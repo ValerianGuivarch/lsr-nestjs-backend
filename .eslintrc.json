@@ -1,0 +1,77 @@
+{
+  "extends": [
+    "plugin:@darraghor/nestjs-typed/recommended",
+    "eslint:recommended",
+    "plugin:@typescript-eslint/eslint-recommended",
+    "plugin:@typescript-eslint/recommended",
+    "plugin:import/errors",
+    "plugin:import/warnings",
+    "plugin:import/typescript"
+  ],
+  "ignorePatterns": [
+    "*.d.ts"
+  ],
+  "parser": "@typescript-eslint/parser",
+  "parserOptions": {
+    "project": ["./tsconfig.json"],
+    "ecmaVersion": 2021,
+    "sourceType": "module",
+    "ecmaFeatures": {
+      "jsx": true
+    }
+  },
+  "plugins": [
+    "@darraghor/nestjs-typed",
+    "prettier",
+    "@typescript-eslint",
+    "unused-imports"
+  ],
+  "root": true,
+  "rules": {
+    "prettier/prettier": ["error", { "semi": false }],
+    "object-curly-spacing": [
+      "error",
+      "always"
+    ],
+    "unused-imports/no-unused-imports-ts": "error",
+    "no-magic-numbers": [
+      "error",
+      {
+        "ignore": [
+          0,
+          1
+        ]
+      }
+    ],
+    "max-params": [
+      "warn",
+      4
+    ],
+    "@typescript-eslint/no-non-null-assertion": "error",
+    "@typescript-eslint/explicit-module-boundary-types": "error",
+    "no-unreachable": "error",
+    "no-process-env": "error",
+    "import/no-namespace": "error",
+    "import/no-default-export": "error",
+    "import/order": [
+      "error",
+      {
+        "newlines-between": "never",
+        "groups": [
+          "index",
+          "sibling",
+          "parent",
+          "internal",
+          "external",
+          "builtin",
+          "object"
+        ],
+        "alphabetize": {
+          "order": "asc",
+          "caseInsensitive": true
+        }
+      }
+    ],
+    "consistent-return": "error"
+  }
+}

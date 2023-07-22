@@ -1,0 +1,14 @@
+version: '3.1'
+services:
+  postgres:
+    container_name: starter-database
+    image: postgres:13-alpine3.14
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - "./postgres-share:/tmp/data"
+      - "./postgres-data:/var/lib/postgresql/data"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: starter-database

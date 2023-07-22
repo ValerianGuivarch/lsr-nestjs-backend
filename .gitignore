@@ -1,0 +1,51 @@
+# compiled output
+/dist
+/node_modules
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# OS
+.DS_Store
+
+# Tests
+/coverage
+/.nyc_output
+
+# IDEs and editors
+/.idea
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+
+# IDE - VSCode
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+
+# custom ignore
+support/docker-dev-starter/postgres-data/*
+support/docker-dev-starter/mongo-data
+support/docker-dev-starter/mongo-share
+support/docker-dev-starter/smtp4dev
+support/docker-prod/mongo-data
+support/docker-prod/mongo-share
+support/docker-prod/smtp4dev
+
+# dotenv environment variables file
+.env
+.env.test
+/support/docker-dev-starter/mongo-data/
+/support/docker-dev-starter/postgres-data/
+/support/docker-dev-starter/postgres-share/
