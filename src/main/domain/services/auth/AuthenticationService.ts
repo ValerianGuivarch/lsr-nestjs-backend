@@ -9,7 +9,6 @@ import { JWTToken } from '../../models/auth/JWTToken'
 import { IAuthenticationProvider } from '../../providers/authentication/IAuthenticationProvider'
 import { IAccountProvider } from '../../providers/IAccountProvider'
 import { IProfileProvider } from '../../providers/IProfileProvider'
-import { ISmsProvider } from '../../providers/ISmsProvider'
 import { ITokenProvider } from '../../providers/ITokenProvider'
 import { Inject, Injectable, Logger, UnauthorizedException } from '@nestjs/common'
 
@@ -23,8 +22,6 @@ export class AuthenticationService {
     private accountProvider: IAccountProvider,
     @Inject('ITokenProvider')
     private tokenProvider: ITokenProvider,
-    @Inject('ISmsProvider')
-    private smsProvider: ISmsProvider,
     @Inject('IAuthenticationProvider')
     private authenticationProvider: IAuthenticationProvider
   ) {
@@ -59,6 +56,7 @@ export class AuthenticationService {
       const profile = await this.profileProvider.create(new Profile({ accountId: account.id }))
       await this.authenticationProvider.create(
         p.identifier,
+        // eslint-disable-next-line no-magic-numbers
         await hashPromise(p.password ?? '', 10),
         p.authType,
         account.id

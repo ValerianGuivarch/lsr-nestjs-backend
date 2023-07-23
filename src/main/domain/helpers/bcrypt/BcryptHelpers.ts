@@ -1,4 +1,4 @@
-import { compare, hash } from 'bcrypt'
+import { compare, hash } from 'bcryptjs'
 import { promisify } from 'util'
 
 export const hashPromise = promisify<string, number, string>(hash)

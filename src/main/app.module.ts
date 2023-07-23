@@ -1,16 +1,20 @@
 import config from './config/configuration'
+import { DBCharacterProvider } from './data/database/character/DBCharacterProvider'
 import { PostgresModule } from './data/database/postgres.module'
-import { PrismicModule } from './data/prismic/prismic.module'
+import { DBRollProvider } from './data/database/rolls/DBRollProvider'
+import { DBSessionProvider } from './data/database/session/DBSessionProvider'
 import { JwtTokenProvider } from './data/security/JwtTokenProvider'
-import { TwilioProvider } from './data/twilio/TwilioProvider'
 import { AccountService } from './domain/services/account/AccountService'
 import { AuthenticationService } from './domain/services/auth/AuthenticationService'
-import { HomePageService } from './domain/services/home_page/HomePageService'
+import { CharacterService } from './domain/services/CharacterService'
+import { MjService } from './domain/services/MjService'
+import { RollService } from './domain/services/RollService'
 import { AccountController } from './web/http/api/v1/account/AccountController'
 import { AdminAccountController } from './web/http/api/v1/admin/account/AdminAccountController'
 import { AdminAuthenticationController } from './web/http/api/v1/admin/auth/AdminAuthenticationController'
 import { AuthenticationController } from './web/http/api/v1/auth/AuthenticationController'
-import { HomePageController } from './web/http/api/v1/home_page/HomePageController'
+import { CharacterController } from './web/http/api/v1/characters/CharacterController'
+import { CharacterGateway } from './web/websocket/api/v1/characters/CharacterGateway'
 import { Module } from '@nestjs/common'
 import { ConfigModule } from '@nestjs/config'
 import { JwtService } from '@nestjs/jwt'
@@ -37,28 +41,38 @@ import { TypeOrmModule } from '@nestjs/typeorm'
       autoLoadEntities: config().postgres.autoLoadEntities,
       synchronize: config().postgres.synchronize
     }),
-    PostgresModule,
-    PrismicModule
+    PostgresModule
   ],
   controllers: [
     AuthenticationController,
     AccountController,
     AdminAccountController,
     AdminAuthenticationController,
-    HomePageController
+    CharacterController
   ],
   providers: [
     AuthenticationService,
     AccountService,
+    CharacterService,
+    RollService,
+    MjService,
     JwtService,
-    HomePageService,
-    {
-      provide: 'ISmsProvider',
-      useClass: TwilioProvider
-    },
+    CharacterGateway,
     {
       provide: 'ITokenProvider',
       useClass: JwtTokenProvider
+    },
+    {
+      provide: 'ICharacterProvider',
+      useClass: DBCharacterProvider
+    },
+    {
+      provide: 'IRollProvider',
+      useClass: DBRollProvider
+    },
+    {
+      provide: 'ISessionProvider',
+      useClass: DBSessionProvider
     }
   ]
 })

@@ -89,4 +89,60 @@ export class ProviderErrors {
       code: 'ENTITY_UPDATE_FAILED'
     })
   }
+
+  static CharacterAlreadyCreated(name: string): GenericError {
+    return GenericError.of({
+      statusCode: HttpStatus.UNAUTHORIZED,
+      message: 'The character' + name + ' already exists',
+      code: 'CHARACTER_ALREADY_CREATED'
+    })
+  }
+
+  static RollNotEnoughPf(): GenericError {
+    return GenericError.of({
+      statusCode: HttpStatus.PRECONDITION_REQUIRED,
+      message: 'Pas assez de Pf !',
+      code: 'ROLL_NOT_ENOUGH_PF'
+    })
+  }
+
+  static RollNotEnoughRelance(): GenericError {
+    return GenericError.of({
+      statusCode: HttpStatus.PRECONDITION_REQUIRED,
+      message: 'Pas assez de relance !',
+      code: 'ROLL_NOT_ENOUGH_RELANCE'
+    })
+  }
+
+  static RollWrongEmpiricalRequest(): GenericError {
+    return GenericError.of({
+      statusCode: HttpStatus.PRECONDITION_REQUIRED,
+      message: 'Erreur dans la requête empirique',
+      code: 'ROLL_WRONG_EMPIRICAL_REQUEST'
+    })
+  }
+
+  static RollNoPreviousRoll(): GenericError {
+    return GenericError.of({
+      statusCode: HttpStatus.PRECONDITION_REQUIRED,
+      message: 'Pas de lancer de dé à relancer',
+      code: 'ROLL_NO_PREVIOUS_ROLL'
+    })
+  }
+
+  static RollNotEnoughPp(): GenericError {
+    return GenericError.of({
+      statusCode: HttpStatus.PRECONDITION_REQUIRED,
+      message: 'Pas assez de Pp !',
+      code: 'ROLL_NOT_ENOUGH_PP'
+    })
+  }
+
+  static RollNotEnoughArcane(): GenericError {
+    return GenericError.of({
+      statusCode: HttpStatus.PRECONDITION_REQUIRED,
+      message: "Pas assez d'arcane !",
+      code: 'ROLL_NOT_ENOUGH_ARCANE'
+    })
+  }
 }
