@@ -1,6 +1,4 @@
-import { Bloodline } from '../../../../../../domain/models/characters/Bloodline'
 import { Category } from '../../../../../../domain/models/characters/Category'
-import { Classe } from '../../../../../../domain/models/characters/Classe'
 import { Genre } from '../../../../../../domain/models/characters/Genre'
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
 import { IsEnum, IsNumber, IsOptional, IsString } from 'class-validator'
@@ -10,19 +8,13 @@ export class CreateCharacterDto {
   @IsString()
   readonly name: string
 
-  @ApiProperty({
-    enum: Classe,
-    enumName: 'Classe'
-  })
-  @IsEnum(Classe)
-  readonly classe: Classe
+  @ApiProperty()
+  @IsString()
+  readonly classeName: string
 
-  @ApiProperty({
-    enum: Bloodline,
-    enumName: 'Bloodline'
-  })
-  @IsEnum(Bloodline)
-  readonly bloodline: Bloodline
+  @ApiProperty()
+  @IsString()
+  readonly bloodlineName: string
 
   @ApiProperty({ default: 2 })
   @IsNumber()

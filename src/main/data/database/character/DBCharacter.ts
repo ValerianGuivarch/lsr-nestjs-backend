@@ -1,32 +1,30 @@
 import { Apotheose } from '../../../domain/models/characters/Apotheose'
 import { BattleState } from '../../../domain/models/characters/BattleState'
-import { Bloodline } from '../../../domain/models/characters/Bloodline'
 import { Category } from '../../../domain/models/characters/Category'
-import { Classe } from '../../../domain/models/characters/Classe'
 import { Genre } from '../../../domain/models/characters/Genre'
 import { Player } from '../../../domain/models/characters/Player'
-import { DBEntity } from '../DBEntity'
-import { Entity, Column } from 'typeorm'
+import { DBBloodline } from '../bloodlines/DBBloodline'
+import { DBClasse } from '../classes/DBClasse'
+import { ManyToOne, Column, Entity, JoinColumn, PrimaryColumn } from 'typeorm'
 
 @Entity()
-export class DBCharacter extends DBEntity {
-  // unique
-  @Column({ type: 'varchar', unique: true })
+export class DBCharacter {
+  @PrimaryColumn({ type: 'varchar' })
   name: string
 
-  @Column({
-    type: 'enum',
-    enum: Classe,
-    default: Classe.CHAMPION
-  })
-  classe: string
+  @Column()
+  classeName: string
 
-  @Column({
-    type: 'enum',
-    enum: Bloodline,
-    default: Bloodline.AUCUN
-  })
-  bloodline: string
+  @ManyToOne(() => DBClasse)
+  @JoinColumn({ name: 'classeName' })
+  classe: DBClasse
+
+  @Column()
+  bloodlineName: string
+
+  @ManyToOne(() => DBBloodline)
+  @JoinColumn({ name: 'bloodlineName' })
+  bloodline: DBBloodline
 
   @Column({
     type: 'enum',

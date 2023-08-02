@@ -1,10 +1,9 @@
 import { ProviderErrors } from '../../data/errors/ProviderErrors'
 import { Apotheose } from '../models/characters/Apotheose'
-import { Bloodline } from '../models/characters/Bloodline'
 import { Category } from '../models/characters/Category'
-import { Classe } from '../models/characters/Classe'
 import { Roll } from '../models/roll/Roll'
 import { RollType } from '../models/roll/RollType'
+import { IBloodlineProvider } from '../providers/IBloodlineProvider'
 import { ICharacterProvider } from '../providers/ICharacterProvider'
 import { IRollProvider } from '../providers/IRollProvider'
 import { ISessionProvider } from '../providers/ISessionProvider'
@@ -40,6 +39,8 @@ export class RollService {
   constructor(
     @Inject('ICharacterProvider')
     private characterProvider: ICharacterProvider,
+    @Inject('IBloodlineProvider')
+    private bloodlineProvider: IBloodlineProvider,
     @Inject('ISessionProvider')
     private sessionProvider: ISessionProvider,
     @Inject('IRollProvider')
@@ -65,6 +66,7 @@ export class RollService {
     resistRoll?: string
   }): Promise<Roll> {
     const character = await this.characterProvider.findOneByName(p.rollerName)
+    const bloodline = await this.bloodlineProvider.findOneByName(character.bloodlineName)
     if (p.rollType === RollType.RELANCE) {
       const lastRoll = await this.rollProvider.getLastForCharacter(character)
       if (lastRoll === undefined) {
@@ -137,7 +139,7 @@ export class RollService {
     let successToCalculate = true
     const availableHelp = await this.rollProvider.availableHelp(p.rollerName)
     let helpCanBeUsed = false
-    let data = ''
+    const data = ''
     let secret = p.secret
     if (
       p.rollType === RollType.SOIN ||
@@ -226,19 +228,13 @@ export class RollService {
         diceNumber = diceNumber + 18
       }
       diceValue = RollService.CLASSIC_ROLL_VALUE
-      dettesDelta++
-      if (character.bloodline === Bloodline.FOUDRE) {
-        dettesDelta++
-      }
-    } else if (p.rollType === RollType.SOIN && character.bloodline !== Bloodline.LUMIERE) {
+      dettesDelta = dettesDelta + bloodline.detteByMagicAction
+    } else if (p.rollType === RollType.SOIN && !bloodline.healthImproved) {
       diceNumber = character.essence + diceValueDelta
       diceValue = RollService.CLASSIC_ROLL_VALUE
-      dettesDelta++
-      if (character.bloodline === Bloodline.FOUDRE) {
-        dettesDelta++
-      }
+      dettesDelta = dettesDelta + bloodline.detteByMagicAction
       ppDelta--
-    } else if (p.rollType === RollType.SOIN && character.bloodline === Bloodline.LUMIERE) {
+    } else if (p.rollType === RollType.SOIN && bloodline.healthImproved) {
       diceNumber = character.essence + diceValueDelta
       diceValue = RollService.CLASSIC_ROLL_VALUE
       ppDelta--
@@ -277,10 +273,7 @@ export class RollService {
     }
     if (usePp) {
       ppDelta--
-      dettesDelta++
-      if (character.bloodline === Bloodline.FOUDRE) {
-        dettesDelta++
-      }
+      dettesDelta = dettesDelta + bloodline.detteByMagicAction
     }
     let success: number | null = null
     let juge12: number | null = null
@@ -381,7 +374,7 @@ export class RollService {
     }
 
     if (p.rollType === RollType.SOIN) {
-      if (character.bloodline !== Bloodline.LUMIERE) {
+      if (!bloodline.healthImproved) {
         // eslint-disable-next-line no-magic-numbers
         success = Math.floor((1 + (success ?? 0)) / 2)
         // eslint-disable-next-line no-magic-numbers
@@ -405,7 +398,7 @@ export class RollService {
         helpUsed = false
       }
 
-      if (character.classe === Classe.PACIFICATEUR && p.rollType === RollType.APOTHEOSE && result[0] === 1) {
+      /*if (character.classe === Classe.PACIFICATEUR && p.rollType === RollType.APOTHEOSE && result[0] === 1) {
         const consequence = RollService.randomIntFromInterval(1, RollService.PACIFICATEUR_CONSEQUENCE)
         if (consequence == 1) {
           data = "Dysfonctionnement, impossible d'agir"
@@ -437,7 +430,7 @@ export class RollService {
         } else if (consequence == 10) {
           data = 'Communication avec le grand concepteur'
         }
-      }
+      }*/
       const rollToCreate = new Roll({
         rollerName: p.rollerName,
         rollType: p.rollType,

@@ -1,56 +1,20 @@
 /* eslint-disable */
 export type Schema = {
-  'db_account': {
+  'db_bloodline': {
     plain: {
-      'id': number;
-      'createdDate': string;
-      'updatedDate': string;
-      'authority': string;
-      'secret': string;
+      'name': string;
+      'detteByMagicAction': number;
+      'healthImproved': boolean;
     };
-    nested: {
-      'db_profile': Schema['db_profile']['plain'] & Schema['db_profile']['nested'];
-    };
-    flat: {
-      'db_profile:id': number;
-      'db_profile:createdDate': string;
-      'db_profile:updatedDate': string;
-      'db_profile:accountId': number;
-      'db_profile:name': string;
-    };
-  };
-  'db_authentication': {
-    plain: {
-      'id': number;
-      'createdDate': string;
-      'updatedDate': string;
-      'identifier': string;
-      'password': string;
-      'type': string;
-      'accountId': number;
-    };
-    nested: {
-      'account': Schema['db_account']['plain'] & Schema['db_account']['nested'];
-    };
-    flat: {
-      'account:id': number;
-      'account:createdDate': string;
-      'account:updatedDate': string;
-      'account:authority': string;
-      'account:secret': string;
-      'account:db_profile:id': number;
-      'account:db_profile:createdDate': string;
-      'account:db_profile:updatedDate': string;
-      'account:db_profile:accountId': number;
-      'account:db_profile:name': string;
-    };
+    nested: {};
+    flat: {};
   };
   'db_character': {
     plain: {
-      'id': number;
-      'createdDate': string;
-      'updatedDate': string;
       'name': string;
+      'classe': 'CHAMPION' | 'CORROMPU' | 'REJETE' | 'PACIFICATEUR' | 'SPIRITE' | 'ARCANISTE' | 'CHAMPION_ARCANIQUE' | 'SOLDAT' | 'AVATAR' | 'SKINWALKER' | 'GAME_MASTER' | 'ROI' | 'PAROLIER' | 'DRAGON' | 'INCONNU';
+      'bloodlineName': string;
+      'apotheose': 'NONE' | 'NORMALE' | 'IMPROVED' | 'FINALE' | 'ARCANIQUE' | 'FORME_VENGERESSE' | 'SURCHARGE' | 'SURCHARGE_IMPROVED';
       'apotheoseImprovement': string;
       'apotheoseImprovementList': string;
       'chair': number;
@@ -70,41 +34,25 @@ export type Schema = {
       'umbra': string;
       'secunda': string;
       'notes': string;
+      'category': 'PJ' | 'PNJ_ALLY' | 'PNJ_ENNEMY' | 'TEMPO' | 'TEMPLATE';
+      'battleState': 'NONE' | 'ALLIES' | 'ENNEMIES';
+      'genre': 'HOMME' | 'FEMME' | 'AUTRE';
       'relance': number;
+      'playerName': 'Arcady' | 'David' | 'Elena' | 'Eric' | 'Florent' | 'Guilhem' | 'Jupi' | 'Nico' | 'Tom' | 'Valou' | 'Guest';
       'picture': string;
       'pictureApotheose': string;
       'background': string;
       'buttonColor': string;
       'textColor': string;
       'boosted': boolean;
-      'classe': 'CHAMPION' | 'CORROMPU' | 'REJETE' | 'PACIFICATEUR' | 'SPIRITE' | 'ARCANISTE' | 'CHAMPION_ARCANIQUE' | 'SOLDAT' | 'AVATAR' | 'SKINWALKER' | 'GAME_MASTER' | 'ROI' | 'PAROLIER' | 'DRAGON' | 'INCONNU';
-      'bloodline': 'LUMIERE' | 'TENEBRE' | 'EAU' | 'FEU' | 'VENT' | 'TERRE' | 'FOUDRE' | 'GLACE' | 'NAGA' | 'TROGLODYTE' | 'LYCAN' | 'GOULE' | 'SUCCUBE' | 'ILLITHIDE' | 'ARBRE' | 'TERREUR' | 'COLLECTIONNEUR' | 'GORGONNE' | 'NECROMANCIE' | 'VOYAGEUR' | 'JUGE' | 'VOLEUR' | 'AUCUN';
-      'apotheose': 'NONE' | 'NORMALE' | 'IMPROVED' | 'FINALE' | 'ARCANIQUE' | 'FORME_VENGERESSE' | 'SURCHARGE' | 'SURCHARGE_IMPROVED';
-      'category': 'PJ' | 'PNJ_ALLY' | 'PNJ_ENNEMY' | 'TEMPO' | 'TEMPLATE';
-      'genre': 'HOMME' | 'FEMME' | 'AUTRE';
-      'playerName': 'Arcady' | 'David' | 'Elena' | 'Eric' | 'Florent' | 'Guilhem' | 'Jupi' | 'Nico' | 'Tom' | 'Valou' | 'Guest';
-      'battleState': 'NONE' | 'ALLIES' | 'ENNEMIES';
-    };
-    nested: {};
-    flat: {};
-  };
-  'db_profile': {
-    plain: {
-      'id': number;
-      'createdDate': string;
-      'updatedDate': string;
-      'accountId': number;
-      'name': string;
     };
     nested: {
-      'account': Schema['db_account']['plain'] & Schema['db_account']['nested'];
+      'db_bloodline': Schema['db_bloodline']['plain'] & Schema['db_bloodline']['nested'];
     };
     flat: {
-      'account:id': number;
-      'account:createdDate': string;
-      'account:updatedDate': string;
-      'account:authority': string;
-      'account:secret': string;
+      'db_bloodline:name': string;
+      'db_bloodline:detteByMagicAction': number;
+      'db_bloodline:healthImproved': boolean;
     };
   };
   'db_roll': {

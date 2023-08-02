@@ -1,5 +1,7 @@
 import config from './config/configuration'
+import { DBBloodlineProvider } from './data/database/bloodlines/DBBloodlineProvider'
 import { DBCharacterProvider } from './data/database/character/DBCharacterProvider'
+import { DBClasseProvider } from './data/database/classes/DBClasseProvider'
 import { PostgresModule } from './data/database/postgres.module'
 import { DBRollProvider } from './data/database/rolls/DBRollProvider'
 import { DBSessionProvider } from './data/database/session/DBSessionProvider'
@@ -53,6 +55,14 @@ import { TypeOrmModule } from '@nestjs/typeorm'
     {
       provide: 'ISessionProvider',
       useClass: DBSessionProvider
+    },
+    {
+      provide: 'IBloodlineProvider',
+      useClass: DBBloodlineProvider
+    },
+    {
+      provide: 'IClassProvider',
+      useClass: DBClasseProvider
     }
   ]
 })

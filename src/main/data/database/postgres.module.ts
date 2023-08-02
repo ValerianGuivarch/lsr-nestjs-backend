@@ -1,5 +1,9 @@
+import { DBBloodline } from './bloodlines/DBBloodline'
+import { DBBloodlineProvider } from './bloodlines/DBBloodlineProvider'
 import { DBCharacter } from './character/DBCharacter'
 import { DBCharacterProvider } from './character/DBCharacterProvider'
+import { DBClasse } from './classes/DBClasse'
+import { DBClasseProvider } from './classes/DBClasseProvider'
 import { DBEntity } from './DBEntity'
 import { DBRoll } from './rolls/DBRoll'
 import { DBRollProvider } from './rolls/DBRollProvider'
@@ -9,7 +13,7 @@ import { Module } from '@nestjs/common'
 import { TypeOrmModule } from '@nestjs/typeorm'
 
 @Module({
-  imports: [TypeOrmModule.forFeature([DBEntity, DBRoll, DBSession, DBCharacter], 'postgres')],
+  imports: [TypeOrmModule.forFeature([DBEntity, DBRoll, DBSession, DBCharacter, DBBloodline, DBClasse], 'postgres')],
   providers: [
     {
       provide: 'IRollProvider',
@@ -22,6 +26,14 @@ import { TypeOrmModule } from '@nestjs/typeorm'
     {
       provide: 'ICharacterProvider',
       useClass: DBCharacterProvider
+    },
+    {
+      provide: 'IBloodlineProvider',
+      useClass: DBBloodlineProvider
+    },
+    {
+      provide: 'IClassProvider',
+      useClass: DBClasseProvider
     }
   ],
   exports: [
@@ -37,6 +49,14 @@ import { TypeOrmModule } from '@nestjs/typeorm'
     {
       provide: 'ICharacterProvider',
       useClass: DBCharacterProvider
+    },
+    {
+      provide: 'IBloodlineProvider',
+      useClass: DBBloodlineProvider
+    },
+    {
+      provide: 'IClassProvider',
+      useClass: DBClasseProvider
     }
   ]
 })

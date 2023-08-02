@@ -1,14 +1,12 @@
 import { Apotheose } from './Apotheose'
 import { BattleState } from './BattleState'
-import { Bloodline } from './Bloodline'
 import { Category } from './Category'
-import { Classe } from './Classe'
 import { Genre } from './Genre'
 
 export class Character {
   name: string
-  classe: Classe
-  bloodline: Bloodline
+  classeName: string
+  bloodlineName: string
   chair: number
   esprit: number
   essence: number
@@ -49,8 +47,8 @@ export class Character {
 
   static characterToCreateFactory(p: {
     name: string
-    classe: Classe
-    bloodline: Bloodline
+    classeName: string
+    bloodlineName: string
     chair: number
     esprit: number
     essence: number
@@ -100,7 +98,9 @@ export class Character {
       pictureApotheose: p.pictureApotheose,
       background: p.background,
       buttonColor: p.buttonColor,
-      textColor: p.textColor
+      textColor: p.textColor,
+      classeName: p.classeName,
+      bloodlineName: p.bloodlineName
     }
 
     return Object.assign(defaults, p)

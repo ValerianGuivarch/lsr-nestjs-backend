@@ -30,8 +30,8 @@ export class CharacterController {
   async createCharacter(@Body() createCharacterDto: CreateCharacterDto): Promise<CharacterVM> {
     const characterToCreate = Character.characterToCreateFactory({
       name: createCharacterDto.name,
-      classe: createCharacterDto.classe,
-      bloodline: createCharacterDto.bloodline,
+      classeName: createCharacterDto.classeName,
+      bloodlineName: createCharacterDto.bloodlineName,
       chair: createCharacterDto.chair,
       esprit: createCharacterDto.esprit,
       essence: createCharacterDto.essence,
@@ -71,8 +71,8 @@ export class CharacterController {
       notes: updateCharacterDto.notes,
       relance: updateCharacterDto.relance,
       name: updateCharacterDto.name,
-      classe: updateCharacterDto.classe,
-      bloodline: updateCharacterDto.bloodline,
+      classeName: updateCharacterDto.classeName,
+      bloodlineName: updateCharacterDto.bloodlineName,
       chair: updateCharacterDto.chair,
       esprit: updateCharacterDto.esprit,
       essence: updateCharacterDto.essence,

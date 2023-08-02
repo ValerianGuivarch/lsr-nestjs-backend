@@ -1,5 +1,5 @@
-export enum Classe {
-  CHAMPION = 'CHAMPION',
+export class Classe {
+  /*CHAMPION = 'CHAMPION',
   CORROMPU = 'CORROMPU',
   REJETE = 'REJETE',
   PACIFICATEUR = 'PACIFICATEUR',
@@ -13,5 +13,10 @@ export enum Classe {
   ROI = 'ROI',
   PAROLIER = 'PAROLIER',
   DRAGON = 'DRAGON',
-  INCONNU = 'INCONNU'
+  INCONNU = 'INCONNU'*/
+  name: string
+
+  constructor(p: Classe) {
+    this.name = p.name
+  }
 }

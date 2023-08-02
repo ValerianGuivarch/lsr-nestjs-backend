@@ -1,10 +1,8 @@
 import { DBCharacter } from './DBCharacter'
 import { Apotheose } from '../../../domain/models/characters/Apotheose'
 import { BattleState } from '../../../domain/models/characters/BattleState'
-import { Bloodline } from '../../../domain/models/characters/Bloodline'
 import { Category } from '../../../domain/models/characters/Category'
 import { Character } from '../../../domain/models/characters/Character'
-import { Classe } from '../../../domain/models/characters/Classe'
 import { Genre } from '../../../domain/models/characters/Genre'
 import { ICharacterProvider } from '../../../domain/providers/ICharacterProvider'
 import { ProviderErrors } from '../../errors/ProviderErrors'
@@ -23,8 +21,8 @@ export class DBCharacterProvider implements ICharacterProvider {
   private static toCharacter(doc: DBCharacter): Character {
     return new Character({
       name: doc.name,
-      classe: Classe[doc.classe],
-      bloodline: Bloodline[doc.bloodline],
+      classeName: doc.classeName,
+      bloodlineName: doc.bloodlineName,
       apotheose: Apotheose[doc.apotheose],
       apotheoseImprovement: doc.apotheoseImprovement,
       apotheoseImprovementList: doc.apotheoseImprovementList,
@@ -62,8 +60,8 @@ export class DBCharacterProvider implements ICharacterProvider {
   private static fromCharacter(doc: Character): DBCharacter {
     return {
       name: doc.name,
-      classe: doc.classe.toString(),
-      bloodline: doc.bloodline.toString(),
+      classeName: doc.classeName,
+      bloodlineName: doc.bloodlineName,
       apotheose: doc.apotheose.toString(),
       apotheoseImprovement: doc.apotheoseImprovement,
       apotheoseImprovementList: doc.apotheoseImprovementList,

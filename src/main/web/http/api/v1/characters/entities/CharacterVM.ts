@@ -6,10 +6,10 @@ export class CharacterVM {
   name: string
 
   @ApiProperty()
-  classe: string
+  classeName: string
 
   @ApiProperty()
-  bloodline: string
+  bloodlineName: string
 
   @ApiProperty()
   chair: number
@@ -103,8 +103,8 @@ export class CharacterVM {
 
   constructor(p: CharacterVM) {
     this.name = p.name
-    this.classe = p.classe
-    this.bloodline = p.bloodline
+    this.classeName = p.classeName
+    this.bloodlineName = p.bloodlineName
     this.apotheose = p.apotheose
     this.apotheoseImprovement = p.apotheoseImprovement
     this.apotheoseImprovementList = p.apotheoseImprovementList
@@ -140,8 +140,8 @@ export class CharacterVM {
   static of(p: { character: Character }): CharacterVM {
     return new CharacterVM({
       name: p.character.name,
-      classe: p.character.classe.toString(),
-      bloodline: p.character.bloodline.toString(),
+      classeName: p.character.classeName,
+      bloodlineName: p.character.bloodlineName,
       chair: p.character.chair,
       esprit: p.character.esprit,
       essence: p.character.essence,
