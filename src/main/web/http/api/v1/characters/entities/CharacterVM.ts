@@ -66,6 +66,9 @@ export class CharacterVM {
   category: string
 
   @ApiProperty()
+  battleState: string
+
+  @ApiProperty()
   apotheose: string
 
   @ApiPropertyOptional()
@@ -123,6 +126,7 @@ export class CharacterVM {
     this.secunda = p.secunda
     this.notes = p.notes
     this.category = p.category
+    this.battleState = p.battleState
     this.genre = p.genre
     this.relance = p.relance
     this.playerName = p.playerName
@@ -156,6 +160,7 @@ export class CharacterVM {
       secunda: p.character.secunda,
       notes: p.character.notes,
       category: p.character.category.toString(),
+      battleState: p.character.battleState.toString(),
       apotheose: p.character.apotheose.toString(),
       apotheoseImprovement: p.character.apotheoseImprovement,
       apotheoseImprovementList: p.character.apotheoseImprovementList,

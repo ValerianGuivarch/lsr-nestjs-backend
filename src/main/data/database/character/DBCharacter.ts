@@ -140,6 +140,13 @@ export class DBCharacter extends DBEntity {
 
   @Column({
     type: 'enum',
+    enum: BattleState,
+    default: BattleState.NONE
+  })
+  battleState: string
+
+  @Column({
+    type: 'enum',
     enum: Genre,
     default: Genre.AUTRE
   })
@@ -175,11 +182,4 @@ export class DBCharacter extends DBEntity {
 
   @Column({ type: 'boolean', default: false })
   boosted: boolean
-
-  @Column({
-    type: 'enum',
-    enum: BattleState,
-    default: BattleState.NONE
-  })
-  battleState: string
 }

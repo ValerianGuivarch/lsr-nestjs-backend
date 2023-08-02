@@ -1,17 +1,4 @@
-import { WsCharacterRequest } from './requests/WsCharacterRequest'
-import { CharacterService } from '../../../../../domain/services/CharacterService'
-import { CharacterVM } from '../../../../http/api/v1/characters/entities/CharacterVM'
-import { OnModuleInit } from '@nestjs/common'
-import {
-  ConnectedSocket,
-  MessageBody,
-  SubscribeMessage,
-  WebSocketGateway,
-  WebSocketServer,
-  WsException
-} from '@nestjs/websockets'
-import { Server, Socket } from 'socket.io'
-
+/*
 @WebSocketGateway({
   cors: {
     origin: '*'
@@ -39,3 +26,4 @@ export class CharacterGateway implements OnModuleInit {
     }
   }
 }
+*/

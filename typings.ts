@@ -78,7 +78,7 @@ export type Schema = {
       'textColor': string;
       'boosted': boolean;
       'classe': 'CHAMPION' | 'CORROMPU' | 'REJETE' | 'PACIFICATEUR' | 'SPIRITE' | 'ARCANISTE' | 'CHAMPION_ARCANIQUE' | 'SOLDAT' | 'AVATAR' | 'SKINWALKER' | 'GAME_MASTER' | 'ROI' | 'PAROLIER' | 'DRAGON' | 'INCONNU';
-      'bloodline': 'LUMIERE' | 'TENEBRE' | 'EAU' | 'FEU' | 'VENT' | 'TERRE' | 'FOUDRE' | 'GLACE' | 'NAGA' | 'TROGLODYTE' | 'LYCAN' | 'GOULE' | 'SUCCUBE' | 'ILLITHIDE' | 'ARBRE' | 'TERREUR' | 'COLLECTIONNEUR' | 'NECROMANCIE' | 'VOYAGEUR' | 'JUGE' | 'VOLEUR' | 'AUCUN';
+      'bloodline': 'LUMIERE' | 'TENEBRE' | 'EAU' | 'FEU' | 'VENT' | 'TERRE' | 'FOUDRE' | 'GLACE' | 'NAGA' | 'TROGLODYTE' | 'LYCAN' | 'GOULE' | 'SUCCUBE' | 'ILLITHIDE' | 'ARBRE' | 'TERREUR' | 'COLLECTIONNEUR' | 'GORGONNE' | 'NECROMANCIE' | 'VOYAGEUR' | 'JUGE' | 'VOLEUR' | 'AUCUN';
       'apotheose': 'NONE' | 'NORMALE' | 'IMPROVED' | 'FINALE' | 'ARCANIQUE' | 'FORME_VENGERESSE' | 'SURCHARGE' | 'SURCHARGE_IMPROVED';
       'category': 'PJ' | 'PNJ_ALLY' | 'PNJ_ENNEMY' | 'TEMPO' | 'TEMPLATE';
       'genre': 'HOMME' | 'FEMME' | 'AUTRE';

@@ -98,14 +98,14 @@ export class DBCharacterProvider implements ICharacterProvider {
     } as DBCharacter
   }
 
-  async createOrUpdate(newCharacter: Character): Promise<Character> {
+  async create(newCharacter: Character): Promise<Character> {
     let character = await this.dbCharacterRepository.findOneBy({ name: newCharacter.name })
     if (!character) {
       character = this.dbCharacterRepository.create(DBCharacterProvider.fromCharacter(newCharacter))
+      return DBCharacterProvider.toCharacter(await this.dbCharacterRepository.save(character))
     } else {
-      character = this.dbCharacterRepository.merge(character, DBCharacterProvider.fromCharacter(newCharacter))
+      throw ProviderErrors.EntityAlreadyExists(newCharacter.name)
     }
-    return DBCharacterProvider.toCharacter(await this.dbCharacterRepository.save(character))
   }
 
   async findOneByName(name: string): Promise<Character> {
@@ -131,9 +131,9 @@ export class DBCharacterProvider implements ICharacterProvider {
     return characters.map(DBCharacterProvider.toCharacter)
   }
 
-  async findAll(playerName?: string): Promise<Character[]> {
-    const characters = playerName
-      ? await this.dbCharacterRepository.findBy({ playerName: playerName })
+  async findAll(category?: Category): Promise<Character[]> {
+    const characters = category
+      ? await this.dbCharacterRepository.findBy({ category: category })
       : await this.dbCharacterRepository.find()
     return characters.map(DBCharacterProvider.toCharacter)
   }

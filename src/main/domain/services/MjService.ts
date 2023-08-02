@@ -24,6 +24,6 @@ export class MjService {
   async updateCharacterBattleState(characterName: string, battleState: BattleState): Promise<void> {
     const character = await this.characterProvider.findByName(characterName)
     character.battleState = battleState
-    await this.characterProvider.createOrUpdate(character)
+    await this.characterProvider.update(character)
   }
 }

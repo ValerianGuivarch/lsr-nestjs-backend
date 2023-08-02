@@ -145,4 +145,12 @@ export class ProviderErrors {
       code: 'ROLL_NOT_ENOUGH_ARCANE'
     })
   }
+
+  static EntityAlreadyExists(name: string): GenericError {
+    return GenericError.of({
+      statusCode: HttpStatus.CONFLICT,
+      message: 'Le personnage existe déjà !',
+      code: 'CHARACTER_ALREADY_EXISTS'
+    })
+  }
 }

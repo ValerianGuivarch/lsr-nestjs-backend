@@ -28,6 +28,7 @@
   ],
   "root": true,
   "rules": {
+    "@darraghor/nestjs-typed/injectable-should-be-provided": "off",
     "prettier/prettier": ["error", { "semi": false }],
     "object-curly-spacing": [
       "error",

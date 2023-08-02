@@ -120,7 +120,7 @@ export class RollService {
         lastRoll.result.push(dice)
       }
       character.relance = relance - 1
-      await this.characterProvider.createOrUpdate(character)
+      await this.characterProvider.update(character)
       return lastRoll //await this.rollProvider.update(lastRoll)
     }
     let diceNumber = 0
@@ -466,7 +466,7 @@ export class RollService {
       character.pp += ppDelta
       character.arcanes += arcaneDelta
       character.dettes += dettesDelta
-      this.characterProvider.createOrUpdate(character)
+      this.characterProvider.update(character)
       if (helpCanBeUsed) {
         this.rollProvider.helpUsed(availableHelp)
       }

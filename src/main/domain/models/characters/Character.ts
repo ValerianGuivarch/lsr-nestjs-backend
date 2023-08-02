@@ -34,6 +34,7 @@ export class Character {
   relance: number
   playerName?: string
   picture?: string
+  pictureInvocation?: string
   pictureApotheose?: string
   background?: string
   buttonColor?: string
@@ -42,62 +43,64 @@ export class Character {
   boosted?: boolean
   battleState: BattleState
 
-  constructor(p: CharacterToCreate) {
+  constructor(p: Character) {
     Object.assign(this, p)
   }
 
-  static async characterToCreateFactory(p: {
+  static characterToCreateFactory(p: {
     name: string
     classe: Classe
     bloodline: Bloodline
     chair: number
     esprit: number
     essence: number
-    pv: number
     pvMax: number
-    pf: number
     pfMax: number
-    pp: number
     ppMax: number
-    dettes: number
-    arcanes: number
     arcanesMax: number
     niveau: number
     lux: string
     umbra: string
     secunda: string
-    notes: string
     category: Category
-    apotheose: Apotheose
-    apotheoseImprovementList: string[]
     genre: Genre
-    relance: number
-  }): Promise<CharacterToCreate> {
+    picture?: string
+    pictureApotheose?: string
+    background?: string
+    buttonColor?: string
+    textColor?: string
+  }): CharacterToCreate {
     const defaults = {
       chair: p.chair,
       esprit: p.esprit,
       essence: p.essence,
-      pv: p.pv,
+      pv: p.pvMax,
       pvMax: p.pvMax,
-      pf: p.pf,
+      pf: p.pfMax,
       pfMax: p.pfMax,
-      pp: p.pp,
+      pp: p.ppMax,
       ppMax: p.ppMax,
-      dettes: p.dettes,
-      arcanes: p.arcanes,
+      // eslint-disable-next-line no-magic-numbers
+      dettes: Math.floor(Math.random() * 11),
+      arcanes: p.arcanesMax,
       arcanesMax: p.arcanesMax,
       niveau: p.niveau,
       lux: p.lux,
       umbra: p.umbra,
       secunda: p.secunda,
-      notes: p.notes,
+      notes: '',
       category: p.category,
-      apotheose: p.apotheose,
-      apotheoseImprovementList: p.apotheoseImprovementList,
+      apotheose: Apotheose.NONE,
+      apotheoseImprovementList: [],
       genre: p.genre,
-      relance: p.relance,
+      relance: 0,
       boosted: false,
-      battleState: BattleState.NONE
+      battleState: BattleState.NONE,
+      picture: p.picture,
+      pictureApotheose: p.pictureApotheose,
+      background: p.background,
+      buttonColor: p.buttonColor,
+      textColor: p.textColor
     }
 
     return Object.assign(defaults, p)
