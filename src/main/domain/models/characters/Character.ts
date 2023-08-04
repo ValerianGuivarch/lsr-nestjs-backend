@@ -6,10 +6,12 @@ import { Genre } from './Genre'
 export class Character {
   name: string
   classeName: string
-  bloodlineName: string
+  bloodlineName?: string
   chair: number
   esprit: number
   essence: number
+  bonus: number
+  malus: number
   pv: number
   pvMax: number
   pf: number
@@ -48,7 +50,7 @@ export class Character {
   static characterToCreateFactory(p: {
     name: string
     classeName: string
-    bloodlineName: string
+    bloodlineName?: string
     chair: number
     esprit: number
     essence: number
@@ -61,7 +63,7 @@ export class Character {
     umbra: string
     secunda: string
     category: Category
-    genre: Genre
+    genre?: Genre
     picture?: string
     pictureApotheose?: string
     background?: string
@@ -72,6 +74,8 @@ export class Character {
       chair: p.chair,
       esprit: p.esprit,
       essence: p.essence,
+      bonus: 0,
+      malus: 0,
       pv: p.pvMax,
       pvMax: p.pvMax,
       pf: p.pfMax,
@@ -90,7 +94,8 @@ export class Character {
       category: p.category,
       apotheose: Apotheose.NONE,
       apotheoseImprovementList: [],
-      genre: p.genre,
+      // eslint-disable-next-line no-magic-numbers
+      genre: p.genre ? p.genre : Math.random() < 0.5 ? Genre.HOMME : Genre.FEMME,
       relance: 0,
       boosted: false,
       battleState: BattleState.NONE,

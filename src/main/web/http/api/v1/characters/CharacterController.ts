@@ -4,7 +4,10 @@ import { CreateCharacterDto } from './requests/CreateCharacterDto'
 import { UpdateCharacterDto } from './requests/UpdateCharacterDto'
 import { Category } from '../../../../../domain/models/characters/Category'
 import { Character } from '../../../../../domain/models/characters/Character'
+import { ArcaneService } from '../../../../../domain/services/ArcaneService'
+import { BloodlineService } from '../../../../../domain/services/BloodlineService'
 import { CharacterService } from '../../../../../domain/services/CharacterService'
+import { ClasseService } from '../../../../../domain/services/ClasseService'
 import { Body, Controller, Get, Logger, Param, Post, Put, Query } from '@nestjs/common'
 import { ApiOkResponse, ApiTags } from '@nestjs/swagger'
 
@@ -12,9 +15,14 @@ import { ApiOkResponse, ApiTags } from '@nestjs/swagger'
 @ApiTags('Character')
 export class CharacterController {
   private readonly logger = new Logger(CharacterController.name)
-  constructor(private characterService: CharacterService) {}
+  constructor(
+    private characterService: CharacterService,
+    private bloodlineService: BloodlineService,
+    private classeService: ClasseService,
+    private arcaneService: ArcaneService
+  ) {}
 
-  @ApiOkResponse({ type: CharacterVM })
+  @ApiOkResponse({ type: CharacterPreviewVM })
   @Get('')
   async getAllCharacters(@Query('category') category?: Category): Promise<CharacterPreviewVM[]> {
     const characters = await this.characterService.findAll(category)
@@ -28,10 +36,12 @@ export class CharacterController {
   @ApiOkResponse({ type: CharacterVM })
   @Post('')
   async createCharacter(@Body() createCharacterDto: CreateCharacterDto): Promise<CharacterVM> {
+    const classe = await this.classeService.findOneByName(createCharacterDto.classeName)
+    const bloodline = await this.bloodlineService.findOneByName(createCharacterDto.bloodlineName)
     const characterToCreate = Character.characterToCreateFactory({
       name: createCharacterDto.name,
-      classeName: createCharacterDto.classeName,
-      bloodlineName: createCharacterDto.bloodlineName,
+      classeName: classe.name,
+      bloodlineName: bloodline.name,
       chair: createCharacterDto.chair,
       esprit: createCharacterDto.esprit,
       essence: createCharacterDto.essence,
@@ -54,7 +64,10 @@ export class CharacterController {
     return CharacterVM.of({
       character: await this.characterService.createCharacter({
         character: characterToCreate
-      })
+      }),
+      classe: classe,
+      bloodline: bloodline,
+      arcanesList: []
     })
   }
 
@@ -64,43 +77,21 @@ export class CharacterController {
     @Param('name') name: string,
     @Body() updateCharacterDto: UpdateCharacterDto
   ): Promise<CharacterVM> {
-    const characterToUpdate = new Character({
-      apotheose: updateCharacterDto.apotheose,
-      apotheoseImprovementList: updateCharacterDto.apotheoseImprovementList,
-      battleState: updateCharacterDto.battleState,
-      notes: updateCharacterDto.notes,
-      relance: updateCharacterDto.relance,
-      name: updateCharacterDto.name,
-      classeName: updateCharacterDto.classeName,
-      bloodlineName: updateCharacterDto.bloodlineName,
-      chair: updateCharacterDto.chair,
-      esprit: updateCharacterDto.esprit,
-      essence: updateCharacterDto.essence,
-      pv: updateCharacterDto.pv,
-      pvMax: updateCharacterDto.pvMax,
-      pf: updateCharacterDto.pf,
-      pfMax: updateCharacterDto.pfMax,
-      pp: updateCharacterDto.pp,
-      ppMax: updateCharacterDto.ppMax,
-      dettes: updateCharacterDto.dettes,
-      arcanes: updateCharacterDto.arcanes,
-      arcanesMax: updateCharacterDto.arcanesMax,
-      niveau: updateCharacterDto.niveau,
-      lux: updateCharacterDto.lux,
-      umbra: updateCharacterDto.umbra,
-      secunda: updateCharacterDto.secunda,
-      category: updateCharacterDto.category,
-      genre: updateCharacterDto.genre,
-      picture: updateCharacterDto.picture,
-      pictureApotheose: updateCharacterDto.pictureApotheose,
-      background: updateCharacterDto.background,
-      buttonColor: updateCharacterDto.buttonColor,
-      textColor: updateCharacterDto.textColor
-    })
+    const character = await this.characterService.findOneByName(name)
+    const classe = await this.classeService.findOneByName(character.classeName)
+    const bloodline = await this.bloodlineService.findOneByName(character.bloodlineName)
+    const arcanesList = await this.arcaneService.findOwnedArcanes(character)
+    const characterToUpdate = {
+      ...character,
+      ...updateCharacterDto
+    }
     return CharacterVM.of({
       character: await this.characterService.updateCharacter({
         character: characterToUpdate
-      })
+      }),
+      classe: classe,
+      bloodline: bloodline,
+      arcanesList: arcanesList
     })
   }
 
@@ -108,10 +99,17 @@ export class CharacterController {
   @Get(':name')
   async findByName(@Param('name') name: string): Promise<CharacterVM> {
     this.logger.log('get character')
-    const character = await this.characterService.findByName(name)
+    const character = await this.characterService.findOneByName(name)
+    const classe = await this.classeService.findOneByName(character.classeName)
+    const bloodline = await this.bloodlineService.findOneByName(character.bloodlineName)
+    const arcanesList = await this.arcaneService.findOwnedArcanes(character)
     this.logger.log('get character', character)
-    return CharacterVM.of({
-      character: character
+    const vm = CharacterVM.of({
+      character: character,
+      classe: classe,
+      bloodline: bloodline,
+      arcanesList: arcanesList
     })
+    return vm
   }
 }

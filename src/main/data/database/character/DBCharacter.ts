@@ -19,13 +19,6 @@ export class DBCharacter {
   @JoinColumn({ name: 'classeName' })
   classe: DBClasse
 
-  @Column()
-  bloodlineName: string
-
-  @ManyToOne(() => DBBloodline)
-  @JoinColumn({ name: 'bloodlineName' })
-  bloodline: DBBloodline
-
   @Column({
     type: 'enum',
     enum: Apotheose,
@@ -56,6 +49,18 @@ export class DBCharacter {
     default: 2
   })
   essence: number
+
+  @Column({
+    type: 'integer',
+    default: 0
+  })
+  bonus: number
+
+  @Column({
+    type: 'integer',
+    default: 0
+  })
+  malus: number
 
   @Column({
     type: 'integer',
@@ -145,8 +150,7 @@ export class DBCharacter {
 
   @Column({
     type: 'enum',
-    enum: Genre,
-    default: Genre.AUTRE
+    enum: Genre
   })
   genre: string
 
@@ -180,4 +184,11 @@ export class DBCharacter {
 
   @Column({ type: 'boolean', default: false })
   boosted: boolean
+
+  @Column({ type: 'varchar', nullable: true })
+  bloodlineName?: string
+
+  @ManyToOne(() => DBBloodline)
+  @JoinColumn({ name: 'bloodlineName' })
+  bloodline: DBBloodline
 }

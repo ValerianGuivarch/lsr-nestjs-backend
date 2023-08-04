@@ -16,13 +16,17 @@ export class DBClasseProvider implements IClasseProvider {
 
   private static toClasse(doc: DBClasse): Classe {
     return new Classe({
-      name: doc.name
+      name: doc.name,
+      displayMale: doc.displayMale,
+      displayFemale: doc.displayFemale
     })
   }
 
   private static fromClasse(doc: Classe): DBClasse {
     return {
-      name: doc.name
+      name: doc.name,
+      displayMale: doc.displayMale,
+      displayFemale: doc.displayFemale
     } as DBClasse
   }
 

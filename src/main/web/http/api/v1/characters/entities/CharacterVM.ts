@@ -1,4 +1,8 @@
+import { OwnedArcane } from '../../../../../../domain/models/arcanes/OwnedArcane'
+import { Bloodline } from '../../../../../../domain/models/characters/Bloodline'
 import { Character } from '../../../../../../domain/models/characters/Character'
+import { Classe } from '../../../../../../domain/models/characters/Classe'
+import { Genre } from '../../../../../../domain/models/characters/Genre'
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
 
 export class CharacterVM {
@@ -6,10 +10,23 @@ export class CharacterVM {
   name: string
 
   @ApiProperty()
-  classeName: string
+  classe: {
+    name: string
+    display: string
+  }
+
+  @ApiProperty({ isArray: true, type: String })
+  arcaneList: {
+    name: string
+    type: string
+    use: string
+  }[]
 
   @ApiProperty()
-  bloodlineName: string
+  bloodline: {
+    name: string
+    display: string
+  }
 
   @ApiProperty()
   chair: number
@@ -19,6 +36,12 @@ export class CharacterVM {
 
   @ApiProperty()
   essence: number
+
+  @ApiProperty()
+  bonus: number
+
+  @ApiProperty()
+  malus: number
 
   @ApiProperty()
   pv: number
@@ -103,14 +126,16 @@ export class CharacterVM {
 
   constructor(p: CharacterVM) {
     this.name = p.name
-    this.classeName = p.classeName
-    this.bloodlineName = p.bloodlineName
+    this.classe = p.classe
+    this.bloodline = p.bloodline
     this.apotheose = p.apotheose
     this.apotheoseImprovement = p.apotheoseImprovement
     this.apotheoseImprovementList = p.apotheoseImprovementList
     this.chair = p.chair
     this.esprit = p.esprit
     this.essence = p.essence
+    this.bonus = p.bonus
+    this.malus = p.malus
     this.pv = p.pv
     this.pvMax = p.pvMax
     this.pf = p.pf
@@ -120,6 +145,7 @@ export class CharacterVM {
     this.dettes = p.dettes
     this.arcanes = p.arcanes
     this.arcanesMax = p.arcanesMax
+    this.arcaneList = p.arcaneList
     this.niveau = p.niveau
     this.lux = p.lux
     this.umbra = p.umbra
@@ -137,14 +163,34 @@ export class CharacterVM {
     this.textColor = p.textColor
   }
 
-  static of(p: { character: Character }): CharacterVM {
+  static of(p: {
+    character: Character
+    classe: Classe
+    bloodline?: Bloodline
+    arcanesList: OwnedArcane[]
+  }): CharacterVM {
     return new CharacterVM({
       name: p.character.name,
-      classeName: p.character.classeName,
-      bloodlineName: p.character.bloodlineName,
+      classe: {
+        name: p.character.classeName,
+        display: p.character.genre === Genre.HOMME ? p.classe.displayMale : p.classe.displayFemale
+      },
+      bloodline: p.bloodline
+        ? {
+            name: p.bloodline.name,
+            display: p.bloodline.display
+          }
+        : undefined,
+      arcaneList: p.arcanesList.map((a) => ({
+        name: a.arcane.name,
+        type: a.arcane.type,
+        use: a.use
+      })),
       chair: p.character.chair,
       esprit: p.character.esprit,
       essence: p.character.essence,
+      bonus: p.character.bonus,
+      malus: p.character.malus,
       pv: p.character.pv,
       pvMax: p.character.pvMax,
       pf: p.character.pf,

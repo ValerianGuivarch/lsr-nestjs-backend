@@ -66,65 +66,7 @@ export class RollService {
     resistRoll?: string
   }): Promise<Roll> {
     const character = await this.characterProvider.findOneByName(p.rollerName)
-    const bloodline = await this.bloodlineProvider.findOneByName(character.bloodlineName)
-    if (p.rollType === RollType.RELANCE) {
-      const lastRoll = await this.rollProvider.getLastForCharacter(character)
-      if (lastRoll === undefined) {
-        throw ProviderErrors.RollNoPreviousRoll()
-      }
-
-      let relance = character.relance
-      if (character.category != Category.PJ) {
-        relance = (await this.sessionProvider.getSessionCharacter()).relanceMj
-      }
-      if (relance <= 0) {
-        throw ProviderErrors.RollNotEnoughRelance()
-      }
-      lastRoll.date = new Date()
-      lastRoll.juge12 =
-        (lastRoll.juge12 ?? 0) -
-        lastRoll.result.filter((r) => r === RollService.ONE_SUCCESS_DICE_12).length * RollService.ONE_SUCCESS_EFFECT -
-        lastRoll.result.filter((r) => r === RollService.TWO_SUCCESS_DICE_12).length * RollService.TWO_SUCCESS_EFFECT
-      lastRoll.juge34 =
-        (lastRoll.juge34 ?? 0) -
-        lastRoll.result.filter((r) => r === RollService.ONE_SUCCESS_DICE_34).length * RollService.ONE_SUCCESS_EFFECT -
-        lastRoll.result.filter((r) => r === RollService.TWO_SUCCESS_DICE_34).length * RollService.TWO_SUCCESS_EFFECT
-      lastRoll.success =
-        (lastRoll.success ?? 0) -
-        lastRoll.result.filter((r) => r === RollService.ONE_SUCCESS_DICE_56).length * RollService.ONE_SUCCESS_EFFECT -
-        lastRoll.result.filter((r) => r === RollService.TWO_SUCCESS_DICE_56).length * RollService.TWO_SUCCESS_EFFECT
-
-      const diceNumber = lastRoll.result.length
-      lastRoll.result = []
-      for (let i = 0; i < diceNumber; i++) {
-        const dice = RollService.randomIntFromInterval(1, RollService.CLASSIC_ROLL_VALUE)
-        if (dice === RollService.ONE_SUCCESS_DICE_56) {
-          lastRoll.success = (lastRoll.success ?? 0) + RollService.ONE_SUCCESS_EFFECT
-        }
-        if (dice === RollService.TWO_SUCCESS_DICE_56) {
-          // eslint-disable-next-line no-magic-numbers
-          lastRoll.success = (lastRoll.success ?? 0) + RollService.TWO_SUCCESS_EFFECT
-        }
-        if (dice === RollService.ONE_SUCCESS_DICE_12) {
-          lastRoll.juge12 = (lastRoll.success ?? 0) + RollService.ONE_SUCCESS_EFFECT
-        }
-        if (dice === RollService.TWO_SUCCESS_DICE_12) {
-          // eslint-disable-next-line no-magic-numbers
-          lastRoll.juge12 = (lastRoll.success ?? 0) + RollService.TWO_SUCCESS_EFFECT
-        }
-        if (dice === RollService.ONE_SUCCESS_DICE_34) {
-          lastRoll.juge34 = (lastRoll.success ?? 0) + RollService.ONE_SUCCESS_EFFECT
-        }
-        if (dice === RollService.TWO_SUCCESS_DICE_34) {
-          // eslint-disable-next-line no-magic-numbers
-          lastRoll.juge34 = (lastRoll.success ?? 0) + RollService.TWO_SUCCESS_EFFECT
-        }
-        lastRoll.result.push(dice)
-      }
-      character.relance = relance - 1
-      await this.characterProvider.update(character)
-      return lastRoll //await this.rollProvider.update(lastRoll)
-    }
+    const bloodline = await this.bloodlineProvider.findOneByName(character.bloodlineName ?? undefined)
     let diceNumber = 0
     let diceValue = 0
     let diceValueDelta = p.benediction - p.malediction
@@ -228,7 +170,7 @@ export class RollService {
         diceNumber = diceNumber + 18
       }
       diceValue = RollService.CLASSIC_ROLL_VALUE
-      dettesDelta = dettesDelta + bloodline.detteByMagicAction
+      dettesDelta = dettesDelta + (bloodline ? bloodline.detteByMagicAction : 1)
     } else if (p.rollType === RollType.SOIN && !bloodline.healthImproved) {
       diceNumber = character.essence + diceValueDelta
       diceValue = RollService.CLASSIC_ROLL_VALUE

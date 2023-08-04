@@ -1,3 +1,6 @@
+import { DBArcane } from './arcanes/DBArcane'
+import { DBArcaneProvider } from './arcanes/DBArcaneProvider'
+import { DBOwnedArcane } from './arcanes/DBOwnedArcane'
 import { DBBloodline } from './bloodlines/DBBloodline'
 import { DBBloodlineProvider } from './bloodlines/DBBloodlineProvider'
 import { DBCharacter } from './character/DBCharacter'
@@ -13,13 +16,22 @@ import { Module } from '@nestjs/common'
 import { TypeOrmModule } from '@nestjs/typeorm'
 
 @Module({
-  imports: [TypeOrmModule.forFeature([DBEntity, DBRoll, DBSession, DBCharacter, DBBloodline, DBClasse], 'postgres')],
+  imports: [
+    TypeOrmModule.forFeature(
+      [DBEntity, DBRoll, DBSession, DBCharacter, DBBloodline, DBClasse, DBArcane, DBOwnedArcane],
+      'postgres'
+    )
+  ],
   providers: [
     {
       provide: 'IRollProvider',
       useClass: DBRollProvider
     },
     {
+      provide: 'IArcaneProvider',
+      useClass: DBArcaneProvider
+    },
+    {
       provide: 'ISessionProvider',
       useClass: DBSessionProvider
     },
@@ -32,12 +44,16 @@ import { TypeOrmModule } from '@nestjs/typeorm'
       useClass: DBBloodlineProvider
     },
     {
-      provide: 'IClassProvider',
+      provide: 'IClasseProvider',
       useClass: DBClasseProvider
     }
   ],
   exports: [
     TypeOrmModule,
+    {
+      provide: 'IArcaneProvider',
+      useClass: DBArcaneProvider
+    },
     {
       provide: 'IRollProvider',
       useClass: DBRollProvider
@@ -55,7 +71,7 @@ import { TypeOrmModule } from '@nestjs/typeorm'
       useClass: DBBloodlineProvider
     },
     {
-      provide: 'IClassProvider',
+      provide: 'IClasseProvider',
       useClass: DBClasseProvider
     }
   ]

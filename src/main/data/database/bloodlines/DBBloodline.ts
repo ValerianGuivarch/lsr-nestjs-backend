@@ -10,4 +10,7 @@ export class DBBloodline {
 
   @Column({ type: 'boolean', default: false })
   healthImproved: boolean
+
+  @Column({ type: 'varchar', default: '' })
+  display: string
 }

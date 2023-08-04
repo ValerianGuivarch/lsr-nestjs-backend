@@ -69,8 +69,7 @@ export class CreateCharacterDto {
 
   @ApiProperty({
     enum: Genre,
-    enumName: 'Genre',
-    default: Genre.AUTRE
+    enumName: 'Genre'
   })
   @IsEnum(Genre)
   readonly genre: Genre
