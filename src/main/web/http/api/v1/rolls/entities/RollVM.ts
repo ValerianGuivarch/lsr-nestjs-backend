@@ -9,9 +9,6 @@ export class RollVM {
   rollerName: string
 
   @ApiProperty()
-  rollType: string
-
-  @ApiProperty()
   date: Date
 
   @ApiProperty()
@@ -30,10 +27,10 @@ export class RollVM {
   proficiency: boolean
 
   @ApiProperty()
-  benediction: number
+  bonus: number
 
   @ApiProperty()
-  malediction: number
+  malus: number
 
   @ApiProperty({ isArray: true, type: Number })
   result: number[]
@@ -62,6 +59,9 @@ export class RollVM {
   @ApiPropertyOptional()
   apotheose?: string
 
+  @ApiProperty()
+  display: string
+
   constructor(p: RollVM) {
     Object.assign(this, p)
   }
@@ -70,15 +70,14 @@ export class RollVM {
     return new RollVM({
       id: p.roll.id,
       rollerName: p.roll.rollerName,
-      rollType: p.roll.rollType,
       date: p.roll.date,
       secret: p.roll.secret,
       displayDices: p.roll.displayDices,
       focus: p.roll.focus,
       power: p.roll.power,
       proficiency: p.roll.proficiency,
-      benediction: p.roll.benediction,
-      malediction: p.roll.malediction,
+      bonus: p.roll.bonus,
+      malus: p.roll.malus,
       result: p.roll.result,
       success: p.roll.success,
       juge12: p.roll.juge12,
@@ -87,7 +86,8 @@ export class RollVM {
       picture: p.roll.picture,
       data: p.roll.data,
       empirique: p.roll.empirique,
-      apotheose: p.roll.apotheose
+      apotheose: p.roll.apotheose,
+      display: p.roll.display
     })
   }
 }

@@ -19,12 +19,12 @@ export class DBCharacter {
   @JoinColumn({ name: 'classeName' })
   classe: DBClasse
 
-  @Column({
-    type: 'enum',
-    enum: Apotheose,
-    default: Apotheose.NONE
-  })
-  apotheose: string
+  @Column({ type: 'varchar', nullable: true })
+  apotheoseName?: string
+
+  @ManyToOne(() => DBBloodline)
+  @JoinColumn({ name: 'apotheoseName' })
+  apotheose: Apotheose
 
   @Column({ type: 'varchar', nullable: true })
   apotheoseImprovement?: string

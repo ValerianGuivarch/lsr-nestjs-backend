@@ -1,11 +1,11 @@
 import config from './config/configuration'
-import { DBArcaneProvider } from './data/database/arcanes/DBArcaneProvider'
 import { DBBloodlineProvider } from './data/database/bloodlines/DBBloodlineProvider'
 import { DBCharacterProvider } from './data/database/character/DBCharacterProvider'
 import { DBClasseProvider } from './data/database/classes/DBClasseProvider'
 import { PostgresModule } from './data/database/postgres.module'
 import { DBRollProvider } from './data/database/rolls/DBRollProvider'
 import { DBSessionProvider } from './data/database/session/DBSessionProvider'
+import { DBSkillProvider } from './data/database/skills/DBSkillProvider'
 import { ArcaneService } from './domain/services/ArcaneService'
 import { BloodlineService } from './domain/services/BloodlineService'
 import { CharacterService } from './domain/services/CharacterService'
@@ -58,7 +58,7 @@ import { TypeOrmModule } from '@nestjs/typeorm'
     },
     {
       provide: 'IArcaneProvider',
-      useClass: DBArcaneProvider
+      useClass: DBSkillProvider
     },
     {
       provide: 'IRollProvider',

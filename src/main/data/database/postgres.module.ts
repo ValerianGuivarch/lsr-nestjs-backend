@@ -1,6 +1,3 @@
-import { DBArcane } from './arcanes/DBArcane'
-import { DBArcaneProvider } from './arcanes/DBArcaneProvider'
-import { DBOwnedArcane } from './arcanes/DBOwnedArcane'
 import { DBBloodline } from './bloodlines/DBBloodline'
 import { DBBloodlineProvider } from './bloodlines/DBBloodlineProvider'
 import { DBCharacter } from './character/DBCharacter'
@@ -12,13 +9,16 @@ import { DBRoll } from './rolls/DBRoll'
 import { DBRollProvider } from './rolls/DBRollProvider'
 import { DBSession } from './session/DBSession'
 import { DBSessionProvider } from './session/DBSessionProvider'
+import { DBOwnedSkill } from './skills/DBOwnedSkill'
+import { DBSkill } from './skills/DBSkill'
+import { DBSkillProvider } from './skills/DBSkillProvider'
 import { Module } from '@nestjs/common'
 import { TypeOrmModule } from '@nestjs/typeorm'
 
 @Module({
   imports: [
     TypeOrmModule.forFeature(
-      [DBEntity, DBRoll, DBSession, DBCharacter, DBBloodline, DBClasse, DBArcane, DBOwnedArcane],
+      [DBEntity, DBRoll, DBSession, DBCharacter, DBBloodline, DBClasse, DBSkill, DBOwnedSkill],
       'postgres'
     )
   ],
@@ -28,8 +28,8 @@ import { TypeOrmModule } from '@nestjs/typeorm'
       useClass: DBRollProvider
     },
     {
-      provide: 'IArcaneProvider',
-      useClass: DBArcaneProvider
+      provide: 'ISkillProvider',
+      useClass: DBSkillProvider
     },
     {
       provide: 'ISessionProvider',
@@ -51,8 +51,8 @@ import { TypeOrmModule } from '@nestjs/typeorm'
   exports: [
     TypeOrmModule,
     {
-      provide: 'IArcaneProvider',
-      useClass: DBArcaneProvider
+      provide: 'ISkillProvider',
+      useClass: DBSkillProvider
     },
     {
       provide: 'IRollProvider',

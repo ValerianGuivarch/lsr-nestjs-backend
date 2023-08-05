@@ -1,4 +1,3 @@
-import { Apotheose } from './Apotheose'
 import { BattleState } from './BattleState'
 import { Category } from './Category'
 import { Genre } from './Genre'
@@ -27,7 +26,7 @@ export class Character {
   secunda: string
   notes: string
   category: Category
-  apotheose: Apotheose
+  apotheoseName?: string
   apotheoseImprovement?: string
   apotheoseImprovementList: string[]
   genre: Genre
@@ -92,7 +91,7 @@ export class Character {
       secunda: p.secunda,
       notes: '',
       category: p.category,
-      apotheose: Apotheose.NONE,
+      apotheose: undefined,
       apotheoseImprovementList: [],
       // eslint-disable-next-line no-magic-numbers
       genre: p.genre ? p.genre : Math.random() < 0.5 ? Genre.HOMME : Genre.FEMME,

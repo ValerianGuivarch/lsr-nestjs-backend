@@ -7,10 +7,6 @@ export class SendRollRequest {
   readonly rollerName: string
 
   @ApiProperty()
-  @IsString()
-  readonly rollType: string
-
-  @ApiProperty()
   @IsBoolean()
   readonly secret: boolean
 
@@ -28,11 +24,11 @@ export class SendRollRequest {
 
   @ApiProperty()
   @IsNumber()
-  readonly benediction: number
+  readonly bonus: number
 
   @ApiProperty()
   @IsNumber()
-  readonly malediction: number
+  readonly malus: number
 
   @ApiPropertyOptional({ required: false })
   @IsOptional()
@@ -53,4 +49,8 @@ export class SendRollRequest {
   @IsOptional()
   @IsString()
   readonly resistRoll?: string
+
+  @ApiProperty()
+  @IsString()
+  readonly skillName: string
 }

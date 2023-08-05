@@ -1,12 +1,13 @@
 import { ProviderErrors } from '../../data/errors/ProviderErrors'
-import { Apotheose } from '../models/characters/Apotheose'
 import { Category } from '../models/characters/Category'
 import { Roll } from '../models/roll/Roll'
-import { RollType } from '../models/roll/RollType'
+import { SuccessCalculation } from '../models/roll/SuccessCalculation'
+import { SkillStat } from '../models/skills/SkillStat'
 import { IBloodlineProvider } from '../providers/IBloodlineProvider'
 import { ICharacterProvider } from '../providers/ICharacterProvider'
 import { IRollProvider } from '../providers/IRollProvider'
 import { ISessionProvider } from '../providers/ISessionProvider'
+import { ISkillProvider } from '../providers/ISkillProvider'
 import { Inject, Logger } from '@nestjs/common'
 
 export class RollService {
@@ -39,6 +40,8 @@ export class RollService {
   constructor(
     @Inject('ICharacterProvider')
     private characterProvider: ICharacterProvider,
+    @Inject('ISkillProvider')
+    private skillProvider: ISkillProvider,
     @Inject('IBloodlineProvider')
     private bloodlineProvider: IBloodlineProvider,
     @Inject('ISessionProvider')
@@ -54,181 +57,84 @@ export class RollService {
 
   async roll(p: {
     rollerName: string
-    rollType: RollType
+    skillName: string
     secret: boolean
     focus: boolean
     power: boolean
+    bonus: number
+    malus: number
     proficiency: boolean
-    benediction: number
-    malediction: number
     empirique?: string
     characterToHelp?: string
     resistRoll?: string
   }): Promise<Roll> {
     const character = await this.characterProvider.findOneByName(p.rollerName)
     const bloodline = await this.bloodlineProvider.findOneByName(character.bloodlineName ?? undefined)
+    const skill = await this.skillProvider.findSkillByCharacterAndSkillName(character, p.skillName)
+
     let diceNumber = 0
     let diceValue = 0
-    let diceValueDelta = p.benediction - p.malediction
+    let pvDelta = 0
     let pfDelta = 0
     let ppDelta = 0
     let arcaneDelta = 0
     let dettesDelta = 0
-    let usePf = p.focus
-    let usePp = p.power
+    let usePf = p.focus && skill.allowsPf
+    let usePp = p.power && skill.allowsPp
     let useProficiency = p.proficiency
-    let result: number[] = []
-    let successToCalculate = true
-    const availableHelp = await this.rollProvider.availableHelp(p.rollerName)
-    let helpCanBeUsed = false
+    const result: number[] = []
     const data = ''
-    let secret = p.secret
-    if (
-      p.rollType === RollType.SOIN ||
-      p.rollType === RollType.MAGIE_FORTE ||
-      p.rollType === RollType.MAGIE_LEGERE ||
-      p.rollType === RollType.ESPRIT ||
-      p.rollType === RollType.ARCANE_ESPRIT ||
-      p.rollType === RollType.ESSENCE ||
-      p.rollType === RollType.ARCANE_ESSENCE ||
-      p.rollType === RollType.CHAIR
-    ) {
-      helpCanBeUsed = true
-      for (const help of availableHelp) {
-        if (!help.helpUsed) {
-          if (help.success === 0) {
-            diceValueDelta--
-          } else {
-            diceValueDelta = diceValueDelta + (help.success ?? 0)
-          }
-        }
-      }
-    }
-    if (p.rollType === RollType.APOTHEOSE) {
-      secret = true
-    }
-    if (
-      character.apotheose != Apotheose.NONE &&
-      (p.rollType === RollType.SOIN ||
-        p.rollType === RollType.MAGIE_FORTE ||
-        p.rollType === RollType.MAGIE_LEGERE ||
-        p.rollType === RollType.ESPRIT ||
-        p.rollType === RollType.ESSENCE ||
-        p.rollType === RollType.CHAIR)
-    ) {
-      if (character.apotheose == Apotheose.FINALE) {
-        // eslint-disable-next-line no-magic-numbers
-        diceValueDelta = diceValueDelta + 5
-      } else if (character.apotheose == Apotheose.ARCANIQUE) {
-        // eslint-disable-next-line no-magic-numbers
-        diceValueDelta = diceValueDelta + 2
-      } else {
-        // eslint-disable-next-line no-magic-numbers
-        diceValueDelta = diceValueDelta + 3
-      }
-    }
-
-    if (usePf) {
-      diceValueDelta++
-    }
-    if (p.rollType === RollType.CHAIR) {
-      diceNumber = character.chair + diceValueDelta
-      diceValue = RollService.CLASSIC_ROLL_VALUE
-    } else if (p.rollType === RollType.ESPRIT) {
-      diceNumber = character.esprit + diceValueDelta
-      diceValue = RollService.CLASSIC_ROLL_VALUE
-    } else if (p.rollType === RollType.ESSENCE) {
-      diceNumber = character.essence + diceValueDelta
-      diceValue = RollService.CLASSIC_ROLL_VALUE
-    } else if (p.rollType === RollType.ARCANE_FIXE) {
-      diceNumber = 0
-      diceValue = 0
-      arcaneDelta--
-      usePp = false
-      usePf = false
-      useProficiency = false
-      successToCalculate = false
-    } else if (p.rollType === RollType.ARCANE_ESPRIT) {
-      diceNumber = character.esprit + diceValueDelta
-      diceValue = RollService.CLASSIC_ROLL_VALUE
-      arcaneDelta--
-      usePp = false
-    } else if (p.rollType === RollType.ARCANE_ESSENCE) {
-      diceNumber = character.essence + diceValueDelta
-      diceValue = RollService.CLASSIC_ROLL_VALUE
-      arcaneDelta--
-      usePp = false
-    } else if (p.rollType === RollType.MAGIE_LEGERE) {
-      diceNumber = character.essence + diceValueDelta
-      diceValue = RollService.CLASSIC_ROLL_VALUE
-      usePp = false
-      ppDelta--
-    } else if (p.rollType === RollType.MAGIE_FORTE) {
-      diceNumber = character.essence + diceValueDelta
-      if (character.name === 'Jack Frost') {
-        // eslint-disable-next-line no-magic-numbers
-        diceNumber = diceNumber + 18
-      }
-      diceValue = RollService.CLASSIC_ROLL_VALUE
-      dettesDelta = dettesDelta + (bloodline ? bloodline.detteByMagicAction : 1)
-    } else if (p.rollType === RollType.SOIN && !bloodline.healthImproved) {
-      diceNumber = character.essence + diceValueDelta
-      diceValue = RollService.CLASSIC_ROLL_VALUE
-      dettesDelta = dettesDelta + bloodline.detteByMagicAction
-      ppDelta--
-    } else if (p.rollType === RollType.SOIN && bloodline.healthImproved) {
-      diceNumber = character.essence + diceValueDelta
-      diceValue = RollService.CLASSIC_ROLL_VALUE
-      ppDelta--
-    } else if (p.rollType === RollType.EMPIRIQUE) {
+    if (skill.stat === SkillStat.EMPRIQUE) {
       try {
         diceNumber = Number(p.empirique?.substring(0, p.empirique.indexOf('d')))
         diceValue = Number(p.empirique?.substring(p.empirique.indexOf('d') + 1))
         usePf = false
         usePp = false
         useProficiency = false
-        successToCalculate = false
       } catch (e) {
         throw ProviderErrors.RollWrongEmpiricalRequest()
       }
-    } else if (p.rollType === RollType.APOTHEOSE) {
+    } else if (skill.stat === SkillStat.CUSTOM) {
       try {
-        diceNumber = 1
-        diceValue = RollService.CLASSIC_ROLL_VALUE
+        diceNumber = Number(skill.customRolls?.substring(0, skill.customRolls.indexOf('d')))
+        diceValue = Number(skill.customRolls?.substring(skill.customRolls.indexOf('d') + 1))
         usePf = false
         usePp = false
         useProficiency = false
-        successToCalculate = false
       } catch (e) {
         throw ProviderErrors.RollWrongEmpiricalRequest()
       }
-    } else if (p.rollType === RollType.SAUVEGARDE_VS_MORT) {
-      diceNumber = 1
-      diceValue = RollService.DEATH_ROLL_VALUE
-      usePf = false
-      usePp = false
-      useProficiency = false
-      successToCalculate = false
-    }
-    if (usePf) {
-      pfDelta--
-    }
-    if (usePp) {
-      ppDelta--
-      dettesDelta = dettesDelta + bloodline.detteByMagicAction
+    } else if (skill.stat === SkillStat.CHAIR || skill.stat === SkillStat.ESPRIT || skill.stat === SkillStat.ESSENCE) {
+      let diceValueDelta = p.bonus - p.malus
+      if (usePf) {
+        diceValueDelta++
+        pfDelta--
+      }
+      if (usePp) {
+        ppDelta--
+        dettesDelta = dettesDelta + bloodline.detteByPp
+      }
+      diceValue = RollService.CLASSIC_ROLL_VALUE
+      if (skill.stat === SkillStat.CHAIR) {
+        diceNumber = character.chair + diceValueDelta
+      } else if (skill.stat === SkillStat.ESPRIT) {
+        diceNumber = character.esprit + diceValueDelta
+      } else if (skill.stat === SkillStat.ESSENCE) {
+        diceNumber = character.essence + diceValueDelta
+      }
     }
     let success: number | null = null
     let juge12: number | null = null
     let juge34: number | null = null
-    if (successToCalculate) {
+    if (skill.successCalculation !== SuccessCalculation.AUCUN) {
       success = 0
       juge12 = 0
       juge34 = 0
     }
     for (let i = 0; i < diceNumber; i++) {
       const dice = RollService.randomIntFromInterval(1, diceValue)
-      if (successToCalculate) {
-        if (character.name === 'Vernet' && i === 0) {
+      if (skill.successCalculation !== SuccessCalculation.AUCUN) {
+        if (character.name === 'vernet' && i === 0) {
           if (
             dice === RollService.ONE_SUCCESS_DICE_12 ||
             dice === RollService.ONE_SUCCESS_DICE_34 ||
@@ -266,43 +172,28 @@ export class RollService {
       }
       result.push(dice)
     }
-
-    let successBis: number | null = null
-    let juge12Bis: number | null = null
-    let juge34Bis: number | null = null
-    const resultBis: number[] = []
-
-    if (character.boosted) {
-      for (let i = 0; i < diceNumber; i++) {
-        const dice = RollService.randomIntFromInterval(1, diceValue)
-        if (successToCalculate) {
-          if (dice === RollService.ONE_SUCCESS_DICE_56) {
-            successBis = (successBis ?? 0) + RollService.ONE_SUCCESS_EFFECT
-          }
-          if (dice === RollService.TWO_SUCCESS_DICE_56) {
-            successBis = (successBis ?? 0) + RollService.TWO_SUCCESS_EFFECT
-          }
-          if (dice === RollService.ONE_SUCCESS_DICE_12) {
-            juge12Bis = (juge12Bis ?? 0) + RollService.ONE_SUCCESS_EFFECT
-          }
-          if (dice === RollService.TWO_SUCCESS_DICE_12) {
-            juge12Bis = (juge12Bis ?? 0) + RollService.TWO_SUCCESS_EFFECT
-          }
-          if (dice === RollService.ONE_SUCCESS_DICE_34) {
-            juge34Bis = (juge34Bis ?? 0) + RollService.ONE_SUCCESS_EFFECT
-          }
-          if (dice === RollService.TWO_SUCCESS_DICE_34) {
-            juge34Bis = (juge34Bis ?? 0) + RollService.TWO_SUCCESS_EFFECT
-          }
-        }
-        resultBis.push(dice)
-      }
+    if (skill.successCalculation === SuccessCalculation.SIMPLE_PLUS_1) {
+      success = (success ?? 0) + 1
+      juge12 = (juge12 ?? 0) + 1
+      juge34 = (juge34 ?? 0) + 1
     }
-    if ((success ? success : 0) < (successBis ? successBis : 0)) {
-      success = successBis
-      juge12 = juge12Bis
-      juge34 = juge34Bis
-      result = resultBis
+
+    if (skill.successCalculation === SuccessCalculation.DIVISE) {
+      // eslint-disable-next-line no-magic-numbers
+      success = Math.ceil(success / 2)
+      // eslint-disable-next-line no-magic-numbers
+      juge12 = Math.ceil(juge12 / 2)
+      // eslint-disable-next-line no-magic-numbers
+      juge34 = Math.ceil(juge34 / 2)
+    }
+
+    if (skill.successCalculation === SuccessCalculation.DIVISE_PLUS_1) {
+      // eslint-disable-next-line no-magic-numbers
+      success = Math.ceil(success / 2) + 1
+      // eslint-disable-next-line no-magic-numbers
+      juge12 = Math.ceil(juge12 / 2) + 1
+      // eslint-disable-next-line no-magic-numbers
+      juge34 = Math.ceil(juge34 / 2) + 1
     }
     if (usePp) {
       success = (success ?? 0) + 1
@@ -315,112 +206,49 @@ export class RollService {
       juge34 = (juge34 ?? 0) + 1
     }
 
-    if (p.rollType === RollType.SOIN) {
-      if (!bloodline.healthImproved) {
-        // eslint-disable-next-line no-magic-numbers
-        success = Math.floor((1 + (success ?? 0)) / 2)
-        // eslint-disable-next-line no-magic-numbers
-        juge12 = Math.floor((1 + (juge12 ?? 0)) / 2)
-        // eslint-disable-next-line no-magic-numbers
-        juge34 = Math.floor((1 + (juge34 ?? 0)) / 2)
-      }
-      success = (success ?? 0) + 1
-      juge12 = (juge12 ?? 0) + 1
-      juge34 = (juge34 ?? 0) + 1
-    }
-    if (character.pf + pfDelta < 0) {
+    pvDelta = pvDelta - skill.pvCost
+    pfDelta = pfDelta - skill.pfCost
+    ppDelta = ppDelta - skill.ppCost
+    arcaneDelta = arcaneDelta - skill.arcaneCost
+    dettesDelta = dettesDelta + skill.dettesCost * bloodline.detteByMagicAction
+    if (character.pv + pvDelta < 0) {
+      throw ProviderErrors.RollNotEnoughPv()
+    } else if (character.pf + pfDelta < 0) {
       throw ProviderErrors.RollNotEnoughPf()
     } else if (character.pp + ppDelta < 0) {
       throw ProviderErrors.RollNotEnoughPp()
     } else if (character.arcanes + arcaneDelta < 0) {
       throw ProviderErrors.RollNotEnoughArcane()
-    } else {
-      let helpUsed: boolean | null = null
-      if (p.characterToHelp) {
-        helpUsed = false
-      }
-
-      /*if (character.classe === Classe.PACIFICATEUR && p.rollType === RollType.APOTHEOSE && result[0] === 1) {
-        const consequence = RollService.randomIntFromInterval(1, RollService.PACIFICATEUR_CONSEQUENCE)
-        if (consequence == 1) {
-          data = "Dysfonctionnement, impossible d'agir"
-          // eslint-disable-next-line no-magic-numbers
-        } else if (consequence == 2) {
-          data = 'Subit un effet de dette du roi de la dernière attaque magique subit'
-          // eslint-disable-next-line no-magic-numbers
-        } else if (consequence == 3) {
-          data = 'Le personnage émet de la musique et se met à faire la danse du robot'
-          // eslint-disable-next-line no-magic-numbers
-        } else if (consequence == 4) {
-          data = 'Exacerber l’Umbra'
-          // eslint-disable-next-line no-magic-numbers
-        } else if (consequence == 5) {
-          data = "Le personnage brille d'une lumière aléatoire"
-          // eslint-disable-next-line no-magic-numbers
-        } else if (consequence == 6) {
-          data = 'Perturbation du don des langues'
-          // eslint-disable-next-line no-magic-numbers
-        } else if (consequence == 7) {
-          data = 'Hallucination'
-          // eslint-disable-next-line no-magic-numbers
-        } else if (consequence == 8) {
-          data = 'Rayon laser avec les yeux'
-          // eslint-disable-next-line no-magic-numbers
-        } else if (consequence == 9) {
-          data = 'Le personnage redevient un enfant pendant un certain temps'
-          // eslint-disable-next-line no-magic-numbers
-        } else if (consequence == 10) {
-          data = 'Communication avec le grand concepteur'
-        }
-      }*/
-      const rollToCreate = new Roll({
-        rollerName: p.rollerName,
-        rollType: p.rollType,
-        data: data,
-        date: new Date(),
-        secret: secret,
-        displayDices: character.category === Category.PJ || character.category === Category.PNJ_ALLY,
-        focus: usePf,
-        power: usePp,
-        proficiency: useProficiency,
-        benediction: p.benediction,
-        malediction: p.malediction,
-        result: result,
-        success: success,
-        juge12: juge12,
-        juge34: juge34,
-        characterToHelp: p.characterToHelp,
-        resistRoll: p.resistRoll,
-        helpUsed: helpUsed,
-        picture: character.apotheose != Apotheose.NONE ? character.pictureApotheose : character.picture,
-        empirique: p.empirique,
-        apotheose: character.apotheose
-      })
-      const createdRoll = await this.rollProvider.add(rollToCreate)
-      character.pf += pfDelta
-      character.pp += ppDelta
-      character.arcanes += arcaneDelta
-      character.dettes += dettesDelta
-      this.characterProvider.update(character)
-      if (helpCanBeUsed) {
-        this.rollProvider.helpUsed(availableHelp)
-      }
-
-      /*if (
-        createdRoll.resistRoll === '' &&
-        createdRoll.empirique === '' &&
-        createdRoll.rollType != RollType.APOTHEOSE &&
-        createdRoll.rollType != RollType.EMPIRIQUE &&
-        createdRoll.rollType != RollType.SAUVEGARDE_VS_MORT &&
-        createdRoll.rollType != RollType.RELANCE
-      ) {
-        await this.sessionProvider.addCharacterBattle(
-          createdRoll.rollerName,
-          character.category == Category.PJ || character.category == Category.PNJ_ALLY
-        )
-      }*/
-      return createdRoll
     }
+    const rollToCreate = new Roll({
+      rollerName: p.rollerName,
+      data: data,
+      date: new Date(),
+      secret: skill.secret,
+      displayDices: character.category === Category.PJ || character.category === Category.PNJ_ALLY,
+      focus: usePf,
+      power: usePp,
+      proficiency: useProficiency,
+      bonus: p.bonus,
+      malus: p.malus,
+      result: result,
+      success: success,
+      juge12: juge12,
+      juge34: juge34,
+      characterToHelp: p.characterToHelp,
+      resistRoll: p.resistRoll,
+      picture: character.apotheoseName ? character.pictureApotheose : character.picture,
+      empirique: p.empirique,
+      display: skill.display
+    })
+    const createdRoll = await this.rollProvider.add(rollToCreate)
+    character.pv += pvDelta
+    character.pf += pfDelta
+    character.pp += ppDelta
+    character.arcanes += arcaneDelta
+    character.dettes += dettesDelta
+    await this.characterProvider.update(character)
+    return createdRoll
   }
 
   async deleteAll(): Promise<boolean> {
@@ -434,20 +262,5 @@ export class RollService {
   private static randomIntFromInterval(min, max) {
     // min and max included
     return Math.floor(Math.random() * (max - min + 1) + min)
-  }
-
-  async getHelp(name: string): Promise<number> {
-    const availableHelp = await this.rollProvider.availableHelp(name)
-    let totalHelp = 0
-    for (const help of availableHelp) {
-      if (!help.helpUsed) {
-        if (help.success === 0) {
-          totalHelp--
-        } else {
-          totalHelp = totalHelp + (help.success ?? 0)
-        }
-      }
-    }
-    return totalHelp
   }
 }

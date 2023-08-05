@@ -1,4 +1,5 @@
-import { PrimaryColumn, Entity, Column } from 'typeorm'
+import { DBSkill } from '../skills/DBSkill'
+import { PrimaryColumn, Entity, Column, ManyToMany } from 'typeorm'
 
 @Entity()
 export class DBClasse {
@@ -10,4 +11,7 @@ export class DBClasse {
 
   @Column({ type: 'varchar', default: '' })
   displayFemale: string
+
+  @ManyToMany(() => DBSkill, (skill) => skill.attributionClasseList)
+  skills: DBSkill[]
 }

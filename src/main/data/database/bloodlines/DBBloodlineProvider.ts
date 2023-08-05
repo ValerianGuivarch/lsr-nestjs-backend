@@ -17,6 +17,7 @@ export class DBBloodlineProvider implements IBloodlineProvider {
     return new Bloodline({
       name: doc.name,
       detteByMagicAction: doc.detteByMagicAction,
+      detteByPp: doc.detteByPp,
       healthImproved: doc.healthImproved,
       display: doc.display
     })

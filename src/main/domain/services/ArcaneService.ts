@@ -1,6 +1,6 @@
-import { OwnedArcane } from '../models/arcanes/OwnedArcane'
 import { Character } from '../models/characters/Character'
-import { IArcaneProvider } from '../providers/IArcaneProvider'
+import { Skill } from '../models/skills/Skill'
+import { ISkillProvider } from '../providers/ISkillProvider'
 import { Inject, Logger } from '@nestjs/common'
 
 export class ArcaneService {
@@ -8,12 +8,12 @@ export class ArcaneService {
 
   constructor(
     @Inject('IArcaneProvider')
-    private arcaneProvider: IArcaneProvider
+    private arcaneProvider: ISkillProvider
   ) {
     console.log('ArcaneService')
   }
 
-  async findOwnedArcanes(character: Character): Promise<OwnedArcane[]> {
-    return await this.arcaneProvider.findOwnedArcaneByCharacter(character.name)
+  async findOwnedArcanes(character: Character): Promise<Skill[]> {
+    return await this.arcaneProvider.findSkillsByCharacter(character)
   }
 }

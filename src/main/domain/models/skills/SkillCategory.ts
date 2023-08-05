@@ -1,0 +1,6 @@
+export enum SkillCategory {
+  STATS = 'STATS',
+  ARCANES = 'ARCANES',
+  SOLDATS = 'SOLDATS',
+  PACIFICATEURS = 'PACIFICATEURS'
+}

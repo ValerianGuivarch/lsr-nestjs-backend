@@ -1,6 +1,5 @@
-import { Apotheose } from '../../../../../../domain/models/characters/Apotheose'
-import { ApiProperty } from '@nestjs/swagger'
-import { IsEnum, IsNumber, IsString } from 'class-validator'
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
+import { IsNumber, IsOptional, IsString } from 'class-validator'
 
 export class UpdateCharacterDto {
   @ApiProperty()
@@ -83,13 +82,10 @@ export class UpdateCharacterDto {
   @IsString()
   readonly notes: string
 
-  @ApiProperty({
-    enum: Apotheose,
-    enumName: 'Apotheose',
-    default: Apotheose.NONE
-  })
-  @IsEnum(Apotheose)
-  apotheose: Apotheose
+  @ApiPropertyOptional({ nullable: true })
+  @IsString()
+  @IsOptional()
+  apotheose?: string
 
   @ApiProperty({ default: [], isArray: true })
   apotheoseImprovementList: string[]

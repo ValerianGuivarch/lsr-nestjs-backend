@@ -3,12 +3,8 @@ import { Column, Entity } from 'typeorm'
 
 @Entity()
 export class DBRoll extends DBEntity {
-
   @Column({ type: 'varchar' })
   rollerName: string
-
-  @Column({ type: 'varchar' })
-  rollType: string
 
   @Column({ type: 'timestamp' })
   date: Date
@@ -28,11 +24,11 @@ export class DBRoll extends DBEntity {
   @Column({ type: 'boolean' })
   proficiency: boolean
 
-  @Column({ type: 'integer' })
-  benediction: number
+  @Column({ type: 'integer', default: 0 })
+  bonus: number
 
-  @Column({ type: 'integer' })
-  malediction: number
+  @Column({ type: 'integer', default: 0 })
+  malus: number
 
   @Column('simple-array')
   result: number[]
@@ -66,4 +62,7 @@ export class DBRoll extends DBEntity {
 
   @Column({ type: 'boolean', nullable: true })
   helpUsed?: boolean
+
+  @Column({ type: 'varchar', default: 'fait un jet ', nullable: false })
+  display: string
 }

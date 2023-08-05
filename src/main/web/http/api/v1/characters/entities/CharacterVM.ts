@@ -1,8 +1,9 @@
-import { OwnedArcane } from '../../../../../../domain/models/arcanes/OwnedArcane'
+import { SkillVM } from './SkillVM'
 import { Bloodline } from '../../../../../../domain/models/characters/Bloodline'
 import { Character } from '../../../../../../domain/models/characters/Character'
 import { Classe } from '../../../../../../domain/models/characters/Classe'
 import { Genre } from '../../../../../../domain/models/characters/Genre'
+import { Skill } from '../../../../../../domain/models/skills/Skill'
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
 
 export class CharacterVM {
@@ -15,12 +16,8 @@ export class CharacterVM {
     display: string
   }
 
-  @ApiProperty({ isArray: true, type: String })
-  arcaneList: {
-    name: string
-    type: string
-    use: string
-  }[]
+  @ApiProperty({ isArray: true, type: SkillVM })
+  skills: SkillVM[]
 
   @ApiProperty()
   bloodline: {
@@ -92,7 +89,7 @@ export class CharacterVM {
   battleState: string
 
   @ApiProperty()
-  apotheose: string
+  apotheoseName: string
 
   @ApiPropertyOptional()
   apotheoseImprovement?: string
@@ -128,7 +125,7 @@ export class CharacterVM {
     this.name = p.name
     this.classe = p.classe
     this.bloodline = p.bloodline
-    this.apotheose = p.apotheose
+    this.apotheoseName = p.apotheoseName
     this.apotheoseImprovement = p.apotheoseImprovement
     this.apotheoseImprovementList = p.apotheoseImprovementList
     this.chair = p.chair
@@ -145,7 +142,7 @@ export class CharacterVM {
     this.dettes = p.dettes
     this.arcanes = p.arcanes
     this.arcanesMax = p.arcanesMax
-    this.arcaneList = p.arcaneList
+    this.skills = p.skills
     this.niveau = p.niveau
     this.lux = p.lux
     this.umbra = p.umbra
@@ -163,12 +160,7 @@ export class CharacterVM {
     this.textColor = p.textColor
   }
 
-  static of(p: {
-    character: Character
-    classe: Classe
-    bloodline?: Bloodline
-    arcanesList: OwnedArcane[]
-  }): CharacterVM {
+  static of(p: { character: Character; classe: Classe; bloodline?: Bloodline; skills: Skill[] }): CharacterVM {
     return new CharacterVM({
       name: p.character.name,
       classe: {
@@ -181,11 +173,11 @@ export class CharacterVM {
             display: p.bloodline.display
           }
         : undefined,
-      arcaneList: p.arcanesList.map((a) => ({
-        name: a.arcane.name,
-        type: a.arcane.type,
-        use: a.use
-      })),
+      skills: p.skills.map((skill) =>
+        SkillVM.of({
+          skill
+        })
+      ),
       chair: p.character.chair,
       esprit: p.character.esprit,
       essence: p.character.essence,
@@ -207,7 +199,7 @@ export class CharacterVM {
       notes: p.character.notes,
       category: p.character.category.toString(),
       battleState: p.character.battleState.toString(),
-      apotheose: p.character.apotheose.toString(),
+      apotheoseName: p.character.apotheoseName,
       apotheoseImprovement: p.character.apotheoseImprovement,
       apotheoseImprovementList: p.character.apotheoseImprovementList,
       genre: p.character.genre.toString(),

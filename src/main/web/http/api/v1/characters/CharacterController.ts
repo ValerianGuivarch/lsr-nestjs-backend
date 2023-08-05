@@ -67,7 +67,7 @@ export class CharacterController {
       }),
       classe: classe,
       bloodline: bloodline,
-      arcanesList: []
+      skills: []
     })
   }
 
@@ -91,7 +91,7 @@ export class CharacterController {
       }),
       classe: classe,
       bloodline: bloodline,
-      arcanesList: arcanesList
+      skills: arcanesList
     })
   }
 
@@ -108,7 +108,7 @@ export class CharacterController {
       character: character,
       classe: classe,
       bloodline: bloodline,
-      arcanesList: arcanesList
+      skills: arcanesList
     })
     return vm
   }

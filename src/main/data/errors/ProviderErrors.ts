@@ -106,6 +106,14 @@ export class ProviderErrors {
     })
   }
 
+  static RollNotEnoughPv(): GenericError {
+    return GenericError.of({
+      statusCode: HttpStatus.PRECONDITION_REQUIRED,
+      message: 'Pas assez de pv !',
+      code: 'ROLL_NOT_ENOUGH_PV'
+    })
+  }
+
   static RollNotEnoughRelance(): GenericError {
     return GenericError.of({
       statusCode: HttpStatus.PRECONDITION_REQUIRED,

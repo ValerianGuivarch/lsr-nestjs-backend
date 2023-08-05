@@ -1,5 +1,4 @@
 import { DBCharacter } from './DBCharacter'
-import { Apotheose } from '../../../domain/models/characters/Apotheose'
 import { BattleState } from '../../../domain/models/characters/BattleState'
 import { Category } from '../../../domain/models/characters/Category'
 import { Character } from '../../../domain/models/characters/Character'
@@ -23,7 +22,7 @@ export class DBCharacterProvider implements ICharacterProvider {
       name: doc.name,
       classeName: doc.classeName,
       bloodlineName: doc.bloodlineName,
-      apotheose: Apotheose[doc.apotheose],
+      apotheoseName: doc.apotheoseName,
       apotheoseImprovement: doc.apotheoseImprovement,
       apotheoseImprovementList: doc.apotheoseImprovementList,
       chair: doc.chair,
@@ -64,7 +63,7 @@ export class DBCharacterProvider implements ICharacterProvider {
       name: doc.name,
       classeName: doc.classeName,
       bloodlineName: doc.bloodlineName,
-      apotheose: doc.apotheose.toString(),
+      apotheoseName: doc.apotheoseName,
       apotheoseImprovement: doc.apotheoseImprovement,
       apotheoseImprovementList: doc.apotheoseImprovementList,
       chair: doc.chair,

@@ -8,6 +8,9 @@ export class DBBloodline {
   @Column({ type: 'integer', default: 1 })
   detteByMagicAction: number
 
+  @Column({ type: 'integer', default: 1 })
+  detteByPp: number
+
   @Column({ type: 'boolean', default: false })
   healthImproved: boolean
 

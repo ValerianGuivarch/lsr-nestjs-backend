@@ -1,6 +1,5 @@
 import { RollVM } from './entities/RollVM'
 import { SendRollRequest } from './requests/SendRollRequest'
-import { RollType } from '../../../../../domain/models/roll/RollType'
 import { ArcaneService } from '../../../../../domain/services/ArcaneService'
 import { BloodlineService } from '../../../../../domain/services/BloodlineService'
 import { ClasseService } from '../../../../../domain/services/ClasseService'
@@ -35,16 +34,16 @@ export class RollController {
   async sendRoll(@Body() req: SendRollRequest): Promise<RollVM> {
     const roll = await this.rollService.roll({
       rollerName: req.rollerName,
-      rollType: RollType[req.rollType],
       secret: req.secret,
       focus: req.focus,
       power: req.power,
       proficiency: req.proficiency,
-      benediction: req.benediction,
-      malediction: req.malediction,
+      bonus: req.bonus,
+      malus: req.malus,
       empirique: req.empiriqueRoll,
       characterToHelp: req.characterToHelp,
-      resistRoll: req.resistRoll
+      resistRoll: req.resistRoll,
+      skillName: req.skillName
     })
     return RollVM.of({
       roll: roll
