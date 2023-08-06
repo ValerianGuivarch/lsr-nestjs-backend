@@ -1,4 +1,5 @@
 import config from './config/configuration'
+import { InitDatabase } from './config/evolutions/InitDatabase'
 import { DBBloodlineProvider } from './data/database/bloodlines/DBBloodlineProvider'
 import { DBCharacterProvider } from './data/database/character/DBCharacterProvider'
 import { DBClasseProvider } from './data/database/classes/DBClasseProvider'
@@ -38,7 +39,8 @@ import { TypeOrmModule } from '@nestjs/typeorm'
       password: config().postgres.password,
       database: config().postgres.database,
       autoLoadEntities: config().postgres.autoLoadEntities,
-      synchronize: config().postgres.synchronize
+      synchronize: config().postgres.synchronize,
+      migrationsRun: true // Exécute automatiquement les évolutions au démarrage de l'application
     }),
     PostgresModule
   ],
@@ -51,6 +53,7 @@ import { TypeOrmModule } from '@nestjs/typeorm'
     RollService,
     MjService,
     JwtService,
+    InitDatabase,
     //    CharacterGateway,
     {
       provide: 'ICharacterProvider',

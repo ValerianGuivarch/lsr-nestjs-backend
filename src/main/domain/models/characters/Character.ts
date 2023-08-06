@@ -9,8 +9,6 @@ export class Character {
   chair: number
   esprit: number
   essence: number
-  bonus: number
-  malus: number
   pv: number
   pvMax: number
   pf: number
@@ -73,8 +71,6 @@ export class Character {
       chair: p.chair,
       esprit: p.esprit,
       essence: p.essence,
-      bonus: 0,
-      malus: 0,
       pv: p.pvMax,
       pvMax: p.pvMax,
       pf: p.pfMax,

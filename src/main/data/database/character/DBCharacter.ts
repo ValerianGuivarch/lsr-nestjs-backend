@@ -52,18 +52,6 @@ export class DBCharacter {
 
   @Column({
     type: 'integer',
-    default: 0
-  })
-  bonus: number
-
-  @Column({
-    type: 'integer',
-    default: 0
-  })
-  malus: number
-
-  @Column({
-    type: 'integer',
     default: 4
   })
   pv: number

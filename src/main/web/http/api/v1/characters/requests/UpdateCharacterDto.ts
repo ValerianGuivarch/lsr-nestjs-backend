@@ -18,14 +18,6 @@ export class UpdateCharacterDto {
   @IsNumber()
   readonly essence: number
 
-  @ApiProperty({ default: 0 })
-  @IsNumber()
-  readonly bonus: number
-
-  @ApiProperty({ default: 0 })
-  @IsNumber()
-  readonly malus: number
-
   @ApiProperty({ default: 4 })
   @IsNumber()
   readonly pv: number

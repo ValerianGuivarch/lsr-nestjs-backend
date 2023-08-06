@@ -35,12 +35,6 @@ export class CharacterVM {
   essence: number
 
   @ApiProperty()
-  bonus: number
-
-  @ApiProperty()
-  malus: number
-
-  @ApiProperty()
   pv: number
 
   @ApiProperty()
@@ -131,8 +125,6 @@ export class CharacterVM {
     this.chair = p.chair
     this.esprit = p.esprit
     this.essence = p.essence
-    this.bonus = p.bonus
-    this.malus = p.malus
     this.pv = p.pv
     this.pvMax = p.pvMax
     this.pf = p.pf
@@ -181,8 +173,6 @@ export class CharacterVM {
       chair: p.character.chair,
       esprit: p.character.esprit,
       essence: p.character.essence,
-      bonus: p.character.bonus,
-      malus: p.character.malus,
       pv: p.character.pv,
       pvMax: p.character.pvMax,
       pf: p.character.pf,

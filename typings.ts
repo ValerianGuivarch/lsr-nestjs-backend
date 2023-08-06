@@ -20,8 +20,6 @@ export type Schema = {
       'chair': number;
       'esprit': number;
       'essence': number;
-      'bonus': number;
-      'malus': number;
       'pv': number;
       'pvMax': number;
       'pf': number;
@@ -107,8 +105,6 @@ export type Schema = {
       'db_character:chair': number;
       'db_character:esprit': number;
       'db_character:essence': number;
-      'db_character:bonus': number;
-      'db_character:malus': number;
       'db_character:pv': number;
       'db_character:pvMax': number;
       'db_character:pf': number;
@@ -297,5 +293,14 @@ export type Schema = {
       'db_classe:displayMale': string;
       'db_classe:displayFemale': string;
     };
+  };
+  'migrations': {
+    plain: {
+      'id': number;
+      'timestamp': number;
+      'name': string;
+    };
+    nested: {};
+    flat: {};
   };
 };
