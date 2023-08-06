@@ -15,7 +15,8 @@ import { MjService } from './domain/services/MjService'
 import { RollService } from './domain/services/RollService'
 import { CharacterController } from './web/http/api/v1/characters/CharacterController'
 import { RollController } from './web/http/api/v1/rolls/RollController'
-import { RollGateway } from './web/websocket/api/v1/RollGateway'
+import { CharacterGateway } from './web/websocket/api/v1/characters/CharacterGateway'
+import { RollGateway } from './web/websocket/api/v1/rolls/RollGateway'
 import { Module } from '@nestjs/common'
 import { ConfigModule } from '@nestjs/config'
 import { JwtService } from '@nestjs/jwt'
@@ -45,7 +46,7 @@ import { TypeOrmModule } from '@nestjs/typeorm'
     }),
     PostgresModule
   ],
-  controllers: [RollGateway, CharacterController, RollController],
+  controllers: [CharacterGateway, RollGateway, CharacterController, RollController],
   providers: [
     ArcaneService,
     BloodlineService,

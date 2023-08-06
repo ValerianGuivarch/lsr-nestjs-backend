@@ -141,6 +141,48 @@ export class InitDatabase {
         display: "fait un Jet d'essence",
         attributionClasseList: [],
         attributionBloodlineList: []
+      },
+      {
+        name: 'licorne',
+        attribution: SkillAttribution.OWNED,
+        allowsPf: true,
+        allowsPp: false,
+        stat: SkillStat.ESSENCE,
+        category: SkillCategory.ARCANES,
+        use: SkillOwnedUse.UNLIMITED,
+        limitedUse: 0,
+        pvCost: 0,
+        pfCost: 0,
+        ppCost: 0,
+        dettesCost: 0,
+        arcaneCost: 1,
+        customRolls: '',
+        successCalculation: SuccessCalculation.SIMPLE,
+        secret: false,
+        display: 'fait une *Licorne*',
+        attributionClasseList: [],
+        attributionBloodlineList: []
+      },
+      {
+        name: 'cheval',
+        attribution: SkillAttribution.OWNED,
+        allowsPf: true,
+        allowsPp: false,
+        stat: SkillStat.ESPRIT,
+        category: SkillCategory.ARCANES,
+        use: SkillOwnedUse.UNLIMITED,
+        limitedUse: 0,
+        pvCost: 0,
+        pfCost: 0,
+        ppCost: 0,
+        dettesCost: 0,
+        arcaneCost: 1,
+        customRolls: '',
+        successCalculation: SuccessCalculation.SIMPLE,
+        secret: false,
+        display: 'fait un *Cheval*',
+        attributionClasseList: [],
+        attributionBloodlineList: []
       }
     ]
 

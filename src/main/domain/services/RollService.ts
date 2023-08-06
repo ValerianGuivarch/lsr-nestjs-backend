@@ -9,6 +9,7 @@ import { IRollProvider } from '../providers/IRollProvider'
 import { ISessionProvider } from '../providers/ISessionProvider'
 import { ISkillProvider } from '../providers/ISkillProvider'
 import { Inject, Logger } from '@nestjs/common'
+import { Observable, Subject } from 'rxjs'
 
 export class RollService {
   // eslint-disable-next-line no-magic-numbers
@@ -37,6 +38,9 @@ export class RollService {
   public static readonly PACIFICATEUR_CONSEQUENCE = 10
 
   private readonly logger = new Logger(RollService.name)
+
+  private rollsChangeSubject = new Subject<Roll[]>()
+
   constructor(
     @Inject('ICharacterProvider')
     private characterProvider: ICharacterProvider,
@@ -248,6 +252,8 @@ export class RollService {
     character.arcanes += arcaneDelta
     character.dettes += dettesDelta
     await this.characterProvider.update(character)
+    const rolls = await this.getLast()
+    this.rollsChangeSubject.next(rolls)
     return createdRoll
   }
 
@@ -262,5 +268,9 @@ export class RollService {
   private static randomIntFromInterval(min, max) {
     // min and max included
     return Math.floor(Math.random() * (max - min + 1) + min)
+  }
+
+  getRollsChangeObservable(): Observable<Roll[]> {
+    return this.rollsChangeSubject.asObservable()
   }
 }

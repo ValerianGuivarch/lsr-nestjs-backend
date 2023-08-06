@@ -98,18 +98,15 @@ export class CharacterController {
   @ApiOkResponse()
   @Get(':name')
   async findByName(@Param('name') name: string): Promise<CharacterVM> {
-    this.logger.log('get character')
     const character = await this.characterService.findOneByName(name)
     const classe = await this.classeService.findOneByName(character.classeName)
     const bloodline = await this.bloodlineService.findOneByName(character.bloodlineName)
     const arcanesList = await this.arcaneService.findOwnedArcanes(character)
-    this.logger.log('get character', character)
-    const vm = CharacterVM.of({
+    return CharacterVM.of({
       character: character,
       classe: classe,
       bloodline: bloodline,
       skills: arcanesList
     })
-    return vm
   }
 }
