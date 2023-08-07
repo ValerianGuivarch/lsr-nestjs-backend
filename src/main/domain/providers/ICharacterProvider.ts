@@ -1,7 +1,9 @@
 import { Category } from '../models/characters/Category'
 import { Character, CharacterToCreate } from '../models/characters/Character'
+import { Observable } from 'rxjs'
 
 export interface ICharacterProvider {
+  getCharacterObservable(name: string): Observable<Character>
   create(character: CharacterToCreate): Promise<Character>
   update(character: Character): Promise<Character>
   delete(name: string): Promise<boolean>

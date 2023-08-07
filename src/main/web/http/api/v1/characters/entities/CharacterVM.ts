@@ -165,11 +165,13 @@ export class CharacterVM {
             display: p.bloodline.display
           }
         : undefined,
-      skills: p.skills.map((skill) =>
-        SkillVM.of({
-          skill
-        })
-      ),
+      skills: p.skills
+        .map((skill) =>
+          SkillVM.of({
+            skill
+          })
+        )
+        .sort((a, b) => a.position - b.position),
       chair: p.character.chair,
       esprit: p.character.esprit,
       essence: p.character.essence,

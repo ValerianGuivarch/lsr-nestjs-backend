@@ -3,9 +3,7 @@ import { SkillAttribution } from '../../../domain/models/skills/SkillAttribution
 import { SkillCategory } from '../../../domain/models/skills/SkillCategory'
 import { SkillOwnedUse } from '../../../domain/models/skills/SkillOwnedUse'
 import { SkillStat } from '../../../domain/models/skills/SkillStat'
-import { DBBloodline } from '../bloodlines/DBBloodline'
-import { DBClasse } from '../classes/DBClasse'
-import { ManyToMany, JoinTable, Column, Entity, PrimaryColumn } from 'typeorm'
+import { Column, Entity, PrimaryColumn } from 'typeorm'
 
 @Entity()
 export class DBSkill {
@@ -23,14 +21,6 @@ export class DBSkill {
 
   @Column({ type: 'boolean', default: true })
   allowsPp: boolean
-
-  @ManyToMany(() => DBClasse)
-  @JoinTable()
-  attributionClasseList: DBClasse[]
-
-  @ManyToMany(() => DBBloodline)
-  @JoinTable()
-  attributionBloodlineList: DBBloodline[]
 
   @Column({
     type: 'enum',
@@ -53,6 +43,9 @@ export class DBSkill {
 
   @Column({ type: 'integer', default: 1 })
   limitedUse: number
+
+  @Column({ type: 'integer', default: 1 })
+  position: number
 
   @Column({ type: 'integer', default: 0 })
   pvCost: number

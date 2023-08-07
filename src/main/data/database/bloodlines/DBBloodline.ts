@@ -1,4 +1,5 @@
-import { PrimaryColumn, Column, Entity } from 'typeorm'
+import { DBSkill } from '../skills/DBSkill'
+import { PrimaryColumn, Column, Entity, ManyToMany, JoinTable } from 'typeorm'
 
 @Entity()
 export class DBBloodline {
@@ -16,4 +17,8 @@ export class DBBloodline {
 
   @Column({ type: 'varchar', default: '' })
   display: string
+
+  @ManyToMany(() => DBSkill)
+  @JoinTable({ name: 'DBBloodlineSkill' })
+  skills: DBSkill[]
 }

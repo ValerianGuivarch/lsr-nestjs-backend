@@ -17,6 +17,7 @@ export class Skill {
   successCalculation: SuccessCalculation
   secret: boolean
   display: string
+  position: number
 
   constructor(p: Skill) {
     this.name = p.name
@@ -33,5 +34,6 @@ export class Skill {
     this.successCalculation = p.successCalculation
     this.secret = p.secret
     this.display = p.display
+    this.position = p.position
   }
 }

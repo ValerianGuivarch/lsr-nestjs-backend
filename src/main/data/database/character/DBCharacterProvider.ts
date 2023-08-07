@@ -7,11 +7,14 @@ import { ICharacterProvider } from '../../../domain/providers/ICharacterProvider
 import { ProviderErrors } from '../../errors/ProviderErrors'
 import { Injectable } from '@nestjs/common' // adjust the path as needed
 import { InjectRepository } from '@nestjs/typeorm'
+import { Observable, Subject } from 'rxjs'
 import { In, Repository } from 'typeorm'
 
 @Injectable()
 // eslint-disable-next-line @darraghor/nestjs-typed/injectable-should-be-provided
 export class DBCharacterProvider implements ICharacterProvider {
+  private characters: Map<string, Subject<Character>> = new Map()
+
   constructor(
     @InjectRepository(DBCharacter, 'postgres')
     private dbCharacterRepository: Repository<DBCharacter>
@@ -96,10 +99,15 @@ export class DBCharacterProvider implements ICharacterProvider {
   }
 
   async create(newCharacter: Character): Promise<Character> {
-    let character = await this.dbCharacterRepository.findOneBy({ name: newCharacter.name })
-    if (!character) {
-      character = this.dbCharacterRepository.create(DBCharacterProvider.fromCharacter(newCharacter))
-      return DBCharacterProvider.toCharacter(await this.dbCharacterRepository.save(character))
+    let createdCharacter = await this.dbCharacterRepository.findOneBy({ name: newCharacter.name })
+    if (!createdCharacter) {
+      createdCharacter = this.dbCharacterRepository.create(DBCharacterProvider.fromCharacter(newCharacter))
+      const character = DBCharacterProvider.toCharacter(await this.dbCharacterRepository.save(createdCharacter))
+      const characterObservable = this.characters.get(character.name)
+      if (characterObservable) {
+        characterObservable.next(character)
+      }
+      return character
     } else {
       throw ProviderErrors.EntityAlreadyExists(newCharacter.name)
     }
@@ -140,12 +148,17 @@ export class DBCharacterProvider implements ICharacterProvider {
     return characters.map((c) => c.name)
   }
 
-  async update(character: Character): Promise<Character> {
+  async update(characterToUpdate: Character): Promise<Character> {
     const updatedCharacter = this.dbCharacterRepository.merge(
-      await this.dbCharacterRepository.findOneByOrFail({ name: character.name }),
-      DBCharacterProvider.fromCharacter(character)
+      await this.dbCharacterRepository.findOneByOrFail({ name: characterToUpdate.name }),
+      DBCharacterProvider.fromCharacter(characterToUpdate)
     )
-    return DBCharacterProvider.toCharacter(await this.dbCharacterRepository.save(updatedCharacter))
+    const character = DBCharacterProvider.toCharacter(await this.dbCharacterRepository.save(updatedCharacter))
+    const characterObservable = this.characters.get(character.name)
+    if (characterObservable) {
+      characterObservable.next(character)
+    }
+    return character
   }
 
   async delete(name: string): Promise<boolean> {
@@ -159,5 +172,12 @@ export class DBCharacterProvider implements ICharacterProvider {
 
   countAll(): Promise<number> {
     return this.dbCharacterRepository.count()
+  }
+
+  getCharacterObservable(name: string): Observable<Character> {
+    if (!this.characters.has(name)) {
+      this.characters.set(name, new Subject())
+    }
+    return this.characters.get(name).asObservable()
   }
 }

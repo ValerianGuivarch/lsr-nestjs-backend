@@ -41,7 +41,41 @@ export class Character {
   battleState: BattleState
 
   constructor(p: Character) {
-    Object.assign(this, p)
+    this.name = p.name
+    this.classeName = p.classeName
+    this.bloodlineName = p.bloodlineName
+    this.apotheoseName = p.apotheoseName
+    this.apotheoseImprovement = p.apotheoseImprovement
+    this.apotheoseImprovementList = p.apotheoseImprovementList
+    this.chair = p.chair
+    this.esprit = p.esprit
+    this.essence = p.essence
+    this.pv = p.pv < 0 ? 0 : p.pv
+    this.pvMax = p.pvMax
+    this.pf = p.pf < 0 ? 0 : p.pf
+    this.pfMax = p.pfMax
+    this.pp = p.pp < 0 ? 0 : p.pp
+    this.ppMax = p.ppMax
+    this.dettes = p.dettes < 0 ? 0 : p.dettes
+    this.arcanes = p.arcanes < 0 ? 0 : p.arcanes
+    this.arcanesMax = p.arcanesMax
+    this.niveau = p.niveau < 0 ? 0 : p.niveau
+    this.lux = p.lux
+    this.umbra = p.umbra
+    this.secunda = p.secunda
+    this.notes = p.notes
+    this.category = p.category
+    this.genre = p.genre
+    this.relance = p.relance < 0 ? 0 : p.relance
+    this.playerName = p.playerName
+    this.picture = p.picture
+    this.pictureInvocation = p.pictureInvocation
+    this.pictureApotheose = p.pictureApotheose
+    this.background = p.background
+    this.buttonColor = p.buttonColor
+    this.textColor = p.textColor
+    this.boosted = p.boosted
+    this.battleState = p.battleState
   }
 
   static characterToCreateFactory(p: {
@@ -66,6 +100,7 @@ export class Character {
     background?: string
     buttonColor?: string
     textColor?: string
+    playerName?: string
   }): CharacterToCreate {
     const defaults = {
       chair: p.chair,
@@ -77,6 +112,7 @@ export class Character {
       pfMax: p.pfMax,
       pp: p.ppMax,
       ppMax: p.ppMax,
+      playerName: p.playerName,
       // eslint-disable-next-line no-magic-numbers
       dettes: Math.floor(Math.random() * 11),
       arcanes: p.arcanesMax,

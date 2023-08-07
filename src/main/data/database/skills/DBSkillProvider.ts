@@ -7,6 +7,7 @@ import { SkillAttribution } from '../../../domain/models/skills/SkillAttribution
 import { SkillCategory } from '../../../domain/models/skills/SkillCategory'
 import { SkillStat } from '../../../domain/models/skills/SkillStat'
 import { ISkillProvider } from '../../../domain/providers/ISkillProvider'
+import { DBClasse } from '../classes/DBClasse'
 import { Injectable } from '@nestjs/common' // adjust the path as needed
 import { InjectRepository } from '@nestjs/typeorm'
 import { In, Repository } from 'typeorm'
@@ -17,6 +18,8 @@ export class DBSkillProvider implements ISkillProvider {
   constructor(
     @InjectRepository(DBSkill, 'postgres')
     private dbSkillRepository: Repository<DBSkill>,
+    @InjectRepository(DBClasse, 'postgres')
+    private dbClasseRepository: Repository<DBClasse>,
     @InjectRepository(DBOwnedSkill, 'postgres')
     private dbOwnedSkillRepository: Repository<DBOwnedSkill>
   ) {}
@@ -36,7 +39,8 @@ export class DBSkillProvider implements ISkillProvider {
       customRolls: skill.customRolls,
       successCalculation: SuccessCalculation[skill.successCalculation],
       secret: skill.secret,
-      display: skill.display
+      display: skill.display,
+      position: skill.position
     })
   }
   async findSkillOwnedById(id: number): Promise<Skill> {
@@ -66,18 +70,11 @@ export class DBSkillProvider implements ISkillProvider {
 
   async findSkillsByCharacter(character: Character): Promise<Skill[]> {
     const skillsForAll = await this.dbSkillRepository.findBy({ attribution: SkillAttribution.ALL })
-    const skillsForClasse = await this.dbSkillRepository
-      .createQueryBuilder('skill')
-      .leftJoin('skill.attributionClasseList', 'classe')
-      .where('skill.attribution = :attribution', { attribution: SkillAttribution.CLASSES })
-      .andWhere('classe.name = :classeName', { classeName: character.classeName })
-      .getMany()
-    const skillsForBloodline = await this.dbSkillRepository
-      .createQueryBuilder('skill')
-      .leftJoin('skill.attributionBloodlineList', 'bloodline')
-      .where('skill.attribution = :attribution', { attribution: SkillAttribution.BLOODLINES })
-      .andWhere('bloodline.name = :bloodlineName', { bloodlineName: character.bloodlineName })
-      .getMany()
+    const classeWithSkills = await this.dbClasseRepository.findOne({
+      where: { name: character.classeName },
+      relations: ['skills']
+    })
+    const skillsForClasse = classeWithSkills ? classeWithSkills.skills : []
     const skillsOwned = await this.dbOwnedSkillRepository.findBy({ characterName: character.name })
     const associatedSkills = await this.dbSkillRepository.findBy({ name: In(skillsOwned.map((s) => s.skillName)) })
     const skillPromises = skillsForAll
@@ -89,11 +86,11 @@ export class DBSkillProvider implements ISkillProvider {
           return DBSkillProvider.toSkill(skill, undefined)
         })
       )
-      .concat(
+      /*.concat(
         skillsForBloodline.map((skill) => {
           return DBSkillProvider.toSkill(skill, undefined)
         })
-      )
+      )*/
       .concat(
         skillsOwned.map((skill) => {
           return DBSkillProvider.toSkill(

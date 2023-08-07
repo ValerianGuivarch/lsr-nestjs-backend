@@ -2,7 +2,6 @@ import { Apotheose } from '../../../domain/models/characters/Apotheose'
 import { BattleState } from '../../../domain/models/characters/BattleState'
 import { Category } from '../../../domain/models/characters/Category'
 import { Genre } from '../../../domain/models/characters/Genre'
-import { Player } from '../../../domain/models/characters/Player'
 import { DBBloodline } from '../bloodlines/DBBloodline'
 import { DBClasse } from '../classes/DBClasse'
 import { ManyToOne, Column, Entity, JoinColumn, PrimaryColumn } from 'typeorm'
@@ -148,11 +147,7 @@ export class DBCharacter {
   })
   relance: number
 
-  @Column({
-    type: 'enum',
-    enum: Player,
-    default: Player.GUEST
-  })
+  @Column({ type: 'varchar', nullable: true })
   playerName?: string
 
   @Column({ type: 'varchar', nullable: true })
