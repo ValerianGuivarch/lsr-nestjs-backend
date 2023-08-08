@@ -36,16 +36,19 @@ export class DBProficiencyProvider implements IProficiencyProvider {
 
   async findProficienciesByCharacter(character: Character): Promise<Proficiency[]> {
     const classeWithProficiencies = await this.dbClasseProficiencyRepository.find({
-      where: { classeName: character.classeName }
+      where: { classeName: character.classeName },
+      relations: ['classe', 'proficiency']
     })
     const bloodlineWithProficiencies = await this.dbBloodlineProficiencyRepository.find({
-      where: { bloodlineName: character.bloodlineName }
+      where: { bloodlineName: character.bloodlineName },
+      relations: ['bloodline', 'proficiency']
     })
 
     const characterWithProficiencies = await this.dbCharacterProficiencyRepository.find({
-      where: { characterName: character.name }
+      where: { characterName: character.name },
+      relations: ['character', 'proficiency']
     })
-    /**/
+
     const proficiencyPromises: Proficiency[] = characterWithProficiencies.map((characterProficiency) =>
       DBProficiencyProvider.toProficiency(characterProficiency.proficiency, characterProficiency)
     )
@@ -66,6 +69,10 @@ export class DBProficiencyProvider implements IProficiencyProvider {
         proficiencyPromises.push(DBProficiencyProvider.toProficiency(classeProficiency.proficiency, classeProficiency))
       }
     }
-    return Promise.all(proficiencyPromises)
+    return Promise.all(
+      proficiencyPromises.filter((proficiency) =>
+        proficiency.minLevel ? proficiency.minLevel <= character.niveau : true
+      )
+    )
   }
 }

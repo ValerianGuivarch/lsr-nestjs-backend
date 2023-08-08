@@ -155,11 +155,13 @@ export class DBSkillProvider implements ISkillProvider {
       relations: ['classe', 'skill']
     })
     const bloodlineWithSkills = await this.dbBloodlineSkillRepository.find({
-      where: { bloodlineName: character.bloodlineName }
+      where: { bloodlineName: character.bloodlineName },
+      relations: ['bloodline', 'skill']
     })
 
     const characterWithSkills = await this.dbCharacterSkillRepository.find({
-      where: { characterName: character.name }
+      where: { characterName: character.name },
+      relations: ['character', 'skill']
     })
 
     const skillPromises: Skill[] = characterWithSkills.map((characterSkill) =>

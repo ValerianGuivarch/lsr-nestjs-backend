@@ -1,7 +1,12 @@
 import { DBBloodline } from '../../data/database/bloodlines/DBBloodline'
 import { DBCharacter } from '../../data/database/character/DBCharacter'
 import { DBClasse } from '../../data/database/classes/DBClasse'
+import { DBBloodlineProficiency } from '../../data/database/proficiencies/DBBloodlineProficiency'
+import { DBCharacterProficiency } from '../../data/database/proficiencies/DBCharacterProficiency'
+import { DBClasseProficiency } from '../../data/database/proficiencies/DBClasseProficiency'
 import { DBProficiency } from '../../data/database/proficiencies/DBProficiency'
+import { DBBloodlineSkill } from '../../data/database/skills/DBBloodlineSkill'
+import { DBCharacterSkill } from '../../data/database/skills/DBCharacterSkill'
 import { DBClasseSkill } from '../../data/database/skills/DBClasseSkill'
 import { DBSkill } from '../../data/database/skills/DBSkill'
 import { Category } from '../../domain/models/characters/Category'
@@ -29,7 +34,17 @@ export class InitDatabase {
     @InjectRepository(DBProficiency, 'postgres')
     private dbProficiencyRepository: Repository<DBProficiency>,
     @InjectRepository(DBClasseSkill, 'postgres')
-    private dbClasseSkillRepository: Repository<DBClasseSkill>
+    private dbClasseSkillRepository: Repository<DBClasseSkill>,
+    @InjectRepository(DBBloodlineSkill, 'postgres')
+    private dbBloodlineSkillRepository: Repository<DBBloodlineSkill>,
+    @InjectRepository(DBCharacterSkill, 'postgres')
+    private dbCharacterSkillRepository: Repository<DBCharacterSkill>,
+    @InjectRepository(DBClasseProficiency, 'postgres')
+    private dbClasseProficiencyRepository: Repository<DBClasseProficiency>,
+    @InjectRepository(DBBloodlineProficiency, 'postgres')
+    private dbBloodlineProficiencyRepository: Repository<DBBloodlineProficiency>,
+    @InjectRepository(DBCharacterProficiency, 'postgres')
+    private dbCharacterProficiencyRepository: Repository<DBCharacterProficiency>
   ) {}
 
   async onModuleInit(): Promise<void> {
@@ -39,34 +54,9 @@ export class InitDatabase {
     const bloodlines = await this.initBloodlines()
     const characters = await this.initCharacters(classes, bloodlines)
     await this.skillsAttribution(skills, classes, bloodlines, characters)
+    await this.proficienciesAttribution(proficiencies, classes, bloodlines, characters)
   }
 
-  /*async initClasseSkills(
-    classes: Map<string, DBClasse>,
-    skills: Map<string, DBSkill>
-  ): Promise<Map<string, DBClasseSkill>> {
-    const tst = this.createClassSkill({
-      classe: classes.get('champion'),
-      skill: skills.get('cantrip')
-    })
-    const newClasseSkills = [tst]
-    const classeSkills = new Map<string, DBClasseSkill>()
-    for (const classeSkillData of newClasseSkills) {
-      const existingClasseSkill = await this.dbClasseSkillRepository.findOneBy({
-        classeName: classeSkillData.classeName,
-        skillName: classeSkillData.skillName
-      })
-      if (!existingClasseSkill) {
-        const classeSkill = new DBClasseSkill()
-        Object.assign(classeSkill, classeSkillData)
-        const createdClasseSkill = await this.dbClasseSkillRepository.save(classeSkill)
-        classeSkills.set(classeSkill.id.toString(), createdClasseSkill)
-      } else {
-        classeSkills.set(existingClasseSkill.id.toString(), existingClasseSkill)
-      }
-    }
-    return classeSkills
-  }*/
   async initCharacters(
     classes: Map<string, DBClasse>,
     bloodlines: Map<string, DBBloodline>
@@ -540,13 +530,103 @@ export class InitDatabase {
         skillName: skill.name
       }
     })
-
     if (!existingRelation) {
       await this.dbClasseSkillRepository.save({
         classe: classe,
         skill: skill,
         classeName: classe.name,
         skillName: skill.name
+      })
+    }
+  }
+  private async saveBloodlineSkillIfNotExisting(bloodline: DBBloodline, skill: DBSkill) {
+    const existingRelation = await this.dbBloodlineSkillRepository.findOne({
+      where: {
+        bloodlineName: bloodline.name,
+        skillName: skill.name
+      }
+    })
+    if (!existingRelation) {
+      await this.dbBloodlineSkillRepository.save({
+        bloodline: bloodline,
+        skill: skill,
+        bloodlineName: bloodline.name,
+        skillName: skill.name
+      })
+    }
+  }
+  private async saveCharacterSkillIfNotExisting(character: DBCharacter, skill: DBSkill) {
+    const existingRelation = await this.dbCharacterSkillRepository.findOne({
+      where: {
+        characterName: character.name,
+        skillName: skill.name
+      }
+    })
+    if (!existingRelation) {
+      await this.dbCharacterSkillRepository.save({
+        character: character,
+        skill: skill,
+        characterName: character.name,
+        skillName: skill.name
+      })
+    }
+  }
+
+  private async proficienciesAttribution(
+    proficiencies: Map<string, DBProficiency>,
+    classes: Map<string, DBClasse>,
+    bloodlines: Map<string, DBBloodline>,
+    characters: Map<string, DBCharacter>
+  ) {
+    await this.saveBloodlineProficiencyIfNotExisting(bloodlines.get('lumière'), proficiencies.get('sagesse'))
+    await this.saveBloodlineProficiencyIfNotExisting(bloodlines.get('lumière'), proficiencies.get('charisme'))
+  }
+
+  private async saveClasseProficiencyIfNotExisting(classe: DBClasse, proficiency: DBProficiency) {
+    const existingRelation = await this.dbClasseProficiencyRepository.findOne({
+      where: {
+        classeName: classe.name,
+        proficiencyName: proficiency.name
+      }
+    })
+    if (!existingRelation) {
+      await this.dbClasseProficiencyRepository.save({
+        classe: classe,
+        proficiency: proficiency,
+        classeName: classe.name,
+        proficiencyName: proficiency.name
+      })
+    }
+  }
+  private async saveBloodlineProficiencyIfNotExisting(bloodline: DBBloodline, proficiency: DBProficiency) {
+    const existingRelation = await this.dbBloodlineProficiencyRepository.findOne({
+      where: {
+        bloodlineName: bloodline.name,
+        proficiencyName: proficiency.name
+      }
+    })
+    if (!existingRelation) {
+      await this.dbBloodlineProficiencyRepository.save({
+        bloodline: bloodline,
+        proficiency: proficiency,
+        bloodlineName: bloodline.name,
+        proficiencyName: proficiency.name
+      })
+    }
+  }
+  private async saveCharacterProficiencyIfNotExisting(character: DBCharacter, proficiency: DBProficiency) {
+    const existingRelation = await this.dbCharacterProficiencyRepository.findOne({
+      where: {
+        characterName: character.name,
+        proficiencyName: proficiency.name
+      }
+    })
+    if (!existingRelation) {
+      await this.dbCharacterProficiencyRepository.save({
+        character: character,
+        proficiency: proficiency,
+        characterName: character.name,
+        proficiencyName: proficiency.name
       })
     }
   }
