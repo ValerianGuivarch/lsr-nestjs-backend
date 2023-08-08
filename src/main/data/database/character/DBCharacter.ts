@@ -1,4 +1,4 @@
-import { Apotheose } from '../../../domain/models/characters/Apotheose'
+import { Apotheose } from '../../../domain/models/apotheoses/Apotheose'
 import { BattleState } from '../../../domain/models/characters/BattleState'
 import { Category } from '../../../domain/models/characters/Category'
 import { Genre } from '../../../domain/models/characters/Genre'

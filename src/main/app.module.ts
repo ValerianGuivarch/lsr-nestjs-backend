@@ -7,12 +7,13 @@ import { PostgresModule } from './data/database/postgres.module'
 import { DBRollProvider } from './data/database/rolls/DBRollProvider'
 import { DBSessionProvider } from './data/database/session/DBSessionProvider'
 import { DBSkillProvider } from './data/database/skills/DBSkillProvider'
-import { ArcaneService } from './domain/services/ArcaneService'
 import { BloodlineService } from './domain/services/BloodlineService'
 import { CharacterService } from './domain/services/CharacterService'
 import { ClasseService } from './domain/services/ClasseService'
 import { MjService } from './domain/services/MjService'
+import { ProficiencyService } from './domain/services/ProficiencyService'
 import { RollService } from './domain/services/RollService'
+import { SkillService } from './domain/services/SkillService'
 import { CharacterController } from './web/http/api/v1/characters/CharacterController'
 import { RollController } from './web/http/api/v1/rolls/RollController'
 import { CharacterGateway } from './web/websocket/api/v1/characters/CharacterGateway'
@@ -48,7 +49,8 @@ import { TypeOrmModule } from '@nestjs/typeorm'
   ],
   controllers: [CharacterGateway, RollGateway, CharacterController, RollController],
   providers: [
-    ArcaneService,
+    SkillService,
+    ProficiencyService,
     BloodlineService,
     CharacterService,
     ClasseService,
@@ -62,7 +64,7 @@ import { TypeOrmModule } from '@nestjs/typeorm'
       useClass: DBCharacterProvider
     },
     {
-      provide: 'IArcaneProvider',
+      provide: 'ISkillProvider',
       useClass: DBSkillProvider
     },
     {

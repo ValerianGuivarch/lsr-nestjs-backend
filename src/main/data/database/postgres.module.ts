@@ -5,11 +5,18 @@ import { DBCharacterProvider } from './character/DBCharacterProvider'
 import { DBClasse } from './classes/DBClasse'
 import { DBClasseProvider } from './classes/DBClasseProvider'
 import { DBEntity } from './DBEntity'
+import { DBBloodlineProficiency } from './proficiencies/DBBloodlineProficiency'
+import { DBCharacterProficiency } from './proficiencies/DBCharacterProficiency'
+import { DBClasseProficiency } from './proficiencies/DBClasseProficiency'
+import { DBProficiency } from './proficiencies/DBProficiency'
+import { DBProficiencyProvider } from './proficiencies/DBProficiencyProvider'
 import { DBRoll } from './rolls/DBRoll'
 import { DBRollProvider } from './rolls/DBRollProvider'
 import { DBSession } from './session/DBSession'
 import { DBSessionProvider } from './session/DBSessionProvider'
-import { DBOwnedSkill } from './skills/DBOwnedSkill'
+import { DBBloodlineSkill } from './skills/DBBloodlineSkill'
+import { DBCharacterSkill } from './skills/DBCharacterSkill'
+import { DBClasseSkill } from './skills/DBClasseSkill'
 import { DBSkill } from './skills/DBSkill'
 import { DBSkillProvider } from './skills/DBSkillProvider'
 import { Module } from '@nestjs/common'
@@ -18,7 +25,22 @@ import { TypeOrmModule } from '@nestjs/typeorm'
 @Module({
   imports: [
     TypeOrmModule.forFeature(
-      [DBEntity, DBRoll, DBSession, DBCharacter, DBBloodline, DBClasse, DBSkill, DBOwnedSkill],
+      [
+        DBEntity,
+        DBRoll,
+        DBSession,
+        DBCharacter,
+        DBBloodline,
+        DBClasse,
+        DBSkill,
+        DBCharacterSkill,
+        DBBloodlineSkill,
+        DBClasseSkill,
+        DBProficiency,
+        DBClasseProficiency,
+        DBBloodlineProficiency,
+        DBCharacterProficiency
+      ],
       'postgres'
     )
   ],
@@ -46,6 +68,10 @@ import { TypeOrmModule } from '@nestjs/typeorm'
     {
       provide: 'IClasseProvider',
       useClass: DBClasseProvider
+    },
+    {
+      provide: 'IProficiencyProvider',
+      useClass: DBProficiencyProvider
     }
   ],
   exports: [
@@ -73,6 +99,10 @@ import { TypeOrmModule } from '@nestjs/typeorm'
     {
       provide: 'IClasseProvider',
       useClass: DBClasseProvider
+    },
+    {
+      provide: 'IProficiencyProvider',
+      useClass: DBProficiencyProvider
     }
   ]
 })

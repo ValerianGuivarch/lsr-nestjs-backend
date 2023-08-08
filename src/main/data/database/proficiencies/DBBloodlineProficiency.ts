@@ -1,10 +1,10 @@
-import { DBSkill } from './DBSkill'
-import { DBSkillAttrs } from './DBSkillAttrs'
+import { DBProficiency } from './DBProficiency'
+import { DBProficiencyAttrs } from './DBProficiencyAttrs'
 import { DBBloodline } from '../bloodlines/DBBloodline'
 import { Column, Entity, PrimaryGeneratedColumn, ManyToOne, JoinColumn } from 'typeorm'
 
 @Entity()
-export class DBBloodlineSkill extends DBSkillAttrs {
+export class DBBloodlineProficiency extends DBProficiencyAttrs {
   @PrimaryGeneratedColumn()
   id: number
 
@@ -16,9 +16,9 @@ export class DBBloodlineSkill extends DBSkillAttrs {
   bloodline: DBBloodline
 
   @Column({ type: 'varchar', nullable: false })
-  skillName: string
+  proficiencyName: string
 
-  @ManyToOne(() => DBSkill)
-  @JoinColumn({ name: 'skillName' })
-  skill: DBSkill
+  @ManyToOne(() => DBProficiency)
+  @JoinColumn({ name: 'proficiencyName' })
+  proficiency: DBProficiency
 }

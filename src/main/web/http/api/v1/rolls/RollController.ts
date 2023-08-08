@@ -1,9 +1,9 @@
 import { RollVM } from './entities/RollVM'
 import { SendRollRequest } from './requests/SendRollRequest'
-import { ArcaneService } from '../../../../../domain/services/ArcaneService'
 import { BloodlineService } from '../../../../../domain/services/BloodlineService'
 import { ClasseService } from '../../../../../domain/services/ClasseService'
 import { RollService } from '../../../../../domain/services/RollService'
+import { SkillService } from '../../../../../domain/services/SkillService'
 import { Body, Controller, Get, Logger, Post } from '@nestjs/common'
 import { ApiOkResponse, ApiTags } from '@nestjs/swagger'
 
@@ -15,7 +15,7 @@ export class RollController {
     private rollService: RollService,
     private bloodlineService: BloodlineService,
     private classeService: ClasseService,
-    private arcaneService: ArcaneService
+    private arcaneService: SkillService
   ) {}
 
   @ApiOkResponse({ type: RollVM })

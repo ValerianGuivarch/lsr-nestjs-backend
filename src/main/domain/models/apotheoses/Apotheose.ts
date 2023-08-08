@@ -1,7 +1,6 @@
 export class Apotheose {
   name: string
   minLevel: number
-  classes: string[]
   chairImprovement: number
   espritImprovement: number
   essenceImprovement: number
@@ -10,7 +9,6 @@ export class Apotheose {
   constructor(p: Apotheose) {
     this.name = p.name
     this.minLevel = p.minLevel
-    this.classes = p.classes
     this.chairImprovement = p.chairImprovement
     this.espritImprovement = p.espritImprovement
     this.essenceImprovement = p.essenceImprovement

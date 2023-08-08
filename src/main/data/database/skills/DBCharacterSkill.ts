@@ -1,19 +1,19 @@
 import { DBSkill } from './DBSkill'
 import { DBSkillAttrs } from './DBSkillAttrs'
-import { DBClasse } from '../classes/DBClasse'
+import { DBCharacter } from '../character/DBCharacter'
 import { Column, Entity, PrimaryGeneratedColumn, ManyToOne, JoinColumn } from 'typeorm'
 
 @Entity()
-export class DBClasseSkill extends DBSkillAttrs {
+export class DBCharacterSkill extends DBSkillAttrs {
   @PrimaryGeneratedColumn()
   id: number
 
   @Column({ type: 'varchar', nullable: false })
-  classeName: string
+  characterName: string
 
-  @ManyToOne(() => DBClasse)
-  @JoinColumn({ name: 'classeName' })
-  classe: DBClasse
+  @ManyToOne(() => DBCharacter)
+  @JoinColumn({ name: 'characterName' })
+  character: DBCharacter
 
   @Column({ type: 'varchar', nullable: false })
   skillName: string

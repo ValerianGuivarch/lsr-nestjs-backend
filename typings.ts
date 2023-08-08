@@ -8,19 +8,26 @@ import {
   TSortClause
 } from '@forestadmin/agent';
 
-export type DBClasseSkillCustomizer = CollectionCustomizer<Schema, 'DBClasseSkill'>;
-export type DBClasseSkillRecord = TPartialRow<Schema, 'DBClasseSkill'>;
-export type DBClasseSkillConditionTree = TConditionTree<Schema, 'DBClasseSkill'>;
-export type DBClasseSkillFilter = TPaginatedFilter<Schema, 'DBClasseSkill'>;
-export type DBClasseSkillSortClause = TSortClause<Schema, 'DBClasseSkill'>;
-export type DBClasseSkillAggregation = TAggregation<Schema, 'DBClasseSkill'>;
-
 export type DbBloodlineCustomizer = CollectionCustomizer<Schema, 'db_bloodline'>;
 export type DbBloodlineRecord = TPartialRow<Schema, 'db_bloodline'>;
 export type DbBloodlineConditionTree = TConditionTree<Schema, 'db_bloodline'>;
 export type DbBloodlineFilter = TPaginatedFilter<Schema, 'db_bloodline'>;
 export type DbBloodlineSortClause = TSortClause<Schema, 'db_bloodline'>;
 export type DbBloodlineAggregation = TAggregation<Schema, 'db_bloodline'>;
+
+export type DbBloodlineProficiencyCustomizer = CollectionCustomizer<Schema, 'db_bloodline_proficiency'>;
+export type DbBloodlineProficiencyRecord = TPartialRow<Schema, 'db_bloodline_proficiency'>;
+export type DbBloodlineProficiencyConditionTree = TConditionTree<Schema, 'db_bloodline_proficiency'>;
+export type DbBloodlineProficiencyFilter = TPaginatedFilter<Schema, 'db_bloodline_proficiency'>;
+export type DbBloodlineProficiencySortClause = TSortClause<Schema, 'db_bloodline_proficiency'>;
+export type DbBloodlineProficiencyAggregation = TAggregation<Schema, 'db_bloodline_proficiency'>;
+
+export type DbBloodlineSkillCustomizer = CollectionCustomizer<Schema, 'db_bloodline_skill'>;
+export type DbBloodlineSkillRecord = TPartialRow<Schema, 'db_bloodline_skill'>;
+export type DbBloodlineSkillConditionTree = TConditionTree<Schema, 'db_bloodline_skill'>;
+export type DbBloodlineSkillFilter = TPaginatedFilter<Schema, 'db_bloodline_skill'>;
+export type DbBloodlineSkillSortClause = TSortClause<Schema, 'db_bloodline_skill'>;
+export type DbBloodlineSkillAggregation = TAggregation<Schema, 'db_bloodline_skill'>;
 
 export type DbCharacterCustomizer = CollectionCustomizer<Schema, 'db_character'>;
 export type DbCharacterRecord = TPartialRow<Schema, 'db_character'>;
@@ -29,6 +36,20 @@ export type DbCharacterFilter = TPaginatedFilter<Schema, 'db_character'>;
 export type DbCharacterSortClause = TSortClause<Schema, 'db_character'>;
 export type DbCharacterAggregation = TAggregation<Schema, 'db_character'>;
 
+export type DbCharacterProficiencyCustomizer = CollectionCustomizer<Schema, 'db_character_proficiency'>;
+export type DbCharacterProficiencyRecord = TPartialRow<Schema, 'db_character_proficiency'>;
+export type DbCharacterProficiencyConditionTree = TConditionTree<Schema, 'db_character_proficiency'>;
+export type DbCharacterProficiencyFilter = TPaginatedFilter<Schema, 'db_character_proficiency'>;
+export type DbCharacterProficiencySortClause = TSortClause<Schema, 'db_character_proficiency'>;
+export type DbCharacterProficiencyAggregation = TAggregation<Schema, 'db_character_proficiency'>;
+
+export type DbCharacterSkillCustomizer = CollectionCustomizer<Schema, 'db_character_skill'>;
+export type DbCharacterSkillRecord = TPartialRow<Schema, 'db_character_skill'>;
+export type DbCharacterSkillConditionTree = TConditionTree<Schema, 'db_character_skill'>;
+export type DbCharacterSkillFilter = TPaginatedFilter<Schema, 'db_character_skill'>;
+export type DbCharacterSkillSortClause = TSortClause<Schema, 'db_character_skill'>;
+export type DbCharacterSkillAggregation = TAggregation<Schema, 'db_character_skill'>;
+
 export type DbClasseCustomizer = CollectionCustomizer<Schema, 'db_classe'>;
 export type DbClasseRecord = TPartialRow<Schema, 'db_classe'>;
 export type DbClasseConditionTree = TConditionTree<Schema, 'db_classe'>;
@@ -36,12 +57,26 @@ export type DbClasseFilter = TPaginatedFilter<Schema, 'db_classe'>;
 export type DbClasseSortClause = TSortClause<Schema, 'db_classe'>;
 export type DbClasseAggregation = TAggregation<Schema, 'db_classe'>;
 
-export type DbOwnedSkillCustomizer = CollectionCustomizer<Schema, 'db_owned_skill'>;
-export type DbOwnedSkillRecord = TPartialRow<Schema, 'db_owned_skill'>;
-export type DbOwnedSkillConditionTree = TConditionTree<Schema, 'db_owned_skill'>;
-export type DbOwnedSkillFilter = TPaginatedFilter<Schema, 'db_owned_skill'>;
-export type DbOwnedSkillSortClause = TSortClause<Schema, 'db_owned_skill'>;
-export type DbOwnedSkillAggregation = TAggregation<Schema, 'db_owned_skill'>;
+export type DbClasseProficiencyCustomizer = CollectionCustomizer<Schema, 'db_classe_proficiency'>;
+export type DbClasseProficiencyRecord = TPartialRow<Schema, 'db_classe_proficiency'>;
+export type DbClasseProficiencyConditionTree = TConditionTree<Schema, 'db_classe_proficiency'>;
+export type DbClasseProficiencyFilter = TPaginatedFilter<Schema, 'db_classe_proficiency'>;
+export type DbClasseProficiencySortClause = TSortClause<Schema, 'db_classe_proficiency'>;
+export type DbClasseProficiencyAggregation = TAggregation<Schema, 'db_classe_proficiency'>;
+
+export type DbClasseSkillCustomizer = CollectionCustomizer<Schema, 'db_classe_skill'>;
+export type DbClasseSkillRecord = TPartialRow<Schema, 'db_classe_skill'>;
+export type DbClasseSkillConditionTree = TConditionTree<Schema, 'db_classe_skill'>;
+export type DbClasseSkillFilter = TPaginatedFilter<Schema, 'db_classe_skill'>;
+export type DbClasseSkillSortClause = TSortClause<Schema, 'db_classe_skill'>;
+export type DbClasseSkillAggregation = TAggregation<Schema, 'db_classe_skill'>;
+
+export type DbProficiencyCustomizer = CollectionCustomizer<Schema, 'db_proficiency'>;
+export type DbProficiencyRecord = TPartialRow<Schema, 'db_proficiency'>;
+export type DbProficiencyConditionTree = TConditionTree<Schema, 'db_proficiency'>;
+export type DbProficiencyFilter = TPaginatedFilter<Schema, 'db_proficiency'>;
+export type DbProficiencySortClause = TSortClause<Schema, 'db_proficiency'>;
+export type DbProficiencyAggregation = TAggregation<Schema, 'db_proficiency'>;
 
 export type DbRollCustomizer = CollectionCustomizer<Schema, 'db_roll'>;
 export type DbRollRecord = TPartialRow<Schema, 'db_roll'>;
@@ -83,6 +118,73 @@ export type Schema = {
     };
     nested: {};
     flat: {};
+  };
+  'db_bloodline_proficiency': {
+    plain: {
+      'minLevel': number;
+      'id': number;
+      'bloodlineName': string;
+      'proficiencyName': string;
+    };
+    nested: {
+      'db_bloodline': Schema['db_bloodline']['plain'] & Schema['db_bloodline']['nested'];
+      'db_proficiency': Schema['db_proficiency']['plain'] & Schema['db_proficiency']['nested'];
+    };
+    flat: {
+      'db_bloodline:name': string;
+      'db_bloodline:detteByMagicAction': number;
+      'db_bloodline:detteByPp': number;
+      'db_bloodline:healthImproved': boolean;
+      'db_bloodline:display': string;
+      'db_proficiency:minLevel': number;
+      'db_proficiency:name': string;
+      'db_proficiency:displayCategory': 'STATS' | 'MAGIE' | 'ARCANES' | 'SOLDATS' | 'PACIFICATEURS';
+    };
+  };
+  'db_bloodline_skill': {
+    plain: {
+      'allowsPf': boolean;
+      'allowsPp': boolean;
+      'stat': 'FIXE' | 'CHAIR' | 'ESPRIT' | 'ESSENCE' | 'EMPIRIQUE' | 'CUSTOM';
+      'pvCost': number;
+      'pfCost': number;
+      'ppCost': number;
+      'dettesCost': number;
+      'arcaneCost': number;
+      'customRolls': string;
+      'successCalculation': 'AUCUN' | 'SIMPLE' | 'SIMPLE_PLUS_1' | 'DIVISE' | 'DIVISE_PLUS_1';
+      'secret': boolean;
+      'id': number;
+      'bloodlineName': string;
+      'skillName': string;
+    };
+    nested: {
+      'db_bloodline': Schema['db_bloodline']['plain'] & Schema['db_bloodline']['nested'];
+      'db_skill': Schema['db_skill']['plain'] & Schema['db_skill']['nested'];
+    };
+    flat: {
+      'db_bloodline:name': string;
+      'db_bloodline:detteByMagicAction': number;
+      'db_bloodline:detteByPp': number;
+      'db_bloodline:healthImproved': boolean;
+      'db_bloodline:display': string;
+      'db_skill:allowsPf': boolean;
+      'db_skill:allowsPp': boolean;
+      'db_skill:stat': 'FIXE' | 'CHAIR' | 'ESPRIT' | 'ESSENCE' | 'EMPIRIQUE' | 'CUSTOM';
+      'db_skill:pvCost': number;
+      'db_skill:pfCost': number;
+      'db_skill:ppCost': number;
+      'db_skill:dettesCost': number;
+      'db_skill:arcaneCost': number;
+      'db_skill:customRolls': string;
+      'db_skill:successCalculation': 'AUCUN' | 'SIMPLE' | 'SIMPLE_PLUS_1' | 'DIVISE' | 'DIVISE_PLUS_1';
+      'db_skill:secret': boolean;
+      'db_skill:name': string;
+      'db_skill:allAttribution': boolean;
+      'db_skill:displayCategory': 'STATS' | 'MAGIE' | 'ARCANES' | 'SOLDATS' | 'PACIFICATEURS';
+      'db_skill:position': number;
+      'db_skill:display': string;
+    };
   };
   'db_character': {
     plain: {
@@ -142,29 +244,86 @@ export type Schema = {
       'db_bloodline_through_bloodlineName:display': string;
     };
   };
-  'db_classe': {
+  'db_character_proficiency': {
     plain: {
-      'name': string;
-      'displayMale': string;
-      'displayFemale': string;
-    };
-    nested: {};
-    flat: {};
-  };
-  'db_owned_skill': {
-    plain: {
+      'minLevel': number;
       'id': number;
       'characterName': string;
-      'skillName': string;
-      'use': 'UNLIMITED' | 'LIMITED';
-      'limitedUse': number;
+      'proficiencyName': string;
+    };
+    nested: {
+      'db_character': Schema['db_character']['plain'] & Schema['db_character']['nested'];
+      'db_proficiency': Schema['db_proficiency']['plain'] & Schema['db_proficiency']['nested'];
+    };
+    flat: {
+      'db_character:name': string;
+      'db_character:classeName': string;
+      'db_character:apotheoseName': string;
+      'db_character:apotheoseImprovement': string;
+      'db_character:apotheoseImprovementList': string;
+      'db_character:chair': number;
+      'db_character:esprit': number;
+      'db_character:essence': number;
+      'db_character:pv': number;
+      'db_character:pvMax': number;
+      'db_character:pf': number;
+      'db_character:pfMax': number;
+      'db_character:pp': number;
+      'db_character:ppMax': number;
+      'db_character:dettes': number;
+      'db_character:arcanes': number;
+      'db_character:arcanesMax': number;
+      'db_character:niveau': number;
+      'db_character:lux': string;
+      'db_character:umbra': string;
+      'db_character:secunda': string;
+      'db_character:notes': string;
+      'db_character:category': 'PJ' | 'PNJ_ALLY' | 'PNJ_ENNEMY' | 'TEMPO' | 'TEMPLATE';
+      'db_character:battleState': 'NONE' | 'ALLIES' | 'ENNEMIES';
+      'db_character:genre': 'HOMME' | 'FEMME';
+      'db_character:relance': number;
+      'db_character:playerName': string;
+      'db_character:picture': string;
+      'db_character:pictureApotheose': string;
+      'db_character:background': string;
+      'db_character:buttonColor': string;
+      'db_character:textColor': string;
+      'db_character:boosted': boolean;
+      'db_character:bloodlineName': string;
+      'db_character:db_classe:name': string;
+      'db_character:db_classe:displayMale': string;
+      'db_character:db_classe:displayFemale': string;
+      'db_character:db_bloodline_through_apotheoseName:name': string;
+      'db_character:db_bloodline_through_apotheoseName:detteByMagicAction': number;
+      'db_character:db_bloodline_through_apotheoseName:detteByPp': number;
+      'db_character:db_bloodline_through_apotheoseName:healthImproved': boolean;
+      'db_character:db_bloodline_through_apotheoseName:display': string;
+      'db_character:db_bloodline_through_bloodlineName:name': string;
+      'db_character:db_bloodline_through_bloodlineName:detteByMagicAction': number;
+      'db_character:db_bloodline_through_bloodlineName:detteByPp': number;
+      'db_character:db_bloodline_through_bloodlineName:healthImproved': boolean;
+      'db_character:db_bloodline_through_bloodlineName:display': string;
+      'db_proficiency:minLevel': number;
+      'db_proficiency:name': string;
+      'db_proficiency:displayCategory': 'STATS' | 'MAGIE' | 'ARCANES' | 'SOLDATS' | 'PACIFICATEURS';
+    };
+  };
+  'db_character_skill': {
+    plain: {
+      'allowsPf': boolean;
+      'allowsPp': boolean;
+      'stat': 'FIXE' | 'CHAIR' | 'ESPRIT' | 'ESSENCE' | 'EMPIRIQUE' | 'CUSTOM';
       'pvCost': number;
       'pfCost': number;
       'ppCost': number;
       'dettesCost': number;
       'arcaneCost': number;
-      'allowsPf': boolean;
-      'allowsPp': boolean;
+      'customRolls': string;
+      'successCalculation': 'AUCUN' | 'SIMPLE' | 'SIMPLE_PLUS_1' | 'DIVISE' | 'DIVISE_PLUS_1';
+      'secret': boolean;
+      'id': number;
+      'characterName': string;
+      'skillName': string;
     };
     nested: {
       'db_character': Schema['db_character']['plain'] & Schema['db_character']['nested'];
@@ -218,15 +377,9 @@ export type Schema = {
       'db_character:db_bloodline_through_bloodlineName:detteByPp': number;
       'db_character:db_bloodline_through_bloodlineName:healthImproved': boolean;
       'db_character:db_bloodline_through_bloodlineName:display': string;
-      'db_skill:name': string;
-      'db_skill:attribution': 'ALL' | 'CLASSES' | 'BLOODLINES' | 'OWNED';
       'db_skill:allowsPf': boolean;
       'db_skill:allowsPp': boolean;
       'db_skill:stat': 'FIXE' | 'CHAIR' | 'ESPRIT' | 'ESSENCE' | 'EMPIRIQUE' | 'CUSTOM';
-      'db_skill:category': 'STATS' | 'MAGIE' | 'CORROMPUS' | 'PAROLIERS' | 'SPIRITES' | 'ARCANES' | 'SOLDATS' | 'ROYALS' | 'PACIFICATEURS';
-      'db_skill:use': 'UNLIMITED' | 'LIMITED';
-      'db_skill:limitedUse': number;
-      'db_skill:position': number;
       'db_skill:pvCost': number;
       'db_skill:pfCost': number;
       'db_skill:ppCost': number;
@@ -235,8 +388,93 @@ export type Schema = {
       'db_skill:customRolls': string;
       'db_skill:successCalculation': 'AUCUN' | 'SIMPLE' | 'SIMPLE_PLUS_1' | 'DIVISE' | 'DIVISE_PLUS_1';
       'db_skill:secret': boolean;
+      'db_skill:name': string;
+      'db_skill:allAttribution': boolean;
+      'db_skill:displayCategory': 'STATS' | 'MAGIE' | 'ARCANES' | 'SOLDATS' | 'PACIFICATEURS';
+      'db_skill:position': number;
       'db_skill:display': string;
     };
+  };
+  'db_classe': {
+    plain: {
+      'name': string;
+      'displayMale': string;
+      'displayFemale': string;
+    };
+    nested: {};
+    flat: {};
+  };
+  'db_classe_proficiency': {
+    plain: {
+      'minLevel': number;
+      'id': number;
+      'classeName': string;
+      'proficiencyName': string;
+    };
+    nested: {
+      'db_classe': Schema['db_classe']['plain'] & Schema['db_classe']['nested'];
+      'db_proficiency': Schema['db_proficiency']['plain'] & Schema['db_proficiency']['nested'];
+    };
+    flat: {
+      'db_classe:name': string;
+      'db_classe:displayMale': string;
+      'db_classe:displayFemale': string;
+      'db_proficiency:minLevel': number;
+      'db_proficiency:name': string;
+      'db_proficiency:displayCategory': 'STATS' | 'MAGIE' | 'ARCANES' | 'SOLDATS' | 'PACIFICATEURS';
+    };
+  };
+  'db_classe_skill': {
+    plain: {
+      'allowsPf': boolean;
+      'allowsPp': boolean;
+      'stat': 'FIXE' | 'CHAIR' | 'ESPRIT' | 'ESSENCE' | 'EMPIRIQUE' | 'CUSTOM';
+      'pvCost': number;
+      'pfCost': number;
+      'ppCost': number;
+      'dettesCost': number;
+      'arcaneCost': number;
+      'customRolls': string;
+      'successCalculation': 'AUCUN' | 'SIMPLE' | 'SIMPLE_PLUS_1' | 'DIVISE' | 'DIVISE_PLUS_1';
+      'secret': boolean;
+      'id': number;
+      'classeName': string;
+      'skillName': string;
+    };
+    nested: {
+      'db_classe': Schema['db_classe']['plain'] & Schema['db_classe']['nested'];
+      'db_skill': Schema['db_skill']['plain'] & Schema['db_skill']['nested'];
+    };
+    flat: {
+      'db_classe:name': string;
+      'db_classe:displayMale': string;
+      'db_classe:displayFemale': string;
+      'db_skill:allowsPf': boolean;
+      'db_skill:allowsPp': boolean;
+      'db_skill:stat': 'FIXE' | 'CHAIR' | 'ESPRIT' | 'ESSENCE' | 'EMPIRIQUE' | 'CUSTOM';
+      'db_skill:pvCost': number;
+      'db_skill:pfCost': number;
+      'db_skill:ppCost': number;
+      'db_skill:dettesCost': number;
+      'db_skill:arcaneCost': number;
+      'db_skill:customRolls': string;
+      'db_skill:successCalculation': 'AUCUN' | 'SIMPLE' | 'SIMPLE_PLUS_1' | 'DIVISE' | 'DIVISE_PLUS_1';
+      'db_skill:secret': boolean;
+      'db_skill:name': string;
+      'db_skill:allAttribution': boolean;
+      'db_skill:displayCategory': 'STATS' | 'MAGIE' | 'ARCANES' | 'SOLDATS' | 'PACIFICATEURS';
+      'db_skill:position': number;
+      'db_skill:display': string;
+    };
+  };
+  'db_proficiency': {
+    plain: {
+      'minLevel': number;
+      'name': string;
+      'displayCategory': 'STATS' | 'MAGIE' | 'ARCANES' | 'SOLDATS' | 'PACIFICATEURS';
+    };
+    nested: {};
+    flat: {};
   };
   'db_roll': {
     plain: {
@@ -281,15 +519,9 @@ export type Schema = {
   };
   'db_skill': {
     plain: {
-      'name': string;
-      'attribution': 'ALL' | 'CLASSES' | 'BLOODLINES' | 'OWNED';
       'allowsPf': boolean;
       'allowsPp': boolean;
       'stat': 'FIXE' | 'CHAIR' | 'ESPRIT' | 'ESSENCE' | 'EMPIRIQUE' | 'CUSTOM';
-      'category': 'STATS' | 'MAGIE' | 'CORROMPUS' | 'PAROLIERS' | 'SPIRITES' | 'ARCANES' | 'SOLDATS' | 'ROYALS' | 'PACIFICATEURS';
-      'use': 'UNLIMITED' | 'LIMITED';
-      'limitedUse': number;
-      'position': number;
       'pvCost': number;
       'pfCost': number;
       'ppCost': number;
@@ -298,43 +530,14 @@ export type Schema = {
       'customRolls': string;
       'successCalculation': 'AUCUN' | 'SIMPLE' | 'SIMPLE_PLUS_1' | 'DIVISE' | 'DIVISE_PLUS_1';
       'secret': boolean;
+      'name': string;
+      'allAttribution': boolean;
+      'displayCategory': 'STATS' | 'MAGIE' | 'ARCANES' | 'SOLDATS' | 'PACIFICATEURS';
+      'position': number;
       'display': string;
     };
     nested: {};
     flat: {};
-  };
-  'DBClasseSkill': {
-    plain: {
-      'dbClasseName': string;
-      'dbSkillName': string;
-    };
-    nested: {
-      'db_classe': Schema['db_classe']['plain'] & Schema['db_classe']['nested'];
-      'db_skill': Schema['db_skill']['plain'] & Schema['db_skill']['nested'];
-    };
-    flat: {
-      'db_classe:name': string;
-      'db_classe:displayMale': string;
-      'db_classe:displayFemale': string;
-      'db_skill:name': string;
-      'db_skill:attribution': 'ALL' | 'CLASSES' | 'BLOODLINES' | 'OWNED';
-      'db_skill:allowsPf': boolean;
-      'db_skill:allowsPp': boolean;
-      'db_skill:stat': 'FIXE' | 'CHAIR' | 'ESPRIT' | 'ESSENCE' | 'EMPIRIQUE' | 'CUSTOM';
-      'db_skill:category': 'STATS' | 'MAGIE' | 'CORROMPUS' | 'PAROLIERS' | 'SPIRITES' | 'ARCANES' | 'SOLDATS' | 'ROYALS' | 'PACIFICATEURS';
-      'db_skill:use': 'UNLIMITED' | 'LIMITED';
-      'db_skill:limitedUse': number;
-      'db_skill:position': number;
-      'db_skill:pvCost': number;
-      'db_skill:pfCost': number;
-      'db_skill:ppCost': number;
-      'db_skill:dettesCost': number;
-      'db_skill:arcaneCost': number;
-      'db_skill:customRolls': string;
-      'db_skill:successCalculation': 'AUCUN' | 'SIMPLE' | 'SIMPLE_PLUS_1' | 'DIVISE' | 'DIVISE_PLUS_1';
-      'db_skill:secret': boolean;
-      'db_skill:display': string;
-    };
   };
   'migrations': {
     plain: {

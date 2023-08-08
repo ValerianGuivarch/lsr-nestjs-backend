@@ -1,0 +1,7 @@
+export enum DisplayCategory {
+  STATS = 'STATS',
+  MAGIE = 'MAGIE',
+  ARCANES = 'ARCANES',
+  SOLDATS = 'SOLDATS',
+  PACIFICATEURS = 'PACIFICATEURS'
+}

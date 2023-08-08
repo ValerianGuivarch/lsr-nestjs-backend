@@ -1,8 +1,10 @@
+import { ProficiencyVM } from './ProficiencyVM'
 import { SkillVM } from './SkillVM'
 import { Bloodline } from '../../../../../../domain/models/characters/Bloodline'
 import { Character } from '../../../../../../domain/models/characters/Character'
 import { Classe } from '../../../../../../domain/models/characters/Classe'
 import { Genre } from '../../../../../../domain/models/characters/Genre'
+import { Proficiency } from '../../../../../../domain/models/proficiencies/Proficiency'
 import { Skill } from '../../../../../../domain/models/skills/Skill'
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
 
@@ -115,6 +117,9 @@ export class CharacterVM {
   @ApiPropertyOptional()
   textColor?: string
 
+  @ApiProperty({ isArray: true, type: String })
+  proficiencies: ProficiencyVM[]
+
   constructor(p: CharacterVM) {
     this.name = p.name
     this.classe = p.classe
@@ -150,9 +155,16 @@ export class CharacterVM {
     this.background = p.background
     this.buttonColor = p.buttonColor
     this.textColor = p.textColor
+    this.proficiencies = p.proficiencies
   }
 
-  static of(p: { character: Character; classe: Classe; bloodline?: Bloodline; skills: Skill[] }): CharacterVM {
+  static of(p: {
+    character: Character
+    classe: Classe
+    bloodline?: Bloodline
+    skills: Skill[]
+    proficiencies: Proficiency[]
+  }): CharacterVM {
     return new CharacterVM({
       name: p.character.name,
       classe: {
@@ -172,6 +184,11 @@ export class CharacterVM {
           })
         )
         .sort((a, b) => a.position - b.position),
+      proficiencies: p.proficiencies.map((proficiency) =>
+        ProficiencyVM.of({
+          proficiency
+        })
+      ),
       chair: p.character.chair,
       esprit: p.character.esprit,
       essence: p.character.essence,

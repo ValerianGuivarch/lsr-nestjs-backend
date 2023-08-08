@@ -4,10 +4,11 @@ import { CreateCharacterDto } from './requests/CreateCharacterDto'
 import { UpdateCharacterDto } from './requests/UpdateCharacterDto'
 import { Category } from '../../../../../domain/models/characters/Category'
 import { Character } from '../../../../../domain/models/characters/Character'
-import { ArcaneService } from '../../../../../domain/services/ArcaneService'
 import { BloodlineService } from '../../../../../domain/services/BloodlineService'
 import { CharacterService } from '../../../../../domain/services/CharacterService'
 import { ClasseService } from '../../../../../domain/services/ClasseService'
+import { ProficiencyService } from '../../../../../domain/services/ProficiencyService'
+import { SkillService } from '../../../../../domain/services/SkillService'
 import { Body, Controller, Get, Logger, Param, Post, Put, Query } from '@nestjs/common'
 import { ApiOkResponse, ApiTags } from '@nestjs/swagger'
 
@@ -19,7 +20,8 @@ export class CharacterController {
     private characterService: CharacterService,
     private bloodlineService: BloodlineService,
     private classeService: ClasseService,
-    private arcaneService: ArcaneService
+    private skillService: SkillService,
+    private proficiencyService: ProficiencyService
   ) {}
 
   @ApiOkResponse({ type: CharacterPreviewVM })
@@ -61,13 +63,17 @@ export class CharacterController {
       buttonColor: createCharacterDto.buttonColor,
       textColor: createCharacterDto.textColor
     })
+    const createdCharacter = await this.characterService.createCharacter({
+      character: characterToCreate
+    })
+    const skillsList = await this.skillService.findSkillsByCharacter(createdCharacter)
+    const proficienciesList = await this.proficiencyService.findProficienciesByCharacter(createdCharacter)
     return CharacterVM.of({
-      character: await this.characterService.createCharacter({
-        character: characterToCreate
-      }),
+      character: createdCharacter,
       classe: classe,
       bloodline: bloodline,
-      skills: []
+      skills: skillsList,
+      proficiencies: proficienciesList
     })
   }
 
@@ -80,7 +86,8 @@ export class CharacterController {
     const character = await this.characterService.findOneByName(name)
     const classe = await this.classeService.findOneByName(character.classeName)
     const bloodline = await this.bloodlineService.findOneByName(character.bloodlineName)
-    const arcanesList = await this.arcaneService.findOwnedArcanes(character)
+    const skillsList = await this.skillService.findSkillsByCharacter(character)
+    const proficienciesList = await this.proficiencyService.findProficienciesByCharacter(character)
     const characterToUpdate = {
       ...character,
       ...updateCharacterDto
@@ -91,7 +98,8 @@ export class CharacterController {
       }),
       classe: classe,
       bloodline: bloodline,
-      skills: arcanesList
+      skills: skillsList,
+      proficiencies: proficienciesList
     })
   }
 
@@ -101,12 +109,14 @@ export class CharacterController {
     const character = await this.characterService.findOneByName(name)
     const classe = await this.classeService.findOneByName(character.classeName)
     const bloodline = await this.bloodlineService.findOneByName(character.bloodlineName)
-    const arcanesList = await this.arcaneService.findOwnedArcanes(character)
+    const skillsList = await this.skillService.findSkillsByCharacter(character)
+    const proficienciesList = await this.proficiencyService.findProficienciesByCharacter(character)
     return CharacterVM.of({
       character: character,
       classe: classe,
       bloodline: bloodline,
-      skills: arcanesList
+      skills: skillsList,
+      proficiencies: proficienciesList
     })
   }
 }

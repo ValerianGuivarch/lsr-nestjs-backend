@@ -1,11 +1,11 @@
-import { SkillCategory } from './SkillCategory'
 import { SkillStat } from './SkillStat'
+import { DisplayCategory } from '../characters/DisplayCategory'
 import { SuccessCalculation } from '../roll/SuccessCalculation'
 
 export class Skill {
   name: string
   stat: SkillStat
-  category: SkillCategory // just for display ?
+  displayCategory: DisplayCategory // just for display ?
   pvCost: number
   pfCost: number
   ppCost: number
@@ -22,7 +22,7 @@ export class Skill {
   constructor(p: Skill) {
     this.name = p.name
     this.stat = p.stat
-    this.category = p.category
+    this.displayCategory = p.displayCategory
     this.pvCost = p.pvCost
     this.pfCost = p.pfCost
     this.ppCost = p.ppCost

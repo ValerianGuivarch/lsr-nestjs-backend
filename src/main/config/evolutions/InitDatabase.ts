@@ -1,12 +1,13 @@
 import { DBBloodline } from '../../data/database/bloodlines/DBBloodline'
 import { DBCharacter } from '../../data/database/character/DBCharacter'
 import { DBClasse } from '../../data/database/classes/DBClasse'
+import { DBProficiency } from '../../data/database/proficiencies/DBProficiency'
+import { DBClasseSkill } from '../../data/database/skills/DBClasseSkill'
 import { DBSkill } from '../../data/database/skills/DBSkill'
 import { Category } from '../../domain/models/characters/Category'
+import { DisplayCategory } from '../../domain/models/characters/DisplayCategory'
 import { Genre } from '../../domain/models/characters/Genre'
 import { SuccessCalculation } from '../../domain/models/roll/SuccessCalculation'
-import { SkillAttribution } from '../../domain/models/skills/SkillAttribution'
-import { SkillCategory } from '../../domain/models/skills/SkillCategory'
 import { SkillOwnedUse } from '../../domain/models/skills/SkillOwnedUse'
 import { SkillStat } from '../../domain/models/skills/SkillStat'
 import { Injectable } from '@nestjs/common'
@@ -24,14 +25,20 @@ export class InitDatabase {
     @InjectRepository(DBSkill, 'postgres')
     private dbSkillRepository: Repository<DBSkill>,
     @InjectRepository(DBCharacter, 'postgres')
-    private dbCharacterRepository: Repository<DBCharacter>
+    private dbCharacterRepository: Repository<DBCharacter>,
+    @InjectRepository(DBProficiency, 'postgres')
+    private dbProficiencyRepository: Repository<DBProficiency>,
+    @InjectRepository(DBClasseSkill, 'postgres')
+    private dbClasseSkillRepository: Repository<DBClasseSkill>
   ) {}
 
   async onModuleInit(): Promise<void> {
     const skills = await this.initSkills()
-    const classes = await this.initClasses(skills)
+    const proficiencies = await this.initProficiencies()
+    const classes = await this.initClasses()
     const bloodlines = await this.initBloodlines()
-    const characters = await this.initCharacters(classes, bloodlines, skills)
+    const characters = await this.initCharacters(classes, bloodlines)
+    await this.skillsAttribution(skills, classes, bloodlines, characters)
   }
 
   /*async initClasseSkills(
@@ -62,8 +69,7 @@ export class InitDatabase {
   }*/
   async initCharacters(
     classes: Map<string, DBClasse>,
-    bloodlines: Map<string, DBBloodline>,
-    skills: Map<string, DBSkill>
+    bloodlines: Map<string, DBBloodline>
   ): Promise<Map<string, DBCharacter>> {
     const jonathan: DBCharacter = this.createCharacter({
       name: 'jonathan',
@@ -106,73 +112,66 @@ export class InitDatabase {
   async initSkills(): Promise<Map<string, DBSkill>> {
     const chairSkill: DBSkill = this.createSkill({
       name: 'chair',
-      attribution: SkillAttribution.ALL,
+      allAttribution: true,
       stat: SkillStat.CHAIR,
-      category: SkillCategory.STATS,
+      category: DisplayCategory.STATS,
       display: 'fait un *Jet de Chair*',
       position: 1
     })
-
     const espritSkill: DBSkill = this.createSkill({
       name: 'esprit',
-      attribution: SkillAttribution.ALL,
+      allAttribution: true,
       stat: SkillStat.ESPRIT,
-      category: SkillCategory.STATS,
+      category: DisplayCategory.STATS,
       display: "fait un *Jet d'Esprit*",
       position: 2
     })
-
     const essenceSkill: DBSkill = this.createSkill({
       name: 'essence',
-      attribution: SkillAttribution.ALL,
+      allAttribution: true,
       stat: SkillStat.ESSENCE,
-      category: SkillCategory.STATS,
+      category: DisplayCategory.STATS,
       display: "fait un *Jet d'Essence*",
       position: 3
     })
-
     const magieSkill: DBSkill = this.createSkill({
       name: 'magie',
-      attribution: SkillAttribution.ALL,
+      allAttribution: false,
       stat: SkillStat.ESSENCE,
-      category: SkillCategory.STATS,
+      category: DisplayCategory.MAGIE,
       display: 'fait un *Jet de Magie*',
       position: 1,
       dettesCost: 1
     })
-
     const cantripSkill: DBSkill = this.createSkill({
       name: 'cantrip',
-      attribution: SkillAttribution.CLASSES,
+      allAttribution: false,
       stat: SkillStat.ESSENCE,
-      category: SkillCategory.STATS,
+      category: DisplayCategory.MAGIE,
       display: 'fait un *Jet de Magie Légère*',
       position: 1,
       ppCost: 1
     })
-
     const licorneSkill: DBSkill = this.createSkill({
       name: 'licorne',
-      attribution: SkillAttribution.OWNED,
+      allAttribution: false,
       stat: SkillStat.ESSENCE,
-      category: SkillCategory.ARCANES,
+      category: DisplayCategory.ARCANES,
       display: 'fait une *Licorne*',
       position: 23,
       successCalculation: SuccessCalculation.SIMPLE_PLUS_1,
       arcaneCost: 1
     })
-
     const chevalSkill: DBSkill = this.createSkill({
       name: 'cheval',
-      attribution: SkillAttribution.OWNED,
+      allAttribution: false,
       stat: SkillStat.ESPRIT,
-      category: SkillCategory.ARCANES,
+      category: DisplayCategory.ARCANES,
       display: 'fait un *Cheval*',
       position: 24,
       successCalculation: SuccessCalculation.SIMPLE_PLUS_1,
       arcaneCost: 1
     })
-
     const newSkills = [chairSkill, espritSkill, essenceSkill, magieSkill, cantripSkill, licorneSkill, chevalSkill]
     const skills = new Map<string, DBSkill>()
     for (const skillData of newSkills) {
@@ -187,6 +186,32 @@ export class InitDatabase {
       }
     }
     return skills
+  }
+  async initProficiencies(): Promise<Map<string, DBProficiency>> {
+    const lumiereSagesse: DBProficiency = this.createProficiency({
+      name: 'sagesse',
+      category: DisplayCategory.MAGIE,
+      minLevel: 1
+    })
+    const lumiereCharisme: DBProficiency = this.createProficiency({
+      name: 'charisme',
+      category: DisplayCategory.MAGIE,
+      minLevel: 10
+    })
+    const newProficiencies = [lumiereSagesse, lumiereCharisme]
+    const proficiencies = new Map<string, DBProficiency>()
+    for (const proficiencyData of newProficiencies) {
+      const existingProficiency = await this.dbProficiencyRepository.findOneBy({ name: proficiencyData.name })
+      if (!existingProficiency) {
+        const proficiency = new DBProficiency()
+        Object.assign(proficiency, proficiencyData)
+        const createdProficiency = await this.dbProficiencyRepository.save(proficiency)
+        proficiencies.set(proficiency.name, createdProficiency)
+      } else {
+        proficiencies.set(existingProficiency.name, existingProficiency)
+      }
+    }
+    return proficiencies
   }
   async initBloodlines(): Promise<Map<string, DBBloodline>> {
     const eauBloodline: DBBloodline = this.createBloodline({
@@ -269,24 +294,21 @@ export class InitDatabase {
     return bloodlines
   }
 
-  async initClasses(skills: Map<string, DBSkill>): Promise<Map<string, DBClasse>> {
+  async initClasses(): Promise<Map<string, DBClasse>> {
     const championClasse: DBClasse = this.createClasse({
       name: 'champion',
       displayMale: 'Champion',
-      displayFemale: 'Championne',
-      skills: [skills.get('cantrip'), skills.get('magie')]
+      displayFemale: 'Championne'
     })
     const corrompuClasse: DBClasse = this.createClasse({
       name: 'corrompu',
       displayMale: 'Corrompu',
-      displayFemale: 'Corrompue',
-      skills: [skills.get('cantrip'), skills.get('magie')]
+      displayFemale: 'Corrompue'
     })
     const rejeteClasse: DBClasse = this.createClasse({
       name: 'rejeté',
       displayMale: 'Rejeté',
-      displayFemale: 'Rejetée',
-      skills: [skills.get('cantrip'), skills.get('magie')]
+      displayFemale: 'Rejetée'
     })
     const pacificateurClasse: DBClasse = this.createClasse({
       name: 'pacificateur',
@@ -326,8 +348,7 @@ export class InitDatabase {
     const roiClasse: DBClasse = this.createClasse({
       name: 'roi',
       displayMale: 'Roi',
-      displayFemale: 'Reine',
-      skills: [skills.get('cantrip'), skills.get('magie')]
+      displayFemale: 'Reine'
     })
     const parolierClasse: DBClasse = this.createClasse({
       name: 'parolier',
@@ -375,23 +396,13 @@ export class InitDatabase {
     }
     return classes
   }
-  createClasse(p: { name: string; displayMale: string; displayFemale: string; skills?: DBSkill[] }): DBClasse {
+  createClasse(p: { name: string; displayMale: string; displayFemale: string }): DBClasse {
     const newClass = new DBClasse()
     newClass.name = p.name
     newClass.displayMale = p.displayMale
     newClass.displayFemale = p.displayFemale
-    newClass.skills = p.skills || []
     return newClass
   }
-  /*
-  createClassSkill(p: { classe: DBClasse; skill: DBSkill }): DBClasseSkill {
-    const newClasseSkill = new DBClasseSkill()
-    newClasseSkill.classe = p.classe
-    newClasseSkill.classeName = p.classe.name
-    newClasseSkill.skill = p.skill
-    newClasseSkill.skillName = p.skill.name
-    return newClasseSkill
-  }*/
   createCharacter(p: {
     name: string
     classe: DBClasse
@@ -466,9 +477,9 @@ export class InitDatabase {
 
   createSkill(p: {
     name: string
-    attribution: SkillAttribution
+    allAttribution: boolean
     stat: SkillStat
-    category: SkillCategory
+    category: DisplayCategory
     display: string
     position: number
     allowsPf?: boolean
@@ -486,13 +497,11 @@ export class InitDatabase {
   }): DBSkill {
     return {
       name: p.name,
-      attribution: p.attribution,
+      allAttribution: p.allAttribution,
       allowsPf: p.allowsPf || true,
       allowsPp: p.allowsPp || true,
       stat: p.stat,
-      category: p.category,
-      use: p.use || SkillOwnedUse.UNLIMITED,
-      limitedUse: p.limitedUse || 1,
+      displayCategory: p.category,
       pvCost: p.pvCost || 0,
       pfCost: p.pfCost || 0,
       ppCost: p.ppCost || 0,
@@ -503,6 +512,42 @@ export class InitDatabase {
       secret: p.secret || false,
       display: p.display,
       position: p.position
+    }
+  }
+
+  createProficiency(p: { name: string; category: DisplayCategory; minLevel?: number }): DBProficiency {
+    return {
+      name: p.name,
+      displayCategory: p.category,
+      minLevel: p.minLevel || 1
+    }
+  }
+
+  private async skillsAttribution(
+    skills: Map<string, DBSkill>,
+    classes: Map<string, DBClasse>,
+    bloodlines: Map<string, DBBloodline>,
+    characters: Map<string, DBCharacter>
+  ) {
+    await this.saveClasseSkillIfNotExisting(classes.get('champion'), skills.get('magie'))
+    await this.saveClasseSkillIfNotExisting(classes.get('champion'), skills.get('cantrip'))
+  }
+
+  private async saveClasseSkillIfNotExisting(classe: DBClasse, skill: DBSkill) {
+    const existingRelation = await this.dbClasseSkillRepository.findOne({
+      where: {
+        classeName: classe.name,
+        skillName: skill.name
+      }
+    })
+
+    if (!existingRelation) {
+      await this.dbClasseSkillRepository.save({
+        classe: classe,
+        skill: skill,
+        classeName: classe.name,
+        skillName: skill.name
+      })
     }
   }
 }
