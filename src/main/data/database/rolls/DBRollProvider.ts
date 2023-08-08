@@ -1,5 +1,6 @@
 import { DBRoll } from './DBRoll'
 import { Roll } from '../../../domain/models/roll/Roll'
+import { SkillStat } from '../../../domain/models/skills/SkillStat'
 import { IRollProvider } from '../../../domain/providers/IRollProvider'
 import { ProviderErrors } from '../../errors/ProviderErrors'
 import { Injectable } from '@nestjs/common'
@@ -29,17 +30,18 @@ export class DBRollProvider implements IRollProvider {
       success: doc.success,
       juge12: doc.juge12,
       juge34: doc.juge34,
-      characterToHelp: doc.characterToHelp,
       picture: doc.picture,
       data: doc.data,
-      empirique: doc.empirique,
+      empiriqueRoll: doc.empiriqueRoll,
       resistRoll: doc.resistRoll,
-      display: doc.display
+      display: doc.display,
+      stat: SkillStat[doc.stat]
     })
   }
 
   private static fromRoll(doc: Roll): DBRoll {
     return {
+      id: doc.id,
       rollerName: doc.rollerName,
       date: doc.date,
       secret: doc.secret,
@@ -56,9 +58,10 @@ export class DBRollProvider implements IRollProvider {
       characterToHelp: doc.characterToHelp,
       picture: doc.picture,
       data: doc.data,
-      empirique: doc.empirique,
+      empiriqueRoll: doc.empiriqueRoll,
       resistRoll: doc.resistRoll,
-      display: doc.display
+      display: doc.display,
+      stat: doc.stat
     } as DBRoll
   }
 

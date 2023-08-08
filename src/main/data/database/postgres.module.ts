@@ -4,7 +4,6 @@ import { DBCharacter } from './character/DBCharacter'
 import { DBCharacterProvider } from './character/DBCharacterProvider'
 import { DBClasse } from './classes/DBClasse'
 import { DBClasseProvider } from './classes/DBClasseProvider'
-import { DBEntity } from './DBEntity'
 import { DBBloodlineProficiency } from './proficiencies/DBBloodlineProficiency'
 import { DBCharacterProficiency } from './proficiencies/DBCharacterProficiency'
 import { DBClasseProficiency } from './proficiencies/DBClasseProficiency'
@@ -26,7 +25,6 @@ import { TypeOrmModule } from '@nestjs/typeorm'
   imports: [
     TypeOrmModule.forFeature(
       [
-        DBEntity,
         DBRoll,
         DBSession,
         DBCharacter,

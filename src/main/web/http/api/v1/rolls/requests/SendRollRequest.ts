@@ -33,16 +33,6 @@ export class SendRollRequest {
   @ApiPropertyOptional({ required: false })
   @IsOptional()
   @IsString()
-  readonly characterToHelp?: string
-
-  @ApiPropertyOptional({ required: false })
-  @IsOptional()
-  @IsString()
-  readonly picture?: string
-
-  @ApiPropertyOptional({ required: false })
-  @IsOptional()
-  @IsString()
   readonly empiriqueRoll?: string
 
   @ApiPropertyOptional({ required: false })

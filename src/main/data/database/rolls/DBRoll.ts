@@ -1,13 +1,22 @@
-import { DBEntity } from '../DBEntity'
-import { Column, Entity } from 'typeorm'
+import { SkillStat } from '../../../domain/models/skills/SkillStat'
+import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm'
 
 @Entity()
-export class DBRoll extends DBEntity {
+export class DBRoll {
+  @PrimaryGeneratedColumn()
+  id: string
+
   @Column({ type: 'varchar' })
   rollerName: string
 
   @Column({ type: 'timestamp' })
   date: Date
+
+  @Column({
+    type: 'enum',
+    enum: SkillStat
+  })
+  stat: string
 
   @Column({ type: 'boolean' })
   secret: boolean
@@ -43,25 +52,16 @@ export class DBRoll extends DBEntity {
   juge34?: number
 
   @Column({ type: 'varchar', nullable: true })
-  characterToHelp?: string
-
-  @Column({ type: 'varchar', nullable: true })
   picture?: string
 
   @Column({ type: 'varchar', nullable: true })
   data?: string
 
   @Column({ type: 'varchar', nullable: true })
-  empirique?: string
-
-  @Column({ type: 'varchar', nullable: true })
-  apotheose?: string
+  empiriqueRoll?: string
 
   @Column({ type: 'varchar', nullable: true })
   resistRoll?: string
-
-  @Column({ type: 'boolean', nullable: true })
-  helpUsed?: boolean
 
   @Column({ type: 'varchar', default: 'fait un jet ', nullable: false })
   display: string

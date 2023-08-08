@@ -1947,22 +1947,6 @@
       "actions": [],
       "fields": [
         {
-          "defaultValue": null,
-          "enums": [],
-          "field": "apotheose",
-          "integration": null,
-          "inverseOf": null,
-          "isFilterable": true,
-          "isPrimaryKey": false,
-          "isReadOnly": false,
-          "isRequired": false,
-          "isSortable": true,
-          "isVirtual": false,
-          "reference": null,
-          "type": "String",
-          "validations": []
-        },
-        {
           "defaultValue": 0,
           "enums": [],
           "field": "bonus",
@@ -1977,38 +1961,6 @@
           "reference": null,
           "type": "Number",
           "validations": [{"type": "is present", "message": "Field is required"}]
-        },
-        {
-          "defaultValue": null,
-          "enums": [],
-          "field": "characterToHelp",
-          "integration": null,
-          "inverseOf": null,
-          "isFilterable": true,
-          "isPrimaryKey": false,
-          "isReadOnly": false,
-          "isRequired": false,
-          "isSortable": true,
-          "isVirtual": false,
-          "reference": null,
-          "type": "String",
-          "validations": []
-        },
-        {
-          "defaultValue": null,
-          "enums": [],
-          "field": "createdDate",
-          "integration": null,
-          "inverseOf": null,
-          "isFilterable": true,
-          "isPrimaryKey": false,
-          "isReadOnly": false,
-          "isRequired": false,
-          "isSortable": true,
-          "isVirtual": false,
-          "reference": null,
-          "type": "Date",
-          "validations": []
         },
         {
           "defaultValue": null,
@@ -2077,7 +2029,7 @@
         {
           "defaultValue": null,
           "enums": [],
-          "field": "empirique",
+          "field": "empiriqueRoll",
           "integration": null,
           "inverseOf": null,
           "isFilterable": true,
@@ -2105,22 +2057,6 @@
           "reference": null,
           "type": "Boolean",
           "validations": [{"type": "is present", "message": "Field is required"}]
-        },
-        {
-          "defaultValue": null,
-          "enums": [],
-          "field": "helpUsed",
-          "integration": null,
-          "inverseOf": null,
-          "isFilterable": true,
-          "isPrimaryKey": false,
-          "isReadOnly": false,
-          "isRequired": false,
-          "isSortable": true,
-          "isVirtual": false,
-          "reference": null,
-          "type": "Boolean",
-          "validations": []
         },
         {
           "defaultValue": null,
@@ -2300,6 +2236,22 @@
         },
         {
           "defaultValue": null,
+          "enums": ["CHAIR", "CUSTOM", "EMPIRIQUE", "ESPRIT", "ESSENCE", "FIXE"],
+          "field": "stat",
+          "integration": null,
+          "inverseOf": null,
+          "isFilterable": true,
+          "isPrimaryKey": false,
+          "isReadOnly": false,
+          "isRequired": true,
+          "isSortable": true,
+          "isVirtual": false,
+          "reference": null,
+          "type": "Enum",
+          "validations": [{"type": "is present", "message": "Field is required"}]
+        },
+        {
+          "defaultValue": null,
           "enums": [],
           "field": "success",
           "integration": null,
@@ -2312,22 +2264,6 @@
           "isVirtual": false,
           "reference": null,
           "type": "Number",
-          "validations": []
-        },
-        {
-          "defaultValue": null,
-          "enums": [],
-          "field": "updatedDate",
-          "integration": null,
-          "inverseOf": null,
-          "isFilterable": true,
-          "isPrimaryKey": false,
-          "isReadOnly": false,
-          "isRequired": false,
-          "isSortable": true,
-          "isVirtual": false,
-          "reference": null,
-          "type": "Date",
           "validations": []
         }
       ],
@@ -2363,22 +2299,6 @@
         {
           "defaultValue": null,
           "enums": [],
-          "field": "createdDate",
-          "integration": null,
-          "inverseOf": null,
-          "isFilterable": true,
-          "isPrimaryKey": false,
-          "isReadOnly": false,
-          "isRequired": false,
-          "isSortable": true,
-          "isVirtual": false,
-          "reference": null,
-          "type": "Date",
-          "validations": []
-        },
-        {
-          "defaultValue": null,
-          "enums": [],
           "field": "id",
           "integration": null,
           "inverseOf": null,
@@ -2407,22 +2327,6 @@
           "reference": null,
           "type": "Number",
           "validations": [{"type": "is present", "message": "Field is required"}]
-        },
-        {
-          "defaultValue": null,
-          "enums": [],
-          "field": "updatedDate",
-          "integration": null,
-          "inverseOf": null,
-          "isFilterable": true,
-          "isPrimaryKey": false,
-          "isReadOnly": false,
-          "isRequired": false,
-          "isSortable": true,
-          "isVirtual": false,
-          "reference": null,
-          "type": "Date",
-          "validations": []
         }
       ],
       "icon": null,

@@ -1,8 +1,10 @@
-import { DBEntity } from '../DBEntity'
-import { Entity, Column } from "typeorm"
+import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm'
 
 @Entity()
-export class DBSession extends DBEntity {
+export class DBSession {
+  @PrimaryGeneratedColumn()
+  id: string
+
   @Column({ type: 'integer', default: 0 })
   relanceMj: number
 

@@ -48,6 +48,17 @@ export class InitDatabase {
   ) {}
 
   async onModuleInit(): Promise<void> {
+    await this.dbClasseSkillRepository.delete({})
+    await this.dbBloodlineSkillRepository.delete({})
+    await this.dbCharacterSkillRepository.delete({})
+    await this.dbClasseProficiencyRepository.delete({})
+    await this.dbBloodlineProficiencyRepository.delete({})
+    await this.dbCharacterProficiencyRepository.delete({})
+    await this.dbCharacterRepository.delete({})
+    await this.dbClasseRepository.delete({})
+    await this.dbBloodlineRepository.delete({})
+    await this.dbSkillRepository.delete({})
+    await this.dbProficiencyRepository.delete({})
     const skills = await this.initSkills()
     const proficiencies = await this.initProficiencies()
     const classes = await this.initClasses()
@@ -65,22 +76,19 @@ export class InitDatabase {
       name: 'jonathan',
       classe: classes.get('champion'),
       bloodline: bloodlines.get('lumière'),
-      chair: 3,
+      chair: 9,
       esprit: 2,
-      essence: 1,
-      pvMax: 10,
-      pfMax: 10,
-      ppMax: 10,
-      arcanesMax: 10,
-      niveau: 1,
-      lux: 'bleu',
-      umbra: 'bleu',
-      secunda: 'bleu',
+      essence: 8,
+      niveau: 18,
+      lux: 'Hyper social',
+      umbra: 'Tendance psychopathe',
+      secunda: 'Cuisinier hair pair',
       category: Category.PJ,
       genre: Genre.HOMME,
-      picture: 'https://i.imgur.com/3QfZQ5u.jpg',
-      pictureApotheose: 'https://i.imgur.com/3QfZQ5u.jpg',
-      background: 'https://i.imgur.com/3QfZQ5u.jpg',
+      picture: 'https://media.discordapp.net/attachments/689044605311647799/1001476340358328380/unknown.png',
+      pictureApotheose: 'https://media.discordapp.net/attachments/689044605311647799/1006315258585034802/unknown.png',
+      background:
+        'https://media.discordapp.net/attachments/689044605311647799/1001506417561325568/unknown.png?width=2160&height=1021',
       playerName: 'valou'
     })
 
@@ -124,6 +132,15 @@ export class InitDatabase {
       display: "fait un *Jet d'Essence*",
       position: 3
     })
+    const empiriqueSkill: DBSkill = this.createSkill({
+      name: 'empirique',
+      allAttribution: true,
+      stat: SkillStat.EMPIRIQUE,
+      category: DisplayCategory.STATS,
+      display: 'fait un *Jet Empirique*',
+      position: 4,
+      successCalculation: SuccessCalculation.AUCUN
+    })
     const magieSkill: DBSkill = this.createSkill({
       name: 'magie',
       allAttribution: false,
@@ -141,6 +158,26 @@ export class InitDatabase {
       display: 'fait un *Jet de Magie Légère*',
       position: 1,
       ppCost: 1
+    })
+    const arbreSkill: DBSkill = this.createSkill({
+      name: 'arbre',
+      allAttribution: false,
+      stat: SkillStat.ESSENCE,
+      category: DisplayCategory.ARCANES,
+      display: 'fait une *Arbre*',
+      position: 20,
+      successCalculation: SuccessCalculation.SIMPLE_PLUS_1,
+      arcaneCost: 1
+    })
+    const mortSkill: DBSkill = this.createSkill({
+      name: 'mort',
+      allAttribution: false,
+      stat: SkillStat.FIXE,
+      category: DisplayCategory.ARCANES,
+      display: 'fait une *Arcane de la Mort*',
+      position: 94,
+      successCalculation: SuccessCalculation.AUCUN,
+      arcaneCost: 1
     })
     const licorneSkill: DBSkill = this.createSkill({
       name: 'licorne',
@@ -162,7 +199,18 @@ export class InitDatabase {
       successCalculation: SuccessCalculation.SIMPLE_PLUS_1,
       arcaneCost: 1
     })
-    const newSkills = [chairSkill, espritSkill, essenceSkill, magieSkill, cantripSkill, licorneSkill, chevalSkill]
+    const newSkills = [
+      chairSkill,
+      espritSkill,
+      essenceSkill,
+      empiriqueSkill,
+      magieSkill,
+      cantripSkill,
+      licorneSkill,
+      chevalSkill,
+      arbreSkill,
+      mortSkill
+    ]
     const skills = new Map<string, DBSkill>()
     for (const skillData of newSkills) {
       const existingSkill = await this.dbSkillRepository.findOneBy({ name: skillData.name })
@@ -428,9 +476,9 @@ export class InitDatabase {
     // eslint-disable-next-line no-magic-numbers
     newCharacter.pvMax = p.pvMax || p.chair * 2
     // eslint-disable-next-line no-magic-numbers
-    newCharacter.pfMax = p.pfMax || p.esprit * 2
+    newCharacter.pfMax = p.pfMax || p.esprit
     // eslint-disable-next-line no-magic-numbers
-    newCharacter.ppMax = p.ppMax || p.essence * 2
+    newCharacter.ppMax = p.ppMax || p.essence
     newCharacter.pv = newCharacter.pvMax
     newCharacter.pf = newCharacter.pfMax
     newCharacter.pp = newCharacter.ppMax
@@ -521,6 +569,8 @@ export class InitDatabase {
   ) {
     await this.saveClasseSkillIfNotExisting(classes.get('champion'), skills.get('magie'))
     await this.saveClasseSkillIfNotExisting(classes.get('champion'), skills.get('cantrip'))
+    await this.saveCharacterSkillIfNotExisting(characters.get('jonathan'), skills.get('arbre'))
+    await this.saveCharacterSkillIfNotExisting(characters.get('jonathan'), skills.get('mort'))
   }
 
   private async saveClasseSkillIfNotExisting(classe: DBClasse, skill: DBSkill) {

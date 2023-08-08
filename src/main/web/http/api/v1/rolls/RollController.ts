@@ -40,8 +40,7 @@ export class RollController {
       proficiency: req.proficiency,
       bonus: req.bonus,
       malus: req.malus,
-      empirique: req.empiriqueRoll,
-      characterToHelp: req.characterToHelp,
+      empiriqueRoll: req.empiriqueRoll,
       resistRoll: req.resistRoll,
       skillName: req.skillName
     })

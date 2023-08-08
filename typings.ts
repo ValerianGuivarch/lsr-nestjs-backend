@@ -479,8 +479,6 @@ export type Schema = {
   'db_roll': {
     plain: {
       'id': number;
-      'createdDate': string;
-      'updatedDate': string;
       'rollerName': string;
       'date': string;
       'secret': boolean;
@@ -494,14 +492,12 @@ export type Schema = {
       'success': number;
       'juge12': number;
       'juge34': number;
-      'characterToHelp': string;
       'picture': string;
       'data': string;
-      'empirique': string;
-      'apotheose': string;
+      'empiriqueRoll': string;
       'resistRoll': string;
-      'helpUsed': boolean;
       'display': string;
+      'stat': 'FIXE' | 'CHAIR' | 'ESPRIT' | 'ESSENCE' | 'EMPIRIQUE' | 'CUSTOM';
     };
     nested: {};
     flat: {};
@@ -509,8 +505,6 @@ export type Schema = {
   'db_session': {
     plain: {
       'id': number;
-      'createdDate': string;
-      'updatedDate': string;
       'relanceMj': number;
       'chaos': number;
     };

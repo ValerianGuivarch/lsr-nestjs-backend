@@ -68,8 +68,7 @@ export class RollService {
     bonus: number
     malus: number
     proficiency: boolean
-    empirique?: string
-    characterToHelp?: string
+    empiriqueRoll?: string
     resistRoll?: string
   }): Promise<Roll> {
     const character = await this.characterProvider.findOneByName(p.rollerName)
@@ -88,10 +87,10 @@ export class RollService {
     let useProficiency = p.proficiency
     const result: number[] = []
     const data = ''
-    if (skill.stat === SkillStat.EMPRIQUE) {
+    if (skill.stat === SkillStat.EMPIRIQUE) {
       try {
-        diceNumber = Number(p.empirique?.substring(0, p.empirique.indexOf('d')))
-        diceValue = Number(p.empirique?.substring(p.empirique.indexOf('d') + 1))
+        diceNumber = Number(p.empiriqueRoll?.substring(0, p.empiriqueRoll.indexOf('d')))
+        diceValue = Number(p.empiriqueRoll?.substring(p.empiriqueRoll.indexOf('d') + 1))
         usePf = false
         usePp = false
         useProficiency = false
@@ -239,11 +238,11 @@ export class RollService {
       success: success,
       juge12: juge12,
       juge34: juge34,
-      characterToHelp: p.characterToHelp,
       resistRoll: p.resistRoll,
       picture: character.apotheoseName ? character.pictureApotheose : character.picture,
-      empirique: p.empirique,
-      display: skill.display
+      empiriqueRoll: p.empiriqueRoll,
+      display: skill.display,
+      stat: skill.stat
     })
     const createdRoll = await this.rollProvider.add(rollToCreate)
     character.pv += pvDelta

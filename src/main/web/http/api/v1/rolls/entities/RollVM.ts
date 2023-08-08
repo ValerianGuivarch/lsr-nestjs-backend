@@ -54,13 +54,16 @@ export class RollVM {
   data?: string
 
   @ApiPropertyOptional()
-  empirique?: string
+  empiriqueRoll?: string
 
   @ApiPropertyOptional()
   apotheose?: string
 
   @ApiProperty()
   display: string
+
+  @ApiProperty()
+  stat: string
 
   constructor(p: RollVM) {
     Object.assign(this, p)
@@ -85,9 +88,10 @@ export class RollVM {
       resistRoll: p.roll.resistRoll,
       picture: p.roll.picture,
       data: p.roll.data,
-      empirique: p.roll.empirique,
+      empiriqueRoll: p.roll.empiriqueRoll,
       apotheose: p.roll.apotheose,
-      display: p.roll.display
+      display: p.roll.display,
+      stat: p.roll.stat
     })
   }
 }

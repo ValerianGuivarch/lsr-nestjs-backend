@@ -1,3 +1,4 @@
+import { SkillStat } from '../skills/SkillStat'
 export class Roll {
   id: string
   rollerName: string
@@ -17,10 +18,10 @@ export class Roll {
   resistRoll?: string
   picture?: string
   data?: string
-  empirique?: string
+  empiriqueRoll?: string
   apotheose?: string
   display: string
-
+  stat: SkillStat
   constructor(p: RollToCreate) {
     Object.assign(this, p)
   }
@@ -44,9 +45,10 @@ export class Roll {
     resistRoll?: string
     picture?: string
     data?: string
-    empirique?: string
+    empiriqueRoll?: string
     apotheose?: string
     display: string
+    stat: SkillStat
   }): Promise<RollToCreate> {
     const defaults = {
       rollerName: p.rollerName,
@@ -66,9 +68,10 @@ export class Roll {
       resistRoll: p.resistRoll,
       picture: p.picture,
       data: p.data,
-      empirique: p.empirique,
+      empiriqueRoll: p.empiriqueRoll,
       apotheose: p.apotheose,
-      display: p.display
+      display: p.display,
+      stat: p.stat
     }
 
     return Object.assign(defaults, p)

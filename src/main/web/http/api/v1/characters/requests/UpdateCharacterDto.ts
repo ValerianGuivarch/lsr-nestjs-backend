@@ -2,10 +2,6 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
 import { IsNumber, IsOptional, IsString } from 'class-validator'
 
 export class UpdateCharacterDto {
-  @ApiProperty()
-  @IsString()
-  readonly name: string
-
   @ApiProperty({ default: 2 })
   @IsNumber()
   readonly chair: number

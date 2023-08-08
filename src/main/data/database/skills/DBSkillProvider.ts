@@ -38,7 +38,7 @@ export class DBSkillProvider implements ISkillProvider {
           ? SkillStat[overloadSkill.stat]
           : SkillStat[skill.stat] ||
             (() => {
-              throw new Error('Missing stat for skill ' + skill.name)
+              throw new Error('Missing stat for skill ' + skill.name + ' : ' + skill.stat)
             })(),
       pvCost:
         overloadSkill && overloadSkill.pvCost
