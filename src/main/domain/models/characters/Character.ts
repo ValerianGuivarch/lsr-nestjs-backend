@@ -39,9 +39,11 @@ export class Character {
   uid?: number
   boosted?: boolean
   battleState: BattleState
+  restImproved: boolean
 
   constructor(p: Character) {
     this.name = p.name
+    this.restImproved = p.restImproved
     this.classeName = p.classeName
     this.bloodlineName = p.bloodlineName
     this.apotheoseName = p.apotheoseName
@@ -136,7 +138,8 @@ export class Character {
       buttonColor: p.buttonColor,
       textColor: p.textColor,
       classeName: p.classeName,
-      bloodlineName: p.bloodlineName
+      bloodlineName: p.bloodlineName,
+      restImproved: false
     }
 
     return Object.assign(defaults, p)

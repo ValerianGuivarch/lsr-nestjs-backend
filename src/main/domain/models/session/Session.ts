@@ -1,9 +1,13 @@
-export class Session {
-  chaos: number
-  relanceMj: number
+import { ChaosLevel } from './ChaosLevel'
 
-  constructor(p: { relanceMj: number; chaos: number }) {
-    this.relanceMj = p.relanceMj ?? 0
-    this.chaos = p.chaos ?? 0
+export class Session {
+  chaos: ChaosLevel
+  baseRest: number
+  improvedRest: number
+
+  constructor(session: Session) {
+    this.chaos = session.chaos
+    this.baseRest = session.baseRest
+    this.improvedRest = session.improvedRest
   }
 }

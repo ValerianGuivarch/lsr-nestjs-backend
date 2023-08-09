@@ -13,33 +13,19 @@ export class DBSessionProvider implements ISessionProvider {
 
   private static toSession(doc: DBSession): Session {
     return new Session({
-      relanceMj: doc.relanceMj,
-      chaos: doc.chaos
+      chaos: doc.chaos,
+      baseRest: doc.baseRest,
+      improvedRest: doc.improvedRest
     })
   }
 
-  private static fromSession(doc: Session): DBSession {
-    return {
-      relanceMj: doc.relanceMj,
-      chaos: doc.chaos
-    } as DBSession
-  }
-
-  async getSessionCharacter(): Promise<Session> {
+  async getSession(): Promise<Session> {
     // get all
-    const session = await this.dbSessionRepository.findOne({})
-    if (session) return DBSessionProvider.toSession(session)
+    const session = await this.dbSessionRepository.find({})
+    if (session && session.length > 0) return DBSessionProvider.toSession(session[0])
     else {
       // create one
-      await this.dbSessionRepository.create(
-        DBSessionProvider.fromSession(
-          new Session({
-            relanceMj: 0,
-            chaos: 0
-          })
-        )
-      )
-      return await this.dbSessionRepository.findOne({})
+      return DBSessionProvider.toSession(await this.dbSessionRepository.create({}))
     }
   }
 }

@@ -1019,6 +1019,22 @@
           "validations": [{"type": "is present", "message": "Field is required"}]
         },
         {
+          "defaultValue": false,
+          "enums": [],
+          "field": "restImproved",
+          "integration": null,
+          "inverseOf": null,
+          "isFilterable": true,
+          "isPrimaryKey": false,
+          "isReadOnly": false,
+          "isRequired": true,
+          "isSortable": true,
+          "isVirtual": false,
+          "reference": null,
+          "type": "Boolean",
+          "validations": [{"type": "is present", "message": "Field is required"}]
+        },
+        {
           "defaultValue": " ",
           "enums": [],
           "field": "secunda",
@@ -2281,20 +2297,36 @@
       "actions": [],
       "fields": [
         {
-          "defaultValue": 0,
+          "defaultValue": 3,
           "enums": [],
+          "field": "baseRest",
+          "integration": null,
+          "inverseOf": null,
+          "isFilterable": true,
+          "isPrimaryKey": false,
+          "isReadOnly": false,
+          "isRequired": false,
+          "isSortable": true,
+          "isVirtual": false,
+          "reference": null,
+          "type": "Number",
+          "validations": []
+        },
+        {
+          "defaultValue": "0",
+          "enums": ["0", "15", "30", "45", "60", "75"],
           "field": "chaos",
           "integration": null,
           "inverseOf": null,
           "isFilterable": true,
           "isPrimaryKey": false,
           "isReadOnly": false,
-          "isRequired": true,
+          "isRequired": false,
           "isSortable": true,
           "isVirtual": false,
           "reference": null,
-          "type": "Number",
-          "validations": [{"type": "is present", "message": "Field is required"}]
+          "type": "Enum",
+          "validations": []
         },
         {
           "defaultValue": null,
@@ -2313,20 +2345,20 @@
           "validations": []
         },
         {
-          "defaultValue": 0,
+          "defaultValue": 4,
           "enums": [],
-          "field": "relanceMj",
+          "field": "improvedRest",
           "integration": null,
           "inverseOf": null,
           "isFilterable": true,
           "isPrimaryKey": false,
           "isReadOnly": false,
-          "isRequired": true,
+          "isRequired": false,
           "isSortable": true,
           "isVirtual": false,
           "reference": null,
           "type": "Number",
-          "validations": [{"type": "is present", "message": "Field is required"}]
+          "validations": []
         }
       ],
       "icon": null,

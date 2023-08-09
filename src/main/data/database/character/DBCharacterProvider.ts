@@ -23,6 +23,7 @@ export class DBCharacterProvider implements ICharacterProvider {
   private static toCharacter(doc: DBCharacter): Character {
     return new Character({
       name: doc.name,
+      restImproved: doc.restImproved,
       classeName: doc.classeName,
       bloodlineName: doc.bloodlineName,
       apotheoseName: doc.apotheoseName,

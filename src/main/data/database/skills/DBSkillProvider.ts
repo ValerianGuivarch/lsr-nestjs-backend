@@ -132,21 +132,6 @@ export class DBSkillProvider implements ISkillProvider {
     }
   }
 
-  async findSkillByCharacterAndSkillName(character: Character, skillName: string): Promise<Skill> {
-    try {
-      const dbOwnedSkill = await this.dbCharacterSkillRepository.findOneByOrFail({
-        characterName: character.name,
-        skillName: skillName
-      })
-
-      const skill = await this.dbSkillRepository.findOneByOrFail({ name: dbOwnedSkill.skillName })
-      return DBSkillProvider.toSkill(skill, dbOwnedSkill)
-    } catch (error) {
-      const skill = await this.dbSkillRepository.findOneByOrFail({ name: skillName })
-      return DBSkillProvider.toSkill(skill, undefined)
-    }
-  }
-
   async findSkillsByCharacter(character: Character): Promise<Skill[]> {
     const skillsForAll = await this.dbSkillRepository.findBy({ allAttribution: true })
 
@@ -158,12 +143,10 @@ export class DBSkillProvider implements ISkillProvider {
       where: { bloodlineName: character.bloodlineName },
       relations: ['bloodline', 'skill']
     })
-
     const characterWithSkills = await this.dbCharacterSkillRepository.find({
       where: { characterName: character.name },
       relations: ['character', 'skill']
     })
-
     const skillPromises: Skill[] = characterWithSkills.map((characterSkill) =>
       DBSkillProvider.toSkill(characterSkill.skill, characterSkill)
     )

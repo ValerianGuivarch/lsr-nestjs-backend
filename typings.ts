@@ -222,6 +222,7 @@ export type Schema = {
       'textColor': string;
       'boosted': boolean;
       'bloodlineName': string;
+      'restImproved': boolean;
     };
     nested: {
       'db_classe': Schema['db_classe']['plain'] & Schema['db_classe']['nested'];
@@ -290,6 +291,7 @@ export type Schema = {
       'db_character:textColor': string;
       'db_character:boosted': boolean;
       'db_character:bloodlineName': string;
+      'db_character:restImproved': boolean;
       'db_character:db_classe:name': string;
       'db_character:db_classe:displayMale': string;
       'db_character:db_classe:displayFemale': string;
@@ -364,6 +366,7 @@ export type Schema = {
       'db_character:textColor': string;
       'db_character:boosted': boolean;
       'db_character:bloodlineName': string;
+      'db_character:restImproved': boolean;
       'db_character:db_classe:name': string;
       'db_character:db_classe:displayMale': string;
       'db_character:db_classe:displayFemale': string;
@@ -505,8 +508,9 @@ export type Schema = {
   'db_session': {
     plain: {
       'id': number;
-      'relanceMj': number;
-      'chaos': number;
+      'baseRest': number;
+      'improvedRest': number;
+      'chaos': '0' | '15' | '30' | '45' | '60' | '75';
     };
     nested: {};
     flat: {};

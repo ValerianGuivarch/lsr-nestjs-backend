@@ -73,7 +73,9 @@ export class RollService {
   }): Promise<Roll> {
     const character = await this.characterProvider.findOneByName(p.rollerName)
     const bloodline = await this.bloodlineProvider.findOneByName(character.bloodlineName ?? undefined)
-    const skill = await this.skillProvider.findSkillByCharacterAndSkillName(character, p.skillName)
+    const skill = (await this.skillProvider.findSkillsByCharacter(character)).filter(
+      (skill) => skill.name === p.skillName
+    )[0]
 
     let diceNumber = 0
     let diceValue = 0

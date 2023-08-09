@@ -109,6 +109,12 @@ export class DBCharacter {
   })
   niveau: number
 
+  @Column({
+    type: 'boolean',
+    default: false
+  })
+  restImproved: boolean
+
   @Column({ type: 'varchar', default: ' ' })
   lux: string
 

@@ -1,7 +1,7 @@
 import { Session } from '../models/session/Session'
 
 export interface ISessionProvider {
-  getSessionCharacter(): Promise<Session>
+  getSession(): Promise<Session>
   /*  addCharacter(characterName: string): Promise<boolean>
   removeCharacter(characterName: string): Promise<boolean>
   updateVisioToken(visioToken: string): Promise<boolean>

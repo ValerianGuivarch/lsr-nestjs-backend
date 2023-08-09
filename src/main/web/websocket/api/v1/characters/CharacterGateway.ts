@@ -2,6 +2,7 @@ import { BloodlineService } from '../../../../../domain/services/BloodlineServic
 import { CharacterService } from '../../../../../domain/services/CharacterService'
 import { ClasseService } from '../../../../../domain/services/ClasseService'
 import { ProficiencyService } from '../../../../../domain/services/ProficiencyService'
+import { SessionService } from '../../../../../domain/services/SessionService'
 import { SkillService } from '../../../../../domain/services/SkillService'
 import { CharacterVM } from '../../../../http/api/v1/characters/entities/CharacterVM'
 import { Controller, Get, Param, Sse } from '@nestjs/common'
@@ -21,7 +22,8 @@ export class CharacterGateway {
     private bloodlineService: BloodlineService,
     private classeService: ClasseService,
     private skillService: SkillService,
-    private proficiencyService: ProficiencyService
+    private proficiencyService: ProficiencyService,
+    private sessionService: SessionService
   ) {}
   @Get(':name')
   @ApiOkResponse()
@@ -35,13 +37,18 @@ export class CharacterGateway {
         const bloodline = await this.bloodlineService.findOneByName(character.bloodlineName)
         const skillsList = await this.skillService.findSkillsByCharacter(character)
         const proficienciesList = await this.proficiencyService.findProficienciesByCharacter(character)
+        const rest: {
+          baseRest: number
+          longRest: number
+        } = await this.sessionService.getRestForCharacter(character)
         return `data: ${JSON.stringify(
           CharacterVM.of({
             character: character,
             classe: classe,
             bloodline: bloodline,
             skills: skillsList,
-            proficiencies: proficienciesList
+            proficiencies: proficienciesList,
+            rest: rest
           })
         )}\n\n`
       })

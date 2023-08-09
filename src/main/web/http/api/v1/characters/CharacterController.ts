@@ -8,6 +8,7 @@ import { BloodlineService } from '../../../../../domain/services/BloodlineServic
 import { CharacterService } from '../../../../../domain/services/CharacterService'
 import { ClasseService } from '../../../../../domain/services/ClasseService'
 import { ProficiencyService } from '../../../../../domain/services/ProficiencyService'
+import { SessionService } from '../../../../../domain/services/SessionService'
 import { SkillService } from '../../../../../domain/services/SkillService'
 import { Body, Controller, Get, Logger, Param, Post, Put, Query } from '@nestjs/common'
 import { ApiOkResponse, ApiTags } from '@nestjs/swagger'
@@ -21,7 +22,8 @@ export class CharacterController {
     private bloodlineService: BloodlineService,
     private classeService: ClasseService,
     private skillService: SkillService,
-    private proficiencyService: ProficiencyService
+    private proficiencyService: ProficiencyService,
+    private sessionService: SessionService
   ) {}
 
   @ApiOkResponse({ type: CharacterPreviewVM })
@@ -68,12 +70,17 @@ export class CharacterController {
     })
     const skillsList = await this.skillService.findSkillsByCharacter(createdCharacter)
     const proficienciesList = await this.proficiencyService.findProficienciesByCharacter(createdCharacter)
+    const rest: {
+      baseRest: number
+      longRest: number
+    } = await this.sessionService.getRestForCharacter(characterToCreate)
     return CharacterVM.of({
       character: createdCharacter,
       classe: classe,
       bloodline: bloodline,
       skills: skillsList,
-      proficiencies: proficienciesList
+      proficiencies: proficienciesList,
+      rest: rest
     })
   }
 
@@ -92,14 +99,18 @@ export class CharacterController {
       ...character,
       ...updateCharacterDto
     }
+    const updatedCharacter = await this.characterService.updateCharacter({ character: characterToUpdate })
+    const rest: {
+      baseRest: number
+      longRest: number
+    } = await this.sessionService.getRestForCharacter(updatedCharacter)
     return CharacterVM.of({
-      character: await this.characterService.updateCharacter({
-        character: characterToUpdate
-      }),
+      character: updatedCharacter,
       classe: classe,
       bloodline: bloodline,
       skills: skillsList,
-      proficiencies: proficienciesList
+      proficiencies: proficienciesList,
+      rest: rest
     })
   }
 
@@ -111,12 +122,17 @@ export class CharacterController {
     const bloodline = await this.bloodlineService.findOneByName(character.bloodlineName)
     const skillsList = await this.skillService.findSkillsByCharacter(character)
     const proficienciesList = await this.proficiencyService.findProficienciesByCharacter(character)
+    const rest: {
+      baseRest: number
+      longRest: number
+    } = await this.sessionService.getRestForCharacter(character)
     return CharacterVM.of({
       character: character,
       classe: classe,
       bloodline: bloodline,
       skills: skillsList,
-      proficiencies: proficienciesList
+      proficiencies: proficienciesList,
+      rest: rest
     })
   }
 }

@@ -13,6 +13,7 @@ import { ClasseService } from './domain/services/ClasseService'
 import { MjService } from './domain/services/MjService'
 import { ProficiencyService } from './domain/services/ProficiencyService'
 import { RollService } from './domain/services/RollService'
+import { SessionService } from './domain/services/SessionService'
 import { SkillService } from './domain/services/SkillService'
 import { CharacterController } from './web/http/api/v1/characters/CharacterController'
 import { RollController } from './web/http/api/v1/rolls/RollController'
@@ -51,6 +52,7 @@ import { TypeOrmModule } from '@nestjs/typeorm'
   providers: [
     SkillService,
     ProficiencyService,
+    SessionService,
     BloodlineService,
     CharacterService,
     ClasseService,

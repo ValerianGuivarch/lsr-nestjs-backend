@@ -6,5 +6,5 @@ export interface ISkillProvider {
   //findOneArcaneByName(name: string): Promise<Skill>
   findSkillOwnedById(id: number): Promise<Skill>
   findSkillsByCharacter(character: Character): Promise<Skill[]>
-  findSkillByCharacterAndSkillName(character: Character, skillName): Promise<Skill>
+  //  findSkillByCharacterAndSkillName(character: Character, skillName): Promise<Skill>
 }

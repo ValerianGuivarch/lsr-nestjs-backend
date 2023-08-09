@@ -120,6 +120,12 @@ export class CharacterVM {
   @ApiProperty({ isArray: true, type: String })
   proficiencies: ProficiencyVM[]
 
+  @ApiProperty()
+  rest: number
+
+  @ApiProperty()
+  longRest: number
+
   constructor(p: CharacterVM) {
     this.name = p.name
     this.classe = p.classe
@@ -156,6 +162,8 @@ export class CharacterVM {
     this.buttonColor = p.buttonColor
     this.textColor = p.textColor
     this.proficiencies = p.proficiencies
+    this.rest = p.rest
+    this.longRest = p.longRest
   }
 
   static of(p: {
@@ -164,6 +172,10 @@ export class CharacterVM {
     bloodline?: Bloodline
     skills: Skill[]
     proficiencies: Proficiency[]
+    rest: {
+      baseRest: number
+      longRest: number
+    }
   }): CharacterVM {
     return new CharacterVM({
       name: p.character.name,
@@ -218,7 +230,9 @@ export class CharacterVM {
       pictureApotheose: p.character.pictureApotheose,
       background: p.character.background,
       buttonColor: p.character.buttonColor,
-      textColor: p.character.textColor
+      textColor: p.character.textColor,
+      rest: p.rest.baseRest,
+      longRest: p.rest.longRest
     })
   }
 }
