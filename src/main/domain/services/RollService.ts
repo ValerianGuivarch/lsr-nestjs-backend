@@ -3,6 +3,7 @@ import { Category } from '../models/characters/Category'
 import { Roll } from '../models/roll/Roll'
 import { SuccessCalculation } from '../models/roll/SuccessCalculation'
 import { SkillStat } from '../models/skills/SkillStat'
+import { IApotheoseProvider } from '../providers/IApotheoseProvider'
 import { IBloodlineProvider } from '../providers/IBloodlineProvider'
 import { ICharacterProvider } from '../providers/ICharacterProvider'
 import { IRollProvider } from '../providers/IRollProvider'
@@ -48,6 +49,8 @@ export class RollService {
     private skillProvider: ISkillProvider,
     @Inject('IBloodlineProvider')
     private bloodlineProvider: IBloodlineProvider,
+    @Inject('IApotheoseProvider')
+    private apotheoseProvider: IApotheoseProvider,
     @Inject('ISessionProvider')
     private sessionProvider: ISessionProvider,
     @Inject('IRollProvider')
@@ -76,6 +79,11 @@ export class RollService {
     const skill = (await this.skillProvider.findSkillsByCharacter(character)).filter(
       (skill) => skill.name === p.skillName
     )[0]
+    const apotheose = character.apotheoseName
+      ? (await this.apotheoseProvider.findApotheosesByCharacter(character)).filter(
+          (apotheose) => apotheose.name === character.apotheoseName
+        )[0]
+      : undefined
 
     let diceNumber = 0
     let diceValue = 0
@@ -119,6 +127,19 @@ export class RollService {
         ppDelta--
         dettesDelta = dettesDelta + bloodline.detteByPp
       }
+
+      if (apotheose) {
+        if (!skill.isArcanique || (skill.isArcanique && apotheose.arcaneImprovement)) {
+          if (skill.stat === SkillStat.CHAIR) {
+            diceValueDelta += apotheose.chairImprovement
+          } else if (skill.stat === SkillStat.ESPRIT) {
+            diceValueDelta += apotheose.espritImprovement
+          } else if (skill.stat === SkillStat.ESSENCE) {
+            diceValueDelta += apotheose.essenceImprovement
+          }
+        }
+      }
+
       diceValue = RollService.CLASSIC_ROLL_VALUE
       if (skill.stat === SkillStat.CHAIR) {
         diceNumber = character.chair + diceValueDelta
@@ -229,7 +250,7 @@ export class RollService {
       rollerName: p.rollerName,
       data: data,
       date: new Date(),
-      secret: skill.secret,
+      secret: skill.secret || p.secret,
       displayDices: character.category === Category.PJ || character.category === Category.PNJ_ALLY,
       focus: usePf,
       power: usePp,
@@ -241,7 +262,7 @@ export class RollService {
       juge12: juge12,
       juge34: juge34,
       resistRoll: p.resistRoll,
-      picture: character.apotheoseName ? character.pictureApotheose : character.picture,
+      picture: apotheose ? character.pictureApotheose : character.picture,
       empiriqueRoll: p.empiriqueRoll,
       display: skill.display,
       stat: skill.stat

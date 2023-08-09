@@ -1,3 +1,4 @@
+import { ApotheoseService } from '../../../../../domain/services/ApotheoseService'
 import { BloodlineService } from '../../../../../domain/services/BloodlineService'
 import { CharacterService } from '../../../../../domain/services/CharacterService'
 import { ClasseService } from '../../../../../domain/services/ClasseService'
@@ -23,6 +24,7 @@ export class CharacterGateway {
     private classeService: ClasseService,
     private skillService: SkillService,
     private proficiencyService: ProficiencyService,
+    private apotheoseService: ApotheoseService,
     private sessionService: SessionService
   ) {}
   @Get(':name')
@@ -37,6 +39,7 @@ export class CharacterGateway {
         const bloodline = await this.bloodlineService.findOneByName(character.bloodlineName)
         const skillsList = await this.skillService.findSkillsByCharacter(character)
         const proficienciesList = await this.proficiencyService.findProficienciesByCharacter(character)
+        const apotheosesList = await this.apotheoseService.findApotheosesByCharacter(character)
         const rest: {
           baseRest: number
           longRest: number
@@ -48,7 +51,8 @@ export class CharacterGateway {
             bloodline: bloodline,
             skills: skillsList,
             proficiencies: proficienciesList,
-            rest: rest
+            rest: rest,
+            apotheoses: apotheosesList
           })
         )}\n\n`
       })

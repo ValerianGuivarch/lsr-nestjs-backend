@@ -1,3 +1,8 @@
+import { DBApotheose } from './apotheoses/DBApotheose'
+import { DBApotheoseProvider } from './apotheoses/DBApotheoseProvider'
+import { DBBloodlineApotheose } from './apotheoses/DBBloodlineApotheose'
+import { DBCharacterApotheose } from './apotheoses/DBCharacterApotheose'
+import { DBClasseApotheose } from './apotheoses/DBClasseApotheose'
 import { DBBloodline } from './bloodlines/DBBloodline'
 import { DBBloodlineProvider } from './bloodlines/DBBloodlineProvider'
 import { DBCharacter } from './character/DBCharacter'
@@ -25,6 +30,10 @@ import { TypeOrmModule } from '@nestjs/typeorm'
   imports: [
     TypeOrmModule.forFeature(
       [
+        DBApotheose,
+        DBClasseApotheose,
+        DBBloodlineApotheose,
+        DBCharacterApotheose,
         DBRoll,
         DBSession,
         DBCharacter,
@@ -46,6 +55,10 @@ import { TypeOrmModule } from '@nestjs/typeorm'
     {
       provide: 'IRollProvider',
       useClass: DBRollProvider
+    },
+    {
+      provide: 'IApotheoseProvider',
+      useClass: DBApotheoseProvider
     },
     {
       provide: 'ISkillProvider',
@@ -77,6 +90,10 @@ import { TypeOrmModule } from '@nestjs/typeorm'
     {
       provide: 'ISkillProvider',
       useClass: DBSkillProvider
+    },
+    {
+      provide: 'IApotheoseProvider',
+      useClass: DBApotheoseProvider
     },
     {
       provide: 'IRollProvider',

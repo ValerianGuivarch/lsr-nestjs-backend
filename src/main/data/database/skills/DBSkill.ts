@@ -21,4 +21,7 @@ export class DBSkill extends DBSkillAttrs {
 
   @Column({ type: 'varchar', default: 'fait un Jet ', nullable: true })
   display: string
+
+  @Column({ type: 'boolean', default: false })
+  isArcanique: boolean
 }

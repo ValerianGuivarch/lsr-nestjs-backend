@@ -4,6 +4,7 @@ import { CreateCharacterDto } from './requests/CreateCharacterDto'
 import { UpdateCharacterDto } from './requests/UpdateCharacterDto'
 import { Category } from '../../../../../domain/models/characters/Category'
 import { Character } from '../../../../../domain/models/characters/Character'
+import { ApotheoseService } from '../../../../../domain/services/ApotheoseService'
 import { BloodlineService } from '../../../../../domain/services/BloodlineService'
 import { CharacterService } from '../../../../../domain/services/CharacterService'
 import { ClasseService } from '../../../../../domain/services/ClasseService'
@@ -23,7 +24,8 @@ export class CharacterController {
     private classeService: ClasseService,
     private skillService: SkillService,
     private proficiencyService: ProficiencyService,
-    private sessionService: SessionService
+    private sessionService: SessionService,
+    private apotheoseService: ApotheoseService
   ) {}
 
   @ApiOkResponse({ type: CharacterPreviewVM })
@@ -69,6 +71,7 @@ export class CharacterController {
       character: characterToCreate
     })
     const skillsList = await this.skillService.findSkillsByCharacter(createdCharacter)
+    const apotheosesList = await this.apotheoseService.findApotheosesByCharacter(createdCharacter)
     const proficienciesList = await this.proficiencyService.findProficienciesByCharacter(createdCharacter)
     const rest: {
       baseRest: number
@@ -80,7 +83,8 @@ export class CharacterController {
       bloodline: bloodline,
       skills: skillsList,
       proficiencies: proficienciesList,
-      rest: rest
+      rest: rest,
+      apotheoses: apotheosesList
     })
   }
 
@@ -100,6 +104,7 @@ export class CharacterController {
       ...updateCharacterDto
     }
     const updatedCharacter = await this.characterService.updateCharacter({ character: characterToUpdate })
+    const apotheosesList = await this.apotheoseService.findApotheosesByCharacter(updatedCharacter)
     const rest: {
       baseRest: number
       longRest: number
@@ -110,7 +115,8 @@ export class CharacterController {
       bloodline: bloodline,
       skills: skillsList,
       proficiencies: proficienciesList,
-      rest: rest
+      rest: rest,
+      apotheoses: apotheosesList
     })
   }
 
@@ -122,6 +128,7 @@ export class CharacterController {
     const bloodline = await this.bloodlineService.findOneByName(character.bloodlineName)
     const skillsList = await this.skillService.findSkillsByCharacter(character)
     const proficienciesList = await this.proficiencyService.findProficienciesByCharacter(character)
+    const apotheosesList = await this.apotheoseService.findApotheosesByCharacter(character)
     const rest: {
       baseRest: number
       longRest: number
@@ -132,7 +139,8 @@ export class CharacterController {
       bloodline: bloodline,
       skills: skillsList,
       proficiencies: proficienciesList,
-      rest: rest
+      rest: rest,
+      apotheoses: apotheosesList
     })
   }
 }

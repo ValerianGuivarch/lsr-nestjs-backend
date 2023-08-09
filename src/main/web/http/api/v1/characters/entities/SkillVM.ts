@@ -8,20 +8,15 @@ export class SkillVM {
   @ApiProperty()
   displayCategory: string
 
-  @ApiProperty()
-  position: number
-
   constructor(p: SkillVM) {
     this.name = p.name
     this.displayCategory = p.displayCategory
-    this.position = p.position
   }
 
   static of(p: { skill: Skill }): SkillVM {
     return new SkillVM({
       name: p.skill.name,
-      displayCategory: p.skill.displayCategory.toString(),
-      position: p.skill.position
+      displayCategory: p.skill.displayCategory.toString()
     })
   }
 }

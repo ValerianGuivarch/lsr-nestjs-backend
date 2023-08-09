@@ -1,3 +1,7 @@
+import { DBApotheose } from '../../data/database/apotheoses/DBApotheose'
+import { DBBloodlineApotheose } from '../../data/database/apotheoses/DBBloodlineApotheose'
+import { DBCharacterApotheose } from '../../data/database/apotheoses/DBCharacterApotheose'
+import { DBClasseApotheose } from '../../data/database/apotheoses/DBClasseApotheose'
 import { DBBloodline } from '../../data/database/bloodlines/DBBloodline'
 import { DBCharacter } from '../../data/database/character/DBCharacter'
 import { DBClasse } from '../../data/database/classes/DBClasse'
@@ -44,13 +48,24 @@ export class InitDatabase {
     @InjectRepository(DBBloodlineProficiency, 'postgres')
     private dbBloodlineProficiencyRepository: Repository<DBBloodlineProficiency>,
     @InjectRepository(DBCharacterProficiency, 'postgres')
-    private dbCharacterProficiencyRepository: Repository<DBCharacterProficiency>
+    private dbCharacterProficiencyRepository: Repository<DBCharacterProficiency>,
+    @InjectRepository(DBApotheose, 'postgres')
+    private dbApotheoseRepository: Repository<DBApotheose>,
+    @InjectRepository(DBClasseApotheose, 'postgres')
+    private dbClasseApotheoseRepository: Repository<DBClasseApotheose>,
+    @InjectRepository(DBBloodlineApotheose, 'postgres')
+    private dbBloodlineApotheoseRepository: Repository<DBBloodlineApotheose>,
+    @InjectRepository(DBCharacterApotheose, 'postgres')
+    private dbCharacterApotheoseRepository: Repository<DBCharacterApotheose>
   ) {}
 
   async onModuleInit(): Promise<void> {
     await this.dbClasseSkillRepository.delete({})
     await this.dbBloodlineSkillRepository.delete({})
     await this.dbCharacterSkillRepository.delete({})
+    await this.dbClasseApotheoseRepository.delete({})
+    await this.dbBloodlineApotheoseRepository.delete({})
+    await this.dbCharacterApotheoseRepository.delete({})
     await this.dbClasseProficiencyRepository.delete({})
     await this.dbBloodlineProficiencyRepository.delete({})
     await this.dbCharacterProficiencyRepository.delete({})
@@ -58,14 +73,17 @@ export class InitDatabase {
     await this.dbClasseRepository.delete({})
     await this.dbBloodlineRepository.delete({})
     await this.dbSkillRepository.delete({})
+    await this.dbApotheoseRepository.delete({})
     await this.dbProficiencyRepository.delete({})
     const skills = await this.initSkills()
     const proficiencies = await this.initProficiencies()
+    const apotheoses = await this.initApotheoses()
     const classes = await this.initClasses()
     const bloodlines = await this.initBloodlines()
     const characters = await this.initCharacters(classes, bloodlines)
     await this.skillsAttribution(skills, classes, bloodlines, characters)
     await this.proficienciesAttribution(proficiencies, classes, bloodlines, characters)
+    await this.apotheosesAttribution(apotheoses, classes, bloodlines, characters)
   }
 
   async initCharacters(
@@ -167,7 +185,8 @@ export class InitDatabase {
       display: 'fait une *Arbre*',
       position: 20,
       successCalculation: SuccessCalculation.SIMPLE_PLUS_1,
-      arcaneCost: 1
+      arcaneCost: 1,
+      isArcanique: true
     })
     const mortSkill: DBSkill = this.createSkill({
       name: 'mort',
@@ -177,7 +196,8 @@ export class InitDatabase {
       display: 'fait une *Arcane de la Mort*',
       position: 94,
       successCalculation: SuccessCalculation.AUCUN,
-      arcaneCost: 1
+      arcaneCost: 1,
+      isArcanique: true
     })
     const licorneSkill: DBSkill = this.createSkill({
       name: 'licorne',
@@ -187,7 +207,8 @@ export class InitDatabase {
       display: 'fait une *Licorne*',
       position: 23,
       successCalculation: SuccessCalculation.SIMPLE_PLUS_1,
-      arcaneCost: 1
+      arcaneCost: 1,
+      isArcanique: true
     })
     const chevalSkill: DBSkill = this.createSkill({
       name: 'cheval',
@@ -197,7 +218,8 @@ export class InitDatabase {
       display: 'fait un *Cheval*',
       position: 24,
       successCalculation: SuccessCalculation.SIMPLE_PLUS_1,
-      arcaneCost: 1
+      arcaneCost: 1,
+      isArcanique: true
     })
     const newSkills = [
       chairSkill,
@@ -250,6 +272,44 @@ export class InitDatabase {
       }
     }
     return proficiencies
+  }
+
+  async initApotheoses(): Promise<Map<string, DBApotheose>> {
+    const apotheoseBasic: DBApotheose = this.createApotheose({
+      name: 'apotheose',
+      category: DisplayCategory.MAGIE,
+      maxLevel: 9,
+      position: 1
+    })
+    const apotheoseAmelioree: DBApotheose = this.createApotheose({
+      name: 'apotheose améliorée',
+      category: DisplayCategory.MAGIE,
+      minLevel: 10,
+      position: 5
+    })
+    const apotheoseFinal: DBApotheose = this.createApotheose({
+      name: 'apotheose finale',
+      category: DisplayCategory.MAGIE,
+      minLevel: 20,
+      position: 10,
+      chairImprovement: 5,
+      espritImprovement: 5,
+      essenceImprovement: 5
+    })
+    const newApotheoses = [apotheoseBasic, apotheoseAmelioree, apotheoseFinal]
+    const apotheoses = new Map<string, DBApotheose>()
+    for (const apotheoseData of newApotheoses) {
+      const existingApotheose = await this.dbApotheoseRepository.findOneBy({ name: apotheoseData.name })
+      if (!existingApotheose) {
+        const apotheose = new DBApotheose()
+        Object.assign(apotheose, apotheoseData)
+        const createdPApotheose = await this.dbApotheoseRepository.save(apotheose)
+        apotheoses.set(apotheose.name, createdPApotheose)
+      } else {
+        apotheoses.set(existingApotheose.name, existingApotheose)
+      }
+    }
+    return apotheoses
   }
   async initBloodlines(): Promise<Map<string, DBBloodline>> {
     const eauBloodline: DBBloodline = this.createBloodline({
@@ -520,6 +580,7 @@ export class InitDatabase {
     category: DisplayCategory
     display: string
     position: number
+    isArcanique?: boolean
     allowsPf?: boolean
     allowsPp?: boolean
     use?: SkillOwnedUse
@@ -549,7 +610,8 @@ export class InitDatabase {
       successCalculation: p.successCalculation || SuccessCalculation.SIMPLE,
       secret: p.secret || false,
       display: p.display,
-      position: p.position
+      position: p.position,
+      isArcanique: p.isArcanique
     }
   }
 
@@ -558,6 +620,48 @@ export class InitDatabase {
       name: p.name,
       displayCategory: p.category,
       minLevel: p.minLevel || 1
+    }
+  }
+
+  createApotheose(p: {
+    name: string
+    category: DisplayCategory
+    position: number
+    minLevel?: number
+    maxLevel?: number
+    cost?: number
+    chairImprovement?: number
+    espritImprovement?: number
+    essenceImprovement?: number
+    arcaneImprovement?: boolean
+    avantage?: boolean
+    apotheoseEffect?: string[]
+  }): DBApotheose {
+    return {
+      name: p.name,
+      displayCategory: p.category,
+      position: p.position,
+      // eslint-disable-next-line no-magic-numbers
+      maxLevel: p.maxLevel || 100,
+      minLevel: p.minLevel || 1,
+      // eslint-disable-next-line no-magic-numbers
+      cost: p.cost || 3,
+      // eslint-disable-next-line no-magic-numbers
+      chairImprovement: p.chairImprovement || 3,
+      // eslint-disable-next-line no-magic-numbers
+      espritImprovement: p.espritImprovement || 3,
+      // eslint-disable-next-line no-magic-numbers
+      essenceImprovement: p.essenceImprovement || 3,
+      arcaneImprovement: p.arcaneImprovement || false,
+      avantage: p.avantage || false,
+      apotheoseEffect: p.apotheoseEffect || [
+        'perd le contrôle',
+        'garde le contrôle',
+        'garde le contrôle',
+        'garde le contrôle',
+        'garde le contrôle',
+        'garde le contrôle'
+      ]
     }
   }
 
@@ -677,6 +781,66 @@ export class InitDatabase {
         proficiency: proficiency,
         characterName: character.name,
         proficiencyName: proficiency.name
+      })
+    }
+  }
+
+  private async apotheosesAttribution(
+    apotheoses: Map<string, DBApotheose>,
+    classes: Map<string, DBClasse>,
+    bloodlines: Map<string, DBBloodline>,
+    characters: Map<string, DBCharacter>
+  ) {
+    await this.saveClasseApotheoseIfNotExisting(classes.get('champion'), apotheoses.get('apotheose'))
+    await this.saveClasseApotheoseIfNotExisting(classes.get('champion'), apotheoses.get('apotheose améliorée'))
+    await this.saveClasseApotheoseIfNotExisting(classes.get('champion'), apotheoses.get('apotheose finale'))
+  }
+
+  private async saveClasseApotheoseIfNotExisting(classe: DBClasse, apotheose: DBApotheose) {
+    const existingRelation = await this.dbClasseApotheoseRepository.findOne({
+      where: {
+        classeName: classe.name,
+        apotheoseName: apotheose.name
+      }
+    })
+    if (!existingRelation) {
+      await this.dbClasseApotheoseRepository.save({
+        classe: classe,
+        apotheose: apotheose,
+        classeName: classe.name,
+        apotheoseName: apotheose.name
+      })
+    }
+  }
+  private async saveBloodlineApotheoseIfNotExisting(bloodline: DBBloodline, apotheose: DBApotheose) {
+    const existingRelation = await this.dbBloodlineApotheoseRepository.findOne({
+      where: {
+        bloodlineName: bloodline.name,
+        apotheoseName: apotheose.name
+      }
+    })
+    if (!existingRelation) {
+      await this.dbBloodlineApotheoseRepository.save({
+        bloodline: bloodline,
+        apotheose: apotheose,
+        bloodlineName: bloodline.name,
+        apotheoseName: apotheose.name
+      })
+    }
+  }
+  private async saveCharacterApotheoseIfNotExisting(character: DBCharacter, apotheose: DBApotheose) {
+    const existingRelation = await this.dbCharacterApotheoseRepository.findOne({
+      where: {
+        characterName: character.name,
+        apotheoseName: apotheose.name
+      }
+    })
+    if (!existingRelation) {
+      await this.dbCharacterApotheoseRepository.save({
+        character: character,
+        apotheose: apotheose,
+        characterName: character.name,
+        apotheoseName: apotheose.name
       })
     }
   }

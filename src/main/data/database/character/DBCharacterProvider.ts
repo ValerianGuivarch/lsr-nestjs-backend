@@ -1,4 +1,5 @@
 import { DBCharacter } from './DBCharacter'
+import { ApotheoseState } from '../../../domain/models/apotheoses/ApotheoseState'
 import { BattleState } from '../../../domain/models/characters/BattleState'
 import { Category } from '../../../domain/models/characters/Category'
 import { Character } from '../../../domain/models/characters/Character'
@@ -26,6 +27,7 @@ export class DBCharacterProvider implements ICharacterProvider {
       restImproved: doc.restImproved,
       classeName: doc.classeName,
       bloodlineName: doc.bloodlineName,
+      apotheoseState: ApotheoseState[doc.apotheoseState],
       apotheoseName: doc.apotheoseName,
       apotheoseImprovement: doc.apotheoseImprovement,
       apotheoseImprovementList: doc.apotheoseImprovementList,

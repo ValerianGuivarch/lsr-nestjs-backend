@@ -5,7 +5,7 @@ import { SuccessCalculation } from '../roll/SuccessCalculation'
 export class Skill {
   name: string
   stat: SkillStat
-  displayCategory: DisplayCategory // just for display ?
+  displayCategory: DisplayCategory
   pvCost: number
   pfCost: number
   ppCost: number
@@ -18,6 +18,8 @@ export class Skill {
   secret: boolean
   display: string
   position: number
+  isArcanique: boolean
+  invocationTemplateId?: string
 
   constructor(p: Skill) {
     this.name = p.name
@@ -35,5 +37,7 @@ export class Skill {
     this.secret = p.secret
     this.display = p.display
     this.position = p.position
+    this.isArcanique = p.isArcanique
+    this.invocationTemplateId = p.invocationTemplateId
   }
 }

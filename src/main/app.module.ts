@@ -1,5 +1,6 @@
 import config from './config/configuration'
 import { InitDatabase } from './config/evolutions/InitDatabase'
+import { DBApotheoseProvider } from './data/database/apotheoses/DBApotheoseProvider'
 import { DBBloodlineProvider } from './data/database/bloodlines/DBBloodlineProvider'
 import { DBCharacterProvider } from './data/database/character/DBCharacterProvider'
 import { DBClasseProvider } from './data/database/classes/DBClasseProvider'
@@ -7,6 +8,7 @@ import { PostgresModule } from './data/database/postgres.module'
 import { DBRollProvider } from './data/database/rolls/DBRollProvider'
 import { DBSessionProvider } from './data/database/session/DBSessionProvider'
 import { DBSkillProvider } from './data/database/skills/DBSkillProvider'
+import { ApotheoseService } from './domain/services/ApotheoseService'
 import { BloodlineService } from './domain/services/BloodlineService'
 import { CharacterService } from './domain/services/CharacterService'
 import { ClasseService } from './domain/services/ClasseService'
@@ -52,6 +54,7 @@ import { TypeOrmModule } from '@nestjs/typeorm'
   providers: [
     SkillService,
     ProficiencyService,
+    ApotheoseService,
     SessionService,
     BloodlineService,
     CharacterService,
@@ -64,6 +67,10 @@ import { TypeOrmModule } from '@nestjs/typeorm'
     {
       provide: 'ICharacterProvider',
       useClass: DBCharacterProvider
+    },
+    {
+      provide: 'IApotheoseProvider',
+      useClass: DBApotheoseProvider
     },
     {
       provide: 'ISkillProvider',

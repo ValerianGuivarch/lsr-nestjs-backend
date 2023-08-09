@@ -1,5 +1,6 @@
 import { RollVM } from './entities/RollVM'
 import { SendRollRequest } from './requests/SendRollRequest'
+import { ApotheoseService } from '../../../../../domain/services/ApotheoseService'
 import { BloodlineService } from '../../../../../domain/services/BloodlineService'
 import { ClasseService } from '../../../../../domain/services/ClasseService'
 import { RollService } from '../../../../../domain/services/RollService'
@@ -15,7 +16,8 @@ export class RollController {
     private rollService: RollService,
     private bloodlineService: BloodlineService,
     private classeService: ClasseService,
-    private arcaneService: SkillService
+    private arcaneService: SkillService,
+    private apotheoseService: ApotheoseService
   ) {}
 
   @ApiOkResponse({ type: RollVM })

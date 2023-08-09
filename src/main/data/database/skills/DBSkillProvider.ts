@@ -33,6 +33,7 @@ export class DBSkillProvider implements ISkillProvider {
       display: skill.display,
       position: skill.position,
       displayCategory: DisplayCategory[skill.displayCategory],
+      isArcanique: skill.isArcanique,
       stat:
         overloadSkill && overloadSkill.stat
           ? SkillStat[overloadSkill.stat]
@@ -165,6 +166,6 @@ export class DBSkillProvider implements ISkillProvider {
         skillPromises.push(DBSkillProvider.toSkill(allSkill, undefined))
       }
     }
-    return Promise.all(skillPromises)
+    return Promise.all(skillPromises.sort((a, b) => a.position - b.position))
   }
 }

@@ -1,4 +1,4 @@
-import { Apotheose } from '../../../domain/models/apotheoses/Apotheose'
+import { ApotheoseState } from '../../../domain/models/apotheoses/ApotheoseState'
 import { BattleState } from '../../../domain/models/characters/BattleState'
 import { Category } from '../../../domain/models/characters/Category'
 import { Genre } from '../../../domain/models/characters/Genre'
@@ -21,9 +21,12 @@ export class DBCharacter {
   @Column({ type: 'varchar', nullable: true })
   apotheoseName?: string
 
-  @ManyToOne(() => DBBloodline)
-  @JoinColumn({ name: 'apotheoseName' })
-  apotheose: Apotheose
+  @Column({
+    type: 'enum',
+    enum: ApotheoseState,
+    default: ApotheoseState.NONE
+  })
+  apotheoseState: string
 
   @Column({ type: 'varchar', nullable: true })
   apotheoseImprovement?: string

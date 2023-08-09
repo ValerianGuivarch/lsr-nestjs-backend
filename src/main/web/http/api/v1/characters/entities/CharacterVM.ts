@@ -1,5 +1,7 @@
+import { ApotheoseVM } from './ApotheoseVM'
 import { ProficiencyVM } from './ProficiencyVM'
 import { SkillVM } from './SkillVM'
+import { Apotheose } from '../../../../../../domain/models/apotheoses/Apotheose'
 import { Bloodline } from '../../../../../../domain/models/characters/Bloodline'
 import { Character } from '../../../../../../domain/models/characters/Character'
 import { Classe } from '../../../../../../domain/models/characters/Classe'
@@ -20,6 +22,12 @@ export class CharacterVM {
 
   @ApiProperty({ isArray: true, type: SkillVM })
   skills: SkillVM[]
+
+  @ApiProperty({ isArray: true, type: ApotheoseVM })
+  apotheoses: ApotheoseVM[]
+
+  @ApiProperty()
+  apotheoseState: string
 
   @ApiProperty()
   bloodline: {
@@ -76,16 +84,16 @@ export class CharacterVM {
   secunda: string
 
   @ApiProperty()
-  notes: string
+  category: string
 
   @ApiProperty()
-  category: string
+  notes: string
 
   @ApiProperty()
   battleState: string
 
-  @ApiProperty()
-  apotheoseName: string
+  @ApiPropertyOptional()
+  apotheoseName?: string
 
   @ApiPropertyOptional()
   apotheoseImprovement?: string
@@ -130,6 +138,8 @@ export class CharacterVM {
     this.name = p.name
     this.classe = p.classe
     this.bloodline = p.bloodline
+    this.apotheoses = p.apotheoses
+    this.apotheoseState = p.apotheoseState
     this.apotheoseName = p.apotheoseName
     this.apotheoseImprovement = p.apotheoseImprovement
     this.apotheoseImprovementList = p.apotheoseImprovementList
@@ -172,6 +182,7 @@ export class CharacterVM {
     bloodline?: Bloodline
     skills: Skill[]
     proficiencies: Proficiency[]
+    apotheoses: Apotheose[]
     rest: {
       baseRest: number
       longRest: number
@@ -189,13 +200,17 @@ export class CharacterVM {
             display: p.bloodline.display
           }
         : undefined,
-      skills: p.skills
-        .map((skill) =>
-          SkillVM.of({
-            skill
-          })
-        )
-        .sort((a, b) => a.position - b.position),
+      apotheoseState: p.character.apotheoseState,
+      skills: p.skills.map((skill) =>
+        SkillVM.of({
+          skill
+        })
+      ),
+      apotheoses: p.apotheoses.map((apotheose) =>
+        ApotheoseVM.of({
+          apotheose
+        })
+      ),
       proficiencies: p.proficiencies.map((proficiency) =>
         ProficiencyVM.of({
           proficiency

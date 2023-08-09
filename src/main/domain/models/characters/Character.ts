@@ -1,6 +1,7 @@
 import { BattleState } from './BattleState'
 import { Category } from './Category'
 import { Genre } from './Genre'
+import { ApotheoseState } from '../apotheoses/ApotheoseState'
 
 export class Character {
   name: string
@@ -24,6 +25,7 @@ export class Character {
   secunda: string
   notes: string
   category: Category
+  apotheoseState: ApotheoseState
   apotheoseName?: string
   apotheoseImprovement?: string
   apotheoseImprovementList: string[]
@@ -47,6 +49,7 @@ export class Character {
     this.classeName = p.classeName
     this.bloodlineName = p.bloodlineName
     this.apotheoseName = p.apotheoseName
+    this.apotheoseState = p.apotheoseState
     this.apotheoseImprovement = p.apotheoseImprovement
     this.apotheoseImprovementList = p.apotheoseImprovementList
     this.chair = p.chair
@@ -126,6 +129,7 @@ export class Character {
       notes: '',
       category: p.category,
       apotheose: undefined,
+      apotheoseState: ApotheoseState.NONE,
       apotheoseImprovementList: [],
       // eslint-disable-next-line no-magic-numbers
       genre: p.genre ? p.genre : Math.random() < 0.5 ? Genre.HOMME : Genre.FEMME,
