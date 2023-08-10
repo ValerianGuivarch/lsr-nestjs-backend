@@ -1,10 +1,8 @@
 import { InvocationToCreate } from './Invocation'
 import { InvocationReferential } from './InvocationReferential'
-import { Bloodline } from '../characters/Bloodline'
 
-export class InvocationType {
+export class InvocationTemplate {
   name: string
-  bloodlines: Bloodline[]
   chairValueReferential: InvocationReferential
   chairValueRule: number
   espritValueReferential: InvocationReferential
@@ -14,7 +12,7 @@ export class InvocationType {
   pvMaxValueReferential: InvocationReferential
   pvMaxValueRule: number
   healer: boolean
-  picture: string
+  picture?: string
 
   constructor(p: InvocationToCreate) {
     Object.assign(this, p)

@@ -1,5 +1,5 @@
 import { Invocation, InvocationToCreate } from '../models/invocation/Invocation'
-import { InvocationType } from '../models/invocation/InvocationType'
+import { InvocationTemplate } from '../models/invocation/InvocationTemplate'
 
 export interface IInvocationProvider {
   create(Invocation: InvocationToCreate): Promise<Invocation>
@@ -8,7 +8,9 @@ export interface IInvocationProvider {
 
   delete(name: string): Promise<boolean>
 
+  getById(invocationId: string): Promise<Invocation>
+
   findAll(summonerName: string): Promise<Invocation[]>
 
-  findTypeByName(invocationName: string): Promise<InvocationType>
+  findTemplateByName(invocationName: string): Promise<InvocationTemplate>
 }

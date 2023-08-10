@@ -1,6 +1,7 @@
 import { Character } from '../models/characters/Character'
 import { Invocation } from '../models/invocation/Invocation'
 import { InvocationReferential } from '../models/invocation/InvocationReferential'
+import { InvocationTemplate } from '../models/invocation/InvocationTemplate'
 import { Roll } from '../models/roll/Roll'
 import { ICharacterProvider } from '../providers/ICharacterProvider'
 import { IInvocationProvider } from '../providers/IInvocationProvider'
@@ -24,34 +25,18 @@ export class CharacterService {
     console.log('InvocationService')
   }
 
-  async createInvocation(typeId: string, roll: Roll, invocationName: string): Promise<Invocation> {
+  async createInvocation(templateName: string, roll: Roll): Promise<Invocation> {
     const summoner = await this.characterProvider.findOneByName(roll.rollerName)
-    const success = roll.success
-    const invocationType = await this.invocationProvider.findTypeByName(invocationName)
+    const template = await this.invocationProvider.findTemplateByName(templateName)
     const chair: number = this.valueByReferential(
       summoner,
       roll,
-      invocationType.chairValueReferential,
-      invocationType.chairValueRule
+      template.chairValueReferential,
+      template.chairValueRule
     )
-    const esprit = this.valueByReferential(
-      summoner,
-      roll,
-      invocationType.espritValueReferential,
-      invocationType.espritValueRule
-    )
-    const essence = this.valueByReferential(
-      summoner,
-      roll,
-      invocationType.essenceValueReferential,
-      invocationType.essenceValueRule
-    )
-    const pvMax = this.valueByReferential(
-      summoner,
-      roll,
-      invocationType.pvMaxValueReferential,
-      invocationType.pvMaxValueRule
-    )
+    const esprit = this.valueByReferential(summoner, roll, template.espritValueReferential, template.espritValueRule)
+    const essence = this.valueByReferential(summoner, roll, template.essenceValueReferential, template.essenceValueRule)
+    const pvMax = this.valueByReferential(summoner, roll, template.pvMaxValueReferential, template.pvMaxValueRule)
 
     const invocation = await Invocation.invocationToCreateFactory({
       id: summoner.name,
@@ -59,10 +44,10 @@ export class CharacterService {
       esprit: esprit,
       essence: essence,
       pvMax: pvMax,
-      typeId: typeId,
+      templateName: templateName,
       summonerName: summoner.name,
-      picture: invocationType.picture,
-      healer: invocationType.healer
+      picture: template.picture,
+      healer: template.healer
     })
     return await this.invocationProvider.create(invocation)
   }
@@ -85,5 +70,25 @@ export class CharacterService {
       // if(valueReferential === InvocationReferential.SUCCESS) {
       return valueRule * roll.success
     }
+  }
+
+  async update(invocation: Invocation): Promise<Invocation> {
+    return this.invocationProvider.update(invocation)
+  }
+
+  async delete(name: string): Promise<boolean> {
+    return this.invocationProvider.delete(name)
+  }
+
+  async getById(invocationId: string): Promise<Invocation> {
+    return this.invocationProvider.getById(invocationId)
+  }
+
+  async findAll(summonerName: string): Promise<Invocation[]> {
+    return this.invocationProvider.findAll(summonerName)
+  }
+
+  async findTemplateByName(invocationName: string): Promise<InvocationTemplate> {
+    return this.invocationProvider.findTemplateByName(invocationName)
   }
 }

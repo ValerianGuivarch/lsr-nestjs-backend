@@ -6,7 +6,7 @@ export class Invocation {
   pv: number
   pvMax: number
   summonerName: string
-  typeId: string
+  templateName: string
   picture?: string
   healer: boolean
 
@@ -20,10 +20,10 @@ export class Invocation {
     esprit: number
     essence: number
     pvMax: number
-    typeId: string
     summonerName: string
     picture?: string
     healer: boolean
+    templateName: string
   }): Promise<InvocationToCreate> {
     const defaults = {
       chair: p.chair,
@@ -31,8 +31,10 @@ export class Invocation {
       essence: p.essence,
       pv: p.pvMax,
       pvMax: p.pvMax,
-      typeId: p.typeId,
-      healer: p.healer
+      templateName: p.templateName,
+      healer: p.healer,
+      summonerName: p.summonerName,
+      picture: p.picture
     }
 
     return Object.assign(defaults, p)
