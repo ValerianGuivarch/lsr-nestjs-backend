@@ -2,7 +2,9 @@ import { RollVM } from './entities/RollVM'
 import { SendRollRequest } from './requests/SendRollRequest'
 import { ApotheoseService } from '../../../../../domain/services/ApotheoseService'
 import { BloodlineService } from '../../../../../domain/services/BloodlineService'
+import { CharacterService } from '../../../../../domain/services/CharacterService'
 import { ClasseService } from '../../../../../domain/services/ClasseService'
+import { InvocationService } from '../../../../../domain/services/InvocationService'
 import { RollService } from '../../../../../domain/services/RollService'
 import { SkillService } from '../../../../../domain/services/SkillService'
 import { Body, Controller, Get, Logger, Post } from '@nestjs/common'
@@ -16,7 +18,9 @@ export class RollController {
     private rollService: RollService,
     private bloodlineService: BloodlineService,
     private classeService: ClasseService,
-    private arcaneService: SkillService,
+    private skillService: SkillService,
+    private characterService: CharacterService,
+    private invocationService: InvocationService,
     private apotheoseService: ApotheoseService
   ) {}
 
@@ -34,8 +38,11 @@ export class RollController {
   @ApiOkResponse({ type: RollVM })
   @Post('')
   async sendRoll(@Body() req: SendRollRequest): Promise<RollVM> {
+    const character = await this.characterService.findOneByName(req.rollerName)
+    const skill = await this.skillService.findOneSkillByCharacterAndName(character, req.skillName)
     const roll = await this.rollService.roll({
-      rollerName: req.rollerName,
+      character: character,
+      skill: skill,
       secret: req.secret,
       focus: req.focus,
       power: req.power,
@@ -43,9 +50,11 @@ export class RollController {
       bonus: req.bonus,
       malus: req.malus,
       empiriqueRoll: req.empiriqueRoll,
-      resistRoll: req.resistRoll,
-      skillName: req.skillName
+      resistRoll: req.resistRoll
     })
+    if (skill.invocationTemplateName) {
+      await this.invocationService.createInvocation(skill.invocationTemplateName, roll)
+    }
     return RollVM.of({
       roll: roll
     })

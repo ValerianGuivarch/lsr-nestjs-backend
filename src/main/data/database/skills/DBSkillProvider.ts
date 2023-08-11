@@ -32,6 +32,7 @@ export class DBSkillProvider implements ISkillProvider {
       name: skill.name,
       display: skill.display,
       position: skill.position,
+      invocationTemplateName: skill.invocationTemplateName,
       displayCategory: DisplayCategory[skill.displayCategory],
       isArcanique: skill.isArcanique,
       stat:
@@ -102,9 +103,7 @@ export class DBSkillProvider implements ISkillProvider {
           ? overloadSkill.customRolls
           : skill.customRolls !== null
           ? skill.customRolls
-          : (() => {
-              throw new Error('Missing customRolls for skill ' + skill.name)
-            })(),
+          : undefined,
       successCalculation:
         overloadSkill && overloadSkill.successCalculation
           ? SuccessCalculation[overloadSkill.successCalculation]

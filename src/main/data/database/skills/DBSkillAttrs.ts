@@ -1,6 +1,7 @@
 import { SuccessCalculation } from '../../../domain/models/roll/SuccessCalculation'
 import { SkillStat } from '../../../domain/models/skills/SkillStat'
-import { Column } from 'typeorm'
+import { DBCharacterTemplate } from '../character/DBCharacterTemplate'
+import { Column, JoinColumn, ManyToOne } from 'typeorm'
 
 export abstract class DBSkillAttrs {
   @Column({ type: 'boolean', nullable: true })
@@ -43,4 +44,11 @@ export abstract class DBSkillAttrs {
 
   @Column({ type: 'boolean', nullable: true })
   secret: boolean | null
+
+  @Column({ type: 'varchar', nullable: true })
+  invocationTemplateName?: string | null
+
+  @ManyToOne(() => DBCharacterTemplate)
+  @JoinColumn({ name: 'invocationTemplateName' })
+  invocationTemplate: DBCharacterTemplate | null
 }

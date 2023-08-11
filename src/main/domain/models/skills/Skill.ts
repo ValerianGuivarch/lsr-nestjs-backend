@@ -13,13 +13,13 @@ export class Skill {
   arcaneCost: number
   allowsPf: boolean
   allowsPp: boolean
-  customRolls: string
+  customRolls?: string
   successCalculation: SuccessCalculation
   secret: boolean
   display: string
   position: number
   isArcanique: boolean
-  invocationTemplateId?: string
+  invocationTemplateName?: string
 
   constructor(p: Skill) {
     this.name = p.name
@@ -38,6 +38,6 @@ export class Skill {
     this.display = p.display
     this.position = p.position
     this.isArcanique = p.isArcanique
-    this.invocationTemplateId = p.invocationTemplateId
+    this.invocationTemplateName = p.invocationTemplateName
   }
 }

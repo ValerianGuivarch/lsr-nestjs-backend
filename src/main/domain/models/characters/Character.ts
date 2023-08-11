@@ -33,7 +33,6 @@ export class Character {
   relance: number
   playerName?: string
   picture?: string
-  pictureInvocation?: string
   pictureApotheose?: string
   background?: string
   buttonColor?: string
@@ -42,6 +41,8 @@ export class Character {
   boosted?: boolean
   battleState: BattleState
   restImproved: boolean
+  isInvocation: boolean
+  summoner?: string
 
   constructor(p: Character) {
     this.name = p.name
@@ -74,13 +75,14 @@ export class Character {
     this.relance = p.relance < 0 ? 0 : p.relance
     this.playerName = p.playerName
     this.picture = p.picture
-    this.pictureInvocation = p.pictureInvocation
     this.pictureApotheose = p.pictureApotheose
     this.background = p.background
     this.buttonColor = p.buttonColor
     this.textColor = p.textColor
     this.boosted = p.boosted
     this.battleState = p.battleState
+    this.isInvocation = p.isInvocation
+    this.summoner = p.summoner
   }
 
   static characterToCreateFactory(p: {
@@ -143,10 +145,65 @@ export class Character {
       textColor: p.textColor,
       classeName: p.classeName,
       bloodlineName: p.bloodlineName,
-      restImproved: false
+      restImproved: false,
+      isInvocation: false,
+      summoner: undefined
+    }
+    return Object.assign(defaults, p)
+  }
+
+  static invocationToCreateFactory(p: {
+    name: string
+    summoner: Character
+    chair: number
+    esprit: number
+    essence: number
+    pvMax: number
+    picture?: string
+  }): CharacterToCreate {
+    const defaults = {
+      name: p.name,
+      chair: p.chair,
+      esprit: p.esprit,
+      essence: p.essence,
+      pv: p.pvMax,
+      pvMax: p.pvMax,
+      pf: 0,
+      pfMax: 0,
+      pp: 0,
+      ppMax: 0,
+      playerName: p.summoner.playerName,
+      // eslint-disable-next-line no-magic-numbers
+      dettes: 0,
+      arcanes: 0,
+      arcanesMax: 0,
+      niveau: p.summoner.niveau,
+      lux: '',
+      umbra: '',
+      secunda: '',
+      notes: '',
+      category: p.summoner.category,
+      apotheose: undefined,
+      apotheoseState: ApotheoseState.NONE,
+      apotheoseImprovementList: [],
+      // eslint-disable-next-line no-magic-numbers
+      genre: p.summoner.genre,
+      relance: 0,
+      boosted: false,
+      battleState: p.summoner.battleState,
+      picture: p.picture,
+      pictureApotheose: '',
+      background: '',
+      buttonColor: '',
+      textColor: '',
+      classeName: p.summoner.classeName,
+      bloodlineName: p.summoner.bloodlineName,
+      restImproved: false,
+      isInvocation: true,
+      summoner: p.summoner.name
     }
 
-    return Object.assign(defaults, p)
+    return Object.assign(defaults)
   }
 }
 

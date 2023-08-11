@@ -16,4 +16,8 @@ export class SkillService {
   async findSkillsByCharacter(character: Character): Promise<Skill[]> {
     return await this.skillsProvider.findSkillsByCharacter(character)
   }
+
+  async findOneSkillByCharacterAndName(character: Character, skillName: string): Promise<Skill> {
+    return (await this.skillsProvider.findSkillsByCharacter(character)).filter((skill) => skill.name === skillName)[0]
+  }
 }

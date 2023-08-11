@@ -12,6 +12,7 @@ import { ApotheoseService } from './domain/services/ApotheoseService'
 import { BloodlineService } from './domain/services/BloodlineService'
 import { CharacterService } from './domain/services/CharacterService'
 import { ClasseService } from './domain/services/ClasseService'
+import { InvocationService } from './domain/services/InvocationService'
 import { MjService } from './domain/services/MjService'
 import { ProficiencyService } from './domain/services/ProficiencyService'
 import { RollService } from './domain/services/RollService'
@@ -57,6 +58,7 @@ import { TypeOrmModule } from '@nestjs/typeorm'
     ApotheoseService,
     SessionService,
     BloodlineService,
+    InvocationService,
     CharacterService,
     ClasseService,
     RollService,

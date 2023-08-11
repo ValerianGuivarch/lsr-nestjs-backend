@@ -1,4 +1,4 @@
-export enum InvocationReferential {
+export enum CharacterTemplateReferential {
   FIXE = 'Fixe',
   CHAIR = 'Chair',
   ESPRIT = 'Esprit',

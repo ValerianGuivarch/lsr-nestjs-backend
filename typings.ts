@@ -71,6 +71,13 @@ export type DbCharacterSkillFilter = TPaginatedFilter<Schema, 'db_character_skil
 export type DbCharacterSkillSortClause = TSortClause<Schema, 'db_character_skill'>;
 export type DbCharacterSkillAggregation = TAggregation<Schema, 'db_character_skill'>;
 
+export type DbCharacterTemplateCustomizer = CollectionCustomizer<Schema, 'db_character_template'>;
+export type DbCharacterTemplateRecord = TPartialRow<Schema, 'db_character_template'>;
+export type DbCharacterTemplateConditionTree = TConditionTree<Schema, 'db_character_template'>;
+export type DbCharacterTemplateFilter = TPaginatedFilter<Schema, 'db_character_template'>;
+export type DbCharacterTemplateSortClause = TSortClause<Schema, 'db_character_template'>;
+export type DbCharacterTemplateAggregation = TAggregation<Schema, 'db_character_template'>;
+
 export type DbClasseCustomizer = CollectionCustomizer<Schema, 'db_classe'>;
 export type DbClasseRecord = TPartialRow<Schema, 'db_classe'>;
 export type DbClasseConditionTree = TConditionTree<Schema, 'db_classe'>;
@@ -233,10 +240,12 @@ export type Schema = {
       'id': number;
       'bloodlineName': string;
       'skillName': string;
+      'invocationTemplateName': string;
     };
     nested: {
       'db_bloodline': Schema['db_bloodline']['plain'] & Schema['db_bloodline']['nested'];
       'db_skill': Schema['db_skill']['plain'] & Schema['db_skill']['nested'];
+      'db_character_template': Schema['db_character_template']['plain'] & Schema['db_character_template']['nested'];
     };
     flat: {
       'db_bloodline:name': string;
@@ -261,6 +270,35 @@ export type Schema = {
       'db_skill:position': number;
       'db_skill:display': string;
       'db_skill:isArcanique': boolean;
+      'db_skill:invocationTemplateName': string;
+      'db_skill:db_character_template:name': string;
+      'db_skill:db_character_template:chairValueReferential': 'Fixe' | 'Chair' | 'Esprit' | 'Essence' | 'Success';
+      'db_skill:db_character_template:chairValueRule': number;
+      'db_skill:db_character_template:espritValueReferential': 'Fixe' | 'Chair' | 'Esprit' | 'Essence' | 'Success';
+      'db_skill:db_character_template:espritValueRule': number;
+      'db_skill:db_character_template:essenceValueReferential': 'Fixe' | 'Chair' | 'Esprit' | 'Essence' | 'Success';
+      'db_skill:db_character_template:essenceValueRule': number;
+      'db_skill:db_character_template:pvMaxValueReferential': 'Fixe' | 'Chair' | 'Esprit' | 'Essence' | 'Success';
+      'db_skill:db_character_template:pvMaxValueRule': number;
+      'db_skill:db_character_template:pfMaxValueReferential': 'Fixe' | 'Chair' | 'Esprit' | 'Essence' | 'Success';
+      'db_skill:db_character_template:pfMaxValueRule': number;
+      'db_skill:db_character_template:ppMaxValueReferential': 'Fixe' | 'Chair' | 'Esprit' | 'Essence' | 'Success';
+      'db_skill:db_character_template:ppMaxValueRule': number;
+      'db_skill:db_character_template:picture': string;
+      'db_character_template:name': string;
+      'db_character_template:chairValueReferential': 'Fixe' | 'Chair' | 'Esprit' | 'Essence' | 'Success';
+      'db_character_template:chairValueRule': number;
+      'db_character_template:espritValueReferential': 'Fixe' | 'Chair' | 'Esprit' | 'Essence' | 'Success';
+      'db_character_template:espritValueRule': number;
+      'db_character_template:essenceValueReferential': 'Fixe' | 'Chair' | 'Esprit' | 'Essence' | 'Success';
+      'db_character_template:essenceValueRule': number;
+      'db_character_template:pvMaxValueReferential': 'Fixe' | 'Chair' | 'Esprit' | 'Essence' | 'Success';
+      'db_character_template:pvMaxValueRule': number;
+      'db_character_template:pfMaxValueReferential': 'Fixe' | 'Chair' | 'Esprit' | 'Essence' | 'Success';
+      'db_character_template:pfMaxValueRule': number;
+      'db_character_template:ppMaxValueReferential': 'Fixe' | 'Chair' | 'Esprit' | 'Essence' | 'Success';
+      'db_character_template:ppMaxValueRule': number;
+      'db_character_template:picture': string;
     };
   };
   'db_character': {
@@ -301,6 +339,8 @@ export type Schema = {
       'bloodlineName': string;
       'restImproved': boolean;
       'apotheoseState': 'NONE' | 'ALREADY_USED' | 'COST_TO_PAY' | 'COST_PAID';
+      'summoner': string;
+      'isInvocation': boolean;
     };
     nested: {
       'db_classe': Schema['db_classe']['plain'] & Schema['db_classe']['nested'];
@@ -364,6 +404,8 @@ export type Schema = {
       'db_character:bloodlineName': string;
       'db_character:restImproved': boolean;
       'db_character:apotheoseState': 'NONE' | 'ALREADY_USED' | 'COST_TO_PAY' | 'COST_PAID';
+      'db_character:summoner': string;
+      'db_character:isInvocation': boolean;
       'db_character:db_classe:name': string;
       'db_character:db_classe:displayMale': string;
       'db_character:db_classe:displayFemale': string;
@@ -434,6 +476,8 @@ export type Schema = {
       'db_character:bloodlineName': string;
       'db_character:restImproved': boolean;
       'db_character:apotheoseState': 'NONE' | 'ALREADY_USED' | 'COST_TO_PAY' | 'COST_PAID';
+      'db_character:summoner': string;
+      'db_character:isInvocation': boolean;
       'db_character:db_classe:name': string;
       'db_character:db_classe:displayMale': string;
       'db_character:db_classe:displayFemale': string;
@@ -463,10 +507,12 @@ export type Schema = {
       'id': number;
       'characterName': string;
       'skillName': string;
+      'invocationTemplateName': string;
     };
     nested: {
       'db_character': Schema['db_character']['plain'] & Schema['db_character']['nested'];
       'db_skill': Schema['db_skill']['plain'] & Schema['db_skill']['nested'];
+      'db_character_template': Schema['db_character_template']['plain'] & Schema['db_character_template']['nested'];
     };
     flat: {
       'db_character:name': string;
@@ -505,6 +551,8 @@ export type Schema = {
       'db_character:bloodlineName': string;
       'db_character:restImproved': boolean;
       'db_character:apotheoseState': 'NONE' | 'ALREADY_USED' | 'COST_TO_PAY' | 'COST_PAID';
+      'db_character:summoner': string;
+      'db_character:isInvocation': boolean;
       'db_character:db_classe:name': string;
       'db_character:db_classe:displayMale': string;
       'db_character:db_classe:displayFemale': string;
@@ -530,7 +578,56 @@ export type Schema = {
       'db_skill:position': number;
       'db_skill:display': string;
       'db_skill:isArcanique': boolean;
+      'db_skill:invocationTemplateName': string;
+      'db_skill:db_character_template:name': string;
+      'db_skill:db_character_template:chairValueReferential': 'Fixe' | 'Chair' | 'Esprit' | 'Essence' | 'Success';
+      'db_skill:db_character_template:chairValueRule': number;
+      'db_skill:db_character_template:espritValueReferential': 'Fixe' | 'Chair' | 'Esprit' | 'Essence' | 'Success';
+      'db_skill:db_character_template:espritValueRule': number;
+      'db_skill:db_character_template:essenceValueReferential': 'Fixe' | 'Chair' | 'Esprit' | 'Essence' | 'Success';
+      'db_skill:db_character_template:essenceValueRule': number;
+      'db_skill:db_character_template:pvMaxValueReferential': 'Fixe' | 'Chair' | 'Esprit' | 'Essence' | 'Success';
+      'db_skill:db_character_template:pvMaxValueRule': number;
+      'db_skill:db_character_template:pfMaxValueReferential': 'Fixe' | 'Chair' | 'Esprit' | 'Essence' | 'Success';
+      'db_skill:db_character_template:pfMaxValueRule': number;
+      'db_skill:db_character_template:ppMaxValueReferential': 'Fixe' | 'Chair' | 'Esprit' | 'Essence' | 'Success';
+      'db_skill:db_character_template:ppMaxValueRule': number;
+      'db_skill:db_character_template:picture': string;
+      'db_character_template:name': string;
+      'db_character_template:chairValueReferential': 'Fixe' | 'Chair' | 'Esprit' | 'Essence' | 'Success';
+      'db_character_template:chairValueRule': number;
+      'db_character_template:espritValueReferential': 'Fixe' | 'Chair' | 'Esprit' | 'Essence' | 'Success';
+      'db_character_template:espritValueRule': number;
+      'db_character_template:essenceValueReferential': 'Fixe' | 'Chair' | 'Esprit' | 'Essence' | 'Success';
+      'db_character_template:essenceValueRule': number;
+      'db_character_template:pvMaxValueReferential': 'Fixe' | 'Chair' | 'Esprit' | 'Essence' | 'Success';
+      'db_character_template:pvMaxValueRule': number;
+      'db_character_template:pfMaxValueReferential': 'Fixe' | 'Chair' | 'Esprit' | 'Essence' | 'Success';
+      'db_character_template:pfMaxValueRule': number;
+      'db_character_template:ppMaxValueReferential': 'Fixe' | 'Chair' | 'Esprit' | 'Essence' | 'Success';
+      'db_character_template:ppMaxValueRule': number;
+      'db_character_template:picture': string;
     };
+  };
+  'db_character_template': {
+    plain: {
+      'name': string;
+      'chairValueReferential': 'Fixe' | 'Chair' | 'Esprit' | 'Essence' | 'Success';
+      'chairValueRule': number;
+      'espritValueReferential': 'Fixe' | 'Chair' | 'Esprit' | 'Essence' | 'Success';
+      'espritValueRule': number;
+      'essenceValueReferential': 'Fixe' | 'Chair' | 'Esprit' | 'Essence' | 'Success';
+      'essenceValueRule': number;
+      'pvMaxValueReferential': 'Fixe' | 'Chair' | 'Esprit' | 'Essence' | 'Success';
+      'pvMaxValueRule': number;
+      'pfMaxValueReferential': 'Fixe' | 'Chair' | 'Esprit' | 'Essence' | 'Success';
+      'pfMaxValueRule': number;
+      'ppMaxValueReferential': 'Fixe' | 'Chair' | 'Esprit' | 'Essence' | 'Success';
+      'ppMaxValueRule': number;
+      'picture': string;
+    };
+    nested: {};
+    flat: {};
   };
   'db_classe': {
     plain: {
@@ -605,10 +702,12 @@ export type Schema = {
       'id': number;
       'classeName': string;
       'skillName': string;
+      'invocationTemplateName': string;
     };
     nested: {
       'db_classe': Schema['db_classe']['plain'] & Schema['db_classe']['nested'];
       'db_skill': Schema['db_skill']['plain'] & Schema['db_skill']['nested'];
+      'db_character_template': Schema['db_character_template']['plain'] & Schema['db_character_template']['nested'];
     };
     flat: {
       'db_classe:name': string;
@@ -631,6 +730,35 @@ export type Schema = {
       'db_skill:position': number;
       'db_skill:display': string;
       'db_skill:isArcanique': boolean;
+      'db_skill:invocationTemplateName': string;
+      'db_skill:db_character_template:name': string;
+      'db_skill:db_character_template:chairValueReferential': 'Fixe' | 'Chair' | 'Esprit' | 'Essence' | 'Success';
+      'db_skill:db_character_template:chairValueRule': number;
+      'db_skill:db_character_template:espritValueReferential': 'Fixe' | 'Chair' | 'Esprit' | 'Essence' | 'Success';
+      'db_skill:db_character_template:espritValueRule': number;
+      'db_skill:db_character_template:essenceValueReferential': 'Fixe' | 'Chair' | 'Esprit' | 'Essence' | 'Success';
+      'db_skill:db_character_template:essenceValueRule': number;
+      'db_skill:db_character_template:pvMaxValueReferential': 'Fixe' | 'Chair' | 'Esprit' | 'Essence' | 'Success';
+      'db_skill:db_character_template:pvMaxValueRule': number;
+      'db_skill:db_character_template:pfMaxValueReferential': 'Fixe' | 'Chair' | 'Esprit' | 'Essence' | 'Success';
+      'db_skill:db_character_template:pfMaxValueRule': number;
+      'db_skill:db_character_template:ppMaxValueReferential': 'Fixe' | 'Chair' | 'Esprit' | 'Essence' | 'Success';
+      'db_skill:db_character_template:ppMaxValueRule': number;
+      'db_skill:db_character_template:picture': string;
+      'db_character_template:name': string;
+      'db_character_template:chairValueReferential': 'Fixe' | 'Chair' | 'Esprit' | 'Essence' | 'Success';
+      'db_character_template:chairValueRule': number;
+      'db_character_template:espritValueReferential': 'Fixe' | 'Chair' | 'Esprit' | 'Essence' | 'Success';
+      'db_character_template:espritValueRule': number;
+      'db_character_template:essenceValueReferential': 'Fixe' | 'Chair' | 'Esprit' | 'Essence' | 'Success';
+      'db_character_template:essenceValueRule': number;
+      'db_character_template:pvMaxValueReferential': 'Fixe' | 'Chair' | 'Esprit' | 'Essence' | 'Success';
+      'db_character_template:pvMaxValueRule': number;
+      'db_character_template:pfMaxValueReferential': 'Fixe' | 'Chair' | 'Esprit' | 'Essence' | 'Success';
+      'db_character_template:pfMaxValueRule': number;
+      'db_character_template:ppMaxValueReferential': 'Fixe' | 'Chair' | 'Esprit' | 'Essence' | 'Success';
+      'db_character_template:ppMaxValueRule': number;
+      'db_character_template:picture': string;
     };
   };
   'db_proficiency': {
@@ -697,9 +825,27 @@ export type Schema = {
       'position': number;
       'display': string;
       'isArcanique': boolean;
+      'invocationTemplateName': string;
     };
-    nested: {};
-    flat: {};
+    nested: {
+      'db_character_template': Schema['db_character_template']['plain'] & Schema['db_character_template']['nested'];
+    };
+    flat: {
+      'db_character_template:name': string;
+      'db_character_template:chairValueReferential': 'Fixe' | 'Chair' | 'Esprit' | 'Essence' | 'Success';
+      'db_character_template:chairValueRule': number;
+      'db_character_template:espritValueReferential': 'Fixe' | 'Chair' | 'Esprit' | 'Essence' | 'Success';
+      'db_character_template:espritValueRule': number;
+      'db_character_template:essenceValueReferential': 'Fixe' | 'Chair' | 'Esprit' | 'Essence' | 'Success';
+      'db_character_template:essenceValueRule': number;
+      'db_character_template:pvMaxValueReferential': 'Fixe' | 'Chair' | 'Esprit' | 'Essence' | 'Success';
+      'db_character_template:pvMaxValueRule': number;
+      'db_character_template:pfMaxValueReferential': 'Fixe' | 'Chair' | 'Esprit' | 'Essence' | 'Success';
+      'db_character_template:pfMaxValueRule': number;
+      'db_character_template:ppMaxValueReferential': 'Fixe' | 'Chair' | 'Esprit' | 'Essence' | 'Success';
+      'db_character_template:ppMaxValueRule': number;
+      'db_character_template:picture': string;
+    };
   };
   'migrations': {
     plain: {

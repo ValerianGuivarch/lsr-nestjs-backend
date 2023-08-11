@@ -7,6 +7,7 @@ import { DBBloodline } from './bloodlines/DBBloodline'
 import { DBBloodlineProvider } from './bloodlines/DBBloodlineProvider'
 import { DBCharacter } from './character/DBCharacter'
 import { DBCharacterProvider } from './character/DBCharacterProvider'
+import { DBCharacterTemplate } from './character/DBCharacterTemplate'
 import { DBClasse } from './classes/DBClasse'
 import { DBClasseProvider } from './classes/DBClasseProvider'
 import { DBBloodlineProficiency } from './proficiencies/DBBloodlineProficiency'
@@ -37,6 +38,7 @@ import { TypeOrmModule } from '@nestjs/typeorm'
         DBRoll,
         DBSession,
         DBCharacter,
+        DBCharacterTemplate,
         DBBloodline,
         DBClasse,
         DBSkill,

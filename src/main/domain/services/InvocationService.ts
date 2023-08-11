@@ -1,33 +1,23 @@
 import { Character } from '../models/characters/Character'
-import { Invocation } from '../models/invocation/Invocation'
-import { InvocationReferential } from '../models/invocation/InvocationReferential'
-import { InvocationTemplate } from '../models/invocation/InvocationTemplate'
+import { CharacterTemplateReferential } from '../models/invocation/CharacterTemplateReferential'
 import { Roll } from '../models/roll/Roll'
 import { ICharacterProvider } from '../providers/ICharacterProvider'
-import { IInvocationProvider } from '../providers/IInvocationProvider'
 import { ISessionProvider } from '../providers/ISessionProvider'
 import { Inject, Logger } from '@nestjs/common'
 
-export class CharacterService {
-  private readonly logger = new Logger(CharacterService.name)
-  @Inject('IInvocationProvider')
-  private invocationProvider: IInvocationProvider
+export class InvocationService {
+  private readonly logger = new Logger(InvocationService.name)
 
   constructor(
     @Inject('ICharacterProvider')
     private characterProvider: ICharacterProvider,
     @Inject('ISessionProvider')
-    private sessionProvider: ISessionProvider,
-    @Inject('IInvocationProvider')
-    invocationProvider: IInvocationProvider
-  ) {
-    this.invocationProvider = invocationProvider
-    console.log('InvocationService')
-  }
+    private sessionProvider: ISessionProvider
+  ) {}
 
-  async createInvocation(templateName: string, roll: Roll): Promise<Invocation> {
+  async createInvocation(templateName: string, roll: Roll): Promise<Character> {
     const summoner = await this.characterProvider.findOneByName(roll.rollerName)
-    const template = await this.invocationProvider.findTemplateByName(templateName)
+    const template = await this.characterProvider.findTemplateByName(templateName)
     const chair: number = this.valueByReferential(
       summoner,
       roll,
@@ -38,33 +28,31 @@ export class CharacterService {
     const essence = this.valueByReferential(summoner, roll, template.essenceValueReferential, template.essenceValueRule)
     const pvMax = this.valueByReferential(summoner, roll, template.pvMaxValueReferential, template.pvMaxValueRule)
 
-    const invocation = await Invocation.invocationToCreateFactory({
-      id: summoner.name,
+    const invocation = await Character.invocationToCreateFactory({
       chair: chair,
       esprit: esprit,
       essence: essence,
       pvMax: pvMax,
-      templateName: templateName,
-      summonerName: summoner.name,
       picture: template.picture,
-      healer: template.healer
+      name: templateName,
+      summoner: summoner
     })
-    return await this.invocationProvider.create(invocation)
+    return await this.characterProvider.createInvocation(invocation)
   }
 
   valueByReferential(
     character: Character,
     roll: Roll,
-    valueReferential: InvocationReferential,
+    valueReferential: CharacterTemplateReferential,
     valueRule: number
   ): number {
-    if (valueReferential === InvocationReferential.FIXE) {
+    if (valueReferential === CharacterTemplateReferential.FIXE) {
       return valueRule
-    } else if (valueReferential === InvocationReferential.CHAIR) {
+    } else if (valueReferential === CharacterTemplateReferential.CHAIR) {
       return valueRule * character.chair
-    } else if (valueReferential === InvocationReferential.ESPRIT) {
+    } else if (valueReferential === CharacterTemplateReferential.ESPRIT) {
       return valueRule * character.esprit
-    } else if (valueReferential === InvocationReferential.ESSENCE) {
+    } else if (valueReferential === CharacterTemplateReferential.ESSENCE) {
       return valueRule * character.essence
     } else {
       // if(valueReferential === InvocationReferential.SUCCESS) {
@@ -72,23 +60,7 @@ export class CharacterService {
     }
   }
 
-  async update(invocation: Invocation): Promise<Invocation> {
-    return this.invocationProvider.update(invocation)
-  }
-
-  async delete(name: string): Promise<boolean> {
-    return this.invocationProvider.delete(name)
-  }
-
-  async getById(invocationId: string): Promise<Invocation> {
-    return this.invocationProvider.getById(invocationId)
-  }
-
-  async findAll(summonerName: string): Promise<Invocation[]> {
-    return this.invocationProvider.findAll(summonerName)
-  }
-
-  async findTemplateByName(invocationName: string): Promise<InvocationTemplate> {
-    return this.invocationProvider.findTemplateByName(invocationName)
+  async findAll(summonerName: string): Promise<Character[]> {
+    return this.characterProvider.findAllInvocations(summonerName)
   }
 }

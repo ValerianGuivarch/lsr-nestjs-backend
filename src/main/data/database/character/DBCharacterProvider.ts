@@ -1,9 +1,12 @@
 import { DBCharacter } from './DBCharacter'
+import { DBCharacterTemplate } from './DBCharacterTemplate'
 import { ApotheoseState } from '../../../domain/models/apotheoses/ApotheoseState'
 import { BattleState } from '../../../domain/models/characters/BattleState'
 import { Category } from '../../../domain/models/characters/Category'
 import { Character } from '../../../domain/models/characters/Character'
 import { Genre } from '../../../domain/models/characters/Genre'
+import { CharacterTemplate } from '../../../domain/models/invocation/CharacterTemplate'
+import { CharacterTemplateReferential } from '../../../domain/models/invocation/CharacterTemplateReferential'
 import { ICharacterProvider } from '../../../domain/providers/ICharacterProvider'
 import { ProviderErrors } from '../../errors/ProviderErrors'
 import { Injectable } from '@nestjs/common' // adjust the path as needed
@@ -18,7 +21,9 @@ export class DBCharacterProvider implements ICharacterProvider {
 
   constructor(
     @InjectRepository(DBCharacter, 'postgres')
-    private dbCharacterRepository: Repository<DBCharacter>
+    private dbCharacterRepository: Repository<DBCharacter>,
+    @InjectRepository(DBCharacterTemplate, 'postgres')
+    private dbCharacterTemplateRepository: Repository<DBCharacterTemplate>
   ) {}
 
   private static toCharacter(doc: DBCharacter): Character {
@@ -58,7 +63,28 @@ export class DBCharacterProvider implements ICharacterProvider {
       buttonColor: doc.buttonColor,
       textColor: doc.textColor,
       boosted: doc.boosted,
-      battleState: BattleState[doc.battleState]
+      battleState: BattleState[doc.battleState],
+      isInvocation: doc.isInvocation,
+      summoner: doc.summoner
+    })
+  }
+
+  private static toCharacterTemplate(template: DBCharacterTemplate) {
+    return new CharacterTemplate({
+      name: template.name,
+      chairValueReferential: CharacterTemplateReferential[template.chairValueReferential],
+      chairValueRule: template.chairValueRule,
+      espritValueReferential: CharacterTemplateReferential[template.espritValueReferential],
+      espritValueRule: template.espritValueRule,
+      essenceValueReferential: CharacterTemplateReferential[template.essenceValueReferential],
+      essenceValueRule: template.essenceValueRule,
+      pvMaxValueReferential: CharacterTemplateReferential[template.pvMaxValueReferential],
+      pvMaxValueRule: template.pvMaxValueRule,
+      pfMaxValueReferential: CharacterTemplateReferential[template.pfMaxValueReferential],
+      pfMaxValueRule: template.pfMaxValueRule,
+      ppMaxValueReferential: CharacterTemplateReferential[template.ppMaxValueReferential],
+      ppMaxValueRule: template.ppMaxValueRule,
+      picture: template.picture
     })
   }
 
@@ -114,6 +140,18 @@ export class DBCharacterProvider implements ICharacterProvider {
     } else {
       throw ProviderErrors.EntityAlreadyExists(newCharacter.name)
     }
+  }
+
+  async createInvocation(newCharacter: Character): Promise<Character> {
+    const nbInvocation = await this.dbCharacterRepository.countBy({ summoner: newCharacter.summoner })
+    newCharacter.name = `${newCharacter.summoner} - ${newCharacter.name} ${nbInvocation + 1}`
+    const createdInvocation = this.dbCharacterRepository.create(DBCharacterProvider.fromCharacter(newCharacter))
+    const character = DBCharacterProvider.toCharacter(await this.dbCharacterRepository.save(createdInvocation))
+    const characterObservable = this.characters.get(character.name)
+    if (characterObservable) {
+      characterObservable.next(character)
+    }
+    return character
   }
 
   async findOneByName(name: string): Promise<Character> {
@@ -182,5 +220,18 @@ export class DBCharacterProvider implements ICharacterProvider {
       this.characters.set(name, new Subject())
     }
     return this.characters.get(name).asObservable()
+  }
+
+  async findAllInvocations(summoner: string): Promise<Character[]> {
+    const invocations = await this.dbCharacterRepository.findBy({ summoner: summoner })
+    return invocations.map(DBCharacterProvider.toCharacter)
+  }
+
+  async findTemplateByName(name: string): Promise<CharacterTemplate> {
+    const template = await this.dbCharacterTemplateRepository.findOneBy({ name: name })
+    if (!template) {
+      throw ProviderErrors.EntityNotFound(name)
+    }
+    return DBCharacterProvider.toCharacterTemplate(template)
   }
 }

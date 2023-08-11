@@ -1,14 +1,14 @@
-import { InvocationReferential } from '../../../domain/models/invocation/InvocationReferential'
+import { CharacterTemplateReferential } from '../../../domain/models/invocation/CharacterTemplateReferential'
 import { PrimaryColumn, Entity, Column } from 'typeorm'
 
 @Entity()
-export class DBInvocationTemplate {
+export class DBCharacterTemplate {
   @PrimaryColumn({ type: 'varchar' })
   name: string
 
   @Column({
     type: 'enum',
-    enum: InvocationReferential
+    enum: CharacterTemplateReferential
   })
   chairValueReferential: string
 
@@ -17,7 +17,7 @@ export class DBInvocationTemplate {
 
   @Column({
     type: 'enum',
-    enum: InvocationReferential
+    enum: CharacterTemplateReferential
   })
   espritValueReferential: string
 
@@ -26,7 +26,7 @@ export class DBInvocationTemplate {
 
   @Column({
     type: 'enum',
-    enum: InvocationReferential
+    enum: CharacterTemplateReferential
   })
   essenceValueReferential: string
 
@@ -35,15 +35,30 @@ export class DBInvocationTemplate {
 
   @Column({
     type: 'enum',
-    enum: InvocationReferential
+    enum: CharacterTemplateReferential
   })
   pvMaxValueReferential: string
 
   @Column({ type: 'int' })
   pvMaxValueRule: number
 
-  @Column({ type: 'boolean' })
-  healer: boolean
+  @Column({
+    type: 'enum',
+    enum: CharacterTemplateReferential
+  })
+  pfMaxValueReferential: string
+
+  @Column({ type: 'int' })
+  pfMaxValueRule: number
+
+  @Column({
+    type: 'enum',
+    enum: CharacterTemplateReferential
+  })
+  ppMaxValueReferential: string
+
+  @Column({ type: 'int' })
+  ppMaxValueRule: number
 
   @Column({ type: 'varchar', nullable: true })
   picture?: string

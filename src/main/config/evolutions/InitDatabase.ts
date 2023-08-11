@@ -4,6 +4,7 @@ import { DBCharacterApotheose } from '../../data/database/apotheoses/DBCharacter
 import { DBClasseApotheose } from '../../data/database/apotheoses/DBClasseApotheose'
 import { DBBloodline } from '../../data/database/bloodlines/DBBloodline'
 import { DBCharacter } from '../../data/database/character/DBCharacter'
+import { DBCharacterTemplate } from '../../data/database/character/DBCharacterTemplate'
 import { DBClasse } from '../../data/database/classes/DBClasse'
 import { DBBloodlineProficiency } from '../../data/database/proficiencies/DBBloodlineProficiency'
 import { DBCharacterProficiency } from '../../data/database/proficiencies/DBCharacterProficiency'
@@ -16,6 +17,7 @@ import { DBSkill } from '../../data/database/skills/DBSkill'
 import { Category } from '../../domain/models/characters/Category'
 import { DisplayCategory } from '../../domain/models/characters/DisplayCategory'
 import { Genre } from '../../domain/models/characters/Genre'
+import { CharacterTemplateReferential } from '../../domain/models/invocation/CharacterTemplateReferential'
 import { SuccessCalculation } from '../../domain/models/roll/SuccessCalculation'
 import { SkillOwnedUse } from '../../domain/models/skills/SkillOwnedUse'
 import { SkillStat } from '../../domain/models/skills/SkillStat'
@@ -56,7 +58,9 @@ export class InitDatabase {
     @InjectRepository(DBBloodlineApotheose, 'postgres')
     private dbBloodlineApotheoseRepository: Repository<DBBloodlineApotheose>,
     @InjectRepository(DBCharacterApotheose, 'postgres')
-    private dbCharacterApotheoseRepository: Repository<DBCharacterApotheose>
+    private dbCharacterApotheoseRepository: Repository<DBCharacterApotheose>,
+    @InjectRepository(DBCharacterTemplate, 'postgres')
+    private dbCharacterTemplateRepository: Repository<DBCharacterTemplate>
   ) {}
 
   async onModuleInit(): Promise<void> {
@@ -75,7 +79,9 @@ export class InitDatabase {
     await this.dbSkillRepository.delete({})
     await this.dbApotheoseRepository.delete({})
     await this.dbProficiencyRepository.delete({})
-    const skills = await this.initSkills()
+    await this.dbCharacterTemplateRepository.delete({})
+    const charactersTemplates = await this.initCharactersTemplates()
+    const skills = await this.initSkills(charactersTemplates)
     const proficiencies = await this.initProficiencies()
     const apotheoses = await this.initApotheoses()
     const classes = await this.initClasses()
@@ -84,6 +90,42 @@ export class InitDatabase {
     await this.skillsAttribution(skills, classes, bloodlines, characters)
     await this.proficienciesAttribution(proficiencies, classes, bloodlines, characters)
     await this.apotheosesAttribution(apotheoses, classes, bloodlines, characters)
+  }
+
+  async initCharactersTemplates(): Promise<Map<string, DBCharacterTemplate>> {
+    const jonathanLight: DBCharacterTemplate = this.createCharacterTemplate({
+      name: 'summonLight',
+      chairValueReferential: CharacterTemplateReferential.SUCCESS,
+      chairValueRule: 1,
+      espritValueReferential: CharacterTemplateReferential.SUCCESS,
+      espritValueRule: 1,
+      essenceValueReferential: CharacterTemplateReferential.SUCCESS,
+      essenceValueRule: 1,
+      pvMaxValueReferential: CharacterTemplateReferential.SUCCESS,
+      pvMaxValueRule: 1,
+      pfMaxValueReferential: CharacterTemplateReferential.SUCCESS,
+      pfMaxValueRule: 1,
+      ppMaxValueReferential: CharacterTemplateReferential.SUCCESS,
+      ppMaxValueRule: 1,
+      picture: ''
+    })
+
+    const newCharactersTemplate = [jonathanLight]
+    const charactersTemplate = new Map<string, DBCharacterTemplate>()
+    for (const characterTemplateData of newCharactersTemplate) {
+      const existingCharacterTemplate = await this.dbCharacterTemplateRepository.findOneBy({
+        name: characterTemplateData.name
+      })
+      if (!existingCharacterTemplate) {
+        const characterTemplate = new DBCharacterTemplate()
+        Object.assign(characterTemplate, characterTemplateData)
+        const createdCharacterTemplate = await this.dbCharacterTemplateRepository.save(characterTemplate)
+        charactersTemplate.set(characterTemplate.name, createdCharacterTemplate)
+      } else {
+        charactersTemplate.set(existingCharacterTemplate.name, existingCharacterTemplate)
+      }
+    }
+    return charactersTemplate
   }
 
   async initCharacters(
@@ -125,7 +167,7 @@ export class InitDatabase {
     }
     return characters
   }
-  async initSkills(): Promise<Map<string, DBSkill>> {
+  async initSkills(charactersTemplates: Map<string, DBCharacterTemplate>): Promise<Map<string, DBSkill>> {
     const chairSkill: DBSkill = this.createSkill({
       name: 'chair',
       allAttribution: true,
@@ -221,6 +263,15 @@ export class InitDatabase {
       arcaneCost: 1,
       isArcanique: true
     })
+    const lightSummon: DBSkill = this.createSkill({
+      name: 'summonLight',
+      allAttribution: false,
+      stat: SkillStat.ESSENCE,
+      category: DisplayCategory.MAGIE,
+      display: 'fait une *Invocation de Lumière*',
+      position: 25,
+      invocationTemplate: charactersTemplates.get('summonLight')
+    })
     const newSkills = [
       chairSkill,
       espritSkill,
@@ -231,7 +282,8 @@ export class InitDatabase {
       licorneSkill,
       chevalSkill,
       arbreSkill,
-      mortSkill
+      mortSkill,
+      lightSummon
     ]
     const skills = new Map<string, DBSkill>()
     for (const skillData of newSkills) {
@@ -557,6 +609,47 @@ export class InitDatabase {
     return newCharacter
   }
 
+  createCharacterTemplate(p: {
+    name: string
+    chairValueReferential: CharacterTemplateReferential
+    chairValueRule: number
+    espritValueReferential: CharacterTemplateReferential
+    espritValueRule: number
+    essenceValueReferential: CharacterTemplateReferential
+    essenceValueRule: number
+    pvMaxValueReferential?: CharacterTemplateReferential
+    pvMaxValueRule?: number
+    pfMaxValueReferential?: CharacterTemplateReferential
+    pfMaxValueRule?: number
+    ppMaxValueReferential?: CharacterTemplateReferential
+    ppMaxValueRule?: number
+    picture?: string
+  }): DBCharacterTemplate {
+    const newCharacterTemplate = new DBCharacterTemplate()
+    newCharacterTemplate.name = p.name
+    newCharacterTemplate.chairValueReferential = p.chairValueReferential
+    newCharacterTemplate.chairValueRule = p.chairValueRule
+    newCharacterTemplate.espritValueReferential = p.espritValueReferential
+    newCharacterTemplate.espritValueRule = p.espritValueRule
+    newCharacterTemplate.essenceValueReferential = p.essenceValueReferential
+    newCharacterTemplate.essenceValueRule = p.essenceValueRule
+    newCharacterTemplate.pvMaxValueReferential = p.pvMaxValueReferential
+      ? p.pvMaxValueReferential
+      : CharacterTemplateReferential.CHAIR
+    // eslint-disable-next-line no-magic-numbers
+    newCharacterTemplate.pvMaxValueRule = p.pvMaxValueRule ? p.pvMaxValueRule : 2
+    newCharacterTemplate.pfMaxValueReferential = p.pfMaxValueReferential
+      ? p.pfMaxValueReferential
+      : CharacterTemplateReferential.ESPRIT
+    newCharacterTemplate.pfMaxValueRule = p.pfMaxValueRule ? p.pfMaxValueRule : 1
+    newCharacterTemplate.ppMaxValueReferential = p.ppMaxValueReferential
+      ? p.ppMaxValueReferential
+      : CharacterTemplateReferential.ESSENCE
+    newCharacterTemplate.ppMaxValueRule = p.ppMaxValueRule ? p.ppMaxValueRule : 1
+    newCharacterTemplate.picture = p.picture || ''
+    return newCharacterTemplate
+  }
+
   createBloodline(p: {
     name: string
     display: string
@@ -593,6 +686,7 @@ export class InitDatabase {
     customRolls?: string
     successCalculation?: SuccessCalculation
     secret?: boolean
+    invocationTemplate?: DBCharacterTemplate
   }): DBSkill {
     return {
       name: p.name,
@@ -611,7 +705,9 @@ export class InitDatabase {
       secret: p.secret || false,
       display: p.display,
       position: p.position,
-      isArcanique: p.isArcanique
+      isArcanique: p.isArcanique,
+      invocationTemplate: p.invocationTemplate || null,
+      invocationTemplateName: p.invocationTemplate ? p.invocationTemplate.name : null
     }
   }
 
@@ -675,6 +771,7 @@ export class InitDatabase {
     await this.saveClasseSkillIfNotExisting(classes.get('champion'), skills.get('cantrip'))
     await this.saveCharacterSkillIfNotExisting(characters.get('jonathan'), skills.get('arbre'))
     await this.saveCharacterSkillIfNotExisting(characters.get('jonathan'), skills.get('mort'))
+    await this.saveCharacterSkillIfNotExisting(characters.get('jonathan'), skills.get('summonLight'))
   }
 
   private async saveClasseSkillIfNotExisting(classe: DBClasse, skill: DBSkill) {

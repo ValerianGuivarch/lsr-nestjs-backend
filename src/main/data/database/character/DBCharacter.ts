@@ -4,6 +4,7 @@ import { Category } from '../../../domain/models/characters/Category'
 import { Genre } from '../../../domain/models/characters/Genre'
 import { DBBloodline } from '../bloodlines/DBBloodline'
 import { DBClasse } from '../classes/DBClasse'
+import { IsOptional } from 'class-validator'
 import { ManyToOne, Column, Entity, JoinColumn, PrimaryColumn } from 'typeorm'
 
 @Entity()
@@ -17,6 +18,13 @@ export class DBCharacter {
   @ManyToOne(() => DBClasse)
   @JoinColumn({ name: 'classeName' })
   classe: DBClasse
+
+  @Column({ type: 'varchar', nullable: true })
+  @IsOptional()
+  summoner: string
+
+  @Column({ type: 'boolean', default: false })
+  isInvocation: boolean
 
   @Column({ type: 'varchar', nullable: true })
   apotheoseName?: string

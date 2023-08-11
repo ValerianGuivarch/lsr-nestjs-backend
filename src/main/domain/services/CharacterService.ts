@@ -39,11 +39,6 @@ export class CharacterService {
 
   async createCharacter(p: { character: CharacterToCreate }): Promise<Character> {
     return await this.characterProvider.create(p.character)
-    /*const characterObservable = this.characters.get(character.name)
-    if (characterObservable) {
-      characterObservable.next(character)
-    }
-    return character*/
   }
 
   async updateCharacter(p: { character: Character }): Promise<Character> {

@@ -1,7 +1,9 @@
 import { ProviderErrors } from '../../data/errors/ProviderErrors'
 import { Category } from '../models/characters/Category'
+import { Character } from '../models/characters/Character'
 import { Roll } from '../models/roll/Roll'
 import { SuccessCalculation } from '../models/roll/SuccessCalculation'
+import { Skill } from '../models/skills/Skill'
 import { SkillStat } from '../models/skills/SkillStat'
 import { IApotheoseProvider } from '../providers/IApotheoseProvider'
 import { IBloodlineProvider } from '../providers/IBloodlineProvider'
@@ -63,8 +65,8 @@ export class RollService {
   }
 
   async roll(p: {
-    rollerName: string
-    skillName: string
+    character: Character
+    skill: Skill
     secret: boolean
     focus: boolean
     power: boolean
@@ -74,14 +76,10 @@ export class RollService {
     empiriqueRoll?: string
     resistRoll?: string
   }): Promise<Roll> {
-    const character = await this.characterProvider.findOneByName(p.rollerName)
-    const bloodline = await this.bloodlineProvider.findOneByName(character.bloodlineName ?? undefined)
-    const skill = (await this.skillProvider.findSkillsByCharacter(character)).filter(
-      (skill) => skill.name === p.skillName
-    )[0]
-    const apotheose = character.apotheoseName
-      ? (await this.apotheoseProvider.findApotheosesByCharacter(character)).filter(
-          (apotheose) => apotheose.name === character.apotheoseName
+    const bloodline = await this.bloodlineProvider.findOneByName(p.character.bloodlineName ?? undefined)
+    const apotheose = p.character.apotheoseName
+      ? (await this.apotheoseProvider.findApotheosesByCharacter(p.character)).filter(
+          (apotheose) => apotheose.name === p.character.apotheoseName
         )[0]
       : undefined
 
@@ -92,12 +90,12 @@ export class RollService {
     let ppDelta = 0
     let arcaneDelta = 0
     let dettesDelta = 0
-    let usePf = p.focus && skill.allowsPf
-    let usePp = p.power && skill.allowsPp
+    let usePf = p.focus && p.skill.allowsPf
+    let usePp = p.power && p.skill.allowsPp
     let useProficiency = p.proficiency
     const result: number[] = []
     const data = ''
-    if (skill.stat === SkillStat.EMPIRIQUE) {
+    if (p.skill.stat === SkillStat.EMPIRIQUE) {
       try {
         diceNumber = Number(p.empiriqueRoll?.substring(0, p.empiriqueRoll.indexOf('d')))
         diceValue = Number(p.empiriqueRoll?.substring(p.empiriqueRoll.indexOf('d') + 1))
@@ -107,17 +105,21 @@ export class RollService {
       } catch (e) {
         throw ProviderErrors.RollWrongEmpiricalRequest()
       }
-    } else if (skill.stat === SkillStat.CUSTOM) {
+    } else if (p.skill.stat === SkillStat.CUSTOM) {
       try {
-        diceNumber = Number(skill.customRolls?.substring(0, skill.customRolls.indexOf('d')))
-        diceValue = Number(skill.customRolls?.substring(skill.customRolls.indexOf('d') + 1))
+        diceNumber = Number(p.skill.customRolls?.substring(0, p.skill.customRolls.indexOf('d')))
+        diceValue = Number(p.skill.customRolls?.substring(p.skill.customRolls.indexOf('d') + 1))
         usePf = false
         usePp = false
         useProficiency = false
       } catch (e) {
         throw ProviderErrors.RollWrongEmpiricalRequest()
       }
-    } else if (skill.stat === SkillStat.CHAIR || skill.stat === SkillStat.ESPRIT || skill.stat === SkillStat.ESSENCE) {
+    } else if (
+      p.skill.stat === SkillStat.CHAIR ||
+      p.skill.stat === SkillStat.ESPRIT ||
+      p.skill.stat === SkillStat.ESSENCE
+    ) {
       let diceValueDelta = p.bonus - p.malus
       if (usePf) {
         diceValueDelta++
@@ -129,38 +131,38 @@ export class RollService {
       }
 
       if (apotheose) {
-        if (!skill.isArcanique || (skill.isArcanique && apotheose.arcaneImprovement)) {
-          if (skill.stat === SkillStat.CHAIR) {
+        if (!p.skill.isArcanique || (p.skill.isArcanique && apotheose.arcaneImprovement)) {
+          if (p.skill.stat === SkillStat.CHAIR) {
             diceValueDelta += apotheose.chairImprovement
-          } else if (skill.stat === SkillStat.ESPRIT) {
+          } else if (p.skill.stat === SkillStat.ESPRIT) {
             diceValueDelta += apotheose.espritImprovement
-          } else if (skill.stat === SkillStat.ESSENCE) {
+          } else if (p.skill.stat === SkillStat.ESSENCE) {
             diceValueDelta += apotheose.essenceImprovement
           }
         }
       }
 
       diceValue = RollService.CLASSIC_ROLL_VALUE
-      if (skill.stat === SkillStat.CHAIR) {
-        diceNumber = character.chair + diceValueDelta
-      } else if (skill.stat === SkillStat.ESPRIT) {
-        diceNumber = character.esprit + diceValueDelta
-      } else if (skill.stat === SkillStat.ESSENCE) {
-        diceNumber = character.essence + diceValueDelta
+      if (p.skill.stat === SkillStat.CHAIR) {
+        diceNumber = p.character.chair + diceValueDelta
+      } else if (p.skill.stat === SkillStat.ESPRIT) {
+        diceNumber = p.character.esprit + diceValueDelta
+      } else if (p.skill.stat === SkillStat.ESSENCE) {
+        diceNumber = p.character.essence + diceValueDelta
       }
     }
     let success: number | null = null
     let juge12: number | null = null
     let juge34: number | null = null
-    if (skill.successCalculation !== SuccessCalculation.AUCUN) {
+    if (p.skill.successCalculation !== SuccessCalculation.AUCUN) {
       success = 0
       juge12 = 0
       juge34 = 0
     }
     for (let i = 0; i < diceNumber; i++) {
       const dice = RollService.randomIntFromInterval(1, diceValue)
-      if (skill.successCalculation !== SuccessCalculation.AUCUN) {
-        if (character.name === 'vernet' && i === 0) {
+      if (p.skill.successCalculation !== SuccessCalculation.AUCUN) {
+        if (p.character.name === 'vernet' && i === 0) {
           if (
             dice === RollService.ONE_SUCCESS_DICE_12 ||
             dice === RollService.ONE_SUCCESS_DICE_34 ||
@@ -198,13 +200,13 @@ export class RollService {
       }
       result.push(dice)
     }
-    if (skill.successCalculation === SuccessCalculation.SIMPLE_PLUS_1) {
+    if (p.skill.successCalculation === SuccessCalculation.SIMPLE_PLUS_1) {
       success = (success ?? 0) + 1
       juge12 = (juge12 ?? 0) + 1
       juge34 = (juge34 ?? 0) + 1
     }
 
-    if (skill.successCalculation === SuccessCalculation.DIVISE) {
+    if (p.skill.successCalculation === SuccessCalculation.DIVISE) {
       // eslint-disable-next-line no-magic-numbers
       success = Math.ceil(success / 2)
       // eslint-disable-next-line no-magic-numbers
@@ -213,7 +215,7 @@ export class RollService {
       juge34 = Math.ceil(juge34 / 2)
     }
 
-    if (skill.successCalculation === SuccessCalculation.DIVISE_PLUS_1) {
+    if (p.skill.successCalculation === SuccessCalculation.DIVISE_PLUS_1) {
       // eslint-disable-next-line no-magic-numbers
       success = Math.ceil(success / 2) + 1
       // eslint-disable-next-line no-magic-numbers
@@ -232,26 +234,26 @@ export class RollService {
       juge34 = (juge34 ?? 0) + 1
     }
 
-    pvDelta = pvDelta - skill.pvCost
-    pfDelta = pfDelta - skill.pfCost
-    ppDelta = ppDelta - skill.ppCost
-    arcaneDelta = arcaneDelta - skill.arcaneCost
-    dettesDelta = dettesDelta + skill.dettesCost * bloodline.detteByMagicAction
-    if (character.pv + pvDelta < 0) {
+    pvDelta = pvDelta - p.skill.pvCost
+    pfDelta = pfDelta - p.skill.pfCost
+    ppDelta = ppDelta - p.skill.ppCost
+    arcaneDelta = arcaneDelta - p.skill.arcaneCost
+    dettesDelta = dettesDelta + p.skill.dettesCost * bloodline.detteByMagicAction
+    if (p.character.pv + pvDelta < 0) {
       throw ProviderErrors.RollNotEnoughPv()
-    } else if (character.pf + pfDelta < 0) {
+    } else if (p.character.pf + pfDelta < 0) {
       throw ProviderErrors.RollNotEnoughPf()
-    } else if (character.pp + ppDelta < 0) {
+    } else if (p.character.pp + ppDelta < 0) {
       throw ProviderErrors.RollNotEnoughPp()
-    } else if (character.arcanes + arcaneDelta < 0) {
+    } else if (p.character.arcanes + arcaneDelta < 0) {
       throw ProviderErrors.RollNotEnoughArcane()
     }
     const rollToCreate = new Roll({
-      rollerName: p.rollerName,
+      rollerName: p.character.name,
       data: data,
       date: new Date(),
-      secret: skill.secret || p.secret,
-      displayDices: character.category === Category.PJ || character.category === Category.PNJ_ALLY,
+      secret: p.skill.secret || p.secret,
+      displayDices: p.character.category === Category.PJ || p.character.category === Category.PNJ_ALLY,
       focus: usePf,
       power: usePp,
       proficiency: useProficiency,
@@ -262,18 +264,18 @@ export class RollService {
       juge12: juge12,
       juge34: juge34,
       resistRoll: p.resistRoll,
-      picture: apotheose ? character.pictureApotheose : character.picture,
+      picture: apotheose ? p.character.pictureApotheose : p.character.picture,
       empiriqueRoll: p.empiriqueRoll,
-      display: skill.display,
-      stat: skill.stat
+      display: p.skill.display,
+      stat: p.skill.stat
     })
     const createdRoll = await this.rollProvider.add(rollToCreate)
-    character.pv += pvDelta
-    character.pf += pfDelta
-    character.pp += ppDelta
-    character.arcanes += arcaneDelta
-    character.dettes += dettesDelta
-    await this.characterProvider.update(character)
+    p.character.pv += pvDelta
+    p.character.pf += pfDelta
+    p.character.pp += ppDelta
+    p.character.arcanes += arcaneDelta
+    p.character.dettes += dettesDelta
+    await this.characterProvider.update(p.character)
     const rolls = await this.getLast()
     this.rollsChangeSubject.next(rolls)
     return createdRoll
