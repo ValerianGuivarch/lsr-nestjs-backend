@@ -42,7 +42,7 @@ export class Character {
   battleState: BattleState
   restImproved: boolean
   isInvocation: boolean
-  summoner?: string
+  controlledBy?: string
 
   constructor(p: Character) {
     this.name = p.name
@@ -82,7 +82,7 @@ export class Character {
     this.boosted = p.boosted
     this.battleState = p.battleState
     this.isInvocation = p.isInvocation
-    this.summoner = p.summoner
+    this.controlledBy = p.controlledBy
   }
 
   static characterToCreateFactory(p: {

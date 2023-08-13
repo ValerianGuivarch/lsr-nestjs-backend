@@ -27,6 +27,7 @@ export class DBApotheoseProvider implements IApotheoseProvider {
   private static toApotheose(apotheose: DBApotheose): Apotheose {
     return new Apotheose({
       name: apotheose.name,
+      shortName: apotheose.shortName,
       minLevel: apotheose.minLevel,
       maxLevel: apotheose.maxLevel,
       position: apotheose.position,

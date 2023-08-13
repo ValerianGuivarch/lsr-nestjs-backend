@@ -146,9 +146,11 @@ export type Schema = {
   'db_apotheose': {
     plain: {
       'name': string;
+      'shortName': string;
       'displayCategory': 'STATS' | 'MAGIE' | 'ARCANES' | 'SOLDATS' | 'PACIFICATEURS';
       'position': number;
       'minLevel': number;
+      'maxLevel': number;
       'cost': number;
       'chairImprovement': number;
       'espritImprovement': number;
@@ -156,7 +158,6 @@ export type Schema = {
       'arcaneImprovement': boolean;
       'avantage': boolean;
       'apotheoseEffect': string;
-      'maxLevel': number;
     };
     nested: {};
     flat: {};
@@ -189,9 +190,11 @@ export type Schema = {
       'db_bloodline:healthImproved': boolean;
       'db_bloodline:display': string;
       'db_apotheose:name': string;
+      'db_apotheose:shortName': string;
       'db_apotheose:displayCategory': 'STATS' | 'MAGIE' | 'ARCANES' | 'SOLDATS' | 'PACIFICATEURS';
       'db_apotheose:position': number;
       'db_apotheose:minLevel': number;
+      'db_apotheose:maxLevel': number;
       'db_apotheose:cost': number;
       'db_apotheose:chairImprovement': number;
       'db_apotheose:espritImprovement': number;
@@ -199,7 +202,6 @@ export type Schema = {
       'db_apotheose:arcaneImprovement': boolean;
       'db_apotheose:avantage': boolean;
       'db_apotheose:apotheoseEffect': string;
-      'db_apotheose:maxLevel': number;
     };
   };
   'db_bloodline_proficiency': {
@@ -221,6 +223,7 @@ export type Schema = {
       'db_bloodline:display': string;
       'db_proficiency:minLevel': number;
       'db_proficiency:name': string;
+      'db_proficiency:shortName': string;
       'db_proficiency:displayCategory': 'STATS' | 'MAGIE' | 'ARCANES' | 'SOLDATS' | 'PACIFICATEURS';
     };
   };
@@ -237,17 +240,31 @@ export type Schema = {
       'customRolls': string;
       'successCalculation': 'AUCUN' | 'SIMPLE' | 'SIMPLE_PLUS_1' | 'DIVISE' | 'DIVISE_PLUS_1';
       'secret': boolean;
+      'invocationTemplateName': string;
       'id': number;
       'bloodlineName': string;
       'skillName': string;
-      'invocationTemplateName': string;
     };
     nested: {
+      'db_character_template': Schema['db_character_template']['plain'] & Schema['db_character_template']['nested'];
       'db_bloodline': Schema['db_bloodline']['plain'] & Schema['db_bloodline']['nested'];
       'db_skill': Schema['db_skill']['plain'] & Schema['db_skill']['nested'];
-      'db_character_template': Schema['db_character_template']['plain'] & Schema['db_character_template']['nested'];
     };
     flat: {
+      'db_character_template:name': string;
+      'db_character_template:chairValueReferential': 'Fixe' | 'Chair' | 'Esprit' | 'Essence' | 'Success';
+      'db_character_template:chairValueRule': number;
+      'db_character_template:espritValueReferential': 'Fixe' | 'Chair' | 'Esprit' | 'Essence' | 'Success';
+      'db_character_template:espritValueRule': number;
+      'db_character_template:essenceValueReferential': 'Fixe' | 'Chair' | 'Esprit' | 'Essence' | 'Success';
+      'db_character_template:essenceValueRule': number;
+      'db_character_template:pvMaxValueReferential': 'Fixe' | 'Chair' | 'Esprit' | 'Essence' | 'Success';
+      'db_character_template:pvMaxValueRule': number;
+      'db_character_template:pfMaxValueReferential': 'Fixe' | 'Chair' | 'Esprit' | 'Essence' | 'Success';
+      'db_character_template:pfMaxValueRule': number;
+      'db_character_template:ppMaxValueReferential': 'Fixe' | 'Chair' | 'Esprit' | 'Essence' | 'Success';
+      'db_character_template:ppMaxValueRule': number;
+      'db_character_template:picture': string;
       'db_bloodline:name': string;
       'db_bloodline:detteByMagicAction': number;
       'db_bloodline:detteByPp': number;
@@ -264,13 +281,15 @@ export type Schema = {
       'db_skill:customRolls': string;
       'db_skill:successCalculation': 'AUCUN' | 'SIMPLE' | 'SIMPLE_PLUS_1' | 'DIVISE' | 'DIVISE_PLUS_1';
       'db_skill:secret': boolean;
+      'db_skill:invocationTemplateName': string;
       'db_skill:name': string;
+      'db_skill:shortName': string;
       'db_skill:allAttribution': boolean;
       'db_skill:displayCategory': 'STATS' | 'MAGIE' | 'ARCANES' | 'SOLDATS' | 'PACIFICATEURS';
       'db_skill:position': number;
       'db_skill:display': string;
       'db_skill:isArcanique': boolean;
-      'db_skill:invocationTemplateName': string;
+      'db_skill:description': string;
       'db_skill:db_character_template:name': string;
       'db_skill:db_character_template:chairValueReferential': 'Fixe' | 'Chair' | 'Esprit' | 'Essence' | 'Success';
       'db_skill:db_character_template:chairValueRule': number;
@@ -285,27 +304,16 @@ export type Schema = {
       'db_skill:db_character_template:ppMaxValueReferential': 'Fixe' | 'Chair' | 'Esprit' | 'Essence' | 'Success';
       'db_skill:db_character_template:ppMaxValueRule': number;
       'db_skill:db_character_template:picture': string;
-      'db_character_template:name': string;
-      'db_character_template:chairValueReferential': 'Fixe' | 'Chair' | 'Esprit' | 'Essence' | 'Success';
-      'db_character_template:chairValueRule': number;
-      'db_character_template:espritValueReferential': 'Fixe' | 'Chair' | 'Esprit' | 'Essence' | 'Success';
-      'db_character_template:espritValueRule': number;
-      'db_character_template:essenceValueReferential': 'Fixe' | 'Chair' | 'Esprit' | 'Essence' | 'Success';
-      'db_character_template:essenceValueRule': number;
-      'db_character_template:pvMaxValueReferential': 'Fixe' | 'Chair' | 'Esprit' | 'Essence' | 'Success';
-      'db_character_template:pvMaxValueRule': number;
-      'db_character_template:pfMaxValueReferential': 'Fixe' | 'Chair' | 'Esprit' | 'Essence' | 'Success';
-      'db_character_template:pfMaxValueRule': number;
-      'db_character_template:ppMaxValueReferential': 'Fixe' | 'Chair' | 'Esprit' | 'Essence' | 'Success';
-      'db_character_template:ppMaxValueRule': number;
-      'db_character_template:picture': string;
     };
   };
   'db_character': {
     plain: {
       'name': string;
       'classeName': string;
+      'controlledBy': string;
+      'isInvocation': boolean;
       'apotheoseName': string;
+      'apotheoseState': 'NONE' | 'ALREADY_USED' | 'COST_TO_PAY' | 'COST_PAID';
       'apotheoseImprovement': string;
       'apotheoseImprovementList': string;
       'chair': number;
@@ -321,6 +329,7 @@ export type Schema = {
       'arcanes': number;
       'arcanesMax': number;
       'niveau': number;
+      'restImproved': boolean;
       'lux': string;
       'umbra': string;
       'secunda': string;
@@ -337,10 +346,6 @@ export type Schema = {
       'textColor': string;
       'boosted': boolean;
       'bloodlineName': string;
-      'restImproved': boolean;
-      'apotheoseState': 'NONE' | 'ALREADY_USED' | 'COST_TO_PAY' | 'COST_PAID';
-      'summoner': string;
-      'isInvocation': boolean;
     };
     nested: {
       'db_classe': Schema['db_classe']['plain'] & Schema['db_classe']['nested'];
@@ -370,7 +375,10 @@ export type Schema = {
     flat: {
       'db_character:name': string;
       'db_character:classeName': string;
+      'db_character:controlledBy': string;
+      'db_character:isInvocation': boolean;
       'db_character:apotheoseName': string;
+      'db_character:apotheoseState': 'NONE' | 'ALREADY_USED' | 'COST_TO_PAY' | 'COST_PAID';
       'db_character:apotheoseImprovement': string;
       'db_character:apotheoseImprovementList': string;
       'db_character:chair': number;
@@ -386,6 +394,7 @@ export type Schema = {
       'db_character:arcanes': number;
       'db_character:arcanesMax': number;
       'db_character:niveau': number;
+      'db_character:restImproved': boolean;
       'db_character:lux': string;
       'db_character:umbra': string;
       'db_character:secunda': string;
@@ -402,10 +411,6 @@ export type Schema = {
       'db_character:textColor': string;
       'db_character:boosted': boolean;
       'db_character:bloodlineName': string;
-      'db_character:restImproved': boolean;
-      'db_character:apotheoseState': 'NONE' | 'ALREADY_USED' | 'COST_TO_PAY' | 'COST_PAID';
-      'db_character:summoner': string;
-      'db_character:isInvocation': boolean;
       'db_character:db_classe:name': string;
       'db_character:db_classe:displayMale': string;
       'db_character:db_classe:displayFemale': string;
@@ -415,9 +420,11 @@ export type Schema = {
       'db_character:db_bloodline:healthImproved': boolean;
       'db_character:db_bloodline:display': string;
       'db_apotheose:name': string;
+      'db_apotheose:shortName': string;
       'db_apotheose:displayCategory': 'STATS' | 'MAGIE' | 'ARCANES' | 'SOLDATS' | 'PACIFICATEURS';
       'db_apotheose:position': number;
       'db_apotheose:minLevel': number;
+      'db_apotheose:maxLevel': number;
       'db_apotheose:cost': number;
       'db_apotheose:chairImprovement': number;
       'db_apotheose:espritImprovement': number;
@@ -425,7 +432,6 @@ export type Schema = {
       'db_apotheose:arcaneImprovement': boolean;
       'db_apotheose:avantage': boolean;
       'db_apotheose:apotheoseEffect': string;
-      'db_apotheose:maxLevel': number;
     };
   };
   'db_character_proficiency': {
@@ -442,7 +448,10 @@ export type Schema = {
     flat: {
       'db_character:name': string;
       'db_character:classeName': string;
+      'db_character:controlledBy': string;
+      'db_character:isInvocation': boolean;
       'db_character:apotheoseName': string;
+      'db_character:apotheoseState': 'NONE' | 'ALREADY_USED' | 'COST_TO_PAY' | 'COST_PAID';
       'db_character:apotheoseImprovement': string;
       'db_character:apotheoseImprovementList': string;
       'db_character:chair': number;
@@ -458,6 +467,7 @@ export type Schema = {
       'db_character:arcanes': number;
       'db_character:arcanesMax': number;
       'db_character:niveau': number;
+      'db_character:restImproved': boolean;
       'db_character:lux': string;
       'db_character:umbra': string;
       'db_character:secunda': string;
@@ -474,10 +484,6 @@ export type Schema = {
       'db_character:textColor': string;
       'db_character:boosted': boolean;
       'db_character:bloodlineName': string;
-      'db_character:restImproved': boolean;
-      'db_character:apotheoseState': 'NONE' | 'ALREADY_USED' | 'COST_TO_PAY' | 'COST_PAID';
-      'db_character:summoner': string;
-      'db_character:isInvocation': boolean;
       'db_character:db_classe:name': string;
       'db_character:db_classe:displayMale': string;
       'db_character:db_classe:displayFemale': string;
@@ -488,6 +494,7 @@ export type Schema = {
       'db_character:db_bloodline:display': string;
       'db_proficiency:minLevel': number;
       'db_proficiency:name': string;
+      'db_proficiency:shortName': string;
       'db_proficiency:displayCategory': 'STATS' | 'MAGIE' | 'ARCANES' | 'SOLDATS' | 'PACIFICATEURS';
     };
   };
@@ -504,20 +511,37 @@ export type Schema = {
       'customRolls': string;
       'successCalculation': 'AUCUN' | 'SIMPLE' | 'SIMPLE_PLUS_1' | 'DIVISE' | 'DIVISE_PLUS_1';
       'secret': boolean;
+      'invocationTemplateName': string;
       'id': number;
       'characterName': string;
       'skillName': string;
-      'invocationTemplateName': string;
     };
     nested: {
+      'db_character_template': Schema['db_character_template']['plain'] & Schema['db_character_template']['nested'];
       'db_character': Schema['db_character']['plain'] & Schema['db_character']['nested'];
       'db_skill': Schema['db_skill']['plain'] & Schema['db_skill']['nested'];
-      'db_character_template': Schema['db_character_template']['plain'] & Schema['db_character_template']['nested'];
     };
     flat: {
+      'db_character_template:name': string;
+      'db_character_template:chairValueReferential': 'Fixe' | 'Chair' | 'Esprit' | 'Essence' | 'Success';
+      'db_character_template:chairValueRule': number;
+      'db_character_template:espritValueReferential': 'Fixe' | 'Chair' | 'Esprit' | 'Essence' | 'Success';
+      'db_character_template:espritValueRule': number;
+      'db_character_template:essenceValueReferential': 'Fixe' | 'Chair' | 'Esprit' | 'Essence' | 'Success';
+      'db_character_template:essenceValueRule': number;
+      'db_character_template:pvMaxValueReferential': 'Fixe' | 'Chair' | 'Esprit' | 'Essence' | 'Success';
+      'db_character_template:pvMaxValueRule': number;
+      'db_character_template:pfMaxValueReferential': 'Fixe' | 'Chair' | 'Esprit' | 'Essence' | 'Success';
+      'db_character_template:pfMaxValueRule': number;
+      'db_character_template:ppMaxValueReferential': 'Fixe' | 'Chair' | 'Esprit' | 'Essence' | 'Success';
+      'db_character_template:ppMaxValueRule': number;
+      'db_character_template:picture': string;
       'db_character:name': string;
       'db_character:classeName': string;
+      'db_character:controlledBy': string;
+      'db_character:isInvocation': boolean;
       'db_character:apotheoseName': string;
+      'db_character:apotheoseState': 'NONE' | 'ALREADY_USED' | 'COST_TO_PAY' | 'COST_PAID';
       'db_character:apotheoseImprovement': string;
       'db_character:apotheoseImprovementList': string;
       'db_character:chair': number;
@@ -533,6 +557,7 @@ export type Schema = {
       'db_character:arcanes': number;
       'db_character:arcanesMax': number;
       'db_character:niveau': number;
+      'db_character:restImproved': boolean;
       'db_character:lux': string;
       'db_character:umbra': string;
       'db_character:secunda': string;
@@ -549,10 +574,6 @@ export type Schema = {
       'db_character:textColor': string;
       'db_character:boosted': boolean;
       'db_character:bloodlineName': string;
-      'db_character:restImproved': boolean;
-      'db_character:apotheoseState': 'NONE' | 'ALREADY_USED' | 'COST_TO_PAY' | 'COST_PAID';
-      'db_character:summoner': string;
-      'db_character:isInvocation': boolean;
       'db_character:db_classe:name': string;
       'db_character:db_classe:displayMale': string;
       'db_character:db_classe:displayFemale': string;
@@ -572,13 +593,15 @@ export type Schema = {
       'db_skill:customRolls': string;
       'db_skill:successCalculation': 'AUCUN' | 'SIMPLE' | 'SIMPLE_PLUS_1' | 'DIVISE' | 'DIVISE_PLUS_1';
       'db_skill:secret': boolean;
+      'db_skill:invocationTemplateName': string;
       'db_skill:name': string;
+      'db_skill:shortName': string;
       'db_skill:allAttribution': boolean;
       'db_skill:displayCategory': 'STATS' | 'MAGIE' | 'ARCANES' | 'SOLDATS' | 'PACIFICATEURS';
       'db_skill:position': number;
       'db_skill:display': string;
       'db_skill:isArcanique': boolean;
-      'db_skill:invocationTemplateName': string;
+      'db_skill:description': string;
       'db_skill:db_character_template:name': string;
       'db_skill:db_character_template:chairValueReferential': 'Fixe' | 'Chair' | 'Esprit' | 'Essence' | 'Success';
       'db_skill:db_character_template:chairValueRule': number;
@@ -593,20 +616,6 @@ export type Schema = {
       'db_skill:db_character_template:ppMaxValueReferential': 'Fixe' | 'Chair' | 'Esprit' | 'Essence' | 'Success';
       'db_skill:db_character_template:ppMaxValueRule': number;
       'db_skill:db_character_template:picture': string;
-      'db_character_template:name': string;
-      'db_character_template:chairValueReferential': 'Fixe' | 'Chair' | 'Esprit' | 'Essence' | 'Success';
-      'db_character_template:chairValueRule': number;
-      'db_character_template:espritValueReferential': 'Fixe' | 'Chair' | 'Esprit' | 'Essence' | 'Success';
-      'db_character_template:espritValueRule': number;
-      'db_character_template:essenceValueReferential': 'Fixe' | 'Chair' | 'Esprit' | 'Essence' | 'Success';
-      'db_character_template:essenceValueRule': number;
-      'db_character_template:pvMaxValueReferential': 'Fixe' | 'Chair' | 'Esprit' | 'Essence' | 'Success';
-      'db_character_template:pvMaxValueRule': number;
-      'db_character_template:pfMaxValueReferential': 'Fixe' | 'Chair' | 'Esprit' | 'Essence' | 'Success';
-      'db_character_template:pfMaxValueRule': number;
-      'db_character_template:ppMaxValueReferential': 'Fixe' | 'Chair' | 'Esprit' | 'Essence' | 'Success';
-      'db_character_template:ppMaxValueRule': number;
-      'db_character_template:picture': string;
     };
   };
   'db_character_template': {
@@ -653,9 +662,11 @@ export type Schema = {
       'db_classe:displayMale': string;
       'db_classe:displayFemale': string;
       'db_apotheose:name': string;
+      'db_apotheose:shortName': string;
       'db_apotheose:displayCategory': 'STATS' | 'MAGIE' | 'ARCANES' | 'SOLDATS' | 'PACIFICATEURS';
       'db_apotheose:position': number;
       'db_apotheose:minLevel': number;
+      'db_apotheose:maxLevel': number;
       'db_apotheose:cost': number;
       'db_apotheose:chairImprovement': number;
       'db_apotheose:espritImprovement': number;
@@ -663,7 +674,6 @@ export type Schema = {
       'db_apotheose:arcaneImprovement': boolean;
       'db_apotheose:avantage': boolean;
       'db_apotheose:apotheoseEffect': string;
-      'db_apotheose:maxLevel': number;
     };
   };
   'db_classe_proficiency': {
@@ -683,6 +693,7 @@ export type Schema = {
       'db_classe:displayFemale': string;
       'db_proficiency:minLevel': number;
       'db_proficiency:name': string;
+      'db_proficiency:shortName': string;
       'db_proficiency:displayCategory': 'STATS' | 'MAGIE' | 'ARCANES' | 'SOLDATS' | 'PACIFICATEURS';
     };
   };
@@ -699,52 +710,17 @@ export type Schema = {
       'customRolls': string;
       'successCalculation': 'AUCUN' | 'SIMPLE' | 'SIMPLE_PLUS_1' | 'DIVISE' | 'DIVISE_PLUS_1';
       'secret': boolean;
+      'invocationTemplateName': string;
       'id': number;
       'classeName': string;
       'skillName': string;
-      'invocationTemplateName': string;
     };
     nested: {
+      'db_character_template': Schema['db_character_template']['plain'] & Schema['db_character_template']['nested'];
       'db_classe': Schema['db_classe']['plain'] & Schema['db_classe']['nested'];
       'db_skill': Schema['db_skill']['plain'] & Schema['db_skill']['nested'];
-      'db_character_template': Schema['db_character_template']['plain'] & Schema['db_character_template']['nested'];
     };
     flat: {
-      'db_classe:name': string;
-      'db_classe:displayMale': string;
-      'db_classe:displayFemale': string;
-      'db_skill:allowsPf': boolean;
-      'db_skill:allowsPp': boolean;
-      'db_skill:stat': 'FIXE' | 'CHAIR' | 'ESPRIT' | 'ESSENCE' | 'EMPIRIQUE' | 'CUSTOM';
-      'db_skill:pvCost': number;
-      'db_skill:pfCost': number;
-      'db_skill:ppCost': number;
-      'db_skill:dettesCost': number;
-      'db_skill:arcaneCost': number;
-      'db_skill:customRolls': string;
-      'db_skill:successCalculation': 'AUCUN' | 'SIMPLE' | 'SIMPLE_PLUS_1' | 'DIVISE' | 'DIVISE_PLUS_1';
-      'db_skill:secret': boolean;
-      'db_skill:name': string;
-      'db_skill:allAttribution': boolean;
-      'db_skill:displayCategory': 'STATS' | 'MAGIE' | 'ARCANES' | 'SOLDATS' | 'PACIFICATEURS';
-      'db_skill:position': number;
-      'db_skill:display': string;
-      'db_skill:isArcanique': boolean;
-      'db_skill:invocationTemplateName': string;
-      'db_skill:db_character_template:name': string;
-      'db_skill:db_character_template:chairValueReferential': 'Fixe' | 'Chair' | 'Esprit' | 'Essence' | 'Success';
-      'db_skill:db_character_template:chairValueRule': number;
-      'db_skill:db_character_template:espritValueReferential': 'Fixe' | 'Chair' | 'Esprit' | 'Essence' | 'Success';
-      'db_skill:db_character_template:espritValueRule': number;
-      'db_skill:db_character_template:essenceValueReferential': 'Fixe' | 'Chair' | 'Esprit' | 'Essence' | 'Success';
-      'db_skill:db_character_template:essenceValueRule': number;
-      'db_skill:db_character_template:pvMaxValueReferential': 'Fixe' | 'Chair' | 'Esprit' | 'Essence' | 'Success';
-      'db_skill:db_character_template:pvMaxValueRule': number;
-      'db_skill:db_character_template:pfMaxValueReferential': 'Fixe' | 'Chair' | 'Esprit' | 'Essence' | 'Success';
-      'db_skill:db_character_template:pfMaxValueRule': number;
-      'db_skill:db_character_template:ppMaxValueReferential': 'Fixe' | 'Chair' | 'Esprit' | 'Essence' | 'Success';
-      'db_skill:db_character_template:ppMaxValueRule': number;
-      'db_skill:db_character_template:picture': string;
       'db_character_template:name': string;
       'db_character_template:chairValueReferential': 'Fixe' | 'Chair' | 'Esprit' | 'Essence' | 'Success';
       'db_character_template:chairValueRule': number;
@@ -759,12 +735,50 @@ export type Schema = {
       'db_character_template:ppMaxValueReferential': 'Fixe' | 'Chair' | 'Esprit' | 'Essence' | 'Success';
       'db_character_template:ppMaxValueRule': number;
       'db_character_template:picture': string;
+      'db_classe:name': string;
+      'db_classe:displayMale': string;
+      'db_classe:displayFemale': string;
+      'db_skill:allowsPf': boolean;
+      'db_skill:allowsPp': boolean;
+      'db_skill:stat': 'FIXE' | 'CHAIR' | 'ESPRIT' | 'ESSENCE' | 'EMPIRIQUE' | 'CUSTOM';
+      'db_skill:pvCost': number;
+      'db_skill:pfCost': number;
+      'db_skill:ppCost': number;
+      'db_skill:dettesCost': number;
+      'db_skill:arcaneCost': number;
+      'db_skill:customRolls': string;
+      'db_skill:successCalculation': 'AUCUN' | 'SIMPLE' | 'SIMPLE_PLUS_1' | 'DIVISE' | 'DIVISE_PLUS_1';
+      'db_skill:secret': boolean;
+      'db_skill:invocationTemplateName': string;
+      'db_skill:name': string;
+      'db_skill:shortName': string;
+      'db_skill:allAttribution': boolean;
+      'db_skill:displayCategory': 'STATS' | 'MAGIE' | 'ARCANES' | 'SOLDATS' | 'PACIFICATEURS';
+      'db_skill:position': number;
+      'db_skill:display': string;
+      'db_skill:isArcanique': boolean;
+      'db_skill:description': string;
+      'db_skill:db_character_template:name': string;
+      'db_skill:db_character_template:chairValueReferential': 'Fixe' | 'Chair' | 'Esprit' | 'Essence' | 'Success';
+      'db_skill:db_character_template:chairValueRule': number;
+      'db_skill:db_character_template:espritValueReferential': 'Fixe' | 'Chair' | 'Esprit' | 'Essence' | 'Success';
+      'db_skill:db_character_template:espritValueRule': number;
+      'db_skill:db_character_template:essenceValueReferential': 'Fixe' | 'Chair' | 'Esprit' | 'Essence' | 'Success';
+      'db_skill:db_character_template:essenceValueRule': number;
+      'db_skill:db_character_template:pvMaxValueReferential': 'Fixe' | 'Chair' | 'Esprit' | 'Essence' | 'Success';
+      'db_skill:db_character_template:pvMaxValueRule': number;
+      'db_skill:db_character_template:pfMaxValueReferential': 'Fixe' | 'Chair' | 'Esprit' | 'Essence' | 'Success';
+      'db_skill:db_character_template:pfMaxValueRule': number;
+      'db_skill:db_character_template:ppMaxValueReferential': 'Fixe' | 'Chair' | 'Esprit' | 'Essence' | 'Success';
+      'db_skill:db_character_template:ppMaxValueRule': number;
+      'db_skill:db_character_template:picture': string;
     };
   };
   'db_proficiency': {
     plain: {
       'minLevel': number;
       'name': string;
+      'shortName': string;
       'displayCategory': 'STATS' | 'MAGIE' | 'ARCANES' | 'SOLDATS' | 'PACIFICATEURS';
     };
     nested: {};
@@ -775,6 +789,7 @@ export type Schema = {
       'id': number;
       'rollerName': string;
       'date': string;
+      'stat': 'FIXE' | 'CHAIR' | 'ESPRIT' | 'ESSENCE' | 'EMPIRIQUE' | 'CUSTOM';
       'secret': boolean;
       'displayDices': boolean;
       'focus': boolean;
@@ -791,7 +806,6 @@ export type Schema = {
       'empiriqueRoll': string;
       'resistRoll': string;
       'display': string;
-      'stat': 'FIXE' | 'CHAIR' | 'ESPRIT' | 'ESSENCE' | 'EMPIRIQUE' | 'CUSTOM';
     };
     nested: {};
     flat: {};
@@ -799,9 +813,9 @@ export type Schema = {
   'db_session': {
     plain: {
       'id': number;
+      'chaos': '0' | '15' | '30' | '45' | '60' | '75';
       'baseRest': number;
       'improvedRest': number;
-      'chaos': '0' | '15' | '30' | '45' | '60' | '75';
     };
     nested: {};
     flat: {};
@@ -819,13 +833,15 @@ export type Schema = {
       'customRolls': string;
       'successCalculation': 'AUCUN' | 'SIMPLE' | 'SIMPLE_PLUS_1' | 'DIVISE' | 'DIVISE_PLUS_1';
       'secret': boolean;
+      'invocationTemplateName': string;
       'name': string;
+      'shortName': string;
       'allAttribution': boolean;
       'displayCategory': 'STATS' | 'MAGIE' | 'ARCANES' | 'SOLDATS' | 'PACIFICATEURS';
       'position': number;
       'display': string;
       'isArcanique': boolean;
-      'invocationTemplateName': string;
+      'description': string;
     };
     nested: {
       'db_character_template': Schema['db_character_template']['plain'] & Schema['db_character_template']['nested'];

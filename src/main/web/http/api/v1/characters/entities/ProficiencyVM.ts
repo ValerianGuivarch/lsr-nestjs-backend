@@ -6,16 +6,21 @@ export class ProficiencyVM {
   name: string
 
   @ApiProperty()
+  shortName: string
+
+  @ApiProperty()
   displayCategory: string
 
   constructor(p: ProficiencyVM) {
     this.name = p.name
+    this.shortName = p.shortName
     this.displayCategory = p.displayCategory
   }
 
   static of(p: { proficiency: Proficiency }): ProficiencyVM {
     return new ProficiencyVM({
       name: p.proficiency.name,
+      shortName: p.proficiency.shortName,
       displayCategory: p.proficiency.displayCategory.toString()
     })
   }

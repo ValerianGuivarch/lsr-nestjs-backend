@@ -245,6 +245,22 @@
           "reference": null,
           "type": "Number",
           "validations": []
+        },
+        {
+          "defaultValue": null,
+          "enums": [],
+          "field": "shortName",
+          "integration": null,
+          "inverseOf": null,
+          "isFilterable": true,
+          "isPrimaryKey": false,
+          "isReadOnly": false,
+          "isRequired": true,
+          "isSortable": true,
+          "isVirtual": false,
+          "reference": null,
+          "type": "String",
+          "validations": [{"type": "is present", "message": "Field is required"}]
         }
       ],
       "icon": null,
@@ -1017,6 +1033,22 @@
         },
         {
           "defaultValue": null,
+          "enums": [],
+          "field": "controlledBy",
+          "integration": null,
+          "inverseOf": null,
+          "isFilterable": true,
+          "isPrimaryKey": false,
+          "isReadOnly": false,
+          "isRequired": false,
+          "isSortable": true,
+          "isVirtual": false,
+          "reference": null,
+          "type": "String",
+          "validations": []
+        },
+        {
+          "defaultValue": null,
           "enums": null,
           "field": "db_bloodline",
           "integration": null,
@@ -1424,22 +1456,6 @@
           "defaultValue": " ",
           "enums": [],
           "field": "secunda",
-          "integration": null,
-          "inverseOf": null,
-          "isFilterable": true,
-          "isPrimaryKey": false,
-          "isReadOnly": false,
-          "isRequired": false,
-          "isSortable": true,
-          "isVirtual": false,
-          "reference": null,
-          "type": "String",
-          "validations": []
-        },
-        {
-          "defaultValue": null,
-          "enums": [],
-          "field": "summoner",
           "integration": null,
           "inverseOf": null,
           "isFilterable": true,
@@ -2834,6 +2850,22 @@
           "reference": null,
           "type": "String",
           "validations": [{"type": "is present", "message": "Field is required"}]
+        },
+        {
+          "defaultValue": null,
+          "enums": [],
+          "field": "shortName",
+          "integration": null,
+          "inverseOf": null,
+          "isFilterable": true,
+          "isPrimaryKey": false,
+          "isReadOnly": false,
+          "isRequired": true,
+          "isSortable": true,
+          "isVirtual": false,
+          "reference": null,
+          "type": "String",
+          "validations": [{"type": "is present", "message": "Field is required"}]
         }
       ],
       "icon": null,
@@ -3410,6 +3442,22 @@
           "validations": []
         },
         {
+          "defaultValue": "",
+          "enums": [],
+          "field": "description",
+          "integration": null,
+          "inverseOf": null,
+          "isFilterable": true,
+          "isPrimaryKey": false,
+          "isReadOnly": false,
+          "isRequired": true,
+          "isSortable": true,
+          "isVirtual": false,
+          "reference": null,
+          "type": "String",
+          "validations": [{"type": "is present", "message": "Field is required"}]
+        },
+        {
           "defaultValue": null,
           "enums": [],
           "field": "dettesCost",
@@ -3568,6 +3616,22 @@
           "reference": null,
           "type": "Boolean",
           "validations": []
+        },
+        {
+          "defaultValue": null,
+          "enums": [],
+          "field": "shortName",
+          "integration": null,
+          "inverseOf": null,
+          "isFilterable": true,
+          "isPrimaryKey": false,
+          "isReadOnly": false,
+          "isRequired": true,
+          "isSortable": true,
+          "isVirtual": false,
+          "reference": null,
+          "type": "String",
+          "validations": [{"type": "is present", "message": "Field is required"}]
         },
         {
           "defaultValue": null,

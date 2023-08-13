@@ -59,8 +59,4 @@ export class InvocationService {
       return valueRule * roll.success
     }
   }
-
-  async findAll(summonerName: string): Promise<Character[]> {
-    return this.characterProvider.findAllInvocations(summonerName)
-  }
 }

@@ -9,7 +9,7 @@ import { CharacterTemplate } from '../../../domain/models/invocation/CharacterTe
 import { CharacterTemplateReferential } from '../../../domain/models/invocation/CharacterTemplateReferential'
 import { ICharacterProvider } from '../../../domain/providers/ICharacterProvider'
 import { ProviderErrors } from '../../errors/ProviderErrors'
-import { Injectable } from '@nestjs/common' // adjust the path as needed
+import { Injectable } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { Observable, Subject } from 'rxjs'
 import { In, Repository } from 'typeorm'
@@ -18,6 +18,8 @@ import { In, Repository } from 'typeorm'
 // eslint-disable-next-line @darraghor/nestjs-typed/injectable-should-be-provided
 export class DBCharacterProvider implements ICharacterProvider {
   private characters: Map<string, Subject<Character>> = new Map()
+  private charactersSession: Subject<Character[]> = new Subject()
+  private charactersControlled: Map<string, Subject<Character[]>> = new Map()
 
   constructor(
     @InjectRepository(DBCharacter, 'postgres')
@@ -65,7 +67,7 @@ export class DBCharacterProvider implements ICharacterProvider {
       boosted: doc.boosted,
       battleState: BattleState[doc.battleState],
       isInvocation: doc.isInvocation,
-      summoner: doc.summoner
+      controlledBy: doc.controlledBy
     })
   }
 
@@ -91,6 +93,7 @@ export class DBCharacterProvider implements ICharacterProvider {
   private static fromCharacter(doc: Character): DBCharacter {
     return {
       name: doc.name,
+      apotheoseState: doc.apotheoseState,
       classeName: doc.classeName,
       bloodlineName: doc.bloodlineName,
       apotheoseName: doc.apotheoseName,
@@ -132,26 +135,35 @@ export class DBCharacterProvider implements ICharacterProvider {
     if (!createdCharacter) {
       createdCharacter = this.dbCharacterRepository.create(DBCharacterProvider.fromCharacter(newCharacter))
       const character = DBCharacterProvider.toCharacter(await this.dbCharacterRepository.save(createdCharacter))
-      const characterObservable = this.characters.get(character.name)
-      if (characterObservable) {
-        characterObservable.next(character)
-      }
+      await this.dealsWithObservables(character)
       return character
     } else {
       throw ProviderErrors.EntityAlreadyExists(newCharacter.name)
     }
   }
 
-  async createInvocation(newCharacter: Character): Promise<Character> {
-    const nbInvocation = await this.dbCharacterRepository.countBy({ summoner: newCharacter.summoner })
-    newCharacter.name = `${newCharacter.summoner} - ${newCharacter.name} ${nbInvocation + 1}`
-    const createdInvocation = this.dbCharacterRepository.create(DBCharacterProvider.fromCharacter(newCharacter))
-    const character = DBCharacterProvider.toCharacter(await this.dbCharacterRepository.save(createdInvocation))
+  private async dealsWithObservables(character: Character) {
     const characterObservable = this.characters.get(character.name)
     if (characterObservable) {
       characterObservable.next(character)
     }
-    return character
+    if (character.battleState !== BattleState.NONE) {
+      const session = await this.findAllForSession()
+      this.charactersSession.next(session)
+    }
+    if (character.controlledBy) {
+      const characters = await this.findAllControlledBy(character.name)
+      this.charactersControlled.get(character.name).next(characters)
+    }
+  }
+
+  async createInvocation(newCharacter: Character): Promise<Character> {
+    const nbInvocation = await this.dbCharacterRepository.countBy({ controlledBy: newCharacter.controlledBy })
+    newCharacter.name = `${newCharacter.controlledBy} - ${newCharacter.name} ${nbInvocation + 1}`
+    const createdInvocation = this.dbCharacterRepository.create(DBCharacterProvider.fromCharacter(newCharacter))
+    const invocation = DBCharacterProvider.toCharacter(await this.dbCharacterRepository.save(createdInvocation))
+    await this.dealsWithObservables(invocation)
+    return invocation
   }
 
   async findOneByName(name: string): Promise<Character> {
@@ -184,6 +196,19 @@ export class DBCharacterProvider implements ICharacterProvider {
     return characters.map(DBCharacterProvider.toCharacter)
   }
 
+  async findAllForSession(): Promise<Character[]> {
+    const characters = await this.dbCharacterRepository
+      .createQueryBuilder('character')
+      .where('character.battleState != :battleState', { battleState: BattleState.NONE })
+      .getMany()
+    return characters.map(DBCharacterProvider.toCharacter)
+  }
+
+  async findAllControlledBy(characterName: string): Promise<Character[]> {
+    const characters = await this.dbCharacterRepository.findBy({ controlledBy: characterName })
+    return characters.map(DBCharacterProvider.toCharacter)
+  }
+
   async findAllByCategory(category: Category): Promise<string[]> {
     const characters = await this.dbCharacterRepository.findBy({ category: category.toString() })
     return characters.map((c) => c.name)
@@ -195,10 +220,7 @@ export class DBCharacterProvider implements ICharacterProvider {
       DBCharacterProvider.fromCharacter(characterToUpdate)
     )
     const character = DBCharacterProvider.toCharacter(await this.dbCharacterRepository.save(updatedCharacter))
-    const characterObservable = this.characters.get(character.name)
-    if (characterObservable) {
-      characterObservable.next(character)
-    }
+    await this.dealsWithObservables(character)
     return character
   }
 
@@ -207,6 +229,7 @@ export class DBCharacterProvider implements ICharacterProvider {
     if (!character) {
       throw ProviderErrors.EntityNotFound(name)
     }
+    this.characters.delete(name)
     await this.dbCharacterRepository.remove(character)
     return true
   }
@@ -222,9 +245,15 @@ export class DBCharacterProvider implements ICharacterProvider {
     return this.characters.get(name).asObservable()
   }
 
-  async findAllInvocations(summoner: string): Promise<Character[]> {
-    const invocations = await this.dbCharacterRepository.findBy({ summoner: summoner })
-    return invocations.map(DBCharacterProvider.toCharacter)
+  getCharactersControlledObservable(name: string): Observable<Character[]> {
+    if (!this.charactersControlled.has(name)) {
+      this.charactersControlled.set(name, new Subject())
+    }
+    return this.charactersControlled.get(name).asObservable()
+  }
+
+  getCharactersSessionObservable(): Observable<Character[]> {
+    return this.charactersSession.asObservable()
   }
 
   async findTemplateByName(name: string): Promise<CharacterTemplate> {

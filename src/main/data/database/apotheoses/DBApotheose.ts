@@ -6,6 +6,9 @@ export class DBApotheose {
   @PrimaryColumn({ type: 'varchar' })
   name: string
 
+  @Column({ type: 'varchar' })
+  shortName: string
+
   @Column({
     type: 'enum',
     enum: DisplayCategory

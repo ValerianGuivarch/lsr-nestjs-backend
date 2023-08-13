@@ -7,6 +7,9 @@ export class DBSkill extends DBSkillAttrs {
   @PrimaryColumn({ type: 'varchar' })
   name: string
 
+  @Column({ type: 'varchar' })
+  shortName: string
+
   @Column({ type: 'boolean', default: false })
   allAttribution: boolean
 
@@ -24,4 +27,7 @@ export class DBSkill extends DBSkillAttrs {
 
   @Column({ type: 'boolean', default: false })
   isArcanique: boolean
+
+  @Column({ type: 'varchar', default: '' })
+  description: string
 }

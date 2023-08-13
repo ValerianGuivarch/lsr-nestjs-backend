@@ -21,7 +21,7 @@ export class DBCharacter {
 
   @Column({ type: 'varchar', nullable: true })
   @IsOptional()
-  summoner: string
+  controlledBy: string
 
   @Column({ type: 'boolean', default: false })
   isInvocation: boolean

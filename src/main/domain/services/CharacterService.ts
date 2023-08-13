@@ -1,3 +1,4 @@
+import { ApotheoseState } from '../models/apotheoses/ApotheoseState'
 import { Category } from '../models/characters/Category'
 import { Character, CharacterToCreate } from '../models/characters/Character'
 import { ICharacterProvider } from '../providers/ICharacterProvider'
@@ -21,20 +22,12 @@ export class CharacterService {
     return this.characterProvider.findOneByName(name)
   }
 
-  async findByName(name: string): Promise<Character | undefined> {
-    return this.characterProvider.findByName(name)
-  }
-
-  async findManyByName(names: string[]): Promise<Character[]> {
-    return this.characterProvider.findManyByName(names)
-  }
-
   async findAll(category?: Category): Promise<Character[]> {
     return this.characterProvider.findAll(category)
   }
 
-  async findAllByCategory(category: Category): Promise<string[]> {
-    return this.characterProvider.findAllByCategory(category)
+  async findAllControllerBy(name: string): Promise<Character[]> {
+    return this.characterProvider.findAllControlledBy(name)
   }
 
   async createCharacter(p: { character: CharacterToCreate }): Promise<Character> {
@@ -42,10 +35,30 @@ export class CharacterService {
   }
 
   async updateCharacter(p: { character: Character }): Promise<Character> {
+    if (p.character.apotheoseName && p.character.apotheoseState == ApotheoseState.NONE) {
+      p.character.apotheoseState = ApotheoseState.COST_PAID
+    }
+    if (
+      !p.character.apotheoseName &&
+      (p.character.apotheoseState == ApotheoseState.COST_PAID ||
+        p.character.apotheoseState == ApotheoseState.COST_TO_PAY)
+    ) {
+      p.character.apotheoseState = ApotheoseState.ALREADY_USED
+    }
+    if (p.character.apotheoseName && p.character.apotheoseState == ApotheoseState.ALREADY_USED) {
+      p.character.apotheoseState = ApotheoseState.COST_TO_PAY
+    }
     return await this.characterProvider.update(p.character)
   }
 
   getCharacterObservable(name: string): Observable<Character> {
     return this.characterProvider.getCharacterObservable(name)
+  }
+  getCharactersSessionObservable(): Observable<Character[]> {
+    return this.characterProvider.getCharactersSessionObservable()
+  }
+
+  getCharactersControlledObservable(name: string): Observable<Character[]> {
+    return this.characterProvider.getCharactersControlledObservable(name)
   }
 }

@@ -9,7 +9,7 @@ import { SuccessCalculation } from '../../../domain/models/roll/SuccessCalculati
 import { Skill } from '../../../domain/models/skills/Skill'
 import { SkillStat } from '../../../domain/models/skills/SkillStat'
 import { ISkillProvider } from '../../../domain/providers/ISkillProvider'
-import { Injectable } from '@nestjs/common' // adjust the path as needed
+import { Injectable } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { Repository } from 'typeorm'
 
@@ -30,6 +30,8 @@ export class DBSkillProvider implements ISkillProvider {
   private static toSkill(skill: DBSkill, overloadSkill?: DBSkillAttrs): Skill {
     return new Skill({
       name: skill.name,
+      description: skill.description,
+      shortName: skill.shortName,
       display: skill.display,
       position: skill.position,
       invocationTemplateName: skill.invocationTemplateName,

@@ -6,17 +6,27 @@ export class SkillVM {
   name: string
 
   @ApiProperty()
+  shortName: string
+
+  @ApiProperty()
   displayCategory: string
+
+  @ApiProperty()
+  description: string
 
   constructor(p: SkillVM) {
     this.name = p.name
+    this.shortName = p.shortName
     this.displayCategory = p.displayCategory
+    this.description = p.description
   }
 
   static of(p: { skill: Skill }): SkillVM {
     return new SkillVM({
       name: p.skill.name,
-      displayCategory: p.skill.displayCategory.toString()
+      shortName: p.skill.shortName,
+      displayCategory: p.skill.displayCategory.toString(),
+      description: p.skill.description
     })
   }
 }

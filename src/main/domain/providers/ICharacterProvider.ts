@@ -5,9 +5,11 @@ import { Observable } from 'rxjs'
 
 export interface ICharacterProvider {
   getCharacterObservable(name: string): Observable<Character>
+  getCharactersSessionObservable(): Observable<Character[]>
+  getCharactersControlledObservable(name: string): Observable<Character[]>
   create(character: CharacterToCreate): Promise<Character>
   createInvocation(character: CharacterToCreate): Promise<Character>
-  findAllInvocations(summonerName: string): Promise<Character[]>
+  findAllControlledBy(characterName: string): Promise<Character[]>
   update(character: Character): Promise<Character>
   delete(name: string): Promise<boolean>
   findOneByName(name: string): Promise<Character>
@@ -16,6 +18,7 @@ export interface ICharacterProvider {
   exist(name: string): Promise<boolean>
   findManyByName(names: string[]): Promise<Character[]>
   findAll(category?: Category): Promise<Character[]>
+  findAllForSession(): Promise<Character[]>
   countAll(): Promise<number>
   findAllByCategory(category: Category): Promise<string[]>
 }

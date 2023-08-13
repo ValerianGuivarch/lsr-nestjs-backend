@@ -2,6 +2,7 @@ import { DisplayCategory } from '../characters/DisplayCategory'
 
 export class Apotheose {
   name: string
+  shortName: string
   minLevel: number
   maxLevel: number
   chairImprovement: number
@@ -16,6 +17,7 @@ export class Apotheose {
 
   constructor(p: Apotheose) {
     this.name = p.name
+    this.shortName = p.shortName
     this.minLevel = p.minLevel
     this.maxLevel = p.maxLevel
     this.chairImprovement = p.chairImprovement

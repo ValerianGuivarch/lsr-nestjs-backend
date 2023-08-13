@@ -19,8 +19,10 @@ import { RollService } from './domain/services/RollService'
 import { SessionService } from './domain/services/SessionService'
 import { SkillService } from './domain/services/SkillService'
 import { CharacterController } from './web/http/api/v1/characters/CharacterController'
+import { MjController } from './web/http/api/v1/mj/MjController'
 import { RollController } from './web/http/api/v1/rolls/RollController'
 import { CharacterGateway } from './web/websocket/api/v1/characters/CharacterGateway'
+import { MjGateway } from './web/websocket/api/v1/mj/MjGateway'
 import { RollGateway } from './web/websocket/api/v1/rolls/RollGateway'
 import { Module } from '@nestjs/common'
 import { ConfigModule } from '@nestjs/config'
@@ -51,7 +53,7 @@ import { TypeOrmModule } from '@nestjs/typeorm'
     }),
     PostgresModule
   ],
-  controllers: [CharacterGateway, RollGateway, CharacterController, RollController],
+  controllers: [MjGateway, CharacterGateway, RollGateway, MjController, CharacterController, RollController],
   providers: [
     SkillService,
     ProficiencyService,

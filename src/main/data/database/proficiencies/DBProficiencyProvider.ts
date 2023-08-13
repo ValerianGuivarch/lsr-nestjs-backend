@@ -28,6 +28,7 @@ export class DBProficiencyProvider implements IProficiencyProvider {
   private static toProficiency(proficiency: DBProficiency, overloadProficiency?: DBProficiencyAttrs): Proficiency {
     return new Proficiency({
       name: proficiency.name,
+      shortName: proficiency.shortName,
       minLevel:
         overloadProficiency && overloadProficiency.minLevel ? overloadProficiency.minLevel : proficiency.minLevel || 1,
       displayCategory: DisplayCategory[proficiency.displayCategory]

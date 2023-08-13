@@ -143,4 +143,32 @@ export class CharacterController {
       apotheoses: apotheosesList
     })
   }
+
+  @ApiOkResponse({ type: CharacterVM })
+  @Get(':name/characters-controller')
+  async findControlledByName(@Param('name') name: string): Promise<CharacterVM[]> {
+    const characters = await this.characterService.findAllControllerBy(name)
+    return await Promise.all(
+      characters.map(async (character) => {
+        const classe = await this.classeService.findOneByName(character.classeName)
+        const bloodline = await this.bloodlineService.findOneByName(character.bloodlineName)
+        const skillsList = await this.skillService.findSkillsByCharacter(character)
+        const proficienciesList = await this.proficiencyService.findProficienciesByCharacter(character)
+        const apotheosesList = await this.apotheoseService.findApotheosesByCharacter(character)
+
+        return CharacterVM.of({
+          character: character,
+          classe: classe,
+          bloodline: bloodline,
+          skills: skillsList,
+          proficiencies: proficienciesList,
+          rest: {
+            baseRest: 3,
+            longRest: 0
+          },
+          apotheoses: apotheosesList
+        })
+      })
+    )
+  }
 }

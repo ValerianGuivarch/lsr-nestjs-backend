@@ -134,8 +134,12 @@ export class CharacterVM {
   @ApiProperty()
   longRest: number
 
+  @ApiProperty()
+  isInvocation: boolean
+
   constructor(p: CharacterVM) {
     this.name = p.name
+    this.isInvocation = p.isInvocation
     this.classe = p.classe
     this.bloodline = p.bloodline
     this.apotheoses = p.apotheoses
@@ -190,6 +194,7 @@ export class CharacterVM {
   }): CharacterVM {
     return new CharacterVM({
       name: p.character.name,
+      isInvocation: p.character.isInvocation,
       classe: {
         name: p.character.classeName,
         display: p.character.genre === Genre.HOMME ? p.classe.displayMale : p.classe.displayFemale

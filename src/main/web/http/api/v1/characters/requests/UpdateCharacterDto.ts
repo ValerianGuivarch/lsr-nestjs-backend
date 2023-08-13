@@ -1,3 +1,4 @@
+import { ApotheoseState } from '../../../../../../domain/models/apotheoses/ApotheoseState'
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
 import { IsNumber, IsOptional, IsString } from 'class-validator'
 
@@ -81,4 +82,7 @@ export class UpdateCharacterDto {
   @ApiProperty({ default: 0 })
   @IsNumber()
   relance: number
+
+  @ApiPropertyOptional({ nullable: true })
+  apotheoseState?: ApotheoseState
 }
