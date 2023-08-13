@@ -3,7 +3,10 @@
 export default () => ({
   // eslint-disable-next-line no-magic-numbers
   apiUrl: process.env.API_URL,
-  port: parseInt(process.env.PORT) || 8080,
+  http: {
+    host: process.env.HOST || '0.0.0.0',
+    port: parseInt(process.env.PORT || '3000')
+  },
   JwtService: {
     jwtSecret: process.env.JWT_SECRET
   },
