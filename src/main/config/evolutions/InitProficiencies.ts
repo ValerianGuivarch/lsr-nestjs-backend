@@ -44,7 +44,46 @@ export class InitProficiencies {
       minLevel: 10,
       description: '1 réussite automatique pour diminuer la peur'
     })
-    const newProficiencies = [lumiereSagesse, lumiereCharisme, ventRapidite, ventAdresse, crainte, courage]
+    const negociation: DBProficiency = this.createProficiency({
+      name: 'négociation',
+      shortName: 'neg',
+      category: DisplayCategory.MAGIE,
+      minLevel: 1,
+      description: '1 réussite automatique pour négocier'
+    })
+    const arnaque: DBProficiency = this.createProficiency({
+      name: 'arnaque',
+      shortName: 'arn',
+      category: DisplayCategory.MAGIE,
+      minLevel: 10,
+      description: '1 réussite automatique pour arnaquer'
+    })
+    const force: DBProficiency = this.createProficiency({
+      name: 'force',
+      shortName: 'fr',
+      category: DisplayCategory.MAGIE,
+      minLevel: 1,
+      description: '1 réussite automatique pour utiliser sa force'
+    })
+    const strategie: DBProficiency = this.createProficiency({
+      name: 'stratégie',
+      shortName: 'str',
+      category: DisplayCategory.MAGIE,
+      minLevel: 10,
+      description: '1 réussite automatique pour établir une stratégie'
+    })
+    const newProficiencies = [
+      lumiereSagesse,
+      lumiereCharisme,
+      ventRapidite,
+      ventAdresse,
+      crainte,
+      courage,
+      negociation,
+      arnaque,
+      force,
+      strategie
+    ]
     return newProficiencies
   }
   static createProficiency(p: {

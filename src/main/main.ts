@@ -37,7 +37,7 @@ async function bootstrap() {
     .addDataSource(createSqlDataSource(configService.get('DB_URI')))
   await agent.mountOnNestJs(app).start()
 
-  await app.listen(configService.get('PORT'))
+  await app.listen(configService.get('PORT'), configService.get('HOST'))
   console.log(`Application is running on: ${await app.getUrl()}`)
 }
 bootstrap().then(() => console.log('Application started'))

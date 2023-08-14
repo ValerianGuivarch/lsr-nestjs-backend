@@ -6,24 +6,24 @@ import { Injectable } from '@nestjs/common'
 // eslint-disable-next-line @darraghor/nestjs-typed/injectable-should-be-provided
 export class InitCharactersTemplates {
   static getCharactersTemplates(): DBCharacterTemplate[] {
-    const jonathanLight: DBCharacterTemplate = this.createCharacterTemplate({
-      name: 'summonLight',
-      chairValueReferential: CharacterTemplateReferential.SUCCESS,
+    const planteSoutien: DBCharacterTemplate = this.createCharacterTemplate({
+      name: 'planteSoutien',
+      chairValueReferential: CharacterTemplateReferential.FIXE,
       chairValueRule: 1,
-      espritValueReferential: CharacterTemplateReferential.SUCCESS,
+      espritValueReferential: CharacterTemplateReferential.FIXE,
       espritValueRule: 1,
       essenceValueReferential: CharacterTemplateReferential.SUCCESS,
       essenceValueRule: 1,
       pvMaxValueReferential: CharacterTemplateReferential.SUCCESS,
-      pvMaxValueRule: 1,
-      pfMaxValueReferential: CharacterTemplateReferential.SUCCESS,
-      pfMaxValueRule: 1,
-      ppMaxValueReferential: CharacterTemplateReferential.SUCCESS,
-      ppMaxValueRule: 1,
-      picture: ''
+      pvMaxValueRule: 2,
+      pfMaxValueReferential: CharacterTemplateReferential.FIXE,
+      pfMaxValueRule: 0,
+      ppMaxValueReferential: CharacterTemplateReferential.FIXE,
+      ppMaxValueRule: 0,
+      picture: 'https://i.pinimg.com/236x/4d/f4/1f/4df41fc59d65612f26a046d6d3a481f9.jpg'
     })
 
-    const newCharactersTemplate = [jonathanLight]
+    const newCharactersTemplate = [planteSoutien]
     return newCharactersTemplate
   }
 

@@ -223,6 +223,18 @@ export class InitDatabase {
   ) {
     await this.saveClasseSkillIfNotExisting(classes.get('champion'), skills.get('magie'))
     await this.saveClasseSkillIfNotExisting(classes.get('champion'), skills.get('cantrip'))
+    await this.saveClasseSkillIfNotExisting(classes.get('rejete'), skills.get('magie'))
+    await this.saveClasseSkillIfNotExisting(classes.get('rejete'), skills.get('cantrip'))
+    await this.saveClasseSkillIfNotExisting(classes.get('corrompu'), skills.get('magie'))
+    await this.saveClasseSkillIfNotExisting(classes.get('corrompu'), skills.get('cantrip'))
+    await this.saveBloodlineSkillIfNotExisting(bloodlines.get('eau'), skills.get('forme aqueuse'))
+    await this.saveBloodlineSkillIfNotExisting(bloodlines.get('feu'), skills.get('soin mental'))
+    await this.saveBloodlineSkillIfNotExisting(bloodlines.get('vent'), skills.get('vol'))
+    await this.saveBloodlineSkillIfNotExisting(bloodlines.get('terre'), skills.get('armure'))
+    await this.saveBloodlineSkillIfNotExisting(bloodlines.get('foudre'), skills.get('speed'))
+    await this.saveBloodlineSkillIfNotExisting(bloodlines.get('glace'), skills.get('malédiction'))
+    await this.saveBloodlineSkillIfNotExisting(bloodlines.get('neige'), skills.get('malédiction'))
+    await this.saveBloodlineSkillIfNotExisting(bloodlines.get('ombre'), skills.get('invisibilité'))
 
     // Viktor
     await this.saveCharacterSkillIfNotExisting({
@@ -250,6 +262,12 @@ export class InitDatabase {
 
     // Millia
     await this.saveCharacterSkillIfNotExisting({ character: characters.get('millia'), skill: skills.get('montre') })
+
+    // Judith
+    await this.saveCharacterSkillIfNotExisting({
+      character: characters.get('judith'),
+      skill: skills.get('Plante de soutien')
+    })
 
     // Aurélien
     await this.saveCharacterSkillIfNotExisting({ character: characters.get('aurélien'), skill: skills.get('peur') })
@@ -348,12 +366,16 @@ export class InitDatabase {
     bloodlines: Map<string, DBBloodline>,
     characters: Map<string, DBCharacter>
   ) {
+    await this.saveBloodlineProficiencyIfNotExisting(bloodlines.get('terre'), proficiencies.get('force'))
+    await this.saveBloodlineProficiencyIfNotExisting(bloodlines.get('terre'), proficiencies.get('stratégie'))
     await this.saveBloodlineProficiencyIfNotExisting(bloodlines.get('lumiere'), proficiencies.get('sagesse'))
     await this.saveBloodlineProficiencyIfNotExisting(bloodlines.get('lumiere'), proficiencies.get('charisme'))
     await this.saveBloodlineProficiencyIfNotExisting(bloodlines.get('terreur'), proficiencies.get('crainte'))
     await this.saveBloodlineProficiencyIfNotExisting(bloodlines.get('terreur'), proficiencies.get('courage'))
     await this.saveBloodlineProficiencyIfNotExisting(bloodlines.get('vent'), proficiencies.get('rapidité'))
     await this.saveBloodlineProficiencyIfNotExisting(bloodlines.get('vent'), proficiencies.get('adresse'))
+    await this.saveBloodlineProficiencyIfNotExisting(bloodlines.get('naga'), proficiencies.get('négociation'))
+    await this.saveBloodlineProficiencyIfNotExisting(bloodlines.get('naga'), proficiencies.get('arnaque'))
   }
 
   private async saveClasseProficiencyIfNotExisting(classe: DBClasse, proficiency: DBProficiency) {

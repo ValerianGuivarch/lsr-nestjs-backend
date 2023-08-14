@@ -45,6 +45,18 @@ export class CharacterVM {
   essence: number
 
   @ApiProperty()
+  chairBonus: number
+
+  @ApiProperty()
+  espritBonus: number
+
+  @ApiProperty()
+  essenceBonus: number
+
+  @ApiProperty()
+  avantage: boolean
+
+  @ApiProperty()
   pv: number
 
   @ApiProperty()
@@ -150,6 +162,10 @@ export class CharacterVM {
     this.chair = p.chair
     this.esprit = p.esprit
     this.essence = p.essence
+    this.chairBonus = p.chairBonus
+    this.espritBonus = p.espritBonus
+    this.essenceBonus = p.essenceBonus
+    this.avantage = p.avantage
     this.pv = p.pv
     this.pvMax = p.pvMax
     this.pf = p.pf
@@ -192,6 +208,7 @@ export class CharacterVM {
       longRest: number
     }
   }): CharacterVM {
+    const currentApotheose = p.apotheoses.find((a) => a.name === p.character.apotheoseName)
     return new CharacterVM({
       name: p.character.name,
       isInvocation: p.character.isInvocation,
@@ -224,6 +241,10 @@ export class CharacterVM {
       chair: p.character.chair,
       esprit: p.character.esprit,
       essence: p.character.essence,
+      chairBonus: (p.character.chairBonus ?? 0) + (currentApotheose?.chairImprovement ?? 0),
+      espritBonus: (p.character.espritBonus ?? 0) + (currentApotheose?.espritImprovement ?? 0),
+      essenceBonus: (p.character.essenceBonus ?? 0) + (currentApotheose?.essenceImprovement ?? 0),
+      avantage: false, //TODO
       pv: p.character.pv,
       pvMax: p.character.pvMax,
       pf: p.character.pf,

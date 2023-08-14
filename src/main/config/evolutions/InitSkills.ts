@@ -70,7 +70,85 @@ export class InitSkills {
       stat: SkillStat.ESSENCE,
       category: DisplayCategory.MAGIE,
       display: 'fait un *Jet de Magie Légère*',
-      position: 1,
+      position: 2,
+      ppCost: 1
+    })
+    const formeAqueue: DBSkill = this.createSkill({
+      name: 'forme aqueuse',
+      shortName: 'fa',
+      description: "se transforme en eau au prix d'un pp",
+      allAttribution: false,
+      stat: SkillStat.ESSENCE,
+      category: DisplayCategory.MAGIE,
+      display: 'se *transforme en Eau*',
+      position: 2,
+      ppCost: 1
+    })
+    const soinMental: DBSkill = this.createSkill({
+      name: 'soin mental',
+      shortName: 'sm',
+      description: "donne des PF à une cible au prix d'un pp",
+      allAttribution: false,
+      stat: SkillStat.ESSENCE,
+      category: DisplayCategory.MAGIE,
+      display: 'donne des *Points de Focus*',
+      position: 2,
+      ppCost: 1
+    })
+    const vol: DBSkill = this.createSkill({
+      name: 'vol',
+      shortName: 'vol',
+      description: "permet de voler au prix d'un pp",
+      allAttribution: false,
+      stat: SkillStat.ESSENCE,
+      category: DisplayCategory.MAGIE,
+      display: "s'*Envole*",
+      position: 2,
+      ppCost: 1
+    })
+    const armure: DBSkill = this.createSkill({
+      name: 'armure',
+      shortName: 'arm',
+      description: "permet de donner X/2 d'armure, -1 par tour, au prix d'un pp",
+      allAttribution: false,
+      stat: SkillStat.ESSENCE,
+      category: DisplayCategory.MAGIE,
+      display: 'génère une *Armure*',
+      position: 2,
+      successCalculation: SuccessCalculation.DIVISE,
+      ppCost: 1
+    })
+    const speed: DBSkill = this.createSkill({
+      name: 'speed',
+      shortName: 'spd',
+      description: "permet de donner X bénédiction à la prochaine action au prix d'un pp",
+      allAttribution: false,
+      stat: SkillStat.ESSENCE,
+      category: DisplayCategory.MAGIE,
+      display: 'donne des *Bénédictions*',
+      position: 2,
+      ppCost: 1
+    })
+    const malediction: DBSkill = this.createSkill({
+      name: 'malédiction',
+      shortName: 'mld',
+      description: "permet de donner X malédiction à la prochaine action au prix d'un pp",
+      allAttribution: false,
+      stat: SkillStat.ESSENCE,
+      category: DisplayCategory.MAGIE,
+      display: 'donne des *Malédictions*',
+      position: 2,
+      ppCost: 1
+    })
+    const invisibilite: DBSkill = this.createSkill({
+      name: 'invisibilité',
+      shortName: 'inv',
+      description: "permet de rendre invisible au prix d'un pp",
+      allAttribution: false,
+      stat: SkillStat.ESSENCE,
+      category: DisplayCategory.MAGIE,
+      display: 'rend *Invisible*',
+      position: 2,
       ppCost: 1
     })
     const communicationArcaniqueSkill: DBSkill = this.createSkill({
@@ -1516,17 +1594,16 @@ export class InitSkills {
       successCalculation: SuccessCalculation.AUCUN,
       isArcanique: true
     })
-
-    const lightSummon: DBSkill = this.createSkill({
-      name: 'summonLight',
-      shortName: 'inv',
-      description: 'Invoquer une créature de lumiere',
+    const planteSoutien: DBSkill = this.createSkill({
+      name: 'Plante de soutien',
+      shortName: 'pl-st',
+      description: 'Invoquer une plante de soutien',
       allAttribution: false,
       stat: SkillStat.ESSENCE,
       category: DisplayCategory.MAGIE,
-      display: 'fait une *Invocation de lumiere*',
-      position: 25,
-      invocationTemplate: charactersTemplates.get('summonLight')
+      display: 'invoque une *Plante de Soutien*',
+      position: 31,
+      invocationTemplate: charactersTemplates.get('planteSoutien')
     })
     const newSkills = [
       chairSkill,
@@ -1639,13 +1716,20 @@ export class InitSkills {
       sobreSkill,
       illumineSkill,
       souhaitSkill,
-      lightSummon,
+      planteSoutien,
       communicationArcaniqueSkill,
       boostArcaniqueSkill,
       blocageArcaniqueSkill,
       copieArcaniqueSkill,
       lienAuxVoyageursSkill,
-      peurSkill
+      peurSkill,
+      formeAqueue,
+      soinMental,
+      vol,
+      armure,
+      malediction,
+      speed,
+      invisibilite
     ]
     return newSkills
   }

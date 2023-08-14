@@ -69,7 +69,7 @@ export class InitCharacters {
 
     const judith = this.createCharacter({
       name: 'judith',
-      classe: classes.get('skinwalker'),
+      classe: classes.get('champion arcanique'),
       bloodline: bloodlines.get('arbre'),
       chair: 3,
       esprit: 4,
@@ -325,7 +325,7 @@ export class InitCharacters {
     const ayoub = this.createCharacter({
       name: 'ayoub',
       classe: classes.get('champion'),
-      bloodline: bloodlines.get('glace'),
+      bloodline: bloodlines.get('neige'),
       chair: 9,
       esprit: 5,
       essence: 7,
@@ -1955,27 +1955,6 @@ export class InitCharacters {
       playerName: ''
     })
 
-    const plantes = this.createCharacter({
-      name: 'plantes',
-      classe: classes.get('champion arcanique'),
-      bloodline: bloodlines.get('arbre'),
-      chair: 2,
-      esprit: 2,
-      essence: 2,
-      niveau: 12,
-      lux: '',
-      umbra: '',
-      secunda: '',
-      category: Category.PJ,
-      genre: Genre.HOMME,
-      picture:
-        'https://media.discordapp.net/attachments/734153794681700394/1133427123747573840/7f4a611c822ddaa9d9759c045f203b81.png?width=972&height=1058',
-      pictureApotheose: '',
-      background:
-        'https://media.discordapp.net/attachments/734153794681700394/1133427539113676830/image.png?width=2160&height=628',
-      playerName: 'elena'
-    })
-
     const rat = this.createCharacter({
       name: 'rat',
       classe: classes.get('rejete'),
@@ -2318,7 +2297,6 @@ export class InitCharacters {
       mendel,
       alséides,
       ouranos,
-      plantes,
       rat,
       buffle,
       tigre,

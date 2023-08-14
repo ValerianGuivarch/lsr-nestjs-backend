@@ -361,38 +361,6 @@
           "validations": []
         },
         {
-          "defaultValue": 1,
-          "enums": [],
-          "field": "detteByMagicAction",
-          "integration": null,
-          "inverseOf": null,
-          "isFilterable": true,
-          "isPrimaryKey": false,
-          "isReadOnly": false,
-          "isRequired": false,
-          "isSortable": true,
-          "isVirtual": false,
-          "reference": null,
-          "type": "Number",
-          "validations": []
-        },
-        {
-          "defaultValue": 1,
-          "enums": [],
-          "field": "detteByPp",
-          "integration": null,
-          "inverseOf": null,
-          "isFilterable": true,
-          "isPrimaryKey": false,
-          "isReadOnly": false,
-          "isRequired": false,
-          "isSortable": true,
-          "isVirtual": false,
-          "reference": null,
-          "type": "Number",
-          "validations": []
-        },
-        {
           "defaultValue": "",
           "enums": [],
           "field": "display",
@@ -406,22 +374,6 @@
           "isVirtual": false,
           "reference": null,
           "type": "String",
-          "validations": [{"type": "is present", "message": "Field is required"}]
-        },
-        {
-          "defaultValue": false,
-          "enums": [],
-          "field": "healthImproved",
-          "integration": null,
-          "inverseOf": null,
-          "isFilterable": true,
-          "isPrimaryKey": false,
-          "isReadOnly": false,
-          "isRequired": true,
-          "isSortable": true,
-          "isVirtual": false,
-          "reference": null,
-          "type": "Boolean",
           "validations": [{"type": "is present", "message": "Field is required"}]
         },
         {
@@ -3389,6 +3341,29 @@
           "isVirtual": false,
           "reference": null,
           "type": "Number",
+          "validations": []
+        },
+        {
+          "defaultValue": "LEVEL_0_PAUVRE",
+          "enums": [
+            "LEVEL_0_PAUVRE",
+            "LEVEL_1_RARE",
+            "LEVEL_2_PRESENTE",
+            "LEVEL_3_ABONDANTE",
+            "LEVEL_4_RICHE",
+            "LEVEL_5_DOMINANTE"
+          ],
+          "field": "nature",
+          "integration": null,
+          "inverseOf": null,
+          "isFilterable": true,
+          "isPrimaryKey": false,
+          "isReadOnly": false,
+          "isRequired": false,
+          "isSortable": true,
+          "isVirtual": false,
+          "reference": null,
+          "type": "Enum",
           "validations": []
         }
       ],

@@ -166,9 +166,6 @@ export type Schema = {
   'db_bloodline': {
     plain: {
       'name': string;
-      'detteByMagicAction': number;
-      'detteByPp': number;
-      'healthImproved': boolean;
       'display': string;
     };
     nested: {};
@@ -186,9 +183,6 @@ export type Schema = {
     };
     flat: {
       'db_bloodline:name': string;
-      'db_bloodline:detteByMagicAction': number;
-      'db_bloodline:detteByPp': number;
-      'db_bloodline:healthImproved': boolean;
       'db_bloodline:display': string;
       'db_apotheose:name': string;
       'db_apotheose:shortName': string;
@@ -219,9 +213,6 @@ export type Schema = {
     };
     flat: {
       'db_bloodline:name': string;
-      'db_bloodline:detteByMagicAction': number;
-      'db_bloodline:detteByPp': number;
-      'db_bloodline:healthImproved': boolean;
       'db_bloodline:display': string;
       'db_proficiency:minLevel': number;
       'db_proficiency:name': string;
@@ -270,9 +261,6 @@ export type Schema = {
       'db_character_template:ppMaxValueRule': number;
       'db_character_template:picture': string;
       'db_bloodline:name': string;
-      'db_bloodline:detteByMagicAction': number;
-      'db_bloodline:detteByPp': number;
-      'db_bloodline:healthImproved': boolean;
       'db_bloodline:display': string;
       'db_skill:allowsPf': boolean;
       'db_skill:allowsPp': boolean;
@@ -361,9 +349,6 @@ export type Schema = {
       'db_classe:displayMale': string;
       'db_classe:displayFemale': string;
       'db_bloodline:name': string;
-      'db_bloodline:detteByMagicAction': number;
-      'db_bloodline:detteByPp': number;
-      'db_bloodline:healthImproved': boolean;
       'db_bloodline:display': string;
     };
   };
@@ -420,9 +405,6 @@ export type Schema = {
       'db_character:db_classe:displayMale': string;
       'db_character:db_classe:displayFemale': string;
       'db_character:db_bloodline:name': string;
-      'db_character:db_bloodline:detteByMagicAction': number;
-      'db_character:db_bloodline:detteByPp': number;
-      'db_character:db_bloodline:healthImproved': boolean;
       'db_character:db_bloodline:display': string;
       'db_apotheose:name': string;
       'db_apotheose:shortName': string;
@@ -494,9 +476,6 @@ export type Schema = {
       'db_character:db_classe:displayMale': string;
       'db_character:db_classe:displayFemale': string;
       'db_character:db_bloodline:name': string;
-      'db_character:db_bloodline:detteByMagicAction': number;
-      'db_character:db_bloodline:detteByPp': number;
-      'db_character:db_bloodline:healthImproved': boolean;
       'db_character:db_bloodline:display': string;
       'db_proficiency:minLevel': number;
       'db_proficiency:name': string;
@@ -588,9 +567,6 @@ export type Schema = {
       'db_character:db_classe:displayMale': string;
       'db_character:db_classe:displayFemale': string;
       'db_character:db_bloodline:name': string;
-      'db_character:db_bloodline:detteByMagicAction': number;
-      'db_character:db_bloodline:detteByPp': number;
-      'db_character:db_bloodline:healthImproved': boolean;
       'db_character:db_bloodline:display': string;
       'db_skill:allowsPf': boolean;
       'db_skill:allowsPp': boolean;
@@ -832,6 +808,7 @@ export type Schema = {
       'chaos': '0' | '15' | '30' | '45' | '60' | '75';
       'baseRest': number;
       'improvedRest': number;
+      'nature': 'LEVEL_0_PAUVRE' | 'LEVEL_1_RARE' | 'LEVEL_2_PRESENTE' | 'LEVEL_3_ABONDANTE' | 'LEVEL_4_RICHE' | 'LEVEL_5_DOMINANTE';
     };
     nested: {};
     flat: {};

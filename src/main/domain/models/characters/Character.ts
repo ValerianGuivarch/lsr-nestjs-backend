@@ -43,6 +43,9 @@ export class Character {
   restImproved: boolean
   isInvocation: boolean
   controlledBy?: string
+  chairBonus: number
+  espritBonus: number
+  essenceBonus: number
 
   constructor(p: Character) {
     this.name = p.name
@@ -56,6 +59,9 @@ export class Character {
     this.chair = p.chair
     this.esprit = p.esprit
     this.essence = p.essence
+    this.chairBonus = p.chairBonus
+    this.espritBonus = p.espritBonus
+    this.essenceBonus = p.essenceBonus
     this.pv = p.pv < 0 ? 0 : p.pv
     this.pvMax = p.pvMax
     this.pf = p.pf < 0 ? 0 : p.pf
@@ -113,6 +119,9 @@ export class Character {
       chair: p.chair,
       esprit: p.esprit,
       essence: p.essence,
+      chairBonus: 0,
+      espritBonus: 0,
+      essenceBonus: 0,
       pv: p.pvMax,
       pvMax: p.pvMax,
       pf: p.pfMax,
@@ -200,7 +209,7 @@ export class Character {
       bloodlineName: p.summoner.bloodlineName,
       restImproved: false,
       isInvocation: true,
-      summoner: p.summoner.name
+      controlledBy: p.summoner.name
     }
 
     return Object.assign(defaults)

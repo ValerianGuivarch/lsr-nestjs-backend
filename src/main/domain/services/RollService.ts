@@ -129,7 +129,6 @@ export class RollService {
       }
       if (usePp) {
         ppDelta--
-        dettesDelta = dettesDelta + bloodline.detteByPp
       }
 
       if (apotheose) {
@@ -146,11 +145,11 @@ export class RollService {
 
       diceValue = RollService.CLASSIC_ROLL_VALUE
       if (p.skill.stat === SkillStat.CHAIR) {
-        diceNumber = p.character.chair + diceValueDelta
+        diceNumber = p.character.chair + diceValueDelta + p.character.chairBonus
       } else if (p.skill.stat === SkillStat.ESPRIT) {
-        diceNumber = p.character.esprit + diceValueDelta
+        diceNumber = p.character.esprit + diceValueDelta + p.character.espritBonus
       } else if (p.skill.stat === SkillStat.ESSENCE) {
-        diceNumber = p.character.essence + diceValueDelta
+        diceNumber = p.character.essence + diceValueDelta + p.character.essenceBonus
       }
     }
     let success: number | null = null
@@ -240,7 +239,7 @@ export class RollService {
     pfDelta = pfDelta - p.skill.pfCost
     ppDelta = ppDelta - p.skill.ppCost
     arcaneDelta = arcaneDelta - p.skill.arcaneCost
-    dettesDelta = dettesDelta + p.skill.dettesCost * bloodline.detteByMagicAction
+    dettesDelta = dettesDelta + p.skill.dettesCost
     if (p.character.pv + pvDelta < 0) {
       throw ProviderErrors.RollNotEnoughPv()
     } else if (p.character.pf + pfDelta < 0) {

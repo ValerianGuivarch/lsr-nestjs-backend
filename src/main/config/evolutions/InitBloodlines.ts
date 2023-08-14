@@ -133,9 +133,6 @@ export class InitBloodlines {
     const newBloodline = new DBBloodline()
     newBloodline.name = p.name
     newBloodline.display = p.display
-    newBloodline.detteByMagicAction = p.detteByMagicAction || 1
-    newBloodline.detteByPp = p.detteByPp || 1
-    newBloodline.healthImproved = p.healthImproved || false
     return newBloodline
   }
 }

@@ -16,20 +16,8 @@ export class DBBloodlineProvider implements IBloodlineProvider {
   private static toBloodline(doc: DBBloodline): Bloodline {
     return new Bloodline({
       name: doc.name,
-      detteByMagicAction: doc.detteByMagicAction,
-      detteByPp: doc.detteByPp,
-      healthImproved: doc.healthImproved,
       display: doc.display
     })
-  }
-
-  private static fromBloodline(doc: Bloodline): DBBloodline {
-    return {
-      name: doc.name,
-      detteByMagicAction: doc.detteByMagicAction,
-      healthImproved: doc.healthImproved,
-      display: doc.display
-    } as DBBloodline
   }
 
   async findOneByName(name: string): Promise<Bloodline> {
