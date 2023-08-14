@@ -14,11 +14,15 @@ export class ApotheoseVM {
   @ApiProperty()
   cost: number
 
+  @ApiProperty()
+  description?: string
+
   constructor(p: ApotheoseVM) {
     this.name = p.name
     this.shortName = p.shortName
     this.displayCategory = p.displayCategory
     this.cost = p.cost
+    this.description = p.description
   }
 
   static of(p: { apotheose: Apotheose }): ApotheoseVM {
@@ -26,7 +30,8 @@ export class ApotheoseVM {
       name: p.apotheose.name,
       shortName: p.apotheose.shortName,
       displayCategory: p.apotheose.displayCategory.toString(),
-      cost: p.apotheose.cost
+      cost: p.apotheose.cost,
+      description: p.apotheose.description
     })
   }
 }

@@ -20,4 +20,13 @@ export class SkillService {
   async findOneSkillByCharacterAndName(character: Character, skillName: string): Promise<Skill> {
     return (await this.skillsProvider.findSkillsByCharacter(character)).filter((skill) => skill.name === skillName)[0]
   }
+
+  async resetCharacterSkills(character: Character): Promise<void> {
+    const skills = await this.findSkillsByCharacter(character)
+    skills.forEach((skill) => {
+      if (skill.dailyUse != null && skill.limitationMax != null && skill.dailyUse != skill.limitationMax) {
+        this.skillsProvider.updateDailyUse(skill.name, character.name, skill.limitationMax)
+      }
+    })
+  }
 }

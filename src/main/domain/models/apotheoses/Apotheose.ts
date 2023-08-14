@@ -14,6 +14,7 @@ export class Apotheose {
   displayCategory: DisplayCategory
   position: number
   cost: number
+  description?: string
 
   constructor(p: Apotheose) {
     this.name = p.name
@@ -29,6 +30,7 @@ export class Apotheose {
     this.displayCategory = p.displayCategory
     this.position = p.position
     this.cost = p.cost
+    this.description = p.description
   }
 
   /*  NONE = 'NONE',

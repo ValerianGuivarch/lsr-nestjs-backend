@@ -28,16 +28,19 @@ export class RollController {
   @Get('')
   async getAllRolls(): Promise<RollVM[]> {
     const rolls = await this.rollService.getLast()
-    return rolls.map((roll) =>
-      RollVM.of({
-        roll: roll
-      })
-    )
+    return rolls
+      .filter((roll) => !roll.resistRoll)
+      .map((roll) =>
+        RollVM.of({
+          roll: roll,
+          othersRolls: rolls.filter((r) => r.resistRoll === '' + roll.id)
+        })
+      )
   }
 
   @ApiOkResponse({ type: RollVM })
   @Post('')
-  async sendRoll(@Body() req: SendRollRequest): Promise<RollVM> {
+  async sendRoll(@Body() req: SendRollRequest): Promise<void> {
     const character = await this.characterService.findOneByName(req.rollerName)
     const skill = await this.skillService.findOneSkillByCharacterAndName(character, req.skillName)
     const roll = await this.rollService.roll({
@@ -55,8 +58,5 @@ export class RollController {
     if (skill.invocationTemplateName) {
       await this.invocationService.createInvocation(skill.invocationTemplateName, roll)
     }
-    return RollVM.of({
-      roll: roll
-    })
   }
 }

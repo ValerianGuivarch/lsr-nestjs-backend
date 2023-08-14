@@ -2,6 +2,7 @@ import { CharacterPreviewVM } from './entities/CharacterPreviewVM'
 import { CharacterVM } from './entities/CharacterVM'
 import { CreateCharacterDto } from './requests/CreateCharacterDto'
 import { UpdateCharacterDto } from './requests/UpdateCharacterDto'
+import { ApotheoseState } from '../../../../../domain/models/apotheoses/ApotheoseState'
 import { Category } from '../../../../../domain/models/characters/Category'
 import { Character } from '../../../../../domain/models/characters/Character'
 import { ApotheoseService } from '../../../../../domain/services/ApotheoseService'
@@ -37,6 +38,20 @@ export class CharacterController {
         character: character
       })
     )
+  }
+
+  @ApiOkResponse({})
+  @Put(':name/rest')
+  async rest(@Param('name') name: string): Promise<void> {
+    const character = await this.characterService.findOneByName(name)
+    await this.skillService.resetCharacterSkills(character)
+    await this.characterService.updateCharacter({
+      character: {
+        ...character,
+        apotheoseState: ApotheoseState.NONE,
+        apotheoseName: null
+      }
+    })
   }
 
   @ApiOkResponse({ type: CharacterVM })

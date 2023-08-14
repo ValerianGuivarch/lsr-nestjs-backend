@@ -14,4 +14,8 @@ export class ApotheoseService {
   async findApotheosesByCharacter(character: Character): Promise<Apotheose[]> {
     return await this.apotheosesProvider.findApotheosesByCharacter(character)
   }
+
+  async findApotheosesByCharacterAndName(character: Character, apotheoseName: string): Promise<Apotheose> {
+    return await this.apotheosesProvider.findApotheoseByCharacterAndName(character)
+  }
 }

@@ -158,6 +158,7 @@ export type Schema = {
       'arcaneImprovement': boolean;
       'avantage': boolean;
       'apotheoseEffect': string;
+      'description': string;
     };
     nested: {};
     flat: {};
@@ -202,6 +203,7 @@ export type Schema = {
       'db_apotheose:arcaneImprovement': boolean;
       'db_apotheose:avantage': boolean;
       'db_apotheose:apotheoseEffect': string;
+      'db_apotheose:description': string;
     };
   };
   'db_bloodline_proficiency': {
@@ -225,6 +227,7 @@ export type Schema = {
       'db_proficiency:name': string;
       'db_proficiency:shortName': string;
       'db_proficiency:displayCategory': 'STATS' | 'MAGIE' | 'ARCANES' | 'SOLDATS' | 'PACIFICATEURS';
+      'db_proficiency:description': string;
     };
   };
   'db_bloodline_skill': {
@@ -238,12 +241,13 @@ export type Schema = {
       'dettesCost': number;
       'arcaneCost': number;
       'customRolls': string;
-      'successCalculation': 'AUCUN' | 'SIMPLE' | 'SIMPLE_PLUS_1' | 'DIVISE' | 'DIVISE_PLUS_1';
+      'successCalculation': 'AUCUN' | 'SIMPLE' | 'SIMPLE_PLUS_1' | 'DIVISE' | 'DIVISE_PLUS_1' | 'CUSTOM';
       'secret': boolean;
       'invocationTemplateName': string;
       'id': number;
       'bloodlineName': string;
       'skillName': string;
+      'displayCategory': 'STATS' | 'MAGIE' | 'ARCANES' | 'SOLDATS' | 'PACIFICATEURS';
     };
     nested: {
       'db_character_template': Schema['db_character_template']['plain'] & Schema['db_character_template']['nested'];
@@ -279,7 +283,7 @@ export type Schema = {
       'db_skill:dettesCost': number;
       'db_skill:arcaneCost': number;
       'db_skill:customRolls': string;
-      'db_skill:successCalculation': 'AUCUN' | 'SIMPLE' | 'SIMPLE_PLUS_1' | 'DIVISE' | 'DIVISE_PLUS_1';
+      'db_skill:successCalculation': 'AUCUN' | 'SIMPLE' | 'SIMPLE_PLUS_1' | 'DIVISE' | 'DIVISE_PLUS_1' | 'CUSTOM';
       'db_skill:secret': boolean;
       'db_skill:invocationTemplateName': string;
       'db_skill:name': string;
@@ -290,6 +294,7 @@ export type Schema = {
       'db_skill:display': string;
       'db_skill:isArcanique': boolean;
       'db_skill:description': string;
+      'db_skill:longName': string;
       'db_skill:db_character_template:name': string;
       'db_skill:db_character_template:chairValueReferential': 'Fixe' | 'Chair' | 'Esprit' | 'Essence' | 'Success';
       'db_skill:db_character_template:chairValueRule': number;
@@ -432,6 +437,7 @@ export type Schema = {
       'db_apotheose:arcaneImprovement': boolean;
       'db_apotheose:avantage': boolean;
       'db_apotheose:apotheoseEffect': string;
+      'db_apotheose:description': string;
     };
   };
   'db_character_proficiency': {
@@ -496,6 +502,7 @@ export type Schema = {
       'db_proficiency:name': string;
       'db_proficiency:shortName': string;
       'db_proficiency:displayCategory': 'STATS' | 'MAGIE' | 'ARCANES' | 'SOLDATS' | 'PACIFICATEURS';
+      'db_proficiency:description': string;
     };
   };
   'db_character_skill': {
@@ -509,12 +516,15 @@ export type Schema = {
       'dettesCost': number;
       'arcaneCost': number;
       'customRolls': string;
-      'successCalculation': 'AUCUN' | 'SIMPLE' | 'SIMPLE_PLUS_1' | 'DIVISE' | 'DIVISE_PLUS_1';
+      'successCalculation': 'AUCUN' | 'SIMPLE' | 'SIMPLE_PLUS_1' | 'DIVISE' | 'DIVISE_PLUS_1' | 'CUSTOM';
       'secret': boolean;
       'invocationTemplateName': string;
       'id': number;
       'characterName': string;
       'skillName': string;
+      'dailyUse': number;
+      'limitationMax': number;
+      'displayCategory': 'STATS' | 'MAGIE' | 'ARCANES' | 'SOLDATS' | 'PACIFICATEURS';
     };
     nested: {
       'db_character_template': Schema['db_character_template']['plain'] & Schema['db_character_template']['nested'];
@@ -591,7 +601,7 @@ export type Schema = {
       'db_skill:dettesCost': number;
       'db_skill:arcaneCost': number;
       'db_skill:customRolls': string;
-      'db_skill:successCalculation': 'AUCUN' | 'SIMPLE' | 'SIMPLE_PLUS_1' | 'DIVISE' | 'DIVISE_PLUS_1';
+      'db_skill:successCalculation': 'AUCUN' | 'SIMPLE' | 'SIMPLE_PLUS_1' | 'DIVISE' | 'DIVISE_PLUS_1' | 'CUSTOM';
       'db_skill:secret': boolean;
       'db_skill:invocationTemplateName': string;
       'db_skill:name': string;
@@ -602,6 +612,7 @@ export type Schema = {
       'db_skill:display': string;
       'db_skill:isArcanique': boolean;
       'db_skill:description': string;
+      'db_skill:longName': string;
       'db_skill:db_character_template:name': string;
       'db_skill:db_character_template:chairValueReferential': 'Fixe' | 'Chair' | 'Esprit' | 'Essence' | 'Success';
       'db_skill:db_character_template:chairValueRule': number;
@@ -674,6 +685,7 @@ export type Schema = {
       'db_apotheose:arcaneImprovement': boolean;
       'db_apotheose:avantage': boolean;
       'db_apotheose:apotheoseEffect': string;
+      'db_apotheose:description': string;
     };
   };
   'db_classe_proficiency': {
@@ -695,6 +707,7 @@ export type Schema = {
       'db_proficiency:name': string;
       'db_proficiency:shortName': string;
       'db_proficiency:displayCategory': 'STATS' | 'MAGIE' | 'ARCANES' | 'SOLDATS' | 'PACIFICATEURS';
+      'db_proficiency:description': string;
     };
   };
   'db_classe_skill': {
@@ -708,12 +721,13 @@ export type Schema = {
       'dettesCost': number;
       'arcaneCost': number;
       'customRolls': string;
-      'successCalculation': 'AUCUN' | 'SIMPLE' | 'SIMPLE_PLUS_1' | 'DIVISE' | 'DIVISE_PLUS_1';
+      'successCalculation': 'AUCUN' | 'SIMPLE' | 'SIMPLE_PLUS_1' | 'DIVISE' | 'DIVISE_PLUS_1' | 'CUSTOM';
       'secret': boolean;
       'invocationTemplateName': string;
       'id': number;
       'classeName': string;
       'skillName': string;
+      'displayCategory': 'STATS' | 'MAGIE' | 'ARCANES' | 'SOLDATS' | 'PACIFICATEURS';
     };
     nested: {
       'db_character_template': Schema['db_character_template']['plain'] & Schema['db_character_template']['nested'];
@@ -747,7 +761,7 @@ export type Schema = {
       'db_skill:dettesCost': number;
       'db_skill:arcaneCost': number;
       'db_skill:customRolls': string;
-      'db_skill:successCalculation': 'AUCUN' | 'SIMPLE' | 'SIMPLE_PLUS_1' | 'DIVISE' | 'DIVISE_PLUS_1';
+      'db_skill:successCalculation': 'AUCUN' | 'SIMPLE' | 'SIMPLE_PLUS_1' | 'DIVISE' | 'DIVISE_PLUS_1' | 'CUSTOM';
       'db_skill:secret': boolean;
       'db_skill:invocationTemplateName': string;
       'db_skill:name': string;
@@ -758,6 +772,7 @@ export type Schema = {
       'db_skill:display': string;
       'db_skill:isArcanique': boolean;
       'db_skill:description': string;
+      'db_skill:longName': string;
       'db_skill:db_character_template:name': string;
       'db_skill:db_character_template:chairValueReferential': 'Fixe' | 'Chair' | 'Esprit' | 'Essence' | 'Success';
       'db_skill:db_character_template:chairValueRule': number;
@@ -780,6 +795,7 @@ export type Schema = {
       'name': string;
       'shortName': string;
       'displayCategory': 'STATS' | 'MAGIE' | 'ARCANES' | 'SOLDATS' | 'PACIFICATEURS';
+      'description': string;
     };
     nested: {};
     flat: {};
@@ -831,7 +847,7 @@ export type Schema = {
       'dettesCost': number;
       'arcaneCost': number;
       'customRolls': string;
-      'successCalculation': 'AUCUN' | 'SIMPLE' | 'SIMPLE_PLUS_1' | 'DIVISE' | 'DIVISE_PLUS_1';
+      'successCalculation': 'AUCUN' | 'SIMPLE' | 'SIMPLE_PLUS_1' | 'DIVISE' | 'DIVISE_PLUS_1' | 'CUSTOM';
       'secret': boolean;
       'invocationTemplateName': string;
       'name': string;
@@ -842,6 +858,7 @@ export type Schema = {
       'display': string;
       'isArcanique': boolean;
       'description': string;
+      'longName': string;
     };
     nested: {
       'db_character_template': Schema['db_character_template']['plain'] & Schema['db_character_template']['nested'];

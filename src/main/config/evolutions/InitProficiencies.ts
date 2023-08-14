@@ -18,18 +18,46 @@ export class InitProficiencies {
       category: DisplayCategory.MAGIE,
       minLevel: 10
     })
-    const newProficiencies = [lumiereSagesse, lumiereCharisme]
+    const ventRapidite: DBProficiency = this.createProficiency({
+      name: 'rapidité',
+      shortName: 'rp',
+      category: DisplayCategory.MAGIE,
+      minLevel: 10
+    })
+    const ventAdresse: DBProficiency = this.createProficiency({
+      name: 'adresse',
+      shortName: 'ad',
+      category: DisplayCategory.MAGIE,
+      minLevel: 10
+    })
+    const crainte: DBProficiency = this.createProficiency({
+      name: 'crainte',
+      shortName: 'ad',
+      category: DisplayCategory.MAGIE,
+      minLevel: 1,
+      description: '1 réussite automatique pour inspirer la crainte'
+    })
+    const courage: DBProficiency = this.createProficiency({
+      name: 'courage',
+      shortName: 'cg',
+      category: DisplayCategory.MAGIE,
+      minLevel: 10,
+      description: '1 réussite automatique pour diminuer la peur'
+    })
+    const newProficiencies = [lumiereSagesse, lumiereCharisme, ventRapidite, ventAdresse, crainte, courage]
     return newProficiencies
   }
   static createProficiency(p: {
     name: string
     shortName: string
     category: DisplayCategory
+    description?: string
     minLevel?: number
   }): DBProficiency {
     return {
       name: p.name,
       shortName: p.shortName,
+      description: p.description || '',
       displayCategory: p.category,
       minLevel: p.minLevel || 1
     }

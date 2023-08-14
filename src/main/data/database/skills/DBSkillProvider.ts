@@ -27,25 +27,39 @@ export class DBSkillProvider implements ISkillProvider {
     private dbCharacterSkillRepository: Repository<DBCharacterSkill>
   ) {}
 
-  private static toSkill(skill: DBSkill, overloadSkill?: DBSkillAttrs): Skill {
+  private static toSkill(
+    skill: DBSkill,
+    overloadSkill?: DBSkillAttrs,
+    limitationMax?: number,
+    dailyUse?: number
+  ): Skill {
     return new Skill({
       name: skill.name,
+      limitationMax: limitationMax !== undefined ? limitationMax : null,
+      dailyUse: dailyUse !== undefined ? dailyUse : null,
       description: skill.description,
       shortName: skill.shortName,
+      longName: skill.longName,
       display: skill.display,
       position: skill.position,
       invocationTemplateName: skill.invocationTemplateName,
-      displayCategory: DisplayCategory[skill.displayCategory],
       isArcanique: skill.isArcanique,
+      displayCategory:
+        overloadSkill && overloadSkill.displayCategory !== null
+          ? DisplayCategory[overloadSkill.displayCategory]
+          : DisplayCategory[skill.displayCategory] ||
+            (() => {
+              throw new Error('Missing displayCategory for skill ' + skill.name + ' : ' + skill.displayCategory)
+            })(),
       stat:
-        overloadSkill && overloadSkill.stat
+        overloadSkill && overloadSkill.stat !== null
           ? SkillStat[overloadSkill.stat]
           : SkillStat[skill.stat] ||
             (() => {
               throw new Error('Missing stat for skill ' + skill.name + ' : ' + skill.stat)
             })(),
       pvCost:
-        overloadSkill && overloadSkill.pvCost
+        overloadSkill && overloadSkill.pvCost !== null
           ? overloadSkill.pvCost
           : skill.pvCost !== null
           ? skill.pvCost
@@ -53,7 +67,7 @@ export class DBSkillProvider implements ISkillProvider {
               throw new Error('Missing pvCost for skill ' + skill.name)
             })(),
       pfCost:
-        overloadSkill && overloadSkill.pfCost
+        overloadSkill && overloadSkill.pfCost !== null
           ? overloadSkill.pfCost
           : skill.pfCost !== null
           ? skill.pfCost
@@ -61,7 +75,7 @@ export class DBSkillProvider implements ISkillProvider {
               throw new Error('Missing pfCost for skill ' + skill.name)
             })(),
       ppCost:
-        overloadSkill && overloadSkill.ppCost
+        overloadSkill && overloadSkill.ppCost !== null
           ? overloadSkill.ppCost
           : skill.ppCost !== null
           ? skill.ppCost
@@ -69,7 +83,7 @@ export class DBSkillProvider implements ISkillProvider {
               throw new Error('Missing ppCost for skill ' + skill.name)
             })(),
       dettesCost:
-        overloadSkill && overloadSkill.dettesCost
+        overloadSkill && overloadSkill.dettesCost !== null
           ? overloadSkill.dettesCost
           : skill.dettesCost !== null
           ? skill.dettesCost
@@ -77,7 +91,7 @@ export class DBSkillProvider implements ISkillProvider {
               throw new Error('Missing dettesCost for skill ' + skill.name)
             })(),
       arcaneCost:
-        overloadSkill && overloadSkill.arcaneCost
+        overloadSkill && overloadSkill.arcaneCost !== null
           ? overloadSkill.arcaneCost
           : skill.arcaneCost !== null
           ? skill.arcaneCost
@@ -85,7 +99,7 @@ export class DBSkillProvider implements ISkillProvider {
               throw new Error('Missing arcaneCost for skill ' + skill.name)
             })(),
       allowsPp:
-        overloadSkill && overloadSkill.allowsPp
+        overloadSkill && overloadSkill.allowsPp !== null
           ? overloadSkill.allowsPp
           : skill.allowsPp !== null
           ? skill.allowsPp
@@ -93,7 +107,7 @@ export class DBSkillProvider implements ISkillProvider {
               throw new Error('Missing pvCost for skill ' + skill.name)
             })(),
       allowsPf:
-        overloadSkill && overloadSkill.allowsPf
+        overloadSkill && overloadSkill.allowsPf !== null
           ? overloadSkill.allowsPf
           : skill.allowsPf !== null
           ? skill.allowsPf
@@ -101,13 +115,13 @@ export class DBSkillProvider implements ISkillProvider {
               throw new Error('Missing allowsPf for skill ' + skill.name)
             })(),
       customRolls:
-        overloadSkill && overloadSkill.customRolls
+        overloadSkill && overloadSkill.customRolls !== null
           ? overloadSkill.customRolls
           : skill.customRolls !== null
           ? skill.customRolls
           : undefined,
       successCalculation:
-        overloadSkill && overloadSkill.successCalculation
+        overloadSkill && overloadSkill.successCalculation !== null
           ? SuccessCalculation[overloadSkill.successCalculation]
           : skill.successCalculation !== null
           ? SuccessCalculation[skill.successCalculation]
@@ -115,23 +129,26 @@ export class DBSkillProvider implements ISkillProvider {
               throw new Error('Missing successCalculation for skill ' + skill.name)
             })(),
       secret:
-        overloadSkill && overloadSkill.secret
-          ? overloadSkill.secret
-          : skill.secret !== null
-          ? skill.secret
-          : (() => {
-              throw new Error('Missing secret for skill ' + skill.name)
-            })()
+        overloadSkill && overloadSkill.secret ? overloadSkill.secret : skill.secret !== null ? skill.secret : false
     })
   }
   async findSkillOwnedById(id: number): Promise<Skill> {
     try {
       const dbOwnedSkill = await this.dbCharacterSkillRepository.findOneByOrFail({ id: id })
       const skill = await this.dbSkillRepository.findOneByOrFail({ name: dbOwnedSkill.skillName })
-      return DBSkillProvider.toSkill(skill, dbOwnedSkill)
+      return DBSkillProvider.toSkill(skill, dbOwnedSkill, dbOwnedSkill.limitationMax, dbOwnedSkill.dailyUse)
     } catch (error) {
       return undefined
     }
+  }
+
+  async updateDailyUse(skillName: string, characterName: string, number: number): Promise<void> {
+    const characterSkill = await this.dbCharacterSkillRepository.findOneByOrFail({
+      skillName: skillName,
+      characterName: characterName
+    })
+    characterSkill.dailyUse = number
+    await this.dbCharacterSkillRepository.save(characterSkill)
   }
 
   async findSkillsByCharacter(character: Character): Promise<Skill[]> {
@@ -150,7 +167,12 @@ export class DBSkillProvider implements ISkillProvider {
       relations: ['character', 'skill']
     })
     const skillPromises: Skill[] = characterWithSkills.map((characterSkill) =>
-      DBSkillProvider.toSkill(characterSkill.skill, characterSkill)
+      DBSkillProvider.toSkill(
+        characterSkill.skill,
+        characterSkill,
+        characterSkill.limitationMax,
+        characterSkill.dailyUse
+      )
     )
     for (const bloodlineSkill of bloodlineWithSkills) {
       if (skillPromises.filter((skill) => skill.name === bloodlineSkill.skillName).length === 0) {

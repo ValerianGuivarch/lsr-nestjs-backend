@@ -130,18 +130,6 @@ export class DBCharacterProvider implements ICharacterProvider {
     } as DBCharacter
   }
 
-  async create(newCharacter: Character): Promise<Character> {
-    let createdCharacter = await this.dbCharacterRepository.findOneBy({ name: newCharacter.name })
-    if (!createdCharacter) {
-      createdCharacter = this.dbCharacterRepository.create(DBCharacterProvider.fromCharacter(newCharacter))
-      const character = DBCharacterProvider.toCharacter(await this.dbCharacterRepository.save(createdCharacter))
-      await this.dealsWithObservables(character)
-      return character
-    } else {
-      throw ProviderErrors.EntityAlreadyExists(newCharacter.name)
-    }
-  }
-
   private async dealsWithObservables(character: Character) {
     const characterObservable = this.characters.get(character.name)
     if (characterObservable) {
@@ -152,8 +140,28 @@ export class DBCharacterProvider implements ICharacterProvider {
       this.charactersSession.next(session)
     }
     if (character.controlledBy) {
-      const characters = await this.findAllControlledBy(character.name)
-      this.charactersControlled.get(character.name).next(characters)
+      const characters = await this.findAllControlledBy(character.controlledBy)
+      const charactersControlledObservable = this.charactersControlled.get(character.controlledBy)
+      if (charactersControlledObservable) {
+        charactersControlledObservable.next(characters)
+      }
+    }
+    const characters = await this.findAllControlledBy(character.name)
+    const charactersControlledObservable = this.charactersControlled.get(character.name)
+    if (charactersControlledObservable) {
+      charactersControlledObservable.next(characters)
+    }
+  }
+
+  async create(newCharacter: Character): Promise<Character> {
+    let createdCharacter = await this.dbCharacterRepository.findOneBy({ name: newCharacter.name })
+    if (!createdCharacter) {
+      createdCharacter = this.dbCharacterRepository.create(DBCharacterProvider.fromCharacter(newCharacter))
+      const character = DBCharacterProvider.toCharacter(await this.dbCharacterRepository.save(createdCharacter))
+      await this.dealsWithObservables(character)
+      return character
+    } else {
+      throw ProviderErrors.EntityAlreadyExists(newCharacter.name)
     }
   }
 
@@ -205,7 +213,9 @@ export class DBCharacterProvider implements ICharacterProvider {
   }
 
   async findAllControlledBy(characterName: string): Promise<Character[]> {
+    const character = await this.dbCharacterRepository.findOneByOrFail({ name: characterName })
     const characters = await this.dbCharacterRepository.findBy({ controlledBy: characterName })
+    characters.push(character)
     return characters.map(DBCharacterProvider.toCharacter)
   }
 

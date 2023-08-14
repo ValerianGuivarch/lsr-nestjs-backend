@@ -5,6 +5,7 @@ import { CharacterService } from '../../../../../domain/services/CharacterServic
 import { ClasseService } from '../../../../../domain/services/ClasseService'
 import { MjService } from '../../../../../domain/services/MjService'
 import { ProficiencyService } from '../../../../../domain/services/ProficiencyService'
+import { RollService } from '../../../../../domain/services/RollService'
 import { SessionService } from '../../../../../domain/services/SessionService'
 import { SkillService } from '../../../../../domain/services/SkillService'
 import { CharacterVM } from '../characters/entities/CharacterVM'
@@ -23,13 +24,21 @@ export class MjController {
     private proficiencyService: ProficiencyService,
     private sessionService: SessionService,
     private apotheoseService: ApotheoseService,
+    private rollService: RollService,
     private initDatabase: InitDatabase
   ) {}
 
   @ApiOkResponse({})
   @Put('newTurn')
   async newTurn(): Promise<void> {
-    await this.mjService.newTurn()
+    const apotheosedCharacters = await this.mjService.newTurn()
+    for (const character of apotheosedCharacters) {
+      const apotheose = await this.apotheoseService.findApotheosesByCharacterAndName(character, character.apotheoseName)
+      this.rollService.rollApotheose({
+        character: character,
+        apotheose: apotheose
+      })
+    }
   }
 
   @ApiOkResponse({})

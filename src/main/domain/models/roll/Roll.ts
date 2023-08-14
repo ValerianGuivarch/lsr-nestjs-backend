@@ -22,7 +22,7 @@ export class Roll {
   apotheose?: string
   display: string
   stat: SkillStat
-  constructor(p: RollToCreate) {
+  constructor(p: Roll) {
     Object.assign(this, p)
   }
 

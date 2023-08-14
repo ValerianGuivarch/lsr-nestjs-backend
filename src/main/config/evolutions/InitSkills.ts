@@ -74,8 +74,9 @@ export class InitSkills {
       ppCost: 1
     })
     const communicationArcaniqueSkill: DBSkill = this.createSkill({
-      name: 'communication arc',
+      name: 'communication arcanique',
       shortName: 'ca',
+      longName: 'communication',
       description: 'Permet de communiquer avec un arcane',
       allAttribution: false,
       stat: SkillStat.ESSENCE,
@@ -86,8 +87,9 @@ export class InitSkills {
       isArcanique: true
     })
     const boostArcaniqueSkill: DBSkill = this.createSkill({
-      name: 'boost arc',
+      name: 'boost arcanique',
       shortName: 'ba',
+      longName: 'boost',
       description: 'Augmente la puissance d un sort arcanique',
       allAttribution: false,
       stat: SkillStat.ESSENCE,
@@ -98,8 +100,9 @@ export class InitSkills {
       isArcanique: true
     })
     const blocageArcaniqueSkill: DBSkill = this.createSkill({
-      name: 'blocage arc',
+      name: 'blocage arcanique',
       shortName: 'bl',
+      longName: 'blocage',
       description: 'Bloque un sort arcanique',
       allAttribution: false,
       stat: SkillStat.ESSENCE,
@@ -110,8 +113,9 @@ export class InitSkills {
       isArcanique: true
     })
     const copieArcaniqueSkill: DBSkill = this.createSkill({
-      name: 'copie arc',
+      name: 'copie arcanique',
       shortName: 'cpa',
+      longName: 'copie',
       description: 'Copie un sort arcanique',
       allAttribution: false,
       stat: SkillStat.ESSENCE,
@@ -131,6 +135,20 @@ export class InitSkills {
       display: 'fait un *Lien aux Voyageurs*',
       position: 109,
       arcaneCost: 1,
+      isArcanique: true
+    })
+
+    const peurSkill: DBSkill = this.createSkill({
+      name: 'peur',
+      shortName: 'pr',
+      description: 'Effet de peur',
+      allAttribution: false,
+      stat: SkillStat.ESPRIT,
+      category: DisplayCategory.MAGIE,
+      display: 'fait un *Jet de Peur*',
+      position: 1,
+      ppCost: 1,
+      dettesCost: 0,
       isArcanique: true
     })
 
@@ -275,7 +293,7 @@ export class InitSkills {
     })
     const fantomeSkill: DBSkill = this.createSkill({
       name: 'fantome',
-      shortName: 'phantom',
+      shortName: 'ftm',
       description: 'Permet de traverser les murs',
       allAttribution: false,
       stat: SkillStat.ESSENCE,
@@ -289,7 +307,7 @@ export class InitSkills {
 
     const illusionisteSkill: DBSkill = this.createSkill({
       name: 'illusioniste',
-      shortName: 'illusionist',
+      shortName: 'ill',
       description: 'Crée une illusion',
       allAttribution: false,
       stat: SkillStat.ESPRIT,
@@ -302,7 +320,7 @@ export class InitSkills {
     })
     const comedienSkill: DBSkill = this.createSkill({
       name: 'comedien',
-      shortName: 'comedien',
+      shortName: 'cmd',
       description: "Permet de changer d'apparence",
       allAttribution: false,
       stat: SkillStat.ESPRIT,
@@ -330,7 +348,7 @@ export class InitSkills {
 
     const mentalisteSkill: DBSkill = this.createSkill({
       name: 'mentaliste',
-      shortName: 'mentaliste',
+      shortName: 'mtn',
       description: "Lire les souvenirs d'une cible",
       allAttribution: false,
       stat: SkillStat.ESPRIT,
@@ -344,7 +362,7 @@ export class InitSkills {
 
     const eruditSkill: DBSkill = this.createSkill({
       name: 'erudit',
-      shortName: 'erudit',
+      shortName: 'eru',
       description: "Découvrir si quelqu'un ment",
       allAttribution: false,
       stat: SkillStat.ESPRIT,
@@ -372,7 +390,7 @@ export class InitSkills {
 
     const ivrogneSkill: DBSkill = this.createSkill({
       name: 'ivrogne',
-      shortName: 'ivrogne',
+      shortName: 'ivr',
       description: "Utiliser une Stat à la place d'une autre",
       allAttribution: false,
       stat: SkillStat.FIXE,
@@ -400,7 +418,7 @@ export class InitSkills {
 
     const arbreSkill: DBSkill = this.createSkill({
       name: 'arbre',
-      shortName: 'arbre',
+      shortName: 'arb',
       description: 'Invoquer et/ou manipuler des plantes',
       allAttribution: false,
       stat: SkillStat.ESSENCE,
@@ -428,7 +446,7 @@ export class InitSkills {
 
     const necromancienSkill: DBSkill = this.createSkill({
       name: 'necromancien',
-      shortName: 'necromancien',
+      shortName: 'nec',
       description: 'Poser X questions à un cadavre, -1 par heure depuis le décès',
       allAttribution: false,
       stat: SkillStat.ESSENCE,
@@ -442,7 +460,7 @@ export class InitSkills {
 
     const licorneSkill: DBSkill = this.createSkill({
       name: 'licorne',
-      shortName: 'licorne',
+      shortName: 'lic',
       description: 'Invoquer et/ou manipuler des animaux',
       allAttribution: false,
       stat: SkillStat.ESSENCE,
@@ -455,7 +473,7 @@ export class InitSkills {
     })
     const chouetteSkill: DBSkill = this.createSkill({
       name: 'chouette',
-      shortName: 'chouette',
+      shortName: 'cht',
       description: 'Projeter son esprit pour voir au loin',
       allAttribution: false,
       stat: SkillStat.ESPRIT,
@@ -468,7 +486,7 @@ export class InitSkills {
 
     const chevalSkill: DBSkill = this.createSkill({
       name: 'cheval',
-      shortName: 'cheval',
+      shortName: 'chv',
       description: 'Invoquer un véhicule',
       allAttribution: false,
       stat: SkillStat.ESPRIT,
@@ -481,7 +499,7 @@ export class InitSkills {
 
     const diablotinSkill: DBSkill = this.createSkill({
       name: 'diablotin',
-      shortName: 'diablotin',
+      shortName: 'diab',
       description: 'Invoquer un petit serviteur',
       allAttribution: false,
       stat: SkillStat.ESSENCE,
@@ -494,7 +512,7 @@ export class InitSkills {
 
     const protecteurSkill: DBSkill = this.createSkill({
       name: 'protecteur',
-      shortName: 'protecteur',
+      shortName: 'prtc',
       description: 'Donne X PV temporaire, -1 par tour',
       allAttribution: false,
       stat: SkillStat.ESSENCE,
@@ -507,7 +525,7 @@ export class InitSkills {
 
     const corbeauSkill: DBSkill = this.createSkill({
       name: 'corbeau',
-      shortName: 'corbeau',
+      shortName: 'crb',
       description: 'Ajoute X en Esprit au prochain Jet pour soit et ses alliés',
       allAttribution: false,
       stat: SkillStat.ESSENCE,
@@ -520,7 +538,7 @@ export class InitSkills {
 
     const araigneeSkill: DBSkill = this.createSkill({
       name: 'araignee',
-      shortName: 'araignee',
+      shortName: 'argn',
       description: 'Immobiliser une cible',
       allAttribution: false,
       stat: SkillStat.ESSENCE,
@@ -533,7 +551,7 @@ export class InitSkills {
 
     const tisserandSkill: DBSkill = this.createSkill({
       name: 'tisserand',
-      shortName: 'tisserand',
+      shortName: 'tiss',
       description: "Modifie les souvenirs d'une cible",
       allAttribution: false,
       stat: SkillStat.ESPRIT,
@@ -546,7 +564,7 @@ export class InitSkills {
 
     const commandantSkill: DBSkill = this.createSkill({
       name: 'commandant',
-      shortName: 'commandant',
+      shortName: 'cmdt',
       description: 'Donne un ordre à une cible',
       allAttribution: false,
       stat: SkillStat.ESPRIT,
@@ -572,7 +590,7 @@ export class InitSkills {
 
     const pretreSkill: DBSkill = this.createSkill({
       name: 'pretre',
-      shortName: 'pretre',
+      shortName: 'prtr',
       description: 'Apaise les émotions',
       allAttribution: false,
       stat: SkillStat.ESSENCE,
@@ -585,7 +603,7 @@ export class InitSkills {
 
     const bourreauSkill: DBSkill = this.createSkill({
       name: 'bourreau',
-      shortName: 'bourreau',
+      shortName: 'bour',
       description: 'Provoque de la douleur pure',
       allAttribution: false,
       stat: SkillStat.ESSENCE,
@@ -597,7 +615,7 @@ export class InitSkills {
     })
     const marionnettisteSkill: DBSkill = this.createSkill({
       name: 'marionnettiste',
-      shortName: 'marionnettiste',
+      shortName: 'mrnt',
       description: 'Manipule les mouvements',
       allAttribution: false,
       stat: SkillStat.ESSENCE,
@@ -623,7 +641,7 @@ export class InitSkills {
 
     const taureauSkill: DBSkill = this.createSkill({
       name: 'taureau',
-      shortName: 'taureau',
+      shortName: 'taur',
       description: 'Booste son Esprit de X/2, -1 par tour',
       allAttribution: false,
       stat: SkillStat.ESSENCE,
@@ -636,7 +654,7 @@ export class InitSkills {
 
     const renardSkill: DBSkill = this.createSkill({
       name: 'renard',
-      shortName: 'renard',
+      shortName: 'rnd',
       description: 'Booste son Essence de X/2, -1 par tour',
       allAttribution: false,
       stat: SkillStat.ESSENCE,
@@ -662,7 +680,7 @@ export class InitSkills {
 
     const miroirSkill: DBSkill = this.createSkill({
       name: 'miroir',
-      shortName: 'miroir',
+      shortName: 'mir',
       description: 'Crée des illusions de soi autour',
       allAttribution: false,
       stat: SkillStat.ESPRIT,
@@ -675,7 +693,7 @@ export class InitSkills {
 
     const devinSkill: DBSkill = this.createSkill({
       name: 'devin',
-      shortName: 'devin',
+      shortName: 'dvn',
       description: 'Voir dans le futur',
       allAttribution: false,
       stat: SkillStat.ESPRIT,
@@ -688,7 +706,7 @@ export class InitSkills {
 
     const peintreSkill: DBSkill = this.createSkill({
       name: 'peintre',
-      shortName: 'peintre',
+      shortName: 'peint',
       description: 'Fige le temps',
       allAttribution: false,
       stat: SkillStat.ESSENCE,
@@ -701,7 +719,7 @@ export class InitSkills {
 
     const telepatheSkill: DBSkill = this.createSkill({
       name: 'telepathe',
-      shortName: 'telepathe',
+      shortName: 'tlpt',
       description: 'Télépathie',
       allAttribution: false,
       stat: SkillStat.ESPRIT,
@@ -714,7 +732,7 @@ export class InitSkills {
 
     const montreSkill: DBSkill = this.createSkill({
       name: 'montre',
-      shortName: 'montre',
+      shortName: 'mtre',
       description: 'Se projeter dans le futur',
       allAttribution: false,
       stat: SkillStat.ESSENCE,
@@ -726,7 +744,7 @@ export class InitSkills {
     })
     const omniscientSkill: DBSkill = this.createSkill({
       name: 'omniscient',
-      shortName: 'omniscient',
+      shortName: 'omn',
       description: 'Avoir une vision totale autour de soi',
       allAttribution: false,
       stat: SkillStat.ESPRIT,
@@ -739,7 +757,7 @@ export class InitSkills {
 
     const messagerSkill: DBSkill = this.createSkill({
       name: 'messager',
-      shortName: 'messager',
+      shortName: 'msg',
       description: "Envoie d'un message à une cible proche ou marquée",
       allAttribution: false,
       stat: SkillStat.ESPRIT,
@@ -804,7 +822,7 @@ export class InitSkills {
 
     const chamanSkill: DBSkill = this.createSkill({
       name: 'chaman',
-      shortName: 'chaman',
+      shortName: 'chmn',
       description: 'Communiquer avec les animaux',
       allAttribution: false,
       stat: SkillStat.ESPRIT,
@@ -817,7 +835,7 @@ export class InitSkills {
 
     const cryptesthesisteSkill: DBSkill = this.createSkill({
       name: 'cryptesthesiste',
-      shortName: 'cryptesthesiste',
+      shortName: 'crypt',
       description: "Percevoir les souvenirs d'un objet",
       allAttribution: false,
       stat: SkillStat.ESPRIT,
@@ -843,7 +861,7 @@ export class InitSkills {
 
     const professeurSkill: DBSkill = this.createSkill({
       name: 'professeur',
-      shortName: 'professeur',
+      shortName: 'prof',
       description: 'Donner des PF à une cible',
       allAttribution: false,
       stat: SkillStat.ESSENCE,
@@ -855,7 +873,7 @@ export class InitSkills {
     })
     const magicienSkill: DBSkill = this.createSkill({
       name: 'magicien',
-      shortName: 'magicien',
+      shortName: 'mag',
       description: 'Donner des PP à une cible',
       allAttribution: false,
       stat: SkillStat.ESSENCE,
@@ -868,7 +886,7 @@ export class InitSkills {
 
     const empoisonneurSkill: DBSkill = this.createSkill({
       name: 'empoisonneur',
-      shortName: 'empoisonneur',
+      shortName: 'emp',
       description: 'Empoisonner une cible (-1pv par tour)',
       allAttribution: false,
       stat: SkillStat.ESSENCE,
@@ -881,7 +899,7 @@ export class InitSkills {
 
     const amnesiqueSkill: DBSkill = this.createSkill({
       name: 'amnesique',
-      shortName: 'amnesique',
+      shortName: 'amn',
       description: 'Faire oublier sa présence aux adversaires',
       allAttribution: false,
       stat: SkillStat.ESSENCE,
@@ -894,7 +912,7 @@ export class InitSkills {
 
     const pragmatiqueSkill: DBSkill = this.createSkill({
       name: 'pragmatique',
-      shortName: 'pragmatique',
+      shortName: 'prag',
       description: 'Annuler de la magie',
       allAttribution: false,
       stat: SkillStat.ESSENCE,
@@ -907,7 +925,7 @@ export class InitSkills {
 
     const parfumeurSkill: DBSkill = this.createSkill({
       name: 'parfumeur',
-      shortName: 'parfumeur',
+      shortName: 'parf',
       description: 'Créer des odeurs et des gouts',
       allAttribution: false,
       stat: SkillStat.ESSENCE,
@@ -920,7 +938,7 @@ export class InitSkills {
 
     const banquierSkill: DBSkill = this.createSkill({
       name: 'banquier',
-      shortName: 'banquier',
+      shortName: 'banq',
       description: 'Créer un espace où cacher des objets',
       allAttribution: false,
       stat: SkillStat.ESSENCE,
@@ -933,7 +951,7 @@ export class InitSkills {
 
     const colletSkill: DBSkill = this.createSkill({
       name: 'collet',
-      shortName: 'collet',
+      shortName: 'clt',
       description: "Lier une cible à soi, qui ne peut plus s'éloigner",
       allAttribution: false,
       stat: SkillStat.ESSENCE,
@@ -946,7 +964,7 @@ export class InitSkills {
 
     const linguisteSkill: DBSkill = this.createSkill({
       name: 'linguiste',
-      shortName: 'linguiste',
+      shortName: 'ling',
       description: "Compréhension écrite et orale d'une langue",
       allAttribution: false,
       stat: SkillStat.ESPRIT,
@@ -959,7 +977,7 @@ export class InitSkills {
 
     const equilibristeSkill: DBSkill = this.createSkill({
       name: 'equilibriste',
-      shortName: 'equilibriste',
+      shortName: 'equi',
       description: "Attaque en jet d'équilibre (somme des stats - somme des diff entre max et autres)",
       allAttribution: false,
       stat: SkillStat.FIXE,
@@ -973,7 +991,7 @@ export class InitSkills {
     const marchandSkill: DBSkill = this.createSkill({
       name: 'marchand',
       shortName: 'marchand',
-      description: 'Lier deux cibles par un contrat magique',
+      description: 'mrchd deux cibles par un contrat magique',
       allAttribution: false,
       stat: SkillStat.ESSENCE,
       category: DisplayCategory.ARCANES,
@@ -984,7 +1002,7 @@ export class InitSkills {
     })
     const mecanicienSkill: DBSkill = this.createSkill({
       name: 'mecanicien',
-      shortName: 'mecanicien',
+      shortName: 'meca',
       description: 'Animer des objets',
       allAttribution: false,
       stat: SkillStat.ESPRIT,
@@ -997,7 +1015,7 @@ export class InitSkills {
 
     const cadavreSkill: DBSkill = this.createSkill({
       name: 'cadavre',
-      shortName: 'cadavre',
+      shortName: 'cdvr',
       description: 'Simuler un état de mort',
       allAttribution: false,
       stat: SkillStat.FIXE,
@@ -1010,7 +1028,7 @@ export class InitSkills {
 
     const leprechaunSkill: DBSkill = this.createSkill({
       name: 'leprechaun',
-      shortName: 'leprechaun',
+      shortName: 'lep',
       description: 'Avoir de la chance',
       allAttribution: false,
       stat: SkillStat.ESSENCE,
@@ -1023,7 +1041,7 @@ export class InitSkills {
 
     const bergerSkill: DBSkill = this.createSkill({
       name: 'berger',
-      shortName: 'berger',
+      shortName: 'brg',
       description: "Percevoir où se trouver ce que l'on désire",
       allAttribution: false,
       stat: SkillStat.ESSENCE,
@@ -1049,7 +1067,7 @@ export class InitSkills {
 
     const orateurSkill: DBSkill = this.createSkill({
       name: 'orateur',
-      shortName: 'orateur',
+      shortName: 'ora',
       description: 'Réussite un jet pour encourager',
       allAttribution: false,
       stat: SkillStat.ESSENCE,
@@ -1088,7 +1106,7 @@ export class InitSkills {
 
     const scorpionSkill: DBSkill = this.createSkill({
       name: 'scorpion',
-      shortName: 'scorpion',
+      shortName: 'scrp',
       description: 'Donne X malus aux ennemis pour le prochain jet de Chair',
       allAttribution: false,
       stat: SkillStat.ESSENCE,
@@ -1101,7 +1119,7 @@ export class InitSkills {
 
     const vautourSkill: DBSkill = this.createSkill({
       name: 'vautour',
-      shortName: 'vautour',
+      shortName: 'vtr',
       description: "Donne X malus aux ennemis pour le prochain jet d'Esprit",
       allAttribution: false,
       stat: SkillStat.ESSENCE,
@@ -1113,7 +1131,7 @@ export class InitSkills {
     })
     const balanceSkill: DBSkill = this.createSkill({
       name: 'balance',
-      shortName: 'balance',
+      shortName: 'bal',
       description: 'Transférer X blessures sur une cible',
       allAttribution: false,
       stat: SkillStat.ESSENCE,
@@ -1126,7 +1144,7 @@ export class InitSkills {
 
     const savantSkill: DBSkill = this.createSkill({
       name: 'savant',
-      shortName: 'savant',
+      shortName: 'sav',
       description: 'Protéger son esprit',
       allAttribution: false,
       stat: SkillStat.FIXE,
@@ -1139,7 +1157,7 @@ export class InitSkills {
 
     const archeologueSkill: DBSkill = this.createSkill({
       name: 'archeologue',
-      shortName: 'archeologue',
+      shortName: 'arcg',
       description: 'Percevoir où se trouve un objet à proximité ou marqué',
       allAttribution: false,
       stat: SkillStat.ESPRIT,
@@ -1152,7 +1170,7 @@ export class InitSkills {
 
     const gardienSkill: DBSkill = this.createSkill({
       name: 'gardien',
-      shortName: 'gardien',
+      shortName: 'gard',
       description: 'Ressent si un marqué est en danger',
       allAttribution: false,
       stat: SkillStat.ESSENCE,
@@ -1165,7 +1183,7 @@ export class InitSkills {
 
     const destructionSkill: DBSkill = this.createSkill({
       name: 'destruction',
-      shortName: 'destruction',
+      shortName: 'destr',
       description: 'Détruire une zone',
       allAttribution: false,
       stat: SkillStat.ESSENCE,
@@ -1178,7 +1196,7 @@ export class InitSkills {
 
     const conteurSkill: DBSkill = this.createSkill({
       name: 'conteur',
-      shortName: 'conteur',
+      shortName: 'cntr',
       description: 'Provoque un état de sommeil',
       allAttribution: false,
       stat: SkillStat.ESSENCE,
@@ -1191,7 +1209,7 @@ export class InitSkills {
 
     const lucioleSkill: DBSkill = this.createSkill({
       name: 'luciole',
-      shortName: 'luciole',
+      shortName: 'luc',
       description: 'Soigne X/2 PV à ses alliés à distance',
       allAttribution: false,
       stat: SkillStat.ESSENCE,
@@ -1204,7 +1222,7 @@ export class InitSkills {
 
     const chaperonSkill: DBSkill = this.createSkill({
       name: 'chaperon',
-      shortName: 'chaperon',
+      shortName: 'chap',
       description: 'Téléporté une personne marqué ou visible vers soi',
       allAttribution: false,
       stat: SkillStat.ESSENCE,
@@ -1217,7 +1235,7 @@ export class InitSkills {
 
     const chauveSourisSkill: DBSkill = this.createSkill({
       name: 'chauvesouris',
-      shortName: 'chauvesouris',
+      shortName: 'chvsr',
       description: 'Projeter son esprit pour entendre au loin',
       allAttribution: false,
       stat: SkillStat.ESSENCE,
@@ -1230,7 +1248,7 @@ export class InitSkills {
 
     const acrobateSkill: DBSkill = this.createSkill({
       name: 'acrobate',
-      shortName: 'acrobate',
+      shortName: 'acro',
       description: "Pouvoir s'accrocher aux murs",
       allAttribution: false,
       stat: SkillStat.ESSENCE,
@@ -1242,7 +1260,7 @@ export class InitSkills {
     })
     const terreurSkill: DBSkill = this.createSkill({
       name: 'terreur',
-      shortName: 'terreur',
+      shortName: 'ter',
       description: 'Provoque un sentiment de peur',
       allAttribution: false,
       stat: SkillStat.ESSENCE,
@@ -1255,7 +1273,7 @@ export class InitSkills {
 
     const ectoplasmeSkill: DBSkill = this.createSkill({
       name: 'ectoplasme',
-      shortName: 'ectoplasme',
+      shortName: 'ecto',
       description: 'Projette une version visible de soit pour voir et entendre au loin',
       allAttribution: false,
       stat: SkillStat.ESSENCE,
@@ -1268,7 +1286,7 @@ export class InitSkills {
 
     const torcheSkill: DBSkill = this.createSkill({
       name: 'torche',
-      shortName: 'torche',
+      shortName: 'trch',
       description: 'Aura de soin (X tour avec 1 soin de 1 PV par tour)',
       allAttribution: false,
       stat: SkillStat.ESSENCE,
@@ -1281,7 +1299,7 @@ export class InitSkills {
 
     const survivantSkill: DBSkill = this.createSkill({
       name: 'survivant',
-      shortName: 'survivant',
+      shortName: 'surv',
       description: 'Protection contre la mort (pv de secours si on tombe KO)',
       allAttribution: false,
       stat: SkillStat.ESSENCE,
@@ -1294,7 +1312,7 @@ export class InitSkills {
 
     const purificateurSkill: DBSkill = this.createSkill({
       name: 'purificateur',
-      shortName: 'purificateur',
+      shortName: 'purf',
       description: 'Purification (eau/nourriture/maladie)',
       allAttribution: false,
       stat: SkillStat.ESSENCE,
@@ -1307,7 +1325,7 @@ export class InitSkills {
 
     const reparateurSkill: DBSkill = this.createSkill({
       name: 'réparateur',
-      shortName: 'réparateur',
+      shortName: 'rep',
       description: "Réparation d'objets ou de mécanismes",
       allAttribution: false,
       stat: SkillStat.ESSENCE,
@@ -1320,7 +1338,7 @@ export class InitSkills {
 
     const voyantSkill: DBSkill = this.createSkill({
       name: 'voyant',
-      shortName: 'voyant',
+      shortName: 'voy',
       description: 'Scruter une personne à proximité ou précédemment marquée',
       allAttribution: false,
       stat: SkillStat.ESPRIT,
@@ -1333,7 +1351,7 @@ export class InitSkills {
 
     const nomadeSkill: DBSkill = this.createSkill({
       name: 'nomade',
-      shortName: 'nomade',
+      shortName: 'nmd',
       description: 'Savoir exactement où on se situe',
       allAttribution: false,
       stat: SkillStat.FIXE,
@@ -1346,7 +1364,7 @@ export class InitSkills {
 
     const silenceSkill: DBSkill = this.createSkill({
       name: 'silence',
-      shortName: 'silence',
+      shortName: 'slnc',
       description: 'Bloquer le son dans une zone',
       allAttribution: false,
       stat: SkillStat.ESSENCE,
@@ -1371,7 +1389,7 @@ export class InitSkills {
     })
     const analysteSkill: DBSkill = this.createSkill({
       name: 'analyste',
-      shortName: 'analyste',
+      shortName: 'anlst',
       description: "Scanner quelqu'un pour connaitre sa lignée, et ses PV, PF et PP courant et max",
       allAttribution: false,
       stat: SkillStat.FIXE,
@@ -1384,7 +1402,7 @@ export class InitSkills {
 
     const farceurSkill: DBSkill = this.createSkill({
       name: 'farceur',
-      shortName: 'farceur',
+      shortName: 'farc',
       description: 'Ajoute un effet visuel et ou sonore à un objet quand on le touche pour X fois',
       allAttribution: false,
       stat: SkillStat.ESSENCE,
@@ -1397,7 +1415,7 @@ export class InitSkills {
 
     const observateurSkill: DBSkill = this.createSkill({
       name: 'observateur',
-      shortName: 'observateur',
+      shortName: 'obsr',
       description: 'Obtenir la vision véritable (voir la magie, les auras, les êtres invisibles, etc...)',
       allAttribution: false,
       stat: SkillStat.FIXE,
@@ -1410,7 +1428,7 @@ export class InitSkills {
 
     const confesseurSkill: DBSkill = this.createSkill({
       name: 'confesseur',
-      shortName: 'confesseur',
+      shortName: 'conf',
       description: 'Crée une zone de vérité où on ne peut mentir',
       allAttribution: false,
       stat: SkillStat.ESSENCE,
@@ -1423,7 +1441,7 @@ export class InitSkills {
 
     const bouclierSkill: DBSkill = this.createSkill({
       name: 'bouclier',
-      shortName: 'bouclier',
+      shortName: 'bclr',
       description: 'Réduit X dégats en réaction',
       allAttribution: false,
       stat: SkillStat.ESSENCE,
@@ -1436,7 +1454,7 @@ export class InitSkills {
 
     const pisteurSkill: DBSkill = this.createSkill({
       name: 'pisteur',
-      shortName: 'pisteur',
+      shortName: 'pist',
       description: 'Perçoit une cible à proximité pour X heures',
       allAttribution: false,
       stat: SkillStat.ESSENCE,
@@ -1449,7 +1467,7 @@ export class InitSkills {
 
     const pieuvreSkill: DBSkill = this.createSkill({
       name: 'pieuvre',
-      shortName: 'pieuvre',
+      shortName: 'pvr',
       description: "Ajoute des bras pour X tours, donnant une action supplémentaire d'attaque",
       allAttribution: false,
       stat: SkillStat.ESSENCE,
@@ -1462,7 +1480,7 @@ export class InitSkills {
 
     const sobreSkill: DBSkill = this.createSkill({
       name: 'sobre',
-      shortName: 'sobre',
+      shortName: 'sbr',
       description: 'Force un adversaire à se défendre avec une autre stat',
       allAttribution: false,
       stat: SkillStat.FIXE,
@@ -1475,7 +1493,7 @@ export class InitSkills {
 
     const illumineSkill: DBSkill = this.createSkill({
       name: 'illuminé',
-      shortName: 'illuminé',
+      shortName: 'ill',
       description: 'Communion avec son Être Supérieur',
       allAttribution: false,
       stat: SkillStat.ESSENCE,
@@ -1488,7 +1506,7 @@ export class InitSkills {
 
     const souhaitSkill: DBSkill = this.createSkill({
       name: 'souhait',
-      shortName: 'souhait',
+      shortName: 'sht',
       description: "Utilise n'importe quelle arcane ou modifie le monde avec contre-coup",
       allAttribution: false,
       stat: SkillStat.FIXE,
@@ -1626,7 +1644,8 @@ export class InitSkills {
       boostArcaniqueSkill,
       blocageArcaniqueSkill,
       copieArcaniqueSkill,
-      lienAuxVoyageursSkill
+      lienAuxVoyageursSkill,
+      peurSkill
     ]
     return newSkills
   }
@@ -1639,6 +1658,7 @@ export class InitSkills {
     category: DisplayCategory
     display: string
     position: number
+    longName?: string
     isArcanique?: boolean
     allowsPf?: boolean
     allowsPp?: boolean
@@ -1658,6 +1678,7 @@ export class InitSkills {
       name: p.name,
       description: p.description,
       shortName: p.shortName,
+      longName: p.longName || p.name,
       allAttribution: p.allAttribution,
       allowsPf: p.allowsPf || true,
       allowsPp: p.allowsPp || true,

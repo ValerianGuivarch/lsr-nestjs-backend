@@ -1,5 +1,4 @@
 import { DBSkillAttrs } from './DBSkillAttrs'
-import { DisplayCategory } from '../../../domain/models/characters/DisplayCategory'
 import { Column, Entity, PrimaryColumn } from 'typeorm'
 
 @Entity()
@@ -10,14 +9,11 @@ export class DBSkill extends DBSkillAttrs {
   @Column({ type: 'varchar' })
   shortName: string
 
+  @Column({ type: 'varchar', nullable: true })
+  longName: string | null
+
   @Column({ type: 'boolean', default: false })
   allAttribution: boolean
-
-  @Column({
-    type: 'enum',
-    enum: DisplayCategory
-  })
-  displayCategory: string
 
   @Column({ type: 'integer', default: 1 })
   position: number

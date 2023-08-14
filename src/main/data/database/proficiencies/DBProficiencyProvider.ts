@@ -31,7 +31,8 @@ export class DBProficiencyProvider implements IProficiencyProvider {
       shortName: proficiency.shortName,
       minLevel:
         overloadProficiency && overloadProficiency.minLevel ? overloadProficiency.minLevel : proficiency.minLevel || 1,
-      displayCategory: DisplayCategory[proficiency.displayCategory]
+      displayCategory: DisplayCategory[proficiency.displayCategory],
+      description: proficiency.description
     })
   }
 

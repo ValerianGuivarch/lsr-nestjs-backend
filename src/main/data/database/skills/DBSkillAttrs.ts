@@ -1,9 +1,17 @@
+import { DisplayCategory } from '../../../domain/models/characters/DisplayCategory'
 import { SuccessCalculation } from '../../../domain/models/roll/SuccessCalculation'
 import { SkillStat } from '../../../domain/models/skills/SkillStat'
 import { DBCharacterTemplate } from '../character/DBCharacterTemplate'
 import { Column, JoinColumn, ManyToOne } from 'typeorm'
 
 export abstract class DBSkillAttrs {
+  @Column({
+    type: 'enum',
+    enum: DisplayCategory,
+    nullable: true
+  })
+  displayCategory: string | null
+
   @Column({ type: 'boolean', nullable: true })
   allowsPf: boolean | null
 

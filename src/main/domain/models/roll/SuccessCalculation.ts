@@ -3,5 +3,6 @@ export enum SuccessCalculation {
   SIMPLE = 'SIMPLE',
   SIMPLE_PLUS_1 = 'SIMPLE_PLUS_1',
   DIVISE = 'DIVISE',
-  DIVISE_PLUS_1 = 'DIVISE_PLUS_1'
+  DIVISE_PLUS_1 = 'DIVISE_PLUS_1',
+  CUSTOM = 'CUSTOM'
 }

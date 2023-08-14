@@ -1,5 +1,5 @@
 import { DBRoll } from './DBRoll'
-import { Roll } from '../../../domain/models/roll/Roll'
+import { Roll, RollToCreate } from '../../../domain/models/roll/Roll'
 import { SkillStat } from '../../../domain/models/skills/SkillStat'
 import { IRollProvider } from '../../../domain/providers/IRollProvider'
 import { ProviderErrors } from '../../errors/ProviderErrors'
@@ -17,6 +17,7 @@ export class DBRollProvider implements IRollProvider {
 
   private static toRoll(doc: DBRoll): Roll {
     return new Roll({
+      id: doc.id,
       rollerName: doc.rollerName,
       date: doc.date,
       secret: doc.secret,
@@ -39,9 +40,8 @@ export class DBRollProvider implements IRollProvider {
     })
   }
 
-  private static fromRoll(doc: Roll): DBRoll {
+  private static fromRoll(doc: RollToCreate): Partial<DBRoll> {
     return {
-      id: doc.id,
       rollerName: doc.rollerName,
       date: doc.date,
       secret: doc.secret,
@@ -62,10 +62,10 @@ export class DBRollProvider implements IRollProvider {
       resistRoll: doc.resistRoll,
       display: doc.display,
       stat: doc.stat
-    } as DBRoll
+    } as Partial<DBRoll>
   }
 
-  async add(roll: Roll): Promise<Roll> {
+  async add(roll: RollToCreate): Promise<Roll> {
     const dbRoll = this.dbRollRepository.create(DBRollProvider.fromRoll(roll))
     return DBRollProvider.toRoll(await this.dbRollRepository.save(dbRoll))
   }

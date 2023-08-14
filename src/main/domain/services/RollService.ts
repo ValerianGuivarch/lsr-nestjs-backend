@@ -1,4 +1,6 @@
 import { ProviderErrors } from '../../data/errors/ProviderErrors'
+import { Apotheose } from '../models/apotheoses/Apotheose'
+import { ApotheoseState } from '../models/apotheoses/ApotheoseState'
 import { Category } from '../models/characters/Category'
 import { Character } from '../models/characters/Character'
 import { Roll } from '../models/roll/Roll'
@@ -94,7 +96,7 @@ export class RollService {
     let usePp = p.power && p.skill.allowsPp
     let useProficiency = p.proficiency
     const result: number[] = []
-    const data = ''
+    let data = ''
     if (p.skill.stat === SkillStat.EMPIRIQUE) {
       try {
         diceNumber = Number(p.empiriqueRoll?.substring(0, p.empiriqueRoll.indexOf('d')))
@@ -247,8 +249,26 @@ export class RollService {
       throw ProviderErrors.RollNotEnoughPp()
     } else if (p.character.arcanes + arcaneDelta < 0) {
       throw ProviderErrors.RollNotEnoughArcane()
+    } else if (p.skill.dailyUse === 0) {
+      throw ProviderErrors.RollNotEnoughDailyUse()
     }
-    const rollToCreate = new Roll({
+    if (p.skill.stat === SkillStat.CUSTOM) {
+      if (p.skill.name === 'KO') {
+        // eslint-disable-next-line no-magic-numbers
+        if (result[0] == 1) {
+          data = ' et échoue dangereusement'
+          // eslint-disable-next-line no-magic-numbers
+        } else if (result[0] == 20) {
+          data = ' et se relève'
+          // eslint-disable-next-line no-magic-numbers
+        } else if (result[0] < 10) {
+          data = ' et échoue'
+        } else {
+          data = ' et réussi'
+        }
+      }
+    }
+    const rollToCreate = await Roll.rollToCreateFactory({
       rollerName: p.character.name,
       data: data,
       date: new Date(),
@@ -270,6 +290,9 @@ export class RollService {
       stat: p.skill.stat
     })
     const createdRoll = await this.rollProvider.add(rollToCreate)
+    if (p.skill.dailyUse !== null) {
+      await this.skillProvider.updateDailyUse(p.skill.name, p.character.name, p.skill.dailyUse - 1)
+    }
     p.character.pv += pvDelta
     p.character.pf += pfDelta
     p.character.pp += ppDelta
@@ -296,5 +319,38 @@ export class RollService {
 
   getRollsChangeObservable(): Observable<Roll[]> {
     return this.rollsChangeSubject.asObservable()
+  }
+
+  async rollApotheose(p: { apotheose: Apotheose; character: Character }): Promise<void> {
+    if (p.apotheose.apotheoseEffect.length > 0) {
+      const diceValue = p.apotheose.apotheoseEffect.length
+      const dice = RollService.randomIntFromInterval(1, diceValue)
+      const rollToCreate = await Roll.rollToCreateFactory({
+        rollerName: p.character.name,
+        data: '',
+        date: new Date(),
+        secret: true,
+        displayDices: true,
+        focus: false,
+        power: false,
+        proficiency: false,
+        bonus: 0,
+        malus: 0,
+        result: [dice],
+        success: null,
+        juge12: null,
+        juge34: null,
+        resistRoll: null,
+        picture: p.character.pictureApotheose,
+        empiriqueRoll: '1d' + diceValue,
+        display: p.apotheose.apotheoseEffect[dice - 1],
+        stat: SkillStat.EMPIRIQUE
+      })
+      await this.rollProvider.add(rollToCreate)
+      const rolls = await this.getLast()
+      this.rollsChangeSubject.next(rolls)
+    }
+    p.character.apotheoseState = ApotheoseState.COST_TO_PAY
+    await this.characterProvider.update(p.character)
   }
 }

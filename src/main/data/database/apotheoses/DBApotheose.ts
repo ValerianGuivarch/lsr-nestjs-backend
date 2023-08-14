@@ -15,6 +15,9 @@ export class DBApotheose {
   })
   displayCategory: string
 
+  @Column({ default: '' })
+  description: string
+
   @Column({ type: 'integer', default: 1 })
   position: number
 

@@ -21,4 +21,10 @@ export class DBCharacterSkill extends DBSkillAttrs {
   @ManyToOne(() => DBSkill)
   @JoinColumn({ name: 'skillName' })
   skill: DBSkill
+
+  @Column({ type: 'integer', default: null, nullable: true })
+  dailyUse?: number
+
+  @Column({ type: 'integer', default: null, nullable: true })
+  limitationMax?: number
 }

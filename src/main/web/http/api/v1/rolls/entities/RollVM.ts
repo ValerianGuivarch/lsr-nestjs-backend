@@ -44,8 +44,8 @@ export class RollVM {
   @ApiProperty()
   juge34: number | null
 
-  @ApiPropertyOptional()
-  resistRoll?: string
+  @ApiProperty()
+  resistRolls: RollVM[]
 
   @ApiPropertyOptional()
   picture?: string
@@ -69,7 +69,7 @@ export class RollVM {
     Object.assign(this, p)
   }
 
-  static of(p: { roll: Roll }): RollVM {
+  static of(p: { roll: Roll; othersRolls: Roll[] }): RollVM {
     return new RollVM({
       id: p.roll.id,
       rollerName: p.roll.rollerName,
@@ -85,7 +85,7 @@ export class RollVM {
       success: p.roll.success,
       juge12: p.roll.juge12,
       juge34: p.roll.juge34,
-      resistRoll: p.roll.resistRoll,
+      resistRolls: p.othersRolls.map((r) => RollVM.of({ roll: r, othersRolls: [] })),
       picture: p.roll.picture,
       data: p.roll.data,
       empiriqueRoll: p.roll.empiriqueRoll,

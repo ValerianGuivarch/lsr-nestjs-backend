@@ -15,4 +15,7 @@ export class DBProficiency extends DBProficiencyAttrs {
     enum: DisplayCategory
   })
   displayCategory: string
+
+  @Column({ default: '' })
+  description: string
 }

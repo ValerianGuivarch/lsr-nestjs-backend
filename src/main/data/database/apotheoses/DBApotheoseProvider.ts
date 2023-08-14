@@ -38,7 +38,8 @@ export class DBApotheoseProvider implements IApotheoseProvider {
       essenceImprovement: apotheose.essenceImprovement,
       arcaneImprovement: apotheose.arcaneImprovement,
       avantage: apotheose.avantage,
-      apotheoseEffect: apotheose.apotheoseEffect
+      apotheoseEffect: apotheose.apotheoseEffect,
+      description: apotheose.description
     })
   }
   async findApotheosesByCharacter(character: Character): Promise<Apotheose[]> {
@@ -64,5 +65,29 @@ export class DBApotheoseProvider implements IApotheoseProvider {
       )
       .filter((apotheose) => apotheose.minLevel <= character.niveau && apotheose.maxLevel >= character.niveau)
     return Promise.all(apotheosePromises.sort((a, b) => a.position - b.position))
+  }
+
+  async findApotheoseByCharacterAndName(character: Character): Promise<Apotheose> {
+    const classeWithApotheose = await this.dbClasseApotheoseRepository.findOne({
+      where: { classeName: character.classeName, apotheoseName: character.apotheoseName },
+      relations: ['classe', 'apotheose']
+    })
+    const bloodlineWithApotheose = await this.dbBloodlineApotheoseRepository.findOne({
+      where: { bloodlineName: character.bloodlineName, apotheoseName: character.apotheoseName },
+      relations: ['bloodline', 'apotheose']
+    })
+    const characterWithApotheose = await this.dbCharacterApotheoseRepository.findOne({
+      where: { characterName: character.name, apotheoseName: character.apotheoseName },
+      relations: ['character', 'apotheose']
+    })
+    if (characterWithApotheose) {
+      return DBApotheoseProvider.toApotheose(characterWithApotheose.apotheose)
+    } else if (bloodlineWithApotheose) {
+      return DBApotheoseProvider.toApotheose(bloodlineWithApotheose.apotheose)
+    } else if (classeWithApotheose) {
+      return DBApotheoseProvider.toApotheose(classeWithApotheose.apotheose)
+    } else {
+      throw new Error('Apotheose not found')
+    }
   }
 }

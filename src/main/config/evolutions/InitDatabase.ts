@@ -21,6 +21,7 @@ import { DBBloodlineSkill } from '../../data/database/skills/DBBloodlineSkill'
 import { DBCharacterSkill } from '../../data/database/skills/DBCharacterSkill'
 import { DBClasseSkill } from '../../data/database/skills/DBClasseSkill'
 import { DBSkill } from '../../data/database/skills/DBSkill'
+import { DisplayCategory } from '../../domain/models/characters/DisplayCategory'
 import { Injectable } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { Repository } from 'typeorm'
@@ -224,14 +225,59 @@ export class InitDatabase {
     await this.saveClasseSkillIfNotExisting(classes.get('champion'), skills.get('cantrip'))
 
     // Viktor
-    await this.saveCharacterSkillIfNotExisting(characters.get('viktor'), skills.get('communication arc'))
-    await this.saveCharacterSkillIfNotExisting(characters.get('viktor'), skills.get('boost arc'))
-    await this.saveCharacterSkillIfNotExisting(characters.get('viktor'), skills.get('blocage arc'))
-    await this.saveCharacterSkillIfNotExisting(characters.get('viktor'), skills.get('copie arc'))
-    await this.saveCharacterSkillIfNotExisting(characters.get('viktor'), skills.get('arpenteur'))
+    await this.saveCharacterSkillIfNotExisting({
+      character: characters.get('viktor'),
+      skill: skills.get('communication arcanique')
+    })
+    await this.saveCharacterSkillIfNotExisting({
+      character: characters.get('viktor'),
+      skill: skills.get('boost arcanique')
+    })
+    await this.saveCharacterSkillIfNotExisting({
+      character: characters.get('viktor'),
+      skill: skills.get('blocage arcanique')
+    })
+    await this.saveCharacterSkillIfNotExisting({
+      character: characters.get('viktor'),
+      skill: skills.get('copie arcanique')
+    })
+    await this.saveCharacterSkillIfNotExisting({
+      character: characters.get('viktor'),
+      skill: skills.get('arpenteur'),
+      limitationMax: 1,
+      arcaneCost: 0
+    })
 
     // Millia
-    await this.saveCharacterSkillIfNotExisting(characters.get('millia'), skills.get('montre'))
+    await this.saveCharacterSkillIfNotExisting({ character: characters.get('millia'), skill: skills.get('montre') })
+
+    // Aurélien
+    await this.saveCharacterSkillIfNotExisting({ character: characters.get('aurélien'), skill: skills.get('peur') })
+    await this.saveCharacterSkillIfNotExisting({
+      character: characters.get('aurélien'),
+      skill: skills.get('terreur'),
+      displayCategory: DisplayCategory.MAGIE,
+      arcaneCost: 0,
+      dettesCost: 1
+    })
+    await this.saveCharacterSkillIfNotExisting({
+      character: characters.get('aurélien'),
+      skill: skills.get('illusioniste'),
+      limitationMax: 1,
+      arcaneCost: 0
+    })
+    await this.saveCharacterSkillIfNotExisting({
+      character: characters.get('aurélien'),
+      skill: skills.get('mentaliste'),
+      limitationMax: 1,
+      arcaneCost: 0
+    })
+    await this.saveCharacterSkillIfNotExisting({
+      character: characters.get('aurélien'),
+      skill: skills.get('amnesique'),
+      limitationMax: 1,
+      arcaneCost: 0
+    })
   }
 
   private async saveClasseSkillIfNotExisting(classe: DBClasse, skill: DBSkill) {
@@ -266,19 +312,32 @@ export class InitDatabase {
       })
     }
   }
-  private async saveCharacterSkillIfNotExisting(character: DBCharacter, skill: DBSkill) {
+  private async saveCharacterSkillIfNotExisting(p: {
+    character: DBCharacter
+    skill: DBSkill
+    limitationMax?: number
+    arcaneCost?: number
+    dettesCost?: number
+    displayCategory?: DisplayCategory
+  }) {
     const existingRelation = await this.dbCharacterSkillRepository.findOne({
       where: {
-        characterName: character.name,
-        skillName: skill.name
+        characterName: p.character.name,
+        skillName: p.skill.name
       }
     })
     if (!existingRelation) {
       await this.dbCharacterSkillRepository.save({
-        character: character,
-        skill: skill,
-        characterName: character.name,
-        skillName: skill.name
+        character: p.character,
+        skill: p.skill,
+        characterName: p.character.name,
+        skillName: p.skill.name,
+        arcaneCost: p.arcaneCost === undefined ? p.skill.arcaneCost : p.arcaneCost,
+        limited: !!p.limitationMax,
+        limitationMax: p.limitationMax,
+        dailyUse: p.limitationMax,
+        dettesCost: p.dettesCost === undefined ? p.skill.dettesCost : p.dettesCost,
+        displayCategory: p.displayCategory === undefined ? p.skill.displayCategory : p.displayCategory
       })
     }
   }
@@ -291,6 +350,10 @@ export class InitDatabase {
   ) {
     await this.saveBloodlineProficiencyIfNotExisting(bloodlines.get('lumiere'), proficiencies.get('sagesse'))
     await this.saveBloodlineProficiencyIfNotExisting(bloodlines.get('lumiere'), proficiencies.get('charisme'))
+    await this.saveBloodlineProficiencyIfNotExisting(bloodlines.get('terreur'), proficiencies.get('crainte'))
+    await this.saveBloodlineProficiencyIfNotExisting(bloodlines.get('terreur'), proficiencies.get('courage'))
+    await this.saveBloodlineProficiencyIfNotExisting(bloodlines.get('vent'), proficiencies.get('rapidité'))
+    await this.saveBloodlineProficiencyIfNotExisting(bloodlines.get('vent'), proficiencies.get('adresse'))
   }
 
   private async saveClasseProficiencyIfNotExisting(classe: DBClasse, proficiency: DBProficiency) {
@@ -351,6 +414,7 @@ export class InitDatabase {
     await this.saveClasseApotheoseIfNotExisting(classes.get('champion'), apotheoses.get('apotheose'))
     await this.saveClasseApotheoseIfNotExisting(classes.get('champion'), apotheoses.get('apotheose améliorée'))
     await this.saveClasseApotheoseIfNotExisting(classes.get('champion'), apotheoses.get('apotheose finale'))
+    await this.saveClasseApotheoseIfNotExisting(classes.get('avatar'), apotheoses.get('apotheose arcanique'))
   }
 
   private async saveClasseApotheoseIfNotExisting(classe: DBClasse, apotheose: DBApotheose) {

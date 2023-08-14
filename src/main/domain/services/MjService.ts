@@ -33,13 +33,9 @@ export class MjService {
     return await this.characterProvider.findAllForSession()
   }
 
-  async newTurn(): Promise<void> {
-    const characters = await this.characterProvider.findAll()
-    for (const character of characters) {
-      if (character.apotheoseName && character.apotheoseState === ApotheoseState.COST_PAID) {
-        character.apotheoseState = ApotheoseState.COST_TO_PAY
-        await this.characterProvider.update(character)
-      }
-    }
+  async newTurn(): Promise<Character[]> {
+    return (await this.characterProvider.findAll()).filter(
+      (character) => character.apotheoseName && character.apotheoseState === ApotheoseState.COST_PAID
+    )
   }
 }
