@@ -40,12 +40,18 @@ export class MjController {
       })
     }
   }
+  @ApiOkResponse({})
+  @Put('resetRolls')
+  async resetRolls(): Promise<void> {
+    await this.rollService.deleteAll()
+  }
 
   @ApiOkResponse({})
   @Put('initDatabase')
   async runInitDatabase(): Promise<void> {
     await this.initDatabase.initDatabase()
   }
+
   @ApiOkResponse({ type: CharacterVM })
   @Get('characters')
   async getSessionCharacters(): Promise<CharacterVM[]> {

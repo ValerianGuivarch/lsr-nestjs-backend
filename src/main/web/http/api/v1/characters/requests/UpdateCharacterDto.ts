@@ -1,4 +1,5 @@
 import { ApotheoseState } from '../../../../../../domain/models/apotheoses/ApotheoseState'
+import { BattleState } from '../../../../../../domain/models/characters/BattleState'
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
 import { IsNumber, IsOptional, IsString } from 'class-validator'
 
@@ -58,6 +59,9 @@ export class UpdateCharacterDto {
   @ApiProperty({ default: '' })
   @IsString()
   readonly lux: string
+
+  @ApiPropertyOptional()
+  readonly battleState?: BattleState
 
   @ApiProperty({ default: '' })
   @IsString()

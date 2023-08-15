@@ -1,5 +1,4 @@
 import { BattleState } from './BattleState'
-import { Category } from './Category'
 import { Genre } from './Genre'
 import { ApotheoseState } from '../apotheoses/ApotheoseState'
 
@@ -24,7 +23,6 @@ export class Character {
   umbra: string
   secunda: string
   notes: string
-  category: Category
   apotheoseState: ApotheoseState
   apotheoseName?: string
   apotheoseImprovement?: string
@@ -76,7 +74,6 @@ export class Character {
     this.umbra = p.umbra
     this.secunda = p.secunda
     this.notes = p.notes
-    this.category = p.category
     this.genre = p.genre
     this.relance = p.relance < 0 ? 0 : p.relance
     this.playerName = p.playerName
@@ -106,7 +103,6 @@ export class Character {
     lux: string
     umbra: string
     secunda: string
-    category: Category
     genre?: Genre
     picture?: string
     pictureApotheose?: string
@@ -138,7 +134,6 @@ export class Character {
       umbra: p.umbra,
       secunda: p.secunda,
       notes: '',
-      category: p.category,
       apotheose: undefined,
       apotheoseState: ApotheoseState.NONE,
       apotheoseImprovementList: [],
@@ -191,7 +186,7 @@ export class Character {
       umbra: '',
       secunda: '',
       notes: '',
-      category: p.summoner.category,
+      battleState: p.summoner.battleState,
       apotheose: undefined,
       apotheoseState: ApotheoseState.NONE,
       apotheoseImprovementList: [],
@@ -199,7 +194,6 @@ export class Character {
       genre: p.summoner.genre,
       relance: 0,
       boosted: false,
-      battleState: p.summoner.battleState,
       picture: p.picture,
       pictureApotheose: '',
       background: '',

@@ -1,5 +1,4 @@
 import { ApotheoseState } from '../models/apotheoses/ApotheoseState'
-import { Category } from '../models/characters/Category'
 import { Character, CharacterToCreate } from '../models/characters/Character'
 import { ICharacterProvider } from '../providers/ICharacterProvider'
 import { ISessionProvider } from '../providers/ISessionProvider'
@@ -22,8 +21,8 @@ export class CharacterService {
     return this.characterProvider.findOneByName(name)
   }
 
-  async findAll(category?: Category): Promise<Character[]> {
-    return this.characterProvider.findAll(category)
+  async findAll(): Promise<Character[]> {
+    return this.characterProvider.findAll()
   }
 
   async findAllControllerBy(name: string): Promise<Character[]> {

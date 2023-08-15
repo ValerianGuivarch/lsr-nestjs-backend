@@ -1,6 +1,5 @@
 import { ApotheoseState } from '../../../domain/models/apotheoses/ApotheoseState'
 import { BattleState } from '../../../domain/models/characters/BattleState'
-import { Category } from '../../../domain/models/characters/Category'
 import { Genre } from '../../../domain/models/characters/Genre'
 import { DBBloodline } from '../bloodlines/DBBloodline'
 import { DBClasse } from '../classes/DBClasse'
@@ -137,13 +136,6 @@ export class DBCharacter {
 
   @Column({ type: 'varchar', default: ' ' })
   notes: string
-
-  @Column({
-    type: 'enum',
-    enum: Category,
-    default: Category.TEMPO
-  })
-  category: string
 
   @Column({
     type: 'enum',

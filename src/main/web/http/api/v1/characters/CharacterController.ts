@@ -3,7 +3,6 @@ import { CharacterVM } from './entities/CharacterVM'
 import { CreateCharacterDto } from './requests/CreateCharacterDto'
 import { UpdateCharacterDto } from './requests/UpdateCharacterDto'
 import { ApotheoseState } from '../../../../../domain/models/apotheoses/ApotheoseState'
-import { Category } from '../../../../../domain/models/characters/Category'
 import { Character } from '../../../../../domain/models/characters/Character'
 import { ApotheoseService } from '../../../../../domain/services/ApotheoseService'
 import { BloodlineService } from '../../../../../domain/services/BloodlineService'
@@ -12,7 +11,7 @@ import { ClasseService } from '../../../../../domain/services/ClasseService'
 import { ProficiencyService } from '../../../../../domain/services/ProficiencyService'
 import { SessionService } from '../../../../../domain/services/SessionService'
 import { SkillService } from '../../../../../domain/services/SkillService'
-import { Body, Controller, Get, Logger, Param, Post, Put, Query } from '@nestjs/common'
+import { Body, Controller, Get, Logger, Param, Post, Put } from '@nestjs/common'
 import { ApiOkResponse, ApiTags } from '@nestjs/swagger'
 
 @Controller('api/v1/characters')
@@ -31,8 +30,8 @@ export class CharacterController {
 
   @ApiOkResponse({ type: CharacterPreviewVM })
   @Get('')
-  async getAllCharacters(@Query('category') category?: Category): Promise<CharacterPreviewVM[]> {
-    const characters = await this.characterService.findAll(category)
+  async getAllCharacters(): Promise<CharacterPreviewVM[]> {
+    const characters = await this.characterService.findAll()
     return characters.map((character) =>
       CharacterPreviewVM.of({
         character: character
@@ -74,7 +73,6 @@ export class CharacterController {
       lux: createCharacterDto.lux,
       umbra: createCharacterDto.umbra,
       secunda: createCharacterDto.secunda,
-      category: createCharacterDto.category,
       genre: createCharacterDto.genre,
       picture: createCharacterDto.picture,
       pictureApotheose: createCharacterDto.pictureApotheose,

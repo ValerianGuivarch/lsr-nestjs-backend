@@ -1,4 +1,3 @@
-import { Category } from '../models/characters/Category'
 import { Character, CharacterToCreate } from '../models/characters/Character'
 import { CharacterTemplate } from '../models/invocation/CharacterTemplate'
 import { Observable } from 'rxjs'
@@ -17,8 +16,7 @@ export interface ICharacterProvider {
   findByName(name: string): Promise<Character | undefined>
   exist(name: string): Promise<boolean>
   findManyByName(names: string[]): Promise<Character[]>
-  findAll(category?: Category): Promise<Character[]>
+  findAll(): Promise<Character[]>
   findAllForSession(): Promise<Character[]>
   countAll(): Promise<number>
-  findAllByCategory(category: Category): Promise<string[]>
 }

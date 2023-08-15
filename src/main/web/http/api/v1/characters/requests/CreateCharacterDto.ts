@@ -1,4 +1,3 @@
-import { Category } from '../../../../../../domain/models/characters/Category'
 import { Genre } from '../../../../../../domain/models/characters/Genre'
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
 import { IsEnum, IsNumber, IsOptional, IsString } from 'class-validator'
@@ -59,13 +58,6 @@ export class CreateCharacterDto {
   @ApiProperty({ default: '' })
   @IsString()
   readonly secunda: string
-
-  @ApiProperty({
-    enum: Category,
-    enumName: 'Category'
-  })
-  @IsEnum(Category)
-  readonly category: Category
 
   @ApiProperty({
     enum: Genre,

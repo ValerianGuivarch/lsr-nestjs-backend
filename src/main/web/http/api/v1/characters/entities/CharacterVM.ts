@@ -96,9 +96,6 @@ export class CharacterVM {
   secunda: string
 
   @ApiProperty()
-  category: string
-
-  @ApiProperty()
   notes: string
 
   @ApiProperty()
@@ -181,7 +178,6 @@ export class CharacterVM {
     this.umbra = p.umbra
     this.secunda = p.secunda
     this.notes = p.notes
-    this.category = p.category
     this.battleState = p.battleState
     this.genre = p.genre
     this.relance = p.relance
@@ -259,7 +255,6 @@ export class CharacterVM {
       umbra: p.character.umbra,
       secunda: p.character.secunda,
       notes: p.character.notes,
-      category: p.character.category.toString(),
       battleState: p.character.battleState.toString(),
       apotheoseName: p.character.apotheoseName,
       apotheoseImprovement: p.character.apotheoseImprovement,

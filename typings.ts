@@ -327,7 +327,6 @@ export type Schema = {
       'umbra': string;
       'secunda': string;
       'notes': string;
-      'category': 'PJ' | 'PNJ_ALLY' | 'PNJ_ENNEMY' | 'TEMPO' | 'TEMPLATE';
       'battleState': 'NONE' | 'ALLIES' | 'ENNEMIES';
       'genre': 'HOMME' | 'FEMME';
       'relance': number;
@@ -389,7 +388,6 @@ export type Schema = {
       'db_character:umbra': string;
       'db_character:secunda': string;
       'db_character:notes': string;
-      'db_character:category': 'PJ' | 'PNJ_ALLY' | 'PNJ_ENNEMY' | 'TEMPO' | 'TEMPLATE';
       'db_character:battleState': 'NONE' | 'ALLIES' | 'ENNEMIES';
       'db_character:genre': 'HOMME' | 'FEMME';
       'db_character:relance': number;
@@ -460,7 +458,6 @@ export type Schema = {
       'db_character:umbra': string;
       'db_character:secunda': string;
       'db_character:notes': string;
-      'db_character:category': 'PJ' | 'PNJ_ALLY' | 'PNJ_ENNEMY' | 'TEMPO' | 'TEMPLATE';
       'db_character:battleState': 'NONE' | 'ALLIES' | 'ENNEMIES';
       'db_character:genre': 'HOMME' | 'FEMME';
       'db_character:relance': number;
@@ -551,7 +548,6 @@ export type Schema = {
       'db_character:umbra': string;
       'db_character:secunda': string;
       'db_character:notes': string;
-      'db_character:category': 'PJ' | 'PNJ_ALLY' | 'PNJ_ENNEMY' | 'TEMPO' | 'TEMPLATE';
       'db_character:battleState': 'NONE' | 'ALLIES' | 'ENNEMIES';
       'db_character:genre': 'HOMME' | 'FEMME';
       'db_character:relance': number;

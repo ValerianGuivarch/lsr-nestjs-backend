@@ -2,7 +2,6 @@ import { DBCharacter } from './DBCharacter'
 import { DBCharacterTemplate } from './DBCharacterTemplate'
 import { ApotheoseState } from '../../../domain/models/apotheoses/ApotheoseState'
 import { BattleState } from '../../../domain/models/characters/BattleState'
-import { Category } from '../../../domain/models/characters/Category'
 import { Character } from '../../../domain/models/characters/Character'
 import { Genre } from '../../../domain/models/characters/Genre'
 import { CharacterTemplate } from '../../../domain/models/invocation/CharacterTemplate'
@@ -109,7 +108,6 @@ export class DBCharacterProvider implements ICharacterProvider {
       umbra: doc.umbra,
       secunda: doc.secunda,
       notes: doc.notes,
-      category: Category[doc.category],
       genre: Genre[doc.genre],
       relance: doc.relance,
       playerName: doc.playerName,
@@ -170,7 +168,6 @@ export class DBCharacterProvider implements ICharacterProvider {
       umbra: doc.umbra,
       secunda: doc.secunda,
       notes: doc.notes,
-      category: doc.category.toString(),
       genre: doc.genre.toString(),
       relance: doc.relance,
       playerName: doc.playerName,
@@ -253,10 +250,8 @@ export class DBCharacterProvider implements ICharacterProvider {
     return Promise.all(characterPromises)
   }
 
-  async findAll(category?: Category): Promise<Character[]> {
-    const characters = category
-      ? await this.dbCharacterRepository.findBy({ category: category })
-      : await this.dbCharacterRepository.find()
+  async findAll(): Promise<Character[]> {
+    const characters = await this.dbCharacterRepository.find()
     const characterPromises = characters.map((character) => this.toCharacter(character))
     return Promise.all(characterPromises)
   }
@@ -276,11 +271,6 @@ export class DBCharacterProvider implements ICharacterProvider {
     characters.push(character)
     const characterPromises = characters.map((character) => this.toCharacter(character))
     return Promise.all(characterPromises)
-  }
-
-  async findAllByCategory(category: Category): Promise<string[]> {
-    const characters = await this.dbCharacterRepository.findBy({ category: category.toString() })
-    return characters.map((c) => c.name)
   }
 
   async update(characterToUpdate: Character): Promise<Character> {

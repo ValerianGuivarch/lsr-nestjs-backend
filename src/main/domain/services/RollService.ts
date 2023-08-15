@@ -1,7 +1,7 @@
 import { ProviderErrors } from '../../data/errors/ProviderErrors'
 import { Apotheose } from '../models/apotheoses/Apotheose'
 import { ApotheoseState } from '../models/apotheoses/ApotheoseState'
-import { Category } from '../models/characters/Category'
+import { BattleState } from '../models/characters/BattleState'
 import { Character } from '../models/characters/Character'
 import { Roll } from '../models/roll/Roll'
 import { SuccessCalculation } from '../models/roll/SuccessCalculation'
@@ -272,7 +272,7 @@ export class RollService {
       data: data,
       date: new Date(),
       secret: p.skill.secret || p.secret,
-      displayDices: p.character.category === Category.PJ || p.character.category === Category.PNJ_ALLY,
+      displayDices: p.character.battleState === BattleState.ALLIES,
       focus: usePf,
       power: usePp,
       proficiency: useProficiency,
@@ -303,12 +303,16 @@ export class RollService {
     return createdRoll
   }
 
-  async deleteAll(): Promise<boolean> {
-    return this.rollProvider.deleteAll()
+  async deleteAll(): Promise<void> {
+    await this.rollProvider.deleteAll()
+    const rolls = await this.getLast()
+    this.rollsChangeSubject.next(rolls)
   }
 
-  async delete(id: string): Promise<boolean> {
-    return this.rollProvider.delete(id)
+  async delete(id: string): Promise<void> {
+    await this.rollProvider.delete(id)
+    const rolls = await this.getLast()
+    this.rollsChangeSubject.next(rolls)
   }
 
   private static randomIntFromInterval(min, max) {
