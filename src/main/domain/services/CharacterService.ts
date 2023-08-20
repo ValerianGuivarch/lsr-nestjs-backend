@@ -60,4 +60,16 @@ export class CharacterService {
   getCharactersControlledObservable(name: string): Observable<Character[]> {
     return this.characterProvider.getCharactersControlledObservable(name)
   }
+
+  async deleteControlledCharacter(controllerName: string, characterToDeleteName: string): Promise<void> {
+    const characterToDelete = await this.characterProvider.findOneByName(characterToDeleteName)
+    if (characterToDelete.isInvocation) {
+      await this.characterProvider.delete(characterToDeleteName)
+    } else {
+      await this.characterProvider.update({
+        ...characterToDelete,
+        controlledBy: null
+      })
+    }
+  }
 }

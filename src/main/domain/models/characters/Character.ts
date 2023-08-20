@@ -18,6 +18,10 @@ export class Character {
   dettes: number
   arcanes: number
   arcanesMax: number
+  arcanePrimes: number
+  arcanePrimesMax: number
+  munitions: number
+  munitionsMax: number
   niveau: number
   lux: string
   umbra: string
@@ -44,6 +48,7 @@ export class Character {
   chairBonus: number
   espritBonus: number
   essenceBonus: number
+  customData?: string
 
   constructor(p: Character) {
     this.name = p.name
@@ -69,6 +74,10 @@ export class Character {
     this.dettes = p.dettes < 0 ? 0 : p.dettes
     this.arcanes = p.arcanes < 0 ? 0 : p.arcanes
     this.arcanesMax = p.arcanesMax
+    this.munitions = p.munitions < 0 ? 0 : p.munitions
+    this.munitionsMax = p.munitionsMax
+    this.arcanePrimes = p.arcanePrimes < 0 ? 0 : p.arcanePrimes
+    this.arcanePrimesMax = p.arcanePrimesMax
     this.niveau = p.niveau < 0 ? 0 : p.niveau
     this.lux = p.lux
     this.umbra = p.umbra
@@ -99,6 +108,8 @@ export class Character {
     pfMax: number
     ppMax: number
     arcanesMax: number
+    arcanePrimesMax: number
+    munitionsMax: number
     niveau: number
     lux: string
     umbra: string
@@ -110,6 +121,7 @@ export class Character {
     buttonColor?: string
     textColor?: string
     playerName?: string
+    customData?: string
   }): CharacterToCreate {
     const defaults = {
       chair: p.chair,
@@ -129,6 +141,10 @@ export class Character {
       dettes: Math.floor(Math.random() * 11),
       arcanes: p.arcanesMax,
       arcanesMax: p.arcanesMax,
+      arcanePrimes: p.arcanePrimesMax,
+      arcanePrimesMax: p.arcanePrimesMax,
+      munitions: p.munitionsMax,
+      munitionsMax: p.munitionsMax,
       niveau: p.niveau,
       lux: p.lux,
       umbra: p.umbra,
@@ -151,7 +167,8 @@ export class Character {
       bloodlineName: p.bloodlineName,
       restImproved: false,
       isInvocation: false,
-      summoner: undefined
+      summoner: undefined,
+      customData: p.customData
     }
     return Object.assign(defaults, p)
   }
@@ -164,6 +181,7 @@ export class Character {
     essence: number
     pvMax: number
     picture?: string
+    customData?: string
   }): CharacterToCreate {
     const defaults = {
       name: p.name,
@@ -181,6 +199,10 @@ export class Character {
       dettes: 0,
       arcanes: 0,
       arcanesMax: 0,
+      arcanePrimes: 0,
+      arcanePrimesMax: 0,
+      munitions: 0,
+      munitionsMax: 0,
       niveau: p.summoner.niveau,
       lux: '',
       umbra: '',
@@ -203,7 +225,8 @@ export class Character {
       bloodlineName: p.summoner.bloodlineName,
       restImproved: false,
       isInvocation: true,
-      controlledBy: p.summoner.name
+      controlledBy: p.summoner.name,
+      customData: p.customData
     }
 
     return Object.assign(defaults)

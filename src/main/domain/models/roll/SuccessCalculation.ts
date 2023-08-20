@@ -4,5 +4,7 @@ export enum SuccessCalculation {
   SIMPLE_PLUS_1 = 'SIMPLE_PLUS_1',
   DIVISE = 'DIVISE',
   DIVISE_PLUS_1 = 'DIVISE_PLUS_1',
+  DOUBLE = 'DOUBLE',
+  DOUBLE_PLUS_1 = 'DOUBLE_PLUS_1',
   CUSTOM = 'CUSTOM'
 }

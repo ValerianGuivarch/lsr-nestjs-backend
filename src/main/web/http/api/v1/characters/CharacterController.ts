@@ -2,6 +2,7 @@ import { CharacterPreviewVM } from './entities/CharacterPreviewVM'
 import { CharacterVM } from './entities/CharacterVM'
 import { CreateCharacterDto } from './requests/CreateCharacterDto'
 import { UpdateCharacterDto } from './requests/UpdateCharacterDto'
+import { UpdateMunitionDto } from './requests/UpdateMunitionDto'
 import { ApotheoseState } from '../../../../../domain/models/apotheoses/ApotheoseState'
 import { Character } from '../../../../../domain/models/characters/Character'
 import { ApotheoseService } from '../../../../../domain/services/ApotheoseService'
@@ -11,7 +12,7 @@ import { ClasseService } from '../../../../../domain/services/ClasseService'
 import { ProficiencyService } from '../../../../../domain/services/ProficiencyService'
 import { SessionService } from '../../../../../domain/services/SessionService'
 import { SkillService } from '../../../../../domain/services/SkillService'
-import { Body, Controller, Get, Logger, Param, Post, Put } from '@nestjs/common'
+import { Body, Controller, Delete, Get, Logger, Param, Post, Put } from '@nestjs/common'
 import { ApiOkResponse, ApiTags } from '@nestjs/swagger'
 
 @Controller('api/v1/characters')
@@ -53,6 +54,31 @@ export class CharacterController {
     })
   }
 
+  @ApiOkResponse({})
+  @Put(':name/munitions')
+  async munitions(@Param('name') name: string, @Body() updateMunitionDto: UpdateMunitionDto): Promise<CharacterVM> {
+    await this.skillService.updateMunitions(name, updateMunitionDto.skillName, updateMunitionDto.limitationMax)
+    const character = await this.characterService.findOneByName(name)
+    const classe = await this.classeService.findOneByName(character.classeName)
+    const bloodline = await this.bloodlineService.findOneByName(character.bloodlineName)
+    const skillsList = await this.skillService.findSkillsByCharacter(character)
+    const proficienciesList = await this.proficiencyService.findProficienciesByCharacter(character)
+    const apotheosesList = await this.apotheoseService.findApotheosesByCharacter(character)
+    const rest: {
+      baseRest: number
+      longRest: number
+    } = await this.sessionService.getRestForCharacter(character)
+    return CharacterVM.of({
+      character: character,
+      classe: classe,
+      bloodline: bloodline,
+      skills: skillsList,
+      proficiencies: proficienciesList,
+      rest: rest,
+      apotheoses: apotheosesList
+    })
+  }
+
   @ApiOkResponse({ type: CharacterVM })
   @Post('')
   async createCharacter(@Body() createCharacterDto: CreateCharacterDto): Promise<CharacterVM> {
@@ -69,6 +95,8 @@ export class CharacterController {
       pfMax: createCharacterDto.pfMax,
       ppMax: createCharacterDto.ppMax,
       arcanesMax: createCharacterDto.arcanesMax,
+      arcanePrimesMax: createCharacterDto.arcanePrimesMax,
+      munitionsMax: createCharacterDto.munitionsMax,
       niveau: createCharacterDto.niveau,
       lux: createCharacterDto.lux,
       umbra: createCharacterDto.umbra,
@@ -183,5 +211,14 @@ export class CharacterController {
         })
       })
     )
+  }
+
+  @ApiOkResponse()
+  @Delete(':controllerName/characters-controller/:characterToDeleteName')
+  async deleteInvocation(
+    @Param('controllerName') controllerName: string,
+    @Param('characterToDeleteName') characterToDeleteName: string
+  ): Promise<void> {
+    await this.characterService.deleteControlledCharacter(controllerName, characterToDeleteName)
   }
 }

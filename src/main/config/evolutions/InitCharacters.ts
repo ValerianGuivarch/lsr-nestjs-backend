@@ -122,7 +122,8 @@ export class InitCharacters {
       genre: Genre.HOMME,
       picture: 'https://media.discordapp.net/attachments/689106767031828580/1003776173605658774/unknown.png',
       pictureApotheose: '',
-      background: '',
+      background:
+        'https://media.discordapp.net/attachments/734153794681700394/1141000189071601695/HD-wallpaper-field-of-honour-fantasy-background-abstract-sword-blue-light.png?width=1248&height=936',
       playerName: ''
     })
 
@@ -141,7 +142,8 @@ export class InitCharacters {
       genre: Genre.FEMME,
       picture: 'https://media.discordapp.net/attachments/689106767031828580/1003780008134844497/unknown.png',
       pictureApotheose: '',
-      background: '',
+      background:
+        'https://media.discordapp.net/attachments/734153794681700394/1141000189071601695/HD-wallpaper-field-of-honour-fantasy-background-abstract-sword-blue-light.png?width=1248&height=936',
       playerName: ''
     })
 
@@ -160,7 +162,8 @@ export class InitCharacters {
       genre: Genre.HOMME,
       picture: 'https://media.discordapp.net/attachments/689106767031828580/1003956879732519054/unknown.png',
       pictureApotheose: '',
-      background: '',
+      background:
+        'https://media.discordapp.net/attachments/734153794681700394/1141000189071601695/HD-wallpaper-field-of-honour-fantasy-background-abstract-sword-blue-light.png?width=1248&height=936',
       playerName: ''
     })
 
@@ -181,7 +184,8 @@ export class InitCharacters {
         'https://images-ext-2.discordapp.net/external/LCiRm0eJMZ-AAszTuy4sfk5UkXsOG1c7HyV5iGxTmyI/https/i.pinimg.com/originals/0b/8d/cd/0b8dcd8e21b986bbb1f93a739af895a8.jpg?width=954&height=1055',
       pictureApotheose:
         'https://images-ext-2.discordapp.net/external/LCiRm0eJMZ-AAszTuy4sfk5UkXsOG1c7HyV5iGxTmyI/https/i.pinimg.com/originals/0b/8d/cd/0b8dcd8e21b986bbb1f93a739af895a8.jpg?width=954&height=1055',
-      background: '',
+      background:
+        'https://media.discordapp.net/attachments/734153794681700394/1141000189071601695/HD-wallpaper-field-of-honour-fantasy-background-abstract-sword-blue-light.png?width=1248&height=936',
       playerName: ''
     })
 
@@ -200,7 +204,8 @@ export class InitCharacters {
       genre: Genre.HOMME,
       picture: 'https://media.discordapp.net/attachments/689106767031828580/1003959897538445342/unknown.png',
       pictureApotheose: 'https://media.discordapp.net/attachments/689106767031828580/1003959897538445342/unknown.png',
-      background: '',
+      background:
+        'https://media.discordapp.net/attachments/734153794681700394/1141000189071601695/HD-wallpaper-field-of-honour-fantasy-background-abstract-sword-blue-light.png?width=1248&height=936',
       playerName: ''
     })
 
@@ -219,7 +224,8 @@ export class InitCharacters {
       genre: Genre.FEMME,
       picture: 'https://media.discordapp.net/attachments/689106767031828580/1003963674282692628/unknown.png',
       pictureApotheose: 'https://media.discordapp.net/attachments/689106767031828580/1003963674282692628/unknown.png',
-      background: '',
+      background:
+        'https://media.discordapp.net/attachments/734153794681700394/1141000189071601695/HD-wallpaper-field-of-honour-fantasy-background-abstract-sword-blue-light.png?width=1248&height=936',
       playerName: ''
     })
 
@@ -238,7 +244,8 @@ export class InitCharacters {
       genre: Genre.FEMME,
       picture: 'https://media.discordapp.net/attachments/689106767031828580/1003970181661470730/unknown.png',
       pictureApotheose: '',
-      background: '',
+      background:
+        'https://media.discordapp.net/attachments/734153794681700394/1141000189071601695/HD-wallpaper-field-of-honour-fantasy-background-abstract-sword-blue-light.png?width=1248&height=936',
       playerName: ''
     })
 
@@ -257,7 +264,8 @@ export class InitCharacters {
       genre: Genre.HOMME,
       picture: 'https://media.discordapp.net/attachments/689106767031828580/1003775078623879251/unknown.png',
       pictureApotheose: '',
-      background: '',
+      background:
+        'https://media.discordapp.net/attachments/734153794681700394/1141000189071601695/HD-wallpaper-field-of-honour-fantasy-background-abstract-sword-blue-light.png?width=1248&height=936',
       playerName: ''
     })
 
@@ -375,7 +383,8 @@ export class InitCharacters {
       genre: Genre.HOMME,
       picture: 'https://media.discordapp.net/attachments/689106767031828580/1003775078623879251/unknown.png',
       pictureApotheose: '',
-      background: '',
+      background:
+        'https://media.discordapp.net/attachments/734153794681700394/1141000189071601695/HD-wallpaper-field-of-honour-fantasy-background-abstract-sword-blue-light.png?width=1248&height=936',
       playerName: ''
     })
 
@@ -394,7 +403,8 @@ export class InitCharacters {
       genre: Genre.HOMME,
       picture: '',
       pictureApotheose: '',
-      background: '',
+      background:
+        'https://media.discordapp.net/attachments/734153794681700394/1141000189071601695/HD-wallpaper-field-of-honour-fantasy-background-abstract-sword-blue-light.png?width=1248&height=936',
       playerName: ''
     })
 
@@ -452,7 +462,8 @@ export class InitCharacters {
       genre: Genre.HOMME,
       picture: '',
       pictureApotheose: '',
-      background: '',
+      background:
+        'https://media.discordapp.net/attachments/734153794681700394/1141000189071601695/HD-wallpaper-field-of-honour-fantasy-background-abstract-sword-blue-light.png?width=1248&height=936',
       playerName: ''
     })
 
@@ -471,7 +482,8 @@ export class InitCharacters {
       genre: Genre.HOMME,
       picture: 'https://media.discordapp.net/attachments/1006612551217455275/1006619442194677890/07_-_Lucien__co.png',
       pictureApotheose: '',
-      background: '',
+      background:
+        'https://media.discordapp.net/attachments/734153794681700394/1141000189071601695/HD-wallpaper-field-of-honour-fantasy-background-abstract-sword-blue-light.png?width=1248&height=936',
       playerName: ''
     })
 
@@ -529,7 +541,8 @@ export class InitCharacters {
       genre: Genre.HOMME,
       picture: '',
       pictureApotheose: 'https://media.discordapp.net/attachments/1008780709214830632/1054347849778868224/image.png',
-      background: '',
+      background:
+        'https://media.discordapp.net/attachments/734153794681700394/1141000189071601695/HD-wallpaper-field-of-honour-fantasy-background-abstract-sword-blue-light.png?width=1248&height=936',
       playerName: 'guilhem'
     })
 
@@ -548,7 +561,8 @@ export class InitCharacters {
       genre: Genre.HOMME,
       picture: 'https://media.discordapp.net/attachments/689034158307409933/1007379191634874468/unknown.png',
       pictureApotheose: '',
-      background: '',
+      background:
+        'https://media.discordapp.net/attachments/734153794681700394/1141000189071601695/HD-wallpaper-field-of-honour-fantasy-background-abstract-sword-blue-light.png?width=1248&height=936',
       playerName: ''
     })
 
@@ -568,7 +582,8 @@ export class InitCharacters {
       picture:
         'https://media.discordapp.net/attachments/689034158307409933/1007380574073270373/unknown.png?width=1080&height=1056',
       pictureApotheose: '',
-      background: '',
+      background:
+        'https://media.discordapp.net/attachments/734153794681700394/1141000189071601695/HD-wallpaper-field-of-honour-fantasy-background-abstract-sword-blue-light.png?width=1248&height=936',
       playerName: ''
     })
 
@@ -684,7 +699,8 @@ export class InitCharacters {
       genre: Genre.HOMME,
       picture: 'https://media.discordapp.net/attachments/689034158307409933/1009196453454942248/unknown.png',
       pictureApotheose: 'https://media.discordapp.net/attachments/689034158307409933/1009206181459402772/unknown.png',
-      background: '',
+      background:
+        'https://media.discordapp.net/attachments/734153794681700394/1141000189071601695/HD-wallpaper-field-of-honour-fantasy-background-abstract-sword-blue-light.png?width=1248&height=936',
       playerName: ''
     })
 
@@ -704,7 +720,8 @@ export class InitCharacters {
       picture:
         'https://media.discordapp.net/attachments/689034158307409933/1024386655316095076/unknown.png?width=1534&height=1055',
       pictureApotheose: '',
-      background: '',
+      background:
+        'https://media.discordapp.net/attachments/734153794681700394/1141000189071601695/HD-wallpaper-field-of-honour-fantasy-background-abstract-sword-blue-light.png?width=1248&height=936',
       playerName: 'guilhem'
     })
 
@@ -801,7 +818,8 @@ export class InitCharacters {
       genre: Genre.HOMME,
       picture: 'https://media.discordapp.net/attachments/1016035628783243302/1016708028646576169/unknown.png',
       pictureApotheose: '',
-      background: '',
+      background:
+        'https://media.discordapp.net/attachments/734153794681700394/1141000189071601695/HD-wallpaper-field-of-honour-fantasy-background-abstract-sword-blue-light.png?width=1248&height=936',
       playerName: ''
     })
 
@@ -820,7 +838,8 @@ export class InitCharacters {
       genre: Genre.HOMME,
       picture: 'https://media.discordapp.net/attachments/1016035628783243302/1016717576681824326/unknown.png',
       pictureApotheose: '',
-      background: '',
+      background:
+        'https://media.discordapp.net/attachments/734153794681700394/1141000189071601695/HD-wallpaper-field-of-honour-fantasy-background-abstract-sword-blue-light.png?width=1248&height=936',
       playerName: ''
     })
 
@@ -839,7 +858,8 @@ export class InitCharacters {
       genre: Genre.HOMME,
       picture: 'https://media.discordapp.net/attachments/1016035628783243302/1016718948793864282/unknown.png',
       pictureApotheose: '',
-      background: '',
+      background:
+        'https://media.discordapp.net/attachments/734153794681700394/1141000189071601695/HD-wallpaper-field-of-honour-fantasy-background-abstract-sword-blue-light.png?width=1248&height=936',
       playerName: ''
     })
 
@@ -858,7 +878,8 @@ export class InitCharacters {
       genre: Genre.HOMME,
       picture: 'https://media.discordapp.net/attachments/1016035628783243302/1016736531303628850/unknown.png',
       pictureApotheose: '',
-      background: '',
+      background:
+        'https://media.discordapp.net/attachments/734153794681700394/1141000189071601695/HD-wallpaper-field-of-honour-fantasy-background-abstract-sword-blue-light.png?width=1248&height=936',
       playerName: ''
     })
 
@@ -877,7 +898,8 @@ export class InitCharacters {
       genre: Genre.HOMME,
       picture: 'https://media.discordapp.net/attachments/1016035628783243302/1017321603543085107/unknown.png',
       pictureApotheose: '',
-      background: '',
+      background:
+        'https://media.discordapp.net/attachments/734153794681700394/1141000189071601695/HD-wallpaper-field-of-honour-fantasy-background-abstract-sword-blue-light.png?width=1248&height=936',
       playerName: ''
     })
 
@@ -889,6 +911,7 @@ export class InitCharacters {
       esprit: 4,
       essence: 6,
       niveau: 9,
+      munitionsMax: 10,
       lux: '',
       umbra: '',
       secunda: '',
@@ -918,7 +941,8 @@ export class InitCharacters {
         'https://media.discordapp.net/attachments/689034158307409933/1021873210649751622/unknown.png?width=1002&height=1055',
       pictureApotheose:
         'https://media.discordapp.net/attachments/689034158307409933/1021873210649751622/unknown.png?width=1002&height=1055',
-      background: '',
+      background:
+        'https://media.discordapp.net/attachments/734153794681700394/1141000189071601695/HD-wallpaper-field-of-honour-fantasy-background-abstract-sword-blue-light.png?width=1248&height=936',
       playerName: ''
     })
 
@@ -939,7 +963,8 @@ export class InitCharacters {
         'https://media.discordapp.net/attachments/689034158307409933/1021872552076923010/unknown.png?width=858&height=1056',
       pictureApotheose:
         'https://media.discordapp.net/attachments/689034158307409933/1021872552076923010/unknown.png?width=858&height=1056',
-      background: '',
+      background:
+        'https://media.discordapp.net/attachments/734153794681700394/1141000189071601695/HD-wallpaper-field-of-honour-fantasy-background-abstract-sword-blue-light.png?width=1248&height=936',
       playerName: ''
     })
 
@@ -977,7 +1002,8 @@ export class InitCharacters {
       genre: Genre.FEMME,
       picture: 'https://media.discordapp.net/attachments/689034158307409933/1004120376453894254/unknown.png',
       pictureApotheose: 'https://media.discordapp.net/attachments/689034158307409933/1004120376453894254/unknown.png',
-      background: '',
+      background:
+        'https://media.discordapp.net/attachments/734153794681700394/1141000189071601695/HD-wallpaper-field-of-honour-fantasy-background-abstract-sword-blue-light.png?width=1248&height=936',
       playerName: ''
     })
 
@@ -996,7 +1022,8 @@ export class InitCharacters {
       genre: Genre.HOMME,
       picture: '',
       pictureApotheose: '',
-      background: '',
+      background:
+        'https://media.discordapp.net/attachments/734153794681700394/1141000189071601695/HD-wallpaper-field-of-honour-fantasy-background-abstract-sword-blue-light.png?width=1248&height=936',
       playerName: ''
     })
 
@@ -1054,7 +1081,8 @@ export class InitCharacters {
       genre: Genre.HOMME,
       picture: '',
       pictureApotheose: '',
-      background: '',
+      background:
+        'https://media.discordapp.net/attachments/734153794681700394/1141000189071601695/HD-wallpaper-field-of-honour-fantasy-background-abstract-sword-blue-light.png?width=1248&height=936',
       playerName: 'guilhem'
     })
 
@@ -1073,7 +1101,8 @@ export class InitCharacters {
       genre: Genre.HOMME,
       picture: 'https://media.discordapp.net/attachments/1016035628783243302/1062448523506876486/image.png',
       pictureApotheose: 'https://media.discordapp.net/attachments/1016035628783243302/1062448523506876486/image.png',
-      background: '',
+      background:
+        'https://media.discordapp.net/attachments/734153794681700394/1141000189071601695/HD-wallpaper-field-of-honour-fantasy-background-abstract-sword-blue-light.png?width=1248&height=936',
       playerName: 'guilhem'
     })
 
@@ -1092,7 +1121,8 @@ export class InitCharacters {
       genre: Genre.HOMME,
       picture: 'https://media.discordapp.net/attachments/1016035628783243302/1062449258948726874/image.png',
       pictureApotheose: 'https://media.discordapp.net/attachments/1016035628783243302/1062449258948726874/image.png',
-      background: '',
+      background:
+        'https://media.discordapp.net/attachments/734153794681700394/1141000189071601695/HD-wallpaper-field-of-honour-fantasy-background-abstract-sword-blue-light.png?width=1248&height=936',
       playerName: 'florent'
     })
 
@@ -1111,7 +1141,8 @@ export class InitCharacters {
       genre: Genre.HOMME,
       picture: 'https://media.discordapp.net/attachments/689034158307409933/1062465459124977824/image.png',
       pictureApotheose: 'https://media.discordapp.net/attachments/689034158307409933/1062465459124977824/image.png',
-      background: '',
+      background:
+        'https://media.discordapp.net/attachments/734153794681700394/1141000189071601695/HD-wallpaper-field-of-honour-fantasy-background-abstract-sword-blue-light.png?width=1248&height=936',
       playerName: 'nico'
     })
 
@@ -1150,7 +1181,8 @@ export class InitCharacters {
       genre: Genre.HOMME,
       picture: 'https://media.discordapp.net/attachments/1016035628783243302/1062450761658802186/image.png',
       pictureApotheose: 'https://media.discordapp.net/attachments/1016035628783243302/1062450761658802186/image.png',
-      background: '',
+      background:
+        'https://media.discordapp.net/attachments/734153794681700394/1141000189071601695/HD-wallpaper-field-of-honour-fantasy-background-abstract-sword-blue-light.png?width=1248&height=936',
       playerName: ''
     })
 
@@ -1169,7 +1201,8 @@ export class InitCharacters {
       genre: Genre.HOMME,
       picture: 'https://media.discordapp.net/attachments/1016035628783243302/1062450762074030150/image.png',
       pictureApotheose: '',
-      background: '',
+      background:
+        'https://media.discordapp.net/attachments/734153794681700394/1141000189071601695/HD-wallpaper-field-of-honour-fantasy-background-abstract-sword-blue-light.png?width=1248&height=936',
       playerName: ''
     })
 
@@ -1188,7 +1221,8 @@ export class InitCharacters {
       genre: Genre.HOMME,
       picture: 'https://media.discordapp.net/attachments/1016035628783243302/1062450875471241217/image.png',
       pictureApotheose: '',
-      background: '',
+      background:
+        'https://media.discordapp.net/attachments/734153794681700394/1141000189071601695/HD-wallpaper-field-of-honour-fantasy-background-abstract-sword-blue-light.png?width=1248&height=936',
       playerName: ''
     })
 
@@ -1207,7 +1241,8 @@ export class InitCharacters {
       genre: Genre.HOMME,
       picture: '',
       pictureApotheose: '',
-      background: '',
+      background:
+        'https://media.discordapp.net/attachments/734153794681700394/1141000189071601695/HD-wallpaper-field-of-honour-fantasy-background-abstract-sword-blue-light.png?width=1248&height=936',
       playerName: ''
     })
 
@@ -1227,7 +1262,8 @@ export class InitCharacters {
       picture:
         'https://media.discordapp.net/attachments/689034158307409933/1065001676752298014/image.png?width=778&height=920',
       pictureApotheose: '',
-      background: '',
+      background:
+        'https://media.discordapp.net/attachments/734153794681700394/1141000189071601695/HD-wallpaper-field-of-honour-fantasy-background-abstract-sword-blue-light.png?width=1248&height=936',
       playerName: ''
     })
 
@@ -1246,7 +1282,8 @@ export class InitCharacters {
       genre: Genre.HOMME,
       picture: 'https://media.discordapp.net/attachments/689034158307409933/1067577204889890846/Diablo_adulte.png',
       pictureApotheose: '',
-      background: '',
+      background:
+        'https://media.discordapp.net/attachments/734153794681700394/1141000189071601695/HD-wallpaper-field-of-honour-fantasy-background-abstract-sword-blue-light.png?width=1248&height=936',
       playerName: 'guilhem'
     })
 
@@ -1266,7 +1303,8 @@ export class InitCharacters {
       picture:
         'https://media.discordapp.net/attachments/689034158307409933/1067551979506770011/image.png?width=812&height=1054',
       pictureApotheose: '',
-      background: '',
+      background:
+        'https://media.discordapp.net/attachments/734153794681700394/1141000189071601695/HD-wallpaper-field-of-honour-fantasy-background-abstract-sword-blue-light.png?width=1248&height=936',
       playerName: 'guilhem'
     })
 
@@ -1285,7 +1323,8 @@ export class InitCharacters {
       genre: Genre.HOMME,
       picture: 'https://media.discordapp.net/attachments/689034158307409933/1067558006520283216/image.png',
       pictureApotheose: '',
-      background: '',
+      background:
+        'https://media.discordapp.net/attachments/734153794681700394/1141000189071601695/HD-wallpaper-field-of-honour-fantasy-background-abstract-sword-blue-light.png?width=1248&height=936',
       playerName: 'guilhem'
     })
 
@@ -1305,7 +1344,8 @@ export class InitCharacters {
       picture:
         'https://media.discordapp.net/attachments/689034158307409933/1067546049306177687/image.png?width=848&height=1054',
       pictureApotheose: '',
-      background: '',
+      background:
+        'https://media.discordapp.net/attachments/734153794681700394/1141000189071601695/HD-wallpaper-field-of-honour-fantasy-background-abstract-sword-blue-light.png?width=1248&height=936',
       playerName: 'guilhem'
     })
 
@@ -1324,7 +1364,8 @@ export class InitCharacters {
       genre: Genre.FEMME,
       picture: 'https://media.discordapp.net/attachments/689034158307409933/1067535787870126120/image.png',
       pictureApotheose: '',
-      background: '',
+      background:
+        'https://media.discordapp.net/attachments/734153794681700394/1141000189071601695/HD-wallpaper-field-of-honour-fantasy-background-abstract-sword-blue-light.png?width=1248&height=936',
       playerName: 'guilhem'
     })
 
@@ -1343,7 +1384,8 @@ export class InitCharacters {
       genre: Genre.HOMME,
       picture: 'https://media.discordapp.net/attachments/689034158307409933/1067527301039919204/Sun_Wukong_Akira.png',
       pictureApotheose: '',
-      background: '',
+      background:
+        'https://media.discordapp.net/attachments/734153794681700394/1141000189071601695/HD-wallpaper-field-of-honour-fantasy-background-abstract-sword-blue-light.png?width=1248&height=936',
       playerName: 'guilhem'
     })
 
@@ -1362,7 +1404,8 @@ export class InitCharacters {
       genre: Genre.FEMME,
       picture: 'https://media.discordapp.net/attachments/689044605311647799/1001477316070866994/unknown.png',
       pictureApotheose: 'https://media.discordapp.net/attachments/689044605311647799/1003654562365845564/unknown.png',
-      background: '',
+      background:
+        'https://media.discordapp.net/attachments/734153794681700394/1141000189071601695/HD-wallpaper-field-of-honour-fantasy-background-abstract-sword-blue-light.png?width=1248&height=936',
       playerName: ''
     })
 
@@ -1382,7 +1425,8 @@ export class InitCharacters {
       picture: 'https://media.discordapp.net/attachments/959399143485354004/959486612390154361/tara.jpg',
       pictureApotheose:
         'https://media.discordapp.net/attachments/1016035628783243302/1072525104245907506/hermes_by_ninjart1st_d98161p-fullview.png',
-      background: '',
+      background:
+        'https://media.discordapp.net/attachments/734153794681700394/1141000189071601695/HD-wallpaper-field-of-honour-fantasy-background-abstract-sword-blue-light.png?width=1248&height=936',
       playerName: ''
     })
 
@@ -1401,7 +1445,8 @@ export class InitCharacters {
       genre: Genre.FEMME,
       picture: 'https://media.discordapp.net/attachments/689044605311647799/1001476595934056588/unknown.png',
       pictureApotheose: 'https://media.discordapp.net/attachments/1008780709214830632/1008783630912475268/unknown.png',
-      background: '',
+      background:
+        'https://media.discordapp.net/attachments/734153794681700394/1141000189071601695/HD-wallpaper-field-of-honour-fantasy-background-abstract-sword-blue-light.png?width=1248&height=936',
       playerName: ''
     })
 
@@ -1420,7 +1465,8 @@ export class InitCharacters {
       genre: Genre.HOMME,
       picture: 'https://media.discordapp.net/attachments/959399143485354004/960187732720746516/mathieu.png',
       pictureApotheose: 'https://media.discordapp.net/attachments/1008780709214830632/1009121826049368114/unknown.png',
-      background: '',
+      background:
+        'https://media.discordapp.net/attachments/734153794681700394/1141000189071601695/HD-wallpaper-field-of-honour-fantasy-background-abstract-sword-blue-light.png?width=1248&height=936',
       playerName: ''
     })
 
@@ -1440,7 +1486,8 @@ export class InitCharacters {
       picture:
         'https://media.discordapp.net/attachments/689034158307409933/1095447733239828590/image.png?width=940&height=848',
       pictureApotheose: '',
-      background: '',
+      background:
+        'https://media.discordapp.net/attachments/734153794681700394/1141000189071601695/HD-wallpaper-field-of-honour-fantasy-background-abstract-sword-blue-light.png?width=1248&height=936',
       playerName: 'guilhem'
     })
 
@@ -1459,7 +1506,8 @@ export class InitCharacters {
       genre: Genre.HOMME,
       picture: 'https://media.discordapp.net/attachments/689034158307409933/1080962345196605581/image.png',
       pictureApotheose: '',
-      background: '',
+      background:
+        'https://media.discordapp.net/attachments/734153794681700394/1141000189071601695/HD-wallpaper-field-of-honour-fantasy-background-abstract-sword-blue-light.png?width=1248&height=936',
       playerName: 'guilhem'
     })
 
@@ -1478,7 +1526,8 @@ export class InitCharacters {
       genre: Genre.HOMME,
       picture: '',
       pictureApotheose: '',
-      background: '',
+      background:
+        'https://media.discordapp.net/attachments/734153794681700394/1141000189071601695/HD-wallpaper-field-of-honour-fantasy-background-abstract-sword-blue-light.png?width=1248&height=936',
       playerName: ''
     })
 
@@ -1498,7 +1547,8 @@ export class InitCharacters {
       picture:
         'https://media.discordapp.net/attachments/689034158307409933/1082751194277085245/image.png?width=696&height=1054',
       pictureApotheose: '',
-      background: '',
+      background:
+        'https://media.discordapp.net/attachments/734153794681700394/1141000189071601695/HD-wallpaper-field-of-honour-fantasy-background-abstract-sword-blue-light.png?width=1248&height=936',
       playerName: ''
     })
 
@@ -1518,7 +1568,8 @@ export class InitCharacters {
       picture:
         'https://media.discordapp.net/attachments/689034158307409933/1089976547164835870/image.png?width=1072&height=1054',
       pictureApotheose: '',
-      background: '',
+      background:
+        'https://media.discordapp.net/attachments/734153794681700394/1141000189071601695/HD-wallpaper-field-of-honour-fantasy-background-abstract-sword-blue-light.png?width=1248&height=936',
       playerName: 'florent'
     })
 
@@ -1618,7 +1669,8 @@ export class InitCharacters {
       genre: Genre.HOMME,
       picture: '',
       pictureApotheose: '',
-      background: '',
+      background:
+        'https://media.discordapp.net/attachments/734153794681700394/1141000189071601695/HD-wallpaper-field-of-honour-fantasy-background-abstract-sword-blue-light.png?width=1248&height=936',
       playerName: ''
     })
 
@@ -1638,7 +1690,8 @@ export class InitCharacters {
       picture:
         'https://media.discordapp.net/attachments/689034158307409933/1105590402532261888/image.png?width=702&height=1054',
       pictureApotheose: '',
-      background: '',
+      background:
+        'https://media.discordapp.net/attachments/734153794681700394/1141000189071601695/HD-wallpaper-field-of-honour-fantasy-background-abstract-sword-blue-light.png?width=1248&height=936',
       playerName: ''
     })
 
@@ -1657,7 +1710,8 @@ export class InitCharacters {
       genre: Genre.HOMME,
       picture: '',
       pictureApotheose: '',
-      background: '',
+      background:
+        'https://media.discordapp.net/attachments/734153794681700394/1141000189071601695/HD-wallpaper-field-of-honour-fantasy-background-abstract-sword-blue-light.png?width=1248&height=936',
       playerName: 'eric'
     })
 
@@ -1677,7 +1731,8 @@ export class InitCharacters {
       picture:
         'https://media.discordapp.net/attachments/689034158307409933/1106950196090380369/image.png?width=808&height=748',
       pictureApotheose: '',
-      background: '',
+      background:
+        'https://media.discordapp.net/attachments/734153794681700394/1141000189071601695/HD-wallpaper-field-of-honour-fantasy-background-abstract-sword-blue-light.png?width=1248&height=936',
       playerName: ''
     })
 
@@ -1696,7 +1751,8 @@ export class InitCharacters {
       genre: Genre.HOMME,
       picture: '',
       pictureApotheose: '',
-      background: '',
+      background:
+        'https://media.discordapp.net/attachments/734153794681700394/1141000189071601695/HD-wallpaper-field-of-honour-fantasy-background-abstract-sword-blue-light.png?width=1248&height=936',
       playerName: ''
     })
 
@@ -1715,7 +1771,8 @@ export class InitCharacters {
       genre: Genre.HOMME,
       picture: '',
       pictureApotheose: '',
-      background: '',
+      background:
+        'https://media.discordapp.net/attachments/734153794681700394/1141000189071601695/HD-wallpaper-field-of-honour-fantasy-background-abstract-sword-blue-light.png?width=1248&height=936',
       playerName: ''
     })
 
@@ -1734,7 +1791,8 @@ export class InitCharacters {
       genre: Genre.HOMME,
       picture: '',
       pictureApotheose: '',
-      background: '',
+      background:
+        'https://media.discordapp.net/attachments/734153794681700394/1141000189071601695/HD-wallpaper-field-of-honour-fantasy-background-abstract-sword-blue-light.png?width=1248&height=936',
       playerName: ''
     })
 
@@ -1753,7 +1811,8 @@ export class InitCharacters {
       genre: Genre.HOMME,
       picture: 'https://media.discordapp.net/attachments/689034158307409933/1118245290315624539/Gustav.png',
       pictureApotheose: '',
-      background: '',
+      background:
+        'https://media.discordapp.net/attachments/734153794681700394/1141000189071601695/HD-wallpaper-field-of-honour-fantasy-background-abstract-sword-blue-light.png?width=1248&height=936',
       playerName: 'nico'
     })
 
@@ -1772,7 +1831,8 @@ export class InitCharacters {
       genre: Genre.HOMME,
       picture: 'https://media.discordapp.net/attachments/689034158307409933/1118245290940584086/Henrik.png',
       pictureApotheose: '',
-      background: '',
+      background:
+        'https://media.discordapp.net/attachments/734153794681700394/1141000189071601695/HD-wallpaper-field-of-honour-fantasy-background-abstract-sword-blue-light.png?width=1248&height=936',
       playerName: 'guilhem'
     })
 
@@ -1792,7 +1852,8 @@ export class InitCharacters {
       picture:
         'https://media.discordapp.net/attachments/689034158307409933/1118245291552952380/ingrid.png?width=664&height=1058',
       pictureApotheose: '',
-      background: '',
+      background:
+        'https://media.discordapp.net/attachments/734153794681700394/1141000189071601695/HD-wallpaper-field-of-honour-fantasy-background-abstract-sword-blue-light.png?width=1248&height=936',
       playerName: 'david'
     })
 
@@ -1812,7 +1873,8 @@ export class InitCharacters {
       picture:
         'https://media.discordapp.net/attachments/689034158307409933/1118245291833958472/Lars.png?width=742&height=1058',
       pictureApotheose: '',
-      background: '',
+      background:
+        'https://media.discordapp.net/attachments/734153794681700394/1141000189071601695/HD-wallpaper-field-of-honour-fantasy-background-abstract-sword-blue-light.png?width=1248&height=936',
       playerName: 'elena'
     })
 
@@ -1832,7 +1894,8 @@ export class InitCharacters {
       picture:
         'https://media.discordapp.net/attachments/689034158307409933/1118245292169506856/Astrid.png?width=962&height=1058',
       pictureApotheose: '',
-      background: '',
+      background:
+        'https://media.discordapp.net/attachments/734153794681700394/1141000189071601695/HD-wallpaper-field-of-honour-fantasy-background-abstract-sword-blue-light.png?width=1248&height=936',
       playerName: 'eric'
     })
 
@@ -1851,7 +1914,8 @@ export class InitCharacters {
       genre: Genre.HOMME,
       picture: '',
       pictureApotheose: '',
-      background: '',
+      background:
+        'https://media.discordapp.net/attachments/734153794681700394/1141000189071601695/HD-wallpaper-field-of-honour-fantasy-background-abstract-sword-blue-light.png?width=1248&height=936',
       playerName: ''
     })
 
@@ -1871,7 +1935,8 @@ export class InitCharacters {
       picture:
         'https://media.discordapp.net/attachments/689034158307409933/1116445523587633202/image.png?width=814&height=1058',
       pictureApotheose: '',
-      background: '',
+      background:
+        'https://media.discordapp.net/attachments/734153794681700394/1141000189071601695/HD-wallpaper-field-of-honour-fantasy-background-abstract-sword-blue-light.png?width=1248&height=936',
       playerName: 'david'
     })
 
@@ -1891,7 +1956,8 @@ export class InitCharacters {
       picture:
         'https://media.discordapp.net/attachments/689034158307409933/1123351465730256896/image.png?width=968&height=1058',
       pictureApotheose: '',
-      background: '',
+      background:
+        'https://media.discordapp.net/attachments/734153794681700394/1141000189071601695/HD-wallpaper-field-of-honour-fantasy-background-abstract-sword-blue-light.png?width=1248&height=936',
       playerName: ''
     })
 
@@ -1911,7 +1977,8 @@ export class InitCharacters {
       picture:
         'https://media.discordapp.net/attachments/689034158307409933/1128039716181262547/image.png?width=726&height=1058',
       pictureApotheose: '',
-      background: '',
+      background:
+        'https://media.discordapp.net/attachments/734153794681700394/1141000189071601695/HD-wallpaper-field-of-honour-fantasy-background-abstract-sword-blue-light.png?width=1248&height=936',
       playerName: ''
     })
 
@@ -1931,7 +1998,8 @@ export class InitCharacters {
       picture:
         'https://media.discordapp.net/attachments/689034158307409933/1130595210234183700/image.png?width=700&height=1058',
       pictureApotheose: '',
-      background: '',
+      background:
+        'https://media.discordapp.net/attachments/734153794681700394/1141000189071601695/HD-wallpaper-field-of-honour-fantasy-background-abstract-sword-blue-light.png?width=1248&height=936',
       playerName: ''
     })
 
@@ -1951,7 +2019,8 @@ export class InitCharacters {
       picture:
         'https://media.discordapp.net/attachments/690902358057680897/1114877922617069578/rat.jpg?width=942&height=1058',
       pictureApotheose: '',
-      background: '',
+      background:
+        'https://media.discordapp.net/attachments/734153794681700394/1141000189071601695/HD-wallpaper-field-of-honour-fantasy-background-abstract-sword-blue-light.png?width=1248&height=936',
       playerName: ''
     })
 
@@ -1971,7 +2040,8 @@ export class InitCharacters {
       picture:
         'https://media.discordapp.net/attachments/690902358057680897/1114877921413316618/buffle.png?width=862&height=1058',
       pictureApotheose: '',
-      background: '',
+      background:
+        'https://media.discordapp.net/attachments/734153794681700394/1141000189071601695/HD-wallpaper-field-of-honour-fantasy-background-abstract-sword-blue-light.png?width=1248&height=936',
       playerName: ''
     })
 
@@ -1991,7 +2061,8 @@ export class InitCharacters {
       picture:
         'https://media.discordapp.net/attachments/690902358057680897/1114877922084392990/tigre.jpg?width=848&height=1058',
       pictureApotheose: '',
-      background: '',
+      background:
+        'https://media.discordapp.net/attachments/734153794681700394/1141000189071601695/HD-wallpaper-field-of-honour-fantasy-background-abstract-sword-blue-light.png?width=1248&height=936',
       playerName: ''
     })
 
@@ -2011,7 +2082,8 @@ export class InitCharacters {
       picture:
         'https://media.discordapp.net/attachments/690902358057680897/1114877921740455997/lapin.jpg?width=862&height=1058',
       pictureApotheose: '',
-      background: '',
+      background:
+        'https://media.discordapp.net/attachments/734153794681700394/1141000189071601695/HD-wallpaper-field-of-honour-fantasy-background-abstract-sword-blue-light.png?width=1248&height=936',
       playerName: ''
     })
 
@@ -2031,7 +2103,8 @@ export class InitCharacters {
       picture:
         'https://media.discordapp.net/attachments/690902358057680897/1114877933811683388/serpent.png?width=1046&height=1058',
       pictureApotheose: '',
-      background: '',
+      background:
+        'https://media.discordapp.net/attachments/734153794681700394/1141000189071601695/HD-wallpaper-field-of-honour-fantasy-background-abstract-sword-blue-light.png?width=1248&height=936',
       playerName: ''
     })
 
@@ -2051,7 +2124,8 @@ export class InitCharacters {
       picture:
         'https://media.discordapp.net/attachments/690902358057680897/1114877934210125844/chat.png?width=1094&height=1058',
       pictureApotheose: '',
-      background: '',
+      background:
+        'https://media.discordapp.net/attachments/734153794681700394/1141000189071601695/HD-wallpaper-field-of-honour-fantasy-background-abstract-sword-blue-light.png?width=1248&height=936',
       playerName: ''
     })
 
@@ -2071,7 +2145,8 @@ export class InitCharacters {
       picture:
         'https://media.discordapp.net/attachments/690902358057680897/1114877920729645137/singe.jpg?width=918&height=1058',
       pictureApotheose: '',
-      background: '',
+      background:
+        'https://media.discordapp.net/attachments/734153794681700394/1141000189071601695/HD-wallpaper-field-of-honour-fantasy-background-abstract-sword-blue-light.png?width=1248&height=936',
       playerName: ''
     })
 
@@ -2091,7 +2166,8 @@ export class InitCharacters {
       picture:
         'https://media.discordapp.net/attachments/690902358057680897/1114877920377311232/coq.jpg?width=748&height=1058',
       pictureApotheose: '',
-      background: '',
+      background:
+        'https://media.discordapp.net/attachments/734153794681700394/1141000189071601695/HD-wallpaper-field-of-honour-fantasy-background-abstract-sword-blue-light.png?width=1248&height=936',
       playerName: ''
     })
 
@@ -2111,7 +2187,8 @@ export class InitCharacters {
       picture:
         'https://media.discordapp.net/attachments/690902358057680897/1114877921040011376/chien.jpg?width=818&height=1058',
       pictureApotheose: '',
-      background: '',
+      background:
+        'https://media.discordapp.net/attachments/734153794681700394/1141000189071601695/HD-wallpaper-field-of-honour-fantasy-background-abstract-sword-blue-light.png?width=1248&height=936',
       playerName: ''
     })
 
@@ -2131,7 +2208,8 @@ export class InitCharacters {
       picture:
         'https://media.discordapp.net/attachments/690902358057680897/1114877920071122965/cochon.jpg?width=938&height=1058',
       pictureApotheose: '',
-      background: '',
+      background:
+        'https://media.discordapp.net/attachments/734153794681700394/1141000189071601695/HD-wallpaper-field-of-honour-fantasy-background-abstract-sword-blue-light.png?width=1248&height=936',
       playerName: ''
     })
 
@@ -2151,7 +2229,8 @@ export class InitCharacters {
       picture:
         'https://media.discordapp.net/attachments/690902358057680897/1114877919760760914/cheval.jpg?width=700&height=956',
       pictureApotheose: '',
-      background: '',
+      background:
+        'https://media.discordapp.net/attachments/734153794681700394/1141000189071601695/HD-wallpaper-field-of-honour-fantasy-background-abstract-sword-blue-light.png?width=1248&height=936',
       playerName: ''
     })
 
@@ -2172,7 +2251,8 @@ export class InitCharacters {
         'https://media.discordapp.net/attachments/690902358057680897/1114877922319286364/mercenaire.jpeg?width=846&height=1058',
       pictureApotheose:
         'https://media.discordapp.net/attachments/690902358057680897/1114877933539041280/dragon.jpg?width=1058&height=1058',
-      background: '',
+      background:
+        'https://media.discordapp.net/attachments/734153794681700394/1141000189071601695/HD-wallpaper-field-of-honour-fantasy-background-abstract-sword-blue-light.png?width=1248&height=936',
       playerName: ''
     })
 
@@ -2306,6 +2386,7 @@ export class InitCharacters {
     umbra?: string
     secunda?: string
     arcanesMax?: number
+    munitionsMax?: number
     //category: Category
     genre: Genre
     picture?: string
@@ -2314,7 +2395,6 @@ export class InitCharacters {
     playerName?: string
   }): DBCharacter {
     const newCharacter = new DBCharacter()
-    console.log('createCharacter', p.name)
     newCharacter.name = p.name
     newCharacter.classe = p.classe
     newCharacter.classeName = p.classe.name
@@ -2324,6 +2404,7 @@ export class InitCharacters {
     newCharacter.esprit = p.esprit
     newCharacter.essence = p.essence
     newCharacter.niveau = p.niveau
+    newCharacter.munitionsMax = p.munitionsMax || 0
     // eslint-disable-next-line no-magic-numbers
     newCharacter.pvMax = p.pvMax || p.chair * 2
     // eslint-disable-next-line no-magic-numbers

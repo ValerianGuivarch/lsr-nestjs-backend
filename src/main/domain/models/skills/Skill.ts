@@ -13,6 +13,7 @@ export class Skill {
   ppCost: number
   dettesCost: number
   arcaneCost: number
+  arcanePrimeCost: number
   allowsPf: boolean
   allowsPp: boolean
   customRolls?: string
@@ -20,6 +21,7 @@ export class Skill {
   secret: boolean
   display: string
   position: number
+  soldatCost: number
   isArcanique: boolean
   invocationTemplateName?: string
   description: string
@@ -29,6 +31,7 @@ export class Skill {
   constructor(p: Skill) {
     this.name = p.name
     this.shortName = p.shortName
+    this.soldatCost = p.soldatCost
     this.longName = p.longName
     this.stat = p.stat
     this.displayCategory = p.displayCategory
@@ -37,6 +40,7 @@ export class Skill {
     this.ppCost = p.ppCost
     this.dettesCost = p.dettesCost
     this.arcaneCost = p.arcaneCost
+    this.arcanePrimeCost = p.arcanePrimeCost
     this.allowsPp = p.allowsPp
     this.allowsPf = p.allowsPf
     this.customRolls = p.customRolls

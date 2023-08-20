@@ -154,6 +154,14 @@ export class ProviderErrors {
     })
   }
 
+  static RollNotEnoughArcanePrime(): GenericError {
+    return GenericError.of({
+      statusCode: HttpStatus.PRECONDITION_REQUIRED,
+      message: "Pas assez d'arcane prime !",
+      code: 'ROLL_NOT_ENOUGH_ARCANE_PRIME'
+    })
+  }
+
   static RollNotEnoughDailyUse(): GenericError {
     return GenericError.of({
       statusCode: HttpStatus.PRECONDITION_REQUIRED,

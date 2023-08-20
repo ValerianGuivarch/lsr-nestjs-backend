@@ -117,6 +117,30 @@ export class DBCharacter {
     type: 'integer',
     default: 1
   })
+  arcanePrimes: number
+
+  @Column({
+    type: 'integer',
+    default: 1
+  })
+  arcanePrimesMax: number
+
+  @Column({
+    type: 'integer',
+    default: 0
+  })
+  munitions: number
+
+  @Column({
+    type: 'integer',
+    default: 0
+  })
+  munitionsMax: number
+
+  @Column({
+    type: 'integer',
+    default: 1
+  })
   niveau: number
 
   @Column({
@@ -159,13 +183,28 @@ export class DBCharacter {
   @Column({ type: 'varchar', nullable: true })
   playerName?: string
 
-  @Column({ type: 'varchar', nullable: true })
+  @Column({
+    type: 'varchar',
+    nullable: true,
+    default:
+      'https://media.discordapp.net/attachments/734153794681700394/1140999461791867023/images.png?width=450&height=450'
+  })
   picture?: string
 
-  @Column({ type: 'varchar', nullable: true })
+  @Column({
+    type: 'varchar',
+    nullable: true,
+    default:
+      'https://media.discordapp.net/attachments/734153794681700394/1140999392724258997/OjPbfYPcRXDerbc3tbs29uF4rf3psnnDCCSeccMIJJ5xQFv8D3XLFiJT6dRcAAAAASUVORK5CYII.png?width=450&height=450'
+  })
   pictureApotheose?: string
 
-  @Column({ type: 'varchar', nullable: true })
+  @Column({
+    type: 'varchar',
+    nullable: true,
+    default:
+      'https://media.discordapp.net/attachments/734153794681700394/1141000189071601695/HD-wallpaper-field-of-honour-fantasy-background-abstract-sword-blue-light.png?width=1248&height=936'
+  })
   background?: string
 
   @Column({ type: 'varchar', nullable: true })
@@ -183,4 +222,7 @@ export class DBCharacter {
   @ManyToOne(() => DBBloodline)
   @JoinColumn({ name: 'bloodlineName' })
   bloodline: DBBloodline
+
+  @Column({ type: 'varchar', nullable: true })
+  customData?: string
 }

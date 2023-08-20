@@ -21,6 +21,7 @@ import { DBSession } from './session/DBSession'
 import { DBSessionProvider } from './session/DBSessionProvider'
 import { DBBloodlineSkill } from './skills/DBBloodlineSkill'
 import { DBCharacterSkill } from './skills/DBCharacterSkill'
+import { DBCharacterTemplateSkill } from './skills/DBCharacterTemplateSkill'
 import { DBClasseSkill } from './skills/DBClasseSkill'
 import { DBSkill } from './skills/DBSkill'
 import { DBSkillProvider } from './skills/DBSkillProvider'
@@ -35,6 +36,7 @@ import { TypeOrmModule } from '@nestjs/typeorm'
         DBClasseApotheose,
         DBBloodlineApotheose,
         DBCharacterApotheose,
+        DBCharacterTemplateSkill,
         DBRoll,
         DBSession,
         DBCharacter,

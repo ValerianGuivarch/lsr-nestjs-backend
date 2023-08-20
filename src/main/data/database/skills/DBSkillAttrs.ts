@@ -40,6 +40,9 @@ export abstract class DBSkillAttrs {
   @Column({ type: 'integer', nullable: true })
   arcaneCost: number | null
 
+  @Column({ type: 'integer', nullable: true })
+  arcanePrimeCost: number | null
+
   @Column({ type: 'varchar', nullable: true })
   customRolls: string | null
 

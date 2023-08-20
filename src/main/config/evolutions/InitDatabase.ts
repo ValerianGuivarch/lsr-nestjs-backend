@@ -19,6 +19,7 @@ import { DBClasseProficiency } from '../../data/database/proficiencies/DBClasseP
 import { DBProficiency } from '../../data/database/proficiencies/DBProficiency'
 import { DBBloodlineSkill } from '../../data/database/skills/DBBloodlineSkill'
 import { DBCharacterSkill } from '../../data/database/skills/DBCharacterSkill'
+import { DBCharacterTemplateSkill } from '../../data/database/skills/DBCharacterTemplateSkill'
 import { DBClasseSkill } from '../../data/database/skills/DBClasseSkill'
 import { DBSkill } from '../../data/database/skills/DBSkill'
 import { DisplayCategory } from '../../domain/models/characters/DisplayCategory'
@@ -61,13 +62,16 @@ export class InitDatabase {
     @InjectRepository(DBCharacterApotheose, 'postgres')
     private dbCharacterApotheoseRepository: Repository<DBCharacterApotheose>,
     @InjectRepository(DBCharacterTemplate, 'postgres')
-    private dbCharacterTemplateRepository: Repository<DBCharacterTemplate>
+    private dbCharacterTemplateRepository: Repository<DBCharacterTemplate>,
+    @InjectRepository(DBCharacterTemplateSkill, 'postgres')
+    private dbTemplateCharacterSkillRepository: Repository<DBCharacterTemplateSkill>
   ) {}
 
   async initDatabase(): Promise<void> {
     await this.dbClasseSkillRepository.delete({})
     await this.dbBloodlineSkillRepository.delete({})
     await this.dbCharacterSkillRepository.delete({})
+    await this.dbTemplateCharacterSkillRepository.delete({})
     await this.dbClasseApotheoseRepository.delete({})
     await this.dbBloodlineApotheoseRepository.delete({})
     await this.dbCharacterApotheoseRepository.delete({})
@@ -81,16 +85,38 @@ export class InitDatabase {
     await this.dbApotheoseRepository.delete({})
     await this.dbProficiencyRepository.delete({})
     await this.dbCharacterTemplateRepository.delete({})
+    await this.dbTemplateCharacterSkillRepository.delete({})
+    console.log('Initializing character templates...')
     const charactersTemplates = await this.initCharactersTemplates()
+
+    console.log('Initializing skills...')
     const skills = await this.initSkills(charactersTemplates)
+
+    console.log('Initializing proficiencies...')
     const proficiencies = await this.initProficiencies()
+
+    console.log('Initializing apotheoses...')
     const apotheoses = await this.initApotheoses()
+
+    console.log('Initializing classes...')
     const classes = await this.initClasses()
+
+    console.log('Initializing bloodlines...')
     const bloodlines = await this.initBloodlines()
+
+    console.log('Initializing characters...')
     const characters = await this.initCharacters(classes, bloodlines)
-    await this.skillsAttribution(skills, classes, bloodlines, characters)
+
+    console.log('Attributing skills...')
+    await this.skillsAttribution(skills, classes, bloodlines, characters, charactersTemplates)
+
+    console.log('Attributing proficiencies...')
     await this.proficienciesAttribution(proficiencies, classes, bloodlines, characters)
+
+    console.log('Attributing apotheoses...')
     await this.apotheosesAttribution(apotheoses, classes, bloodlines, characters)
+
+    console.log('Database initialized')
   }
 
   async initCharactersTemplates(): Promise<Map<string, DBCharacterTemplate>> {
@@ -219,7 +245,8 @@ export class InitDatabase {
     skills: Map<string, DBSkill>,
     classes: Map<string, DBClasse>,
     bloodlines: Map<string, DBBloodline>,
-    characters: Map<string, DBCharacter>
+    characters: Map<string, DBCharacter>,
+    charactersTemplates: Map<string, DBCharacterTemplate>
   ) {
     await this.saveClasseSkillIfNotExisting(classes.get('champion'), skills.get('magie'))
     await this.saveClasseSkillIfNotExisting(classes.get('champion'), skills.get('cantrip'))
@@ -260,6 +287,56 @@ export class InitDatabase {
       arcaneCost: 0
     })
 
+    // Vernet
+    await this.saveCharacterSkillIfNotExisting({
+      character: characters.get('vernet'),
+      skill: skills.get('Bras Robotique')
+    })
+    await this.saveCharacterSkillIfNotExisting({
+      character: characters.get('vernet'),
+      skill: skills.get('Oeil Bionique'),
+      limitationMax: 1
+    })
+    await this.saveCharacterSkillIfNotExisting({
+      character: characters.get('vernet'),
+      skill: skills.get('Mun. courantes')
+    })
+    await this.saveCharacterSkillIfNotExisting({
+      character: characters.get('vernet'),
+      skill: skills.get('Mun. léthales'),
+      limitationMax: 0
+    })
+    await this.saveCharacterSkillIfNotExisting({
+      character: characters.get('vernet'),
+      skill: skills.get('Mun. affaiblissantes'),
+      limitationMax: 0
+    })
+    await this.saveCharacterSkillIfNotExisting({
+      character: characters.get('vernet'),
+      skill: skills.get('Mun. peste'),
+      limitationMax: 0
+    })
+    await this.saveCharacterSkillIfNotExisting({
+      character: characters.get('vernet'),
+      skill: skills.get('Mun. marquage'),
+      limitationMax: 0
+    })
+    await this.saveCharacterSkillIfNotExisting({
+      character: characters.get('vernet'),
+      skill: skills.get('Mun. dégénérative'),
+      limitationMax: 0
+    })
+    await this.saveCharacterSkillIfNotExisting({
+      character: characters.get('vernet'),
+      skill: skills.get('Gr. fumigène'),
+      limitationMax: 0
+    })
+    await this.saveCharacterSkillIfNotExisting({
+      character: characters.get('vernet'),
+      skill: skills.get('Gr. flash'),
+      limitationMax: 0
+    })
+
     // Millia
     await this.saveCharacterSkillIfNotExisting({ character: characters.get('millia'), skill: skills.get('montre') })
 
@@ -268,21 +345,147 @@ export class InitDatabase {
       character: characters.get('judith'),
       skill: skills.get('Plante de soutien')
     })
+    await this.saveCharacterSkillIfNotExisting({
+      character: characters.get('judith'),
+      skill: skills.get('Plante de combat')
+    })
+    await this.saveCharacterSkillIfNotExisting({
+      character: characters.get('judith'),
+      skill: skills.get('Plante de magie')
+    })
+    await this.saveCharacterSkillIfNotExisting({
+      character: characters.get('judith'),
+      skill: skills.get('Plante envahissante')
+    })
+    await this.saveCharacterSkillIfNotExisting({
+      character: characters.get('judith'),
+      skill: skills.get('Reconnaissance naturelle')
+    })
+    await this.saveCharacterSkillIfNotExisting({
+      character: characters.get('judith'),
+      skill: skills.get('Lien naturel')
+    })
+    await this.saveCharacterSkillIfNotExisting({
+      character: characters.get('judith'),
+      skill: skills.get('Soulèvement de la Nature')
+    })
+    await this.saveCharacterSkillIfNotExisting({
+      character: characters.get('judith'),
+      skill: skills.get('Animation de la Nature')
+    })
+    await this.saveCharacterSkillIfNotExisting({
+      character: characters.get('judith'),
+      skill: skills.get('Communication avec la Nature')
+    })
+    await this.saveCharacterSkillIfNotExisting({
+      character: characters.get('judith'),
+      skill: skills.get('Voie des Arbres')
+    })
+    await this.saveCharacterSkillIfNotExisting({
+      character: characters.get('judith'),
+      skill: skills.get("Lien à l'Avatar")
+    })
+    await this.saveTemplateCharacterSkillIfNotExisting({
+      characterTemplate: charactersTemplates.get('Plante Soutien'),
+      skill: skills.get('Coup de sève')
+    })
+    await this.saveTemplateCharacterSkillIfNotExisting({
+      characterTemplate: charactersTemplates.get('Plante Magie'),
+      skill: skills.get('Pollen')
+    })
 
     // Aurélien
     await this.saveCharacterSkillIfNotExisting({ character: characters.get('aurélien'), skill: skills.get('peur') })
+    await this.saveCharacterSkillIfNotExisting({
+      character: characters.get('aurélien'),
+      skill: skills.get('illusioniste'),
+      limitationMax: 1,
+      arcaneCost: 0
+    })
+    await this.saveCharacterSkillIfNotExisting({
+      character: characters.get('aurélien'),
+      skill: skills.get('sablier'),
+      limitationMax: 1,
+      arcaneCost: 0
+    })
+    await this.saveCharacterSkillIfNotExisting({
+      character: characters.get('aurélien'),
+      skill: skills.get('diablotin'),
+      limitationMax: 1,
+      arcaneCost: 0
+    })
+    await this.saveCharacterSkillIfNotExisting({
+      character: characters.get('aurélien'),
+      skill: skills.get('sorcière'),
+      limitationMax: 1,
+      arcaneCost: 0
+    })
+    await this.saveCharacterSkillIfNotExisting({
+      character: characters.get('aurélien'),
+      skill: skills.get('forgeron'),
+      limitationMax: 1,
+      arcaneCost: 0
+    })
+    await this.saveCharacterSkillIfNotExisting({
+      character: characters.get('aurélien'),
+      skill: skills.get('cheval'),
+      limitationMax: 1,
+      arcaneCost: 0
+    })
+    await this.saveCharacterSkillIfNotExisting({
+      character: characters.get('aurélien'),
+      skill: skills.get('arbre'),
+      limitationMax: 1,
+      arcaneCost: 0
+    })
+    await this.saveCharacterSkillIfNotExisting({
+      character: characters.get('aurélien'),
+      skill: skills.get('licorne'),
+      limitationMax: 1,
+      arcaneCost: 0
+    })
+    await this.saveCharacterSkillIfNotExisting({
+      character: characters.get('aurélien'),
+      skill: skills.get('serpent'),
+      limitationMax: 1,
+      arcaneCost: 0
+    })
+    await this.saveCharacterSkillIfNotExisting({
+      character: characters.get('aurélien'),
+      skill: skills.get('loup'),
+      limitationMax: 1,
+      arcaneCost: 0
+    })
+    await this.saveCharacterSkillIfNotExisting({
+      character: characters.get('aurélien'),
+      skill: skills.get('ivrogne'),
+      limitationMax: 1,
+      arcaneCost: 0
+    })
+    await this.saveCharacterSkillIfNotExisting({
+      character: characters.get('aurélien'),
+      skill: skills.get('erudit'),
+      limitationMax: 1,
+      arcaneCost: 0
+    })
+    await this.saveCharacterSkillIfNotExisting({
+      character: characters.get('aurélien'),
+      skill: skills.get('fantome'),
+      limitationMax: 1,
+      arcaneCost: 0
+    })
+    await this.saveCharacterSkillIfNotExisting({
+      character: characters.get('aurélien'),
+      skill: skills.get('faucon'),
+      limitationMax: 1,
+      arcaneCost: 0
+    })
     await this.saveCharacterSkillIfNotExisting({
       character: characters.get('aurélien'),
       skill: skills.get('terreur'),
       displayCategory: DisplayCategory.MAGIE,
       arcaneCost: 0,
       dettesCost: 1
-    })
-    await this.saveCharacterSkillIfNotExisting({
-      character: characters.get('aurélien'),
-      skill: skills.get('illusioniste'),
-      limitationMax: 1,
-      arcaneCost: 0
     })
     await this.saveCharacterSkillIfNotExisting({
       character: characters.get('aurélien'),
@@ -295,6 +498,17 @@ export class InitDatabase {
       skill: skills.get('amnesique'),
       limitationMax: 1,
       arcaneCost: 0
+    })
+    await this.saveCharacterSkillIfNotExisting({
+      character: characters.get('aurélien'),
+      skill: skills.get('tatouage'),
+      limitationMax: 1,
+      arcanePrimeCost: 0
+    })
+    await this.saveCharacterSkillIfNotExisting({
+      character: characters.get('viktor'),
+      skill: skills.get('pokéball'),
+      arcanePrimeCost: 0
     })
   }
 
@@ -335,6 +549,7 @@ export class InitDatabase {
     skill: DBSkill
     limitationMax?: number
     arcaneCost?: number
+    arcanePrimeCost?: number
     dettesCost?: number
     displayCategory?: DisplayCategory
   }) {
@@ -351,6 +566,39 @@ export class InitDatabase {
         characterName: p.character.name,
         skillName: p.skill.name,
         arcaneCost: p.arcaneCost === undefined ? p.skill.arcaneCost : p.arcaneCost,
+        arcanePrimeCost: p.arcanePrimeCost === undefined ? p.skill.arcanePrimeCost : p.arcanePrimeCost,
+        limited: !!p.limitationMax,
+        limitationMax: p.limitationMax,
+        dailyUse: p.limitationMax,
+        dettesCost: p.dettesCost === undefined ? p.skill.dettesCost : p.dettesCost,
+        displayCategory: p.displayCategory === undefined ? p.skill.displayCategory : p.displayCategory
+      })
+    }
+  }
+
+  private async saveTemplateCharacterSkillIfNotExisting(p: {
+    characterTemplate: DBCharacterTemplate
+    skill: DBSkill
+    limitationMax?: number
+    arcaneCost?: number
+    arcanePrimeCost?: number
+    dettesCost?: number
+    displayCategory?: DisplayCategory
+  }) {
+    const existingRelation = await this.dbTemplateCharacterSkillRepository.findOne({
+      where: {
+        characterTemplateName: p.characterTemplate.name,
+        skillName: p.skill.name
+      }
+    })
+    if (!existingRelation) {
+      await this.dbTemplateCharacterSkillRepository.save({
+        template: p.characterTemplate,
+        skill: p.skill,
+        characterTemplateName: p.characterTemplate.name,
+        skillName: p.skill.name,
+        arcaneCost: p.arcaneCost === undefined ? p.skill.arcaneCost : p.arcaneCost,
+        arcanePrimeCost: p.arcanePrimeCost === undefined ? p.skill.arcanePrimeCost : p.arcanePrimeCost,
         limited: !!p.limitationMax,
         limitationMax: p.limitationMax,
         dailyUse: p.limitationMax,

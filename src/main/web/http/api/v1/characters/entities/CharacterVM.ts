@@ -84,6 +84,18 @@ export class CharacterVM {
   arcanesMax: number
 
   @ApiProperty()
+  munitions: number
+
+  @ApiProperty()
+  munitionsMax: number
+
+  @ApiProperty()
+  arcanePrimes: number
+
+  @ApiProperty()
+  arcanePrimesMax: number
+
+  @ApiProperty()
   niveau: number
 
   @ApiProperty()
@@ -146,8 +158,12 @@ export class CharacterVM {
   @ApiProperty()
   isInvocation: boolean
 
+  @ApiPropertyOptional()
+  controlledBy?: string
+
   constructor(p: CharacterVM) {
     this.name = p.name
+    this.controlledBy = p.controlledBy
     this.isInvocation = p.isInvocation
     this.classe = p.classe
     this.bloodline = p.bloodline
@@ -172,6 +188,10 @@ export class CharacterVM {
     this.dettes = p.dettes
     this.arcanes = p.arcanes
     this.arcanesMax = p.arcanesMax
+    this.arcanePrimes = p.arcanePrimes
+    this.arcanePrimesMax = p.arcanePrimesMax
+    this.munitions = p.munitions
+    this.munitionsMax = p.munitionsMax
     this.skills = p.skills
     this.niveau = p.niveau
     this.lux = p.lux
@@ -207,6 +227,7 @@ export class CharacterVM {
     const currentApotheose = p.apotheoses.find((a) => a.name === p.character.apotheoseName)
     return new CharacterVM({
       name: p.character.name,
+      controlledBy: p.character.controlledBy,
       isInvocation: p.character.isInvocation,
       classe: {
         name: p.character.classeName,
@@ -250,6 +271,10 @@ export class CharacterVM {
       dettes: p.character.dettes,
       arcanes: p.character.arcanes,
       arcanesMax: p.character.arcanesMax,
+      arcanePrimes: p.character.arcanePrimes,
+      arcanePrimesMax: p.character.arcanePrimesMax,
+      munitions: p.character.munitions,
+      munitionsMax: p.character.munitionsMax,
       niveau: p.character.niveau,
       lux: p.character.lux,
       umbra: p.character.umbra,

@@ -45,6 +45,14 @@ export class CreateCharacterDto {
 
   @ApiProperty({ default: 1 })
   @IsNumber()
+  readonly arcanePrimesMax: number
+
+  @ApiProperty({ default: 0 })
+  @IsNumber()
+  readonly munitionsMax: number
+
+  @ApiProperty({ default: 1 })
+  @IsNumber()
   readonly niveau: number
 
   @ApiProperty({ default: '' })

@@ -1,7 +1,7 @@
 export enum CharacterTemplateReferential {
-  FIXE = 'Fixe',
-  CHAIR = 'Chair',
-  ESPRIT = 'Esprit',
-  ESSENCE = 'Essence',
-  SUCCESS = 'Success'
+  FIXE = 'FIXE',
+  CHAIR = 'CHAIR',
+  ESPRIT = 'ESPRIT',
+  ESSENCE = 'ESSENCE',
+  SUCCESS = 'SUCCESS'
 }

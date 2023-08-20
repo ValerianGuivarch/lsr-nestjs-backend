@@ -44,6 +44,14 @@ export class UpdateCharacterDto {
   @IsNumber()
   readonly arcanes: number
 
+  @ApiProperty({ default: 1 })
+  @IsNumber()
+  readonly arcanePrimes: number
+
+  @ApiProperty({ default: 0 })
+  @IsNumber()
+  readonly munitions: number
+
   @ApiProperty({ default: 0 })
   @IsNumber()
   readonly dettes: number
@@ -51,6 +59,10 @@ export class UpdateCharacterDto {
   @ApiProperty({ default: 3 })
   @IsNumber()
   readonly arcanesMax: number
+
+  @ApiProperty({ default: 1 })
+  @IsNumber()
+  readonly arcanePrimesMax: number
 
   @ApiProperty({ default: 1 })
   @IsNumber()

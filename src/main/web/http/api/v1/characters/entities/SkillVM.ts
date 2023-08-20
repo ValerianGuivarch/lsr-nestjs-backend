@@ -18,7 +18,13 @@ export class SkillVM {
   description: string
 
   @ApiProperty()
+  limitationMax: number | null
+
+  @ApiProperty()
   dailyUse: number | null
+
+  @ApiProperty()
+  soldatCost: number
 
   constructor(p: SkillVM) {
     this.name = p.name
@@ -27,16 +33,20 @@ export class SkillVM {
     this.displayCategory = p.displayCategory
     this.description = p.description
     this.dailyUse = p.dailyUse
+    this.limitationMax = p.limitationMax
+    this.soldatCost = p.soldatCost
   }
 
   static of(p: { skill: Skill }): SkillVM {
     return new SkillVM({
       name: p.skill.name,
       dailyUse: p.skill.dailyUse,
+      limitationMax: p.skill.limitationMax,
       shortName: p.skill.shortName,
       longName: p.skill.longName,
       displayCategory: p.skill.displayCategory.toString(),
-      description: p.skill.description
+      description: p.skill.description,
+      soldatCost: p.skill.soldatCost
     })
   }
 }

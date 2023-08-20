@@ -51,6 +51,19 @@ export class InitSkills {
       position: 4,
       successCalculation: SuccessCalculation.AUCUN
     })
+    const koSkill: DBSkill = this.createSkill({
+      name: 'KO',
+      shortName: 'KO',
+      description: 'Jet de Sauv. contre la Mort',
+      allAttribution: true,
+      stat: SkillStat.CUSTOM,
+      successCalculation: SuccessCalculation.CUSTOM,
+      category: DisplayCategory.STATS,
+      display: 'fait un *Jet de Sauvegarde contre la Mort*',
+      customRolls: '1d6',
+      position: 0,
+      secret: true
+    })
     const magieSkill: DBSkill = this.createSkill({
       name: 'magie',
       shortName: 'mg',
@@ -1596,20 +1609,317 @@ export class InitSkills {
     })
     const planteSoutien: DBSkill = this.createSkill({
       name: 'Plante de soutien',
-      shortName: 'pl-st',
+      shortName: 'pl-soutien',
       description: 'Invoquer une plante de soutien',
       allAttribution: false,
       stat: SkillStat.ESSENCE,
       category: DisplayCategory.MAGIE,
       display: 'invoque une *Plante de Soutien*',
       position: 31,
-      invocationTemplate: charactersTemplates.get('planteSoutien')
+      invocationTemplate: charactersTemplates.get('Plante Soutien')
     })
-    const newSkills = [
+    const coupDeSeve: DBSkill = this.createSkill({
+      name: 'Coup de sève',
+      shortName: 'Coup de sève',
+      description: 'Donne des bénédictions pour un tour',
+      allAttribution: false,
+      stat: SkillStat.ESSENCE,
+      category: DisplayCategory.MAGIE,
+      display: 'donne des *Bénédictions* pour un tour',
+      position: 31
+    })
+    const planteCombat: DBSkill = this.createSkill({
+      name: 'Plante de combat',
+      shortName: 'pl-combat',
+      description: 'Invoquer une plante de combat',
+      allAttribution: false,
+      stat: SkillStat.ESSENCE,
+      category: DisplayCategory.MAGIE,
+      display: 'invoque une *Plante de Combat*',
+      position: 32,
+      invocationTemplate: charactersTemplates.get('Plante Combat')
+    })
+    const planteMagie: DBSkill = this.createSkill({
+      name: 'Plante de magie',
+      shortName: 'pl-magie',
+      description: 'Invoquer une plante de magie',
+      allAttribution: false,
+      stat: SkillStat.ESSENCE,
+      category: DisplayCategory.MAGIE,
+      display: 'invoque une *Plante de Magie*',
+      position: 33,
+      invocationTemplate: charactersTemplates.get('Plante Magie')
+    })
+    const pollen: DBSkill = this.createSkill({
+      name: 'Pollen',
+      shortName: 'pollen',
+      description: 'Crèe un effet magique (poison, soin, etc...)',
+      allAttribution: false,
+      stat: SkillStat.ESSENCE,
+      category: DisplayCategory.MAGIE,
+      display: 'génère un *Pollen Magique*',
+      position: 31
+    })
+    const planteEnvahissante: DBSkill = this.createSkill({
+      name: 'Plante envahissante',
+      shortName: 'pl-envahis.',
+      description: 'Invoquer une plante envahissante',
+      allAttribution: false,
+      stat: SkillStat.ESSENCE,
+      category: DisplayCategory.MAGIE,
+      display: 'invoque une *Plante Envahissante*',
+      position: 34,
+      invocationTemplate: charactersTemplates.get('Plante Envahissante')
+    })
+
+    const reconnaissanceNaturelle: DBSkill = this.createSkill({
+      name: 'Reconnaissance naturelle',
+      shortName: 'reco nat.',
+      description: 'Analyser le niveau courant de la Nature',
+      allAttribution: false,
+      stat: SkillStat.CUSTOM,
+      category: DisplayCategory.MAGIE,
+      display: 'analyse le *Niveau de la Nature*',
+      position: 9,
+      successCalculation: SuccessCalculation.CUSTOM
+    })
+
+    const lienNaturel: DBSkill = this.createSkill({
+      name: 'Lien naturel',
+      shortName: 'lien nat.',
+      description: 'Retirer 2 PV à une plante invoquée pour annuler une blessure',
+      allAttribution: false,
+      stat: SkillStat.FIXE,
+      category: DisplayCategory.MAGIE,
+      display: 'se *soigne* en puissant dans ses plantes',
+      precision: 'Rappel : retirer 2 PV à une plante pour en gagner 1',
+      position: 10
+    })
+
+    const soulevementDeLaNature: DBSkill = this.createSkill({
+      name: 'Soulèvement de la Nature',
+      shortName: 'soulev nat.',
+      description: 'Attaque de Chair à 2*Nature, 1 dégat aux plantes invoquées',
+      allAttribution: false,
+      stat: SkillStat.CUSTOM,
+      category: DisplayCategory.MAGIE,
+      display: 'provoque un *Soulèvement de la Nature*',
+      precision: 'Rappel : retirer 1 PV à chaque plante invoquée',
+      position: 11,
+      dettesCost: 1
+    })
+
+    const animationDeLaNature: DBSkill = this.createSkill({
+      name: 'Animation de la Nature',
+      shortName: 'anim nat.',
+      description: 'Donne une consscience avancée à une plante',
+      allAttribution: false,
+      stat: SkillStat.ESSENCE,
+      category: DisplayCategory.MAGIE,
+      display: 'réalise une *Animation de la Nature*',
+      position: 12,
+      dettesCost: 1
+    })
+
+    const communicationAvecLaNature: DBSkill = this.createSkill({
+      name: 'Communication avec la Nature',
+      shortName: 'comm nat.',
+      description: 'Lien avec une plante pour communiquer avec elle tant que la Nature est supérieure à 2',
+      allAttribution: false,
+      stat: SkillStat.ESSENCE,
+      category: DisplayCategory.MAGIE,
+      display: 'réalise une *Communication avec la Nature*',
+      position: 13,
+      dettesCost: 1
+    })
+
+    const voieDesArbres: DBSkill = this.createSkill({
+      name: 'Voie des Arbres',
+      shortName: 'voie arbre',
+      description: 'Permet de créer un portail entre 2 arrbres',
+      allAttribution: false,
+      stat: SkillStat.ESSENCE,
+      category: DisplayCategory.MAGIE,
+      display: 'créée une *Voie des Arbres*',
+      position: 13,
+      dettesCost: 1
+    })
+
+    const lienAvatar: DBSkill = this.createSkill({
+      name: "Lien à l'Avatar",
+      shortName: 'lien',
+      description: "Utilise son lien avec l'Avatar",
+      allAttribution: false,
+      stat: SkillStat.ESSENCE,
+      category: DisplayCategory.MAGIE,
+      display: 'se lie à son *Avatar*',
+      position: 14,
+      limitedUse: 1
+    })
+
+    const brasRobotique: DBSkill = this.createSkill({
+      name: 'Bras Robotique',
+      shortName: 'bras',
+      description: 'Attaque double en Chair contre un PV perdu',
+      allAttribution: false,
+      stat: SkillStat.CHAIR,
+      category: DisplayCategory.SOLDATS,
+      display: 'utilise son *Bras Mécanique*',
+      position: 1,
+      pvCost: 1
+    })
+
+    const oeilBionique: DBSkill = this.createSkill({
+      name: 'Oeil Bionique',
+      shortName: 'oeil',
+      description: 'Analyse une cible (personne ou objet)',
+      allAttribution: false,
+      stat: SkillStat.ESPRIT,
+      category: DisplayCategory.SOLDATS,
+      display: 'utilise son *Oeil Bionique*',
+      position: 2,
+      limitedUse: 1
+    })
+
+    const munitionCourante: DBSkill = this.createSkill({
+      name: 'Mun. courantes',
+      shortName: 'm-cour',
+      description: 'Utilise une munition courante',
+      allAttribution: false,
+      stat: SkillStat.ESPRIT,
+      category: DisplayCategory.SOLDATS,
+      display: 'utilise une *Munition courante*',
+      position: 3
+    })
+
+    const munitionLethale: DBSkill = this.createSkill({
+      name: 'Mun. léthales',
+      shortName: 'm-leth',
+      description: 'Utilise une munition léthale, x2',
+      allAttribution: false,
+      stat: SkillStat.ESPRIT,
+      category: DisplayCategory.SOLDATS,
+      display: 'utilise une *Munition léthale*',
+      position: 4,
+      successCalculation: SuccessCalculation.DOUBLE,
+      soldatCost: 1
+    })
+
+    const munitionAffaiblissante: DBSkill = this.createSkill({
+      name: 'Mun. affaiblissantes',
+      shortName: 'm-aff',
+      description: 'Utilise une munition affaiblissante, +1 malus à la cible touchée',
+      allAttribution: false,
+      stat: SkillStat.ESPRIT,
+      category: DisplayCategory.SOLDATS,
+      display: 'utilise une *Munition affaiblissante*',
+      position: 5,
+      soldatCost: 2
+    })
+
+    const munitionPeste: DBSkill = this.createSkill({
+      name: 'Mun. peste',
+      shortName: 'm-pest',
+      description: 'Utilise une munition peste, +1 dégat à la cible touchée à chacune de ses actions',
+      allAttribution: false,
+      stat: SkillStat.ESPRIT,
+      category: DisplayCategory.SOLDATS,
+      display: 'utilise une *Munition peste*',
+      position: 6,
+      soldatCost: 2
+    })
+
+    const munitionMarquage: DBSkill = this.createSkill({
+      name: 'Mun. marquage',
+      shortName: 'm-marq',
+      description: 'Utilise une munition marquage, marque la cible touchée',
+      allAttribution: false,
+      stat: SkillStat.ESPRIT,
+      category: DisplayCategory.SOLDATS,
+      display: 'utilise une *Munition géolocalisable*',
+      position: 7,
+      soldatCost: 3
+    })
+
+    const munitionDegenerative: DBSkill = this.createSkill({
+      name: 'Mun. dégénérative',
+      shortName: 'm-deg',
+      description: 'Utilise une munition dégénérative, soins divisés par 2',
+      allAttribution: false,
+      stat: SkillStat.ESPRIT,
+      category: DisplayCategory.SOLDATS,
+      display: 'utilise une *Grenade dégénérative*',
+      position: 8,
+      soldatCost: 2
+    })
+
+    const munitionFumigene: DBSkill = this.createSkill({
+      name: 'Gr. fumigène',
+      shortName: 'g-fum',
+      description: 'Utilise une munition fumigène, crée un nuage de fumée',
+      allAttribution: false,
+      stat: SkillStat.FIXE,
+      category: DisplayCategory.SOLDATS,
+      display: 'utilise une *Grenade fumigène*',
+      position: 9,
+      soldatCost: 1
+    })
+
+    const munitionFlash: DBSkill = this.createSkill({
+      name: 'Gr. flash',
+      shortName: 'g-flsh',
+      description: 'Utilise une munition flash, aveugle la cible touchée',
+      allAttribution: false,
+      stat: SkillStat.FIXE,
+      category: DisplayCategory.SOLDATS,
+      display: 'utilise une *Grenade flash*',
+      position: 10,
+      soldatCost: 1
+    })
+
+    const tatouage: DBSkill = this.createSkill({
+      name: 'tatouage',
+      shortName: 'tat',
+      description: 'Se transformer la plus grande peur de la cible',
+      allAttribution: false,
+      stat: SkillStat.ESSENCE,
+      category: DisplayCategory.ARCANES_PRIMES,
+      display: "utilise l'*Arcane Prime* du *Tatouage de Terreur*",
+      position: 1,
+      arcanePrimeCost: 1
+    })
+
+    const pokeball: DBSkill = this.createSkill({
+      name: 'pokéball',
+      shortName: 'pkb',
+      description: 'Invoque aléatoirement un pokémon',
+      allAttribution: false,
+      stat: SkillStat.CUSTOM,
+      category: DisplayCategory.ARCANES_PRIMES,
+      display: 'invoque un *Pokémon*',
+      position: 2,
+      arcanePrimeCost: 1,
+      customRolls: '1d150',
+      successCalculation: SuccessCalculation.CUSTOM
+    })
+    return [
+      munitionDegenerative,
+      munitionCourante,
+      munitionLethale,
+      munitionAffaiblissante,
+      munitionPeste,
+      munitionMarquage,
+      brasRobotique,
+      oeilBionique,
+      munitionFlash,
+      munitionFumigene,
+      pokeball,
+      tatouage,
       chairSkill,
       espritSkill,
       essenceSkill,
       empiriqueSkill,
+      koSkill,
       magieSkill,
       cantripSkill,
       sablierSkill,
@@ -1729,9 +2039,21 @@ export class InitSkills {
       armure,
       malediction,
       speed,
-      invisibilite
+      invisibilite,
+      planteMagie,
+      planteCombat,
+      planteEnvahissante,
+      planteSoutien,
+      pollen,
+      coupDeSeve,
+      lienAvatar,
+      reconnaissanceNaturelle,
+      lienNaturel,
+      soulevementDeLaNature,
+      animationDeLaNature,
+      communicationAvecLaNature,
+      voieDesArbres
     ]
-    return newSkills
   }
   static createSkill(p: {
     name: string
@@ -1753,14 +2075,18 @@ export class InitSkills {
     ppCost?: number
     dettesCost?: number
     arcaneCost?: number
+    arcanePrimeCost?: number
     customRolls?: string
     successCalculation?: SuccessCalculation
     secret?: boolean
     invocationTemplate?: DBCharacterTemplate
+    precision?: string
+    soldatCost?: number
   }): DBSkill {
     return {
       name: p.name,
       description: p.description,
+      precision: p.precision || '',
       shortName: p.shortName,
       longName: p.longName || p.name,
       allAttribution: p.allAttribution,
@@ -1773,6 +2099,7 @@ export class InitSkills {
       ppCost: p.ppCost || 0,
       dettesCost: p.dettesCost || 0,
       arcaneCost: p.arcaneCost || 0,
+      arcanePrimeCost: p.arcanePrimeCost || 0,
       customRolls: p.customRolls || '',
       successCalculation: p.successCalculation || SuccessCalculation.SIMPLE,
       secret: p.secret || false,
@@ -1780,7 +2107,8 @@ export class InitSkills {
       position: p.position,
       isArcanique: p.isArcanique,
       invocationTemplate: p.invocationTemplate || null,
-      invocationTemplateName: p.invocationTemplate ? p.invocationTemplate.name : null
+      invocationTemplateName: p.invocationTemplate ? p.invocationTemplate.name : null,
+      soldatCost: p.soldatCost || 0
     }
   }
 }

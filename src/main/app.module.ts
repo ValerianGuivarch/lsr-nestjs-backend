@@ -1,5 +1,6 @@
 import config from './config/configuration'
 import { InitDatabase } from './config/evolutions/InitDatabase'
+import { BTNNameProvider } from './data/behind/BTNNameProvider'
 import { DBApotheoseProvider } from './data/database/apotheoses/DBApotheoseProvider'
 import { DBBloodlineProvider } from './data/database/bloodlines/DBBloodlineProvider'
 import { DBCharacterProvider } from './data/database/character/DBCharacterProvider'
@@ -87,6 +88,10 @@ import { TypeOrmModule } from '@nestjs/typeorm'
     {
       provide: 'ISessionProvider',
       useClass: DBSessionProvider
+    },
+    {
+      provide: 'INameProvider',
+      useClass: BTNNameProvider
     },
     {
       provide: 'IBloodlineProvider',

@@ -31,52 +31,86 @@ export class DBCharacterProvider implements ICharacterProvider {
     private dbSessionRepository: Repository<DBSession>
   ) {}
 
+  public async getNatureLevel(): Promise<NatureLevel> {
+    const session = await this.dbSessionRepository.findOneBy({})
+    if (!session) {
+      throw ProviderErrors.EntityNotFound('session')
+    }
+    const natureValue = session.nature
+    const natureIndex = Object.values(NatureLevel).indexOf(natureValue)
+    const arbres = await this.dbCharacterRepository.findBy({
+      bloodlineName: 'arbre',
+      battleState: In([BattleState.ALLIES, BattleState.ENNEMIES])
+    })
+
+    const impact = Math.floor(
+      arbres
+        .map((arbre) => {
+          return parseFloat(arbre.customData ?? '0')
+        })
+        .reduce((a, b) => {
+          return a + b
+        }, 0)
+    )
+
+    const nextNatureIndex = natureIndex + impact
+
+    let nextNatureValue: NatureLevel
+    if (natureValue === NatureLevel.LEVEL_5_DOMINANTE) {
+      nextNatureValue = natureValue
+    } else if (nextNatureIndex < Object.values(NatureLevel).length - 1) {
+      nextNatureValue = Object.values(NatureLevel)[nextNatureIndex]
+    } else {
+      nextNatureValue = NatureLevel.LEVEL_4_SAUVAGE
+    }
+    return nextNatureValue
+  }
+
   private async toCharacter(doc: DBCharacter): Promise<Character> {
     let chairBonus = 0
     let espritBonus = 0
     let essenceBonus = 0
     if (doc.bloodlineName && doc.bloodlineName === 'arbre') {
-      const session = await this.dbSessionRepository.findOneBy({})
-      if (session) {
-        switch (session.nature) {
-          case NatureLevel.LEVEL_0_PAUVRE:
-            chairBonus = 0
-            espritBonus = 0
-            essenceBonus = 0
-            break
-          case NatureLevel.LEVEL_1_RARE:
-            chairBonus = 0
-            espritBonus = 0
-            essenceBonus = 1
-            break
-          case NatureLevel.LEVEL_2_PRESENTE:
-            chairBonus = 0
-            espritBonus = 1
-            // eslint-disable-next-line no-magic-numbers
-            essenceBonus = 2
-            break
-          case NatureLevel.LEVEL_3_ABONDANTE:
-            chairBonus = 0
-            // eslint-disable-next-line no-magic-numbers
-            espritBonus = 2
-            // eslint-disable-next-line no-magic-numbers
-            essenceBonus = 3
-            break
-          case NatureLevel.LEVEL_4_SAUVAGE:
-            chairBonus = 0
-            // eslint-disable-next-line no-magic-numbers
-            espritBonus = 3
-            // eslint-disable-next-line no-magic-numbers
-            essenceBonus = 4
-            break
-          case NatureLevel.LEVEL_5_DOMINANTE:
-            chairBonus = 1
-            // eslint-disable-next-line no-magic-numbers
-            espritBonus = 4
-            // eslint-disable-next-line no-magic-numbers
-            essenceBonus = 5
-            break
-        }
+      const nextNatureValue = await this.getNatureLevel()
+
+      switch (nextNatureValue) {
+        case NatureLevel.LEVEL_0_PAUVRE:
+          chairBonus = 0
+          espritBonus = 0
+          essenceBonus = 0
+          break
+        case NatureLevel.LEVEL_1_RARE:
+          chairBonus = 0
+          espritBonus = 0
+          essenceBonus = 1
+          break
+        case NatureLevel.LEVEL_2_PRESENTE:
+          chairBonus = 0
+          espritBonus = 1
+          // eslint-disable-next-line no-magic-numbers
+          essenceBonus = 2
+          break
+        case NatureLevel.LEVEL_3_ABONDANTE:
+          chairBonus = 0
+          // eslint-disable-next-line no-magic-numbers
+          espritBonus = 2
+          // eslint-disable-next-line no-magic-numbers
+          essenceBonus = 3
+          break
+        case NatureLevel.LEVEL_4_SAUVAGE:
+          chairBonus = 0
+          // eslint-disable-next-line no-magic-numbers
+          espritBonus = 3
+          // eslint-disable-next-line no-magic-numbers
+          essenceBonus = 4
+          break
+        case NatureLevel.LEVEL_5_DOMINANTE:
+          chairBonus = 1
+          // eslint-disable-next-line no-magic-numbers
+          espritBonus = 4
+          // eslint-disable-next-line no-magic-numbers
+          essenceBonus = 5
+          break
       }
     }
     return new Character({
@@ -103,6 +137,10 @@ export class DBCharacterProvider implements ICharacterProvider {
       dettes: doc.dettes,
       arcanes: doc.arcanes,
       arcanesMax: doc.arcanesMax,
+      arcanePrimes: doc.arcanePrimes,
+      arcanePrimesMax: doc.arcanePrimesMax,
+      munitions: doc.munitions,
+      munitionsMax: doc.munitionsMax,
       niveau: doc.niveau,
       lux: doc.lux,
       umbra: doc.umbra,
@@ -112,7 +150,7 @@ export class DBCharacterProvider implements ICharacterProvider {
       relance: doc.relance,
       playerName: doc.playerName,
       picture: doc.picture,
-      pictureApotheose: doc.pictureApotheose,
+      pictureApotheose: doc.pictureApotheose ? doc.pictureApotheose : doc.picture,
       background: doc.background,
       buttonColor: doc.buttonColor,
       textColor: doc.textColor,
@@ -138,7 +176,8 @@ export class DBCharacterProvider implements ICharacterProvider {
       pfMaxValueRule: template.pfMaxValueRule,
       ppMaxValueReferential: CharacterTemplateReferential[template.ppMaxValueReferential],
       ppMaxValueRule: template.ppMaxValueRule,
-      picture: template.picture
+      picture: template.picture,
+      customData: template.customData
     })
   }
 
@@ -178,7 +217,9 @@ export class DBCharacterProvider implements ICharacterProvider {
       textColor: doc.textColor,
       boosted: doc.boosted,
       battleState: doc.battleState.toString(),
-      controlledBy: doc.controlledBy
+      controlledBy: doc.controlledBy,
+      customData: doc.customData,
+      isInvocation: doc.isInvocation
     } as DBCharacter
   }
 
@@ -187,10 +228,9 @@ export class DBCharacterProvider implements ICharacterProvider {
     if (characterObservable) {
       characterObservable.next(character)
     }
-    if (character.battleState !== BattleState.NONE) {
-      const session = await this.findAllForSession()
-      this.charactersSession.next(session)
-    }
+    const session = await this.findAllForSession()
+    this.charactersSession.next(session)
+
     if (character.controlledBy) {
       const characters = await this.findAllControlledBy(character.controlledBy)
       const charactersControlledObservable = this.charactersControlled.get(character.controlledBy)
@@ -218,8 +258,6 @@ export class DBCharacterProvider implements ICharacterProvider {
   }
 
   async createInvocation(newCharacter: Character): Promise<Character> {
-    const nbInvocation = await this.dbCharacterRepository.countBy({ controlledBy: newCharacter.controlledBy })
-    newCharacter.name = `${newCharacter.controlledBy} - ${newCharacter.name} ${nbInvocation + 1}`
     const createdInvocation = this.dbCharacterRepository.create(DBCharacterProvider.fromCharacter(newCharacter))
     const invocation = await this.toCharacter(await this.dbCharacterRepository.save(createdInvocation))
     await this.dealsWithObservables(invocation)
@@ -290,6 +328,7 @@ export class DBCharacterProvider implements ICharacterProvider {
     }
     this.characters.delete(name)
     await this.dbCharacterRepository.remove(character)
+    await this.dealsWithObservables(await this.toCharacter(character))
     return true
   }
 

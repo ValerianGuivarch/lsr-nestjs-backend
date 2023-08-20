@@ -1,5 +1,6 @@
 import { Character, CharacterToCreate } from '../models/characters/Character'
 import { CharacterTemplate } from '../models/invocation/CharacterTemplate'
+import { NatureLevel } from '../models/session/NatureLevel'
 import { Observable } from 'rxjs'
 
 export interface ICharacterProvider {
@@ -19,4 +20,5 @@ export interface ICharacterProvider {
   findAll(): Promise<Character[]>
   findAllForSession(): Promise<Character[]>
   countAll(): Promise<number>
+  getNatureLevel(): Promise<NatureLevel>
 }

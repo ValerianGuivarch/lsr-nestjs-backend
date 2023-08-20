@@ -1,5 +1,7 @@
 import { CharacterTemplateReferential } from '../../../domain/models/invocation/CharacterTemplateReferential'
-import { PrimaryColumn, Entity, Column } from 'typeorm'
+import { DBBloodline } from '../bloodlines/DBBloodline'
+import { DBClasse } from '../classes/DBClasse'
+import { PrimaryColumn, Entity, Column, ManyToOne, JoinColumn } from 'typeorm'
 
 @Entity()
 export class DBCharacterTemplate {
@@ -62,4 +64,21 @@ export class DBCharacterTemplate {
 
   @Column({ type: 'varchar', nullable: true })
   picture?: string
+
+  @Column({ type: 'varchar', nullable: true })
+  customData?: string
+
+  @Column({ type: 'varchar', nullable: true })
+  classeName?: string
+
+  @ManyToOne(() => DBClasse)
+  @JoinColumn({ name: 'classeName' })
+  classe: DBClasse
+
+  @Column({ type: 'varchar', nullable: true })
+  bloodlineName?: string
+
+  @ManyToOne(() => DBBloodline)
+  @JoinColumn({ name: 'bloodlineName' })
+  bloodline: DBBloodline
 }

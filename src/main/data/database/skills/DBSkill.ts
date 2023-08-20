@@ -26,4 +26,10 @@ export class DBSkill extends DBSkillAttrs {
 
   @Column({ type: 'varchar', default: '' })
   description: string
+
+  @Column({ type: 'varchar', default: '' })
+  precision: string
+
+  @Column({ type: 'integer', default: 0 })
+  soldatCost: number
 }

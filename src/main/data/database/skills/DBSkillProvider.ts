@@ -1,14 +1,17 @@
 import { DBBloodlineSkill } from './DBBloodlineSkill'
 import { DBCharacterSkill } from './DBCharacterSkill'
+import { DBCharacterTemplateSkill } from './DBCharacterTemplateSkill'
 import { DBClasseSkill } from './DBClasseSkill'
 import { DBSkill } from './DBSkill'
 import { DBSkillAttrs } from './DBSkillAttrs'
 import { Character } from '../../../domain/models/characters/Character'
 import { DisplayCategory } from '../../../domain/models/characters/DisplayCategory'
+import { CharacterTemplate } from '../../../domain/models/invocation/CharacterTemplate'
 import { SuccessCalculation } from '../../../domain/models/roll/SuccessCalculation'
 import { Skill } from '../../../domain/models/skills/Skill'
 import { SkillStat } from '../../../domain/models/skills/SkillStat'
 import { ISkillProvider } from '../../../domain/providers/ISkillProvider'
+import { DBCharacter } from '../character/DBCharacter'
 import { Injectable } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { Repository } from 'typeorm'
@@ -24,7 +27,11 @@ export class DBSkillProvider implements ISkillProvider {
     @InjectRepository(DBBloodlineSkill, 'postgres')
     private dbBloodlineSkillRepository: Repository<DBBloodlineSkill>,
     @InjectRepository(DBCharacterSkill, 'postgres')
-    private dbCharacterSkillRepository: Repository<DBCharacterSkill>
+    private dbCharacterSkillRepository: Repository<DBCharacterSkill>,
+    @InjectRepository(DBCharacterTemplateSkill, 'postgres')
+    private dbCharacterTemplateSkillRepository: Repository<DBCharacterTemplateSkill>,
+    @InjectRepository(DBCharacter, 'postgres')
+    private dbCharacterRepository: Repository<DBCharacter>
   ) {}
 
   private static toSkill(
@@ -42,6 +49,7 @@ export class DBSkillProvider implements ISkillProvider {
       longName: skill.longName,
       display: skill.display,
       position: skill.position,
+      soldatCost: skill.soldatCost,
       invocationTemplateName: skill.invocationTemplateName,
       isArcanique: skill.isArcanique,
       displayCategory:
@@ -98,6 +106,14 @@ export class DBSkillProvider implements ISkillProvider {
           : (() => {
               throw new Error('Missing arcaneCost for skill ' + skill.name)
             })(),
+      arcanePrimeCost:
+        overloadSkill && overloadSkill.arcanePrimeCost !== null
+          ? overloadSkill.arcanePrimeCost
+          : skill.arcanePrimeCost !== null
+          ? skill.arcanePrimeCost
+          : (() => {
+              throw new Error('Missing arcanePrimeCost for skill ' + skill.name)
+            })(),
       allowsPp:
         overloadSkill && overloadSkill.allowsPp !== null
           ? overloadSkill.allowsPp
@@ -151,6 +167,16 @@ export class DBSkillProvider implements ISkillProvider {
     await this.dbCharacterSkillRepository.save(characterSkill)
   }
 
+  async updateSkillAttribution(characterName: string, skillName: string, limitationMax: number): Promise<void> {
+    const characterSkill = await this.dbCharacterSkillRepository.findOneByOrFail({
+      skillName: skillName,
+      characterName: characterName
+    })
+    characterSkill.limitationMax = limitationMax
+    characterSkill.dailyUse = limitationMax
+    await this.dbCharacterSkillRepository.save(characterSkill)
+  }
+
   async findSkillsByCharacter(character: Character): Promise<Skill[]> {
     const skillsForAll = await this.dbSkillRepository.findBy({ allAttribution: true })
 
@@ -190,5 +216,42 @@ export class DBSkillProvider implements ISkillProvider {
       }
     }
     return Promise.all(skillPromises.sort((a, b) => a.position - b.position))
+  }
+
+  async findSkillsByCharacterTemplate(characterTemplate: CharacterTemplate): Promise<Skill[]> {
+    const characterTemplateWithSkills = await this.dbCharacterTemplateSkillRepository.find({
+      where: { characterTemplateName: characterTemplate.name },
+      relations: ['characterTemplate', 'skill']
+    })
+    const skillPromises: Skill[] = characterTemplateWithSkills.map((characterTemplateSkill) =>
+      DBSkillProvider.toSkill(
+        characterTemplateSkill.skill,
+        characterTemplateSkill,
+        characterTemplateSkill.limitationMax,
+        characterTemplateSkill.dailyUse
+      )
+    )
+    return Promise.all(skillPromises.sort((a, b) => a.position - b.position))
+  }
+
+  async affectSkillToCharacter(character: Character, skill: Skill): Promise<void> {
+    // Check if character exists in DBCharacter
+    const dbCharacter = await this.dbCharacterRepository.findOneBy({ name: character.name })
+    if (!dbCharacter) {
+      throw new Error('Character does not exist.')
+    }
+
+    // Check if skill exists in DBSkill
+    const dbSkill = await this.dbSkillRepository.findOneBy({ name: skill.name })
+    if (!dbSkill) {
+      throw new Error('Skill does not exist.')
+    }
+
+    await this.dbCharacterSkillRepository.save({
+      character: character,
+      characterName: character.name,
+      skill: skill,
+      skillName: skill.name
+    })
   }
 }

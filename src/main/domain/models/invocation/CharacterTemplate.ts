@@ -15,6 +15,9 @@ export class CharacterTemplate {
   ppMaxValueReferential: CharacterTemplateReferential
   ppMaxValueRule: number
   picture?: string
+  customData?: string
+  classeName?: string
+  bloodlineName?: string
 
   constructor(p: CharacterTemplate) {
     Object.assign(this, p)
