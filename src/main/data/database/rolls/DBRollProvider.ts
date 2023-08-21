@@ -18,6 +18,7 @@ export class DBRollProvider implements IRollProvider {
   private static toRoll(doc: DBRoll): Roll {
     return new Roll({
       id: doc.id,
+      isHeal: doc.isHeal,
       rollerName: doc.rollerName,
       date: doc.date,
       secret: doc.secret,
@@ -42,6 +43,7 @@ export class DBRollProvider implements IRollProvider {
 
   private static fromRoll(doc: RollToCreate): Partial<DBRoll> {
     return {
+      isHeal: doc.isHeal,
       rollerName: doc.rollerName,
       date: doc.date,
       secret: doc.secret,

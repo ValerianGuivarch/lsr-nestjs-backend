@@ -52,6 +52,7 @@ export class DBSkillProvider implements ISkillProvider {
       soldatCost: skill.soldatCost,
       invocationTemplateName: skill.invocationTemplateName,
       isArcanique: skill.isArcanique,
+      isHeal: skill.isHeal,
       displayCategory:
         overloadSkill && overloadSkill.displayCategory !== null
           ? DisplayCategory[overloadSkill.displayCategory]
@@ -167,13 +168,18 @@ export class DBSkillProvider implements ISkillProvider {
     await this.dbCharacterSkillRepository.save(characterSkill)
   }
 
-  async updateSkillAttribution(characterName: string, skillName: string, limitationMax: number): Promise<void> {
+  async updateSkillAttribution(
+    characterName: string,
+    skillName: string,
+    dailyUse: number,
+    limitationMax: number
+  ): Promise<void> {
     const characterSkill = await this.dbCharacterSkillRepository.findOneByOrFail({
       skillName: skillName,
       characterName: characterName
     })
     characterSkill.limitationMax = limitationMax
-    characterSkill.dailyUse = limitationMax
+    characterSkill.dailyUse = dailyUse
     await this.dbCharacterSkillRepository.save(characterSkill)
   }
 

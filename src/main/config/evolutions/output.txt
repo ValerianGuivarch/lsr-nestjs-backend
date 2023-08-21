@@ -382,7 +382,7 @@ const canarticho = this.createCharacter({
 const jonathan = this.createCharacter({
     name: "jonathan",
     classe: classes.get('champion'),
-    bloodline: bloodlines.get('lumiere'),
+    bloodline: bloodlines.get('lumière'),
     chair: 9,
     esprit: 2,
     essence: 8,
@@ -610,7 +610,7 @@ const john = this.createCharacter({
 const mathieu = this.createCharacter({
     name: "mathieu",
     classe: classes.get('champion'),
-    bloodline: bloodlines.get('lumiere'),
+    bloodline: bloodlines.get('lumière'),
     chair: 3,
     esprit: 3,
     essence: 15,
@@ -781,7 +781,7 @@ const bélial = this.createCharacter({
 const gabriel = this.createCharacter({
     name: "gabriel",
     classe: classes.get('roi'),
-    bloodline: bloodlines.get('lumiere'),
+    bloodline: bloodlines.get('lumière'),
     chair: 20,
     esprit: 20,
     essence: 20,
@@ -971,7 +971,7 @@ const anamada = this.createCharacter({
 const paladin = this.createCharacter({
     name: "paladin",
     classe: classes.get('champion'),
-    bloodline: bloodlines.get('lumiere'),
+    bloodline: bloodlines.get('lumière'),
     chair: 6,
     esprit: 5,
     essence: 6,
@@ -1085,7 +1085,7 @@ const mordred = this.createCharacter({
 const lancelot = this.createCharacter({
     name: "lancelot",
     classe: classes.get('champion'),
-    bloodline: bloodlines.get('lumiere'),
+    bloodline: bloodlines.get('lumière'),
     chair: 10,
     esprit: 4,
     essence: 9,
@@ -1389,7 +1389,7 @@ const darkkhalis = this.createCharacter({
 const darkmathieu = this.createCharacter({
     name: "darkmathieu",
     classe: classes.get('champion'),
-    bloodline: bloodlines.get('lumiere'),
+    bloodline: bloodlines.get('lumière'),
     chair: 15,
     esprit: 5,
     essence: 5,
@@ -1826,7 +1826,7 @@ const directeur = this.createCharacter({
 const cortès = this.createCharacter({
     name: "cortès",
     classe: classes.get('champion'),
-    bloodline: bloodlines.get('lumiere'),
+    bloodline: bloodlines.get('lumière'),
     chair: 3,
     esprit: 6,
     essence: 11,

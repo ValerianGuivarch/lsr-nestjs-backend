@@ -30,7 +30,12 @@ export class SkillService {
     })
   }
 
-  async updateMunitions(characterName: string, skillName: string, limitationMax: number): Promise<void> {
-    await this.skillsProvider.updateSkillAttribution(characterName, skillName, limitationMax)
+  async updateSkillsAttribution(
+    characterName: string,
+    skillName: string,
+    dailyUse: number,
+    limitationMax: number
+  ): Promise<void> {
+    await this.skillsProvider.updateSkillAttribution(characterName, skillName, dailyUse, limitationMax)
   }
 }

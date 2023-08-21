@@ -309,6 +309,7 @@ export type Schema = {
       'db_skill:arcanePrimeCost': number;
       'db_skill:precision': string;
       'db_skill:soldatCost': number;
+      'db_skill:isHeal': boolean;
       'db_skill:db_character_template:name': string;
       'db_skill:db_character_template:chairValueReferential': 'CHAIR' | 'ESPRIT' | 'ESSENCE' | 'FIXE' | 'SUCCESS';
       'db_skill:db_character_template:chairValueRule': number;
@@ -651,6 +652,7 @@ export type Schema = {
       'db_skill:arcanePrimeCost': number;
       'db_skill:precision': string;
       'db_skill:soldatCost': number;
+      'db_skill:isHeal': boolean;
       'db_skill:db_character_template:name': string;
       'db_skill:db_character_template:chairValueReferential': 'CHAIR' | 'ESPRIT' | 'ESSENCE' | 'FIXE' | 'SUCCESS';
       'db_skill:db_character_template:chairValueRule': number;
@@ -803,6 +805,7 @@ export type Schema = {
       'db_skill:arcanePrimeCost': number;
       'db_skill:precision': string;
       'db_skill:soldatCost': number;
+      'db_skill:isHeal': boolean;
       'db_skill:db_character_template:name': string;
       'db_skill:db_character_template:chairValueReferential': 'CHAIR' | 'ESPRIT' | 'ESSENCE' | 'FIXE' | 'SUCCESS';
       'db_skill:db_character_template:chairValueRule': number;
@@ -963,6 +966,7 @@ export type Schema = {
       'db_skill:arcanePrimeCost': number;
       'db_skill:precision': string;
       'db_skill:soldatCost': number;
+      'db_skill:isHeal': boolean;
       'db_skill:db_character_template:name': string;
       'db_skill:db_character_template:chairValueReferential': 'CHAIR' | 'ESPRIT' | 'ESSENCE' | 'FIXE' | 'SUCCESS';
       'db_skill:db_character_template:chairValueRule': number;
@@ -1020,6 +1024,7 @@ export type Schema = {
       'empiriqueRoll': string;
       'resistRoll': string;
       'display': string;
+      'isHeal': boolean;
     };
     nested: {};
     flat: {};
@@ -1061,6 +1066,7 @@ export type Schema = {
       'arcanePrimeCost': number;
       'precision': string;
       'soldatCost': number;
+      'isHeal': boolean;
     };
     nested: {
       'db_character_template': Schema['db_character_template']['plain'] & Schema['db_character_template']['nested'];
@@ -1184,6 +1190,7 @@ export type Schema = {
       'db_skill:arcanePrimeCost': number;
       'db_skill:precision': string;
       'db_skill:soldatCost': number;
+      'db_skill:isHeal': boolean;
       'db_skill:db_character_template:name': string;
       'db_skill:db_character_template:chairValueReferential': 'CHAIR' | 'ESPRIT' | 'ESSENCE' | 'FIXE' | 'SUCCESS';
       'db_skill:db_character_template:chairValueRule': number;

@@ -2,7 +2,7 @@ import { CharacterPreviewVM } from './entities/CharacterPreviewVM'
 import { CharacterVM } from './entities/CharacterVM'
 import { CreateCharacterDto } from './requests/CreateCharacterDto'
 import { UpdateCharacterDto } from './requests/UpdateCharacterDto'
-import { UpdateMunitionDto } from './requests/UpdateMunitionDto'
+import { UpdateSkillsAttributionDto } from './requests/UpdateSkillsAttributionDto'
 import { ApotheoseState } from '../../../../../domain/models/apotheoses/ApotheoseState'
 import { Character } from '../../../../../domain/models/characters/Character'
 import { ApotheoseService } from '../../../../../domain/services/ApotheoseService'
@@ -55,28 +55,17 @@ export class CharacterController {
   }
 
   @ApiOkResponse({})
-  @Put(':name/munitions')
-  async munitions(@Param('name') name: string, @Body() updateMunitionDto: UpdateMunitionDto): Promise<CharacterVM> {
-    await this.skillService.updateMunitions(name, updateMunitionDto.skillName, updateMunitionDto.limitationMax)
-    const character = await this.characterService.findOneByName(name)
-    const classe = await this.classeService.findOneByName(character.classeName)
-    const bloodline = await this.bloodlineService.findOneByName(character.bloodlineName)
-    const skillsList = await this.skillService.findSkillsByCharacter(character)
-    const proficienciesList = await this.proficiencyService.findProficienciesByCharacter(character)
-    const apotheosesList = await this.apotheoseService.findApotheosesByCharacter(character)
-    const rest: {
-      baseRest: number
-      longRest: number
-    } = await this.sessionService.getRestForCharacter(character)
-    return CharacterVM.of({
-      character: character,
-      classe: classe,
-      bloodline: bloodline,
-      skills: skillsList,
-      proficiencies: proficienciesList,
-      rest: rest,
-      apotheoses: apotheosesList
-    })
+  @Put(':name/skills')
+  async updateSkillsAttribution(
+    @Param('name') name: string,
+    @Body() updateSkillsAttributionDto: UpdateSkillsAttributionDto
+  ): Promise<void> {
+    await this.skillService.updateSkillsAttribution(
+      name,
+      updateSkillsAttributionDto.skillName,
+      updateSkillsAttributionDto.dailyUse,
+      updateSkillsAttributionDto.limitationMax
+    )
   }
 
   @ApiOkResponse({ type: CharacterVM })

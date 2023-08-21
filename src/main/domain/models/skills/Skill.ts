@@ -23,6 +23,7 @@ export class Skill {
   position: number
   soldatCost: number
   isArcanique: boolean
+  isHeal: boolean
   invocationTemplateName?: string
   description: string
   limitationMax: number | null
@@ -49,6 +50,7 @@ export class Skill {
     this.display = p.display
     this.position = p.position
     this.isArcanique = p.isArcanique
+    this.isHeal = p.isHeal
     this.invocationTemplateName = p.invocationTemplateName
     this.description = p.description
     this.limitationMax = p.limitationMax

@@ -165,7 +165,7 @@ export class ProviderErrors {
   static RollNotEnoughDailyUse(): GenericError {
     return GenericError.of({
       statusCode: HttpStatus.PRECONDITION_REQUIRED,
-      message: 'utilisation journalières atteintes !',
+      message: "plus d'utilisation possible !",
       code: 'ROLL_NOT_ENOUGH_DAILY_USE'
     })
   }

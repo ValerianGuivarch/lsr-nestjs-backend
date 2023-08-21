@@ -65,4 +65,7 @@ export class DBRoll {
 
   @Column({ type: 'varchar', default: 'fait un jet ', nullable: false })
   display: string
+
+  @Column({ type: 'boolean', default: false, nullable: false })
+  isHeal?: boolean
 }

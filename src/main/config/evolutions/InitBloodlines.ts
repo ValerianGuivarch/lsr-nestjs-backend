@@ -31,8 +31,8 @@ export class InitBloodlines {
     })
 
     const lumiereBloodline: DBBloodline = this.createBloodline({
-      name: 'lumiere',
-      display: 'de la lumiere',
+      name: 'lumière',
+      display: 'de la lumière',
       healthImproved: true
     })
 

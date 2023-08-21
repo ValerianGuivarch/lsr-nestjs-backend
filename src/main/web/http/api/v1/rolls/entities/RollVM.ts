@@ -65,6 +65,9 @@ export class RollVM {
   @ApiProperty()
   stat: string
 
+  @ApiProperty()
+  isHeal: boolean
+
   constructor(p: RollVM) {
     Object.assign(this, p)
   }
@@ -72,6 +75,7 @@ export class RollVM {
   static of(p: { roll: Roll; othersRolls: Roll[] }): RollVM {
     return new RollVM({
       id: p.roll.id,
+      isHeal: p.roll.isHeal,
       rollerName: p.roll.rollerName,
       date: p.roll.date,
       secret: p.roll.secret,

@@ -411,7 +411,7 @@ export class InitCharacters {
     const jonathan = this.createCharacter({
       name: 'jonathan',
       classe: classes.get('champion'),
-      bloodline: bloodlines.get('lumiere'),
+      bloodline: bloodlines.get('lumière'),
       chair: 9,
       esprit: 2,
       essence: 8,
@@ -648,7 +648,7 @@ export class InitCharacters {
     const mathieu = this.createCharacter({
       name: 'mathieu',
       classe: classes.get('champion'),
-      bloodline: bloodlines.get('lumiere'),
+      bloodline: bloodlines.get('lumière'),
       chair: 3,
       esprit: 3,
       essence: 15,
@@ -826,7 +826,7 @@ export class InitCharacters {
     const gabriel = this.createCharacter({
       name: 'gabriel',
       classe: classes.get('roi'),
-      bloodline: bloodlines.get('lumiere'),
+      bloodline: bloodlines.get('lumière'),
       chair: 20,
       esprit: 20,
       essence: 20,
@@ -1129,7 +1129,7 @@ export class InitCharacters {
     const lancelot = this.createCharacter({
       name: 'lancelot',
       classe: classes.get('champion'),
-      bloodline: bloodlines.get('lumiere'),
+      bloodline: bloodlines.get('lumière'),
       chair: 10,
       esprit: 4,
       essence: 9,
@@ -1453,7 +1453,7 @@ export class InitCharacters {
     const darkmathieu = this.createCharacter({
       name: 'darkmathieu',
       classe: classes.get('champion'),
-      bloodline: bloodlines.get('lumiere'),
+      bloodline: bloodlines.get('lumière'),
       chair: 15,
       esprit: 5,
       essence: 5,
@@ -1922,7 +1922,7 @@ export class InitCharacters {
     const cortès = this.createCharacter({
       name: 'cortès',
       classe: classes.get('champion'),
-      bloodline: bloodlines.get('lumiere'),
+      bloodline: bloodlines.get('lumière'),
       chair: 3,
       esprit: 6,
       essence: 11,

@@ -86,7 +86,21 @@ export class InitSkills {
       position: 2,
       ppCost: 1
     })
-    const formeAqueue: DBSkill = this.createSkill({
+
+    const soin: DBSkill = this.createSkill({
+      name: 'soin',
+      shortName: 'soin',
+      description: "donne des PV à une cible au prix d'un pp",
+      allAttribution: false,
+      stat: SkillStat.ESSENCE,
+      category: DisplayCategory.MAGIE,
+      display: 'prodigue un *Soin*',
+      position: 3,
+      ppCost: 1,
+      successCalculation: SuccessCalculation.DIVISE_PLUS_1,
+      isHeal: true
+    })
+    const formeAqueuse: DBSkill = this.createSkill({
       name: 'forme aqueuse',
       shortName: 'fa',
       description: "se transforme en eau au prix d'un pp",
@@ -94,7 +108,7 @@ export class InitSkills {
       stat: SkillStat.ESSENCE,
       category: DisplayCategory.MAGIE,
       display: 'se *transforme en Eau*',
-      position: 2,
+      position: 4,
       ppCost: 1
     })
     const soinMental: DBSkill = this.createSkill({
@@ -105,7 +119,7 @@ export class InitSkills {
       stat: SkillStat.ESSENCE,
       category: DisplayCategory.MAGIE,
       display: 'donne des *Points de Focus*',
-      position: 2,
+      position: 4,
       ppCost: 1
     })
     const vol: DBSkill = this.createSkill({
@@ -116,7 +130,7 @@ export class InitSkills {
       stat: SkillStat.ESSENCE,
       category: DisplayCategory.MAGIE,
       display: "s'*Envole*",
-      position: 2,
+      position: 4,
       ppCost: 1
     })
     const armure: DBSkill = this.createSkill({
@@ -127,7 +141,7 @@ export class InitSkills {
       stat: SkillStat.ESSENCE,
       category: DisplayCategory.MAGIE,
       display: 'génère une *Armure*',
-      position: 2,
+      position: 4,
       successCalculation: SuccessCalculation.DIVISE,
       ppCost: 1
     })
@@ -139,7 +153,7 @@ export class InitSkills {
       stat: SkillStat.ESSENCE,
       category: DisplayCategory.MAGIE,
       display: 'donne des *Bénédictions*',
-      position: 2,
+      position: 4,
       ppCost: 1
     })
     const malediction: DBSkill = this.createSkill({
@@ -150,7 +164,7 @@ export class InitSkills {
       stat: SkillStat.ESSENCE,
       category: DisplayCategory.MAGIE,
       display: 'donne des *Malédictions*',
-      position: 2,
+      position: 4,
       ppCost: 1
     })
     const invisibilite: DBSkill = this.createSkill({
@@ -161,7 +175,7 @@ export class InitSkills {
       stat: SkillStat.ESSENCE,
       category: DisplayCategory.MAGIE,
       display: 'rend *Invisible*',
-      position: 2,
+      position: 4,
       ppCost: 1
     })
     const communicationArcaniqueSkill: DBSkill = this.createSkill({
@@ -265,7 +279,7 @@ export class InitSkills {
       stat: SkillStat.ESPRIT,
       category: DisplayCategory.ARCANES,
       display: 'fait une *Alchimiste*',
-      position: 2,
+      position: 4,
       successCalculation: SuccessCalculation.SIMPLE_PLUS_1,
       arcaneCost: 1,
       isArcanique: true
@@ -560,7 +574,8 @@ export class InitSkills {
       position: 22,
       successCalculation: SuccessCalculation.SIMPLE_PLUS_1,
       arcaneCost: 1,
-      isArcanique: true
+      isArcanique: true,
+      isHeal: true
     })
     const chouetteSkill: DBSkill = this.createSkill({
       name: 'chouette',
@@ -2033,7 +2048,8 @@ export class InitSkills {
       copieArcaniqueSkill,
       lienAuxVoyageursSkill,
       peurSkill,
-      formeAqueue,
+      soin,
+      formeAqueuse,
       soinMental,
       vol,
       armure,
@@ -2066,6 +2082,7 @@ export class InitSkills {
     position: number
     longName?: string
     isArcanique?: boolean
+    isHeal?: boolean
     allowsPf?: boolean
     allowsPp?: boolean
     use?: SkillOwnedUse
@@ -2106,6 +2123,7 @@ export class InitSkills {
       display: p.display,
       position: p.position,
       isArcanique: p.isArcanique,
+      isHeal: p.isHeal || false,
       invocationTemplate: p.invocationTemplate || null,
       invocationTemplateName: p.invocationTemplate ? p.invocationTemplate.name : null,
       soldatCost: p.soldatCost || 0

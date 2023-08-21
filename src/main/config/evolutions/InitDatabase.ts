@@ -23,6 +23,7 @@ import { DBCharacterTemplateSkill } from '../../data/database/skills/DBCharacter
 import { DBClasseSkill } from '../../data/database/skills/DBClasseSkill'
 import { DBSkill } from '../../data/database/skills/DBSkill'
 import { DisplayCategory } from '../../domain/models/characters/DisplayCategory'
+import { SuccessCalculation } from '../../domain/models/roll/SuccessCalculation'
 import { Injectable } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { Repository } from 'typeorm'
@@ -250,10 +251,13 @@ export class InitDatabase {
   ) {
     await this.saveClasseSkillIfNotExisting(classes.get('champion'), skills.get('magie'))
     await this.saveClasseSkillIfNotExisting(classes.get('champion'), skills.get('cantrip'))
+    await this.saveClasseSkillIfNotExisting(classes.get('champion'), skills.get('soin'))
     await this.saveClasseSkillIfNotExisting(classes.get('rejete'), skills.get('magie'))
     await this.saveClasseSkillIfNotExisting(classes.get('rejete'), skills.get('cantrip'))
+    await this.saveClasseSkillIfNotExisting(classes.get('rejete'), skills.get('soin'))
     await this.saveClasseSkillIfNotExisting(classes.get('corrompu'), skills.get('magie'))
     await this.saveClasseSkillIfNotExisting(classes.get('corrompu'), skills.get('cantrip'))
+    await this.saveClasseSkillIfNotExisting(classes.get('corrompu'), skills.get('soin'))
     await this.saveBloodlineSkillIfNotExisting(bloodlines.get('eau'), skills.get('forme aqueuse'))
     await this.saveBloodlineSkillIfNotExisting(bloodlines.get('feu'), skills.get('soin mental'))
     await this.saveBloodlineSkillIfNotExisting(bloodlines.get('vent'), skills.get('vol'))
@@ -262,6 +266,10 @@ export class InitDatabase {
     await this.saveBloodlineSkillIfNotExisting(bloodlines.get('glace'), skills.get('malédiction'))
     await this.saveBloodlineSkillIfNotExisting(bloodlines.get('neige'), skills.get('malédiction'))
     await this.saveBloodlineSkillIfNotExisting(bloodlines.get('ombre'), skills.get('invisibilité'))
+    await this.saveBloodlineSkillIfNotExisting(bloodlines.get('lumière'), {
+      ...skills.get('soin'),
+      successCalculation: SuccessCalculation.SIMPLE_PLUS_1
+    })
 
     // Viktor
     await this.saveCharacterSkillIfNotExisting({
@@ -287,6 +295,58 @@ export class InitDatabase {
       arcaneCost: 0
     })
 
+    // Isycho
+    await this.saveCharacterSkillIfNotExisting({
+      character: characters.get('isycho'),
+      skill: {
+        ...skills.get('soin'),
+        successCalculation: SuccessCalculation.SIMPLE_PLUS_1
+      },
+      dailyUse: 0
+    })
+    // Isycho
+    await this.saveCharacterSkillIfNotExisting({
+      character: characters.get('isycho'),
+      skill: skills.get('forme aqueuse'),
+      dailyUse: 0
+    })
+    // Isycho
+    await this.saveCharacterSkillIfNotExisting({
+      character: characters.get('isycho'),
+      skill: skills.get('soin mental'),
+      dailyUse: 0
+    })
+    // Isycho
+    await this.saveCharacterSkillIfNotExisting({
+      character: characters.get('isycho'),
+      skill: skills.get('vol'),
+      dailyUse: 0
+    })
+    // Isycho
+    await this.saveCharacterSkillIfNotExisting({
+      character: characters.get('isycho'),
+      skill: skills.get('armure'),
+      dailyUse: 0
+    })
+    // Isycho
+    await this.saveCharacterSkillIfNotExisting({
+      character: characters.get('isycho'),
+      skill: skills.get('speed'),
+      dailyUse: 0
+    })
+    // Isycho
+    await this.saveCharacterSkillIfNotExisting({
+      character: characters.get('isycho'),
+      skill: skills.get('malédiction'),
+      dailyUse: 0
+    })
+    // Isycho
+    await this.saveCharacterSkillIfNotExisting({
+      character: characters.get('isycho'),
+      skill: skills.get('invisibilité'),
+      dailyUse: 0
+    })
+
     // Vernet
     await this.saveCharacterSkillIfNotExisting({
       character: characters.get('vernet'),
@@ -304,37 +364,37 @@ export class InitDatabase {
     await this.saveCharacterSkillIfNotExisting({
       character: characters.get('vernet'),
       skill: skills.get('Mun. léthales'),
-      limitationMax: 0
+      dailyUse: 0
     })
     await this.saveCharacterSkillIfNotExisting({
       character: characters.get('vernet'),
       skill: skills.get('Mun. affaiblissantes'),
-      limitationMax: 0
+      dailyUse: 0
     })
     await this.saveCharacterSkillIfNotExisting({
       character: characters.get('vernet'),
       skill: skills.get('Mun. peste'),
-      limitationMax: 0
+      dailyUse: 0
     })
     await this.saveCharacterSkillIfNotExisting({
       character: characters.get('vernet'),
       skill: skills.get('Mun. marquage'),
-      limitationMax: 0
+      dailyUse: 0
     })
     await this.saveCharacterSkillIfNotExisting({
       character: characters.get('vernet'),
       skill: skills.get('Mun. dégénérative'),
-      limitationMax: 0
+      dailyUse: 0
     })
     await this.saveCharacterSkillIfNotExisting({
       character: characters.get('vernet'),
       skill: skills.get('Gr. fumigène'),
-      limitationMax: 0
+      dailyUse: 0
     })
     await this.saveCharacterSkillIfNotExisting({
       character: characters.get('vernet'),
       skill: skills.get('Gr. flash'),
-      limitationMax: 0
+      dailyUse: 0
     })
 
     // Millia
@@ -547,6 +607,7 @@ export class InitDatabase {
   private async saveCharacterSkillIfNotExisting(p: {
     character: DBCharacter
     skill: DBSkill
+    dailyUse?: number
     limitationMax?: number
     arcaneCost?: number
     arcanePrimeCost?: number
@@ -569,7 +630,7 @@ export class InitDatabase {
         arcanePrimeCost: p.arcanePrimeCost === undefined ? p.skill.arcanePrimeCost : p.arcanePrimeCost,
         limited: !!p.limitationMax,
         limitationMax: p.limitationMax,
-        dailyUse: p.limitationMax,
+        dailyUse: p.dailyUse,
         dettesCost: p.dettesCost === undefined ? p.skill.dettesCost : p.dettesCost,
         displayCategory: p.displayCategory === undefined ? p.skill.displayCategory : p.displayCategory
       })
@@ -616,8 +677,8 @@ export class InitDatabase {
   ) {
     await this.saveBloodlineProficiencyIfNotExisting(bloodlines.get('terre'), proficiencies.get('force'))
     await this.saveBloodlineProficiencyIfNotExisting(bloodlines.get('terre'), proficiencies.get('stratégie'))
-    await this.saveBloodlineProficiencyIfNotExisting(bloodlines.get('lumiere'), proficiencies.get('sagesse'))
-    await this.saveBloodlineProficiencyIfNotExisting(bloodlines.get('lumiere'), proficiencies.get('charisme'))
+    await this.saveBloodlineProficiencyIfNotExisting(bloodlines.get('lumière'), proficiencies.get('sagesse'))
+    await this.saveBloodlineProficiencyIfNotExisting(bloodlines.get('lumière'), proficiencies.get('charisme'))
     await this.saveBloodlineProficiencyIfNotExisting(bloodlines.get('terreur'), proficiencies.get('crainte'))
     await this.saveBloodlineProficiencyIfNotExisting(bloodlines.get('terreur'), proficiencies.get('courage'))
     await this.saveBloodlineProficiencyIfNotExisting(bloodlines.get('vent'), proficiencies.get('rapidité'))

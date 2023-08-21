@@ -8,5 +8,10 @@ export interface ISkillProvider {
   findSkillsByCharacterTemplate(characterTemplate: CharacterTemplate): Promise<Skill[]>
   affectSkillToCharacter(character: Character, skill: Skill): Promise<void>
   updateDailyUse(skillName: string, characterName: string, number: number): Promise<void>
-  updateSkillAttribution(characterName: string, skillName: string, limitationMax: number): Promise<void>
+  updateSkillAttribution(
+    characterName: string,
+    skillName: string,
+    dailyUse: number,
+    limitationMax: number
+  ): Promise<void>
 }

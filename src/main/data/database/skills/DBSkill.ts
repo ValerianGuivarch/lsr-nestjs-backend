@@ -24,6 +24,9 @@ export class DBSkill extends DBSkillAttrs {
   @Column({ type: 'boolean', default: false })
   isArcanique: boolean
 
+  @Column({ type: 'boolean', default: false })
+  isHeal: boolean
+
   @Column({ type: 'varchar', default: '' })
   description: string
 

@@ -26,6 +26,9 @@ export class SkillVM {
   @ApiProperty()
   soldatCost: number
 
+  @ApiProperty()
+  isHeal: boolean
+
   constructor(p: SkillVM) {
     this.name = p.name
     this.shortName = p.shortName
@@ -35,6 +38,7 @@ export class SkillVM {
     this.dailyUse = p.dailyUse
     this.limitationMax = p.limitationMax
     this.soldatCost = p.soldatCost
+    this.isHeal = p.isHeal
   }
 
   static of(p: { skill: Skill }): SkillVM {
@@ -46,7 +50,8 @@ export class SkillVM {
       longName: p.skill.longName,
       displayCategory: p.skill.displayCategory.toString(),
       description: p.skill.description,
-      soldatCost: p.skill.soldatCost
+      soldatCost: p.skill.soldatCost,
+      isHeal: p.skill.isHeal
     })
   }
 }

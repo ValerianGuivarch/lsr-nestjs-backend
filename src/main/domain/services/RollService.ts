@@ -442,6 +442,7 @@ export class RollService {
     }
     const rollToCreate = await Roll.rollToCreateFactory({
       rollerName: p.character.name,
+      isHeal: p.skill.isHeal,
       data: data,
       date: new Date(),
       secret: p.skill.secret || p.secret,
@@ -504,6 +505,7 @@ export class RollService {
       const dice = RollService.randomIntFromInterval(1, diceValue)
       const rollToCreate = await Roll.rollToCreateFactory({
         rollerName: p.character.name,
+        isHeal: false,
         data: '',
         date: new Date(),
         secret: true,
