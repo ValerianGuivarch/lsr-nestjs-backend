@@ -31,6 +31,6 @@ export class DBBloodlineProvider implements IBloodlineProvider {
 
   async findAll(): Promise<Bloodline[]> {
     const bloodlines = await this.dbBloodlineRepository.find()
-    return bloodlines.map(DBBloodlineProvider.toBloodline)
+    return bloodlines.sort((a, b) => a.name.localeCompare(b.name)).map(DBBloodlineProvider.toBloodline)
   }
 }

@@ -282,12 +282,6 @@ export class DBCharacterProvider implements ICharacterProvider {
     return count > 0
   }
 
-  async findManyByName(names: string[]): Promise<Character[]> {
-    const characters = await this.dbCharacterRepository.findBy({ name: In(names) })
-    const characterPromises = characters.map((character) => this.toCharacter(character))
-    return Promise.all(characterPromises)
-  }
-
   async findAll(): Promise<Character[]> {
     const characters = await this.dbCharacterRepository.find()
     const characterPromises = characters.map((character) => this.toCharacter(character))
@@ -299,14 +293,16 @@ export class DBCharacterProvider implements ICharacterProvider {
       .createQueryBuilder('character')
       .where('character.battleState != :battleState', { battleState: BattleState.NONE })
       .getMany()
-    const characterPromises = characters.map((character) => this.toCharacter(character))
+    const characterPromises = characters
+      .sort((c1, c2) => c1.name.localeCompare(c2.name))
+      .map((character) => this.toCharacter(character))
     return Promise.all(characterPromises)
   }
 
   async findAllControlledBy(characterName: string): Promise<Character[]> {
     const character = await this.dbCharacterRepository.findOneByOrFail({ name: characterName })
     const characters = await this.dbCharacterRepository.findBy({ controlledBy: characterName })
-    characters.push(character)
+    characters.sort((c1, c2) => c1.name.localeCompare(c2.name)).push(character)
     const characterPromises = characters.map((character) => this.toCharacter(character))
     return Promise.all(characterPromises)
   }

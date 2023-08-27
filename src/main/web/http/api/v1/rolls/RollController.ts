@@ -1,5 +1,6 @@
 import { RollVM } from './entities/RollVM'
 import { SendRollRequest } from './requests/SendRollRequest'
+import { UpdateRollRequest } from './requests/UpdateRollRequest'
 import { ApotheoseService } from '../../../../../domain/services/ApotheoseService'
 import { BloodlineService } from '../../../../../domain/services/BloodlineService'
 import { CharacterService } from '../../../../../domain/services/CharacterService'
@@ -7,7 +8,7 @@ import { ClasseService } from '../../../../../domain/services/ClasseService'
 import { InvocationService } from '../../../../../domain/services/InvocationService'
 import { RollService } from '../../../../../domain/services/RollService'
 import { SkillService } from '../../../../../domain/services/SkillService'
-import { Body, Controller, Get, Logger, Post } from '@nestjs/common'
+import { Body, Controller, Get, Logger, Param, Post, Put } from '@nestjs/common'
 import { ApiOkResponse, ApiTags } from '@nestjs/swagger'
 
 @Controller('api/v1/rolls')
@@ -36,6 +37,18 @@ export class RollController {
           othersRolls: rolls.filter((r) => r.resistRoll === '' + roll.id)
         })
       )
+  }
+
+  @ApiOkResponse({ type: RollVM })
+  @Put(':id')
+  async updateRoll(@Param() id: string, @Body() req: UpdateRollRequest): Promise<void> {
+    const rollToUpdate = await this.rollService.findOneById(id)
+    if (rollToUpdate) {
+      await this.rollService.updateRoll({
+        ...rollToUpdate,
+        ...req
+      })
+    }
   }
 
   @ApiOkResponse({ type: RollVM })

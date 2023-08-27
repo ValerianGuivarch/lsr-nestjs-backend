@@ -2,7 +2,7 @@ import { SkillStat } from '../skills/SkillStat'
 export class Roll {
   id: string
   rollerName: string
-  isHeal: boolean
+  healPoint?: number
   date: Date
   secret: boolean
   displayDices: boolean
@@ -50,11 +50,11 @@ export class Roll {
     apotheose?: string
     display: string
     stat: SkillStat
-    isHeal: boolean
+    healPoint?: number
   }): Promise<RollToCreate> {
     const defaults = {
       rollerName: p.rollerName,
-      isHeal: p.isHeal,
+      healPoint: p.healPoint,
       date: p.date,
       secret: p.secret,
       displayDices: p.displayDices,

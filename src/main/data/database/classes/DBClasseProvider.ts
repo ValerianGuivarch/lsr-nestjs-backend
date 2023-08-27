@@ -38,7 +38,7 @@ export class DBClasseProvider implements IClasseProvider {
     return DBClasseProvider.toClasse(classe)
   }
   async findAll(): Promise<Classe[]> {
-    const classes = await this.dbClasseRepository.find()
+    const classes = (await this.dbClasseRepository.find()).sort((a, b) => a.name.localeCompare(b.name))
     return classes.map(DBClasseProvider.toClasse)
   }
 }

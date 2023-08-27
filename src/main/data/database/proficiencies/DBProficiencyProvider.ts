@@ -71,6 +71,7 @@ export class DBProficiencyProvider implements IProficiencyProvider {
         proficiencyPromises.push(DBProficiencyProvider.toProficiency(classeProficiency.proficiency, classeProficiency))
       }
     }
+    proficiencyPromises.sort((a, b) => a.name.localeCompare(b.name))
     return Promise.all(
       proficiencyPromises.filter((proficiency) =>
         proficiency.minLevel ? proficiency.minLevel <= character.niveau : true

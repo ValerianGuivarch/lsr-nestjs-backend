@@ -29,17 +29,6 @@ export class CharacterController {
     private apotheoseService: ApotheoseService
   ) {}
 
-  @ApiOkResponse({ type: CharacterPreviewVM })
-  @Get('')
-  async getAllCharacters(): Promise<CharacterPreviewVM[]> {
-    const characters = await this.characterService.findAll()
-    return characters.map((character) =>
-      CharacterPreviewVM.of({
-        character: character
-      })
-    )
-  }
-
   @ApiOkResponse({})
   @Put(':name/rest')
   async rest(@Param('name') name: string): Promise<void> {
@@ -148,6 +137,17 @@ export class CharacterController {
       rest: rest,
       apotheoses: apotheosesList
     })
+  }
+
+  @ApiOkResponse({ type: CharacterPreviewVM })
+  @Get('')
+  async getAllCharacters(): Promise<CharacterPreviewVM[]> {
+    const characters = await this.characterService.findAll()
+    return characters.map((character) =>
+      CharacterPreviewVM.of({
+        character: character
+      })
+    )
   }
 
   @ApiOkResponse()

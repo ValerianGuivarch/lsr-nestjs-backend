@@ -20,11 +20,6 @@ export class CharacterService {
   async findOneByName(name: string): Promise<Character> {
     return this.characterProvider.findOneByName(name)
   }
-
-  async findAll(): Promise<Character[]> {
-    return this.characterProvider.findAll()
-  }
-
   async findAllControllerBy(name: string): Promise<Character[]> {
     return this.characterProvider.findAllControlledBy(name)
   }
@@ -55,6 +50,10 @@ export class CharacterService {
   }
   getCharactersSessionObservable(): Observable<Character[]> {
     return this.characterProvider.getCharactersSessionObservable()
+  }
+
+  findAll(): Promise<Character[]> {
+    return this.characterProvider.findAll()
   }
 
   getCharactersControlledObservable(name: string): Observable<Character[]> {

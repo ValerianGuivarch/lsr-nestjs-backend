@@ -18,11 +18,11 @@ export class DBRollProvider implements IRollProvider {
   private static toRoll(doc: DBRoll): Roll {
     return new Roll({
       id: doc.id,
-      isHeal: doc.isHeal,
+      healPoint: doc.healPoint,
       rollerName: doc.rollerName,
       date: doc.date,
       secret: doc.secret,
-      displayDices: doc.displayDices,
+      displayDices: true,
       focus: doc.focus,
       power: doc.power,
       proficiency: doc.proficiency,
@@ -43,7 +43,7 @@ export class DBRollProvider implements IRollProvider {
 
   private static fromRoll(doc: RollToCreate): Partial<DBRoll> {
     return {
-      isHeal: doc.isHeal,
+      healPoint: doc.healPoint,
       rollerName: doc.rollerName,
       date: doc.date,
       secret: doc.secret,
@@ -70,6 +70,19 @@ export class DBRollProvider implements IRollProvider {
   async add(roll: RollToCreate): Promise<Roll> {
     const dbRoll = this.dbRollRepository.create(DBRollProvider.fromRoll(roll))
     return DBRollProvider.toRoll(await this.dbRollRepository.save(dbRoll))
+  }
+
+  async update(roll: Roll): Promise<Roll> {
+    const dbRoll = this.dbRollRepository.create(DBRollProvider.fromRoll(roll))
+    return DBRollProvider.toRoll(await this.dbRollRepository.save(dbRoll))
+  }
+
+  async findOneById(id: string): Promise<Roll> {
+    const roll = await this.dbRollRepository.findOneBy({ id })
+    if (!roll) {
+      throw ProviderErrors.EntityNotFound('roll ${id}')
+    }
+    return DBRollProvider.toRoll(roll)
   }
 
   async getLast(size: number): Promise<Roll[]> {

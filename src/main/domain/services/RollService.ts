@@ -442,7 +442,7 @@ export class RollService {
     }
     const rollToCreate = await Roll.rollToCreateFactory({
       rollerName: p.character.name,
-      isHeal: p.skill.isHeal,
+      healPoint: p.skill.isHeal ? success : undefined,
       data: data,
       date: new Date(),
       secret: p.skill.secret || p.secret,
@@ -505,7 +505,7 @@ export class RollService {
       const dice = RollService.randomIntFromInterval(1, diceValue)
       const rollToCreate = await Roll.rollToCreateFactory({
         rollerName: p.character.name,
-        isHeal: false,
+        healPoint: undefined,
         data: '',
         date: new Date(),
         secret: true,
@@ -531,5 +531,16 @@ export class RollService {
     }
     p.character.apotheoseState = ApotheoseState.COST_TO_PAY
     await this.characterProvider.update(p.character)
+  }
+
+  async updateRoll(roll: Roll): Promise<Roll> {
+    const rollUpdated = this.rollProvider.update(roll)
+    const rolls = await this.getLast()
+    this.rollsChangeSubject.next(rolls)
+    return rollUpdated
+  }
+
+  async findOneById(id: string): Promise<Roll> {
+    return this.rollProvider.findOneById(id)
   }
 }

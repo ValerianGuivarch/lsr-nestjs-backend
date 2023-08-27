@@ -16,9 +16,8 @@ export interface ICharacterProvider {
   findTemplateByName(name: string): Promise<CharacterTemplate>
   findByName(name: string): Promise<Character | undefined>
   exist(name: string): Promise<boolean>
-  findManyByName(names: string[]): Promise<Character[]>
-  findAll(): Promise<Character[]>
   findAllForSession(): Promise<Character[]>
+  findAll(): Promise<Character[]>
   countAll(): Promise<number>
   getNatureLevel(): Promise<NatureLevel>
 }

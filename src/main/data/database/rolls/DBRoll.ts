@@ -1,5 +1,6 @@
 import { SkillStat } from '../../../domain/models/skills/SkillStat'
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm'
+import { DBCharacter } from '../character/DBCharacter'
+import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm'
 
 @Entity()
 export class DBRoll {
@@ -8,6 +9,10 @@ export class DBRoll {
 
   @Column({ type: 'varchar' })
   rollerName: string
+
+  @ManyToOne(() => DBCharacter)
+  @JoinColumn({ name: 'rollerName' })
+  roller: DBCharacter
 
   @Column({ type: 'timestamp' })
   date: Date
@@ -20,9 +25,6 @@ export class DBRoll {
 
   @Column({ type: 'boolean' })
   secret: boolean
-
-  @Column({ type: 'boolean' })
-  displayDices: boolean
 
   @Column({ type: 'boolean' })
   focus: boolean
@@ -55,6 +57,9 @@ export class DBRoll {
   picture?: string
 
   @Column({ type: 'varchar', nullable: true })
+  illustration?: string
+
+  @Column({ type: 'varchar', nullable: true })
   data?: string
 
   @Column({ type: 'varchar', nullable: true })
@@ -66,6 +71,6 @@ export class DBRoll {
   @Column({ type: 'varchar', default: 'fait un jet ', nullable: false })
   display: string
 
-  @Column({ type: 'boolean', default: false, nullable: false })
-  isHeal?: boolean
+  @Column({ type: 'integer', nullable: true })
+  healPoint?: number
 }

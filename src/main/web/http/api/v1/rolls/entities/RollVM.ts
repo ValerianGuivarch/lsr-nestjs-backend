@@ -44,7 +44,7 @@ export class RollVM {
   @ApiProperty()
   juge34: number | null
 
-  @ApiProperty()
+  @ApiProperty({ type: RollVM, isArray: true })
   resistRolls: RollVM[]
 
   @ApiPropertyOptional()
@@ -65,8 +65,8 @@ export class RollVM {
   @ApiProperty()
   stat: string
 
-  @ApiProperty()
-  isHeal: boolean
+  @ApiPropertyOptional()
+  healPoint?: number
 
   constructor(p: RollVM) {
     Object.assign(this, p)
@@ -75,7 +75,7 @@ export class RollVM {
   static of(p: { roll: Roll; othersRolls: Roll[] }): RollVM {
     return new RollVM({
       id: p.roll.id,
-      isHeal: p.roll.isHeal,
+      healPoint: p.roll.healPoint,
       rollerName: p.roll.rollerName,
       date: p.roll.date,
       secret: p.roll.secret,

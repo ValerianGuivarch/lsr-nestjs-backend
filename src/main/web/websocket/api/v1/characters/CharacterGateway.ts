@@ -2,9 +2,11 @@ import { ApotheoseService } from '../../../../../domain/services/ApotheoseServic
 import { BloodlineService } from '../../../../../domain/services/BloodlineService'
 import { CharacterService } from '../../../../../domain/services/CharacterService'
 import { ClasseService } from '../../../../../domain/services/ClasseService'
+import { MjService } from '../../../../../domain/services/MjService'
 import { ProficiencyService } from '../../../../../domain/services/ProficiencyService'
 import { SessionService } from '../../../../../domain/services/SessionService'
 import { SkillService } from '../../../../../domain/services/SkillService'
+import { CharacterPreviewVM } from '../../../../http/api/v1/characters/entities/CharacterPreviewVM'
 import { CharacterVM } from '../../../../http/api/v1/characters/entities/CharacterVM'
 import { Controller, Get, Param, Sse } from '@nestjs/common'
 import { ApiOkResponse, ApiTags } from '@nestjs/swagger'
@@ -25,7 +27,8 @@ export class CharacterGateway {
     private skillService: SkillService,
     private proficiencyService: ProficiencyService,
     private apotheoseService: ApotheoseService,
-    private sessionService: SessionService
+    private sessionService: SessionService,
+    private mjService: MjService
   ) {}
   @Get(':name')
   @ApiOkResponse()
@@ -55,6 +58,26 @@ export class CharacterGateway {
             apotheoses: apotheosesList
           })
         )}\n\n`
+      })
+    )
+  }
+
+  @Get('characters-session')
+  @ApiOkResponse()
+  @Sse('character-session')
+  findCharactersSessions(): Observable<string> {
+    // eslint-disable-next-line no-magic-numbers
+    return this.characterService.getCharactersSessionObservable().pipe(
+      concatMap(async () => {
+        const characters = await this.mjService.getSessionCharacters()
+        const result = await Promise.all(
+          characters.map(async (character) => {
+            return CharacterPreviewVM.of({
+              character: character
+            })
+          })
+        )
+        return `data: ${JSON.stringify(result)}\n\n`
       })
     )
   }
