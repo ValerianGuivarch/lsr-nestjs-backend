@@ -12,10 +12,16 @@ export class ApotheoseService {
   ) {}
 
   async findApotheosesByCharacter(character: Character): Promise<Apotheose[]> {
-    return await this.apotheosesProvider.findApotheosesByCharacter(character)
+    const characterApotheoses = await this.apotheosesProvider.findApotheosesByCharacter(character.name)
+    const classeApotheoses = await this.apotheosesProvider.findApotheosesByClasse(character.classe.name)
+
+    const apotheoseCharacterNames = new Set(characterApotheoses.map((ac) => ac.name))
+    const uniqueClasseApotheoses = classeApotheoses.filter((apotheose) => !apotheoseCharacterNames.has(apotheose.name))
+
+    return [...characterApotheoses, ...uniqueClasseApotheoses]
   }
 
-  async findApotheosesByCharacterAndName(character: Character, apotheoseName: string): Promise<Apotheose> {
-    return await this.apotheosesProvider.findApotheoseByCharacterAndName(character)
+  async findOneByName(name: string): Promise<Apotheose> {
+    return this.apotheosesProvider.findOneByName(name)
   }
 }

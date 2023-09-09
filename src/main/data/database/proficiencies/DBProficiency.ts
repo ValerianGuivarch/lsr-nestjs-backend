@@ -1,9 +1,11 @@
-import { DBProficiencyAttrs } from './DBProficiencyAttrs'
 import { DisplayCategory } from '../../../domain/models/characters/DisplayCategory'
-import { Column, Entity, PrimaryColumn } from 'typeorm'
+import { DBBloodline } from '../bloodlines/DBBloodline'
+import { DBCharacter } from '../character/DBCharacter'
+import { DBClasse } from '../classes/DBClasse'
+import { Column, Entity, ManyToMany, PrimaryColumn } from 'typeorm'
 
 @Entity()
-export class DBProficiency extends DBProficiencyAttrs {
+export class DBProficiency {
   @PrimaryColumn({ type: 'varchar' })
   name: string
 
@@ -18,4 +20,16 @@ export class DBProficiency extends DBProficiencyAttrs {
 
   @Column({ default: '' })
   description: string
+
+  @Column({ type: 'integer', nullable: true })
+  minLevel?: number | null
+
+  @ManyToMany(() => DBCharacter, (character) => character.proficiencies)
+  characters: DBCharacter[]
+
+  @ManyToMany(() => DBBloodline, (bloodline) => bloodline.proficiencies)
+  bloodlines: DBBloodline[]
+
+  @ManyToMany(() => DBClasse, (classe) => classe.proficiencies)
+  classes: DBClasse[]
 }

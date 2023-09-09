@@ -1,6 +1,9 @@
+import { DBApotheose } from '../../data/database/apotheoses/DBApotheose'
 import { DBBloodline } from '../../data/database/bloodlines/DBBloodline'
 import { DBCharacter } from '../../data/database/character/DBCharacter'
 import { DBClasse } from '../../data/database/classes/DBClasse'
+import { DBProficiency } from '../../data/database/proficiencies/DBProficiency'
+import { DBSkill } from '../../data/database/skills/DBSkill'
 import { BattleState } from '../../domain/models/characters/BattleState'
 import { Genre } from '../../domain/models/characters/Genre'
 import { Injectable } from '@nestjs/common'
@@ -8,7 +11,13 @@ import { Injectable } from '@nestjs/common'
 @Injectable()
 // eslint-disable-next-line @darraghor/nestjs-typed/injectable-should-be-provided
 export class InitCharacters {
-  static getCharacters(classes: Map<string, DBClasse>, bloodlines: Map<string, DBBloodline>): DBCharacter[] {
+  static getCharacters(
+    skills: Map<string, DBSkill>,
+    proficiencies: Map<string, DBProficiency>,
+    apotheoses: Map<string, DBApotheose>,
+    classes: Map<string, DBClasse>,
+    bloodlines: Map<string, DBBloodline>
+  ): DBCharacter[] {
     const roger = this.createCharacter({
       name: 'roger',
       classe: classes.get('champion'),
@@ -44,7 +53,8 @@ export class InitCharacters {
       picture: 'https://media.discordapp.net/attachments/689044605311647799/1001477316070866994/unknown.png',
       pictureApotheose: 'https://media.discordapp.net/attachments/689044605311647799/1003654562365845564/unknown.png',
       background: 'https://media.discordapp.net/attachments/689044605311647799/1001484678806634576/unknown.png',
-      playerName: 'guilhem'
+      playerName: 'guilhem',
+      skills: [skills.get('montre')]
     })
 
     const viktor = this.createCharacter({
@@ -63,7 +73,18 @@ export class InitCharacters {
       picture: 'https://media.discordapp.net/attachments/689044605311647799/1001476980056784966/unknown.png',
       pictureApotheose: 'https://media.discordapp.net/attachments/689106767031828580/1004051323680993400/unknown.png',
       background: 'https://media.discordapp.net/attachments/689044605311647799/1003755046422462475/unknown.png',
-      playerName: 'eric'
+      playerName: 'eric',
+      dailyUseMax: { ['arpenteur']: 1 },
+      skills: [
+        skills.get('communication arcanique'),
+        skills.get('boost arcanique'),
+        skills.get('blocage arcanique'),
+        skills.get('copie arcanique'),
+        {
+          ...skills.get('arpenteur'),
+          arcaneCost: 0
+        }
+      ]
     })
 
     const judith = this.createCharacter({
@@ -82,7 +103,20 @@ export class InitCharacters {
       picture: 'https://media.discordapp.net/attachments/689044605311647799/1001473966445166592/unknown.png',
       pictureApotheose: 'https://media.discordapp.net/attachments/689044605311647799/1003763200283660501/unknown.png',
       background: 'https://media.discordapp.net/attachments/689044605311647799/1003763867932962956/unknown.png',
-      playerName: 'elena'
+      playerName: 'elena',
+      skills: [
+        skills.get('Plante de soutien'),
+        skills.get('Plante de combat'),
+        skills.get('Plante de magie'),
+        skills.get('Plante envahissante'),
+        skills.get('Reconnaissance naturelle'),
+        skills.get('Lien naturel'),
+        skills.get('Soulèvement de la Nature'),
+        skills.get('Animation de la Nature'),
+        skills.get('Communication avec la Nature'),
+        skills.get('Voie des Arbres'),
+        skills.get("Lien à l'Avatar")
+      ]
     })
 
     const aurélien = this.createCharacter({
@@ -104,8 +138,131 @@ export class InitCharacters {
         'https://media.discordapp.net/attachments/1016035628783243302/1089943093039603773/image.png?width=1084&height=960',
       background:
         'https://media.discordapp.net/attachments/1016035628783243302/1089943526072127669/image.png?width=2160&height=782',
-      playerName: 'nico'
+      playerName: 'nico',
+      skills: [
+        { ...skills.get('sablier'), arcaneCost: 0 },
+        { ...skills.get('illusioniste'), arcaneCost: 0 },
+        { ...skills.get('diablotin'), arcaneCost: 0 },
+        { ...skills.get('sorcière'), arcaneCost: 0 },
+        { ...skills.get('forgeron'), arcaneCost: 0 },
+        { ...skills.get('cheval'), arcaneCost: 0 },
+        { ...skills.get('arbre'), arcaneCost: 0 },
+        { ...skills.get('licorne'), arcaneCost: 0 },
+        { ...skills.get('serpent'), arcaneCost: 0 },
+        { ...skills.get('loup'), arcaneCost: 0 },
+        { ...skills.get('ivrogne'), arcaneCost: 0 },
+        { ...skills.get('erudit'), arcaneCost: 0 },
+        { ...skills.get('fantome'), arcaneCost: 0 },
+        { ...skills.get('faucon'), arcaneCost: 0 },
+        { ...skills.get('mentaliste'), arcaneCost: 0 },
+        { ...skills.get('amnesique'), arcaneCost: 0 },
+        { ...skills.get('terreur'), arcaneCost: 0, dettesCost: 1 }
+      ]
     })
+
+    /* await this.saveCharacterSkillIfNotExisting({
+      character: characters.get('aurélien'),
+      skill: skills.get('illusioniste'),
+      limitationMax: 1,
+      arcaneCost: 0
+    })
+    await this.saveCharacterSkillIfNotExisting({
+      character: characters.get('aurélien'),
+      skill: skills.get('sablier'),
+      limitationMax: 1,
+      arcaneCost: 0
+    })
+    await this.saveCharacterSkillIfNotExisting({
+      character: characters.get('aurélien'),
+      skill: skills.get('diablotin'),
+      limitationMax: 1,
+      arcaneCost: 0
+    })
+    await this.saveCharacterSkillIfNotExisting({
+      character: characters.get('aurélien'),
+      skill: skills.get('sorcière'),
+      limitationMax: 1,
+      arcaneCost: 0
+    })
+    await this.saveCharacterSkillIfNotExisting({
+      character: characters.get('aurélien'),
+      skill: skills.get('forgeron'),
+      limitationMax: 1,
+      arcaneCost: 0
+    })
+    await this.saveCharacterSkillIfNotExisting({
+      character: characters.get('aurélien'),
+      skill: skills.get('cheval'),
+      limitationMax: 1,
+      arcaneCost: 0
+    })
+    await this.saveCharacterSkillIfNotExisting({
+      character: characters.get('aurélien'),
+      skill: skills.get('arbre'),
+      limitationMax: 1,
+      arcaneCost: 0
+    })
+    await this.saveCharacterSkillIfNotExisting({
+      character: characters.get('aurélien'),
+      skill: skills.get('licorne'),
+      limitationMax: 1,
+      arcaneCost: 0
+    })
+    await this.saveCharacterSkillIfNotExisting({
+      character: characters.get('aurélien'),
+      skill: skills.get('serpent'),
+      limitationMax: 1,
+      arcaneCost: 0
+    })
+    await this.saveCharacterSkillIfNotExisting({
+      character: characters.get('aurélien'),
+      skill: skills.get('loup'),
+      limitationMax: 1,
+      arcaneCost: 0
+    })
+    await this.saveCharacterSkillIfNotExisting({
+      character: characters.get('aurélien'),
+      skill: skills.get('ivrogne'),
+      limitationMax: 1,
+      arcaneCost: 0
+    })
+    await this.saveCharacterSkillIfNotExisting({
+      character: characters.get('aurélien'),
+      skill: skills.get('erudit'),
+      limitationMax: 1,
+      arcaneCost: 0
+    })
+    await this.saveCharacterSkillIfNotExisting({
+      character: characters.get('aurélien'),
+      skill: skills.get('fantome'),
+      limitationMax: 1,
+      arcaneCost: 0
+    })
+    await this.saveCharacterSkillIfNotExisting({
+      character: characters.get('aurélien'),
+      skill: skills.get('faucon'),
+      limitationMax: 1,
+      arcaneCost: 0
+    })
+    await this.saveCharacterSkillIfNotExisting({
+      character: characters.get('aurélien'),
+      skill: skills.get('terreur'),
+      displayCategory: DisplayCategory.MAGIE,
+      arcaneCost: 0,
+      dettesCost: 1
+    })
+    await this.saveCharacterSkillIfNotExisting({
+      character: characters.get('aurélien'),
+      skill: skills.get('mentaliste'),
+      limitationMax: 1,
+      arcaneCost: 0
+    })
+    await this.saveCharacterSkillIfNotExisting({
+      character: characters.get('aurélien'),
+      skill: skills.get('amnesique'),
+      limitationMax: 1,
+      arcaneCost: 0
+    })*/
 
     const pamuk = this.createCharacter({
       name: 'pamuk',
@@ -921,7 +1078,29 @@ export class InitCharacters {
       pictureApotheose: '',
       background:
         'https://media.discordapp.net/attachments/1016035628783243302/1017473535628808272/unknown.png?width=2160&height=966',
-      playerName: 'florent'
+      playerName: 'florent',
+      dailyUse: {
+        ['Mun. courantes']: 0,
+        ['Mun. léthales']: 0,
+        ['Mun. affaiblissantes']: 0,
+        ['Mun. peste']: 0,
+        ['Mun. marquage']: 0,
+        ['Mun. dégénérative']: 0,
+        ['Gr. fumigène']: 0,
+        ['Gr. flash']: 0
+      },
+      skills: [
+        skills.get('Bras Robotique'),
+        skills.get('Oeil Bionique'),
+        skills.get('Mun. courantes'),
+        skills.get('Mun. léthales'),
+        skills.get('Mun. affaiblissantes'),
+        skills.get('Mun. peste'),
+        skills.get('Mun. marquage'),
+        skills.get('Mun. dégénérative'),
+        skills.get('Gr. fumigène'),
+        skills.get('Gr. flash')
+      ]
     })
 
     const méduse = this.createCharacter({
@@ -2102,6 +2281,7 @@ export class InitCharacters {
       genre: Genre.FEMME,
       picture:
         'https://media.discordapp.net/attachments/690902358057680897/1114877933811683388/serpent.png?width=1046&height=1058',
+
       pictureApotheose: '',
       background:
         'https://media.discordapp.net/attachments/734153794681700394/1141000189071601695/HD-wallpaper-field-of-honour-fantasy-background-abstract-sword-blue-light.png?width=1248&height=936',
@@ -2393,6 +2573,11 @@ export class InitCharacters {
     pictureApotheose?: string
     background?: string
     playerName?: string
+    skills?: DBSkill[]
+    apotheoses?: DBApotheose[]
+    proficiencies?: DBProficiency[]
+    dailyUse?: { [skillName: string]: number }
+    dailyUseMax?: { [skillName: string]: number }
   }): DBCharacter {
     const newCharacter = new DBCharacter()
     newCharacter.name = p.name
@@ -2426,6 +2611,11 @@ export class InitCharacters {
     newCharacter.background = p.background || ''
     newCharacter.playerName = p.playerName || ''
     newCharacter.battleState = BattleState.NONE
+    newCharacter.skills = p.skills || []
+    newCharacter.apotheoses = p.apotheoses || []
+    newCharacter.proficiencies = p.proficiencies || []
+    newCharacter.dailyUse = p.dailyUse || {}
+    newCharacter.dailyUseMax = p.dailyUseMax || {}
     return newCharacter
   }
 }

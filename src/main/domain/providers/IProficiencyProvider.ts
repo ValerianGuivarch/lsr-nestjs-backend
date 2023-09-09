@@ -1,6 +1,7 @@
-import { Character } from '../models/characters/Character'
 import { Proficiency } from '../models/proficiencies/Proficiency'
 
 export interface IProficiencyProvider {
-  findProficienciesByCharacter(character: Character): Promise<Proficiency[]>
+  findProficienciesByCharacter(characterName: string): Promise<Proficiency[]>
+  findProficienciesByBloodline(bloodlineName: string): Promise<Proficiency[]>
+  findProficienciesByClasse(classeName: string): Promise<Proficiency[]>
 }

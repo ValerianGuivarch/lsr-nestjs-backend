@@ -1,4 +1,6 @@
 import { CharacterTemplateReferential } from './CharacterTemplateReferential'
+import { Bloodline } from '../characters/Bloodline'
+import { Classe } from '../characters/Classe'
 
 export class CharacterTemplate {
   name: string
@@ -16,8 +18,8 @@ export class CharacterTemplate {
   ppMaxValueRule: number
   picture?: string
   customData?: string
-  classeName?: string
-  bloodlineName?: string
+  classe: Classe
+  bloodline?: Bloodline
 
   constructor(p: CharacterTemplate) {
     Object.assign(this, p)

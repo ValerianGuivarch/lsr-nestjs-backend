@@ -1,9 +1,75 @@
-import { DBSkillAttrs } from './DBSkillAttrs'
-import { Column, Entity, PrimaryColumn } from 'typeorm'
+import { DisplayCategory } from '../../../domain/models/characters/DisplayCategory'
+import { SuccessCalculation } from '../../../domain/models/roll/SuccessCalculation'
+import { SkillStat } from '../../../domain/models/skills/SkillStat'
+import { DBBloodline } from '../bloodlines/DBBloodline'
+import { DBCharacter } from '../character/DBCharacter'
+import { DBCharacterTemplate } from '../character/DBCharacterTemplate'
+import { DBClasse } from '../classes/DBClasse'
+import { Column, Entity, JoinColumn, ManyToOne, ManyToMany, PrimaryGeneratedColumn } from 'typeorm'
 
 @Entity()
-export class DBSkill extends DBSkillAttrs {
-  @PrimaryColumn({ type: 'varchar' })
+export class DBSkill {
+  @PrimaryGeneratedColumn()
+  id: string
+
+  @Column({
+    type: 'enum',
+    enum: DisplayCategory
+  })
+  displayCategory: string
+
+  @Column({ type: 'boolean' })
+  allowsPf: boolean
+
+  @Column({ type: 'boolean' })
+  allowsPp: boolean
+
+  @Column({
+    type: 'enum',
+    enum: SkillStat,
+    nullable: true
+  })
+  stat: string
+
+  @Column({ type: 'integer' })
+  pvCost: number
+
+  @Column({ type: 'integer' })
+  pfCost: number
+
+  @Column({ type: 'integer' })
+  ppCost: number
+
+  @Column({ type: 'integer' })
+  dettesCost: number
+
+  @Column({ type: 'integer' })
+  arcaneCost: number
+
+  @Column({ type: 'integer' })
+  arcanePrimeCost: number
+
+  @Column({ type: 'varchar', nullable: true })
+  customRolls: string | null
+
+  @Column({
+    type: 'enum',
+    enum: SuccessCalculation,
+    nullable: true
+  })
+  successCalculation: string
+
+  @Column({ type: 'boolean' })
+  secret: boolean
+
+  @Column({ type: 'varchar', nullable: true })
+  invocationTemplateName?: string | null
+
+  @ManyToOne(() => DBCharacterTemplate)
+  @JoinColumn({ name: 'invocationTemplateName' })
+  invocationTemplate: DBCharacterTemplate | null
+
+  @Column({ type: 'varchar' })
   name: string
 
   @Column({ type: 'varchar' })
@@ -18,7 +84,7 @@ export class DBSkill extends DBSkillAttrs {
   @Column({ type: 'integer', default: 1 })
   position: number
 
-  @Column({ type: 'varchar', default: 'fait un Jet ', nullable: true })
+  @Column({ type: 'varchar', default: 'fait un Jet ' })
   display: string
 
   @Column({ type: 'boolean', default: false })
@@ -35,4 +101,16 @@ export class DBSkill extends DBSkillAttrs {
 
   @Column({ type: 'integer', default: 0 })
   soldatCost: number
+
+  @ManyToMany(() => DBClasse, (classe) => classe.skills)
+  classes: DBClasse[]
+
+  @ManyToMany(() => DBBloodline, (bloodline) => bloodline.skills)
+  bloodlines: DBBloodline[]
+
+  @ManyToMany(() => DBCharacter, (character) => character.skills)
+  characters: DBCharacter[]
+
+  @ManyToMany(() => DBCharacterTemplate, (characterTemplate) => characterTemplate.skills)
+  characterTemplates: DBCharacterTemplate[]
 }

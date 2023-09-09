@@ -10,7 +10,6 @@ import { DBRollProvider } from './data/database/rolls/DBRollProvider'
 import { DBSessionProvider } from './data/database/session/DBSessionProvider'
 import { DBSkillProvider } from './data/database/skills/DBSkillProvider'
 import { ApotheoseService } from './domain/services/ApotheoseService'
-import { BloodlineService } from './domain/services/BloodlineService'
 import { CharacterService } from './domain/services/CharacterService'
 import { ClasseService } from './domain/services/ClasseService'
 import { InvocationService } from './domain/services/InvocationService'
@@ -60,7 +59,6 @@ import { TypeOrmModule } from '@nestjs/typeorm'
     ProficiencyService,
     ApotheoseService,
     SessionService,
-    BloodlineService,
     InvocationService,
     CharacterService,
     ClasseService,

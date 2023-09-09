@@ -1,13 +1,26 @@
+import { DBApotheose } from '../../data/database/apotheoses/DBApotheose'
+import { DBBloodline } from '../../data/database/bloodlines/DBBloodline'
 import { DBCharacterTemplate } from '../../data/database/character/DBCharacterTemplate'
+import { DBClasse } from '../../data/database/classes/DBClasse'
+import { DBProficiency } from '../../data/database/proficiencies/DBProficiency'
+import { DBSkill } from '../../data/database/skills/DBSkill'
 import { CharacterTemplateReferential } from '../../domain/models/invocation/CharacterTemplateReferential'
 import { Injectable } from '@nestjs/common'
 
 @Injectable()
 // eslint-disable-next-line @darraghor/nestjs-typed/injectable-should-be-provided
 export class InitCharactersTemplates {
-  static getCharactersTemplates(): DBCharacterTemplate[] {
+  static getCharactersTemplates(
+    skills: Map<string, DBSkill>,
+    proficiencies: Map<string, DBProficiency>,
+    apotheoses: Map<string, DBApotheose>,
+    classes: Map<string, DBClasse>,
+    bloodlines: Map<string, DBBloodline>
+  ): DBCharacterTemplate[] {
     const planteSoutien: DBCharacterTemplate = this.createCharacterTemplate({
       name: 'Plante Soutien',
+      classe: classes.get('champion arcanique'),
+      bloodline: bloodlines.get('plante'),
       chairValueReferential: CharacterTemplateReferential.FIXE,
       chairValueRule: 1,
       espritValueReferential: CharacterTemplateReferential.FIXE,
@@ -25,6 +38,8 @@ export class InitCharactersTemplates {
     })
     const planteCombat: DBCharacterTemplate = this.createCharacterTemplate({
       name: 'Plante Combat',
+      classe: classes.get('champion arcanique'),
+      bloodline: bloodlines.get('plante'),
       chairValueReferential: CharacterTemplateReferential.FIXE,
       chairValueRule: 1,
       espritValueReferential: CharacterTemplateReferential.SUCCESS,
@@ -42,6 +57,8 @@ export class InitCharactersTemplates {
     })
     const planteMagie: DBCharacterTemplate = this.createCharacterTemplate({
       name: 'Plante Magie',
+      classe: classes.get('champion arcanique'),
+      bloodline: bloodlines.get('plante'),
       chairValueReferential: CharacterTemplateReferential.FIXE,
       chairValueRule: 1,
       espritValueReferential: CharacterTemplateReferential.FIXE,
@@ -60,6 +77,8 @@ export class InitCharactersTemplates {
 
     const planteEnvahissante: DBCharacterTemplate = this.createCharacterTemplate({
       name: 'Plante Envahissante',
+      classe: classes.get('champion arcanique'),
+      bloodline: bloodlines.get('plante'),
       chairValueReferential: CharacterTemplateReferential.FIXE,
       chairValueRule: 1,
       espritValueReferential: CharacterTemplateReferential.FIXE,
@@ -96,6 +115,8 @@ export class InitCharactersTemplates {
     ppMaxValueRule?: number
     picture?: string
     customData?: string
+    classe: DBClasse
+    bloodline?: DBBloodline
   }): DBCharacterTemplate {
     const newCharacterTemplate = new DBCharacterTemplate()
     newCharacterTemplate.name = p.name
@@ -120,6 +141,10 @@ export class InitCharactersTemplates {
     newCharacterTemplate.ppMaxValueRule = p.ppMaxValueRule ? p.ppMaxValueRule : 1
     newCharacterTemplate.picture = p.picture || ''
     newCharacterTemplate.customData = p.customData || ''
+    newCharacterTemplate.classe = p.classe
+    newCharacterTemplate.classeName = p.classe.name
+    newCharacterTemplate.bloodline = p.bloodline
+    newCharacterTemplate.bloodlineName = p.bloodline?.name
     return newCharacterTemplate
   }
 }

@@ -1,11 +1,14 @@
 import { BattleState } from './BattleState'
+import { Bloodline } from './Bloodline'
+import { Classe } from './Classe'
 import { Genre } from './Genre'
+import { Apotheose } from '../apotheoses/Apotheose'
 import { ApotheoseState } from '../apotheoses/ApotheoseState'
 
 export class Character {
   name: string
-  classeName: string
-  bloodlineName?: string
+  classe: Classe
+  bloodline?: Bloodline
   chair: number
   esprit: number
   essence: number
@@ -28,9 +31,7 @@ export class Character {
   secunda: string
   notes: string
   apotheoseState: ApotheoseState
-  apotheoseName?: string
-  apotheoseImprovement?: string
-  apotheoseImprovementList: string[]
+  currentApotheose?: Apotheose
   genre: Genre
   relance: number
   playerName?: string
@@ -39,7 +40,6 @@ export class Character {
   background?: string
   buttonColor?: string
   textColor?: string
-  uid?: number
   boosted?: boolean
   battleState: BattleState
   restImproved: boolean
@@ -49,16 +49,16 @@ export class Character {
   espritBonus: number
   essenceBonus: number
   customData?: string
+  dailyUse: Map<string, number>
+  dailyUseMax: Map<string, number>
 
   constructor(p: Character) {
     this.name = p.name
     this.restImproved = p.restImproved
-    this.classeName = p.classeName
-    this.bloodlineName = p.bloodlineName
-    this.apotheoseName = p.apotheoseName
+    this.classe = p.classe
+    this.bloodline = p.bloodline
+    this.currentApotheose = p.currentApotheose
     this.apotheoseState = p.apotheoseState
-    this.apotheoseImprovement = p.apotheoseImprovement
-    this.apotheoseImprovementList = p.apotheoseImprovementList
     this.chair = p.chair
     this.esprit = p.esprit
     this.essence = p.essence
@@ -95,6 +95,9 @@ export class Character {
     this.battleState = p.battleState
     this.isInvocation = p.isInvocation
     this.controlledBy = p.controlledBy
+    this.customData = p.customData
+    this.dailyUse = p.dailyUse
+    this.dailyUseMax = p.dailyUseMax
   }
 
   static characterToCreateFactory(p: {
@@ -152,7 +155,6 @@ export class Character {
       notes: '',
       apotheose: undefined,
       apotheoseState: ApotheoseState.NONE,
-      apotheoseImprovementList: [],
       // eslint-disable-next-line no-magic-numbers
       genre: p.genre ? p.genre : Math.random() < 0.5 ? Genre.HOMME : Genre.FEMME,
       relance: 0,
@@ -163,12 +165,16 @@ export class Character {
       background: p.background,
       buttonColor: p.buttonColor,
       textColor: p.textColor,
-      classeName: p.classeName,
-      bloodlineName: p.bloodlineName,
+      classe: Classe[p.classeName],
+      bloodline: p.bloodlineName ? Bloodline[p.bloodlineName] : undefined,
+      skills: [],
+      proficiencies: [],
       restImproved: false,
       isInvocation: false,
       summoner: undefined,
-      customData: p.customData
+      customData: p.customData,
+      dailyUse: new Map<string, number>(),
+      dailyUseMax: new Map<string, number>()
     }
     return Object.assign(defaults, p)
   }
@@ -183,11 +189,14 @@ export class Character {
     picture?: string
     customData?: string
   }): CharacterToCreate {
-    const defaults = {
+    return {
       name: p.name,
       chair: p.chair,
       esprit: p.esprit,
       essence: p.essence,
+      chairBonus: 0,
+      espritBonus: 0,
+      essenceBonus: 0,
       pv: p.pvMax,
       pvMax: p.pvMax,
       pf: 0,
@@ -211,7 +220,6 @@ export class Character {
       battleState: p.summoner.battleState,
       apotheose: undefined,
       apotheoseState: ApotheoseState.NONE,
-      apotheoseImprovementList: [],
       // eslint-disable-next-line no-magic-numbers
       genre: p.summoner.genre,
       relance: 0,
@@ -221,16 +229,16 @@ export class Character {
       background: '',
       buttonColor: '',
       textColor: '',
-      classeName: p.summoner.classeName,
-      bloodlineName: p.summoner.bloodlineName,
+      classe: p.summoner.classe,
+      bloodline: p.summoner.bloodline,
       restImproved: false,
       isInvocation: true,
       controlledBy: p.summoner.name,
-      customData: p.customData
-    }
-
-    return Object.assign(defaults)
+      customData: p.customData,
+      dailyUse: new Map<string, number>(),
+      dailyUseMax: new Map<string, number>()
+    } as CharacterToCreate
   }
 }
 
-export type CharacterToCreate = Omit<Character, 'id'>
+export type CharacterToCreate = Omit<Character, 'id' | 'classe' | 'bloodline' | 'apotheoses' | 'proficiencies'>

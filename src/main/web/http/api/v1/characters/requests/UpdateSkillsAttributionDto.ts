@@ -6,12 +6,13 @@ export class UpdateSkillsAttributionDto {
   @IsString()
   readonly skillName: string
 
-  @ApiProperty()
-  @IsNumber()
-  readonly dailyUse: number
-
-  @ApiPropertyOptional({ nullable: true, default: null })
+  @ApiPropertyOptional()
   @IsOptional()
   @IsNumber()
-  readonly limitationMax: number | null
+  readonly dailyUse?: number
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsNumber()
+  readonly limitationMax?: number | null
 }

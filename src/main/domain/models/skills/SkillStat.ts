@@ -6,7 +6,3 @@ export enum SkillStat {
   EMPIRIQUE = 'EMPIRIQUE', // jet empirique donné en paramètre
   CUSTOM = 'CUSTOM' // jet custom spécifique à la compétence
 }
-
-/*
-
- */

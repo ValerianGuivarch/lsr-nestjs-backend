@@ -2,15 +2,14 @@ import { DBCharacterTemplate } from '../../data/database/character/DBCharacterTe
 import { DBSkill } from '../../data/database/skills/DBSkill'
 import { DisplayCategory } from '../../domain/models/characters/DisplayCategory'
 import { SuccessCalculation } from '../../domain/models/roll/SuccessCalculation'
-import { SkillOwnedUse } from '../../domain/models/skills/SkillOwnedUse'
 import { SkillStat } from '../../domain/models/skills/SkillStat'
 import { Injectable } from '@nestjs/common'
 
 @Injectable()
 // eslint-disable-next-line @darraghor/nestjs-typed/injectable-should-be-provided
 export class InitSkills {
-  static getSkills(charactersTemplates: Map<string, DBCharacterTemplate>): DBSkill[] {
-    const chairSkill: DBSkill = this.createSkill({
+  static getSkills(): Omit<DBSkill, 'id'>[] {
+    const chairSkill = this.createSkill({
       name: 'chair',
       shortName: 'ch',
       description: 'Jet de chair',
@@ -20,7 +19,7 @@ export class InitSkills {
       display: 'fait un *Jet de Chair*',
       position: 1
     })
-    const espritSkill: DBSkill = this.createSkill({
+    const espritSkill = this.createSkill({
       name: 'esprit',
       shortName: 'sp',
       description: "Jet d'esprit",
@@ -30,7 +29,7 @@ export class InitSkills {
       display: "fait un *Jet d'Esprit*",
       position: 2
     })
-    const essenceSkill: DBSkill = this.createSkill({
+    const essenceSkill = this.createSkill({
       name: 'essence',
       shortName: 'es',
       description: "Jet d'essence",
@@ -40,7 +39,7 @@ export class InitSkills {
       display: "fait un *Jet d'Essence*",
       position: 3
     })
-    const empiriqueSkill: DBSkill = this.createSkill({
+    const empiriqueSkill = this.createSkill({
       name: 'empirique',
       shortName: 'emp',
       description: 'Jet empirique',
@@ -51,7 +50,7 @@ export class InitSkills {
       position: 4,
       successCalculation: SuccessCalculation.AUCUN
     })
-    const koSkill: DBSkill = this.createSkill({
+    const koSkill = this.createSkill({
       name: 'KO',
       shortName: 'KO',
       description: 'Jet de Sauv. contre la Mort',
@@ -64,7 +63,7 @@ export class InitSkills {
       position: 0,
       secret: true
     })
-    const magieSkill: DBSkill = this.createSkill({
+    const magieSkill = this.createSkill({
       name: 'magie',
       shortName: 'mg',
       description: "Jet de magie au prix d'une dette",
@@ -75,7 +74,7 @@ export class InitSkills {
       position: 1,
       dettesCost: 1
     })
-    const cantripSkill: DBSkill = this.createSkill({
+    const cantripSkill = this.createSkill({
       name: 'cantrip',
       shortName: 'ct',
       description: "Jet de magie légère au prix d'un pp",
@@ -87,7 +86,7 @@ export class InitSkills {
       ppCost: 1
     })
 
-    const soin: DBSkill = this.createSkill({
+    const soin = this.createSkill({
       name: 'soin',
       shortName: 'soin',
       description: "donne des PV à une cible au prix d'un pp",
@@ -100,7 +99,7 @@ export class InitSkills {
       successCalculation: SuccessCalculation.DIVISE_PLUS_1,
       isHeal: true
     })
-    const formeAqueuse: DBSkill = this.createSkill({
+    const formeAqueuse = this.createSkill({
       name: 'forme aqueuse',
       shortName: 'fa',
       description: "se transforme en eau au prix d'un pp",
@@ -111,7 +110,7 @@ export class InitSkills {
       position: 4,
       ppCost: 1
     })
-    const soinMental: DBSkill = this.createSkill({
+    const soinMental = this.createSkill({
       name: 'soin mental',
       shortName: 'sm',
       description: "donne des PF à une cible au prix d'un pp",
@@ -122,7 +121,7 @@ export class InitSkills {
       position: 4,
       ppCost: 1
     })
-    const vol: DBSkill = this.createSkill({
+    const vol = this.createSkill({
       name: 'vol',
       shortName: 'vol',
       description: "permet de voler au prix d'un pp",
@@ -133,7 +132,7 @@ export class InitSkills {
       position: 4,
       ppCost: 1
     })
-    const armure: DBSkill = this.createSkill({
+    const armure = this.createSkill({
       name: 'armure',
       shortName: 'arm',
       description: "permet de donner X/2 d'armure, -1 par tour, au prix d'un pp",
@@ -145,7 +144,7 @@ export class InitSkills {
       successCalculation: SuccessCalculation.DIVISE,
       ppCost: 1
     })
-    const speed: DBSkill = this.createSkill({
+    const speed = this.createSkill({
       name: 'speed',
       shortName: 'spd',
       description: "permet de donner X bénédiction à la prochaine action au prix d'un pp",
@@ -156,7 +155,7 @@ export class InitSkills {
       position: 4,
       ppCost: 1
     })
-    const malediction: DBSkill = this.createSkill({
+    const malediction = this.createSkill({
       name: 'malédiction',
       shortName: 'mld',
       description: "permet de donner X malédiction à la prochaine action au prix d'un pp",
@@ -167,7 +166,7 @@ export class InitSkills {
       position: 4,
       ppCost: 1
     })
-    const invisibilite: DBSkill = this.createSkill({
+    const invisibilite = this.createSkill({
       name: 'invisibilité',
       shortName: 'inv',
       description: "permet de rendre invisible au prix d'un pp",
@@ -178,7 +177,7 @@ export class InitSkills {
       position: 4,
       ppCost: 1
     })
-    const communicationArcaniqueSkill: DBSkill = this.createSkill({
+    const communicationArcaniqueSkill = this.createSkill({
       name: 'communication arcanique',
       shortName: 'ca',
       longName: 'communication',
@@ -191,7 +190,7 @@ export class InitSkills {
       arcaneCost: 1,
       isArcanique: true
     })
-    const boostArcaniqueSkill: DBSkill = this.createSkill({
+    const boostArcaniqueSkill = this.createSkill({
       name: 'boost arcanique',
       shortName: 'ba',
       longName: 'boost',
@@ -204,7 +203,7 @@ export class InitSkills {
       arcaneCost: 1,
       isArcanique: true
     })
-    const blocageArcaniqueSkill: DBSkill = this.createSkill({
+    const blocageArcaniqueSkill = this.createSkill({
       name: 'blocage arcanique',
       shortName: 'bl',
       longName: 'blocage',
@@ -217,7 +216,7 @@ export class InitSkills {
       arcaneCost: 1,
       isArcanique: true
     })
-    const copieArcaniqueSkill: DBSkill = this.createSkill({
+    const copieArcaniqueSkill = this.createSkill({
       name: 'copie arcanique',
       shortName: 'cpa',
       longName: 'copie',
@@ -230,7 +229,7 @@ export class InitSkills {
       arcaneCost: 1,
       isArcanique: true
     })
-    const lienAuxVoyageursSkill: DBSkill = this.createSkill({
+    const lienAuxVoyageursSkill = this.createSkill({
       name: 'arpenteur',
       shortName: 'lv',
       description: 'Permet d utiliser un voyageur amélioré',
@@ -243,7 +242,7 @@ export class InitSkills {
       isArcanique: true
     })
 
-    const peurSkill: DBSkill = this.createSkill({
+    const peurSkill = this.createSkill({
       name: 'peur',
       shortName: 'pr',
       description: 'Effet de peur',
@@ -257,7 +256,7 @@ export class InitSkills {
       isArcanique: true
     })
 
-    const sablierSkill: DBSkill = this.createSkill({
+    const sablierSkill = this.createSkill({
       name: 'sablier',
       shortName: 'sab',
       description: 'Remonter le temps de quelques secondes',
@@ -271,7 +270,7 @@ export class InitSkills {
       isArcanique: true
     })
 
-    const alchimisteSkill: DBSkill = this.createSkill({
+    const alchimisteSkill = this.createSkill({
       name: 'alchimiste',
       shortName: 'alch',
       description: 'Transformer la matière',
@@ -285,7 +284,7 @@ export class InitSkills {
       isArcanique: true
     })
 
-    const voyageurSkill: DBSkill = this.createSkill({
+    const voyageurSkill = this.createSkill({
       name: 'voyageur',
       shortName: 'voy',
       description: 'Se téléporter ou poser une ancre de téléportation',
@@ -299,7 +298,7 @@ export class InitSkills {
       isArcanique: true
     })
 
-    const forgeronSkill: DBSkill = this.createSkill({
+    const forgeronSkill = this.createSkill({
       name: 'forgeron',
       shortName: 'forg',
       description: 'Invoquer un objet non magique',
@@ -313,7 +312,7 @@ export class InitSkills {
       isArcanique: true
     })
 
-    const loupSkill: DBSkill = this.createSkill({
+    const loupSkill = this.createSkill({
       name: 'loup',
       shortName: 'loup',
       description: 'Ajoute X en Chair au prochain Jet pour soit et ses alliés',
@@ -327,7 +326,7 @@ export class InitSkills {
       isArcanique: true
     })
 
-    const serpentSkill: DBSkill = this.createSkill({
+    const serpentSkill = this.createSkill({
       name: 'serpent',
       shortName: 'serp',
       description: 'Ajoute X en Essence au prochain Jet pour soit et ses alliés',
@@ -341,7 +340,7 @@ export class InitSkills {
       isArcanique: true
     })
 
-    const fauconSkill: DBSkill = this.createSkill({
+    const fauconSkill = this.createSkill({
       name: 'faucon',
       shortName: 'fauc',
       description: 'Ajoute une action en réaction',
@@ -355,7 +354,7 @@ export class InitSkills {
       isArcanique: true
     })
 
-    const sorciereSkill: DBSkill = this.createSkill({
+    const sorciereSkill = this.createSkill({
       name: 'sorcière',
       shortName: 'sorc',
       description: 'Ajoute X en Esprit et invoque -X en Esprit à un ennemi pour le prochain jet',
@@ -369,7 +368,7 @@ export class InitSkills {
       isArcanique: true
     })
 
-    const vampireSkill: DBSkill = this.createSkill({
+    const vampireSkill = this.createSkill({
       name: 'vampire',
       shortName: 'vamp',
       description: 'Vol X PV à une cible',
@@ -383,7 +382,7 @@ export class InitSkills {
       isArcanique: true
     })
 
-    const licheSkill: DBSkill = this.createSkill({
+    const licheSkill = this.createSkill({
       name: 'liche',
       shortName: 'lich',
       description: 'Vol X PP à une cible',
@@ -396,7 +395,7 @@ export class InitSkills {
       arcaneCost: 1,
       isArcanique: true
     })
-    const fantomeSkill: DBSkill = this.createSkill({
+    const fantomeSkill = this.createSkill({
       name: 'fantome',
       shortName: 'ftm',
       description: 'Permet de traverser les murs',
@@ -410,7 +409,7 @@ export class InitSkills {
       isArcanique: true
     })
 
-    const illusionisteSkill: DBSkill = this.createSkill({
+    const illusionisteSkill = this.createSkill({
       name: 'illusioniste',
       shortName: 'ill',
       description: 'Crée une illusion',
@@ -423,7 +422,7 @@ export class InitSkills {
       arcaneCost: 1,
       isArcanique: true
     })
-    const comedienSkill: DBSkill = this.createSkill({
+    const comedienSkill = this.createSkill({
       name: 'comedien',
       shortName: 'cmd',
       description: "Permet de changer d'apparence",
@@ -437,7 +436,7 @@ export class InitSkills {
       isArcanique: true
     })
 
-    const voleurSkill: DBSkill = this.createSkill({
+    const voleurSkill = this.createSkill({
       name: 'voleur',
       shortName: 'voleur',
       description: 'Télékinésie',
@@ -451,7 +450,7 @@ export class InitSkills {
       isArcanique: true
     })
 
-    const mentalisteSkill: DBSkill = this.createSkill({
+    const mentalisteSkill = this.createSkill({
       name: 'mentaliste',
       shortName: 'mtn',
       description: "Lire les souvenirs d'une cible",
@@ -465,7 +464,7 @@ export class InitSkills {
       isArcanique: true
     })
 
-    const eruditSkill: DBSkill = this.createSkill({
+    const eruditSkill = this.createSkill({
       name: 'erudit',
       shortName: 'eru',
       description: "Découvrir si quelqu'un ment",
@@ -479,7 +478,7 @@ export class InitSkills {
       isArcanique: true
     })
 
-    const chasseurSkill: DBSkill = this.createSkill({
+    const chasseurSkill = this.createSkill({
       name: 'chasseur',
       shortName: 'chasseur',
       description: "Repérer une cible à X centaine de mètre ou poser une ancre sur quelqu'un",
@@ -493,7 +492,7 @@ export class InitSkills {
       isArcanique: true
     })
 
-    const ivrogneSkill: DBSkill = this.createSkill({
+    const ivrogneSkill = this.createSkill({
       name: 'ivrogne',
       shortName: 'ivr',
       description: "Utiliser une Stat à la place d'une autre",
@@ -507,7 +506,7 @@ export class InitSkills {
       isArcanique: true
     })
 
-    const jugeSkill: DBSkill = this.createSkill({
+    const jugeSkill = this.createSkill({
       name: 'juge',
       shortName: 'juge',
       description: 'Utiliser 1/2 ou 3/4 pour ses réussites',
@@ -521,7 +520,7 @@ export class InitSkills {
       isArcanique: true
     })
 
-    const arbreSkill: DBSkill = this.createSkill({
+    const arbreSkill = this.createSkill({
       name: 'arbre',
       shortName: 'arb',
       description: 'Invoquer et/ou manipuler des plantes',
@@ -535,7 +534,7 @@ export class InitSkills {
       isArcanique: true
     })
 
-    const phoenixSkill: DBSkill = this.createSkill({
+    const phoenixSkill = this.createSkill({
       name: 'phoenix',
       shortName: 'phoenix',
       description: 'Donner 3 PV à une cible KO, qui peut agir immédiatemment',
@@ -549,7 +548,7 @@ export class InitSkills {
       isArcanique: true
     })
 
-    const necromancienSkill: DBSkill = this.createSkill({
+    const necromancienSkill = this.createSkill({
       name: 'necromancien',
       shortName: 'nec',
       description: 'Poser X questions à un cadavre, -1 par heure depuis le décès',
@@ -563,7 +562,7 @@ export class InitSkills {
       isArcanique: true
     })
 
-    const licorneSkill: DBSkill = this.createSkill({
+    const licorneSkill = this.createSkill({
       name: 'licorne',
       shortName: 'lic',
       description: 'Invoquer et/ou manipuler des animaux',
@@ -577,7 +576,7 @@ export class InitSkills {
       isArcanique: true,
       isHeal: true
     })
-    const chouetteSkill: DBSkill = this.createSkill({
+    const chouetteSkill = this.createSkill({
       name: 'chouette',
       shortName: 'cht',
       description: 'Projeter son esprit pour voir au loin',
@@ -590,7 +589,7 @@ export class InitSkills {
       isArcanique: true
     })
 
-    const chevalSkill: DBSkill = this.createSkill({
+    const chevalSkill = this.createSkill({
       name: 'cheval',
       shortName: 'chv',
       description: 'Invoquer un véhicule',
@@ -603,7 +602,7 @@ export class InitSkills {
       isArcanique: true
     })
 
-    const diablotinSkill: DBSkill = this.createSkill({
+    const diablotinSkill = this.createSkill({
       name: 'diablotin',
       shortName: 'diab',
       description: 'Invoquer un petit serviteur',
@@ -616,7 +615,7 @@ export class InitSkills {
       isArcanique: true
     })
 
-    const protecteurSkill: DBSkill = this.createSkill({
+    const protecteurSkill = this.createSkill({
       name: 'protecteur',
       shortName: 'prtc',
       description: 'Donne X PV temporaire, -1 par tour',
@@ -629,7 +628,7 @@ export class InitSkills {
       isArcanique: true
     })
 
-    const corbeauSkill: DBSkill = this.createSkill({
+    const corbeauSkill = this.createSkill({
       name: 'corbeau',
       shortName: 'crb',
       description: 'Ajoute X en Esprit au prochain Jet pour soit et ses alliés',
@@ -642,7 +641,7 @@ export class InitSkills {
       isArcanique: true
     })
 
-    const araigneeSkill: DBSkill = this.createSkill({
+    const araigneeSkill = this.createSkill({
       name: 'araignee',
       shortName: 'argn',
       description: 'Immobiliser une cible',
@@ -655,7 +654,7 @@ export class InitSkills {
       isArcanique: true
     })
 
-    const tisserandSkill: DBSkill = this.createSkill({
+    const tisserandSkill = this.createSkill({
       name: 'tisserand',
       shortName: 'tiss',
       description: "Modifie les souvenirs d'une cible",
@@ -668,7 +667,7 @@ export class InitSkills {
       isArcanique: true
     })
 
-    const commandantSkill: DBSkill = this.createSkill({
+    const commandantSkill = this.createSkill({
       name: 'commandant',
       shortName: 'cmdt',
       description: 'Donne un ordre à une cible',
@@ -681,7 +680,7 @@ export class InitSkills {
       isArcanique: true
     })
 
-    const verSkill: DBSkill = this.createSkill({
+    const verSkill = this.createSkill({
       name: 'ver',
       shortName: 'ver',
       description: 'Création de portails à courte portée',
@@ -694,7 +693,7 @@ export class InitSkills {
       isArcanique: true
     })
 
-    const pretreSkill: DBSkill = this.createSkill({
+    const pretreSkill = this.createSkill({
       name: 'pretre',
       shortName: 'prtr',
       description: 'Apaise les émotions',
@@ -707,7 +706,7 @@ export class InitSkills {
       isArcanique: true
     })
 
-    const bourreauSkill: DBSkill = this.createSkill({
+    const bourreauSkill = this.createSkill({
       name: 'bourreau',
       shortName: 'bour',
       description: 'Provoque de la douleur pure',
@@ -719,7 +718,7 @@ export class InitSkills {
       successCalculation: SuccessCalculation.SIMPLE_PLUS_1,
       isArcanique: true
     })
-    const marionnettisteSkill: DBSkill = this.createSkill({
+    const marionnettisteSkill = this.createSkill({
       name: 'marionnettiste',
       shortName: 'mrnt',
       description: 'Manipule les mouvements',
@@ -732,7 +731,7 @@ export class InitSkills {
       isArcanique: true
     })
 
-    const lionSkill: DBSkill = this.createSkill({
+    const lionSkill = this.createSkill({
       name: 'lion',
       shortName: 'lion',
       description: 'Booste sa Chair de X/2, -1 par tour',
@@ -745,7 +744,7 @@ export class InitSkills {
       isArcanique: true
     })
 
-    const taureauSkill: DBSkill = this.createSkill({
+    const taureauSkill = this.createSkill({
       name: 'taureau',
       shortName: 'taur',
       description: 'Booste son Esprit de X/2, -1 par tour',
@@ -758,7 +757,7 @@ export class InitSkills {
       isArcanique: true
     })
 
-    const renardSkill: DBSkill = this.createSkill({
+    const renardSkill = this.createSkill({
       name: 'renard',
       shortName: 'rnd',
       description: 'Booste son Essence de X/2, -1 par tour',
@@ -771,7 +770,7 @@ export class InitSkills {
       isArcanique: true
     })
 
-    const videSkill: DBSkill = this.createSkill({
+    const videSkill = this.createSkill({
       name: 'vide',
       shortName: 'vide',
       description: 'Faire disparaitre quelque chose',
@@ -784,7 +783,7 @@ export class InitSkills {
       isArcanique: true
     })
 
-    const miroirSkill: DBSkill = this.createSkill({
+    const miroirSkill = this.createSkill({
       name: 'miroir',
       shortName: 'mir',
       description: 'Crée des illusions de soi autour',
@@ -797,7 +796,7 @@ export class InitSkills {
       isArcanique: true
     })
 
-    const devinSkill: DBSkill = this.createSkill({
+    const devinSkill = this.createSkill({
       name: 'devin',
       shortName: 'dvn',
       description: 'Voir dans le futur',
@@ -810,7 +809,7 @@ export class InitSkills {
       isArcanique: true
     })
 
-    const peintreSkill: DBSkill = this.createSkill({
+    const peintreSkill = this.createSkill({
       name: 'peintre',
       shortName: 'peint',
       description: 'Fige le temps',
@@ -823,7 +822,7 @@ export class InitSkills {
       isArcanique: true
     })
 
-    const telepatheSkill: DBSkill = this.createSkill({
+    const telepatheSkill = this.createSkill({
       name: 'telepathe',
       shortName: 'tlpt',
       description: 'Télépathie',
@@ -836,7 +835,7 @@ export class InitSkills {
       isArcanique: true
     })
 
-    const montreSkill: DBSkill = this.createSkill({
+    const montreSkill = this.createSkill({
       name: 'montre',
       shortName: 'mtre',
       description: 'Se projeter dans le futur',
@@ -848,7 +847,7 @@ export class InitSkills {
       successCalculation: SuccessCalculation.SIMPLE_PLUS_1,
       isArcanique: true
     })
-    const omniscientSkill: DBSkill = this.createSkill({
+    const omniscientSkill = this.createSkill({
       name: 'omniscient',
       shortName: 'omn',
       description: 'Avoir une vision totale autour de soi',
@@ -861,7 +860,7 @@ export class InitSkills {
       isArcanique: true
     })
 
-    const messagerSkill: DBSkill = this.createSkill({
+    const messagerSkill = this.createSkill({
       name: 'messager',
       shortName: 'msg',
       description: "Envoie d'un message à une cible proche ou marquée",
@@ -874,7 +873,7 @@ export class InitSkills {
       isArcanique: true
     })
 
-    const nainSkill: DBSkill = this.createSkill({
+    const nainSkill = this.createSkill({
       name: 'nain',
       shortName: 'nain',
       description: 'Rétrécir (+X/2 bonus pour esquiver Chair et Esprit)',
@@ -887,7 +886,7 @@ export class InitSkills {
       isArcanique: true
     })
 
-    const geantSkill: DBSkill = this.createSkill({
+    const geantSkill = this.createSkill({
       name: 'geant',
       shortName: 'geant',
       description: 'Grandir (+X/2 bonus pour attaquer en Chair)',
@@ -900,7 +899,7 @@ export class InitSkills {
       isArcanique: true
     })
 
-    const vigieSkill: DBSkill = this.createSkill({
+    const vigieSkill = this.createSkill({
       name: 'vigie',
       shortName: 'vigie',
       description: 'Marquer un objet et sentir quand il est touché',
@@ -913,7 +912,7 @@ export class InitSkills {
       isArcanique: true
     })
 
-    const amiSkill: DBSkill = this.createSkill({
+    const amiSkill = this.createSkill({
       name: 'ami',
       shortName: 'ami',
       description: "Donner l'impression à une cible qu'on est son ami",
@@ -926,7 +925,7 @@ export class InitSkills {
       isArcanique: true
     })
 
-    const chamanSkill: DBSkill = this.createSkill({
+    const chamanSkill = this.createSkill({
       name: 'chaman',
       shortName: 'chmn',
       description: 'Communiquer avec les animaux',
@@ -939,7 +938,7 @@ export class InitSkills {
       isArcanique: true
     })
 
-    const cryptesthesisteSkill: DBSkill = this.createSkill({
+    const cryptesthesisteSkill = this.createSkill({
       name: 'cryptesthesiste',
       shortName: 'crypt',
       description: "Percevoir les souvenirs d'un objet",
@@ -952,7 +951,7 @@ export class InitSkills {
       isArcanique: true
     })
 
-    const sageSkill: DBSkill = this.createSkill({
+    const sageSkill = this.createSkill({
       name: 'sage',
       shortName: 'sage',
       description: 'Au moins X/2 réussites à chaque jet, -1 par tour',
@@ -965,7 +964,7 @@ export class InitSkills {
       isArcanique: true
     })
 
-    const professeurSkill: DBSkill = this.createSkill({
+    const professeurSkill = this.createSkill({
       name: 'professeur',
       shortName: 'prof',
       description: 'Donner des PF à une cible',
@@ -977,7 +976,7 @@ export class InitSkills {
       successCalculation: SuccessCalculation.SIMPLE_PLUS_1,
       isArcanique: true
     })
-    const magicienSkill: DBSkill = this.createSkill({
+    const magicienSkill = this.createSkill({
       name: 'magicien',
       shortName: 'mag',
       description: 'Donner des PP à une cible',
@@ -990,7 +989,7 @@ export class InitSkills {
       isArcanique: true
     })
 
-    const empoisonneurSkill: DBSkill = this.createSkill({
+    const empoisonneurSkill = this.createSkill({
       name: 'empoisonneur',
       shortName: 'emp',
       description: 'Empoisonner une cible (-1pv par tour)',
@@ -1003,7 +1002,7 @@ export class InitSkills {
       isArcanique: true
     })
 
-    const amnesiqueSkill: DBSkill = this.createSkill({
+    const amnesiqueSkill = this.createSkill({
       name: 'amnesique',
       shortName: 'amn',
       description: 'Faire oublier sa présence aux adversaires',
@@ -1016,7 +1015,7 @@ export class InitSkills {
       isArcanique: true
     })
 
-    const pragmatiqueSkill: DBSkill = this.createSkill({
+    const pragmatiqueSkill = this.createSkill({
       name: 'pragmatique',
       shortName: 'prag',
       description: 'Annuler de la magie',
@@ -1029,7 +1028,7 @@ export class InitSkills {
       isArcanique: true
     })
 
-    const parfumeurSkill: DBSkill = this.createSkill({
+    const parfumeurSkill = this.createSkill({
       name: 'parfumeur',
       shortName: 'parf',
       description: 'Créer des odeurs et des gouts',
@@ -1042,7 +1041,7 @@ export class InitSkills {
       isArcanique: true
     })
 
-    const banquierSkill: DBSkill = this.createSkill({
+    const banquierSkill = this.createSkill({
       name: 'banquier',
       shortName: 'banq',
       description: 'Créer un espace où cacher des objets',
@@ -1055,7 +1054,7 @@ export class InitSkills {
       isArcanique: true
     })
 
-    const colletSkill: DBSkill = this.createSkill({
+    const colletSkill = this.createSkill({
       name: 'collet',
       shortName: 'clt',
       description: "Lier une cible à soi, qui ne peut plus s'éloigner",
@@ -1068,7 +1067,7 @@ export class InitSkills {
       isArcanique: true
     })
 
-    const linguisteSkill: DBSkill = this.createSkill({
+    const linguisteSkill = this.createSkill({
       name: 'linguiste',
       shortName: 'ling',
       description: "Compréhension écrite et orale d'une langue",
@@ -1081,7 +1080,7 @@ export class InitSkills {
       isArcanique: true
     })
 
-    const equilibristeSkill: DBSkill = this.createSkill({
+    const equilibristeSkill = this.createSkill({
       name: 'equilibriste',
       shortName: 'equi',
       description: "Attaque en jet d'équilibre (somme des stats - somme des diff entre max et autres)",
@@ -1094,7 +1093,7 @@ export class InitSkills {
       isArcanique: true
     })
 
-    const marchandSkill: DBSkill = this.createSkill({
+    const marchandSkill = this.createSkill({
       name: 'marchand',
       shortName: 'marchand',
       description: 'mrchd deux cibles par un contrat magique',
@@ -1106,7 +1105,7 @@ export class InitSkills {
       successCalculation: SuccessCalculation.SIMPLE_PLUS_1,
       isArcanique: true
     })
-    const mecanicienSkill: DBSkill = this.createSkill({
+    const mecanicienSkill = this.createSkill({
       name: 'mecanicien',
       shortName: 'meca',
       description: 'Animer des objets',
@@ -1119,7 +1118,7 @@ export class InitSkills {
       isArcanique: true
     })
 
-    const cadavreSkill: DBSkill = this.createSkill({
+    const cadavreSkill = this.createSkill({
       name: 'cadavre',
       shortName: 'cdvr',
       description: 'Simuler un état de mort',
@@ -1132,7 +1131,7 @@ export class InitSkills {
       isArcanique: true
     })
 
-    const leprechaunSkill: DBSkill = this.createSkill({
+    const leprechaunSkill = this.createSkill({
       name: 'leprechaun',
       shortName: 'lep',
       description: 'Avoir de la chance',
@@ -1145,7 +1144,7 @@ export class InitSkills {
       isArcanique: true
     })
 
-    const bergerSkill: DBSkill = this.createSkill({
+    const bergerSkill = this.createSkill({
       name: 'berger',
       shortName: 'brg',
       description: "Percevoir où se trouver ce que l'on désire",
@@ -1158,7 +1157,7 @@ export class InitSkills {
       isArcanique: true
     })
 
-    const reveSkill: DBSkill = this.createSkill({
+    const reveSkill = this.createSkill({
       name: 'reve',
       shortName: 'reve',
       description: "Aller dans les rêves d'une cible",
@@ -1171,7 +1170,7 @@ export class InitSkills {
       isArcanique: true
     })
 
-    const orateurSkill: DBSkill = this.createSkill({
+    const orateurSkill = this.createSkill({
       name: 'orateur',
       shortName: 'ora',
       description: 'Réussite un jet pour encourager',
@@ -1184,7 +1183,7 @@ export class InitSkills {
       isArcanique: true
     })
 
-    const furieSkill: DBSkill = this.createSkill({
+    const furieSkill = this.createSkill({
       name: 'furie',
       shortName: 'furie',
       description: 'Provoque un sentiment de colère à une cible',
@@ -1197,7 +1196,7 @@ export class InitSkills {
       isArcanique: true
     })
 
-    const ratSkill: DBSkill = this.createSkill({
+    const ratSkill = this.createSkill({
       name: 'rat',
       shortName: 'rat',
       description: "Donne X malus aux ennemis pour le prochain jet d'Essence",
@@ -1210,7 +1209,7 @@ export class InitSkills {
       isArcanique: true
     })
 
-    const scorpionSkill: DBSkill = this.createSkill({
+    const scorpionSkill = this.createSkill({
       name: 'scorpion',
       shortName: 'scrp',
       description: 'Donne X malus aux ennemis pour le prochain jet de Chair',
@@ -1223,7 +1222,7 @@ export class InitSkills {
       isArcanique: true
     })
 
-    const vautourSkill: DBSkill = this.createSkill({
+    const vautourSkill = this.createSkill({
       name: 'vautour',
       shortName: 'vtr',
       description: "Donne X malus aux ennemis pour le prochain jet d'Esprit",
@@ -1235,7 +1234,7 @@ export class InitSkills {
       successCalculation: SuccessCalculation.SIMPLE_PLUS_1,
       isArcanique: true
     })
-    const balanceSkill: DBSkill = this.createSkill({
+    const balanceSkill = this.createSkill({
       name: 'balance',
       shortName: 'bal',
       description: 'Transférer X blessures sur une cible',
@@ -1248,7 +1247,7 @@ export class InitSkills {
       isArcanique: true
     })
 
-    const savantSkill: DBSkill = this.createSkill({
+    const savantSkill = this.createSkill({
       name: 'savant',
       shortName: 'sav',
       description: 'Protéger son esprit',
@@ -1261,7 +1260,7 @@ export class InitSkills {
       isArcanique: true
     })
 
-    const archeologueSkill: DBSkill = this.createSkill({
+    const archeologueSkill = this.createSkill({
       name: 'archeologue',
       shortName: 'arcg',
       description: 'Percevoir où se trouve un objet à proximité ou marqué',
@@ -1274,7 +1273,7 @@ export class InitSkills {
       isArcanique: true
     })
 
-    const gardienSkill: DBSkill = this.createSkill({
+    const gardienSkill = this.createSkill({
       name: 'gardien',
       shortName: 'gard',
       description: 'Ressent si un marqué est en danger',
@@ -1287,7 +1286,7 @@ export class InitSkills {
       isArcanique: true
     })
 
-    const destructionSkill: DBSkill = this.createSkill({
+    const destructionSkill = this.createSkill({
       name: 'destruction',
       shortName: 'destr',
       description: 'Détruire une zone',
@@ -1300,7 +1299,7 @@ export class InitSkills {
       isArcanique: true
     })
 
-    const conteurSkill: DBSkill = this.createSkill({
+    const conteurSkill = this.createSkill({
       name: 'conteur',
       shortName: 'cntr',
       description: 'Provoque un état de sommeil',
@@ -1313,7 +1312,7 @@ export class InitSkills {
       isArcanique: true
     })
 
-    const lucioleSkill: DBSkill = this.createSkill({
+    const lucioleSkill = this.createSkill({
       name: 'luciole',
       shortName: 'luc',
       description: 'Soigne X/2 PV à ses alliés à distance',
@@ -1326,7 +1325,7 @@ export class InitSkills {
       isArcanique: true
     })
 
-    const chaperonSkill: DBSkill = this.createSkill({
+    const chaperonSkill = this.createSkill({
       name: 'chaperon',
       shortName: 'chap',
       description: 'Téléporté une personne marqué ou visible vers soi',
@@ -1339,7 +1338,7 @@ export class InitSkills {
       isArcanique: true
     })
 
-    const chauveSourisSkill: DBSkill = this.createSkill({
+    const chauveSourisSkill = this.createSkill({
       name: 'chauvesouris',
       shortName: 'chvsr',
       description: 'Projeter son esprit pour entendre au loin',
@@ -1352,7 +1351,7 @@ export class InitSkills {
       isArcanique: true
     })
 
-    const acrobateSkill: DBSkill = this.createSkill({
+    const acrobateSkill = this.createSkill({
       name: 'acrobate',
       shortName: 'acro',
       description: "Pouvoir s'accrocher aux murs",
@@ -1364,7 +1363,7 @@ export class InitSkills {
       successCalculation: SuccessCalculation.SIMPLE_PLUS_1,
       isArcanique: true
     })
-    const terreurSkill: DBSkill = this.createSkill({
+    const terreurSkill = this.createSkill({
       name: 'terreur',
       shortName: 'ter',
       description: 'Provoque un sentiment de peur',
@@ -1377,7 +1376,7 @@ export class InitSkills {
       isArcanique: true
     })
 
-    const ectoplasmeSkill: DBSkill = this.createSkill({
+    const ectoplasmeSkill = this.createSkill({
       name: 'ectoplasme',
       shortName: 'ecto',
       description: 'Projette une version visible de soit pour voir et entendre au loin',
@@ -1390,7 +1389,7 @@ export class InitSkills {
       isArcanique: true
     })
 
-    const torcheSkill: DBSkill = this.createSkill({
+    const torcheSkill = this.createSkill({
       name: 'torche',
       shortName: 'trch',
       description: 'Aura de soin (X tour avec 1 soin de 1 PV par tour)',
@@ -1403,7 +1402,7 @@ export class InitSkills {
       isArcanique: true
     })
 
-    const survivantSkill: DBSkill = this.createSkill({
+    const survivantSkill = this.createSkill({
       name: 'survivant',
       shortName: 'surv',
       description: 'Protection contre la mort (pv de secours si on tombe KO)',
@@ -1416,7 +1415,7 @@ export class InitSkills {
       isArcanique: true
     })
 
-    const purificateurSkill: DBSkill = this.createSkill({
+    const purificateurSkill = this.createSkill({
       name: 'purificateur',
       shortName: 'purf',
       description: 'Purification (eau/nourriture/maladie)',
@@ -1429,7 +1428,7 @@ export class InitSkills {
       isArcanique: true
     })
 
-    const reparateurSkill: DBSkill = this.createSkill({
+    const reparateurSkill = this.createSkill({
       name: 'réparateur',
       shortName: 'rep',
       description: "Réparation d'objets ou de mécanismes",
@@ -1442,7 +1441,7 @@ export class InitSkills {
       isArcanique: true
     })
 
-    const voyantSkill: DBSkill = this.createSkill({
+    const voyantSkill = this.createSkill({
       name: 'voyant',
       shortName: 'voy',
       description: 'Scruter une personne à proximité ou précédemment marquée',
@@ -1455,7 +1454,7 @@ export class InitSkills {
       isArcanique: true
     })
 
-    const nomadeSkill: DBSkill = this.createSkill({
+    const nomadeSkill = this.createSkill({
       name: 'nomade',
       shortName: 'nmd',
       description: 'Savoir exactement où on se situe',
@@ -1468,7 +1467,7 @@ export class InitSkills {
       isArcanique: true
     })
 
-    const silenceSkill: DBSkill = this.createSkill({
+    const silenceSkill = this.createSkill({
       name: 'silence',
       shortName: 'slnc',
       description: 'Bloquer le son dans une zone',
@@ -1481,7 +1480,7 @@ export class InitSkills {
       isArcanique: true
     })
 
-    const mortSkill: DBSkill = this.createSkill({
+    const mortSkill = this.createSkill({
       name: 'mort',
       shortName: 'mort',
       description: 'Achève une personne avec 25% max de PV restant',
@@ -1493,7 +1492,7 @@ export class InitSkills {
       successCalculation: SuccessCalculation.AUCUN,
       isArcanique: true
     })
-    const analysteSkill: DBSkill = this.createSkill({
+    const analysteSkill = this.createSkill({
       name: 'analyste',
       shortName: 'anlst',
       description: "Scanner quelqu'un pour connaitre sa lignée, et ses PV, PF et PP courant et max",
@@ -1506,7 +1505,7 @@ export class InitSkills {
       isArcanique: true
     })
 
-    const farceurSkill: DBSkill = this.createSkill({
+    const farceurSkill = this.createSkill({
       name: 'farceur',
       shortName: 'farc',
       description: 'Ajoute un effet visuel et ou sonore à un objet quand on le touche pour X fois',
@@ -1519,7 +1518,7 @@ export class InitSkills {
       isArcanique: true
     })
 
-    const observateurSkill: DBSkill = this.createSkill({
+    const observateurSkill = this.createSkill({
       name: 'observateur',
       shortName: 'obsr',
       description: 'Obtenir la vision véritable (voir la magie, les auras, les êtres invisibles, etc...)',
@@ -1532,7 +1531,7 @@ export class InitSkills {
       isArcanique: true
     })
 
-    const confesseurSkill: DBSkill = this.createSkill({
+    const confesseurSkill = this.createSkill({
       name: 'confesseur',
       shortName: 'conf',
       description: 'Crée une zone de vérité où on ne peut mentir',
@@ -1545,7 +1544,7 @@ export class InitSkills {
       isArcanique: true
     })
 
-    const bouclierSkill: DBSkill = this.createSkill({
+    const bouclierSkill = this.createSkill({
       name: 'bouclier',
       shortName: 'bclr',
       description: 'Réduit X dégats en réaction',
@@ -1558,7 +1557,7 @@ export class InitSkills {
       isArcanique: true
     })
 
-    const pisteurSkill: DBSkill = this.createSkill({
+    const pisteurSkill = this.createSkill({
       name: 'pisteur',
       shortName: 'pist',
       description: 'Perçoit une cible à proximité pour X heures',
@@ -1571,7 +1570,7 @@ export class InitSkills {
       isArcanique: true
     })
 
-    const pieuvreSkill: DBSkill = this.createSkill({
+    const pieuvreSkill = this.createSkill({
       name: 'pieuvre',
       shortName: 'pvr',
       description: "Ajoute des bras pour X tours, donnant une action supplémentaire d'attaque",
@@ -1584,7 +1583,7 @@ export class InitSkills {
       isArcanique: true
     })
 
-    const sobreSkill: DBSkill = this.createSkill({
+    const sobreSkill = this.createSkill({
       name: 'sobre',
       shortName: 'sbr',
       description: 'Force un adversaire à se défendre avec une autre stat',
@@ -1597,7 +1596,7 @@ export class InitSkills {
       isArcanique: true
     })
 
-    const illumineSkill: DBSkill = this.createSkill({
+    const illumineSkill = this.createSkill({
       name: 'illuminé',
       shortName: 'ill',
       description: 'Communion avec son Être Supérieur',
@@ -1610,7 +1609,7 @@ export class InitSkills {
       isArcanique: true
     })
 
-    const souhaitSkill: DBSkill = this.createSkill({
+    const souhaitSkill = this.createSkill({
       name: 'souhait',
       shortName: 'sht',
       description: "Utilise n'importe quelle arcane ou modifie le monde avec contre-coup",
@@ -1622,7 +1621,7 @@ export class InitSkills {
       successCalculation: SuccessCalculation.AUCUN,
       isArcanique: true
     })
-    const planteSoutien: DBSkill = this.createSkill({
+    /*const planteSoutien = this.createSkill({
       name: 'Plante de soutien',
       shortName: 'pl-soutien',
       description: 'Invoquer une plante de soutien',
@@ -1632,8 +1631,8 @@ export class InitSkills {
       display: 'invoque une *Plante de Soutien*',
       position: 31,
       invocationTemplate: charactersTemplates.get('Plante Soutien')
-    })
-    const coupDeSeve: DBSkill = this.createSkill({
+    })*/
+    const coupDeSeve = this.createSkill({
       name: 'Coup de sève',
       shortName: 'Coup de sève',
       description: 'Donne des bénédictions pour un tour',
@@ -1643,7 +1642,7 @@ export class InitSkills {
       display: 'donne des *Bénédictions* pour un tour',
       position: 31
     })
-    const planteCombat: DBSkill = this.createSkill({
+    /*const planteCombat = this.createSkill({
       name: 'Plante de combat',
       shortName: 'pl-combat',
       description: 'Invoquer une plante de combat',
@@ -1654,7 +1653,7 @@ export class InitSkills {
       position: 32,
       invocationTemplate: charactersTemplates.get('Plante Combat')
     })
-    const planteMagie: DBSkill = this.createSkill({
+    const planteMagie = this.createSkill({
       name: 'Plante de magie',
       shortName: 'pl-magie',
       description: 'Invoquer une plante de magie',
@@ -1664,8 +1663,8 @@ export class InitSkills {
       display: 'invoque une *Plante de Magie*',
       position: 33,
       invocationTemplate: charactersTemplates.get('Plante Magie')
-    })
-    const pollen: DBSkill = this.createSkill({
+    })*/
+    const pollen = this.createSkill({
       name: 'Pollen',
       shortName: 'pollen',
       description: 'Crèe un effet magique (poison, soin, etc...)',
@@ -1675,7 +1674,7 @@ export class InitSkills {
       display: 'génère un *Pollen Magique*',
       position: 31
     })
-    const planteEnvahissante: DBSkill = this.createSkill({
+    /*const planteEnvahissante = this.createSkill({
       name: 'Plante envahissante',
       shortName: 'pl-envahis.',
       description: 'Invoquer une plante envahissante',
@@ -1685,9 +1684,9 @@ export class InitSkills {
       display: 'invoque une *Plante Envahissante*',
       position: 34,
       invocationTemplate: charactersTemplates.get('Plante Envahissante')
-    })
+    })*/
 
-    const reconnaissanceNaturelle: DBSkill = this.createSkill({
+    const reconnaissanceNaturelle = this.createSkill({
       name: 'Reconnaissance naturelle',
       shortName: 'reco nat.',
       description: 'Analyser le niveau courant de la Nature',
@@ -1699,7 +1698,7 @@ export class InitSkills {
       successCalculation: SuccessCalculation.CUSTOM
     })
 
-    const lienNaturel: DBSkill = this.createSkill({
+    const lienNaturel = this.createSkill({
       name: 'Lien naturel',
       shortName: 'lien nat.',
       description: 'Retirer 2 PV à une plante invoquée pour annuler une blessure',
@@ -1711,7 +1710,7 @@ export class InitSkills {
       position: 10
     })
 
-    const soulevementDeLaNature: DBSkill = this.createSkill({
+    const soulevementDeLaNature = this.createSkill({
       name: 'Soulèvement de la Nature',
       shortName: 'soulev nat.',
       description: 'Attaque de Chair à 2*Nature, 1 dégat aux plantes invoquées',
@@ -1724,7 +1723,7 @@ export class InitSkills {
       dettesCost: 1
     })
 
-    const animationDeLaNature: DBSkill = this.createSkill({
+    const animationDeLaNature = this.createSkill({
       name: 'Animation de la Nature',
       shortName: 'anim nat.',
       description: 'Donne une consscience avancée à une plante',
@@ -1736,7 +1735,7 @@ export class InitSkills {
       dettesCost: 1
     })
 
-    const communicationAvecLaNature: DBSkill = this.createSkill({
+    const communicationAvecLaNature = this.createSkill({
       name: 'Communication avec la Nature',
       shortName: 'comm nat.',
       description: 'Lien avec une plante pour communiquer avec elle tant que la Nature est supérieure à 2',
@@ -1748,7 +1747,7 @@ export class InitSkills {
       dettesCost: 1
     })
 
-    const voieDesArbres: DBSkill = this.createSkill({
+    const voieDesArbres = this.createSkill({
       name: 'Voie des Arbres',
       shortName: 'voie arbre',
       description: 'Permet de créer un portail entre 2 arrbres',
@@ -1760,7 +1759,7 @@ export class InitSkills {
       dettesCost: 1
     })
 
-    const lienAvatar: DBSkill = this.createSkill({
+    const lienAvatar = this.createSkill({
       name: "Lien à l'Avatar",
       shortName: 'lien',
       description: "Utilise son lien avec l'Avatar",
@@ -1772,7 +1771,7 @@ export class InitSkills {
       limitedUse: 1
     })
 
-    const brasRobotique: DBSkill = this.createSkill({
+    const brasRobotique = this.createSkill({
       name: 'Bras Robotique',
       shortName: 'bras',
       description: 'Attaque double en Chair contre un PV perdu',
@@ -1784,7 +1783,7 @@ export class InitSkills {
       pvCost: 1
     })
 
-    const oeilBionique: DBSkill = this.createSkill({
+    const oeilBionique = this.createSkill({
       name: 'Oeil Bionique',
       shortName: 'oeil',
       description: 'Analyse une cible (personne ou objet)',
@@ -1796,7 +1795,7 @@ export class InitSkills {
       limitedUse: 1
     })
 
-    const munitionCourante: DBSkill = this.createSkill({
+    const munitionCourante = this.createSkill({
       name: 'Mun. courantes',
       shortName: 'm-cour',
       description: 'Utilise une munition courante',
@@ -1807,7 +1806,7 @@ export class InitSkills {
       position: 3
     })
 
-    const munitionLethale: DBSkill = this.createSkill({
+    const munitionLethale = this.createSkill({
       name: 'Mun. léthales',
       shortName: 'm-leth',
       description: 'Utilise une munition léthale, x2',
@@ -1820,7 +1819,7 @@ export class InitSkills {
       soldatCost: 1
     })
 
-    const munitionAffaiblissante: DBSkill = this.createSkill({
+    const munitionAffaiblissante = this.createSkill({
       name: 'Mun. affaiblissantes',
       shortName: 'm-aff',
       description: 'Utilise une munition affaiblissante, +1 malus à la cible touchée',
@@ -1832,7 +1831,7 @@ export class InitSkills {
       soldatCost: 2
     })
 
-    const munitionPeste: DBSkill = this.createSkill({
+    const munitionPeste = this.createSkill({
       name: 'Mun. peste',
       shortName: 'm-pest',
       description: 'Utilise une munition peste, +1 dégat à la cible touchée à chacune de ses actions',
@@ -1844,7 +1843,7 @@ export class InitSkills {
       soldatCost: 2
     })
 
-    const munitionMarquage: DBSkill = this.createSkill({
+    const munitionMarquage = this.createSkill({
       name: 'Mun. marquage',
       shortName: 'm-marq',
       description: 'Utilise une munition marquage, marque la cible touchée',
@@ -1856,7 +1855,7 @@ export class InitSkills {
       soldatCost: 3
     })
 
-    const munitionDegenerative: DBSkill = this.createSkill({
+    const munitionDegenerative = this.createSkill({
       name: 'Mun. dégénérative',
       shortName: 'm-deg',
       description: 'Utilise une munition dégénérative, soins divisés par 2',
@@ -1868,7 +1867,7 @@ export class InitSkills {
       soldatCost: 2
     })
 
-    const munitionFumigene: DBSkill = this.createSkill({
+    const munitionFumigene = this.createSkill({
       name: 'Gr. fumigène',
       shortName: 'g-fum',
       description: 'Utilise une munition fumigène, crée un nuage de fumée',
@@ -1880,7 +1879,7 @@ export class InitSkills {
       soldatCost: 1
     })
 
-    const munitionFlash: DBSkill = this.createSkill({
+    const munitionFlash = this.createSkill({
       name: 'Gr. flash',
       shortName: 'g-flsh',
       description: 'Utilise une munition flash, aveugle la cible touchée',
@@ -1892,7 +1891,7 @@ export class InitSkills {
       soldatCost: 1
     })
 
-    const tatouage: DBSkill = this.createSkill({
+    const tatouage = this.createSkill({
       name: 'tatouage',
       shortName: 'tat',
       description: 'Se transformer la plus grande peur de la cible',
@@ -1904,7 +1903,7 @@ export class InitSkills {
       arcanePrimeCost: 1
     })
 
-    const pokeball: DBSkill = this.createSkill({
+    const pokeball = this.createSkill({
       name: 'pokéball',
       shortName: 'pkb',
       description: 'Invoque aléatoirement un pokémon',
@@ -2041,7 +2040,7 @@ export class InitSkills {
       sobreSkill,
       illumineSkill,
       souhaitSkill,
-      planteSoutien,
+      //planteSoutien,
       communicationArcaniqueSkill,
       boostArcaniqueSkill,
       blocageArcaniqueSkill,
@@ -2056,10 +2055,10 @@ export class InitSkills {
       malediction,
       speed,
       invisibilite,
-      planteMagie,
-      planteCombat,
-      planteEnvahissante,
-      planteSoutien,
+      //planteMagie,
+      //planteCombat,
+      //planteEnvahissante,
+      //planteSoutien,
       pollen,
       coupDeSeve,
       lienAvatar,
@@ -2070,6 +2069,53 @@ export class InitSkills {
       communicationAvecLaNature,
       voieDesArbres
     ]
+  }
+  static getSkillsInvocation(charactersTemplates: Map<string, DBCharacterTemplate>): Omit<DBSkill, 'id'>[] {
+    const planteSoutien = this.createSkill({
+      name: 'Plante de soutien',
+      shortName: 'pl-soutien',
+      description: 'Invoquer une plante de soutien',
+      allAttribution: false,
+      stat: SkillStat.ESSENCE,
+      category: DisplayCategory.MAGIE,
+      display: 'invoque une *Plante de Soutien*',
+      position: 31,
+      invocationTemplate: charactersTemplates.get('Plante Soutien')
+    })
+    const planteCombat = this.createSkill({
+      name: 'Plante de combat',
+      shortName: 'pl-combat',
+      description: 'Invoquer une plante de combat',
+      allAttribution: false,
+      stat: SkillStat.ESSENCE,
+      category: DisplayCategory.MAGIE,
+      display: 'invoque une *Plante de Combat*',
+      position: 32,
+      invocationTemplate: charactersTemplates.get('Plante Combat')
+    })
+    const planteMagie = this.createSkill({
+      name: 'Plante de magie',
+      shortName: 'pl-magie',
+      description: 'Invoquer une plante de magie',
+      allAttribution: false,
+      stat: SkillStat.ESSENCE,
+      category: DisplayCategory.MAGIE,
+      display: 'invoque une *Plante de Magie*',
+      position: 33,
+      invocationTemplate: charactersTemplates.get('Plante Magie')
+    })
+    const planteEnvahissante = this.createSkill({
+      name: 'Plante envahissante',
+      shortName: 'pl-envahis.',
+      description: 'Invoquer une plante envahissante',
+      allAttribution: false,
+      stat: SkillStat.ESSENCE,
+      category: DisplayCategory.MAGIE,
+      display: 'invoque une *Plante Envahissante*',
+      position: 34,
+      invocationTemplate: charactersTemplates.get('Plante Envahissante')
+    })
+    return [planteSoutien, planteMagie, planteCombat, planteEnvahissante, planteSoutien]
   }
   static createSkill(p: {
     name: string
@@ -2085,7 +2131,6 @@ export class InitSkills {
     isHeal?: boolean
     allowsPf?: boolean
     allowsPp?: boolean
-    use?: SkillOwnedUse
     limitedUse?: number
     pvCost?: number
     pfCost?: number
@@ -2099,7 +2144,7 @@ export class InitSkills {
     invocationTemplate?: DBCharacterTemplate
     precision?: string
     soldatCost?: number
-  }): DBSkill {
+  }): Omit<DBSkill, 'id'> {
     return {
       name: p.name,
       description: p.description,
@@ -2126,7 +2171,11 @@ export class InitSkills {
       isHeal: p.isHeal || false,
       invocationTemplate: p.invocationTemplate || null,
       invocationTemplateName: p.invocationTemplate ? p.invocationTemplate.name : null,
-      soldatCost: p.soldatCost || 0
+      soldatCost: p.soldatCost || 0,
+      classes: [],
+      bloodlines: [],
+      characters: [],
+      characterTemplates: []
     }
   }
 }

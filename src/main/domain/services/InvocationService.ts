@@ -1,10 +1,10 @@
+import { SkillService } from './SkillService'
 import { Character } from '../models/characters/Character'
 import { CharacterTemplateReferential } from '../models/invocation/CharacterTemplateReferential'
 import { Roll } from '../models/roll/Roll'
 import { ICharacterProvider } from '../providers/ICharacterProvider'
 import { INameProvider } from '../providers/INameProvider'
 import { ISessionProvider } from '../providers/ISessionProvider'
-import { ISkillProvider } from '../providers/ISkillProvider'
 import { Inject, Logger } from '@nestjs/common'
 
 export class InvocationService {
@@ -15,8 +15,7 @@ export class InvocationService {
     private characterProvider: ICharacterProvider,
     @Inject('ISessionProvider')
     private sessionProvider: ISessionProvider,
-    @Inject('ISkillProvider')
-    private skillProvider: ISkillProvider,
+    private skillService: SkillService,
     @Inject('INameProvider')
     private nameProvider: INameProvider
   ) {}
@@ -24,7 +23,6 @@ export class InvocationService {
   async createInvocation(templateName: string, roll: Roll): Promise<Character> {
     const summoner = await this.characterProvider.findOneByName(roll.rollerName)
     const template = await this.characterProvider.findTemplateByName(templateName)
-    const skills = await this.skillProvider.findSkillsByCharacterTemplate(template)
     const chair: number = this.valueByReferential(
       summoner,
       roll,
@@ -48,8 +46,9 @@ export class InvocationService {
       customData: template.customData
     })
     const createdInvocation = await this.characterProvider.createInvocation(invocation)
+    const skills = await this.skillService.findSkillsByCharacterTemplate(template)
     for (const skill of skills) {
-      await this.skillProvider.affectSkillToCharacter(createdInvocation, skill)
+      await this.skillService.affectSkillToCharacter(createdInvocation, skill)
     }
     return createdInvocation
   }

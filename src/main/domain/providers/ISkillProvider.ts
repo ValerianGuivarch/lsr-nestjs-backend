@@ -1,17 +1,12 @@
 import { Character } from '../models/characters/Character'
-import { CharacterTemplate } from '../models/invocation/CharacterTemplate'
 import { Skill } from '../models/skills/Skill'
 
 export interface ISkillProvider {
-  findSkillOwnedById(id: number): Promise<Skill>
-  findSkillsByCharacter(character: Character): Promise<Skill[]>
-  findSkillsByCharacterTemplate(characterTemplate: CharacterTemplate): Promise<Skill[]>
-  affectSkillToCharacter(character: Character, skill: Skill): Promise<void>
-  updateDailyUse(skillName: string, characterName: string, number: number): Promise<void>
-  updateSkillAttribution(
-    characterName: string,
-    skillName: string,
-    dailyUse: number,
-    limitationMax: number
-  ): Promise<void>
+  findOneById(id: string): Promise<Skill>
+  findSkillsForAll(): Promise<Skill[]>
+  findSkillsByCharacter(characterName: string): Promise<Skill[]>
+  findSkillsByBloodline(bloodlineName: string): Promise<Skill[]>
+  findSkillsByClasse(classeName: string): Promise<Skill[]>
+  findSkillsByCharacterTemplate(name: string): Promise<Skill[]>
+  affectSkillToCharacter(createdInvocation: Character, skill: Skill): Promise<void>
 }

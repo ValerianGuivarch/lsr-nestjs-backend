@@ -1,59 +1,74 @@
 import { DBBloodline } from '../../data/database/bloodlines/DBBloodline'
+import { DBProficiency } from '../../data/database/proficiencies/DBProficiency'
+import { DBSkill } from '../../data/database/skills/DBSkill'
+import { SuccessCalculation } from '../../domain/models/roll/SuccessCalculation'
 import { Injectable } from '@nestjs/common'
 
 @Injectable()
 // eslint-disable-next-line @darraghor/nestjs-typed/injectable-should-be-provided
 export class InitBloodlines {
-  static getBloodlines(): DBBloodline[] {
+  static getBloodlines(skills: Map<string, DBSkill>, proficiencies: Map<string, DBProficiency>): DBBloodline[] {
     const aucunBloodline: DBBloodline = this.createBloodline({
       name: 'aucun',
       display: ''
     })
     const eauBloodline: DBBloodline = this.createBloodline({
       name: 'eau',
-      display: "de l'Eau"
+      display: "de l'Eau",
+      skills: [skills.get('forme aqueuse')]
     })
 
     const feuBloodline: DBBloodline = this.createBloodline({
       name: 'feu',
       display: 'du Feu',
-      detteByMagicAction: 2
+      skills: [skills.get('soin mental')]
     })
 
     const ventBloodline: DBBloodline = this.createBloodline({
       name: 'vent',
-      display: 'du Vent'
+      display: 'du Vent',
+      skills: [skills.get('vol')]
     })
 
     const terreBloodline: DBBloodline = this.createBloodline({
       name: 'terre',
-      display: 'de la Terre'
+      display: 'de la Terre',
+      skills: [skills.get('armure')]
     })
 
     const lumiereBloodline: DBBloodline = this.createBloodline({
       name: 'lumière',
       display: 'de la lumière',
-      healthImproved: true
+      skills: [
+        {
+          ...skills.get('soin'),
+          successCalculation: SuccessCalculation.SIMPLE_PLUS_1
+        }
+      ]
     })
 
     const ombreBloodline: DBBloodline = this.createBloodline({
       name: 'ombre',
-      display: 'des Ombres'
+      display: 'des Ombres',
+      skills: [skills.get('invisibilité')]
     })
 
     const foudreBloodline: DBBloodline = this.createBloodline({
       name: 'foudre',
-      display: 'de la Foudre'
+      display: 'de la Foudre',
+      skills: [skills.get('speed')]
     })
 
     const glaceBloodline: DBBloodline = this.createBloodline({
       name: 'glace',
-      display: 'de la Glace'
+      display: 'de la Glace',
+      skills: [skills.get('malédiction')]
     })
 
     const neigeBloodline: DBBloodline = this.createBloodline({
       name: 'neige',
-      display: 'de la Neige'
+      display: 'de la Neige',
+      skills: [skills.get('malédiction')]
     })
 
     const arbreBloodline: DBBloodline = this.createBloodline({
@@ -126,13 +141,14 @@ export class InitBloodlines {
   static createBloodline(p: {
     name: string
     display: string
-    detteByMagicAction?: number
-    detteByPp?: number
-    healthImproved?: boolean
+    proficiencies?: DBProficiency[]
+    skills?: DBSkill[]
   }): DBBloodline {
     const newBloodline = new DBBloodline()
     newBloodline.name = p.name
     newBloodline.display = p.display
+    newBloodline.proficiencies = p.proficiencies || []
+    newBloodline.skills = p.skills || []
     return newBloodline
   }
 }

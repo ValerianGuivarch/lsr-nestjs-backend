@@ -1,24 +1,49 @@
+import { DBApotheose } from '../../data/database/apotheoses/DBApotheose'
 import { DBClasse } from '../../data/database/classes/DBClasse'
+import { DBProficiency } from '../../data/database/proficiencies/DBProficiency'
+import { DBSkill } from '../../data/database/skills/DBSkill'
 import { Injectable } from '@nestjs/common'
 
 @Injectable()
 // eslint-disable-next-line @darraghor/nestjs-typed/injectable-should-be-provided
 export class InitClasses {
-  static getClasses(): DBClasse[] {
+  static getClasses(
+    skills: Map<string, DBSkill>,
+    proficiencies: Map<string, DBProficiency>,
+    apotheoses: Map<string, DBApotheose>
+  ): DBClasse[] {
     const championClasse: DBClasse = this.createClasse({
       name: 'champion',
       displayMale: 'Champion',
-      displayFemale: 'Championne'
+      displayFemale: 'Championne',
+      apotheoses: [
+        apotheoses.get('apotheose'),
+        apotheoses.get('apotheose améliorée'),
+        apotheoses.get('apotheose finale')
+      ],
+      skills: [skills.get('magie'), skills.get('cantrip'), skills.get('soin')]
     })
     const corrompuClasse: DBClasse = this.createClasse({
       name: 'corrompu',
       displayMale: 'Corrompu',
-      displayFemale: 'Corrompue'
+      displayFemale: 'Corrompue',
+      apotheoses: [
+        apotheoses.get('apotheose'),
+        apotheoses.get('apotheose améliorée'),
+        apotheoses.get('apotheose finale')
+      ],
+      skills: [skills.get('magie'), skills.get('cantrip'), skills.get('soin')]
     })
     const rejeteClasse: DBClasse = this.createClasse({
       name: 'rejete',
       displayMale: 'Rejeté',
-      displayFemale: 'Rejetée'
+      displayFemale: 'Rejetée',
+      apotheoses: [
+        apotheoses.get('apotheose'),
+        apotheoses.get('apotheose améliorée'),
+        apotheoses.get('apotheose finale')
+      ],
+      skills: [skills.get('magie'), skills.get('cantrip'), skills.get('soin')]
     })
     const pacificateurClasse: DBClasse = this.createClasse({
       name: 'pacificateur',
@@ -38,7 +63,8 @@ export class InitClasses {
     const championArcaniqueClasse: DBClasse = this.createClasse({
       name: 'champion arcanique',
       displayMale: 'Champion Arcanique',
-      displayFemale: 'Championne Arcanique'
+      displayFemale: 'Championne Arcanique',
+      apotheoses: [apotheoses.get('apotheose arcanique'), apotheoses.get('apotheose arcanique finale')]
     })
     const soldatClasse: DBClasse = this.createClasse({
       name: 'soldat',
@@ -48,17 +74,20 @@ export class InitClasses {
     const avatarClasse: DBClasse = this.createClasse({
       name: 'avatar',
       displayMale: 'Avatar',
-      displayFemale: 'Avatar'
+      displayFemale: 'Avatar',
+      apotheoses: [apotheoses.get('apotheose arcanique'), apotheoses.get('apotheose arcanique finale')]
     })
     const skinwalkerClasse: DBClasse = this.createClasse({
       name: 'skinwalker',
       displayMale: 'Skinwalker',
-      displayFemale: 'Skinwalker'
+      displayFemale: 'Skinwalker',
+      apotheoses: [apotheoses.get('apotheose arcanique'), apotheoses.get('apotheose arcanique finale')]
     })
     const roiClasse: DBClasse = this.createClasse({
       name: 'roi',
       displayMale: 'Roi',
-      displayFemale: 'Reine'
+      displayFemale: 'Reine',
+      apotheoses: [apotheoses.get('apotheose finale')]
     })
     const parolierClasse: DBClasse = this.createClasse({
       name: 'parolier',
@@ -68,7 +97,12 @@ export class InitClasses {
     const dragonClasse: DBClasse = this.createClasse({
       name: 'dragon',
       displayMale: 'Dragon',
-      displayFemale: 'Dragon'
+      displayFemale: 'Dragon',
+      apotheoses: [
+        apotheoses.get('apotheose'),
+        apotheoses.get('apotheose améliorée'),
+        apotheoses.get('apotheose finale')
+      ]
     })
     const inconnuClasse: DBClasse = this.createClasse({
       name: 'inconnu',
@@ -93,11 +127,21 @@ export class InitClasses {
     ]
     return newClasses
   }
-  static createClasse(p: { name: string; displayMale: string; displayFemale: string }): DBClasse {
+  static createClasse(p: {
+    name: string
+    displayMale: string
+    displayFemale: string
+    apotheoses?: DBApotheose[]
+    skills?: DBSkill[]
+    proficiencies?: DBProficiency[]
+  }): DBClasse {
     const newClass = new DBClasse()
     newClass.name = p.name
     newClass.displayMale = p.displayMale
     newClass.displayFemale = p.displayFemale
+    newClass.apotheoses = p.apotheoses || []
+    newClass.skills = p.skills || []
+    newClass.proficiencies = p.proficiencies || []
     return newClass
   }
 }

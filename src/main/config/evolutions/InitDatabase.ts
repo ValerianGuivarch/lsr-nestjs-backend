@@ -6,24 +6,12 @@ import { InitClasses } from './InitClasses'
 import { InitProficiencies } from './InitProficiencies'
 import { InitSkills } from './InitSkills'
 import { DBApotheose } from '../../data/database/apotheoses/DBApotheose'
-import { DBBloodlineApotheose } from '../../data/database/apotheoses/DBBloodlineApotheose'
-import { DBCharacterApotheose } from '../../data/database/apotheoses/DBCharacterApotheose'
-import { DBClasseApotheose } from '../../data/database/apotheoses/DBClasseApotheose'
 import { DBBloodline } from '../../data/database/bloodlines/DBBloodline'
 import { DBCharacter } from '../../data/database/character/DBCharacter'
 import { DBCharacterTemplate } from '../../data/database/character/DBCharacterTemplate'
 import { DBClasse } from '../../data/database/classes/DBClasse'
-import { DBBloodlineProficiency } from '../../data/database/proficiencies/DBBloodlineProficiency'
-import { DBCharacterProficiency } from '../../data/database/proficiencies/DBCharacterProficiency'
-import { DBClasseProficiency } from '../../data/database/proficiencies/DBClasseProficiency'
 import { DBProficiency } from '../../data/database/proficiencies/DBProficiency'
-import { DBBloodlineSkill } from '../../data/database/skills/DBBloodlineSkill'
-import { DBCharacterSkill } from '../../data/database/skills/DBCharacterSkill'
-import { DBCharacterTemplateSkill } from '../../data/database/skills/DBCharacterTemplateSkill'
-import { DBClasseSkill } from '../../data/database/skills/DBClasseSkill'
 import { DBSkill } from '../../data/database/skills/DBSkill'
-import { DisplayCategory } from '../../domain/models/characters/DisplayCategory'
-import { SuccessCalculation } from '../../domain/models/roll/SuccessCalculation'
 import { Injectable } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { Repository } from 'typeorm'
@@ -42,56 +30,23 @@ export class InitDatabase {
     private dbCharacterRepository: Repository<DBCharacter>,
     @InjectRepository(DBProficiency, 'postgres')
     private dbProficiencyRepository: Repository<DBProficiency>,
-    @InjectRepository(DBClasseSkill, 'postgres')
-    private dbClasseSkillRepository: Repository<DBClasseSkill>,
-    @InjectRepository(DBBloodlineSkill, 'postgres')
-    private dbBloodlineSkillRepository: Repository<DBBloodlineSkill>,
-    @InjectRepository(DBCharacterSkill, 'postgres')
-    private dbCharacterSkillRepository: Repository<DBCharacterSkill>,
-    @InjectRepository(DBClasseProficiency, 'postgres')
-    private dbClasseProficiencyRepository: Repository<DBClasseProficiency>,
-    @InjectRepository(DBBloodlineProficiency, 'postgres')
-    private dbBloodlineProficiencyRepository: Repository<DBBloodlineProficiency>,
-    @InjectRepository(DBCharacterProficiency, 'postgres')
-    private dbCharacterProficiencyRepository: Repository<DBCharacterProficiency>,
     @InjectRepository(DBApotheose, 'postgres')
     private dbApotheoseRepository: Repository<DBApotheose>,
-    @InjectRepository(DBClasseApotheose, 'postgres')
-    private dbClasseApotheoseRepository: Repository<DBClasseApotheose>,
-    @InjectRepository(DBBloodlineApotheose, 'postgres')
-    private dbBloodlineApotheoseRepository: Repository<DBBloodlineApotheose>,
-    @InjectRepository(DBCharacterApotheose, 'postgres')
-    private dbCharacterApotheoseRepository: Repository<DBCharacterApotheose>,
     @InjectRepository(DBCharacterTemplate, 'postgres')
-    private dbCharacterTemplateRepository: Repository<DBCharacterTemplate>,
-    @InjectRepository(DBCharacterTemplateSkill, 'postgres')
-    private dbTemplateCharacterSkillRepository: Repository<DBCharacterTemplateSkill>
+    private dbCharacterTemplateRepository: Repository<DBCharacterTemplate>
   ) {}
 
   async initDatabase(): Promise<void> {
-    await this.dbClasseSkillRepository.delete({})
-    await this.dbBloodlineSkillRepository.delete({})
-    await this.dbCharacterSkillRepository.delete({})
-    await this.dbTemplateCharacterSkillRepository.delete({})
-    await this.dbClasseApotheoseRepository.delete({})
-    await this.dbBloodlineApotheoseRepository.delete({})
-    await this.dbCharacterApotheoseRepository.delete({})
-    await this.dbClasseProficiencyRepository.delete({})
-    await this.dbBloodlineProficiencyRepository.delete({})
-    await this.dbCharacterProficiencyRepository.delete({})
     await this.dbCharacterRepository.delete({})
+    await this.dbCharacterTemplateRepository.delete({})
     await this.dbClasseRepository.delete({})
     await this.dbBloodlineRepository.delete({})
     await this.dbSkillRepository.delete({})
     await this.dbApotheoseRepository.delete({})
     await this.dbProficiencyRepository.delete({})
-    await this.dbCharacterTemplateRepository.delete({})
-    await this.dbTemplateCharacterSkillRepository.delete({})
-    console.log('Initializing character templates...')
-    const charactersTemplates = await this.initCharactersTemplates()
 
     console.log('Initializing skills...')
-    const skills = await this.initSkills(charactersTemplates)
+    const skills = await this.initSkills()
 
     console.log('Initializing proficiencies...')
     const proficiencies = await this.initProficiencies()
@@ -100,28 +55,43 @@ export class InitDatabase {
     const apotheoses = await this.initApotheoses()
 
     console.log('Initializing classes...')
-    const classes = await this.initClasses()
+    const classes = await this.initClasses(skills, proficiencies, apotheoses)
 
     console.log('Initializing bloodlines...')
-    const bloodlines = await this.initBloodlines()
+    const bloodlines = await this.initBloodlines(skills, proficiencies)
+
+    console.log('Initializing character templates...')
+    const charactersTemplates = await this.initCharactersTemplates(
+      skills,
+      proficiencies,
+      apotheoses,
+      classes,
+      bloodlines
+    )
+
+    console.log('Initializing skills invocations...')
+    await this.initSkillsInvocations(charactersTemplates)
 
     console.log('Initializing characters...')
-    const characters = await this.initCharacters(classes, bloodlines)
-
-    console.log('Attributing skills...')
-    await this.skillsAttribution(skills, classes, bloodlines, characters, charactersTemplates)
-
-    console.log('Attributing proficiencies...')
-    await this.proficienciesAttribution(proficiencies, classes, bloodlines, characters)
-
-    console.log('Attributing apotheoses...')
-    await this.apotheosesAttribution(apotheoses, classes, bloodlines, characters)
+    await this.initCharacters(skills, proficiencies, apotheoses, classes, bloodlines)
 
     console.log('Database initialized')
   }
 
-  async initCharactersTemplates(): Promise<Map<string, DBCharacterTemplate>> {
-    const newCharactersTemplate = InitCharactersTemplates.getCharactersTemplates()
+  async initCharactersTemplates(
+    skills: Map<string, DBSkill>,
+    proficiencies: Map<string, DBProficiency>,
+    apotheoses: Map<string, DBApotheose>,
+    classes: Map<string, DBClasse>,
+    bloodlines: Map<string, DBBloodline>
+  ): Promise<Map<string, DBCharacterTemplate>> {
+    const newCharactersTemplate = InitCharactersTemplates.getCharactersTemplates(
+      skills,
+      proficiencies,
+      apotheoses,
+      classes,
+      bloodlines
+    )
     const charactersTemplate = new Map<string, DBCharacterTemplate>()
     for (const characterTemplateData of newCharactersTemplate) {
       const existingCharacterTemplate = await this.dbCharacterTemplateRepository.findOneBy({
@@ -140,10 +110,13 @@ export class InitDatabase {
   }
 
   async initCharacters(
+    skills: Map<string, DBSkill>,
+    proficiencies: Map<string, DBProficiency>,
+    apotheoses: Map<string, DBApotheose>,
     classes: Map<string, DBClasse>,
     bloodlines: Map<string, DBBloodline>
   ): Promise<Map<string, DBCharacter>> {
-    const newCharacters = InitCharacters.getCharacters(classes, bloodlines)
+    const newCharacters = InitCharacters.getCharacters(skills, proficiencies, apotheoses, classes, bloodlines)
     const characters = new Map<string, DBCharacter>()
     for (const characterData of newCharacters) {
       const existingCharacter = await this.dbCharacterRepository.findOneBy({ name: characterData.name })
@@ -158,8 +131,24 @@ export class InitDatabase {
     }
     return characters
   }
-  async initSkills(charactersTemplates: Map<string, DBCharacterTemplate>): Promise<Map<string, DBSkill>> {
-    const newSkills = InitSkills.getSkills(charactersTemplates)
+  async initSkills(): Promise<Map<string, DBSkill>> {
+    const newSkills = InitSkills.getSkills()
+    const skills = new Map<string, DBSkill>()
+    for (const skillData of newSkills) {
+      const existingSkill = await this.dbSkillRepository.findOneBy({ name: skillData.name })
+      if (!existingSkill) {
+        const skill = new DBSkill()
+        Object.assign(skill, skillData)
+        const createdSkill = await this.dbSkillRepository.save(skill)
+        skills.set(skill.name, createdSkill)
+      } else {
+        skills.set(existingSkill.name, existingSkill)
+      }
+    }
+    return skills
+  }
+  async initSkillsInvocations(charactersTemplates: Map<string, DBCharacterTemplate>): Promise<Map<string, DBSkill>> {
+    const newSkills = InitSkills.getSkillsInvocation(charactersTemplates)
     const skills = new Map<string, DBSkill>()
     for (const skillData of newSkills) {
       const existingSkill = await this.dbSkillRepository.findOneBy({ name: skillData.name })
@@ -207,8 +196,11 @@ export class InitDatabase {
     }
     return apotheoses
   }
-  async initBloodlines(): Promise<Map<string, DBBloodline>> {
-    const newBloodlines = InitBloodlines.getBloodlines()
+  async initBloodlines(
+    skills: Map<string, DBSkill>,
+    proficiencies: Map<string, DBProficiency>
+  ): Promise<Map<string, DBBloodline>> {
+    const newBloodlines = InitBloodlines.getBloodlines(skills, proficiencies)
 
     const bloodlines = new Map<string, DBBloodline>()
     for (const bloodlineData of newBloodlines) {
@@ -225,14 +217,20 @@ export class InitDatabase {
     return bloodlines
   }
 
-  async initClasses(): Promise<Map<string, DBClasse>> {
-    const newClasses = InitClasses.getClasses()
+  async initClasses(
+    skills: Map<string, DBSkill>,
+    proficiencies: Map<string, DBProficiency>,
+    apotheoses: Map<string, DBApotheose>
+  ): Promise<Map<string, DBClasse>> {
+    const newClasses = InitClasses.getClasses(skills, proficiencies, apotheoses)
     const classes = new Map<string, DBClasse>()
     for (const classeData of newClasses) {
       const existingClasse = await this.dbClasseRepository.findOneBy({ name: classeData.name })
       if (!existingClasse) {
         const classe = new DBClasse()
         Object.assign(classe, classeData)
+        console.log(classe.name)
+
         const createdClasse = await this.dbClasseRepository.save(classe)
         classes.set(classe.name, createdClasse)
       } else {
@@ -241,7 +239,7 @@ export class InitDatabase {
     }
     return classes
   }
-
+  /*
   private async skillsAttribution(
     skills: Map<string, DBSkill>,
     classes: Map<string, DBClasse>,
@@ -249,51 +247,6 @@ export class InitDatabase {
     characters: Map<string, DBCharacter>,
     charactersTemplates: Map<string, DBCharacterTemplate>
   ) {
-    await this.saveClasseSkillIfNotExisting(classes.get('champion'), skills.get('magie'))
-    await this.saveClasseSkillIfNotExisting(classes.get('champion'), skills.get('cantrip'))
-    await this.saveClasseSkillIfNotExisting(classes.get('champion'), skills.get('soin'))
-    await this.saveClasseSkillIfNotExisting(classes.get('rejete'), skills.get('magie'))
-    await this.saveClasseSkillIfNotExisting(classes.get('rejete'), skills.get('cantrip'))
-    await this.saveClasseSkillIfNotExisting(classes.get('rejete'), skills.get('soin'))
-    await this.saveClasseSkillIfNotExisting(classes.get('corrompu'), skills.get('magie'))
-    await this.saveClasseSkillIfNotExisting(classes.get('corrompu'), skills.get('cantrip'))
-    await this.saveClasseSkillIfNotExisting(classes.get('corrompu'), skills.get('soin'))
-    await this.saveBloodlineSkillIfNotExisting(bloodlines.get('eau'), skills.get('forme aqueuse'))
-    await this.saveBloodlineSkillIfNotExisting(bloodlines.get('feu'), skills.get('soin mental'))
-    await this.saveBloodlineSkillIfNotExisting(bloodlines.get('vent'), skills.get('vol'))
-    await this.saveBloodlineSkillIfNotExisting(bloodlines.get('terre'), skills.get('armure'))
-    await this.saveBloodlineSkillIfNotExisting(bloodlines.get('foudre'), skills.get('speed'))
-    await this.saveBloodlineSkillIfNotExisting(bloodlines.get('glace'), skills.get('malédiction'))
-    await this.saveBloodlineSkillIfNotExisting(bloodlines.get('neige'), skills.get('malédiction'))
-    await this.saveBloodlineSkillIfNotExisting(bloodlines.get('ombre'), skills.get('invisibilité'))
-    await this.saveBloodlineSkillIfNotExisting(bloodlines.get('lumière'), {
-      ...skills.get('soin'),
-      successCalculation: SuccessCalculation.SIMPLE_PLUS_1
-    })
-
-    // Viktor
-    await this.saveCharacterSkillIfNotExisting({
-      character: characters.get('viktor'),
-      skill: skills.get('communication arcanique')
-    })
-    await this.saveCharacterSkillIfNotExisting({
-      character: characters.get('viktor'),
-      skill: skills.get('boost arcanique')
-    })
-    await this.saveCharacterSkillIfNotExisting({
-      character: characters.get('viktor'),
-      skill: skills.get('blocage arcanique')
-    })
-    await this.saveCharacterSkillIfNotExisting({
-      character: characters.get('viktor'),
-      skill: skills.get('copie arcanique')
-    })
-    await this.saveCharacterSkillIfNotExisting({
-      character: characters.get('viktor'),
-      skill: skills.get('arpenteur'),
-      limitationMax: 1,
-      arcaneCost: 0
-    })
 
     // Isycho
     await this.saveCharacterSkillIfNotExisting({
@@ -347,104 +300,6 @@ export class InitDatabase {
       dailyUse: 0
     })
 
-    // Vernet
-    await this.saveCharacterSkillIfNotExisting({
-      character: characters.get('vernet'),
-      skill: skills.get('Bras Robotique')
-    })
-    await this.saveCharacterSkillIfNotExisting({
-      character: characters.get('vernet'),
-      skill: skills.get('Oeil Bionique'),
-      limitationMax: 1
-    })
-    await this.saveCharacterSkillIfNotExisting({
-      character: characters.get('vernet'),
-      skill: skills.get('Mun. courantes')
-    })
-    await this.saveCharacterSkillIfNotExisting({
-      character: characters.get('vernet'),
-      skill: skills.get('Mun. léthales'),
-      dailyUse: 0
-    })
-    await this.saveCharacterSkillIfNotExisting({
-      character: characters.get('vernet'),
-      skill: skills.get('Mun. affaiblissantes'),
-      dailyUse: 0
-    })
-    await this.saveCharacterSkillIfNotExisting({
-      character: characters.get('vernet'),
-      skill: skills.get('Mun. peste'),
-      dailyUse: 0
-    })
-    await this.saveCharacterSkillIfNotExisting({
-      character: characters.get('vernet'),
-      skill: skills.get('Mun. marquage'),
-      dailyUse: 0
-    })
-    await this.saveCharacterSkillIfNotExisting({
-      character: characters.get('vernet'),
-      skill: skills.get('Mun. dégénérative'),
-      dailyUse: 0
-    })
-    await this.saveCharacterSkillIfNotExisting({
-      character: characters.get('vernet'),
-      skill: skills.get('Gr. fumigène'),
-      dailyUse: 0
-    })
-    await this.saveCharacterSkillIfNotExisting({
-      character: characters.get('vernet'),
-      skill: skills.get('Gr. flash'),
-      dailyUse: 0
-    })
-
-    // Millia
-    await this.saveCharacterSkillIfNotExisting({ character: characters.get('millia'), skill: skills.get('montre') })
-
-    // Judith
-    await this.saveCharacterSkillIfNotExisting({
-      character: characters.get('judith'),
-      skill: skills.get('Plante de soutien')
-    })
-    await this.saveCharacterSkillIfNotExisting({
-      character: characters.get('judith'),
-      skill: skills.get('Plante de combat')
-    })
-    await this.saveCharacterSkillIfNotExisting({
-      character: characters.get('judith'),
-      skill: skills.get('Plante de magie')
-    })
-    await this.saveCharacterSkillIfNotExisting({
-      character: characters.get('judith'),
-      skill: skills.get('Plante envahissante')
-    })
-    await this.saveCharacterSkillIfNotExisting({
-      character: characters.get('judith'),
-      skill: skills.get('Reconnaissance naturelle')
-    })
-    await this.saveCharacterSkillIfNotExisting({
-      character: characters.get('judith'),
-      skill: skills.get('Lien naturel')
-    })
-    await this.saveCharacterSkillIfNotExisting({
-      character: characters.get('judith'),
-      skill: skills.get('Soulèvement de la Nature')
-    })
-    await this.saveCharacterSkillIfNotExisting({
-      character: characters.get('judith'),
-      skill: skills.get('Animation de la Nature')
-    })
-    await this.saveCharacterSkillIfNotExisting({
-      character: characters.get('judith'),
-      skill: skills.get('Communication avec la Nature')
-    })
-    await this.saveCharacterSkillIfNotExisting({
-      character: characters.get('judith'),
-      skill: skills.get('Voie des Arbres')
-    })
-    await this.saveCharacterSkillIfNotExisting({
-      character: characters.get('judith'),
-      skill: skills.get("Lien à l'Avatar")
-    })
     await this.saveTemplateCharacterSkillIfNotExisting({
       characterTemplate: charactersTemplates.get('Plante Soutien'),
       skill: skills.get('Coup de sève')
@@ -453,112 +308,7 @@ export class InitDatabase {
       characterTemplate: charactersTemplates.get('Plante Magie'),
       skill: skills.get('Pollen')
     })
-
     // Aurélien
-    await this.saveCharacterSkillIfNotExisting({ character: characters.get('aurélien'), skill: skills.get('peur') })
-    await this.saveCharacterSkillIfNotExisting({
-      character: characters.get('aurélien'),
-      skill: skills.get('illusioniste'),
-      limitationMax: 1,
-      arcaneCost: 0
-    })
-    await this.saveCharacterSkillIfNotExisting({
-      character: characters.get('aurélien'),
-      skill: skills.get('sablier'),
-      limitationMax: 1,
-      arcaneCost: 0
-    })
-    await this.saveCharacterSkillIfNotExisting({
-      character: characters.get('aurélien'),
-      skill: skills.get('diablotin'),
-      limitationMax: 1,
-      arcaneCost: 0
-    })
-    await this.saveCharacterSkillIfNotExisting({
-      character: characters.get('aurélien'),
-      skill: skills.get('sorcière'),
-      limitationMax: 1,
-      arcaneCost: 0
-    })
-    await this.saveCharacterSkillIfNotExisting({
-      character: characters.get('aurélien'),
-      skill: skills.get('forgeron'),
-      limitationMax: 1,
-      arcaneCost: 0
-    })
-    await this.saveCharacterSkillIfNotExisting({
-      character: characters.get('aurélien'),
-      skill: skills.get('cheval'),
-      limitationMax: 1,
-      arcaneCost: 0
-    })
-    await this.saveCharacterSkillIfNotExisting({
-      character: characters.get('aurélien'),
-      skill: skills.get('arbre'),
-      limitationMax: 1,
-      arcaneCost: 0
-    })
-    await this.saveCharacterSkillIfNotExisting({
-      character: characters.get('aurélien'),
-      skill: skills.get('licorne'),
-      limitationMax: 1,
-      arcaneCost: 0
-    })
-    await this.saveCharacterSkillIfNotExisting({
-      character: characters.get('aurélien'),
-      skill: skills.get('serpent'),
-      limitationMax: 1,
-      arcaneCost: 0
-    })
-    await this.saveCharacterSkillIfNotExisting({
-      character: characters.get('aurélien'),
-      skill: skills.get('loup'),
-      limitationMax: 1,
-      arcaneCost: 0
-    })
-    await this.saveCharacterSkillIfNotExisting({
-      character: characters.get('aurélien'),
-      skill: skills.get('ivrogne'),
-      limitationMax: 1,
-      arcaneCost: 0
-    })
-    await this.saveCharacterSkillIfNotExisting({
-      character: characters.get('aurélien'),
-      skill: skills.get('erudit'),
-      limitationMax: 1,
-      arcaneCost: 0
-    })
-    await this.saveCharacterSkillIfNotExisting({
-      character: characters.get('aurélien'),
-      skill: skills.get('fantome'),
-      limitationMax: 1,
-      arcaneCost: 0
-    })
-    await this.saveCharacterSkillIfNotExisting({
-      character: characters.get('aurélien'),
-      skill: skills.get('faucon'),
-      limitationMax: 1,
-      arcaneCost: 0
-    })
-    await this.saveCharacterSkillIfNotExisting({
-      character: characters.get('aurélien'),
-      skill: skills.get('terreur'),
-      displayCategory: DisplayCategory.MAGIE,
-      arcaneCost: 0,
-      dettesCost: 1
-    })
-    await this.saveCharacterSkillIfNotExisting({
-      character: characters.get('aurélien'),
-      skill: skills.get('mentaliste'),
-      limitationMax: 1,
-      arcaneCost: 0
-    })
-    await this.saveCharacterSkillIfNotExisting({
-      character: characters.get('aurélien'),
-      skill: skills.get('amnesique'),
-      limitationMax: 1,
-      arcaneCost: 0
-    })
     await this.saveCharacterSkillIfNotExisting({
       character: characters.get('aurélien'),
       skill: skills.get('tatouage'),
@@ -570,39 +320,6 @@ export class InitDatabase {
       skill: skills.get('pokéball'),
       arcanePrimeCost: 0
     })
-  }
-
-  private async saveClasseSkillIfNotExisting(classe: DBClasse, skill: DBSkill) {
-    const existingRelation = await this.dbClasseSkillRepository.findOne({
-      where: {
-        classeName: classe.name,
-        skillName: skill.name
-      }
-    })
-    if (!existingRelation) {
-      await this.dbClasseSkillRepository.save({
-        classe: classe,
-        skill: skill,
-        classeName: classe.name,
-        skillName: skill.name
-      })
-    }
-  }
-  private async saveBloodlineSkillIfNotExisting(bloodline: DBBloodline, skill: DBSkill) {
-    const existingRelation = await this.dbBloodlineSkillRepository.findOne({
-      where: {
-        bloodlineName: bloodline.name,
-        skillName: skill.name
-      }
-    })
-    if (!existingRelation) {
-      await this.dbBloodlineSkillRepository.save({
-        bloodline: bloodline,
-        skill: skill,
-        bloodlineName: bloodline.name,
-        skillName: skill.name
-      })
-    }
   }
   private async saveCharacterSkillIfNotExisting(p: {
     character: DBCharacter
@@ -795,5 +512,5 @@ export class InitDatabase {
         apotheoseName: apotheose.name
       })
     }
-  }
+  }*/
 }

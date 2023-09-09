@@ -1,9 +1,5 @@
 import { DBApotheose } from './DBApotheose'
-import { DBBloodlineApotheose } from './DBBloodlineApotheose'
-import { DBCharacterApotheose } from './DBCharacterApotheose'
-import { DBClasseApotheose } from './DBClasseApotheose'
 import { Apotheose } from '../../../domain/models/apotheoses/Apotheose'
-import { Character } from '../../../domain/models/characters/Character'
 import { DisplayCategory } from '../../../domain/models/characters/DisplayCategory'
 import { IApotheoseProvider } from '../../../domain/providers/IApotheoseProvider'
 import { Injectable } from '@nestjs/common' // adjust the path as needed
@@ -15,16 +11,10 @@ import { Repository } from 'typeorm'
 export class DBApotheoseProvider implements IApotheoseProvider {
   constructor(
     @InjectRepository(DBApotheose, 'postgres')
-    private dbApotheoseRepository: Repository<DBApotheose>,
-    @InjectRepository(DBClasseApotheose, 'postgres')
-    private dbClasseApotheoseRepository: Repository<DBClasseApotheose>,
-    @InjectRepository(DBBloodlineApotheose, 'postgres')
-    private dbBloodlineApotheoseRepository: Repository<DBBloodlineApotheose>,
-    @InjectRepository(DBCharacterApotheose, 'postgres')
-    private dbCharacterApotheoseRepository: Repository<DBCharacterApotheose>
+    private dbApotheoseRepository: Repository<DBApotheose>
   ) {}
 
-  private static toApotheose(apotheose: DBApotheose): Apotheose {
+  static toApotheose(apotheose: DBApotheose): Apotheose {
     return new Apotheose({
       name: apotheose.name,
       shortName: apotheose.shortName,
@@ -42,52 +32,27 @@ export class DBApotheoseProvider implements IApotheoseProvider {
       description: apotheose.description
     })
   }
-  async findApotheosesByCharacter(character: Character): Promise<Apotheose[]> {
-    const classeWithApotheoses = await this.dbClasseApotheoseRepository.find({
-      where: { classeName: character.classeName },
-      relations: ['classe', 'apotheose']
-    })
-    const bloodlineWithApotheoses = await this.dbBloodlineApotheoseRepository.find({
-      where: { bloodlineName: character.bloodlineName },
-      relations: ['bloodline', 'apotheose']
-    })
-    const characterWithApotheoses = await this.dbCharacterApotheoseRepository.find({
-      where: { characterName: character.name },
-      relations: ['character', 'apotheose']
-    })
-    const apotheosePromises: Apotheose[] = characterWithApotheoses
-      .map((characterApotheose) => DBApotheoseProvider.toApotheose(characterApotheose.apotheose))
-      .concat(classeWithApotheoses.map((classeApotheose) => DBApotheoseProvider.toApotheose(classeApotheose.apotheose)))
-      .concat(
-        bloodlineWithApotheoses.map((bloodlineApotheose) =>
-          DBApotheoseProvider.toApotheose(bloodlineApotheose.apotheose)
-        )
-      )
-      .filter((apotheose) => apotheose.minLevel <= character.niveau && apotheose.maxLevel >= character.niveau)
-    return Promise.all(apotheosePromises.sort((a, b) => a.position - b.position))
+
+  async findApotheosesByCharacter(characterName: string): Promise<Apotheose[]> {
+    const apotheoses = await this.dbApotheoseRepository
+      .createQueryBuilder('apotheose')
+      .innerJoinAndSelect('apotheose.characters', 'character', 'character.name = :name', { name: characterName })
+      .getMany()
+
+    return apotheoses.map(DBApotheoseProvider.toApotheose)
   }
 
-  async findApotheoseByCharacterAndName(character: Character): Promise<Apotheose> {
-    const classeWithApotheose = await this.dbClasseApotheoseRepository.findOne({
-      where: { classeName: character.classeName, apotheoseName: character.apotheoseName },
-      relations: ['classe', 'apotheose']
-    })
-    const bloodlineWithApotheose = await this.dbBloodlineApotheoseRepository.findOne({
-      where: { bloodlineName: character.bloodlineName, apotheoseName: character.apotheoseName },
-      relations: ['bloodline', 'apotheose']
-    })
-    const characterWithApotheose = await this.dbCharacterApotheoseRepository.findOne({
-      where: { characterName: character.name, apotheoseName: character.apotheoseName },
-      relations: ['character', 'apotheose']
-    })
-    if (characterWithApotheose) {
-      return DBApotheoseProvider.toApotheose(characterWithApotheose.apotheose)
-    } else if (bloodlineWithApotheose) {
-      return DBApotheoseProvider.toApotheose(bloodlineWithApotheose.apotheose)
-    } else if (classeWithApotheose) {
-      return DBApotheoseProvider.toApotheose(classeWithApotheose.apotheose)
-    } else {
-      throw new Error('Apotheose not found')
-    }
+  async findApotheosesByClasse(classeName: string): Promise<Apotheose[]> {
+    const apotheoses = await this.dbApotheoseRepository
+      .createQueryBuilder('apotheose')
+      .innerJoinAndSelect('apotheose.classes', 'classe', 'classe.name = :name', { name: classeName })
+      .getMany()
+
+    return apotheoses.map(DBApotheoseProvider.toApotheose)
+  }
+
+  async findOneByName(name: string): Promise<Apotheose> {
+    const apotheose = await this.dbApotheoseRepository.findOneBy({ name: name })
+    return DBApotheoseProvider.toApotheose(apotheose)
   }
 }

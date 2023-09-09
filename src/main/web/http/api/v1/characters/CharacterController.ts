@@ -1,46 +1,21 @@
 import { CharacterPreviewVM } from './entities/CharacterPreviewVM'
 import { CharacterVM } from './entities/CharacterVM'
-import { CreateCharacterDto } from './requests/CreateCharacterDto'
 import { UpdateCharacterDto } from './requests/UpdateCharacterDto'
 import { UpdateSkillsAttributionDto } from './requests/UpdateSkillsAttributionDto'
-import { ApotheoseState } from '../../../../../domain/models/apotheoses/ApotheoseState'
-import { Character } from '../../../../../domain/models/characters/Character'
-import { ApotheoseService } from '../../../../../domain/services/ApotheoseService'
-import { BloodlineService } from '../../../../../domain/services/BloodlineService'
 import { CharacterService } from '../../../../../domain/services/CharacterService'
-import { ClasseService } from '../../../../../domain/services/ClasseService'
-import { ProficiencyService } from '../../../../../domain/services/ProficiencyService'
 import { SessionService } from '../../../../../domain/services/SessionService'
-import { SkillService } from '../../../../../domain/services/SkillService'
-import { Body, Controller, Delete, Get, Logger, Param, Post, Put } from '@nestjs/common'
+import { Body, Controller, Delete, Get, Param, Put } from '@nestjs/common'
 import { ApiOkResponse, ApiTags } from '@nestjs/swagger'
 
 @Controller('api/v1/characters')
 @ApiTags('Character')
 export class CharacterController {
-  private readonly logger = new Logger(CharacterController.name)
-  constructor(
-    private characterService: CharacterService,
-    private bloodlineService: BloodlineService,
-    private classeService: ClasseService,
-    private skillService: SkillService,
-    private proficiencyService: ProficiencyService,
-    private sessionService: SessionService,
-    private apotheoseService: ApotheoseService
-  ) {}
+  constructor(private characterService: CharacterService, private sessionService: SessionService) {}
 
   @ApiOkResponse({})
   @Put(':name/rest')
   async rest(@Param('name') name: string): Promise<void> {
-    const character = await this.characterService.findOneByName(name)
-    await this.skillService.resetCharacterSkills(character)
-    await this.characterService.updateCharacter({
-      character: {
-        ...character,
-        apotheoseState: ApotheoseState.NONE,
-        apotheoseName: null
-      }
-    })
+    await this.characterService.rest(name)
   }
 
   @ApiOkResponse({})
@@ -49,7 +24,7 @@ export class CharacterController {
     @Param('name') name: string,
     @Body() updateSkillsAttributionDto: UpdateSkillsAttributionDto
   ): Promise<void> {
-    await this.skillService.updateSkillsAttribution(
+    await this.characterService.updateSkillsAttribution(
       name,
       updateSkillsAttributionDto.skillName,
       updateSkillsAttributionDto.dailyUse,
@@ -57,53 +32,27 @@ export class CharacterController {
     )
   }
 
+  @Put(':name/apotheose/:apotheoseName')
   @ApiOkResponse({ type: CharacterVM })
-  @Post('')
-  async createCharacter(@Body() createCharacterDto: CreateCharacterDto): Promise<CharacterVM> {
-    const classe = await this.classeService.findOneByName(createCharacterDto.classeName)
-    const bloodline = await this.bloodlineService.findOneByName(createCharacterDto.bloodlineName)
-    const characterToCreate = Character.characterToCreateFactory({
-      name: createCharacterDto.name,
-      classeName: classe.name,
-      bloodlineName: bloodline.name,
-      chair: createCharacterDto.chair,
-      esprit: createCharacterDto.esprit,
-      essence: createCharacterDto.essence,
-      pvMax: createCharacterDto.pvMax,
-      pfMax: createCharacterDto.pfMax,
-      ppMax: createCharacterDto.ppMax,
-      arcanesMax: createCharacterDto.arcanesMax,
-      arcanePrimesMax: createCharacterDto.arcanePrimesMax,
-      munitionsMax: createCharacterDto.munitionsMax,
-      niveau: createCharacterDto.niveau,
-      lux: createCharacterDto.lux,
-      umbra: createCharacterDto.umbra,
-      secunda: createCharacterDto.secunda,
-      genre: createCharacterDto.genre,
-      picture: createCharacterDto.picture,
-      pictureApotheose: createCharacterDto.pictureApotheose,
-      background: createCharacterDto.background,
-      buttonColor: createCharacterDto.buttonColor,
-      textColor: createCharacterDto.textColor
+  async updateApotheose(
+    @Param('name') characterName: string,
+    @Param('apotheoseName') apotheoseName: string
+  ): Promise<CharacterVM> {
+    await this.characterService.updateApotheose({
+      characterName: characterName,
+      apotheoseName: apotheoseName
     })
-    const createdCharacter = await this.characterService.createCharacter({
-      character: characterToCreate
-    })
-    const skillsList = await this.skillService.findSkillsByCharacter(createdCharacter)
-    const apotheosesList = await this.apotheoseService.findApotheosesByCharacter(createdCharacter)
-    const proficienciesList = await this.proficiencyService.findProficienciesByCharacter(createdCharacter)
+    const updatedCharacter = await this.characterService.findFullCharacterByName(characterName)
     const rest: {
       baseRest: number
       longRest: number
-    } = await this.sessionService.getRestForCharacter(characterToCreate)
+    } = await this.sessionService.getRestForCharacter(updatedCharacter.character)
     return CharacterVM.of({
-      character: createdCharacter,
-      classe: classe,
-      bloodline: bloodline,
-      skills: skillsList,
-      proficiencies: proficienciesList,
-      rest: rest,
-      apotheoses: apotheosesList
+      character: updatedCharacter.character,
+      skills: updatedCharacter.skills,
+      apotheoses: updatedCharacter.apotheoses,
+      proficiencies: updatedCharacter.proficiencies,
+      rest: rest
     })
   }
 
@@ -114,28 +63,22 @@ export class CharacterController {
     @Body() updateCharacterDto: UpdateCharacterDto
   ): Promise<CharacterVM> {
     const character = await this.characterService.findOneByName(name)
-    const classe = await this.classeService.findOneByName(character.classeName)
-    const bloodline = await this.bloodlineService.findOneByName(character.bloodlineName)
-    const skillsList = await this.skillService.findSkillsByCharacter(character)
-    const proficienciesList = await this.proficiencyService.findProficienciesByCharacter(character)
     const characterToUpdate = {
       ...character,
       ...updateCharacterDto
     }
-    const updatedCharacter = await this.characterService.updateCharacter({ character: characterToUpdate })
-    const apotheosesList = await this.apotheoseService.findApotheosesByCharacter(updatedCharacter)
+    await this.characterService.updateCharacter({ character: characterToUpdate })
+    const updatedCharacter = await this.characterService.findFullCharacterByName(name)
     const rest: {
       baseRest: number
       longRest: number
-    } = await this.sessionService.getRestForCharacter(updatedCharacter)
+    } = await this.sessionService.getRestForCharacter(updatedCharacter.character)
     return CharacterVM.of({
-      character: updatedCharacter,
-      classe: classe,
-      bloodline: bloodline,
-      skills: skillsList,
-      proficiencies: proficienciesList,
-      rest: rest,
-      apotheoses: apotheosesList
+      character: updatedCharacter.character,
+      skills: updatedCharacter.skills,
+      apotheoses: updatedCharacter.apotheoses,
+      proficiencies: updatedCharacter.proficiencies,
+      rest: rest
     })
   }
 
@@ -153,24 +96,17 @@ export class CharacterController {
   @ApiOkResponse()
   @Get(':name')
   async findByName(@Param('name') name: string): Promise<CharacterVM> {
-    const character = await this.characterService.findOneByName(name)
-    const classe = await this.classeService.findOneByName(character.classeName)
-    const bloodline = await this.bloodlineService.findOneByName(character.bloodlineName)
-    const skillsList = await this.skillService.findSkillsByCharacter(character)
-    const proficienciesList = await this.proficiencyService.findProficienciesByCharacter(character)
-    const apotheosesList = await this.apotheoseService.findApotheosesByCharacter(character)
+    const character = await this.characterService.findFullCharacterByName(name)
     const rest: {
       baseRest: number
       longRest: number
-    } = await this.sessionService.getRestForCharacter(character)
+    } = await this.sessionService.getRestForCharacter(character.character)
     return CharacterVM.of({
-      character: character,
-      classe: classe,
-      bloodline: bloodline,
-      skills: skillsList,
-      proficiencies: proficienciesList,
-      rest: rest,
-      apotheoses: apotheosesList
+      character: character.character,
+      skills: character.skills,
+      apotheoses: character.apotheoses,
+      proficiencies: character.proficiencies,
+      rest: rest
     })
   }
 
@@ -180,23 +116,15 @@ export class CharacterController {
     const characters = await this.characterService.findAllControllerBy(name)
     return await Promise.all(
       characters.map(async (character) => {
-        const classe = await this.classeService.findOneByName(character.classeName)
-        const bloodline = await this.bloodlineService.findOneByName(character.bloodlineName)
-        const skillsList = await this.skillService.findSkillsByCharacter(character)
-        const proficienciesList = await this.proficiencyService.findProficienciesByCharacter(character)
-        const apotheosesList = await this.apotheoseService.findApotheosesByCharacter(character)
-
         return CharacterVM.of({
-          character: character,
-          classe: classe,
-          bloodline: bloodline,
-          skills: skillsList,
-          proficiencies: proficienciesList,
+          character: character.character,
+          skills: character.skills,
+          apotheoses: character.apotheoses,
+          proficiencies: character.proficiencies,
           rest: {
             baseRest: 3,
             longRest: 0
-          },
-          apotheoses: apotheosesList
+          }
         })
       })
     )

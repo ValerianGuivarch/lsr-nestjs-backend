@@ -9,11 +9,12 @@ import { CharacterTemplateReferential } from '../../../domain/models/invocation/
 import { NatureLevel } from '../../../domain/models/session/NatureLevel'
 import { ICharacterProvider } from '../../../domain/providers/ICharacterProvider'
 import { ProviderErrors } from '../../errors/ProviderErrors'
+import { DBApotheoseProvider } from '../apotheoses/DBApotheoseProvider'
 import { DBSession } from '../session/DBSession'
 import { Injectable } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { Observable, Subject } from 'rxjs'
-import { In, Repository } from 'typeorm'
+import { In, Not, Repository } from 'typeorm'
 
 @Injectable()
 // eslint-disable-next-line @darraghor/nestjs-typed/injectable-should-be-provided
@@ -116,12 +117,10 @@ export class DBCharacterProvider implements ICharacterProvider {
     return new Character({
       name: doc.name,
       restImproved: doc.restImproved,
-      classeName: doc.classeName,
-      bloodlineName: doc.bloodlineName,
+      classe: doc.classe,
+      bloodline: doc.bloodline,
       apotheoseState: ApotheoseState[doc.apotheoseState],
-      apotheoseName: doc.apotheoseName,
-      apotheoseImprovement: doc.apotheoseImprovement,
-      apotheoseImprovementList: doc.apotheoseImprovementList,
+      currentApotheose: doc.currentApotheose ? DBApotheoseProvider.toApotheose(doc.currentApotheose) : undefined,
       chair: doc.chair,
       esprit: doc.esprit,
       essence: doc.essence,
@@ -157,12 +156,17 @@ export class DBCharacterProvider implements ICharacterProvider {
       boosted: doc.boosted,
       battleState: BattleState[doc.battleState],
       isInvocation: doc.isInvocation,
-      controlledBy: doc.controlledBy
+      controlledBy: doc.controlledBy,
+      customData: doc.customData,
+      dailyUse: new Map(Object.entries(doc.dailyUse ? doc.dailyUse : {})),
+      dailyUseMax: new Map(Object.entries(doc.dailyUseMax ? doc.dailyUseMax : {}))
     })
   }
 
   private static toCharacterTemplate(template: DBCharacterTemplate) {
     return new CharacterTemplate({
+      bloodline: template.bloodline,
+      classe: template.classe,
       name: template.name,
       chairValueReferential: CharacterTemplateReferential[template.chairValueReferential],
       chairValueRule: template.chairValueRule,
@@ -181,15 +185,35 @@ export class DBCharacterProvider implements ICharacterProvider {
     })
   }
 
-  private static fromCharacter(doc: Character): DBCharacter {
+  private static fromCharacterTemplate(template: CharacterTemplate): DBCharacterTemplate {
+    return {
+      bloodlineName: template.bloodline?.name,
+      classeName: template.classe?.name,
+      name: template.name,
+      chairValueReferential: CharacterTemplateReferential[template.chairValueReferential],
+      chairValueRule: template.chairValueRule,
+      espritValueReferential: CharacterTemplateReferential[template.espritValueReferential],
+      espritValueRule: template.espritValueRule,
+      essenceValueReferential: CharacterTemplateReferential[template.essenceValueReferential],
+      essenceValueRule: template.essenceValueRule,
+      pvMaxValueReferential: CharacterTemplateReferential[template.pvMaxValueReferential],
+      pvMaxValueRule: template.pvMaxValueRule,
+      pfMaxValueReferential: CharacterTemplateReferential[template.pfMaxValueReferential],
+      pfMaxValueRule: template.pfMaxValueRule,
+      ppMaxValueReferential: CharacterTemplateReferential[template.ppMaxValueReferential],
+      ppMaxValueRule: template.ppMaxValueRule,
+      picture: template.picture,
+      customData: template.customData
+    } as DBCharacterTemplate
+  }
+
+  private static fromCharacter(doc: Character): Partial<DBCharacter> {
     return {
       name: doc.name,
       apotheoseState: doc.apotheoseState,
-      classeName: doc.classeName,
-      bloodlineName: doc.bloodlineName,
-      apotheoseName: doc.apotheoseName,
-      apotheoseImprovement: doc.apotheoseImprovement,
-      apotheoseImprovementList: doc.apotheoseImprovementList,
+      classeName: doc.classe.name,
+      bloodlineName: doc.bloodline?.name,
+      currentApotheoseName: doc.currentApotheose ? doc.currentApotheose.name : undefined,
       chair: doc.chair,
       esprit: doc.esprit,
       essence: doc.essence,
@@ -219,8 +243,15 @@ export class DBCharacterProvider implements ICharacterProvider {
       battleState: doc.battleState.toString(),
       controlledBy: doc.controlledBy,
       customData: doc.customData,
-      isInvocation: doc.isInvocation
-    } as DBCharacter
+      isInvocation: doc.isInvocation,
+      arcanePrimes: doc.arcanePrimes,
+      arcanePrimesMax: doc.arcanePrimesMax,
+      munitions: doc.munitions,
+      munitionsMax: doc.munitionsMax,
+      restImproved: doc.restImproved,
+      dailyUse: Object.fromEntries(doc.dailyUse),
+      dailyUseMax: Object.fromEntries(doc.dailyUseMax)
+    }
   }
 
   private async dealsWithObservables(character: Character) {
@@ -249,7 +280,8 @@ export class DBCharacterProvider implements ICharacterProvider {
     let createdCharacter = await this.dbCharacterRepository.findOneBy({ name: newCharacter.name })
     if (!createdCharacter) {
       createdCharacter = this.dbCharacterRepository.create(DBCharacterProvider.fromCharacter(newCharacter))
-      const character = await this.toCharacter(await this.dbCharacterRepository.save(createdCharacter))
+      await this.toCharacter(await this.dbCharacterRepository.save(createdCharacter))
+      const character = await this.findOneByName(newCharacter.name)
       await this.dealsWithObservables(character)
       return character
     } else {
@@ -259,22 +291,21 @@ export class DBCharacterProvider implements ICharacterProvider {
 
   async createInvocation(newCharacter: Character): Promise<Character> {
     const createdInvocation = this.dbCharacterRepository.create(DBCharacterProvider.fromCharacter(newCharacter))
-    const invocation = await this.toCharacter(await this.dbCharacterRepository.save(createdInvocation))
+    await this.toCharacter(await this.dbCharacterRepository.save(createdInvocation))
+    const invocation = await this.findOneByName(newCharacter.name)
     await this.dealsWithObservables(invocation)
     return invocation
   }
 
   async findOneByName(name: string): Promise<Character> {
-    const character = await this.dbCharacterRepository.findOneBy({ name: name })
+    const character = await this.dbCharacterRepository.findOne({
+      where: { name: name },
+      relations: ['classe', 'bloodline', 'currentApotheose']
+    })
     if (!character) {
       throw ProviderErrors.EntityNotFound(name)
     }
     return await this.toCharacter(character)
-  }
-
-  async findByName(name: string): Promise<Character | undefined> {
-    const character = await this.dbCharacterRepository.findOneBy({ name: name })
-    return character ? await this.toCharacter(character) : undefined
   }
 
   async exist(name: string): Promise<boolean> {
@@ -283,16 +314,20 @@ export class DBCharacterProvider implements ICharacterProvider {
   }
 
   async findAll(): Promise<Character[]> {
-    const characters = await this.dbCharacterRepository.find()
+    const characters = await this.dbCharacterRepository.find({
+      relations: ['classe', 'bloodline', 'currentApotheose']
+    })
     const characterPromises = characters.map((character) => this.toCharacter(character))
     return Promise.all(characterPromises)
   }
 
   async findAllForSession(): Promise<Character[]> {
-    const characters = await this.dbCharacterRepository
-      .createQueryBuilder('character')
-      .where('character.battleState != :battleState', { battleState: BattleState.NONE })
-      .getMany()
+    const characters = await this.dbCharacterRepository.find({
+      where: {
+        battleState: Not(BattleState.NONE)
+      },
+      relations: ['classe', 'currentApotheose']
+    })
     const characterPromises = characters
       .sort((c1, c2) => c1.name.localeCompare(c2.name))
       .map((character) => this.toCharacter(character))
@@ -301,7 +336,10 @@ export class DBCharacterProvider implements ICharacterProvider {
 
   async findAllControlledBy(characterName: string): Promise<Character[]> {
     const character = await this.dbCharacterRepository.findOneByOrFail({ name: characterName })
-    const characters = await this.dbCharacterRepository.findBy({ controlledBy: characterName })
+    const characters = await this.dbCharacterRepository.find({
+      where: { controlledBy: characterName },
+      relations: ['classe', 'bloodline', 'currentApotheose']
+    })
     characters.sort((c1, c2) => c1.name.localeCompare(c2.name)).push(character)
     const characterPromises = characters.map((character) => this.toCharacter(character))
     return Promise.all(characterPromises)
@@ -312,7 +350,8 @@ export class DBCharacterProvider implements ICharacterProvider {
       await this.dbCharacterRepository.findOneByOrFail({ name: characterToUpdate.name }),
       DBCharacterProvider.fromCharacter(characterToUpdate)
     )
-    const character = await this.toCharacter(await this.dbCharacterRepository.save(updatedCharacter))
+    await this.toCharacter(await this.dbCharacterRepository.save(updatedCharacter))
+    const character = await this.findOneByName(characterToUpdate.name)
     await this.dealsWithObservables(character)
     return character
   }
@@ -351,7 +390,10 @@ export class DBCharacterProvider implements ICharacterProvider {
   }
 
   async findTemplateByName(name: string): Promise<CharacterTemplate> {
-    const template = await this.dbCharacterTemplateRepository.findOneBy({ name: name })
+    const template = await this.dbCharacterTemplateRepository.findOne({
+      where: { name: name },
+      relations: ['classe', 'bloodline']
+    })
     if (!template) {
       throw ProviderErrors.EntityNotFound(name)
     }

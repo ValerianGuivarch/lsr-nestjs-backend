@@ -3,6 +3,7 @@ import { DisplayCategory } from '../characters/DisplayCategory'
 import { SuccessCalculation } from '../roll/SuccessCalculation'
 
 export class Skill {
+  id: string
   name: string
   shortName: string
   longName?: string
@@ -26,10 +27,9 @@ export class Skill {
   isHeal: boolean
   invocationTemplateName?: string
   description: string
-  limitationMax: number | null
-  dailyUse: number | null
 
   constructor(p: Skill) {
+    this.id = p.id
     this.name = p.name
     this.shortName = p.shortName
     this.soldatCost = p.soldatCost
@@ -53,7 +53,5 @@ export class Skill {
     this.isHeal = p.isHeal
     this.invocationTemplateName = p.invocationTemplateName
     this.description = p.description
-    this.limitationMax = p.limitationMax
-    this.dailyUse = p.dailyUse
   }
 }

@@ -72,7 +72,7 @@ export class InitProficiencies {
       minLevel: 10,
       description: '1 réussite automatique pour établir une stratégie'
     })
-    const newProficiencies = [
+    return [
       lumiereSagesse,
       lumiereCharisme,
       ventRapidite,
@@ -84,7 +84,6 @@ export class InitProficiencies {
       force,
       strategie
     ]
-    return newProficiencies
   }
   static createProficiency(p: {
     name: string
@@ -98,7 +97,10 @@ export class InitProficiencies {
       shortName: p.shortName,
       description: p.description || '',
       displayCategory: p.category,
-      minLevel: p.minLevel || 1
+      minLevel: p.minLevel || 1,
+      characters: [],
+      classes: [],
+      bloodlines: []
     }
   }
 }

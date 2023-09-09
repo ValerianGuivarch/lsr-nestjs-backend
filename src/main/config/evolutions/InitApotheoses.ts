@@ -63,14 +63,7 @@ export class InitApotheoses {
       essenceImprovement: 3,
       cost: 3
     })
-    const newApotheoses = [
-      apotheoseBasic,
-      apotheoseAmelioree,
-      apotheoseFinal,
-      apotheoseArcanique,
-      apotheoseArcaniqueFinale
-    ]
-    return newApotheoses
+    return [apotheoseBasic, apotheoseAmelioree, apotheoseFinal, apotheoseArcanique, apotheoseArcaniqueFinale]
   }
 
   static createApotheose(p: {
@@ -115,7 +108,9 @@ export class InitApotheoses {
         'garde le contrôle',
         'garde le contrôle',
         'garde le contrôle'
-      ]
+      ],
+      characters: [],
+      classes: []
     }
   }
 }

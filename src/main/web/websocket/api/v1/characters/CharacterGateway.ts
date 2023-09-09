@@ -1,5 +1,4 @@
 import { ApotheoseService } from '../../../../../domain/services/ApotheoseService'
-import { BloodlineService } from '../../../../../domain/services/BloodlineService'
 import { CharacterService } from '../../../../../domain/services/CharacterService'
 import { ClasseService } from '../../../../../domain/services/ClasseService'
 import { MjService } from '../../../../../domain/services/MjService'
@@ -22,7 +21,6 @@ export class CharacterGateway {
 
   constructor(
     private characterService: CharacterService,
-    private bloodlineService: BloodlineService,
     private classeService: ClasseService,
     private skillService: SkillService,
     private proficiencyService: ProficiencyService,
@@ -37,25 +35,18 @@ export class CharacterGateway {
     // eslint-disable-next-line no-magic-numbers
     return this.characterService.getCharacterObservable(name).pipe(
       concatMap(async () => {
-        const character = await this.characterService.findOneByName(name)
-        const classe = await this.classeService.findOneByName(character.classeName)
-        const bloodline = await this.bloodlineService.findOneByName(character.bloodlineName)
-        const skillsList = await this.skillService.findSkillsByCharacter(character)
-        const proficienciesList = await this.proficiencyService.findProficienciesByCharacter(character)
-        const apotheosesList = await this.apotheoseService.findApotheosesByCharacter(character)
+        const character = await this.characterService.findFullCharacterByName(name)
         const rest: {
           baseRest: number
           longRest: number
-        } = await this.sessionService.getRestForCharacter(character)
+        } = await this.sessionService.getRestForCharacter(character.character)
         return `data: ${JSON.stringify(
           CharacterVM.of({
-            character: character,
-            classe: classe,
-            bloodline: bloodline,
-            skills: skillsList,
-            proficiencies: proficienciesList,
-            rest: rest,
-            apotheoses: apotheosesList
+            character: character.character,
+            skills: character.skills,
+            apotheoses: character.apotheoses,
+            proficiencies: character.proficiencies,
+            rest: rest
           })
         )}\n\n`
       })
@@ -73,7 +64,7 @@ export class CharacterGateway {
         const result = await Promise.all(
           characters.map(async (character) => {
             return CharacterPreviewVM.of({
-              character: character
+              character: character.character
             })
           })
         )
@@ -92,23 +83,15 @@ export class CharacterGateway {
         const characters = await this.characterService.findAllControllerBy(name)
         const result = await Promise.all(
           characters.map(async (character) => {
-            const classe = await this.classeService.findOneByName(character.classeName)
-            const bloodline = await this.bloodlineService.findOneByName(character.bloodlineName)
-            const skillsList = await this.skillService.findSkillsByCharacter(character)
-            const proficienciesList = await this.proficiencyService.findProficienciesByCharacter(character)
-            const apotheosesList = await this.apotheoseService.findApotheosesByCharacter(character)
-
             return CharacterVM.of({
-              character: character,
-              classe: classe,
-              bloodline: bloodline,
-              skills: skillsList,
-              proficiencies: proficienciesList,
+              character: character.character,
+              skills: character.skills,
+              apotheoses: character.apotheoses,
+              proficiencies: character.proficiencies,
               rest: {
                 baseRest: 3,
                 longRest: 0
-              },
-              apotheoses: apotheosesList
+              }
             })
           })
         )

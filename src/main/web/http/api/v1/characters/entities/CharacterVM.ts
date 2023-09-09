@@ -1,11 +1,10 @@
 import { ApotheoseVM } from './ApotheoseVM'
+import { BloodlineVM } from './BloodlineVM'
+import { ClasseVM } from './ClasseVM'
 import { ProficiencyVM } from './ProficiencyVM'
 import { SkillVM } from './SkillVM'
 import { Apotheose } from '../../../../../../domain/models/apotheoses/Apotheose'
-import { Bloodline } from '../../../../../../domain/models/characters/Bloodline'
 import { Character } from '../../../../../../domain/models/characters/Character'
-import { Classe } from '../../../../../../domain/models/characters/Classe'
-import { Genre } from '../../../../../../domain/models/characters/Genre'
 import { Proficiency } from '../../../../../../domain/models/proficiencies/Proficiency'
 import { Skill } from '../../../../../../domain/models/skills/Skill'
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
@@ -114,13 +113,7 @@ export class CharacterVM {
   battleState: string
 
   @ApiPropertyOptional()
-  apotheoseName?: string
-
-  @ApiPropertyOptional()
-  apotheoseImprovement?: string
-
-  @ApiProperty({ isArray: true, type: String })
-  apotheoseImprovementList: string[]
+  currentApotheose?: ApotheoseVM
 
   @ApiProperty()
   genre: string
@@ -169,9 +162,7 @@ export class CharacterVM {
     this.bloodline = p.bloodline
     this.apotheoses = p.apotheoses
     this.apotheoseState = p.apotheoseState
-    this.apotheoseName = p.apotheoseName
-    this.apotheoseImprovement = p.apotheoseImprovement
-    this.apotheoseImprovementList = p.apotheoseImprovementList
+    this.currentApotheose = p.currentApotheose
     this.chair = p.chair
     this.esprit = p.esprit
     this.essence = p.essence
@@ -214,35 +205,26 @@ export class CharacterVM {
 
   static of(p: {
     character: Character
-    classe: Classe
-    bloodline?: Bloodline
     skills: Skill[]
-    proficiencies: Proficiency[]
     apotheoses: Apotheose[]
+    proficiencies: Proficiency[]
     rest: {
       baseRest: number
       longRest: number
     }
   }): CharacterVM {
-    const currentApotheose = p.apotheoses.find((a) => a.name === p.character.apotheoseName)
     return new CharacterVM({
       name: p.character.name,
       controlledBy: p.character.controlledBy,
       isInvocation: p.character.isInvocation,
-      classe: {
-        name: p.character.classeName,
-        display: p.character.genre === Genre.HOMME ? p.classe.displayMale : p.classe.displayFemale
-      },
-      bloodline: p.bloodline
-        ? {
-            name: p.bloodline.name,
-            display: p.bloodline.display
-          }
-        : undefined,
+      classe: ClasseVM.of({ classe: p.character.classe, genre: p.character.genre }),
+      bloodline: p.character.bloodline ? BloodlineVM.of({ bloodline: p.character.bloodline }) : null,
+      currentApotheose: p.character.currentApotheose,
       apotheoseState: p.character.apotheoseState,
       skills: p.skills.map((skill) =>
         SkillVM.of({
-          skill
+          skill,
+          character: p.character
         })
       ),
       apotheoses: p.apotheoses.map((apotheose) =>
@@ -258,9 +240,9 @@ export class CharacterVM {
       chair: p.character.chair,
       esprit: p.character.esprit,
       essence: p.character.essence,
-      chairBonus: (p.character.chairBonus ?? 0) + (currentApotheose?.chairImprovement ?? 0),
-      espritBonus: (p.character.espritBonus ?? 0) + (currentApotheose?.espritImprovement ?? 0),
-      essenceBonus: (p.character.essenceBonus ?? 0) + (currentApotheose?.essenceImprovement ?? 0),
+      chairBonus: p.character.chairBonus ?? 0,
+      espritBonus: p.character.espritBonus ?? 0,
+      essenceBonus: p.character.essenceBonus ?? 0,
       avantage: false, //TODO
       pv: p.character.pv,
       pvMax: p.character.pvMax,
@@ -281,9 +263,6 @@ export class CharacterVM {
       secunda: p.character.secunda,
       notes: p.character.notes,
       battleState: p.character.battleState.toString(),
-      apotheoseName: p.character.apotheoseName,
-      apotheoseImprovement: p.character.apotheoseImprovement,
-      apotheoseImprovementList: p.character.apotheoseImprovementList,
       genre: p.character.genre.toString(),
       relance: p.character.relance,
       playerName: p.character.playerName,

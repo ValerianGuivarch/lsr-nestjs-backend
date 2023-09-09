@@ -1,5 +1,7 @@
 import { DisplayCategory } from '../../../domain/models/characters/DisplayCategory'
-import { Column, Entity, PrimaryColumn } from 'typeorm'
+import { DBCharacter } from '../character/DBCharacter'
+import { DBClasse } from '../classes/DBClasse'
+import { Column, Entity, ManyToMany, PrimaryColumn } from 'typeorm'
 
 @Entity()
 export class DBApotheose {
@@ -56,4 +58,10 @@ export class DBApotheose {
     ]
   })
   apotheoseEffect: string[]
+
+  @ManyToMany(() => DBCharacter, (character) => character.apotheoses)
+  characters: DBCharacter[]
+
+  @ManyToMany(() => DBClasse, (classe) => classe.apotheoses)
+  classes: DBClasse[]
 }

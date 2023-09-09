@@ -1,7 +1,7 @@
 import { ApotheoseState } from '../../../../../../domain/models/apotheoses/ApotheoseState'
 import { BattleState } from '../../../../../../domain/models/characters/BattleState'
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
-import { IsNumber, IsOptional, IsString } from 'class-validator'
+import { IsEnum, IsNumber, IsOptional, IsString } from 'class-validator'
 
 export class UpdateCharacterDto {
   @ApiProperty({ default: 2 })
@@ -73,6 +73,8 @@ export class UpdateCharacterDto {
   readonly lux: string
 
   @ApiPropertyOptional()
+  @IsEnum(BattleState)
+  @IsOptional()
   readonly battleState?: BattleState
 
   @ApiProperty({ default: '' })
@@ -92,13 +94,10 @@ export class UpdateCharacterDto {
   @IsOptional()
   apotheose?: string
 
-  @ApiProperty({ default: [], isArray: true })
-  apotheoseImprovementList: string[]
-
   @ApiProperty({ default: 0 })
   @IsNumber()
   relance: number
 
-  @ApiPropertyOptional({ nullable: true })
+  @IsOptional()
   apotheoseState?: ApotheoseState
 }

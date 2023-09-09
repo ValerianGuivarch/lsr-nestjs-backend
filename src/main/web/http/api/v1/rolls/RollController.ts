@@ -1,28 +1,19 @@
 import { RollVM } from './entities/RollVM'
 import { SendRollRequest } from './requests/SendRollRequest'
 import { UpdateRollRequest } from './requests/UpdateRollRequest'
-import { ApotheoseService } from '../../../../../domain/services/ApotheoseService'
-import { BloodlineService } from '../../../../../domain/services/BloodlineService'
 import { CharacterService } from '../../../../../domain/services/CharacterService'
 import { ClasseService } from '../../../../../domain/services/ClasseService'
-import { InvocationService } from '../../../../../domain/services/InvocationService'
 import { RollService } from '../../../../../domain/services/RollService'
-import { SkillService } from '../../../../../domain/services/SkillService'
-import { Body, Controller, Get, Logger, Param, Post, Put } from '@nestjs/common'
+import { Body, Controller, Delete, Get, Param, Post, Put } from '@nestjs/common'
 import { ApiOkResponse, ApiTags } from '@nestjs/swagger'
 
 @Controller('api/v1/rolls')
 @ApiTags('Roll')
 export class RollController {
-  private readonly logger = new Logger(RollController.name)
   constructor(
     private rollService: RollService,
-    private bloodlineService: BloodlineService,
     private classeService: ClasseService,
-    private skillService: SkillService,
-    private characterService: CharacterService,
-    private invocationService: InvocationService,
-    private apotheoseService: ApotheoseService
+    private characterService: CharacterService
   ) {}
 
   @ApiOkResponse({ type: RollVM })
@@ -55,10 +46,9 @@ export class RollController {
   @Post('')
   async sendRoll(@Body() req: SendRollRequest): Promise<void> {
     const character = await this.characterService.findOneByName(req.rollerName)
-    const skill = await this.skillService.findOneSkillByCharacterAndName(character, req.skillName)
-    const roll = await this.rollService.roll({
+    await this.rollService.roll({
       character: character,
-      skill: skill,
+      skillId: req.skillId,
       secret: req.secret,
       focus: req.focus,
       power: req.power,
@@ -68,8 +58,17 @@ export class RollController {
       empiriqueRoll: req.empiriqueRoll,
       resistRoll: req.resistRoll
     })
-    if (skill.invocationTemplateName) {
-      await this.invocationService.createInvocation(skill.invocationTemplateName, roll)
-    }
+  }
+
+  @ApiOkResponse()
+  @Delete(':id')
+  async deleteRoll(@Param() id: string): Promise<void> {
+    await this.rollService.delete(id)
+  }
+
+  @ApiOkResponse({})
+  @Put('resetRolls')
+  async resetRolls(): Promise<void> {
+    await this.rollService.deleteAll()
   }
 }

@@ -14,7 +14,6 @@ export interface ICharacterProvider {
   delete(name: string): Promise<boolean>
   findOneByName(name: string): Promise<Character>
   findTemplateByName(name: string): Promise<CharacterTemplate>
-  findByName(name: string): Promise<Character | undefined>
   exist(name: string): Promise<boolean>
   findAllForSession(): Promise<Character[]>
   findAll(): Promise<Character[]>
