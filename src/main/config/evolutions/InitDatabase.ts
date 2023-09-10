@@ -346,6 +346,30 @@ export class InitDatabase {
       skill: skills.get('invisibilité'),
       dailyUse: 0
     })
+    // Isycho
+    await this.saveCharacterSkillIfNotExisting({
+      character: characters.get('isycho'),
+      skill: skills.get('perturbation essence'),
+      dailyUse: 0
+    })
+    // Isycho
+    await this.saveCharacterSkillIfNotExisting({
+      character: characters.get('isycho'),
+      skill: skills.get('destruction essence'),
+      dailyUse: 0
+    })
+    // Isycho
+    await this.saveCharacterSkillIfNotExisting({
+      character: characters.get('isycho'),
+      skill: skills.get('Vol de magie'),
+      dailyUse: 0
+    })
+    // Isycho
+    await this.saveCharacterSkillIfNotExisting({
+      character: characters.get('isycho'),
+      skill: skills.get('Emprunt de magie'),
+      dailyUse: 0
+    })
 
     // Vernet
     await this.saveCharacterSkillIfNotExisting({
@@ -743,9 +767,15 @@ export class InitDatabase {
     characters: Map<string, DBCharacter>
   ) {
     await this.saveClasseApotheoseIfNotExisting(classes.get('champion'), apotheoses.get('apotheose'))
+    await this.saveClasseApotheoseIfNotExisting(classes.get('pacificateur'), apotheoses.get('apotheose'))
     await this.saveClasseApotheoseIfNotExisting(classes.get('champion'), apotheoses.get('apotheose améliorée'))
+    await this.saveClasseApotheoseIfNotExisting(classes.get('pacificateur'), apotheoses.get('apotheose améliorée'))
     await this.saveClasseApotheoseIfNotExisting(classes.get('champion'), apotheoses.get('apotheose finale'))
     await this.saveClasseApotheoseIfNotExisting(classes.get('avatar'), apotheoses.get('apotheose arcanique'))
+    await this.saveClasseApotheoseIfNotExisting(
+      classes.get('pacificateur'),
+      apotheoses.get('apotheose pacificator weapon')
+    )
   }
 
   private async saveClasseApotheoseIfNotExisting(classe: DBClasse, apotheose: DBApotheose) {

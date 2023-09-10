@@ -221,6 +221,13 @@ export class DBSkillProvider implements ISkillProvider {
         skillPromises.push(DBSkillProvider.toSkill(allSkill, undefined))
       }
     }
+    await Promise.all(
+      skillsForAll.map(async (allSkill) => {
+        if (skillPromises.filter((skill) => skill.name === allSkill.name).length === 0) {
+          skillPromises.push(DBSkillProvider.toSkill(allSkill, undefined))
+        }
+      })
+    )
     return Promise.all(skillPromises.sort((a, b) => a.position - b.position))
   }
 

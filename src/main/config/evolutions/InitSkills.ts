@@ -1917,7 +1917,68 @@ export class InitSkills {
       customRolls: '1d150',
       successCalculation: SuccessCalculation.CUSTOM
     })
+
+    const perturbationEssence: DBSkill = this.createSkill({
+      name: 'perturbation essence',
+      shortName: 'pert-ess',
+      description: "Empeche un ennemi d'utiliser sa magie",
+      allAttribution: false,
+      stat: SkillStat.FIXE,
+      category: DisplayCategory.PACIFICATEURS,
+      display: 'Perturbe essence',
+      position: 2,
+      arcanePrimeCost: 0,
+      successCalculation: SuccessCalculation.CUSTOM,
+      ppCost: 1
+    })
+
+    const destructionEssence: DBSkill = this.createSkill({
+      name: 'destruction essence',
+      shortName: 'destr-ess',
+      description: 'Fait exploser la magie',
+      allAttribution: false,
+      stat: SkillStat.ESSENCE,
+      category: DisplayCategory.PACIFICATEURS,
+      display: 'Détruit essence',
+      position: 2,
+      arcanePrimeCost: 0,
+      successCalculation: SuccessCalculation.SIMPLE,
+      dettesCost: 1,
+      ppCost: -1
+    })
+
+    const volMagie: DBSkill = this.createSkill({
+      name: 'Vol de magie',
+      shortName: 'vol-mag',
+      description: 'Vol une magie et la stocke',
+      allAttribution: false,
+      stat: SkillStat.FIXE,
+      category: DisplayCategory.ARCANES,
+      display: 'Vol la magie',
+      position: 2,
+      arcanePrimeCost: 0,
+      successCalculation: SuccessCalculation.SIMPLE,
+      arcaneCost: 1,
+      isArcanique: true
+    })
+
+    const empruntMagie: DBSkill = this.createSkill({
+      name: 'Emprunt de magie',
+      shortName: 'empr-mag',
+      description: "Emprunte une magie et la lance immédiatement avec les stats de l'adversaire",
+      allAttribution: false,
+      stat: SkillStat.FIXE,
+      category: DisplayCategory.ARCANES,
+      display: 'Emprunt de magie',
+      position: 3,
+      arcanePrimeCost: 0,
+      successCalculation: SuccessCalculation.SIMPLE,
+      arcaneCost: 1,
+      isArcanique: true
+    })
+
     return [
+      empruntMagie,
       munitionDegenerative,
       munitionCourante,
       munitionLethale,
@@ -2056,6 +2117,9 @@ export class InitSkills {
       malediction,
       speed,
       invisibilite,
+      destructionEssence,
+      volMagie,
+      perturbationEssence,
       planteMagie,
       planteCombat,
       planteEnvahissante,

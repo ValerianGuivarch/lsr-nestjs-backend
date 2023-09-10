@@ -63,12 +63,27 @@ export class InitApotheoses {
       essenceImprovement: 3,
       cost: 3
     })
+    const apotheosePacifcatorWeapon: DBApotheose = this.createApotheose({
+      name: 'apotheose pacificator weapon',
+      shortName: 'apt-pac-weap',
+      description:
+        "donne +5 à chaque stat, 2 actions par tour et attaque avc avantage, au coût de 3 pierres par tour et avec obligation d'attaquer",
+      category: DisplayCategory.MAGIE,
+      minLevel: 20,
+      position: 11,
+      chairImprovement: 5,
+      espritImprovement: 5,
+      essenceImprovement: 5,
+      cost: 3,
+      avantage: true
+    })
     const newApotheoses = [
       apotheoseBasic,
       apotheoseAmelioree,
       apotheoseFinal,
       apotheoseArcanique,
-      apotheoseArcaniqueFinale
+      apotheoseArcaniqueFinale,
+      apotheosePacifcatorWeapon
     ]
     return newApotheoses
   }
