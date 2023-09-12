@@ -50,6 +50,7 @@ import { TypeOrmModule } from '@nestjs/typeorm'
       database: config().postgres.database,
       autoLoadEntities: config().postgres.autoLoadEntities,
       synchronize: config().postgres.synchronize,
+      poolSize: 8,
       migrationsRun: true // Exécute automatiquement les évolutions au démarrage de l'application
     }),
     PostgresModule
