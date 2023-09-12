@@ -228,6 +228,10 @@ export type Schema = {
       'dbSkill:description': string;
       'dbSkill:precision': string;
       'dbSkill:soldatCost': number;
+      'dbSkill:resistance': boolean;
+      'dbSkill:blessure': boolean;
+      'dbSkill:help': boolean;
+      'dbSkill:etherCost': number;
       'dbSkill:db_character_template:name': string;
       'dbSkill:db_character_template:chairValueReferential': 'FIXE' | 'CHAIR' | 'ESPRIT' | 'ESSENCE' | 'SUCCESS';
       'dbSkill:db_character_template:chairValueRule': number;
@@ -248,6 +252,7 @@ export type Schema = {
       'dbSkill:db_character_template:db_classe:name': string;
       'dbSkill:db_character_template:db_classe:displayMale': string;
       'dbSkill:db_character_template:db_classe:displayFemale': string;
+      'dbSkill:db_character_template:db_classe:canUsePp': boolean;
       'dbSkill:db_character_template:db_bloodline:name': string;
       'dbSkill:db_character_template:db_bloodline:display': string;
     };
@@ -296,6 +301,8 @@ export type Schema = {
       'customData': string;
       'dailyUse': any;
       'dailyUseMax': any;
+      'ether': number;
+      'etherMax': number;
     };
     nested: {
       'db_classe': Schema['db_classe']['plain'] & Schema['db_classe']['nested'];
@@ -306,6 +313,7 @@ export type Schema = {
       'db_classe:name': string;
       'db_classe:displayMale': string;
       'db_classe:displayFemale': string;
+      'db_classe:canUsePp': boolean;
       'db_apotheose:name': string;
       'db_apotheose:shortName': string;
       'db_apotheose:displayCategory': 'STATS' | 'MAGIE' | 'ARCANES' | 'ARCANES_PRIMES' | 'SOLDATS' | 'PACIFICATEURS';
@@ -376,9 +384,12 @@ export type Schema = {
       'db_character:customData': string;
       'db_character:dailyUse': any;
       'db_character:dailyUseMax': any;
+      'db_character:ether': number;
+      'db_character:etherMax': number;
       'db_character:db_classe:name': string;
       'db_character:db_classe:displayMale': string;
       'db_character:db_classe:displayFemale': string;
+      'db_character:db_classe:canUsePp': boolean;
       'db_character:db_apotheose:name': string;
       'db_character:db_apotheose:shortName': string;
       'db_character:db_apotheose:displayCategory': 'STATS' | 'MAGIE' | 'ARCANES' | 'ARCANES_PRIMES' | 'SOLDATS' | 'PACIFICATEURS';
@@ -463,9 +474,12 @@ export type Schema = {
       'db_character:customData': string;
       'db_character:dailyUse': any;
       'db_character:dailyUseMax': any;
+      'db_character:ether': number;
+      'db_character:etherMax': number;
       'db_character:db_classe:name': string;
       'db_character:db_classe:displayMale': string;
       'db_character:db_classe:displayFemale': string;
+      'db_character:db_classe:canUsePp': boolean;
       'db_character:db_apotheose:name': string;
       'db_character:db_apotheose:shortName': string;
       'db_character:db_apotheose:displayCategory': 'STATS' | 'MAGIE' | 'ARCANES' | 'ARCANES_PRIMES' | 'SOLDATS' | 'PACIFICATEURS';
@@ -541,9 +555,12 @@ export type Schema = {
       'db_character:customData': string;
       'db_character:dailyUse': any;
       'db_character:dailyUseMax': any;
+      'db_character:ether': number;
+      'db_character:etherMax': number;
       'db_character:db_classe:name': string;
       'db_character:db_classe:displayMale': string;
       'db_character:db_classe:displayFemale': string;
+      'db_character:db_classe:canUsePp': boolean;
       'db_character:db_apotheose:name': string;
       'db_character:db_apotheose:shortName': string;
       'db_character:db_apotheose:displayCategory': 'STATS' | 'MAGIE' | 'ARCANES' | 'ARCANES_PRIMES' | 'SOLDATS' | 'PACIFICATEURS';
@@ -586,6 +603,10 @@ export type Schema = {
       'dbSkill:description': string;
       'dbSkill:precision': string;
       'dbSkill:soldatCost': number;
+      'dbSkill:resistance': boolean;
+      'dbSkill:blessure': boolean;
+      'dbSkill:help': boolean;
+      'dbSkill:etherCost': number;
       'dbSkill:db_character_template:name': string;
       'dbSkill:db_character_template:chairValueReferential': 'FIXE' | 'CHAIR' | 'ESPRIT' | 'ESSENCE' | 'SUCCESS';
       'dbSkill:db_character_template:chairValueRule': number;
@@ -606,6 +627,7 @@ export type Schema = {
       'dbSkill:db_character_template:db_classe:name': string;
       'dbSkill:db_character_template:db_classe:displayMale': string;
       'dbSkill:db_character_template:db_classe:displayFemale': string;
+      'dbSkill:db_character_template:db_classe:canUsePp': boolean;
       'dbSkill:db_character_template:db_bloodline:name': string;
       'dbSkill:db_character_template:db_bloodline:display': string;
     };
@@ -638,6 +660,7 @@ export type Schema = {
       'db_classe:name': string;
       'db_classe:displayMale': string;
       'db_classe:displayFemale': string;
+      'db_classe:canUsePp': boolean;
       'db_bloodline:name': string;
       'db_bloodline:display': string;
     };
@@ -672,6 +695,7 @@ export type Schema = {
       'db_character_template:db_classe:name': string;
       'db_character_template:db_classe:displayMale': string;
       'db_character_template:db_classe:displayFemale': string;
+      'db_character_template:db_classe:canUsePp': boolean;
       'db_character_template:db_bloodline:name': string;
       'db_character_template:db_bloodline:display': string;
       'dbSkill:id': number;
@@ -700,6 +724,10 @@ export type Schema = {
       'dbSkill:description': string;
       'dbSkill:precision': string;
       'dbSkill:soldatCost': number;
+      'dbSkill:resistance': boolean;
+      'dbSkill:blessure': boolean;
+      'dbSkill:help': boolean;
+      'dbSkill:etherCost': number;
       'dbSkill:db_character_template:name': string;
       'dbSkill:db_character_template:chairValueReferential': 'FIXE' | 'CHAIR' | 'ESPRIT' | 'ESSENCE' | 'SUCCESS';
       'dbSkill:db_character_template:chairValueRule': number;
@@ -720,6 +748,7 @@ export type Schema = {
       'dbSkill:db_character_template:db_classe:name': string;
       'dbSkill:db_character_template:db_classe:displayMale': string;
       'dbSkill:db_character_template:db_classe:displayFemale': string;
+      'dbSkill:db_character_template:db_classe:canUsePp': boolean;
       'dbSkill:db_character_template:db_bloodline:name': string;
       'dbSkill:db_character_template:db_bloodline:display': string;
     };
@@ -729,6 +758,7 @@ export type Schema = {
       'name': string;
       'displayMale': string;
       'displayFemale': string;
+      'canUsePp': boolean;
     };
     nested: {};
     flat: {};
@@ -746,6 +776,7 @@ export type Schema = {
       'db_classe:name': string;
       'db_classe:displayMale': string;
       'db_classe:displayFemale': string;
+      'db_classe:canUsePp': boolean;
       'db_apotheose:name': string;
       'db_apotheose:shortName': string;
       'db_apotheose:displayCategory': 'STATS' | 'MAGIE' | 'ARCANES' | 'ARCANES_PRIMES' | 'SOLDATS' | 'PACIFICATEURS';
@@ -775,6 +806,7 @@ export type Schema = {
       'db_classe:name': string;
       'db_classe:displayMale': string;
       'db_classe:displayFemale': string;
+      'db_classe:canUsePp': boolean;
       'db_proficiency:name': string;
       'db_proficiency:shortName': string;
       'db_proficiency:displayCategory': 'STATS' | 'MAGIE' | 'ARCANES' | 'ARCANES_PRIMES' | 'SOLDATS' | 'PACIFICATEURS';
@@ -795,6 +827,7 @@ export type Schema = {
       'db_classe:name': string;
       'db_classe:displayMale': string;
       'db_classe:displayFemale': string;
+      'db_classe:canUsePp': boolean;
       'dbSkill:id': number;
       'dbSkill:displayCategory': 'STATS' | 'MAGIE' | 'ARCANES' | 'ARCANES_PRIMES' | 'SOLDATS' | 'PACIFICATEURS';
       'dbSkill:allowsPf': boolean;
@@ -821,6 +854,10 @@ export type Schema = {
       'dbSkill:description': string;
       'dbSkill:precision': string;
       'dbSkill:soldatCost': number;
+      'dbSkill:resistance': boolean;
+      'dbSkill:blessure': boolean;
+      'dbSkill:help': boolean;
+      'dbSkill:etherCost': number;
       'dbSkill:db_character_template:name': string;
       'dbSkill:db_character_template:chairValueReferential': 'FIXE' | 'CHAIR' | 'ESPRIT' | 'ESSENCE' | 'SUCCESS';
       'dbSkill:db_character_template:chairValueRule': number;
@@ -841,6 +878,7 @@ export type Schema = {
       'dbSkill:db_character_template:db_classe:name': string;
       'dbSkill:db_character_template:db_classe:displayMale': string;
       'dbSkill:db_character_template:db_classe:displayFemale': string;
+      'dbSkill:db_character_template:db_classe:canUsePp': boolean;
       'dbSkill:db_character_template:db_bloodline:name': string;
       'dbSkill:db_character_template:db_bloodline:display': string;
     };
@@ -858,7 +896,6 @@ export type Schema = {
   };
   'db_roll': {
     plain: {
-      'id': number;
       'rollerName': string;
       'date': string;
       'stat': 'FIXE' | 'CHAIR' | 'ESPRIT' | 'ESSENCE' | 'EMPIRIQUE' | 'CUSTOM';
@@ -879,6 +916,13 @@ export type Schema = {
       'resistRoll': string;
       'display': string;
       'healPoint': number;
+      'displayDices': boolean;
+      'id': string;
+      'resistance': boolean;
+      'blessure': boolean;
+      'help': boolean;
+      'precision': string;
+      'pictureUrl': string;
     };
     nested: {
       'db_character': Schema['db_character']['plain'] & Schema['db_character']['nested'];
@@ -926,9 +970,12 @@ export type Schema = {
       'db_character:customData': string;
       'db_character:dailyUse': any;
       'db_character:dailyUseMax': any;
+      'db_character:ether': number;
+      'db_character:etherMax': number;
       'db_character:db_classe:name': string;
       'db_character:db_classe:displayMale': string;
       'db_character:db_classe:displayFemale': string;
+      'db_character:db_classe:canUsePp': boolean;
       'db_character:db_apotheose:name': string;
       'db_character:db_apotheose:shortName': string;
       'db_character:db_apotheose:displayCategory': 'STATS' | 'MAGIE' | 'ARCANES' | 'ARCANES_PRIMES' | 'SOLDATS' | 'PACIFICATEURS';
@@ -986,6 +1033,10 @@ export type Schema = {
       'description': string;
       'precision': string;
       'soldatCost': number;
+      'resistance': boolean;
+      'blessure': boolean;
+      'help': boolean;
+      'etherCost': number;
     };
     nested: {
       'db_character_template': Schema['db_character_template']['plain'] & Schema['db_character_template']['nested'];
@@ -1011,6 +1062,7 @@ export type Schema = {
       'db_character_template:db_classe:name': string;
       'db_character_template:db_classe:displayMale': string;
       'db_character_template:db_classe:displayFemale': string;
+      'db_character_template:db_classe:canUsePp': boolean;
       'db_character_template:db_bloodline:name': string;
       'db_character_template:db_bloodline:display': string;
     };

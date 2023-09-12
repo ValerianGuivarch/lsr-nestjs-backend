@@ -33,7 +33,8 @@ export class InitBloodlines {
     const terreBloodline: DBBloodline = this.createBloodline({
       name: 'terre',
       display: 'de la Terre',
-      skills: [skills.get('armure')]
+      skills: [skills.get('armure')],
+      proficiencies: [proficiencies.get('force')]
     })
 
     const lumiereBloodline: DBBloodline = this.createBloodline({

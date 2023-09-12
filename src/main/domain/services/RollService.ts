@@ -12,6 +12,7 @@ import { SkillStat } from '../models/skills/SkillStat'
 import { IApotheoseProvider } from '../providers/IApotheoseProvider'
 import { IBloodlineProvider } from '../providers/IBloodlineProvider'
 import { ICharacterProvider } from '../providers/ICharacterProvider'
+import { IPokeProvider } from '../providers/IPokeProvider'
 import { IRollProvider } from '../providers/IRollProvider'
 import { ISessionProvider } from '../providers/ISessionProvider'
 import { Inject, Logger } from '@nestjs/common'
@@ -59,12 +60,19 @@ export class RollService {
     @Inject('ISessionProvider')
     private sessionProvider: ISessionProvider,
     @Inject('IRollProvider')
-    private rollProvider: IRollProvider
+    private rollProvider: IRollProvider,
+    @Inject('IPokeProvider')
+    private pokeProvider: IPokeProvider
   ) {
     console.log('RollService')
   }
   async getLast(): Promise<Roll[]> {
     return this.rollProvider.getLast(RollService.MAX_ROLL_LIST_SIZE)
+  }
+  async getLastExceptSecret(name: string): Promise<Roll[]> {
+    return (await this.rollProvider.getLast(RollService.MAX_ROLL_LIST_SIZE)).filter((roll) => {
+      return !roll.secret || roll.rollerName === name || name === 'MJ'
+    })
   }
 
   async roll(p: {
@@ -89,11 +97,13 @@ export class RollService {
     let pfDelta = 0
     let ppDelta = 0
     let arcaneDelta = 0
+    let etherDelta = 0
     let arcanePrimeDelta = 0
     let dettesDelta = 0
     let usePf = p.focus && skill.allowsPf
     let usePp = p.power && skill.allowsPp
     let useProficiency = p.proficiency
+    let pictureUrl: string | undefined = undefined
     const result: number[] = []
     let data = ''
     if (skill.stat === SkillStat.EMPIRIQUE) {
@@ -252,6 +262,7 @@ export class RollService {
     pfDelta = pfDelta - skill.pfCost
     ppDelta = ppDelta - skill.ppCost
     arcaneDelta = arcaneDelta - skill.arcaneCost
+    etherDelta = etherDelta - skill.etherCost
     dettesDelta = dettesDelta + skill.dettesCost
     arcanePrimeDelta = arcanePrimeDelta + skill.arcanePrimeCost
     if (p.character.pv + pvDelta < 0) {
@@ -262,9 +273,11 @@ export class RollService {
       throw ProviderErrors.RollNotEnoughPp()
     } else if (p.character.arcanes + arcaneDelta < 0) {
       throw ProviderErrors.RollNotEnoughArcane()
+    } else if (p.character.ether + etherDelta < 0) {
+      throw ProviderErrors.RollNotEnoughEther()
     } else if (p.character.arcanePrimes + arcanePrimeDelta < 0) {
       throw ProviderErrors.RollNotEnoughArcanePrime()
-    } else if (p.character.dailyUse[skill.name] === 0) {
+    } else if (p.character.dailyUse.get(skill.name) === 0) {
       throw ProviderErrors.RollNotEnoughDailyUse()
     }
     if (skill.successCalculation === SuccessCalculation.CUSTOM) {
@@ -281,158 +294,63 @@ export class RollService {
         } else {
           data = ' et réussi'
         }
-      } else if (skill.name === 'Reconnaissance naturelle') {
+      } else if (skill.name === 'Reco. naturelle') {
         const natureLevel = await this.characterProvider.getNatureLevel()
         switch (natureLevel) {
           case NatureLevel.LEVEL_0_PAUVRE:
-            data = ' et perçoit un niveau de nature pauvre (0).'
+            data = ' et perçoit un niveau de nature pauvre (0)'
             break
           case NatureLevel.LEVEL_1_RARE:
-            data = ' et perçoit un niveau de nature rare (1).'
+            data = ' et perçoit un niveau de nature rare (1)'
             break
           case NatureLevel.LEVEL_2_PRESENTE:
-            data = ' et perçoit un niveau de nature présente (2).'
+            data = ' et perçoit un niveau de nature présente (2)'
             break
           case NatureLevel.LEVEL_3_ABONDANTE:
-            data = ' et perçoit un niveau de nature abondante (3).'
+            data = ' et perçoit un niveau de nature abondante (3)'
             break
           case NatureLevel.LEVEL_4_SAUVAGE:
-            data = ' et perçoit un niveau de nature sauvage (4).'
+            data = ' et perçoit un niveau de nature sauvage (4)'
             break
           case NatureLevel.LEVEL_5_DOMINANTE:
-            data = ' et perçoit un niveau de nature dominante (5).'
+            data = ' et perçoit un niveau de nature dominante (5)'
             break
           default:
             data = ' et perçoit un niveau de nature inconnu.'
             break
         }
       } else if (skill.name === 'pokéball') {
-        const pokemons = [
-          'Bulbizarre',
-          'Herbizarre',
-          'Florizarre',
-          'Salamèche',
-          'Reptincel',
-          'Dracaufeu',
-          'Carapuce',
-          'Carabaffe',
-          'Tortank',
-          'Chenipan',
-          'Chrysacier',
-          'Papilusion',
-          'Aspicot',
-          'Coconfort',
-          'Dardargnan',
-          'Roucool',
-          'Roucoups',
-          'Roucarnage',
-          'Rattata',
-          'Rattatac',
-          'Piafabec',
-          'Rapasdepic',
-          'Abra',
-          'Kadabra',
-          'Alakazam',
-          'Machoc',
-          'Machopeur',
-          'Mackogneur',
-          'Chétiflor',
-          'Boustiflor',
-          'Empiflor',
-          'Tentacool',
-          'Tentacruel',
-          'Miaouss',
-          'Persian',
-          'Psykokwak',
-          'Akwakwak',
-          'Férosinge',
-          'Colossinge',
-          'Caninos',
-          'Arcanin',
-          'Ptitard',
-          'Têtarte',
-          'Tarpaud',
-          'Abra',
-          'Kadabra',
-          'Alakazam',
-          'Machoc',
-          'Machopeur',
-          'Mackogneur',
-          'Nosferapti',
-          'Nosferalto',
-          'Mystherbe',
-          'Orthan',
-          'Ectoplasma',
-          'Onix',
-          'Soporifik',
-          'Hypnomade',
-          'Krabby',
-          'Krabboss',
-          'Voltorbe',
-          'Électrode',
-          'Noeunoeuf',
-          'Noadkoko',
-          'Osselait',
-          'Ossatueur',
-          'Kicklee',
-          'Tygnon',
-          'Excelangue',
-          'Smogo',
-          'Smogogo',
-          'Rhinocorne',
-          'Rhinoféros',
-          'Leveinard',
-          'Saquedeneu',
-          'Kangourex',
-          'Hypotrempe',
-          'Hypocéan',
-          'Poissirène',
-          'Poissoroy',
-          'Stari',
-          'Staross',
-          'M.Mime',
-          'Insécateur',
-          'Lippoutou',
-          'Élektek',
-          'Magmar',
-          'Pinsir',
-          'Tauros',
-          'Magicarpe',
-          'Léviator',
-          'Lokhlass',
-          'Métamorph',
-          'Évoli',
-          'Aquali',
-          'Voltali',
-          'Pyroli',
-          'Porygon',
-          'Amonita',
-          'Amonistar',
-          'Kabuto',
-          'Kabutops',
-          'Ptéra',
-          'Ronflex',
-          'Artikodin',
-          'Électhor',
-          'Sulfura',
-          'Minidraco',
-          'Draco',
-          'Dracolosse',
-          'Mewtwo'
-        ]
-
         data = ' et fait apparaître'
 
+        const pokemon = await this.pokeProvider.getPokemonById(result[0])
         // eslint-disable-next-line no-magic-numbers
         if (result[0] >= 1 && result[0] <= 150) {
           console.log('result[0] : ' + result[0])
-          data += ' un *' + pokemons[result[0] - 1] + '*'
+          data += ' *' + pokemon.nameFr + '*'
           console.log('data : ' + data)
         } else {
           data += ' un pokémon inconnu'
         }
+        pictureUrl = pokemon.imageUrl
+        await this.characterProvider.create(
+          Character.invocationToCreateFactory({
+            name: pokemon.nameFr,
+            chair: 2,
+            esprit: 2,
+            essence: 2,
+            pvMax: 4,
+            picture: pokemon.imageUrl,
+            summoner: p.character
+          })
+        )
       }
     }
+
+    let display = skill.display
+    if (skill.stat === SkillStat.EMPIRIQUE) {
+      display = display + ' (' + p.empiriqueRoll + ')'
+    }
+
     const rollToCreate = await Roll.rollToCreateFactory({
       rollerName: p.character.name,
       healPoint: skill.isHeal ? success : undefined,
@@ -452,17 +370,25 @@ export class RollService {
       resistRoll: p.resistRoll,
       picture: apotheose ? p.character.pictureApotheose : p.character.picture,
       empiriqueRoll: p.empiriqueRoll,
-      display: skill.display,
-      stat: skill.stat
+      display: display,
+      stat: skill.stat,
+      resistance: skill.resistance,
+      blessure: skill.blessure,
+      help: skill.help,
+      precision: skill.precision,
+      pictureUrl: pictureUrl
     })
     const createdRoll = await this.rollProvider.add(rollToCreate)
     p.character.pv += pvDelta
     p.character.pf += pfDelta
     p.character.pp += ppDelta
     p.character.arcanes += arcaneDelta
+    p.character.ether += etherDelta
     p.character.arcanePrimes += arcanePrimeDelta
     p.character.dettes += dettesDelta
-    p.character.dailyUse[skill.name]--
+    if (p.character.dailyUse.get(skill.name) !== undefined) {
+      p.character.dailyUse.set(skill.name, p.character.dailyUse.get(skill.name) - 1)
+    }
     await this.characterProvider.update(p.character)
     const rolls = await this.getLast()
     this.rollsChangeSubject.next(rolls)
@@ -516,7 +442,10 @@ export class RollService {
         picture: p.character.pictureApotheose,
         empiriqueRoll: '1d' + diceValue,
         display: p.apotheose.apotheoseEffect[dice - 1],
-        stat: SkillStat.EMPIRIQUE
+        stat: SkillStat.EMPIRIQUE,
+        resistance: false,
+        blessure: false,
+        help: false
       })
       await this.rollProvider.add(rollToCreate)
       const rolls = await this.getLast()

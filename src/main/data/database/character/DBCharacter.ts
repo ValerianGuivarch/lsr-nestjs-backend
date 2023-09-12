@@ -137,6 +137,20 @@ export class DBCharacter {
 
   @Column({
     type: 'integer',
+    default: 3
+  })
+  @IsDefined()
+  ether: number
+
+  @Column({
+    type: 'integer',
+    default: 3
+  })
+  @IsDefined()
+  etherMax: number
+
+  @Column({
+    type: 'integer',
     default: 1
   })
   @IsDefined()

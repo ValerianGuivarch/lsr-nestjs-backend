@@ -83,6 +83,12 @@ export class CharacterVM {
   arcanesMax: number
 
   @ApiProperty()
+  ether: number
+
+  @ApiProperty()
+  etherMax: number
+
+  @ApiProperty()
   munitions: number
 
   @ApiProperty()
@@ -179,6 +185,8 @@ export class CharacterVM {
     this.dettes = p.dettes
     this.arcanes = p.arcanes
     this.arcanesMax = p.arcanesMax
+    this.ether = p.ether
+    this.etherMax = p.etherMax
     this.arcanePrimes = p.arcanePrimes
     this.arcanePrimesMax = p.arcanePrimesMax
     this.munitions = p.munitions
@@ -253,6 +261,8 @@ export class CharacterVM {
       dettes: p.character.dettes,
       arcanes: p.character.arcanes,
       arcanesMax: p.character.arcanesMax,
+      ether: p.character.ether,
+      etherMax: p.character.etherMax,
       arcanePrimes: p.character.arcanePrimes,
       arcanePrimesMax: p.character.arcanePrimesMax,
       munitions: p.character.munitions,

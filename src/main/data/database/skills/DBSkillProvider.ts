@@ -33,11 +33,15 @@ export class DBSkillProvider implements ISkillProvider {
       invocationTemplateName: skill.invocationTemplateName,
       isArcanique: skill.isArcanique,
       isHeal: skill.isHeal,
+      resistance: skill.resistance,
+      help: skill.help,
+      blessure: skill.blessure,
       displayCategory: DisplayCategory[skill.displayCategory],
       stat: SkillStat[skill.stat],
       pvCost: skill.pvCost,
       pfCost: skill.pfCost,
       ppCost: skill.ppCost,
+      etherCost: skill.etherCost,
       dettesCost: skill.dettesCost,
       arcaneCost: skill.arcaneCost,
       arcanePrimeCost: skill.arcanePrimeCost,
@@ -45,7 +49,8 @@ export class DBSkillProvider implements ISkillProvider {
       allowsPp: skill.allowsPp,
       customRolls: skill.customRolls !== undefined ? skill.customRolls : null,
       successCalculation: SuccessCalculation[skill.successCalculation],
-      secret: skill.secret
+      secret: skill.secret,
+      precision: skill.precision
     } as DBSkill
   }
 
@@ -62,11 +67,15 @@ export class DBSkillProvider implements ISkillProvider {
       invocationTemplateName: skill.invocationTemplateName,
       isArcanique: skill.isArcanique,
       isHeal: skill.isHeal,
+      resistance: skill.resistance,
+      help: skill.help,
+      blessure: skill.blessure,
       displayCategory: DisplayCategory[skill.displayCategory],
       stat: SkillStat[skill.stat],
       pvCost: skill.pvCost,
       pfCost: skill.pfCost,
       ppCost: skill.ppCost,
+      etherCost: skill.etherCost,
       dettesCost: skill.dettesCost,
       arcaneCost: skill.arcaneCost,
       arcanePrimeCost: skill.arcanePrimeCost,
@@ -74,7 +83,8 @@ export class DBSkillProvider implements ISkillProvider {
       allowsPp: skill.allowsPp,
       customRolls: skill.customRolls !== null ? skill.customRolls : undefined,
       successCalculation: SuccessCalculation[skill.successCalculation],
-      secret: skill.secret
+      secret: skill.secret,
+      precision: skill.precision
     })
   }
 

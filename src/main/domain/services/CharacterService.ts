@@ -40,17 +40,25 @@ export class CharacterService {
     const characters = await this.characterProvider.findAllControlledBy(name)
     return Promise.all(
       characters.map(async (character) => {
-        return new FullCharacter({
-          character: character,
-          skills: await this.skillService.findSkillsByCharacter(character),
-          apotheoses: await this.apotheoseService.findApotheosesByCharacter(character),
-          proficiencies: await this.proficiencyService.findProficienciesByCharacter(character)
-        })
+        return await this.findFullCharacterByName(character.name)
       })
     )
   }
 
   async updateCharacter(p: { character: Character }): Promise<Character> {
+    if (p.character.currentApotheose && p.character.apotheoseState == ApotheoseState.NONE) {
+      p.character.apotheoseState = ApotheoseState.COST_PAID
+    }
+    if (
+      !p.character.currentApotheose &&
+      (p.character.apotheoseState == ApotheoseState.COST_PAID ||
+        p.character.apotheoseState == ApotheoseState.COST_TO_PAY)
+    ) {
+      p.character.apotheoseState = ApotheoseState.ALREADY_USED
+    }
+    if (p.character.currentApotheose && p.character.apotheoseState == ApotheoseState.ALREADY_USED) {
+      p.character.apotheoseState = ApotheoseState.COST_TO_PAY
+    }
     return await this.characterProvider.update(p.character)
   }
 
@@ -106,30 +114,9 @@ export class CharacterService {
     dailyUseMax?: number
   ): Promise<void> {
     const character = await this.characterProvider.findOneByName(characterName)
-    character.dailyUse[skillName] = dailyUse
-    character.dailyUseMax[skillName] = dailyUseMax
+    character.dailyUse.set(skillName, dailyUse)
+    character.dailyUseMax.set(skillName, dailyUseMax)
     await this.characterProvider.update({
-      ...character
-    })
-  }
-
-  async updateApotheose(p: { characterName: string; apotheoseName: string }): Promise<Character> {
-    const character = await this.characterProvider.findOneByName(p.characterName)
-    const apotheose = await this.apotheoseService.findOneByName(p.apotheoseName)
-    character.currentApotheose = apotheose
-    if (character.currentApotheose && character.apotheoseState == ApotheoseState.NONE) {
-      character.apotheoseState = ApotheoseState.COST_PAID
-    }
-    if (
-      !character.currentApotheose &&
-      (character.apotheoseState == ApotheoseState.COST_PAID || character.apotheoseState == ApotheoseState.COST_TO_PAY)
-    ) {
-      character.apotheoseState = ApotheoseState.ALREADY_USED
-    }
-    if (character.currentApotheose && character.apotheoseState == ApotheoseState.ALREADY_USED) {
-      character.apotheoseState = ApotheoseState.COST_TO_PAY
-    }
-    return await this.characterProvider.update({
       ...character
     })
   }

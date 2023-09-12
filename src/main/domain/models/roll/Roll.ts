@@ -23,6 +23,12 @@ export class Roll {
   apotheose?: string
   display: string
   stat: SkillStat
+  resistance: boolean
+  blessure: boolean
+  help: boolean
+  precision?: string
+  pictureUrl?: string
+
   constructor(p: Roll) {
     Object.assign(this, p)
   }
@@ -51,6 +57,11 @@ export class Roll {
     display: string
     stat: SkillStat
     healPoint?: number
+    resistance: boolean
+    blessure: boolean
+    help: boolean
+    precision?: string
+    pictureUrl?: string
   }): Promise<RollToCreate> {
     const defaults = {
       rollerName: p.rollerName,
@@ -74,7 +85,12 @@ export class Roll {
       empiriqueRoll: p.empiriqueRoll,
       apotheose: p.apotheose,
       display: p.display,
-      stat: p.stat
+      stat: p.stat,
+      resistance: p.resistance,
+      blessure: p.blessure,
+      help: p.help,
+      precision: p.precision,
+      pictureUrl: p.pictureUrl
     }
 
     return Object.assign(defaults, p)

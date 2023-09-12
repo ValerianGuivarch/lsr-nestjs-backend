@@ -1,6 +1,6 @@
 import { RollService } from '../../../../../domain/services/RollService'
 import { RollVM } from '../../../../http/api/v1/rolls/entities/RollVM'
-import { Controller, Get, Sse } from '@nestjs/common'
+import { Controller, Get, Param, Sse } from '@nestjs/common'
 import { ApiOkResponse, ApiTags } from '@nestjs/swagger'
 import { WebSocketGateway, WebSocketServer } from '@nestjs/websockets'
 import { concatMap, Observable } from 'rxjs'
@@ -13,14 +13,14 @@ export class RollGateway {
   @WebSocketServer() server: Server
 
   constructor(private rollService: RollService) {}
-  @Get('')
+  @Get(':name')
   @ApiOkResponse()
   @Sse('rolls')
-  getRolls(): Observable<string> {
+  getRolls(@Param('name') name: string): Observable<string> {
     // eslint-disable-next-line no-magic-numbers
     return this.rollService.getRollsChangeObservable().pipe(
       concatMap(async () => {
-        const rolls = await this.rollService.getLast()
+        const rolls = await this.rollService.getLastExceptSecret(name)
         const rolls2 = rolls.filter((roll) => !roll.resistRoll)
         const rolls3 = rolls2.map((roll) =>
           RollVM.of({

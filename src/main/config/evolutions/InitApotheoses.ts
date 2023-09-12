@@ -15,6 +15,26 @@ export class InitApotheoses {
       maxLevel: 9,
       position: 1
     })
+    const apotheosePacif: DBApotheose = this.createApotheose({
+      name: 'surcharge',
+      shortName: 'surch',
+      description:
+        'donne +3 à chaque stat et 2 actions par tour, au coût de 3 pierres par tour et un effet négatif à 1/6',
+      category: DisplayCategory.PACIFICATEURS,
+      position: 1
+    })
+    const apotheoseTalos: DBApotheose = this.createApotheose({
+      name: 'Epée de Talos',
+      shortName: 'talos',
+      description:
+        "donne +5 à chaque stat, 2 actions par tour, et avantage aux attaques, au coût de 3 pierres par tour obligation d'attaquer",
+      category: DisplayCategory.PACIFICATEURS,
+      avantage: true,
+      chairImprovement: 5,
+      espritImprovement: 5,
+      essenceImprovement: 5,
+      position: 1
+    })
     const apotheoseAmelioree: DBApotheose = this.createApotheose({
       name: 'apotheose améliorée',
       shortName: 'apt-am',
@@ -28,7 +48,7 @@ export class InitApotheoses {
       name: 'apotheose finale',
       shortName: 'apt-fin',
       description:
-        'donne +5 à chaque stat et 2 actions par tour, au coût de 3 pierres par tour et une perte de contrôle perpétuelle',
+        'donne +5 à chaque stat et 2 actions par tour, au coût de 3 pierres par tour et une perte de contrôle sur la 2ème action',
       category: DisplayCategory.MAGIE,
       minLevel: 20,
       position: 10,
@@ -63,7 +83,15 @@ export class InitApotheoses {
       essenceImprovement: 3,
       cost: 3
     })
-    return [apotheoseBasic, apotheoseAmelioree, apotheoseFinal, apotheoseArcanique, apotheoseArcaniqueFinale]
+    return [
+      apotheoseBasic,
+      apotheoseAmelioree,
+      apotheoseFinal,
+      apotheoseArcanique,
+      apotheoseArcaniqueFinale,
+      apotheosePacif,
+      apotheoseTalos
+    ]
   }
 
   static createApotheose(p: {

@@ -31,4 +31,7 @@ export class DBClasse {
   })
   @JoinTable()
   proficiencies: DBProficiency[]
+
+  @Column({ type: 'boolean', default: true })
+  canUsePp: boolean
 }

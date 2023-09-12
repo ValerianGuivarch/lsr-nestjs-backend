@@ -44,6 +44,10 @@ export class UpdateCharacterDto {
   @IsNumber()
   readonly arcanes: number
 
+  @ApiProperty({ default: 0 })
+  @IsNumber()
+  readonly ether: number
+
   @ApiProperty({ default: 1 })
   @IsNumber()
   readonly arcanePrimes: number
@@ -100,4 +104,7 @@ export class UpdateCharacterDto {
 
   @IsOptional()
   apotheoseState?: ApotheoseState
+
+  @IsOptional()
+  apotheoseName?: string
 }

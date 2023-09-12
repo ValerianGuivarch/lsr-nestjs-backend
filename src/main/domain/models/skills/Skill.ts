@@ -13,6 +13,7 @@ export class Skill {
   pfCost: number
   ppCost: number
   dettesCost: number
+  etherCost: number
   arcaneCost: number
   arcanePrimeCost: number
   allowsPf: boolean
@@ -25,8 +26,12 @@ export class Skill {
   soldatCost: number
   isArcanique: boolean
   isHeal: boolean
+  resistance: boolean
+  blessure: boolean
+  help: boolean
   invocationTemplateName?: string
   description: string
+  precision?: string
 
   constructor(p: Skill) {
     this.id = p.id
@@ -40,6 +45,7 @@ export class Skill {
     this.pfCost = p.pfCost
     this.ppCost = p.ppCost
     this.dettesCost = p.dettesCost
+    this.etherCost = p.etherCost
     this.arcaneCost = p.arcaneCost
     this.arcanePrimeCost = p.arcanePrimeCost
     this.allowsPp = p.allowsPp
@@ -51,7 +57,11 @@ export class Skill {
     this.position = p.position
     this.isArcanique = p.isArcanique
     this.isHeal = p.isHeal
+    this.resistance = p.resistance
+    this.blessure = p.blessure
+    this.help = p.help
     this.invocationTemplateName = p.invocationTemplateName
     this.description = p.description
+    this.precision = p.precision
   }
 }

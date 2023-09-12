@@ -2,6 +2,7 @@ import { CharacterPreviewVM } from './entities/CharacterPreviewVM'
 import { CharacterVM } from './entities/CharacterVM'
 import { UpdateCharacterDto } from './requests/UpdateCharacterDto'
 import { UpdateSkillsAttributionDto } from './requests/UpdateSkillsAttributionDto'
+import { ApotheoseService } from '../../../../../domain/services/ApotheoseService'
 import { CharacterService } from '../../../../../domain/services/CharacterService'
 import { SessionService } from '../../../../../domain/services/SessionService'
 import { Body, Controller, Delete, Get, Param, Put } from '@nestjs/common'
@@ -10,7 +11,11 @@ import { ApiOkResponse, ApiTags } from '@nestjs/swagger'
 @Controller('api/v1/characters')
 @ApiTags('Character')
 export class CharacterController {
-  constructor(private characterService: CharacterService, private sessionService: SessionService) {}
+  constructor(
+    private characterService: CharacterService,
+    private sessionService: SessionService,
+    private apotheoseService: ApotheoseService
+  ) {}
 
   @ApiOkResponse({})
   @Put(':name/rest')
@@ -32,30 +37,6 @@ export class CharacterController {
     )
   }
 
-  @Put(':name/apotheose/:apotheoseName')
-  @ApiOkResponse({ type: CharacterVM })
-  async updateApotheose(
-    @Param('name') characterName: string,
-    @Param('apotheoseName') apotheoseName: string
-  ): Promise<CharacterVM> {
-    await this.characterService.updateApotheose({
-      characterName: characterName,
-      apotheoseName: apotheoseName
-    })
-    const updatedCharacter = await this.characterService.findFullCharacterByName(characterName)
-    const rest: {
-      baseRest: number
-      longRest: number
-    } = await this.sessionService.getRestForCharacter(updatedCharacter.character)
-    return CharacterVM.of({
-      character: updatedCharacter.character,
-      skills: updatedCharacter.skills,
-      apotheoses: updatedCharacter.apotheoses,
-      proficiencies: updatedCharacter.proficiencies,
-      rest: rest
-    })
-  }
-
   @Put(':name')
   @ApiOkResponse({ type: CharacterVM })
   async updateCharacter(
@@ -66,6 +47,12 @@ export class CharacterController {
     const characterToUpdate = {
       ...character,
       ...updateCharacterDto
+    }
+    if (updateCharacterDto.apotheoseName) {
+      const apotheose = await this.apotheoseService.findOneByName(updateCharacterDto.apotheoseName)
+      characterToUpdate.currentApotheose = apotheose
+    } else {
+      characterToUpdate.currentApotheose = null
     }
     await this.characterService.updateCharacter({ character: characterToUpdate })
     const updatedCharacter = await this.characterService.findFullCharacterByName(name)
@@ -125,6 +112,19 @@ export class CharacterController {
             baseRest: 3,
             longRest: 0
           }
+        })
+      })
+    )
+  }
+
+  @Get('characters-session')
+  @ApiOkResponse()
+  async findCharactersSessions(): Promise<Awaited<CharacterPreviewVM>[]> {
+    const characters = await this.sessionService.getSessionCharacters()
+    return await Promise.all(
+      characters.map(async (character) => {
+        return CharacterPreviewVM.of({
+          character: character.character
         })
       })
     )

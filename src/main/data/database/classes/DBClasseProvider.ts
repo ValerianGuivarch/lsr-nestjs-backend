@@ -18,7 +18,8 @@ export class DBClasseProvider implements IClasseProvider {
     return new Classe({
       name: doc.name,
       displayMale: doc.displayMale,
-      displayFemale: doc.displayFemale
+      displayFemale: doc.displayFemale,
+      canUsePp: doc.canUsePp
     })
   }
 
@@ -26,7 +27,8 @@ export class DBClasseProvider implements IClasseProvider {
     return {
       name: doc.name,
       displayMale: doc.displayMale,
-      displayFemale: doc.displayFemale
+      displayFemale: doc.displayFemale,
+      canUsePp: doc.canUsePp
     } as DBClasse
   }
 

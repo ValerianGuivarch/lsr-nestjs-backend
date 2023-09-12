@@ -34,7 +34,8 @@ export class InitCharacters {
       picture: 'https://media.discordapp.net/attachments/959399143485354004/959930006463725669/roger.png',
       pictureApotheose: 'https://media.discordapp.net/attachments/689044605311647799/1006318155049734144/unknown.png',
       background: 'https://media.discordapp.net/attachments/689044605311647799/1001499478131482624/unknown.png',
-      playerName: 'arcady'
+      playerName: 'arcady',
+      skills: [skills.get('arbre')]
     })
 
     const millia = this.createCharacter({
@@ -109,11 +110,11 @@ export class InitCharacters {
         skills.get('Plante de combat'),
         skills.get('Plante de magie'),
         skills.get('Plante envahissante'),
-        skills.get('Reconnaissance naturelle'),
+        skills.get('Reco. naturelle'),
         skills.get('Lien naturel'),
         skills.get('Soulèvement de la Nature'),
-        skills.get('Animation de la Nature'),
-        skills.get('Communication avec la Nature'),
+        skills.get('Anim. de la Nature'),
+        skills.get('Comm. avec la Nature'),
         skills.get('Voie des Arbres'),
         skills.get("Lien à l'Avatar")
       ]
@@ -466,6 +467,17 @@ export class InitCharacters {
       playerName: 'guilhem'
     })
 
+    /*dailyUse: {
+      ['Mun. courantes']: 0,
+        ['Mun. léthales']: 0,
+        ['Mun. affaiblissantes']: 0,
+        ['Mun. peste']: 0,
+        ['Mun. marquage']: 0,
+        ['Mun. dégénérative']: 0,
+        ['Gr. fumigène']: 0,
+        ['Gr. flash']: 0
+    },*/
+
     const isycho = this.createCharacter({
       name: 'isycho',
       classe: classes.get('pacificateur'),
@@ -483,7 +495,8 @@ export class InitCharacters {
       pictureApotheose:
         'https://media.discordapp.net/attachments/689034158307409933/1077311468678172692/isycho_apotheose.png',
       background: 'https://media.discordapp.net/attachments/689034158307409933/846816235157061672/bat2.jpg',
-      playerName: 'guilhem'
+      playerName: 'guilhem',
+      apotheoses: [apotheoses.get('Epée de Talos')]
     })
 
     const ayoub = this.createCharacter({
@@ -503,7 +516,23 @@ export class InitCharacters {
       pictureApotheose:
         'https://media.discordapp.net/attachments/689034158307409933/1082788605006729246/image.png?width=1028&height=1058',
       background: 'https://media.discordapp.net/attachments/689044605311647799/1001499755354005524/unknown.png',
-      playerName: 'eric'
+      playerName: 'eric',
+      skills: [
+        skills.get('juge'),
+        skills.get('phoenix'),
+        skills.get('balance'),
+        skills.get('phoenix amélioré'),
+        skills.get('juge amélioré'),
+        skills.get('pokéball')
+      ],
+      dailyUse: {
+        ['phoenix amélioré']: 1,
+        ['juge amélioré']: 1
+      },
+      dailyUseMax: {
+        ['phoenix amélioré']: 1,
+        ['juge amélioré']: 1
+      }
     })
 
     const roy = this.createCharacter({

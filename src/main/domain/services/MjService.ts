@@ -3,7 +3,6 @@ import { ProficiencyService } from './ProficiencyService'
 import { RollService } from './RollService'
 import { SkillService } from './SkillService'
 import { ApotheoseState } from '../models/apotheoses/ApotheoseState'
-import { FullCharacter } from '../models/characters/FullCharacter'
 import { ICharacterProvider } from '../providers/ICharacterProvider'
 import { ISessionProvider } from '../providers/ISessionProvider'
 import { Inject, Logger } from '@nestjs/common'
@@ -24,20 +23,6 @@ export class MjService {
   }
   // eslint-disable-next-line no-magic-numbers
   private static statByLevel: number[] = [7, 8, 8, 9, 10, 10, 11, 12, 12, 13, 14, 15, 16, 16, 17, 18, 18, 19, 20, 21]
-
-  async getSessionCharacters(): Promise<FullCharacter[]> {
-    const characters = await this.characterProvider.findAllForSession()
-    return Promise.all(
-      characters.map(async (character) => {
-        return new FullCharacter({
-          character: character,
-          skills: await this.skillService.findSkillsByCharacter(character),
-          apotheoses: await this.apotheoseService.findApotheosesByCharacter(character),
-          proficiencies: await this.proficiencyService.findProficienciesByCharacter(character)
-        })
-      })
-    )
-  }
 
   async newTurn(): Promise<void> {
     const apotheosedCharacters = (await this.characterProvider.findAll()).filter(

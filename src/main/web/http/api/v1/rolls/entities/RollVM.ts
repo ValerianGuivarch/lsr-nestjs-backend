@@ -1,8 +1,10 @@
 import { Roll } from '../../../../../../domain/models/roll/Roll'
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
+import { IsString } from 'class-validator'
 
 export class RollVM {
   @ApiProperty()
+  @IsString()
   id: string
 
   @ApiProperty()
@@ -65,6 +67,21 @@ export class RollVM {
   @ApiProperty()
   stat: string
 
+  @ApiProperty()
+  resistance: boolean
+
+  @ApiProperty()
+  blessure: boolean
+
+  @ApiProperty()
+  help: boolean
+
+  @ApiPropertyOptional()
+  precision?: string
+
+  @ApiPropertyOptional()
+  pictureUrl?: string
+
   @ApiPropertyOptional()
   healPoint?: number
 
@@ -95,7 +112,12 @@ export class RollVM {
       empiriqueRoll: p.roll.empiriqueRoll,
       apotheose: p.roll.apotheose,
       display: p.roll.display,
-      stat: p.roll.stat
+      stat: p.roll.stat,
+      resistance: p.roll.resistance,
+      help: p.roll.help,
+      blessure: p.roll.blessure,
+      precision: p.roll.precision,
+      pictureUrl: p.roll.pictureUrl
     })
   }
 }

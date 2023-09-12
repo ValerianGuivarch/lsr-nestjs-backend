@@ -105,7 +105,9 @@ export class DBCharacterTemplate {
   @IsObject()
   bloodline: DBBloodline
 
-  @ManyToMany(() => DBSkill, (skill) => skill.characterTemplates)
+  @ManyToMany(() => DBSkill, (skill) => skill.characterTemplates, {
+    cascade: ['remove']
+  })
   @JoinTable()
   @IsDefined()
   @IsObject()

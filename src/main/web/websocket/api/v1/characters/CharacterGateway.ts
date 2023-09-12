@@ -60,7 +60,7 @@ export class CharacterGateway {
     // eslint-disable-next-line no-magic-numbers
     return this.characterService.getCharactersSessionObservable().pipe(
       concatMap(async () => {
-        const characters = await this.mjService.getSessionCharacters()
+        const characters = await this.sessionService.getSessionCharacters()
         const result = await Promise.all(
           characters.map(async (character) => {
             return CharacterPreviewVM.of({

@@ -46,6 +46,9 @@ export class DBSkill {
   @Column({ type: 'integer' })
   arcaneCost: number
 
+  @Column({ type: 'integer', default: 0 })
+  etherCost: number
+
   @Column({ type: 'integer' })
   arcanePrimeCost: number
 
@@ -92,6 +95,15 @@ export class DBSkill {
 
   @Column({ type: 'boolean', default: false })
   isHeal: boolean
+
+  @Column({ type: 'boolean', default: false })
+  resistance: boolean
+
+  @Column({ type: 'boolean', default: false })
+  help: boolean
+
+  @Column({ type: 'boolean', default: false })
+  blessure: boolean
 
   @Column({ type: 'varchar', default: '' })
   description: string

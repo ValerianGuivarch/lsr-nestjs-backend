@@ -1,16 +1,20 @@
 import { SkillStat } from '../../../domain/models/skills/SkillStat'
 import { DBCharacter } from '../character/DBCharacter'
+pokebalimport { IsOptional, IsString } from 'class-validator'
 import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm'
 
 @Entity()
 export class DBRoll {
-  @PrimaryGeneratedColumn()
+  @PrimaryGeneratedColumn('uuid')
+  @IsString()
   id: string
 
   @Column({ type: 'varchar' })
   rollerName: string
 
-  @ManyToOne(() => DBCharacter)
+  @ManyToOne(() => DBCharacter, {
+    cascade: ['remove']
+  })
   @JoinColumn({ name: 'rollerName' })
   roller: DBCharacter
 
@@ -25,6 +29,9 @@ export class DBRoll {
 
   @Column({ type: 'boolean' })
   secret: boolean
+
+  @Column({ type: 'boolean' })
+  displayDices: boolean
 
   @Column({ type: 'boolean' })
   focus: boolean
@@ -73,4 +80,19 @@ export class DBRoll {
 
   @Column({ type: 'integer', nullable: true })
   healPoint?: number
+
+  @Column({ type: 'boolean', default: false })
+  resistance: boolean
+
+  @Column({ type: 'boolean', default: false })
+  blessure: boolean
+
+  @Column({ type: 'boolean', default: false })
+  help: boolean
+
+  @Column({ type: 'varchar', nullable: true })
+  precision?: string
+
+  @Column({ type: 'varchar', nullable: true })
+  pictureUrl?: string
 }

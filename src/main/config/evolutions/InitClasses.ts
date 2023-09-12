@@ -48,7 +48,14 @@ export class InitClasses {
     const pacificateurClasse: DBClasse = this.createClasse({
       name: 'pacificateur',
       displayMale: 'Pacificateur',
-      displayFemale: 'Pacificatrice'
+      displayFemale: 'Pacificatrice',
+      skills: [
+        skills.get('perturbation essence'),
+        skills.get('destruction essence'),
+        skills.get('Vol de magie'),
+        skills.get('Emprunt de magie')
+      ],
+      apotheoses: [apotheoses.get('surcharge')]
     })
     const spiriteClasse: DBClasse = this.createClasse({
       name: 'spirite',
@@ -58,7 +65,8 @@ export class InitClasses {
     const arcanisteClasse: DBClasse = this.createClasse({
       name: 'arcaniste',
       displayMale: 'Arcaniste',
-      displayFemale: 'Arcaniste'
+      displayFemale: 'Arcaniste',
+      canUsePp: false
     })
     const championArcaniqueClasse: DBClasse = this.createClasse({
       name: 'champion arcanique',
@@ -69,7 +77,8 @@ export class InitClasses {
     const soldatClasse: DBClasse = this.createClasse({
       name: 'soldat',
       displayMale: 'Soldat',
-      displayFemale: 'Soldate'
+      displayFemale: 'Soldate',
+      canUsePp: false
     })
     const avatarClasse: DBClasse = this.createClasse({
       name: 'avatar',
@@ -134,6 +143,7 @@ export class InitClasses {
     apotheoses?: DBApotheose[]
     skills?: DBSkill[]
     proficiencies?: DBProficiency[]
+    canUsePp?: boolean
   }): DBClasse {
     const newClass = new DBClasse()
     newClass.name = p.name
@@ -142,6 +152,7 @@ export class InitClasses {
     newClass.apotheoses = p.apotheoses || []
     newClass.skills = p.skills || []
     newClass.proficiencies = p.proficiencies || []
+    newClass.canUsePp = p.canUsePp
     return newClass
   }
 }

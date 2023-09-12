@@ -21,6 +21,8 @@ export class Character {
   dettes: number
   arcanes: number
   arcanesMax: number
+  ether: number
+  etherMax: number
   arcanePrimes: number
   arcanePrimesMax: number
   munitions: number
@@ -74,6 +76,8 @@ export class Character {
     this.dettes = p.dettes < 0 ? 0 : p.dettes
     this.arcanes = p.arcanes < 0 ? 0 : p.arcanes
     this.arcanesMax = p.arcanesMax
+    this.ether = p.ether < 0 ? 0 : p.ether
+    this.etherMax = p.etherMax
     this.munitions = p.munitions < 0 ? 0 : p.munitions
     this.munitionsMax = p.munitionsMax
     this.arcanePrimes = p.arcanePrimes < 0 ? 0 : p.arcanePrimes
@@ -110,6 +114,7 @@ export class Character {
     pvMax: number
     pfMax: number
     ppMax: number
+    ethersMax: number
     arcanesMax: number
     arcanePrimesMax: number
     munitionsMax: number
@@ -144,6 +149,8 @@ export class Character {
       dettes: Math.floor(Math.random() * 11),
       arcanes: p.arcanesMax,
       arcanesMax: p.arcanesMax,
+      ether: p.ethersMax,
+      etherMax: p.ethersMax,
       arcanePrimes: p.arcanePrimesMax,
       arcanePrimesMax: p.arcanePrimesMax,
       munitions: p.munitionsMax,
@@ -208,6 +215,8 @@ export class Character {
       dettes: 0,
       arcanes: 0,
       arcanesMax: 0,
+      ether: 0,
+      etherMax: 0,
       arcanePrimes: 0,
       arcanePrimesMax: 0,
       munitions: 0,

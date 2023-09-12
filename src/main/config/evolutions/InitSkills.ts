@@ -17,7 +17,10 @@ export class InitSkills {
       stat: SkillStat.CHAIR,
       category: DisplayCategory.STATS,
       display: 'fait un *Jet de Chair*',
-      position: 1
+      position: 1,
+      resistance: true,
+      blessure: true,
+      help: true
     })
     const espritSkill = this.createSkill({
       name: 'esprit',
@@ -27,7 +30,10 @@ export class InitSkills {
       stat: SkillStat.ESPRIT,
       category: DisplayCategory.STATS,
       display: "fait un *Jet d'Esprit*",
-      position: 2
+      position: 2,
+      resistance: true,
+      blessure: true,
+      help: true
     })
     const essenceSkill = this.createSkill({
       name: 'essence',
@@ -37,7 +43,10 @@ export class InitSkills {
       stat: SkillStat.ESSENCE,
       category: DisplayCategory.STATS,
       display: "fait un *Jet d'Essence*",
-      position: 3
+      position: 3,
+      resistance: true,
+      blessure: true,
+      help: true
     })
     const empiriqueSkill = this.createSkill({
       name: 'empirique',
@@ -59,7 +68,7 @@ export class InitSkills {
       successCalculation: SuccessCalculation.CUSTOM,
       category: DisplayCategory.STATS,
       display: 'fait un *Jet de Sauvegarde contre la Mort*',
-      customRolls: '1d6',
+      customRolls: '1d20',
       position: 0,
       secret: true
     })
@@ -72,7 +81,10 @@ export class InitSkills {
       category: DisplayCategory.MAGIE,
       display: 'fait un *Jet de Magie*',
       position: 1,
-      dettesCost: 1
+      dettesCost: 1,
+      resistance: true,
+      blessure: true,
+      help: true
     })
     const cantripSkill = this.createSkill({
       name: 'cantrip',
@@ -83,7 +95,9 @@ export class InitSkills {
       category: DisplayCategory.MAGIE,
       display: 'fait un *Jet de Magie Légère*',
       position: 2,
-      ppCost: 1
+      ppCost: 1,
+      resistance: true,
+      blessure: true
     })
 
     const soin = this.createSkill({
@@ -420,7 +434,8 @@ export class InitSkills {
       position: 12,
       successCalculation: SuccessCalculation.SIMPLE_PLUS_1,
       arcaneCost: 1,
-      isArcanique: true
+      isArcanique: true,
+      resistance: true
     })
     const comedienSkill = this.createSkill({
       name: 'comedien',
@@ -447,7 +462,8 @@ export class InitSkills {
       position: 13,
       successCalculation: SuccessCalculation.SIMPLE_PLUS_1,
       arcaneCost: 1,
-      isArcanique: true
+      isArcanique: true,
+      resistance: true
     })
 
     const mentalisteSkill = this.createSkill({
@@ -461,7 +477,8 @@ export class InitSkills {
       position: 14,
       successCalculation: SuccessCalculation.SIMPLE_PLUS_1,
       arcaneCost: 1,
-      isArcanique: true
+      isArcanique: true,
+      resistance: true
     })
 
     const eruditSkill = this.createSkill({
@@ -520,6 +537,20 @@ export class InitSkills {
       isArcanique: true
     })
 
+    const jugeAmelioreSkill = this.createSkill({
+      name: 'juge amélioré',
+      shortName: 'juge am.',
+      description: "Utiliser 1/2 ou 3/4 pour ses réussites ou celles d'un allié",
+      allAttribution: false,
+      stat: SkillStat.FIXE,
+      category: DisplayCategory.ARCANES,
+      display: 'fait une *Juge Amélioré*',
+      position: 18,
+      successCalculation: SuccessCalculation.AUCUN,
+      arcaneCost: 1,
+      isArcanique: true
+    })
+
     const arbreSkill = this.createSkill({
       name: 'arbre',
       shortName: 'arb',
@@ -531,7 +562,9 @@ export class InitSkills {
       position: 19,
       successCalculation: SuccessCalculation.SIMPLE_PLUS_1,
       arcaneCost: 1,
-      isArcanique: true
+      isArcanique: true,
+      resistance: true,
+      blessure: true
     })
 
     const phoenixSkill = this.createSkill({
@@ -542,6 +575,20 @@ export class InitSkills {
       stat: SkillStat.FIXE,
       category: DisplayCategory.ARCANES,
       display: 'fait une *Phoenix*',
+      position: 20,
+      successCalculation: SuccessCalculation.AUCUN,
+      arcaneCost: 1,
+      isArcanique: true
+    })
+
+    const phoenixAmelioreSkill = this.createSkill({
+      name: 'phoenix amélioré',
+      shortName: 'ph. am.',
+      description: 'Donner 3 PV à plusieurs cibles KO, qui peuvent agir immédiatement',
+      allAttribution: false,
+      stat: SkillStat.ESSENCE,
+      category: DisplayCategory.ARCANES,
+      display: 'fait une *Phoenix Amélioré*',
       position: 20,
       successCalculation: SuccessCalculation.AUCUN,
       arcaneCost: 1,
@@ -651,7 +698,8 @@ export class InitSkills {
       display: 'immobilise une *Cible*',
       position: 29,
       successCalculation: SuccessCalculation.SIMPLE_PLUS_1,
-      isArcanique: true
+      isArcanique: true,
+      resistance: true
     })
 
     const tisserandSkill = this.createSkill({
@@ -664,7 +712,8 @@ export class InitSkills {
       display: "modifie les *Souvenirs* d'une cible",
       position: 30,
       successCalculation: SuccessCalculation.SIMPLE_PLUS_1,
-      isArcanique: true
+      isArcanique: true,
+      resistance: true
     })
 
     const commandantSkill = this.createSkill({
@@ -677,7 +726,8 @@ export class InitSkills {
       display: 'donne un *Ordre* à une cible',
       position: 31,
       successCalculation: SuccessCalculation.SIMPLE_PLUS_1,
-      isArcanique: true
+      isArcanique: true,
+      resistance: true
     })
 
     const verSkill = this.createSkill({
@@ -703,7 +753,8 @@ export class InitSkills {
       display: 'apaise les *Émotions*',
       position: 33,
       successCalculation: SuccessCalculation.SIMPLE_PLUS_1,
-      isArcanique: true
+      isArcanique: true,
+      resistance: true
     })
 
     const bourreauSkill = this.createSkill({
@@ -716,7 +767,9 @@ export class InitSkills {
       display: 'provoque de la *Douleur Pure*',
       position: 34,
       successCalculation: SuccessCalculation.SIMPLE_PLUS_1,
-      isArcanique: true
+      isArcanique: true,
+      resistance: true,
+      blessure: true
     })
     const marionnettisteSkill = this.createSkill({
       name: 'marionnettiste',
@@ -728,7 +781,8 @@ export class InitSkills {
       display: 'manipule les *Mouvements*',
       position: 35,
       successCalculation: SuccessCalculation.SIMPLE_PLUS_1,
-      isArcanique: true
+      isArcanique: true,
+      resistance: true
     })
 
     const lionSkill = this.createSkill({
@@ -922,7 +976,8 @@ export class InitSkills {
       display: "donne l'impression à une cible qu'on est son *Ami*",
       position: 50,
       successCalculation: SuccessCalculation.SIMPLE_PLUS_1,
-      isArcanique: true
+      isArcanique: true,
+      resistance: true
     })
 
     const chamanSkill = this.createSkill({
@@ -999,7 +1054,8 @@ export class InitSkills {
       display: 'empoisonne une cible (-1pv par tour)',
       position: 56,
       successCalculation: SuccessCalculation.SIMPLE_PLUS_1,
-      isArcanique: true
+      isArcanique: true,
+      resistance: true
     })
 
     const amnesiqueSkill = this.createSkill({
@@ -1025,7 +1081,8 @@ export class InitSkills {
       display: 'annule de la magie',
       position: 58,
       successCalculation: SuccessCalculation.SIMPLE_PLUS_1,
-      isArcanique: true
+      isArcanique: true,
+      resistance: true
     })
 
     const parfumeurSkill = this.createSkill({
@@ -1296,7 +1353,9 @@ export class InitSkills {
       display: 'détruit une zone',
       position: 79,
       successCalculation: SuccessCalculation.SIMPLE_PLUS_1,
-      isArcanique: true
+      isArcanique: true,
+      resistance: true,
+      blessure: true
     })
 
     const conteurSkill = this.createSkill({
@@ -1672,7 +1731,9 @@ export class InitSkills {
       stat: SkillStat.ESSENCE,
       category: DisplayCategory.MAGIE,
       display: 'génère un *Pollen Magique*',
-      position: 31
+      position: 31,
+      resistance: true,
+      blessure: true
     })
     /*const planteEnvahissante = this.createSkill({
       name: 'Plante envahissante',
@@ -1687,7 +1748,7 @@ export class InitSkills {
     })*/
 
     const reconnaissanceNaturelle = this.createSkill({
-      name: 'Reconnaissance naturelle',
+      name: 'Reco. naturelle',
       shortName: 'reco nat.',
       description: 'Analyser le niveau courant de la Nature',
       allAttribution: false,
@@ -1695,7 +1756,8 @@ export class InitSkills {
       category: DisplayCategory.MAGIE,
       display: 'analyse le *Niveau de la Nature*',
       position: 9,
-      successCalculation: SuccessCalculation.CUSTOM
+      successCalculation: SuccessCalculation.CUSTOM,
+      secret: true
     })
 
     const lienNaturel = this.createSkill({
@@ -1707,6 +1769,7 @@ export class InitSkills {
       category: DisplayCategory.MAGIE,
       display: 'se *soigne* en puissant dans ses plantes',
       precision: 'Rappel : retirer 2 PV à une plante pour en gagner 1',
+      successCalculation: SuccessCalculation.AUCUN,
       position: 10
     })
 
@@ -1720,11 +1783,13 @@ export class InitSkills {
       display: 'provoque un *Soulèvement de la Nature*',
       precision: 'Rappel : retirer 1 PV à chaque plante invoquée',
       position: 11,
-      dettesCost: 1
+      dettesCost: 1,
+      resistance: true,
+      blessure: true
     })
 
     const animationDeLaNature = this.createSkill({
-      name: 'Animation de la Nature',
+      name: 'Anim. de la Nature',
       shortName: 'anim nat.',
       description: 'Donne une consscience avancée à une plante',
       allAttribution: false,
@@ -1736,7 +1801,7 @@ export class InitSkills {
     })
 
     const communicationAvecLaNature = this.createSkill({
-      name: 'Communication avec la Nature',
+      name: 'Comm. avec la Nature',
       shortName: 'comm nat.',
       description: 'Lien avec une plante pour communiquer avec elle tant que la Nature est supérieure à 2',
       allAttribution: false,
@@ -1780,7 +1845,9 @@ export class InitSkills {
       category: DisplayCategory.SOLDATS,
       display: 'utilise son *Bras Mécanique*',
       position: 1,
-      pvCost: 1
+      pvCost: 1,
+      resistance: true,
+      blessure: true
     })
 
     const oeilBionique = this.createSkill({
@@ -1803,7 +1870,9 @@ export class InitSkills {
       stat: SkillStat.ESPRIT,
       category: DisplayCategory.SOLDATS,
       display: 'utilise une *Munition courante*',
-      position: 3
+      position: 3,
+      resistance: true,
+      blessure: true
     })
 
     const munitionLethale = this.createSkill({
@@ -1816,7 +1885,9 @@ export class InitSkills {
       display: 'utilise une *Munition léthale*',
       position: 4,
       successCalculation: SuccessCalculation.DOUBLE,
-      soldatCost: 1
+      soldatCost: 1,
+      resistance: true,
+      blessure: true
     })
 
     const munitionAffaiblissante = this.createSkill({
@@ -1828,7 +1899,9 @@ export class InitSkills {
       category: DisplayCategory.SOLDATS,
       display: 'utilise une *Munition affaiblissante*',
       position: 5,
-      soldatCost: 2
+      soldatCost: 2,
+      resistance: true,
+      blessure: true
     })
 
     const munitionPeste = this.createSkill({
@@ -1840,7 +1913,9 @@ export class InitSkills {
       category: DisplayCategory.SOLDATS,
       display: 'utilise une *Munition peste*',
       position: 6,
-      soldatCost: 2
+      soldatCost: 2,
+      resistance: true,
+      blessure: true
     })
 
     const munitionMarquage = this.createSkill({
@@ -1852,7 +1927,9 @@ export class InitSkills {
       category: DisplayCategory.SOLDATS,
       display: 'utilise une *Munition géolocalisable*',
       position: 7,
-      soldatCost: 3
+      soldatCost: 3,
+      resistance: true,
+      blessure: true
     })
 
     const munitionDegenerative = this.createSkill({
@@ -1864,7 +1941,9 @@ export class InitSkills {
       category: DisplayCategory.SOLDATS,
       display: 'utilise une *Grenade dégénérative*',
       position: 8,
-      soldatCost: 2
+      soldatCost: 2,
+      resistance: true,
+      blessure: true
     })
 
     const munitionFumigene = this.createSkill({
@@ -1876,7 +1955,9 @@ export class InitSkills {
       category: DisplayCategory.SOLDATS,
       display: 'utilise une *Grenade fumigène*',
       position: 9,
-      soldatCost: 1
+      soldatCost: 1,
+      resistance: true,
+      blessure: true
     })
 
     const munitionFlash = this.createSkill({
@@ -1889,6 +1970,62 @@ export class InitSkills {
       display: 'utilise une *Grenade flash*',
       position: 10,
       soldatCost: 1
+    })
+
+    const perturbationEssence = this.createSkill({
+      name: 'perturbation essence',
+      shortName: 'pert-ess',
+      description: "Empeche un ennemi d'utiliser sa magie",
+      allAttribution: false,
+      stat: SkillStat.ESSENCE,
+      category: DisplayCategory.PACIFICATEURS,
+      display: 'Perturbe essence',
+      position: 1,
+      successCalculation: SuccessCalculation.SIMPLE,
+      ppCost: 1,
+      precision: 'Chaque réussite annule une réussite du jet de magie de la cible'
+    })
+
+    const destructionEssence = this.createSkill({
+      name: 'destruction essence',
+      shortName: 'destr-ess',
+      description: 'Fait exploser la magie',
+      allAttribution: false,
+      stat: SkillStat.ESSENCE,
+      category: DisplayCategory.PACIFICATEURS,
+      display: 'Détruit essence',
+      position: 2,
+      successCalculation: SuccessCalculation.SIMPLE,
+      dettesCost: 1,
+      resistance: true,
+      precision: 'Une Malédiction par PP en moins pour résister, rend 1 PP si au moins un dégat infligé'
+    })
+
+    const volMagie = this.createSkill({
+      name: 'Vol de magie',
+      shortName: 'vol-mag',
+      description: 'Vol une magie et la stocke',
+      allAttribution: false,
+      stat: SkillStat.FIXE,
+      category: DisplayCategory.PACIFICATEURS,
+      display: 'Vol la magie',
+      position: 3,
+      successCalculation: SuccessCalculation.AUCUN,
+      etherCost: 1
+    })
+
+    const empruntMagie = this.createSkill({
+      name: 'Emprunt de magie',
+      shortName: 'empr-mag',
+      description: "Emprunte une magie et la lance immédiatement avec les stats de l'adversaire",
+      allAttribution: false,
+      stat: SkillStat.FIXE,
+      category: DisplayCategory.PACIFICATEURS,
+      display: 'Emprunt de magie',
+      position: 3,
+      arcanePrimeCost: 0,
+      successCalculation: SuccessCalculation.AUCUN,
+      etherCost: 1
     })
 
     const tatouage = this.createSkill({
@@ -1917,6 +2054,10 @@ export class InitSkills {
       successCalculation: SuccessCalculation.CUSTOM
     })
     return [
+      empruntMagie,
+      destructionEssence,
+      volMagie,
+      perturbationEssence,
       munitionDegenerative,
       munitionCourante,
       munitionLethale,
@@ -1955,8 +2096,10 @@ export class InitSkills {
       chasseurSkill,
       ivrogneSkill,
       jugeSkill,
+      jugeAmelioreSkill,
       arbreSkill,
       phoenixSkill,
+      phoenixAmelioreSkill,
       necromancienSkill,
       licorneSkill,
       chouetteSkill,
@@ -2129,6 +2272,9 @@ export class InitSkills {
     longName?: string
     isArcanique?: boolean
     isHeal?: boolean
+    resistance?: boolean
+    help?: boolean
+    blessure?: boolean
     allowsPf?: boolean
     allowsPp?: boolean
     limitedUse?: number
@@ -2136,6 +2282,7 @@ export class InitSkills {
     pfCost?: number
     ppCost?: number
     dettesCost?: number
+    etherCost?: number
     arcaneCost?: number
     arcanePrimeCost?: number
     customRolls?: string
@@ -2161,6 +2308,7 @@ export class InitSkills {
       ppCost: p.ppCost || 0,
       dettesCost: p.dettesCost || 0,
       arcaneCost: p.arcaneCost || 0,
+      etherCost: p.etherCost || 0,
       arcanePrimeCost: p.arcanePrimeCost || 0,
       customRolls: p.customRolls || '',
       successCalculation: p.successCalculation || SuccessCalculation.SIMPLE,
@@ -2169,6 +2317,9 @@ export class InitSkills {
       position: p.position,
       isArcanique: p.isArcanique,
       isHeal: p.isHeal || false,
+      resistance: p.resistance || false,
+      help: p.help || false,
+      blessure: p.blessure || false,
       invocationTemplate: p.invocationTemplate || null,
       invocationTemplateName: p.invocationTemplate ? p.invocationTemplate.name : null,
       soldatCost: p.soldatCost || 0,

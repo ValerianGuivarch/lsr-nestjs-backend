@@ -17,9 +17,9 @@ export class RollController {
   ) {}
 
   @ApiOkResponse({ type: RollVM })
-  @Get('')
-  async getAllRolls(): Promise<RollVM[]> {
-    const rolls = await this.rollService.getLast()
+  @Get(':name')
+  async getAllRolls(@Param('name') name: string): Promise<RollVM[]> {
+    const rolls = await this.rollService.getLastExceptSecret(name)
     return rolls
       .filter((roll) => !roll.resistRoll)
       .map((roll) =>
@@ -32,7 +32,8 @@ export class RollController {
 
   @ApiOkResponse({ type: RollVM })
   @Put(':id')
-  async updateRoll(@Param() id: string, @Body() req: UpdateRollRequest): Promise<void> {
+  async updateRoll(@Param('id') id: string, @Body() req: UpdateRollRequest): Promise<void> {
+    console.log('updateRoll', id, req)
     const rollToUpdate = await this.rollService.findOneById(id)
     if (rollToUpdate) {
       await this.rollService.updateRoll({
@@ -67,7 +68,7 @@ export class RollController {
   }
 
   @ApiOkResponse({})
-  @Put('resetRolls')
+  @Delete('')
   async resetRolls(): Promise<void> {
     await this.rollService.deleteAll()
   }

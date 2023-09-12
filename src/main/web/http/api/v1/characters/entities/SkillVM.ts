@@ -33,6 +33,18 @@ export class SkillVM {
   @ApiProperty()
   isHeal: boolean
 
+  @ApiProperty()
+  resistance: boolean
+
+  @ApiProperty()
+  help: boolean
+
+  @ApiProperty()
+  blessure: boolean
+
+  @ApiProperty()
+  stat: string
+
   constructor(p: SkillVM) {
     this.id = p.id
     this.name = p.name
@@ -44,20 +56,29 @@ export class SkillVM {
     this.dailyUseMax = p.dailyUseMax
     this.soldatCost = p.soldatCost
     this.isHeal = p.isHeal
+    this.resistance = p.resistance
+    this.help = p.help
+    this.blessure = p.blessure
+    this.stat = p.stat
   }
 
   static of(p: { skill: Skill; character: Character }): SkillVM {
-    return new SkillVM({
+    const vm = new SkillVM({
       id: p.skill.id,
       name: p.skill.name,
-      dailyUse: p.character.dailyUse[p.skill.name],
-      dailyUseMax: p.character.dailyUseMax[p.skill.name],
+      dailyUse: p.character.dailyUse.get(p.skill.name),
+      dailyUseMax: p.character.dailyUseMax.get(p.skill.name),
       shortName: p.skill.shortName,
       longName: p.skill.longName,
       displayCategory: p.skill.displayCategory.toString(),
       description: p.skill.description,
       soldatCost: p.skill.soldatCost,
-      isHeal: p.skill.isHeal
+      isHeal: p.skill.isHeal,
+      resistance: p.skill.resistance,
+      help: p.skill.help,
+      blessure: p.skill.blessure,
+      stat: p.skill.stat.toString()
     })
+    return vm
   }
 }

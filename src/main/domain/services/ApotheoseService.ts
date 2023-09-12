@@ -12,8 +12,12 @@ export class ApotheoseService {
   ) {}
 
   async findApotheosesByCharacter(character: Character): Promise<Apotheose[]> {
-    const characterApotheoses = await this.apotheosesProvider.findApotheosesByCharacter(character.name)
-    const classeApotheoses = await this.apotheosesProvider.findApotheosesByClasse(character.classe.name)
+    const characterApotheoses = (await this.apotheosesProvider.findApotheosesByCharacter(character.name)).filter(
+      (apotheose) => apotheose.minLevel <= character.niveau && apotheose.maxLevel >= character.niveau
+    )
+    const classeApotheoses = (await this.apotheosesProvider.findApotheosesByClasse(character.classe.name)).filter(
+      (apotheose) => apotheose.minLevel <= character.niveau && apotheose.maxLevel >= character.niveau
+    )
 
     const apotheoseCharacterNames = new Set(characterApotheoses.map((ac) => ac.name))
     const uniqueClasseApotheoses = classeApotheoses.filter((apotheose) => !apotheoseCharacterNames.has(apotheose.name))

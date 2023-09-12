@@ -154,6 +154,14 @@ export class ProviderErrors {
     })
   }
 
+  static RollNotEnoughEther(): GenericError {
+    return GenericError.of({
+      statusCode: HttpStatus.PRECONDITION_REQUIRED,
+      message: "Pas assez d'ether !",
+      code: 'ROLL_NOT_ENOUGH_ETHER'
+    })
+  }
+
   static RollNotEnoughArcanePrime(): GenericError {
     return GenericError.of({
       statusCode: HttpStatus.PRECONDITION_REQUIRED,

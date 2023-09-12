@@ -22,7 +22,7 @@ export class DBRollProvider implements IRollProvider {
       rollerName: doc.rollerName,
       date: doc.date,
       secret: doc.secret,
-      displayDices: true,
+      displayDices: doc.displayDices,
       focus: doc.focus,
       power: doc.power,
       proficiency: doc.proficiency,
@@ -37,7 +37,12 @@ export class DBRollProvider implements IRollProvider {
       empiriqueRoll: doc.empiriqueRoll,
       resistRoll: doc.resistRoll,
       display: doc.display,
-      stat: SkillStat[doc.stat]
+      stat: SkillStat[doc.stat],
+      resistance: doc.resistance,
+      blessure: doc.blessure,
+      help: doc.help,
+      precision: doc.precision,
+      pictureUrl: doc.pictureUrl
     })
   }
 
@@ -63,7 +68,12 @@ export class DBRollProvider implements IRollProvider {
       empiriqueRoll: doc.empiriqueRoll,
       resistRoll: doc.resistRoll,
       display: doc.display,
-      stat: doc.stat
+      stat: doc.stat,
+      resistance: doc.resistance,
+      blessure: doc.blessure,
+      help: doc.help,
+      precision: doc.precision,
+      pictureUrl: doc.pictureUrl
     } as Partial<DBRoll>
   }
 
@@ -73,12 +83,14 @@ export class DBRollProvider implements IRollProvider {
   }
 
   async update(roll: Roll): Promise<Roll> {
-    const dbRoll = this.dbRollRepository.create(DBRollProvider.fromRoll(roll))
-    return DBRollProvider.toRoll(await this.dbRollRepository.save(dbRoll))
+    await this.dbRollRepository.update({ id: roll.id }, DBRollProvider.fromRoll(roll))
+    const dbRoll = await this.dbRollRepository.findOneBy({ id: roll.id })
+    return DBRollProvider.toRoll(dbRoll)
   }
 
   async findOneById(id: string): Promise<Roll> {
-    const roll = await this.dbRollRepository.findOneBy({ id })
+    console.log('findOneById', id)
+    const roll = await this.dbRollRepository.findOneBy({ id: id })
     if (!roll) {
       throw ProviderErrors.EntityNotFound('roll ${id}')
     }

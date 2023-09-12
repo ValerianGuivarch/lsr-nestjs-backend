@@ -39,9 +39,9 @@ export class MjController {
   }
 
   @ApiOkResponse({ type: CharacterVM })
-  @Get('characters')
+  @Get('characters-session')
   async getSessionCharacters(): Promise<CharacterVM[]> {
-    const characters = await this.mjService.getSessionCharacters()
+    const characters = await this.sessionService.getSessionCharacters()
 
     return await Promise.all(
       characters.map(async (character) => {

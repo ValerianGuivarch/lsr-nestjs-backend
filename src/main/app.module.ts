@@ -9,6 +9,7 @@ import { PostgresModule } from './data/database/postgres.module'
 import { DBRollProvider } from './data/database/rolls/DBRollProvider'
 import { DBSessionProvider } from './data/database/session/DBSessionProvider'
 import { DBSkillProvider } from './data/database/skills/DBSkillProvider'
+import { PokeProvider } from './data/poke/PokeProvider'
 import { ApotheoseService } from './domain/services/ApotheoseService'
 import { CharacterService } from './domain/services/CharacterService'
 import { ClasseService } from './domain/services/ClasseService'
@@ -82,6 +83,10 @@ import { TypeOrmModule } from '@nestjs/typeorm'
     {
       provide: 'IRollProvider',
       useClass: DBRollProvider
+    },
+    {
+      provide: 'IPokeProvider',
+      useClass: PokeProvider
     },
     {
       provide: 'ISessionProvider',

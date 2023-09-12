@@ -1,5 +1,5 @@
 import { CharacterService } from '../../../../../domain/services/CharacterService'
-import { MjService } from '../../../../../domain/services/MjService'
+import { SessionService } from '../../../../../domain/services/SessionService'
 import { CharacterVM } from '../../../../http/api/v1/characters/entities/CharacterVM'
 import { Controller, Get, Sse } from '@nestjs/common'
 import { ApiOkResponse, ApiTags } from '@nestjs/swagger'
@@ -13,7 +13,7 @@ import { Server } from 'ws'
 export class MjGateway {
   @WebSocketServer() server: Server
 
-  constructor(private characterService: CharacterService, private mjService: MjService) {}
+  constructor(private characterService: CharacterService, private sessionService: SessionService) {}
   @Get('')
   @ApiOkResponse()
   @Sse('character')
@@ -21,7 +21,7 @@ export class MjGateway {
     // eslint-disable-next-line no-magic-numbers
     return this.characterService.getCharactersSessionObservable().pipe(
       concatMap(async () => {
-        const characters = await this.mjService.getSessionCharacters()
+        const characters = await this.sessionService.getSessionCharacters()
         const result = await Promise.all(
           characters.map(async (character) => {
             return CharacterVM.of({

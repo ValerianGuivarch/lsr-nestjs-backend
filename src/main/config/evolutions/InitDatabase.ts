@@ -11,6 +11,7 @@ import { DBCharacter } from '../../data/database/character/DBCharacter'
 import { DBCharacterTemplate } from '../../data/database/character/DBCharacterTemplate'
 import { DBClasse } from '../../data/database/classes/DBClasse'
 import { DBProficiency } from '../../data/database/proficiencies/DBProficiency'
+import { DBRoll } from '../../data/database/rolls/DBRoll'
 import { DBSkill } from '../../data/database/skills/DBSkill'
 import { Injectable } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
@@ -28,6 +29,8 @@ export class InitDatabase {
     private dbSkillRepository: Repository<DBSkill>,
     @InjectRepository(DBCharacter, 'postgres')
     private dbCharacterRepository: Repository<DBCharacter>,
+    @InjectRepository(DBRoll, 'postgres')
+    private dbRollRepository: Repository<DBRoll>,
     @InjectRepository(DBProficiency, 'postgres')
     private dbProficiencyRepository: Repository<DBProficiency>,
     @InjectRepository(DBApotheose, 'postgres')
@@ -36,12 +39,46 @@ export class InitDatabase {
     private dbCharacterTemplateRepository: Repository<DBCharacterTemplate>
   ) {}
 
+  async deleteSkills(): Promise<void> {
+    // Supprimez les relations entre DBClasse et DBSkill
+    const classes = await this.dbClasseRepository.find({ relations: ['skills'] })
+    for (const classe of classes) {
+      classe.skills = []
+      await this.dbClasseRepository.save(classe)
+    }
+
+    // Supprimez les relations entre DBBloodline et DBSkill
+    const bloodlines = await this.dbBloodlineRepository.find({ relations: ['skills'] })
+    for (const bloodline of bloodlines) {
+      bloodline.skills = []
+      await this.dbBloodlineRepository.save(bloodline)
+    }
+
+    // Supprimez les relations entre DBCharacter et DBSkill
+    const characters = await this.dbCharacterRepository.find({ relations: ['skills'] })
+    for (const character of characters) {
+      character.skills = []
+      await this.dbCharacterRepository.save(character)
+    }
+
+    // Supprimez les relations entre DBCharacterTemplate et DBSkill
+    const characterTemplates = await this.dbCharacterTemplateRepository.find({ relations: ['skills'] })
+    for (const characterTemplate of characterTemplates) {
+      characterTemplate.skills = []
+      await this.dbCharacterTemplateRepository.save(characterTemplate)
+    }
+
+    // Maintenant, supprimez les enregistrements de DBSkill
+    await this.dbSkillRepository.delete({})
+  }
+
   async initDatabase(): Promise<void> {
+    await this.deleteSkills()
+    await this.dbRollRepository.delete({})
     await this.dbCharacterRepository.delete({})
     await this.dbCharacterTemplateRepository.delete({})
     await this.dbClasseRepository.delete({})
     await this.dbBloodlineRepository.delete({})
-    await this.dbSkillRepository.delete({})
     await this.dbApotheoseRepository.delete({})
     await this.dbProficiencyRepository.delete({})
 
@@ -70,10 +107,17 @@ export class InitDatabase {
     )
 
     console.log('Initializing skills invocations...')
-    await this.initSkillsInvocations(charactersTemplates)
+    const skillsInvoc = await this.initSkillsInvocations(charactersTemplates)
 
+    const totalSkills = new Map<string, DBSkill>()
+    for (const skill of skills.values()) {
+      totalSkills.set(skill.name, skill)
+    }
+    for (const skill of skillsInvoc.values()) {
+      totalSkills.set(skill.name, skill)
+    }
     console.log('Initializing characters...')
-    await this.initCharacters(skills, proficiencies, apotheoses, classes, bloodlines)
+    await this.initCharacters(totalSkills, proficiencies, apotheoses, classes, bloodlines)
 
     console.log('Database initialized')
   }
