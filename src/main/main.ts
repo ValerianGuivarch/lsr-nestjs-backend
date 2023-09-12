@@ -12,12 +12,7 @@ async function bootstrap() {
   })
 
   // CORS
-  app.enableCors({
-    origin: ['https://app.forestadmin.com', 'https://l7r.fr'], // Remplacez par les origines appropriées
-    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
-    credentials: true,
-    allowedHeaders: 'Content-Type, Authorization, X-Requested-With'
-  })
+  app.enableCors()
 
   const configService = app.get(ConfigService)
   app.useGlobalPipes(new ValidationPipe())
