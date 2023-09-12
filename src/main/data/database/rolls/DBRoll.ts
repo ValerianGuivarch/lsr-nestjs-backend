@@ -1,6 +1,6 @@
 import { SkillStat } from '../../../domain/models/skills/SkillStat'
 import { DBCharacter } from '../character/DBCharacter'
-pokebalimport { IsOptional, IsString } from 'class-validator'
+import { IsString } from 'class-validator'
 import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm'
 
 @Entity()
