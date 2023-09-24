@@ -2028,6 +2028,102 @@ export class InitSkills {
       etherCost: 1
     })
 
+    const bouteilleKyma = this.createSkill({
+      name: 'Bouteille de Kyma',
+      shortName: 'btl',
+      description: 'Se réfugier dans la bouteille',
+      allAttribution: false,
+      stat: SkillStat.ESSENCE,
+      category: DisplayCategory.ARCANES_PRIMES,
+      display: "utilise l'*Arcane Prime* de la *Bouteille de Kyma*",
+      position: 1,
+      arcanePrimeCost: 1
+    })
+
+    const poignardTemporelle = this.createSkill({
+      name: 'Poignard Temporelle',
+      shortName: 'pgnd',
+      description: 'Invoquer un commandant du futur',
+      allAttribution: false,
+      stat: SkillStat.ESSENCE,
+      category: DisplayCategory.ARCANES_PRIMES,
+      display: "utilise l'*Arcane Prime* du *Poignard Temporelle*",
+      position: 1,
+      arcanePrimeCost: 1
+    })
+
+    const bagueDeirdre = this.createSkill({
+      name: 'Bague de Deirdre',
+      shortName: 'bgdeird',
+      description: 'Contrôler un objet',
+      allAttribution: false,
+      stat: SkillStat.ESSENCE,
+      category: DisplayCategory.ARCANES_PRIMES,
+      display: "utilise l'*Arcane Prime* de la *Bague de Deirdre*",
+      position: 1,
+      arcanePrimeCost: 1
+    })
+
+    const jetonLilou = this.createSkill({
+      name: 'Jeton de Lilou',
+      shortName: 'jtn',
+      description: 'Voir les probabilités',
+      allAttribution: false,
+      stat: SkillStat.ESSENCE,
+      category: DisplayCategory.ARCANES_PRIMES,
+      display: "utilise l'*Arcane Prime* du *Jeton de Lilou*",
+      position: 1,
+      arcanePrimeCost: 1
+    })
+
+    const beretRoger = this.createSkill({
+      name: 'Béret de Roger',
+      shortName: 'brt',
+      description: 'Passer inaperçu',
+      allAttribution: false,
+      stat: SkillStat.ESSENCE,
+      category: DisplayCategory.ARCANES_PRIMES,
+      display: "utilise l'*Arcane Prime* du *Béret de Roger*",
+      position: 1,
+      arcanePrimeCost: 1
+    })
+
+    const ciel = this.createSkill({
+      name: 'Ciel',
+      shortName: 'ciel',
+      description: 'Invoquer Ciel',
+      allAttribution: false,
+      stat: SkillStat.ESSENCE,
+      category: DisplayCategory.ARCANES_PRIMES,
+      display: "utilise l'*Arcane Prime* de *Ciel*",
+      position: 1,
+      arcanePrimeCost: 1
+    })
+
+    const guiboleViktor = this.createSkill({
+      name: 'Guibole',
+      shortName: 'guib',
+      description: 'Bloque une Apothéose et crée un fruit',
+      allAttribution: false,
+      stat: SkillStat.ESSENCE,
+      category: DisplayCategory.ARCANES_PRIMES,
+      display: "utilise l'*Arcane Prime* de la *Guibole de Viktor*",
+      position: 1,
+      arcanePrimeCost: 1
+    })
+
+    const carteTara = this.createSkill({
+      name: 'Carte de Tara',
+      shortName: 'guib',
+      description: 'Crée un effet aléatoire (fascination, amour, etc...)',
+      allAttribution: false,
+      stat: SkillStat.ESSENCE,
+      category: DisplayCategory.ARCANES_PRIMES,
+      display: "utilise l'*Arcane Prime* de la *Carte de Tara*",
+      position: 1,
+      arcanePrimeCost: 1
+    })
+
     const tatouage = this.createSkill({
       name: 'tatouage',
       shortName: 'tat',
@@ -2036,6 +2132,54 @@ export class InitSkills {
       stat: SkillStat.ESSENCE,
       category: DisplayCategory.ARCANES_PRIMES,
       display: "utilise l'*Arcane Prime* du *Tatouage de Terreur*",
+      position: 1,
+      arcanePrimeCost: 1
+    })
+
+    const tarotMathieu = this.createSkill({
+      name: 'Tarot de Mathieu',
+      shortName: 'tarot',
+      description: 'Crée une arcane aléatoirement',
+      allAttribution: false,
+      stat: SkillStat.ESSENCE,
+      category: DisplayCategory.ARCANES_PRIMES,
+      display: "utilise l'*Arcane Prime* du *Tarot de Mathieu*",
+      position: 1,
+      arcanePrimeCost: 1
+    })
+
+    const chapeauMerlin = this.createSkill({
+      name: 'Chapeau de Merlin',
+      shortName: 'merlin',
+      description: 'Donne accès à X arcanes',
+      allAttribution: false,
+      stat: SkillStat.ESSENCE,
+      category: DisplayCategory.ARCANES_PRIMES,
+      display: "utilise l'*Arcane Prime* du *Chapeau de Merlin*",
+      position: 1,
+      arcanePrimeCost: 1
+    })
+
+    const medaillonRoy = this.createSkill({
+      name: 'Médaillon de Roy',
+      shortName: 'medroy',
+      description: 'Echange les émotions entre les porteurs du médaillon',
+      allAttribution: false,
+      stat: SkillStat.ESSENCE,
+      category: DisplayCategory.ARCANES_PRIMES,
+      display: "utilise l'*Arcane Prime* du *Médaillon de Roy*",
+      position: 1,
+      arcanePrimeCost: 1
+    })
+
+    const flasqueJohn = this.createSkill({
+      name: 'Flasque de John',
+      shortName: 'medroy',
+      description: 'Echange les émotions entre les porteurs du médaillon',
+      allAttribution: false,
+      stat: SkillStat.ESSENCE,
+      category: DisplayCategory.ARCANES_PRIMES,
+      display: "utilise l'*Arcane Prime* du *Médaillon de Roy*",
       position: 1,
       arcanePrimeCost: 1
     })

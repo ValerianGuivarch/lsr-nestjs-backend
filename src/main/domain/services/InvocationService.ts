@@ -45,7 +45,11 @@ export class InvocationService {
       summoner: summoner,
       customData: template.customData
     })
-    const createdInvocation = await this.characterProvider.createInvocation(invocation)
+    const createdInvocation = await this.characterProvider.createInvocation(
+      invocation,
+      template.classe.name,
+      template.bloodline?.name
+    )
     const skills = await this.skillService.findSkillsByCharacterTemplate(template)
     for (const skill of skills) {
       await this.skillService.affectSkillToCharacter(createdInvocation, skill)

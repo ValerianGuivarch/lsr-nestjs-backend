@@ -1,6 +1,5 @@
 import { AppModule } from './app.module'
-import { createAgent } from '@forestadmin/agent'
-import { createSqlDataSource } from '@forestadmin/datasource-sql'
+import { ForestService } from './data/ForestService'
 import { ValidationPipe } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { NestFactory } from '@nestjs/core'
@@ -26,16 +25,8 @@ async function bootstrap() {
     .build()
   const document = SwaggerModule.createDocument(app, config)
   SwaggerModule.setup('api', app, document)
-  const agent = createAgent({
-    authSecret: configService.get('FOREST_AUTH_SECRET'),
-    envSecret: configService.get('FOREST_ENV_SECRET'),
-    isProduction: configService.get('NODE_ENV') === 'production',
-    typingsPath: './typings.ts',
-    typingsMaxDepth: 5
-  })
-    // Create your SQL datasource
-    .addDataSource(createSqlDataSource(configService.get('DB_URI')))
-  await agent.mountOnNestJs(app).start()
+
+  await ForestService.agent.mountOnNestJs(app).start()
 
   await app.listen(configService.get('PORT'), configService.get('HOST'))
   console.log(`Application is running on: ${await app.getUrl()}`)

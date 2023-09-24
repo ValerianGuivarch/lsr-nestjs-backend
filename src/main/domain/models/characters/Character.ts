@@ -6,6 +6,12 @@ import { Apotheose } from '../apotheoses/Apotheose'
 import { ApotheoseState } from '../apotheoses/ApotheoseState'
 
 export class Character {
+  // eslint-disable-next-line no-magic-numbers
+  public static statByLevel: number[] = [
+    // eslint-disable-next-line no-magic-numbers
+    6, 7, 8, 8, 9, 10, 10, 11, 12, 12, 13, 14, 15, 16, 16, 17, 18, 18, 19, 20, 21, 22, 23, 24, 25, 26
+  ]
+
   name: string
   classe: Classe
   bloodline?: Bloodline
@@ -106,8 +112,6 @@ export class Character {
 
   static characterToCreateFactory(p: {
     name: string
-    classeName: string
-    bloodlineName?: string
     chair: number
     esprit: number
     essence: number
@@ -172,8 +176,6 @@ export class Character {
       background: p.background,
       buttonColor: p.buttonColor,
       textColor: p.textColor,
-      classe: Classe[p.classeName],
-      bloodline: p.bloodlineName ? Bloodline[p.bloodlineName] : undefined,
       skills: [],
       proficiencies: [],
       restImproved: false,

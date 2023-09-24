@@ -564,7 +564,145 @@
       "segments": []
     },
     {
-      "actions": [],
+      "actions": [
+        {
+          "id": "db_character-0-ajouter-personnage",
+          "name": "Ajouter Personnage",
+          "type": "global",
+          "baseUrl": null,
+          "endpoint": "/forest/_actions/db_character/0/ajouter-personnage",
+          "httpMethod": "POST",
+          "redirect": null,
+          "download": false,
+          "fields": [
+            {
+              "description": "Nom du personnage",
+              "isRequired": true,
+              "field": "Name",
+              "type": "String"
+            },
+            {
+              "description": "Classe du personnage",
+              "isRequired": true,
+              "field": "Classe",
+              "type": "String",
+              "reference": "db_classe.name"
+            },
+            {
+              "description": "Lignée du personnage",
+              "isRequired": false,
+              "field": "Bloodline",
+              "type": "String",
+              "reference": "db_bloodline.name"
+            },
+            {
+              "description": "Niveau du personnage (entre 1 et 25)",
+              "isRequired": false,
+              "field": "Level",
+              "type": "Number"
+            },
+            {
+              "description": "Chair du personnage",
+              "isRequired": false,
+              "field": "Chair",
+              "type": "Number"
+            },
+            {
+              "description": "Esprit du personnage",
+              "isRequired": false,
+              "field": "Esprit",
+              "type": "Number"
+            },
+            {
+              "description": "Essence du personnage",
+              "isRequired": false,
+              "field": "Essence",
+              "type": "Number"
+            },
+            {
+              "description": "PV du personnage",
+              "isRequired": false,
+              "field": "PV",
+              "type": "Number"
+            },
+            {
+              "description": "PF du personnage",
+              "isRequired": false,
+              "field": "PF",
+              "type": "Number"
+            },
+            {
+              "description": "PP du personnage",
+              "isRequired": false,
+              "field": "PP",
+              "type": "Number"
+            },
+            {
+              "description": "Picture du personnage",
+              "isRequired": false,
+              "field": "picture",
+              "type": "String"
+            },
+            {
+              "description": "Picture apotheose du personnage",
+              "isRequired": false,
+              "field": "pictureApotheose",
+              "type": "String"
+            },
+            {
+              "description": "Genre du personnage",
+              "isRequired": false,
+              "field": "genre",
+              "type": "Enum",
+              "enums": ["HOMME", "FEMME"],
+              "defaultValue": null
+            },
+            {
+              "description": "Lux du personnage",
+              "isRequired": false,
+              "field": "lux",
+              "type": "String"
+            },
+            {
+              "description": "Umbra du personnage",
+              "isRequired": false,
+              "field": "umbra",
+              "type": "String"
+            },
+            {
+              "description": "Secunda du personnage",
+              "isRequired": false,
+              "field": "secunda",
+              "type": "String"
+            },
+            {
+              "description": "arcanesMax du personnage",
+              "isRequired": false,
+              "field": "arcanesMax",
+              "type": "Number"
+            },
+            {
+              "description": "ether du personnage",
+              "isRequired": false,
+              "field": "ether",
+              "type": "Number"
+            },
+            {
+              "description": "arcanePrimesMax du personnage",
+              "isRequired": false,
+              "field": "arcanePrimesMax",
+              "type": "Number"
+            },
+            {
+              "description": "PP du personnage",
+              "isRequired": false,
+              "field": "munitionsMax",
+              "type": "Number"
+            }
+          ],
+          "hooks": {"load": false, "change": ["changeHook"]}
+        }
+      ],
       "fields": [
         {
           "defaultValue": "NONE",
@@ -990,7 +1128,7 @@
           "validations": []
         },
         {
-          "defaultValue": null,
+          "defaultValue": "FEMME",
           "enums": ["FEMME", "HOMME"],
           "field": "genre",
           "integration": null,
@@ -998,12 +1136,12 @@
           "isFilterable": true,
           "isPrimaryKey": false,
           "isReadOnly": false,
-          "isRequired": true,
+          "isRequired": false,
           "isSortable": true,
           "isVirtual": false,
           "reference": null,
           "type": "Enum",
-          "validations": [{"type": "is present", "message": "Field is required"}]
+          "validations": []
         },
         {
           "defaultValue": false,
