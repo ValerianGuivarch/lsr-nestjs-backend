@@ -9,6 +9,7 @@ import { PostgresModule } from './data/database/postgres.module'
 import { DBRollProvider } from './data/database/rolls/DBRollProvider'
 import { DBSessionProvider } from './data/database/session/DBSessionProvider'
 import { DBSkillProvider } from './data/database/skills/DBSkillProvider'
+import { ForestService } from './data/ForestService'
 import { PokeProvider } from './data/poke/PokeProvider'
 import { ApotheoseService } from './domain/services/ApotheoseService'
 import { CharacterService } from './domain/services/CharacterService'
@@ -104,7 +105,8 @@ import { TypeOrmModule } from '@nestjs/typeorm'
     {
       provide: 'IClasseProvider',
       useClass: DBClasseProvider
-    }
+    },
+    ForestService
   ]
 })
 export class AppModule {}

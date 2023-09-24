@@ -7,8 +7,8 @@ export interface ICharacterProvider {
   getCharacterObservable(name: string): Observable<Character>
   getCharactersSessionObservable(): Observable<Character[]>
   getCharactersControlledObservable(name: string): Observable<Character[]>
-  create(character: CharacterToCreate): Promise<Character>
-  createInvocation(character: CharacterToCreate): Promise<Character>
+  create(character: CharacterToCreate, classeName: string, bloodlineName?: string): Promise<Character>
+  createInvocation(character: CharacterToCreate, classeName: string, bloodlineName?: string): Promise<Character>
   findAllControlledBy(characterName: string): Promise<Character[]>
   update(character: Character): Promise<Character>
   delete(name: string): Promise<boolean>

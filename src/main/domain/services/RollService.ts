@@ -341,7 +341,8 @@ export class RollService {
             pvMax: 4,
             picture: pokemon.imageUrl,
             summoner: p.character
-          })
+          }),
+          'champion'
         )
       }
     }

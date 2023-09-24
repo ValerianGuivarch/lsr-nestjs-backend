@@ -2,7 +2,7 @@ import { DBCharacter } from './DBCharacter'
 import { DBCharacterTemplate } from './DBCharacterTemplate'
 import { ApotheoseState } from '../../../domain/models/apotheoses/ApotheoseState'
 import { BattleState } from '../../../domain/models/characters/BattleState'
-import { Character } from '../../../domain/models/characters/Character'
+import { Character, CharacterToCreate } from '../../../domain/models/characters/Character'
 import { Genre } from '../../../domain/models/characters/Genre'
 import { CharacterTemplate } from '../../../domain/models/invocation/CharacterTemplate'
 import { CharacterTemplateReferential } from '../../../domain/models/invocation/CharacterTemplateReferential'
@@ -209,12 +209,16 @@ export class DBCharacterProvider implements ICharacterProvider {
     } as DBCharacterTemplate
   }
 
-  private static fromCharacter(doc: Character): Partial<DBCharacter> {
+  private static fromCharacter(
+    doc: CharacterToCreate,
+    classeName: string,
+    bloodlineName?: string
+  ): Partial<DBCharacter> {
     return {
       name: doc.name,
       apotheoseState: doc.apotheoseState,
-      classeName: doc.classe.name,
-      bloodlineName: doc.bloodline?.name,
+      classeName: classeName,
+      bloodlineName: bloodlineName,
       currentApotheoseName: doc.currentApotheose ? doc.currentApotheose.name : null,
       chair: doc.chair,
       esprit: doc.esprit,
@@ -280,10 +284,12 @@ export class DBCharacterProvider implements ICharacterProvider {
     }
   }
 
-  async create(newCharacter: Character): Promise<Character> {
+  async create(newCharacter: CharacterToCreate, classeName: string, bloodlineName?: string): Promise<Character> {
     let createdCharacter = await this.dbCharacterRepository.findOneBy({ name: newCharacter.name })
     if (!createdCharacter) {
-      createdCharacter = this.dbCharacterRepository.create(DBCharacterProvider.fromCharacter(newCharacter))
+      createdCharacter = this.dbCharacterRepository.create(
+        DBCharacterProvider.fromCharacter(newCharacter, classeName, bloodlineName)
+      )
       await this.toCharacter(await this.dbCharacterRepository.save(createdCharacter))
       const character = await this.findOneByName(newCharacter.name)
       await this.dealsWithObservables(character)
@@ -293,8 +299,10 @@ export class DBCharacterProvider implements ICharacterProvider {
     }
   }
 
-  async createInvocation(newCharacter: Character): Promise<Character> {
-    const createdInvocation = this.dbCharacterRepository.create(DBCharacterProvider.fromCharacter(newCharacter))
+  async createInvocation(newCharacter: Character, classeName: string, bloodlineName?: string): Promise<Character> {
+    const createdInvocation = this.dbCharacterRepository.create(
+      DBCharacterProvider.fromCharacter(newCharacter, classeName, bloodlineName)
+    )
     await this.toCharacter(await this.dbCharacterRepository.save(createdInvocation))
     const invocation = await this.findOneByName(newCharacter.name)
     await this.dealsWithObservables(invocation)
@@ -352,7 +360,11 @@ export class DBCharacterProvider implements ICharacterProvider {
   async update(characterToUpdate: Character): Promise<Character> {
     const updatedCharacter = this.dbCharacterRepository.merge(
       await this.dbCharacterRepository.findOneByOrFail({ name: characterToUpdate.name }),
-      DBCharacterProvider.fromCharacter(characterToUpdate)
+      DBCharacterProvider.fromCharacter(
+        characterToUpdate,
+        characterToUpdate.classe.name,
+        characterToUpdate.bloodline?.name
+      )
     )
     await this.toCharacter(await this.dbCharacterRepository.save(updatedCharacter))
     const character = await this.findOneByName(characterToUpdate.name)

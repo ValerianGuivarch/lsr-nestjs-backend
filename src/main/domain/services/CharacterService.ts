@@ -2,7 +2,7 @@ import { ApotheoseService } from './ApotheoseService'
 import { ProficiencyService } from './ProficiencyService'
 import { SkillService } from './SkillService'
 import { ApotheoseState } from '../models/apotheoses/ApotheoseState'
-import { Character } from '../models/characters/Character'
+import { Character, CharacterToCreate } from '../models/characters/Character'
 import { FullCharacter } from '../models/characters/FullCharacter'
 import { ICharacterProvider } from '../providers/ICharacterProvider'
 import { ISessionProvider } from '../providers/ISessionProvider'
@@ -119,5 +119,13 @@ export class CharacterService {
     await this.characterProvider.update({
       ...character
     })
+  }
+
+  createNewCharacter(
+    characterToCreate: CharacterToCreate,
+    classeName: string,
+    bloodlineName?: string
+  ): Promise<Character> {
+    return this.characterProvider.create(characterToCreate, classeName, bloodlineName)
   }
 }

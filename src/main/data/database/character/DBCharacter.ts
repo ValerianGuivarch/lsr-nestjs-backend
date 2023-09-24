@@ -217,7 +217,8 @@ export class DBCharacter {
 
   @Column({
     type: 'enum',
-    enum: Genre
+    enum: Genre,
+    default: Genre.FEMME
   })
   @IsDefined()
   genre: string
