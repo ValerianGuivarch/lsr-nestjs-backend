@@ -96,6 +96,8 @@ export class CharacterService {
       apotheoseState: ApotheoseState.NONE,
       currentApotheose: null
     }
+    updatedCharacter.arcanePrimes = character.arcanePrimesMax
+    updatedCharacter.arcanes = character.arcanesMax
     character.dailyUseMax.forEach((maxValue, key) => {
       if (character.dailyUse.has(key)) {
         updatedCharacter.dailyUse.set(key, maxValue)
@@ -109,16 +111,19 @@ export class CharacterService {
 
   async updateSkillsAttribution(
     characterName: string,
-    skillName: string,
+    skillId: string,
     dailyUse?: number,
-    dailyUseMax?: number
+    dailyUseMax?: number,
+    affected?: boolean
   ): Promise<void> {
     const character = await this.characterProvider.findOneByName(characterName)
-    character.dailyUse.set(skillName, dailyUse)
-    character.dailyUseMax.set(skillName, dailyUseMax)
+    const skill = await this.skillService.findSkillById(skillId)
+    character.dailyUse.set(skill.name, dailyUse)
+    character.dailyUseMax.set(skill.name, dailyUseMax)
     await this.characterProvider.update({
       ...character
     })
+    await this.skillService.affectSkillToCharacter(character, skill, affected ?? true)
   }
 
   createNewCharacter(

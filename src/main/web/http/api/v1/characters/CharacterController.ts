@@ -1,10 +1,12 @@
 import { CharacterPreviewVM } from './entities/CharacterPreviewVM'
 import { CharacterVM } from './entities/CharacterVM'
+import { SkillVM } from './entities/SkillVM'
 import { UpdateCharacterDto } from './requests/UpdateCharacterDto'
 import { UpdateSkillsAttributionDto } from './requests/UpdateSkillsAttributionDto'
 import { ApotheoseService } from '../../../../../domain/services/ApotheoseService'
 import { CharacterService } from '../../../../../domain/services/CharacterService'
 import { SessionService } from '../../../../../domain/services/SessionService'
+import { SkillService } from '../../../../../domain/services/SkillService'
 import { Body, Controller, Delete, Get, Param, Put } from '@nestjs/common'
 import { ApiOkResponse, ApiTags } from '@nestjs/swagger'
 
@@ -14,6 +16,7 @@ export class CharacterController {
   constructor(
     private characterService: CharacterService,
     private sessionService: SessionService,
+    private skillService: SkillService,
     private apotheoseService: ApotheoseService
   ) {}
 
@@ -21,20 +24,6 @@ export class CharacterController {
   @Put(':name/rest')
   async rest(@Param('name') name: string): Promise<void> {
     await this.characterService.rest(name)
-  }
-
-  @ApiOkResponse({})
-  @Put(':name/skills')
-  async updateSkillsAttribution(
-    @Param('name') name: string,
-    @Body() updateSkillsAttributionDto: UpdateSkillsAttributionDto
-  ): Promise<void> {
-    await this.characterService.updateSkillsAttribution(
-      name,
-      updateSkillsAttributionDto.skillName,
-      updateSkillsAttributionDto.dailyUse,
-      updateSkillsAttributionDto.limitationMax
-    )
   }
 
   @Put(':name')
@@ -66,6 +55,33 @@ export class CharacterController {
       apotheoses: updatedCharacter.apotheoses,
       proficiencies: updatedCharacter.proficiencies,
       rest: rest
+    })
+  }
+
+  @ApiOkResponse({})
+  @Put(':name/skills')
+  async updateSkillsAttribution(
+    @Param('name') name: string,
+    @Body() updateSkillsAttributionDto: UpdateSkillsAttributionDto
+  ): Promise<void> {
+    await this.characterService.updateSkillsAttribution(
+      name,
+      updateSkillsAttributionDto.skillId.toString(),
+      updateSkillsAttributionDto.dailyUse,
+      updateSkillsAttributionDto.dailyUseMax,
+      updateSkillsAttributionDto.affected ?? true
+    )
+  }
+
+  @Get(':name/arcane-primes')
+  @ApiOkResponse({ type: SkillVM, isArray: true })
+  async getArcanePrimes(@Param('name') name: string): Promise<SkillVM[]> {
+    const skills = await this.skillService.findArcanePrimes(name)
+    return skills.map((skill) => {
+      return SkillVM.of({
+        skill: skill,
+        character: undefined
+      })
     })
   }
 

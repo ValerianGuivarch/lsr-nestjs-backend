@@ -232,6 +232,7 @@ export type Schema = {
       'dbSkill:blessure': boolean;
       'dbSkill:help': boolean;
       'dbSkill:etherCost': number;
+      'dbSkill:owner': string;
       'dbSkill:db_character_template:name': string;
       'dbSkill:db_character_template:chairValueReferential': 'FIXE' | 'CHAIR' | 'ESPRIT' | 'ESSENCE' | 'SUCCESS';
       'dbSkill:db_character_template:chairValueRule': number;
@@ -607,6 +608,7 @@ export type Schema = {
       'dbSkill:blessure': boolean;
       'dbSkill:help': boolean;
       'dbSkill:etherCost': number;
+      'dbSkill:owner': string;
       'dbSkill:db_character_template:name': string;
       'dbSkill:db_character_template:chairValueReferential': 'FIXE' | 'CHAIR' | 'ESPRIT' | 'ESSENCE' | 'SUCCESS';
       'dbSkill:db_character_template:chairValueRule': number;
@@ -728,6 +730,7 @@ export type Schema = {
       'dbSkill:blessure': boolean;
       'dbSkill:help': boolean;
       'dbSkill:etherCost': number;
+      'dbSkill:owner': string;
       'dbSkill:db_character_template:name': string;
       'dbSkill:db_character_template:chairValueReferential': 'FIXE' | 'CHAIR' | 'ESPRIT' | 'ESSENCE' | 'SUCCESS';
       'dbSkill:db_character_template:chairValueRule': number;
@@ -858,6 +861,7 @@ export type Schema = {
       'dbSkill:blessure': boolean;
       'dbSkill:help': boolean;
       'dbSkill:etherCost': number;
+      'dbSkill:owner': string;
       'dbSkill:db_character_template:name': string;
       'dbSkill:db_character_template:chairValueReferential': 'FIXE' | 'CHAIR' | 'ESPRIT' | 'ESSENCE' | 'SUCCESS';
       'dbSkill:db_character_template:chairValueRule': number;
@@ -1001,6 +1005,7 @@ export type Schema = {
       'nature': 'LEVEL_0_PAUVRE' | 'LEVEL_1_RARE' | 'LEVEL_2_PRESENTE' | 'LEVEL_3_ABONDANTE' | 'LEVEL_4_RICHE' | 'LEVEL_5_DOMINANTE';
       'baseRest': number;
       'improvedRest': number;
+      'owners': string;
     };
     nested: {};
     flat: {};
@@ -1037,6 +1042,7 @@ export type Schema = {
       'blessure': boolean;
       'help': boolean;
       'etherCost': number;
+      'owner': string;
     };
     nested: {
       'db_character_template': Schema['db_character_template']['plain'] & Schema['db_character_template']['nested'];

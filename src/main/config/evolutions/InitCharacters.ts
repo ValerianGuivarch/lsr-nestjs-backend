@@ -35,7 +35,7 @@ export class InitCharacters {
       pictureApotheose: 'https://media.discordapp.net/attachments/689044605311647799/1006318155049734144/unknown.png',
       background: 'https://media.discordapp.net/attachments/689044605311647799/1001499478131482624/unknown.png',
       playerName: 'arcady',
-      skills: [skills.get('arbre')]
+      skills: [skills.get('arbre'), skills.get('Libération arcanique'), skills.get('Béret de Roger')]
     })
 
     const millia = this.createCharacter({
@@ -55,7 +55,7 @@ export class InitCharacters {
       pictureApotheose: 'https://media.discordapp.net/attachments/689044605311647799/1003654562365845564/unknown.png',
       background: 'https://media.discordapp.net/attachments/689044605311647799/1001484678806634576/unknown.png',
       playerName: 'guilhem',
-      skills: [skills.get('montre')]
+      skills: [skills.get('montre'), skills.get('comédien'), skills.get('sorcière'), skills.get('Poignard Temporel')]
     })
 
     const viktor = this.createCharacter({
@@ -157,113 +157,48 @@ export class InitCharacters {
         { ...skills.get('faucon'), arcaneCost: 0 },
         { ...skills.get('mentaliste'), arcaneCost: 0 },
         { ...skills.get('amnesique'), arcaneCost: 0 },
-        { ...skills.get('terreur'), arcaneCost: 0, dettesCost: 1 }
-      ]
+        skills.get('peur'),
+        skills.get('Terreur')
+      ],
+      dailyUse: {
+        ['sablier']: 1,
+        ['illusioniste']: 1,
+        ['diablotin']: 1,
+        ['sorcière']: 1,
+        ['forgeron']: 1,
+        ['cheval']: 1,
+        ['arbre']: 1,
+        ['licorne']: 1,
+        ['serpent']: 1,
+        ['loup']: 1,
+        ['ivrogne']: 1,
+        ['erudit']: 1,
+        ['fantome']: 1,
+        ['faucon']: 1,
+        ['mentaliste']: 1,
+        ['amnesique']: 1,
+        ['terreur']: 1
+      },
+      dailyUseMax: {
+        ['sablier']: 1,
+        ['illusioniste']: 1,
+        ['diablotin']: 1,
+        ['sorcière']: 1,
+        ['forgeron']: 1,
+        ['cheval']: 1,
+        ['arbre']: 1,
+        ['licorne']: 1,
+        ['serpent']: 1,
+        ['loup']: 1,
+        ['ivrogne']: 1,
+        ['erudit']: 1,
+        ['fantome']: 1,
+        ['faucon']: 1,
+        ['mentaliste']: 1,
+        ['amnesique']: 1,
+        ['terreur']: 1
+      }
     })
-
-    /* await this.saveCharacterSkillIfNotExisting({
-      character: characters.get('aurélien'),
-      skill: skills.get('illusioniste'),
-      limitationMax: 1,
-      arcaneCost: 0
-    })
-    await this.saveCharacterSkillIfNotExisting({
-      character: characters.get('aurélien'),
-      skill: skills.get('sablier'),
-      limitationMax: 1,
-      arcaneCost: 0
-    })
-    await this.saveCharacterSkillIfNotExisting({
-      character: characters.get('aurélien'),
-      skill: skills.get('diablotin'),
-      limitationMax: 1,
-      arcaneCost: 0
-    })
-    await this.saveCharacterSkillIfNotExisting({
-      character: characters.get('aurélien'),
-      skill: skills.get('sorcière'),
-      limitationMax: 1,
-      arcaneCost: 0
-    })
-    await this.saveCharacterSkillIfNotExisting({
-      character: characters.get('aurélien'),
-      skill: skills.get('forgeron'),
-      limitationMax: 1,
-      arcaneCost: 0
-    })
-    await this.saveCharacterSkillIfNotExisting({
-      character: characters.get('aurélien'),
-      skill: skills.get('cheval'),
-      limitationMax: 1,
-      arcaneCost: 0
-    })
-    await this.saveCharacterSkillIfNotExisting({
-      character: characters.get('aurélien'),
-      skill: skills.get('arbre'),
-      limitationMax: 1,
-      arcaneCost: 0
-    })
-    await this.saveCharacterSkillIfNotExisting({
-      character: characters.get('aurélien'),
-      skill: skills.get('licorne'),
-      limitationMax: 1,
-      arcaneCost: 0
-    })
-    await this.saveCharacterSkillIfNotExisting({
-      character: characters.get('aurélien'),
-      skill: skills.get('serpent'),
-      limitationMax: 1,
-      arcaneCost: 0
-    })
-    await this.saveCharacterSkillIfNotExisting({
-      character: characters.get('aurélien'),
-      skill: skills.get('loup'),
-      limitationMax: 1,
-      arcaneCost: 0
-    })
-    await this.saveCharacterSkillIfNotExisting({
-      character: characters.get('aurélien'),
-      skill: skills.get('ivrogne'),
-      limitationMax: 1,
-      arcaneCost: 0
-    })
-    await this.saveCharacterSkillIfNotExisting({
-      character: characters.get('aurélien'),
-      skill: skills.get('erudit'),
-      limitationMax: 1,
-      arcaneCost: 0
-    })
-    await this.saveCharacterSkillIfNotExisting({
-      character: characters.get('aurélien'),
-      skill: skills.get('fantome'),
-      limitationMax: 1,
-      arcaneCost: 0
-    })
-    await this.saveCharacterSkillIfNotExisting({
-      character: characters.get('aurélien'),
-      skill: skills.get('faucon'),
-      limitationMax: 1,
-      arcaneCost: 0
-    })
-    await this.saveCharacterSkillIfNotExisting({
-      character: characters.get('aurélien'),
-      skill: skills.get('terreur'),
-      displayCategory: DisplayCategory.MAGIE,
-      arcaneCost: 0,
-      dettesCost: 1
-    })
-    await this.saveCharacterSkillIfNotExisting({
-      character: characters.get('aurélien'),
-      skill: skills.get('mentaliste'),
-      limitationMax: 1,
-      arcaneCost: 0
-    })
-    await this.saveCharacterSkillIfNotExisting({
-      character: characters.get('aurélien'),
-      skill: skills.get('amnesique'),
-      limitationMax: 1,
-      arcaneCost: 0
-    })*/
 
     const pamuk = this.createCharacter({
       name: 'pamuk',
@@ -431,10 +366,10 @@ export class InitCharacters {
       name: 'tara',
       classe: classes.get('champion'),
       bloodline: bloodlines.get('foudre'),
-      chair: 7,
-      esprit: 4,
-      essence: 10,
-      niveau: 20,
+      chair: 14,
+      esprit: 8,
+      essence: 20,
+      niveau: 30,
       lux: 'Archéologie',
       umbra: 'Nymphomanie',
       secunda: 'Cambrioleuse',
@@ -444,7 +379,8 @@ export class InitCharacters {
       pictureApotheose:
         'https://media.discordapp.net/attachments/1016035628783243302/1072525104245907506/hermes_by_ninjart1st_d98161p-fullview.png',
       background: 'https://media.discordapp.net/attachments/689044605311647799/997930808969003098/unknown.png',
-      playerName: 'nico'
+      playerName: 'nico',
+      skills: [skills.get('voleur'), skills.get('fantôme'), skills.get('Carte de Tara'), skills.get('Dévorer')]
     })
 
     const kyma = this.createCharacter({
@@ -466,17 +402,6 @@ export class InitCharacters {
         'https://images-ext-1.discordapp.net/external/aVlv9icrng_dulxPseBpALbyRRlEYaOCeAJKYdxmFCc/%3Ftable%3Dblock%26id%3D8e001995-05dd-413e-9163-1328fedaf0fa%26spaceId%3Da4f22bfa-739b-4835-89ff-43b3ef9f69f3%26width%3D600%26userId%3Dd28065db-d011-48fc-9e95-e1b89f7ea73d%26cache%3Dv2/https/www.notion.so/image/https%253A%252F%252Fs3-us-west-2.amazonaws.com%252Fsecure.notion-static.com%252F77840cc9-138b-4a1a-a35c-2a4ca1ec2871%252FKymaBG.jpg',
       playerName: 'guilhem'
     })
-
-    /*dailyUse: {
-      ['Mun. courantes']: 0,
-        ['Mun. léthales']: 0,
-        ['Mun. affaiblissantes']: 0,
-        ['Mun. peste']: 0,
-        ['Mun. marquage']: 0,
-        ['Mun. dégénérative']: 0,
-        ['Gr. fumigène']: 0,
-        ['Gr. flash']: 0
-    },*/
 
     const isycho = this.createCharacter({
       name: 'isycho',
@@ -522,8 +447,7 @@ export class InitCharacters {
         skills.get('phoenix'),
         skills.get('balance'),
         skills.get('phoenix amélioré'),
-        skills.get('juge amélioré'),
-        skills.get('pokéball')
+        skills.get('juge amélioré')
       ],
       dailyUse: {
         ['phoenix amélioré']: 1,
@@ -928,7 +852,8 @@ export class InitCharacters {
       pictureApotheose:
         'https://media.discordapp.net/attachments/734153794681700394/1000802351663284224/unknown.png?width=1096&height=1055',
       background: 'https://media.discordapp.net/attachments/689044605311647799/997931629525880845/unknown.png',
-      playerName: 'jupi'
+      playerName: 'jupi',
+      skills: [skills.get('faucon'), skills.get('ivrogne'), skills.get('serpent'), skills.get('Bague de Deirdre')]
     })
 
     const oleg = this.createCharacter({
@@ -1128,7 +1053,37 @@ export class InitCharacters {
         skills.get('Mun. marquage'),
         skills.get('Mun. dégénérative'),
         skills.get('Gr. fumigène'),
-        skills.get('Gr. flash')
+        skills.get('Gr. flash'),
+        {
+          ...skills.get('juge'),
+          ppCost: 1,
+          arcaneCost: 0
+        },
+        {
+          ...skills.get('comédien'),
+          ppCost: 1,
+          arcaneCost: 0
+        },
+        {
+          ...skills.get('voleur'),
+          ppCost: 1,
+          arcaneCost: 0
+        },
+        {
+          ...skills.get('nécromancien'),
+          ppCost: 1,
+          arcaneCost: 0
+        },
+        {
+          ...skills.get('vampire'),
+          ppCost: 1,
+          arcaneCost: 0
+        },
+        {
+          ...skills.get('chouette'),
+          ppCost: 1,
+          arcaneCost: 0
+        }
       ]
     })
 
@@ -1189,7 +1144,8 @@ export class InitCharacters {
       secunda: 'Jet Set',
       //category: Category.PJ,
       genre: Genre.FEMME,
-      picture: 'https://media.discordapp.net/attachments/689044605311647799/1001478072031252602/unknown.png',
+      picture:
+        'https://media.discordapp.net/attachments/689034158307409933/1158010684613857361/image.png?ex=65350efe&is=652299fe&hm=e8699c7792d883b264473f707207659b2d16d35a3e343d249d72171fa01e9bee&=',
       pictureApotheose: 'https://media.discordapp.net/attachments/1008780709214830632/1029119025411801188/unknown.png',
       background: 'https://media.discordapp.net/attachments/1008780709214830632/1029117716965118065/unknown.png',
       playerName: 'florent'
@@ -1597,87 +1553,6 @@ export class InitCharacters {
       playerName: 'guilhem'
     })
 
-    const darkmillia = this.createCharacter({
-      name: 'darkmillia',
-      classe: classes.get('champion'),
-      bloodline: bloodlines.get('ombre'),
-      chair: 8,
-      esprit: 6,
-      essence: 3,
-      niveau: 15,
-      lux: '',
-      umbra: '',
-      secunda: '',
-      //category: Category.PNJ_ENNEMY,
-      genre: Genre.FEMME,
-      picture: 'https://media.discordapp.net/attachments/689044605311647799/1001477316070866994/unknown.png',
-      pictureApotheose: 'https://media.discordapp.net/attachments/689044605311647799/1003654562365845564/unknown.png',
-      background:
-        'https://media.discordapp.net/attachments/734153794681700394/1141000189071601695/HD-wallpaper-field-of-honour-fantasy-background-abstract-sword-blue-light.png?width=1248&height=936',
-      playerName: ''
-    })
-
-    const darktara = this.createCharacter({
-      name: 'darktara',
-      classe: classes.get('champion'),
-      bloodline: bloodlines.get('foudre'),
-      chair: 7,
-      esprit: 10,
-      essence: 4,
-      niveau: 20,
-      lux: '',
-      umbra: '',
-      secunda: '',
-      //category: Category.PNJ_ENNEMY,
-      genre: Genre.FEMME,
-      picture: 'https://media.discordapp.net/attachments/959399143485354004/959486612390154361/tara.jpg',
-      pictureApotheose:
-        'https://media.discordapp.net/attachments/1016035628783243302/1072525104245907506/hermes_by_ninjart1st_d98161p-fullview.png',
-      background:
-        'https://media.discordapp.net/attachments/734153794681700394/1141000189071601695/HD-wallpaper-field-of-honour-fantasy-background-abstract-sword-blue-light.png?width=1248&height=936',
-      playerName: ''
-    })
-
-    const darkkhalis = this.createCharacter({
-      name: 'darkkhalis',
-      classe: classes.get('rejete'),
-      bloodline: bloodlines.get('naga'),
-      chair: 6,
-      esprit: 6,
-      essence: 5,
-      niveau: 15,
-      lux: '',
-      umbra: '',
-      secunda: '',
-      //category: Category.PNJ_ENNEMY,
-      genre: Genre.FEMME,
-      picture: 'https://media.discordapp.net/attachments/689044605311647799/1001476595934056588/unknown.png',
-      pictureApotheose: 'https://media.discordapp.net/attachments/1008780709214830632/1008783630912475268/unknown.png',
-      background:
-        'https://media.discordapp.net/attachments/734153794681700394/1141000189071601695/HD-wallpaper-field-of-honour-fantasy-background-abstract-sword-blue-light.png?width=1248&height=936',
-      playerName: ''
-    })
-
-    const darkmathieu = this.createCharacter({
-      name: 'darkmathieu',
-      classe: classes.get('champion'),
-      bloodline: bloodlines.get('lumière'),
-      chair: 15,
-      esprit: 5,
-      essence: 5,
-      niveau: 20,
-      lux: '',
-      umbra: '',
-      secunda: '',
-      //category: Category.PNJ_ENNEMY,
-      genre: Genre.HOMME,
-      picture: 'https://media.discordapp.net/attachments/959399143485354004/960187732720746516/mathieu.png',
-      pictureApotheose: 'https://media.discordapp.net/attachments/1008780709214830632/1009121826049368114/unknown.png',
-      background:
-        'https://media.discordapp.net/attachments/734153794681700394/1141000189071601695/HD-wallpaper-field-of-honour-fantasy-background-abstract-sword-blue-light.png?width=1248&height=936',
-      playerName: ''
-    })
-
     const milliatouami = this.createCharacter({
       name: 'millia-touami',
       classe: classes.get('champion'),
@@ -1717,26 +1592,6 @@ export class InitCharacters {
       background:
         'https://media.discordapp.net/attachments/734153794681700394/1141000189071601695/HD-wallpaper-field-of-honour-fantasy-background-abstract-sword-blue-light.png?width=1248&height=936',
       playerName: 'guilhem'
-    })
-
-    const inèsetco = this.createCharacter({
-      name: 'inèsetco',
-      classe: classes.get('inconnu'),
-      bloodline: bloodlines.get('aucun'),
-      chair: 4,
-      esprit: 11,
-      essence: 2,
-      niveau: 3,
-      lux: '',
-      umbra: '',
-      secunda: '',
-      //category: Category.PNJ_ALLY,
-      genre: Genre.HOMME,
-      picture: '',
-      pictureApotheose: '',
-      background:
-        'https://media.discordapp.net/attachments/734153794681700394/1141000189071601695/HD-wallpaper-field-of-honour-fantasy-background-abstract-sword-blue-light.png?width=1248&height=936',
-      playerName: ''
     })
 
     const naia = this.createCharacter({
@@ -2535,13 +2390,8 @@ export class InitCharacters {
       milliarafael,
       milliamaia,
       milliaakira,
-      darkmillia,
-      darktara,
-      darkkhalis,
-      darkmathieu,
       milliatouami,
       milliajohn,
-      inèsetco,
       naia,
       camille,
       emmanuel,

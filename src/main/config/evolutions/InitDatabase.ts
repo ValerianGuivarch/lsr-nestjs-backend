@@ -167,6 +167,7 @@ export class InitDatabase {
       if (!existingCharacter) {
         const character = new DBCharacter()
         Object.assign(character, characterData)
+        console.log(character.name)
         const createdCharacter = await this.dbCharacterRepository.save(character)
         characters.set(character.name, createdCharacter)
       } else {

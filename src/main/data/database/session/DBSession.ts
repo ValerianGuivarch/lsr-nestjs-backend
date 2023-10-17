@@ -32,4 +32,10 @@ export class DBSession {
     default: 4
   })
   improvedRest: number
+
+  @Column({
+    type: 'simple-array',
+    default: []
+  })
+  owners: string[]
 }

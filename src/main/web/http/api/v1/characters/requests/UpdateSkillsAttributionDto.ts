@@ -1,10 +1,10 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
-import { IsNumber, IsOptional, IsString } from 'class-validator'
+import { IsBoolean, IsNumber, IsOptional } from 'class-validator'
 
 export class UpdateSkillsAttributionDto {
   @ApiProperty()
-  @IsString()
-  readonly skillName: string
+  @IsNumber()
+  readonly skillId: number
 
   @ApiPropertyOptional()
   @IsOptional()
@@ -14,5 +14,10 @@ export class UpdateSkillsAttributionDto {
   @ApiPropertyOptional()
   @IsOptional()
   @IsNumber()
-  readonly limitationMax?: number | null
+  readonly dailyUseMax?: number | null
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsBoolean()
+  readonly affected?: boolean | null
 }

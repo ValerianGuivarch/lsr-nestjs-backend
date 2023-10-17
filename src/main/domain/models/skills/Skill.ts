@@ -32,6 +32,7 @@ export class Skill {
   invocationTemplateName?: string
   description: string
   precision?: string
+  owner?: string
 
   constructor(p: Skill) {
     this.id = p.id
@@ -63,5 +64,6 @@ export class Skill {
     this.invocationTemplateName = p.invocationTemplateName
     this.description = p.description
     this.precision = p.precision
+    this.owner = p.owner
   }
 }

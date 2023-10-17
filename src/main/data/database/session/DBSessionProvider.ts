@@ -15,7 +15,8 @@ export class DBSessionProvider implements ISessionProvider {
     return new Session({
       chaos: doc.chaos,
       baseRest: doc.baseRest,
-      improvedRest: doc.improvedRest
+      improvedRest: doc.improvedRest,
+      owners: doc.owners
     })
   }
 

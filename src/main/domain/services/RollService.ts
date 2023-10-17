@@ -1,3 +1,4 @@
+/* eslint-disable no-magic-numbers */
 import { InvocationService } from './InvocationService'
 import { SkillService } from './SkillService'
 import { ProviderErrors } from '../../data/errors/ProviderErrors'
@@ -90,6 +91,23 @@ export class RollService {
     const skill = await this.skillService.findSkillById(p.skillId)
     const apotheose = p.character.currentApotheose
     const controller = await this.characterProvider.findOneByName(p.character.controlledBy)
+
+    if (p.character.name === skill.owner) {
+      skill.arcanePrimeCost = 0
+    }
+
+    if (p.character.classe.name === 'avatar' && skill.arcaneCost > 0) {
+      skill.arcaneCost = 0
+    }
+    if (
+      (p.character.classe.name === 'soldat' ||
+        p.character.classe.name === 'arcaniste' ||
+        p.character.classe.name === 'sorcière') &&
+      skill.arcaneCost > 0
+    ) {
+      skill.arcaneCost = 0
+      skill.ppCost = 1
+    }
 
     let diceNumber = 0
     let diceValue = 0
@@ -264,7 +282,7 @@ export class RollService {
     arcaneDelta = arcaneDelta - skill.arcaneCost
     etherDelta = etherDelta - skill.etherCost
     dettesDelta = dettesDelta + skill.dettesCost
-    arcanePrimeDelta = arcanePrimeDelta + skill.arcanePrimeCost
+    arcanePrimeDelta = arcanePrimeDelta - skill.arcanePrimeCost
     if (p.character.pv + pvDelta < 0) {
       throw ProviderErrors.RollNotEnoughPv()
     } else if (p.character.pf + pfDelta < 0) {
@@ -319,7 +337,7 @@ export class RollService {
             data = ' et perçoit un niveau de nature inconnu.'
             break
         }
-      } else if (skill.name === 'pokéball') {
+      } else if (skill.name === 'Pokéball') {
         data = ' et fait apparaître'
 
         const pokemon = await this.pokeProvider.getPokemonById(result[0])
@@ -344,6 +362,38 @@ export class RollService {
           }),
           'champion'
         )
+      } else if (skill.name === 'Poignard Temporel') {
+        if (result[0] === 1) {
+          data += ' et subit une transformation négative'
+        } else if (result[0] === 2) {
+          data += ' et se transforme en Akira'
+          pictureUrl =
+            'https://media.discordapp.net/attachments/689034158307409933/1067527301039919204/Sun_Wukong_Akira.png'
+        } else if (result[0] === 3) {
+          data += ' et se transforme en Cortès'
+          pictureUrl = 'https://media.discordapp.net/attachments/689034158307409933/1067551979506770011/image.png'
+        } else if (result[0] === 4) {
+          data += ' et se transforme en Diablo'
+          pictureUrl =
+            'https://media.discordapp.net/attachments/689034158307409933/1067577204889890846/Diablo_adulte.png'
+        } else if (result[0] === 5) {
+          data += ' et se transforme en John'
+          pictureUrl = 'https://media.discordapp.net/attachments/689034158307409933/1080962345196605581/image.png'
+        } else if (result[0] === 6) {
+          data += ' et se transforme en Maia'
+          pictureUrl = 'https://media.discordapp.net/attachments/689034158307409933/1067535787870126120/image.png'
+        } else if (result[0] === 7) {
+          data += ' et se transforme en Polem'
+          pictureUrl = 'https://media.discordapp.net/attachments/689034158307409933/1067558006520283216/image.png'
+        } else if (result[0] === 8) {
+          data += ' et se transforme en Rafael'
+          pictureUrl = 'https://media.discordapp.net/attachments/689034158307409933/1067546049306177687/image.png'
+        } else if (result[0] === 9) {
+          data += ' et se transforme en Touami'
+          pictureUrl = 'https://media.discordapp.net/attachments/689034158307409933/1095447733239828590/image.png'
+        } else {
+          data += ' et choisit ssa transformation'
+        }
       }
     }
 

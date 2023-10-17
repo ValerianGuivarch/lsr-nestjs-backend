@@ -1,6 +1,8 @@
 import { Character } from '../models/characters/Character'
+import { DisplayCategory } from '../models/characters/DisplayCategory'
 import { CharacterTemplate } from '../models/invocation/CharacterTemplate'
 import { Skill } from '../models/skills/Skill'
+import { ISessionProvider } from '../providers/ISessionProvider'
 import { ISkillProvider } from '../providers/ISkillProvider'
 import { Inject, Logger } from '@nestjs/common'
 
@@ -9,7 +11,9 @@ export class SkillService {
 
   constructor(
     @Inject('ISkillProvider')
-    private skillsProvider: ISkillProvider
+    private skillsProvider: ISkillProvider,
+    @Inject('ISessionProvider')
+    private sessionProvider: ISessionProvider
   ) {
     console.log('SkillService')
   }
@@ -39,8 +43,13 @@ export class SkillService {
   async findSkillsByCharacterTemplate(template: CharacterTemplate): Promise<Skill[]> {
     return this.skillsProvider.findSkillsByCharacterTemplate(template.name)
   }
+  async findArcanePrimes(me: string): Promise<Skill[]> {
+    const arcanePrimes = await this.skillsProvider.findSkillsByDisplayCategory(DisplayCategory.ARCANES_PRIMES)
+    const owners = (await this.sessionProvider.getSession()).owners
+    return arcanePrimes.filter((skill) => owners.includes(skill.owner) || skill.owner === me)
+  }
 
-  async affectSkillToCharacter(createdInvocation: Character, skill: Skill): Promise<void> {
-    return this.skillsProvider.affectSkillToCharacter(createdInvocation, skill)
+  async affectSkillToCharacter(createdInvocation: Character, skill: Skill, affected: boolean): Promise<void> {
+    return this.skillsProvider.affectSkillToCharacter(createdInvocation, skill, affected)
   }
 }

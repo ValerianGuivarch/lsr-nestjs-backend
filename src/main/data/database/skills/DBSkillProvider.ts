@@ -23,6 +23,7 @@ export class DBSkillProvider implements ISkillProvider {
   static fromSkill(skill: Skill): DBSkill {
     return {
       id: skill.id,
+      owner: skill.owner,
       name: skill.name,
       description: skill.description,
       shortName: skill.shortName,
@@ -57,6 +58,7 @@ export class DBSkillProvider implements ISkillProvider {
   static toSkill(skill: DBSkill): Skill {
     return new Skill({
       id: skill.id,
+      owner: skill.owner,
       name: skill.name,
       description: skill.description,
       shortName: skill.shortName,
@@ -142,10 +144,22 @@ export class DBSkillProvider implements ISkillProvider {
     return skills.map(DBSkillProvider.toSkill)
   }
 
-  async affectSkillToCharacter(createdInvocation: Character, skill: Skill): Promise<void> {
-    const dbCharacter = await this.dbCharacterRepository.findOneBy({ name: createdInvocation.name })
+  async findSkillsByDisplayCategory(category: DisplayCategory): Promise<Skill[]> {
+    const skills = await this.dbSkillRepository.findBy({ displayCategory: DisplayCategory[category] })
+    return skills.map(DBSkillProvider.toSkill)
+  }
+
+  async affectSkillToCharacter(createdInvocation: Character, skill: Skill, affected: boolean): Promise<void> {
+    const dbCharacter = await this.dbCharacterRepository.findOne({
+      where: { name: createdInvocation.name },
+      relations: ['skills']
+    })
     const dbSkill = await this.dbSkillRepository.findOneBy({ id: skill.id })
-    dbCharacter.skills.push(dbSkill)
+    if (affected) {
+      dbCharacter.skills.push(dbSkill)
+    } else {
+      dbCharacter.skills = dbCharacter.skills.filter((dbSkill) => dbSkill.id !== skill.id)
+    }
     await this.dbCharacterRepository.save(dbCharacter)
   }
 }

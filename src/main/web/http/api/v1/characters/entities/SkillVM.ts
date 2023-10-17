@@ -62,12 +62,12 @@ export class SkillVM {
     this.stat = p.stat
   }
 
-  static of(p: { skill: Skill; character: Character }): SkillVM {
+  static of(p: { skill: Skill; character: Character | undefined }): SkillVM {
     const vm = new SkillVM({
       id: p.skill.id,
       name: p.skill.name,
-      dailyUse: p.character.dailyUse.get(p.skill.name),
-      dailyUseMax: p.character.dailyUseMax.get(p.skill.name),
+      dailyUse: p.character?.dailyUse.get(p.skill.name),
+      dailyUseMax: p.character?.dailyUseMax.get(p.skill.name),
       shortName: p.skill.shortName,
       longName: p.skill.longName,
       displayCategory: p.skill.displayCategory.toString(),

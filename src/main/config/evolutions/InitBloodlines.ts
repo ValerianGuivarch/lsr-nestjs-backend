@@ -21,20 +21,22 @@ export class InitBloodlines {
     const feuBloodline: DBBloodline = this.createBloodline({
       name: 'feu',
       display: 'du Feu',
-      skills: [skills.get('soin mental')]
+      skills: [skills.get('soin mental')],
+      proficiencies: [proficiencies.get('folie'), proficiencies.get('séduction')]
     })
 
     const ventBloodline: DBBloodline = this.createBloodline({
       name: 'vent',
       display: 'du Vent',
-      skills: [skills.get('vol')]
+      skills: [skills.get('vol')],
+      proficiencies: [proficiencies.get('rapidité'), proficiencies.get('adresse')]
     })
 
     const terreBloodline: DBBloodline = this.createBloodline({
       name: 'terre',
       display: 'de la Terre',
       skills: [skills.get('armure')],
-      proficiencies: [proficiencies.get('force')]
+      proficiencies: [proficiencies.get('force'), proficiencies.get('stratégie')]
     })
 
     const lumiereBloodline: DBBloodline = this.createBloodline({
@@ -51,7 +53,8 @@ export class InitBloodlines {
     const ombreBloodline: DBBloodline = this.createBloodline({
       name: 'ombre',
       display: 'des Ombres',
-      skills: [skills.get('invisibilité')]
+      skills: [skills.get('invisibilité')],
+      proficiencies: [proficiencies.get('discrétion'), proficiencies.get('empathie')]
     })
 
     const foudreBloodline: DBBloodline = this.createBloodline({

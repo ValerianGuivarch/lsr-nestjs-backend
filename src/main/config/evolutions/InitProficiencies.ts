@@ -30,6 +30,18 @@ export class InitProficiencies {
       category: DisplayCategory.MAGIE,
       minLevel: 10
     })
+    const folie: DBProficiency = this.createProficiency({
+      name: 'folie',
+      shortName: 'fl',
+      category: DisplayCategory.MAGIE,
+      minLevel: 10
+    })
+    const seduction: DBProficiency = this.createProficiency({
+      name: 'séduction',
+      shortName: 'sd',
+      category: DisplayCategory.MAGIE,
+      minLevel: 10
+    })
     const crainte: DBProficiency = this.createProficiency({
       name: 'crainte',
       shortName: 'ad',
@@ -72,7 +84,21 @@ export class InitProficiencies {
       minLevel: 10,
       description: '1 réussite automatique pour établir une stratégie'
     })
+    const discretion: DBProficiency = this.createProficiency({
+      name: 'discrétion',
+      shortName: 'disc',
+      category: DisplayCategory.MAGIE,
+      minLevel: 10
+    })
+    const empathie: DBProficiency = this.createProficiency({
+      name: 'empathie',
+      shortName: 'empat',
+      category: DisplayCategory.MAGIE,
+      minLevel: 10
+    })
     return [
+      empathie,
+      discretion,
       lumiereSagesse,
       lumiereCharisme,
       ventRapidite,
@@ -82,7 +108,9 @@ export class InitProficiencies {
       negociation,
       arnaque,
       force,
-      strategie
+      strategie,
+      folie,
+      seduction
     ]
   }
   static createProficiency(p: {

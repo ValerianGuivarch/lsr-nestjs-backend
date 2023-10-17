@@ -109,6 +109,9 @@ export class DBSkill {
   description: string
 
   @Column({ type: 'varchar', default: '' })
+  owner: string
+
+  @Column({ type: 'varchar', default: '' })
   precision: string
 
   @Column({ type: 'integer', default: 0 })

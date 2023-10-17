@@ -201,8 +201,22 @@ export class InitSkills {
       category: DisplayCategory.ARCANES,
       display: 'fait une *Communication Arcanique*',
       position: 105,
-      arcaneCost: 1,
-      isArcanique: true
+
+      isArcanique: true,
+      arcaneCost: 1
+    })
+    const liberationArcaniqueSkill = this.createSkill({
+      name: 'Libération arcanique',
+      shortName: 'lib',
+      longName: 'libération',
+      description: 'Permet de libérer une arcane',
+      allAttribution: false,
+      stat: SkillStat.ESSENCE,
+      category: DisplayCategory.ARCANES,
+      display: 'fait une *Libération Arcanique*',
+      position: 110,
+      isArcanique: true,
+      arcaneCost: 0
     })
     const boostArcaniqueSkill = this.createSkill({
       name: 'boost arcanique',
@@ -214,8 +228,9 @@ export class InitSkills {
       category: DisplayCategory.ARCANES,
       display: 'fait un *Boost Arcanique*',
       position: 106,
-      arcaneCost: 1,
-      isArcanique: true
+
+      isArcanique: true,
+      arcaneCost: 1
     })
     const blocageArcaniqueSkill = this.createSkill({
       name: 'blocage arcanique',
@@ -227,8 +242,9 @@ export class InitSkills {
       category: DisplayCategory.ARCANES,
       display: 'fait un *Blocage Arcanique*',
       position: 107,
-      arcaneCost: 1,
-      isArcanique: true
+
+      isArcanique: true,
+      arcaneCost: 1
     })
     const copieArcaniqueSkill = this.createSkill({
       name: 'copie arcanique',
@@ -240,8 +256,9 @@ export class InitSkills {
       category: DisplayCategory.ARCANES,
       display: 'fait une *Copie Arcanique*',
       position: 108,
-      arcaneCost: 1,
-      isArcanique: true
+
+      isArcanique: true,
+      arcaneCost: 1
     })
     const lienAuxVoyageursSkill = this.createSkill({
       name: 'arpenteur',
@@ -252,8 +269,8 @@ export class InitSkills {
       category: DisplayCategory.ARCANES,
       display: 'fait un *Lien aux Voyageurs*',
       position: 109,
-      arcaneCost: 1,
-      isArcanique: true
+      isArcanique: true,
+      arcaneCost: 0
     })
 
     const peurSkill = this.createSkill({
@@ -267,7 +284,8 @@ export class InitSkills {
       position: 1,
       ppCost: 1,
       dettesCost: 0,
-      isArcanique: true
+      isArcanique: true,
+      arcaneCost: 1
     })
 
     const sablierSkill = this.createSkill({
@@ -280,8 +298,9 @@ export class InitSkills {
       display: 'fait une *Sablier*',
       position: 1,
       successCalculation: SuccessCalculation.SIMPLE_PLUS_1,
-      arcaneCost: 1,
-      isArcanique: true
+
+      isArcanique: true,
+      arcaneCost: 1
     })
 
     const alchimisteSkill = this.createSkill({
@@ -294,8 +313,9 @@ export class InitSkills {
       display: 'fait une *Alchimiste*',
       position: 4,
       successCalculation: SuccessCalculation.SIMPLE_PLUS_1,
-      arcaneCost: 1,
-      isArcanique: true
+
+      isArcanique: true,
+      arcaneCost: 1
     })
 
     const voyageurSkill = this.createSkill({
@@ -308,8 +328,8 @@ export class InitSkills {
       display: 'fait une *Voyageur*',
       position: 3,
       successCalculation: SuccessCalculation.SIMPLE_PLUS_1,
-      arcaneCost: 1,
-      isArcanique: true
+      isArcanique: true,
+      arcaneCost: 1
     })
 
     const forgeronSkill = this.createSkill({
@@ -322,8 +342,9 @@ export class InitSkills {
       display: 'fait une *Forgeron*',
       position: 4,
       successCalculation: SuccessCalculation.SIMPLE_PLUS_1,
-      arcaneCost: 1,
-      isArcanique: true
+
+      isArcanique: true,
+      arcaneCost: 1
     })
 
     const loupSkill = this.createSkill({
@@ -336,8 +357,9 @@ export class InitSkills {
       display: 'fait une *Loup*',
       position: 5,
       successCalculation: SuccessCalculation.SIMPLE_PLUS_1,
-      arcaneCost: 1,
-      isArcanique: true
+
+      isArcanique: true,
+      arcaneCost: 1
     })
 
     const serpentSkill = this.createSkill({
@@ -350,8 +372,9 @@ export class InitSkills {
       display: 'fait une *Serpent*',
       position: 6,
       successCalculation: SuccessCalculation.SIMPLE_PLUS_1,
-      arcaneCost: 1,
-      isArcanique: true
+
+      isArcanique: true,
+      arcaneCost: 1
     })
 
     const fauconSkill = this.createSkill({
@@ -364,8 +387,9 @@ export class InitSkills {
       display: 'fait une *Faucon*',
       position: 7,
       successCalculation: SuccessCalculation.AUCUN,
-      arcaneCost: 1,
-      isArcanique: true
+
+      isArcanique: true,
+      arcaneCost: 1
     })
 
     const sorciereSkill = this.createSkill({
@@ -378,8 +402,9 @@ export class InitSkills {
       display: 'fait une *Sorcière*',
       position: 8,
       successCalculation: SuccessCalculation.SIMPLE_PLUS_1,
-      arcaneCost: 1,
-      isArcanique: true
+
+      isArcanique: true,
+      arcaneCost: 1
     })
 
     const vampireSkill = this.createSkill({
@@ -392,8 +417,9 @@ export class InitSkills {
       display: 'fait une *Vampire*',
       position: 9,
       successCalculation: SuccessCalculation.DIVISE_PLUS_1,
-      arcaneCost: 1,
-      isArcanique: true
+
+      isArcanique: true,
+      arcaneCost: 1
     })
 
     const licheSkill = this.createSkill({
@@ -406,11 +432,12 @@ export class InitSkills {
       display: 'fait une *Liche*',
       position: 10,
       successCalculation: SuccessCalculation.SIMPLE_PLUS_1,
-      arcaneCost: 1,
-      isArcanique: true
+
+      isArcanique: true,
+      arcaneCost: 1
     })
     const fantomeSkill = this.createSkill({
-      name: 'fantome',
+      name: 'fantôme',
       shortName: 'ftm',
       description: 'Permet de traverser les murs',
       allAttribution: false,
@@ -419,8 +446,9 @@ export class InitSkills {
       display: 'fait un *Fantome*',
       position: 11,
       successCalculation: SuccessCalculation.SIMPLE_PLUS_1,
-      arcaneCost: 1,
-      isArcanique: true
+
+      isArcanique: true,
+      arcaneCost: 1
     })
 
     const illusionisteSkill = this.createSkill({
@@ -433,12 +461,13 @@ export class InitSkills {
       display: 'fait un *Illusioniste*',
       position: 12,
       successCalculation: SuccessCalculation.SIMPLE_PLUS_1,
-      arcaneCost: 1,
+
       isArcanique: true,
+      arcaneCost: 1,
       resistance: true
     })
     const comedienSkill = this.createSkill({
-      name: 'comedien',
+      name: 'comédien',
       shortName: 'cmd',
       description: "Permet de changer d'apparence",
       allAttribution: false,
@@ -447,8 +476,9 @@ export class InitSkills {
       display: 'fait une *Comédien*',
       position: 12,
       successCalculation: SuccessCalculation.SIMPLE_PLUS_1,
-      arcaneCost: 1,
-      isArcanique: true
+
+      isArcanique: true,
+      arcaneCost: 1
     })
 
     const voleurSkill = this.createSkill({
@@ -461,8 +491,9 @@ export class InitSkills {
       display: 'fait une *Voleur*',
       position: 13,
       successCalculation: SuccessCalculation.SIMPLE_PLUS_1,
-      arcaneCost: 1,
+
       isArcanique: true,
+      arcaneCost: 1,
       resistance: true
     })
 
@@ -476,8 +507,9 @@ export class InitSkills {
       display: 'fait une *Mentaliste*',
       position: 14,
       successCalculation: SuccessCalculation.SIMPLE_PLUS_1,
-      arcaneCost: 1,
+
       isArcanique: true,
+      arcaneCost: 1,
       resistance: true
     })
 
@@ -491,8 +523,9 @@ export class InitSkills {
       display: 'fait une *Erudit*',
       position: 15,
       successCalculation: SuccessCalculation.SIMPLE_PLUS_1,
-      arcaneCost: 1,
-      isArcanique: true
+
+      isArcanique: true,
+      arcaneCost: 1
     })
 
     const chasseurSkill = this.createSkill({
@@ -505,8 +538,9 @@ export class InitSkills {
       display: 'fait une *Chasseur*',
       position: 16,
       successCalculation: SuccessCalculation.SIMPLE_PLUS_1,
-      arcaneCost: 1,
-      isArcanique: true
+
+      isArcanique: true,
+      arcaneCost: 1
     })
 
     const ivrogneSkill = this.createSkill({
@@ -519,8 +553,9 @@ export class InitSkills {
       display: 'fait une *Ivrogne*',
       position: 17,
       successCalculation: SuccessCalculation.AUCUN,
-      arcaneCost: 1,
-      isArcanique: true
+
+      isArcanique: true,
+      arcaneCost: 1
     })
 
     const jugeSkill = this.createSkill({
@@ -533,8 +568,9 @@ export class InitSkills {
       display: 'fait une *Juge*',
       position: 18,
       successCalculation: SuccessCalculation.AUCUN,
-      arcaneCost: 1,
-      isArcanique: true
+
+      isArcanique: true,
+      arcaneCost: 1
     })
 
     const jugeAmelioreSkill = this.createSkill({
@@ -547,8 +583,9 @@ export class InitSkills {
       display: 'fait une *Juge Amélioré*',
       position: 18,
       successCalculation: SuccessCalculation.AUCUN,
-      arcaneCost: 1,
-      isArcanique: true
+
+      isArcanique: true,
+      arcaneCost: 1
     })
 
     const arbreSkill = this.createSkill({
@@ -561,8 +598,9 @@ export class InitSkills {
       display: 'fait une *Arbre*',
       position: 19,
       successCalculation: SuccessCalculation.SIMPLE_PLUS_1,
-      arcaneCost: 1,
+
       isArcanique: true,
+      arcaneCost: 1,
       resistance: true,
       blessure: true
     })
@@ -577,8 +615,9 @@ export class InitSkills {
       display: 'fait une *Phoenix*',
       position: 20,
       successCalculation: SuccessCalculation.AUCUN,
-      arcaneCost: 1,
-      isArcanique: true
+
+      isArcanique: true,
+      arcaneCost: 1
     })
 
     const phoenixAmelioreSkill = this.createSkill({
@@ -591,8 +630,9 @@ export class InitSkills {
       display: 'fait une *Phoenix Amélioré*',
       position: 20,
       successCalculation: SuccessCalculation.AUCUN,
-      arcaneCost: 1,
-      isArcanique: true
+
+      isArcanique: true,
+      arcaneCost: 1
     })
 
     const necromancienSkill = this.createSkill({
@@ -605,8 +645,9 @@ export class InitSkills {
       display: 'fait une *Necromancien*',
       position: 21,
       successCalculation: SuccessCalculation.SIMPLE_PLUS_1,
-      arcaneCost: 1,
-      isArcanique: true
+
+      isArcanique: true,
+      arcaneCost: 1
     })
 
     const licorneSkill = this.createSkill({
@@ -619,8 +660,9 @@ export class InitSkills {
       display: 'fait une *Licorne*',
       position: 22,
       successCalculation: SuccessCalculation.SIMPLE_PLUS_1,
-      arcaneCost: 1,
+
       isArcanique: true,
+      arcaneCost: 1,
       isHeal: true
     })
     const chouetteSkill = this.createSkill({
@@ -633,7 +675,9 @@ export class InitSkills {
       display: 'projette son *Esprit* pour voir au loin',
       position: 24,
       successCalculation: SuccessCalculation.SIMPLE_PLUS_1,
-      isArcanique: true
+
+      isArcanique: true,
+      arcaneCost: 1
     })
 
     const chevalSkill = this.createSkill({
@@ -646,7 +690,9 @@ export class InitSkills {
       display: 'invoque un *Véhicule*',
       position: 25,
       successCalculation: SuccessCalculation.SIMPLE_PLUS_1,
-      isArcanique: true
+
+      isArcanique: true,
+      arcaneCost: 1
     })
 
     const diablotinSkill = this.createSkill({
@@ -659,7 +705,9 @@ export class InitSkills {
       display: 'invoque un petit *Serviteur*',
       position: 26,
       successCalculation: SuccessCalculation.SIMPLE_PLUS_1,
-      isArcanique: true
+
+      isArcanique: true,
+      arcaneCost: 1
     })
 
     const protecteurSkill = this.createSkill({
@@ -672,20 +720,24 @@ export class InitSkills {
       display: 'donne X *PV temporaire*, -1 par tour',
       position: 27,
       successCalculation: SuccessCalculation.SIMPLE_PLUS_1,
-      isArcanique: true
+
+      isArcanique: true,
+      arcaneCost: 1
     })
 
     const corbeauSkill = this.createSkill({
       name: 'corbeau',
       shortName: 'crb',
       description: 'Ajoute X en Esprit au prochain Jet pour soit et ses alliés',
+
       allAttribution: false,
       stat: SkillStat.ESSENCE,
       category: DisplayCategory.ARCANES,
       display: 'ajoute X en *Esprit* au prochain Jet pour soi et ses alliés',
       position: 28,
       successCalculation: SuccessCalculation.SIMPLE_PLUS_1,
-      isArcanique: true
+      isArcanique: true,
+      arcaneCost: 1
     })
 
     const araigneeSkill = this.createSkill({
@@ -699,6 +751,7 @@ export class InitSkills {
       position: 29,
       successCalculation: SuccessCalculation.SIMPLE_PLUS_1,
       isArcanique: true,
+      arcaneCost: 1,
       resistance: true
     })
 
@@ -713,6 +766,7 @@ export class InitSkills {
       position: 30,
       successCalculation: SuccessCalculation.SIMPLE_PLUS_1,
       isArcanique: true,
+      arcaneCost: 1,
       resistance: true
     })
 
@@ -727,6 +781,7 @@ export class InitSkills {
       position: 31,
       successCalculation: SuccessCalculation.SIMPLE_PLUS_1,
       isArcanique: true,
+      arcaneCost: 1,
       resistance: true
     })
 
@@ -740,7 +795,8 @@ export class InitSkills {
       display: 'crée des *Portails* à courte portée',
       position: 32,
       successCalculation: SuccessCalculation.SIMPLE_PLUS_1,
-      isArcanique: true
+      isArcanique: true,
+      arcaneCost: 1
     })
 
     const pretreSkill = this.createSkill({
@@ -754,6 +810,7 @@ export class InitSkills {
       position: 33,
       successCalculation: SuccessCalculation.SIMPLE_PLUS_1,
       isArcanique: true,
+      arcaneCost: 1,
       resistance: true
     })
 
@@ -768,6 +825,7 @@ export class InitSkills {
       position: 34,
       successCalculation: SuccessCalculation.SIMPLE_PLUS_1,
       isArcanique: true,
+      arcaneCost: 1,
       resistance: true,
       blessure: true
     })
@@ -782,6 +840,7 @@ export class InitSkills {
       position: 35,
       successCalculation: SuccessCalculation.SIMPLE_PLUS_1,
       isArcanique: true,
+      arcaneCost: 1,
       resistance: true
     })
 
@@ -795,7 +854,8 @@ export class InitSkills {
       display: 'booste sa *Chair* de X/2, -1 par tour',
       position: 36,
       successCalculation: SuccessCalculation.DIVISE_PLUS_1,
-      isArcanique: true
+      isArcanique: true,
+      arcaneCost: 1
     })
 
     const taureauSkill = this.createSkill({
@@ -808,7 +868,8 @@ export class InitSkills {
       display: 'booste son *Esprit* de X/2, -1 par tour',
       position: 37,
       successCalculation: SuccessCalculation.DIVISE_PLUS_1,
-      isArcanique: true
+      isArcanique: true,
+      arcaneCost: 1
     })
 
     const renardSkill = this.createSkill({
@@ -821,7 +882,8 @@ export class InitSkills {
       display: 'booste son *Essence* de X/2, -1 par tour',
       position: 38,
       successCalculation: SuccessCalculation.DIVISE_PLUS_1,
-      isArcanique: true
+      isArcanique: true,
+      arcaneCost: 1
     })
 
     const videSkill = this.createSkill({
@@ -834,7 +896,8 @@ export class InitSkills {
       display: 'fait disparaitre quelque chose',
       position: 39,
       successCalculation: SuccessCalculation.SIMPLE_PLUS_1,
-      isArcanique: true
+      isArcanique: true,
+      arcaneCost: 1
     })
 
     const miroirSkill = this.createSkill({
@@ -847,7 +910,8 @@ export class InitSkills {
       display: 'crée des *Illusions* de soi autour',
       position: 40,
       successCalculation: SuccessCalculation.SIMPLE_PLUS_1,
-      isArcanique: true
+      isArcanique: true,
+      arcaneCost: 1
     })
 
     const devinSkill = this.createSkill({
@@ -860,7 +924,8 @@ export class InitSkills {
       display: 'voit dans le *Futur*',
       position: 41,
       successCalculation: SuccessCalculation.SIMPLE_PLUS_1,
-      isArcanique: true
+      isArcanique: true,
+      arcaneCost: 1
     })
 
     const peintreSkill = this.createSkill({
@@ -873,7 +938,8 @@ export class InitSkills {
       display: 'fige le *Temps*',
       position: 42,
       successCalculation: SuccessCalculation.SIMPLE_PLUS_1,
-      isArcanique: true
+      isArcanique: true,
+      arcaneCost: 1
     })
 
     const telepatheSkill = this.createSkill({
@@ -886,7 +952,8 @@ export class InitSkills {
       display: 'communique par *Télépathie*',
       position: 43,
       successCalculation: SuccessCalculation.SIMPLE_PLUS_1,
-      isArcanique: true
+      isArcanique: true,
+      arcaneCost: 1
     })
 
     const montreSkill = this.createSkill({
@@ -899,7 +966,8 @@ export class InitSkills {
       display: 'se projette dans le *Futur*',
       position: 44,
       successCalculation: SuccessCalculation.SIMPLE_PLUS_1,
-      isArcanique: true
+      isArcanique: true,
+      arcaneCost: 1
     })
     const omniscientSkill = this.createSkill({
       name: 'omniscient',
@@ -911,7 +979,8 @@ export class InitSkills {
       display: 'a une *Vision Totale* autour de soi',
       position: 45,
       successCalculation: SuccessCalculation.SIMPLE_PLUS_1,
-      isArcanique: true
+      isArcanique: true,
+      arcaneCost: 1
     })
 
     const messagerSkill = this.createSkill({
@@ -924,7 +993,8 @@ export class InitSkills {
       display: "envoie d'un *Message* à une cible proche ou marquée",
       position: 46,
       successCalculation: SuccessCalculation.SIMPLE_PLUS_1,
-      isArcanique: true
+      isArcanique: true,
+      arcaneCost: 1
     })
 
     const nainSkill = this.createSkill({
@@ -937,7 +1007,8 @@ export class InitSkills {
       display: 'rétrécit (+X/2 bonus pour esquiver Chair et Esprit)',
       position: 47,
       successCalculation: SuccessCalculation.DIVISE_PLUS_1,
-      isArcanique: true
+      isArcanique: true,
+      arcaneCost: 1
     })
 
     const geantSkill = this.createSkill({
@@ -950,7 +1021,8 @@ export class InitSkills {
       display: 'grandit (+X/2 bonus pour attaquer en Chair)',
       position: 48,
       successCalculation: SuccessCalculation.DIVISE_PLUS_1,
-      isArcanique: true
+      isArcanique: true,
+      arcaneCost: 1
     })
 
     const vigieSkill = this.createSkill({
@@ -963,7 +1035,8 @@ export class InitSkills {
       display: 'marque un objet et sent quand il est touché',
       position: 49,
       successCalculation: SuccessCalculation.SIMPLE_PLUS_1,
-      isArcanique: true
+      isArcanique: true,
+      arcaneCost: 1
     })
 
     const amiSkill = this.createSkill({
@@ -977,6 +1050,7 @@ export class InitSkills {
       position: 50,
       successCalculation: SuccessCalculation.SIMPLE_PLUS_1,
       isArcanique: true,
+      arcaneCost: 1,
       resistance: true
     })
 
@@ -990,7 +1064,8 @@ export class InitSkills {
       display: 'communique avec les *Animaux*',
       position: 51,
       successCalculation: SuccessCalculation.SIMPLE_PLUS_1,
-      isArcanique: true
+      isArcanique: true,
+      arcaneCost: 1
     })
 
     const cryptesthesisteSkill = this.createSkill({
@@ -1003,7 +1078,8 @@ export class InitSkills {
       display: "perçoit les *Souvenirs* d'un objet",
       position: 52,
       successCalculation: SuccessCalculation.SIMPLE_PLUS_1,
-      isArcanique: true
+      isArcanique: true,
+      arcaneCost: 1
     })
 
     const sageSkill = this.createSkill({
@@ -1016,7 +1092,8 @@ export class InitSkills {
       display: 'obtient au moins X/2 réussites à chaque jet, -1 par tour',
       position: 53,
       successCalculation: SuccessCalculation.DIVISE_PLUS_1,
-      isArcanique: true
+      isArcanique: true,
+      arcaneCost: 1
     })
 
     const professeurSkill = this.createSkill({
@@ -1029,7 +1106,8 @@ export class InitSkills {
       display: 'donne des *PF* à une cible',
       position: 54,
       successCalculation: SuccessCalculation.SIMPLE_PLUS_1,
-      isArcanique: true
+      isArcanique: true,
+      arcaneCost: 1
     })
     const magicienSkill = this.createSkill({
       name: 'magicien',
@@ -1041,7 +1119,8 @@ export class InitSkills {
       display: 'donne des *PP* à une cible',
       position: 55,
       successCalculation: SuccessCalculation.SIMPLE_PLUS_1,
-      isArcanique: true
+      isArcanique: true,
+      arcaneCost: 1
     })
 
     const empoisonneurSkill = this.createSkill({
@@ -1055,6 +1134,7 @@ export class InitSkills {
       position: 56,
       successCalculation: SuccessCalculation.SIMPLE_PLUS_1,
       isArcanique: true,
+      arcaneCost: 1,
       resistance: true
     })
 
@@ -1068,7 +1148,8 @@ export class InitSkills {
       display: 'fait oublier sa présence aux adversaires',
       position: 57,
       successCalculation: SuccessCalculation.SIMPLE_PLUS_1,
-      isArcanique: true
+      isArcanique: true,
+      arcaneCost: 1
     })
 
     const pragmatiqueSkill = this.createSkill({
@@ -1082,6 +1163,7 @@ export class InitSkills {
       position: 58,
       successCalculation: SuccessCalculation.SIMPLE_PLUS_1,
       isArcanique: true,
+      arcaneCost: 1,
       resistance: true
     })
 
@@ -1095,7 +1177,8 @@ export class InitSkills {
       display: 'crée des odeurs et des gouts',
       position: 59,
       successCalculation: SuccessCalculation.SIMPLE_PLUS_1,
-      isArcanique: true
+      isArcanique: true,
+      arcaneCost: 1
     })
 
     const banquierSkill = this.createSkill({
@@ -1108,7 +1191,8 @@ export class InitSkills {
       display: 'crée un espace où cacher des objets',
       position: 60,
       successCalculation: SuccessCalculation.SIMPLE_PLUS_1,
-      isArcanique: true
+      isArcanique: true,
+      arcaneCost: 1
     })
 
     const colletSkill = this.createSkill({
@@ -1121,7 +1205,8 @@ export class InitSkills {
       display: "lie une cible à soi, qui ne peut plus s'éloigner",
       position: 61,
       successCalculation: SuccessCalculation.SIMPLE_PLUS_1,
-      isArcanique: true
+      isArcanique: true,
+      arcaneCost: 1
     })
 
     const linguisteSkill = this.createSkill({
@@ -1134,7 +1219,8 @@ export class InitSkills {
       display: "comprend à l'écrit et à l'oral une langue",
       position: 62,
       successCalculation: SuccessCalculation.SIMPLE_PLUS_1,
-      isArcanique: true
+      isArcanique: true,
+      arcaneCost: 1
     })
 
     const equilibristeSkill = this.createSkill({
@@ -1147,7 +1233,8 @@ export class InitSkills {
       display: "attaque en jet d'équilibre (somme des stats - somme des diff entre max et autres)",
       position: 63,
       successCalculation: SuccessCalculation.AUCUN,
-      isArcanique: true
+      isArcanique: true,
+      arcaneCost: 1
     })
 
     const marchandSkill = this.createSkill({
@@ -1160,7 +1247,8 @@ export class InitSkills {
       display: 'lie deux cibles par un contrat magique',
       position: 64,
       successCalculation: SuccessCalculation.SIMPLE_PLUS_1,
-      isArcanique: true
+      isArcanique: true,
+      arcaneCost: 1
     })
     const mecanicienSkill = this.createSkill({
       name: 'mecanicien',
@@ -1172,7 +1260,8 @@ export class InitSkills {
       display: 'anime des objets',
       position: 65,
       successCalculation: SuccessCalculation.SIMPLE_PLUS_1,
-      isArcanique: true
+      isArcanique: true,
+      arcaneCost: 1
     })
 
     const cadavreSkill = this.createSkill({
@@ -1185,7 +1274,8 @@ export class InitSkills {
       display: 'simule un état de mort',
       position: 66,
       successCalculation: SuccessCalculation.AUCUN,
-      isArcanique: true
+      isArcanique: true,
+      arcaneCost: 1
     })
 
     const leprechaunSkill = this.createSkill({
@@ -1198,7 +1288,8 @@ export class InitSkills {
       display: 'a de la chance',
       position: 67,
       successCalculation: SuccessCalculation.SIMPLE_PLUS_1,
-      isArcanique: true
+      isArcanique: true,
+      arcaneCost: 1
     })
 
     const bergerSkill = this.createSkill({
@@ -1211,7 +1302,8 @@ export class InitSkills {
       display: "perçoit où se trouver ce que l'on désire",
       position: 68,
       successCalculation: SuccessCalculation.SIMPLE_PLUS_1,
-      isArcanique: true
+      isArcanique: true,
+      arcaneCost: 1
     })
 
     const reveSkill = this.createSkill({
@@ -1224,7 +1316,8 @@ export class InitSkills {
       display: "va dans les rêves d'une cible",
       position: 69,
       successCalculation: SuccessCalculation.SIMPLE_PLUS_1,
-      isArcanique: true
+      isArcanique: true,
+      arcaneCost: 1
     })
 
     const orateurSkill = this.createSkill({
@@ -1237,7 +1330,8 @@ export class InitSkills {
       display: 'réussit un jet pour encourager',
       position: 70,
       successCalculation: SuccessCalculation.SIMPLE_PLUS_1,
-      isArcanique: true
+      isArcanique: true,
+      arcaneCost: 1
     })
 
     const furieSkill = this.createSkill({
@@ -1250,7 +1344,8 @@ export class InitSkills {
       display: 'provoque un sentiment de colère à une cible',
       position: 71,
       successCalculation: SuccessCalculation.SIMPLE_PLUS_1,
-      isArcanique: true
+      isArcanique: true,
+      arcaneCost: 1
     })
 
     const ratSkill = this.createSkill({
@@ -1263,7 +1358,8 @@ export class InitSkills {
       display: "donne X malus aux ennemis pour le prochain jet d'Essence",
       position: 72,
       successCalculation: SuccessCalculation.SIMPLE_PLUS_1,
-      isArcanique: true
+      isArcanique: true,
+      arcaneCost: 1
     })
 
     const scorpionSkill = this.createSkill({
@@ -1276,7 +1372,8 @@ export class InitSkills {
       display: 'donne X malus aux ennemis pour le prochain jet de Chair',
       position: 73,
       successCalculation: SuccessCalculation.SIMPLE_PLUS_1,
-      isArcanique: true
+      isArcanique: true,
+      arcaneCost: 1
     })
 
     const vautourSkill = this.createSkill({
@@ -1289,7 +1386,8 @@ export class InitSkills {
       display: "donne X malus aux ennemis pour le prochain jet d'Esprit",
       position: 74,
       successCalculation: SuccessCalculation.SIMPLE_PLUS_1,
-      isArcanique: true
+      isArcanique: true,
+      arcaneCost: 1
     })
     const balanceSkill = this.createSkill({
       name: 'balance',
@@ -1301,7 +1399,8 @@ export class InitSkills {
       display: 'transfère X blessures sur une cible',
       position: 75,
       successCalculation: SuccessCalculation.SIMPLE_PLUS_1,
-      isArcanique: true
+      isArcanique: true,
+      arcaneCost: 1
     })
 
     const savantSkill = this.createSkill({
@@ -1314,7 +1413,8 @@ export class InitSkills {
       display: 'protège son esprit',
       position: 76,
       successCalculation: SuccessCalculation.AUCUN,
-      isArcanique: true
+      isArcanique: true,
+      arcaneCost: 1
     })
 
     const archeologueSkill = this.createSkill({
@@ -1327,7 +1427,8 @@ export class InitSkills {
       display: 'perçoit où se trouve un objet à proximité ou marqué',
       position: 77,
       successCalculation: SuccessCalculation.SIMPLE_PLUS_1,
-      isArcanique: true
+      isArcanique: true,
+      arcaneCost: 1
     })
 
     const gardienSkill = this.createSkill({
@@ -1340,7 +1441,8 @@ export class InitSkills {
       display: 'ressent si un marqué est en danger',
       position: 78,
       successCalculation: SuccessCalculation.SIMPLE_PLUS_1,
-      isArcanique: true
+      isArcanique: true,
+      arcaneCost: 1
     })
 
     const destructionSkill = this.createSkill({
@@ -1354,6 +1456,7 @@ export class InitSkills {
       position: 79,
       successCalculation: SuccessCalculation.SIMPLE_PLUS_1,
       isArcanique: true,
+      arcaneCost: 1,
       resistance: true,
       blessure: true
     })
@@ -1368,7 +1471,8 @@ export class InitSkills {
       display: 'provoque un état de sommeil',
       position: 80,
       successCalculation: SuccessCalculation.SIMPLE_PLUS_1,
-      isArcanique: true
+      isArcanique: true,
+      arcaneCost: 1
     })
 
     const lucioleSkill = this.createSkill({
@@ -1381,7 +1485,8 @@ export class InitSkills {
       display: 'soigne X/2 PV à ses alliés à distance',
       position: 81,
       successCalculation: SuccessCalculation.DIVISE_PLUS_1,
-      isArcanique: true
+      isArcanique: true,
+      arcaneCost: 1
     })
 
     const chaperonSkill = this.createSkill({
@@ -1394,7 +1499,8 @@ export class InitSkills {
       display: 'téléporte une personne marqué ou visible vers soi',
       position: 82,
       successCalculation: SuccessCalculation.SIMPLE_PLUS_1,
-      isArcanique: true
+      isArcanique: true,
+      arcaneCost: 1
     })
 
     const chauveSourisSkill = this.createSkill({
@@ -1407,7 +1513,8 @@ export class InitSkills {
       display: 'projette son esprit pour entendre au loin',
       position: 83,
       successCalculation: SuccessCalculation.SIMPLE_PLUS_1,
-      isArcanique: true
+      isArcanique: true,
+      arcaneCost: 1
     })
 
     const acrobateSkill = this.createSkill({
@@ -1420,7 +1527,8 @@ export class InitSkills {
       display: "peut s'accrocher aux murs",
       position: 84,
       successCalculation: SuccessCalculation.SIMPLE_PLUS_1,
-      isArcanique: true
+      isArcanique: true,
+      arcaneCost: 1
     })
     const terreurSkill = this.createSkill({
       name: 'terreur',
@@ -1432,7 +1540,21 @@ export class InitSkills {
       display: 'provoque un sentiment de peur',
       position: 85,
       successCalculation: SuccessCalculation.SIMPLE_PLUS_1,
-      isArcanique: true
+      isArcanique: true,
+      arcaneCost: 1
+    })
+    const TerreurSkill = this.createSkill({
+      name: 'Terreur',
+      shortName: 'Ter',
+      description: 'Provoque un sentiment de peur',
+      allAttribution: false,
+      stat: SkillStat.ESPRIT,
+      category: DisplayCategory.MAGIE,
+      display: 'provoque un sentiment de peur',
+      position: 1,
+      successCalculation: SuccessCalculation.SIMPLE_PLUS_1,
+      isArcanique: true,
+      dettesCost: 1
     })
 
     const ectoplasmeSkill = this.createSkill({
@@ -1445,7 +1567,8 @@ export class InitSkills {
       display: 'projette une version visible pour voir/entendre au loin',
       position: 86,
       successCalculation: SuccessCalculation.SIMPLE_PLUS_1,
-      isArcanique: true
+      isArcanique: true,
+      arcaneCost: 1
     })
 
     const torcheSkill = this.createSkill({
@@ -1458,7 +1581,8 @@ export class InitSkills {
       display: 'aura de soin pour X tours',
       position: 87,
       successCalculation: SuccessCalculation.SIMPLE_PLUS_1,
-      isArcanique: true
+      isArcanique: true,
+      arcaneCost: 1
     })
 
     const survivantSkill = this.createSkill({
@@ -1471,7 +1595,8 @@ export class InitSkills {
       display: 'protection contre la mort',
       position: 88,
       successCalculation: SuccessCalculation.SIMPLE_PLUS_1,
-      isArcanique: true
+      isArcanique: true,
+      arcaneCost: 1
     })
 
     const purificateurSkill = this.createSkill({
@@ -1484,7 +1609,8 @@ export class InitSkills {
       display: 'purifie eau, nourriture ou maladies',
       position: 89,
       successCalculation: SuccessCalculation.SIMPLE_PLUS_1,
-      isArcanique: true
+      isArcanique: true,
+      arcaneCost: 1
     })
 
     const reparateurSkill = this.createSkill({
@@ -1497,7 +1623,8 @@ export class InitSkills {
       display: 'répare objets ou mécanismes',
       position: 90,
       successCalculation: SuccessCalculation.SIMPLE_PLUS_1,
-      isArcanique: true
+      isArcanique: true,
+      arcaneCost: 1
     })
 
     const voyantSkill = this.createSkill({
@@ -1510,7 +1637,8 @@ export class InitSkills {
       display: 'scrute une personne proche ou marquée',
       position: 91,
       successCalculation: SuccessCalculation.SIMPLE_PLUS_1,
-      isArcanique: true
+      isArcanique: true,
+      arcaneCost: 1
     })
 
     const nomadeSkill = this.createSkill({
@@ -1523,7 +1651,8 @@ export class InitSkills {
       display: 'sait exactement où il se situe',
       position: 92,
       successCalculation: SuccessCalculation.AUCUN,
-      isArcanique: true
+      isArcanique: true,
+      arcaneCost: 1
     })
 
     const silenceSkill = this.createSkill({
@@ -1536,7 +1665,8 @@ export class InitSkills {
       display: 'bloque le son dans une zone',
       position: 93,
       successCalculation: SuccessCalculation.SIMPLE_PLUS_1,
-      isArcanique: true
+      isArcanique: true,
+      arcaneCost: 1
     })
 
     const mortSkill = this.createSkill({
@@ -1549,7 +1679,8 @@ export class InitSkills {
       display: 'achève une cible à 25% de PV ou moins',
       position: 94,
       successCalculation: SuccessCalculation.AUCUN,
-      isArcanique: true
+      isArcanique: true,
+      arcaneCost: 1
     })
     const analysteSkill = this.createSkill({
       name: 'analyste',
@@ -1561,7 +1692,8 @@ export class InitSkills {
       display: 'scanne pour connaître lignée et stats',
       position: 95,
       successCalculation: SuccessCalculation.AUCUN,
-      isArcanique: true
+      isArcanique: true,
+      arcaneCost: 1
     })
 
     const farceurSkill = this.createSkill({
@@ -1574,7 +1706,8 @@ export class InitSkills {
       display: 'ajoute un effet à un objet touché',
       position: 96,
       successCalculation: SuccessCalculation.SIMPLE_PLUS_1,
-      isArcanique: true
+      isArcanique: true,
+      arcaneCost: 1
     })
 
     const observateurSkill = this.createSkill({
@@ -1587,7 +1720,8 @@ export class InitSkills {
       display: 'obtient vision véritable',
       position: 97,
       successCalculation: SuccessCalculation.AUCUN,
-      isArcanique: true
+      isArcanique: true,
+      arcaneCost: 1
     })
 
     const confesseurSkill = this.createSkill({
@@ -1600,7 +1734,8 @@ export class InitSkills {
       display: 'crée une zone de vérité',
       position: 98,
       successCalculation: SuccessCalculation.SIMPLE_PLUS_1,
-      isArcanique: true
+      isArcanique: true,
+      arcaneCost: 1
     })
 
     const bouclierSkill = this.createSkill({
@@ -1613,7 +1748,8 @@ export class InitSkills {
       display: 'réduit X dégâts',
       position: 99,
       successCalculation: SuccessCalculation.SIMPLE_PLUS_1,
-      isArcanique: true
+      isArcanique: true,
+      arcaneCost: 1
     })
 
     const pisteurSkill = this.createSkill({
@@ -1626,7 +1762,8 @@ export class InitSkills {
       display: 'perçoit cible pour X heures',
       position: 100,
       successCalculation: SuccessCalculation.SIMPLE_PLUS_1,
-      isArcanique: true
+      isArcanique: true,
+      arcaneCost: 1
     })
 
     const pieuvreSkill = this.createSkill({
@@ -1639,7 +1776,8 @@ export class InitSkills {
       display: 'ajoute des bras pour attaque supplémentaire',
       position: 101,
       successCalculation: SuccessCalculation.SIMPLE_PLUS_1,
-      isArcanique: true
+      isArcanique: true,
+      arcaneCost: 1
     })
 
     const sobreSkill = this.createSkill({
@@ -1652,7 +1790,8 @@ export class InitSkills {
       display: 'force défense avec autre stat',
       position: 102,
       successCalculation: SuccessCalculation.AUCUN,
-      isArcanique: true
+      isArcanique: true,
+      arcaneCost: 1
     })
 
     const illumineSkill = this.createSkill({
@@ -1665,7 +1804,8 @@ export class InitSkills {
       display: 'communion avec Être Supérieur',
       position: 103,
       successCalculation: SuccessCalculation.SIMPLE_PLUS_1,
-      isArcanique: true
+      isArcanique: true,
+      arcaneCost: 1
     })
 
     const souhaitSkill = this.createSkill({
@@ -1678,7 +1818,8 @@ export class InitSkills {
       display: 'utilise arcanes ou modifie le monde',
       position: 104,
       successCalculation: SuccessCalculation.AUCUN,
-      isArcanique: true
+      isArcanique: true,
+      arcaneCost: 1
     })
     /*const planteSoutien = this.createSkill({
       name: 'Plante de soutien',
@@ -2037,19 +2178,23 @@ export class InitSkills {
       category: DisplayCategory.ARCANES_PRIMES,
       display: "utilise l'*Arcane Prime* de la *Bouteille de Kyma*",
       position: 1,
-      arcanePrimeCost: 1
+      arcanePrimeCost: 1,
+      owner: 'Atlantide'
     })
 
     const poignardTemporelle = this.createSkill({
-      name: 'Poignard Temporelle',
+      name: 'Poignard Temporel',
       shortName: 'pgnd',
       description: 'Invoquer un commandant du futur',
       allAttribution: false,
-      stat: SkillStat.ESSENCE,
       category: DisplayCategory.ARCANES_PRIMES,
+      owner: 'millia',
       display: "utilise l'*Arcane Prime* du *Poignard Temporelle*",
       position: 1,
-      arcanePrimeCost: 1
+      arcanePrimeCost: 1,
+      customRolls: '1d10',
+      successCalculation: SuccessCalculation.CUSTOM,
+      stat: SkillStat.CUSTOM
     })
 
     const bagueDeirdre = this.createSkill({
@@ -2059,6 +2204,7 @@ export class InitSkills {
       allAttribution: false,
       stat: SkillStat.ESSENCE,
       category: DisplayCategory.ARCANES_PRIMES,
+      owner: 'deirdre',
       display: "utilise l'*Arcane Prime* de la *Bague de Deirdre*",
       position: 1,
       arcanePrimeCost: 1
@@ -2071,6 +2217,7 @@ export class InitSkills {
       allAttribution: false,
       stat: SkillStat.ESSENCE,
       category: DisplayCategory.ARCANES_PRIMES,
+      owner: 'lilou',
       display: "utilise l'*Arcane Prime* du *Jeton de Lilou*",
       position: 1,
       arcanePrimeCost: 1
@@ -2083,6 +2230,7 @@ export class InitSkills {
       allAttribution: false,
       stat: SkillStat.ESSENCE,
       category: DisplayCategory.ARCANES_PRIMES,
+      owner: 'roger',
       display: "utilise l'*Arcane Prime* du *Béret de Roger*",
       position: 1,
       arcanePrimeCost: 1
@@ -2095,6 +2243,7 @@ export class InitSkills {
       allAttribution: false,
       stat: SkillStat.ESSENCE,
       category: DisplayCategory.ARCANES_PRIMES,
+      owner: 'ayoub',
       display: "utilise l'*Arcane Prime* de *Ciel*",
       position: 1,
       arcanePrimeCost: 1
@@ -2107,6 +2256,7 @@ export class InitSkills {
       allAttribution: false,
       stat: SkillStat.ESSENCE,
       category: DisplayCategory.ARCANES_PRIMES,
+      owner: 'viktor',
       display: "utilise l'*Arcane Prime* de la *Guibole de Viktor*",
       position: 1,
       arcanePrimeCost: 1
@@ -2114,23 +2264,38 @@ export class InitSkills {
 
     const carteTara = this.createSkill({
       name: 'Carte de Tara',
-      shortName: 'guib',
+      shortName: 'carte',
       description: 'Crée un effet aléatoire (fascination, amour, etc...)',
       allAttribution: false,
       stat: SkillStat.ESSENCE,
       category: DisplayCategory.ARCANES_PRIMES,
       display: "utilise l'*Arcane Prime* de la *Carte de Tara*",
+      owner: 'tara',
+      position: 1,
+      arcanePrimeCost: 1
+    })
+
+    const devorer = this.createSkill({
+      name: 'Dévorer',
+      shortName: 'devorer',
+      description: 'Dévorer une âme',
+      allAttribution: false,
+      stat: SkillStat.ESSENCE,
+      successCalculation: SuccessCalculation.DOUBLE,
+      category: DisplayCategory.MAGIE,
+      display: 'tente de dévorer une âme',
       position: 1,
       arcanePrimeCost: 1
     })
 
     const tatouage = this.createSkill({
-      name: 'tatouage',
+      name: 'Tatouage',
       shortName: 'tat',
       description: 'Se transformer la plus grande peur de la cible',
       allAttribution: false,
       stat: SkillStat.ESSENCE,
       category: DisplayCategory.ARCANES_PRIMES,
+      owner: 'aurélien',
       display: "utilise l'*Arcane Prime* du *Tatouage de Terreur*",
       position: 1,
       arcanePrimeCost: 1
@@ -2143,6 +2308,7 @@ export class InitSkills {
       allAttribution: false,
       stat: SkillStat.ESSENCE,
       category: DisplayCategory.ARCANES_PRIMES,
+      owner: 'mathieu',
       display: "utilise l'*Arcane Prime* du *Tarot de Mathieu*",
       position: 1,
       arcanePrimeCost: 1
@@ -2155,6 +2321,7 @@ export class InitSkills {
       allAttribution: false,
       stat: SkillStat.ESSENCE,
       category: DisplayCategory.ARCANES_PRIMES,
+      owner: 'rain',
       display: "utilise l'*Arcane Prime* du *Chapeau de Merlin*",
       position: 1,
       arcanePrimeCost: 1
@@ -2167,37 +2334,285 @@ export class InitSkills {
       allAttribution: false,
       stat: SkillStat.ESSENCE,
       category: DisplayCategory.ARCANES_PRIMES,
+      owner: 'roy',
       display: "utilise l'*Arcane Prime* du *Médaillon de Roy*",
+      position: 1,
+      arcanePrimeCost: 1
+    })
+
+    const aureoleIllusion = this.createSkill({
+      name: 'Aureole d Illusion',
+      shortName: 'aureole',
+      description: 'Crée une illusion du décor de la pièce',
+      allAttribution: false,
+      stat: SkillStat.ESSENCE,
+      successCalculation: SuccessCalculation.SIMPLE,
+      category: DisplayCategory.ARCANES_PRIMES,
+      owner: 'Bouclier',
+      display: "utilise l'*Auréole d'Illusion*",
+      position: 1,
+      arcanePrimeCost: 1
+    })
+
+    const chevaliereDiscorde = this.createSkill({
+      name: 'Chevalière de Discorde',
+      shortName: 'discord',
+      description: 'Applique un besoin de se battre à une cible',
+      allAttribution: false,
+      stat: SkillStat.ESSENCE,
+      category: DisplayCategory.ARCANES_PRIMES,
+      successCalculation: SuccessCalculation.SIMPLE,
+      owner: 'Bouclier',
+      display: 'utilise la *Chevalière de Discorde*',
+      position: 1,
+      arcanePrimeCost: 1
+    })
+
+    const bagueDeFoyer = this.createSkill({
+      name: 'Bague de Foyer',
+      shortName: 'foyer',
+      description: 'Renvoie l utilisateur dans le lieu où il se sent en sécurité',
+      allAttribution: false,
+      stat: SkillStat.FIXE,
+      successCalculation: SuccessCalculation.AUCUN,
+      category: DisplayCategory.ARCANES_PRIMES,
+      owner: 'Bouclier',
+      display: 'utilise la *Bague de Foyer*',
+      position: 1,
+      arcanePrimeCost: 1
+    })
+
+    const pyramideKheops = this.createSkill({
+      name: 'Pyramide de Khéops',
+      shortName: 'kheops',
+      description: 'Perte des dettes des Ombres',
+      allAttribution: false,
+      stat: SkillStat.FIXE,
+      successCalculation: SuccessCalculation.AUCUN,
+      category: DisplayCategory.ARCANES_PRIMES,
+      owner: 'Prince',
+      display: 'utilise la *Pyramide de Kheops*',
+      position: 1,
+      arcanePrimeCost: 1
+    })
+
+    const tourDeBable = this.createSkill({
+      name: 'Tour de Babel',
+      shortName: 'babel',
+      description: 'Ouvre un passage vers un autre plan dans l au delà',
+      allAttribution: false,
+      stat: SkillStat.FIXE,
+      successCalculation: SuccessCalculation.AUCUN,
+      category: DisplayCategory.ARCANES_PRIMES,
+      owner: 'Prince',
+      display: 'utilise la *Tour de Babel*',
+      position: 1,
+      arcanePrimeCost: 1
+    })
+
+    const collierDeNonDetection = this.createSkill({
+      name: 'Collier de Non Détection',
+      shortName: 'nonDetect',
+      description: 'Permet d echapper aux détections diverses',
+      allAttribution: false,
+      stat: SkillStat.FIXE,
+      successCalculation: SuccessCalculation.AUCUN,
+      category: DisplayCategory.ARCANES_PRIMES,
+      owner: 'Renouveau',
+      display: 'utilise le *Collier de Non Détection*',
+      position: 1,
+      arcanePrimeCost: 1
+    })
+
+    const dagueAmes = this.createSkill({
+      name: 'Dague des Âmes',
+      shortName: 'dague',
+      description: "Absorbe l âme d'une cible mourante pour retrouver sa vitalité",
+      allAttribution: false,
+      stat: SkillStat.FIXE,
+      successCalculation: SuccessCalculation.AUCUN,
+      category: DisplayCategory.ARCANES_PRIMES,
+      owner: 'Bouclier',
+      display: 'utilise la *Dague des Âmes*',
+      position: 1,
+      arcanePrimeCost: 1
+    })
+
+    const montreTemporelle = this.createSkill({
+      name: 'Montre Temporelle',
+      shortName: 'ontr',
+      description: 'Fige le temps',
+      allAttribution: false,
+      stat: SkillStat.ESSENCE,
+      successCalculation: SuccessCalculation.SIMPLE,
+      category: DisplayCategory.ARCANES_PRIMES,
+      owner: 'Bouclier',
+      display: 'utilise la *Dague des Âmes*',
       position: 1,
       arcanePrimeCost: 1
     })
 
     const flasqueJohn = this.createSkill({
       name: 'Flasque de John',
-      shortName: 'medroy',
-      description: 'Echange les émotions entre les porteurs du médaillon',
+      shortName: 'flasque',
+      description: 'Retrouver sa vitalité et même davantage, mais gueule de bois en contact avec le Dévoreur',
       allAttribution: false,
       stat: SkillStat.ESSENCE,
       category: DisplayCategory.ARCANES_PRIMES,
-      display: "utilise l'*Arcane Prime* du *Médaillon de Roy*",
+      owner: 'Bouclier',
+      display: 'utilise la *Flasque de John*',
       position: 1,
       arcanePrimeCost: 1
     })
 
     const pokeball = this.createSkill({
-      name: 'pokéball',
+      name: 'Pokéball',
       shortName: 'pkb',
       description: 'Invoque aléatoirement un pokémon',
       allAttribution: false,
       stat: SkillStat.CUSTOM,
       category: DisplayCategory.ARCANES_PRIMES,
+      owner: 'Bouclier',
       display: 'invoque un *Pokémon*',
       position: 2,
       arcanePrimeCost: 1,
       customRolls: '1d150',
       successCalculation: SuccessCalculation.CUSTOM
     })
+
+    const canneMartial = this.createSkill({
+      name: 'Canne de Martial',
+      shortName: 'martial',
+      description: 'Permet de connaître le désir principal de sa cible',
+      allAttribution: false,
+      stat: SkillStat.FIXE,
+      category: DisplayCategory.ARCANES_PRIMES,
+      owner: 'Renouveau',
+      display: 'utilise la *Canne de Martial*',
+      position: 2,
+      arcanePrimeCost: 1,
+      successCalculation: SuccessCalculation.AUCUN
+    })
+
+    const statueDeZeus = this.createSkill({
+      name: 'Statue de Zeusl',
+      shortName: 'zeus',
+      description: 'Perte des dettes pour un Champion de Foudre, et résistance à la perte de Contrôle',
+      allAttribution: false,
+      stat: SkillStat.FIXE,
+      category: DisplayCategory.ARCANES_PRIMES,
+      owner: 'Bouclier',
+      display: 'utilise la *Statue de Zeus*',
+      position: 2,
+      arcanePrimeCost: 1,
+      successCalculation: SuccessCalculation.AUCUN
+    })
+
+    const amphoreDyonisos = this.createSkill({
+      name: 'Amphore de Dyonisos',
+      shortName: 'dyonisos',
+      description: 'Création d un espace où l ivresse devient réalité, considérée comme très dangereuse',
+      allAttribution: false,
+      stat: SkillStat.ESSENCE,
+      category: DisplayCategory.ARCANES_PRIMES,
+      owner: 'Bouclier',
+      display: 'utilise l*Amphore de Dyonisos*',
+      position: 2,
+      arcanePrimeCost: 1,
+      successCalculation: SuccessCalculation.SIMPLE
+    })
+
+    const armureAdamantium = this.createSkill({
+      name: 'Armure Adamantium',
+      shortName: 'adam',
+      description: 'Encaisse une attaque à la place de quelqu un d autre',
+      allAttribution: false,
+      stat: SkillStat.FIXE,
+      category: DisplayCategory.ARCANES_PRIMES,
+      owner: 'Prince',
+      display: 'utilise l*Armure d Adamantium*',
+      position: 2,
+      arcanePrimeCost: 1,
+      successCalculation: SuccessCalculation.AUCUN
+    })
+
+    const ceintureIntransigeance = this.createSkill({
+      name: 'Intransigeance de Radhamantes',
+      shortName: 'radham',
+      description: 'Refuse un effet négatif en réaction',
+      allAttribution: false,
+      stat: SkillStat.FIXE,
+      category: DisplayCategory.ARCANES_PRIMES,
+      owner: 'Bouclier',
+      display: 'utilise l *Intransigeance de Radhamantes*',
+      position: 2,
+      arcanePrimeCost: 1,
+      successCalculation: SuccessCalculation.AUCUN
+    })
+
+    const cléDePorte = this.createSkill({
+      name: 'Clé de Porte',
+      shortName: 'porte',
+      description: 'Marque une porte, ou ouvre une porte vers une autre porte marquée',
+      allAttribution: false,
+      stat: SkillStat.FIXE,
+      category: DisplayCategory.ARCANES_PRIMES,
+      owner: 'Bouclier',
+      display: 'utilise la *Clé de Porte*',
+      position: 2,
+      arcanePrimeCost: 1,
+      successCalculation: SuccessCalculation.AUCUN
+    })
+
+    const craieDePorte = this.createSkill({
+      name: 'Craie de Porte',
+      shortName: 'craie',
+      description: 'Permet de dessiner X portes et/ou fenêtres qui deviennent réelles, -1 par heure',
+      allAttribution: false,
+      stat: SkillStat.ESSENCE,
+      category: DisplayCategory.ARCANES_PRIMES,
+      owner: 'Renouveau',
+      display: 'utilise la *Craie de Porte*',
+      position: 2,
+      arcanePrimeCost: 1,
+      successCalculation: SuccessCalculation.SIMPLE
+    })
+
+    const hacheDeSerment = this.createSkill({
+      name: 'Hache de Serment',
+      shortName: 'hache',
+      description: 'Jure de tuer une cible, avantage sur elle et désavantage sur les autres jusqu a sa mort',
+      allAttribution: false,
+      stat: SkillStat.FIXE,
+      category: DisplayCategory.ARCANES_PRIMES,
+      owner: 'Bouclier',
+      display: 'utilise la *Hache de Serment*',
+      position: 2,
+      arcanePrimeCost: 1,
+      successCalculation: SuccessCalculation.AUCUN
+    })
     return [
+      bouteilleKyma,
+      ceintureIntransigeance,
+      armureAdamantium,
+      cléDePorte,
+      craieDePorte,
+      hacheDeSerment,
+      amphoreDyonisos,
+      statueDeZeus,
+      canneMartial,
+      poignardTemporelle,
+      bagueDeirdre,
+      jetonLilou,
+      beretRoger,
+      ciel,
+      guiboleViktor,
+      carteTara,
+      devorer,
+      tarotMathieu,
+      chapeauMerlin,
+      medaillonRoy,
+      flasqueJohn,
       empruntMagie,
       destructionEssence,
       volMagie,
@@ -2289,6 +2704,7 @@ export class InitSkills {
       marchandSkill,
       mecanicienSkill,
       cadavreSkill,
+      TerreurSkill,
       leprechaunSkill,
       bergerSkill,
       reveSkill,
@@ -2314,6 +2730,7 @@ export class InitSkills {
       purificateurSkill,
       reparateurSkill,
       voyantSkill,
+      liberationArcaniqueSkill,
       nomadeSkill,
       silenceSkill,
       mortSkill,
@@ -2330,6 +2747,14 @@ export class InitSkills {
       //planteSoutien,
       communicationArcaniqueSkill,
       boostArcaniqueSkill,
+      collierDeNonDetection,
+      dagueAmes,
+      montreTemporelle,
+      pyramideKheops,
+      tourDeBable,
+      aureoleIllusion,
+      chevaliereDiscorde,
+      bagueDeFoyer,
       blocageArcaniqueSkill,
       copieArcaniqueSkill,
       lienAuxVoyageursSkill,
@@ -2435,9 +2860,11 @@ export class InitSkills {
     invocationTemplate?: DBCharacterTemplate
     precision?: string
     soldatCost?: number
+    owner?: string
   }): Omit<DBSkill, 'id'> {
     return {
       name: p.name,
+      owner: p.owner || '',
       description: p.description,
       precision: p.precision || '',
       shortName: p.shortName,

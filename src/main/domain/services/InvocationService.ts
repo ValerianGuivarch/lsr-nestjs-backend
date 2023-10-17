@@ -52,7 +52,7 @@ export class InvocationService {
     )
     const skills = await this.skillService.findSkillsByCharacterTemplate(template)
     for (const skill of skills) {
-      await this.skillService.affectSkillToCharacter(createdInvocation, skill)
+      await this.skillService.affectSkillToCharacter(createdInvocation, skill, true)
     }
     return createdInvocation
   }
