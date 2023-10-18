@@ -35,7 +35,7 @@ export class InitCharacters {
       pictureApotheose: 'https://media.discordapp.net/attachments/689044605311647799/1006318155049734144/unknown.png',
       background: 'https://media.discordapp.net/attachments/689044605311647799/1001499478131482624/unknown.png',
       playerName: 'arcady',
-      skills: [skills.get('arbre'), skills.get('Libération arcanique'), skills.get('Béret de Roger')]
+      skills: [skills.get('arbre'), skills.get('Libération arcanique')]
     })
 
     const millia = this.createCharacter({
@@ -55,7 +55,7 @@ export class InitCharacters {
       pictureApotheose: 'https://media.discordapp.net/attachments/689044605311647799/1003654562365845564/unknown.png',
       background: 'https://media.discordapp.net/attachments/689044605311647799/1001484678806634576/unknown.png',
       playerName: 'guilhem',
-      skills: [skills.get('montre'), skills.get('comédien'), skills.get('sorcière'), skills.get('Poignard Temporel')]
+      skills: [skills.get('montre'), skills.get('comédien'), skills.get('sorcière')]
     })
 
     const viktor = this.createCharacter({
@@ -853,7 +853,7 @@ export class InitCharacters {
         'https://media.discordapp.net/attachments/734153794681700394/1000802351663284224/unknown.png?width=1096&height=1055',
       background: 'https://media.discordapp.net/attachments/689044605311647799/997931629525880845/unknown.png',
       playerName: 'jupi',
-      skills: [skills.get('faucon'), skills.get('ivrogne'), skills.get('serpent'), skills.get('Bague de Deirdre')]
+      skills: [skills.get('faucon'), skills.get('ivrogne'), skills.get('serpent')]
     })
 
     const oleg = this.createCharacter({

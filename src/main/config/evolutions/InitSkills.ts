@@ -2480,6 +2480,287 @@ export class InitSkills {
       successCalculation: SuccessCalculation.CUSTOM
     })
 
+    const boiteASouvenir = this.createSkill({
+      name: 'Boite à Souvenir',
+      shortName: 'souv',
+      description: 'Enferme un souvenir que seul l utilisateur se rappelle',
+      allAttribution: false,
+      stat: SkillStat.FIXE,
+      category: DisplayCategory.ARCANES_PRIMES,
+      owner: 'Atlantide',
+      display: 'utilise la *Boîte à Souvenir*',
+      position: 2,
+      arcanePrimeCost: 1,
+      successCalculation: SuccessCalculation.AUCUN
+    })
+
+    const corneAbondance = this.createSkill({
+      name: 'Corne d Abondance',
+      shortName: 'corne',
+      description: 'Crée de la nourriture',
+      allAttribution: false,
+      stat: SkillStat.ESSENCE,
+      category: DisplayCategory.ARCANES_PRIMES,
+      owner: 'Atlantide',
+      display: 'utilise la *Corne d Abondance*',
+      position: 2,
+      arcanePrimeCost: 1,
+      successCalculation: SuccessCalculation.SIMPLE
+    })
+
+    const pierreReconfort = this.createSkill({
+      name: 'Pierre de Réconfort',
+      shortName: 'reconf',
+      description: 'Crée une illusion qui permet de réconforter quelqu un',
+      allAttribution: false,
+      stat: SkillStat.ESSENCE,
+      category: DisplayCategory.ARCANES_PRIMES,
+      owner: 'Atlantide',
+      display: 'utilise la *Pierre de Réconfort*',
+      position: 2,
+      arcanePrimeCost: 1,
+      successCalculation: SuccessCalculation.SIMPLE
+    })
+
+    const collierLien = this.createSkill({
+      name: 'Collier de Lien Eternel',
+      shortName: 'coll',
+      description: 'Lie deux existences ensemble, accordant l esperance de vie',
+      allAttribution: false,
+      stat: SkillStat.FIXE,
+      category: DisplayCategory.ARCANES_PRIMES,
+      owner: 'Atlantide',
+      display: 'utilise la *Pierre de Réconfort*',
+      position: 2,
+      arcanePrimeCost: 1,
+      successCalculation: SuccessCalculation.AUCUN
+    })
+
+    const compasDuDésir = this.createSkill({
+      name: 'Compas du Désir',
+      shortName: 'compas',
+      description: 'Donne la direction de ce que l on desire le plus au monde',
+      allAttribution: false,
+      stat: SkillStat.FIXE,
+      category: DisplayCategory.ARCANES_PRIMES,
+      owner: 'Atlantide',
+      display: 'utilise le *Compas du Désir*',
+      position: 2,
+      arcanePrimeCost: 1,
+      successCalculation: SuccessCalculation.AUCUN
+    })
+
+    const linceulMaudit = this.createSkill({
+      name: 'Linceul du Maudit',
+      shortName: 'linc',
+      description: 'Linceul du Maudit',
+      allAttribution: false,
+      stat: SkillStat.ESSENCE,
+      category: DisplayCategory.ARCANES_PRIMES,
+      owner: 'Atlantide',
+      display: 'utilise le *Linceul du Maudit*',
+      position: 2,
+      arcanePrimeCost: 1,
+      successCalculation: SuccessCalculation.SIMPLE
+    })
+
+    const mailletMinos = this.createSkill({
+      name: 'Maillet de Minos',
+      shortName: 'minos',
+      description: 'Dommages pyschiques lorsqu un souvenir de péché passé est exprimé',
+      allAttribution: false,
+      stat: SkillStat.FIXE,
+      category: DisplayCategory.ARCANES_PRIMES,
+      owner: 'Bouclier',
+      display: 'utilise le *Maillet de Minos*',
+      position: 2,
+      arcanePrimeCost: 1,
+      successCalculation: SuccessCalculation.AUCUN
+    })
+
+    const phareAlex = this.createSkill({
+      name: 'Phare d Alexandrie',
+      shortName: 'alex',
+      description: 'Perte des dettes pour les champions de lumière',
+      allAttribution: false,
+      stat: SkillStat.FIXE,
+      category: DisplayCategory.ARCANES_PRIMES,
+      owner: 'Prince',
+      display: 'utilise le *Phare d Alexandrie*',
+      position: 2,
+      arcanePrimeCost: 1,
+      successCalculation: SuccessCalculation.AUCUN
+    })
+
+    const templeArtemis = this.createSkill({
+      name: 'Temple Artémis',
+      shortName: 'arté',
+      description: 'Perte des dettes pour les champions de vent',
+      allAttribution: false,
+      stat: SkillStat.FIXE,
+      category: DisplayCategory.ARCANES_PRIMES,
+      owner: 'Bouclier',
+      display: 'utilise le *Temple d Artémis*',
+      position: 2,
+      arcanePrimeCost: 1,
+      successCalculation: SuccessCalculation.AUCUN
+    })
+
+    const jardinBabylone = this.createSkill({
+      name: 'Jardin de Babylone',
+      shortName: 'baby',
+      description: 'Perte des dettes pour les champions de feu',
+      allAttribution: false,
+      stat: SkillStat.FIXE,
+      category: DisplayCategory.ARCANES_PRIMES,
+      owner: 'Bouclier',
+      display: 'utilise les *Jardins Suspendus de Babylone*',
+      position: 2,
+      arcanePrimeCost: 1,
+      successCalculation: SuccessCalculation.AUCUN
+    })
+
+    const lunettesPremo = this.createSkill({
+      name: 'Lunette de prémonition',
+      shortName: 'prémo',
+      description: 'Voir les secondes à venir, ou avoir des visions d evenements dans la journée',
+      allAttribution: false,
+      stat: SkillStat.FIXE,
+      category: DisplayCategory.ARCANES_PRIMES,
+      owner: 'Atlantide',
+      display: 'utilise les *Lunettes de Prémonitions*',
+      position: 2,
+      arcanePrimeCost: 1,
+      successCalculation: SuccessCalculation.AUCUN
+    })
+
+    const listeMechants = this.createSkill({
+      name: 'Liste des méchants',
+      shortName: 'méch',
+      description: 'Invoque un monstre à minuit qui va attaquer chaque nuit les gens marqué sur la liste',
+      allAttribution: false,
+      stat: SkillStat.ESSENCE,
+      category: DisplayCategory.ARCANES_PRIMES,
+      owner: 'Bouclier',
+      display: 'utilise la *Liste des Méchants*',
+      position: 2,
+      arcanePrimeCost: 1,
+      successCalculation: SuccessCalculation.SIMPLE
+    })
+
+    const lyreNolan = this.createSkill({
+      name: 'Lyre de Nolan',
+      shortName: 'méch',
+      description: 'Permett d avoir une vision de la personne qu on aime le plus (au sens romantique)',
+      allAttribution: false,
+      stat: SkillStat.ESSENCE,
+      category: DisplayCategory.ARCANES_PRIMES,
+      owner: 'Bouclier',
+      display: 'utilise la *Lyre de Nolan*',
+      position: 2,
+      arcanePrimeCost: 1,
+      successCalculation: SuccessCalculation.SIMPLE
+    })
+
+    const melrich = this.createSkill({
+      name: 'Epée de Melrich',
+      shortName: 'melr',
+      description: 'Empêche les soirs de blessures en esprit et chair, possible de récupérer les dégats soi même',
+      allAttribution: false,
+      stat: SkillStat.FIXE,
+      category: DisplayCategory.ARCANES_PRIMES,
+      owner: 'Bouclier',
+      display: 'utilise l *Epée de Melrich*',
+      position: 2,
+      arcanePrimeCost: 1,
+      successCalculation: SuccessCalculation.AUCUN
+    })
+
+    const menottes = this.createSkill({
+      name: 'Menottes de Cerbères',
+      shortName: 'cerb',
+      description:
+        'Permet de fusionner en additionnant la meilleure stat et prenant les 2 moins fortes pour les autres',
+      allAttribution: false,
+      stat: SkillStat.FIXE,
+      category: DisplayCategory.ARCANES_PRIMES,
+      owner: 'Bouclier',
+      display: 'utilise les *Menottes de Cerbères*',
+      position: 2,
+      arcanePrimeCost: 1,
+      successCalculation: SuccessCalculation.AUCUN
+    })
+
+    const miroirBronze = this.createSkill({
+      name: 'Miroir de Bronze',
+      shortName: 'bronz',
+      description: '1er trésor impérial japonais, inverse la manière de penser de la cible',
+      allAttribution: false,
+      stat: SkillStat.ESSENCE,
+      category: DisplayCategory.ARCANES_PRIMES,
+      owner: 'Bouclier',
+      display: 'utilise le *Miroir de Bronze*',
+      position: 2,
+      arcanePrimeCost: 1,
+      successCalculation: SuccessCalculation.SIMPLE
+    })
+
+    const medaillonMagatama = this.createSkill({
+      name: 'Médaillon de Magatama',
+      shortName: 'maga',
+      description: '2ème trésor impérial japonais, inverse la moralité de la cible',
+      allAttribution: false,
+      stat: SkillStat.ESSENCE,
+      category: DisplayCategory.ARCANES_PRIMES,
+      owner: 'Bouclier',
+      display: 'utilise le *Médaillon de Magatama*',
+      position: 2,
+      arcanePrimeCost: 1,
+      successCalculation: SuccessCalculation.SIMPLE
+    })
+
+    const mosaiqueGaudhi = this.createSkill({
+      name: 'Mosaïque de Gaudhi',
+      shortName: 'gaudhi',
+      description: 'Torture une arcane pour booster son pouvoir',
+      allAttribution: false,
+      stat: SkillStat.ESSENCE,
+      category: DisplayCategory.ARCANES_PRIMES,
+      owner: 'Bouclier',
+      display: 'utilise la *Mosaïque de Gaudhi*',
+      position: 2,
+      arcanePrimeCost: 1,
+      successCalculation: SuccessCalculation.SIMPLE
+    })
+
+    const nounours = this.createSkill({
+      name: 'Nounours',
+      shortName: 'nounours',
+      description: 'Invoque un ourson géant de combat',
+      allAttribution: false,
+      stat: SkillStat.ESSENCE,
+      category: DisplayCategory.ARCANES_PRIMES,
+      owner: 'Bouclier',
+      display: 'utilise *Nounours*',
+      position: 2,
+      arcanePrimeCost: 1,
+      successCalculation: SuccessCalculation.SIMPLE
+    })
+
+    const skateWesh = this.createSkill({
+      name: 'Skate de Wesh',
+      shortName: 'wesh',
+      description: 'Se multiplie, chaque clone a 1 stat en moins que le précédent',
+      allAttribution: false,
+      stat: SkillStat.ESSENCE,
+      category: DisplayCategory.ARCANES_PRIMES,
+      owner: 'Renouveau',
+      display: 'utilise le *Skate de Wesh*',
+      position: 2,
+      arcanePrimeCost: 1,
+      successCalculation: SuccessCalculation.SIMPLE
+    })
+
     const canneMartial = this.createSkill({
       name: 'Canne de Martial',
       shortName: 'martial',
@@ -2603,6 +2884,26 @@ export class InitSkills {
       canneMartial,
       poignardTemporelle,
       bagueDeirdre,
+      skateWesh,
+      nounours,
+      mosaiqueGaudhi,
+      medaillonMagatama,
+      miroirBronze,
+      menottes,
+      melrich,
+      lyreNolan,
+      listeMechants,
+      lunettesPremo,
+      jardinBabylone,
+      templeArtemis,
+      phareAlex,
+      linceulMaudit,
+      mailletMinos,
+      compasDuDésir,
+      collierLien,
+      pierreReconfort,
+      corneAbondance,
+      boiteASouvenir,
       jetonLilou,
       beretRoger,
       ciel,
