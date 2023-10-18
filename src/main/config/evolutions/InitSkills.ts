@@ -645,9 +645,120 @@ export class InitSkills {
       display: 'fait une *Necromancien*',
       position: 21,
       successCalculation: SuccessCalculation.SIMPLE_PLUS_1,
-
       isArcanique: true,
       arcaneCost: 1
+    })
+
+    const sorc1 = this.createSkill({
+      name: 'Eleanor Corvin',
+      shortName: 'corvin',
+      description: 'Arcane améliorée du Corbeau',
+      allAttribution: false,
+      stat: SkillStat.ESPRIT,
+      category: DisplayCategory.ARCANES,
+      display: "invoque l'Arcane Améliorée du Corbeau de *Eleanor Corvin*",
+      position: 201,
+      successCalculation: SuccessCalculation.SIMPLE_PLUS_1,
+      isArcanique: true,
+      arcaneCost: 1
+    })
+
+    const sorc2 = this.createSkill({
+      name: 'Lilith Lumina',
+      shortName: 'lumina',
+      description: 'Arcane améliorée de la Luciole',
+      allAttribution: false,
+      stat: SkillStat.ESSENCE,
+      category: DisplayCategory.ARCANES,
+      display: "invoque l'Arcane Améliorée de la Luciole de *Lilith Lumina*",
+      position: 202,
+      successCalculation: SuccessCalculation.SIMPLE_PLUS_1,
+      isArcanique: true,
+      arcaneCost: 1
+    })
+
+    const sorc3 = this.createSkill({
+      name: 'Clarissa Venenum',
+      shortName: 'venenum',
+      description: "Arcane améliorée de l'Empoisonneuse",
+      allAttribution: false,
+      stat: SkillStat.ESSENCE,
+      category: DisplayCategory.ARCANES,
+      display: "invoque l'Arcane Améliorée de l'Empoisonneuse de *Clarissa Venenum*",
+      position: 203,
+      successCalculation: SuccessCalculation.SIMPLE_PLUS_1,
+      isArcanique: true,
+      arcaneCost: 1
+    })
+
+    const sorc4 = this.createSkill({
+      name: 'Isabella Nocturna',
+      shortName: 'Nocturna',
+      description: 'Arcane améliorée de la Chauve-Souris',
+      allAttribution: false,
+      stat: SkillStat.ESSENCE,
+      category: DisplayCategory.ARCANES,
+      display: "invoque l'Arcane Améliorée de la Chauve-Souris de *Isabella Nocturna*",
+      position: 204,
+      successCalculation: SuccessCalculation.SIMPLE_PLUS_1,
+      isArcanique: true,
+      arcaneCost: 1
+    })
+
+    const sorc5 = this.createSkill({
+      name: 'Seraphina Rattus',
+      shortName: 'Rattus',
+      description: 'Arcane améliorée du Rat',
+      allAttribution: false,
+      stat: SkillStat.ESSENCE,
+      category: DisplayCategory.ARCANES,
+      display: "invoque l'Arcane Améliorée du Rat de *Seraphina Rattus*",
+      position: 205,
+      successCalculation: SuccessCalculation.SIMPLE_PLUS_1,
+      isArcanique: true,
+      arcaneCost: 1
+    })
+
+    const sorc6 = this.createSkill({
+      name: 'Aradia Knéa',
+      shortName: 'Knéa',
+      description: "Arcane améliorée de l'Araignée",
+      allAttribution: false,
+      stat: SkillStat.ESSENCE,
+      category: DisplayCategory.ARCANES,
+      display: "invoque l'Arcane Améliorée de l'Araignée de *Aradia Knéa*",
+      position: 206,
+      successCalculation: SuccessCalculation.SIMPLE_PLUS_1,
+      isArcanique: true,
+      arcaneCost: 1
+    })
+
+    const sorc7 = this.createSkill({
+      name: 'Celestine Chapya',
+      shortName: 'Chapia',
+      description: 'Arcane améliorée du Chaperon',
+      allAttribution: false,
+      stat: SkillStat.ESSENCE,
+      category: DisplayCategory.ARCANES,
+      display: "invoque l'Arcane Améliorée du Chaperon de *Celestine Chapya*",
+      position: 207,
+      successCalculation: SuccessCalculation.SIMPLE_PLUS_1,
+      isArcanique: true,
+      arcaneCost: 1
+    })
+
+    const sacrificeSpectral = this.createSkill({
+      name: 'Sacrifice Spectral',
+      shortName: 'sacr',
+      description: 'Sacrifie une Sorcière pour esquiver une attaque',
+      allAttribution: false,
+      stat: SkillStat.CUSTOM,
+      category: DisplayCategory.ARCANES,
+      display: 'utilise un Sacrifice Spectral',
+      position: 200,
+      successCalculation: SuccessCalculation.CUSTOM,
+      isArcanique: true,
+      arcaneCost: 0
     })
 
     const licorneSkill = this.createSkill({
@@ -741,7 +852,7 @@ export class InitSkills {
     })
 
     const araigneeSkill = this.createSkill({
-      name: 'araignee',
+      name: 'araignée',
       shortName: 'argn',
       description: 'Immobiliser une cible',
       allAttribution: false,
@@ -2923,6 +3034,14 @@ export class InitSkills {
       munitionLethale,
       munitionAffaiblissante,
       munitionPeste,
+      sorc1,
+      sorc2,
+      sorc3,
+      sorc4,
+      sorc5,
+      sorc6,
+      sorc7,
+      sacrificeSpectral,
       munitionMarquage,
       brasRobotique,
       oeilBionique,

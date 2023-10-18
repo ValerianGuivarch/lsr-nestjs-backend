@@ -92,6 +92,24 @@ export class RollService {
     const apotheose = p.character.currentApotheose
     const controller = await this.characterProvider.findOneByName(p.character.controlledBy)
 
+    if (p.character.name === 'esther' && skill.arcaneCost > 0) {
+      skill.arcaneCost = 0
+      if (
+        skill.name === 'corbeau' ||
+        skill.name === 'luciole' ||
+        skill.name === 'empoisonneur' ||
+        skill.name === 'chauvesouris' ||
+        skill.name === 'rat' ||
+        skill.name === 'chaperon' ||
+        skill.name === 'araignée'
+      ) {
+        skill.pfCost = 1
+        skill.ppCost = 0
+      } else {
+        skill.pfCost = 0
+        skill.ppCost = 1
+      }
+    }
     if (p.character.name === skill.owner) {
       skill.arcanePrimeCost = 0
     }
@@ -312,6 +330,18 @@ export class RollService {
         } else {
           data = ' et réussi'
         }
+      } else if (skill.name === 'Sacrifice Spectral') {
+        const listSorciere = ['Eleanor Corvin', 'Lilith Lumina', 'Clarissa Venenum']
+        const result = new Map(
+          [...p.character.dailyUse.entries()].filter(([key, value]) => listSorciere.includes(key) && value === 1)
+        )
+        const keysArray = [...result.keys()]
+        const randomKey = keysArray[Math.floor(Math.random() * keysArray.length)]
+        p.character.dailyUse.set(randomKey, 0)
+        data = ' et sacrifie ' + randomKey
+        if (keysArray.length === 0) {
+          throw ProviderErrors.RollNotEnoughDailyUse()
+        }
       } else if (skill.name === 'Reco. naturelle') {
         const natureLevel = await this.characterProvider.getNatureLevel()
         switch (natureLevel) {
@@ -392,7 +422,7 @@ export class RollService {
           data += ' et se transforme en Touami'
           pictureUrl = 'https://media.discordapp.net/attachments/689034158307409933/1095447733239828590/image.png'
         } else {
-          data += ' et choisit ssa transformation'
+          data += ' et choisit sa transformation'
         }
       }
     }

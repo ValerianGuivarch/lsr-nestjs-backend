@@ -135,8 +135,7 @@ export class InitCharacters {
       genre: Genre.HOMME,
       picture:
         'https://media.discordapp.net/attachments/1016035628783243302/1089943901118402560/image.png?width=1050&height=1054',
-      pictureApotheose:
-        'https://media.discordapp.net/attachments/1016035628783243302/1089943093039603773/image.png?width=1084&height=960',
+      pictureApotheose: 'https://media.discordapp.net/attachments/983661260564492288/983669338647166996/unknown.png',
       background:
         'https://media.discordapp.net/attachments/1016035628783243302/1089943526072127669/image.png?width=2160&height=782',
       playerName: 'nico',
@@ -536,6 +535,66 @@ export class InitCharacters {
       background:
         'https://media.discordapp.net/attachments/689044605311647799/1001506417561325568/unknown.png?width=2160&height=1021',
       playerName: 'valou'
+    })
+
+    const argine = this.createCharacter({
+      name: 'esther',
+      classe: classes.get('sorcière'),
+      bloodline: bloodlines.get('aucun'),
+      chair: 3,
+      esprit: 6,
+      essence: 4,
+      pvMax: 5,
+      pfMax: 12,
+      ppMax: 8,
+      niveau: 10,
+      lux: 'Altruiste',
+      umbra: 'Stressée',
+      secunda: 'Ecolo',
+      //category: Category.PJ,
+      genre: Genre.FEMME,
+      picture: 'https://media.discordapp.net/attachments/983661260564492288/1159047368822501406/image.png',
+      pictureApotheose: 'https://media.discordapp.net/attachments/689044605311647799/1006315258585034802/unknown.png',
+      background: 'https://media.discordapp.net/attachments/983661260564492288/1164170874358861844/image.png',
+      playerName: 'nico',
+      skills: [
+        skills.get('corbeau'),
+        skills.get('luciole'),
+        skills.get('empoisonneur'),
+        skills.get('chauvesouris'),
+        skills.get('rat'),
+        skills.get('chaperon'),
+        skills.get('araignée'),
+        skills.get('sorcière'),
+        skills.get('licorne'),
+        skills.get('faucon'),
+        skills.get('Eleanor Corvin'),
+        skills.get('Lilith Lumina'),
+        skills.get('Clarissa Venenum'),
+        skills.get('Sacrifice Spectral'),
+        skills.get('Isabella Nocturna'),
+        skills.get('Seraphina Rattus'),
+        skills.get('Aradia Knéa'),
+        skills.get('Celestine Chapya')
+      ],
+      dailyUse: {
+        ['Eleanor Corvin']: 1,
+        ['Lilith Lumina']: 1,
+        ['Clarissa Venenum']: 1,
+        ['Isabella Nocturna']: 1,
+        ['Seraphina Rattus']: 1,
+        ['Aradia Knéa']: 1,
+        ['Celestine Chapya']: 1
+      },
+      dailyUseMax: {
+        ['Eleanor Corvin']: 1,
+        ['Lilith Lumina']: 1,
+        ['Clarissa Venenum']: 1,
+        ['Isabella Nocturna']: 1,
+        ['Seraphina Rattus']: 1,
+        ['Aradia Knéa']: 1,
+        ['Celestine Chapya']: 1
+      }
     })
 
     const tibo = this.createCharacter({
@@ -2342,6 +2401,7 @@ export class InitCharacters {
       malkim,
       canarticho,
       jonathan,
+      argine,
       tibo,
       johnlecorrompu,
       lucien,

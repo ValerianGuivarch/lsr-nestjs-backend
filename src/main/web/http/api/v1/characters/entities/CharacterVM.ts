@@ -229,12 +229,14 @@ export class CharacterVM {
       bloodline: p.character.bloodline ? BloodlineVM.of({ bloodline: p.character.bloodline }) : null,
       currentApotheose: p.character.currentApotheose,
       apotheoseState: p.character.apotheoseState,
-      skills: p.skills.map((skill) =>
-        SkillVM.of({
-          skill,
-          character: p.character
-        })
-      ),
+      skills: p.skills
+        .sort((a, b) => a.position - b.position)
+        .map((skill) =>
+          SkillVM.of({
+            skill,
+            character: p.character
+          })
+        ),
       apotheoses: p.apotheoses.map((apotheose) =>
         ApotheoseVM.of({
           apotheose

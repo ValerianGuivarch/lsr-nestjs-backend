@@ -76,7 +76,13 @@ export class CharacterController {
   @Get(':name/arcane-primes')
   @ApiOkResponse({ type: SkillVM, isArray: true })
   async getArcanePrimes(@Param('name') name: string): Promise<SkillVM[]> {
-    const skills = await this.skillService.findArcanePrimes(name)
+    const skills = (await this.skillService.findArcanePrimes(name)).sort((a, b) => {
+      if (a.name > b.name) {
+        return 1
+      } else {
+        return -1
+      }
+    })
     return skills.map((skill) => {
       return SkillVM.of({
         skill: skill,

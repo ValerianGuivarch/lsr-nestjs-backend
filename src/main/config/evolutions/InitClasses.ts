@@ -68,6 +68,12 @@ export class InitClasses {
       displayFemale: 'Arcaniste',
       canUsePp: false
     })
+    const sorciereClasse: DBClasse = this.createClasse({
+      name: 'sorcière',
+      displayMale: 'Sorcier',
+      displayFemale: 'Sorcière',
+      canUsePp: false
+    })
     const championArcaniqueClasse: DBClasse = this.createClasse({
       name: 'champion arcanique',
       displayMale: 'Champion Arcanique',
@@ -126,6 +132,7 @@ export class InitClasses {
       spiriteClasse,
       arcanisteClasse,
       championArcaniqueClasse,
+      sorciereClasse,
       soldatClasse,
       avatarClasse,
       skinwalkerClasse,
