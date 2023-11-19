@@ -107,6 +107,9 @@ export class CharacterVM {
   lux: string
 
   @ApiProperty()
+  boulet: boolean
+
+  @ApiProperty()
   umbra: string
 
   @ApiProperty()
@@ -171,6 +174,7 @@ export class CharacterVM {
     this.currentApotheose = p.currentApotheose
     this.chair = p.chair
     this.esprit = p.esprit
+    this.boulet = p.boulet
     this.essence = p.essence
     this.chairBonus = p.chairBonus
     this.espritBonus = p.espritBonus
@@ -225,6 +229,7 @@ export class CharacterVM {
       name: p.character.name,
       controlledBy: p.character.controlledBy,
       isInvocation: p.character.isInvocation,
+      boulet: p.character.boulet,
       classe: ClasseVM.of({ classe: p.character.classe, genre: p.character.genre }),
       bloodline: p.character.bloodline ? BloodlineVM.of({ bloodline: p.character.bloodline }) : null,
       currentApotheose: p.character.currentApotheose,

@@ -163,6 +163,10 @@ export class RollService {
         throw ProviderErrors.RollWrongEmpiricalRequest()
       }
     } else if (skill.stat === SkillStat.CHAIR || skill.stat === SkillStat.ESPRIT || skill.stat === SkillStat.ESSENCE) {
+      if (p.character.hurtMalus && p.character.classe.name !== 'troglodyte' && skill.stat === SkillStat.CHAIR) {
+        const diff = p.character.pvMax - p.character.pv
+        p.malus = p.malus + Math.floor(diff / 6)
+      }
       let diceValueDelta = p.bonus - p.malus
       if (usePf) {
         diceValueDelta++
@@ -201,46 +205,55 @@ export class RollService {
       juge12 = 0
       juge34 = 0
     }
-    for (let i = 0; i < diceNumber; i++) {
-      const dice = RollService.randomIntFromInterval(1, diceValue)
-      if (skill.successCalculation !== SuccessCalculation.AUCUN) {
-        if (p.character.name === 'vernet' && i === 0) {
-          if (
-            dice === RollService.ONE_SUCCESS_DICE_12 ||
-            dice === RollService.ONE_SUCCESS_DICE_34 ||
-            dice === RollService.ONE_SUCCESS_DICE_56
-          ) {
-            success = (success ?? 0) + RollService.ONE_SUCCESS_EFFECT
-          }
-          if (
-            dice === RollService.TWO_SUCCESS_DICE_12 ||
-            dice === RollService.TWO_SUCCESS_DICE_34 ||
-            dice === RollService.TWO_SUCCESS_DICE_56
-          ) {
-            success = (success ?? 0) + RollService.TWO_SUCCESS_EFFECT
-          }
-        } else {
-          if (dice === RollService.ONE_SUCCESS_DICE_56) {
-            success = (success ?? 0) + RollService.ONE_SUCCESS_EFFECT
-          }
-          if (dice === RollService.TWO_SUCCESS_DICE_56) {
-            success = (success ?? 0) + RollService.TWO_SUCCESS_EFFECT
-          }
-          if (dice === RollService.ONE_SUCCESS_DICE_12) {
-            juge12 = (juge12 ?? 0) + RollService.ONE_SUCCESS_EFFECT
-          }
-          if (dice === RollService.TWO_SUCCESS_DICE_12) {
-            juge12 = (juge12 ?? 0) + RollService.TWO_SUCCESS_EFFECT
-          }
-          if (dice === RollService.ONE_SUCCESS_DICE_34) {
-            juge34 = (juge34 ?? 0) + RollService.ONE_SUCCESS_EFFECT
-          }
-          if (dice === RollService.TWO_SUCCESS_DICE_34) {
-            juge34 = (juge34 ?? 0) + RollService.TWO_SUCCESS_EFFECT
+    const fake = (await this.sessionProvider.getSession()).fake
+    if (fake !== 0 && diceNumber === 1 && diceValue === 103) {
+      result.push(fake)
+      skill.precision += '\n' + (await this.skillService.findSkillByArcaneId(fake)).name
+    } else {
+      for (let i = 0; i < diceNumber; i++) {
+        const dice = RollService.randomIntFromInterval(1, diceValue)
+        if (skill.successCalculation !== SuccessCalculation.AUCUN) {
+          if (p.character.name === 'vernet' && i === 0) {
+            if (
+              dice === RollService.ONE_SUCCESS_DICE_12 ||
+              dice === RollService.ONE_SUCCESS_DICE_34 ||
+              dice === RollService.ONE_SUCCESS_DICE_56
+            ) {
+              success = (success ?? 0) + RollService.ONE_SUCCESS_EFFECT
+            }
+            if (
+              dice === RollService.TWO_SUCCESS_DICE_12 ||
+              dice === RollService.TWO_SUCCESS_DICE_34 ||
+              dice === RollService.TWO_SUCCESS_DICE_56
+            ) {
+              success = (success ?? 0) + RollService.TWO_SUCCESS_EFFECT
+            }
+          } else {
+            if (dice === RollService.ONE_SUCCESS_DICE_56) {
+              success = (success ?? 0) + RollService.ONE_SUCCESS_EFFECT
+            }
+            if (dice === RollService.TWO_SUCCESS_DICE_56) {
+              success = (success ?? 0) + RollService.TWO_SUCCESS_EFFECT
+            }
+            if (dice === RollService.ONE_SUCCESS_DICE_12) {
+              juge12 = (juge12 ?? 0) + RollService.ONE_SUCCESS_EFFECT
+            }
+            if (dice === RollService.TWO_SUCCESS_DICE_12) {
+              juge12 = (juge12 ?? 0) + RollService.TWO_SUCCESS_EFFECT
+            }
+            if (dice === RollService.ONE_SUCCESS_DICE_34) {
+              juge34 = (juge34 ?? 0) + RollService.ONE_SUCCESS_EFFECT
+            }
+            if (dice === RollService.TWO_SUCCESS_DICE_34) {
+              juge34 = (juge34 ?? 0) + RollService.TWO_SUCCESS_EFFECT
+            }
           }
         }
+        result.push(dice)
+        if (diceValue === 103 || diceValue === 104) {
+          skill.precision += '\n' + (await this.skillService.findSkillByArcaneId(dice)).name
+        }
       }
-      result.push(dice)
     }
     if (skill.successCalculation === SuccessCalculation.SIMPLE_PLUS_1) {
       success = (success ?? 0) + 1
@@ -320,15 +333,15 @@ export class RollService {
       if (skill.name === 'KO') {
         // eslint-disable-next-line no-magic-numbers
         if (result[0] == 1) {
-          data = ' et échoue dangereusement'
+          data += ' et échoue dangereusement'
           // eslint-disable-next-line no-magic-numbers
         } else if (result[0] == 20) {
-          data = ' et se relève'
+          data += ' et se relève'
           // eslint-disable-next-line no-magic-numbers
         } else if (result[0] < 10) {
-          data = ' et échoue'
+          data += ' et échoue'
         } else {
-          data = ' et réussi'
+          data += ' et réussi'
         }
       } else if (skill.name === 'Sacrifice Spectral') {
         const listSorciere = ['Eleanor Corvin', 'Lilith Lumina', 'Clarissa Venenum']
@@ -338,7 +351,7 @@ export class RollService {
         const keysArray = [...result.keys()]
         const randomKey = keysArray[Math.floor(Math.random() * keysArray.length)]
         p.character.dailyUse.set(randomKey, 0)
-        data = ' et sacrifie ' + randomKey
+        data += ' et sacrifie ' + randomKey
         if (keysArray.length === 0) {
           throw ProviderErrors.RollNotEnoughDailyUse()
         }
@@ -346,29 +359,29 @@ export class RollService {
         const natureLevel = await this.characterProvider.getNatureLevel()
         switch (natureLevel) {
           case NatureLevel.LEVEL_0_PAUVRE:
-            data = ' et perçoit un niveau de nature pauvre (0)'
+            data += ' et perçoit un niveau de nature pauvre (0)'
             break
           case NatureLevel.LEVEL_1_RARE:
-            data = ' et perçoit un niveau de nature rare (1)'
+            data += ' et perçoit un niveau de nature rare (1)'
             break
           case NatureLevel.LEVEL_2_PRESENTE:
-            data = ' et perçoit un niveau de nature présente (2)'
+            data += ' et perçoit un niveau de nature présente (2)'
             break
           case NatureLevel.LEVEL_3_ABONDANTE:
-            data = ' et perçoit un niveau de nature abondante (3)'
+            data += ' et perçoit un niveau de nature abondante (3)'
             break
           case NatureLevel.LEVEL_4_SAUVAGE:
-            data = ' et perçoit un niveau de nature sauvage (4)'
+            data += ' et perçoit un niveau de nature sauvage (4)'
             break
           case NatureLevel.LEVEL_5_DOMINANTE:
-            data = ' et perçoit un niveau de nature dominante (5)'
+            data += ' et perçoit un niveau de nature dominante (5)'
             break
           default:
-            data = ' et perçoit un niveau de nature inconnu.'
+            data += ' et perçoit un niveau de nature inconnu.'
             break
         }
       } else if (skill.name === 'Pokéball') {
-        data = ' et fait apparaître'
+        data += ' et fait apparaître'
 
         const pokemon = await this.pokeProvider.getPokemonById(result[0])
         // eslint-disable-next-line no-magic-numbers

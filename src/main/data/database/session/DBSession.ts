@@ -38,4 +38,10 @@ export class DBSession {
     default: []
   })
   owners: string[]
+
+  @Column({
+    type: 'integer',
+    default: 0
+  })
+  fake: number
 }

@@ -52,4 +52,8 @@ export class SkillService {
   async affectSkillToCharacter(createdInvocation: Character, skill: Skill, affected: boolean): Promise<void> {
     return this.skillsProvider.affectSkillToCharacter(createdInvocation, skill, affected)
   }
+
+  findSkillByArcaneId(dice: number): Promise<Skill> {
+    return this.skillsProvider.findSkillByArcaneId(dice)
+  }
 }

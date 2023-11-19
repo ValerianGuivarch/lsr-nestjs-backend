@@ -833,6 +833,22 @@
           "validations": [{"type": "is present", "message": "Field is required"}]
         },
         {
+          "defaultValue": false,
+          "enums": [],
+          "field": "boulet",
+          "integration": null,
+          "inverseOf": null,
+          "isFilterable": true,
+          "isPrimaryKey": false,
+          "isReadOnly": false,
+          "isRequired": true,
+          "isSortable": true,
+          "isVirtual": false,
+          "reference": null,
+          "type": "Boolean",
+          "validations": [{"type": "is present", "message": "Field is required"}]
+        },
+        {
           "defaultValue": null,
           "enums": [],
           "field": "buttonColor",
@@ -1141,6 +1157,22 @@
           "isVirtual": false,
           "reference": null,
           "type": "Enum",
+          "validations": []
+        },
+        {
+          "defaultValue": true,
+          "enums": [],
+          "field": "hurtMalus",
+          "integration": null,
+          "inverseOf": null,
+          "isFilterable": true,
+          "isPrimaryKey": false,
+          "isReadOnly": false,
+          "isRequired": false,
+          "isSortable": true,
+          "isVirtual": false,
+          "reference": null,
+          "type": "Boolean",
           "validations": []
         },
         {
@@ -3161,6 +3193,22 @@
           "reference": null,
           "type": "Enum",
           "validations": []
+        },
+        {
+          "defaultValue": 0,
+          "enums": [],
+          "field": "fake",
+          "integration": null,
+          "inverseOf": null,
+          "isFilterable": true,
+          "isPrimaryKey": false,
+          "isReadOnly": false,
+          "isRequired": true,
+          "isSortable": true,
+          "isVirtual": false,
+          "reference": null,
+          "type": "Number",
+          "validations": [{"type": "is present", "message": "Field is required"}]
         },
         {
           "defaultValue": null,

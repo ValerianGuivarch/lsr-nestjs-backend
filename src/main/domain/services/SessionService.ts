@@ -43,7 +43,7 @@ export class SessionService {
         longRest: Math.floor(((character.chair + character.esprit + character.essence) * session.chaos.valueOf()) / 100)
       }
     } else {
-      const previousChaos = Math.max(session.chaos - 1, ChaosLevel.LEVEL_0_0)
+      const previousChaos = Math.max(session.chaos - 15, ChaosLevel.LEVEL_0_0)
       return {
         baseRest: session.improvedRest,
         // eslint-disable-next-line no-magic-numbers

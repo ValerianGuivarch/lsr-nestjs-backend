@@ -106,6 +106,14 @@ export class DBSkillProvider implements ISkillProvider {
     return skills.map(DBSkillProvider.toSkill)
   }
 
+  async findSkillByArcaneId(id: number): Promise<Skill> {
+    const skills = await this.dbSkillRepository.findOneBy({
+      displayCategory: DisplayCategory.ARCANES,
+      position: id
+    })
+    return DBSkillProvider.toSkill(skills)
+  }
+
   async findSkillsByCharacter(characterName: string): Promise<Skill[]> {
     const skills = await this.dbSkillRepository
       .createQueryBuilder('skill')

@@ -59,15 +59,19 @@ export class Character {
   customData?: string
   dailyUse: Map<string, number>
   dailyUseMax: Map<string, number>
+  hurtMalus: boolean
+  boulet: boolean
 
   constructor(p: Character) {
     this.name = p.name
+    this.boulet = p.boulet
     this.restImproved = p.restImproved
     this.classe = p.classe
     this.bloodline = p.bloodline
     this.currentApotheose = p.currentApotheose
     this.apotheoseState = p.apotheoseState
     this.chair = p.chair
+    this.hurtMalus = p.hurtMalus
     this.esprit = p.esprit
     this.essence = p.essence
     this.chairBonus = p.chairBonus
@@ -177,8 +181,10 @@ export class Character {
       buttonColor: p.buttonColor,
       textColor: p.textColor,
       skills: [],
+      hurtMalus: true,
       proficiencies: [],
       restImproved: false,
+      boulet: false,
       isInvocation: false,
       summoner: undefined,
       customData: p.customData,
@@ -200,6 +206,7 @@ export class Character {
   }): CharacterToCreate {
     return {
       name: p.name,
+      boulet: false,
       chair: p.chair,
       esprit: p.esprit,
       essence: p.essence,
@@ -212,6 +219,7 @@ export class Character {
       pfMax: 0,
       pp: 0,
       ppMax: 0,
+      hurtMalus: true,
       playerName: p.summoner.playerName,
       // eslint-disable-next-line no-magic-numbers
       dettes: 0,

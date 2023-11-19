@@ -112,7 +112,7 @@ export class DBSkill {
   owner: string
 
   @Column({ type: 'varchar', default: '' })
-  precision: string
+  precision: string | null
 
   @Column({ type: 'integer', default: 0 })
   soldatCost: number

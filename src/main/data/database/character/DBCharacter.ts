@@ -318,4 +318,12 @@ export class DBCharacter {
   @IsDefined()
   @IsObject()
   dailyUseMax: { [skillName: string]: number }
+
+  @Column({ type: 'boolean', default: true })
+  @IsDefined()
+  hurtMalus: boolean
+
+  @Column({ type: 'boolean', default: false })
+  @IsDefined()
+  boulet: boolean
 }

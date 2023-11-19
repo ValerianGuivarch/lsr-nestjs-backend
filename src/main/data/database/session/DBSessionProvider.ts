@@ -16,7 +16,8 @@ export class DBSessionProvider implements ISessionProvider {
       chaos: doc.chaos,
       baseRest: doc.baseRest,
       improvedRest: doc.improvedRest,
-      owners: doc.owners
+      owners: doc.owners,
+      fake: doc.fake
     })
   }
 

@@ -11,4 +11,5 @@ export interface ISkillProvider {
   findSkillsByCharacterTemplate(name: string): Promise<Skill[]>
   affectSkillToCharacter(createdInvocation: Character, skill: Skill, affected: boolean): Promise<void>
   findSkillsByDisplayCategory(category: DisplayCategory): Promise<Skill[]>
+  findSkillByArcaneId(id: number): Promise<Skill>
 }

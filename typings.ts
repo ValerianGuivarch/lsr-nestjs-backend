@@ -304,6 +304,8 @@ export type Schema = {
       'dailyUseMax': any;
       'ether': number;
       'etherMax': number;
+      'hurtMalus': boolean;
+      'boulet': boolean;
     };
     nested: {
       'db_classe': Schema['db_classe']['plain'] & Schema['db_classe']['nested'];
@@ -387,6 +389,8 @@ export type Schema = {
       'db_character:dailyUseMax': any;
       'db_character:ether': number;
       'db_character:etherMax': number;
+      'db_character:hurtMalus': boolean;
+      'db_character:boulet': boolean;
       'db_character:db_classe:name': string;
       'db_character:db_classe:displayMale': string;
       'db_character:db_classe:displayFemale': string;
@@ -477,6 +481,8 @@ export type Schema = {
       'db_character:dailyUseMax': any;
       'db_character:ether': number;
       'db_character:etherMax': number;
+      'db_character:hurtMalus': boolean;
+      'db_character:boulet': boolean;
       'db_character:db_classe:name': string;
       'db_character:db_classe:displayMale': string;
       'db_character:db_classe:displayFemale': string;
@@ -558,6 +564,8 @@ export type Schema = {
       'db_character:dailyUseMax': any;
       'db_character:ether': number;
       'db_character:etherMax': number;
+      'db_character:hurtMalus': boolean;
+      'db_character:boulet': boolean;
       'db_character:db_classe:name': string;
       'db_character:db_classe:displayMale': string;
       'db_character:db_classe:displayFemale': string;
@@ -976,6 +984,8 @@ export type Schema = {
       'db_character:dailyUseMax': any;
       'db_character:ether': number;
       'db_character:etherMax': number;
+      'db_character:hurtMalus': boolean;
+      'db_character:boulet': boolean;
       'db_character:db_classe:name': string;
       'db_character:db_classe:displayMale': string;
       'db_character:db_classe:displayFemale': string;
@@ -1006,6 +1016,7 @@ export type Schema = {
       'baseRest': number;
       'improvedRest': number;
       'owners': string;
+      'fake': number;
     };
     nested: {};
     flat: {};
