@@ -105,11 +105,11 @@ export class DBSkill {
   @Column({ type: 'boolean', default: false })
   blessure: boolean
 
-  @Column({ type: 'varchar', default: '' })
+  @Column({ type: 'varchar', default: '', nullable: true })
   description: string
 
-  @Column({ type: 'varchar', default: '' })
-  owner: string
+  @Column({ type: 'varchar', default: '', nullable: true })
+  owner: string | null
 
   @Column({ type: 'varchar', default: '' })
   precision: string | null
