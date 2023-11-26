@@ -7,6 +7,7 @@ import { DBCharacterProvider } from './character/DBCharacterProvider'
 import { DBCharacterTemplate } from './character/DBCharacterTemplate'
 import { DBClasse } from './classes/DBClasse'
 import { DBClasseProvider } from './classes/DBClasseProvider'
+import { DBEntry } from './entries/DBEntry'
 import { DBProficiency } from './proficiencies/DBProficiency'
 import { DBProficiencyProvider } from './proficiencies/DBProficiencyProvider'
 import { DBRoll } from './rolls/DBRoll'
@@ -21,7 +22,18 @@ import { TypeOrmModule } from '@nestjs/typeorm'
 @Module({
   imports: [
     TypeOrmModule.forFeature(
-      [DBApotheose, DBRoll, DBSession, DBCharacter, DBCharacterTemplate, DBBloodline, DBClasse, DBSkill, DBProficiency],
+      [
+        DBApotheose,
+        DBRoll,
+        DBSession,
+        DBCharacter,
+        DBCharacterTemplate,
+        DBBloodline,
+        DBEntry,
+        DBClasse,
+        DBSkill,
+        DBProficiency
+      ],
       'postgres'
     )
   ],
