@@ -43,4 +43,8 @@ export class SendRollRequest {
   @ApiProperty()
   @IsString()
   readonly skillId: string
+
+  @ApiProperty()
+  @IsBoolean()
+  readonly double: boolean
 }

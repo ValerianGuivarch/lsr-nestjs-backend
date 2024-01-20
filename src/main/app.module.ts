@@ -1,5 +1,6 @@
 import config from './config/configuration'
 import { InitDatabase } from './config/evolutions/InitDatabase'
+import { InitEntry } from './config/evolutions/InitEntry'
 import { BTNNameProvider } from './data/behind/BTNNameProvider'
 import { DBApotheoseProvider } from './data/database/apotheoses/DBApotheoseProvider'
 import { DBBloodlineProvider } from './data/database/bloodlines/DBBloodlineProvider'
@@ -9,11 +10,19 @@ import { PostgresModule } from './data/database/postgres.module'
 import { DBRollProvider } from './data/database/rolls/DBRollProvider'
 import { DBSessionProvider } from './data/database/session/DBSessionProvider'
 import { DBSkillProvider } from './data/database/skills/DBSkillProvider'
+import { DBConstellationProvider } from './data/elena/DBConstellationProvider'
+import { DBJoueuseProvider } from './data/elena/DBJoueuseProvider'
+import { DBMessageProvider } from './data/elena/DBMessageProvider'
+import { DBScenarioProvider } from './data/elena/DBScenarioProvider'
 import { ForestService } from './data/ForestService'
 import { PokeProvider } from './data/poke/PokeProvider'
 import { ApotheoseService } from './domain/services/ApotheoseService'
 import { CharacterService } from './domain/services/CharacterService'
 import { ClasseService } from './domain/services/ClasseService'
+import { ConstellationService } from './domain/services/entities/elena/ConstellationService'
+import { JoueuseService } from './domain/services/entities/elena/JoueuseService'
+import { MessageService } from './domain/services/entities/elena/MessageService'
+import { ScenarioService } from './domain/services/entities/elena/ScenarioService'
 import { InvocationService } from './domain/services/InvocationService'
 import { MjService } from './domain/services/MjService'
 import { ProficiencyService } from './domain/services/ProficiencyService'
@@ -21,6 +30,10 @@ import { RollService } from './domain/services/RollService'
 import { SessionService } from './domain/services/SessionService'
 import { SkillService } from './domain/services/SkillService'
 import { CharacterController } from './web/http/api/v1/characters/CharacterController'
+import { ConstellationController } from './web/http/api/v1/elena/ConstellationController'
+import { JoueuseController } from './web/http/api/v1/elena/JoueuseController'
+import { MessageController } from './web/http/api/v1/elena/MessageController'
+import { ScenarioController } from './web/http/api/v1/elena/ScenarioController'
 import { MjController } from './web/http/api/v1/mj/MjController'
 import { RollController } from './web/http/api/v1/rolls/RollController'
 import { CharacterGateway } from './web/websocket/api/v1/characters/CharacterGateway'
@@ -56,7 +69,18 @@ import { TypeOrmModule } from '@nestjs/typeorm'
     }),
     PostgresModule
   ],
-  controllers: [MjGateway, CharacterGateway, RollGateway, MjController, CharacterController, RollController],
+  controllers: [
+    MjGateway,
+    CharacterGateway,
+    RollGateway,
+    MjController,
+    CharacterController,
+    RollController,
+    JoueuseController,
+    ScenarioController,
+    ConstellationController,
+    MessageController
+  ],
   providers: [
     SkillService,
     ProficiencyService,
@@ -66,9 +90,14 @@ import { TypeOrmModule } from '@nestjs/typeorm'
     CharacterService,
     ClasseService,
     RollService,
+    ConstellationService,
+    MessageService,
+    JoueuseService,
+    ScenarioService,
     MjService,
     JwtService,
     InitDatabase,
+    InitEntry,
     //    CharacterGateway,
     {
       provide: 'ICharacterProvider',
@@ -105,6 +134,22 @@ import { TypeOrmModule } from '@nestjs/typeorm'
     {
       provide: 'IClasseProvider',
       useClass: DBClasseProvider
+    },
+    {
+      provide: 'IScenarioProvider',
+      useClass: DBScenarioProvider
+    },
+    {
+      provide: 'IConstellationProvider',
+      useClass: DBConstellationProvider
+    },
+    {
+      provide: 'IJoueuseProvider',
+      useClass: DBJoueuseProvider
+    },
+    {
+      provide: 'IMessageProvider',
+      useClass: DBMessageProvider
     },
     ForestService
   ]

@@ -16,6 +16,18 @@ import { DBSession } from './session/DBSession'
 import { DBSessionProvider } from './session/DBSessionProvider'
 import { DBSkill } from './skills/DBSkill'
 import { DBSkillProvider } from './skills/DBSkillProvider'
+import { DBConstellation } from '../elena/DBConstellation'
+import { DBConstellationProvider } from '../elena/DBConstellationProvider'
+import { DBEvent } from '../elena/DBEvent'
+import { DBJoueuse } from '../elena/DBJoueuse'
+import { DBJoueuseProvider } from '../elena/DBJoueuseProvider'
+import { DBMessage } from '../elena/DBMessage'
+import { DBMessageProvider } from '../elena/DBMessageProvider'
+import { DBModelMessage } from '../elena/DBModelMessage'
+import { DBModelMessageProvider } from '../elena/DBModelMessageProvider'
+import { DBScenario } from '../elena/DBScenario'
+import { DBScenarioProvider } from '../elena/DBScenarioProvider'
+import { FBNotificationProvider } from '../elena/FBNotificationProvider'
 import { Module } from '@nestjs/common'
 import { TypeOrmModule } from '@nestjs/typeorm'
 
@@ -32,7 +44,13 @@ import { TypeOrmModule } from '@nestjs/typeorm'
         DBEntry,
         DBClasse,
         DBSkill,
-        DBProficiency
+        DBProficiency,
+        DBJoueuse,
+        DBScenario,
+        DBMessage,
+        DBModelMessage,
+        DBConstellation,
+        DBEvent
       ],
       'postgres'
     )
@@ -67,8 +85,32 @@ import { TypeOrmModule } from '@nestjs/typeorm'
       useClass: DBClasseProvider
     },
     {
+      provide: 'IScenarioProvider',
+      useClass: DBScenarioProvider
+    },
+    {
+      provide: 'IConstellationProvider',
+      useClass: DBConstellationProvider
+    },
+    {
+      provide: 'IJoueuseProvider',
+      useClass: DBJoueuseProvider
+    },
+    {
+      provide: 'IMessageProvider',
+      useClass: DBMessageProvider
+    },
+    {
+      provide: 'IModelMessageProvider',
+      useClass: DBModelMessageProvider
+    },
+    {
       provide: 'IProficiencyProvider',
       useClass: DBProficiencyProvider
+    },
+    {
+      provide: 'INotificationProvider',
+      useClass: FBNotificationProvider
     }
   ],
   exports: [
@@ -102,8 +144,32 @@ import { TypeOrmModule } from '@nestjs/typeorm'
       useClass: DBClasseProvider
     },
     {
+      provide: 'IScenarioProvider',
+      useClass: DBScenarioProvider
+    },
+    {
+      provide: 'IConstellationProvider',
+      useClass: DBConstellationProvider
+    },
+    {
+      provide: 'IJoueuseProvider',
+      useClass: DBJoueuseProvider
+    },
+    {
+      provide: 'IMessageProvider',
+      useClass: DBMessageProvider
+    },
+    {
+      provide: 'IModelMessageProvider',
+      useClass: DBModelMessageProvider
+    },
+    {
       provide: 'IProficiencyProvider',
       useClass: DBProficiencyProvider
+    },
+    {
+      provide: 'INotificationProvider',
+      useClass: FBNotificationProvider
     }
   ]
 })

@@ -8,6 +8,48 @@ import {
   TSortClause
 } from '@forestadmin/agent';
 
+export type ConstellationCustomizer = CollectionCustomizer<Schema, 'Constellation'>;
+export type ConstellationRecord = TPartialRow<Schema, 'Constellation'>;
+export type ConstellationConditionTree = TConditionTree<Schema, 'Constellation'>;
+export type ConstellationFilter = TPaginatedFilter<Schema, 'Constellation'>;
+export type ConstellationSortClause = TSortClause<Schema, 'Constellation'>;
+export type ConstellationAggregation = TAggregation<Schema, 'Constellation'>;
+
+export type EventCustomizer = CollectionCustomizer<Schema, 'Event'>;
+export type EventRecord = TPartialRow<Schema, 'Event'>;
+export type EventConditionTree = TConditionTree<Schema, 'Event'>;
+export type EventFilter = TPaginatedFilter<Schema, 'Event'>;
+export type EventSortClause = TSortClause<Schema, 'Event'>;
+export type EventAggregation = TAggregation<Schema, 'Event'>;
+
+export type JoueuseCustomizer = CollectionCustomizer<Schema, 'Joueuse'>;
+export type JoueuseRecord = TPartialRow<Schema, 'Joueuse'>;
+export type JoueuseConditionTree = TConditionTree<Schema, 'Joueuse'>;
+export type JoueuseFilter = TPaginatedFilter<Schema, 'Joueuse'>;
+export type JoueuseSortClause = TSortClause<Schema, 'Joueuse'>;
+export type JoueuseAggregation = TAggregation<Schema, 'Joueuse'>;
+
+export type MessageCustomizer = CollectionCustomizer<Schema, 'Message'>;
+export type MessageRecord = TPartialRow<Schema, 'Message'>;
+export type MessageConditionTree = TConditionTree<Schema, 'Message'>;
+export type MessageFilter = TPaginatedFilter<Schema, 'Message'>;
+export type MessageSortClause = TSortClause<Schema, 'Message'>;
+export type MessageAggregation = TAggregation<Schema, 'Message'>;
+
+export type ModelMessageCustomizer = CollectionCustomizer<Schema, 'ModelMessage'>;
+export type ModelMessageRecord = TPartialRow<Schema, 'ModelMessage'>;
+export type ModelMessageConditionTree = TConditionTree<Schema, 'ModelMessage'>;
+export type ModelMessageFilter = TPaginatedFilter<Schema, 'ModelMessage'>;
+export type ModelMessageSortClause = TSortClause<Schema, 'ModelMessage'>;
+export type ModelMessageAggregation = TAggregation<Schema, 'ModelMessage'>;
+
+export type ScenarioCustomizer = CollectionCustomizer<Schema, 'Scenario'>;
+export type ScenarioRecord = TPartialRow<Schema, 'Scenario'>;
+export type ScenarioConditionTree = TConditionTree<Schema, 'Scenario'>;
+export type ScenarioFilter = TPaginatedFilter<Schema, 'Scenario'>;
+export type ScenarioSortClause = TSortClause<Schema, 'Scenario'>;
+export type ScenarioAggregation = TAggregation<Schema, 'Scenario'>;
+
 export type DbApotheoseCustomizer = CollectionCustomizer<Schema, 'db_apotheose'>;
 export type DbApotheoseRecord = TPartialRow<Schema, 'db_apotheose'>;
 export type DbApotheoseConditionTree = TConditionTree<Schema, 'db_apotheose'>;
@@ -106,6 +148,13 @@ export type DbClasseSkillsDbSkillFilter = TPaginatedFilter<Schema, 'db_classe_sk
 export type DbClasseSkillsDbSkillSortClause = TSortClause<Schema, 'db_classe_skills_db_skill'>;
 export type DbClasseSkillsDbSkillAggregation = TAggregation<Schema, 'db_classe_skills_db_skill'>;
 
+export type DbEntryCustomizer = CollectionCustomizer<Schema, 'db_entry'>;
+export type DbEntryRecord = TPartialRow<Schema, 'db_entry'>;
+export type DbEntryConditionTree = TConditionTree<Schema, 'db_entry'>;
+export type DbEntryFilter = TPaginatedFilter<Schema, 'db_entry'>;
+export type DbEntrySortClause = TSortClause<Schema, 'db_entry'>;
+export type DbEntryAggregation = TAggregation<Schema, 'db_entry'>;
+
 export type DbProficiencyCustomizer = CollectionCustomizer<Schema, 'db_proficiency'>;
 export type DbProficiencyRecord = TPartialRow<Schema, 'db_proficiency'>;
 export type DbProficiencyConditionTree = TConditionTree<Schema, 'db_proficiency'>;
@@ -143,6 +192,20 @@ export type MigrationsAggregation = TAggregation<Schema, 'migrations'>;
 
 
 export type Schema = {
+  'Constellation': {
+    plain: {
+      'id': string;
+      'name': string;
+      'pictureUrl': string;
+      'pictureUrlRevealed': string;
+      'revealed': boolean;
+      'realName': string;
+      'isStarStream': boolean;
+      'sponsor': boolean;
+    };
+    nested: {};
+    flat: {};
+  };
   'db_apotheose': {
     plain: {
       'name': string;
@@ -895,6 +958,16 @@ export type Schema = {
       'dbSkill:db_character_template:db_bloodline:display': string;
     };
   };
+  'db_entry': {
+    plain: {
+      'day': number;
+      'month': number;
+      'year': number;
+      'text': string;
+    };
+    nested: {};
+    flat: {};
+  };
   'db_proficiency': {
     plain: {
       'name': string;
@@ -1017,6 +1090,7 @@ export type Schema = {
       'improvedRest': number;
       'owners': string;
       'fake': number;
+      'entries': string;
     };
     nested: {};
     flat: {};
@@ -1084,11 +1158,129 @@ export type Schema = {
       'db_character_template:db_bloodline:display': string;
     };
   };
+  'Event': {
+    plain: {
+      'id': string;
+      'description': string;
+    };
+    nested: {};
+    flat: {};
+  };
+  'Joueuse': {
+    plain: {
+      'id': string;
+      'name': string;
+      'coins': number;
+      'sponsorId': string;
+      'scenarioId': string;
+      'state': 'NOT_STARTED' | 'STARTED' | 'FINISHED';
+    };
+    nested: {
+      'sponsor': Schema['Constellation']['plain'] & Schema['Constellation']['nested'];
+      'scenario': Schema['Scenario']['plain'] & Schema['Scenario']['nested'];
+    };
+    flat: {
+      'sponsor:id': string;
+      'sponsor:name': string;
+      'sponsor:pictureUrl': string;
+      'sponsor:pictureUrlRevealed': string;
+      'sponsor:revealed': boolean;
+      'sponsor:realName': string;
+      'sponsor:isStarStream': boolean;
+      'sponsor:sponsor': boolean;
+      'scenario:id': string;
+      'scenario:name': string;
+      'scenario:difficulty': string;
+      'scenario:victory': string;
+      'scenario:defeat': string;
+      'scenario:time': string;
+      'scenario:reward': string;
+      'scenario:text': string;
+      'scenario:victoryMsg': string;
+      'scenario:defaiteMsg': string;
+      'scenario:category': 'PRINCIPAL' | 'SECONDAIRE' | 'CACHE';
+    };
+  };
+  'Message': {
+    plain: {
+      'id': string;
+      'text': string;
+      'senderId': string;
+    };
+    nested: {
+      'sender': Schema['Constellation']['plain'] & Schema['Constellation']['nested'];
+    };
+    flat: {
+      'sender:id': string;
+      'sender:name': string;
+      'sender:pictureUrl': string;
+      'sender:pictureUrlRevealed': string;
+      'sender:revealed': boolean;
+      'sender:realName': string;
+      'sender:isStarStream': boolean;
+      'sender:sponsor': boolean;
+    };
+  };
   'migrations': {
     plain: {
       'id': number;
       'timestamp': number;
       'name': string;
+    };
+    nested: {};
+    flat: {};
+  };
+  'ModelMessage': {
+    plain: {
+      'id': string;
+      'text': string;
+      'senderId': string;
+      'eventId': string;
+      'scenarioId': string;
+      'scenario': string;
+    };
+    nested: {
+      'sender': Schema['Constellation']['plain'] & Schema['Constellation']['nested'];
+      'event': Schema['Event']['plain'] & Schema['Event']['nested'];
+      'Scenario': Schema['Scenario']['plain'] & Schema['Scenario']['nested'];
+    };
+    flat: {
+      'sender:id': string;
+      'sender:name': string;
+      'sender:pictureUrl': string;
+      'sender:pictureUrlRevealed': string;
+      'sender:revealed': boolean;
+      'sender:realName': string;
+      'sender:isStarStream': boolean;
+      'sender:sponsor': boolean;
+      'event:id': string;
+      'event:description': string;
+      'Scenario:id': string;
+      'Scenario:name': string;
+      'Scenario:difficulty': string;
+      'Scenario:victory': string;
+      'Scenario:defeat': string;
+      'Scenario:time': string;
+      'Scenario:reward': string;
+      'Scenario:text': string;
+      'Scenario:victoryMsg': string;
+      'Scenario:defaiteMsg': string;
+      'Scenario:category': 'PRINCIPAL' | 'SECONDAIRE' | 'CACHE';
+    };
+  };
+  'Scenario': {
+    plain: {
+      'id': string;
+      'name': string;
+      'difficulty': string;
+      'victory': string;
+      'defeat': string;
+      'time': string;
+      'reward': string;
+      'text': string;
+      'victoryMsg': string;
+      'defaiteMsg': string;
+      'category': 'PRINCIPAL' | 'SECONDAIRE' | 'CACHE';
     };
     nested: {};
     flat: {};

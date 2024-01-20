@@ -44,4 +44,11 @@ export class DBSession {
     default: 0
   })
   fake: number
+
+  @Column({
+    type: 'text',
+    default: '',
+    nullable: true
+  })
+  entries: string | null
 }

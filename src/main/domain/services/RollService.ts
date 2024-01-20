@@ -87,6 +87,7 @@ export class RollService {
     proficiency: boolean
     empiriqueRoll?: string
     resistRoll?: string
+    affect: boolean
   }): Promise<void> {
     const skill = await this.skillService.findSkillById(p.skillId)
     const apotheose = p.character.currentApotheose
@@ -483,7 +484,7 @@ export class RollService {
     if (p.character.dailyUse.get(skill.name) !== undefined) {
       p.character.dailyUse.set(skill.name, p.character.dailyUse.get(skill.name) - 1)
     }
-    await this.characterProvider.update(p.character)
+    if (p.affect) await this.characterProvider.update(p.character)
     const rolls = await this.getLast()
     this.rollsChangeSubject.next(rolls)
     if (skill.invocationTemplateName) {
