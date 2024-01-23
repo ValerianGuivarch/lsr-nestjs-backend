@@ -21,6 +21,12 @@ export const forestAdminElena = (p: {
       execute: async (context) => {
         const starStream = (await p.constellationsService.findAll()).find((constellation) => constellation.isStarStream)
 
+        await p.joueuseService.update({
+          joueuseName: 'éléna',
+          joueuse: {
+            sponsorToChoose: true
+          }
+        })
         await p.messageService.create(
           {
             text: 'Choisissez votre sponsor. Celui que vous allez choisir deviendra votre principal soutien',
@@ -126,7 +132,8 @@ export const forestAdminElena = (p: {
         await p.joueuseService.create({
           name: 'éléna',
           coins: 0,
-          state: PlayState.NOT_STARTED
+          state: PlayState.NOT_STARTED,
+          sponsorToChoose: false
         })
         await p.constellationsService.create({
           name: "L'Ours Furieux au Grand Coeur",

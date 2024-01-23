@@ -13,6 +13,11 @@ export class DBJoueuse {
   name: string
 
   @Column({
+    default: false
+  })
+  sponsorToChoose: boolean
+
+  @Column({
     default: 0
   })
   coins: number
@@ -55,7 +60,8 @@ export class DBJoueuse {
       coins: dbJoueuse.coins,
       state: dbJoueuse.state,
       sponsor: dbJoueuse.sponsor,
-      scenario: dbJoueuse.scenario
+      scenario: dbJoueuse.scenario,
+      sponsorToChoose: dbJoueuse.sponsorToChoose
     })
   }
 }

@@ -2,9 +2,9 @@ import { ConstellationVM, ConstellationVMExample } from './ConstellationVM'
 import { MessageVM } from './MessageVM'
 import { ScenarioVM, ScenarioVMExample } from './ScenarioVM'
 import { Joueuse } from '../../../../../../domain/models/elena/Joueuse'
+import { Message } from '../../../../../../domain/models/elena/Message'
 import { PlayState } from '../../../../../../domain/models/elena/PlayState'
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
-import { Message } from 'src/main/domain/models/elena/Message'
 
 export class JoueuseVM {
   @ApiProperty({
@@ -41,6 +41,8 @@ export class JoueuseVM {
 
   state: PlayState
 
+  sponsorToChoose: boolean
+
   constructor(joueuse: JoueuseVM) {
     this.id = joueuse.id
     this.name = joueuse.name
@@ -49,6 +51,7 @@ export class JoueuseVM {
     this.scenario = joueuse.scenario
     this.state = joueuse.state
     this.messages = joueuse.messages
+    this.sponsorToChoose = joueuse.sponsorToChoose
   }
 
   static fromJoueuse(joueuse: Joueuse, messages: Message[]): JoueuseVM {
@@ -58,7 +61,8 @@ export class JoueuseVM {
       coins: joueuse.coins,
       state: joueuse.state,
       messages: messages.map((m) => MessageVM.fromMessage(m)),
-      sponsor: joueuse.sponsor ? ConstellationVM.fromConstellation(joueuse.sponsor) : undefined
+      sponsor: joueuse.sponsor ? ConstellationVM.fromConstellation(joueuse.sponsor) : undefined,
+      sponsorToChoose: joueuse.sponsorToChoose
     })
   }
 }
@@ -70,5 +74,6 @@ export const JoueuseVMExample: JoueuseVM = {
   sponsor: ConstellationVMExample,
   scenario: ScenarioVMExample,
   state: PlayState.NOT_STARTED,
-  messages: []
+  messages: [],
+  sponsorToChoose: false
 }

@@ -9,6 +9,7 @@ export class Joueuse {
   state: PlayState
   sponsor?: Constellation
   scenario?: Scenario
+  sponsorToChoose: boolean
 
   constructor(p: {
     id: string
@@ -16,6 +17,7 @@ export class Joueuse {
     coins: number
     sponsor?: Constellation
     scenario?: Scenario
+    sponsorToChoose: boolean
     state: PlayState
   }) {
     this.id = p.id
@@ -24,19 +26,21 @@ export class Joueuse {
     this.sponsor = p.sponsor
     this.scenario = p.scenario
     this.state = p.state
+    this.sponsorToChoose = false
   }
 
   static toJoueuseToCreate(p: { name: string }): JoueuseToCreate {
     return {
       name: p.name,
       coins: 0,
-      state: PlayState.NOT_STARTED
+      state: PlayState.NOT_STARTED,
+      sponsorToChoose: false
     }
   }
 }
 
 export type JoueuseToCreate = Omit<Joueuse, 'id' | 'sponsor' | 'scenario'>
-export type JoueuseToUpdate = Pick<Joueuse, 'coins'> & {
+export type JoueuseToUpdate = Pick<Joueuse, 'coins' | 'sponsorToChoose'> & {
   scenarioId: string
   sponsorId: string
   state: PlayState

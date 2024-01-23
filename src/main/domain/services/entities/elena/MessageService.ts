@@ -47,6 +47,7 @@ export class MessageService {
         senderId: modelMessage.sender.id,
         text: modelMessage.text
       })
+      await new Promise((resolve) => setTimeout(resolve, 1000))
     }
   }
 }

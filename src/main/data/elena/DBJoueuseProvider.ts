@@ -22,6 +22,7 @@ export class DBJoueuseProvider implements IJoueuseProvider {
       name: joueuse.name,
       coins: joueuse.coins,
       state: joueuse.state,
+      sponsorToChoose: joueuse.sponsorToChoose,
       sponsorId: null,
       scenarioId: null
     }
@@ -51,7 +52,7 @@ export class DBJoueuseProvider implements IJoueuseProvider {
   }
 
   async update(p: { joueuseName: string; joueuse: Partial<JoueuseToUpdate> }): Promise<Joueuse> {
-    const toUpdate: JoueuseToUpdate = {
+    const toUpdate: Partial<JoueuseToUpdate> = {
       coins: p.joueuse.coins,
       state: p.joueuse.state,
       sponsorId: p.joueuse.sponsorId,
