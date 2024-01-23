@@ -1,10 +1,10 @@
 import { ConstellationVM, ConstellationVMExample } from './ConstellationVM'
+import { MessageVM } from './MessageVM'
 import { ScenarioVM, ScenarioVMExample } from './ScenarioVM'
-import { Constellation } from '../../../../../../domain/models/elena/Constellation'
 import { Joueuse } from '../../../../../../domain/models/elena/Joueuse'
 import { PlayState } from '../../../../../../domain/models/elena/PlayState'
-import { Scenario } from '../../../../../../domain/models/elena/Scenario'
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
+import { Message } from 'src/main/domain/models/elena/Message'
 
 export class JoueuseVM {
   @ApiProperty({
@@ -37,17 +37,9 @@ export class JoueuseVM {
   })
   scenario?: ScenarioVM
 
+  messages: MessageVM[]
+
   state: PlayState
-
-  sponsorChoices?: {
-    id: string
-    name: string
-  }[]
-
-  scenarioChoices?: {
-    id: string
-    name: string
-  }[]
 
   constructor(joueuse: JoueuseVM) {
     this.id = joueuse.id
@@ -55,31 +47,18 @@ export class JoueuseVM {
     this.coins = joueuse.coins
     this.sponsor = joueuse.sponsor
     this.scenario = joueuse.scenario
-    this.sponsorChoices = joueuse.sponsorChoices
-    this.scenarioChoices = joueuse.scenarioChoices
     this.state = joueuse.state
+    this.messages = joueuse.messages
   }
 
-  static fromJoueuse(joueuse: Joueuse, sponsorChoices: Constellation[], scenarioChoices: Scenario[]): JoueuseVM {
+  static fromJoueuse(joueuse: Joueuse, messages: Message[]): JoueuseVM {
     return new JoueuseVM({
       id: joueuse.id,
       name: joueuse.name,
       coins: joueuse.coins,
       state: joueuse.state,
-      sponsor: joueuse.sponsor === null ? null : ConstellationVM.fromConstellation(joueuse.sponsor),
-      scenario: joueuse.scenario === null ? null : ScenarioVM.fromScenario(joueuse.scenario),
-      sponsorChoices: sponsorChoices.map((sponsor) => {
-        return {
-          id: sponsor.id,
-          name: sponsor.name
-        }
-      }),
-      scenarioChoices: scenarioChoices.map((scenario) => {
-        return {
-          id: scenario.id,
-          name: scenario.name
-        }
-      })
+      messages: messages.map((m) => MessageVM.fromMessage(m)),
+      sponsor: joueuse.sponsor ? ConstellationVM.fromConstellation(joueuse.sponsor) : undefined
     })
   }
 }
@@ -90,5 +69,6 @@ export const JoueuseVMExample: JoueuseVM = {
   coins: 0,
   sponsor: ConstellationVMExample,
   scenario: ScenarioVMExample,
-  state: PlayState.NOT_STARTED
+  state: PlayState.NOT_STARTED,
+  messages: []
 }

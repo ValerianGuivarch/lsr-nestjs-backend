@@ -2,8 +2,8 @@ import { JoueuseVM, JoueuseVMExample } from './entities/JoueuseVM'
 import { CreateJoueuseRequest, CreateJoueuseRequestExample } from './requests/CreateJoueuseRequest'
 import { UpdateJoueuseRequest } from './requests/UpdateJoueuseRequest'
 import { Joueuse } from '../../../../../domain/models/elena/Joueuse'
-import { ConstellationService } from '../../../../../domain/services/entities/elena/ConstellationService'
 import { JoueuseService } from '../../../../../domain/services/entities/elena/JoueuseService'
+import { MessageService } from '../../../../../domain/services/entities/elena/MessageService'
 import { ScenarioService } from '../../../../../domain/services/entities/elena/ScenarioService'
 import { generateRequestSchemasAndExamples, generateResponseContent } from '../../utils/swagger'
 import { Body, Controller, Get, HttpCode, HttpStatus, Param, Patch, Post, Res } from '@nestjs/common'
@@ -15,7 +15,7 @@ import { FastifyReply } from 'fastify'
 export class JoueuseController {
   constructor(
     private readonly joueuseService: JoueuseService,
-    private readonly constellationService: ConstellationService,
+    private readonly messageService: MessageService,
     private readonly scenarioService: ScenarioService
   ) {}
 
@@ -47,7 +47,6 @@ export class JoueuseController {
           name: request.name
         })
       ),
-      [],
       []
     )
   }
@@ -64,9 +63,10 @@ export class JoueuseController {
   @HttpCode(HttpStatus.OK)
   @Get(':joueuseName')
   async getJoueuseById(@Param('joueuseName') joueuseName: string): Promise<JoueuseVM> {
-    const scenarioChoices = await this.scenarioService.findAll()
-    const sponsorChoices = await this.constellationService.findAll()
-    return JoueuseVM.fromJoueuse(await this.joueuseService.findOneByName(joueuseName), sponsorChoices, scenarioChoices)
+    return JoueuseVM.fromJoueuse(
+      await this.joueuseService.findOneByName(joueuseName),
+      await this.messageService.findAll()
+    )
   }
 
   @ApiOkResponse({
@@ -93,7 +93,6 @@ export class JoueuseController {
           scenarioId: request.scenarioId
         }
       }),
-      [],
       []
     )
   }
@@ -101,7 +100,7 @@ export class JoueuseController {
   @Get('')
   async getAllJoueuses(@Res() response: FastifyReply): Promise<JoueuseVM[]> {
     const joueuses = await this.joueuseService.findAll()
-    const joueuseVMs = joueuses.map((joueuse) => JoueuseVM.fromJoueuse(joueuse, [], []))
+    const joueuseVMs = joueuses.map((joueuse) => JoueuseVM.fromJoueuse(joueuse, []))
 
     // Définir les en-têtes pour la pagination (adaptez selon vos besoins)
     response.header('Content-Range', `joueuses 0-${joueuseVMs.length}/${joueuseVMs.length}`)
