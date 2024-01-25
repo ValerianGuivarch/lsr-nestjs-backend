@@ -1174,6 +1174,7 @@ export type Schema = {
       'sponsorId': string;
       'scenarioId': string;
       'state': 'NOT_STARTED' | 'STARTED' | 'FINISHED';
+      'sponsorToChoose': boolean;
     };
     nested: {
       'sponsor': Schema['Constellation']['plain'] & Schema['Constellation']['nested'];

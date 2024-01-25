@@ -47,48 +47,19 @@ export class RollController {
   @Post('')
   async sendRoll(@Body() req: SendRollRequest): Promise<void> {
     const character = await this.characterService.findOneByName(req.rollerName)
-    if (!req.double) {
-      await this.rollService.roll({
-        character: character,
-        skillId: req.skillId,
-        secret: req.secret,
-        focus: req.focus,
-        power: req.power,
-        proficiency: req.proficiency,
-        bonus: req.bonus,
-        malus: req.malus,
-        empiriqueRoll: req.empiriqueRoll,
-        resistRoll: req.resistRoll,
-        affect: true
-      })
-    } else {
-      await this.rollService.roll({
-        character: character,
-        skillId: req.skillId,
-        secret: req.secret,
-        focus: req.focus,
-        power: req.power,
-        proficiency: req.proficiency,
-        bonus: req.bonus,
-        malus: req.malus,
-        empiriqueRoll: req.empiriqueRoll,
-        resistRoll: req.resistRoll,
-        affect: false
-      })
-      await this.rollService.roll({
-        character: character,
-        skillId: req.skillId,
-        secret: req.secret,
-        focus: req.focus,
-        power: req.power,
-        proficiency: req.proficiency,
-        bonus: req.bonus,
-        malus: req.malus,
-        empiriqueRoll: req.empiriqueRoll,
-        resistRoll: req.resistRoll,
-        affect: true
-      })
-    }
+    await this.rollService.roll({
+      character: character,
+      skillId: req.skillId,
+      secret: req.secret,
+      focus: req.focus,
+      power: req.power,
+      proficiency: req.proficiency,
+      bonus: req.bonus,
+      malus: req.malus,
+      empiriqueRoll: req.empiriqueRoll,
+      resistRoll: req.resistRoll,
+      affect: true
+    })
   }
 
   @ApiOkResponse()
