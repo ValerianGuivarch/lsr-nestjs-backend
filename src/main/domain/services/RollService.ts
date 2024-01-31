@@ -210,6 +210,8 @@ export class RollService {
     if (fake !== 0 && diceNumber === 1 && diceValue === 103) {
       result.push(fake)
       skill.precision += '\n' + (await this.skillService.findSkillByArcaneId(fake)).name
+    } else if (fake !== 0 && diceValue === 10) {
+      result.push(fake)
     } else {
       for (let i = 0; i < diceNumber; i++) {
         const dice = RollService.randomIntFromInterval(1, diceValue)
@@ -345,7 +347,15 @@ export class RollService {
           data += ' et réussi'
         }
       } else if (skill.name === 'Sacrifice Spectral') {
-        const listSorciere = ['Eleanor Corvin', 'Lilith Lumina', 'Clarissa Venenum']
+        const listSorciere = [
+          'Eleanor Corvin',
+          'Lilith Lumina',
+          'Clarissa Venenum',
+          'Isabella Nocturna',
+          'Seraphina Rattus',
+          'Aradia Knéa',
+          'Celestine Chapya'
+        ]
         const result = new Map(
           [...p.character.dailyUse.entries()].filter(([key, value]) => listSorciere.includes(key) && value === 1)
         )
@@ -356,6 +366,24 @@ export class RollService {
         if (keysArray.length === 0) {
           throw ProviderErrors.RollNotEnoughDailyUse()
         }
+      } else if (skill.name === 'Coeur Artificiel') {
+        data += ' et subit les dettes de '
+
+        const rois = [
+          'Nautilus',
+          'Ifrit',
+          'Alastor',
+          'Béhémot',
+          'Méphisto',
+          'Bélial',
+          'Gabriel',
+          'Gabriel',
+          'Lucifer',
+          'Jack'
+        ]
+        const randomRois = rois[Math.floor(Math.random() * rois.length)]
+        data += randomRois
+        ppDelta = -5
       } else if (skill.name === 'Reco. naturelle') {
         const natureLevel = await this.characterProvider.getNatureLevel()
         switch (natureLevel) {

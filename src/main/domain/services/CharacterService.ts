@@ -59,6 +59,12 @@ export class CharacterService {
     if (p.character.currentApotheose && p.character.apotheoseState == ApotheoseState.ALREADY_USED) {
       p.character.apotheoseState = ApotheoseState.COST_TO_PAY
     }
+    if (p.character.name === 'mathieu') {
+      const previous = await this.characterProvider.findOneByName(p.character.name)
+      if (p.character.pp < previous.pp) {
+        p.character.dettes = p.character.dettes + (previous.pp - p.character.pp)
+      }
+    }
     return await this.characterProvider.update(p.character)
   }
 
