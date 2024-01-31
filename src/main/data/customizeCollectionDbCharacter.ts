@@ -174,9 +174,9 @@ export const customizeCollectionDbCompany = (p: { agent: Agent; characterService
           // eslint-disable-next-line no-magic-numbers
           pvMax: (context.formValues['PV'] as number) ?? chair * 2,
           // eslint-disable-next-line no-magic-numbers
-          pfMax: (context.formValues['PF'] as number) ?? esprit * 2,
+          pfMax: (context.formValues['PF'] as number) ?? esprit,
           // eslint-disable-next-line no-magic-numbers
-          ppMax: (context.formValues['PP'] as number) ?? essence * 2,
+          ppMax: (context.formValues['PP'] as number) ?? essence,
           ethersMax: (context.formValues['ether'] as number) ?? 0,
           // eslint-disable-next-line no-magic-numbers
           arcanesMax: (context.formValues['arcanesMax'] as number) ?? 3,
