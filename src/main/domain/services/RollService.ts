@@ -332,7 +332,9 @@ export class RollService {
     } else if (p.character.dailyUse.get(skill.name) === 0) {
       throw ProviderErrors.RollNotEnoughDailyUse()
     }
+    console.log(skill.name)
     if (skill.successCalculation === SuccessCalculation.CUSTOM) {
+      console.log('custom')
       if (skill.name === 'KO') {
         // eslint-disable-next-line no-magic-numbers
         if (result[0] == 1) {
@@ -367,6 +369,7 @@ export class RollService {
           throw ProviderErrors.RollNotEnoughDailyUse()
         }
       } else if (skill.name === 'Coeur Artificiel') {
+        console.log('coeur')
         data += ' et subit les dettes de '
 
         const rois = [
