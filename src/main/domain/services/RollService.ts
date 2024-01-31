@@ -386,7 +386,7 @@ export class RollService {
         ]
         const randomRois = rois[Math.floor(Math.random() * rois.length)]
         data += randomRois
-        ppDelta = -5
+        dettesDelta = -5
       } else if (skill.name === 'Reco. naturelle') {
         const natureLevel = await this.characterProvider.getNatureLevel()
         switch (natureLevel) {
