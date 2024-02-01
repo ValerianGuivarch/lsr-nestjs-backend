@@ -273,7 +273,7 @@ export class DBCharacter {
   @IsDefined()
   boosted: boolean
 
-  @Column({ type: 'varchar', nullable: true })
+  @Column({ type: 'varchar', nullable: false, default: 'aucun' })
   @IsOptional()
   bloodlineName?: string
 
