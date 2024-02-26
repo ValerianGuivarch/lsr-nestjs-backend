@@ -37,7 +37,6 @@ export class ScenarioController {
       await this.scenarioService.create(
         Scenario.toScenarioToCreate({
           name: request.name,
-          category: request.category,
           difficulty: request.difficulty,
           victory: request.victory,
           defeat: request.defeat,

@@ -1,4 +1,3 @@
-import { ScenarioCategory } from '../../../../../../domain/models/elena/ScenarioCategory'
 import { ApiProperty } from '@nestjs/swagger'
 import { IsString } from 'class-validator'
 
@@ -9,13 +8,6 @@ export class CreateScenarioRequest {
   })
   @IsString()
   name: string
-
-  @ApiProperty({
-    description: 'The scenario category',
-    type: String
-  })
-  @IsString()
-  category: ScenarioCategory
 
   @ApiProperty({
     description: 'The scenario difficulty',
@@ -76,7 +68,6 @@ export class CreateScenarioRequest {
 
 export const CreateScenarioRequestExample1: CreateScenarioRequest = {
   name: '<SCENARIO 1>',
-  category: ScenarioCategory.PRINCIPAL,
   difficulty: 'F',
   victory: 'Prendre un petit déjeuner calorique pour avoir de l’énergie',
   defeat: 'Manque de calories',

@@ -1,9 +1,6 @@
-import { ScenarioCategory } from './ScenarioCategory'
-
 export class Scenario {
   id: string
   name: string
-  category: ScenarioCategory
   difficulty: string
   victory: string
   defeat: string
@@ -16,7 +13,6 @@ export class Scenario {
   constructor(p: {
     id: string
     name: string
-    category: ScenarioCategory
     difficulty: string
     victory: string
     defeat: string
@@ -28,7 +24,6 @@ export class Scenario {
   }) {
     this.id = p.id
     this.name = p.name
-    this.category = p.category
     this.difficulty = p.difficulty
     this.victory = p.victory
     this.defeat = p.defeat
@@ -41,7 +36,6 @@ export class Scenario {
 
   static toScenarioToCreate(p: {
     name: string
-    category: ScenarioCategory
     difficulty: string
     victory: string
     defeat: string
@@ -53,7 +47,6 @@ export class Scenario {
   }): ScenarioToCreate {
     return {
       name: p.name,
-      category: p.category,
       difficulty: p.difficulty,
       victory: p.victory,
       defeat: p.defeat,

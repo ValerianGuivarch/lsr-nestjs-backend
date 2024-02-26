@@ -3,7 +3,6 @@ import { Scenario } from '../../../../../../domain/models/elena/Scenario'
 export class ScenarioVM {
   id: string
   name: string
-  category: string
   difficulty: string
   victory: string
   defeat: string
@@ -14,7 +13,6 @@ export class ScenarioVM {
   constructor(p: {
     id: string
     name: string
-    category: string
     difficulty: string
     victory: string
     defeat: string
@@ -24,7 +22,6 @@ export class ScenarioVM {
   }) {
     this.id = p.id
     this.name = p.name
-    this.category = p.category
     this.difficulty = p.difficulty
     this.victory = p.victory
     this.defeat = p.defeat
@@ -37,7 +34,6 @@ export class ScenarioVM {
     return new ScenarioVM({
       id: scenario.id,
       name: scenario.name,
-      category: scenario.category,
       difficulty: scenario.difficulty,
       victory: scenario.victory,
       defeat: scenario.defeat,
@@ -52,7 +48,6 @@ export const ScenarioVMExample: ScenarioVM = {
   id: '1',
   name: 'Scenario 1',
   text: 'Text 1',
-  category: 'category 1',
   difficulty: 'difficulty 1',
   victory: 'victory 1',
   defeat: 'defeat 1',

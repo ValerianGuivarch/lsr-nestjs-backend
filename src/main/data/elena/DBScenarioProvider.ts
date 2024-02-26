@@ -20,7 +20,6 @@ export class DBScenarioProvider implements IScenarioProvider {
   async create(scenario: ScenarioToCreate): Promise<Scenario> {
     const toCreate: DBScenarioToCreate = {
       name: scenario.name,
-      category: scenario.category,
       difficulty: scenario.difficulty,
       victory: scenario.victory,
       defeat: scenario.defeat,

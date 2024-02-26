@@ -1,5 +1,4 @@
 import { Scenario } from '../../domain/models/elena/Scenario'
-import { ScenarioCategory } from '../../domain/models/elena/ScenarioCategory'
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm'
 
 @Entity('Scenario')
@@ -9,13 +8,6 @@ export class DBScenario {
 
   @Column()
   name: string
-
-  @Column({
-    type: 'enum',
-    enum: ScenarioCategory,
-    default: ScenarioCategory.PRINCIPAL
-  })
-  category: ScenarioCategory
 
   @Column()
   difficulty: string
@@ -54,7 +46,6 @@ export class DBScenario {
       id: dbScenario.id,
       text: dbScenario.text,
       name: dbScenario.name,
-      category: dbScenario.category,
       difficulty: dbScenario.difficulty,
       victory: dbScenario.victory,
       defeat: dbScenario.defeat,
