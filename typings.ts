@@ -1199,7 +1199,7 @@ export type Schema = {
       'scenario:text': string;
       'scenario:victoryMsg': string;
       'scenario:defaiteMsg': string;
-      'scenario:category': 'PRINCIPAL' | 'SECONDAIRE' | 'CACHE';
+      'scenario:rewardCoin': number;
     };
   };
   'Message': {
@@ -1266,7 +1266,7 @@ export type Schema = {
       'Scenario:text': string;
       'Scenario:victoryMsg': string;
       'Scenario:defaiteMsg': string;
-      'Scenario:category': 'PRINCIPAL' | 'SECONDAIRE' | 'CACHE';
+      'Scenario:rewardCoin': number;
     };
   };
   'Scenario': {
@@ -1281,7 +1281,7 @@ export type Schema = {
       'text': string;
       'victoryMsg': string;
       'defaiteMsg': string;
-      'category': 'PRINCIPAL' | 'SECONDAIRE' | 'CACHE';
+      'rewardCoin': number;
     };
     nested: {};
     flat: {};

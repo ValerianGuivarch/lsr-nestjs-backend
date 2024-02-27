@@ -1189,7 +1189,7 @@
           "validations": []
         },
         {
-          "defaultValue": null,
+          "defaultValue": "aucun",
           "enums": null,
           "field": "db_bloodline",
           "integration": null,
@@ -4437,18 +4437,6 @@
     {
       "actions": [
         {
-          "id": "migrations-1-init",
-          "name": "Init",
-          "type": "global",
-          "baseUrl": null,
-          "endpoint": "/forest/_actions/migrations/1/init",
-          "httpMethod": "POST",
-          "redirect": null,
-          "download": false,
-          "fields": [],
-          "hooks": {"load": false, "change": ["changeHook"]}
-        },
-        {
           "id": "migrations-0-stopper-jeu",
           "name": "Stopper jeu",
           "type": "global",
@@ -4712,22 +4700,6 @@
           "validations": []
         },
         {
-          "defaultValue": "PRINCIPAL",
-          "enums": ["CACHE", "PRINCIPAL", "SECONDAIRE"],
-          "field": "category",
-          "integration": null,
-          "inverseOf": null,
-          "isFilterable": true,
-          "isPrimaryKey": false,
-          "isReadOnly": false,
-          "isRequired": false,
-          "isSortable": true,
-          "isVirtual": false,
-          "reference": null,
-          "type": "Enum",
-          "validations": []
-        },
-        {
           "defaultValue": "",
           "enums": [],
           "field": "defaiteMsg",
@@ -4821,6 +4793,22 @@
           "isVirtual": false,
           "reference": null,
           "type": "String",
+          "validations": [{"type": "is present", "message": "Field is required"}]
+        },
+        {
+          "defaultValue": 0,
+          "enums": [],
+          "field": "rewardCoin",
+          "integration": null,
+          "inverseOf": null,
+          "isFilterable": true,
+          "isPrimaryKey": false,
+          "isReadOnly": false,
+          "isRequired": true,
+          "isSortable": true,
+          "isVirtual": false,
+          "reference": null,
+          "type": "Number",
           "validations": [{"type": "is present", "message": "Field is required"}]
         },
         {
