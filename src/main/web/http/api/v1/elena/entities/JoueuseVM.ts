@@ -62,7 +62,8 @@ export class JoueuseVM {
       state: joueuse.state,
       messages: messages.map((m) => MessageVM.fromMessage(m)),
       sponsor: joueuse.sponsor ? ConstellationVM.fromConstellation(joueuse.sponsor) : undefined,
-      sponsorToChoose: joueuse.sponsorToChoose
+      sponsorToChoose: joueuse.sponsorToChoose,
+      scenario: joueuse.scenario ? ScenarioVM.fromScenario(joueuse.scenario) : undefined
     })
   }
 }

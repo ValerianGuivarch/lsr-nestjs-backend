@@ -25,6 +25,11 @@ export class DBScenario {
   reward: string
 
   @Column({
+    default: 0
+  })
+  rewardCoin: number
+
+  @Column({
     default: ''
   })
   text: string
@@ -51,6 +56,7 @@ export class DBScenario {
       defeat: dbScenario.defeat,
       time: dbScenario.time,
       reward: dbScenario.reward,
+      rewardCoin: dbScenario.rewardCoin,
       victoryMsg: dbScenario.victoryMsg,
       defaiteMsg: dbScenario.defaiteMsg
     })

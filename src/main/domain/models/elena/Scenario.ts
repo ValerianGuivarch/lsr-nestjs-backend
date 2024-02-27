@@ -6,6 +6,7 @@ export class Scenario {
   defeat: string
   time: string
   reward: string
+  rewardCoin: number
   text: string
   victoryMsg: string
   defaiteMsg: string
@@ -18,6 +19,7 @@ export class Scenario {
     defeat: string
     time: string
     reward: string
+    rewardCoin: number
     text: string
     victoryMsg: string
     defaiteMsg: string
@@ -29,6 +31,7 @@ export class Scenario {
     this.defeat = p.defeat
     this.time = p.time
     this.reward = p.reward
+    this.rewardCoin = p.rewardCoin
     this.text = p.text
     this.victoryMsg = p.victoryMsg
     this.defaiteMsg = p.defaiteMsg
@@ -41,6 +44,7 @@ export class Scenario {
     defeat: string
     time: string
     reward: string
+    rewardCoin: number
     text: string
     victoryMsg: string
     defaiteMsg: string
@@ -52,6 +56,7 @@ export class Scenario {
       defeat: p.defeat,
       time: p.time,
       reward: p.reward,
+      rewardCoin: p.rewardCoin,
       text: p.text,
       victoryMsg: p.victoryMsg,
       defaiteMsg: p.defaiteMsg

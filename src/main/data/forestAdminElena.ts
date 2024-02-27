@@ -76,9 +76,13 @@ export const forestAdminElena = (p: {
         const scenarioId = (await context.getRecordId()).toString()
         const scenario = await p.scenarioService.findOneById(scenarioId)
 
+        const joueuse = await p.joueuseService.findOneByName('éléna')
+        const coins = joueuse.coins + (reussite ? scenario.rewardCoin : 0)
+
         await p.joueuseService.update({
           joueuseName: 'éléna',
           joueuse: {
+            coins: coins,
             scenarioId: null
           }
         })

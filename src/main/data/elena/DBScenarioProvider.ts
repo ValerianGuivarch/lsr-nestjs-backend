@@ -25,6 +25,7 @@ export class DBScenarioProvider implements IScenarioProvider {
       defeat: scenario.defeat,
       time: scenario.time,
       reward: scenario.reward,
+      rewardCoin: scenario.rewardCoin,
       text: scenario.text,
       victoryMsg: scenario.victoryMsg,
       defaiteMsg: scenario.defaiteMsg

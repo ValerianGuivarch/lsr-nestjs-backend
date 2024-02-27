@@ -42,6 +42,7 @@ export class ScenarioController {
           defeat: request.defeat,
           time: request.time,
           reward: request.reward,
+          rewardCoin: 100,
           text: request.text,
           victoryMsg: request.victoryMsg,
           defaiteMsg: request.defaiteMsg
