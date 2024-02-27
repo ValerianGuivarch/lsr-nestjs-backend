@@ -1,4 +1,3 @@
-import { Message } from '../domain/models/elena/Message'
 import { PlayState } from '../domain/models/elena/PlayState'
 import { ConstellationService } from '../domain/services/entities/elena/ConstellationService'
 import { JoueuseService } from '../domain/services/entities/elena/JoueuseService'
@@ -86,13 +85,18 @@ export const forestAdminElena = (p: {
             scenarioId: null
           }
         })
-        await p.messageService.create(
+
+        await p.messageService.create({
+          text: reussite ? 'Scénario réussi !' : 'Echec du scénario...',
+          senderId: starStreamId
+        })
+        /*await p.messageService.create(
           Message.toMessageToCreate({
             text: reussite ? scenario.victoryMsg : scenario.defaiteMsg,
             senderId: starStreamId
           }),
           reussite ? 'Scénario réussi !' : 'Echec du scénario...'
-        )
+        )*/
       }
     })
   })
