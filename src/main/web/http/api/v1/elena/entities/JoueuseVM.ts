@@ -1,10 +1,12 @@
 import { ConstellationVM, ConstellationVMExample } from './ConstellationVM'
 import { MessageVM } from './MessageVM'
 import { ScenarioVM, ScenarioVMExample } from './ScenarioVM'
+import { Constellation } from '../../../../../../domain/models/elena/Constellation'
 import { Joueuse } from '../../../../../../domain/models/elena/Joueuse'
 import { Message } from '../../../../../../domain/models/elena/Message'
 import { PlayState } from '../../../../../../domain/models/elena/PlayState'
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
+import { IsArray, IsOptional } from 'class-validator'
 
 export class JoueuseVM {
   @ApiProperty({
@@ -31,10 +33,18 @@ export class JoueuseVM {
   })
   sponsor?: ConstellationVM
 
+  @ApiProperty({
+    description: 'The joueuse constellations',
+    type: [ConstellationVM]
+  })
+  @IsArray()
+  constellations: ConstellationVM[]
+
   @ApiPropertyOptional({
     description: 'The joueuse scenario',
     type: ScenarioVM
   })
+  @IsOptional()
   scenario?: ScenarioVM
 
   messages: MessageVM[]
@@ -54,7 +64,7 @@ export class JoueuseVM {
     this.sponsorToChoose = joueuse.sponsorToChoose
   }
 
-  static fromJoueuse(joueuse: Joueuse, messages: Message[]): JoueuseVM {
+  static fromJoueuse(joueuse: Joueuse, messages: Message[], constellations: Constellation[]): JoueuseVM {
     return new JoueuseVM({
       id: joueuse.id,
       name: joueuse.name,
@@ -63,7 +73,8 @@ export class JoueuseVM {
       messages: messages.map((m) => MessageVM.fromMessage(m)),
       sponsor: joueuse.sponsor ? ConstellationVM.fromConstellation(joueuse.sponsor) : undefined,
       sponsorToChoose: joueuse.sponsorToChoose,
-      scenario: joueuse.scenario ? ScenarioVM.fromScenario(joueuse.scenario) : undefined
+      scenario: joueuse.scenario ? ScenarioVM.fromScenario(joueuse.scenario) : undefined,
+      constellations: constellations.map((c) => ConstellationVM.fromConstellation(c))
     })
   }
 }
@@ -76,5 +87,6 @@ export const JoueuseVMExample: JoueuseVM = {
   scenario: ScenarioVMExample,
   state: PlayState.NOT_STARTED,
   messages: [],
-  sponsorToChoose: false
+  sponsorToChoose: false,
+  constellations: [ConstellationVMExample]
 }

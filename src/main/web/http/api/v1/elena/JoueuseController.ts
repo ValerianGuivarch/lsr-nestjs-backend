@@ -2,6 +2,7 @@ import { JoueuseVM, JoueuseVMExample } from './entities/JoueuseVM'
 import { CreateJoueuseRequest, CreateJoueuseRequestExample } from './requests/CreateJoueuseRequest'
 import { UpdateJoueuseRequest } from './requests/UpdateJoueuseRequest'
 import { Joueuse } from '../../../../../domain/models/elena/Joueuse'
+import { ConstellationService } from '../../../../../domain/services/entities/elena/ConstellationService'
 import { JoueuseService } from '../../../../../domain/services/entities/elena/JoueuseService'
 import { MessageService } from '../../../../../domain/services/entities/elena/MessageService'
 import { ScenarioService } from '../../../../../domain/services/entities/elena/ScenarioService'
@@ -16,7 +17,8 @@ export class JoueuseController {
   constructor(
     private readonly joueuseService: JoueuseService,
     private readonly messageService: MessageService,
-    private readonly scenarioService: ScenarioService
+    private readonly scenarioService: ScenarioService,
+    private readonly constellationsService: ConstellationService
   ) {}
 
   @ApiCreatedResponse({
@@ -47,6 +49,7 @@ export class JoueuseController {
           name: request.name
         })
       ),
+      [],
       []
     )
   }
@@ -65,7 +68,8 @@ export class JoueuseController {
   async getJoueuseById(@Param('joueuseName') joueuseName: string): Promise<JoueuseVM> {
     return JoueuseVM.fromJoueuse(
       await this.joueuseService.findOneByName(joueuseName),
-      await this.messageService.findAll()
+      await this.messageService.findAll(),
+      await this.constellationsService.findAll()
     )
   }
 
@@ -93,6 +97,7 @@ export class JoueuseController {
           scenarioId: request.scenarioId
         }
       }),
+      [],
       []
     )
   }
@@ -100,7 +105,7 @@ export class JoueuseController {
   @Get('')
   async getAllJoueuses(@Res() response: FastifyReply): Promise<JoueuseVM[]> {
     const joueuses = await this.joueuseService.findAll()
-    const joueuseVMs = joueuses.map((joueuse) => JoueuseVM.fromJoueuse(joueuse, []))
+    const joueuseVMs = joueuses.map((joueuse) => JoueuseVM.fromJoueuse(joueuse, [], []))
 
     // Définir les en-têtes pour la pagination (adaptez selon vos besoins)
     response.header('Content-Range', `joueuses 0-${joueuseVMs.length}/${joueuseVMs.length}`)
