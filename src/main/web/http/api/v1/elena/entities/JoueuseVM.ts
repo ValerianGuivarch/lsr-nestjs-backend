@@ -62,6 +62,7 @@ export class JoueuseVM {
     this.state = joueuse.state
     this.messages = joueuse.messages
     this.sponsorToChoose = joueuse.sponsorToChoose
+    this.constellations = joueuse.constellations
   }
 
   static fromJoueuse(joueuse: Joueuse, messages: Message[], constellations: Constellation[]): JoueuseVM {
