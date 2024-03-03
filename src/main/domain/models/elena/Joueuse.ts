@@ -26,7 +26,7 @@ export class Joueuse {
     this.sponsor = p.sponsor
     this.scenario = p.scenario
     this.state = p.state
-    this.sponsorToChoose = false
+    this.sponsorToChoose = p.sponsorToChoose
   }
 
   static toJoueuseToCreate(p: { name: string }): JoueuseToCreate {
