@@ -32,6 +32,7 @@ export class ConstellationVM {
     type: String
   })
   name: string
+  isSponsor: boolean
 
   constructor(constellation: ConstellationVM) {
     this.id = constellation.id
@@ -39,6 +40,7 @@ export class ConstellationVM {
     this.pictureUrlRevealed = constellation.pictureUrlRevealed
     this.revealed = constellation.revealed
     this.name = constellation.name
+    this.isSponsor = constellation.isSponsor
   }
 
   static fromConstellation(constellation: Constellation): ConstellationVM {
@@ -47,7 +49,8 @@ export class ConstellationVM {
       pictureUrl: constellation.pictureUrl,
       name: constellation.name,
       pictureUrlRevealed: constellation.pictureUrlRevealed,
-      revealed: constellation.revealed
+      revealed: constellation.revealed,
+      isSponsor: constellation.sponsor
     })
   }
 }
@@ -57,5 +60,6 @@ export const ConstellationVMExample: ConstellationVM = {
   pictureUrl: 'https://www.google.com',
   pictureUrlRevealed: 'https://www.google.com',
   revealed: false,
-  name: 'Constellation'
+  name: 'Constellation',
+  sponsor: false
 }
