@@ -73,6 +73,24 @@ export class JoueuseController {
     )
   }
 
+  @HttpCode(HttpStatus.OK)
+  @Post(':joueuseName/sponsor/:sponsorId')
+  async selectSponsor(
+    @Param('joueuseName') joueuseName: string,
+    @Param('sponsorId') sponsorId: string
+  ): Promise<JoueuseVM> {
+    return JoueuseVM.fromJoueuse(
+      await this.joueuseService.update({
+        joueuseName: joueuseName,
+        joueuse: {
+          sponsorId: sponsorId
+        }
+      }),
+      [],
+      []
+    )
+  }
+
   @ApiOkResponse({
     description: 'Update a joueuse',
     content: generateResponseContent<JoueuseVM>({
