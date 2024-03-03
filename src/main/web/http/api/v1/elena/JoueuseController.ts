@@ -83,7 +83,8 @@ export class JoueuseController {
       await this.joueuseService.update({
         joueuseName: joueuseName,
         joueuse: {
-          sponsorId: sponsorId
+          sponsorId: sponsorId,
+          sponsorToChoose: false
         }
       }),
       [],
