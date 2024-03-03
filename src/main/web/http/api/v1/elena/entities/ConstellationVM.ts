@@ -61,5 +61,5 @@ export const ConstellationVMExample: ConstellationVM = {
   pictureUrlRevealed: 'https://www.google.com',
   revealed: false,
   name: 'Constellation',
-  sponsor: false
+  isSponsor: false
 }
