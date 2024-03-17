@@ -56,7 +56,8 @@ export class DBJoueuseProvider implements IJoueuseProvider {
       coins: p.joueuse.coins,
       state: p.joueuse.state,
       sponsorId: p.joueuse.sponsorId,
-      scenarioId: p.joueuse.scenarioId
+      scenarioId: p.joueuse.scenarioId,
+      sponsorToChoose: p.joueuse.sponsorToChoose
     }
     await this.joueuseRepository.update(
       {
