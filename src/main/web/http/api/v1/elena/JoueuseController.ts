@@ -2,6 +2,7 @@ import { JoueuseVM, JoueuseVMExample } from './entities/JoueuseVM'
 import { CreateJoueuseRequest, CreateJoueuseRequestExample } from './requests/CreateJoueuseRequest'
 import { UpdateJoueuseRequest } from './requests/UpdateJoueuseRequest'
 import { Joueuse } from '../../../../../domain/models/elena/Joueuse'
+import { Message } from '../../../../../domain/models/elena/Message'
 import { ConstellationService } from '../../../../../domain/services/entities/elena/ConstellationService'
 import { JoueuseService } from '../../../../../domain/services/entities/elena/JoueuseService'
 import { MessageService } from '../../../../../domain/services/entities/elena/MessageService'
@@ -75,20 +76,19 @@ export class JoueuseController {
 
   @HttpCode(HttpStatus.OK)
   @Post(':joueuseName/sponsor/:sponsorId')
-  async selectSponsor(
-    @Param('joueuseName') joueuseName: string,
-    @Param('sponsorId') sponsorId: string
-  ): Promise<JoueuseVM> {
-    return JoueuseVM.fromJoueuse(
-      await this.joueuseService.update({
-        joueuseName: joueuseName,
-        joueuse: {
-          sponsorId: sponsorId,
-          sponsorToChoose: false
-        }
-      }),
-      [],
-      []
+  async selectSponsor(@Param('joueuseName') joueuseName: string, @Param('sponsorId') sponsorId: string): Promise<void> {
+    await this.joueuseService.update({
+      joueuseName: joueuseName,
+      joueuse: {
+        sponsorId: sponsorId,
+        sponsorToChoose: false
+      }
+    })
+    await this.messageService.create(
+      Message.toMessageToCreate({
+        text: 'a été choisi comme sponsor',
+        senderId: sponsorId
+      })
     )
   }
 
