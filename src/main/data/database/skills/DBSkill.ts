@@ -43,7 +43,7 @@ export class DBSkill {
   @Column({ type: 'integer' })
   dettesCost: number
 
-  @Column({ type: 'integer' })
+  @Column({ type: 'integer', default: 0 })
   dragonDettesCost: number
 
   @Column({ type: 'integer' })

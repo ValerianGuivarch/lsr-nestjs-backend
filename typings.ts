@@ -296,6 +296,7 @@ export type Schema = {
       'dbSkill:help': boolean;
       'dbSkill:etherCost': number;
       'dbSkill:owner': string;
+      'dbSkill:dragonDettesCost': number;
       'dbSkill:db_character_template:name': string;
       'dbSkill:db_character_template:chairValueReferential': 'FIXE' | 'CHAIR' | 'ESPRIT' | 'ESSENCE' | 'SUCCESS';
       'dbSkill:db_character_template:chairValueRule': number;
@@ -369,6 +370,7 @@ export type Schema = {
       'etherMax': number;
       'hurtMalus': boolean;
       'boulet': boolean;
+      'dragonDettes': number;
     };
     nested: {
       'db_classe': Schema['db_classe']['plain'] & Schema['db_classe']['nested'];
@@ -454,6 +456,7 @@ export type Schema = {
       'db_character:etherMax': number;
       'db_character:hurtMalus': boolean;
       'db_character:boulet': boolean;
+      'db_character:dragonDettes': number;
       'db_character:db_classe:name': string;
       'db_character:db_classe:displayMale': string;
       'db_character:db_classe:displayFemale': string;
@@ -546,6 +549,7 @@ export type Schema = {
       'db_character:etherMax': number;
       'db_character:hurtMalus': boolean;
       'db_character:boulet': boolean;
+      'db_character:dragonDettes': number;
       'db_character:db_classe:name': string;
       'db_character:db_classe:displayMale': string;
       'db_character:db_classe:displayFemale': string;
@@ -629,6 +633,7 @@ export type Schema = {
       'db_character:etherMax': number;
       'db_character:hurtMalus': boolean;
       'db_character:boulet': boolean;
+      'db_character:dragonDettes': number;
       'db_character:db_classe:name': string;
       'db_character:db_classe:displayMale': string;
       'db_character:db_classe:displayFemale': string;
@@ -680,6 +685,7 @@ export type Schema = {
       'dbSkill:help': boolean;
       'dbSkill:etherCost': number;
       'dbSkill:owner': string;
+      'dbSkill:dragonDettesCost': number;
       'dbSkill:db_character_template:name': string;
       'dbSkill:db_character_template:chairValueReferential': 'FIXE' | 'CHAIR' | 'ESPRIT' | 'ESSENCE' | 'SUCCESS';
       'dbSkill:db_character_template:chairValueRule': number;
@@ -802,6 +808,7 @@ export type Schema = {
       'dbSkill:help': boolean;
       'dbSkill:etherCost': number;
       'dbSkill:owner': string;
+      'dbSkill:dragonDettesCost': number;
       'dbSkill:db_character_template:name': string;
       'dbSkill:db_character_template:chairValueReferential': 'FIXE' | 'CHAIR' | 'ESPRIT' | 'ESSENCE' | 'SUCCESS';
       'dbSkill:db_character_template:chairValueRule': number;
@@ -933,6 +940,7 @@ export type Schema = {
       'dbSkill:help': boolean;
       'dbSkill:etherCost': number;
       'dbSkill:owner': string;
+      'dbSkill:dragonDettesCost': number;
       'dbSkill:db_character_template:name': string;
       'dbSkill:db_character_template:chairValueReferential': 'FIXE' | 'CHAIR' | 'ESPRIT' | 'ESSENCE' | 'SUCCESS';
       'dbSkill:db_character_template:chairValueRule': number;
@@ -1059,6 +1067,7 @@ export type Schema = {
       'db_character:etherMax': number;
       'db_character:hurtMalus': boolean;
       'db_character:boulet': boolean;
+      'db_character:dragonDettes': number;
       'db_character:db_classe:name': string;
       'db_character:db_classe:displayMale': string;
       'db_character:db_classe:displayFemale': string;
@@ -1128,6 +1137,7 @@ export type Schema = {
       'help': boolean;
       'etherCost': number;
       'owner': string;
+      'dragonDettesCost': number;
     };
     nested: {
       'db_character_template': Schema['db_character_template']['plain'] & Schema['db_character_template']['nested'];
