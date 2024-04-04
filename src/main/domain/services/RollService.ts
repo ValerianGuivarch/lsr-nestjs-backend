@@ -476,7 +476,8 @@ export class RollService {
 
     let display = skill.display
     if (skill.stat === SkillStat.EMPIRIQUE) {
-      display = display + ' (' + p.empiriqueRoll + ')'
+      if (p.empiriqueRoll === undefined) display = display + ' (' + skill.customRolls + ')'
+      else display = display + ' (' + p.empiriqueRoll + ')'
     }
 
     const rollToCreate = await Roll.rollToCreateFactory({
