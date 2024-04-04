@@ -3298,6 +3298,7 @@ export class InitSkills {
       pfCost: p.pfCost || 0,
       ppCost: p.ppCost || 0,
       dettesCost: p.dettesCost || 0,
+      dragonDettesCost: 0,
       arcaneCost: p.arcaneCost || 0,
       etherCost: p.etherCost || 0,
       arcanePrimeCost: p.arcanePrimeCost || 0,

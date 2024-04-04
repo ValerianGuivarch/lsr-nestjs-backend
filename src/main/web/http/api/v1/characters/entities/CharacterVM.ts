@@ -77,6 +77,9 @@ export class CharacterVM {
   dettes: number
 
   @ApiProperty()
+  dragonDettes: number
+
+  @ApiProperty()
   arcanes: number
 
   @ApiProperty()
@@ -187,6 +190,7 @@ export class CharacterVM {
     this.pp = p.pp
     this.ppMax = p.ppMax
     this.dettes = p.dettes
+    this.dragonDettes = p.dragonDettes
     this.arcanes = p.arcanes
     this.arcanesMax = p.arcanesMax
     this.ether = p.ether
@@ -266,6 +270,7 @@ export class CharacterVM {
       pp: p.character.pp,
       ppMax: p.character.ppMax,
       dettes: p.character.dettes,
+      dragonDettes: p.character.dragonDettes,
       arcanes: p.character.arcanes,
       arcanesMax: p.character.arcanesMax,
       ether: p.character.ether,

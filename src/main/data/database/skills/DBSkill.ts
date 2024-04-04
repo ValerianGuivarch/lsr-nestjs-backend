@@ -44,6 +44,9 @@ export class DBSkill {
   dettesCost: number
 
   @Column({ type: 'integer' })
+  dragonDettesCost: number
+
+  @Column({ type: 'integer' })
   arcaneCost: number
 
   @Column({ type: 'integer', default: 0 })

@@ -13,6 +13,7 @@ export class Skill {
   pfCost: number
   ppCost: number
   dettesCost: number
+  dragonDettesCost: number
   etherCost: number
   arcaneCost: number
   arcanePrimeCost: number
@@ -46,6 +47,7 @@ export class Skill {
     this.pfCost = p.pfCost
     this.ppCost = p.ppCost
     this.dettesCost = p.dettesCost
+    this.dragonDettesCost = p.dragonDettesCost
     this.etherCost = p.etherCost
     this.arcaneCost = p.arcaneCost
     this.arcanePrimeCost = p.arcanePrimeCost

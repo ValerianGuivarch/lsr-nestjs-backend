@@ -137,6 +137,7 @@ export class RollService {
     let etherDelta = 0
     let arcanePrimeDelta = 0
     let dettesDelta = 0
+    let dragonDettesDelta = 0
     let usePf = p.focus && skill.allowsPf
     let usePp = p.power && skill.allowsPp
     let useProficiency = p.proficiency
@@ -316,6 +317,7 @@ export class RollService {
     arcaneDelta = arcaneDelta - skill.arcaneCost
     etherDelta = etherDelta - skill.etherCost
     dettesDelta = dettesDelta + skill.dettesCost
+    dragonDettesDelta = dragonDettesDelta + skill.dragonDettesCost
     arcanePrimeDelta = arcanePrimeDelta - skill.arcanePrimeCost
     if (p.character.pv + pvDelta < 0) {
       throw ProviderErrors.RollNotEnoughPv()
@@ -512,6 +514,7 @@ export class RollService {
     p.character.ether += etherDelta
     p.character.arcanePrimes += arcanePrimeDelta
     p.character.dettes += dettesDelta
+    p.character.dragonDettes += dragonDettesDelta
     if (p.character.dailyUse.get(skill.name) !== undefined) {
       p.character.dailyUse.set(skill.name, p.character.dailyUse.get(skill.name) - 1)
     }

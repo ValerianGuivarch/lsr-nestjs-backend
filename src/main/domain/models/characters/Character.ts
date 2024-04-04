@@ -25,6 +25,7 @@ export class Character {
   pp: number
   ppMax: number
   dettes: number
+  dragonDettes: number
   arcanes: number
   arcanesMax: number
   ether: number
@@ -84,6 +85,7 @@ export class Character {
     this.pp = p.pp < 0 ? 0 : p.pp
     this.ppMax = p.ppMax
     this.dettes = p.dettes < 0 ? 0 : p.dettes
+    this.dragonDettes = p.dragonDettes < 0 ? 0 : p.dragonDettes
     this.arcanes = p.arcanes < 0 ? 0 : p.arcanes
     this.arcanesMax = p.arcanesMax
     this.ether = p.ether < 0 ? 0 : p.ether
@@ -155,6 +157,7 @@ export class Character {
       playerName: p.playerName,
       // eslint-disable-next-line no-magic-numbers
       dettes: Math.floor(Math.random() * 11),
+      dragonDettes: 0,
       arcanes: p.arcanesMax,
       arcanesMax: p.arcanesMax,
       ether: p.ethersMax,
@@ -223,6 +226,7 @@ export class Character {
       playerName: p.summoner.playerName,
       // eslint-disable-next-line no-magic-numbers
       dettes: 0,
+      dragonDettes: 0,
       arcanes: 0,
       arcanesMax: 0,
       ether: 0,

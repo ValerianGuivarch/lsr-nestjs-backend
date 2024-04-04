@@ -60,6 +60,10 @@ export class UpdateCharacterDto {
   @IsNumber()
   readonly dettes: number
 
+  @ApiProperty({ default: 0 })
+  @IsNumber()
+  readonly dragonDettes: number
+
   @ApiProperty({ default: 3 })
   @IsNumber()
   readonly arcanesMax: number

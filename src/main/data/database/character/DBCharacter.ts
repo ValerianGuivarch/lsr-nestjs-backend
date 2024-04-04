@@ -123,6 +123,13 @@ export class DBCharacter {
 
   @Column({
     type: 'integer',
+    default: 0
+  })
+  @IsDefined()
+  dragonDettes: number
+
+  @Column({
+    type: 'integer',
     default: 3
   })
   @IsDefined()
