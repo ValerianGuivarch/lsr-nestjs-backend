@@ -198,6 +198,10 @@ export class RollService {
       } else if (skill.stat === SkillStat.ESSENCE) {
         diceNumber = p.character.essence + diceValueDelta + p.character.essenceBonus
       }
+
+      if (skill.name === 'dragon') {
+        diceNumber = 9
+      }
     }
     let success: number | null = null
     let juge12: number | null = null
