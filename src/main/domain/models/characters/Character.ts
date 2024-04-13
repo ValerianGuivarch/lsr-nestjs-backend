@@ -102,12 +102,12 @@ export class Character {
     this.genre = p.genre
     this.relance = p.relance < 0 ? 0 : p.relance
     this.playerName = p.playerName
-    this.picture = p.picture ? p.picture : 'http://78.199.187.90:8080/web_images/l7r/' + p.name + '.png'
+    this.picture = p.picture ? p.picture : 'http://78.199.187.90:8080/web_images/l7r/' + p.name.toLowerCase() + '.png'
     this.pictureApotheose = p.pictureApotheose
       ? p.pictureApotheose
       : p.picture
       ? p.picture
-      : 'http://78.199.187.90:8080/web_images/l7r/' + p.name + '.png'
+      : 'http://78.199.187.90:8080/web_images/l7r/' + p.name.toLowerCase() + '.png'
     ;(this.background = p.background ? p.background : 'http://78.199.187.90:8080/web_images/l7r/background.png'),
       (this.buttonColor = p.buttonColor)
     this.textColor = p.textColor
