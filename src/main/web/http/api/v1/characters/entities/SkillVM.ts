@@ -57,6 +57,7 @@ export class SkillVM {
     this.description = p.description
     this.dailyUse = p.dailyUse
     this.dailyUseMax = p.dailyUseMax
+    this.arcaneDette = p.arcaneDette
     this.soldatCost = p.soldatCost
     this.isHeal = p.isHeal
     this.resistance = p.resistance
