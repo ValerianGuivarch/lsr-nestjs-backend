@@ -371,6 +371,7 @@ export type Schema = {
       'hurtMalus': boolean;
       'boulet': boolean;
       'dragonDettes': number;
+      'arcaneDette': any;
     };
     nested: {
       'db_classe': Schema['db_classe']['plain'] & Schema['db_classe']['nested'];
@@ -457,6 +458,7 @@ export type Schema = {
       'db_character:hurtMalus': boolean;
       'db_character:boulet': boolean;
       'db_character:dragonDettes': number;
+      'db_character:arcaneDette': any;
       'db_character:db_classe:name': string;
       'db_character:db_classe:displayMale': string;
       'db_character:db_classe:displayFemale': string;
@@ -550,6 +552,7 @@ export type Schema = {
       'db_character:hurtMalus': boolean;
       'db_character:boulet': boolean;
       'db_character:dragonDettes': number;
+      'db_character:arcaneDette': any;
       'db_character:db_classe:name': string;
       'db_character:db_classe:displayMale': string;
       'db_character:db_classe:displayFemale': string;
@@ -634,6 +637,7 @@ export type Schema = {
       'db_character:hurtMalus': boolean;
       'db_character:boulet': boolean;
       'db_character:dragonDettes': number;
+      'db_character:arcaneDette': any;
       'db_character:db_classe:name': string;
       'db_character:db_classe:displayMale': string;
       'db_character:db_classe:displayFemale': string;
@@ -1068,6 +1072,7 @@ export type Schema = {
       'db_character:hurtMalus': boolean;
       'db_character:boulet': boolean;
       'db_character:dragonDettes': number;
+      'db_character:arcaneDette': any;
       'db_character:db_classe:name': string;
       'db_character:db_classe:displayMale': string;
       'db_character:db_classe:displayFemale': string;

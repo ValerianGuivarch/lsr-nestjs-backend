@@ -914,6 +914,22 @@
           "validations": []
         },
         {
+          "defaultValue": null,
+          "enums": [],
+          "field": "arcaneDette",
+          "integration": null,
+          "inverseOf": null,
+          "isFilterable": false,
+          "isPrimaryKey": false,
+          "isReadOnly": false,
+          "isRequired": false,
+          "isSortable": true,
+          "isVirtual": false,
+          "reference": null,
+          "type": "Json",
+          "validations": []
+        },
+        {
           "defaultValue": 1,
           "enums": [],
           "field": "arcanePrimes",
