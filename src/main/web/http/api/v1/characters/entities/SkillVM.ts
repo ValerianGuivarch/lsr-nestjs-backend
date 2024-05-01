@@ -25,6 +25,9 @@ export class SkillVM {
   dailyUseMax: number | null
 
   @ApiProperty()
+  arcaneDette: number | null
+
+  @ApiProperty()
   dailyUse: number | null
 
   @ApiProperty()
@@ -68,6 +71,7 @@ export class SkillVM {
       name: p.skill.name,
       dailyUse: p.character?.dailyUse.get(p.skill.name),
       dailyUseMax: p.character?.dailyUseMax.get(p.skill.name),
+      arcaneDette: p.character?.arcaneDette.get(p.skill.name),
       shortName: p.skill.shortName,
       longName: p.skill.longName,
       displayCategory: p.skill.displayCategory.toString(),

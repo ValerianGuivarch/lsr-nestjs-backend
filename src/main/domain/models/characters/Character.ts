@@ -60,6 +60,7 @@ export class Character {
   customData?: string
   dailyUse: Map<string, number>
   dailyUseMax: Map<string, number>
+  arcaneDette: Map<string, number>
   hurtMalus: boolean
   boulet: boolean
 
@@ -118,6 +119,7 @@ export class Character {
     this.customData = p.customData
     this.dailyUse = p.dailyUse
     this.dailyUseMax = p.dailyUseMax
+    this.arcaneDette = p.arcaneDette
   }
 
   static characterToCreateFactory(p: {
@@ -196,7 +198,8 @@ export class Character {
       summoner: undefined,
       customData: p.customData,
       dailyUse: new Map<string, number>(),
-      dailyUseMax: new Map<string, number>()
+      dailyUseMax: new Map<string, number>(),
+      arcaneDette: new Map<string, number>()
     }
     return Object.assign(defaults, p)
   }
@@ -263,7 +266,8 @@ export class Character {
       controlledBy: p.summoner.name,
       customData: p.customData,
       dailyUse: new Map<string, number>(),
-      dailyUseMax: new Map<string, number>()
+      dailyUseMax: new Map<string, number>(),
+      arcaneDette: new Map<string, number>()
     } as CharacterToCreate
   }
 }

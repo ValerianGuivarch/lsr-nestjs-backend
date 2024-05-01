@@ -326,6 +326,11 @@ export class DBCharacter {
   @IsObject()
   dailyUseMax: { [skillName: string]: number }
 
+  @Column({ type: 'jsonb', nullable: true })
+  @IsDefined()
+  @IsObject()
+  arcaneDette: { [arcaneName: string]: number }
+
   @Column({ type: 'boolean', default: true })
   @IsDefined()
   hurtMalus: boolean
