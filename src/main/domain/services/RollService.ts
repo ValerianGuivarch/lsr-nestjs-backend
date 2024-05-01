@@ -523,8 +523,8 @@ export class RollService {
     if (p.character.dailyUse.get(skill.name) !== undefined) {
       p.character.dailyUse.set(skill.name, p.character.dailyUse.get(skill.name) - 1)
     }
-    if (p.character.arcaneDette.get(skill.name) !== undefined) {
-      p.character.arcaneDette.set(skill.name, p.character.arcaneDette.get(skill.name) + 1)
+    if (skill.isArcanique) {
+      p.character.arcaneDette.set(skill.name, (p.character.arcaneDette.get(skill.name) ?? 0) + 1)
     }
     if (p.affect) await this.characterProvider.update(p.character)
     const rolls = await this.getLast()
