@@ -69,7 +69,8 @@ export class CharacterController {
       updateSkillsAttributionDto.skillId.toString(),
       updateSkillsAttributionDto.dailyUse,
       updateSkillsAttributionDto.dailyUseMax,
-      updateSkillsAttributionDto.affected ?? true
+      updateSkillsAttributionDto.affected ?? true,
+      updateSkillsAttributionDto.arcaneDetteToDecrease
     )
   }
 
@@ -80,6 +81,7 @@ export class CharacterController {
       if (a.name > b.name) {
         return 1
       } else {
+        // eslint-disable-next-line no-magic-numbers
         return -1
       }
     })

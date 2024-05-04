@@ -120,12 +120,14 @@ export class CharacterService {
     skillId: string,
     dailyUse?: number,
     dailyUseMax?: number,
-    affected?: boolean
+    affected?: boolean,
+    arcaneDetteToDecrease?: number
   ): Promise<void> {
     const character = await this.characterProvider.findOneByName(characterName)
     const skill = await this.skillService.findSkillById(skillId)
     character.dailyUse.set(skill.name, dailyUse)
     character.dailyUseMax.set(skill.name, dailyUseMax)
+    character.arcaneDette.set(skill.name, arcaneDetteToDecrease)
     await this.characterProvider.update({
       ...character
     })

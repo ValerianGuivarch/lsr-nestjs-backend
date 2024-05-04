@@ -18,6 +18,11 @@ export class UpdateSkillsAttributionDto {
 
   @ApiPropertyOptional()
   @IsOptional()
+  @IsNumber()
+  readonly arcaneDetteToDecrease?: number | null
+
+  @ApiPropertyOptional()
+  @IsOptional()
   @IsBoolean()
   readonly affected?: boolean | null
 }
