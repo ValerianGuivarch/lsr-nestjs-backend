@@ -345,7 +345,15 @@
         },
         {
           "defaultValue": null,
-          "enums": ["ARCANES", "ARCANES_PRIMES", "MAGIE", "PACIFICATEURS", "SOLDATS", "STATS"],
+          "enums": [
+            "ARCANES",
+            "ARCANES_PRIMES",
+            "MAGIE",
+            "PACIFICATEURS",
+            "PAROLIERS",
+            "SOLDATS",
+            "STATS"
+          ],
           "field": "displayCategory",
           "integration": null,
           "inverseOf": null,
@@ -2942,7 +2950,15 @@
         },
         {
           "defaultValue": null,
-          "enums": ["ARCANES", "ARCANES_PRIMES", "MAGIE", "PACIFICATEURS", "SOLDATS", "STATS"],
+          "enums": [
+            "ARCANES",
+            "ARCANES_PRIMES",
+            "MAGIE",
+            "PACIFICATEURS",
+            "PAROLIERS",
+            "SOLDATS",
+            "STATS"
+          ],
           "field": "displayCategory",
           "integration": null,
           "inverseOf": null,
@@ -3861,7 +3877,15 @@
         },
         {
           "defaultValue": null,
-          "enums": ["ARCANES", "ARCANES_PRIMES", "MAGIE", "PACIFICATEURS", "SOLDATS", "STATS"],
+          "enums": [
+            "ARCANES",
+            "ARCANES_PRIMES",
+            "MAGIE",
+            "PACIFICATEURS",
+            "PAROLIERS",
+            "SOLDATS",
+            "STATS"
+          ],
           "field": "displayCategory",
           "integration": null,
           "inverseOf": null,
@@ -4939,6 +4963,6 @@
     "liana": "forest-nodejs-agent",
     "liana_version": "1.16.1",
     "liana_features": null,
-    "stack": {"engine": "nodejs", "engine_version": "18.16.1"}
+    "stack": {"engine": "nodejs", "engine_version": "20.10.0"}
   }
 }
