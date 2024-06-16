@@ -348,11 +348,13 @@
           "enums": [
             "ARCANES",
             "ARCANES_PRIMES",
+            "BONUS",
             "MAGIE",
             "PACIFICATEURS",
             "PAROLIERS",
             "SOLDATS",
-            "STATS"
+            "STATS",
+            "TECHNOMANCIE"
           ],
           "field": "displayCategory",
           "integration": null,
@@ -2953,11 +2955,13 @@
           "enums": [
             "ARCANES",
             "ARCANES_PRIMES",
+            "BONUS",
             "MAGIE",
             "PACIFICATEURS",
             "PAROLIERS",
             "SOLDATS",
-            "STATS"
+            "STATS",
+            "TECHNOMANCIE"
           ],
           "field": "displayCategory",
           "integration": null,
@@ -3880,11 +3884,13 @@
           "enums": [
             "ARCANES",
             "ARCANES_PRIMES",
+            "BONUS",
             "MAGIE",
             "PACIFICATEURS",
             "PAROLIERS",
             "SOLDATS",
-            "STATS"
+            "STATS",
+            "TECHNOMANCIE"
           ],
           "field": "displayCategory",
           "integration": null,
