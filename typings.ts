@@ -210,7 +210,7 @@ export type Schema = {
     plain: {
       'name': string;
       'shortName': string;
-      'displayCategory': 'STATS' | 'MAGIE' | 'ARCANES' | 'ARCANES_PRIMES' | 'BONUS' | 'SOLDATS' | 'PACIFICATEURS' | 'PAROLIERS' | 'TECHNOMANCIE';
+      'displayCategory': 'STATS' | 'MAGIE' | 'ARCANES' | 'ARCANES_PRIMES' | 'BONUS' | 'SOLDATS' | 'PACIFICATEURS' | 'PAROLIERS' | 'TECHNOMANCIE' | 'SOUTIENS';
       'description': string;
       'position': number;
       'minLevel': number;
@@ -248,7 +248,7 @@ export type Schema = {
       'db_bloodline:display': string;
       'db_proficiency:name': string;
       'db_proficiency:shortName': string;
-      'db_proficiency:displayCategory': 'STATS' | 'MAGIE' | 'ARCANES' | 'ARCANES_PRIMES' | 'BONUS' | 'SOLDATS' | 'PACIFICATEURS' | 'PAROLIERS' | 'TECHNOMANCIE';
+      'db_proficiency:displayCategory': 'STATS' | 'MAGIE' | 'ARCANES' | 'ARCANES_PRIMES' | 'BONUS' | 'SOLDATS' | 'PACIFICATEURS' | 'PAROLIERS' | 'TECHNOMANCIE' | 'SOUTIENS';
       'db_proficiency:description': string;
       'db_proficiency:minLevel': number;
     };
@@ -266,7 +266,7 @@ export type Schema = {
       'db_bloodline:name': string;
       'db_bloodline:display': string;
       'dbSkill:id': number;
-      'dbSkill:displayCategory': 'STATS' | 'MAGIE' | 'ARCANES' | 'ARCANES_PRIMES' | 'BONUS' | 'SOLDATS' | 'PACIFICATEURS' | 'PAROLIERS' | 'TECHNOMANCIE';
+      'dbSkill:displayCategory': 'STATS' | 'MAGIE' | 'ARCANES' | 'ARCANES_PRIMES' | 'BONUS' | 'SOLDATS' | 'PACIFICATEURS' | 'PAROLIERS' | 'TECHNOMANCIE' | 'SOUTIENS';
       'dbSkill:allowsPf': boolean;
       'dbSkill:allowsPp': boolean;
       'dbSkill:stat': 'FIXE' | 'CHAIR' | 'ESPRIT' | 'ESSENCE' | 'EMPIRIQUE' | 'CUSTOM';
@@ -385,7 +385,7 @@ export type Schema = {
       'db_classe:canUsePp': boolean;
       'db_apotheose:name': string;
       'db_apotheose:shortName': string;
-      'db_apotheose:displayCategory': 'STATS' | 'MAGIE' | 'ARCANES' | 'ARCANES_PRIMES' | 'BONUS' | 'SOLDATS' | 'PACIFICATEURS' | 'PAROLIERS' | 'TECHNOMANCIE';
+      'db_apotheose:displayCategory': 'STATS' | 'MAGIE' | 'ARCANES' | 'ARCANES_PRIMES' | 'BONUS' | 'SOLDATS' | 'PACIFICATEURS' | 'PAROLIERS' | 'TECHNOMANCIE' | 'SOUTIENS';
       'db_apotheose:description': string;
       'db_apotheose:position': number;
       'db_apotheose:minLevel': number;
@@ -465,7 +465,7 @@ export type Schema = {
       'db_character:db_classe:canUsePp': boolean;
       'db_character:db_apotheose:name': string;
       'db_character:db_apotheose:shortName': string;
-      'db_character:db_apotheose:displayCategory': 'STATS' | 'MAGIE' | 'ARCANES' | 'ARCANES_PRIMES' | 'BONUS' | 'SOLDATS' | 'PACIFICATEURS' | 'PAROLIERS' | 'TECHNOMANCIE';
+      'db_character:db_apotheose:displayCategory': 'STATS' | 'MAGIE' | 'ARCANES' | 'ARCANES_PRIMES' | 'BONUS' | 'SOLDATS' | 'PACIFICATEURS' | 'PAROLIERS' | 'TECHNOMANCIE' | 'SOUTIENS';
       'db_character:db_apotheose:description': string;
       'db_character:db_apotheose:position': number;
       'db_character:db_apotheose:minLevel': number;
@@ -481,7 +481,7 @@ export type Schema = {
       'db_character:db_bloodline:display': string;
       'db_apotheose:name': string;
       'db_apotheose:shortName': string;
-      'db_apotheose:displayCategory': 'STATS' | 'MAGIE' | 'ARCANES' | 'ARCANES_PRIMES' | 'BONUS' | 'SOLDATS' | 'PACIFICATEURS' | 'PAROLIERS' | 'TECHNOMANCIE';
+      'db_apotheose:displayCategory': 'STATS' | 'MAGIE' | 'ARCANES' | 'ARCANES_PRIMES' | 'BONUS' | 'SOLDATS' | 'PACIFICATEURS' | 'PAROLIERS' | 'TECHNOMANCIE' | 'SOUTIENS';
       'db_apotheose:description': string;
       'db_apotheose:position': number;
       'db_apotheose:minLevel': number;
@@ -559,7 +559,7 @@ export type Schema = {
       'db_character:db_classe:canUsePp': boolean;
       'db_character:db_apotheose:name': string;
       'db_character:db_apotheose:shortName': string;
-      'db_character:db_apotheose:displayCategory': 'STATS' | 'MAGIE' | 'ARCANES' | 'ARCANES_PRIMES' | 'BONUS' | 'SOLDATS' | 'PACIFICATEURS' | 'PAROLIERS' | 'TECHNOMANCIE';
+      'db_character:db_apotheose:displayCategory': 'STATS' | 'MAGIE' | 'ARCANES' | 'ARCANES_PRIMES' | 'BONUS' | 'SOLDATS' | 'PACIFICATEURS' | 'PAROLIERS' | 'TECHNOMANCIE' | 'SOUTIENS';
       'db_character:db_apotheose:description': string;
       'db_character:db_apotheose:position': number;
       'db_character:db_apotheose:minLevel': number;
@@ -575,7 +575,7 @@ export type Schema = {
       'db_character:db_bloodline:display': string;
       'db_proficiency:name': string;
       'db_proficiency:shortName': string;
-      'db_proficiency:displayCategory': 'STATS' | 'MAGIE' | 'ARCANES' | 'ARCANES_PRIMES' | 'BONUS' | 'SOLDATS' | 'PACIFICATEURS' | 'PAROLIERS' | 'TECHNOMANCIE';
+      'db_proficiency:displayCategory': 'STATS' | 'MAGIE' | 'ARCANES' | 'ARCANES_PRIMES' | 'BONUS' | 'SOLDATS' | 'PACIFICATEURS' | 'PAROLIERS' | 'TECHNOMANCIE' | 'SOUTIENS';
       'db_proficiency:description': string;
       'db_proficiency:minLevel': number;
     };
@@ -644,7 +644,7 @@ export type Schema = {
       'db_character:db_classe:canUsePp': boolean;
       'db_character:db_apotheose:name': string;
       'db_character:db_apotheose:shortName': string;
-      'db_character:db_apotheose:displayCategory': 'STATS' | 'MAGIE' | 'ARCANES' | 'ARCANES_PRIMES' | 'BONUS' | 'SOLDATS' | 'PACIFICATEURS' | 'PAROLIERS' | 'TECHNOMANCIE';
+      'db_character:db_apotheose:displayCategory': 'STATS' | 'MAGIE' | 'ARCANES' | 'ARCANES_PRIMES' | 'BONUS' | 'SOLDATS' | 'PACIFICATEURS' | 'PAROLIERS' | 'TECHNOMANCIE' | 'SOUTIENS';
       'db_character:db_apotheose:description': string;
       'db_character:db_apotheose:position': number;
       'db_character:db_apotheose:minLevel': number;
@@ -659,7 +659,7 @@ export type Schema = {
       'db_character:db_bloodline:name': string;
       'db_character:db_bloodline:display': string;
       'dbSkill:id': number;
-      'dbSkill:displayCategory': 'STATS' | 'MAGIE' | 'ARCANES' | 'ARCANES_PRIMES' | 'BONUS' | 'SOLDATS' | 'PACIFICATEURS' | 'PAROLIERS' | 'TECHNOMANCIE';
+      'dbSkill:displayCategory': 'STATS' | 'MAGIE' | 'ARCANES' | 'ARCANES_PRIMES' | 'BONUS' | 'SOLDATS' | 'PACIFICATEURS' | 'PAROLIERS' | 'TECHNOMANCIE' | 'SOUTIENS';
       'dbSkill:allowsPf': boolean;
       'dbSkill:allowsPp': boolean;
       'dbSkill:stat': 'FIXE' | 'CHAIR' | 'ESPRIT' | 'ESSENCE' | 'EMPIRIQUE' | 'CUSTOM';
@@ -782,7 +782,7 @@ export type Schema = {
       'db_character_template:db_bloodline:name': string;
       'db_character_template:db_bloodline:display': string;
       'dbSkill:id': number;
-      'dbSkill:displayCategory': 'STATS' | 'MAGIE' | 'ARCANES' | 'ARCANES_PRIMES' | 'BONUS' | 'SOLDATS' | 'PACIFICATEURS' | 'PAROLIERS' | 'TECHNOMANCIE';
+      'dbSkill:displayCategory': 'STATS' | 'MAGIE' | 'ARCANES' | 'ARCANES_PRIMES' | 'BONUS' | 'SOLDATS' | 'PACIFICATEURS' | 'PAROLIERS' | 'TECHNOMANCIE' | 'SOUTIENS';
       'dbSkill:allowsPf': boolean;
       'dbSkill:allowsPp': boolean;
       'dbSkill:stat': 'FIXE' | 'CHAIR' | 'ESPRIT' | 'ESSENCE' | 'EMPIRIQUE' | 'CUSTOM';
@@ -864,7 +864,7 @@ export type Schema = {
       'db_classe:canUsePp': boolean;
       'db_apotheose:name': string;
       'db_apotheose:shortName': string;
-      'db_apotheose:displayCategory': 'STATS' | 'MAGIE' | 'ARCANES' | 'ARCANES_PRIMES' | 'BONUS' | 'SOLDATS' | 'PACIFICATEURS' | 'PAROLIERS' | 'TECHNOMANCIE';
+      'db_apotheose:displayCategory': 'STATS' | 'MAGIE' | 'ARCANES' | 'ARCANES_PRIMES' | 'BONUS' | 'SOLDATS' | 'PACIFICATEURS' | 'PAROLIERS' | 'TECHNOMANCIE' | 'SOUTIENS';
       'db_apotheose:description': string;
       'db_apotheose:position': number;
       'db_apotheose:minLevel': number;
@@ -894,7 +894,7 @@ export type Schema = {
       'db_classe:canUsePp': boolean;
       'db_proficiency:name': string;
       'db_proficiency:shortName': string;
-      'db_proficiency:displayCategory': 'STATS' | 'MAGIE' | 'ARCANES' | 'ARCANES_PRIMES' | 'BONUS' | 'SOLDATS' | 'PACIFICATEURS' | 'PAROLIERS' | 'TECHNOMANCIE';
+      'db_proficiency:displayCategory': 'STATS' | 'MAGIE' | 'ARCANES' | 'ARCANES_PRIMES' | 'BONUS' | 'SOLDATS' | 'PACIFICATEURS' | 'PAROLIERS' | 'TECHNOMANCIE' | 'SOUTIENS';
       'db_proficiency:description': string;
       'db_proficiency:minLevel': number;
     };
@@ -914,7 +914,7 @@ export type Schema = {
       'db_classe:displayFemale': string;
       'db_classe:canUsePp': boolean;
       'dbSkill:id': number;
-      'dbSkill:displayCategory': 'STATS' | 'MAGIE' | 'ARCANES' | 'ARCANES_PRIMES' | 'BONUS' | 'SOLDATS' | 'PACIFICATEURS' | 'PAROLIERS' | 'TECHNOMANCIE';
+      'dbSkill:displayCategory': 'STATS' | 'MAGIE' | 'ARCANES' | 'ARCANES_PRIMES' | 'BONUS' | 'SOLDATS' | 'PACIFICATEURS' | 'PAROLIERS' | 'TECHNOMANCIE' | 'SOUTIENS';
       'dbSkill:allowsPf': boolean;
       'dbSkill:allowsPp': boolean;
       'dbSkill:stat': 'FIXE' | 'CHAIR' | 'ESPRIT' | 'ESSENCE' | 'EMPIRIQUE' | 'CUSTOM';
@@ -984,7 +984,7 @@ export type Schema = {
     plain: {
       'name': string;
       'shortName': string;
-      'displayCategory': 'STATS' | 'MAGIE' | 'ARCANES' | 'ARCANES_PRIMES' | 'BONUS' | 'SOLDATS' | 'PACIFICATEURS' | 'PAROLIERS' | 'TECHNOMANCIE';
+      'displayCategory': 'STATS' | 'MAGIE' | 'ARCANES' | 'ARCANES_PRIMES' | 'BONUS' | 'SOLDATS' | 'PACIFICATEURS' | 'PAROLIERS' | 'TECHNOMANCIE' | 'SOUTIENS';
       'description': string;
       'minLevel': number;
     };
@@ -1079,7 +1079,7 @@ export type Schema = {
       'db_character:db_classe:canUsePp': boolean;
       'db_character:db_apotheose:name': string;
       'db_character:db_apotheose:shortName': string;
-      'db_character:db_apotheose:displayCategory': 'STATS' | 'MAGIE' | 'ARCANES' | 'ARCANES_PRIMES' | 'BONUS' | 'SOLDATS' | 'PACIFICATEURS' | 'PAROLIERS' | 'TECHNOMANCIE';
+      'db_character:db_apotheose:displayCategory': 'STATS' | 'MAGIE' | 'ARCANES' | 'ARCANES_PRIMES' | 'BONUS' | 'SOLDATS' | 'PACIFICATEURS' | 'PAROLIERS' | 'TECHNOMANCIE' | 'SOUTIENS';
       'db_character:db_apotheose:description': string;
       'db_character:db_apotheose:position': number;
       'db_character:db_apotheose:minLevel': number;
@@ -1112,7 +1112,7 @@ export type Schema = {
   'db_skill': {
     plain: {
       'id': number;
-      'displayCategory': 'STATS' | 'MAGIE' | 'ARCANES' | 'ARCANES_PRIMES' | 'BONUS' | 'SOLDATS' | 'PACIFICATEURS' | 'PAROLIERS' | 'TECHNOMANCIE';
+      'displayCategory': 'STATS' | 'MAGIE' | 'ARCANES' | 'ARCANES_PRIMES' | 'BONUS' | 'SOLDATS' | 'PACIFICATEURS' | 'PAROLIERS' | 'TECHNOMANCIE' | 'SOUTIENS';
       'allowsPf': boolean;
       'allowsPp': boolean;
       'stat': 'FIXE' | 'CHAIR' | 'ESPRIT' | 'ESSENCE' | 'EMPIRIQUE' | 'CUSTOM';
