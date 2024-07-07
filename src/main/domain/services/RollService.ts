@@ -374,6 +374,14 @@ export class RollService {
         if (keysArray.length === 0) {
           throw ProviderErrors.RollNotEnoughDailyUse()
         }
+      } else if (skill.name === 'Dettes multiples') {
+        console.log('coeur')
+        data += ' de '
+
+        const rois = ['Ifrit', 'Jack']
+        const randomRois = rois[Math.floor(Math.random() * rois.length)]
+        data += randomRois
+        dettesDelta = -5
       } else if (skill.name === 'Coeur Artificiel') {
         console.log('coeur')
         data += ' et subit les dettes de '
