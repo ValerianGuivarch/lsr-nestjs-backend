@@ -382,7 +382,6 @@ export class RollService {
         const rois = ['Ifrit', 'Jack']
         const randomRois = rois[Math.floor(Math.random() * rois.length)]
         data += randomRois
-        dettesDelta = -5
       } else if (skill.name === 'Coeur Artificiel') {
         console.log('coeur')
         data += ' et subit les dettes de '
