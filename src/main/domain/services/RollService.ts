@@ -176,6 +176,7 @@ export class RollService {
       }
       if (usePp) {
         ppDelta--
+        dettesDelta = dettesDelta + 1
       }
 
       if (apotheose) {
