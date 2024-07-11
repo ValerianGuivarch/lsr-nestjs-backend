@@ -488,9 +488,25 @@ export class RollService {
     if (skill.name === 'cheval amélioré') {
       console.log('CHEVAL')
       const tiger = await this.characterProvider.findOneByName('ChevalDeRoy')
-      let chevalChair = 2 + Math.floor(2 + success / 3)
-      let chevalEsprit = 2 + Math.floor(2 + success / 3)
-      const chevalEssence = 2 + Math.floor(2 + success / 3)
+      let chevalChair = 2
+      let chevalEsprit = 2
+      let chevalEssence = 2
+
+      let successCheval: number = success
+
+      while (successCheval > 0) {
+        chevalChair++
+        successCheval--
+        if (successCheval > 0) {
+          chevalEsprit++
+          successCheval--
+        }
+        if (successCheval > 0) {
+          chevalEssence++
+          successCheval--
+        }
+      }
+
       if (success - (chevalChair + chevalEsprit + chevalEssence) > 0) {
         chevalEsprit = chevalEsprit + 1
       }
