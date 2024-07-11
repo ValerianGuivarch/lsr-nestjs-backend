@@ -65,12 +65,6 @@ export class CharacterService {
         p.character.dettes = p.character.dettes + (previous.pp - p.character.pp)
       }
     }
-    if (p.character.name === 'atès') {
-      const previous = await this.characterProvider.findOneByName(p.character.name)
-      if (p.character.dettes > previous.dettes) {
-        p.character.dettes = p.character.dettes + 1
-      }
-    }
     return await this.characterProvider.update(p.character)
   }
 

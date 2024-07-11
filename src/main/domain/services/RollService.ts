@@ -526,7 +526,11 @@ export class RollService {
     p.character.arcanes += arcaneDelta
     p.character.ether += etherDelta
     p.character.arcanePrimes += arcanePrimeDelta
-    p.character.dettes += dettesDelta
+    if (p.character.name === 'atès') {
+      p.character.dettes += dettesDelta * 2
+    } else {
+      p.character.dettes += dettesDelta
+    }
     p.character.dragonDettes += dragonDettesDelta
     if (p.character.dailyUse.get(skill.name) !== undefined) {
       p.character.dailyUse.set(skill.name, p.character.dailyUse.get(skill.name) - 1)
