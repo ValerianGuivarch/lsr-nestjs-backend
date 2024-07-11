@@ -484,6 +484,7 @@ export class RollService {
           data += ' et choisit sa transformation'
         }
       } else if (skill.name === 'cheval amélioré') {
+        console.log('CHEVAL')
         const tiger = await this.characterProvider.findOneByName('ChevalDeRoy')
         let chevalChair = 2 + success / 3
         let chevalEsprit = 2 + success / 3
@@ -503,6 +504,9 @@ export class RollService {
         tiger.essence = chevalEssence
         tiger.pp = 0
         tiger.ppMax = 0
+        console.log(chevalChair)
+        console.log(chevalEsprit)
+        console.log(chevalEssence)
         await this.characterProvider.update(tiger)
       }
     }
