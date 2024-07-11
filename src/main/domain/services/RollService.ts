@@ -492,7 +492,7 @@ export class RollService {
       let chevalEsprit = 2
       let chevalEssence = 2
 
-      let successCheval: number = success
+      let successCheval: number = success * 2
 
       while (successCheval > 0) {
         chevalChair++
