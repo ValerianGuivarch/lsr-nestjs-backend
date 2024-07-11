@@ -483,6 +483,27 @@ export class RollService {
         } else {
           data += ' et choisit sa transformation'
         }
+      } else if (skill.name === 'cheval amélioré') {
+        const tiger = await this.characterProvider.findOneByName('ChevalDeRoy')
+        let chevalChair = 2 + success / 3
+        let chevalEsprit = 2 + success / 3
+        const chevalEssence = 2 + success / 3
+        if (success - (chevalChair + chevalEsprit + chevalEssence) > 0) {
+          chevalEsprit = chevalEsprit + 1
+        }
+        if (success - (chevalChair + chevalEsprit + chevalEssence) > 0) {
+          chevalChair = chevalChair + 1
+        }
+        tiger.chair = chevalChair
+        tiger.pv = chevalChair * 2
+        tiger.pvMax = chevalChair * 2
+        tiger.esprit = chevalEsprit
+        tiger.pf = chevalEsprit
+        tiger.pfMax = chevalEsprit
+        tiger.essence = chevalEssence
+        tiger.pp = 0
+        tiger.ppMax = 0
+        await this.characterProvider.update(tiger)
       }
     }
 
