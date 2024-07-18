@@ -13,7 +13,7 @@ export class SpeakingGateway {
 
   constructor(private sessionService: SessionService) {}
   @ApiOkResponse()
-  @Sse('speaking')
+  @Sse('')
   getRolls(): Observable<string> {
     // eslint-disable-next-line no-magic-numbers
     return this.sessionService.getSpeakingObservable().pipe(
