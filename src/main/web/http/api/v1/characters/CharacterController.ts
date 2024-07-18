@@ -26,6 +26,12 @@ export class CharacterController {
     await this.characterService.rest(name)
   }
 
+  @ApiOkResponse({})
+  @Get('/speaking')
+  async speaking(): Promise<string> {
+    return (await this.sessionService.getSession()).speaking
+  }
+
   @Put(':name')
   @ApiOkResponse({ type: CharacterVM })
   async updateCharacter(
