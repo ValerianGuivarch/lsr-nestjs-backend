@@ -9,9 +9,13 @@ import { Session } from '../models/session/Session'
 import { ICharacterProvider } from '../providers/ICharacterProvider'
 import { ISessionProvider } from '../providers/ISessionProvider'
 import { Inject, Logger } from '@nestjs/common'
+import { Observable, Subject } from 'rxjs'
 
 export class SessionService {
   private readonly logger = new Logger(SessionService.name)
+
+  private speakingChangeSubject = new Subject<string>()
+
   constructor(
     @Inject('ICharacterProvider')
     private characterProvider: ICharacterProvider,
@@ -29,6 +33,15 @@ export class SessionService {
 
   async getSession(): Promise<Session> {
     return await this.sessionProvider.getSession()
+  }
+
+  async changeSpeaking(speaking: string) {
+    this.sessionProvider.updateSpeaking(speaking)
+    this.speakingChangeSubject.next(speaking)
+  }
+
+  getSpeakingObservable(): Observable<string> {
+    return this.speakingChangeSubject.asObservable()
   }
 
   async getRestForCharacter(character: Character): Promise<{

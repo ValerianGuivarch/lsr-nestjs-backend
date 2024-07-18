@@ -9,7 +9,7 @@ import { RollService } from '../../../../../domain/services/RollService'
 import { SessionService } from '../../../../../domain/services/SessionService'
 import { SkillService } from '../../../../../domain/services/SkillService'
 import { CharacterVM } from '../characters/entities/CharacterVM'
-import { Controller, Get, Put } from '@nestjs/common'
+import { Controller, Get, Param, Put } from '@nestjs/common'
 import { ApiOkResponse, ApiTags } from '@nestjs/swagger'
 
 @Controller('api/v1/mj')
@@ -32,6 +32,12 @@ export class MjController {
   @Put('newTurn')
   async newTurn(): Promise<void> {
     this.mjService.newTurn()
+  }
+
+  @ApiOkResponse({})
+  @Put('speaking/:speaking')
+  async speaking(@Param('speaking') speaking: string): Promise<void> {
+    this.sessionService.changeSpeaking(speaking)
   }
 
   @ApiOkResponse({})

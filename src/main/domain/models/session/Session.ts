@@ -7,6 +7,7 @@ export class Session {
   owners: string[]
   fake: number
   entries: string
+  speaking: string
 
   constructor(session: Session) {
     this.chaos = session.chaos
@@ -15,5 +16,6 @@ export class Session {
     this.owners = session.owners
     this.fake = session.fake
     this.entries = session.entries
+    this.speaking = session.speaking
   }
 }

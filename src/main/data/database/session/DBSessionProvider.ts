@@ -18,7 +18,8 @@ export class DBSessionProvider implements ISessionProvider {
       improvedRest: doc.improvedRest,
       owners: doc.owners,
       fake: doc.fake,
-      entries: doc.entries ?? ''
+      entries: doc.entries ?? '',
+      speaking: doc.speaking ?? ''
     })
   }
 
@@ -30,5 +31,11 @@ export class DBSessionProvider implements ISessionProvider {
       // create one
       return DBSessionProvider.toSession(await this.dbSessionRepository.create({}))
     }
+  }
+
+  async updateSpeaking(speaking: string): Promise<void> {
+    const session = await this.getSession()
+    session.speaking = speaking
+    await this.dbSessionRepository.save(session)
   }
 }

@@ -51,4 +51,11 @@ export class DBSession {
     nullable: true
   })
   entries: string | null
+
+  @Column({
+    type: 'text',
+    default: '',
+    nullable: true
+  })
+  speaking: string | null
 }
