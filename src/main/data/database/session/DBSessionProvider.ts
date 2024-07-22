@@ -34,7 +34,7 @@ export class DBSessionProvider implements ISessionProvider {
   }
 
   async updateSpeaking(speaking: string): Promise<void> {
-    const session = await this.getSession()
+    const session = (await this.dbSessionRepository.find({}))[0]
     session.speaking = speaking
     await this.dbSessionRepository.save(session)
   }

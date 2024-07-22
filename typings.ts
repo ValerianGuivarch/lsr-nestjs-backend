@@ -210,7 +210,7 @@ export type Schema = {
     plain: {
       'name': string;
       'shortName': string;
-      'displayCategory': 'STATS' | 'MAGIE' | 'ARCANES' | 'ARCANES_PRIMES' | 'BONUS' | 'SOLDATS' | 'PACIFICATEURS' | 'PAROLIERS' | 'TECHNOMANCIE' | 'SOUTIENS';
+      'displayCategory': 'ARCANES' | 'ARCANES_PRIMES' | 'BONUS' | 'MAGIE' | 'PACIFICATEURS' | 'PAROLIERS' | 'SOLDATS' | 'SOUTIENS' | 'STATS' | 'TECHNOMANCIE';
       'description': string;
       'position': number;
       'minLevel': number;
@@ -248,7 +248,7 @@ export type Schema = {
       'db_bloodline:display': string;
       'db_proficiency:name': string;
       'db_proficiency:shortName': string;
-      'db_proficiency:displayCategory': 'STATS' | 'MAGIE' | 'ARCANES' | 'ARCANES_PRIMES' | 'BONUS' | 'SOLDATS' | 'PACIFICATEURS' | 'PAROLIERS' | 'TECHNOMANCIE' | 'SOUTIENS';
+      'db_proficiency:displayCategory': 'ARCANES' | 'ARCANES_PRIMES' | 'BONUS' | 'MAGIE' | 'PACIFICATEURS' | 'PAROLIERS' | 'SOLDATS' | 'SOUTIENS' | 'STATS' | 'TECHNOMANCIE';
       'db_proficiency:description': string;
       'db_proficiency:minLevel': number;
     };
@@ -266,10 +266,10 @@ export type Schema = {
       'db_bloodline:name': string;
       'db_bloodline:display': string;
       'dbSkill:id': number;
-      'dbSkill:displayCategory': 'STATS' | 'MAGIE' | 'ARCANES' | 'ARCANES_PRIMES' | 'BONUS' | 'SOLDATS' | 'PACIFICATEURS' | 'PAROLIERS' | 'TECHNOMANCIE' | 'SOUTIENS';
+      'dbSkill:displayCategory': 'ARCANES' | 'ARCANES_PRIMES' | 'BONUS' | 'MAGIE' | 'PACIFICATEURS' | 'PAROLIERS' | 'SOLDATS' | 'SOUTIENS' | 'STATS' | 'TECHNOMANCIE';
       'dbSkill:allowsPf': boolean;
       'dbSkill:allowsPp': boolean;
-      'dbSkill:stat': 'FIXE' | 'CHAIR' | 'ESPRIT' | 'ESSENCE' | 'EMPIRIQUE' | 'CUSTOM';
+      'dbSkill:stat': 'CHAIR' | 'CUSTOM' | 'EMPIRIQUE' | 'ESPRIT' | 'ESSENCE' | 'FIXE';
       'dbSkill:pvCost': number;
       'dbSkill:pfCost': number;
       'dbSkill:ppCost': number;
@@ -277,7 +277,7 @@ export type Schema = {
       'dbSkill:arcaneCost': number;
       'dbSkill:arcanePrimeCost': number;
       'dbSkill:customRolls': string;
-      'dbSkill:successCalculation': 'AUCUN' | 'SIMPLE' | 'SIMPLE_PLUS_1' | 'DIVISE' | 'DIVISE_PLUS_1' | 'DOUBLE' | 'DOUBLE_PLUS_1' | 'CUSTOM';
+      'dbSkill:successCalculation': 'AUCUN' | 'CUSTOM' | 'DIVISE' | 'DIVISE_PLUS_1' | 'DOUBLE' | 'DOUBLE_PLUS_1' | 'SIMPLE' | 'SIMPLE_PLUS_1';
       'dbSkill:secret': boolean;
       'dbSkill:invocationTemplateName': string;
       'dbSkill:name': string;
@@ -298,17 +298,17 @@ export type Schema = {
       'dbSkill:owner': string;
       'dbSkill:dragonDettesCost': number;
       'dbSkill:db_character_template:name': string;
-      'dbSkill:db_character_template:chairValueReferential': 'FIXE' | 'CHAIR' | 'ESPRIT' | 'ESSENCE' | 'SUCCESS';
+      'dbSkill:db_character_template:chairValueReferential': 'CHAIR' | 'ESPRIT' | 'ESSENCE' | 'FIXE' | 'SUCCESS';
       'dbSkill:db_character_template:chairValueRule': number;
-      'dbSkill:db_character_template:espritValueReferential': 'FIXE' | 'CHAIR' | 'ESPRIT' | 'ESSENCE' | 'SUCCESS';
+      'dbSkill:db_character_template:espritValueReferential': 'CHAIR' | 'ESPRIT' | 'ESSENCE' | 'FIXE' | 'SUCCESS';
       'dbSkill:db_character_template:espritValueRule': number;
-      'dbSkill:db_character_template:essenceValueReferential': 'FIXE' | 'CHAIR' | 'ESPRIT' | 'ESSENCE' | 'SUCCESS';
+      'dbSkill:db_character_template:essenceValueReferential': 'CHAIR' | 'ESPRIT' | 'ESSENCE' | 'FIXE' | 'SUCCESS';
       'dbSkill:db_character_template:essenceValueRule': number;
-      'dbSkill:db_character_template:pvMaxValueReferential': 'FIXE' | 'CHAIR' | 'ESPRIT' | 'ESSENCE' | 'SUCCESS';
+      'dbSkill:db_character_template:pvMaxValueReferential': 'CHAIR' | 'ESPRIT' | 'ESSENCE' | 'FIXE' | 'SUCCESS';
       'dbSkill:db_character_template:pvMaxValueRule': number;
-      'dbSkill:db_character_template:pfMaxValueReferential': 'FIXE' | 'CHAIR' | 'ESPRIT' | 'ESSENCE' | 'SUCCESS';
+      'dbSkill:db_character_template:pfMaxValueReferential': 'CHAIR' | 'ESPRIT' | 'ESSENCE' | 'FIXE' | 'SUCCESS';
       'dbSkill:db_character_template:pfMaxValueRule': number;
-      'dbSkill:db_character_template:ppMaxValueReferential': 'FIXE' | 'CHAIR' | 'ESPRIT' | 'ESSENCE' | 'SUCCESS';
+      'dbSkill:db_character_template:ppMaxValueReferential': 'CHAIR' | 'ESPRIT' | 'ESSENCE' | 'FIXE' | 'SUCCESS';
       'dbSkill:db_character_template:ppMaxValueRule': number;
       'dbSkill:db_character_template:picture': string;
       'dbSkill:db_character_template:customData': string;
@@ -329,7 +329,7 @@ export type Schema = {
       'controlledBy': string;
       'isInvocation': boolean;
       'currentApotheoseName': string;
-      'apotheoseState': 'NONE' | 'ALREADY_USED' | 'COST_TO_PAY' | 'COST_PAID';
+      'apotheoseState': 'ALREADY_USED' | 'COST_PAID' | 'COST_TO_PAY' | 'NONE';
       'chair': number;
       'esprit': number;
       'essence': number;
@@ -352,8 +352,8 @@ export type Schema = {
       'umbra': string;
       'secunda': string;
       'notes': string;
-      'battleState': 'NONE' | 'ALLIES' | 'ENNEMIES';
-      'genre': 'HOMME' | 'FEMME';
+      'battleState': 'ALLIES' | 'ENNEMIES' | 'NONE';
+      'genre': 'FEMME' | 'HOMME';
       'relance': number;
       'playerName': string;
       'picture': string;
@@ -385,7 +385,7 @@ export type Schema = {
       'db_classe:canUsePp': boolean;
       'db_apotheose:name': string;
       'db_apotheose:shortName': string;
-      'db_apotheose:displayCategory': 'STATS' | 'MAGIE' | 'ARCANES' | 'ARCANES_PRIMES' | 'BONUS' | 'SOLDATS' | 'PACIFICATEURS' | 'PAROLIERS' | 'TECHNOMANCIE' | 'SOUTIENS';
+      'db_apotheose:displayCategory': 'ARCANES' | 'ARCANES_PRIMES' | 'BONUS' | 'MAGIE' | 'PACIFICATEURS' | 'PAROLIERS' | 'SOLDATS' | 'SOUTIENS' | 'STATS' | 'TECHNOMANCIE';
       'db_apotheose:description': string;
       'db_apotheose:position': number;
       'db_apotheose:minLevel': number;
@@ -416,7 +416,7 @@ export type Schema = {
       'db_character:controlledBy': string;
       'db_character:isInvocation': boolean;
       'db_character:currentApotheoseName': string;
-      'db_character:apotheoseState': 'NONE' | 'ALREADY_USED' | 'COST_TO_PAY' | 'COST_PAID';
+      'db_character:apotheoseState': 'ALREADY_USED' | 'COST_PAID' | 'COST_TO_PAY' | 'NONE';
       'db_character:chair': number;
       'db_character:esprit': number;
       'db_character:essence': number;
@@ -439,8 +439,8 @@ export type Schema = {
       'db_character:umbra': string;
       'db_character:secunda': string;
       'db_character:notes': string;
-      'db_character:battleState': 'NONE' | 'ALLIES' | 'ENNEMIES';
-      'db_character:genre': 'HOMME' | 'FEMME';
+      'db_character:battleState': 'ALLIES' | 'ENNEMIES' | 'NONE';
+      'db_character:genre': 'FEMME' | 'HOMME';
       'db_character:relance': number;
       'db_character:playerName': string;
       'db_character:picture': string;
@@ -465,7 +465,7 @@ export type Schema = {
       'db_character:db_classe:canUsePp': boolean;
       'db_character:db_apotheose:name': string;
       'db_character:db_apotheose:shortName': string;
-      'db_character:db_apotheose:displayCategory': 'STATS' | 'MAGIE' | 'ARCANES' | 'ARCANES_PRIMES' | 'BONUS' | 'SOLDATS' | 'PACIFICATEURS' | 'PAROLIERS' | 'TECHNOMANCIE' | 'SOUTIENS';
+      'db_character:db_apotheose:displayCategory': 'ARCANES' | 'ARCANES_PRIMES' | 'BONUS' | 'MAGIE' | 'PACIFICATEURS' | 'PAROLIERS' | 'SOLDATS' | 'SOUTIENS' | 'STATS' | 'TECHNOMANCIE';
       'db_character:db_apotheose:description': string;
       'db_character:db_apotheose:position': number;
       'db_character:db_apotheose:minLevel': number;
@@ -481,7 +481,7 @@ export type Schema = {
       'db_character:db_bloodline:display': string;
       'db_apotheose:name': string;
       'db_apotheose:shortName': string;
-      'db_apotheose:displayCategory': 'STATS' | 'MAGIE' | 'ARCANES' | 'ARCANES_PRIMES' | 'BONUS' | 'SOLDATS' | 'PACIFICATEURS' | 'PAROLIERS' | 'TECHNOMANCIE' | 'SOUTIENS';
+      'db_apotheose:displayCategory': 'ARCANES' | 'ARCANES_PRIMES' | 'BONUS' | 'MAGIE' | 'PACIFICATEURS' | 'PAROLIERS' | 'SOLDATS' | 'SOUTIENS' | 'STATS' | 'TECHNOMANCIE';
       'db_apotheose:description': string;
       'db_apotheose:position': number;
       'db_apotheose:minLevel': number;
@@ -510,7 +510,7 @@ export type Schema = {
       'db_character:controlledBy': string;
       'db_character:isInvocation': boolean;
       'db_character:currentApotheoseName': string;
-      'db_character:apotheoseState': 'NONE' | 'ALREADY_USED' | 'COST_TO_PAY' | 'COST_PAID';
+      'db_character:apotheoseState': 'ALREADY_USED' | 'COST_PAID' | 'COST_TO_PAY' | 'NONE';
       'db_character:chair': number;
       'db_character:esprit': number;
       'db_character:essence': number;
@@ -533,8 +533,8 @@ export type Schema = {
       'db_character:umbra': string;
       'db_character:secunda': string;
       'db_character:notes': string;
-      'db_character:battleState': 'NONE' | 'ALLIES' | 'ENNEMIES';
-      'db_character:genre': 'HOMME' | 'FEMME';
+      'db_character:battleState': 'ALLIES' | 'ENNEMIES' | 'NONE';
+      'db_character:genre': 'FEMME' | 'HOMME';
       'db_character:relance': number;
       'db_character:playerName': string;
       'db_character:picture': string;
@@ -559,7 +559,7 @@ export type Schema = {
       'db_character:db_classe:canUsePp': boolean;
       'db_character:db_apotheose:name': string;
       'db_character:db_apotheose:shortName': string;
-      'db_character:db_apotheose:displayCategory': 'STATS' | 'MAGIE' | 'ARCANES' | 'ARCANES_PRIMES' | 'BONUS' | 'SOLDATS' | 'PACIFICATEURS' | 'PAROLIERS' | 'TECHNOMANCIE' | 'SOUTIENS';
+      'db_character:db_apotheose:displayCategory': 'ARCANES' | 'ARCANES_PRIMES' | 'BONUS' | 'MAGIE' | 'PACIFICATEURS' | 'PAROLIERS' | 'SOLDATS' | 'SOUTIENS' | 'STATS' | 'TECHNOMANCIE';
       'db_character:db_apotheose:description': string;
       'db_character:db_apotheose:position': number;
       'db_character:db_apotheose:minLevel': number;
@@ -575,7 +575,7 @@ export type Schema = {
       'db_character:db_bloodline:display': string;
       'db_proficiency:name': string;
       'db_proficiency:shortName': string;
-      'db_proficiency:displayCategory': 'STATS' | 'MAGIE' | 'ARCANES' | 'ARCANES_PRIMES' | 'BONUS' | 'SOLDATS' | 'PACIFICATEURS' | 'PAROLIERS' | 'TECHNOMANCIE' | 'SOUTIENS';
+      'db_proficiency:displayCategory': 'ARCANES' | 'ARCANES_PRIMES' | 'BONUS' | 'MAGIE' | 'PACIFICATEURS' | 'PAROLIERS' | 'SOLDATS' | 'SOUTIENS' | 'STATS' | 'TECHNOMANCIE';
       'db_proficiency:description': string;
       'db_proficiency:minLevel': number;
     };
@@ -595,7 +595,7 @@ export type Schema = {
       'db_character:controlledBy': string;
       'db_character:isInvocation': boolean;
       'db_character:currentApotheoseName': string;
-      'db_character:apotheoseState': 'NONE' | 'ALREADY_USED' | 'COST_TO_PAY' | 'COST_PAID';
+      'db_character:apotheoseState': 'ALREADY_USED' | 'COST_PAID' | 'COST_TO_PAY' | 'NONE';
       'db_character:chair': number;
       'db_character:esprit': number;
       'db_character:essence': number;
@@ -618,8 +618,8 @@ export type Schema = {
       'db_character:umbra': string;
       'db_character:secunda': string;
       'db_character:notes': string;
-      'db_character:battleState': 'NONE' | 'ALLIES' | 'ENNEMIES';
-      'db_character:genre': 'HOMME' | 'FEMME';
+      'db_character:battleState': 'ALLIES' | 'ENNEMIES' | 'NONE';
+      'db_character:genre': 'FEMME' | 'HOMME';
       'db_character:relance': number;
       'db_character:playerName': string;
       'db_character:picture': string;
@@ -644,7 +644,7 @@ export type Schema = {
       'db_character:db_classe:canUsePp': boolean;
       'db_character:db_apotheose:name': string;
       'db_character:db_apotheose:shortName': string;
-      'db_character:db_apotheose:displayCategory': 'STATS' | 'MAGIE' | 'ARCANES' | 'ARCANES_PRIMES' | 'BONUS' | 'SOLDATS' | 'PACIFICATEURS' | 'PAROLIERS' | 'TECHNOMANCIE' | 'SOUTIENS';
+      'db_character:db_apotheose:displayCategory': 'ARCANES' | 'ARCANES_PRIMES' | 'BONUS' | 'MAGIE' | 'PACIFICATEURS' | 'PAROLIERS' | 'SOLDATS' | 'SOUTIENS' | 'STATS' | 'TECHNOMANCIE';
       'db_character:db_apotheose:description': string;
       'db_character:db_apotheose:position': number;
       'db_character:db_apotheose:minLevel': number;
@@ -659,10 +659,10 @@ export type Schema = {
       'db_character:db_bloodline:name': string;
       'db_character:db_bloodline:display': string;
       'dbSkill:id': number;
-      'dbSkill:displayCategory': 'STATS' | 'MAGIE' | 'ARCANES' | 'ARCANES_PRIMES' | 'BONUS' | 'SOLDATS' | 'PACIFICATEURS' | 'PAROLIERS' | 'TECHNOMANCIE' | 'SOUTIENS';
+      'dbSkill:displayCategory': 'ARCANES' | 'ARCANES_PRIMES' | 'BONUS' | 'MAGIE' | 'PACIFICATEURS' | 'PAROLIERS' | 'SOLDATS' | 'SOUTIENS' | 'STATS' | 'TECHNOMANCIE';
       'dbSkill:allowsPf': boolean;
       'dbSkill:allowsPp': boolean;
-      'dbSkill:stat': 'FIXE' | 'CHAIR' | 'ESPRIT' | 'ESSENCE' | 'EMPIRIQUE' | 'CUSTOM';
+      'dbSkill:stat': 'CHAIR' | 'CUSTOM' | 'EMPIRIQUE' | 'ESPRIT' | 'ESSENCE' | 'FIXE';
       'dbSkill:pvCost': number;
       'dbSkill:pfCost': number;
       'dbSkill:ppCost': number;
@@ -670,7 +670,7 @@ export type Schema = {
       'dbSkill:arcaneCost': number;
       'dbSkill:arcanePrimeCost': number;
       'dbSkill:customRolls': string;
-      'dbSkill:successCalculation': 'AUCUN' | 'SIMPLE' | 'SIMPLE_PLUS_1' | 'DIVISE' | 'DIVISE_PLUS_1' | 'DOUBLE' | 'DOUBLE_PLUS_1' | 'CUSTOM';
+      'dbSkill:successCalculation': 'AUCUN' | 'CUSTOM' | 'DIVISE' | 'DIVISE_PLUS_1' | 'DOUBLE' | 'DOUBLE_PLUS_1' | 'SIMPLE' | 'SIMPLE_PLUS_1';
       'dbSkill:secret': boolean;
       'dbSkill:invocationTemplateName': string;
       'dbSkill:name': string;
@@ -691,17 +691,17 @@ export type Schema = {
       'dbSkill:owner': string;
       'dbSkill:dragonDettesCost': number;
       'dbSkill:db_character_template:name': string;
-      'dbSkill:db_character_template:chairValueReferential': 'FIXE' | 'CHAIR' | 'ESPRIT' | 'ESSENCE' | 'SUCCESS';
+      'dbSkill:db_character_template:chairValueReferential': 'CHAIR' | 'ESPRIT' | 'ESSENCE' | 'FIXE' | 'SUCCESS';
       'dbSkill:db_character_template:chairValueRule': number;
-      'dbSkill:db_character_template:espritValueReferential': 'FIXE' | 'CHAIR' | 'ESPRIT' | 'ESSENCE' | 'SUCCESS';
+      'dbSkill:db_character_template:espritValueReferential': 'CHAIR' | 'ESPRIT' | 'ESSENCE' | 'FIXE' | 'SUCCESS';
       'dbSkill:db_character_template:espritValueRule': number;
-      'dbSkill:db_character_template:essenceValueReferential': 'FIXE' | 'CHAIR' | 'ESPRIT' | 'ESSENCE' | 'SUCCESS';
+      'dbSkill:db_character_template:essenceValueReferential': 'CHAIR' | 'ESPRIT' | 'ESSENCE' | 'FIXE' | 'SUCCESS';
       'dbSkill:db_character_template:essenceValueRule': number;
-      'dbSkill:db_character_template:pvMaxValueReferential': 'FIXE' | 'CHAIR' | 'ESPRIT' | 'ESSENCE' | 'SUCCESS';
+      'dbSkill:db_character_template:pvMaxValueReferential': 'CHAIR' | 'ESPRIT' | 'ESSENCE' | 'FIXE' | 'SUCCESS';
       'dbSkill:db_character_template:pvMaxValueRule': number;
-      'dbSkill:db_character_template:pfMaxValueReferential': 'FIXE' | 'CHAIR' | 'ESPRIT' | 'ESSENCE' | 'SUCCESS';
+      'dbSkill:db_character_template:pfMaxValueReferential': 'CHAIR' | 'ESPRIT' | 'ESSENCE' | 'FIXE' | 'SUCCESS';
       'dbSkill:db_character_template:pfMaxValueRule': number;
-      'dbSkill:db_character_template:ppMaxValueReferential': 'FIXE' | 'CHAIR' | 'ESPRIT' | 'ESSENCE' | 'SUCCESS';
+      'dbSkill:db_character_template:ppMaxValueReferential': 'CHAIR' | 'ESPRIT' | 'ESSENCE' | 'FIXE' | 'SUCCESS';
       'dbSkill:db_character_template:ppMaxValueRule': number;
       'dbSkill:db_character_template:picture': string;
       'dbSkill:db_character_template:customData': string;
@@ -718,17 +718,17 @@ export type Schema = {
   'db_character_template': {
     plain: {
       'name': string;
-      'chairValueReferential': 'FIXE' | 'CHAIR' | 'ESPRIT' | 'ESSENCE' | 'SUCCESS';
+      'chairValueReferential': 'CHAIR' | 'ESPRIT' | 'ESSENCE' | 'FIXE' | 'SUCCESS';
       'chairValueRule': number;
-      'espritValueReferential': 'FIXE' | 'CHAIR' | 'ESPRIT' | 'ESSENCE' | 'SUCCESS';
+      'espritValueReferential': 'CHAIR' | 'ESPRIT' | 'ESSENCE' | 'FIXE' | 'SUCCESS';
       'espritValueRule': number;
-      'essenceValueReferential': 'FIXE' | 'CHAIR' | 'ESPRIT' | 'ESSENCE' | 'SUCCESS';
+      'essenceValueReferential': 'CHAIR' | 'ESPRIT' | 'ESSENCE' | 'FIXE' | 'SUCCESS';
       'essenceValueRule': number;
-      'pvMaxValueReferential': 'FIXE' | 'CHAIR' | 'ESPRIT' | 'ESSENCE' | 'SUCCESS';
+      'pvMaxValueReferential': 'CHAIR' | 'ESPRIT' | 'ESSENCE' | 'FIXE' | 'SUCCESS';
       'pvMaxValueRule': number;
-      'pfMaxValueReferential': 'FIXE' | 'CHAIR' | 'ESPRIT' | 'ESSENCE' | 'SUCCESS';
+      'pfMaxValueReferential': 'CHAIR' | 'ESPRIT' | 'ESSENCE' | 'FIXE' | 'SUCCESS';
       'pfMaxValueRule': number;
-      'ppMaxValueReferential': 'FIXE' | 'CHAIR' | 'ESPRIT' | 'ESSENCE' | 'SUCCESS';
+      'ppMaxValueReferential': 'CHAIR' | 'ESPRIT' | 'ESSENCE' | 'FIXE' | 'SUCCESS';
       'ppMaxValueRule': number;
       'picture': string;
       'customData': string;
@@ -759,17 +759,17 @@ export type Schema = {
     };
     flat: {
       'db_character_template:name': string;
-      'db_character_template:chairValueReferential': 'FIXE' | 'CHAIR' | 'ESPRIT' | 'ESSENCE' | 'SUCCESS';
+      'db_character_template:chairValueReferential': 'CHAIR' | 'ESPRIT' | 'ESSENCE' | 'FIXE' | 'SUCCESS';
       'db_character_template:chairValueRule': number;
-      'db_character_template:espritValueReferential': 'FIXE' | 'CHAIR' | 'ESPRIT' | 'ESSENCE' | 'SUCCESS';
+      'db_character_template:espritValueReferential': 'CHAIR' | 'ESPRIT' | 'ESSENCE' | 'FIXE' | 'SUCCESS';
       'db_character_template:espritValueRule': number;
-      'db_character_template:essenceValueReferential': 'FIXE' | 'CHAIR' | 'ESPRIT' | 'ESSENCE' | 'SUCCESS';
+      'db_character_template:essenceValueReferential': 'CHAIR' | 'ESPRIT' | 'ESSENCE' | 'FIXE' | 'SUCCESS';
       'db_character_template:essenceValueRule': number;
-      'db_character_template:pvMaxValueReferential': 'FIXE' | 'CHAIR' | 'ESPRIT' | 'ESSENCE' | 'SUCCESS';
+      'db_character_template:pvMaxValueReferential': 'CHAIR' | 'ESPRIT' | 'ESSENCE' | 'FIXE' | 'SUCCESS';
       'db_character_template:pvMaxValueRule': number;
-      'db_character_template:pfMaxValueReferential': 'FIXE' | 'CHAIR' | 'ESPRIT' | 'ESSENCE' | 'SUCCESS';
+      'db_character_template:pfMaxValueReferential': 'CHAIR' | 'ESPRIT' | 'ESSENCE' | 'FIXE' | 'SUCCESS';
       'db_character_template:pfMaxValueRule': number;
-      'db_character_template:ppMaxValueReferential': 'FIXE' | 'CHAIR' | 'ESPRIT' | 'ESSENCE' | 'SUCCESS';
+      'db_character_template:ppMaxValueReferential': 'CHAIR' | 'ESPRIT' | 'ESSENCE' | 'FIXE' | 'SUCCESS';
       'db_character_template:ppMaxValueRule': number;
       'db_character_template:picture': string;
       'db_character_template:customData': string;
@@ -782,10 +782,10 @@ export type Schema = {
       'db_character_template:db_bloodline:name': string;
       'db_character_template:db_bloodline:display': string;
       'dbSkill:id': number;
-      'dbSkill:displayCategory': 'STATS' | 'MAGIE' | 'ARCANES' | 'ARCANES_PRIMES' | 'BONUS' | 'SOLDATS' | 'PACIFICATEURS' | 'PAROLIERS' | 'TECHNOMANCIE' | 'SOUTIENS';
+      'dbSkill:displayCategory': 'ARCANES' | 'ARCANES_PRIMES' | 'BONUS' | 'MAGIE' | 'PACIFICATEURS' | 'PAROLIERS' | 'SOLDATS' | 'SOUTIENS' | 'STATS' | 'TECHNOMANCIE';
       'dbSkill:allowsPf': boolean;
       'dbSkill:allowsPp': boolean;
-      'dbSkill:stat': 'FIXE' | 'CHAIR' | 'ESPRIT' | 'ESSENCE' | 'EMPIRIQUE' | 'CUSTOM';
+      'dbSkill:stat': 'CHAIR' | 'CUSTOM' | 'EMPIRIQUE' | 'ESPRIT' | 'ESSENCE' | 'FIXE';
       'dbSkill:pvCost': number;
       'dbSkill:pfCost': number;
       'dbSkill:ppCost': number;
@@ -793,7 +793,7 @@ export type Schema = {
       'dbSkill:arcaneCost': number;
       'dbSkill:arcanePrimeCost': number;
       'dbSkill:customRolls': string;
-      'dbSkill:successCalculation': 'AUCUN' | 'SIMPLE' | 'SIMPLE_PLUS_1' | 'DIVISE' | 'DIVISE_PLUS_1' | 'DOUBLE' | 'DOUBLE_PLUS_1' | 'CUSTOM';
+      'dbSkill:successCalculation': 'AUCUN' | 'CUSTOM' | 'DIVISE' | 'DIVISE_PLUS_1' | 'DOUBLE' | 'DOUBLE_PLUS_1' | 'SIMPLE' | 'SIMPLE_PLUS_1';
       'dbSkill:secret': boolean;
       'dbSkill:invocationTemplateName': string;
       'dbSkill:name': string;
@@ -814,17 +814,17 @@ export type Schema = {
       'dbSkill:owner': string;
       'dbSkill:dragonDettesCost': number;
       'dbSkill:db_character_template:name': string;
-      'dbSkill:db_character_template:chairValueReferential': 'FIXE' | 'CHAIR' | 'ESPRIT' | 'ESSENCE' | 'SUCCESS';
+      'dbSkill:db_character_template:chairValueReferential': 'CHAIR' | 'ESPRIT' | 'ESSENCE' | 'FIXE' | 'SUCCESS';
       'dbSkill:db_character_template:chairValueRule': number;
-      'dbSkill:db_character_template:espritValueReferential': 'FIXE' | 'CHAIR' | 'ESPRIT' | 'ESSENCE' | 'SUCCESS';
+      'dbSkill:db_character_template:espritValueReferential': 'CHAIR' | 'ESPRIT' | 'ESSENCE' | 'FIXE' | 'SUCCESS';
       'dbSkill:db_character_template:espritValueRule': number;
-      'dbSkill:db_character_template:essenceValueReferential': 'FIXE' | 'CHAIR' | 'ESPRIT' | 'ESSENCE' | 'SUCCESS';
+      'dbSkill:db_character_template:essenceValueReferential': 'CHAIR' | 'ESPRIT' | 'ESSENCE' | 'FIXE' | 'SUCCESS';
       'dbSkill:db_character_template:essenceValueRule': number;
-      'dbSkill:db_character_template:pvMaxValueReferential': 'FIXE' | 'CHAIR' | 'ESPRIT' | 'ESSENCE' | 'SUCCESS';
+      'dbSkill:db_character_template:pvMaxValueReferential': 'CHAIR' | 'ESPRIT' | 'ESSENCE' | 'FIXE' | 'SUCCESS';
       'dbSkill:db_character_template:pvMaxValueRule': number;
-      'dbSkill:db_character_template:pfMaxValueReferential': 'FIXE' | 'CHAIR' | 'ESPRIT' | 'ESSENCE' | 'SUCCESS';
+      'dbSkill:db_character_template:pfMaxValueReferential': 'CHAIR' | 'ESPRIT' | 'ESSENCE' | 'FIXE' | 'SUCCESS';
       'dbSkill:db_character_template:pfMaxValueRule': number;
-      'dbSkill:db_character_template:ppMaxValueReferential': 'FIXE' | 'CHAIR' | 'ESPRIT' | 'ESSENCE' | 'SUCCESS';
+      'dbSkill:db_character_template:ppMaxValueReferential': 'CHAIR' | 'ESPRIT' | 'ESSENCE' | 'FIXE' | 'SUCCESS';
       'dbSkill:db_character_template:ppMaxValueRule': number;
       'dbSkill:db_character_template:picture': string;
       'dbSkill:db_character_template:customData': string;
@@ -864,7 +864,7 @@ export type Schema = {
       'db_classe:canUsePp': boolean;
       'db_apotheose:name': string;
       'db_apotheose:shortName': string;
-      'db_apotheose:displayCategory': 'STATS' | 'MAGIE' | 'ARCANES' | 'ARCANES_PRIMES' | 'BONUS' | 'SOLDATS' | 'PACIFICATEURS' | 'PAROLIERS' | 'TECHNOMANCIE' | 'SOUTIENS';
+      'db_apotheose:displayCategory': 'ARCANES' | 'ARCANES_PRIMES' | 'BONUS' | 'MAGIE' | 'PACIFICATEURS' | 'PAROLIERS' | 'SOLDATS' | 'SOUTIENS' | 'STATS' | 'TECHNOMANCIE';
       'db_apotheose:description': string;
       'db_apotheose:position': number;
       'db_apotheose:minLevel': number;
@@ -894,7 +894,7 @@ export type Schema = {
       'db_classe:canUsePp': boolean;
       'db_proficiency:name': string;
       'db_proficiency:shortName': string;
-      'db_proficiency:displayCategory': 'STATS' | 'MAGIE' | 'ARCANES' | 'ARCANES_PRIMES' | 'BONUS' | 'SOLDATS' | 'PACIFICATEURS' | 'PAROLIERS' | 'TECHNOMANCIE' | 'SOUTIENS';
+      'db_proficiency:displayCategory': 'ARCANES' | 'ARCANES_PRIMES' | 'BONUS' | 'MAGIE' | 'PACIFICATEURS' | 'PAROLIERS' | 'SOLDATS' | 'SOUTIENS' | 'STATS' | 'TECHNOMANCIE';
       'db_proficiency:description': string;
       'db_proficiency:minLevel': number;
     };
@@ -914,10 +914,10 @@ export type Schema = {
       'db_classe:displayFemale': string;
       'db_classe:canUsePp': boolean;
       'dbSkill:id': number;
-      'dbSkill:displayCategory': 'STATS' | 'MAGIE' | 'ARCANES' | 'ARCANES_PRIMES' | 'BONUS' | 'SOLDATS' | 'PACIFICATEURS' | 'PAROLIERS' | 'TECHNOMANCIE' | 'SOUTIENS';
+      'dbSkill:displayCategory': 'ARCANES' | 'ARCANES_PRIMES' | 'BONUS' | 'MAGIE' | 'PACIFICATEURS' | 'PAROLIERS' | 'SOLDATS' | 'SOUTIENS' | 'STATS' | 'TECHNOMANCIE';
       'dbSkill:allowsPf': boolean;
       'dbSkill:allowsPp': boolean;
-      'dbSkill:stat': 'FIXE' | 'CHAIR' | 'ESPRIT' | 'ESSENCE' | 'EMPIRIQUE' | 'CUSTOM';
+      'dbSkill:stat': 'CHAIR' | 'CUSTOM' | 'EMPIRIQUE' | 'ESPRIT' | 'ESSENCE' | 'FIXE';
       'dbSkill:pvCost': number;
       'dbSkill:pfCost': number;
       'dbSkill:ppCost': number;
@@ -925,7 +925,7 @@ export type Schema = {
       'dbSkill:arcaneCost': number;
       'dbSkill:arcanePrimeCost': number;
       'dbSkill:customRolls': string;
-      'dbSkill:successCalculation': 'AUCUN' | 'SIMPLE' | 'SIMPLE_PLUS_1' | 'DIVISE' | 'DIVISE_PLUS_1' | 'DOUBLE' | 'DOUBLE_PLUS_1' | 'CUSTOM';
+      'dbSkill:successCalculation': 'AUCUN' | 'CUSTOM' | 'DIVISE' | 'DIVISE_PLUS_1' | 'DOUBLE' | 'DOUBLE_PLUS_1' | 'SIMPLE' | 'SIMPLE_PLUS_1';
       'dbSkill:secret': boolean;
       'dbSkill:invocationTemplateName': string;
       'dbSkill:name': string;
@@ -946,17 +946,17 @@ export type Schema = {
       'dbSkill:owner': string;
       'dbSkill:dragonDettesCost': number;
       'dbSkill:db_character_template:name': string;
-      'dbSkill:db_character_template:chairValueReferential': 'FIXE' | 'CHAIR' | 'ESPRIT' | 'ESSENCE' | 'SUCCESS';
+      'dbSkill:db_character_template:chairValueReferential': 'CHAIR' | 'ESPRIT' | 'ESSENCE' | 'FIXE' | 'SUCCESS';
       'dbSkill:db_character_template:chairValueRule': number;
-      'dbSkill:db_character_template:espritValueReferential': 'FIXE' | 'CHAIR' | 'ESPRIT' | 'ESSENCE' | 'SUCCESS';
+      'dbSkill:db_character_template:espritValueReferential': 'CHAIR' | 'ESPRIT' | 'ESSENCE' | 'FIXE' | 'SUCCESS';
       'dbSkill:db_character_template:espritValueRule': number;
-      'dbSkill:db_character_template:essenceValueReferential': 'FIXE' | 'CHAIR' | 'ESPRIT' | 'ESSENCE' | 'SUCCESS';
+      'dbSkill:db_character_template:essenceValueReferential': 'CHAIR' | 'ESPRIT' | 'ESSENCE' | 'FIXE' | 'SUCCESS';
       'dbSkill:db_character_template:essenceValueRule': number;
-      'dbSkill:db_character_template:pvMaxValueReferential': 'FIXE' | 'CHAIR' | 'ESPRIT' | 'ESSENCE' | 'SUCCESS';
+      'dbSkill:db_character_template:pvMaxValueReferential': 'CHAIR' | 'ESPRIT' | 'ESSENCE' | 'FIXE' | 'SUCCESS';
       'dbSkill:db_character_template:pvMaxValueRule': number;
-      'dbSkill:db_character_template:pfMaxValueReferential': 'FIXE' | 'CHAIR' | 'ESPRIT' | 'ESSENCE' | 'SUCCESS';
+      'dbSkill:db_character_template:pfMaxValueReferential': 'CHAIR' | 'ESPRIT' | 'ESSENCE' | 'FIXE' | 'SUCCESS';
       'dbSkill:db_character_template:pfMaxValueRule': number;
-      'dbSkill:db_character_template:ppMaxValueReferential': 'FIXE' | 'CHAIR' | 'ESPRIT' | 'ESSENCE' | 'SUCCESS';
+      'dbSkill:db_character_template:ppMaxValueReferential': 'CHAIR' | 'ESPRIT' | 'ESSENCE' | 'FIXE' | 'SUCCESS';
       'dbSkill:db_character_template:ppMaxValueRule': number;
       'dbSkill:db_character_template:picture': string;
       'dbSkill:db_character_template:customData': string;
@@ -984,7 +984,7 @@ export type Schema = {
     plain: {
       'name': string;
       'shortName': string;
-      'displayCategory': 'STATS' | 'MAGIE' | 'ARCANES' | 'ARCANES_PRIMES' | 'BONUS' | 'SOLDATS' | 'PACIFICATEURS' | 'PAROLIERS' | 'TECHNOMANCIE' | 'SOUTIENS';
+      'displayCategory': 'ARCANES' | 'ARCANES_PRIMES' | 'BONUS' | 'MAGIE' | 'PACIFICATEURS' | 'PAROLIERS' | 'SOLDATS' | 'SOUTIENS' | 'STATS' | 'TECHNOMANCIE';
       'description': string;
       'minLevel': number;
     };
@@ -995,7 +995,7 @@ export type Schema = {
     plain: {
       'rollerName': string;
       'date': string;
-      'stat': 'FIXE' | 'CHAIR' | 'ESPRIT' | 'ESSENCE' | 'EMPIRIQUE' | 'CUSTOM';
+      'stat': 'CHAIR' | 'CUSTOM' | 'EMPIRIQUE' | 'ESPRIT' | 'ESSENCE' | 'FIXE';
       'secret': boolean;
       'focus': boolean;
       'power': boolean;
@@ -1030,7 +1030,7 @@ export type Schema = {
       'db_character:controlledBy': string;
       'db_character:isInvocation': boolean;
       'db_character:currentApotheoseName': string;
-      'db_character:apotheoseState': 'NONE' | 'ALREADY_USED' | 'COST_TO_PAY' | 'COST_PAID';
+      'db_character:apotheoseState': 'ALREADY_USED' | 'COST_PAID' | 'COST_TO_PAY' | 'NONE';
       'db_character:chair': number;
       'db_character:esprit': number;
       'db_character:essence': number;
@@ -1053,8 +1053,8 @@ export type Schema = {
       'db_character:umbra': string;
       'db_character:secunda': string;
       'db_character:notes': string;
-      'db_character:battleState': 'NONE' | 'ALLIES' | 'ENNEMIES';
-      'db_character:genre': 'HOMME' | 'FEMME';
+      'db_character:battleState': 'ALLIES' | 'ENNEMIES' | 'NONE';
+      'db_character:genre': 'FEMME' | 'HOMME';
       'db_character:relance': number;
       'db_character:playerName': string;
       'db_character:picture': string;
@@ -1079,7 +1079,7 @@ export type Schema = {
       'db_character:db_classe:canUsePp': boolean;
       'db_character:db_apotheose:name': string;
       'db_character:db_apotheose:shortName': string;
-      'db_character:db_apotheose:displayCategory': 'STATS' | 'MAGIE' | 'ARCANES' | 'ARCANES_PRIMES' | 'BONUS' | 'SOLDATS' | 'PACIFICATEURS' | 'PAROLIERS' | 'TECHNOMANCIE' | 'SOUTIENS';
+      'db_character:db_apotheose:displayCategory': 'ARCANES' | 'ARCANES_PRIMES' | 'BONUS' | 'MAGIE' | 'PACIFICATEURS' | 'PAROLIERS' | 'SOLDATS' | 'SOUTIENS' | 'STATS' | 'TECHNOMANCIE';
       'db_character:db_apotheose:description': string;
       'db_character:db_apotheose:position': number;
       'db_character:db_apotheose:minLevel': number;
@@ -1105,6 +1105,7 @@ export type Schema = {
       'owners': string;
       'fake': number;
       'entries': string;
+      'speaking': string;
     };
     nested: {};
     flat: {};
@@ -1112,10 +1113,10 @@ export type Schema = {
   'db_skill': {
     plain: {
       'id': number;
-      'displayCategory': 'STATS' | 'MAGIE' | 'ARCANES' | 'ARCANES_PRIMES' | 'BONUS' | 'SOLDATS' | 'PACIFICATEURS' | 'PAROLIERS' | 'TECHNOMANCIE' | 'SOUTIENS';
+      'displayCategory': 'ARCANES' | 'ARCANES_PRIMES' | 'BONUS' | 'MAGIE' | 'PACIFICATEURS' | 'PAROLIERS' | 'SOLDATS' | 'SOUTIENS' | 'STATS' | 'TECHNOMANCIE';
       'allowsPf': boolean;
       'allowsPp': boolean;
-      'stat': 'FIXE' | 'CHAIR' | 'ESPRIT' | 'ESSENCE' | 'EMPIRIQUE' | 'CUSTOM';
+      'stat': 'CHAIR' | 'CUSTOM' | 'EMPIRIQUE' | 'ESPRIT' | 'ESSENCE' | 'FIXE';
       'pvCost': number;
       'pfCost': number;
       'ppCost': number;
@@ -1123,7 +1124,7 @@ export type Schema = {
       'arcaneCost': number;
       'arcanePrimeCost': number;
       'customRolls': string;
-      'successCalculation': 'AUCUN' | 'SIMPLE' | 'SIMPLE_PLUS_1' | 'DIVISE' | 'DIVISE_PLUS_1' | 'DOUBLE' | 'DOUBLE_PLUS_1' | 'CUSTOM';
+      'successCalculation': 'AUCUN' | 'CUSTOM' | 'DIVISE' | 'DIVISE_PLUS_1' | 'DOUBLE' | 'DOUBLE_PLUS_1' | 'SIMPLE' | 'SIMPLE_PLUS_1';
       'secret': boolean;
       'invocationTemplateName': string;
       'name': string;
@@ -1149,17 +1150,17 @@ export type Schema = {
     };
     flat: {
       'db_character_template:name': string;
-      'db_character_template:chairValueReferential': 'FIXE' | 'CHAIR' | 'ESPRIT' | 'ESSENCE' | 'SUCCESS';
+      'db_character_template:chairValueReferential': 'CHAIR' | 'ESPRIT' | 'ESSENCE' | 'FIXE' | 'SUCCESS';
       'db_character_template:chairValueRule': number;
-      'db_character_template:espritValueReferential': 'FIXE' | 'CHAIR' | 'ESPRIT' | 'ESSENCE' | 'SUCCESS';
+      'db_character_template:espritValueReferential': 'CHAIR' | 'ESPRIT' | 'ESSENCE' | 'FIXE' | 'SUCCESS';
       'db_character_template:espritValueRule': number;
-      'db_character_template:essenceValueReferential': 'FIXE' | 'CHAIR' | 'ESPRIT' | 'ESSENCE' | 'SUCCESS';
+      'db_character_template:essenceValueReferential': 'CHAIR' | 'ESPRIT' | 'ESSENCE' | 'FIXE' | 'SUCCESS';
       'db_character_template:essenceValueRule': number;
-      'db_character_template:pvMaxValueReferential': 'FIXE' | 'CHAIR' | 'ESPRIT' | 'ESSENCE' | 'SUCCESS';
+      'db_character_template:pvMaxValueReferential': 'CHAIR' | 'ESPRIT' | 'ESSENCE' | 'FIXE' | 'SUCCESS';
       'db_character_template:pvMaxValueRule': number;
-      'db_character_template:pfMaxValueReferential': 'FIXE' | 'CHAIR' | 'ESPRIT' | 'ESSENCE' | 'SUCCESS';
+      'db_character_template:pfMaxValueReferential': 'CHAIR' | 'ESPRIT' | 'ESSENCE' | 'FIXE' | 'SUCCESS';
       'db_character_template:pfMaxValueRule': number;
-      'db_character_template:ppMaxValueReferential': 'FIXE' | 'CHAIR' | 'ESPRIT' | 'ESSENCE' | 'SUCCESS';
+      'db_character_template:ppMaxValueReferential': 'CHAIR' | 'ESPRIT' | 'ESSENCE' | 'FIXE' | 'SUCCESS';
       'db_character_template:ppMaxValueRule': number;
       'db_character_template:picture': string;
       'db_character_template:customData': string;
@@ -1188,7 +1189,7 @@ export type Schema = {
       'coins': number;
       'sponsorId': string;
       'scenarioId': string;
-      'state': 'NOT_STARTED' | 'STARTED' | 'FINISHED';
+      'state': 'FINISHED' | 'NOT_STARTED' | 'STARTED';
       'sponsorToChoose': boolean;
     };
     nested: {
