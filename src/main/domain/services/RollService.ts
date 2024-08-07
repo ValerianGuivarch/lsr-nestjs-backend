@@ -165,9 +165,12 @@ export class RollService {
         throw ProviderErrors.RollWrongEmpiricalRequest()
       }
     } else if (skill.stat === SkillStat.CHAIR || skill.stat === SkillStat.ESPRIT || skill.stat === SkillStat.ESSENCE) {
-      if (p.character.hurtMalus && p.character.classe.name !== 'troglodyte' && skill.stat === SkillStat.CHAIR) {
+      if (p.character.hurtMalus && p.character.bloodline.name !== 'troglodyte' && skill.stat === SkillStat.CHAIR) {
         const diff = p.character.pvMax - p.character.pv
         p.malus = p.malus + Math.floor(diff / 6)
+      } else {
+        const diff = p.character.pvMax - p.character.pv
+        p.malus = p.malus + Math.floor(diff / 12)
       }
       let diceValueDelta = p.bonus - p.malus
       if (usePf) {
