@@ -554,7 +554,11 @@ export class RollService {
       juge12: juge12,
       juge34: juge34,
       resistRoll: p.resistRoll,
-      picture: apotheose ? p.character.pictureApotheose : p.character.picture,
+      picture: p.character.isInvocation
+        ? p.character.picture
+        : apotheose
+        ? 'https://l7r.fr/l7r/' + p.character.name + '-apotheose.png'
+        : 'https://l7r.fr/l7r/' + p.character.name + '.png',
       empiriqueRoll: p.empiriqueRoll,
       display: display,
       stat: skill.stat,
