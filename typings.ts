@@ -155,6 +155,13 @@ export type DbEntryFilter = TPaginatedFilter<Schema, 'db_entry'>;
 export type DbEntrySortClause = TSortClause<Schema, 'db_entry'>;
 export type DbEntryAggregation = TAggregation<Schema, 'db_entry'>;
 
+export type DbKnowledgeCustomizer = CollectionCustomizer<Schema, 'db_knowledge'>;
+export type DbKnowledgeRecord = TPartialRow<Schema, 'db_knowledge'>;
+export type DbKnowledgeConditionTree = TConditionTree<Schema, 'db_knowledge'>;
+export type DbKnowledgeFilter = TPaginatedFilter<Schema, 'db_knowledge'>;
+export type DbKnowledgeSortClause = TSortClause<Schema, 'db_knowledge'>;
+export type DbKnowledgeAggregation = TAggregation<Schema, 'db_knowledge'>;
+
 export type DbProficiencyCustomizer = CollectionCustomizer<Schema, 'db_proficiency'>;
 export type DbProficiencyRecord = TPartialRow<Schema, 'db_proficiency'>;
 export type DbProficiencyConditionTree = TConditionTree<Schema, 'db_proficiency'>;
@@ -182,6 +189,34 @@ export type DbSkillConditionTree = TConditionTree<Schema, 'db_skill'>;
 export type DbSkillFilter = TPaginatedFilter<Schema, 'db_skill'>;
 export type DbSkillSortClause = TSortClause<Schema, 'db_skill'>;
 export type DbSkillAggregation = TAggregation<Schema, 'db_skill'>;
+
+export type DbStatCustomizer = CollectionCustomizer<Schema, 'db_stat'>;
+export type DbStatRecord = TPartialRow<Schema, 'db_stat'>;
+export type DbStatConditionTree = TConditionTree<Schema, 'db_stat'>;
+export type DbStatFilter = TPaginatedFilter<Schema, 'db_stat'>;
+export type DbStatSortClause = TSortClause<Schema, 'db_stat'>;
+export type DbStatAggregation = TAggregation<Schema, 'db_stat'>;
+
+export type DbWizardCustomizer = CollectionCustomizer<Schema, 'db_wizard'>;
+export type DbWizardRecord = TPartialRow<Schema, 'db_wizard'>;
+export type DbWizardConditionTree = TConditionTree<Schema, 'db_wizard'>;
+export type DbWizardFilter = TPaginatedFilter<Schema, 'db_wizard'>;
+export type DbWizardSortClause = TSortClause<Schema, 'db_wizard'>;
+export type DbWizardAggregation = TAggregation<Schema, 'db_wizard'>;
+
+export type DbWizardKnowledgeCustomizer = CollectionCustomizer<Schema, 'db_wizard_knowledge'>;
+export type DbWizardKnowledgeRecord = TPartialRow<Schema, 'db_wizard_knowledge'>;
+export type DbWizardKnowledgeConditionTree = TConditionTree<Schema, 'db_wizard_knowledge'>;
+export type DbWizardKnowledgeFilter = TPaginatedFilter<Schema, 'db_wizard_knowledge'>;
+export type DbWizardKnowledgeSortClause = TSortClause<Schema, 'db_wizard_knowledge'>;
+export type DbWizardKnowledgeAggregation = TAggregation<Schema, 'db_wizard_knowledge'>;
+
+export type DbWizardStatCustomizer = CollectionCustomizer<Schema, 'db_wizard_stat'>;
+export type DbWizardStatRecord = TPartialRow<Schema, 'db_wizard_stat'>;
+export type DbWizardStatConditionTree = TConditionTree<Schema, 'db_wizard_stat'>;
+export type DbWizardStatFilter = TPaginatedFilter<Schema, 'db_wizard_stat'>;
+export type DbWizardStatSortClause = TSortClause<Schema, 'db_wizard_stat'>;
+export type DbWizardStatAggregation = TAggregation<Schema, 'db_wizard_stat'>;
 
 export type MigrationsCustomizer = CollectionCustomizer<Schema, 'migrations'>;
 export type MigrationsRecord = TPartialRow<Schema, 'migrations'>;
@@ -984,6 +1019,25 @@ export type Schema = {
     nested: {};
     flat: {};
   };
+  'db_knowledge': {
+    plain: {
+      'id': string;
+      'createdDate': string;
+      'updatedDate': string;
+      'name': string;
+      'statId': string;
+    };
+    nested: {
+      'stat': Schema['db_stat']['plain'] & Schema['db_stat']['nested'];
+    };
+    flat: {
+      'stat:id': string;
+      'stat:createdDate': string;
+      'stat:updatedDate': string;
+      'stat:name': string;
+      'stat:color': string;
+    };
+  };
   'db_proficiency': {
     plain: {
       'name': string;
@@ -1178,6 +1232,83 @@ export type Schema = {
       'db_character_template:db_classe:canUsePp': boolean;
       'db_character_template:db_bloodline:name': string;
       'db_character_template:db_bloodline:display': string;
+    };
+  };
+  'db_stat': {
+    plain: {
+      'id': string;
+      'createdDate': string;
+      'updatedDate': string;
+      'name': string;
+      'color': string;
+    };
+    nested: {};
+    flat: {};
+  };
+  'db_wizard': {
+    plain: {
+      'id': string;
+      'createdDate': string;
+      'updatedDate': string;
+      'name': string;
+      'category': string;
+    };
+    nested: {};
+    flat: {};
+  };
+  'db_wizard_knowledge': {
+    plain: {
+      'createdDate': string;
+      'updatedDate': string;
+      'level': number;
+      'wizardId': string;
+      'knowledgeId': string;
+    };
+    nested: {
+      'wizard': Schema['db_wizard']['plain'] & Schema['db_wizard']['nested'];
+      'knowledge': Schema['db_knowledge']['plain'] & Schema['db_knowledge']['nested'];
+    };
+    flat: {
+      'wizard:id': string;
+      'wizard:createdDate': string;
+      'wizard:updatedDate': string;
+      'wizard:name': string;
+      'wizard:category': string;
+      'knowledge:id': string;
+      'knowledge:createdDate': string;
+      'knowledge:updatedDate': string;
+      'knowledge:name': string;
+      'knowledge:statId': string;
+      'knowledge:stat:id': string;
+      'knowledge:stat:createdDate': string;
+      'knowledge:stat:updatedDate': string;
+      'knowledge:stat:name': string;
+      'knowledge:stat:color': string;
+    };
+  };
+  'db_wizard_stat': {
+    plain: {
+      'createdDate': string;
+      'updatedDate': string;
+      'level': number;
+      'wizardId': string;
+      'statId': string;
+    };
+    nested: {
+      'wizard': Schema['db_wizard']['plain'] & Schema['db_wizard']['nested'];
+      'stat': Schema['db_stat']['plain'] & Schema['db_stat']['nested'];
+    };
+    flat: {
+      'wizard:id': string;
+      'wizard:createdDate': string;
+      'wizard:updatedDate': string;
+      'wizard:name': string;
+      'wizard:category': string;
+      'stat:id': string;
+      'stat:createdDate': string;
+      'stat:updatedDate': string;
+      'stat:name': string;
+      'stat:color': string;
     };
   };
   'Event': {
