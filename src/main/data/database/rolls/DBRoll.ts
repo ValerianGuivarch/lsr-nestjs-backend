@@ -1,6 +1,6 @@
 import { SkillStat } from '../../../domain/models/skills/SkillStat'
 import { DBCharacter } from '../character/DBCharacter'
-import { IsString } from 'class-validator'
+import { IsDefined, IsString } from 'class-validator'
 import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm'
 
 @Entity()
@@ -95,4 +95,8 @@ export class DBRoll {
 
   @Column({ type: 'varchar', nullable: true })
   pictureUrl?: string
+
+  @Column({ type: 'boolean', default: false })
+  @IsDefined()
+  dark: boolean
 }

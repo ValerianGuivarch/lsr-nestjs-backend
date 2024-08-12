@@ -76,6 +76,9 @@ export class RollVM {
   @ApiProperty()
   help: boolean
 
+  @ApiProperty()
+  dark: boolean
+
   @ApiPropertyOptional()
   precision?: string
 
@@ -117,7 +120,8 @@ export class RollVM {
       help: p.roll.help,
       blessure: p.roll.blessure,
       precision: p.roll.precision,
-      pictureUrl: p.roll.pictureUrl
+      pictureUrl: p.roll.pictureUrl,
+      dark: p.roll.dark
     })
   }
 }

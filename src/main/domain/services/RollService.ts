@@ -566,7 +566,8 @@ export class RollService {
       blessure: skill.blessure,
       help: skill.help,
       precision: skill.precision,
-      pictureUrl: pictureUrl
+      pictureUrl: pictureUrl,
+      dark: p.character.dark
     })
     const createdRoll = await this.rollProvider.add(rollToCreate)
     p.character.pv += pvDelta
@@ -643,7 +644,8 @@ export class RollService {
         stat: SkillStat.EMPIRIQUE,
         resistance: false,
         blessure: false,
-        help: false
+        help: false,
+        dark: p.character.dark
       })
       await this.rollProvider.add(rollToCreate)
       const rolls = await this.getLast()

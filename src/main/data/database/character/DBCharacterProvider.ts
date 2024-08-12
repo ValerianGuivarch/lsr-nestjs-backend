@@ -165,7 +165,8 @@ export class DBCharacterProvider implements ICharacterProvider {
       customData: doc.customData,
       dailyUse: new Map(Object.entries(doc.dailyUse ? doc.dailyUse : {})),
       dailyUseMax: new Map(Object.entries(doc.dailyUseMax ? doc.dailyUseMax : {})),
-      arcaneDette: new Map(Object.entries(doc.arcaneDette ? doc.arcaneDette : {}))
+      arcaneDette: new Map(Object.entries(doc.arcaneDette ? doc.arcaneDette : {})),
+      dark: doc.dark
     })
   }
 
@@ -266,7 +267,8 @@ export class DBCharacterProvider implements ICharacterProvider {
       restImproved: doc.restImproved,
       dailyUse: Object.fromEntries(doc.dailyUse),
       dailyUseMax: Object.fromEntries(doc.dailyUseMax),
-      arcaneDette: Object.fromEntries(doc.arcaneDette)
+      arcaneDette: Object.fromEntries(doc.arcaneDette),
+      dark: doc.dark
     }
   }
 

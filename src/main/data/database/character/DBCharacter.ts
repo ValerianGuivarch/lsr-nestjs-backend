@@ -338,4 +338,8 @@ export class DBCharacter {
   @Column({ type: 'boolean', default: false })
   @IsDefined()
   boulet: boolean
+
+  @Column({ type: 'boolean', default: false })
+  @IsDefined()
+  dark: boolean
 }

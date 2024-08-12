@@ -28,6 +28,7 @@ export class Roll {
   help: boolean
   precision?: string
   pictureUrl?: string
+  dark: boolean
 
   constructor(p: Roll) {
     Object.assign(this, p)
@@ -62,6 +63,7 @@ export class Roll {
     help: boolean
     precision?: string
     pictureUrl?: string
+    dark: boolean
   }): Promise<RollToCreate> {
     const defaults = {
       rollerName: p.rollerName,
@@ -90,7 +92,8 @@ export class Roll {
       blessure: p.blessure,
       help: p.help,
       precision: p.precision,
-      pictureUrl: p.pictureUrl
+      pictureUrl: p.pictureUrl,
+      dark: p.dark
     }
 
     return Object.assign(defaults, p)

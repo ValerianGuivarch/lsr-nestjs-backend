@@ -42,7 +42,8 @@ export class DBRollProvider implements IRollProvider {
       blessure: doc.blessure,
       help: doc.help,
       precision: doc.precision,
-      pictureUrl: doc.pictureUrl
+      pictureUrl: doc.pictureUrl,
+      dark: doc.dark
     })
   }
 
@@ -73,7 +74,8 @@ export class DBRollProvider implements IRollProvider {
       blessure: doc.blessure,
       help: doc.help,
       precision: doc.precision,
-      pictureUrl: doc.pictureUrl
+      pictureUrl: doc.pictureUrl,
+      dark: doc.dark
     } as Partial<DBRoll>
   }
 

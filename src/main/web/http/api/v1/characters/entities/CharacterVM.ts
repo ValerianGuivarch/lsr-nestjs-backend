@@ -163,6 +163,9 @@ export class CharacterVM {
   @ApiProperty()
   isInvocation: boolean
 
+  @ApiProperty()
+  dark: boolean
+
   @ApiPropertyOptional()
   controlledBy?: string
 
@@ -217,6 +220,7 @@ export class CharacterVM {
     this.proficiencies = p.proficiencies
     this.rest = p.rest
     this.longRest = p.longRest
+    this.dark = p.dark
   }
 
   static of(p: {
@@ -294,7 +298,8 @@ export class CharacterVM {
       buttonColor: p.character.buttonColor,
       textColor: p.character.textColor,
       rest: p.rest.baseRest,
-      longRest: p.rest.longRest
+      longRest: p.rest.longRest,
+      dark: p.character.dark
     })
   }
 }
