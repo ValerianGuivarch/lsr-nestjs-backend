@@ -71,12 +71,9 @@ export class RollService {
     return this.rollProvider.getLast(RollService.MAX_ROLL_LIST_SIZE)
   }
   async getLastExceptSecretOrDarkness(name: string): Promise<Roll[]> {
-    const character = await this.characterProvider.findOneByName(name)
-    if (character === undefined) {
-      return []
-    }
+    const dark = name === 'MJ' ? false : (await this.characterProvider.findOneByName(name)).dark
     return (await this.rollProvider.getLast(RollService.MAX_ROLL_LIST_SIZE)).filter((roll) => {
-      return (character.dark === roll.dark && (!roll.secret || roll.rollerName === name)) || name === 'MJ'
+      return (dark === roll.dark && (!roll.secret || roll.rollerName === name)) || name === 'MJ'
     })
   }
 
