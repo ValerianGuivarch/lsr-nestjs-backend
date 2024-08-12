@@ -372,6 +372,7 @@ export type Schema = {
       'boulet': boolean;
       'dragonDettes': number;
       'arcaneDette': any;
+      'dark': boolean;
     };
     nested: {
       'db_classe': Schema['db_classe']['plain'] & Schema['db_classe']['nested'];
@@ -459,6 +460,7 @@ export type Schema = {
       'db_character:boulet': boolean;
       'db_character:dragonDettes': number;
       'db_character:arcaneDette': any;
+      'db_character:dark': boolean;
       'db_character:db_classe:name': string;
       'db_character:db_classe:displayMale': string;
       'db_character:db_classe:displayFemale': string;
@@ -553,6 +555,7 @@ export type Schema = {
       'db_character:boulet': boolean;
       'db_character:dragonDettes': number;
       'db_character:arcaneDette': any;
+      'db_character:dark': boolean;
       'db_character:db_classe:name': string;
       'db_character:db_classe:displayMale': string;
       'db_character:db_classe:displayFemale': string;
@@ -638,6 +641,7 @@ export type Schema = {
       'db_character:boulet': boolean;
       'db_character:dragonDettes': number;
       'db_character:arcaneDette': any;
+      'db_character:dark': boolean;
       'db_character:db_classe:name': string;
       'db_character:db_classe:displayMale': string;
       'db_character:db_classe:displayFemale': string;
@@ -1020,6 +1024,7 @@ export type Schema = {
       'help': boolean;
       'precision': string;
       'pictureUrl': string;
+      'dark': boolean;
     };
     nested: {
       'db_character': Schema['db_character']['plain'] & Schema['db_character']['nested'];
@@ -1073,6 +1078,7 @@ export type Schema = {
       'db_character:boulet': boolean;
       'db_character:dragonDettes': number;
       'db_character:arcaneDette': any;
+      'db_character:dark': boolean;
       'db_character:db_classe:name': string;
       'db_character:db_classe:displayMale': string;
       'db_character:db_classe:displayFemale': string;
