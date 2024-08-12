@@ -20,7 +20,7 @@ export class RollGateway {
     // eslint-disable-next-line no-magic-numbers
     return this.rollService.getRollsChangeObservable().pipe(
       concatMap(async () => {
-        const rolls = await this.rollService.getLastExceptSecret(name)
+        const rolls = await this.rollService.getLastExceptSecretOrDarkness(name)
         const rolls2 = rolls.filter((roll) => !roll.resistRoll)
         const rolls3 = rolls2.map((roll) =>
           RollVM.of({

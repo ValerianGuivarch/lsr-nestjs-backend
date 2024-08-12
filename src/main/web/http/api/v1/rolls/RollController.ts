@@ -19,7 +19,7 @@ export class RollController {
   @ApiOkResponse({ type: RollVM })
   @Get(':name')
   async getAllRolls(@Param('name') name: string): Promise<RollVM[]> {
-    const rolls = await this.rollService.getLastExceptSecret(name)
+    const rolls = await this.rollService.getLastExceptSecretOrDarkness(name)
     return rolls
       .filter((roll) => !roll.resistRoll)
       .map((roll) =>
