@@ -29,6 +29,18 @@ import { ProficiencyService } from './domain/services/ProficiencyService'
 import { RollService } from './domain/services/RollService'
 import { SessionService } from './domain/services/SessionService'
 import { SkillService } from './domain/services/SkillService'
+import { FlipImplementation } from './hp/data/flip.implementation'
+import { KnowledgeImplementation } from './hp/data/knowledge.implementation'
+import { StatImplementation } from './hp/data/stat.implementation'
+import { WizardKnowledgeImplementation } from './hp/data/wizard-knowledge.implementation'
+import { WizardStatImplementation } from './hp/data/wizard-stat.implementation'
+import { WizardImplementation } from './hp/data/wizard.implementation'
+import { KnowledgeService } from './hp/domain/services/knowledge.service'
+import { StatService } from './hp/domain/services/stat.service'
+import { WizardService } from './hp/domain/services/wizard.service'
+import { KnowledgeController } from './hp/web/http/api/knowledges/knowledges.controller'
+import { StatController } from './hp/web/http/api/stats/stats.controller'
+import { WizardController } from './hp/web/http/api/wizards/wizard.controller'
 import { CharacterController } from './web/http/api/v1/characters/CharacterController'
 import { ConstellationController } from './web/http/api/v1/elena/ConstellationController'
 import { JoueuseController } from './web/http/api/v1/elena/JoueuseController'
@@ -81,7 +93,10 @@ import { TypeOrmModule } from '@nestjs/typeorm'
     JoueuseController,
     ScenarioController,
     ConstellationController,
-    MessageController
+    MessageController,
+    WizardController,
+    KnowledgeController,
+    StatController
   ],
   providers: [
     SkillService,
@@ -98,6 +113,9 @@ import { TypeOrmModule } from '@nestjs/typeorm'
     ScenarioService,
     MjService,
     JwtService,
+    WizardService,
+    StatService,
+    KnowledgeService,
     InitDatabase,
     InitEntry,
     //    CharacterGateway,
@@ -152,6 +170,30 @@ import { TypeOrmModule } from '@nestjs/typeorm'
     {
       provide: 'IMessageProvider',
       useClass: DBMessageProvider
+    },
+    {
+      provide: 'IWizardProvider',
+      useClass: WizardImplementation
+    },
+    {
+      provide: 'IKnowledgeProvider',
+      useClass: KnowledgeImplementation
+    },
+    {
+      provide: 'IFlipProvider',
+      useClass: FlipImplementation
+    },
+    {
+      provide: 'IStatProvider',
+      useClass: StatImplementation
+    },
+    {
+      provide: 'IWizardStatProvider',
+      useClass: WizardStatImplementation
+    },
+    {
+      provide: 'IWizardKnowledgeProvider',
+      useClass: WizardKnowledgeImplementation
     },
     ForestService
   ]

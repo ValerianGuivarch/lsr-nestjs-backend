@@ -5,7 +5,7 @@ import { ContentObject, ReferenceObject, SchemaObject } from '@nestjs/swagger/di
 export function generateResponseContent<T>(p: {
   // eslint-disable-next-line @typescript-eslint/ban-types
   types: Function | Function[]
-  examples: Record<string, T>
+  examples?: Record<string, T>
 }): ContentObject {
   if (typeof p.types === 'function') {
     p.types = [p.types]
@@ -18,7 +18,7 @@ export function generateResponseContent<T>(p: {
           : { anyOf: p.types.map((ref) => ({ $ref: getSchemaPath(ref) })) },
       examples: Object.assign(
         {},
-        ...Object.entries(p.examples).map(([name, example]) => {
+        ...Object.entries(p.examples ?? {}).map(([name, example]) => {
           return {
             [name]: {
               value: example
@@ -33,7 +33,7 @@ export function generateResponseContent<T>(p: {
 export function generateRequestSchemasAndExamples<T>(p: {
   // eslint-disable-next-line @typescript-eslint/ban-types
   types: Function | Function[]
-  examples: Record<string, T>
+  examples?: Record<string, T>
 }): {
   schema: SchemaObject | ReferenceObject
   examples: Record<string, T>
@@ -48,10 +48,10 @@ export function generateRequestSchemasAndExamples<T>(p: {
         : { oneOf: p.types.map((ref) => ({ $ref: getSchemaPath(ref) })) },
     examples: Object.assign(
       {},
-      ...Object.entries(p.examples).map(([name, exaample]) => {
+      ...Object.entries(p.examples ?? {}).map(([name, example]) => {
         return {
           [name]: {
-            value: exaample
+            value: example
           }
         }
       })

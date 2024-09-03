@@ -155,6 +155,13 @@ export type DbEntryFilter = TPaginatedFilter<Schema, 'db_entry'>;
 export type DbEntrySortClause = TSortClause<Schema, 'db_entry'>;
 export type DbEntryAggregation = TAggregation<Schema, 'db_entry'>;
 
+export type DbFlipCustomizer = CollectionCustomizer<Schema, 'db_flip'>;
+export type DbFlipRecord = TPartialRow<Schema, 'db_flip'>;
+export type DbFlipConditionTree = TConditionTree<Schema, 'db_flip'>;
+export type DbFlipFilter = TPaginatedFilter<Schema, 'db_flip'>;
+export type DbFlipSortClause = TSortClause<Schema, 'db_flip'>;
+export type DbFlipAggregation = TAggregation<Schema, 'db_flip'>;
+
 export type DbKnowledgeCustomizer = CollectionCustomizer<Schema, 'db_knowledge'>;
 export type DbKnowledgeRecord = TPartialRow<Schema, 'db_knowledge'>;
 export type DbKnowledgeConditionTree = TConditionTree<Schema, 'db_knowledge'>;
@@ -1015,6 +1022,17 @@ export type Schema = {
       'month': number;
       'year': number;
       'text': string;
+    };
+    nested: {};
+    flat: {};
+  };
+  'db_flip': {
+    plain: {
+      'id': string;
+      'createdDate': string;
+      'updatedDate': string;
+      'text': string;
+      'wizardName': string;
     };
     nested: {};
     flat: {};

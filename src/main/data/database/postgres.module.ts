@@ -16,6 +16,18 @@ import { DBSession } from './session/DBSession'
 import { DBSessionProvider } from './session/DBSessionProvider'
 import { DBSkill } from './skills/DBSkill'
 import { DBSkillProvider } from './skills/DBSkillProvider'
+import { DBFlip } from '../../hp/data/flip.db'
+import { FlipImplementation } from '../../hp/data/flip.implementation'
+import { DBKnowledge } from '../../hp/data/knowledge.db'
+import { KnowledgeImplementation } from '../../hp/data/knowledge.implementation'
+import { DBStat } from '../../hp/data/stat.db'
+import { StatImplementation } from '../../hp/data/stat.implementation'
+import { DBWizardKnowledge } from '../../hp/data/wizard-knowledge.db'
+import { WizardKnowledgeImplementation } from '../../hp/data/wizard-knowledge.implementation'
+import { DBWizardStat } from '../../hp/data/wizard-stat.db'
+import { WizardStatImplementation } from '../../hp/data/wizard-stat.implementation'
+import { DBWizard } from '../../hp/data/wizard.db'
+import { WizardImplementation } from '../../hp/data/wizard.implementation'
 import { DBConstellation } from '../elena/DBConstellation'
 import { DBConstellationProvider } from '../elena/DBConstellationProvider'
 import { DBEvent } from '../elena/DBEvent'
@@ -50,7 +62,13 @@ import { TypeOrmModule } from '@nestjs/typeorm'
         DBMessage,
         DBModelMessage,
         DBConstellation,
-        DBEvent
+        DBEvent,
+        DBWizard,
+        DBStat,
+        DBWizardStat,
+        DBKnowledge,
+        DBWizardKnowledge,
+        DBFlip
       ],
       'postgres'
     )
@@ -111,6 +129,30 @@ import { TypeOrmModule } from '@nestjs/typeorm'
     {
       provide: 'INotificationProvider',
       useClass: FBNotificationProvider
+    },
+    {
+      provide: 'IWizardProvider',
+      useClass: WizardImplementation
+    },
+    {
+      provide: 'IKnowledgeProvider',
+      useClass: KnowledgeImplementation
+    },
+    {
+      provide: 'IStatProvider',
+      useClass: StatImplementation
+    },
+    {
+      provide: 'IWizardStatProvider',
+      useClass: WizardStatImplementation
+    },
+    {
+      provide: 'IWizardKnowledgeProvider',
+      useClass: WizardKnowledgeImplementation
+    },
+    {
+      provide: 'IFlipProvider',
+      useClass: FlipImplementation
     }
   ],
   exports: [
@@ -170,6 +212,31 @@ import { TypeOrmModule } from '@nestjs/typeorm'
     {
       provide: 'INotificationProvider',
       useClass: FBNotificationProvider
+    },
+
+    {
+      provide: 'IWizardProvider',
+      useClass: WizardImplementation
+    },
+    {
+      provide: 'IKnowledgeProvider',
+      useClass: KnowledgeImplementation
+    },
+    {
+      provide: 'IStatProvider',
+      useClass: StatImplementation
+    },
+    {
+      provide: 'IWizardStatProvider',
+      useClass: WizardStatImplementation
+    },
+    {
+      provide: 'IWizardKnowledgeProvider',
+      useClass: WizardKnowledgeImplementation
+    },
+    {
+      provide: 'IFlipProvider',
+      useClass: FlipImplementation
     }
   ]
 })
