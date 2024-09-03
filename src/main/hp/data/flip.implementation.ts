@@ -17,7 +17,10 @@ export class FlipImplementation implements IFlipProvider {
       createdDate: new Date(),
       updatedDate: new Date(),
       wizardName: flip.wizardName,
-      text: flip.text
+      text: flip.text,
+      result: flip.result,
+      modif: flip.modif,
+      base: flip.base
     }
     return this.flipRepository.save(toCreate).then(DBFlip.toFlip)
   }
@@ -27,6 +30,9 @@ export class FlipImplementation implements IFlipProvider {
       await this.flipRepository.find({
         relations: DBFlip.RELATIONS
       })
-    ).map(DBFlip.toFlip)
+    )
+      .sort((a, b) => a.createdDate.getTime() - b.createdDate.getTime())
+      .map(DBFlip.toFlip)
+      .map(DBFlip.toFlip)
   }
 }

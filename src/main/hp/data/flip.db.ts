@@ -18,13 +18,25 @@ export class DBFlip {
   @Column({ type: 'varchar', nullable: false })
   wizardName: string
 
+  @Column({ type: 'int', nullable: false })
+  result: number
+
+  @Column({ type: 'int', nullable: false, default: 0 })
+  base: number
+
+  @Column({ type: 'int', nullable: false, default: 0 })
+  modif: number
+
   static readonly RELATIONS = {}
 
   static toFlip(flip: DBFlip): Flip {
     return new Flip({
       id: flip.id,
       text: flip.text,
-      wizardName: flip.wizardName
+      wizardName: flip.wizardName,
+      result: flip.result,
+      base: flip.base,
+      modif: flip.modif
     })
   }
 }

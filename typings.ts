@@ -1033,6 +1033,9 @@ export type Schema = {
       'updatedDate': string;
       'text': string;
       'wizardName': string;
+      'result': number;
+      'base': number;
+      'modif': number;
     };
     nested: {};
     flat: {};
@@ -1044,6 +1047,7 @@ export type Schema = {
       'updatedDate': string;
       'name': string;
       'statId': string;
+      'flipText': string;
     };
     nested: {
       'stat': Schema['db_stat']['plain'] & Schema['db_stat']['nested'];
@@ -1054,6 +1058,8 @@ export type Schema = {
       'stat:updatedDate': string;
       'stat:name': string;
       'stat:color': string;
+      'stat:order': number;
+      'stat:flipText': string;
     };
   };
   'db_proficiency': {
@@ -1259,6 +1265,8 @@ export type Schema = {
       'updatedDate': string;
       'name': string;
       'color': string;
+      'order': number;
+      'flipText': string;
     };
     nested: {};
     flat: {};
@@ -1270,6 +1278,7 @@ export type Schema = {
       'updatedDate': string;
       'name': string;
       'category': string;
+      'xp': number;
     };
     nested: {};
     flat: {};
@@ -1281,6 +1290,7 @@ export type Schema = {
       'level': number;
       'wizardId': string;
       'knowledgeId': string;
+      'xp': number;
     };
     nested: {
       'wizard': Schema['db_wizard']['plain'] & Schema['db_wizard']['nested'];
@@ -1292,16 +1302,20 @@ export type Schema = {
       'wizard:updatedDate': string;
       'wizard:name': string;
       'wizard:category': string;
+      'wizard:xp': number;
       'knowledge:id': string;
       'knowledge:createdDate': string;
       'knowledge:updatedDate': string;
       'knowledge:name': string;
       'knowledge:statId': string;
+      'knowledge:flipText': string;
       'knowledge:stat:id': string;
       'knowledge:stat:createdDate': string;
       'knowledge:stat:updatedDate': string;
       'knowledge:stat:name': string;
       'knowledge:stat:color': string;
+      'knowledge:stat:order': number;
+      'knowledge:stat:flipText': string;
     };
   };
   'db_wizard_stat': {
@@ -1311,6 +1325,7 @@ export type Schema = {
       'level': number;
       'wizardId': string;
       'statId': string;
+      'xp': number;
     };
     nested: {
       'wizard': Schema['db_wizard']['plain'] & Schema['db_wizard']['nested'];
@@ -1322,11 +1337,14 @@ export type Schema = {
       'wizard:updatedDate': string;
       'wizard:name': string;
       'wizard:category': string;
+      'wizard:xp': number;
       'stat:id': string;
       'stat:createdDate': string;
       'stat:updatedDate': string;
       'stat:name': string;
       'stat:color': string;
+      'stat:order': number;
+      'stat:flipText': string;
     };
   };
   'Event': {

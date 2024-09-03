@@ -1,6 +1,5 @@
 import { WizardKnowledgeDto } from './wizard-knowledge.dto'
 import { WizardStatDto } from './wizard-stat.dto'
-import { Category } from '../../../../../domain/entities/category.enum'
 import { Wizard, WizardName } from '../../../../../domain/entities/wizard.entity'
 import { ApiProperty } from '@nestjs/swagger'
 
@@ -20,10 +19,9 @@ export class WizardDto {
 
   @ApiProperty({
     description: 'The wizard category',
-    enum: Category,
-    enumName: 'Category'
+    type: String
   })
-  category: Category
+  category: string
 
   @ApiProperty({
     description: 'All wizard stats',
@@ -39,12 +37,19 @@ export class WizardDto {
   })
   knowledges: WizardKnowledgeDto[]
 
+  @ApiProperty({
+    description: 'The wizard xp',
+    type: Number
+  })
+  xp: number
+
   constructor(wizard: WizardDto) {
     this.id = wizard.id
     this.name = wizard.name
     this.category = wizard.category
     this.stats = wizard.stats
     this.knowledges = wizard.knowledges
+    this.xp = wizard.xp
   }
   static from(wizard: Wizard): WizardDto {
     return new WizardDto({
@@ -52,7 +57,8 @@ export class WizardDto {
       name: wizard.name,
       category: wizard.category,
       stats: wizard.stats.map(WizardStatDto.from),
-      knowledges: wizard.knowledges.map(WizardKnowledgeDto.from)
+      knowledges: wizard.knowledges.map(WizardKnowledgeDto.from),
+      xp: wizard.xp
     })
   }
 }

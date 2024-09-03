@@ -6,10 +6,15 @@ import { Inject, Injectable } from '@nestjs/common'
 export class FlipService {
   constructor(@Inject('IFlipProvider') private flipProvider: IFlipProvider) {}
 
-  async createFlip(flip: { flipModif: string; wizardName: string }): Promise<Flip> {
+  async createFlip(flip: { flipText: string; flipModif: number; wizardName: string }): Promise<Flip> {
+    const flipRolling = this.flipRolling()
     return await this.flipProvider.create(
       Flip.toFlipToCreate({
-        text: this.flipRolling(flip.flipModif),
+        text: flip.flipText,
+        // eslint-disable-next-line no-magic-numbers
+        result: flipRolling === 1 ? 1 : flipRolling === 20 ? 20 : flipRolling + flip.flipModif,
+        base: flipRolling,
+        modif: flip.flipModif,
         wizardName: flip.wizardName
       })
     )
@@ -19,7 +24,8 @@ export class FlipService {
     return await this.flipProvider.findAll()
   }
 
-  private flipRolling(flipModif: string): string {
-    return Math.floor(Math.random() * 20 + 1) + flipModif
+  private flipRolling(): number {
+    // eslint-disable-next-line no-magic-numbers
+    return Math.floor(Math.random() * 20 + 1)
   }
 }

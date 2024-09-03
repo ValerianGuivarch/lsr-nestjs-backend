@@ -35,9 +35,12 @@ import { StatImplementation } from './hp/data/stat.implementation'
 import { WizardKnowledgeImplementation } from './hp/data/wizard-knowledge.implementation'
 import { WizardStatImplementation } from './hp/data/wizard-stat.implementation'
 import { WizardImplementation } from './hp/data/wizard.implementation'
+import { FlipService } from './hp/domain/services/flip.service'
+import { FlipWorkflowService } from './hp/domain/services/flip.workflow-service'
 import { KnowledgeService } from './hp/domain/services/knowledge.service'
 import { StatService } from './hp/domain/services/stat.service'
 import { WizardService } from './hp/domain/services/wizard.service'
+import { FlipController } from './hp/web/http/api/flips/flip.controller'
 import { KnowledgeController } from './hp/web/http/api/knowledges/knowledges.controller'
 import { StatController } from './hp/web/http/api/stats/stats.controller'
 import { WizardController } from './hp/web/http/api/wizards/wizard.controller'
@@ -96,7 +99,8 @@ import { TypeOrmModule } from '@nestjs/typeorm'
     MessageController,
     WizardController,
     KnowledgeController,
-    StatController
+    StatController,
+    FlipController
   ],
   providers: [
     SkillService,
@@ -116,12 +120,22 @@ import { TypeOrmModule } from '@nestjs/typeorm'
     WizardService,
     StatService,
     KnowledgeService,
+    FlipService,
+    FlipWorkflowService,
     InitDatabase,
     InitEntry,
     //    CharacterGateway,
     {
       provide: 'ICharacterProvider',
       useClass: DBCharacterProvider
+    },
+    {
+      provide: 'FlipService',
+      useClass: FlipService
+    },
+    {
+      provide: 'WizardService',
+      useClass: WizardService
     },
     {
       provide: 'IApotheoseProvider',
@@ -194,6 +208,10 @@ import { TypeOrmModule } from '@nestjs/typeorm'
     {
       provide: 'IWizardKnowledgeProvider',
       useClass: WizardKnowledgeImplementation
+    },
+    {
+      provide: 'FlipProvider',
+      useClass: FlipImplementation
     },
     ForestService
   ]

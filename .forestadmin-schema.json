@@ -2901,6 +2901,22 @@
       "actions": [],
       "fields": [
         {
+          "defaultValue": 0,
+          "enums": [],
+          "field": "base",
+          "integration": null,
+          "inverseOf": null,
+          "isFilterable": true,
+          "isPrimaryKey": false,
+          "isReadOnly": false,
+          "isRequired": true,
+          "isSortable": true,
+          "isVirtual": false,
+          "reference": null,
+          "type": "Number",
+          "validations": [{"type": "is present", "message": "Field is required"}]
+        },
+        {
           "defaultValue": null,
           "enums": [],
           "field": "createdDate",
@@ -2931,6 +2947,38 @@
           "reference": null,
           "type": "Uuid",
           "validations": []
+        },
+        {
+          "defaultValue": 0,
+          "enums": [],
+          "field": "modif",
+          "integration": null,
+          "inverseOf": null,
+          "isFilterable": true,
+          "isPrimaryKey": false,
+          "isReadOnly": false,
+          "isRequired": true,
+          "isSortable": true,
+          "isVirtual": false,
+          "reference": null,
+          "type": "Number",
+          "validations": [{"type": "is present", "message": "Field is required"}]
+        },
+        {
+          "defaultValue": null,
+          "enums": [],
+          "field": "result",
+          "integration": null,
+          "inverseOf": null,
+          "isFilterable": true,
+          "isPrimaryKey": false,
+          "isReadOnly": false,
+          "isRequired": true,
+          "isSortable": true,
+          "isVirtual": false,
+          "reference": null,
+          "type": "Number",
+          "validations": [{"type": "is present", "message": "Field is required"}]
         },
         {
           "defaultValue": null,
@@ -3009,6 +3057,22 @@
           "reference": null,
           "type": "Date",
           "validations": []
+        },
+        {
+          "defaultValue": "",
+          "enums": [],
+          "field": "flipText",
+          "integration": null,
+          "inverseOf": null,
+          "isFilterable": true,
+          "isPrimaryKey": false,
+          "isReadOnly": false,
+          "isRequired": true,
+          "isSortable": true,
+          "isVirtual": false,
+          "reference": null,
+          "type": "String",
+          "validations": [{"type": "is present", "message": "Field is required"}]
         },
         {
           "defaultValue": null,
@@ -4555,6 +4619,22 @@
           "validations": []
         },
         {
+          "defaultValue": "",
+          "enums": [],
+          "field": "flipText",
+          "integration": null,
+          "inverseOf": null,
+          "isFilterable": true,
+          "isPrimaryKey": false,
+          "isReadOnly": false,
+          "isRequired": true,
+          "isSortable": true,
+          "isVirtual": false,
+          "reference": null,
+          "type": "String",
+          "validations": [{"type": "is present", "message": "Field is required"}]
+        },
+        {
           "defaultValue": null,
           "enums": [],
           "field": "id",
@@ -4584,6 +4664,22 @@
           "isVirtual": false,
           "reference": null,
           "type": "String",
+          "validations": [{"type": "is present", "message": "Field is required"}]
+        },
+        {
+          "defaultValue": 0,
+          "enums": [],
+          "field": "order",
+          "integration": null,
+          "inverseOf": null,
+          "isFilterable": true,
+          "isPrimaryKey": false,
+          "isReadOnly": false,
+          "isRequired": true,
+          "isSortable": true,
+          "isVirtual": false,
+          "reference": null,
+          "type": "Number",
           "validations": [{"type": "is present", "message": "Field is required"}]
         },
         {
@@ -4746,6 +4842,22 @@
           "reference": null,
           "type": "Date",
           "validations": []
+        },
+        {
+          "defaultValue": 0,
+          "enums": [],
+          "field": "xp",
+          "integration": null,
+          "inverseOf": null,
+          "isFilterable": true,
+          "isPrimaryKey": false,
+          "isReadOnly": false,
+          "isRequired": true,
+          "isSortable": true,
+          "isVirtual": false,
+          "reference": null,
+          "type": "Number",
+          "validations": [{"type": "is present", "message": "Field is required"}]
         }
       ],
       "icon": null,
@@ -4874,6 +4986,22 @@
           "reference": null,
           "type": "Uuid",
           "validations": [{"type": "is present", "message": "Field is required"}]
+        },
+        {
+          "defaultValue": 0,
+          "enums": [],
+          "field": "xp",
+          "integration": null,
+          "inverseOf": null,
+          "isFilterable": true,
+          "isPrimaryKey": false,
+          "isReadOnly": false,
+          "isRequired": true,
+          "isSortable": true,
+          "isVirtual": false,
+          "reference": null,
+          "type": "Number",
+          "validations": [{"type": "is present", "message": "Field is required"}]
         }
       ],
       "icon": null,
@@ -5001,6 +5129,22 @@
           "isVirtual": false,
           "reference": null,
           "type": "Uuid",
+          "validations": [{"type": "is present", "message": "Field is required"}]
+        },
+        {
+          "defaultValue": 0,
+          "enums": [],
+          "field": "xp",
+          "integration": null,
+          "inverseOf": null,
+          "isFilterable": true,
+          "isPrimaryKey": false,
+          "isReadOnly": false,
+          "isRequired": true,
+          "isSortable": true,
+          "isVirtual": false,
+          "reference": null,
+          "type": "Number",
           "validations": [{"type": "is present", "message": "Field is required"}]
         }
       ],

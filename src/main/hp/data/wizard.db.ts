@@ -1,6 +1,5 @@
 import { DBWizardKnowledge } from './wizard-knowledge.db'
 import { DBWizardStat } from './wizard-stat.db'
-import { Category } from '../domain/entities/category.enum'
 import { Wizard } from '../domain/entities/wizard.entity'
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, OneToMany, UpdateDateColumn } from 'typeorm'
 
@@ -21,6 +20,9 @@ export class DBWizard {
   @Column({ type: 'varchar', nullable: false })
   category: string
 
+  @Column({ type: 'int', nullable: false, default: 0 })
+  xp: number
+
   @OneToMany(() => DBWizardStat, (wizardStat) => wizardStat.wizard, { cascade: true })
   wizardStats: DBWizardStat[]
 
@@ -40,9 +42,10 @@ export class DBWizard {
     return new Wizard({
       id: wizard.id,
       name: wizard.name,
-      category: Category[wizard.category],
+      category: wizard.category,
       stats: wizard.wizardStats.map(DBWizardStat.toWizardStat),
-      knowledges: wizard.wizardKnowledges.map(DBWizardKnowledge.toWizardKnowledge)
+      knowledges: wizard.wizardKnowledges.map(DBWizardKnowledge.toWizardKnowledge),
+      xp: wizard.xp
     })
   }
 }

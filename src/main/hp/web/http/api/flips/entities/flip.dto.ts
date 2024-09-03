@@ -21,16 +21,40 @@ export class FlipDto {
   })
   text: string
 
+  @ApiProperty({
+    description: 'The flip result',
+    type: Number
+  })
+  result: number
+
+  @ApiProperty({
+    description: 'The flip modif',
+    type: Number
+  })
+  modif: number
+
+  @ApiProperty({
+    description: 'The flip result',
+    type: Number
+  })
+  base: number
+
   constructor(flip: FlipDto) {
     this.id = flip.id
     this.wizardName = flip.wizardName
     this.text = flip.text
+    this.result = flip.result
+    this.base = flip.base
+    this.modif = flip.modif
   }
   static from(flip: Flip): FlipDto {
     return new FlipDto({
       id: flip.id,
       wizardName: flip.wizardName,
-      text: flip.text
+      text: flip.text,
+      result: flip.result,
+      base: flip.base,
+      modif: flip.modif
     })
   }
 }

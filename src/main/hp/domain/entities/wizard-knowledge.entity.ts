@@ -3,9 +3,10 @@ import { Knowledge } from './knowledge.entity'
 export class WizardKnowledge {
   knowledge: Knowledge
   level: number
+  xp: number
 }
 
-export type WizardKnowledgeToCreate = Omit<WizardKnowledge, 'knowledge'> & {
+export type WizardKnowledgeToCreate = Omit<WizardKnowledge, 'knowledge' | 'xp'> & {
   knowledge: Pick<Knowledge, 'id'>
 }
 

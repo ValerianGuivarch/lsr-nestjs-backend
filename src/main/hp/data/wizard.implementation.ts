@@ -23,6 +23,7 @@ export class WizardImplementation implements IWizardProvider {
     const toCreate: DBWizardToCreate = {
       name: wizard.name,
       category: wizard.category,
+      xp: 0,
       createdDate: new Date(),
       updatedDate: new Date()
     }
@@ -33,7 +34,8 @@ export class WizardImplementation implements IWizardProvider {
       const statToCreate: DBWizardStatToCreate = {
         level: stat.level,
         wizardId: savedWizard.id,
-        statId: stat.stat.id
+        statId: stat.stat.id,
+        xp: 0
       }
       const createdStatWizard = this.wizardStatRepository.create(statToCreate)
       await this.wizardStatRepository.save(createdStatWizard)
@@ -42,7 +44,8 @@ export class WizardImplementation implements IWizardProvider {
       const knowledgeToCreate: DBWizardKnowledgeToCreate = {
         level: knowledge.level,
         wizardId: savedWizard.id,
-        knowledgeId: knowledge.knowledge.id
+        knowledgeId: knowledge.knowledge.id,
+        xp: 0
       }
       const createdKnowledgeWizard = this.wizardKnowledgeRepository.create(knowledgeToCreate)
       createdKnowledgeWizard.wizard = savedWizard

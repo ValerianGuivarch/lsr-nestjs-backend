@@ -9,15 +9,20 @@ export class WizardKnowledgeDto {
   @ApiProperty({ description: 'The knowledge', type: KnowledgeDto })
   knowledge: KnowledgeDto
 
+  @ApiProperty({ description: 'The wizard knowledge xp', type: Number })
+  xp: number
+
   constructor(wizardKnowledge: WizardKnowledgeDto) {
     this.level = wizardKnowledge.level
     this.knowledge = wizardKnowledge.knowledge
+    this.xp = wizardKnowledge.xp
   }
 
   static from(wizardKnowledge: WizardKnowledge): WizardKnowledgeDto {
     return new WizardKnowledgeDto({
       level: wizardKnowledge.level,
-      knowledge: wizardKnowledge.knowledge
+      knowledge: wizardKnowledge.knowledge,
+      xp: wizardKnowledge.xp
     })
   }
 }

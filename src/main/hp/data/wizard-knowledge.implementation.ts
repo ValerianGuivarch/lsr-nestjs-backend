@@ -24,7 +24,8 @@ export class WizardKnowledgeImplementation implements IWizardKnowledgeProvider {
     const toCreate: DBWizardKnowledgeToCreate = {
       knowledgeId: wizardKnowledge.knowledge.id,
       wizardId: wizardId,
-      level: wizardKnowledge.level
+      level: wizardKnowledge.level,
+      xp: 0
     }
     const created = this.wizardKnowledgeRepository.create(toCreate)
     await this.wizardKnowledgeRepository.insert(created)

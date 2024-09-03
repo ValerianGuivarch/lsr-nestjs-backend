@@ -28,6 +28,9 @@ export class DBKnowledge {
   @JoinColumn({ name: 'statId' })
   stat: DBStat
 
+  @Column({ type: 'varchar', nullable: false, default: '' })
+  flipText: string
+
   static readonly RELATIONS = {
     stat: true
   }
@@ -36,7 +39,8 @@ export class DBKnowledge {
     return new Knowledge({
       id: knowledge.id,
       name: knowledge.name,
-      stat: DBStat.toStat(knowledge.stat)
+      stat: DBStat.toStat(knowledge.stat),
+      flipText: knowledge.flipText
     })
   }
 }

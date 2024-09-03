@@ -28,6 +28,9 @@ export class DBWizardStat {
   @JoinColumn({ name: 'statId' })
   stat: DBStat
 
+  @Column({ type: 'integer', nullable: false, default: 0 })
+  xp: number
+
   static readonly RELATIONS = {
     stat: true
   }
@@ -35,7 +38,8 @@ export class DBWizardStat {
   static toWizardStat(dbWizardStat: DBWizardStat): WizardStat {
     return {
       stat: DBStat.toStat(dbWizardStat.stat),
-      level: dbWizardStat.level
+      level: dbWizardStat.level,
+      xp: dbWizardStat.xp
     }
   }
 }

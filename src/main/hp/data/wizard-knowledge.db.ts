@@ -28,12 +28,16 @@ export class DBWizardKnowledge {
   @JoinColumn({ name: 'knowledgeId' })
   knowledge: DBKnowledge
 
+  @Column({ type: 'integer', nullable: false, default: 0 })
+  xp: number
+
   static readonly RELATIONS = {}
 
   static toWizardKnowledge(dbWizardKnowledge: DBWizardKnowledge): WizardKnowledge {
     return {
       knowledge: DBKnowledge.toKnowledge(dbWizardKnowledge.knowledge),
-      level: dbWizardKnowledge.level
+      level: dbWizardKnowledge.level,
+      xp: dbWizardKnowledge.xp
     }
   }
 }

@@ -18,13 +18,21 @@ export class DBStat {
   @Column({ type: 'varchar', nullable: false })
   color: string
 
+  @Column({ type: 'int', default: 0 })
+  order: number
+
+  @Column({ type: 'varchar', nullable: false, default: '' })
+  flipText: string
+
   static readonly RELATIONS = {}
 
   static toStat(stat: DBStat): Stat {
     return new Stat({
       id: stat.id,
       name: stat.name,
-      color: stat.color
+      color: stat.color,
+      order: stat.order,
+      flipText: stat.flipText
     })
   }
 }

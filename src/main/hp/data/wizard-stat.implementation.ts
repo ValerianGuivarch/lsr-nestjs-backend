@@ -20,7 +20,8 @@ export class WizardStatImplementation implements IWizardStatProvider {
     const toCreate: DBWizardStatToCreate = {
       statId: wizardStat.stat.id,
       wizardId: wizardId,
-      level: wizardStat.level
+      level: wizardStat.level,
+      xp: 0
     }
     const created = this.wizardStatRepository.create(toCreate)
     await this.wizardStatRepository.insert(created)

@@ -21,7 +21,15 @@ export class FlipWorkflowService {
       }
       return this.flipService.createFlip({
         wizardName: wizard.name,
-        flipModif: '+' + wizardKnowledge.level
+        flipModif: wizardKnowledge.level,
+        flipText:
+          wizard.name +
+          ' ' +
+          wizardKnowledge.knowledge.flipText +
+          wizardKnowledge.knowledge.name +
+          ' [ ' +
+          wizardKnowledge.level +
+          ' ] et obtient : '
       })
     } else if (flip.statId) {
       const wizardStat = wizard.stats.find((wizardStat) => wizardStat.stat.id === flip.statId)
@@ -30,7 +38,15 @@ export class FlipWorkflowService {
       }
       return this.flipService.createFlip({
         wizardName: wizard.name,
-        flipModif: '+' + wizardStat.level
+        flipModif: wizardStat.level,
+        flipText:
+          wizard.name +
+          ' ' +
+          wizardStat.stat.flipText +
+          wizardStat.stat.name +
+          ' [ ' +
+          wizardStat.level +
+          ' ] et obtient : '
       })
     } else {
       throw new BadRequestException('Invalid flip')

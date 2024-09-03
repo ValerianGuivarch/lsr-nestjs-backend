@@ -1,6 +1,5 @@
 import { CreateWizardKnowledgeRequest } from './wizard-knowledge-create.request'
 import { CreateWizardStatRequest } from './wizard-stat-create.request'
-import { Category } from '../../../../../domain/entities/category.enum'
 import { ApiProperty } from '@nestjs/swagger'
 import { Type } from 'class-transformer'
 import { IsDefined, IsString, ValidateNested } from 'class-validator'
@@ -10,9 +9,9 @@ export class CreateWizardRequest {
   @IsString()
   name: string
 
-  @ApiProperty({ description: 'The wizard category', enum: Category, enumName: 'Category' })
+  @ApiProperty({ description: 'The wizard category', type: String })
   @IsDefined()
-  category: Category
+  category: string
 
   @ApiProperty({ description: 'All wizard stats', isArray: true, type: CreateWizardStatRequest })
   @IsDefined()
