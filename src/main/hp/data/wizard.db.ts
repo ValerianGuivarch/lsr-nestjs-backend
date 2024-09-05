@@ -1,4 +1,5 @@
 import { DBWizardKnowledge } from './wizard-knowledge.db'
+import { DBWizardSpell } from './wizard-spell.db'
 import { DBWizardStat } from './wizard-stat.db'
 import { Wizard } from '../domain/entities/wizard.entity'
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, OneToMany, UpdateDateColumn } from 'typeorm'
@@ -29,13 +30,20 @@ export class DBWizard {
   @OneToMany(() => DBWizardKnowledge, (wizardKnowledge) => wizardKnowledge.wizard, { cascade: true })
   wizardKnowledges: DBWizardKnowledge[]
 
+  @OneToMany(() => DBWizardSpell, (wizardSpell) => wizardSpell.wizard, { cascade: true })
+  wizardSpells: DBWizardSpell[]
+
   static readonly RELATIONS = {
     wizardKnowledges: {
-      knowledge: {
+      knowledge: true
+    },
+    wizardStats: { stat: true },
+    wizardSpells: {
+      spell: {
+        knowledge: true,
         stat: true
       }
-    },
-    wizardStats: { stat: true }
+    }
   }
 
   static toWizard(wizard: DBWizard): Wizard {
@@ -45,11 +53,12 @@ export class DBWizard {
       category: wizard.category,
       stats: wizard.wizardStats.map(DBWizardStat.toWizardStat),
       knowledges: wizard.wizardKnowledges.map(DBWizardKnowledge.toWizardKnowledge),
+      spells: wizard.wizardSpells.map(DBWizardSpell.toWizardSpell),
       xp: wizard.xp
     })
   }
 }
 
-export type DBWizardToCreate = Omit<DBWizard, 'id' | 'wizardStats' | 'wizardKnowledges'>
+export type DBWizardToCreate = Omit<DBWizard, 'id' | 'wizardStats' | 'wizardKnowledges' | 'wizardSpells'>
 
 export type DBWizardToUpdate = Omit<DBWizard, 'id' | 'createdDate' | 'wizardStats' | 'wizardKnowledges'>

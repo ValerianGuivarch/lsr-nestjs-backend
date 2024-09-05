@@ -20,10 +20,12 @@ import { DBFlip } from '../../hp/data/flip.db'
 import { FlipImplementation } from '../../hp/data/flip.implementation'
 import { DBKnowledge } from '../../hp/data/knowledge.db'
 import { KnowledgeImplementation } from '../../hp/data/knowledge.implementation'
+import { DBSpell } from '../../hp/data/spell.db'
 import { DBStat } from '../../hp/data/stat.db'
 import { StatImplementation } from '../../hp/data/stat.implementation'
 import { DBWizardKnowledge } from '../../hp/data/wizard-knowledge.db'
 import { WizardKnowledgeImplementation } from '../../hp/data/wizard-knowledge.implementation'
+import { DBWizardSpell } from '../../hp/data/wizard-spell.db'
 import { DBWizardStat } from '../../hp/data/wizard-stat.db'
 import { WizardStatImplementation } from '../../hp/data/wizard-stat.implementation'
 import { DBWizard } from '../../hp/data/wizard.db'
@@ -64,6 +66,8 @@ import { TypeOrmModule } from '@nestjs/typeorm'
         DBConstellation,
         DBEvent,
         DBWizard,
+        DBSpell,
+        DBWizardSpell,
         DBStat,
         DBWizardStat,
         DBKnowledge,

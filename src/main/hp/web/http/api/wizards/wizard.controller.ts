@@ -20,6 +20,7 @@ export class WizardController {
   @HttpCode(HttpStatus.CREATED)
   @Post('')
   async createNewWizard(@Body() request: CreateWizardRequest): Promise<WizardDto> {
+    console.log('request', JSON.stringify(request))
     return WizardDto.from(
       await this.wizardService.createWizard(
         Wizard.toWizardToCreate({
@@ -35,6 +36,12 @@ export class WizardController {
             level: knowledge.level,
             knowledge: {
               id: knowledge.id
+            }
+          })),
+          spells: request.spells.map((spell) => ({
+            difficulty: spell.difficulty,
+            spell: {
+              id: spell.id
             }
           }))
         })

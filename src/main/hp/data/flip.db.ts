@@ -1,3 +1,4 @@
+import { Difficulty } from '../domain/entities/difficulty.enum'
 import { Flip } from '../domain/entities/flip.entity'
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm'
 
@@ -27,6 +28,9 @@ export class DBFlip {
   @Column({ type: 'int', nullable: false, default: 0 })
   modif: number
 
+  @Column({ type: 'varchar', nullable: false, default: 'NORMAL' })
+  difficulty: string
+
   static readonly RELATIONS = {}
 
   static toFlip(flip: DBFlip): Flip {
@@ -36,7 +40,8 @@ export class DBFlip {
       wizardName: flip.wizardName,
       result: flip.result,
       base: flip.base,
-      modif: flip.modif
+      modif: flip.modif,
+      difficulty: Difficulty[flip.difficulty]
     })
   }
 }

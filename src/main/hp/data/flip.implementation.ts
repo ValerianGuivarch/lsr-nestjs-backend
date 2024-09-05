@@ -27,12 +27,15 @@ export class FlipImplementation implements IFlipProvider {
 
   async findAll(): Promise<Flip[]> {
     return (
-      await this.flipRepository.find({
-        relations: DBFlip.RELATIONS
-      })
+      (
+        await this.flipRepository.find({
+          relations: DBFlip.RELATIONS
+        })
+      )
+        .sort((a, b) => a.createdDate.getTime() - b.createdDate.getTime())
+        //inverse
+        .reverse()
+        .map(DBFlip.toFlip)
     )
-      .sort((a, b) => a.createdDate.getTime() - b.createdDate.getTime())
-      .map(DBFlip.toFlip)
-      .map(DBFlip.toFlip)
   }
 }

@@ -1,5 +1,6 @@
 import { FlipService } from './flip.service'
 import { WizardService } from './wizard.service'
+import { Difficulty } from '../entities/difficulty.enum'
 import { Flip } from '../entities/flip.entity'
 import { BadRequestException, Inject, Injectable } from '@nestjs/common'
 
@@ -10,7 +11,13 @@ export class FlipWorkflowService {
     @Inject('WizardService') private wizardService: WizardService
   ) {}
 
-  async createFlip(flip: { knowledgeId?: string; statId?: string; wizardId: string }): Promise<Flip> {
+  async createFlip(flip: {
+    knowledgeId?: string
+    statId?: string
+    spellId?: string
+    wizardId: string
+    difficulty?: Difficulty
+  }): Promise<Flip> {
     const wizard = await this.wizardService.getWizardById(flip.wizardId)
     if (flip.knowledgeId) {
       const wizardKnowledge = wizard.knowledges.find(
@@ -29,7 +36,8 @@ export class FlipWorkflowService {
           wizardKnowledge.knowledge.name +
           ' [ ' +
           wizardKnowledge.level +
-          ' ] et obtient : '
+          ' ] et obtient : ',
+        difficulty: flip.difficulty ?? Difficulty.NORMAL
       })
     } else if (flip.statId) {
       const wizardStat = wizard.stats.find((wizardStat) => wizardStat.stat.id === flip.statId)
@@ -39,17 +47,40 @@ export class FlipWorkflowService {
       return this.flipService.createFlip({
         wizardName: wizard.name,
         flipModif: wizardStat.level,
+        flipText: wizard.name + ' ' + wizardStat.stat.flipText + ' [ ' + wizardStat.level + ' ] et obtient : ',
+        difficulty: flip.difficulty ?? Difficulty.NORMAL
+      })
+    } else if (flip.spellId) {
+      const wizardSpell = wizard.spells.find((wizardSpell) => wizardSpell.spell.id === flip.spellId)
+      if (!wizardSpell) {
+        throw new BadRequestException(wizard.name + ' does not have spell with id ' + flip.spellId)
+      }
+      return this.flipService.createFlip({
+        wizardName: wizard.name,
+        flipModif:
+          wizardSpell.spell.rank +
+          (wizard.stats.find((stat) => stat.stat.id === wizardSpell.spell.stat.id)?.level ?? 0),
         flipText:
           wizard.name +
-          ' ' +
-          wizardStat.stat.flipText +
-          wizardStat.stat.name +
+          ' lance le sort ' +
+          wizardSpell.spell.name +
           ' [ ' +
-          wizardStat.level +
-          ' ] et obtient : '
+          wizardSpell.spell.rank +
+          ' ] et obtient : ',
+        difficulty: this.adjustDifficulty(wizardSpell.difficulty, flip.difficulty)
       })
     } else {
       throw new BadRequestException('Invalid flip')
+    }
+  }
+
+  private adjustDifficulty(difficulty: Difficulty, difficultyAdjustment: Difficulty) {
+    if (difficulty === difficultyAdjustment) {
+      return difficulty
+    } else if (difficulty === Difficulty.NORMAL || difficultyAdjustment === Difficulty.NORMAL) {
+      return difficultyAdjustment
+    } else {
+      return Difficulty.NORMAL
     }
   }
 }

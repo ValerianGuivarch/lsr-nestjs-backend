@@ -31,17 +31,21 @@ import { SessionService } from './domain/services/SessionService'
 import { SkillService } from './domain/services/SkillService'
 import { FlipImplementation } from './hp/data/flip.implementation'
 import { KnowledgeImplementation } from './hp/data/knowledge.implementation'
+import { SpellImplementation } from './hp/data/spell.implementation'
 import { StatImplementation } from './hp/data/stat.implementation'
 import { WizardKnowledgeImplementation } from './hp/data/wizard-knowledge.implementation'
+import { WizardSpellImplementation } from './hp/data/wizard-spell.implementation'
 import { WizardStatImplementation } from './hp/data/wizard-stat.implementation'
 import { WizardImplementation } from './hp/data/wizard.implementation'
 import { FlipService } from './hp/domain/services/flip.service'
 import { FlipWorkflowService } from './hp/domain/services/flip.workflow-service'
 import { KnowledgeService } from './hp/domain/services/knowledge.service'
+import { SpellService } from './hp/domain/services/spell.service'
 import { StatService } from './hp/domain/services/stat.service'
 import { WizardService } from './hp/domain/services/wizard.service'
 import { FlipController } from './hp/web/http/api/flips/flip.controller'
 import { KnowledgeController } from './hp/web/http/api/knowledges/knowledges.controller'
+import { SpellController } from './hp/web/http/api/spells/spells.controller'
 import { StatController } from './hp/web/http/api/stats/stats.controller'
 import { WizardController } from './hp/web/http/api/wizards/wizard.controller'
 import { CharacterController } from './web/http/api/v1/characters/CharacterController'
@@ -99,6 +103,7 @@ import { TypeOrmModule } from '@nestjs/typeorm'
     MessageController,
     WizardController,
     KnowledgeController,
+    SpellController,
     StatController,
     FlipController
   ],
@@ -122,12 +127,17 @@ import { TypeOrmModule } from '@nestjs/typeorm'
     KnowledgeService,
     FlipService,
     FlipWorkflowService,
+    SpellService,
     InitDatabase,
     InitEntry,
     //    CharacterGateway,
     {
       provide: 'ICharacterProvider',
       useClass: DBCharacterProvider
+    },
+    {
+      provide: 'FlipService',
+      useClass: FlipService
     },
     {
       provide: 'FlipService',
@@ -210,8 +220,16 @@ import { TypeOrmModule } from '@nestjs/typeorm'
       useClass: WizardKnowledgeImplementation
     },
     {
-      provide: 'FlipProvider',
+      provide: 'IFlipProvider',
       useClass: FlipImplementation
+    },
+    {
+      provide: 'ISpellProvider',
+      useClass: SpellImplementation
+    },
+    {
+      provide: 'IWizardSpellProvider',
+      useClass: WizardSpellImplementation
     },
     ForestService
   ]

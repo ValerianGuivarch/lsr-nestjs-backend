@@ -1,4 +1,5 @@
 import { DBWizardKnowledge, DBWizardKnowledgeToCreate } from './wizard-knowledge.db'
+import { DBWizardSpell, DBWizardSpellToCreate } from './wizard-spell.db'
 import { DBWizardStat, DBWizardStatToCreate } from './wizard-stat.db'
 import { DBWizard, DBWizardToCreate, DBWizardToUpdate } from './wizard.db'
 import { ProviderErrors } from '../../data/errors/ProviderErrors'
@@ -16,7 +17,9 @@ export class WizardImplementation implements IWizardProvider {
     @InjectRepository(DBWizardStat, 'postgres')
     private readonly wizardStatRepository: Repository<DBWizardStat>,
     @InjectRepository(DBWizardKnowledge, 'postgres')
-    private readonly wizardKnowledgeRepository: Repository<DBWizardKnowledge>
+    private readonly wizardKnowledgeRepository: Repository<DBWizardKnowledge>,
+    @InjectRepository(DBWizardSpell, 'postgres')
+    private readonly wizardSpellRepository: Repository<DBWizardSpell>
   ) {}
 
   async create(wizard: WizardToCreate): Promise<Wizard> {
@@ -50,6 +53,17 @@ export class WizardImplementation implements IWizardProvider {
       const createdKnowledgeWizard = this.wizardKnowledgeRepository.create(knowledgeToCreate)
       createdKnowledgeWizard.wizard = savedWizard
       await this.wizardKnowledgeRepository.insert(createdKnowledgeWizard)
+    }
+    for (const spell of wizard.spells) {
+      const spellToCreate: DBWizardSpellToCreate = {
+        difficulty: spell.difficulty,
+        wizardId: savedWizard.id,
+        spellId: spell.spell.id,
+        xp: 0
+      }
+      const createdSpellWizard = this.wizardSpellRepository.create(spellToCreate)
+      createdSpellWizard.wizard = savedWizard
+      await this.wizardSpellRepository.insert(createdSpellWizard)
     }
     return this.findOneById(savedWizard.id)
   }

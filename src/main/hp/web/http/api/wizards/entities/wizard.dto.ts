@@ -1,4 +1,5 @@
 import { WizardKnowledgeDto } from './wizard-knowledge.dto'
+import { WizardSpellDto } from './wizard-spell.dto'
 import { WizardStatDto } from './wizard-stat.dto'
 import { Wizard, WizardName } from '../../../../../domain/entities/wizard.entity'
 import { ApiProperty } from '@nestjs/swagger'
@@ -38,6 +39,13 @@ export class WizardDto {
   knowledges: WizardKnowledgeDto[]
 
   @ApiProperty({
+    description: 'All wizard spells',
+    isArray: true,
+    type: WizardSpellDto
+  })
+  spells: WizardSpellDto[]
+
+  @ApiProperty({
     description: 'The wizard xp',
     type: Number
   })
@@ -50,6 +58,7 @@ export class WizardDto {
     this.stats = wizard.stats
     this.knowledges = wizard.knowledges
     this.xp = wizard.xp
+    this.spells = wizard.spells
   }
   static from(wizard: Wizard): WizardDto {
     return new WizardDto({
@@ -58,6 +67,7 @@ export class WizardDto {
       category: wizard.category,
       stats: wizard.stats.map(WizardStatDto.from),
       knowledges: wizard.knowledges.map(WizardKnowledgeDto.from),
+      spells: wizard.spells.map(WizardSpellDto.from),
       xp: wizard.xp
     })
   }

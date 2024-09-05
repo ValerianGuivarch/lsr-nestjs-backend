@@ -1,14 +1,5 @@
-import { DBStat } from './stat.db'
 import { Knowledge } from '../domain/entities/knowledge.entity'
-import {
-  Entity,
-  PrimaryGeneratedColumn,
-  Column,
-  CreateDateColumn,
-  UpdateDateColumn,
-  ManyToOne,
-  JoinColumn
-} from 'typeorm'
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm'
 
 @Entity()
 export class DBKnowledge {
@@ -24,22 +15,15 @@ export class DBKnowledge {
   @Column({ type: 'varchar', nullable: false })
   name: string
 
-  @ManyToOne(() => DBStat)
-  @JoinColumn({ name: 'statId' })
-  stat: DBStat
-
   @Column({ type: 'varchar', nullable: false, default: '' })
   flipText: string
 
-  static readonly RELATIONS = {
-    stat: true
-  }
+  static readonly RELATIONS = {}
 
   static toKnowledge(knowledge: DBKnowledge): Knowledge {
     return new Knowledge({
       id: knowledge.id,
       name: knowledge.name,
-      stat: DBStat.toStat(knowledge.stat),
       flipText: knowledge.flipText
     })
   }
