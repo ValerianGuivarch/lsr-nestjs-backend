@@ -1,18 +1,15 @@
 import { Knowledge } from '../domain/entities/knowledge.entity'
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm'
+import { Entity, Column, CreateDateColumn, UpdateDateColumn, PrimaryColumn } from 'typeorm'
 
 @Entity()
 export class DBKnowledge {
-  @PrimaryGeneratedColumn('uuid')
-  id: string
-
   @CreateDateColumn({ default: () => 'NOW()' })
   createdDate: Date
 
   @UpdateDateColumn({ default: () => 'NOW()' })
   updatedDate: Date
 
-  @Column({ type: 'varchar', nullable: false })
+  @PrimaryColumn({ type: 'varchar' })
   name: string
 
   @Column({ type: 'varchar', nullable: false, default: '' })
@@ -22,7 +19,6 @@ export class DBKnowledge {
 
   static toKnowledge(knowledge: DBKnowledge): Knowledge {
     return new Knowledge({
-      id: knowledge.id,
       name: knowledge.name,
       flipText: knowledge.flipText
     })

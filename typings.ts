@@ -1057,7 +1057,6 @@ export type Schema = {
   };
   'db_knowledge': {
     plain: {
-      'id': string;
       'createdDate': string;
       'updatedDate': string;
       'name': string;
@@ -1264,7 +1263,6 @@ export type Schema = {
   };
   'db_spell': {
     plain: {
-      'id': string;
       'createdDate': string;
       'updatedDate': string;
       'name': string;
@@ -1277,14 +1275,11 @@ export type Schema = {
       'knowledge': Schema['db_knowledge']['plain'] & Schema['db_knowledge']['nested'];
     };
     flat: {
-      'stat:id': string;
       'stat:createdDate': string;
       'stat:updatedDate': string;
       'stat:name': string;
-      'stat:color': string;
       'stat:order': number;
       'stat:flipText': string;
-      'knowledge:id': string;
       'knowledge:createdDate': string;
       'knowledge:updatedDate': string;
       'knowledge:name': string;
@@ -1293,11 +1288,9 @@ export type Schema = {
   };
   'db_stat': {
     plain: {
-      'id': string;
       'createdDate': string;
       'updatedDate': string;
       'name': string;
-      'color': string;
       'order': number;
       'flipText': string;
     };
@@ -1306,7 +1299,6 @@ export type Schema = {
   };
   'db_wizard': {
     plain: {
-      'id': string;
       'createdDate': string;
       'updatedDate': string;
       'name': string;
@@ -1321,26 +1313,24 @@ export type Schema = {
       'createdDate': string;
       'updatedDate': string;
       'level': number;
-      'wizardId': string;
-      'knowledgeId': string;
+      'wizardName': string;
+      'knowledgeName': string;
       'xp': number;
     };
     nested: {
-      'wizard': Schema['db_wizard']['plain'] & Schema['db_wizard']['nested'];
-      'knowledge': Schema['db_knowledge']['plain'] & Schema['db_knowledge']['nested'];
+      'db_wizard': Schema['db_wizard']['plain'] & Schema['db_wizard']['nested'];
+      'db_knowledge': Schema['db_knowledge']['plain'] & Schema['db_knowledge']['nested'];
     };
     flat: {
-      'wizard:id': string;
-      'wizard:createdDate': string;
-      'wizard:updatedDate': string;
-      'wizard:name': string;
-      'wizard:category': string;
-      'wizard:xp': number;
-      'knowledge:id': string;
-      'knowledge:createdDate': string;
-      'knowledge:updatedDate': string;
-      'knowledge:name': string;
-      'knowledge:flipText': string;
+      'db_wizard:createdDate': string;
+      'db_wizard:updatedDate': string;
+      'db_wizard:name': string;
+      'db_wizard:category': string;
+      'db_wizard:xp': number;
+      'db_knowledge:createdDate': string;
+      'db_knowledge:updatedDate': string;
+      'db_knowledge:name': string;
+      'db_knowledge:flipText': string;
     };
   };
   'db_wizard_spell': {
@@ -1348,40 +1338,35 @@ export type Schema = {
       'createdDate': string;
       'updatedDate': string;
       'difficulty': string;
-      'wizardId': string;
-      'spellId': string;
+      'wizardName': string;
+      'spellName': string;
       'xp': number;
     };
     nested: {
-      'wizard': Schema['db_wizard']['plain'] & Schema['db_wizard']['nested'];
-      'spell': Schema['db_spell']['plain'] & Schema['db_spell']['nested'];
+      'db_wizard': Schema['db_wizard']['plain'] & Schema['db_wizard']['nested'];
+      'db_spell': Schema['db_spell']['plain'] & Schema['db_spell']['nested'];
     };
     flat: {
-      'wizard:id': string;
-      'wizard:createdDate': string;
-      'wizard:updatedDate': string;
-      'wizard:name': string;
-      'wizard:category': string;
-      'wizard:xp': number;
-      'spell:id': string;
-      'spell:createdDate': string;
-      'spell:updatedDate': string;
-      'spell:name': string;
-      'spell:rank': number;
-      'spell:statId': string;
-      'spell:knowledgeId': string;
-      'spell:stat:id': string;
-      'spell:stat:createdDate': string;
-      'spell:stat:updatedDate': string;
-      'spell:stat:name': string;
-      'spell:stat:color': string;
-      'spell:stat:order': number;
-      'spell:stat:flipText': string;
-      'spell:knowledge:id': string;
-      'spell:knowledge:createdDate': string;
-      'spell:knowledge:updatedDate': string;
-      'spell:knowledge:name': string;
-      'spell:knowledge:flipText': string;
+      'db_wizard:createdDate': string;
+      'db_wizard:updatedDate': string;
+      'db_wizard:name': string;
+      'db_wizard:category': string;
+      'db_wizard:xp': number;
+      'db_spell:createdDate': string;
+      'db_spell:updatedDate': string;
+      'db_spell:name': string;
+      'db_spell:rank': number;
+      'db_spell:statId': string;
+      'db_spell:knowledgeId': string;
+      'db_spell:stat:createdDate': string;
+      'db_spell:stat:updatedDate': string;
+      'db_spell:stat:name': string;
+      'db_spell:stat:order': number;
+      'db_spell:stat:flipText': string;
+      'db_spell:knowledge:createdDate': string;
+      'db_spell:knowledge:updatedDate': string;
+      'db_spell:knowledge:name': string;
+      'db_spell:knowledge:flipText': string;
     };
   };
   'db_wizard_stat': {
@@ -1389,28 +1374,25 @@ export type Schema = {
       'createdDate': string;
       'updatedDate': string;
       'level': number;
-      'wizardId': string;
-      'statId': string;
+      'wizardName': string;
+      'statName': string;
       'xp': number;
     };
     nested: {
-      'wizard': Schema['db_wizard']['plain'] & Schema['db_wizard']['nested'];
-      'stat': Schema['db_stat']['plain'] & Schema['db_stat']['nested'];
+      'db_wizard': Schema['db_wizard']['plain'] & Schema['db_wizard']['nested'];
+      'db_stat': Schema['db_stat']['plain'] & Schema['db_stat']['nested'];
     };
     flat: {
-      'wizard:id': string;
-      'wizard:createdDate': string;
-      'wizard:updatedDate': string;
-      'wizard:name': string;
-      'wizard:category': string;
-      'wizard:xp': number;
-      'stat:id': string;
-      'stat:createdDate': string;
-      'stat:updatedDate': string;
-      'stat:name': string;
-      'stat:color': string;
-      'stat:order': number;
-      'stat:flipText': string;
+      'db_wizard:createdDate': string;
+      'db_wizard:updatedDate': string;
+      'db_wizard:name': string;
+      'db_wizard:category': string;
+      'db_wizard:xp': number;
+      'db_stat:createdDate': string;
+      'db_stat:updatedDate': string;
+      'db_stat:name': string;
+      'db_stat:order': number;
+      'db_stat:flipText': string;
     };
   };
   'Event': {

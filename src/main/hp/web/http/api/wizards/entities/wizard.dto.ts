@@ -6,13 +6,6 @@ import { ApiProperty } from '@nestjs/swagger'
 
 export class WizardDto {
   @ApiProperty({
-    description: 'The wizard uuid',
-    type: String,
-    format: 'uuid'
-  })
-  id: string
-
-  @ApiProperty({
     description: 'The wizard name',
     type: String
   })
@@ -52,7 +45,6 @@ export class WizardDto {
   xp: number
 
   constructor(wizard: WizardDto) {
-    this.id = wizard.id
     this.name = wizard.name
     this.category = wizard.category
     this.stats = wizard.stats
@@ -62,7 +54,6 @@ export class WizardDto {
   }
   static from(wizard: Wizard): WizardDto {
     return new WizardDto({
-      id: wizard.id,
       name: wizard.name,
       category: wizard.category,
       stats: wizard.stats.map(WizardStatDto.from),
@@ -73,4 +64,4 @@ export class WizardDto {
   }
 }
 
-export type WizardNameDto = Pick<WizardName, 'id' | 'name'>
+export type WizardNameDto = Pick<WizardName, 'name'>

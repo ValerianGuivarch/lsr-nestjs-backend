@@ -1,10 +1,9 @@
 import { ApiProperty } from '@nestjs/swagger'
-import { IsDefined, IsUUID } from 'class-validator'
+import { IsDefined } from 'class-validator'
 
 export class CreateWizardKnowledgeRequest {
-  @ApiProperty({ description: 'The class ID', type: String, format: 'uuid' })
-  @IsUUID()
-  id: string
+  @ApiProperty({ description: 'The knowledge name', type: String, format: 'varchar' })
+  name: string
 
   @ApiProperty({ description: 'The knowledge level', type: Number, format: 'int32' })
   @IsDefined()

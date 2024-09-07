@@ -7,7 +7,9 @@ export class WizardKnowledge {
 }
 
 export type WizardKnowledgeToCreate = Omit<WizardKnowledge, 'knowledge' | 'xp'> & {
-  knowledge: Pick<Knowledge, 'id'>
+  knowledge: Pick<Knowledge, 'name'>
 }
 
-export type WizardKnowledgeToUpdate = Pick<WizardKnowledge, 'level'>
+export type WizardKnowledgeToUpdate = Pick<WizardKnowledge, 'level'> & {
+  knowledgeName: string
+}

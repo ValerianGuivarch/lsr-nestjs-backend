@@ -1,10 +1,8 @@
 export class Knowledge {
-  id: string
   name: string
   flipText: string
 
-  constructor(knowledge: { id: string; name: string; flipText: string }) {
-    this.id = knowledge.id
+  constructor(knowledge: { name: string; flipText: string }) {
     this.name = knowledge.name
     this.flipText = knowledge.flipText
   }

@@ -14,18 +14,18 @@ export class DBWizardKnowledge {
   @Column({ type: 'integer', default: 1 })
   level: number
 
-  @PrimaryColumn({ type: 'uuid' })
-  wizardId: string
+  @PrimaryColumn({ type: 'varchar' })
+  wizardName: string
 
   @ManyToOne(() => DBWizard, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'wizardId' })
+  @JoinColumn({ name: 'wizardName' })
   wizard: DBWizard
 
   @PrimaryColumn({ type: 'uuid' })
-  knowledgeId: string
+  knowledgeName: string
 
   @ManyToOne(() => DBKnowledge, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'knowledgeId' })
+  @JoinColumn({ name: 'knowledgeName' })
   knowledge: DBKnowledge
 
   @Column({ type: 'integer', nullable: false, default: 0 })

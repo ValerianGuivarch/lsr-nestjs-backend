@@ -5,13 +5,6 @@ import { ApiProperty } from '@nestjs/swagger'
 
 export class SpellDto {
   @ApiProperty({
-    description: 'The spell uuid',
-    type: String,
-    format: 'uuid'
-  })
-  id: string
-
-  @ApiProperty({
     description: 'The spell name',
     type: String
   })
@@ -36,7 +29,6 @@ export class SpellDto {
   knowledge: KnowledgeDto
 
   constructor(spell: SpellDto) {
-    this.id = spell.id
     this.name = spell.name
     this.stat = spell.stat
     this.rank = spell.rank
@@ -44,7 +36,6 @@ export class SpellDto {
   }
   static from(spell: Spell): SpellDto {
     return new SpellDto({
-      id: spell.id,
       name: spell.name,
       rank: spell.rank,
       stat: StatDto.from(spell.stat),

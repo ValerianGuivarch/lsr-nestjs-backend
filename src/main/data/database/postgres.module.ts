@@ -24,10 +24,8 @@ import { DBSpell } from '../../hp/data/spell.db'
 import { DBStat } from '../../hp/data/stat.db'
 import { StatImplementation } from '../../hp/data/stat.implementation'
 import { DBWizardKnowledge } from '../../hp/data/wizard-knowledge.db'
-import { WizardKnowledgeImplementation } from '../../hp/data/wizard-knowledge.implementation'
 import { DBWizardSpell } from '../../hp/data/wizard-spell.db'
 import { DBWizardStat } from '../../hp/data/wizard-stat.db'
-import { WizardStatImplementation } from '../../hp/data/wizard-stat.implementation'
 import { DBWizard } from '../../hp/data/wizard.db'
 import { WizardImplementation } from '../../hp/data/wizard.implementation'
 import { DBConstellation } from '../elena/DBConstellation'
@@ -147,14 +145,6 @@ import { TypeOrmModule } from '@nestjs/typeorm'
       useClass: StatImplementation
     },
     {
-      provide: 'IWizardStatProvider',
-      useClass: WizardStatImplementation
-    },
-    {
-      provide: 'IWizardKnowledgeProvider',
-      useClass: WizardKnowledgeImplementation
-    },
-    {
       provide: 'IFlipProvider',
       useClass: FlipImplementation
     }
@@ -229,14 +219,6 @@ import { TypeOrmModule } from '@nestjs/typeorm'
     {
       provide: 'IStatProvider',
       useClass: StatImplementation
-    },
-    {
-      provide: 'IWizardStatProvider',
-      useClass: WizardStatImplementation
-    },
-    {
-      provide: 'IWizardKnowledgeProvider',
-      useClass: WizardKnowledgeImplementation
     },
     {
       provide: 'IFlipProvider',

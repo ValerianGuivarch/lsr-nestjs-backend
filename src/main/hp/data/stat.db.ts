@@ -1,22 +1,16 @@
 import { Stat } from '../domain/entities/stat.entity'
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm'
+import { Entity, Column, CreateDateColumn, UpdateDateColumn, PrimaryColumn } from 'typeorm'
 
 @Entity()
 export class DBStat {
-  @PrimaryGeneratedColumn('uuid')
-  id: string
-
   @CreateDateColumn({ default: () => 'NOW()' })
   createdDate: Date
 
   @UpdateDateColumn({ default: () => 'NOW()' })
   updatedDate: Date
 
-  @Column({ type: 'varchar', nullable: false })
+  @PrimaryColumn({ type: 'varchar' })
   name: string
-
-  @Column({ type: 'varchar', nullable: false })
-  color: string
 
   @Column({ type: 'int', default: 0 })
   order: number
@@ -28,9 +22,7 @@ export class DBStat {
 
   static toStat(stat: DBStat): Stat {
     return new Stat({
-      id: stat.id,
       name: stat.name,
-      color: stat.color,
       order: stat.order,
       flipText: stat.flipText
     })

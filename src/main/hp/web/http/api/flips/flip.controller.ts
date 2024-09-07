@@ -20,11 +20,13 @@ export class FlipController {
   @HttpCode(HttpStatus.CREATED)
   @Post('')
   async createNewFlip(@Body() request: CreateFlipRequest): Promise<FlipDto> {
+    console.log('request', JSON.stringify(request))
     return FlipDto.from(
       await this.flipWorkflowService.createFlip({
-        wizardId: request.wizardId,
-        knowledgeId: request.knowledgeId,
-        statId: request.statId
+        wizardName: request.wizardName,
+        knowledgeName: request.knowledgeName,
+        spellName: request.spellName,
+        statName: request.statName
       })
     )
   }

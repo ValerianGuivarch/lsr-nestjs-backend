@@ -7,6 +7,5 @@ export class WizardSpell {
   xp: number
 }
 export type WizardSpellToCreate = Omit<WizardSpell, 'spell' | 'xp'> & {
-  spell: Pick<Spell, 'id'>
+  spell: Pick<Spell, 'name'>
 }
-export type WizardSpellToUpdate = Pick<WizardSpell, 'difficulty'>

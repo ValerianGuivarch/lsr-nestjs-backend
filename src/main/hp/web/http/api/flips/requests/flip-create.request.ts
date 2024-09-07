@@ -2,17 +2,22 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
 import { IsOptional, IsString } from 'class-validator'
 
 export class CreateFlipRequest {
-  @ApiProperty({ description: 'The wizard id', type: String })
+  @ApiProperty({ description: 'The wizard name', type: String })
   @IsString()
-  wizardId: string
+  wizardName: string
 
-  @ApiPropertyOptional({ description: 'The knowledge id', type: String })
+  @ApiPropertyOptional({ description: 'The knowledge name', type: String })
   @IsString()
   @IsOptional()
-  knowledgeId?: string
+  knowledgeName?: string
 
-  @ApiPropertyOptional({ description: 'The stat id', type: String })
+  @ApiPropertyOptional({ description: 'The spell name', type: String })
   @IsString()
   @IsOptional()
-  statId?: string
+  spellName?: string
+
+  @ApiPropertyOptional({ description: 'The stat name', type: String })
+  @IsString()
+  @IsOptional()
+  statName?: string
 }

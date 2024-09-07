@@ -1,8 +1,9 @@
 import { WizardDto, WizardNameDto } from './entities/wizard.dto'
 import { CreateWizardRequest } from './requests/wizard-create.request'
+import { UpdateWizardRequest } from './requests/wizard-update.request'
 import { Wizard } from '../../../../domain/entities/wizard.entity'
 import { WizardService } from '../../../../domain/services/wizard.service'
-import { Body, Controller, Get, HttpCode, HttpStatus, Param, Post } from '@nestjs/common'
+import { Body, Controller, Get, HttpCode, HttpStatus, Param, Patch, Post } from '@nestjs/common'
 import { ApiBody, ApiCreatedResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger'
 
 @Controller('api/v1/hp/wizards')
@@ -29,23 +30,60 @@ export class WizardController {
           stats: request.stats.map((stat) => ({
             level: stat.level,
             stat: {
-              id: stat.id
+              name: stat.name
             }
           })),
           knowledges: request.knowledges.map((knowledge) => ({
             level: knowledge.level,
             knowledge: {
-              id: knowledge.id
+              name: knowledge.name
             }
           })),
           spells: request.spells.map((spell) => ({
             difficulty: spell.difficulty,
             spell: {
-              id: spell.id
+              name: spell.name
             }
           }))
         })
       )
+    )
+  }
+
+  @ApiCreatedResponse({
+    description: 'Create a new wizard for account'
+  })
+  @ApiBody({
+    description: 'Create a new wizard',
+    required: true
+  })
+  @Patch(':wizardName')
+  async updateNewWizard(
+    @Param('wizardName') wizardName: string,
+    @Body() request: UpdateWizardRequest
+  ): Promise<WizardDto> {
+    console.log('request', JSON.stringify(request))
+    return WizardDto.from(
+      await this.wizardService.updateWizard({
+        wizardName: wizardName,
+        wizard: {
+          category: request.category,
+          statsToUpdate: request.stats.map((stat) => ({
+            statName: stat.name,
+            level: stat.level
+          })),
+          knowledgesToUpdate: request.knowledges.map((knowledge) => ({
+            knowledgeName: knowledge.name,
+            level: knowledge.level
+          })),
+          spellsToUpdate: request.spells.map((spell) => ({
+            difficulty: spell.difficulty,
+            spell: {
+              name: spell.name
+            }
+          }))
+        }
+      })
     )
   }
 
@@ -57,7 +95,6 @@ export class WizardController {
   async getAllWizardsName(): Promise<WizardNameDto[]> {
     const wizards = await this.wizardService.getAllWizardNames()
     return wizards.map((wizard) => ({
-      id: wizard.id,
       name: wizard.name
     }))
   }
@@ -68,7 +105,7 @@ export class WizardController {
   @HttpCode(HttpStatus.OK)
   @Get(':wizardId')
   async getWizardById(@Param('wizardId') wizardId: string): Promise<WizardDto> {
-    return WizardDto.from(await this.wizardService.getWizardById(wizardId))
+    return WizardDto.from(await this.wizardService.getWizardByName(wizardId))
   }
 
   @ApiOkResponse({

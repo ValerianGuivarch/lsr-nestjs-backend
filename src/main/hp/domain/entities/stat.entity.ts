@@ -1,14 +1,10 @@
 export class Stat {
-  id: string
   name: string
-  color: string
   order: number
   flipText: string
 
-  constructor(stat: { id: string; name: string; color: string; order: number; flipText: string }) {
-    this.id = stat.id
+  constructor(stat: { name: string; order: number; flipText: string }) {
     this.name = stat.name
-    this.color = stat.color
     this.order = stat.order
     this.flipText = stat.flipText
   }

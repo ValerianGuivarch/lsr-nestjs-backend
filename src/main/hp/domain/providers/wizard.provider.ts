@@ -2,8 +2,7 @@ import { Wizard, WizardName, WizardToCreate, WizardToUpdate } from '../entities/
 
 export interface IWizardProvider {
   create(wizard: WizardToCreate): Promise<Wizard>
-  findOneById(id: string): Promise<Wizard>
   findOneByName(name: string): Promise<Wizard>
   findAllNames(): Promise<WizardName[]>
-  update(p: { wizardId: string; wizard: Partial<WizardToUpdate> }): Promise<Wizard>
+  update(p: { wizardName: string; wizard: Partial<WizardToUpdate> }): Promise<Wizard>
 }

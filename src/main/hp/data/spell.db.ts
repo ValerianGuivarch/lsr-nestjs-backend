@@ -1,28 +1,17 @@
 import { DBKnowledge } from './knowledge.db'
 import { DBStat } from './stat.db'
 import { Spell } from '../domain/entities/spell.entity'
-import {
-  Entity,
-  PrimaryGeneratedColumn,
-  Column,
-  CreateDateColumn,
-  UpdateDateColumn,
-  ManyToOne,
-  JoinColumn
-} from 'typeorm'
+import { Entity, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn, PrimaryColumn } from 'typeorm'
 
 @Entity()
 export class DBSpell {
-  @PrimaryGeneratedColumn('uuid')
-  id: string
-
   @CreateDateColumn({ default: () => 'NOW()' })
   createdDate: Date
 
   @UpdateDateColumn({ default: () => 'NOW()' })
   updatedDate: Date
 
-  @Column({ type: 'varchar', nullable: false })
+  @PrimaryColumn({ type: 'varchar' })
   name: string
 
   @Column({ type: 'int', nullable: false, default: 0 })
@@ -43,7 +32,6 @@ export class DBSpell {
 
   static toSpell(spell: DBSpell): Spell {
     return new Spell({
-      id: spell.id,
       name: spell.name,
       knowledge: spell.knowledge,
       stat: spell.stat,

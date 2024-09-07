@@ -2,20 +2,17 @@ import { DBWizardKnowledge } from './wizard-knowledge.db'
 import { DBWizardSpell } from './wizard-spell.db'
 import { DBWizardStat } from './wizard-stat.db'
 import { Wizard } from '../domain/entities/wizard.entity'
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, OneToMany, UpdateDateColumn } from 'typeorm'
+import { Entity, Column, CreateDateColumn, OneToMany, UpdateDateColumn, PrimaryColumn } from 'typeorm'
 
 @Entity()
 export class DBWizard {
-  @PrimaryGeneratedColumn('uuid')
-  id: string
-
   @CreateDateColumn({ default: () => 'NOW()' })
   createdDate: Date
 
   @UpdateDateColumn({ default: () => 'NOW()' })
   updatedDate: Date
 
-  @Column({ type: 'varchar', nullable: false })
+  @PrimaryColumn({ type: 'varchar' })
   name: string
 
   @Column({ type: 'varchar', nullable: false })
@@ -48,7 +45,6 @@ export class DBWizard {
 
   static toWizard(wizard: DBWizard): Wizard {
     return new Wizard({
-      id: wizard.id,
       name: wizard.name,
       category: wizard.category,
       stats: wizard.wizardStats.map(DBWizardStat.toWizardStat),

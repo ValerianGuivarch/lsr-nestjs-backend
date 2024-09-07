@@ -33,9 +33,6 @@ import { FlipImplementation } from './hp/data/flip.implementation'
 import { KnowledgeImplementation } from './hp/data/knowledge.implementation'
 import { SpellImplementation } from './hp/data/spell.implementation'
 import { StatImplementation } from './hp/data/stat.implementation'
-import { WizardKnowledgeImplementation } from './hp/data/wizard-knowledge.implementation'
-import { WizardSpellImplementation } from './hp/data/wizard-spell.implementation'
-import { WizardStatImplementation } from './hp/data/wizard-stat.implementation'
 import { WizardImplementation } from './hp/data/wizard.implementation'
 import { FlipService } from './hp/domain/services/flip.service'
 import { FlipWorkflowService } from './hp/domain/services/flip.workflow-service'
@@ -212,24 +209,12 @@ import { TypeOrmModule } from '@nestjs/typeorm'
       useClass: StatImplementation
     },
     {
-      provide: 'IWizardStatProvider',
-      useClass: WizardStatImplementation
-    },
-    {
-      provide: 'IWizardKnowledgeProvider',
-      useClass: WizardKnowledgeImplementation
-    },
-    {
       provide: 'IFlipProvider',
       useClass: FlipImplementation
     },
     {
       provide: 'ISpellProvider',
       useClass: SpellImplementation
-    },
-    {
-      provide: 'IWizardSpellProvider',
-      useClass: WizardSpellImplementation
     },
     ForestService
   ]

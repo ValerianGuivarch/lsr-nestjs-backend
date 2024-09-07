@@ -15,18 +15,18 @@ export class DBWizardSpell {
   @Column({ type: String, nullable: false, default: 'NORMAL' })
   difficulty: string
 
-  @PrimaryColumn({ type: 'uuid' })
-  wizardId: string
+  @PrimaryColumn({ type: 'varchar' })
+  wizardName: string
 
   @ManyToOne(() => DBWizard, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'wizardId' })
+  @JoinColumn({ name: 'wizardName' })
   wizard: DBWizard
 
-  @PrimaryColumn({ type: 'uuid' })
-  spellId: string
+  @PrimaryColumn({ type: 'varchar' })
+  spellName: string
 
   @ManyToOne(() => DBSpell, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'spellId' })
+  @JoinColumn({ name: 'spellName' })
   spell: DBSpell
 
   @Column({ type: 'integer', nullable: false, default: 0 })

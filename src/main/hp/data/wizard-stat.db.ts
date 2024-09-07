@@ -14,18 +14,18 @@ export class DBWizardStat {
   @Column({ type: 'integer', default: 1 })
   level: number
 
-  @PrimaryColumn({ type: 'uuid' })
-  wizardId: string
+  @PrimaryColumn({ type: 'varchar' })
+  wizardName: string
 
   @ManyToOne(() => DBWizard, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'wizardId' })
+  @JoinColumn({ name: 'wizardName' })
   wizard: DBWizard
 
-  @PrimaryColumn({ type: 'uuid' })
-  statId: string
+  @PrimaryColumn({ type: 'varchar' })
+  statName: string
 
   @ManyToOne(() => DBStat, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'statId' })
+  @JoinColumn({ name: 'statName' })
   stat: DBStat
 
   @Column({ type: 'integer', nullable: false, default: 0 })

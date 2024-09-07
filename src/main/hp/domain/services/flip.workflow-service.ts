@@ -12,19 +12,19 @@ export class FlipWorkflowService {
   ) {}
 
   async createFlip(flip: {
-    knowledgeId?: string
-    statId?: string
-    spellId?: string
-    wizardId: string
+    knowledgeName?: string
+    statName?: string
+    spellName?: string
+    wizardName: string
     difficulty?: Difficulty
   }): Promise<Flip> {
-    const wizard = await this.wizardService.getWizardById(flip.wizardId)
-    if (flip.knowledgeId) {
+    const wizard = await this.wizardService.getWizardByName(flip.wizardName)
+    if (flip.knowledgeName) {
       const wizardKnowledge = wizard.knowledges.find(
-        (wizardKnowledge) => wizardKnowledge.knowledge.id === flip.knowledgeId
+        (wizardKnowledge) => wizardKnowledge.knowledge.name === flip.knowledgeName
       )
       if (!wizardKnowledge) {
-        throw new BadRequestException(wizard.name + ' does not have knowledge with id ' + flip.knowledgeId)
+        throw new BadRequestException(wizard.name + ' does not have knowledge with name ' + flip.knowledgeName)
       }
       return this.flipService.createFlip({
         wizardName: wizard.name,
@@ -39,10 +39,10 @@ export class FlipWorkflowService {
           ' ] et obtient : ',
         difficulty: flip.difficulty ?? Difficulty.NORMAL
       })
-    } else if (flip.statId) {
-      const wizardStat = wizard.stats.find((wizardStat) => wizardStat.stat.id === flip.statId)
+    } else if (flip.statName) {
+      const wizardStat = wizard.stats.find((wizardStat) => wizardStat.stat.name === flip.statName)
       if (!wizardStat) {
-        throw new BadRequestException(wizard.name + ' does not have stat with id ' + flip.statId)
+        throw new BadRequestException(wizard.name + ' does not have stat with name ' + flip.statName)
       }
       return this.flipService.createFlip({
         wizardName: wizard.name,
@@ -50,16 +50,16 @@ export class FlipWorkflowService {
         flipText: wizard.name + ' ' + wizardStat.stat.flipText + ' [ ' + wizardStat.level + ' ] et obtient : ',
         difficulty: flip.difficulty ?? Difficulty.NORMAL
       })
-    } else if (flip.spellId) {
-      const wizardSpell = wizard.spells.find((wizardSpell) => wizardSpell.spell.id === flip.spellId)
+    } else if (flip.spellName) {
+      const wizardSpell = wizard.spells.find((wizardSpell) => wizardSpell.spell.name === flip.spellName)
       if (!wizardSpell) {
-        throw new BadRequestException(wizard.name + ' does not have spell with id ' + flip.spellId)
+        throw new BadRequestException(wizard.name + ' does not have spell with name ' + flip.spellName)
       }
       return this.flipService.createFlip({
         wizardName: wizard.name,
         flipModif:
           wizardSpell.spell.rank +
-          (wizard.stats.find((stat) => stat.stat.id === wizardSpell.spell.stat.id)?.level ?? 0),
+          (wizard.stats.find((stat) => stat.stat.name === wizardSpell.spell.stat.name)?.level ?? 0),
         flipText:
           wizard.name +
           ' lance le sort ' +

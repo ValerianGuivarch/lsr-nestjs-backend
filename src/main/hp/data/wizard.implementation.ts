@@ -36,8 +36,8 @@ export class WizardImplementation implements IWizardProvider {
     for (const stat of wizard.stats) {
       const statToCreate: DBWizardStatToCreate = {
         level: stat.level,
-        wizardId: savedWizard.id,
-        statId: stat.stat.id,
+        wizardName: savedWizard.name,
+        statName: stat.stat.name,
         xp: 0
       }
       const createdStatWizard = this.wizardStatRepository.create(statToCreate)
@@ -46,39 +46,25 @@ export class WizardImplementation implements IWizardProvider {
     for (const knowledge of wizard.knowledges) {
       const knowledgeToCreate: DBWizardKnowledgeToCreate = {
         level: knowledge.level,
-        wizardId: savedWizard.id,
-        knowledgeId: knowledge.knowledge.id,
+        wizardName: savedWizard.name,
+        knowledgeName: knowledge.knowledge.name,
         xp: 0
       }
       const createdKnowledgeWizard = this.wizardKnowledgeRepository.create(knowledgeToCreate)
-      createdKnowledgeWizard.wizard = savedWizard
-      await this.wizardKnowledgeRepository.insert(createdKnowledgeWizard)
+      await this.wizardKnowledgeRepository.save(createdKnowledgeWizard)
     }
     for (const spell of wizard.spells) {
       const spellToCreate: DBWizardSpellToCreate = {
         difficulty: spell.difficulty,
-        wizardId: savedWizard.id,
-        spellId: spell.spell.id,
+        wizardName: savedWizard.name,
+        spellName: spell.spell.name,
         xp: 0
       }
       const createdSpellWizard = this.wizardSpellRepository.create(spellToCreate)
       createdSpellWizard.wizard = savedWizard
       await this.wizardSpellRepository.insert(createdSpellWizard)
     }
-    return this.findOneById(savedWizard.id)
-  }
-
-  async findOneById(id: string): Promise<Wizard> {
-    const wizard = await this.wizardRepository.findOne({
-      where: {
-        id: id
-      },
-      relations: DBWizard.RELATIONS
-    })
-    if (!wizard) {
-      throw ProviderErrors.EntityNotFound(DBWizard.name)
-    }
-    return DBWizard.toWizard(wizard)
+    return this.findOneByName(savedWizard.name)
   }
 
   async findOneByName(name: string): Promise<Wizard> {
@@ -96,20 +82,52 @@ export class WizardImplementation implements IWizardProvider {
 
   async findAllNames(): Promise<WizardName[]> {
     const wizards = this.wizardRepository.find()
-    return wizards.then((wizards) => wizards.map((wizard) => ({ id: wizard.id, name: wizard.name })))
+    return wizards.then((wizards) => wizards.map((wizard) => ({ name: wizard.name })))
   }
 
-  async update(p: { wizardId: string; wizard: Partial<WizardToUpdate> }): Promise<Wizard> {
+  async update(p: { wizardName: string; wizard: Partial<WizardToUpdate> }): Promise<Wizard> {
     const toUpdate: Partial<DBWizardToUpdate> = {
       updatedDate: new Date(),
       category: p.wizard.category
     }
     await this.wizardRepository.update(
       {
-        id: p.wizardId
+        name: p.wizardName
       },
       toUpdate
     )
-    return await this.findOneById(p.wizardId)
+    const savedWizard = await this.findOneByName(p.wizardName)
+
+    for (const stat of p.wizard.statsToUpdate) {
+      const statToCreate: DBWizardStatToCreate = {
+        level: stat.level,
+        wizardName: savedWizard.name,
+        statName: stat.statName,
+        xp: 0
+      }
+      const createdStatWizard = this.wizardStatRepository.create(statToCreate)
+      await this.wizardStatRepository.save(createdStatWizard)
+    }
+    for (const knowledge of p.wizard.knowledgesToUpdate) {
+      const knowledgeToCreate: DBWizardKnowledgeToCreate = {
+        level: knowledge.level,
+        wizardName: savedWizard.name,
+        knowledgeName: knowledge.knowledgeName,
+        xp: 0
+      }
+      const createdKnowledgeWizard = this.wizardKnowledgeRepository.create(knowledgeToCreate)
+      await this.wizardKnowledgeRepository.save(createdKnowledgeWizard)
+    }
+    for (const spell of p.wizard.spellsToUpdate) {
+      const spellToCreate: DBWizardSpellToCreate = {
+        difficulty: spell.difficulty,
+        wizardName: savedWizard.name,
+        spellName: spell.spell.name,
+        xp: 0
+      }
+      const createdSpellWizard = this.wizardSpellRepository.create(spellToCreate)
+      await this.wizardSpellRepository.save(createdSpellWizard)
+    }
+    return await this.findOneByName(p.wizardName)
   }
 }

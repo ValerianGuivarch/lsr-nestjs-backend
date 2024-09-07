@@ -1,9 +1,8 @@
-import { WizardKnowledge, WizardKnowledgeToCreate } from './wizard-knowledge.entity'
+import { WizardKnowledge, WizardKnowledgeToCreate, WizardKnowledgeToUpdate } from './wizard-knowledge.entity'
 import { WizardSpell, WizardSpellToCreate } from './wizard-spell.entity'
-import { WizardStat, WizardStatToCreate } from './wizard-stat.entity'
+import { WizardStat, WizardStatToCreate, WizardStatToUpdate } from './wizard-stat.entity'
 
 export class Wizard {
-  id: string
   name: string
   category: string
   stats: WizardStat[]
@@ -12,7 +11,6 @@ export class Wizard {
   xp: number
 
   constructor(wizard: {
-    id: string
     name: string
     category: string
     stats: WizardStat[]
@@ -20,7 +18,6 @@ export class Wizard {
     spells: WizardSpell[]
     xp: number
   }) {
-    this.id = wizard.id
     this.name = wizard.name
     this.category = wizard.category
     this.stats = wizard.stats
@@ -47,12 +44,16 @@ export class Wizard {
   }
 }
 
-export type WizardToCreate = Omit<Wizard, 'id' | 'stats' | 'knowledges' | 'spells'> & {
+export type WizardToCreate = Omit<Wizard, 'stats' | 'knowledges' | 'spells'> & {
   stats: WizardStatToCreate[]
   knowledges: WizardKnowledgeToCreate[]
   spells: WizardSpellToCreate[]
 }
 
-export type WizardToUpdate = Pick<Wizard, 'category' | 'xp'>
+export type WizardToUpdate = Pick<Wizard, 'category'> & {
+  statsToUpdate: WizardStatToUpdate[]
+  knowledgesToUpdate: WizardKnowledgeToUpdate[]
+  spellsToUpdate: WizardSpellToCreate[]
+}
 
-export type WizardName = Pick<Wizard, 'id' | 'name'>
+export type WizardName = Pick<Wizard, 'name'>
