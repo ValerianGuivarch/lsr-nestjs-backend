@@ -18,6 +18,7 @@ import { DBSkill } from './skills/DBSkill'
 import { DBSkillProvider } from './skills/DBSkillProvider'
 import { DBFlip } from '../../hp/data/flip.db'
 import { FlipImplementation } from '../../hp/data/flip.implementation'
+import { DBHouse } from '../../hp/data/house.db'
 import { DBKnowledge } from '../../hp/data/knowledge.db'
 import { KnowledgeImplementation } from '../../hp/data/knowledge.implementation'
 import { DBSpell } from '../../hp/data/spell.db'
@@ -69,6 +70,7 @@ import { TypeOrmModule } from '@nestjs/typeorm'
         DBStat,
         DBWizardStat,
         DBKnowledge,
+        DBHouse,
         DBWizardKnowledge,
         DBFlip
       ],

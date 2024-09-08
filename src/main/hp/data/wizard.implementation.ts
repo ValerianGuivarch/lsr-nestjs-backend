@@ -25,8 +25,14 @@ export class WizardImplementation implements IWizardProvider {
   async create(wizard: WizardToCreate): Promise<Wizard> {
     const toCreate: DBWizardToCreate = {
       name: wizard.name,
+      familyName: wizard.familyName,
       category: wizard.category,
       xp: 0,
+      houseName: wizard.houseName,
+      baguette: '',
+      coupDePouce: '',
+      crochePatte: '',
+      text: '',
       createdDate: new Date(),
       updatedDate: new Date()
     }

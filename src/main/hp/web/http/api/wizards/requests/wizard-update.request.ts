@@ -1,7 +1,7 @@
 import { CreateWizardKnowledgeRequest } from './wizard-knowledge-create.request'
 import { CreateWizardSpellRequest } from './wizard-spell-create.request'
 import { CreateWizardStatRequest } from './wizard-stat-create.request'
-import { ApiProperty } from '@nestjs/swagger'
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
 import { Type } from 'class-transformer'
 import { IsDefined, ValidateNested } from 'class-validator'
 
@@ -27,4 +27,7 @@ export class UpdateWizardRequest {
   @Type(() => CreateWizardSpellRequest)
   @ValidateNested({ each: true })
   spells: CreateWizardSpellRequest[]
+
+  @ApiPropertyOptional({ description: 'The wizard text', type: String })
+  text?: string
 }

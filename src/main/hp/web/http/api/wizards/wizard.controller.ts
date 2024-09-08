@@ -25,7 +25,9 @@ export class WizardController {
     return WizardDto.from(
       await this.wizardService.createWizard(
         Wizard.toWizardToCreate({
+          houseName: request.houseName,
           name: request.name,
+          familyName: request.familyName ?? '',
           category: request.category,
           stats: request.stats.map((stat) => ({
             level: stat.level,
@@ -67,6 +69,7 @@ export class WizardController {
       await this.wizardService.updateWizard({
         wizardName: wizardName,
         wizard: {
+          text: request.text ?? '',
           category: request.category,
           statsToUpdate: request.stats.map((stat) => ({
             statName: stat.name,

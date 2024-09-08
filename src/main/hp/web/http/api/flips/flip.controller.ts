@@ -19,16 +19,15 @@ export class FlipController {
   })
   @HttpCode(HttpStatus.CREATED)
   @Post('')
-  async createNewFlip(@Body() request: CreateFlipRequest): Promise<FlipDto> {
+  async createNewFlip(@Body() request: CreateFlipRequest): Promise<void> {
     console.log('request', JSON.stringify(request))
-    return FlipDto.from(
-      await this.flipWorkflowService.createFlip({
-        wizardName: request.wizardName,
-        knowledgeName: request.knowledgeName,
-        spellName: request.spellName,
-        statName: request.statName
-      })
-    )
+    await this.flipWorkflowService.createFlip({
+      wizardName: request.wizardName,
+      knowledgeName: request.knowledgeName,
+      spellName: request.spellName,
+      statName: request.statName,
+      difficulty: request.difficulty
+    })
   }
 
   @ApiOkResponse({

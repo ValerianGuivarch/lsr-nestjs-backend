@@ -1,5 +1,6 @@
+import { Difficulty } from '../../../../../domain/entities/difficulty.enum'
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
-import { IsOptional, IsString } from 'class-validator'
+import { IsEnum, IsOptional, IsString } from 'class-validator'
 
 export class CreateFlipRequest {
   @ApiProperty({ description: 'The wizard name', type: String })
@@ -20,4 +21,8 @@ export class CreateFlipRequest {
   @IsString()
   @IsOptional()
   statName?: string
+
+  @ApiProperty({ description: 'The difficulty', enumName: 'Difficulty' })
+  @IsEnum(Difficulty)
+  difficulty: Difficulty
 }

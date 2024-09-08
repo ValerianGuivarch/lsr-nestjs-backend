@@ -19,8 +19,10 @@ export class FlipImplementation implements IFlipProvider {
       wizardName: flip.wizardName,
       text: flip.text,
       result: flip.result,
+      baseBis: flip.baseBis,
       modif: flip.modif,
-      base: flip.base
+      base: flip.base,
+      difficulty: flip.difficulty
     }
     return this.flipRepository.save(toCreate).then(DBFlip.toFlip)
   }

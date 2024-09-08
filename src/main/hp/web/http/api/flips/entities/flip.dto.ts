@@ -1,3 +1,4 @@
+import { Difficulty } from '../../../../../domain/entities/difficulty.enum'
 import { Flip } from '../../../../../domain/entities/flip.entity'
 import { ApiProperty } from '@nestjs/swagger'
 
@@ -28,6 +29,12 @@ export class FlipDto {
   result: number
 
   @ApiProperty({
+    description: 'The flip baseBis',
+    type: Number
+  })
+  baseBis: number
+
+  @ApiProperty({
     description: 'The flip modif',
     type: Number
   })
@@ -39,6 +46,12 @@ export class FlipDto {
   })
   base: number
 
+  @ApiProperty({
+    description: 'The flip difficulty',
+    enumName: 'Difficulty'
+  })
+  difficulty: Difficulty
+
   constructor(flip: FlipDto) {
     this.id = flip.id
     this.wizardName = flip.wizardName
@@ -46,6 +59,8 @@ export class FlipDto {
     this.result = flip.result
     this.base = flip.base
     this.modif = flip.modif
+    this.baseBis = flip.baseBis
+    this.difficulty = flip.difficulty
   }
   static from(flip: Flip): FlipDto {
     return new FlipDto({
@@ -54,7 +69,9 @@ export class FlipDto {
       text: flip.text,
       result: flip.result,
       base: flip.base,
-      modif: flip.modif
+      modif: flip.modif,
+      baseBis: flip.baseBis,
+      difficulty: flip.difficulty
     })
   }
 }

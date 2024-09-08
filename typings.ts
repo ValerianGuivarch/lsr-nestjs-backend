@@ -162,6 +162,13 @@ export type DbFlipFilter = TPaginatedFilter<Schema, 'db_flip'>;
 export type DbFlipSortClause = TSortClause<Schema, 'db_flip'>;
 export type DbFlipAggregation = TAggregation<Schema, 'db_flip'>;
 
+export type DbHouseCustomizer = CollectionCustomizer<Schema, 'db_house'>;
+export type DbHouseRecord = TPartialRow<Schema, 'db_house'>;
+export type DbHouseConditionTree = TConditionTree<Schema, 'db_house'>;
+export type DbHouseFilter = TPaginatedFilter<Schema, 'db_house'>;
+export type DbHouseSortClause = TSortClause<Schema, 'db_house'>;
+export type DbHouseAggregation = TAggregation<Schema, 'db_house'>;
+
 export type DbKnowledgeCustomizer = CollectionCustomizer<Schema, 'db_knowledge'>;
 export type DbKnowledgeRecord = TPartialRow<Schema, 'db_knowledge'>;
 export type DbKnowledgeConditionTree = TConditionTree<Schema, 'db_knowledge'>;
@@ -1048,9 +1055,25 @@ export type Schema = {
       'text': string;
       'wizardName': string;
       'result': number;
+      'baseBis': number;
       'base': number;
       'modif': number;
       'difficulty': string;
+      'xpOk': boolean;
+      'spellId': string;
+      'knowledgeId': string;
+      'statId': string;
+      'success': boolean;
+    };
+    nested: {};
+    flat: {};
+  };
+  'db_house': {
+    plain: {
+      'createdDate': string;
+      'updatedDate': string;
+      'name': string;
+      'points': number;
     };
     nested: {};
     flat: {};
@@ -1304,9 +1327,22 @@ export type Schema = {
       'name': string;
       'category': string;
       'xp': number;
+      'houseName': string;
+      'baguette': string;
+      'coupDePouce': string;
+      'crochePatte': string;
+      'text': string;
+      'familyName': string;
     };
-    nested: {};
-    flat: {};
+    nested: {
+      'db_house': Schema['db_house']['plain'] & Schema['db_house']['nested'];
+    };
+    flat: {
+      'db_house:createdDate': string;
+      'db_house:updatedDate': string;
+      'db_house:name': string;
+      'db_house:points': number;
+    };
   };
   'db_wizard_knowledge': {
     plain: {
@@ -1327,6 +1363,16 @@ export type Schema = {
       'db_wizard:name': string;
       'db_wizard:category': string;
       'db_wizard:xp': number;
+      'db_wizard:houseName': string;
+      'db_wizard:baguette': string;
+      'db_wizard:coupDePouce': string;
+      'db_wizard:crochePatte': string;
+      'db_wizard:text': string;
+      'db_wizard:familyName': string;
+      'db_wizard:db_house:createdDate': string;
+      'db_wizard:db_house:updatedDate': string;
+      'db_wizard:db_house:name': string;
+      'db_wizard:db_house:points': number;
       'db_knowledge:createdDate': string;
       'db_knowledge:updatedDate': string;
       'db_knowledge:name': string;
@@ -1352,6 +1398,16 @@ export type Schema = {
       'db_wizard:name': string;
       'db_wizard:category': string;
       'db_wizard:xp': number;
+      'db_wizard:houseName': string;
+      'db_wizard:baguette': string;
+      'db_wizard:coupDePouce': string;
+      'db_wizard:crochePatte': string;
+      'db_wizard:text': string;
+      'db_wizard:familyName': string;
+      'db_wizard:db_house:createdDate': string;
+      'db_wizard:db_house:updatedDate': string;
+      'db_wizard:db_house:name': string;
+      'db_wizard:db_house:points': number;
       'db_spell:createdDate': string;
       'db_spell:updatedDate': string;
       'db_spell:name': string;
@@ -1388,6 +1444,16 @@ export type Schema = {
       'db_wizard:name': string;
       'db_wizard:category': string;
       'db_wizard:xp': number;
+      'db_wizard:houseName': string;
+      'db_wizard:baguette': string;
+      'db_wizard:coupDePouce': string;
+      'db_wizard:crochePatte': string;
+      'db_wizard:text': string;
+      'db_wizard:familyName': string;
+      'db_wizard:db_house:createdDate': string;
+      'db_wizard:db_house:updatedDate': string;
+      'db_wizard:db_house:name': string;
+      'db_wizard:db_house:points': number;
       'db_stat:createdDate': string;
       'db_stat:updatedDate': string;
       'db_stat:name': string;

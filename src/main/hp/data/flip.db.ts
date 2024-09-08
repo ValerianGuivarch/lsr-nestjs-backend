@@ -22,6 +22,9 @@ export class DBFlip {
   @Column({ type: 'int', nullable: false })
   result: number
 
+  @Column({ type: 'int', nullable: true })
+  baseBis?: number
+
   @Column({ type: 'int', nullable: false, default: 0 })
   base: number
 
@@ -30,6 +33,21 @@ export class DBFlip {
 
   @Column({ type: 'varchar', nullable: false, default: 'NORMAL' })
   difficulty: string
+
+  @Column({ type: 'boolean', nullable: false, default: false })
+  xpOk: boolean
+
+  @Column({ type: 'varchar', nullable: true })
+  spellId?: string
+
+  @Column({ type: 'boolean', nullable: false, default: false })
+  success: boolean
+
+  @Column({ type: 'varchar', nullable: true })
+  knowledgeId?: string
+
+  @Column({ type: 'varchar', nullable: true })
+  statId?: string
 
   static readonly RELATIONS = {}
 
@@ -40,8 +58,14 @@ export class DBFlip {
       wizardName: flip.wizardName,
       result: flip.result,
       base: flip.base,
+      baseBis: flip.baseBis,
       modif: flip.modif,
-      difficulty: Difficulty[flip.difficulty]
+      difficulty: Difficulty[flip.difficulty],
+      xpOk: flip.xpOk,
+      spellId: flip.spellId,
+      knowledgeId: flip.knowledgeId,
+      statId: flip.statId,
+      success: flip.success
     })
   }
 }

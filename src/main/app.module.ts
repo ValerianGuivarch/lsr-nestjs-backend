@@ -30,21 +30,25 @@ import { RollService } from './domain/services/RollService'
 import { SessionService } from './domain/services/SessionService'
 import { SkillService } from './domain/services/SkillService'
 import { FlipImplementation } from './hp/data/flip.implementation'
+import { HouseImplementation } from './hp/data/house.implementation'
 import { KnowledgeImplementation } from './hp/data/knowledge.implementation'
 import { SpellImplementation } from './hp/data/spell.implementation'
 import { StatImplementation } from './hp/data/stat.implementation'
 import { WizardImplementation } from './hp/data/wizard.implementation'
 import { FlipService } from './hp/domain/services/flip.service'
 import { FlipWorkflowService } from './hp/domain/services/flip.workflow-service'
+import { HouseService } from './hp/domain/services/house.service'
 import { KnowledgeService } from './hp/domain/services/knowledge.service'
 import { SpellService } from './hp/domain/services/spell.service'
 import { StatService } from './hp/domain/services/stat.service'
 import { WizardService } from './hp/domain/services/wizard.service'
 import { FlipController } from './hp/web/http/api/flips/flip.controller'
+import { HouseController } from './hp/web/http/api/houses/houses.controller'
 import { KnowledgeController } from './hp/web/http/api/knowledges/knowledges.controller'
 import { SpellController } from './hp/web/http/api/spells/spells.controller'
 import { StatController } from './hp/web/http/api/stats/stats.controller'
 import { WizardController } from './hp/web/http/api/wizards/wizard.controller'
+import { FlipGateway } from './hp/web/http/websocket/api/flips/FlipGateway'
 import { CharacterController } from './web/http/api/v1/characters/CharacterController'
 import { ConstellationController } from './web/http/api/v1/elena/ConstellationController'
 import { JoueuseController } from './web/http/api/v1/elena/JoueuseController'
@@ -90,6 +94,7 @@ import { TypeOrmModule } from '@nestjs/typeorm'
     MjGateway,
     CharacterGateway,
     RollGateway,
+    FlipGateway,
     SpeakingGateway,
     MjController,
     CharacterController,
@@ -100,6 +105,7 @@ import { TypeOrmModule } from '@nestjs/typeorm'
     MessageController,
     WizardController,
     KnowledgeController,
+    HouseController,
     SpellController,
     StatController,
     FlipController
@@ -122,6 +128,7 @@ import { TypeOrmModule } from '@nestjs/typeorm'
     WizardService,
     StatService,
     KnowledgeService,
+    HouseService,
     FlipService,
     FlipWorkflowService,
     SpellService,
@@ -205,6 +212,10 @@ import { TypeOrmModule } from '@nestjs/typeorm'
       useClass: FlipImplementation
     },
     {
+      provide: 'IHouseProvider',
+      useClass: HouseImplementation
+    },
+    {
       provide: 'IStatProvider',
       useClass: StatImplementation
     },
@@ -215,6 +226,10 @@ import { TypeOrmModule } from '@nestjs/typeorm'
     {
       provide: 'ISpellProvider',
       useClass: SpellImplementation
+    },
+    {
+      provide: 'IHouseProvider',
+      useClass: HouseImplementation
     },
     ForestService
   ]
