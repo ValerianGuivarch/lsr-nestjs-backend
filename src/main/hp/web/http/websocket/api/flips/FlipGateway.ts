@@ -15,7 +15,7 @@ export class FlipGateway {
   constructor(private flipService: FlipService) {}
   @Get('')
   @ApiOkResponse()
-  @Sse('')
+  @Sse('flips')
   getFlips(): Observable<string> {
     // eslint-disable-next-line no-magic-numbers
     return this.flipService.getFlipsChangeObservable().pipe(

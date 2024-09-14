@@ -1333,6 +1333,9 @@ export type Schema = {
       'crochePatte': string;
       'text': string;
       'familyName': string;
+      'traits': string;
+      'pv': number;
+      'pvMax': number;
     };
     nested: {
       'db_house': Schema['db_house']['plain'] & Schema['db_house']['nested'];
@@ -1369,6 +1372,9 @@ export type Schema = {
       'db_wizard:crochePatte': string;
       'db_wizard:text': string;
       'db_wizard:familyName': string;
+      'db_wizard:traits': string;
+      'db_wizard:pv': number;
+      'db_wizard:pvMax': number;
       'db_wizard:db_house:createdDate': string;
       'db_wizard:db_house:updatedDate': string;
       'db_wizard:db_house:name': string;
@@ -1404,6 +1410,9 @@ export type Schema = {
       'db_wizard:crochePatte': string;
       'db_wizard:text': string;
       'db_wizard:familyName': string;
+      'db_wizard:traits': string;
+      'db_wizard:pv': number;
+      'db_wizard:pvMax': number;
       'db_wizard:db_house:createdDate': string;
       'db_wizard:db_house:updatedDate': string;
       'db_wizard:db_house:name': string;
@@ -1450,6 +1459,9 @@ export type Schema = {
       'db_wizard:crochePatte': string;
       'db_wizard:text': string;
       'db_wizard:familyName': string;
+      'db_wizard:traits': string;
+      'db_wizard:pv': number;
+      'db_wizard:pvMax': number;
       'db_wizard:db_house:createdDate': string;
       'db_wizard:db_house:updatedDate': string;
       'db_wizard:db_house:name': string;

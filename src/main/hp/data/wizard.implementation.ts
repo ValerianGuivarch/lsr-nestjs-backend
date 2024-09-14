@@ -28,6 +28,8 @@ export class WizardImplementation implements IWizardProvider {
       familyName: wizard.familyName,
       category: wizard.category,
       xp: 0,
+      pv: 0,
+      pvMax: 0,
       houseName: wizard.houseName,
       baguette: '',
       coupDePouce: '',
@@ -91,10 +93,65 @@ export class WizardImplementation implements IWizardProvider {
     return wizards.then((wizards) => wizards.map((wizard) => ({ name: wizard.name })))
   }
 
+  async levelUpStat(wizardName: string, statName: string): Promise<void> {
+    const wizard = await this.findOneByName(wizardName)
+    const stat = wizard.stats.find((stat) => stat.stat.name === statName)
+    if (!stat) {
+      throw ProviderErrors.EntityNotFound(DBWizardStat.name)
+    }
+    const updatedStat = {
+      xp: stat.xp + 1
+    }
+    await this.wizardStatRepository.update(
+      {
+        wizardName: wizardName,
+        statName: stat.stat.name
+      },
+      updatedStat
+    )
+  }
+
+  async levelUpKnowledge(wizardName: string, knowledgeName: string): Promise<void> {
+    const wizard = await this.findOneByName(wizardName)
+    const knowledge = wizard.knowledges.find((knowledge) => knowledge.knowledge.name === knowledgeName)
+    if (!knowledge) {
+      throw ProviderErrors.EntityNotFound(DBWizardKnowledge.name)
+    }
+    const updatedKnowledge = {
+      xp: knowledge.xp + 1
+    }
+    await this.wizardKnowledgeRepository.update(
+      {
+        wizardName: wizardName,
+        knowledgeName: knowledge.knowledge.name
+      },
+      updatedKnowledge
+    )
+  }
+
+  async levelUpSpell(wizardName: string, spellName: string): Promise<void> {
+    const wizard = await this.findOneByName(wizardName)
+    const spell = wizard.spells.find((spell) => spell.spell.name === spellName)
+    if (!spell) {
+      throw ProviderErrors.EntityNotFound(DBWizardSpell.name)
+    }
+    const updatedSpell = {
+      xp: spell.xp + 1
+    }
+    await this.wizardSpellRepository.update(
+      {
+        wizardName: wizardName,
+        spellName: spell.spell.name
+      },
+      updatedSpell
+    )
+  }
+
   async update(p: { wizardName: string; wizard: Partial<WizardToUpdate> }): Promise<Wizard> {
     const toUpdate: Partial<DBWizardToUpdate> = {
       updatedDate: new Date(),
-      category: p.wizard.category
+      category: p.wizard.category,
+      text: p.wizard.text
     }
     await this.wizardRepository.update(
       {
@@ -104,7 +161,7 @@ export class WizardImplementation implements IWizardProvider {
     )
     const savedWizard = await this.findOneByName(p.wizardName)
 
-    for (const stat of p.wizard.statsToUpdate) {
+    for (const stat of p.wizard.statsToUpdate ?? []) {
       const statToCreate: DBWizardStatToCreate = {
         level: stat.level,
         wizardName: savedWizard.name,
@@ -114,7 +171,7 @@ export class WizardImplementation implements IWizardProvider {
       const createdStatWizard = this.wizardStatRepository.create(statToCreate)
       await this.wizardStatRepository.save(createdStatWizard)
     }
-    for (const knowledge of p.wizard.knowledgesToUpdate) {
+    for (const knowledge of p.wizard.knowledgesToUpdate ?? []) {
       const knowledgeToCreate: DBWizardKnowledgeToCreate = {
         level: knowledge.level,
         wizardName: savedWizard.name,
@@ -124,7 +181,7 @@ export class WizardImplementation implements IWizardProvider {
       const createdKnowledgeWizard = this.wizardKnowledgeRepository.create(knowledgeToCreate)
       await this.wizardKnowledgeRepository.save(createdKnowledgeWizard)
     }
-    for (const spell of p.wizard.spellsToUpdate) {
+    for (const spell of p.wizard.spellsToUpdate ?? []) {
       const spellToCreate: DBWizardSpellToCreate = {
         difficulty: spell.difficulty,
         wizardName: savedWizard.name,

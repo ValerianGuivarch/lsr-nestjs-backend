@@ -52,6 +52,18 @@ export class FlipDto {
   })
   difficulty: Difficulty
 
+  @ApiProperty({
+    description: 'The flip success',
+    type: Boolean
+  })
+  success: boolean
+
+  @ApiProperty({
+    description: 'The flip xpOk',
+    type: Boolean
+  })
+  xpOk: boolean
+
   constructor(flip: FlipDto) {
     this.id = flip.id
     this.wizardName = flip.wizardName
@@ -61,17 +73,21 @@ export class FlipDto {
     this.modif = flip.modif
     this.baseBis = flip.baseBis
     this.difficulty = flip.difficulty
+    this.success = flip.success
+    this.xpOk = flip.xpOk
   }
   static from(flip: Flip): FlipDto {
     return new FlipDto({
       id: flip.id,
       wizardName: flip.wizardName,
+      xpOk: flip.xpOk,
       text: flip.text,
       result: flip.result,
       base: flip.base,
       modif: flip.modif,
       baseBis: flip.baseBis,
-      difficulty: flip.difficulty
+      difficulty: flip.difficulty,
+      success: flip.success
     })
   }
 }

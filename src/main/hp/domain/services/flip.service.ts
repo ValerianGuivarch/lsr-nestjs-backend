@@ -11,6 +11,9 @@ export class FlipService {
   constructor(@Inject('IFlipProvider') private flipProvider: IFlipProvider) {}
 
   async createFlip(flip: {
+    spellId?: string
+    knowledgeId?: string
+    statId?: string
     flipText: string
     flipModif: number
     wizardName: string
@@ -18,6 +21,9 @@ export class FlipService {
     seuil: number
   }): Promise<void> {
     const flipRolling = this.flipRolling(flip.flipModif)
+    console.log(
+      'flipRollingSuccess' + flipRolling.result + 'seuil' + flip.seuil + 'result' + (flipRolling.result >= flip.seuil)
+    )
     if (flip.difficulty === Difficulty.NORMAL) {
       await this.flipProvider.create(
         Flip.toFlipToCreate({
@@ -28,7 +34,10 @@ export class FlipService {
           base: flipRolling.rolling,
           modif: flip.flipModif,
           wizardName: flip.wizardName,
-          success: flipRolling.result >= flip.seuil
+          success: flipRolling.result >= flip.seuil,
+          statId: flip.statId,
+          knowledgeId: flip.knowledgeId,
+          spellId: flip.spellId
         })
       )
     } else {
@@ -61,7 +70,7 @@ export class FlipService {
   }
 
   getFlipsChangeObservable(): Observable<Flip[]> {
-    console.log('getFlipsChangeObservable')
+    console.log('flipsChangeSubject.asObservable' + this.flipsChangeSubject.asObservable())
     return this.flipsChangeSubject.asObservable()
   }
 
@@ -76,5 +85,16 @@ export class FlipService {
       // eslint-disable-next-line no-magic-numbers
       result: rolling === 1 ? 1 : rolling === 20 ? 20 : rolling + flipModif
     }
+  }
+
+  async getFlipById(flipId: string): Promise<Flip> {
+    return await this.flipProvider.findById(flipId)
+  }
+
+  async levelUpFlipDone(flip: Flip): Promise<void> {
+    await this.flipProvider.update(flip.id, {
+      ...flip,
+      xpOk: true
+    })
   }
 }

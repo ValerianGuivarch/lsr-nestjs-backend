@@ -34,6 +34,12 @@ export class DBWizard {
   @Column({ type: 'int', nullable: false, default: 0 })
   xp: number
 
+  @Column({ type: 'int', nullable: false, default: 0 })
+  pv: number
+
+  @Column({ type: 'int', nullable: false, default: 0 })
+  pvMax: number
+
   @Column({ type: 'varchar', nullable: true })
   houseName?: string
 
@@ -52,6 +58,9 @@ export class DBWizard {
 
   @Column({ type: 'varchar', nullable: false, default: '' })
   text: string
+
+  @Column({ type: 'varchar', nullable: false, default: '' })
+  traits: string
 
   @OneToMany(() => DBWizardStat, (wizardStat) => wizardStat.wizard, { cascade: true })
   wizardStats: DBWizardStat[]
@@ -85,15 +94,21 @@ export class DBWizard {
       knowledges: wizard.wizardKnowledges.map(DBWizardKnowledge.toWizardKnowledge),
       spells: wizard.wizardSpells.map(DBWizardSpell.toWizardSpell),
       xp: wizard.xp,
+      pv: wizard.pv,
+      pvMax: wizard.pvMax,
       house: wizard.house ? DBHouse.toHouse(wizard.house) : undefined,
       baguette: wizard.baguette,
       coupDePouce: wizard.coupDePouce,
       crochePatte: wizard.crochePatte,
-      text: wizard.text
+      text: wizard.text,
+      traits: wizard.traits.split(';')
     })
   }
 }
 
-export type DBWizardToCreate = Omit<DBWizard, 'id' | 'wizardStats' | 'wizardKnowledges' | 'wizardSpells' | 'house'>
+export type DBWizardToCreate = Omit<
+  DBWizard,
+  'id' | 'wizardStats' | 'wizardKnowledges' | 'wizardSpells' | 'house' | 'traits'
+>
 
 export type DBWizardToUpdate = Omit<DBWizard, 'id' | 'createdDate' | 'wizardStats' | 'wizardKnowledges' | 'house'>

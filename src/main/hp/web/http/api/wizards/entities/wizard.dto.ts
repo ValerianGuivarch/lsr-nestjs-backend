@@ -3,7 +3,7 @@ import { WizardSpellDto } from './wizard-spell.dto'
 import { WizardStatDto } from './wizard-stat.dto'
 import { House } from '../../../../../domain/entities/house.entity'
 import { Wizard, WizardName } from '../../../../../domain/entities/wizard.entity'
-import { ApiProperty } from '@nestjs/swagger'
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
 
 export class WizardDto {
   @ApiProperty({
@@ -52,6 +52,18 @@ export class WizardDto {
   xp: number
 
   @ApiProperty({
+    description: 'The wizard pv',
+    type: Number
+  })
+  pv: number
+
+  @ApiProperty({
+    description: 'The wizard pvMax',
+    type: Number
+  })
+  pvMax: number
+
+  @ApiPropertyOptional({
     description: 'The wizard house',
     type: House
   })
@@ -81,6 +93,13 @@ export class WizardDto {
   })
   text: string
 
+  @ApiProperty({
+    description: 'The wizard traits',
+    isArray: true,
+    type: String
+  })
+  traits: string[]
+
   constructor(wizard: WizardDto) {
     this.name = wizard.name
     this.familyName = wizard.familyName
@@ -88,12 +107,15 @@ export class WizardDto {
     this.stats = wizard.stats
     this.knowledges = wizard.knowledges
     this.xp = wizard.xp
+    this.pv = wizard.pv
+    this.pvMax = wizard.pvMax
     this.spells = wizard.spells
     this.house = wizard.house
     this.baguette = wizard.baguette
     this.coupDePouce = wizard.coupDePouce
     this.crochePatte = wizard.crochePatte
     this.text = wizard.text
+    this.traits = wizard.traits
   }
   static from(wizard: Wizard): WizardDto {
     return new WizardDto({
@@ -104,11 +126,14 @@ export class WizardDto {
       knowledges: wizard.knowledges.map(WizardKnowledgeDto.from),
       spells: wizard.spells.map(WizardSpellDto.from),
       xp: wizard.xp,
+      pv: wizard.pv,
+      pvMax: wizard.pvMax,
       house: wizard.house,
       baguette: wizard.baguette,
       coupDePouce: wizard.coupDePouce,
       crochePatte: wizard.crochePatte,
-      text: wizard.text
+      text: wizard.text,
+      traits: wizard.traits
     })
   }
 }

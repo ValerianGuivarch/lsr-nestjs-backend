@@ -129,7 +129,6 @@ import { TypeOrmModule } from '@nestjs/typeorm'
     StatService,
     KnowledgeService,
     HouseService,
-    FlipService,
     FlipWorkflowService,
     SpellService,
     InitDatabase,
@@ -143,10 +142,7 @@ import { TypeOrmModule } from '@nestjs/typeorm'
       provide: 'FlipService',
       useClass: FlipService
     },
-    {
-      provide: 'FlipService',
-      useClass: FlipService
-    },
+    FlipService,
     {
       provide: 'WizardService',
       useClass: WizardService

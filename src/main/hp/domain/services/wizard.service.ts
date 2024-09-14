@@ -21,4 +21,16 @@ export class WizardService {
   async updateWizard(p: { wizardName: string; wizard: WizardToUpdate }): Promise<Wizard> {
     return await this.wizardProvider.update({ wizardName: p.wizardName, wizard: p.wizard })
   }
+
+  async levelUpStat(wizardName: string, statId: string): Promise<void> {
+    return await this.wizardProvider.levelUpStat(wizardName, statId)
+  }
+
+  async levelUpKnowledge(wizardName: string, knowledgeId: string): Promise<void> {
+    return await this.wizardProvider.levelUpKnowledge(wizardName, knowledgeId)
+  }
+
+  async levelUpSpell(wizardName: string, spellId: string): Promise<void> {
+    return await this.wizardProvider.levelUpSpell(wizardName, spellId)
+  }
 }

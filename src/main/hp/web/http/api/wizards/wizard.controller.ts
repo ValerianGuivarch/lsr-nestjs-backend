@@ -65,21 +65,23 @@ export class WizardController {
     @Body() request: UpdateWizardRequest
   ): Promise<WizardDto> {
     console.log('request', JSON.stringify(request))
+    const wizard = await this.wizardService.getWizardByName(wizardName)
     return WizardDto.from(
       await this.wizardService.updateWizard({
         wizardName: wizardName,
         wizard: {
-          text: request.text ?? '',
-          category: request.category,
-          statsToUpdate: request.stats.map((stat) => ({
+          text: request.text ?? wizard.text,
+          category: request.category ?? wizard.category,
+          statsToUpdate: request.stats?.map((stat) => ({
             statName: stat.name,
             level: stat.level
           })),
-          knowledgesToUpdate: request.knowledges.map((knowledge) => ({
+          knowledgesToUpdate: request.knowledges?.map((knowledge) => ({
             knowledgeName: knowledge.name,
             level: knowledge.level
           })),
-          spellsToUpdate: request.spells.map((spell) => ({
+          pv: request.pv ?? wizard.pv,
+          spellsToUpdate: request.spells?.map((spell) => ({
             difficulty: spell.difficulty,
             spell: {
               name: spell.name

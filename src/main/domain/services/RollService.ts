@@ -615,6 +615,7 @@ export class RollService {
   }
 
   getRollsChangeObservable(): Observable<Roll[]> {
+    console.log('rollsChangeSubject.asObservable' + this.rollsChangeSubject.asObservable())
     return this.rollsChangeSubject.asObservable()
   }
 

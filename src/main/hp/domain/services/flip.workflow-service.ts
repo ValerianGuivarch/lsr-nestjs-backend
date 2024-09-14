@@ -42,7 +42,8 @@ export class FlipWorkflowService {
           wizardKnowledge.level +
           ' ] et obtient : ',
         difficulty: flip.difficulty ?? Difficulty.NORMAL,
-        seuil: 12
+        seuil: 12,
+        knowledgeId: wizardKnowledge.knowledge.name
       })
     } else if (flip.statName) {
       const wizardStat = wizard.stats.find((wizardStat) => wizardStat.stat.name === flip.statName)
@@ -55,7 +56,8 @@ export class FlipWorkflowService {
         flipText:
           wizard.name + ' ' + wizardStat.stat.flipText + textDifficulty + ' [ ' + wizardStat.level + ' ] et obtient : ',
         difficulty: flip.difficulty ?? Difficulty.NORMAL,
-        seuil: 12
+        seuil: 12,
+        statId: wizardStat.stat.name
       })
     } else if (flip.spellName) {
       const wizardSpell = wizard.spells.find((wizardSpell) => wizardSpell.spell.name === flip.spellName)
@@ -76,7 +78,8 @@ export class FlipWorkflowService {
           wizardSpell.spell.rank +
           ' ] et obtient : ',
         difficulty: this.adjustDifficulty(wizardSpell.difficulty, flip.difficulty),
-        seuil: wizardSpell.spell.rank + 10
+        seuil: wizardSpell.spell.rank + 10,
+        spellId: wizardSpell.spell.name
       })
     } else {
       throw new BadRequestException('Invalid flip')
@@ -92,5 +95,22 @@ export class FlipWorkflowService {
     } else {
       return Difficulty.NORMAL
     }
+  }
+
+  async levelUpFlip(flipId: string) {
+    const flip = await this.flipService.getFlipById(flipId)
+    if (flip.xpOk || flip.success) {
+      return
+    }
+    if (flip.statId) {
+      await this.wizardService.levelUpStat(flip.wizardName, flip.statId)
+    } else if (flip.knowledgeId) {
+      await this.wizardService.levelUpKnowledge(flip.wizardName, flip.knowledgeId)
+    } else if (flip.spellId) {
+      await this.wizardService.levelUpSpell(flip.wizardName, flip.spellId)
+    } else {
+      throw new BadRequestException('Invalid flip')
+    }
+    await this.flipService.levelUpFlipDone(flip)
   }
 }

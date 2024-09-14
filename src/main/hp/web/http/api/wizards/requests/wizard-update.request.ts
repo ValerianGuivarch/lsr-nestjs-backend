@@ -1,33 +1,38 @@
 import { CreateWizardKnowledgeRequest } from './wizard-knowledge-create.request'
 import { CreateWizardSpellRequest } from './wizard-spell-create.request'
 import { CreateWizardStatRequest } from './wizard-stat-create.request'
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
+import { ApiPropertyOptional } from '@nestjs/swagger'
 import { Type } from 'class-transformer'
-import { IsDefined, ValidateNested } from 'class-validator'
+import { IsOptional, ValidateNested } from 'class-validator'
 
 export class UpdateWizardRequest {
-  @ApiProperty({ description: 'The wizard category', type: String })
-  @IsDefined()
-  category: string
+  @ApiPropertyOptional({ description: 'The wizard category', type: String })
+  @IsOptional()
+  category?: string
 
-  @ApiProperty({ description: 'All wizard stats', isArray: true, type: CreateWizardStatRequest })
-  @IsDefined()
+  @ApiPropertyOptional({ description: 'All wizard stats', isArray: true, type: CreateWizardStatRequest })
+  @IsOptional()
   @Type(() => CreateWizardStatRequest)
   @ValidateNested({ each: true })
-  stats: CreateWizardStatRequest[]
+  stats?: CreateWizardStatRequest[]
 
-  @ApiProperty({ description: 'All wizard knowledges', isArray: true, type: CreateWizardKnowledgeRequest })
-  @IsDefined()
+  @ApiPropertyOptional({ description: 'All wizard knowledges', isArray: true, type: CreateWizardKnowledgeRequest })
+  @IsOptional()
   @Type(() => CreateWizardKnowledgeRequest)
   @ValidateNested({ each: true })
-  knowledges: CreateWizardKnowledgeRequest[]
+  knowledges?: CreateWizardKnowledgeRequest[]
 
-  @ApiProperty({ description: 'All wizard spells', isArray: true, type: CreateWizardSpellRequest })
-  @IsDefined()
+  @ApiPropertyOptional({ description: 'All wizard spells', isArray: true, type: CreateWizardSpellRequest })
+  @IsOptional()
   @Type(() => CreateWizardSpellRequest)
   @ValidateNested({ each: true })
-  spells: CreateWizardSpellRequest[]
+  spells?: CreateWizardSpellRequest[]
 
   @ApiPropertyOptional({ description: 'The wizard text', type: String })
+  @IsOptional()
   text?: string
+
+  @ApiPropertyOptional({ description: 'The wizard pv', type: Number })
+  @IsOptional()
+  pv: number
 }

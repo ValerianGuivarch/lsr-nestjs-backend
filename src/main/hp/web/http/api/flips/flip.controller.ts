@@ -2,7 +2,7 @@ import { FlipDto } from './entities/flip.dto'
 import { CreateFlipRequest } from './requests/flip-create.request'
 import { FlipService } from '../../../../domain/services/flip.service'
 import { FlipWorkflowService } from '../../../../domain/services/flip.workflow-service'
-import { Body, Controller, Get, HttpCode, HttpStatus, Post } from '@nestjs/common'
+import { Body, Controller, Get, HttpCode, HttpStatus, Param, Post, Put } from '@nestjs/common'
 import { ApiBody, ApiCreatedResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger'
 
 @Controller('api/v1/hp/flips')
@@ -28,6 +28,11 @@ export class FlipController {
       statName: request.statName,
       difficulty: request.difficulty
     })
+  }
+
+  @Put('level-up/:flipId')
+  async levelUpFlip(@Param('flipId') flipId: string): Promise<void> {
+    await this.flipWorkflowService.levelUpFlip(flipId)
   }
 
   @ApiOkResponse({
