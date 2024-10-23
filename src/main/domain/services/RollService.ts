@@ -470,6 +470,7 @@ export class RollService {
       successBis: successBis,
       juge12Bis: juge12Bis,
       juge34Bis: juge34Bis,
+      avantage: p.avantage,
       resistRoll: p.resistRoll,
       picture: p.character.isInvocation
         ? p.character.picture
