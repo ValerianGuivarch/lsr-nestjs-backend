@@ -43,4 +43,9 @@ export class SendRollRequest {
   @ApiProperty()
   @IsString()
   readonly skillId: string
+
+  @ApiPropertyOptional({ required: false })
+  @IsOptional()
+  @IsBoolean()
+  readonly avantage?: boolean
 }

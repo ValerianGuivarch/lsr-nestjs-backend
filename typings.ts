@@ -1129,6 +1129,11 @@ export type Schema = {
       'precision': string;
       'pictureUrl': string;
       'dark': boolean;
+      'resultBis': string;
+      'successBis': number;
+      'juge12Bis': number;
+      'juge34Bis': number;
+      'avantage': boolean;
     };
     nested: {
       'db_character': Schema['db_character']['plain'] & Schema['db_character']['nested'];

@@ -10,6 +10,7 @@ import { DisplayCategory } from '../models/characters/DisplayCategory'
 import { Roll } from '../models/roll/Roll'
 import { SuccessCalculation } from '../models/roll/SuccessCalculation'
 import { NatureLevel } from '../models/session/NatureLevel'
+import { Skill } from '../models/skills/Skill'
 import { SkillStat } from '../models/skills/SkillStat'
 import { IApotheoseProvider } from '../providers/IApotheoseProvider'
 import { IBloodlineProvider } from '../providers/IBloodlineProvider'
@@ -90,6 +91,7 @@ export class RollService {
     empiriqueRoll?: string
     resistRoll?: string
     affect: boolean
+    avantage?: boolean
   }): Promise<void> {
     const skill = await this.skillService.findSkillById(p.skillId)
     const apotheose = p.character.currentApotheose
@@ -145,6 +147,7 @@ export class RollService {
     let useProficiency = p.proficiency
     let pictureUrl: string | undefined = undefined
     const result: number[] = []
+    const resultBis: number[] = []
     let data = ''
     if (skill.stat === SkillStat.EMPIRIQUE) {
       try {
@@ -212,117 +215,16 @@ export class RollService {
         diceNumber = 9
       }
     }
-    let success: number | null = null
-    let juge12: number | null = null
-    let juge34: number | null = null
-    if (skill.successCalculation !== SuccessCalculation.AUCUN) {
-      success = 0
-      juge12 = 0
-      juge34 = 0
-    }
-    const fake = (await this.sessionProvider.getSession()).fake
-    if (fake !== 0 && diceNumber === 1 && diceValue === 103) {
-      result.push(fake)
-      skill.precision += '\n' + (await this.skillService.findSkillByArcaneId(fake)).name
-    } else if (fake !== 0 && diceValue === 10) {
-      result.push(fake)
-    } else {
-      for (let i = 0; i < diceNumber; i++) {
-        const dice = RollService.randomIntFromInterval(1, diceValue)
-        if (skill.successCalculation !== SuccessCalculation.AUCUN) {
-          if (p.character.name === 'vernet' && i === 0) {
-            if (
-              dice === RollService.ONE_SUCCESS_DICE_12 ||
-              dice === RollService.ONE_SUCCESS_DICE_34 ||
-              dice === RollService.ONE_SUCCESS_DICE_56
-            ) {
-              success = (success ?? 0) + RollService.ONE_SUCCESS_EFFECT
-            }
-            if (
-              dice === RollService.TWO_SUCCESS_DICE_12 ||
-              dice === RollService.TWO_SUCCESS_DICE_34 ||
-              dice === RollService.TWO_SUCCESS_DICE_56
-            ) {
-              success = (success ?? 0) + RollService.TWO_SUCCESS_EFFECT
-            }
-          } else {
-            if (dice === RollService.ONE_SUCCESS_DICE_56) {
-              success = (success ?? 0) + RollService.ONE_SUCCESS_EFFECT
-            }
-            if (dice === RollService.TWO_SUCCESS_DICE_56) {
-              success = (success ?? 0) + RollService.TWO_SUCCESS_EFFECT
-            }
-            if (dice === RollService.ONE_SUCCESS_DICE_12) {
-              juge12 = (juge12 ?? 0) + RollService.ONE_SUCCESS_EFFECT
-            }
-            if (dice === RollService.TWO_SUCCESS_DICE_12) {
-              juge12 = (juge12 ?? 0) + RollService.TWO_SUCCESS_EFFECT
-            }
-            if (dice === RollService.ONE_SUCCESS_DICE_34) {
-              juge34 = (juge34 ?? 0) + RollService.ONE_SUCCESS_EFFECT
-            }
-            if (dice === RollService.TWO_SUCCESS_DICE_34) {
-              juge34 = (juge34 ?? 0) + RollService.TWO_SUCCESS_EFFECT
-            }
-          }
-        }
-        result.push(dice)
-        if (diceValue === 103 || diceValue === 104) {
-          skill.precision += '\n' + (await this.skillService.findSkillByArcaneId(dice)).name
-        }
-      }
-    }
-    if (skill.successCalculation === SuccessCalculation.SIMPLE_PLUS_1) {
-      success = (success ?? 0) + 1
-      juge12 = (juge12 ?? 0) + 1
-      juge34 = (juge34 ?? 0) + 1
-    }
-
-    if (skill.successCalculation === SuccessCalculation.DIVISE) {
-      // eslint-disable-next-line no-magic-numbers
-      success = Math.ceil(success / 2)
-      // eslint-disable-next-line no-magic-numbers
-      juge12 = Math.ceil(juge12 / 2)
-      // eslint-disable-next-line no-magic-numbers
-      juge34 = Math.ceil(juge34 / 2)
-    }
-
-    if (skill.successCalculation === SuccessCalculation.DIVISE_PLUS_1) {
-      // eslint-disable-next-line no-magic-numbers
-      success = Math.ceil(success / 2) + 1
-      // eslint-disable-next-line no-magic-numbers
-      juge12 = Math.ceil(juge12 / 2) + 1
-      // eslint-disable-next-line no-magic-numbers
-      juge34 = Math.ceil(juge34 / 2) + 1
-    }
-
-    if (skill.successCalculation === SuccessCalculation.DOUBLE) {
-      // eslint-disable-next-line no-magic-numbers
-      success = Math.ceil(success * 2)
-      // eslint-disable-next-line no-magic-numbers
-      juge12 = Math.ceil(juge12 * 2)
-      // eslint-disable-next-line no-magic-numbers
-      juge34 = Math.ceil(juge34 * 2)
-    }
-
-    if (skill.successCalculation === SuccessCalculation.DOUBLE_PLUS_1) {
-      // eslint-disable-next-line no-magic-numbers
-      success = Math.ceil(success * 2) + 1
-      // eslint-disable-next-line no-magic-numbers
-      juge12 = Math.ceil(juge12 * 2) + 1
-      // eslint-disable-next-line no-magic-numbers
-      juge34 = Math.ceil(juge34 * 2) + 1
-    }
-    if (usePp) {
-      success = (success ?? 0) + 1
-      juge12 = (juge12 ?? 0) + 1
-      juge34 = (juge34 ?? 0) + 1
-    }
-    if (useProficiency) {
-      success = (success ?? 0) + 1
-      juge12 = (juge12 ?? 0) + 1
-      juge34 = (juge34 ?? 0) + 1
-    }
+    const {
+      successRoll: success,
+      juge12Roll: juge12,
+      juge34Roll: juge34
+    } = await this.dealWithSuccess(diceNumber, diceValue, result, p, skill, usePp, useProficiency)
+    const {
+      successRoll: successBis,
+      juge12Roll: juge12Bis,
+      juge34Roll: juge34Bis
+    } = await this.dealWithSuccess(diceNumber, diceValue, resultBis, p, skill, usePp, useProficiency)
 
     pvDelta = pvDelta - skill.pvCost
     pfDelta = pfDelta - skill.pfCost
@@ -541,6 +443,13 @@ export class RollService {
       else display = display + ' (' + p.empiriqueRoll + ')'
     }
 
+    const realSuccess =
+      p.avantage === undefined ? success : p.avantage ? Math.max(success, successBis) : Math.min(success, successBis)
+    const realJuge12 =
+      p.avantage === undefined ? juge12 : p.avantage ? Math.max(juge12, juge12Bis) : Math.min(juge12, juge12Bis)
+    const realJuge34 =
+      p.avantage === undefined ? juge34 : p.avantage ? Math.max(juge34, juge34Bis) : Math.min(juge34, juge34Bis)
+
     const rollToCreate = await Roll.rollToCreateFactory({
       rollerName: p.character.name,
       healPoint: skill.isHeal ? success : undefined,
@@ -554,9 +463,13 @@ export class RollService {
       bonus: p.bonus,
       malus: p.malus,
       result: result,
-      success: success,
-      juge12: juge12,
-      juge34: juge34,
+      success: realSuccess,
+      juge12: realJuge12,
+      juge34: realJuge34,
+      resultBis: resultBis,
+      successBis: successBis,
+      juge12Bis: juge12Bis,
+      juge34Bis: juge34Bis,
       resistRoll: p.resistRoll,
       picture: p.character.isInvocation
         ? p.character.picture
@@ -669,5 +582,146 @@ export class RollService {
 
   async findOneById(id: string): Promise<Roll> {
     return this.rollProvider.findOneById(id)
+  }
+
+  private async dealWithSuccess(
+    diceNumber: number,
+    diceValue: number,
+    result: number[],
+    p: {
+      character: Character
+      skillId: string
+      secret: boolean
+      focus: boolean
+      power: boolean
+      bonus: number
+      malus: number
+      proficiency: boolean
+      empiriqueRoll?: string
+      resistRoll?: string
+      affect: boolean
+      avantage?: boolean
+    },
+    skill: Skill,
+    usePp: boolean,
+    useProficiency: boolean
+  ): Promise<{ successRoll: number | null; juge12Roll: number | null; juge34Roll: number | null }> {
+    let success: number | null = null
+    let juge12: number | null = null
+    let juge34: number | null = null
+
+    if (skill.successCalculation !== SuccessCalculation.AUCUN) {
+      success = 0
+      juge12 = 0
+      juge34 = 0
+    }
+    const fake = (await this.sessionProvider.getSession()).fake
+    if (fake !== 0 && diceNumber === 1 && diceValue === 103 && p.avantage === undefined) {
+      result.push(fake)
+      skill.precision += '\n' + (await this.skillService.findSkillByArcaneId(fake)).name
+    } else if (fake !== 0 && diceValue === 10) {
+      result.push(fake)
+    } else {
+      for (let i = 0; i < diceNumber; i++) {
+        const dice = RollService.randomIntFromInterval(1, diceValue)
+        if (skill.successCalculation !== SuccessCalculation.AUCUN) {
+          if (p.character.name === 'vernet' && i === 0) {
+            if (
+              dice === RollService.ONE_SUCCESS_DICE_12 ||
+              dice === RollService.ONE_SUCCESS_DICE_34 ||
+              dice === RollService.ONE_SUCCESS_DICE_56
+            ) {
+              success = (success ?? 0) + RollService.ONE_SUCCESS_EFFECT
+            }
+            if (
+              dice === RollService.TWO_SUCCESS_DICE_12 ||
+              dice === RollService.TWO_SUCCESS_DICE_34 ||
+              dice === RollService.TWO_SUCCESS_DICE_56
+            ) {
+              success = (success ?? 0) + RollService.TWO_SUCCESS_EFFECT
+            }
+          } else {
+            if (dice === RollService.ONE_SUCCESS_DICE_56) {
+              success = (success ?? 0) + RollService.ONE_SUCCESS_EFFECT
+            }
+            if (dice === RollService.TWO_SUCCESS_DICE_56) {
+              success = (success ?? 0) + RollService.TWO_SUCCESS_EFFECT
+            }
+            if (dice === RollService.ONE_SUCCESS_DICE_12) {
+              juge12 = (juge12 ?? 0) + RollService.ONE_SUCCESS_EFFECT
+            }
+            if (dice === RollService.TWO_SUCCESS_DICE_12) {
+              juge12 = (juge12 ?? 0) + RollService.TWO_SUCCESS_EFFECT
+            }
+            if (dice === RollService.ONE_SUCCESS_DICE_34) {
+              juge34 = (juge34 ?? 0) + RollService.ONE_SUCCESS_EFFECT
+            }
+            if (dice === RollService.TWO_SUCCESS_DICE_34) {
+              juge34 = (juge34 ?? 0) + RollService.TWO_SUCCESS_EFFECT
+            }
+          }
+        }
+        result.push(dice)
+        if (diceValue === 103 || diceValue === 104) {
+          skill.precision += '\n' + (await this.skillService.findSkillByArcaneId(dice)).name
+        }
+      }
+    }
+    if (skill.successCalculation === SuccessCalculation.SIMPLE_PLUS_1) {
+      success = (success ?? 0) + 1
+      juge12 = (juge12 ?? 0) + 1
+      juge34 = (juge34 ?? 0) + 1
+    }
+
+    if (skill.successCalculation === SuccessCalculation.DIVISE) {
+      // eslint-disable-next-line no-magic-numbers
+      success = Math.ceil(success / 2)
+      // eslint-disable-next-line no-magic-numbers
+      juge12 = Math.ceil(juge12 / 2)
+      // eslint-disable-next-line no-magic-numbers
+      juge34 = Math.ceil(juge34 / 2)
+    }
+
+    if (skill.successCalculation === SuccessCalculation.DIVISE_PLUS_1) {
+      // eslint-disable-next-line no-magic-numbers
+      success = Math.ceil(success / 2) + 1
+      // eslint-disable-next-line no-magic-numbers
+      juge12 = Math.ceil(juge12 / 2) + 1
+      // eslint-disable-next-line no-magic-numbers
+      juge34 = Math.ceil(juge34 / 2) + 1
+    }
+
+    if (skill.successCalculation === SuccessCalculation.DOUBLE) {
+      // eslint-disable-next-line no-magic-numbers
+      success = Math.ceil(success * 2)
+      // eslint-disable-next-line no-magic-numbers
+      juge12 = Math.ceil(juge12 * 2)
+      // eslint-disable-next-line no-magic-numbers
+      juge34 = Math.ceil(juge34 * 2)
+    }
+
+    if (skill.successCalculation === SuccessCalculation.DOUBLE_PLUS_1) {
+      // eslint-disable-next-line no-magic-numbers
+      success = Math.ceil(success * 2) + 1
+      // eslint-disable-next-line no-magic-numbers
+      juge12 = Math.ceil(juge12 * 2) + 1
+      // eslint-disable-next-line no-magic-numbers
+      juge34 = Math.ceil(juge34 * 2) + 1
+    }
+    if (usePp) {
+      success = (success ?? 0) + 1
+      juge12 = (juge12 ?? 0) + 1
+      juge34 = (juge34 ?? 0) + 1
+    }
+    if (useProficiency) {
+      success = (success ?? 0) + 1
+      juge12 = (juge12 ?? 0) + 1
+      juge34 = (juge34 ?? 0) + 1
+    }
+    return {
+      successRoll: success,
+      juge12Roll: juge12,
+      juge34Roll: juge34
+    }
   }
 }

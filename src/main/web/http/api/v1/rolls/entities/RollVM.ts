@@ -46,6 +46,18 @@ export class RollVM {
   @ApiProperty()
   juge34: number | null
 
+  @ApiPropertyOptional({ isArray: true, type: Number })
+  resultBis?: number[]
+
+  @ApiPropertyOptional()
+  successBis?: number
+
+  @ApiPropertyOptional()
+  juge12Bis?: number
+
+  @ApiPropertyOptional()
+  juge34Bis?: number
+
   @ApiProperty({ type: RollVM, isArray: true })
   resistRolls: RollVM[]
 
@@ -80,6 +92,9 @@ export class RollVM {
   dark: boolean
 
   @ApiPropertyOptional()
+  avantage?: boolean
+
+  @ApiPropertyOptional()
   precision?: string
 
   @ApiPropertyOptional()
@@ -102,6 +117,7 @@ export class RollVM {
       displayDices: p.roll.displayDices,
       focus: p.roll.focus,
       power: p.roll.power,
+      avantage: p.roll.avantage,
       proficiency: p.roll.proficiency,
       bonus: p.roll.bonus,
       malus: p.roll.malus,
@@ -109,6 +125,10 @@ export class RollVM {
       success: p.roll.success,
       juge12: p.roll.juge12,
       juge34: p.roll.juge34,
+      resultBis: p.roll.resultBis,
+      successBis: p.roll.successBis,
+      juge12Bis: p.roll.juge12Bis,
+      juge34Bis: p.roll.juge34Bis,
       resistRolls: p.othersRolls.map((r) => RollVM.of({ roll: r, othersRolls: [] })),
       picture: p.roll.picture,
       data: p.roll.data,

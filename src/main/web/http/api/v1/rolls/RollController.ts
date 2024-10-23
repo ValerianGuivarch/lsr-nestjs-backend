@@ -58,7 +58,8 @@ export class RollController {
       malus: req.malus,
       empiriqueRoll: req.empiriqueRoll,
       resistRoll: req.resistRoll,
-      affect: true
+      affect: true,
+      avantage: req.avantage
     })
   }
 

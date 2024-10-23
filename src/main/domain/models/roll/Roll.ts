@@ -15,6 +15,11 @@ export class Roll {
   success: number | null
   juge12: number | null
   juge34: number | null
+  resultBis?: number[]
+  successBis?: number
+  juge12Bis?: number
+  juge34Bis?: number
+  avantage?: boolean
   characterToHelp?: string
   resistRoll?: string
   picture?: string
@@ -49,6 +54,11 @@ export class Roll {
     success: number | null
     juge12: number | null
     juge34: number | null
+    resultBis?: number[]
+    successBis?: number
+    juge12Bis?: number
+    juge34Bis?: number
+    avantage?: boolean
     characterToHelp?: string
     resistRoll?: string
     picture?: string
@@ -80,6 +90,10 @@ export class Roll {
       success: p.success,
       juge12: p.juge12,
       juge34: p.juge34,
+      successBis: p.successBis,
+      juge12Bis: p.juge12Bis,
+      juge34Bis: p.juge34Bis,
+      avantage: p.avantage,
       characterToHelp: p.characterToHelp,
       resistRoll: p.resistRoll,
       picture: p.picture,

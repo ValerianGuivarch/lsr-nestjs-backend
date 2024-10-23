@@ -60,6 +60,21 @@ export class DBRoll {
   @Column({ type: 'integer', nullable: true })
   juge34?: number
 
+  @Column('simple-array', { nullable: true })
+  resultBis?: number[]
+
+  @Column({ type: 'integer', nullable: true })
+  successBis?: number
+
+  @Column({ type: 'integer', nullable: true })
+  juge12Bis?: number
+
+  @Column({ type: 'integer', nullable: true })
+  juge34Bis?: number
+
+  @Column({ type: 'boolean', default: null, nullable: true })
+  avantage?: boolean
+
   @Column({ type: 'varchar', nullable: true })
   picture?: string
 

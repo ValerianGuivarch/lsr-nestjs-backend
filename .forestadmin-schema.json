@@ -3518,6 +3518,22 @@
       "actions": [],
       "fields": [
         {
+          "defaultValue": null,
+          "enums": [],
+          "field": "avantage",
+          "integration": null,
+          "inverseOf": null,
+          "isFilterable": true,
+          "isPrimaryKey": false,
+          "isReadOnly": false,
+          "isRequired": false,
+          "isSortable": true,
+          "isVirtual": false,
+          "reference": null,
+          "type": "Boolean",
+          "validations": []
+        },
+        {
           "defaultValue": false,
           "enums": [],
           "field": "blessure",
@@ -3761,7 +3777,39 @@
         {
           "defaultValue": null,
           "enums": [],
+          "field": "juge12Bis",
+          "integration": null,
+          "inverseOf": null,
+          "isFilterable": true,
+          "isPrimaryKey": false,
+          "isReadOnly": false,
+          "isRequired": false,
+          "isSortable": true,
+          "isVirtual": false,
+          "reference": null,
+          "type": "Number",
+          "validations": []
+        },
+        {
+          "defaultValue": null,
+          "enums": [],
           "field": "juge34",
+          "integration": null,
+          "inverseOf": null,
+          "isFilterable": true,
+          "isPrimaryKey": false,
+          "isReadOnly": false,
+          "isRequired": false,
+          "isSortable": true,
+          "isVirtual": false,
+          "reference": null,
+          "type": "Number",
+          "validations": []
+        },
+        {
+          "defaultValue": null,
+          "enums": [],
+          "field": "juge34Bis",
           "integration": null,
           "inverseOf": null,
           "isFilterable": true,
@@ -3921,6 +3969,22 @@
         {
           "defaultValue": null,
           "enums": [],
+          "field": "resultBis",
+          "integration": null,
+          "inverseOf": null,
+          "isFilterable": true,
+          "isPrimaryKey": false,
+          "isReadOnly": false,
+          "isRequired": false,
+          "isSortable": true,
+          "isVirtual": false,
+          "reference": null,
+          "type": "String",
+          "validations": []
+        },
+        {
+          "defaultValue": null,
+          "enums": [],
           "field": "secret",
           "integration": null,
           "inverseOf": null,
@@ -3954,6 +4018,22 @@
           "defaultValue": null,
           "enums": [],
           "field": "success",
+          "integration": null,
+          "inverseOf": null,
+          "isFilterable": true,
+          "isPrimaryKey": false,
+          "isReadOnly": false,
+          "isRequired": false,
+          "isSortable": true,
+          "isVirtual": false,
+          "reference": null,
+          "type": "Number",
+          "validations": []
+        },
+        {
+          "defaultValue": null,
+          "enums": [],
+          "field": "successBis",
           "integration": null,
           "inverseOf": null,
           "isFilterable": true,
@@ -6460,6 +6540,6 @@
     "liana": "forest-nodejs-agent",
     "liana_version": "1.16.1",
     "liana_features": null,
-    "stack": {"engine": "nodejs", "engine_version": "20.11.1"}
+    "stack": {"engine": "nodejs", "engine_version": "20.18.0"}
   }
 }
