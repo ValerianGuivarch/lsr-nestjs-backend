@@ -9,4 +9,8 @@ export class SpellService {
   async getAll(): Promise<Spell[]> {
     return await this.spellProvider.findAll()
   }
+
+  async createSpell(param: { name: string; knowledgeName: string; rank: number }) {
+    await this.spellProvider.createSpell(param)
+  }
 }

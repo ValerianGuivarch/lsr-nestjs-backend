@@ -4924,23 +4924,6 @@
         },
         {
           "defaultValue": null,
-          "enums": null,
-          "field": "stat",
-          "integration": null,
-          "inverseOf": "db_spells",
-          "isFilterable": true,
-          "isPrimaryKey": false,
-          "isReadOnly": false,
-          "isRequired": false,
-          "isSortable": true,
-          "isVirtual": false,
-          "reference": "db_stat.name",
-          "relationship": "BelongsTo",
-          "type": "String",
-          "validations": []
-        },
-        {
-          "defaultValue": null,
           "enums": [],
           "field": "updatedDate",
           "integration": null,
@@ -4983,23 +4966,6 @@
           "isVirtual": false,
           "reference": null,
           "type": "Date",
-          "validations": []
-        },
-        {
-          "defaultValue": null,
-          "enums": null,
-          "field": "db_spells",
-          "integration": null,
-          "inverseOf": "stat",
-          "isFilterable": false,
-          "isPrimaryKey": false,
-          "isReadOnly": false,
-          "isRequired": false,
-          "isSortable": true,
-          "isVirtual": false,
-          "reference": "db_spell.name",
-          "relationship": "HasMany",
-          "type": ["String"],
           "validations": []
         },
         {
@@ -6540,6 +6506,6 @@
     "liana": "forest-nodejs-agent",
     "liana_version": "1.16.1",
     "liana_features": null,
-    "stack": {"engine": "nodejs", "engine_version": "20.18.0"}
+    "stack": {"engine": "nodejs", "engine_version": "18.16.1"}
   }
 }

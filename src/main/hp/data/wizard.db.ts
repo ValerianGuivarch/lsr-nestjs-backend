@@ -79,8 +79,7 @@ export class DBWizard {
     wizardStats: { stat: true },
     wizardSpells: {
       spell: {
-        knowledge: true,
-        stat: true
+        knowledge: true
       }
     }
   }

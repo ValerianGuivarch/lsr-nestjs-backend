@@ -1295,19 +1295,12 @@ export type Schema = {
       'updatedDate': string;
       'name': string;
       'rank': number;
-      'statId': string;
       'knowledgeId': string;
     };
     nested: {
-      'stat': Schema['db_stat']['plain'] & Schema['db_stat']['nested'];
       'knowledge': Schema['db_knowledge']['plain'] & Schema['db_knowledge']['nested'];
     };
     flat: {
-      'stat:createdDate': string;
-      'stat:updatedDate': string;
-      'stat:name': string;
-      'stat:order': number;
-      'stat:flipText': string;
       'knowledge:createdDate': string;
       'knowledge:updatedDate': string;
       'knowledge:name': string;
@@ -1426,13 +1419,7 @@ export type Schema = {
       'db_spell:updatedDate': string;
       'db_spell:name': string;
       'db_spell:rank': number;
-      'db_spell:statId': string;
       'db_spell:knowledgeId': string;
-      'db_spell:stat:createdDate': string;
-      'db_spell:stat:updatedDate': string;
-      'db_spell:stat:name': string;
-      'db_spell:stat:order': number;
-      'db_spell:stat:flipText': string;
       'db_spell:knowledge:createdDate': string;
       'db_spell:knowledge:updatedDate': string;
       'db_spell:knowledge:name': string;

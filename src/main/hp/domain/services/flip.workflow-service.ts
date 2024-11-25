@@ -1,6 +1,7 @@
 import { FlipService } from './flip.service'
 import { WizardService } from './wizard.service'
 import { Difficulty } from '../entities/difficulty.enum'
+import { Wizard } from '../entities/wizard.entity'
 import { BadRequestException, Inject, Injectable } from '@nestjs/common'
 
 @Injectable()
@@ -68,7 +69,9 @@ export class FlipWorkflowService {
         wizardName: wizard.name,
         flipModif:
           (wizard.knowledges.find((knowledge) => knowledge.knowledge.name === wizardSpell.spell.knowledge.name)
-            ?.level ?? 0) + (wizard.stats.find((stat) => stat.stat.name === wizardSpell.spell.stat.name)?.level ?? 0),
+            ?.level ?? 0) +
+          (wizard.stats.find((stat) => stat.stat.name === 'Pouvoir')?.level ?? 0) -
+          2 * (Wizard.getSpellLevel(wizard.category) - wizardSpell.spell.rank),
         flipText:
           wizard.name +
           ' lance le sort ' +
@@ -78,7 +81,7 @@ export class FlipWorkflowService {
           wizardSpell.spell.rank +
           ' ] et obtient : ',
         difficulty: this.adjustDifficulty(wizardSpell.difficulty, flip.difficulty),
-        seuil: wizardSpell.spell.rank + 10,
+        seuil: 12,
         spellId: wizardSpell.spell.name
       })
     } else {

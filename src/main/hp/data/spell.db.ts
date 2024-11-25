@@ -1,5 +1,4 @@
 import { DBKnowledge } from './knowledge.db'
-import { DBStat } from './stat.db'
 import { Spell } from '../domain/entities/spell.entity'
 import { Entity, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn, PrimaryColumn } from 'typeorm'
 
@@ -17,16 +16,14 @@ export class DBSpell {
   @Column({ type: 'int', nullable: false, default: 0 })
   rank: number
 
-  @ManyToOne(() => DBStat)
-  @JoinColumn({ name: 'statId' })
-  stat: DBStat
+  @Column({ type: 'varchar', nullable: true })
+  knowledgeId?: string
 
-  @ManyToOne(() => DBKnowledge)
+  @ManyToOne(() => DBKnowledge, { nullable: true })
   @JoinColumn({ name: 'knowledgeId' })
-  knowledge: DBKnowledge
+  knowledge?: DBKnowledge
 
   static readonly RELATIONS = {
-    stat: true,
     knowledge: true
   }
 
@@ -34,8 +31,9 @@ export class DBSpell {
     return new Spell({
       name: spell.name,
       knowledge: spell.knowledge,
-      stat: spell.stat,
       rank: spell.rank
     })
   }
 }
+
+export type DBSpellToCreate = Omit<DBSpell, 'id' | 'knowledge'>

@@ -54,6 +54,28 @@ export class Wizard {
     this.traits = wizard.traits
   }
 
+  static getSpellLevel(category: string): number {
+    if (category === '1ère année') {
+      return 1
+    } else if (category === '2ème année') {
+      return 2
+    } else if (category === '3ème année') {
+      return 3
+    } else if (category === '4ème année') {
+      return 4
+    } else if (category === '5ème année') {
+      return 5
+    } else if (category === '6ème année') {
+      return 6
+    } else if (category === '7ème année') {
+      return 7
+    } else if (category === 'Professeur') {
+      return 8
+    } else {
+      return 5
+    }
+  }
+
   static toWizardToCreate(p: {
     name: string
     familyName: string

@@ -1,7 +1,6 @@
 import { WizardKnowledgeDto } from './wizard-knowledge.dto'
 import { WizardSpellDto } from './wizard-spell.dto'
 import { WizardStatDto } from './wizard-stat.dto'
-import { House } from '../../../../../domain/entities/house.entity'
 import { Wizard, WizardName } from '../../../../../domain/entities/wizard.entity'
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
 
@@ -65,9 +64,9 @@ export class WizardDto {
 
   @ApiPropertyOptional({
     description: 'The wizard house',
-    type: House
+    type: String
   })
-  house?: House
+  houseName?: string
 
   @ApiProperty({
     description: 'The wizard baguette',
@@ -110,7 +109,7 @@ export class WizardDto {
     this.pv = wizard.pv
     this.pvMax = wizard.pvMax
     this.spells = wizard.spells
-    this.house = wizard.house
+    this.houseName = wizard.houseName
     this.baguette = wizard.baguette
     this.coupDePouce = wizard.coupDePouce
     this.crochePatte = wizard.crochePatte
@@ -128,7 +127,7 @@ export class WizardDto {
       xp: wizard.xp,
       pv: wizard.pv,
       pvMax: wizard.pvMax,
-      house: wizard.house,
+      houseName: wizard.house.name,
       baguette: wizard.baguette,
       coupDePouce: wizard.coupDePouce,
       crochePatte: wizard.crochePatte,
