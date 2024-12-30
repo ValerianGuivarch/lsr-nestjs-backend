@@ -70,7 +70,7 @@ export class FlipWorkflowService {
         flipModif:
           (wizard.knowledges.find((knowledge) => knowledge.knowledge.name === wizardSpell.spell.knowledge.name)
             ?.level ?? 0) +
-          (wizard.stats.find((stat) => stat.stat.name === 'Pouvoir')?.level ?? 0) -
+          (wizard.stats.find((stat) => stat.stat.name === 'Pouvoir')?.level ?? 0) +
           2 * (Wizard.getSpellLevel(wizard.category) - wizardSpell.spell.rank),
         flipText:
           wizard.name +
