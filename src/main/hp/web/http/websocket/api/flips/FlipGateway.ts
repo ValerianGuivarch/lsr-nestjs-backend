@@ -1,9 +1,8 @@
-import { FlipService } from '../../../../../domain/services/flip.service'
-import { FlipDto } from '../../../api/flips/entities/flip.dto'
+/*import { FlipService } from '../../../../../domain/services/flip.service'
 import { Controller, Get, Sse } from '@nestjs/common'
-import { ApiOkResponse, ApiTags } from '@nestjs/swagger'
+import { ApiTags } from '@nestjs/swagger'
 import { WebSocketGateway, WebSocketServer } from '@nestjs/websockets'
-import { concatMap, Observable } from 'rxjs'
+import { map, Observable } from 'rxjs'
 import { Server } from 'ws'
 
 @Controller('api/v1/hp/sse/flips')
@@ -14,18 +13,17 @@ export class FlipGateway {
 
   constructor(private flipService: FlipService) {}
   @Get('')
-  @ApiOkResponse()
-  @Sse('flips')
+  @Sse()
   getFlips(): Observable<string> {
-    // eslint-disable-next-line no-magic-numbers
+    console.log('SSE getFlips() called')
     return this.flipService.getFlipsChangeObservable().pipe(
-      concatMap(async () => {
-        console.log('getFlipsPipe')
-        const flips = await this.flipService.getAllFlips()
-        const flipsDtos = flips.map((flip) => FlipDto.from(flip))
-        console.log('flipsDtos', JSON.stringify(flipsDtos))
-        return `data: ${JSON.stringify(flipsDtos)}\n\n`
+      map((flips) => {
+        console.log('Data emitted (before formatting):', flips)
+        const formattedData = `data: ${JSON.stringify(flips)}\n\n`
+        console.log('Formatted Data:', formattedData)
+        return formattedData
       })
     )
   }
 }
+*/

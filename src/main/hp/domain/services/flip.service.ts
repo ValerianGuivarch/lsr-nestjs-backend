@@ -2,13 +2,17 @@ import { Difficulty } from '../entities/difficulty.enum'
 import { Flip } from '../entities/flip.entity'
 import { IFlipProvider } from '../providers/flip.provider'
 import { Inject, Injectable } from '@nestjs/common'
-import { Observable, Subject } from 'rxjs'
+import { Observable, Subject, tap } from 'rxjs'
 
 @Injectable()
 export class FlipService {
   private flipsChangeSubject = new Subject<Flip[]>()
 
-  constructor(@Inject('IFlipProvider') private flipProvider: IFlipProvider) {}
+  constructor(@Inject('IFlipProvider') private flipProvider: IFlipProvider) {
+    this.getFlipsChangeObservable().subscribe((flips) => {
+      console.log('Observable received:', flips.length)
+    })
+  }
 
   async createFlip(flip: {
     spellId?: string
@@ -55,14 +59,17 @@ export class FlipService {
           base: flipRolling.rolling,
           modif: flip.flipModif,
           wizardName: flip.wizardName,
-          success: result >= flip.seuil
+          success: result >= flip.seuil,
+          statId: flip.statId,
+          knowledgeId: flip.knowledgeId,
+          spellId: flip.spellId
         })
       )
     }
     const flips = await this.getAllFlips()
-    console.log('flipsChangeSubject.next' + flips)
     this.flipsChangeSubject.next(flips)
-    console.log('flipsChangeSubject.next')
+    console.log('Data pushed to flipsChangeSubject:', flips)
+    console.log('Subject observers count:', this.flipsChangeSubject.observers.length)
   }
 
   async getAllFlips(): Promise<Flip[]> {
@@ -70,8 +77,10 @@ export class FlipService {
   }
 
   getFlipsChangeObservable(): Observable<Flip[]> {
-    console.log('flipsChangeSubject.asObservable' + this.flipsChangeSubject.asObservable())
-    return this.flipsChangeSubject.asObservable()
+    console.log('getFlipsChangeObservable called. Observers count:', this.flipsChangeSubject.observers.length)
+    return this.flipsChangeSubject
+      .asObservable()
+      .pipe(tap((flips) => console.log('Observable emitting:', flips.length, flips)))
   }
 
   private flipRolling(flipModif: number): {

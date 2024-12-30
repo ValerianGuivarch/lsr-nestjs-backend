@@ -48,7 +48,7 @@ import { KnowledgeController } from './hp/web/http/api/knowledges/knowledges.con
 import { SpellController } from './hp/web/http/api/spells/spells.controller'
 import { StatController } from './hp/web/http/api/stats/stats.controller'
 import { WizardController } from './hp/web/http/api/wizards/wizard.controller'
-import { FlipGateway } from './hp/web/http/websocket/api/flips/FlipGateway'
+//import { FlipGateway } from './hp/web/http/websocket/api/flips/FlipGateway'
 import { CharacterController } from './web/http/api/v1/characters/CharacterController'
 import { ConstellationController } from './web/http/api/v1/elena/ConstellationController'
 import { JoueuseController } from './web/http/api/v1/elena/JoueuseController'
@@ -94,7 +94,7 @@ import { TypeOrmModule } from '@nestjs/typeorm'
     MjGateway,
     CharacterGateway,
     RollGateway,
-    FlipGateway,
+    //FlipGateway,
     SpeakingGateway,
     MjController,
     CharacterController,

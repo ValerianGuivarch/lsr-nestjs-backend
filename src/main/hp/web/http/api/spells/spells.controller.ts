@@ -1,7 +1,7 @@
 import { SpellToCreateDto } from './entities/spell-create.dto'
 import { SpellDto } from './entities/spell.dto'
 import { SpellService } from '../../../../domain/services/spell.service'
-import { Controller, Get, HttpCode, HttpStatus, Post } from '@nestjs/common'
+import { Body, Controller, Get, HttpCode, HttpStatus, Post } from '@nestjs/common'
 import { ApiOkResponse, ApiTags } from '@nestjs/swagger'
 
 @Controller('api/v1/hp/spells')
@@ -20,7 +20,8 @@ export class SpellController {
   }
 
   @Post('')
-  async postNewSpell(spell: SpellToCreateDto): Promise<void> {
+  async postNewSpell(@Body() spell: SpellToCreateDto): Promise<void> {
+    console.log(JSON.stringify(spell))
     await this.spellService.createSpell({
       name: spell.name,
       rank: spell.rank,

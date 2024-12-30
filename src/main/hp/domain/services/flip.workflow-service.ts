@@ -93,8 +93,10 @@ export class FlipWorkflowService {
   private adjustDifficulty(difficulty: Difficulty, difficultyAdjustment: Difficulty) {
     if (difficulty === difficultyAdjustment) {
       return difficulty
-    } else if (difficulty === Difficulty.NORMAL || difficultyAdjustment === Difficulty.NORMAL) {
+    } else if (difficulty === Difficulty.NORMAL) {
       return difficultyAdjustment
+    } else if (difficultyAdjustment === Difficulty.NORMAL) {
+      return difficulty
     } else {
       return Difficulty.NORMAL
     }
