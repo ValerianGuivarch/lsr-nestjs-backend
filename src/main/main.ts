@@ -1,5 +1,4 @@
 import { AppModule } from './app.module'
-import { ForestService } from './data/ForestService'
 import { ValidationPipe } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { NestFactory } from '@nestjs/core'
@@ -26,7 +25,7 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config)
   SwaggerModule.setup('api', app, document)
 
-  await ForestService.agent.mountOnNestJs(app).start()
+  //  await ForestService.agent.mountOnNestJs(app).start()
 
   await app.listen(configService.get('PORT'), configService.get('HOST'))
   console.log(`Application is running on: ${await app.getUrl()}`)

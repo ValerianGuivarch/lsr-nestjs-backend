@@ -14,7 +14,6 @@ import { DBConstellationProvider } from './data/elena/DBConstellationProvider'
 import { DBJoueuseProvider } from './data/elena/DBJoueuseProvider'
 import { DBMessageProvider } from './data/elena/DBMessageProvider'
 import { DBScenarioProvider } from './data/elena/DBScenarioProvider'
-import { ForestService } from './data/ForestService'
 import { PokeProvider } from './data/poke/PokeProvider'
 import { ApotheoseService } from './domain/services/ApotheoseService'
 import { CharacterService } from './domain/services/CharacterService'
@@ -226,8 +225,7 @@ import { TypeOrmModule } from '@nestjs/typeorm'
     {
       provide: 'IHouseProvider',
       useClass: HouseImplementation
-    },
-    ForestService
+    }
   ]
 })
 export class AppModule {}

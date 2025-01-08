@@ -1,7 +1,6 @@
-import { Character } from '../domain/models/characters/Character'
+/*import { Character } from '../domain/models/characters/Character'
 import { Genre } from '../domain/models/characters/Genre'
 import { CharacterService } from '../domain/services/CharacterService'
-import { Agent } from '@forestadmin/agent'
 
 export const customizeCollectionDbCompany = (p: { agent: Agent; characterService: CharacterService }): void => {
   p.agent.customizeCollection('db_character', (collectionCustomizer) => {
@@ -204,3 +203,4 @@ export const customizeCollectionDbCompany = (p: { agent: Agent; characterService
     })
   })
 }
+*/
