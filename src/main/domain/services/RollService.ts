@@ -6,7 +6,6 @@ import { Apotheose } from '../models/apotheoses/Apotheose'
 import { ApotheoseState } from '../models/apotheoses/ApotheoseState'
 import { BattleState } from '../models/characters/BattleState'
 import { Character } from '../models/characters/Character'
-import { DisplayCategory } from '../models/characters/DisplayCategory'
 import { Roll } from '../models/roll/Roll'
 import { SuccessCalculation } from '../models/roll/SuccessCalculation'
 import { NatureLevel } from '../models/session/NatureLevel'
@@ -206,9 +205,6 @@ export class RollService {
         diceNumber = p.character.esprit + diceValueDelta + p.character.espritBonus
       } else if (skill.stat === SkillStat.ESSENCE) {
         diceNumber = p.character.essence + diceValueDelta + p.character.essenceBonus
-        if (p.character.name === 'atès' && skill.displayCategory === DisplayCategory.MAGIE) {
-          diceNumber = diceNumber * 2
-        }
       }
 
       if (skill.name === 'dragon') {
@@ -494,11 +490,7 @@ export class RollService {
     p.character.arcanes += arcaneDelta
     p.character.ether += etherDelta
     p.character.arcanePrimes += arcanePrimeDelta
-    if (p.character.name === 'atès') {
-      p.character.dettes += dettesDelta * 2
-    } else {
-      p.character.dettes += dettesDelta
-    }
+    p.character.dettes += dettesDelta
     p.character.dragonDettes += dragonDettesDelta
     if (p.character.dailyUse.get(skill.name) !== undefined) {
       p.character.dailyUse.set(skill.name, p.character.dailyUse.get(skill.name) - 1)
