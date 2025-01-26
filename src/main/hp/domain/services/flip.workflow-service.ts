@@ -85,7 +85,14 @@ export class FlipWorkflowService {
         spellId: wizardSpell.spell.name
       })
     } else {
-      throw new BadRequestException('Invalid flip')
+      // generic flip
+      this.flipService.createFlip({
+        wizardName: wizard.name,
+        flipModif: 0,
+        flipText: wizard.name + ' obtient : ',
+        difficulty: flip.difficulty,
+        seuil: 0
+      })
     }
     return void 0
   }

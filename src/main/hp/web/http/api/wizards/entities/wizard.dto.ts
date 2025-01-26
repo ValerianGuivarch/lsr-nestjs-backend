@@ -93,6 +93,12 @@ export class WizardDto {
   text: string
 
   @ApiProperty({
+    description: 'The wizard animal',
+    type: String
+  })
+  animal: string
+
+  @ApiProperty({
     description: 'The wizard traits',
     isArray: true,
     type: String
@@ -101,6 +107,7 @@ export class WizardDto {
 
   constructor(wizard: WizardDto) {
     this.name = wizard.name
+    this.animal = wizard.animal
     this.familyName = wizard.familyName
     this.category = wizard.category
     this.stats = wizard.stats
@@ -121,6 +128,7 @@ export class WizardDto {
       name: wizard.name,
       familyName: wizard.familyName,
       category: wizard.category,
+      animal: wizard.animal,
       stats: wizard.stats.map(WizardStatDto.from),
       knowledges: wizard.knowledges.map(WizardKnowledgeDto.from),
       spells: wizard.spells.map(WizardSpellDto.from),

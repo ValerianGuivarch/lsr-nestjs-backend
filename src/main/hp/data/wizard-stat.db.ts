@@ -1,7 +1,16 @@
 import { DBStat } from './stat.db'
 import { DBWizard } from './wizard.db'
 import { WizardStat } from '../domain/entities/wizard-stat.entity'
-import { Entity, Column, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn, PrimaryColumn } from 'typeorm'
+import {
+  Entity,
+  Column,
+  ManyToOne,
+  JoinColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
+  PrimaryColumn,
+  PrimaryGeneratedColumn
+} from 'typeorm'
 
 @Entity()
 export class DBWizardStat {
@@ -13,6 +22,9 @@ export class DBWizardStat {
 
   @Column({ type: 'integer', default: 1 })
   level: number
+
+  @PrimaryGeneratedColumn('uuid')
+  id: string // Clé primaire unique ajoutée pour Directus
 
   @PrimaryColumn({ type: 'varchar' })
   wizardName: string
@@ -44,5 +56,5 @@ export class DBWizardStat {
   }
 }
 
-export type DBWizardStatToCreate = Omit<DBWizardStat, 'createdDate' | 'updatedDate' | 'wizard' | 'stat'>
+export type DBWizardStatToCreate = Omit<DBWizardStat, 'createdDate' | 'updatedDate' | 'wizard' | 'stat' | 'id'>
 export type DBWizardStatToUpdate = Pick<DBWizardStat, 'level' | 'updatedDate'>

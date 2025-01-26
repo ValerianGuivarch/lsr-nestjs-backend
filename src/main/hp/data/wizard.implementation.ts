@@ -26,6 +26,7 @@ export class WizardImplementation implements IWizardProvider {
     const toCreate: DBWizardToCreate = {
       name: wizard.name,
       familyName: wizard.familyName,
+      animal: '',
       category: wizard.category,
       xp: 0,
       pv: 0,

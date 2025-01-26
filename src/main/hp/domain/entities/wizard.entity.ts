@@ -6,6 +6,7 @@ import { WizardStat, WizardStatToCreate, WizardStatToUpdate } from './wizard-sta
 export class Wizard {
   name: string
   familyName: string
+  animal: string
   category: string
   stats: WizardStat[]
   knowledges: WizardKnowledge[]
@@ -23,6 +24,7 @@ export class Wizard {
   constructor(wizard: {
     name: string
     familyName: string
+    animal: string
     category: string
     stats: WizardStat[]
     knowledges: WizardKnowledge[]
@@ -39,6 +41,7 @@ export class Wizard {
   }) {
     this.name = wizard.name
     this.familyName = wizard.familyName
+    this.animal = wizard.animal
     this.category = wizard.category
     this.stats = wizard.stats
     this.knowledges = wizard.knowledges
@@ -79,6 +82,7 @@ export class Wizard {
   static toWizardToCreate(p: {
     name: string
     familyName: string
+    animal: string
     category: string
     stats: WizardStatToCreate[]
     knowledges: WizardKnowledgeToCreate[]
@@ -88,6 +92,7 @@ export class Wizard {
     return {
       name: p.name,
       familyName: p.familyName,
+      animal: p.animal,
       category: p.category,
       stats: p.stats,
       knowledges: p.knowledges,

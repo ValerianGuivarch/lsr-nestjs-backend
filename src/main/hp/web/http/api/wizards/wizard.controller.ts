@@ -28,6 +28,7 @@ export class WizardController {
           houseName: request.houseName,
           name: request.name,
           familyName: request.familyName ?? '',
+          animal: '',
           category: request.category,
           stats: request.stats.map((stat) => ({
             level: stat.level,
