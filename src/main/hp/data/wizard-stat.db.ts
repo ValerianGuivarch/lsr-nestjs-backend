@@ -8,32 +8,33 @@ import {
   JoinColumn,
   CreateDateColumn,
   UpdateDateColumn,
-  PrimaryColumn,
-  PrimaryGeneratedColumn
+  PrimaryGeneratedColumn,
+  Index
 } from 'typeorm'
 
 @Entity()
+@Index(['wizardName', 'statName'], { unique: true }) // Garantit l'unicité logique des colonnes wizardName et statName
 export class DBWizardStat {
-  @CreateDateColumn({ default: () => 'NOW()' })
+  @PrimaryGeneratedColumn('uuid') // Clé primaire unique requise pour Directus
+  id: string
+
+  @CreateDateColumn()
   createdDate: Date
 
-  @UpdateDateColumn({ default: () => 'NOW()' })
+  @UpdateDateColumn()
   updatedDate: Date
 
   @Column({ type: 'integer', default: 1 })
   level: number
 
-  @PrimaryGeneratedColumn('uuid')
-  id: string // Clé primaire unique ajoutée pour Directus
-
-  @PrimaryColumn({ type: 'varchar' })
+  @Column({ type: 'varchar' })
   wizardName: string
 
   @ManyToOne(() => DBWizard, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'wizardName' })
   wizard: DBWizard
 
-  @PrimaryColumn({ type: 'varchar' })
+  @Column({ type: 'varchar' })
   statName: string
 
   @ManyToOne(() => DBStat, { onDelete: 'CASCADE' })
@@ -56,5 +57,5 @@ export class DBWizardStat {
   }
 }
 
-export type DBWizardStatToCreate = Omit<DBWizardStat, 'createdDate' | 'updatedDate' | 'wizard' | 'stat' | 'id'>
+export type DBWizardStatToCreate = Omit<DBWizardStat, 'id' | 'createdDate' | 'updatedDate' | 'wizard' | 'stat'>
 export type DBWizardStatToUpdate = Pick<DBWizardStat, 'level' | 'updatedDate'>

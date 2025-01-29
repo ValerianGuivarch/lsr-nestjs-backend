@@ -2,11 +2,14 @@ import { DisplayCategory } from '../../../domain/models/characters/DisplayCatego
 import { DBBloodline } from '../bloodlines/DBBloodline'
 import { DBCharacter } from '../character/DBCharacter'
 import { DBClasse } from '../classes/DBClasse'
-import { Column, Entity, ManyToMany, PrimaryColumn } from 'typeorm'
+import { PrimaryGeneratedColumn, Column, Entity, ManyToMany } from 'typeorm'
 
 @Entity()
 export class DBProficiency {
-  @PrimaryColumn({ type: 'varchar' })
+  @PrimaryGeneratedColumn('uuid') // Clé primaire unique requise pour Directus
+  id: string
+
+  @Column({ type: 'varchar', unique: true })
   name: string
 
   @Column({ type: 'varchar' })
