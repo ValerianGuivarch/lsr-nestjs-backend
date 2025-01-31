@@ -9,6 +9,7 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   PrimaryGeneratedColumn,
+  PrimaryColumn,
   Index
 } from 'typeorm'
 
@@ -27,14 +28,14 @@ export class DBWizardKnowledge {
   @Column({ type: 'integer', default: 1 })
   level: number
 
-  @Column({ type: 'varchar' })
+  @PrimaryColumn({ type: 'varchar' }) // Assure que wizardName reste une clé primaire composite
   wizardName: string
 
   @ManyToOne(() => DBWizard, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'wizardName' })
   wizard: DBWizard
 
-  @Column({ type: 'uuid' })
+  @PrimaryColumn({ type: 'uuid' }) // Assure que knowledgeName reste une clé primaire composite
   knowledgeName: string
 
   @ManyToOne(() => DBKnowledge, { onDelete: 'CASCADE' })

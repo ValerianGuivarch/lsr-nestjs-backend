@@ -9,13 +9,14 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   PrimaryGeneratedColumn,
+  PrimaryColumn,
   Index
 } from 'typeorm'
 
 @Entity()
-@Index(['wizardName', 'statName'], { unique: true }) // Garantit l'unicité logique des colonnes wizardName et statName
+@Index(['wizardName', 'statName'], { unique: true }) // Garantit l'unicité logique
 export class DBWizardStat {
-  @PrimaryGeneratedColumn('uuid') // Clé primaire unique requise pour Directus
+  @PrimaryGeneratedColumn('uuid') // Clé primaire unique pour Directus
   id: string
 
   @CreateDateColumn()
@@ -27,14 +28,14 @@ export class DBWizardStat {
   @Column({ type: 'integer', default: 1 })
   level: number
 
-  @Column({ type: 'varchar' })
+  @PrimaryColumn({ type: 'varchar' }) // Assure que wizardName reste une clé primaire
   wizardName: string
 
   @ManyToOne(() => DBWizard, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'wizardName' })
   wizard: DBWizard
 
-  @Column({ type: 'varchar' })
+  @PrimaryColumn({ type: 'varchar' }) // Assure que statName reste une clé primaire
   statName: string
 
   @ManyToOne(() => DBStat, { onDelete: 'CASCADE' })

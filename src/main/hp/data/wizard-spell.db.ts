@@ -9,6 +9,7 @@ import {
   JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
+  PrimaryColumn,
   Index,
   UpdateDateColumn
 } from 'typeorm'
@@ -28,14 +29,14 @@ export class DBWizardSpell {
   @Column({ type: 'varchar', nullable: false, default: 'NORMAL' })
   difficulty: string
 
-  @Column({ type: 'varchar' })
+  @PrimaryColumn({ type: 'varchar' }) // Assure que wizardName reste une clé primaire composite
   wizardName: string
 
   @ManyToOne(() => DBWizard, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'wizardName' })
   wizard: DBWizard
 
-  @Column({ type: 'varchar' })
+  @PrimaryColumn({ type: 'varchar' }) // Assure que spellName reste une clé primaire composite
   spellName: string
 
   @ManyToOne(() => DBSpell, { onDelete: 'CASCADE' })
