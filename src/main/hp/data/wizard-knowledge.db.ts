@@ -1,41 +1,27 @@
 import { DBKnowledge } from './knowledge.db'
 import { DBWizard } from './wizard.db'
 import { WizardKnowledge } from '../domain/entities/wizard-knowledge.entity'
-import {
-  Entity,
-  Column,
-  ManyToOne,
-  JoinColumn,
-  CreateDateColumn,
-  UpdateDateColumn,
-  PrimaryGeneratedColumn,
-  PrimaryColumn,
-  Index
-} from 'typeorm'
+import { Entity, Column, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn, PrimaryColumn } from 'typeorm'
 
 @Entity()
-@Index(['wizardName', 'knowledgeName'], { unique: true }) // Garantit l'unicité logique
 export class DBWizardKnowledge {
-  @PrimaryGeneratedColumn('uuid') // Clé primaire unique pour Directus
-  id: string
-
-  @CreateDateColumn()
+  @CreateDateColumn({ default: () => 'NOW()' })
   createdDate: Date
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ default: () => 'NOW()' })
   updatedDate: Date
 
   @Column({ type: 'integer', default: 1 })
   level: number
 
-  @PrimaryColumn({ type: 'varchar' }) // Assure que wizardName reste une clé primaire composite
+  @PrimaryColumn({ type: 'varchar' })
   wizardName: string
 
   @ManyToOne(() => DBWizard, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'wizardName' })
   wizard: DBWizard
 
-  @PrimaryColumn({ type: 'uuid' }) // Assure que knowledgeName reste une clé primaire composite
+  @PrimaryColumn({ type: 'uuid' })
   knowledgeName: string
 
   @ManyToOne(() => DBKnowledge, { onDelete: 'CASCADE' })
@@ -56,8 +42,5 @@ export class DBWizardKnowledge {
   }
 }
 
-export type DBWizardKnowledgeToCreate = Omit<
-  DBWizardKnowledge,
-  'id' | 'createdDate' | 'updatedDate' | 'wizard' | 'knowledge'
->
+export type DBWizardKnowledgeToCreate = Omit<DBWizardKnowledge, 'createdDate' | 'updatedDate' | 'wizard' | 'knowledge'>
 export type DBWizardKnowledgeToUpdate = Pick<DBWizardKnowledge, 'level' | 'updatedDate'>

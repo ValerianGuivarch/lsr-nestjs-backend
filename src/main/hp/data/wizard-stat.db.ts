@@ -1,41 +1,27 @@
 import { DBStat } from './stat.db'
 import { DBWizard } from './wizard.db'
 import { WizardStat } from '../domain/entities/wizard-stat.entity'
-import {
-  Entity,
-  Column,
-  ManyToOne,
-  JoinColumn,
-  CreateDateColumn,
-  UpdateDateColumn,
-  PrimaryGeneratedColumn,
-  PrimaryColumn,
-  Index
-} from 'typeorm'
+import { Entity, Column, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn, PrimaryColumn } from 'typeorm'
 
 @Entity()
-@Index(['wizardName', 'statName'], { unique: true }) // Garantit l'unicité logique
 export class DBWizardStat {
-  @PrimaryGeneratedColumn('uuid') // Clé primaire unique pour Directus
-  id: string
-
-  @CreateDateColumn()
+  @CreateDateColumn({ default: () => 'NOW()' })
   createdDate: Date
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ default: () => 'NOW()' })
   updatedDate: Date
 
   @Column({ type: 'integer', default: 1 })
   level: number
 
-  @PrimaryColumn({ type: 'varchar' }) // Assure que wizardName reste une clé primaire
+  @PrimaryColumn({ type: 'varchar' })
   wizardName: string
 
   @ManyToOne(() => DBWizard, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'wizardName' })
   wizard: DBWizard
 
-  @PrimaryColumn({ type: 'varchar' }) // Assure que statName reste une clé primaire
+  @PrimaryColumn({ type: 'varchar' })
   statName: string
 
   @ManyToOne(() => DBStat, { onDelete: 'CASCADE' })
@@ -58,5 +44,4 @@ export class DBWizardStat {
   }
 }
 
-export type DBWizardStatToCreate = Omit<DBWizardStat, 'id' | 'createdDate' | 'updatedDate' | 'wizard' | 'stat'>
-export type DBWizardStatToUpdate = Pick<DBWizardStat, 'level' | 'updatedDate'>
+export type DBWizardStatToCreate = Omit<DBWizardStat, 'createdDate' | 'updatedDate' | 'wizard' | 'stat'>
