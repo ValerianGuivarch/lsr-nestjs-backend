@@ -342,4 +342,11 @@ export class DBCharacter {
   @Column({ type: 'boolean', default: false })
   @IsDefined()
   dark: boolean
+
+  @Column({
+    type: 'integer',
+    default: 50
+  })
+  @IsDefined()
+  vr: number
 }
