@@ -64,6 +64,7 @@ export class Character {
   hurtMalus: boolean
   boulet: boolean
   dark: boolean
+  vr: number
 
   constructor(p: Character) {
     this.name = p.name
@@ -123,6 +124,7 @@ export class Character {
     this.arcaneDette = p.arcaneDette
     this.dark = p.dark
     this.hurtMalus = p.hurtMalus
+    this.vr = p.vr
   }
 
   static characterToCreateFactory(p: {
@@ -203,7 +205,8 @@ export class Character {
       dailyUse: new Map<string, number>(),
       dailyUseMax: new Map<string, number>(),
       arcaneDette: new Map<string, number>(),
-      dark: false
+      dark: false,
+      vr: -1
     }
     return Object.assign(defaults, p)
   }
@@ -272,7 +275,8 @@ export class Character {
       dailyUse: new Map<string, number>(),
       dailyUseMax: new Map<string, number>(),
       arcaneDette: new Map<string, number>(),
-      dark: p.summoner.dark
+      dark: p.summoner.dark,
+      vr: -1
     } as CharacterToCreate
   }
 }

@@ -169,6 +169,9 @@ export class CharacterVM {
   @ApiPropertyOptional()
   controlledBy?: string
 
+  @ApiProperty()
+  vr: number
+
   constructor(p: CharacterVM) {
     this.name = p.name
     this.controlledBy = p.controlledBy
@@ -221,6 +224,7 @@ export class CharacterVM {
     this.rest = p.rest
     this.longRest = p.longRest
     this.dark = p.dark
+    this.vr = p.vr
   }
 
   static of(p: {
@@ -299,7 +303,8 @@ export class CharacterVM {
       textColor: p.character.textColor,
       rest: p.rest.baseRest,
       longRest: p.rest.longRest,
-      dark: p.character.dark
+      dark: p.character.dark,
+      vr: p.character.vr
     })
   }
 }

@@ -111,4 +111,8 @@ export class UpdateCharacterDto {
 
   @IsOptional()
   apotheoseName?: string
+
+  @ApiProperty({ default: 50 })
+  @IsNumber()
+  readonly vr: number
 }
