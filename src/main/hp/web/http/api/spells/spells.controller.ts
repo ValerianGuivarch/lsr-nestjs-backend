@@ -25,7 +25,8 @@ export class SpellController {
     await this.spellService.createSpell({
       name: spell.name,
       rank: spell.rank,
-      knowledgeName: spell.knowledgeName
+      knowledgeName: spell.knowledgeName,
+      formule: spell.formule
     })
   }
 }

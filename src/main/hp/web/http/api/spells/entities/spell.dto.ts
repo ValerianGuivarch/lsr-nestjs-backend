@@ -21,16 +21,24 @@ export class SpellDto {
   })
   knowledge: KnowledgeDto
 
+  @ApiProperty({
+    description: 'The spell formule',
+    type: String
+  })
+  formule: string
+
   constructor(spell: SpellDto) {
     this.name = spell.name
     this.rank = spell.rank
     this.knowledge = spell.knowledge
+    this.formule = spell.formule
   }
   static from(spell: Spell): SpellDto {
     return new SpellDto({
       name: spell.name,
       rank: spell.rank,
-      knowledge: KnowledgeDto.from(spell.knowledge)
+      knowledge: KnowledgeDto.from(spell.knowledge),
+      formule: spell.formule
     })
   }
 }

@@ -19,4 +19,10 @@ export class SpellToCreateDto {
     type: KnowledgeDto
   })
   knowledgeName: string
+
+  @ApiProperty({
+    description: 'The spell formule',
+    type: String
+  })
+  formule: string
 }

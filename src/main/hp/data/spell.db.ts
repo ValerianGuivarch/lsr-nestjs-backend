@@ -27,11 +27,15 @@ export class DBSpell {
     knowledge: true
   }
 
+  @Column({ type: 'varchar', nullable: true })
+  formule: string
+
   static toSpell(spell: DBSpell): Spell {
     return new Spell({
       name: spell.name,
       knowledge: spell.knowledge,
-      rank: spell.rank
+      rank: spell.rank,
+      formule: spell.formule
     })
   }
 }

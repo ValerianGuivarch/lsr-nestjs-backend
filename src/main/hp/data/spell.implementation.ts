@@ -20,11 +20,12 @@ export class SpellImplementation implements ISpellProvider {
     ).map(DBSpell.toSpell)
   }
 
-  async createSpell(param: { name: string; knowledgeName: string; rank: number }): Promise<void> {
+  async createSpell(param: { name: string; knowledgeName: string; rank: number; formule: string }): Promise<void> {
     const spellToCreate = {
       name: param.name,
       knowledgeId: param.knowledgeName,
-      rank: param.rank
+      rank: param.rank,
+      formule: param.formule
     }
     const createdSpell = this.spellRepository.create(spellToCreate)
     await this.spellRepository.save(createdSpell)

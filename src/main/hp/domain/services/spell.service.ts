@@ -10,7 +10,7 @@ export class SpellService {
     return await this.spellProvider.findAll()
   }
 
-  async createSpell(param: { name: string; knowledgeName: string; rank: number }) {
+  async createSpell(param: { name: string; knowledgeName: string; rank: number; formule: string }): Promise<void> {
     await this.spellProvider.createSpell(param)
   }
 }
