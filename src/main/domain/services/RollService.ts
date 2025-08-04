@@ -92,27 +92,17 @@ export class RollService {
     affect: boolean
     avantage?: boolean
   }): Promise<void> {
+
+    if (p.skillId === '861') {
+        p.skillId = (await this.skillService.findSkillByArcaneId(Math.floor(Math.random() * 110) + 1)).id;
+    }
+
     const skill = await this.skillService.findSkillById(p.skillId)
     const apotheose = p.character.currentApotheose
     const controller = await this.characterProvider.findOneByName(p.character.controlledBy)
 
     if (p.character.name === 'esther' && skill.arcaneCost > 0) {
       skill.arcaneCost = 0
-      if (
-        skill.name === 'corbeau' ||
-        skill.name === 'luciole' ||
-        skill.name === 'empoisonneur' ||
-        skill.name === 'chauvesouris' ||
-        skill.name === 'rat' ||
-        skill.name === 'chaperon' ||
-        skill.name === 'araignée'
-      ) {
-        skill.pfCost = 1
-        skill.ppCost = 0
-      } else {
-        skill.pfCost = 0
-        skill.ppCost = 1
-      }
     }
     if (p.character.name === skill.owner) {
       skill.arcanePrimeCost = 0
@@ -609,10 +599,7 @@ export class RollService {
       juge34 = 0
     }
     const fake = (await this.sessionProvider.getSession()).fake
-    if (fake !== 0 && diceNumber === 1 && diceValue === 103 && p.avantage === undefined) {
-      result.push(fake)
-      skill.precision += '\n' + (await this.skillService.findSkillByArcaneId(fake)).name
-    } else if (fake !== 0 && diceValue === 10) {
+    if (fake !== 0 && diceValue === 10) {
       result.push(fake)
     } else {
       for (let i = 0; i < diceNumber; i++) {
@@ -655,7 +642,7 @@ export class RollService {
           }
         }
         result.push(dice)
-        if (diceValue === 103 || diceValue === 104) {
+        if (diceValue === 110) {
           skill.precision += '\n' + (await this.skillService.findSkillByArcaneId(dice)).name
         }
       }
