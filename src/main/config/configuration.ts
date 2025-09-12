@@ -25,8 +25,8 @@ export default () => ({
     autoLoadEntities: true,
     synchronize: false,
     extra: {
-      max: 20, // pool max connections
-      min: 2 // pool min connections
+      max: 5,
+      min: 1
     }
   },
   mailjet: {
