@@ -3,23 +3,18 @@ import { ValidationPipe } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { NestFactory } from '@nestjs/core'
 import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify'
-import * as fs from 'fs'
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
 async function bootstrap() {
-
   // Charger les certificats SSL
-/*  const httpsOptions = {
+  /*  const httpsOptions = {
     https: {
       key: fs.readFileSync('/etc/ssl/certs/key.pem'),
       cert: fs.readFileSync('/etc/ssl/certs/cert.pem')
     }
   }*/
-  const app = await NestFactory.create<NestFastifyApplication>(
-    AppModule,
-    new FastifyAdapter(), {
-      logger: ['error', 'warn', 'log']
-    }
-  )
+  const app = await NestFactory.create<NestFastifyApplication>(AppModule, new FastifyAdapter(), {
+    logger: ['error', 'warn', 'log']
+  })
 
   // CORS
   app.enableCors()
@@ -40,6 +35,6 @@ async function bootstrap() {
   //  await ForestService.agent.mountOnNestJs(app).start()
 
   await app.listen(configService.get('PORT'), configService.get('HOST'))
-  console.log(`Application is running on: ${await app.getUrl()}`)
+  //console.log(`Application is running on: ${await app.getUrl()}`)
 }
 bootstrap().then(() => console.log('Application started'))

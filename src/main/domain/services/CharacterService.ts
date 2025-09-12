@@ -19,7 +19,7 @@ export class CharacterService {
     private apotheoseService: ApotheoseService,
     private proficiencyService: ProficiencyService
   ) {
-    console.log('CharacterService')
+    //console.log('CharacterService')
   }
 
   async findOneByName(name: string): Promise<Character> {

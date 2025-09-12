@@ -190,10 +190,10 @@ export const customizeCollectionDbCompany = (p: { agent: Agent; characterService
           pictureApotheose: (context.formValues['pictureApotheose'] as string) ?? ''
         })
         // log all data
-        console.log('name', name)
-        console.log('chair', chair)
-        console.log('esprit', esprit)
-        console.log('essence', essence)
+        //console.log('name', name)
+        //console.log('chair', chair)
+        //console.log('esprit', esprit)
+        //console.log('essence', essence)
         await p.characterService.createNewCharacter(
           characterToCreate,
           classeName[0],

@@ -82,22 +82,22 @@ export class InitDatabase {
     await this.dbApotheoseRepository.delete({})
     await this.dbProficiencyRepository.delete({})
 
-    console.log('Initializing skills...')
+    //console.log('Initializing skills...')
     const skills = await this.initSkills()
 
-    console.log('Initializing proficiencies...')
+    //console.log('Initializing proficiencies...')
     const proficiencies = await this.initProficiencies()
 
-    console.log('Initializing apotheoses...')
+    //console.log('Initializing apotheoses...')
     const apotheoses = await this.initApotheoses()
 
-    console.log('Initializing classes...')
+    //console.log('Initializing classes...')
     const classes = await this.initClasses(skills, proficiencies, apotheoses)
 
-    console.log('Initializing bloodlines...')
+    //console.log('Initializing bloodlines...')
     const bloodlines = await this.initBloodlines(skills, proficiencies)
 
-    console.log('Initializing character templates...')
+    //console.log('Initializing character templates...')
     const charactersTemplates = await this.initCharactersTemplates(
       skills,
       proficiencies,
@@ -106,7 +106,7 @@ export class InitDatabase {
       bloodlines
     )
 
-    console.log('Initializing skills invocations...')
+    //console.log('Initializing skills invocations...')
     const skillsInvoc = await this.initSkillsInvocations(charactersTemplates)
 
     const totalSkills = new Map<string, DBSkill>()
@@ -116,10 +116,10 @@ export class InitDatabase {
     for (const skill of skillsInvoc.values()) {
       totalSkills.set(skill.name, skill)
     }
-    console.log('Initializing characters...')
+    //console.log('Initializing characters...')
     await this.initCharacters(totalSkills, proficiencies, apotheoses, classes, bloodlines)
 
-    console.log('Database initialized')
+    //console.log('Database initialized')
   }
 
   async initCharactersTemplates(
@@ -167,7 +167,7 @@ export class InitDatabase {
       if (!existingCharacter) {
         const character = new DBCharacter()
         Object.assign(character, characterData)
-        console.log(character.name)
+        //console.log(character.name)
         const createdCharacter = await this.dbCharacterRepository.save(character)
         characters.set(character.name, createdCharacter)
       } else {
@@ -274,7 +274,7 @@ export class InitDatabase {
       if (!existingClasse) {
         const classe = new DBClasse()
         Object.assign(classe, classeData)
-        console.log(classe.name)
+        //console.log(classe.name)
 
         const createdClasse = await this.dbClasseRepository.save(classe)
         classes.set(classe.name, createdClasse)

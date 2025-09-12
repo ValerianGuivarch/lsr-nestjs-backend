@@ -21,7 +21,7 @@ export class SpellController {
 
   @Post('')
   async postNewSpell(@Body() spell: SpellToCreateDto): Promise<void> {
-    console.log(JSON.stringify(spell))
+    //console.log(JSON.stringify(spell))
     await this.spellService.createSpell({
       name: spell.name,
       rank: spell.rank,

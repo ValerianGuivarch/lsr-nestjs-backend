@@ -63,8 +63,8 @@ const main = () => {
   const names: string[] = []
 
   charactersData.forEach((characterData) => {
-    console.log('Génération du code en cours...')
-    console.log(characterData)
+    //console.log('Génération du code en cours...')
+    //console.log(characterData)
     // varName is name with - and space removed and in lowercase
     const varName = characterData.character.name.toLowerCase().replace(/-|\s/g, '')
     generatedCode += generateCharacterCode(varName, characterData.character)
@@ -74,7 +74,7 @@ const main = () => {
   return newCharacters
 }`
   writeFileSync(outputFile, generatedCode)
-  console.log('Code généré avec succès dans le fichier de sortie.')
+  //console.log('Code généré avec succès dans le fichier de sortie.')
 }
 
 main()

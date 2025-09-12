@@ -21,7 +21,7 @@ export class WizardController {
   @HttpCode(HttpStatus.CREATED)
   @Post('')
   async createNewWizard(@Body() request: CreateWizardRequest): Promise<WizardDto> {
-    console.log('request', JSON.stringify(request))
+    //console.log('request', JSON.stringify(request))
     return WizardDto.from(
       await this.wizardService.createWizard(
         Wizard.toWizardToCreate({
@@ -65,7 +65,7 @@ export class WizardController {
     @Param('wizardName') wizardName: string,
     @Body() request: UpdateWizardRequest
   ): Promise<WizardDto> {
-    console.log('request', JSON.stringify(request))
+    //console.log('request', JSON.stringify(request))
     const wizard = await this.wizardService.getWizardByName(wizardName)
     return WizardDto.from(
       await this.wizardService.updateWizard({

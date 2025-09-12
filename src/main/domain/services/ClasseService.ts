@@ -9,7 +9,7 @@ export class ClasseService {
     @Inject('IClasseProvider')
     private classeProvider: IClasseProvider
   ) {
-    console.log('ClasseService')
+    //console.log('ClasseService')
   }
 
   async findAll(): Promise<Classe[]> {

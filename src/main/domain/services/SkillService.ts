@@ -15,7 +15,7 @@ export class SkillService {
     @Inject('ISessionProvider')
     private sessionProvider: ISessionProvider
   ) {
-    console.log('SkillService')
+    //console.log('SkillService')
   }
 
   async findSkillsByCharacter(character: Character): Promise<Skill[]> {

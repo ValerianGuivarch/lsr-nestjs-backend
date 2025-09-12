@@ -101,7 +101,7 @@ export class DBRollProvider implements IRollProvider {
   }
 
   async findOneById(id: string): Promise<Roll> {
-    console.log('findOneById', id)
+    //console.log('findOneById', id)
     const roll = await this.dbRollRepository.findOneBy({ id: id })
     if (!roll) {
       throw ProviderErrors.EntityNotFound('roll ${id}')

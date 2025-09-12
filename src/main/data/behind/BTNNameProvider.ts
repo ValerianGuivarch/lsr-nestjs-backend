@@ -17,10 +17,10 @@ export class BTNNameProvider implements INameProvider {
       })
 
       if (response.data && response.data.names && response.data.names.length > 0) {
-        console.log(response.data.names[0])
+        //console.log(response.data.names[0])
         return response.data.names[0]
       } else {
-        console.log('Pas de nom généré')
+        //console.log('Pas de nom généré')
         return 'Pas de nom généré'
       }
     } catch (error) {

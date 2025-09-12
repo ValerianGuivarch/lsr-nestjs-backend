@@ -22,7 +22,7 @@ export class FBNotificationProvider implements INotificationProvider {
         }
       }
 
-      console.log('Sending notification:', body)
+      //console.log('Sending notification:', body)
       // Appel à Firebase Cloud Messaging API
       const response = await axios.post(
         'https://us-central1-elena-evjf.cloudfunctions.net/sendNotificationOnEvent',
@@ -31,7 +31,7 @@ export class FBNotificationProvider implements INotificationProvider {
           headers
         }
       )
-      console.log('Notification sent successfully:', response.data)
+      //console.log('Notification sent successfully:', response.data)
     } catch (error) {
       console.error('Error sending notification:', error)
     }

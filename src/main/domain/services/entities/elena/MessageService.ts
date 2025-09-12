@@ -17,9 +17,9 @@ export class MessageService {
   }
 
   async create(messageToCreate: MessageToCreate, notifTitle?: string): Promise<Message> {
-    console.log('Creating message:', messageToCreate)
+    //console.log('Creating message:', messageToCreate)
     const message = await this.messageProvider.create(messageToCreate)
-    console.log('Message created:', message)
+    //console.log('Message created:', message)
     await this.notificationProvider.send({
       titre: notifTitle ? notifTitle : message.sender.name,
       text: message.text,

@@ -33,7 +33,7 @@ export class RollController {
   @ApiOkResponse({ type: RollVM })
   @Put(':id')
   async updateRoll(@Param('id') id: string, @Body() req: UpdateRollRequest): Promise<void> {
-    console.log('updateRoll', id, req)
+    //console.log('updateRoll', id, req)
     const rollToUpdate = await this.rollService.findOneById(id)
     if (rollToUpdate) {
       await this.rollService.updateRoll({

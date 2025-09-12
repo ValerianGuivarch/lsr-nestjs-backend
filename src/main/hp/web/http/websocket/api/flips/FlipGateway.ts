@@ -15,12 +15,12 @@ export class FlipGateway {
   @Get('')
   @Sse()
   getFlips(): Observable<string> {
-    console.log('SSE getFlips() called')
+    //console.log('SSE getFlips() called')
     return this.flipService.getFlipsChangeObservable().pipe(
       map((flips) => {
-        console.log('Data emitted (before formatting):', flips)
+        //console.log('Data emitted (before formatting):', flips)
         const formattedData = `data: ${JSON.stringify(flips)}\n\n`
-        console.log('Formatted Data:', formattedData)
+        //console.log('Formatted Data:', formattedData)
         return formattedData
       })
     )

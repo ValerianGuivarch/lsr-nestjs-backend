@@ -50,7 +50,7 @@ export class InitEntry {
           const day = dayMatch[1].padStart(2, '0')
           // eslint-disable-next-line no-magic-numbers
           const entryText = dayMatch[2]
-          console.log(`${day}/${currentMonth}/${currentYear}: ${entryText}`)
+          //console.log(`${day}/${currentMonth}/${currentYear}: ${entryText}`)
           const entry = this.dbEntryRepository.create({
             text: entryText,
             day: parseInt(day),

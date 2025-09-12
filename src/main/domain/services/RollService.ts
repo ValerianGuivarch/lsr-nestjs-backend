@@ -66,7 +66,7 @@ export class RollService {
     @Inject('IPokeProvider')
     private pokeProvider: IPokeProvider
   ) {
-    console.log('RollService')
+    //console.log('RollService')
   }
   async getLast(): Promise<Roll[]> {
     return this.rollProvider.getLast(RollService.MAX_ROLL_LIST_SIZE)
@@ -92,17 +92,15 @@ export class RollService {
     affect: boolean
     avantage?: boolean
   }): Promise<void> {
-
     if (p.skillId === '861') {
-        p.skillId = (await this.skillService.findSkillByArcaneId(Math.floor(Math.random() * 110) + 1)).id;
+      p.skillId = (await this.skillService.findSkillByArcaneId(Math.floor(Math.random() * 110) + 1)).id
     }
 
     const skill = await this.skillService.findSkillById(p.skillId)
 
     if (p.skillId === '861') {
-              skill.precision += '\n(' + (await this.skillService.findSkillByArcaneId(parseInt(p.skillId, 10))).name + ')'
+      skill.precision += '\n(' + (await this.skillService.findSkillByArcaneId(parseInt(p.skillId, 10))).name + ')'
     }
-
 
     const apotheose = p.character.currentApotheose
     const controller = await this.characterProvider.findOneByName(p.character.controlledBy)
@@ -241,9 +239,9 @@ export class RollService {
     } else if (p.character.dailyUse.get(skill.name) === 0) {
       throw ProviderErrors.RollNotEnoughDailyUse()
     }
-    console.log(skill.name)
+    //console.log(skill.name)
     if (skill.successCalculation === SuccessCalculation.CUSTOM) {
-      console.log('custom')
+      //console.log('custom')
       if (skill.name === 'KO') {
         // eslint-disable-next-line no-magic-numbers
         if (result[0] == 1) {
@@ -277,14 +275,14 @@ export class RollService {
           throw ProviderErrors.RollNotEnoughDailyUse()
         }
       } else if (skill.name === 'Dettes multiples') {
-        console.log('coeur')
+        //console.log('coeur')
         data += ' de '
 
         const rois = ['Ifrit', 'Jack']
         const randomRois = rois[Math.floor(Math.random() * rois.length)]
         data += randomRois
       } else if (skill.name === 'Coeur Artificiel') {
-        console.log('coeur')
+        //console.log('coeur')
         data += ' et subit les dettes de '
 
         const rois = [
@@ -333,9 +331,9 @@ export class RollService {
         const pokemon = await this.pokeProvider.getPokemonById(result[0])
         // eslint-disable-next-line no-magic-numbers
         if (result[0] >= 1 && result[0] <= 150) {
-          console.log('result[0] : ' + result[0])
+          //console.log('result[0] : ' + result[0])
           data += ' *' + pokemon.nameFr + '*'
-          console.log('data : ' + data)
+          //console.log('data : ' + data)
         } else {
           data += ' un pokémon inconnu'
         }
@@ -387,7 +385,7 @@ export class RollService {
       }
     }
     if (skill.name === 'cheval amélioré') {
-      console.log('CHEVAL')
+      //console.log('CHEVAL')
       const tiger = await this.characterProvider.findOneByName('ChevalDeRoy')
       let chevalChair = 2
       let chevalEsprit = 2
@@ -423,9 +421,9 @@ export class RollService {
       tiger.essence = chevalEssence
       tiger.pp = 0
       tiger.ppMax = 0
-      console.log(chevalChair)
-      console.log(chevalEsprit)
-      console.log(chevalChair)
+      //console.log(chevalChair)
+      //console.log(chevalEsprit)
+      //console.log(chevalChair)
       await this.characterProvider.update(tiger)
     }
 
@@ -520,7 +518,7 @@ export class RollService {
   }
 
   getRollsChangeObservable(): Observable<Roll[]> {
-    console.log('rollsChangeSubject.asObservable' + this.rollsChangeSubject.asObservable())
+    //console.log('rollsChangeSubject.asObservable' + this.rollsChangeSubject.asObservable())
     return this.rollsChangeSubject.asObservable()
   }
 

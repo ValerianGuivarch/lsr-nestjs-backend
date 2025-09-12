@@ -2,7 +2,7 @@ import { Difficulty } from '../entities/difficulty.enum'
 import { Flip } from '../entities/flip.entity'
 import { IFlipProvider } from '../providers/flip.provider'
 import { Inject, Injectable } from '@nestjs/common'
-import { Observable, Subject, tap } from 'rxjs'
+import { Observable, Subject } from 'rxjs'
 
 @Injectable()
 export class FlipService {
@@ -10,7 +10,7 @@ export class FlipService {
 
   constructor(@Inject('IFlipProvider') private flipProvider: IFlipProvider) {
     this.getFlipsChangeObservable().subscribe((flips) => {
-      console.log('Observable received:', flips.length)
+      //console.log('Observable received:', flips.length)
     })
   }
 
@@ -25,9 +25,7 @@ export class FlipService {
     seuil: number
   }): Promise<void> {
     const flipRolling = this.flipRolling(flip.flipModif)
-    console.log(
-      'flipRollingSuccess' + flipRolling.result + 'seuil' + flip.seuil + 'result' + (flipRolling.result >= flip.seuil)
-    )
+    //console.log('flipRollingSuccess' + flipRolling.result + 'seuil' + flip.seuil + 'result' + (flipRolling.result >= flip.seuil)   )
     if (flip.difficulty === Difficulty.NORMAL) {
       await this.flipProvider.create(
         Flip.toFlipToCreate({
@@ -68,8 +66,8 @@ export class FlipService {
     }
     const flips = await this.getAllFlips()
     this.flipsChangeSubject.next(flips)
-    console.log('Data pushed to flipsChangeSubject:', flips)
-    console.log('Subject observers count:', this.flipsChangeSubject.observers.length)
+    //console.log('Data pushed to flipsChangeSubject:', flips)
+    //console.log('Subject observers count:', this.flipsChangeSubject.observers.length)
   }
 
   async getAllFlips(): Promise<Flip[]> {
@@ -77,10 +75,9 @@ export class FlipService {
   }
 
   getFlipsChangeObservable(): Observable<Flip[]> {
-    console.log('getFlipsChangeObservable called. Observers count:', this.flipsChangeSubject.observers.length)
-    return this.flipsChangeSubject
-      .asObservable()
-      .pipe(tap((flips) => console.log('Observable emitting:', flips.length, flips)))
+    //console.log('getFlipsChangeObservable called. Observers count:', this.flipsChangeSubject.observers.length)
+    return this.flipsChangeSubject.asObservable()
+    //      .pipe(tap((flips) => console.log('Observable emitting:', flips.length, flips)))
   }
 
   private flipRolling(flipModif: number): {
