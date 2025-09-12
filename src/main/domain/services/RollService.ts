@@ -98,6 +98,12 @@ export class RollService {
     }
 
     const skill = await this.skillService.findSkillById(p.skillId)
+
+    if (p.skillId === '861') {
+              skill.precision += '\n(' + (await this.skillService.findSkillByArcaneId(parseInt(p.skillId, 10))).name + ')'
+    }
+
+
     const apotheose = p.character.currentApotheose
     const controller = await this.characterProvider.findOneByName(p.character.controlledBy)
 
@@ -205,12 +211,12 @@ export class RollService {
       successRoll: success,
       juge12Roll: juge12,
       juge34Roll: juge34
-    } = await this.dealWithSuccess(diceNumber, diceValue, result, p, skill, usePp, useProficiency)
+    } = await this.dealWithSuccess(diceNumber, diceValue, result, p, skill, usePp, useProficiency, false)
     const {
       successRoll: successBis,
       juge12Roll: juge12Bis,
       juge34Roll: juge34Bis
-    } = await this.dealWithSuccess(diceNumber, diceValue, resultBis, p, skill, usePp, useProficiency)
+    } = await this.dealWithSuccess(diceNumber, diceValue, resultBis, p, skill, usePp, useProficiency, true)
 
     pvDelta = pvDelta - skill.pvCost
     pfDelta = pfDelta - skill.pfCost
@@ -587,7 +593,8 @@ export class RollService {
     },
     skill: Skill,
     usePp: boolean,
-    useProficiency: boolean
+    useProficiency: boolean,
+    bis: boolean
   ): Promise<{ successRoll: number | null; juge12Roll: number | null; juge34Roll: number | null }> {
     let success: number | null = null
     let juge12: number | null = null
@@ -642,7 +649,7 @@ export class RollService {
           }
         }
         result.push(dice)
-        if (diceValue === 110) {
+        if (diceValue === 110 && !bis) {
           skill.precision += '\n' + (await this.skillService.findSkillByArcaneId(dice)).name
         }
       }
