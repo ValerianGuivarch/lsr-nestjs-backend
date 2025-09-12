@@ -23,7 +23,11 @@ export default () => ({
     // eslint-disable-next-line no-process-env
     database: process.env.DB_NAME || 'starter-database',
     autoLoadEntities: true,
-    synchronize: false
+    synchronize: false,
+    extra: {
+      max: 20, // pool max connections
+      min: 2 // pool min connections
+    }
   },
   mailjet: {
     emailFrom: process.env.EMAIL_FROM,
