@@ -55,10 +55,6 @@ import { MessageController } from './web/http/api/v1/elena/MessageController'
 import { ScenarioController } from './web/http/api/v1/elena/ScenarioController'
 import { MjController } from './web/http/api/v1/mj/MjController'
 import { RollController } from './web/http/api/v1/rolls/RollController'
-import { CharacterGateway } from './web/websocket/api/v1/characters/CharacterGateway'
-import { MjGateway } from './web/websocket/api/v1/mj/MjGateway'
-import { RollGateway } from './web/websocket/api/v1/rolls/RollGateway'
-import { SpeakingGateway } from './web/websocket/api/v1/speaking/SpeakingGateway'
 import { Module } from '@nestjs/common'
 import { ConfigModule } from '@nestjs/config'
 import { JwtService } from '@nestjs/jwt'
@@ -90,11 +86,6 @@ import { TypeOrmModule } from '@nestjs/typeorm'
     PostgresModule
   ],
   controllers: [
-    MjGateway,
-    CharacterGateway,
-    RollGateway,
-    //FlipGateway,
-    SpeakingGateway,
     MjController,
     CharacterController,
     RollController,
