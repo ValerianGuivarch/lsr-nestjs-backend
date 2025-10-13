@@ -166,6 +166,9 @@ export class RollService {
       if (p.character.hurtMalus && p.character.bloodline.name !== 'troglodyte' && skill.stat === SkillStat.CHAIR) {
         const diff = p.character.pvMax - p.character.pv
         p.malus = p.malus + Math.floor(diff / 6)
+      } else if (p.character.name === 'Thavma') {
+        const diff = p.character.pvMax - p.character.pv
+        p.malus = p.malus + Math.floor(diff / 2)
       } else {
         const diff = p.character.pvMax - p.character.pv
         p.malus = p.malus + Math.floor(diff / 12)
