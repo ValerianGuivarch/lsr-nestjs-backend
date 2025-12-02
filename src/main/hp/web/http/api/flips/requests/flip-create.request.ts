@@ -7,6 +7,10 @@ export class CreateFlipRequest {
   @IsString()
   wizardName: string
 
+  @ApiProperty({ description: 'The wizard name', type: String, required: false })
+  @IsString()
+  wizardDisplayName?: string
+
   @ApiPropertyOptional({ description: 'The knowledge name', type: String })
   @IsString()
   @IsOptional()

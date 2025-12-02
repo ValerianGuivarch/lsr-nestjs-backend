@@ -21,6 +21,7 @@ export class FlipService {
     flipText: string
     flipModif: number
     wizardName: string
+    wizardDisplayName?: string
     difficulty: Difficulty
     seuil: number
   }): Promise<void> {
@@ -36,6 +37,7 @@ export class FlipService {
           base: flipRolling.rolling,
           modif: flip.flipModif,
           wizardName: flip.wizardName,
+          wizardDisplayName: flip.wizardDisplayName,
           success: flipRolling.result >= flip.seuil,
           statId: flip.statId,
           knowledgeId: flip.knowledgeId,
@@ -57,6 +59,7 @@ export class FlipService {
           base: flipRolling.rolling,
           modif: flip.flipModif,
           wizardName: flip.wizardName,
+          wizardDisplayName: flip.wizardDisplayName,
           success: result >= flip.seuil,
           statId: flip.statId,
           knowledgeId: flip.knowledgeId,

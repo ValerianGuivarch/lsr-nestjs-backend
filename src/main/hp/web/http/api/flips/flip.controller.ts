@@ -23,6 +23,7 @@ export class FlipController {
     //console.log('request', JSON.stringify(request))
     await this.flipWorkflowService.createFlip({
       wizardName: request.wizardName,
+      wizardDisplayName: request.wizardDisplayName,
       knowledgeName: request.knowledgeName,
       spellName: request.spellName,
       statName: request.statName,

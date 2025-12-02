@@ -17,6 +17,12 @@ export class FlipDto {
   wizardName: string
 
   @ApiProperty({
+    description: 'The flip wizardName',
+    type: String
+  })
+  wizardDisplayName?: string
+
+  @ApiProperty({
     description: 'The flip text',
     type: String
   })
@@ -67,6 +73,7 @@ export class FlipDto {
   constructor(flip: FlipDto) {
     this.id = flip.id
     this.wizardName = flip.wizardName
+    this.wizardDisplayName = flip.wizardDisplayName
     this.text = flip.text
     this.result = flip.result
     this.base = flip.base
@@ -80,6 +87,7 @@ export class FlipDto {
     return new FlipDto({
       id: flip.id,
       wizardName: flip.wizardName,
+      wizardDisplayName: flip.wizardDisplayName,
       xpOk: flip.xpOk,
       text: flip.text,
       result: flip.result,

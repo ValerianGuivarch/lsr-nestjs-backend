@@ -16,6 +16,7 @@ export class FlipWorkflowService {
     statName?: string
     spellName?: string
     wizardName: string
+    wizardDisplayName?: string
     difficulty?: Difficulty
   }): Promise<void> {
     const wizard = await this.wizardService.getWizardByName(flip.wizardName)
@@ -34,6 +35,7 @@ export class FlipWorkflowService {
       }
       return this.flipService.createFlip({
         wizardName: wizard.name,
+        wizardDisplayName: flip.wizardDisplayName,
         flipModif: wizardKnowledge.level,
         flipText:
           wizard.name +
@@ -53,6 +55,7 @@ export class FlipWorkflowService {
       }
       this.flipService.createFlip({
         wizardName: wizard.name,
+        wizardDisplayName: flip.wizardDisplayName,
         flipModif: wizardStat.level,
         flipText:
           wizard.name + ' ' + wizardStat.stat.flipText + textDifficulty + ' [ ' + wizardStat.level + ' ] et obtient : ',
@@ -67,6 +70,7 @@ export class FlipWorkflowService {
       }
       this.flipService.createFlip({
         wizardName: wizard.name,
+        wizardDisplayName: flip.wizardDisplayName,
         flipModif:
           (wizard.knowledges.find((knowledge) => knowledge.knowledge.name === wizardSpell.spell.knowledge.name)
             ?.level ?? 0) +
@@ -88,6 +92,7 @@ export class FlipWorkflowService {
       // generic flip
       this.flipService.createFlip({
         wizardName: wizard.name,
+        wizardDisplayName: flip.wizardDisplayName,
         flipModif: 0,
         flipText: wizard.name + ' obtient : ',
         difficulty: flip.difficulty,

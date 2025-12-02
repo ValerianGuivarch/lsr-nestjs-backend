@@ -25,6 +25,9 @@ export class DBWizard {
   @PrimaryColumn({ type: 'varchar' })
   name: string
 
+  @Column({ type: 'varchar', nullable: true, default: null })
+  displayName?: string
+
   @Column({ type: 'varchar', nullable: false, default: '' })
   animal: string
 
@@ -90,6 +93,7 @@ export class DBWizard {
   static toWizard(wizard: DBWizard): Wizard {
     return new Wizard({
       name: wizard.name,
+      displayName: wizard.displayName,
       animal: wizard.animal,
       familyName: wizard.familyName,
       category: wizard.category,
