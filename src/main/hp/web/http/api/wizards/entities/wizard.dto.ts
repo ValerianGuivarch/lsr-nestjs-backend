@@ -11,6 +11,12 @@ export class WizardDto {
   })
   name: string
 
+  @ApiPropertyOptional({
+    description: 'The wizard display name',
+    type: String
+  })
+  displayName?: string
+
   @ApiProperty({
     description: 'The wizard family name',
     type: String
@@ -107,6 +113,7 @@ export class WizardDto {
 
   constructor(wizard: WizardDto) {
     this.name = wizard.name
+    this.displayName = wizard.displayName
     this.animal = wizard.animal
     this.familyName = wizard.familyName
     this.category = wizard.category
@@ -126,6 +133,7 @@ export class WizardDto {
   static from(wizard: Wizard): WizardDto {
     return new WizardDto({
       name: wizard.name,
+      displayName: wizard.displayName,
       familyName: wizard.familyName,
       category: wizard.category,
       animal: wizard.animal,
