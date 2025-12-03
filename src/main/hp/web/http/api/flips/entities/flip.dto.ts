@@ -20,7 +20,7 @@ export class FlipDto {
     description: 'The flip wizardName',
     type: String
   })
-  wizardDisplayName?: string
+  wizardDisplayName: string
 
   @ApiProperty({
     description: 'The flip text',
@@ -87,7 +87,7 @@ export class FlipDto {
     return new FlipDto({
       id: flip.id,
       wizardName: flip.wizardName,
-      wizardDisplayName: flip.wizardDisplayName,
+      wizardDisplayName: flip.wizardDisplayName ?? '',
       xpOk: flip.xpOk,
       text: flip.text,
       result: flip.result,

@@ -15,7 +15,7 @@ export class WizardDto {
     description: 'The wizard display name',
     type: String
   })
-  displayName?: string
+  displayName: string
 
   @ApiProperty({
     description: 'The wizard family name',
