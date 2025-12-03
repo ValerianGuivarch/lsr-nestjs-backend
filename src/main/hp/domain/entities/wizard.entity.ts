@@ -5,7 +5,7 @@ import { WizardStat, WizardStatToCreate, WizardStatToUpdate } from './wizard-sta
 
 export class Wizard {
   name: string
-  displayName?: string
+  displayName: string
   familyName: string
   animal: string
   category: string
@@ -24,7 +24,7 @@ export class Wizard {
 
   constructor(wizard: {
     name: string
-    displayName?: string
+    displayName: string
     familyName: string
     animal: string
     category: string
@@ -94,6 +94,7 @@ export class Wizard {
   }): WizardToCreate {
     return {
       name: p.name,
+      displayName: p.name,
       familyName: p.familyName,
       animal: p.animal,
       category: p.category,

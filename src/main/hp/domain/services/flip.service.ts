@@ -21,7 +21,7 @@ export class FlipService {
     flipText: string
     flipModif: number
     wizardName: string
-    wizardDisplayName?: string
+    wizardDisplayName: string
     difficulty: Difficulty
     seuil: number
   }): Promise<void> {

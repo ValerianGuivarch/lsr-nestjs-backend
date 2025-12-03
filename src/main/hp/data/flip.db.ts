@@ -19,8 +19,8 @@ export class DBFlip {
   @Column({ type: 'varchar', nullable: false })
   wizardName: string
 
-  @Column({ type: 'varchar', nullable: true })
-  wizardDisplayName?: string
+  @Column({ type: 'varchar', nullable: false })
+  wizardDisplayName: string
 
   @Column({ type: 'int', nullable: false })
   result: number

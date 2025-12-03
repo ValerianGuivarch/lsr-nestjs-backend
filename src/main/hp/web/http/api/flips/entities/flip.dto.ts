@@ -87,7 +87,7 @@ export class FlipDto {
     return new FlipDto({
       id: flip.id,
       wizardName: flip.wizardName,
-      wizardDisplayName: flip.wizardDisplayName ?? '',
+      wizardDisplayName: flip.wizardDisplayName,
       xpOk: flip.xpOk,
       text: flip.text,
       result: flip.result,

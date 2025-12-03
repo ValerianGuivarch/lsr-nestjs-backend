@@ -25,8 +25,8 @@ export class DBWizard {
   @PrimaryColumn({ type: 'varchar' })
   name: string
 
-  @Column({ type: 'varchar', nullable: true, default: null })
-  displayName?: string
+  @Column({ type: 'varchar', nullable: false, default: '' })
+  displayName: string
 
   @Column({ type: 'varchar', nullable: false, default: '' })
   animal: string

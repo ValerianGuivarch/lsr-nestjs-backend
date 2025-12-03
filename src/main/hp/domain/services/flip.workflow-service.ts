@@ -16,7 +16,7 @@ export class FlipWorkflowService {
     statName?: string
     spellName?: string
     wizardName: string
-    wizardDisplayName?: string
+    wizardDisplayName: string
     difficulty?: Difficulty
   }): Promise<void> {
     const wizard = await this.wizardService.getWizardByName(flip.wizardName)

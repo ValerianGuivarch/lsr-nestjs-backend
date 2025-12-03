@@ -3,7 +3,7 @@ import { Difficulty } from './difficulty.enum'
 export class Flip {
   id: string
   wizardName: string
-  wizardDisplayName?: string
+  wizardDisplayName: string
   xpOk: boolean
   spellId?: string
   knowledgeId?: string
@@ -20,7 +20,7 @@ export class Flip {
     id: string
     text: string
     wizardName: string
-    wizardDisplayName?: string
+    wizardDisplayName: string
     success: boolean
     result: number
     base: number
@@ -50,7 +50,7 @@ export class Flip {
 
   static toFlipToCreate(p: {
     wizardName: string
-    wizardDisplayName?: string
+    wizardDisplayName: string
     text: string
     result: number
     base: number
