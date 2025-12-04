@@ -38,7 +38,7 @@ export class FlipWorkflowService {
         wizardDisplayName: flip.wizardDisplayName,
         flipModif: wizardKnowledge.level,
         flipText:
-          (wizard.displayName === '' ? wizard.displayName : wizard.name) +
+          (wizard.displayName !== '' ? wizard.displayName : wizard.name) +
           wizardKnowledge.knowledge.flipText +
           textDifficulty +
           ' [ ' +
@@ -58,7 +58,7 @@ export class FlipWorkflowService {
         wizardDisplayName: flip.wizardDisplayName,
         flipModif: wizardStat.level,
         flipText:
-          (wizard.displayName === '' ? wizard.displayName : wizard.name) +
+          (wizard.displayName !== '' ? wizard.displayName : wizard.name) +
           ' ' +
           wizardStat.stat.flipText +
           textDifficulty +
@@ -83,7 +83,7 @@ export class FlipWorkflowService {
           (wizard.stats.find((stat) => stat.stat.name === 'Pouvoir')?.level ?? 0) +
           2 * (Wizard.getSpellLevel(wizard.category) - wizardSpell.spell.rank),
         flipText:
-          (wizard.displayName === '' ? wizard.displayName : wizard.name) +
+          (wizard.displayName !== '' ? wizard.displayName : wizard.name) +
           ' lance le sort ' +
           wizardSpell.spell.name +
           textDifficulty +
@@ -100,7 +100,7 @@ export class FlipWorkflowService {
         wizardName: wizard.name,
         wizardDisplayName: flip.wizardDisplayName,
         flipModif: 0,
-        flipText: (wizard.displayName === '' ? wizard.displayName : wizard.name) + ' obtient : ',
+        flipText: (wizard.displayName !== '' ? wizard.displayName : wizard.name) + ' obtient : ',
         difficulty: flip.difficulty,
         seuil: 0
       })
