@@ -18,7 +18,7 @@ export class FlipImplementation implements IFlipProvider {
       createdDate: new Date(),
       updatedDate: new Date(),
       wizardName: flip.wizardName,
-      wizardDisplayName: flip.wizardDisplayName,
+      wizardDisplayName: flip.wizardDisplayName ?? '',
       text: flip.text,
       result: flip.result,
       baseBis: flip.baseBis,
