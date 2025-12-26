@@ -5,7 +5,6 @@ import type { FastifyReply, FastifyRequest } from 'fastify'
 
 type OkUploadResponse = { ok: true; item: PhotoItem }
 type OkLatestResponse = { ok: true; items: PhotoItem[] }
-type OkNextResponse = { ok: true; item: PhotoItem | null }
 
 @ApiTags('wedding-photos')
 @Controller('api/v1/wedding-photos')
@@ -22,72 +21,56 @@ export class WeddingPhotosController {
 
     const buffer: Buffer = await part.toBuffer()
 
-    const item = await this.svc.saveUpload({
-      buffer,
-      mimetype: part.mimetype,
-      originalname: part.filename,
-      size: buffer.length
-    } as any)
-
+    const item = await this.svc.saveUpload({ buffer })
     return { ok: true, item }
   }
 
-  // ✅ REMIS : /latest
   @Get('latest')
   @ApiResponse({ status: 200, description: 'Latest photos (most recent first)' })
   async latest(@Query('limit') limit?: string): Promise<OkLatestResponse> {
+    // eslint-disable-next-line no-magic-numbers
     const n = Math.min(Math.max(Number(limit ?? 120), 1), 200)
     const items = await this.svc.listLatest(n)
     return { ok: true, items }
   }
 
-  // ✅ Nouveau : /next
-  @Get('next')
-  @ApiResponse({ status: 200, description: 'One photo (random). first=1 => latest.' })
-  async next(@Query('first') first?: string): Promise<OkNextResponse> {
-    const item = await this.svc.nextRandom({ first: first === '1' || first === 'true' })
-    return { ok: true, item }
-  }
-
   @Get('thumb')
   @ApiResponse({ status: 200, description: 'JPEG thumbnail (stream)' })
+  @ApiResponse({ status: 404, description: 'Thumb not found' })
   async thumb(@Query('name') name: string, @Res() reply: FastifyReply): Promise<void> {
-    if (!name) throw new BadRequestException('Missing name')
+    const stream = this.svc.getThumbStream(name)
+
     reply.header('Content-Type', 'image/jpeg')
     reply.header('Cache-Control', 'public, max-age=60')
-    await reply.send(this.svc.getThumbStream(name))
+    await reply.send(stream)
   }
 
   @Get('original')
   @ApiResponse({ status: 200, description: 'JPEG original (stream)' })
+  @ApiResponse({ status: 404, description: 'Original not found' })
   async original(@Query('name') name: string, @Res() reply: FastifyReply): Promise<void> {
-    if (!name) throw new BadRequestException('Missing name')
+    const stream = this.svc.getOriginalStream(name)
+
     reply.header('Content-Type', 'image/jpeg')
     reply.header('Cache-Control', 'public, max-age=60')
-    await reply.send(this.svc.getOriginalStream(name))
+    await reply.send(stream)
   }
 
   @Get('stream')
   @Header('Content-Type', 'text/event-stream')
   @Header('Cache-Control', 'no-cache')
   @Header('Connection', 'keep-alive')
-  @ApiResponse({ status: 200, description: 'SSE stream. Emits event "new".' })
+  @ApiResponse({ status: 200, description: 'SSE stream (heartbeat only in this version)' })
   async stream(@Req() req: FastifyRequest, @Res() reply: FastifyReply): Promise<void> {
     const res = reply.raw
     res.write(`event: ping\ndata: ${Date.now()}\n\n`)
 
-    const unsubscribe = this.svc.onNewPhoto((item) => {
-      res.write(`event: new\ndata: ${JSON.stringify({ id: item.id, createdAt: item.createdAt })}\n\n`)
-    })
+    const interval = setInterval(() => {
+      res.write(`event: refresh\ndata: ${Date.now()}\n\n`)
+      // eslint-disable-next-line no-magic-numbers
+    }, 3000)
 
-    const heartbeat = setInterval(() => {
-      res.write(`: hb ${Date.now()}\n\n`)
-    }, 15000)
-
-    const cleanup = () => {
-      clearInterval(heartbeat)
-      unsubscribe()
-    }
+    const cleanup = () => clearInterval(interval)
     req.raw.on('close', cleanup)
     req.raw.on('end', cleanup)
   }
