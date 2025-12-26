@@ -1,9 +1,11 @@
 import { AppModule } from './app.module'
+import multipart from '@fastify/multipart'
 import { ValidationPipe } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { NestFactory } from '@nestjs/core'
 import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify'
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
+
 async function bootstrap() {
   // Charger les certificats SSL
   /*  const httpsOptions = {
@@ -33,6 +35,11 @@ async function bootstrap() {
   SwaggerModule.setup('api', app, document)
 
   //  await ForestService.agent.mountOnNestJs(app).start()
+
+  await app.register(multipart, {
+    // eslint-disable-next-line no-magic-numbers
+    limits: { fileSize: 12 * 1024 * 1024 }
+  })
 
   await app.listen(configService.get('PORT'), configService.get('HOST'))
   //console.log(`Application is running on: ${await app.getUrl()}`)

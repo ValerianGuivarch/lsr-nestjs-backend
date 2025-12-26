@@ -55,6 +55,8 @@ import { MessageController } from './web/http/api/v1/elena/MessageController'
 import { ScenarioController } from './web/http/api/v1/elena/ScenarioController'
 import { MjController } from './web/http/api/v1/mj/MjController'
 import { RollController } from './web/http/api/v1/rolls/RollController'
+import { WeddingPhotosController } from './web/http/api/v1/wedding-photos/wedding-photos.controller'
+import { WeddingPhotosService } from './web/http/api/v1/wedding-photos/wedding-photos.service'
 import { Module } from '@nestjs/common'
 import { ConfigModule } from '@nestjs/config'
 import { JwtService } from '@nestjs/jwt'
@@ -98,7 +100,8 @@ import { TypeOrmModule } from '@nestjs/typeorm'
     HouseController,
     SpellController,
     StatController,
-    FlipController
+    FlipController,
+    WeddingPhotosController
   ],
   providers: [
     SkillService,
@@ -123,6 +126,7 @@ import { TypeOrmModule } from '@nestjs/typeorm'
     SpellService,
     InitDatabase,
     InitEntry,
+    WeddingPhotosService,
     //    CharacterGateway,
     {
       provide: 'ICharacterProvider',
