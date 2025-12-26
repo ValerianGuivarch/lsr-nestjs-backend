@@ -1,6 +1,7 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common'
-import * as sharp from 'sharp'
+import sharp from 'sharp'
 import { randomUUID } from 'node:crypto'
+import { EventEmitter } from 'node:events'
 import { statSync, createReadStream, ReadStream } from 'node:fs'
 import { mkdir, readdir } from 'node:fs/promises'
 import { join } from 'node:path'
@@ -12,12 +13,24 @@ export type PhotoItem = {
   thumbUrl: string // thumbnail
 }
 
+type CachedPhoto = {
+  originalName: string
+  thumbName: string
+  mtimeMs: number
+}
+
 @Injectable()
 export class WeddingPhotosService {
-  // eslint-disable-next-line no-process-env
   private baseDir = process.env.WEDDING_PHOTOS_DIR || join(process.cwd(), 'data', 'wedding-photos')
   private originalsDir = join(this.baseDir, 'originals')
   private thumbsDir = join(this.baseDir, 'thumbs')
+
+  private emitter = new EventEmitter()
+
+  private cacheLoaded = false
+  private photos: CachedPhoto[] = [] // triées du + récent au + ancien
+  private recentIds: string[] = [] // derniers servis (anti-répétition)
+  private readonly RECENT_MAX = 40
 
   async ensureDirs(): Promise<void> {
     await mkdir(this.originalsDir, { recursive: true })
@@ -25,15 +38,68 @@ export class WeddingPhotosService {
   }
 
   private publicBase() {
-    // eslint-disable-next-line no-process-env
     return (process.env.WEDDING_PHOTOS_PUBLIC_BASE || '').replace(/\/$/, '')
   }
 
-  async saveUpload(file: Express.Multer.File): Promise<PhotoItem> {
+  private apiPrefix() {
+    // si ton nginx expose /apil7r -> /api côté backend, tu peux mettre directement apil7r ici
+    // sinon laisse '/api/v1' (cohérent avec ton controller)
+    return '/api/v1'
+  }
+
+  private toItem(originalName: string, thumbName: string, createdAt: string): PhotoItem {
+    const base = this.publicBase()
+    const prefix = this.apiPrefix()
+    return {
+      id: thumbName,
+      createdAt,
+      url: `${base}${prefix}/wedding-photos/original?name=${encodeURIComponent(originalName)}`,
+      thumbUrl: `${base}${prefix}/wedding-photos/thumb?name=${encodeURIComponent(thumbName)}`
+    }
+  }
+
+  private async loadCacheIfNeeded(): Promise<void> {
+    if (this.cacheLoaded) return
     await this.ensureDirs()
+
+    const files = await readdir(this.thumbsDir)
+    const thumbs = files.filter((f) => f.endsWith('_thumb.jpg'))
+
+    this.photos = thumbs
+      .map((thumbName) => {
+        const originalName = thumbName.replace(/_thumb\.jpg$/, '.jpg')
+        const p = join(this.thumbsDir, thumbName)
+        const st = statSync(p)
+        return { originalName, thumbName, mtimeMs: st.mtimeMs }
+      })
+      .sort((a, b) => b.mtimeMs - a.mtimeMs)
+
+    this.cacheLoaded = true
+  }
+
+  private registerInCache(originalName: string, thumbName: string): void {
+    const p = join(this.thumbsDir, thumbName)
+    const st = statSync(p)
+
+    // enlève doublon éventuel
+    this.photos = this.photos.filter((x) => x.thumbName !== thumbName)
+
+    // ajoute en tête (plus récent)
+    this.photos.unshift({ originalName, thumbName, mtimeMs: st.mtimeMs })
+  }
+
+  onNewPhoto(listener: (item: PhotoItem) => void): () => void {
+    this.emitter.on('new', listener)
+    return () => this.emitter.off('new', listener)
+  }
+
+  async saveUpload(fileLike: { buffer: Buffer; mimetype?: string; originalname?: string }): Promise<PhotoItem> {
+    await this.ensureDirs()
+    await this.loadCacheIfNeeded()
 
     const id = randomUUID()
     const createdAt = new Date().toISOString()
+
     const originalName = `${createdAt.replace(/[:.]/g, '-')}_${id}.jpg`
     const thumbName = `${createdAt.replace(/[:.]/g, '-')}_${id}_thumb.jpg`
 
@@ -41,54 +107,54 @@ export class WeddingPhotosService {
     const thumbPath = join(this.thumbsDir, thumbName)
 
     try {
-      // On force JPEG (si le front a déjà converti, c’est direct)
-      // rotate() = corrige orientation EXIF
-      const img = sharp(file.buffer).rotate()
+      const img = sharp(fileLike.buffer).rotate()
 
       await img.jpeg({ quality: 85, mozjpeg: true }).toFile(originalPath)
-
       await img.resize({ width: 900, withoutEnlargement: true }).jpeg({ quality: 70, mozjpeg: true }).toFile(thumbPath)
     } catch (e) {
       throw new InternalServerErrorException(`Image processing failed: ${(e as Error).message}`)
     }
 
-    const base = this.publicBase()
-    return {
-      id,
-      createdAt,
-      url: `${base}/api/wedding-photos/original/${encodeURIComponent(originalName)}`,
-      thumbUrl: `${base}/api/wedding-photos/thumb/${encodeURIComponent(thumbName)}`
-    }
+    this.registerInCache(originalName, thumbName)
+
+    const item = this.toItem(originalName, thumbName, createdAt)
+    this.emitter.emit('new', item)
+
+    return item
   }
 
-  // eslint-disable-next-line no-magic-numbers
   async listLatest(limit = 60): Promise<PhotoItem[]> {
-    await this.ensureDirs()
+    await this.loadCacheIfNeeded()
+    const slice = this.photos.slice(0, limit)
 
-    const base = this.publicBase()
-    const files = await readdir(this.thumbsDir)
+    return slice.map((p) => this.toItem(p.originalName, p.thumbName, new Date().toISOString()))
+  }
 
-    // tri par mtime desc
-    const withStats = files
-      .filter((f) => f.endsWith('_thumb.jpg'))
-      .map((f) => {
-        const p = join(this.thumbsDir, f)
-        const stat = statSync(p)
-        return { f, mtimeMs: stat.mtimeMs }
-      })
-      .sort((a, b) => b.mtimeMs - a.mtimeMs)
-      .slice(0, limit)
+  async nextRandom(opts: { first?: boolean } = {}): Promise<PhotoItem | null> {
+    await this.loadCacheIfNeeded()
 
-    return withStats.map(({ f }) => {
-      // on reconstruit le nom original (même préfixe sans _thumb)
-      const original = f.replace(/_thumb\.jpg$/, '.jpg')
-      return {
-        id: f,
-        createdAt: new Date().toISOString(), // option: tu peux parser depuis le nom si tu veux
-        url: `${base}/api/wedding-photos/original/${encodeURIComponent(original)}`,
-        thumbUrl: `${base}/api/wedding-photos/thumb/${encodeURIComponent(f)}`
-      }
-    })
+    if (this.photos.length === 0) return null
+
+    // 1ère fois => plus récent
+    if (opts.first) {
+      const top = this.photos[0]
+      this.noteServed(top.thumbName)
+      return this.toItem(top.originalName, top.thumbName, new Date().toISOString())
+    }
+
+    const exclude = new Set(this.recentIds)
+    const candidates = this.photos.filter((p) => !exclude.has(p.thumbName))
+    const pool = candidates.length > 0 ? candidates : this.photos
+
+    const pick = pool[Math.floor(Math.random() * pool.length)]
+    this.noteServed(pick.thumbName)
+
+    return this.toItem(pick.originalName, pick.thumbName, new Date().toISOString())
+  }
+
+  private noteServed(id: string) {
+    this.recentIds.unshift(id)
+    if (this.recentIds.length > this.RECENT_MAX) this.recentIds.length = this.RECENT_MAX
   }
 
   getThumbStream(filename: string): ReadStream {
