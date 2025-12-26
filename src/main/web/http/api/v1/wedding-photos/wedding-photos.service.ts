@@ -64,8 +64,8 @@ export class WeddingPhotosService {
     return {
       id,
       createdAt,
-      url: `${base}/api/v1/wedding-photos/original?name=${encodeURIComponent(originalName)}`,
-      thumbUrl: `${base}/api/v1/wedding-photos/thumb?name=${encodeURIComponent(thumbName)}`
+      url: `${base}/wedding-photos/original?name=${encodeURIComponent(originalName)}`,
+      thumbUrl: `${base}/wedding-photos/thumb?name=${encodeURIComponent(thumbName)}`
     }
   }
 
@@ -93,8 +93,8 @@ export class WeddingPhotosService {
       return {
         id: thumbName,
         createdAt: new Date().toISOString(),
-        url: `${base}/api/v1/wedding-photos/original?name=${encodeURIComponent(originalName)}`,
-        thumbUrl: `${base}/api/v1/wedding-photos/thumb?name=${encodeURIComponent(thumbName)}`
+        url: `${base}//wedding-photos/original?name=${encodeURIComponent(originalName)}`,
+        thumbUrl: `${base}//wedding-photos/thumb?name=${encodeURIComponent(thumbName)}`
       }
     })
   }
