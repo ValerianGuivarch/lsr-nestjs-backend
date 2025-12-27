@@ -1,5 +1,5 @@
 import { Injectable, InternalServerErrorException, NotFoundException, BadRequestException } from '@nestjs/common'
-import sharp from 'sharp'
+import sharp = require('sharp')
 import { randomUUID } from 'node:crypto'
 import { createReadStream, ReadStream, existsSync } from 'node:fs'
 import { mkdir, readdir } from 'node:fs/promises'
