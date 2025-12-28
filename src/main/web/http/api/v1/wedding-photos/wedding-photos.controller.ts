@@ -1,5 +1,5 @@
 import { WeddingPhotosService, PhotoItem } from './wedding-photos.service'
-import { BadRequestException, Controller, Get, Header, Post, Query, Req, Res } from '@nestjs/common'
+import { BadRequestException, Controller, Delete, Get, Header, Post, Query, Req, Res } from '@nestjs/common'
 import { ApiConsumes, ApiResponse, ApiTags } from '@nestjs/swagger'
 import type { FastifyReply, FastifyRequest } from 'fastify'
 
@@ -10,6 +10,14 @@ type OkLatestResponse = { ok: true; items: PhotoItem[] }
 @Controller('api/v1/wedding-photos')
 export class WeddingPhotosController {
   constructor(private readonly svc: WeddingPhotosService) {}
+
+  @Delete('item')
+  @ApiResponse({ status: 200, description: 'Deleted' })
+  @ApiResponse({ status: 404, description: 'Not found' })
+  async delete(@Query('id') id: string): Promise<{ ok: true }> {
+    await this.svc.deleteById(id)
+    return { ok: true }
+  }
 
   @Post('upload')
   @ApiConsumes('multipart/form-data')

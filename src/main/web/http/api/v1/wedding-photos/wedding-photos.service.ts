@@ -2,7 +2,7 @@ import { Injectable, InternalServerErrorException, NotFoundException, BadRequest
 import sharp = require('sharp')
 import { randomUUID } from 'node:crypto'
 import { createReadStream, ReadStream, existsSync } from 'node:fs'
-import { mkdir, readdir } from 'node:fs/promises'
+import { mkdir, readdir, unlink } from 'node:fs/promises'
 import { join, basename } from 'node:path'
 
 export type PhotoItem = {
@@ -24,18 +24,33 @@ export class WeddingPhotosService {
     await mkdir(this.thumbsDir, { recursive: true })
   }
 
+  private safeName(name: string): string {
+    if (!name) throw new BadRequestException('Missing id')
+    const base = basename(name)
+    if (base !== name) throw new BadRequestException('Invalid id')
+    if (base.includes('..')) throw new BadRequestException('Invalid id')
+    return base
+  }
+
+  async deleteById(id: string): Promise<void> {
+    await this.ensureDirs()
+    const thumb = this.safeName(id)
+
+    const thumbPath = join(this.thumbsDir, thumb)
+    if (!existsSync(thumbPath)) throw new NotFoundException('Thumb not found')
+
+    const original = thumb.replace(/_thumb\.jpg$/, '.jpg')
+    const originalPath = join(this.originalsDir, original)
+
+    await unlink(thumbPath).catch(() => undefined)
+    if (existsSync(originalPath)) {
+      await unlink(originalPath).catch(() => undefined)
+    }
+  }
+
   private publicBase(): string {
     // eslint-disable-next-line no-process-env
     return (process.env.WEDDING_PHOTOS_PUBLIC_BASE || '').replace(/\/$/, '')
-  }
-
-  // ⚠️ protège contre ../ et chemins chelous
-  private safeName(name: string): string {
-    if (!name) throw new BadRequestException('Missing name')
-    const base = basename(name)
-    if (base !== name) throw new BadRequestException('Invalid name')
-    if (base.includes('..')) throw new BadRequestException('Invalid name')
-    return base
   }
 
   async saveUpload(file: { buffer: Buffer }): Promise<PhotoItem> {
