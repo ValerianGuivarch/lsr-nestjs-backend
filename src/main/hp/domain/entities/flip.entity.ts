@@ -64,7 +64,7 @@ export class Flip {
   }): FlipToCreate {
     return {
       wizardName: p.wizardName,
-      wizardDisplayName: p.wizardDisplayName,
+      wizardDisplayName: p.wizardDisplayName && p.wizardDisplayName !== 'null' ? p.wizardDisplayName : p.wizardName,
       text: p.text,
       result: p.result,
       success: p.success,
