@@ -19,7 +19,10 @@ async function bootstrap() {
   })
 
   // CORS
-  app.enableCors()
+  app.enableCors({
+    origin: ['https://photos.mariage-mickael-valerian.fr', 'https://l7r.fr', 'http://localhost:3000'],
+    credentials: false
+  })
 
   const configService = app.get(ConfigService)
   app.useGlobalPipes(new ValidationPipe())
