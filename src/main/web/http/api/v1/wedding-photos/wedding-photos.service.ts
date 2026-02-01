@@ -53,7 +53,7 @@ export class WeddingPhotosService {
     return (process.env.WEDDING_PHOTOS_PUBLIC_BASE || '').replace(/\/$/, '')
   }
 
-  async saveUpload(file: { buffer: Buffer }): Promise<PhotoItem> {
+  async saveUpload(file: { buffer: Buffer }, folder: string): Promise<PhotoItem> {
     await this.ensureDirs()
 
     const id = randomUUID()
@@ -79,8 +79,8 @@ export class WeddingPhotosService {
     return {
       id,
       createdAt,
-      url: `${base}/wedding-photos/original?name=${encodeURIComponent(originalName)}`,
-      thumbUrl: `${base}/wedding-photos/thumb?name=${encodeURIComponent(thumbName)}`
+      url: `${base}/wedding-photos/${folder}/original?name=${encodeURIComponent(originalName)}`,
+      thumbUrl: `${base}/wedding-photos/${folder}/thumb?name=${encodeURIComponent(thumbName)}`
     }
   }
 
@@ -108,8 +108,8 @@ export class WeddingPhotosService {
       return {
         id: thumbName,
         createdAt: new Date().toISOString(),
-        url: `${base}//wedding-photos/original?name=${encodeURIComponent(originalName)}`,
-        thumbUrl: `${base}//wedding-photos/thumb?name=${encodeURIComponent(thumbName)}`
+        url: `${base}//wedding-photos/golf/original?name=${encodeURIComponent(originalName)}`,
+        thumbUrl: `${base}//wedding-photos/golf/thumb?name=${encodeURIComponent(thumbName)}`
       }
     })
   }

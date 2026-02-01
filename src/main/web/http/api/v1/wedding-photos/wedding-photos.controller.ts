@@ -19,17 +19,31 @@ export class WeddingPhotosController {
     return { ok: true }
   }
 
-  @Post('upload')
+  @Post('upload-golf')
   @ApiConsumes('multipart/form-data')
   @ApiResponse({ status: 201, description: 'Photo uploaded' })
-  async upload(@Req() req: FastifyRequest): Promise<OkUploadResponse> {
+  async uploadGolf(@Req() req: FastifyRequest): Promise<OkUploadResponse> {
     const part = await (req as any).file?.()
     if (!part) throw new BadRequestException('Missing file')
     if (!part.mimetype?.startsWith('image/')) throw new BadRequestException('Not an image')
 
     const buffer: Buffer = await part.toBuffer()
 
-    const item = await this.svc.saveUpload({ buffer })
+    const item = await this.svc.saveUpload({ buffer }, 'golf')
+    return { ok: true, item }
+  }
+
+  @Post('upload-selfie')
+  @ApiConsumes('multipart/form-data')
+  @ApiResponse({ status: 201, description: 'Photo uploaded' })
+  async uploadSelfie(@Req() req: FastifyRequest): Promise<OkUploadResponse> {
+    const part = await (req as any).file?.()
+    if (!part) throw new BadRequestException('Missing file')
+    if (!part.mimetype?.startsWith('image/')) throw new BadRequestException('Not an image')
+
+    const buffer: Buffer = await part.toBuffer()
+
+    const item = await this.svc.saveUpload({ buffer }, 'selfie')
     return { ok: true, item }
   }
 
