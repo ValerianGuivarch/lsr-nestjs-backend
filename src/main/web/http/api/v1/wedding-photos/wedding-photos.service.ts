@@ -85,8 +85,8 @@ export class WeddingPhotosService {
     return {
       id,
       createdAt,
-      url: `${base}/wedding-photos/${folder}/original?name=${encodeURIComponent(originalName)}`,
-      thumbUrl: `${base}/wedding-photos/${folder}/thumb?name=${encodeURIComponent(thumbName)}`
+      url: `${base}/wedding-photos/original?name=${encodeURIComponent(originalName)}`,
+      thumbUrl: `${base}/wedding-photos/thumb?name=${encodeURIComponent(thumbName)}`
     }
   }
 
