@@ -15,13 +15,19 @@ export type PhotoItem = {
 @Injectable()
 export class WeddingPhotosService {
   // eslint-disable-next-line no-process-env
-  private baseDir = process.env.WEDDING_PHOTOS_DIR || join(process.cwd(), 'data', 'wedding-photos')
-  private originalsDir = join(this.baseDir, 'originals')
-  private thumbsDir = join(this.baseDir, 'thumbs')
+  private baseDirGolf = (process.env.WEDDING_PHOTOS_DIR || join(process.cwd(), 'data', 'wedding-photos')) + '/golf'
+  // eslint-disable-next-line no-process-env
+  private baseDirSelfie = (process.env.WEDDING_PHOTOS_DIR || join(process.cwd(), 'data', 'wedding-photos')) + '/selfie'
+  private originalsDirGolf = join(this.baseDirGolf, 'originals')
+  private originalsDirSelfie = join(this.baseDirSelfie, 'originals')
+  private thumbsDirGolf = join(this.baseDirGolf, 'thumbs')
+  private thumbsDirSelfie = join(this.baseDirSelfie, 'thumbs')
 
   async ensureDirs(): Promise<void> {
-    await mkdir(this.originalsDir, { recursive: true })
-    await mkdir(this.thumbsDir, { recursive: true })
+    await mkdir(this.originalsDirGolf, { recursive: true })
+    await mkdir(this.thumbsDirGolf, { recursive: true })
+    await mkdir(this.originalsDirSelfie, { recursive: true })
+    await mkdir(this.thumbsDirSelfie, { recursive: true })
   }
 
   private safeName(name: string): string {
@@ -36,11 +42,11 @@ export class WeddingPhotosService {
     await this.ensureDirs()
     const thumb = this.safeName(id)
 
-    const thumbPath = join(this.thumbsDir, thumb)
+    const thumbPath = join(this.thumbsDirGolf, thumb)
     if (!existsSync(thumbPath)) throw new NotFoundException('Thumb not found')
 
     const original = thumb.replace(/_thumb\.jpg$/, '.jpg')
-    const originalPath = join(this.originalsDir, original)
+    const originalPath = join(this.originalsDirGolf, original)
 
     await unlink(thumbPath).catch(() => undefined)
     if (existsSync(originalPath)) {
@@ -53,7 +59,7 @@ export class WeddingPhotosService {
     return (process.env.WEDDING_PHOTOS_PUBLIC_BASE || '').replace(/\/$/, '')
   }
 
-  async saveUpload(file: { buffer: Buffer }, folder: string): Promise<PhotoItem> {
+  async saveUpload(file: { buffer: Buffer }, folder: 'golf' | 'selfie'): Promise<PhotoItem> {
     await this.ensureDirs()
 
     const id = randomUUID()
@@ -63,8 +69,8 @@ export class WeddingPhotosService {
     const originalName = `${stamp}_${id}.jpg`
     const thumbName = `${stamp}_${id}_thumb.jpg`
 
-    const originalPath = join(this.originalsDir, originalName)
-    const thumbPath = join(this.thumbsDir, thumbName)
+    const originalPath = join(folder === 'golf' ? this.originalsDirGolf : this.originalsDirSelfie, originalName)
+    const thumbPath = join(folder === 'golf' ? this.thumbsDirGolf : this.thumbsDirSelfie, thumbName)
 
     try {
       const img = sharp(file.buffer).rotate()
@@ -89,13 +95,13 @@ export class WeddingPhotosService {
     await this.ensureDirs()
     const base = this.publicBase()
 
-    const files = await readdir(this.thumbsDir)
+    const files = await readdir(this.thumbsDirGolf)
     const thumbs = files.filter((f) => f.endsWith('_thumb.jpg'))
 
     // tri par mtime desc (plus récent d'abord)
     const sorted = thumbs
       .map((thumbName) => {
-        const p = join(this.thumbsDir, thumbName)
+        const p = join(this.thumbsDirGolf, thumbName)
         // eslint-disable-next-line @typescript-eslint/no-var-requires
         const st = require('node:fs').statSync(p) as { mtimeMs: number }
         return { thumbName, mtimeMs: st.mtimeMs }
@@ -116,14 +122,14 @@ export class WeddingPhotosService {
 
   getThumbStream(name: string): ReadStream {
     const filename = this.safeName(name)
-    const p = join(this.thumbsDir, filename)
+    const p = join(this.thumbsDirGolf, filename)
     if (!existsSync(p)) throw new NotFoundException('Thumb not found')
     return createReadStream(p)
   }
 
   getOriginalStream(name: string): ReadStream {
     const filename = this.safeName(name)
-    const p = join(this.originalsDir, filename)
+    const p = join(this.originalsDirGolf, filename)
     if (!existsSync(p)) throw new NotFoundException('Original not found')
     return createReadStream(p)
   }
