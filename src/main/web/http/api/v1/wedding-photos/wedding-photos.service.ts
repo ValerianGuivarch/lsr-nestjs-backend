@@ -114,8 +114,8 @@ export class WeddingPhotosService {
       return {
         id: thumbName,
         createdAt: new Date().toISOString(),
-        url: `${base}//wedding-photos/golf/original?name=${encodeURIComponent(originalName)}`,
-        thumbUrl: `${base}//wedding-photos/golf/thumb?name=${encodeURIComponent(thumbName)}`
+        url: `${base}//wedding-photos/original?name=${encodeURIComponent(originalName)}`,
+        thumbUrl: `${base}//wedding-photos/thumb?name=${encodeURIComponent(thumbName)}`
       }
     })
   }
