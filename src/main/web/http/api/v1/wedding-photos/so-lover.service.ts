@@ -15,8 +15,11 @@ export class SoLoverService {
   async checkBoard(image: Buffer) {
     if (!this.apiKey) throw new InternalServerErrorException('OPENAI_API_KEY missing')
 
-    const base64 = image.toString('base64')
-    const testDataUrl = `data:image/jpeg;base64,${base64}`
+    // 1) Charger la référence côté NAS (au lieu de laisser OpenAI la télécharger)
+    const ref = await this.loadReferenceAsDataUrl()
+
+    // 2) Photo test (data URL)
+    const testDataUrl = `data:image/jpeg;base64,${image.toString('base64')}`
 
     const prompt = `
 Tu es un validateur du jeu So Clover.
@@ -25,24 +28,21 @@ Tu reçois 2 images :
 - Image 1 = la référence (plateau correct)
 - Image 2 = la photo à valider
 
-Tâche :
 Compare l'image 2 à l'image 1 et décide, pour chaque position (haut, droite, bas, gauche),
 si la carte correspondante est placée et orientée de la même façon que sur la référence.
 
-Sortie attendue :
-- UNIQUEMENT du JSON (pas de markdown, pas d'explication)
-- Format exact :
+Réponds UNIQUEMENT en JSON strict :
 {
   "result": { "haut": true|false, "droite": true|false, "bas": true|false, "gauche": true|false }
 }
 
-Règle importante :
-Si tu n’es pas sûr (photo floue, reflet, angle), renvoie false pour la position concernée.
+Si tu n’es pas sûr (flou, reflet, angle), renvoie false pour la position concernée.
 `.trim()
 
     const payload = {
       model: 'gpt-4.1-mini',
       temperature: 0,
+      // NOTE: si ton compte ne supporte pas json_schema ici, on enlèvera text.format.
       text: {
         format: {
           type: 'json_schema',
@@ -74,10 +74,10 @@ Si tu n’es pas sûr (photo floue, reflet, angle), renvoie false pour la positi
           content: [
             { type: 'input_text', text: prompt },
 
-            // image 1 : référence (URL publique)
-            { type: 'input_image', image_url: this.REFERENCE_URL },
+            // image 1 : référence (base64)
+            { type: 'input_image', image_url: ref },
 
-            // image 2 : photo prise (data URL)
+            // image 2 : photo à valider
             { type: 'input_image', image_url: testDataUrl }
           ]
         }
@@ -85,7 +85,7 @@ Si tu n’es pas sûr (photo floue, reflet, angle), renvoie false pour la positi
     }
 
     const start = Date.now()
-    this.logger.log(`OpenAI request: model=gpt-4.1-mini imageBytes=${image.length} ref=${this.REFERENCE_URL}`)
+    this.logger.log(`OpenAI request: model=gpt-4.1-mini imageBytes=${image.length} refUrl=${this.REFERENCE_URL}`)
 
     const r = await fetch('https://api.openai.com/v1/responses', {
       method: 'POST',
@@ -122,19 +122,9 @@ Si tu n’es pas sûr (photo floue, reflet, angle), renvoie false pour la positi
     // eslint-disable-next-line no-magic-numbers
     this.logger.log(`Model rawText (truncated): ${String(rawText).slice(0, 1200)}`)
 
-    const text = this.stripJson(rawText)
-
-    let parsed: any
-    try {
-      parsed = JSON.parse(text)
-    } catch (e: any) {
-      this.logger.error(`JSON.parse failed: ${(e?.message ?? e) as string}`)
-      // eslint-disable-next-line no-magic-numbers
-      this.logger.error(`Unparseable JSON (truncated): ${String(text).slice(0, 2000)}`)
-      throw new InternalServerErrorException('Model returned invalid JSON')
-    }
-
+    const parsed = JSON.parse(this.stripJson(rawText))
     const result: Record<Side, boolean> = parsed?.result
+
     this.logger.log(`Parsed.result: ${JSON.stringify(result ?? null)}`)
 
     if (
@@ -150,10 +140,39 @@ Si tu n’es pas sûr (photo floue, reflet, angle), renvoie false pour la positi
     return { ok: true, result }
   }
 
+  private async loadReferenceAsDataUrl(): Promise<string> {
+    const start = Date.now()
+    this.logger.log(`Fetching reference from ${this.REFERENCE_URL}`)
+
+    const r = await fetch(this.REFERENCE_URL, {
+      method: 'GET',
+      // petit bonus pour éviter certains blocages
+      headers: { 'User-Agent': 'Mozilla/5.0 (SoLoverValidator)' }
+    })
+
+    const dt = Date.now() - start
+    this.logger.log(`Reference fetch: status=${r.status} ok=${r.ok} dt=${dt}ms`)
+
+    if (!r.ok) {
+      const txt = await r.text().catch(() => '')
+      // eslint-disable-next-line no-magic-numbers
+      this.logger.error(`Reference fetch failed body (truncated): ${(txt || '').slice(0, 300)}`)
+      throw new InternalServerErrorException(`Cannot fetch reference image: ${r.status}`)
+    }
+
+    const contentType = r.headers.get('content-type') || 'image/png'
+    const ab = await r.arrayBuffer()
+    const buf = Buffer.from(ab)
+
+    this.logger.log(`Reference bytes=${buf.length} contentType=${contentType}`)
+
+    const b64 = buf.toString('base64')
+    return `data:${contentType};base64,${b64}`
+  }
+
   private stripJson(text: string) {
     const t = String(text ?? '').trim()
     if (t.startsWith('```')) {
-      this.logger.warn('Model returned fenced JSON (```...). Stripping fences.')
       return t
         .replace(/^```[a-z]*\n/, '')
         .replace(/\n```$/, '')
