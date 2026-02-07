@@ -15,6 +15,6 @@ export class SoLoverController {
     if (!part.mimetype?.startsWith('image/')) throw new BadRequestException('Not an image')
 
     const buffer: Buffer = await part.toBuffer()
-    return await this.svc.validateSoClover(buffer)
+    return await this.svc.checkBoard(buffer)
   }
 }
