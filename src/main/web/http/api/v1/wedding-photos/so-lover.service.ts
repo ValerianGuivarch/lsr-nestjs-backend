@@ -1,11 +1,6 @@
 import { Injectable, InternalServerErrorException, Logger } from '@nestjs/common'
 
 type Side = 'haut' | 'droite' | 'bas' | 'gauche'
-type Petal = 'levre' | 'biberon' | 'succube' | 'crapaud'
-
-const WORD_ENUM = ['court', 'boisson', 'couche', 'diable', 'été', 'espèce', 'bouche', 'bassin'] as const
-
-type Word = (typeof WORD_ENUM)[number]
 
 @Injectable()
 export class SoLoverService {
@@ -14,91 +9,59 @@ export class SoLoverService {
   // eslint-disable-next-line no-process-env
   private apiKey = process.env.OPENAI_API_KEY
 
-  private EXPECTED: Record<Side, Partial<Record<Petal, Word>>> = {
-    haut: { levre: 'court', biberon: 'boisson' },
-    droite: { biberon: 'couche', succube: 'diable' },
-    bas: { succube: 'été', crapaud: 'espèce' },
-    gauche: { levre: 'bouche', crapaud: 'bassin' }
-  }
+  private readonly REFERENCE_URL = 'https://l7r.fr/l7r/resultat.png'
 
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
   async checkBoard(image: Buffer) {
     if (!this.apiKey) throw new InternalServerErrorException('OPENAI_API_KEY missing')
 
     const base64 = image.toString('base64')
+    const testDataUrl = `data:image/jpeg;base64,${base64}`
 
     const prompt = `
-Tu es un validateur So Clover.
+Tu es un validateur du jeu So Clover.
 
-Les mots manuscrits sont FIXES et connus:
-- haut: levre / biberon
-- droite: biberon / succube
-- bas: succube / crapaud
-- gauche: levre / crapaud
+Tu reçois 2 images :
+- Image 1 = la référence (plateau correct)
+- Image 2 = la photo à valider
 
-Tu dois UNIQUEMENT lire les mots imprimés sur les cartes roses.
-Pour chaque carte, retourne le mot imprimé qui TOUCHE chaque pétale manuscrit.
+Tâche :
+Compare l'image 2 à l'image 1 et décide, pour chaque position (haut, droite, bas, gauche),
+si la carte correspondante est placée et orientée de la même façon que sur la référence.
 
-IMPORTANT:
-- Tu n'as le droit de répondre que par l'un des mots autorisés (enum) ou null si illisible.
-- Ne devine pas.
+Sortie attendue :
+- UNIQUEMENT du JSON (pas de markdown, pas d'explication)
+- Format exact :
+{
+  "result": { "haut": true|false, "droite": true|false, "bas": true|false, "gauche": true|false }
+}
+
+Règle importante :
+Si tu n’es pas sûr (photo floue, reflet, angle), renvoie false pour la position concernée.
 `.trim()
 
     const payload = {
       model: 'gpt-4.1-mini',
       temperature: 0,
-      // Structured outputs (bloque "Menthe"/"Palix"/etc.)
-      response_format: {
-        type: 'json_schema',
-        json_schema: {
-          name: 'so_clover_validator',
+      text: {
+        format: {
+          type: 'json_schema',
+          name: 'so_clover_compare',
           strict: true,
           schema: {
             type: 'object',
             additionalProperties: false,
-            required: ['tiles'],
+            required: ['result'],
             properties: {
-              tiles: {
+              result: {
                 type: 'object',
                 additionalProperties: false,
                 required: ['haut', 'droite', 'bas', 'gauche'],
                 properties: {
-                  haut: {
-                    type: 'object',
-                    additionalProperties: false,
-                    required: ['levre', 'biberon'],
-                    properties: {
-                      levre: { anyOf: [{ type: 'string', enum: [...WORD_ENUM] }, { type: 'null' }] },
-                      biberon: { anyOf: [{ type: 'string', enum: [...WORD_ENUM] }, { type: 'null' }] }
-                    }
-                  },
-                  droite: {
-                    type: 'object',
-                    additionalProperties: false,
-                    required: ['biberon', 'succube'],
-                    properties: {
-                      biberon: { anyOf: [{ type: 'string', enum: [...WORD_ENUM] }, { type: 'null' }] },
-                      succube: { anyOf: [{ type: 'string', enum: [...WORD_ENUM] }, { type: 'null' }] }
-                    }
-                  },
-                  bas: {
-                    type: 'object',
-                    additionalProperties: false,
-                    required: ['succube', 'crapaud'],
-                    properties: {
-                      succube: { anyOf: [{ type: 'string', enum: [...WORD_ENUM] }, { type: 'null' }] },
-                      crapaud: { anyOf: [{ type: 'string', enum: [...WORD_ENUM] }, { type: 'null' }] }
-                    }
-                  },
-                  gauche: {
-                    type: 'object',
-                    additionalProperties: false,
-                    required: ['levre', 'crapaud'],
-                    properties: {
-                      levre: { anyOf: [{ type: 'string', enum: [...WORD_ENUM] }, { type: 'null' }] },
-                      crapaud: { anyOf: [{ type: 'string', enum: [...WORD_ENUM] }, { type: 'null' }] }
-                    }
-                  }
+                  haut: { type: 'boolean' },
+                  droite: { type: 'boolean' },
+                  bas: { type: 'boolean' },
+                  gauche: { type: 'boolean' }
                 }
               }
             }
@@ -110,19 +73,26 @@ IMPORTANT:
           role: 'user',
           content: [
             { type: 'input_text', text: prompt },
-            { type: 'input_image', image_url: `data:image/jpeg;base64,${base64}` }
+
+            // image 1 : référence (URL publique)
+            { type: 'input_image', image_url: this.REFERENCE_URL },
+
+            // image 2 : photo prise (data URL)
+            { type: 'input_image', image_url: testDataUrl }
           ]
         }
       ]
     }
 
     const start = Date.now()
-    this.logger.log(`OpenAI request: model=gpt-4.1-mini imageBytes=${image.length}`)
-    this.logger.log(`Expected: ${JSON.stringify(this.EXPECTED)}`)
+    this.logger.log(`OpenAI request: model=gpt-4.1-mini imageBytes=${image.length} ref=${this.REFERENCE_URL}`)
 
     const r = await fetch('https://api.openai.com/v1/responses', {
       method: 'POST',
-      headers: { Authorization: `Bearer ${this.apiKey}`, 'Content-Type': 'application/json' },
+      headers: {
+        Authorization: `Bearer ${this.apiKey}`,
+        'Content-Type': 'application/json'
+      },
       body: JSON.stringify(payload)
     })
 
@@ -148,16 +118,11 @@ IMPORTANT:
         .join('\n') ??
       ''
 
-    // Avec structured outputs, ça devrait être déjà propre, mais on log quand même
     this.logger.log(`Model rawText length=${rawText.length}`)
     // eslint-disable-next-line no-magic-numbers
     this.logger.log(`Model rawText (truncated): ${String(rawText).slice(0, 1200)}`)
 
     const text = this.stripJson(rawText)
-
-    this.logger.log(`Model JSON length=${text.length}`)
-    // eslint-disable-next-line no-magic-numbers
-    this.logger.log(`Model JSON (truncated): ${String(text).slice(0, 1200)}`)
 
     let parsed: any
     try {
@@ -169,54 +134,24 @@ IMPORTANT:
       throw new InternalServerErrorException('Model returned invalid JSON')
     }
 
-    this.logger.log(`Parsed.tiles: ${JSON.stringify(parsed?.tiles ?? null)}`)
+    const result: Record<Side, boolean> = parsed?.result
+    this.logger.log(`Parsed.result: ${JSON.stringify(result ?? null)}`)
 
-    const result = {
-      haut: this.compare('haut', parsed),
-      droite: this.compare('droite', parsed),
-      bas: this.compare('bas', parsed),
-      gauche: this.compare('gauche', parsed)
+    if (
+      !result ||
+      typeof result.haut !== 'boolean' ||
+      typeof result.droite !== 'boolean' ||
+      typeof result.bas !== 'boolean' ||
+      typeof result.gauche !== 'boolean'
+    ) {
+      throw new InternalServerErrorException('Model returned unexpected JSON shape')
     }
 
-    this.logger.log(
-      `Final result: haut=${result.haut} droite=${result.droite} bas=${result.bas} gauche=${result.gauche}`
-    )
-
-    return { ok: true, result, tiles: parsed?.tiles ?? null }
-  }
-
-  private compare(side: Side, parsed: any) {
-    const expected = this.EXPECTED[side]
-    const actual = parsed?.tiles?.[side] ?? {}
-
-    const oks = Object.entries(expected).map(([petal, exp]) => {
-      const gotRaw = actual?.[petal]
-      const gotNorm = this.norm(gotRaw)
-      const ok = gotNorm === exp
-
-      this.logger.log(
-        `[compare:${side}] petale=${petal} expected="${exp}" gotRaw="${gotRaw ?? null}" gotNorm="${gotNorm}" ok=${ok}`
-      )
-      return ok
-    })
-
-    const okAll = oks.every(Boolean)
-    this.logger.log(`[compare:${side}] => ${okAll}`)
-    return okAll
-  }
-
-  private norm(s?: string | null) {
-    if (!s) return ''
-    return String(s)
-      .toLowerCase()
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .replace(/[^a-z]/g, '')
+    return { ok: true, result }
   }
 
   private stripJson(text: string) {
     const t = String(text ?? '').trim()
-
     if (t.startsWith('```')) {
       this.logger.warn('Model returned fenced JSON (```...). Stripping fences.')
       return t
@@ -224,18 +159,10 @@ IMPORTANT:
         .replace(/\n```$/, '')
         .trim()
     }
-
     const i = t.indexOf('{')
     const j = t.lastIndexOf('}')
     // eslint-disable-next-line no-magic-numbers
-    if (i !== -1 && j !== -1) {
-      if (i !== 0 || j !== t.length - 1) {
-        this.logger.warn('Model returned JSON with extra text. Extracting {...} substring.')
-      }
-      return t.slice(i, j + 1)
-    }
-
-    this.logger.warn('Model output does not look like JSON. Returning as-is.')
+    if (i !== -1 && j !== -1) return t.slice(i, j + 1)
     return t
   }
 }
