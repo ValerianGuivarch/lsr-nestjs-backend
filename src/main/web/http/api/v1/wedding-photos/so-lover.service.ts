@@ -69,7 +69,8 @@ FORMAT EXACT:
 
     const start = Date.now()
 
-    this.logger.log(`OpenAI request imageBytes=${image.length}`)
+    this.logger.log(`OpenAI request: model=gpt-4.1-mini imageBytes=${image.length}`)
+    this.logger.debug?.(`Expected (normed): ${JSON.stringify(this.EXPECTED)}`)
 
     const r = await fetch('https://api.openai.com/v1/responses', {
       method: 'POST',
@@ -81,14 +82,22 @@ FORMAT EXACT:
     })
 
     const dt = Date.now() - start
-    this.logger.log(`OpenAI response status=${r.status} dt=${dt}ms`)
+    this.logger.log(`OpenAI response: status=${r.status} ok=${r.ok} dt=${dt}ms`)
 
     if (!r.ok) {
-      const txt = await r.text()
-      throw new InternalServerErrorException(txt)
+      const txt = await r.text().catch(() => '')
+      this.logger.error(`OpenAI error body (truncated): ${(txt || '').slice(0, 2000)}`)
+      throw new InternalServerErrorException((txt || '').slice(0, 2000))
     }
 
     const data: any = await r.json()
+
+    // --- logs bruts côté "Responses API" (sans l'image) ---
+    this.logger.debug?.(
+      `OpenAI meta: has_output_text=${Boolean(data?.output_text)} output_len=${
+        Array.isArray(data?.output) ? data.output.length : 0
+      }`
+    )
 
     const rawText =
       data.output_text ??
@@ -99,17 +108,25 @@ FORMAT EXACT:
         .join('\n') ??
       ''
 
+    this.logger.log(`Model rawText length=${rawText.length}`)
+    this.logger.log(`Model rawText (truncated): ${String(rawText).slice(0, 1200)}`)
+
     const text = this.stripJson(rawText)
 
     this.logger.log(`Model JSON length=${text.length}`)
+    this.logger.log(`Model JSON (truncated): ${String(text).slice(0, 1200)}`)
 
-    let parsed
+    let parsed: any
     try {
       parsed = JSON.parse(text)
-    } catch {
-      this.logger.error(text)
+    } catch (e: any) {
+      this.logger.error(`JSON.parse failed: ${(e?.message ?? e) as string}`)
+      this.logger.error(`Unparseable JSON (truncated): ${String(text).slice(0, 2000)}`)
       throw new InternalServerErrorException('Model returned invalid JSON')
     }
+
+    // --- log de ce que le modèle a réellement donné pour tiles ---
+    this.logger.log(`Parsed.tiles: ${JSON.stringify(parsed?.tiles ?? null)}`)
 
     const result = {
       haut: this.compare('haut', parsed),
@@ -118,6 +135,10 @@ FORMAT EXACT:
       gauche: this.compare('gauche', parsed)
     }
 
+    this.logger.log(
+      `Final result: haut=${result.haut} droite=${result.droite} bas=${result.bas} gauche=${result.gauche}`
+    )
+
     return { ok: true, result }
   }
 
@@ -125,7 +146,22 @@ FORMAT EXACT:
     const expected = this.EXPECTED[side]
     const actual = parsed?.tiles?.[side] ?? {}
 
-    return Object.entries(expected).every(([k, v]) => this.norm(actual[k]) === v)
+    // logs détaillés pour comprendre pourquoi ça peut être false
+    const pairs = Object.entries(expected).map(([k, v]) => {
+      const gotRaw = actual?.[k]
+      const gotNorm = this.norm(gotRaw)
+      const ok = gotNorm === v
+
+      this.logger.log(
+        `[compare:${side}] petale=${k} expected="${v}" gotRaw="${gotRaw ?? null}" gotNorm="${gotNorm}" ok=${ok}`
+      )
+
+      return ok
+    })
+
+    const okAll = pairs.every(Boolean)
+    this.logger.log(`[compare:${side}] => ${okAll}`)
+    return okAll
   }
 
   private norm(s?: string) {
@@ -138,9 +174,11 @@ FORMAT EXACT:
   }
 
   private stripJson(text: string) {
-    const t = text.trim()
+    const t = String(text ?? '').trim()
 
+    // LOG: détecte les fences
     if (t.startsWith('```')) {
+      this.logger.warn('Model returned fenced JSON (```...). Stripping fences.')
       return t
         .replace(/^```[a-z]*\n/, '')
         .replace(/\n```$/, '')
@@ -150,8 +188,14 @@ FORMAT EXACT:
     const i = t.indexOf('{')
     const j = t.lastIndexOf('}')
     // eslint-disable-next-line no-magic-numbers
-    if (i !== -1 && j !== -1) return t.slice(i, j + 1)
+    if (i !== -1 && j !== -1) {
+      if (i !== 0 || j !== t.length - 1) {
+        this.logger.warn('Model returned JSON with extra text. Extracting {...} substring.')
+      }
+      return t.slice(i, j + 1)
+    }
 
+    this.logger.warn('Model output does not look like JSON. Returning as-is.')
     return t
   }
 }
