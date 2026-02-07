@@ -58,6 +58,7 @@ export class SoLoverService {
 
     if (!r.ok) {
       const errText = await r.text().catch(() => '')
+      // eslint-disable-next-line no-magic-numbers
       throw new InternalServerErrorException(`OpenAI error: ${r.status} ${(errText || '').slice(0, 1200)}`)
     }
 
@@ -74,12 +75,14 @@ export class SoLoverService {
         : '')
 
     const textTrim = (text ?? '').trim()
+    // eslint-disable-next-line no-magic-numbers
     this.logger.log(`OpenAI output_text (truncated): ${textTrim.slice(0, 600)}`)
 
     let parsed: ModelShape
     try {
       parsed = JSON.parse(textTrim)
     } catch {
+      // eslint-disable-next-line no-magic-numbers
       throw new InternalServerErrorException(`Model did not return JSON: ${textTrim.slice(0, 800)}`)
     }
 
