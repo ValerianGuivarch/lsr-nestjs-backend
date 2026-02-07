@@ -55,6 +55,7 @@ import { MessageController } from './web/http/api/v1/elena/MessageController'
 import { ScenarioController } from './web/http/api/v1/elena/ScenarioController'
 import { MjController } from './web/http/api/v1/mj/MjController'
 import { RollController } from './web/http/api/v1/rolls/RollController'
+import { SoLoverController } from './web/http/api/v1/wedding-photos/so-lover.controller'
 import { WeddingPhotosController } from './web/http/api/v1/wedding-photos/wedding-photos.controller'
 import { WeddingPhotosService } from './web/http/api/v1/wedding-photos/wedding-photos.service'
 import { Module } from '@nestjs/common'
@@ -101,7 +102,8 @@ import { TypeOrmModule } from '@nestjs/typeorm'
     SpellController,
     StatController,
     FlipController,
-    WeddingPhotosController
+    WeddingPhotosController,
+    SoLoverController
   ],
   providers: [
     SkillService,
