@@ -140,34 +140,28 @@ Si tu n’es pas sûr (flou, reflet, angle), renvoie false pour la position conc
     return { ok: true, result }
   }
 
+  private readonly REFERENCE_LOCAL_PATH = '/volume1/homes/Valou/lsr-nestjs-backend/src/assets/so-lover/resultat.png'
+
   private async loadReferenceAsDataUrl(): Promise<string> {
     const start = Date.now()
-    this.logger.log(`Fetching reference from ${this.REFERENCE_URL}`)
+    this.logger.log(`Loading reference from local file ${this.REFERENCE_LOCAL_PATH}`)
 
-    const r = await fetch(this.REFERENCE_URL, {
-      method: 'GET',
-      // petit bonus pour éviter certains blocages
-      headers: { 'User-Agent': 'Mozilla/5.0 (SoLoverValidator)' }
-    })
-
-    const dt = Date.now() - start
-    this.logger.log(`Reference fetch: status=${r.status} ok=${r.ok} dt=${dt}ms`)
-
-    if (!r.ok) {
-      const txt = await r.text().catch(() => '')
-      // eslint-disable-next-line no-magic-numbers
-      this.logger.error(`Reference fetch failed body (truncated): ${(txt || '').slice(0, 300)}`)
-      throw new InternalServerErrorException(`Cannot fetch reference image: ${r.status}`)
+    let buf: Buffer
+    try {
+      buf = await readFile(this.REFERENCE_LOCAL_PATH)
+    } catch (e: any) {
+      this.logger.error(`Cannot read reference file: ${e?.message ?? e}`)
+      throw new InternalServerErrorException('Cannot read reference image on server')
     }
 
-    const contentType = r.headers.get('content-type') || 'image/png'
-    const ab = await r.arrayBuffer()
-    const buf = Buffer.from(ab)
+    const dt = Date.now() - start
+    const ext = extname(this.REFERENCE_LOCAL_PATH).toLowerCase()
+    const contentType =
+      ext === '.png' ? 'image/png' : ext === '.jpg' || ext === '.jpeg' ? 'image/jpeg' : 'application/octet-stream'
 
-    this.logger.log(`Reference bytes=${buf.length} contentType=${contentType}`)
+    this.logger.log(`Reference loaded: bytes=${buf.length} contentType=${contentType} dt=${dt}ms`)
 
-    const b64 = buf.toString('base64')
-    return `data:${contentType};base64,${b64}`
+    return `data:${contentType};base64,${buf.toString('base64')}`
   }
 
   private stripJson(text: string) {
