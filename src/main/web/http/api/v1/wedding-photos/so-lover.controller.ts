@@ -18,4 +18,3 @@ export class SoLoverController {
     return await this.svc.validateSoClover(buffer)
   }
 }
-}
