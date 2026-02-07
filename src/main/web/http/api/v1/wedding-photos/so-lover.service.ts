@@ -60,14 +60,11 @@ export class SoLoverService {
     const h = meta.height ?? 0
     if (!w || !h) throw new InternalServerErrorException('Invalid image')
 
-    // On crop en pourcentages (robuste aux résolutions)
-    // Ajustables si besoin après 1-2 tests.
     // eslint-disable-next-line no-magic-numbers
     const cx = w / 2
     // eslint-disable-next-line no-magic-numbers
     const cy = h / 2
 
-    // tailles des crops (carte rose par côté)
     // eslint-disable-next-line no-magic-numbers
     const cw = Math.round(w * 0.55)
     // eslint-disable-next-line no-magic-numbers
@@ -104,7 +101,6 @@ export class SoLoverService {
     for (const side of Object.keys(boxes) as Side[]) {
       const b = boxes[side]
 
-      // clamp pour éviter extract() qui plante si la photo est petite / cadrage étrange
       const left = Math.max(0, Math.min(w - 1, b.left))
       const top = Math.max(0, Math.min(h - 1, b.top))
       const width = Math.max(1, Math.min(w - left, b.width))
@@ -125,10 +121,12 @@ export class SoLoverService {
   }
 
   /**
-   * Lit les 2 mots imprimés sur la carte rose du côté.
-   * On ne compare PAS ici, on ne fait que "lire".
+   * Lit les 2 mots imprimés sur la carte rose du côté + explique pourquoi.
+   * L'explication sert UNIQUEMENT aux logs et n'est PAS renvoyée.
    */
   private async readTile(side: Side, tileJpeg: Buffer): Promise<any> {
+    const expectedKeys = Object.keys(this.EXPECTED[side])
+
     const prompt = `
 Tu regardes UNE SEULE carte rose du jeu So Clover (un côté du trèfle).
 
@@ -146,12 +144,16 @@ Tu n'as le droit de renvoyer que:
 ${WORD_ENUM.join(', ')} ou null si illisible.
 Ne devine pas.
 
-Réponds UNIQUEMENT en JSON strict:
+En plus, donne une explication courte (1-2 phrases) dans "why" :
+- ce que tu as vu (orientation, lecture des mots),
+- et si un mot est illisible, pourquoi (flou, reflet, angle).
+
+Réponds UNIQUEMENT en JSON strict au format:
 {
   "side": "${side}",
-  "petals": { ... }
+  "petals": { ${expectedKeys.map((k) => `"${k}": "..."`).join(', ')} },
+  "why": "..."
 }
-Où "petals" contient EXACTEMENT les 2 clés attendues pour ce côté.
 `.trim()
 
     const schema = this.schemaForSide(side)
@@ -215,6 +217,9 @@ Où "petals" contient EXACTEMENT les 2 clés attendues pour ce côté.
     this.logger.log(`[tile:${side}] parsed: ${JSON.stringify(parsed)}`)
     this.logger.log(`[tile:${side}] expectedKeys=${JSON.stringify(Object.keys(this.EXPECTED[side]))}`)
     this.logger.log(`[tile:${side}] gotKeys=${JSON.stringify(Object.keys(parsed?.petals ?? {}))}`)
+    // >>> LOG explication (sans renvoyer)
+    // eslint-disable-next-line no-magic-numbers
+    this.logger.log(`[tile:${side}] why: ${String(parsed?.why ?? '').slice(0, 800)}`)
 
     return parsed?.petals ?? {}
   }
@@ -253,7 +258,7 @@ Où "petals" contient EXACTEMENT les 2 clés attendues pour ce côté.
     return {
       type: 'object',
       additionalProperties: false,
-      required: ['side', 'petals'],
+      required: ['side', 'petals', 'why'],
       properties: {
         side: { type: 'string', enum: [side] },
         petals: {
@@ -261,7 +266,9 @@ Où "petals" contient EXACTEMENT les 2 clés attendues pour ce côté.
           additionalProperties: false,
           required: keys,
           properties: petalProps
-        }
+        },
+        // explication log-only
+        why: { type: 'string' }
       }
     }
   }
