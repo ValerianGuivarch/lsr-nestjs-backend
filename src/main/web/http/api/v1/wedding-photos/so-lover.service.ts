@@ -1,4 +1,6 @@
 import { Injectable, InternalServerErrorException, Logger } from '@nestjs/common'
+import { readFile } from 'node:fs/promises'
+import { extname } from 'node:path'
 
 type Side = 'haut' | 'droite' | 'bas' | 'gauche'
 
