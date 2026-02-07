@@ -1,5 +1,5 @@
 import { Injectable, InternalServerErrorException, Logger } from '@nestjs/common'
-import sharp from 'sharp'
+import sharp = require('sharp')
 
 type Side = 'haut' | 'droite' | 'bas' | 'gauche'
 
@@ -213,6 +213,8 @@ Où "petals" contient EXACTEMENT les 2 clés attendues pour ce côté.
 
     const parsed = JSON.parse(this.stripJson(rawText))
     this.logger.log(`[tile:${side}] parsed: ${JSON.stringify(parsed)}`)
+    this.logger.log(`[tile:${side}] expectedKeys=${JSON.stringify(Object.keys(this.EXPECTED[side]))}`)
+    this.logger.log(`[tile:${side}] gotKeys=${JSON.stringify(Object.keys(parsed?.petals ?? {}))}`)
 
     return parsed?.petals ?? {}
   }
