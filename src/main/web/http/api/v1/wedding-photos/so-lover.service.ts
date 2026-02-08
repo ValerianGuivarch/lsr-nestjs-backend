@@ -105,7 +105,7 @@ export class SoLoverService {
       anch4: quadrants.bas_droite?.same ?? false
     }
 
-    // ⭐ Mapping vers le front (SIDES)
+    // Mapping historique (pour ton front actuel)
     const result: Record<Side, boolean> = {
       haut: anchors.anch1 && anchors.anch2,
       bas: anchors.anch3 && anchors.anch4,
@@ -116,10 +116,16 @@ export class SoLoverService {
     this.logger.log(`[board] anchors=${JSON.stringify(anchors)}`)
     this.logger.log(`[board] resultBySide=${JSON.stringify(result)}`)
 
-    return {
-      ok: true,
-      result
+    // ✅ IMPORTANT : log EXACT de ce qui part au front
+    const response = {
+      ok: true as const,
+      result, // compat front actuel
+      anchors, // ✅ nouveau: résultat par anchor
+      quadrants // ✅ bonus debug: why + same par quadrant
     }
+
+    this.logger.log(`[board] response->front=${JSON.stringify(response)}`)
+    return response
   }
 
   private buildPrompt() {
