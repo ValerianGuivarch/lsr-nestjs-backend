@@ -8,10 +8,12 @@ type Quadrant = 'haut_gauche' | 'haut_droite' | 'bas_gauche' | 'bas_droite'
 export class SoLoverService {
   private readonly logger = new Logger(SoLoverService.name)
 
+  // eslint-disable-next-line no-process-env
   private apiKey = process.env.OPENAI_API_KEY
 
   private REF_PATH = '/volume1/homes/Valou/lsr-nestjs-backend/src/assets/so-lover/resultat.png'
 
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
   async checkBoard(image: Buffer) {
     if (!this.apiKey) throw new InternalServerErrorException('OPENAI_API_KEY missing')
 
@@ -98,33 +100,37 @@ export class SoLoverService {
   private postProcess(parsed: any) {
     const quadrants = parsed?.quadrants ?? {}
 
-    const anchors = {
-      anch1: quadrants.haut_gauche?.same ?? false,
-      anch2: quadrants.haut_droite?.same ?? false,
-      anch3: quadrants.bas_gauche?.same ?? false,
-      anch4: quadrants.bas_droite?.same ?? false
+    const q = {
+      haut_gauche: {
+        same: Boolean(quadrants.haut_gauche?.same),
+        why: String(quadrants.haut_gauche?.why ?? '')
+      },
+      haut_droite: {
+        same: Boolean(quadrants.haut_droite?.same),
+        why: String(quadrants.haut_droite?.why ?? '')
+      },
+      bas_gauche: {
+        same: Boolean(quadrants.bas_gauche?.same),
+        why: String(quadrants.bas_gauche?.why ?? '')
+      },
+      bas_droite: {
+        same: Boolean(quadrants.bas_droite?.same),
+        why: String(quadrants.bas_droite?.why ?? '')
+      }
     }
 
-    // Mapping historique (pour ton front actuel)
-    const result: Record<Side, boolean> = {
-      haut: anchors.anch1 && anchors.anch2,
-      bas: anchors.anch3 && anchors.anch4,
-      gauche: anchors.anch1 && anchors.anch3,
-      droite: anchors.anch2 && anchors.anch4
-    }
+    const global = q.haut_gauche.same && q.haut_droite.same && q.bas_gauche.same && q.bas_droite.same
 
-    this.logger.log(`[board] anchors=${JSON.stringify(anchors)}`)
-    this.logger.log(`[board] resultBySide=${JSON.stringify(result)}`)
-
-    // ✅ IMPORTANT : log EXACT de ce qui part au front
     const response = {
       ok: true as const,
-      result, // compat front actuel
-      anchors, // ✅ nouveau: résultat par anchor
-      quadrants // ✅ bonus debug: why + same par quadrant
+      global,
+      quadrants: q
     }
 
+    this.logger.log(`[board] global=${global}`)
+    this.logger.log(`[board] quadrants=${JSON.stringify(q)}`)
     this.logger.log(`[board] response->front=${JSON.stringify(response)}`)
+
     return response
   }
 
