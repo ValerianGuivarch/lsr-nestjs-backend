@@ -191,21 +191,24 @@ Réponds uniquement en JSON.
   private schema() {
     return {
       type: 'object',
+      additionalProperties: false,
       required: ['fixed', 'mobile'],
       properties: {
         fixed: {
           type: 'object',
-          required: FIXED_WORDS,
+          additionalProperties: false,
+          required: ['levre', 'biberon', 'succube', 'crapaud'],
           properties: {
-            levre: { type: 'string' },
-            biberon: { type: 'string' },
-            succube: { type: 'string' },
-            crapaud: { type: 'string' }
+            levre: { type: 'string', enum: ['haut', 'bas', 'gauche', 'droite'] },
+            biberon: { type: 'string', enum: ['haut', 'bas', 'gauche', 'droite'] },
+            succube: { type: 'string', enum: ['haut', 'bas', 'gauche', 'droite'] },
+            crapaud: { type: 'string', enum: ['haut', 'bas', 'gauche', 'droite'] }
           }
         },
         mobile: {
           type: 'object',
-          required: MOBILE_ANCHORS,
+          additionalProperties: false,
+          required: ['bouche', 'boisson', 'diable', 'espece'],
           properties: {
             bouche: this.mobileSchema(),
             boisson: this.mobileSchema(),
