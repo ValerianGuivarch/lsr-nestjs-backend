@@ -1,10 +1,17 @@
 import { Injectable, InternalServerErrorException, Logger } from '@nestjs/common'
-import sharp = require('sharp')
 
+type Pos = 'hg' | 'hd' | 'bg' | 'bd'
 type Side = 'haut' | 'droite' | 'bas' | 'gauche'
 
 const WORD_ENUM = ['court', 'boisson', 'couche', 'diable', 'ete', 'espece', 'bouche', 'bassin'] as const
 type Word = (typeof WORD_ENUM)[number]
+
+const POS_ENUM = ['hg', 'hd', 'bg', 'bd'] as const
+
+type TileRead = {
+  words: [Word, Word, Word, Word] | null // N,E,S,O (sens horaire) OU null si illisible
+  why: string
+}
 
 @Injectable()
 export class SoLoverService {
@@ -12,151 +19,151 @@ export class SoLoverService {
   // eslint-disable-next-line no-process-env
   private apiKey = process.env.OPENAI_API_KEY
 
-  private EXPECTED: Record<Side, Record<string, Word>> = {
-    haut: { levre: 'court', biberon: 'boisson' },
-    droite: { biberon: 'couche', succube: 'diable' },
-    bas: { succube: 'ete', crapaud: 'espece' },
-    gauche: { levre: 'bouche', crapaud: 'bassin' }
+  /**
+   * Règles attendues : pour chaque position (HG/HD/BG/BD),
+   * quels mots doivent toucher les 2 mots fixes adjacents.
+   *
+   * Repère FIXE imposé dans le prompt :
+   * - LEVRE = haut du plateau
+   * - BIBERON = droite
+   * - SUCCUBE = bas
+   * - CRAPAUD = gauche
+   *
+   * Donc :
+   * - HG touche LEVRE & CRAPAUD
+   * - HD touche LEVRE & BIBERON
+   * - BD touche SUCCUBE & BIBERON
+   * - BG touche SUCCUBE & CRAPAUD
+   */
+  private EXPECTED_BY_POS: Record<
+    Pos,
+    {
+      // pour comparer ensuite, on stocke ce qu’on attend côté fixe
+      touches: Partial<Record<'levre' | 'biberon' | 'succube' | 'crapaud', Word>>
+    }
+  > = {
+    hg: { touches: { levre: 'bouche', crapaud: 'bassin' } },
+    hd: { touches: { levre: 'court', biberon: 'boisson' } },
+    bd: { touches: { succube: 'diable', biberon: 'couche' } },
+    bg: { touches: { succube: 'ete', crapaud: 'espece' } }
+  }
+
+  // Pour garder ton retour actuel (haut/droite/bas/gauche) côté front :
+  private POS_TO_SIDE: Record<Pos, Side> = {
+    hg: 'gauche', // HG = côté gauche du trèfle (diagonale haut-gauche)
+    hd: 'haut', // HD = côté haut
+    bd: 'droite', // BD = côté droite
+    bg: 'bas' // BG = côté bas
   }
 
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
   async checkBoard(image: Buffer) {
     if (!this.apiKey) throw new InternalServerErrorException('OPENAI_API_KEY missing')
 
-    // 1) Préparer 4 crops (haut/droite/bas/gauche)
-    const crops = await this.crop4Sides(image)
+    const dataUrl = `data:image/jpeg;base64,${image.toString('base64')}`
 
-    // 2) Lire chaque crop indépendamment (ça évite l’effet domino)
-    const tiles = {
-      haut: await this.readTile('haut', crops.haut),
-      droite: await this.readTile('droite', crops.droite),
-      bas: await this.readTile('bas', crops.bas),
-      gauche: await this.readTile('gauche', crops.gauche)
+    // 1) Lire le plateau entier : positions HG/HD/BG/BD + orientation des mots
+    const board = await this.readBoardWhole(dataUrl)
+
+    // 2) Comparer localement (stable) selon tes règles
+    const { resultByPos, detailsByPos } = this.compareBoard(board)
+
+    // 3) Adapter au format frontend actuel: haut/droite/bas/gauche (pas obligé mais pratique)
+    const resultBySide: Record<Side, boolean> = {
+      haut: resultByPos.hd,
+      droite: resultByPos.bd,
+      bas: resultByPos.bg,
+      gauche: resultByPos.hg
     }
 
-    this.logger.log(`Tiles read: ${JSON.stringify(tiles)}`)
+    // logs utiles
+    this.logger.log(`Board read: ${JSON.stringify(board)}`)
+    this.logger.log(`Result by pos: ${JSON.stringify(resultByPos)}`)
+    this.logger.log(`Result by side: ${JSON.stringify(resultBySide)}`)
+    this.logger.log(`Details by pos: ${JSON.stringify(detailsByPos)}`)
 
-    // 3) Comparer localement
-    const result: Record<Side, boolean> = {
-      haut: this.compare('haut', tiles.haut),
-      droite: this.compare('droite', tiles.droite),
-      bas: this.compare('bas', tiles.bas),
-      gauche: this.compare('gauche', tiles.gauche)
-    }
-
-    this.logger.log(`Final result: ${JSON.stringify(result)}`)
-
-    return { ok: true, result, tiles } // tiles est super utile pour debug
-  }
-
-  /**
-   * Crop "approx" en 4 zones.
-   * Ça marche tant que le trèfle est à peu près centré dans la photo.
-   */
-  private async crop4Sides(image: Buffer): Promise<Record<Side, Buffer>> {
-    const img = sharp(image).rotate()
-    const meta = await img.metadata()
-    const w = meta.width ?? 0
-    const h = meta.height ?? 0
-    if (!w || !h) throw new InternalServerErrorException('Invalid image')
-
-    // eslint-disable-next-line no-magic-numbers
-    const cx = w / 2
-    // eslint-disable-next-line no-magic-numbers
-    const cy = h / 2
-
-    // eslint-disable-next-line no-magic-numbers
-    const cw = Math.round(w * 0.55)
-    // eslint-disable-next-line no-magic-numbers
-    const ch = Math.round(h * 0.28)
-
-    const boxes: Record<Side, { left: number; top: number; width: number; height: number }> = {
-      // eslint-disable-next-line no-magic-numbers
-      haut: { left: Math.round(cx - cw / 2), top: Math.round(h * 0.05), width: cw, height: ch },
-      // eslint-disable-next-line no-magic-numbers
-      bas: { left: Math.round(cx - cw / 2), top: Math.round(h * 0.67), width: cw, height: ch },
-      gauche: {
-        // eslint-disable-next-line no-magic-numbers
-        left: Math.round(w * 0.02),
-        // eslint-disable-next-line no-magic-numbers
-        top: Math.round(cy - ch / 2),
-        // eslint-disable-next-line no-magic-numbers
-        width: Math.round(w * 0.4),
-        // eslint-disable-next-line no-magic-numbers
-        height: Math.round(h * 0.35)
+    // On ne renvoie pas les "why" si tu veux rester clean.
+    // Mais je te laisse "board" et "details" pour debug: tu peux les retirer plus tard.
+    return {
+      ok: true,
+      result: {
+        haut: resultBySide.haut,
+        droite: resultBySide.droite,
+        bas: resultBySide.bas,
+        gauche: resultBySide.gauche
       },
-      droite: {
-        // eslint-disable-next-line no-magic-numbers
-        left: Math.round(w * 0.58),
-        // eslint-disable-next-line no-magic-numbers
-        top: Math.round(cy - ch / 2),
-        // eslint-disable-next-line no-magic-numbers
-        width: Math.round(w * 0.4),
-        // eslint-disable-next-line no-magic-numbers
-        height: Math.round(h * 0.35)
-      }
+      board, // debug
+      details: detailsByPos // debug
     }
-
-    const out: any = {}
-    for (const side of Object.keys(boxes) as Side[]) {
-      const b = boxes[side]
-
-      const left = Math.max(0, Math.min(w - 1, b.left))
-      const top = Math.max(0, Math.min(h - 1, b.top))
-      const width = Math.max(1, Math.min(w - left, b.width))
-      const height = Math.max(1, Math.min(h - top, b.height))
-
-      const buf = await sharp(image)
-        .rotate()
-        .extract({ left, top, width, height })
-        .resize({ width: 900, withoutEnlargement: true })
-        .jpeg({ quality: 80, mozjpeg: true })
-        .toBuffer()
-
-      this.logger.log(`[crop:${side}] box=${JSON.stringify({ left, top, width, height })} bytes=${buf.length}`)
-      out[side] = buf
-    }
-
-    return out as Record<Side, Buffer>
   }
 
   /**
-   * Lit les 2 mots imprimés sur la carte rose du côté + explique pourquoi.
-   * L'explication sert UNIQUEMENT aux logs et n'est PAS renvoyée.
+   * Lecture plateau entier, sans crop.
+   * On demande :
+   * - où sont les 4 cartes (HG/HD/BG/BD)
+   * - pour chaque carte : les 4 mots imprimés dans l'ordre N/E/S/O (horaire)
+   * - + why pour logs
    */
-  private async readTile(side: Side, tileJpeg: Buffer): Promise<any> {
-    const expectedKeys = Object.keys(this.EXPECTED[side])
-
+  private async readBoardWhole(imageDataUrl: string): Promise<Record<Pos, TileRead>> {
     const prompt = `
-Tu regardes UNE SEULE carte rose du jeu So Clover (un côté du trèfle).
+Tu es un validateur du jeu So Clover.
 
-Les mots manuscrits à ignorer :
-- haut: levre / biberon
-- droite: biberon / succube
-- bas: succube / crapaud
-- gauche: levre / crapaud
+IMPORTANT (repère de l'image):
+- Le mot fixe "LEVRE" indique le HAUT du plateau.
+- "BIBERON" = droite du plateau
+- "SUCCUBE" = bas du plateau
+- "CRAPAUD" = gauche du plateau
 
-Tâche:
-Pour le côté "${side}", lis UNIQUEMENT les mots imprimés sur la carte rose,
-et renvoie quel mot imprimé touche chaque pétale manuscrit de ce côté.
+Au centre il y a 4 cartes roses en grille 2×2:
+- hg = en haut-gauche
+- hd = en haut-droite
+- bg = en bas-gauche
+- bd = en bas-droite
 
-Tu n'as le droit de renvoyer que:
-${WORD_ENUM.join(', ')} ou null si illisible.
-Ne devine pas.
+TÂCHE:
+Pour chacune des 4 cartes (hg/hd/bg/bd),
+lis UNIQUEMENT les mots imprimés sur la carte rose et renvoie les 4 mots
+dans l'ordre suivant: N, E, S, O (sens horaire, avec N = côté "haut" de la PHOTO).
 
-En plus, donne une explication courte (1-2 phrases) dans "why" :
-- ce que tu as vu (orientation, lecture des mots),
-- et si un mot est illisible, pourquoi (flou, reflet, angle).
+Contraintes:
+- Tu n'as le droit de répondre que par un mot parmi: ${WORD_ENUM.join(', ')}
+- Si un mot est illisible: renvoie null (et explique dans "why")
+- Ne devine pas.
 
-Réponds UNIQUEMENT en JSON strict au format:
-{
-  "side": "${side}",
-  "petals": { ${expectedKeys.map((k) => `"${k}": "..."`).join(', ')} },
-  "why": "..."
-}
+En plus, pour chaque carte, remplis "why" en 1-2 phrases (orientation, lisibilité, etc.).
+Réponds UNIQUEMENT en JSON strict.
 `.trim()
 
-    const schema = this.schemaForSide(side)
+    const schema = {
+      type: 'object',
+      additionalProperties: false,
+      required: [...POS_ENUM],
+      properties: Object.fromEntries(
+        POS_ENUM.map((p) => [
+          p,
+          {
+            type: 'object',
+            additionalProperties: false,
+            required: ['words', 'why'],
+            properties: {
+              // [N,E,S,O] chacun = enum ou null ; si trop dur, tout words=null
+              words: {
+                anyOf: [
+                  { type: 'null' },
+                  {
+                    type: 'array',
+                    minItems: 4,
+                    maxItems: 4,
+                    items: { anyOf: [{ type: 'string', enum: [...WORD_ENUM] }, { type: 'null' }] }
+                  }
+                ]
+              },
+              why: { type: 'string' }
+            }
+          }
+        ])
+      )
+    }
 
     const payload = {
       model: 'gpt-4.1-mini',
@@ -164,7 +171,7 @@ Réponds UNIQUEMENT en JSON strict au format:
       text: {
         format: {
           type: 'json_schema',
-          name: `so_clover_tile_${side}`,
+          name: 'so_clover_board_whole',
           strict: true,
           schema
         }
@@ -174,14 +181,15 @@ Réponds UNIQUEMENT en JSON strict au format:
           role: 'user',
           content: [
             { type: 'input_text', text: prompt },
-            { type: 'input_image', image_url: `data:image/jpeg;base64,${tileJpeg.toString('base64')}` }
+            { type: 'input_image', image_url: imageDataUrl }
           ]
         }
       ]
     }
 
     const start = Date.now()
-    this.logger.log(`[tile:${side}] OpenAI request bytes=${tileJpeg.length}`)
+    // eslint-disable-next-line no-magic-numbers
+    this.logger.log(`[board] OpenAI request bytes≈${Math.round((imageDataUrl.length * 3) / 4)}`)
 
     const r = await fetch('https://api.openai.com/v1/responses', {
       method: 'POST',
@@ -190,13 +198,14 @@ Réponds UNIQUEMENT en JSON strict au format:
     })
 
     const dt = Date.now() - start
-    this.logger.log(`[tile:${side}] OpenAI response status=${r.status} ok=${r.ok} dt=${dt}ms`)
+    this.logger.log(`[board] OpenAI response status=${r.status} ok=${r.ok} dt=${dt}ms`)
 
     if (!r.ok) {
       const txt = await r.text().catch(() => '')
       // eslint-disable-next-line no-magic-numbers
-      this.logger.error(`[tile:${side}] OpenAI error (truncated): ${(txt || '').slice(0, 1500)}`)
-      throw new InternalServerErrorException(`OpenAI error on tile ${side}`)
+      this.logger.error(`[board] OpenAI error (truncated): ${(txt || '').slice(0, 2000)}`)
+      // eslint-disable-next-line no-magic-numbers
+      throw new InternalServerErrorException((txt || '').slice(0, 2000))
     }
 
     const data: any = await r.json()
@@ -211,75 +220,128 @@ Réponds UNIQUEMENT en JSON strict au format:
       ''
 
     // eslint-disable-next-line no-magic-numbers
-    this.logger.log(`[tile:${side}] rawText: ${String(rawText).slice(0, 500)}`)
+    this.logger.log(`[board] rawText (truncated): ${String(rawText).slice(0, 1200)}`)
 
     const parsed = JSON.parse(this.stripJson(rawText))
-    this.logger.log(`[tile:${side}] parsed: ${JSON.stringify(parsed)}`)
-    this.logger.log(`[tile:${side}] expectedKeys=${JSON.stringify(Object.keys(this.EXPECTED[side]))}`)
-    this.logger.log(`[tile:${side}] gotKeys=${JSON.stringify(Object.keys(parsed?.petals ?? {}))}`)
-    // >>> LOG explication (sans renvoyer)
-    // eslint-disable-next-line no-magic-numbers
-    this.logger.log(`[tile:${side}] why: ${String(parsed?.why ?? '').slice(0, 800)}`)
 
-    return parsed?.petals ?? {}
+    // log why
+    for (const pos of POS_ENUM) {
+      // eslint-disable-next-line no-magic-numbers
+      this.logger.log(`[board:${pos}] why: ${String(parsed?.[pos]?.why ?? '').slice(0, 800)}`)
+    }
+
+    return parsed as Record<Pos, TileRead>
   }
 
-  private compare(side: Side, petals: any): boolean {
-    const expected = this.EXPECTED[side]
-    const entries = Object.entries(expected)
-
-    let okAll = true
-    for (const [k, exp] of entries) {
-      const got = petals?.[k]
-      const gotNorm = this.norm(got)
-      const ok = gotNorm === exp
-
-      this.logger.log(`[compare:${side}] petal=${k} expected=${exp} gotRaw=${got ?? null} gotNorm=${gotNorm} ok=${ok}`)
-      if (!ok) okAll = false
-    }
-    return okAll
-  }
-
-  private schemaForSide(side: Side) {
-    const petalsForSide: Record<Side, string[]> = {
-      haut: ['levre', 'biberon'],
-      droite: ['biberon', 'succube'],
-      bas: ['succube', 'crapaud'],
-      gauche: ['levre', 'crapaud']
-    }
-
-    const keys = petalsForSide[side]
-
-    const petalProps: Record<string, any> = {}
-    for (const k of keys) {
-      petalProps[k] = { anyOf: [{ type: 'string', enum: [...WORD_ENUM] }, { type: 'null' }] }
-    }
-
-    return {
-      type: 'object',
-      additionalProperties: false,
-      required: ['side', 'petals', 'why'],
-      properties: {
-        side: { type: 'string', enum: [side] },
-        petals: {
-          type: 'object',
-          additionalProperties: false,
-          required: keys,
-          properties: petalProps
-        },
-        // explication log-only
-        why: { type: 'string' }
+  /**
+   * Compare en local.
+   * On déduit quels mots touchent LEVRE/BIBERON/SUCCUBE/CRAPAUD en fonction de la position.
+   *
+   * Convention simple (très stable) :
+   * - Carte HG touche LEVRE (au nord de la carte) et CRAPAUD (à l’ouest de la carte)
+   * - Carte HD touche LEVRE (nord) et BIBERON (est)
+   * - Carte BD touche SUCCUBE (sud) et BIBERON (est)
+   * - Carte BG touche SUCCUBE (sud) et CRAPAUD (ouest)
+   *
+   * Donc on prend words[N], words[E], words[S], words[O] selon le cas.
+   */
+  private compareBoard(board: Record<Pos, TileRead>) {
+    const resultByPos: Record<Pos, boolean> = { hg: false, hd: false, bg: false, bd: false }
+    const detailsByPos: Record<
+      Pos,
+      {
+        ok: boolean
+        touches: Record<string, { expected: Word; got: Word | null; ok: boolean }>
+        why: string
+        words: [Word | null, Word | null, Word | null, Word | null] | null
       }
+    > = {
+      hg: { ok: false, touches: {}, why: '', words: null },
+      hd: { ok: false, touches: {}, why: '', words: null },
+      bg: { ok: false, touches: {}, why: '', words: null },
+      bd: { ok: false, touches: {}, why: '', words: null }
     }
+
+    for (const pos of POS_ENUM) {
+      const tile = board[pos]
+      const words = tile?.words ?? null
+      const why = String(tile?.why ?? '')
+
+      detailsByPos[pos].why = why
+      detailsByPos[pos].words = words as any
+
+      // eslint-disable-next-line no-magic-numbers
+      if (!words || words.length !== 4) {
+        // illisible => false
+        resultByPos[pos] = false
+        detailsByPos[pos].ok = false
+        continue
+      }
+
+      // N,E,S,O
+      const N = this.normWord(words[0])
+      const E = this.normWord(words[1])
+      // eslint-disable-next-line no-magic-numbers
+      const S = this.normWord(words[2])
+      // eslint-disable-next-line no-magic-numbers
+      const O = this.normWord(words[3])
+
+      const expectedTouches = this.EXPECTED_BY_POS[pos].touches
+
+      const touches: any = {}
+
+      // mapping touches attendu selon pos
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const pick = (which: 'n' | 'e' | 's' | 'o'): Word | null => {
+        if (which === 'n') return N
+        if (which === 'e') return E
+        if (which === 's') return S
+        return O
+      }
+
+      // hg: levre<-N, crapaud<-O
+      // hd: levre<-N, biberon<-E
+      // bd: succube<-S, biberon<-E
+      // bg: succube<-S, crapaud<-O
+      const actualByFixed: Record<string, Word | null> =
+        pos === 'hg'
+          ? { levre: N, crapaud: O }
+          : pos === 'hd'
+          ? { levre: N, biberon: E }
+          : pos === 'bd'
+          ? { succube: S, biberon: E }
+          : { succube: S, crapaud: O }
+
+      let okAll = true
+      for (const [fixed, exp] of Object.entries(expectedTouches)) {
+        const got = (actualByFixed as any)[fixed] ?? null
+        const ok = got === exp
+        touches[fixed] = { expected: exp, got, ok }
+        if (!ok) okAll = false
+
+        this.logger.log(
+          `[compare:${pos}] fixed=${fixed} expected=${exp} got=${got ?? null} ok=${ok} (N=${N},E=${E},S=${S},O=${O})`
+        )
+      }
+
+      resultByPos[pos] = okAll
+      detailsByPos[pos].ok = okAll
+      detailsByPos[pos].touches = touches
+    }
+
+    return { resultByPos, detailsByPos }
   }
 
-  private norm(s?: string | null) {
-    if (!s) return ''
-    return String(s)
+  private normWord(w: any): Word | null {
+    if (w == null) return null
+    const s = String(w)
       .toLowerCase()
       .normalize('NFD')
       .replace(/[\u0300-\u036f]/g, '')
       .replace(/[^a-z]/g, '')
+
+    // match strict enum
+    return (WORD_ENUM as readonly string[]).includes(s) ? (s as Word) : null
   }
 
   private stripJson(text: string) {
