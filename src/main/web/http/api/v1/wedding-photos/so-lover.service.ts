@@ -1,8 +1,9 @@
 import { Injectable, InternalServerErrorException, Logger } from '@nestjs/common'
 import { readFile } from 'fs/promises'
 
-type Side = 'haut' | 'droite' | 'bas' | 'gauche'
 type Quadrant = 'haut_gauche' | 'haut_droite' | 'bas_gauche' | 'bas_droite'
+
+type QuadrantResult = { same: boolean; why: string }
 
 @Injectable()
 export class SoLoverService {
@@ -12,6 +13,9 @@ export class SoLoverService {
   private apiKey = process.env.OPENAI_API_KEY
 
   private REF_PATH = '/volume1/homes/Valou/lsr-nestjs-backend/src/assets/so-lover/resultat.png'
+
+  // Mets à true si tu veux logger le raw COMPLET (souvent très long)
+  private readonly RAW_LOG_FULL = false
 
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
   async checkBoard(image: Buffer) {
@@ -29,25 +33,18 @@ export class SoLoverService {
         {
           role: 'user',
           content: [
-            {
-              type: 'input_text',
-              text: this.buildPrompt()
-            },
-            {
-              type: 'input_image',
-              image_url: `data:image/png;base64,${base64Ref}`
-            },
-            {
-              type: 'input_image',
-              image_url: `data:image/jpeg;base64,${base64Test}`
-            }
+            { type: 'input_text', text: this.buildPrompt() },
+            { type: 'input_image', image_url: `data:image/png;base64,${base64Ref}` },
+            { type: 'input_image', image_url: `data:image/jpeg;base64,${base64Test}` }
           ]
         }
       ]
     }
 
     const start = Date.now()
-    this.logger.log(`[board] OpenAI request model=gpt-4.1 testBytes≈${image.length} ref=${this.REF_PATH}`)
+    this.logger.log(
+      `[board] OpenAI request model=${payload.model} testBytes≈${image.length} refBytes≈${refBuffer.length} ref=${this.REF_PATH}`
+    )
 
     const r = await fetch('https://api.openai.com/v1/responses', {
       method: 'POST',
@@ -63,7 +60,8 @@ export class SoLoverService {
 
     if (!r.ok) {
       const txt = await r.text().catch(() => '')
-      this.logger.error(txt)
+      // eslint-disable-next-line no-magic-numbers
+      this.logger.error(`[board] OpenAI error body: ${(txt || '').slice(0, 4000)}`)
       throw new InternalServerErrorException('OpenAI error')
     }
 
@@ -78,9 +76,24 @@ export class SoLoverService {
         .join('\n') ??
       ''
 
-    this.logger.log(`[board] rawText FULL: ${raw}`)
+    if (this.RAW_LOG_FULL) {
+      this.logger.log(`[board] rawText FULL: ${raw}`)
+    } else {
+      // eslint-disable-next-line no-magic-numbers
+      this.logger.log(`[board] rawText (truncated): ${String(raw).slice(0, 1200)}`)
+    }
 
-    const parsed = JSON.parse(raw)
+    let parsed: any
+    try {
+      parsed = JSON.parse(this.stripJson(raw))
+    } catch (e: any) {
+      this.logger.error(`[board] JSON.parse failed: ${e?.message ?? e}`)
+      // eslint-disable-next-line no-magic-numbers
+      this.logger.error(`[board] rawText for debug: ${String(raw).slice(0, 4000)}`)
+      throw new InternalServerErrorException('Model returned invalid JSON')
+    }
+
+    this.logger.log(`[board] parsed keys=${JSON.stringify(Object.keys(parsed ?? {}))}`)
 
     return this.postProcess(parsed)
   }
@@ -89,7 +102,13 @@ export class SoLoverService {
     const start = Date.now()
     this.logger.log(`[ref] loading reference ${this.REF_PATH}`)
 
-    const buf = await readFile(this.REF_PATH)
+    let buf: Buffer
+    try {
+      buf = await readFile(this.REF_PATH)
+    } catch (e: any) {
+      this.logger.error(`[ref] cannot read reference: ${e?.message ?? e}`)
+      throw new InternalServerErrorException('Cannot read reference image on server')
+    }
 
     const dt = Date.now() - start
     this.logger.log(`[ref] loaded bytes=${buf.length} dt=${dt}ms`)
@@ -100,22 +119,22 @@ export class SoLoverService {
   private postProcess(parsed: any) {
     const quadrants = parsed?.quadrants ?? {}
 
-    const q = {
+    const q: Record<Quadrant, QuadrantResult> = {
       haut_gauche: {
-        same: Boolean(quadrants.haut_gauche?.same),
-        why: String(quadrants.haut_gauche?.why ?? '')
+        same: Boolean(quadrants?.haut_gauche?.same),
+        why: String(quadrants?.haut_gauche?.why ?? '')
       },
       haut_droite: {
-        same: Boolean(quadrants.haut_droite?.same),
-        why: String(quadrants.haut_droite?.why ?? '')
+        same: Boolean(quadrants?.haut_droite?.same),
+        why: String(quadrants?.haut_droite?.why ?? '')
       },
       bas_gauche: {
-        same: Boolean(quadrants.bas_gauche?.same),
-        why: String(quadrants.bas_gauche?.why ?? '')
+        same: Boolean(quadrants?.bas_gauche?.same),
+        why: String(quadrants?.bas_gauche?.why ?? '')
       },
       bas_droite: {
-        same: Boolean(quadrants.bas_droite?.same),
-        why: String(quadrants.bas_droite?.why ?? '')
+        same: Boolean(quadrants?.bas_droite?.same),
+        why: String(quadrants?.bas_droite?.why ?? '')
       }
     }
 
@@ -141,7 +160,8 @@ Tu compares 2 images du jeu So Clover.
 Image 1 = référence correcte.
 Image 2 = photo test.
 
-Il y a 4 cartes blanches.
+Ignore les mots du fond vert. Concentre-toi uniquement sur les 4 cartes blanches.
+Imagine que l'image est divisée en 4 quadrants, chacun contenant une carte blanche.
 
 Pour CHAQUE quadrant :
 - haut_gauche
@@ -149,10 +169,10 @@ Pour CHAQUE quadrant :
 - bas_gauche
 - bas_droite
 
-Tu dois vérifier :
-1️⃣ Est-ce la même carte ?
-2️⃣ Est-elle dans le même sens ?
-3️⃣ Est-elle au même endroit ?
+Tu dois vérifier pour quache cadran strictement les 3 points :
+1) Est-ce la même carte (mêmes 4 mots) ?
+2) Est-elle dans le même sens (orientation identique) ?
+3) Est-elle dans le même quadrant (emplacement identique) ?
 
 Important :
 Une carte est SAME uniquement si :
@@ -160,9 +180,9 @@ Une carte est SAME uniquement si :
 ✔ même orientation
 ✔ même quadrant
 
-Sinon → false
+Si tu n’es pas sûr (flou, reflet, angle), mets same=false et explique pourquoi.
 
-Réponds en JSON :
+Réponds UNIQUEMENT en JSON strict :
 {
   "quadrants": {
     "haut_gauche": { "same": boolean, "why": string },
@@ -171,6 +191,26 @@ Réponds en JSON :
     "bas_droite": { "same": boolean, "why": string }
   }
 }
-`
+`.trim()
+  }
+
+  private stripJson(text: string) {
+    const t = String(text ?? '').trim()
+
+    // Cas ```json ... ```
+    if (t.startsWith('```')) {
+      return t
+        .replace(/^```[a-z]*\n?/i, '')
+        .replace(/\n?```$/i, '')
+        .trim()
+    }
+
+    // Cas "voici le JSON: {...}"
+    const i = t.indexOf('{')
+    const j = t.lastIndexOf('}')
+    // eslint-disable-next-line no-magic-numbers
+    if (i !== -1 && j !== -1 && j > i) return t.slice(i, j + 1)
+
+    return t
   }
 }
