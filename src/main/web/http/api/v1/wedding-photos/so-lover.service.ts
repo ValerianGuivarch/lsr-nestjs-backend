@@ -1,60 +1,68 @@
 import { Injectable, InternalServerErrorException, Logger } from '@nestjs/common'
 
-type Pos = 'hg' | 'hd' | 'bg' | 'bd'
 type Side = 'haut' | 'droite' | 'bas' | 'gauche'
+type FixedWord = 'levre' | 'biberon' | 'succube' | 'crapaud'
+type AnchorWord = 'bouche' | 'boisson' | 'diable' | 'espece'
+type AnchorId = 'anch1' | 'anch2' | 'anch3' | 'anch4'
 
-const WORD_ENUM = ['court', 'boisson', 'couche', 'diable', 'ete', 'espece', 'bouche', 'bassin'] as const
-type Word = (typeof WORD_ENUM)[number]
+const SIDES: Side[] = ['haut', 'droite', 'bas', 'gauche']
+const FIXED_WORDS: FixedWord[] = ['levre', 'biberon', 'succube', 'crapaud']
+const ANCHOR_WORDS: AnchorWord[] = ['bouche', 'boisson', 'diable', 'espece']
 
-const POS_ENUM = ['hg', 'hd', 'bg', 'bd'] as const
+// Règles du plateau "solution" (logique So Clover)
+// Couples de mots fixes attendus par position:
+const EXPECTED_PAIR_BY_SIDE: Record<Side, [FixedWord, FixedWord]> = {
+  haut: ['levre', 'biberon'],
+  droite: ['biberon', 'succube'],
+  bas: ['succube', 'crapaud'],
+  gauche: ['levre', 'crapaud']
+}
 
-type TileRead = {
-  words: [Word, Word, Word, Word] | null // N,E,S,O (sens horaire) OU null si illisible
-  why: string
+// Le mot fixe que doit toucher le mot ancre de chaque carte mobile
+const EXPECTED_ANCHOR_TOUCHES: Record<AnchorWord, FixedWord> = {
+  bouche: 'levre',
+  boisson: 'biberon',
+  diable: 'succube',
+  espece: 'crapaud'
+}
+
+// La position attendue de chaque mot ancre (déduite du couple de fixes)
+const EXPECTED_ANCHOR_SIDE: Record<AnchorWord, Side> = {
+  // carte (levre + crapaud)
+  bouche: 'gauche',
+  // carte (levre + biberon)
+  boisson: 'haut',
+  // carte (biberon + succube)
+  diable: 'droite',
+  // carte (succube + crapaud)
+  espece: 'bas'
+}
+
+type ModelBoard = {
+  fixed: Record<FixedWord, Side>
+  mobiles: Record<
+    AnchorId,
+    {
+      anchor: AnchorWord
+      position: Side
+      // orientation du mot anchor sur la carte (où est écrit le mot sur la carte)
+      anchorOrientation: Side
+      // les 2 mots fixes que la carte touche (les 2 pétales adjacents)
+      touches: [FixedWord, FixedWord]
+      // le mot fixe qui touche DIRECTEMENT le mot anchor (ex: "boisson" touche "biberon")
+      anchorTouches: FixedWord
+      // explication courte, log-only
+      why: string
+    }
+  >
 }
 
 @Injectable()
 export class SoLoverService {
   private readonly logger = new Logger(SoLoverService.name)
+
   // eslint-disable-next-line no-process-env
   private apiKey = process.env.OPENAI_API_KEY
-
-  /**
-   * Règles attendues : pour chaque position (HG/HD/BG/BD),
-   * quels mots doivent toucher les 2 mots fixes adjacents.
-   *
-   * Repère FIXE imposé dans le prompt :
-   * - LEVRE = haut du plateau
-   * - BIBERON = droite
-   * - SUCCUBE = bas
-   * - CRAPAUD = gauche
-   *
-   * Donc :
-   * - HG touche LEVRE & CRAPAUD
-   * - HD touche LEVRE & BIBERON
-   * - BD touche SUCCUBE & BIBERON
-   * - BG touche SUCCUBE & CRAPAUD
-   */
-  private EXPECTED_BY_POS: Record<
-    Pos,
-    {
-      // pour comparer ensuite, on stocke ce qu’on attend côté fixe
-      touches: Partial<Record<'levre' | 'biberon' | 'succube' | 'crapaud', Word>>
-    }
-  > = {
-    hg: { touches: { levre: 'bouche', crapaud: 'bassin' } },
-    hd: { touches: { levre: 'court', biberon: 'boisson' } },
-    bd: { touches: { succube: 'diable', biberon: 'couche' } },
-    bg: { touches: { succube: 'ete', crapaud: 'espece' } }
-  }
-
-  // Pour garder ton retour actuel (haut/droite/bas/gauche) côté front :
-  private POS_TO_SIDE: Record<Pos, Side> = {
-    hg: 'gauche', // HG = côté gauche du trèfle (diagonale haut-gauche)
-    hd: 'haut', // HD = côté haut
-    bd: 'droite', // BD = côté droite
-    bg: 'bas' // BG = côté bas
-  }
 
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
   async checkBoard(image: Buffer) {
@@ -62,138 +70,31 @@ export class SoLoverService {
 
     const dataUrl = `data:image/jpeg;base64,${image.toString('base64')}`
 
-    // 1) Lire le plateau entier : positions HG/HD/BG/BD + orientation des mots
-    const board = await this.readBoardWhole(dataUrl)
+    const prompt = this.buildPrompt()
 
-    // 2) Comparer localement (stable) selon tes règles
-    const { resultByPos, detailsByPos } = this.compareBoard(board)
-
-    // 3) Adapter au format frontend actuel: haut/droite/bas/gauche (pas obligé mais pratique)
-    const resultBySide: Record<Side, boolean> = {
-      haut: resultByPos.hd,
-      droite: resultByPos.bd,
-      bas: resultByPos.bg,
-      gauche: resultByPos.hg
-    }
-
-    // logs utiles
-    this.logger.log(`Board read: ${JSON.stringify(board)}`)
-    this.logger.log(`Result by pos: ${JSON.stringify(resultByPos)}`)
-    this.logger.log(`Result by side: ${JSON.stringify(resultBySide)}`)
-    this.logger.log(`Details by pos: ${JSON.stringify(detailsByPos)}`)
-
-    // On ne renvoie pas les "why" si tu veux rester clean.
-    // Mais je te laisse "board" et "details" pour debug: tu peux les retirer plus tard.
-    return {
-      ok: true,
-      result: {
-        haut: resultBySide.haut,
-        droite: resultBySide.droite,
-        bas: resultBySide.bas,
-        gauche: resultBySide.gauche
-      },
-      board, // debug
-      details: detailsByPos // debug
-    }
-  }
-
-  /**
-   * Lecture plateau entier, sans crop.
-   * On demande :
-   * - où sont les 4 cartes (HG/HD/BG/BD)
-   * - pour chaque carte : les 4 mots imprimés dans l'ordre N/E/S/O (horaire)
-   * - + why pour logs
-   */
-  private async readBoardWhole(imageDataUrl: string): Promise<Record<Pos, TileRead>> {
-    const prompt = `
-Tu es un validateur du jeu So Clover.
-
-IMPORTANT (repère de l'image):
-- Le mot fixe "LEVRE" indique le HAUT du plateau.
-- "BIBERON" = droite du plateau
-- "SUCCUBE" = bas du plateau
-- "CRAPAUD" = gauche du plateau
-
-Au centre il y a 4 cartes roses en grille 2×2:
-- hg = en haut-gauche
-- hd = en haut-droite
-- bg = en bas-gauche
-- bd = en bas-droite
-
-TÂCHE:
-Pour chacune des 4 cartes (hg/hd/bg/bd),
-lis UNIQUEMENT les mots imprimés sur la carte rose et renvoie les 4 mots
-dans l'ordre suivant: N, E, S, O (sens horaire, avec N = côté "haut" de la PHOTO).
-
-Contraintes:
-- Tu n'as le droit de répondre que par un mot parmi: ${WORD_ENUM.join(', ')}
-- Si un mot est illisible: renvoie null (et explique dans "why")
-- Ne devine pas.
-
-En plus, pour chaque carte, remplis "why" en 1-2 phrases (orientation, lisibilité, etc.).
-Réponds UNIQUEMENT en JSON strict.
-`.trim()
-
-    const schema = {
-      type: 'object',
-      additionalProperties: false,
-      required: [...POS_ENUM],
-      properties: Object.fromEntries(
-        POS_ENUM.map((p) => [
-          p,
-          {
-            type: 'object',
-            additionalProperties: false,
-            required: ['words', 'why'],
-            properties: {
-              // [N,E,S,O] chacun = enum ou null ; si trop dur, tout words=null
-              words: {
-                anyOf: [
-                  { type: 'null' },
-                  {
-                    type: 'array',
-                    minItems: 4,
-                    maxItems: 4,
-                    items: { anyOf: [{ type: 'string', enum: [...WORD_ENUM] }, { type: 'null' }] }
-                  }
-                ]
-              },
-              why: { type: 'string' }
-            }
-          }
-        ])
-      )
-    }
-
-    const payload = {
+    const payload: any = {
       model: 'gpt-4.1-mini',
       temperature: 0,
-      text: {
-        format: {
-          type: 'json_schema',
-          name: 'so_clover_board_whole',
-          strict: true,
-          schema
-        }
-      },
       input: [
         {
           role: 'user',
           content: [
             { type: 'input_text', text: prompt },
-            { type: 'input_image', image_url: imageDataUrl }
+            { type: 'input_image', image_url: dataUrl }
           ]
         }
       ]
     }
 
     const start = Date.now()
-    // eslint-disable-next-line no-magic-numbers
-    this.logger.log(`[board] OpenAI request bytes≈${Math.round((imageDataUrl.length * 3) / 4)}`)
+    this.logger.log(`[board] OpenAI request bytes≈${image.length}`)
 
     const r = await fetch('https://api.openai.com/v1/responses', {
       method: 'POST',
-      headers: { Authorization: `Bearer ${this.apiKey}`, 'Content-Type': 'application/json' },
+      headers: {
+        Authorization: `Bearer ${this.apiKey}`,
+        'Content-Type': 'application/json'
+      },
       body: JSON.stringify(payload)
     })
 
@@ -203,14 +104,14 @@ Réponds UNIQUEMENT en JSON strict.
     if (!r.ok) {
       const txt = await r.text().catch(() => '')
       // eslint-disable-next-line no-magic-numbers
-      this.logger.error(`[board] OpenAI error (truncated): ${(txt || '').slice(0, 2000)}`)
+      this.logger.error(`[board] OpenAI error body (truncated): ${(txt || '').slice(0, 2000)}`)
       // eslint-disable-next-line no-magic-numbers
       throw new InternalServerErrorException((txt || '').slice(0, 2000))
     }
 
     const data: any = await r.json()
 
-    const rawText =
+    const rawText: string =
       data.output_text ??
       data.output
         ?.flatMap((o: any) => o.content || [])
@@ -220,137 +121,312 @@ Réponds UNIQUEMENT en JSON strict.
       ''
 
     // eslint-disable-next-line no-magic-numbers
-    this.logger.log(`[board] rawText (truncated): ${String(rawText).slice(0, 1200)}`)
+    this.logger.log(`[board] rawText (truncated): ${String(rawText).slice(0, 2000)}`)
 
-    const parsed = JSON.parse(this.stripJson(rawText))
-
-    // log why
-    for (const pos of POS_ENUM) {
+    const jsonText = this.stripJson(rawText)
+    let parsed: ModelBoard
+    try {
+      parsed = JSON.parse(jsonText) as ModelBoard
+    } catch (e: any) {
+      this.logger.error(`[board] JSON.parse failed: ${(e?.message ?? e) as string}`)
       // eslint-disable-next-line no-magic-numbers
-      this.logger.log(`[board:${pos}] why: ${String(parsed?.[pos]?.why ?? '').slice(0, 800)}`)
+      this.logger.error(`[board] Unparseable JSON (truncated): ${String(jsonText).slice(0, 2000)}`)
+      throw new InternalServerErrorException('Model returned invalid JSON')
     }
 
-    return parsed as Record<Pos, TileRead>
-  }
+    // 1) sanity checks + normalisation légère
+    const normalized = this.normalizeModelBoard(parsed)
 
-  /**
-   * Compare en local.
-   * On déduit quels mots touchent LEVRE/BIBERON/SUCCUBE/CRAPAUD en fonction de la position.
-   *
-   * Convention simple (très stable) :
-   * - Carte HG touche LEVRE (au nord de la carte) et CRAPAUD (à l’ouest de la carte)
-   * - Carte HD touche LEVRE (nord) et BIBERON (est)
-   * - Carte BD touche SUCCUBE (sud) et BIBERON (est)
-   * - Carte BG touche SUCCUBE (sud) et CRAPAUD (ouest)
-   *
-   * Donc on prend words[N], words[E], words[S], words[O] selon le cas.
-   */
-  private compareBoard(board: Record<Pos, TileRead>) {
-    const resultByPos: Record<Pos, boolean> = { hg: false, hd: false, bg: false, bd: false }
-    const detailsByPos: Record<
-      Pos,
-      {
-        ok: boolean
-        touches: Record<string, { expected: Word; got: Word | null; ok: boolean }>
-        why: string
-        words: [Word | null, Word | null, Word | null, Word | null] | null
-      }
-    > = {
-      hg: { ok: false, touches: {}, why: '', words: null },
-      hd: { ok: false, touches: {}, why: '', words: null },
-      bg: { ok: false, touches: {}, why: '', words: null },
-      bd: { ok: false, touches: {}, why: '', words: null }
+    // 2) logs "why" (log-only)
+    for (const anch of Object.keys(normalized.mobiles) as AnchorId[]) {
+      // eslint-disable-next-line no-magic-numbers
+      this.logger.log(`[board:${anch}] why: ${String(normalized.mobiles[anch]?.why ?? '').slice(0, 800)}`)
     }
 
-    for (const pos of POS_ENUM) {
-      const tile = board[pos]
-      const words = tile?.words ?? null
-      const why = String(tile?.why ?? '')
+    // 3) traitement local : est-ce que chaque anchX est bien placé ?
+    const byAnchor = this.validateAnchors(normalized)
 
-      detailsByPos[pos].why = why
-      detailsByPos[pos].words = words as any
+    // 4) petit récap log
+    this.logger.log(`[board] Fixed positions: ${JSON.stringify(normalized.fixed)}`)
+    this.logger.log(
+      `[board] Mobiles: ${JSON.stringify(
+        Object.fromEntries(
+          (Object.keys(normalized.mobiles) as AnchorId[]).map((k) => [
+            k,
+            {
+              anchor: normalized.mobiles[k].anchor,
+              position: normalized.mobiles[k].position,
+              anchorOrientation: normalized.mobiles[k].anchorOrientation,
+              touches: normalized.mobiles[k].touches,
+              anchorTouches: normalized.mobiles[k].anchorTouches
+            }
+          ])
+        )
+      )}`
+    )
+    this.logger.log(`[board] Result by anchor: ${JSON.stringify(byAnchor)}`)
 
-      // eslint-disable-next-line no-magic-numbers
-      if (!words || words.length !== 4) {
-        // illisible => false
-        resultByPos[pos] = false
-        detailsByPos[pos].ok = false
-        continue
-      }
-
-      // N,E,S,O
-      const N = this.normWord(words[0])
-      const E = this.normWord(words[1])
-      // eslint-disable-next-line no-magic-numbers
-      const S = this.normWord(words[2])
-      // eslint-disable-next-line no-magic-numbers
-      const O = this.normWord(words[3])
-
-      const expectedTouches = this.EXPECTED_BY_POS[pos].touches
-
-      const touches: any = {}
-
-      // mapping touches attendu selon pos
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const pick = (which: 'n' | 'e' | 's' | 'o'): Word | null => {
-        if (which === 'n') return N
-        if (which === 'e') return E
-        if (which === 's') return S
-        return O
-      }
-
-      // hg: levre<-N, crapaud<-O
-      // hd: levre<-N, biberon<-E
-      // bd: succube<-S, biberon<-E
-      // bg: succube<-S, crapaud<-O
-      const actualByFixed: Record<string, Word | null> =
-        pos === 'hg'
-          ? { levre: N, crapaud: O }
-          : pos === 'hd'
-          ? { levre: N, biberon: E }
-          : pos === 'bd'
-          ? { succube: S, biberon: E }
-          : { succube: S, crapaud: O }
-
-      let okAll = true
-      for (const [fixed, exp] of Object.entries(expectedTouches)) {
-        const got = (actualByFixed as any)[fixed] ?? null
-        const ok = got === exp
-        touches[fixed] = { expected: exp, got, ok }
-        if (!ok) okAll = false
-
-        this.logger.log(
-          `[compare:${pos}] fixed=${fixed} expected=${exp} got=${got ?? null} ok=${ok} (N=${N},E=${E},S=${S},O=${O})`
+    // 5) réponse API (front-friendly, sans les "why")
+    // On renvoie aussi "detected" pour debug éventuel (tu peux enlever plus tard)
+    return {
+      ok: true,
+      result: byAnchor,
+      detected: {
+        fixed: normalized.fixed,
+        mobiles: Object.fromEntries(
+          (Object.keys(normalized.mobiles) as AnchorId[]).map((k) => [
+            k,
+            {
+              anchor: normalized.mobiles[k].anchor,
+              position: normalized.mobiles[k].position,
+              anchorOrientation: normalized.mobiles[k].anchorOrientation,
+              touches: normalized.mobiles[k].touches,
+              anchorTouches: normalized.mobiles[k].anchorTouches
+            }
+          ])
         )
       }
-
-      resultByPos[pos] = okAll
-      detailsByPos[pos].ok = okAll
-      detailsByPos[pos].touches = touches
     }
-
-    return { resultByPos, detailsByPos }
   }
 
-  private normWord(w: any): Word | null {
-    if (w == null) return null
-    const s = String(w)
-      .toLowerCase()
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .replace(/[^a-z]/g, '')
+  private buildPrompt() {
+    // NOTE: On impose une grammaire très stricte, et on rappelle : si doute => mettre "haut" etc quand même ? NON:
+    // -> si doute: choisir "gauche/droite/haut/bas" au mieux, mais l'erreur est possible.
+    // -> pour la robustesse, on force "why" qui explique.
+    return `
+Tu es un détecteur pour un plateau du jeu So Clover, photographié.
 
-    // match strict enum
-    return (WORD_ENUM as readonly string[]).includes(s) ? (s as Word) : null
+Tu dois analyser L'IMAGE ENTIÈRE.
+
+Mots FIXES (manuscrits) présents EXACTEMENT une fois chacun :
+- levre
+- biberon
+- succube
+- crapaud
+
+Cartes MOBILES : il y en a 4 et chacune contient un "mot ancre" unique (imprimé) :
+- bouche
+- boisson
+- diable
+- espece
+
+TÂCHE 1 (FIXES):
+Pour chaque mot fixe (levre, biberon, succube, crapaud), donne sa position relative à la photo :
+"haut" | "droite" | "bas" | "gauche".
+Tu DOIS utiliser ces 4 positions, et les 4 mots fixes doivent être tous présents.
+
+TÂCHE 2 (MOBILES):
+Tu dois retourner 4 objets "anch1..anch4" (ordre libre).
+Pour chaque ancre, tu dois déterminer :
+- anchor: l'un de [bouche, boisson, diable, espece] (chacun exactement une fois)
+- position: où est située cette carte mobile dans la photo ("haut"|"droite"|"bas"|"gauche")
+- anchorOrientation: où est écrit le mot anchor SUR LA CARTE (haut|droite|bas|gauche sur la carte elle-même)
+- touches: les DEUX mots fixes (parmi levre,biberon,succube,crapaud) dont cette carte est adjacente (exactement 2 valeurs)
+- anchorTouches: le mot fixe qui touche DIRECTEMENT le mot anchor (ex: boisson touche biberon)
+- why: 1-2 phrases courtes expliquant comment tu as décidé (lisibilité, orientation, etc.)
+
+IMPORTANT:
+- Réponds UNIQUEMENT en JSON strict.
+- Pas de markdown.
+- Pas de texte autour.
+- Utilise seulement ces strings exactes:
+  - positions: haut|droite|bas|gauche
+  - fixed: levre|biberon|succube|crapaud
+  - anchors: bouche|boisson|diable|espece
+
+FORMAT JSON EXACT:
+
+{
+  "fixed": {
+    "levre": "haut|droite|bas|gauche",
+    "biberon": "haut|droite|bas|gauche",
+    "succube": "haut|droite|bas|gauche",
+    "crapaud": "haut|droite|bas|gauche"
+  },
+  "mobiles": {
+    "anch1": {
+      "anchor": "bouche|boisson|diable|espece",
+      "position": "haut|droite|bas|gauche",
+      "anchorOrientation": "haut|droite|bas|gauche",
+      "touches": ["levre|biberon|succube|crapaud", "levre|biberon|succube|crapaud"],
+      "anchorTouches": "levre|biberon|succube|crapaud",
+      "why": "..."
+    },
+    "anch2": { ... },
+    "anch3": { ... },
+    "anch4": { ... }
+  }
+}
+`.trim()
+  }
+
+  private normalizeModelBoard(b: ModelBoard): ModelBoard {
+    const fixed: any = {}
+    for (const k of FIXED_WORDS) fixed[k] = this.normSide((b as any)?.fixed?.[k])
+
+    const mobiles: any = {}
+    const anchorsSeen = new Set<string>()
+    for (const id of ['anch1', 'anch2', 'anch3', 'anch4'] as AnchorId[]) {
+      const m = (b as any)?.mobiles?.[id] ?? {}
+      const anchor = this.normAnchor(m.anchor)
+      mobiles[id] = {
+        anchor,
+        position: this.normSide(m.position),
+        anchorOrientation: this.normSide(m.anchorOrientation),
+        touches: this.normTouches(m.touches),
+        anchorTouches: this.normFixed(m.anchorTouches),
+        why: String(m.why ?? '')
+      }
+      anchorsSeen.add(anchor)
+    }
+
+    // Logs si ça semble bizarre (mais on ne bloque pas ici, on bloque dans validate)
+    this.logger.log(
+      `[board] normalize anchorsSeen=${JSON.stringify(Array.from(anchorsSeen))} fixed=${JSON.stringify(fixed)}`
+    )
+
+    return { fixed, mobiles } as ModelBoard
+  }
+
+  private validateAnchors(b: ModelBoard) {
+    // résultat demandé: "si chaque MOBILE_ANCHORS est bien placé ou pas"
+    // on renvoie anch1..anch4 => { ok: boolean, details: ... }
+    const out: Record<
+      AnchorId,
+      {
+        ok: boolean
+        details: {
+          anchor: AnchorWord | string
+          expected: {
+            side: Side
+            touchesPair: [FixedWord, FixedWord]
+            anchorTouches: FixedWord
+          }
+          got: {
+            position: Side
+            touches: [FixedWord, FixedWord]
+            anchorTouches: FixedWord
+            anchorOrientation: Side
+          }
+          checks: {
+            anchorUnique: boolean
+            positionMatchesExpectedSide: boolean
+            touchesPairMatches: boolean
+            anchorTouchesMatches: boolean
+          }
+        }
+      }
+    > = {} as any
+
+    // check unicité anchors
+    const allAnchors = (Object.keys(b.mobiles) as AnchorId[]).map((k) => b.mobiles[k].anchor)
+    // eslint-disable-next-line no-magic-numbers
+    const uniqueOk = new Set(allAnchors).size === 4 && allAnchors.every((a) => ANCHOR_WORDS.includes(a as any))
+
+    for (const id of Object.keys(b.mobiles) as AnchorId[]) {
+      const m = b.mobiles[id]
+      const anchor = m.anchor as AnchorWord
+
+      const expectedSide = EXPECTED_ANCHOR_SIDE[anchor]
+      const expectedPair = EXPECTED_PAIR_BY_SIDE[expectedSide]
+      const expectedAnchorTouches = EXPECTED_ANCHOR_TOUCHES[anchor]
+
+      const gotTouches = m.touches
+      const touchesPairMatches = this.samePair(gotTouches, expectedPair)
+      const positionMatchesExpectedSide = m.position === expectedSide
+      const anchorTouchesMatches = m.anchorTouches === expectedAnchorTouches
+
+      const ok = uniqueOk && positionMatchesExpectedSide && touchesPairMatches && anchorTouchesMatches
+
+      // log par anchor (très lisible)
+      this.logger.log(
+        `[anch:${id}] anchor=${anchor} ok=${ok} ` +
+          `pos ${m.position} vs exp ${expectedSide} | ` +
+          `touches ${JSON.stringify(gotTouches)} vs exp ${JSON.stringify(expectedPair)} | ` +
+          `anchorTouches ${m.anchorTouches} vs exp ${expectedAnchorTouches} | ` +
+          `anchorOrientation=${m.anchorOrientation}`
+      )
+
+      out[id] = {
+        ok,
+        details: {
+          anchor,
+          expected: { side: expectedSide, touchesPair: expectedPair, anchorTouches: expectedAnchorTouches },
+          got: {
+            position: m.position,
+            touches: gotTouches,
+            anchorTouches: m.anchorTouches,
+            anchorOrientation: m.anchorOrientation
+          },
+          checks: {
+            anchorUnique: uniqueOk,
+            positionMatchesExpectedSide,
+            touchesPairMatches,
+            anchorTouchesMatches
+          }
+        }
+      }
+    }
+
+    // gros récap
+    const summary = Object.fromEntries((Object.keys(out) as AnchorId[]).map((k) => [k, out[k].ok]))
+    this.logger.log(`[board] Summary anchors ok: ${JSON.stringify(summary)}`)
+
+    return out
+  }
+
+  private samePair(a: [FixedWord, FixedWord], b: [FixedWord, FixedWord]) {
+    // ignore order
+    const as = [...a].sort().join('|')
+    const bs = [...b].sort().join('|')
+    return as === bs
+  }
+
+  private normSide(x: any): Side {
+    const s = String(x ?? '')
+      .toLowerCase()
+      .trim()
+    if (s === 'haut' || s === 'bas' || s === 'gauche' || s === 'droite') return s
+    // fallback: si le modèle dévie, on force une valeur (mais on log)
+    this.logger.warn(`[normSide] unexpected value="${String(x)}" -> forcing "haut"`)
+    return 'haut'
+  }
+
+  private normFixed(x: any): FixedWord {
+    const s = String(x ?? '')
+      .toLowerCase()
+      .trim()
+    if (FIXED_WORDS.includes(s as any)) return s as FixedWord
+    this.logger.warn(`[normFixed] unexpected value="${String(x)}" -> forcing "levre"`)
+    return 'levre'
+  }
+
+  private normAnchor(x: any): AnchorWord {
+    const s = String(x ?? '')
+      .toLowerCase()
+      .trim()
+    if (ANCHOR_WORDS.includes(s as any)) return s as AnchorWord
+    this.logger.warn(`[normAnchor] unexpected value="${String(x)}" -> forcing "bouche"`)
+    return 'bouche'
+  }
+
+  private normTouches(x: any): [FixedWord, FixedWord] {
+    // eslint-disable-next-line no-magic-numbers
+    if (Array.isArray(x) && x.length === 2) {
+      return [this.normFixed(x[0]), this.normFixed(x[1])]
+    }
+    this.logger.warn(`[normTouches] unexpected value="${JSON.stringify(x)}" -> forcing ["levre","biberon"]`)
+    return ['levre', 'biberon']
   }
 
   private stripJson(text: string) {
     const t = String(text ?? '').trim()
-    if (t.startsWith('```'))
+    if (t.startsWith('```')) {
       return t
         .replace(/^```[a-z]*\n/, '')
         .replace(/\n```$/, '')
         .trim()
+    }
     const i = t.indexOf('{')
     const j = t.lastIndexOf('}')
     // eslint-disable-next-line no-magic-numbers
