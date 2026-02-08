@@ -1,17 +1,19 @@
 import { Injectable, InternalServerErrorException, Logger } from '@nestjs/common'
+import { readFile } from 'node:fs/promises'
+import { extname } from 'node:path'
 
-type Side = 'haut' | 'droite' | 'bas' | 'gauche'
 type Quadrant = 'haut_gauche' | 'haut_droite' | 'bas_gauche' | 'bas_droite'
-type Orientation = 'haut' | 'bas' | 'gauche' | 'droite'
+const QUADRANTS: Quadrant[] = ['haut_gauche', 'haut_droite', 'bas_gauche', 'bas_droite']
 
-const WORD_ENUM = ['court', 'boisson', 'couche', 'diable', 'ete', 'espece', 'bouche', 'bassin'] as const
+type QuadrantResult = {
+  same: boolean
+  why: string
+}
 
-const FIXED_WORDS = ['levre', 'biberon', 'succube', 'crapaud'] as const
-const MOBILE_ANCHORS = ['bouche', 'boisson', 'diable', 'espece'] as const
-
-const SIDE_ENUM: Side[] = ['haut', 'droite', 'bas', 'gauche']
-const QUADRANT_ENUM: Quadrant[] = ['haut_gauche', 'haut_droite', 'bas_gauche', 'bas_droite']
-const ORIENTATION_ENUM: Orientation[] = ['haut', 'bas', 'gauche', 'droite']
+type ModelOutput = {
+  quadrants: Record<Quadrant, QuadrantResult>
+  global: { same: boolean; why: string }
+}
 
 @Injectable()
 export class SoLoverService {
@@ -20,37 +22,40 @@ export class SoLoverService {
   // eslint-disable-next-line no-process-env
   private apiKey = process.env.OPENAI_API_KEY
 
-  // 👉 ADAPTABLE
-  private EXPECTED_FIXED: Record<(typeof FIXED_WORDS)[number], Side> = {
-    levre: 'haut',
-    biberon: 'droite',
-    succube: 'bas',
-    crapaud: 'gauche'
-  }
+  /**
+   * ✅ Tu changes le modèle ICI (côté code uniquement).
+   * - gpt-4.1-mini : moins cher, moins fiable
+   * - gpt-4.1      : mieux
+   * - (si dispo sur ton compte) un modèle vision plus haut de gamme : encore mieux
+   */
+  private readonly MODEL = 'gpt-4.1' as const
 
-  // 👉 ADAPTABLE
-  private EXPECTED_ANCHORS: Record<(typeof MOBILE_ANCHORS)[number], { quadrant: Quadrant; orientation: Orientation }> =
-    {
-      bouche: { quadrant: 'haut_gauche', orientation: 'haut' },
-      boisson: { quadrant: 'haut_droite', orientation: 'gauche' },
-      diable: { quadrant: 'bas_droite', orientation: 'bas' },
-      espece: { quadrant: 'bas_gauche', orientation: 'droite' }
-    }
+  /**
+   * Image de référence (plateau correct) stockée côté serveur.
+   * (le modèle OpenAI ne télécharge rien chez toi: on envoie du base64)
+   */
+  private readonly REFERENCE_LOCAL_PATH = '/volume1/homes/Valou/lsr-nestjs-backend/src/assets/so-lover/resultat.png'
 
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
   async checkBoard(image: Buffer) {
     if (!this.apiKey) throw new InternalServerErrorException('OPENAI_API_KEY missing')
 
-    const base64 = image.toString('base64')
+    // 1) Charge la référence en data URL
+    const refDataUrl = await this.loadReferenceAsDataUrl()
+
+    // 2) Convertit la photo test en data URL
+    const testDataUrl = `data:image/jpeg;base64,${image.toString('base64')}`
+
+    // 3) Prompt + schema (structured output)
     const prompt = this.buildPrompt()
 
     const payload = {
-      model: 'gpt-4.1-mini',
+      model: this.MODEL,
       temperature: 0,
       text: {
         format: {
           type: 'json_schema',
-          name: 'so_clover_full_read',
+          name: 'so_clover_compare_quadrants',
           strict: true,
           schema: this.schema()
         }
@@ -60,21 +65,28 @@ export class SoLoverService {
           role: 'user',
           content: [
             { type: 'input_text', text: prompt },
-            { type: 'input_image', image_url: `data:image/jpeg;base64,${base64}` }
+
+            // Image 1: référence (plateau correct)
+            { type: 'input_image', image_url: refDataUrl },
+
+            // Image 2: photo à valider
+            { type: 'input_image', image_url: testDataUrl }
           ]
         }
       ]
     }
 
     const start = Date.now()
-    this.logger.log(`[board] OpenAI request bytes≈${image.length}`)
     this.logger.log(
-      `[board] Expected fixed=${JSON.stringify(this.EXPECTED_FIXED)} anchors=${JSON.stringify(this.EXPECTED_ANCHORS)}`
+      `[board] OpenAI request model=${this.MODEL} testBytes≈${image.length} ref=${this.REFERENCE_LOCAL_PATH}`
     )
 
     const r = await fetch('https://api.openai.com/v1/responses', {
       method: 'POST',
-      headers: { Authorization: `Bearer ${this.apiKey}`, 'Content-Type': 'application/json' },
+      headers: {
+        Authorization: `Bearer ${this.apiKey}`,
+        'Content-Type': 'application/json'
+      },
       body: JSON.stringify(payload)
     })
 
@@ -90,7 +102,7 @@ export class SoLoverService {
 
     const data: any = await r.json()
 
-    const raw =
+    const rawText =
       data.output_text ??
       data.output
         ?.flatMap((o: any) => o.content || [])
@@ -100,164 +112,152 @@ export class SoLoverService {
       ''
 
     // eslint-disable-next-line no-magic-numbers
-    this.logger.log(`[board] rawText (truncated): ${String(raw).slice(0, 900)}`)
+    this.logger.log(`[board] rawText (truncated): ${String(rawText).slice(0, 900)}`)
 
-    let parsed: any
-    try {
-      parsed = JSON.parse(this.stripJson(raw))
-    } catch (e: any) {
-      this.logger.error(`[board] JSON.parse failed: ${(e?.message ?? e) as string}`)
-      // eslint-disable-next-line no-magic-numbers
-      this.logger.error(`[board] rawText (truncated): ${String(raw).slice(0, 2000)}`)
-      throw new InternalServerErrorException('Model returned invalid JSON')
+    const parsed = this.safeParse<ModelOutput>(rawText)
+
+    // 4) Log détaillé WHY (mais on ne renvoie pas why au front si tu veux)
+    this.logSummary(parsed)
+
+    // 5) Retour API: bool par quadrant (front peut s’adapter ensuite)
+    const result: Record<Quadrant, boolean> = {
+      haut_gauche: !!parsed.quadrants.haut_gauche.same,
+      haut_droite: !!parsed.quadrants.haut_droite.same,
+      bas_gauche: !!parsed.quadrants.bas_gauche.same,
+      bas_droite: !!parsed.quadrants.bas_droite.same
     }
 
-    return this.postProcess(parsed)
-  }
-
-  private postProcess(parsed: any) {
-    const fixed = parsed?.fixed ?? null
-    const mobile = parsed?.mobile ?? null
-
-    this.logger.log(`[board] Parsed.fixed: ${JSON.stringify(fixed)}`)
-    this.logger.log(`[board] Parsed.mobile: ${JSON.stringify(mobile)}`)
-
-    // --- 1) compare FIXED ---
-    const fixedOk: Record<(typeof FIXED_WORDS)[number], boolean> = {
-      levre: false,
-      biberon: false,
-      succube: false,
-      crapaud: false
-    }
-
-    for (const word of FIXED_WORDS) {
-      const expected = this.EXPECTED_FIXED[word]
-      const got = fixed?.[word] ?? null
-      const ok = got === expected
-
-      fixedOk[word] = ok
-      this.logger.log(`[compare:fixed] ${word} expected=${expected} got=${got} ok=${ok}`)
-    }
-
-    // --- 2) compare ANCHORS ---
-    const anchorOk: Record<(typeof MOBILE_ANCHORS)[number], boolean> = {
-      bouche: false,
-      boisson: false,
-      diable: false,
-      espece: false
-    }
-
-    for (const a of MOBILE_ANCHORS) {
-      const exp = this.EXPECTED_ANCHORS[a]
-      const got = mobile?.[a] ?? null
-
-      const ok = got && got.quadrant === exp.quadrant && got.orientation === exp.orientation
-
-      anchorOk[a] = Boolean(ok)
-
-      this.logger.log(
-        `[compare:anchor] ${a} expected=${JSON.stringify(exp)} got=${JSON.stringify(got)} ok=${Boolean(ok)}`
-      )
-    }
-
-    // --- 3) resultBySide (comme ton front actuel) ---
-    const resultBySide: Record<Side, boolean> = {
-      haut: fixedOk.levre,
-      droite: fixedOk.biberon,
-      bas: fixedOk.succube,
-      gauche: fixedOk.crapaud
-    }
-
-    // log récap utile
-    this.logger.log(
-      `[board] Summary fixedOk=${JSON.stringify(fixedOk)} anchorsOk=${JSON.stringify(
-        anchorOk
-      )} resultBySide=${JSON.stringify(resultBySide)}`
-    )
+    // Optionnel: garder la compat “haut/droite/bas/gauche” si tu veux brancher le front actuel
+    // Ici je te mets un mapping simple “tout ok” si tous les quadrants sont ok.
+    // (Tu adapteras ensuite la sémantique si nécessaire.)
+    const allOk = Object.values(result).every(Boolean)
 
     return {
       ok: true,
-      result: resultBySide, // compatible front actuel
-      anchors: anchorOk, // prêt pour front futur
-      raw: { fixed, mobile } // debug
+      result, // ✅ bool par quadrant (nouveau)
+      allOk // ✅ pratique
+      // NOTE: on NE renvoie PAS why au front
     }
   }
 
+  // ----------------------------
+  // Prompt + schema
+  // ----------------------------
+
   private buildPrompt() {
     return `
-Tu analyses UNE photo du jeu So Clover.
+Tu es un validateur d'images pour le jeu So Clover.
 
-Il y a 4 MOTS FIXES écrits à la main (et TOUJOURS les mêmes) :
-${FIXED_WORDS.join(', ')}
+Tu reçois 2 images :
+- Image 1 = référence (plateau correct)
+- Image 2 = photo à valider
 
-Ces 4 mots fixes sont chacun placés UNE seule fois sur un des côtés du trèfle :
-haut / droite / bas / gauche
+But :
+Comparer UNIQUEMENT les 4 cartes roses (les cartes avec 4 mots imprimés) entre les deux images.
 
-Il y a aussi 4 CARTES MOBILES roses.
-Chaque carte mobile contient 4 mots imprimés parmi la liste :
-${WORD_ENUM.join(', ')}
+IMPORTANT :
+- Ignore totalement tout ce qui est écrit sur le fond vert (mots manuscrits, traits, etc.).
+- Ignore la table, les mains, l’ombre, les reflets.
+- Concentre-toi sur les 4 cartes roses et leur ORIENTATION.
+- Une carte est "pareille" si c'est la même carte (mêmes 4 mots) ET dans le même sens (orientation identique).
 
-Chaque carte mobile contient EXACTEMENT un mot "anchor" parmi :
-${MOBILE_ANCHORS.join(', ')}
+On découpe le plateau en 4 zones / quadrants :
+- haut_gauche
+- haut_droite
+- bas_gauche
+- bas_droite
 
-Tâches :
+Pour chaque quadrant :
+- same = true si la carte rose du quadrant de l'image 2 est identique ET orientée pareil que sur l'image 1
+- same = false sinon (carte différente, rotation différente, carte absente, incertain)
 
-1) Donne la position (haut/droite/bas/gauche) de chacun des 4 mots fixes.
+Ajoute un champ "why" (1 phrase courte) pour expliquer ta décision dans ce quadrant.
+Si tu es incertain (flou, angle, carte partiellement cachée), mets same=false et explique dans why.
 
-2) Pour chaque anchor (bouche, boisson, diable, espece), donne :
-- quadrant de la carte mobile : haut_gauche / haut_droite / bas_gauche / bas_droite
-- orientation du mot anchor DANS la carte : haut / droite / bas / gauche
-
-Règles :
-- Tu dois fournir une réponse complète (toutes les clés).
-- Si un élément est incertain : renvoie null (mais garde les clés).
-- Réponds uniquement en JSON.
+Réponds uniquement en JSON au format imposé.
 `.trim()
   }
 
+  /**
+   * ⚠️ Important: OpenAI te demande additionalProperties:false à tous les niveaux.
+   */
   private schema() {
-    // NB: additionalProperties:false PARTOUT (root + nested objects)
+    const quadrantSchema = {
+      type: 'object',
+      additionalProperties: false,
+      required: ['same', 'why'],
+      properties: {
+        same: { type: 'boolean' },
+        why: { type: 'string' }
+      }
+    }
+
     return {
       type: 'object',
       additionalProperties: false,
-      required: ['fixed', 'mobile'],
+      required: ['quadrants', 'global'],
       properties: {
-        fixed: {
+        quadrants: {
           type: 'object',
           additionalProperties: false,
-          required: [...FIXED_WORDS],
+          required: QUADRANTS,
           properties: {
-            levre: { anyOf: [{ type: 'string', enum: SIDE_ENUM }, { type: 'null' }] },
-            biberon: { anyOf: [{ type: 'string', enum: SIDE_ENUM }, { type: 'null' }] },
-            succube: { anyOf: [{ type: 'string', enum: SIDE_ENUM }, { type: 'null' }] },
-            crapaud: { anyOf: [{ type: 'string', enum: SIDE_ENUM }, { type: 'null' }] }
+            haut_gauche: quadrantSchema,
+            haut_droite: quadrantSchema,
+            bas_gauche: quadrantSchema,
+            bas_droite: quadrantSchema
           }
         },
-        mobile: {
+        global: {
           type: 'object',
           additionalProperties: false,
-          required: [...MOBILE_ANCHORS],
+          required: ['same', 'why'],
           properties: {
-            bouche: this.mobileSchema(),
-            boisson: this.mobileSchema(),
-            diable: this.mobileSchema(),
-            espece: this.mobileSchema()
+            same: { type: 'boolean' },
+            why: { type: 'string' }
           }
         }
       }
     }
   }
 
-  private mobileSchema() {
-    // ✅ Fix erreur: additionalProperties:false requis ici aussi
-    return {
-      type: 'object',
-      additionalProperties: false,
-      required: ['quadrant', 'orientation'],
-      properties: {
-        quadrant: { anyOf: [{ type: 'string', enum: QUADRANT_ENUM }, { type: 'null' }] },
-        orientation: { anyOf: [{ type: 'string', enum: ORIENTATION_ENUM }, { type: 'null' }] }
-      }
+  // ----------------------------
+  // Logs & helpers
+  // ----------------------------
+
+  private logSummary(parsed: ModelOutput) {
+    // Log global
+    this.logger.log(`[board] global.same=${parsed.global?.same} global.why=${this.trunc(parsed.global?.why, 300)}`)
+
+    // Logs quadrant par quadrant
+    for (const q of QUADRANTS) {
+      const it = parsed.quadrants?.[q]
+      this.logger.log(`[board:${q}] same=${it?.same} why=${this.trunc(it?.why, 500)}`)
+    }
+
+    // Résumé bool
+    const summary: Record<Quadrant, boolean> = {
+      haut_gauche: !!parsed.quadrants.haut_gauche.same,
+      haut_droite: !!parsed.quadrants.haut_droite.same,
+      bas_gauche: !!parsed.quadrants.bas_gauche.same,
+      bas_droite: !!parsed.quadrants.bas_droite.same
+    }
+    this.logger.log(`[board] summary=${JSON.stringify(summary)}`)
+  }
+
+  private trunc(s: any, n: number) {
+    const t = String(s ?? '')
+    return t.length > n ? `${t.slice(0, n)}…` : t
+  }
+
+  private safeParse<T>(text: string): T {
+    const t = this.stripJson(text)
+    try {
+      return JSON.parse(t) as T
+    } catch (e: any) {
+      // eslint-disable-next-line no-magic-numbers
+      this.logger.error(`[board] JSON.parse failed: ${(e?.message ?? e) as string} body=${t.slice(0, 2000)}`)
+      throw new InternalServerErrorException('Model returned invalid JSON')
     }
   }
 
@@ -274,5 +274,27 @@ Règles :
     // eslint-disable-next-line no-magic-numbers
     if (i !== -1 && j !== -1) return t.slice(i, j + 1)
     return t
+  }
+
+  private async loadReferenceAsDataUrl(): Promise<string> {
+    const start = Date.now()
+    this.logger.log(`[ref] loading reference ${this.REFERENCE_LOCAL_PATH}`)
+
+    let buf: Buffer
+    try {
+      buf = await readFile(this.REFERENCE_LOCAL_PATH)
+    } catch (e: any) {
+      this.logger.error(`[ref] cannot read: ${e?.message ?? e}`)
+      throw new InternalServerErrorException('Cannot read reference image on server')
+    }
+
+    const dt = Date.now() - start
+    const ext = extname(this.REFERENCE_LOCAL_PATH).toLowerCase()
+    const contentType =
+      ext === '.png' ? 'image/png' : ext === '.jpg' || ext === '.jpeg' ? 'image/jpeg' : 'application/octet-stream'
+
+    this.logger.log(`[ref] loaded bytes=${buf.length} contentType=${contentType} dt=${dt}ms`)
+
+    return `data:${contentType};base64,${buf.toString('base64')}`
   }
 }
