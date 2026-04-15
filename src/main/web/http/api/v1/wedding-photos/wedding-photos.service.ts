@@ -1,8 +1,7 @@
-import { Injectable, InternalServerErrorException, NotFoundException, BadRequestException } from '@nestjs/common'
-import sharp = require('sharp')
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common'
 import { randomUUID } from 'node:crypto'
 import { createReadStream, ReadStream, existsSync } from 'node:fs'
-import { mkdir, readdir, unlink } from 'node:fs/promises'
+import { writeFile, mkdir, readdir, unlink } from 'node:fs/promises'
 import { join, basename } from 'node:path'
 
 export type PhotoItem = {
@@ -67,29 +66,20 @@ export class WeddingPhotosService {
     const stamp = createdAt.replace(/[:.]/g, '-')
 
     const originalName = `${stamp}_${id}.jpg`
-    const thumbName = `${stamp}_${id}_thumb.jpg`
-
     const originalPath = join(folder === 'golf' ? this.originalsDirGolf : this.originalsDirSelfie, originalName)
-    const thumbPath = join(folder === 'golf' ? this.thumbsDirGolf : this.thumbsDirSelfie, thumbName)
 
-    try {
-      const img = sharp(file.buffer).rotate()
-
-      await img.jpeg({ quality: 85, mozjpeg: true }).toFile(originalPath)
-      await img.resize({ width: 900, withoutEnlargement: true }).jpeg({ quality: 70, mozjpeg: true }).toFile(thumbPath)
-    } catch (e) {
-      throw new InternalServerErrorException(`Image processing failed: ${(e as Error).message}`)
-    }
+    // 🔥 juste écrire le fichier
+    await writeFile(originalPath, file.buffer)
 
     const base = this.publicBase()
+
     return {
       id,
       createdAt,
       url: `${base}/wedding-photos/original?name=${encodeURIComponent(originalName)}`,
-      thumbUrl: `${base}/wedding-photos/thumb?name=${encodeURIComponent(thumbName)}`
+      thumbUrl: `${base}/wedding-photos/original?name=${encodeURIComponent(originalName)}` // même image
     }
   }
-
   // eslint-disable-next-line no-magic-numbers
   async listLatest(limit = 60): Promise<PhotoItem[]> {
     await this.ensureDirs()
