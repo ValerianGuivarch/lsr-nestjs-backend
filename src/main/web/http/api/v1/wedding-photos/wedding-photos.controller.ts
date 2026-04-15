@@ -47,9 +47,15 @@ export class WeddingPhotosController {
     return { ok: true, item }
   }
 
+  // eslint-disable-next-line @darraghor/nestjs-typed/api-method-should-specify-api-response
   @Get('latest')
-  @ApiResponse({ status: 200, description: 'Latest photos (most recent first)' })
-  async latest(@Query('limit') limit?: string): Promise<OkLatestResponse> {
+  async latest(@Query('limit') limit?: string, @Query('all') all?: string): Promise<OkLatestResponse> {
+    if (all === 'true') {
+      // eslint-disable-next-line no-magic-numbers
+      const items = await this.svc.listLatest(9999)
+      return { ok: true, items }
+    }
+
     // eslint-disable-next-line no-magic-numbers
     const n = Math.min(Math.max(Number(limit ?? 120), 1), 200)
     const items = await this.svc.listLatest(n)
