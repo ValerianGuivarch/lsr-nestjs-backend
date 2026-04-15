@@ -1,9 +1,8 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common'
 import { randomUUID } from 'node:crypto'
-import { createReadStream, ReadStream, existsSync } from 'node:fs'
+import { createReadStream, ReadStream, existsSync, statSync } from 'node:fs'
 import { writeFile, mkdir, readdir, unlink } from 'node:fs/promises'
 import { join, basename } from 'node:path'
-
 export type PhotoItem = {
   id: string
   createdAt: string // ISO
@@ -85,31 +84,25 @@ export class WeddingPhotosService {
     await this.ensureDirs()
     const base = this.publicBase()
 
-    const files = await readdir(this.thumbsDirGolf)
-    const thumbs = files.filter((f) => f.endsWith('_thumb.jpg'))
+    const files = await readdir(this.originalsDirGolf)
+    const originals = files.filter((f) => f.endsWith('.jpg'))
 
-    // tri par mtime desc (plus récent d'abord)
-    const sorted = thumbs
-      .map((thumbName) => {
-        const p = join(this.thumbsDirGolf, thumbName)
-        // eslint-disable-next-line @typescript-eslint/no-var-requires
-        const st = require('node:fs').statSync(p) as { mtimeMs: number }
-        return { thumbName, mtimeMs: st.mtimeMs }
+    const sorted = originals
+      .map((name) => {
+        const p = join(this.originalsDirGolf, name)
+        const st = statSync(p)
+        return { name, mtimeMs: st.mtimeMs }
       })
       .sort((a, b) => b.mtimeMs - a.mtimeMs)
       .slice(0, limit)
 
-    return sorted.map(({ thumbName }) => {
-      const originalName = thumbName.replace(/_thumb\.jpg$/, '.jpg')
-      return {
-        id: thumbName,
-        createdAt: new Date().toISOString(),
-        url: `${base}//wedding-photos/original?name=${encodeURIComponent(originalName)}`,
-        thumbUrl: `${base}//wedding-photos/thumb?name=${encodeURIComponent(thumbName)}`
-      }
-    })
+    return sorted.map(({ name }) => ({
+      id: name,
+      createdAt: new Date().toISOString(),
+      url: `${base}/wedding-photos/original?name=${encodeURIComponent(name)}`,
+      thumbUrl: `${base}/wedding-photos/original?name=${encodeURIComponent(name)}`
+    }))
   }
-
   getThumbStream(name: string): ReadStream {
     const filename = this.safeName(name)
     const p = join(this.thumbsDirGolf, filename)
