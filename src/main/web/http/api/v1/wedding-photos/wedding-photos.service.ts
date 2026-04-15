@@ -38,18 +38,13 @@ export class WeddingPhotosService {
 
   async deleteById(id: string): Promise<void> {
     await this.ensureDirs()
-    const thumb = this.safeName(id)
 
-    const thumbPath = join(this.thumbsDirGolf, thumb)
-    if (!existsSync(thumbPath)) throw new NotFoundException('Thumb not found')
+    const filename = this.safeName(id)
+    const p = join(this.originalsDirGolf, filename)
 
-    const original = thumb.replace(/_thumb\.jpg$/, '.jpg')
-    const originalPath = join(this.originalsDirGolf, original)
+    if (!existsSync(p)) throw new NotFoundException('File not found')
 
-    await unlink(thumbPath).catch(() => undefined)
-    if (existsSync(originalPath)) {
-      await unlink(originalPath).catch(() => undefined)
-    }
+    await unlink(p)
   }
 
   private publicBase(): string {
@@ -102,12 +97,6 @@ export class WeddingPhotosService {
       url: `${base}/wedding-photos/original?name=${encodeURIComponent(name)}`,
       thumbUrl: `${base}/wedding-photos/original?name=${encodeURIComponent(name)}`
     }))
-  }
-  getThumbStream(name: string): ReadStream {
-    const filename = this.safeName(name)
-    const p = join(this.thumbsDirGolf, filename)
-    if (!existsSync(p)) throw new NotFoundException('Thumb not found')
-    return createReadStream(p)
   }
 
   getOriginalStream(name: string): ReadStream {

@@ -62,17 +62,6 @@ export class WeddingPhotosController {
     return { ok: true, items }
   }
 
-  @Get('thumb')
-  @ApiResponse({ status: 200, description: 'JPEG thumbnail (stream)' })
-  @ApiResponse({ status: 404, description: 'Thumb not found' })
-  async thumb(@Query('name') name: string, @Res() reply: FastifyReply): Promise<void> {
-    const stream = this.svc.getThumbStream(name)
-
-    reply.header('Content-Type', 'image/jpeg')
-    reply.header('Cache-Control', 'public, max-age=60')
-    await reply.send(stream)
-  }
-
   @Get('original')
   @ApiResponse({ status: 200, description: 'JPEG original (stream)' })
   @ApiResponse({ status: 404, description: 'Original not found' })
