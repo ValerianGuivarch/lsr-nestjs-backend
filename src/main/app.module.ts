@@ -214,16 +214,8 @@ import { TypeOrmModule } from '@nestjs/typeorm'
       useClass: StatImplementation
     },
     {
-      provide: 'IFlipProvider',
-      useClass: FlipImplementation
-    },
-    {
       provide: 'ISpellProvider',
       useClass: SpellImplementation
-    },
-    {
-      provide: 'IHouseProvider',
-      useClass: HouseImplementation
     }
   ]
 })
