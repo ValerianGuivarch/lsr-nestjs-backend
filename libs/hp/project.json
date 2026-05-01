@@ -1,0 +1,19 @@
+{
+  "name": "hp",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/hp/src",
+  "projectType": "library",
+  "tags": ["scope:hp", "type:feature"],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/libs/hp",
+        "main": "libs/hp/src/index.ts",
+        "tsConfig": "libs/hp/tsconfig.lib.json",
+        "assets": ["libs/hp/*.md"]
+      }
+    }
+  }
+}

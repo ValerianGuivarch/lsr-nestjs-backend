@@ -1,0 +1,20 @@
+{
+  "compileOnSave": false,
+  "compilerOptions": {
+    "sourceMap": true,
+    "declaration": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "target": "es2017",
+    "module": "commonjs",
+    "skipLibCheck": true,
+    "paths": {
+      "domain": ["./libs/l7r/domain/src/index.ts"],
+      "hp-domain": ["./libs/hp/domain/src/index.ts"],
+      "l7r": ["./libs/l7r/src/index.ts"],
+      "hp": ["./libs/hp/src/index.ts"],
+      "shared": ["./libs/shared/src/index.ts"]
+    }
+  },
+  "exclude": ["node_modules", "dist"]
+}

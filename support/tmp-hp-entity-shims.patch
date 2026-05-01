@@ -1,0 +1,334 @@
+*** Begin Patch
+*** Update File: /Users/valerianguivarch/IdeaProjects/lsr-nestjs-backend/libs/hp/src/lib/backend/domain/entities/difficulty.enum.ts
+-export enum Difficulty {
+-  AVANTAGE = 'AVANTAGE',
+-  NORMAL = 'NORMAL',
+-  DESAVANTAGE = 'DESAVANTAGE'
+-}
++export * from '../../../difficulty.enum.ts'
+
+*** Update File: /Users/valerianguivarch/IdeaProjects/lsr-nestjs-backend/libs/hp/src/lib/backend/domain/entities/flip.entity.ts
+-import { Difficulty } from './difficulty.enum'
+-
+-export class Flip {
+-  id: string
+-  wizardName: string
+-  wizardDisplayName: string
+-  xpOk: boolean
+-  spellId?: string
+-  knowledgeId?: string
+-  success: boolean
+-  statId?: string
+-  text: string
+-  result: number
+-  difficulty: Difficulty
+-  base: number
+-  baseBis: number
+-  modif: number
+-
+-  constructor(flip: {
+-    id: string
+-    text: string
+-    wizardName: string
+-    wizardDisplayName: string
+-    success: boolean
+-    result: number
+-    base: number
+-    modif: number
+-    difficulty: Difficulty
+-    baseBis?: number
+-    xpOk: boolean
+-    spellId?: string
+-    knowledgeId?: string
+-    statId?: string
+-  }) {
+-    this.id = flip.id
+-    this.wizardName = flip.wizardName
+-    this.wizardDisplayName = flip.wizardDisplayName
+-    this.text = flip.text
+-    this.result = flip.result
+-    this.base = flip.base
+-    this.success = flip.success
+-    this.modif = flip.modif
+-    this.difficulty = flip.difficulty
+-    this.baseBis = flip.baseBis
+-    this.xpOk = flip.xpOk
+-    this.spellId = flip.spellId
+-    this.knowledgeId = flip.knowledgeId
+-    this.statId = flip.statId
+-  }
+-
+-  static toFlipToCreate(p: {
+-    wizardName: string
+-    wizardDisplayName: string
+-    text: string
+-    result: number
+-    base: number
+-    modif: number
+-    success: boolean
+-    difficulty: Difficulty
+-    baseBis?: number
+-    spellId?: string
+-    knowledgeId?: string
+-    statId?: string
+-  }): FlipToCreate {
+-    return {
+-      wizardName: p.wizardName,
+-      wizardDisplayName: p.wizardDisplayName && p.wizardDisplayName !== 'null' ? p.wizardDisplayName : p.wizardName,
+-      text: p.text,
+-      result: p.result,
+-      success: p.success,
+-      base: p.base,
+-      modif: p.modif,
+-      difficulty: p.difficulty,
+-      baseBis: p.baseBis,
+-      xpOk: false,
+-      spellId: p.spellId,
+-      knowledgeId: p.knowledgeId,
+-      statId: p.statId
+-    }
+-  }
+-}
+-
+-export type FlipToCreate = Omit<Flip, 'id'>
++export * from '../../../flip.entity.ts'
+
+*** Update File: /Users/valerianguivarch/IdeaProjects/lsr-nestjs-backend/libs/hp/src/lib/backend/domain/entities/house.entity.ts
+-export class House {
+-  name: string
+-  points: number
+-
+-  constructor(house: { name: string; points: number }) {
+-    this.name = house.name
+-    this.points = house.points
+-  }
+-}
++export * from '../../../house.entity.ts'
+
+*** Update File: /Users/valerianguivarch/IdeaProjects/lsr-nestjs-backend/libs/hp/src/lib/backend/domain/entities/knowledge.entity.ts
+-export class Knowledge {
+-  name: string
+-  flipText: string
+-
+-  constructor(knowledge: { name: string; flipText: string }) {
+-    this.name = knowledge.name
+-    this.flipText = knowledge.flipText
+-  }
+-}
++export * from '../../../knowledge.entity.ts'
+
+*** Update File: /Users/valerianguivarch/IdeaProjects/lsr-nestjs-backend/libs/hp/src/lib/backend/domain/entities/spell.entity.ts
+-import { Knowledge } from './knowledge.entity'
+-
+-export class Spell {
+-  name: string
+-  rank: number
+-  formule: string
+-  knowledge: Knowledge
+-
+-  constructor(stat: { name: string; knowledge: Knowledge; rank: number; formule: string }) {
+-    this.name = stat.name
+-    this.knowledge = stat.knowledge
+-    this.rank = stat.rank
+-    this.formule = stat.formule
+-  }
+-}
++export * from '../../../spell.entity.ts'
+
+*** Update File: /Users/valerianguivarch/IdeaProjects/lsr-nestjs-backend/libs/hp/src/lib/backend/domain/entities/stat.entity.ts
+-export class Stat {
+-  name: string
+-  order: number
+-  flipText: string
+-
+-  constructor(stat: { name: string; order: number; flipText: string }) {
+-    this.name = stat.name
+-    this.order = stat.order
+-    this.flipText = stat.flipText
+-  }
+-}
++export * from '../../../stat.entity.ts'
+
+*** Update File: /Users/valerianguivarch/IdeaProjects/lsr-nestjs-backend/libs/hp/src/lib/backend/domain/entities/wizard-knowledge.entity.ts
+-import { Knowledge } from './knowledge.entity'
+-
+-export class WizardKnowledge {
+-  knowledge: Knowledge
+-  level: number
+-  xp: number
+-}
+-
+-export type WizardKnowledgeToCreate = Omit<WizardKnowledge, 'knowledge' | 'xp'> & {
+-  knowledge: Pick<Knowledge, 'name'>
+-}
+-
+-export type WizardKnowledgeToUpdate = Pick<WizardKnowledge, 'level'> & {
+-  knowledgeName: string
+-}
++export * from '../../../wizard-knowledge.entity.ts'
+
+*** Update File: /Users/valerianguivarch/IdeaProjects/lsr-nestjs-backend/libs/hp/src/lib/backend/domain/entities/wizard-spell.entity.ts
+-import { Difficulty } from './difficulty.enum'
+-import { Spell } from './spell.entity'
+-
+-export class WizardSpell {
+-  spell: Spell
+-  difficulty: Difficulty
+-  xp: number
+-}
+-export type WizardSpellToCreate = Omit<WizardSpell, 'spell' | 'xp'> & {
+-  spell: Pick<Spell, 'name'>
+-}
++export * from '../../../wizard-spell.entity.ts'
+
+*** Update File: /Users/valerianguivarch/IdeaProjects/lsr-nestjs-backend/libs/hp/src/lib/backend/domain/entities/wizard-stat.entity.ts
+-import { Stat } from './stat.entity'
+-
+-export class WizardStat {
+-  stat: Stat
+-  level: number
+-  xp: number
+-}
+-export type WizardStatToCreate = Omit<WizardStat, 'stat' | 'xp'> & {
+-  stat: Pick<Stat, 'name'>
+-}
+-export type WizardStatToUpdate = Pick<WizardStat, 'level'> & {
+-  statName: string
+-}
++export * from '../../../wizard-stat.entity.ts'
+
+*** Update File: /Users/valerianguivarch/IdeaProjects/lsr-nestjs-backend/libs/hp/src/lib/backend/domain/entities/wizard.entity.ts
+-import { House } from './house.entity'
+-import { WizardKnowledge, WizardKnowledgeToCreate, WizardKnowledgeToUpdate } from './wizard-knowledge.entity'
+-import { WizardSpell, WizardSpellToCreate } from './wizard-spell.entity'
+-import { WizardStat, WizardStatToCreate, WizardStatToUpdate } from './wizard-stat.entity'
+-
+-export class Wizard {
+-  name: string
+-  displayName: string
+-  familyName: string
+-  animal: string
+-  category: string
+-  stats: WizardStat[]
+-  knowledges: WizardKnowledge[]
+-  spells: WizardSpell[]
+-  xp: number
+-  pv: number
+-  pvMax: number
+-  house?: House
+-  baguette: string
+-  coupDePouce: string
+-  crochePatte: string
+-  text: string
+-  traits: string[]
+-
+-  constructor(wizard: {
+-    name: string
+-    displayName: string
+-    familyName: string
+-    animal: string
+-    category: string
+-    stats: WizardStat[]
+-    knowledges: WizardKnowledge[]
+-    spells: WizardSpell[]
+-    xp: number
+-    pv: number
+-    pvMax: number
+-    house?: House
+-    baguette: string
+-    coupDePouce: string
+-    crochePatte: string
+-    text: string
+-    traits: string[]
+-  }) {
+-    this.name = wizard.name
+-    this.displayName = wizard.displayName
+-    this.familyName = wizard.familyName
+-    this.animal = wizard.animal
+-    this.category = wizard.category
+-    this.stats = wizard.stats
+-    this.knowledges = wizard.knowledges
+-    this.spells = wizard.spells
+-    this.xp = wizard.xp
+-    this.pv = wizard.pv
+-    this.pvMax = wizard.pvMax
+-    this.house = wizard.house
+-    this.baguette = wizard.baguette
+-    this.coupDePouce = wizard.coupDePouce
+-    this.crochePatte = wizard.crochePatte
+-    this.text = wizard.text
+-    this.traits = wizard.traits
+-  }
+-
+-  static getSpellLevel(category: string): number {
+-    if (category === '1ère année') {
+-      return 1
+-    } else if (category === '2ème année') {
+-      return 2
+-    } else if (category === '3ème année') {
+-      return 3
+-    } else if (category === '4ème année') {
+-      return 4
+-    } else if (category === '5ème année') {
+-      return 5
+-    } else if (category === '6ème année') {
+-      return 6
+-    } else if (category === '7ème année') {
+-      return 7
+-    } else if (category === 'Professeur') {
+-      return 8
+-    } else {
+-      return 5
+-    }
+-  }
+-
+-  static toWizardToCreate(p: {
+-    name: string
+-    familyName: string
+-    animal: string
+-    category: string
+-    stats: WizardStatToCreate[]
+-    knowledges: WizardKnowledgeToCreate[]
+-    spells: WizardSpellToCreate[]
+-    houseName?: string
+-  }): WizardToCreate {
+-    return {
+-      name: p.name,
+-      displayName: p.name,
+-      familyName: p.familyName,
+-      animal: p.animal,
+-      category: p.category,
+-      stats: p.stats,
+-      knowledges: p.knowledges,
+-      spells: p.spells,
+-      xp: 0,
+-      pv: 0,
+-      pvMax: 0,
+-      houseName: p.houseName,
+-      baguette: '',
+-      coupDePouce: '',
+-      crochePatte: '',
+-      text: '',
+-      traits: []
+-    }
+-  }
+-}
+-
+-export type WizardToCreate = Omit<Wizard, 'house' | 'stats' | 'knowledges' | 'spells'> & {
+-  stats: WizardStatToCreate[]
+-  knowledges: WizardKnowledgeToCreate[]
+-  spells: WizardSpellToCreate[]
+-  houseName?: string
+-}
+-
+-export type WizardToUpdate = Pick<Wizard, 'category' | 'pv'> & {
+-  statsToUpdate?: WizardStatToUpdate[]
+-  knowledgesToUpdate?: WizardKnowledgeToUpdate[]
+-  spellsToUpdate?: WizardSpellToCreate[]
+-  text?: string
+-}
+-
+-export type WizardName = Pick<Wizard, 'name'>
++export * from '../../../wizard.entity.ts'
+
+*** End Patch

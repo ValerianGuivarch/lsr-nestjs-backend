@@ -49,3 +49,11 @@ support/docker-prod/smtp4dev
 /support/docker-dev-starter/mongo-data/
 /support/docker-dev-starter/postgres-data/
 /support/docker-dev-starter/postgres-share/
+
+
+
+.nx/cache
+.nx/workspace-data
+/l7r-react-frontend/
+
+vite.config.*.timestamp*

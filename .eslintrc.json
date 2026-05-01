@@ -6,11 +6,10 @@
     "plugin:@typescript-eslint/recommended",
     "plugin:import/errors",
     "plugin:import/warnings",
-    "plugin:import/typescript"
+    "plugin:import/typescript",
+    "./.eslintrc.base.json"
   ],
-  "ignorePatterns": [
-    "*.d.ts"
-  ],
+  "ignorePatterns": ["*.d.ts"],
   "parser": "@typescript-eslint/parser",
   "parserOptions": {
     "project": ["./tsconfig.json"],
@@ -20,34 +19,24 @@
       "jsx": true
     }
   },
-  "plugins": [
-    "@darraghor/nestjs-typed",
-    "prettier",
-    "@typescript-eslint",
-    "unused-imports"
-  ],
-  "root": true,
+  "plugins": ["@darraghor/nestjs-typed", "prettier", "@typescript-eslint", "unused-imports"],
   "rules": {
     "@darraghor/nestjs-typed/injectable-should-be-provided": "off",
-    "prettier/prettier": ["error", { "semi": false }],
-    "object-curly-spacing": [
+    "prettier/prettier": [
       "error",
-      "always"
+      {
+        "semi": false
+      }
     ],
+    "object-curly-spacing": ["error", "always"],
     "unused-imports/no-unused-imports-ts": "error",
     "no-magic-numbers": [
       "error",
       {
-        "ignore": [
-          0,
-          1
-        ]
+        "ignore": [0, 1]
       }
     ],
-    "max-params": [
-      "warn",
-      4
-    ],
+    "max-params": ["warn", 4],
     "@typescript-eslint/no-non-null-assertion": "error",
     "@typescript-eslint/explicit-module-boundary-types": "error",
     "no-unreachable": "error",
@@ -58,15 +47,7 @@
       "error",
       {
         "newlines-between": "never",
-        "groups": [
-          "index",
-          "sibling",
-          "parent",
-          "internal",
-          "external",
-          "builtin",
-          "object"
-        ],
+        "groups": ["index", "sibling", "parent", "internal", "external", "builtin", "object"],
         "alphabetize": {
           "order": "asc",
           "caseInsensitive": true

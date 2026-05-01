@@ -1,0 +1,1071 @@
+*** Begin Patch
+*** Update File: /Users/valerianguivarch/IdeaProjects/lsr-nestjs-backend/libs/l7r/src/lib/backend/domain/models/apotheoses/Apotheose.ts
+-import { DisplayCategory } from '../characters/DisplayCategory'
+-
+-export class Apotheose {
+-  name: string
+-  shortName: string
+-  minLevel: number
+-  maxLevel: number
+-  chairImprovement: number
+-  espritImprovement: number
+-  essenceImprovement: number
+-  arcaneImprovement: boolean
+-  avantage: boolean
+-  apotheoseEffect: string[]
+-  displayCategory: DisplayCategory
+-  position: number
+-  cost: number
+-  description?: string
+-
+-  constructor(p: Apotheose) {
+-    this.name = p.name
+-    this.shortName = p.shortName
+-    this.minLevel = p.minLevel
+-    this.maxLevel = p.maxLevel
+-    this.chairImprovement = p.chairImprovement
+-    this.espritImprovement = p.espritImprovement
+-    this.essenceImprovement = p.essenceImprovement
+-    this.arcaneImprovement = p.arcaneImprovement
+-    this.avantage = p.avantage
+-    this.apotheoseEffect = p.apotheoseEffect
+-    this.displayCategory = p.displayCategory
+-    this.position = p.position
+-    this.cost = p.cost
+-    this.description = p.description
+-  }
+-
+-  /*  NONE = 'NONE',
+-  NORMALE = 'NORMALE',
+-  IMPROVED = 'IMPROVED',
+-  FINALE = 'FINALE',
+-  ARCANIQUE = 'ARCANIQUE',
+-  FORME_VENGERESSE = 'FORME_VENGERESSE',
+-  SURCHARGE = 'SURCHARGE',
+-  SURCHARGE_IMPROVED = 'SURCHARGE_IMPROVED'*/
+-}
++export * from 'domain'
+
+*** Update File: /Users/valerianguivarch/IdeaProjects/lsr-nestjs-backend/libs/l7r/src/lib/backend/domain/models/apotheoses/ApotheoseState.ts
+-export enum ApotheoseState {
+-  NONE = 'NONE',
+-  ALREADY_USED = 'ALREADY_USED',
+-  COST_TO_PAY = 'COST_TO_PAY',
+-  COST_PAID = 'COST_PAID'
+-}
++export * from 'domain'
+
+*** Update File: /Users/valerianguivarch/IdeaProjects/lsr-nestjs-backend/libs/l7r/src/lib/backend/domain/models/characters/BattleState.ts
+-export enum BattleState {
+-  NONE = 'NONE',
+-  ALLIES = 'ALLIES',
+-  ENNEMIES = 'ENNEMIES'
+-}
++export * from 'domain'
+
+*** Update File: /Users/valerianguivarch/IdeaProjects/lsr-nestjs-backend/libs/l7r/src/lib/backend/domain/models/characters/Bloodline.ts
+-export class Bloodline {
+-  name: string
+-  display: string
+-
+-  constructor(p: Bloodline) {
+-    this.name = p.name
+-    this.display = p.display
+-  }
+-}
++export * from 'domain'
+
+*** Update File: /Users/valerianguivarch/IdeaProjects/lsr-nestjs-backend/libs/l7r/src/lib/backend/domain/models/characters/Category.ts
++export * from 'domain'
+
+*** Update File: /Users/valerianguivarch/IdeaProjects/lsr-nestjs-backend/libs/l7r/src/lib/backend/domain/models/characters/Character.ts
+-import { BattleState } from './BattleState'
+-import { Bloodline } from './Bloodline'
+-import { Classe } from './Classe'
+-import { Genre } from './Genre'
+-import { Apotheose } from '../apotheoses/Apotheose'
+-import { ApotheoseState } from '../apotheoses/ApotheoseState'
+-
+-export class Character {
+-  // eslint-disable-next-line no-magic-numbers
+-  public static statByLevel: number[] = [
+-    // eslint-disable-next-line no-magic-numbers
+-    6, 7, 8, 8, 9, 10, 10, 11, 12, 12, 13, 14, 15, 16, 16, 17, 18, 18, 19, 20, 21, 22, 23, 24, 25, 26
+-  ]
+-
+-  name: string
+-  classe: Classe
+-  bloodline?: Bloodline
+-  chair: number
+-  esprit: number
+-  essence: number
+-  pv: number
+-  pvMax: number
+-  pf: number
+-  pfMax: number
+-  pp: number
+-  ppMax: number
+-  dettes: number
+-  dragonDettes: number
+-  arcanes: number
+-  arcanesMax: number
+-  ether: number
+-  etherMax: number
+-  arcanePrimes: number
+-  arcanePrimesMax: number
+-  munitions: number
+-  munitionsMax: number
+-  niveau: number
+-  lux: string
+-  umbra: string
+-  secunda: string
+-  notes: string
+-  apotheoseState: ApotheoseState
+-  currentApotheose?: Apotheose
+-  genre: Genre
+-  relance: number
+-  playerName?: string
+-  picture?: string
+-  pictureApotheose?: string
+-  background?: string
+-  buttonColor?: string
+-  textColor?: string
+-  boosted?: boolean
+-  battleState: BattleState
+-  restImproved: boolean
+-  isInvocation: boolean
+-  controlledBy?: string
+-  chairBonus: number
+-  espritBonus: number
+-  essenceBonus: number
+-  customData?: string
+-  dailyUse: Map<string, number>
+-  dailyUseMax: Map<string, number>
+-  arcaneDette: Map<string, number>
+-  hurtMalus: boolean
+-  boulet: boolean
+-  dark: boolean
+-  vr: number
+-
+-  constructor(p: Character) {
+-    this.name = p.name
+-    this.boulet = p.boulet
+-    this.restImproved = p.restImproved
+-    this.classe = p.classe
+-    this.bloodline = p.bloodline
+-    this.currentApotheose = p.currentApotheose
+-    this.apotheoseState = p.apotheoseState
+-    this.chair = p.chair
+-    this.hurtMalus = p.hurtMalus
+-    this.esprit = p.esprit
+-    this.essence = p.essence
+-    this.chairBonus = p.chairBonus
+-    this.espritBonus = p.espritBonus
+-    this.essenceBonus = p.essenceBonus
+-    this.pv = p.pv < 0 ? 0 : p.pv
+-    this.pvMax = p.pvMax
+-    this.pf = p.pf < 0 ? 0 : p.pf
+-    this.pfMax = p.pfMax
+-    this.pp = p.pp < 0 ? 0 : p.pp
+-    this.ppMax = p.ppMax
+-    this.dettes = p.dettes < 0 ? 0 : p.dettes
+-    this.dragonDettes = p.dragonDettes < 0 ? 0 : p.dragonDettes
+-    this.arcanes = p.arcanes < 0 ? 0 : p.arcanes
+-    this.arcanesMax = p.arcanesMax
+-    this.ether = p.ether < 0 ? 0 : p.ether
+-    this.etherMax = p.etherMax
+-    this.munitions = p.munitions < 0 ? 0 : p.munitions
+-    this.munitionsMax = p.munitionsMax
+-    this.arcanePrimes = p.arcanePrimes < 0 ? 0 : p.arcanePrimes
+-    this.arcanePrimesMax = p.arcanePrimesMax
+-    this.niveau = p.niveau < 0 ? 0 : p.niveau
+-    this.lux = p.lux
+-    this.umbra = p.umbra
+-    this.secunda = p.secunda
+-    this.notes = p.notes
+-    this.genre = p.genre
+-    this.relance = p.relance < 0 ? 0 : p.relance
+-    this.playerName = p.playerName
+-    this.picture = p.picture ? p.picture : 'http://78.199.187.90:8080/web_images/l7r/' + p.name.toLowerCase() + '.png'
+-    this.pictureApotheose = p.pictureApotheose
+-      ? p.pictureApotheose
+-      : p.picture
+-      ? p.picture
+-      : 'http://78.199.187.90:8080/web_images/l7r/' + p.name.toLowerCase() + '.png'
+-    ;(this.background = p.background ? p.background : 'http://78.199.187.90:8080/web_images/l7r/background.png'),
+-      (this.buttonColor = p.buttonColor)
+-    this.textColor = p.textColor
+-    this.boosted = p.boosted
+-    this.battleState = p.battleState
+-    this.isInvocation = p.isInvocation
+-    this.controlledBy = p.controlledBy
+-    this.customData = p.customData
+-    this.dailyUse = p.dailyUse
+-    this.dailyUseMax = p.dailyUseMax
+-    this.arcaneDette = p.arcaneDette
+-    this.dark = p.dark
+-    this.hurtMalus = p.hurtMalus
+-    this.vr = p.vr
+-  }
+-
+-  static characterToCreateFactory(p: {
+-    name: string
+-    chair: number
+-    esprit: number
+-    essence: number
+-    pvMax: number
+-    pfMax: number
+-    ppMax: number
+-    ethersMax: number
+-    arcanesMax: number
+-    arcanePrimesMax: number
+-    munitionsMax: number
+-    niveau: number
+-    lux: string
+-    umbra: string
+-    secunda: string
+-    genre?: Genre
+-    picture?: string
+-    pictureApotheose?: string
+-    background?: string
+-    buttonColor?: string
+-    textColor?: string
+-    playerName?: string
+-    customData?: string
+-  }): CharacterToCreate {
+-    const defaults = {
+-      chair: p.chair,
+-      esprit: p.esprit,
+-      essence: p.essence,
+-      chairBonus: 0,
+-      espritBonus: 0,
+-      essenceBonus: 0,
+-      pv: p.pvMax,
+-      pvMax: p.pvMax,
+-      pf: p.pfMax,
+-      pfMax: p.pfMax,
+-      pp: p.ppMax,
+-      ppMax: p.ppMax,
+-      playerName: p.playerName,
+-      // eslint-disable-next-line no-magic-numbers
+-      dettes: Math.floor(Math.random() * 11),
+-      dragonDettes: 0,
+-      arcanes: p.arcanesMax,
+-      arcanesMax: p.arcanesMax,
+-      ether: p.ethersMax,
+-      etherMax: p.ethersMax,
+-      arcanePrimes: p.arcanePrimesMax,
+-      arcanePrimesMax: p.arcanePrimesMax,
+-      munitions: p.munitionsMax,
+-      munitionsMax: p.munitionsMax,
+-      niveau: p.niveau,
+-      lux: p.lux,
+-      umbra: p.umbra,
+-      secunda: p.secunda,
+-      notes: '',
+-      apotheose: undefined,
+-      apotheoseState: ApotheoseState.NONE,
+-      // eslint-disable-next-line no-magic-numbers
+-      genre: p.genre ? p.genre : Math.random() < 0.5 ? Genre.HOMME : Genre.FEMME,
+-      relance: 0,
+-      boosted: false,
+-      battleState: BattleState.NONE,
+-      picture: p.picture,
+-      pictureApotheose: p.pictureApotheose,
+-      background: p.background,
+-      buttonColor: p.buttonColor,
+-      textColor: p.textColor,
+-      skills: [],
+-      hurtMalus: true,
+-      proficiencies: [],
+-      restImproved: false,
+-      boulet: false,
+-      isInvocation: false,
+-      summoner: undefined,
+-      customData: p.customData,
+-      dailyUse: new Map<string, number>(),
+-      dailyUseMax: new Map<string, number>(),
+-      arcaneDette: new Map<string, number>(),
+-      dark: false,
+-      vr: -1
+-    }
+-    return Object.assign(defaults, p)
+-  }
+-
+-  static invocationToCreateFactory(p: {
+-    name: string
+-    summoner: Character
+-    chair: number
+-    esprit: number
+-    essence: number
+-    pvMax: number
+-    picture?: string
+-    customData?: string
+-  }): CharacterToCreate {
+-    return {
+-      name: p.name,
+-      boulet: false,
+-      chair: p.chair,
+-      esprit: p.esprit,
+-      essence: p.essence,
+-      chairBonus: 0,
+-      espritBonus: 0,
+-      essenceBonus: 0,
+-      pv: p.pvMax,
+-      pvMax: p.pvMax,
+-      pf: 0,
+-      pfMax: 0,
+-      pp: 0,
+-      ppMax: 0,
+-      hurtMalus: true,
+-      playerName: p.summoner.playerName,
+-      // eslint-disable-next-line no-magic-numbers
+-      dettes: 0,
+-      dragonDettes: 0,
+-      arcanes: 0,
+-      arcanesMax: 0,
+-      ether: 0,
+-      etherMax: 0,
+-      arcanePrimes: 0,
+-      arcanePrimesMax: 0,
+-      munitions: 0,
+-      munitionsMax: 0,
+-      niveau: p.summoner.niveau,
+-      lux: '',
+-      umbra: '',
+-      secunda: '',
+-      notes: '',
+-      battleState: p.summoner.battleState,
+-      apotheose: undefined,
+-      apotheoseState: ApotheoseState.NONE,
+-      // eslint-disable-next-line no-magic-numbers
+-      genre: p.summoner.genre,
+-      relance: 0,
+-      boosted: false,
+-      picture: p.picture,
+-      pictureApotheose: '',
+-      background: '',
+-      buttonColor: '',
+-      textColor: '',
+-      classe: p.summoner.classe,
+-      bloodline: p.summoner.bloodline,
+-      restImproved: false,
+-      isInvocation: true,
+-      controlledBy: p.summoner.name,
+-      customData: p.customData,
+-      dailyUse: new Map<string, number>(),
+-      dailyUseMax: new Map<string, number>(),
+-      arcaneDette: new Map<string, number>(),
+-      dark: p.summoner.dark,
+-      vr: -1
+-    } as CharacterToCreate
+-  }
+-}
+-
+-export type CharacterToCreate = Omit<Character, 'id' | 'classe' | 'bloodline' | 'apotheoses' | 'proficiencies'>
++export * from 'domain'
+
+*** Update File: /Users/valerianguivarch/IdeaProjects/lsr-nestjs-backend/libs/l7r/src/lib/backend/domain/models/characters/Classe.ts
+-export class Classe {
+-  name: string
+-  displayMale: string
+-  displayFemale: string
+-  canUsePp: boolean
+-
+-  constructor(p: Classe) {
+-    this.name = p.name
+-    this.displayMale = p.displayMale
+-    this.displayFemale = p.displayFemale
+-    this.canUsePp = p.canUsePp
+-  }
+-}
++export * from 'domain'
+
+*** Update File: /Users/valerianguivarch/IdeaProjects/lsr-nestjs-backend/libs/l7r/src/lib/backend/domain/models/characters/DisplayCategory.ts
+-export enum DisplayCategory {
+-  STATS = 'STATS',
+-  MAGIE = 'MAGIE',
+-  ARCANES = 'ARCANES',
+-  ARCANES_PRIMES = 'ARCANES_PRIMES',
+-  BONUS = 'BONUS',
+-  SOLDATS = 'SOLDATS',
+-  PACIFICATEURS = 'PACIFICATEURS',
+-  PAROLIERS = 'PAROLIERS',
+-  TECHNOMANCIE = 'TECHNOMANCIE',
+-  SOUTIENS = 'SOUTIENS'
+-}
++export * from 'domain'
+
+*** Update File: /Users/valerianguivarch/IdeaProjects/lsr-nestjs-backend/libs/l7r/src/lib/backend/domain/models/characters/FullCharacter.ts
+-import { Character } from './Character'
+-import { Apotheose } from '../apotheoses/Apotheose'
+-import { Proficiency } from '../proficiencies/Proficiency'
+-import { Skill } from '../skills/Skill'
+-
+-export class FullCharacter {
+-  character: Character
+-  skills: Skill[]
+-  apotheoses: Apotheose[]
+-  proficiencies: Proficiency[]
+-
+-  constructor(p: { character: Character; skills: Skill[]; apotheoses: Apotheose[]; proficiencies: Proficiency[] }) {
+-    this.character = p.character
+-    this.skills = p.skills
+-    this.apotheoses = p.apotheoses
+-    this.proficiencies = p.proficiencies
+-  }
+-}
++export * from 'domain'
+
+*** Update File: /Users/valerianguivarch/IdeaProjects/lsr-nestjs-backend/libs/l7r/src/lib/backend/domain/models/characters/Genre.ts
+-export enum Genre {
+-  HOMME = 'HOMME',
+-  FEMME = 'FEMME'
+-}
++export * from 'domain'
+
+*** Update File: /Users/valerianguivarch/IdeaProjects/lsr-nestjs-backend/libs/l7r/src/lib/backend/domain/models/characters/Player.ts
+-
+-export enum Player {
+-  ARCADY = 'Arcady',
+-  DAVID = 'David',
+-  ELENA = 'Elena',
+-  ERIC = 'Eric',
+-  FLORENT = 'Florent',
+-  GUILHEM = 'Guilhem',
+-  JUPI = 'Jupi',
+-  NICO = 'Nico',
+-  TOM = 'Tom',
+-  VALOU = 'Valou',
+-  GUEST = 'Guest'
+-}
+-export * from 'domain'
++export * from 'domain'
+
+*** Update File: /Users/valerianguivarch/IdeaProjects/lsr-nestjs-backend/libs/l7r/src/lib/backend/domain/models/elena/Constellation.ts
+-export class Constellation {
+-  id: string
+-  name: string
+-  realName: string
+-  pictureUrl: string
+-  pictureUrlRevealed: string
+-  revealed: boolean
+-  isStarStream: boolean
+-  sponsor: boolean
+-
+-  constructor(p: {
+-    id: string
+-    name: string
+-    realName: string
+-    pictureUrl: string
+-    pictureUrlRevealed: string
+-    revealed: boolean
+-    isStarStream: boolean
+-    sponsor: boolean
+-  }) {
+-    this.id = p.id
+-    this.name = p.name
+-    this.realName = p.realName
+-    this.pictureUrl = p.pictureUrl
+-    this.pictureUrlRevealed = p.pictureUrlRevealed
+-    this.revealed = p.revealed
+-    this.isStarStream = p.isStarStream
+-    this.sponsor = p.sponsor
+-  }
+-
+-  static toConstellationToCreate(p: {
+-    name: string
+-    realName: string
+-    pictureUrl: string
+-    pictureUrlRevealed: string
+-    isStarStream: boolean
+-    sponsor: boolean
+-  }): ConstellationToCreate {
+-    return {
+-      name: p.name,
+-      realName: p.realName,
+-      pictureUrl: p.pictureUrl,
+-      pictureUrlRevealed: p.pictureUrlRevealed,
+-      revealed: false,
+-      isStarStream: p.isStarStream,
+-      sponsor: p.sponsor
+-    }
+-  }
+-}
+-
+-export type ConstellationToCreate = Omit<Constellation, 'id'>
++export * from 'domain'
+
+*** Update File: /Users/valerianguivarch/IdeaProjects/lsr-nestjs-backend/libs/l7r/src/lib/backend/domain/models/elena/Event.ts
+-export class Event {
+-  id: string
+-  description: string
+-
+-  constructor(p: { id: string; description: string }) {
+-    this.id = p.id
+-    this.description = p.description
+-  }
+-}
++export * from 'domain'
+
+*** Update File: /Users/valerianguivarch/IdeaProjects/lsr-nestjs-backend/libs/l7r/src/lib/backend/domain/models/elena/Joueuse.ts
+-import { Constellation } from './Constellation'
+-import { PlayState } from './PlayState'
+-import { Scenario } from './Scenario'
+-
+-export class Joueuse {
+-  id: string
+-  name: string
+-  coins: number
+-  state: PlayState
+-  sponsor?: Constellation
+-  scenario?: Scenario
+-  sponsorToChoose: boolean
+-
+-  constructor(p: {
+-    id: string
+-    name: string
+-    coins: number
+-    sponsor?: Constellation
+-    scenario?: Scenario
+-    sponsorToChoose: boolean
+-    state: PlayState
+-  }) {
+-    this.id = p.id
+-    this.name = p.name
+-    this.coins = p.coins
+-    this.sponsor = p.sponsor
+-    this.scenario = p.scenario
+-    this.state = p.state
+-    this.sponsorToChoose = p.sponsorToChoose
+-  }
+-
+-  static toJoueuseToCreate(p: { name: string }): JoueuseToCreate {
+-    return {
+-      name: p.name,
+-      coins: 0,
+-      state: PlayState.NOT_STARTED,
+-      sponsorToChoose: false
+-    }
+-  }
+-}
+-
+-export type JoueuseToCreate = Omit<Joueuse, 'id' | 'sponsor' | 'scenario'>
+-export type JoueuseToUpdate = Pick<Joueuse, 'coins' | 'sponsorToChoose'> & {
+-  scenarioId: string
+-  sponsorId: string
+-  state: PlayState
+-}
++export * from 'domain'
+
+*** Update File: /Users/valerianguivarch/IdeaProjects/lsr-nestjs-backend/libs/l7r/src/lib/backend/domain/models/elena/Message.ts
+-import { Constellation } from './Constellation'
+-
+-export class Message {
+-  id: string
+-  text: string
+-  sender: Constellation
+-
+-  constructor(p: { id: string; text: string; sender: Constellation }) {
+-    this.id = p.id
+-    this.text = p.text
+-    this.sender = p.sender
+-  }
+-
+-  static toMessageToCreate(p: { text: string; senderId: string }): MessageToCreate {
+-    return {
+-      text: p.text,
+-      senderId: p.senderId
+-    }
+-  }
+-}
+-
+-export type MessageToCreate = Omit<Message, 'id' | 'sender'> & { senderId: string }
++export * from 'domain'
+
+*** Update File: /Users/valerianguivarch/IdeaProjects/lsr-nestjs-backend/libs/l7r/src/lib/backend/domain/models/elena/ModelMessage.ts
+-import { Constellation } from './Constellation'
+-
+-export class ModelMessage {
+-  id: string
+-  text: string
+-  sender: Constellation
+-
+-  constructor(p: { id: string; text: string; sender: Constellation }) {
+-    this.id = p.id
+-    this.text = p.text
+-    this.sender = p.sender
+-  }
+-
+-  static toModelMessageToCreate(p: { text: string; senderId: string }): ModelMessageToCreate {
+-    return {
+-      text: p.text,
+-      senderId: p.senderId
+-    }
+-  }
+-}
+-
+-export type ModelMessageToCreate = Omit<ModelMessage, 'id' | 'sender'> & { senderId: string }
++export * from 'domain'
+
+*** Update File: /Users/valerianguivarch/IdeaProjects/lsr-nestjs-backend/libs/l7r/src/lib/backend/domain/models/elena/Notification.ts
+-export class Notification {
+-  titre: string
+-  text: string
+-  pictureUrl?: string
+-
+-  constructor(p: Notification) {
+-    this.titre = p.titre
+-    this.text = p.text
+-    this.pictureUrl = p.pictureUrl
+-  }
+-}
++export * from 'domain'
+
+*** Update File: /Users/valerianguivarch/IdeaProjects/lsr-nestjs-backend/libs/l7r/src/lib/backend/domain/models/elena/PlayState.ts
+-export enum PlayState {
+-  NOT_STARTED = 'NOT_STARTED',
+-  STARTED = 'STARTED',
+-  FINISHED = 'FINISHED'
+-}
++export * from 'domain'
+
+*** Update File: /Users/valerianguivarch/IdeaProjects/lsr-nestjs-backend/libs/l7r/src/lib/backend/domain/models/elena/Scenario.ts
+-export class Scenario {
+-  id: string
+-  name: string
+-  difficulty: string
+-  victory: string
+-  defeat: string
+-  time: string
+-  reward: string
+-  rewardCoin: number
+-  text: string
+-  victoryMsg: string
+-  defaiteMsg: string
+-
+-  constructor(p: {
+-    id: string
+-    name: string
+-    difficulty: string
+-    victory: string
+-    defeat: string
+-    time: string
+-    reward: string
+-    rewardCoin: number
+-    text: string
+-    victoryMsg: string
+-    defaiteMsg: string
+-  }) {
+-    this.id = p.id
+-    this.name = p.name
+-    this.difficulty = p.difficulty
+-    this.victory = p.victory
+-    this.defeat = p.defeat
+-    this.time = p.time
+-    this.reward = p.reward
+-    this.rewardCoin = p.rewardCoin
+-    this.text = p.text
+-    this.victoryMsg = p.victoryMsg
+-    this.defaiteMsg = p.defaiteMsg
+-  }
+-
+-  static toScenarioToCreate(p: {
+-    name: string
+-    difficulty: string
+-    victory: string
+-    defeat: string
+-    time: string
+-    reward: string
+-    rewardCoin: number
+-    text: string
+-    victoryMsg: string
+-    defaiteMsg: string
+-  }): ScenarioToCreate {
+-    return {
+-      name: p.name,
+-      difficulty: p.difficulty,
+-      victory: p.victory,
+-      defeat: p.defeat,
+-      time: p.time,
+-      reward: p.reward,
+-      rewardCoin: p.rewardCoin,
+-      text: p.text,
+-      victoryMsg: p.victoryMsg,
+-      defaiteMsg: p.defaiteMsg
+-    }
+-  }
+-}
+-
+-export type ScenarioToCreate = Omit<Scenario, 'id'>
++export * from 'domain'
+
+*** Update File: /Users/valerianguivarch/IdeaProjects/lsr-nestjs-backend/libs/l7r/src/lib/backend/domain/models/invocation/CharacterTemplate.ts
+-import { CharacterTemplateReferential } from './CharacterTemplateReferential'
+-import { Bloodline } from '../characters/Bloodline'
+-import { Classe } from '../characters/Classe'
+-
+-export class CharacterTemplate {
+-  name: string
+-  chairValueReferential: CharacterTemplateReferential
+-  chairValueRule: number
+-  espritValueReferential: CharacterTemplateReferential
+-  espritValueRule: number
+-  essenceValueReferential: CharacterTemplateReferential
+-  essenceValueRule: number
+-  pvMaxValueReferential: CharacterTemplateReferential
+-  pvMaxValueRule: number
+-  pfMaxValueReferential: CharacterTemplateReferential
+-  pfMaxValueRule: number
+-  ppMaxValueReferential: CharacterTemplateReferential
+-  ppMaxValueRule: number
+-  picture?: string
+-  customData?: string
+-  classe: Classe
+-  bloodline?: Bloodline
+-
+-  constructor(p: CharacterTemplate) {
+-    Object.assign(this, p)
+-  }
+-}
++export * from 'domain'
+
+*** Update File: /Users/valerianguivarch/IdeaProjects/lsr-nestjs-backend/libs/l7r/src/lib/backend/domain/models/invocation/CharacterTemplateReferential.ts
+-export enum CharacterTemplateReferential {
+-  FIXE = 'FIXE',
+-  CHAIR = 'CHAIR',
+-  ESPRIT = 'ESPRIT',
+-  ESSENCE = 'ESSENCE',
+-  SUCCESS = 'SUCCESS'
+-}
++export * from 'domain'
+
+*** Update File: /Users/valerianguivarch/IdeaProjects/lsr-nestjs-backend/libs/l7r/src/lib/backend/domain/models/invocation/Pokemon.ts
+-export class Pokemon {
+-  nameFr: string
+-  imageUrl: string
+-
+-  constructor(p: Pokemon) {
+-    this.nameFr = p.nameFr
+-    this.imageUrl = p.imageUrl
+-  }
+-}
++export * from 'domain'
+
+*** Update File: /Users/valerianguivarch/IdeaProjects/lsr-nestjs-backend/libs/l7r/src/lib/backend/domain/models/proficiencies/Proficiency.ts
+-import { DisplayCategory } from '../characters/DisplayCategory'
+-
+-export class Proficiency {
+-  name: string
+-  shortName: string
+-  minLevel: number
+-  displayCategory: DisplayCategory
+-  description?: string
+-
+-  constructor(p: Proficiency) {
+-    this.name = p.name
+-    this.shortName = p.shortName
+-    this.minLevel = p.minLevel
+-    this.displayCategory = p.displayCategory
+-    this.description = p.description
+-  }
+-}
++export * from 'domain'
+
+*** Update File: /Users/valerianguivarch/IdeaProjects/lsr-nestjs-backend/libs/l7r/src/lib/backend/domain/models/roll/Roll.ts
+-import { SkillStat } from '../skills/SkillStat'
+-export class Roll {
+-  id: string
+-  rollerName: string
+-  healPoint?: number
+-  date: Date
+-  secret: boolean
+-  displayDices: boolean
+-  focus: boolean
+-  power: boolean
+-  proficiency: boolean
+-  bonus: number
+-  malus: number
+-  result: number[]
+-  success: number | null
+-  juge12: number | null
+-  juge34: number | null
+-  resultBis?: number[]
+-  successBis?: number
+-  juge12Bis?: number
+-  juge34Bis?: number
+-  avantage?: boolean
+-  characterToHelp?: string
+-  resistRoll?: string
+-  picture?: string
+-  data?: string
+-  empiriqueRoll?: string
+-  apotheose?: string
+-  display: string
+-  stat: SkillStat
+-  resistance: boolean
+-  blessure: boolean
+-  help: boolean
+-  precision?: string
+-  pictureUrl?: string
+-  dark: boolean
+-
+-  constructor(p: Roll) {
+-    Object.assign(this, p)
+-  }
+-
+-  static async rollToCreateFactory(p: {
+-    id?: string
+-    rollerName: string
+-    date: Date
+-    secret: boolean
+-    displayDices: boolean
+-    focus: boolean
+-    power: boolean
+-    proficiency: boolean
+-    bonus: number
+-    malus: number
+-    result: number[]
+-    success: number | null
+-    juge12: number | null
+-    juge34: number | null
+-    resultBis?: number[]
+-    successBis?: number
+-    juge12Bis?: number
+-    juge34Bis?: number
+-    avantage?: boolean
+-    characterToHelp?: string
+-    resistRoll?: string
+-    picture?: string
+-    data?: string
+-    empiriqueRoll?: string
+-    apotheose?: string
+-    display: string
+-    stat: SkillStat
+-    healPoint?: number
+-    resistance: boolean
+-    blessure: boolean
+-    help: boolean
+-    precision?: string
+-    pictureUrl?: string
+-    dark: boolean
+-  }): Promise<RollToCreate> {
+-    const defaults = {
+-      rollerName: p.rollerName,
+-      healPoint: p.healPoint,
+-      date: p.date,
+-      secret: p.secret,
+-      displayDices: p.displayDices,
+-      focus: p.focus,
+-      power: p.power,
+-      proficiency: p.proficiency,
+-      bonus: p.bonus,
+-      malus: p.malus,
+-      result: p.result,
+-      success: p.success,
+-      juge12: p.juge12,
+-      juge34: p.juge34,
+-      successBis: p.successBis,
+-      juge12Bis: p.juge12Bis,
+-      juge34Bis: p.juge34Bis,
+-      avantage: p.avantage,
+-      characterToHelp: p.characterToHelp,
+-      resistRoll: p.resistRoll,
+-      picture: p.picture,
+-      data: p.data,
+-      empiriqueRoll: p.empiriqueRoll,
+-      apotheose: p.apotheose,
+-      display: p.display,
+-      stat: p.stat,
+-      resistance: p.resistance,
+-      blessure: p.blessure,
+-      help: p.help,
+-      precision: p.precision,
+-      pictureUrl: p.pictureUrl,
+-      dark: p.dark
+-    }
+-
+-    return Object.assign(defaults, p)
+-  }
+-}
+-
+-export type RollToCreate = Omit<Roll, 'id'>
++export * from 'domain'
+
+*** Update File: /Users/valerianguivarch/IdeaProjects/lsr-nestjs-backend/libs/l7r/src/lib/backend/domain/models/roll/RollAvantage.ts
+-export enum RollAvantage {
+-  NORMAL = 'NORMAL',
+-  AVANTAGE = 'AVANTAGE',
+-  DESAVANTAGE = 'DESAVANTAGE'
+-}
++export * from 'domain'
+
+*** Update File: /Users/valerianguivarch/IdeaProjects/lsr-nestjs-backend/libs/l7r/src/lib/backend/domain/models/roll/SuccessCalculation.ts
+-export enum SuccessCalculation {
+-  AUCUN = 'AUCUN',
+-  SIMPLE = 'SIMPLE',
+-  SIMPLE_PLUS_1 = 'SIMPLE_PLUS_1',
+-  DIVISE = 'DIVISE',
+-  DIVISE_PLUS_1 = 'DIVISE_PLUS_1',
+-  DOUBLE = 'DOUBLE',
+-  DOUBLE_PLUS_1 = 'DOUBLE_PLUS_1',
+-  CUSTOM = 'CUSTOM'
+-}
++export * from 'domain'
+
+*** Update File: /Users/valerianguivarch/IdeaProjects/lsr-nestjs-backend/libs/l7r/src/lib/backend/domain/models/session/ChaosLevel.ts
+-export enum ChaosLevel {
+-  LEVEL_0_0 = 0,
+-  // eslint-disable-next-line no-magic-numbers
+-  LEVEL_1_15 = 15,
+-  // eslint-disable-next-line no-magic-numbers
+-  LEVEL_2_30 = 30,
+-  // eslint-disable-next-line no-magic-numbers
+-  LEVEL_3_45 = 45,
+-  // eslint-disable-next-line no-magic-numbers
+-  LEVEL_4_60 = 60,
+-  // eslint-disable-next-line no-magic-numbers
+-  LEVEL_4_75 = 75
+-}
++export * from 'domain'
+
+*** Update File: /Users/valerianguivarch/IdeaProjects/lsr-nestjs-backend/libs/l7r/src/lib/backend/domain/models/session/NatureLevel.ts
+-export enum NatureLevel {
+-  LEVEL_0_PAUVRE = 'LEVEL_0_PAUVRE',
+-  LEVEL_1_RARE = 'LEVEL_1_RARE',
+-  LEVEL_2_PRESENTE = 'LEVEL_2_PRESENTE',
+-  LEVEL_3_ABONDANTE = 'LEVEL_3_ABONDANTE',
+-  LEVEL_4_SAUVAGE = 'LEVEL_4_RICHE',
+-  LEVEL_5_DOMINANTE = 'LEVEL_5_DOMINANTE'
+-}
++export * from 'domain'
+
+*** Update File: /Users/valerianguivarch/IdeaProjects/lsr-nestjs-backend/libs/l7r/src/lib/backend/domain/models/session/Session.ts
+-import { ChaosLevel } from './ChaosLevel'
+-
+-export class Session {
+-  chaos: ChaosLevel
+-  baseRest: number
+-  improvedRest: number
+-  owners: string[]
+-  fake: number
+-  entries: string
+-  speaking: string
+-
+-  constructor(session: Session) {
+-    this.chaos = session.chaos
+-    this.baseRest = session.baseRest
+-    this.improvedRest = session.improvedRest
+-    this.owners = session.owners
+-    this.fake = session.fake
+-    this.entries = session.entries
+-    this.speaking = session.speaking
+-  }
+-}
++export * from 'domain'
+
+*** Update File: /Users/valerianguivarch/IdeaProjects/lsr-nestjs-backend/libs/l7r/src/lib/backend/domain/models/skills/CharacterSkill.ts
+-import { Skill } from './Skill'
+-import { Character } from '../characters/Character'
+-
+-export class CharacterSkill {
+-  character: Character
+-  skill: Skill
+-  dailyUse?: number
+-  limitationMax?: number
+-
+-  constructor(character: Character, skill: Skill, dailyUse?: number, limitationMax?: number) {
+-    this.character = character
+-    this.skill = skill
+-    this.dailyUse = dailyUse
+-    this.limitationMax = limitationMax
+-  }
+-}
++export * from 'domain'
+
+*** Update File: /Users/valerianguivarch/IdeaProjects/lsr-nestjs-backend/libs/l7r/src/lib/backend/domain/models/skills/Skill.ts
+-import { SkillStat } from './SkillStat'
+-import { DisplayCategory } from '../characters/DisplayCategory'
+-import { SuccessCalculation } from '../roll/SuccessCalculation'
+-
+-export class Skill {
+-  id: string
+-  name: string
+-  shortName: string
+-  longName?: string
+-  stat: SkillStat
+-  displayCategory: DisplayCategory
+-  pvCost: number
+-  pfCost: number
+-  ppCost: number
+-  dettesCost: number
+-  dragonDettesCost: number
+-  etherCost: number
+-  arcaneCost: number
+-  arcanePrimeCost: number
+-  allowsPf: boolean
+-  allowsPp: boolean
+-  customRolls?: string
+-  successCalculation: SuccessCalculation
+-  secret: boolean
+-  display: string
+-  position: number
+-  soldatCost: number
+-  isArcanique: boolean
+-  isHeal: boolean
+-  resistance: boolean
+-  blessure: boolean
+-  help: boolean
+-  invocationTemplateName?: string
+-  description: string
+-  precision?: string
+-  owner?: string
+-
+-  constructor(p: Skill) {
+-    this.id = p.id
+-    this.name = p.name
+-    this.shortName = p.shortName
+-    this.soldatCost = p.soldatCost
+-    this.longName = p.longName
+-    this.stat = p.stat
+-    this.displayCategory = p.displayCategory
+-    this.pvCost = p.pvCost
+-    this.pfCost = p.pfCost
+-    this.ppCost = p.ppCost
+-    this.dettesCost = p.dettesCost
+-    this.dragonDettesCost = p.dragonDettesCost
+-    this.etherCost = p.etherCost
+-    this.arcaneCost = p.arcaneCost
+-    this.arcanePrimeCost = p.arcanePrimeCost
+-    this.allowsPp = p.allowsPp
+-    this.allowsPf = p.allowsPf
+-    this.customRolls = p.customRolls
+-    this.successCalculation = p.successCalculation
+-    this.secret = p.secret
+-    this.display = p.display
+-    this.position = p.position
+-    this.isArcanique = p.isArcanique
+-    this.isHeal = p.isHeal
+-    this.resistance = p.resistance
+-    this.blessure = p.blessure
+-    this.help = p.help
+-    this.invocationTemplateName = p.invocationTemplateName
+-    this.description = p.description
+-    this.precision = p.precision
+-    this.owner = p.owner
+-  }
+-}
++export * from 'domain'
+
+*** Update File: /Users/valerianguivarch/IdeaProjects/lsr-nestjs-backend/libs/l7r/src/lib/backend/domain/models/skills/SkillStat.ts
+-export enum SkillStat {
+-  FIXE = 'FIXE', // pas de jet
+-  CHAIR = 'CHAIR', // jet de chair
+-  ESPRIT = 'ESPRIT', // jet d'esprit
+-  ESSENCE = 'ESSENCE', // jet d'essence
+-  EMPIRIQUE = 'EMPIRIQUE', // jet empirique donné en paramètre
+-  CUSTOM = 'CUSTOM' // jet custom spécifique à la compétence
+-}
++export * from 'domain'
+
+*** End Patch

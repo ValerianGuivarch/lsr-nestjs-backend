@@ -10,11 +10,18 @@ RUN mkdir -p /home/node/app
 WORKDIR /home/node/app
 
 COPY --chown=node:node package*.json ./
-COPY --chown=node:node tsconfig.json ./
+COPY --chown=node:node .npmrc ./
+COPY --chown=node:node tsconfig*.json ./
+COPY --chown=node:node nest-cli.json ./
+COPY --chown=node:node nx.json ./
+COPY --chown=node:node typings.ts ./
+COPY --chown=node:node apps/ ./apps
+COPY --chown=node:node libs/ ./libs
 COPY --chown=node:node src/ ./src
 
-RUN npm install
+RUN npm ci
 RUN npm run build
+RUN npm prune --omit=dev
 
 #
 # Build stage 1

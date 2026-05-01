@@ -1,0 +1,19 @@
+{
+  "name": "domain",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/l7r/domain/src",
+  "projectType": "library",
+  "tags": ["scope:l7r", "type:domain"],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/libs/l7r/domain",
+        "main": "libs/l7r/domain/src/index.ts",
+        "tsConfig": "libs/l7r/domain/tsconfig.lib.json",
+        "assets": ["libs/l7r/domain/*.md"]
+      }
+    }
+  }
+}
