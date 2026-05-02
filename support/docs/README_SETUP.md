@@ -33,8 +33,8 @@ Once you installed nvm, please check the `package.json` to know the correct mini
 ```json
 {
     "engines": {
-        "node": ">=16.4 <17",
-        "npm": ">=7 <8"
+        "node": ">=22 <23",
+        "npm": ">=10 <11"
     }
 }
 ```

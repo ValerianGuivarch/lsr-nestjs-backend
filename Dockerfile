@@ -1,7 +1,7 @@
 #
 # Build stage 0
 #
-FROM node:18-bookworm-slim AS build-stage
+FROM node:22-bookworm-slim AS build-stage
 
 RUN apt-get update && apt-get install -y --no-install-recommends python3 build-essential && rm -rf /var/lib/apt/lists/*
 
@@ -26,7 +26,7 @@ RUN npm prune --omit=dev
 #
 # Build stage 1
 #
-FROM node:18-bookworm-slim
+FROM node:22-bookworm-slim
 
 USER node
 RUN mkdir -p /home/node/app
