@@ -1,10 +1,19 @@
 # node
-NODE_ENV=develop|staging|production
+NODE_ENV=production
 # jwt
 JWT_SECRET=changeme
 # http
-PORT=8080
+PORT=8081
+YEARDIARY_PORT=8080
 HOST=127.0.0.1
+
+# web front (apps/web-l7r)
+REACT_APP_API_URL=http://127.0.0.1:8081/api/v1
+API_URL=http://127.0.0.1:8081/api/v1
+
+# year diary
+FRONTEND_URL=http://127.0.0.1:3000
+
 # database
 DB_URI=postgres://postgres:postgres@localhost:5432/default-database
 DB_HOST=127.0.0.1

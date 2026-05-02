@@ -13,7 +13,8 @@
       "hp-domain": ["./libs/hp/domain/src/index.ts"],
       "l7r": ["./libs/l7r/src/index.ts"],
       "hp": ["./libs/hp/src/index.ts"],
-      "shared": ["./libs/shared/src/index.ts"]
+      "shared": ["./libs/shared/src/index.ts"],
+      "yeardiary": ["./libs/yeardiary/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "dist"]
