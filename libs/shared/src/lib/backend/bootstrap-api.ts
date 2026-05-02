@@ -11,6 +11,7 @@ interface BootstrapApiOptions {
   swaggerTag: string
   swaggerPath: string
   portEnvKey: string
+  beforeListen?: (app: NestFastifyApplication) => Promise<void> | void
 }
 
 function parsePort(value: unknown): number | undefined {
@@ -63,6 +64,8 @@ export async function bootstrapApi(p: BootstrapApiOptions): Promise<void> {
   await app.register(multipart, {
     limits: { fileSize: 12 * 1024 * 1024 }
   })
+
+  await p.beforeListen?.(app)
 
   const configService = app.get(ConfigService)
   const host = configService.get<string>('HOST') ?? configService.get<string>('http.host') ?? '0.0.0.0'
