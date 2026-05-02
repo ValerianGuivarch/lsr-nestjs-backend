@@ -6,7 +6,7 @@ import { ApiL7RProvider } from '../../data/api/ApiL7RProvider'
 export function HpMjWizardCard(props: { wizard: Wizard | undefined; wizardName: string; onRemove: () => void }) {
   const [selectedKnowledge, setSelectedKnowledge] = useState('')
   const [selectedSpell, setSelectedSpell] = useState('')
-  const [portraitHidden, setPortraitHidden] = useState(false)
+  const [portraitIndex, setPortraitIndex] = useState(0)
 
   if (!props.wizard) {
     return (
@@ -18,9 +18,12 @@ export function HpMjWizardCard(props: { wizard: Wizard | undefined; wizardName: 
 
   const wizard = props.wizard
   const portraitName = wizard.displayName || wizard.name || 'wizard'
-  const portraitSrc = `/l7r/${portraitName}.png`
+  const portraitCandidates = [wizard.displayName, wizard.name].filter((value): value is string => Boolean(value))
+  const portraitSrc = portraitCandidates[portraitIndex] ? `/l7r/${portraitCandidates[portraitIndex]}.png` : ''
 
-  const wizardStats = (wizard.stats || []).filter((stat) => stat?.stat?.name)
+  const wizardStats = (wizard.stats || [])
+    .filter((stat) => stat?.stat?.name)
+    .sort((a, b) => (a.stat.order ?? 0) - (b.stat.order ?? 0))
   const wizardKnowledges = (wizard.knowledges || []).filter((knowledge) => knowledge?.knowledge?.name)
   const wizardSpells = (wizard.spells || []).filter((spell) => spell?.spell?.name)
 
@@ -46,6 +49,14 @@ export function HpMjWizardCard(props: { wizard: Wizard | undefined; wizardName: 
     }
   }
 
+  const handleLaunchStat = async (statName: string) => {
+    try {
+      await ApiL7RProvider.rollFlip(wizard.name, statName)
+    } catch (e) {
+      console.error('Failed to launch stat', e)
+    }
+  }
+
   const getHouseColor = (houseName: string) => {
     switch (houseName?.toLowerCase()) {
       case 'gryffondor':
@@ -65,11 +76,17 @@ export function HpMjWizardCard(props: { wizard: Wizard | undefined; wizardName: 
     <CardContainer houseColor={getHouseColor(wizard.houseName || '')}>
       <CardTop>
         <PortraitSection>
-          {!portraitHidden ? (
+          {portraitSrc ? (
             <Portrait
               src={portraitSrc}
               alt={portraitName}
-              onError={() => setPortraitHidden(true)}
+              onError={() => {
+                if (portraitIndex < portraitCandidates.length - 1) {
+                  setPortraitIndex((prev) => prev + 1)
+                } else {
+                  setPortraitIndex(portraitCandidates.length)
+                }
+              }}
             />
           ) : (
             <PortraitFallback>🧙</PortraitFallback>
@@ -95,7 +112,7 @@ export function HpMjWizardCard(props: { wizard: Wizard | undefined; wizardName: 
           wizardStats.map((stat) => {
             const statName = stat.stat.name
             return (
-              <StatButton key={statName} title={statName}>
+              <StatButton key={statName} title={statName} onClick={() => handleLaunchStat(statName)}>
                 {statName} ({stat.level ?? 0})
               </StatButton>
             )
@@ -289,6 +306,7 @@ const StatButton = styled.button`
   font-size: 11px;
   font-weight: 600;
   color: #333;
+  line-height: 1.2;
   cursor: pointer;
   transition: background-color 0.2s;
 
@@ -318,16 +336,23 @@ const SelectGroup = styled.div`
 const SelectRowContainer = styled.div`
   display: flex;
   gap: 4px;
+  min-width: 0;
 `
 
 const Select = styled.select`
   flex: 1;
+  min-width: 0;
   padding: 4px 6px;
   border: 1px solid #ddd;
   border-radius: 3px;
   font-size: 11px;
+  color: #222;
   background-color: white;
   cursor: pointer;
+
+  option {
+    color: #222;
+  }
 
   &:hover {
     border-color: #999;
@@ -341,6 +366,7 @@ const Select = styled.select`
 
 const LaunchButton = styled.button`
   padding: 4px 8px;
+  flex-shrink: 0;
   background: #9b59b6;
   color: white;
   border: none;

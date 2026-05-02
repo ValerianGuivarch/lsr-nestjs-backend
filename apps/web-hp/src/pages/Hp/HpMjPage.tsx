@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import styled from 'styled-components'
 import { Wizard } from '../../domain/models/hp/Wizard'
 import { Flip } from '../../domain/models/hp/Flip'
+import { Difficulty } from '../../domain/models/hp/Difficulty'
 import { ApiL7RProvider } from '../../data/api/ApiL7RProvider'
 import { HpMjWizardCard } from '../../components/Hp/HpMjWizardCard'
 import FlipCard from '../../components/Hp/FlipCard'
@@ -48,8 +49,7 @@ export function HpMjPage() {
     const fetchMjFlips = async () => {
       try {
         const allFlips = await ApiL7RProvider.getFlips()
-        const mjFlips = allFlips.filter((flip) => flip.wizardName === 'MJ Helluin').slice(0, 10)
-        setMjFlips(mjFlips)
+        setMjFlips(allFlips.slice(0, 30))
       } catch (e) {
         console.error('Failed to fetch MJ flips', e)
       }
@@ -146,6 +146,21 @@ export function HpMjPage() {
     window.location.reload()
   }
 
+  const handleMjD20 = async () => {
+    try {
+      await ApiL7RProvider.sendFlip({
+        knowledgeName: undefined,
+        statName: undefined,
+        spellName: undefined,
+        wizardName: 'MJ Helluin',
+        wizardDisplayName: '',
+        difficulty: Difficulty.NORMAL,
+      })
+    } catch (e) {
+      console.error('Failed to launch MJ D20', e)
+    }
+  }
+
   return (
     <>
       <MjHeader>
@@ -180,7 +195,7 @@ export function HpMjPage() {
           </button>
         </SelectContainer>
         <SelectContainer>
-          <button onClick={() => ApiL7RProvider.rollFlip('MJ Helluin', 'knowledge')}>
+          <button onClick={handleMjD20}>
             D20 MJ
           </button>
         </SelectContainer>
@@ -213,12 +228,12 @@ export function HpMjPage() {
         </CardsSection>
 
         <FlipsSection>
-          <FlipsTitle>Flips - MJ Helluin</FlipsTitle>
+          <FlipsTitle>Flips</FlipsTitle>
           <FlipsList>
             {mjFlips.length > 0 ? (
               mjFlips.map((flip) => (
                 <FlipCardWrapper key={flip.id}>
-                  <FlipCard flip={flip} />
+                  <FlipCard flip={flip} fullWidth={true} />
                 </FlipCardWrapper>
               ))
             ) : (

@@ -6,6 +6,7 @@ import { ApiL7RProvider } from "../../data/api/ApiL7RProvider";
 
 export interface FlipCardProps {
   flip: Flip;
+  fullWidth?: boolean;
 }
 
 export default function FlipCard(props: FlipCardProps) {
@@ -18,7 +19,7 @@ export default function FlipCard(props: FlipCardProps) {
     }
   }
   return (
-    <Container>
+    <Container $fullWidth={props.fullWidth === true}>
       <Avatar
         src={
           "/l7r/" +
@@ -111,12 +112,12 @@ function getTextFromFlip(flip: Flip) {
   );
 }
 
-const Container = styled.div`
+const Container = styled.div<{ $fullWidth: boolean }>`
   display: flex;
   border-top: 1px solid #ccc;
   padding: 6px 6px 2px 6px;
-  width: 100%;
-  max-width: 500px;
+  width: ${({ $fullWidth }) => ($fullWidth ? "100%" : "500px")};
+  max-width: ${({ $fullWidth }) => ($fullWidth ? "100%" : "500px")};
 `;
 
 const Avatar = styled.img`
