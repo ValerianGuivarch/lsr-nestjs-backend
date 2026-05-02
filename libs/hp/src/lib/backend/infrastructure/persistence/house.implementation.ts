@@ -19,4 +19,16 @@ export class HouseImplementation implements IHouseProvider {
       })
     ).map(DBHouse.toHouse)
   }
+
+  async updatePoints(houseName: string, points: number): Promise<void> {
+    await this.houseRepository.update(
+      {
+        name: houseName
+      },
+      {
+        points,
+        updatedDate: new Date()
+      }
+    )
+  }
 }

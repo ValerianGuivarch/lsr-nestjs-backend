@@ -305,4 +305,67 @@ export class ApiL7RProvider {
   }) {
     await L7RApi.createSpell(param);
   }
+
+  // MJ Page methods
+  static async getAllWizardNames(): Promise<string[]> {
+    try {
+      const response = await L7RApi.getWizardsNames();
+      return response.map((wizard) => wizard.name);
+    } catch (e) {
+      console.error("Failed to fetch wizard names", e);
+      return [];
+    }
+  }
+
+  static async getAllWizards(): Promise<Wizard[]> {
+    try {
+      const response = await L7RApi.getWizardsNames();
+      const wizards = await Promise.all(
+        response.map(async (wizard) => {
+          return await this.getWizardByName(wizard.name);
+        })
+      );
+      return wizards;
+    } catch (e) {
+      console.error("Failed to fetch all wizards", e);
+      return [];
+    }
+  }
+
+  static async rollFlip(wizardName: string, type: string): Promise<void> {
+    let statName: string | undefined = undefined;
+    let knowledgeName: string | undefined = undefined;
+    let spellName: string | undefined = undefined;
+
+    try {
+      const wizard = await this.getWizardByName(wizardName);
+      const displayName = wizard.displayName || wizard.name;
+
+      if (type === "basic") {
+        statName = "Esprit";
+      } else if (wizard.knowledges.some((knowledge) => knowledge.knowledge?.name === type)) {
+        knowledgeName = type;
+      } else if (wizard.spells.some((spell) => spell.spell?.name === type)) {
+        spellName = type;
+      } else {
+        statName = type;
+      }
+
+      await this.sendFlip({
+        knowledgeName,
+        statName,
+        spellName,
+        wizardName,
+        wizardDisplayName: displayName,
+        difficulty: Difficulty.NORMAL,
+      });
+    } catch (e) {
+      console.error("Failed to roll flip", e);
+      throw e;
+    }
+  }
+
+  static async updateHousePoints(points: { [key: string]: number }): Promise<void> {
+    await L7RApi.updateHousePoints(points)
+  }
 }

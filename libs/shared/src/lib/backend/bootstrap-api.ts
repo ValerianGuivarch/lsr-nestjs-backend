@@ -1,6 +1,7 @@
 import { request as httpRequest } from 'node:http'
 import { request as httpsRequest } from 'node:https'
 import multipart from '@fastify/multipart'
+import { FastifyReply, FastifyRequest, HookHandlerDoneFunction } from 'fastify'
 import { Type, ValidationPipe } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { NestFactory } from '@nestjs/core'
@@ -55,7 +56,7 @@ function matchesProxyRule(pathname: string, rule: ReverseProxyRule): boolean {
 export function registerReverseProxy(app: NestFastifyApplication, rules: ReverseProxyRule[]): void {
   const fastify = app.getHttpAdapter().getInstance()
 
-  fastify.addHook('onRequest', (request, reply, done) => {
+  fastify.addHook('onRequest', (request: FastifyRequest, reply: FastifyReply, done: HookHandlerDoneFunction) => {
     const rawUrl = request.raw.url ?? '/'
     const pathname = rawUrl.split('?')[0]
     const matchingRule = rules.find((rule) => matchesProxyRule(pathname, rule))

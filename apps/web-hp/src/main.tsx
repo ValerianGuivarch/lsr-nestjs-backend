@@ -7,6 +7,7 @@ import { WizardSheet } from './pages/Hp/WizardSheet'
 import { WizardFormCreate } from './pages/Hp/WizardFormCreate'
 import { WizardFormUpdate } from './pages/Hp/WizardFormUpdate'
 import { SpellForm } from './pages/Hp/SpellForm'
+import { HpMjPage } from './pages/Hp/HpMjPage'
 
 const root = ReactDOM.createRoot(document.getElementById('root') as HTMLElement)
 
@@ -17,6 +18,7 @@ root.render(
         <Route path="/" element={<Navigate to="/hp/create" replace />} />
         <Route path="/hp/:wizardName" element={<WizardSheet />} />
         <Route path="/hp/create" element={<WizardFormCreate />} />
+        <Route path="/hp/mj" element={<HpMjPage />} />
         <Route path="/hp/update/:wizardName" element={<WizardFormUpdate />} />
         <Route path="/hp/spell" element={<SpellForm />} />
       </Route>

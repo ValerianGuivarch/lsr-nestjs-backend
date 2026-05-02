@@ -9,4 +9,20 @@ export class HouseService {
   async getAll(): Promise<House[]> {
     return await this.houseProvider.findAll()
   }
+
+  async updatePoints(houseName: string, points: number): Promise<House> {
+    await this.houseProvider.updatePoints(houseName, points)
+    const house = (await this.houseProvider.findAll()).find((currentHouse) => currentHouse.name === houseName)
+    if (!house) {
+      throw new Error(`House not found after update: ${houseName}`)
+    }
+    return house
+  }
+
+  async updateManyPoints(pointsByHouse: { houseName: string; points: number }[]): Promise<House[]> {
+    for (const house of pointsByHouse) {
+      await this.houseProvider.updatePoints(house.houseName, house.points)
+    }
+    return await this.houseProvider.findAll()
+  }
 }

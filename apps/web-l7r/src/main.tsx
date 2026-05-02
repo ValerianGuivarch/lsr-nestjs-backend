@@ -20,6 +20,7 @@ import DateTool from './pages/CharacterSelection/DateTool'
 import { SpeakingSheet } from './pages/CharacterSheet/SpeakingSheet'
 import StoreControl from './components/Store'
 import { WizardSheet } from '../../web-hp/src/pages/Hp/WizardSheet'
+import { HpMjPage } from '../../web-hp/src/pages/Hp/HpMjPage'
 import { WizardFormCreate } from '../../web-hp/src/pages/Hp/WizardFormCreate'
 import { WizardFormUpdate } from '../../web-hp/src/pages/Hp/WizardFormUpdate'
 import { SpellForm } from '../../web-hp/src/pages/Hp/SpellForm'
@@ -40,6 +41,7 @@ root.render(
         <Route path="/" element={<App />}>
           <Route path="/" element={<CharacterSelection />} />
           <Route path="/hp" element={<Navigate to="/hp/create" replace />} />
+          <Route path="/hp/mj" element={<HpMjPage />} />
           <Route path="/hp/:wizardName" element={<WizardSheet />} />
           <Route path="/hp/create" element={<WizardFormCreate />} />
           <Route path="/hp/update/:wizardName" element={<WizardFormUpdate />} />

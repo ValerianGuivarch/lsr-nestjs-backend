@@ -115,7 +115,8 @@ const Container = styled.div`
   display: flex;
   border-top: 1px solid #ccc;
   padding: 6px 6px 2px 6px;
-  width: 500px;
+  width: 100%;
+  max-width: 500px;
 `;
 
 const Avatar = styled.img`

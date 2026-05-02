@@ -184,6 +184,11 @@ export class L7RApi {
     return response.data;
   }
 
+  static async getWizardsNames(): Promise<{ name: string }[]> {
+    const response = await axios.get(`${config.BASE_URL}/hp/wizards`);
+    return response.data;
+  }
+
   static async getFlips(): Promise<FlipRaw[]> {
     const response = await axios.get(`${config.BASE_URL}/hp/flips`);
     return response.data;
@@ -254,6 +259,13 @@ export class L7RApi {
 
   static async getHouses(): Promise<HouseRaw[]> {
     const response = await axios.get(`${config.BASE_URL}/hp/houses`);
+    return response.data;
+  }
+
+  static async updateHousePoints(pointsByHouse: { [key: string]: number }): Promise<HouseRaw[]> {
+    const response = await axios.patch(`${config.BASE_URL}/hp/houses`, {
+      pointsByHouse
+    });
     return response.data;
   }
 
