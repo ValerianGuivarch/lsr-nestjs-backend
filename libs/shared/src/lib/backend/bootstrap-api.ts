@@ -1,9 +1,17 @@
+import { request as httpRequest } from 'node:http'
+import { request as httpsRequest } from 'node:https'
 import multipart from '@fastify/multipart'
 import { Type, ValidationPipe } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { NestFactory } from '@nestjs/core'
 import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify'
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
+
+interface ReverseProxyRule {
+  sourcePrefix: string
+  targetOrigin: string
+  excludePrefixes?: string[]
+}
 
 interface BootstrapApiOptions {
   rootModule: Type<object>
@@ -30,6 +38,70 @@ function parsePort(value: unknown): number | undefined {
   }
 
   return undefined
+}
+
+function matchesPrefix(pathname: string, prefix: string): boolean {
+  return pathname === prefix || pathname.startsWith(`${prefix}/`)
+}
+
+function matchesProxyRule(pathname: string, rule: ReverseProxyRule): boolean {
+  if (!matchesPrefix(pathname, rule.sourcePrefix)) {
+    return false
+  }
+
+  return !(rule.excludePrefixes ?? []).some((prefix) => matchesPrefix(pathname, prefix))
+}
+
+export function registerReverseProxy(app: NestFastifyApplication, rules: ReverseProxyRule[]): void {
+  const fastify = app.getHttpAdapter().getInstance()
+
+  fastify.addHook('onRequest', (request, reply, done) => {
+    const rawUrl = request.raw.url ?? '/'
+    const pathname = rawUrl.split('?')[0]
+    const matchingRule = rules.find((rule) => matchesProxyRule(pathname, rule))
+
+    if (!matchingRule) {
+      done()
+      return
+    }
+
+    reply.hijack()
+
+    const targetUrl = new URL(rawUrl, matchingRule.targetOrigin)
+    const proxyRequest = (targetUrl.protocol === 'https:' ? httpsRequest : httpRequest)(
+      targetUrl,
+      {
+        method: request.raw.method,
+        headers: {
+          ...request.headers,
+          host: targetUrl.host,
+          connection: 'close',
+          'x-forwarded-host': request.headers.host ?? '',
+          'x-forwarded-proto': request.protocol,
+          'x-forwarded-for': request.ip
+        }
+      },
+      (proxyResponse) => {
+        reply.raw.statusCode = proxyResponse.statusCode ?? 502
+
+        Object.entries(proxyResponse.headers).forEach(([key, value]) => {
+          if (value !== undefined) {
+            reply.raw.setHeader(key, value)
+          }
+        })
+
+        proxyResponse.pipe(reply.raw)
+      }
+    )
+
+    proxyRequest.on('error', () => {
+      reply.raw.statusCode = 502
+      reply.raw.setHeader('Content-Type', 'application/json; charset=utf-8')
+      reply.raw.end(JSON.stringify({ message: 'Bad Gateway' }))
+    })
+
+    request.raw.pipe(proxyRequest)
+  })
 }
 
 export async function bootstrapApi(p: BootstrapApiOptions): Promise<void> {

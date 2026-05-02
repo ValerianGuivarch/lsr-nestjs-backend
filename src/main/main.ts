@@ -1,4 +1,5 @@
 import { AppModule } from './app.module'
+import { registerReverseProxy } from '../../libs/shared/src/lib/backend/bootstrap-api'
 import multipart from '@fastify/multipart'
 import { ValidationPipe } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
@@ -43,6 +44,13 @@ async function bootstrap() {
     // eslint-disable-next-line no-magic-numbers
     limits: { fileSize: 12 * 1024 * 1024 }
   })
+
+  registerReverseProxy(app, [
+    {
+      sourcePrefix: '/api/v1/diaries',
+      targetOrigin: process.env['API_YEARDIARY_ORIGIN'] ?? 'http://127.0.0.1:8080'
+    }
+  ])
 
   await app.listen(configService.get('PORT'), configService.get('HOST'))
   //console.log(`Application is running on: ${await app.getUrl()}`)
