@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import styled from "styled-components";
 import { ApiL7RProvider } from "../../data/api/ApiL7RProvider";
 import { SchoolCategory } from "../../domain/models/SchoolCategory";
@@ -44,43 +44,68 @@ export function WizardFormBase({
     WizardSpell[]
   >([]);
   const [isLoading, setIsLoading] = useState(true); // Nouveau drapeau pour le chargement
+  const initialCategoryRef = useRef<string | undefined>(undefined);
+  const initialStatsRef = useRef<Record<string, number>>({});
+  const initialKnowledgesRef = useRef<Record<string, number>>({});
+  const initialSpellsRef = useRef<string[]>([]);
 
-  // Applique les données initiales si elles sont fournies
   useEffect(() => {
-    if (wizardName) {
-      fetchStats();
-      fetchKnowledges();
-      fetchSpells();
-      fetchWizard(wizardName);
-    } else {
-      fetchStats();
-      fetchKnowledges();
-      fetchSpells();
-      setIsLoading(false); // Les données par défaut sont prêtes
+    let isCancelled = false;
+
+    async function load(): Promise<void> {
+      setIsLoading(true);
+      if (wizardName) {
+        await Promise.all([fetchStats(false), fetchKnowledges(false), fetchSpells()]);
+        if (!isCancelled) {
+          await fetchWizard(wizardName);
+        }
+      } else {
+        await Promise.all([fetchStats(true), fetchKnowledges(true), fetchSpells()]);
+      }
+
+      if (!isCancelled) {
+        setIsLoading(false);
+      }
     }
+
+    load().then(() => {});
+
+    return () => {
+      isCancelled = true;
+    };
   }, [wizardName]);
 
   function handleSpellSelect(spellName: string) {
     const selectedSpell = spells.find(
       (spell: Spell) => spell.name === spellName,
     );
+    if (!selectedSpell) {
+      return;
+    }
+
+    if (
+      selectedWizardSpells.some(
+        (wizardSpell: WizardSpell) => wizardSpell.spell.name === selectedSpell.name,
+      )
+    ) {
+      return;
+    }
+
     const newSpell = {
       spell: selectedSpell,
       difficulty: Difficulty.NORMAL,
       xp: 0,
     };
-    if (selectedSpell) {
-      setSelectedWizardSpells((prev) => [...prev, newSpell]);
-    }
+    setSelectedWizardSpells((prev: WizardSpell[]) => [...prev, newSpell]);
   }
   function handleSpellRemove(spellName: string) {
-    setSelectedWizardSpells((prev) =>
-      prev.filter((wizardSpell) => wizardSpell.spell.name !== spellName),
+    setSelectedWizardSpells((prev: WizardSpell[]) =>
+      prev.filter((wizardSpell: WizardSpell) => wizardSpell.spell.name !== spellName),
     );
   }
   function handleDifficultyChange(spellName: string, difficulty: Difficulty) {
-    setSelectedWizardSpells((prev) =>
-      prev.map((wizardSpell) =>
+    setSelectedWizardSpells((prev: WizardSpell[]) =>
+      prev.map((wizardSpell: WizardSpell) =>
         wizardSpell.spell.name === spellName
           ? { ...wizardSpell, difficulty } // Met à jour la difficulté
           : wizardSpell,
@@ -91,6 +116,7 @@ export function WizardFormBase({
     try {
       const wizard = await ApiL7RProvider.getWizardByName(name);
       setName(wizard.name);
+      initialCategoryRef.current = wizard.category;
       setCategory(
         Object.values(SchoolCategory).includes(
           wizard.category as SchoolCategory,
@@ -99,65 +125,67 @@ export function WizardFormBase({
           : SchoolCategory.OTHER,
       );
       setHouseName(wizard.houseName || "Poufsouffle");
-      setWizardStats(
-        wizard.stats.reduce((acc: Record<string, number>, stat: any) => {
-          console.log("Traitement de la stat :", stat); // Log chaque stat traitée
-          if (!stat.stat.name || stat.level === undefined) {
-            console.warn("Stat invalide détectée :", stat); // Log les stats invalides
-          } else {
-            console.log("Stat valide détectée :", stat); // Log les stats valides
+      const statsFromWizard = wizard.stats.reduce(
+        (acc: Record<string, number>, stat: any) => {
+          if (stat?.stat?.name && stat.level !== undefined) {
             acc[stat.stat.name] = stat.level;
-            console.log("Accumulateur après traitement :", acc); // Log l'accumulateur
           }
           return acc;
-        }, {}),
+        },
+        {},
+      );
+      const knowledgesFromWizard = wizard.knowledges.reduce(
+        (acc: Record<string, number>, knowledge: any) => {
+          if (knowledge?.knowledge?.name && knowledge.level !== undefined) {
+            acc[knowledge.knowledge.name] = knowledge.level;
+          }
+          return acc;
+        },
+        {},
       );
 
-      // Log après avoir appliqué les modifications
-      console.log("Wizard stats après traitement :", wizard.stats);
-      console.log("État final de wizardStats :", wizardStats);
-      setWizardKnowledges(
-        wizard.knowledges.reduce(
-          (acc: Record<string, number>, knowledge: any) => {
-            acc[knowledge.knowledge.name] = knowledge.level;
-            return acc;
-          },
-          {},
-        ),
-      );
+      setWizardStats(statsFromWizard);
+      setWizardKnowledges(knowledgesFromWizard);
+      initialStatsRef.current = { ...statsFromWizard };
+      initialKnowledgesRef.current = { ...knowledgesFromWizard };
       setSelectedWizardSpells(wizard.spells.map((spell: any) => spell));
+      initialSpellsRef.current = wizard.spells.map(
+        (spell: any) => `${spell.spell.name}:${spell.difficulty}`,
+      );
     } catch (error) {
       console.error("Error fetching wizard:", error);
-    } finally {
-      setIsLoading(false); // Les données du wizard sont prêtes
     }
   }
 
-  async function fetchStats() {
+  async function fetchStats(initializeWizardValues: boolean) {
     try {
       const statsData = await ApiL7RProvider.getStats();
       setStats(statsData);
-      setWizardStats(
-        statsData.reduce((acc: Record<string, number>, stat: any) => {
-          acc[stat.name] = 0;
-          return acc;
-        }, {}),
-      );
+      if (initializeWizardValues) {
+        setWizardStats(
+          statsData.reduce((acc: Record<string, number>, stat: any) => {
+            acc[stat.name] = 0;
+            return acc;
+          }, {}),
+        );
+      }
     } catch (error) {
       console.error("Error fetching stats:", error);
     }
   }
 
-  async function fetchKnowledges() {
+  async function fetchKnowledges(initializeWizardValues: boolean) {
     try {
       const knowledgesData = await ApiL7RProvider.getKnowledges();
       setKnowledges(knowledgesData);
-      setWizardKnowledges(
-        knowledgesData.reduce((acc: Record<string, number>, knowledge: any) => {
-          acc[knowledge.name] = 0;
-          return acc;
-        }, {}),
-      );
+      if (initializeWizardValues) {
+        setWizardKnowledges(
+          knowledgesData.reduce((acc: Record<string, number>, knowledge: any) => {
+            acc[knowledge.name] = 0;
+            return acc;
+          }, {}),
+        );
+      }
     } catch (error) {
       console.error("Error fetching knowledges:", error);
     }
@@ -204,19 +232,70 @@ export function WizardFormBase({
   }
 
   function handleSubmit() {
+    if (isUpdating) {
+      const updatedPayload: Partial<{
+        stats: { level: number; name: string }[];
+        category: string;
+        knowledges: { level: number; name: string }[];
+        spells: { difficulty: Difficulty; name: string }[];
+      }> = {};
+
+      if (initialCategoryRef.current !== undefined && category !== initialCategoryRef.current) {
+        updatedPayload.category = category;
+      }
+
+      const changedStats = (Object.entries(wizardStats) as [string, number][])
+        .filter(([statName, level]) => initialStatsRef.current[statName] !== level)
+        .map(([statName, level]) => ({ name: statName, level }));
+      if (changedStats.length > 0) {
+        updatedPayload.stats = changedStats;
+      }
+
+      const changedKnowledges = (Object.entries(wizardKnowledges) as [string, number][])
+        .filter(([knowledgeName, level]) => initialKnowledgesRef.current[knowledgeName] !== level)
+        .map(([knowledgeName, level]) => ({ name: knowledgeName, level }));
+      if (changedKnowledges.length > 0) {
+        updatedPayload.knowledges = changedKnowledges;
+      }
+
+      const currentSpellSignature = selectedWizardSpells.map(
+        (wizardSpell: WizardSpell) => `${wizardSpell.spell.name}:${wizardSpell.difficulty}`,
+      );
+      const hasSpellChanges =
+        currentSpellSignature.length !== initialSpellsRef.current.length ||
+        currentSpellSignature.some(
+          (entry: string, index: number) => entry !== initialSpellsRef.current[index],
+        );
+
+      if (hasSpellChanges) {
+        updatedPayload.spells = selectedWizardSpells.map((wizardSpell: WizardSpell) => ({
+          name: wizardSpell.spell.name,
+          difficulty: wizardSpell.difficulty,
+        }));
+      }
+
+      if (Object.keys(updatedPayload).length === 0) {
+        alert("Aucune modification détectée");
+        return;
+      }
+
+      onSubmit(updatedPayload);
+      return;
+    }
+
     const wizardData = {
       name,
       category,
       houseName,
-      stats: Object.entries(wizardStats).map(([name, level]) => ({
+      stats: (Object.entries(wizardStats) as [string, number][]).map(([name, level]) => ({
         name,
         level,
       })),
-      knowledges: Object.entries(wizardKnowledges).map(([name, level]) => ({
+      knowledges: (Object.entries(wizardKnowledges) as [string, number][]).map(([name, level]) => ({
         name,
         level,
       })),
-      spells: selectedWizardSpells.map((wizardSpell) => ({
+      spells: selectedWizardSpells.map((wizardSpell: WizardSpell) => ({
         name: wizardSpell.spell.name,
         difficulty: wizardSpell.difficulty,
       })),
@@ -224,13 +303,13 @@ export function WizardFormBase({
     onSubmit(wizardData);
   }
 
-  const statsSum = Object.values(wizardStats).reduce(
-    (acc, val) => acc + val,
+  const statsSum = (Object.values(wizardStats) as number[]).reduce(
+    (acc: number, val: number) => acc + val,
     0,
   );
   const maxStats = getMaxStatsForCategory(category);
-  const knowledgesSum = Object.values(wizardKnowledges).reduce(
-    (acc, val) => acc + val,
+  const knowledgesSum = (Object.values(wizardKnowledges) as number[]).reduce(
+    (acc: number, val: number) => acc + val,
     0,
   );
   const maxKnowledges = getMaxKnowledgesForCategory(category);
@@ -302,10 +381,12 @@ export function WizardFormBase({
                 type="number"
                 value={wizardStats[stat.name] || 0}
                 onChange={(e) =>
-                  setWizardStats({
-                    ...wizardStats,
-                    [stat.name]: parseInt(e.target.value, 10),
-                  })
+                  setWizardStats((prev) => ({
+                    ...prev,
+                    [stat.name]: Number.isNaN(Number.parseInt(e.target.value, 10))
+                      ? 0
+                      : Number.parseInt(e.target.value, 10),
+                  }))
                 }
               />
             </FormRow>
@@ -336,10 +417,12 @@ export function WizardFormBase({
                 type="number"
                 value={wizardKnowledges[knowledge.name] || 0}
                 onChange={(e) =>
-                  setWizardKnowledges({
-                    ...wizardKnowledges,
-                    [knowledge.name]: parseInt(e.target.value, 10),
-                  })
+                  setWizardKnowledges((prev) => ({
+                    ...prev,
+                    [knowledge.name]: Number.isNaN(Number.parseInt(e.target.value, 10))
+                      ? 0
+                      : Number.parseInt(e.target.value, 10),
+                  }))
                 }
               />
             </FormRow>

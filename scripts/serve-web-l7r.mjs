@@ -1,10 +1,12 @@
 import { createReadStream, existsSync, statSync } from 'node:fs'
 import { extname, join, normalize } from 'node:path'
-import { createServer } from 'node:http'
+import { createServer, request } from 'node:http'
 
 const host = process.env['HOST'] || '127.0.0.1'
 const port = Number(process.env['PORT'] || 3000)
 const rootDir = normalize(process.env['WEB_ROOT'] || 'dist/apps/web-l7r')
+const apiMainOrigin = process.env['API_MAIN_ORIGIN'] || 'http://127.0.0.1:8081'
+const apiYearDiaryOrigin = process.env['API_YEARDIARY_ORIGIN'] || 'http://127.0.0.1:8080'
 
 const contentTypes = {
   '.css': 'text/css; charset=utf-8',
@@ -18,6 +20,47 @@ const contentTypes = {
   '.txt': 'text/plain; charset=utf-8',
   '.woff': 'font/woff',
   '.woff2': 'font/woff2'
+}
+
+function isYearDiaryPath(pathname) {
+  return pathname.startsWith('/api/v1/diaries')
+}
+
+function shouldProxyApi(pathname) {
+  return pathname.startsWith('/api/')
+}
+
+function proxyRequest(req, res, targetOrigin) {
+  const targetUrl = new URL(req.url || '/', targetOrigin)
+
+  const proxy = request(
+    targetUrl,
+    {
+      method: req.method,
+      headers: {
+        ...req.headers,
+        host: targetUrl.host,
+        connection: 'close'
+      }
+    },
+    (proxyRes) => {
+      res.statusCode = proxyRes.statusCode || 502
+      Object.entries(proxyRes.headers).forEach(([key, value]) => {
+        if (value !== undefined) {
+          res.setHeader(key, value)
+        }
+      })
+      proxyRes.pipe(res)
+    }
+  )
+
+  proxy.on('error', () => {
+    res.statusCode = 502
+    res.setHeader('Content-Type', 'application/json; charset=utf-8')
+    res.end(JSON.stringify({ message: 'Bad Gateway' }))
+  })
+
+  req.pipe(proxy)
 }
 
 function resolvePath(urlPath) {
@@ -36,6 +79,14 @@ function resolvePath(urlPath) {
 }
 
 const server = createServer((req, res) => {
+  const pathname = (req.url || '/').split('?')[0]
+
+  if (shouldProxyApi(pathname)) {
+    const targetOrigin = isYearDiaryPath(pathname) ? apiYearDiaryOrigin : apiMainOrigin
+    proxyRequest(req, res, targetOrigin)
+    return
+  }
+
   const filePath = resolvePath(req.url || '/')
   const ext = extname(filePath)
   const contentType = contentTypes[ext] || 'application/octet-stream'

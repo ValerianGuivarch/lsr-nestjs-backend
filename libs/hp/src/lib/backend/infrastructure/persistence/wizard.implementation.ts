@@ -151,10 +151,21 @@ export class WizardImplementation implements IWizardProvider {
 
   async update(p: { wizardName: string; wizard: Partial<WizardToUpdate> }): Promise<Wizard> {
     const toUpdate: Partial<DBWizardToUpdate> = {
-      updatedDate: new Date(),
-      category: p.wizard.category,
-      text: p.wizard.text
+      updatedDate: new Date()
     }
+
+    if (p.wizard.category !== undefined) {
+      toUpdate.category = p.wizard.category
+    }
+
+    if (p.wizard.text !== undefined) {
+      toUpdate.text = p.wizard.text
+    }
+
+    if (p.wizard.pv !== undefined) {
+      toUpdate.pv = p.wizard.pv
+    }
+
     await this.wizardRepository.update(
       {
         name: p.wizardName
@@ -164,35 +175,77 @@ export class WizardImplementation implements IWizardProvider {
     const savedWizard = await this.findOneByName(p.wizardName)
 
     for (const stat of p.wizard.statsToUpdate ?? []) {
-      const statToCreate: DBWizardStatToCreate = {
-        level: stat.level,
-        wizardName: savedWizard.name,
-        statName: stat.statName,
-        xp: 0
+      const updateResult = await this.wizardStatRepository.update(
+        {
+          wizardName: savedWizard.name,
+          statName: stat.statName
+        },
+        {
+          level: stat.level,
+          updatedDate: new Date()
+        }
+      )
+
+      if (!updateResult.affected) {
+        const statToCreate: DBWizardStatToCreate = {
+          level: stat.level,
+          wizardName: savedWizard.name,
+          statName: stat.statName,
+          xp: 0
+        }
+        const createdStatWizard = this.wizardStatRepository.create(statToCreate)
+        await this.wizardStatRepository.save(createdStatWizard)
       }
-      const createdStatWizard = this.wizardStatRepository.create(statToCreate)
-      await this.wizardStatRepository.save(createdStatWizard)
     }
+
     for (const knowledge of p.wizard.knowledgesToUpdate ?? []) {
-      const knowledgeToCreate: DBWizardKnowledgeToCreate = {
-        level: knowledge.level,
-        wizardName: savedWizard.name,
-        knowledgeName: knowledge.knowledgeName,
-        xp: 0
+      const updateResult = await this.wizardKnowledgeRepository.update(
+        {
+          wizardName: savedWizard.name,
+          knowledgeName: knowledge.knowledgeName
+        },
+        {
+          level: knowledge.level,
+          updatedDate: new Date()
+        }
+      )
+
+      if (!updateResult.affected) {
+        const knowledgeToCreate: DBWizardKnowledgeToCreate = {
+          level: knowledge.level,
+          wizardName: savedWizard.name,
+          knowledgeName: knowledge.knowledgeName,
+          xp: 0
+        }
+        const createdKnowledgeWizard = this.wizardKnowledgeRepository.create(knowledgeToCreate)
+        await this.wizardKnowledgeRepository.save(createdKnowledgeWizard)
       }
-      const createdKnowledgeWizard = this.wizardKnowledgeRepository.create(knowledgeToCreate)
-      await this.wizardKnowledgeRepository.save(createdKnowledgeWizard)
     }
+
     for (const spell of p.wizard.spellsToUpdate ?? []) {
-      const spellToCreate: DBWizardSpellToCreate = {
-        difficulty: spell.difficulty,
-        wizardName: savedWizard.name,
-        spellName: spell.spell.name,
-        xp: 0
+      const updateResult = await this.wizardSpellRepository.update(
+        {
+          wizardName: savedWizard.name,
+          spellName: spell.spell.name
+        },
+        {
+          difficulty: spell.difficulty,
+          updatedDate: new Date()
+        }
+      )
+
+      if (!updateResult.affected) {
+        const spellToCreate: DBWizardSpellToCreate = {
+          difficulty: spell.difficulty,
+          wizardName: savedWizard.name,
+          spellName: spell.spell.name,
+          xp: 0
+        }
+        const createdSpellWizard = this.wizardSpellRepository.create(spellToCreate)
+        await this.wizardSpellRepository.save(createdSpellWizard)
       }
-      const createdSpellWizard = this.wizardSpellRepository.create(spellToCreate)
-      await this.wizardSpellRepository.save(createdSpellWizard)
     }
+
     return await this.findOneByName(p.wizardName)
   }
 }

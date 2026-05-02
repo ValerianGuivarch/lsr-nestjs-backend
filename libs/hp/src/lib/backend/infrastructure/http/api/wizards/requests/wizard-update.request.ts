@@ -3,7 +3,7 @@ import { CreateWizardSpellRequest } from './wizard-spell-create.request'
 import { CreateWizardStatRequest } from './wizard-stat-create.request'
 import { ApiPropertyOptional } from '@nestjs/swagger'
 import { Type } from 'class-transformer'
-import { IsOptional, ValidateNested } from 'class-validator'
+import { IsNumber, IsOptional, ValidateNested } from 'class-validator'
 
 export class UpdateWizardRequest {
   @ApiPropertyOptional({ description: 'The wizard category', type: String })
@@ -34,5 +34,6 @@ export class UpdateWizardRequest {
 
   @ApiPropertyOptional({ description: 'The wizard pv', type: Number })
   @IsOptional()
-  pv: number
+  @IsNumber()
+  pv?: number
 }
