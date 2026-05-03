@@ -106,10 +106,13 @@ const Diary: React.FC = () => {
   const handleSaveClick = async (year: number) => {
     const existingEntry = entries[year];
     if (existingEntry) {
+      if (!existingEntry.id) {
+        console.error("Cannot update entry: missing id", existingEntry);
+        return;
+      }
       // Update existing entry
       try {
         await axios.put(`${API_URL}/${existingEntry.id}`, {
-          ...existingEntry,
           text: newText,
         });
         fetchEntries();
