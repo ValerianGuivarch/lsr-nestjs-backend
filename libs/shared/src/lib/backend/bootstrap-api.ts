@@ -111,7 +111,13 @@ export async function bootstrapApi(p: BootstrapApiOptions): Promise<void> {
   })
 
   app.enableCors({
-    origin: ['https://photos.mariage-mickael-valerian.fr', 'https://l7r.fr', 'http://localhost:3000'],
+    origin: [
+      'https://photos.mariage-mickael-valerian.fr',
+      'https://l7r.fr',
+      'http://localhost:3000',
+      'http://localhost:4200',
+      'http://localhost:4202'
+    ],
     credentials: false
   })
 
