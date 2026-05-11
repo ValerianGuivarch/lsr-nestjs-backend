@@ -1,5 +1,7 @@
-import { useEffect, useState } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useEffect, useMemo, useState } from 'react'
+import { useNavigate, useParams } from 'react-router-dom'
+import styled from 'styled-components'
+import { MdEdit } from 'react-icons/md'
 import { JdrApiClient, JdrDto, DiceRollDto } from '../data/JdrApiClient'
 import { DiceRollFeed } from '../components/DiceRollFeed'
 
@@ -10,7 +12,8 @@ export default function CharacterPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [rolling, setRolling] = useState<string | null>(null)
-  const [lastRoll, setLastRoll] = useState<DiceRollDto | null>(null)
+  const [, setLastRoll] = useState<DiceRollDto | null>(null)
+  const [portraitIndex, setPortraitIndex] = useState(0)
 
   useEffect(() => {
     if (!jdrSlug) return
@@ -31,6 +34,28 @@ export default function CharacterPage() {
 
   const character = jdr?.characters.find(c => c.slug === characterSlug)
 
+  const portraitName = character?.name ?? ''
+  const portraitSlug = character?.slug ?? ''
+
+  const portraitCandidates = useMemo(() => {
+    if (!portraitName && !portraitSlug) {
+      return ['/l7r/placeholder.png']
+    }
+
+    const candidates = [
+      `/l7r/${portraitName}.png`,
+      `/l7r/${portraitSlug}.png`,
+      `/l7r/${portraitName.toLowerCase()}.png`,
+      `/l7r/${portraitSlug.toLowerCase()}.png`
+    ].filter(Boolean)
+
+    return Array.from(new Set(candidates))
+  }, [portraitName, portraitSlug])
+
+  useEffect(() => {
+    setPortraitIndex(0)
+  }, [portraitName, portraitSlug])
+
   const handleRollDice = async (statSlug: string) => {
     if (!jdrSlug || !characterSlug) return
     try {
@@ -44,9 +69,9 @@ export default function CharacterPage() {
     }
   }
 
-  if (loading) return <div style={styles.container}>Chargement...</div>
-  if (error) return <div style={styles.container}>Erreur: {error}</div>
-  if (!jdr || !character) return <div style={styles.container}>Personnage non trouvé</div>
+  if (loading) return <StatusShell>Chargement du personnage...</StatusShell>
+  if (error) return <StatusShell>Erreur: {error}</StatusShell>
+  if (!jdr || !character) return <StatusShell>Personnage non trouvé</StatusShell>
 
   const selectedClass = character.classSlug ? jdr.classes.find(c => c.slug === character.classSlug) : undefined
   const selectedGroup = character.groupSlug ? jdr.groups.find(g => g.slug === character.groupSlug) : undefined
@@ -63,226 +88,352 @@ export default function CharacterPage() {
     .filter(Boolean)
 
   return (
-    <div style={styles.container}>
-      <div style={styles.header}>
-        <div>
-          <h1>{character.name}</h1>
-          {selectedClass && <p style={styles.level}>Classe: {selectedClass.name} (Lvl {selectedClass.level})</p>}
-          {selectedGroup && <p style={styles.level}>Groupe: {selectedGroup.name}</p>}
-        </div>
-        <div style={{ display: 'flex', gap: '1rem' }}>
-          <button onClick={() => navigate(`/${jdrSlug}/${characterSlug}/edit`)}>Éditer</button>
-          <button onClick={() => navigate(`/${jdrSlug}/MJ`)}>← Retour</button>
-        </div>
-      </div>
+    <PageShell>
+      <CompactHeader>
+        <HeroContent>
+          <PortraitFrame>
+            <PortraitImage
+              src={portraitCandidates[portraitIndex]}
+              alt={character.name}
+              onError={() => {
+                setPortraitIndex((prev) => (prev < portraitCandidates.length - 1 ? prev + 1 : prev))
+              }}
+            />
+          </PortraitFrame>
 
-      <div style={styles.content}>
-        <div style={styles.main}>
-          {character.text && (
-            <section style={styles.section}>
-              <h2>Description</h2>
-              <p>{character.text}</p>
-            </section>
-          )}
+          <HeroInfo>
+            <Overline>{jdr.name} · Fiche de personnage</Overline>
+            <CharacterTitle>{character.name}</CharacterTitle>
+            <TagRow>
+              {selectedClass && <Tag>Classe: {selectedClass.name} (Lvl {selectedClass.level})</Tag>}
+              {selectedGroup && <Tag>Groupe: {selectedGroup.name}</Tag>}
+              {!selectedClass && <Tag>Classe: Aucune</Tag>}
+            </TagRow>
+          </HeroInfo>
 
-          <section style={styles.section}>
-            <h2>Stats</h2>
-            <div style={styles.statsGrid}>
-              {character.stats.map(stat => (
-                <div key={stat.statSlug} style={styles.statCard}>
-                  <div style={styles.statName}>{stat.statSlug}</div>
-                  <div style={styles.statValues}>
-                    <div>
-                      <small>Base</small>
-                      <div style={styles.value}>{stat.value}</div>
-                    </div>
-                    {stat.value !== stat.finalValue && (
-                      <div>
-                        <small>Final</small>
-                        <div style={styles.finalValue}>{stat.finalValue}</div>
-                      </div>
-                    )}
-                  </div>
-                  <button
-                    onClick={() => handleRollDice(stat.statSlug)}
-                    disabled={rolling === stat.statSlug}
-                    style={styles.rollBtn}
-                  >
-                    {rolling === stat.statSlug ? '...' : 'Lancer'}
-                  </button>
-                </div>
-              ))}
-            </div>
-          </section>
+          <EditIconButton
+            onClick={() => navigate(`/jdr/${jdrSlug}/characters/${characterSlug}/edit`)}
+            aria-label="Éditer le personnage"
+            title="Éditer"
+          >
+            <MdEdit size={20} />
+          </EditIconButton>
+        </HeroContent>
+      </CompactHeader>
 
+      <ContentGrid>
+        <MainColumn>
           {traitNames.length > 0 && (
-            <section style={styles.section}>
-              <h2>Traits</h2>
-              <ul>
+            <SectionCard>
+              <SectionTitle>Traits actifs</SectionTitle>
+              <PillList>
                 {traitNames.map((name, i) => (
-                  <li key={i}>{name}</li>
+                  <Pill key={i}>{name}</Pill>
                 ))}
-              </ul>
-            </section>
+              </PillList>
+            </SectionCard>
           )}
+
+          {character.text && (
+            <SectionCard>
+              <SectionTitle>Description</SectionTitle>
+              <CharacterDescription>{character.text}</CharacterDescription>
+            </SectionCard>
+          )}
+
+          <SectionCard>
+            <SectionTitle>Stats</SectionTitle>
+            <StatsGrid>
+              {character.stats.map(stat => (
+                <StatButton
+                  key={stat.statSlug}
+                  onClick={() => handleRollDice(stat.statSlug)}
+                  disabled={rolling === stat.statSlug}
+                  title={`Lancer ${stat.statSlug}`}
+                >
+                  <span>{stat.statSlug} : {stat.finalValue}</span>
+                  {stat.finalValue !== stat.value && <StatBaseHint>(base {stat.value})</StatBaseHint>}
+                </StatButton>
+              ))}
+            </StatsGrid>
+          </SectionCard>
 
           {itemNames.length > 0 && (
-            <section style={styles.section}>
-              <h2>Objets</h2>
-              <ul>
+            <SectionCard>
+              <SectionTitle>Objets</SectionTitle>
+              <PillList>
                 {itemNames.map((name, i) => (
-                  <li key={i}>{name}</li>
+                  <Pill key={i}>{name}</Pill>
                 ))}
-              </ul>
-            </section>
+              </PillList>
+            </SectionCard>
           )}
 
           {character.resources.length > 0 && (
-            <section style={styles.section}>
-              <h2>Ressources</h2>
-              <div style={styles.resourcesList}>
+            <SectionCard>
+              <SectionTitle>Ressources</SectionTitle>
+              <ResourcesGrid>
                 {character.resources.map(res => {
                   const resource = jdr.resources.find(r => r.slug === res.resourceSlug)
                   return (
-                    <div key={res.resourceSlug} style={styles.resourceItem}>
-                      <span>{resource?.name || res.resourceSlug}</span>
-                      <span style={styles.value}>{res.value}</span>
-                    </div>
+                    <ResourceTile key={res.resourceSlug}>
+                      <ResourceName>{resource?.name || res.resourceSlug}</ResourceName>
+                      <ResourceValue>{res.value}</ResourceValue>
+                    </ResourceTile>
                   )
                 })}
-              </div>
-            </section>
+              </ResourcesGrid>
+            </SectionCard>
           )}
+        </MainColumn>
 
-          {lastRoll && lastRoll.characterSlug === characterSlug && (
-            <section style={styles.section}>
-              <h2>Dernier lancer</h2>
-              <div style={styles.lastRoll}>
-                <p>{lastRoll.statName} ({lastRoll.results.length}d6)</p>
-                <div style={styles.dices}>
-                  {lastRoll.results.map((r, i) => (
-                    <span key={i} style={styles.dice}>{r}</span>
-                  ))}
-                </div>
-              </div>
-            </section>
-          )}
-        </div>
-
-        <aside style={styles.sidebar}>
-          <DiceRollFeed jdrSlug={jdrSlug!} characterSlug={characterSlug} maxItems={15} />
-        </aside>
-      </div>
-    </div>
+        <SideColumn>
+          <SectionCard>
+            <SectionTitle>Flux des lancers</SectionTitle>
+            <DiceRollFeed jdrSlug={jdrSlug!} characterSlug={characterSlug} maxItems={15} jdrData={jdr} />
+          </SectionCard>
+        </SideColumn>
+      </ContentGrid>
+    </PageShell>
   )
 }
 
-const styles = {
-  container: {
-    padding: '1.5rem',
-    maxWidth: '1200px',
-    margin: '0 auto'
-  },
-  header: {
-    display: 'flex' as const,
-    justifyContent: 'space-between' as const,
-    alignItems: 'flex-start' as const,
-    marginBottom: '2rem'
-  },
-  level: {
-    margin: '0.25rem 0 0 0',
-    color: 'var(--color-secondary)',
-    fontSize: '0.875rem'
-  },
-  content: {
-    display: 'grid' as const,
-    gridTemplateColumns: '1fr 300px',
-    gap: '2rem'
-  },
-  main: {
-    minWidth: 0
-  },
-  sidebar: {
-    height: 'fit-content',
-    position: 'sticky' as const,
-    top: '1rem'
-  },
-  section: {
-    marginBottom: '2rem',
-    padding: '1.5rem',
-    background: 'white',
-    borderRadius: '0.5rem',
-    border: '1px solid var(--color-border)'
-  },
-  statsGrid: {
-    display: 'grid' as const,
-    gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))',
-    gap: '1rem'
-  },
-  statCard: {
-    padding: '1rem',
-    background: 'var(--color-bg)',
-    borderRadius: '0.375rem',
-    textAlign: 'center' as const
-  },
-  statName: {
-    fontWeight: 'bold',
-    marginBottom: '0.5rem',
-    fontSize: '0.875rem',
-    color: 'var(--color-secondary)'
-  },
-  statValues: {
-    display: 'flex' as const,
-    justifyContent: 'space-around' as const,
-    marginBottom: '0.75rem'
-  },
-  value: {
-    fontSize: '1.5rem',
-    fontWeight: 'bold',
-    color: 'var(--color-primary)'
-  },
-  finalValue: {
-    fontSize: '1.5rem',
-    fontWeight: 'bold',
-    color: 'var(--color-danger)'
-  },
-  rollBtn: {
-    width: '100%',
-    padding: '0.5rem'
-  },
-  resourcesList: {
-    display: 'flex' as const,
-    flexDirection: 'column' as const,
-    gap: '0.5rem'
-  },
-  resourceItem: {
-    display: 'flex' as const,
-    justifyContent: 'space-between' as const,
-    padding: '0.5rem',
-    background: 'var(--color-bg)',
-    borderRadius: '0.375rem'
-  },
-  lastRoll: {
-    padding: '1rem',
-    background: 'var(--color-bg)',
-    borderRadius: '0.375rem'
-  },
-  dices: {
-    display: 'flex' as const,
-    gap: '0.5rem',
-    marginTop: '0.75rem',
-    flexWrap: 'wrap' as const
-  },
-  dice: {
-    display: 'inline-flex' as any,
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: '2rem',
-    height: '2rem',
-    background: 'white',
-    border: '1px solid var(--color-border)',
-    borderRadius: '0.25rem',
-    fontWeight: 'bold',
-    color: 'var(--color-primary)'
+const StatusShell = styled.div`
+  min-height: 50vh;
+  display: grid;
+  place-items: center;
+  color: #dbe7ff;
+  font-size: 1.05rem;
+`
+
+const PageShell = styled.div`
+  width: 100%;
+  min-height: 100vh;
+  padding: 1.5rem;
+  background:
+    radial-gradient(circle at 15% 20%, rgba(100, 160, 255, 0.2), transparent 28%),
+    radial-gradient(circle at 80% 0%, rgba(240, 110, 60, 0.16), transparent 34%),
+    linear-gradient(180deg, #0f1722 0%, #141d2b 45%, #0d1320 100%);
+  color: #ecf3ff;
+`
+
+const CompactHeader = styled.section`
+  position: relative;
+  width: min(1500px, 100%);
+  margin: 0 auto 0.85rem;
+  border: 1px solid rgba(130, 170, 255, 0.28);
+  border-radius: 14px;
+  background: linear-gradient(135deg, rgba(14, 25, 40, 0.9) 0%, rgba(20, 37, 58, 0.88) 100%);
+  overflow: hidden;
+`
+
+const HeroContent = styled.div`
+  display: grid;
+  grid-template-columns: 88px 1fr auto;
+  gap: 0.85rem;
+  align-items: center;
+  padding: 0.65rem 0.8rem;
+
+  @media (max-width: 900px) {
+    grid-template-columns: 72px 1fr auto;
   }
-}
+`
+
+const PortraitFrame = styled.div`
+  width: 88px;
+  height: 110px;
+  border-radius: 10px;
+  border: 1px solid rgba(166, 194, 255, 0.44);
+  background: linear-gradient(180deg, rgba(27, 41, 62, 0.9), rgba(12, 19, 31, 0.95));
+  overflow: hidden;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+
+  @media (max-width: 900px) {
+    width: 72px;
+    height: 96px;
+  }
+`
+
+const PortraitImage = styled.img`
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+`
+
+const HeroInfo = styled.div`
+  min-width: 0;
+`
+
+const Overline = styled.div`
+  text-transform: uppercase;
+  letter-spacing: 0.11em;
+  font-size: 0.68rem;
+  color: #9ab5df;
+  margin-bottom: 0.25rem;
+`
+
+const CharacterTitle = styled.h1`
+  margin: 0;
+  font-size: clamp(1.2rem, 1.8vw, 1.65rem);
+  line-height: 1.1;
+  color: #f4f8ff;
+  text-shadow: 0 0 12px rgba(149, 201, 255, 0.12);
+`
+
+const TagRow = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.42rem;
+  margin-top: 0.38rem;
+`
+
+const Tag = styled.span`
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid rgba(146, 178, 245, 0.38);
+  background: rgba(14, 27, 46, 0.64);
+  border-radius: 999px;
+  padding: 0.16rem 0.54rem;
+  color: #c6ddff;
+  font-size: 0.74rem;
+`
+
+const CharacterDescription = styled.p`
+  margin: 0;
+  max-width: 90ch;
+  color: #d6e4fb;
+  line-height: 1.6;
+`
+
+const EditIconButton = styled.button`
+  width: 2.2rem;
+  height: 2.2rem;
+  border-radius: 999px;
+  border: 1px solid rgba(146, 183, 255, 0.48);
+  background: linear-gradient(180deg, rgba(54, 91, 142, 0.95), rgba(32, 61, 101, 0.95));
+  color: #eff5ff;
+  display: grid;
+  place-items: center;
+
+  &:hover {
+    filter: brightness(1.08);
+  }
+`
+
+const ContentGrid = styled.div`
+  width: min(1500px, 100%);
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(320px, 0.7fr);
+  gap: 1.1rem;
+
+  @media (max-width: 1150px) {
+    grid-template-columns: 1fr;
+  }
+`
+
+const MainColumn = styled.div`
+  display: grid;
+  gap: 1rem;
+`
+
+const SideColumn = styled.aside`
+  display: grid;
+  gap: 1rem;
+  align-content: start;
+`
+
+const SectionCard = styled.section`
+  border: 1px solid rgba(130, 168, 240, 0.25);
+  border-radius: 16px;
+  background: linear-gradient(180deg, rgba(16, 30, 49, 0.82), rgba(11, 20, 34, 0.88));
+  padding: 1rem;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.26);
+`
+
+const SectionTitle = styled.h2`
+  margin: 0 0 0.85rem;
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  color: #f5f8ff;
+`
+
+const StatsGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 0.8rem;
+`
+
+const StatButton = styled.button`
+  text-align: left;
+  border: 1px solid rgba(124, 170, 246, 0.35);
+  border-radius: 12px;
+  background: linear-gradient(165deg, rgba(21, 37, 60, 0.85), rgba(11, 20, 34, 0.84));
+  padding: 0.72rem 0.78rem;
+  color: #eef5ff;
+  font-weight: 700;
+  display: flex;
+  flex-direction: column;
+  gap: 0.18rem;
+
+  &:hover:enabled {
+    filter: brightness(1.08);
+    border-color: rgba(170, 205, 255, 0.6);
+  }
+
+  &:disabled {
+    opacity: 0.65;
+    cursor: wait;
+  }
+`
+
+const StatBaseHint = styled.small`
+  color: #99b4db;
+  font-weight: 500;
+`
+
+const PillList = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+`
+
+const Pill = styled.span`
+  border: 1px solid rgba(155, 193, 255, 0.3);
+  background: rgba(16, 32, 54, 0.75);
+  border-radius: 999px;
+  padding: 0.35rem 0.68rem;
+  color: #d8e8ff;
+  font-size: 0.87rem;
+`
+
+const ResourcesGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 0.6rem;
+`
+
+const ResourceTile = styled.div`
+  border: 1px solid rgba(129, 163, 229, 0.23);
+  border-radius: 10px;
+  background: rgba(14, 29, 49, 0.7);
+  padding: 0.58rem 0.7rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.7rem;
+`
+
+const ResourceName = styled.span`
+  color: #d7e7ff;
+  font-size: 0.9rem;
+`
+
+const ResourceValue = styled.span`
+  color: #ffe09f;
+  font-size: 1.2rem;
+  font-weight: 800;
+`
+

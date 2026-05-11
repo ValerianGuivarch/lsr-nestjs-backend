@@ -9,6 +9,7 @@ import { GhostModule } from './ghost.module'
       isGlobal: true
     }),
     TypeOrmModule.forRoot({
+      name: 'ghost',
       type: 'sqlite',
       database: 'ghost.sqlite',
       entities: [__dirname + '/**/*.entity.{ts,js}'],

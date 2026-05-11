@@ -14,8 +14,8 @@ export default function FeedPage() {
       <div style={styles.header}>
         <h1>Feed des lancers</h1>
         <div style={styles.actions}>
-          <button onClick={() => navigate(`/${jdrSlug}/MJ`)}>Retour MJ</button>
-          <button onClick={() => navigate('/admin')}>Admin</button>
+          <button onClick={() => navigate(`/jdr/${jdrSlug}/mj`)}>Retour MJ</button>
+          <button onClick={() => navigate('/jdr/admin')}>Admin</button>
         </div>
       </div>
 

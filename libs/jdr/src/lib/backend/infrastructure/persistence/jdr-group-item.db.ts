@@ -5,10 +5,10 @@ import { DBJdrItem } from './jdr-item.db'
 
 @Entity({ name: 'jdr_group_item' })
 export class DBJdrGroupItem {
-  @CreateDateColumn({ default: () => 'NOW()' })
+  @CreateDateColumn({ default: () => 'CURRENT_TIMESTAMP' })
   createdDate: Date
 
-  @UpdateDateColumn({ default: () => 'NOW()' })
+  @UpdateDateColumn({ default: () => 'CURRENT_TIMESTAMP' })
   updatedDate: Date
 
   @PrimaryColumn({ type: 'varchar' })

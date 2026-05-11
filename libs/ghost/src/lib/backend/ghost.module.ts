@@ -6,7 +6,7 @@ import { GhostController } from './ghost.controller'
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([DeviceEntity])
+    TypeOrmModule.forFeature([DeviceEntity], 'ghost')
   ],
   controllers: [GhostController],
   providers: [GhostService],

@@ -20,7 +20,7 @@ export class GhostService {
   private spiritMjToPlayerBuffer = new Map<string, SpiritAudioMessage>()
 
   constructor(
-    @InjectRepository(DeviceEntity)
+    @InjectRepository(DeviceEntity, 'ghost')
     private readonly repo: Repository<DeviceEntity>
   ) {}
 

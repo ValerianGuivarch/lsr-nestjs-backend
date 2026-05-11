@@ -8,10 +8,10 @@ import { DBJdrCharacterResource } from './jdr-character-resource.db'
 
 @Entity({ name: 'jdr_character' })
 export class DBJdrCharacter {
-  @CreateDateColumn({ default: () => 'NOW()' })
+  @CreateDateColumn({ default: () => 'CURRENT_TIMESTAMP' })
   createdDate: Date
 
-  @UpdateDateColumn({ default: () => 'NOW()' })
+  @UpdateDateColumn({ default: () => 'CURRENT_TIMESTAMP' })
   updatedDate: Date
 
   @PrimaryColumn({ type: 'varchar' })

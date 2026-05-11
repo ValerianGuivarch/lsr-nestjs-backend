@@ -2,10 +2,10 @@ import { Module } from '@nestjs/common'
 import { JdrService } from './application/jdr.service'
 import { JdrImplementation } from './infrastructure/jdr.implementation'
 import { JdrController } from './infrastructure/http/jdr.controller'
-import { JdrPostgresModule } from './infrastructure/persistence/database/jdr-postgres.module'
+import { JdrSqliteModule } from './infrastructure/persistence/database/jdr-sqlite.module'
 
 @Module({
-  imports: [JdrPostgresModule],
+  imports: [JdrSqliteModule],
   controllers: [JdrController],
   providers: [
     JdrService,

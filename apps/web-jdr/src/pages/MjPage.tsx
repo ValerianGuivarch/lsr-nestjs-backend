@@ -37,7 +37,7 @@ export default function MjPage() {
       <div style={styles.header}>
         <h1>{jdr.name}</h1>
         <div style={styles.actions}>
-          <button onClick={() => navigate(`/${jdrSlug}/MJ/config`)}>Configurer</button>
+          <button onClick={() => navigate(`/jdr/${jdrSlug}/mj/config`)}>Configurer</button>
         </div>
       </div>
 
@@ -53,7 +53,7 @@ export default function MjPage() {
                   <CharacterCard
                     key={char.slug}
                     character={char}
-                    onClick={() => navigate(`/${jdrSlug}/${char.slug}`)}
+                    onClick={() => navigate(`/jdr/${jdrSlug}/characters/${char.slug}`)}
                   />
                 ))}
               </div>

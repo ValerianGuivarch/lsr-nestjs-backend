@@ -4,10 +4,10 @@ import { DBJdr } from './jdr.db'
 
 @Entity({ name: 'jdr_item' })
 export class DBJdrItem {
-  @CreateDateColumn({ default: () => 'NOW()' })
+  @CreateDateColumn({ default: () => 'CURRENT_TIMESTAMP' })
   createdDate: Date
 
-  @UpdateDateColumn({ default: () => 'NOW()' })
+  @UpdateDateColumn({ default: () => 'CURRENT_TIMESTAMP' })
   updatedDate: Date
 
   @PrimaryColumn({ type: 'varchar' })

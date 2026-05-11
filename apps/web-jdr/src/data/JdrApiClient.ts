@@ -1,4 +1,4 @@
-const API_BASE = 'http://localhost:3333/api/v1/jdr'
+const API_BASE = '/api/jdr'
 
 export interface DiceRollDto {
   id: string

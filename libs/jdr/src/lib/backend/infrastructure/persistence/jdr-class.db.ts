@@ -5,10 +5,10 @@ import { DBJdrClassResource } from './jdr-class-resource.db'
 
 @Entity({ name: 'jdr_class' })
 export class DBJdrClass {
-  @CreateDateColumn({ default: () => 'NOW()' })
+  @CreateDateColumn({ default: () => 'CURRENT_TIMESTAMP' })
   createdDate: Date
 
-  @UpdateDateColumn({ default: () => 'NOW()' })
+  @UpdateDateColumn({ default: () => 'CURRENT_TIMESTAMP' })
   updatedDate: Date
 
   @PrimaryColumn({ type: 'varchar' })

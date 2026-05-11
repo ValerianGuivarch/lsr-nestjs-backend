@@ -87,7 +87,7 @@ export default function AdminPage() {
       setError(null)
       const slug = await seedVikingTest()
       await loadJdrs()
-      navigate(`/${slug}/MJ`)
+      navigate(`/jdr/${slug}/mj`)
     } catch (err) {
       setError((err as Error).message)
     } finally {
@@ -105,7 +105,7 @@ export default function AdminPage() {
       setName('')
       setText('')
       await loadJdrs()
-      navigate(`/${created.slug}/MJ`)
+      navigate(`/jdr/${created.slug}/mj`)
     } catch (err) {
       setError((err as Error).message)
     } finally {
@@ -164,7 +164,7 @@ export default function AdminPage() {
                   <div style={styles.slug}>{jdr.slug}</div>
                 </div>
                 <div style={styles.actions}>
-                  <button onClick={() => navigate(`/${jdr.slug}/MJ`)}>Ouvrir MJ</button>
+                  <button onClick={() => navigate(`/jdr/${jdr.slug}/mj`)}>Ouvrir MJ</button>
                   <button onClick={() => handleDelete(jdr.slug)} style={{ background: 'var(--color-danger)' }}>Supprimer</button>
                 </div>
               </div>

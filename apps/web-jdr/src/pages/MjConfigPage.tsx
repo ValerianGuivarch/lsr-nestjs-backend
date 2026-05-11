@@ -285,7 +285,7 @@ export default function MjConfigPage() {
     <div style={styles.container}>
       <div style={styles.header}>
         <h1>Configuration: {jdr.name}</h1>
-        <button onClick={() => navigate(`/${jdrSlug}/MJ`)}>Retour</button>
+        <button onClick={() => navigate(`/jdr/${jdrSlug}/mj`)}>Retour</button>
       </div>
 
       <div style={styles.tabs}>
@@ -555,7 +555,7 @@ export default function MjConfigPage() {
                     {group ? ` - Groupe ${group.name}` : ''}
                   </span>
                   <div style={{ display: 'flex', gap: '0.5rem' }}>
-                    <button onClick={() => navigate(`/${jdrSlug}/${c.slug}/edit`)}>Editer</button>
+                    <button onClick={() => navigate(`/jdr/${jdrSlug}/characters/${c.slug}`)}>Voir</button>
                     <button onClick={() => handleRemoveCharacter(c.slug)} style={styles.dangerBtn}>X</button>
                   </div>
                 </div>

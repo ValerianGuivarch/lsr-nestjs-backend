@@ -6,7 +6,7 @@ export class DBJdrDiceRoll {
   @PrimaryGeneratedColumn('uuid')
   id: string
 
-  @CreateDateColumn({ default: () => 'NOW()' })
+  @CreateDateColumn({ default: () => 'CURRENT_TIMESTAMP' })
   createdDate: Date
 
   @Column({ type: 'varchar', nullable: false })

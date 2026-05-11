@@ -11,6 +11,7 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
 interface ReverseProxyRule {
   sourcePrefix: string
   targetOrigin: string
+  targetPrefix?: string
   excludePrefixes?: string[]
 }
 
@@ -68,7 +69,15 @@ export function registerReverseProxy(app: NestFastifyApplication, rules: Reverse
 
     reply.hijack()
 
-    const targetUrl = new URL(rawUrl, matchingRule.targetOrigin)
+    const parsedIncomingUrl = new URL(rawUrl, 'http://localhost')
+    const sourcePathname = parsedIncomingUrl.pathname
+    let targetPathname = sourcePathname
+
+    if (matchingRule.targetPrefix !== undefined && matchesPrefix(sourcePathname, matchingRule.sourcePrefix)) {
+      targetPathname = `${matchingRule.targetPrefix}${sourcePathname.slice(matchingRule.sourcePrefix.length)}`
+    }
+
+    const targetUrl = new URL(`${targetPathname}${parsedIncomingUrl.search}`, matchingRule.targetOrigin)
     const proxyRequest = (targetUrl.protocol === 'https:' ? httpsRequest : httpRequest)(
       targetUrl,
       {

@@ -98,7 +98,7 @@ export default function CharacterEditPage() {
       }
 
       setJdr(updated)
-      navigate(`/${jdrSlug}/${characterSlug}`)
+      navigate(`/jdr/${jdrSlug}/characters/${characterSlug}`)
     } catch (err) {
       alert('Erreur: ' + (err as Error).message)
     } finally {
@@ -117,7 +117,7 @@ export default function CharacterEditPage() {
     <div style={styles.container}>
       <div style={styles.header}>
         <h1>Éditer {name || 'Personnage'}</h1>
-        <button onClick={() => navigate(`/${jdrSlug}/${characterSlug}`)}>← Retour</button>
+        <button onClick={() => navigate(`/jdr/${jdrSlug}/characters/${characterSlug}`)}>← Retour</button>
       </div>
 
       <div style={styles.form}>
@@ -227,7 +227,7 @@ export default function CharacterEditPage() {
           <button onClick={handleSave} disabled={saving}>
             {saving ? 'Enregistrement...' : 'Enregistrer'}
           </button>
-          <button onClick={() => navigate(`/${jdrSlug}/${characterSlug}`)}>Annuler</button>
+          <button onClick={() => navigate(`/jdr/${jdrSlug}/characters/${characterSlug}`)}>Annuler</button>
         </div>
       </div>
     </div>

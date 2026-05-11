@@ -90,7 +90,7 @@ export function WizardBanner(props: {
                   ? props.wizard.displayName
                   : props.wizard.name
               }
-              onClick={() => handleRedirect(`/hp/update/${props.wizard.name}`)} // Redirection
+              onClick={() => handleRedirect(`/hp/characters/${props.wizard.name}/edit`)} // Redirection
             />
 
             <LifePointsContainer>
@@ -177,7 +177,7 @@ export function WizardBanner(props: {
                   icon={FaCat}
                   title="Animal"
                   onClick={() =>
-                    handleRedirect(`/hp/${props.wizard.animal}`, true)
+                    handleRedirect(`/hp/characters/${props.wizard.animal}`, true)
                   } // Animal dans un nouvel onglet
                 />
               </ButtonsContainer>

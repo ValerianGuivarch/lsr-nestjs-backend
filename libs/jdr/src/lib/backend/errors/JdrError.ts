@@ -1,11 +1,11 @@
-import { HttpStatus } from '@nestjs/common'
+import { HttpException, HttpStatus } from '@nestjs/common'
 
-export class JdrError extends Error {
+export class JdrError extends HttpException {
   statusCode: number
   code: string
 
   constructor(p: { message: string; code: string; statusCode: number }) {
-    super(p.message)
+    super({ message: p.message, code: p.code }, p.statusCode)
     this.statusCode = p.statusCode
     this.code = p.code
   }

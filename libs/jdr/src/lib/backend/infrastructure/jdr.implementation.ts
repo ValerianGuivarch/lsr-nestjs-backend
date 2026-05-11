@@ -25,23 +25,23 @@ import { DBJdrClassResource } from './persistence/jdr-class-resource.db'
 @Injectable()
 export class JdrImplementation implements IJdrProvider {
   constructor(
-    @InjectRepository(DBJdr, 'postgres') private readonly jdrRepo: Repository<DBJdr>,
-    @InjectRepository(DBJdrStat, 'postgres') private readonly statRepo: Repository<DBJdrStat>,
-    @InjectRepository(DBJdrTrait, 'postgres') private readonly traitRepo: Repository<DBJdrTrait>,
-    @InjectRepository(DBJdrTraitModifier, 'postgres') private readonly traitModifierRepo: Repository<DBJdrTraitModifier>,
-    @InjectRepository(DBJdrResource, 'postgres') private readonly resourceRepo: Repository<DBJdrResource>,
-    @InjectRepository(DBJdrGroupResource, 'postgres') private readonly groupResourceRepo: Repository<DBJdrGroupResource>,
-    @InjectRepository(DBJdrItem, 'postgres') private readonly itemRepo: Repository<DBJdrItem>,
-    @InjectRepository(DBJdrGroupItem, 'postgres') private readonly groupItemRepo: Repository<DBJdrGroupItem>,
-    @InjectRepository(DBJdrCharacter, 'postgres') private readonly characterRepo: Repository<DBJdrCharacter>,
-    @InjectRepository(DBJdrCharacterStat, 'postgres') private readonly characterStatRepo: Repository<DBJdrCharacterStat>,
-    @InjectRepository(DBJdrCharacterTrait, 'postgres') private readonly characterTraitRepo: Repository<DBJdrCharacterTrait>,
-    @InjectRepository(DBJdrCharacterItem, 'postgres') private readonly characterItemRepo: Repository<DBJdrCharacterItem>,
-    @InjectRepository(DBJdrCharacterResource, 'postgres') private readonly characterResourceRepo: Repository<DBJdrCharacterResource>,
-    @InjectRepository(DBJdrDiceRoll, 'postgres') private readonly diceRollRepo: Repository<DBJdrDiceRoll>,
-    @InjectRepository(DBJdrClass, 'postgres') private readonly classRepo: Repository<DBJdrClass>,
-    @InjectRepository(DBJdrGroup, 'postgres') private readonly groupRepo: Repository<DBJdrGroup>,
-    @InjectRepository(DBJdrClassResource, 'postgres') private readonly classResourceRepo: Repository<DBJdrClassResource>
+    @InjectRepository(DBJdr, 'jdr-sqlite') private readonly jdrRepo: Repository<DBJdr>,
+    @InjectRepository(DBJdrStat, 'jdr-sqlite') private readonly statRepo: Repository<DBJdrStat>,
+    @InjectRepository(DBJdrTrait, 'jdr-sqlite') private readonly traitRepo: Repository<DBJdrTrait>,
+    @InjectRepository(DBJdrTraitModifier, 'jdr-sqlite') private readonly traitModifierRepo: Repository<DBJdrTraitModifier>,
+    @InjectRepository(DBJdrResource, 'jdr-sqlite') private readonly resourceRepo: Repository<DBJdrResource>,
+    @InjectRepository(DBJdrGroupResource, 'jdr-sqlite') private readonly groupResourceRepo: Repository<DBJdrGroupResource>,
+    @InjectRepository(DBJdrItem, 'jdr-sqlite') private readonly itemRepo: Repository<DBJdrItem>,
+    @InjectRepository(DBJdrGroupItem, 'jdr-sqlite') private readonly groupItemRepo: Repository<DBJdrGroupItem>,
+    @InjectRepository(DBJdrCharacter, 'jdr-sqlite') private readonly characterRepo: Repository<DBJdrCharacter>,
+    @InjectRepository(DBJdrCharacterStat, 'jdr-sqlite') private readonly characterStatRepo: Repository<DBJdrCharacterStat>,
+    @InjectRepository(DBJdrCharacterTrait, 'jdr-sqlite') private readonly characterTraitRepo: Repository<DBJdrCharacterTrait>,
+    @InjectRepository(DBJdrCharacterItem, 'jdr-sqlite') private readonly characterItemRepo: Repository<DBJdrCharacterItem>,
+    @InjectRepository(DBJdrCharacterResource, 'jdr-sqlite') private readonly characterResourceRepo: Repository<DBJdrCharacterResource>,
+    @InjectRepository(DBJdrDiceRoll, 'jdr-sqlite') private readonly diceRollRepo: Repository<DBJdrDiceRoll>,
+    @InjectRepository(DBJdrClass, 'jdr-sqlite') private readonly classRepo: Repository<DBJdrClass>,
+    @InjectRepository(DBJdrGroup, 'jdr-sqlite') private readonly groupRepo: Repository<DBJdrGroup>,
+    @InjectRepository(DBJdrClassResource, 'jdr-sqlite') private readonly classResourceRepo: Repository<DBJdrClassResource>
   ) {}
 
   // ─── Helpers ──────────────────────────────────────────────────────────────

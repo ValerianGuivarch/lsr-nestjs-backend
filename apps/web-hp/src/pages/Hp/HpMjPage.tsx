@@ -185,7 +185,7 @@ export function HpMjPage() {
           </Select>
         </SelectContainer>
         <SelectContainer>
-          <button onClick={() => navigate('/hp/create')}>
+          <button onClick={() => navigate('/hp/characters/new')}>
             Créer perso
           </button>
         </SelectContainer>

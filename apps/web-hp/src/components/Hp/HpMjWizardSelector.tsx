@@ -61,7 +61,7 @@ export function HpMjWizardSelector(props: {
           <ActionButton onClick={handleRollD20} variant="d20">
             🎲 D20 MJ Helluin
           </ActionButton>
-          <ActionButton onClick={() => navigate('/hp/create')} variant="create">
+          <ActionButton onClick={() => navigate('/hp/characters/new')} variant="create">
             ➕ Créer perso
           </ActionButton>
           <ActionButton onClick={props.onOpenHousePoints} variant="house">

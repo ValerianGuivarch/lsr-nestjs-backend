@@ -1617,6 +1617,8 @@ const Container = styled.div`
   background: ${({ theme }) => theme.background};
   color: ${({ theme }) => theme.color};
   min-height: 100vh;
+  width: 100%;
+  max-width: none;
   padding: 2rem;
 `
 
@@ -1635,7 +1637,7 @@ const Header = styled.header`
 
 const HomeCards = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: 0.75rem;
   margin-bottom: 1rem;
 `
@@ -1664,6 +1666,7 @@ const HomeCard = styled.button<{ $active: boolean }>`
 const Panel = styled.div`
   background: ${({ theme }) => theme.panel};
   border: 1px solid ${({ theme }) => theme.panelBorder};
+  width: 100%;
   padding: 1rem;
   border-radius: 12px;
 `
@@ -1697,7 +1700,7 @@ const TabButton = styled.button<{ $active: boolean }>`
 
 const DevicesGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   gap: 0.9rem;
 `
 
@@ -1705,6 +1708,7 @@ const SectionCard = styled.section`
   border: 1px solid ${({ theme }) => theme.panelBorder};
   border-radius: 10px;
   padding: 0.8rem;
+  width: 100%;
 
   h3 {
     margin-top: 0;
@@ -1803,7 +1807,7 @@ const ErrorBox = styled.div`
 
 const GhostCamGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
   gap: 1rem;
   margin-top: 1rem;
 `

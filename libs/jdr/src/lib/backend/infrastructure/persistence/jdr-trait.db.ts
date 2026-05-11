@@ -5,10 +5,10 @@ import { DBJdrTraitModifier } from './jdr-trait-modifier.db'
 
 @Entity({ name: 'jdr_trait' })
 export class DBJdrTrait {
-  @CreateDateColumn({ default: () => 'NOW()' })
+  @CreateDateColumn({ default: () => 'CURRENT_TIMESTAMP' })
   createdDate: Date
 
-  @UpdateDateColumn({ default: () => 'NOW()' })
+  @UpdateDateColumn({ default: () => 'CURRENT_TIMESTAMP' })
   updatedDate: Date
 
   @PrimaryColumn({ type: 'varchar' })

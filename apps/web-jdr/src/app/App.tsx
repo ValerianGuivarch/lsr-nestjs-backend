@@ -10,29 +10,52 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/admin" element={<AdminPage />} />
-        <Route path="/:jdrSlug/MJ" element={<MjPage />} />
-        <Route path="/:jdrSlug/mj" element={<MJRedirect />} />
-        <Route path="/:jdrSlug/MJ/config" element={<MjConfigPage />} />
-        <Route path="/:jdrSlug/mj/config" element={<MJConfigRedirect />} />
-        <Route path="/:jdrSlug/feed" element={<FeedPage />} />
-        <Route path="/:jdrSlug/:characterSlug/edit" element={<CharacterEditPage />} />
-        <Route path="/:jdrSlug/:characterSlug" element={<CharacterPage />} />
-        <Route path="/" element={<Navigate to="/admin" replace />} />
-        <Route path="*" element={<Navigate to="/admin" replace />} />
+        <Route path="/jdr/admin" element={<AdminPage />} />
+        <Route path="/jdr/:jdrSlug/mj" element={<MjPage />} />
+        <Route path="/jdr/:jdrSlug/mj/config" element={<MjConfigPage />} />
+        <Route path="/jdr/:jdrSlug/feed" element={<FeedPage />} />
+        <Route path="/jdr/:jdrSlug/characters/:characterSlug/edit" element={<CharacterEditPage />} />
+        <Route path="/jdr/:jdrSlug/characters/:characterSlug" element={<CharacterPage />} />
+
+        <Route path="/admin" element={<Navigate to="/jdr/admin" replace />} />
+        <Route path="/:jdrSlug/MJ" element={<LegacyMjRedirect />} />
+        <Route path="/:jdrSlug/mj" element={<LegacyMjRedirect />} />
+        <Route path="/:jdrSlug/MJ/config" element={<LegacyMjConfigRedirect />} />
+        <Route path="/:jdrSlug/mj/config" element={<LegacyMjConfigRedirect />} />
+        <Route path="/:jdrSlug/feed" element={<LegacyFeedRedirect />} />
+        <Route path="/:jdrSlug/:characterSlug/edit" element={<LegacyCharacterEditRedirect />} />
+        <Route path="/:jdrSlug/:characterSlug" element={<LegacyCharacterRedirect />} />
+
+        <Route path="/" element={<Navigate to="/jdr/admin" replace />} />
+        <Route path="*" element={<Navigate to="/jdr/admin" replace />} />
       </Routes>
     </BrowserRouter>
   )
 }
 
-function MJRedirect() {
+function LegacyMjRedirect() {
   const { jdrSlug } = useParams()
-  return <Navigate to={`/${jdrSlug}/MJ`} replace />
+  return <Navigate to={`/jdr/${jdrSlug}/mj`} replace />
 }
 
-function MJConfigRedirect() {
+function LegacyMjConfigRedirect() {
   const { jdrSlug } = useParams()
-  return <Navigate to={`/${jdrSlug}/MJ/config`} replace />
+  return <Navigate to={`/jdr/${jdrSlug}/mj/config`} replace />
+}
+
+function LegacyFeedRedirect() {
+  const { jdrSlug } = useParams()
+  return <Navigate to={`/jdr/${jdrSlug}/feed`} replace />
+}
+
+function LegacyCharacterRedirect() {
+  const { jdrSlug, characterSlug } = useParams()
+  return <Navigate to={`/jdr/${jdrSlug}/characters/${characterSlug}`} replace />
+}
+
+function LegacyCharacterEditRedirect() {
+  const { jdrSlug, characterSlug } = useParams()
+  return <Navigate to={`/jdr/${jdrSlug}/characters/${characterSlug}/edit`} replace />
 }
 
 export default App
