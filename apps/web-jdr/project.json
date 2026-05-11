@@ -1,0 +1,8 @@
+{
+  "name": "web-jdr",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/web-jdr/src",
+  "projectType": "application",
+  "tags": ["scope:jdr", "type:app", "platform:web"],
+  "targets": {}
+}

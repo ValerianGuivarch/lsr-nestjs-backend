@@ -57,3 +57,6 @@ support/docker-prod/smtp4dev
 /l7r-react-frontend/
 
 vite.config.*.timestamp*
+.nx/polygraph
+.claude/worktrees
+.claude/settings.local.json

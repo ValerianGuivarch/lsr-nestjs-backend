@@ -1,5 +1,10 @@
 {
     "chat.tools.terminal.autoApprove": {
-        "lsof": true
+        "pnpm": true,
+        "/^cat /Users/Valerian\\.Guivarch/perso/lsr-nestjs-backend/libs/jdr/project\\.json \\| python3 -c \"import sys,json; d=json\\.load\\(sys\\.stdin\\); print\\(json\\.dumps\\(d\\.get\\('targets',\\{\\}\\)\\.get\\('build',\\{\\}\\), indent=2\\)\\)\"$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "nvm": true
     }
 }

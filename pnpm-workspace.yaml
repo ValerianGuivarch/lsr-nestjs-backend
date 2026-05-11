@@ -1,0 +1,4 @@
+packages:
+  - 'libs/*'
+  - 'libs/*/domain'
+  - 'apps/*'

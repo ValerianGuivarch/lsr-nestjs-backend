@@ -1,0 +1,19 @@
+{
+  "name": "jdr-domain",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/jdr/domain/src",
+  "projectType": "library",
+  "tags": ["scope:jdr", "type:domain"],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/libs/jdr/domain",
+        "main": "libs/jdr/domain/src/index.ts",
+        "tsConfig": "libs/jdr/domain/tsconfig.lib.json",
+        "assets": ["libs/jdr/domain/*.md"]
+      }
+    }
+  }
+}
