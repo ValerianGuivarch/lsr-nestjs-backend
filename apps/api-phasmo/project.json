@@ -1,0 +1,8 @@
+{
+  "name": "api-phasmo",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/api-phasmo/src",
+  "projectType": "application",
+  "tags": ["scope:phasmo", "type:app", "platform:server"],
+  "targets": {}
+}

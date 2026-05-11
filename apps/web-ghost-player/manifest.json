@@ -1,0 +1,10 @@
+{
+  "name": "Ghost Player",
+  "short_name": "GhostPlayer",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#181a1b",
+  "theme_color": "#181a1b",
+  "description": "Escape game device app",
+  "icons": []
+}

@@ -1,0 +1,8 @@
+{
+  "name": "web-ghost-dashboard",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/web-ghost-dashboard/src",
+  "projectType": "application",
+  "tags": ["scope:ghost", "type:app", "platform:web"],
+  "targets": {}
+}
