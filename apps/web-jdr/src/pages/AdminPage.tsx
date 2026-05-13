@@ -9,33 +9,88 @@ async function seedVikingTest(): Promise<string> {
   try { await JdrApiClient.deleteJdr(VIKING_SLUG) } catch (_) { /* not found, ok */ }
 
   // Create JdR
-  let jdr = await JdrApiClient.createJdr('VikingTest', 'JdR de test Viking')
+  let jdr = await JdrApiClient.createJdr('JdR Tribal Viking', 'Campagne Viking post-apocalyptique')
 
   // Stats
-  for (const stat of ['Force', 'Agilité', 'Intelligence', 'Volonté']) {
+  for (const stat of ['Charisme', 'Combat', 'Magie', 'Savoir', 'Agriculture', 'Navigation', 'Nature']) {
     jdr = await JdrApiClient.addStat(jdr.slug, stat)
   }
 
-  // Traits
-  jdr = await JdrApiClient.addTrait(jdr.slug, 'Berserker', 'Normal', [{ statSlug: 'force', value: 2 }, { statSlug: 'volonte', value: -1 }])
-  jdr = await JdrApiClient.addTrait(jdr.slug, 'Ruse', 'Normal', [{ statSlug: 'intelligence', value: 1 }])
+  // Traits Normaux/Positifs
+  const normalTraits = [
+    { name: 'Cartographe', mods: [{ statSlug: 'savoir', value: 1 }, { statSlug: 'navigation', value: 1 }] },
+    { name: 'Fils de l\'ancien chef', mods: [{ statSlug: 'charisme', value: 1 }] },
+    { name: 'Capitaine', mods: [{ statSlug: 'navigation', value: 2 }, { statSlug: 'agriculture', value: -1 }] },
+    { name: 'Voyageur', mods: [{ statSlug: 'navigation', value: 1 }, { statSlug: 'nature', value: -1 }] },
+    { name: 'Beau comme un dieu', mods: [{ statSlug: 'charisme', value: 1 }] },
+    { name: 'Guerrier d\'exception', mods: [{ statSlug: 'combat', value: 2 }] },
+    { name: 'Forestier', mods: [{ statSlug: 'savoir', value: 1 }, { statSlug: 'nature', value: 1 }] },
+    { name: 'Soigneur de bêtes', mods: [{ statSlug: 'agriculture', value: 2 }] },
+    { name: 'Travailleur', mods: [{ statSlug: 'agriculture', value: 1 }] },
+    { name: 'Force de la nature', mods: [{ statSlug: 'combat', value: 1 }] },
+    { name: 'Tellurge', mods: [{ statSlug: 'magie', value: 1 }] },
+    { name: 'Sauvage', mods: [{ statSlug: 'combat', value: 1 }, { statSlug: 'nature', value: 1 }, { statSlug: 'charisme', value: -1 }] },
+    { name: 'Mémoire eidétique', mods: [{ statSlug: 'savoir', value: 1 }] },
+    { name: 'Formé à la magie', mods: [{ statSlug: 'magie', value: 2 }] },
+    { name: 'Guerrier héroïque', mods: [{ statSlug: 'combat', value: 1 }, { statSlug: 'charisme', value: 1 }] },
+    { name: 'Vif', mods: [{ statSlug: 'combat', value: 1 }] },
+    { name: 'Polyvalent', mods: [] },
+    { name: 'Volonté forte', mods: [{ statSlug: 'magie', value: 1 }] },
+    { name: 'Main verte', mods: [{ statSlug: 'agriculture', value: 1 }] },
+    { name: 'Empathie avec la nature', mods: [{ statSlug: 'nature', value: 1 }] },
+    { name: 'Berserker', mods: [{ statSlug: 'combat', value: 1 }] },
+    { name: 'Brasseur', mods: [{ statSlug: 'agriculture', value: 1 }] },
+    { name: 'Compagne remarquable', mods: [] },
+    { name: 'Tatouages shamaniques', mods: [] },
+    { name: 'Bagarreur', mods: [{ statSlug: 'combat', value: 1 }] }
+  ]
+
+  for (const trait of normalTraits) {
+    jdr = await JdrApiClient.addTrait(jdr.slug, trait.name, 'Normal', trait.mods.length > 0 ? trait.mods : undefined)
+  }
+
+  // Traits Pénalisants
+  const disadvantageTraits = [
+    { name: 'Impatient', mods: [{ statSlug: 'agriculture', value: -1 }] },
+    { name: 'Alcoolique', mods: [{ statSlug: 'savoir', value: -1 }] },
+    { name: 'Dépensier', mods: [] },
+    { name: 'Aveugle', mods: [{ statSlug: 'magie', value: 1 }, { statSlug: 'navigation', value: -1 }, { statSlug: 'nature', value: -1 }, { statSlug: 'combat', value: -1 }] },
+    { name: 'Arrogant', mods: [{ statSlug: 'charisme', value: -1 }] },
+    { name: 'Balafré', mods: [{ statSlug: 'charisme', value: -1 }] },
+    { name: 'Téméraire', mods: [] },
+    { name: 'Violent', mods: [{ statSlug: 'combat', value: 1 }, { statSlug: 'charisme', value: -1 }] },
+    { name: 'Analphabète', mods: [{ statSlug: 'savoir', value: -1 }] },
+    { name: 'Boiteux', mods: [{ statSlug: 'combat', value: -1 }] },
+    { name: 'Vénérable', mods: [{ statSlug: 'combat', value: -1 }, { statSlug: 'savoir', value: 2 }] }
+  ]
+
+  for (const trait of disadvantageTraits) {
+    jdr = await JdrApiClient.addTrait(jdr.slug, trait.name, 'Défaut', trait.mods.length > 0 ? trait.mods : undefined)
+  }
 
   // Ressources
-  jdr = await JdrApiClient.addResource(jdr.slug, 'Vigueur', 'all')
   jdr = await JdrApiClient.addResource(jdr.slug, 'Mana', 'specific')
+  jdr = await JdrApiClient.addResource(jdr.slug, 'Faveur Spirituelle', 'all')
 
   // Objets
-  jdr = await JdrApiClient.addItem(jdr.slug, 'Hache runique', 'Une hache gravée de runes', false, undefined)
-  jdr = await JdrApiClient.addItem(jdr.slug, 'Amulette de Odin', 'Objet unique sacré', true, undefined)
+  jdr = await JdrApiClient.addItem(jdr.slug, 'Hache runique', 'Arme traditionnelle gravée de runes', false, undefined)
+  jdr = await JdrApiClient.addItem(jdr.slug, 'Cristal de Freya', 'Fragment divin contenant les visions finales', true, undefined)
+  jdr = await JdrApiClient.addItem(jdr.slug, 'Knarr', 'Navire viking pour les longs voyages', true, undefined)
 
-  // Classes et groupes
-  jdr = await JdrApiClient.addClass(jdr.slug, 'Guerrier', 3, 'Classe martiale')
-  jdr = await JdrApiClient.addClass(jdr.slug, 'Volve', 2, 'Classe mystique')
-  jdr = await JdrApiClient.addGroup(jdr.slug, 'Clan du Nord', 'Groupe de test')
+  // Classes
+  jdr = await JdrApiClient.addClass(jdr.slug, 'Chef', 1, 'Dirigeant du clan')
+  jdr = await JdrApiClient.addClass(jdr.slug, 'Skald', 1, 'Gardien des traditions')
+  jdr = await JdrApiClient.addClass(jdr.slug, 'Sorcier', 1, 'Manipulant du mana')
+  jdr = await JdrApiClient.addClass(jdr.slug, 'Chaman', 1, 'Communicant avec les esprits')
+  jdr = await JdrApiClient.addClass(jdr.slug, 'Trickster', 1, 'Chanceux et chaotique')
 
-  // Personnages
-  jdr = await JdrApiClient.addCharacter(jdr.slug, 'Ragnar', 'guerrier', 'clan-du-nord', 'Chef de clan')
-  jdr = await JdrApiClient.addCharacter(jdr.slug, 'Freya', 'volve', 'clan-du-nord', 'Volva mystique')
+  // Groupes - Conseil du clan (pour les 3 PJs)
+  jdr = await JdrApiClient.addGroup(jdr.slug, 'Conseil', 'Les 3 dirigeants du nouveau clan')
+
+  // Personnages - Le nouveau Conseil
+  jdr = await JdrApiClient.addCharacter(jdr.slug, 'Astrid', 'chef', 'conseil', 'Chef de clan - dirigeante politique')
+  jdr = await JdrApiClient.addCharacter(jdr.slug, 'Leif', 'skald', 'conseil', 'Skald du clan - historien et négociateur')
+  jdr = await JdrApiClient.addCharacter(jdr.slug, 'Kara', 'chaman', 'conseil', 'Chaman - médiatrice avec les esprits')
 
   return jdr.slug
 }

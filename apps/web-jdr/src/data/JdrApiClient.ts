@@ -97,6 +97,27 @@ export interface JdrDto {
   groups: JdrGroupDto[]
 }
 
+export interface DraftRoundDto {
+  round: number
+  availableTraitSlugs: string[]
+  picks: Record<string, string>
+}
+
+export interface DraftDto {
+  id: string
+  name: string
+  jdrSlug: string
+  groupSlug: string
+  traitType: string
+  selectedTraitSlugs: string[]
+  characterOrder: string[]
+  currentHandsByCharacter: Record<string, string[]>
+  totalRounds: number
+  currentRound: number
+  status: 'pending' | 'active' | 'completed' | 'cancelled'
+  rounds: DraftRoundDto[]
+}
+
 export class JdrApiClient {
   static async findAll(): Promise<Array<{ slug: string; name: string }>> {
     const res = await fetch(`${API_BASE}`)
@@ -355,5 +376,84 @@ export class JdrApiClient {
     })
     if (!res.ok) throw new Error(`Failed to remove character item: ${res.statusText}`)
     return res.json()
+  }
+
+  static async createDraft(
+    jdrSlug: string,
+    groupSlug: string,
+    rounds: number,
+    options?: { name?: string; traitType?: string; traitSlugs?: string[] }
+  ): Promise<DraftDto> {
+    const res = await fetch(`${API_BASE}/${jdrSlug}/draft`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ groupSlug, rounds, ...options })
+    })
+    if (!res.ok) throw new Error(`Failed to create draft: ${res.statusText}`)
+    return res.json()
+  }
+
+  static async getDrafts(jdrSlug: string): Promise<DraftDto[]> {
+    const res = await fetch(`${API_BASE}/${jdrSlug}/drafts`)
+    if (!res.ok) throw new Error(`Failed to fetch drafts: ${res.statusText}`)
+    return res.json()
+  }
+
+  static async updateDraft(
+    jdrSlug: string,
+    draftId: string,
+    updates: { name?: string; groupSlug?: string; traitType?: string; traitSlugs?: string[]; rounds?: number }
+  ): Promise<DraftDto> {
+    const res = await fetch(`${API_BASE}/${jdrSlug}/drafts/${draftId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updates)
+    })
+    if (!res.ok) throw new Error(`Failed to update draft: ${res.statusText}`)
+    return res.json()
+  }
+
+  static async launchDraft(jdrSlug: string, draftId: string): Promise<DraftDto> {
+    const res = await fetch(`${API_BASE}/${jdrSlug}/drafts/${draftId}/launch`, {
+      method: 'POST'
+    })
+    if (!res.ok) throw new Error(`Failed to launch draft: ${res.statusText}`)
+    return res.json()
+  }
+
+  static async getActiveDraft(jdrSlug: string): Promise<DraftDto | null> {
+    const res = await fetch(`${API_BASE}/${jdrSlug}/draft`)
+    if (!res.ok) throw new Error(`Failed to fetch active draft: ${res.statusText}`)
+    return res.json()
+  }
+
+  static async pickDraft(jdrSlug: string, characterSlug: string, traitSlug: string): Promise<DraftDto> {
+    const res = await fetch(`${API_BASE}/${jdrSlug}/draft/pick`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ characterSlug, traitSlug })
+    })
+    if (!res.ok) throw new Error(`Failed to pick draft card: ${res.statusText}`)
+    return res.json()
+  }
+
+  static async passDraft(jdrSlug: string, characterSlug: string): Promise<DraftDto> {
+    const res = await fetch(`${API_BASE}/${jdrSlug}/draft/pass`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ characterSlug })
+    })
+    if (!res.ok) throw new Error(`Failed to pass draft card: ${res.statusText}`)
+    return res.json()
+  }
+
+  static async closeDraft(jdrSlug: string): Promise<void> {
+    const res = await fetch(`${API_BASE}/${jdrSlug}/draft`, { method: 'DELETE' })
+    if (!res.ok) throw new Error(`Failed to close draft: ${res.statusText}`)
+  }
+
+  static async deleteDraft(jdrSlug: string, draftId: string): Promise<void> {
+    const res = await fetch(`${API_BASE}/${jdrSlug}/drafts/${draftId}`, { method: 'DELETE' })
+    if (!res.ok) throw new Error(`Failed to delete draft: ${res.statusText}`)
   }
 }

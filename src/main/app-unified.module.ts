@@ -25,6 +25,7 @@ import { DBJdrDiceRoll } from '../../libs/jdr/src/lib/backend/infrastructure/per
 import { DBJdrClass } from '../../libs/jdr/src/lib/backend/infrastructure/persistence/jdr-class.db'
 import { DBJdrClassResource } from '../../libs/jdr/src/lib/backend/infrastructure/persistence/jdr-class-resource.db'
 import { DBJdrGroup } from '../../libs/jdr/src/lib/backend/infrastructure/persistence/jdr-group.db'
+import { DBJdrDraft } from '../../libs/jdr/src/lib/backend/infrastructure/persistence/jdr-draft.db'
 
 function envEnabled(key: string, defaultValue: boolean): boolean {
   const raw = process.env[key]
@@ -102,7 +103,8 @@ const needsPostgres = enableHp || enableL7r || enableYearDiary
               DBJdrDiceRoll,
               DBJdrClass,
               DBJdrClassResource,
-              DBJdrGroup
+              DBJdrGroup,
+              DBJdrDraft
             ],
             synchronize: true
           })

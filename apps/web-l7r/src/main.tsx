@@ -38,6 +38,7 @@ import MjConfigPage from '../../web-jdr/src/pages/MjConfigPage'
 import JdrCharacterPage from '../../web-jdr/src/pages/CharacterPage'
 import JdrCharacterEditPage from '../../web-jdr/src/pages/CharacterEditPage'
 import FeedPage from '../../web-jdr/src/pages/FeedPage'
+import DraftPage from '../../web-jdr/src/pages/DraftPage'
 
 const root = ReactDOM.createRoot(document.getElementById('root') as HTMLElement)
 
@@ -86,6 +87,8 @@ root.render(
             <Route path="/jdr/:jdrSlug/mj" element={<MjPage />} />
             <Route path="/jdr/:jdrSlug/mj/config" element={<MjConfigPage />} />
             <Route path="/jdr/:jdrSlug/feed" element={<FeedPage />} />
+            <Route path="/jdr/:jdrSlug/characters/:characterSlug/draft" element={<DraftPage />} />
+            <Route path="/jdr/:jdrSlug/draft/:characterSlug" element={<LegacyDraftRedirect />} />
             <Route path="/jdr/:jdrSlug/characters/:characterSlug/edit" element={<JdrCharacterEditPage />} />
             <Route path="/jdr/:jdrSlug/characters/:characterSlug" element={<JdrCharacterPage />} />
             <Route path="/jdr" element={<Navigate to="/jdr/admin" replace />} />
@@ -156,4 +159,9 @@ function LegacyHpWizardRedirect() {
 function LegacyHpWizardEditRedirect() {
   const { wizardName } = useParams<{ wizardName: string }>()
   return <Navigate to={`/hp/characters/${wizardName}/edit`} replace />
+}
+
+function LegacyDraftRedirect() {
+  const { jdrSlug, characterSlug } = useParams<{ jdrSlug: string; characterSlug: string }>()
+  return <Navigate to={`/jdr/${jdrSlug}/characters/${characterSlug}/draft`} replace />
 }

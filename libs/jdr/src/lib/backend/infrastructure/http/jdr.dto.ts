@@ -183,3 +183,24 @@ export class DiceRollDto {
     return dto
   }
 }
+
+export class DraftRoundDto {
+  round: number
+  availableTraitSlugs: string[]
+  picks: Record<string, string>
+}
+
+export class DraftDto {
+  id: string
+  name: string
+  jdrSlug: string
+  groupSlug: string
+  traitType: string
+  selectedTraitSlugs: string[]
+  characterOrder: string[]
+  currentHandsByCharacter: Record<string, string[]>
+  totalRounds: number
+  currentRound: number
+  status: 'pending' | 'active' | 'completed' | 'cancelled'
+  rounds: DraftRoundDto[]
+}

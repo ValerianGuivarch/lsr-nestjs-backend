@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import styled from 'styled-components'
 import { MdEdit } from 'react-icons/md'
-import { JdrApiClient, JdrDto, DiceRollDto } from '../data/JdrApiClient'
+import { JdrApiClient, JdrDto, DiceRollDto, DraftDto } from '../data/JdrApiClient'
 import { DiceRollFeed } from '../components/DiceRollFeed'
 
 export default function CharacterPage() {
@@ -14,6 +14,7 @@ export default function CharacterPage() {
   const [rolling, setRolling] = useState<string | null>(null)
   const [, setLastRoll] = useState<DiceRollDto | null>(null)
   const [portraitIndex, setPortraitIndex] = useState(0)
+  const [draft, setDraft] = useState<DraftDto | null>(null)
 
   useEffect(() => {
     if (!jdrSlug) return
@@ -56,6 +57,23 @@ export default function CharacterPage() {
     setPortraitIndex(0)
   }, [portraitName, portraitSlug])
 
+  useEffect(() => {
+    if (!jdrSlug) return
+
+    const refreshDraft = async () => {
+      try {
+        const activeDraft = await JdrApiClient.getActiveDraft(jdrSlug)
+        setDraft(activeDraft)
+      } catch {
+        setDraft(null)
+      }
+    }
+
+    refreshDraft()
+    const id = setInterval(refreshDraft, 2500)
+    return () => clearInterval(id)
+  }, [jdrSlug])
+
   const handleRollDice = async (statSlug: string) => {
     if (!jdrSlug || !characterSlug) return
     try {
@@ -75,10 +93,11 @@ export default function CharacterPage() {
 
   const selectedClass = character.classSlug ? jdr.classes.find(c => c.slug === character.classSlug) : undefined
   const selectedGroup = character.groupSlug ? jdr.groups.find(g => g.slug === character.groupSlug) : undefined
+  const activeRound = draft?.rounds.find(round => round.round === draft.currentRound)
 
-  const traitNames = character.traitSlugs
-    .map(slug => jdr.traits.find(t => t.slug === slug)?.name)
-    .filter(Boolean)
+  const characterTraits = character.traitSlugs
+    .map(slug => jdr.traits.find(t => t.slug === slug))
+    .filter((trait): trait is NonNullable<typeof trait> => Boolean(trait))
 
   const itemNames = character.items
     .map(oi => {
@@ -109,6 +128,15 @@ export default function CharacterPage() {
               {selectedGroup && <Tag>Groupe: {selectedGroup.name}</Tag>}
               {!selectedClass && <Tag>Classe: Aucune</Tag>}
             </TagRow>
+            {draft && selectedGroup?.slug === draft.groupSlug && (
+              <DraftCtaButton onClick={() => navigate(`/jdr/${jdrSlug}/characters/${characterSlug}/draft`)}>
+                DRAFT
+                <DraftSubLabel>
+                  Tour {draft.currentRound}/{draft.totalRounds}
+                  {activeRound?.picks?.[character.slug] ? ' · Choix validé' : ' · Choix à faire'}
+                </DraftSubLabel>
+              </DraftCtaButton>
+            )}
           </HeroInfo>
 
           <EditIconButton
@@ -123,14 +151,30 @@ export default function CharacterPage() {
 
       <ContentGrid>
         <MainColumn>
-          {traitNames.length > 0 && (
+          {characterTraits.length > 0 && (
             <SectionCard>
               <SectionTitle>Traits actifs</SectionTitle>
-              <PillList>
-                {traitNames.map((name, i) => (
-                  <Pill key={i}>{name}</Pill>
+              <TraitTagGrid>
+                {characterTraits.map((trait) => (
+                  <TraitTagCard key={trait.slug} $isDefaut={trait.type.toLowerCase() === 'defaut'}>
+                    <TraitTagTop>
+                      <TraitName>{trait.name}</TraitName>
+                      <TraitTypeBadge $type={trait.type}>{trait.type}</TraitTypeBadge>
+                    </TraitTagTop>
+                    {trait.modifiers.length > 0 ? (
+                      <TraitModifiers>
+                        {trait.modifiers.map((modifier) => (
+                          <TraitModifier key={`${trait.slug}-${modifier.statSlug}`}>
+                            {modifier.value >= 0 ? '+' : ''}{modifier.value} {modifier.statSlug}
+                          </TraitModifier>
+                        ))}
+                      </TraitModifiers>
+                    ) : (
+                      <TraitHint>Aucun modificateur</TraitHint>
+                    )}
+                  </TraitTagCard>
                 ))}
-              </PillList>
+              </TraitTagGrid>
             </SectionCard>
           )}
 
@@ -299,6 +343,33 @@ const Tag = styled.span`
   font-size: 0.74rem;
 `
 
+const DraftCtaButton = styled.button`
+  margin-top: 0.6rem;
+  width: fit-content;
+  border: 2px solid rgba(255, 208, 112, 0.88);
+  border-radius: 12px;
+  background: linear-gradient(180deg, rgba(255, 160, 66, 0.96), rgba(232, 96, 45, 0.96));
+  color: #fff9ee;
+  font-weight: 900;
+  font-size: 1rem;
+  letter-spacing: 0.05em;
+  padding: 0.36rem 0.92rem;
+  display: grid;
+  justify-items: start;
+  box-shadow: 0 0 0 2px rgba(18, 28, 42, 0.55), 0 10px 24px rgba(0, 0, 0, 0.35);
+  animation: pulse 1.8s ease-in-out infinite;
+
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.03); }
+  }
+`
+
+const DraftSubLabel = styled.span`
+  font-size: 0.67rem;
+  letter-spacing: 0.04em;
+`
+
 const CharacterDescription = styled.p`
   margin: 0;
   max-width: 90ch;
@@ -398,6 +469,75 @@ const PillList = styled.div`
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
+`
+
+const TraitTagGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 0.6rem;
+`
+
+const TraitTagCard = styled.div<{ $isDefaut: boolean }>`
+  border: 2px solid ${({ $isDefaut }) => ($isDefaut ? 'rgba(18, 18, 18, 0.95)' : 'rgba(135, 176, 245, 0.34)')};
+  border-radius: 12px;
+  padding: 0.55rem 0.62rem;
+  background: ${({ $isDefaut }) =>
+    $isDefaut
+      ? 'linear-gradient(165deg, rgba(52, 25, 25, 0.78), rgba(23, 16, 18, 0.92))'
+      : 'linear-gradient(165deg, rgba(21, 39, 61, 0.86), rgba(13, 22, 36, 0.9))'};
+`
+
+const TraitTagTop = styled.div`
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+`
+
+const TraitName = styled.span`
+  font-size: 0.96rem;
+  color: #e7f1ff;
+  font-weight: 800;
+`
+
+const TraitTypeBadge = styled.span<{ $type: string }>`
+  border-radius: 999px;
+  padding: 0.12rem 0.52rem;
+  font-size: 0.66rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: ${({ $type }) => ($type.toLowerCase() === 'defaut' ? '#ffe8e8' : '#eef6ff')};
+  background: ${({ $type }) => {
+    const lowered = $type.toLowerCase()
+    if (lowered === 'defaut') return 'rgba(138, 45, 45, 0.72)'
+    if (lowered === 'objet') return 'rgba(133, 90, 22, 0.66)'
+    if (lowered === 'secret') return 'rgba(88, 66, 146, 0.72)'
+    return 'rgba(33, 82, 151, 0.68)'
+  }};
+`
+
+const TraitModifiers = styled.div`
+  margin-top: 0.48rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.36rem;
+`
+
+const TraitModifier = styled.span`
+  border: 1px solid rgba(171, 201, 255, 0.3);
+  border-radius: 999px;
+  padding: 0.14rem 0.5rem;
+  font-size: 0.74rem;
+  color: #d9e9ff;
+  background: rgba(13, 31, 53, 0.6);
+`
+
+const TraitHint = styled.span`
+  margin-top: 0.48rem;
+  display: inline-block;
+  font-size: 0.75rem;
+  color: #9ab3d8;
 `
 
 const Pill = styled.span`

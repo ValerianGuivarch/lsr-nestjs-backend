@@ -1,4 +1,4 @@
-import { IsBoolean, IsNumber, IsOptional, IsString, ValidateNested } from 'class-validator'
+import { IsArray, IsBoolean, IsNumber, IsOptional, IsString, ValidateNested } from 'class-validator'
 import { Type } from 'class-transformer'
 
 export class CreateJdrRequest {
@@ -90,4 +90,25 @@ export class UpdateCharacterStatRequest {
 
 export class UpdateCharacterResourceRequest {
   @IsNumber() value: number
+}
+
+export class CreateDraftRequest {
+  @IsString() name: string
+  @IsString() groupSlug: string
+  @IsOptional() @IsString() traitType?: string
+  @IsOptional() @IsArray() @IsString({ each: true }) traitSlugs?: string[]
+  @IsNumber() rounds: number
+}
+
+export class UpdateDraftRequest {
+  @IsOptional() @IsString() name?: string
+  @IsOptional() @IsString() groupSlug?: string
+  @IsOptional() @IsString() traitType?: string
+  @IsOptional() @IsArray() @IsString({ each: true }) traitSlugs?: string[]
+  @IsOptional() @IsNumber() rounds?: number
+}
+
+export class PickDraftRequest {
+  @IsString() characterSlug: string
+  @IsString() traitSlug: string
 }

@@ -17,6 +17,7 @@ import { DBJdrDiceRoll } from '../jdr-dice-roll.db'
 import { DBJdrClass } from '../jdr-class.db'
 import { DBJdrClassResource } from '../jdr-class-resource.db'
 import { DBJdrGroup } from '../jdr-group.db'
+import { DBJdrDraft } from '../jdr-draft.db'
 
 @Module({
   imports: [
@@ -38,7 +39,8 @@ import { DBJdrGroup } from '../jdr-group.db'
         DBJdrDiceRoll,
         DBJdrClass,
         DBJdrClassResource,
-        DBJdrGroup
+        DBJdrGroup,
+        DBJdrDraft
       ],
       'jdr-sqlite'
     )

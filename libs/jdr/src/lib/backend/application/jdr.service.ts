@@ -1,6 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common'
 import { DiceRoll, Jdr } from '../../../../domain/src/index'
 import { IJdrProvider } from '../domain/ports/jdr.provider'
+import { DraftDto } from '../infrastructure/http/jdr.dto'
 
 @Injectable()
 export class JdrService {
@@ -136,5 +137,41 @@ export class JdrService {
 
   getLastRolls(jdrSlug: string, size: number): Promise<DiceRoll[]> {
     return this.jdrProvider.getLastRolls(jdrSlug, size)
+  }
+
+  createDraft(jdrSlug: string, p: { name: string; groupSlug: string; traitType?: string; traitSlugs?: string[]; rounds: number }): Promise<DraftDto> {
+    return this.jdrProvider.createDraft(jdrSlug, p)
+  }
+
+  getDrafts(jdrSlug: string): Promise<DraftDto[]> {
+    return this.jdrProvider.getDrafts(jdrSlug)
+  }
+
+  updateDraft(jdrSlug: string, draftId: string, p: { name?: string; groupSlug?: string; traitType?: string; traitSlugs?: string[]; rounds?: number }): Promise<DraftDto> {
+    return this.jdrProvider.updateDraft(jdrSlug, draftId, p)
+  }
+
+  launchDraft(jdrSlug: string, draftId: string): Promise<DraftDto> {
+    return this.jdrProvider.launchDraft(jdrSlug, draftId)
+  }
+
+  getActiveDraft(jdrSlug: string): Promise<DraftDto | null> {
+    return this.jdrProvider.getActiveDraft(jdrSlug)
+  }
+
+  pickDraft(jdrSlug: string, p: { characterSlug: string; traitSlug: string }): Promise<DraftDto> {
+    return this.jdrProvider.pickDraft(jdrSlug, p)
+  }
+
+  passDraft(jdrSlug: string, p: { characterSlug: string }): Promise<DraftDto> {
+    return this.jdrProvider.passDraft(jdrSlug, p)
+  }
+
+  closeDraft(jdrSlug: string): Promise<void> {
+    return this.jdrProvider.closeDraft(jdrSlug)
+  }
+
+  deleteDraft(jdrSlug: string, draftId: string): Promise<void> {
+    return this.jdrProvider.deleteDraft(jdrSlug, draftId)
   }
 }

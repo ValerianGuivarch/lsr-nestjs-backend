@@ -1,9 +1,11 @@
 import { Injectable } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
-import { Repository } from 'typeorm'
+import { In, Repository } from 'typeorm'
+import { randomUUID } from 'crypto'
 import { DiceRoll, Jdr, ResourceType, Slug, TraitType } from '../../../../domain/src/index'
 import { IJdrProvider } from '../domain/ports/jdr.provider'
 import { JdrError } from '../errors/JdrError'
+import { DraftDto } from './http/jdr.dto'
 import { DBJdr } from './persistence/jdr.db'
 import { DBJdrStat } from './persistence/jdr-stat.db'
 import { DBJdrTrait } from './persistence/jdr-trait.db'
@@ -21,6 +23,7 @@ import { DBJdrDiceRoll } from './persistence/jdr-dice-roll.db'
 import { DBJdrClass } from './persistence/jdr-class.db'
 import { DBJdrGroup } from './persistence/jdr-group.db'
 import { DBJdrClassResource } from './persistence/jdr-class-resource.db'
+import { DBJdrDraft } from './persistence/jdr-draft.db'
 
 @Injectable()
 export class JdrImplementation implements IJdrProvider {
@@ -41,13 +44,18 @@ export class JdrImplementation implements IJdrProvider {
     @InjectRepository(DBJdrDiceRoll, 'jdr-sqlite') private readonly diceRollRepo: Repository<DBJdrDiceRoll>,
     @InjectRepository(DBJdrClass, 'jdr-sqlite') private readonly classRepo: Repository<DBJdrClass>,
     @InjectRepository(DBJdrGroup, 'jdr-sqlite') private readonly groupRepo: Repository<DBJdrGroup>,
-    @InjectRepository(DBJdrClassResource, 'jdr-sqlite') private readonly classResourceRepo: Repository<DBJdrClassResource>
+    @InjectRepository(DBJdrClassResource, 'jdr-sqlite') private readonly classResourceRepo: Repository<DBJdrClassResource>,
+    @InjectRepository(DBJdrDraft, 'jdr-sqlite') private readonly draftRepo: Repository<DBJdrDraft>
   ) {}
 
   // ─── Helpers ──────────────────────────────────────────────────────────────
 
   private async loadJdr(jdrSlug: string): Promise<DBJdr> {
-    const db = await this.jdrRepo.findOne({ where: { slug: jdrSlug }, relations: DBJdr.RELATIONS })
+    const db = await this.jdrRepo.findOne({
+      where: { slug: jdrSlug },
+      relations: DBJdr.RELATIONS,
+      relationLoadStrategy: 'query'
+    })
     if (!db) throw JdrError.notFound(`Jdr ${jdrSlug}`)
     return db
   }
@@ -62,6 +70,32 @@ export class JdrImplementation implements IJdrProvider {
       const existingGroup = await this.groupRepo.findOne({ where: { jdrSlug, slug: p.groupSlug } })
       if (!existingGroup) throw JdrError.notFound(`Group '${p.groupSlug}'`)
     }
+  }
+
+  private toDraftDto(db: DBJdrDraft): DraftDto {
+    const dto = new DraftDto()
+    dto.id = db.id
+    dto.name = db.name
+    dto.jdrSlug = db.jdrSlug
+    dto.groupSlug = db.groupSlug
+    dto.traitType = db.traitType
+    dto.selectedTraitSlugs = JSON.parse(db.selectedTraitSlugsJson || '[]')
+    dto.characterOrder = JSON.parse(db.characterOrderJson || '[]')
+    dto.currentHandsByCharacter = JSON.parse(db.handsByCharacterJson || '{}')
+    dto.totalRounds = db.totalRounds
+    dto.currentRound = db.currentRound
+    dto.status = db.status
+
+    const picksByRound: Record<number, Record<string, string>> = JSON.parse(db.picksJson || '{}')
+    dto.rounds = dto.status === 'pending'
+      ? []
+      : Array.from({ length: dto.totalRounds }, (_, index) => index + 1).map((round) => ({
+          round,
+          availableTraitSlugs: dto.selectedTraitSlugs,
+          picks: picksByRound[round] ?? {}
+        }))
+
+    return dto
   }
 
   // ─── JdR ──────────────────────────────────────────────────────────────────
@@ -399,5 +433,254 @@ export class JdrImplementation implements IJdrProvider {
       take: size
     })
     return rows.map(DBJdrDiceRoll.toDiceRoll)
+  }
+
+  private buildDraftTraitPool(jdr: Jdr, p: { traitType?: string; traitSlugs?: string[] }): { traitType: string; traitSlugs: string[] } {
+    const selectedTraitSlugs = (p.traitSlugs ?? []).filter(Boolean)
+    if (selectedTraitSlugs.length > 0) {
+      return {
+        traitType: p.traitType || 'Manuel',
+        traitSlugs: selectedTraitSlugs
+      }
+    }
+
+    const traitType = p.traitType || 'Normal'
+    return {
+      traitType,
+      traitSlugs: jdr.traits.filter((trait) => trait.type === traitType).map((trait) => trait.slug)
+    }
+  }
+
+  private async finalizeDraftRound(
+    draft: DBJdrDraft,
+    characterOrder: string[],
+    handsByCharacter: Record<string, string[]>,
+    roundPicks: Record<string, string>
+  ): Promise<void> {
+    for (const characterSlug of characterOrder) {
+      const pickedTrait = roundPicks[characterSlug]
+      if (!pickedTrait || pickedTrait === '__pass__') continue
+      const exists = await this.characterTraitRepo.findOne({ where: { jdrSlug: draft.jdrSlug, characterSlug, traitSlug: pickedTrait } })
+      if (!exists) {
+        await this.characterTraitRepo.save(this.characterTraitRepo.create({ jdrSlug: draft.jdrSlug, characterSlug, traitSlug: pickedTrait }))
+      }
+    }
+
+    for (const characterSlug of characterOrder) {
+      const pickedTrait = roundPicks[characterSlug]
+      if (!pickedTrait || pickedTrait === '__pass__') continue
+      handsByCharacter[characterSlug] = (handsByCharacter[characterSlug] ?? []).filter((slug) => slug !== pickedTrait)
+    }
+
+    const rotatedHands: Record<string, string[]> = {}
+    for (let i = 0; i < characterOrder.length; i++) {
+      const receiver = characterOrder[i]
+      const giver = characterOrder[(i - 1 + characterOrder.length) % characterOrder.length]
+      rotatedHands[receiver] = handsByCharacter[giver] ?? []
+    }
+
+    draft.currentRound += 1
+    if (draft.currentRound > draft.totalRounds) {
+      draft.status = 'completed'
+      draft.currentRound = draft.totalRounds
+    }
+
+    draft.handsByCharacterJson = JSON.stringify(rotatedHands)
+  }
+
+  async createDraft(jdrSlug: string, p: { name: string; groupSlug: string; traitType?: string; traitSlugs?: string[]; rounds: number }): Promise<DraftDto> {
+    const existing = await this.draftRepo.findOne({ where: { jdrSlug, status: 'pending' } })
+    if (existing) throw JdrError.conflict('Un template de draft existe deja pour ce JdR')
+
+    const jdr = await this.findOneBySlug(jdrSlug)
+    const characterOrder = jdr.characters.filter((c) => c.groupSlug === p.groupSlug).map((c) => c.slug)
+    if (characterOrder.length < 2) throw JdrError.conflict('Le groupe doit contenir au moins 2 personnages')
+
+    const pool = this.buildDraftTraitPool(jdr, p)
+
+    const totalRounds = Math.max(1, Math.floor(p.rounds || 1))
+
+    const created = await this.draftRepo.save(
+      this.draftRepo.create({
+        id: randomUUID(),
+        name: p.name?.trim() || 'Sans nom',
+        jdrSlug,
+        groupSlug: p.groupSlug,
+        traitType: pool.traitType,
+        selectedTraitSlugsJson: JSON.stringify(pool.traitSlugs),
+        characterOrderJson: JSON.stringify([]),
+        poolByRoundJson: JSON.stringify(pool.traitSlugs),
+        handsByCharacterJson: JSON.stringify({}),
+        picksJson: JSON.stringify({}),
+        totalRounds,
+        currentRound: 0,
+        status: 'pending'
+      })
+    )
+
+    return this.toDraftDto(created)
+  }
+
+  async getDrafts(jdrSlug: string): Promise<DraftDto[]> {
+    const drafts = await this.draftRepo.find({
+      where: { jdrSlug },
+      order: { updatedDate: 'DESC' }
+    })
+    return drafts.map((draft) => this.toDraftDto(draft))
+  }
+
+  async updateDraft(jdrSlug: string, draftId: string, p: { name?: string; groupSlug?: string; traitType?: string; traitSlugs?: string[]; rounds?: number }): Promise<DraftDto> {
+    const draft = await this.draftRepo.findOne({ where: { jdrSlug, id: draftId } })
+    if (!draft) throw JdrError.notFound('Draft introuvable')
+    if (draft.status !== 'pending') throw JdrError.conflict('Le draft ne peut plus etre modifie une fois lance')
+
+    const jdr = await this.findOneBySlug(jdrSlug)
+    const pool = this.buildDraftTraitPool(jdr, p)
+
+    if (p.name !== undefined) draft.name = p.name.trim() || draft.name
+    if (p.groupSlug) draft.groupSlug = p.groupSlug
+    draft.traitType = pool.traitType
+    draft.selectedTraitSlugsJson = JSON.stringify(pool.traitSlugs)
+    draft.poolByRoundJson = JSON.stringify(pool.traitSlugs)
+    draft.characterOrderJson = JSON.stringify([])
+    draft.handsByCharacterJson = JSON.stringify({})
+    draft.picksJson = JSON.stringify({})
+    draft.totalRounds = Math.max(1, Math.floor(p.rounds || draft.totalRounds || 1))
+    draft.currentRound = 0
+    draft.updatedDate = new Date()
+
+    const saved = await this.draftRepo.save(draft)
+    return this.toDraftDto(saved)
+  }
+
+  async deleteDraft(jdrSlug: string, draftId: string): Promise<void> {
+    const draft = await this.draftRepo.findOne({ where: { jdrSlug, id: draftId } })
+    if (!draft) return
+    if (draft.status === 'active') {
+      throw JdrError.conflict('Le draft doit etre arrete avant suppression')
+    }
+    await this.draftRepo.delete({ jdrSlug, id: draftId })
+  }
+
+  async launchDraft(jdrSlug: string, draftId: string): Promise<DraftDto> {
+    const draft = await this.draftRepo.findOne({ where: { jdrSlug, id: draftId } })
+    if (!draft) throw JdrError.notFound('Draft introuvable')
+    if (draft.status !== 'pending') throw JdrError.conflict('Seul un draft en attente peut etre lance')
+
+    const activeExisting = await this.draftRepo.findOne({ where: { jdrSlug, status: 'active' } })
+    if (activeExisting) throw JdrError.conflict('Un draft est deja en cours')
+
+    const jdr = await this.findOneBySlug(jdrSlug)
+    const characterOrder = jdr.characters.filter((c) => c.groupSlug === draft.groupSlug).map((c) => c.slug)
+    if (characterOrder.length < 2) throw JdrError.conflict('Le groupe doit contenir au moins 2 personnages')
+
+    const selectedTraitSlugs = JSON.parse(draft.selectedTraitSlugsJson || '[]') as string[]
+    const traits = selectedTraitSlugs
+      .map((slug) => jdr.traits.find((trait) => trait.slug === slug))
+      .filter((trait): trait is typeof jdr.traits[number] => Boolean(trait))
+    if (traits.length === 0) throw JdrError.conflict('Aucun trait disponible pour ce draft')
+
+    const requiredCards = characterOrder.length * Math.max(1, draft.totalRounds || 1)
+    if (traits.length < requiredCards) {
+      throw JdrError.conflict(`Pas assez de traits: ${traits.length} disponibles, ${requiredCards} requis`)
+    }
+
+    const shuffled = [...traits].sort(() => Math.random() - 0.5)
+    const handsByCharacter: Record<string, string[]> = Object.fromEntries(characterOrder.map((slug) => [slug, []]))
+    for (let i = 0; i < shuffled.length; i++) {
+      const owner = characterOrder[i % characterOrder.length]
+      handsByCharacter[owner].push(shuffled[i].slug)
+    }
+
+    draft.characterOrderJson = JSON.stringify(characterOrder)
+    draft.handsByCharacterJson = JSON.stringify(handsByCharacter)
+    draft.picksJson = JSON.stringify({})
+    draft.poolByRoundJson = JSON.stringify(selectedTraitSlugs)
+    draft.currentRound = 1
+    draft.status = 'active'
+    draft.updatedDate = new Date()
+
+    const saved = await this.draftRepo.save(draft)
+    return this.toDraftDto(saved)
+  }
+
+  async getActiveDraft(jdrSlug: string): Promise<DraftDto | null> {
+    const existing = await this.draftRepo.findOne({
+      where: { jdrSlug, status: In(['active', 'completed']) },
+      order: { updatedDate: 'DESC' }
+    })
+    return existing ? this.toDraftDto(existing) : null
+  }
+
+  async pickDraft(jdrSlug: string, p: { characterSlug: string; traitSlug: string }): Promise<DraftDto> {
+    const draft = await this.draftRepo.findOne({ where: { jdrSlug, status: 'active' } })
+    if (!draft) throw JdrError.notFound('Draft actif introuvable')
+
+    const characterOrder: string[] = JSON.parse(draft.characterOrderJson || '[]')
+    if (!characterOrder.includes(p.characterSlug)) throw JdrError.conflict('Personnage non autorise dans ce draft')
+
+    const handsByCharacter: Record<string, string[]> = JSON.parse(draft.handsByCharacterJson || '{}')
+    const picksByRound: Record<number, Record<string, string>> = JSON.parse(draft.picksJson || '{}')
+    const currentRound = draft.currentRound
+
+    const currentHand = handsByCharacter[p.characterSlug] ?? []
+    if (!currentHand.includes(p.traitSlug)) throw JdrError.conflict('Trait non disponible dans la main du personnage')
+
+    const roundPicks = picksByRound[currentRound] ?? {}
+    const previousPick = roundPicks[p.characterSlug]
+    if (previousPick === p.traitSlug) return this.toDraftDto(draft)
+    if (previousPick) {
+      delete roundPicks[p.characterSlug]
+    }
+    if (Object.values(roundPicks).includes(p.traitSlug)) throw JdrError.conflict('Trait deja choisi par une autre joueuse')
+
+    roundPicks[p.characterSlug] = p.traitSlug
+    picksByRound[currentRound] = roundPicks
+
+    const everyonePicked = characterOrder.every((characterSlug) => Boolean(roundPicks[characterSlug]))
+
+    if (everyonePicked) {
+      await this.finalizeDraftRound(draft, characterOrder, handsByCharacter, roundPicks)
+    }
+
+    draft.picksJson = JSON.stringify(picksByRound)
+    if (!everyonePicked) {
+      draft.handsByCharacterJson = JSON.stringify(handsByCharacter)
+    }
+    draft.updatedDate = new Date()
+    const saved = await this.draftRepo.save(draft)
+    return this.toDraftDto(saved)
+  }
+
+  async passDraft(jdrSlug: string, p: { characterSlug: string }): Promise<DraftDto> {
+    const draft = await this.draftRepo.findOne({ where: { jdrSlug, status: 'active' } })
+    if (!draft) throw JdrError.notFound('Draft actif introuvable')
+
+    const characterOrder: string[] = JSON.parse(draft.characterOrderJson || '[]')
+    if (!characterOrder.includes(p.characterSlug)) throw JdrError.conflict('Personnage non autorise dans ce draft')
+
+    const picksByRound: Record<number, Record<string, string>> = JSON.parse(draft.picksJson || '{}')
+    const roundPicks = picksByRound[draft.currentRound] ?? {}
+    roundPicks[p.characterSlug] = '__pass__'
+    picksByRound[draft.currentRound] = roundPicks
+
+    const everyonePicked = characterOrder.every((characterSlug) => Boolean(roundPicks[characterSlug]))
+    if (everyonePicked) {
+      const handsByCharacter: Record<string, string[]> = JSON.parse(draft.handsByCharacterJson || '{}')
+      await this.finalizeDraftRound(draft, characterOrder, handsByCharacter, roundPicks)
+    }
+
+    draft.picksJson = JSON.stringify(picksByRound)
+    draft.updatedDate = new Date()
+    const saved = await this.draftRepo.save(draft)
+    return this.toDraftDto(saved)
+  }
+
+  async closeDraft(jdrSlug: string): Promise<void> {
+    const draft = await this.draftRepo.findOne({ where: { jdrSlug, status: 'active' } })
+    if (!draft) return
+    draft.status = 'cancelled'
+    draft.updatedDate = new Date()
+    await this.draftRepo.save(draft)
   }
 }

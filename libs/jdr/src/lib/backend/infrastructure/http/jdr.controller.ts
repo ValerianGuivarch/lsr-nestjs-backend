@@ -1,7 +1,7 @@
 import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Post, Put, Query } from '@nestjs/common'
 import { ApiTags } from '@nestjs/swagger'
 import { JdrService } from '../../application/jdr.service'
-import { DiceRollDto, JdrDto, JdrSummaryDto } from './jdr.dto'
+import { DiceRollDto, DraftDto, JdrDto, JdrSummaryDto } from './jdr.dto'
 import {
   AddCharacterRequest,
   AddClassRequest,
@@ -12,7 +12,10 @@ import {
   AddResourceRequest,
   AddStatRequest,
   AddTraitRequest,
+  CreateDraftRequest,
   CreateJdrRequest,
+  PickDraftRequest,
+  UpdateDraftRequest,
   UpdateCharacterRequest,
   UpdateGroupResourceRequest,
   UpdateJdrRequest
@@ -262,5 +265,62 @@ export class JdrController {
   ): Promise<DiceRollDto[]> {
     const rolls = await this.jdrService.getLastRolls(jdrSlug, size ? parseInt(size, 10) : 30)
     return rolls.map(DiceRollDto.from)
+  }
+
+  // ─── Draft ────────────────────────────────────────────────────────────────
+
+  @HttpCode(HttpStatus.CREATED)
+  @Post(':jdrSlug/draft')
+  async createDraft(@Param('jdrSlug') jdrSlug: string, @Body() body: CreateDraftRequest): Promise<DraftDto> {
+    return this.jdrService.createDraft(jdrSlug, body)
+  }
+
+  @Get(':jdrSlug/drafts')
+  async getDrafts(@Param('jdrSlug') jdrSlug: string): Promise<DraftDto[]> {
+    return this.jdrService.getDrafts(jdrSlug)
+  }
+
+  @Put(':jdrSlug/drafts/:draftId')
+  async updateDraft(
+    @Param('jdrSlug') jdrSlug: string,
+    @Param('draftId') draftId: string,
+    @Body() body: UpdateDraftRequest
+  ): Promise<DraftDto> {
+    return this.jdrService.updateDraft(jdrSlug, draftId, body)
+  }
+
+  @HttpCode(HttpStatus.CREATED)
+  @Post(':jdrSlug/drafts/:draftId/launch')
+  async launchDraft(@Param('jdrSlug') jdrSlug: string, @Param('draftId') draftId: string): Promise<DraftDto> {
+    return this.jdrService.launchDraft(jdrSlug, draftId)
+  }
+
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @Delete(':jdrSlug/drafts/:draftId')
+  async deleteDraft(@Param('jdrSlug') jdrSlug: string, @Param('draftId') draftId: string): Promise<void> {
+    return this.jdrService.deleteDraft(jdrSlug, draftId)
+  }
+
+  @Get(':jdrSlug/draft')
+  async getActiveDraft(@Param('jdrSlug') jdrSlug: string): Promise<DraftDto | null> {
+    return this.jdrService.getActiveDraft(jdrSlug)
+  }
+
+  @HttpCode(HttpStatus.CREATED)
+  @Post(':jdrSlug/draft/pick')
+  async pickDraft(@Param('jdrSlug') jdrSlug: string, @Body() body: PickDraftRequest): Promise<DraftDto> {
+    return this.jdrService.pickDraft(jdrSlug, body)
+  }
+
+  @HttpCode(HttpStatus.CREATED)
+  @Post(':jdrSlug/draft/pass')
+  async passDraft(@Param('jdrSlug') jdrSlug: string, @Body() body: { characterSlug: string }): Promise<DraftDto> {
+    return this.jdrService.passDraft(jdrSlug, body)
+  }
+
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @Delete(':jdrSlug/draft')
+  async closeDraft(@Param('jdrSlug') jdrSlug: string): Promise<void> {
+    return this.jdrService.closeDraft(jdrSlug)
   }
 }

@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { JdrApiClient, JdrDto } from '../data/JdrApiClient'
+import { DraftDto, JdrApiClient, JdrDto, TraitDto } from '../data/JdrApiClient'
 
 export default function MjConfigPage() {
   const { jdrSlug } = useParams<{ jdrSlug: string }>()
@@ -47,7 +47,16 @@ export default function MjConfigPage() {
   const [expandedGroup, setExpandedGroup] = useState<string | null>(null)
 
   // Navigation
-  const [activeTab, setActiveTab] = useState<'jdr' | 'stats' | 'traits' | 'ressources' | 'objets' | 'classes' | 'groupes' | 'personnages'>('jdr')
+  const [activeTab, setActiveTab] = useState<'jdr' | 'stats' | 'traits' | 'ressources' | 'objets' | 'classes' | 'groupes' | 'personnages' | 'draft'>('jdr')
+
+  // Draft
+  const [drafts, setDrafts] = useState<DraftDto[]>([])
+  const [draftId, setDraftId] = useState<string | null>(null)
+  const [draftName, setDraftName] = useState('')
+  const [draftGroupSlug, setDraftGroupSlug] = useState('')
+  const [draftRounds, setDraftRounds] = useState(2)
+  const [selectedDraftTraits, setSelectedDraftTraits] = useState<string[]>([])
+  const [selectedDraftTraitType, setSelectedDraftTraitType] = useState('all')
 
   // Personnages
   const [newCharacterName, setNewCharacterName] = useState('')
@@ -60,8 +69,28 @@ export default function MjConfigPage() {
     const fetchJdr = async () => {
       try {
         setLoading(true)
-        const data = await JdrApiClient.findOneBySlug(jdrSlug)
+        const [data, fetchedDrafts] = await Promise.all([
+          JdrApiClient.findOneBySlug(jdrSlug),
+          JdrApiClient.getDrafts(jdrSlug)
+        ])
         setJdr(data)
+        setDrafts(fetchedDrafts)
+        const pendingDraft = fetchedDrafts.find((draft) => draft.status === 'pending') ?? null
+        const activeDraft = fetchedDrafts.find((draft) => draft.status === 'active') ?? null
+        setDraftId(pendingDraft?.id ?? null)
+        if (pendingDraft) {
+          setDraftName(pendingDraft.name)
+          setDraftGroupSlug(pendingDraft.groupSlug)
+          setDraftRounds(pendingDraft.totalRounds)
+          setSelectedDraftTraits(pendingDraft.selectedTraitSlugs)
+        }
+        if (!pendingDraft) {
+          setDraftName('')
+          setSelectedDraftTraits([])
+        }
+        if (!draftGroupSlug && data.groups.length > 0 && !pendingDraft) {
+          setDraftGroupSlug(data.groups[0].slug)
+        }
         setJdrName(data.name)
         setJdrText(data.text)
         setError(null)
@@ -277,6 +306,129 @@ export default function MjConfigPage() {
     }
   }
 
+  const allDraftTraits = useMemo(() => jdr?.traits ?? [], [jdr])
+
+  const selectedDraftTraitSet = useMemo(() => new Set(selectedDraftTraits), [selectedDraftTraits])
+
+  const availableDraftTraits = useMemo(
+    () => allDraftTraits.filter((trait) => !selectedDraftTraitSet.has(trait.slug)),
+    [allDraftTraits, selectedDraftTraitSet]
+  )
+
+  const filteredAvailableDraftTraits = useMemo(
+    () => availableDraftTraits.filter((trait) => selectedDraftTraitType === 'all' || trait.type === selectedDraftTraitType),
+    [availableDraftTraits, selectedDraftTraitType]
+  )
+
+  const selectedDraftTraitDtos = useMemo(
+    () => selectedDraftTraits.map((slug) => allDraftTraits.find((trait) => trait.slug === slug)).filter((trait): trait is TraitDto => Boolean(trait)),
+    [allDraftTraits, selectedDraftTraits]
+  )
+
+  const addTraitToDraft = (traitSlug: string) => {
+    setSelectedDraftTraits((previous) => {
+      const next = previous.includes(traitSlug) ? previous : [...previous, traitSlug]
+      if (draftId && jdrSlug) {
+        JdrApiClient.updateDraft(jdrSlug, draftId, {
+          groupSlug: draftGroupSlug,
+          rounds: draftRounds,
+          traitSlugs: next
+        }).catch(err)
+      }
+      return next
+    })
+  }
+
+  const removeTraitFromDraft = (traitSlug: string) => {
+    setSelectedDraftTraits((previous) => {
+      const next = previous.filter((slug) => slug !== traitSlug)
+      if (draftId && jdrSlug) {
+        JdrApiClient.updateDraft(jdrSlug, draftId, {
+          groupSlug: draftGroupSlug,
+          rounds: draftRounds,
+          traitSlugs: next
+        }).catch(err)
+      }
+      return next
+    })
+  }
+
+  const createOrSaveDraft = async () => {
+    if (!jdrSlug || !draftGroupSlug || !draftName.trim()) {
+      alert('Donne un nom au template de draft.')
+      return
+    }
+    try {
+      if (draftId) {
+        const updated = await JdrApiClient.updateDraft(jdrSlug, draftId, {
+          name: draftName,
+          groupSlug: draftGroupSlug,
+          rounds: draftRounds,
+          traitSlugs: selectedDraftTraits,
+          traitType: 'Manuel'
+        })
+        setDrafts((previous) => previous.map((draft) => (draft.id === updated.id ? updated : draft)))
+      } else {
+        const created = await JdrApiClient.createDraft(jdrSlug, draftGroupSlug, draftRounds, {
+          name: draftName,
+          traitSlugs: selectedDraftTraits,
+          traitType: 'Manuel'
+        })
+        setDraftId(created.id)
+        setDrafts((previous) => [created, ...previous])
+      }
+    } catch (e) {
+      err(e)
+    }
+  }
+
+  const launchDraft = async (targetDraftId = draftId) => {
+    if (!jdrSlug || !targetDraftId) return
+    try {
+      const launched = await JdrApiClient.launchDraft(jdrSlug, targetDraftId)
+      setDrafts((previous) => previous.map((draft) => (draft.id === launched.id ? launched : draft)))
+      setDraftId(null)
+    } catch (e) {
+      err(e)
+    }
+  }
+
+  const closeActiveDraft = async () => {
+    if (!jdrSlug || !confirm('Arrêter le draft actif ?')) return
+    try {
+      await JdrApiClient.closeDraft(jdrSlug)
+      setDrafts((previous) => previous.filter((draft) => draft.status !== 'active'))
+    } catch (e) {
+      err(e)
+    }
+  }
+
+  const activeDraft = drafts.find((draft) => draft.status === 'active') ?? null
+  const pendingDraft = drafts.find((draft) => draft.status === 'pending') ?? null
+
+  const selectDraftForEdition = (draft: DraftDto) => {
+    setDraftId(draft.id)
+    setDraftName(draft.name)
+    setDraftGroupSlug(draft.groupSlug)
+    setDraftRounds(draft.totalRounds)
+    setSelectedDraftTraits(draft.selectedTraitSlugs)
+  }
+
+  const deleteDraft = async (draft: DraftDto) => {
+    if (!jdrSlug || !confirm(`Supprimer le template "${draft.name}" ?`)) return
+    try {
+      await JdrApiClient.deleteDraft(jdrSlug, draft.id)
+      setDrafts((previous) => previous.filter((candidate) => candidate.id !== draft.id))
+      if (draftId === draft.id) {
+        setDraftId(null)
+        setDraftName('')
+        setSelectedDraftTraits([])
+      }
+    } catch (e) {
+      err(e)
+    }
+  }
+
   if (loading) return <div style={styles.container}>Chargement...</div>
   if (error) return <div style={styles.container}>Erreur: {error}</div>
   if (!jdr) return <div style={styles.container}>JdR non trouve</div>
@@ -289,7 +441,7 @@ export default function MjConfigPage() {
       </div>
 
       <div style={styles.tabs}>
-        {(['jdr', 'stats', 'traits', 'ressources', 'objets', 'classes', 'groupes', 'personnages'] as const).map(tab => (
+        {(['jdr', 'stats', 'traits', 'ressources', 'objets', 'classes', 'groupes', 'personnages', 'draft'] as const).map(tab => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
@@ -580,6 +732,141 @@ export default function MjConfigPage() {
             <button onClick={handleAddCharacter}>Ajouter perso</button>
           </div>
         </section>}
+
+        {activeTab === 'draft' && <section style={styles.section}>
+          <h2>Composer un template de draft</h2>
+
+          {activeDraft && (
+            <div style={{ ...styles.listItem, alignItems: 'flex-start', flexDirection: 'column', gap: '0.5rem', marginBottom: '1rem' }}>
+              <strong>Draft lancé</strong>
+              <span>
+                Groupe {activeDraft.groupSlug} · {activeDraft.status} · tour {activeDraft.currentRound}/{activeDraft.totalRounds}
+              </span>
+              <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                <button onClick={() => navigate(`/jdr/${jdrSlug}/draft/feed`)}>Voir le feed</button>
+                {activeDraft.status === 'active' ? (
+                  <button onClick={closeActiveDraft} style={styles.dangerBtn}>Arrêter</button>
+                ) : (
+                  <span style={styles.slug}>Finalisé</span>
+                )}
+              </div>
+            </div>
+          )}
+
+          <div style={{ ...styles.listItem, alignItems: 'flex-start', flexDirection: 'column', gap: '0.5rem', marginBottom: '1rem' }}>
+            <strong>Templates de draft enregistrés</strong>
+            <div style={styles.draftListWrap}>
+              {drafts.length === 0 && <span style={styles.slug}>Aucun template enregistré.</span>}
+              {drafts.map((draft) => (
+                <div key={draft.id} style={styles.draftListItem}>
+                  <span>
+                    <strong>{draft.name}</strong>
+                    {' '}· {draft.status === 'pending' ? 'Template' : draft.status === 'active' ? 'Draft lancé' : draft.status}
+                    {' '}· groupe {draft.groupSlug} · {draft.selectedTraitSlugs.length} traits · tours {draft.totalRounds}
+                  </span>
+                  <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                    {draft.status === 'pending' && <button onClick={() => selectDraftForEdition(draft)}>Éditer</button>}
+                    {draft.status === 'pending' && <button onClick={() => launchDraft(draft.id)}>Lancer</button>}
+                    {draft.status === 'active' && <button onClick={() => navigate(`/jdr/${jdrSlug}/draft/feed`)}>Feed</button>}
+                    {draft.status !== 'active' && <button onClick={() => deleteDraft(draft)} style={styles.dangerBtn}>Supprimer</button>}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div style={{ ...styles.formRow, alignItems: 'flex-end', marginBottom: '1rem' }}>
+            <label>
+              Nom du template
+              <input
+                value={draftName}
+                onChange={(e) => setDraftName(e.target.value)}
+                placeholder="Ex: Conseil - traits positifs"
+              />
+            </label>
+
+            <label>
+              Groupe des joueurs
+              <select value={draftGroupSlug} onChange={(e) => setDraftGroupSlug(e.target.value)}>
+                <option value="">--- Choisir un groupe ---</option>
+                {jdr.groups.map((group) => (
+                  <option key={group.slug} value={group.slug}>{group.name}</option>
+                ))}
+              </select>
+            </label>
+
+            <label>
+              Nombre de tours
+              <input
+                type="number"
+                min={1}
+                max={10}
+                value={draftRounds}
+                onChange={(e) => setDraftRounds(Number(e.target.value))}
+              />
+            </label>
+
+            <label>
+              Filtre type
+              <select value={selectedDraftTraitType} onChange={(e) => setSelectedDraftTraitType(e.target.value)}>
+                <option value="all">Tous</option>
+                {[...new Set(allDraftTraits.map((trait) => trait.type))].map((type) => (
+                  <option key={type} value={type}>{type}</option>
+                ))}
+              </select>
+            </label>
+
+            <div style={styles.slug}>Traits sélectionnés: {selectedDraftTraits.length}</div>
+
+            <button onClick={() => setSelectedDraftTraits([])} disabled={selectedDraftTraits.length === 0}>Vider</button>
+            <button
+              onClick={launchDraft}
+              disabled={!draftId || selectedDraftTraits.length === 0 || activeDraft?.status === 'active'}
+            >
+              🎲 Lancer le Draft
+            </button>
+          </div>
+
+          <div style={styles.draftComposer}>
+            <div style={styles.draftColumn}>
+              <h3 style={{ marginTop: 0 }}>Tous les traits ({filteredAvailableDraftTraits.length})</h3>
+              <div style={styles.traitList}>
+                {filteredAvailableDraftTraits.map((trait) => (
+                  <div key={trait.slug} style={styles.traitItem}>
+                    <div>
+                      <strong>{trait.name}</strong>{' '}
+                      <small style={styles.slug}>({trait.type})</small>
+                    </div>
+                    <button onClick={() => addTraitToDraft(trait.slug)}>Ajouter</button>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div style={styles.draftColumn}>
+              <h3 style={{ marginTop: 0 }}>Traits dans le draft ({selectedDraftTraitDtos.length})</h3>
+              <div style={styles.traitList}>
+                {selectedDraftTraitDtos.length === 0 && <div style={styles.emptyState}>Le template est vide au départ.</div>}
+                {selectedDraftTraitDtos.map((trait) => (
+                  <div key={trait.slug} style={styles.traitItem}>
+                    <div>
+                      <strong>{trait.name}</strong>{' '}
+                      <small style={styles.slug}>({trait.type})</small>
+                    </div>
+                    <button onClick={() => removeTraitFromDraft(trait.slug)} style={styles.dangerBtn}>Retirer</button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem' }}>
+            <button onClick={createOrSaveDraft}>{draftId ? 'Enregistrer le template' : 'Créer le template'}</button>
+            <button onClick={launchDraft} disabled={!draftId || selectedDraftTraits.length === 0 || activeDraft?.status === 'active'}>
+              Lancer le draft
+            </button>
+          </div>
+        </section>}
       </div>
     </div>
   )
@@ -641,6 +928,52 @@ const styles = {
     padding: '0.5rem 0.75rem',
     background: 'var(--color-bg)',
     borderRadius: '0.375rem'
+  },
+  draftComposer: {
+    display: 'grid' as const,
+    gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+    gap: '1rem'
+  },
+  draftColumn: {
+    border: '1px solid var(--color-border)',
+    borderRadius: '0.5rem',
+    padding: '1rem',
+    background: 'var(--color-bg-secondary)'
+  },
+  draftListWrap: {
+    display: 'grid' as const,
+    gap: '0.5rem',
+    width: '100%'
+  },
+  draftListItem: {
+    display: 'flex' as const,
+    justifyContent: 'space-between' as const,
+    alignItems: 'center' as const,
+    gap: '0.75rem',
+    padding: '0.5rem 0.75rem',
+    borderRadius: '0.375rem',
+    background: 'var(--color-bg)'
+  },
+  traitList: {
+    display: 'flex' as const,
+    flexDirection: 'column' as const,
+    gap: '0.5rem',
+    maxHeight: '55vh',
+    overflow: 'auto'
+  },
+  traitItem: {
+    display: 'flex' as const,
+    justifyContent: 'space-between' as const,
+    alignItems: 'center' as const,
+    gap: '0.75rem',
+    padding: '0.5rem 0.75rem',
+    background: 'var(--color-bg)',
+    borderRadius: '0.375rem'
+  },
+  emptyState: {
+    padding: '0.75rem',
+    color: 'var(--color-secondary)',
+    fontStyle: 'italic'
   },
   slug: { color: 'var(--color-secondary)', fontSize: '0.8rem' },
   dangerBtn: { background: 'var(--color-danger)' as string, minWidth: '2rem' }

@@ -1,4 +1,5 @@
 import { DiceRoll, Jdr } from '../../../../../domain/src/index'
+import { DraftDto } from '../../infrastructure/http/jdr.dto'
 
 export interface IJdrProvider {
   findAll(): Promise<Pick<Jdr, 'slug' | 'name'>[]>
@@ -42,4 +43,14 @@ export interface IJdrProvider {
 
   rollDice(jdrSlug: string, characterSlug: string, statSlug: string): Promise<DiceRoll>
   getLastRolls(jdrSlug: string, size: number): Promise<DiceRoll[]>
+
+  createDraft(jdrSlug: string, p: { name: string; groupSlug: string; traitType?: string; traitSlugs?: string[]; rounds: number }): Promise<DraftDto>
+  getDrafts(jdrSlug: string): Promise<DraftDto[]>
+  updateDraft(jdrSlug: string, draftId: string, p: { name?: string; groupSlug?: string; traitType?: string; traitSlugs?: string[]; rounds?: number }): Promise<DraftDto>
+  launchDraft(jdrSlug: string, draftId: string): Promise<DraftDto>
+  getActiveDraft(jdrSlug: string): Promise<DraftDto | null>
+  pickDraft(jdrSlug: string, p: { characterSlug: string; traitSlug: string }): Promise<DraftDto>
+  passDraft(jdrSlug: string, p: { characterSlug: string }): Promise<DraftDto>
+  closeDraft(jdrSlug: string): Promise<void>
+  deleteDraft(jdrSlug: string, draftId: string): Promise<void>
 }
