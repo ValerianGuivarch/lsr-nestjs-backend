@@ -5,6 +5,7 @@
             "approve": true,
             "matchCommandLine": true
         },
-        "nvm": true
+        "nvm": true,
+        "npm exec": true
     }
 }

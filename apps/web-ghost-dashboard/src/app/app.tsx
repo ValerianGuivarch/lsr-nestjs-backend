@@ -1048,6 +1048,13 @@ export function App() {
                           <strong>{device.deviceId}</strong>
                           <span>{device.role}</span>
                         </DeviceSelectButton>
+                        <DeviceActionButton
+                          type="button"
+                          onClick={() => window.open(`/ghost/player?device=${device.deviceId}`, '_blank')}
+                          title="Voir le player du device"
+                        >
+                          🎮 Player
+                        </DeviceActionButton>
                       </DeviceItem>
                     ))}
                   </DeviceList>
@@ -1726,6 +1733,17 @@ const DeviceList = styled.ul`
 
 const DeviceItem = styled.li`
   margin: 0;
+  display: flex;
+  gap: 0.45rem;
+  align-items: center;
+
+  button:first-child {
+    flex: 1;
+  }
+
+  button:last-child {
+    flex-shrink: 0;
+  }
 `
 
 const DeviceSelectButton = styled.button<{ $active: boolean }>`
@@ -1739,6 +1757,23 @@ const DeviceSelectButton = styled.button<{ $active: boolean }>`
   cursor: pointer;
   display: flex;
   justify-content: space-between;
+`
+
+const DeviceActionButton = styled.button`
+  border: 1px solid ${({ theme }) => theme.panelBorder};
+  background: transparent;
+  color: ${({ theme }) => theme.accent};
+  border-radius: 6px;
+  padding: 0.35rem 0.5rem;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: bold;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: ${({ theme }) => theme.accentSoft};
+    border-color: ${({ theme }) => theme.accent};
+  }
 `
 
 const EditForm = styled.div`

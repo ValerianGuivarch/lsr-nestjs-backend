@@ -5,6 +5,7 @@ import './styles.css'
 import { App } from './app/app'
 import WeddingGolf from './wedding-photos/WeddingGolf'
 import WeddingSelfie from './wedding-photos/WeddingSelfie'
+import WeddingSouvenirs from './wedding-photos/WeddingSouvenirs'
 import WeddingWallSlideshow from './wedding-photos/WeddingWallSlideshow'
 import WeddingSoLover from './wedding-photos/WeddingSoLover'
 import Foussier from './wedding-photos/Foussier'
@@ -21,6 +22,7 @@ root.render(
         <Route path="/foussier" element={<Foussier />} />
         <Route path="/so-lover" element={<WeddingSoLover />} />
         <Route path="/selfie" element={<WeddingSelfie />} />
+        <Route path="/souvenirs" element={<WeddingSouvenirs />} />
         <Route path="/wall" element={<WeddingWallSlideshow />} />
         <Route path="/admin" element={<WeddingWallAdmin />} />
       </Route>

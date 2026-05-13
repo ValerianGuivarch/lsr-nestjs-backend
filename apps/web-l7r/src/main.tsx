@@ -9,6 +9,7 @@ import '../../web-year-diary/src/styles.css'
 import { App } from './app/app'
 import { store } from './data/store'
 import CharacterSelection from './pages/CharacterSelection/CharacterSelection'
+import HomePage from './pages/Home/HomePage'
 import { CharacterSheet } from './pages/CharacterSheet/CharacterSheet'
 import { CharacterEdition } from './pages/CharacterEdition/CharacterEdition'
 import { MjSheet } from './pages/MjSheet/MjSheet'
@@ -26,12 +27,14 @@ import { WizardFormUpdate } from '../../web-hp/src/pages/Hp/WizardFormUpdate'
 import { SpellForm } from '../../web-hp/src/pages/Hp/SpellForm'
 import WeddingGolf from '../../web-misc/src/wedding-photos/WeddingGolf'
 import WeddingSelfie from '../../web-misc/src/wedding-photos/WeddingSelfie'
+import WeddingSouvenirs from '../../web-misc/src/wedding-photos/WeddingSouvenirs'
 import WeddingWallSlideshow from '../../web-misc/src/wedding-photos/WeddingWallSlideshow'
 import WeddingSoLover from '../../web-misc/src/wedding-photos/WeddingSoLover'
 import Foussier from '../../web-misc/src/wedding-photos/Foussier'
 import WeddingWallAdmin from '../../web-misc/src/wedding-photos/WeddingWallAdmin'
 import Diary from '../../web-year-diary/src/components/Diary'
 import GhostApp from '../../web-ghost-dashboard/src/app/app'
+import GhostPlayerApp from '../../web-ghost-player/src/app/app'
 import AdminPage from '../../web-jdr/src/pages/AdminPage'
 import MjPage from '../../web-jdr/src/pages/MjPage'
 import MjConfigPage from '../../web-jdr/src/pages/MjConfigPage'
@@ -47,7 +50,8 @@ root.render(
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<App />}>
-          <Route path="/" element={<CharacterSelection />} />
+          <Route path="/" element={<HomePage />} />
+          <Route path="/menu" element={<CharacterSelection />} />
 
           <Route path="/l7r" element={<CharacterSelection />} />
           <Route path="/l7r/mj" element={<MjSheet />} />
@@ -81,6 +85,7 @@ root.render(
 
           <Route path="/ghost" element={<Navigate to="/ghost/dashboard" replace />} />
           <Route path="/ghost/dashboard" element={<GhostApp />} />
+          <Route path="/ghost/player" element={<GhostPlayerApp />} />
 
           <>
             <Route path="/jdr/admin" element={<AdminPage />} />
@@ -99,6 +104,7 @@ root.render(
           <Route path="/misc/foussier" element={<Foussier />} />
           <Route path="/misc/so-lover" element={<WeddingSoLover />} />
           <Route path="/misc/selfie" element={<WeddingSelfie />} />
+          <Route path="/misc/souvenirs" element={<WeddingSouvenirs />} />
           <Route path="/misc/wall" element={<WeddingWallSlideshow />} />
           <Route path="/misc/admin" element={<WeddingWallAdmin />} />
 
@@ -117,6 +123,7 @@ root.render(
           <Route path="/foussier" element={<Foussier />} />
           <Route path="/so-lover" element={<WeddingSoLover />} />
           <Route path="/selfie" element={<WeddingSelfie />} />
+          <Route path="/souvenirs" element={<WeddingSouvenirs />} />
           <Route path="/wall" element={<WeddingWallSlideshow />} />
           <Route path="/admin" element={<WeddingWallAdmin />} />
           <Route path="/diary" element={<Diary />} />

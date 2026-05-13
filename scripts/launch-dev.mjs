@@ -13,10 +13,11 @@ const openConfigMenu = args.has('--config') || args.has('-c') || args.has('--rec
 const listProfilesOnly = args.has('--list') || args.has('-l')
 const showHelpOnly = args.has('--help') || args.has('-h')
 
-const lotKeys = ['hp', 'l7r', 'jdr', 'ghost', 'yeardiary']
+const lotKeys = ['hp', 'l7r', 'wedding', 'jdr', 'ghost', 'yeardiary']
 const lotLabels = {
   hp: 'lot HP (backend + frontend shell)',
   l7r: 'lot L7R (backend + frontend shell)',
+  wedding: 'lot Wedding (souvenirs, selfie, golf)',
   jdr: 'lot JDR (backend + frontend shell)',
   ghost: 'lot Ghost (backend + frontend shell)',
   yeardiary: 'lot YearDiary (backend + frontend shell)'
@@ -26,6 +27,7 @@ const profileDescriptions = {
   full: 'Tous les lots actifs',
   hp: 'Lot HP uniquement',
   l7r: 'Lot L7R uniquement',
+  wedding: 'Lot wedding (souvenirs, selfie, golf)',
   jdr: 'Lot JDR uniquement',
   ghost: 'Lot Ghost uniquement',
   yeardiary: 'Lot YearDiary uniquement',
@@ -40,6 +42,7 @@ const defaultConfig = {
   domains: {
     hp: true,
     l7r: true,
+    wedding: true,
     jdr: true,
     ghost: true,
     yeardiary: true
@@ -57,12 +60,25 @@ function mergeConfig(baseConfig, overrideConfig) {
   }
 }
 
+function normalizeLaunchConfig(config) {
+  const mergedConfig = mergeConfig(defaultConfig, config)
+
+  return {
+    ...mergedConfig,
+    domains: {
+      ...mergedConfig.domains,
+      l7r: Boolean(mergedConfig.domains.l7r || mergedConfig.domains.wedding)
+    }
+  }
+}
+
 function createLotProfile(enabledLots) {
   const hasAtLeastOneLot = enabledLots.length > 0
   const domains = {}
+  const enableL7r = enabledLots.includes('l7r') || enabledLots.includes('wedding')
 
   for (const key of lotKeys) {
-    domains[key] = enabledLots.includes(key)
+    domains[key] = key === 'l7r' ? enableL7r : enabledLots.includes(key)
   }
 
   return {
@@ -78,6 +94,7 @@ const builtInProfiles = {
   full: createLotProfile(lotKeys),
   hp: createLotProfile(['hp']),
   l7r: createLotProfile(['l7r']),
+  wedding: createLotProfile(['wedding']),
   jdr: createLotProfile(['jdr']),
   ghost: createLotProfile(['ghost']),
   yeardiary: createLotProfile(['yeardiary']),
@@ -89,6 +106,7 @@ const builtInProfiles = {
     domains: {
       hp: false,
       l7r: false,
+      wedding: false,
       jdr: false,
       ghost: true,
       yeardiary: false
@@ -142,6 +160,7 @@ function printProfiles(runnerConfig) {
   console.log('\nExemples:')
   console.log('npm run launch -- --profile full')
   console.log('npm run launch -- --profile hp')
+  console.log('npm run launch -- --profile wedding')
   console.log('npm run launch -- --config')
 }
 
@@ -204,10 +223,17 @@ async function loadConfig() {
     const raw = await readFile(CONFIG_PATH, 'utf8')
     const parsed = JSON.parse(raw)
 
+    const normalizedConfigs = Object.fromEntries(
+      Object.entries(parsed?.configs ?? {}).map(([profileName, config]) => [
+        profileName,
+        normalizeLaunchConfig(config)
+      ])
+    )
+
     return {
       ...defaultRunnerConfig(),
       ...parsed,
-      configs: parsed?.configs ?? {}
+      configs: normalizedConfigs
     }
   }
 
@@ -216,7 +242,7 @@ async function loadConfig() {
     const legacyConfig = JSON.parse(rawLegacy)
     const migrated = defaultRunnerConfig()
 
-    migrated.configs.last = mergeConfig(defaultConfig, legacyConfig)
+    migrated.configs.last = normalizeLaunchConfig(legacyConfig)
     migrated.lastProfile = 'last'
 
     await saveConfig(migrated)
@@ -227,14 +253,24 @@ async function loadConfig() {
 }
 
 async function saveConfig(runnerConfig) {
-  await writeFile(CONFIG_PATH, `${JSON.stringify(runnerConfig, null, 2)}\n`, 'utf8')
+  const normalizedRunnerConfig = {
+    ...runnerConfig,
+    configs: Object.fromEntries(
+      Object.entries(runnerConfig.configs ?? {}).map(([profileName, config]) => [
+        profileName,
+        normalizeLaunchConfig(config)
+      ])
+    )
+  }
+
+  await writeFile(CONFIG_PATH, `${JSON.stringify(normalizedRunnerConfig, null, 2)}\n`, 'utf8')
 }
 
 async function configure(runnerConfig, existingLaunchConfig) {
   const rl = createInterface({ input: stdin, output: stdout })
 
   try {
-    const base = mergeConfig(defaultConfig, existingLaunchConfig)
+    const base = normalizeLaunchConfig(existingLaunchConfig)
     const enabledLots = []
 
     console.log('\nMenu lots:')
@@ -258,7 +294,8 @@ async function configure(runnerConfig, existingLaunchConfig) {
       ? `${profileName}-custom`
       : profileName
 
-    const launchConfig = mergeConfig(createLotProfile(enabledLots), {
+    const launchConfig = normalizeLaunchConfig({
+      ...createLotProfile(enabledLots),
       stopPortsBeforeLaunch
     })
 
@@ -278,17 +315,18 @@ async function configure(runnerConfig, existingLaunchConfig) {
 
 function getLaunchConfigForProfile(profileName, runnerConfig) {
   if (profileName && builtInProfiles[profileName]) {
-    return mergeConfig(defaultConfig, builtInProfiles[profileName])
+    return normalizeLaunchConfig(builtInProfiles[profileName])
   }
 
   if (profileName && runnerConfig.configs[profileName]) {
-    return mergeConfig(defaultConfig, runnerConfig.configs[profileName])
+    return normalizeLaunchConfig(runnerConfig.configs[profileName])
   }
 
   return null
 }
 
-function startProcess(name, scriptName, env = {}) {
+function startProcess(name, scriptName, env = {}, options = {}) {
+  const { critical = false } = options
   console.log(`\n[start] ${name} -> npm run ${scriptName}`)
 
   const child = spawn('npm', ['run', scriptName], {
@@ -301,7 +339,7 @@ function startProcess(name, scriptName, env = {}) {
     console.error(`[error] Impossible de lancer ${name}:`, error)
   })
 
-  return { name, child }
+  return { name, child, critical }
 }
 
 function killProcess(entry) {
@@ -373,21 +411,22 @@ async function main() {
   if (config.backendUnified) {
     processes.push(
       startProcess('backend-unified', 'dev:backend', {
+        PORT: '8081',
         ENABLE_HP: String(config.domains.hp),
         ENABLE_L7R: String(config.domains.l7r),
         ENABLE_JDR: String(config.domains.jdr),
         ENABLE_GHOST: String(config.domains.ghost),
         ENABLE_YEARDIARY: String(config.domains.yeardiary)
-      })
+      }, { critical: true })
     )
   }
 
   if (config.frontendShell) {
-    processes.push(startProcess('frontend-shell', 'dev:frontend'))
+    processes.push(startProcess('frontend-shell', 'dev:frontend', {}, { critical: false }))
   }
 
   if (config.ghostLegacy) {
-    processes.push(startProcess('ghost-legacy', 'start:ghost'))
+    processes.push(startProcess('ghost-legacy', 'start:ghost', {}, { critical: true }))
   }
 
   if (processes.length === 0) {
@@ -424,9 +463,13 @@ async function main() {
       exitedCount += 1
 
       if (!shuttingDown && code && code !== 0) {
-        exitCode = code
-        console.error(`[error] ${entry.name} termine avec code ${code}`)
-        shutdown('child-exit')
+        if (entry.critical) {
+          exitCode = code
+          console.error(`[error] ${entry.name} termine avec code ${code}`)
+          shutdown('child-exit')
+        } else {
+          console.warn(`[warn] ${entry.name} termine avec code ${code} (service non-bloquant)`)
+        }
       }
 
       if (exitedCount === processes.length) {
