@@ -32,6 +32,9 @@ async function bootstrap(): Promise<void> {
         { sourcePrefix: '/api/yeardiary', targetPrefix: '/api/v1/diaries', targetOrigin },
         { sourcePrefix: '/api/ghost', targetPrefix: '/api', targetOrigin }
       ])
+
+      // Store actual port for display
+      global.ACTUAL_SERVER_PORT = port
     }
   })
 }
@@ -42,18 +45,21 @@ function printStartupInfo(): void {
   const enableJdr = envEnabled('ENABLE_JDR', true)
   const enableGhost = envEnabled('ENABLE_GHOST', true)
   const enableYearDiary = envEnabled('ENABLE_YEARDIARY', true)
+  
+  const backendPort = (global as any).ACTUAL_SERVER_PORT ?? process.env.PORT ?? 8081
+  const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000'
 
   console.log('\n\n========================================')
   console.log('   Unified Application Started')
   console.log('========================================\n')
 
-  if (enableHp) console.log('  ✓ HP       → http://localhost:4200/hp/dashboard')
-  if (enableL7r) console.log('  ✓ L7R      → http://localhost:4200/l7r/dashboard')
-  if (enableJdr) console.log('  ✓ JDR      → http://localhost:4200/jdr/dashboard')
-  if (enableGhost) console.log('  ✓ Ghost    → http://localhost:4200/ghost/dashboard')
-  if (enableYearDiary) console.log('  ✓ YearDiary → http://localhost:4200/yeardiary/dashboard')
+  if (enableHp) console.log(`  ✓ HP       → ${frontendUrl}/hp/dashboard`)
+  if (enableL7r) console.log(`  ✓ L7R      → ${frontendUrl}/l7r/dashboard`)
+  if (enableJdr) console.log(`  ✓ JDR      → ${frontendUrl}/jdr/dashboard`)
+  if (enableGhost) console.log(`  ✓ Ghost    → ${frontendUrl}/ghost/dashboard`)
+  if (enableYearDiary) console.log(`  ✓ YearDiary → ${frontendUrl}/yeardiary/dashboard`)
 
-  console.log('\n  Shell Frontend: http://localhost:4200')
+  console.log(`\n  Backend API : http://localhost:${backendPort}`)
   console.log('\n========================================\n')
 }
 

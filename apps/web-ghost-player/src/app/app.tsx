@@ -79,7 +79,6 @@ export function App() {
   const lastSpiritMjMessageIdRef = useRef<string>('')
   const vanMusicAudioRef = useRef<HTMLAudioElement | null>(null)
   const lastTriggeredSoundRef = useRef<Record<string, string>>({})
-  const [vanAudioNotice, setVanAudioNotice] = useState('')
 
   // Van data
   const [vanData, setVanData] = useState<{
@@ -652,7 +651,6 @@ export function App() {
   useEffect(() => {
     if (state?.role !== 'van') {
       vanMusicAudioRef.current?.pause()
-      setVanAudioNotice('')
       return
     }
 
@@ -670,7 +668,6 @@ export function App() {
       audio.pause()
       audio.removeAttribute('src')
       audio.load()
-      setVanAudioNotice('')
       return
     }
 
@@ -681,14 +678,11 @@ export function App() {
 
     if (!music.playing) {
       audio.pause()
-      setVanAudioNotice('')
       return
     }
 
-    void audio.play().then(() => {
-      setVanAudioNotice('')
-    }).catch(() => {
-      setVanAudioNotice('Lecture auto bloquée. Clique une fois sur la page pour autoriser l’audio.')
+    void audio.play().catch(() => {
+      // Le player van ne doit pas exposer d'information sur les musiques.
     })
   }, [state?.role, vanData?.backgroundMusic])
 
@@ -710,10 +704,8 @@ export function App() {
       lastTriggeredSoundRef.current[cue.id] = cue.lastTriggeredAt
       const audio = new Audio(cue.url)
       audio.volume = cue.volume / 100
-      void audio.play().then(() => {
-        setVanAudioNotice('')
-      }).catch(() => {
-        setVanAudioNotice('Lecture d’un son bloquée. Une interaction utilisateur est peut-être requise.')
+      void audio.play().catch(() => {
+        // Le player van ne doit pas exposer d'information sur les musiques.
       })
     })
   }, [state?.role, vanData])
@@ -1174,9 +1166,6 @@ export function App() {
     const soundLevels = vanData?.soundLevels ?? {}
     const motionDetections = vanData?.motionDetections ?? {}
     const objectives = vanData?.missionObjectives ?? []
-    const backgroundMusic = vanData?.backgroundMusic ?? createDefaultVanBackgroundMusic()
-    const soundboard = vanData?.soundboard ?? []
-
     return (
       <ThemeProvider theme={darkTheme}>
         <Container>
@@ -1186,8 +1175,6 @@ export function App() {
               <VanTitle>PARANORMAL DETECTION SYSTEM</VanTitle>
               <VanStatus>LIVE MONITORING</VanStatus>
             </VanHeader>
-
-            {vanAudioNotice && <VanAudioNotice>{vanAudioNotice}</VanAudioNotice>}
 
             {vanData?.floorPlanImage && (
               <VanFloorPlanSection>
@@ -1245,40 +1232,6 @@ export function App() {
                     </SoundItem>
                   ))}
                 </SoundGrid>
-              </VanPanel>
-
-              <VanPanel>
-                <VanPanelLabel>BACKGROUND MUSIC</VanPanelLabel>
-                {backgroundMusic.url ? (
-                  <>
-                    <VanMusicTitle>{backgroundMusic.title || 'Untitled track'}</VanMusicTitle>
-                    <VanMusicMeta>
-                      {backgroundMusic.playing ? 'ON AIR' : 'STANDBY'} · {backgroundMusic.volume}% · {backgroundMusic.loop ? 'LOOP' : 'ONE SHOT'}
-                    </VanMusicMeta>
-                    <VanMusicStatus $active={backgroundMusic.playing}>
-                      {backgroundMusic.playing ? 'DIFFUSION EN COURS' : 'MUSIQUE PRÊTE'}
-                    </VanMusicStatus>
-                  </>
-                ) : (
-                  <VanEmptyState>Aucune musique configurée.</VanEmptyState>
-                )}
-              </VanPanel>
-
-              <VanPanel>
-                <VanPanelLabel>SOUNDBOARD</VanPanelLabel>
-                {soundboard.length > 0 ? (
-                  <VanSoundboardList>
-                    {soundboard.map(cue => (
-                      <VanSoundboardItem key={cue.id}>
-                        <strong>{cue.label || 'Son sans nom'}</strong>
-                        <span>{cue.volume}%</span>
-                        {cue.lastTriggeredAt && <VanTriggerStamp>{new Date(cue.lastTriggeredAt).toLocaleTimeString()}</VanTriggerStamp>}
-                      </VanSoundboardItem>
-                    ))}
-                  </VanSoundboardList>
-                ) : (
-                  <VanEmptyState>Aucun son additionnel configuré.</VanEmptyState>
-                )}
               </VanPanel>
             </VanGridLayout>
 
@@ -1928,82 +1881,6 @@ const VanAlert = styled.div`
   color: #ffd9b3;
   font-weight: 700;
   letter-spacing: 0.04em;
-`
-
-const VanAudioNotice = styled.div`
-  margin-bottom: 1rem;
-  padding: 0.55rem 0.7rem;
-  border: 1px solid #cf8f2f;
-  background: rgba(255, 180, 60, 0.12);
-  color: #ffe6a8;
-  font-size: 0.85rem;
-`
-
-const VanMusicTitle = styled.div`
-  font-size: 1rem;
-  font-weight: 700;
-  color: #dfffe8;
-  margin-bottom: 0.35rem;
-`
-
-const VanMusicMeta = styled.div`
-  font-size: 0.78rem;
-  letter-spacing: 0.12em;
-  color: #7de8b3;
-  margin-bottom: 0.7rem;
-`
-
-const VanMusicStatus = styled.div<{ $active: boolean }>`
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 999px;
-  padding: 0.3rem 0.7rem;
-  border: 1px solid ${({ $active }) => ($active ? '#00ff99' : '#1a4d3e')};
-  background: ${({ $active }) => ($active ? 'rgba(0, 255, 153, 0.12)' : 'rgba(0, 30, 20, 0.2)')};
-  color: ${({ $active }) => ($active ? '#dfffe8' : '#7de8b3')};
-  font-size: 0.78rem;
-  letter-spacing: 0.08em;
-  font-weight: 700;
-`
-
-const VanSoundboardList = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 0.55rem;
-`
-
-const VanSoundboardItem = styled.div`
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 0.35rem 0.75rem;
-  align-items: center;
-  padding: 0.45rem 0.55rem;
-  border: 1px solid #1a4d3e;
-  background: rgba(0, 30, 20, 0.2);
-
-  strong {
-    color: #dfffe8;
-    font-size: 0.88rem;
-  }
-
-  span {
-    color: #7de8b3;
-    font-size: 0.78rem;
-  }
-`
-
-const VanTriggerStamp = styled.div`
-  grid-column: 1 / -1;
-  color: #7de8b3;
-  font-size: 0.72rem;
-  letter-spacing: 0.08em;
-`
-
-const VanEmptyState = styled.div`
-  color: #7de8b3;
-  font-size: 0.85rem;
-  opacity: 0.8;
 `
 
 const MotionItem = styled.div<{ $active: boolean }>`

@@ -6,7 +6,7 @@ export default defineConfig(() => ({
   root: import.meta.dirname,
   cacheDir: '../../node_modules/.vite/apps/web-l7r',
   server: {
-    port: 4200,
+    port: 3000,
     host: 'localhost',
     allowedHosts: true,
     proxy: {
@@ -17,7 +17,7 @@ export default defineConfig(() => ({
     }
   },
   preview: {
-    port: 4200,
+    port: 3000,
     host: 'localhost',
     allowedHosts: true
   },
