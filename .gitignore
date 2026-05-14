@@ -1,6 +1,7 @@
 # compiled output
 /dist
 /node_modules
+**/node_modules
 
 # Logs
 logs
@@ -62,3 +63,6 @@ vite.config.*.timestamp*
 .claude/settings.local.json
 .dev-launcher.config.json
 config-runner.json
+
+# Local sqlite databases
+*.sqlite
