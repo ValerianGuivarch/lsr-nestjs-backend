@@ -1,1 +1,5 @@
 export * from './lib/backend/app-ghost.module'
+export * from './lib/backend/tools.types'
+export * from './lib/backend/scenario.types'
+export * from './lib/backend/game-state.entity'
+export * from './lib/backend/device.entity'

@@ -6,6 +6,10 @@
             "matchCommandLine": true
         },
         "nvm": true,
-        "npm exec": true
+        "npm exec": true,
+        "/^perl -0pi -e 's#/api/admin/#/api/ghost/admin/#g; s#/api/player/#/api/ghost/player/#g; s#/api/game/#/api/ghost/game/#g' apps/web-ghost-dashboard/src/app/app\\.tsx$/": {
+            "approve": true,
+            "matchCommandLine": true
+        }
     }
 }

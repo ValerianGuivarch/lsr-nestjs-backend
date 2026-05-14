@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client'
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import './styles.css'
 import { App } from './app/app'
+import WeddingDashboard from './wedding-photos/WeddingDashboard'
 import WeddingGolf from './wedding-photos/WeddingGolf'
 import WeddingSelfie from './wedding-photos/WeddingSelfie'
 import WeddingSouvenirs from './wedding-photos/WeddingSouvenirs'
@@ -17,7 +18,8 @@ root.render(
   <BrowserRouter>
     <Routes>
       <Route path="/" element={<App />}>
-        <Route path="/" element={<Navigate to="/wall" replace />} />
+        <Route path="/" element={<Navigate to="/dashboard" replace />} />
+        <Route path="/dashboard" element={<WeddingDashboard />} />
         <Route path="/golf" element={<WeddingGolf />} />
         <Route path="/foussier" element={<Foussier />} />
         <Route path="/so-lover" element={<WeddingSoLover />} />

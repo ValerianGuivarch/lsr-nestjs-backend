@@ -1,12 +1,25 @@
-import React, { useEffect, useRef, useState } from 'react'
-import styled, { ThemeProvider, keyframes } from 'styled-components'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
+import styled, { ThemeProvider } from 'styled-components'
+import { VanStep0Intro } from './components/van/VanStep0Intro'
+import { VanStep1Puzzle } from './components/van/VanStep1Puzzle'
+import { VanStep2Equipment } from './components/van/VanStep2Equipment'
+import { VanStep3Validation } from './components/van/VanStep3Validation'
+import { VanDashboard, VanHeader, VanStatus, VanTitle } from './components/van/van-styles'
+import { EmfDeviceView } from './components/devices/EmfDeviceView'
+import { SpiritBoxDeviceView } from './components/devices/SpiritBoxDeviceView'
+import { GhostCamDeviceView } from './components/devices/GhostCamDeviceView'
+import { ThermometerDeviceView } from './components/devices/ThermometerDeviceView'
+import { useEmfNeedle } from './hooks/useEmfNeedle'
+import { useGhostCamPhotoMode } from './hooks/useGhostCamPhotoMode'
+import { useSpiritBoxAudio } from './hooks/useSpiritBoxAudio'
+import { VanFeedMessage, VanObjective } from './components/van/types'
 
 const darkTheme = {
-  background: '#07080a',
-  color: '#e3f0d0',
+  background: '#07111c',
+  color: '#dce8f7',
 }
 
-type DeviceRole = 'emf' | 'spiritbox' | 'ghostcam' | 'ghostorbs' | 'van'
+type DeviceRole = 'emf' | 'spiritbox' | 'ghostcam' | 'thermometer' | 'ghostorbs' | 'van'
 
 type Device = {
   deviceId: string
@@ -16,7 +29,10 @@ type Device = {
   huntActive: boolean
   message?: string
   cameraColor?: 'green' | 'red'
+  temperature?: number
   ghostUntil?: string
+  orbUntil?: string
+  photoModeUnlocked?: boolean
   ghostActivityLevel?: number
   playerSanity?: string
   soundLevels?: string
@@ -28,6 +44,8 @@ type Device = {
   floorPlanImage?: string
   backgroundMusic?: string
   soundboard?: string
+  vanMessageTemplates?: string
+  vanSentMessages?: string
 }
 
 type VanBackgroundMusic = {
@@ -46,12 +64,82 @@ type VanSoundCue = {
   lastTriggeredAt?: string
 }
 
-type SpiritAudioMessage = {
-  id: string
-  audioData: string
-  mimeType?: string
-  from: 'player' | 'mj'
-  createdAt: string
+type VanPhase = 'step0' | 'step1' | 'step2' | 'step3'
+
+const VAN_INTRO_AUDIO_URL = 'https://l7r.fr/l7r/GhostIntro.mp3'
+
+const VAN_OBJECTIVE_INTRO = 'Intro terminee'
+const VAN_OBJECTIVE_MATERIAL = 'Récupérer le matériel de localisation'
+const VAN_OBJECTIVE_GHOST = 'Identifier le fantôme'
+
+const DEFAULT_VAN_OBJECTIVES: VanObjective[] = [
+  { objective: VAN_OBJECTIVE_INTRO, completed: false },
+  { objective: 'Récupérer le matériel de localisation', completed: false },
+  { objective: "Trouver la zone d'activité du fantôme", completed: false },
+  { objective: "Récupérer le matériel d'identification", completed: false },
+  { objective: 'Identifier le fantôme', completed: false },
+  { objective: 'Bannir le fantôme', completed: false },
+]
+
+function normalizeVanText(value: string): string {
+  return value
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim()
+}
+
+function isObjectiveMatch(value: string, expected: string): boolean {
+  return normalizeVanText(value) === normalizeVanText(expected)
+}
+
+function ensureVanObjectives(objectives: VanObjective[]): VanObjective[] {
+  const normalized: VanObjective[] = objectives.map(item => ({
+    objective: item.objective,
+    completed: Boolean(item.completed),
+  }))
+
+  DEFAULT_VAN_OBJECTIVES.forEach(required => {
+    if (!normalized.some(item => isObjectiveMatch(item.objective, required.objective))) {
+      normalized.push({ ...required })
+    }
+  })
+
+  return normalized
+}
+
+function deriveVanPhase(objectives: VanObjective[], mjAccepted: boolean): VanPhase {
+  const hasGhost = objectives.some(item => isObjectiveMatch(item.objective, VAN_OBJECTIVE_GHOST) && item.completed)
+  if (hasGhost || mjAccepted) {
+    return 'step3'
+  }
+
+  const hasMaterial = objectives.some(item => isObjectiveMatch(item.objective, VAN_OBJECTIVE_MATERIAL) && item.completed)
+  if (hasMaterial) {
+    return 'step2'
+  }
+
+  const hasIntro = objectives.some(item => isObjectiveMatch(item.objective, VAN_OBJECTIVE_INTRO) && item.completed)
+  if (hasIntro) {
+    return 'step1'
+  }
+
+  return 'step0'
+}
+
+function getVanPhaseRank(phase: VanPhase): number {
+  switch (phase) {
+    case 'step0':
+      return 0
+    case 'step1':
+      return 1
+    case 'step2':
+      return 2
+    case 'step3':
+      return 3
+    default:
+      return 0
+  }
 }
 
 export function App() {
@@ -61,24 +149,55 @@ export function App() {
   const [step, setStep] = useState<'choose' | 'play'>('choose')
   const [playStatus, setPlayStatus] = useState<'idle' | 'loading' | 'ready' | 'not-found' | 'error'>('idle')
   const [playError, setPlayError] = useState('')
-  const [emfNeedleJitter, setEmfNeedleJitter] = useState<number>(0)
   const audioContextRef = useRef<AudioContext | null>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const videoRef = useRef<HTMLVideoElement>(null)
   const cameraStreamRef = useRef<MediaStream | null>(null)
   const emfUploadInFlightRef = useRef(false)
   const ghostcamUploadInFlightRef = useRef(false)
-  const [photoPaused, setPhotoPaused] = useState(false)
+  const persistPhotoModeUnlocked = useCallback(
+    async (unlocked: boolean): Promise<void> => {
+      if (!deviceId) {
+        return
+      }
 
-  const [spiritRecording, setSpiritRecording] = useState(false)
-  const [spiritStatus, setSpiritStatus] = useState('READY')
-  const [spiritLastHeardAt, setSpiritLastHeardAt] = useState<string>('')
-  const spiritRecorderRef = useRef<MediaRecorder | null>(null)
-  const spiritStreamRef = useRef<MediaStream | null>(null)
-  const spiritChunksRef = useRef<BlobPart[]>([])
-  const lastSpiritMjMessageIdRef = useRef<string>('')
+      await fetch(`/apil7r/admin/device/${encodeURIComponent(deviceId)}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ photoModeUnlocked: unlocked })
+      })
+
+      setState(prev => (prev ? { ...prev, photoModeUnlocked: unlocked } : prev))
+    },
+    [deviceId]
+  )
+  const {
+    photoPaused,
+    photoModeUnlocked,
+    photoModePassword,
+    photoModeError,
+    setPhotoModePassword,
+    togglePhotoPause,
+    unlockPhotoMode
+  } = useGhostCamPhotoMode(state?.role, Boolean(state?.photoModeUnlocked), persistPhotoModeUnlocked)
+  const { needleAngle } = useEmfNeedle({ role: state?.role, emfLevel: state?.emfLevel, powerOn: state?.powerOn })
+  const {
+    spiritStatus,
+    spiritLastHeardAt,
+    spiritFrequency,
+    tuneSpiritFrequencyDown,
+    tuneSpiritFrequencyUp,
+  } = useSpiritBoxAudio(state?.role, deviceId, state?.powerOn ?? true)
+  const vanIntroAudioRef = useRef<HTMLAudioElement | null>(null)
   const vanMusicAudioRef = useRef<HTMLAudioElement | null>(null)
   const lastTriggeredSoundRef = useRef<Record<string, string>>({})
+  const [vanPhase, setVanPhase] = useState<VanPhase>('step0')
+  const [vanIntroState, setVanIntroState] = useState<'idle' | 'playing' | 'done'>('idle')
+  const [vanGhostGuess, setVanGhostGuess] = useState('')
+  const [vanGhostDeclarationError, setVanGhostDeclarationError] = useState('')
+  const lastPlayedVanMessageIdRef = useRef<string>('')
+  const [vanScenarioStep, setVanScenarioStep] = useState<number | null>(null)
+  const introCompletionPendingRef = useRef(false)
 
   // Van data
   const [vanData, setVanData] = useState<{
@@ -93,6 +212,7 @@ export function App() {
     floorPlanImage?: string
     backgroundMusic: VanBackgroundMusic
     soundboard: VanSoundCue[]
+    vanSentMessages: VanFeedMessage[]
   } | null>(null)
 
   const createDefaultVanBackgroundMusic = (): VanBackgroundMusic => ({
@@ -137,6 +257,32 @@ export function App() {
           url: typeof item.url === 'string' ? item.url : '',
           volume: typeof item.volume === 'number' ? Math.max(0, Math.min(100, Math.round(item.volume))) : 80,
           lastTriggeredAt: typeof item.lastTriggeredAt === 'string' ? item.lastTriggeredAt : undefined
+        }))
+    } catch {
+      return []
+    }
+  }
+
+  const parseVanSentMessages = (raw?: string): VanFeedMessage[] => {
+    if (!raw) {
+      return []
+    }
+
+    try {
+      const parsed = JSON.parse(raw) as Array<Partial<VanFeedMessage>>
+      return parsed
+        .filter(item => item && typeof item === 'object')
+        .map((item, index) => ({
+          id: typeof item.id === 'string' && item.id ? item.id : `message-${index}`,
+          kind:
+            item.kind === 'audio' || item.kind === 'text' || item.kind === 'text_image'
+              ? item.kind
+              : 'text',
+          title: typeof item.title === 'string' ? item.title : 'Message',
+          text: typeof item.text === 'string' ? item.text : undefined,
+          audioUrl: typeof item.audioUrl === 'string' ? item.audioUrl : undefined,
+          imageUrl: typeof item.imageUrl === 'string' ? item.imageUrl : undefined,
+          sentAt: typeof item.sentAt === 'string' ? item.sentAt : new Date().toISOString()
         }))
     } catch {
       return []
@@ -216,31 +362,6 @@ export function App() {
 
   useEffect(() => {
     if (state?.role !== 'emf') {
-      setEmfNeedleJitter(0)
-      return
-    }
-
-    const emfLevel = Math.max(0, Math.min(5, state.emfLevel ?? 0))
-    const powerOn = state.powerOn ?? true
-
-    if (!powerOn || emfLevel === 0) {
-      setEmfNeedleJitter(0)
-      return
-    }
-
-    const amplitudeByLevel = [0, 0.8, 1.5, 2.5, 3.8, 5.8]
-    const amplitude = amplitudeByLevel[emfLevel]
-
-    const interval = setInterval(() => {
-      const jitter = (Math.random() * 2 - 1) * amplitude * 2
-      setEmfNeedleJitter(jitter)
-    }, 70)
-
-    return () => clearInterval(interval)
-  }, [state?.role, state?.emfLevel, state?.powerOn])
-
-  useEffect(() => {
-    if (state?.role !== 'emf') {
       return
     }
 
@@ -305,7 +426,7 @@ export function App() {
   }, [state?.role, state?.emfLevel, state?.powerOn])
 
   useEffect(() => {
-    if (state?.role !== 'ghostcam' && state?.role !== 'ghostorbs' && state?.role !== 'emf') {
+    if (state?.role !== 'ghostcam' && state?.role !== 'thermometer' && state?.role !== 'ghostorbs' && state?.role !== 'emf') {
       return
     }
 
@@ -331,7 +452,7 @@ export function App() {
   }, [state?.role])
 
   useEffect(() => {
-    if (state?.role !== 'ghostcam' && state?.role !== 'ghostorbs' && state?.role !== 'emf') {
+    if (state?.role !== 'ghostcam' && state?.role !== 'thermometer' && state?.role !== 'ghostorbs' && state?.role !== 'emf') {
       return
     }
 
@@ -350,8 +471,7 @@ export function App() {
 
   useEffect(() => {
     if (state?.role !== 'ghostcam') {
-      setPhotoPaused(false)
-      if (state?.role !== 'ghostorbs') {
+      if (state?.role !== 'ghostorbs' && state?.role !== 'thermometer') {
         return
       }
     }
@@ -366,8 +486,11 @@ export function App() {
       if (!ctx) return
       const width = canvasRef.current.width
       const height = canvasRef.current.height
-      const cameraColor = state.cameraColor ?? 'green'
-      const isRed = cameraColor === 'red'
+      const ghostUntilTs = state.ghostUntil ? Date.parse(state.ghostUntil) : NaN
+      const ghostActive = Number.isFinite(ghostUntilTs) && ghostUntilTs > Date.now()
+      const orbUntilTs = state.orbUntil ? Date.parse(state.orbUntil) : NaN
+      const orbsActive = Number.isFinite(orbUntilTs) && orbUntilTs > Date.now()
+      const isRed = ghostActive
 
       // Dessiner le flux video
       ctx.drawImage(videoRef.current, 0, 0, width, height)
@@ -427,8 +550,6 @@ export function App() {
       ctx.fillRect(0, 0, width, height)
 
       // Apparition de fantôme temporaire (pilotée par MJ).
-      const ghostUntilTs = state.ghostUntil ? Date.parse(state.ghostUntil) : NaN
-      const ghostActive = Number.isFinite(ghostUntilTs) && ghostUntilTs > Date.now()
 
       if (ghostActive && state.role === 'ghostcam') {
         const now = Date.now() / 1000
@@ -487,17 +608,17 @@ export function App() {
         ctx.restore()
       }
 
-      if (ghostActive && state.role === 'ghostorbs') {
+      if (orbsActive && state.role === 'ghostcam') {
         const now = Date.now() / 1000
-        const orbCount = 6
+        const orbCount = 5
         for (let i = 0; i < orbCount; i++) {
-          const px = width * (0.2 + ((i + 1) / (orbCount + 1)) * 0.65) + Math.sin(now * (1.2 + i * 0.2)) * 18
-          const py = height * (0.35 + ((i % 3) * 0.16)) + Math.cos(now * (1.5 + i * 0.25)) * 12
-          const radius = 6 + ((i * 3) % 7)
+          const px = width * (0.2 + ((i + 1) / (orbCount + 1)) * 0.62) + Math.sin(now * (1.1 + i * 0.18)) * 16
+          const py = height * (0.25 + ((i % 3) * 0.18)) + Math.cos(now * (1.4 + i * 0.22)) * 10
+          const radius = 5 + ((i * 2) % 6)
 
           const orbGradient = ctx.createRadialGradient(px, py, 1, px, py, radius * 2.4)
-          orbGradient.addColorStop(0, isRed ? 'rgba(255, 220, 220, 0.95)' : 'rgba(220, 255, 235, 0.96)')
-          orbGradient.addColorStop(0.5, isRed ? 'rgba(255, 120, 120, 0.34)' : 'rgba(170, 255, 205, 0.35)')
+          orbGradient.addColorStop(0, 'rgba(214, 236, 255, 0.96)')
+          orbGradient.addColorStop(0.5, 'rgba(120, 185, 255, 0.4)')
           orbGradient.addColorStop(1, 'rgba(0, 0, 0, 0)')
 
           ctx.fillStyle = orbGradient
@@ -505,7 +626,7 @@ export function App() {
           ctx.arc(px, py, radius * 2.4, 0, Math.PI * 2)
           ctx.fill()
 
-          ctx.strokeStyle = isRed ? 'rgba(255, 140, 140, 0.45)' : 'rgba(185, 255, 220, 0.45)'
+          ctx.strokeStyle = 'rgba(145, 205, 255, 0.6)'
           ctx.lineWidth = 1
           ctx.beginPath()
           ctx.arc(px, py, radius, 0, Math.PI * 2)
@@ -533,7 +654,7 @@ export function App() {
     const interval = setInterval(captureAndSend, 200) // 5 FPS
 
     return () => clearInterval(interval)
-  }, [state?.role, state?.cameraColor, state?.ghostUntil, photoPaused, deviceId])
+  }, [state?.role, state?.cameraColor, state?.ghostUntil, state?.orbUntil, photoPaused, deviceId])
 
   useEffect(() => {
     if (state?.role !== 'emf') {
@@ -574,46 +695,34 @@ export function App() {
   }, [state?.role, deviceId])
 
   useEffect(() => {
-    if (state?.role !== 'spiritbox') {
-      return
-    }
-
-    const pollMjMessage = () => {
-      fetch(`/apil7r/player/device/${deviceId}/spiritbox/mj-message`)
-        .then(r => r.json())
-        .then((payload: { message?: SpiritAudioMessage }) => {
-          const message = payload.message
-          if (!message || message.id === lastSpiritMjMessageIdRef.current) {
-            return
-          }
-
-          lastSpiritMjMessageIdRef.current = message.id
-          setSpiritStatus('MESSAGE RECU')
-          setSpiritLastHeardAt(new Date().toLocaleTimeString())
-
-          playGhostAudio(message.audioData)
-        })
-        .catch(() => {
-          // Réseau non disponible
-        })
-    }
-
-    pollMjMessage()
-    const interval = setInterval(pollMjMessage, 700)
-
-    return () => clearInterval(interval)
-  }, [state?.role, deviceId])
-
-  useEffect(() => {
     if (state?.role !== 'van') {
       return
     }
 
     const pollVanData = () => {
-      fetch(`/apil7r/player/device/${deviceId}/van`)
+      fetch(`/apil7r/player/device/${deviceId}/van?ts=${Date.now()}`, { cache: 'no-store' })
         .then(r => r.json())
-        .then((device: any) => {
+        .then(async (device: any) => {
           if (!device) return
+
+          let liveGhostCamFrame: string | undefined
+          try {
+            const cameraPayload = await fetch('/apil7r/player/device/ghostcam/camera-frame').then(r => r.json())
+            if (typeof cameraPayload?.frame === 'string' && cameraPayload.frame) {
+              liveGhostCamFrame = cameraPayload.frame
+            }
+          } catch {
+            // Flux caméra indisponible, fallback sur l'image van existante.
+          }
+
+          try {
+            const gamePayload = await fetch('/apil7r/game/hardcoded-game?ts=' + Date.now(), { cache: 'no-store' }).then(r => r.json())
+            if (typeof gamePayload?.currentScenarioStep === 'number') {
+              setVanScenarioStep(gamePayload.currentScenarioStep)
+            }
+          } catch {
+            // Partie indisponible, on garde la logique locale par objectifs.
+          }
           
           setVanData({
             ghostActivityLevel: device.ghostActivityLevel ?? 0,
@@ -623,10 +732,11 @@ export function App() {
             roomList: device.roomList ? JSON.parse(device.roomList) : [],
             motionSensorRooms: device.motionSensorRooms ? JSON.parse(device.motionSensorRooms) : [],
             recentMotionAlert: device.recentMotionAlert,
-            missionObjectives: device.missionObjectives ? JSON.parse(device.missionObjectives) : [],
-            floorPlanImage: device.floorPlanImage,
+            missionObjectives: ensureVanObjectives(device.missionObjectives ? JSON.parse(device.missionObjectives) : []),
+            floorPlanImage: liveGhostCamFrame ?? device.floorPlanImage,
             backgroundMusic: parseVanBackgroundMusic(device.backgroundMusic),
-            soundboard: parseVanSoundboard(device.soundboard)
+            soundboard: parseVanSoundboard(device.soundboard),
+            vanSentMessages: parseVanSentMessages(device.vanSentMessages)
           })
         })
         .catch(() => {
@@ -642,14 +752,83 @@ export function App() {
 
   useEffect(() => {
     return () => {
-      spiritStreamRef.current?.getTracks().forEach(track => track.stop())
-      spiritStreamRef.current = null
+      vanIntroAudioRef.current?.pause()
       vanMusicAudioRef.current?.pause()
     }
   }, [])
 
   useEffect(() => {
     if (state?.role !== 'van') {
+      setVanPhase('step0')
+      setVanIntroState('idle')
+      setVanGhostGuess('')
+      setVanGhostDeclarationError('')
+      lastPlayedVanMessageIdRef.current = ''
+      vanIntroAudioRef.current?.pause()
+      vanMusicAudioRef.current?.pause()
+      return
+    }
+
+    setVanGhostGuess('')
+    setVanGhostDeclarationError('')
+    lastPlayedVanMessageIdRef.current = ''
+    vanIntroAudioRef.current?.pause()
+  }, [state?.role, deviceId])
+
+  const patchVanObjectives = async (
+    updater: (current: VanObjective[]) => VanObjective[]
+  ): Promise<void> => {
+    if (state?.role !== 'van' || !deviceId) {
+      return
+    }
+
+    const current = ensureVanObjectives(vanData?.missionObjectives ?? [])
+    const next = ensureVanObjectives(updater(current))
+
+    if (JSON.stringify(current) === JSON.stringify(next)) {
+      return
+    }
+
+    try {
+      await fetch(`/apil7r/admin/device/${encodeURIComponent(deviceId)}/van`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ missionObjectives: JSON.stringify(next) })
+      })
+
+      setVanData(prev => (prev ? { ...prev, missionObjectives: next } : prev))
+    } catch {
+      // Réseau non disponible
+    }
+  }
+
+  useEffect(() => {
+    if (state?.role !== 'van') {
+      return
+    }
+
+    const objectives = ensureVanObjectives(vanData?.missionObjectives ?? [])
+    const introCompleted = Boolean(objectives[0]?.completed)
+
+    if (vanScenarioStep === 0 && !introCompleted && !introCompletionPendingRef.current) {
+      setVanPhase('step0')
+      setVanIntroState('idle')
+      return
+    }
+
+    const nextPhase = deriveVanPhase(objectives, Boolean(state.huntActive))
+
+    setVanPhase(prev => {
+      if (getVanPhaseRank(nextPhase) > getVanPhaseRank(prev)) {
+        return nextPhase
+      }
+      return prev
+    })
+    setVanIntroState(prev => (nextPhase === 'step0' ? 'idle' : prev === 'playing' ? prev : 'done'))
+  }, [state?.role, state?.huntActive, vanData?.missionObjectives, vanScenarioStep])
+
+  useEffect(() => {
+    if (state?.role !== 'van' || (vanPhase !== 'step1' && vanPhase !== 'step2' && vanPhase !== 'step3')) {
       vanMusicAudioRef.current?.pause()
       return
     }
@@ -684,10 +863,120 @@ export function App() {
     void audio.play().catch(() => {
       // Le player van ne doit pas exposer d'information sur les musiques.
     })
-  }, [state?.role, vanData?.backgroundMusic])
+  }, [state?.role, vanPhase, vanData?.backgroundMusic])
+
+  const playVanIntro = async (): Promise<void> => {
+    if (state?.role !== 'van' || vanIntroState === 'playing') {
+      return
+    }
+
+    const introAudio = vanIntroAudioRef.current ?? new Audio(VAN_INTRO_AUDIO_URL)
+    vanIntroAudioRef.current = introAudio
+    introAudio.pause()
+    introAudio.currentTime = 0
+    introAudio.loop = false
+    introAudio.volume = 0.92
+    introAudio.src = VAN_INTRO_AUDIO_URL
+    introAudio.onended = () => {
+      introCompletionPendingRef.current = true
+      setVanIntroState('done')
+      setVanPhase('step1')
+      setVanData(prev => {
+        if (!prev) {
+          return prev
+        }
+
+        const nextObjectives = ensureVanObjectives(
+          prev.missionObjectives.map(item =>
+            isObjectiveMatch(item.objective, VAN_OBJECTIVE_INTRO)
+              ? { ...item, completed: true }
+              : item
+          )
+        )
+
+        return { ...prev, missionObjectives: nextObjectives }
+      })
+      void patchVanObjectives(current =>
+        current.map(item =>
+          isObjectiveMatch(item.objective, VAN_OBJECTIVE_INTRO)
+            ? { ...item, completed: true }
+            : item
+        )
+      ).finally(() => {
+        introCompletionPendingRef.current = false
+      })
+    }
+    introAudio.onerror = () => {
+      setVanIntroState('idle')
+      setVanGhostDeclarationError(`Impossible de lire ${VAN_INTRO_AUDIO_URL}`)
+    }
+
+    setVanGhostDeclarationError('')
+    setVanIntroState('playing')
+
+    try {
+      await introAudio.play()
+    } catch {
+      setVanIntroState('idle')
+      setVanGhostDeclarationError('Le navigateur a bloqué la lecture de l’intro.')
+    }
+  }
+
+  const declareGhost = (): void => {
+    if (vanPhase !== 'step2') {
+      setVanGhostDeclarationError('Le nom du spectre se valide uniquement en étape 2.')
+      return
+    }
+
+    if (!window.confirm('Confirmer la saisie du nom du spectre ?')) {
+      return
+    }
+
+    const answer = vanGhostGuess.trim().toLowerCase()
+    if (!answer) {
+      setVanGhostDeclarationError('Entre un nom avant de valider.')
+      return
+    }
+
+    if (answer !== 'edouard') {
+      setVanGhostDeclarationError('Ce n’est pas le bon spectre.')
+      return
+    }
+
+    setVanPhase('step3')
+    void patchVanObjectives(current =>
+      current.map(item =>
+        isObjectiveMatch(item.objective, VAN_OBJECTIVE_GHOST)
+          ? { ...item, completed: true }
+          : item
+      )
+    )
+    setVanGhostDeclarationError('')
+  }
 
   useEffect(() => {
-    if (state?.role !== 'van' || !vanData) {
+    if (state?.role !== 'van') {
+      return
+    }
+
+    const sentMessages = vanData?.vanSentMessages ?? []
+    const latestAudioMessage = [...sentMessages].reverse().find(message => message.kind === 'audio' && message.audioUrl)
+
+    if (!latestAudioMessage || latestAudioMessage.id === lastPlayedVanMessageIdRef.current) {
+      return
+    }
+
+    const audio = new Audio(latestAudioMessage.audioUrl)
+    audio.volume = 0.95
+    void audio.play().catch(() => {
+      // Lecture auto potentiellement bloquée sans interaction utilisateur.
+    })
+
+    lastPlayedVanMessageIdRef.current = latestAudioMessage.id
+  }, [state?.role, vanData?.vanSentMessages])
+
+  useEffect(() => {
+    if (state?.role !== 'van' || vanPhase === 'step0' || !vanData) {
       lastTriggeredSoundRef.current = {}
       return
     }
@@ -708,192 +997,36 @@ export function App() {
         // Le player van ne doit pas exposer d'information sur les musiques.
       })
     })
-  }, [state?.role, vanData])
+  }, [state?.role, vanPhase, vanData])
 
-  const blobToDataUrl = (blob: Blob): Promise<string> =>
-    new Promise((resolve, reject) => {
-      const reader = new FileReader()
-      reader.onloadend = () => {
-        if (typeof reader.result === 'string') {
-          resolve(reader.result)
-        } else {
-          reject(new Error('Lecture audio impossible'))
+  useEffect(() => {
+    if (state?.role !== 'van' || vanPhase !== 'step1' || !deviceId) {
+      return
+    }
+
+    const interval = setInterval(async () => {
+      setVanData(prev => {
+        if (!prev) return prev
+        const nextActivityLevel = Math.min(100, prev.ghostActivityLevel + 1)
+        
+        // Patch server with new activity level
+        fetch(`/apil7r/player/device/${deviceId}/van`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ghostActivityLevel: nextActivityLevel })
+        }).catch(() => {
+          // Network error, ignore
+        })
+        
+        return {
+          ...prev,
+          ghostActivityLevel: nextActivityLevel
         }
-      }
-      reader.onerror = () => reject(new Error('Lecture audio impossible'))
-      reader.readAsDataURL(blob)
-    })
+      })
+    }, 15000) // 15 seconds
 
-  const createGhostVoiceFX = (
-    ctx: AudioContext,
-    source: AudioNode
-  ): { fx: AudioNode; masterGain: GainNode } => {
-    // Low-pass filter pour assombrir la voix fantôme
-    const lowPass = ctx.createBiquadFilter()
-    lowPass.type = 'lowpass'
-    lowPass.frequency.setValueAtTime(1800, ctx.currentTime)
-    lowPass.Q.setValueAtTime(1.5, ctx.currentTime)
-
-    // Distortion (bitcrusher) pour l'effet grésillement
-    const distortion = ctx.createWaveShaper()
-    const distortionCurve = new Float32Array(44100)
-    for (let i = 0; i < 44100; i++) {
-      const x = (i / 44100) * 2 - 1
-      // Bitcrusher: réduire la précision du signal
-      const bitDepth = 8
-      distortionCurve[i] = Math.sign(x) * Math.round(Math.abs(x) * (1 << bitDepth)) / (1 << bitDepth)
-    }
-    distortion.curve = distortionCurve
-    distortion.oversample = '4x'
-
-    // Gain avec tremolo (variation d'amplitude pour effet spooky)
-    const tremoloGain = ctx.createGain()
-    const tremoloOsc = ctx.createOscillator()
-    const tremoloDepth = ctx.createGain()
-
-    tremoloOsc.frequency.setValueAtTime(4.5, ctx.currentTime) // Tremolo à 4.5 Hz
-    tremoloDepth.gain.setValueAtTime(0.35, ctx.currentTime) // Profondeur du tremolo
-    tremoloGain.gain.setValueAtTime(0.65, ctx.currentTime) // Gain de base (moins fort pour laisser de la place au tremolo)
-
-    // Chaîne FX: source → low-pass → distortion → tremolo gain → master
-    source.connect(lowPass)
-    lowPass.connect(distortion)
-    distortion.connect(tremoloGain)
-    tremoloOsc.connect(tremoloDepth)
-    tremoloDepth.connect(tremoloGain.gain)
-    tremoloOsc.start()
-
-    // Master gain pour contrôle final du volume
-    const masterGain = ctx.createGain()
-    masterGain.gain.setValueAtTime(0.85, ctx.currentTime)
-    tremoloGain.connect(masterGain)
-
-    return { fx: masterGain, masterGain }
-  }
-
-  const playGhostAudio = (audioData: string): void => {
-    const AudioContextCtor = (window as any).AudioContext || (window as any).webkitAudioContext
-    if (!AudioContextCtor) {
-      setSpiritStatus('WEB AUDIO UNAVAILABLE')
-      return
-    }
-
-    if (!audioContextRef.current) {
-      audioContextRef.current = new AudioContextCtor()
-    }
-
-    const ctx = audioContextRef.current
-    if (!ctx) {
-      setSpiritStatus('AUDIO CONTEXT FAILED')
-      return
-    }
-
-    if (ctx.state === 'suspended') {
-      void ctx.resume()
-    }
-
-    try {
-      // Décoder le data URL en ArrayBuffer
-      const binaryString = atob(audioData.split(',')[1] || audioData)
-      const bytes = new Uint8Array(binaryString.length)
-      for (let i = 0; i < binaryString.length; i++) {
-        bytes[i] = binaryString.charCodeAt(i)
-      }
-
-      ctx.decodeAudioData(
-        bytes.buffer,
-        decodedBuffer => {
-          const source = ctx.createBufferSource()
-          source.buffer = decodedBuffer
-
-          const { masterGain } = createGhostVoiceFX(ctx, source)
-          masterGain.connect(ctx.destination)
-          source.start()
-        },
-        () => {
-          setSpiritStatus('DECODE ERROR')
-        }
-      )
-    } catch {
-      setSpiritStatus('AUDIO PLAY ERROR')
-    }
-  }
-
-  const startSpiritRecording = async (): Promise<void> => {
-    if (spiritRecording || state?.role !== 'spiritbox') {
-      return
-    }
-
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
-      spiritStreamRef.current = stream
-      spiritChunksRef.current = []
-
-      const recorder = MediaRecorder.isTypeSupported('audio/webm')
-        ? new MediaRecorder(stream, { mimeType: 'audio/webm' })
-        : new MediaRecorder(stream)
-      spiritRecorderRef.current = recorder
-
-      recorder.ondataavailable = event => {
-        if (event.data && event.data.size > 0) {
-          spiritChunksRef.current.push(event.data)
-        }
-      }
-
-      recorder.onstop = () => {
-        const blob = new Blob(spiritChunksRef.current, { type: recorder.mimeType || 'audio/webm' })
-        spiritChunksRef.current = []
-
-        if (blob.size === 0) {
-          setSpiritStatus('AUCUN SON')
-          return
-        }
-
-        void blobToDataUrl(blob)
-          .then(audioData => {
-            return fetch(`/apil7r/player/device/${deviceId}/spiritbox/player-message`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ audioData, mimeType: blob.type || 'audio/webm' })
-            })
-          })
-          .then(() => {
-            setSpiritStatus('MESSAGE ENVOYE')
-          })
-          .catch(() => {
-            setSpiritStatus('ECHEC ENVOI')
-          })
-          .finally(() => {
-            spiritStreamRef.current?.getTracks().forEach(track => track.stop())
-            spiritStreamRef.current = null
-          })
-      }
-
-      recorder.start()
-      setSpiritRecording(true)
-      setSpiritStatus('ENREGISTREMENT...')
-    } catch {
-      setSpiritStatus('MICRO INDISPONIBLE')
-    }
-  }
-
-  const stopSpiritRecording = (): void => {
-    const recorder = spiritRecorderRef.current
-    if (!recorder || recorder.state === 'inactive') {
-      return
-    }
-
-    recorder.stop()
-    setSpiritRecording(false)
-  }
-
-  const toggleSpiritRecording = (): void => {
-    if (spiritRecording) {
-      stopSpiritRecording()
-      return
-    }
-    void startSpiritRecording()
-  }
+    return () => clearInterval(interval)
+  }, [state?.role, vanPhase, deviceId])
 
   if (step === 'choose') {
     return (
@@ -980,276 +1113,93 @@ export function App() {
 
   // UI selon le rôle
   if (state.role === 'emf') {
-    const emfLevel = Math.max(0, Math.min(5, state.emfLevel ?? 0))
-    const powerOn = state.powerOn ?? true
-    const baseAngle = powerOn ? -65 + (emfLevel / 5) * 130 : -80
-    const needleAngle = baseAngle + (powerOn && emfLevel > 0 ? emfNeedleJitter : 0)
-
     return (
-      <>
-        <video
-          ref={videoRef}
-          autoPlay
-          playsInline
-          muted
-          style={{ display: 'none' }}
-        />
-        <canvas
-          ref={canvasRef}
-          width={480}
-          height={360}
-          style={{ display: 'none' }}
-        />
-        <ThemeProvider theme={darkTheme}>
-          <DeviceScreen>
-          <HudLine>
-            <small>Device: {state.deviceId}</small>
-            <small>{powerOn ? 'ONLINE' : 'OFFLINE'}</small>
-          </HudLine>
-          <EmfBody>
-            <EmfTop>
-              <EmfBrand>GHOST TECH</EmfBrand>
-              <EmfLabel>ELECTRO MAGNETIC FIELD READER</EmfLabel>
-            </EmfTop>
-
-            <EmfDisplay $on={powerOn}>
-              {powerOn ? `LVL ${emfLevel}` : 'OFF'}
-            </EmfDisplay>
-
-            <GaugeShell>
-              <GaugeArc />
-              <GaugeTicks>
-                {[0, 1, 2, 3, 4, 5].map(level => (
-                  <GaugeTick
-                    key={level}
-                    style={{ transform: `translateX(-50%) rotate(${-65 + (level / 5) * 130}deg)` }}
-                  />
-                ))}
-              </GaugeTicks>
-              <GaugeNeedle $on={powerOn} style={{ transform: `translateX(-50%) rotate(${needleAngle}deg)` }} />
-              <GaugeCenter />
-            </GaugeShell>
-
-            <LedRail>
-              {[1, 2, 3, 4, 5].map(level => (
-                <Led key={level} $active={powerOn && level <= emfLevel} $level={level} />
-              ))}
-            </LedRail>
-
-            <EmfFoot>
-              <span>EMF SENSOR</span>
-              <PowerBadge $on={powerOn}>{powerOn ? 'POWER ON' : 'POWER OFF'}</PowerBadge>
-            </EmfFoot>
-          </EmfBody>
-
-          {state.message && <Message>{state.message}</Message>}
-          {state.huntActive && <Hunt>HUNT!</Hunt>}
-        </DeviceScreen>
-        </ThemeProvider>
-      </>
+      <ThemeProvider theme={darkTheme}>
+        <EmfDeviceView state={state} needleAngle={needleAngle} videoRef={videoRef} canvasRef={canvasRef} />
+      </ThemeProvider>
     )
   }
   if (state.role === 'spiritbox') {
-    const powerOn = state.powerOn ?? true
-
     return (
       <ThemeProvider theme={darkTheme}>
-        <Container>
-          <HudLine>
-            <small>Device: {state.deviceId}</small>
-            <small>{powerOn ? 'ONLINE' : 'OFFLINE'}</small>
-          </HudLine>
-
-          <SpiritBoxShell>
-            <SpiritBoxHeader>
-              <strong>P-SB7T Spirit Box</strong>
-              <span>{powerOn ? 'FM 100ms' : 'OFF'}</span>
-            </SpiritBoxHeader>
-
-            <SpiritBoxScreen $on={powerOn}>
-              <SpiritFrequency>099.20</SpiritFrequency>
-              <SpiritStatus>{spiritStatus}</SpiritStatus>
-              {spiritLastHeardAt && <SpiritTimestamp>Dernier msg MJ: {spiritLastHeardAt}</SpiritTimestamp>}
-            </SpiritBoxScreen>
-
-            <SpiritActions>
-              <SpiritButton
-                type="button"
-                onClick={toggleSpiritRecording}
-                disabled={!powerOn}
-              >
-                {spiritRecording ? 'STOP / ENVOYER' : 'MESSAGE VOCAL'}
-              </SpiritButton>
-            </SpiritActions>
-          </SpiritBoxShell>
-
-          {state.message && <Message>{state.message}</Message>}
-          {state.huntActive && <Hunt>HUNT!</Hunt>}
-        </Container>
+        <SpiritBoxDeviceView
+          state={state}
+          spiritStatus={spiritStatus}
+          spiritLastHeardAt={spiritLastHeardAt}
+          spiritFrequency={spiritFrequency}
+          onTuneFrequencyDown={tuneSpiritFrequencyDown}
+          onTuneFrequencyUp={tuneSpiritFrequencyUp}
+        />
       </ThemeProvider>
     )
   }
   if (state.role === 'ghostcam') {
     return (
       <ThemeProvider theme={darkTheme}>
-        <Container>
-          <HudLine>
-            <small>Device: {state.deviceId}</small>
-            <small>{state.powerOn ? 'ONLINE' : 'OFFLINE'}</small>
-          </HudLine>
-          <GhostCamView>
-            <GhostCamTitle>GHOST CAM</GhostCamTitle>
-            <GhostCamActions>
-              <GhostCamActionButton
-                type="button"
-                onClick={() => setPhotoPaused(prev => !prev)}
-              >
-                {photoPaused ? 'Relancer' : 'Photo'}
-              </GhostCamActionButton>
-            </GhostCamActions>
-            <video
-              ref={videoRef}
-              autoPlay
-              playsInline
-              muted
-              style={{ display: 'none' }}
-            />
-            <GhostCamCanvas
-              ref={canvasRef}
-              width={480}
-              height={360}
-              style={{ display: state.powerOn ? 'block' : 'none' }}
-            />
-            {!state.powerOn && <GhostCamOffline>CAM OFFLINE</GhostCamOffline>}
-            {photoPaused && <GhostCamPaused>PAUSE PHOTO</GhostCamPaused>}
-          </GhostCamView>
-          {state.message && <Message>{state.message}</Message>}
-          {state.huntActive && <Hunt>HUNT!</Hunt>}
-        </Container>
+        <GhostCamDeviceView
+          state={state}
+          photoModeUnlocked={photoModeUnlocked}
+          photoModePassword={photoModePassword}
+          photoModeError={photoModeError}
+          photoPaused={photoPaused}
+          onPhotoModePasswordChange={setPhotoModePassword}
+          onUnlockPhotoMode={unlockPhotoMode}
+          onTogglePhotoPause={togglePhotoPause}
+          videoRef={videoRef}
+          canvasRef={canvasRef}
+        />
       </ThemeProvider>
     )
   }
-  if (state.role === 'ghostorbs') {
+  if (state.role === 'ghostorbs' || state.role === 'thermometer') {
     return (
       <ThemeProvider theme={darkTheme}>
-        <Container>
-          <HudLine>
-            <small>Device: {state.deviceId}</small>
-            <small>{state.powerOn ? 'ONLINE' : 'OFFLINE'}</small>
-          </HudLine>
-          <GhostCamView>
-            <GhostCamTitle>GHOST ORBS</GhostCamTitle>
-            <video
-              ref={videoRef}
-              autoPlay
-              playsInline
-              muted
-              style={{ display: 'none' }}
-            />
-            <GhostCamCanvas
-              ref={canvasRef}
-              width={480}
-              height={360}
-              style={{ display: state.powerOn ? 'block' : 'none' }}
-            />
-            {!state.powerOn && <GhostCamOffline>CAM OFFLINE</GhostCamOffline>}
-          </GhostCamView>
-          {state.message && <Message>{state.message}</Message>}
-          {state.huntActive && <Hunt>HUNT!</Hunt>}
-        </Container>
+        <ThermometerDeviceView state={state} videoRef={videoRef} canvasRef={canvasRef} />
       </ThemeProvider>
     )
   }
   if (state.role === 'van') {
     const ghostActivity = vanData?.ghostActivityLevel ?? 0
-    const sanity = vanData?.playerSanity ?? {}
-    const soundLevels = vanData?.soundLevels ?? {}
-    const motionDetections = vanData?.motionDetections ?? {}
     const objectives = vanData?.missionObjectives ?? []
+    const mjAccepted = Boolean(state.huntActive)
+
     return (
       <ThemeProvider theme={darkTheme}>
-        <Container>
+        <VanContainer>
           <audio ref={vanMusicAudioRef} preload="auto" />
           <VanDashboard>
             <VanHeader>
               <VanTitle>PARANORMAL DETECTION SYSTEM</VanTitle>
-              <VanStatus>LIVE MONITORING</VanStatus>
+              <VanStatus>
+                {'MISSION EN COURS'}
+              </VanStatus>
             </VanHeader>
 
-            {vanData?.floorPlanImage && (
-              <VanFloorPlanSection>
-                <VanSectionLabel>FLOOR PLAN</VanSectionLabel>
-                <FloorPlanImage src={vanData.floorPlanImage} alt="Floor plan" />
-              </VanFloorPlanSection>
+            {vanPhase === 'step0' && (
+              <VanStep0Intro vanIntroState={vanIntroState} onPlayIntro={() => void playVanIntro()} />
             )}
-
-            <VanGridLayout>
-              <VanPanel>
-                <VanPanelLabel>GHOST ACTIVITY</VanPanelLabel>
-                <ActivityBar>
-                  <ActivityLevel $level={ghostActivity} />
-                  <ActivityValue>{ghostActivity}/10</ActivityValue>
-                </ActivityBar>
-              </VanPanel>
-
-              <VanPanel>
-                <VanPanelLabel>SANITY MONITORS</VanPanelLabel>
-                <SanityGrid>
-                  {Object.entries(sanity).map(([player, percent]) => (
-                    <SanityItem key={player} $low={percent <= 35}>
-                      <SanityPlayerName>{player}</SanityPlayerName>
-                      <SanityBar>
-                        <SanityLevel $percent={percent} />
-                      </SanityBar>
-                      <SanityPercent>{Math.round(percent)}%</SanityPercent>
-                    </SanityItem>
-                  ))}
-                </SanityGrid>
-              </VanPanel>
-
-              <VanPanel>
-                <VanPanelLabel>MOTION SENSORS</VanPanelLabel>
-                {vanData?.recentMotionAlert && <VanAlert>{vanData.recentMotionAlert}</VanAlert>}
-                <MotionGrid>
-                  {Object.entries(motionDetections).map(([room, detected]) => (
-                    <MotionItem key={room} $active={detected}>
-                      <MotionDot $active={detected} />
-                      <span>{room}</span>
-                    </MotionItem>
-                  ))}
-                </MotionGrid>
-              </VanPanel>
-
-              <VanPanel>
-                <VanPanelLabel>SOUND LEVELS</VanPanelLabel>
-                <SoundGrid>
-                  {Object.entries(soundLevels).map(([room, level]) => (
-                    <SoundItem key={room}>
-                      <SoundRoom>{room}</SoundRoom>
-                      <SoundBar>
-                        <SoundLevel $level={Math.min(level / 100, 1)} />
-                      </SoundBar>
-                    </SoundItem>
-                  ))}
-                </SoundGrid>
-              </VanPanel>
-            </VanGridLayout>
-
-            {objectives.length > 0 && (
-              <VanPanel>
-                <VanPanelLabel>MISSION OBJECTIVES</VanPanelLabel>
-                <ObjectivesList>
-                  {objectives.map((obj, idx) => (
-                    <ObjectiveItem key={idx} $completed={obj.completed}>
-                      <ObjectiveCheck $completed={obj.completed}>✓</ObjectiveCheck>
-                      <ObjectiveText>{obj.objective}</ObjectiveText>
-                    </ObjectiveItem>
-                  ))}
-                </ObjectivesList>
-              </VanPanel>
+            {vanPhase === 'step1' && (
+              <VanStep1Puzzle
+                objectives={objectives}
+                ghostActivity={ghostActivity}
+                floorPlanImage={vanData?.floorPlanImage}
+                feedMessages={vanData?.vanSentMessages ?? []}
+              />
+            )}
+            {vanPhase === 'step2' && (
+              <VanStep2Equipment
+                floorPlanImage={vanData?.floorPlanImage}
+                vanGhostGuess={vanGhostGuess}
+                onGhostGuessChange={setVanGhostGuess}
+                onDeclareGhost={declareGhost}
+                vanGhostDeclarationError={vanGhostDeclarationError}
+              />
+            )}
+            {vanPhase === 'step3' && (
+              <VanStep3Validation floorPlanImage={vanData?.floorPlanImage} mjAccepted={mjAccepted} />
             )}
           </VanDashboard>
-        </Container>
+        </VanContainer>
       </ThemeProvider>
     )
   }
@@ -1267,6 +1217,15 @@ const Container = styled.div`
   flex-direction: column;
   align-items: center;
   justify-content: center;
+`
+
+const VanContainer = styled(Container)`
+  width: 100vw;
+  max-width: 100vw;
+  min-height: 100vh;
+  padding: 0;
+  align-items: stretch;
+  justify-content: flex-start;
 `
 
 const StatusCard = styled.div`
@@ -1292,689 +1251,4 @@ const StatusActions = styled.div`
   margin-top: 0.9rem;
 `
 
-const DeviceScreen = styled(Container)`
-  background: radial-gradient(circle at 50% 10%, #14171c 0%, #07080a 55%, #040507 100%);
-  padding: 1.5rem;
-`
 
-const HudLine = styled.div`
-  width: min(560px, 100%);
-  display: flex;
-  justify-content: space-between;
-  color: #8ca07b;
-  letter-spacing: 0.1em;
-  margin-bottom: 0.9rem;
-`
-
-const EmfBody = styled.div`
-  width: min(560px, 100%);
-  border-radius: 16px;
-  padding: 1.1rem;
-  background: linear-gradient(180deg, #2f3439 0%, #14181c 100%);
-  border: 1px solid #3e464e;
-  box-shadow:
-    0 18px 40px rgba(0, 0, 0, 0.55),
-    inset 0 1px 0 rgba(255, 255, 255, 0.15);
-`
-
-const EmfTop = styled.div`
-  margin-bottom: 0.9rem;
-`
-
-const EmfBrand = styled.div`
-  color: #d5e2bd;
-  font-size: clamp(1rem, 3.8vw, 1.3rem);
-  font-weight: 700;
-  letter-spacing: 0.16em;
-`
-
-const EmfLabel = styled.div`
-  color: #88957d;
-  font-size: 0.75rem;
-  letter-spacing: 0.12em;
-`
-
-const grainShift = keyframes`
-  0% { transform: translate(0, 0); }
-  20% { transform: translate(-1px, 1px); }
-  40% { transform: translate(1px, -1px); }
-  60% { transform: translate(0, 1px); }
-  80% { transform: translate(1px, 0); }
-  100% { transform: translate(0, 0); }
-`
-
-const screenFlicker = keyframes`
-  0%, 100% { opacity: 0.22; }
-  35% { opacity: 0.3; }
-  60% { opacity: 0.18; }
-`
-
-const EmfDisplay = styled.div<{ $on: boolean }>`
-  position: relative;
-  overflow: hidden;
-  margin: 1rem 0;
-  min-height: 96px;
-  border-radius: 12px;
-  background: ${({ $on }) => ($on ? '#0c1014' : '#090b0d')};
-  border: 1px solid ${({ $on }) => ($on ? '#3f4e5c' : '#242b31')};
-  color: ${({ $on }) => ($on ? '#d9efb4' : '#596069')};
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: clamp(2.1rem, 10vw, 3.7rem);
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-shadow: ${({ $on }) => ($on ? '0 0 16px rgba(180, 226, 133, 0.4)' : 'none')};
-
-  &::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-    opacity: ${({ $on }) => ($on ? 0.14 : 0.06)};
-    background-image:
-      repeating-linear-gradient(
-        0deg,
-        rgba(210, 235, 185, 0.18) 0px,
-        rgba(210, 235, 185, 0.18) 1px,
-        transparent 2px,
-        transparent 4px
-      ),
-      repeating-linear-gradient(
-        90deg,
-        rgba(255, 255, 255, 0.04) 0px,
-        rgba(255, 255, 255, 0.04) 1px,
-        transparent 2px,
-        transparent 3px
-      );
-    animation: ${grainShift} 260ms steps(2) infinite;
-  }
-
-  &::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-    background: linear-gradient(
-      to bottom,
-      rgba(255, 255, 255, 0.04) 0%,
-      rgba(255, 255, 255, 0) 18%,
-      rgba(255, 255, 255, 0.03) 46%,
-      rgba(255, 255, 255, 0) 100%
-    );
-    opacity: ${({ $on }) => ($on ? 0.25 : 0.08)};
-    animation: ${screenFlicker} 1.4s linear infinite;
-  }
-`
-
-const GaugeShell = styled.div`
-  position: relative;
-  margin: 0.2rem auto 1rem;
-  width: min(360px, 92%);
-  height: 130px;
-`
-
-const GaugeArc = styled.div`
-  position: absolute;
-  inset: 0;
-  border-radius: 200px 200px 0 0;
-  border: 2px solid #55606a;
-  border-bottom: none;
-  background:
-    radial-gradient(circle at 50% 100%, transparent 44%, rgba(0, 0, 0, 0.35) 45%, transparent 46%),
-    linear-gradient(180deg, rgba(33, 37, 42, 0.9) 0%, rgba(15, 18, 22, 0.95) 100%);
-`
-
-const GaugeTicks = styled.div`
-  position: absolute;
-  left: 50%;
-  bottom: 0;
-  width: 88%;
-  height: 110px;
-`
-
-const GaugeTick = styled.div`
-  position: absolute;
-  left: 50%;
-  bottom: 6px;
-  width: 2px;
-  height: 22px;
-  transform-origin: bottom center;
-  background: #c4d2b2;
-  box-shadow: 0 0 8px rgba(196, 210, 178, 0.35);
-`
-
-const GaugeNeedle = styled.div<{ $on: boolean }>`
-  position: absolute;
-  left: 50%;
-  bottom: 10px;
-  width: 4px;
-  height: 94px;
-  transform-origin: bottom center;
-  border-radius: 10px;
-  background: ${({ $on }) => ($on ? '#ff5f5f' : '#6f7680')};
-  box-shadow: ${({ $on }) => ($on ? '0 0 12px rgba(255, 95, 95, 0.65)' : 'none')};
-  transition: transform 120ms linear;
-`
-
-const GaugeCenter = styled.div`
-  position: absolute;
-  left: 50%;
-  bottom: 0;
-  width: 20px;
-  height: 20px;
-  border-radius: 999px;
-  transform: translateX(-50%);
-  background: radial-gradient(circle at 35% 35%, #b7c4a8 0%, #5b6656 40%, #2e342d 100%);
-  border: 1px solid #8d9b84;
-`
-
-const LedRail = styled.div`
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 0.5rem;
-  margin-bottom: 0.95rem;
-`
-
-const Led = styled.div<{ $active: boolean; $level: number }>`
-  height: 22px;
-  border-radius: 6px;
-  border: 1px solid #2f343b;
-  background: ${({ $active, $level }) => {
-    if (!$active) {
-      return '#12151a'
-    }
-    if ($level <= 2) {
-      return '#79e36c'
-    }
-    if ($level <= 4) {
-      return '#f4c34f'
-    }
-    return '#ff5e5e'
-  }};
-  box-shadow: ${({ $active, $level }) => {
-    if (!$active) {
-      return 'inset 0 0 0 1px rgba(0, 0, 0, 0.3)'
-    }
-    if ($level <= 2) {
-      return '0 0 12px rgba(121, 227, 108, 0.65)'
-    }
-    if ($level <= 4) {
-      return '0 0 12px rgba(244, 195, 79, 0.65)'
-    }
-    return '0 0 12px rgba(255, 94, 94, 0.7)'
-  }};
-`
-
-const EmfFoot = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  color: #96a689;
-  font-size: 0.85rem;
-`
-
-const PowerBadge = styled.span<{ $on: boolean }>`
-  border-radius: 999px;
-  border: 1px solid ${({ $on }) => ($on ? '#79e36c' : '#4f5964')};
-  color: ${({ $on }) => ($on ? '#a6f39b' : '#9aa3ad')};
-  padding: 0.25rem 0.62rem;
-`
-
-const SpiritBoxShell = styled.div`
-  width: min(560px, 100%);
-  border-radius: 16px;
-  padding: 1rem;
-  background: linear-gradient(180deg, #cbcfd5 0%, #8f98a3 100%);
-  border: 1px solid #68717b;
-  box-shadow:
-    0 20px 42px rgba(0, 0, 0, 0.55),
-    inset 0 1px 0 rgba(255, 255, 255, 0.75);
-`
-
-const SpiritBoxHeader = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 0.7rem;
-  color: #101416;
-
-  strong {
-    letter-spacing: 0.04em;
-  }
-
-  span {
-    font-weight: 700;
-    font-size: 0.9rem;
-  }
-`
-
-const SpiritBoxScreen = styled.div<{ $on: boolean }>`
-  border-radius: 8px;
-  border: 1px solid #b16727;
-  background: ${({ $on }) => ($on ? '#f39b52' : '#5f5448')};
-  color: #120d09;
-  padding: 0.8rem;
-  box-shadow: inset 0 0 0 1px rgba(255, 220, 180, 0.4);
-  min-height: 130px;
-`
-
-const SpiritFrequency = styled.div`
-  font-size: clamp(2.2rem, 9vw, 3.4rem);
-  line-height: 1;
-  letter-spacing: 0.03em;
-  font-family: 'Courier New', monospace;
-  font-weight: 700;
-`
-
-const SpiritStatus = styled.div`
-  margin-top: 0.5rem;
-  font-size: 1rem;
-  letter-spacing: 0.08em;
-  font-weight: 700;
-`
-
-const SpiritTimestamp = styled.div`
-  margin-top: 0.45rem;
-  font-size: 0.85rem;
-  letter-spacing: 0.04em;
-`
-
-const SpiritActions = styled.div`
-  margin-top: 0.8rem;
-  display: flex;
-  justify-content: center;
-`
-
-const SpiritButton = styled.button`
-  border: 1px solid #2f3942;
-  border-radius: 8px;
-  padding: 0.52rem 0.9rem;
-  background: linear-gradient(180deg, #222a30 0%, #14191e 100%);
-  color: #dce5ef;
-  letter-spacing: 0.08em;
-  font-weight: 700;
-  cursor: pointer;
-
-  &:disabled {
-    opacity: 0.45;
-    cursor: not-allowed;
-  }
-`
-
-const GhostCamView = styled.div`
-  width: min(560px, 100%);
-  border-radius: 16px;
-  padding: 1.1rem;
-  background: linear-gradient(180deg, #2f3439 0%, #14181c 100%);
-  border: 1px solid #3e464e;
-  box-shadow:
-    0 18px 40px rgba(0, 0, 0, 0.55),
-    inset 0 1px 0 rgba(255, 255, 255, 0.15);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.8rem;
-`
-
-const GhostCamTitle = styled.div`
-  color: #d5e2bd;
-  font-size: 1.2rem;
-  font-weight: 700;
-  letter-spacing: 0.16em;
-  width: 100%;
-  text-align: center;
-`
-
-const GhostCamActions = styled.div`
-  width: 100%;
-  display: flex;
-  justify-content: center;
-`
-
-const GhostCamActionButton = styled.button`
-  border-radius: 8px;
-  border: 1px solid #7aa391;
-  background: linear-gradient(180deg, #173127 0%, #0e201a 100%);
-  color: #d8efd8;
-  letter-spacing: 0.08em;
-  padding: 0.45rem 0.9rem;
-  cursor: pointer;
-
-  &:hover {
-    filter: brightness(1.08);
-  }
-`
-
-const GhostCamCanvas = styled.canvas`
-  display: block;
-  width: 100%;
-  max-width: 480px;
-  border-radius: 8px;
-  border: 2px solid #3e464e;
-  background: #0c1014;
-  box-shadow: 0 0 20px rgba(0, 255, 100, 0.2);
-  image-rendering: pixelated;
-`
-
-const GhostCamOffline = styled.div`
-  width: 100%;
-  max-width: 480px;
-  aspect-ratio: 4 / 3;
-  border-radius: 8px;
-  border: 2px solid #3e464e;
-  background: #0c1014;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #596069;
-  font-size: 1.3rem;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-`
-
-const GhostCamPaused = styled.div`
-  width: 100%;
-  max-width: 480px;
-  text-align: center;
-  color: #bcd7b9;
-  letter-spacing: 0.12em;
-  font-weight: 700;
-`
-
-const Message = styled.div`
-  font-size: 1.7rem;
-  margin: 1rem;
-  color: #d7eac0;
-  text-align: center;
-`
-
-const Hunt = styled.div`
-  color: #ff4444;
-  font-size: 3rem;
-  margin: 2rem;
-  font-weight: bold;
-`
-
-const VanDashboard = styled.div`
-  width: 100%;
-  max-width: 1200px;
-  background: linear-gradient(135deg, #0a0e12 0%, #0d1117 50%, #090c11 100%);
-  border: 2px solid #1a4d3e;
-  border-radius: 4px;
-  padding: 1.5rem;
-  box-shadow: 0 0 40px rgba(0, 200, 130, 0.15), inset 0 0 20px rgba(0, 0, 0, 0.8);
-  color: #00d878;
-  font-family: 'Courier New', monospace;
-`
-
-const VanHeader = styled.div`
-  margin-bottom: 1.5rem;
-  padding-bottom: 1rem;
-  border-bottom: 2px solid #1a4d3e;
-  text-align: center;
-`
-
-const VanTitle = styled.h1`
-  margin: 0;
-  font-size: 1.5rem;
-  letter-spacing: 0.2em;
-  color: #00ff99;
-  text-shadow: 0 0 10px rgba(0, 255, 153, 0.5);
-  font-weight: 700;
-`
-
-const VanStatus = styled.div`
-  font-size: 0.9rem;
-  letter-spacing: 0.1em;
-  color: #00d878;
-  margin-top: 0.5rem;
-  animation: pulse 2s ease-in-out infinite;
-
-  @keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.6; }
-  }
-`
-
-const VanFloorPlanSection = styled.div`
-  margin-bottom: 1.5rem;
-  padding: 1rem;
-  border: 1px solid #1a4d3e;
-  border-radius: 4px;
-  background: rgba(0, 30, 20, 0.3);
-`
-
-const VanSectionLabel = styled.div`
-  font-size: 0.8rem;
-  letter-spacing: 0.15em;
-  color: #00ff99;
-  margin-bottom: 0.8rem;
-  text-transform: uppercase;
-  font-weight: 700;
-`
-
-const FloorPlanImage = styled.img`
-  width: 100%;
-  max-height: 300px;
-  border: 1px solid #1a4d3e;
-  border-radius: 2px;
-  display: block;
-`
-
-const VanGridLayout = styled.div`
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 1rem;
-  margin-bottom: 1rem;
-`
-
-const VanPanel = styled.div`
-  border: 1px solid #1a4d3e;
-  border-radius: 4px;
-  padding: 1rem;
-  background: rgba(0, 30, 20, 0.2);
-  box-shadow: inset 0 0 10px rgba(0, 200, 130, 0.1);
-`
-
-const VanPanelLabel = styled.div`
-  font-size: 0.75rem;
-  letter-spacing: 0.15em;
-  color: #00ff99;
-  margin-bottom: 0.8rem;
-  text-transform: uppercase;
-  font-weight: 700;
-`
-
-const ActivityBar = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-`
-
-const ActivityLevel = styled.div<{ $level: number }>`
-  flex: 1;
-  height: 30px;
-  background: linear-gradient(90deg, #0a0e12 0%, #1a2a20 100%);
-  border: 1px solid #1a4d3e;
-  border-radius: 2px;
-  overflow: hidden;
-  position: relative;
-
-  &::after {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 0;
-    height: 100%;
-    width: ${({ $level }) => ($level / 10) * 100}%;
-    background: linear-gradient(90deg, #00ff99 0%, #00d878 50%, #ff6600 100%);
-    transition: width 200ms;
-    box-shadow: 0 0 10px rgba(0, 255, 153, 0.6);
-  }
-`
-
-const ActivityValue = styled.span`
-  font-weight: 700;
-  color: #00ff99;
-  min-width: 40px;
-  text-align: right;
-`
-
-const SanityGrid = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 0.8rem;
-`
-
-const SanityItem = styled.div<{ $low: boolean }>`
-  display: grid;
-  grid-template-columns: 80px 1fr 50px;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.2rem;
-  border-left: 2px solid ${({ $low }) => ($low ? '#ff6b6b' : 'transparent')};
-  background: ${({ $low }) => ($low ? 'rgba(255, 80, 80, 0.12)' : 'transparent')};
-`
-
-const SanityPlayerName = styled.span`
-  font-size: 0.85rem;
-  color: #00d878;
-  overflow: hidden;
-  text-overflow: ellipsis;
-`
-
-const SanityBar = styled.div`
-  height: 20px;
-  background: linear-gradient(90deg, #0a0e12 0%, #1a2a20 100%);
-  border: 1px solid #1a4d3e;
-  border-radius: 2px;
-  overflow: hidden;
-`
-
-const SanityLevel = styled.div<{ $percent: number }>`
-  height: 100%;
-  width: ${({ $percent }) => $percent}%;
-  background: linear-gradient(90deg, #00ff99 0%, #ffff00 50%, #ff6600 100%);
-  transition: width 300ms;
-  box-shadow: 0 0 8px rgba(0, 255, 153, 0.5);
-`
-
-const SanityPercent = styled.span`
-  font-size: 0.8rem;
-  font-weight: 700;
-  color: #00ff99;
-  text-align: right;
-`
-
-const MotionGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-  gap: 0.6rem;
-`
-
-const VanAlert = styled.div`
-  margin-bottom: 0.7rem;
-  padding: 0.45rem 0.55rem;
-  border: 1px solid #cf6f2f;
-  background: rgba(255, 120, 40, 0.18);
-  color: #ffd9b3;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-`
-
-const MotionItem = styled.div<{ $active: boolean }>`
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem;
-  border: 1px solid ${({ $active }) => ($active ? '#ff6600' : '#1a4d3e')};
-  border-radius: 2px;
-  background: ${({ $active }) => ($active ? 'rgba(255, 102, 0, 0.15)' : 'rgba(0, 30, 20, 0.2)')};
-  font-size: 0.85rem;
-  transition: all 200ms;
-`
-
-const MotionDot = styled.div<{ $active: boolean }>`
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  background: ${({ $active }) => ($active ? '#ff6600' : '#1a4d3e')};
-  box-shadow: ${({ $active }) => ($active ? '0 0 8px #ff6600' : 'none')};
-  animation: ${({ $active }) => ($active ? 'pulse-orange' : 'none')} 500ms ease-in-out infinite;
-
-  @keyframes pulse-orange {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.5; }
-  }
-`
-
-const SoundGrid = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 0.7rem;
-`
-
-const SoundItem = styled.div`
-  display: grid;
-  grid-template-columns: 80px 1fr;
-  align-items: center;
-  gap: 0.5rem;
-`
-
-const SoundRoom = styled.span`
-  font-size: 0.8rem;
-  color: #00d878;
-`
-
-const SoundBar = styled.div`
-  height: 15px;
-  background: linear-gradient(90deg, #0a0e12 0%, #1a2a20 100%);
-  border: 1px solid #1a4d3e;
-  border-radius: 2px;
-  overflow: hidden;
-`
-
-const SoundLevel = styled.div<{ $level: number }>`
-  height: 100%;
-  width: ${({ $level }) => $level * 100}%;
-  background: linear-gradient(90deg, #00ff99 0%, #ffff00 50%, #ff0066 100%);
-  transition: width 100ms;
-  box-shadow: 0 0 6px rgba(0, 255, 153, 0.5);
-`
-
-const ObjectivesList = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 0.6rem;
-`
-
-const ObjectiveItem = styled.div<{ $completed: boolean }>`
-  display: flex;
-  align-items: center;
-  gap: 0.8rem;
-  padding: 0.5rem;
-  border-left: 2px solid ${({ $completed }) => ($completed ? '#00ff99' : '#1a4d3e')};
-  opacity: ${({ $completed }) => ($completed ? 0.7 : 1)};
-  transition: all 200ms;
-`
-
-const ObjectiveCheck = styled.div<{ $completed: boolean }>`
-  width: 20px;
-  height: 20px;
-  border: 1px solid ${({ $completed }) => ($completed ? '#00ff99' : '#1a4d3e')};
-  border-radius: 2px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.75rem;
-  font-weight: 700;
-  color: ${({ $completed }) => ($completed ? '#00ff99' : 'transparent')};
-  background: ${({ $completed }) => ($completed ? 'rgba(0, 255, 153, 0.1)' : 'transparent')};
-  flex-shrink: 0;
-`
-
-const ObjectiveText = styled.span`
-  font-size: 0.9rem;
-  color: #00d878;
-`

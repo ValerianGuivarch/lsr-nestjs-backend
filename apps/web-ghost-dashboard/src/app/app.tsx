@@ -1,4 +1,12 @@
+import { io, Socket } from 'socket.io-client'
 import React, { useEffect, useMemo, useRef, useState } from 'react'
+import styled, { ThemeProvider } from 'styled-components'
+import { EmfAdminTool } from './components/admin-tools/EmfAdminTool'
+import { GhostCamAdminTool } from './components/admin-tools/GhostCamAdminTool'
+import { GhostOrbsAdminTool } from './components/admin-tools/GhostOrbsAdminTool'
+import { SpiritBoxAdminTool } from './components/admin-tools/SpiritBoxAdminTool'
+import { ThermometerAdminTool } from './components/admin-tools/ThermometerAdminTool'
+import { VanAdminTool } from './components/admin-tools/VanAdminTool'
 // Utilitaires pour charger les sons/voix dynamiquement
 type MusicFile = { label: string; url: string }
 
@@ -19,9 +27,8 @@ function useMusicFiles(type: 'sounds' | 'voices'): MusicFile[] {
   }, [type])
   return files
 }
-import styled, { ThemeProvider } from 'styled-components'
 
-type DeviceRole = 'emf' | 'spiritbox' | 'ghostcam' | 'ghostorbs' | 'van'
+type DeviceRole = 'emf' | 'spiritbox' | 'ghostcam' | 'ghostorbs' | 'thermometer' | 'van'
 
 type Device = {
   deviceId: string
@@ -31,7 +38,9 @@ type Device = {
   huntActive: boolean
   message?: string
   cameraColor?: 'green' | 'red'
+  temperature?: number
   ghostUntil?: string
+  orbUntil?: string
   ghostActivityLevel?: number
   playerSanity?: string
   soundLevels?: string
@@ -43,6 +52,8 @@ type Device = {
   floorPlanImage?: string
   backgroundMusic?: string
   soundboard?: string
+  vanMessageTemplates?: string
+  vanSentMessages?: string
   updatedAt: string
 }
 
@@ -68,6 +79,26 @@ type VanSoundCue = {
   lastTriggeredAt?: string
 }
 
+type VanDashboardMessage = {
+  id: string
+  kind: 'audio' | 'text' | 'text_image'
+  title: string
+  text?: string
+  audioUrl?: string
+  imageUrl?: string
+  sentAt?: string
+}
+
+type VanMessageKind = VanDashboardMessage['kind']
+
+type VanMessageDraft = {
+  kind: VanMessageKind
+  title: string
+  text: string
+  audioUrl: string
+  imageUrl: string
+}
+
 type SpiritAudioMessage = {
   id: string
   audioData: string
@@ -76,8 +107,88 @@ type SpiritAudioMessage = {
   createdAt: string
 }
 
-type HomePanel = 'config' | 'control' | 'scenes'
-type ConfigTab = 'devices' | 'audio' | 'network'
+const SPIRITBOX_PRESET_SOUNDS = [
+  { id: 'ghost-voice-1', label: 'GhostVoix1.mp3', audioUrl: 'https://l7r.fr/l7r/GhostVoix1.mp3' },
+  { id: 'ghost-voice-2', label: 'GhostVoix2.mp3', audioUrl: 'https://l7r.fr/l7r/GhostVoix2.mp3' },
+  { id: 'ghost-voice-3', label: 'GhostVoix3.mp3', audioUrl: 'https://l7r.fr/l7r/GhostVoix3.mp3' },
+  { id: 'ghost-voice-4', label: 'GhostVoix4.mp3', audioUrl: 'https://l7r.fr/l7r/GhostVoix4.mp3' },
+  { id: 'ghost-voice-5', label: 'GhostVoix5.mp3', audioUrl: 'https://l7r.fr/l7r/GhostVoix5.mp3' },
+]
+
+type GameState = {
+  gameId: string
+  isInitialized: boolean
+  isRunning: boolean
+  startedAt?: string
+  initialSpectralActivity: number
+  accelerationRate: number
+  currentSpectralActivity: number
+  currentScenarioStep: number
+  scenarioObjectives?: string
+  updatedAt: string
+}
+
+type EscapeStep = {
+  id: number
+  title: string
+  description: string
+  activityImpact?: string
+  requiredTools: DeviceRole[]
+}
+
+type VanObjective = { objective: string; completed: boolean }
+
+const VAN_OBJECTIVE_INTRO = 'Intro terminee'
+const VAN_OBJECTIVE_MATERIAL = 'Récupérer le matériel de localisation'
+const VAN_OBJECTIVE_GHOST = 'Identifier le fantôme'
+
+function normalizeVanText(value: string): string {
+  return value
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim()
+}
+
+function isVanObjectiveMatch(value: string, expected: string): boolean {
+  return normalizeVanText(value) === normalizeVanText(expected)
+}
+
+function parseVanObjectives(raw?: string): VanObjective[] {
+  if (!raw) {
+    return []
+  }
+
+  try {
+    const parsed = JSON.parse(raw) as Array<Partial<VanObjective>>
+    return parsed
+      .filter(item => item && typeof item === 'object' && typeof item.objective === 'string')
+      .map(item => ({ objective: item.objective as string, completed: Boolean(item.completed) }))
+  } catch {
+    return []
+  }
+}
+
+function deriveVanFlowStepIndex(objectives: VanObjective[], mjAccepted: boolean): number {
+  const hasGhost = objectives.some(item => isVanObjectiveMatch(item.objective, VAN_OBJECTIVE_GHOST) && item.completed)
+  if (hasGhost || mjAccepted) {
+    return 3
+  }
+
+  const hasMaterial = objectives.some(item => isVanObjectiveMatch(item.objective, VAN_OBJECTIVE_MATERIAL) && item.completed)
+  if (hasMaterial) {
+    return 2
+  }
+
+  const hasIntro = objectives.some(item => isVanObjectiveMatch(item.objective, VAN_OBJECTIVE_INTRO) && item.completed)
+  if (hasIntro) {
+    return 1
+  }
+
+  return 0
+}
+
+type HomePanel = 'config' | 'game' | 'admin'
 
 const darkTheme = {
   background: '#11161d',
@@ -89,11 +200,33 @@ const darkTheme = {
   danger: '#ff6b6b'
 }
 
+const ESCAPE_STEPS: EscapeStep[] = [
+  {
+    id: 1,
+    title: "Attente - Audio intro",
+    description: "Le jeu n\x27est pas lancé. La joueuse clique sur Lecture et on attend la fin de l\x27intro.",
+    requiredTools: ["van"]
+  },
+  {
+    id: 2,
+    title: "Jeu - Chasse aux indices",
+    description: "Le matériel démarre, l\x27activité spectrale s\x27accélère. Le MJ peut contrôler les outils et envoyer des messages.",
+    requiredTools: ["emf", "thermometer", "ghostcam", "spiritbox", "van"]
+  },
+  {
+    id: 3,
+    title: "Final - Bannissement",
+    description: "Le spectre est identifié. Affichage de la procédure de bannissement et résultat de la validation.",
+    requiredTools: ["ghostcam", "van"]
+  }
+]
+
 async function toJson<T>(response: Response): Promise<T> {
   if (!response.ok) {
     const maybeJson = (await response.json().catch(() => null)) as { message?: string } | null
     throw new Error(maybeJson?.message ?? `HTTP ${response.status}`)
   }
+
   return response.json() as Promise<T>
 }
 
@@ -147,12 +280,77 @@ function parseVanSoundboard(raw?: string): VanSoundCue[] {
   }
 }
 
+function createDefaultVanMessageTemplates(): VanDashboardMessage[] {
+  return [
+    {
+      id: 'msg-1-intro-audio',
+      kind: 'audio',
+      title: 'Message 1 - Intro audio',
+      audioUrl: 'https://l7r.fr/l7r/GhostIntro.mp3'
+    },
+    {
+      id: 'msg-2-briefing',
+      kind: 'text',
+      title: 'Message 2 - Briefing',
+      text: 'Rassemblez les preuves et confirmez le spectre avant la fin de la chasse.'
+    },
+    {
+      id: 'msg-3-indice-photo',
+      kind: 'text_image',
+      title: 'Message 3 - Indice visuel',
+      text: 'Un indice est apparu dans la zone de la chambre.',
+      imageUrl: 'https://l7r.fr/l7r/indice-van.jpg'
+    }
+  ]
+}
+
+function parseVanMessages(raw?: string): VanDashboardMessage[] {
+  if (!raw) {
+    return []
+  }
+
+  try {
+    const parsed = JSON.parse(raw) as Array<Partial<VanDashboardMessage>>
+    return parsed
+      .filter(item => item && typeof item === 'object')
+      .map((item, index) => ({
+        id: typeof item.id === 'string' && item.id ? item.id : `van-msg-${index}`,
+        kind:
+          item.kind === 'audio' || item.kind === 'text' || item.kind === 'text_image'
+            ? item.kind
+            : 'text',
+        title: typeof item.title === 'string' ? item.title : `Message ${index + 1}`,
+        text: typeof item.text === 'string' ? item.text : undefined,
+        audioUrl: typeof item.audioUrl === 'string' ? item.audioUrl : undefined,
+        imageUrl: typeof item.imageUrl === 'string' ? item.imageUrl : undefined,
+        sentAt: typeof item.sentAt === 'string' ? item.sentAt : undefined
+      }))
+  } catch {
+    return []
+  }
+}
+
+function createEmptyVanMessageDraft(): VanMessageDraft {
+  return {
+    kind: 'text',
+    title: '',
+    text: '',
+    audioUrl: '',
+    imageUrl: ''
+  }
+}
+
 export function App() {
   const [activePanel, setActivePanel] = useState<HomePanel>('config')
-  const [activeConfigTab, setActiveConfigTab] = useState<ConfigTab>('devices')
   const [devices, setDevices] = useState<Device[]>([])
+  const [gameState, setGameState] = useState<GameState | null>(null)
   const [isLoading, setIsLoading] = useState<boolean>(false)
   const [error, setError] = useState<string>('')
+  const [gameId] = useState<string>('hardcoded-game')
+  const [initialSpectralActivity, setInitialSpectralActivity] = useState<number>(20)
+  const [accelerationRate, setAccelerationRate] = useState<number>(30)
+  const [isGameConfigDirty, setIsGameConfigDirty] = useState<boolean>(false)
+  const [scenarioStepIndex, setScenarioStepIndex] = useState<number>(0)
 
   const [createDeviceId, setCreateDeviceId] = useState<string>('')
   const [createRole, setCreateRole] = useState<DeviceRole>('emf')
@@ -173,11 +371,12 @@ export function App() {
   const [controlEmfLevel, setControlEmfLevel] = useState<number>(0)
   const [controlPowerOn, setControlPowerOn] = useState<boolean>(true)
   const [controlGhostcamDeviceId, setControlGhostcamDeviceId] = useState<string>('')
-  const [controlGhostcamColor, setControlGhostcamColor] = useState<'green' | 'red'>('green')
   const [controlGhostDurationSec, setControlGhostDurationSec] = useState<number>(3)
   const [controlGhostorbsDeviceId, setControlGhostorbsDeviceId] = useState<string>('')
-  const [controlGhostorbsColor, setControlGhostorbsColor] = useState<'green' | 'red'>('green')
+  const [controlOrbsCameraDeviceId, setControlOrbsCameraDeviceId] = useState<string>('')
   const [controlOrbDurationSec, setControlOrbDurationSec] = useState<number>(3)
+  const [controlTemperature, setControlTemperature] = useState<number>(12)
+  const [controlThermometerPowerOn, setControlThermometerPowerOn] = useState<boolean>(true)
 
   const [controlSpiritboxDeviceId, setControlSpiritboxDeviceId] = useState<string>('')
   const [spiritboxRecording, setSpiritboxRecording] = useState(false)
@@ -186,6 +385,9 @@ export function App() {
   const spiritboxStreamRef = useRef<MediaStream | null>(null)
   const spiritboxChunksRef = useRef<BlobPart[]>([])
   const lastPlayerSpiritMessageIdRef = useRef<string>('')
+  const spiritboxNextScheduledTimeRef = useRef(0)
+  const spiritboxSocketRef = useRef<Socket | null>(null)
+  const spiritboxHtmlAudioRef = useRef<HTMLAudioElement | null>(null)
 
   const [controlVanDeviceId, setControlVanDeviceId] = useState<string>('')
   const [vanGhostActivity, setVanGhostActivity] = useState<number>(0)
@@ -201,43 +403,170 @@ export function App() {
   const [vanFloorPlanImage, setVanFloorPlanImage] = useState<string | null>(null)
   const [vanBackgroundMusic, setVanBackgroundMusic] = useState<VanBackgroundMusic>(createDefaultVanBackgroundMusic)
   const [vanSoundboard, setVanSoundboard] = useState<VanSoundCue[]>([])
+  const [vanMessageTemplates, setVanMessageTemplates] = useState<VanDashboardMessage[]>(createDefaultVanMessageTemplates)
+  const [vanSentMessages, setVanSentMessages] = useState<VanDashboardMessage[]>([])
+  const [vanDraftMessage, setVanDraftMessage] = useState<VanMessageDraft>(createEmptyVanMessageDraft)
   const [vanNewSoundLabel, setVanNewSoundLabel] = useState<string>('')
   const [vanNewSoundUrl, setVanNewSoundUrl] = useState<string>('')
+  const [vanManualMode, setVanManualMode] = useState<boolean>(false)
   const vanHydratedRef = useRef(false)
 
+  const soundFiles = useMusicFiles('sounds')
+  const voiceFiles = useMusicFiles('voices')
+
   const [cameraSources, setCameraSources] = useState<Record<string, string>>({})
+  const [cameraPollingEnabled, setCameraPollingEnabled] = useState<boolean>(true)
+  const [enabledCameraDevices, setEnabledCameraDevices] = useState<Record<string, boolean>>({})
+  const [adminToolRole, setAdminToolRole] = useState<DeviceRole | null>(null)
+  const [adminToolDeviceId, setAdminToolDeviceId] = useState<string>('')
+
+  const toggleCameraDevice = (deviceId: string): void => {
+    setEnabledCameraDevices(prev => ({ ...prev, [deviceId]: !prev[deviceId] }))
+  }
+
+  const ghostApiUrl = (path: string): string => `/apil7r${path}`
+
+  const fetchGameEndpoint = async (path: string, init?: RequestInit): Promise<Response> => {
+    return fetch(ghostApiUrl(path), init)
+  }
+
+  const toolLabel = (tool: DeviceRole): string => {
+    if (tool === 'emf') return 'EMF'
+    if (tool === 'spiritbox') return 'Spirit Box'
+    if (tool === 'ghostcam') return 'Camera'
+    if (tool === 'thermometer') return 'Thermomètre'
+    if (tool === 'ghostorbs') return 'Thermomètre'
+    return 'Van'
+  }
+
+  const setAdminToolTarget = (role: DeviceRole, deviceId: string, updateUrl = true): void => {
+    setAdminToolRole(role)
+    setAdminToolDeviceId(deviceId)
+    setActivePanel('admin')
+
+    if (role === 'emf') {
+      setControlDeviceId(deviceId)
+    } else if (role === 'spiritbox') {
+      setControlSpiritboxDeviceId(deviceId)
+    } else if (role === 'ghostcam') {
+      setControlGhostcamDeviceId(deviceId)
+    } else if (role === 'ghostorbs' || role === 'thermometer') {
+      setControlGhostorbsDeviceId(deviceId)
+      const selectedThermometer = devices.find(device => device.deviceId === deviceId)
+      if (selectedThermometer) {
+        setControlTemperature(Number(selectedThermometer.temperature ?? 12))
+        setControlThermometerPowerOn(selectedThermometer.powerOn ?? true)
+      }
+    } else if (role === 'van') {
+      setControlVanDeviceId(deviceId)
+    }
+
+    if (updateUrl) {
+      const url = new URL(window.location.href)
+      url.searchParams.set('panel', 'admin')
+      url.searchParams.set('adminRole', role)
+      url.searchParams.set('adminDevice', deviceId)
+      window.location.assign(url.toString())
+    }
+  }
+
+  const openAdminToolPage = (role: DeviceRole, deviceId: string): void => {
+    const url = new URL(window.location.href)
+    url.searchParams.set('panel', 'admin')
+    url.searchParams.set('adminRole', role)
+    url.searchParams.set('adminDevice', deviceId)
+    window.open(url.toString(), '_blank', 'noopener,noreferrer')
+  }
+
+  const currentVanDevice = useMemo(
+    () =>
+      devices.find(device => device.role === 'van' && device.deviceId === controlVanDeviceId) ??
+      devices.find(device => device.role === 'van'),
+    [devices, controlVanDeviceId]
+  )
+
+  const vanFlowStepIndex = useMemo(() => {
+    if (!currentVanDevice) {
+      return Math.min(scenarioStepIndex, ESCAPE_STEPS.length - 1)
+    }
+
+    const objectives = parseVanObjectives(currentVanDevice.missionObjectives)
+    return deriveVanFlowStepIndex(objectives, Boolean(currentVanDevice.huntActive))
+  }, [currentVanDevice, scenarioStepIndex])
+
+  const currentEscapeStep = ESCAPE_STEPS[Math.min(vanFlowStepIndex, ESCAPE_STEPS.length - 1)]
+
+  const stepToolBadges = useMemo(
+    () =>
+      currentEscapeStep.requiredTools.map(tool => ({
+        tool,
+        label: toolLabel(tool),
+        available: devices.some(device => device.role === tool)
+      })),
+    [currentEscapeStep, devices]
+  )
 
   useEffect(() => {
-    const cameraDevices = devices.filter(
-      device => device.role === 'ghostcam' || device.role === 'ghostorbs' || device.role === 'emf'
-    )
-    if (cameraDevices.length === 0) {
+    if (activePanel !== 'admin') {
       return
     }
 
+    // Détermine quel device a besoin d'une camera-frame selon l'outil actif
+    let relevantDeviceId: string | null = null
+    if (adminToolRole === null || adminToolRole === 'emf') {
+      relevantDeviceId = controlDeviceId || null
+    } else if (adminToolRole === 'ghostcam') {
+      relevantDeviceId = controlGhostcamDeviceId || null
+    } else if (adminToolRole === 'ghostorbs' || adminToolRole === 'thermometer') {
+      relevantDeviceId = controlGhostorbsDeviceId || null
+    }
+    // spiritbox et autres : pas de polling caméra
+
+    if (!relevantDeviceId) {
+      return
+    }
+
+    const deviceId = relevantDeviceId
     const interval = setInterval(() => {
-      cameraDevices.forEach(device => {
-        fetch(`/apil7r/player/device/${device.deviceId}/camera-frame`)
-          .then(r => r.json())
-          .then((data: { frame?: string }) => {
-            if (data.frame) {
-              setCameraSources(prev => ({ ...prev, [device.deviceId]: data.frame }))
-            }
-          })
-          .catch(() => {
-            // Erreur silencieuse
-          })
-      })
+      fetch(ghostApiUrl(`/player/device/${deviceId}/camera-frame`))
+        .then(r => r.json())
+        .then((data: { frame?: string }) => {
+          if (data.frame) {
+            setCameraSources(prev => ({ ...prev, [deviceId]: data.frame }))
+          }
+        })
+        .catch(() => {
+          // Erreur silencieuse
+        })
     }, 200)
 
     return () => clearInterval(interval)
+  }, [activePanel, adminToolRole, controlDeviceId, controlGhostcamDeviceId, controlGhostorbsDeviceId])
+
+  useEffect(() => {
+    const cameraDevices = devices.filter(
+      device =>
+        device.role === 'ghostcam' ||
+        device.role === 'ghostorbs' ||
+        device.role === 'thermometer' ||
+        device.role === 'emf'
+    )
+    setEnabledCameraDevices(prev => {
+      const next = { ...prev }
+      cameraDevices.forEach(device => {
+        if (next[device.deviceId] === undefined) {
+          next[device.deviceId] = true
+        }
+      })
+      return next
+    })
   }, [devices])
 
   const refreshDevices = async (): Promise<void> => {
     setIsLoading(true)
     setError('')
     try {
-      const next = await fetch('/apil7r/admin/state').then(toJson<Device[]>)
+      const next = await fetch(ghostApiUrl('/admin/state')).then(toJson<Device[]>)
       setDevices(next)
       if (selectedDeviceId && !next.some(device => device.deviceId === selectedDeviceId)) {
         setSelectedDeviceId('')
@@ -249,9 +578,72 @@ export function App() {
     }
   }
 
+  const refreshGameState = async (forceSyncConfig = false): Promise<void> => {
+    try {
+      const next = await fetchGameEndpoint(`/game/${gameId}`).then(toJson<GameState>)
+      setGameState(next)
+      if (forceSyncConfig || !isGameConfigDirty) {
+        setInitialSpectralActivity(next.initialSpectralActivity)
+        setAccelerationRate(next.accelerationRate)
+      }
+      setScenarioStepIndex(Math.min(next.currentScenarioStep, ESCAPE_STEPS.length - 1))
+    } catch {
+      setGameState(null)
+    }
+  }
+
   useEffect(() => {
     void refreshDevices()
+    void refreshGameState()
   }, [])
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const panelParam = params.get('panel')
+    const roleParam = params.get('adminRole')
+    const deviceParam = params.get('adminDevice')
+
+    if (panelParam === 'admin') {
+      setActivePanel('admin')
+    } else if (panelParam === 'game') {
+      setActivePanel('game')
+    }
+
+    const isRoleValid =
+      roleParam === 'emf' ||
+      roleParam === 'spiritbox' ||
+      roleParam === 'ghostcam' ||
+      roleParam === 'thermometer' ||
+      roleParam === 'ghostorbs' ||
+      roleParam === 'van'
+
+    if (isRoleValid && deviceParam) {
+      setAdminToolTarget(roleParam, deviceParam, false)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (activePanel !== 'game') {
+      return
+    }
+
+    const interval = setInterval(() => {
+      void refreshGameState()
+    }, 1000)
+
+    return () => clearInterval(interval)
+  }, [activePanel, isGameConfigDirty])
+
+  useEffect(() => {
+    if (!gameState || !controlVanDeviceId || vanManualMode) {
+      return
+    }
+
+    const syncedActivity = Math.max(0, Math.min(100, Math.round(gameState.currentSpectralActivity)))
+    if (syncedActivity !== vanGhostActivity) {
+      setVanGhostActivity(syncedActivity)
+    }
+  }, [gameState?.currentSpectralActivity, controlVanDeviceId, vanGhostActivity, vanManualMode])
 
   useEffect(() => {
     if (!selectedDevice) {
@@ -294,7 +686,6 @@ export function App() {
 
     if (!firstGhostcam) {
       setControlGhostcamDeviceId('')
-      setControlGhostcamColor('green')
       return
     }
 
@@ -304,13 +695,7 @@ export function App() {
 
     if (!controlGhostcamDeviceId || !exists) {
       setControlGhostcamDeviceId(firstGhostcam.deviceId)
-      setControlGhostcamColor((firstGhostcam.cameraColor ?? 'green') as 'green' | 'red')
       return
-    }
-
-    const controlled = devices.find(device => device.deviceId === controlGhostcamDeviceId)
-    if (controlled) {
-      setControlGhostcamColor((controlled.cameraColor ?? 'green') as 'green' | 'red')
     }
   }, [devices, controlGhostcamDeviceId])
 
@@ -333,29 +718,53 @@ export function App() {
   }, [devices, controlSpiritboxDeviceId])
 
   useEffect(() => {
-    const firstGhostorbs = devices.find(device => device.role === 'ghostorbs')
+    const firstThermometerLike = devices.find(
+      device => device.role === 'ghostorbs' || device.role === 'thermometer'
+    )
 
-    if (!firstGhostorbs) {
+    if (!firstThermometerLike) {
       setControlGhostorbsDeviceId('')
-      setControlGhostorbsColor('green')
+      setControlTemperature(12)
+      setControlThermometerPowerOn(true)
       return
     }
 
     const exists = devices.some(
-      device => device.deviceId === controlGhostorbsDeviceId && device.role === 'ghostorbs'
+      device =>
+        device.deviceId === controlGhostorbsDeviceId &&
+        (device.role === 'ghostorbs' || device.role === 'thermometer')
     )
 
     if (!controlGhostorbsDeviceId || !exists) {
-      setControlGhostorbsDeviceId(firstGhostorbs.deviceId)
-      setControlGhostorbsColor((firstGhostorbs.cameraColor ?? 'green') as 'green' | 'red')
+      setControlGhostorbsDeviceId(firstThermometerLike.deviceId)
+      setControlTemperature(Number(firstThermometerLike.temperature ?? 12))
+      setControlThermometerPowerOn(firstThermometerLike.powerOn ?? true)
       return
     }
 
     const controlled = devices.find(device => device.deviceId === controlGhostorbsDeviceId)
     if (controlled) {
-      setControlGhostorbsColor((controlled.cameraColor ?? 'green') as 'green' | 'red')
+      setControlTemperature(Number(controlled.temperature ?? 12))
+      setControlThermometerPowerOn(controlled.powerOn ?? true)
     }
   }, [devices, controlGhostorbsDeviceId])
+
+  useEffect(() => {
+    const firstGhostcam = devices.find(device => device.role === 'ghostcam')
+
+    if (!firstGhostcam) {
+      setControlOrbsCameraDeviceId('')
+      return
+    }
+
+    const exists = devices.some(
+      device => device.deviceId === controlOrbsCameraDeviceId && device.role === 'ghostcam'
+    )
+
+    if (!controlOrbsCameraDeviceId || !exists) {
+      setControlOrbsCameraDeviceId(firstGhostcam.deviceId)
+    }
+  }, [devices, controlOrbsCameraDeviceId])
 
   useEffect(() => {
     const firstVan = devices.find(device => device.role === 'van')
@@ -394,6 +803,8 @@ export function App() {
       : []
     const parsedBackgroundMusic = parseVanBackgroundMusic(vanDevice.backgroundMusic)
     const parsedSoundboard = parseVanSoundboard(vanDevice.soundboard)
+    const parsedVanMessageTemplates = parseVanMessages(vanDevice.vanMessageTemplates)
+    const parsedVanSentMessages = parseVanMessages(vanDevice.vanSentMessages)
 
     setVanGhostActivity(vanDevice.ghostActivityLevel ?? 0)
     setVanRooms(parsedRooms.length > 0 ? parsedRooms : Object.keys(parsedSound))
@@ -412,6 +823,10 @@ export function App() {
     setVanFloorPlanImage(vanDevice.floorPlanImage ?? null)
     setVanBackgroundMusic(parsedBackgroundMusic)
     setVanSoundboard(parsedSoundboard)
+    setVanMessageTemplates(
+      parsedVanMessageTemplates.length > 0 ? parsedVanMessageTemplates : createDefaultVanMessageTemplates()
+    )
+    setVanSentMessages(parsedVanSentMessages)
     vanHydratedRef.current = true
   }, [devices, controlVanDeviceId])
 
@@ -429,7 +844,7 @@ export function App() {
         return acc
       }, {})
 
-      fetch(`/apil7r/admin/device/${controlVanDeviceId}/van`, {
+      fetch(ghostApiUrl(`/admin/device/${controlVanDeviceId}/van`), {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -443,7 +858,9 @@ export function App() {
           missionObjectives: JSON.stringify(vanObjectives),
           floorPlanImage: vanFloorPlanImage,
           backgroundMusic: JSON.stringify(vanBackgroundMusic),
-          soundboard: JSON.stringify(vanSoundboard)
+          soundboard: JSON.stringify(vanSoundboard),
+          vanMessageTemplates: JSON.stringify(vanMessageTemplates),
+          vanSentMessages: JSON.stringify(vanSentMessages)
         })
       }).catch(() => {
         // Erreur réseau silencieuse
@@ -463,38 +880,51 @@ export function App() {
     vanObjectives,
     vanFloorPlanImage,
     vanBackgroundMusic,
-    vanSoundboard
+    vanSoundboard,
+    vanMessageTemplates,
+    vanSentMessages
   ])
 
   useEffect(() => {
-    if (!controlSpiritboxDeviceId) {
+    const isSpiritboxAdminPageOpen = activePanel === 'admin' && adminToolRole === 'spiritbox'
+
+    if (!controlSpiritboxDeviceId || !isSpiritboxAdminPageOpen) {
       return
     }
 
-    const pollPlayerMessage = () => {
-      fetch(`/apil7r/admin/device/${controlSpiritboxDeviceId}/spiritbox/player-message`)
-        .then(r => r.json())
-        .then((payload: { message?: SpiritAudioMessage }) => {
-          const message = payload.message
-          if (!message) {
-            return
-          }
+    const ghostAudioOrigin = import.meta.env.VITE_GHOST_AUDIO_ORIGIN as string | undefined
+    const ghostAudioNamespace = ghostAudioOrigin
+      ? `${ghostAudioOrigin.replace(/\/$/, '')}/ghost-audio`
+      : '/ghost-audio'
 
-          setLatestPlayerSpiritMessage(message)
-          if (message.id !== lastPlayerSpiritMessageIdRef.current) {
-            lastPlayerSpiritMessageIdRef.current = message.id
-          }
-        })
-        .catch(() => {
-          // Réseau non disponible
-        })
+    // Connexion Socket.IO en tant qu'admin pour écouter les chunks du joueur en temps réel
+    const socket = io(ghostAudioNamespace, {
+      query: { deviceId: controlSpiritboxDeviceId, role: 'admin' },
+      transports: ['websocket'],
+    })
+    spiritboxSocketRef.current = socket
+
+    socket.on('spiritbox:audio-chunk', (payload: { deviceId: string; chunk: string; mimeType: string }) => {
+      setLatestPlayerSpiritMessage({
+        id: `${Date.now()}`,
+        audioData: payload.chunk,
+        mimeType: payload.mimeType,
+        createdAt: new Date().toISOString(),
+      })
+      playSpiritboxMonitorAudio({
+        id: `${Date.now()}`,
+        audioData: payload.chunk,
+        mimeType: payload.mimeType,
+        from: 'player',
+        createdAt: new Date().toISOString(),
+      })
+    })
+
+    return () => {
+      socket.disconnect()
+      spiritboxSocketRef.current = null
     }
-
-    pollPlayerMessage()
-    const interval = setInterval(pollPlayerMessage, 700)
-
-    return () => clearInterval(interval)
-  }, [controlSpiritboxDeviceId])
+  }, [activePanel, adminToolRole, controlSpiritboxDeviceId])
 
   useEffect(() => {
     return () => {
@@ -512,7 +942,7 @@ export function App() {
 
     setError('')
     try {
-      await fetch('/apil7r/admin/devices', {
+      await fetch(ghostApiUrl('/admin/devices'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ deviceId, role: createRole })
@@ -532,7 +962,7 @@ export function App() {
 
     setError('')
     try {
-      await fetch(`/apil7r/admin/device/${selectedDeviceId}`, {
+      await fetch(ghostApiUrl(`/admin/device/${selectedDeviceId}`), {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -557,7 +987,7 @@ export function App() {
 
     setError('')
     try {
-      await fetch(`/apil7r/admin/device/${controlDeviceId}`, {
+      await fetch(ghostApiUrl(`/admin/device/${controlDeviceId}`), {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(patch)
@@ -568,7 +998,7 @@ export function App() {
     }
   }
 
-  const patchGhostcamControl = async (patch: { cameraColor?: 'green' | 'red'; ghostUntil?: string }): Promise<void> => {
+  const patchGhostcamControl = async (patch: { ghostUntil?: string; orbUntil?: string }): Promise<void> => {
     if (!controlGhostcamDeviceId) {
       setError('Aucun device GhostCam disponible')
       return
@@ -576,7 +1006,7 @@ export function App() {
 
     setError('')
     try {
-      await fetch(`/apil7r/admin/device/${controlGhostcamDeviceId}`, {
+      await fetch(ghostApiUrl(`/admin/device/${controlGhostcamDeviceId}`), {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(patch)
@@ -587,15 +1017,34 @@ export function App() {
     }
   }
 
-  const patchGhostorbsControl = async (patch: { cameraColor?: 'green' | 'red'; ghostUntil?: string }): Promise<void> => {
-    if (!controlGhostorbsDeviceId) {
-      setError('Aucun device Ghost Orbs disponible')
+  const patchGhostorbsControl = async (patch: { orbUntil?: string }): Promise<void> => {
+    if (!controlOrbsCameraDeviceId) {
+      setError('Aucun device Camera disponible pour les orbes')
       return
     }
 
     setError('')
     try {
-      await fetch(`/apil7r/admin/device/${controlGhostorbsDeviceId}`, {
+      await fetch(ghostApiUrl(`/admin/device/${controlOrbsCameraDeviceId}`), {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(patch)
+      }).then(toJson<Device>)
+      await refreshDevices()
+    } catch (e) {
+      setError((e as Error).message)
+    }
+  }
+
+  const patchThermometerControl = async (patch: { temperature?: number; powerOn?: boolean }): Promise<void> => {
+    if (!controlGhostorbsDeviceId) {
+      setError('Aucun device Thermometre disponible')
+      return
+    }
+
+    setError('')
+    try {
+      await fetch(ghostApiUrl(`/admin/device/${controlGhostorbsDeviceId}`), {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(patch)
@@ -614,11 +1063,52 @@ export function App() {
 
   const triggerOrbsAction = async (): Promise<void> => {
     const seconds = Math.max(1, Math.min(30, Number(controlOrbDurationSec) || 1))
-    const ghostUntil = new Date(Date.now() + seconds * 1000).toISOString()
-    await patchGhostorbsControl({ ghostUntil })
+    const orbUntil = new Date(Date.now() + seconds * 1000).toISOString()
+    await patchGhostorbsControl({ orbUntil })
   }
 
   const audioContextRef = useRef<AudioContext | null>(null)
+  const [dashboardAudioUnlocked, setDashboardAudioUnlocked] = useState(false)
+  const dashboardAudioUnlockedRef = useRef(false)
+
+  useEffect(() => {
+    if (dashboardAudioUnlocked) {
+      return
+    }
+
+    const handleGesture = (): void => {
+      dashboardAudioUnlockedRef.current = true
+      setDashboardAudioUnlocked(true)
+    }
+
+    window.addEventListener('pointerdown', handleGesture, { passive: true })
+    window.addEventListener('touchstart', handleGesture, { passive: true })
+    window.addEventListener('keydown', handleGesture)
+
+    return () => {
+      window.removeEventListener('pointerdown', handleGesture)
+      window.removeEventListener('touchstart', handleGesture)
+      window.removeEventListener('keydown', handleGesture)
+    }
+  }, [dashboardAudioUnlocked])
+
+  const enableDashboardAudio = (): void => {
+    dashboardAudioUnlockedRef.current = true
+    setDashboardAudioUnlocked(true)
+
+    const AudioContextCtor = (window as any).AudioContext || (window as any).webkitAudioContext
+    if (!AudioContextCtor) {
+      return
+    }
+
+    if (!audioContextRef.current) {
+      audioContextRef.current = new AudioContextCtor()
+    }
+
+    if (audioContextRef.current?.state === 'suspended') {
+      void audioContextRef.current.resume()
+    }
+  }
 
   const blobToDataUrl = (blob: Blob): Promise<string> =>
     new Promise((resolve, reject) => {
@@ -682,6 +1172,10 @@ export function App() {
   }
 
   const playGhostAudio = (audioData: string): void => {
+    if (!dashboardAudioUnlocked) {
+      return
+    }
+
     const AudioContextCtor = (window as any).AudioContext || (window as any).webkitAudioContext
     if (!AudioContextCtor) {
       setError('Web Audio API non disponible')
@@ -729,6 +1223,71 @@ export function App() {
     }
   }
 
+  const playSpiritboxMonitorAudio = (message: SpiritAudioMessage): void => {
+    if (!dashboardAudioUnlockedRef.current || !message.audioData) {
+      return
+    }
+
+    const AudioContextCtor = (window as any).AudioContext || (window as any).webkitAudioContext
+    if (!AudioContextCtor) {
+      return
+    }
+
+    if (!audioContextRef.current) {
+      audioContextRef.current = new AudioContextCtor()
+    }
+
+    const ctx = audioContextRef.current
+    if (!ctx) {
+      return
+    }
+
+    if (ctx.state === 'suspended') {
+      void ctx.resume()
+    }
+
+    try {
+      const base64 = message.audioData.includes(',') ? message.audioData.split(',')[1] : message.audioData
+      const binaryString = atob(base64)
+      const bytes = new Uint8Array(binaryString.length)
+      for (let i = 0; i < binaryString.length; i++) {
+        bytes[i] = binaryString.charCodeAt(i)
+      }
+
+      void ctx.decodeAudioData(bytes.buffer.slice(0)).then(decodedBuffer => {
+        const source = ctx.createBufferSource()
+        source.buffer = decodedBuffer
+        source.connect(ctx.destination)
+
+        // Scheduling précis : enchaîner les chunks sans gap ni overlap
+        const scheduleAt = Math.max(ctx.currentTime + 0.05, spiritboxNextScheduledTimeRef.current)
+        source.start(scheduleAt)
+        spiritboxNextScheduledTimeRef.current = scheduleAt + decodedBuffer.duration
+      }).catch(() => {
+        const mimeType = message.mimeType || 'audio/webm'
+        const src = message.audioData.includes(',')
+          ? message.audioData
+          : `data:${mimeType};base64,${message.audioData}`
+
+        if (!spiritboxHtmlAudioRef.current) {
+          spiritboxHtmlAudioRef.current = new Audio()
+        }
+
+        const fallbackAudio = spiritboxHtmlAudioRef.current
+        if (!fallbackAudio) {
+          return
+        }
+
+        fallbackAudio.src = src
+        void fallbackAudio.play().catch(() => {
+          // Si le fallback échoue aussi, on n'interrompt pas le flux
+        })
+      })
+    } catch (_e) {
+      // Erreur décodage base64
+    }
+  }
+
   const startSpiritboxRecording = async (): Promise<void> => {
     if (!controlSpiritboxDeviceId || spiritboxRecording) {
       return
@@ -761,7 +1320,7 @@ export function App() {
 
         void blobToDataUrl(blob)
           .then(audioData => {
-            return fetch(`/apil7r/admin/device/${controlSpiritboxDeviceId}/spiritbox/mj-message`, {
+            return fetch(ghostApiUrl(`/admin/device/${controlSpiritboxDeviceId}/spiritbox/mj-message`), {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ audioData, mimeType: blob.type || 'audio/webm' })
@@ -805,7 +1364,34 @@ export function App() {
     if (!latestPlayerSpiritMessage) {
       return
     }
-    playGhostAudio(latestPlayerSpiritMessage.audioData)
+    playSpiritboxMonitorAudio(latestPlayerSpiritMessage)
+  }
+
+  const sendSpiritboxPresetSound = async (preset: { audioUrl: string; label: string }): Promise<void> => {
+    if (!controlSpiritboxDeviceId) {
+      setError('Aucun device SpiritBox disponible')
+      return
+    }
+
+    setError('')
+
+    try {
+      const response = await fetch(preset.audioUrl)
+      if (!response.ok) {
+        throw new Error('fetch failed')
+      }
+
+      const blob = await response.blob()
+      const audioData = await blobToDataUrl(blob)
+
+      await fetch(ghostApiUrl(`/admin/device/${controlSpiritboxDeviceId}/spiritbox/mj-message`), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ audioData, mimeType: blob.type || 'audio/mpeg' })
+      }).then(toJson<{ ok: true; message: SpiritAudioMessage }>)
+    } catch {
+      setError(`Impossible d'envoyer ${preset.label}`)
+    }
   }
 
   const addVanRoom = (): void => {
@@ -910,6 +1496,142 @@ export function App() {
     setVanSoundboard(prev => prev.filter(cue => cue.id !== cueId))
   }
 
+  const pushVanTemplateMessage = (templateId: string): void => {
+    const template = vanMessageTemplates.find(item => item.id === templateId)
+    if (!template) {
+      return
+    }
+
+    const sentMessage: VanDashboardMessage = {
+      ...template,
+      sentAt: new Date().toISOString()
+    }
+    setVanSentMessages(prev => [...prev, sentMessage])
+  }
+
+  const addVanTemplateMessage = (): void => {
+    const title = vanDraftMessage.title.trim()
+    const text = vanDraftMessage.text.trim()
+    const audioUrl = vanDraftMessage.audioUrl.trim()
+    const imageUrl = vanDraftMessage.imageUrl.trim()
+
+    if (!title) {
+      setError('Le titre du message MJ est obligatoire')
+      return
+    }
+
+    if (vanDraftMessage.kind === 'audio' && !audioUrl) {
+      setError('Un message audio doit contenir une URL audio')
+      return
+    }
+
+    if (vanDraftMessage.kind === 'text' && !text) {
+      setError('Un message texte doit contenir du texte')
+      return
+    }
+
+    if (vanDraftMessage.kind === 'text_image' && (!text || !imageUrl)) {
+      setError('Un message texte+image doit contenir du texte et une URL image')
+      return
+    }
+
+    setVanMessageTemplates(prev => [
+      ...prev,
+      {
+        id: `msg-${Date.now()}-${Math.random().toString(16).slice(2)}`,
+        kind: vanDraftMessage.kind,
+        title,
+        text: text || undefined,
+        audioUrl: audioUrl || undefined,
+        imageUrl: imageUrl || undefined
+      }
+    ])
+    setVanDraftMessage(createEmptyVanMessageDraft())
+    setError('')
+  }
+
+  const updateVanTemplateMessage = (messageId: string, patch: Partial<VanDashboardMessage>): void => {
+    setVanMessageTemplates(prev => prev.map(item => (item.id === messageId ? { ...item, ...patch } : item)))
+  }
+
+  const removeVanTemplateMessage = (messageId: string): void => {
+    setVanMessageTemplates(prev => prev.filter(item => item.id !== messageId))
+  }
+
+  const moveVanTemplateMessage = (messageId: string, direction: 'up' | 'down'): void => {
+    setVanMessageTemplates(prev => {
+      const index = prev.findIndex(item => item.id === messageId)
+      if (index < 0) {
+        return prev
+      }
+
+      const targetIndex = direction === 'up' ? index - 1 : index + 1
+      if (targetIndex < 0 || targetIndex >= prev.length) {
+        return prev
+      }
+
+      const next = [...prev]
+      const [item] = next.splice(index, 1)
+      next.splice(targetIndex, 0, item)
+      return next
+    })
+  }
+
+  const clearVanSentMessages = (): void => {
+    setVanSentMessages([])
+  }
+
+  const resetVanSentMessagesForNewGame = async (): Promise<void> => {
+    const vanId = controlVanDeviceId || devices.find(device => device.role === 'van')?.deviceId
+    if (!vanId) {
+      return
+    }
+
+    const templates = vanMessageTemplates.length > 0 ? vanMessageTemplates : createDefaultVanMessageTemplates()
+    const firstAudioTemplate = templates.find(message => message.kind === 'audio')
+    const initialSentMessages = firstAudioTemplate
+      ? [{ ...firstAudioTemplate, sentAt: new Date().toISOString() }]
+      : []
+
+    setVanMessageTemplates(templates)
+    setVanSentMessages(initialSentMessages)
+    setVanObjectives([
+      { objective: 'Intro terminee', completed: false },
+      { objective: 'Récupérer le matériel de localisation', completed: false },
+      { objective: "Trouver la zone d'activité du fantôme", completed: false },
+      { objective: "Récupérer le matériel d'identification", completed: false },
+      { objective: 'Identifier le fantôme', completed: false },
+      { objective: 'Bannir le fantôme', completed: false }
+    ])
+
+    try {
+      await fetch(ghostApiUrl(`/admin/device/${vanId}`), {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ huntActive: false })
+      }).then(toJson<Device>)
+
+      await fetch(ghostApiUrl(`/admin/device/${vanId}/van`), {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          missionObjectives: JSON.stringify([
+            { objective: 'Intro terminee', completed: false },
+            { objective: 'Récupérer le matériel de localisation', completed: false },
+            { objective: "Trouver la zone d'activité du fantôme", completed: false },
+            { objective: "Récupérer le matériel d'identification", completed: false },
+            { objective: 'Identifier le fantôme', completed: false },
+            { objective: 'Bannir le fantôme', completed: false },
+          ]),
+          vanMessageTemplates: JSON.stringify(templates),
+          vanSentMessages: JSON.stringify(initialSentMessages)
+        })
+      }).then(toJson<Device>)
+    } catch {
+      // L'auto-save fera une nouvelle tentative.
+    }
+  }
+
   const triggerMotionEvent = (room: string): void => {
     const nextDetections = vanRooms.reduce<Record<string, boolean>>((acc, currentRoom) => {
       acc[currentRoom] = currentRoom === room
@@ -937,7 +1659,7 @@ export function App() {
         return acc
       }, {})
 
-      await fetch(`/apil7r/admin/device/${controlVanDeviceId}/van`, {
+      await fetch(ghostApiUrl(`/admin/device/${controlVanDeviceId}/van`), {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -951,9 +1673,29 @@ export function App() {
           missionObjectives: JSON.stringify(vanObjectives),
           floorPlanImage: vanFloorPlanImage,
           backgroundMusic: JSON.stringify(vanBackgroundMusic),
-          soundboard: JSON.stringify(vanSoundboard)
+          soundboard: JSON.stringify(vanSoundboard),
+          vanMessageTemplates: JSON.stringify(vanMessageTemplates),
+          vanSentMessages: JSON.stringify(vanSentMessages)
         })
       }).then(toJson<Device>)
+    } catch (e) {
+      setError((e as Error).message)
+    }
+  }
+  const setVanMjApproval = async (approved: boolean): Promise<void> => {
+    if (!controlVanDeviceId) {
+      setError('Aucun device Van disponible')
+      return
+    }
+
+    setError('')
+    try {
+      await fetch(ghostApiUrl(`/admin/device/${controlVanDeviceId}`), {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ huntActive: approved })
+      }).then(toJson<Device>)
+      await refreshDevices()
     } catch (e) {
       setError((e as Error).message)
     }
@@ -968,7 +1710,7 @@ export function App() {
     setIsLoading(true)
 
     try {
-      await fetch('/apil7r/admin/reset', {
+      await fetch(ghostApiUrl('/admin/reset'), {
         method: 'POST'
       }).then(toJson<{ ok: true }>)
 
@@ -981,7 +1723,7 @@ export function App() {
       ]
 
       for (const device of deviceTemplates) {
-        await fetch('/apil7r/admin/devices', {
+        await fetch(ghostApiUrl('/admin/devices'), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(device)
@@ -1015,7 +1757,7 @@ export function App() {
         Diane: 100
       }
 
-      await fetch('/apil7r/admin/device/van/van', {
+      await fetch(ghostApiUrl('/admin/device/van/van'), {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -1027,12 +1769,17 @@ export function App() {
           motionSensorRooms: JSON.stringify(['salon', 'cuisine', 'chambre1', 'chambre2', 'salle de bain', 'toilettes']),
           recentMotionAlert: '',
           missionObjectives: JSON.stringify([
-            { objective: 'Identifier le type de fantome', completed: false },
-            { objective: 'Capturer une preuve paranormale', completed: false },
-            { objective: 'Sortir vivant', completed: false }
+            { objective: 'Intro terminee', completed: false },
+            { objective: 'Récupérer le matériel de localisation', completed: false },
+            { objective: "Trouver la zone d'activité du fantôme", completed: false },
+            { objective: "Récupérer le matériel d'identification", completed: false },
+            { objective: 'Identifier le fantôme', completed: false },
+            { objective: 'Bannir le fantôme', completed: false },
           ]),
           backgroundMusic: JSON.stringify(createDefaultVanBackgroundMusic()),
-          soundboard: JSON.stringify([])
+          soundboard: JSON.stringify([]),
+          vanMessageTemplates: JSON.stringify(createDefaultVanMessageTemplates()),
+          vanSentMessages: JSON.stringify([])
         })
       }).then(toJson<Device>)
 
@@ -1053,7 +1800,7 @@ export function App() {
 
     setError('')
     try {
-      await fetch(`/apil7r/admin/device/${selectedDeviceId}`, {
+      await fetch(ghostApiUrl(`/admin/device/${selectedDeviceId}`), {
         method: 'DELETE'
       }).then(toJson<{ ok: true }>)
       setSelectedDeviceId('')
@@ -1061,6 +1808,102 @@ export function App() {
     } catch (e) {
       setError((e as Error).message)
     }
+  }
+
+  const initGame = async (): Promise<void> => {
+    setError('')
+    try {
+      const next = await fetchGameEndpoint(`/admin/game/${gameId}/init`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          initialSpectralActivity,
+          accelerationRate
+        })
+      }).then(toJson<GameState>)
+      setGameState(next)
+      setInitialSpectralActivity(next.initialSpectralActivity)
+      setAccelerationRate(next.accelerationRate)
+      setIsGameConfigDirty(false)
+    } catch (e) {
+      setError((e as Error).message)
+    }
+  }
+
+  const startGame = async (): Promise<void> => {
+    setError('')
+    try {
+      const next = await fetchGameEndpoint(`/admin/game/${gameId}/start`, {
+        method: 'POST'
+      }).then(toJson<GameState>)
+      await resetVanSentMessagesForNewGame()
+      setGameState(next)
+      setScenarioStepIndex(Math.min(next.currentScenarioStep, ESCAPE_STEPS.length - 1))
+    } catch (e) {
+      setError((e as Error).message)
+    }
+  }
+
+  const stopGame = async (): Promise<void> => {
+    setError('')
+    try {
+      const next = await fetchGameEndpoint(`/admin/game/${gameId}/stop`, {
+        method: 'POST'
+      }).then(toJson<GameState>)
+      setGameState(next)
+      setScenarioStepIndex(Math.min(next.currentScenarioStep, ESCAPE_STEPS.length - 1))
+    } catch (e) {
+      setError((e as Error).message)
+    }
+  }
+
+  const advanceGameStep = async (): Promise<void> => {
+    setError('')
+    try {
+      const next = await fetchGameEndpoint(`/admin/game/${gameId}/advance-step`, {
+        method: 'POST'
+      }).then(toJson<GameState>)
+      setGameState(next)
+      setScenarioStepIndex(Math.min(next.currentScenarioStep, ESCAPE_STEPS.length - 1))
+    } catch (e) {
+      setError((e as Error).message)
+    }
+  }
+
+  const toggleVanObjective = async (objectiveText: string): Promise<void> => {
+    if (!controlVanDeviceId) {
+      setError('Aucun device van sélectionné')
+      return
+    }
+
+    const updated = vanObjectives.map(obj =>
+      obj.objective === objectiveText ? { ...obj, completed: !obj.completed } : obj
+    )
+
+    setVanObjectives(updated)
+
+    try {
+      await fetch(ghostApiUrl(`/admin/device/${encodeURIComponent(controlVanDeviceId)}/van`), {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ missionObjectives: JSON.stringify(updated) })
+      }).then(toJson<Device>)
+    } catch (e) {
+      setError((e as Error).message)
+      setVanObjectives(vanObjectives)
+    }
+  }
+
+  const takeGhostcamPhoto = (): void => {
+    const frame = controlGhostcamDeviceId ? cameraSources[controlGhostcamDeviceId] : undefined
+    if (!frame) {
+      return
+    }
+
+    const link = document.createElement('a')
+    link.href = frame
+    link.download = `ghostcam-${controlGhostcamDeviceId || 'capture'}-${Date.now()}.png`
+    link.click()
   }
 
   return (
@@ -1071,32 +1914,34 @@ export function App() {
           <p>Panel principal: accès aux dashboards MJ</p>
         </Header>
 
-        <HomeCards>
-          <HomeCard
-            $active={activePanel === 'config'}
-            onClick={() => setActivePanel('config')}
-            type="button"
-          >
-            <h3>Config</h3>
-            <span>Créer / modifier / supprimer les devices</span>
-          </HomeCard>
-          <HomeCard
-            $active={activePanel === 'control'}
-            onClick={() => setActivePanel('control')}
-            type="button"
-          >
-            <h3>Live Control</h3>
-            <span>Pilotage instantané des outils</span>
-          </HomeCard>
-          <HomeCard
-            $active={activePanel === 'scenes'}
-            onClick={() => setActivePanel('scenes')}
-            type="button"
-          >
-            <h3>Scenes</h3>
-            <span>À venir</span>
-          </HomeCard>
-        </HomeCards>
+        {activePanel !== 'admin' && (
+          <HomeCards>
+            <HomeCard
+              $active={activePanel === 'config'}
+              onClick={() => setActivePanel('config')}
+              type="button"
+            >
+              <h3>Config</h3>
+              <span>Liste des devices + ouverture player</span>
+            </HomeCard>
+            <HomeCard
+              $active={activePanel === 'game'}
+              onClick={() => setActivePanel('game')}
+              type="button"
+            >
+              <h3>Partie</h3>
+              <span>État du jeu et objectifs</span>
+            </HomeCard>
+            <HomeCard
+              $active={activePanel === 'admin'}
+              onClick={() => setActivePanel('admin')}
+              type="button"
+            >
+              <h3>Admin Outil</h3>
+              <span>Page dédiée par outil</span>
+            </HomeCard>
+          </HomeCards>
+        )}
 
         {activePanel === 'config' && (
           <Panel>
@@ -1106,787 +1951,198 @@ export function App() {
                 <button type="button" onClick={() => void refreshDevices()} disabled={isLoading}>
                   Rafraîchir
                 </button>
-                <PrimaryButton type="button" onClick={() => void feedDefaultSetup()} disabled={isLoading}>
-                  Feed
-                </PrimaryButton>
               </PanelHeaderActions>
             </PanelHeader>
 
-            <Tabs>
-              <TabButton
-                type="button"
-                $active={activeConfigTab === 'devices'}
-                onClick={() => setActiveConfigTab('devices')}
-              >
-                Devices
-              </TabButton>
-              <TabButton
-                type="button"
-                $active={activeConfigTab === 'audio'}
-                onClick={() => setActiveConfigTab('audio')}
-              >
-                Audio
-              </TabButton>
-              <TabButton
-                type="button"
-                $active={activeConfigTab === 'network'}
-                onClick={() => setActiveConfigTab('network')}
-              >
-                Réseau
-              </TabButton>
-            </Tabs>
-
-            {activeConfigTab === 'devices' && (
-              <DevicesGrid>
-                <SectionCard>
-                  <h3>Créer un device</h3>
-                  <FieldLabel htmlFor="device-id">deviceId</FieldLabel>
-                  <TextInput
-                    id="device-id"
-                    value={createDeviceId}
-                    onChange={event => setCreateDeviceId(event.target.value)}
-                    placeholder="ex: salon-01"
-                  />
-                  <FieldLabel htmlFor="create-role">Rôle</FieldLabel>
-                  <Select
-                    id="create-role"
-                    value={createRole}
-                    onChange={event => setCreateRole(event.target.value as DeviceRole)}
-                  >
-                    <option value="emf">EMF</option>
-                    <option value="spiritbox">Spirit Box</option>
-                    <option value="ghostcam">GhostCam</option>
-                    <option value="ghostorbs">Ghost Orbs</option>
-                    <option value="van">Van</option>
-                  </Select>
-                  <PrimaryButton type="button" onClick={() => void createDevice()}>
-                    Créer
-                  </PrimaryButton>
-                </SectionCard>
-
-                <SectionCard>
-                  <h3>Devices existants</h3>
-                  {isLoading && <small>Chargement...</small>}
-                  {!isLoading && devices.length === 0 && <small>Aucun device</small>}
-                  <DeviceList>
-                    {devices.map(device => (
-                      <DeviceItem key={device.deviceId}>
-                        <DeviceSelectButton
-                          type="button"
-                          $active={selectedDeviceId === device.deviceId}
-                          onClick={() => setSelectedDeviceId(device.deviceId)}
-                        >
-                          <strong>{device.deviceId}</strong>
-                          <span>{device.role}</span>
-                        </DeviceSelectButton>
-                        <DeviceActionButton
-                          type="button"
-                          onClick={() => window.open(`/ghost/player?device=${device.deviceId}`, '_blank')}
-                          title="Voir le player du device"
-                        >
-                          🎮 Player
-                        </DeviceActionButton>
-                      </DeviceItem>
-                    ))}
-                  </DeviceList>
-                </SectionCard>
-
-                <SectionCard>
-                  <h3>Modifier / supprimer</h3>
-                  {!selectedDevice && <small>Sélectionne un device pour l'éditer</small>}
-                  {selectedDevice && (
-                    <EditForm>
-                      <FieldLabel htmlFor="edit-role">Rôle</FieldLabel>
-                      <Select
-                        id="edit-role"
-                        value={editRole}
-                        onChange={event => setEditRole(event.target.value as DeviceRole)}
+            <DevicesGrid>
+              <SectionCard>
+                <h3>Devices</h3>
+                {isLoading && <small>Chargement...</small>}
+                {!isLoading && devices.length === 0 && <small>Aucun device</small>}
+                <DeviceList>
+                  {devices.map(device => (
+                    <DeviceItem key={device.deviceId}>
+                      <DeviceSelectButton
+                        type="button"
+                        $active={selectedDeviceId === device.deviceId}
+                        onClick={() => setSelectedDeviceId(device.deviceId)}
                       >
-                        <option value="emf">EMF</option>
-                        <option value="spiritbox">Spirit Box</option>
-                        <option value="ghostcam">GhostCam</option>
-                        <option value="ghostorbs">Ghost Orbs</option>
-                        <option value="van">Van</option>
-                      </Select>
-
-                      <FieldLabel htmlFor="edit-emf">EMF</FieldLabel>
-                      <NumberInput
-                        id="edit-emf"
-                        type="number"
-                        min={0}
-                        max={5}
-                        value={editEmfLevel}
-                        onChange={event => setEditEmfLevel(Number(event.target.value))}
-                      />
-
-                      <CheckRow>
-                        <input
-                          id="edit-power-on"
-                          type="checkbox"
-                          checked={editPowerOn}
-                          onChange={event => setEditPowerOn(event.target.checked)}
-                        />
-                        <FieldLabel htmlFor="edit-power-on">EMF allumé</FieldLabel>
-                      </CheckRow>
-
-                      <CheckRow>
-                        <input
-                          id="edit-hunt"
-                          type="checkbox"
-                          checked={editHuntActive}
-                          onChange={event => setEditHuntActive(event.target.checked)}
-                        />
-                        <FieldLabel htmlFor="edit-hunt">Hunt active</FieldLabel>
-                      </CheckRow>
-
-                      <FieldLabel htmlFor="edit-message">Message</FieldLabel>
-                      <TextInput
-                        id="edit-message"
-                        value={editMessage}
-                        onChange={event => setEditMessage(event.target.value)}
-                      />
-
-                      <Actions>
-                        <PrimaryButton type="button" onClick={() => void updateDevice()}>
-                          Enregistrer
-                        </PrimaryButton>
-                        <DangerButton type="button" onClick={() => void deleteDevice()}>
-                          Supprimer
-                        </DangerButton>
-                      </Actions>
-                    </EditForm>
-                  )}
-                </SectionCard>
-              </DevicesGrid>
-            )}
-
-            {activeConfigTab !== 'devices' && <PlaceholderTab>Catégorie en préparation.</PlaceholderTab>}
+                        <strong>{device.deviceId}</strong>
+                        <span>{toolLabel(device.role as DeviceRole)}</span>
+                      </DeviceSelectButton>
+                      <DeviceActionButton
+                        type="button"
+                        onClick={() => window.open(`/ghost/player?device=${device.deviceId}`, '_blank')}
+                        title="Voir le player du device"
+                      >
+                        🎮 Player
+                      </DeviceActionButton>
+                      <DeviceActionButton
+                        type="button"
+                        onClick={() => openAdminToolPage(device.role, device.deviceId)}
+                        title="Ouvrir la page admin de cet outil"
+                      >
+                        🛠 Admin
+                      </DeviceActionButton>
+                    </DeviceItem>
+                  ))}
+                </DeviceList>
+              </SectionCard>
+            </DevicesGrid>
 
             {error && <ErrorBox>{error}</ErrorBox>}
           </Panel>
         )}
 
-        {activePanel !== 'config' && (
+        {activePanel === 'game' && (
           <Panel>
-            {activePanel === 'control' && (
-              <>
-                <h2>Live Control - Outils</h2>
-                <p>Contrôle rapide depuis MJ pour les outils in-game.</p>
+            <>
+                <h2>Partie en cours</h2>
 
                 <DevicesGrid>
                   <SectionCard>
-                    <h3>EMF Meter</h3>
-                    {devices.filter(device => device.role === 'emf').length === 0 && (
-                      <small>Aucun device EMF configuré.</small>
-                    )}
-                    {devices.filter(device => device.role === 'emf').length > 0 && (
-                      <EmfControlLayout>
-                        <EditForm>
-                          <FieldLabel htmlFor="control-device">Device EMF</FieldLabel>
-                          <Select
-                            id="control-device"
-                            value={controlDeviceId}
-                            onChange={event => setControlDeviceId(event.target.value)}
-                          >
-                            {devices
-                              .filter(device => device.role === 'emf')
-                              .map(device => (
-                                <option key={device.deviceId} value={device.deviceId}>
-                                  {device.deviceId}
-                                </option>
-                              ))}
-                          </Select>
-
-                          <FieldLabel htmlFor="control-emf">Valeur affichée</FieldLabel>
-                          <input
-                            id="control-emf"
-                            type="range"
-                            min={0}
-                            max={5}
-                            step={1}
-                            value={controlEmfLevel}
-                            onChange={event => {
-                              const value = Number(event.target.value)
-                              setControlEmfLevel(value)
-                              void patchEmfControl({ emfLevel: value })
-                            }}
-                          />
-                          <small>Niveau: {controlEmfLevel}</small>
-
-                          <CheckRow>
-                            <input
-                              id="control-emf-power"
-                              type="checkbox"
-                              checked={controlPowerOn}
-                              onChange={event => {
-                                const checked = event.target.checked
-                                setControlPowerOn(checked)
-                                void patchEmfControl({ powerOn: checked })
-                              }}
-                            />
-                            <FieldLabel htmlFor="control-emf-power">EMF allumé</FieldLabel>
-                          </CheckRow>
-
-                          <Actions>
-                            <PrimaryButton
-                              type="button"
-                              onClick={() => void patchEmfControl({ emfLevel: controlEmfLevel, powerOn: controlPowerOn })}
-                            >
-                              Appliquer maintenant
-                            </PrimaryButton>
-                          </Actions>
-                        </EditForm>
-
-                        <SmallPreviewContainer>
-                          <GhostCamLabel>Preview: {controlDeviceId || 'aucun'}</GhostCamLabel>
-                          {controlDeviceId && cameraSources[controlDeviceId] ? (
-                            <SmallPreviewImage src={cameraSources[controlDeviceId]} alt={controlDeviceId} />
-                          ) : (
-                            <SmallPreviewPlaceholder>En attente de frame...</SmallPreviewPlaceholder>
-                          )}
-                        </SmallPreviewContainer>
-                      </EmfControlLayout>
-                    )}
-                  </SectionCard>
-                </DevicesGrid>
-              </>
-            )}
-
-            {activePanel === 'control' && (
-              <>
-                <DevicesGrid>
-                  <SectionCard>
-                    <h3>Spirit Box</h3>
-                    {devices.filter(device => device.role === 'spiritbox').length === 0 && (
-                      <small>Aucun device SpiritBox configuré.</small>
-                    )}
-                    {devices.filter(device => device.role === 'spiritbox').length > 0 && (
-                      <EmfControlLayout>
-                        <EditForm>
-                          <FieldLabel htmlFor="control-spiritbox-device">Device SpiritBox</FieldLabel>
-                          <Select
-                            id="control-spiritbox-device"
-                            value={controlSpiritboxDeviceId}
-                            onChange={event => setControlSpiritboxDeviceId(event.target.value)}
-                          >
-                            {devices
-                              .filter(device => device.role === 'spiritbox')
-                              .map(device => (
-                                <option key={device.deviceId} value={device.deviceId}>
-                                  {device.deviceId}
-                                </option>
-                              ))}
-                          </Select>
-
-                          <Actions>
-                            <PrimaryButton type="button" onClick={toggleSpiritboxRecording}>
-                              {spiritboxRecording ? 'STOP / ENVOYER MJ' : 'MESSAGE VOCAL MJ'}
-                            </PrimaryButton>
-                            <PrimaryButton
-                              type="button"
-                              onClick={playLatestPlayerSpiritMessage}
-                              disabled={!latestPlayerSpiritMessage}
-                            >
-                              Play message joueuse
-                            </PrimaryButton>
-                          </Actions>
-
-                          <small>
-                            {latestPlayerSpiritMessage
-                              ? `Dernier message joueuse: ${new Date(latestPlayerSpiritMessage.createdAt).toLocaleTimeString()}`
-                              : 'Aucun message joueuse pour le moment'}
-                          </small>
-                        </EditForm>
-
-                        <SmallPreviewContainer>
-                          <GhostCamLabel>Dernier message joueuse</GhostCamLabel>
-                          <SmallPreviewPlaceholder>
-                            {latestPlayerSpiritMessage ? 'Message vocal en mémoire' : 'En attente de message'}
-                          </SmallPreviewPlaceholder>
-                        </SmallPreviewContainer>
-                      </EmfControlLayout>
-                    )}
-                  </SectionCard>
-                </DevicesGrid>
-              </>
-            )}
-
-            {activePanel === 'control' && (
-              <>
-                <DevicesGrid>
-                  <SectionCard>
-                    <h3>GhostCam Streaming</h3>
-                    {devices.filter(device => device.role === 'ghostcam').length === 0 && (
-                      <small>Aucun device GhostCam configuré.</small>
-                    )}
-                    {devices.filter(device => device.role === 'ghostcam').length > 0 && (
-                      <EmfControlLayout>
-                        <EditForm>
-                          <FieldLabel htmlFor="control-ghostcam-device">Device GhostCam</FieldLabel>
-                          <Select
-                            id="control-ghostcam-device"
-                            value={controlGhostcamDeviceId}
-                            onChange={event => setControlGhostcamDeviceId(event.target.value)}
-                          >
-                            {devices
-                              .filter(device => device.role === 'ghostcam')
-                              .map(device => (
-                                <option key={device.deviceId} value={device.deviceId}>
-                                  {device.deviceId}
-                                </option>
-                              ))}
-                          </Select>
-
-                          <FieldLabel htmlFor="control-ghostcam-color">Couleur affichage</FieldLabel>
-                          <Select
-                            id="control-ghostcam-color"
-                            value={controlGhostcamColor}
-                            onChange={event => {
-                              const color = event.target.value as 'green' | 'red'
-                              setControlGhostcamColor(color)
-                              void patchGhostcamControl({ cameraColor: color })
-                            }}
-                          >
-                            <option value="green">Vert</option>
-                            <option value="red">Rouge</option>
-                          </Select>
-
-                          <FieldLabel htmlFor="control-ghost-duration">Ghost visible (secondes)</FieldLabel>
-                          <NumberInput
-                            id="control-ghost-duration"
-                            type="number"
-                            min={1}
-                            max={30}
-                            value={controlGhostDurationSec}
-                            onChange={event => setControlGhostDurationSec(Number(event.target.value))}
-                          />
-
-                          <Actions>
-                            <PrimaryButton
-                              type="button"
-                              onClick={() => void patchGhostcamControl({ cameraColor: controlGhostcamColor })}
-                            >
-                              Appliquer couleur
-                            </PrimaryButton>
-                            <PrimaryButton
-                              type="button"
-                              onClick={() => void triggerGhostAction()}
-                            >
-                              Ghost
-                            </PrimaryButton>
-                          </Actions>
-                        </EditForm>
-
-                        <SmallPreviewContainer>
-                          <GhostCamLabel>Preview: {controlGhostcamDeviceId || 'aucun'}</GhostCamLabel>
-                          {controlGhostcamDeviceId && cameraSources[controlGhostcamDeviceId] ? (
-                            <GhostCamFrame>
-                              <SmallPreviewImage src={cameraSources[controlGhostcamDeviceId]} alt={controlGhostcamDeviceId} />
-                            </GhostCamFrame>
-                          ) : (
-                            <GhostCamFrame>
-                              <SmallPreviewPlaceholder>En attente de frame...</SmallPreviewPlaceholder>
-                            </GhostCamFrame>
-                          )}
-                        </SmallPreviewContainer>
-                      </EmfControlLayout>
-                    )}
-                  </SectionCard>
-                </DevicesGrid>
-              </>
-            )}
-
-            {activePanel === 'control' && (
-              <>
-                <DevicesGrid>
-                  <SectionCard>
-                    <h3>Ghost Orbs</h3>
-                    {devices.filter(device => device.role === 'ghostorbs').length === 0 && (
-                      <small>Aucun device Ghost Orbs configuré.</small>
-                    )}
-                    {devices.filter(device => device.role === 'ghostorbs').length > 0 && (
-                      <EmfControlLayout>
-                        <EditForm>
-                          <FieldLabel htmlFor="control-ghostorbs-device">Device Ghost Orbs</FieldLabel>
-                          <Select
-                            id="control-ghostorbs-device"
-                            value={controlGhostorbsDeviceId}
-                            onChange={event => setControlGhostorbsDeviceId(event.target.value)}
-                          >
-                            {devices
-                              .filter(device => device.role === 'ghostorbs')
-                              .map(device => (
-                                <option key={device.deviceId} value={device.deviceId}>
-                                  {device.deviceId}
-                                </option>
-                              ))}
-                          </Select>
-
-                          <FieldLabel htmlFor="control-ghostorbs-color">Couleur affichage</FieldLabel>
-                          <Select
-                            id="control-ghostorbs-color"
-                            value={controlGhostorbsColor}
-                            onChange={event => {
-                              const color = event.target.value as 'green' | 'red'
-                              setControlGhostorbsColor(color)
-                              void patchGhostorbsControl({ cameraColor: color })
-                            }}
-                          >
-                            <option value="green">Vert</option>
-                            <option value="red">Rouge</option>
-                          </Select>
-
-                          <FieldLabel htmlFor="control-orbs-duration">Orbs visibles (secondes)</FieldLabel>
-                          <NumberInput
-                            id="control-orbs-duration"
-                            type="number"
-                            min={1}
-                            max={30}
-                            value={controlOrbDurationSec}
-                            onChange={event => setControlOrbDurationSec(Number(event.target.value))}
-                          />
-
-                          <Actions>
-                            <PrimaryButton type="button" onClick={() => void patchGhostorbsControl({ cameraColor: controlGhostorbsColor })}>
-                              Appliquer couleur
-                            </PrimaryButton>
-                            <PrimaryButton type="button" onClick={() => void triggerOrbsAction()}>
-                              Orbs
-                            </PrimaryButton>
-                          </Actions>
-                        </EditForm>
-
-                        <SmallPreviewContainer>
-                          <GhostCamLabel>Preview: {controlGhostorbsDeviceId || 'aucun'}</GhostCamLabel>
-                          {controlGhostorbsDeviceId && cameraSources[controlGhostorbsDeviceId] ? (
-                            <GhostCamFrame>
-                              <SmallPreviewImage src={cameraSources[controlGhostorbsDeviceId]} alt={controlGhostorbsDeviceId} />
-                            </GhostCamFrame>
-                          ) : (
-                            <GhostCamFrame>
-                              <SmallPreviewPlaceholder>En attente de frame...</SmallPreviewPlaceholder>
-                            </GhostCamFrame>
-                          )}
-                        </SmallPreviewContainer>
-                      </EmfControlLayout>
-                    )}
-                  </SectionCard>
-                </DevicesGrid>
-              </>
-            )}
-
-            {activePanel === 'control' && (
-              <>
-                <DevicesGrid>
-                  <SectionCard>
-                    <h3>Van Dashboard</h3>
-                    {devices.filter(device => device.role === 'van').length === 0 && (
-                      <small>Aucun device Van configuré.</small>
-                    )}
-                    {devices.filter(device => device.role === 'van').length > 0 && (
+                    <h3>État actuel</h3>
+                    {!gameState && <small>Aucune partie trouvée (initialise d'abord).</small>}
+                    {gameState && (
                       <EditForm>
-                        <FieldLabel htmlFor="control-van-device">Device Van</FieldLabel>
-                        <Select
-                          id="control-van-device"
-                          value={controlVanDeviceId}
-                          onChange={event => setControlVanDeviceId(event.target.value)}
-                        >
-                          {devices
-                            .filter(device => device.role === 'van')
-                            .map(device => (
-                              <option key={device.deviceId} value={device.deviceId}>
-                                {device.deviceId}
-                              </option>
-                            ))}
-                        </Select>
-
-                        <FieldLabel>Musique van</FieldLabel>
-                        <TextInput
-                          value={vanBackgroundMusic.title}
-                          onChange={event =>
-                            setVanBackgroundMusic(prev => ({ ...prev, title: event.target.value }))
-                          }
-                          placeholder="Titre affiché dans le van"
-                        />
-                        <TextInput
-                          value={vanBackgroundMusic.url}
-                          onChange={event =>
-                            setVanBackgroundMusic(prev => ({
-                              ...prev,
-                              url: event.target.value,
-                              playing: event.target.value.trim() ? prev.playing : false
-                            }))
-                          }
-                          placeholder="https://.../track.mp3"
-                        />
-                        <MeterRow>
-                          <MeterName>Volume musique</MeterName>
-                          <input
-                            type="range"
-                            min={0}
-                            max={100}
-                            step={1}
-                            value={vanBackgroundMusic.volume}
-                            onChange={event =>
-                              setVanBackgroundMusic(prev => ({ ...prev, volume: Number(event.target.value) }))
-                            }
-                          />
-                          <small>{vanBackgroundMusic.volume}%</small>
-                        </MeterRow>
-                        <CheckRow>
-                          <input
-                            id="van-music-loop"
-                            type="checkbox"
-                            checked={vanBackgroundMusic.loop}
-                            onChange={event =>
-                              setVanBackgroundMusic(prev => ({ ...prev, loop: event.target.checked }))
-                            }
-                          />
-                          <FieldLabel htmlFor="van-music-loop">Boucler la musique</FieldLabel>
-                        </CheckRow>
-                        <Actions>
-                          <PrimaryButton
-                            type="button"
-                            onClick={() =>
-                              setVanBackgroundMusic(prev => ({
-                                ...prev,
-                                playing: Boolean(prev.url.trim()) && !prev.playing
-                              }))
-                            }
-                            disabled={!vanBackgroundMusic.url.trim()}
-                          >
-                            {vanBackgroundMusic.playing ? 'Pause musique' : 'Lancer musique'}
-                          </PrimaryButton>
-                        </Actions>
-                        <small>
-                          {vanBackgroundMusic.url.trim()
-                            ? `Piste active: ${vanBackgroundMusic.title || vanBackgroundMusic.url}`
-                            : 'Aucune musique configurée pour le van'}
-                        </small>
-
-                        <FieldLabel htmlFor="van-ghost-activity">Activité fantôme (0-10)</FieldLabel>
-                        <input
-                          id="van-ghost-activity"
-                          type="range"
-                          min={0}
-                          max={10}
-                          step={1}
-                          value={vanGhostActivity}
-                          onChange={event => setVanGhostActivity(Number(event.target.value))}
-                        />
-                        <small>Niveau: {vanGhostActivity}</small>
-
-                        <FieldLabel>Room List</FieldLabel>
-                        <InlineRow>
-                          <TextInput
-                            value={vanNewRoom}
-                            onChange={event => setVanNewRoom(event.target.value)}
-                            placeholder="Ajouter une pièce"
-                          />
-                          <PrimaryButton type="button" onClick={addVanRoom}>Ajouter</PrimaryButton>
-                        </InlineRow>
-                        <ListGrid>
-                          {vanRooms.map((room, index) => (
-                            <InlineRow key={`${room}-${index}`}>
-                              <TextInput
-                                value={room}
-                                onChange={event => updateVanRoomName(index, event.target.value)}
-                              />
-                              <DangerButton type="button" onClick={() => removeVanRoom(room)}>Supprimer</DangerButton>
-                            </InlineRow>
-                          ))}
-                        </ListGrid>
-
-                        <FieldLabel>Sound Sensor Panel</FieldLabel>
-                        <ListGrid>
-                          {vanRooms.map(room => (
-                            <MeterRow key={`sound-${room}`}>
-                              <MeterName>{room}</MeterName>
-                              <input
-                                type="range"
-                                min={0}
-                                max={100}
-                                step={1}
-                                value={vanSoundLevels[room] ?? 0}
-                                onChange={event => setVanSoundLevels(prev => ({ ...prev, [room]: Number(event.target.value) }))}
-                              />
-                              <small>{vanSoundLevels[room] ?? 0}%</small>
-                            </MeterRow>
-                          ))}
-                        </ListGrid>
-
-                        <FieldLabel>Motion Sensor Panel</FieldLabel>
-                        {vanRecentMotionAlert && <MotionAlert>{vanRecentMotionAlert}</MotionAlert>}
-                        <ListGrid>
-                          {vanRooms.map(room => {
-                            const motionDetected = Boolean(vanMotionDetections[room])
-                            return (
-                              <SensorRow key={`motion-${room}`}>
-                                <FieldLabel>{room}</FieldLabel>
-                                <StatusPill $active={motionDetected}>
-                                  {motionDetected ? 'Activité détectée' : 'Aucune activité'}
-                                </StatusPill>
-                                <Actions>
-                                  <PrimaryButton type="button" onClick={() => triggerMotionEvent(room)}>
-                                    Lancer activité
-                                  </PrimaryButton>
-                                </Actions>
-                              </SensorRow>
-                            )
-                          })}
-                        </ListGrid>
-
-                        <FieldLabel>Sanity Monitor</FieldLabel>
-                        <InlineRow>
-                          <TextInput
-                            value={vanNewPlayer}
-                            onChange={event => setVanNewPlayer(event.target.value)}
-                            placeholder="Ajouter une joueuse"
-                          />
-                          <PrimaryButton type="button" onClick={addVanPlayer}>Ajouter</PrimaryButton>
-                        </InlineRow>
-                        <ListGrid>
-                          {vanPlayers.map(player => (
-                            <MeterRow key={player.id}>
-                              <TextInput
-                                value={player.name}
-                                onChange={event => {
-                                  const nextName = event.target.value
-                                  setVanPlayers(prev => prev.map(item => (item.id === player.id ? { ...item, name: nextName } : item)))
-                                }}
-                              />
-                              <input
-                                type="range"
-                                min={0}
-                                max={100}
-                                step={1}
-                                value={player.sanity}
-                                onChange={event => {
-                                  const next = Number(event.target.value)
-                                  setVanPlayers(prev => prev.map(item => (item.id === player.id ? { ...item, sanity: next } : item)))
-                                }}
-                              />
-                              <StatusPill $active={player.sanity > 35}>{Math.round(player.sanity)}%</StatusPill>
-                              <DangerButton type="button" onClick={() => setVanPlayers(prev => prev.filter(item => item.id !== player.id))}>
-                                Supprimer
-                              </DangerButton>
-                            </MeterRow>
-                          ))}
-                        </ListGrid>
-
-
-                        <FieldLabel>Soundboard</FieldLabel>
-                        <InlineRow>
-                          <TextInput
-                            value={vanNewSoundLabel}
-                            onChange={event => setVanNewSoundLabel(event.target.value)}
-                            placeholder="Nom du son"
-                          />
-                          <TextInput
-                            value={vanNewSoundUrl}
-                            onChange={event => setVanNewSoundUrl(event.target.value)}
-                            placeholder="https://.../effect.mp3"
-                          />
-                          <PrimaryButton type="button" onClick={addVanSoundCue}>Ajouter</PrimaryButton>
-                        </InlineRow>
-
-                        {/* Liste dynamique des sons du dossier music/sounds */}
-                        <FieldLabel>Sons disponibles (music/sounds)</FieldLabel>
-                        <ListGrid>
-                          {useMusicFiles('sounds').map(file => (
-                            <SoundCueCard key={file.url}>
-                              <InlineRow>
-                                <span>{file.label}</span>
-                                <audio controls src={file.url} style={{ maxWidth: 180 }} />
-                                <PrimaryButton type="button" onClick={() => setVanNewSoundUrl(file.url)}>
-                                  Utiliser
-                                </PrimaryButton>
-                              </InlineRow>
-                            </SoundCueCard>
-                          ))}
-                        </ListGrid>
-
-                        {/* Soundboard custom (manuel) */}
-                        <ListGrid>
-                          {vanSoundboard.map(cue => (
-                            <SoundCueCard key={cue.id}>
-                              <InlineRow>
-                                <TextInput
-                                  value={cue.label}
-                                  onChange={event => updateVanSoundCue(cue.id, { label: event.target.value })}
-                                  placeholder="Nom du son"
-                                />
-                                <TextInput
-                                  value={cue.url}
-                                  onChange={event => updateVanSoundCue(cue.id, { url: event.target.value })}
-                                  placeholder="https://.../effect.mp3"
-                                />
-                                <audio controls src={cue.url} style={{ maxWidth: 180 }} />
-                              </InlineRow>
-                              <MeterRow>
-                                <MeterName>Volume</MeterName>
-                                <input
-                                  type="range"
-                                  min={0}
-                                  max={100}
-                                  step={1}
-                                  value={cue.volume}
-                                  onChange={event => updateVanSoundCue(cue.id, { volume: Number(event.target.value) })}
-                                />
-                                <small>{cue.volume}%</small>
-                              </MeterRow>
-                              <Actions>
-                                <PrimaryButton type="button" onClick={() => triggerVanSoundCue(cue.id)} disabled={!cue.url.trim()}>
-                                  Jouer sur le van
-                                </PrimaryButton>
-                                <DangerButton type="button" onClick={() => removeVanSoundCue(cue.id)}>
-                                  Supprimer
-                                </DangerButton>
-                              </Actions>
-                            </SoundCueCard>
-                          ))}
-                        </ListGrid>
-
-// À intégrer dans la SpiritBox :
-// const voiceFiles = useMusicFiles('voices')
-// ... puis afficher dans l'UI SpiritBox :
-// <FieldLabel>Voix pré-enregistrées (music/voices)</FieldLabel>
-// <ListGrid>
-//   {voiceFiles.map(file => (
-//     <SoundCueCard key={file.url}>
-//       <InlineRow>
-//         <span>{file.label}</span>
-//         <audio controls src={file.url} style={{ maxWidth: 180 }} />
-//         <PrimaryButton type="button" onClick={() => playSpiritboxVoice(file.url)}>
-//           Jouer sur SpiritBox
-//         </PrimaryButton>
-//       </InlineRow>
-//     </SoundCueCard>
-//   ))}
-// </ListGrid>
+                        <small>Game ID: {gameState.gameId}</small>
+                        <small>Statut: {gameState.isRunning ? 'En cours' : 'Arrêtée'}</small>
+                        <small>Étape scénario moteur: {gameState.currentScenarioStep + 1}</small>
+                        <small>Étape flow Van: {vanFlowStepIndex + 1}</small>
+                        <small>Activité spectrale: {Math.round(gameState.currentSpectralActivity)}%</small>
 
                         <Actions>
-                          <PrimaryButton
-                            type="button"
-                            onClick={() => void updateVanData()}
-                          >
-                            Envoyer mise à jour
+                          {!gameState.isRunning && (
+                            <PrimaryButton type="button" onClick={() => void startGame()}>
+                              Démarrer
+                            </PrimaryButton>
+                          )}
+                          {gameState.isRunning && (
+                            <DangerButton type="button" onClick={() => void stopGame()}>
+                              Arrêter
+                            </DangerButton>
+                          )}
+                          <PrimaryButton type="button" onClick={() => void advanceGameStep()}>
+                            Étape suivante
                           </PrimaryButton>
                         </Actions>
                       </EditForm>
                     )}
                   </SectionCard>
+
+                  <SectionCard>
+                    <h3>Etape courante</h3>
+                    <EditForm>
+                      <strong>{currentEscapeStep.id}. {currentEscapeStep.title}</strong>
+                      <small>{currentEscapeStep.description}</small>
+                      {currentEscapeStep.activityImpact && <small>Impact: {currentEscapeStep.activityImpact}</small>}
+                    </EditForm>
+                  </SectionCard>
+
+                  <SectionCard>
+                    <h3>Objectifs</h3>
+                    <ObjectivesList>
+                      {vanObjectives.map((obj, idx) => (
+                        <ObjectiveCheckboxItem key={idx}>
+                          <input
+                            type="checkbox"
+                            checked={obj.completed}
+                            onChange={() => void toggleVanObjective(obj.objective)}
+                          />
+                          <label>{obj.objective}</label>
+                        </ObjectiveCheckboxItem>
+                      ))}
+                    </ObjectivesList>
+                  </SectionCard>
                 </DevicesGrid>
-              </>
+
+            </>
+          </Panel>
+        )}
+
+        {activePanel === 'admin' && (
+          <>
+            {(adminToolRole === null || adminToolRole === 'emf') && (
+              <EmfAdminTool
+                devices={devices.map(device => ({ deviceId: device.deviceId, role: device.role }))}
+                controlDeviceId={controlDeviceId}
+                controlEmfLevel={controlEmfLevel}
+                controlPowerOn={controlPowerOn}
+                cameraFrame={controlDeviceId ? cameraSources[controlDeviceId] : undefined}
+                onControlDeviceChange={setControlDeviceId}
+                onControlEmfLevelChange={value => {
+                  setControlEmfLevel(value)
+                  void patchEmfControl({ emfLevel: value })
+                }}
+                onControlPowerOnChange={checked => {
+                  setControlPowerOn(checked)
+                  void patchEmfControl({ powerOn: checked })
+                }}
+              />
             )}
 
-            {activePanel === 'scenes' && (
-              <>
-                <h2>Scenes</h2>
-                <p>Cette zone sera branchée dans l'étape suivante.</p>
-              </>
+            {adminToolRole === 'spiritbox' && (
+              <SpiritBoxAdminTool
+                controlDeviceId={controlSpiritboxDeviceId}
+                audioEnabled={dashboardAudioUnlocked}
+                latestPlayerMessageAt={latestPlayerSpiritMessage?.createdAt}
+                latestPlayerAudioData={latestPlayerSpiritMessage?.audioData}
+                latestPlayerMimeType={latestPlayerSpiritMessage?.mimeType}
+                presetSounds={SPIRITBOX_PRESET_SOUNDS}
+                onEnableAudio={enableDashboardAudio}
+                onPlayLatest={playLatestPlayerSpiritMessage}
+                onSendPresetSound={preset => {
+                  void sendSpiritboxPresetSound(preset)
+                }}
+              />
             )}
-          </Panel>
+
+            {adminToolRole === 'ghostcam' && (
+              <GhostCamAdminTool
+                cameraFrame={controlGhostcamDeviceId ? cameraSources[controlGhostcamDeviceId] : undefined}
+                onPhoto={takeGhostcamPhoto}
+                ghostcamDeviceId={controlGhostcamDeviceId}
+                ghostcamDeviceOptions={devices.filter(device => device.role === 'ghostcam').map(device => device.deviceId)}
+                ghostDurationSec={controlGhostDurationSec}
+                onGhostcamDeviceChange={setControlGhostcamDeviceId}
+                onGhostDurationChange={setControlGhostDurationSec}
+                onTriggerGhost={() => {
+                  void triggerGhostAction()
+                }}
+                ghostorbsDeviceId={controlOrbsCameraDeviceId}
+                ghostorbsDeviceOptions={devices
+                  .filter(device => device.role === 'ghostcam')
+                  .map(device => device.deviceId)}
+                orbDurationSec={controlOrbDurationSec}
+                onGhostorbsDeviceChange={setControlOrbsCameraDeviceId}
+                onOrbDurationChange={setControlOrbDurationSec}
+                onTriggerOrbs={() => {
+                  void triggerOrbsAction()
+                }}
+              />
+            )}
+
+            {(adminToolRole === 'ghostorbs' || adminToolRole === 'thermometer') && (
+              <ThermometerAdminTool
+                devices={devices.map(device => ({ deviceId: device.deviceId, role: device.role }))}
+                controlDeviceId={controlGhostorbsDeviceId}
+                controlTemperature={controlTemperature}
+                controlPowerOn={controlThermometerPowerOn}
+                cameraFrame={controlGhostorbsDeviceId ? cameraSources[controlGhostorbsDeviceId] : undefined}
+                onControlDeviceChange={setControlGhostorbsDeviceId}
+                onControlTemperatureChange={value => {
+                  setControlTemperature(value)
+                  void patchThermometerControl({ temperature: value })
+                }}
+                onControlPowerOnChange={checked => {
+                  setControlThermometerPowerOn(checked)
+                  void patchThermometerControl({ powerOn: checked })
+                }}
+              />
+            )}
+
+            {adminToolRole === 'van' && <VanAdminTool toolLabel={toolLabel(adminToolRole)} />}
+          </>
         )}
       </Container>
     </ThemeProvider>
@@ -2127,61 +2383,10 @@ const GhostCamGrid = styled.div`
   margin-top: 1rem;
 `
 
-const EmfControlLayout = styled.div`
-  display: grid;
-  grid-template-columns: minmax(280px, 1fr) 180px;
-  gap: 0.9rem;
-  align-items: start;
-
-  @media (max-width: 760px) {
-    grid-template-columns: 1fr;
-  }
-`
-
-const SmallPreviewContainer = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-`
-
-const SmallPreviewImage = styled.img`
-  display: block;
-  width: 100%;
-  max-width: 180px;
-  border-radius: 8px;
-  border: 2px solid ${({ theme }) => theme.panelBorder};
-  background: #0c1014;
-  aspect-ratio: 4 / 3;
-  object-fit: cover;
-`
-
-const SmallPreviewPlaceholder = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  max-width: 180px;
-  aspect-ratio: 4 / 3;
-  border-radius: 8px;
-  border: 2px solid ${({ theme }) => theme.panelBorder};
-  background: #0c1014;
-  color: #596069;
-  font-size: 0.8rem;
-  text-align: center;
-  padding: 0.6rem;
-`
-
 const GhostCamContainer = styled.div`
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-`
-
-const GhostCamLabel = styled.div`
-  color: #b4c4da;
-  font-size: 0.9rem;
-  font-weight: 600;
-  letter-spacing: 0.05em;
 `
 
 const GhostCamImage = styled.img`
@@ -2212,13 +2417,6 @@ const GhostCamPlaceholder = styled.div`
   font-size: 0.9rem;
   text-align: center;
   padding: 1rem;
-`
-
-const PlaceholderTab = styled.div`
-  border: 1px dashed ${({ theme }) => theme.panelBorder};
-  border-radius: 8px;
-  padding: 0.9rem;
-  color: #b7c7dd;
 `
 
 const InlineRow = styled.div`
@@ -2312,4 +2510,28 @@ const VanJsonEditor = styled.textarea`
   height: 120px;
   resize: vertical;
   line-height: 1.4;
+`
+
+const ObjectivesList = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+`
+
+const ObjectiveCheckboxItem = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+
+  input[type='checkbox'] {
+    cursor: pointer;
+    width: 18px;
+    height: 18px;
+  }
+
+  label {
+    cursor: pointer;
+    flex: 1;
+    font-size: 0.9rem;
+  }
 `

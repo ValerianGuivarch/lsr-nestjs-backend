@@ -84,10 +84,15 @@ const WeddingSouvenirs: React.FC = () => {
     const updateProgress = () => {
       if (!timelineRef.current) return
 
-      const rect = timelineRef.current.getBoundingClientRect()
-      const viewportHeight = window.innerHeight || document.documentElement.clientHeight
-      const fullTravel = rect.height + viewportHeight
-      const progress = (viewportHeight - rect.top) / fullTravel
+      // Dans une iframe, on track le scroll du document
+      const timelineTop = timelineRef.current.offsetTop
+      const timelineHeight = timelineRef.current.scrollHeight
+      const currentScroll = window.scrollY
+
+      // Position relative du scroll par rapport au début de la timeline
+      const relativeScroll = currentScroll - timelineTop
+      const progress = relativeScroll / timelineHeight
+
       setTimelineProgress(clamp(progress, 0, 1))
     }
 

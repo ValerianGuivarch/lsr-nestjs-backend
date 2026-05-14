@@ -1,32 +1,44 @@
 import { Column, Entity, PrimaryColumn } from 'typeorm'
 
-@Entity('device')
-export class DeviceEntity {
+/**
+ * État d'un outil de l'escape Ghost
+ * Les 8 outils sont hardcodés: EMF, Spirit Box, Ghost Cam, Ghost Orbs, Thermomètre, Motion Sensor, Sound Detector, Van
+ * Cette table enregistre juste l'état (powerOn, valeurs, etc.) de chaque outil
+ */
+@Entity('tool_state')
+export class ToolStateEntity {
   @PrimaryColumn()
-  deviceId: string
+  toolType: string // EMF, SPIRITBOX, GHOSTCAM, GHOSTORBS, THERMOMETER, MOTION_SENSOR, SOUND_DETECTOR, VAN (hardcodé)
 
-  @Column()
-  role: string
-
-  @Column({ nullable: true })
-  emfLevel?: number
-
+  // État d'outil générique
   @Column({ default: true })
   powerOn: boolean
 
+  @Column({ nullable: true })
+  emfLevel?: number // pour EMF, Spirit Box, Spiritmeter
+
   @Column({ default: false })
-  huntActive: boolean
+  huntActive: boolean // pour tous les outils lors d'une chasse
 
   @Column({ nullable: true })
-  message?: string
+  message?: string // message de l'outil (Spirit Box, etc.)
 
   @Column({ default: 'green' })
-  cameraColor: 'green' | 'red'
+  cameraColor: 'green' | 'red' // pour Ghost Cam
+
+  @Column({ type: 'float', default: 20 })
+  temperature: number // pour Thermomètre
 
   @Column({ nullable: true })
-  ghostUntil?: string
+  ghostUntil?: string // timestamp jusqu'où le fantôme est visible
 
-  // Van dashboard data
+  @Column({ nullable: true })
+  orbUntil?: string // timestamp jusqu'où les orbes sont visibles
+
+  @Column({ default: false })
+  photoModeUnlocked: boolean // déverrouillage caméra photo (session de jeu)
+
+  // Van-specific data
   @Column({ default: 0 })
   ghostActivityLevel: number // 0-10
 
@@ -60,6 +72,18 @@ export class DeviceEntity {
   @Column({ type: 'text', default: '[]' })
   soundboard: string // JSON array of { id, label, url, volume, lastTriggeredAt? }
 
-  @Column()
+  @Column({ type: 'text', default: '[]' })
+  vanMessageTemplates: string // JSON array of MJ message templates
+
+  @Column({ type: 'text', default: '[]' })
+  vanSentMessages: string // JSON array of sent messages for player feed
+
+  @Column({ default: new Date().toISOString() })
   updatedAt: string
 }
+
+/**
+ * Alias pour compatibilité (DeviceEntity conservé pour l'historique)
+ */
+export type DeviceEntity = ToolStateEntity
+export const DeviceEntity = ToolStateEntity
