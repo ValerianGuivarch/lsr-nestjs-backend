@@ -54,6 +54,12 @@ export class DeviceEntity {
   @Column({ nullable: true })
   floorPlanImage?: string // URL or base64 image
 
+  @Column({ type: 'text', default: '{"title":"","url":"","volume":70,"loop":true,"playing":false}' })
+  backgroundMusic: string // JSON: { title, url, volume, loop, playing }
+
+  @Column({ type: 'text', default: '[]' })
+  soundboard: string // JSON array of { id, label, url, volume, lastTriggeredAt? }
+
   @Column()
   updatedAt: string
 }

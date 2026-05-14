@@ -136,6 +136,8 @@ export class GhostController {
         | 'recentMotionAlert'
         | 'missionObjectives'
         | 'floorPlanImage'
+        | 'backgroundMusic'
+        | 'soundboard'
       >
     >
   ): Promise<DeviceEntity> {

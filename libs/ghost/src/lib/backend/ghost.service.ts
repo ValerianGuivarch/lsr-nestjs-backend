@@ -165,6 +165,8 @@ export class GhostService {
         | 'recentMotionAlert'
         | 'missionObjectives'
         | 'floorPlanImage'
+        | 'backgroundMusic'
+        | 'soundboard'
       >
     >
   ): Promise<DeviceEntity> {

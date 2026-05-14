@@ -21,6 +21,8 @@ type Device = {
   recentMotionAlert?: string
   missionObjectives?: string
   floorPlanImage?: string
+  backgroundMusic?: string
+  soundboard?: string
   updatedAt: string
 }
 
@@ -28,6 +30,22 @@ type VanPlayer = {
   id: string
   name: string
   sanity: number
+}
+
+type VanBackgroundMusic = {
+  title: string
+  url: string
+  volume: number
+  loop: boolean
+  playing: boolean
+}
+
+type VanSoundCue = {
+  id: string
+  label: string
+  url: string
+  volume: number
+  lastTriggeredAt?: string
 }
 
 type SpiritAudioMessage = {
@@ -57,6 +75,56 @@ async function toJson<T>(response: Response): Promise<T> {
     throw new Error(maybeJson?.message ?? `HTTP ${response.status}`)
   }
   return response.json() as Promise<T>
+}
+
+function createDefaultVanBackgroundMusic(): VanBackgroundMusic {
+  return {
+    title: '',
+    url: '',
+    volume: 70,
+    loop: true,
+    playing: false
+  }
+}
+
+function parseVanBackgroundMusic(raw?: string): VanBackgroundMusic {
+  if (!raw) {
+    return createDefaultVanBackgroundMusic()
+  }
+
+  try {
+    const parsed = JSON.parse(raw) as Partial<VanBackgroundMusic>
+    return {
+      title: typeof parsed.title === 'string' ? parsed.title : '',
+      url: typeof parsed.url === 'string' ? parsed.url : '',
+      volume: typeof parsed.volume === 'number' ? Math.max(0, Math.min(100, Math.round(parsed.volume))) : 70,
+      loop: parsed.loop ?? true,
+      playing: parsed.playing ?? false
+    }
+  } catch {
+    return createDefaultVanBackgroundMusic()
+  }
+}
+
+function parseVanSoundboard(raw?: string): VanSoundCue[] {
+  if (!raw) {
+    return []
+  }
+
+  try {
+    const parsed = JSON.parse(raw) as Array<Partial<VanSoundCue>>
+    return parsed
+      .filter(item => item && typeof item === 'object')
+      .map((item, index) => ({
+        id: typeof item.id === 'string' && item.id ? item.id : `cue-${index}`,
+        label: typeof item.label === 'string' ? item.label : '',
+        url: typeof item.url === 'string' ? item.url : '',
+        volume: typeof item.volume === 'number' ? Math.max(0, Math.min(100, Math.round(item.volume))) : 80,
+        lastTriggeredAt: typeof item.lastTriggeredAt === 'string' ? item.lastTriggeredAt : undefined
+      }))
+  } catch {
+    return []
+  }
 }
 
 export function App() {
@@ -111,6 +179,10 @@ export function App() {
   const [vanRecentMotionAlert, setVanRecentMotionAlert] = useState<string>('')
   const [vanObjectives, setVanObjectives] = useState<Array<{ objective: string; completed: boolean }>>([])
   const [vanFloorPlanImage, setVanFloorPlanImage] = useState<string | null>(null)
+  const [vanBackgroundMusic, setVanBackgroundMusic] = useState<VanBackgroundMusic>(createDefaultVanBackgroundMusic)
+  const [vanSoundboard, setVanSoundboard] = useState<VanSoundCue[]>([])
+  const [vanNewSoundLabel, setVanNewSoundLabel] = useState<string>('')
+  const [vanNewSoundUrl, setVanNewSoundUrl] = useState<string>('')
   const vanHydratedRef = useRef(false)
 
   const [cameraSources, setCameraSources] = useState<Record<string, string>>({})
@@ -300,6 +372,8 @@ export function App() {
     const parsedObjectives = vanDevice.missionObjectives
       ? (JSON.parse(vanDevice.missionObjectives) as Array<{ objective: string; completed: boolean }>)
       : []
+    const parsedBackgroundMusic = parseVanBackgroundMusic(vanDevice.backgroundMusic)
+    const parsedSoundboard = parseVanSoundboard(vanDevice.soundboard)
 
     setVanGhostActivity(vanDevice.ghostActivityLevel ?? 0)
     setVanRooms(parsedRooms.length > 0 ? parsedRooms : Object.keys(parsedSound))
@@ -316,6 +390,8 @@ export function App() {
     )
     setVanObjectives(parsedObjectives)
     setVanFloorPlanImage(vanDevice.floorPlanImage ?? null)
+    setVanBackgroundMusic(parsedBackgroundMusic)
+    setVanSoundboard(parsedSoundboard)
     vanHydratedRef.current = true
   }, [devices, controlVanDeviceId])
 
@@ -345,7 +421,9 @@ export function App() {
           motionSensorRooms: JSON.stringify(vanMotionSensors),
           recentMotionAlert: vanRecentMotionAlert || undefined,
           missionObjectives: JSON.stringify(vanObjectives),
-          floorPlanImage: vanFloorPlanImage
+          floorPlanImage: vanFloorPlanImage,
+          backgroundMusic: JSON.stringify(vanBackgroundMusic),
+          soundboard: JSON.stringify(vanSoundboard)
         })
       }).catch(() => {
         // Erreur réseau silencieuse
@@ -363,7 +441,9 @@ export function App() {
     vanMotionSensors,
     vanRecentMotionAlert,
     vanObjectives,
-    vanFloorPlanImage
+    vanFloorPlanImage,
+    vanBackgroundMusic,
+    vanSoundboard
   ])
 
   useEffect(() => {
@@ -775,6 +855,41 @@ export function App() {
     setVanNewPlayer('')
   }
 
+  const addVanSoundCue = (): void => {
+    const label = vanNewSoundLabel.trim()
+    const url = vanNewSoundUrl.trim()
+
+    if (!label || !url) {
+      return
+    }
+
+    setVanSoundboard(prev => [
+      ...prev,
+      {
+        id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
+        label,
+        url,
+        volume: 80
+      }
+    ])
+    setVanNewSoundLabel('')
+    setVanNewSoundUrl('')
+  }
+
+  const updateVanSoundCue = (cueId: string, patch: Partial<VanSoundCue>): void => {
+    setVanSoundboard(prev => prev.map(cue => (cue.id === cueId ? { ...cue, ...patch } : cue)))
+  }
+
+  const triggerVanSoundCue = (cueId: string): void => {
+    setVanSoundboard(prev =>
+      prev.map(cue => (cue.id === cueId ? { ...cue, lastTriggeredAt: new Date().toISOString() } : cue))
+    )
+  }
+
+  const removeVanSoundCue = (cueId: string): void => {
+    setVanSoundboard(prev => prev.filter(cue => cue.id !== cueId))
+  }
+
   const toggleVanMotionSensor = (room: string, enabled: boolean): void => {
     if (enabled) {
       setVanMotionSensors(prev => (prev.includes(room) ? prev : [...prev, room]))
@@ -822,7 +937,9 @@ export function App() {
           motionSensorRooms: JSON.stringify(vanMotionSensors),
           recentMotionAlert: vanRecentMotionAlert || undefined,
           missionObjectives: JSON.stringify(vanObjectives),
-          floorPlanImage: vanFloorPlanImage
+          floorPlanImage: vanFloorPlanImage,
+          backgroundMusic: JSON.stringify(vanBackgroundMusic),
+          soundboard: JSON.stringify(vanSoundboard)
         })
       }).then(toJson<Device>)
     } catch (e) {
@@ -901,7 +1018,9 @@ export function App() {
             { objective: 'Identifier le type de fantome', completed: false },
             { objective: 'Capturer une preuve paranormale', completed: false },
             { objective: 'Sortir vivant', completed: false }
-          ])
+          ]),
+          backgroundMusic: JSON.stringify(createDefaultVanBackgroundMusic()),
+          soundboard: JSON.stringify([])
         })
       }).then(toJson<Device>)
 
@@ -1590,6 +1709,123 @@ export function App() {
                           ))}
                         </ListGrid>
 
+                        <FieldLabel>Musique van</FieldLabel>
+                        <TextInput
+                          value={vanBackgroundMusic.title}
+                          onChange={event =>
+                            setVanBackgroundMusic(prev => ({ ...prev, title: event.target.value }))
+                          }
+                          placeholder="Titre affiché dans le van"
+                        />
+                        <TextInput
+                          value={vanBackgroundMusic.url}
+                          onChange={event =>
+                            setVanBackgroundMusic(prev => ({
+                              ...prev,
+                              url: event.target.value,
+                              playing: event.target.value.trim() ? prev.playing : false
+                            }))
+                          }
+                          placeholder="https://.../track.mp3"
+                        />
+                        <MeterRow>
+                          <MeterName>Volume musique</MeterName>
+                          <input
+                            type="range"
+                            min={0}
+                            max={100}
+                            step={1}
+                            value={vanBackgroundMusic.volume}
+                            onChange={event =>
+                              setVanBackgroundMusic(prev => ({ ...prev, volume: Number(event.target.value) }))
+                            }
+                          />
+                          <small>{vanBackgroundMusic.volume}%</small>
+                        </MeterRow>
+                        <CheckRow>
+                          <input
+                            id="van-music-loop"
+                            type="checkbox"
+                            checked={vanBackgroundMusic.loop}
+                            onChange={event =>
+                              setVanBackgroundMusic(prev => ({ ...prev, loop: event.target.checked }))
+                            }
+                          />
+                          <FieldLabel htmlFor="van-music-loop">Boucler la musique</FieldLabel>
+                        </CheckRow>
+                        <Actions>
+                          <PrimaryButton
+                            type="button"
+                            onClick={() =>
+                              setVanBackgroundMusic(prev => ({
+                                ...prev,
+                                playing: Boolean(prev.url.trim()) && !prev.playing
+                              }))
+                            }
+                            disabled={!vanBackgroundMusic.url.trim()}
+                          >
+                            {vanBackgroundMusic.playing ? 'Pause musique' : 'Lancer musique'}
+                          </PrimaryButton>
+                        </Actions>
+                        <small>
+                          {vanBackgroundMusic.url.trim()
+                            ? `Piste active: ${vanBackgroundMusic.title || vanBackgroundMusic.url}`
+                            : 'Aucune musique configurée pour le van'}
+                        </small>
+
+                        <FieldLabel>Soundboard</FieldLabel>
+                        <InlineRow>
+                          <TextInput
+                            value={vanNewSoundLabel}
+                            onChange={event => setVanNewSoundLabel(event.target.value)}
+                            placeholder="Nom du son"
+                          />
+                          <TextInput
+                            value={vanNewSoundUrl}
+                            onChange={event => setVanNewSoundUrl(event.target.value)}
+                            placeholder="https://.../effect.mp3"
+                          />
+                          <PrimaryButton type="button" onClick={addVanSoundCue}>Ajouter</PrimaryButton>
+                        </InlineRow>
+                        <ListGrid>
+                          {vanSoundboard.map(cue => (
+                            <SoundCueCard key={cue.id}>
+                              <InlineRow>
+                                <TextInput
+                                  value={cue.label}
+                                  onChange={event => updateVanSoundCue(cue.id, { label: event.target.value })}
+                                  placeholder="Nom du son"
+                                />
+                                <TextInput
+                                  value={cue.url}
+                                  onChange={event => updateVanSoundCue(cue.id, { url: event.target.value })}
+                                  placeholder="https://.../effect.mp3"
+                                />
+                              </InlineRow>
+                              <MeterRow>
+                                <MeterName>Volume</MeterName>
+                                <input
+                                  type="range"
+                                  min={0}
+                                  max={100}
+                                  step={1}
+                                  value={cue.volume}
+                                  onChange={event => updateVanSoundCue(cue.id, { volume: Number(event.target.value) })}
+                                />
+                                <small>{cue.volume}%</small>
+                              </MeterRow>
+                              <Actions>
+                                <PrimaryButton type="button" onClick={() => triggerVanSoundCue(cue.id)} disabled={!cue.url.trim()}>
+                                  Jouer sur le van
+                                </PrimaryButton>
+                                <DangerButton type="button" onClick={() => removeVanSoundCue(cue.id)}>
+                                  Supprimer
+                                </DangerButton>
+                              </Actions>
+                            </SoundCueCard>
+                          ))}
+                        </ListGrid>
+
                         <Actions>
                           <PrimaryButton
                             type="button"
@@ -2009,6 +2245,16 @@ const StatusPill = styled.span<{ $active: boolean }>`
   border: 1px solid ${({ $active }) => ($active ? '#54d89e' : '#db6a6a')};
   background: ${({ $active }) => ($active ? 'rgba(84, 216, 158, 0.15)' : 'rgba(219, 106, 106, 0.14)')};
   color: ${({ $active }) => ($active ? '#b8ffe1' : '#ffd3d3')};
+`
+
+const SoundCueCard = styled.div`
+  border: 1px solid ${({ theme }) => theme.panelBorder};
+  border-radius: 8px;
+  padding: 0.65rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  background: rgba(16, 23, 33, 0.75);
 `
 
 const VanJsonEditor = styled.textarea`

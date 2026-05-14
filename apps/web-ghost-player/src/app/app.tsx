@@ -26,6 +26,24 @@ type Device = {
   recentMotionAlert?: string
   missionObjectives?: string
   floorPlanImage?: string
+  backgroundMusic?: string
+  soundboard?: string
+}
+
+type VanBackgroundMusic = {
+  title: string
+  url: string
+  volume: number
+  loop: boolean
+  playing: boolean
+}
+
+type VanSoundCue = {
+  id: string
+  label: string
+  url: string
+  volume: number
+  lastTriggeredAt?: string
 }
 
 type SpiritAudioMessage = {
@@ -59,6 +77,9 @@ export function App() {
   const spiritStreamRef = useRef<MediaStream | null>(null)
   const spiritChunksRef = useRef<BlobPart[]>([])
   const lastSpiritMjMessageIdRef = useRef<string>('')
+  const vanMusicAudioRef = useRef<HTMLAudioElement | null>(null)
+  const lastTriggeredSoundRef = useRef<Record<string, string>>({})
+  const [vanAudioNotice, setVanAudioNotice] = useState('')
 
   // Van data
   const [vanData, setVanData] = useState<{
@@ -71,7 +92,57 @@ export function App() {
     recentMotionAlert?: string
     missionObjectives: Array<{ objective: string; completed: boolean }>
     floorPlanImage?: string
+    backgroundMusic: VanBackgroundMusic
+    soundboard: VanSoundCue[]
   } | null>(null)
+
+  const createDefaultVanBackgroundMusic = (): VanBackgroundMusic => ({
+    title: '',
+    url: '',
+    volume: 70,
+    loop: true,
+    playing: false
+  })
+
+  const parseVanBackgroundMusic = (raw?: string): VanBackgroundMusic => {
+    if (!raw) {
+      return createDefaultVanBackgroundMusic()
+    }
+
+    try {
+      const parsed = JSON.parse(raw) as Partial<VanBackgroundMusic>
+      return {
+        title: typeof parsed.title === 'string' ? parsed.title : '',
+        url: typeof parsed.url === 'string' ? parsed.url : '',
+        volume: typeof parsed.volume === 'number' ? Math.max(0, Math.min(100, Math.round(parsed.volume))) : 70,
+        loop: parsed.loop ?? true,
+        playing: parsed.playing ?? false
+      }
+    } catch {
+      return createDefaultVanBackgroundMusic()
+    }
+  }
+
+  const parseVanSoundboard = (raw?: string): VanSoundCue[] => {
+    if (!raw) {
+      return []
+    }
+
+    try {
+      const parsed = JSON.parse(raw) as Array<Partial<VanSoundCue>>
+      return parsed
+        .filter(item => item && typeof item === 'object')
+        .map((item, index) => ({
+          id: typeof item.id === 'string' && item.id ? item.id : `cue-${index}`,
+          label: typeof item.label === 'string' ? item.label : '',
+          url: typeof item.url === 'string' ? item.url : '',
+          volume: typeof item.volume === 'number' ? Math.max(0, Math.min(100, Math.round(item.volume))) : 80,
+          lastTriggeredAt: typeof item.lastTriggeredAt === 'string' ? item.lastTriggeredAt : undefined
+        }))
+    } catch {
+      return []
+    }
+  }
 
   useEffect(() => {
     fetch('/api/player/devices')
@@ -554,7 +625,9 @@ export function App() {
             motionSensorRooms: device.motionSensorRooms ? JSON.parse(device.motionSensorRooms) : [],
             recentMotionAlert: device.recentMotionAlert,
             missionObjectives: device.missionObjectives ? JSON.parse(device.missionObjectives) : [],
-            floorPlanImage: device.floorPlanImage
+            floorPlanImage: device.floorPlanImage,
+            backgroundMusic: parseVanBackgroundMusic(device.backgroundMusic),
+            soundboard: parseVanSoundboard(device.soundboard)
           })
         })
         .catch(() => {
@@ -572,8 +645,78 @@ export function App() {
     return () => {
       spiritStreamRef.current?.getTracks().forEach(track => track.stop())
       spiritStreamRef.current = null
+      vanMusicAudioRef.current?.pause()
     }
   }, [])
+
+  useEffect(() => {
+    if (state?.role !== 'van') {
+      vanMusicAudioRef.current?.pause()
+      setVanAudioNotice('')
+      return
+    }
+
+    const audio = vanMusicAudioRef.current
+    const music = vanData?.backgroundMusic
+
+    if (!audio || !music) {
+      return
+    }
+
+    audio.loop = music.loop
+    audio.volume = music.volume / 100
+
+    if (!music.url.trim()) {
+      audio.pause()
+      audio.removeAttribute('src')
+      audio.load()
+      setVanAudioNotice('')
+      return
+    }
+
+    if (audio.src !== music.url) {
+      audio.src = music.url
+      audio.load()
+    }
+
+    if (!music.playing) {
+      audio.pause()
+      setVanAudioNotice('')
+      return
+    }
+
+    void audio.play().then(() => {
+      setVanAudioNotice('')
+    }).catch(() => {
+      setVanAudioNotice('Lecture auto bloquée. Clique une fois sur la page pour autoriser l’audio.')
+    })
+  }, [state?.role, vanData?.backgroundMusic])
+
+  useEffect(() => {
+    if (state?.role !== 'van' || !vanData) {
+      lastTriggeredSoundRef.current = {}
+      return
+    }
+
+    vanData.soundboard.forEach(cue => {
+      if (!cue.lastTriggeredAt || !cue.url.trim()) {
+        return
+      }
+
+      if (lastTriggeredSoundRef.current[cue.id] === cue.lastTriggeredAt) {
+        return
+      }
+
+      lastTriggeredSoundRef.current[cue.id] = cue.lastTriggeredAt
+      const audio = new Audio(cue.url)
+      audio.volume = cue.volume / 100
+      void audio.play().then(() => {
+        setVanAudioNotice('')
+      }).catch(() => {
+        setVanAudioNotice('Lecture d’un son bloquée. Une interaction utilisateur est peut-être requise.')
+      })
+    })
+  }, [state?.role, vanData])
 
   const blobToDataUrl = (blob: Blob): Promise<string> =>
     new Promise((resolve, reject) => {
@@ -1031,15 +1174,20 @@ export function App() {
     const soundLevels = vanData?.soundLevels ?? {}
     const motionDetections = vanData?.motionDetections ?? {}
     const objectives = vanData?.missionObjectives ?? []
+    const backgroundMusic = vanData?.backgroundMusic ?? createDefaultVanBackgroundMusic()
+    const soundboard = vanData?.soundboard ?? []
 
     return (
       <ThemeProvider theme={darkTheme}>
         <Container>
+          <audio ref={vanMusicAudioRef} preload="auto" />
           <VanDashboard>
             <VanHeader>
               <VanTitle>PARANORMAL DETECTION SYSTEM</VanTitle>
               <VanStatus>LIVE MONITORING</VanStatus>
             </VanHeader>
+
+            {vanAudioNotice && <VanAudioNotice>{vanAudioNotice}</VanAudioNotice>}
 
             {vanData?.floorPlanImage && (
               <VanFloorPlanSection>
@@ -1097,6 +1245,40 @@ export function App() {
                     </SoundItem>
                   ))}
                 </SoundGrid>
+              </VanPanel>
+
+              <VanPanel>
+                <VanPanelLabel>BACKGROUND MUSIC</VanPanelLabel>
+                {backgroundMusic.url ? (
+                  <>
+                    <VanMusicTitle>{backgroundMusic.title || 'Untitled track'}</VanMusicTitle>
+                    <VanMusicMeta>
+                      {backgroundMusic.playing ? 'ON AIR' : 'STANDBY'} · {backgroundMusic.volume}% · {backgroundMusic.loop ? 'LOOP' : 'ONE SHOT'}
+                    </VanMusicMeta>
+                    <VanMusicStatus $active={backgroundMusic.playing}>
+                      {backgroundMusic.playing ? 'DIFFUSION EN COURS' : 'MUSIQUE PRÊTE'}
+                    </VanMusicStatus>
+                  </>
+                ) : (
+                  <VanEmptyState>Aucune musique configurée.</VanEmptyState>
+                )}
+              </VanPanel>
+
+              <VanPanel>
+                <VanPanelLabel>SOUNDBOARD</VanPanelLabel>
+                {soundboard.length > 0 ? (
+                  <VanSoundboardList>
+                    {soundboard.map(cue => (
+                      <VanSoundboardItem key={cue.id}>
+                        <strong>{cue.label || 'Son sans nom'}</strong>
+                        <span>{cue.volume}%</span>
+                        {cue.lastTriggeredAt && <VanTriggerStamp>{new Date(cue.lastTriggeredAt).toLocaleTimeString()}</VanTriggerStamp>}
+                      </VanSoundboardItem>
+                    ))}
+                  </VanSoundboardList>
+                ) : (
+                  <VanEmptyState>Aucun son additionnel configuré.</VanEmptyState>
+                )}
               </VanPanel>
             </VanGridLayout>
 
@@ -1746,6 +1928,82 @@ const VanAlert = styled.div`
   color: #ffd9b3;
   font-weight: 700;
   letter-spacing: 0.04em;
+`
+
+const VanAudioNotice = styled.div`
+  margin-bottom: 1rem;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid #cf8f2f;
+  background: rgba(255, 180, 60, 0.12);
+  color: #ffe6a8;
+  font-size: 0.85rem;
+`
+
+const VanMusicTitle = styled.div`
+  font-size: 1rem;
+  font-weight: 700;
+  color: #dfffe8;
+  margin-bottom: 0.35rem;
+`
+
+const VanMusicMeta = styled.div`
+  font-size: 0.78rem;
+  letter-spacing: 0.12em;
+  color: #7de8b3;
+  margin-bottom: 0.7rem;
+`
+
+const VanMusicStatus = styled.div<{ $active: boolean }>`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  padding: 0.3rem 0.7rem;
+  border: 1px solid ${({ $active }) => ($active ? '#00ff99' : '#1a4d3e')};
+  background: ${({ $active }) => ($active ? 'rgba(0, 255, 153, 0.12)' : 'rgba(0, 30, 20, 0.2)')};
+  color: ${({ $active }) => ($active ? '#dfffe8' : '#7de8b3')};
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  font-weight: 700;
+`
+
+const VanSoundboardList = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+`
+
+const VanSoundboardItem = styled.div`
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.35rem 0.75rem;
+  align-items: center;
+  padding: 0.45rem 0.55rem;
+  border: 1px solid #1a4d3e;
+  background: rgba(0, 30, 20, 0.2);
+
+  strong {
+    color: #dfffe8;
+    font-size: 0.88rem;
+  }
+
+  span {
+    color: #7de8b3;
+    font-size: 0.78rem;
+  }
+`
+
+const VanTriggerStamp = styled.div`
+  grid-column: 1 / -1;
+  color: #7de8b3;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+`
+
+const VanEmptyState = styled.div`
+  color: #7de8b3;
+  font-size: 0.85rem;
+  opacity: 0.8;
 `
 
 const MotionItem = styled.div<{ $active: boolean }>`
