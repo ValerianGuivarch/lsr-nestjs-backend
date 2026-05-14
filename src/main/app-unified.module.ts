@@ -26,6 +26,7 @@ import { DBJdrClass } from '../../libs/jdr/src/lib/backend/infrastructure/persis
 import { DBJdrClassResource } from '../../libs/jdr/src/lib/backend/infrastructure/persistence/jdr-class-resource.db'
 import { DBJdrGroup } from '../../libs/jdr/src/lib/backend/infrastructure/persistence/jdr-group.db'
 import { DBJdrDraft } from '../../libs/jdr/src/lib/backend/infrastructure/persistence/jdr-draft.db'
+import { ConfigController } from './config.controller'
 
 function envEnabled(key: string, defaultValue: boolean): boolean {
   const raw = process.env[key]
@@ -115,6 +116,7 @@ const needsPostgres = enableHp || enableL7r || enableYearDiary
     ...(enableJdr ? [JdrModule] : []),
     ...(enableGhost ? [GhostModule] : []),
     ...(enableYearDiary ? [AppYearDiaryModule] : [])
-  ]
+  ],
+  controllers: [ConfigController]
 })
 export class AppUnifiedModule {}

@@ -42,6 +42,7 @@ import JdrCharacterPage from '../../web-jdr/src/pages/CharacterPage'
 import JdrCharacterEditPage from '../../web-jdr/src/pages/CharacterEditPage'
 import FeedPage from '../../web-jdr/src/pages/FeedPage'
 import DraftPage from '../../web-jdr/src/pages/DraftPage'
+import Dashboard from './pages/Dashboard/Dashboard'
 
 const root = ReactDOM.createRoot(document.getElementById('root') as HTMLElement)
 
@@ -50,10 +51,12 @@ root.render(
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<App />}>
-          <Route path="/" element={<HomePage />} />
+          <Route path="/" element={<Dashboard />} />
+          <Route path="/home" element={<HomePage />} />
           <Route path="/menu" element={<CharacterSelection />} />
 
           <Route path="/l7r" element={<CharacterSelection />} />
+          <Route path="/l7r/dashboard" element={<CharacterSelection />} />
           <Route path="/l7r/mj" element={<MjSheet />} />
           <Route path="/l7r/characters/:characterName" element={<CharacterSheet />} />
           <Route
@@ -82,6 +85,7 @@ root.render(
 
           <Route path="/yeardiary" element={<Navigate to="/yeardiary/diary" replace />} />
           <Route path="/yeardiary/diary" element={<Diary />} />
+          <Route path="/diary" element={<Navigate to="/yeardiary/diary" replace />} />
 
           <Route path="/ghost" element={<Navigate to="/ghost/dashboard" replace />} />
           <Route path="/ghost/dashboard" element={<GhostApp />} />
@@ -107,6 +111,7 @@ root.render(
           <Route path="/misc/souvenirs" element={<WeddingSouvenirs />} />
           <Route path="/misc/wall" element={<WeddingWallSlideshow />} />
           <Route path="/misc/admin" element={<WeddingWallAdmin />} />
+          <Route path="/wedding" element={<Navigate to="/misc/souvenirs" replace />} />
 
           <Route path="/hp" element={<Navigate to="/hp/characters/new" replace />} />
           <Route path="/hp/mj" element={<HpMjPage />} />
