@@ -67,7 +67,10 @@ function proxyRequest(req, res, targetOrigin) {
     }
   )
 
-  proxy.on('error', () => {
+  proxy.on('error', (error) => {
+    console.error(
+      `[proxy-error] ${req.method || 'GET'} ${req.url || '/'} -> ${targetUrl.toString()} | ${error.message}`
+    )
     res.statusCode = 502
     res.setHeader('Content-Type', 'application/json; charset=utf-8')
     res.end(JSON.stringify({ message: 'Bad Gateway' }))
