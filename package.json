@@ -14,7 +14,7 @@
     "help": "npm run launch -- --help",
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
-    "start:prod": "bash -c 'npm run build && npm run build:web:l7r && trap \"kill 0\" SIGINT SIGTERM EXIT; npm run serve:web:l7r:nginx & node dist/src/main/main-unified.js & wait'",
+    "start:prod": "bash -c 'npm run build && npm run build:web:l7r && trap \"kill 0\" SIGINT SIGTERM EXIT; API_YEARDIARY_ORIGIN=http://127.0.0.1:8081 npm run serve:web:l7r:nginx & node dist/src/main/main-unified.js & wait'",
     "start:prod:legacy": "node dist/src/main/main.js",
     "dev:backend": "nest start --watch --entryFile main/main-unified",
     "dev:frontend": "npm run dev:web:l7r",
