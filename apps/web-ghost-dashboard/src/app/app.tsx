@@ -890,23 +890,15 @@ export function App() {
     setVanSoundboard(prev => prev.filter(cue => cue.id !== cueId))
   }
 
-  const toggleVanMotionSensor = (room: string, enabled: boolean): void => {
-    if (enabled) {
-      setVanMotionSensors(prev => (prev.includes(room) ? prev : [...prev, room]))
-      return
-    }
-    setVanMotionSensors(prev => prev.filter(item => item !== room))
-    setVanMotionDetections(prev => ({ ...prev, [room]: false }))
-  }
-
   const triggerMotionEvent = (room: string): void => {
-    const nextMessage = `Motion detected in ${room}`
-    setVanMotionDetections(prev => ({ ...prev, [room]: true }))
-    setVanRecentMotionAlert(nextMessage)
-  }
+    const nextDetections = vanRooms.reduce<Record<string, boolean>>((acc, currentRoom) => {
+      acc[currentRoom] = currentRoom === room
+      return acc
+    }, {})
 
-  const clearMotionEvent = (room: string): void => {
-    setVanMotionDetections(prev => ({ ...prev, [room]: false }))
+    const nextMessage = `Activité détectée dans ${room}`
+    setVanMotionDetections(nextDetections)
+    setVanRecentMotionAlert(nextMessage)
   }
 
   const updateVanData = async (): Promise<void> => {
@@ -934,7 +926,7 @@ export function App() {
           soundLevels: JSON.stringify(vanSoundLevels),
           motionDetections: JSON.stringify(vanMotionDetections),
           roomList: JSON.stringify(vanRooms),
-          motionSensorRooms: JSON.stringify(vanMotionSensors),
+          motionSensorRooms: JSON.stringify(vanRooms),
           recentMotionAlert: vanRecentMotionAlert || undefined,
           missionObjectives: JSON.stringify(vanObjectives),
           floorPlanImage: vanFloorPlanImage,
@@ -1588,127 +1580,6 @@ export function App() {
                             ))}
                         </Select>
 
-                        <FieldLabel htmlFor="van-ghost-activity">Activité fantôme (0-10)</FieldLabel>
-                        <input
-                          id="van-ghost-activity"
-                          type="range"
-                          min={0}
-                          max={10}
-                          step={1}
-                          value={vanGhostActivity}
-                          onChange={event => setVanGhostActivity(Number(event.target.value))}
-                        />
-                        <small>Niveau: {vanGhostActivity}</small>
-
-                        <FieldLabel>Room List</FieldLabel>
-                        <InlineRow>
-                          <TextInput
-                            value={vanNewRoom}
-                            onChange={event => setVanNewRoom(event.target.value)}
-                            placeholder="Ajouter une pièce"
-                          />
-                          <PrimaryButton type="button" onClick={addVanRoom}>Ajouter</PrimaryButton>
-                        </InlineRow>
-                        <ListGrid>
-                          {vanRooms.map((room, index) => (
-                            <InlineRow key={`${room}-${index}`}>
-                              <TextInput
-                                value={room}
-                                onChange={event => updateVanRoomName(index, event.target.value)}
-                              />
-                              <DangerButton type="button" onClick={() => removeVanRoom(room)}>Supprimer</DangerButton>
-                            </InlineRow>
-                          ))}
-                        </ListGrid>
-
-                        <FieldLabel>Sound Sensor Panel</FieldLabel>
-                        <ListGrid>
-                          {vanRooms.map(room => (
-                            <MeterRow key={`sound-${room}`}>
-                              <MeterName>{room}</MeterName>
-                              <input
-                                type="range"
-                                min={0}
-                                max={100}
-                                step={1}
-                                value={vanSoundLevels[room] ?? 0}
-                                onChange={event => setVanSoundLevels(prev => ({ ...prev, [room]: Number(event.target.value) }))}
-                              />
-                              <small>{vanSoundLevels[room] ?? 0}%</small>
-                            </MeterRow>
-                          ))}
-                        </ListGrid>
-
-                        <FieldLabel>Motion Sensor Panel</FieldLabel>
-                        {vanRecentMotionAlert && <MotionAlert>{vanRecentMotionAlert}</MotionAlert>}
-                        <ListGrid>
-                          {vanRooms.map(room => {
-                            const sensorActive = vanMotionSensors.includes(room)
-                            const motionDetected = Boolean(vanMotionDetections[room])
-                            return (
-                              <SensorRow key={`motion-${room}`}>
-                                <CheckRow>
-                                  <input
-                                    type="checkbox"
-                                    checked={sensorActive}
-                                    onChange={event => toggleVanMotionSensor(room, event.target.checked)}
-                                  />
-                                  <FieldLabel>{room}</FieldLabel>
-                                </CheckRow>
-                                <StatusPill $active={motionDetected}>
-                                  {motionDetected ? 'Détection' : 'Idle'}
-                                </StatusPill>
-                                <Actions>
-                                  <PrimaryButton type="button" disabled={!sensorActive} onClick={() => triggerMotionEvent(room)}>
-                                    Trigger
-                                  </PrimaryButton>
-                                  <PrimaryButton type="button" disabled={!sensorActive} onClick={() => clearMotionEvent(room)}>
-                                    Reset
-                                  </PrimaryButton>
-                                </Actions>
-                              </SensorRow>
-                            )
-                          })}
-                        </ListGrid>
-
-                        <FieldLabel>Sanity Monitor</FieldLabel>
-                        <InlineRow>
-                          <TextInput
-                            value={vanNewPlayer}
-                            onChange={event => setVanNewPlayer(event.target.value)}
-                            placeholder="Ajouter une joueuse"
-                          />
-                          <PrimaryButton type="button" onClick={addVanPlayer}>Ajouter</PrimaryButton>
-                        </InlineRow>
-                        <ListGrid>
-                          {vanPlayers.map(player => (
-                            <MeterRow key={player.id}>
-                              <TextInput
-                                value={player.name}
-                                onChange={event => {
-                                  const nextName = event.target.value
-                                  setVanPlayers(prev => prev.map(item => (item.id === player.id ? { ...item, name: nextName } : item)))
-                                }}
-                              />
-                              <input
-                                type="range"
-                                min={0}
-                                max={100}
-                                step={1}
-                                value={player.sanity}
-                                onChange={event => {
-                                  const next = Number(event.target.value)
-                                  setVanPlayers(prev => prev.map(item => (item.id === player.id ? { ...item, sanity: next } : item)))
-                                }}
-                              />
-                              <StatusPill $active={player.sanity > 35}>{Math.round(player.sanity)}%</StatusPill>
-                              <DangerButton type="button" onClick={() => setVanPlayers(prev => prev.filter(item => item.id !== player.id))}>
-                                Supprimer
-                              </DangerButton>
-                            </MeterRow>
-                          ))}
-                        </ListGrid>
-
                         <FieldLabel>Musique van</FieldLabel>
                         <TextInput
                           value={vanBackgroundMusic.title}
@@ -1772,6 +1643,116 @@ export function App() {
                             ? `Piste active: ${vanBackgroundMusic.title || vanBackgroundMusic.url}`
                             : 'Aucune musique configurée pour le van'}
                         </small>
+
+                        <FieldLabel htmlFor="van-ghost-activity">Activité fantôme (0-10)</FieldLabel>
+                        <input
+                          id="van-ghost-activity"
+                          type="range"
+                          min={0}
+                          max={10}
+                          step={1}
+                          value={vanGhostActivity}
+                          onChange={event => setVanGhostActivity(Number(event.target.value))}
+                        />
+                        <small>Niveau: {vanGhostActivity}</small>
+
+                        <FieldLabel>Room List</FieldLabel>
+                        <InlineRow>
+                          <TextInput
+                            value={vanNewRoom}
+                            onChange={event => setVanNewRoom(event.target.value)}
+                            placeholder="Ajouter une pièce"
+                          />
+                          <PrimaryButton type="button" onClick={addVanRoom}>Ajouter</PrimaryButton>
+                        </InlineRow>
+                        <ListGrid>
+                          {vanRooms.map((room, index) => (
+                            <InlineRow key={`${room}-${index}`}>
+                              <TextInput
+                                value={room}
+                                onChange={event => updateVanRoomName(index, event.target.value)}
+                              />
+                              <DangerButton type="button" onClick={() => removeVanRoom(room)}>Supprimer</DangerButton>
+                            </InlineRow>
+                          ))}
+                        </ListGrid>
+
+                        <FieldLabel>Sound Sensor Panel</FieldLabel>
+                        <ListGrid>
+                          {vanRooms.map(room => (
+                            <MeterRow key={`sound-${room}`}>
+                              <MeterName>{room}</MeterName>
+                              <input
+                                type="range"
+                                min={0}
+                                max={100}
+                                step={1}
+                                value={vanSoundLevels[room] ?? 0}
+                                onChange={event => setVanSoundLevels(prev => ({ ...prev, [room]: Number(event.target.value) }))}
+                              />
+                              <small>{vanSoundLevels[room] ?? 0}%</small>
+                            </MeterRow>
+                          ))}
+                        </ListGrid>
+
+                        <FieldLabel>Motion Sensor Panel</FieldLabel>
+                        {vanRecentMotionAlert && <MotionAlert>{vanRecentMotionAlert}</MotionAlert>}
+                        <ListGrid>
+                          {vanRooms.map(room => {
+                            const motionDetected = Boolean(vanMotionDetections[room])
+                            return (
+                              <SensorRow key={`motion-${room}`}>
+                                <FieldLabel>{room}</FieldLabel>
+                                <StatusPill $active={motionDetected}>
+                                  {motionDetected ? 'Activité détectée' : 'Aucune activité'}
+                                </StatusPill>
+                                <Actions>
+                                  <PrimaryButton type="button" onClick={() => triggerMotionEvent(room)}>
+                                    Lancer activité
+                                  </PrimaryButton>
+                                </Actions>
+                              </SensorRow>
+                            )
+                          })}
+                        </ListGrid>
+
+                        <FieldLabel>Sanity Monitor</FieldLabel>
+                        <InlineRow>
+                          <TextInput
+                            value={vanNewPlayer}
+                            onChange={event => setVanNewPlayer(event.target.value)}
+                            placeholder="Ajouter une joueuse"
+                          />
+                          <PrimaryButton type="button" onClick={addVanPlayer}>Ajouter</PrimaryButton>
+                        </InlineRow>
+                        <ListGrid>
+                          {vanPlayers.map(player => (
+                            <MeterRow key={player.id}>
+                              <TextInput
+                                value={player.name}
+                                onChange={event => {
+                                  const nextName = event.target.value
+                                  setVanPlayers(prev => prev.map(item => (item.id === player.id ? { ...item, name: nextName } : item)))
+                                }}
+                              />
+                              <input
+                                type="range"
+                                min={0}
+                                max={100}
+                                step={1}
+                                value={player.sanity}
+                                onChange={event => {
+                                  const next = Number(event.target.value)
+                                  setVanPlayers(prev => prev.map(item => (item.id === player.id ? { ...item, sanity: next } : item)))
+                                }}
+                              />
+                              <StatusPill $active={player.sanity > 35}>{Math.round(player.sanity)}%</StatusPill>
+                              <DangerButton type="button" onClick={() => setVanPlayers(prev => prev.filter(item => item.id !== player.id))}>
+                                Supprimer
+                              </DangerButton>
+                            </MeterRow>
+                          ))}
+                        </ListGrid>
 
                         <FieldLabel>Soundboard</FieldLabel>
                         <InlineRow>
@@ -1860,9 +1841,14 @@ const Container = styled.div`
   background: ${({ theme }) => theme.background};
   color: ${({ theme }) => theme.color};
   min-height: 100vh;
-  width: 100%;
-  max-width: none;
+  width: 60%;
+  max-width: 1400px;
+  margin: 0 auto;
   padding: 2rem;
+
+  @media (max-width: 1200px) {
+    width: 100%;
+  }
 `
 
 const Header = styled.header`

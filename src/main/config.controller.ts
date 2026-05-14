@@ -19,11 +19,11 @@ export class ConfigController {
   getFeatures(): DashboardConfig {
     return {
       features: {
-        l7r: this.envEnabled('DISPLAY_L7R', true),
+        l7r: this.envEnabled('DISPLAY_L7R', false),
         ghost: this.envEnabled('DISPLAY_GHOST', false),
         wedding: this.envEnabled('DISPLAY_WEDDING', false),
         jdr: this.envEnabled('DISPLAY_JDR', false),
-        diary: this.envEnabled('DISPLAY_DIARY', true)
+        diary: this.envEnabled('DISPLAY_DIARY', false)
       }
     }
   }
