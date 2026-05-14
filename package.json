@@ -41,7 +41,7 @@
     "prod:yeardiary": "node dist/src/main/main-yeardiary.js",
     "prod:all": "bash -c 'trap \"kill 0\" SIGINT SIGTERM EXIT; npm run start:prod & (npm run build:web:l7r && npm run preview:web:l7r) & wait'",
     "prod:all:nginx": "bash -c 'npm run stop:ports; trap \"kill 0\" SIGINT SIGTERM EXIT; npm run start:prod & npm run prod:yeardiary & (npm run build:web:l7r && npm run serve:web:l7r:nginx) & wait'",
-    "stop:ports": "bash -c 'for p in 3000 4200 4202 8080 8081; do ss -tlnp 2>/dev/null | grep \":$p \" | awk \"{print \\$NF}\" | sed \"s|.*/||\" | xargs -r kill -9 2>/dev/null; done'",
+    "stop:ports": "node scripts/kill-ports.js",
     "dev:ghost:api": "GHOST_PORT=3100 nest start --watch --entryFile main/main-ghost",
     "dev:ghost:dashboard": "vite --config apps/web-ghost-dashboard/vite.config.mts --host 0.0.0.0 --port 4400 --strictPort",
     "dev:ghost:player": "vite --config apps/web-ghost-player/vite.config.mts --host 0.0.0.0 --port 4500 --strictPort",
