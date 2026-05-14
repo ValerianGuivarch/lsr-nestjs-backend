@@ -1,4 +1,24 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
+// Utilitaires pour charger les sons/voix dynamiquement
+type MusicFile = { label: string; url: string }
+
+function useMusicFiles(type: 'sounds' | 'voices'): MusicFile[] {
+  const [files, setFiles] = useState<MusicFile[]>([])
+  useEffect(() => {
+    fetch(`/api/music/${type}`)
+      .then(r => r.json())
+      .then((data: { files: string[] }) => {
+        setFiles(
+          (data.files || []).map(f => ({
+            label: f.replace(/\.(mp3|wav|ogg)$/i, ''),
+            url: `/music/${type}/${f}`
+          }))
+        )
+      })
+      .catch(() => setFiles([]))
+  }, [type])
+  return files
+}
 import styled, { ThemeProvider } from 'styled-components'
 
 type DeviceRole = 'emf' | 'spiritbox' | 'ghostcam' | 'ghostorbs' | 'van'
@@ -1754,6 +1774,7 @@ export function App() {
                           ))}
                         </ListGrid>
 
+
                         <FieldLabel>Soundboard</FieldLabel>
                         <InlineRow>
                           <TextInput
@@ -1768,6 +1789,24 @@ export function App() {
                           />
                           <PrimaryButton type="button" onClick={addVanSoundCue}>Ajouter</PrimaryButton>
                         </InlineRow>
+
+                        {/* Liste dynamique des sons du dossier music/sounds */}
+                        <FieldLabel>Sons disponibles (music/sounds)</FieldLabel>
+                        <ListGrid>
+                          {useMusicFiles('sounds').map(file => (
+                            <SoundCueCard key={file.url}>
+                              <InlineRow>
+                                <span>{file.label}</span>
+                                <audio controls src={file.url} style={{ maxWidth: 180 }} />
+                                <PrimaryButton type="button" onClick={() => setVanNewSoundUrl(file.url)}>
+                                  Utiliser
+                                </PrimaryButton>
+                              </InlineRow>
+                            </SoundCueCard>
+                          ))}
+                        </ListGrid>
+
+                        {/* Soundboard custom (manuel) */}
                         <ListGrid>
                           {vanSoundboard.map(cue => (
                             <SoundCueCard key={cue.id}>
@@ -1782,6 +1821,7 @@ export function App() {
                                   onChange={event => updateVanSoundCue(cue.id, { url: event.target.value })}
                                   placeholder="https://.../effect.mp3"
                                 />
+                                <audio controls src={cue.url} style={{ maxWidth: 180 }} />
                               </InlineRow>
                               <MeterRow>
                                 <MeterName>Volume</MeterName>
@@ -1806,6 +1846,24 @@ export function App() {
                             </SoundCueCard>
                           ))}
                         </ListGrid>
+
+// À intégrer dans la SpiritBox :
+// const voiceFiles = useMusicFiles('voices')
+// ... puis afficher dans l'UI SpiritBox :
+// <FieldLabel>Voix pré-enregistrées (music/voices)</FieldLabel>
+// <ListGrid>
+//   {voiceFiles.map(file => (
+//     <SoundCueCard key={file.url}>
+//       <InlineRow>
+//         <span>{file.label}</span>
+//         <audio controls src={file.url} style={{ maxWidth: 180 }} />
+//         <PrimaryButton type="button" onClick={() => playSpiritboxVoice(file.url)}>
+//           Jouer sur SpiritBox
+//         </PrimaryButton>
+//       </InlineRow>
+//     </SoundCueCard>
+//   ))}
+// </ListGrid>
 
                         <Actions>
                           <PrimaryButton

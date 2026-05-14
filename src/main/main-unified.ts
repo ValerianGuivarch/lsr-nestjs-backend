@@ -33,6 +33,12 @@ async function bootstrap(): Promise<void> {
         { sourcePrefix: '/api/ghost', targetPrefix: '/api', targetOrigin }
       ])
 
+      // Expose /music as static
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      const express = require('express')
+      const path = require('path')
+      app.use('/music', express.static(path.join(process.cwd(), 'music')))
+
       // Store actual port for display
       global.ACTUAL_SERVER_PORT = port
     }
