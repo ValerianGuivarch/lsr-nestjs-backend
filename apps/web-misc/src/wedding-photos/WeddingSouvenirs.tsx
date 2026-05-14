@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import styled, { createGlobalStyle } from 'styled-components'
 
 const LOGO_URL =
@@ -72,39 +72,34 @@ const GlobalStyle = createGlobalStyle`
   *, *::before, *::after { box-sizing: border-box; }
 `
 
-function parseMinutes(time: string): number {
-  const [h, m] = time.split(':').map(Number)
-  return h * 60 + m
-}
-
-function nowInMinutes(): number {
-  const now = new Date()
-  return now.getHours() * 60 + now.getMinutes()
-}
-
 function clamp(value: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, value))
 }
 
 const WeddingSouvenirs: React.FC = () => {
   const [timelineProgress, setTimelineProgress] = useState(0)
-
-  const minuteRange = useMemo(() => {
-    const points = WEDDING_MOMENTS.map(m => parseMinutes(m.time)).sort((a, b) => a - b)
-    return { start: points[0], end: points[points.length - 1] }
-  }, [])
+  const timelineRef = useRef<HTMLElement | null>(null)
 
   useEffect(() => {
     const updateProgress = () => {
-      const current = nowInMinutes()
-      const raw = (current - minuteRange.start) / (minuteRange.end - minuteRange.start)
-      setTimelineProgress(clamp(raw, 0, 1))
+      if (!timelineRef.current) return
+
+      const rect = timelineRef.current.getBoundingClientRect()
+      const viewportHeight = window.innerHeight || document.documentElement.clientHeight
+      const fullTravel = rect.height + viewportHeight
+      const progress = (viewportHeight - rect.top) / fullTravel
+      setTimelineProgress(clamp(progress, 0, 1))
     }
 
     updateProgress()
-    const interval = window.setInterval(updateProgress, 30_000)
-    return () => window.clearInterval(interval)
-  }, [minuteRange.end, minuteRange.start])
+    window.addEventListener('scroll', updateProgress, { passive: true })
+    window.addEventListener('resize', updateProgress)
+
+    return () => {
+      window.removeEventListener('scroll', updateProgress)
+      window.removeEventListener('resize', updateProgress)
+    }
+  }, [])
 
   useEffect(() => {
     const sendHeight = () => {
@@ -154,7 +149,7 @@ const WeddingSouvenirs: React.FC = () => {
           </Lead>
         </Hero>
 
-        <TimelineSection>
+        <TimelineSection ref={timelineRef}>
           <TimelineRail>
             <RailLine />
             <MovingIcon style={{ top: `${timelineProgress * 100}%` }}>
@@ -209,61 +204,69 @@ export default WeddingSouvenirs
 
 const Page = styled.div`
   width: 100%;
-  padding: 20px 14px 34px;
-  background:
-    radial-gradient(1100px 450px at 0% 0%, rgba(220, 252, 231, 0.9), transparent 60%),
-    radial-gradient(1000px 400px at 100% 0%, rgba(209, 250, 229, 0.8), transparent 58%),
-    #f9fafb;
+  padding: 32px 0 48px;
+  background: #f7faf9;
+  min-height: 100vh;
+  overflow: visible;
 `
 
 const Hero = styled.header`
   width: 100%;
-  max-width: 940px;
-  margin: 0 auto 18px;
-  padding: 20px 18px;
-  border-radius: 20px;
-  background: linear-gradient(140deg, #0f3d35 0%, #1e6a57 55%, #59b996 100%);
-  color: #ffffff;
-  box-shadow: 0 18px 40px rgba(15, 61, 53, 0.25);
+  max-width: 900px;
+  margin: 0 auto 28px;
+  padding: 28px 24px 22px;
+  border-radius: 24px;
+  background: linear-gradient(120deg, #5fc89a 0%, #3ba87c 100%);
+  color: #fff;
+  box-shadow: 0 6px 32px rgba(63, 200, 154, 0.10);
+  text-align: left;
 `
 
 const Eyebrow = styled.p`
   margin: 0;
-  font-size: 0.86rem;
-  opacity: 0.88;
+  font-size: 0.92rem;
+  opacity: 0.92;
   letter-spacing: 0.08em;
   text-transform: uppercase;
+  font-weight: 600;
 `
 
 const Title = styled.h1`
-  margin: 8px 0 0;
-  font-size: clamp(1.45rem, 4.2vw, 2.1rem);
+  margin: 10px 0 0;
+  font-size: clamp(1.7rem, 4vw, 2.3rem);
+  font-weight: 700;
+  letter-spacing: -0.5px;
 `
 
 const Lead = styled.p`
-  margin: 10px 0 0;
+  margin: 12px 0 0;
   max-width: 700px;
   line-height: 1.6;
-  opacity: 0.95;
+  opacity: 0.97;
+  font-size: 1.08rem;
 `
 
 const TimelineSection = styled.section`
   width: 100%;
-  max-width: 940px;
+  max-width: 900px;
   margin: 0 auto;
   display: grid;
-  grid-template-columns: 72px minmax(0, 1fr);
-  gap: 12px;
+  grid-template-columns: 60px minmax(0, 1fr);
+  gap: 18px;
+  overflow: visible;
 
   @media (max-width: 720px) {
-    grid-template-columns: 54px minmax(0, 1fr);
-    gap: 10px;
+    grid-template-columns: 38px minmax(0, 1fr);
+    gap: 8px;
   }
 `
 
 const TimelineRail = styled.div`
   position: relative;
   min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 `
 
 const RailLine = styled.div`
@@ -271,28 +274,29 @@ const RailLine = styled.div`
   left: 50%;
   top: 0;
   bottom: 0;
-  width: 4px;
+  width: 5px;
   transform: translateX(-50%);
   border-radius: 999px;
-  background: linear-gradient(180deg, #1f7a62 0%, #4bb494 100%);
+  background: linear-gradient(180deg, #3ba87c 0%, #5fc89a 100%);
+  box-shadow: 0 0 0 2px #e6f4ed;
 `
 
 const MovingIcon = styled.div`
   position: absolute;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 44px;
-  height: 44px;
+  width: 38px;
+  height: 38px;
   border-radius: 50%;
-  border: 3px solid #ffffff;
-  background: #ffffff;
-  box-shadow: 0 10px 24px rgba(13, 64, 57, 0.25);
+  border: 2.5px solid #fff;
+  background: #fff;
+  box-shadow: 0 4px 16px rgba(63, 200, 154, 0.13);
   overflow: hidden;
-  transition: top 700ms ease;
+  transition: top 700ms cubic-bezier(.7,.2,.2,1);
 
   @media (max-width: 720px) {
-    width: 36px;
-    height: 36px;
+    width: 28px;
+    height: 28px;
   }
 `
 
@@ -304,15 +308,20 @@ const MovingIconImage = styled.img`
 
 const Moments = styled.div`
   display: grid;
-  gap: 12px;
+  gap: 18px;
+  overflow: visible;
 `
 
 const MomentCard = styled.article`
-  background: #ffffff;
-  border: 1px solid #d7e4dd;
-  border-radius: 16px;
-  padding: 14px;
-  box-shadow: 0 8px 20px rgba(15, 61, 53, 0.08);
+  background: #fff;
+  border: 1.5px solid #e2efe7;
+  border-radius: 18px;
+  padding: 18px 18px 14px;
+  box-shadow: 0 2px 10px rgba(63, 200, 154, 0.07);
+  transition: box-shadow 0.2s;
+  &:hover {
+    box-shadow: 0 6px 24px rgba(63, 200, 154, 0.13);
+  }
 `
 
 const MomentTime = styled.p`
@@ -320,41 +329,46 @@ const MomentTime = styled.p`
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 72px;
+  min-width: 62px;
   padding: 4px 10px;
   border-radius: 999px;
-  background: #e9f8f1;
-  color: #0f6c53;
+  background: #e6f4ed;
+  color: #3ba87c;
   font-weight: 700;
-  font-size: 0.9rem;
+  font-size: 0.98rem;
+  letter-spacing: 0.01em;
 `
 
 const MomentTitle = styled.h2`
   margin: 10px 0 0;
-  font-size: 1.08rem;
-  color: #123f35;
+  font-size: 1.13rem;
+  color: #217a5c;
+  font-weight: 700;
 `
 
 const MomentDescription = styled.p`
   margin: 8px 0 0;
   color: #3a4b46;
   line-height: 1.55;
+  font-size: 1.01rem;
 `
 
 const ActionLink = styled.a`
-  margin-top: 12px;
+  margin-top: 14px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   text-decoration: none;
-  padding: 10px 14px;
-  border-radius: 10px;
-  background: #1f7a62;
-  color: #ffffff;
+  padding: 10px 18px;
+  border-radius: 999px;
+  background: #3ba87c;
+  color: #fff;
   font-weight: 600;
-
+  font-size: 1.01rem;
+  box-shadow: 0 1px 4px rgba(63, 200, 154, 0.08);
+  transition: background 0.18s;
   &:hover {
-    background: #19634f;
+    background: #217a5c;
   }
 `
 
