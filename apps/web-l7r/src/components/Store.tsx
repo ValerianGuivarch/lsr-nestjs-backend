@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import styled from "styled-components";
 import axios from "axios";
 
-const API_URL = "https://l7r.fr/api/v1/diaries";
+const API_URL = "/apil7r/v1/diaries";
 
 const StoreControl: React.FC = () => {
   const [storeStates, setStoreStates] = useState<{

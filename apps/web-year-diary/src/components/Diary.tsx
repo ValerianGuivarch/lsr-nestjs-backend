@@ -15,7 +15,7 @@ import {
 import { MdEdit, MdSave } from "react-icons/md";
 import { GiReturnArrow } from "react-icons/gi";
 
-const API_URL = "https://l7r.fr/api/v1/diaries";
+const API_URL = "/apil7r/v1/diaries";
 const CHARACTER_LIMIT = 300;
 
 interface Entry {

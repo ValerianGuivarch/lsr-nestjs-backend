@@ -197,7 +197,7 @@ export function App() {
 
     const interval = setInterval(() => {
       cameraDevices.forEach(device => {
-        fetch(`/api/player/device/${device.deviceId}/camera-frame`)
+        fetch(`/apil7r/player/device/${device.deviceId}/camera-frame`)
           .then(r => r.json())
           .then((data: { frame?: string }) => {
             if (data.frame) {
@@ -217,7 +217,7 @@ export function App() {
     setIsLoading(true)
     setError('')
     try {
-      const next = await fetch('/api/admin/state').then(toJson<Device[]>)
+      const next = await fetch('/apil7r/admin/state').then(toJson<Device[]>)
       setDevices(next)
       if (selectedDeviceId && !next.some(device => device.deviceId === selectedDeviceId)) {
         setSelectedDeviceId('')
@@ -409,7 +409,7 @@ export function App() {
         return acc
       }, {})
 
-      fetch(`/api/admin/device/${controlVanDeviceId}/van`, {
+      fetch(`/apil7r/admin/device/${controlVanDeviceId}/van`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -452,7 +452,7 @@ export function App() {
     }
 
     const pollPlayerMessage = () => {
-      fetch(`/api/admin/device/${controlSpiritboxDeviceId}/spiritbox/player-message`)
+      fetch(`/apil7r/admin/device/${controlSpiritboxDeviceId}/spiritbox/player-message`)
         .then(r => r.json())
         .then((payload: { message?: SpiritAudioMessage }) => {
           const message = payload.message
@@ -492,7 +492,7 @@ export function App() {
 
     setError('')
     try {
-      await fetch('/api/admin/devices', {
+      await fetch('/apil7r/admin/devices', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ deviceId, role: createRole })
@@ -512,7 +512,7 @@ export function App() {
 
     setError('')
     try {
-      await fetch(`/api/admin/device/${selectedDeviceId}`, {
+      await fetch(`/apil7r/admin/device/${selectedDeviceId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -537,7 +537,7 @@ export function App() {
 
     setError('')
     try {
-      await fetch(`/api/admin/device/${controlDeviceId}`, {
+      await fetch(`/apil7r/admin/device/${controlDeviceId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(patch)
@@ -556,7 +556,7 @@ export function App() {
 
     setError('')
     try {
-      await fetch(`/api/admin/device/${controlGhostcamDeviceId}`, {
+      await fetch(`/apil7r/admin/device/${controlGhostcamDeviceId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(patch)
@@ -575,7 +575,7 @@ export function App() {
 
     setError('')
     try {
-      await fetch(`/api/admin/device/${controlGhostorbsDeviceId}`, {
+      await fetch(`/apil7r/admin/device/${controlGhostorbsDeviceId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(patch)
@@ -741,7 +741,7 @@ export function App() {
 
         void blobToDataUrl(blob)
           .then(audioData => {
-            return fetch(`/api/admin/device/${controlSpiritboxDeviceId}/spiritbox/mj-message`, {
+            return fetch(`/apil7r/admin/device/${controlSpiritboxDeviceId}/spiritbox/mj-message`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ audioData, mimeType: blob.type || 'audio/webm' })
@@ -925,7 +925,7 @@ export function App() {
         return acc
       }, {})
 
-      await fetch(`/api/admin/device/${controlVanDeviceId}/van`, {
+      await fetch(`/apil7r/admin/device/${controlVanDeviceId}/van`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -956,7 +956,7 @@ export function App() {
     setIsLoading(true)
 
     try {
-      await fetch('/api/admin/reset', {
+      await fetch('/apil7r/admin/reset', {
         method: 'POST'
       }).then(toJson<{ ok: true }>)
 
@@ -969,7 +969,7 @@ export function App() {
       ]
 
       for (const device of deviceTemplates) {
-        await fetch('/api/admin/devices', {
+        await fetch('/apil7r/admin/devices', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(device)
@@ -1003,7 +1003,7 @@ export function App() {
         Diane: 100
       }
 
-      await fetch('/api/admin/device/van/van', {
+      await fetch('/apil7r/admin/device/van/van', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -1041,7 +1041,7 @@ export function App() {
 
     setError('')
     try {
-      await fetch(`/api/admin/device/${selectedDeviceId}`, {
+      await fetch(`/apil7r/admin/device/${selectedDeviceId}`, {
         method: 'DELETE'
       }).then(toJson<{ ok: true }>)
       setSelectedDeviceId('')

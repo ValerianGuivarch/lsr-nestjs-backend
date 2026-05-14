@@ -65,7 +65,7 @@ export const Dashboard: React.FC = () => {
   const [features, setFeatures] = useState<Features | null>(null)
 
   useEffect(() => {
-    axios.get<{ features: Features }>('/api/config/features').then(res => {
+    axios.get<{ features: Features }>('/apil7r/config/features').then(res => {
       setFeatures(res.data.features)
     }).catch(err => {
       console.error('Failed to fetch features:', err)

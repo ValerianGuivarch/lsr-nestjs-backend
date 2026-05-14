@@ -1,4 +1,4 @@
-const API_BASE = '/api/jdr'
+const API_BASE = '/apil7r/jdr'
 
 export interface DiceRollDto {
   id: string

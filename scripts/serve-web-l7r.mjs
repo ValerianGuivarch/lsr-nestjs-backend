@@ -28,11 +28,11 @@ const contentTypes = {
 }
 
 function isYearDiaryPath(pathname) {
-  return pathname.startsWith('/api/v1/diaries')
+  return pathname.startsWith('/api/v1/diaries') || pathname.startsWith('/apil7r/v1/diaries')
 }
 
 function shouldProxyApi(pathname) {
-  return pathname.startsWith('/api/')
+  return pathname.startsWith('/api/') || pathname.startsWith('/apil7r/')
 }
 
 function isL7rImagePath(pathname) {
@@ -44,7 +44,11 @@ function hasFileExtension(pathname) {
 }
 
 function proxyRequest(req, res, targetOrigin) {
-  const targetUrl = new URL(req.url || '/', targetOrigin)
+  const incomingUrl = new URL(req.url || '/', 'http://localhost')
+  const rewrittenPathname = incomingUrl.pathname.startsWith('/apil7r/')
+    ? incomingUrl.pathname.replace('/apil7r/', '/api/')
+    : incomingUrl.pathname
+  const targetUrl = new URL(`${rewrittenPathname}${incomingUrl.search}`, targetOrigin)
 
   const proxy = request(
     targetUrl,

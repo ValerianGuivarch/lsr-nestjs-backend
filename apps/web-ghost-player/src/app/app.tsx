@@ -144,7 +144,7 @@ export function App() {
   }
 
   useEffect(() => {
-    fetch('/api/player/devices')
+    fetch('/apil7r/player/devices')
       .then(r => r.json())
       .then(list => {
         setDevices(list)
@@ -172,7 +172,7 @@ export function App() {
 
       const refreshState = async () => {
         try {
-          const response = await fetch(`/api/player/state?deviceId=${encodeURIComponent(deviceId)}`)
+          const response = await fetch(`/apil7r/player/state?deviceId=${encodeURIComponent(deviceId)}`)
           if (!response.ok) {
             if (response.status === 404) {
               setState(null)
@@ -518,7 +518,7 @@ export function App() {
 
       try {
         ghostcamUploadInFlightRef.current = true
-        await fetch(`/api/admin/device/${deviceId}/camera-frame`, {
+        await fetch(`/apil7r/admin/device/${deviceId}/camera-frame`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ frame: frameData })
@@ -556,7 +556,7 @@ export function App() {
 
       try {
         emfUploadInFlightRef.current = true
-        await fetch(`/api/admin/device/${deviceId}/camera-frame`, {
+        await fetch(`/apil7r/admin/device/${deviceId}/camera-frame`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ frame: frameData })
@@ -579,7 +579,7 @@ export function App() {
     }
 
     const pollMjMessage = () => {
-      fetch(`/api/player/device/${deviceId}/spiritbox/mj-message`)
+      fetch(`/apil7r/player/device/${deviceId}/spiritbox/mj-message`)
         .then(r => r.json())
         .then((payload: { message?: SpiritAudioMessage }) => {
           const message = payload.message
@@ -610,7 +610,7 @@ export function App() {
     }
 
     const pollVanData = () => {
-      fetch(`/api/player/device/${deviceId}/van`)
+      fetch(`/apil7r/player/device/${deviceId}/van`)
         .then(r => r.json())
         .then((device: any) => {
           if (!device) return
@@ -851,7 +851,7 @@ export function App() {
 
         void blobToDataUrl(blob)
           .then(audioData => {
-            return fetch(`/api/player/device/${deviceId}/spiritbox/player-message`, {
+            return fetch(`/apil7r/player/device/${deviceId}/spiritbox/player-message`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ audioData, mimeType: blob.type || 'audio/webm' })
