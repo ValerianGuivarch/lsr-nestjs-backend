@@ -14,7 +14,7 @@
     "help": "npm run launch -- --help",
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
-    "start:prod": "node dist/src/main/main-unified.js",
+    "start:prod": "bash -c 'npm run build && npm run build:web:l7r && trap \"kill 0\" SIGINT SIGTERM EXIT; npm run serve:web:l7r:nginx & node dist/src/main/main-unified.js & wait'",
     "start:prod:legacy": "node dist/src/main/main.js",
     "dev:backend": "nest start --watch --entryFile main/main-unified",
     "dev:frontend": "npm run dev:web:l7r",
