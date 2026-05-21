@@ -25,4 +25,12 @@ export class JdrError extends HttpException {
       code: 'CONFLICT'
     })
   }
+
+  static badRequest(message: string): JdrError {
+    return new JdrError({
+      statusCode: HttpStatus.BAD_REQUEST,
+      message,
+      code: 'BAD_REQUEST'
+    })
+  }
 }

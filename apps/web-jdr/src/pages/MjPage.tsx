@@ -1,28 +1,54 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { DraftDto, JdrApiClient, JdrDto } from '../data/JdrApiClient'
-import { CharacterCard } from '../components/CharacterCard'
+import styled from 'styled-components'
+import { JdrApiClient, JdrDto, RollState } from '../data/JdrApiClient'
 import { DiceRollFeed } from '../components/DiceRollFeed'
+
+const ROLL_STATES: { value: RollState; label: string }[] = [
+  { value: 'normal', label: 'Normal' },
+  { value: 'advantage', label: 'Avantage' },
+  { value: 'double_advantage', label: 'Double avantage' },
+  { value: 'disadvantage', label: 'Désavantage' }
+]
+
+function getVisibleKey(jdrSlug: string) {
+  return `jdr_${jdrSlug}_visible`
+}
+
+function loadVisible(jdrSlug: string, allSlugs: string[]): string[] {
+  try {
+    const raw = localStorage.getItem(getVisibleKey(jdrSlug))
+    if (!raw) return allSlugs
+    const parsed = JSON.parse(raw)
+    return Array.isArray(parsed) ? parsed : allSlugs
+  } catch {
+    return allSlugs
+  }
+}
+
+function saveVisible(jdrSlug: string, slugs: string[]) {
+  localStorage.setItem(getVisibleKey(jdrSlug), JSON.stringify(slugs))
+}
 
 export default function MjPage() {
   const { jdrSlug } = useParams<{ jdrSlug: string }>()
   const navigate = useNavigate()
   const [jdr, setJdr] = useState<JdrDto | null>(null)
-  const [draft, setDraft] = useState<DraftDto | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [visibleSlugs, setVisibleSlugs] = useState<string[]>([])
+  const [rollState, setRollState] = useState<RollState>('normal')
+  const [rolling, setRolling] = useState<string | null>(null)
+  const [rollFeedKey, setRollFeedKey] = useState(0)
 
   useEffect(() => {
     if (!jdrSlug) return
-
-    const fetchJdr = async () => {
+    const fetch = async () => {
       try {
-        const [data, activeDraft] = await Promise.all([
-          JdrApiClient.findOneBySlug(jdrSlug),
-          JdrApiClient.getActiveDraft(jdrSlug)
-        ])
+        const data = await JdrApiClient.findOneBySlug(jdrSlug)
         setJdr(data)
-        setDraft(activeDraft)
+        const allSlugs = data.characters.map((c) => c.slug)
+        setVisibleSlugs(loadVisible(jdrSlug, allSlugs))
         setError(null)
       } catch (err) {
         setError((err as Error).message)
@@ -30,276 +56,289 @@ export default function MjPage() {
         setLoading(false)
       }
     }
-
-    fetchJdr()
-    const id = setInterval(fetchJdr, 2500)
-    return () => clearInterval(id)
+    fetch()
   }, [jdrSlug])
 
-  const traitsBySlug = useMemo(
-    () => Object.fromEntries((jdr?.traits ?? []).map((trait) => [trait.slug, trait])),
-    [jdr]
-  )
+  const toggleVisible = (slug: string) => {
+    setVisibleSlugs((prev) => {
+      const next = prev.includes(slug) ? prev.filter((s) => s !== slug) : [...prev, slug]
+      saveVisible(jdrSlug!, next)
+      return next
+    })
+  }
 
-  const charactersBySlug = useMemo(
-    () => Object.fromEntries((jdr?.characters ?? []).map((character) => [character.slug, character])),
-    [jdr]
-  )
-
-  const unselectedFinalTraitSlugs = useMemo(() => {
-    if (!draft) return []
-    return Object.values(draft.currentHandsByCharacter).flat()
-  }, [draft])
-
-  const closeDraft = async () => {
-    if (!jdrSlug || !confirm('Arrêter le draft actif ?')) return
+  const rollDice = async (characterSlug: string, statSlug: string) => {
+    if (!jdrSlug) return
+    const key = `${characterSlug}-${statSlug}`
+    setRolling(key)
     try {
-      await JdrApiClient.closeDraft(jdrSlug)
-      setDraft(null)
+      await JdrApiClient.rollDice(jdrSlug, characterSlug, statSlug, rollState)
+      setRollFeedKey((k) => k + 1)
     } catch (err) {
       alert('Erreur: ' + (err as Error).message)
+    } finally {
+      setRolling(null)
     }
   }
 
-  if (loading) return <div style={styles.container}>Chargement...</div>
-  if (error) return <div style={styles.container}>Erreur: {error}</div>
-  if (!jdr) return <div style={styles.container}>JdR non trouvé</div>
+  if (loading) return <Container>Chargement...</Container>
+  if (error) return <Container>Erreur: {error}</Container>
+  if (!jdr) return <Container>JdR non trouvé</Container>
+
+  const visibleChars = jdr.characters.filter((c) => visibleSlugs.includes(c.slug))
 
   return (
-    <div style={styles.container}>
-      <div style={styles.header}>
+    <Container>
+      <Header>
         <h1>{jdr.name}</h1>
-        <div style={styles.actions}>
-          <button onClick={() => navigate(`/jdr/${jdrSlug}/mj/config`)}>Onglet Draft</button>
-        </div>
-      </div>
+        <button onClick={() => navigate(`/jdr/${jdrSlug}/mj/config`)}>Config</button>
+      </Header>
 
-      <section style={styles.draftBox}>
-        <h2>Draft de traits</h2>
-        {draft ? (
-          <div style={styles.draftStack}>
-            <div style={styles.draftActiveRow}>
-              <span>
-                Draft {draft.status === 'active' ? 'actif' : 'terminé'}: {draft.name} · groupe {draft.groupSlug} · type {draft.traitType} · tour {draft.currentRound}/{draft.totalRounds}
-              </span>
-              <div style={{ display: 'flex', gap: '0.5rem' }}>
-                <button onClick={() => navigate(`/jdr/${jdrSlug}/draft/feed`)}>Voir le feed</button>
-                {draft.status === 'active' ? (
-                  <button onClick={closeDraft}>Arrêter le draft</button>
-                ) : (
-                  <span style={styles.draftDoneBadge}>Finalisé</span>
+      <SelectorBar>
+        <SelectorLabel>Personnages affichés :</SelectorLabel>
+        {jdr.characters.map((c) => (
+          <CharCheckbox key={c.slug}>
+            <input
+              type="checkbox"
+              checked={visibleSlugs.includes(c.slug)}
+              onChange={() => toggleVisible(c.slug)}
+              id={`vis-${c.slug}`}
+            />
+            <label htmlFor={`vis-${c.slug}`}>{c.name}</label>
+          </CharCheckbox>
+        ))}
+      </SelectorBar>
+
+      <RollStateBar>
+        <span>État du dé :</span>
+        {ROLL_STATES.map(({ value, label }) => (
+          <RollStateBtn key={value} $active={rollState === value} onClick={() => setRollState(value)}>
+            {label}
+          </RollStateBtn>
+        ))}
+      </RollStateBar>
+
+      <Content>
+        <Main>
+          <CharGrid>
+            {visibleChars.map((char) => (
+              <MiniCard key={char.slug}>
+                <Portrait onClick={() => navigate(`/jdr/${jdrSlug}/characters/${char.slug}`)}>
+                  {char.name.charAt(0).toUpperCase()}
+                </Portrait>
+                <CardName onClick={() => navigate(`/jdr/${jdrSlug}/characters/${char.slug}`)}>
+                  {char.name}
+                </CardName>
+                {char.classSlug && (
+                  <CardClass>{char.classSlug}{char.classLevel > 1 ? ` Niv.${char.classLevel}` : ''}</CardClass>
                 )}
-              </div>
-            </div>
-
-            <div style={styles.draftMonitorGrid}>
-              <div style={styles.draftPanel}>
-                <h3 style={styles.panelTitle}>Mains restantes</h3>
-                {draft.characterOrder.map((characterSlug) => {
-                  const traitSlugs = draft.currentHandsByCharacter[characterSlug] ?? []
-                  return (
-                    <div key={characterSlug} style={styles.monitorRow}>
-                      <strong>{charactersBySlug[characterSlug]?.name || characterSlug}</strong>
-                      <div style={styles.chipsWrap}>
-                        {traitSlugs.length === 0 && <span style={styles.emptyHint}>Aucune carte</span>}
-                        {traitSlugs.map((traitSlug) => (
-                          <span key={`${characterSlug}-${traitSlug}`} style={styles.chip}>
-                            {traitsBySlug[traitSlug]?.name || traitSlug}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-
-              <div style={styles.draftPanel}>
-                <h3 style={styles.panelTitle}>Picks par tour</h3>
-                {draft.rounds.map((round) => (
-                  <div key={round.round} style={styles.roundBlock}>
-                    <strong>Tour {round.round}</strong>
-                    <div style={styles.chipsWrap}>
-                      {draft.characterOrder.map((characterSlug) => {
-                        const pickedSlug = round.picks[characterSlug]
-                        const label = pickedSlug
-                          ? `${charactersBySlug[characterSlug]?.name || characterSlug}: ${traitsBySlug[pickedSlug]?.name || pickedSlug}`
-                          : `${charactersBySlug[characterSlug]?.name || characterSlug}: en attente`
-                        return (
-                          <span key={`${round.round}-${characterSlug}`} style={pickedSlug ? styles.chip : styles.pendingChip}>
-                            {label}
-                          </span>
-                        )
-                      })}
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <div style={styles.draftPanel}>
-                <h3 style={styles.panelTitle}>Cartes non sélectionnées finales</h3>
-                <div style={styles.chipsWrap}>
-                  {unselectedFinalTraitSlugs.length === 0 && <span style={styles.emptyHint}>Aucune</span>}
-                  {unselectedFinalTraitSlugs.map((traitSlug, index) => (
-                    <span key={`${traitSlug}-${index}`} style={styles.chip}>
-                      {traitsBySlug[traitSlug]?.name || traitSlug}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        ) : (
-          <div style={styles.emptyDraftHint}>
-            Aucun draft actif. Créez-le dans l'onglet Draft.
-          </div>
-        )}
-      </section>
-
-      <div style={styles.content}>
-        <div style={styles.main}>
-          <section style={styles.section}>
-            <h2>Personnages</h2>
-            {jdr.characters.length === 0 ? (
-              <p>Aucun personnage. Allez à la config pour en créer.</p>
-            ) : (
-              <div style={styles.grid}>
-                {jdr.characters.map(char => (
-                  <CharacterCard
-                    key={char.slug}
-                    character={char}
-                    onClick={() => navigate(`/jdr/${jdrSlug}/characters/${char.slug}`)}
-                  />
-                ))}
-              </div>
+                <StatsGrid>
+                  {char.stats.map((stat) => {
+                    const statDef = jdr.stats.find((s) => s.slug === stat.statSlug)
+                    const key = `${char.slug}-${stat.statSlug}`
+                    return (
+                      <StatBtn
+                        key={stat.statSlug}
+                        title={`${statDef?.name ?? stat.statSlug}: ${stat.finalValue}`}
+                        $rolling={rolling === key}
+                        onClick={() => rollDice(char.slug, stat.statSlug)}
+                      >
+                        <StatAbbr>{statDef?.name?.slice(0, 3).toUpperCase() ?? stat.statSlug.slice(0, 3).toUpperCase()}</StatAbbr>
+                        <StatVal>{stat.finalValue}</StatVal>
+                      </StatBtn>
+                    )
+                  })}
+                </StatsGrid>
+              </MiniCard>
+            ))}
+            {visibleChars.length === 0 && (
+              <EmptyHint>Sélectionnez des personnages à afficher.</EmptyHint>
             )}
-          </section>
-        </div>
+          </CharGrid>
+        </Main>
 
-        <aside style={styles.sidebar}>
-          <DiceRollFeed jdrSlug={jdrSlug!} maxItems={20} />
-        </aside>
-      </div>
-    </div>
+        <Sidebar>
+          <DiceRollFeed key={rollFeedKey} jdrSlug={jdrSlug!} maxItems={30} jdrData={jdr} />
+        </Sidebar>
+      </Content>
+    </Container>
   )
 }
 
-const styles = {
-  container: {
-    padding: '1.5rem',
-    maxWidth: '1400px',
-    margin: '0 auto'
-  },
-  header: {
-    display: 'flex' as const,
-    justifyContent: 'space-between' as const,
-    alignItems: 'center' as const,
-    marginBottom: '2rem'
-  },
-  actions: {
-    display: 'flex' as const,
-    gap: '0.75rem'
-  },
-  draftBox: {
-    border: '1px solid #d6a34f',
-    borderRadius: '12px',
-    padding: '0.9rem',
-    marginBottom: '1rem',
-    background: 'rgba(255, 174, 78, 0.08)'
-  },
-  draftForm: {
-    display: 'grid' as const,
-    gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-    gap: '0.8rem',
-    alignItems: 'end'
-  },
-  draftActiveRow: {
-    display: 'flex' as const,
-    alignItems: 'center' as const,
-    justifyContent: 'space-between' as const,
-    gap: '1rem',
-    flexWrap: 'wrap' as const
-  },
-  draftStack: {
-    display: 'grid' as const,
-    gap: '0.8rem'
-  },
-  draftMonitorGrid: {
-    display: 'grid' as const,
-    gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
-    gap: '0.8rem'
-  },
-  draftPanel: {
-    border: '1px solid rgba(163, 118, 43, 0.45)',
-    borderRadius: '10px',
-    background: 'rgba(30, 22, 10, 0.28)',
-    padding: '0.65rem'
-  },
-  panelTitle: {
-    margin: '0 0 0.55rem 0',
-    fontSize: '0.95rem'
-  },
-  monitorRow: {
-    display: 'grid' as const,
-    gap: '0.35rem',
-    marginBottom: '0.55rem'
-  },
-  chipsWrap: {
-    display: 'flex' as const,
-    flexWrap: 'wrap' as const,
-    gap: '0.35rem'
-  },
-  chip: {
-    border: '1px solid rgba(229, 196, 134, 0.5)',
-    borderRadius: '999px',
-    padding: '0.12rem 0.5rem',
-    fontSize: '0.76rem',
-    background: 'rgba(89, 58, 22, 0.35)'
-  },
-  pendingChip: {
-    border: '1px solid rgba(158, 158, 158, 0.42)',
-    borderRadius: '999px',
-    padding: '0.12rem 0.5rem',
-    fontSize: '0.76rem',
-    background: 'rgba(55, 55, 55, 0.24)',
-    color: '#737373'
-  },
-  emptyHint: {
-    fontSize: '0.8rem',
-    color: '#6b6b6b'
-  },
-  roundBlock: {
-    marginBottom: '0.55rem',
-    display: 'grid' as const,
-    gap: '0.35rem'
-  },
-  draftDoneBadge: {
-    border: '1px solid #3f7f45',
-    borderRadius: '999px',
-    padding: '0.2rem 0.6rem',
-    background: 'rgba(51, 117, 58, 0.22)',
-    color: '#225e2a',
-    fontSize: '0.8rem',
-    fontWeight: 700
-  },
-  content: {
-    display: 'grid' as const,
-    gridTemplateColumns: '1fr 300px',
-    gap: '2rem'
-  },
-  main: {
-    minWidth: 0
-  },
-  sidebar: {
-    height: 'fit-content',
-    position: 'sticky' as const,
-    top: '1rem'
-  },
-  section: {
-    marginBottom: '2rem'
-  },
-  grid: {
-    display: 'grid' as const,
-    gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))',
-    gap: '1rem'
+const Container = styled.div`
+  padding: 1.5rem 2rem;
+  max-width: 1800px;
+  margin: 0 auto;
+`
+
+const Header = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+
+  h1 { margin: 0; }
+
+  button {
+    padding: 0.5rem 1.2rem;
+    background: rgba(163, 118, 43, 0.25);
+    border: 1px solid rgba(163, 118, 43, 0.6);
+    border-radius: 6px;
+    color: #e5c486;
+    cursor: pointer;
+    font-size: 0.95rem;
+    &:hover { background: rgba(163, 118, 43, 0.45); }
   }
-}
+`
+
+const SelectorBar = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.8rem;
+  padding: 0.6rem 0.8rem;
+  background: rgba(30, 22, 10, 0.3);
+  border: 1px solid rgba(163, 118, 43, 0.25);
+  border-radius: 8px;
+`
+
+const SelectorLabel = styled.span`
+  color: #aaa;
+  font-size: 0.85rem;
+  margin-right: 0.5rem;
+`
+
+const CharCheckbox = styled.label`
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  cursor: pointer;
+  font-size: 0.85rem;
+  input { cursor: pointer; }
+`
+
+const RollStateBar = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+  font-size: 0.85rem;
+  color: #aaa;
+`
+
+const RollStateBtn = styled.button<{ $active: boolean }>`
+  padding: 0.3rem 0.8rem;
+  border-radius: 999px;
+  border: 1px solid ${(p) => (p.$active ? 'rgba(229, 196, 134, 0.8)' : 'rgba(163, 118, 43, 0.35)')};
+  background: ${(p) => (p.$active ? 'rgba(163, 118, 43, 0.4)' : 'transparent')};
+  color: ${(p) => (p.$active ? '#e5c486' : '#888')};
+  cursor: pointer;
+  font-size: 0.8rem;
+  &:hover { background: rgba(163, 118, 43, 0.3); color: #e5c486; }
+`
+
+const Content = styled.div`
+  display: grid;
+  grid-template-columns: 1fr 280px;
+  gap: 1.5rem;
+  width: 100%;
+`
+
+const Main = styled.div`
+  min-width: 0;
+  width: 100%;
+`
+
+const Sidebar = styled.aside`
+  height: fit-content;
+  position: sticky;
+  top: 1rem;
+`
+
+const CharGrid = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: flex-start;
+`
+
+const MiniCard = styled.div`
+  background: rgba(30, 22, 10, 0.4);
+  border: 1px solid rgba(163, 118, 43, 0.35);
+  border-radius: 10px;
+  padding: 0.65rem 0.6rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  flex: 0 0 160px;
+  box-sizing: border-box;
+`
+
+const Portrait = styled.div`
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(89, 58, 22, 0.6);
+  border: 2px solid rgba(163, 118, 43, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #e5c486;
+  cursor: pointer;
+  &:hover { border-color: #e5c486; }
+`
+
+const CardName = styled.div`
+  font-weight: 600;
+  font-size: 0.95rem;
+  text-align: center;
+  cursor: pointer;
+  &:hover { color: #e5c486; }
+`
+
+const CardClass = styled.div`
+  font-size: 0.75rem;
+  color: #888;
+`
+
+const StatsGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.3rem;
+  width: 100%;
+`
+
+const StatBtn = styled.button<{ $rolling: boolean }>`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.3rem 0.5rem;
+  border-radius: 6px;
+  border: 1px solid rgba(163, 118, 43, ${(p) => (p.$rolling ? '0.9' : '0.35')});
+  background: ${(p) => (p.$rolling ? 'rgba(163, 118, 43, 0.45)' : 'rgba(89, 58, 22, 0.25)')};
+  cursor: pointer;
+  min-width: 42px;
+  transition: background 0.15s;
+  &:hover { background: rgba(163, 118, 43, 0.35); border-color: rgba(163, 118, 43, 0.7); }
+`
+
+const StatAbbr = styled.span`
+  font-size: 0.65rem;
+  color: #aaa;
+  letter-spacing: 0.04em;
+`
+
+const StatVal = styled.span`
+  font-size: 1rem;
+  font-weight: 700;
+  color: #e5c486;
+`
+
+const EmptyHint = styled.p`
+  color: #666;
+  font-size: 0.9rem;
+`

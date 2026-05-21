@@ -5,19 +5,21 @@ import MjConfigPage from '../pages/MjConfigPage.tsx'
 import CharacterPage from '../pages/CharacterPage.tsx'
 import CharacterEditPage from '../pages/CharacterEditPage.tsx'
 import FeedPage from '../pages/FeedPage.tsx'
-import DraftPage from '../pages/DraftPage.tsx'
-import DraftFeedPage from '../pages/DraftFeedPage.tsx'
+import JoueurListPage from '../pages/JoueurListPage.tsx'
+import JdrListPage from '../pages/JdrListPage.tsx'
+import GroupPage from '../pages/GroupPage.tsx'
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
+        <Route path="/jdr" element={<JdrListPage />} />
         <Route path="/jdr/admin" element={<AdminPage />} />
         <Route path="/jdr/:jdrSlug/mj" element={<MjPage />} />
         <Route path="/jdr/:jdrSlug/mj/config" element={<MjConfigPage />} />
         <Route path="/jdr/:jdrSlug/feed" element={<FeedPage />} />
-        <Route path="/jdr/:jdrSlug/draft/feed" element={<DraftFeedPage />} />
-        <Route path="/jdr/:jdrSlug/characters/:characterSlug/draft" element={<DraftPage />} />
+        <Route path="/jdr/:jdrSlug/joueurs" element={<JoueurListPage />} />
+        <Route path="/jdr/:jdrSlug/groups/:groupSlug" element={<GroupPage />} />
         <Route path="/jdr/:jdrSlug/characters/:characterSlug/edit" element={<CharacterEditPage />} />
         <Route path="/jdr/:jdrSlug/characters/:characterSlug" element={<CharacterPage />} />
 
@@ -30,8 +32,8 @@ function App() {
         <Route path="/:jdrSlug/:characterSlug/edit" element={<LegacyCharacterEditRedirect />} />
         <Route path="/:jdrSlug/:characterSlug" element={<LegacyCharacterRedirect />} />
 
-        <Route path="/" element={<Navigate to="/jdr/admin" replace />} />
-        <Route path="*" element={<Navigate to="/jdr/admin" replace />} />
+        <Route path="/" element={<Navigate to="/jdr" replace />} />
+        <Route path="*" element={<Navigate to="/jdr" replace />} />
       </Routes>
     </BrowserRouter>
   )

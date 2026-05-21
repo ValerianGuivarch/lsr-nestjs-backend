@@ -65,7 +65,8 @@ export class DBJdr {
       stats: true,
       traits: true,
       items: true,
-      resources: true
+      resources: true,
+      groups: true
     },
     classes: { resources: true },
     groups: true

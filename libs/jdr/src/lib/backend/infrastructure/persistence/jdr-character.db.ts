@@ -5,6 +5,7 @@ import { DBJdrCharacterStat } from './jdr-character-stat.db'
 import { DBJdrCharacterTrait } from './jdr-character-trait.db'
 import { DBJdrCharacterItem } from './jdr-character-item.db'
 import { DBJdrCharacterResource } from './jdr-character-resource.db'
+import { DBJdrCharacterGroup } from './jdr-character-group.db'
 
 @Entity({ name: 'jdr_character' })
 export class DBJdrCharacter {
@@ -33,6 +34,12 @@ export class DBJdrCharacter {
   @Column({ type: 'varchar', nullable: true })
   groupSlug: string | null
 
+  @Column({ type: 'int', nullable: false, default: 1 })
+  classLevel: number
+
+  @Column({ type: 'boolean', nullable: false, default: false })
+  isPlayable: boolean
+
   @Column({ type: 'varchar', nullable: false, default: '' })
   text: string
 
@@ -48,11 +55,15 @@ export class DBJdrCharacter {
   @OneToMany(() => DBJdrCharacterResource, (cr) => cr.character, { cascade: true })
   resources: DBJdrCharacterResource[]
 
+  @OneToMany(() => DBJdrCharacterGroup, (cg) => cg.character, { cascade: true })
+  groups: DBJdrCharacterGroup[]
+
   static readonly RELATIONS = {
     stats: true,
     traits: true,
     items: true,
-    resources: true
+    resources: true,
+    groups: true
   }
 
   static toCharacter(db: DBJdrCharacter): Character {
@@ -61,7 +72,9 @@ export class DBJdrCharacter {
       name: db.name,
       slug: db.slug,
       classSlug: db.classSlug ?? undefined,
-      groupSlug: db.groupSlug ?? undefined,
+      groupSlugs: (db.groups ?? []).map((g) => g.groupSlug),
+      classLevel: db.classLevel ?? 1,
+      isPlayable: db.isPlayable ?? false,
       text: db.text,
       stats: (db.stats ?? []).map(DBJdrCharacterStat.toCharacterStat),
       traitSlugs: (db.traits ?? []).map((ct) => ct.traitSlug),
@@ -71,5 +84,5 @@ export class DBJdrCharacter {
   }
 }
 
-export type DBJdrCharacterToCreate = Pick<DBJdrCharacter, 'jdrSlug' | 'slug' | 'name' | 'classSlug' | 'groupSlug' | 'text'>
-export type DBJdrCharacterToUpdate = Partial<Pick<DBJdrCharacter, 'name' | 'classSlug' | 'groupSlug' | 'text'>> & Pick<DBJdrCharacter, 'updatedDate'>
+export type DBJdrCharacterToCreate = Pick<DBJdrCharacter, 'jdrSlug' | 'slug' | 'name' | 'classSlug' | 'groupSlug' | 'isPlayable' | 'text'>
+export type DBJdrCharacterToUpdate = Partial<Pick<DBJdrCharacter, 'name' | 'classSlug' | 'groupSlug' | 'isPlayable' | 'text'>> & Pick<DBJdrCharacter, 'updatedDate'>

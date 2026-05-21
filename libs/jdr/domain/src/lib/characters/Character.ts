@@ -8,7 +8,9 @@ export class Character {
   name: string
   slug: string
   classSlug?: string
-  groupSlug?: string
+  groupSlugs: string[]
+  classLevel: number
+  isPlayable: boolean
   text: string
   stats: CharacterStat[]
   traitSlugs: string[]
@@ -20,7 +22,9 @@ export class Character {
     name: string
     slug?: string
     classSlug?: string
-    groupSlug?: string
+    groupSlugs?: string[]
+    classLevel?: number
+    isPlayable?: boolean
     text?: string
     stats: CharacterStat[]
     traitSlugs?: string[]
@@ -31,7 +35,9 @@ export class Character {
     this.name = p.name
     this.slug = p.slug ?? Slug.from(p.name)
     this.classSlug = p.classSlug
-    this.groupSlug = p.groupSlug
+    this.groupSlugs = p.groupSlugs ?? []
+    this.classLevel = p.classLevel ?? 1
+    this.isPlayable = p.isPlayable ?? false
     this.text = p.text ?? ''
     this.stats = p.stats
     this.traitSlugs = p.traitSlugs ?? []
@@ -41,7 +47,7 @@ export class Character {
     Slug.assertValid(this.jdrSlug)
     Slug.assertValid(this.slug)
     if (this.classSlug) Slug.assertValid(this.classSlug)
-    if (this.groupSlug) Slug.assertValid(this.groupSlug)
+    this.groupSlugs.forEach((gs) => Slug.assertValid(gs))
     this.traitSlugs.forEach((traitSlug) => Slug.assertValid(traitSlug))
   }
 }

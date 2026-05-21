@@ -97,7 +97,7 @@ export default function DraftPage() {
   if (!jdr || !character) return <StatusShell>Personnage non trouvé</StatusShell>
   if (!draft) return <StatusShell>Aucun draft actif.</StatusShell>
 
-  if (character.groupSlug !== draft.groupSlug) {
+  if (!character.groupSlugs.includes(draft.groupSlug)) {
     return <StatusShell>Ce personnage ne fait pas partie du draft actif.</StatusShell>
   }
 

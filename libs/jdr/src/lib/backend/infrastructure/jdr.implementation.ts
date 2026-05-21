@@ -19,6 +19,7 @@ import { DBJdrCharacterStat } from './persistence/jdr-character-stat.db'
 import { DBJdrCharacterTrait } from './persistence/jdr-character-trait.db'
 import { DBJdrCharacterItem } from './persistence/jdr-character-item.db'
 import { DBJdrCharacterResource } from './persistence/jdr-character-resource.db'
+import { DBJdrCharacterGroup } from './persistence/jdr-character-group.db'
 import { DBJdrDiceRoll } from './persistence/jdr-dice-roll.db'
 import { DBJdrClass } from './persistence/jdr-class.db'
 import { DBJdrGroup } from './persistence/jdr-group.db'
@@ -41,6 +42,7 @@ export class JdrImplementation implements IJdrProvider {
     @InjectRepository(DBJdrCharacterTrait, 'jdr-sqlite') private readonly characterTraitRepo: Repository<DBJdrCharacterTrait>,
     @InjectRepository(DBJdrCharacterItem, 'jdr-sqlite') private readonly characterItemRepo: Repository<DBJdrCharacterItem>,
     @InjectRepository(DBJdrCharacterResource, 'jdr-sqlite') private readonly characterResourceRepo: Repository<DBJdrCharacterResource>,
+    @InjectRepository(DBJdrCharacterGroup, 'jdr-sqlite') private readonly characterGroupRepo: Repository<DBJdrCharacterGroup>,
     @InjectRepository(DBJdrDiceRoll, 'jdr-sqlite') private readonly diceRollRepo: Repository<DBJdrDiceRoll>,
     @InjectRepository(DBJdrClass, 'jdr-sqlite') private readonly classRepo: Repository<DBJdrClass>,
     @InjectRepository(DBJdrGroup, 'jdr-sqlite') private readonly groupRepo: Repository<DBJdrGroup>,
@@ -60,15 +62,10 @@ export class JdrImplementation implements IJdrProvider {
     return db
   }
 
-  private async ensureCharacterClassAndGroup(jdrSlug: string, p: { classSlug?: string; groupSlug?: string }): Promise<void> {
-    if (p.classSlug) {
-      const existingClass = await this.classRepo.findOne({ where: { jdrSlug, slug: p.classSlug } })
-      if (!existingClass) throw JdrError.notFound(`Class '${p.classSlug}'`)
-    }
-
-    if (p.groupSlug) {
-      const existingGroup = await this.groupRepo.findOne({ where: { jdrSlug, slug: p.groupSlug } })
-      if (!existingGroup) throw JdrError.notFound(`Group '${p.groupSlug}'`)
+  private async ensureCharacterClass(jdrSlug: string, classSlug?: string): Promise<void> {
+    if (classSlug) {
+      const existingClass = await this.classRepo.findOne({ where: { jdrSlug, slug: classSlug } })
+      if (!existingClass) throw JdrError.notFound(`Class '${classSlug}' in jdr '${jdrSlug}'`)
     }
   }
 
@@ -140,6 +137,11 @@ export class JdrImplementation implements IJdrProvider {
     return this.findOneBySlug(jdrSlug)
   }
 
+  async updateStat(jdrSlug: string, statSlug: string, p: { name: string }): Promise<Jdr> {
+    await this.statRepo.update({ jdrSlug, slug: statSlug }, { name: p.name })
+    return this.findOneBySlug(jdrSlug)
+  }
+
   async removeStat(jdrSlug: string, statSlug: string): Promise<Jdr> {
     await this.statRepo.delete({ jdrSlug, slug: statSlug })
     return this.findOneBySlug(jdrSlug)
@@ -165,6 +167,22 @@ export class JdrImplementation implements IJdrProvider {
     return this.findOneBySlug(jdrSlug)
   }
 
+  async updateTrait(jdrSlug: string, traitSlug: string, p: { name?: string; type?: string; modifiers?: { statSlug: string; value: number }[] }): Promise<Jdr> {
+    const existing = await this.traitRepo.findOne({ where: { jdrSlug, slug: traitSlug } })
+    if (!existing) throw JdrError.notFound(`Trait '${traitSlug}'`)
+    const patch: { name?: string; type?: TraitType; updatedDate: Date } = { updatedDate: new Date() }
+    if (p.name !== undefined) patch.name = p.name
+    if (p.type !== undefined) patch.type = p.type as TraitType
+    await this.traitRepo.update({ jdrSlug, slug: traitSlug }, patch)
+    if (p.modifiers !== undefined) {
+      await this.traitModifierRepo.delete({ jdrSlug, traitSlug })
+      for (const modifier of p.modifiers) {
+        await this.traitModifierRepo.save(this.traitModifierRepo.create({ jdrSlug, traitSlug, statSlug: modifier.statSlug, value: modifier.value }))
+      }
+    }
+    return this.findOneBySlug(jdrSlug)
+  }
+
   // ─── Resources ────────────────────────────────────────────────────────────
 
   async addResource(jdrSlug: string, p: { name: string; type: string }): Promise<Jdr> {
@@ -173,6 +191,19 @@ export class JdrImplementation implements IJdrProvider {
     const existing = await this.resourceRepo.findOne({ where: { jdrSlug, slug } })
     if (existing) throw JdrError.conflict(`Resource '${slug}' already exists in jdr '${jdrSlug}'`)
     await this.resourceRepo.save(this.resourceRepo.create({ jdrSlug, slug, name: p.name, type: p.type as ResourceType }))
+    if ((p.type as ResourceType) === ResourceType.GROUP) {
+      await this.groupResourceRepo.save(this.groupResourceRepo.create({ jdrSlug, resourceSlug: slug, value: 0 }))
+    }
+    return this.findOneBySlug(jdrSlug)
+  }
+
+  async updateResource(jdrSlug: string, resourceSlug: string, p: { name?: string; type?: string }): Promise<Jdr> {
+    const updates: Record<string, unknown> = {}
+    if (p.name) updates.name = p.name
+    if (p.type) updates.type = p.type
+    if (Object.keys(updates).length > 0) {
+      await this.resourceRepo.update({ jdrSlug, slug: resourceSlug }, updates)
+    }
     return this.findOneBySlug(jdrSlug)
   }
 
@@ -205,6 +236,17 @@ export class JdrImplementation implements IJdrProvider {
         level: p.level
       })
     )
+    return this.findOneBySlug(jdrSlug)
+  }
+
+  async updateClass(jdrSlug: string, classSlug: string, p: { name?: string; level?: number; text?: string }): Promise<Jdr> {
+    const updates: Record<string, unknown> = {}
+    if (p.name !== undefined) updates.name = p.name
+    if (p.level !== undefined) updates.level = p.level
+    if (p.text !== undefined) updates.text = p.text
+    if (Object.keys(updates).length > 0) {
+      await this.classRepo.update({ jdrSlug, slug: classSlug }, updates)
+    }
     return this.findOneBySlug(jdrSlug)
   }
 
@@ -254,9 +296,19 @@ export class JdrImplementation implements IJdrProvider {
     return this.findOneBySlug(jdrSlug)
   }
 
+  async updateGroup(jdrSlug: string, groupSlug: string, p: { name?: string; text?: string }): Promise<Jdr> {
+    const updates: Record<string, unknown> = {}
+    if (p.name !== undefined) updates.name = p.name
+    if (p.text !== undefined) updates.text = p.text
+    if (Object.keys(updates).length > 0) {
+      await this.groupRepo.update({ jdrSlug, slug: groupSlug }, updates)
+    }
+    return this.findOneBySlug(jdrSlug)
+  }
+
   async removeGroup(jdrSlug: string, groupSlug: string): Promise<Jdr> {
+    await this.characterGroupRepo.delete({ jdrSlug, groupSlug })
     await this.groupRepo.delete({ jdrSlug, slug: groupSlug })
-    await this.characterRepo.update({ jdrSlug, groupSlug }, { groupSlug: null })
     return this.findOneBySlug(jdrSlug)
   }
 
@@ -275,6 +327,17 @@ export class JdrImplementation implements IJdrProvider {
       unique: p.unique ?? true,
       traitSlug: p.traitSlug ?? null
     }))
+    return this.findOneBySlug(jdrSlug)
+  }
+
+  async updateItem(jdrSlug: string, itemSlug: string, p: { name?: string; description?: string; unique?: boolean }): Promise<Jdr> {
+    const updates: Record<string, unknown> = {}
+    if (p.name !== undefined) updates.name = p.name
+    if (p.description !== undefined) updates.description = p.description
+    if (p.unique !== undefined) updates.unique = p.unique
+    if (Object.keys(updates).length > 0) {
+      await this.itemRepo.update({ jdrSlug, slug: itemSlug }, updates)
+    }
     return this.findOneBySlug(jdrSlug)
   }
 
@@ -297,22 +360,22 @@ export class JdrImplementation implements IJdrProvider {
 
   // ─── Characters ───────────────────────────────────────────────────────────
 
-  async addCharacter(jdrSlug: string, p: { name: string; classSlug?: string; groupSlug?: string; text?: string }): Promise<Jdr> {
+  async addCharacter(jdrSlug: string, p: { name: string; classSlug?: string; classLevel?: number; isPlayable?: boolean; text?: string }): Promise<Jdr> {
     const db = await this.loadJdr(jdrSlug)
     const slug = Slug.from(p.name)
     const existing = await this.characterRepo.findOne({ where: { jdrSlug, slug } })
     if (existing) throw JdrError.conflict(`Character '${slug}' already exists in jdr '${jdrSlug}'`)
 
     const classSlug = p.classSlug || undefined
-    const groupSlug = p.groupSlug || undefined
-
-    await this.ensureCharacterClassAndGroup(jdrSlug, { classSlug, groupSlug })
+    await this.ensureCharacterClass(jdrSlug, classSlug)
     await this.characterRepo.save(this.characterRepo.create({
       jdrSlug,
       slug,
       name: p.name,
       classSlug: classSlug ?? null,
-      groupSlug: groupSlug ?? null,
+      groupSlug: null,
+      classLevel: p.classLevel ?? 1,
+      isPlayable: p.isPlayable ?? false,
       text: p.text ?? ''
     }))
     // seed stats with default value 2 for each stat of the jdr
@@ -326,22 +389,21 @@ export class JdrImplementation implements IJdrProvider {
     return this.findOneBySlug(jdrSlug)
   }
 
-  async updateCharacter(jdrSlug: string, characterSlug: string, p: { name?: string; classSlug?: string; groupSlug?: string; text?: string }): Promise<Jdr> {
+  async updateCharacter(jdrSlug: string, characterSlug: string, p: { name?: string; classSlug?: string; classLevel?: number; isPlayable?: boolean; text?: string }): Promise<Jdr> {
     const existing = await this.characterRepo.findOne({ where: { jdrSlug, slug: characterSlug } })
     if (!existing) throw JdrError.notFound(`Character '${characterSlug}'`)
 
     const classSlug = p.classSlug === undefined ? undefined : (p.classSlug || undefined)
-    const groupSlug = p.groupSlug === undefined ? undefined : (p.groupSlug || undefined)
+    await this.ensureCharacterClass(jdrSlug, classSlug)
 
-    await this.ensureCharacterClassAndGroup(jdrSlug, { classSlug, groupSlug })
-
-    const patch: { name?: string; text?: string; classSlug?: string | null; groupSlug?: string | null; updatedDate: Date } = {
+    const patch: { name?: string; text?: string; classSlug?: string | null; classLevel?: number; isPlayable?: boolean; updatedDate: Date } = {
       updatedDate: new Date()
     }
     if (p.name !== undefined) patch.name = p.name
     if (p.text !== undefined) patch.text = p.text
     if (p.classSlug !== undefined) patch.classSlug = classSlug ?? null
-    if (p.groupSlug !== undefined) patch.groupSlug = groupSlug ?? null
+    if (p.classLevel !== undefined) patch.classLevel = p.classLevel
+    if (p.isPlayable !== undefined) patch.isPlayable = p.isPlayable
 
     await this.characterRepo.update(
       { jdrSlug, slug: characterSlug },
@@ -352,6 +414,22 @@ export class JdrImplementation implements IJdrProvider {
 
   async removeCharacter(jdrSlug: string, characterSlug: string): Promise<Jdr> {
     await this.characterRepo.delete({ jdrSlug, slug: characterSlug })
+    return this.findOneBySlug(jdrSlug)
+  }
+
+  async addCharacterGroup(jdrSlug: string, characterSlug: string, groupSlug: string): Promise<Jdr> {
+    const existing = await this.characterGroupRepo.findOne({ where: { jdrSlug, characterSlug, groupSlug } })
+    if (existing) return this.findOneBySlug(jdrSlug)
+    const group = await this.groupRepo.findOne({ where: { jdrSlug, slug: groupSlug } })
+    if (!group) throw JdrError.notFound(`Group '${groupSlug}' in jdr '${jdrSlug}'`)
+    const character = await this.characterRepo.findOne({ where: { jdrSlug, slug: characterSlug } })
+    if (!character) throw JdrError.notFound(`Character '${characterSlug}'`)
+    await this.characterGroupRepo.save(this.characterGroupRepo.create({ jdrSlug, characterSlug, groupSlug }))
+    return this.findOneBySlug(jdrSlug)
+  }
+
+  async removeCharacterGroup(jdrSlug: string, characterSlug: string, groupSlug: string): Promise<Jdr> {
+    await this.characterGroupRepo.delete({ jdrSlug, characterSlug, groupSlug })
     return this.findOneBySlug(jdrSlug)
   }
 
@@ -396,9 +474,19 @@ export class JdrImplementation implements IJdrProvider {
     return this.findOneBySlug(jdrSlug)
   }
 
+  async removeCharacterResource(jdrSlug: string, characterSlug: string, resourceSlug: string): Promise<Jdr> {
+    await this.characterResourceRepo.delete({ jdrSlug, characterSlug, resourceSlug })
+    return this.findOneBySlug(jdrSlug)
+  }
+
   // ─── Dice Rolls ───────────────────────────────────────────────────────────
 
-  async rollDice(jdrSlug: string, characterSlug: string, statSlug: string): Promise<DiceRoll> {
+  async rollDice(
+    jdrSlug: string,
+    characterSlug: string,
+    statSlug: string,
+    rollState: DiceRoll['rollState'] = 'normal'
+  ): Promise<DiceRoll> {
     const jdr = await this.loadJdr(jdrSlug)
     const domainJdr = DBJdr.toJdr(jdr)
 
@@ -420,6 +508,36 @@ export class JdrImplementation implements IJdrProvider {
         statSlug,
         statName: stat.name,
         statValue,
+        rollState,
+        results
+      })
+    )
+    return DBJdrDiceRoll.toDiceRoll(saved)
+  }
+
+  async rollArbitrary(jdrSlug: string, characterSlug: string, formula: string): Promise<DiceRoll> {
+    const jdr = await this.loadJdr(jdrSlug)
+    const domainJdr = DBJdr.toJdr(jdr)
+    const character = domainJdr.characters.find((c) => c.slug === characterSlug)
+    if (!character) throw JdrError.notFound(`Character ${characterSlug}`)
+
+    const match = /^(\d+)d(\d+)$/i.exec(formula.trim())
+    if (!match) throw JdrError.badRequest(`Invalid formula: ${formula}. Expected format XdX (e.g. 2d6, 1d20)`)
+    const count = Math.min(50, parseInt(match[1], 10))
+    const faces = Math.min(1000, parseInt(match[2], 10))
+    const results = Array.from({ length: count }, () => Math.floor(Math.random() * faces) + 1)
+
+    const saved = await this.diceRollRepo.save(
+      this.diceRollRepo.create({
+        jdrSlug,
+        characterSlug,
+        characterName: character.name,
+        statSlug: 'arbitrary',
+        statName: formula.toLowerCase().trim(),
+        statValue: faces,
+        rollState: 'normal',
+        isArbitrary: true,
+        formula: formula.toLowerCase().trim(),
         results
       })
     )
@@ -493,7 +611,7 @@ export class JdrImplementation implements IJdrProvider {
     if (existing) throw JdrError.conflict('Un template de draft existe deja pour ce JdR')
 
     const jdr = await this.findOneBySlug(jdrSlug)
-    const characterOrder = jdr.characters.filter((c) => c.groupSlug === p.groupSlug).map((c) => c.slug)
+    const characterOrder = jdr.characters.filter((c) => c.groupSlugs.includes(p.groupSlug)).map((c) => c.slug)
     if (characterOrder.length < 2) throw JdrError.conflict('Le groupe doit contenir au moins 2 personnages')
 
     const pool = this.buildDraftTraitPool(jdr, p)
@@ -571,7 +689,7 @@ export class JdrImplementation implements IJdrProvider {
     if (activeExisting) throw JdrError.conflict('Un draft est deja en cours')
 
     const jdr = await this.findOneBySlug(jdrSlug)
-    const characterOrder = jdr.characters.filter((c) => c.groupSlug === draft.groupSlug).map((c) => c.slug)
+    const characterOrder = jdr.characters.filter((c) => c.groupSlugs.includes(draft.groupSlug)).map((c) => c.slug)
     if (characterOrder.length < 2) throw JdrError.conflict('Le groupe doit contenir au moins 2 personnages')
 
     const selectedTraitSlugs = JSON.parse(draft.selectedTraitSlugsJson || '[]') as string[]

@@ -1,5 +1,7 @@
 const API_BASE = '/apil7r/jdr'
 
+export type RollState = 'normal' | 'disadvantage' | 'advantage' | 'double_advantage'
+
 export interface DiceRollDto {
   id: string
   jdrSlug: string
@@ -8,6 +10,9 @@ export interface DiceRollDto {
   statSlug: string
   statName: string
   statValue: number
+  rollState: RollState
+  isArbitrary: boolean
+  formula: string | null
   results: number[]
   createdDate: string
 }
@@ -22,7 +27,9 @@ export interface CharacterDto {
   slug: string
   name: string
   classSlug: string | null
-  groupSlug: string | null
+  groupSlugs: string[]
+  classLevel: number
+  isPlayable: boolean
   text: string
   stats: CharacterStatDto[]
   traitSlugs: string[]
@@ -137,9 +144,11 @@ export class JdrApiClient {
     return res.json()
   }
 
-  static async rollDice(jdrSlug: string, characterSlug: string, statSlug: string): Promise<DiceRollDto> {
+  static async rollDice(jdrSlug: string, characterSlug: string, statSlug: string, rollState: RollState = 'normal'): Promise<DiceRollDto> {
     const res = await fetch(`${API_BASE}/${jdrSlug}/characters/${characterSlug}/roll/${statSlug}`, {
-      method: 'POST'
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ rollState })
     })
     if (!res.ok) throw new Error(`Failed to roll dice: ${res.statusText}`)
     return res.json()
@@ -186,21 +195,21 @@ export class JdrApiClient {
     return res.json()
   }
 
-  static async addCharacter(jdrSlug: string, name: string, classSlug?: string, groupSlug?: string, text?: string): Promise<JdrDto> {
+  static async addCharacter(jdrSlug: string, name: string, classSlug?: string, text?: string, isPlayable?: boolean, classLevel?: number): Promise<JdrDto> {
     const res = await fetch(`${API_BASE}/${jdrSlug}/characters`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, classSlug, groupSlug, text })
+      body: JSON.stringify({ name, classSlug, text, isPlayable, classLevel })
     })
     if (!res.ok) throw new Error(`Failed to add character: ${res.statusText}`)
     return res.json()
   }
 
-  static async updateCharacter(jdrSlug: string, characterSlug: string, name?: string, classSlug?: string, groupSlug?: string, text?: string): Promise<JdrDto> {
+  static async updateCharacter(jdrSlug: string, characterSlug: string, name?: string, classSlug?: string, text?: string, isPlayable?: boolean, classLevel?: number): Promise<JdrDto> {
     const res = await fetch(`${API_BASE}/${jdrSlug}/characters/${characterSlug}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, classSlug, groupSlug, text })
+      body: JSON.stringify({ name, classSlug, text, isPlayable, classLevel })
     })
     if (!res.ok) throw new Error(`Failed to update character: ${res.statusText}`)
     return res.json()
@@ -209,6 +218,18 @@ export class JdrApiClient {
   static async removeCharacter(jdrSlug: string, characterSlug: string): Promise<JdrDto> {
     const res = await fetch(`${API_BASE}/${jdrSlug}/characters/${characterSlug}`, { method: 'DELETE' })
     if (!res.ok) throw new Error(`Failed to remove character: ${res.statusText}`)
+    return res.json()
+  }
+
+  static async addCharacterGroup(jdrSlug: string, characterSlug: string, groupSlug: string): Promise<JdrDto> {
+    const res = await fetch(`${API_BASE}/${jdrSlug}/characters/${characterSlug}/groups/${groupSlug}`, { method: 'POST' })
+    if (!res.ok) throw new Error(`Failed to add character group: ${res.statusText}`)
+    return res.json()
+  }
+
+  static async removeCharacterGroup(jdrSlug: string, characterSlug: string, groupSlug: string): Promise<JdrDto> {
+    const res = await fetch(`${API_BASE}/${jdrSlug}/characters/${characterSlug}/groups/${groupSlug}`, { method: 'DELETE' })
+    if (!res.ok) throw new Error(`Failed to remove character group: ${res.statusText}`)
     return res.json()
   }
 
@@ -235,6 +256,16 @@ export class JdrApiClient {
   static async removeTrait(jdrSlug: string, traitSlug: string): Promise<JdrDto> {
     const res = await fetch(`${API_BASE}/${jdrSlug}/traits/${traitSlug}`, { method: 'DELETE' })
     if (!res.ok) throw new Error(`Failed to remove trait: ${res.statusText}`)
+    return res.json()
+  }
+
+  static async updateTrait(jdrSlug: string, traitSlug: string, p: { name?: string; type?: string; modifiers?: Array<{ statSlug: string; value: number }> }): Promise<JdrDto> {
+    const res = await fetch(`${API_BASE}/${jdrSlug}/traits/${traitSlug}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(p)
+    })
+    if (!res.ok) throw new Error(`Failed to update trait: ${res.statusText}`)
     return res.json()
   }
 
@@ -378,6 +409,22 @@ export class JdrApiClient {
     return res.json()
   }
 
+  static async updateCharacterResource(jdrSlug: string, characterSlug: string, resourceSlug: string, value: number): Promise<JdrDto> {
+    const res = await fetch(`${API_BASE}/${jdrSlug}/characters/${characterSlug}/resources/${resourceSlug}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ value })
+    })
+    if (!res.ok) throw new Error(`Failed to update character resource: ${res.statusText}`)
+    return res.json()
+  }
+
+  static async removeCharacterResource(jdrSlug: string, characterSlug: string, resourceSlug: string): Promise<JdrDto> {
+    const res = await fetch(`${API_BASE}/${jdrSlug}/characters/${characterSlug}/resources/${resourceSlug}`, { method: 'DELETE' })
+    if (!res.ok) throw new Error(`Failed to remove character resource: ${res.statusText}`)
+    return res.json()
+  }
+
   static async createDraft(
     jdrSlug: string,
     groupSlug: string,
@@ -450,6 +497,66 @@ export class JdrApiClient {
   static async closeDraft(jdrSlug: string): Promise<void> {
     const res = await fetch(`${API_BASE}/${jdrSlug}/draft`, { method: 'DELETE' })
     if (!res.ok) throw new Error(`Failed to close draft: ${res.statusText}`)
+  }
+
+  static async rollArbitrary(jdrSlug: string, characterSlug: string, formula: string): Promise<DiceRollDto> {
+    const res = await fetch(`${API_BASE}/${jdrSlug}/characters/${characterSlug}/roll-arbitrary`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ formula })
+    })
+    if (!res.ok) throw new Error(`Failed to roll arbitrary dice: ${res.statusText}`)
+    return res.json()
+  }
+
+  static async updateStat(jdrSlug: string, statSlug: string, name: string): Promise<JdrDto> {
+    const res = await fetch(`${API_BASE}/${jdrSlug}/stats/${statSlug}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name })
+    })
+    if (!res.ok) throw new Error(`Failed to update stat: ${res.statusText}`)
+    return res.json()
+  }
+
+  static async updateResource(jdrSlug: string, resourceSlug: string, p: { name?: string; type?: string }): Promise<JdrDto> {
+    const res = await fetch(`${API_BASE}/${jdrSlug}/resources/${resourceSlug}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(p)
+    })
+    if (!res.ok) throw new Error(`Failed to update resource: ${res.statusText}`)
+    return res.json()
+  }
+
+  static async updateClass(jdrSlug: string, classSlug: string, p: { name?: string; level?: number; text?: string }): Promise<JdrDto> {
+    const res = await fetch(`${API_BASE}/${jdrSlug}/classes/${classSlug}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(p)
+    })
+    if (!res.ok) throw new Error(`Failed to update class: ${res.statusText}`)
+    return res.json()
+  }
+
+  static async updateGroup(jdrSlug: string, groupSlug: string, p: { name?: string; text?: string }): Promise<JdrDto> {
+    const res = await fetch(`${API_BASE}/${jdrSlug}/groups/${groupSlug}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(p)
+    })
+    if (!res.ok) throw new Error(`Failed to update group: ${res.statusText}`)
+    return res.json()
+  }
+
+  static async updateItem(jdrSlug: string, itemSlug: string, p: { name?: string; description?: string; unique?: boolean }): Promise<JdrDto> {
+    const res = await fetch(`${API_BASE}/${jdrSlug}/items/${itemSlug}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(p)
+    })
+    if (!res.ok) throw new Error(`Failed to update item: ${res.statusText}`)
+    return res.json()
   }
 
   static async deleteDraft(jdrSlug: string, draftId: string): Promise<void> {

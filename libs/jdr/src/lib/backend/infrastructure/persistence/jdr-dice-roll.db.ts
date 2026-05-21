@@ -27,6 +27,15 @@ export class DBJdrDiceRoll {
   @Column({ type: 'int', nullable: false })
   statValue: number
 
+  @Column({ type: 'varchar', nullable: false, default: 'normal' })
+  rollState: string
+
+  @Column({ type: 'boolean', nullable: false, default: false })
+  isArbitrary: boolean
+
+  @Column({ type: 'varchar', nullable: true, default: null })
+  formula: string | null
+
   @Column({ type: 'simple-array', nullable: false })
   results: number[]
 
@@ -39,6 +48,9 @@ export class DBJdrDiceRoll {
       statSlug: db.statSlug,
       statName: db.statName,
       statValue: db.statValue,
+      rollState: db.rollState as DiceRoll['rollState'],
+      isArbitrary: db.isArbitrary ?? false,
+      formula: db.formula ?? null,
       results: db.results.map(Number),
       createdDate: db.createdDate
     })

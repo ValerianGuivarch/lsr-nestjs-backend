@@ -38,7 +38,7 @@ export default function DraftFeedPage() {
 
   const groupCharacters = useMemo(() => {
     if (!jdr || !draft) return []
-    return jdr.characters.filter((c) => c.groupSlug === draft.groupSlug)
+    return jdr.characters.filter((c) => c.groupSlugs.includes(draft.groupSlug))
   }, [jdr, draft])
 
   const characterMap = useMemo(() => {

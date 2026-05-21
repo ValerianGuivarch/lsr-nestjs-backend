@@ -1,4 +1,4 @@
-import { IsArray, IsBoolean, IsNumber, IsOptional, IsString, ValidateNested } from 'class-validator'
+import { IsArray, IsBoolean, IsIn, IsNumber, IsOptional, IsString, ValidateNested } from 'class-validator'
 import { Type } from 'class-transformer'
 
 export class CreateJdrRequest {
@@ -23,6 +23,12 @@ export class AddTraitModifierRequest {
 export class AddTraitRequest {
   @IsString() name: string
   @IsString() type: string
+  @IsOptional() @ValidateNested({ each: true }) @Type(() => AddTraitModifierRequest) modifiers?: AddTraitModifierRequest[]
+}
+
+export class UpdateTraitRequest {
+  @IsOptional() @IsString() name?: string
+  @IsOptional() @IsString() type?: string
   @IsOptional() @ValidateNested({ each: true }) @Type(() => AddTraitModifierRequest) modifiers?: AddTraitModifierRequest[]
 }
 
@@ -68,14 +74,16 @@ export class AddGroupItemRequest {
 export class AddCharacterRequest {
   @IsString() name: string
   @IsOptional() @IsString() classSlug?: string
-  @IsOptional() @IsString() groupSlug?: string
+  @IsOptional() @IsNumber() classLevel?: number
+  @IsOptional() @IsBoolean() isPlayable?: boolean
   @IsOptional() @IsString() text?: string
 }
 
 export class UpdateCharacterRequest {
   @IsOptional() @IsString() name?: string
   @IsOptional() @IsString() classSlug?: string
-  @IsOptional() @IsString() groupSlug?: string
+  @IsOptional() @IsNumber() classLevel?: number
+  @IsOptional() @IsBoolean() isPlayable?: boolean
   @IsOptional() @IsString() text?: string
 }
 
@@ -111,4 +119,40 @@ export class UpdateDraftRequest {
 export class PickDraftRequest {
   @IsString() characterSlug: string
   @IsString() traitSlug: string
+}
+
+export class RollDiceRequest {
+  @IsOptional()
+  @IsIn(['normal', 'disadvantage', 'advantage', 'double_advantage'])
+  rollState?: 'normal' | 'disadvantage' | 'advantage' | 'double_advantage'
+}
+
+export class RollArbitraryRequest {
+  @IsString() formula: string
+}
+
+export class UpdateStatRequest {
+  @IsString() name: string
+}
+
+export class UpdateItemRequest {
+  @IsOptional() @IsString() name?: string
+  @IsOptional() @IsString() description?: string
+  @IsOptional() @IsBoolean() unique?: boolean
+}
+
+export class UpdateClassRequest {
+  @IsOptional() @IsString() name?: string
+  @IsOptional() @IsNumber() level?: number
+  @IsOptional() @IsString() text?: string
+}
+
+export class UpdateGroupRequest {
+  @IsOptional() @IsString() name?: string
+  @IsOptional() @IsString() text?: string
+}
+
+export class UpdateResourceRequest {
+  @IsOptional() @IsString() name?: string
+  @IsOptional() @IsString() type?: string
 }

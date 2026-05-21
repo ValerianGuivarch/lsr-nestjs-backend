@@ -56,7 +56,9 @@ export class CharacterDto {
   slug: string
   name: string
   classSlug: string | null
-  groupSlug: string | null
+  groupSlugs: string[]
+  classLevel: number
+  isPlayable: boolean
   text: string
   stats: CharacterStatDto[]
   traitSlugs: string[]
@@ -68,7 +70,9 @@ export class CharacterDto {
     dto.slug = character.slug
     dto.name = character.name
     dto.classSlug = character.classSlug ?? null
-    dto.groupSlug = character.groupSlug ?? null
+    dto.groupSlugs = character.groupSlugs
+    dto.classLevel = character.classLevel ?? 1
+    dto.isPlayable = character.isPlayable
     dto.text = character.text
     dto.traitSlugs = character.traitSlugs
     dto.items = character.items.map((i) => ({ itemSlug: i.itemSlug, quantity: i.quantity }))
@@ -166,6 +170,9 @@ export class DiceRollDto {
   statSlug: string
   statName: string
   statValue: number
+  rollState: DiceRoll['rollState']
+  isArbitrary: boolean
+  formula: string | null
   results: number[]
   createdDate: Date
 
@@ -178,6 +185,9 @@ export class DiceRollDto {
     dto.statSlug = roll.statSlug
     dto.statName = roll.statName
     dto.statValue = roll.statValue
+    dto.rollState = roll.rollState
+    dto.isArbitrary = roll.isArbitrary ?? false
+    dto.formula = roll.formula ?? null
     dto.results = roll.results
     dto.createdDate = roll.createdDate
     return dto

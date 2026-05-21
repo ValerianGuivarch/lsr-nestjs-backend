@@ -26,6 +26,7 @@ import { DBJdrDiceRoll } from '../../libs/jdr/src/lib/backend/infrastructure/per
 import { DBJdrClass } from '../../libs/jdr/src/lib/backend/infrastructure/persistence/jdr-class.db'
 import { DBJdrClassResource } from '../../libs/jdr/src/lib/backend/infrastructure/persistence/jdr-class-resource.db'
 import { DBJdrGroup } from '../../libs/jdr/src/lib/backend/infrastructure/persistence/jdr-group.db'
+import { DBJdrCharacterGroup } from '../../libs/jdr/src/lib/backend/infrastructure/persistence/jdr-character-group.db'
 import { DBJdrDraft } from '../../libs/jdr/src/lib/backend/infrastructure/persistence/jdr-draft.db'
 import { ConfigController } from './config.controller'
 import { MusicController } from './music.controller'
@@ -107,6 +108,7 @@ const needsPostgres = enableHp || enableL7r || enableYearDiary
               DBJdrClass,
               DBJdrClassResource,
               DBJdrGroup,
+              DBJdrCharacterGroup,
               DBJdrDraft
             ],
             synchronize: true

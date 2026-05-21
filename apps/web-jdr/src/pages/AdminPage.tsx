@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { JdrApiClient } from '../data/JdrApiClient'
 
 const VIKING_SLUG = 'vikingtest'
+const HP_FEED_SLUG = 'poudlard'
 
 async function seedVikingTest(): Promise<string> {
   // Delete if exists
@@ -94,6 +95,103 @@ async function seedVikingTest(): Promise<string> {
 
   return jdr.slug
 }
+
+async function seedHpFeed(): Promise<string> {
+  try { await JdrApiClient.deleteJdr(HP_FEED_SLUG) } catch (_) { /* not found, ok */ }
+
+  let jdr = await JdrApiClient.createJdr('Poudlard', 'Seed HP pour la reprise JdR')
+
+  for (const stat of ['Physique', 'Charisme', 'Emotion', 'Agilité', 'Perception', 'Sagesse', 'Intelligence', 'Pouvoir']) {
+    jdr = await JdrApiClient.addStat(jdr.slug, stat)
+  }
+
+  const classicTraits = [
+    { name: 'Athlétique', mods: [{ statSlug: 'physique', value: 1 }] },
+    { name: 'Magnétique', mods: [{ statSlug: 'charisme', value: 1 }] },
+    { name: 'Perceptif', mods: [{ statSlug: 'perception', value: 1 }] },
+    { name: 'Savant', mods: [{ statSlug: 'intelligence', value: 2 }] },
+    { name: 'Mystique', mods: [{ statSlug: 'pouvoir', value: 2 }] },
+    { name: 'Stoïque', mods: [{ statSlug: 'sagesse', value: 1 }] },
+    { name: 'Instinctif', mods: [{ statSlug: 'agilite', value: 1 }, { statSlug: 'sagesse', value: -1 }] },
+    { name: 'Empathique', mods: [{ statSlug: 'emotion', value: 1 }, { statSlug: 'physique', value: -1 }] },
+    { name: 'Tacticien', mods: [{ statSlug: 'intelligence', value: 1 }, { statSlug: 'emotion', value: -1 }] },
+    { name: 'Volontaire', mods: [{ statSlug: 'pouvoir', value: 1 }, { statSlug: 'charisme', value: -1 }] }
+  ]
+
+  for (const trait of classicTraits) {
+    jdr = await JdrApiClient.addTrait(jdr.slug, trait.name, 'Normal', trait.mods)
+  }
+
+  const spellTraits = [
+    { name: 'Lumos', mods: [{ statSlug: 'pouvoir', value: 1 }] },
+    { name: 'Protego', mods: [{ statSlug: 'sagesse', value: 1 }] },
+    { name: 'Expelliarmus', mods: [{ statSlug: 'agilite', value: 1 }] },
+    { name: 'Stupefix', mods: [{ statSlug: 'emotion', value: 1 }, { statSlug: 'charisme', value: -1 }] }
+  ]
+
+  for (const spell of spellTraits) {
+    jdr = await JdrApiClient.addTrait(jdr.slug, spell.name, 'Sorts', spell.mods)
+  }
+
+  jdr = await JdrApiClient.addResource(jdr.slug, 'PV', 'all')
+  jdr = await JdrApiClient.addResource(jdr.slug, 'Points Gryffondor', 'group')
+  jdr = await JdrApiClient.addResource(jdr.slug, 'Points Serpentard', 'group')
+  jdr = await JdrApiClient.addResource(jdr.slug, 'Points Serdaigle', 'group')
+  jdr = await JdrApiClient.addResource(jdr.slug, 'Points Poufsouffle', 'group')
+
+  jdr = await JdrApiClient.addClass(jdr.slug, 'Sorcier', 4, 'Pratique experte de la magie')
+  jdr = await JdrApiClient.addClass(jdr.slug, 'Elève', 2, 'Formation a Poudlard')
+
+  jdr = await JdrApiClient.addGroup(jdr.slug, 'Gryffondor', 'Maison des audacieux')
+  jdr = await JdrApiClient.addGroup(jdr.slug, 'Serpentard', 'Maison des ambitieux')
+  jdr = await JdrApiClient.addGroup(jdr.slug, 'Serdaigle', 'Maison des erudits')
+  jdr = await JdrApiClient.addGroup(jdr.slug, 'Poufsouffle', 'Maison des loyaux')
+  jdr = await JdrApiClient.addGroup(jdr.slug, 'Poudlard', 'L\'école de sorcellerie')
+
+  jdr = await JdrApiClient.addCharacter(jdr.slug, 'Pearl', 'eleve', undefined, true)
+  jdr = await JdrApiClient.addCharacter(jdr.slug, 'Actéon', 'eleve', undefined, true)
+  jdr = await JdrApiClient.addCharacter(jdr.slug, 'Maggie', 'eleve', undefined, true)
+  jdr = await JdrApiClient.addCharacter(jdr.slug, 'Gédéon', 'eleve', undefined, true)
+  jdr = await JdrApiClient.addCharacter(jdr.slug, 'Caly', 'eleve', undefined, true)
+
+  const characterSlugByName = new Map(jdr.characters.map(character => [character.name, character.slug]))
+
+  jdr = await JdrApiClient.addCharacterGroup(jdr.slug, characterSlugByName.get('Pearl')!, 'poufsouffle')
+  jdr = await JdrApiClient.addCharacterGroup(jdr.slug, characterSlugByName.get('Pearl')!, 'poudlard')
+  jdr = await JdrApiClient.addCharacterGroup(jdr.slug, characterSlugByName.get('Actéon')!, 'poufsouffle')
+  jdr = await JdrApiClient.addCharacterGroup(jdr.slug, characterSlugByName.get('Actéon')!, 'poudlard')
+  jdr = await JdrApiClient.addCharacterGroup(jdr.slug, characterSlugByName.get('Maggie')!, 'poufsouffle')
+  jdr = await JdrApiClient.addCharacterGroup(jdr.slug, characterSlugByName.get('Maggie')!, 'poudlard')
+  jdr = await JdrApiClient.addCharacterGroup(jdr.slug, characterSlugByName.get('Gédéon')!, 'gryffondor')
+  jdr = await JdrApiClient.addCharacterGroup(jdr.slug, characterSlugByName.get('Gédéon')!, 'poudlard')
+  jdr = await JdrApiClient.addCharacterGroup(jdr.slug, characterSlugByName.get('Caly')!, 'poufsouffle')
+  jdr = await JdrApiClient.addCharacterGroup(jdr.slug, characterSlugByName.get('Caly')!, 'poudlard')
+
+  const characterItems = [
+    { characterName: 'Pearl', itemName: 'Amulette de Pearl' },
+    { characterName: 'Actéon', itemName: 'Lance d\'Actéon' },
+    { characterName: 'Maggie', itemName: 'Grimoire de Maggie' },
+    { characterName: 'Gédéon', itemName: 'Bouclier de Gédéon' },
+    { characterName: 'Caly', itemName: 'Dague de Caly' }
+  ]
+
+  for (const { itemName } of characterItems) {
+    jdr = await JdrApiClient.addItem(jdr.slug, itemName, `Objet personnel: ${itemName}`, true)
+  }
+
+  const itemSlugByName = new Map(jdr.items.map(item => [item.name, item.slug]))
+
+  for (const { characterName, itemName } of characterItems) {
+    const characterSlug = characterSlugByName.get(characterName)
+    const itemSlug = itemSlugByName.get(itemName)
+    if (!characterSlug || !itemSlug) {
+      throw new Error(`Impossible d'associer ${itemName} a ${characterName}`)
+    }
+    jdr = await JdrApiClient.addCharacterItem(jdr.slug, characterSlug, itemSlug, 1)
+  }
+
+  return jdr.slug
+}
 interface JdrListItem {
   slug: string
   name: string
@@ -107,6 +205,7 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [seeding, setSeeding] = useState(false)
+  const [seedingHp, setSeedingHp] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const loadJdrs = async () => {
@@ -150,6 +249,20 @@ export default function AdminPage() {
     }
   }
 
+  const handleSeedHp = async () => {
+    try {
+      setSeedingHp(true)
+      setError(null)
+      const slug = await seedHpFeed()
+      await loadJdrs()
+      navigate(`/jdr/${slug}/mj`)
+    } catch (err) {
+      setError((err as Error).message)
+    } finally {
+      setSeedingHp(false)
+    }
+  }
+
   const handleCreate = async (event: FormEvent) => {
     event.preventDefault()
     if (!name.trim()) return
@@ -175,9 +288,14 @@ export default function AdminPage() {
           <h1>Admin JdR</h1>
           <p style={styles.subtitle}>Crée un univers puis ouvre sa page MJ.</p>
         </div>
-        <button onClick={handleSeedViking} disabled={seeding}>
-          {seeding ? 'Seeding...' : '⚡ Seed VikingTest'}
-        </button>
+        <div style={styles.headerActions}>
+          <button onClick={handleSeedViking} disabled={seeding || seedingHp}>
+            {seeding ? 'Seeding...' : '⚡ Seed VikingTest'}
+          </button>
+          <button onClick={handleSeedHp} disabled={seeding || seedingHp}>
+            {seedingHp ? 'Seeding...' : '⚡ Feed HP'}
+          </button>
+        </div>
       </header>
 
       <section style={styles.card}>
@@ -220,6 +338,7 @@ export default function AdminPage() {
                 </div>
                 <div style={styles.actions}>
                   <button onClick={() => navigate(`/jdr/${jdr.slug}/mj`)}>Ouvrir MJ</button>
+                  <button onClick={() => navigate(`/jdr/${jdr.slug}/joueurs`)}>Choix du perso</button>
                   <button onClick={() => handleDelete(jdr.slug)} style={{ background: 'var(--color-danger)' }}>Supprimer</button>
                 </div>
               </div>
@@ -252,6 +371,12 @@ const styles = {
   subtitle: {
     color: 'var(--color-secondary)'
   },
+  headerActions: {
+    display: 'flex',
+    gap: '0.5rem',
+    flexWrap: 'wrap',
+    justifyContent: 'flex-end'
+  } as const,
   card: {
     background: 'white',
     border: '1px solid var(--color-border)',

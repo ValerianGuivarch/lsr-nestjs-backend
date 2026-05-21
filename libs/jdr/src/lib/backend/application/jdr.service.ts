@@ -31,6 +31,10 @@ export class JdrService {
     return this.jdrProvider.addStat(jdrSlug, p)
   }
 
+  updateStat(jdrSlug: string, statSlug: string, p: { name: string }): Promise<Jdr> {
+    return this.jdrProvider.updateStat(jdrSlug, statSlug, p)
+  }
+
   removeStat(jdrSlug: string, statSlug: string): Promise<Jdr> {
     return this.jdrProvider.removeStat(jdrSlug, statSlug)
   }
@@ -39,12 +43,20 @@ export class JdrService {
     return this.jdrProvider.addTrait(jdrSlug, p)
   }
 
+  updateTrait(jdrSlug: string, traitSlug: string, p: { name?: string; type?: string; modifiers?: { statSlug: string; value: number }[] }): Promise<Jdr> {
+    return this.jdrProvider.updateTrait(jdrSlug, traitSlug, p)
+  }
+
   removeTrait(jdrSlug: string, traitSlug: string): Promise<Jdr> {
     return this.jdrProvider.removeTrait(jdrSlug, traitSlug)
   }
 
   addResource(jdrSlug: string, p: { name: string; type: string }): Promise<Jdr> {
     return this.jdrProvider.addResource(jdrSlug, p)
+  }
+
+  updateResource(jdrSlug: string, resourceSlug: string, p: { name?: string; type?: string }): Promise<Jdr> {
+    return this.jdrProvider.updateResource(jdrSlug, resourceSlug, p)
   }
 
   removeResource(jdrSlug: string, resourceSlug: string): Promise<Jdr> {
@@ -57,6 +69,10 @@ export class JdrService {
 
   addClass(jdrSlug: string, p: { name: string; level: number; text?: string }): Promise<Jdr> {
     return this.jdrProvider.addClass(jdrSlug, p)
+  }
+
+  updateClass(jdrSlug: string, classSlug: string, p: { name?: string; level?: number; text?: string }): Promise<Jdr> {
+    return this.jdrProvider.updateClass(jdrSlug, classSlug, p)
   }
 
   removeClass(jdrSlug: string, classSlug: string): Promise<Jdr> {
@@ -75,12 +91,20 @@ export class JdrService {
     return this.jdrProvider.addGroup(jdrSlug, p)
   }
 
+  updateGroup(jdrSlug: string, groupSlug: string, p: { name?: string; text?: string }): Promise<Jdr> {
+    return this.jdrProvider.updateGroup(jdrSlug, groupSlug, p)
+  }
+
   removeGroup(jdrSlug: string, groupSlug: string): Promise<Jdr> {
     return this.jdrProvider.removeGroup(jdrSlug, groupSlug)
   }
 
   addItem(jdrSlug: string, p: { name: string; description?: string; unique?: boolean; traitSlug?: string }): Promise<Jdr> {
     return this.jdrProvider.addItem(jdrSlug, p)
+  }
+
+  updateItem(jdrSlug: string, itemSlug: string, p: { name?: string; description?: string; unique?: boolean }): Promise<Jdr> {
+    return this.jdrProvider.updateItem(jdrSlug, itemSlug, p)
   }
 
   removeItem(jdrSlug: string, itemSlug: string): Promise<Jdr> {
@@ -95,16 +119,24 @@ export class JdrService {
     return this.jdrProvider.removeGroupItem(jdrSlug, itemSlug)
   }
 
-  addCharacter(jdrSlug: string, p: { name: string; classSlug?: string; groupSlug?: string; text?: string }): Promise<Jdr> {
+  addCharacter(jdrSlug: string, p: { name: string; classSlug?: string; classLevel?: number; isPlayable?: boolean; text?: string }): Promise<Jdr> {
     return this.jdrProvider.addCharacter(jdrSlug, p)
   }
 
-  updateCharacter(jdrSlug: string, characterSlug: string, p: { name?: string; classSlug?: string; groupSlug?: string; text?: string }): Promise<Jdr> {
+  updateCharacter(jdrSlug: string, characterSlug: string, p: { name?: string; classSlug?: string; classLevel?: number; isPlayable?: boolean; text?: string }): Promise<Jdr> {
     return this.jdrProvider.updateCharacter(jdrSlug, characterSlug, p)
   }
 
   removeCharacter(jdrSlug: string, characterSlug: string): Promise<Jdr> {
     return this.jdrProvider.removeCharacter(jdrSlug, characterSlug)
+  }
+
+  addCharacterGroup(jdrSlug: string, characterSlug: string, groupSlug: string): Promise<Jdr> {
+    return this.jdrProvider.addCharacterGroup(jdrSlug, characterSlug, groupSlug)
+  }
+
+  removeCharacterGroup(jdrSlug: string, characterSlug: string, groupSlug: string): Promise<Jdr> {
+    return this.jdrProvider.removeCharacterGroup(jdrSlug, characterSlug, groupSlug)
   }
 
   addCharacterTrait(jdrSlug: string, characterSlug: string, traitSlug: string): Promise<Jdr> {
@@ -131,8 +163,16 @@ export class JdrService {
     return this.jdrProvider.updateCharacterResource(jdrSlug, characterSlug, resourceSlug, value)
   }
 
-  rollDice(jdrSlug: string, characterSlug: string, statSlug: string): Promise<DiceRoll> {
-    return this.jdrProvider.rollDice(jdrSlug, characterSlug, statSlug)
+  removeCharacterResource(jdrSlug: string, characterSlug: string, resourceSlug: string): Promise<Jdr> {
+    return this.jdrProvider.removeCharacterResource(jdrSlug, characterSlug, resourceSlug)
+  }
+
+  rollDice(jdrSlug: string, characterSlug: string, statSlug: string, rollState?: DiceRoll['rollState']): Promise<DiceRoll> {
+    return this.jdrProvider.rollDice(jdrSlug, characterSlug, statSlug, rollState)
+  }
+
+  rollArbitrary(jdrSlug: string, characterSlug: string, formula: string): Promise<DiceRoll> {
+    return this.jdrProvider.rollArbitrary(jdrSlug, characterSlug, formula)
   }
 
   getLastRolls(jdrSlug: string, size: number): Promise<DiceRoll[]> {

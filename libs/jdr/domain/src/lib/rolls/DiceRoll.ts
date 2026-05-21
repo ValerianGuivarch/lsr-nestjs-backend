@@ -1,3 +1,5 @@
+export type RollState = 'normal' | 'disadvantage' | 'advantage' | 'double_advantage'
+
 export class DiceRoll {
   id: string
   jdrSlug: string
@@ -6,6 +8,9 @@ export class DiceRoll {
   statSlug: string
   statName: string
   statValue: number
+  rollState: RollState
+  isArbitrary: boolean
+  formula: string | null
   results: number[]
   createdDate: Date
 

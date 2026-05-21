@@ -12,13 +12,21 @@ import {
   AddResourceRequest,
   AddStatRequest,
   AddTraitRequest,
+  UpdateTraitRequest,
   CreateDraftRequest,
   CreateJdrRequest,
   PickDraftRequest,
   UpdateDraftRequest,
   UpdateCharacterRequest,
   UpdateGroupResourceRequest,
-  UpdateJdrRequest
+  UpdateJdrRequest,
+  RollDiceRequest,
+  RollArbitraryRequest,
+  UpdateStatRequest,
+  UpdateResourceRequest,
+  UpdateClassRequest,
+  UpdateGroupRequest,
+  UpdateItemRequest
 } from './jdr.requests'
 
 @Controller('api/v1/jdr')
@@ -61,6 +69,11 @@ export class JdrController {
     return JdrDto.from(await this.jdrService.addStat(jdrSlug, body))
   }
 
+  @Put(':jdrSlug/stats/:statSlug')
+  async updateStat(@Param('jdrSlug') jdrSlug: string, @Param('statSlug') statSlug: string, @Body() body: UpdateStatRequest): Promise<JdrDto> {
+    return JdrDto.from(await this.jdrService.updateStat(jdrSlug, statSlug, body))
+  }
+
   @Delete(':jdrSlug/stats/:statSlug')
   async removeStat(@Param('jdrSlug') jdrSlug: string, @Param('statSlug') statSlug: string): Promise<JdrDto> {
     return JdrDto.from(await this.jdrService.removeStat(jdrSlug, statSlug))
@@ -79,12 +92,22 @@ export class JdrController {
     return JdrDto.from(await this.jdrService.removeTrait(jdrSlug, traitSlug))
   }
 
+  @Put(':jdrSlug/traits/:traitSlug')
+  async updateTrait(@Param('jdrSlug') jdrSlug: string, @Param('traitSlug') traitSlug: string, @Body() body: UpdateTraitRequest): Promise<JdrDto> {
+    return JdrDto.from(await this.jdrService.updateTrait(jdrSlug, traitSlug, body))
+  }
+
   // ─── Resources ────────────────────────────────────────────────────────────
 
   @HttpCode(HttpStatus.CREATED)
   @Post(':jdrSlug/resources')
   async addResource(@Param('jdrSlug') jdrSlug: string, @Body() body: AddResourceRequest): Promise<JdrDto> {
     return JdrDto.from(await this.jdrService.addResource(jdrSlug, body))
+  }
+
+  @Put(':jdrSlug/resources/:resourceSlug')
+  async updateResource(@Param('jdrSlug') jdrSlug: string, @Param('resourceSlug') resourceSlug: string, @Body() body: UpdateResourceRequest): Promise<JdrDto> {
+    return JdrDto.from(await this.jdrService.updateResource(jdrSlug, resourceSlug, body))
   }
 
   @Delete(':jdrSlug/resources/:resourceSlug')
@@ -105,6 +128,11 @@ export class JdrController {
   @Post(':jdrSlug/classes')
   async addClass(@Param('jdrSlug') jdrSlug: string, @Body() body: AddClassRequest): Promise<JdrDto> {
     return JdrDto.from(await this.jdrService.addClass(jdrSlug, body))
+  }
+
+  @Put(':jdrSlug/classes/:classSlug')
+  async updateClass(@Param('jdrSlug') jdrSlug: string, @Param('classSlug') classSlug: string, @Body() body: UpdateClassRequest): Promise<JdrDto> {
+    return JdrDto.from(await this.jdrService.updateClass(jdrSlug, classSlug, body))
   }
 
   @Delete(':jdrSlug/classes/:classSlug')
@@ -137,6 +165,11 @@ export class JdrController {
     return JdrDto.from(await this.jdrService.addGroup(jdrSlug, body))
   }
 
+  @Put(':jdrSlug/groups/:groupSlug')
+  async updateGroup(@Param('jdrSlug') jdrSlug: string, @Param('groupSlug') groupSlug: string, @Body() body: UpdateGroupRequest): Promise<JdrDto> {
+    return JdrDto.from(await this.jdrService.updateGroup(jdrSlug, groupSlug, body))
+  }
+
   @Delete(':jdrSlug/groups/:groupSlug')
   async removeGroup(@Param('jdrSlug') jdrSlug: string, @Param('groupSlug') groupSlug: string): Promise<JdrDto> {
     return JdrDto.from(await this.jdrService.removeGroup(jdrSlug, groupSlug))
@@ -148,6 +181,11 @@ export class JdrController {
   @Post(':jdrSlug/items')
   async addItem(@Param('jdrSlug') jdrSlug: string, @Body() body: AddItemRequest): Promise<JdrDto> {
     return JdrDto.from(await this.jdrService.addItem(jdrSlug, body))
+  }
+
+  @Put(':jdrSlug/items/:itemSlug')
+  async updateItem(@Param('jdrSlug') jdrSlug: string, @Param('itemSlug') itemSlug: string, @Body() body: UpdateItemRequest): Promise<JdrDto> {
+    return JdrDto.from(await this.jdrService.updateItem(jdrSlug, itemSlug, body))
   }
 
   @Delete(':jdrSlug/items/:itemSlug')
@@ -186,6 +224,25 @@ export class JdrController {
   @Delete(':jdrSlug/characters/:characterSlug')
   async removeCharacter(@Param('jdrSlug') jdrSlug: string, @Param('characterSlug') characterSlug: string): Promise<JdrDto> {
     return JdrDto.from(await this.jdrService.removeCharacter(jdrSlug, characterSlug))
+  }
+
+  @HttpCode(HttpStatus.CREATED)
+  @Post(':jdrSlug/characters/:characterSlug/groups/:groupSlug')
+  async addCharacterGroup(
+    @Param('jdrSlug') jdrSlug: string,
+    @Param('characterSlug') characterSlug: string,
+    @Param('groupSlug') groupSlug: string
+  ): Promise<JdrDto> {
+    return JdrDto.from(await this.jdrService.addCharacterGroup(jdrSlug, characterSlug, groupSlug))
+  }
+
+  @Delete(':jdrSlug/characters/:characterSlug/groups/:groupSlug')
+  async removeCharacterGroup(
+    @Param('jdrSlug') jdrSlug: string,
+    @Param('characterSlug') characterSlug: string,
+    @Param('groupSlug') groupSlug: string
+  ): Promise<JdrDto> {
+    return JdrDto.from(await this.jdrService.removeCharacterGroup(jdrSlug, characterSlug, groupSlug))
   }
 
   @HttpCode(HttpStatus.CREATED)
@@ -246,6 +303,15 @@ export class JdrController {
     return JdrDto.from(await this.jdrService.updateCharacterResource(jdrSlug, characterSlug, resourceSlug, body.value))
   }
 
+  @Delete(':jdrSlug/characters/:characterSlug/resources/:resourceSlug')
+  async removeCharacterResource(
+    @Param('jdrSlug') jdrSlug: string,
+    @Param('characterSlug') characterSlug: string,
+    @Param('resourceSlug') resourceSlug: string
+  ): Promise<JdrDto> {
+    return JdrDto.from(await this.jdrService.removeCharacterResource(jdrSlug, characterSlug, resourceSlug))
+  }
+
   // ─── Dice Rolls ───────────────────────────────────────────────────────────
 
   @HttpCode(HttpStatus.CREATED)
@@ -253,9 +319,20 @@ export class JdrController {
   async rollDice(
     @Param('jdrSlug') jdrSlug: string,
     @Param('characterSlug') characterSlug: string,
-    @Param('statSlug') statSlug: string
+    @Param('statSlug') statSlug: string,
+    @Body() body: RollDiceRequest
   ): Promise<DiceRollDto> {
-    return DiceRollDto.from(await this.jdrService.rollDice(jdrSlug, characterSlug, statSlug))
+    return DiceRollDto.from(await this.jdrService.rollDice(jdrSlug, characterSlug, statSlug, body?.rollState))
+  }
+
+  @HttpCode(HttpStatus.CREATED)
+  @Post(':jdrSlug/characters/:characterSlug/roll-arbitrary')
+  async rollArbitrary(
+    @Param('jdrSlug') jdrSlug: string,
+    @Param('characterSlug') characterSlug: string,
+    @Body() body: RollArbitraryRequest
+  ): Promise<DiceRollDto> {
+    return DiceRollDto.from(await this.jdrService.rollArbitrary(jdrSlug, characterSlug, body.formula))
   }
 
   @Get(':jdrSlug/rolls')

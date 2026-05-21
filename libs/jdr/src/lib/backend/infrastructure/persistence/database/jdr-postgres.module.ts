@@ -13,6 +13,7 @@ import { DBJdrCharacterStat } from '../jdr-character-stat.db'
 import { DBJdrCharacterTrait } from '../jdr-character-trait.db'
 import { DBJdrCharacterItem } from '../jdr-character-item.db'
 import { DBJdrCharacterResource } from '../jdr-character-resource.db'
+import { DBJdrCharacterGroup } from '../jdr-character-group.db'
 import { DBJdrDiceRoll } from '../jdr-dice-roll.db'
 import { DBJdrClass } from '../jdr-class.db'
 import { DBJdrClassResource } from '../jdr-class-resource.db'
@@ -35,6 +36,7 @@ import { DBJdrGroup } from '../jdr-group.db'
         DBJdrCharacterTrait,
         DBJdrCharacterItem,
         DBJdrCharacterResource,
+        DBJdrCharacterGroup,
         DBJdrDiceRoll,
         DBJdrClass,
         DBJdrClassResource,

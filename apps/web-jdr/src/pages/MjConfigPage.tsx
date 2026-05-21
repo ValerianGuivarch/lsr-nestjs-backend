@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { DraftDto, JdrApiClient, JdrDto, TraitDto } from '../data/JdrApiClient'
+import { JdrApiClient, JdrDto, TraitDto } from '../data/JdrApiClient'
 
 export default function MjConfigPage() {
   const { jdrSlug } = useParams<{ jdrSlug: string }>()
@@ -15,27 +15,42 @@ export default function MjConfigPage() {
 
   // Stats
   const [newStatName, setNewStatName] = useState('')
+  const [editingStatSlug, setEditingStatSlug] = useState<string | null>(null)
+  const [editingStatName, setEditingStatName] = useState('')
 
   // Traits
   const [newTraitName, setNewTraitName] = useState('')
   const [newTraitType, setNewTraitType] = useState('Normal')
   const [traitModifiers, setTraitModifiers] = useState<Record<string, number>>({})
   const [expandedTrait, setExpandedTrait] = useState<string | null>(null)
+  const [editingTraitSlug, setEditingTraitSlug] = useState<string | null>(null)
+  const [editingTraitName, setEditingTraitName] = useState('')
+  const [editingTraitType, setEditingTraitType] = useState('')
+  const [editingTraitModifiers, setEditingTraitModifiers] = useState<Record<string, number>>({})
 
   // Ressources
   const [newResourceName, setNewResourceName] = useState('')
   const [newResourceType, setNewResourceType] = useState('all')
+  const [editingResourceSlug, setEditingResourceSlug] = useState<string | null>(null)
+  const [editingResourceName, setEditingResourceName] = useState('')
+  const [editingResourceType, setEditingResourceType] = useState('')
 
   // Objets
   const [newItemName, setNewItemName] = useState('')
   const [newItemDesc, setNewItemDesc] = useState('')
   const [newItemUnique, setNewItemUnique] = useState(false)
+  const [editingItemSlug, setEditingItemSlug] = useState<string | null>(null)
+  const [editingItemName, setEditingItemName] = useState('')
+  const [editingItemDesc, setEditingItemDesc] = useState('')
 
   // Classes
   const [newClassName, setNewClassName] = useState('')
   const [newClassLevel, setNewClassLevel] = useState<number>(1)
   const [newClassText, setNewClassText] = useState('')
   const [expandedClass, setExpandedClass] = useState<string | null>(null)
+  const [editingClassSlug, setEditingClassSlug] = useState<string | null>(null)
+  const [editingClassName, setEditingClassName] = useState('')
+  const [editingClassLevel, setEditingClassLevel] = useState<number>(1)
   const [newClassResourceSlug, setNewClassResourceSlug] = useState('')
   const [newClassResourceType, setNewClassResourceType] = useState('')
   const [newClassResourceDefault, setNewClassResourceDefault] = useState<number>(0)
@@ -45,18 +60,11 @@ export default function MjConfigPage() {
   const [newGroupName, setNewGroupName] = useState('')
   const [newGroupText, setNewGroupText] = useState('')
   const [expandedGroup, setExpandedGroup] = useState<string | null>(null)
+  const [editingGroupSlug, setEditingGroupSlug] = useState<string | null>(null)
+  const [editingGroupName, setEditingGroupName] = useState('')
 
   // Navigation
-  const [activeTab, setActiveTab] = useState<'jdr' | 'stats' | 'traits' | 'ressources' | 'objets' | 'classes' | 'groupes' | 'personnages' | 'draft'>('jdr')
-
-  // Draft
-  const [drafts, setDrafts] = useState<DraftDto[]>([])
-  const [draftId, setDraftId] = useState<string | null>(null)
-  const [draftName, setDraftName] = useState('')
-  const [draftGroupSlug, setDraftGroupSlug] = useState('')
-  const [draftRounds, setDraftRounds] = useState(2)
-  const [selectedDraftTraits, setSelectedDraftTraits] = useState<string[]>([])
-  const [selectedDraftTraitType, setSelectedDraftTraitType] = useState('all')
+  const [activeTab, setActiveTab] = useState<'jdr' | 'stats' | 'traits' | 'ressources' | 'objets' | 'classes' | 'groupes' | 'personnages'>('jdr')
 
   // Personnages
   const [newCharacterName, setNewCharacterName] = useState('')
@@ -69,28 +77,8 @@ export default function MjConfigPage() {
     const fetchJdr = async () => {
       try {
         setLoading(true)
-        const [data, fetchedDrafts] = await Promise.all([
-          JdrApiClient.findOneBySlug(jdrSlug),
-          JdrApiClient.getDrafts(jdrSlug)
-        ])
+        const data = await JdrApiClient.findOneBySlug(jdrSlug)
         setJdr(data)
-        setDrafts(fetchedDrafts)
-        const pendingDraft = fetchedDrafts.find((draft) => draft.status === 'pending') ?? null
-        const activeDraft = fetchedDrafts.find((draft) => draft.status === 'active') ?? null
-        setDraftId(pendingDraft?.id ?? null)
-        if (pendingDraft) {
-          setDraftName(pendingDraft.name)
-          setDraftGroupSlug(pendingDraft.groupSlug)
-          setDraftRounds(pendingDraft.totalRounds)
-          setSelectedDraftTraits(pendingDraft.selectedTraitSlugs)
-        }
-        if (!pendingDraft) {
-          setDraftName('')
-          setSelectedDraftTraits([])
-        }
-        if (!draftGroupSlug && data.groups.length > 0 && !pendingDraft) {
-          setDraftGroupSlug(data.groups[0].slug)
-        }
         setJdrName(data.name)
         setJdrText(data.text)
         setError(null)
@@ -134,6 +122,17 @@ export default function MjConfigPage() {
     }
   }
 
+  const handleUpdateStat = async (slug: string) => {
+    if (!jdrSlug || !editingStatName.trim()) return
+    try {
+      upd(await JdrApiClient.updateStat(jdrSlug, slug, editingStatName.trim()))
+      setEditingStatSlug(null)
+      setEditingStatName('')
+    } catch (e) {
+      err(e)
+    }
+  }
+
   const handleAddTrait = async () => {
     if (!jdrSlug || !newTraitName) return
     try {
@@ -157,6 +156,28 @@ export default function MjConfigPage() {
     }
   }
 
+  const handleUpdateTrait = async (slug: string) => {
+    if (!jdrSlug) return
+    try {
+      const mods = Object.entries(editingTraitModifiers)
+        .filter(([, v]) => v !== 0)
+        .map(([statSlug, value]) => ({ statSlug, value }))
+      upd(await JdrApiClient.updateTrait(jdrSlug, slug, { name: editingTraitName || undefined, type: editingTraitType || undefined, modifiers: mods }))
+      setEditingTraitSlug(null)
+    } catch (e) {
+      err(e)
+    }
+  }
+
+  const startEditTrait = (t: { slug: string; name: string; type: string; modifiers: Array<{ statSlug: string; value: number }> }) => {
+    setEditingTraitSlug(t.slug)
+    setEditingTraitName(t.name)
+    setEditingTraitType(t.type)
+    const modMap: Record<string, number> = {}
+    t.modifiers.forEach(m => { modMap[m.statSlug] = m.value })
+    setEditingTraitModifiers(modMap)
+  }
+
   const handleAddResource = async () => {
     if (!jdrSlug || !newResourceName) return
     try {
@@ -171,6 +192,16 @@ export default function MjConfigPage() {
     if (!jdrSlug || !confirm('Supprimer cette ressource ?')) return
     try {
       upd(await JdrApiClient.removeResource(jdrSlug, slug))
+    } catch (e) {
+      err(e)
+    }
+  }
+
+  const handleUpdateResource = async (slug: string) => {
+    if (!jdrSlug) return
+    try {
+      upd(await JdrApiClient.updateResource(jdrSlug, slug, { name: editingResourceName || undefined, type: editingResourceType || undefined }))
+      setEditingResourceSlug(null)
     } catch (e) {
       err(e)
     }
@@ -197,6 +228,16 @@ export default function MjConfigPage() {
     }
   }
 
+  const handleUpdateItem = async (slug: string) => {
+    if (!jdrSlug) return
+    try {
+      upd(await JdrApiClient.updateItem(jdrSlug, slug, { name: editingItemName || undefined, description: editingItemDesc }))
+      setEditingItemSlug(null)
+    } catch (e) {
+      err(e)
+    }
+  }
+
   const handleAddClass = async () => {
     if (!jdrSlug || !newClassName) return
     try {
@@ -213,6 +254,16 @@ export default function MjConfigPage() {
     if (!jdrSlug || !confirm('Supprimer cette classe ? Les personnages perdront leur classe.')) return
     try {
       upd(await JdrApiClient.removeClass(jdrSlug, slug))
+    } catch (e) {
+      err(e)
+    }
+  }
+
+  const handleUpdateClass = async (slug: string) => {
+    if (!jdrSlug || !editingClassName.trim()) return
+    try {
+      upd(await JdrApiClient.updateClass(jdrSlug, slug, { name: editingClassName.trim(), level: editingClassLevel }))
+      setEditingClassSlug(null)
     } catch (e) {
       err(e)
     }
@@ -243,16 +294,16 @@ export default function MjConfigPage() {
   const handleAddGroupMember = async (groupSlug: string, characterSlug: string) => {
     if (!jdrSlug) return
     try {
-      upd(await JdrApiClient.updateCharacter(jdrSlug, characterSlug, undefined, undefined, groupSlug))
+      upd(await JdrApiClient.addCharacterGroup(jdrSlug, characterSlug, groupSlug))
     } catch (e) {
       err(e)
     }
   }
 
-  const handleRemoveGroupMember = async (characterSlug: string) => {
+  const handleRemoveGroupMember = async (groupSlug: string, characterSlug: string) => {
     if (!jdrSlug) return
     try {
-      upd(await JdrApiClient.updateCharacter(jdrSlug, characterSlug, undefined, undefined, ''))
+      upd(await JdrApiClient.removeCharacterGroup(jdrSlug, characterSlug, groupSlug))
     } catch (e) {
       err(e)
     }
@@ -278,16 +329,31 @@ export default function MjConfigPage() {
     }
   }
 
+  const handleUpdateGroup = async (slug: string) => {
+    if (!jdrSlug || !editingGroupName.trim()) return
+    try {
+      upd(await JdrApiClient.updateGroup(jdrSlug, slug, { name: editingGroupName.trim() }))
+      setEditingGroupSlug(null)
+    } catch (e) {
+      err(e)
+    }
+  }
+
   const handleAddCharacter = async () => {
     if (!jdrSlug || !newCharacterName) return
     try {
-      upd(await JdrApiClient.addCharacter(
+      const updated = await JdrApiClient.addCharacter(
         jdrSlug,
         newCharacterName,
         newCharacterClassSlug || undefined,
-        newCharacterGroupSlug || undefined,
         newCharacterText
-      ))
+      )
+      const addedChar = updated.characters.find(c => c.name === newCharacterName)
+      let finalJdr = updated
+      if (addedChar && newCharacterGroupSlug) {
+        finalJdr = await JdrApiClient.addCharacterGroup(jdrSlug, addedChar.slug, newCharacterGroupSlug)
+      }
+      upd(finalJdr)
       setNewCharacterName('')
       setNewCharacterClassSlug('')
       setNewCharacterGroupSlug('')
@@ -306,129 +372,6 @@ export default function MjConfigPage() {
     }
   }
 
-  const allDraftTraits = useMemo(() => jdr?.traits ?? [], [jdr])
-
-  const selectedDraftTraitSet = useMemo(() => new Set(selectedDraftTraits), [selectedDraftTraits])
-
-  const availableDraftTraits = useMemo(
-    () => allDraftTraits.filter((trait) => !selectedDraftTraitSet.has(trait.slug)),
-    [allDraftTraits, selectedDraftTraitSet]
-  )
-
-  const filteredAvailableDraftTraits = useMemo(
-    () => availableDraftTraits.filter((trait) => selectedDraftTraitType === 'all' || trait.type === selectedDraftTraitType),
-    [availableDraftTraits, selectedDraftTraitType]
-  )
-
-  const selectedDraftTraitDtos = useMemo(
-    () => selectedDraftTraits.map((slug) => allDraftTraits.find((trait) => trait.slug === slug)).filter((trait): trait is TraitDto => Boolean(trait)),
-    [allDraftTraits, selectedDraftTraits]
-  )
-
-  const addTraitToDraft = (traitSlug: string) => {
-    setSelectedDraftTraits((previous) => {
-      const next = previous.includes(traitSlug) ? previous : [...previous, traitSlug]
-      if (draftId && jdrSlug) {
-        JdrApiClient.updateDraft(jdrSlug, draftId, {
-          groupSlug: draftGroupSlug,
-          rounds: draftRounds,
-          traitSlugs: next
-        }).catch(err)
-      }
-      return next
-    })
-  }
-
-  const removeTraitFromDraft = (traitSlug: string) => {
-    setSelectedDraftTraits((previous) => {
-      const next = previous.filter((slug) => slug !== traitSlug)
-      if (draftId && jdrSlug) {
-        JdrApiClient.updateDraft(jdrSlug, draftId, {
-          groupSlug: draftGroupSlug,
-          rounds: draftRounds,
-          traitSlugs: next
-        }).catch(err)
-      }
-      return next
-    })
-  }
-
-  const createOrSaveDraft = async () => {
-    if (!jdrSlug || !draftGroupSlug || !draftName.trim()) {
-      alert('Donne un nom au template de draft.')
-      return
-    }
-    try {
-      if (draftId) {
-        const updated = await JdrApiClient.updateDraft(jdrSlug, draftId, {
-          name: draftName,
-          groupSlug: draftGroupSlug,
-          rounds: draftRounds,
-          traitSlugs: selectedDraftTraits,
-          traitType: 'Manuel'
-        })
-        setDrafts((previous) => previous.map((draft) => (draft.id === updated.id ? updated : draft)))
-      } else {
-        const created = await JdrApiClient.createDraft(jdrSlug, draftGroupSlug, draftRounds, {
-          name: draftName,
-          traitSlugs: selectedDraftTraits,
-          traitType: 'Manuel'
-        })
-        setDraftId(created.id)
-        setDrafts((previous) => [created, ...previous])
-      }
-    } catch (e) {
-      err(e)
-    }
-  }
-
-  const launchDraft = async (targetDraftId = draftId) => {
-    if (!jdrSlug || !targetDraftId) return
-    try {
-      const launched = await JdrApiClient.launchDraft(jdrSlug, targetDraftId)
-      setDrafts((previous) => previous.map((draft) => (draft.id === launched.id ? launched : draft)))
-      setDraftId(null)
-    } catch (e) {
-      err(e)
-    }
-  }
-
-  const closeActiveDraft = async () => {
-    if (!jdrSlug || !confirm('Arrêter le draft actif ?')) return
-    try {
-      await JdrApiClient.closeDraft(jdrSlug)
-      setDrafts((previous) => previous.filter((draft) => draft.status !== 'active'))
-    } catch (e) {
-      err(e)
-    }
-  }
-
-  const activeDraft = drafts.find((draft) => draft.status === 'active') ?? null
-  const pendingDraft = drafts.find((draft) => draft.status === 'pending') ?? null
-
-  const selectDraftForEdition = (draft: DraftDto) => {
-    setDraftId(draft.id)
-    setDraftName(draft.name)
-    setDraftGroupSlug(draft.groupSlug)
-    setDraftRounds(draft.totalRounds)
-    setSelectedDraftTraits(draft.selectedTraitSlugs)
-  }
-
-  const deleteDraft = async (draft: DraftDto) => {
-    if (!jdrSlug || !confirm(`Supprimer le template "${draft.name}" ?`)) return
-    try {
-      await JdrApiClient.deleteDraft(jdrSlug, draft.id)
-      setDrafts((previous) => previous.filter((candidate) => candidate.id !== draft.id))
-      if (draftId === draft.id) {
-        setDraftId(null)
-        setDraftName('')
-        setSelectedDraftTraits([])
-      }
-    } catch (e) {
-      err(e)
-    }
-  }
-
   if (loading) return <div style={styles.container}>Chargement...</div>
   if (error) return <div style={styles.container}>Erreur: {error}</div>
   if (!jdr) return <div style={styles.container}>JdR non trouve</div>
@@ -441,7 +384,7 @@ export default function MjConfigPage() {
       </div>
 
       <div style={styles.tabs}>
-        {(['jdr', 'stats', 'traits', 'ressources', 'objets', 'classes', 'groupes', 'personnages', 'draft'] as const).map(tab => (
+        {(['jdr', 'stats', 'traits', 'ressources', 'objets', 'classes', 'groupes', 'personnages'] as const).map(tab => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
@@ -455,6 +398,7 @@ export default function MjConfigPage() {
       <div style={styles.sections}>
         {activeTab === 'jdr' && <section style={styles.section}>
           <h2>Informations JdR</h2>
+          <p style={styles.hint}>Nom et description de la partie. Ces informations apparaissent sur la page d'accueil du JdR.</p>
           <div style={styles.formRow}>
             <input value={jdrName} onChange={e => setJdrName(e.target.value)} placeholder="Nom" />
             <textarea value={jdrText} onChange={e => setJdrText(e.target.value)} rows={2} placeholder="Description" />
@@ -464,11 +408,30 @@ export default function MjConfigPage() {
 
         {activeTab === 'stats' && <section style={styles.section}>
           <h2>Stats ({jdr.stats.length})</h2>
+          <p style={styles.hint}>Les stats sont les attributs numériques des personnages (ex : Force, Intelligence, Agilité). Chaque stat peut recevoir des modificateurs via les traits. Sur la page MJ, cliquer sur une stat d'un personnage déclenche un jet de dé avec cette stat. Un X grisé signifie que la stat est utilisée dans un modificateur de trait — supprimez d'abord le trait concerné.</p>
           <div style={styles.list}>
             {jdr.stats.map(s => (
               <div key={s.slug} style={styles.listItem}>
-                <span>{s.name} <small style={styles.slug}>({s.slug})</small></span>
-                <button onClick={() => handleRemoveStat(s.slug)} style={styles.dangerBtn}>X</button>
+                {editingStatSlug === s.slug ? (
+                  <>
+                    <input value={editingStatName} onChange={e => setEditingStatName(e.target.value)} style={{ flex: 1 }} autoFocus onKeyDown={e => { if (e.key === 'Enter') handleUpdateStat(s.slug); if (e.key === 'Escape') setEditingStatSlug(null) }} />
+                    <button onClick={() => handleUpdateStat(s.slug)}>✓</button>
+                    <button onClick={() => setEditingStatSlug(null)}>✕</button>
+                  </>
+                ) : (
+                  <>
+                    <span>{s.name} <small style={styles.slug}>({s.slug})</small></span>
+                    <div style={{ display: 'flex', gap: '0.25rem' }}>
+                      <button onClick={() => { setEditingStatSlug(s.slug); setEditingStatName(s.name) }} style={{ fontSize: '0.75rem' }}>✎</button>
+                      <button
+                        onClick={() => handleRemoveStat(s.slug)}
+                        style={styles.dangerBtn}
+                        disabled={jdr.traits.some(t => t.modifiers.some(m => m.statSlug === s.slug))}
+                        title={jdr.traits.some(t => t.modifiers.some(m => m.statSlug === s.slug)) ? 'Utilisé par un trait' : ''}
+                      >X</button>
+                    </div>
+                  </>
+                )}
               </div>
             ))}
           </div>
@@ -480,34 +443,71 @@ export default function MjConfigPage() {
 
         {activeTab === 'traits' && <section style={styles.section}>
           <h2>Traits ({jdr.traits.length})</h2>
-          <div style={styles.list}>
-            {jdr.traits.map(t => (
-              <div key={t.slug} style={{ ...styles.listItem, flexDirection: 'column', alignItems: 'stretch', gap: '0.5rem' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span>
-                    {t.name} <small style={styles.slug}>({t.type})</small>
-                    {t.modifiers.length > 0 && (
-                      <small style={{ marginLeft: '0.5rem', color: 'var(--color-primary)' }}>
-                        [{t.modifiers.map(m => `${m.statSlug}:${m.value >= 0 ? '+' : ''}${m.value}`).join(', ')}]
-                      </small>
-                    )}
-                  </span>
-                  <div style={{ display: 'flex', gap: '0.25rem' }}>
-                    <button onClick={() => setExpandedTrait(expandedTrait === t.slug ? null : t.slug)} style={{ fontSize: '0.75rem' }}>Modifiers</button>
-                    <button onClick={() => handleRemoveTrait(t.slug)} style={styles.dangerBtn}>X</button>
-                  </div>
+          <p style={styles.hint}>Les traits sont des caractéristiques qualitatives assignables aux personnages depuis leur fiche. Chaque trait peut modifier une ou plusieurs stats (bonus ou malus). Les types permettent de les organiser : <strong>Normal</strong> (trait standard), <strong>Defaut</strong> (défaut ou faiblesse), <strong>Sorts</strong> (magie ou compétences actives), <strong>Objet</strong> (lié à un équipement), <strong>Secret</strong> (visible uniquement du MJ). Le symbole ★ indique qu'au moins un personnage possède ce trait — impossible de le supprimer tant qu'il est attribué.</p>
+          {(['Normal', 'Defaut', 'Sorts', 'Objet', 'Secret'] as const).map(typeGroup => {
+            const group = jdr.traits.filter(t => t.type === typeGroup)
+            if (group.length === 0) return null
+            return (
+              <div key={typeGroup} style={{ marginBottom: '1.5rem' }}>
+                <h3 style={{ margin: '0 0 0.5rem 0', fontSize: '0.9rem', color: 'var(--color-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{typeGroup}</h3>
+                <div style={styles.list}>
+                  {group.map(t => {
+                    const isEditing = editingTraitSlug === t.slug
+                    const isOwnedByChar = jdr.characters.some(c => c.traitSlugs.includes(t.slug))
+                    return (
+                      <div key={t.slug} style={{ ...styles.listItem, flexDirection: 'column', alignItems: 'stretch', gap: '0.5rem' }}>
+                        {isEditing ? (
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                              <input value={editingTraitName} onChange={e => setEditingTraitName(e.target.value)} placeholder="Nom" style={{ flex: 1 }} autoFocus />
+                              <select value={editingTraitType} onChange={e => setEditingTraitType(e.target.value)}>
+                                <option>Normal</option>
+                                <option>Defaut</option>
+                                <option>Objet</option>
+                                <option>Secret</option>
+                                <option>Sorts</option>
+                              </select>
+                              <button onClick={() => handleUpdateTrait(t.slug)}>✓</button>
+                              <button onClick={() => setEditingTraitSlug(null)}>✕</button>
+                            </div>
+                            {jdr.stats.length > 0 && (
+                              <div style={{ padding: '0.5rem', background: 'var(--color-bg)', borderRadius: '0.375rem' }}>
+                                <small style={styles.slug}>Modificateurs (0 = ignoré):</small>
+                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginTop: '0.25rem' }}>
+                                  {jdr.stats.map(s => (
+                                    <label key={s.slug} style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.85rem' }}>
+                                      {s.name}:
+                                      <input type="number" style={{ width: '4rem' }} value={editingTraitModifiers[s.slug] ?? 0} onChange={e => setEditingTraitModifiers(prev => ({ ...prev, [s.slug]: parseInt(e.target.value, 10) || 0 }))} />
+                                    </label>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <span>
+                              {t.name}
+                              {t.modifiers.length > 0 && (
+                                <small style={{ marginLeft: '0.5rem', color: 'var(--color-primary)' }}>
+                                  [{t.modifiers.map(m => `${m.statSlug}:${m.value >= 0 ? '+' : ''}${m.value}`).join(', ')}]
+                                </small>
+                              )}
+                              {isOwnedByChar && <small style={{ marginLeft: '0.5rem', color: 'var(--color-secondary)' }}>★</small>}
+                            </span>
+                            <div style={{ display: 'flex', gap: '0.25rem' }}>
+                              <button onClick={() => startEditTrait(t)} style={{ fontSize: '0.75rem' }}>✎</button>
+                              <button onClick={() => handleRemoveTrait(t.slug)} style={styles.dangerBtn} disabled={isOwnedByChar} title={isOwnedByChar ? 'Utilisé par un perso' : ''}>X</button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })}
                 </div>
-                {expandedTrait === t.slug && (
-                  <div style={{ paddingLeft: '1rem', fontSize: '0.85rem', color: 'var(--color-secondary)' }}>
-                    <em>Les modifiers sont définis à la création du trait. Pour modifier, supprimez et recréez le trait.</em>
-                    {t.modifiers.map(m => (
-                      <div key={m.statSlug}>{m.statSlug}: {m.value >= 0 ? '+' : ''}{m.value}</div>
-                    ))}
-                  </div>
-                )}
               </div>
-            ))}
-          </div>
+            )
+          })}
           <div style={{ ...styles.formRow, flexDirection: 'column', alignItems: 'stretch' }}>
             <div style={styles.formRow}>
               <input placeholder="Nom du trait" value={newTraitName} onChange={e => setNewTraitName(e.target.value)} />
@@ -516,6 +516,7 @@ export default function MjConfigPage() {
                 <option>Defaut</option>
                 <option>Objet</option>
                 <option>Secret</option>
+                <option>Sorts</option>
               </select>
             </div>
             {jdr.stats.length > 0 && (
@@ -542,11 +543,30 @@ export default function MjConfigPage() {
 
         {activeTab === 'ressources' && <section style={styles.section}>
           <h2>Ressources ({jdr.resources.length})</h2>
+          <p style={styles.hint}>Les ressources sont des compteurs associés aux personnages (ex : Points de Vie, Mana, Points d'Action). Le type détermine leur portée : <strong>all</strong> = tous les personnages ont cette ressource, <strong>specific</strong> = seulement certains (assignée via la classe), <strong>group</strong> = partagée au niveau d'un groupe. Les ressources sont ensuite configurées par classe (valeur par défaut, mode de progression).</p>
           <div style={styles.list}>
             {jdr.resources.map(r => (
               <div key={r.slug} style={styles.listItem}>
-                <span>{r.name} <small style={styles.slug}>({r.type})</small></span>
-                <button onClick={() => handleRemoveResource(r.slug)} style={styles.dangerBtn}>X</button>
+                {editingResourceSlug === r.slug ? (
+                  <div style={{ display: 'flex', gap: '0.5rem', flex: 1, flexWrap: 'wrap' }}>
+                    <input value={editingResourceName} onChange={e => setEditingResourceName(e.target.value)} placeholder="Nom" style={{ flex: 1 }} autoFocus />
+                    <select value={editingResourceType} onChange={e => setEditingResourceType(e.target.value)}>
+                      <option value="all">all</option>
+                      <option value="specific">specific</option>
+                      <option value="group">group</option>
+                    </select>
+                    <button onClick={() => handleUpdateResource(r.slug)}>✓</button>
+                    <button onClick={() => setEditingResourceSlug(null)}>✕</button>
+                  </div>
+                ) : (
+                  <>
+                    <span>{r.name} <small style={styles.slug}>({r.type})</small></span>
+                    <div style={{ display: 'flex', gap: '0.25rem' }}>
+                      <button onClick={() => { setEditingResourceSlug(r.slug); setEditingResourceName(r.name); setEditingResourceType(r.type) }} style={{ fontSize: '0.75rem' }}>✎</button>
+                      <button onClick={() => handleRemoveResource(r.slug)} style={styles.dangerBtn}>X</button>
+                    </div>
+                  </>
+                )}
               </div>
             ))}
           </div>
@@ -563,11 +583,26 @@ export default function MjConfigPage() {
 
         {activeTab === 'objets' && <section style={styles.section}>
           <h2>Catalogue d'objets ({jdr.items.length})</h2>
+          <p style={styles.hint}>Le catalogue regroupe tous les objets pouvant être distribués aux personnages depuis leur fiche. Un objet <strong>unique</strong> ne peut être détenu que par un seul personnage à la fois. Les objets sont réutilisables entre les parties du même JdR.</p>
           <div style={styles.list}>
             {jdr.items.map(i => (
-              <div key={i.slug} style={styles.listItem}>
-                <span>{i.name}{i.unique ? ' [unique]' : ''} <small style={styles.slug}>{i.description}</small></span>
-                <button onClick={() => handleRemoveItem(i.slug)} style={styles.dangerBtn}>X</button>
+              <div key={i.slug} style={{ ...styles.listItem, flexDirection: 'column', alignItems: 'stretch', gap: '0.25rem' }}>
+                {editingItemSlug === i.slug ? (
+                  <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                    <input value={editingItemName} onChange={e => setEditingItemName(e.target.value)} placeholder="Nom" style={{ flex: 1 }} autoFocus />
+                    <input value={editingItemDesc} onChange={e => setEditingItemDesc(e.target.value)} placeholder="Description" style={{ flex: 2 }} />
+                    <button onClick={() => handleUpdateItem(i.slug)}>✓</button>
+                    <button onClick={() => setEditingItemSlug(null)}>✕</button>
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span>{i.name}{i.unique ? ' [unique]' : ''} <small style={styles.slug}>{i.description}</small></span>
+                    <div style={{ display: 'flex', gap: '0.25rem' }}>
+                      <button onClick={() => { setEditingItemSlug(i.slug); setEditingItemName(i.name); setEditingItemDesc(i.description) }} style={{ fontSize: '0.75rem' }}>✎</button>
+                      <button onClick={() => handleRemoveItem(i.slug)} style={styles.dangerBtn}>X</button>
+                    </div>
+                  </div>
+                )}
               </div>
             ))}
           </div>
@@ -583,21 +618,34 @@ export default function MjConfigPage() {
 
         {activeTab === 'classes' && <section style={styles.section}>
           <h2>Classes ({jdr.classes.length})</h2>
+          <p style={styles.hint}>Les classes définissent l'archétype d'un personnage (ex : Guerrier, Mage, Roublard). Chaque classe peut embarquer des ressources spécifiques avec une valeur par défaut et un mode de progression : <strong>fixed</strong> = valeur constante, <strong>scalable</strong> = évolue avec le niveau du personnage. Le niveau propre à chaque personnage (<em>Niv.</em>) est géré sur sa fiche, indépendamment de la classe.</p>
           <div style={styles.list}>
             {jdr.classes.map(clazz => (
               <div key={clazz.slug} style={{ ...styles.listItem, flexDirection: 'column', alignItems: 'stretch', gap: '0.5rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span>{clazz.name} <small style={styles.slug}>(Lvl {clazz.level})</small>
-                    {clazz.resources.length > 0 && (
-                      <small style={{ marginLeft: '0.5rem', color: 'var(--color-primary)' }}>
-                        [{clazz.resources.map(r => r.resourceSlug).join(', ')}]
-                      </small>
-                    )}
-                  </span>
-                  <div style={{ display: 'flex', gap: '0.25rem' }}>
-                    <button onClick={() => setExpandedClass(expandedClass === clazz.slug ? null : clazz.slug)} style={{ fontSize: '0.75rem' }}>Ressources</button>
-                    <button onClick={() => handleRemoveClass(clazz.slug)} style={styles.dangerBtn}>X</button>
-                  </div>
+                  {editingClassSlug === clazz.slug ? (
+                    <div style={{ display: 'flex', gap: '0.5rem', flex: 1 }}>
+                      <input value={editingClassName} onChange={e => setEditingClassName(e.target.value)} placeholder="Nom" style={{ flex: 1 }} autoFocus />
+                      <input type="number" min={1} value={editingClassLevel} onChange={e => setEditingClassLevel(parseInt(e.target.value, 10) || 1)} style={{ width: '5rem' }} />
+                      <button onClick={() => handleUpdateClass(clazz.slug)}>✓</button>
+                      <button onClick={() => setEditingClassSlug(null)}>✕</button>
+                    </div>
+                  ) : (
+                    <>
+                      <span>{clazz.name}
+                        {clazz.resources.length > 0 && (
+                          <small style={{ marginLeft: '0.5rem', color: 'var(--color-primary)' }}>
+                            [{clazz.resources.map(r => r.resourceSlug).join(', ')}]
+                          </small>
+                        )}
+                      </span>
+                      <div style={{ display: 'flex', gap: '0.25rem' }}>
+                        <button onClick={() => { setEditingClassSlug(clazz.slug); setEditingClassName(clazz.name); setEditingClassLevel(clazz.level) }} style={{ fontSize: '0.75rem' }}>✎</button>
+                        <button onClick={() => setExpandedClass(expandedClass === clazz.slug ? null : clazz.slug)} style={{ fontSize: '0.75rem' }}>Ressources</button>
+                        <button onClick={() => handleRemoveClass(clazz.slug)} style={styles.dangerBtn}>X</button>
+                      </div>
+                    </>
+                  )}
                 </div>
                 {expandedClass === clazz.slug && (
                   <div style={{ paddingLeft: '1rem', fontSize: '0.85rem' }}>
@@ -648,20 +696,32 @@ export default function MjConfigPage() {
 
         {activeTab === 'groupes' && <section style={styles.section}>
           <h2>Groupes ({jdr.groups.length})</h2>
+          <p style={styles.hint}>Les groupes permettent d'organiser les personnages en équipes, factions ou familles. Un personnage peut appartenir à plusieurs groupes. Sur la page MJ, les personnages sont affichés par groupe.</p>
           <div style={styles.list}>
             {jdr.groups.map(group => {
-              const members = jdr.characters.filter(c => c.groupSlug === group.slug)
-              const nonMembers = jdr.characters.filter(c => !c.groupSlug)
+              const members = jdr.characters.filter(c => c.groupSlugs.includes(group.slug))
+              const nonMembers = jdr.characters.filter(c => !c.groupSlugs.includes(group.slug))
               return (
                 <div key={group.slug} style={{ ...styles.listItem, flexDirection: 'column', alignItems: 'stretch', gap: '0.5rem' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span>{group.name}
-                      <small style={{ marginLeft: '0.5rem', ...styles.slug }}>({members.length} membre{members.length !== 1 ? 's' : ''})</small>
-                    </span>
-                    <div style={{ display: 'flex', gap: '0.25rem' }}>
-                      <button onClick={() => setExpandedGroup(expandedGroup === group.slug ? null : group.slug)} style={{ fontSize: '0.75rem' }}>Membres</button>
-                      <button onClick={() => handleRemoveGroup(group.slug)} style={styles.dangerBtn}>X</button>
-                    </div>
+                    {editingGroupSlug === group.slug ? (
+                      <div style={{ display: 'flex', gap: '0.5rem', flex: 1 }}>
+                        <input value={editingGroupName} onChange={e => setEditingGroupName(e.target.value)} placeholder="Nom" style={{ flex: 1 }} autoFocus />
+                        <button onClick={() => handleUpdateGroup(group.slug)}>✓</button>
+                        <button onClick={() => setEditingGroupSlug(null)}>✕</button>
+                      </div>
+                    ) : (
+                      <>
+                        <span>{group.name}
+                          <small style={{ marginLeft: '0.5rem', ...styles.slug }}>({members.length} membre{members.length !== 1 ? 's' : ''})</small>
+                        </span>
+                        <div style={{ display: 'flex', gap: '0.25rem' }}>
+                          <button onClick={() => { setEditingGroupSlug(group.slug); setEditingGroupName(group.name) }} style={{ fontSize: '0.75rem' }}>✎</button>
+                          <button onClick={() => setExpandedGroup(expandedGroup === group.slug ? null : group.slug)} style={{ fontSize: '0.75rem' }}>Membres</button>
+                          <button onClick={() => handleRemoveGroup(group.slug)} style={styles.dangerBtn}>X</button>
+                        </div>
+                      </>
+                    )}
                   </div>
                   {expandedGroup === group.slug && (
                     <div style={{ paddingLeft: '1rem', fontSize: '0.85rem' }}>
@@ -669,7 +729,7 @@ export default function MjConfigPage() {
                       {members.map(c => (
                         <div key={c.slug} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.25rem' }}>
                           <span>{c.name}</span>
-                          <button onClick={() => handleRemoveGroupMember(c.slug)} style={{ ...styles.dangerBtn, fontSize: '0.75rem' }}>Retirer</button>
+                          <button onClick={() => handleRemoveGroupMember(group.slug, c.slug)} style={{ ...styles.dangerBtn, fontSize: '0.75rem' }}>Retirer</button>
                         </div>
                       ))}
                       {nonMembers.length > 0 && (
@@ -695,19 +755,21 @@ export default function MjConfigPage() {
 
         {activeTab === 'personnages' && <section style={styles.section}>
           <h2>Personnages ({jdr.characters.length})</h2>
-          <div style={styles.list}>
+          <p style={styles.hint}>Liste de tous les personnages du JdR. Cliquez sur <strong>Voir</strong> pour accéder à la fiche complète d'un personnage (stats, ressources, traits, objets, niveau). Les personnages jouables sont visibles sur la page MJ et peuvent y lancer des dés. Les personnages non jouables (PNJ) peuvent être créés sans classe.</p>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '0.5rem', marginBottom: '1rem' }}>
             {jdr.characters.map(c => {
               const clazz = c.classSlug ? jdr.classes.find(v => v.slug === c.classSlug) : undefined
-              const group = c.groupSlug ? jdr.groups.find(v => v.slug === c.groupSlug) : undefined
+              const groups = jdr.groups.filter(v => c.groupSlugs.includes(v.slug))
               return (
-                <div key={c.slug} style={styles.listItem}>
-                  <span>
-                    {c.name}
-                    {clazz ? ` - ${clazz.name} (Lvl ${clazz.level})` : ''}
-                    {group ? ` - Groupe ${group.name}` : ''}
+                <div key={c.slug} style={{ ...styles.listItem, flexDirection: 'column' as const, alignItems: 'flex-start' as const, gap: '0.4rem' }}>
+                  <span style={{ fontWeight: 500, fontSize: '0.9rem' }}>{c.name}</span>
+                  <span style={{ fontSize: '0.78rem', color: 'var(--color-secondary)' }}>
+                    {clazz ? `${clazz.name}${c.classLevel > 1 ? ` Niv.${c.classLevel}` : ''}` : 'Sans classe'}
+                    {groups.length > 0 ? ` · ${groups.map(g => g.name).join(', ')}` : ''}
                   </span>
-                  <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  <div style={{ display: 'flex', gap: '0.4rem' }}>
                     <button onClick={() => navigate(`/jdr/${jdrSlug}/characters/${c.slug}`)}>Voir</button>
+                    <button onClick={() => navigate(`/jdr/${jdrSlug}/characters/${c.slug}/edit`)}>Éditer</button>
                     <button onClick={() => handleRemoveCharacter(c.slug)} style={styles.dangerBtn}>X</button>
                   </div>
                 </div>
@@ -719,7 +781,7 @@ export default function MjConfigPage() {
             <select value={newCharacterClassSlug} onChange={e => setNewCharacterClassSlug(e.target.value)}>
               <option value="">Classe: aucune</option>
               {jdr.classes.map(clazz => (
-                <option key={clazz.slug} value={clazz.slug}>{clazz.name} (Lvl {clazz.level})</option>
+                <option key={clazz.slug} value={clazz.slug}>{clazz.name}</option>
               ))}
             </select>
             <select value={newCharacterGroupSlug} onChange={e => setNewCharacterGroupSlug(e.target.value)}>
@@ -730,141 +792,6 @@ export default function MjConfigPage() {
             </select>
             <input placeholder="Description" value={newCharacterText} onChange={e => setNewCharacterText(e.target.value)} />
             <button onClick={handleAddCharacter}>Ajouter perso</button>
-          </div>
-        </section>}
-
-        {activeTab === 'draft' && <section style={styles.section}>
-          <h2>Composer un template de draft</h2>
-
-          {activeDraft && (
-            <div style={{ ...styles.listItem, alignItems: 'flex-start', flexDirection: 'column', gap: '0.5rem', marginBottom: '1rem' }}>
-              <strong>Draft lancé</strong>
-              <span>
-                Groupe {activeDraft.groupSlug} · {activeDraft.status} · tour {activeDraft.currentRound}/{activeDraft.totalRounds}
-              </span>
-              <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                <button onClick={() => navigate(`/jdr/${jdrSlug}/draft/feed`)}>Voir le feed</button>
-                {activeDraft.status === 'active' ? (
-                  <button onClick={closeActiveDraft} style={styles.dangerBtn}>Arrêter</button>
-                ) : (
-                  <span style={styles.slug}>Finalisé</span>
-                )}
-              </div>
-            </div>
-          )}
-
-          <div style={{ ...styles.listItem, alignItems: 'flex-start', flexDirection: 'column', gap: '0.5rem', marginBottom: '1rem' }}>
-            <strong>Templates de draft enregistrés</strong>
-            <div style={styles.draftListWrap}>
-              {drafts.length === 0 && <span style={styles.slug}>Aucun template enregistré.</span>}
-              {drafts.map((draft) => (
-                <div key={draft.id} style={styles.draftListItem}>
-                  <span>
-                    <strong>{draft.name}</strong>
-                    {' '}· {draft.status === 'pending' ? 'Template' : draft.status === 'active' ? 'Draft lancé' : draft.status}
-                    {' '}· groupe {draft.groupSlug} · {draft.selectedTraitSlugs.length} traits · tours {draft.totalRounds}
-                  </span>
-                  <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                    {draft.status === 'pending' && <button onClick={() => selectDraftForEdition(draft)}>Éditer</button>}
-                    {draft.status === 'pending' && <button onClick={() => launchDraft(draft.id)}>Lancer</button>}
-                    {draft.status === 'active' && <button onClick={() => navigate(`/jdr/${jdrSlug}/draft/feed`)}>Feed</button>}
-                    {draft.status !== 'active' && <button onClick={() => deleteDraft(draft)} style={styles.dangerBtn}>Supprimer</button>}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div style={{ ...styles.formRow, alignItems: 'flex-end', marginBottom: '1rem' }}>
-            <label>
-              Nom du template
-              <input
-                value={draftName}
-                onChange={(e) => setDraftName(e.target.value)}
-                placeholder="Ex: Conseil - traits positifs"
-              />
-            </label>
-
-            <label>
-              Groupe des joueurs
-              <select value={draftGroupSlug} onChange={(e) => setDraftGroupSlug(e.target.value)}>
-                <option value="">--- Choisir un groupe ---</option>
-                {jdr.groups.map((group) => (
-                  <option key={group.slug} value={group.slug}>{group.name}</option>
-                ))}
-              </select>
-            </label>
-
-            <label>
-              Nombre de tours
-              <input
-                type="number"
-                min={1}
-                max={10}
-                value={draftRounds}
-                onChange={(e) => setDraftRounds(Number(e.target.value))}
-              />
-            </label>
-
-            <label>
-              Filtre type
-              <select value={selectedDraftTraitType} onChange={(e) => setSelectedDraftTraitType(e.target.value)}>
-                <option value="all">Tous</option>
-                {[...new Set(allDraftTraits.map((trait) => trait.type))].map((type) => (
-                  <option key={type} value={type}>{type}</option>
-                ))}
-              </select>
-            </label>
-
-            <div style={styles.slug}>Traits sélectionnés: {selectedDraftTraits.length}</div>
-
-            <button onClick={() => setSelectedDraftTraits([])} disabled={selectedDraftTraits.length === 0}>Vider</button>
-            <button
-              onClick={launchDraft}
-              disabled={!draftId || selectedDraftTraits.length === 0 || activeDraft?.status === 'active'}
-            >
-              🎲 Lancer le Draft
-            </button>
-          </div>
-
-          <div style={styles.draftComposer}>
-            <div style={styles.draftColumn}>
-              <h3 style={{ marginTop: 0 }}>Tous les traits ({filteredAvailableDraftTraits.length})</h3>
-              <div style={styles.traitList}>
-                {filteredAvailableDraftTraits.map((trait) => (
-                  <div key={trait.slug} style={styles.traitItem}>
-                    <div>
-                      <strong>{trait.name}</strong>{' '}
-                      <small style={styles.slug}>({trait.type})</small>
-                    </div>
-                    <button onClick={() => addTraitToDraft(trait.slug)}>Ajouter</button>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div style={styles.draftColumn}>
-              <h3 style={{ marginTop: 0 }}>Traits dans le draft ({selectedDraftTraitDtos.length})</h3>
-              <div style={styles.traitList}>
-                {selectedDraftTraitDtos.length === 0 && <div style={styles.emptyState}>Le template est vide au départ.</div>}
-                {selectedDraftTraitDtos.map((trait) => (
-                  <div key={trait.slug} style={styles.traitItem}>
-                    <div>
-                      <strong>{trait.name}</strong>{' '}
-                      <small style={styles.slug}>({trait.type})</small>
-                    </div>
-                    <button onClick={() => removeTraitFromDraft(trait.slug)} style={styles.dangerBtn}>Retirer</button>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem' }}>
-            <button onClick={createOrSaveDraft}>{draftId ? 'Enregistrer le template' : 'Créer le template'}</button>
-            <button onClick={launchDraft} disabled={!draftId || selectedDraftTraits.length === 0 || activeDraft?.status === 'active'}>
-              Lancer le draft
-            </button>
           </div>
         </section>}
       </div>
@@ -976,5 +903,6 @@ const styles = {
     fontStyle: 'italic'
   },
   slug: { color: 'var(--color-secondary)', fontSize: '0.8rem' },
-  dangerBtn: { background: 'var(--color-danger)' as string, minWidth: '2rem' }
+  dangerBtn: { background: 'var(--color-danger)' as string, minWidth: '2rem' },
+  hint: { color: 'var(--color-secondary)', fontSize: '0.85rem', margin: '0 0 1rem 0', lineHeight: '1.5' }
 }

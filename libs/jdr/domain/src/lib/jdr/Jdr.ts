@@ -133,9 +133,11 @@ export class Jdr {
         throw new Error(`character ${character.slug} references unknown class ${character.classSlug}`)
       }
 
-      if (character.groupSlug && !groupMap.has(character.groupSlug)) {
-        throw new Error(`character ${character.slug} references unknown group ${character.groupSlug}`)
-      }
+      character.groupSlugs.forEach((groupSlug) => {
+        if (!groupMap.has(groupSlug)) {
+          throw new Error(`character ${character.slug} references unknown group ${groupSlug}`)
+        }
+      })
 
       // Traits: must exist in JdR, must not be OBJET
       character.traitSlugs.forEach((traitSlug) => {

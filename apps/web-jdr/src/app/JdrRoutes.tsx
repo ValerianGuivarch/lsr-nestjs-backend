@@ -6,6 +6,8 @@ import MjConfigPage from '../pages/MjConfigPage.tsx'
 import CharacterPage from '../pages/CharacterPage.tsx'
 import CharacterEditPage from '../pages/CharacterEditPage.tsx'
 import FeedPage from '../pages/FeedPage.tsx'
+import JoueurListPage from '../pages/JoueurListPage.tsx'
+import GroupPage from '../pages/GroupPage.tsx'
 
 function LegacyMjRedirect() {
   const { jdrSlug } = useParams()
@@ -39,6 +41,8 @@ export function JdrRoutes() {
       <Route path="/jdr/:jdrSlug/mj" element={<MjPage />} />
       <Route path="/jdr/:jdrSlug/mj/config" element={<MjConfigPage />} />
       <Route path="/jdr/:jdrSlug/feed" element={<FeedPage />} />
+      <Route path="/jdr/:jdrSlug/joueurs" element={<JoueurListPage />} />
+      <Route path="/jdr/:jdrSlug/groups/:groupSlug" element={<GroupPage />} />
       <Route path="/jdr/:jdrSlug/characters/:characterSlug/edit" element={<CharacterEditPage />} />
       <Route path="/jdr/:jdrSlug/characters/:characterSlug" element={<CharacterPage />} />
 
