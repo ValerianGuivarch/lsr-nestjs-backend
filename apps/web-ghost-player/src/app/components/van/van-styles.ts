@@ -90,6 +90,25 @@ export const VanQuadGrid = styled.div`
   }
 `
 
+export const VanTwoColumnGrid = styled.div`
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
+  gap: 1rem;
+  min-height: 0;
+  align-items: stretch;
+
+  @media (max-width: 900px) {
+    grid-template-columns: 1fr;
+  }
+`
+
+export const VanColumnStack = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-width: 0;
+`
+
 export const VanPanelEqual = styled.div`
   border: 1px solid #26476e;
   border-radius: 4px;

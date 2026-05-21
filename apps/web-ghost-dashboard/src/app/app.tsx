@@ -7,6 +7,7 @@ import { GhostOrbsAdminTool } from './components/admin-tools/GhostOrbsAdminTool'
 import { SpiritBoxAdminTool } from './components/admin-tools/SpiritBoxAdminTool'
 import { ThermometerAdminTool } from './components/admin-tools/ThermometerAdminTool'
 import { VanAdminTool } from './components/admin-tools/VanAdminTool'
+import { MessagerieAdminTool } from './components/admin-tools/MessagerieAdminTool'
 // Utilitaires pour charger les sons/voix dynamiquement
 type MusicFile = { label: string; url: string }
 
@@ -28,7 +29,7 @@ function useMusicFiles(type: 'sounds' | 'voices'): MusicFile[] {
   return files
 }
 
-type DeviceRole = 'emf' | 'spiritbox' | 'ghostcam' | 'ghostorbs' | 'thermometer' | 'van'
+type DeviceRole = 'emf' | 'spiritbox' | 'ghostcam' | 'ghostorbs' | 'thermometer' | 'van' | 'messagerie'
 
 type Device = {
   deviceId: string
@@ -103,6 +104,10 @@ type SpiritAudioMessage = {
   id: string
   audioData: string
   mimeType?: string
+  hasPrependedHeader?: boolean
+  codec?: 'pcm16'
+  sampleRate?: number
+  channels?: number
   from: 'player' | 'mj'
   createdAt: string
 }
@@ -386,6 +391,7 @@ export function App() {
   const spiritboxChunksRef = useRef<BlobPart[]>([])
   const lastPlayerSpiritMessageIdRef = useRef<string>('')
   const spiritboxNextScheduledTimeRef = useRef(0)
+  const spiritboxHeaderDurationRef = useRef(0)
   const spiritboxSocketRef = useRef<Socket | null>(null)
   const spiritboxHtmlAudioRef = useRef<HTMLAudioElement | null>(null)
 
@@ -436,6 +442,7 @@ export function App() {
     if (tool === 'ghostcam') return 'Camera'
     if (tool === 'thermometer') return 'Thermomètre'
     if (tool === 'ghostorbs') return 'Thermomètre'
+    if (tool === 'messagerie') return 'Messagerie'
     return 'Van'
   }
 
@@ -459,6 +466,11 @@ export function App() {
       }
     } else if (role === 'van') {
       setControlVanDeviceId(deviceId)
+    } else if (role === 'messagerie') {
+      const firstVan = devices.find(device => device.role === 'van')
+      if (firstVan) {
+        setControlVanDeviceId(firstVan.deviceId)
+      }
     }
 
     if (updateUrl) {
@@ -615,10 +627,11 @@ export function App() {
       roleParam === 'ghostcam' ||
       roleParam === 'thermometer' ||
       roleParam === 'ghostorbs' ||
-      roleParam === 'van'
+      roleParam === 'van' ||
+      roleParam === 'messagerie'
 
     if (isRoleValid && deviceParam) {
-      setAdminToolTarget(roleParam, deviceParam, false)
+      setAdminToolTarget(roleParam as DeviceRole, deviceParam, false)
     }
   }, [])
 
@@ -903,26 +916,49 @@ export function App() {
       transports: ['websocket'],
     })
     spiritboxSocketRef.current = socket
+    spiritboxNextScheduledTimeRef.current = 0
+    spiritboxHeaderDurationRef.current = 0
 
-    socket.on('spiritbox:audio-chunk', (payload: { deviceId: string; chunk: string; mimeType: string }) => {
+    socket.on('spiritbox:audio-chunk', (payload: {
+      deviceId: string
+      chunk: string
+      mimeType: string
+      hasPrependedHeader?: boolean
+      codec?: 'pcm16'
+      sampleRate?: number
+      channels?: number
+    }) => {
+      const messageId = `${Date.now()}`
+      const createdAt = new Date().toISOString()
       setLatestPlayerSpiritMessage({
-        id: `${Date.now()}`,
+        id: messageId,
         audioData: payload.chunk,
         mimeType: payload.mimeType,
-        createdAt: new Date().toISOString(),
+        hasPrependedHeader: payload.hasPrependedHeader,
+        codec: payload.codec,
+        sampleRate: payload.sampleRate,
+        channels: payload.channels,
+        from: 'player',
+        createdAt,
       })
       playSpiritboxMonitorAudio({
-        id: `${Date.now()}`,
+        id: messageId,
         audioData: payload.chunk,
         mimeType: payload.mimeType,
+        hasPrependedHeader: payload.hasPrependedHeader,
+        codec: payload.codec,
+        sampleRate: payload.sampleRate,
+        channels: payload.channels,
         from: 'player',
-        createdAt: new Date().toISOString(),
+        createdAt,
       })
     })
 
     return () => {
       socket.disconnect()
       spiritboxSocketRef.current = null
+      spiritboxNextScheduledTimeRef.current = 0
+      spiritboxHeaderDurationRef.current = 0
     }
   }, [activePanel, adminToolRole, controlSpiritboxDeviceId])
 
@@ -1254,15 +1290,92 @@ export function App() {
         bytes[i] = binaryString.charCodeAt(i)
       }
 
-      void ctx.decodeAudioData(bytes.buffer.slice(0)).then(decodedBuffer => {
+      if (message.codec === 'pcm16') {
+        const sampleRate = Math.max(8000, Math.min(96000, message.sampleRate || 48000))
+        const channelCount = Math.max(1, Math.min(2, message.channels || 1))
+        const totalSamples = Math.floor(bytes.length / 2)
+        const frameCount = Math.floor(totalSamples / channelCount)
+        if (frameCount <= 0) {
+          return
+        }
+
+        const pcmView = new DataView(bytes.buffer, bytes.byteOffset, frameCount * channelCount * 2)
+        const pcmBuffer = ctx.createBuffer(channelCount, frameCount, sampleRate)
+
+        for (let channelIndex = 0; channelIndex < channelCount; channelIndex++) {
+          const channelData = pcmBuffer.getChannelData(channelIndex)
+          for (let frameIndex = 0; frameIndex < frameCount; frameIndex++) {
+            const sampleIndex = frameIndex * channelCount + channelIndex
+            const sample = pcmView.getInt16(sampleIndex * 2, true)
+            channelData[frameIndex] = sample / 32768
+          }
+        }
+
         const source = ctx.createBufferSource()
-        source.buffer = decodedBuffer
+        source.buffer = pcmBuffer
+        source.connect(ctx.destination)
+
+        const leadTime = 0.14
+        if (spiritboxNextScheduledTimeRef.current < ctx.currentTime - 0.25) {
+          spiritboxNextScheduledTimeRef.current = ctx.currentTime + leadTime
+        }
+
+        const scheduleAt = Math.max(ctx.currentTime + leadTime, spiritboxNextScheduledTimeRef.current)
+        source.start(scheduleAt)
+        spiritboxNextScheduledTimeRef.current = scheduleAt + pcmBuffer.duration
+        return
+      }
+
+      void ctx.decodeAudioData(bytes.buffer.slice(0)).then(decodedBuffer => {
+        if (!message.hasPrependedHeader && spiritboxHeaderDurationRef.current === 0) {
+          spiritboxHeaderDurationRef.current = decodedBuffer.duration
+        }
+
+        let playableBuffer = decodedBuffer
+        if (message.hasPrependedHeader && spiritboxHeaderDurationRef.current > 0.02) {
+          const trimSeconds = Math.min(
+            spiritboxHeaderDurationRef.current,
+            Math.max(0, decodedBuffer.duration - 0.02)
+          )
+
+          if (trimSeconds > 0) {
+            const trimSampleIndex = Math.floor(trimSeconds * decodedBuffer.sampleRate)
+            const trimmedSampleLength = decodedBuffer.length - trimSampleIndex
+
+            if (trimmedSampleLength > 0) {
+              const trimmedBuffer = ctx.createBuffer(
+                decodedBuffer.numberOfChannels,
+                trimmedSampleLength,
+                decodedBuffer.sampleRate
+              )
+
+              for (let channelIndex = 0; channelIndex < decodedBuffer.numberOfChannels; channelIndex++) {
+                const sourceChannel = decodedBuffer.getChannelData(channelIndex)
+                const targetChannel = trimmedBuffer.getChannelData(channelIndex)
+                targetChannel.set(sourceChannel.subarray(trimSampleIndex))
+              }
+
+              playableBuffer = trimmedBuffer
+            }
+          }
+        }
+
+        if (!playableBuffer || playableBuffer.duration <= 0.01) {
+          return
+        }
+
+        const source = ctx.createBufferSource()
+        source.buffer = playableBuffer
         source.connect(ctx.destination)
 
         // Scheduling précis : enchaîner les chunks sans gap ni overlap
-        const scheduleAt = Math.max(ctx.currentTime + 0.05, spiritboxNextScheduledTimeRef.current)
+        if (spiritboxNextScheduledTimeRef.current < ctx.currentTime - 0.25) {
+          spiritboxNextScheduledTimeRef.current = ctx.currentTime + 0.08
+        }
+
+        const scheduleAt = Math.max(ctx.currentTime + 0.08, spiritboxNextScheduledTimeRef.current)
         source.start(scheduleAt)
-        spiritboxNextScheduledTimeRef.current = scheduleAt + decodedBuffer.duration
+        spiritboxNextScheduledTimeRef.current = scheduleAt + playableBuffer.duration
       }).catch(() => {
         const mimeType = message.mimeType || 'audio/webm'
         const src = message.audioData.includes(',')
@@ -2141,7 +2254,28 @@ export function App() {
               />
             )}
 
-            {adminToolRole === 'van' && <VanAdminTool toolLabel={toolLabel(adminToolRole)} />}
+            {adminToolRole === 'van' && (
+              <VanAdminTool
+                vanGhostActivity={vanGhostActivity}
+                onVanGhostActivityChange={setVanGhostActivity}
+                vanObjectives={vanObjectives}
+                onToggleObjective={(t) => void toggleVanObjective(t)}
+              />
+            )}
+
+            {adminToolRole === 'messagerie' && (
+              <MessagerieAdminTool
+                templates={vanMessageTemplates}
+                sentMessages={vanSentMessages}
+                draft={vanDraftMessage}
+                onDraftChange={(patch) => setVanDraftMessage((prev) => ({ ...prev, ...patch }))}
+                onAddTemplate={addVanTemplateMessage}
+                onUpdateTemplate={updateVanTemplateMessage}
+                onRemoveTemplate={removeVanTemplateMessage}
+                onSendTemplate={pushVanTemplateMessage}
+                onClearSent={clearVanSentMessages}
+              />
+            )}
           </>
         )}
       </Container>
@@ -2155,7 +2289,7 @@ const Container = styled.div`
   background: ${({ theme }) => theme.background};
   color: ${({ theme }) => theme.color};
   min-height: 100vh;
-  width: 60%;
+  width: min(100%, 1400px);
   max-width: 1400px;
   margin: 0 auto;
   padding: 2rem;
@@ -2245,6 +2379,7 @@ const DevicesGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   gap: 0.9rem;
+  align-items: start;
 `
 
 const SectionCard = styled.section`
@@ -2252,9 +2387,14 @@ const SectionCard = styled.section`
   border-radius: 10px;
   padding: 0.8rem;
   width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
 
   h3 {
-    margin-top: 0;
+    margin: 0;
   }
 `
 
@@ -2272,6 +2412,7 @@ const DeviceItem = styled.li`
   display: flex;
   gap: 0.45rem;
   align-items: center;
+  min-width: 0;
 
   button:first-child {
     flex: 1;
@@ -2293,6 +2434,14 @@ const DeviceSelectButton = styled.button<{ $active: boolean }>`
   cursor: pointer;
   display: flex;
   justify-content: space-between;
+  gap: 0.75rem;
+  min-width: 0;
+
+  strong,
+  span {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
 `
 
 const DeviceActionButton = styled.button`
@@ -2316,6 +2465,7 @@ const EditForm = styled.div`
   display: flex;
   flex-direction: column;
   gap: 0.45rem;
+  min-width: 0;
 `
 
 const FieldLabel = styled.label`
@@ -2351,6 +2501,7 @@ const Actions = styled.div`
   display: flex;
   gap: 0.45rem;
   margin-top: 0.5rem;
+  flex-wrap: wrap;
 `
 
 const PrimaryButton = styled.button`
@@ -2423,6 +2574,7 @@ const InlineRow = styled.div`
   display: flex;
   gap: 0.5rem;
   align-items: center;
+  flex-wrap: wrap;
 
   @media (max-width: 760px) {
     flex-direction: column;
@@ -2434,6 +2586,7 @@ const ListGrid = styled.div`
   display: flex;
   flex-direction: column;
   gap: 0.45rem;
+  min-width: 0;
 `
 
 const MeterRow = styled.div`
@@ -2441,6 +2594,7 @@ const MeterRow = styled.div`
   grid-template-columns: 1fr 1.5fr auto;
   align-items: center;
   gap: 0.45rem;
+  min-width: 0;
 
   @media (max-width: 760px) {
     grid-template-columns: 1fr;
@@ -2469,6 +2623,7 @@ const SensorRow = styled.div`
   align-items: center;
   justify-content: space-between;
   gap: 0.6rem;
+  min-width: 0;
 
   @media (max-width: 760px) {
     flex-direction: column;
@@ -2497,6 +2652,7 @@ const SoundCueCard = styled.div`
   flex-direction: column;
   gap: 0.55rem;
   background: rgba(16, 23, 33, 0.75);
+  min-width: 0;
 `
 
 const VanJsonEditor = styled.textarea`
@@ -2516,22 +2672,28 @@ const ObjectivesList = styled.div`
   display: flex;
   flex-direction: column;
   gap: 0.45rem;
+  min-width: 0;
 `
 
 const ObjectiveCheckboxItem = styled.div`
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 0.6rem;
+  min-width: 0;
 
   input[type='checkbox'] {
     cursor: pointer;
     width: 18px;
     height: 18px;
+    margin-top: 0.2rem;
+    flex-shrink: 0;
   }
 
   label {
     cursor: pointer;
     flex: 1;
     font-size: 0.9rem;
+    line-height: 1.35;
+    overflow-wrap: anywhere;
   }
 `

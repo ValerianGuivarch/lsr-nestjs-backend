@@ -11,7 +11,8 @@ export enum ToolType {
   THERMOMETER = 'thermometer',
   MOTION_SENSOR = 'motion_sensor',
   SOUND_DETECTOR = 'sound_detector',
-  VAN = 'van'
+  VAN = 'van',
+  MESSAGERIE = 'messagerie'
 }
 
 export const TOOL_LABELS: Record<ToolType, string> = {
@@ -22,7 +23,8 @@ export const TOOL_LABELS: Record<ToolType, string> = {
   [ToolType.THERMOMETER]: 'Thermomètre',
   [ToolType.MOTION_SENSOR]: 'Détecteur de mouvement',
   [ToolType.SOUND_DETECTOR]: 'Détecteur sonore',
-  [ToolType.VAN]: 'Van'
+  [ToolType.VAN]: 'Van',
+  [ToolType.MESSAGERIE]: 'Messagerie'
 }
 
 export interface Tool {

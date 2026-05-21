@@ -54,9 +54,18 @@ export class GhostAudioGateway implements OnGatewayConnection, OnGatewayDisconne
   @SubscribeMessage('spiritbox:audio-chunk')
   handleAudioChunk(
     @ConnectedSocket() client: Socket,
-    @MessageBody() payload: { deviceId: string; chunk: ArrayBuffer | string; mimeType: string }
+    @MessageBody()
+    payload: {
+      deviceId: string
+      chunk: ArrayBuffer | string
+      mimeType: string
+      hasPrependedHeader?: boolean
+      codec?: 'pcm16'
+      sampleRate?: number
+      channels?: number
+    }
   ): void {
-    const { deviceId, chunk, mimeType } = payload
+    const { deviceId, chunk, mimeType, hasPrependedHeader, codec, sampleRate, channels } = payload
     if (!deviceId || !chunk) {
       return
     }
@@ -66,6 +75,10 @@ export class GhostAudioGateway implements OnGatewayConnection, OnGatewayDisconne
       deviceId,
       chunk,
       mimeType,
+      hasPrependedHeader,
+      codec,
+      sampleRate,
+      channels,
     })
   }
 }

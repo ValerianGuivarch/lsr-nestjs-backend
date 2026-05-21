@@ -25,6 +25,9 @@ export function useSpiritBoxAudio(role: string | undefined, deviceId: string, po
   const spiritRecorderRef = useRef<MediaRecorder | null>(null)
   const spiritStreamRef = useRef<MediaStream | null>(null)
   const spiritHeaderChunkRef = useRef<Blob | null>(null)
+  const spiritPcmContextRef = useRef<AudioContext | null>(null)
+  const spiritPcmSourceRef = useRef<MediaStreamAudioSourceNode | null>(null)
+  const spiritPcmProcessorRef = useRef<ScriptProcessorNode | null>(null)
   const spiritSocketRef = useRef<Socket | null>(null)
   const lastSpiritMjMessageIdRef = useRef('')
   const spiritAudioContextRef = useRef<AudioContext | null>(null)
@@ -79,6 +82,22 @@ export function useSpiritBoxAudio(role: string | undefined, deviceId: string, po
       reader.onerror = () => reject(new Error('Lecture audio impossible'))
       reader.readAsDataURL(blob)
     })
+  }, [])
+
+  const floatToPcm16Base64 = useCallback((input: Float32Array): string => {
+    const pcm16 = new Int16Array(input.length)
+    for (let i = 0; i < input.length; i++) {
+      const sample = Math.max(-1, Math.min(1, input[i]))
+      pcm16[i] = sample < 0 ? Math.round(sample * 0x8000) : Math.round(sample * 0x7fff)
+    }
+
+    const bytes = new Uint8Array(pcm16.buffer)
+    let binary = ''
+    for (let i = 0; i < bytes.length; i++) {
+      binary += String.fromCharCode(bytes[i])
+    }
+
+    return btoa(binary)
   }, [])
 
   const createGhostVoiceFX = useCallback((ctx: AudioContext, source: AudioNode): GainNode => {
@@ -257,6 +276,54 @@ export function useSpiritBoxAudio(role: string | undefined, deviceId: string, po
       })
       spiritSocketRef.current = socket
 
+      const AudioContextCtor = (window as any).AudioContext || (window as any).webkitAudioContext
+      if (AudioContextCtor) {
+        try {
+          const pcmCtx = new AudioContextCtor({ latencyHint: 'interactive' })
+          spiritPcmContextRef.current = pcmCtx
+          if (pcmCtx.state === 'suspended') {
+            void pcmCtx.resume()
+          }
+
+          const source = pcmCtx.createMediaStreamSource(stream)
+          const processor = pcmCtx.createScriptProcessor(2048, 1, 1)
+          source.connect(processor)
+          processor.connect(pcmCtx.destination)
+
+          processor.onaudioprocess = event => {
+            if (!socket.connected) {
+              return
+            }
+
+            const channelData = event.inputBuffer.getChannelData(0)
+            if (!channelData || channelData.length === 0) {
+              return
+            }
+
+            const pcmBase64 = floatToPcm16Base64(channelData)
+            socket.emit('spiritbox:audio-chunk', {
+              deviceId,
+              chunk: pcmBase64,
+              mimeType: 'audio/pcm;codecs=s16le',
+              codec: 'pcm16',
+              sampleRate: event.inputBuffer.sampleRate,
+              channels: 1,
+            })
+            setSpiritStatus('ECOUTE EN COURS')
+          }
+
+          spiritPcmSourceRef.current = source
+          spiritPcmProcessorRef.current = processor
+          setSpiritRecording(true)
+          setSpiritStatus('ECOUTE EN COURS')
+          return
+        } catch {
+          spiritPcmProcessorRef.current = null
+          spiritPcmSourceRef.current = null
+          spiritPcmContextRef.current = null
+        }
+      }
+
       const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
         ? 'audio/webm;codecs=opus'
         : MediaRecorder.isTypeSupported('audio/webm')
@@ -280,13 +347,23 @@ export function useSpiritBoxAudio(role: string | undefined, deviceId: string, po
           spiritHeaderChunkRef.current = event.data
           const fullBlob = event.data
           void blobToDataUrl(fullBlob).then(audioData => {
-            socket.emit('spiritbox:audio-chunk', { deviceId, chunk: audioData, mimeType: chunkMimeType })
+            socket.emit('spiritbox:audio-chunk', {
+              deviceId,
+              chunk: audioData,
+              mimeType: chunkMimeType,
+              hasPrependedHeader: false,
+            })
           })
         } else {
           // Chunks suivants : réinjecter le header pour rendre le chunk autonome
           const fullBlob = new Blob([spiritHeaderChunkRef.current, event.data], { type: chunkMimeType })
           void blobToDataUrl(fullBlob).then(audioData => {
-            socket.emit('spiritbox:audio-chunk', { deviceId, chunk: audioData, mimeType: chunkMimeType })
+            socket.emit('spiritbox:audio-chunk', {
+              deviceId,
+              chunk: audioData,
+              mimeType: chunkMimeType,
+              hasPrependedHeader: true,
+            })
           })
         }
 
@@ -295,16 +372,30 @@ export function useSpiritBoxAudio(role: string | undefined, deviceId: string, po
 
       socket.on('connect_error', () => setSpiritStatus('ERREUR CONNEXION WS'))
 
-      // Timeslice 600ms : latence faible, chunks assez grands pour décoder
-      recorder.start(600)
+      // Timeslice 240ms : meilleur compromis fluidite / charge decode
+      recorder.start(240)
       setSpiritRecording(true)
       setSpiritStatus('ECOUTE EN COURS')
     } catch (_e) {
       setSpiritStatus('MICRO INDISPONIBLE')
     }
-  }, [blobToDataUrl, deviceId, powerOn, role])
+  }, [blobToDataUrl, deviceId, floatToPcm16Base64, powerOn, role])
 
   const stopSpiritRecording = useCallback((): void => {
+    if (spiritPcmProcessorRef.current) {
+      spiritPcmProcessorRef.current.onaudioprocess = null
+      spiritPcmProcessorRef.current.disconnect()
+      spiritPcmProcessorRef.current = null
+    }
+
+    spiritPcmSourceRef.current?.disconnect()
+    spiritPcmSourceRef.current = null
+
+    if (spiritPcmContextRef.current) {
+      void spiritPcmContextRef.current.close()
+      spiritPcmContextRef.current = null
+    }
+
     const recorder = spiritRecorderRef.current
     if (recorder && recorder.state === 'recording') {
       recorder.stop()

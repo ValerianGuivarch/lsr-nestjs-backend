@@ -5,7 +5,7 @@ import { ToolStateEntity } from './device.entity'
 import { GameStateEntity } from './game-state.entity'
 import { GameConfig, ToolType } from './tools.types'
 
-export type DeviceRole = 'emf' | 'spiritbox' | 'ghostcam' | 'ghostorbs' | 'van'
+export type DeviceRole = 'emf' | 'spiritbox' | 'ghostcam' | 'ghostorbs' | 'van' | 'messagerie'
 
 export type SpiritAudioMessage = {
   id: string
@@ -20,7 +20,8 @@ const CANONICAL_TOOL_TYPES: ToolType[] = [
   ToolType.SPIRITBOX,
   ToolType.GHOSTCAM,
   ToolType.THERMOMETER,
-  ToolType.VAN
+  ToolType.VAN,
+  ToolType.MESSAGERIE
 ]
 
 @Injectable()

@@ -7,6 +7,7 @@ import { ConfigService } from '@nestjs/config'
 import { NestFactory } from '@nestjs/core'
 import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify'
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
+import { IoAdapter } from '@nestjs/platform-socket.io'
 
 interface ReverseProxyRule {
   sourcePrefix: string
@@ -118,6 +119,9 @@ export async function bootstrapApi(p: BootstrapApiOptions): Promise<void> {
   const app = await NestFactory.create<NestFastifyApplication>(p.rootModule, new FastifyAdapter(), {
     logger: ['error', 'warn', 'log']
   })
+
+  // Configure Socket.IO adapter for WebSocket gateway support
+  app.useWebSocketAdapter(new IoAdapter(app))
 
   app.enableCors({
     origin: [

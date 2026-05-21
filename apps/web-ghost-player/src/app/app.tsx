@@ -9,6 +9,7 @@ import { EmfDeviceView } from './components/devices/EmfDeviceView'
 import { SpiritBoxDeviceView } from './components/devices/SpiritBoxDeviceView'
 import { GhostCamDeviceView } from './components/devices/GhostCamDeviceView'
 import { ThermometerDeviceView } from './components/devices/ThermometerDeviceView'
+import { MessagerieDeviceView } from './components/devices/MessagerieDeviceView'
 import { useEmfNeedle } from './hooks/useEmfNeedle'
 import { useGhostCamPhotoMode } from './hooks/useGhostCamPhotoMode'
 import { useSpiritBoxAudio } from './hooks/useSpiritBoxAudio'
@@ -19,7 +20,7 @@ const darkTheme = {
   color: '#dce8f7',
 }
 
-type DeviceRole = 'emf' | 'spiritbox' | 'ghostcam' | 'thermometer' | 'ghostorbs' | 'van'
+type DeviceRole = 'emf' | 'spiritbox' | 'ghostcam' | 'thermometer' | 'ghostorbs' | 'van' | 'messagerie'
 
 type Device = {
   deviceId: string
@@ -210,6 +211,7 @@ export function App() {
     recentMotionAlert?: string
     missionObjectives: Array<{ objective: string; completed: boolean }>
     floorPlanImage?: string
+    liveCameraFrame?: string
     backgroundMusic: VanBackgroundMusic
     soundboard: VanSoundCue[]
     vanSentMessages: VanFeedMessage[]
@@ -695,12 +697,13 @@ export function App() {
   }, [state?.role, deviceId])
 
   useEffect(() => {
-    if (state?.role !== 'van') {
+    if (state?.role !== 'van' && state?.role !== 'messagerie') {
       return
     }
 
     const pollVanData = () => {
-      fetch(`/apil7r/player/device/${deviceId}/van?ts=${Date.now()}`, { cache: 'no-store' })
+      const vanFetchId = state?.role === 'messagerie' ? 'van' : deviceId
+      fetch(`/apil7r/player/device/${vanFetchId}/van?ts=${Date.now()}`, { cache: 'no-store' })
         .then(r => r.json())
         .then(async (device: any) => {
           if (!device) return
@@ -733,7 +736,8 @@ export function App() {
             motionSensorRooms: device.motionSensorRooms ? JSON.parse(device.motionSensorRooms) : [],
             recentMotionAlert: device.recentMotionAlert,
             missionObjectives: ensureVanObjectives(device.missionObjectives ? JSON.parse(device.missionObjectives) : []),
-            floorPlanImage: liveGhostCamFrame ?? device.floorPlanImage,
+            floorPlanImage: device.floorPlanImage,
+            liveCameraFrame: liveGhostCamFrame,
             backgroundMusic: parseVanBackgroundMusic(device.backgroundMusic),
             soundboard: parseVanSoundboard(device.soundboard),
             vanSentMessages: parseVanSentMessages(device.vanSentMessages)
@@ -1155,6 +1159,15 @@ export function App() {
     return (
       <ThemeProvider theme={darkTheme}>
         <ThermometerDeviceView state={state} videoRef={videoRef} canvasRef={canvasRef} />
+      </ThemeProvider>
+    )
+  }
+  if (state.role === 'messagerie') {
+    return (
+      <ThemeProvider theme={darkTheme}>
+        <Container>
+          <MessagerieDeviceView messages={vanData?.vanSentMessages ?? []} />
+        </Container>
       </ThemeProvider>
     )
   }

@@ -22,7 +22,8 @@ export class GhostController {
       thermometer: 'thermometer',
       motion_sensor: 'emf',
       sound_detector: 'spiritbox',
-      van: 'van'
+      van: 'van',
+      messagerie: 'messagerie'
     }
 
     return {
