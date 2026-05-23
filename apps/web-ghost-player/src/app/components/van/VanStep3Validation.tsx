@@ -1,6 +1,6 @@
 import React from 'react'
 import {
-  FloorPlanImage,
+  VanCameraFrame,
   VanDeclarationHint,
   VanDeclarationMeta,
   VanEmptyState,
@@ -11,20 +11,21 @@ import {
 
 type VanStep3ValidationProps = {
   floorPlanImage?: string
+  liveCameraFrame?: string
   mjAccepted: boolean
 }
 
-export function VanStep3Validation({ floorPlanImage, mjAccepted }: VanStep3ValidationProps) {
+export function VanStep3Validation({ liveCameraFrame, mjAccepted }: VanStep3ValidationProps) {
   return (
     <VanFinalCard>
       <VanFinalTitle>Étape 3 - Validation MJ</VanFinalTitle>
-      {floorPlanImage ? (
-        <FloorPlanImage src={floorPlanImage} alt="Caméra finale" />
+      {liveCameraFrame ? (
+        <VanCameraFrame src={liveCameraFrame} alt="Flux caméra" />
       ) : (
-        <VanEmptyState>Caméra en attente.</VanEmptyState>
+        <VanEmptyState>Caméra en attente de retour.</VanEmptyState>
       )}
       <VanFinalText>
-        Le nom du spectre "edouard" a été saisi. En attente du bouton Accepter du MJ.
+        Le nom du spectre a été saisi. En attente du bouton Accepter du MJ.
       </VanFinalText>
       {!mjAccepted && <VanDeclarationHint>Statut: en attente de validation MJ.</VanDeclarationHint>}
       {mjAccepted && <VanDeclarationMeta>Partie validée par le MJ: c’est gagné.</VanDeclarationMeta>}

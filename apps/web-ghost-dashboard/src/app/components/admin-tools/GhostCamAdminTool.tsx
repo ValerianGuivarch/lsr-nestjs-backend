@@ -4,6 +4,7 @@ import { GhostCamAdminToolProps } from './types'
 export function GhostCamAdminTool({
   cameraFrame,
   onPhoto,
+  onRelock,
   ghostcamDeviceId,
   ghostcamDeviceOptions,
   ghostDurationSec,
@@ -72,6 +73,27 @@ export function GhostCamAdminTool({
             boxShadow: '0 4px 16px rgba(0,0,0,0.45)',
           }}
         />
+
+        <button
+          type="button"
+          onClick={onRelock}
+          title="Reverrouiller l'appareil photo côté joueur"
+          style={{
+            position: 'absolute',
+            top: 12,
+            right: 12,
+            padding: '0.45rem 0.85rem',
+            borderRadius: 8,
+            border: '1px solid #c98d35',
+            background: 'rgba(34, 24, 12, 0.72)',
+            color: '#ffe2b0',
+            cursor: 'pointer',
+            fontWeight: 600,
+            letterSpacing: '0.04em',
+          }}
+        >
+          Reverrouiller
+        </button>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '0.8rem' }}>

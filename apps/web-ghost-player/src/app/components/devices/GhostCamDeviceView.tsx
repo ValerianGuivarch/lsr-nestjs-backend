@@ -74,18 +74,45 @@ export function GhostCamDeviceView({
       {unlockPromptOpen && !photoModeUnlocked && (
         <UnlockOverlay>
           <UnlockModal>
-            <GhostCamLocker>Saisir code pour debloquer l'appareil photo</GhostCamLocker>
-            <GhostCamUnlockRow>
-              <GhostCamUnlockInput
-                value={photoModePassword}
-                onChange={event => onPhotoModePasswordChange(event.target.value)}
-                placeholder="Code"
-                inputMode="numeric"
-              />
-              <GhostCamActionButton type="button" onClick={onUnlockPhotoMode}>
-                Debloquer
-              </GhostCamActionButton>
-            </GhostCamUnlockRow>
+            <GhostCamLocker>Saisir le code pour déverrouiller l'appareil photo</GhostCamLocker>
+            <PinDisplay>
+              {Array.from({ length: 6 }).map((_, idx) => (
+                <PinDot key={idx} $filled={idx < photoModePassword.length} />
+              ))}
+            </PinDisplay>
+            <Keypad>
+              {['1','2','3','4','5','6','7','8','9'].map(digit => (
+                <KeypadButton
+                  key={digit}
+                  type="button"
+                  onClick={() => onPhotoModePasswordChange((photoModePassword + digit).slice(0, 6))}
+                >
+                  {digit}
+                </KeypadButton>
+              ))}
+              <KeypadButton
+                type="button"
+                $variant="secondary"
+                onClick={() => onPhotoModePasswordChange('')}
+              >
+                C
+              </KeypadButton>
+              <KeypadButton
+                key="0"
+                type="button"
+                onClick={() => onPhotoModePasswordChange((photoModePassword + '0').slice(0, 6))}
+              >
+                0
+              </KeypadButton>
+              <KeypadButton
+                type="button"
+                $variant="primary"
+                onClick={onUnlockPhotoMode}
+                disabled={photoModePassword.length === 0}
+              >
+                OK
+              </KeypadButton>
+            </Keypad>
             {photoModeError && <GhostCamError>{photoModeError}</GhostCamError>}
             <GhostCamCloseButton type="button" onClick={() => setUnlockPromptOpen(false)}>
               Fermer
@@ -153,11 +180,10 @@ const GhostCamTitle = styled.div`
 const GhostCamActions = styled.div`
   width: auto;
   display: flex;
-  justify-content: center;
+  justify-content: flex-end;
   position: absolute;
   bottom: 1.4rem;
-  left: 50%;
-  transform: translateX(-50%);
+  right: 1.4rem;
   z-index: 3;
 `
 
@@ -303,4 +329,52 @@ const Hunt = styled.div`
   top: 4rem;
   z-index: 3;
   text-shadow: 0 2px 8px rgba(0, 0, 0, 0.65);
+`
+
+const PinDisplay = styled.div`
+  display: flex;
+  justify-content: center;
+  gap: 0.6rem;
+  margin: 0.4rem 0 0.2rem;
+`
+
+const PinDot = styled.div<{ $filled: boolean }>`
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 1px solid #6b7e95;
+  background: ${({ $filled }) => ($filled ? '#dce8f7' : 'transparent')};
+  transition: background 120ms ease;
+`
+
+const Keypad = styled.div`
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.55rem;
+  width: min(82vw, 320px);
+  margin: 0 auto;
+`
+
+const KeypadButton = styled.button<{ $variant?: 'primary' | 'secondary' }>`
+  appearance: none;
+  height: 56px;
+  border-radius: 12px;
+  border: 1px solid ${({ $variant }) =>
+    $variant === 'primary' ? '#5fb27c' : $variant === 'secondary' ? '#b25f5f' : '#3e4a5b'};
+  background: ${({ $variant }) =>
+    $variant === 'primary' ? '#1e3a26' : $variant === 'secondary' ? '#3a1e1e' : '#19222e'};
+  color: #f1f6ff;
+  font-size: 1.3rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 80ms ease, background 120ms ease;
+
+  &:active {
+    transform: scale(0.96);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
 `

@@ -2214,6 +2214,14 @@ export function App() {
               <GhostCamAdminTool
                 cameraFrame={controlGhostcamDeviceId ? cameraSources[controlGhostcamDeviceId] : undefined}
                 onPhoto={takeGhostcamPhoto}
+                onRelock={() => {
+                  if (!controlGhostcamDeviceId) return
+                  void fetch(`/apil7r/admin/device/${encodeURIComponent(controlGhostcamDeviceId)}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ photoModeUnlocked: false })
+                  })
+                }}
                 ghostcamDeviceId={controlGhostcamDeviceId}
                 ghostcamDeviceOptions={devices.filter(device => device.role === 'ghostcam').map(device => device.deviceId)}
                 ghostDurationSec={controlGhostDurationSec}

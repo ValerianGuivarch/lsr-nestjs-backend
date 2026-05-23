@@ -109,12 +109,10 @@ function ensureVanObjectives(objectives: VanObjective[]): VanObjective[] {
   return normalized
 }
 
-function deriveVanPhase(objectives: VanObjective[], mjAccepted: boolean): VanPhase {
-  const hasGhost = objectives.some(item => isObjectiveMatch(item.objective, VAN_OBJECTIVE_GHOST) && item.completed)
-  if (hasGhost || mjAccepted) {
-    return 'step3'
-  }
-
+function deriveVanPhase(objectives: VanObjective[], _mjAccepted: boolean): VanPhase {
+  // Step 3 n'est plus declenchee automatiquement par hasGhost / mjAccepted :
+  // elle est exclusivement atteinte via la saisie du mot de passe (declareGhost),
+  // qui appelle setVanPhase('step3') directement.
   const hasMaterial = objectives.some(item => isObjectiveMatch(item.objective, VAN_OBJECTIVE_MATERIAL) && item.completed)
   if (hasMaterial) {
     return 'step2'
@@ -292,6 +290,50 @@ export function App() {
   }
 
   useEffect(() => {
+    // Bouton plein écran flottant (injecte dans body pour apparaître quelle que soit la vue)
+    const btn = document.createElement('button')
+    btn.type = 'button'
+    btn.textContent = '⛶'
+    btn.setAttribute('aria-label', 'Basculer le plein écran')
+    btn.title = 'Plein écran'
+    btn.style.cssText = [
+      'position:fixed',
+      'top:10px',
+      'right:10px',
+      'z-index:99999',
+      'width:38px',
+      'height:38px',
+      'border-radius:50%',
+      'border:1px solid rgba(255,255,255,0.4)',
+      'background:rgba(0,0,0,0.55)',
+      'color:#fff',
+      'font-size:18px',
+      'line-height:1',
+      'cursor:pointer',
+      'backdrop-filter:blur(4px)',
+      'padding:0'
+    ].join(';')
+    const toggle = (): void => {
+      const doc: any = document
+      const el: any = document.documentElement
+      const isFs = doc.fullscreenElement || doc.webkitFullscreenElement
+      if (isFs) {
+        const exit = doc.exitFullscreen || doc.webkitExitFullscreen
+        if (exit) void exit.call(doc)
+      } else {
+        const req = el.requestFullscreen || el.webkitRequestFullscreen
+        if (req) void req.call(el)
+      }
+    }
+    btn.addEventListener('click', toggle)
+    document.body.appendChild(btn)
+    return () => {
+      btn.removeEventListener('click', toggle)
+      btn.remove()
+    }
+  }, [])
+
+  useEffect(() => {
     fetch('/apil7r/player/devices')
       .then(r => r.json())
       .then(list => {
@@ -436,7 +478,12 @@ export function App() {
       try {
         if (!cameraStreamRef.current) {
           const stream = await navigator.mediaDevices.getUserMedia({
-            video: { width: 480, height: 360, facingMode: 'user' },
+            video: {
+              width: { ideal: 1280 },
+              height: { ideal: 720 },
+              facingMode: { ideal: 'environment' },
+              frameRate: { ideal: 30 }
+            },
             audio: false
           })
           cameraStreamRef.current = stream
@@ -653,7 +700,7 @@ export function App() {
       }
     }
 
-    const interval = setInterval(captureAndSend, 200) // 5 FPS
+    const interval = setInterval(captureAndSend, 80) // ~12 FPS
 
     return () => clearInterval(interval)
   }, [state?.role, state?.cameraColor, state?.ghostUntil, state?.orbUntil, photoPaused, deviceId])
@@ -691,7 +738,7 @@ export function App() {
       }
     }
 
-    const interval = setInterval(captureWebcam, 200) // 5 FPS
+    const interval = setInterval(captureWebcam, 80) // ~12 FPS
 
     return () => clearInterval(interval)
   }, [state?.role, deviceId])
@@ -970,6 +1017,13 @@ export function App() {
       return
     }
 
+    // Lors du premier chargement on ne rejoue pas les messages deja presents en base
+    // (sinon on entend l'intro / un message ancien sans avoir clique sur "lancer").
+    if (lastPlayedVanMessageIdRef.current === '') {
+      lastPlayedVanMessageIdRef.current = latestAudioMessage.id
+      return
+    }
+
     const audio = new Audio(latestAudioMessage.audioUrl)
     audio.volume = 0.95
     void audio.play().catch(() => {
@@ -1196,12 +1250,18 @@ export function App() {
                 objectives={objectives}
                 ghostActivity={ghostActivity}
                 floorPlanImage={vanData?.floorPlanImage}
-                feedMessages={vanData?.vanSentMessages ?? []}
+                liveCameraFrame={vanData?.liveCameraFrame}
               />
             )}
             {vanPhase === 'step2' && (
               <VanStep2Equipment
                 floorPlanImage={vanData?.floorPlanImage}
+                liveCameraFrame={vanData?.liveCameraFrame}
+                objectives={objectives}
+                ghostActivity={ghostActivity}
+                materialCompleted={objectives.some(
+                  obj => isObjectiveMatch(obj.objective, VAN_OBJECTIVE_MATERIAL) && obj.completed
+                )}
                 vanGhostGuess={vanGhostGuess}
                 onGhostGuessChange={setVanGhostGuess}
                 onDeclareGhost={declareGhost}
@@ -1209,7 +1269,11 @@ export function App() {
               />
             )}
             {vanPhase === 'step3' && (
-              <VanStep3Validation floorPlanImage={vanData?.floorPlanImage} mjAccepted={mjAccepted} />
+              <VanStep3Validation
+                floorPlanImage={vanData?.floorPlanImage}
+                liveCameraFrame={vanData?.liveCameraFrame}
+                mjAccepted={mjAccepted}
+              />
             )}
           </VanDashboard>
         </VanContainer>

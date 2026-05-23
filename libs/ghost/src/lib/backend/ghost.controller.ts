@@ -62,6 +62,11 @@ export class GhostController {
     return { ok: true }
   }
 
+  @Get('music/:type')
+  listMusicFiles(@Param('type') _type: string): { files: string[] } {
+    return { files: [] }
+  }
+
   @Post('admin/devices')
   async createDeviceCompat(
     @Body()

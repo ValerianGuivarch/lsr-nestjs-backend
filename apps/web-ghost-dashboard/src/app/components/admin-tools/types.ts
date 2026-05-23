@@ -41,6 +41,7 @@ export type SpiritBoxAdminToolProps = {
 export type GhostCamAdminToolProps = {
   cameraFrame?: string
   onPhoto: () => void
+  onRelock: () => void
   ghostcamDeviceId: string
   ghostcamDeviceOptions: string[]
   ghostDurationSec: number
