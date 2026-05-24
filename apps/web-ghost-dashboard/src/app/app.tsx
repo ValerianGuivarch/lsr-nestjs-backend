@@ -145,7 +145,19 @@ type VanObjective = { objective: string; completed: boolean }
 
 const VAN_OBJECTIVE_INTRO = 'Intro terminee'
 const VAN_OBJECTIVE_MATERIAL = 'Récupérer le matériel de localisation'
+const VAN_OBJECTIVE_LOCATE = "Trouver la zone d'activité du fantôme"
+const VAN_OBJECTIVE_IDENTIFICATION_GEAR = "Récupérer le matériel d'identification"
 const VAN_OBJECTIVE_GHOST = 'Identifier le fantôme'
+const VAN_OBJECTIVE_BANISH = 'Bannir le fantôme'
+
+const VAN_PROGRESS_OBJECTIVES: VanObjective[] = [
+  { objective: VAN_OBJECTIVE_INTRO, completed: false },
+  { objective: VAN_OBJECTIVE_MATERIAL, completed: false },
+  { objective: VAN_OBJECTIVE_LOCATE, completed: false },
+  { objective: VAN_OBJECTIVE_IDENTIFICATION_GEAR, completed: false },
+  { objective: VAN_OBJECTIVE_GHOST, completed: false },
+  { objective: VAN_OBJECTIVE_BANISH, completed: false },
+]
 
 function normalizeVanText(value: string): string {
   return value
@@ -174,23 +186,56 @@ function parseVanObjectives(raw?: string): VanObjective[] {
   }
 }
 
-function deriveVanFlowStepIndex(objectives: VanObjective[], mjAccepted: boolean): number {
-  const hasGhost = objectives.some(item => isVanObjectiveMatch(item.objective, VAN_OBJECTIVE_GHOST) && item.completed)
-  if (hasGhost || mjAccepted) {
-    return 3
+function ensureVanObjectives(objectives: VanObjective[]): VanObjective[] {
+  const normalized = objectives.map(item => ({
+    objective: item.objective,
+    completed: Boolean(item.completed),
+  }))
+
+  VAN_PROGRESS_OBJECTIVES.forEach(required => {
+    if (!normalized.some(item => isVanObjectiveMatch(item.objective, required.objective))) {
+      normalized.push({ ...required })
+    }
+  })
+
+  return normalized
+}
+
+function deriveVanObjectiveStep(objectives: VanObjective[]): number {
+  const normalized = ensureVanObjectives(objectives)
+  let count = 0
+
+  for (const expected of VAN_PROGRESS_OBJECTIVES) {
+    const matched = normalized.find(item => isVanObjectiveMatch(item.objective, expected.objective))
+    if (!matched?.completed) {
+      break
+    }
+    count += 1
   }
 
-  const hasMaterial = objectives.some(item => isVanObjectiveMatch(item.objective, VAN_OBJECTIVE_MATERIAL) && item.completed)
-  if (hasMaterial) {
-    return 2
+  return count
+}
+
+type VanCameraMode = 'manual_locked' | 'manual_unlocked' | 'auto_mj_validation'
+
+function resolveVanCameraMode(vanStep: number, photoModeUnlocked: boolean): VanCameraMode {
+  if (vanStep >= 6) {
+    return 'auto_mj_validation'
   }
 
-  const hasIntro = objectives.some(item => isVanObjectiveMatch(item.objective, VAN_OBJECTIVE_INTRO) && item.completed)
-  if (hasIntro) {
-    return 1
-  }
+  return photoModeUnlocked ? 'manual_unlocked' : 'manual_locked'
+}
 
-  return 0
+function formatVanCameraMode(mode: VanCameraMode): string {
+  switch (mode) {
+    case 'auto_mj_validation':
+      return 'Auto + validation MJ'
+    case 'manual_unlocked':
+      return 'Bouton photo joueur déverrouillé'
+    case 'manual_locked':
+    default:
+      return 'Bouton photo joueur verrouillé'
+  }
 }
 
 type HomePanel = 'config' | 'game' | 'admin'
@@ -348,6 +393,10 @@ function createEmptyVanMessageDraft(): VanMessageDraft {
 export function App() {
   const [activePanel, setActivePanel] = useState<HomePanel>('config')
   const [devices, setDevices] = useState<Device[]>([])
+  const devicesRef = useRef<Device[]>([])
+  useEffect(() => {
+    devicesRef.current = devices
+  }, [devices])
   const [gameState, setGameState] = useState<GameState | null>(null)
   const [isLoading, setIsLoading] = useState<boolean>(false)
   const [error, setError] = useState<string>('')
@@ -406,6 +455,9 @@ export function App() {
   const [vanMotionDetections, setVanMotionDetections] = useState<Record<string, boolean>>({})
   const [vanRecentMotionAlert, setVanRecentMotionAlert] = useState<string>('')
   const [vanObjectives, setVanObjectives] = useState<Array<{ objective: string; completed: boolean }>>([])
+  const [vanStep, setVanStep] = useState<number>(0)
+  const [vanPendingPhoto, setVanPendingPhoto] = useState<string | undefined>(undefined)
+  const [vanFinalPhoto, setVanFinalPhoto] = useState<string | undefined>(undefined)
   const [vanFloorPlanImage, setVanFloorPlanImage] = useState<string | null>(null)
   const [vanBackgroundMusic, setVanBackgroundMusic] = useState<VanBackgroundMusic>(createDefaultVanBackgroundMusic)
   const [vanSoundboard, setVanSoundboard] = useState<VanSoundCue[]>([])
@@ -497,16 +549,57 @@ export function App() {
     [devices, controlVanDeviceId]
   )
 
-  const vanFlowStepIndex = useMemo(() => {
+  const currentGhostcamDevice = useMemo(
+    () =>
+      devices.find(device => device.role === 'ghostcam' && device.deviceId === controlGhostcamDeviceId) ??
+      devices.find(device => device.role === 'ghostcam'),
+    [devices, controlGhostcamDeviceId]
+  )
+
+  const vanProgressState = useMemo(() => {
     if (!currentVanDevice) {
-      return Math.min(scenarioStepIndex, ESCAPE_STEPS.length - 1)
+      const fallbackStep = Math.max(1, Math.min(7, scenarioStepIndex || 1))
+      const cameraMode = resolveVanCameraMode(fallbackStep, Boolean(currentGhostcamDevice?.photoModeUnlocked))
+      return {
+        objectiveStep: fallbackStep,
+        effectiveStep: fallbackStep,
+        flowStepIndex: Math.min(fallbackStep, ESCAPE_STEPS.length - 1),
+        cameraMode,
+      }
     }
 
-    const objectives = parseVanObjectives(currentVanDevice.missionObjectives)
-    return deriveVanFlowStepIndex(objectives, Boolean(currentVanDevice.huntActive))
-  }, [currentVanDevice, scenarioStepIndex])
+    const objectives = ensureVanObjectives(parseVanObjectives(currentVanDevice.missionObjectives))
+    const objectiveStep = deriveVanObjectiveStep(objectives)
+    const baseStep = typeof (currentVanDevice as any).vanStep === 'number' ? Math.max(1, Math.min(7, (currentVanDevice as any).vanStep)) : 1
+    const pendingPhoto = Boolean(vanPendingPhoto || (currentVanDevice as any).vanPendingPhoto)
+    const finalPhoto = Boolean(vanFinalPhoto || (currentVanDevice as any).vanFinalPhoto)
 
-  const currentEscapeStep = ESCAPE_STEPS[Math.min(vanFlowStepIndex, ESCAPE_STEPS.length - 1)]
+    // Le step affiché est 1..7 : objectif résolu => count + 1 (intro fait => 2, ...).
+    const displayedFromObjectives = Math.max(1, Math.min(7, objectiveStep + 1))
+    let effectiveStep = Math.max(baseStep, displayedFromObjectives)
+    if (pendingPhoto) {
+      effectiveStep = Math.max(effectiveStep, 6)
+    }
+    if (finalPhoto) {
+      effectiveStep = 7
+    }
+
+    const cameraMode = resolveVanCameraMode(effectiveStep, Boolean(currentGhostcamDevice?.photoModeUnlocked))
+    return {
+      objectiveStep,
+      effectiveStep,
+      flowStepIndex: Math.min(effectiveStep, ESCAPE_STEPS.length - 1),
+      cameraMode,
+    }
+  }, [
+    currentVanDevice,
+    scenarioStepIndex,
+    currentGhostcamDevice?.photoModeUnlocked,
+    vanPendingPhoto,
+    vanFinalPhoto,
+  ])
+
+  const currentEscapeStep = ESCAPE_STEPS[vanProgressState.flowStepIndex]
 
   const stepToolBadges = useMemo(
     () =>
@@ -657,6 +750,21 @@ export function App() {
       setVanGhostActivity(syncedActivity)
     }
   }, [gameState?.currentSpectralActivity, controlVanDeviceId, vanGhostActivity, vanManualMode])
+
+  useEffect(() => {
+    const isVanAdminPageOpen = activePanel === 'admin' && adminToolRole === 'van'
+    if (!isVanAdminPageOpen || !controlVanDeviceId) {
+      return
+    }
+
+    setVanManualMode(true)
+
+    const interval = window.setInterval(() => {
+      setVanGhostActivity(prev => Math.min(100, prev + 1))
+    }, 20_000)
+
+    return () => window.clearInterval(interval)
+  }, [activePanel, adminToolRole, controlVanDeviceId])
 
   useEffect(() => {
     if (!selectedDevice) {
@@ -811,9 +919,22 @@ export function App() {
     const parsedMotion = vanDevice.motionDetections ? (JSON.parse(vanDevice.motionDetections) as Record<string, boolean>) : {}
     const parsedSensors = vanDevice.motionSensorRooms ? (JSON.parse(vanDevice.motionSensorRooms) as string[]) : []
     const parsedSanity = vanDevice.playerSanity ? (JSON.parse(vanDevice.playerSanity) as Record<string, number>) : {}
-    const parsedObjectives = vanDevice.missionObjectives
+    const parsedObjectivesRaw = vanDevice.missionObjectives
       ? (JSON.parse(vanDevice.missionObjectives) as Array<{ objective: string; completed: boolean }>)
       : []
+    const parsedObjectives = ensureVanObjectives(parsedObjectivesRaw)
+    const objectiveStep = deriveVanObjectiveStep(parsedObjectives)
+    const persistedStep = typeof (vanDevice as any).vanStep === 'number' ? (vanDevice as any).vanStep : 1
+    const hasPendingPhoto = Boolean((vanDevice as any).vanPendingPhoto)
+    const hasFinalPhoto = Boolean((vanDevice as any).vanFinalPhoto)
+    const displayedFromObjectives = Math.max(1, Math.min(7, objectiveStep + 1))
+    let effectiveStep = Math.max(1, Math.min(7, Math.max(persistedStep, displayedFromObjectives)))
+    if (hasPendingPhoto) {
+      effectiveStep = Math.max(effectiveStep, 6)
+    }
+    if (hasFinalPhoto) {
+      effectiveStep = 7
+    }
     const parsedBackgroundMusic = parseVanBackgroundMusic(vanDevice.backgroundMusic)
     const parsedSoundboard = parseVanSoundboard(vanDevice.soundboard)
     const parsedVanMessageTemplates = parseVanMessages(vanDevice.vanMessageTemplates)
@@ -833,6 +954,9 @@ export function App() {
       }))
     )
     setVanObjectives(parsedObjectives)
+    setVanStep(effectiveStep)
+    setVanPendingPhoto((vanDevice as any).vanPendingPhoto || undefined)
+    setVanFinalPhoto((vanDevice as any).vanFinalPhoto || undefined)
     setVanFloorPlanImage(vanDevice.floorPlanImage ?? null)
     setVanBackgroundMusic(parsedBackgroundMusic)
     setVanSoundboard(parsedSoundboard)
@@ -844,7 +968,12 @@ export function App() {
   }, [devices, controlVanDeviceId])
 
   useEffect(() => {
-    if (!controlVanDeviceId || !vanHydratedRef.current) {
+    if (
+      !controlVanDeviceId ||
+      !vanHydratedRef.current ||
+      activePanel !== 'admin' ||
+      adminToolRole !== 'van'
+    ) {
       return
     }
 
@@ -868,7 +997,6 @@ export function App() {
           roomList: JSON.stringify(vanRooms),
           motionSensorRooms: JSON.stringify(vanMotionSensors),
           recentMotionAlert: vanRecentMotionAlert || undefined,
-          missionObjectives: JSON.stringify(vanObjectives),
           floorPlanImage: vanFloorPlanImage,
           backgroundMusic: JSON.stringify(vanBackgroundMusic),
           soundboard: JSON.stringify(vanSoundboard),
@@ -882,6 +1010,8 @@ export function App() {
 
     return () => window.clearTimeout(timer)
   }, [
+    activePanel,
+    adminToolRole,
     controlVanDeviceId,
     vanGhostActivity,
     vanPlayers,
@@ -890,13 +1020,101 @@ export function App() {
     vanRooms,
     vanMotionSensors,
     vanRecentMotionAlert,
-    vanObjectives,
     vanFloorPlanImage,
     vanBackgroundMusic,
     vanSoundboard,
     vanMessageTemplates,
     vanSentMessages
   ])
+
+  useEffect(() => {
+    if (activePanel !== 'admin' || adminToolRole !== 'van' || !controlVanDeviceId) {
+      return
+    }
+
+    const syncVanState = (): void => {
+      fetch(ghostApiUrl(`/player/device/${encodeURIComponent(controlVanDeviceId)}/van?ts=${Date.now()}`), { cache: 'no-store' })
+        .then(toJson<Device>)
+        .then(vanDevice => {
+          const parsedObjectives = ensureVanObjectives(parseVanObjectives(vanDevice.missionObjectives))
+          const objectiveStep = deriveVanObjectiveStep(parsedObjectives)
+          const persistedStep = typeof (vanDevice as any).vanStep === 'number' ? (vanDevice as any).vanStep : 1
+          const hasPendingPhoto = Boolean((vanDevice as any).vanPendingPhoto)
+          const hasFinalPhoto = Boolean((vanDevice as any).vanFinalPhoto)
+
+          const displayedFromObjectives = Math.max(1, Math.min(7, objectiveStep + 1))
+          let effectiveStep = Math.max(1, Math.min(7, Math.max(persistedStep, displayedFromObjectives)))
+          if (hasPendingPhoto) {
+            effectiveStep = Math.max(effectiveStep, 6)
+          }
+          if (hasFinalPhoto) {
+            effectiveStep = 7
+          }
+
+          if (!vanManualMode) {
+            setVanGhostActivity(prev => {
+              const next = Math.max(0, Math.min(100, Math.round(vanDevice.ghostActivityLevel ?? 0)))
+              return prev === next ? prev : next
+            })
+          }
+
+          setVanObjectives(prev =>
+            JSON.stringify(prev) === JSON.stringify(parsedObjectives) ? prev : parsedObjectives
+          )
+          setVanStep(prev => (prev === effectiveStep ? prev : effectiveStep))
+          setVanPendingPhoto(prev => {
+            const next = (vanDevice as any).vanPendingPhoto || undefined
+            return prev === next ? prev : next
+          })
+          setVanFinalPhoto(prev => {
+            const next = (vanDevice as any).vanFinalPhoto || undefined
+            return prev === next ? prev : next
+          })
+
+          // Fusionne le device van rafraichi dans la liste devices pour que
+          // currentVanDevice (et donc vanProgressState.effectiveStep) reste a jour.
+          setDevices(prev => {
+            const idx = prev.findIndex(d => d.deviceId === vanDevice.deviceId)
+            if (idx < 0) return prev
+            const merged = { ...prev[idx], ...vanDevice }
+            if (JSON.stringify(prev[idx]) === JSON.stringify(merged)) return prev
+            const copy = prev.slice()
+            copy[idx] = merged
+            return copy
+          })
+        })
+        .catch(() => {
+          // Réseau indisponible: on garde l'état local.
+        })
+
+      // Sync ghostcam pour garder photoModeUnlocked (et donc le mode camera) frais.
+      const ghostcamDevice = devicesRef.current.find(d => d.role === 'ghostcam')
+      const ghostcamId = controlGhostcamDeviceId || ghostcamDevice?.deviceId
+      if (ghostcamId) {
+        fetch(ghostApiUrl(`/player/state?deviceId=${encodeURIComponent(ghostcamId)}&ts=${Date.now()}`), { cache: 'no-store' })
+          .then(toJson<Device | undefined>)
+          .then(cam => {
+            if (!cam || !cam.deviceId) return
+            setDevices(prev => {
+              const idx = prev.findIndex(d => d.deviceId === cam.deviceId)
+              if (idx < 0) return prev
+              const merged = { ...prev[idx], ...cam }
+              if (JSON.stringify(prev[idx]) === JSON.stringify(merged)) return prev
+              const copy = prev.slice()
+              copy[idx] = merged
+              return copy
+            })
+          })
+          .catch(() => {
+            // ignore
+          })
+      }
+    }
+
+    syncVanState()
+    const interval = window.setInterval(syncVanState, 1000)
+    return () => window.clearInterval(interval)
+  }, [activePanel, adminToolRole, controlVanDeviceId, controlGhostcamDeviceId, vanManualMode])
 
   useEffect(() => {
     const isSpiritboxAdminPageOpen = activePanel === 'admin' && adminToolRole === 'spiritbox'
@@ -1708,14 +1926,11 @@ export function App() {
 
     setVanMessageTemplates(templates)
     setVanSentMessages(initialSentMessages)
-    setVanObjectives([
-      { objective: 'Intro terminee', completed: false },
-      { objective: 'Récupérer le matériel de localisation', completed: false },
-      { objective: "Trouver la zone d'activité du fantôme", completed: false },
-      { objective: "Récupérer le matériel d'identification", completed: false },
-      { objective: 'Identifier le fantôme', completed: false },
-      { objective: 'Bannir le fantôme', completed: false }
-    ])
+    const resetObjectives = VAN_PROGRESS_OBJECTIVES.map(item => ({ ...item }))
+    setVanObjectives(resetObjectives)
+    setVanStep(0)
+    setVanPendingPhoto(undefined)
+    setVanFinalPhoto(undefined)
 
     try {
       await fetch(ghostApiUrl(`/admin/device/${vanId}`), {
@@ -1728,14 +1943,10 @@ export function App() {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          missionObjectives: JSON.stringify([
-            { objective: 'Intro terminee', completed: false },
-            { objective: 'Récupérer le matériel de localisation', completed: false },
-            { objective: "Trouver la zone d'activité du fantôme", completed: false },
-            { objective: "Récupérer le matériel d'identification", completed: false },
-            { objective: 'Identifier le fantôme', completed: false },
-            { objective: 'Bannir le fantôme', completed: false },
-          ]),
+          vanStep: 0,
+          missionObjectives: JSON.stringify(resetObjectives),
+          vanPendingPhoto: null,
+          vanFinalPhoto: null,
           vanMessageTemplates: JSON.stringify(templates),
           vanSentMessages: JSON.stringify(initialSentMessages)
         })
@@ -1814,6 +2025,12 @@ export function App() {
     }
   }
 
+  const handleVanGhostActivityChange = (value: number): void => {
+    const clamped = Math.max(0, Math.min(100, Math.round(value)))
+    setVanManualMode(true)
+    setVanGhostActivity(clamped)
+  }
+
   const feedDefaultSetup = async (): Promise<void> => {
     if (!window.confirm('etes vous sur ?')) {
       return
@@ -1874,6 +2091,7 @@ export function App() {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          vanStep: 0,
           ghostActivityLevel: 0,
           playerSanity: JSON.stringify(seededPlayers),
           soundLevels: JSON.stringify(seededSoundLevels),
@@ -1881,14 +2099,9 @@ export function App() {
           roomList: JSON.stringify(seededRooms),
           motionSensorRooms: JSON.stringify(['salon', 'cuisine', 'chambre1', 'chambre2', 'salle de bain', 'toilettes']),
           recentMotionAlert: '',
-          missionObjectives: JSON.stringify([
-            { objective: 'Intro terminee', completed: false },
-            { objective: 'Récupérer le matériel de localisation', completed: false },
-            { objective: "Trouver la zone d'activité du fantôme", completed: false },
-            { objective: "Récupérer le matériel d'identification", completed: false },
-            { objective: 'Identifier le fantôme', completed: false },
-            { objective: 'Bannir le fantôme', completed: false },
-          ]),
+          missionObjectives: JSON.stringify(VAN_PROGRESS_OBJECTIVES),
+          vanPendingPhoto: null,
+          vanFinalPhoto: null,
           backgroundMusic: JSON.stringify(createDefaultVanBackgroundMusic()),
           soundboard: JSON.stringify([]),
           vanMessageTemplates: JSON.stringify(createDefaultVanMessageTemplates()),
@@ -1989,27 +2202,209 @@ export function App() {
       return
     }
 
-    const updated = vanObjectives.map(obj =>
+    const updated = ensureVanObjectives(vanObjectives.map(obj =>
       obj.objective === objectiveText ? { ...obj, completed: !obj.completed } : obj
-    )
+    ))
+    const nextStep = Math.max(1, Math.min(7, deriveVanObjectiveStep(updated) + 1))
+    const { vanPatch, nextPendingPhoto, nextFinalPhoto, lockGhostcamPhotoMode } = buildVanStateForManualStep(nextStep)
+    vanPatch.missionObjectives = JSON.stringify(updated)
 
     setVanObjectives(updated)
+    setVanStep(nextStep)
+    setVanPendingPhoto(nextPendingPhoto)
+    setVanFinalPhoto(nextFinalPhoto)
 
     try {
       await fetch(ghostApiUrl(`/admin/device/${encodeURIComponent(controlVanDeviceId)}/van`), {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ missionObjectives: JSON.stringify(updated) })
+        body: JSON.stringify(vanPatch)
       }).then(toJson<Device>)
+
+      const ghostcamId = controlGhostcamDeviceId || devices.find(device => device.role === 'ghostcam')?.deviceId
+      if (ghostcamId && lockGhostcamPhotoMode) {
+        await fetch(ghostApiUrl(`/admin/device/${encodeURIComponent(ghostcamId)}`), {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ photoModeUnlocked: false })
+        }).then(toJson<Device>)
+      }
     } catch (e) {
       setError((e as Error).message)
       setVanObjectives(vanObjectives)
+      setVanStep(vanStep)
+      setVanPendingPhoto(vanPendingPhoto)
+      setVanFinalPhoto(vanFinalPhoto)
     }
+  }
+
+  const DEFAULT_VAN_OBJECTIVES_LIST: Array<{ objective: string; completed: boolean }> =
+    VAN_PROGRESS_OBJECTIVES.map(item => ({ ...item }))
+
+  const buildObjectivesForStep = (step: number): Array<{ objective: string; completed: boolean }> => {
+    const next = DEFAULT_VAN_OBJECTIVES_LIST.map(o => ({ ...o }))
+    // `step` est l'etape affichee (1..7), donc on complete `step - 1` objectifs.
+    const count = Math.max(0, Math.min(next.length, step - 1))
+    for (let i = 0; i < count; i++) next[i].completed = true
+    return next
+  }
+
+  const buildVanStateForManualStep = (step: number): {
+    objectives: Array<{ objective: string; completed: boolean }>
+    vanPatch: Record<string, unknown>
+    nextPendingPhoto?: string
+    nextFinalPhoto?: string
+    lockGhostcamPhotoMode: boolean
+  } => {
+    const objectives = buildObjectivesForStep(step)
+    const vanPatch: Record<string, unknown> = {
+      vanStep: step,
+      missionObjectives: JSON.stringify(objectives),
+    }
+
+    let nextPendingPhoto = vanPendingPhoto
+    let nextFinalPhoto = vanFinalPhoto
+
+    // Le mode auto+validation MJ commence a l'etape 6.
+    // Toute navigation manuelle doit remettre un etat coherent.
+    if (step <= 5) {
+      vanPatch.vanPendingPhoto = null
+      vanPatch.vanFinalPhoto = null
+      vanPatch.vanFearMessageAt = null
+      nextPendingPhoto = undefined
+      nextFinalPhoto = undefined
+    } else if (step === 6) {
+      vanPatch.vanPendingPhoto = null
+      vanPatch.vanFinalPhoto = null
+      vanPatch.vanFearMessageAt = null
+      nextPendingPhoto = undefined
+      nextFinalPhoto = undefined
+    } else {
+      vanPatch.vanPendingPhoto = null
+      nextPendingPhoto = undefined
+    }
+
+    return {
+      objectives,
+      vanPatch,
+      nextPendingPhoto,
+      nextFinalPhoto,
+      lockGhostcamPhotoMode: step >= 6,
+    }
+  }
+
+  const setVanStepRemote = (newStep: number): void => {
+    if (!controlVanDeviceId) return
+    const clamped = Math.max(1, Math.min(7, newStep))
+    const {
+      objectives,
+      vanPatch,
+      nextPendingPhoto,
+      nextFinalPhoto,
+      lockGhostcamPhotoMode,
+    } = buildVanStateForManualStep(clamped)
+
+    setVanStep(clamped)
+    setVanObjectives(objectives)
+    setVanPendingPhoto(nextPendingPhoto)
+    setVanFinalPhoto(nextFinalPhoto)
+
+    void fetch(ghostApiUrl(`/admin/device/${encodeURIComponent(controlVanDeviceId)}/van`), {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(vanPatch)
+    }).catch(() => { /* offline */ })
+
+    const ghostcamId = controlGhostcamDeviceId || devices.find(device => device.role === 'ghostcam')?.deviceId
+    if (ghostcamId && lockGhostcamPhotoMode) {
+      void fetch(ghostApiUrl(`/admin/device/${encodeURIComponent(ghostcamId)}`), {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ photoModeUnlocked: false })
+      }).catch(() => { /* offline */ })
+    }
+  }
+
+  const resetVan = (): void => {
+    if (!controlVanDeviceId) return
+    if (!window.confirm('Réinitialiser le scénario du van (étape 1) ?')) return
+    const ghostcamId = controlGhostcamDeviceId || devices.find(device => device.role === 'ghostcam')?.deviceId
+    const resetGhostActivity = 25
+    const objs = buildObjectivesForStep(1)
+    setVanManualMode(true)
+    setVanGhostActivity(resetGhostActivity)
+    setVanStep(1)
+    setVanObjectives(objs)
+    setVanPendingPhoto(undefined)
+    setVanFinalPhoto(undefined)
+    void fetch(ghostApiUrl(`/admin/device/${encodeURIComponent(controlVanDeviceId)}/van`), {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        vanStep: 1,
+        ghostActivityLevel: resetGhostActivity,
+        missionObjectives: JSON.stringify(objs),
+        vanPendingPhoto: null,
+        vanFinalPhoto: null,
+        vanFearMessageAt: null
+      })
+    }).catch(() => { /* offline */ })
+
+    if (ghostcamId) {
+      void fetch(ghostApiUrl(`/admin/device/${encodeURIComponent(ghostcamId)}`), {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ photoModeUnlocked: false })
+      }).catch(() => { /* offline */ })
+    }
+  }
+
+  const validateVanPhoto = (): void => {
+    if (!controlVanDeviceId || !vanPendingPhoto) return
+    const photo = vanPendingPhoto
+    const objs = buildObjectivesForStep(7)
+    setVanStep(7)
+    setVanObjectives(objs)
+    setVanPendingPhoto(undefined)
+    setVanFinalPhoto(photo)
+    void fetch(ghostApiUrl(`/admin/device/${encodeURIComponent(controlVanDeviceId)}/van`), {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        vanStep: 7,
+        missionObjectives: JSON.stringify(objs),
+        vanFinalPhoto: photo,
+        vanPendingPhoto: null
+      })
+    }).catch(() => { /* offline */ })
+  }
+
+  const refuseVanPhoto = (): void => {
+    if (!controlVanDeviceId) return
+    setVanPendingPhoto(undefined)
+    setVanFinalPhoto(undefined)
+    void fetch(ghostApiUrl(`/admin/device/${encodeURIComponent(controlVanDeviceId)}/van`), {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        vanPendingPhoto: null,
+        vanFearMessageAt: new Date().toISOString()
+      })
+    }).catch(() => { /* offline */ })
   }
 
   const takeGhostcamPhoto = (): void => {
     const frame = controlGhostcamDeviceId ? cameraSources[controlGhostcamDeviceId] : undefined
-    if (!frame) {
+    if (!frame) return
+
+    // Étape 6 du van : on envoie la photo en validation au MJ.
+    if (vanStep === 6 && controlVanDeviceId) {
+      setVanPendingPhoto(frame)
+      void fetch(ghostApiUrl(`/admin/device/${encodeURIComponent(controlVanDeviceId)}/van`), {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ vanPendingPhoto: frame })
+      }).catch(() => { /* offline */ })
       return
     }
 
@@ -2025,6 +2420,12 @@ export function App() {
         <Header>
           <h1>Ghost MJ Dashboard</h1>
           <p>Panel principal: accès aux dashboards MJ</p>
+          <GhostCardsActions>
+            <GhostCardsLink href="/ghost-cards" target="_blank" rel="noreferrer">
+              Ouvrir les cartes fantômes
+            </GhostCardsLink>
+            <GhostCardsHint>/ghost-cards</GhostCardsHint>
+          </GhostCardsActions>
         </Header>
 
         {activePanel !== 'admin' && (
@@ -2121,7 +2522,8 @@ export function App() {
                         <small>Game ID: {gameState.gameId}</small>
                         <small>Statut: {gameState.isRunning ? 'En cours' : 'Arrêtée'}</small>
                         <small>Étape scénario moteur: {gameState.currentScenarioStep + 1}</small>
-                        <small>Étape flow Van: {vanFlowStepIndex + 1}</small>
+                        <small>Étape flow Van: {vanProgressState.effectiveStep}/7</small>
+                        <small>Étape objectifs validés: {vanProgressState.objectiveStep}/7</small>
                         <small>Activité spectrale: {Math.round(gameState.currentSpectralActivity)}%</small>
 
                         <Actions>
@@ -2213,6 +2615,11 @@ export function App() {
             {adminToolRole === 'ghostcam' && (
               <GhostCamAdminTool
                 cameraFrame={controlGhostcamDeviceId ? cameraSources[controlGhostcamDeviceId] : undefined}
+                vanStep={vanProgressState.effectiveStep}
+                cameraModeLabel={formatVanCameraMode(vanProgressState.cameraMode)}
+                vanPendingPhoto={vanPendingPhoto}
+                onValidatePhoto={validateVanPhoto}
+                onRefusePhoto={refuseVanPhoto}
                 onPhoto={takeGhostcamPhoto}
                 onRelock={() => {
                   if (!controlGhostcamDeviceId) return
@@ -2265,9 +2672,19 @@ export function App() {
             {adminToolRole === 'van' && (
               <VanAdminTool
                 vanGhostActivity={vanGhostActivity}
-                onVanGhostActivityChange={setVanGhostActivity}
+                onVanGhostActivityChange={handleVanGhostActivityChange}
                 vanObjectives={vanObjectives}
-                onToggleObjective={(t) => void toggleVanObjective(t)}
+                vanStep={vanProgressState.effectiveStep}
+                objectiveStep={Math.max(1, Math.min(7, vanProgressState.objectiveStep + 1))}
+                cameraModeLabel={formatVanCameraMode(vanProgressState.cameraMode)}
+                onStepChange={setVanStepRemote}
+                onResetVan={resetVan}
+                onOpenCameraAdmin={() => {
+                  const ghostcamId =
+                    controlGhostcamDeviceId || devices.find(d => d.role === 'ghostcam')?.deviceId
+                  if (!ghostcamId) return
+                  openAdminToolPage('ghostcam', ghostcamId)
+                }}
               />
             )}
 
@@ -2318,6 +2735,35 @@ const Header = styled.header`
     margin: 0.5rem 0 0;
     color: #b4c4da;
   }
+`
+
+const GhostCardsActions = styled.div`
+  margin-top: 0.65rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+`
+
+const GhostCardsLink = styled.a`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.45rem 0.75rem;
+  border-radius: 8px;
+  border: 1px solid #2f8d5d;
+  background: #133021;
+  color: #d9ffe9;
+  font-weight: 700;
+  text-decoration: none;
+
+  &:hover {
+    filter: brightness(1.12);
+  }
+`
+
+const GhostCardsHint = styled.small`
+  color: #9ac0a9;
 `
 
 const HomeCards = styled.div`

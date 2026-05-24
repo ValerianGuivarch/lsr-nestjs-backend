@@ -1,5 +1,5 @@
 import React from 'react'
-import styled from 'styled-components'
+import styled, { keyframes } from 'styled-components'
 
 type GhostCamDeviceState = {
   deviceId: string
@@ -19,6 +19,8 @@ type GhostCamDeviceViewProps = {
   onTogglePhotoPause: () => void
   videoRef: React.RefObject<HTMLVideoElement>
   canvasRef: React.RefObject<HTMLCanvasElement>
+  hidePhotoButton?: boolean
+  fearMessage?: string
 }
 
 export function GhostCamDeviceView({
@@ -31,7 +33,9 @@ export function GhostCamDeviceView({
   onUnlockPhotoMode,
   onTogglePhotoPause,
   videoRef,
-  canvasRef
+  canvasRef,
+  hidePhotoButton,
+  fearMessage
 }: GhostCamDeviceViewProps) {
   const [unlockPromptOpen, setUnlockPromptOpen] = React.useState(false)
 
@@ -59,16 +63,19 @@ export function GhostCamDeviceView({
 
       <GhostCamView>
         <GhostCamTitle>CAMERA</GhostCamTitle>
-        <GhostCamActions>
-          <GhostCamActionButton type="button" onClick={handlePhotoButton}>
-            {photoModeUnlocked ? (photoPaused ? 'PHOTO - RELANCER' : 'PHOTO') : 'PHOTO [LOCK]'}
-          </GhostCamActionButton>
-        </GhostCamActions>
+        {!hidePhotoButton && (
+          <GhostCamActions>
+            <GhostCamActionButton type="button" onClick={handlePhotoButton}>
+              {photoModeUnlocked ? (photoPaused ? 'PHOTO - RELANCER' : 'PHOTO') : 'PHOTO [LOCK]'}
+            </GhostCamActionButton>
+          </GhostCamActions>
+        )}
 
         <video ref={videoRef} autoPlay playsInline muted style={{ display: 'none' }} />
         <GhostCamCanvas ref={canvasRef} width={480} height={360} style={{ display: state.powerOn ? 'block' : 'none' }} />
         {!state.powerOn && <GhostCamOffline>CAM OFFLINE</GhostCamOffline>}
         {photoPaused && <GhostCamPaused>PAUSE PHOTO</GhostCamPaused>}
+        {fearMessage && <FearOverlay>{fearMessage}</FearOverlay>}
       </GhostCamView>
 
       {unlockPromptOpen && !photoModeUnlocked && (
@@ -377,4 +384,64 @@ const KeypadButton = styled.button<{ $variant?: 'primary' | 'secondary' }>`
     opacity: 0.5;
     cursor: not-allowed;
   }
+`
+
+const FearOverlay = styled.div`
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(120, 0, 0, 0.55);
+  color: #fff;
+  font-size: 1.8rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  text-shadow: 0 0 12px rgba(0, 0, 0, 0.8);
+  z-index: 5;
+  pointer-events: none;
+`
+
+const glow = keyframes`
+  0%, 100% { text-shadow: 0 0 8px rgba(120, 255, 180, 0.4); }
+  50% { text-shadow: 0 0 20px rgba(120, 255, 180, 0.9); }
+`
+
+const VictoryOverlay = styled.div`
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(circle at center, rgba(20, 60, 40, 0.95), rgba(0, 0, 0, 0.97));
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+  z-index: 100;
+  padding: 2rem;
+`
+
+const VictoryTitle = styled.h1`
+  margin: 0;
+  font-size: 2.4rem;
+  color: #88ffaa;
+  letter-spacing: 0.15rem;
+  text-align: center;
+  animation: ${glow} 2.5s ease-in-out infinite;
+`
+
+const VictorySubtitle = styled.div`
+  font-size: 1.2rem;
+  color: #b8ffcc;
+  letter-spacing: 0.08em;
+  text-align: center;
+`
+
+const VictoryPhoto = styled.img`
+  max-width: 80vw;
+  max-height: 55vh;
+  border: 3px solid rgba(255, 220, 100, 0.7);
+  border-radius: 8px;
+  object-fit: contain;
+  box-shadow: 0 0 30px rgba(255, 220, 100, 0.3);
 `

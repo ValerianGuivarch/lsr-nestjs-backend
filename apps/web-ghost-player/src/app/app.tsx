@@ -1,9 +1,9 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import styled, { ThemeProvider } from 'styled-components'
 import { VanStep0Intro } from './components/van/VanStep0Intro'
-import { VanStep1Puzzle } from './components/van/VanStep1Puzzle'
 import { VanStep2Equipment } from './components/van/VanStep2Equipment'
-import { VanStep3Validation } from './components/van/VanStep3Validation'
+import { VanStep7Victory } from './components/van/VanStep7Victory'
+import { GhostEvidenceCardsPrintPage } from './components/print/GhostEvidenceCardsPrintPage'
 import { VanDashboard, VanHeader, VanStatus, VanTitle } from './components/van/van-styles'
 import { EmfDeviceView } from './components/devices/EmfDeviceView'
 import { SpiritBoxDeviceView } from './components/devices/SpiritBoxDeviceView'
@@ -65,12 +65,26 @@ type VanSoundCue = {
   lastTriggeredAt?: string
 }
 
-type VanPhase = 'step0' | 'step1' | 'step2' | 'step3'
+type VanPhase = 'step1' | 'step2' | 'step3' | 'step4' | 'step5' | 'step6' | 'step7'
+
+// Libellé affiché dans le bandeau de la vue van classique (étapes 2-6)
+const VAN_STEP_BANNERS: Record<VanPhase, string> = {
+  step1: 'Etape 1/7 — Lecture du message',
+  step2: 'Etape 2/7 — Récupérer le matériel de localisation',
+  step3: 'Etape 3/7 — Identifier le lieu du fantôme',
+  step4: "Etape 4/7 — Récupérer le matériel d'identification",
+  step5: 'Etape 5/7 — Identifier le fantôme',
+  step6: 'Etape 6/7 — Bannir le fantôme',
+  step7: 'Etape 7/7 — Victoire',
+}
 
 const VAN_INTRO_AUDIO_URL = 'https://l7r.fr/l7r/GhostIntro.mp3'
+const GHOST_CAM_SPRITE_URL = '/ghostcam-sprite.svg'
 
 const VAN_OBJECTIVE_INTRO = 'Intro terminee'
 const VAN_OBJECTIVE_MATERIAL = 'Récupérer le matériel de localisation'
+const VAN_OBJECTIVE_LOCATE = "Trouver la zone d'activité du fantôme"
+const VAN_OBJECTIVE_IDENTIFICATION_GEAR = "Récupérer le matériel d'identification"
 const VAN_OBJECTIVE_GHOST = 'Identifier le fantôme'
 
 const DEFAULT_VAN_OBJECTIVES: VanObjective[] = [
@@ -109,39 +123,77 @@ function ensureVanObjectives(objectives: VanObjective[]): VanObjective[] {
   return normalized
 }
 
+function deriveVanObjectiveStep(objectives: VanObjective[]): number {
+  const normalized = ensureVanObjectives(objectives)
+  let count = 0
+
+  for (const objective of DEFAULT_VAN_OBJECTIVES) {
+    const matched = normalized.find(item => isObjectiveMatch(item.objective, objective.objective))
+    if (!matched?.completed) {
+      break
+    }
+    count += 1
+  }
+
+  return count
+}
+
+// Mappe les données backend vers le numéro d'étape affiché côté player (1..7).
+// - Aucun objectif terminé → 1 (lecture du message)
+// - Intro lu → 2, Matériel → 3, Lieu → 4, Id Gear → 5, Fantôme → 6, Banish → 7
+// - Override par vanStep persisté (ex: photo finale) si plus avancé.
+function deriveDisplayedVanStep(
+  objectives: VanObjective[],
+  persistedVanStep: number | undefined,
+  hasFinalPhoto: boolean,
+): number {
+  const objStep = deriveVanObjectiveStep(objectives)
+  const fromObjectives = Math.max(1, Math.min(7, objStep + 1))
+  const persisted =
+    typeof persistedVanStep === 'number' ? Math.max(1, Math.min(7, persistedVanStep)) : 1
+  let step = Math.max(fromObjectives, persisted)
+  if (hasFinalPhoto) step = 7
+  return step
+}
+
+function phaseFromDisplayedStep(step: number): VanPhase {
+  const clamped = Math.max(1, Math.min(7, step))
+  return (`step${clamped}` as VanPhase)
+}
+
 function deriveVanPhase(objectives: VanObjective[], _mjAccepted: boolean): VanPhase {
-  // Step 3 n'est plus declenchee automatiquement par hasGhost / mjAccepted :
-  // elle est exclusivement atteinte via la saisie du mot de passe (declareGhost),
-  // qui appelle setVanPhase('step3') directement.
-  const hasMaterial = objectives.some(item => isObjectiveMatch(item.objective, VAN_OBJECTIVE_MATERIAL) && item.completed)
-  if (hasMaterial) {
-    return 'step2'
-  }
-
-  const hasIntro = objectives.some(item => isObjectiveMatch(item.objective, VAN_OBJECTIVE_INTRO) && item.completed)
-  if (hasIntro) {
-    return 'step1'
-  }
-
-  return 'step0'
+  return phaseFromDisplayedStep(deriveDisplayedVanStep(objectives, undefined, false))
 }
 
 function getVanPhaseRank(phase: VanPhase): number {
   switch (phase) {
-    case 'step0':
-      return 0
     case 'step1':
       return 1
     case 'step2':
       return 2
     case 'step3':
       return 3
+    case 'step4':
+      return 4
+    case 'step5':
+      return 5
+    case 'step6':
+      return 6
+    case 'step7':
+      return 7
     default:
-      return 0
+      return 1
   }
 }
 
 export function App() {
+  const isGhostCardsPage =
+    window.location.pathname === '/ghost-cards' || window.location.pathname === '/ghost-cards/'
+
+  if (isGhostCardsPage) {
+    return <GhostEvidenceCardsPrintPage />
+  }
+
   const [deviceId, setDeviceId] = useState('')
   const [devices, setDevices] = useState<Device[]>([])
   const [state, setState] = useState<Device | null>(null)
@@ -154,6 +206,7 @@ export function App() {
   const cameraStreamRef = useRef<MediaStream | null>(null)
   const emfUploadInFlightRef = useRef(false)
   const ghostcamUploadInFlightRef = useRef(false)
+  const ghostCamSpriteRef = useRef<HTMLImageElement | null>(null)
   const persistPhotoModeUnlocked = useCallback(
     async (unlocked: boolean): Promise<void> => {
       if (!deviceId) {
@@ -187,10 +240,25 @@ export function App() {
     tuneSpiritFrequencyDown,
     tuneSpiritFrequencyUp,
   } = useSpiritBoxAudio(state?.role, deviceId, state?.powerOn ?? true)
+
+  useEffect(() => {
+    const sprite = new Image()
+    sprite.crossOrigin = 'anonymous'
+    sprite.src = GHOST_CAM_SPRITE_URL
+    ghostCamSpriteRef.current = sprite
+
+    return () => {
+      if (ghostCamSpriteRef.current === sprite) {
+        ghostCamSpriteRef.current = null
+      }
+    }
+  }, [])
+
   const vanIntroAudioRef = useRef<HTMLAudioElement | null>(null)
   const vanMusicAudioRef = useRef<HTMLAudioElement | null>(null)
   const lastTriggeredSoundRef = useRef<Record<string, string>>({})
-  const [vanPhase, setVanPhase] = useState<VanPhase>('step0')
+  const lastActivityAdjustRef = useRef(0)
+  const [vanPhase, setVanPhase] = useState<VanPhase>('step1')
   const [vanIntroState, setVanIntroState] = useState<'idle' | 'playing' | 'done'>('idle')
   const [vanGhostGuess, setVanGhostGuess] = useState('')
   const [vanGhostDeclarationError, setVanGhostDeclarationError] = useState('')
@@ -200,6 +268,9 @@ export function App() {
 
   // Van data
   const [vanData, setVanData] = useState<{
+    vanStep?: number
+    vanPendingPhoto?: string
+    vanFinalPhoto?: string
     ghostActivityLevel: number
     playerSanity: Record<string, number>
     soundLevels: Record<string, number>
@@ -358,7 +429,10 @@ export function App() {
   useEffect(() => {
     if (step === 'play' && deviceId) {
       const roleFromList = devices.find(device => device.deviceId === deviceId)?.role
-      const refreshMs = roleFromList === 'emf' ? 150 : 1000
+      const refreshMs =
+        roleFromList === 'emf' || roleFromList === 'ghostcam'
+          ? 150
+          : 1000
 
       const refreshState = async () => {
         try {
@@ -539,7 +613,7 @@ export function App() {
       const ghostActive = Number.isFinite(ghostUntilTs) && ghostUntilTs > Date.now()
       const orbUntilTs = state.orbUntil ? Date.parse(state.orbUntil) : NaN
       const orbsActive = Number.isFinite(orbUntilTs) && orbUntilTs > Date.now()
-      const isRed = ghostActive
+      const isRed = ghostActive && state.role === 'ghostcam' && photoPaused
 
       // Dessiner le flux video
       ctx.drawImage(videoRef.current, 0, 0, width, height)
@@ -601,58 +675,59 @@ export function App() {
       // Apparition de fantôme temporaire (pilotée par MJ).
 
       if (ghostActive && state.role === 'ghostcam') {
+        const sprite = ghostCamSpriteRef.current
         const now = Date.now() / 1000
-        const ghostW = width * 0.24
-        const ghostH = height * 0.44
-        const jitterX = Math.sin(now * 4.4) * 8
-        const jitterY = Math.cos(now * 5.1) * 5
+        const ghostW = width * 0.26
+        const ghostH = height * 0.52
+        const jitterX = Math.sin(now * 4.4) * 6
+        const jitterY = Math.cos(now * 5.1) * 4
         const ghostX = width * (0.52 + Math.sin(now * 0.9) * 0.18) + jitterX
         const ghostY = height * (0.42 + Math.cos(now * 0.8) * 0.08) + jitterY
 
         ctx.save()
-        ctx.globalAlpha = isRed ? 0.5 : 0.56
+        ctx.globalAlpha = isRed ? 0.9 : 0.82
+        ctx.filter = isRed
+          ? 'drop-shadow(0 0 14px rgba(255, 70, 70, 0.85))'
+          : 'drop-shadow(0 0 10px rgba(180, 255, 220, 0.55))'
 
-        const bodyGradient = ctx.createRadialGradient(
-          ghostX,
-          ghostY,
-          ghostW * 0.15,
-          ghostX,
-          ghostY,
-          ghostW * 0.65
-        )
-        bodyGradient.addColorStop(0, isRed ? 'rgba(255, 220, 220, 0.92)' : 'rgba(225, 255, 240, 0.95)')
-        bodyGradient.addColorStop(1, isRed ? 'rgba(255, 110, 110, 0)' : 'rgba(170, 255, 205, 0)')
-        ctx.fillStyle = bodyGradient
+        if (sprite && sprite.complete && sprite.naturalWidth > 0 && sprite.naturalHeight > 0) {
+          ctx.drawImage(sprite, ghostX - ghostW / 2, ghostY - ghostH / 2, ghostW, ghostH)
+        } else {
+          // Fallback local pour garantir une apparition visible meme si le sprite distant est indisponible.
+          const bodyGradient = ctx.createRadialGradient(
+            ghostX,
+            ghostY - ghostH * 0.08,
+            ghostW * 0.1,
+            ghostX,
+            ghostY,
+            ghostH * 0.62
+          )
+          bodyGradient.addColorStop(0, isRed ? 'rgba(255, 210, 210, 0.92)' : 'rgba(210, 255, 235, 0.9)')
+          bodyGradient.addColorStop(0.65, isRed ? 'rgba(255, 90, 90, 0.62)' : 'rgba(120, 255, 210, 0.56)')
+          bodyGradient.addColorStop(1, 'rgba(0, 0, 0, 0)')
 
-        // Tête
-        ctx.beginPath()
-        ctx.ellipse(ghostX, ghostY - ghostH * 0.27, ghostW * 0.32, ghostH * 0.21, 0, 0, Math.PI * 2)
-        ctx.fill()
+          ctx.fillStyle = bodyGradient
+          ctx.beginPath()
+          ctx.ellipse(ghostX, ghostY, ghostW * 0.33, ghostH * 0.48, 0, Math.PI, 0, true)
+          ctx.lineTo(ghostX + ghostW * 0.22, ghostY + ghostH * 0.34)
+          ctx.quadraticCurveTo(ghostX, ghostY + ghostH * 0.46, ghostX - ghostW * 0.22, ghostY + ghostH * 0.34)
+          ctx.closePath()
+          ctx.fill()
 
-        // Corps flottant
-        ctx.beginPath()
-        ctx.moveTo(ghostX - ghostW * 0.37, ghostY - ghostH * 0.15)
-        ctx.quadraticCurveTo(ghostX - ghostW * 0.46, ghostY + ghostH * 0.22, ghostX - ghostW * 0.18, ghostY + ghostH * 0.44)
-        ctx.quadraticCurveTo(ghostX, ghostY + ghostH * 0.32 + Math.sin(now * 3.2) * 9, ghostX + ghostW * 0.18, ghostY + ghostH * 0.44)
-        ctx.quadraticCurveTo(ghostX + ghostW * 0.46, ghostY + ghostH * 0.22, ghostX + ghostW * 0.37, ghostY - ghostH * 0.15)
-        ctx.closePath()
-        ctx.fill()
+          ctx.fillStyle = isRed ? 'rgba(60, 0, 0, 0.8)' : 'rgba(5, 32, 18, 0.82)'
+          ctx.beginPath()
+          ctx.arc(ghostX - ghostW * 0.1, ghostY - ghostH * 0.1, ghostW * 0.028, 0, Math.PI * 2)
+          ctx.arc(ghostX + ghostW * 0.1, ghostY - ghostH * 0.1, ghostW * 0.028, 0, Math.PI * 2)
+          ctx.fill()
+        }
 
-        // Yeux
-        ctx.globalAlpha = 0.85
-        ctx.fillStyle = isRed ? 'rgba(170, 0, 0, 0.95)' : 'rgba(10, 35, 10, 0.92)'
-        ctx.beginPath()
-        ctx.ellipse(ghostX - ghostW * 0.1, ghostY - ghostH * 0.29, ghostW * 0.038, ghostH * 0.026, 0, 0, Math.PI * 2)
-        ctx.ellipse(ghostX + ghostW * 0.1, ghostY - ghostH * 0.29, ghostW * 0.038, ghostH * 0.026, 0, 0, Math.PI * 2)
-        ctx.fill()
-
-        // Halo spectral
-        ctx.globalAlpha = 0.32
-        ctx.strokeStyle = isRed ? 'rgba(255, 120, 120, 0.9)' : 'rgba(168, 255, 205, 0.9)'
-        ctx.lineWidth = 2
-        ctx.beginPath()
-        ctx.ellipse(ghostX, ghostY, ghostW * 0.56, ghostH * 0.62, Math.sin(now * 0.7) * 0.2, 0, Math.PI * 2)
-        ctx.stroke()
+        ctx.filter = 'none'
+        if (isRed) {
+          ctx.globalCompositeOperation = 'source-atop'
+          ctx.fillStyle = 'rgba(255, 40, 40, 0.45)'
+          ctx.fillRect(ghostX - ghostW / 2, ghostY - ghostH / 2, ghostW, ghostH)
+          ctx.globalCompositeOperation = 'source-over'
+        }
 
         ctx.restore()
       }
@@ -744,12 +819,13 @@ export function App() {
   }, [state?.role, deviceId])
 
   useEffect(() => {
-    if (state?.role !== 'van' && state?.role !== 'messagerie') {
+    if (state?.role !== 'van' && state?.role !== 'messagerie' && state?.role !== 'ghostcam') {
       return
     }
 
     const pollVanData = () => {
-      const vanFetchId = state?.role === 'messagerie' ? 'van' : deviceId
+      const discoveredVanId = devices.find(device => device.role === 'van')?.deviceId
+      const vanFetchId = state?.role === 'van' ? deviceId : (discoveredVanId || 'van')
       fetch(`/apil7r/player/device/${vanFetchId}/van?ts=${Date.now()}`, { cache: 'no-store' })
         .then(r => r.json())
         .then(async (device: any) => {
@@ -774,8 +850,13 @@ export function App() {
             // Partie indisponible, on garde la logique locale par objectifs.
           }
           
-          setVanData({
-            ghostActivityLevel: device.ghostActivityLevel ?? 0,
+          setVanData(prev => ({
+            vanStep: typeof device.vanStep === 'number' ? device.vanStep : undefined,
+            vanPendingPhoto: typeof device.vanPendingPhoto === 'string' ? device.vanPendingPhoto : undefined,
+            vanFinalPhoto: typeof device.vanFinalPhoto === 'string' ? device.vanFinalPhoto : undefined,
+            ghostActivityLevel: (Date.now() - lastActivityAdjustRef.current < 3000)
+              ? (prev?.ghostActivityLevel ?? device.ghostActivityLevel ?? 0)
+              : (device.ghostActivityLevel ?? 0),
             playerSanity: device.playerSanity ? JSON.parse(device.playerSanity) : {},
             soundLevels: device.soundLevels ? JSON.parse(device.soundLevels) : {},
             motionDetections: device.motionDetections ? JSON.parse(device.motionDetections) : {},
@@ -788,7 +869,7 @@ export function App() {
             backgroundMusic: parseVanBackgroundMusic(device.backgroundMusic),
             soundboard: parseVanSoundboard(device.soundboard),
             vanSentMessages: parseVanSentMessages(device.vanSentMessages)
-          })
+          }))
         })
         .catch(() => {
           // Réseau non disponible
@@ -799,7 +880,30 @@ export function App() {
     const interval = setInterval(pollVanData, 500)
 
     return () => clearInterval(interval)
-  }, [state?.role, deviceId])
+  }, [state?.role, deviceId, devices])
+
+  useEffect(() => {
+    if (state?.role !== 'ghostcam') {
+      return
+    }
+
+    const hasFinalPhoto = Boolean(vanData?.vanFinalPhoto)
+    const step = typeof vanData?.vanStep === 'number' ? vanData.vanStep : 1
+    if (!hasFinalPhoto && step < 7) {
+      return
+    }
+
+    const vanDeviceId = devices.find(device => device.role === 'van')?.deviceId || 'van'
+    if (deviceId === vanDeviceId) {
+      return
+    }
+
+    setDeviceId(vanDeviceId)
+    setStep('play')
+    const url = new URL(window.location.href)
+    url.searchParams.set('device', vanDeviceId)
+    window.history.replaceState(null, '', url.toString())
+  }, [state?.role, vanData?.vanFinalPhoto, vanData?.vanStep, devices, deviceId])
 
   useEffect(() => {
     return () => {
@@ -810,7 +914,7 @@ export function App() {
 
   useEffect(() => {
     if (state?.role !== 'van') {
-      setVanPhase('step0')
+      setVanPhase('step1')
       setVanIntroState('idle')
       setVanGhostGuess('')
       setVanGhostDeclarationError('')
@@ -827,7 +931,8 @@ export function App() {
   }, [state?.role, deviceId])
 
   const patchVanObjectives = async (
-    updater: (current: VanObjective[]) => VanObjective[]
+    updater: (current: VanObjective[]) => VanObjective[],
+    stepOverride?: number
   ): Promise<void> => {
     if (state?.role !== 'van' || !deviceId) {
       return
@@ -841,17 +946,34 @@ export function App() {
     }
 
     try {
+      const currentPersisted = typeof vanData?.vanStep === 'number' ? vanData.vanStep : 1
+      const derivedDisplayed = Math.max(1, Math.min(7, deriveVanObjectiveStep(next) + 1))
+      const nextVanStep =
+        typeof stepOverride === 'number'
+          ? Math.max(1, Math.min(7, stepOverride))
+          : Math.max(currentPersisted, derivedDisplayed)
       await fetch(`/apil7r/admin/device/${encodeURIComponent(deviceId)}/van`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ missionObjectives: JSON.stringify(next) })
+        body: JSON.stringify({ missionObjectives: JSON.stringify(next), vanStep: nextVanStep })
       })
 
-      setVanData(prev => (prev ? { ...prev, missionObjectives: next } : prev))
+      setVanData(prev => (prev ? { ...prev, missionObjectives: next, vanStep: nextVanStep } : prev))
     } catch {
       // Réseau non disponible
     }
   }
+
+  const validateVanLocation = useCallback((_roomId: string): void => {
+    // Étape 3 → 4 : le joueur a cliqué sur la bonne salle (salle de bain).
+    void patchVanObjectives(current =>
+      current.map(item =>
+        isObjectiveMatch(item.objective, VAN_OBJECTIVE_LOCATE)
+          ? { ...item, completed: true }
+          : item
+      )
+    , 4)
+  }, [patchVanObjectives])
 
   useEffect(() => {
     if (state?.role !== 'van') {
@@ -859,27 +981,39 @@ export function App() {
     }
 
     const objectives = ensureVanObjectives(vanData?.missionObjectives ?? [])
-    const introCompleted = Boolean(objectives[0]?.completed)
+    const introCompleted = objectives.some(
+      item => isObjectiveMatch(item.objective, VAN_OBJECTIVE_INTRO) && item.completed
+    )
+    const backendVanStep = vanData?.vanStep
+    const hasFinalPhoto = Boolean((vanData as any)?.vanFinalPhoto)
 
-    if (vanScenarioStep === 0 && !introCompleted && !introCompletionPendingRef.current) {
-      setVanPhase('step0')
-      setVanIntroState('idle')
-      return
+    const displayedStep = deriveDisplayedVanStep(objectives, backendVanStep, hasFinalPhoto)
+    const nextPhase = phaseFromDisplayedStep(displayedStep)
+
+    const shouldForceIntro =
+      !introCompleted &&
+      !introCompletionPendingRef.current &&
+      (vanScenarioStep === 0 || backendVanStep === 0 || backendVanStep === 1 || backendVanStep === undefined)
+
+    let resolvedPhase = vanPhase
+
+    if (shouldForceIntro) {
+      resolvedPhase = 'step1'
+    } else if (getVanPhaseRank(nextPhase) > getVanPhaseRank(vanPhase)) {
+      resolvedPhase = nextPhase
+    } else if (hasFinalPhoto) {
+      resolvedPhase = 'step7'
     }
 
-    const nextPhase = deriveVanPhase(objectives, Boolean(state.huntActive))
+    if (resolvedPhase !== vanPhase) {
+      setVanPhase(resolvedPhase)
+    }
 
-    setVanPhase(prev => {
-      if (getVanPhaseRank(nextPhase) > getVanPhaseRank(prev)) {
-        return nextPhase
-      }
-      return prev
-    })
-    setVanIntroState(prev => (nextPhase === 'step0' ? 'idle' : prev === 'playing' ? prev : 'done'))
-  }, [state?.role, state?.huntActive, vanData?.missionObjectives, vanScenarioStep])
+    setVanIntroState(prev => (resolvedPhase === 'step1' ? prev : prev === 'playing' ? prev : 'done'))
+  }, [state?.role, state?.huntActive, vanData?.missionObjectives, vanData?.vanStep, (vanData as any)?.vanFinalPhoto, vanScenarioStep, vanPhase])
 
   useEffect(() => {
-    if (state?.role !== 'van' || (vanPhase !== 'step1' && vanPhase !== 'step2' && vanPhase !== 'step3')) {
+    if (state?.role !== 'van' || vanPhase === 'step1' || vanPhase === 'step7') {
       vanMusicAudioRef.current?.pause()
       return
     }
@@ -931,7 +1065,7 @@ export function App() {
     introAudio.onended = () => {
       introCompletionPendingRef.current = true
       setVanIntroState('done')
-      setVanPhase('step1')
+      setVanPhase('step2')
       setVanData(prev => {
         if (!prev) {
           return prev
@@ -974,8 +1108,8 @@ export function App() {
   }
 
   const declareGhost = (): void => {
-    if (vanPhase !== 'step2') {
-      setVanGhostDeclarationError('Le nom du spectre se valide uniquement en étape 2.')
+    if (vanPhase !== 'step5') {
+      setVanGhostDeclarationError('Le nom du spectre se valide uniquement en étape 5.')
       return
     }
 
@@ -989,19 +1123,25 @@ export function App() {
       return
     }
 
-    if (answer !== 'edouard') {
+    if (answer !== 'oni') {
       setVanGhostDeclarationError('Ce n’est pas le bon spectre.')
       return
     }
 
-    setVanPhase('step3')
+    setVanPhase('step6')
     void patchVanObjectives(current =>
-      current.map(item =>
-        isObjectiveMatch(item.objective, VAN_OBJECTIVE_GHOST)
-          ? { ...item, completed: true }
-          : item
-      )
-    )
+      current.map(item => {
+        if (isObjectiveMatch(item.objective, VAN_OBJECTIVE_IDENTIFICATION_GEAR)) {
+          return { ...item, completed: true }
+        }
+
+        if (isObjectiveMatch(item.objective, VAN_OBJECTIVE_GHOST)) {
+          return { ...item, completed: true }
+        }
+
+        return item
+      })
+    , 6)
     setVanGhostDeclarationError('')
   }
 
@@ -1034,7 +1174,7 @@ export function App() {
   }, [state?.role, vanData?.vanSentMessages])
 
   useEffect(() => {
-    if (state?.role !== 'van' || vanPhase === 'step0' || !vanData) {
+    if (state?.role !== 'van' || vanPhase === 'step1' || !vanData) {
       lastTriggeredSoundRef.current = {}
       return
     }
@@ -1057,34 +1197,6 @@ export function App() {
     })
   }, [state?.role, vanPhase, vanData])
 
-  useEffect(() => {
-    if (state?.role !== 'van' || vanPhase !== 'step1' || !deviceId) {
-      return
-    }
-
-    const interval = setInterval(async () => {
-      setVanData(prev => {
-        if (!prev) return prev
-        const nextActivityLevel = Math.min(100, prev.ghostActivityLevel + 1)
-        
-        // Patch server with new activity level
-        fetch(`/apil7r/player/device/${deviceId}/van`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ ghostActivityLevel: nextActivityLevel })
-        }).catch(() => {
-          // Network error, ignore
-        })
-        
-        return {
-          ...prev,
-          ghostActivityLevel: nextActivityLevel
-        }
-      })
-    }, 15000) // 15 seconds
-
-    return () => clearInterval(interval)
-  }, [state?.role, vanPhase, deviceId])
 
   if (step === 'choose') {
     return (
@@ -1192,6 +1304,7 @@ export function App() {
     )
   }
   if (state.role === 'ghostcam') {
+    const ghostcamVanStep = typeof vanData?.vanStep === 'number' ? vanData.vanStep : 1
     return (
       <ThemeProvider theme={darkTheme}>
         <GhostCamDeviceView
@@ -1205,6 +1318,7 @@ export function App() {
           onTogglePhotoPause={togglePhotoPause}
           videoRef={videoRef}
           canvasRef={canvasRef}
+          hidePhotoButton={ghostcamVanStep >= 6}
         />
       </ThemeProvider>
     )
@@ -1228,7 +1342,22 @@ export function App() {
   if (state.role === 'van') {
     const ghostActivity = vanData?.ghostActivityLevel ?? 0
     const objectives = vanData?.missionObjectives ?? []
-    const mjAccepted = Boolean(state.huntActive)
+
+    const adjustGhostActivity = (delta: number): void => {
+      setVanData(prev => {
+        if (!prev) return prev
+        const next = Math.max(0, Math.min(100, prev.ghostActivityLevel + delta))
+        lastActivityAdjustRef.current = Date.now()
+        if (deviceId) {
+          void fetch(`/apil7r/admin/device/${encodeURIComponent(deviceId)}/van`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ghostActivityLevel: next })
+          }).catch(() => {})
+        }
+        return { ...prev, ghostActivityLevel: next }
+      })
+    }
 
     return (
       <ThemeProvider theme={darkTheme}>
@@ -1237,25 +1366,20 @@ export function App() {
           <VanDashboard>
             <VanHeader>
               <VanTitle>PARANORMAL DETECTION SYSTEM</VanTitle>
-              <VanStatus>
-                {'MISSION EN COURS'}
-              </VanStatus>
+              <VanStatus>{'MISSION EN COURS'}</VanStatus>
             </VanHeader>
 
-            {vanPhase === 'step0' && (
+            {vanPhase === 'step1' && (
               <VanStep0Intro vanIntroState={vanIntroState} onPlayIntro={() => void playVanIntro()} />
             )}
-            {vanPhase === 'step1' && (
-              <VanStep1Puzzle
-                objectives={objectives}
-                ghostActivity={ghostActivity}
-                floorPlanImage={vanData?.floorPlanImage}
-                liveCameraFrame={vanData?.liveCameraFrame}
-              />
-            )}
-            {vanPhase === 'step2' && (
+            {(vanPhase === 'step2' ||
+              vanPhase === 'step3' ||
+              vanPhase === 'step4' ||
+              vanPhase === 'step5' ||
+              vanPhase === 'step6') && (
               <VanStep2Equipment
-                floorPlanImage={vanData?.floorPlanImage}
+                currentStep={getVanPhaseRank(vanPhase)}
+                stepBanner={VAN_STEP_BANNERS[vanPhase]}
                 liveCameraFrame={vanData?.liveCameraFrame}
                 objectives={objectives}
                 ghostActivity={ghostActivity}
@@ -1266,14 +1390,15 @@ export function App() {
                 onGhostGuessChange={setVanGhostGuess}
                 onDeclareGhost={declareGhost}
                 vanGhostDeclarationError={vanGhostDeclarationError}
+                messages={vanData?.vanSentMessages ?? []}
+                onValidateLocation={validateVanLocation}
+                locationFormEnabled={vanPhase === 'step3'}
+                ghostFormEnabled={vanPhase === 'step5'}
+                showBanishInstructions={vanPhase === 'step6'}
               />
             )}
-            {vanPhase === 'step3' && (
-              <VanStep3Validation
-                floorPlanImage={vanData?.floorPlanImage}
-                liveCameraFrame={vanData?.liveCameraFrame}
-                mjAccepted={mjAccepted}
-              />
+            {vanPhase === 'step7' && (
+              <VanStep7Victory finalPhoto={(vanData as any)?.vanFinalPhoto ?? undefined} />
             )}
           </VanDashboard>
         </VanContainer>
@@ -1327,5 +1452,6 @@ const StatusCard = styled.div`
 const StatusActions = styled.div`
   margin-top: 0.9rem;
 `
+
 
 

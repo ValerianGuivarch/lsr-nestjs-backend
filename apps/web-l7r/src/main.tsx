@@ -91,6 +91,7 @@ root.render(
           <Route path="/ghost" element={<Navigate to="/ghost/dashboard" replace />} />
           <Route path="/ghost/dashboard" element={<GhostApp />} />
           <Route path="/ghost/player" element={<GhostPlayerApp />} />
+          <Route path="/ghost-cards" element={<GhostPlayerApp />} />
 
           <>
             <Route path="/jdr/admin" element={<AdminPage />} />

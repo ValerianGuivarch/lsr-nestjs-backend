@@ -78,6 +78,19 @@ export class ToolStateEntity {
   @Column({ type: 'text', default: '[]' })
   vanSentMessages: string // JSON array of sent messages for player feed
 
+  // Van scenario flow (controlled by MJ, 0..7)
+  @Column({ default: 0 })
+  vanStep: number
+
+  @Column({ type: 'text', nullable: true })
+  vanPendingPhoto?: string // base64 photo en attente de validation MJ (étape 6)
+
+  @Column({ type: 'text', nullable: true })
+  vanFinalPhoto?: string // base64 photo de la victoire (étape 7)
+
+  @Column({ nullable: true })
+  vanFearMessageAt?: string // timestamp ISO du dernier refus, sert au message 3s
+
   @Column({ default: new Date().toISOString() })
   updatedAt: string
 }

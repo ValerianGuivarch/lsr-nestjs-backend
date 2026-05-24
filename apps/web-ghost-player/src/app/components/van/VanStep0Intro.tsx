@@ -9,18 +9,16 @@ type VanStep0IntroProps = {
 export function VanStep0Intro({ vanIntroState, onPlayIntro }: VanStep0IntroProps) {
   return (
     <VanIntroCard>
-      <VanIntroTitle>Étape 0 - Audio de lancement</VanIntroTitle>
+      <VanIntroTitle>MESSAGE EN ATTENTE</VanIntroTitle>
       <VanIntroText>
-        Le jeu n’est pas lancé. Clique sur lecture pour démarrer l’audio d’introduction.
+        Une transmission cryptée vient d'être interceptée. Les équipements de détection sont en veille.
+        Initialisez le système pour recevoir le briefing de mission — les coordonnées de l'entité sont attendues.
       </VanIntroText>
       <VanIntroActions>
         <VanIntroButton type="button" onClick={onPlayIntro} disabled={vanIntroState === 'playing'}>
-          {vanIntroState === 'playing' ? 'Lecture en cours...' : 'Lecture'}
+          {vanIntroState === 'playing' ? '— TRANSMISSION EN COURS —' : 'INITIALISER'}
         </VanIntroButton>
       </VanIntroActions>
-      <VanIntroHint>
-        Intro: <strong>https://l7r.fr/l7r/GhostIntro.mp3</strong>. À la fin du son, passage automatique en étape 1.
-      </VanIntroHint>
     </VanIntroCard>
   )
 }

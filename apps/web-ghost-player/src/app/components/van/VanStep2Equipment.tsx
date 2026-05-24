@@ -1,30 +1,48 @@
 import React from 'react'
 import styled from 'styled-components'
-import { VanObjective } from './types'
+import { VanFeedMessage, VanObjective } from './types'
 import {
   ActivityBar,
   ActivityLevel,
   ActivityValue,
-  FloorPlanImage,
   ObjectiveCheck,
+  ObjectiveHint,
   ObjectiveItem,
   ObjectivesList,
   ObjectiveText,
-  VanActivityCopy,
   VanCameraFrame,
-  VanDeclarationBlock,
   VanDeclarationButton,
   VanDeclarationError,
   VanDeclarationInput,
   VanDeclarationRow,
   VanDeclarationTitle,
   VanEmptyState,
+  VanFeed,
+  VanFeedItem,
   VanPanelLabel,
   VanTwoColumnGrid
 } from './van-styles'
 
+const OBJECTIVE_HINTS: Record<string, string> = {
+  'récupérer le matériel de localisation':
+    "Récupérer le capteur EMF et le Thermomètre au rez-de-chaussée, ne montez pas à l'étage !",
+  "trouver la zone d'activité du fantôme":
+    "Utilisez le matériel de localisation pour repérer la pièce où se trouve le fantôme puis sélectionnez-la dans la liste déroulante.",
+  "récupérer le matériel d'identification":
+    'Récupérer la lampe UV, la Camera Ghost et la Spirit Box.',
+  'identifier le fantôme':
+    'Utilisez le matériel à votre disposition pour identifier le fantôme. Saisissez son nom après identification.',
+}
+
+function normalizeKey(text: string): string {
+  return text
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim()
+}
+
 type VanStep2EquipmentProps = {
-  floorPlanImage?: string
   liveCameraFrame?: string
   objectives: VanObjective[]
   ghostActivity: number
@@ -33,66 +51,169 @@ type VanStep2EquipmentProps = {
   onGhostGuessChange: (value: string) => void
   onDeclareGhost: () => void
   vanGhostDeclarationError: string
+  messages?: VanFeedMessage[]
+  onValidateLocation?: (roomId: string) => void
+  // Nouveaux props pour piloter la vue par étape (2..6)
+  currentStep?: number
+  stepBanner?: string
+  locationFormEnabled?: boolean
+  ghostFormEnabled?: boolean
+  showBanishInstructions?: boolean
 }
 
 export function VanStep2Equipment({
-  floorPlanImage,
   liveCameraFrame,
   objectives,
   ghostActivity,
-  materialCompleted,
   vanGhostGuess,
   onGhostGuessChange,
   onDeclareGhost,
-  vanGhostDeclarationError
+  vanGhostDeclarationError,
+  messages = [],
+  onValidateLocation,
+  currentStep,
+  stepBanner,
+  locationFormEnabled,
+  ghostFormEnabled,
+  showBanishInstructions,
 }: VanStep2EquipmentProps) {
+  const [selectedRoom, setSelectedRoom] = React.useState('')
+  const [locationError, setLocationError] = React.useState('')
+  const displayedObjectives = objectives.filter(
+    o => normalizeKey(o.objective) !== 'intro terminee'
+  )
+  const firstUncheckedIdx = displayedObjectives.findIndex(o => !o.completed)
+  const firstUncheckedKey =
+    firstUncheckedIdx >= 0 ? normalizeKey(displayedObjectives[firstUncheckedIdx].objective) : ''
+  const isIdentifyActive =
+    (firstUncheckedKey === 'identifier le fantôme' || firstUncheckedKey === 'identifier le fantome') &&
+    (ghostFormEnabled === undefined ? true : ghostFormEnabled)
+  const isLocateRoomActive =
+    (firstUncheckedKey === "trouver la zone d'activité du fantôme" ||
+      firstUncheckedKey === "trouver la zone d'activite du fantome") &&
+    (locationFormEnabled === undefined ? true : locationFormEnabled)
+
+  const sortedMessages = [...messages].sort((a, b) => {
+    const ta = a.sentAt ? new Date(a.sentAt).getTime() : 0
+    const tb = b.sentAt ? new Date(b.sentAt).getTime() : 0
+    return ta - tb
+  })
+
+  const handleValidateRoom = (): void => {
+    if (!selectedRoom) {
+      setLocationError('Choisissez une salle avant de valider.')
+      return
+    }
+
+    const isCorrect = selectedRoom === 'salle-de-bain-1'
+    if (!isCorrect) {
+      setLocationError("Ce n'est pas la bonne salle.")
+      return
+    }
+
+    setLocationError('')
+    onValidateLocation?.(selectedRoom)
+  }
+
   return (
     <VanTwoColumnGrid>
       <LeftPanel>
+        {stepBanner && (
+          <StepBanner>
+            <StepBannerLabel>ÉTAPE EN COURS</StepBannerLabel>
+            <StepBannerText>{stepBanner}</StepBannerText>
+          </StepBanner>
+        )}
+
         <Block>
           <VanPanelLabel>ACTIVITÉ DU FANTÔME</VanPanelLabel>
           <ActivityBar>
             <ActivityLevel $level={ghostActivity} />
-            <ActivityValue>{ghostActivity}/10</ActivityValue>
+            <ActivityValue>{ghostActivity}/100</ActivityValue>
           </ActivityBar>
         </Block>
+
+        <Separator />
 
         <Block style={{ flex: 1, minHeight: 0 }}>
           <VanPanelLabel>MISSION EN COURS</VanPanelLabel>
           <ScrollArea>
             <ObjectivesList>
-              {objectives.length === 0 && <VanEmptyState>Aucun objectif pour le moment.</VanEmptyState>}
-              {objectives.map((obj, idx) => (
-                <ObjectiveItem key={idx} $completed={obj.completed}>
-                  <ObjectiveCheck $completed={obj.completed}>✓</ObjectiveCheck>
-                  <ObjectiveText>{obj.objective}</ObjectiveText>
-                </ObjectiveItem>
-              ))}
+              {displayedObjectives.length === 0 && <VanEmptyState>Aucun objectif pour le moment.</VanEmptyState>}
+              {displayedObjectives.map((obj, idx) => {
+                const key = normalizeKey(obj.objective)
+                const isActive = idx === firstUncheckedIdx
+                return (
+                  <React.Fragment key={idx}>
+                    <ObjectiveItem $completed={obj.completed}>
+                      <ObjectiveCheck $completed={obj.completed}>✓</ObjectiveCheck>
+                      <ObjectiveText>{obj.objective}</ObjectiveText>
+                    </ObjectiveItem>
+                    {isActive && OBJECTIVE_HINTS[key] && (
+                      <ObjectiveHint>{OBJECTIVE_HINTS[key]}</ObjectiveHint>
+                    )}
+                    {isActive && isLocateRoomActive && (
+                      <RoomSelectorRow>
+                        <RoomSelect
+                          value={selectedRoom}
+                          onChange={event => {
+                            setSelectedRoom(event.target.value)
+                            setLocationError('')
+                          }}
+                          aria-label="Choisir la salle suspecte"
+                        >
+                          <option value="">Choisir une salle</option>
+                          <option value="salon">Salon</option>
+                          <option value="cuisine">Cuisine</option>
+                          <option value="chambre1">Chambre 1</option>
+                          <option value="chambre2">Chambre 2</option>
+                          <option value="salle-de-bain-1">Salle de bain 1</option>
+                          <option value="salle-de-bain-2">Salle de bain 2</option>
+                          <option value="toilettes">Toilettes</option>
+                        </RoomSelect>
+                        <RoomValidateButton type="button" onClick={handleValidateRoom} disabled={!selectedRoom}>
+                          Valider la salle
+                        </RoomValidateButton>
+                        {locationError && <RoomError>{locationError}</RoomError>}
+                      </RoomSelectorRow>
+                    )}
+                    {isActive && isIdentifyActive && (
+                      <GhostFormInline>
+                        <VanDeclarationTitle>Saisir le nom du spectre</VanDeclarationTitle>
+                        <VanDeclarationRow>
+                          <VanDeclarationInput
+                            value={vanGhostGuess}
+                            onChange={event => onGhostGuessChange(event.target.value)}
+                            placeholder="Nom du spectre"
+                            aria-label="Nom du spectre"
+                          />
+                          <VanDeclarationButton type="button" onClick={onDeclareGhost}>
+                            Valider
+                          </VanDeclarationButton>
+                        </VanDeclarationRow>
+                        {vanGhostDeclarationError && <VanDeclarationError>{vanGhostDeclarationError}</VanDeclarationError>}
+                      </GhostFormInline>
+                    )}
+                  </React.Fragment>
+                )
+              })}
             </ObjectivesList>
           </ScrollArea>
         </Block>
 
-        {materialCompleted && (
+        {showBanishInstructions && (
           <Block>
-            <VanPanelLabel>IDENTIFICATION DU SPECTRE</VanPanelLabel>
-            <VanActivityCopy>
-              Le matériel est en place. Entre le nom du spectre identifié pour valider l'étape.
-            </VanActivityCopy>
-            <VanDeclarationBlock>
-              <VanDeclarationTitle>Saisir le nom du spectre</VanDeclarationTitle>
-              <VanDeclarationRow>
-                <VanDeclarationInput
-                  value={vanGhostGuess}
-                  onChange={event => onGhostGuessChange(event.target.value)}
-                  placeholder="Nom du spectre"
-                  aria-label="Nom du spectre"
-                />
-                <VanDeclarationButton type="button" onClick={onDeclareGhost}>
-                  Valider
-                </VanDeclarationButton>
-              </VanDeclarationRow>
-              {vanGhostDeclarationError && <VanDeclarationError>{vanGhostDeclarationError}</VanDeclarationError>}
-            </VanDeclarationBlock>
+            <BanishCard>
+              <BanishCheckRow>
+                <BanishCheckbox type="checkbox" id="banish-ghost" />
+                <BanishLabel htmlFor="banish-ghost">Bannir le fantôme</BanishLabel>
+              </BanishCheckRow>
+              <BanishDescription>
+                Affichez votre plus beau sourire et prenez-vous en photo avec la caméra fantôme.
+                Une photo suffisamment effrayante (validée par le MJ depuis l’admin caméra) bannira le
+                spectre pour de bon.
+              </BanishDescription>
+            </BanishCard>
           </Block>
         )}
       </LeftPanel>
@@ -110,14 +231,20 @@ export function VanStep2Equipment({
         </Block>
 
         <Block>
-          <VanPanelLabel>PLAN DE LA MAISON</VanPanelLabel>
-          <MediaBox>
-            {floorPlanImage ? (
-              <FloorPlanImage src={floorPlanImage} alt="Plan du lieu" />
-            ) : (
-              <VanEmptyState>Plan indisponible.</VanEmptyState>
-            )}
-          </MediaBox>
+          <VanPanelLabel>MESSAGERIE MJ</VanPanelLabel>
+          <MessagePanel>
+            <VanFeed>
+              {sortedMessages.length === 0 && <VanEmptyState>Aucun message pour le moment.</VanEmptyState>}
+              {sortedMessages.map(message => (
+                <VanFeedItem key={message.id}>
+                  <VanFeedTitle>{message.title}</VanFeedTitle>
+                  {message.text && <VanFeedText>{message.text}</VanFeedText>}
+                  {message.imageUrl && <VanFeedImage src={message.imageUrl} alt={message.title} />}
+                  {message.sentAt && <VanFeedMeta>{new Date(message.sentAt).toLocaleTimeString()}</VanFeedMeta>}
+                </VanFeedItem>
+              ))}
+            </VanFeed>
+          </MessagePanel>
         </Block>
       </RightPanel>
     </VanTwoColumnGrid>
@@ -150,6 +277,12 @@ const Block = styled.div`
   gap: 0.5rem;
 `
 
+const Separator = styled.div`
+  height: 1px;
+  background: #1a4d3e;
+  margin: 0.3rem 0;
+`
+
 const ScrollArea = styled.div`
   flex: 1;
   min-height: 0;
@@ -157,9 +290,157 @@ const ScrollArea = styled.div`
 `
 
 const MediaBox = styled.div`
-  flex: 1;
-  min-height: 220px;
+  width: min(100%, 760px);
+  max-height: min(42vh, 380px);
+  aspect-ratio: 16 / 10;
+  min-height: 0;
   display: flex;
   align-items: center;
   justify-content: center;
+  border: 1px solid #26476e;
+  border-radius: 4px;
+  background: rgba(8, 16, 27, 0.42);
+  overflow: hidden;
+  margin: 0 auto;
+`
+
+const GhostFormInline = styled.div`
+  margin-top: 0.6rem;
+  margin-left: 2.2rem;
+  padding: 0.8rem;
+  border: 1px solid #26476e;
+  border-radius: 4px;
+  background: rgba(8, 16, 27, 0.5);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+`
+
+const MessagePanel = styled.div`
+  border: 1px solid #26476e;
+  border-radius: 4px;
+  background: rgba(8, 16, 27, 0.42);
+  padding: 0.55rem;
+  min-height: 220px;
+  max-height: 42vh;
+  overflow: auto;
+`
+
+const RoomSelectorRow = styled.div`
+  margin: 0.55rem 0 0.2rem 2.2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+`
+
+const RoomSelect = styled.select`
+  width: min(100%, 280px);
+  border-radius: 6px;
+  border: 1px solid #4f7fb1;
+  background: #08111c;
+  color: #dce8f7;
+  padding: 0.45rem 0.55rem;
+`
+
+const RoomValidateButton = styled.button`
+  width: fit-content;
+  border-radius: 6px;
+  border: 1px solid #4f7fb1;
+  background: linear-gradient(180deg, #1a3858 0%, #102235 100%);
+  color: #dce8f7;
+  padding: 0.45rem 0.7rem;
+  cursor: pointer;
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+`
+
+const RoomError = styled.small`
+  color: #ff9d9d;
+  font-weight: 700;
+`
+
+const VanFeedTitle = styled.strong`
+  color: #b9d6fb;
+  letter-spacing: 0.08em;
+`
+
+const VanFeedText = styled.p`
+  margin: 0;
+  color: #dce8f7;
+  line-height: 1.4;
+  white-space: pre-wrap;
+`
+
+const VanFeedMeta = styled.small`
+  color: #88a2c4;
+`
+
+const VanFeedImage = styled.img`
+  width: 100%;
+  max-height: 220px;
+  object-fit: contain;
+  border: 1px solid #26476e;
+  border-radius: 4px;
+  background: #08111c;
+`
+
+const StepBanner = styled.div`
+  border: 1px solid #3a86ff;
+  border-radius: 6px;
+  padding: 0.6rem 0.75rem;
+  background: linear-gradient(180deg, rgba(58, 134, 255, 0.18) 0%, rgba(8, 16, 27, 0.4) 100%);
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+`
+
+const StepBannerLabel = styled.small`
+  letter-spacing: 0.12em;
+  color: #9bbcff;
+  font-weight: 700;
+`
+
+const StepBannerText = styled.strong`
+  color: #f0f6ff;
+  font-size: 1rem;
+  line-height: 1.3;
+`
+
+const BanishCard = styled.div`
+  border: 1px solid #b06b6b;
+  border-radius: 6px;
+  padding: 0.7rem 0.85rem;
+  background: linear-gradient(180deg, rgba(176, 107, 107, 0.18) 0%, rgba(8, 16, 27, 0.5) 100%);
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+`
+
+const BanishCheckRow = styled.label`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+`
+
+const BanishCheckbox = styled.input`
+  width: 1.1rem;
+  height: 1.1rem;
+  cursor: pointer;
+`
+
+const BanishLabel = styled.span`
+  color: #f3d1d1;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+`
+
+const BanishDescription = styled.p`
+  margin: 0;
+  color: #f0e3e3;
+  line-height: 1.45;
+  font-size: 0.95rem;
 `

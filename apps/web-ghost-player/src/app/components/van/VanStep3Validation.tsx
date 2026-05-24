@@ -1,34 +1,23 @@
 import React from 'react'
 import {
-  VanCameraFrame,
-  VanDeclarationHint,
-  VanDeclarationMeta,
-  VanEmptyState,
   VanFinalCard,
   VanFinalText,
   VanFinalTitle
 } from './van-styles'
 
-type VanStep3ValidationProps = {
-  floorPlanImage?: string
-  liveCameraFrame?: string
-  mjAccepted: boolean
-}
-
-export function VanStep3Validation({ liveCameraFrame, mjAccepted }: VanStep3ValidationProps) {
+export function VanStep3Validation() {
   return (
     <VanFinalCard>
-      <VanFinalTitle>Étape 3 - Validation MJ</VanFinalTitle>
-      {liveCameraFrame ? (
-        <VanCameraFrame src={liveCameraFrame} alt="Flux caméra" />
-      ) : (
-        <VanEmptyState>Caméra en attente de retour.</VanEmptyState>
-      )}
+      <VanFinalTitle>Étape 5/7 - Bannissement</VanFinalTitle>
       <VanFinalText>
-        Le nom du spectre a été saisi. En attente du bouton Accepter du MJ.
+        Spectre identifié: ONI.
       </VanFinalText>
-      {!mjAccepted && <VanDeclarationHint>Statut: en attente de validation MJ.</VanDeclarationHint>}
-      {mjAccepted && <VanDeclarationMeta>Partie validée par le MJ: c’est gagné.</VanDeclarationMeta>}
+      <VanFinalText>
+        Comment le vaincre: utilisez l&apos;encens dans sa zone d&apos;activité pour le repousser, puis appliquez le rituel de bannissement avec l&apos;équipement requis.
+      </VanFinalText>
+      <VanFinalText>
+        Aucune validation MJ n&apos;est nécessaire: poursuivez directement la mission.
+      </VanFinalText>
     </VanFinalCard>
   )
 }

@@ -162,6 +162,10 @@ export class GhostService {
         | 'soundboard'
         | 'vanMessageTemplates'
         | 'vanSentMessages'
+        | 'vanStep'
+        | 'vanPendingPhoto'
+        | 'vanFinalPhoto'
+        | 'vanFearMessageAt'
       >
     >
   ): Promise<ToolStateEntity> {

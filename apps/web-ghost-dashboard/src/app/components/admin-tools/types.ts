@@ -42,6 +42,7 @@ export type GhostCamAdminToolProps = {
   cameraFrame?: string
   onPhoto: () => void
   onRelock: () => void
+  cameraModeLabel?: string
   ghostcamDeviceId: string
   ghostcamDeviceOptions: string[]
   ghostDurationSec: number
@@ -54,6 +55,10 @@ export type GhostCamAdminToolProps = {
   onGhostorbsDeviceChange: (deviceId: string) => void
   onOrbDurationChange: (value: number) => void
   onTriggerOrbs: () => void
+  vanStep?: number
+  vanPendingPhoto?: string
+  onValidatePhoto?: () => void
+  onRefusePhoto?: () => void
 }
 
 export type ThermometerAdminToolProps = {
@@ -73,7 +78,12 @@ export type VanAdminToolProps = {
   vanGhostActivity: number
   onVanGhostActivityChange: (value: number) => void
   vanObjectives: VanObjective[]
-  onToggleObjective: (objective: string) => void
+  vanStep: number
+  objectiveStep: number
+  cameraModeLabel: string
+  onStepChange: (step: number) => void
+  onResetVan: () => void
+  onOpenCameraAdmin?: () => void
 }
 
 export type VanDashboardMessage = {

@@ -5,6 +5,7 @@ export function GhostCamAdminTool({
   cameraFrame,
   onPhoto,
   onRelock,
+  cameraModeLabel,
   ghostcamDeviceId,
   ghostcamDeviceOptions,
   ghostDurationSec,
@@ -17,9 +18,32 @@ export function GhostCamAdminTool({
   onGhostorbsDeviceChange,
   onOrbDurationChange,
   onTriggerOrbs,
+  vanStep,
+  vanPendingPhoto,
+  onValidatePhoto,
+  onRefusePhoto,
 }: GhostCamAdminToolProps): JSX.Element {
+  const photoCaptureMode = vanStep === 6
+  const photoTitle = photoCaptureMode
+    ? "Envoyer la photo de peur au MJ"
+    : 'Prendre une photo'
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+      {cameraModeLabel && (
+        <div
+          style={{
+            border: '1px solid #2f3d50',
+            borderRadius: 8,
+            padding: '0.55rem 0.7rem',
+            background: '#121b29',
+            color: '#b4d6ff',
+            fontSize: '0.92rem',
+            fontWeight: 600,
+          }}
+        >
+          Mode camera actif: {cameraModeLabel}
+        </div>
+      )}
       <div
         style={{
           position: 'relative',
@@ -58,7 +82,7 @@ export function GhostCamAdminTool({
           type="button"
           onClick={onPhoto}
           disabled={!cameraFrame}
-          title="Prendre une photo"
+          title={photoTitle}
           style={{
             position: 'absolute',
             bottom: 18,
@@ -95,6 +119,63 @@ export function GhostCamAdminTool({
           Reverrouiller
         </button>
       </div>
+
+      {vanPendingPhoto && (
+        <div
+          style={{
+            border: '2px solid #d6a73d',
+            borderRadius: 10,
+            padding: '0.8rem',
+            background: '#241a08',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '0.6rem',
+          }}
+        >
+          <div style={{ fontWeight: 700, color: '#ffe2a0' }}>
+            Photo de peur en attente de validation (étape 6)
+          </div>
+          <img
+            src={vanPendingPhoto}
+            alt="photo-en-attente"
+            style={{ maxWidth: '100%', maxHeight: 280, objectFit: 'contain', borderRadius: 6 }}
+          />
+          <div style={{ display: 'flex', gap: '0.6rem' }}>
+            <button
+              type="button"
+              onClick={onValidatePhoto}
+              style={{
+                flex: 1,
+                padding: '0.6rem',
+                borderRadius: 8,
+                border: '1px solid #3aa35d',
+                background: '#1a3f24',
+                color: '#bff5ce',
+                fontWeight: 700,
+                cursor: 'pointer',
+              }}
+            >
+              ✓ Valider (passer à l'étape 7)
+            </button>
+            <button
+              type="button"
+              onClick={onRefusePhoto}
+              style={{
+                flex: 1,
+                padding: '0.6rem',
+                borderRadius: 8,
+                border: '1px solid #b53d3d',
+                background: '#3a1414',
+                color: '#ffb0bb',
+                fontWeight: 700,
+                cursor: 'pointer',
+              }}
+            >
+              ✗ Refuser (niveau de peur insuffisant)
+            </button>
+          </div>
+        </div>
+      )}
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '0.8rem' }}>
         <div style={{ border: '1px solid #2f3d50', borderRadius: 10, padding: '0.8rem', background: '#151d27' }}>

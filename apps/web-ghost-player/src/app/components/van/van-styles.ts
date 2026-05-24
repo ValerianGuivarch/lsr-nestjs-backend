@@ -422,16 +422,27 @@ export const ActivityLevel = styled.div<{ $level: number }>`
     left: 0;
     top: 0;
     height: 100%;
-    width: ${({ $level }) => ($level / 10) * 100}%;
-    background: linear-gradient(90deg, #4fa3ff 0%, #99d0ff 50%, #ff8f5a 100%);
-    transition: width 200ms;
-    box-shadow: 0 0 10px rgba(79, 163, 255, 0.6);
+    width: ${({ $level }) => $level}%;
+    background: linear-gradient(90deg, #4fa3ff 0%, #c044ff 55%, #ff2020 100%);
+    transition: width 300ms;
+    box-shadow: 0 0 10px rgba(79, 163, 255, 0.5);
   }
 `
 
 export const ActivityValue = styled.span`
   font-weight: 700;
   color: #9cc9ff;
-  min-width: 40px;
+  min-width: 52px;
   text-align: right;
+`
+
+export const ObjectiveHint = styled.div`
+  margin-top: 0.35rem;
+  padding: 0.35rem 0.6rem;
+  margin-left: 2.2rem;
+  background: rgba(79, 163, 255, 0.06);
+  border-left: 2px solid #26476e;
+  color: #88a2c4;
+  font-size: 0.82rem;
+  line-height: 1.45;
 `
