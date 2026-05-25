@@ -628,6 +628,9 @@ export function App() {
     // toDataURL (synchrone, coûteux) ne s'exécute qu'une fois toutes les 80ms.
     // L'upload est fire-and-forget : le rendu n'est jamais bloqué par le réseau.
 
+    // Vignette pré-rendue : recréée uniquement si les dimensions changent (pas chaque tick).
+    let vignetteCanvas: HTMLCanvasElement | null = null
+
     const captureAndSend = () => {
       if (!canvasRef.current || !videoRef.current) return
       if (videoRef.current.readyState < 2) return
@@ -692,25 +695,30 @@ export function App() {
         captureCtx.fillRect(x, y, 1, 1)
       }
 
-      // Flash de gain pour un rendu plus sature/hostile.
-      captureCtx.globalCompositeOperation = 'overlay'
-      captureCtx.fillStyle = isRed ? 'rgba(255, 40, 40, 0.2)' : 'rgba(40, 255, 120, 0.18)'
+      // Flash de gain : simple fillRect (pas d'overlay composite qui lit chaque pixel).
+      captureCtx.fillStyle = isRed ? 'rgba(255, 40, 40, 0.14)' : 'rgba(40, 255, 120, 0.12)'
       captureCtx.fillRect(0, 0, width, height)
-      captureCtx.globalCompositeOperation = 'source-over'
 
-      // Vignette sombre pour renforcer le style camera nocturne.
-      const vignette = captureCtx.createRadialGradient(
-        width / 2,
-        height / 2,
-        Math.min(width, height) * 0.25,
-        width / 2,
-        height / 2,
-        Math.max(width, height) * 0.72
-      )
-      vignette.addColorStop(0, 'rgba(0, 0, 0, 0)')
-      vignette.addColorStop(1, 'rgba(0, 0, 0, 0.58)')
-      captureCtx.fillStyle = vignette
-      captureCtx.fillRect(0, 0, width, height)
+      // Vignette sombre — gradient recréé uniquement quand les dimensions changent.
+      if (
+        !vignetteCanvas ||
+        vignetteCanvas.width !== width ||
+        vignetteCanvas.height !== height
+      ) {
+        vignetteCanvas = document.createElement('canvas')
+        vignetteCanvas.width = width
+        vignetteCanvas.height = height
+        const vCtx = vignetteCanvas.getContext('2d')!
+        const gradient = vCtx.createRadialGradient(
+          width / 2, height / 2, Math.min(width, height) * 0.25,
+          width / 2, height / 2, Math.max(width, height) * 0.72
+        )
+        gradient.addColorStop(0, 'rgba(0, 0, 0, 0)')
+        gradient.addColorStop(1, 'rgba(0, 0, 0, 0.58)')
+        vCtx.fillStyle = gradient
+        vCtx.fillRect(0, 0, width, height)
+      }
+      captureCtx.drawImage(vignetteCanvas, 0, 0)
 
       // Fantôme temporaire (piloté par MJ) - tout rendu sur captureCtx.
       if (ghostActive && state.role === 'ghostcam') {
