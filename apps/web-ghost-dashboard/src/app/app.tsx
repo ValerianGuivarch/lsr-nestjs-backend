@@ -90,13 +90,9 @@ type VanDashboardMessage = {
   sentAt?: string
 }
 
-type VanMessageKind = VanDashboardMessage['kind']
-
 type VanMessageDraft = {
-  kind: VanMessageKind
   title: string
   text: string
-  audioUrl: string
   imageUrl: string
 }
 
@@ -330,30 +326,6 @@ function parseVanSoundboard(raw?: string): VanSoundCue[] {
   }
 }
 
-function createDefaultVanMessageTemplates(): VanDashboardMessage[] {
-  return [
-    {
-      id: 'msg-1-intro-audio',
-      kind: 'audio',
-      title: 'Message 1 - Intro audio',
-      audioUrl: 'https://l7r.fr/l7r/GhostIntro.mp3'
-    },
-    {
-      id: 'msg-2-briefing',
-      kind: 'text',
-      title: 'Message 2 - Briefing',
-      text: 'Rassemblez les preuves et confirmez le spectre avant la fin de la chasse.'
-    },
-    {
-      id: 'msg-3-indice-photo',
-      kind: 'text_image',
-      title: 'Message 3 - Indice visuel',
-      text: 'Un indice est apparu dans la zone de la chambre.',
-      imageUrl: 'https://l7r.fr/l7r/indice-van.jpg'
-    }
-  ]
-}
-
 function parseVanMessages(raw?: string): VanDashboardMessage[] {
   if (!raw) {
     return []
@@ -382,10 +354,8 @@ function parseVanMessages(raw?: string): VanDashboardMessage[] {
 
 function createEmptyVanMessageDraft(): VanMessageDraft {
   return {
-    kind: 'text',
     title: '',
     text: '',
-    audioUrl: '',
     imageUrl: ''
   }
 }
@@ -461,7 +431,6 @@ export function App() {
   const [vanFloorPlanImage, setVanFloorPlanImage] = useState<string | null>(null)
   const [vanBackgroundMusic, setVanBackgroundMusic] = useState<VanBackgroundMusic>(createDefaultVanBackgroundMusic)
   const [vanSoundboard, setVanSoundboard] = useState<VanSoundCue[]>([])
-  const [vanMessageTemplates, setVanMessageTemplates] = useState<VanDashboardMessage[]>(createDefaultVanMessageTemplates)
   const [vanSentMessages, setVanSentMessages] = useState<VanDashboardMessage[]>([])
   const [vanDraftMessage, setVanDraftMessage] = useState<VanMessageDraft>(createEmptyVanMessageDraft)
   const [vanNewSoundLabel, setVanNewSoundLabel] = useState<string>('')
@@ -937,7 +906,6 @@ export function App() {
     }
     const parsedBackgroundMusic = parseVanBackgroundMusic(vanDevice.backgroundMusic)
     const parsedSoundboard = parseVanSoundboard(vanDevice.soundboard)
-    const parsedVanMessageTemplates = parseVanMessages(vanDevice.vanMessageTemplates)
     const parsedVanSentMessages = parseVanMessages(vanDevice.vanSentMessages)
 
     setVanGhostActivity(vanDevice.ghostActivityLevel ?? 0)
@@ -960,9 +928,6 @@ export function App() {
     setVanFloorPlanImage(vanDevice.floorPlanImage ?? null)
     setVanBackgroundMusic(parsedBackgroundMusic)
     setVanSoundboard(parsedSoundboard)
-    setVanMessageTemplates(
-      parsedVanMessageTemplates.length > 0 ? parsedVanMessageTemplates : createDefaultVanMessageTemplates()
-    )
     setVanSentMessages(parsedVanSentMessages)
     vanHydratedRef.current = true
   }, [devices, controlVanDeviceId])
@@ -1000,7 +965,6 @@ export function App() {
           floorPlanImage: vanFloorPlanImage,
           backgroundMusic: JSON.stringify(vanBackgroundMusic),
           soundboard: JSON.stringify(vanSoundboard),
-          vanMessageTemplates: JSON.stringify(vanMessageTemplates),
           vanSentMessages: JSON.stringify(vanSentMessages)
         })
       }).catch(() => {
@@ -1023,7 +987,6 @@ export function App() {
     vanFloorPlanImage,
     vanBackgroundMusic,
     vanSoundboard,
-    vanMessageTemplates,
     vanSentMessages
   ])
 
@@ -1827,89 +1790,54 @@ export function App() {
     setVanSoundboard(prev => prev.filter(cue => cue.id !== cueId))
   }
 
-  const pushVanTemplateMessage = (templateId: string): void => {
-    const template = vanMessageTemplates.find(item => item.id === templateId)
-    if (!template) {
-      return
-    }
-
-    const sentMessage: VanDashboardMessage = {
-      ...template,
-      sentAt: new Date().toISOString()
-    }
-    setVanSentMessages(prev => [...prev, sentMessage])
-  }
-
-  const addVanTemplateMessage = (): void => {
+  const sendVanMessage = (): void => {
     const title = vanDraftMessage.title.trim()
     const text = vanDraftMessage.text.trim()
-    const audioUrl = vanDraftMessage.audioUrl.trim()
     const imageUrl = vanDraftMessage.imageUrl.trim()
 
     if (!title) {
-      setError('Le titre du message MJ est obligatoire')
+      setError('Le titre du message est obligatoire')
       return
     }
 
-    if (vanDraftMessage.kind === 'audio' && !audioUrl) {
-      setError('Un message audio doit contenir une URL audio')
-      return
+    const newMsg: VanDashboardMessage = {
+      id: `msg-${Date.now()}-${Math.random().toString(16).slice(2)}`,
+      kind: imageUrl ? 'text_image' : 'text',
+      title,
+      text: text || undefined,
+      imageUrl: imageUrl || undefined,
+      sentAt: new Date().toISOString()
     }
 
-    if (vanDraftMessage.kind === 'text' && !text) {
-      setError('Un message texte doit contenir du texte')
-      return
-    }
-
-    if (vanDraftMessage.kind === 'text_image' && (!text || !imageUrl)) {
-      setError('Un message texte+image doit contenir du texte et une URL image')
-      return
-    }
-
-    setVanMessageTemplates(prev => [
-      ...prev,
-      {
-        id: `msg-${Date.now()}-${Math.random().toString(16).slice(2)}`,
-        kind: vanDraftMessage.kind,
-        title,
-        text: text || undefined,
-        audioUrl: audioUrl || undefined,
-        imageUrl: imageUrl || undefined
-      }
-    ])
+    const next = [...vanSentMessages, newMsg]
+    setVanSentMessages(next)
     setVanDraftMessage(createEmptyVanMessageDraft())
     setError('')
-  }
 
-  const updateVanTemplateMessage = (messageId: string, patch: Partial<VanDashboardMessage>): void => {
-    setVanMessageTemplates(prev => prev.map(item => (item.id === messageId ? { ...item, ...patch } : item)))
-  }
+    const vanId = controlVanDeviceId || devices.find(d => d.role === 'van')?.deviceId
+    if (!vanId) {
+      setError('Aucun device van configuré')
+      return
+    }
 
-  const removeVanTemplateMessage = (messageId: string): void => {
-    setVanMessageTemplates(prev => prev.filter(item => item.id !== messageId))
-  }
-
-  const moveVanTemplateMessage = (messageId: string, direction: 'up' | 'down'): void => {
-    setVanMessageTemplates(prev => {
-      const index = prev.findIndex(item => item.id === messageId)
-      if (index < 0) {
-        return prev
-      }
-
-      const targetIndex = direction === 'up' ? index - 1 : index + 1
-      if (targetIndex < 0 || targetIndex >= prev.length) {
-        return prev
-      }
-
-      const next = [...prev]
-      const [item] = next.splice(index, 1)
-      next.splice(targetIndex, 0, item)
-      return next
-    })
+    fetch(ghostApiUrl(`/admin/device/${vanId}/van`), {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ vanSentMessages: JSON.stringify(next) })
+    }).catch(() => {})
   }
 
   const clearVanSentMessages = (): void => {
     setVanSentMessages([])
+
+    const vanId = controlVanDeviceId || devices.find(d => d.role === 'van')?.deviceId
+    if (!vanId) return
+
+    fetch(ghostApiUrl(`/admin/device/${vanId}/van`), {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ vanSentMessages: JSON.stringify([]) })
+    }).catch(() => {})
   }
 
   const resetVanSentMessagesForNewGame = async (): Promise<void> => {
@@ -1918,14 +1846,7 @@ export function App() {
       return
     }
 
-    const templates = vanMessageTemplates.length > 0 ? vanMessageTemplates : createDefaultVanMessageTemplates()
-    const firstAudioTemplate = templates.find(message => message.kind === 'audio')
-    const initialSentMessages = firstAudioTemplate
-      ? [{ ...firstAudioTemplate, sentAt: new Date().toISOString() }]
-      : []
-
-    setVanMessageTemplates(templates)
-    setVanSentMessages(initialSentMessages)
+    setVanSentMessages([])
     const resetObjectives = VAN_PROGRESS_OBJECTIVES.map(item => ({ ...item }))
     setVanObjectives(resetObjectives)
     setVanStep(0)
@@ -1947,8 +1868,8 @@ export function App() {
           missionObjectives: JSON.stringify(resetObjectives),
           vanPendingPhoto: null,
           vanFinalPhoto: null,
-          vanMessageTemplates: JSON.stringify(templates),
-          vanSentMessages: JSON.stringify(initialSentMessages)
+          vanMessageTemplates: null,
+          vanSentMessages: JSON.stringify([])
         })
       }).then(toJson<Device>)
     } catch {
@@ -1998,7 +1919,6 @@ export function App() {
           floorPlanImage: vanFloorPlanImage,
           backgroundMusic: JSON.stringify(vanBackgroundMusic),
           soundboard: JSON.stringify(vanSoundboard),
-          vanMessageTemplates: JSON.stringify(vanMessageTemplates),
           vanSentMessages: JSON.stringify(vanSentMessages)
         })
       }).then(toJson<Device>)
@@ -2104,7 +2024,6 @@ export function App() {
           vanFinalPhoto: null,
           backgroundMusic: JSON.stringify(createDefaultVanBackgroundMusic()),
           soundboard: JSON.stringify([]),
-          vanMessageTemplates: JSON.stringify(createDefaultVanMessageTemplates()),
           vanSentMessages: JSON.stringify([])
         })
       }).then(toJson<Device>)
@@ -2337,6 +2256,7 @@ export function App() {
     setVanObjectives(objs)
     setVanPendingPhoto(undefined)
     setVanFinalPhoto(undefined)
+    setVanSentMessages([])
     void fetch(ghostApiUrl(`/admin/device/${encodeURIComponent(controlVanDeviceId)}/van`), {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
@@ -2346,7 +2266,8 @@ export function App() {
         missionObjectives: JSON.stringify(objs),
         vanPendingPhoto: null,
         vanFinalPhoto: null,
-        vanFearMessageAt: null
+        vanFearMessageAt: null,
+        vanSentMessages: JSON.stringify([])
       })
     }).catch(() => { /* offline */ })
 
@@ -2690,14 +2611,10 @@ export function App() {
 
             {adminToolRole === 'messagerie' && (
               <MessagerieAdminTool
-                templates={vanMessageTemplates}
                 sentMessages={vanSentMessages}
                 draft={vanDraftMessage}
                 onDraftChange={(patch) => setVanDraftMessage((prev) => ({ ...prev, ...patch }))}
-                onAddTemplate={addVanTemplateMessage}
-                onUpdateTemplate={updateVanTemplateMessage}
-                onRemoveTemplate={removeVanTemplateMessage}
-                onSendTemplate={pushVanTemplateMessage}
+                onSend={sendVanMessage}
                 onClearSent={clearVanSentMessages}
               />
             )}

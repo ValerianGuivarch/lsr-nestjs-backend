@@ -1,141 +1,67 @@
 import React from 'react'
 import styled from 'styled-components'
-import { MessagerieAdminToolProps, VanDashboardMessage } from './types'
+import { MessagerieAdminToolProps } from './types'
 
 export function MessagerieAdminTool({
-  templates,
   sentMessages,
   draft,
   onDraftChange,
-  onAddTemplate,
-  onUpdateTemplate,
-  onRemoveTemplate,
-  onSendTemplate,
+  onSend,
   onClearSent
 }: MessagerieAdminToolProps): JSX.Element {
-  const handleAdd = () => {
+  const handleSend = () => {
     if (!draft.title.trim()) return
-    onAddTemplate()
+    onSend()
   }
 
   return (
     <Wrapper>
       <Section>
-        <SectionTitle>Composer un message</SectionTitle>
-        <Row>
-          <label>
-            <input
-              type="radio"
-              name="kind"
-              checked={draft.kind === 'text'}
-              onChange={() => onDraftChange({ kind: 'text' })}
-            />
-            Texte
-          </label>
-          <label>
-            <input
-              type="radio"
-              name="kind"
-              checked={draft.kind === 'text_image'}
-              onChange={() => onDraftChange({ kind: 'text_image' })}
-            />
-            Texte + image
-          </label>
-        </Row>
+        <SectionTitle>Nouveau message</SectionTitle>
         <input
           type="text"
-          placeholder="Titre"
+          placeholder="Titre (obligatoire)"
           value={draft.title}
           onChange={(e) => onDraftChange({ title: e.target.value })}
         />
         <textarea
-          placeholder="Texte du message"
+          placeholder="Texte du message (optionnel)"
           rows={3}
           value={draft.text}
           onChange={(e) => onDraftChange({ text: e.target.value })}
         />
-        {draft.kind === 'text_image' && (
-          <input
-            type="url"
-            placeholder="URL de l'image"
-            value={draft.imageUrl}
-            onChange={(e) => onDraftChange({ imageUrl: e.target.value })}
-          />
-        )}
-        <PrimaryButton type="button" onClick={handleAdd}>
-          Ajouter au catalogue
+        <input
+          type="url"
+          placeholder="URL de l'image (optionnel)"
+          value={draft.imageUrl}
+          onChange={(e) => onDraftChange({ imageUrl: e.target.value })}
+        />
+        <PrimaryButton type="button" onClick={handleSend} disabled={!draft.title.trim()}>
+          Envoyer
         </PrimaryButton>
       </Section>
 
       <Section>
-        <SectionTitle>Catalogue ({templates.length})</SectionTitle>
-        {templates.length === 0 && <Empty>Aucun modèle.</Empty>}
-        <List>
-          {templates.map((tpl) => (
-            <TemplateRow key={tpl.id}>
-              <TemplateBody>
-                <KindBadge>{tpl.kind}</KindBadge>
-                <input
-                  type="text"
-                  value={tpl.title}
-                  onChange={(e) => onUpdateTemplate(tpl.id, { title: e.target.value })}
-                />
-                {tpl.kind !== 'audio' && (
-                  <textarea
-                    rows={2}
-                    value={tpl.text ?? ''}
-                    onChange={(e) => onUpdateTemplate(tpl.id, { text: e.target.value })}
-                  />
-                )}
-                {tpl.kind === 'text_image' && (
-                  <input
-                    type="url"
-                    placeholder="URL image"
-                    value={tpl.imageUrl ?? ''}
-                    onChange={(e) => onUpdateTemplate(tpl.id, { imageUrl: e.target.value })}
-                  />
-                )}
-                {tpl.kind === 'audio' && tpl.audioUrl && (
-                  <audio controls preload="none" src={tpl.audioUrl} />
-                )}
-              </TemplateBody>
-              <TemplateActions>
-                <PrimaryButton type="button" onClick={() => onSendTemplate(tpl.id)}>
-                  Envoyer
-                </PrimaryButton>
-                <DangerButton type="button" onClick={() => onRemoveTemplate(tpl.id)}>
-                  Supprimer
-                </DangerButton>
-              </TemplateActions>
-            </TemplateRow>
-          ))}
-        </List>
-      </Section>
-
-      <Section>
         <SectionTitleRow>
-          <SectionTitle>Historique envoyés ({sentMessages.length})</SectionTitle>
+          <SectionTitle>Historique ({sentMessages.length})</SectionTitle>
           {sentMessages.length > 0 && (
             <DangerButton type="button" onClick={onClearSent}>Vider</DangerButton>
           )}
         </SectionTitleRow>
         {sentMessages.length === 0 && <Empty>Aucun message envoyé.</Empty>}
         <List>
-          {sentMessages.map((msg) => (
+          {[...sentMessages].reverse().map((msg) => (
             <SentRow key={msg.id}>
               <SentTitle>{msg.title}</SentTitle>
               {msg.text && <SentText>{msg.text}</SentText>}
               {msg.imageUrl && <SentImage src={msg.imageUrl} alt={msg.title} />}
-              {msg.audioUrl && <audio controls preload="none" src={msg.audioUrl} />}
-              {msg.sentAt && <SentDate>{new Date(msg.sentAt).toLocaleString()}</SentDate>}
+              {msg.sentAt && <SentDate>{new Date(msg.sentAt).toLocaleTimeString()}</SentDate>}
             </SentRow>
           ))}
         </List>
       </Section>
     </Wrapper>
   )
-}
-
 const Wrapper = styled.div`
   display: flex;
   flex-direction: column;
@@ -146,6 +72,21 @@ const Section = styled.div`
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+
+  input,
+  textarea {
+    padding: 0.4rem 0.6rem;
+    border: 1px solid #2f3d50;
+    border-radius: 4px;
+    background: #1a222d;
+    color: #e8f0ff;
+    font-family: inherit;
+    font-size: 0.9rem;
+  }
+
+  textarea {
+    resize: vertical;
+  }
 `
 
 const SectionTitle = styled.h3`
@@ -159,12 +100,6 @@ const SectionTitleRow = styled.div`
   align-items: center;
 `
 
-const Row = styled.div`
-  display: flex;
-  gap: 1rem;
-  align-items: center;
-`
-
 const PrimaryButton = styled.button`
   align-self: flex-start;
   padding: 0.45rem 0.8rem;
@@ -173,10 +108,14 @@ const PrimaryButton = styled.button`
   border: none;
   border-radius: 4px;
   cursor: pointer;
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: default;
+  }
 `
 
 const DangerButton = styled.button`
-  align-self: flex-start;
   padding: 0.35rem 0.7rem;
   background: #b91c1c;
   color: #fff;
@@ -191,53 +130,21 @@ const List = styled.div`
   gap: 0.6rem;
 `
 
-const TemplateRow = styled.div`
-  display: flex;
-  gap: 0.75rem;
-  padding: 0.5rem;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  background: #fafafa;
-  align-items: flex-start;
-`
-
-const TemplateBody = styled.div`
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-`
-
-const TemplateActions = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 0.3rem;
-`
-
-const KindBadge = styled.span`
-  align-self: flex-start;
-  font-size: 0.7rem;
-  background: #1f2937;
-  color: #fff;
-  padding: 0.1rem 0.5rem;
-  border-radius: 999px;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-`
-
 const SentRow = styled.div`
   display: flex;
   flex-direction: column;
   gap: 0.3rem;
   padding: 0.5rem;
   border-left: 3px solid #1c64f2;
-  background: #f4f7fb;
+  background: #1a222d;
 `
 
 const SentTitle = styled.strong``
 const SentText = styled.p`
   margin: 0;
   white-space: pre-wrap;
+  font-size: 0.88rem;
+  color: #b0c4de;
 `
 const SentImage = styled.img`
   max-width: 100%;
@@ -245,9 +152,11 @@ const SentImage = styled.img`
   object-fit: contain;
 `
 const SentDate = styled.small`
-  color: #666;
+  color: #667;
+  font-size: 0.78rem;
 `
 
 const Empty = styled.small`
   color: #888;
 `
+

@@ -579,7 +579,7 @@ export function App() {
             video: {
               width: { ideal: 1280 },
               height: { ideal: 720 },
-              facingMode: { ideal: 'environment' },
+              facingMode: { ideal: 'user' },
               frameRate: { ideal: 30 }
             },
             audio: false
@@ -1177,6 +1177,12 @@ export function App() {
 
     const sentMessages = vanData?.vanSentMessages ?? []
     const latestAudioMessage = [...sentMessages].reverse().find(message => message.kind === 'audio' && message.audioUrl)
+
+    // Réinit côté MJ : la liste de messages est redevenue vide → reset du curseur.
+    if (sentMessages.length === 0) {
+      lastPlayedVanMessageIdRef.current = ''
+      return
+    }
 
     if (!latestAudioMessage || latestAudioMessage.id === lastPlayedVanMessageIdRef.current) {
       return

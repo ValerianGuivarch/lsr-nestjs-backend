@@ -97,21 +97,15 @@ export type VanDashboardMessage = {
 }
 
 export type VanMessageDraft = {
-  kind: 'audio' | 'text' | 'text_image'
   title: string
   text: string
-  audioUrl: string
   imageUrl: string
 }
 
 export type MessagerieAdminToolProps = {
-  templates: VanDashboardMessage[]
   sentMessages: VanDashboardMessage[]
   draft: VanMessageDraft
   onDraftChange: (patch: Partial<VanMessageDraft>) => void
-  onAddTemplate: () => void
-  onUpdateTemplate: (id: string, patch: Partial<VanDashboardMessage>) => void
-  onRemoveTemplate: (id: string) => void
-  onSendTemplate: (id: string) => void
+  onSend: () => void
   onClearSent: () => void
 }
