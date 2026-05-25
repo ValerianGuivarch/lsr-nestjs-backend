@@ -23,7 +23,7 @@ import {
   VanTwoColumnGrid
 } from './van-styles'
 
-const OBJECTIVE_HINTS: Record<string, string> = {
+const RAW_OBJECTIVE_HINTS: Record<string, string> = {
   'récupérer le matériel de localisation':
     "Récupérer le capteur EMF et le Thermomètre au rez-de-chaussée, ne montez pas à l'étage !",
   "trouver la zone d'activité du fantôme":
@@ -41,6 +41,11 @@ function normalizeKey(text: string): string {
     .replace(/[\u0300-\u036f]/g, '')
     .trim()
 }
+
+// Les cles du dictionnaire doivent etre normalisees (sans accents) comme les lookups.
+const OBJECTIVE_HINTS: Record<string, string> = Object.fromEntries(
+  Object.entries(RAW_OBJECTIVE_HINTS).map(([key, value]) => [normalizeKey(key), value])
+)
 
 type VanStep2EquipmentProps = {
   liveCameraFrame?: string
@@ -204,10 +209,7 @@ export function VanStep2Equipment({
         {showBanishInstructions && (
           <Block>
             <BanishCard>
-              <BanishCheckRow>
-                <BanishCheckbox type="checkbox" id="banish-ghost" />
-                <BanishLabel htmlFor="banish-ghost">Bannir le fantôme</BanishLabel>
-              </BanishCheckRow>
+              <BanishLabel as="div">Bannir le fantôme</BanishLabel>
               <BanishDescription>
                 Affichez votre plus beau sourire et prenez-vous en photo avec la caméra fantôme.
                 Une photo suffisamment effrayante (validée par le MJ depuis l’admin caméra) bannira le

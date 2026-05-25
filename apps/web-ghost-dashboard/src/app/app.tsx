@@ -643,7 +643,7 @@ export function App() {
         .catch(() => {
           // Erreur silencieuse
         })
-    }, 200)
+    }, 100)
 
     return () => clearInterval(interval)
   }, [activePanel, adminToolRole, controlDeviceId, controlGhostcamDeviceId, controlGhostorbsDeviceId])

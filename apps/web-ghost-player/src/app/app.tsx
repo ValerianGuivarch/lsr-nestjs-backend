@@ -69,17 +69,17 @@ type VanPhase = 'step1' | 'step2' | 'step3' | 'step4' | 'step5' | 'step6' | 'ste
 
 // Libellé affiché dans le bandeau de la vue van classique (étapes 2-6)
 const VAN_STEP_BANNERS: Record<VanPhase, string> = {
-  step1: 'Etape 1/7 — Lecture du message',
-  step2: 'Etape 2/7 — Récupérer le matériel de localisation',
-  step3: 'Etape 3/7 — Identifier le lieu du fantôme',
-  step4: "Etape 4/7 — Récupérer le matériel d'identification",
-  step5: 'Etape 5/7 — Identifier le fantôme',
-  step6: 'Etape 6/7 — Bannir le fantôme',
-  step7: 'Etape 7/7 — Victoire',
+  step1: 'Lecture du message',
+  step2: 'Récupérer le matériel de localisation',
+  step3: "Trouver la zone d'activité du fantôme",
+  step4: "Récupérer le matériel d'identification",
+  step5: 'Identifier le fantôme',
+  step6: 'Bannir le fantôme',
+  step7: 'Victoire',
 }
 
 const VAN_INTRO_AUDIO_URL = 'https://l7r.fr/l7r/GhostIntro.mp3'
-const GHOST_CAM_SPRITE_URL = '/ghostcam-sprite.svg'
+const GHOST_CAM_SPRITE_URL = '/Colin2.png' // servi en same-origin depuis public/
 
 const VAN_OBJECTIVE_INTRO = 'Intro terminee'
 const VAN_OBJECTIVE_MATERIAL = 'Récupérer le matériel de localisation'
@@ -207,6 +207,11 @@ export function App() {
   const emfUploadInFlightRef = useRef(false)
   const ghostcamUploadInFlightRef = useRef(false)
   const ghostCamSpriteRef = useRef<HTMLImageElement | null>(null)
+  // Canvas offscreen pour toDataURL — jamais taint par le sprite cross-origin.
+  const captureCanvasRef = useRef<HTMLCanvasElement | null>(null)
+  // Quand photoPaused passe true, on rend UNE dernière frame (avec teinte rouge si fantôme)
+  // puis on bloque le rendu. Ref consulté par captureAndSend.
+  const pausedFrameDrawnRef = useRef(false)
   const persistPhotoModeUnlocked = useCallback(
     async (unlocked: boolean): Promise<void> => {
       if (!deviceId) {
@@ -243,7 +248,9 @@ export function App() {
 
   useEffect(() => {
     const sprite = new Image()
-    sprite.crossOrigin = 'anonymous'
+    // Pas de crossOrigin : le serveur distant ne renvoie pas de headers CORS.
+    // Sans crossOrigin l'image se charge normalement ; le canvas peut devenir
+    // tainted mais on gère ca dans captureAndSend (try/catch sur toDataURL).
     sprite.src = GHOST_CAM_SPRITE_URL
     ghostCamSpriteRef.current = sprite
 
@@ -271,6 +278,7 @@ export function App() {
     vanStep?: number
     vanPendingPhoto?: string
     vanFinalPhoto?: string
+    vanFearMessageAt?: string
     ghostActivityLevel: number
     playerSanity: Record<string, number>
     soundLevels: Record<string, number>
@@ -285,6 +293,22 @@ export function App() {
     soundboard: VanSoundCue[]
     vanSentMessages: VanFeedMessage[]
   } | null>(null)
+
+  // Message "pas assez effrayant" : affich\u00e9 4s apr\u00e8s un refus MJ, puis efface.
+  const [ghostcamFearMessage, setGhostcamFearMessage] = useState<string | undefined>(undefined)
+  const lastSeenFearMessageAtRef = useRef<string | undefined>(undefined)
+  useEffect(() => {
+    const fearAt = vanData?.vanFearMessageAt
+    if (!fearAt) return
+    if (fearAt === lastSeenFearMessageAtRef.current) return
+    lastSeenFearMessageAtRef.current = fearAt
+    setGhostcamFearMessage('Pas assez effrayant. Recommence !')
+    if (photoPaused) {
+      togglePhotoPause()
+    }
+    const timer = window.setTimeout(() => setGhostcamFearMessage(undefined), 4000)
+    return () => window.clearTimeout(timer)
+  }, [vanData?.vanFearMessageAt, photoPaused, togglePhotoPause])
 
   const createDefaultVanBackgroundMusic = (): VanBackgroundMusic => ({
     title: '',
@@ -599,67 +623,83 @@ export function App() {
       }
     }
 
-    const captureAndSend = async () => {
+    // ─── Render + upload loop (~12 FPS) ──────────────────────────────────────
+    // 12 FPS est volontaire pour l'effet caméra paranormal.
+    // toDataURL (synchrone, coûteux) ne s'exécute qu'une fois toutes les 80ms.
+    // L'upload est fire-and-forget : le rendu n'est jamais bloqué par le réseau.
+
+    const captureAndSend = () => {
       if (!canvasRef.current || !videoRef.current) return
-      if (ghostcamUploadInFlightRef.current) return
       if (videoRef.current.readyState < 2) return
-      if (state.role === 'ghostcam' && photoPaused) return
+      // Photo pause : frame figée déjà dessinée → stop.
+      if (state.role === 'ghostcam' && photoPaused && pausedFrameDrawnRef.current) return
 
       const ctx = canvasRef.current.getContext('2d')
       if (!ctx) return
       const width = canvasRef.current.width
       const height = canvasRef.current.height
+
+      // Canvas de capture offscreen (dimensions synchronisées).
+      if (!captureCanvasRef.current) captureCanvasRef.current = document.createElement('canvas')
+      const captureCanvas = captureCanvasRef.current
+      if (captureCanvas.width !== width || captureCanvas.height !== height) {
+        captureCanvas.width = width
+        captureCanvas.height = height
+      }
+      const captureCtx = captureCanvas.getContext('2d')
+      if (!captureCtx) return
+
       const ghostUntilTs = state.ghostUntil ? Date.parse(state.ghostUntil) : NaN
       const ghostActive = Number.isFinite(ghostUntilTs) && ghostUntilTs > Date.now()
       const orbUntilTs = state.orbUntil ? Date.parse(state.orbUntil) : NaN
       const orbsActive = Number.isFinite(orbUntilTs) && orbUntilTs > Date.now()
       const isRed = ghostActive && state.role === 'ghostcam' && photoPaused
 
-      // Dessiner le flux video
-      ctx.drawImage(videoRef.current, 0, 0, width, height)
+      // Dessiner le flux video sur le canvas de capture.
+      captureCtx.drawImage(videoRef.current, 0, 0, width, height)
 
-      // Teinte verte forte façon caméra paranormal.
-      ctx.fillStyle = isRed ? 'rgba(255, 40, 40, 0.34)' : 'rgba(0, 255, 125, 0.32)'
-      ctx.fillRect(0, 0, width, height)
+      // Teinte verte forte facon camera paranormal.
+      captureCtx.fillStyle = isRed ? 'rgba(255, 40, 40, 0.34)' : 'rgba(0, 255, 125, 0.32)'
+      captureCtx.fillRect(0, 0, width, height)
 
-      // Scanlines serrées et marquées.
-      ctx.strokeStyle = isRed ? 'rgba(255, 180, 180, 0.24)' : 'rgba(165, 255, 185, 0.24)'
-      ctx.lineWidth = 1
+      // Scanlines : un seul appel stroke() groupé (perf : 120 calls → 1).
+      captureCtx.strokeStyle = isRed ? 'rgba(255, 180, 180, 0.24)' : 'rgba(165, 255, 185, 0.24)'
+      captureCtx.lineWidth = 1
+      captureCtx.beginPath()
       for (let i = 0; i < height; i += 4) {
-        ctx.beginPath()
-        ctx.moveTo(0, i)
-        ctx.lineTo(width, i)
-        ctx.stroke()
+        captureCtx.moveTo(0, i)
+        captureCtx.lineTo(width, i)
       }
+      captureCtx.stroke()
 
-      // Lignes de glitch horizontales aléatoires.
-      ctx.strokeStyle = isRed ? 'rgba(255, 120, 120, 0.6)' : 'rgba(120, 255, 155, 0.6)'
+      // Lignes de glitch horizontales aleatoires.
+      captureCtx.strokeStyle = isRed ? 'rgba(255, 120, 120, 0.6)' : 'rgba(120, 255, 155, 0.6)'
+      captureCtx.beginPath()
       for (let i = 0; i < 5; i++) {
         const y = Math.random() * height
         const offset = (Math.random() - 0.5) * 20
-        ctx.beginPath()
-        ctx.moveTo(0, y)
-        ctx.lineTo(width, y + offset)
-        ctx.stroke()
+        captureCtx.moveTo(0, y)
+        captureCtx.lineTo(width, y + offset)
       }
+      captureCtx.stroke()
 
-      // Grain vidéo prononcé.
+      // Grain video prononce.
       const noiseDensity = Math.floor((width * height) / 180)
-      ctx.fillStyle = isRed ? 'rgba(255, 190, 190, 0.15)' : 'rgba(185, 255, 210, 0.15)'
+      captureCtx.fillStyle = isRed ? 'rgba(255, 190, 190, 0.15)' : 'rgba(185, 255, 210, 0.15)'
       for (let i = 0; i < noiseDensity; i++) {
         const x = Math.floor(Math.random() * width)
         const y = Math.floor(Math.random() * height)
-        ctx.fillRect(x, y, 1, 1)
+        captureCtx.fillRect(x, y, 1, 1)
       }
 
-      // Flash de gain pour un rendu plus saturé/hostile.
-      ctx.globalCompositeOperation = 'overlay'
-      ctx.fillStyle = isRed ? 'rgba(255, 40, 40, 0.2)' : 'rgba(40, 255, 120, 0.18)'
-      ctx.fillRect(0, 0, width, height)
-      ctx.globalCompositeOperation = 'source-over'
+      // Flash de gain pour un rendu plus sature/hostile.
+      captureCtx.globalCompositeOperation = 'overlay'
+      captureCtx.fillStyle = isRed ? 'rgba(255, 40, 40, 0.2)' : 'rgba(40, 255, 120, 0.18)'
+      captureCtx.fillRect(0, 0, width, height)
+      captureCtx.globalCompositeOperation = 'source-over'
 
-      // Vignette sombre pour renforcer le style caméra nocturne.
-      const vignette = ctx.createRadialGradient(
+      // Vignette sombre pour renforcer le style camera nocturne.
+      const vignette = captureCtx.createRadialGradient(
         width / 2,
         height / 2,
         Math.min(width, height) * 0.25,
@@ -669,11 +709,10 @@ export function App() {
       )
       vignette.addColorStop(0, 'rgba(0, 0, 0, 0)')
       vignette.addColorStop(1, 'rgba(0, 0, 0, 0.58)')
-      ctx.fillStyle = vignette
-      ctx.fillRect(0, 0, width, height)
+      captureCtx.fillStyle = vignette
+      captureCtx.fillRect(0, 0, width, height)
 
-      // Apparition de fantôme temporaire (pilotée par MJ).
-
+      // Fantôme temporaire (piloté par MJ) - tout rendu sur captureCtx.
       if (ghostActive && state.role === 'ghostcam') {
         const sprite = ghostCamSpriteRef.current
         const now = Date.now() / 1000
@@ -684,52 +723,49 @@ export function App() {
         const ghostX = width * (0.52 + Math.sin(now * 0.9) * 0.18) + jitterX
         const ghostY = height * (0.42 + Math.cos(now * 0.8) * 0.08) + jitterY
 
-        ctx.save()
-        ctx.globalAlpha = isRed ? 0.9 : 0.82
-        ctx.filter = isRed
-          ? 'drop-shadow(0 0 14px rgba(255, 70, 70, 0.85))'
-          : 'drop-shadow(0 0 10px rgba(180, 255, 220, 0.55))'
-
-        if (sprite && sprite.complete && sprite.naturalWidth > 0 && sprite.naturalHeight > 0) {
-          ctx.drawImage(sprite, ghostX - ghostW / 2, ghostY - ghostH / 2, ghostW, ghostH)
-        } else {
-          // Fallback local pour garantir une apparition visible meme si le sprite distant est indisponible.
-          const bodyGradient = ctx.createRadialGradient(
-            ghostX,
-            ghostY - ghostH * 0.08,
-            ghostW * 0.1,
-            ghostX,
-            ghostY,
-            ghostH * 0.62
+        const drawGhostFallback = (c: CanvasRenderingContext2D) => {
+          const bodyGradient = c.createRadialGradient(
+            ghostX, ghostY - ghostH * 0.08, ghostW * 0.1,
+            ghostX, ghostY, ghostH * 0.62
           )
           bodyGradient.addColorStop(0, isRed ? 'rgba(255, 210, 210, 0.92)' : 'rgba(210, 255, 235, 0.9)')
           bodyGradient.addColorStop(0.65, isRed ? 'rgba(255, 90, 90, 0.62)' : 'rgba(120, 255, 210, 0.56)')
           bodyGradient.addColorStop(1, 'rgba(0, 0, 0, 0)')
-
-          ctx.fillStyle = bodyGradient
-          ctx.beginPath()
-          ctx.ellipse(ghostX, ghostY, ghostW * 0.33, ghostH * 0.48, 0, Math.PI, 0, true)
-          ctx.lineTo(ghostX + ghostW * 0.22, ghostY + ghostH * 0.34)
-          ctx.quadraticCurveTo(ghostX, ghostY + ghostH * 0.46, ghostX - ghostW * 0.22, ghostY + ghostH * 0.34)
-          ctx.closePath()
-          ctx.fill()
-
-          ctx.fillStyle = isRed ? 'rgba(60, 0, 0, 0.8)' : 'rgba(5, 32, 18, 0.82)'
-          ctx.beginPath()
-          ctx.arc(ghostX - ghostW * 0.1, ghostY - ghostH * 0.1, ghostW * 0.028, 0, Math.PI * 2)
-          ctx.arc(ghostX + ghostW * 0.1, ghostY - ghostH * 0.1, ghostW * 0.028, 0, Math.PI * 2)
-          ctx.fill()
+          c.fillStyle = bodyGradient
+          c.beginPath()
+          c.ellipse(ghostX, ghostY, ghostW * 0.33, ghostH * 0.48, 0, Math.PI, 0, true)
+          c.lineTo(ghostX + ghostW * 0.22, ghostY + ghostH * 0.34)
+          c.quadraticCurveTo(ghostX, ghostY + ghostH * 0.46, ghostX - ghostW * 0.22, ghostY + ghostH * 0.34)
+          c.closePath()
+          c.fill()
+          c.fillStyle = isRed ? 'rgba(60, 0, 0, 0.8)' : 'rgba(5, 32, 18, 0.82)'
+          c.beginPath()
+          c.arc(ghostX - ghostW * 0.1, ghostY - ghostH * 0.1, ghostW * 0.028, 0, Math.PI * 2)
+          c.arc(ghostX + ghostW * 0.1, ghostY - ghostH * 0.1, ghostW * 0.028, 0, Math.PI * 2)
+          c.fill()
         }
 
-        ctx.filter = 'none'
-        if (isRed) {
-          ctx.globalCompositeOperation = 'source-atop'
-          ctx.fillStyle = 'rgba(255, 40, 40, 0.45)'
-          ctx.fillRect(ghostX - ghostW / 2, ghostY - ghostH / 2, ghostW, ghostH)
-          ctx.globalCompositeOperation = 'source-over'
+        const applyRedOverlay = (c: CanvasRenderingContext2D) => {
+          if (!isRed) return
+          c.globalCompositeOperation = 'source-atop'
+          c.fillStyle = 'rgba(255, 40, 40, 0.45)'
+          c.fillRect(ghostX - ghostW / 2, ghostY - ghostH / 2, ghostW, ghostH)
+          c.globalCompositeOperation = 'source-over'
         }
 
-        ctx.restore()
+        captureCtx.save()
+        captureCtx.globalAlpha = isRed ? 0.9 : 0.82
+        captureCtx.filter = isRed
+          ? 'drop-shadow(0 0 14px rgba(255, 70, 70, 0.85))'
+          : 'drop-shadow(0 0 10px rgba(180, 255, 220, 0.55))'
+        if (sprite && sprite.complete && sprite.naturalWidth > 0 && sprite.naturalHeight > 0) {
+          captureCtx.drawImage(sprite, ghostX - ghostW / 2, ghostY - ghostH / 2, ghostW, ghostH)
+        } else {
+          drawGhostFallback(captureCtx)
+        }
+        captureCtx.filter = 'none'
+        applyRedOverlay(captureCtx)
+        captureCtx.restore()
       }
 
       if (orbsActive && state.role === 'ghostcam') {
@@ -740,41 +776,45 @@ export function App() {
           const py = height * (0.25 + ((i % 3) * 0.18)) + Math.cos(now * (1.4 + i * 0.22)) * 10
           const radius = 5 + ((i * 2) % 6)
 
-          const orbGradient = ctx.createRadialGradient(px, py, 1, px, py, radius * 2.4)
+          const orbGradient = captureCtx.createRadialGradient(px, py, 1, px, py, radius * 2.4)
           orbGradient.addColorStop(0, 'rgba(214, 236, 255, 0.96)')
           orbGradient.addColorStop(0.5, 'rgba(120, 185, 255, 0.4)')
           orbGradient.addColorStop(1, 'rgba(0, 0, 0, 0)')
-
-          ctx.fillStyle = orbGradient
-          ctx.beginPath()
-          ctx.arc(px, py, radius * 2.4, 0, Math.PI * 2)
-          ctx.fill()
-
-          ctx.strokeStyle = 'rgba(145, 205, 255, 0.6)'
-          ctx.lineWidth = 1
-          ctx.beginPath()
-          ctx.arc(px, py, radius, 0, Math.PI * 2)
-          ctx.stroke()
+          captureCtx.fillStyle = orbGradient
+          captureCtx.beginPath()
+          captureCtx.arc(px, py, radius * 2.4, 0, Math.PI * 2)
+          captureCtx.fill()
+          captureCtx.strokeStyle = 'rgba(145, 205, 255, 0.6)'
+          captureCtx.lineWidth = 1
+          captureCtx.beginPath()
+          captureCtx.arc(px, py, radius, 0, Math.PI * 2)
+          captureCtx.stroke()
         }
       }
 
-      // Convertir en base64 et envoyer
-      const frameData = canvasRef.current.toDataURL('image/jpeg', 0.35)
+      // Copier capture → display (joueur et admin voient la même image).
+      ctx.clearRect(0, 0, width, height)
+      ctx.drawImage(captureCanvas, 0, 0)
 
-      try {
+      // Upload fire-and-forget : ne bloque pas le tick suivant.
+      if (!ghostcamUploadInFlightRef.current) {
+        const frameData = captureCanvas.toDataURL('image/jpeg', 0.35)
+        if (state.role === 'ghostcam' && photoPaused) {
+          pausedFrameDrawnRef.current = true
+        }
         ghostcamUploadInFlightRef.current = true
-        await fetch(`/apil7r/admin/device/${deviceId}/camera-frame`, {
+        fetch(`/apil7r/admin/device/${deviceId}/camera-frame`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ frame: frameData })
+        }).catch(() => {}).finally(() => {
+          ghostcamUploadInFlightRef.current = false
         })
-      } catch {
-        // Erreur silencieuse
-      } finally {
-        ghostcamUploadInFlightRef.current = false
       }
     }
 
+    // Réinitialise le flag de pause quand on (re)démarre l'effet.
+    pausedFrameDrawnRef.current = false
     const interval = setInterval(captureAndSend, 80) // ~12 FPS
 
     return () => clearInterval(interval)
@@ -785,7 +825,7 @@ export function App() {
       return
     }
 
-    const captureWebcam = async () => {
+    const captureWebcam = () => {
       if (!canvasRef.current || !videoRef.current) return
       if (emfUploadInFlightRef.current) return
       if (videoRef.current.readyState < 2) return
@@ -796,21 +836,16 @@ export function App() {
       // Dessiner le flux vidéo sur un canvas invisible
       ctx.drawImage(videoRef.current, 0, 0, canvasRef.current.width, canvasRef.current.height)
 
-      // Envoyer au backend (en silencieux, le joueur ne voit rien)
+      // Upload fire-and-forget : ne bloque pas le tick suivant (fix 1 FPS).
       const frameData = canvasRef.current.toDataURL('image/jpeg', 0.35)
-
-      try {
-        emfUploadInFlightRef.current = true
-        await fetch(`/apil7r/admin/device/${deviceId}/camera-frame`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ frame: frameData })
-        })
-      } catch {
-        // Erreur silencieuse
-      } finally {
+      emfUploadInFlightRef.current = true
+      fetch(`/apil7r/admin/device/${deviceId}/camera-frame`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ frame: frameData })
+      }).catch(() => {}).finally(() => {
         emfUploadInFlightRef.current = false
-      }
+      })
     }
 
     const interval = setInterval(captureWebcam, 80) // ~12 FPS
@@ -854,6 +889,7 @@ export function App() {
             vanStep: typeof device.vanStep === 'number' ? device.vanStep : undefined,
             vanPendingPhoto: typeof device.vanPendingPhoto === 'string' ? device.vanPendingPhoto : undefined,
             vanFinalPhoto: typeof device.vanFinalPhoto === 'string' ? device.vanFinalPhoto : undefined,
+            vanFearMessageAt: typeof device.vanFearMessageAt === 'string' ? device.vanFearMessageAt : undefined,
             ghostActivityLevel: (Date.now() - lastActivityAdjustRef.current < 3000)
               ? (prev?.ghostActivityLevel ?? device.ghostActivityLevel ?? 0)
               : (device.ghostActivityLevel ?? 0),
@@ -882,28 +918,9 @@ export function App() {
     return () => clearInterval(interval)
   }, [state?.role, deviceId, devices])
 
-  useEffect(() => {
-    if (state?.role !== 'ghostcam') {
-      return
-    }
-
-    const hasFinalPhoto = Boolean(vanData?.vanFinalPhoto)
-    const step = typeof vanData?.vanStep === 'number' ? vanData.vanStep : 1
-    if (!hasFinalPhoto && step < 7) {
-      return
-    }
-
-    const vanDeviceId = devices.find(device => device.role === 'van')?.deviceId || 'van'
-    if (deviceId === vanDeviceId) {
-      return
-    }
-
-    setDeviceId(vanDeviceId)
-    setStep('play')
-    const url = new URL(window.location.href)
-    url.searchParams.set('device', vanDeviceId)
-    window.history.replaceState(null, '', url.toString())
-  }, [state?.role, vanData?.vanFinalPhoto, vanData?.vanStep, devices, deviceId])
+  // Etape 7 sur le device ghostcam : on n'effectue PLUS de redirect vers le van,
+  // pour preserver la navigation arriere. L'affichage victoire est rendu en overlay
+  // sur GhostCamDeviceView (voir plus bas).
 
   useEffect(() => {
     return () => {
@@ -1305,6 +1322,8 @@ export function App() {
   }
   if (state.role === 'ghostcam') {
     const ghostcamVanStep = typeof vanData?.vanStep === 'number' ? vanData.vanStep : 1
+    const ghostcamFinalPhoto = (vanData as any)?.vanFinalPhoto as string | undefined
+    const ghostcamVictory = Boolean(ghostcamFinalPhoto) || ghostcamVanStep >= 7
     return (
       <ThemeProvider theme={darkTheme}>
         <GhostCamDeviceView
@@ -1319,6 +1338,9 @@ export function App() {
           videoRef={videoRef}
           canvasRef={canvasRef}
           hidePhotoButton={ghostcamVanStep >= 6}
+          showVictoryOverlay={ghostcamVictory}
+          victoryPhoto={ghostcamFinalPhoto}
+          fearMessage={ghostcamFearMessage}
         />
       </ThemeProvider>
     )

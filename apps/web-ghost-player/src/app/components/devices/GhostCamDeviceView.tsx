@@ -21,6 +21,9 @@ type GhostCamDeviceViewProps = {
   canvasRef: React.RefObject<HTMLCanvasElement>
   hidePhotoButton?: boolean
   fearMessage?: string
+  // Victoire affichée en overlay lorsque l'étape van >= 7 / photo finale validée.
+  showVictoryOverlay?: boolean
+  victoryPhoto?: string
 }
 
 export function GhostCamDeviceView({
@@ -35,9 +38,19 @@ export function GhostCamDeviceView({
   videoRef,
   canvasRef,
   hidePhotoButton,
-  fearMessage
+  fearMessage,
+  showVictoryOverlay,
+  victoryPhoto
 }: GhostCamDeviceViewProps) {
   const [unlockPromptOpen, setUnlockPromptOpen] = React.useState(false)
+  const [victoryDismissed, setVictoryDismissed] = React.useState(false)
+
+  // Reset le "retour caméra" si la victoire est ré-armée (ex: reset MJ).
+  React.useEffect(() => {
+    if (!showVictoryOverlay) {
+      setVictoryDismissed(false)
+    }
+  }, [showVictoryOverlay])
 
   React.useEffect(() => {
     if (photoModeUnlocked) {
@@ -130,6 +143,21 @@ export function GhostCamDeviceView({
 
       {state.message && <Message>{state.message}</Message>}
       {state.huntActive && <Hunt>HUNT!</Hunt>}
+
+      {showVictoryOverlay && !victoryDismissed && (
+        <VictoryOverlay>
+          <VictoryCard>
+            <VictoryTitle>Fantôme banni !</VictoryTitle>
+            <VictorySubtitle>
+              Votre photo a terrifié le spectre. La maison est sécurisée.
+            </VictorySubtitle>
+            {victoryPhoto && <VictoryPhoto src={victoryPhoto} alt="Photo finale" />}
+            <VictoryBack type="button" onClick={() => setVictoryDismissed(true)}>
+              Retour caméra
+            </VictoryBack>
+          </VictoryCard>
+        </VictoryOverlay>
+      )}
     </Root>
   )
 }
@@ -444,4 +472,26 @@ const VictoryPhoto = styled.img`
   border-radius: 8px;
   object-fit: contain;
   box-shadow: 0 0 30px rgba(255, 220, 100, 0.3);
+`
+
+const VictoryCard = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  max-width: 92vw;
+`
+
+const VictoryBack = styled.button`
+  background: rgba(20, 60, 40, 0.85);
+  color: #b8ffcc;
+  border: 1px solid #4fd17a;
+  padding: 0.65rem 1.2rem;
+  border-radius: 8px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  &:hover {
+    background: rgba(40, 100, 70, 0.9);
+  }
 `
