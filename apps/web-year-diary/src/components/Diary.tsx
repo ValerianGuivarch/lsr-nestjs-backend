@@ -164,16 +164,30 @@ const Diary: React.FC = () => {
     closeModal();
   };
 
-  const goToLastMissingDate = () => {
-    if (missingDates.length > 0) {
-      const lastMissingDate = missingDates[missingDates.length - 1];
-      setDate(
-        new Date(
-          lastMissingDate.year,
-          lastMissingDate.month - 1,
-          lastMissingDate.day,
-        ),
-      );
+  const goToOldestMissingDateWithinLastYear = () => {
+    if (missingDates.length === 0) {
+      return;
+    }
+
+    const today = new Date();
+    today.setHours(23, 59, 59, 999);
+
+    const oneYearAgo = new Date(today);
+    oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+    oneYearAgo.setHours(0, 0, 0, 0);
+
+    const candidateDates = missingDates
+      .map(
+        (missingDate) =>
+          new Date(missingDate.year, missingDate.month - 1, missingDate.day),
+      )
+      .filter(
+        (missingDate) => missingDate >= oneYearAgo && missingDate <= today,
+      )
+      .sort((a, b) => a.getTime() - b.getTime());
+
+    if (candidateDates.length > 0) {
+      setDate(candidateDates[0]);
     }
   };
 
@@ -195,7 +209,7 @@ const Diary: React.FC = () => {
   return (
     <DiaryContainer>
       <DateNavigation>
-        <Button onClick={goToLastMissingDate}>
+        <Button onClick={goToOldestMissingDateWithinLastYear}>
           <GiReturnArrow />
         </Button>
         <Button onClick={openModal}>
