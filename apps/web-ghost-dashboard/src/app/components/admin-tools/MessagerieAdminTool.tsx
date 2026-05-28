@@ -62,6 +62,8 @@ export function MessagerieAdminTool({
       </Section>
     </Wrapper>
   )
+}
+
 const Wrapper = styled.div`
   display: flex;
   flex-direction: column;
