@@ -36,6 +36,12 @@ export function MessagerieAdminTool({
           value={draft.imageUrl}
           onChange={(e) => onDraftChange({ imageUrl: e.target.value })}
         />
+        <input
+          type="url"
+          placeholder="URL audio (optionnel, joué automatiquement)"
+          value={draft.audioUrl}
+          onChange={(e) => onDraftChange({ audioUrl: e.target.value })}
+        />
         <PrimaryButton type="button" onClick={handleSend} disabled={!draft.title.trim()}>
           Envoyer
         </PrimaryButton>
@@ -55,6 +61,7 @@ export function MessagerieAdminTool({
               <SentTitle>{msg.title}</SentTitle>
               {msg.text && <SentText>{msg.text}</SentText>}
               {msg.imageUrl && <SentImage src={msg.imageUrl} alt={msg.title} />}
+              {msg.audioUrl && <SentAudio controls src={msg.audioUrl} />}
               {msg.sentAt && <SentDate>{new Date(msg.sentAt).toLocaleTimeString()}</SentDate>}
             </SentRow>
           ))}
@@ -152,6 +159,9 @@ const SentImage = styled.img`
   max-width: 100%;
   max-height: 200px;
   object-fit: contain;
+`
+const SentAudio = styled.audio`
+  width: 100%;
 `
 const SentDate = styled.small`
   color: #667;

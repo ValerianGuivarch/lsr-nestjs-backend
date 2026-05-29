@@ -27,7 +27,7 @@ export function useSpiritBoxAudio(role: string | undefined, deviceId: string, po
   const spiritHeaderChunkRef = useRef<Blob | null>(null)
   const spiritPcmContextRef = useRef<AudioContext | null>(null)
   const spiritPcmSourceRef = useRef<MediaStreamAudioSourceNode | null>(null)
-  const spiritPcmProcessorRef = useRef<ScriptProcessorNode | null>(null)
+  const spiritPcmProcessorRef = useRef<AudioWorkletNode | null>(null)
   const spiritSocketRef = useRef<Socket | null>(null)
   const lastSpiritMjMessageIdRef = useRef('')
   const spiritAudioContextRef = useRef<AudioContext | null>(null)
@@ -286,34 +286,35 @@ export function useSpiritBoxAudio(role: string | undefined, deviceId: string, po
           }
 
           const source = pcmCtx.createMediaStreamSource(stream)
-          const processor = pcmCtx.createScriptProcessor(2048, 1, 1)
-          source.connect(processor)
-          processor.connect(pcmCtx.destination)
 
-          processor.onaudioprocess = event => {
-            if (!socket.connected) {
-              return
-            }
+          try {
+            await pcmCtx.audioWorklet.addModule('/pcm-processor.js')
+          } catch {
+            throw new Error('AudioWorklet not supported')
+          }
 
-            const channelData = event.inputBuffer.getChannelData(0)
-            if (!channelData || channelData.length === 0) {
-              return
-            }
+          const workletNode = new AudioWorkletNode(pcmCtx, 'pcm-processor')
+          source.connect(workletNode)
+          // AudioWorkletNode n'a pas besoin d'être connecté à destination pour tourner
 
-            const pcmBase64 = floatToPcm16Base64(channelData)
+          workletNode.port.onmessage = (event: MessageEvent<{ samples: Float32Array }>) => {
+            if (!socket.connected) return
+            const { samples } = event.data
+            if (!samples || samples.length === 0) return
+            const pcmBase64 = floatToPcm16Base64(samples)
             socket.emit('spiritbox:audio-chunk', {
               deviceId,
               chunk: pcmBase64,
               mimeType: 'audio/pcm;codecs=s16le',
               codec: 'pcm16',
-              sampleRate: event.inputBuffer.sampleRate,
+              sampleRate: pcmCtx.sampleRate,
               channels: 1,
             })
             setSpiritStatus('ECOUTE EN COURS')
           }
 
           spiritPcmSourceRef.current = source
-          spiritPcmProcessorRef.current = processor
+          spiritPcmProcessorRef.current = workletNode
           setSpiritRecording(true)
           setSpiritStatus('ECOUTE EN COURS')
           return
@@ -383,7 +384,7 @@ export function useSpiritBoxAudio(role: string | undefined, deviceId: string, po
 
   const stopSpiritRecording = useCallback((): void => {
     if (spiritPcmProcessorRef.current) {
-      spiritPcmProcessorRef.current.onaudioprocess = null
+      spiritPcmProcessorRef.current.port.onmessage = null
       spiritPcmProcessorRef.current.disconnect()
       spiritPcmProcessorRef.current = null
     }

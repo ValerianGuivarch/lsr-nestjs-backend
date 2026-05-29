@@ -14,7 +14,7 @@ export function VanStep6Banish({ ghostName }: Props): JSX.Element {
       {ghostName && <GhostNameBadge>{ghostName.toUpperCase()}</GhostNameBadge>}
       <BanishImage src={DEFAULT_BANISH_IMAGE} alt={ghostName ?? 'Fantôme'} />
       <BanishInstruction>
-        Pour vaincre ce fantôme, <strong>affichez votre plus beau sourire</strong> et{' '}
+        Pour vaincre ce fantôme, <strong>montrez votre plus belle expression de terreur</strong> et{' '}
         <strong>prenez-vous en photo</strong> !
       </BanishInstruction>
     </Layout>

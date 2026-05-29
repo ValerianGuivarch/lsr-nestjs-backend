@@ -17,7 +17,8 @@
       "hp": ["./libs/hp/src/index.ts"],
       "shared": ["./libs/shared/src/index.ts"],
       "yeardiary": ["./libs/yeardiary/src/index.ts"],
-      "ghost": ["./libs/ghost/src/index.ts"]
+      "ghost": ["./libs/ghost/src/index.ts"],
+      "ghost/frontend": ["./libs/ghost/src/lib/frontend/van-shared.ts"]
     }
   },
   "exclude": ["node_modules", "dist"]

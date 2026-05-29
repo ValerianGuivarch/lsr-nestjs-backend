@@ -1,4 +1,7 @@
 export type DeviceRole = 'emf' | 'spiritbox' | 'ghostcam' | 'thermometer' | 'ghostorbs' | 'van' | 'messagerie'
+import type { VanObjective, VanBackgroundMusic, VanSoundCue, VanMessage } from 'ghost/frontend'
+export type { VanObjective, VanBackgroundMusic, VanSoundCue }
+export type VanDashboardMessage = VanMessage
 
 export type Device = {
   deviceId: string
@@ -72,8 +75,6 @@ export type ThermometerAdminToolProps = {
   onControlPowerOnChange: (checked: boolean) => void
 }
 
-export type VanObjective = { objective: string; completed: boolean }
-
 export type VanAdminToolProps = {
   vanGhostActivity: number
   onVanGhostActivityChange: (value: number) => void
@@ -86,20 +87,11 @@ export type VanAdminToolProps = {
   onOpenCameraAdmin?: () => void
 }
 
-export type VanDashboardMessage = {
-  id: string
-  kind: 'audio' | 'text' | 'text_image'
-  title: string
-  text?: string
-  audioUrl?: string
-  imageUrl?: string
-  sentAt?: string
-}
-
 export type VanMessageDraft = {
   title: string
   text: string
   imageUrl: string
+  audioUrl: string
 }
 
 export type MessagerieAdminToolProps = {

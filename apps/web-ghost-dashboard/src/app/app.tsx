@@ -8,6 +8,27 @@ import { SpiritBoxAdminTool } from './components/admin-tools/SpiritBoxAdminTool'
 import { ThermometerAdminTool } from './components/admin-tools/ThermometerAdminTool'
 import { VanAdminTool } from './components/admin-tools/VanAdminTool'
 import { MessagerieAdminTool } from './components/admin-tools/MessagerieAdminTool'
+import {
+  VanMessage,
+  VanObjective,
+  VanBackgroundMusic,
+  VanSoundCue,
+  VAN_OBJECTIVE_INTRO,
+  VAN_OBJECTIVE_MATERIAL,
+  VAN_OBJECTIVE_LOCATE,
+  VAN_OBJECTIVE_IDENTIFICATION_GEAR,
+  VAN_OBJECTIVE_GHOST,
+  VAN_OBJECTIVE_BANISH,
+  DEFAULT_VAN_OBJECTIVES,
+  isVanObjectiveMatch,
+  ensureVanObjectives,
+  deriveVanObjectiveStep,
+  createDefaultVanBackgroundMusic,
+  parseVanBackgroundMusic,
+  parseVanSoundboard,
+  parseVanObjectives,
+  parseVanMessages,
+} from 'ghost/frontend'
 // Utilitaires pour charger les sons/voix dynamiquement
 type MusicFile = { label: string; url: string }
 
@@ -64,36 +85,13 @@ type VanPlayer = {
   sanity: number
 }
 
-type VanBackgroundMusic = {
-  title: string
-  url: string
-  volume: number
-  loop: boolean
-  playing: boolean
-}
-
-type VanSoundCue = {
-  id: string
-  label: string
-  url: string
-  volume: number
-  lastTriggeredAt?: string
-}
-
-type VanDashboardMessage = {
-  id: string
-  kind: 'audio' | 'text' | 'text_image'
-  title: string
-  text?: string
-  audioUrl?: string
-  imageUrl?: string
-  sentAt?: string
-}
+type VanDashboardMessage = VanMessage
 
 type VanMessageDraft = {
   title: string
   text: string
   imageUrl: string
+  audioUrl: string
 }
 
 type SpiritAudioMessage = {
@@ -135,81 +133,6 @@ type EscapeStep = {
   description: string
   activityImpact?: string
   requiredTools: DeviceRole[]
-}
-
-type VanObjective = { objective: string; completed: boolean }
-
-const VAN_OBJECTIVE_INTRO = 'Intro terminee'
-const VAN_OBJECTIVE_MATERIAL = 'Récupérer le matériel de localisation'
-const VAN_OBJECTIVE_LOCATE = "Trouver la zone d'activité du fantôme"
-const VAN_OBJECTIVE_IDENTIFICATION_GEAR = "Récupérer le matériel d'identification"
-const VAN_OBJECTIVE_GHOST = 'Identifier le fantôme'
-const VAN_OBJECTIVE_BANISH = 'Bannir le fantôme'
-
-const VAN_PROGRESS_OBJECTIVES: VanObjective[] = [
-  { objective: VAN_OBJECTIVE_INTRO, completed: false },
-  { objective: VAN_OBJECTIVE_MATERIAL, completed: false },
-  { objective: VAN_OBJECTIVE_LOCATE, completed: false },
-  { objective: VAN_OBJECTIVE_IDENTIFICATION_GEAR, completed: false },
-  { objective: VAN_OBJECTIVE_GHOST, completed: false },
-  { objective: VAN_OBJECTIVE_BANISH, completed: false },
-]
-
-function normalizeVanText(value: string): string {
-  return value
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .trim()
-}
-
-function isVanObjectiveMatch(value: string, expected: string): boolean {
-  return normalizeVanText(value) === normalizeVanText(expected)
-}
-
-function parseVanObjectives(raw?: string): VanObjective[] {
-  if (!raw) {
-    return []
-  }
-
-  try {
-    const parsed = JSON.parse(raw) as Array<Partial<VanObjective>>
-    return parsed
-      .filter(item => item && typeof item === 'object' && typeof item.objective === 'string')
-      .map(item => ({ objective: item.objective as string, completed: Boolean(item.completed) }))
-  } catch {
-    return []
-  }
-}
-
-function ensureVanObjectives(objectives: VanObjective[]): VanObjective[] {
-  const normalized = objectives.map(item => ({
-    objective: item.objective,
-    completed: Boolean(item.completed),
-  }))
-
-  VAN_PROGRESS_OBJECTIVES.forEach(required => {
-    if (!normalized.some(item => isVanObjectiveMatch(item.objective, required.objective))) {
-      normalized.push({ ...required })
-    }
-  })
-
-  return normalized
-}
-
-function deriveVanObjectiveStep(objectives: VanObjective[]): number {
-  const normalized = ensureVanObjectives(objectives)
-  let count = 0
-
-  for (const expected of VAN_PROGRESS_OBJECTIVES) {
-    const matched = normalized.find(item => isVanObjectiveMatch(item.objective, expected.objective))
-    if (!matched?.completed) {
-      break
-    }
-    count += 1
-  }
-
-  return count
 }
 
 type VanCameraMode = 'manual_locked' | 'manual_unlocked' | 'auto_mj_validation'
@@ -276,87 +199,12 @@ async function toJson<T>(response: Response): Promise<T> {
   return response.json() as Promise<T>
 }
 
-function createDefaultVanBackgroundMusic(): VanBackgroundMusic {
-  return {
-    title: '',
-    url: '',
-    volume: 70,
-    loop: true,
-    playing: false
-  }
-}
-
-function parseVanBackgroundMusic(raw?: string): VanBackgroundMusic {
-  if (!raw) {
-    return createDefaultVanBackgroundMusic()
-  }
-
-  try {
-    const parsed = JSON.parse(raw) as Partial<VanBackgroundMusic>
-    return {
-      title: typeof parsed.title === 'string' ? parsed.title : '',
-      url: typeof parsed.url === 'string' ? parsed.url : '',
-      volume: typeof parsed.volume === 'number' ? Math.max(0, Math.min(100, Math.round(parsed.volume))) : 70,
-      loop: parsed.loop ?? true,
-      playing: parsed.playing ?? false
-    }
-  } catch {
-    return createDefaultVanBackgroundMusic()
-  }
-}
-
-function parseVanSoundboard(raw?: string): VanSoundCue[] {
-  if (!raw) {
-    return []
-  }
-
-  try {
-    const parsed = JSON.parse(raw) as Array<Partial<VanSoundCue>>
-    return parsed
-      .filter(item => item && typeof item === 'object')
-      .map((item, index) => ({
-        id: typeof item.id === 'string' && item.id ? item.id : `cue-${index}`,
-        label: typeof item.label === 'string' ? item.label : '',
-        url: typeof item.url === 'string' ? item.url : '',
-        volume: typeof item.volume === 'number' ? Math.max(0, Math.min(100, Math.round(item.volume))) : 80,
-        lastTriggeredAt: typeof item.lastTriggeredAt === 'string' ? item.lastTriggeredAt : undefined
-      }))
-  } catch {
-    return []
-  }
-}
-
-function parseVanMessages(raw?: string): VanDashboardMessage[] {
-  if (!raw) {
-    return []
-  }
-
-  try {
-    const parsed = JSON.parse(raw) as Array<Partial<VanDashboardMessage>>
-    return parsed
-      .filter(item => item && typeof item === 'object')
-      .map((item, index) => ({
-        id: typeof item.id === 'string' && item.id ? item.id : `van-msg-${index}`,
-        kind:
-          item.kind === 'audio' || item.kind === 'text' || item.kind === 'text_image'
-            ? item.kind
-            : 'text',
-        title: typeof item.title === 'string' ? item.title : `Message ${index + 1}`,
-        text: typeof item.text === 'string' ? item.text : undefined,
-        audioUrl: typeof item.audioUrl === 'string' ? item.audioUrl : undefined,
-        imageUrl: typeof item.imageUrl === 'string' ? item.imageUrl : undefined,
-        sentAt: typeof item.sentAt === 'string' ? item.sentAt : undefined
-      }))
-  } catch {
-    return []
-  }
-}
-
 function createEmptyVanMessageDraft(): VanMessageDraft {
   return {
     title: '',
     text: '',
-    imageUrl: ''
+    imageUrl: '',
+    audioUrl: ''
   }
 }
 
@@ -462,7 +310,7 @@ export function App() {
     if (tool === 'spiritbox') return 'Spirit Box'
     if (tool === 'ghostcam') return 'Camera'
     if (tool === 'thermometer') return 'Thermomètre'
-    if (tool === 'ghostorbs') return 'Thermomètre'
+    if (tool === 'ghostorbs') return 'Ghost Orbs'
     if (tool === 'messagerie') return 'Messagerie'
     return 'Van'
   }
@@ -1794,6 +1642,7 @@ export function App() {
     const title = vanDraftMessage.title.trim()
     const text = vanDraftMessage.text.trim()
     const imageUrl = vanDraftMessage.imageUrl.trim()
+    const audioUrl = vanDraftMessage.audioUrl.trim()
 
     if (!title) {
       setError('Le titre du message est obligatoire')
@@ -1802,10 +1651,11 @@ export function App() {
 
     const newMsg: VanDashboardMessage = {
       id: `msg-${Date.now()}-${Math.random().toString(16).slice(2)}`,
-      kind: imageUrl ? 'text_image' : 'text',
+      kind: audioUrl ? 'audio' : imageUrl ? 'text_image' : 'text',
       title,
       text: text || undefined,
       imageUrl: imageUrl || undefined,
+      audioUrl: audioUrl || undefined,
       sentAt: new Date().toISOString()
     }
 
@@ -1847,7 +1697,7 @@ export function App() {
     }
 
     setVanSentMessages([])
-    const resetObjectives = VAN_PROGRESS_OBJECTIVES.map(item => ({ ...item }))
+    const resetObjectives = DEFAULT_VAN_OBJECTIVES.map(item => ({ ...item }))
     setVanObjectives(resetObjectives)
     setVanStep(0)
     setVanPendingPhoto(undefined)
@@ -2019,7 +1869,7 @@ export function App() {
           roomList: JSON.stringify(seededRooms),
           motionSensorRooms: JSON.stringify(['salon', 'cuisine', 'chambre1', 'chambre2', 'salle de bain', 'toilettes']),
           recentMotionAlert: '',
-          missionObjectives: JSON.stringify(VAN_PROGRESS_OBJECTIVES),
+          missionObjectives: JSON.stringify(DEFAULT_VAN_OBJECTIVES),
           vanPendingPhoto: null,
           vanFinalPhoto: null,
           backgroundMusic: JSON.stringify(createDefaultVanBackgroundMusic()),
@@ -2158,7 +2008,7 @@ export function App() {
   }
 
   const DEFAULT_VAN_OBJECTIVES_LIST: Array<{ objective: string; completed: boolean }> =
-    VAN_PROGRESS_OBJECTIVES.map(item => ({ ...item }))
+    DEFAULT_VAN_OBJECTIVES.map(item => ({ ...item }))
 
   const buildObjectivesForStep = (step: number): Array<{ objective: string; completed: boolean }> => {
     const next = DEFAULT_VAN_OBJECTIVES_LIST.map(o => ({ ...o }))
