@@ -91,6 +91,9 @@ export class ToolStateEntity {
   @Column({ nullable: true })
   vanFearMessageAt?: string // timestamp ISO du dernier refus, sert au message 3s
 
+  @Column({ type: 'text', nullable: true })
+  vanTextConfig?: string // JSON: VanTextConfig (textes personnalisables)
+
   @Column({ default: new Date().toISOString() })
   updatedAt: string
 }

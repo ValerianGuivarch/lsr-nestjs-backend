@@ -8,11 +8,13 @@ import { SpiritBoxAdminTool } from './components/admin-tools/SpiritBoxAdminTool'
 import { ThermometerAdminTool } from './components/admin-tools/ThermometerAdminTool'
 import { VanAdminTool } from './components/admin-tools/VanAdminTool'
 import { MessagerieAdminTool } from './components/admin-tools/MessagerieAdminTool'
+import { VanTextsEditor } from './components/admin-tools/VanTextsEditor'
 import {
   VanMessage,
   VanObjective,
   VanBackgroundMusic,
   VanSoundCue,
+  VanTextConfig,
   VAN_OBJECTIVE_INTRO,
   VAN_OBJECTIVE_MATERIAL,
   VAN_OBJECTIVE_LOCATE,
@@ -28,6 +30,8 @@ import {
   parseVanSoundboard,
   parseVanObjectives,
   parseVanMessages,
+  parseVanTextConfig,
+  DEFAULT_VAN_TEXT_CONFIG,
 } from 'ghost/frontend'
 // Utilitaires pour charger les sons/voix dynamiquement
 type MusicFile = { label: string; url: string }
@@ -76,6 +80,7 @@ type Device = {
   soundboard?: string
   vanMessageTemplates?: string
   vanSentMessages?: string
+  vanTextConfig?: string
   updatedAt: string
 }
 
@@ -157,7 +162,7 @@ function formatVanCameraMode(mode: VanCameraMode): string {
   }
 }
 
-type HomePanel = 'config' | 'game' | 'admin'
+type HomePanel = 'config' | 'game' | 'admin' | 'texts'
 
 const darkTheme = {
   background: '#11161d',
@@ -285,6 +290,9 @@ export function App() {
   const [vanNewSoundLabel, setVanNewSoundLabel] = useState<string>('')
   const [vanNewSoundUrl, setVanNewSoundUrl] = useState<string>('')
   const [vanManualMode, setVanManualMode] = useState<boolean>(false)
+  const [vanTexts, setVanTexts] = useState<VanTextConfig>(() => ({ ...DEFAULT_VAN_TEXT_CONFIG, banners: { ...DEFAULT_VAN_TEXT_CONFIG.banners }, hints: { ...DEFAULT_VAN_TEXT_CONFIG.hints }, intro: { ...DEFAULT_VAN_TEXT_CONFIG.intro }, identification: { ...DEFAULT_VAN_TEXT_CONFIG.identification }, banish: { ...DEFAULT_VAN_TEXT_CONFIG.banish }, victory: { ...DEFAULT_VAN_TEXT_CONFIG.victory } }))
+  const [vanTextsSaving, setVanTextsSaving] = useState(false)
+  const [vanTextsSaveError, setVanTextsSaveError] = useState('')
   const vanHydratedRef = useRef(false)
 
   const soundFiles = useMusicFiles('sounds')
@@ -782,6 +790,7 @@ export function App() {
     setVanBackgroundMusic(parsedBackgroundMusic)
     setVanSoundboard(parsedSoundboard)
     setVanSentMessages(parsedVanSentMessages)
+    setVanTexts(parseVanTextConfig(vanDevice.vanTextConfig))
     vanHydratedRef.current = true
   }, [devices, controlVanDeviceId])
 
@@ -1046,6 +1055,27 @@ export function App() {
       await refreshDevices()
     } catch (e) {
       setError((e as Error).message)
+    }
+  }
+
+  const saveVanTexts = async (): Promise<void> => {
+    const vanDevice = currentVanDevice
+    if (!vanDevice) {
+      setVanTextsSaveError('Aucun device van trouvé.')
+      return
+    }
+    setVanTextsSaving(true)
+    setVanTextsSaveError('')
+    try {
+      await fetch(ghostApiUrl(`/admin/device/${vanDevice.deviceId}/van`), {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ vanTextConfig: JSON.stringify(vanTexts) }),
+      }).then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`) })
+    } catch (e) {
+      setVanTextsSaveError((e as Error).message)
+    } finally {
+      setVanTextsSaving(false)
     }
   }
 
@@ -2245,12 +2275,12 @@ export function App() {
               <span>État du jeu et objectifs</span>
             </HomeCard>
             <HomeCard
-              $active={activePanel === 'admin'}
-              onClick={() => setActivePanel('admin')}
+              $active={activePanel === 'texts'}
+              onClick={() => setActivePanel('texts')}
               type="button"
             >
-              <h3>Admin Outil</h3>
-              <span>Page dédiée par outil</span>
+              <h3>Edition texte</h3>
+              <span>Personnaliser les textes du van</span>
             </HomeCard>
           </HomeCards>
         )}
@@ -2370,6 +2400,18 @@ export function App() {
                 </DevicesGrid>
 
             </>
+          </Panel>
+        )}
+
+        {activePanel === 'texts' && (
+          <Panel>
+            <VanTextsEditor
+              value={vanTexts}
+              onChange={setVanTexts}
+              onSave={() => void saveVanTexts()}
+              isSaving={vanTextsSaving}
+              saveError={vanTextsSaveError}
+            />
           </Panel>
         )}
 

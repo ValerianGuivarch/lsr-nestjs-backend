@@ -155,6 +155,109 @@ export function parseVanObjectives(raw?: string): VanObjective[] {
   }
 }
 
+// ─── Textes personnalisables du van ──────────────────────────────────────────
+
+export type VanTextConfig = {
+  intro: {
+    title: string
+    body: string
+    buttonIdle: string
+    buttonPlaying: string
+  }
+  banners: {
+    step1: string
+    step2: string
+    step3: string
+    step4: string
+    step5: string
+    step6: string
+    step7: string
+  }
+  hints: {
+    material: string
+    locate: string
+    identificationGear: string
+    ghost: string
+  }
+  identification: {
+    formTitle: string
+    placeholder: string
+    buttonLabel: string
+  }
+  banish: {
+    sideTitle: string
+    sideDescription: string
+    fullTitle: string
+    imageUrl: string
+    fullInstruction: string
+  }
+  victory: {
+    title: string
+    subtitle: string
+    photoPlaceholder: string
+  }
+}
+
+export const DEFAULT_VAN_TEXT_CONFIG: VanTextConfig = {
+  intro: {
+    title: 'MESSAGE EN ATTENTE',
+    body: "Une transmission cryptée vient d'être interceptée. Les équipements de détection sont en veille. Initialisez le système pour recevoir le briefing de mission — les coordonnées de l'entité sont attendues.",
+    buttonIdle: 'INITIALISER',
+    buttonPlaying: '— TRANSMISSION EN COURS —',
+  },
+  banners: {
+    step1: 'Lecture du message',
+    step2: 'Récupérer le matériel de localisation',
+    step3: "Trouver la zone d'activité du fantôme",
+    step4: "Récupérer le matériel d'identification",
+    step5: 'Identifier le fantôme',
+    step6: 'Bannir le fantôme',
+    step7: 'Victoire',
+  },
+  hints: {
+    material: "Récupérer le capteur EMF et le Thermomètre au rez-de-chaussée, ne montez pas à l'étage !",
+    locate: "Utilisez le matériel de localisation pour repérer la pièce où se trouve le fantôme puis sélectionnez-la dans la liste déroulante.",
+    identificationGear: 'Récupérer la lampe UV, la Camera Ghost et la Spirit Box.',
+    ghost: 'Utilisez le matériel à votre disposition pour identifier le fantôme. Saisissez son nom après identification.',
+  },
+  identification: {
+    formTitle: 'Saisir le nom du spectre',
+    placeholder: 'Nom du spectre',
+    buttonLabel: 'Valider',
+  },
+  banish: {
+    sideTitle: 'Bannir le fantôme',
+    sideDescription:
+      "Le Spectre déteste le bonheur. Une personne qui a un heureux évènement à venir doit se rendre dans la salle du fantôme et s'en vanter très fort pour le faire apparaître. Une fois sur place, il faudra avoir l'air TERRIFIÉ et se prendre en photo avec la caméra fantôme pour qu'il soit satisfait et disparaisse.",
+    fullTitle: 'BANNIR LE FANTÔME',
+    imageUrl: 'https://l7r.fr/l7r/GhostBanish.jpg',
+    fullInstruction:
+      "Le Spectre déteste le bonheur : vantez-vous très fort d'un heureux évènement à venir pour le faire apparaître, puis ayez l'air TERRIFIÉ et prenez-vous en photo pour qu'il disparaisse.",
+  },
+  victory: {
+    title: 'VOUS AVEZ RÉUSSI À CHASSER LE FANTÔME !',
+    subtitle: 'BRAVO !',
+    photoPlaceholder: 'En attente de la photo finale…',
+  },
+}
+
+export function parseVanTextConfig(raw?: string): VanTextConfig {
+  if (!raw) return { ...DEFAULT_VAN_TEXT_CONFIG, banners: { ...DEFAULT_VAN_TEXT_CONFIG.banners }, hints: { ...DEFAULT_VAN_TEXT_CONFIG.hints }, intro: { ...DEFAULT_VAN_TEXT_CONFIG.intro }, identification: { ...DEFAULT_VAN_TEXT_CONFIG.identification }, banish: { ...DEFAULT_VAN_TEXT_CONFIG.banish }, victory: { ...DEFAULT_VAN_TEXT_CONFIG.victory } }
+  try {
+    const parsed = JSON.parse(raw) as Partial<VanTextConfig>
+    return {
+      intro: { ...DEFAULT_VAN_TEXT_CONFIG.intro, ...(parsed.intro ?? {}) },
+      banners: { ...DEFAULT_VAN_TEXT_CONFIG.banners, ...(parsed.banners ?? {}) },
+      hints: { ...DEFAULT_VAN_TEXT_CONFIG.hints, ...(parsed.hints ?? {}) },
+      identification: { ...DEFAULT_VAN_TEXT_CONFIG.identification, ...(parsed.identification ?? {}) },
+      banish: { ...DEFAULT_VAN_TEXT_CONFIG.banish, ...(parsed.banish ?? {}) },
+      victory: { ...DEFAULT_VAN_TEXT_CONFIG.victory, ...(parsed.victory ?? {}) },
+    }
+  } catch {
+    return parseVanTextConfig(undefined)
+  }
+}
+
 export function parseVanMessages(raw?: string): VanMessage[] {
   if (!raw) return []
 

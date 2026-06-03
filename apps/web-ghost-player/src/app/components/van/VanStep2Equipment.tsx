@@ -1,6 +1,7 @@
 import React from 'react'
 import styled from 'styled-components'
 import { VanFeedMessage, VanObjective } from './types'
+import { VanTextConfig, DEFAULT_VAN_TEXT_CONFIG, normalizeVanText, VAN_OBJECTIVE_MATERIAL, VAN_OBJECTIVE_LOCATE, VAN_OBJECTIVE_IDENTIFICATION_GEAR, VAN_OBJECTIVE_GHOST } from 'ghost/frontend'
 import {
   ActivityBar,
   ActivityLevel,
@@ -23,29 +24,18 @@ import {
   VanTwoColumnGrid
 } from './van-styles'
 
-const RAW_OBJECTIVE_HINTS: Record<string, string> = {
-  'récupérer le matériel de localisation':
-    "Récupérer le capteur EMF et le Thermomètre au rez-de-chaussée, ne montez pas à l'étage !",
-  "trouver la zone d'activité du fantôme":
-    "Utilisez le matériel de localisation pour repérer la pièce où se trouve le fantôme puis sélectionnez-la dans la liste déroulante.",
-  "récupérer le matériel d'identification":
-    'Récupérer la lampe UV, la Camera Ghost et la Spirit Box.',
-  'identifier le fantôme':
-    'Utilisez le matériel à votre disposition pour identifier le fantôme. Saisissez son nom après identification.',
-}
-
 function normalizeKey(text: string): string {
-  return text
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .trim()
+  return normalizeVanText(text)
 }
 
-// Les cles du dictionnaire doivent etre normalisees (sans accents) comme les lookups.
-const OBJECTIVE_HINTS: Record<string, string> = Object.fromEntries(
-  Object.entries(RAW_OBJECTIVE_HINTS).map(([key, value]) => [normalizeKey(key), value])
-)
+function buildObjectiveHints(t: VanTextConfig): Record<string, string> {
+  return {
+    [normalizeKey(VAN_OBJECTIVE_MATERIAL)]: t.hints.material,
+    [normalizeKey(VAN_OBJECTIVE_LOCATE)]: t.hints.locate,
+    [normalizeKey(VAN_OBJECTIVE_IDENTIFICATION_GEAR)]: t.hints.identificationGear,
+    [normalizeKey(VAN_OBJECTIVE_GHOST)]: t.hints.ghost,
+  }
+}
 
 type VanStep2EquipmentProps = {
   liveCameraFrame?: string
@@ -64,6 +54,7 @@ type VanStep2EquipmentProps = {
   locationFormEnabled?: boolean
   ghostFormEnabled?: boolean
   showBanishInstructions?: boolean
+  textConfig?: VanTextConfig
 }
 
 export function VanStep2Equipment({
@@ -81,7 +72,10 @@ export function VanStep2Equipment({
   locationFormEnabled,
   ghostFormEnabled,
   showBanishInstructions,
+  textConfig,
 }: VanStep2EquipmentProps) {
+  const t = textConfig ?? DEFAULT_VAN_TEXT_CONFIG
+  const objectiveHints = buildObjectiveHints(t)
   const [selectedRoom, setSelectedRoom] = React.useState('')
   const [locationError, setLocationError] = React.useState('')
   const displayedObjectives = objectives.filter(
@@ -154,8 +148,8 @@ export function VanStep2Equipment({
                       <ObjectiveCheck $completed={obj.completed}>✓</ObjectiveCheck>
                       <ObjectiveText>{obj.objective}</ObjectiveText>
                     </ObjectiveItem>
-                    {isActive && OBJECTIVE_HINTS[key] && (
-                      <ObjectiveHint>{OBJECTIVE_HINTS[key]}</ObjectiveHint>
+                    {isActive && objectiveHints[key] && (
+                      <ObjectiveHint>{objectiveHints[key]}</ObjectiveHint>
                     )}
                     {isActive && isLocateRoomActive && (
                       <RoomSelectorRow>
@@ -184,16 +178,16 @@ export function VanStep2Equipment({
                     )}
                     {isActive && isIdentifyActive && (
                       <GhostFormInline>
-                        <VanDeclarationTitle>Saisir le nom du spectre</VanDeclarationTitle>
+                        <VanDeclarationTitle>{t.identification.formTitle}</VanDeclarationTitle>
                         <VanDeclarationRow>
                           <VanDeclarationInput
                             value={vanGhostGuess}
                             onChange={event => onGhostGuessChange(event.target.value)}
-                            placeholder="Nom du spectre"
-                            aria-label="Nom du spectre"
+                            placeholder={t.identification.placeholder}
+                            aria-label={t.identification.placeholder}
                           />
                           <VanDeclarationButton type="button" onClick={onDeclareGhost}>
-                            Valider
+                            {t.identification.buttonLabel}
                           </VanDeclarationButton>
                         </VanDeclarationRow>
                         {vanGhostDeclarationError && <VanDeclarationError>{vanGhostDeclarationError}</VanDeclarationError>}
@@ -209,15 +203,8 @@ export function VanStep2Equipment({
         {showBanishInstructions && (
           <Block>
             <BanishCard>
-              <BanishLabel as="div">Bannir le fantôme</BanishLabel>
-              <BanishDescription>
-                Le Spectre déteste le bonheur. Une personne qui a un heureux évènement à venir
-                (exemple au hasard : un mariage) doit se rendre dans la salle du fantôme et s’en
-                vanter très fort pour le faire apparaître. Une fois sur place, il faudra avoir l’air
-                <strong> TERRIFIÉ </strong>
-                et se prendre en photo avec la caméra fantôme pour qu’il soit satisfait et
-                disparaisse. Le système de détection automatique prendra la photo, focalisez-vous sur votre prestation !
-              </BanishDescription>
+              <BanishLabel as="div">{t.banish.sideTitle}</BanishLabel>
+              <BanishDescription>{t.banish.sideDescription}</BanishDescription>
             </BanishCard>
           </Block>
         )}

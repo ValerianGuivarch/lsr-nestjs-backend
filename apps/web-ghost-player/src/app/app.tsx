@@ -17,6 +17,7 @@ import { VanFeedMessage, VanObjective } from './components/van/types'
 import {
   VanBackgroundMusic,
   VanSoundCue,
+  VanTextConfig,
   VAN_OBJECTIVE_INTRO,
   VAN_OBJECTIVE_MATERIAL,
   VAN_OBJECTIVE_LOCATE,
@@ -31,6 +32,7 @@ import {
   parseVanBackgroundMusic,
   parseVanSoundboard,
   parseVanMessages,
+  parseVanTextConfig,
 } from 'ghost/frontend'
 
 const darkTheme = {
@@ -65,19 +67,23 @@ type Device = {
   soundboard?: string
   vanMessageTemplates?: string
   vanSentMessages?: string
+  vanTextConfig?: string
 }
 
 type VanPhase = 'step1' | 'step2' | 'step3' | 'step4' | 'step5' | 'step6' | 'step7'
 
 // Libellé affiché dans le bandeau de la vue van classique (étapes 2-6)
-const VAN_STEP_BANNERS: Record<VanPhase, string> = {
-  step1: 'Lecture du message',
-  step2: 'Récupérer le matériel de localisation',
-  step3: "Trouver la zone d'activité du fantôme",
-  step4: "Récupérer le matériel d'identification",
-  step5: 'Identifier le fantôme',
-  step6: 'Bannir le fantôme',
-  step7: 'Victoire',
+function getVanStepBanners(t?: VanTextConfig): Record<VanPhase, string> {
+  const cfg = t ?? parseVanTextConfig(undefined)
+  return {
+    step1: cfg.banners.step1,
+    step2: cfg.banners.step2,
+    step3: cfg.banners.step3,
+    step4: cfg.banners.step4,
+    step5: cfg.banners.step5,
+    step6: cfg.banners.step6,
+    step7: cfg.banners.step7,
+  }
 }
 
 const VAN_INTRO_AUDIO_URL = 'https://l7r.fr/l7r/GhostIntro.mp3'
@@ -237,6 +243,7 @@ export function App() {
     backgroundMusic: VanBackgroundMusic
     soundboard: VanSoundCue[]
     vanSentMessages: VanFeedMessage[]
+    vanTextConfig: VanTextConfig
   } | null>(null)
 
   // Message "pas assez effrayant" : affich\u00e9 4s apr\u00e8s un refus MJ, puis efface.
@@ -797,7 +804,8 @@ export function App() {
             liveCameraFrame: liveGhostCamFrame,
             backgroundMusic: parseVanBackgroundMusic(device.backgroundMusic),
             soundboard: parseVanSoundboard(device.soundboard),
-            vanSentMessages: parseVanMessages(device.vanSentMessages)
+            vanSentMessages: parseVanMessages(device.vanSentMessages),
+            vanTextConfig: parseVanTextConfig(device.vanTextConfig)
           }))
         })
         .catch(() => {
@@ -1291,7 +1299,11 @@ export function App() {
             </VanHeader>
 
             {vanPhase === 'step1' && (
-              <VanStep0Intro vanIntroState={vanIntroState} onPlayIntro={() => void playVanIntro()} />
+              <VanStep0Intro
+                vanIntroState={vanIntroState}
+                onPlayIntro={() => void playVanIntro()}
+                textConfig={vanData?.vanTextConfig}
+              />
             )}
             {(vanPhase === 'step2' ||
               vanPhase === 'step3' ||
@@ -1300,7 +1312,7 @@ export function App() {
               vanPhase === 'step6') && (
               <VanStep2Equipment
                 currentStep={getVanPhaseRank(vanPhase)}
-                stepBanner={VAN_STEP_BANNERS[vanPhase]}
+                stepBanner={getVanStepBanners(vanData?.vanTextConfig)[vanPhase]}
                 liveCameraFrame={vanData?.liveCameraFrame}
                 objectives={objectives}
                 ghostActivity={ghostActivity}
@@ -1316,10 +1328,14 @@ export function App() {
                 locationFormEnabled={vanPhase === 'step3'}
                 ghostFormEnabled={vanPhase === 'step5'}
                 showBanishInstructions={vanPhase === 'step6'}
+                textConfig={vanData?.vanTextConfig}
               />
             )}
             {vanPhase === 'step7' && (
-              <VanStep7Victory finalPhoto={(vanData as any)?.vanFinalPhoto ?? undefined} />
+              <VanStep7Victory
+                finalPhoto={(vanData as any)?.vanFinalPhoto ?? undefined}
+                textConfig={vanData?.vanTextConfig}
+              />
             )}
           </VanDashboard>
         </VanContainer>

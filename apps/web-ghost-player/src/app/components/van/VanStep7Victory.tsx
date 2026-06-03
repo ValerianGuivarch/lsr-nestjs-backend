@@ -1,21 +1,24 @@
 import React from 'react'
 import styled, { keyframes } from 'styled-components'
+import { VanTextConfig, DEFAULT_VAN_TEXT_CONFIG } from 'ghost/frontend'
 
 type Props = {
   finalPhoto?: string
+  textConfig?: VanTextConfig
 }
 
-export function VanStep7Victory({ finalPhoto }: Props): JSX.Element {
+export function VanStep7Victory({ finalPhoto, textConfig }: Props): JSX.Element {
+  const t = textConfig ?? DEFAULT_VAN_TEXT_CONFIG
   return (
     <VictoryLayout>
-      <VictoryTitle>VOUS AVEZ RÉUSSI À CHASSER LE FANTÔME !</VictoryTitle>
-      <Subtitle>BRAVO !</Subtitle>
+      <VictoryTitle>{t.victory.title}</VictoryTitle>
+      <Subtitle>{t.victory.subtitle}</Subtitle>
       {finalPhoto ? (
         <PhotoFrame>
           <Photo src={finalPhoto} alt="Photo de victoire" />
         </PhotoFrame>
       ) : (
-        <PhotoPlaceholder>En attente de la photo finale…</PhotoPlaceholder>
+        <PhotoPlaceholder>{t.victory.photoPlaceholder}</PhotoPlaceholder>
       )}
     </VictoryLayout>
   )

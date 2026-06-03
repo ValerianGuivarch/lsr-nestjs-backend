@@ -1,25 +1,23 @@
 import React from 'react'
 import styled, { keyframes } from 'styled-components'
+import { VanTextConfig, DEFAULT_VAN_TEXT_CONFIG } from 'ghost/frontend'
 
 type Props = {
   ghostName?: string
+  textConfig?: VanTextConfig
 }
 
-const DEFAULT_BANISH_IMAGE = 'https://l7r.fr/l7r/GhostBanish.jpg'
-
-export function VanStep6Banish({ ghostName }: Props): JSX.Element {
+export function VanStep6Banish({ ghostName, textConfig }: Props): JSX.Element {
+  const t = textConfig ?? DEFAULT_VAN_TEXT_CONFIG
   return (
     <Layout>
-      <BanishTitle>BANNIR LE FANTÔME</BanishTitle>
+      <BanishTitle>{t.banish.fullTitle}</BanishTitle>
       {ghostName && <GhostNameBadge>{ghostName.toUpperCase()}</GhostNameBadge>}
-      <BanishImage src={DEFAULT_BANISH_IMAGE} alt={ghostName ?? 'Fantôme'} />
-      <BanishInstruction>
-        Le Spectre déteste le bonheur : vantez-vous très fort d’un heureux évènement à venir pour
-        le faire apparaître, puis <strong>ayez l’air TERRIFIÉ</strong> et{' '}
-        <strong>prenez-vous en photo</strong> pour qu’il disparaisse.
-      </BanishInstruction>
+      <BanishImage src={t.banish.imageUrl} alt={ghostName ?? 'Fantôme'} />
+      <BanishInstruction>{t.banish.fullInstruction}</BanishInstruction>
     </Layout>
   )
+
 }
 
 const pulse = keyframes`

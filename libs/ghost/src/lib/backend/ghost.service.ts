@@ -121,16 +121,8 @@ export class GhostService {
     return this.frameBuffer.get(toolType)
   }
 
-  setCameraFrameClean(toolType: string, frameBase64: string): void {
-    this.frameCleanBuffer.set(toolType, frameBase64)
-  }
-
   getCameraFrameClean(toolType: string): string | undefined {
     return this.frameCleanBuffer.get(toolType)
-  }
-
-  getCameraFrameClean(toolType: string): string | undefined {
-    return this.cleanFrameBuffer.get(toolType)
   }
 
   setSpiritPlayerMessage(toolType: string, audioData: string, mimeType?: string): SpiritAudioMessage {
@@ -186,6 +178,7 @@ export class GhostService {
         | 'vanPendingPhoto'
         | 'vanFinalPhoto'
         | 'vanFearMessageAt'
+        | 'vanTextConfig'
       >
     >
   ): Promise<ToolStateEntity> {
