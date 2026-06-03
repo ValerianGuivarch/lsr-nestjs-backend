@@ -1,4 +1,4 @@
-import { IsArray, IsBoolean, IsIn, IsNumber, IsOptional, IsString, ValidateNested } from 'class-validator'
+import { IsArray, IsBoolean, IsIn, IsNumber, IsObject, IsOptional, IsString, ValidateNested } from 'class-validator'
 import { Type } from 'class-transformer'
 
 export class CreateJdrRequest {
@@ -23,12 +23,16 @@ export class AddTraitModifierRequest {
 export class AddTraitRequest {
   @IsString() name: string
   @IsString() type: string
+  @IsOptional() @IsNumber() level?: number
+  @IsOptional() @IsObject() data?: Record<string, unknown>
   @IsOptional() @ValidateNested({ each: true }) @Type(() => AddTraitModifierRequest) modifiers?: AddTraitModifierRequest[]
 }
 
 export class UpdateTraitRequest {
   @IsOptional() @IsString() name?: string
   @IsOptional() @IsString() type?: string
+  @IsOptional() @IsNumber() level?: number
+  @IsOptional() @IsObject() data?: Record<string, unknown> | null
   @IsOptional() @ValidateNested({ each: true }) @Type(() => AddTraitModifierRequest) modifiers?: AddTraitModifierRequest[]
 }
 
@@ -125,6 +129,8 @@ export class RollDiceRequest {
   @IsOptional()
   @IsIn(['normal', 'disadvantage', 'advantage', 'double_advantage'])
   rollState?: 'normal' | 'disadvantage' | 'advantage' | 'double_advantage'
+
+  @IsOptional() @IsString() text?: string
 }
 
 export class RollArbitraryRequest {

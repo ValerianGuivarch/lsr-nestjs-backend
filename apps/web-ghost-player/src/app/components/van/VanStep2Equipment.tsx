@@ -211,9 +211,12 @@ export function VanStep2Equipment({
             <BanishCard>
               <BanishLabel as="div">Bannir le fantôme</BanishLabel>
               <BanishDescription>
-                Affichez votre plus beau sourire et prenez-vous en photo avec la caméra fantôme.
-                Une photo suffisamment effrayante (validée par le MJ depuis l’admin caméra) bannira le
-                spectre pour de bon.
+                Le Spectre déteste le bonheur. Une personne qui a un heureux évènement à venir
+                (exemple au hasard : un mariage) doit se rendre dans la salle du fantôme et s’en
+                vanter très fort pour le faire apparaître. Une fois sur place, il faudra avoir l’air
+                <strong> TERRIFIÉ </strong>
+                et se prendre en photo avec la caméra fantôme pour qu’il soit satisfait et
+                disparaisse. Le système de détection automatique prendra la photo, focalisez-vous sur votre prestation !
               </BanishDescription>
             </BanishCard>
           </Block>

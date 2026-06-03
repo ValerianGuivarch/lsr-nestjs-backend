@@ -125,16 +125,22 @@ export class GhostController {
   @Post('admin/device/:deviceId/camera-frame')
   async setCameraFrameCompat(
     @Param('deviceId') deviceId: string,
-    @Body('frame') frameBase64: string
+    @Body() body: { frame: string; frameClean?: string }
   ): Promise<{ ok: true }> {
-    this.ghost.setCameraFrame(deviceId, frameBase64)
+    this.ghost.setCameraFrame(deviceId, body.frame)
+    if (body.frameClean) {
+      this.ghost.setCameraFrameClean(deviceId, body.frameClean)
+    }
     return { ok: true }
   }
 
   @Get('player/device/:deviceId/camera-frame')
-  async getCameraFrameCompat(@Param('deviceId') deviceId: string): Promise<{ frame?: string }> {
+  async getCameraFrameCompat(
+    @Param('deviceId') deviceId: string
+  ): Promise<{ frame?: string; frameClean?: string }> {
     const frame = this.ghost.getCameraFrame(deviceId)
-    return { frame }
+    const frameClean = this.ghost.getCameraFrameClean(deviceId)
+    return { frame, frameClean }
   }
 
   @Post('player/device/:deviceId/spiritbox/player-message')

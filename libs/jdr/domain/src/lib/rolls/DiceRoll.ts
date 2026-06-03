@@ -12,6 +12,7 @@ export class DiceRoll {
   isArbitrary: boolean
   formula: string | null
   results: number[]
+  text: string | null
   createdDate: Date
 
   constructor(p: DiceRoll) {

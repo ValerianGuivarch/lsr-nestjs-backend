@@ -14,8 +14,9 @@ export function VanStep6Banish({ ghostName }: Props): JSX.Element {
       {ghostName && <GhostNameBadge>{ghostName.toUpperCase()}</GhostNameBadge>}
       <BanishImage src={DEFAULT_BANISH_IMAGE} alt={ghostName ?? 'Fantôme'} />
       <BanishInstruction>
-        Pour vaincre ce fantôme, <strong>montrez votre plus belle expression de terreur</strong> et{' '}
-        <strong>prenez-vous en photo</strong> !
+        Le Spectre déteste le bonheur : vantez-vous très fort d’un heureux évènement à venir pour
+        le faire apparaître, puis <strong>ayez l’air TERRIFIÉ</strong> et{' '}
+        <strong>prenez-vous en photo</strong> pour qu’il disparaisse.
       </BanishInstruction>
     </Layout>
   )

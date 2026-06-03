@@ -39,6 +39,9 @@ export class DBJdrDiceRoll {
   @Column({ type: 'simple-array', nullable: false })
   results: number[]
 
+  @Column({ type: 'varchar', nullable: true, default: null })
+  text: string | null
+
   static toDiceRoll(db: DBJdrDiceRoll): DiceRoll {
     return new DiceRoll({
       id: db.id,
@@ -52,6 +55,7 @@ export class DBJdrDiceRoll {
       isArbitrary: db.isArbitrary ?? false,
       formula: db.formula ?? null,
       results: db.results.map(Number),
+      text: db.text ?? null,
       createdDate: db.createdDate
     })
   }

@@ -25,6 +25,7 @@ export default function CharacterPage() {
   const [draft, setDraft] = useState<DraftDto | null>(null)
   const [arbitraryFormula, setArbitraryFormula] = useState('1d20')
   const [rollingArbitrary, setRollingArbitrary] = useState(false)
+  const [spellPopup, setSpellPopup] = useState<{ slug: string; name: string } | null>(null)
 
   useEffect(() => {
     if (!jdrSlug) return
@@ -74,11 +75,11 @@ export default function CharacterPage() {
     return () => clearInterval(id)
   }, [jdrSlug])
 
-  const handleRollDice = async (statSlug: string) => {
+  const handleRollDice = async (statSlug: string, text?: string | null) => {
     if (!jdrSlug || !characterSlug) return
     try {
       setRolling(statSlug)
-      const roll = await JdrApiClient.rollDice(jdrSlug, characterSlug, statSlug, rollState)
+      const roll = await JdrApiClient.rollDice(jdrSlug, characterSlug, statSlug, rollState, text ?? null)
       setLastRoll(roll)
     } catch (err) {
       alert('Erreur: ' + (err as Error).message)
@@ -332,9 +333,15 @@ export default function CharacterPage() {
               <SectionTitle>Sorts</SectionTitle>
               <TraitTagGrid>
                 {traitsByType.sorts.map((trait) => (
-                  <TraitTagCard key={trait.slug} $variant="sorts">
+                  <TraitTagCard
+                    key={trait.slug}
+                    $variant="sorts"
+                    onClick={() => setSpellPopup({ slug: trait.slug, name: trait.name })}
+                    style={{ cursor: 'pointer' }}
+                    title={`Lancer ${trait.name}`}
+                  >
                     <TraitName>{trait.name}</TraitName>
-                    {trait.modifiers.length > 0 ? (
+                    {trait.modifiers.length > 0 && (
                       <TraitModifiers>
                         {trait.modifiers.map((modifier) => (
                           <TraitModifier key={`${trait.slug}-${modifier.statSlug}`}>
@@ -342,8 +349,6 @@ export default function CharacterPage() {
                           </TraitModifier>
                         ))}
                       </TraitModifiers>
-                    ) : (
-                      <TraitHint>Aucun modificateur</TraitHint>
                     )}
                   </TraitTagCard>
                 ))}
@@ -376,6 +381,32 @@ export default function CharacterPage() {
           </SectionCard>
         </SideColumn>
       </ContentGrid>
+
+      {spellPopup && (
+        <SpellModalBackdrop onClick={() => setSpellPopup(null)}>
+          <SpellModalCard onClick={(e) => e.stopPropagation()}>
+            <SpellModalTitle>{spellPopup.name}</SpellModalTitle>
+            <SpellModalHint>Choisis la stat pour lancer ce sort :</SpellModalHint>
+            <SpellStatGrid>
+              {jdr.stats.map((stat) => (
+                <SpellStatButton
+                  key={stat.slug}
+                  type="button"
+                  disabled={rolling === stat.slug}
+                  onClick={async () => {
+                    const name = spellPopup.name
+                    setSpellPopup(null)
+                    await handleRollDice(stat.slug, name)
+                  }}
+                >
+                  {stat.name}
+                </SpellStatButton>
+              ))}
+            </SpellStatGrid>
+            <SpellModalClose type="button" onClick={() => setSpellPopup(null)}>Annuler</SpellModalClose>
+          </SpellModalCard>
+        </SpellModalBackdrop>
+      )}
     </PageShell>
   )
 }
@@ -937,4 +968,76 @@ const GroupEmptyHint = styled.span`
   font-size: 0.85rem;
   color: #8a6645;
   font-style: italic;
+`
+
+const SpellModalBackdrop = styled.div`
+  position: fixed;
+  inset: 0;
+  background: rgba(20, 12, 5, 0.55);
+  display: grid;
+  place-items: center;
+  z-index: 1000;
+  padding: 1rem;
+`
+
+const SpellModalCard = styled.div`
+  background: linear-gradient(180deg, #fbeed1, #f1d9ad);
+  border: 1px solid rgba(118, 76, 36, 0.45);
+  border-radius: 16px;
+  padding: 1.25rem 1.5rem;
+  width: min(420px, 100%);
+  box-shadow: 0 18px 40px rgba(40, 22, 8, 0.35);
+  color: #3b2926;
+`
+
+const SpellModalTitle = styled.h3`
+  margin: 0 0 0.25rem;
+  font-size: 1.15rem;
+  color: #5a3712;
+`
+
+const SpellModalHint = styled.p`
+  margin: 0 0 0.85rem;
+  font-size: 0.85rem;
+  color: #6f4f37;
+`
+
+const SpellStatGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 0.5rem;
+`
+
+const SpellStatButton = styled.button`
+  padding: 0.55rem 0.7rem;
+  border-radius: 10px;
+  border: 1px solid rgba(118, 76, 36, 0.4);
+  background: #fff6e1;
+  color: #3b2926;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.1s ease;
+  &:hover:not(:disabled) {
+    background: #ffe6b3;
+    transform: translateY(-1px);
+  }
+  &:disabled {
+    opacity: 0.6;
+    cursor: progress;
+  }
+`
+
+const SpellModalClose = styled.button`
+  margin-top: 0.9rem;
+  width: 100%;
+  padding: 0.5rem;
+  border-radius: 10px;
+  border: 1px solid rgba(118, 76, 36, 0.35);
+  background: transparent;
+  color: #6f4f37;
+  font-weight: 500;
+  cursor: pointer;
+  &:hover {
+    background: rgba(118, 76, 36, 0.08);
+  }
 `

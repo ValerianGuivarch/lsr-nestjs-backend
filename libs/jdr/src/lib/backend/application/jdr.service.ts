@@ -39,11 +39,11 @@ export class JdrService {
     return this.jdrProvider.removeStat(jdrSlug, statSlug)
   }
 
-  addTrait(jdrSlug: string, p: { name: string; type: string; modifiers?: { statSlug: string; value: number }[] }): Promise<Jdr> {
+  addTrait(jdrSlug: string, p: { name: string; type: string; level?: number; data?: Record<string, unknown> | null; modifiers?: { statSlug: string; value: number }[] }): Promise<Jdr> {
     return this.jdrProvider.addTrait(jdrSlug, p)
   }
 
-  updateTrait(jdrSlug: string, traitSlug: string, p: { name?: string; type?: string; modifiers?: { statSlug: string; value: number }[] }): Promise<Jdr> {
+  updateTrait(jdrSlug: string, traitSlug: string, p: { name?: string; type?: string; level?: number | null; data?: Record<string, unknown> | null; modifiers?: { statSlug: string; value: number }[] }): Promise<Jdr> {
     return this.jdrProvider.updateTrait(jdrSlug, traitSlug, p)
   }
 
@@ -167,8 +167,8 @@ export class JdrService {
     return this.jdrProvider.removeCharacterResource(jdrSlug, characterSlug, resourceSlug)
   }
 
-  rollDice(jdrSlug: string, characterSlug: string, statSlug: string, rollState?: DiceRoll['rollState']): Promise<DiceRoll> {
-    return this.jdrProvider.rollDice(jdrSlug, characterSlug, statSlug, rollState)
+  rollDice(jdrSlug: string, characterSlug: string, statSlug: string, rollState?: DiceRoll['rollState'], text?: string | null): Promise<DiceRoll> {
+    return this.jdrProvider.rollDice(jdrSlug, characterSlug, statSlug, rollState, text)
   }
 
   rollArbitrary(jdrSlug: string, characterSlug: string, formula: string): Promise<DiceRoll> {

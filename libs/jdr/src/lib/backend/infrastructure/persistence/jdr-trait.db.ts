@@ -27,6 +27,12 @@ export class DBJdrTrait {
   @Column({ type: 'varchar', nullable: false })
   type: TraitType
 
+  @Column({ type: 'int', nullable: true })
+  level: number | null
+
+  @Column({ type: 'simple-json', nullable: true })
+  data: Record<string, unknown> | null
+
   @OneToMany(() => DBJdrTraitModifier, (modifier) => modifier.trait, { cascade: true })
   modifiers: DBJdrTraitModifier[]
 
@@ -40,9 +46,11 @@ export class DBJdrTrait {
       name: db.name,
       slug: db.slug,
       type: db.type,
+      level: db.level ?? null,
+      data: db.data ?? null,
       modifiers: (db.modifiers ?? []).map(DBJdrTraitModifier.toTraitStatModifier)
     })
   }
 }
 
-export type DBJdrTraitToCreate = Pick<DBJdrTrait, 'jdrSlug' | 'slug' | 'name' | 'type'>
+export type DBJdrTraitToCreate = Pick<DBJdrTrait, 'jdrSlug' | 'slug' | 'name' | 'type' | 'level' | 'data'>

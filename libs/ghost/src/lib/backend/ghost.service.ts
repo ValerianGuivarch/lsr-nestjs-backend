@@ -27,6 +27,8 @@ const CANONICAL_TOOL_TYPES: ToolType[] = [
 @Injectable()
 export class GhostService {
   private frameBuffer = new Map<string, string>()
+  private frameCleanBuffer = new Map<string, string>()
+  private cleanFrameBuffer = new Map<string, string>()
   private spiritPlayerToMjBuffer = new Map<string, SpiritAudioMessage>()
   private spiritMjToPlayerBuffer = new Map<string, SpiritAudioMessage>()
   private accelerationIntervals = new Map<string, NodeJS.Timeout>()
@@ -101,6 +103,8 @@ export class GhostService {
   async reset(): Promise<void> {
     await this.toolStateRepo.clear()
     this.frameBuffer.clear()
+    this.frameCleanBuffer.clear()
+    this.cleanFrameBuffer.clear()
     this.spiritPlayerToMjBuffer.clear()
     this.spiritMjToPlayerBuffer.clear()
   }
@@ -109,8 +113,24 @@ export class GhostService {
     this.frameBuffer.set(toolType, frameBase64)
   }
 
+  setCameraFrameClean(toolType: string, frameBase64: string): void {
+    this.cleanFrameBuffer.set(toolType, frameBase64)
+  }
+
   getCameraFrame(toolType: string): string | undefined {
     return this.frameBuffer.get(toolType)
+  }
+
+  setCameraFrameClean(toolType: string, frameBase64: string): void {
+    this.frameCleanBuffer.set(toolType, frameBase64)
+  }
+
+  getCameraFrameClean(toolType: string): string | undefined {
+    return this.frameCleanBuffer.get(toolType)
+  }
+
+  getCameraFrameClean(toolType: string): string | undefined {
+    return this.cleanFrameBuffer.get(toolType)
   }
 
   setSpiritPlayerMessage(toolType: string, audioData: string, mimeType?: string): SpiritAudioMessage {

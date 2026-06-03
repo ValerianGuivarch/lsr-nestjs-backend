@@ -149,12 +149,12 @@ export class JdrImplementation implements IJdrProvider {
 
   // ─── Traits ───────────────────────────────────────────────────────────────
 
-  async addTrait(jdrSlug: string, p: { name: string; type: string; modifiers?: { statSlug: string; value: number }[] }): Promise<Jdr> {
+  async addTrait(jdrSlug: string, p: { name: string; type: string; level?: number; data?: Record<string, unknown> | null; modifiers?: { statSlug: string; value: number }[] }): Promise<Jdr> {
     await this.loadJdr(jdrSlug)
     const slug = Slug.from(p.name)
     const existing = await this.traitRepo.findOne({ where: { jdrSlug, slug } })
     if (existing) throw JdrError.conflict(`Trait '${slug}' already exists in jdr '${jdrSlug}'`)
-    await this.traitRepo.save(this.traitRepo.create({ jdrSlug, slug, name: p.name, type: p.type as TraitType }))
+    await this.traitRepo.save(this.traitRepo.create({ jdrSlug, slug, name: p.name, type: p.type as TraitType, level: p.level ?? null, data: p.data ?? null }))
     for (const modifier of p.modifiers ?? []) {
       await this.traitModifierRepo.save(this.traitModifierRepo.create({ jdrSlug, traitSlug: slug, statSlug: modifier.statSlug, value: modifier.value }))
     }
@@ -167,12 +167,14 @@ export class JdrImplementation implements IJdrProvider {
     return this.findOneBySlug(jdrSlug)
   }
 
-  async updateTrait(jdrSlug: string, traitSlug: string, p: { name?: string; type?: string; modifiers?: { statSlug: string; value: number }[] }): Promise<Jdr> {
+  async updateTrait(jdrSlug: string, traitSlug: string, p: { name?: string; type?: string; level?: number | null; data?: Record<string, unknown> | null; modifiers?: { statSlug: string; value: number }[] }): Promise<Jdr> {
     const existing = await this.traitRepo.findOne({ where: { jdrSlug, slug: traitSlug } })
     if (!existing) throw JdrError.notFound(`Trait '${traitSlug}'`)
-    const patch: { name?: string; type?: TraitType; updatedDate: Date } = { updatedDate: new Date() }
+    const patch: { name?: string; type?: TraitType; level?: number | null; data?: Record<string, unknown> | null; updatedDate: Date } = { updatedDate: new Date() }
     if (p.name !== undefined) patch.name = p.name
     if (p.type !== undefined) patch.type = p.type as TraitType
+    if (p.level !== undefined) patch.level = p.level
+    if (p.data !== undefined) patch.data = p.data
     await this.traitRepo.update({ jdrSlug, slug: traitSlug }, patch)
     if (p.modifiers !== undefined) {
       await this.traitModifierRepo.delete({ jdrSlug, traitSlug })
@@ -485,7 +487,8 @@ export class JdrImplementation implements IJdrProvider {
     jdrSlug: string,
     characterSlug: string,
     statSlug: string,
-    rollState: DiceRoll['rollState'] = 'normal'
+    rollState: DiceRoll['rollState'] = 'normal',
+    text?: string | null
   ): Promise<DiceRoll> {
     const jdr = await this.loadJdr(jdrSlug)
     const domainJdr = DBJdr.toJdr(jdr)
@@ -509,7 +512,8 @@ export class JdrImplementation implements IJdrProvider {
         statName: stat.name,
         statValue,
         rollState,
-        results
+        results,
+        text: text ?? null
       })
     )
     return DBJdrDiceRoll.toDiceRoll(saved)

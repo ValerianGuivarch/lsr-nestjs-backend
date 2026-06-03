@@ -275,6 +275,7 @@ export function App() {
   const [vanObjectives, setVanObjectives] = useState<Array<{ objective: string; completed: boolean }>>([])
   const [vanStep, setVanStep] = useState<number>(0)
   const [vanPendingPhoto, setVanPendingPhoto] = useState<string | undefined>(undefined)
+  const [vanPendingPhotoClean, setVanPendingPhotoClean] = useState<string | undefined>(undefined)
   const [vanFinalPhoto, setVanFinalPhoto] = useState<string | undefined>(undefined)
   const [vanFloorPlanImage, setVanFloorPlanImage] = useState<string | null>(null)
   const [vanBackgroundMusic, setVanBackgroundMusic] = useState<VanBackgroundMusic>(createDefaultVanBackgroundMusic)
@@ -290,6 +291,7 @@ export function App() {
   const voiceFiles = useMusicFiles('voices')
 
   const [cameraSources, setCameraSources] = useState<Record<string, string>>({})
+  const [cameraSourcesClean, setCameraSourcesClean] = useState<Record<string, string>>({})
   const [cameraPollingEnabled, setCameraPollingEnabled] = useState<boolean>(true)
   const [enabledCameraDevices, setEnabledCameraDevices] = useState<Record<string, boolean>>({})
   const [adminToolRole, setAdminToolRole] = useState<DeviceRole | null>(null)
@@ -452,9 +454,12 @@ export function App() {
     const interval = setInterval(() => {
       fetch(ghostApiUrl(`/player/device/${deviceId}/camera-frame`))
         .then(r => r.json())
-        .then((data: { frame?: string }) => {
+        .then((data: { frame?: string; frameClean?: string }) => {
           if (data.frame) {
             setCameraSources(prev => ({ ...prev, [deviceId]: data.frame }))
+          }
+          if (data.frameClean) {
+            setCameraSourcesClean(prev => ({ ...prev, [deviceId]: data.frameClean as string }))
           }
         })
         .catch(() => {
@@ -2105,6 +2110,7 @@ export function App() {
     setVanStep(1)
     setVanObjectives(objs)
     setVanPendingPhoto(undefined)
+    setVanPendingPhotoClean(undefined)
     setVanFinalPhoto(undefined)
     setVanSentMessages([])
     void fetch(ghostApiUrl(`/admin/device/${encodeURIComponent(controlVanDeviceId)}/van`), {
@@ -2133,11 +2139,29 @@ export function App() {
   const validateVanPhoto = (): void => {
     if (!controlVanDeviceId || !vanPendingPhoto) return
     const photo = vanPendingPhoto
+    const photoClean = vanPendingPhotoClean
     const objs = buildObjectivesForStep(7)
     setVanStep(7)
     setVanObjectives(objs)
     setVanPendingPhoto(undefined)
+    setVanPendingPhotoClean(undefined)
     setVanFinalPhoto(photo)
+
+    // Enregistrer les deux versions sur le PC du MJ.
+    const stamp = Date.now()
+    const triggerDownload = (dataUrl: string, suffix: string): void => {
+      const link = document.createElement('a')
+      link.href = dataUrl
+      link.download = `ghost-photo-${stamp}-${suffix}.jpg`
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+    }
+    triggerDownload(photo, 'spectre')
+    if (photoClean) {
+      triggerDownload(photoClean, 'clean')
+    }
+
     void fetch(ghostApiUrl(`/admin/device/${encodeURIComponent(controlVanDeviceId)}/van`), {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
@@ -2153,6 +2177,7 @@ export function App() {
   const refuseVanPhoto = (): void => {
     if (!controlVanDeviceId) return
     setVanPendingPhoto(undefined)
+    setVanPendingPhotoClean(undefined)
     setVanFinalPhoto(undefined)
     void fetch(ghostApiUrl(`/admin/device/${encodeURIComponent(controlVanDeviceId)}/van`), {
       method: 'PATCH',
@@ -2167,10 +2192,12 @@ export function App() {
   const takeGhostcamPhoto = (): void => {
     const frame = controlGhostcamDeviceId ? cameraSources[controlGhostcamDeviceId] : undefined
     if (!frame) return
+    const frameClean = controlGhostcamDeviceId ? cameraSourcesClean[controlGhostcamDeviceId] : undefined
 
     // Étape 6 du van : on envoie la photo en validation au MJ.
     if (vanStep === 6 && controlVanDeviceId) {
       setVanPendingPhoto(frame)
+      setVanPendingPhotoClean(frameClean)
       void fetch(ghostApiUrl(`/admin/device/${encodeURIComponent(controlVanDeviceId)}/van`), {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },

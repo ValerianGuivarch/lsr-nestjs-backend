@@ -11,8 +11,8 @@ export interface IJdrProvider {
   updateStat(jdrSlug: string, statSlug: string, p: { name: string }): Promise<Jdr>
   removeStat(jdrSlug: string, statSlug: string): Promise<Jdr>
 
-  addTrait(jdrSlug: string, p: { name: string; type: string; modifiers?: { statSlug: string; value: number }[] }): Promise<Jdr>
-  updateTrait(jdrSlug: string, traitSlug: string, p: { name?: string; type?: string; modifiers?: { statSlug: string; value: number }[] }): Promise<Jdr>
+  addTrait(jdrSlug: string, p: { name: string; type: string; level?: number; data?: Record<string, unknown> | null; modifiers?: { statSlug: string; value: number }[] }): Promise<Jdr>
+  updateTrait(jdrSlug: string, traitSlug: string, p: { name?: string; type?: string; level?: number | null; data?: Record<string, unknown> | null; modifiers?: { statSlug: string; value: number }[] }): Promise<Jdr>
   removeTrait(jdrSlug: string, traitSlug: string): Promise<Jdr>
 
   addResource(jdrSlug: string, p: { name: string; type: string }): Promise<Jdr>
@@ -50,7 +50,7 @@ export interface IJdrProvider {
   updateCharacterResource(jdrSlug: string, characterSlug: string, resourceSlug: string, value: number): Promise<Jdr>
   removeCharacterResource(jdrSlug: string, characterSlug: string, resourceSlug: string): Promise<Jdr>
 
-  rollDice(jdrSlug: string, characterSlug: string, statSlug: string, rollState?: DiceRoll['rollState']): Promise<DiceRoll>
+  rollDice(jdrSlug: string, characterSlug: string, statSlug: string, rollState?: DiceRoll['rollState'], text?: string | null): Promise<DiceRoll>
   rollArbitrary(jdrSlug: string, characterSlug: string, formula: string): Promise<DiceRoll>
   getLastRolls(jdrSlug: string, size: number): Promise<DiceRoll[]>
 

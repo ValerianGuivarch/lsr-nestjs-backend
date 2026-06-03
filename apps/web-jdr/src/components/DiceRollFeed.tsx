@@ -57,24 +57,6 @@ export function DiceRollFeed({ jdrSlug, characterSlug, maxItems = 30, jdrData }:
     return 'Normal'
   }
 
-  const getTraitImpacts = (roll: DiceRollDto): string[] => {
-    if (!jdrData) return []
-
-    const character = jdrData.characters.find(c => c.slug === roll.characterSlug)
-    if (!character) return []
-
-    return character.traitSlugs
-      .map(traitSlug => jdrData.traits.find(t => t.slug === traitSlug))
-      .filter((trait): trait is NonNullable<typeof trait> => Boolean(trait))
-      .map(trait => {
-        const modifier = trait.modifiers.find(m => m.statSlug === roll.statSlug)
-        if (!modifier || modifier.value === 0) return null
-        const sign = modifier.value > 0 ? '+' : ''
-        return `${trait.name} (${sign}${modifier.value})`
-      })
-      .filter((impact): impact is string => Boolean(impact))
-  }
-
   if (error) {
     return <div style={{ color: 'var(--color-danger)' }}>Erreur: {error}</div>
   }
@@ -112,13 +94,17 @@ export function DiceRollFeed({ jdrSlug, characterSlug, maxItems = 30, jdrData }:
                 </div>
               )
             }
-            const traitImpacts = getTraitImpacts(roll)
             const rollState = resolveRollState(roll)
             const successCount = getSuccessCount(roll.results, rollState)
             return (
               <div key={roll.id} style={styles.rollItem}>
                 <div style={styles.rollHeader}>
-                  🎲 <strong>{roll.characterName}</strong> · <strong>{roll.statName}</strong>
+                  🎲 <strong>{roll.characterName}</strong> ·{' '}
+                  {roll.text ? (
+                    <strong>{roll.text} ({roll.statName})</strong>
+                  ) : (
+                    <strong>{roll.statName}</strong>
+                  )}
                 </div>
                 <div style={styles.rollMeta}>
                   <span>Valeur: {roll.statValue}</span>
@@ -144,14 +130,6 @@ export function DiceRollFeed({ jdrSlug, characterSlug, maxItems = 30, jdrData }:
                     </span>
                   ))}
                 </div>
-
-                {traitImpacts.length > 0 && (
-                  <div style={styles.traitsRow}>
-                    {traitImpacts.map(impact => (
-                      <span key={impact} style={styles.traitBadge}>{impact}</span>
-                    ))}
-                  </div>
-                )}
               </div>
             )
           })}

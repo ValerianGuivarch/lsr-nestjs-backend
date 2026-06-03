@@ -9,6 +9,8 @@ export class TraitDto {
   slug: string
   name: string
   type: string
+  level: number | null
+  data: Record<string, unknown> | null
   modifiers: TraitModifierDto[]
 }
 
@@ -133,6 +135,8 @@ export class JdrDto {
       slug: t.slug,
       name: t.name,
       type: t.type,
+      level: t.level,
+      data: t.data,
       modifiers: t.modifiers.map((m) => ({ statSlug: m.statSlug, value: m.value }))
     }))
     dto.resources = jdr.resources.map((r) => ({ slug: r.slug, name: r.name, type: r.type }))
@@ -174,6 +178,7 @@ export class DiceRollDto {
   isArbitrary: boolean
   formula: string | null
   results: number[]
+  text: string | null
   createdDate: Date
 
   static from(roll: DiceRoll): DiceRollDto {
@@ -189,6 +194,7 @@ export class DiceRollDto {
     dto.isArbitrary = roll.isArbitrary ?? false
     dto.formula = roll.formula ?? null
     dto.results = roll.results
+    dto.text = roll.text ?? null
     dto.createdDate = roll.createdDate
     return dto
   }

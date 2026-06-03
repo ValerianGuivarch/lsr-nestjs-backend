@@ -322,7 +322,7 @@ export class JdrController {
     @Param('statSlug') statSlug: string,
     @Body() body: RollDiceRequest
   ): Promise<DiceRollDto> {
-    return DiceRollDto.from(await this.jdrService.rollDice(jdrSlug, characterSlug, statSlug, body?.rollState))
+    return DiceRollDto.from(await this.jdrService.rollDice(jdrSlug, characterSlug, statSlug, body?.rollState, body?.text))
   }
 
   @HttpCode(HttpStatus.CREATED)

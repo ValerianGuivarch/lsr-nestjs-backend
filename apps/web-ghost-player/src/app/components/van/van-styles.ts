@@ -2,7 +2,8 @@ import styled from 'styled-components'
 
 export const VanDashboard = styled.div`
   width: 100%;
-  max-width: none;
+  max-width: 100%;
+  box-sizing: border-box;
   min-height: 100vh;
   background: linear-gradient(135deg, #0a0e12 0%, #0d1117 50%, #090c11 100%);
   border: 2px solid #1a4d3e;

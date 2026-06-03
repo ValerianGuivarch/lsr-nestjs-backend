@@ -678,6 +678,20 @@ export function App() {
       // Upload fire-and-forget : ne bloque pas le tick suivant.
       if (!ghostcamUploadInFlightRef.current) {
         const frameData = captureCanvas.toDataURL('image/jpeg', 0.35)
+        // Frame propre (sans effets) capturée depuis le flux video direct.
+        let frameClean: string | undefined
+        try {
+          const cleanCanvas = document.createElement('canvas')
+          cleanCanvas.width = width
+          cleanCanvas.height = height
+          const cleanCtx = cleanCanvas.getContext('2d')
+          if (cleanCtx) {
+            cleanCtx.drawImage(videoRef.current, 0, 0, width, height)
+            frameClean = cleanCanvas.toDataURL('image/jpeg', 0.6)
+          }
+        } catch {
+          frameClean = undefined
+        }
         if (state.role === 'ghostcam' && photoPaused) {
           pausedFrameDrawnRef.current = true
         }
@@ -685,7 +699,7 @@ export function App() {
         fetch(`/apil7r/admin/device/${deviceId}/camera-frame`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ frame: frameData })
+          body: JSON.stringify({ frame: frameData, frameClean })
         }).catch(() => {}).finally(() => {
           ghostcamUploadInFlightRef.current = false
         })
@@ -1329,12 +1343,14 @@ const Container = styled.div`
 `
 
 const VanContainer = styled(Container)`
-  width: 100vw;
-  max-width: 100vw;
+  width: 100%;
+  max-width: 100%;
   min-height: 100vh;
   padding: 0;
   align-items: stretch;
   justify-content: flex-start;
+  box-sizing: border-box;
+  overflow-x: hidden;
 `
 
 const StatusCard = styled.div`

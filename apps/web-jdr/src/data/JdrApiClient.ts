@@ -14,6 +14,7 @@ export interface DiceRollDto {
   isArbitrary: boolean
   formula: string | null
   results: number[]
+  text: string | null
   createdDate: string
 }
 
@@ -49,6 +50,8 @@ export interface TraitDto {
   slug: string
   name: string
   type: string
+  level: number | null
+  data: Record<string, unknown> | null
   modifiers: Array<{ statSlug: string; value: number }>
 }
 
@@ -144,11 +147,11 @@ export class JdrApiClient {
     return res.json()
   }
 
-  static async rollDice(jdrSlug: string, characterSlug: string, statSlug: string, rollState: RollState = 'normal'): Promise<DiceRollDto> {
+  static async rollDice(jdrSlug: string, characterSlug: string, statSlug: string, rollState: RollState = 'normal', text?: string | null): Promise<DiceRollDto> {
     const res = await fetch(`${API_BASE}/${jdrSlug}/characters/${characterSlug}/roll/${statSlug}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ rollState })
+      body: JSON.stringify({ rollState, text: text ?? undefined })
     })
     if (!res.ok) throw new Error(`Failed to roll dice: ${res.statusText}`)
     return res.json()
@@ -243,11 +246,11 @@ export class JdrApiClient {
     return res.json()
   }
 
-  static async addTrait(jdrSlug: string, name: string, type: string, modifiers?: Array<{ statSlug: string; value: number }>): Promise<JdrDto> {
+  static async addTrait(jdrSlug: string, name: string, type: string, modifiers?: Array<{ statSlug: string; value: number }>, level?: number, data?: Record<string, unknown>): Promise<JdrDto> {
     const res = await fetch(`${API_BASE}/${jdrSlug}/traits`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, type, modifiers })
+      body: JSON.stringify({ name, type, modifiers, level, data })
     })
     if (!res.ok) throw new Error(`Failed to add trait: ${res.statusText}`)
     return res.json()
@@ -259,7 +262,7 @@ export class JdrApiClient {
     return res.json()
   }
 
-  static async updateTrait(jdrSlug: string, traitSlug: string, p: { name?: string; type?: string; modifiers?: Array<{ statSlug: string; value: number }> }): Promise<JdrDto> {
+  static async updateTrait(jdrSlug: string, traitSlug: string, p: { name?: string; type?: string; level?: number | null; data?: Record<string, unknown> | null; modifiers?: Array<{ statSlug: string; value: number }> }): Promise<JdrDto> {
     const res = await fetch(`${API_BASE}/${jdrSlug}/traits/${traitSlug}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
