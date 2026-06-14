@@ -162,7 +162,7 @@ function formatVanCameraMode(mode: VanCameraMode): string {
   }
 }
 
-type HomePanel = 'config' | 'game' | 'admin' | 'texts'
+type HomePanel = 'config' | 'game' | 'admin' | 'texts' | 'van-admin-mobile'
 
 const darkTheme = {
   background: '#11161d',
@@ -545,6 +545,8 @@ export function App() {
       setActivePanel('admin')
     } else if (panelParam === 'game') {
       setActivePanel('game')
+    } else if (panelParam === 'van-admin-mobile') {
+      setActivePanel('van-admin-mobile')
     }
 
     const isRoleValid =
@@ -1163,6 +1165,44 @@ export function App() {
     const seconds = Math.max(1, Math.min(30, Number(controlOrbDurationSec) || 1))
     const orbUntil = new Date(Date.now() + seconds * 1000).toISOString()
     await patchGhostorbsControl({ orbUntil })
+  }
+
+  const triggerGhostActionForSeconds = async (seconds: number): Promise<void> => {
+    const duration = Math.max(1, Math.min(30, Number(seconds) || 1))
+    const ghostUntil = new Date(Date.now() + duration * 1000).toISOString()
+    await patchGhostcamControl({ ghostUntil })
+  }
+
+  const triggerOrbsActionForSeconds = async (seconds: number): Promise<void> => {
+    const duration = Math.max(1, Math.min(30, Number(seconds) || 1))
+    const orbUntil = new Date(Date.now() + duration * 1000).toISOString()
+    await patchGhostorbsControl({ orbUntil })
+  }
+
+  const setQuickEmfFound = (found: boolean): void => {
+    if (!controlDeviceId) {
+      setError('Aucun device EMF disponible')
+      return
+    }
+
+    const emfLevel = found ? 4 : 1
+    setControlPowerOn(true)
+    setControlEmfFound(found)
+    setControlEmfLevel(emfLevel)
+    void patchEmfControl({ powerOn: true, emfLevel })
+  }
+
+  const setQuickThermometerFound = (found: boolean): void => {
+    if (!controlGhostorbsDeviceId) {
+      setError('Aucun device Thermometre disponible')
+      return
+    }
+
+    const temperature = found ? 3 : 16
+    setControlThermometerPowerOn(true)
+    setControlThermometerActive(found)
+    setControlTemperature(temperature)
+    void patchThermometerControl({ powerOn: true, temperature })
   }
 
   const audioContextRef = useRef<AudioContext | null>(null)
@@ -2280,6 +2320,14 @@ export function App() {
               <h3>Edition texte</h3>
               <span>Personnaliser les textes du van</span>
             </HomeCard>
+            <HomeCard
+              $active={activePanel === 'van-admin-mobile'}
+              onClick={() => setActivePanel('van-admin-mobile')}
+              type="button"
+            >
+              <h3>Van Admin Mobile</h3>
+              <span>Commandes d'urgence mobile</span>
+            </HomeCard>
           </HomeCards>
         )}
 
@@ -2413,6 +2461,91 @@ export function App() {
           </Panel>
         )}
 
+        {activePanel === 'van-admin-mobile' && (
+          <Panel>
+            <PanelHeader>
+              <h2>Van Admin Mobile</h2>
+            </PanelHeader>
+
+            <MobileQuickMeta>
+              <small>EMF: {controlDeviceId || 'indisponible'}</small>
+              <small>Thermo: {controlGhostorbsDeviceId || 'indisponible'}</small>
+              <small>SpiritBox: {controlSpiritboxDeviceId || 'indisponible'}</small>
+              <small>GhostCam: {controlGhostcamDeviceId || 'indisponible'}</small>
+            </MobileQuickMeta>
+
+            <MobileQuickGrid>
+              <MobileQuickSection>
+                <h3>Indices</h3>
+                <MobileTwoCols>
+                  <MobileQuickAction
+                    type="button"
+                    $active={controlEmfFound}
+                    onClick={() => setQuickEmfFound(!controlEmfFound)}
+                  >
+                    EMF Trouve: {controlEmfFound ? 'OUI' : 'NON'}
+                  </MobileQuickAction>
+                  <MobileQuickAction
+                    type="button"
+                    $active={controlThermometerActive}
+                    onClick={() => setQuickThermometerFound(!controlThermometerActive)}
+                  >
+                    Thermo Trouve: {controlThermometerActive ? 'OUI' : 'NON'}
+                  </MobileQuickAction>
+                </MobileTwoCols>
+              </MobileQuickSection>
+
+              <MobileQuickSection>
+                <h3>SpiritBox</h3>
+                <MobileFiveCols>
+                  {SPIRITBOX_PRESET_SOUNDS.map(preset => (
+                    <MobileQuickButton
+                      key={preset.id}
+                      type="button"
+                      onClick={() => {
+                        void sendSpiritboxPresetSound(preset)
+                      }}
+                    >
+                      {preset.label.replace('.mp3', '')}
+                    </MobileQuickButton>
+                  ))}
+                </MobileFiveCols>
+              </MobileQuickSection>
+
+              <MobileQuickSection>
+                <h3>Apparitions</h3>
+                <MobileTwoCols>
+                  <MobileQuickButton
+                    type="button"
+                    onClick={() => {
+                      void triggerGhostActionForSeconds(5)
+                    }}
+                  >
+                    Fantome 5s
+                  </MobileQuickButton>
+                  <MobileQuickButton
+                    type="button"
+                    onClick={() => {
+                      void triggerOrbsActionForSeconds(5)
+                    }}
+                  >
+                    Orbes 5s
+                  </MobileQuickButton>
+                </MobileTwoCols>
+              </MobileQuickSection>
+
+              <MobileQuickSection>
+                <h3>GhostCam</h3>
+                <MobileQuickButton type="button" onClick={takeGhostcamPhoto}>
+                  Prendre une photo
+                </MobileQuickButton>
+              </MobileQuickSection>
+            </MobileQuickGrid>
+
+            {error && <ErrorBox>{error}</ErrorBox>}
+          </Panel>
+        )}
+
         {activePanel === 'admin' && (
           <>
             {(adminToolRole === null || adminToolRole === 'emf') && (
@@ -2421,7 +2554,6 @@ export function App() {
                 controlDeviceId={controlDeviceId}
                 controlPowerOn={controlPowerOn}
                 controlFound={controlEmfFound}
-                cameraFrame={controlDeviceId ? cameraSources[controlDeviceId] : undefined}
                 onControlDeviceChange={setControlDeviceId}
                 onControlPowerOnChange={checked => {
                   setControlPowerOn(checked)
@@ -2496,7 +2628,6 @@ export function App() {
                 controlDeviceId={controlGhostorbsDeviceId}
                 controlPowerOn={controlThermometerPowerOn}
                 controlActive={controlThermometerActive}
-                cameraFrame={controlGhostorbsDeviceId ? cameraSources[controlGhostorbsDeviceId] : undefined}
                 onControlDeviceChange={setControlGhostorbsDeviceId}
                 onControlPowerOnChange={checked => {
                   setControlThermometerPowerOn(checked)
@@ -2993,4 +3124,73 @@ const ObjectiveCheckboxItem = styled.div`
     line-height: 1.35;
     overflow-wrap: anywhere;
   }
+`
+
+const MobileQuickMeta = styled.div`
+  margin-top: 0.55rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.35rem;
+
+  small {
+    color: #b7c7dd;
+  }
+`
+
+const MobileQuickGrid = styled.div`
+  margin-top: 0.8rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+`
+
+const MobileQuickSection = styled.section`
+  border: 1px solid ${({ theme }) => theme.panelBorder};
+  border-radius: 10px;
+  padding: 0.7rem;
+  background: rgba(16, 23, 33, 0.75);
+
+  h3 {
+    margin: 0 0 0.55rem 0;
+    font-size: 0.95rem;
+  }
+`
+
+const MobileTwoCols = styled.div`
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+
+  @media (max-width: 640px) {
+    grid-template-columns: 1fr;
+  }
+`
+
+const MobileFiveCols = styled.div`
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.45rem;
+
+  @media (max-width: 900px) {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  @media (max-width: 560px) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+`
+
+const MobileQuickButton = styled.button`
+  border: 1px solid ${({ theme }) => theme.panelBorder};
+  background: #162030;
+  color: ${({ theme }) => theme.color};
+  border-radius: 10px;
+  padding: 0.85rem 0.55rem;
+  cursor: pointer;
+  font-weight: 700;
+`
+
+const MobileQuickAction = styled(MobileQuickButton)<{ $active: boolean }>`
+  border-color: ${({ theme, $active }) => ($active ? theme.accent : theme.panelBorder)};
+  background: ${({ theme, $active }) => ($active ? theme.accentSoft : '#162030')};
 `

@@ -6,7 +6,6 @@ export function ThermometerAdminTool({
   controlDeviceId,
   controlPowerOn,
   controlActive,
-  cameraFrame,
   onControlDeviceChange,
   onControlPowerOnChange,
   onControlActiveChange,
@@ -20,7 +19,7 @@ export function ThermometerAdminTool({
   }
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'minmax(280px, 1fr) 360px', gap: '0.9rem' }}>
+    <div style={{ display: 'grid', gridTemplateColumns: 'minmax(280px, 1fr)', gap: '0.9rem' }}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.45rem' }}>
         <label htmlFor="control-thermometer-device">Device Thermometre</label>
         <select
@@ -62,36 +61,6 @@ export function ThermometerAdminTool({
               : 'Mode normal (~16°C)'
             : 'Capteur eteint (0°C)'}
         </small>
-      </div>
-
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-        <strong>Camera Thermometre: {controlDeviceId || 'aucun'}</strong>
-        {cameraFrame ? (
-          <img
-            src={cameraFrame}
-            alt={controlDeviceId || 'thermometer-camera'}
-            style={{ width: '100%', maxWidth: 360, borderRadius: 8, border: '1px solid #2f3d50', aspectRatio: '4 / 3', objectFit: 'cover' }}
-          />
-        ) : (
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              width: '100%',
-              maxWidth: 360,
-              aspectRatio: '4 / 3',
-              borderRadius: 8,
-              border: '1px solid #2f3d50',
-              color: '#8fa6c4',
-              textAlign: 'center',
-              padding: '0.6rem',
-              fontSize: '0.85rem',
-            }}
-          >
-            En attente de frame camera thermometre...
-          </div>
-        )}
       </div>
     </div>
   )

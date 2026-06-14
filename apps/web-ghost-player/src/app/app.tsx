@@ -151,6 +151,8 @@ export function App() {
   const [step, setStep] = useState<'choose' | 'play'>('choose')
   const [playStatus, setPlayStatus] = useState<'idle' | 'loading' | 'ready' | 'not-found' | 'error'>('idle')
   const [playError, setPlayError] = useState('')
+  const [isFullscreenActive, setIsFullscreenActive] = useState(false)
+  const [fullscreenRequestError, setFullscreenRequestError] = useState('')
   const audioContextRef = useRef<AudioContext | null>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const videoRef = useRef<HTMLVideoElement>(null)
@@ -264,48 +266,34 @@ export function App() {
   }, [vanData?.vanFearMessageAt, photoPaused, togglePhotoPause])
 
   useEffect(() => {
-    // Bouton plein écran flottant (injecte dans body pour apparaître quelle que soit la vue)
-    const btn = document.createElement('button')
-    btn.type = 'button'
-    btn.textContent = '⛶'
-    btn.setAttribute('aria-label', 'Basculer le plein écran')
-    btn.title = 'Plein écran'
-    btn.style.cssText = [
-      'position:fixed',
-      'top:10px',
-      'right:10px',
-      'z-index:99999',
-      'width:38px',
-      'height:38px',
-      'border-radius:50%',
-      'border:1px solid rgba(255,255,255,0.4)',
-      'background:rgba(0,0,0,0.55)',
-      'color:#fff',
-      'font-size:18px',
-      'line-height:1',
-      'cursor:pointer',
-      'backdrop-filter:blur(4px)',
-      'padding:0'
-    ].join(';')
-    const toggle = (): void => {
-      const doc: any = document
-      const el: any = document.documentElement
-      const isFs = doc.fullscreenElement || doc.webkitFullscreenElement
-      if (isFs) {
-        const exit = doc.exitFullscreen || doc.webkitExitFullscreen
-        if (exit) void exit.call(doc)
-      } else {
-        const req = el.requestFullscreen || el.webkitRequestFullscreen
-        if (req) void req.call(el)
-      }
+    const syncFullscreenState = (): void => {
+      const doc = document as Document & { webkitFullscreenElement?: Element | null }
+      setIsFullscreenActive(Boolean(doc.fullscreenElement || doc.webkitFullscreenElement))
     }
-    btn.addEventListener('click', toggle)
-    document.body.appendChild(btn)
+
+    syncFullscreenState()
+    document.addEventListener('fullscreenchange', syncFullscreenState)
+    document.addEventListener('webkitfullscreenchange', syncFullscreenState as EventListener)
+
     return () => {
-      btn.removeEventListener('click', toggle)
-      btn.remove()
+      document.removeEventListener('fullscreenchange', syncFullscreenState)
+      document.removeEventListener('webkitfullscreenchange', syncFullscreenState as EventListener)
     }
   }, [])
+
+  const requestDeviceFullscreen = async (): Promise<void> => {
+    try {
+      const root = document.documentElement as HTMLElement & { webkitRequestFullscreen?: () => Promise<void> | void }
+      if (root.requestFullscreen) {
+        await root.requestFullscreen()
+      } else if (root.webkitRequestFullscreen) {
+        root.webkitRequestFullscreen()
+      }
+      setFullscreenRequestError('')
+    } catch {
+      setFullscreenRequestError('Impossible d\'activer le plein écran.')
+    }
+  }
 
   useEffect(() => {
     fetch('/apil7r/player/devices')
@@ -1200,6 +1188,48 @@ export function App() {
           <StatusCard>
             <h2>Chargement</h2>
             <p>Connexion au device en cours...</p>
+          </StatusCard>
+        </Container>
+      </ThemeProvider>
+    )
+  }
+
+  if (!isFullscreenActive) {
+    const roleLabel =
+      state.role === 'emf'
+        ? 'EMF'
+        : state.role === 'spiritbox'
+          ? 'SpiritBox'
+          : state.role === 'ghostcam'
+            ? 'GhostCam'
+            : state.role === 'thermometer' || state.role === 'ghostorbs'
+              ? 'Thermometre'
+              : state.role === 'van'
+                ? 'Van'
+                : 'Messagerie'
+    const activationLabel = `${roleLabel}${state.deviceId ? ` (${state.deviceId})` : ''}`
+    return (
+      <ThemeProvider theme={darkTheme}>
+        <Container style={{ minHeight: '100vh', background: '#000', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <StatusCard style={{ background: '#000', border: '1px solid #1e2936' }}>
+            <button
+              type="button"
+              onClick={() => {
+                void requestDeviceFullscreen()
+              }}
+              style={{
+                border: '1px solid #3a4f68',
+                background: '#0d1722',
+                color: '#e6f0ff',
+                borderRadius: 10,
+                padding: '0.9rem 1rem',
+                fontWeight: 700,
+                cursor: 'pointer',
+              }}
+            >
+              Activer l'appareil {activationLabel}
+            </button>
+            {fullscreenRequestError && <p>{fullscreenRequestError}</p>}
           </StatusCard>
         </Container>
       </ThemeProvider>

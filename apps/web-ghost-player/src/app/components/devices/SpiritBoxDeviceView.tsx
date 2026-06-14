@@ -28,6 +28,7 @@ export function SpiritBoxDeviceView({
   onTuneFrequencyUp,
 }: SpiritBoxDeviceViewProps) {
   const powerOn = state.powerOn ?? true
+  const displayedStatus = spiritSignalLocked ? 'AUDIO DISPONIBLE' : spiritStatus
   const holdTimeoutRef = React.useRef<number | null>(null)
   const holdIntervalRef = React.useRef<number | null>(null)
 
@@ -83,7 +84,7 @@ export function SpiritBoxDeviceView({
 
         <SpiritBoxScreen $on={powerOn} $locked={spiritSignalLocked}>
           <SpiritFrequency>{spiritFrequency.toFixed(1).padStart(5, '0')}</SpiritFrequency>
-          <SpiritStatus>{spiritStatus}</SpiritStatus>
+          <SpiritStatus>{displayedStatus}</SpiritStatus>
           {spiritLastHeardAt && <SpiritTimestamp>Dernier msg MJ: {spiritLastHeardAt}</SpiritTimestamp>}
         </SpiritBoxScreen>
 
