@@ -1,5 +1,5 @@
 import React from 'react'
-import styled, { keyframes } from 'styled-components'
+import styled from 'styled-components'
 
 type ThermometerDeviceState = {
   deviceId: string
@@ -18,8 +18,7 @@ type ThermometerDeviceViewProps = {
 export function ThermometerDeviceView({ state, videoRef, canvasRef }: ThermometerDeviceViewProps) {
   const powerOn = state.powerOn ?? true
   const tempC = state.temperature ?? 13.4
-  const tempF = (tempC * 9) / 5 + 32
-  const ems = 0.95
+  const isGlacial = powerOn && tempC <= 6
 
   return (
     <Root>
@@ -32,39 +31,19 @@ export function ThermometerDeviceView({ state, videoRef, canvasRef }: Thermomete
       </HudLine>
 
       <DeviceBody>
-        <DeviceTop>
-          <BrandLine>GHOST HUNTIN'</BrandLine>
-          <ModelLine>HOT OR NOT 300</ModelLine>
-          <RangeLine>-50°C~700°C (-58°F~1382°F)</RangeLine>
-        </DeviceTop>
-
         <LcdBezel>
-          <LcdScreen $on={powerOn}>
+          <LcdScreen $on={powerOn} $glacial={isGlacial}>
             {powerOn ? (
               <>
-                <LcdStatusRow>
-                  <LcdTag>HOLD</LcdTag>
-                  <LcdIcons>
-                    <LcdIcon>▪▪▪</LcdIcon>
-                    <LcdIcon>↑</LcdIcon>
-                    <LcdIcon>⚠</LcdIcon>
-                  </LcdIcons>
-                </LcdStatusRow>
-                <LcdUnitRow>°F</LcdUnitRow>
-                <LcdTempValue>{tempF.toFixed(1)}</LcdTempValue>
-                <LcdEmsRow>EMS {ems.toFixed(2)}</LcdEmsRow>
+                <LcdTitle $glacial={isGlacial}>THERMOMETRE</LcdTitle>
+                <LcdUnitRow $glacial={isGlacial}>Celsius</LcdUnitRow>
+                <LcdTempValue $glacial={isGlacial}>{tempC.toFixed(1)}°C</LcdTempValue>
               </>
             ) : (
               <LcdOffText>- - -</LcdOffText>
             )}
           </LcdScreen>
         </LcdBezel>
-
-        <ButtonRow>
-          <DeviceButton $color="#e8c94a">SET</DeviceButton>
-          <DeviceButton $color="#4a7ae8">▲</DeviceButton>
-          <DeviceButton $color="#4a7ae8">▼</DeviceButton>
-        </ButtonRow>
       </DeviceBody>
 
       {state.message && <Message>{state.message}</Message>}
@@ -104,35 +83,8 @@ const DeviceBody = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1rem;
+  gap: 0.6rem;
   box-shadow: 0 8px 40px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.06);
-`
-
-const DeviceTop = styled.div`
-  width: 100%;
-  text-align: center;
-`
-
-const BrandLine = styled.div`
-  font-size: 0.65rem;
-  font-weight: 700;
-  color: #b0c8e0;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-`
-
-const ModelLine = styled.div`
-  font-size: 0.85rem;
-  font-weight: 900;
-  color: #d8eaf8;
-  letter-spacing: 0.12em;
-`
-
-const RangeLine = styled.div`
-  font-size: 0.55rem;
-  color: #5a7a9a;
-  letter-spacing: 0.06em;
-  margin-top: 2px;
 `
 
 const LcdBezel = styled.div`
@@ -144,101 +96,64 @@ const LcdBezel = styled.div`
   box-shadow: inset 0 2px 8px rgba(0,0,0,0.8);
 `
 
-const lcdGlow = keyframes`
-  0%, 100% { box-shadow: 0 0 12px rgba(0, 255, 100, 0.3), inset 0 0 20px rgba(0, 180, 80, 0.08); }
-  50% { box-shadow: 0 0 18px rgba(0, 255, 100, 0.5), inset 0 0 24px rgba(0, 180, 80, 0.14); }
-`
-
-const LcdScreen = styled.div<{ $on: boolean }>`
-  background: ${({ $on }) => ($on ? 'linear-gradient(160deg, #0a2210 0%, #071c0d 100%)' : '#090e0b')};
+const LcdScreen = styled.div<{ $on: boolean; $glacial: boolean }>`
+  background: ${({ $on, $glacial }) => {
+    if (!$on) return '#1a130d'
+    return $glacial
+      ? 'linear-gradient(160deg, #092439 0%, #07192a 100%)'
+      : 'linear-gradient(160deg, #3a2508 0%, #2a1a06 100%)'
+  }};
   border-radius: 6px;
   padding: 0.6rem 0.8rem;
-  min-height: 130px;
+  min-height: 120px;
   display: flex;
   flex-direction: column;
   justify-content: center;
   gap: 0.1rem;
-  animation: ${({ $on }) => ($on ? lcdGlow : 'none')} 3s ease-in-out infinite;
+  box-shadow: ${({ $on, $glacial }) => {
+    if (!$on) return 'none'
+    return $glacial
+      ? '0 0 14px rgba(90, 185, 255, 0.45), inset 0 0 20px rgba(55, 145, 220, 0.18)'
+      : '0 0 14px rgba(255, 170, 80, 0.35), inset 0 0 20px rgba(205, 110, 25, 0.16)'
+  }};
 `
 
-const LcdStatusRow = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-`
-
-const LcdTag = styled.span`
-  font-size: 0.6rem;
-  font-weight: 700;
-  color: #50e080;
+const LcdTitle = styled.div<{ $glacial: boolean }>`
+  text-align: center;
+  font-size: 0.7rem;
+  font-weight: 800;
   letter-spacing: 0.12em;
-  border: 1px solid #50e080;
-  padding: 1px 4px;
-  border-radius: 2px;
+  color: ${({ $glacial }) => ($glacial ? '#c3e7ff' : '#f5d3ab')};
 `
 
-const LcdIcons = styled.div`
-  display: flex;
-  gap: 4px;
-`
-
-const LcdIcon = styled.span`
-  font-size: 0.55rem;
-  color: #50e080;
-  opacity: 0.7;
-`
-
-const LcdUnitRow = styled.div`
+const LcdUnitRow = styled.div<{ $glacial: boolean }>`
   text-align: right;
   font-size: 0.75rem;
   font-weight: 700;
-  color: #50e080;
+  color: ${({ $glacial }) => ($glacial ? '#b7e0ff' : '#f0c08a')};
   letter-spacing: 0.1em;
   margin-top: 2px;
 `
 
-const LcdTempValue = styled.div`
+const LcdTempValue = styled.div<{ $glacial: boolean }>`
   font-size: 3.2rem;
   font-weight: 900;
-  color: #60f090;
-  text-shadow: 0 0 14px rgba(96, 240, 144, 0.6), 0 0 30px rgba(40, 200, 80, 0.25);
+  color: ${({ $glacial }) => ($glacial ? '#a7ddff' : '#ffd19a')};
+  text-shadow: ${({ $glacial }) =>
+    $glacial
+      ? '0 0 14px rgba(120, 195, 255, 0.48), 0 0 30px rgba(70, 145, 215, 0.22)'
+      : '0 0 14px rgba(255, 166, 70, 0.45), 0 0 30px rgba(210, 120, 30, 0.2)'};
   letter-spacing: 0.04em;
   line-height: 1;
   font-variant-numeric: tabular-nums;
 `
 
-const LcdEmsRow = styled.div`
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: #50e080;
-  letter-spacing: 0.1em;
-  margin-top: 2px;
-`
-
 const LcdOffText = styled.div`
   font-size: 2.5rem;
-  color: #1a3320;
+  color: #4a3520;
   text-align: center;
   letter-spacing: 0.3em;
   padding: 1rem 0;
-`
-
-const ButtonRow = styled.div`
-  display: flex;
-  gap: 0.7rem;
-  margin-top: 0.2rem;
-`
-
-const DeviceButton = styled.button<{ $color: string }>`
-  background: ${({ $color }) => $color};
-  color: #0a1218;
-  border: none;
-  border-radius: 6px;
-  padding: 6px 14px;
-  font-size: 0.75rem;
-  font-weight: 900;
-  cursor: default;
-  box-shadow: 0 3px 0 rgba(0,0,0,0.4);
 `
 
 const Message = styled.div`

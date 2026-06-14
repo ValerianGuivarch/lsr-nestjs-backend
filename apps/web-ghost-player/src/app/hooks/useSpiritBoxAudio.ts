@@ -11,6 +11,7 @@ type Result = {
   spiritStatus: string
   spiritLastHeardAt: string
   spiritFrequency: number
+  spiritSignalLocked: boolean
   tuneSpiritFrequencyDown: () => void
   tuneSpiritFrequencyUp: () => void
 }
@@ -20,6 +21,7 @@ export function useSpiritBoxAudio(role: string | undefined, deviceId: string, po
   const [spiritStatus, setSpiritStatus] = useState('READY')
   const [spiritLastHeardAt, setSpiritLastHeardAt] = useState('')
   const [spiritFrequency, setSpiritFrequency] = useState(99.2)
+  const [spiritSignalLocked, setSpiritSignalLocked] = useState(false)
   const [audioUnlocked, setAudioUnlocked] = useState(false)
 
   const spiritRecorderRef = useRef<MediaRecorder | null>(null)
@@ -34,9 +36,20 @@ export function useSpiritBoxAudio(role: string | undefined, deviceId: string, po
   const spiritNoiseSourceRef = useRef<AudioBufferSourceNode | null>(null)
   const spiritNoiseGainRef = useRef<GainNode | null>(null)
   const spiritLockTimerRef = useRef<number | null>(null)
+  const spiritDisplayLockTimerRef = useRef<number | null>(null)
 
   const BASE_STATIC_GAIN = 0.012
   const LOCKED_STATIC_GAIN = 0.0035
+  const SPIRITBOX_MIN_FREQUENCY = 87.5
+  const SPIRITBOX_MAX_FREQUENCY = 108
+  const SPIRITBOX_LOCKED_FREQUENCY = 93.4
+
+  const clearSpiritDisplayLockTimer = useCallback((): void => {
+    if (spiritDisplayLockTimerRef.current !== null) {
+      window.clearTimeout(spiritDisplayLockTimerRef.current)
+      spiritDisplayLockTimerRef.current = null
+    }
+  }, [])
 
   const clearSpiritLockTimer = useCallback((): void => {
     if (spiritLockTimerRef.current !== null) {
@@ -193,11 +206,13 @@ export function useSpiritBoxAudio(role: string | undefined, deviceId: string, po
 
   const stopSpiritAmbientAudio = useCallback((): void => {
     clearSpiritLockTimer()
+    clearSpiritDisplayLockTimer()
+    setSpiritSignalLocked(false)
 
     spiritNoiseSourceRef.current?.stop()
     spiritNoiseSourceRef.current = null
     spiritNoiseGainRef.current = null
-  }, [clearSpiritLockTimer])
+  }, [clearSpiritDisplayLockTimer, clearSpiritLockTimer])
 
   const playGhostAudio = useCallback(
     (audioData: string): void => {
@@ -378,7 +393,7 @@ export function useSpiritBoxAudio(role: string | undefined, deviceId: string, po
       setSpiritRecording(true)
       setSpiritStatus('ECOUTE EN COURS')
     } catch (_e) {
-      setSpiritStatus('MICRO INDISPONIBLE')
+      setSpiritStatus('AUDIO INDISPONIBLE')
     }
   }, [blobToDataUrl, deviceId, floatToPcm16Base64, powerOn, role])
 
@@ -416,12 +431,15 @@ export function useSpiritBoxAudio(role: string | undefined, deviceId: string, po
   const tuneSpiritFrequency = useCallback(
     (delta: number): void => {
       setSpiritFrequency(prev => {
-        const next = Math.max(80, Math.min(110, Number((prev + delta).toFixed(1))))
+        const next = Math.max(
+          SPIRITBOX_MIN_FREQUENCY,
+          Math.min(SPIRITBOX_MAX_FREQUENCY, Number((prev + delta).toFixed(1)))
+        )
         return next
       })
       ensureSpiritAmbientAudio()
     },
-    [ensureSpiritAmbientAudio]
+    [ensureSpiritAmbientAudio, SPIRITBOX_MAX_FREQUENCY, SPIRITBOX_MIN_FREQUENCY]
   )
 
   const tuneSpiritFrequencyDown = useCallback(() => {
@@ -445,15 +463,18 @@ export function useSpiritBoxAudio(role: string | undefined, deviceId: string, po
       return
     }
 
-    const isExactlyTuned = Math.abs(spiritFrequency - 83.4) < 0.0001
+    const isExactlyTuned = Math.abs(spiritFrequency - SPIRITBOX_LOCKED_FREQUENCY) < 0.0001
 
     const noiseGain = spiritNoiseGainRef.current
     if (noiseGain) {
       noiseGain.gain.cancelScheduledValues(ctx.currentTime)
       if (!isExactlyTuned) {
         clearSpiritLockTimer()
+        clearSpiritDisplayLockTimer()
+        setSpiritSignalLocked(false)
         noiseGain.gain.setValueAtTime(BASE_STATIC_GAIN, ctx.currentTime)
       } else if (spiritLockTimerRef.current === null) {
+        setSpiritSignalLocked(false)
         noiseGain.gain.setValueAtTime(BASE_STATIC_GAIN, ctx.currentTime)
         spiritLockTimerRef.current = window.setTimeout(() => {
           if (!spiritNoiseGainRef.current || !spiritAudioContextRef.current) {
@@ -464,10 +485,16 @@ export function useSpiritBoxAudio(role: string | undefined, deviceId: string, po
           spiritNoiseGainRef.current.gain.setValueAtTime(spiritNoiseGainRef.current.gain.value, now)
           spiritNoiseGainRef.current.gain.linearRampToValueAtTime(LOCKED_STATIC_GAIN, now + 2.2)
           spiritLockTimerRef.current = null
+
+          clearSpiritDisplayLockTimer()
+          spiritDisplayLockTimerRef.current = window.setTimeout(() => {
+            setSpiritSignalLocked(true)
+            spiritDisplayLockTimerRef.current = null
+          }, 2200)
         }, 500)
       }
     }
-  }, [BASE_STATIC_GAIN, LOCKED_STATIC_GAIN, audioUnlocked, clearSpiritLockTimer, ensureSpiritAmbientAudio, powerOn, role, spiritFrequency, stopSpiritAmbientAudio])
+  }, [BASE_STATIC_GAIN, LOCKED_STATIC_GAIN, SPIRITBOX_LOCKED_FREQUENCY, audioUnlocked, clearSpiritDisplayLockTimer, clearSpiritLockTimer, ensureSpiritAmbientAudio, powerOn, role, spiritFrequency, stopSpiritAmbientAudio])
 
   useEffect(() => {
     if (role !== 'spiritbox' || !powerOn) {
@@ -523,6 +550,7 @@ export function useSpiritBoxAudio(role: string | undefined, deviceId: string, po
     spiritStatus,
     spiritLastHeardAt,
     spiritFrequency,
+    spiritSignalLocked,
     tuneSpiritFrequencyDown,
     tuneSpiritFrequencyUp,
   }

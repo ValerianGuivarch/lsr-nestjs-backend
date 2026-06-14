@@ -193,6 +193,7 @@ export function App() {
     spiritStatus,
     spiritLastHeardAt,
     spiritFrequency,
+    spiritSignalLocked,
     tuneSpiritFrequencyDown,
     tuneSpiritFrequencyUp,
   } = useSpiritBoxAudio(state?.role, deviceId, state?.powerOn ?? true)
@@ -1221,6 +1222,7 @@ export function App() {
           spiritStatus={spiritStatus}
           spiritLastHeardAt={spiritLastHeardAt}
           spiritFrequency={spiritFrequency}
+          spiritSignalLocked={spiritSignalLocked}
           onTuneFrequencyDown={tuneSpiritFrequencyDown}
           onTuneFrequencyUp={tuneSpiritFrequencyUp}
         />

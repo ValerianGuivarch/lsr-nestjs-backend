@@ -247,6 +247,7 @@ export function App() {
   const [controlDeviceId, setControlDeviceId] = useState<string>('')
   const [controlEmfLevel, setControlEmfLevel] = useState<number>(0)
   const [controlPowerOn, setControlPowerOn] = useState<boolean>(true)
+  const [controlEmfFound, setControlEmfFound] = useState<boolean>(false)
   const [controlGhostcamDeviceId, setControlGhostcamDeviceId] = useState<string>('')
   const [controlGhostDurationSec, setControlGhostDurationSec] = useState<number>(3)
   const [controlGhostorbsDeviceId, setControlGhostorbsDeviceId] = useState<string>('')
@@ -254,6 +255,7 @@ export function App() {
   const [controlOrbDurationSec, setControlOrbDurationSec] = useState<number>(3)
   const [controlTemperature, setControlTemperature] = useState<number>(12)
   const [controlThermometerPowerOn, setControlThermometerPowerOn] = useState<boolean>(true)
+  const [controlThermometerActive, setControlThermometerActive] = useState<boolean>(false)
 
   const [controlSpiritboxDeviceId, setControlSpiritboxDeviceId] = useState<string>('')
   const [spiritboxRecording, setSpiritboxRecording] = useState(false)
@@ -342,6 +344,7 @@ export function App() {
       if (selectedThermometer) {
         setControlTemperature(Number(selectedThermometer.temperature ?? 12))
         setControlThermometerPowerOn(selectedThermometer.powerOn ?? true)
+        setControlThermometerActive(Number(selectedThermometer.temperature ?? 12) <= 6)
       }
     } else if (role === 'van') {
       setControlVanDeviceId(deviceId)
@@ -615,6 +618,7 @@ export function App() {
       setControlDeviceId('')
       setControlEmfLevel(0)
       setControlPowerOn(true)
+      setControlEmfFound(false)
       return
     }
 
@@ -622,6 +626,7 @@ export function App() {
       setControlDeviceId(firstEmf.deviceId)
       setControlEmfLevel(firstEmf.emfLevel ?? 0)
       setControlPowerOn(firstEmf.powerOn ?? true)
+      setControlEmfFound((firstEmf.emfLevel ?? 0) >= 4)
       return
     }
 
@@ -629,6 +634,7 @@ export function App() {
     if (controlled) {
       setControlEmfLevel(controlled.emfLevel ?? 0)
       setControlPowerOn(controlled.powerOn ?? true)
+      setControlEmfFound((controlled.emfLevel ?? 0) >= 4)
     }
   }, [devices, controlDeviceId])
 
@@ -677,6 +683,7 @@ export function App() {
       setControlGhostorbsDeviceId('')
       setControlTemperature(12)
       setControlThermometerPowerOn(true)
+      setControlThermometerActive(false)
       return
     }
 
@@ -690,6 +697,7 @@ export function App() {
       setControlGhostorbsDeviceId(firstThermometerLike.deviceId)
       setControlTemperature(Number(firstThermometerLike.temperature ?? 12))
       setControlThermometerPowerOn(firstThermometerLike.powerOn ?? true)
+      setControlThermometerActive(Number(firstThermometerLike.temperature ?? 12) <= 6)
       return
     }
 
@@ -697,6 +705,7 @@ export function App() {
     if (controlled) {
       setControlTemperature(Number(controlled.temperature ?? 12))
       setControlThermometerPowerOn(controlled.powerOn ?? true)
+      setControlThermometerActive(Number(controlled.temperature ?? 12) <= 6)
     }
   }, [devices, controlGhostorbsDeviceId])
 
@@ -974,17 +983,6 @@ export function App() {
       const messageId = `${Date.now()}`
       const createdAt = new Date().toISOString()
       setLatestPlayerSpiritMessage({
-        id: messageId,
-        audioData: payload.chunk,
-        mimeType: payload.mimeType,
-        hasPrependedHeader: payload.hasPrependedHeader,
-        codec: payload.codec,
-        sampleRate: payload.sampleRate,
-        channels: payload.channels,
-        from: 'player',
-        createdAt,
-      })
-      playSpiritboxMonitorAudio({
         id: messageId,
         audioData: payload.chunk,
         mimeType: payload.mimeType,
@@ -1516,7 +1514,7 @@ export function App() {
       setSpiritboxRecording(true)
       setError('')
     } catch {
-      setError('Micro MJ indisponible')
+      setError('Impossible de capturer le micro MJ')
     }
   }
 
@@ -2421,17 +2419,24 @@ export function App() {
               <EmfAdminTool
                 devices={devices.map(device => ({ deviceId: device.deviceId, role: device.role }))}
                 controlDeviceId={controlDeviceId}
-                controlEmfLevel={controlEmfLevel}
                 controlPowerOn={controlPowerOn}
+                controlFound={controlEmfFound}
                 cameraFrame={controlDeviceId ? cameraSources[controlDeviceId] : undefined}
                 onControlDeviceChange={setControlDeviceId}
-                onControlEmfLevelChange={value => {
-                  setControlEmfLevel(value)
-                  void patchEmfControl({ emfLevel: value })
-                }}
                 onControlPowerOnChange={checked => {
                   setControlPowerOn(checked)
-                  void patchEmfControl({ powerOn: checked })
+                  const emfLevel = checked ? (controlEmfFound ? 4 : 1) : 0
+                  setControlEmfLevel(emfLevel)
+                  void patchEmfControl({ powerOn: checked, emfLevel })
+                }}
+                onControlFoundChange={checked => {
+                  setControlEmfFound(checked)
+                  if (!controlPowerOn) {
+                    return
+                  }
+                  const emfLevel = checked ? 4 : 1
+                  setControlEmfLevel(emfLevel)
+                  void patchEmfControl({ emfLevel })
                 }}
               />
             )}
@@ -2439,13 +2444,8 @@ export function App() {
             {adminToolRole === 'spiritbox' && (
               <SpiritBoxAdminTool
                 controlDeviceId={controlSpiritboxDeviceId}
-                audioEnabled={dashboardAudioUnlocked}
                 latestPlayerMessageAt={latestPlayerSpiritMessage?.createdAt}
-                latestPlayerAudioData={latestPlayerSpiritMessage?.audioData}
-                latestPlayerMimeType={latestPlayerSpiritMessage?.mimeType}
                 presetSounds={SPIRITBOX_PRESET_SOUNDS}
-                onEnableAudio={enableDashboardAudio}
-                onPlayLatest={playLatestPlayerSpiritMessage}
                 onSendPresetSound={preset => {
                   void sendSpiritboxPresetSound(preset)
                 }}
@@ -2494,17 +2494,24 @@ export function App() {
               <ThermometerAdminTool
                 devices={devices.map(device => ({ deviceId: device.deviceId, role: device.role }))}
                 controlDeviceId={controlGhostorbsDeviceId}
-                controlTemperature={controlTemperature}
                 controlPowerOn={controlThermometerPowerOn}
+                controlActive={controlThermometerActive}
                 cameraFrame={controlGhostorbsDeviceId ? cameraSources[controlGhostorbsDeviceId] : undefined}
                 onControlDeviceChange={setControlGhostorbsDeviceId}
-                onControlTemperatureChange={value => {
-                  setControlTemperature(value)
-                  void patchThermometerControl({ temperature: value })
-                }}
                 onControlPowerOnChange={checked => {
                   setControlThermometerPowerOn(checked)
-                  void patchThermometerControl({ powerOn: checked })
+                  const temperature = checked ? (controlThermometerActive ? 3 : 16) : 0
+                  setControlTemperature(temperature)
+                  void patchThermometerControl({ powerOn: checked, temperature })
+                }}
+                onControlActiveChange={checked => {
+                  setControlThermometerActive(checked)
+                  if (!controlThermometerPowerOn) {
+                    return
+                  }
+                  const temperature = checked ? 3 : 16
+                  setControlTemperature(temperature)
+                  void patchThermometerControl({ temperature })
                 }}
               />
             )}

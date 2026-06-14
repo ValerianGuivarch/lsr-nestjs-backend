@@ -11,12 +11,12 @@ export type Device = {
 export type EmfAdminToolProps = {
   devices: Device[]
   controlDeviceId: string
-  controlEmfLevel: number
   controlPowerOn: boolean
+  controlFound: boolean
   cameraFrame?: string
   onControlDeviceChange: (deviceId: string) => void
-  onControlEmfLevelChange: (value: number) => void
   onControlPowerOnChange: (checked: boolean) => void
+  onControlFoundChange: (checked: boolean) => void
 }
 
 export type ToolPlaceholderProps = {
@@ -31,13 +31,8 @@ export type SpiritPresetSound = {
 
 export type SpiritBoxAdminToolProps = {
   controlDeviceId: string
-  audioEnabled: boolean
   latestPlayerMessageAt?: string
-  latestPlayerAudioData?: string
-  latestPlayerMimeType?: string
   presetSounds: SpiritPresetSound[]
-  onEnableAudio: () => void
-  onPlayLatest: () => void
   onSendPresetSound: (preset: SpiritPresetSound) => void
 }
 
@@ -67,12 +62,12 @@ export type GhostCamAdminToolProps = {
 export type ThermometerAdminToolProps = {
   devices: Device[]
   controlDeviceId: string
-  controlTemperature: number
   controlPowerOn: boolean
+  controlActive: boolean
   cameraFrame?: string
   onControlDeviceChange: (deviceId: string) => void
-  onControlTemperatureChange: (value: number) => void
   onControlPowerOnChange: (checked: boolean) => void
+  onControlActiveChange: (checked: boolean) => void
 }
 
 export type VanAdminToolProps = {

@@ -4,12 +4,12 @@ import { EmfAdminToolProps } from './types'
 export function EmfAdminTool({
   devices,
   controlDeviceId,
-  controlEmfLevel,
   controlPowerOn,
+  controlFound,
   cameraFrame,
   onControlDeviceChange,
-  onControlEmfLevelChange,
   onControlPowerOnChange,
+  onControlFoundChange,
 }: EmfAdminToolProps): JSX.Element {
   const emfDevices = devices.filter(device => device.role === 'emf')
 
@@ -33,18 +33,6 @@ export function EmfAdminTool({
           ))}
         </select>
 
-        <label htmlFor="control-emf">Niveau EMF</label>
-        <input
-          id="control-emf"
-          type="range"
-          min={0}
-          max={5}
-          step={1}
-          value={controlEmfLevel}
-          onChange={event => onControlEmfLevelChange(Number(event.target.value))}
-        />
-        <small>Niveau actuel: {controlEmfLevel}</small>
-
         <label style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }} htmlFor="control-emf-power">
           <input
             id="control-emf-power"
@@ -54,6 +42,24 @@ export function EmfAdminTool({
           />
           EMF allume
         </label>
+
+        <label style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }} htmlFor="control-emf-found">
+          <input
+            id="control-emf-found"
+            type="checkbox"
+            checked={controlFound}
+            onChange={event => onControlFoundChange(event.target.checked)}
+            disabled={!controlPowerOn}
+          />
+          Trouve
+        </label>
+        <small>
+          {controlPowerOn
+            ? controlFound
+              ? 'Signal fort (~18 mG)'
+              : 'Signal faible (~1.4 mG)'
+            : 'Capteur eteint (0 mG)'}
+        </small>
 
       </div>
 

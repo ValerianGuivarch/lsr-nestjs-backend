@@ -13,6 +13,7 @@ type SpiritBoxDeviceViewProps = {
   spiritStatus: string
   spiritLastHeardAt: string
   spiritFrequency: number
+  spiritSignalLocked: boolean
   onTuneFrequencyDown: () => void
   onTuneFrequencyUp: () => void
 }
@@ -22,6 +23,7 @@ export function SpiritBoxDeviceView({
   spiritStatus,
   spiritLastHeardAt,
   spiritFrequency,
+  spiritSignalLocked,
   onTuneFrequencyDown,
   onTuneFrequencyUp,
 }: SpiritBoxDeviceViewProps) {
@@ -76,10 +78,10 @@ export function SpiritBoxDeviceView({
       <SpiritBoxShell>
         <SpiritBoxHeader>
           <strong>P-SB7T Spirit Box</strong>
-          <span>{powerOn ? 'FM 100ms' : 'OFF'}</span>
+          <span>{powerOn ? '87.5 - 108 MHz' : 'OFF'}</span>
         </SpiritBoxHeader>
 
-        <SpiritBoxScreen $on={powerOn}>
+        <SpiritBoxScreen $on={powerOn} $locked={spiritSignalLocked}>
           <SpiritFrequency>{spiritFrequency.toFixed(1).padStart(5, '0')}</SpiritFrequency>
           <SpiritStatus>{spiritStatus}</SpiritStatus>
           {spiritLastHeardAt && <SpiritTimestamp>Dernier msg MJ: {spiritLastHeardAt}</SpiritTimestamp>}
@@ -156,11 +158,14 @@ const SpiritBoxHeader = styled.div`
   color: #101416;
 `
 
-const SpiritBoxScreen = styled.div<{ $on: boolean }>`
+const SpiritBoxScreen = styled.div<{ $on: boolean; $locked: boolean }>`
   border-radius: 8px;
-  border: 1px solid #b16727;
-  background: ${({ $on }) => ($on ? '#f39b52' : '#5f5448')};
-  color: #120d09;
+  border: 1px solid ${({ $locked }) => ($locked ? '#247a2f' : '#b16727')};
+  background: ${({ $on, $locked }) => {
+    if (!$on) return '#5f5448'
+    return $locked ? '#78d96b' : '#f39b52'
+  }};
+  color: ${({ $locked }) => ($locked ? '#07220a' : '#120d09')};
   padding: 0.8rem;
   min-height: 130px;
 `

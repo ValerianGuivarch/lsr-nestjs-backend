@@ -4,12 +4,12 @@ import { ThermometerAdminToolProps } from './types'
 export function ThermometerAdminTool({
   devices,
   controlDeviceId,
-  controlTemperature,
   controlPowerOn,
+  controlActive,
   cameraFrame,
   onControlDeviceChange,
-  onControlTemperatureChange,
   onControlPowerOnChange,
+  onControlActiveChange,
 }: ThermometerAdminToolProps): JSX.Element {
   const thermometerDevices = devices.filter(
     device => device.role === 'ghostorbs' || device.role === 'thermometer'
@@ -35,18 +35,6 @@ export function ThermometerAdminTool({
           ))}
         </select>
 
-        <label htmlFor="control-thermometer-temp">Temperature (°C)</label>
-        <input
-          id="control-thermometer-temp"
-          type="range"
-          min={-20}
-          max={40}
-          step={1}
-          value={controlTemperature}
-          onChange={event => onControlTemperatureChange(Number(event.target.value))}
-        />
-        <small>Temperature actuelle: {controlTemperature}°C</small>
-
         <label style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }} htmlFor="control-thermometer-power">
           <input
             id="control-thermometer-power"
@@ -56,6 +44,24 @@ export function ThermometerAdminTool({
           />
           Thermometre allume
         </label>
+
+        <label style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }} htmlFor="control-thermometer-active">
+          <input
+            id="control-thermometer-active"
+            type="checkbox"
+            checked={controlActive}
+            onChange={event => onControlActiveChange(event.target.checked)}
+            disabled={!controlPowerOn}
+          />
+          Actif
+        </label>
+        <small>
+          {controlPowerOn
+            ? controlActive
+              ? 'Mode glacial (~3°C)'
+              : 'Mode normal (~16°C)'
+            : 'Capteur eteint (0°C)'}
+        </small>
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>

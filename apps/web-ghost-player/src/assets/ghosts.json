@@ -5,7 +5,7 @@
     "description": "Entité très active lorsque les joueurs sont proches, réputée forte et plus visible pendant les chasses.",
     "emf": 4,
     "temperature": "COLD",
-    "uv": true,
+    "uv": false,
     "spiritBox": true,
     "orbs": true,
     "appearance": "RED"
@@ -38,7 +38,7 @@
     "description": "Fantôme dangereux connu pour se déplacer discrètement et laisser peu de traces physiques.",
     "emf": 4,
     "temperature": "COLD",
-    "uv": false,
+    "uv": true,
     "spiritBox": false,
     "orbs": true,
     "appearance": "RED"
@@ -82,7 +82,7 @@
     "description": "Fantôme timide, moins actif en présence de plusieurs personnes.",
     "emf": 4,
     "temperature": "COLD",
-    "uv": false,
+    "uv": true,
     "spiritBox": true,
     "orbs": true,
     "appearance": "RED"
