@@ -1194,7 +1194,7 @@ export function App() {
     )
   }
 
-  if (!isFullscreenActive) {
+  if (!isFullscreenActive && state.role !== 'ghostcam') {
     const roleLabel =
       state.role === 'emf'
         ? 'EMF'
