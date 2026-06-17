@@ -1194,7 +1194,7 @@ export function App() {
     )
   }
 
-  if (!isFullscreenActive && state.role !== 'ghostcam') {
+  if (!isFullscreenActive) {
     const roleLabel =
       state.role === 'emf'
         ? 'EMF'
@@ -1265,22 +1265,51 @@ export function App() {
     const ghostcamVictory = Boolean(ghostcamFinalPhoto) || ghostcamVanStep >= 7
     return (
       <ThemeProvider theme={darkTheme}>
-        <GhostCamDeviceView
-          state={state}
-          photoModeUnlocked={photoModeUnlocked}
-          photoModePassword={photoModePassword}
-          photoModeError={photoModeError}
-          photoPaused={photoPaused}
-          onPhotoModePasswordChange={setPhotoModePassword}
-          onUnlockPhotoMode={unlockPhotoMode}
-          onTogglePhotoPause={togglePhotoPause}
-          videoRef={videoRef}
-          canvasRef={canvasRef}
-          hidePhotoButton={ghostcamVanStep >= 6}
-          showVictoryOverlay={ghostcamVictory}
-          victoryPhoto={ghostcamFinalPhoto}
-          fearMessage={ghostcamFearMessage}
-        />
+        <div style={{ position: 'relative' }}>
+          <GhostCamDeviceView
+            state={state}
+            photoModeUnlocked={photoModeUnlocked}
+            photoModePassword={photoModePassword}
+            photoModeError={photoModeError}
+            photoPaused={photoPaused}
+            onPhotoModePasswordChange={setPhotoModePassword}
+            onUnlockPhotoMode={unlockPhotoMode}
+            onTogglePhotoPause={togglePhotoPause}
+            videoRef={videoRef}
+            canvasRef={canvasRef}
+            hidePhotoButton={ghostcamVanStep >= 6}
+            showVictoryOverlay={ghostcamVictory}
+            victoryPhoto={ghostcamFinalPhoto}
+            fearMessage={ghostcamFearMessage}
+          />
+          {!isFullscreenActive && (
+            <button
+              type="button"
+              onClick={() => { void requestDeviceFullscreen() }}
+              style={{
+                position: 'fixed',
+                top: 10,
+                right: 10,
+                zIndex: 99999,
+                width: 38,
+                height: 38,
+                borderRadius: '50%',
+                border: '1px solid rgba(255,255,255,0.4)',
+                background: 'rgba(0,0,0,0.55)',
+                color: '#fff',
+                fontSize: 18,
+                lineHeight: 1,
+                cursor: 'pointer',
+                backdropFilter: 'blur(4px)',
+                padding: 0,
+              }}
+              aria-label="Plein écran"
+              title="Plein écran"
+            >
+              ⛶
+            </button>
+          )}
+        </div>
       </ThemeProvider>
     )
   }
