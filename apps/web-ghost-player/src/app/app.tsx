@@ -295,15 +295,77 @@ export function App() {
     }
   }
 
-  const closeCurrentDevice = (): void => {
-    setStep('choose')
-    setDeviceId('')
-    setState(null)
-    setPlayStatus('idle')
-    setPlayError('')
-    const url = new URL(window.location.href)
-    url.searchParams.delete('device')
-    window.history.replaceState(null, '', url.toString())
+  const exitDeviceFullscreen = async (): Promise<void> => {
+    try {
+      const doc = document as Document & { webkitExitFullscreen?: () => Promise<void> | void }
+      if (doc.exitFullscreen) {
+        await doc.exitFullscreen()
+      } else if (doc.webkitExitFullscreen) {
+        doc.webkitExitFullscreen()
+      }
+      setFullscreenRequestError('')
+    } catch {
+      setFullscreenRequestError('Impossible de quitter le plein écran.')
+    }
+  }
+
+  const renderFullscreenControl = (): JSX.Element => {
+    if (isFullscreenActive) {
+      return (
+        <button
+          type="button"
+          onClick={() => { void exitDeviceFullscreen() }}
+          style={{
+            position: 'fixed',
+            top: 10,
+            right: 10,
+            zIndex: 99999,
+            width: 38,
+            height: 38,
+            borderRadius: '50%',
+            border: '1px solid rgba(255,255,255,0.4)',
+            background: 'rgba(0,0,0,0.55)',
+            color: '#fff',
+            fontSize: 18,
+            lineHeight: 1,
+            cursor: 'pointer',
+            backdropFilter: 'blur(4px)',
+            padding: 0,
+          }}
+          aria-label="Quitter le plein écran"
+          title="Quitter le plein écran"
+        >
+          ✕
+        </button>
+      )
+    }
+    return (
+      <button
+        type="button"
+        onClick={() => { void requestDeviceFullscreen() }}
+        style={{
+          position: 'fixed',
+          top: 10,
+          right: 10,
+          zIndex: 99999,
+          width: 38,
+          height: 38,
+          borderRadius: '50%',
+          border: '1px solid rgba(255,255,255,0.4)',
+          background: 'rgba(0,0,0,0.55)',
+          color: '#fff',
+          fontSize: 18,
+          lineHeight: 1,
+          cursor: 'pointer',
+          backdropFilter: 'blur(4px)',
+          padding: 0,
+        }}
+        aria-label="Plein écran"
+        title="Plein écran"
+      >
+        ⛶
+      </button>
+    )
   }
 
   useEffect(() => {
@@ -1249,29 +1311,7 @@ export function App() {
       <ThemeProvider theme={darkTheme}>
         <div style={{ position: 'relative' }}>
           <EmfDeviceView state={state} needleAngle={needleAngle} videoRef={videoRef} canvasRef={canvasRef} />
-          <button
-            type="button"
-            onClick={closeCurrentDevice}
-            style={{
-              position: 'fixed',
-              top: 10,
-              right: 10,
-              zIndex: 99999,
-              borderRadius: 8,
-              border: '1px solid rgba(255,255,255,0.35)',
-              background: 'rgba(0,0,0,0.6)',
-              color: '#fff',
-              fontSize: 13,
-              lineHeight: 1,
-              cursor: 'pointer',
-              backdropFilter: 'blur(4px)',
-              padding: '0.5rem 0.6rem',
-            }}
-            aria-label="Fermer l'appareil"
-            title="Fermer"
-          >
-            ✕
-          </button>
+          {renderFullscreenControl()}
         </div>
       </ThemeProvider>
     )
@@ -1289,29 +1329,7 @@ export function App() {
             onTuneFrequencyDown={tuneSpiritFrequencyDown}
             onTuneFrequencyUp={tuneSpiritFrequencyUp}
           />
-          <button
-            type="button"
-            onClick={closeCurrentDevice}
-            style={{
-              position: 'fixed',
-              top: 10,
-              right: 10,
-              zIndex: 99999,
-              borderRadius: 8,
-              border: '1px solid rgba(255,255,255,0.35)',
-              background: 'rgba(0,0,0,0.6)',
-              color: '#fff',
-              fontSize: 13,
-              lineHeight: 1,
-              cursor: 'pointer',
-              backdropFilter: 'blur(4px)',
-              padding: '0.5rem 0.6rem',
-            }}
-            aria-label="Fermer l'appareil"
-            title="Fermer"
-          >
-            ✕
-          </button>
+          {renderFullscreenControl()}
         </div>
       </ThemeProvider>
     )
@@ -1393,29 +1411,7 @@ export function App() {
       <ThemeProvider theme={darkTheme}>
         <div style={{ position: 'relative' }}>
           <ThermometerDeviceView state={state} videoRef={videoRef} canvasRef={canvasRef} />
-          <button
-            type="button"
-            onClick={closeCurrentDevice}
-            style={{
-              position: 'fixed',
-              top: 10,
-              right: 10,
-              zIndex: 99999,
-              borderRadius: 8,
-              border: '1px solid rgba(255,255,255,0.35)',
-              background: 'rgba(0,0,0,0.6)',
-              color: '#fff',
-              fontSize: 13,
-              lineHeight: 1,
-              cursor: 'pointer',
-              backdropFilter: 'blur(4px)',
-              padding: '0.5rem 0.6rem',
-            }}
-            aria-label="Fermer l'appareil"
-            title="Fermer"
-          >
-            ✕
-          </button>
+          {renderFullscreenControl()}
         </div>
       </ThemeProvider>
     )
@@ -1427,29 +1423,7 @@ export function App() {
           <Container>
             <MessagerieDeviceView messages={vanData?.vanSentMessages ?? []} />
           </Container>
-          <button
-            type="button"
-            onClick={closeCurrentDevice}
-            style={{
-              position: 'fixed',
-              top: 10,
-              right: 10,
-              zIndex: 99999,
-              borderRadius: 8,
-              border: '1px solid rgba(255,255,255,0.35)',
-              background: 'rgba(0,0,0,0.6)',
-              color: '#fff',
-              fontSize: 13,
-              lineHeight: 1,
-              cursor: 'pointer',
-              backdropFilter: 'blur(4px)',
-              padding: '0.5rem 0.6rem',
-            }}
-            aria-label="Fermer l'appareil"
-            title="Fermer"
-          >
-            ✕
-          </button>
+          {renderFullscreenControl()}
         </div>
       </ThemeProvider>
     )
