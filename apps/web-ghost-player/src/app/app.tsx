@@ -508,6 +508,7 @@ export function App() {
 
     // Vignette pré-rendue : recréée uniquement si les dimensions changent (pas chaque tick).
     let vignetteCanvas: HTMLCanvasElement | null = null
+    let ghostTintCanvas: HTMLCanvasElement | null = null
 
     const captureAndSend = () => {
       if (!canvasRef.current || !videoRef.current) return
@@ -602,8 +603,8 @@ export function App() {
       if (ghostActive && state.role === 'ghostcam') {
         const sprite = ghostCamSpriteRef.current
         const now = Date.now() / 1000
-        const ghostW = width * 0.26
-        const ghostH = height * 0.52
+        const ghostW = width * 0.13
+        const ghostH = height * 0.26
         const jitterX = Math.sin(now * 4.4) * 6
         const jitterY = Math.cos(now * 5.1) * 4
         const ghostX = width * (0.52 + Math.sin(now * 0.9) * 0.18) + jitterX
@@ -631,26 +632,41 @@ export function App() {
           c.fill()
         }
 
-        const applyRedOverlay = (c: CanvasRenderingContext2D) => {
-          if (!isRed) return
-          c.globalCompositeOperation = 'source-atop'
-          c.fillStyle = 'rgba(255, 40, 40, 0.45)'
-          c.fillRect(ghostX - ghostW / 2, ghostY - ghostH / 2, ghostW, ghostH)
-          c.globalCompositeOperation = 'source-over'
-        }
-
         captureCtx.save()
-        captureCtx.globalAlpha = isRed ? 0.9 : 0.82
+        captureCtx.globalAlpha = isRed ? 0.98 : 0.82
         captureCtx.filter = isRed
-          ? 'drop-shadow(0 0 14px rgba(255, 70, 70, 0.85))'
+          ? 'drop-shadow(0 0 18px rgba(255, 0, 0, 0.95))'
           : 'drop-shadow(0 0 10px rgba(180, 255, 220, 0.55))'
         if (sprite && sprite.complete && sprite.naturalWidth > 0 && sprite.naturalHeight > 0) {
-          captureCtx.drawImage(sprite, ghostX - ghostW / 2, ghostY - ghostH / 2, ghostW, ghostH)
+          if (isRed) {
+            const tintWidth = Math.max(1, Math.round(ghostW))
+            const tintHeight = Math.max(1, Math.round(ghostH))
+            if (!ghostTintCanvas) {
+              ghostTintCanvas = document.createElement('canvas')
+            }
+            if (ghostTintCanvas.width !== tintWidth || ghostTintCanvas.height !== tintHeight) {
+              ghostTintCanvas.width = tintWidth
+              ghostTintCanvas.height = tintHeight
+            }
+            const tintCtx = ghostTintCanvas.getContext('2d')
+            if (tintCtx) {
+              tintCtx.clearRect(0, 0, tintWidth, tintHeight)
+              tintCtx.drawImage(sprite, 0, 0, tintWidth, tintHeight)
+              tintCtx.globalCompositeOperation = 'source-atop'
+              tintCtx.fillStyle = 'rgba(255, 0, 0, 0.82)'
+              tintCtx.fillRect(0, 0, tintWidth, tintHeight)
+              tintCtx.globalCompositeOperation = 'source-over'
+              captureCtx.drawImage(ghostTintCanvas, ghostX - ghostW / 2, ghostY - ghostH / 2, ghostW, ghostH)
+            } else {
+              captureCtx.drawImage(sprite, ghostX - ghostW / 2, ghostY - ghostH / 2, ghostW, ghostH)
+            }
+          } else {
+            captureCtx.drawImage(sprite, ghostX - ghostW / 2, ghostY - ghostH / 2, ghostW, ghostH)
+          }
         } else {
           drawGhostFallback(captureCtx)
         }
         captureCtx.filter = 'none'
-        applyRedOverlay(captureCtx)
         captureCtx.restore()
       }
 
