@@ -1,6 +1,21 @@
-body {
+html,
+body,
+#root {
   margin: 0;
+  padding: 0;
+  width: 100%;
+  min-height: 100vh;
+  background: #07111c;
+}
+
+body {
   font-family: 'Segoe UI', 'Roboto', 'Arial', sans-serif;
-  background: #181a1b;
   color: #e0e0e0;
+  overflow-x: hidden;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
 }
