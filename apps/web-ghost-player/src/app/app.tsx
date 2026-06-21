@@ -295,6 +295,17 @@ export function App() {
     }
   }
 
+  const closeCurrentDevice = (): void => {
+    setStep('choose')
+    setDeviceId('')
+    setState(null)
+    setPlayStatus('idle')
+    setPlayError('')
+    const url = new URL(window.location.href)
+    url.searchParams.delete('device')
+    window.history.replaceState(null, '', url.toString())
+  }
+
   useEffect(() => {
     fetch('/apil7r/player/devices')
       .then(r => r.json())
@@ -1194,68 +1205,76 @@ export function App() {
     )
   }
 
-  if (!isFullscreenActive) {
-    const roleLabel =
-      state.role === 'emf'
-        ? 'EMF'
-        : state.role === 'spiritbox'
-          ? 'SpiritBox'
-          : state.role === 'ghostcam'
-            ? 'GhostCam'
-            : state.role === 'thermometer' || state.role === 'ghostorbs'
-              ? 'Thermometre'
-              : state.role === 'van'
-                ? 'Van'
-                : 'Messagerie'
-    const activationLabel = `${roleLabel}${state.deviceId ? ` (${state.deviceId})` : ''}`
-    return (
-      <ThemeProvider theme={darkTheme}>
-        <Container style={{ minHeight: '100vh', background: '#000', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <StatusCard style={{ background: '#000', border: '1px solid #1e2936' }}>
-            <button
-              type="button"
-              onClick={() => {
-                void requestDeviceFullscreen()
-              }}
-              style={{
-                border: '1px solid #3a4f68',
-                background: '#0d1722',
-                color: '#e6f0ff',
-                borderRadius: 10,
-                padding: '0.9rem 1rem',
-                fontWeight: 700,
-                cursor: 'pointer',
-              }}
-            >
-              Activer l'appareil {activationLabel}
-            </button>
-            {fullscreenRequestError && <p>{fullscreenRequestError}</p>}
-          </StatusCard>
-        </Container>
-      </ThemeProvider>
-    )
-  }
-
   // UI selon le rôle
   if (state.role === 'emf') {
     return (
       <ThemeProvider theme={darkTheme}>
-        <EmfDeviceView state={state} needleAngle={needleAngle} videoRef={videoRef} canvasRef={canvasRef} />
+        <div style={{ position: 'relative' }}>
+          <EmfDeviceView state={state} needleAngle={needleAngle} videoRef={videoRef} canvasRef={canvasRef} />
+          <button
+            type="button"
+            onClick={closeCurrentDevice}
+            style={{
+              position: 'fixed',
+              top: 10,
+              right: 10,
+              zIndex: 99999,
+              borderRadius: 8,
+              border: '1px solid rgba(255,255,255,0.35)',
+              background: 'rgba(0,0,0,0.6)',
+              color: '#fff',
+              fontSize: 13,
+              lineHeight: 1,
+              cursor: 'pointer',
+              backdropFilter: 'blur(4px)',
+              padding: '0.5rem 0.6rem',
+            }}
+            aria-label="Fermer l'appareil"
+            title="Fermer"
+          >
+            ✕
+          </button>
+        </div>
       </ThemeProvider>
     )
   }
   if (state.role === 'spiritbox') {
     return (
       <ThemeProvider theme={darkTheme}>
-        <SpiritBoxDeviceView
-          state={state}
-          spiritStatus={spiritStatus}
-          spiritLastHeardAt={spiritLastHeardAt}
-          spiritFrequency={spiritFrequency}
-          spiritSignalLocked={spiritSignalLocked}
-          onTuneFrequencyDown={tuneSpiritFrequencyDown}
-          onTuneFrequencyUp={tuneSpiritFrequencyUp}
-        />
+        <div style={{ position: 'relative' }}>
+          <SpiritBoxDeviceView
+            state={state}
+            spiritStatus={spiritStatus}
+            spiritLastHeardAt={spiritLastHeardAt}
+            spiritFrequency={spiritFrequency}
+            spiritSignalLocked={spiritSignalLocked}
+            onTuneFrequencyDown={tuneSpiritFrequencyDown}
+            onTuneFrequencyUp={tuneSpiritFrequencyUp}
+          />
+          <button
+            type="button"
+            onClick={closeCurrentDevice}
+            style={{
+              position: 'fixed',
+              top: 10,
+              right: 10,
+              zIndex: 99999,
+              borderRadius: 8,
+              border: '1px solid rgba(255,255,255,0.35)',
+              background: 'rgba(0,0,0,0.6)',
+              color: '#fff',
+              fontSize: 13,
+              lineHeight: 1,
+              cursor: 'pointer',
+              backdropFilter: 'blur(4px)',
+              padding: '0.5rem 0.6rem',
+            }}
+            aria-label="Fermer l'appareil"
+            title="Fermer"
+          >
+            ✕
+          </button>
+        </div>
       </ThemeProvider>
     )
   }
@@ -1309,6 +1328,24 @@ export function App() {
               ⛶
             </button>
           )}
+          {fullscreenRequestError && !isFullscreenActive && (
+            <p
+              style={{
+                position: 'fixed',
+                top: 56,
+                right: 10,
+                margin: 0,
+                padding: '0.35rem 0.5rem',
+                borderRadius: 6,
+                background: 'rgba(0,0,0,0.65)',
+                color: '#ffdede',
+                fontSize: 12,
+                zIndex: 99999,
+              }}
+            >
+              {fullscreenRequestError}
+            </p>
+          )}
         </div>
       </ThemeProvider>
     )
@@ -1316,16 +1353,66 @@ export function App() {
   if (state.role === 'ghostorbs' || state.role === 'thermometer') {
     return (
       <ThemeProvider theme={darkTheme}>
-        <ThermometerDeviceView state={state} videoRef={videoRef} canvasRef={canvasRef} />
+        <div style={{ position: 'relative' }}>
+          <ThermometerDeviceView state={state} videoRef={videoRef} canvasRef={canvasRef} />
+          <button
+            type="button"
+            onClick={closeCurrentDevice}
+            style={{
+              position: 'fixed',
+              top: 10,
+              right: 10,
+              zIndex: 99999,
+              borderRadius: 8,
+              border: '1px solid rgba(255,255,255,0.35)',
+              background: 'rgba(0,0,0,0.6)',
+              color: '#fff',
+              fontSize: 13,
+              lineHeight: 1,
+              cursor: 'pointer',
+              backdropFilter: 'blur(4px)',
+              padding: '0.5rem 0.6rem',
+            }}
+            aria-label="Fermer l'appareil"
+            title="Fermer"
+          >
+            ✕
+          </button>
+        </div>
       </ThemeProvider>
     )
   }
   if (state.role === 'messagerie') {
     return (
       <ThemeProvider theme={darkTheme}>
-        <Container>
-          <MessagerieDeviceView messages={vanData?.vanSentMessages ?? []} />
-        </Container>
+        <div style={{ position: 'relative' }}>
+          <Container>
+            <MessagerieDeviceView messages={vanData?.vanSentMessages ?? []} />
+          </Container>
+          <button
+            type="button"
+            onClick={closeCurrentDevice}
+            style={{
+              position: 'fixed',
+              top: 10,
+              right: 10,
+              zIndex: 99999,
+              borderRadius: 8,
+              border: '1px solid rgba(255,255,255,0.35)',
+              background: 'rgba(0,0,0,0.6)',
+              color: '#fff',
+              fontSize: 13,
+              lineHeight: 1,
+              cursor: 'pointer',
+              backdropFilter: 'blur(4px)',
+              padding: '0.5rem 0.6rem',
+            }}
+            aria-label="Fermer l'appareil"
+            title="Fermer"
+          >
+            ✕
+          </button>
+        </div>
       </ThemeProvider>
     )
   }
@@ -1351,9 +1438,10 @@ export function App() {
 
     return (
       <ThemeProvider theme={darkTheme}>
-        <VanContainer>
-          <audio ref={vanMusicAudioRef} preload="auto" />
-          <VanDashboard>
+        <div style={{ position: 'relative' }}>
+          <VanContainer>
+            <audio ref={vanMusicAudioRef} preload="auto" />
+            <VanDashboard>
             <VanHeader>
               <VanTitle>PARANORMAL DETECTION SYSTEM</VanTitle>
               <VanStatus>{'MISSION EN COURS'}</VanStatus>
@@ -1398,8 +1486,54 @@ export function App() {
                 textConfig={vanData?.vanTextConfig}
               />
             )}
-          </VanDashboard>
-        </VanContainer>
+            </VanDashboard>
+          </VanContainer>
+          {!isFullscreenActive && (
+            <button
+              type="button"
+              onClick={() => { void requestDeviceFullscreen() }}
+              style={{
+                position: 'fixed',
+                top: 10,
+                right: 10,
+                zIndex: 99999,
+                width: 38,
+                height: 38,
+                borderRadius: '50%',
+                border: '1px solid rgba(255,255,255,0.4)',
+                background: 'rgba(0,0,0,0.55)',
+                color: '#fff',
+                fontSize: 18,
+                lineHeight: 1,
+                cursor: 'pointer',
+                backdropFilter: 'blur(4px)',
+                padding: 0,
+              }}
+              aria-label="Plein écran"
+              title="Plein écran"
+            >
+              ⛶
+            </button>
+          )}
+          {fullscreenRequestError && !isFullscreenActive && (
+            <p
+              style={{
+                position: 'fixed',
+                top: 56,
+                right: 10,
+                margin: 0,
+                padding: '0.35rem 0.5rem',
+                borderRadius: 6,
+                background: 'rgba(0,0,0,0.65)',
+                color: '#ffdede',
+                fontSize: 12,
+                zIndex: 99999,
+              }}
+            >
+              {fullscreenRequestError}
+            </p>
+          )}
+        </div>
       </ThemeProvider>
     )
   }
