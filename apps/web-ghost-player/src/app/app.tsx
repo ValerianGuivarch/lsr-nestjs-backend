@@ -449,10 +449,22 @@ export function App() {
     if (state?.role !== 'ghostcam' && state?.role !== 'thermometer' && state?.role !== 'ghostorbs' && state?.role !== 'emf') {
       return
     }
+    if (playStatus !== 'ready') return
 
     const initCamera = async () => {
       try {
-        if (!cameraStreamRef.current) {
+        const existing = cameraStreamRef.current
+        // Réutilise la stream existante uniquement si toutes ses pistes sont encore vivantes.
+        const stillAlive = !!existing && existing.getVideoTracks().some(t => t.readyState === 'live')
+        if (!stillAlive) {
+          if (existing) {
+            try {
+              existing.getTracks().forEach(t => t.stop())
+            } catch {
+              // ignore
+            }
+            cameraStreamRef.current = null
+          }
           const stream = await navigator.mediaDevices.getUserMedia({
             video: {
               width: { ideal: 1280 },
@@ -463,10 +475,11 @@ export function App() {
             audio: false
           })
           cameraStreamRef.current = stream
+        }
 
-          if (videoRef.current) {
-            videoRef.current.srcObject = stream
-          }
+        if (videoRef.current && videoRef.current.srcObject !== cameraStreamRef.current) {
+          videoRef.current.srcObject = cameraStreamRef.current
+          void videoRef.current.play().catch(() => {})
         }
       } catch {
         // Caméra non disponible
@@ -474,12 +487,13 @@ export function App() {
     }
 
     void initCamera()
-  }, [state?.role])
+  }, [state?.role, playStatus])
 
   useEffect(() => {
     if (state?.role !== 'ghostcam' && state?.role !== 'thermometer' && state?.role !== 'ghostorbs' && state?.role !== 'emf') {
       return
     }
+    if (playStatus !== 'ready') return
 
     if (!videoRef.current || !cameraStreamRef.current) {
       return
@@ -492,7 +506,7 @@ export function App() {
     void videoRef.current.play().catch(() => {
       // Le navigateur peut bloquer la lecture auto avant interaction utilisateur.
     })
-  }, [state?.role])
+  }, [state?.role, playStatus])
 
   useEffect(() => {
     if (state?.role !== 'ghostcam') {
@@ -680,25 +694,25 @@ export function App() {
       if (orbsActive && state.role === 'ghostcam') {
         const now = Date.now() / 1000
         const orbCount = 5
+        captureCtx.save()
+        // Orbes plus discrètes : opacité globale réduite + mode de fusion doux.
+        captureCtx.globalAlpha = 0.45
+        captureCtx.globalCompositeOperation = 'lighter'
         for (let i = 0; i < orbCount; i++) {
           const px = width * (0.2 + ((i + 1) / (orbCount + 1)) * 0.62) + Math.sin(now * (1.1 + i * 0.18)) * 16
           const py = height * (0.25 + ((i % 3) * 0.18)) + Math.cos(now * (1.4 + i * 0.22)) * 10
-          const radius = 5 + ((i * 2) % 6)
+          const radius = 3 + ((i * 2) % 4)
 
-          const orbGradient = captureCtx.createRadialGradient(px, py, 1, px, py, radius * 2.4)
-          orbGradient.addColorStop(0, 'rgba(214, 236, 255, 0.96)')
-          orbGradient.addColorStop(0.5, 'rgba(120, 185, 255, 0.4)')
+          const orbGradient = captureCtx.createRadialGradient(px, py, 0.5, px, py, radius * 2.2)
+          orbGradient.addColorStop(0, 'rgba(214, 236, 255, 0.55)')
+          orbGradient.addColorStop(0.5, 'rgba(120, 185, 255, 0.18)')
           orbGradient.addColorStop(1, 'rgba(0, 0, 0, 0)')
           captureCtx.fillStyle = orbGradient
           captureCtx.beginPath()
-          captureCtx.arc(px, py, radius * 2.4, 0, Math.PI * 2)
+          captureCtx.arc(px, py, radius * 2.2, 0, Math.PI * 2)
           captureCtx.fill()
-          captureCtx.strokeStyle = 'rgba(145, 205, 255, 0.6)'
-          captureCtx.lineWidth = 1
-          captureCtx.beginPath()
-          captureCtx.arc(px, py, radius, 0, Math.PI * 2)
-          captureCtx.stroke()
         }
+        captureCtx.restore()
       }
 
       // Copier capture → display (joueur et admin voient la même image).
