@@ -1073,10 +1073,6 @@ export function App() {
       return
     }
 
-    if (!window.confirm('Confirmer la saisie du nom du spectre ?')) {
-      return
-    }
-
     const answer = vanGhostGuess.trim().toLowerCase()
     if (!answer) {
       setVanGhostDeclarationError('Entre un nom avant de valider.')
