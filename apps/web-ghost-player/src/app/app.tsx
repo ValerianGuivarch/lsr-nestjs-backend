@@ -87,7 +87,7 @@ function getVanStepBanners(t?: VanTextConfig): Record<VanPhase, string> {
 }
 
 const VAN_INTRO_AUDIO_URL = 'https://l7r.fr/l7r/GhostIntro.mp3'
-const GHOST_CAM_SPRITE_URL = '/Colin2.png' // servi en same-origin depuis public/
+const GHOST_CAM_SPRITE_URL = 'l7r/Colin2.png' // servi en same-origin depuis public/
 
 // Mappe les données backend vers le numéro d'étape affiché côté player (1..7).
 // - Aucun objectif terminé → 1 (lecture du message)
@@ -1438,7 +1438,7 @@ export function App() {
 
     return (
       <ThemeProvider theme={darkTheme}>
-        <div style={{ position: 'relative' }}>
+        <div style={{ position: 'relative', width: '100vw', minHeight: '100vh', overflowX: 'hidden' }}>
           <VanContainer>
             <audio ref={vanMusicAudioRef} preload="auto" />
             <VanDashboard>
