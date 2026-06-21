@@ -39,7 +39,7 @@ const Layout = styled.div`
 
 const BanishTitle = styled.h2`
   margin: 0;
-  font-size: 2rem;
+  font-size: 3.8rem;
   color: #ff5555;
   letter-spacing: 0.2rem;
   text-shadow: 0 0 14px rgba(255, 60, 60, 0.6);
@@ -48,7 +48,7 @@ const BanishTitle = styled.h2`
 
 const GhostNameBadge = styled.div`
   font-family: 'Courier New', monospace;
-  font-size: 1.3rem;
+  font-size: 2.45rem;
   font-weight: 700;
   color: #ffdddd;
   letter-spacing: 0.25rem;
@@ -69,7 +69,7 @@ const BanishImage = styled.img`
 
 const BanishInstruction = styled.p`
   margin: 0;
-  font-size: 1.25rem;
+  font-size: 2.35rem;
   line-height: 1.7;
   text-align: center;
   color: #ffdddd;

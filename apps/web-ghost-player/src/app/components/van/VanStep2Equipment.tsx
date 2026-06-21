@@ -223,7 +223,7 @@ export function VanStep2Equipment({
         </Block>
 
         <Block>
-          <VanPanelLabel>MESSAGERIE MJ</VanPanelLabel>
+          <VanPanelLabel>MESSAGERIE</VanPanelLabel>
           <MessagePanel>
             <VanFeed>
               {sortedMessages.length === 0 && <VanEmptyState>Aucun message pour le moment.</VanEmptyState>}
@@ -397,7 +397,7 @@ const StepBannerLabel = styled.small`
 
 const StepBannerText = styled.strong`
   color: #f0f6ff;
-  font-size: 1rem;
+  font-size: 1.9rem;
   line-height: 1.3;
 `
 
@@ -434,5 +434,5 @@ const BanishDescription = styled.p`
   margin: 0;
   color: #f0e3e3;
   line-height: 1.45;
-  font-size: 0.95rem;
+  font-size: 1.8rem;
 `

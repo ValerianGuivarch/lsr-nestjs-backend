@@ -96,7 +96,7 @@ export function GhostCamDeviceView({
           <UnlockModal>
             <GhostCamLocker>Saisir le code pour déverrouiller l'appareil photo</GhostCamLocker>
             <PinDisplay>
-              {Array.from({ length: 6 }).map((_, idx) => (
+              {Array.from({ length: 3 }).map((_, idx) => (
                 <PinDot key={idx} $filled={idx < photoModePassword.length} />
               ))}
             </PinDisplay>
@@ -105,7 +105,7 @@ export function GhostCamDeviceView({
                 <KeypadButton
                   key={digit}
                   type="button"
-                  onClick={() => onPhotoModePasswordChange((photoModePassword + digit).slice(0, 6))}
+                  onClick={() => onPhotoModePasswordChange((photoModePassword + digit).slice(0, 3))}
                 >
                   {digit}
                 </KeypadButton>
@@ -120,7 +120,7 @@ export function GhostCamDeviceView({
               <KeypadButton
                 key="0"
                 type="button"
-                onClick={() => onPhotoModePasswordChange((photoModePassword + '0').slice(0, 6))}
+                onClick={() => onPhotoModePasswordChange((photoModePassword + '0').slice(0, 3))}
               >
                 0
               </KeypadButton>

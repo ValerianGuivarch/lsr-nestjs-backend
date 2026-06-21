@@ -34,7 +34,7 @@ export const VanHeader = styled.div`
 
 export const VanTitle = styled.h1`
   margin: 0;
-  font-size: 1.5rem;
+  font-size: 2.8rem;
   letter-spacing: 0.2em;
   color: #7fc0ff;
   text-shadow: 0 0 10px rgba(127, 192, 255, 0.5);
@@ -42,7 +42,7 @@ export const VanTitle = styled.h1`
 `
 
 export const VanStatus = styled.div`
-  font-size: 0.9rem;
+  font-size: 1.7rem;
   letter-spacing: 0.1em;
   color: #9cc9ff;
   margin-top: 0.5rem;
@@ -132,7 +132,7 @@ export const VanPanel = styled.div`
 `
 
 export const VanPanelLabel = styled.div`
-  font-size: 0.75rem;
+  font-size: 1.4rem;
   letter-spacing: 0.15em;
   color: #7fc0ff;
   margin-bottom: 0.8rem;
@@ -164,7 +164,7 @@ export const ObjectiveCheck = styled.div<{ $completed: boolean }>`
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.75rem;
+  font-size: 1.4rem;
   font-weight: 700;
   color: ${({ $completed }) => ($completed ? '#7fc0ff' : 'transparent')};
   background: ${({ $completed }) => ($completed ? 'rgba(79, 163, 255, 0.1)' : 'transparent')};
@@ -172,7 +172,7 @@ export const ObjectiveCheck = styled.div<{ $completed: boolean }>`
 `
 
 export const ObjectiveText = styled.span`
-  font-size: 0.9rem;
+  font-size: 1.7rem;
   color: #dce8f7;
 `
 
@@ -224,12 +224,12 @@ export const VanIntroButton = styled.button`
 export const VanIntroHint = styled.div`
   margin-top: 1rem;
   color: #88a2c4;
-  font-size: 0.9rem;
+  font-size: 1.7rem;
 `
 
 export const VanEmptyState = styled.div`
   color: #88a2c4;
-  font-size: 0.92rem;
+  font-size: 1.75rem;
   line-height: 1.45;
 `
 
@@ -287,7 +287,7 @@ export const VanDeclarationError = styled.div`
 export const VanDeclarationMeta = styled.div`
   margin-top: 0.45rem;
   color: #88a2c4;
-  font-size: 0.9rem;
+  font-size: 1.7rem;
 `
 
 export const VanActivityCopy = styled.p`
@@ -309,7 +309,7 @@ export const VanCheckItem = styled.span`
   padding: 0.3rem 0.6rem;
   color: #dce8f7;
   background: rgba(79, 127, 177, 0.12);
-  font-size: 0.85rem;
+  font-size: 1.6rem;
 `
 
 export const VanFeed = styled.div`
@@ -444,6 +444,6 @@ export const ObjectiveHint = styled.div`
   background: rgba(79, 163, 255, 0.06);
   border-left: 2px solid #26476e;
   color: #88a2c4;
-  font-size: 0.82rem;
+  font-size: 1.55rem;
   line-height: 1.45;
 `

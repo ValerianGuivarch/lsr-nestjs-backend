@@ -138,6 +138,37 @@ export function VanAdminTool({
         style={{
           display: 'flex',
           flexDirection: 'column',
+          gap: '0.4rem',
+          padding: '0.8rem',
+          border: '1px solid #5a4a1f',
+          borderRadius: 8,
+          background: '#1d1808',
+        }}
+      >
+        <strong style={{ color: '#ffd166' }}>Infos MJ (codes &amp; fréquences)</strong>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.8rem' }}>
+          <span style={{ color: '#c8d8ed' }}>
+            Code déverrouillage <strong>GhostCam</strong> :{' '}
+            <code style={{ background: '#0b0f17', padding: '0.1rem 0.4rem', borderRadius: 4, color: '#ffd166' }}>
+              131
+            </code>
+          </span>
+          <span style={{ color: '#c8d8ed' }}>
+            Fréquence <strong>Spiritbox</strong> (son débloqué) :{' '}
+            <code style={{ background: '#0b0f17', padding: '0.1rem 0.4rem', borderRadius: 4, color: '#ffd166' }}>
+              93.4 MHz
+            </code>
+          </span>
+        </div>
+        <small style={{ color: '#8fa6c4' }}>
+          À communiquer aux joueurs uniquement quand le scénario le prévoit.
+        </small>
+      </section>
+
+      <section
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
           gap: '0.5rem',
           padding: '0.8rem',
           border: '1px solid #2f3d50',

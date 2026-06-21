@@ -512,6 +512,13 @@ export function App() {
 
     const captureAndSend = () => {
       if (!canvasRef.current || !videoRef.current) return
+      // Si le <video> a été remonté (ex: bref écran d'erreur pendant un restart backend),
+      // on rebranche la MediaStream et on relance la lecture.
+      const stream = cameraStreamRef.current
+      if (stream && videoRef.current.srcObject !== stream) {
+        videoRef.current.srcObject = stream
+        void videoRef.current.play().catch(() => {})
+      }
       if (videoRef.current.readyState < 2) return
       // Photo pause : frame figée déjà dessinée → stop.
       if (state.role === 'ghostcam' && photoPaused && pausedFrameDrawnRef.current) return
@@ -744,6 +751,11 @@ export function App() {
     const captureWebcam = () => {
       if (!canvasRef.current || !videoRef.current) return
       if (emfUploadInFlightRef.current) return
+      const stream = cameraStreamRef.current
+      if (stream && videoRef.current.srcObject !== stream) {
+        videoRef.current.srcObject = stream
+        void videoRef.current.play().catch(() => {})
+      }
       if (videoRef.current.readyState < 2) return
 
       const ctx = canvasRef.current.getContext('2d')

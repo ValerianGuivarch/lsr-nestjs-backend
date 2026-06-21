@@ -168,7 +168,7 @@ const RoomCell = styled.button<{
   background: ${p => typeBg[p.$type]};
   color: #b8ffd2;
   font-family: 'Courier New', monospace;
-  font-size: 0.85rem;
+  font-size: 1.6rem;
   letter-spacing: 0.08em;
   border-radius: 3px;
   cursor: ${p => (p.$interactive ? 'pointer' : 'default')};
@@ -245,13 +245,13 @@ const ModalBox = styled.div`
 `
 
 const ModalTitle = styled.div`
-  font-size: 1rem;
+  font-size: 1.9rem;
   letter-spacing: 0.12em;
   color: #9affd1;
 `
 
 const ModalRoom = styled.div`
-  font-size: 1.4rem;
+  font-size: 2.6rem;
   font-weight: 700;
   letter-spacing: 0.08em;
   color: #d6ffe6;

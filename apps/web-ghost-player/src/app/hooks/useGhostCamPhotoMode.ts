@@ -38,7 +38,7 @@ export function useGhostCamPhotoMode(
   }, [role])
 
   const unlockPhotoMode = useCallback(() => {
-    if (photoModePassword.trim() !== '1234') {
+    if (photoModePassword.trim() !== '131') {
       setPhotoModeError('Mot de passe incorrect')
       return
     }

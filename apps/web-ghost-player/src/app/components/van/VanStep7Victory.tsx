@@ -44,14 +44,14 @@ const VictoryLayout = styled.div`
 const VictoryTitle = styled.h1`
   margin: 0;
   text-align: center;
-  font-size: 2rem;
+  font-size: 3.8rem;
   color: #88ffaa;
   letter-spacing: 0.15rem;
   animation: ${glow} 2.5s ease-in-out infinite;
 `
 
 const Subtitle = styled.div`
-  font-size: 3rem;
+  font-size: 5.6rem;
   font-weight: 800;
   color: #ffe066;
   text-shadow: 0 0 12px rgba(255, 220, 100, 0.7);
