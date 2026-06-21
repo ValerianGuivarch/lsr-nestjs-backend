@@ -13,6 +13,7 @@ export type EmfAdminToolProps = {
   controlDeviceId: string
   controlPowerOn: boolean
   controlFound: boolean
+  cameraFrame?: string
   onControlDeviceChange: (deviceId: string) => void
   onControlPowerOnChange: (checked: boolean) => void
   onControlFoundChange: (checked: boolean) => void
@@ -63,6 +64,7 @@ export type ThermometerAdminToolProps = {
   controlDeviceId: string
   controlPowerOn: boolean
   controlActive: boolean
+  cameraFrame?: string
   onControlDeviceChange: (deviceId: string) => void
   onControlPowerOnChange: (checked: boolean) => void
   onControlActiveChange: (checked: boolean) => void

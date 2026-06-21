@@ -2554,6 +2554,7 @@ export function App() {
                 controlDeviceId={controlDeviceId}
                 controlPowerOn={controlPowerOn}
                 controlFound={controlEmfFound}
+                cameraFrame={controlDeviceId ? cameraSources[controlDeviceId] : undefined}
                 onControlDeviceChange={setControlDeviceId}
                 onControlPowerOnChange={checked => {
                   setControlPowerOn(checked)
@@ -2628,6 +2629,7 @@ export function App() {
                 controlDeviceId={controlGhostorbsDeviceId}
                 controlPowerOn={controlThermometerPowerOn}
                 controlActive={controlThermometerActive}
+                cameraFrame={controlGhostorbsDeviceId ? cameraSources[controlGhostorbsDeviceId] : undefined}
                 onControlDeviceChange={setControlGhostorbsDeviceId}
                 onControlPowerOnChange={checked => {
                   setControlThermometerPowerOn(checked)

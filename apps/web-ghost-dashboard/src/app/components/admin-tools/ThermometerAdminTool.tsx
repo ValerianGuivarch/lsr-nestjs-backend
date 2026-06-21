@@ -6,6 +6,7 @@ export function ThermometerAdminTool({
   controlDeviceId,
   controlPowerOn,
   controlActive,
+  cameraFrame,
   onControlDeviceChange,
   onControlPowerOnChange,
   onControlActiveChange,
@@ -20,6 +21,29 @@ export function ThermometerAdminTool({
 
   return (
     <div style={{ display: 'grid', gridTemplateColumns: 'minmax(280px, 1fr)', gap: '0.9rem' }}>
+      <div
+        style={{
+          aspectRatio: '4 / 3',
+          background: '#000',
+          borderRadius: 8,
+          overflow: 'hidden',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          color: '#666',
+          fontSize: '0.85rem',
+        }}
+      >
+        {cameraFrame ? (
+          <img
+            src={cameraFrame}
+            alt="Flux caméra Thermomètre"
+            style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+          />
+        ) : (
+          <span>Aucun flux caméra</span>
+        )}
+      </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.45rem' }}>
         <label htmlFor="control-thermometer-device">Device Thermometre</label>
         <select
