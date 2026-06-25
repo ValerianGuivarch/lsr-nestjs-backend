@@ -164,7 +164,7 @@ export function VanStep1Puzzle({
         </Block>
 
         <Block style={{ flex: 1, minHeight: 0 }}>
-          <VanPanelLabel>MESSAGERIE MJ</VanPanelLabel>
+          <VanPanelLabel>MESSAGERIE</VanPanelLabel>
           <MessagePanel>
             <VanFeed>
               {sortedMessages.length === 0 && <VanEmptyState>Aucun message pour le moment.</VanEmptyState>}

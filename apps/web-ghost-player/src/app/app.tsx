@@ -1309,7 +1309,7 @@ export function App() {
   if (state.role === 'emf') {
     return (
       <ThemeProvider theme={darkTheme}>
-        <div style={{ position: 'relative' }}>
+        <div style={{ position: 'relative', width: '100vw', minHeight: '100vh', background: '#07111c' }}>
           <EmfDeviceView state={state} needleAngle={needleAngle} videoRef={videoRef} canvasRef={canvasRef} />
           {renderFullscreenControl()}
         </div>
@@ -1319,7 +1319,7 @@ export function App() {
   if (state.role === 'spiritbox') {
     return (
       <ThemeProvider theme={darkTheme}>
-        <div style={{ position: 'relative' }}>
+        <div style={{ position: 'relative', width: '100vw', minHeight: '100vh', background: '#07111c' }}>
           <SpiritBoxDeviceView
             state={state}
             spiritStatus={spiritStatus}
@@ -1409,7 +1409,7 @@ export function App() {
   if (state.role === 'ghostorbs' || state.role === 'thermometer') {
     return (
       <ThemeProvider theme={darkTheme}>
-        <div style={{ position: 'relative' }}>
+        <div style={{ position: 'relative', width: '100vw', minHeight: '100vh', background: '#07111c' }}>
           <ThermometerDeviceView state={state} videoRef={videoRef} canvasRef={canvasRef} />
           {renderFullscreenControl()}
         </div>
@@ -1419,7 +1419,7 @@ export function App() {
   if (state.role === 'messagerie') {
     return (
       <ThemeProvider theme={darkTheme}>
-        <div style={{ position: 'relative' }}>
+        <div style={{ position: 'relative', width: '100vw', minHeight: '100vh', background: '#07111c' }}>
           <Container>
             <MessagerieDeviceView messages={vanData?.vanSentMessages ?? []} />
           </Container>

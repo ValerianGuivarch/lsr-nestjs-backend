@@ -203,13 +203,15 @@ export function GhostEvidenceCardsPrintPage(): JSX.Element {
 
 const Page = styled.main`
   min-height: 100vh;
-  background:
-    radial-gradient(circle at 18% 8%, rgba(168, 34, 44, 0.2), transparent 48%),
-    radial-gradient(circle at 82% 16%, rgba(26, 126, 79, 0.18), transparent 50%),
-    linear-gradient(180deg, #090c11 0%, #0e131b 65%, #0a0d13 100%);
-  color: #ece3cc;
+  background: #ffffff;
+  color: #1a1a1a;
   padding: 14mm 10mm;
   font-family: 'Times New Roman', serif;
+
+  @media print {
+    background: #ffffff;
+    padding: 0;
+  }
 `
 
 const ScreenToolbar = styled.div`
@@ -227,7 +229,7 @@ const ScreenToolbar = styled.div`
 
 const Title = styled.h1`
   margin: 0;
-  color: #e56d6d;
+  color: #a82a2e;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   font-size: 18px;
@@ -256,7 +258,7 @@ const PrintButton = styled.button`
 const LoadState = styled.div`
   width: min(190mm, 100%);
   margin: 0 auto 4mm auto;
-  color: #d8ccb3;
+  color: #4a3a26;
   letter-spacing: 0.05em;
 `
 
@@ -270,25 +272,24 @@ const CardsGrid = styled.section`
 
 const Card = styled.article`
   min-height: 86mm;
-  background:
-    linear-gradient(180deg, rgba(50, 30, 22, 0.78) 0%, rgba(27, 18, 15, 0.94) 100%),
-    repeating-linear-gradient(
-      0deg,
-      rgba(255, 255, 255, 0.02) 0,
-      rgba(255, 255, 255, 0.02) 2px,
-      rgba(0, 0, 0, 0.04) 2px,
-      rgba(0, 0, 0, 0.04) 4px
-    );
-  border: 1px solid #b68969;
+  background: #ffffff;
+  border: 1.5px solid #6e4a2c;
   box-shadow:
-    inset 0 0 0 1px rgba(38, 139, 87, 0.22),
-    0 0 0 1px rgba(160, 43, 43, 0.26),
-    0 8px 20px rgba(0, 0, 0, 0.35);
+    inset 0 0 0 1px rgba(110, 74, 44, 0.15),
+    0 2px 6px rgba(0, 0, 0, 0.08);
   padding: 3mm;
   break-inside: avoid;
   page-break-inside: avoid;
   display: flex;
   flex-direction: column;
+  color: #1a1a1a;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+
+  & * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
 `
 
 
@@ -296,7 +297,7 @@ const GhostName = styled.h2`
   margin: 8;
   width: 50mm;
   text-align: center;
-  color: #f1c1b9;
+  color: #6e1b1b;
   font-size: 16px;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -324,10 +325,8 @@ const PortraitPlaceholder = styled.div`
   width: 50mm;
   height: 50mm;
   align-self: start;
-  border: 1px solid rgba(198, 156, 114, 0.75);
-  background:
-    radial-gradient(circle at 35% 24%, rgba(194, 52, 52, 0.2), transparent 55%),
-    linear-gradient(150deg, rgba(18, 36, 29, 0.8), rgba(15, 18, 24, 0.88));
+  border: 1px solid #a0764e;
+  background: #f5efe5;
   overflow: hidden;
 `
 
@@ -336,7 +335,7 @@ const PortraitImage = styled.img`
   height: 100%;
   object-fit: cover;
   display: block;
-  filter: grayscale(100%) contrast(1.1) brightness(0.86);
+  filter: grayscale(100%) contrast(1.05) brightness(1);
 `
 
 const Details = styled.div`
@@ -356,8 +355,8 @@ const EvidenceList = styled.ul`
 `
 
 const EvidenceItem = styled.li`
-  border: 1px solid rgba(66, 121, 89, 0.6);
-  background: rgba(11, 24, 19, 0.72);
+  border: 1px solid #b9c8bf;
+  background: #ffffff;
   padding: 2.2mm 1.2mm;
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
@@ -377,15 +376,15 @@ const EvidenceIcon = styled.span`
   font-size: 8px;
   font-weight: 800;
   letter-spacing: 0.08em;
-  color: #d4ffe5;
-  border: 1px solid rgba(95, 201, 138, 0.55);
-  background: rgba(17, 59, 39, 0.8);
+  color: #1f5c3c;
+  border: 1px solid #5fa37e;
+  background: #ffffff;
   border-radius: 999px;
   padding: 0.15rem 0.35rem;
 `
 
 const EvidenceLabel = styled.div`
-  color: #73d5a1;
+  color: #1f5c3c;
   letter-spacing: 0.07em;
   text-transform: uppercase;
   font-size: 8px;
@@ -402,20 +401,16 @@ const BooleanBadge = styled.span<{ $state: 'yes' | 'no' | 'uv-yes' }>`
   padding: 0.12rem 0.4rem;
   border: 1px solid
     ${({ $state }) => {
-      if ($state === 'uv-yes') return 'rgba(173, 128, 255, 0.92)'
-      if ($state === 'yes') return 'rgba(95, 201, 138, 0.85)'
-      return 'rgba(214, 90, 90, 0.85)'
+      if ($state === 'uv-yes') return '#7e5cc0'
+      if ($state === 'yes') return '#3f9f71'
+      return '#c0494b'
     }};
   color: ${({ $state }) => {
-    if ($state === 'uv-yes') return '#efe4ff'
-    if ($state === 'yes') return '#d4ffe5'
-    return '#ffd8d8'
+    if ($state === 'uv-yes') return '#3a1f6e'
+    if ($state === 'yes') return '#0f4427'
+    return '#6e1b1b'
   }};
-  background: ${({ $state }) => {
-    if ($state === 'uv-yes') return 'rgba(82, 46, 122, 0.9)'
-    if ($state === 'yes') return 'rgba(18, 67, 43, 0.8)'
-    return 'rgba(82, 22, 26, 0.8)'
-  }};
+  background: #ffffff;
 `
 
 const EmfMeterWrap = styled.div`
@@ -435,14 +430,13 @@ const EmfBars = styled.div`
 const EmfBar = styled.span<{ $active: boolean; $level: number }>`
   height: ${({ $level }) => 8 + $level * 4}px;
   border-radius: 3px 3px 1px 1px;
-  border: 1px solid ${({ $active }) => ($active ? 'rgba(138, 245, 187, 0.95)' : 'rgba(88, 133, 106, 0.55)')};
+  border: 1px solid ${({ $active }) => ($active ? '#3f9f71' : '#cfd7d2')};
   background: ${({ $active, $level }) =>
     $active
       ? $level <= 3
-        ? 'linear-gradient(180deg, #6de2a8 0%, #3f9f71 100%)'
-        : 'linear-gradient(180deg, #f2b26d 0%, #e76c48 100%)'
-      : 'rgba(14, 28, 20, 0.72)'};
-  box-shadow: ${({ $active }) => ($active ? '0 0 6px rgba(120, 232, 171, 0.45)' : 'none')};
+        ? '#6de2a8'
+        : '#f2b26d'
+      : '#ffffff'};
 `
 
 const EmfNumber = styled.span`
@@ -451,9 +445,9 @@ const EmfNumber = styled.span`
   transform: translateX(-50%);
   font-size: 10px;
   font-weight: 800;
-  color: #f6e6ce;
-  border: 1px solid rgba(192, 154, 121, 0.65);
-  background: rgba(58, 35, 24, 0.9);
+  color: #4a2a18;
+  border: 1px solid #a0764e;
+  background: #ffffff;
   border-radius: 999px;
   padding: 0 0.34rem;
 `
@@ -467,23 +461,18 @@ const TemperatureBadge = styled.span<{ $temperature: TemperatureValue }>`
   padding: 0.12rem 0.4rem;
   border: 1px solid
     ${({ $temperature }) => {
-      if ($temperature === 'VERY_COLD') return 'rgba(127, 189, 255, 0.92)'
-      if ($temperature === 'COLD') return 'rgba(98, 165, 255, 0.86)'
-      if ($temperature === 'HOT') return 'rgba(255, 144, 112, 0.92)'
-      return 'rgba(215, 188, 120, 0.82)'
+      if ($temperature === 'VERY_COLD') return '#2a5da8'
+      if ($temperature === 'COLD') return '#4c84c4'
+      if ($temperature === 'HOT') return '#c6543a'
+      return '#a98839'
     }};
   color: ${({ $temperature }) => {
-    if ($temperature === 'VERY_COLD') return '#e8f5ff'
-    if ($temperature === 'COLD') return '#e2efff'
-    if ($temperature === 'HOT') return '#ffe3dc'
-    return '#fbeec7'
+    if ($temperature === 'VERY_COLD') return '#15355e'
+    if ($temperature === 'COLD') return '#1f4470'
+    if ($temperature === 'HOT') return '#6e2a18'
+    return '#5a4516'
   }};
-  background: ${({ $temperature }) => {
-    if ($temperature === 'VERY_COLD') return 'rgba(37, 72, 118, 0.9)'
-    if ($temperature === 'COLD') return 'rgba(35, 64, 103, 0.88)'
-    if ($temperature === 'HOT') return 'rgba(114, 47, 30, 0.88)'
-    return 'rgba(92, 74, 29, 0.8)'
-  }};
+  background: #ffffff;
 `
 
 const AppearanceBadge = styled.span<{ $appearance: AppearanceValue }>`
@@ -496,15 +485,15 @@ const AppearanceBadge = styled.span<{ $appearance: AppearanceValue }>`
   text-transform: uppercase;
   border-radius: 999px;
   padding: 0.12rem 0.4rem;
-  border: 1px solid ${({ $appearance }) => ($appearance === 'RED' ? 'rgba(234, 104, 104, 0.88)' : 'rgba(225, 225, 225, 0.9)')};
-  color: ${({ $appearance }) => ($appearance === 'RED' ? '#ffe0e0' : '#f1f1f1')};
-  background: ${({ $appearance }) => ($appearance === 'RED' ? 'rgba(102, 30, 34, 0.9)' : 'rgba(78, 78, 78, 0.85)')};
+  border: 1px solid ${({ $appearance }) => ($appearance === 'RED' ? '#c0494b' : '#8c8c8c')};
+  color: ${({ $appearance }) => ($appearance === 'RED' ? '#6e1b1b' : '#3a3a3a')};
+  background: #ffffff;
 `
 
 const AppearanceDot = styled.span<{ $appearance: AppearanceValue }>`
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  border: 1px solid rgba(20, 20, 20, 0.7);
-  background: ${({ $appearance }) => ($appearance === 'RED' ? '#ff5b5b' : '#ffffff')};
+  border: 1px solid #1a1a1a;
+  background: ${({ $appearance }) => ($appearance === 'RED' ? '#d94545' : '#ffffff')};
 `
