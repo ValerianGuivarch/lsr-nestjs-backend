@@ -97,30 +97,35 @@ export function EmfDeviceView({ state, needleAngle, videoRef, canvasRef }: EmfDe
 }
 
 const DeviceScreen = styled.div`
-  min-height: 100dvh;
+  height: 100dvh;
   width: 100%;
   background: radial-gradient(circle at 50% 10%, #14171c 0%, #07080a 55%, #040507 100%);
-  padding: 1rem;
+  padding: 0.75rem;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  overflow-y: auto;
+  justify-content: flex-start;
+  overflow: hidden;
 `
 
 const HudLine = styled.div`
-  width: min(560px, 100%);
+  width: min(420px, 100%);
   display: flex;
   justify-content: space-between;
   color: #8ca07b;
   letter-spacing: 0.1em;
-  margin-bottom: 0.9rem;
+  margin-bottom: 0.6rem;
 `
 
 const EmfBody = styled.div`
-  width: min(560px, 100%);
+  width: min(420px, 100%);
+  flex: 1 1 auto;
+  max-height: 760px;
   border-radius: 16px;
   padding: 1.1rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
   background: linear-gradient(180deg, #2f3439 0%, #14181c 100%);
   border: 1px solid #3e464e;
   box-shadow: 0 18px 40px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.15);

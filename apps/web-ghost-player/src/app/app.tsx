@@ -1392,7 +1392,6 @@ export function App() {
             victoryPhoto={ghostcamFinalPhoto}
             fearMessage={ghostcamFearMessage}
           />
-          {renderFullscreenControl()}
         </div>
       </ThemeProvider>
     )

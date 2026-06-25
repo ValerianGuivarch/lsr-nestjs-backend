@@ -53,30 +53,32 @@ export function ThermometerDeviceView({ state, videoRef, canvasRef }: Thermomete
 }
 
 const Root = styled.div`
-  min-height: 100dvh;
+  height: 100dvh;
   width: 100%;
   background: #07111c;
   color: #dce8f7;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  padding: 1rem;
-  overflow-y: auto;
+  justify-content: flex-start;
+  padding: 0.75rem;
+  overflow: hidden;
 `
 
 const HudLine = styled.div`
-  width: min(340px, 100%);
+  width: min(360px, 100%);
   display: flex;
   justify-content: space-between;
   color: #8ca07b;
   letter-spacing: 0.1em;
-  margin-bottom: 0.9rem;
+  margin-bottom: 0.6rem;
   font-size: 0.75rem;
 `
 
 const DeviceBody = styled.div`
-  width: min(340px, 100%);
+  width: min(360px, 100%);
+  flex: 1 1 auto;
+  max-height: 680px;
   border-radius: 18px 18px 40px 40px;
   background: linear-gradient(170deg, #1e2837 0%, #111924 55%, #0d141c 100%);
   border: 2px solid #2c3a4a;
@@ -84,6 +86,7 @@ const DeviceBody = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: 0.6rem;
   box-shadow: 0 8px 40px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.06);
 `
@@ -106,7 +109,7 @@ const LcdScreen = styled.div<{ $on: boolean; $glacial: boolean }>`
   }};
   border-radius: 6px;
   padding: 0.6rem 0.8rem;
-  min-height: 120px;
+  min-height: clamp(140px, 32vh, 280px);
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -137,7 +140,7 @@ const LcdUnitRow = styled.div<{ $glacial: boolean }>`
 `
 
 const LcdTempValue = styled.div<{ $glacial: boolean }>`
-  font-size: 3.2rem;
+  font-size: clamp(3.2rem, 16vw, 5rem);
   font-weight: 900;
   color: ${({ $glacial }) => ($glacial ? '#a7ddff' : '#ffd19a')};
   text-shadow: ${({ $glacial }) =>
