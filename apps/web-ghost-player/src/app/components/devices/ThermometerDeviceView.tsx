@@ -53,7 +53,7 @@ export function ThermometerDeviceView({ state, videoRef, canvasRef }: Thermomete
 }
 
 const Root = styled.div`
-  min-height: 100vh;
+  min-height: 100dvh;
   width: 100%;
   background: #07111c;
   color: #dce8f7;
@@ -61,7 +61,8 @@ const Root = styled.div`
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 2rem;
+  padding: 1rem;
+  overflow-y: auto;
 `
 
 const HudLine = styled.div`

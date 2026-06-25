@@ -96,7 +96,12 @@ export class GhostService {
         updatedAt: now
       })
     }
-    Object.assign(tool, partial, { toolType, updatedAt: now })
+    // On ignore les clés à `undefined` pour ne pas écraser les valeurs par défaut
+    // (ex: emfLevel/temperature non fournis lors du seed de réinitialisation).
+    const cleanedPartial = Object.fromEntries(
+      Object.entries(partial).filter(([, value]) => value !== undefined)
+    ) as Partial<ToolStateEntity>
+    Object.assign(tool, cleanedPartial, { toolType, updatedAt: now })
     return this.toolStateRepo.save(tool)
   }
 

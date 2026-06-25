@@ -531,7 +531,7 @@ export function App() {
             video: {
               width: { ideal: 1280 },
               height: { ideal: 720 },
-              facingMode: { ideal: 'user' },
+              facingMode: { ideal: state?.role === 'ghostcam' ? 'user' : 'environment' },
               frameRate: { ideal: 30 }
             },
             audio: false
@@ -1305,6 +1305,41 @@ export function App() {
     )
   }
 
+  // Tant que l'appareil n'est pas en plein écran, on affiche un écran de lancement.
+  // Le bouton constitue un geste utilisateur indispensable (plein écran + déblocage audio).
+  if (!isFullscreenActive) {
+    const roleLabel =
+      state.role === 'emf'
+        ? 'EMF'
+        : state.role === 'spiritbox'
+          ? 'SpiritBox'
+          : state.role === 'ghostcam'
+            ? 'GhostCam'
+            : state.role === 'thermometer' || state.role === 'ghostorbs'
+              ? 'Thermomètre'
+              : state.role === 'van'
+                ? 'Van'
+                : 'Messagerie'
+    return (
+      <ThemeProvider theme={darkTheme}>
+        <Container>
+          <StatusCard>
+            <h2>Appareil prêt</h2>
+            <p>Touchez le bouton pour activer l'appareil en plein écran.</p>
+            <StatusActions>
+              <button type="button" onClick={() => { void requestDeviceFullscreen() }}>
+                Activer l'appareil {roleLabel} ({deviceId})
+              </button>
+            </StatusActions>
+            {fullscreenRequestError ? (
+              <p style={{ color: '#ff8a8a', marginTop: 12 }}>{fullscreenRequestError}</p>
+            ) : null}
+          </StatusCard>
+        </Container>
+      </ThemeProvider>
+    )
+  }
+
   // UI selon le rôle
   if (state.role === 'emf') {
     return (
@@ -1357,51 +1392,7 @@ export function App() {
             victoryPhoto={ghostcamFinalPhoto}
             fearMessage={ghostcamFearMessage}
           />
-          {!isFullscreenActive && (
-            <button
-              type="button"
-              onClick={() => { void requestDeviceFullscreen() }}
-              style={{
-                position: 'fixed',
-                top: 10,
-                right: 10,
-                zIndex: 99999,
-                width: 38,
-                height: 38,
-                borderRadius: '50%',
-                border: '1px solid rgba(255,255,255,0.4)',
-                background: 'rgba(0,0,0,0.55)',
-                color: '#fff',
-                fontSize: 18,
-                lineHeight: 1,
-                cursor: 'pointer',
-                backdropFilter: 'blur(4px)',
-                padding: 0,
-              }}
-              aria-label="Plein écran"
-              title="Plein écran"
-            >
-              ⛶
-            </button>
-          )}
-          {fullscreenRequestError && !isFullscreenActive && (
-            <p
-              style={{
-                position: 'fixed',
-                top: 56,
-                right: 10,
-                margin: 0,
-                padding: '0.35rem 0.5rem',
-                borderRadius: 6,
-                background: 'rgba(0,0,0,0.65)',
-                color: '#ffdede',
-                fontSize: 12,
-                zIndex: 99999,
-              }}
-            >
-              {fullscreenRequestError}
-            </p>
-          )}
+          {renderFullscreenControl()}
         </div>
       </ThemeProvider>
     )

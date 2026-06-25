@@ -97,14 +97,15 @@ export function EmfDeviceView({ state, needleAngle, videoRef, canvasRef }: EmfDe
 }
 
 const DeviceScreen = styled.div`
-  min-height: 100vh;
+  min-height: 100dvh;
   width: 100%;
   background: radial-gradient(circle at 50% 10%, #14171c 0%, #07080a 55%, #040507 100%);
-  padding: 1.5rem;
+  padding: 1rem;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  overflow-y: auto;
 `
 
 const HudLine = styled.div`

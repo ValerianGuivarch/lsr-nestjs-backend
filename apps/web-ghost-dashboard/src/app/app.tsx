@@ -1887,11 +1887,17 @@ export function App() {
         method: 'POST'
       }).then(toJson<{ ok: true }>)
 
-      const deviceTemplates: Array<{ deviceId: string; role: DeviceRole; powerOn: boolean }> = [
-        { deviceId: 'emf', role: 'emf', powerOn: true },
+      const deviceTemplates: Array<{
+        deviceId: string
+        role: DeviceRole
+        powerOn: boolean
+        emfLevel?: number
+        temperature?: number
+      }> = [
+        { deviceId: 'emf', role: 'emf', powerOn: true, emfLevel: 0 },
         { deviceId: 'spiritbox', role: 'spiritbox', powerOn: true },
         { deviceId: 'ghostcam', role: 'ghostcam', powerOn: true },
-        { deviceId: 'ghostorbs', role: 'ghostorbs', powerOn: true },
+        { deviceId: 'ghostorbs', role: 'ghostorbs', powerOn: true, temperature: 20 },
         { deviceId: 'van', role: 'van', powerOn: true }
       ]
 
