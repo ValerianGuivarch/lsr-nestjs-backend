@@ -51,16 +51,17 @@ export function SpiritBoxDeviceView({
     clearHold()
     step()
 
+    // Délai généreux avant l'auto-répétition : un appui bref = un seul pas.
     holdTimeoutRef.current = window.setTimeout(() => {
-      holdIntervalRef.current = window.setInterval(step, 120)
+      holdIntervalRef.current = window.setInterval(step, 180)
 
       window.setTimeout(() => {
         if (holdIntervalRef.current !== null) {
           window.clearInterval(holdIntervalRef.current)
-          holdIntervalRef.current = window.setInterval(step, 45)
+          holdIntervalRef.current = window.setInterval(step, 70)
         }
-      }, 650)
-    }, 260)
+      }, 900)
+    }, 550)
   }
 
   React.useEffect(() => {
@@ -91,24 +92,28 @@ export function SpiritBoxDeviceView({
         <SpiritActions>
           <SpiritButton
             type="button"
-            onMouseDown={() => startHold(onTuneFrequencyDown)}
-            onMouseUp={clearHold}
-            onMouseLeave={clearHold}
-            onTouchStart={() => startHold(onTuneFrequencyDown)}
-            onTouchEnd={clearHold}
-            onClick={event => event.preventDefault()}
+            onPointerDown={event => {
+              event.preventDefault()
+              startHold(onTuneFrequencyDown)
+            }}
+            onPointerUp={clearHold}
+            onPointerLeave={clearHold}
+            onPointerCancel={clearHold}
+            onContextMenu={event => event.preventDefault()}
             disabled={!powerOn}
           >
             -
           </SpiritButton>
           <SpiritButton
             type="button"
-            onMouseDown={() => startHold(onTuneFrequencyUp)}
-            onMouseUp={clearHold}
-            onMouseLeave={clearHold}
-            onTouchStart={() => startHold(onTuneFrequencyUp)}
-            onTouchEnd={clearHold}
-            onClick={event => event.preventDefault()}
+            onPointerDown={event => {
+              event.preventDefault()
+              startHold(onTuneFrequencyUp)
+            }}
+            onPointerUp={clearHold}
+            onPointerLeave={clearHold}
+            onPointerCancel={clearHold}
+            onContextMenu={event => event.preventDefault()}
             disabled={!powerOn}
           >
             +
@@ -218,6 +223,10 @@ const SpiritButton = styled.button`
   letter-spacing: 0.08em;
   font-weight: 700;
   cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  touch-action: manipulation;
 
   &:disabled {
     opacity: 0.45;
