@@ -165,6 +165,9 @@ export function App() {
   // Quand photoPaused passe true, on rend UNE dernière frame (avec teinte rouge si fantôme)
   // puis on bloque le rendu. Ref consulté par captureAndSend.
   const pausedFrameDrawnRef = useRef(false)
+  // Photo finale prise par le MJ en attente de validation : on fige le flux + loader.
+  const photoPendingRef = useRef(false)
+  const pendingFrozenRef = useRef(false)
   const persistPhotoModeUnlocked = useCallback(
     async (unlocked: boolean): Promise<void> => {
       if (!deviceId) {
@@ -264,6 +267,20 @@ export function App() {
     const timer = window.setTimeout(() => setGhostcamFearMessage(undefined), 4000)
     return () => window.clearTimeout(timer)
   }, [vanData?.vanFearMessageAt, photoPaused, togglePhotoPause])
+
+  // Photo finale prise par le MJ : tant qu'elle est en attente de validation
+  // (vanPendingPhoto présent, pas encore de vanFinalPhoto), le flux GhostCam
+  // est figé et un loader s'affiche côté joueur.
+  const ghostcamPhotoPending =
+    state?.role === 'ghostcam' &&
+    Boolean(vanData?.vanPendingPhoto) &&
+    !vanData?.vanFinalPhoto
+  useEffect(() => {
+    photoPendingRef.current = ghostcamPhotoPending
+    if (!ghostcamPhotoPending) {
+      pendingFrozenRef.current = false
+    }
+  }, [ghostcamPhotoPending])
 
   useEffect(() => {
     const syncFullscreenState = (): void => {
@@ -598,6 +615,8 @@ export function App() {
       if (videoRef.current.readyState < 2) return
       // Photo pause : frame figée déjà dessinée → stop.
       if (state.role === 'ghostcam' && photoPaused && pausedFrameDrawnRef.current) return
+      // Photo finale MJ en attente : on fige le flux (1 dernière frame puis stop).
+      if (state.role === 'ghostcam' && photoPendingRef.current && pendingFrozenRef.current) return
 
       const ctx = canvasRef.current.getContext('2d')
       if (!ctx) return
@@ -800,6 +819,9 @@ export function App() {
         }
         if (state.role === 'ghostcam' && photoPaused) {
           pausedFrameDrawnRef.current = true
+        }
+        if (state.role === 'ghostcam' && photoPendingRef.current) {
+          pendingFrozenRef.current = true
         }
         ghostcamUploadInFlightRef.current = true
         fetch(`/apil7r/admin/device/${deviceId}/camera-frame`, {
@@ -1391,6 +1413,7 @@ export function App() {
             showVictoryOverlay={ghostcamVictory}
             victoryPhoto={ghostcamFinalPhoto}
             fearMessage={ghostcamFearMessage}
+            photoPending={ghostcamPhotoPending}
           />
         </div>
       </ThemeProvider>

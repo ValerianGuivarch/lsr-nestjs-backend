@@ -293,6 +293,10 @@ export function App() {
   const [vanTextsSaving, setVanTextsSaving] = useState(false)
   const [vanTextsSaveError, setVanTextsSaveError] = useState('')
   const vanHydratedRef = useRef(false)
+  // Les messages van sont écrits de façon optimiste (envoi/clear) puis persistés.
+  // On ne ré-hydrate la liste depuis le backend qu'une fois (ou au changement de van)
+  // pour éviter qu'un poll plus ancien écrase un message à peine envoyé.
+  const vanMessagesHydratedRef = useRef(false)
 
   const soundFiles = useMusicFiles('sounds')
   const voiceFiles = useMusicFiles('voices')
@@ -749,6 +753,11 @@ export function App() {
     }
   }, [devices, controlVanDeviceId])
 
+  // Au changement de van sélectionné, on autorise une ré-hydratation des messages.
+  useEffect(() => {
+    vanMessagesHydratedRef.current = false
+  }, [controlVanDeviceId])
+
   useEffect(() => {
     if (!controlVanDeviceId) {
       return
@@ -758,7 +767,6 @@ export function App() {
     if (!vanDevice) {
       return
     }
-
     const parsedRooms = vanDevice.roomList ? (JSON.parse(vanDevice.roomList) as string[]) : []
     const parsedSound = vanDevice.soundLevels ? (JSON.parse(vanDevice.soundLevels) as Record<string, number>) : {}
     const parsedMotion = vanDevice.motionDetections ? (JSON.parse(vanDevice.motionDetections) as Record<string, boolean>) : {}
@@ -804,7 +812,10 @@ export function App() {
     setVanFloorPlanImage(vanDevice.floorPlanImage ?? null)
     setVanBackgroundMusic(parsedBackgroundMusic)
     setVanSoundboard(parsedSoundboard)
-    setVanSentMessages(parsedVanSentMessages)
+    if (!vanMessagesHydratedRef.current) {
+      setVanSentMessages(parsedVanSentMessages)
+      vanMessagesHydratedRef.current = true
+    }
     setVanTexts(parseVanTextConfig(vanDevice.vanTextConfig))
     vanHydratedRef.current = true
   }, [devices, controlVanDeviceId])
@@ -2709,30 +2720,94 @@ export function App() {
                   <VanHubCard>
                     <VanHubTitle>Caméras EMF & Thermomètre</VanHubTitle>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.8rem' }}>
-                      <VanHubPortrait>
-                        <VanHubPortraitLabel>EMF — {controlDeviceId || 'aucun'}</VanHubPortraitLabel>
-                        {controlDeviceId && (cameraSourcesClean[controlDeviceId] ?? cameraSources[controlDeviceId]) ? (
-                          <img
-                            src={cameraSourcesClean[controlDeviceId] ?? cameraSources[controlDeviceId]}
-                            alt="emf-cam"
-                            style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
-                          />
-                        ) : (
-                          <VanHubPortraitEmpty>En attente…</VanHubPortraitEmpty>
-                        )}
-                      </VanHubPortrait>
-                      <VanHubPortrait>
-                        <VanHubPortraitLabel>Thermo — {controlGhostorbsDeviceId || 'aucun'}</VanHubPortraitLabel>
-                        {controlGhostorbsDeviceId && (cameraSourcesClean[controlGhostorbsDeviceId] ?? cameraSources[controlGhostorbsDeviceId]) ? (
-                          <img
-                            src={cameraSourcesClean[controlGhostorbsDeviceId] ?? cameraSources[controlGhostorbsDeviceId]}
-                            alt="thermo-cam"
-                            style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
-                          />
-                        ) : (
-                          <VanHubPortraitEmpty>En attente…</VanHubPortraitEmpty>
-                        )}
-                      </VanHubPortrait>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                        <VanHubPortrait>
+                          <VanHubPortraitLabel>EMF — {controlDeviceId || 'aucun'}</VanHubPortraitLabel>
+                          {controlDeviceId && (cameraSourcesClean[controlDeviceId] ?? cameraSources[controlDeviceId]) ? (
+                            <img
+                              src={cameraSourcesClean[controlDeviceId] ?? cameraSources[controlDeviceId]}
+                              alt="emf-cam"
+                              style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                            />
+                          ) : (
+                            <VanHubPortraitEmpty>En attente…</VanHubPortraitEmpty>
+                          )}
+                        </VanHubPortrait>
+                        <VanHubToggleRow>
+                          <VanHubToggle
+                            type="button"
+                            data-on={controlPowerOn}
+                            onClick={() => {
+                              const checked = !controlPowerOn
+                              setControlPowerOn(checked)
+                              const emfLevel = checked ? (controlEmfFound ? 4 : 1) : 0
+                              setControlEmfLevel(emfLevel)
+                              void patchEmfControl({ powerOn: checked, emfLevel })
+                            }}
+                          >
+                            {controlPowerOn ? 'ON' : 'OFF'}
+                          </VanHubToggle>
+                          <VanHubToggle
+                            type="button"
+                            data-on={controlEmfFound}
+                            disabled={!controlPowerOn}
+                            onClick={() => {
+                              const checked = !controlEmfFound
+                              setControlEmfFound(checked)
+                              if (!controlPowerOn) return
+                              const emfLevel = checked ? 4 : 1
+                              setControlEmfLevel(emfLevel)
+                              void patchEmfControl({ emfLevel })
+                            }}
+                          >
+                            {controlEmfFound ? 'Trouvé' : 'Pas trouvé'}
+                          </VanHubToggle>
+                        </VanHubToggleRow>
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                        <VanHubPortrait>
+                          <VanHubPortraitLabel>Thermo — {controlGhostorbsDeviceId || 'aucun'}</VanHubPortraitLabel>
+                          {controlGhostorbsDeviceId && (cameraSourcesClean[controlGhostorbsDeviceId] ?? cameraSources[controlGhostorbsDeviceId]) ? (
+                            <img
+                              src={cameraSourcesClean[controlGhostorbsDeviceId] ?? cameraSources[controlGhostorbsDeviceId]}
+                              alt="thermo-cam"
+                              style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                            />
+                          ) : (
+                            <VanHubPortraitEmpty>En attente…</VanHubPortraitEmpty>
+                          )}
+                        </VanHubPortrait>
+                        <VanHubToggleRow>
+                          <VanHubToggle
+                            type="button"
+                            data-on={controlThermometerPowerOn}
+                            onClick={() => {
+                              const checked = !controlThermometerPowerOn
+                              setControlThermometerPowerOn(checked)
+                              const temperature = checked ? (controlThermometerActive ? 3 : 16) : 0
+                              setControlTemperature(temperature)
+                              void patchThermometerControl({ powerOn: checked, temperature })
+                            }}
+                          >
+                            {controlThermometerPowerOn ? 'ON' : 'OFF'}
+                          </VanHubToggle>
+                          <VanHubToggle
+                            type="button"
+                            data-on={controlThermometerActive}
+                            disabled={!controlThermometerPowerOn}
+                            onClick={() => {
+                              const checked = !controlThermometerActive
+                              setControlThermometerActive(checked)
+                              if (!controlThermometerPowerOn) return
+                              const temperature = checked ? 3 : 16
+                              setControlTemperature(temperature)
+                              void patchThermometerControl({ temperature })
+                            }}
+                          >
+                            {controlThermometerActive ? 'Trouvé' : 'Pas trouvé'}
+                          </VanHubToggle>
+                        </VanHubToggleRow>
+                      </div>
                     </div>
                   </VanHubCard>
 
@@ -2899,6 +2974,29 @@ const VanHubPortraitEmpty = styled.div`
   justify-content: center;
   color: #8fa6c4;
   font-size: 0.85rem;
+`
+
+const VanHubToggleRow = styled.div`
+  display: flex;
+  gap: 0.4rem;
+  width: 160px;
+`
+
+const VanHubToggle = styled.button`
+  flex: 1 1 0;
+  padding: 0.4rem 0.3rem;
+  border-radius: 8px;
+  border: 1px solid #2f3d50;
+  background: ${({ 'data-on': on }: { 'data-on'?: boolean }) => (on ? '#133021' : '#1b2330')};
+  color: ${({ 'data-on': on }: { 'data-on'?: boolean }) => (on ? '#7CFFB2' : '#9fb1c9')};
+  font-weight: 700;
+  font-size: 0.78rem;
+  cursor: pointer;
+
+  &:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
 `
 
 const GhostCardsActions = styled.div`

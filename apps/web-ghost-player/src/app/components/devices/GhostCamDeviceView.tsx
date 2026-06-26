@@ -21,6 +21,8 @@ type GhostCamDeviceViewProps = {
   canvasRef: React.RefObject<HTMLCanvasElement>
   hidePhotoButton?: boolean
   fearMessage?: string
+  // Photo prise par le MJ en attente de validation : on fige l'image + loader.
+  photoPending?: boolean
   // Victoire affichée en overlay lorsque l'étape van >= 7 / photo finale validée.
   showVictoryOverlay?: boolean
   victoryPhoto?: string
@@ -39,6 +41,7 @@ export function GhostCamDeviceView({
   canvasRef,
   hidePhotoButton,
   fearMessage,
+  photoPending,
   showVictoryOverlay,
   victoryPhoto
 }: GhostCamDeviceViewProps) {
@@ -89,6 +92,12 @@ export function GhostCamDeviceView({
         {!state.powerOn && <GhostCamOffline>CAM OFFLINE</GhostCamOffline>}
         {photoPaused && <GhostCamPaused>PAUSE PHOTO</GhostCamPaused>}
         {fearMessage && <FearOverlay>{fearMessage}</FearOverlay>}
+        {photoPending && (
+          <PhotoPendingOverlay>
+            <PhotoPendingSpinner />
+            <PhotoPendingText>Photo en cours…</PhotoPendingText>
+          </PhotoPendingOverlay>
+        )}
       </GhostCamView>
 
       {unlockPromptOpen && !photoModeUnlocked && (
@@ -281,7 +290,6 @@ const GhostCamLocker = styled.div`
   line-height: 1.5;
   text-shadow: 0 2px 8px rgba(0, 0, 0, 0.65);
 `
-
 const GhostCamUnlockRow = styled.div`
   width: min(92vw, 520px);
   display: flex;
@@ -434,6 +442,42 @@ const FearOverlay = styled.div`
 const glow = keyframes`
   0%, 100% { text-shadow: 0 0 8px rgba(120, 255, 180, 0.4); }
   50% { text-shadow: 0 0 20px rgba(120, 255, 180, 0.9); }
+`
+
+const spin = keyframes`
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+`
+
+const PhotoPendingOverlay = styled.div`
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.1rem;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(2px);
+  z-index: 6;
+  pointer-events: none;
+`
+
+const PhotoPendingSpinner = styled.div`
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  border: 5px solid rgba(180, 255, 210, 0.25);
+  border-top-color: #7CFFB2;
+  animation: ${spin} 0.9s linear infinite;
+`
+
+const PhotoPendingText = styled.div`
+  color: #d5ffe6;
+  font-size: 1.1rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.7);
 `
 
 const VictoryOverlay = styled.div`

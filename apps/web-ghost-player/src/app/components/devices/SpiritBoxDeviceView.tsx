@@ -123,32 +123,38 @@ export function SpiritBoxDeviceView({
 }
 
 const Root = styled.div`
-  min-height: 100vh;
+  height: 100dvh;
   width: 100%;
   background: #07111c;
   color: #dce8f7;
-  padding: 2rem;
+  padding: 0.75rem;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
+  overflow: hidden;
 `
 
 const HudLine = styled.div`
-  width: min(560px, 100%);
+  width: min(360px, 100%);
   display: flex;
   justify-content: space-between;
   color: #8ca07b;
   letter-spacing: 0.1em;
-  margin-bottom: 0.9rem;
+  margin-bottom: 0.6rem;
 `
 
 const SpiritBoxShell = styled.div`
-  width: min(560px, 100%);
+  width: min(360px, 100%);
   border-radius: 16px;
   padding: 1rem;
   background: linear-gradient(180deg, #cbcfd5 0%, #8f98a3 100%);
   border: 1px solid #68717b;
+  flex: 1 1 auto;
+  max-height: 760px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 `
 
 const SpiritBoxHeader = styled.div`
@@ -168,11 +174,15 @@ const SpiritBoxScreen = styled.div<{ $on: boolean; $locked: boolean }>`
   }};
   color: ${({ $locked }) => ($locked ? '#07220a' : '#120d09')};
   padding: 0.8rem;
-  min-height: 130px;
+  flex: 1 1 auto;
+  min-height: clamp(160px, 34vh, 320px);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 `
 
 const SpiritFrequency = styled.div`
-  font-size: clamp(2.2rem, 9vw, 3.4rem);
+  font-size: clamp(2.8rem, 14vw, 4.4rem);
   line-height: 1;
   letter-spacing: 0.03em;
   font-family: 'Courier New', monospace;

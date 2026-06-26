@@ -38,8 +38,8 @@ export function useSpiritBoxAudio(role: string | undefined, deviceId: string, po
   const spiritLockTimerRef = useRef<number | null>(null)
   const spiritDisplayLockTimerRef = useRef<number | null>(null)
 
-  const BASE_STATIC_GAIN = 0.012
-  const LOCKED_STATIC_GAIN = 0.0035
+  const BASE_STATIC_GAIN = 0.06
+  const LOCKED_STATIC_GAIN = 0.018
   const SPIRITBOX_MIN_FREQUENCY = 87.5
   const SPIRITBOX_MAX_FREQUENCY = 108
   const SPIRITBOX_LOCKED_FREQUENCY = 93.4
