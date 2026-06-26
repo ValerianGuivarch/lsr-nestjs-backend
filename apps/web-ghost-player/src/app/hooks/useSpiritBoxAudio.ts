@@ -496,6 +496,22 @@ export function useSpiritBoxAudio(role: string | undefined, deviceId: string, po
     }
   }, [BASE_STATIC_GAIN, LOCKED_STATIC_GAIN, SPIRITBOX_LOCKED_FREQUENCY, audioUnlocked, clearSpiritDisplayLockTimer, clearSpiritLockTimer, ensureSpiritAmbientAudio, powerOn, role, spiritFrequency, stopSpiritAmbientAudio])
 
+  // Remonte la fréquence courante (et l'état de verrouillage) au backend pour l'admin.
+  useEffect(() => {
+    if (role !== 'spiritbox' || !deviceId) {
+      return
+    }
+
+    const payload = JSON.stringify({ frequency: spiritFrequency, locked: spiritSignalLocked })
+    fetch(`/apil7r/player/device/${deviceId}/spiritbox/frequency`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: payload
+    }).catch(() => {
+      // Erreur silencieuse
+    })
+  }, [role, deviceId, spiritFrequency, spiritSignalLocked])
+
   useEffect(() => {
     if (role !== 'spiritbox' || !powerOn) {
       stopSpiritRecording()

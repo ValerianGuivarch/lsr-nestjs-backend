@@ -109,7 +109,7 @@ const DeviceScreen = styled.div`
 `
 
 const HudLine = styled.div`
-  width: min(420px, 100%);
+  width: min(360px, 100%);
   display: flex;
   justify-content: space-between;
   color: #8ca07b;
@@ -118,7 +118,7 @@ const HudLine = styled.div`
 `
 
 const EmfBody = styled.div`
-  width: min(420px, 100%);
+  width: min(360px, 100%);
   flex: 1 1 auto;
   max-height: 760px;
   border-radius: 16px;

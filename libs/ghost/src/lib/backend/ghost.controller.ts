@@ -1,5 +1,5 @@
 import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from '@nestjs/common'
-import { GhostService, SpiritAudioMessage } from './ghost.service'
+import { GhostService, SpiritAudioMessage, SpiritFrequencyState } from './ghost.service'
 import { ToolStateEntity } from './device.entity'
 import { GameStateEntity } from './game-state.entity'
 import { GameConfig } from './tools.types'
@@ -173,6 +173,22 @@ export class GhostController {
     @Param('deviceId') deviceId: string
   ): Promise<{ message?: SpiritAudioMessage }> {
     return { message: this.ghost.getSpiritMjMessage(deviceId) }
+  }
+
+  @Post('player/device/:deviceId/spiritbox/frequency')
+  setSpiritFrequencyCompat(
+    @Param('deviceId') deviceId: string,
+    @Body() payload: { frequency: number; locked?: boolean }
+  ): { ok: true; state: SpiritFrequencyState } {
+    const state = this.ghost.setSpiritFrequency(deviceId, payload.frequency, payload.locked ?? false)
+    return { ok: true, state }
+  }
+
+  @Get('admin/device/:deviceId/spiritbox/frequency')
+  getSpiritFrequencyCompat(
+    @Param('deviceId') deviceId: string
+  ): { state?: SpiritFrequencyState } {
+    return { state: this.ghost.getSpiritFrequency(deviceId) }
   }
 
   @Patch('admin/device/:deviceId/van')

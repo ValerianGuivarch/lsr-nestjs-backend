@@ -112,11 +112,7 @@ type SpiritAudioMessage = {
 }
 
 const SPIRITBOX_PRESET_SOUNDS = [
-  { id: 'ghost-voice-1', label: 'GhostVoix1.mp3', audioUrl: 'https://l7r.fr/l7r/GhostVoix1.mp3' },
-  { id: 'ghost-voice-2', label: 'GhostVoix2.mp3', audioUrl: 'https://l7r.fr/l7r/GhostVoix2.mp3' },
-  { id: 'ghost-voice-3', label: 'GhostVoix3.mp3', audioUrl: 'https://l7r.fr/l7r/GhostVoix3.mp3' },
-  { id: 'ghost-voice-4', label: 'GhostVoix4.mp3', audioUrl: 'https://l7r.fr/l7r/GhostVoix4.mp3' },
-  { id: 'ghost-voice-5', label: 'GhostVoix5.mp3', audioUrl: 'https://l7r.fr/l7r/GhostVoix5.mp3' },
+  { id: 'ghost-voice', label: 'Voix fantôme', audioUrl: 'https://l7r.fr/l7r/GhostVoix1.mp3' },
 ]
 
 type GameState = {
@@ -260,6 +256,7 @@ export function App() {
   const [controlSpiritboxDeviceId, setControlSpiritboxDeviceId] = useState<string>('')
   const [spiritboxRecording, setSpiritboxRecording] = useState(false)
   const [latestPlayerSpiritMessage, setLatestPlayerSpiritMessage] = useState<SpiritAudioMessage | null>(null)
+  const [spiritboxFrequency, setSpiritboxFrequency] = useState<{ frequency: number; locked: boolean } | null>(null)
   const spiritboxRecorderRef = useRef<MediaRecorder | null>(null)
   const spiritboxStreamRef = useRef<MediaStream | null>(null)
   const spiritboxChunksRef = useRef<BlobPart[]>([])
@@ -446,36 +443,43 @@ export function App() {
       return
     }
 
-    // Détermine quel device a besoin d'une camera-frame selon l'outil actif
-    let relevantDeviceId: string | null = null
+    // Détermine quels devices ont besoin d'une camera-frame selon l'outil actif
+    const relevantDeviceIds = new Set<string>()
     if (adminToolRole === null || adminToolRole === 'emf') {
-      relevantDeviceId = controlDeviceId || null
+      if (controlDeviceId) relevantDeviceIds.add(controlDeviceId)
     } else if (adminToolRole === 'ghostcam') {
-      relevantDeviceId = controlGhostcamDeviceId || null
+      if (controlGhostcamDeviceId) relevantDeviceIds.add(controlGhostcamDeviceId)
     } else if (adminToolRole === 'ghostorbs' || adminToolRole === 'thermometer') {
-      relevantDeviceId = controlGhostorbsDeviceId || null
+      if (controlGhostorbsDeviceId) relevantDeviceIds.add(controlGhostorbsDeviceId)
+    } else if (adminToolRole === 'van') {
+      // Page Admin Van condensée : on suit toutes les caméras utiles
+      if (controlDeviceId) relevantDeviceIds.add(controlDeviceId)
+      if (controlGhostorbsDeviceId) relevantDeviceIds.add(controlGhostorbsDeviceId)
+      if (controlGhostcamDeviceId) relevantDeviceIds.add(controlGhostcamDeviceId)
     }
     // spiritbox et autres : pas de polling caméra
 
-    if (!relevantDeviceId) {
+    if (relevantDeviceIds.size === 0) {
       return
     }
 
-    const deviceId = relevantDeviceId
+    const deviceIds = Array.from(relevantDeviceIds)
     const interval = setInterval(() => {
-      fetch(ghostApiUrl(`/player/device/${deviceId}/camera-frame`))
-        .then(r => r.json())
-        .then((data: { frame?: string; frameClean?: string }) => {
-          if (data.frame) {
-            setCameraSources(prev => ({ ...prev, [deviceId]: data.frame }))
-          }
-          if (data.frameClean) {
-            setCameraSourcesClean(prev => ({ ...prev, [deviceId]: data.frameClean as string }))
-          }
-        })
-        .catch(() => {
-          // Erreur silencieuse
-        })
+      deviceIds.forEach(deviceId => {
+        fetch(ghostApiUrl(`/player/device/${deviceId}/camera-frame`))
+          .then(r => r.json())
+          .then((data: { frame?: string; frameClean?: string }) => {
+            if (data.frame) {
+              setCameraSources(prev => ({ ...prev, [deviceId]: data.frame }))
+            }
+            if (data.frameClean) {
+              setCameraSourcesClean(prev => ({ ...prev, [deviceId]: data.frameClean as string }))
+            }
+          })
+          .catch(() => {
+            // Erreur silencieuse
+          })
+      })
     }, 100)
 
     return () => clearInterval(interval)
@@ -1003,6 +1007,31 @@ export function App() {
       spiritboxNextScheduledTimeRef.current = 0
       spiritboxHeaderDurationRef.current = 0
     }
+  }, [activePanel, adminToolRole, controlSpiritboxDeviceId])
+
+  // Sonde la fréquence courante de la SpiritBox côté joueur (pour savoir si on peut envoyer le son)
+  useEffect(() => {
+    const isRelevantPage =
+      activePanel === 'admin' && (adminToolRole === 'spiritbox' || adminToolRole === 'van')
+    if (!controlSpiritboxDeviceId || !isRelevantPage) {
+      setSpiritboxFrequency(null)
+      return
+    }
+
+    const poll = (): void => {
+      fetch(ghostApiUrl(`/admin/device/${controlSpiritboxDeviceId}/spiritbox/frequency`))
+        .then(r => r.json())
+        .then((data: { state?: { frequency: number; locked: boolean } }) => {
+          setSpiritboxFrequency(data.state ? { frequency: data.state.frequency, locked: data.state.locked } : null)
+        })
+        .catch(() => {
+          // Erreur silencieuse
+        })
+    }
+
+    poll()
+    const interval = window.setInterval(poll, 500)
+    return () => window.clearInterval(interval)
   }, [activePanel, adminToolRole, controlSpiritboxDeviceId])
 
   useEffect(() => {
@@ -2585,6 +2614,8 @@ export function App() {
                 controlDeviceId={controlSpiritboxDeviceId}
                 latestPlayerMessageAt={latestPlayerSpiritMessage?.createdAt}
                 presetSounds={SPIRITBOX_PRESET_SOUNDS}
+                frequency={spiritboxFrequency?.frequency ?? null}
+                signalLocked={spiritboxFrequency?.locked ?? false}
                 onSendPresetSound={preset => {
                   void sendSpiritboxPresetSound(preset)
                 }}
@@ -2656,22 +2687,120 @@ export function App() {
             )}
 
             {adminToolRole === 'van' && (
-              <VanAdminTool
-                vanGhostActivity={vanGhostActivity}
-                onVanGhostActivityChange={handleVanGhostActivityChange}
-                vanObjectives={vanObjectives}
-                vanStep={vanProgressState.effectiveStep}
-                objectiveStep={Math.max(1, Math.min(7, vanProgressState.objectiveStep + 1))}
-                cameraModeLabel={formatVanCameraMode(vanProgressState.cameraMode)}
-                onStepChange={setVanStepRemote}
-                onResetVan={resetVan}
-                onOpenCameraAdmin={() => {
-                  const ghostcamId =
-                    controlGhostcamDeviceId || devices.find(d => d.role === 'ghostcam')?.deviceId
-                  if (!ghostcamId) return
-                  openAdminToolPage('ghostcam', ghostcamId)
-                }}
-              />
+              <>
+                <VanAdminTool
+                  vanGhostActivity={vanGhostActivity}
+                  onVanGhostActivityChange={handleVanGhostActivityChange}
+                  vanObjectives={vanObjectives}
+                  vanStep={vanProgressState.effectiveStep}
+                  objectiveStep={Math.max(1, Math.min(7, vanProgressState.objectiveStep + 1))}
+                  cameraModeLabel={formatVanCameraMode(vanProgressState.cameraMode)}
+                  onStepChange={setVanStepRemote}
+                  onResetVan={resetVan}
+                  onOpenCameraAdmin={() => {
+                    const ghostcamId =
+                      controlGhostcamDeviceId || devices.find(d => d.role === 'ghostcam')?.deviceId
+                    if (!ghostcamId) return
+                    openAdminToolPage('ghostcam', ghostcamId)
+                  }}
+                />
+
+                <VanHubGrid>
+                  <VanHubCard>
+                    <VanHubTitle>Caméras EMF & Thermomètre</VanHubTitle>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.8rem' }}>
+                      <VanHubPortrait>
+                        <VanHubPortraitLabel>EMF — {controlDeviceId || 'aucun'}</VanHubPortraitLabel>
+                        {controlDeviceId && (cameraSourcesClean[controlDeviceId] ?? cameraSources[controlDeviceId]) ? (
+                          <img
+                            src={cameraSourcesClean[controlDeviceId] ?? cameraSources[controlDeviceId]}
+                            alt="emf-cam"
+                            style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                          />
+                        ) : (
+                          <VanHubPortraitEmpty>En attente…</VanHubPortraitEmpty>
+                        )}
+                      </VanHubPortrait>
+                      <VanHubPortrait>
+                        <VanHubPortraitLabel>Thermo — {controlGhostorbsDeviceId || 'aucun'}</VanHubPortraitLabel>
+                        {controlGhostorbsDeviceId && (cameraSourcesClean[controlGhostorbsDeviceId] ?? cameraSources[controlGhostorbsDeviceId]) ? (
+                          <img
+                            src={cameraSourcesClean[controlGhostorbsDeviceId] ?? cameraSources[controlGhostorbsDeviceId]}
+                            alt="thermo-cam"
+                            style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                          />
+                        ) : (
+                          <VanHubPortraitEmpty>En attente…</VanHubPortraitEmpty>
+                        )}
+                      </VanHubPortrait>
+                    </div>
+                  </VanHubCard>
+
+                  <VanHubCard>
+                    <VanHubTitle>SpiritBox</VanHubTitle>
+                    <SpiritBoxAdminTool
+                      controlDeviceId={controlSpiritboxDeviceId}
+                      latestPlayerMessageAt={latestPlayerSpiritMessage?.createdAt}
+                      presetSounds={SPIRITBOX_PRESET_SOUNDS}
+                      frequency={spiritboxFrequency?.frequency ?? null}
+                      signalLocked={spiritboxFrequency?.locked ?? false}
+                      onSendPresetSound={preset => {
+                        void sendSpiritboxPresetSound(preset)
+                      }}
+                    />
+                  </VanHubCard>
+
+                  <VanHubCard style={{ gridColumn: '1 / -1' }}>
+                    <VanHubTitle>GhostCam</VanHubTitle>
+                    <GhostCamAdminTool
+                      cameraFrame={controlGhostcamDeviceId ? cameraSources[controlGhostcamDeviceId] : undefined}
+                      vanStep={vanProgressState.effectiveStep}
+                      cameraModeLabel={formatVanCameraMode(vanProgressState.cameraMode)}
+                      vanPendingPhoto={vanPendingPhoto}
+                      onValidatePhoto={validateVanPhoto}
+                      onRefusePhoto={refuseVanPhoto}
+                      onPhoto={takeGhostcamPhoto}
+                      onRelock={() => {
+                        if (!controlGhostcamDeviceId) return
+                        void fetch(`/apil7r/admin/device/${encodeURIComponent(controlGhostcamDeviceId)}`, {
+                          method: 'PATCH',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ photoModeUnlocked: false })
+                        })
+                      }}
+                      ghostcamDeviceId={controlGhostcamDeviceId}
+                      ghostcamDeviceOptions={devices.filter(device => device.role === 'ghostcam').map(device => device.deviceId)}
+                      ghostDurationSec={controlGhostDurationSec}
+                      onGhostcamDeviceChange={setControlGhostcamDeviceId}
+                      onGhostDurationChange={setControlGhostDurationSec}
+                      onTriggerGhost={() => {
+                        void triggerGhostAction()
+                      }}
+                      ghostorbsDeviceId={controlOrbsCameraDeviceId}
+                      ghostorbsDeviceOptions={devices
+                        .filter(device => device.role === 'ghostcam')
+                        .map(device => device.deviceId)}
+                      orbDurationSec={controlOrbDurationSec}
+                      onGhostorbsDeviceChange={setControlOrbsCameraDeviceId}
+                      onOrbDurationChange={setControlOrbDurationSec}
+                      onTriggerOrbs={() => {
+                        void triggerOrbsAction()
+                      }}
+                    />
+                  </VanHubCard>
+
+                  <VanHubCard style={{ gridColumn: '1 / -1' }}>
+                    <VanHubTitle>Messagerie (texte)</VanHubTitle>
+                    <MessagerieAdminTool
+                      sentMessages={vanSentMessages}
+                      draft={vanDraftMessage}
+                      onDraftChange={(patch) => setVanDraftMessage((prev) => ({ ...prev, ...patch }))}
+                      onSend={sendVanMessage}
+                      onClearSent={clearVanSentMessages}
+                    />
+                  </VanHubCard>
+                </VanHubGrid>
+              </>
             )}
 
             {adminToolRole === 'messagerie' && (
@@ -2717,6 +2846,59 @@ const Header = styled.header`
     margin: 0.5rem 0 0;
     color: #b4c4da;
   }
+`
+
+const VanHubGrid = styled.div`
+  margin-top: 1.2rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 1rem;
+`
+
+const VanHubCard = styled.div`
+  border: 1px solid #2f3d50;
+  border-radius: 12px;
+  padding: 0.9rem;
+  background: #101a25;
+`
+
+const VanHubTitle = styled.h3`
+  margin: 0 0 0.7rem 0;
+  font-size: 1rem;
+  color: #cfe0f3;
+  letter-spacing: 0.02em;
+`
+
+const VanHubPortrait = styled.div`
+  position: relative;
+  width: 160px;
+  aspect-ratio: 3 / 4;
+  background: #000;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid #29384a;
+`
+
+const VanHubPortraitLabel = styled.div`
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  padding: 0.25rem 0.4rem;
+  font-size: 0.72rem;
+  color: #cfe0f3;
+  background: rgba(0, 0, 0, 0.55);
+  z-index: 1;
+`
+
+const VanHubPortraitEmpty = styled.div`
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #8fa6c4;
+  font-size: 0.85rem;
 `
 
 const GhostCardsActions = styled.div`

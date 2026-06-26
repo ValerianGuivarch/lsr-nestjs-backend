@@ -15,6 +15,12 @@ export type SpiritAudioMessage = {
   createdAt: string
 }
 
+export type SpiritFrequencyState = {
+  frequency: number
+  locked: boolean
+  updatedAt: string
+}
+
 const CANONICAL_TOOL_TYPES: ToolType[] = [
   ToolType.EMF,
   ToolType.SPIRITBOX,
@@ -31,6 +37,7 @@ export class GhostService {
   private cleanFrameBuffer = new Map<string, string>()
   private spiritPlayerToMjBuffer = new Map<string, SpiritAudioMessage>()
   private spiritMjToPlayerBuffer = new Map<string, SpiritAudioMessage>()
+  private spiritFrequencyBuffer = new Map<string, SpiritFrequencyState>()
   private accelerationIntervals = new Map<string, NodeJS.Timeout>()
 
   constructor(
@@ -112,6 +119,7 @@ export class GhostService {
     this.cleanFrameBuffer.clear()
     this.spiritPlayerToMjBuffer.clear()
     this.spiritMjToPlayerBuffer.clear()
+    this.spiritFrequencyBuffer.clear()
   }
 
   setCameraFrame(toolType: string, frameBase64: string): void {
@@ -128,6 +136,20 @@ export class GhostService {
 
   getCameraFrameClean(toolType: string): string | undefined {
     return this.frameCleanBuffer.get(toolType)
+  }
+
+  setSpiritFrequency(toolType: string, frequency: number, locked: boolean): SpiritFrequencyState {
+    const state: SpiritFrequencyState = {
+      frequency,
+      locked,
+      updatedAt: new Date().toISOString()
+    }
+    this.spiritFrequencyBuffer.set(toolType, state)
+    return state
+  }
+
+  getSpiritFrequency(toolType: string): SpiritFrequencyState | undefined {
+    return this.spiritFrequencyBuffer.get(toolType)
   }
 
   setSpiritPlayerMessage(toolType: string, audioData: string, mimeType?: string): SpiritAudioMessage {

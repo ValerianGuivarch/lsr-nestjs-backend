@@ -34,6 +34,9 @@ export type SpiritBoxAdminToolProps = {
   latestPlayerMessageAt?: string
   presetSounds: SpiritPresetSound[]
   onSendPresetSound: (preset: SpiritPresetSound) => void
+  frequency?: number | null
+  signalLocked?: boolean
+  lockedFrequency?: number
 }
 
 export type GhostCamAdminToolProps = {
