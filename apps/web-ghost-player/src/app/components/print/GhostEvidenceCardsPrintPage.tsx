@@ -336,6 +336,11 @@ const PortraitImage = styled.img`
   object-fit: cover;
   display: block;
   filter: grayscale(100%) contrast(1.05) brightness(1);
+
+  /* Chrome n'imprime pas les images ayant un filter CSS : on le retire au print. */
+  @media print {
+    filter: none;
+  }
 `
 
 const Details = styled.div`
