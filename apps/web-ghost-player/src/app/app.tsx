@@ -153,6 +153,8 @@ export function App() {
   const [playError, setPlayError] = useState('')
   const [isFullscreenActive, setIsFullscreenActive] = useState(false)
   const [fullscreenRequestError, setFullscreenRequestError] = useState('')
+  // iOS (iPhone) n'a pas l'API Fullscreen : on garde un fallback "pseudo plein écran".
+  const pseudoFullscreenRef = useRef(false)
   const audioContextRef = useRef<AudioContext | null>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const videoRef = useRef<HTMLVideoElement>(null)
@@ -285,7 +287,9 @@ export function App() {
   useEffect(() => {
     const syncFullscreenState = (): void => {
       const doc = document as Document & { webkitFullscreenElement?: Element | null }
-      setIsFullscreenActive(Boolean(doc.fullscreenElement || doc.webkitFullscreenElement))
+      setIsFullscreenActive(
+        Boolean(doc.fullscreenElement || doc.webkitFullscreenElement) || pseudoFullscreenRef.current
+      )
     }
 
     syncFullscreenState()
@@ -305,6 +309,14 @@ export function App() {
         await root.requestFullscreen()
       } else if (root.webkitRequestFullscreen) {
         root.webkitRequestFullscreen()
+      } else {
+        // iOS Safari (iPhone) n'expose pas l'API Fullscreen : on bascule en
+        // pseudo plein écran (mode immersif CSS) pour ne pas bloquer le joueur.
+        pseudoFullscreenRef.current = true
+        document.documentElement.classList.add('ios-pseudo-fullscreen')
+        setIsFullscreenActive(true)
+        // Tente de masquer la barre d'adresse Safari.
+        window.setTimeout(() => window.scrollTo(0, 1), 50)
       }
       setFullscreenRequestError('')
     } catch {
@@ -314,6 +326,13 @@ export function App() {
 
   const exitDeviceFullscreen = async (): Promise<void> => {
     try {
+      if (pseudoFullscreenRef.current) {
+        pseudoFullscreenRef.current = false
+        document.documentElement.classList.remove('ios-pseudo-fullscreen')
+        setIsFullscreenActive(false)
+        setFullscreenRequestError('')
+        return
+      }
       const doc = document as Document & { webkitExitFullscreen?: () => Promise<void> | void }
       if (doc.exitFullscreen) {
         await doc.exitFullscreen()
