@@ -929,7 +929,7 @@ export function App() {
           } catch {
             // Partie indisponible, on garde la logique locale par objectifs.
           }
-          
+
           setVanData(prev => ({
             vanStep: typeof device.vanStep === 'number' ? device.vanStep : undefined,
             vanPendingPhoto: typeof device.vanPendingPhoto === 'string' ? device.vanPendingPhoto : undefined,
@@ -1182,7 +1182,7 @@ export function App() {
       return
     }
 
-    if (answer !== 'oni') {
+    if (answer !== 'shade' || answer !== 'demon' || answer !== 'oni') {
       setVanGhostDeclarationError('Ce n’est pas le bon spectre.')
       return
     }
