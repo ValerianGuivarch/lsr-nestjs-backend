@@ -5,6 +5,7 @@ interface DashboardConfig {
   features: {
     l7r: boolean
     ghost: boolean
+    pf2: boolean
     wedding: boolean
     jdr: boolean
     diary: boolean
@@ -21,6 +22,7 @@ export class ConfigController {
       features: {
         l7r: this.envEnabled('DISPLAY_L7R', false),
         ghost: this.envEnabled('DISPLAY_GHOST', false),
+        pf2: true,
         wedding: this.envEnabled('DISPLAY_WEDDING', false),
         jdr: this.envEnabled('DISPLAY_JDR', false),
         diary: this.envEnabled('DISPLAY_DIARY', false)

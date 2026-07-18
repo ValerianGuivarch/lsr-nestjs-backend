@@ -35,6 +35,7 @@ import WeddingWallAdmin from '../../web-misc/src/wedding-photos/WeddingWallAdmin
 import Diary from '../../web-year-diary/src/components/Diary'
 import GhostApp from '../../web-ghost-dashboard/src/app/app'
 import GhostPlayerApp from '../../web-ghost-player/src/app/app'
+import Pf2App from '../../web-pf2/src/app/app'
 import AdminPage from '../../web-jdr/src/pages/AdminPage'
 import MjPage from '../../web-jdr/src/pages/MjPage'
 import MjConfigPage from '../../web-jdr/src/pages/MjConfigPage'
@@ -92,6 +93,8 @@ root.render(
           <Route path="/ghost/dashboard" element={<GhostApp />} />
           <Route path="/ghost/player" element={<GhostPlayerApp />} />
           <Route path="/ghost-cards" element={<GhostPlayerApp />} />
+
+          <Route path="/pf2" element={<Pf2App />} />
 
           <>
             <Route path="/jdr/admin" element={<AdminPage />} />

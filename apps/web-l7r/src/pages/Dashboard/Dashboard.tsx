@@ -55,6 +55,7 @@ const Card = styled.button`
 interface Features {
   l7r: boolean
   ghost: boolean
+  pf2: boolean
   wedding: boolean
   jdr: boolean
   diary: boolean
@@ -73,6 +74,7 @@ export const Dashboard: React.FC = () => {
       setFeatures({
         l7r: true,
         ghost: false,
+        pf2: true,
         wedding: false,
         jdr: false,
         diary: true
@@ -96,6 +98,11 @@ export const Dashboard: React.FC = () => {
         {features.ghost && (
           <Card onClick={() => navigate('/ghost/dashboard')}>
             👻 Ghost
+          </Card>
+        )}
+        {features.pf2 && (
+          <Card onClick={() => navigate('/pf2')}>
+            🐉 PF2
           </Card>
         )}
         {features.wedding && (

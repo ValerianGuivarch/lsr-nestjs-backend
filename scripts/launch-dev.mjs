@@ -31,6 +31,7 @@ const profileDescriptions = {
   jdr: 'Lot JDR uniquement',
   ghost: 'Lot Ghost uniquement',
   yeardiary: 'Lot YearDiary uniquement',
+  pf2: 'Application Pathfinder PF2 uniquement',
   legacyGhost: 'Stack Ghost legacy (api + dashboard + player)'
 }
 
@@ -38,6 +39,7 @@ const defaultConfig = {
   backendUnified: true,
   frontendShell: true,
   ghostLegacy: false,
+  pf2App: false,
   stopPortsBeforeLaunch: false,
   domains: {
     hp: true,
@@ -98,6 +100,21 @@ const builtInProfiles = {
   jdr: createLotProfile(['jdr']),
   ghost: createLotProfile(['ghost']),
   yeardiary: createLotProfile(['yeardiary']),
+  pf2: {
+    backendUnified: false,
+    frontendShell: false,
+    ghostLegacy: false,
+    pf2App: true,
+    stopPortsBeforeLaunch: false,
+    domains: {
+      hp: false,
+      l7r: false,
+      wedding: false,
+      jdr: false,
+      ghost: false,
+      yeardiary: false
+    }
+  },
   legacyGhost: {
     backendUnified: false,
     frontendShell: false,
@@ -427,6 +444,10 @@ async function main() {
 
   if (config.ghostLegacy) {
     processes.push(startProcess('ghost-legacy', 'start:ghost', {}, { critical: true }))
+  }
+
+  if (config.pf2App) {
+    processes.push(startProcess('pf2-app', 'dev:web:pf2', {}, { critical: true }))
   }
 
   if (processes.length === 0) {

@@ -63,6 +63,7 @@ function printStartupInfo(): void {
   if (enableL7r) console.log(`  ✓ L7R      → ${frontendUrl}/l7r/dashboard`)
   if (enableJdr) console.log(`  ✓ JDR      → ${frontendUrl}/jdr/dashboard`)
   if (enableGhost) console.log(`  ✓ Ghost    → ${frontendUrl}/ghost/dashboard`)
+  console.log(`  ✓ PF2      → ${frontendUrl}/pf2`)
   if (enableYearDiary) console.log(`  ✓ YearDiary → ${frontendUrl}/yeardiary/dashboard`)
 
   console.log(`\n  Backend API : http://localhost:${backendPort}`)
