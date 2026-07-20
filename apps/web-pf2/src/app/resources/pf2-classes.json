@@ -1,0 +1,290 @@
+[
+  {
+    "id": "alchemist",
+    "name": "Alchimiste",
+    "nameEn": "Alchemist",
+    "urlImage": "https://2e.aonprd.com/Images/Class/Alchemist_Icon.png",
+    "shortDescription": "Spécialiste des préparations, bombes, élixirs, poisons et mutagènes.",
+    "longDescription": "Spécialiste des préparations, bombes, élixirs, poisons et mutagènes. L’alchimiste gagne en puissance lorsqu’il anticipe les dangers, choisit le bon outil et partage ses ressources avec le groupe ; il peut soutenir, soigner ou attaquer selon sa spécialité. Style : technique, polyvalent et exigeant davantage de préparation que la plupart des classes. En combat, son efficacité dépend moins d’une action unique que de la bonne préparation et de l’emploi du bon consommable au bon moment. Hors combat, il excelle dans l’artisanat, l’analyse des substances et la résolution pratique de problèmes.",
+    "rarity": "commune",
+    "difficulté": "difficile",
+    "roleTags": [
+      "alchimie",
+      "soutien",
+      "préparation"
+    ],
+    "sourceUrl": "https://2e.aonprd.com/Classes.aspx"
+  },
+  {
+    "id": "barbarian",
+    "name": "Barbare",
+    "nameEn": "Barbarian",
+    "urlImage": "https://2e.aonprd.com/Images/Class/Barbarian_Icon.png",
+    "shortDescription": "Combattant qui libère une rage liée à un instinct : animal, draconique, géant, spirituel ou autre.",
+    "longDescription": "Combattant qui libère une rage liée à un instinct : animal, draconique, géant, spirituel ou autre. Il inflige de lourds dégâts, encaisse bien et impose une présence immédiate au corps à corps, tout en risquant davantage lorsqu’il se jette dans la mêlée. Style : puissant, direct et spectaculaire, mais pas dépourvu de décisions tactiques. La rage augmente sa menace mais ne supprime ni son intelligence ni sa personnalité : l’instinct choisi raconte l’origine de cette puissance. Hors combat, Athlétisme, Intimidation et Survie lui donnent une présence très concrète.",
+    "rarity": "commune",
+    "difficulté": "simple",
+    "roleTags": [
+      "corps à corps",
+      "dégâts",
+      "résistance"
+    ],
+    "sourceUrl": "https://2e.aonprd.com/Classes.aspx"
+  },
+  {
+    "id": "bard",
+    "name": "Barde",
+    "nameEn": "Bard",
+    "urlImage": "https://2e.aonprd.com/Images/Class/Bard_Icon.png",
+    "shortDescription": "Artiste et lanceur de magie occulte capable d’inspirer ses alliés, perturber ses ennemis et manipuler les émotions, les récits ou les perceptions.",
+    "longDescription": "Artiste et lanceur de magie occulte capable d’inspirer ses alliés, perturber ses ennemis et manipuler les émotions, les récits ou les perceptions. Sa contribution se mesure souvent aux réussites qu’il rend possibles plutôt qu’aux seuls dégâts qu’il inflige. Style : soutien très actif, social, polyvalent et excellent pour une personne qui aime renforcer toute l’équipe. Ses compositions renforcent toute l’équipe avec une régularité remarquable, tandis que ses sorts occultes couvrent illusion, émotion, connaissance et contrôle. Hors combat, il brille dans les interactions sociales, les récits et les savoirs.",
+    "rarity": "commune",
+    "difficulté": "intermédiaire",
+    "roleTags": [
+      "soutien",
+      "magie occulte",
+      "social"
+    ],
+    "sourceUrl": "https://2e.aonprd.com/Classes.aspx"
+  },
+  {
+    "id": "swashbuckler",
+    "name": "Bretteur",
+    "nameEn": "Swashbuckler",
+    "urlImage": "https://2e.aonprd.com/Images/Class/Swashbuckler_Icon.png",
+    "shortDescription": "Duelliste flamboyant qui gagne du panache en accomplissant des actions audacieuses, puis le dépense dans de puissants finishers.",
+    "longDescription": "Duelliste flamboyant qui gagne du panache en accomplissant des actions audacieuses, puis le dépense dans de puissants finishers. Selon son style, il provoque, feinte, danse, intimide ou multiplie les acrobaties pour dominer la scène. Style : mobile, théâtral et risqué, pour qui aime que la manière de combattre compte autant que le résultat. Il gagne du panache en accomplissant des actions audacieuses liées à son style, puis le dépense dans des finishers décisifs. La classe récompense les descriptions dynamiques, le mouvement et la prise de risque maîtrisée.",
+    "rarity": "commune",
+    "difficulté": "intermédiaire",
+    "roleTags": [
+      "panache",
+      "duel",
+      "mobilité"
+    ],
+    "sourceUrl": "https://2e.aonprd.com/Classes.aspx"
+  },
+  {
+    "id": "champion",
+    "name": "Champion",
+    "nameEn": "Champion",
+    "urlImage": "https://2e.aonprd.com/Images/Class/Champion_Icon.png",
+    "shortDescription": "Guerrier sacré lié à une divinité, une cause et des principes précis.",
+    "longDescription": "Guerrier sacré lié à une divinité, une cause et des principes précis. Son armure, ses réactions et ses pouvoirs lui permettent de protéger les autres, de punir certaines actions et de tenir la première ligne ; tous les champions ne sont pas des paladins classiques. Style : défensif, résistant, moralement marqué et très tourné vers le groupe. Ses réactions défensives récompensent une bonne position et une attention constante aux alliés. Hors combat, sa divinité et sa cause donnent immédiatement des convictions, des devoirs et des conflits moraux au personnage.",
+    "rarity": "commune",
+    "difficulté": "intermédiaire",
+    "roleTags": [
+      "défense",
+      "divin",
+      "protection"
+    ],
+    "sourceUrl": "https://2e.aonprd.com/Classes.aspx"
+  },
+  {
+    "id": "druid",
+    "name": "Druide",
+    "nameEn": "Druid",
+    "urlImage": "https://2e.aonprd.com/Images/Class/Druid_Icon.png",
+    "shortDescription": "Lanceur de magie primordiale lié à un ordre druidique, aux animaux, aux plantes, aux tempêtes ou aux transformations.",
+    "longDescription": "Lanceur de magie primordiale lié à un ordre druidique, aux animaux, aux plantes, aux tempêtes ou aux transformations. Il peut soigner, contrôler le terrain, invoquer les forces naturelles ou combattre sous une forme sauvage. Style : très polyvalent, puissant dans l’exploration et la magie, avec une identité façonnée par sa relation à la nature. Son ordre précise son rapport à la nature : animal, tempête, plante, transformation ou autre tradition. Il apporte à la fois magie, exploration, connaissance naturelle et outils de survie.",
+    "rarity": "commune",
+    "difficulté": "difficile",
+    "roleTags": [
+      "nature",
+      "magie primordiale",
+      "contrôle"
+    ],
+    "sourceUrl": "https://2e.aonprd.com/Classes.aspx"
+  },
+  {
+    "id": "investigator",
+    "name": "Enquêteur",
+    "nameEn": "Investigator",
+    "urlImage": "https://2e.aonprd.com/Images/Class/Investigator_Icon.png",
+    "shortDescription": "Détective, analyste ou savant qui transforme l’observation en avantage concret.",
+    "longDescription": "Détective, analyste ou savant qui transforme l’observation en avantage concret. L’investigateur peut anticiper une attaque avant de s’y engager, suivre des pistes et résoudre des problèmes grâce à ses nombreuses compétences et à sa méthodologie. Style : cérébral, précis et excellent hors combat, particulièrement satisfaisant dans les campagnes d’enquête et de mystère. Sa capacité à prévoir le résultat d’une attaque favorise les décisions calculées et l’emploi judicieux des compétences. Hors combat, il est l’une des meilleures classes pour les mystères, les recherches, les indices et la préparation.",
+    "rarity": "commune",
+    "difficulté": "difficile",
+    "roleTags": [
+      "enquête",
+      "compétences",
+      "planification"
+    ],
+    "sourceUrl": "https://2e.aonprd.com/Classes.aspx"
+  },
+  {
+    "id": "sorcerer",
+    "name": "Ensorceleur",
+    "nameEn": "Sorcerer",
+    "urlImage": "https://2e.aonprd.com/Images/Class/Sorcerer_Icon.png",
+    "shortDescription": "Lanceur de sorts dont la magie est innée, héritée d’un lignage draconique, féerique, céleste, démoniaque ou de nombreuses autres sources.",
+    "longDescription": "Lanceur de sorts dont la magie est innée, héritée d’un lignage draconique, féerique, céleste, démoniaque ou de nombreuses autres sources. Son lignage détermine sa tradition magique et une grande partie de son identité, tandis qu’il lance spontanément les sorts qu’il connaît. Style : accessible, charismatique et fortement thématique. Son lignage détermine sa tradition magique, ses pouvoirs et une part importante de son histoire familiale ou surnaturelle. Il lance ses sorts spontanément et convient aux joueurs qui préfèrent une sélection stable à la préparation quotidienne.",
+    "rarity": "commune",
+    "difficulté": "intermédiaire",
+    "roleTags": [
+      "magie spontanée",
+      "lignage",
+      "polyvalence"
+    ],
+    "sourceUrl": "https://2e.aonprd.com/Classes.aspx"
+  },
+  {
+    "id": "fighter",
+    "name": "Guerrier",
+    "nameEn": "Fighter",
+    "urlImage": "https://2e.aonprd.com/Images/Class/Fighter_Icon.png",
+    "shortDescription": "Maître des armes dont la précision dépasse celle des autres combattants.",
+    "longDescription": "Maître des armes dont la précision dépasse celle des autres combattants. Le guerrier peut se spécialiser dans presque n’importe quel style : bouclier, arme lourde, archerie, duel, contrôle ou techniques complexes, tout en restant immédiatement efficace. Style : accessible au départ, extrêmement personnalisable et plus tactique qu’un simple personnage qui frappe à chaque tour. Sa maîtrise supérieure des armes rend fiables les manœuvres offensives comme défensives, et ses dons permettent de construire des styles très distincts. Hors combat, il peut être soldat, maître d’armes, garde, athlète ou chef expérimenté.",
+    "rarity": "commune",
+    "difficulté": "simple",
+    "roleTags": [
+      "martial",
+      "armes",
+      "précision"
+    ],
+    "sourceUrl": "https://2e.aonprd.com/Classes.aspx"
+  },
+  {
+    "id": "summoner",
+    "name": "Invocateur",
+    "nameEn": "Summoner",
+    "urlImage": "https://2e.aonprd.com/Images/Class/Summoner_Icon.png",
+    "shortDescription": "Aventurier lié à un eidolon, puissante entité surnaturelle qui l’accompagne physiquement.",
+    "longDescription": "Aventurier lié à un eidolon, puissante entité surnaturelle qui l’accompagne physiquement. Les deux partagent leur vitalité et combinent leurs actions, donnant l’impression de contrôler un duo plutôt qu’un personnage unique. Style : original, tactique et personnalisable, centré sur la relation entre deux êtres aux rôles complémentaires. Le personnage et son eidolon partagent leurs points de vie et leurs actions, ce qui crée un duo unique à coordonner. L’eidolon est aussi une véritable personnalité et une relation centrale du récit, pas seulement une créature de combat.",
+    "rarity": "commune",
+    "difficulté": "difficile",
+    "roleTags": [
+      "eidolon",
+      "duo",
+      "tactique"
+    ],
+    "sourceUrl": "https://2e.aonprd.com/Classes.aspx"
+  },
+  {
+    "id": "wizard",
+    "name": "Magicien",
+    "nameEn": "Wizard",
+    "urlImage": "https://2e.aonprd.com/Images/Class/Wizard_Icon.png",
+    "shortDescription": "Érudit de la magie arcanique qui prépare ses sorts à partir d’un vaste savoir.",
+    "longDescription": "Érudit de la magie arcanique qui prépare ses sorts à partir d’un vaste savoir. Le magicien récompense l’anticipation, l’étude des dangers et l’emploi du bon sort au bon moment ; ses écoles et sa thèse personnalisent sa façon de pratiquer la magie. Style : très polyvalent, intellectuel et exigeant une bonne connaissance de sa boîte à outils. La préparation quotidienne lui permet d’adapter précisément son arsenal lorsqu’il connaît les dangers à venir. Hors combat, son érudition, ses recherches et sa compréhension de la magie en font un spécialiste naturel des mystères arcaniques.",
+    "rarity": "commune",
+    "difficulté": "difficile",
+    "roleTags": [
+      "magie arcanique",
+      "préparation",
+      "savoir"
+    ],
+    "sourceUrl": "https://2e.aonprd.com/Classes.aspx"
+  },
+  {
+    "id": "magus",
+    "name": "Magus",
+    "nameEn": "Magus",
+    "urlImage": "https://2e.aonprd.com/Images/Class/Magus_Icon.png",
+    "shortDescription": "Combattant arcanique capable de charger son arme avec un sort et de libérer les deux dans une même frappe.",
+    "longDescription": "Combattant arcanique capable de charger son arme avec un sort et de libérer les deux dans une même frappe. Il alterne préparation, mouvement et attaques décisives, avec des pics de puissance impressionnants mais une économie d’actions exigeante. Style : hybride guerrier-mage, explosif et technique, pour qui aime construire un tour autour d’un coup spectaculaire. La Frappe magique concentre arme et sort dans une attaque spectaculaire, mais son rechargement et son placement demandent une bonne gestion des trois actions. Hors combat, il associe souvent compétences martiales, Arcane et étude magique.",
+    "rarity": "commune",
+    "difficulté": "difficile",
+    "roleTags": [
+      "martial",
+      "magie arcanique",
+      "dégâts explosifs"
+    ],
+    "sourceUrl": "https://2e.aonprd.com/Classes.aspx"
+  },
+  {
+    "id": "monk",
+    "name": "Moine",
+    "nameEn": "Monk",
+    "urlImage": "https://2e.aonprd.com/Images/Class/Monk_Icon.png",
+    "shortDescription": "Combattant mobile qui transforme son corps, sa discipline et ses postures en armes.",
+    "longDescription": "Combattant mobile qui transforme son corps, sa discipline et ses postures en armes. Le moine peut frapper rapidement, esquiver, saisir, projeter ou développer des techniques surnaturelles sans dépendre d’un équipement lourd. Style : rapide, autonome et tactique, avec de nombreux choix de mouvements et une forte identité martiale ou spirituelle. Le Déluge de coups lui laisse des actions pour se déplacer, se défendre ou effectuer des manœuvres, ce qui en fait un combattant très fluide. Ses postures permettent des versions très différentes, du lutteur robuste au mystique mobile.",
+    "rarity": "commune",
+    "difficulté": "intermédiaire",
+    "roleTags": [
+      "mobilité",
+      "arts martiaux",
+      "postures"
+    ],
+    "sourceUrl": "https://2e.aonprd.com/Classes.aspx"
+  },
+  {
+    "id": "oracle",
+    "name": "Oracle",
+    "nameEn": "Oracle",
+    "urlImage": "https://2e.aonprd.com/Images/Class/Oracle_Icon.png",
+    "shortDescription": "Lanceur de magie divine dont le pouvoir provient d’un mystère trop vaste pour être canalisé sans conséquence.",
+    "longDescription": "Lanceur de magie divine dont le pouvoir provient d’un mystère trop vaste pour être canalisé sans conséquence. En utilisant ses capacités les plus fortes, l’oracle approfondit une malédiction qui le gêne tout en révélant sa nature exceptionnelle. Style : puissant, dramatique et fondé sur une gestion du risque entre bénédiction et fardeau. Son mystère définit à la fois ses thèmes et les effets de sa malédiction, créant une magie qui ressemble davantage à une révélation dangereuse qu’à un apprentissage classique. Il convient aux personnages marqués par une puissance qu’ils n’ont pas entièrement choisie.",
+    "rarity": "commune",
+    "difficulté": "difficile",
+    "roleTags": [
+      "magie divine",
+      "mystère",
+      "risque"
+    ],
+    "sourceUrl": "https://2e.aonprd.com/Classes.aspx"
+  },
+  {
+    "id": "cleric",
+    "name": "Prêtre",
+    "nameEn": "Cleric",
+    "urlImage": "https://2e.aonprd.com/Images/Class/Cleric_Icon.png",
+    "shortDescription": "Serviteur d’une divinité qui manie la magie divine et reçoit des capacités directement liées à son culte.",
+    "longDescription": "Serviteur d’une divinité qui manie la magie divine et reçoit des capacités directement liées à son culte. Il peut devenir un formidable soigneur, un lanceur de sorts de soutien ou un prêtre combattant en armure, selon sa doctrine et son dieu. Style : polyvalent, spirituel et fortement ancré dans le lore de Golarion. La divinité choisie modifie fortement son identité, ses sorts accordés, son arme et ses obligations, si bien que deux clercs peuvent être radicalement différents. Il est excellent pour relier les règles du personnage au lore religieux de Golarion.",
+    "rarity": "commune",
+    "difficulté": "difficile",
+    "roleTags": [
+      "magie divine",
+      "soins",
+      "soutien"
+    ],
+    "sourceUrl": "https://2e.aonprd.com/Classes.aspx"
+  },
+  {
+    "id": "ranger",
+    "name": "Rôdeur",
+    "nameEn": "Ranger",
+    "urlImage": "https://2e.aonprd.com/Images/Class/Ranger_Icon.png",
+    "shortDescription": "Chasseur qui désigne une proie et concentre sur elle son entraînement, ses sens et ses techniques.",
+    "longDescription": "Chasseur qui désigne une proie et concentre sur elle son entraînement, ses sens et ses techniques. Il peut combattre à deux armes, tirer à distance, voyager avec un compagnon animal ou devenir un maître de la survie et de la traque. Style : efficace contre une cible choisie, autonome et très à l’aise dans l’exploration. Le choix de son avantage de chasseur change sa façon de poursuivre et de combattre sa proie, tandis que ses dons couvrent armes, pièges, compagnons et exploration. Il reste utile bien au-delà des forêts grâce au pistage et à l’observation.",
+    "rarity": "commune",
+    "difficulté": "simple",
+    "roleTags": [
+      "traque",
+      "survie",
+      "martial"
+    ],
+    "sourceUrl": "https://2e.aonprd.com/Classes.aspx"
+  },
+  {
+    "id": "rogue",
+    "name": "Roublard",
+    "nameEn": "Rogue",
+    "urlImage": "https://2e.aonprd.com/Images/Class/Rogue_Icon.png",
+    "shortDescription": "Expert des compétences et des attaques opportunistes, capable d’exploiter la moindre ouverture pour infliger des dégâts précis.",
+    "longDescription": "Expert des compétences et des attaques opportunistes, capable d’exploiter la moindre ouverture pour infliger des dégâts précis. Le roublard peut être voleur, acrobate, escroc, assassin, savant ou diplomate selon son racket et ses choix. Style : agile, polyvalent hors combat et récompensant la coopération qui place les ennemis en mauvaise posture. Ses nombreuses compétences lui permettent de devenir l’expert du groupe dans plusieurs domaines, tandis que l’attaque sournoise récompense la coopération et le placement. Le racket choisi peut produire un voleur, un escrimeur, un enquêteur, un brute ou un intellectuel.",
+    "rarity": "commune",
+    "difficulté": "intermédiaire",
+    "roleTags": [
+      "compétences",
+      "discrétion",
+      "précision"
+    ],
+    "sourceUrl": "https://2e.aonprd.com/Classes.aspx"
+  },
+  {
+    "id": "witch",
+    "name": "Sorcier",
+    "nameEn": "Witch",
+    "urlImage": "https://2e.aonprd.com/Images/Class/Witch_Icon.png",
+    "shortDescription": "Lanceuse de sorts liée à un mystérieux patron qui transmet sa magie par l’intermédiaire d’un familier exceptionnel.",
+    "longDescription": "Lanceuse de sorts liée à un mystérieux patron qui transmet sa magie par l’intermédiaire d’un familier exceptionnel. Ses maléfices et son choix de patron peuvent en faire une soigneuse, une manipulatrice, une spécialiste des secrets ou une figure inquiétante. Style : thématique, flexible et idéal pour jouer une relation ambiguë avec une puissance invisible. Son familier contient et transmet les leçons d’un patron mystérieux, tandis que ses hexes apportent des pouvoirs récurrents. La tradition magique et le patron permettent aussi bien une guérisseuse féerique qu’une occultiste inquiétante ou une mage des éléments.",
+    "rarity": "commune",
+    "difficulté": "difficile",
+    "roleTags": [
+      "familier",
+      "patron",
+      "maléfices"
+    ],
+    "sourceUrl": "https://2e.aonprd.com/Classes.aspx"
+  }
+]

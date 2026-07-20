@@ -95,6 +95,41 @@ button {
   margin-bottom: 0.75rem;
 }
 
+.pf2-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.85rem;
+  margin: 0 0 1rem;
+}
+
+.pf2-filter {
+  display: grid;
+  gap: 0.35rem;
+  min-width: 180px;
+}
+
+.pf2-filter span {
+  color: #9ec0ff;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.pf2-filter select {
+  appearance: none;
+  border: 1px solid rgba(134, 180, 255, 0.25);
+  border-radius: 0.8rem;
+  background: rgba(8, 18, 34, 0.95);
+  color: #f5f7ff;
+  padding: 0.75rem 0.85rem;
+  min-height: 48px;
+}
+
+.pf2-filter select:focus {
+  outline: 2px solid rgba(134, 180, 255, 0.45);
+  outline-offset: 2px;
+}
+
 .pf2-count {
   color: #86b4ff;
   font-size: 0.92rem;
@@ -301,6 +336,56 @@ button {
 
 .pf2-detail a {
   color: #8ab3ff;
+}
+
+.pf2-tag--difficulty {
+  background: rgba(180, 140, 255, 0.15);
+  border-color: rgba(180, 140, 255, 0.3);
+  color: #c8aaff;
+}
+
+.pf2-heritages {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.pf2-heritages-title {
+  margin: 0;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #86b4ff;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.pf2-heritage-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.4rem;
+}
+
+.pf2-heritage-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  padding: 0.45rem 0.7rem;
+  border-left: 2px solid rgba(127, 174, 255, 0.35);
+  background: rgba(127, 174, 255, 0.05);
+  border-radius: 0 0.4rem 0.4rem 0;
+}
+
+.pf2-heritage-name {
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: #c8deff;
+}
+
+.pf2-heritage-desc {
+  font-size: 0.81rem;
+  color: #a8bce0;
+  line-height: 1.4;
 }
 
 @media (max-width: 980px) {

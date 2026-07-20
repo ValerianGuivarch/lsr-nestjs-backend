@@ -1,8 +1,15 @@
 import { useMemo, useState } from 'react'
 import './app.css'
 import pf2Data from './resources/pf2.json'
+import ascendancesData from './resources/pf2-ascendances.json'
+import classesData from './resources/pf2-classes.json'
 
 type TabKey = 'historique' | 'ascendance' | 'classe' | 'dieu' | 'origine'
+
+type Heritage = {
+  nomHeritage: string
+  descriptionHeritage: string
+}
 
 type Pf2Entry = {
   id: string
@@ -12,6 +19,7 @@ type Pf2Entry = {
   shortDescription?: string
   longDescription?: string
   rarity?: string
+  difficulté?: string
   sourceUrl?: string
   region?: string
   continent?: string
@@ -22,6 +30,7 @@ type Pf2Entry = {
   accessibility?: string
   areasOfConcern?: string[]
   roleTags?: string[]
+  heritages?: Heritage[]
   status?: string
 }
 
@@ -41,6 +50,13 @@ type TabDefinition = {
   title: string
   jsonKey: keyof Pick<Pf2Data, 'historiques' | 'ascendances' | 'classes' | 'dieux' | 'origines'>
 }
+
+type EntryFilterState = {
+  rarity: string
+  difficulty: string
+}
+
+type TabFilterState = Record<'ascendance' | 'classe', EntryFilterState>
 
 const tabs: TabDefinition[] = [
   { id: 'ascendance', label: 'Ascendance', title: 'Ascendances', jsonKey: 'ascendances' },
@@ -98,25 +114,71 @@ function getGroupKey(entry: Pf2Entry, tabId: TabKey): string {
 function getEntryBadge(entry: Pf2Entry, tabId: TabKey): string {
   if (tabId === 'dieu') return entry.category ?? ''
   if (tabId === 'origine') return entry.accessibility ?? ''
-  if (tabId === 'classe') return ''
+  if (tabId === 'classe') return entry.difficulté ?? ''
   return toLabel(entry.rarity)
+}
+
+function getDifficultyLabel(value?: string): string {
+  if (!value || !value.trim()) return 'non précisée'
+  return value.trim().toLowerCase()
+}
+
+function getDifficultySortRank(value?: string): number {
+  const normalized = getDifficultyLabel(value)
+  const order = ['simple', 'intermédiaire', 'difficile', 'non précisée']
+  const index = order.indexOf(normalized)
+  return index === -1 ? order.length : index
 }
 
 export function App() {
   const [activeTab, setActiveTab] = useState<TabKey>('ascendance')
   const [expandedEntryId, setExpandedEntryId] = useState<string | null>(null)
+  const [filtersByTab, setFiltersByTab] = useState<TabFilterState>({
+    ascendance: { rarity: '', difficulty: '' },
+    classe: { rarity: '', difficulty: '' }
+  })
 
-  const data = pf2Data as Pf2Data
+  const data = useMemo<Pf2Data>(() => ({
+    ...(pf2Data as Pf2Data),
+    ascendances: ascendancesData as Pf2Entry[],
+    classes: classesData as Pf2Entry[],
+  }), [])
 
   const currentTab = useMemo(() => tabs.find(tab => tab.id === activeTab) ?? tabs[0], [activeTab])
   const currentEntries = useMemo(() => {
     return data[currentTab.jsonKey] ?? []
   }, [currentTab, data])
 
+  const filterTabId = activeTab === 'ascendance' || activeTab === 'classe' ? activeTab : null
+
+  const activeFilters = filterTabId ? filtersByTab[filterTabId] : null
+
+  const rarityOptions = useMemo(() => {
+    if (!activeFilters) return []
+    return [...new Set(currentEntries.map(entry => normalizeRarity(entry.rarity)))]
+      .sort((rarityA, rarityB) => getRarityRank(rarityA) - getRarityRank(rarityB))
+  }, [activeFilters, currentEntries])
+
+  const difficultyOptions = useMemo(() => {
+    if (!activeFilters) return []
+    return [...new Set(currentEntries.map(entry => getDifficultyLabel(entry.difficulté)))]
+      .sort((difficultyA, difficultyB) => getDifficultySortRank(difficultyA) - getDifficultySortRank(difficultyB))
+  }, [activeFilters, currentEntries])
+
+  const filteredEntries = useMemo(() => {
+    if (!activeFilters) return currentEntries
+
+    return currentEntries.filter((entry) => {
+      const matchesRarity = !activeFilters.rarity || normalizeRarity(entry.rarity) === activeFilters.rarity
+      const matchesDifficulty = !activeFilters.difficulty || getDifficultyLabel(entry.difficulté) === activeFilters.difficulty
+      return matchesRarity && matchesDifficulty
+    })
+  }, [activeFilters, currentEntries])
+
   const groupedEntries = useMemo(() => {
     const grouped = new Map<string, Pf2Entry[]>()
 
-    currentEntries.forEach((entry) => {
+    filteredEntries.forEach((entry) => {
       const key = getGroupKey(entry, activeTab)
       const existing = grouped.get(key) ?? []
       existing.push(entry)
@@ -132,12 +194,12 @@ export function App() {
         groupKey,
         entries: entries.sort((entryA, entryB) => getEntryTitle(entryA).localeCompare(getEntryTitle(entryB), 'fr'))
       }))
-  }, [currentEntries, activeTab])
+  }, [filteredEntries, activeTab])
 
   const expandedEntry = useMemo(() => {
     if (!expandedEntryId) return null
-    return currentEntries.find(entry => entry.id === expandedEntryId) ?? null
-  }, [currentEntries, expandedEntryId])
+    return filteredEntries.find(entry => entry.id === expandedEntryId) ?? null
+  }, [filteredEntries, expandedEntryId])
 
   return (
     <main className="pf2-page">
@@ -147,7 +209,8 @@ export function App() {
         <p>
           Données chargées depuis la ressource locale
           {' '}
-          <strong>apps/web-pf2/src/app/resources/pf2.json</strong>.
+          <strong>apps/web-pf2/src/app/resources/pf2.json</strong>,
+          <strong>pf2-ascendances.json</strong> et <strong>pf2-classes.json</strong>.
         </p>
       </header>
 
@@ -168,10 +231,60 @@ export function App() {
         <h2>
           {currentTab.title}
           {' '}
-          <span className="pf2-count">({currentEntries.length})</span>
+          <span className="pf2-count">({filteredEntries.length})</span>
         </h2>
 
-        {currentEntries.length === 0 && (
+        {activeFilters && (
+          <div className="pf2-filters" aria-label="Filtres de liste">
+            <label className="pf2-filter">
+              <span>Rareté</span>
+              <select
+                value={activeFilters.rarity}
+                onChange={(event) => {
+                  const rarity = event.target.value
+                    if (!filterTabId) return
+                  setFiltersByTab((current) => ({
+                    ...current,
+                      [filterTabId]: {
+                        ...current[filterTabId],
+                      rarity
+                    }
+                  }))
+                }}
+              >
+                <option value="">Tous</option>
+                {rarityOptions.map(rarity => (
+                  <option key={rarity} value={rarity}>{rarity}</option>
+                ))}
+              </select>
+            </label>
+
+            <label className="pf2-filter">
+              <span>Difficulté</span>
+              <select
+                value={activeFilters.difficulty}
+                onChange={(event) => {
+                  const difficulty = event.target.value
+                    if (!filterTabId) return
+                  setFiltersByTab((current) => ({
+                    ...current,
+                      [filterTabId]: {
+                        ...current[filterTabId],
+                      difficulty
+                    }
+                  }))
+                }}
+              >
+                <option value="">Tous</option>
+                {difficultyOptions.map(difficulty => (
+                  <option key={difficulty} value={difficulty}>{difficulty}</option>
+                ))}
+              </select>
+            </label>
+          </div>
+        )}
+
+        {filteredEntries.length === 0 && (
           <p>Aucune entrée disponible pour cet onglet dans la ressource actuelle.</p>
         )}
 
@@ -231,8 +344,9 @@ export function App() {
                           )}
                           {activeTab === 'classe' && entry.roleTags && entry.roleTags.length > 0 && (
                             <p className="pf2-compact-extra">{entry.roleTags.join(' · ')}</p>
-                          )}
-                          {activeTab === 'origine' && entry.continent && (
+                          )}                          {activeTab === 'ascendance' && entry.difficulté && (
+                            <p className="pf2-compact-extra">{entry.difficulté}</p>
+                          )}                          {activeTab === 'origine' && entry.continent && (
                             <p className="pf2-compact-extra">{entry.continent}</p>
                           )}
                         </div>
@@ -258,12 +372,30 @@ export function App() {
                               ))}
                             </div>
                           )}
+                          {(activeTab === 'ascendance' || activeTab === 'classe') && entry.difficulté && (
+                            <div className="pf2-tags">
+                              <span className="pf2-tag pf2-tag--difficulty">difficulté : {entry.difficulté}</span>
+                            </div>
+                          )}
                           {activeTab === 'origine' && (entry.originType ?? entry.continent ?? entry.accessibility) && (
                             <p className="pf2-detail-meta">
                               {[entry.originType, entry.continent, entry.accessibility].filter(Boolean).join(' · ')}
                             </p>
                           )}
                           {entry.longDescription && <p>{entry.longDescription}</p>}
+                          {activeTab === 'ascendance' && entry.heritages && entry.heritages.length > 0 && (
+                            <div className="pf2-heritages">
+                              <p className="pf2-heritages-title">Héritages</p>
+                              <ul className="pf2-heritage-list">
+                                {entry.heritages.map(h => (
+                                  <li key={h.nomHeritage} className="pf2-heritage-item">
+                                    <span className="pf2-heritage-name">{h.nomHeritage}</span>
+                                    <span className="pf2-heritage-desc">{h.descriptionHeritage}</span>
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
                         </div>
                       )}
                     </article>

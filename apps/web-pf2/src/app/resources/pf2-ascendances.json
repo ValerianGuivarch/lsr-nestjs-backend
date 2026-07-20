@@ -1,0 +1,792 @@
+[
+  {
+    "id": "android",
+    "name": "Androïde",
+    "nameEn": "Android",
+    "urlImage": "https://2e.aonprd.com/Images//Ancestries/Android01.png",
+    "shortDescription": "Être doté d’un corps synthétique et d’une âme véritable, héritier de technologies venues d’au-delà de Golarion.",
+    "longDescription": "Être doté d’un corps synthétique et d’une âme véritable, héritier de technologies venues d’au-delà de Golarion. Les androïdes peuvent paraître calmes et distants, mais leurs émotions et leur identité sont aussi réelles que celles de n’importe quel mortel. À choisir pour explorer la conscience, la mémoire, la technologie et la recherche d’une place parmi les vivants. Le personnage peut explorer la continuité de l’âme, la mémoire imparfaite, la liberté face à une origine technologique et la difficulté d’être perçu comme une personne entière.",
+    "rarity": "rare",
+    "difficulté": "intermédiaire",
+    "sourceUrl": "https://2e.aonprd.com/Ancestries.aspx",
+    "heritages": [
+      {
+        "nomHeritage": "Androïde artisan",
+        "descriptionHeritage": "Conçu pour fabriquer, réparer ou entretenir des ouvrages complexes, vous êtes naturellement doué en Artisanat."
+      },
+      {
+        "nomHeritage": "Androïde guerrier",
+        "descriptionHeritage": "Programmé pour le combat et la sécurité, vous maîtrisez naturellement un large éventail d’armes."
+      },
+      {
+        "nomHeritage": "Androïde imitateur",
+        "descriptionHeritage": "Votre apparence et vos routines sociales ont été adaptées pour vous permettre de passer plus facilement pour un humain."
+      },
+      {
+        "nomHeritage": "Androïde travailleur",
+        "descriptionHeritage": "Votre corps est conçu pour supporter les efforts prolongés, les lourdes charges et les travaux physiques exigeants."
+      },
+      {
+        "nomHeritage": "Androïde polyglotte",
+        "descriptionHeritage": "Préprogrammé pour servir d’interprète, vous connaissez plusieurs langues supplémentaires."
+      }
+    ]
+  },
+  {
+    "id": "azarketi",
+    "name": "Azarketi",
+    "nameEn": "Azarketi",
+    "urlImage": "https://2e.aonprd.com/Images//Ancestries/Azarketi01.png",
+    "shortDescription": "Descendants aquatiques d’un empire englouti, les azarketis portent avec eux la fierté, les blessures et les traditions d’Azlant.",
+    "longDescription": "Descendants aquatiques d’un empire englouti, les azarketis portent avec eux la fierté, les blessures et les traditions d’Azlant. Ils vivent entre les profondeurs et le monde de la surface, parfois fascinés par les ruines de leur passé. À choisir pour un héritier d’une civilisation perdue, partagé entre nostalgie, adaptation et exploration. Le lien avec Azlant peut prendre la forme d’une fierté ancestrale, d’un deuil collectif, d’une obsession archéologique ou d’un désir de bâtir quelque chose de nouveau.",
+    "rarity": "peu commune",
+    "difficulté": "difficile",
+    "sourceUrl": "https://2e.aonprd.com/Ancestries.aspx",
+    "heritages": [
+      {
+        "nomHeritage": "Azarketi endurci",
+        "descriptionHeritage": "Adapté aux eaux polluées, vous résistez mieux aux poisons et pouvez rester plus longtemps hors de l’eau."
+      },
+      {
+        "nomHeritage": "Azarketi épineux",
+        "descriptionHeritage": "Vos nageoires dissimulent des épines toxiques que vous pouvez projeter à distance."
+      },
+      {
+        "nomHeritage": "Azarketi tactile",
+        "descriptionHeritage": "Votre peau perçoit les mouvements et les variations des courants autour de vous."
+      },
+      {
+        "nomHeritage": "Azarketi troublien",
+        "descriptionHeritage": "Habitué aux eaux troubles, vous distinguez plus facilement les créatures malgré une mauvaise visibilité."
+      }
+    ]
+  },
+  {
+    "id": "fleshwarp",
+    "name": "Distordu",
+    "nameEn": "Fleshwarp",
+    "urlImage": "https://2e.aonprd.com/Images//Ancestries/Fleshwarp01.png",
+    "shortDescription": "Personne dont le corps a été créé ou profondément transformé par la magie, l’alchimie, une expérience ou des énergies anormales.",
+    "longDescription": "Personne dont le corps a été créé ou profondément transformé par la magie, l’alchimie, une expérience ou des énergies anormales. Chaque fleshwarp est presque une ascendance à lui seul, avec une apparence et une histoire uniques. À choisir pour un personnage marqué par la transformation, la différence, la survie et la reconstruction de son identité. Chaque fleshwarp peut avoir une origine différente, volontaire ou subie, ce qui en fait une ascendance idéale pour parler de transformation, de corps et de reconstruction.",
+    "rarity": "rare",
+    "difficulté": "intermédiaire",
+    "sourceUrl": "https://2e.aonprd.com/Ancestries.aspx",
+    "heritages": [
+      {
+        "nomHeritage": "Distordu créé",
+        "descriptionHeritage": "Assemblé ou cultivé par des procédés occultes ou alchimiques, votre organisme résiste particulièrement bien aux maladies."
+      },
+      {
+        "nomHeritage": "Distordu forgé",
+        "descriptionHeritage": "Votre transformation physique traumatisante a renforcé votre esprit contre les atteintes mentales."
+      },
+      {
+        "nomHeritage": "Distordu mutant",
+        "descriptionHeritage": "Une magie incontrôlée vous a doté d’organes renforcés ou surnuméraires qui limitent les saignements."
+      },
+      {
+        "nomHeritage": "Distordu technologique",
+        "descriptionHeritage": "Altéré par une technologie avancée, vous gardez plus facilement votre sang-froid face aux effets émotionnels."
+      }
+    ]
+  },
+  {
+    "id": "elf",
+    "name": "Elfe",
+    "nameEn": "Elf",
+    "urlImage": "https://2e.aonprd.com/Images//Ancestries/Elf01.png",
+    "shortDescription": "Peuple longévif, gracieux et profondément lié à l’art, à la magie et aux transformations du temps.",
+    "longDescription": "Peuple longévif, gracieux et profondément lié à l’art, à la magie et aux transformations du temps. Un elfe peut avoir connu plusieurs vies sociales au cours d’un même siècle et porter un regard très différent sur l’urgence des peuples plus brefs. À choisir pour une figure élégante, ancienne, curieuse ou déracinée. Le contraste entre leur longue mémoire et la brièveté des vies voisines nourrit facilement des personnages contemplatifs, impatients, nostalgiques ou avides de renouveau.",
+    "rarity": "commune",
+    "difficulté": "simple",
+    "sourceUrl": "https://2e.aonprd.com/Ancestries.aspx",
+    "heritages": [
+      {
+        "nomHeritage": "Elfe ancien",
+        "descriptionHeritage": "Votre longue existence vous a permis d’explorer plusieurs vocations et d’acquérir une expérience inhabituelle."
+      },
+      {
+        "nomHeritage": "Elfe arctique",
+        "descriptionHeritage": "Adapté aux régions glaciales, vous résistez mieux au froid et aux environnements polaires."
+      },
+      {
+        "nomHeritage": "Elfe des bois",
+        "descriptionHeritage": "Habitué aux forêts et aux jungles, vous grimpez aisément et exploitez naturellement la végétation pour vous protéger."
+      },
+      {
+        "nomHeritage": "Elfe des cavernes",
+        "descriptionHeritage": "Votre vie dans les profondeurs vous a donné la capacité de voir dans l’obscurité totale."
+      },
+      {
+        "nomHeritage": "Elfe des murmures",
+        "descriptionHeritage": "Votre ouïe exceptionnelle vous aide à repérer et viser les créatures dissimulées à proximité."
+      },
+      {
+        "nomHeritage": "Elfe visionnaire",
+        "descriptionHeritage": "Vous percevez instinctivement la magie et comprenez plus facilement les phénomènes et textes magiques."
+      }
+    ]
+  },
+  {
+    "id": "catfolk",
+    "name": "Félide",
+    "nameEn": "Catfolk",
+    "urlImage": "https://2e.aonprd.com/Images//Ancestries/Catfolk01.webp",
+    "shortDescription": "Humanoïdes félins sociables, curieux et volontiers voyageurs.",
+    "longDescription": "Humanoïdes félins sociables, curieux et volontiers voyageurs. Leur vivacité, leur goût pour les rencontres et leur réputation de chance les poussent souvent vers le commerce, les arts, l’aventure ou la collecte d’histoires. À choisir pour un personnage mobile, expressif, charmeur, indépendant ou toujours tenté par ce qui se cache derrière la prochaine porte. Leur curiosité n’implique pas l’inconstance : un catfolk peut être un voyageur enthousiaste, un protecteur loyal, un marchand rusé ou un collectionneur de récits.",
+    "rarity": "peu commune",
+    "difficulté": "simple",
+    "sourceUrl": "https://2e.aonprd.com/Ancestries.aspx",
+    "heritages": [
+      {
+        "nomHeritage": "Félide chasseur",
+        "descriptionHeritage": "Votre odorat développé vous permet de repérer et de suivre plus facilement les créatures."
+      },
+      {
+        "nomHeritage": "Félide griffu",
+        "descriptionHeritage": "Vous possédez de longues griffes naturelles capables d’infliger de sérieuses blessures."
+      },
+      {
+        "nomHeritage": "Félide hivernal",
+        "descriptionHeritage": "Votre épaisse fourrure vous protège du froid et des environnements glacials."
+      },
+      {
+        "nomHeritage": "Félide de la jungle",
+        "descriptionHeritage": "Vous vous déplacez avec aisance dans les broussailles, les sous-bois et les terrains végétalisés."
+      },
+      {
+        "nomHeritage": "Félide liminal",
+        "descriptionHeritage": "Votre lien avec les frontières entre les plans vous permet de percevoir la magie et de mieux comprendre les créatures extraplanaires."
+      },
+      {
+        "nomHeritage": "Félide aux neuf vies",
+        "descriptionHeritage": "Une chance presque surnaturelle vous aide à survivre lorsque vous êtes aux portes de la mort."
+      },
+      {
+        "nomHeritage": "Félide à l’oreille fine",
+        "descriptionHeritage": "Vos grandes oreilles sensibles vous permettent de localiser rapidement les créatures que vous entendez."
+      }
+    ]
+  },
+  {
+    "id": "fetchling",
+    "name": "Fétchelin",
+    "nameEn": "Fetchling",
+    "urlImage": "https://2e.aonprd.com/Images//Ancestries/Fetchling01.png",
+    "shortDescription": "Descendants d’humains transformés par l’influence durable du Plan de l’Ombre.",
+    "longDescription": "Descendants d’humains transformés par l’influence durable du Plan de l’Ombre. Leur apparence monochrome, leurs yeux lumineux et leur affinité avec les ténèbres leur donnent une présence surnaturelle, sans les rendre mauvais. À choisir pour un personnage silencieux, mystérieux, élégant ou partagé entre le monde matériel et une culture façonnée par l’ombre. Leur culture peut être liée au Néthermonde, aux communautés d’ombre ou à des familles installées depuis longtemps sur Golarion.",
+    "rarity": "peu commune",
+    "difficulté": "intermédiaire",
+    "sourceUrl": "https://2e.aonprd.com/Ancestries.aspx",
+    "heritages": [
+      {
+        "nomHeritage": "Fétchelin des profondeurs",
+        "descriptionHeritage": "Issu des régions les plus sombres du plan de l’ombre, vous résistez au froid ou aux énergies négatives."
+      },
+      {
+        "nomHeritage": "Fétchelin déterminé",
+        "descriptionHeritage": "Les horreurs affrontées par votre lignée ont renforcé votre esprit contre les effets émotionnels."
+      },
+      {
+        "nomHeritage": "Fétchelin liminal",
+        "descriptionHeritage": "Votre proximité avec les plans éthéré et de l’ombre vous aide à détecter les présences difficiles à percevoir."
+      },
+      {
+        "nomHeritage": "Fétchelin lumineux",
+        "descriptionHeritage": "Votre corps et votre ombre peuvent émettre une lueur surnaturelle et produire de petites manifestations lumineuses."
+      },
+      {
+        "nomHeritage": "Fétchelin menu",
+        "descriptionHeritage": "Plus petit, léger et agile que la plupart des vôtres, vous excellez dans les déplacements acrobatiques."
+      }
+    ]
+  },
+  {
+    "id": "gnome",
+    "name": "Gnome",
+    "nameEn": "Gnome",
+    "urlImage": "https://2e.aonprd.com/Images//Ancestries/Gnome01.png",
+    "shortDescription": "Petit peuple marqué par le Premier Monde, animé par une curiosité presque vitale.",
+    "longDescription": "Petit peuple marqué par le Premier Monde, animé par une curiosité presque vitale. Les gnomes recherchent souvent la nouveauté, les couleurs, les expériences et les passions singulières, qu’elles soient artistiques, mécaniques ou magiques. À choisir pour un personnage inventif, excentrique, émerveillé ou inquiet de voir le monde devenir trop prévisible. La quête de nouveauté peut être joyeuse, mais aussi urgente : un gnome qui cesse de s’émerveiller risque de perdre peu à peu ses couleurs et sa vitalité.",
+    "rarity": "commune",
+    "difficulté": "intermédiaire",
+    "sourceUrl": "https://2e.aonprd.com/Ancestries.aspx",
+    "heritages": [
+      {
+        "nomHeritage": "Gnome béni des fées",
+        "descriptionHeritage": "Votre sang féerique vous rapproche du Premier Monde et vous accorde un tour de magie primordial."
+      },
+      {
+        "nomHeritage": "Gnome caméléon",
+        "descriptionHeritage": "Vous pouvez modifier les couleurs et motifs de votre corps afin de mieux vous fondre dans votre environnement."
+      },
+      {
+        "nomHeritage": "Gnome des sources",
+        "descriptionHeritage": "Une autre tradition magique que la magie primordiale façonne votre héritage et vous accorde un tour de magie associé."
+      },
+      {
+        "nomHeritage": "Gnome ombral",
+        "descriptionHeritage": "Votre lien avec les fées sombres ou les profondeurs vous permet de voir dans l’obscurité."
+      },
+      {
+        "nomHeritage": "Gnome sensitif",
+        "descriptionHeritage": "Vos sens particulièrement fins, notamment votre odorat, vous aident à détecter les créatures proches."
+      }
+    ]
+  },
+  {
+    "id": "goblin",
+    "name": "Gobelin",
+    "nameEn": "Goblin",
+    "urlImage": "https://2e.aonprd.com/Images//Ancestries/Goblin01.png",
+    "shortDescription": "Petits humanoïdes énergiques, bruyants et incroyablement adaptables, longtemps victimes d’une réputation monstrueuse.",
+    "longDescription": "Petits humanoïdes énergiques, bruyants et incroyablement adaptables, longtemps victimes d’une réputation monstrueuse. Beaucoup aiment le feu, les chansons, les objets bricolés et les idées qui semblent mauvaises jusqu’à ce qu’elles fonctionnent. À choisir pour un personnage débrouillard, excessif, comique sans être idiot, ou déterminé à changer le regard des autres. Les gobelins de PF2 ne sont pas condamnés au rôle de monstres comiques : ils peuvent être héros, artisans, érudits ou chefs, tout en conservant leur énergie et leur culture singulière.",
+    "rarity": "commune",
+    "difficulté": "simple",
+    "sourceUrl": "https://2e.aonprd.com/Ancestries.aspx",
+    "heritages": [
+      {
+        "nomHeritage": "Gobelin boyaud’fer",
+        "descriptionHeritage": "Votre estomac exceptionnellement robuste supporte les aliments avariés et vous protège de nombreuses afflictions ingérées."
+      },
+      {
+        "nomHeritage": "Gobelin dentd’rasoir",
+        "descriptionHeritage": "Vos dents particulièrement longues et tranchantes constituent une redoutable arme naturelle."
+      },
+      {
+        "nomHeritage": "Gobelin des neiges",
+        "descriptionHeritage": "Votre fourrure et votre constitution vous protègent du froid et des climats glacials."
+      },
+      {
+        "nomHeritage": "Gobelin incassable",
+        "descriptionHeritage": "Vos os souples et votre crâne épais vous rendent particulièrement robuste et résistant aux chutes."
+      },
+      {
+        "nomHeritage": "Gobelin peaud’charbon",
+        "descriptionHeritage": "Votre peau épaisse et votre affinité ancestrale avec les flammes vous protègent du feu."
+      }
+    ]
+  },
+  {
+    "id": "halfling",
+    "name": "Halfelin",
+    "nameEn": "Halfling",
+    "urlImage": "https://2e.aonprd.com/Images//Ancestries/Halfling01.png",
+    "shortDescription": "Petit peuple résilient, chaleureux et souvent sous-estimé.",
+    "longDescription": "Petit peuple résilient, chaleureux et souvent sous-estimé. Les halfelins savent se fondre dans les communautés, observer les puissants et survivre là où d’autres s’effondrent ; certains recherchent le confort, d’autres la route et la liberté. À choisir pour un héros discret, chanceux, sociable, rusé ou étonnamment courageux. Leur histoire mêle communautés chaleureuses, diasporas, voyages et parfois lutte contre l’asservissement, ce qui permet des personnages bien plus variés que le simple amateur de confort.",
+    "rarity": "commune",
+    "difficulté": "simple",
+    "sourceUrl": "https://2e.aonprd.com/Ancestries.aspx",
+    "heritages": [
+      {
+        "nomHeritage": "Halfelin bois-sauvage",
+        "descriptionHeritage": "Habitué aux jungles et aux forêts, vous traversez sans gêne les terrains difficiles formés par les plantes et les champignons."
+      },
+      {
+        "nomHeritage": "Halfelin des collines",
+        "descriptionHeritage": "Le repos, le confort et un bon repas vous permettent de récupérer plus efficacement."
+      },
+      {
+        "nomHeritage": "Halfelin du crépuscule",
+        "descriptionHeritage": "Votre lignée a développé une vue adaptée aux faibles luminosités, vous conférant la vision nocturne."
+      },
+      {
+        "nomHeritage": "Halfelin flegmatique",
+        "descriptionHeritage": "Votre calme exceptionnel vous aide à résister aux effets émotionnels et à la peur."
+      },
+      {
+        "nomHeritage": "Halfelin nomade",
+        "descriptionHeritage": "Des générations de voyages vous ont transmis une grande facilité pour apprendre et pratiquer de nouvelles langues."
+      },
+      {
+        "nomHeritage": "Halfelin porteur de malheur",
+        "descriptionHeritage": "Privé de la chance halfeline habituelle, vous pouvez à la place porter malheur à une autre créature."
+      }
+    ]
+  },
+  {
+    "id": "hobgoblin",
+    "name": "Hobgobelin",
+    "nameEn": "Hobgoblin",
+    "urlImage": "https://2e.aonprd.com/Images//Ancestries/Hobgoblin01.webp",
+    "shortDescription": "Cousins plus grands et plus robustes des gobelins, les hobgobelins se structurent volontiers autour de la discipline, de l’entraînement et de la coopération militaire.",
+    "longDescription": "Cousins plus grands et plus robustes des gobelins, les hobgobelins se structurent volontiers autour de la discipline, de l’entraînement et de la coopération militaire. Cela peut produire des soldats rigides, mais aussi des stratèges, ingénieurs ou réformateurs. À choisir pour un personnage méthodique, loyal, ambitieux et habitué à penser en termes d’équipe et d’organisation. La discipline hobgobeline peut servir un empire autoritaire, une armée réformée, une communauté nouvelle ou un idéal personnel d’efficacité et de loyauté.",
+    "rarity": "peu commune",
+    "difficulté": "simple",
+    "sourceUrl": "https://2e.aonprd.com/Ancestries.aspx",
+    "heritages": [
+      {
+        "nomHeritage": "Hobgobelin court sur pattes",
+        "descriptionHeritage": "Votre centre de gravité bas et votre torse puissant vous rendent particulièrement à l’aise pour chevaucher et escalader."
+      },
+      {
+        "nomHeritage": "Hobgobelin du dédale",
+        "descriptionHeritage": "Vos grandes oreilles sensibles aux échos vous aident à repérer les créatures cachées et à vous faufiler sous terre."
+      },
+      {
+        "nomHeritage": "Hobgobelin fléau des elfes",
+        "descriptionHeritage": "Votre lignée conserve une résistance ancestrale à la magie, particulièrement aux effets arcaniques."
+      },
+      {
+        "nomHeritage": "Hobgobelin de la fumée",
+        "descriptionHeritage": "Habitué aux incendies et aux champs de bataille enfumés, vous résistez au feu et voyez mieux à travers la fumée."
+      },
+      {
+        "nomHeritage": "Hobgobelin marcheguerre",
+        "descriptionHeritage": "Issu d’une lignée de mercenaires itinérants, vous supportez mieux les longues marches et savez trouver de quoi subsister."
+      },
+      {
+        "nomHeritage": "Hobgobelin Petitboss",
+        "descriptionHeritage": "Plus petit mais autoritaire, vous savez diriger et intimider efficacement les gobelins."
+      }
+    ]
+  },
+  {
+    "id": "lizardfolk",
+    "name": "Homme-Lézard",
+    "nameEn": "Lizardfolk",
+    "urlImage": "https://2e.aonprd.com/Images//Ancestries/Lizardfolk01.webp",
+    "shortDescription": "Peuple reptilien ancien, souvent plus patient et pragmatique que les sociétés qui l’entourent.",
+    "longDescription": "Peuple reptilien ancien, souvent plus patient et pragmatique que les sociétés qui l’entourent. Les iruxis accordent de l’importance à la mémoire, aux lieux, aux besoins concrets et à la continuité de leur peuple. À choisir pour un personnage calme, physique, traditionnel ou doté d’une façon très différente de comprendre les émotions et les urgences humaines. Les iruxis peuvent paraître distants aux peuples plus expressifs, mais leur mémoire, leur patience et leur attachement aux lieux donnent des liens communautaires profonds.",
+    "rarity": "peu commune",
+    "difficulté": "intermédiaire",
+    "sourceUrl": "https://2e.aonprd.com/Ancestries.aspx",
+    "heritages": [
+      {
+        "nomHeritage": "Homme-lézard à collerette",
+        "descriptionHeritage": "Votre collerette et vos épines dorsales forment une démonstration visuelle particulièrement intimidante."
+      },
+      {
+        "nomHeritage": "Homme-lézard esc’écaille",
+        "descriptionHeritage": "Vos pieds adhérents vous permettent de grimper avec aisance tout en gardant les mains libres."
+      },
+      {
+        "nomHeritage": "Homme-lézard invisible",
+        "descriptionHeritage": "Vous pouvez modifier la couleur de votre peau pour mieux vous fondre dans votre environnement."
+      },
+      {
+        "nomHeritage": "Homme-lézard marchesable",
+        "descriptionHeritage": "Adapté aux déserts, vous résistez à la chaleur et supportez bien plus longtemps la faim et la soif."
+      },
+      {
+        "nomHeritage": "Homme-lézard traque-forêt",
+        "descriptionHeritage": "Vous exploitez instinctivement la végétation des forêts et jungles pour vous cacher et vous déplacer."
+      },
+      {
+        "nomHeritage": "Homme-lézard des marécages",
+        "descriptionHeritage": "Votre lignée aquatique vous confère une vitesse de nage naturelle."
+      },
+      {
+        "nomHeritage": "Homme-lézard saute-nuages",
+        "descriptionHeritage": "Des membranes le long de vos membres vous permettent de planer et d’éviter les dégâts de chute."
+      }
+    ]
+  },
+  {
+    "id": "ratfolk",
+    "name": "Homme-Rat",
+    "nameEn": "Ratfolk",
+    "urlImage": "https://2e.aonprd.com/Images//Ancestries/Ratfolk01.webp",
+    "shortDescription": "Petit peuple à traits de rat, ingénieux, mobile et extrêmement communautaire.",
+    "longDescription": "Petit peuple à traits de rat, ingénieux, mobile et extrêmement communautaire. Les ysokis aiment échanger des objets, des idées et des services ; beaucoup excellent dans le commerce, la mécanique ou l’exploration des lieux oubliés. À choisir pour un personnage vif, sociable, collectionneur, bricoleur ou toujours prêt à trouver une solution dans ses réserves. Leur goût des réseaux, des échanges et de la récupération en fait d’excellents personnages de caravane, de ville, d’atelier ou d’expédition.",
+    "rarity": "peu commune",
+    "difficulté": "intermédiaire",
+    "sourceUrl": "https://2e.aonprd.com/Ancestries.aspx",
+    "heritages": [
+      {
+        "nomHeritage": "Rat du désert",
+        "descriptionHeritage": "Vous courez rapidement à quatre pattes et supportez bien la chaleur, la faim et la soif."
+      },
+      {
+        "nomHeritage": "Rat d’égout",
+        "descriptionHeritage": "Votre organisme résiste particulièrement bien aux maladies et aux poisons des milieux insalubres."
+      },
+      {
+        "nomHeritage": "Rat long-museau",
+        "descriptionHeritage": "Votre odorat très développé vous aide à détecter et retrouver les créatures ou objets proches."
+      },
+      {
+        "nomHeritage": "Rat des neiges",
+        "descriptionHeritage": "Votre fourrure épaisse vous protège du froid et des environnements glacials."
+      },
+      {
+        "nomHeritage": "Rat des ombres",
+        "descriptionHeritage": "Votre apparence inquiétante vous rend naturellement intimidant, particulièrement face aux animaux."
+      },
+      {
+        "nomHeritage": "Rat des profondeurs",
+        "descriptionHeritage": "Votre lignée souterraine vous permet de voir dans l’obscurité totale."
+      },
+      {
+        "nomHeritage": "Rat des tunnels",
+        "descriptionHeritage": "Votre corps souple se comprime facilement pour traverser rapidement des passages très étroits."
+      }
+    ]
+  },
+  {
+    "id": "human",
+    "name": "Humain",
+    "nameEn": "Human",
+    "urlImage": "https://2e.aonprd.com/Images//Ancestries/Human01.png",
+    "shortDescription": "L’ascendance la plus diverse de Golarion, présente dans presque toutes les cultures et capable d’embrasser toutes les ambitions.",
+    "longDescription": "L’ascendance la plus diverse de Golarion, présente dans presque toutes les cultures et capable d’embrasser toutes les ambitions. Les humains n’ont pas une identité unique : leur nation, leur famille, leur métier et leurs convictions les définissent davantage que leur ascendance. À choisir pour une liberté maximale de concept et d’origine. L’humain est le meilleur choix lorsque la culture, la nation, la profession ou les convictions doivent définir le personnage davantage que sa biologie.",
+    "rarity": "commune",
+    "difficulté": "simple",
+    "sourceUrl": "https://2e.aonprd.com/Ancestries.aspx",
+    "heritages": [
+      {
+        "nomHeritage": "Humain polyvalent",
+        "descriptionHeritage": "Votre grande adaptabilité vous permet d’acquérir dès le départ un don général supplémentaire."
+      },
+      {
+        "nomHeritage": "Humain talentueux",
+        "descriptionHeritage": "Vous possédez une aptitude naturelle remarquable dans une compétence de votre choix."
+      }
+    ]
+  },
+  {
+    "id": "kholo",
+    "name": "Kholo",
+    "nameEn": "Kholo",
+    "urlImage": "https://2e.aonprd.com/Images//Ancestries/Kholo01.webp",
+    "shortDescription": "Humanoïdes à tête de hyène, directs, pragmatiques et très attentifs à la survie de leur communauté.",
+    "longDescription": "Humanoïdes à tête de hyène, directs, pragmatiques et très attentifs à la survie de leur communauté. Leur humour, leur sens de la famille et leur capacité à tirer parti de ce que d’autres abandonnent contrastent avec les récits hostiles racontés sur eux. À choisir pour un personnage réaliste, protecteur, mordant et difficile à impressionner. Leur pragmatisme et leur sens de la meute favorisent des personnages protecteurs, commerçants, récupérateurs, diplomates ou guerriers au rire intimidant.",
+    "rarity": "peu commune",
+    "difficulté": "simple",
+    "sourceUrl": "https://2e.aonprd.com/Ancestries.aspx",
+    "heritages": [
+      {
+        "nomHeritage": "Kholo canin",
+        "descriptionHeritage": "Votre silhouette agile vous permet de courir rapidement à quatre pattes lorsque vos mains sont libres."
+      },
+      {
+        "nomHeritage": "Kholo des cavernes",
+        "descriptionHeritage": "Vos ancêtres souterrains vous ont transmis la capacité de voir dans l’obscurité totale."
+      },
+      {
+        "nomHeritage": "Kholo douce-haleine",
+        "descriptionHeritage": "Votre haleine étonnamment agréable vous aide à charmer les personnes que vous rencontrez."
+      },
+      {
+        "nomHeritage": "Kholo fourmi",
+        "descriptionHeritage": "Plus petit que la plupart des kholos, vous êtes particulièrement doué pour mentir et paraître innocent."
+      },
+      {
+        "nomHeritage": "Kholo hivernal",
+        "descriptionHeritage": "Votre fourrure épaisse vous protège du froid et des climats glacials."
+      },
+      {
+        "nomHeritage": "Kholo sorcier",
+        "descriptionHeritage": "Votre voix surnaturelle peut produire des illusions sonores et améliorer vos déguisements et diversions."
+      }
+    ]
+  },
+  {
+    "id": "kitsune",
+    "name": "Kitsune",
+    "nameEn": "Kitsune",
+    "urlImage": "https://2e.aonprd.com/Images//Ancestries/Kitsune01.png",
+    "shortDescription": "Peuple spirituel lié au renard, capable de changer d’apparence et de naviguer entre plusieurs identités.",
+    "longDescription": "Peuple spirituel lié au renard, capable de changer d’apparence et de naviguer entre plusieurs identités. Les kitsunes observent les sociétés avec finesse, dissimulant parfois leur nature ou affichant fièrement leurs queues et leurs pouvoirs. À choisir pour un personnage charismatique, subtil, joueur, mystique ou confronté à la question de son vrai visage. La coexistence entre forme véritable, apparence humanoïde et identité sociale offre un excellent terrain pour jouer les secrets, l’adaptation et le rapport au regard d’autrui.",
+    "rarity": "peu commune",
+    "difficulté": "intermédiaire",
+    "sourceUrl": "https://2e.aonprd.com/Ancestries.aspx",
+    "heritages": [
+      {
+        "nomHeritage": "Kitsune des champs sombres",
+        "descriptionHeritage": "Votre présence inquiétante vous permet d’effrayer silencieusement vos ennemis et de tirer de la vigueur de leur peur."
+      },
+      {
+        "nomHeritage": "Kitsune des terres sauvages",
+        "descriptionHeritage": "Proche de la nature, vous possédez une morsure efficace et pouvez prendre la forme d’un renard."
+      },
+      {
+        "nomHeritage": "Kitsune du ciel vide",
+        "descriptionHeritage": "Votre esprit ouvert aux secrets spirituels vous donne un accès plus précoce à la magie kitsune."
+      },
+      {
+        "nomHeritage": "Kitsune du vent gelé",
+        "descriptionHeritage": "Votre lignée des régions froides vous protège du gel et des environnements hivernaux."
+      },
+      {
+        "nomHeritage": "Kitsune émissaire céleste",
+        "descriptionHeritage": "Une bénédiction divine protège votre lignée et renforce votre résistance aux effets divins."
+      }
+    ]
+  },
+  {
+    "id": "kobold",
+    "name": "Kobold",
+    "nameEn": "Kobold",
+    "urlImage": "https://2e.aonprd.com/Images//Ancestries/Kobold01.webp",
+    "shortDescription": "Petits humanoïdes reptiliens dont l’apparence et les pouvoirs reflètent souvent une influence draconique, élémentaire ou magique.",
+    "longDescription": "Petits humanoïdes reptiliens dont l’apparence et les pouvoirs reflètent souvent une influence draconique, élémentaire ou magique. Les kobolds compensent leur taille par la ruse, la solidarité, les pièges et un immense désir de prouver leur valeur. À choisir pour un personnage ingénieux, ambitieux, communautaire ou fasciné par les dragons et les puissances anciennes. Leur héritage peut refléter un dragon, un élément ou une autre puissance, ce qui rend les kobolds extrêmement variés dans leur apparence comme dans leurs ambitions.",
+    "rarity": "peu commune",
+    "difficulté": "intermédiaire",
+    "sourceUrl": "https://2e.aonprd.com/Ancestries.aspx",
+    "heritages": [
+      {
+        "nomHeritage": "Kobold caverneux",
+        "descriptionHeritage": "Votre corps souple vous aide à grimper sur la roche et à vous glisser dans les passages étroits."
+      },
+      {
+        "nomHeritage": "Kobold cornenchantée",
+        "descriptionHeritage": "La magie qui imprègne votre sang vous permet de lancer naturellement un tour de magie arcanique."
+      },
+      {
+        "nomHeritage": "Kobold dure-mâchoire",
+        "descriptionHeritage": "Vos puissantes mâchoires et vos dents aiguisées constituent une arme naturelle redoutable."
+      },
+      {
+        "nomHeritage": "Kobold à écailles de dragon",
+        "descriptionHeritage": "Vos écailles draconiques renforcent votre robustesse et votre résistance aux pouvoirs des dragons."
+      },
+      {
+        "nomHeritage": "Kobold élémentallié",
+        "descriptionHeritage": "Votre lien avec une puissance élémentaire vous confère une résistance adaptée à son élément."
+      },
+      {
+        "nomHeritage": "Kobold à queue empoisonnée",
+        "descriptionHeritage": "Un éperon venimeux sur votre queue vous permet d’enduire une arme de poison."
+      },
+      {
+        "nomHeritage": "Kobold tunnel-inondé",
+        "descriptionHeritage": "Élevé dans des galeries aquatiques, vous possédez une vitesse de nage naturelle."
+      }
+    ]
+  },
+  {
+    "id": "leshy",
+    "name": "Léchi",
+    "nameEn": "Leshy",
+    "urlImage": "https://2e.aonprd.com/Images//Ancestries/Leshy01.png",
+    "shortDescription": "Esprit de la nature installé dans un petit corps végétal façonné pour lui.",
+    "longDescription": "Esprit de la nature installé dans un petit corps végétal façonné pour lui. Un léchi peut ressembler à une racine ambulante, un champignon, une fleur, une courge ou une étrange pousse forestière, tout en possédant une personnalité parfaitement individuelle. À choisir pour découvrir le monde avec un regard non humain, tendre, étrange ou profondément naturel. Son corps végétal peut être façonné selon une multitude de plantes, tandis que l’esprit qui l’habite peut être naïf, ancien, malicieux ou profondément sage.",
+    "rarity": "commune",
+    "difficulté": "intermédiaire",
+    "sourceUrl": "https://2e.aonprd.com/Ancestries.aspx",
+    "heritages": [
+      {
+        "nomHeritage": "Léchi algues",
+        "descriptionHeritage": "Votre corps d’algues vous permet de respirer sous l’eau et de nager naturellement, mais réduit légèrement votre vitesse au sol."
+      },
+      {
+        "nomHeritage": "Léchi cactus",
+        "descriptionHeritage": "Les épines qui couvrent votre corps forment une arme naturelle perforante."
+      },
+      {
+        "nomHeritage": "Léchi calebasse",
+        "descriptionHeritage": "Votre tête creuse peut dissimuler un petit objet, que vous pouvez dégainer très rapidement."
+      },
+      {
+        "nomHeritage": "Léchi de feuilles",
+        "descriptionHeritage": "Votre corps léger et feuillu vous permet de tomber de n’importe quelle hauteur sans subir de dégâts."
+      },
+      {
+        "nomHeritage": "Léchi de vigne",
+        "descriptionHeritage": "Vos vignes préhensiles vous permettent d’escalader sans utiliser vos mains et avec une grande efficacité."
+      },
+      {
+        "nomHeritage": "Léchi fongique",
+        "descriptionHeritage": "Votre corps de champignon est adapté aux cavernes et vous permet de voir dans l’obscurité totale."
+      },
+      {
+        "nomHeritage": "Léchi fruitier",
+        "descriptionHeritage": "Votre corps produit chaque jour un fruit magique capable de soigner la créature qui le mange."
+      },
+      {
+        "nomHeritage": "Léchi lotus",
+        "descriptionHeritage": "Vous flottez naturellement et pouvez marcher prudemment à la surface de l’eau."
+      },
+      {
+        "nomHeritage": "Léchi racinaire",
+        "descriptionHeritage": "Vos racines robustes augmentent votre vitalité et vous rendent difficile à déplacer ou à renverser."
+      }
+    ]
+  },
+  {
+    "id": "dwarf",
+    "name": "Nain",
+    "nameEn": "Dwarf",
+    "urlImage": "https://2e.aonprd.com/Images//Ancestries/Dwarf01.png",
+    "shortDescription": "Peuple robuste, souvent attaché aux clans, à la mémoire et aux ouvrages faits pour durer.",
+    "longDescription": "Peuple robuste, souvent attaché aux clans, à la mémoire et aux ouvrages faits pour durer. Un nain peut être artisan, soldat, négociant, explorateur des profondeurs ou citadin cosmopolite : la pierre et la tradition sont des racines, pas une prison. À choisir pour une présence solide, fière et tenace. Ce choix convient particulièrement aux personnages attachés à une famille, une cité, un serment ou une œuvre qu’ils veulent transmettre.",
+    "rarity": "commune",
+    "difficulté": "simple",
+    "sourceUrl": "https://2e.aonprd.com/Ancestries.aspx",
+    "heritages": [
+      {
+        "nomHeritage": "Nain des forges",
+        "descriptionHeritage": "Habitué aux chaleurs extrêmes, vous résistez au feu et supportez mieux les environnements brûlants."
+      },
+      {
+        "nomHeritage": "Nain des roches",
+        "descriptionHeritage": "Aussi stable qu’une montagne, vous résistez particulièrement bien aux tentatives de déplacement et de renversement."
+      },
+      {
+        "nomHeritage": "Nain gardemort",
+        "descriptionHeritage": "Votre lignée de gardiens de tombeaux vous protège des morts-vivants et des énergies du néant."
+      },
+      {
+        "nomHeritage": "Nain sang-ancien",
+        "descriptionHeritage": "La résistance magique de vos ancêtres vous permet de renforcer ponctuellement vos défenses contre la magie."
+      },
+      {
+        "nomHeritage": "Nain sang-fort",
+        "descriptionHeritage": "Votre organisme robuste résiste au poison et en élimine rapidement les effets."
+      }
+    ]
+  },
+  {
+    "id": "orc",
+    "name": "Orc",
+    "nameEn": "Orc",
+    "urlImage": "https://2e.aonprd.com/Images//Ancestries/Orc01.png",
+    "shortDescription": "Peuple puissant et endurant, forgé par des siècles de conflits, de survie et de préjugés.",
+    "longDescription": "Peuple puissant et endurant, forgé par des siècles de conflits, de survie et de préjugés. Les cultures orques peuvent valoriser la force, mais aussi la loyauté, la gloire, l’endurance et la responsabilité envers les leurs. À choisir pour une figure impressionnante, passionnée et fière, sans être contraint de jouer une brute violente. Un orc peut incarner la puissance brute, mais aussi la ténacité d’un peuple qui refuse de disparaître et cherche à définir son avenir au-delà des stéréotypes.",
+    "rarity": "commune",
+    "difficulté": "simple",
+    "sourceUrl": "https://2e.aonprd.com/Ancestries.aspx",
+    "heritages": [
+      {
+        "nomHeritage": "Orc batailleur",
+        "descriptionHeritage": "Descendant de chefs de guerre, vous êtes naturellement doué pour intimider vos adversaires."
+      },
+      {
+        "nomHeritage": "Orc de pluie",
+        "descriptionHeritage": "Adapté aux forêts humides, vous grimpez, nagez et résistez mieux aux maladies."
+      },
+      {
+        "nomHeritage": "Orc des profondeurs",
+        "descriptionHeritage": "Votre vie souterraine vous a appris à survivre dans les cavernes et à combattre efficacement en escaladant."
+      },
+      {
+        "nomHeritage": "Orc des terres désolées",
+        "descriptionHeritage": "Votre endurance vous permet de marcher longtemps et de mieux supporter les chaleurs extrêmes."
+      },
+      {
+        "nomHeritage": "Orc hivernal",
+        "descriptionHeritage": "Habitué aux régions glaciales, vous êtes un survivant compétent et résistez mieux au froid."
+      },
+      {
+        "nomHeritage": "Orc scarifié",
+        "descriptionHeritage": "Vos scarifications rituelles témoignent d’une vitalité exceptionnelle et vous rendent particulièrement difficile à abattre."
+      },
+      {
+        "nomHeritage": "Orc sépulcral",
+        "descriptionHeritage": "Votre exposition aux énergies nécromantiques vous protège du néant et des effets liés à la mort."
+      }
+    ]
+  },
+  {
+    "id": "strix",
+    "name": "Strix",
+    "nameEn": "Strix",
+    "urlImage": "https://2e.aonprd.com/Images//Ancestries/Strix01.png",
+    "shortDescription": "Humanoïdes ailés vivant dans des communautés isolées et farouchement attachés à leurs terres.",
+    "longDescription": "Humanoïdes ailés vivant dans des communautés isolées et farouchement attachés à leurs terres. Leur méfiance envers les étrangers vient souvent d’une longue histoire de violence et d’intrusions. À choisir pour un personnage capable de voler, fier, vigilant, protecteur ou décidé à découvrir le monde au-delà des récits transmis par son peuple. Le vol, la défense du territoire et une longue méfiance envers les étrangers donnent des personnages fiers, vigilants et très attachés à leur communauté.",
+    "rarity": "rare",
+    "difficulté": "difficile",
+    "sourceUrl": "https://2e.aonprd.com/Ancestries.aspx",
+    "heritages": [
+      {
+        "nomHeritage": "Strix chanteur",
+        "descriptionHeritage": "Votre voix entraînée vous aide à chanter et à imiter précisément la voix d’autres personnes."
+      },
+      {
+        "nomHeritage": "Strix des littoraux",
+        "descriptionHeritage": "Vos plumes imperméables et votre aisance dans l’eau font de vous un excellent nageur et plongeur."
+      },
+      {
+        "nomHeritage": "Strix grapilleur",
+        "descriptionHeritage": "Habitué à survivre avec peu de ressources, vous excellez à trouver de la nourriture et des provisions."
+      },
+      {
+        "nomHeritage": "Strix nocturne",
+        "descriptionHeritage": "Votre lignée de chasseurs nocturnes vous permet de voir dans l’obscurité totale."
+      },
+      {
+        "nomHeritage": "Strix prédateur",
+        "descriptionHeritage": "Vos longues serres constituent une arme naturelle rapide et précise."
+      }
+    ]
+  },
+  {
+    "id": "tengu",
+    "name": "Tengu",
+    "nameEn": "Tengu",
+    "urlImage": "https://2e.aonprd.com/Images//Ancestries/Tengu01.webp",
+    "shortDescription": "Humanoïdes aviens aux traits de corbeau, sociables, débrouillards et avides de connaissances comme de trésors.",
+    "longDescription": "Humanoïdes aviens aux traits de corbeau, sociables, débrouillards et avides de connaissances comme de trésors. Les tengus peuvent être voyageurs, escrimeurs, marins, artisans ou collectionneurs d’histoires et de superstitions. À choisir pour un personnage curieux, opportuniste, élégant ou toujours prêt à apprendre une nouvelle technique. Ils s’intègrent naturellement aux concepts de marin, duelliste, voyageur, artisan, érudit populaire ou collectionneur de techniques étrangères.",
+    "rarity": "peu commune",
+    "difficulté": "intermédiaire",
+    "sourceUrl": "https://2e.aonprd.com/Ancestries.aspx",
+    "heritages": [
+      {
+        "nomHeritage": "Tengu dents de chien",
+        "descriptionHeritage": "Vos dents renforcent votre bec et rendent ses coups particulièrement meurtriers."
+      },
+      {
+        "nomHeritage": "Tengu enfant du ciel",
+        "descriptionHeritage": "Votre corps léger ou vos ailes atrophiées ralentissent vos chutes et vous évitent tout dégât de chute."
+      },
+      {
+        "nomHeritage": "Tengu gardien des montagnes",
+        "descriptionHeritage": "Votre lien aux esprits vous accorde un tour de magie de vitalité et une affinité divine ou primordiale."
+      },
+      {
+        "nomHeritage": "Tengu griffu",
+        "descriptionHeritage": "Vos serres acérées constituent une arme naturelle agile, précise et polyvalente."
+      },
+      {
+        "nomHeritage": "Tengu maudit",
+        "descriptionHeritage": "Les malédictions glissent plus facilement sur vous et vous résistez mieux à la malchance et à la condamnation."
+      },
+      {
+        "nomHeritage": "Tengu né de la tempête",
+        "descriptionHeritage": "Vous résistez à l’électricité et voyez sans difficulté à travers la pluie et le brouillard."
+      },
+      {
+        "nomHeritage": "Tengu plongeur entre les vagues",
+        "descriptionHeritage": "Votre adaptation aux milieux aquatiques vous confère une vitesse de nage naturelle."
+      }
+    ]
+  },
+  {
+    "id": "tripkee",
+    "name": "Tripki",
+    "nameEn": "Tripkee",
+    "urlImage": "https://2e.aonprd.com/Images//Ancestries/Tripkee01.webp",
+    "shortDescription": "Petit peuple amphibien à l’apparence de grenouille, dont l’enthousiasme dépasse souvent la taille.",
+    "longDescription": "Petit peuple amphibien à l’apparence de grenouille, dont l’enthousiasme dépasse souvent la taille. Les tripkees vivent volontiers près des marais, rivières et forêts humides, mais certains partent découvrir des mondes bien plus secs. À choisir pour un personnage vif, optimiste, bondissant, attachant ou étonnamment courageux face à des dangers gigantesques. Le contraste entre leur petite taille et leur enthousiasme donne des héros vifs et expressifs, particulièrement à l’aise dans les milieux humides et les communautés soudées.",
+    "rarity": "peu commune",
+    "difficulté": "intermédiaire",
+    "sourceUrl": "https://2e.aonprd.com/Ancestries.aspx",
+    "heritages": [
+      {
+        "nomHeritage": "Tripki doigts-collants",
+        "descriptionHeritage": "Vos mains et pieds adhérents vous rendent difficile à déplacer et particulièrement habile pour grimper dans la végétation."
+      },
+      {
+        "nomHeritage": "Tripki doigts-palmés",
+        "descriptionHeritage": "Les membranes entre vos doigts ralentissent vos chutes et vous évitent tout dégât tant qu’une main reste libre."
+      },
+      {
+        "nomHeritage": "Tripki langue-agile",
+        "descriptionHeritage": "Votre longue langue peut accomplir à distance de petites interactions et transmettre des sorts de contact."
+      },
+      {
+        "nomHeritage": "Tripki peau-épaisse",
+        "descriptionHeritage": "Votre peau robuste augmente votre vitalité et vous protège mieux des maladies et des poisons."
+      },
+      {
+        "nomHeritage": "Tripki peau-venimeuse",
+        "descriptionHeritage": "Votre peau sécrète une toxine qui empoisonne les créatures qui vous touchent directement."
+      },
+      {
+        "nomHeritage": "Tripki riverain",
+        "descriptionHeritage": "Issu d’une lignée vivant sur l’eau, vous possédez une vitesse de nage naturelle."
+      }
+    ]
+  }
+]
