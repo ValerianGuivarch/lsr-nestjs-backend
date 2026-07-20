@@ -132,7 +132,7 @@ function getDifficultySortRank(value?: string): number {
 
 function getPdfUrl(entry: Pf2Entry): string {
   const pdfName = encodeURIComponent(entry.name || entry.nameEn || entry.id)
-  return `https://l7r.fr/l7r/${pdfName}.pf`
+  return `https://l7r.fr/l7r/${pdfName}.pdf` 
 }
 
 export function App() {
