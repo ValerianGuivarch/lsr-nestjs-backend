@@ -338,6 +338,25 @@ button {
   color: #8ab3ff;
 }
 
+.pf2-pdf-link {
+  width: fit-content;
+  color: #d8e6ff;
+  text-decoration: none;
+  border: 1px solid rgba(134, 180, 255, 0.3);
+  border-radius: 999px;
+  padding: 0.38rem 0.75rem;
+  background: rgba(134, 180, 255, 0.12);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.pf2-pdf-link:hover {
+  border-color: rgba(134, 180, 255, 0.55);
+  background: rgba(134, 180, 255, 0.18);
+}
+
 .pf2-tag--difficulty {
   background: rgba(180, 140, 255, 0.15);
   border-color: rgba(180, 140, 255, 0.3);

@@ -130,6 +130,11 @@ function getDifficultySortRank(value?: string): number {
   return index === -1 ? order.length : index
 }
 
+function getPdfUrl(entry: Pf2Entry): string {
+  const pdfName = encodeURIComponent(entry.name || entry.nameEn || entry.id)
+  return `https://l7r.fr/l7r/${pdfName}.pf`
+}
+
 export function App() {
   const [activeTab, setActiveTab] = useState<TabKey>('ascendance')
   const [expandedEntryId, setExpandedEntryId] = useState<string | null>(null)
@@ -242,11 +247,11 @@ export function App() {
                 value={activeFilters.rarity}
                 onChange={(event) => {
                   const rarity = event.target.value
-                    if (!filterTabId) return
+                  if (!filterTabId) return
                   setFiltersByTab((current) => ({
                     ...current,
-                      [filterTabId]: {
-                        ...current[filterTabId],
+                    [filterTabId]: {
+                      ...current[filterTabId],
                       rarity
                     }
                   }))
@@ -265,11 +270,11 @@ export function App() {
                 value={activeFilters.difficulty}
                 onChange={(event) => {
                   const difficulty = event.target.value
-                    if (!filterTabId) return
+                  if (!filterTabId) return
                   setFiltersByTab((current) => ({
                     ...current,
-                      [filterTabId]: {
-                        ...current[filterTabId],
+                    [filterTabId]: {
+                      ...current[filterTabId],
                       difficulty
                     }
                   }))
@@ -376,6 +381,11 @@ export function App() {
                             <div className="pf2-tags">
                               <span className="pf2-tag pf2-tag--difficulty">difficulté : {entry.difficulté}</span>
                             </div>
+                          )}
+                          {(activeTab === 'ascendance' || activeTab === 'classe') && (
+                            <a className="pf2-pdf-link" href={getPdfUrl(entry)} target="_blank" rel="noreferrer">
+                              PDF
+                            </a>
                           )}
                           {activeTab === 'origine' && (entry.originType ?? entry.continent ?? entry.accessibility) && (
                             <p className="pf2-detail-meta">
