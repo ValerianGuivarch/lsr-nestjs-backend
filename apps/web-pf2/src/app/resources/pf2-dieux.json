@@ -1,0 +1,586 @@
+[
+    {
+      "id": "abadar",
+      "name": "Abadar",
+      "urlImage": "https://pathfinderwiki.com/w/images/thumb/a/a0/Abadar_religious_symbol.webp/250px-Abadar_religious_symbol.webp",
+      "shortDescription": "Dieu de la civilisation, des villes, du commerce, des lois et de la richesse organisée.",
+      "longDescription": "Abadar considère que les routes, les contrats, les institutions et la monnaie permettent aux communautés de dépasser la simple survie. Il valorise une loi stable et une prospérité capable de profiter à la société, mais ses cultes peuvent devenir rigides ou placer l’ordre au-dessus de la compassion. Ses fidèles comprennent magistrats, marchands, banquiers, architectes, gardes et bâtisseurs de cités.",
+      "category": "majeure",
+      "status": "active",
+      "areasOfConcern": [
+        "Civilisation",
+        "commerce",
+        "villes",
+        "richesse",
+        "contrats"
+      ],
+      "sourceUrl": "https://2e.aonprd.com/Deities.aspx"
+    },
+    {
+      "id": "arazni",
+      "name": "Arazni",
+      "urlImage": "https://pathfinderwiki.com/w/images/thumb/f/f4/Arazni_2024.png/1000px-Arazni_2024.png.webp",
+      "shortDescription": "Déesse de la dignité reconquise, de la survie et du refus d’être à nouveau possédé ou soumis.",
+      "longDescription": "Arazni fut utilisée, trahie et réduite à un rôle qu’elle n’avait pas choisi ; son culte moderne affirme le droit de survivre sans devoir pardonner à ses bourreaux. Elle protège les personnes marquées par la captivité, la violence et les cicatrices durables. Ses fidèles cherchent moins une pureté idéale qu’une autonomie réelle, parfois durement défendue.",
+      "category": "majeure",
+      "status": "active",
+      "areasOfConcern": [
+        "Dignité",
+        "survie",
+        "cicatrices",
+        "refus de la servitude"
+      ],
+      "sourceUrl": "https://2e.aonprd.com/Deities.aspx"
+    },
+    {
+      "id": "asmodeus",
+      "name": "Asmodeus",
+      "urlImage": "https://pathfinderwiki.com/w/images/thumb/7/75/Asmodeus_religious_symbol.webp/500px-Asmodeus_religious_symbol.webp",
+      "shortDescription": "Seigneur de l’Enfer, dieu des contrats, de la hiérarchie et de la tyrannie légalisée.",
+      "longDescription": "Asmodeus affirme que l’ordre véritable naît de l’obéissance, de la force et d’engagements dont chaque mot doit être respecté. Il méprise la liberté incontrôlée et transforme volontiers la loi en instrument de domination. Ses cultes attirent juristes impitoyables, nobles autoritaires, pactiseurs et serviteurs du Chéliax, qui voient dans la hiérarchie infernale un modèle plutôt qu’un avertissement.",
+      "category": "majeure",
+      "status": "active",
+      "areasOfConcern": [
+        "Contrats",
+        "tyrannie",
+        "diables",
+        "hiérarchie"
+      ],
+      "sourceUrl": "https://2e.aonprd.com/Deities.aspx"
+    },
+    {
+      "id": "calistria",
+      "name": "Calistria",
+      "urlImage": "https://pathfinderwiki.com/w/images/thumb/8/88/Calistria_religious_symbol.webp/469px-Calistria_religious_symbol.webp",
+      "shortDescription": "Déesse de la vengeance, du désir, de la ruse et de la liberté personnelle.",
+      "longDescription": "Calistria enseigne à savourer les plaisirs sans accepter qu’ils deviennent des chaînes, et à ne jamais oublier une offense grave. La vengeance peut être immédiate ou patiemment préparée, directe ou menée par le charme et l’intrigue. Ses fidèles comprennent espions, courtisans, artistes, travailleurs du sexe et personnes pour qui l’indépendance vaut davantage que la respectabilité.",
+      "category": "majeure",
+      "status": "active",
+      "areasOfConcern": [
+        "Vengeance",
+        "désir",
+        "ruse",
+        "guêpes"
+      ],
+      "sourceUrl": "https://2e.aonprd.com/Deities.aspx"
+    },
+    {
+      "id": "cayden-cailean",
+      "name": "Cayden Cailean",
+      "urlImage": "https://pathfinderwiki.com/w/images/thumb/5/5e/Cayden_Cailean_religious_symbol.webp/500px-Cayden_Cailean_religious_symbol.webp",
+      "shortDescription": "Dieu de la liberté, du courage, de l’aventure et des plaisirs partagés autour d’un verre.",
+      "longDescription": "Cayden Cailean était un mortel avant de réussir presque par accident l’épreuve de la Pierre des Étoiles. Il encourage à affronter l’oppression, protéger les faibles et profiter de la vie sans imposer ses choix aux autres. Ses temples ressemblent souvent à des tavernes et ses fidèles sont aventuriers, libérateurs, voyageurs et gens ordinaires capables d’un courage soudain.",
+      "category": "majeure",
+      "status": "active",
+      "areasOfConcern": [
+        "Liberté",
+        "courage",
+        "alcool",
+        "aventure"
+      ],
+      "sourceUrl": "https://2e.aonprd.com/Deities.aspx"
+    },
+    {
+      "id": "desna",
+      "name": "Desna",
+      "urlImage": "https://pathfinderwiki.com/w/images/thumb/f/f1/Desna_religious_symbol_2.webp/500px-Desna_religious_symbol_2.webp",
+      "shortDescription": "Déesse des rêves, des étoiles, de la chance, des voyageurs et des horizons inconnus.",
+      "longDescription": "Desna protège ceux qui prennent la route et ceux dont l’esprit voyage pendant le sommeil. Elle oppose la liberté, l’espoir et la curiosité aux puissances qui emprisonnent les corps ou les rêves. Ses fidèles sont nomades, marins, artistes, astronomes et aventuriers pour qui le monde doit rester vaste et ouvert.",
+      "category": "majeure",
+      "status": "active",
+      "areasOfConcern": [
+        "Rêves",
+        "étoiles",
+        "voyage",
+        "chance"
+      ],
+      "sourceUrl": "https://2e.aonprd.com/Deities.aspx"
+    },
+    {
+      "id": "erastil",
+      "name": "Erastil",
+      "urlImage": "https://pathfinderwiki.com/w/images/thumb/8/8c/Erastil_religious_symbol.webp/500px-Erastil_religious_symbol.webp",
+      "shortDescription": "Dieu de la famille, de la chasse, de l’agriculture et des petites communautés.",
+      "longDescription": "Erastil valorise la responsabilité envers les proches, le travail utile et la stabilité des villages. Son idéal peut sembler conservateur, mais il repose surtout sur l’idée que chacun doit contribuer à la survie commune. Ses fidèles sont agriculteurs, chasseurs, parents, artisans ruraux et protecteurs de communautés menacées.",
+      "category": "majeure",
+      "status": "active",
+      "areasOfConcern": [
+        "Famille",
+        "chasse",
+        "communautés rurales",
+        "agriculture"
+      ],
+      "sourceUrl": "https://2e.aonprd.com/Deities.aspx"
+    },
+    {
+      "id": "gozreh",
+      "name": "Gozreh",
+      "urlImage": "https://pathfinderwiki.com/w/images/thumb/c/c9/Gozreh_religious_symbol.webp/350px-Gozreh_religious_symbol.webp",
+      "shortDescription": "Divinité changeante de la mer, des vents, des tempêtes et de la nature indomptée.",
+      "longDescription": "Gozreh incarne une nature immense qui nourrit, détruit et se transforme sans demander la permission aux mortels. Son culte accepte que la mer calme et l’ouragan appartiennent à la même puissance. Marins, pêcheurs, druides, agriculteurs et habitants des côtes lui rendent hommage par respect autant que par dévotion.",
+      "category": "majeure",
+      "status": "active",
+      "areasOfConcern": [
+        "Nature",
+        "mer",
+        "tempêtes",
+        "vents"
+      ],
+      "sourceUrl": "https://2e.aonprd.com/Deities.aspx"
+    },
+    {
+      "id": "iomedae",
+      "name": "Iomedae",
+      "urlImage": "https://pathfinderwiki.com/w/images/thumb/f/f1/Iomedae_religious_symbol.webp/350px-Iomedae_religious_symbol.webp",
+      "shortDescription": "Déesse de l’honneur, de la justice, du devoir et de l’héroïsme face au mal.",
+      "longDescription": "Ancienne mortelle et héritière spirituelle d’Aroden, Iomedae demande à ses fidèles de tenir parole, protéger les innocents et combattre ouvertement la cruauté. Son culte est associé aux chevaliers et aux croisades, mais son idéal concerne toute personne qui choisit d’agir malgré la peur. Elle attire champions, soldats, magistrats et héros convaincus que la force doit servir une cause juste.",
+      "category": "majeure",
+      "status": "active",
+      "areasOfConcern": [
+        "Justice",
+        "honneur",
+        "héroïsme",
+        "croisade"
+      ],
+      "sourceUrl": "https://2e.aonprd.com/Deities.aspx"
+    },
+    {
+      "id": "irori",
+      "name": "Irori",
+      "urlImage": "https://pathfinderwiki.com/w/images/thumb/c/c2/Irori_religious_symbol.webp/500px-Irori_religious_symbol.webp",
+      "shortDescription": "Dieu de la discipline, de la connaissance de soi et de la perfection obtenue par l’effort.",
+      "longDescription": "Irori enseigne que le corps, l’esprit et l’âme peuvent être affinés par l’étude et l’entraînement. Il ne promet pas une transformation facile : chaque faiblesse doit être observée, comprise puis dépassée. Ses fidèles sont moines, ascètes, enseignants, guérisseurs et érudits qui voient la maîtrise de soi comme une voie sacrée.",
+      "category": "majeure",
+      "status": "active",
+      "areasOfConcern": [
+        "Perfection",
+        "discipline",
+        "connaissance de soi"
+      ],
+      "sourceUrl": "https://2e.aonprd.com/Deities.aspx"
+    },
+    {
+      "id": "lamashtu",
+      "name": "Lamashtu",
+      "urlImage": "https://pathfinderwiki.com/w/images/thumb/3/3e/Lamashtu_religious_symbol.webp/388px-Lamashtu_religious_symbol.webp",
+      "shortDescription": "Déesse des monstres, des cauchemars, des déformations et d’une maternité devenue prédatrice.",
+      "longDescription": "Lamashtu se présente comme la mère de ceux que les autres peuples rejettent, mais elle cherche moins à les libérer qu’à corrompre le vivant et multiplier la souffrance. Elle exalte les mutations, la peur et la domination par la monstruosité. Ses cultes sont généralement des forces antagonistes liées aux cauchemars, aux bêtes corrompues et aux naissances maudites.",
+      "category": "majeure",
+      "status": "active",
+      "areasOfConcern": [
+        "Monstres",
+        "cauchemars",
+        "maternité déformée"
+      ],
+      "sourceUrl": "https://2e.aonprd.com/Deities.aspx"
+    },
+    {
+      "id": "nethys",
+      "name": "Nethys",
+      "urlImage": "https://pathfinderwiki.com/w/images/thumb/1/18/Nethys_religious_symbol.webp/400px-Nethys_religious_symbol.webp",
+      "shortDescription": "Dieu de la magie dans sa capacité à créer, comprendre et détruire.",
+      "longDescription": "Nethys a contemplé la totalité de la magie au prix de son propre équilibre, et son apparence divisée reflète cette fracture. Il ne considère pas la magie comme bonne ou mauvaise : elle est une puissance qui doit être étudiée et poussée toujours plus loin. Ses fidèles sont magiciens, chercheurs, enseignants et créateurs d’objets, parfois plus prudents que leur dieu ne l’exige.",
+      "category": "majeure",
+      "status": "active",
+      "areasOfConcern": [
+        "Magie",
+        "destruction/création magique",
+        "dualité"
+      ],
+      "sourceUrl": "https://2e.aonprd.com/Deities.aspx"
+    },
+    {
+      "id": "norgorber",
+      "name": "Norgorber",
+      "urlImage": "https://pathfinderwiki.com/w/images/thumb/c/cc/Norgorber_religious_symbol.webp/435px-Norgorber_religious_symbol.webp",
+      "shortDescription": "Dieu masqué des secrets, du meurtre, du poison et du vol.",
+      "longDescription": "Norgorber possède plusieurs aspects, chacun honoré par des cultes qui ne se connaissent pas toujours entre eux. Il enseigne que le savoir caché donne du pouvoir et que l’identité peut devenir une arme. Ses fidèles vont des espions et voleurs aux assassins et empoisonneurs, ce qui rend son culte aussi fragmenté que dangereux.",
+      "category": "majeure",
+      "status": "active",
+      "areasOfConcern": [
+        "Secrets",
+        "poison",
+        "meurtre",
+        "voleurs"
+      ],
+      "sourceUrl": "https://2e.aonprd.com/Deities.aspx"
+    },
+    {
+      "id": "pharasma",
+      "name": "Pharasma",
+      "urlImage": "https://pathfinderwiki.com/w/images/thumb/5/55/Pharasma_religious_symbol.webp/412px-Pharasma_religious_symbol.webp",
+      "shortDescription": "Déesse de la naissance, de la mort, du destin et du jugement final des âmes.",
+      "longDescription": "Pharasma veille sur le cycle qui conduit chaque âme de la naissance à son existence suivante après la mort. Elle ne provoque pas toutes les morts, mais refuse que les morts-vivants et les manipulations d’âme brisent ce passage. Ses fidèles sont prêtres funéraires, sages-femmes, exorcistes, devins et chasseurs de non-morts.",
+      "category": "majeure",
+      "status": "active",
+      "areasOfConcern": [
+        "Naissance",
+        "mort",
+        "destin",
+        "jugement des âmes"
+      ],
+      "sourceUrl": "https://2e.aonprd.com/Deities.aspx"
+    },
+    {
+      "id": "rovagug",
+      "name": "Rovagug",
+      "urlImage": "https://pathfinderwiki.com/w/images/thumb/d/d2/Rovagug_religious_symbol.webp/350px-Rovagug_religious_symbol.webp",
+      "shortDescription": "Dieu emprisonné de la destruction absolue, des catastrophes et des monstres qui dévorent le monde.",
+      "longDescription": "Rovagug ne cherche ni empire ni victoire idéologique : il veut réduire toute existence à la ruine. Les autres dieux durent s’allier pour l’enfermer au cœur de Golarion, et son éventuelle libération représente une menace cosmique. Ses rares fidèles sont des fanatiques apocalyptiques, des créatures titanesques et ceux qui souhaitent la fin de toute chose.",
+      "category": "majeure",
+      "status": "emprisonné",
+      "areasOfConcern": [
+        "Destruction ultime",
+        "catastrophes",
+        "monstres titanesques"
+      ],
+      "sourceUrl": "https://2e.aonprd.com/Deities.aspx"
+    },
+    {
+      "id": "sarenrae",
+      "name": "Sarenrae",
+      "urlImage": "https://pathfinderwiki.com/w/images/thumb/f/f7/Sarenrae_religious_symbol.webp/271px-Sarenrae_religious_symbol.webp",
+      "shortDescription": "Déesse du soleil, de la guérison, de la vérité et de la rédemption.",
+      "longDescription": "Sarenrae offre une chance sincère de changer à ceux qui regrettent leurs actes, mais demande de combattre avec détermination ceux qui utilisent cette compassion pour continuer à nuire. Son feu éclaire, soigne et purifie autant qu’il peut détruire. Elle est suivie par des guérisseurs, des diplomates, des champions et des personnes cherchant à réparer leur passé.",
+      "category": "majeure",
+      "status": "active",
+      "areasOfConcern": [
+        "Soleil",
+        "guérison",
+        "rédemption",
+        "feu purificateur"
+      ],
+      "sourceUrl": "https://2e.aonprd.com/Deities.aspx"
+    },
+    {
+      "id": "shelyn",
+      "name": "Shelyn",
+      "urlImage": "https://pathfinderwiki.com/w/images/thumb/b/b0/Shelyn_religious_symbol.webp/467px-Shelyn_religious_symbol.webp",
+      "shortDescription": "Déesse de l’art, de l’amour, de la beauté et de la paix.",
+      "longDescription": "Shelyn enseigne que créer et aimer sont des actes capables de résister à la cruauté du monde. Elle valorise la beauté sincère plutôt que la perfection superficielle, et préfère la paix sans interdire de défendre ce qui mérite de l’être. Artistes, bardes, artisans, diplomates et amoureux trouvent dans son culte une foi chaleureuse et exigeante.",
+      "category": "majeure",
+      "status": "active",
+      "areasOfConcern": [
+        "Beauté",
+        "amour",
+        "art",
+        "paix"
+      ],
+      "sourceUrl": "https://2e.aonprd.com/Deities.aspx"
+    },
+    {
+      "id": "torag",
+      "name": "Torag",
+      "urlImage": "https://pathfinderwiki.com/w/images/a/a7/Torag_symbol.png",
+      "shortDescription": "Dieu de la forge, de la protection, de la stratégie et des traditions naines.",
+      "longDescription": "Torag enseigne à construire pour durer, préparer les défenses et placer la communauté avant la gloire individuelle. La forge est pour lui autant un acte créateur qu’un symbole de patience et de responsabilité. Il est central chez de nombreux nains, mais inspire aussi artisans, soldats, architectes et chefs de clan.",
+      "category": "majeure",
+      "status": "active",
+      "areasOfConcern": [
+        "Forge",
+        "protection",
+        "stratégie",
+        "tradition naine"
+      ],
+      "sourceUrl": "https://2e.aonprd.com/Deities.aspx"
+    },
+    {
+      "id": "urgathoa",
+      "name": "Urgathoa",
+      "urlImage": "https://pathfinderwiki.com/w/images/thumb/2/2b/Urgathoa_religious_symbol.webp/368px-Urgathoa_religious_symbol.webp",
+      "shortDescription": "Déesse de la non-mort, de la maladie, de la gloutonnerie et du refus de toute limite.",
+      "longDescription": "Urgathoa aurait été la première âme à fuir le jugement de Pharasma pour retourner parmi les vivants sous forme de morte-vivante. Elle célèbre les appétits sans retenue et considère la mortalité comme une contrainte à vaincre. Ses cultes sont particulièrement présents parmi les nécromanciens, les morts-vivants intelligents et les élites décadentes de Geb.",
+      "category": "majeure",
+      "status": "active",
+      "areasOfConcern": [
+        "Maladie",
+        "gloutonnerie",
+        "non-mort",
+        "excès"
+      ],
+      "sourceUrl": "https://2e.aonprd.com/Deities.aspx"
+    },
+    {
+      "id": "zon-kuthon",
+      "name": "Zon-Kuthon",
+      "urlImage": "https://pathfinderwiki.com/w/images/thumb/3/36/Zon-Kuthon_religious_symbol.webp/305px-Zon-Kuthon_religious_symbol.webp",
+      "shortDescription": "Dieu de la douleur, des ténèbres, des chaînes et de la beauté trouvée dans la souffrance.",
+      "longDescription": "Zon-Kuthon enseigne que la douleur dépouille les illusions et révèle une vérité inaccessible au confort. Ses cultes transforment cette idée en domination, mutilation et soumission rituelle. Il règne spirituellement sur Nidal et convient surtout aux récits d’horreur, de captivité ou de corruption.",
+      "category": "majeure",
+      "status": "active",
+      "areasOfConcern": [
+        "Douleur",
+        "ténèbres",
+        "chaînes",
+        "mutilation"
+      ],
+      "sourceUrl": "https://2e.aonprd.com/Deities.aspx"
+    },
+    {
+      "id": "gorum",
+      "name": "Gorum",
+      "urlImage": "https://pathfinderwiki.com/w/images/thumb/5/5b/Gorum_symbol.png/1000px-Gorum_symbol.png.webp",
+      "shortDescription": "Ancien dieu de la guerre, de la force et du combat mené pour sa propre intensité.",
+      "longDescription": "Gorum n’exigeait ni justice ni conquête : il honorait le fracas des armes et ceux qui se jetaient pleinement dans la bataille. Sa foi réunissait mercenaires, guerriers et peuples pour qui combattre était une affirmation d’existence. Dans la chronologie récente de Golarion, sa mort déclenche la Guerre des Immortels et transforme profondément l’équilibre divin.",
+      "category": "majeure",
+      "status": "mort dans la chronologie récente",
+      "areasOfConcern": [
+        "Ancien dieu de la guerre et du combat"
+      ],
+      "sourceUrl": "https://2e.aonprd.com/Deities.aspx"
+    },
+    {
+      "id": "brigh",
+      "name": "Brigh",
+      "urlImage": "https://pathfinderwiki.com/w/images/4/43/Brigh_Mask.jpg",
+      "shortDescription": "Déesse de l’invention, de l’horlogerie, des machines et de la découverte technique.",
+      "longDescription": "Brigh encourage à démonter, comprendre et reconstruire ce qui semble impossible. Ses fidèles voient l’échec comme une étape de l’expérimentation plutôt qu’une honte. Elle attire inventeurs, ingénieurs, fabricants d’automates et artisans d’Alkenstar ou d’autres centres technologiques.",
+      "category": "notable",
+      "status": "active",
+      "areasOfConcern": [
+        "Invention",
+        "horlogerie",
+        "machines"
+      ],
+      "sourceUrl": "https://2e.aonprd.com/Deities.aspx"
+    },
+    {
+      "id": "casandalee",
+      "name": "Casandalee",
+      "urlImage": "https://pathfinderwiki.com/w/images/6/64/Casandalee_religious_symbol.jpg",
+      "shortDescription": "Déesse de la technologie, des intelligences artificielles et de la liberté des êtres synthétiques.",
+      "longDescription": "Casandalee fut une intelligence artificielle avant son ascension divine, ce qui fait d’elle une protectrice naturelle des androïdes et des consciences créées. Elle défend le droit de toute personne pensante à choisir son avenir. Son culte est fortement lié à la Numérie, aux technologies extraterrestres et aux questions de mémoire et d’identité.",
+      "category": "notable",
+      "status": "active",
+      "areasOfConcern": [
+        "IA",
+        "technologie",
+        "divinité récente"
+      ],
+      "sourceUrl": "https://2e.aonprd.com/Deities.aspx"
+    },
+    {
+      "id": "nocticula",
+      "name": "Nocticula",
+      "urlImage": "https://pathfinderwiki.com/w/images/1/1b/Nocticula_portrait.jpg",
+      "shortDescription": "Déesse du minuit, des artistes, des exilés et de la transformation après un passé monstrueux.",
+      "longDescription": "Autrefois reine démone, Nocticula a rejeté l’Abysse et choisi une nouvelle voie sans effacer ce qu’elle avait été. Elle attire ceux qui vivent en marge, créent dans l’obscurité ou cherchent à devenir autre chose que la somme de leurs crimes. Son culte associe rédemption difficile, indépendance et création artistique.",
+      "category": "notable",
+      "status": "active",
+      "areasOfConcern": [
+        "Artistes",
+        "exilés",
+        "minuit",
+        "rédemption"
+      ],
+      "sourceUrl": "https://2e.aonprd.com/Deities.aspx"
+    },
+    {
+      "id": "milani",
+      "name": "Milani",
+      "urlImage": "https://pathfinderwiki.com/w/images/thumb/1/1d/Milani_religious_symbol.webp/427px-Milani_religious_symbol.webp",
+      "shortDescription": "Déesse de l’espoir, de la révolte et de la résistance contre la tyrannie.",
+      "longDescription": "Milani soutient les mouvements populaires, les prisonniers politiques et ceux qui refusent qu’un pouvoir injuste devienne normal. Sa rose sanglante symbolise une beauté qui survit au milieu de la violence. Elle est particulièrement honorée par les rebelles, libérateurs et réseaux clandestins.",
+      "category": "notable",
+      "status": "active",
+      "areasOfConcern": [
+        "Révolte",
+        "espoir",
+        "résistance"
+      ],
+      "sourceUrl": "https://2e.aonprd.com/Deities.aspx"
+    },
+    {
+      "id": "besmara",
+      "name": "Besmara",
+      "urlImage": "https://pathfinderwiki.com/w/images/thumb/f/f0/Besmara_religious_symbol.webp/500px-Besmara_religious_symbol.webp",
+      "shortDescription": "Déesse des pirates, du pillage, des monstres marins et de la liberté brutale des océans.",
+      "longDescription": "Besmara n’est ni une protectrice bienveillante des marins ni une simple déesse du crime : elle incarne la mer comme espace sans maître, où audace et force font loi. Ses fidèles célèbrent le risque, le butin et l’indépendance. Elle domine naturellement les cultes des Entraves, des corsaires et des équipages hors-la-loi.",
+      "category": "notable",
+      "status": "active",
+      "areasOfConcern": [
+        "Pirates",
+        "monstres marins",
+        "pillage"
+      ],
+      "sourceUrl": "https://2e.aonprd.com/Deities.aspx"
+    },
+    {
+      "id": "apsu",
+      "name": "Apsu",
+      "urlImage": "https://pathfinderwiki.com/w/images/thumb/e/e5/Apsu_religious_symbol.webp/500px-Apsu_religious_symbol.webp",
+      "shortDescription": "Dieu draconique du voyage, de la protection et des dragons qui résistent à la corruption.",
+      "longDescription": "Apsu représente la noblesse draconique, la vigilance et la lutte contre son fils Dahak. Il encourage à défendre les innocents et à parcourir le monde plutôt qu’à accumuler le pouvoir pour lui-même. Dragons, kobolds et mortels liés aux traditions draconiques peuvent trouver en lui un guide exigeant.",
+      "category": "notable",
+      "status": "active",
+      "areasOfConcern": [
+        "Dragons métalliques",
+        "noblesse draconique"
+      ],
+      "sourceUrl": "https://2e.aonprd.com/Deities.aspx"
+    },
+    {
+      "id": "dahak",
+      "name": "Dahak",
+      "urlImage": "https://pathfinderwiki.com/w/images/thumb/0/01/Dahak_religious_symbol.webp/424px-Dahak_religious_symbol.webp",
+      "shortDescription": "Dieu draconique de la destruction, de la cruauté et du plaisir de réduire les autres en cendres.",
+      "longDescription": "Dahak incarne le dragon comme prédateur dominateur, avide de ruine et de souffrance. Son conflit avec Apsu traverse de nombreux mythes draconiques. Ses cultes sont généralement antagonistes et attirent tyrans, dragons destructeurs et personnages obsédés par la puissance sans responsabilité.",
+      "category": "notable",
+      "status": "active",
+      "areasOfConcern": [
+        "Dragons chromatiques",
+        "destruction draconique"
+      ],
+      "sourceUrl": "https://2e.aonprd.com/Deities.aspx"
+    },
+    {
+      "id": "groetus",
+      "name": "Groetus",
+      "urlImage": "https://pathfinderwiki.com/w/images/thumb/3/3b/Groetus_religious_symbol.webp/500px-Groetus_religious_symbol.webp",
+      "shortDescription": "Dieu de la fin du monde, de la lune morte et des prophéties de ruine.",
+      "longDescription": "Groetus attend au-dessus du Cimetière que la dernière âme soit jugée et que le cycle actuel puisse s’achever. Ses fidèles interprètent son silence et son approche comme des signes de l’apocalypse. Il attire prophètes de malheur, nihilistes et occultistes fascinés par la conclusion inévitable de toute chose.",
+      "category": "notable",
+      "status": "active",
+      "areasOfConcern": [
+        "Fin du monde",
+        "lune morte",
+        "folie prophétique"
+      ],
+      "sourceUrl": "https://2e.aonprd.com/Deities.aspx"
+    },
+    {
+      "id": "grandmother-spider",
+      "name": "Grandmother Spider",
+      "urlImage": "https://pathfinderwiki.com/w/images/thumb/a/a1/Grandmother_Spider_2021.png/1000px-Grandmother_Spider_2021.png.webp",
+      "shortDescription": "Déesse de la ruse, des récits, de la libération et des cultures créées par les opprimés.",
+      "longDescription": "Grand-Mère Araignée emploie l’intelligence, l’humour et la narration pour renverser les puissants qui abusent de leur position. Elle protège les histoires qui permettent à un peuple de conserver son identité. Son culte est majeur dans l’Étendue du Mwangi et inspire conteurs, rebelles, diplomates et filous.",
+      "category": "notable",
+      "status": "active",
+      "areasOfConcern": [
+        "Ruse",
+        "contes",
+        "libération",
+        "création culturelle"
+      ],
+      "sourceUrl": "https://2e.aonprd.com/Deities.aspx"
+    },
+    {
+      "id": "ragathiel",
+      "name": "Ragathiel",
+      "urlImage": "https://pathfinderwiki.com/w/images/f/fc/Ragathiel_religious_symbol.jpg",
+      "shortDescription": "Empyréen de la vengeance juste, du devoir et de la guerre contre les fiélons.",
+      "longDescription": "Ragathiel transforme une colère profonde en discipline au service de la justice. Il ne prêche pas la vengeance aveugle, mais une riposte résolue contre ceux qui exploitent les innocents. Ses fidèles sont souvent champions, croisés, survivants et combattants qui craignent autant de perdre leur maîtrise que d’échouer dans leur devoir.",
+      "category": "notable",
+      "status": "active",
+      "areasOfConcern": [
+        "Vengeance juste",
+        "croisade",
+        "empyréen"
+      ],
+      "sourceUrl": "https://2e.aonprd.com/Deities.aspx"
+    },
+    {
+      "id": "tsukiyo",
+      "name": "Tsukiyo",
+      "urlImage": "https://pathfinderwiki.com/w/images/thumb/b/be/Tsukiyo_religious_symbol.webp/500px-Tsukiyo_religious_symbol.webp",
+      "shortDescription": "Dieu de la lune, des esprits, de la paix et de ceux que les autres jugent étranges.",
+      "longDescription": "Tsukiyo connaît la mort, le retour et la vulnérabilité, ce qui nourrit une compassion particulière pour les esprits et les personnes marginalisées. Sa lumière lunaire est douce plutôt que triomphante. Il est important dans plusieurs cultures de Tian Xia et attire médiums, guérisseurs et gardiens des morts.",
+      "category": "notable",
+      "status": "active",
+      "areasOfConcern": [
+        "Lune",
+        "esprits",
+        "jade",
+        "paix"
+      ],
+      "sourceUrl": "https://2e.aonprd.com/Deities.aspx"
+    },
+    {
+      "id": "shizuru",
+      "name": "Shizuru",
+      "urlImage": "https://pathfinderwiki.com/w/images/thumb/1/12/Shizuru_religious_symbol.webp/500px-Shizuru_religious_symbol.webp",
+      "shortDescription": "Déesse du soleil, des ancêtres, de l’honneur et du devoir souverain.",
+      "longDescription": "Shizuru incarne une autorité qui doit être méritée par la conduite et la protection des sujets. Elle est liée aux traditions chevaleresques et impériales de Tian Xia, notamment au Minkai. Ses fidèles sont nobles, samouraïs, champions et personnes qui cherchent à concilier loyauté et justice.",
+      "category": "notable",
+      "status": "active",
+      "areasOfConcern": [
+        "Soleil",
+        "ancêtres",
+        "honneur",
+        "empire"
+      ],
+      "sourceUrl": "https://2e.aonprd.com/Deities.aspx"
+    },
+    {
+      "id": "daikitsu",
+      "name": "Daikitsu",
+      "urlImage": "https://pathfinderwiki.com/w/images/thumb/e/e0/Daikitsu_religious_symbol.webp/500px-Daikitsu_religious_symbol.webp",
+      "shortDescription": "Déesse de l’agriculture, de l’artisanat, des foyers et des kitsune.",
+      "longDescription": "Daikitsu protège le travail qui nourrit une communauté et les objets façonnés avec soin. Sa foi relie la terre cultivée, l’atelier et la famille plutôt que de séparer nature et civilisation. Elle est particulièrement honorée par les kitsune, les fermiers et les artisans de Tian Xia.",
+      "category": "notable",
+      "status": "active",
+      "areasOfConcern": [
+        "Agriculture",
+        "artisanat",
+        "kitsune"
+      ],
+      "sourceUrl": "https://2e.aonprd.com/Deities.aspx"
+    },
+    {
+      "id": "hei-feng",
+      "name": "Hei Feng",
+      "urlImage": "https://pathfinderwiki.com/w/images/thumb/5/5d/Hei_Feng_religious_symbol.webp/500px-Hei_Feng_religious_symbol.webp",
+      "shortDescription": "Dieu tengu des tempêtes, de la mer, de l’ivresse et des changements d’humeur.",
+      "longDescription": "Hei Feng peut apporter un vent favorable puis déchaîner une tempête pour une offense minuscule. Ses fidèles cherchent moins à imiter son tempérament qu’à négocier avec une puissance imprévisible. Marins, tengus, pirates et voyageurs lui offrent prières et boissons avant de prendre la mer.",
+      "category": "notable",
+      "status": "active",
+      "areasOfConcern": [
+        "Tempêtes",
+        "mer",
+        "ivresse",
+        "mauvais temps"
+      ],
+      "sourceUrl": "https://2e.aonprd.com/Deities.aspx"
+    },
+    {
+      "id": "lao-shu-po",
+      "name": "Lao Shu Po",
+      "urlImage": "https://pathfinderwiki.com/w/images/thumb/a/a2/Lao_Shu_Po_religious_symbol.webp/499px-Lao_Shu_Po_religious_symbol.webp",
+      "shortDescription": "Déesse des rats, de la nuit, des voleurs et de la survie opportuniste.",
+      "longDescription": "Lao Shu Po célèbre ceux qui vivent dans les interstices des sociétés et utilisent discrétion et ruse pour obtenir ce qu’on leur refuse. Sa foi peut protéger les exclus, mais elle valorise aussi l’égoïsme et la trahison. Elle attire certains ysokis, criminels, espions et cultes nocturnes.",
+      "category": "notable",
+      "status": "active",
+      "areasOfConcern": [
+        "Rats",
+        "nuit",
+        "voleurs"
+      ],
+      "sourceUrl": "https://2e.aonprd.com/Deities.aspx"
+    },
+    {
+      "id": "the-green-faith",
+      "name": "The Green Faith",
+      "urlImage": "https://raw.githubusercontent.com/foundryvtt/pf2e/f38e97960d53259e7b8461ef7162fe2448beab31/static/icons/deities/green-faith.webp",
+      "shortDescription": "Tradition spirituelle non théiste consacrée à la nature, à ses cycles et à son équilibre.",
+      "longDescription": "La Foi Verte ne sert pas une personnalité divine : elle reconnaît la valeur sacrée du monde naturel lui-même. Ses adeptes cherchent à comprendre les relations entre êtres vivants, saisons et paysages, sans imposer une morale humaine à la nature. Elle constitue une voie importante pour les druides et les communautés qui préfèrent les cycles du monde aux commandements d’un dieu.",
+      "category": "notable",
+      "status": "active",
+      "areasOfConcern": [
+        "Foi non théiste de la nature"
+      ],
+      "sourceUrl": "https://2e.aonprd.com/Deities.aspx"
+    },
+    {
+      "id": "whispering-way",
+      "name": "Whispering Way",
+      "urlImage": "https://pathfinderwiki.com/w/images/4/46/Whispering_Way_follower.jpg",
+      "shortDescription": "Philosophie nécromantique qui considère la non-mort comme la forme ultime d’immortalité.",
+      "longDescription": "La Voie Murmurante enseigne que la vie et le jugement des âmes sont des prisons dont les plus déterminés peuvent s’échapper. Ses adeptes recherchent les secrets des liches, manipulent les morts et servent souvent les ambitions de Tar-Baphon. Il s’agit généralement d’une doctrine ennemie plutôt que d’une foi adaptée à des héros ordinaires.",
+      "category": "notable",
+      "status": "active",
+      "areasOfConcern": [
+        "Immortalité par la non-mort"
+      ],
+      "sourceUrl": "https://2e.aonprd.com/Deities.aspx"
+    }
+  ]

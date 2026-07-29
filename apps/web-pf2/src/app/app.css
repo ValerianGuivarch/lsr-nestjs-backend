@@ -208,21 +208,21 @@ button {
 }
 
 .pf2-compact-thumb {
-  width: 150px;
-  height: 150px;
+  width: 200px;
+  height: 200px;
   border-radius: 1rem;
   background: linear-gradient(135deg, #3f5c93 0%, #1b2d4f 100%);
   border: 1px solid rgba(255, 255, 255, 0.18);
-  flex: 0 0 150px;
+  flex: 0 0 200px;
   overflow: hidden;
   display: grid;
   place-items: center;
 }
 
 .pf2-compact-thumb--large {
-  width: 300px;
-  height: 300px;
-  flex: 0 0 300px;
+  width: 200px;
+  height: 200px;
+  flex: 0 0 200px;
   border-radius: 1.2rem;
 }
 

@@ -1,8 +1,10 @@
 import { useMemo, useState } from 'react'
 import './app.css'
-import pf2Data from './resources/pf2.json'
 import ascendancesData from './resources/pf2-ascendances.json'
 import classesData from './resources/pf2-classes.json'
+import historiquesData from './resources/pf2-historiques.json'
+import dieuxData from './resources/pf2-dieux.json'
+import originesData from './resources/pf2-origines.json'
 
 type TabKey = 'historique' | 'ascendance' | 'classe' | 'dieu' | 'origine'
 
@@ -144,9 +146,11 @@ export function App() {
   })
 
   const data = useMemo<Pf2Data>(() => ({
-    ...(pf2Data as Pf2Data),
     ascendances: ascendancesData as Pf2Entry[],
     classes: classesData as Pf2Entry[],
+    historiques: historiquesData as Pf2Entry[],
+    dieux: dieuxData as Pf2Entry[],
+    origines: originesData as Pf2Entry[],
   }), [])
 
   const currentTab = useMemo(() => tabs.find(tab => tab.id === activeTab) ?? tabs[0], [activeTab])
@@ -214,8 +218,8 @@ export function App() {
         <p>
           Données chargées depuis la ressource locale
           {' '}
-          <strong>apps/web-pf2/src/app/resources/pf2.json</strong>,
-          <strong>pf2-ascendances.json</strong> et <strong>pf2-classes.json</strong>.
+          <strong>pf2-ascendances.json</strong>, <strong>pf2-classes.json</strong>, <strong>pf2-historiques.json</strong>,
+          <strong>pf2-dieux.json</strong> et <strong>pf2-origines.json</strong>.
         </p>
       </header>
 
