@@ -13,40 +13,26 @@ const openConfigMenu = args.has('--config') || args.has('-c') || args.has('--rec
 const listProfilesOnly = args.has('--list') || args.has('-l')
 const showHelpOnly = args.has('--help') || args.has('-h')
 
-const lotKeys = ['hp', 'l7r', 'wedding', 'jdr', 'ghost', 'yeardiary']
+const lotKeys = ['jdr', 'yeardiary']
 const lotLabels = {
-  hp: 'lot HP (backend + frontend shell)',
-  l7r: 'lot L7R (backend + frontend shell)',
-  wedding: 'lot Wedding (souvenirs, selfie, golf)',
   jdr: 'lot JDR (backend + frontend shell)',
-  ghost: 'lot Ghost (backend + frontend shell)',
   yeardiary: 'lot YearDiary (backend + frontend shell)'
 }
 
 const profileDescriptions = {
   full: 'Tous les lots actifs',
-  hp: 'Lot HP uniquement',
-  l7r: 'Lot L7R uniquement',
-  wedding: 'Lot wedding (souvenirs, selfie, golf)',
   jdr: 'Lot JDR uniquement',
-  ghost: 'Lot Ghost uniquement',
   yeardiary: 'Lot YearDiary uniquement',
-  pf2: 'Application Pathfinder PF2 uniquement',
-  legacyGhost: 'Stack Ghost legacy (api + dashboard + player)'
+  pf2: 'Application Pathfinder PF2 uniquement'
 }
 
 const defaultConfig = {
   backendUnified: true,
   frontendShell: true,
-  ghostLegacy: false,
   pf2App: false,
   stopPortsBeforeLaunch: false,
   domains: {
-    hp: true,
-    l7r: true,
-    wedding: true,
     jdr: true,
-    ghost: true,
     yeardiary: true
   }
 }
@@ -63,30 +49,20 @@ function mergeConfig(baseConfig, overrideConfig) {
 }
 
 function normalizeLaunchConfig(config) {
-  const mergedConfig = mergeConfig(defaultConfig, config)
-
-  return {
-    ...mergedConfig,
-    domains: {
-      ...mergedConfig.domains,
-      l7r: Boolean(mergedConfig.domains.l7r || mergedConfig.domains.wedding)
-    }
-  }
+  return mergeConfig(defaultConfig, config)
 }
 
 function createLotProfile(enabledLots) {
   const hasAtLeastOneLot = enabledLots.length > 0
   const domains = {}
-  const enableL7r = enabledLots.includes('l7r') || enabledLots.includes('wedding')
 
   for (const key of lotKeys) {
-    domains[key] = key === 'l7r' ? enableL7r : enabledLots.includes(key)
+    domains[key] = enabledLots.includes(key)
   }
 
   return {
     backendUnified: hasAtLeastOneLot,
     frontendShell: hasAtLeastOneLot,
-    ghostLegacy: false,
     stopPortsBeforeLaunch: false,
     domains
   }
@@ -94,38 +70,15 @@ function createLotProfile(enabledLots) {
 
 const builtInProfiles = {
   full: createLotProfile(lotKeys),
-  hp: createLotProfile(['hp']),
-  l7r: createLotProfile(['l7r']),
-  wedding: createLotProfile(['wedding']),
   jdr: createLotProfile(['jdr']),
-  ghost: createLotProfile(['ghost']),
   yeardiary: createLotProfile(['yeardiary']),
   pf2: {
     backendUnified: false,
     frontendShell: false,
-    ghostLegacy: false,
     pf2App: true,
     stopPortsBeforeLaunch: false,
     domains: {
-      hp: false,
-      l7r: false,
-      wedding: false,
       jdr: false,
-      ghost: false,
-      yeardiary: false
-    }
-  },
-  legacyGhost: {
-    backendUnified: false,
-    frontendShell: false,
-    ghostLegacy: true,
-    stopPortsBeforeLaunch: false,
-    domains: {
-      hp: false,
-      l7r: false,
-      wedding: false,
-      jdr: false,
-      ghost: true,
       yeardiary: false
     }
   }
@@ -176,8 +129,7 @@ function printProfiles(runnerConfig) {
 
   console.log('\nExemples:')
   console.log('npm run launch -- --profile full')
-  console.log('npm run launch -- --profile hp')
-  console.log('npm run launch -- --profile wedding')
+  console.log('npm run launch -- --profile jdr')
   console.log('npm run launch -- --config')
 }
 
@@ -429,10 +381,7 @@ async function main() {
     processes.push(
       startProcess('backend-unified', 'dev:backend', {
         PORT: '8081',
-        ENABLE_HP: String(config.domains.hp),
-        ENABLE_L7R: String(config.domains.l7r),
         ENABLE_JDR: String(config.domains.jdr),
-        ENABLE_GHOST: String(config.domains.ghost),
         ENABLE_YEARDIARY: String(config.domains.yeardiary)
       }, { critical: true })
     )
@@ -440,10 +389,6 @@ async function main() {
 
   if (config.frontendShell) {
     processes.push(startProcess('frontend-shell', 'dev:frontend', {}, { critical: false }))
-  }
-
-  if (config.ghostLegacy) {
-    processes.push(startProcess('ghost-legacy', 'start:ghost', {}, { critical: true }))
   }
 
   if (config.pf2App) {

@@ -2,12 +2,7 @@ import { Module } from '@nestjs/common'
 import { ConfigModule } from '@nestjs/config'
 import { TypeOrmModule } from '@nestjs/typeorm'
 import { AppYearDiaryModule } from '../../libs/yeardiary/src/lib/backend/app-yeardiary.module'
-import { GhostModule } from '../../libs/ghost/src/lib/backend/ghost.module'
-import { HpModule } from '../../libs/hp/src/lib/backend/hp.module'
 import { JdrModule } from '../../libs/jdr/src/lib/backend/jdr.module'
-import { L7rModule } from '../../libs/l7r/src/lib/backend/l7r.module'
-import { ToolStateEntity } from '../../libs/ghost/src/lib/backend/device.entity'
-import { GameStateEntity } from '../../libs/ghost/src/lib/backend/game-state.entity'
 import configuration from '../../libs/shared/src/lib/backend/configuration'
 import { DBJdr } from '../../libs/jdr/src/lib/backend/infrastructure/persistence/jdr.db'
 import { DBJdrStat } from '../../libs/jdr/src/lib/backend/infrastructure/persistence/jdr-stat.db'
@@ -42,13 +37,10 @@ function envEnabled(key: string, defaultValue: boolean): boolean {
   return normalized === '1' || normalized === 'true' || normalized === 'yes' || normalized === 'on'
 }
 
-const enableHp = envEnabled('ENABLE_HP', true)
-const enableL7r = envEnabled('ENABLE_L7R', true)
 const enableJdr = envEnabled('ENABLE_JDR', true)
-const enableGhost = envEnabled('ENABLE_GHOST', true)
 const enableYearDiary = envEnabled('ENABLE_YEARDIARY', true)
 
-const needsPostgres = enableHp || enableL7r || enableYearDiary
+const needsPostgres = enableYearDiary
 
 @Module({
   imports: [
@@ -70,17 +62,6 @@ const needsPostgres = enableHp || enableL7r || enableYearDiary
             synchronize: configuration().postgres.synchronize,
             poolSize: 8,
             migrationsRun: true
-          })
-        ]
-      : []),
-    ...(enableGhost
-      ? [
-          TypeOrmModule.forRoot({
-            name: 'ghost',
-            type: 'sqlite',
-            database: 'ghost.sqlite',
-            entities: [ToolStateEntity, GameStateEntity],
-            synchronize: true
           })
         ]
       : []),
@@ -115,10 +96,7 @@ const needsPostgres = enableHp || enableL7r || enableYearDiary
           })
         ]
       : []),
-    ...(enableHp ? [HpModule] : []),
-    ...(enableL7r ? [L7rModule] : []),
     ...(enableJdr ? [JdrModule] : []),
-    ...(enableGhost ? [GhostModule] : []),
     ...(enableYearDiary ? [AppYearDiaryModule] : [])
   ],
   controllers: [ConfigController, MusicController]

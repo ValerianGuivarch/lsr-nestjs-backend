@@ -26,11 +26,8 @@ async function bootstrap(): Promise<void> {
       const targetOrigin = `http://127.0.0.1:${port}`
 
       registerReverseProxy(app, [
-        { sourcePrefix: '/api/hp', targetPrefix: '/api/v1/hp', targetOrigin },
-        { sourcePrefix: '/api/l7r', targetPrefix: '/api/v1', targetOrigin },
         { sourcePrefix: '/api/jdr', targetPrefix: '/api/v1/jdr', targetOrigin },
-        { sourcePrefix: '/api/yeardiary', targetPrefix: '/api/v1/diaries', targetOrigin },
-        { sourcePrefix: '/api/ghost', targetPrefix: '/api', targetOrigin }
+        { sourcePrefix: '/api/yeardiary', targetPrefix: '/api/v1/diaries', targetOrigin }
       ])
 
       // Expose /music as static
@@ -46,10 +43,7 @@ async function bootstrap(): Promise<void> {
 }
 
 function printStartupInfo(): void {
-  const enableHp = envEnabled('ENABLE_HP', true)
-  const enableL7r = envEnabled('ENABLE_L7R', true)
   const enableJdr = envEnabled('ENABLE_JDR', true)
-  const enableGhost = envEnabled('ENABLE_GHOST', true)
   const enableYearDiary = envEnabled('ENABLE_YEARDIARY', true)
   
   const backendPort = (global as any).ACTUAL_SERVER_PORT ?? process.env.PORT ?? 8081
@@ -59,10 +53,7 @@ function printStartupInfo(): void {
   console.log('   Unified Application Started')
   console.log('========================================\n')
 
-  if (enableHp) console.log(`  ✓ HP       → ${frontendUrl}/hp/dashboard`)
-  if (enableL7r) console.log(`  ✓ L7R      → ${frontendUrl}/l7r/dashboard`)
   if (enableJdr) console.log(`  ✓ JDR      → ${frontendUrl}/jdr/dashboard`)
-  if (enableGhost) console.log(`  ✓ Ghost    → ${frontendUrl}/ghost/dashboard`)
   console.log(`  ✓ PF2      → ${frontendUrl}/pf2`)
   if (enableYearDiary) console.log(`  ✓ YearDiary → ${frontendUrl}/yeardiary/dashboard`)
 

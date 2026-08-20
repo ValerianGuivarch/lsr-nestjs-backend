@@ -1,0 +1,25 @@
+{
+  "compilerOptions": {
+    "paths": {
+      "hp-domain": [
+        "/Users/Valerian.Guivarch/perso/lsr-nestjs-backend/libs/hp/domain/src/index.ts"
+      ],
+      "jdr-domain": [
+        "/Users/Valerian.Guivarch/perso/lsr-nestjs-backend/dist/libs/jdr/domain"
+      ],
+      "jdr": [
+        "/Users/Valerian.Guivarch/perso/lsr-nestjs-backend/libs/jdr/src/index.ts"
+      ],
+      "hp": [
+        "/Users/Valerian.Guivarch/perso/lsr-nestjs-backend/libs/hp/src/index.ts"
+      ],
+      "shared": [
+        "/Users/Valerian.Guivarch/perso/lsr-nestjs-backend/libs/shared/src/index.ts"
+      ],
+      "yeardiary": [
+        "/Users/Valerian.Guivarch/perso/lsr-nestjs-backend/libs/yeardiary/src/index.ts"
+      ]
+    }
+  },
+  "extends": "../../../../libs/jdr/tsconfig.lib.json"
+}

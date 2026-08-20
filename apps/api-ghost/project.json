@@ -1,8 +1,0 @@
-{
-  "name": "api-ghost",
-  "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "apps/api-ghost/src",
-  "projectType": "application",
-  "tags": ["scope:ghost", "type:app", "platform:server"],
-  "targets": {}
-}
