@@ -1,37 +1,21 @@
-import { useEffect, useState } from 'react'
-import { JdrApiClient, DiceRollDto, JdrDto, RollState } from '../data/JdrApiClient'
+import { useQuery } from '@tanstack/react-query'
+import { JdrApiClient, RollState } from '../data/JdrApiClient'
 
 interface DiceRollFeedProps {
   jdrSlug: string
   characterSlug?: string
   maxItems?: number
-  jdrData?: JdrDto
 }
 
-export function DiceRollFeed({ jdrSlug, characterSlug, maxItems = 30, jdrData }: DiceRollFeedProps) {
-  const [rolls, setRolls] = useState<DiceRollDto[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+export function DiceRollFeed({ jdrSlug, characterSlug, maxItems = 30 }: DiceRollFeedProps) {
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['jdr', jdrSlug, 'rolls', maxItems],
+    queryFn: () => JdrApiClient.getLastRolls(jdrSlug, maxItems),
+    refetchInterval: 4000
+  })
 
-  useEffect(() => {
-    const fetchRolls = async () => {
-      try {
-        setLoading(true)
-        const data = await JdrApiClient.getLastRolls(jdrSlug, maxItems)
-        setRolls(data)
-        setError(null)
-      } catch (err) {
-        setError((err as Error).message)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    fetchRolls()
-    const interval = setInterval(fetchRolls, 4000)
-    return () => clearInterval(interval)
-  }, [jdrSlug, maxItems])
-
+  const rolls = data ?? []
+  const loading = isLoading
   const filteredRolls = characterSlug ? rolls.filter(r => r.characterSlug === characterSlug) : rolls
 
   const resolveRollState = (roll: DiceRollDto): RollState => roll.rollState ?? 'normal'
@@ -58,7 +42,7 @@ export function DiceRollFeed({ jdrSlug, characterSlug, maxItems = 30, jdrData }:
   }
 
   if (error) {
-    return <div style={{ color: 'var(--color-danger)' }}>Erreur: {error}</div>
+    return <div style={{ color: 'var(--color-danger)' }}>Erreur: {(error as Error).message}</div>
   }
 
   return (

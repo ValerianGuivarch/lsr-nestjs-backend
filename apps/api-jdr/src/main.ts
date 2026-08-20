@@ -1,9 +1,9 @@
-import { AppJdrModule } from 'jdr'
+import { JdrModule } from 'jdr'
 import { bootstrapApi } from 'shared'
 
 async function bootstrap(): Promise<void> {
   await bootstrapApi({
-    rootModule: AppJdrModule,
+    rootModule: JdrModule,
     appName: 'JdR',
     swaggerTag: 'JdR',
     swaggerPath: 'api/jdr',

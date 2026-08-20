@@ -7,6 +7,10 @@ PORT=8081
 YEARDIARY_PORT=8080
 HOST=127.0.0.1
 
+# jdr admin (apps/admin-jdr) - Basic Auth gating the admin frontend only, not the JDR API
+ADMIN_USERNAME=admin
+ADMIN_PASSWORD=changeme
+
 # web front (apps/web-l7r)
 REACT_APP_API_URL=http://127.0.0.1:8081/api/v1
 API_URL=http://127.0.0.1:8081/api/v1

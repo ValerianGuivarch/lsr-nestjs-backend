@@ -9,10 +9,9 @@
     "module": "commonjs",
     "skipLibCheck": true,
     "paths": {
-      "jdr-domain": ["./libs/jdr/domain/src/index.ts"],
-      "jdr": ["./libs/jdr/src/index.ts"],
-      "shared": ["./libs/shared/src/index.ts"],
-      "yeardiary": ["./libs/yeardiary/src/index.ts"]
+      "jdr": ["./libs/jdr/src/index"],
+      "shared": ["./libs/shared/src/index"],
+      "yeardiary": ["./libs/yeardiary/src/index"]
     }
   },
   "exclude": ["node_modules", "dist"]

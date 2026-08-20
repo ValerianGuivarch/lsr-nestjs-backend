@@ -129,7 +129,8 @@ export async function bootstrapApi(p: BootstrapApiOptions): Promise<void> {
       'https://l7r.fr',
       'http://localhost:3000',
       'http://localhost:4200',
-      'http://localhost:4202'
+      'http://localhost:4202',
+      'http://localhost:4203'
     ],
     credentials: false
   })

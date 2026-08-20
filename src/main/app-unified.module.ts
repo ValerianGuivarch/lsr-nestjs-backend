@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common'
 import { ConfigModule } from '@nestjs/config'
 import { AppYearDiaryModule } from '../../libs/yeardiary/src/lib/backend/app-yeardiary.module'
-import { JdrModule } from '../../libs/jdr/src/lib/backend/jdr.module'
+import { JdrModule } from 'jdr'
 import configuration from '../../libs/shared/src/lib/backend/configuration'
 
 function envEnabled(key: string, defaultValue: boolean): boolean {

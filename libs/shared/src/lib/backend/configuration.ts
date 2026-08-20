@@ -4,7 +4,7 @@ export default () => ({
   apiUrl: process.env['API_URL'],
   http: {
     host: process.env['HOST'] || '0.0.0.0',
-    port: parseInt(process.env['PORT'] || '3000')
+    port: parseInt(process.env['PORT'] || '8081')
   },
   JwtService: {
     jwtSecret: process.env['JWT_SECRET']

@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useState } from 'react'
+import { useParams } from 'react-router-dom'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import styled from 'styled-components'
-import { MdEdit } from 'react-icons/md'
-import { JdrApiClient, JdrDto, DiceRollDto, DraftDto, RollState } from '../data/JdrApiClient'
+import { JdrApiClient, RollState } from '../data/JdrApiClient'
 import { DiceRollFeed } from '../components/DiceRollFeed'
 
 const ROLL_STATES: Array<{ value: RollState; label: string }> = [
@@ -14,35 +14,21 @@ const ROLL_STATES: Array<{ value: RollState; label: string }> = [
 
 export default function CharacterPage() {
   const { jdrSlug, characterSlug } = useParams<{ jdrSlug: string; characterSlug: string }>()
-  const navigate = useNavigate()
-  const [jdr, setJdr] = useState<JdrDto | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const queryClient = useQueryClient()
+  const jdrQueryKey = ['jdr', jdrSlug] as const
+  const { data: jdr, isLoading: loading, error } = useQuery({
+    queryKey: jdrQueryKey,
+    queryFn: () => JdrApiClient.findOneBySlug(jdrSlug ?? ''),
+    enabled: !!jdrSlug,
+    // Refetch periodically so edits made from the admin (traits, stats...) show up without a manual reload.
+    refetchInterval: 15000
+  })
   const [rolling, setRolling] = useState<string | null>(null)
-  const [, setLastRoll] = useState<DiceRollDto | null>(null)
   const [rollState, setRollState] = useState<RollState>('normal')
-  const [updatingPv, setUpdatingPv] = useState(false)
-  const [draft, setDraft] = useState<DraftDto | null>(null)
+  const [updatingResource, setUpdatingResource] = useState<string | null>(null)
   const [arbitraryFormula, setArbitraryFormula] = useState('1d20')
   const [rollingArbitrary, setRollingArbitrary] = useState(false)
   const [spellPopup, setSpellPopup] = useState<{ slug: string; name: string } | null>(null)
-
-  useEffect(() => {
-    if (!jdrSlug) return
-    const fetchJdr = async () => {
-      try {
-        setLoading(true)
-        const data = await JdrApiClient.findOneBySlug(jdrSlug)
-        setJdr(data)
-        setError(null)
-      } catch (err) {
-        setError((err as Error).message)
-      } finally {
-        setLoading(false)
-      }
-    }
-    fetchJdr()
-  }, [jdrSlug])
 
   const character = jdr?.characters.find(c => c.slug === characterSlug)
 
@@ -58,29 +44,11 @@ export default function CharacterPage() {
       `/l7r/${portraitSlug.toLowerCase()}.png`
     ].filter(Boolean)))
 
-  useEffect(() => {
-    if (!jdrSlug) return
-
-    const refreshDraft = async () => {
-      try {
-        const activeDraft = await JdrApiClient.getActiveDraft(jdrSlug)
-        setDraft(activeDraft)
-      } catch {
-        setDraft(null)
-      }
-    }
-
-    refreshDraft()
-    const id = setInterval(refreshDraft, 2500)
-    return () => clearInterval(id)
-  }, [jdrSlug])
-
   const handleRollDice = async (statSlug: string, text?: string | null) => {
     if (!jdrSlug || !characterSlug) return
     try {
       setRolling(statSlug)
-      const roll = await JdrApiClient.rollDice(jdrSlug, characterSlug, statSlug, rollState, text ?? null)
-      setLastRoll(roll)
+      await JdrApiClient.rollDice(jdrSlug, characterSlug, statSlug, rollState, text ?? null)
     } catch (err) {
       alert('Erreur: ' + (err as Error).message)
     } finally {
@@ -97,8 +65,7 @@ export default function CharacterPage() {
     }
     try {
       setRollingArbitrary(true)
-      const roll = await JdrApiClient.rollArbitrary(jdrSlug, characterSlug, formula)
-      setLastRoll(roll)
+      await JdrApiClient.rollArbitrary(jdrSlug, characterSlug, formula)
     } catch (err) {
       alert('Erreur: ' + (err as Error).message)
     } finally {
@@ -107,12 +74,11 @@ export default function CharacterPage() {
   }
 
   if (loading) return <StatusShell>Chargement du personnage...</StatusShell>
-  if (error) return <StatusShell>Erreur: {error}</StatusShell>
+  if (error) return <StatusShell>Erreur: {(error as Error).message}</StatusShell>
   if (!jdr || !character) return <StatusShell>Personnage non trouvé</StatusShell>
 
   const selectedClass = character.classSlug ? jdr.classes.find(c => c.slug === character.classSlug) : undefined
   const selectedGroups = jdr.groups.filter(g => character.groupSlugs.includes(g.slug))
-  const activeRound = draft?.rounds.find(round => round.round === draft.currentRound)
   const isHpJdr =
     jdr.name.toLowerCase().includes('hp') ||
     jdr.classes.some((klass) => klass.slug === 'eleve' || klass.slug === 'sorcier') ||
@@ -145,18 +111,18 @@ export default function CharacterPage() {
     return resource.resourceSlug !== pvResource.slug
   })
 
-  const handleAdjustPv = async (delta: number) => {
-    if (!jdrSlug || !characterSlug || !pvResource || !characterPv || updatingPv) return
+  const handleAdjustResource = async (resourceSlug: string, currentValue: number, delta: number) => {
+    if (!jdrSlug || !characterSlug || updatingResource) return
 
-    const nextValue = Math.max(0, characterPv.value + delta)
+    const nextValue = Math.max(0, currentValue + delta)
     try {
-      setUpdatingPv(true)
-      const updated = await JdrApiClient.updateCharacterResource(jdrSlug, characterSlug, pvResource.slug, nextValue)
-      setJdr(updated)
+      setUpdatingResource(resourceSlug)
+      const updated = await JdrApiClient.updateCharacterResource(jdrSlug, characterSlug, resourceSlug, nextValue)
+      queryClient.setQueryData(jdrQueryKey, updated)
     } catch (err) {
       alert('Erreur: ' + (err as Error).message)
     } finally {
-      setUpdatingPv(false)
+      setUpdatingResource(null)
     }
   }
 
@@ -193,9 +159,9 @@ export default function CharacterPage() {
               <PvPanel>
                 <PvLabel>PV</PvLabel>
                 <PvValueRow>
-                  <PvButton type="button" onClick={() => handleAdjustPv(-1)} disabled={updatingPv || characterPv.value <= 0}>-</PvButton>
+                  <PvButton type="button" onClick={() => handleAdjustResource(pvResource.slug, characterPv.value, -1)} disabled={updatingResource === pvResource.slug || characterPv.value <= 0}>-</PvButton>
                   <PvValue>{characterPv.value}</PvValue>
-                  <PvButton type="button" onClick={() => handleAdjustPv(1)} disabled={updatingPv}>+</PvButton>
+                  <PvButton type="button" onClick={() => handleAdjustResource(pvResource.slug, characterPv.value, 1)} disabled={updatingResource === pvResource.slug}>+</PvButton>
                 </PvValueRow>
               </PvPanel>
             )}
@@ -207,9 +173,7 @@ export default function CharacterPage() {
             <TagRow>
               {selectedClass && <Tag>Classe: {selectedClass.name} (Lvl {selectedClass.level})</Tag>}
               {selectedGroups.map(g => (
-                <GroupTag key={g.slug} onClick={() => navigate(`/jdr/${jdrSlug}/groups/${g.slug}`)}>
-                  {g.name}
-                </GroupTag>
+                <Tag key={g.slug}>{g.name}</Tag>
               ))}
               {!selectedClass && <Tag>Classe: Aucune</Tag>}
             </TagRow>
@@ -223,24 +187,7 @@ export default function CharacterPage() {
                 ))}
               </HousePointsRow>
             )}
-            {draft && character.groupSlugs.includes(draft.groupSlug) && (
-              <DraftCtaButton onClick={() => navigate(`/jdr/${jdrSlug}/characters/${characterSlug}/draft`)}>
-                DRAFT
-                <DraftSubLabel>
-                  Tour {draft.currentRound}/{draft.totalRounds}
-                  {activeRound?.picks?.[character.slug] ? ' · Choix validé' : ' · Choix à faire'}
-                </DraftSubLabel>
-              </DraftCtaButton>
-            )}
           </HeroInfo>
-
-          <EditIconButton
-            onClick={() => navigate(`/jdr/${jdrSlug}/characters/${characterSlug}/edit`)}
-            aria-label="Éditer le personnage"
-            title="Éditer"
-          >
-            <MdEdit size={20} />
-          </EditIconButton>
         </HeroContent>
       </CompactHeader>
 
@@ -362,10 +309,15 @@ export default function CharacterPage() {
               <ResourcesGrid>
                 {resourcesForPanel.map(res => {
                   const resource = jdr.resources.find(r => r.slug === res.resourceSlug)
+                  const isUpdating = updatingResource === res.resourceSlug
                   return (
                     <ResourceTile key={res.resourceSlug}>
                       <ResourceName>{resource?.name || res.resourceSlug}</ResourceName>
-                      <ResourceValue>{res.value}</ResourceValue>
+                      <ResourceValueRow>
+                        <ResourceButton type="button" onClick={() => handleAdjustResource(res.resourceSlug, res.value, -1)} disabled={isUpdating || res.value <= 0}>-</ResourceButton>
+                        <ResourceValue>{res.value}</ResourceValue>
+                        <ResourceButton type="button" onClick={() => handleAdjustResource(res.resourceSlug, res.value, 1)} disabled={isUpdating}>+</ResourceButton>
+                      </ResourceValueRow>
                     </ResourceTile>
                   )
                 })}
@@ -377,7 +329,7 @@ export default function CharacterPage() {
         <SideColumn>
           <SectionCard>
             <SectionTitle>Flux des lancers</SectionTitle>
-            <DiceRollFeed jdrSlug={jdr.slug} characterSlug={characterSlug} maxItems={15} jdrData={jdr} />
+            <DiceRollFeed jdrSlug={jdr.slug} characterSlug={characterSlug} maxItems={15} />
           </SectionCard>
         </SideColumn>
       </ContentGrid>
@@ -557,70 +509,6 @@ const Tag = styled.span`
   padding: 0.16rem 0.54rem;
   color: #5e3e35;
   font-size: 0.74rem;
-`
-
-const GroupTag = styled.button`
-  display: inline-flex;
-  align-items: center;
-  border: 1px solid rgba(167, 119, 64, 0.6);
-  background: linear-gradient(135deg, rgba(151, 93, 46, 0.9), rgba(121, 71, 34, 0.9));
-  border-radius: 999px;
-  padding: 0.16rem 0.54rem;
-  color: #fff4de;
-  font-size: 0.74rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: filter 0.15s;
-  &:hover { filter: brightness(1.12); }
-`
-
-const DraftCtaButton = styled.button`
-  margin-top: 0.6rem;
-  width: fit-content;
-  border: 2px solid rgba(255, 208, 112, 0.88);
-  border-radius: 12px;
-  background: linear-gradient(180deg, rgba(255, 160, 66, 0.96), rgba(232, 96, 45, 0.96));
-  color: #fff9ee;
-  font-weight: 900;
-  font-size: 1rem;
-  letter-spacing: 0.05em;
-  padding: 0.36rem 0.92rem;
-  display: grid;
-  justify-items: start;
-  box-shadow: 0 0 0 2px rgba(18, 28, 42, 0.55), 0 10px 24px rgba(0, 0, 0, 0.35);
-  animation: pulse 1.8s ease-in-out infinite;
-
-  @keyframes pulse {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.03); }
-  }
-`
-
-const DraftSubLabel = styled.span`
-  font-size: 0.67rem;
-  letter-spacing: 0.04em;
-`
-
-const CharacterDescription = styled.p`
-  margin: 0;
-  max-width: 90ch;
-  color: #5a4338;
-  line-height: 1.6;
-`
-
-const EditIconButton = styled.button`
-  width: 2.2rem;
-  height: 2.2rem;
-  border-radius: 999px;
-  border: 1px solid rgba(174, 123, 72, 0.46);
-  background: linear-gradient(180deg, rgba(150, 89, 47, 0.95), rgba(117, 66, 38, 0.95));
-  color: #fff4de;
-  display: grid;
-  place-items: center;
-
-  &:hover {
-    filter: brightness(1.08);
-  }
 `
 
 const ContentGrid = styled.div`
@@ -809,8 +697,30 @@ const ResourceName = styled.span`
   font-size: 0.9rem;
 `
 
+const ResourceValueRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+`
+
+const ResourceButton = styled.button`
+  width: 1.5rem;
+  height: 1.5rem;
+  padding: 0;
+  border-radius: 6px;
+  border: 1px solid rgba(163, 110, 58, 0.42);
+  background: linear-gradient(180deg, #8d5030, #6e3d28);
+  color: #fff5dd;
+  font-weight: 800;
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+`
+
 const ResourceValue = styled.span`
-  color: #ffe09f;
+  color: #4b2f2a;
   font-size: 1.2rem;
   font-weight: 800;
 `
@@ -888,86 +798,6 @@ const HousePillValue = styled.span<{ $textColor?: string }>`
   font-weight: 800;
   color: ${({ $textColor }) => $textColor ?? '#fff'};
   font-family: 'Cinzel', Georgia, serif;
-`
-
-const GroupRow = styled.div<{ $own: boolean }>`
-  border: 1px solid ${({ $own }) => ($own ? 'rgba(167, 110, 62, 0.6)' : 'rgba(171, 127, 81, 0.25)')};
-  border-radius: 10px;
-  background: ${({ $own }) => ($own ? 'rgba(253, 242, 218, 0.9)' : 'rgba(248, 238, 214, 0.6)')};
-  margin-bottom: 0.6rem;
-  overflow: hidden;
-`
-
-const GroupRowHeader = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0.55rem 0.8rem;
-  cursor: pointer;
-  user-select: none;
-  &:hover { background: rgba(255, 243, 216, 0.7); }
-`
-
-const GroupRowName = styled.span<{ $own: boolean }>`
-  font-weight: ${({ $own }) => ($own ? 800 : 600)};
-  color: ${({ $own }) => ($own ? '#5b3c2e' : '#6d5040')};
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-`
-
-const GroupMemberCount = styled.small`
-  font-size: 0.75rem;
-  font-weight: 400;
-  color: #8a6645;
-`
-
-const GroupToggle = styled.span`
-  font-size: 0.7rem;
-  color: #8a6645;
-`
-
-const GroupMembersPanel = styled.div`
-  padding: 0.5rem 0.8rem 0.7rem;
-  border-top: 1px solid rgba(171, 127, 81, 0.2);
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-`
-
-const GroupMemberRow = styled.div`
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-`
-
-const GroupMemberName = styled.span<{ $self: boolean }>`
-  font-size: 0.9rem;
-  font-weight: ${({ $self }) => ($self ? 800 : 500)};
-  color: ${({ $self }) => ($self ? '#5b3c2e' : '#6d5040')};
-  min-width: 8rem;
-`
-
-const GroupMemberResources = styled.div`
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.3rem;
-`
-
-const GroupResourcePill = styled.span`
-  font-size: 0.75rem;
-  border: 1px solid rgba(171, 127, 81, 0.35);
-  border-radius: 999px;
-  padding: 0.1rem 0.5rem;
-  background: rgba(246, 231, 199, 0.8);
-  color: #66452f;
-`
-
-const GroupEmptyHint = styled.span`
-  font-size: 0.85rem;
-  color: #8a6645;
-  font-style: italic;
 `
 
 const SpellModalBackdrop = styled.div`

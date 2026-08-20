@@ -1,0 +1,31 @@
+import { Entity, Column, PrimaryColumn, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm'
+import { DBJdr } from '../../jdr/database/DBJdr'
+import { DBJdrResource } from './jdr-resource.db'
+
+@Entity({ name: 'jdr_group_resource' })
+export class DBJdrGroupResource {
+  @CreateDateColumn({ default: () => 'CURRENT_TIMESTAMP' })
+  createdDate: Date
+
+  @UpdateDateColumn({ default: () => 'CURRENT_TIMESTAMP' })
+  updatedDate: Date
+
+  @PrimaryColumn({ type: 'varchar' })
+  jdrSlug: string
+
+  @ManyToOne(() => DBJdr, (jdr) => jdr.groupResources, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'jdrSlug' })
+  jdr: DBJdr
+
+  @PrimaryColumn({ type: 'varchar' })
+  resourceSlug: string
+
+  @ManyToOne(() => DBJdrResource, { onDelete: 'CASCADE' })
+  @JoinColumn([{ name: 'jdrSlug', referencedColumnName: 'jdrSlug' }, { name: 'resourceSlug', referencedColumnName: 'slug' }])
+  resource: DBJdrResource
+
+  @Column({ type: 'int', nullable: false, default: 0 })
+  value: number
+}
+
+export type DBJdrGroupResourceToCreate = Pick<DBJdrGroupResource, 'jdrSlug' | 'resourceSlug' | 'value'>

@@ -1,0 +1,29 @@
+import { Entity, Column, PrimaryColumn, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm'
+import { DBJdrCharacter } from './jdr-character.db'
+
+@Entity({ name: 'jdr_character_item' })
+export class DBJdrCharacterItem {
+  @CreateDateColumn({ default: () => 'CURRENT_TIMESTAMP' })
+  createdDate: Date
+
+  @UpdateDateColumn({ default: () => 'CURRENT_TIMESTAMP' })
+  updatedDate: Date
+
+  @PrimaryColumn({ type: 'varchar' })
+  jdrSlug: string
+
+  @PrimaryColumn({ type: 'varchar' })
+  characterSlug: string
+
+  @ManyToOne(() => DBJdrCharacter, (character) => character.items, { onDelete: 'CASCADE' })
+  @JoinColumn([{ name: 'jdrSlug', referencedColumnName: 'jdrSlug' }, { name: 'characterSlug', referencedColumnName: 'slug' }])
+  character: DBJdrCharacter
+
+  @PrimaryColumn({ type: 'varchar' })
+  itemSlug: string
+
+  @Column({ type: 'int', nullable: false, default: 1 })
+  quantity: number
+}
+
+export type DBJdrCharacterItemToCreate = Pick<DBJdrCharacterItem, 'jdrSlug' | 'characterSlug' | 'itemSlug' | 'quantity'>
