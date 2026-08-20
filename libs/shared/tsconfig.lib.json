@@ -6,5 +6,5 @@
     "types": ["node"]
   },
   "include": ["src/index.ts", "src/lib/backend/**/*.ts"],
-  "exclude": ["src/lib/backend/postgres.module.ts"]
+  "exclude": []
 }

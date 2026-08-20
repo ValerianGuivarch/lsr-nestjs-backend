@@ -1,30 +1,8 @@
 import { Module } from '@nestjs/common'
 import { ConfigModule } from '@nestjs/config'
-import { TypeOrmModule } from '@nestjs/typeorm'
 import { AppYearDiaryModule } from '../../libs/yeardiary/src/lib/backend/app-yeardiary.module'
 import { JdrModule } from '../../libs/jdr/src/lib/backend/jdr.module'
 import configuration from '../../libs/shared/src/lib/backend/configuration'
-import { DBJdr } from '../../libs/jdr/src/lib/backend/infrastructure/persistence/jdr.db'
-import { DBJdrStat } from '../../libs/jdr/src/lib/backend/infrastructure/persistence/jdr-stat.db'
-import { DBJdrTrait } from '../../libs/jdr/src/lib/backend/infrastructure/persistence/jdr-trait.db'
-import { DBJdrTraitModifier } from '../../libs/jdr/src/lib/backend/infrastructure/persistence/jdr-trait-modifier.db'
-import { DBJdrResource } from '../../libs/jdr/src/lib/backend/infrastructure/persistence/jdr-resource.db'
-import { DBJdrGroupResource } from '../../libs/jdr/src/lib/backend/infrastructure/persistence/jdr-group-resource.db'
-import { DBJdrItem } from '../../libs/jdr/src/lib/backend/infrastructure/persistence/jdr-item.db'
-import { DBJdrGroupItem } from '../../libs/jdr/src/lib/backend/infrastructure/persistence/jdr-group-item.db'
-import { DBJdrCharacter } from '../../libs/jdr/src/lib/backend/infrastructure/persistence/jdr-character.db'
-import { DBJdrCharacterStat } from '../../libs/jdr/src/lib/backend/infrastructure/persistence/jdr-character-stat.db'
-import { DBJdrCharacterTrait } from '../../libs/jdr/src/lib/backend/infrastructure/persistence/jdr-character-trait.db'
-import { DBJdrCharacterItem } from '../../libs/jdr/src/lib/backend/infrastructure/persistence/jdr-character-item.db'
-import { DBJdrCharacterResource } from '../../libs/jdr/src/lib/backend/infrastructure/persistence/jdr-character-resource.db'
-import { DBJdrDiceRoll } from '../../libs/jdr/src/lib/backend/infrastructure/persistence/jdr-dice-roll.db'
-import { DBJdrClass } from '../../libs/jdr/src/lib/backend/infrastructure/persistence/jdr-class.db'
-import { DBJdrClassResource } from '../../libs/jdr/src/lib/backend/infrastructure/persistence/jdr-class-resource.db'
-import { DBJdrGroup } from '../../libs/jdr/src/lib/backend/infrastructure/persistence/jdr-group.db'
-import { DBJdrCharacterGroup } from '../../libs/jdr/src/lib/backend/infrastructure/persistence/jdr-character-group.db'
-import { DBJdrDraft } from '../../libs/jdr/src/lib/backend/infrastructure/persistence/jdr-draft.db'
-import { ConfigController } from './config.controller'
-import { MusicController } from './music.controller'
 
 function envEnabled(key: string, defaultValue: boolean): boolean {
   const raw = process.env[key]
@@ -40,65 +18,14 @@ function envEnabled(key: string, defaultValue: boolean): boolean {
 const enableJdr = envEnabled('ENABLE_JDR', true)
 const enableYearDiary = envEnabled('ENABLE_YEARDIARY', true)
 
-const needsPostgres = enableYearDiary
-
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
       load: [configuration]
     }),
-    ...(needsPostgres
-      ? [
-          TypeOrmModule.forRoot({
-            name: 'postgres',
-            type: 'postgres',
-            host: configuration().postgres.host,
-            port: configuration().postgres.port,
-            username: configuration().postgres.username,
-            password: configuration().postgres.password,
-            database: configuration().postgres.database,
-            autoLoadEntities: configuration().postgres.autoLoadEntities,
-            synchronize: configuration().postgres.synchronize,
-            poolSize: 8,
-            migrationsRun: true
-          })
-        ]
-      : []),
-    ...(enableJdr
-      ? [
-          TypeOrmModule.forRoot({
-            name: 'jdr-sqlite',
-            type: 'sqlite',
-            database: 'jdr.sqlite',
-            entities: [
-              DBJdr,
-              DBJdrStat,
-              DBJdrTrait,
-              DBJdrTraitModifier,
-              DBJdrResource,
-              DBJdrGroupResource,
-              DBJdrItem,
-              DBJdrGroupItem,
-              DBJdrCharacter,
-              DBJdrCharacterStat,
-              DBJdrCharacterTrait,
-              DBJdrCharacterItem,
-              DBJdrCharacterResource,
-              DBJdrDiceRoll,
-              DBJdrClass,
-              DBJdrClassResource,
-              DBJdrGroup,
-              DBJdrCharacterGroup,
-              DBJdrDraft
-            ],
-            synchronize: true
-          })
-        ]
-      : []),
     ...(enableJdr ? [JdrModule] : []),
     ...(enableYearDiary ? [AppYearDiaryModule] : [])
   ],
-  controllers: [ConfigController, MusicController]
 })
 export class AppUnifiedModule {}
