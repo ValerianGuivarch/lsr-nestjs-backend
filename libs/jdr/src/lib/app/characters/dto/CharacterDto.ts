@@ -24,6 +24,7 @@ export class CharacterDto {
   groupSlugs: string[]
   classLevel: number
   isPlayable: boolean
+  public: boolean
   text: string
   stats: CharacterStatDto[]
   traitSlugs: string[]
@@ -38,6 +39,7 @@ export class CharacterDto {
     dto.groupSlugs = character.groupSlugs
     dto.classLevel = character.classLevel ?? 1
     dto.isPlayable = character.isPlayable
+    dto.public = character.public
     dto.text = character.text
     dto.traitSlugs = character.traitSlugs
     dto.items = character.items.map((i) => ({ itemSlug: i.itemSlug, quantity: i.quantity }))

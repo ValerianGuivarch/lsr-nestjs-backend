@@ -88,6 +88,11 @@ export class RollProvider implements IRollProvider {
     return rows.map(RollMapper.toDomain)
   }
 
+  async deleteRoll(jdrSlug: string, rollId: string): Promise<void> {
+    const result = await this.diceRollRepo.delete({ id: rollId, jdrSlug })
+    if (!result.affected) throw JdrError.notFound(`Roll ${rollId}`)
+  }
+
   private async loadDomainJdr(jdrSlug: string) {
     const db = await this.jdrRepo.findOne({ where: { slug: jdrSlug }, relations: DBJdr.RELATIONS, relationLoadStrategy: 'query' })
     if (!db) throw JdrError.notFound(`Jdr ${jdrSlug}`)

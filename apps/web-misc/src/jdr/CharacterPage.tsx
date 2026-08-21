@@ -2,8 +2,8 @@ import { useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import styled from 'styled-components'
-import { JdrApiClient, RollState } from '../data/JdrApiClient'
-import { DiceRollFeed } from '../components/DiceRollFeed'
+import { JdrApiClient, RollState } from './JdrApiClient'
+import { DiceRollFeed } from './DiceRollFeed'
 
 const ROLL_STATES: Array<{ value: RollState; label: string }> = [
   { value: 'normal', label: 'Normal' },

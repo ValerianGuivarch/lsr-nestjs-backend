@@ -42,6 +42,7 @@ function fakeAggregate(character: Partial<JdrAggregate['characters'][number]>): 
         groupSlugs: [],
         classLevel: 1,
         isPlayable: true,
+        public: true,
         text: '',
         stats: [],
         traitSlugs: [],

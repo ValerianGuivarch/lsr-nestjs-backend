@@ -11,6 +11,8 @@ export class Character {
   groupSlugs: string[]
   classLevel: number
   isPlayable: boolean
+  // Whether the character shows up in the public JdR/character selection list; hidden ones still work via a direct link.
+  public: boolean
   text: string
   stats: CharacterStat[]
   traitSlugs: string[]
@@ -25,6 +27,7 @@ export class Character {
     groupSlugs?: string[]
     classLevel?: number
     isPlayable?: boolean
+    public?: boolean
     text?: string
     stats: CharacterStat[]
     traitSlugs?: string[]
@@ -38,6 +41,7 @@ export class Character {
     this.groupSlugs = p.groupSlugs ?? []
     this.classLevel = p.classLevel ?? 1
     this.isPlayable = p.isPlayable ?? false
+    this.public = p.public ?? true
     this.text = p.text ?? ''
     this.stats = p.stats
     this.traitSlugs = p.traitSlugs ?? []

@@ -18,7 +18,7 @@ export class ConfigController {
     return {
       features: {
         pf2: true,
-        jdr: this.envEnabled('DISPLAY_JDR', false),
+        jdr: this.envEnabled('DISPLAY_JDR', true),
         diary: this.envEnabled('DISPLAY_DIARY', false)
       }
     }

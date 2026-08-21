@@ -3,10 +3,10 @@ import { DiceRollEntity, JdrAggregate, JdrSummary } from './types'
 const API_BASE = '/api/v1/jdr'
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(`${API_BASE}${path}`, {
-    ...init,
-    headers: { 'Content-Type': 'application/json', ...init?.headers }
-  })
+  // Fastify's body parser tries to JSON.parse() any request with a 'Content-Type: application/json'
+  // header, even with an empty body - so this header must be omitted when there's no body to send.
+  const headers = init?.body !== undefined ? { 'Content-Type': 'application/json', ...init?.headers } : init?.headers
+  const res = await fetch(`${API_BASE}${path}`, { ...init, headers })
 
   if (!res.ok) {
     const body = await res.text().catch(() => '')
@@ -34,6 +34,7 @@ export const jdrApi = {
   deleteJdr: (jdrSlug: string) => del<void>(`/${jdrSlug}`),
 
   getLastRolls: (jdrSlug: string, size = 100) => request<DiceRollEntity[]>(`/${jdrSlug}/rolls?size=${size}`),
+  deleteRoll: (jdrSlug: string, rollId: string) => del<void>(`/${jdrSlug}/rolls/${rollId}`),
 
   addStat: (jdrSlug: string, p: { name: string }) => post<JdrAggregate>(`/${jdrSlug}/stats`, p),
   updateStat: (jdrSlug: string, statSlug: string, p: { name: string }) => put<JdrAggregate>(`/${jdrSlug}/stats/${statSlug}`, p),
@@ -72,9 +73,9 @@ export const jdrApi = {
   updateGroup: (jdrSlug: string, groupSlug: string, p: { name?: string; text?: string }) => put<JdrAggregate>(`/${jdrSlug}/groups/${groupSlug}`, p),
   removeGroup: (jdrSlug: string, groupSlug: string) => del<JdrAggregate>(`/${jdrSlug}/groups/${groupSlug}`),
 
-  addCharacter: (jdrSlug: string, p: { name: string; classSlug?: string; classLevel?: number; isPlayable?: boolean; text?: string }) =>
+  addCharacter: (jdrSlug: string, p: { name: string; classSlug?: string; classLevel?: number; isPlayable?: boolean; public?: boolean; text?: string }) =>
     post<JdrAggregate>(`/${jdrSlug}/characters`, p),
-  updateCharacter: (jdrSlug: string, characterSlug: string, p: { name?: string; classSlug?: string; classLevel?: number; isPlayable?: boolean; text?: string }) =>
+  updateCharacter: (jdrSlug: string, characterSlug: string, p: { name?: string; classSlug?: string; classLevel?: number; isPlayable?: boolean; public?: boolean; text?: string }) =>
     put<JdrAggregate>(`/${jdrSlug}/characters/${characterSlug}`, p),
   removeCharacter: (jdrSlug: string, characterSlug: string) => del<JdrAggregate>(`/${jdrSlug}/characters/${characterSlug}`),
 

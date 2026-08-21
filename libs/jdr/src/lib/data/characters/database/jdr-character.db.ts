@@ -39,6 +39,9 @@ export class DBJdrCharacter {
   @Column({ type: 'boolean', nullable: false, default: false })
   isPlayable: boolean
 
+  @Column({ type: 'boolean', nullable: false, default: true })
+  public: boolean
+
   @Column({ type: 'varchar', nullable: false, default: '' })
   text: string
 
@@ -66,5 +69,5 @@ export class DBJdrCharacter {
   }
 }
 
-export type DBJdrCharacterToCreate = Pick<DBJdrCharacter, 'jdrSlug' | 'slug' | 'name' | 'classSlug' | 'groupSlug' | 'isPlayable' | 'text'>
-export type DBJdrCharacterToUpdate = Partial<Pick<DBJdrCharacter, 'name' | 'classSlug' | 'groupSlug' | 'isPlayable' | 'text'>> & Pick<DBJdrCharacter, 'updatedDate'>
+export type DBJdrCharacterToCreate = Pick<DBJdrCharacter, 'jdrSlug' | 'slug' | 'name' | 'classSlug' | 'groupSlug' | 'isPlayable' | 'public' | 'text'>
+export type DBJdrCharacterToUpdate = Partial<Pick<DBJdrCharacter, 'name' | 'classSlug' | 'groupSlug' | 'isPlayable' | 'public' | 'text'>> & Pick<DBJdrCharacter, 'updatedDate'>

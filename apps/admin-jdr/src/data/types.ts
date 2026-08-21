@@ -92,6 +92,7 @@ export interface CharacterEntity {
   groupSlugs: string[]
   classLevel: number
   isPlayable: boolean
+  public: boolean
   text: string
   stats: CharacterStatEntity[]
   traitSlugs: string[]

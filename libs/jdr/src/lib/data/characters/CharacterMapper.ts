@@ -17,6 +17,7 @@ export class CharacterMapper {
       groupSlugs: (db.groups ?? []).map((g) => g.groupSlug),
       classLevel: db.classLevel ?? 1,
       isPlayable: db.isPlayable ?? false,
+      public: db.public ?? true,
       text: db.text,
       stats: (db.stats ?? []).map(CharacterMapper.toCharacterStat),
       traitSlugs: (db.traits ?? []).map((ct) => ct.traitSlug),

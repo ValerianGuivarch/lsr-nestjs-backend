@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpCode, HttpStatus, Param, Post, Query } from '@nestjs/common'
+import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Post, Query } from '@nestjs/common'
 import { ApiTags } from '@nestjs/swagger'
 import { RollService } from '../../domain/rolls/RollService'
 import { DiceRollDto } from './dto/RollDto'
@@ -37,5 +37,11 @@ export class RollController {
   ): Promise<DiceRollDto[]> {
     const rolls = await this.rollService.getLastRolls(jdrSlug, size ? parseInt(size, 10) : 30)
     return rolls.map(DiceRollDto.from)
+  }
+
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @Delete(':jdrSlug/rolls/:rollId')
+  async deleteRoll(@Param('jdrSlug') jdrSlug: string, @Param('rollId') rollId: string): Promise<void> {
+    await this.rollService.deleteRoll(jdrSlug, rollId)
   }
 }

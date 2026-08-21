@@ -242,7 +242,6 @@ Règles :
 
 ## 6. Questions ouvertes (ou depuis fixées)
 
-- ~~Le segment `MJ` doit-il être traité de manière insensible à la casse ?~~ **Oui, `/mj` redirige vers `/MJ`** 
 - Les noms des personnages doivent-ils être uniques dans un JdR ou seul leur slug ? **À trancher avant l'API édition**
 - Une ressource `specific` peut-elle exister plusieurs fois sur un même personnage si le besoin métier apparaît ? **À trancher avant l'API édition**
 

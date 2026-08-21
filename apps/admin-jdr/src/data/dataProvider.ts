@@ -258,40 +258,55 @@ export const dataProvider: DataProvider = {
 
     const jdrSlug = requireSlug()
     const id = String(params.id)
-    let aggregate: JdrAggregate
 
-    switch (resource) {
-      case 'stats':
-        aggregate = await jdrApi.removeStat(jdrSlug, id)
-        break
-      case 'traits':
-        aggregate = await jdrApi.removeTrait(jdrSlug, id)
-        break
-      case 'resources':
-        aggregate = await jdrApi.removeResource(jdrSlug, id)
-        break
-      case 'items':
-        aggregate = await jdrApi.removeItem(jdrSlug, id)
-        break
-      case 'classes':
-        aggregate = await jdrApi.removeClass(jdrSlug, id)
-        break
-      case 'groups':
-        aggregate = await jdrApi.removeGroup(jdrSlug, id)
-        break
-      case 'characters':
-        aggregate = await jdrApi.removeCharacter(jdrSlug, id)
-        break
-      default:
-        throw new Error(`Delete not supported for resource: ${resource}`)
+    if (resource === 'rolls') {
+      await jdrApi.deleteRoll(jdrSlug, id)
+      return { data: params.previousData as RaRecord }
     }
 
-    jdrAggregateStore.setAggregate(aggregate)
+    jdrAggregateStore.setAggregate(await removeOne(resource, jdrSlug, id))
     return { data: params.previousData as RaRecord }
   },
 
-  async deleteMany() {
-    throw new Error('deleteMany is not supported')
+  async deleteMany(resource, params) {
+    if (resource === 'jdrs') throw new Error('deleteMany is not supported for jdrs')
+    const jdrSlug = requireSlug()
+    const ids = params.ids.map(String)
+
+    if (resource === 'rolls') {
+      for (const id of ids) await jdrApi.deleteRoll(jdrSlug, id)
+      return { data: params.ids }
+    }
+
+    // Each removal returns the full recomposed aggregate, so calls must run sequentially
+    // (not in parallel) to avoid one overwriting another's result.
+    let aggregate: JdrAggregate | undefined
+    for (const id of ids) {
+      aggregate = await removeOne(resource, jdrSlug, id)
+    }
+    if (aggregate) jdrAggregateStore.setAggregate(aggregate)
+    return { data: params.ids }
+  }
+}
+
+function removeOne(resource: string, jdrSlug: string, id: string): Promise<JdrAggregate> {
+  switch (resource) {
+    case 'stats':
+      return jdrApi.removeStat(jdrSlug, id)
+    case 'traits':
+      return jdrApi.removeTrait(jdrSlug, id)
+    case 'resources':
+      return jdrApi.removeResource(jdrSlug, id)
+    case 'items':
+      return jdrApi.removeItem(jdrSlug, id)
+    case 'classes':
+      return jdrApi.removeClass(jdrSlug, id)
+    case 'groups':
+      return jdrApi.removeGroup(jdrSlug, id)
+    case 'characters':
+      return jdrApi.removeCharacter(jdrSlug, id)
+    default:
+      throw new Error(`Delete not supported for resource: ${resource}`)
   }
 }
 
@@ -349,6 +364,7 @@ async function updateCharacter(jdrSlug: string, characterSlug: string, params: U
     classSlug: params.data.classSlug || undefined,
     classLevel: params.data.classLevel,
     isPlayable: params.data.isPlayable,
+    public: params.data.public,
     text: params.data.text
   })
 

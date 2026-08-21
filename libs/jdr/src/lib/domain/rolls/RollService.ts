@@ -17,4 +17,8 @@ export class RollService {
   getLastRolls(jdrSlug: string, size: number): Promise<DiceRoll[]> {
     return this.rollProvider.getLastRolls(jdrSlug, size)
   }
+
+  deleteRoll(jdrSlug: string, rollId: string): Promise<void> {
+    return this.rollProvider.deleteRoll(jdrSlug, rollId)
+  }
 }

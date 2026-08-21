@@ -66,6 +66,7 @@ const Foussier: React.FC = () => {
       <GlobalStyle />
       <Page>
         <Shell>
+          <HubBackLink href="/">← Apps</HubBackLink>
           {/* HERO */}
           <Hero>
             <HeroTop>
@@ -227,6 +228,16 @@ const Shell = styled.div`
 
   @media (min-width: 1100px) {
     max-width: 980px;
+  }
+`;
+
+const HubBackLink = styled.a`
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 0.85rem;
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
   }
 `;
 

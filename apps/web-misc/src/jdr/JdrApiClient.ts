@@ -31,6 +31,7 @@ export interface CharacterDto {
   groupSlugs: string[]
   classLevel: number
   isPlayable: boolean
+  public: boolean
   text: string
   stats: CharacterStatDto[]
   traitSlugs: string[]
@@ -92,6 +93,11 @@ export interface JdrGroupDto {
   text: string
 }
 
+export interface JdrSummaryDto {
+  slug: string
+  name: string
+}
+
 export interface JdrDto {
   slug: string
   name: string
@@ -109,6 +115,12 @@ export interface JdrDto {
 
 /** Read/play-time API used by the character sheet page. Catalog/admin CRUD lives in admin-jdr (React Admin). */
 export class JdrApiClient {
+  static async findAll(): Promise<JdrSummaryDto[]> {
+    const res = await fetch(API_BASE)
+    if (!res.ok) throw new Error(`Failed to fetch JdR list: ${res.statusText}`)
+    return res.json()
+  }
+
   static async findOneBySlug(jdrSlug: string): Promise<JdrDto> {
     const res = await fetch(`${API_BASE}/${jdrSlug}`)
     if (!res.ok) throw new Error(`Failed to fetch JdR: ${res.statusText}`)

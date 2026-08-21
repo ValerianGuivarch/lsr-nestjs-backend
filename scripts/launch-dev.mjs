@@ -22,14 +22,12 @@ const lotLabels = {
 const profileDescriptions = {
   full: 'Tous les lots actifs',
   jdr: 'Lot JDR uniquement',
-  yeardiary: 'Lot YearDiary uniquement',
-  pf2: 'Application Pathfinder PF2 uniquement'
+  yeardiary: 'Lot YearDiary uniquement'
 }
 
 const defaultConfig = {
   backendUnified: true,
   frontendShell: true,
-  pf2App: false,
   stopPortsBeforeLaunch: false,
   domains: {
     jdr: true,
@@ -71,17 +69,7 @@ function createLotProfile(enabledLots) {
 const builtInProfiles = {
   full: createLotProfile(lotKeys),
   jdr: createLotProfile(['jdr']),
-  yeardiary: createLotProfile(['yeardiary']),
-  pf2: {
-    backendUnified: false,
-    frontendShell: false,
-    pf2App: true,
-    stopPortsBeforeLaunch: false,
-    domains: {
-      jdr: false,
-      yeardiary: false
-    }
-  }
+  yeardiary: createLotProfile(['yeardiary'])
 }
 
 function defaultRunnerConfig() {
@@ -389,10 +377,6 @@ async function main() {
 
   if (config.frontendShell) {
     processes.push(startProcess('frontend-shell', 'dev:frontend', {}, { critical: false }))
-  }
-
-  if (config.pf2App) {
-    processes.push(startProcess('pf2-app', 'dev:web:pf2', {}, { critical: true }))
   }
 
   if (processes.length === 0) {

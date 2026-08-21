@@ -31,7 +31,7 @@ export class CharacterProvider implements ICharacterProvider {
     @InjectRepository(DBJdrCharacterGroup, 'jdr-sqlite') private readonly characterGroupRepo: Repository<DBJdrCharacterGroup>
   ) {}
 
-  async add(jdrSlug: string, p: { name: string; classSlug?: string; classLevel?: number; isPlayable?: boolean; text?: string }): Promise<Character> {
+  async add(jdrSlug: string, p: { name: string; classSlug?: string; classLevel?: number; isPlayable?: boolean; public?: boolean; text?: string }): Promise<Character> {
     const jdr = await this.jdrRepo.findOne({ where: { slug: jdrSlug }, relations: { stats: true, resources: true } })
     if (!jdr) throw JdrError.notFound(`Jdr ${jdrSlug}`)
     const slug = Slug.from(p.name)
@@ -48,6 +48,7 @@ export class CharacterProvider implements ICharacterProvider {
       groupSlug: null,
       classLevel: p.classLevel ?? 1,
       isPlayable: p.isPlayable ?? false,
+      public: p.public ?? true,
       text: p.text ?? ''
     }))
     // seed stats with default value 2 for each stat of the jdr
@@ -61,14 +62,14 @@ export class CharacterProvider implements ICharacterProvider {
     return this.findOneOrThrow(jdrSlug, slug)
   }
 
-  async update(jdrSlug: string, characterSlug: string, p: { name?: string; classSlug?: string; classLevel?: number; isPlayable?: boolean; text?: string }): Promise<Character> {
+  async update(jdrSlug: string, characterSlug: string, p: { name?: string; classSlug?: string; classLevel?: number; isPlayable?: boolean; public?: boolean; text?: string }): Promise<Character> {
     const existing = await this.characterRepo.findOne({ where: { jdrSlug, slug: characterSlug } })
     if (!existing) throw JdrError.notFound(`Character '${characterSlug}'`)
 
     const classSlug = p.classSlug === undefined ? undefined : (p.classSlug || undefined)
     await this.ensureCharacterClass(jdrSlug, classSlug)
 
-    const patch: { name?: string; text?: string; classSlug?: string | null; classLevel?: number; isPlayable?: boolean; updatedDate: Date } = {
+    const patch: { name?: string; text?: string; classSlug?: string | null; classLevel?: number; isPlayable?: boolean; public?: boolean; updatedDate: Date } = {
       updatedDate: new Date()
     }
     if (p.name !== undefined) patch.name = p.name
@@ -76,6 +77,7 @@ export class CharacterProvider implements ICharacterProvider {
     if (p.classSlug !== undefined) patch.classSlug = classSlug ?? null
     if (p.classLevel !== undefined) patch.classLevel = p.classLevel
     if (p.isPlayable !== undefined) patch.isPlayable = p.isPlayable
+    if (p.public !== undefined) patch.public = p.public
 
     await this.characterRepo.update({ jdrSlug, slug: characterSlug }, patch)
     return this.findOneOrThrow(jdrSlug, characterSlug)

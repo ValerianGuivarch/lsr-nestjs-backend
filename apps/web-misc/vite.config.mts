@@ -4,28 +4,37 @@ import react from '@vitejs/plugin-react'
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin'
 import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin'
 
-export default defineConfig(() => ({
-  root: import.meta.dirname,
-  cacheDir: '../../node_modules/.vite/apps/web-misc',
-  server: {
-    port: 3000,
-    host: 'localhost'
-  },
-  preview: {
-    port: 3000,
-    host: 'localhost'
-  },
-  plugins: [react(), nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
-  // Uncomment this if you are using workers.
-  // worker: {
-  //   plugins: () => [ nxViteTsPaths() ],
-  // },
-  build: {
-    outDir: '../../dist/apps/web-misc',
-    emptyOutDir: true,
-    reportCompressedSize: true,
-    commonjsOptions: {
-      transformMixedEsModules: true
+export default defineConfig(() => {
+  // In real prod, nginx forwards /apil7r/* straight to the unified backend (which rewrites it internally).
+  // Locally (dev or vite preview), there's no nginx, so proxy it ourselves to the same backend port.
+  const backendTarget = process.env.VITE_BACKEND_ORIGIN ?? 'http://localhost:8081'
+  const apiProxy = { '/apil7r': { target: backendTarget, changeOrigin: true } }
+
+  return {
+    root: import.meta.dirname,
+    cacheDir: '../../node_modules/.vite/apps/web-misc',
+    server: {
+      port: 3000,
+      host: 'localhost',
+      proxy: apiProxy
+    },
+    preview: {
+      port: 3000,
+      host: 'localhost',
+      proxy: apiProxy
+    },
+    plugins: [react(), nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
+    // Uncomment this if you are using workers.
+    // worker: {
+    //   plugins: () => [ nxViteTsPaths() ],
+    // },
+    build: {
+      outDir: '../../dist/apps/web-misc',
+      emptyOutDir: true,
+      reportCompressedSize: true,
+      commonjsOptions: {
+        transformMixedEsModules: true
+      }
     }
   }
-}))
+})

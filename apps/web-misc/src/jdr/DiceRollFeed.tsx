@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { JdrApiClient, RollState } from '../data/JdrApiClient'
+import { JdrApiClient, RollState } from './JdrApiClient'
 
 interface DiceRollFeedProps {
   jdrSlug: string

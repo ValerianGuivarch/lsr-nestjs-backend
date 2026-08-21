@@ -1,4 +1,6 @@
 import React from 'react'
+import { Link } from 'react-router-dom'
+import { useQuery } from '@tanstack/react-query'
 import styled, { createGlobalStyle } from 'styled-components'
 
 const GlobalStyle = createGlobalStyle`
@@ -19,31 +21,55 @@ type AppLink = {
   href: string
 }
 
-// Dev ports come from package.json's dev:web:* / dev:admin-jdr scripts.
+interface FeaturesConfig {
+  pf2: boolean
+  jdr: boolean
+  diary: boolean
+}
+
+// Admin JDR is a separate react-admin app, kept on its own dev port.
 function buildDevUrl(port: number): string {
   return `${window.location.protocol}//${window.location.hostname}:${port}`
 }
 
-const apps: AppLink[] = [
-  { label: 'JDR', description: 'Fiches de personnage', href: buildDevUrl(4202) },
-  { label: 'Admin JDR', description: 'Back-office des JDR', href: buildDevUrl(4203) },
-  { label: 'PF2', description: 'Compendium Pathfinder 2', href: buildDevUrl(4200) },
-  { label: 'Foussier', description: 'Calcul de crampillons', href: '/foussier' }
-]
+async function fetchFeatures(): Promise<FeaturesConfig> {
+  const res = await fetch('/apil7r/config/features')
+  if (!res.ok) throw new Error(`Failed to fetch feature config: ${res.statusText}`)
+  const body = await res.json()
+  return body.features
+}
 
 const Home: React.FC = () => {
+  // Backend-driven flags decide what shows in the menu; a hidden app (e.g. diary) still works via a direct link.
+  const { data: features } = useQuery({ queryKey: ['features'], queryFn: fetchFeatures })
+
+  const apps: AppLink[] = [
+    ...(features?.jdr !== false ? [{ label: 'JDR', description: 'Fiches de personnage (nécessite un lien de perso)', href: '/jdr' }] : []),
+    { label: 'Admin JDR', description: 'Back-office des JDR', href: buildDevUrl(4203) },
+    ...(features?.pf2 !== false ? [{ label: 'PF2', description: 'Compendium Pathfinder 2', href: '/pf2' }] : []),
+    ...(features?.diary ? [{ label: 'Diary', description: 'Journal annuel', href: '/diary' }] : []),
+    { label: 'Foussier', description: 'Calcul de crampillons', href: '/foussier' }
+  ]
+
   return (
     <>
       <GlobalStyle />
       <Container>
         <Title>Applications</Title>
         <Grid>
-          {apps.map(app => (
-            <Card key={app.label} href={app.href}>
-              <CardLabel>{app.label}</CardLabel>
-              <CardDescription>{app.description}</CardDescription>
-            </Card>
-          ))}
+          {apps.map(app =>
+            app.href.startsWith('/') ? (
+              <Card key={app.label} as={Link} to={app.href}>
+                <CardLabel>{app.label}</CardLabel>
+                <CardDescription>{app.description}</CardDescription>
+              </Card>
+            ) : (
+              <Card key={app.label} href={app.href}>
+                <CardLabel>{app.label}</CardLabel>
+                <CardDescription>{app.description}</CardDescription>
+              </Card>
+            )
+          )}
         </Grid>
       </Container>
     </>

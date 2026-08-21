@@ -81,6 +81,7 @@ export function CharacterList() {
       <Datagrid rowClick="edit">
         <TextField source="name" label="Nom" />
         <BooleanField source="isPlayable" label="Jouable" />
+        <BooleanField source="public" label="Public" />
         <FunctionField label="Groupes" render={(record: CharacterEntity) => record.groupSlugs.join(', ') || '-'} />
         <TextField source="slug" label="Slug" />
       </Datagrid>
@@ -96,6 +97,7 @@ export function CharacterEdit() {
         <ClassInput />
         <NumberInput source="classLevel" label="Niveau de classe" min={1} />
         <BooleanInput source="isPlayable" label="Jouable" />
+        <BooleanInput source="public" label="Public" />
         <TextInput source="text" label="Description" multiline fullWidth />
         <GroupsInput />
         <TraitsInput />
@@ -115,6 +117,7 @@ export function CharacterCreate() {
         <ClassInput />
         <NumberInput source="classLevel" label="Niveau de classe" defaultValue={1} min={1} />
         <BooleanInput source="isPlayable" label="Jouable" />
+        <BooleanInput source="public" label="Public" defaultValue={true} />
         <TextInput source="text" label="Description" multiline fullWidth />
       </SimpleForm>
     </Create>

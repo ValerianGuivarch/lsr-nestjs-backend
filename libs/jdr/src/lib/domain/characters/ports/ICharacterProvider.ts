@@ -1,8 +1,8 @@
 import { Character } from '../Character'
 
 export interface ICharacterProvider {
-  add(jdrSlug: string, p: { name: string; classSlug?: string; classLevel?: number; isPlayable?: boolean; text?: string }): Promise<Character>
-  update(jdrSlug: string, characterSlug: string, p: { name?: string; classSlug?: string; classLevel?: number; isPlayable?: boolean; text?: string }): Promise<Character>
+  add(jdrSlug: string, p: { name: string; classSlug?: string; classLevel?: number; isPlayable?: boolean; public?: boolean; text?: string }): Promise<Character>
+  update(jdrSlug: string, characterSlug: string, p: { name?: string; classSlug?: string; classLevel?: number; isPlayable?: boolean; public?: boolean; text?: string }): Promise<Character>
   remove(jdrSlug: string, characterSlug: string): Promise<void>
   addCharacterGroup(jdrSlug: string, characterSlug: string, groupSlug: string): Promise<Character>
   removeCharacterGroup(jdrSlug: string, characterSlug: string, groupSlug: string): Promise<void>

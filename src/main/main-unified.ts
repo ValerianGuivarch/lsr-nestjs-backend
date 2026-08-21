@@ -25,9 +25,12 @@ async function bootstrap(): Promise<void> {
       const port = configService.get<number>('PORT') ?? configService.get<number>('http.port') ?? 8081
       const targetOrigin = `http://127.0.0.1:${port}`
 
+      // Frontends call /apil7r/... (mirrors the l7r.fr nginx rewrite) - proxy it to the real API routes
+      // so the unified backend is also self-sufficient when nginx isn't in front of it (local prod testing).
       registerReverseProxy(app, [
-        { sourcePrefix: '/api/jdr', targetPrefix: '/api/v1/jdr', targetOrigin },
-        { sourcePrefix: '/api/yeardiary', targetPrefix: '/api/v1/diaries', targetOrigin }
+        { sourcePrefix: '/apil7r/jdr', targetPrefix: '/api/v1/jdr', targetOrigin },
+        { sourcePrefix: '/apil7r/v1/diaries', targetPrefix: '/api/v1/diaries', targetOrigin },
+        { sourcePrefix: '/apil7r/config', targetPrefix: '/api/config', targetOrigin }
       ])
 
       // Expose /music as static
@@ -53,9 +56,9 @@ function printStartupInfo(): void {
   console.log('   Unified Application Started')
   console.log('========================================\n')
 
-  if (enableJdr) console.log(`  ✓ JDR      → ${frontendUrl}/jdr/dashboard`)
+  if (enableJdr) console.log(`  ✓ JDR      → ${frontendUrl}/jdr`)
   console.log(`  ✓ PF2      → ${frontendUrl}/pf2`)
-  if (enableYearDiary) console.log(`  ✓ YearDiary → ${frontendUrl}/yeardiary/dashboard`)
+  if (enableYearDiary) console.log(`  ✓ YearDiary → ${frontendUrl}/diary`)
 
   console.log(`\n  Backend API : http://localhost:${backendPort}`)
   console.log('\n========================================\n')

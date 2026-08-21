@@ -5,6 +5,7 @@ export class AddCharacterRequest {
   @IsOptional() @IsString() classSlug?: string
   @IsOptional() @IsNumber() classLevel?: number
   @IsOptional() @IsBoolean() isPlayable?: boolean
+  @IsOptional() @IsBoolean() public?: boolean
   @IsOptional() @IsString() text?: string
 }
 
@@ -13,6 +14,7 @@ export class UpdateCharacterRequest {
   @IsOptional() @IsString() classSlug?: string
   @IsOptional() @IsNumber() classLevel?: number
   @IsOptional() @IsBoolean() isPlayable?: boolean
+  @IsOptional() @IsBoolean() public?: boolean
   @IsOptional() @IsString() text?: string
 }
 

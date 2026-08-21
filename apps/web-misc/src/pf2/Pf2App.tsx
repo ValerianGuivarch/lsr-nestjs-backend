@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import './app.css'
+import './pf2.css'
 import ascendancesData from './resources/pf2-ascendances.json'
 import classesData from './resources/pf2-classes.json'
 import historiquesData from './resources/pf2-historiques.json'
@@ -137,7 +137,7 @@ function getPdfUrl(entry: Pf2Entry): string {
   return `https://l7r.fr/l7r/${pdfName}.pdf` 
 }
 
-export function App() {
+export function Pf2App() {
   const [activeTab, setActiveTab] = useState<TabKey>('ascendance')
   const [expandedEntryId, setExpandedEntryId] = useState<string | null>(null)
   const [filtersByTab, setFiltersByTab] = useState<TabFilterState>({
@@ -212,6 +212,12 @@ export function App() {
 
   return (
     <main className="pf2-page">
+      <a
+        href="/"
+        style={{ position: 'fixed', top: '0.5rem', left: '0.5rem', zIndex: 1000, fontSize: '0.8rem' }}
+      >
+        ← Apps
+      </a>
       <header className="pf2-hero">
         <p className="pf2-eyebrow">PF2 helper</p>
         <h1>Helper Pathfinder</h1>
@@ -424,4 +430,3 @@ export function App() {
   )
 }
 
-export default App
