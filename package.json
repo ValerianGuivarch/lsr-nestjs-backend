@@ -123,7 +123,6 @@
     "@nx/vite": "^22.7.1",
     "@nx/web": "22.7.1",
     "@nx/webpack": "22.7.1",
-    "@rolldown/binding-darwin-arm64": "1.0.0-rc.17",
     "@swc-node/register": "~1.11.1",
     "@swc/cli": "~0.8.0",
     "@swc/core": "~1.15.5",
