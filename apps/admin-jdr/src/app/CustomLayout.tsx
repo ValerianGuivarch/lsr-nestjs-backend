@@ -12,6 +12,12 @@ function JdrAdminAppBar() {
       <TitlePortal />
       <JdrSwitcher />
       <a
+        href="#/import-json"
+        style={{ color: 'inherit', marginLeft: '1rem', fontSize: '0.85rem', textDecoration: 'none' }}
+      >
+        Import JSON
+      </a>
+      <a
         href={buildHubUrl()}
         style={{ color: 'inherit', marginLeft: '1rem', fontSize: '0.85rem', textDecoration: 'none' }}
       >

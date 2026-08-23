@@ -1,0 +1,78 @@
+{
+  "generatedAt": "2026-08-16",
+  "fromSchemaVersion": 1,
+  "toSchemaVersion": 2,
+  "oldCampaignObjects": 86,
+  "oldPfsItemObjects": 135,
+  "newCollections": 14,
+  "newPlayableOrReferenceEntries": 244,
+  "newPfs2Entries": 165,
+  "filesPreserved": 202,
+  "oldIdsWithoutDestination": [],
+  "documentFileIdsLost": [],
+  "staleDocumentReferencesRemoved": [
+    {
+      "owner": "strength-of-thousands::strength-of-thousands-maps-1",
+      "fileId": "pdf-db028221f467-71f9fb06"
+    }
+  ],
+  "deduplicatedIds": {
+    "pfs-season-3-intro": "pfs-season-3-3-01",
+    "pfs-season-6-intro": "pfs-season-6-6-01"
+  },
+  "legacyPf1Moved": [
+    "pfs-season-8-8-00"
+  ],
+  "addedCurrentPfs": {
+    "season6Specials": [
+      "pfs-season-6-6-00",
+      "pfs-season-6-6-99"
+    ],
+    "season7": [
+      "pfs-season-7-7-01",
+      "pfs-season-7-7-02",
+      "pfs-season-7-7-03",
+      "pfs-season-7-7-04",
+      "pfs-season-7-7-05",
+      "pfs-season-7-7-06",
+      "pfs-season-7-7-07",
+      "pfs-season-7-7-08",
+      "pfs-season-7-7-09",
+      "pfs-season-7-7-10",
+      "pfs-season-7-7-11",
+      "pfs-season-7-7-12",
+      "pfs-season-7-7-13",
+      "pfs-season-7-7-14",
+      "pfs-season-7-7-15",
+      "pfs-season-7-7-16",
+      "pfs-season-7-7-17",
+      "pfs-season-7-7-18",
+      "pfs-season-7-7-19",
+      "pfs-season-7-7-20",
+      "pfs-season-7-7-21",
+      "pfs-season-7-7-22",
+      "pfs-season-7-7-99"
+    ],
+    "season8": [
+      "pfs-season-8-8-01",
+      "pfs-season-8-8-02",
+      "pfs-season-8-8-03",
+      "pfs-season-8-8-04",
+      "pfs-season-8-8-05",
+      "pfs-season-8-8-06",
+      "pfs-season-8-8-07",
+      "pfs-season-8-8-08"
+    ]
+  },
+  "notes": [
+    "Les saisons PFS ne sont plus des œuvres jouables; elles sont des collections.",
+    "Les lieux PFS sont portés au niveau scénario; aucune saison n’utilise Golarion comme lieu factice.",
+    "Les anciens fichiers overrides ont été fusionnés dans catalogue-pf2.json v2; ils peuvent être archivés après validation de l’app."
+  ],
+  "pfsResearchSummary": {
+    "entries": 165,
+    "withRegions": 162,
+    "withSynopsis": 100,
+    "locationUnknownOrPartial": 4
+  }
+}

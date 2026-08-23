@@ -21,7 +21,10 @@ export class DBJdrGroupItem {
   itemSlug: string
 
   @ManyToOne(() => DBJdrItem, { onDelete: 'CASCADE' })
-  @JoinColumn([{ name: 'jdrSlug', referencedColumnName: 'jdrSlug' }, { name: 'itemSlug', referencedColumnName: 'slug' }])
+  @JoinColumn([
+    { name: 'jdrSlug', referencedColumnName: 'jdrSlug' },
+    { name: 'itemSlug', referencedColumnName: 'slug' }
+  ])
   item: DBJdrItem
 
   @Column({ type: 'int', nullable: false, default: 1 })

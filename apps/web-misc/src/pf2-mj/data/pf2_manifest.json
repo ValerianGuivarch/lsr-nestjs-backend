@@ -1,0 +1,92 @@
+{
+  "version": "2.0",
+  "nom": "Base monde PF2 - campagne table ouverte",
+  "periode_reference": "Début de campagne autour de 4719–4720 AR ; les évolutions dues aux AP/scénarios sont à appliquer selon le canon de la table.",
+  "fichiers": {
+    "pf2_personnages.json": {
+      "type": "personnages",
+      "nombre": 145
+    },
+    "pf2_factions.json": {
+      "type": "factions",
+      "nombre": 60
+    },
+    "pf2_regions.json": {
+      "type": "regions",
+      "nombre": 54
+    },
+    "pf2_lieux.json": {
+      "type": "lieux",
+      "nombre": 81
+    },
+    "pf2_evenements.json": {
+      "type": "evenements",
+      "nombre": 25
+    }
+  },
+  "conventions_ids": {
+    "personnage": "npc_*",
+    "faction": "faction_*",
+    "region": "region_*",
+    "lieu": "lieu_*",
+    "evenement": "event_*"
+  },
+  "reputation_groupe": {
+    "systeme": "GM Core - Reputation",
+    "minimum": -50,
+    "maximum": 50,
+    "paliers": [
+      {
+        "min": -50,
+        "max": -30,
+        "libelle": "Traqué"
+      },
+      {
+        "min": -29,
+        "max": -15,
+        "libelle": "Détesté"
+      },
+      {
+        "min": -14,
+        "max": -5,
+        "libelle": "Mal vu"
+      },
+      {
+        "min": -4,
+        "max": 4,
+        "libelle": "Ignoré / neutre"
+      },
+      {
+        "min": 5,
+        "max": 14,
+        "libelle": "Apprécié"
+      },
+      {
+        "min": 15,
+        "max": 29,
+        "libelle": "Admiré"
+      },
+      {
+        "min": 30,
+        "max": 50,
+        "libelle": "Révéré"
+      }
+    ],
+    "regle_initialisation": "0 par défaut. Les exceptions reflètent uniquement une attitude déjà acquise envers le groupe au début de campagne.",
+    "exceptions_initiales": {
+      "faction_mantes_rouges": {
+        "valeur": -8,
+        "raison": "La Société des Éclaireurs est déjà mal vue par les Mantes rouges, notamment après des tensions antérieures ; le groupe n'est toutefois pas encore personnellement traqué."
+      }
+    },
+    "structure": {
+      "initiale": "Réputation au début de la campagne ; ne change pas.",
+      "actuelle": "Réputation courante du groupe ; évolue selon ses actions."
+    }
+  },
+  "notes": [
+    "Les sous-factions possèdent leur propre réputation indépendante de leur faction parente.",
+    "La Société des Éclaireurs et ses sous-factions commencent à 0 : le groupe doit gagner leur estime en jeu.",
+    "Missions, arcs et objets ne sont pas inclus dans cette version."
+  ]
+}

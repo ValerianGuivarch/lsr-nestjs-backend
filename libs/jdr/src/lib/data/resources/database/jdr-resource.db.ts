@@ -1,5 +1,5 @@
 import { Entity, Column, PrimaryColumn, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm'
-import { ResourceType } from '../../../domain'
+import { ResourceOwnerType } from '../../../domain'
 import { DBJdr } from '../../jdr/database/DBJdr'
 
 @Entity({ name: 'jdr_resource' })
@@ -24,7 +24,10 @@ export class DBJdrResource {
   name: string
 
   @Column({ type: 'varchar', nullable: false })
-  type: ResourceType
+  ownerType: ResourceOwnerType
+
+  @Column({ type: 'int', nullable: false, default: 0 })
+  defaultValue: number
 }
 
-export type DBJdrResourceToCreate = Pick<DBJdrResource, 'jdrSlug' | 'slug' | 'name' | 'type'>
+export type DBJdrResourceToCreate = Pick<DBJdrResource, 'jdrSlug' | 'slug' | 'name' | 'ownerType' | 'defaultValue'>

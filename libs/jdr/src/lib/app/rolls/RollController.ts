@@ -17,7 +17,9 @@ export class RollController {
     @Param('statSlug') statSlug: string,
     @Body() body: RollDiceRequest
   ): Promise<DiceRollDto> {
-    return DiceRollDto.from(await this.rollService.rollDice(jdrSlug, characterSlug, statSlug, body?.rollState, body?.text))
+    return DiceRollDto.from(
+      await this.rollService.rollDice(jdrSlug, characterSlug, statSlug, body?.rollState, body?.text)
+    )
   }
 
   @HttpCode(HttpStatus.CREATED)
@@ -31,10 +33,7 @@ export class RollController {
   }
 
   @Get(':jdrSlug/rolls')
-  async getLastRolls(
-    @Param('jdrSlug') jdrSlug: string,
-    @Query('size') size?: string
-  ): Promise<DiceRollDto[]> {
+  async getLastRolls(@Param('jdrSlug') jdrSlug: string, @Query('size') size?: string): Promise<DiceRollDto[]> {
     const rolls = await this.rollService.getLastRolls(jdrSlug, size ? parseInt(size, 10) : 30)
     return rolls.map(DiceRollDto.from)
   }

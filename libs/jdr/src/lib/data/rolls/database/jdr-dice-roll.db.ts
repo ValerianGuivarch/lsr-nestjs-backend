@@ -41,4 +41,3 @@ export class DBJdrDiceRoll {
   @Column({ type: 'varchar', nullable: true, default: null })
   text: string | null
 }
-

@@ -16,7 +16,11 @@ export default function CharacterPage() {
   const { jdrSlug, characterSlug } = useParams<{ jdrSlug: string; characterSlug: string }>()
   const queryClient = useQueryClient()
   const jdrQueryKey = ['jdr', jdrSlug] as const
-  const { data: jdr, isLoading: loading, error } = useQuery({
+  const {
+    data: jdr,
+    isLoading: loading,
+    error
+  } = useQuery({
     queryKey: jdrQueryKey,
     queryFn: () => JdrApiClient.findOneBySlug(jdrSlug ?? ''),
     enabled: !!jdrSlug,
@@ -30,19 +34,24 @@ export default function CharacterPage() {
   const [rollingArbitrary, setRollingArbitrary] = useState(false)
   const [spellPopup, setSpellPopup] = useState<{ slug: string; name: string } | null>(null)
 
-  const character = jdr?.characters.find(c => c.slug === characterSlug)
+  const character = jdr?.characters.find((c) => c.slug === characterSlug)
 
   const portraitName = character?.name ?? ''
   const portraitSlug = character?.slug ?? ''
 
-  const portraitCandidates = (!portraitName && !portraitSlug)
-    ? ['/l7r/placeholder.png']
-    : Array.from(new Set([
-      `/l7r/${portraitName}.png`,
-      `/l7r/${portraitSlug}.png`,
-      `/l7r/${portraitName.toLowerCase()}.png`,
-      `/l7r/${portraitSlug.toLowerCase()}.png`
-    ].filter(Boolean)))
+  const portraitCandidates =
+    !portraitName && !portraitSlug
+      ? ['/l7r/placeholder.png']
+      : Array.from(
+          new Set(
+            [
+              `/l7r/${portraitName}.png`,
+              `/l7r/${portraitSlug}.png`,
+              `/l7r/${portraitName.toLowerCase()}.png`,
+              `/l7r/${portraitSlug.toLowerCase()}.png`
+            ].filter(Boolean)
+          )
+        )
 
   const handleRollDice = async (statSlug: string, text?: string | null) => {
     if (!jdrSlug || !characterSlug) return
@@ -77,14 +86,16 @@ export default function CharacterPage() {
   if (error) return <StatusShell>Erreur: {(error as Error).message}</StatusShell>
   if (!jdr || !character) return <StatusShell>Personnage non trouvé</StatusShell>
 
-  const selectedClass = character.classSlug ? jdr.classes.find(c => c.slug === character.classSlug) : undefined
-  const selectedGroups = jdr.groups.filter(g => character.groupSlugs.includes(g.slug))
+  const selectedClass = character.classSlug ? jdr.classes.find((c) => c.slug === character.classSlug) : undefined
+  const selectedGroups = jdr.groups.filter((g) => character.groupSlugs.includes(g.slug))
   const isHpJdr =
     jdr.name.toLowerCase().includes('hp') ||
     jdr.classes.some((klass) => klass.slug === 'eleve' || klass.slug === 'sorcier') ||
     jdr.groups.some((group) => ['gryffondor', 'serpentard', 'serdaigle', 'poufsouffle'].includes(group.slug))
 
-  const pvResource = jdr.resources.find((resource) => resource.slug === 'pv' || resource.name.toLowerCase() === 'pv')
+  const pvResource = jdr.resources.find(
+    (resource) => resource.ownerType === 'CHARACTER' && (resource.slug === 'pv' || resource.name.toLowerCase() === 'pv')
+  )
   const characterPv = pvResource
     ? character.resources.find((resource) => resource.resourceSlug === pvResource.slug)
     : undefined
@@ -93,14 +104,16 @@ export default function CharacterPage() {
   const HOUSE_META: Record<string, { label: string; bg: string; textColor: string }> = {
     gryffondor: { label: 'Gryffondor', bg: 'linear-gradient(135deg, #7f1d1d, #9b2626)', textColor: '#ffd700' },
     serpentard: { label: 'Serpentard', bg: 'linear-gradient(135deg, #1a3a2a, #1f4d38)', textColor: '#c0c0c0' },
-    serdaigle:  { label: 'Serdaigle',  bg: 'linear-gradient(135deg, #1a2a4a, #1e3665)', textColor: '#cd7f32' },
-    poufsouffle:{ label: 'Poufsouffle',bg: 'linear-gradient(135deg, #4a3a0a, #5c4a10)', textColor: '#f0d060' },
+    serdaigle: { label: 'Serdaigle', bg: 'linear-gradient(135deg, #1a2a4a, #1e3665)', textColor: '#cd7f32' },
+    poufsouffle: { label: 'Poufsouffle', bg: 'linear-gradient(135deg, #4a3a0a, #5c4a10)', textColor: '#f0d060' }
   }
   const housePoints: Array<{ houseSlug: string; label: string; bg: string; textColor: string; value: number }> | null =
     isHpJdr
       ? HOUSE_SLUGS.map((houseSlug) => {
-          const resourceSlug = `points-${houseSlug}`
-          const gr = jdr.groupResources.find((r) => r.resourceSlug === resourceSlug)
+          const house = jdr.groups.find((group) => group.slug === houseSlug)
+          const gr = house?.resources.find(
+            (resource) => resource.resourceSlug === `points-${houseSlug}` || resource.resourceSlug.includes('point')
+          )
           const meta = HOUSE_META[houseSlug]
           return gr !== undefined ? { houseSlug, ...meta, value: gr.value } : null
         }).filter((h): h is NonNullable<typeof h> => h !== null)
@@ -127,7 +140,7 @@ export default function CharacterPage() {
   }
 
   const characterTraits = character.traitSlugs
-    .map(slug => jdr.traits.find(t => t.slug === slug))
+    .map((slug) => jdr.traits.find((t) => t.slug === slug))
     .filter((trait): trait is NonNullable<typeof trait> => Boolean(trait))
 
   const traitsByType = {
@@ -138,8 +151,8 @@ export default function CharacterPage() {
   }
 
   const itemNames = character.items
-    .map(oi => {
-      const item = jdr.items.find(i => i.slug === oi.itemSlug)
+    .map((oi) => {
+      const item = jdr.items.find((i) => i.slug === oi.itemSlug)
       return item ? `${item.name}${oi.quantity > 1 ? ` (${oi.quantity})` : ''}` : null
     })
     .filter(Boolean)
@@ -150,18 +163,27 @@ export default function CharacterPage() {
         <HeroContent>
           <PortraitColumn>
             <PortraitFrame>
-              <PortraitImage
-                src={portraitCandidates[0] || '/l7r/placeholder.png'}
-                alt={character.name}
-              />
+              <PortraitImage src={portraitCandidates[0] || '/l7r/placeholder.png'} alt={character.name} />
             </PortraitFrame>
             {isHpJdr && pvResource && characterPv && (
               <PvPanel>
                 <PvLabel>PV</PvLabel>
                 <PvValueRow>
-                  <PvButton type="button" onClick={() => handleAdjustResource(pvResource.slug, characterPv.value, -1)} disabled={updatingResource === pvResource.slug || characterPv.value <= 0}>-</PvButton>
+                  <PvButton
+                    type="button"
+                    onClick={() => handleAdjustResource(pvResource.slug, characterPv.value, -1)}
+                    disabled={updatingResource === pvResource.slug || characterPv.value <= 0}
+                  >
+                    -
+                  </PvButton>
                   <PvValue>{characterPv.value}</PvValue>
-                  <PvButton type="button" onClick={() => handleAdjustResource(pvResource.slug, characterPv.value, 1)} disabled={updatingResource === pvResource.slug}>+</PvButton>
+                  <PvButton
+                    type="button"
+                    onClick={() => handleAdjustResource(pvResource.slug, characterPv.value, 1)}
+                    disabled={updatingResource === pvResource.slug}
+                  >
+                    +
+                  </PvButton>
                 </PvValueRow>
               </PvPanel>
             )}
@@ -171,8 +193,13 @@ export default function CharacterPage() {
             <Overline>{jdr.name} · Fiche de personnage</Overline>
             <CharacterTitle>{character.name}</CharacterTitle>
             <TagRow>
-              {selectedClass && <Tag>Classe: {selectedClass.name} (Lvl {selectedClass.level})</Tag>}
-              {selectedGroups.map(g => (
+              {selectedClass && (
+                <Tag>
+                  Classe: {selectedClass.name}
+                  {character.classLevel ? ` (${character.classLevel})` : ''}
+                </Tag>
+              )}
+              {selectedGroups.map((g) => (
                 <Tag key={g.slug}>{g.name}</Tag>
               ))}
               {!selectedClass && <Tag>Classe: Aucune</Tag>}
@@ -210,14 +237,16 @@ export default function CharacterPage() {
               </RollStateControls>
             </StatsHeader>
             <StatsGrid>
-              {character.stats.map(stat => (
+              {character.stats.map((stat) => (
                 <StatButton
                   key={stat.statSlug}
                   onClick={() => handleRollDice(stat.statSlug)}
                   disabled={rolling === stat.statSlug}
                   title={`Lancer ${stat.statSlug}`}
                 >
-                  <span>{stat.statSlug} : {stat.finalValue}</span>
+                  <span>
+                    {stat.statSlug} : {stat.finalValue}
+                  </span>
                   {stat.finalValue !== stat.value && <StatBaseHint>(base {stat.value})</StatBaseHint>}
                 </StatButton>
               ))}
@@ -226,10 +255,12 @@ export default function CharacterPage() {
               <ArbitraryInput
                 type="text"
                 value={arbitraryFormula}
-                onChange={e => setArbitraryFormula(e.target.value)}
+                onChange={(e) => setArbitraryFormula(e.target.value)}
                 placeholder="1d20"
                 aria-label="Formule de dé arbitraire"
-                onKeyDown={e => { if (e.key === 'Enter') handleRollArbitrary() }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') handleRollArbitrary()
+                }}
               />
               <ArbitraryButton type="button" onClick={handleRollArbitrary} disabled={rollingArbitrary}>
                 🎲 {rollingArbitrary ? '...' : 'Lancer'}
@@ -242,7 +273,12 @@ export default function CharacterPage() {
               <SectionTitle>Traits</SectionTitle>
               <TraitTagGrid>
                 {[...traitsByType.normal, ...traitsByType.secret, ...traitsByType.defaut].map((trait) => {
-                  const variant = trait.type.toLowerCase() === 'secret' ? 'secret' : trait.type.toLowerCase() === 'defaut' ? 'defaut' : 'normal'
+                  const variant =
+                    trait.type.toLowerCase() === 'secret'
+                      ? 'secret'
+                      : trait.type.toLowerCase() === 'defaut'
+                        ? 'defaut'
+                        : 'normal'
                   return (
                     <TraitTagCard key={trait.slug} $variant={variant}>
                       <TraitName>{trait.name}</TraitName>
@@ -250,7 +286,8 @@ export default function CharacterPage() {
                         <TraitModifiers>
                           {trait.modifiers.map((modifier) => (
                             <TraitModifier key={`${trait.slug}-${modifier.statSlug}`}>
-                              {modifier.value >= 0 ? '+' : ''}{modifier.value} {modifier.statSlug}
+                              {modifier.value >= 0 ? '+' : ''}
+                              {modifier.value} {modifier.statSlug}
                             </TraitModifier>
                           ))}
                         </TraitModifiers>
@@ -292,7 +329,8 @@ export default function CharacterPage() {
                       <TraitModifiers>
                         {trait.modifiers.map((modifier) => (
                           <TraitModifier key={`${trait.slug}-${modifier.statSlug}`}>
-                            {modifier.value >= 0 ? '+' : ''}{modifier.value} {modifier.statSlug}
+                            {modifier.value >= 0 ? '+' : ''}
+                            {modifier.value} {modifier.statSlug}
                           </TraitModifier>
                         ))}
                       </TraitModifiers>
@@ -307,16 +345,28 @@ export default function CharacterPage() {
             <SectionCard>
               <SectionTitle>Ressources</SectionTitle>
               <ResourcesGrid>
-                {resourcesForPanel.map(res => {
-                  const resource = jdr.resources.find(r => r.slug === res.resourceSlug)
+                {resourcesForPanel.map((res) => {
+                  const resource = jdr.resources.find((r) => r.slug === res.resourceSlug)
                   const isUpdating = updatingResource === res.resourceSlug
                   return (
                     <ResourceTile key={res.resourceSlug}>
-                      <ResourceName>{resource?.name || res.resourceSlug}</ResourceName>
+                      <ResourceName>{res.name || resource?.name || res.resourceSlug}</ResourceName>
                       <ResourceValueRow>
-                        <ResourceButton type="button" onClick={() => handleAdjustResource(res.resourceSlug, res.value, -1)} disabled={isUpdating || res.value <= 0}>-</ResourceButton>
+                        <ResourceButton
+                          type="button"
+                          onClick={() => handleAdjustResource(res.resourceSlug, res.value, -1)}
+                          disabled={isUpdating || res.value <= 0}
+                        >
+                          -
+                        </ResourceButton>
                         <ResourceValue>{res.value}</ResourceValue>
-                        <ResourceButton type="button" onClick={() => handleAdjustResource(res.resourceSlug, res.value, 1)} disabled={isUpdating}>+</ResourceButton>
+                        <ResourceButton
+                          type="button"
+                          onClick={() => handleAdjustResource(res.resourceSlug, res.value, 1)}
+                          disabled={isUpdating}
+                        >
+                          +
+                        </ResourceButton>
                       </ResourceValueRow>
                     </ResourceTile>
                   )
@@ -355,7 +405,9 @@ export default function CharacterPage() {
                 </SpellStatButton>
               ))}
             </SpellStatGrid>
-            <SpellModalClose type="button" onClick={() => setSpellPopup(null)}>Annuler</SpellModalClose>
+            <SpellModalClose type="button" onClick={() => setSpellPopup(null)}>
+              Annuler
+            </SpellModalClose>
           </SpellModalCard>
         </SpellModalBackdrop>
       )}
@@ -559,7 +611,10 @@ const RollStateControls = styled.div`
 const RollStateButton = styled.button<{ $active: boolean }>`
   border: 1px solid ${({ $active }) => ($active ? 'rgba(172, 112, 61, 0.95)' : 'rgba(184, 138, 86, 0.4)')};
   border-radius: 999px;
-  background: ${({ $active }) => ($active ? 'linear-gradient(180deg, rgba(153, 88, 43, 0.95), rgba(123, 69, 36, 0.95))' : 'rgba(245, 230, 197, 0.95)')};
+  background: ${({ $active }) =>
+    $active
+      ? 'linear-gradient(180deg, rgba(153, 88, 43, 0.95), rgba(123, 69, 36, 0.95))'
+      : 'rgba(245, 230, 197, 0.95)'};
   color: ${({ $active }) => ($active ? '#fff4de' : '#5b3f2e')};
   font-size: 0.76rem;
   font-weight: 700;
@@ -621,12 +676,13 @@ const TraitTagGrid = styled.div`
 `
 
 const TraitTagCard = styled.div<{ $variant: 'normal' | 'secret' | 'defaut' | 'sorts' }>`
-  border: 2px solid ${({ $variant }) => {
-    if ($variant === 'defaut') return 'rgba(171, 56, 56, 0.6)'
-    if ($variant === 'secret') return 'rgba(28, 28, 28, 0.74)'
-    if ($variant === 'sorts') return 'rgba(133, 96, 182, 0.58)'
-    return 'rgba(62, 102, 184, 0.52)'
-  }};
+  border: 2px solid
+    ${({ $variant }) => {
+      if ($variant === 'defaut') return 'rgba(171, 56, 56, 0.6)'
+      if ($variant === 'secret') return 'rgba(28, 28, 28, 0.74)'
+      if ($variant === 'sorts') return 'rgba(133, 96, 182, 0.58)'
+      return 'rgba(62, 102, 184, 0.52)'
+    }};
   border-radius: 12px;
   padding: 0.55rem 0.62rem;
   background: ${({ $variant }) => {
@@ -846,7 +902,9 @@ const SpellStatButton = styled.button`
   color: #3b2926;
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.15s ease, transform 0.1s ease;
+  transition:
+    background 0.15s ease,
+    transform 0.1s ease;
   &:hover:not(:disabled) {
     background: #ffe6b3;
     transform: translateY(-1px);

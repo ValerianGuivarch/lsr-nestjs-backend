@@ -16,14 +16,23 @@ export class DBJdrCharacterResource {
   characterSlug: string
 
   @ManyToOne(() => DBJdrCharacter, (character) => character.resources, { onDelete: 'CASCADE' })
-  @JoinColumn([{ name: 'jdrSlug', referencedColumnName: 'jdrSlug' }, { name: 'characterSlug', referencedColumnName: 'slug' }])
+  @JoinColumn([
+    { name: 'jdrSlug', referencedColumnName: 'jdrSlug' },
+    { name: 'characterSlug', referencedColumnName: 'slug' }
+  ])
   character: DBJdrCharacter
 
   @PrimaryColumn({ type: 'varchar' })
   resourceSlug: string
 
+  @Column({ type: 'varchar', nullable: false })
+  name: string
+
   @Column({ type: 'int', nullable: false, default: 0 })
   value: number
 }
 
-export type DBJdrCharacterResourceToCreate = Pick<DBJdrCharacterResource, 'jdrSlug' | 'characterSlug' | 'resourceSlug' | 'value'>
+export type DBJdrCharacterResourceToCreate = Pick<
+  DBJdrCharacterResource,
+  'jdrSlug' | 'characterSlug' | 'resourceSlug' | 'name' | 'value'
+>

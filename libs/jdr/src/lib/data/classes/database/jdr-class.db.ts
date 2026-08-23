@@ -1,6 +1,5 @@
-import { Entity, Column, PrimaryColumn, ManyToOne, JoinColumn, OneToMany, CreateDateColumn, UpdateDateColumn } from 'typeorm'
+import { Entity, Column, PrimaryColumn, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm'
 import { DBJdr } from '../../jdr/database/DBJdr'
-import { DBJdrClassResource } from './jdr-class-resource.db'
 
 @Entity({ name: 'jdr_class' })
 export class DBJdrClass {
@@ -26,13 +25,6 @@ export class DBJdrClass {
   @Column({ type: 'varchar', nullable: false, default: '' })
   text: string
 
-  @Column({ type: 'int', nullable: false, default: 1 })
-  level: number
-
-  @OneToMany(() => DBJdrClassResource, (resource) => resource.clazz, { cascade: true })
-  resources: DBJdrClassResource[]
-
-  static readonly RELATIONS = {
-    resources: true
-  }
+  @Column({ type: 'simple-json', nullable: false, default: '[]' })
+  levels: string[]
 }

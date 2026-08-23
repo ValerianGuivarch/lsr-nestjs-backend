@@ -1,65 +1,109 @@
 import { Injectable } from '@nestjs/common'
-import { InjectRepository } from '@nestjs/typeorm'
-import { Repository } from 'typeorm'
-import { Slug } from '../../domain/shared/Slug'
-import { JdrError } from '../../domain/shared/JdrError'
+import { InjectDataSource, InjectRepository } from '@nestjs/typeorm'
+import { DataSource, EntityManager, Repository } from 'typeorm'
 import { Resource } from '../../domain/resources/Resource'
-import { ResourceType } from '../../domain/resources/ResourceType'
-import { GroupResourceValue } from '../../domain/resources/GroupResourceValue'
+import { ResourceOwnerType } from '../../domain/resources/ResourceType'
 import { IResourceProvider } from '../../domain/resources/ports/IResourceProvider'
+import { JdrError } from '../../domain/shared/JdrError'
+import { Slug } from '../../domain/shared/Slug'
+import { DBJdrCharacter } from '../characters/database/jdr-character.db'
+import { DBJdrCharacterResource } from '../characters/database/jdr-character-resource.db'
+import { DBJdrGroup } from '../groups/database/jdr-group.db'
 import { DBJdr } from '../jdr/database/DBJdr'
-import { DBJdrResource } from './database/jdr-resource.db'
 import { DBJdrGroupResource } from './database/jdr-group-resource.db'
+import { DBJdrResource } from './database/jdr-resource.db'
 import { ResourceMapper } from './ResourceMapper'
 
 @Injectable()
 export class ResourceProvider implements IResourceProvider {
   constructor(
-    @InjectRepository(DBJdr, 'jdr-sqlite') private readonly jdrRepo: Repository<DBJdr>,
-    @InjectRepository(DBJdrResource, 'jdr-sqlite') private readonly resourceRepo: Repository<DBJdrResource>,
-    @InjectRepository(DBJdrGroupResource, 'jdr-sqlite') private readonly groupResourceRepo: Repository<DBJdrGroupResource>
+    @InjectDataSource('jdr-sqlite') private readonly dataSource: DataSource,
+    @InjectRepository(DBJdrResource, 'jdr-sqlite') private readonly resourceRepo: Repository<DBJdrResource>
   ) {}
 
-  async add(jdrSlug: string, p: { name: string; type: string }): Promise<Resource> {
-    await this.ensureJdrExists(jdrSlug)
+  async add(
+    jdrSlug: string,
+    p: { name: string; ownerType: ResourceOwnerType; defaultValue?: number }
+  ): Promise<Resource> {
     const slug = Slug.from(p.name)
-    const existing = await this.resourceRepo.findOne({ where: { jdrSlug, slug } })
-    if (existing) throw JdrError.conflict(`Resource '${slug}' already exists in jdr '${jdrSlug}'`)
-    await this.resourceRepo.save(this.resourceRepo.create({ jdrSlug, slug, name: p.name, type: p.type as ResourceType }))
-    if ((p.type as ResourceType) === ResourceType.GROUP) {
-      await this.groupResourceRepo.save(this.groupResourceRepo.create({ jdrSlug, resourceSlug: slug, value: 0 }))
-    }
+    await this.dataSource.transaction(async (manager) => {
+      await this.ensureJdrExists(manager, jdrSlug)
+      const resourceRepo = manager.getRepository(DBJdrResource)
+      const existing = await resourceRepo.findOne({ where: { jdrSlug, slug } })
+      if (existing) throw JdrError.conflict(`Resource '${slug}' already exists in jdr '${jdrSlug}'`)
+
+      const oppositeOwnerCollision =
+        p.ownerType === ResourceOwnerType.CHARACTER
+          ? await manager.getRepository(DBJdrGroupResource).findOne({ where: { jdrSlug, resourceSlug: slug } })
+          : await manager.getRepository(DBJdrCharacterResource).findOne({ where: { jdrSlug, resourceSlug: slug } })
+      if (oppositeOwnerCollision) {
+        throw JdrError.conflict(`Resource slug '${slug}' is already used locally by another owner type`)
+      }
+
+      const defaultValue = p.defaultValue ?? 0
+      await resourceRepo.save(
+        resourceRepo.create({ jdrSlug, slug, name: p.name, ownerType: p.ownerType, defaultValue })
+      )
+      await this.propagateDefinition(manager, { jdrSlug, slug, name: p.name, ownerType: p.ownerType, defaultValue })
+    })
     return this.findOneOrThrow(jdrSlug, slug)
   }
 
-  async update(jdrSlug: string, resourceSlug: string, p: { name?: string; type?: string }): Promise<Resource> {
-    const updates: Record<string, unknown> = {}
-    if (p.name) updates.name = p.name
-    if (p.type) updates.type = p.type
-    if (Object.keys(updates).length > 0) {
-      await this.resourceRepo.update({ jdrSlug, slug: resourceSlug }, updates)
-    }
+  async update(jdrSlug: string, resourceSlug: string, p: { name?: string; defaultValue?: number }): Promise<Resource> {
+    await this.dataSource.transaction(async (manager) => {
+      const resourceRepo = manager.getRepository(DBJdrResource)
+      const existing = await resourceRepo.findOne({ where: { jdrSlug, slug: resourceSlug } })
+      if (!existing) throw JdrError.notFound(`Resource '${resourceSlug}'`)
+
+      const patch: Partial<Pick<DBJdrResource, 'name' | 'defaultValue'>> = {}
+      if (p.name !== undefined) patch.name = p.name
+      if (p.defaultValue !== undefined) patch.defaultValue = p.defaultValue
+      if (Object.keys(patch).length > 0) await resourceRepo.update({ jdrSlug, slug: resourceSlug }, patch)
+
+      if (p.name !== undefined) {
+        if (existing.ownerType === ResourceOwnerType.CHARACTER) {
+          await manager.getRepository(DBJdrCharacterResource).update({ jdrSlug, resourceSlug }, { name: p.name })
+        } else {
+          await manager.getRepository(DBJdrGroupResource).update({ jdrSlug, resourceSlug }, { name: p.name })
+        }
+      }
+    })
     return this.findOneOrThrow(jdrSlug, resourceSlug)
   }
 
   async remove(jdrSlug: string, resourceSlug: string): Promise<void> {
-    await this.resourceRepo.delete({ jdrSlug, slug: resourceSlug })
+    const result = await this.resourceRepo.delete({ jdrSlug, slug: resourceSlug })
+    if (!result.affected) throw JdrError.notFound(`Resource '${resourceSlug}'`)
   }
 
-  async updateGroupResource(jdrSlug: string, resourceSlug: string, value: number): Promise<GroupResourceValue> {
-    const existing = await this.groupResourceRepo.findOne({ where: { jdrSlug, resourceSlug } })
-    if (existing) {
-      await this.groupResourceRepo.update({ jdrSlug, resourceSlug }, { value })
-    } else {
-      await this.groupResourceRepo.save(this.groupResourceRepo.create({ jdrSlug, resourceSlug, value }))
+  private async propagateDefinition(
+    manager: EntityManager,
+    resource: Pick<DBJdrResource, 'jdrSlug' | 'slug' | 'name' | 'ownerType' | 'defaultValue'>
+  ): Promise<void> {
+    if (resource.ownerType === ResourceOwnerType.CHARACTER) {
+      const owners = await manager.getRepository(DBJdrCharacter).find({ where: { jdrSlug: resource.jdrSlug } })
+      const values = manager.getRepository(DBJdrCharacterResource)
+      for (const character of owners) {
+        const key = { jdrSlug: resource.jdrSlug, characterSlug: character.slug, resourceSlug: resource.slug }
+        const existing = await values.findOne({ where: key })
+        if (existing) await values.update(key, { name: resource.name })
+        else await values.save(values.create({ ...key, name: resource.name, value: resource.defaultValue }))
+      }
+      return
     }
-    const db = await this.groupResourceRepo.findOne({ where: { jdrSlug, resourceSlug } })
-    if (!db) throw JdrError.notFound(`GroupResource '${resourceSlug}'`)
-    return ResourceMapper.toGroupResourceValue(db)
+
+    const owners = await manager.getRepository(DBJdrGroup).find({ where: { jdrSlug: resource.jdrSlug } })
+    const values = manager.getRepository(DBJdrGroupResource)
+    for (const group of owners) {
+      const key = { jdrSlug: resource.jdrSlug, groupSlug: group.slug, resourceSlug: resource.slug }
+      const existing = await values.findOne({ where: key })
+      if (existing) await values.update(key, { name: resource.name })
+      else await values.save(values.create({ ...key, name: resource.name, value: resource.defaultValue }))
+    }
   }
 
-  private async ensureJdrExists(jdrSlug: string): Promise<void> {
-    const jdr = await this.jdrRepo.findOne({ where: { slug: jdrSlug } })
+  private async ensureJdrExists(manager: EntityManager, jdrSlug: string): Promise<void> {
+    const jdr = await manager.getRepository(DBJdr).findOne({ where: { slug: jdrSlug } })
     if (!jdr) throw JdrError.notFound(`Jdr ${jdrSlug}`)
   }
 

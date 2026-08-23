@@ -7,6 +7,7 @@ import { CharacterMapper } from '../characters/CharacterMapper'
 import { ClassMapper } from '../classes/ClassMapper'
 import { GroupMapper } from '../groups/GroupMapper'
 import { DBJdr } from './database/DBJdr'
+import { PlayerMapper } from '../players/PlayerMapper'
 
 export class JdrMapper {
   static toDomain(db: DBJdr): Jdr {
@@ -17,10 +18,10 @@ export class JdrMapper {
       stats: db.stats.map(StatMapper.toDomain),
       traits: db.traits.map(TraitMapper.toDomain),
       resources: db.resources.map(ResourceMapper.toDomain),
-      groupResources: db.groupResources.map(ResourceMapper.toGroupResourceValue),
       items: db.items.map(ItemMapper.toDomain),
       groupItems: db.groupItems.map(ItemMapper.toOwnedItem),
       characters: (db.characters ?? []).map(CharacterMapper.toDomain),
+      players: (db.players ?? []).map(PlayerMapper.toDomain),
       classes: (db.classes ?? []).map(ClassMapper.toDomain),
       groups: (db.groups ?? []).map(GroupMapper.toDomain)
     })

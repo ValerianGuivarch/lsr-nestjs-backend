@@ -5,6 +5,7 @@ import { JdrDto } from '../jdr/dto/JdrDto'
 import { CharacterService } from '../../domain/characters/CharacterService'
 import {
   AddCharacterItemRequest,
+  AddCharacterResourceRequest,
   AddCharacterRequest,
   UpdateCharacterRequest,
   UpdateCharacterResourceRequest,
@@ -38,7 +39,10 @@ export class CharacterController {
   }
 
   @Delete(':jdrSlug/characters/:characterSlug')
-  async removeCharacter(@Param('jdrSlug') jdrSlug: string, @Param('characterSlug') characterSlug: string): Promise<JdrDto> {
+  async removeCharacter(
+    @Param('jdrSlug') jdrSlug: string,
+    @Param('characterSlug') characterSlug: string
+  ): Promise<JdrDto> {
     await this.characterService.remove(jdrSlug, characterSlug)
     return JdrDto.from(await this.jdrService.findOneBySlug(jdrSlug))
   }
@@ -125,6 +129,17 @@ export class CharacterController {
     @Body() body: UpdateCharacterResourceRequest
   ): Promise<JdrDto> {
     await this.characterService.updateCharacterResource(jdrSlug, characterSlug, resourceSlug, body.value)
+    return JdrDto.from(await this.jdrService.findOneBySlug(jdrSlug))
+  }
+
+  @HttpCode(HttpStatus.CREATED)
+  @Post(':jdrSlug/characters/:characterSlug/resources')
+  async addCharacterResource(
+    @Param('jdrSlug') jdrSlug: string,
+    @Param('characterSlug') characterSlug: string,
+    @Body() body: AddCharacterResourceRequest
+  ): Promise<JdrDto> {
+    await this.characterService.addCharacterResource(jdrSlug, characterSlug, body)
     return JdrDto.from(await this.jdrService.findOneBySlug(jdrSlug))
   }
 

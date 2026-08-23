@@ -9,7 +9,14 @@ export class Item {
   unique: boolean
   modifiers: StatModifier[]
 
-  constructor(p: { jdrSlug: string; name: string; slug?: string; description?: string; unique?: boolean; modifiers?: StatModifier[] }) {
+  constructor(p: {
+    jdrSlug: string
+    name: string
+    slug?: string
+    description?: string
+    unique?: boolean
+    modifiers?: StatModifier[]
+  }) {
     this.jdrSlug = p.jdrSlug
     this.name = p.name
     this.slug = p.slug ?? Slug.from(p.name)

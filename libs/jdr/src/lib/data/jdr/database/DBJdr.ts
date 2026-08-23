@@ -2,12 +2,12 @@ import { Entity, Column, PrimaryColumn, OneToMany, CreateDateColumn, UpdateDateC
 import { DBJdrStat } from '../../stats/database/jdr-stat.db'
 import { DBJdrTrait } from '../../traits/database/DBJdrTrait'
 import { DBJdrResource } from '../../resources/database/jdr-resource.db'
-import { DBJdrGroupResource } from '../../resources/database/jdr-group-resource.db'
 import { DBJdrItem } from '../../items/database/jdr-item.db'
 import { DBJdrGroupItem } from '../../items/database/jdr-group-item.db'
 import { DBJdrCharacter } from '../../characters/database/jdr-character.db'
 import { DBJdrClass } from '../../classes/database/jdr-class.db'
 import { DBJdrGroup } from '../../groups/database/jdr-group.db'
+import { DBJdrPlayer } from '../../players/database/jdr-player.db'
 
 @Entity({ name: 'jdr' })
 export class DBJdr {
@@ -35,9 +35,6 @@ export class DBJdr {
   @OneToMany(() => DBJdrResource, (resource) => resource.jdr, { cascade: true })
   resources: DBJdrResource[]
 
-  @OneToMany(() => DBJdrGroupResource, (gr) => gr.jdr, { cascade: true })
-  groupResources: DBJdrGroupResource[]
-
   @OneToMany(() => DBJdrItem, (item) => item.jdr, { cascade: true })
   items: DBJdrItem[]
 
@@ -53,11 +50,13 @@ export class DBJdr {
   @OneToMany(() => DBJdrGroup, (group) => group.jdr, { cascade: true })
   groups: DBJdrGroup[]
 
+  @OneToMany(() => DBJdrPlayer, (player) => player.jdr, { cascade: true })
+  players: DBJdrPlayer[]
+
   static readonly RELATIONS = {
     stats: true,
     traits: { modifiers: true },
     resources: true,
-    groupResources: true,
     items: { modifiers: true },
     groupItems: true,
     characters: {
@@ -67,8 +66,9 @@ export class DBJdr {
       resources: true,
       groups: true
     },
-    classes: { resources: true },
-    groups: true
+    classes: true,
+    groups: { resources: true },
+    players: true
   }
 }
 

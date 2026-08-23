@@ -1,5 +1,15 @@
-import { Entity, Column, PrimaryColumn, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm'
+import {
+  Entity,
+  Column,
+  PrimaryColumn,
+  ManyToOne,
+  JoinColumn,
+  OneToMany,
+  CreateDateColumn,
+  UpdateDateColumn
+} from 'typeorm'
 import { DBJdr } from '../../jdr/database/DBJdr'
+import { DBJdrGroupResource } from '../../resources/database/jdr-group-resource.db'
 
 @Entity({ name: 'jdr_group' })
 export class DBJdrGroup {
@@ -24,4 +34,9 @@ export class DBJdrGroup {
 
   @Column({ type: 'varchar', nullable: false, default: '' })
   text: string
+
+  @OneToMany(() => DBJdrGroupResource, (resource) => resource.group, { cascade: true })
+  resources: DBJdrGroupResource[]
+
+  static readonly RELATIONS = { resources: true }
 }

@@ -1,0 +1,23 @@
+{
+  "generatedAt": "2026-08-16",
+  "globalCompletion": {
+    "newSynopsisEntries": 41,
+    "newRelevanceEntries": 41,
+    "levelCorrections": 20,
+    "placeCorrections": 40
+  },
+  "remainingGenericPlaceholders": {
+    "premise": [],
+    "rationale": [],
+    "adaptation": []
+  },
+  "specialCases": {
+    "invaders-from-the-dark": "Entrée conservée mais marquée à confirmer : aucune identification officielle certaine trouvée.",
+    "pfs-season-8-8-00": "Reste marqué legacy PF1 dans les fichiers Lot C.",
+    "pfs-season-5-intro": "Reste un alias technique du scénario 5-01 et n’est pas créé comme second scénario canonique."
+  },
+  "idCorrections": {
+    "quest-03-grehundes-gorget": "quest-03-grehunde-s-gorget",
+    "quest-20-dacilane-academy-show-must-go-on": "quest-20-the-dacilane-academy-s-show-must-go-on"
+  }
+}

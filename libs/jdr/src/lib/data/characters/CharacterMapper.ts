@@ -13,9 +13,10 @@ export class CharacterMapper {
       jdrSlug: db.jdrSlug,
       name: db.name,
       slug: db.slug,
+      playerSlug: db.playerSlug ?? undefined,
       classSlug: db.classSlug ?? undefined,
       groupSlugs: (db.groups ?? []).map((g) => g.groupSlug),
-      classLevel: db.classLevel ?? 1,
+      classLevel: db.classLevel ?? undefined,
       isPlayable: db.isPlayable ?? false,
       public: db.public ?? true,
       text: db.text,
@@ -35,6 +36,6 @@ export class CharacterMapper {
   }
 
   static toCharacterResource(db: DBJdrCharacterResource): CharacterResource {
-    return new CharacterResource({ resourceSlug: db.resourceSlug, value: db.value })
+    return new CharacterResource({ resourceSlug: db.resourceSlug, name: db.name, value: db.value })
   }
 }

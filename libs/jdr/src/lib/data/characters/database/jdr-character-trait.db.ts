@@ -1,5 +1,6 @@
 import { Entity, PrimaryColumn, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm'
 import { DBJdrCharacter } from './jdr-character.db'
+import { DBJdrTrait } from '../../traits/database/DBJdrTrait'
 
 @Entity({ name: 'jdr_character_trait' })
 export class DBJdrCharacterTrait {
@@ -16,11 +17,21 @@ export class DBJdrCharacterTrait {
   characterSlug: string
 
   @ManyToOne(() => DBJdrCharacter, (character) => character.traits, { onDelete: 'CASCADE' })
-  @JoinColumn([{ name: 'jdrSlug', referencedColumnName: 'jdrSlug' }, { name: 'characterSlug', referencedColumnName: 'slug' }])
+  @JoinColumn([
+    { name: 'jdrSlug', referencedColumnName: 'jdrSlug' },
+    { name: 'characterSlug', referencedColumnName: 'slug' }
+  ])
   character: DBJdrCharacter
 
   @PrimaryColumn({ type: 'varchar' })
   traitSlug: string
+
+  @ManyToOne(() => DBJdrTrait, { onDelete: 'CASCADE' })
+  @JoinColumn([
+    { name: 'jdrSlug', referencedColumnName: 'jdrSlug' },
+    { name: 'traitSlug', referencedColumnName: 'slug' }
+  ])
+  trait: DBJdrTrait
 }
 
 export type DBJdrCharacterTraitToCreate = Pick<DBJdrCharacterTrait, 'jdrSlug' | 'characterSlug' | 'traitSlug'>

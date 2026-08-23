@@ -1,5 +1,6 @@
 import { Entity, Column, PrimaryColumn, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm'
 import { DBJdrCharacter } from './jdr-character.db'
+import { DBJdrItem } from '../../items/database/jdr-item.db'
 
 @Entity({ name: 'jdr_character_item' })
 export class DBJdrCharacterItem {
@@ -16,11 +17,21 @@ export class DBJdrCharacterItem {
   characterSlug: string
 
   @ManyToOne(() => DBJdrCharacter, (character) => character.items, { onDelete: 'CASCADE' })
-  @JoinColumn([{ name: 'jdrSlug', referencedColumnName: 'jdrSlug' }, { name: 'characterSlug', referencedColumnName: 'slug' }])
+  @JoinColumn([
+    { name: 'jdrSlug', referencedColumnName: 'jdrSlug' },
+    { name: 'characterSlug', referencedColumnName: 'slug' }
+  ])
   character: DBJdrCharacter
 
   @PrimaryColumn({ type: 'varchar' })
   itemSlug: string
+
+  @ManyToOne(() => DBJdrItem, { onDelete: 'CASCADE' })
+  @JoinColumn([
+    { name: 'jdrSlug', referencedColumnName: 'jdrSlug' },
+    { name: 'itemSlug', referencedColumnName: 'slug' }
+  ])
+  item: DBJdrItem
 
   @Column({ type: 'int', nullable: false, default: 1 })
   quantity: number

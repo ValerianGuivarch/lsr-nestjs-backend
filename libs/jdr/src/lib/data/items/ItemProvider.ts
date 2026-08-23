@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common'
-import { InjectRepository } from '@nestjs/typeorm'
-import { Repository } from 'typeorm'
+import { InjectDataSource, InjectRepository } from '@nestjs/typeorm'
+import { DataSource, Repository } from 'typeorm'
 import { Slug } from '../../domain/shared/Slug'
 import { JdrError } from '../../domain/shared/JdrError'
 import { Item } from '../../domain/items/Item'
@@ -15,44 +15,64 @@ import { ItemMapper } from './ItemMapper'
 @Injectable()
 export class ItemProvider implements IItemProvider {
   constructor(
+    @InjectDataSource('jdr-sqlite') private readonly dataSource: DataSource,
     @InjectRepository(DBJdr, 'jdr-sqlite') private readonly jdrRepo: Repository<DBJdr>,
     @InjectRepository(DBJdrItem, 'jdr-sqlite') private readonly itemRepo: Repository<DBJdrItem>,
     @InjectRepository(DBJdrItemModifier, 'jdr-sqlite') private readonly itemModifierRepo: Repository<DBJdrItemModifier>,
     @InjectRepository(DBJdrGroupItem, 'jdr-sqlite') private readonly groupItemRepo: Repository<DBJdrGroupItem>
   ) {}
 
-  async add(jdrSlug: string, p: { name: string; description?: string; unique?: boolean; modifiers?: { statSlug: string; value: number }[] }): Promise<Item> {
+  async add(
+    jdrSlug: string,
+    p: { name: string; description?: string; unique?: boolean; modifiers?: { statSlug: string; value: number }[] }
+  ): Promise<Item> {
     await this.ensureJdrExists(jdrSlug)
     const slug = Slug.from(p.name)
     const existing = await this.itemRepo.findOne({ where: { jdrSlug, slug } })
     if (existing) throw JdrError.conflict(`Item '${slug}' already exists in jdr '${jdrSlug}'`)
-    await this.itemRepo.save(this.itemRepo.create({
-      jdrSlug,
-      slug,
-      name: p.name,
-      description: p.description ?? '',
-      unique: p.unique ?? true
-    }))
-    for (const modifier of p.modifiers ?? []) {
-      await this.itemModifierRepo.save(this.itemModifierRepo.create({ jdrSlug, itemSlug: slug, statSlug: modifier.statSlug, value: modifier.value }))
-    }
+    await this.dataSource.transaction(async (manager) => {
+      const itemRepo = manager.getRepository(DBJdrItem)
+      const modifierRepo = manager.getRepository(DBJdrItemModifier)
+      await itemRepo.save(
+        itemRepo.create({
+          jdrSlug,
+          slug,
+          name: p.name,
+          description: p.description ?? '',
+          unique: p.unique ?? true
+        })
+      )
+      for (const modifier of p.modifiers ?? []) {
+        await modifierRepo.save(
+          modifierRepo.create({ jdrSlug, itemSlug: slug, statSlug: modifier.statSlug, value: modifier.value })
+        )
+      }
+    })
     return this.findOneOrThrow(jdrSlug, slug)
   }
 
-  async update(jdrSlug: string, itemSlug: string, p: { name?: string; description?: string; unique?: boolean; modifiers?: { statSlug: string; value: number }[] }): Promise<Item> {
+  async update(
+    jdrSlug: string,
+    itemSlug: string,
+    p: { name?: string; description?: string; unique?: boolean; modifiers?: { statSlug: string; value: number }[] }
+  ): Promise<Item> {
     const updates: Record<string, unknown> = {}
     if (p.name !== undefined) updates.name = p.name
     if (p.description !== undefined) updates.description = p.description
     if (p.unique !== undefined) updates.unique = p.unique
-    if (Object.keys(updates).length > 0) {
-      await this.itemRepo.update({ jdrSlug, slug: itemSlug }, updates)
-    }
-    if (p.modifiers !== undefined) {
-      await this.itemModifierRepo.delete({ jdrSlug, itemSlug })
-      for (const modifier of p.modifiers) {
-        await this.itemModifierRepo.save(this.itemModifierRepo.create({ jdrSlug, itemSlug, statSlug: modifier.statSlug, value: modifier.value }))
+    await this.dataSource.transaction(async (manager) => {
+      if (Object.keys(updates).length > 0)
+        await manager.getRepository(DBJdrItem).update({ jdrSlug, slug: itemSlug }, updates)
+      if (p.modifiers !== undefined) {
+        const modifierRepo = manager.getRepository(DBJdrItemModifier)
+        await modifierRepo.delete({ jdrSlug, itemSlug })
+        for (const modifier of p.modifiers) {
+          await modifierRepo.save(
+            modifierRepo.create({ jdrSlug, itemSlug, statSlug: modifier.statSlug, value: modifier.value })
+          )
+        }
       }
-    }
+    })
     return this.findOneOrThrow(jdrSlug, itemSlug)
   }
 
@@ -64,7 +84,13 @@ export class ItemProvider implements IItemProvider {
   async addGroupItem(jdrSlug: string, p: { itemSlug: string; quantity?: number }): Promise<OwnedItem> {
     const existing = await this.groupItemRepo.findOne({ where: { jdrSlug, itemSlug: p.itemSlug } })
     if (existing) throw JdrError.conflict(`Group already owns item '${p.itemSlug}' in jdr '${jdrSlug}'`)
-    const saved = await this.groupItemRepo.save(this.groupItemRepo.create({ jdrSlug, itemSlug: p.itemSlug, quantity: p.quantity ?? 1 }))
+    const item = await this.itemRepo.findOne({ where: { jdrSlug, slug: p.itemSlug } })
+    if (!item) throw JdrError.notFound(`Item '${p.itemSlug}' in jdr '${jdrSlug}'`)
+    const quantity = p.quantity ?? 1
+    if (!Number.isInteger(quantity) || quantity < 1)
+      throw JdrError.badRequest(`Item quantity must be a positive integer`)
+    if (item.unique && quantity !== 1) throw JdrError.badRequest(`Unique item '${p.itemSlug}' must have quantity 1`)
+    const saved = await this.groupItemRepo.save(this.groupItemRepo.create({ jdrSlug, itemSlug: p.itemSlug, quantity }))
     return ItemMapper.toOwnedItem(saved)
   }
 

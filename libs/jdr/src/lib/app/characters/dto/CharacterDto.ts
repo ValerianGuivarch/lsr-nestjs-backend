@@ -9,6 +9,7 @@ export class CharacterStatDto {
 
 export class CharacterResourceDto {
   resourceSlug: string
+  name: string
   value: number
 }
 
@@ -20,9 +21,10 @@ export class OwnedItemDto {
 export class CharacterDto {
   slug: string
   name: string
+  playerSlug: string | null
   classSlug: string | null
   groupSlugs: string[]
-  classLevel: number
+  classLevel: string | null
   isPlayable: boolean
   public: boolean
   text: string
@@ -35,15 +37,16 @@ export class CharacterDto {
     const dto = new CharacterDto()
     dto.slug = character.slug
     dto.name = character.name
+    dto.playerSlug = character.playerSlug ?? null
     dto.classSlug = character.classSlug ?? null
     dto.groupSlugs = character.groupSlugs
-    dto.classLevel = character.classLevel ?? 1
+    dto.classLevel = character.classLevel ?? null
     dto.isPlayable = character.isPlayable
     dto.public = character.public
     dto.text = character.text
     dto.traitSlugs = character.traitSlugs
     dto.items = character.items.map((i) => ({ itemSlug: i.itemSlug, quantity: i.quantity }))
-    dto.resources = character.resources.map((r) => ({ resourceSlug: r.resourceSlug, value: r.value }))
+    dto.resources = character.resources.map((r) => ({ resourceSlug: r.resourceSlug, name: r.name, value: r.value }))
 
     const finalStats = jdr.computeFinalStats(character.slug)
     dto.stats = character.stats.map((cs) => ({

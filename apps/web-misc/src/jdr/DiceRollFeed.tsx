@@ -16,7 +16,7 @@ export function DiceRollFeed({ jdrSlug, characterSlug, maxItems = 30 }: DiceRoll
 
   const rolls = data ?? []
   const loading = isLoading
-  const filteredRolls = characterSlug ? rolls.filter(r => r.characterSlug === characterSlug) : rolls
+  const filteredRolls = characterSlug ? rolls.filter((r) => r.characterSlug === characterSlug) : rolls
 
   const resolveRollState = (roll: DiceRollDto): RollState => roll.rollState ?? 'normal'
 
@@ -52,7 +52,7 @@ export function DiceRollFeed({ jdrSlug, characterSlug, maxItems = 30 }: DiceRoll
       {!loading && filteredRolls.length === 0 && <p>Aucun lancer</p>}
       {!loading && filteredRolls.length > 0 && (
         <div style={styles.list}>
-          {filteredRolls.map(roll => {
+          {filteredRolls.map((roll) => {
             const isArbitrary = roll.isArbitrary === true
             if (isArbitrary) {
               const total = roll.results.reduce((a, b) => a + b, 0)
@@ -73,7 +73,11 @@ export function DiceRollFeed({ jdrSlug, characterSlug, maxItems = 30 }: DiceRoll
                   </div>
                   <div style={{ ...styles.resultRow, marginTop: '0.45rem' }}>
                     Total: <strong>{total}</strong>
-                    {roll.results.length > 1 && <span style={{ color: '#8a6744', marginLeft: '0.5rem', fontSize: '0.78rem' }}>({roll.results.length} dés)</span>}
+                    {roll.results.length > 1 && (
+                      <span style={{ color: '#8a6744', marginLeft: '0.5rem', fontSize: '0.78rem' }}>
+                        ({roll.results.length} dés)
+                      </span>
+                    )}
                   </div>
                 </div>
               )
@@ -85,7 +89,9 @@ export function DiceRollFeed({ jdrSlug, characterSlug, maxItems = 30 }: DiceRoll
                 <div style={styles.rollHeader}>
                   🎲 <strong>{roll.characterName}</strong> ·{' '}
                   {roll.text ? (
-                    <strong>{roll.text} ({roll.statName})</strong>
+                    <strong>
+                      {roll.text} ({roll.statName})
+                    </strong>
                   ) : (
                     <strong>{roll.statName}</strong>
                   )}

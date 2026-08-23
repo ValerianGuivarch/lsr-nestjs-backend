@@ -20,8 +20,14 @@ import {
 import { CharacterEntity } from '../data/types'
 
 function useChoices(resource: string, labelField = 'name') {
-  const { data } = useGetList(resource, { pagination: { page: 1, perPage: 500 }, sort: { field: labelField, order: 'ASC' } })
-  return (data ?? []).map((record) => ({ id: record.id, name: (record as Record<string, unknown>)[labelField] as string }))
+  const { data } = useGetList(resource, {
+    pagination: { page: 1, perPage: 500 },
+    sort: { field: labelField, order: 'ASC' }
+  })
+  return (data ?? []).map((record) => ({
+    id: record.id,
+    name: (record as Record<string, unknown>)[labelField] as string
+  }))
 }
 
 function GroupsInput() {
@@ -34,6 +40,10 @@ function TraitsInput() {
 
 function ClassInput() {
   return <SelectInput source="classSlug" label="Classe" choices={useChoices('classes')} emptyText="Aucune" />
+}
+
+function PlayerInput() {
+  return <SelectInput source="playerSlug" label="Joueur" choices={useChoices('players')} emptyText="Non attribué" />
 }
 
 function ItemsInput() {
@@ -49,11 +59,10 @@ function ItemsInput() {
 }
 
 function ResourcesInput() {
-  const resourceChoices = useChoices('resources')
   return (
     <ArrayInput source="resources" label="Ressources">
       <SimpleFormIterator inline>
-        <SelectInput source="resourceSlug" label="Ressource" choices={resourceChoices} validate={required()} />
+        <TextInput source="name" label="Nom" validate={required()} />
         <NumberInput source="value" label="Valeur" />
       </SimpleFormIterator>
     </ArrayInput>
@@ -68,7 +77,10 @@ function StatsInput() {
   return (
     <ArrayInput source="stats" label="Statistiques">
       <SimpleFormIterator inline disableAdd disableRemove disableReordering>
-        <FunctionField label="Stat" render={(record: { statSlug?: string }) => statNames.get(record.statSlug ?? '') ?? record.statSlug} />
+        <FunctionField
+          label="Stat"
+          render={(record: { statSlug?: string }) => statNames.get(record.statSlug ?? '') ?? record.statSlug}
+        />
         <NumberInput source="value" label="Valeur" />
       </SimpleFormIterator>
     </ArrayInput>
@@ -95,7 +107,8 @@ export function CharacterEdit() {
       <SimpleForm>
         <TextInput source="name" label="Nom" validate={required()} />
         <ClassInput />
-        <NumberInput source="classLevel" label="Niveau de classe" min={1} />
+        <PlayerInput />
+        <TextInput source="classLevel" label="Niveau de classe" />
         <BooleanInput source="isPlayable" label="Jouable" />
         <BooleanInput source="public" label="Public" />
         <TextInput source="text" label="Description" multiline fullWidth />
@@ -115,7 +128,8 @@ export function CharacterCreate() {
       <SimpleForm>
         <TextInput source="name" label="Nom" validate={required()} />
         <ClassInput />
-        <NumberInput source="classLevel" label="Niveau de classe" defaultValue={1} min={1} />
+        <PlayerInput />
+        <TextInput source="classLevel" label="Niveau de classe" />
         <BooleanInput source="isPlayable" label="Jouable" />
         <BooleanInput source="public" label="Public" defaultValue={true} />
         <TextInput source="text" label="Description" multiline fullWidth />

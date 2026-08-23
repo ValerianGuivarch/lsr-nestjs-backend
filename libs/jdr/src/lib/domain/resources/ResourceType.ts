@@ -1,5 +1,4 @@
-export enum ResourceType {
-  ALL = 'all',
-  SPECIFIC = 'specific',
-  GROUP = 'group'
+export enum ResourceOwnerType {
+  CHARACTER = 'CHARACTER',
+  GROUP = 'GROUP'
 }

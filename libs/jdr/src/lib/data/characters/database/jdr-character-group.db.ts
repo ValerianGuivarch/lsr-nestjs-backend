@@ -1,5 +1,6 @@
 import { Entity, PrimaryColumn, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm'
 import { DBJdrCharacter } from './jdr-character.db'
+import { DBJdrGroup } from '../../groups/database/jdr-group.db'
 
 @Entity({ name: 'jdr_character_group' })
 export class DBJdrCharacterGroup {
@@ -16,9 +17,19 @@ export class DBJdrCharacterGroup {
   characterSlug: string
 
   @ManyToOne(() => DBJdrCharacter, (character) => character.groups, { onDelete: 'CASCADE' })
-  @JoinColumn([{ name: 'jdrSlug', referencedColumnName: 'jdrSlug' }, { name: 'characterSlug', referencedColumnName: 'slug' }])
+  @JoinColumn([
+    { name: 'jdrSlug', referencedColumnName: 'jdrSlug' },
+    { name: 'characterSlug', referencedColumnName: 'slug' }
+  ])
   character: DBJdrCharacter
 
   @PrimaryColumn({ type: 'varchar' })
   groupSlug: string
+
+  @ManyToOne(() => DBJdrGroup, { onDelete: 'CASCADE' })
+  @JoinColumn([
+    { name: 'jdrSlug', referencedColumnName: 'jdrSlug' },
+    { name: 'groupSlug', referencedColumnName: 'slug' }
+  ])
+  group: DBJdrGroup
 }

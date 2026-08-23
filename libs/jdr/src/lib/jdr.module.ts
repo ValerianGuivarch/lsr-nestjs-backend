@@ -27,6 +27,11 @@ import { CharacterController } from './app/characters/CharacterController'
 import { RollService } from './domain/rolls/RollService'
 import { RollProvider } from './data/rolls/RollProvider'
 import { RollController } from './app/rolls/RollController'
+import { PlayerService } from './domain/players/PlayerService'
+import { PlayerProvider } from './data/players/PlayerProvider'
+import { PlayerController } from './app/players/PlayerController'
+import { JdrImportController } from './app/import/JdrImportController'
+import { JdrImportService } from './app/import/JdrImportService'
 
 // Single module for the whole lib - one controller per data type, no module-per-slice fragmentation.
 @Module({
@@ -40,7 +45,9 @@ import { RollController } from './app/rolls/RollController'
     ClassController,
     GroupController,
     CharacterController,
-    RollController
+    RollController,
+    PlayerController,
+    JdrImportController
   ],
   providers: [
     JdrService,
@@ -60,7 +67,10 @@ import { RollController } from './app/rolls/RollController'
     CharacterService,
     { provide: 'ICharacterProvider', useClass: CharacterProvider },
     RollService,
-    { provide: 'IRollProvider', useClass: RollProvider }
+    { provide: 'IRollProvider', useClass: RollProvider },
+    PlayerService,
+    { provide: 'IPlayerProvider', useClass: PlayerProvider },
+    JdrImportService
   ],
   exports: [JdrService]
 })

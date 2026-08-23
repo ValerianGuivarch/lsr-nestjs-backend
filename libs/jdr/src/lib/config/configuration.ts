@@ -4,5 +4,5 @@ export default () => ({
   http: {
     host: process.env['HOST'] || '0.0.0.0',
     port: parseInt(process.env['JDR_PORT'] || '3003')
-  },
+  }
 })

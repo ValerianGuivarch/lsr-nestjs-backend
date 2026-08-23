@@ -94,7 +94,11 @@ export class RollProvider implements IRollProvider {
   }
 
   private async loadDomainJdr(jdrSlug: string) {
-    const db = await this.jdrRepo.findOne({ where: { slug: jdrSlug }, relations: DBJdr.RELATIONS, relationLoadStrategy: 'query' })
+    const db = await this.jdrRepo.findOne({
+      where: { slug: jdrSlug },
+      relations: DBJdr.RELATIONS,
+      relationLoadStrategy: 'query'
+    })
     if (!db) throw JdrError.notFound(`Jdr ${jdrSlug}`)
     return JdrMapper.toDomain(db)
   }

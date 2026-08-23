@@ -7,9 +7,10 @@ export class Character {
   jdrSlug: string
   name: string
   slug: string
+  playerSlug?: string
   classSlug?: string
   groupSlugs: string[]
-  classLevel: number
+  classLevel?: string
   isPlayable: boolean
   // Whether the character shows up in the public JdR/character selection list; hidden ones still work via a direct link.
   public: boolean
@@ -23,9 +24,10 @@ export class Character {
     jdrSlug: string
     name: string
     slug?: string
+    playerSlug?: string
     classSlug?: string
     groupSlugs?: string[]
-    classLevel?: number
+    classLevel?: string
     isPlayable?: boolean
     public?: boolean
     text?: string
@@ -37,9 +39,10 @@ export class Character {
     this.jdrSlug = p.jdrSlug
     this.name = p.name
     this.slug = p.slug ?? Slug.from(p.name)
+    this.playerSlug = p.playerSlug
     this.classSlug = p.classSlug
     this.groupSlugs = p.groupSlugs ?? []
-    this.classLevel = p.classLevel ?? 1
+    this.classLevel = p.classLevel
     this.isPlayable = p.isPlayable ?? false
     this.public = p.public ?? true
     this.text = p.text ?? ''
@@ -50,6 +53,7 @@ export class Character {
 
     Slug.assertValid(this.jdrSlug)
     Slug.assertValid(this.slug)
+    if (this.playerSlug) Slug.assertValid(this.playerSlug)
     if (this.classSlug) Slug.assertValid(this.classSlug)
     this.groupSlugs.forEach((gs) => Slug.assertValid(gs))
     this.traitSlugs.forEach((traitSlug) => Slug.assertValid(traitSlug))

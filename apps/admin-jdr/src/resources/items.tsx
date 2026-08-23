@@ -16,7 +16,10 @@ import {
 } from 'react-admin'
 
 function ModifiersInput() {
-  const { data: stats } = useGetList('stats', { pagination: { page: 1, perPage: 200 }, sort: { field: 'name', order: 'ASC' } })
+  const { data: stats } = useGetList('stats', {
+    pagination: { page: 1, perPage: 200 },
+    sort: { field: 'name', order: 'ASC' }
+  })
   const statChoices = (stats ?? []).map((s) => ({ id: s.slug, name: s.name }))
 
   return (
@@ -49,7 +52,12 @@ export function ItemEdit() {
         <TextInput source="description" label="Description" multiline fullWidth />
         <BooleanInput source="unique" label="Objet unique" />
         <ModifiersInput />
-        <NumberInput source="groupQuantity" label="Quantité dans l'inventaire du groupe" min={0} helperText="Objet partagé par toute l'équipe, indépendant des personnages" />
+        <NumberInput
+          source="groupQuantity"
+          label="Quantité dans l'inventaire du groupe"
+          min={0}
+          helperText="Objet partagé par toute l'équipe, indépendant des personnages"
+        />
       </SimpleForm>
     </Edit>
   )

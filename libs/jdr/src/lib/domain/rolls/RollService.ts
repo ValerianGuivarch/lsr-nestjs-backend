@@ -6,7 +6,13 @@ import { IRollProvider } from './ports/IRollProvider'
 export class RollService {
   constructor(@Inject('IRollProvider') private readonly rollProvider: IRollProvider) {}
 
-  rollDice(jdrSlug: string, characterSlug: string, statSlug: string, rollState?: DiceRoll['rollState'], text?: string | null): Promise<DiceRoll> {
+  rollDice(
+    jdrSlug: string,
+    characterSlug: string,
+    statSlug: string,
+    rollState?: DiceRoll['rollState'],
+    text?: string | null
+  ): Promise<DiceRoll> {
     return this.rollProvider.rollDice(jdrSlug, characterSlug, statSlug, rollState, text)
   }
 

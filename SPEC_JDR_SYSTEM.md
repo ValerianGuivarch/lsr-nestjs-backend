@@ -13,7 +13,6 @@ Le système doit permettre :
 - de voir en continu les lancers de dé côté MJ et côté personnage ;
 - de préparer un jeu de données de test via un script de feed.
 
-
 ---
 
 ## 1. Routing front attendu
@@ -55,9 +54,10 @@ Un JdR est défini par :
 - un texte libre ;
 - une liste de stats propres au JdR ;
 - une liste de traits ;
-- une liste de ressources ;
-- une liste de ressources de groupe avec leur valeur ;
+- une liste de ressources par défaut pour les personnages et les groupes ;
 - une liste d'objets portés par le groupe.
+- une liste de joueurs ;
+- une liste de classes avec leurs niveaux nommés.
 
 ### 2.2 Stat
 
@@ -96,29 +96,22 @@ Règles :
 
 ### 2.4 Ressource
 
-Une ressource est définie par :
+Une définition de ressource du JdR contient :
 
-- un nom ;
-- un type.
+- un nom et un slug ;
+- un type de propriétaire : `CHARACTER` ou `GROUP` ;
+- une valeur par défaut.
 
-Les types de ressource sont :
-
-- `all` ;
-- `specific` ;
-- `group`.
-
-Sémantique :
-
-- une ressource `all` existe dans le référentiel du JdR et doit être possédée par chaque personnage ;
-- une ressource `specific` existe dans le référentiel du JdR et peut être possédée ou non par chaque personnage ;
-- une ressource `group` existe dans le référentiel du JdR et sa valeur est portée au niveau du groupe/JdR.
+Chaque nouveau personnage reçoit une copie de toutes les ressources `CHARACTER`. Chaque nouveau
+groupe reçoit une copie de toutes les ressources `GROUP`. Ajouter ultérieurement une définition
+propage uniquement les valeurs manquantes aux propriétaires existants, sans écraser leurs valeurs.
 
 ### 2.5 Ressource possédée
 
-Posséder une ressource signifie :
-
-- référencer une ressource du JdR ;
-- lui associer une valeur numérique.
+Un personnage ou un groupe possède ses propres ressources (`nom`, `slug`, `valeur`). Une ressource
+peut provenir d'une définition du JdR ou être ajoutée localement à un seul propriétaire. Modifier
+une valeur par défaut ne modifie jamais les valeurs déjà attribuées. Supprimer une définition
+conserve les valeurs existantes, qui deviennent alors locales.
 
 ### 2.6 Objet
 
@@ -143,7 +136,8 @@ Un personnage est défini par :
 
 - un nom ;
 - un slug technique (unique dans son JdR) ;
-- éventuellement un niveau ;
+- éventuellement un joueur (un joueur peut posséder plusieurs personnages) ;
+- éventuellement une classe et l'un des niveaux nommés définis par cette classe ;
 - un texte libre ;
 - une valeur de base pour chaque stat du JdR ;
 - une liste de traits ;
@@ -154,11 +148,19 @@ Règles :
 
 - chaque stat du JdR doit avoir une valeur sur chaque personnage ;
 - la valeur par défaut d'une stat personnage est `2` ;
-- un personnage doit posséder une entrée de ressource pour chaque ressource `all` du JdR ;
-- un personnage peut posséder zéro, une ou plusieurs ressources `specific` ;
-- un personnage ne porte jamais directement de ressource `group`.
+- un personnage reçoit chaque définition de ressource `CHARACTER` du JdR ;
+- il peut recevoir des ressources locales supplémentaires ;
+- une ressource définie pour les groupes ne peut pas être ajoutée à un personnage.
 
-### 2.8 Lancer de dé (DiceRoll)
+### 2.8 Import JSON complet
+
+`POST /api/v1/jdr/import` crée atomiquement un nouveau JdR depuis un document versionné. Le document
+peut contenir l'intégralité du catalogue et des relations : joueurs, classes et niveaux, groupes,
+personnages, stats, traits, objets et ressources. Un slug de JdR existant est refusé et n'est jamais
+écrasé automatiquement. Les stats omises d'un personnage valent `2`; les ressources omises sont
+héritées des définitions du JdR.
+
+### 2.9 Lancer de dé (DiceRoll)
 
 Un lancer de dé enregistre le résultat d'une tentative d'un personnage :
 
@@ -214,14 +216,17 @@ Règles :
 - une ressource appartient à un seul JdR ;
 - un trait appartient à un seul JdR ;
 - un personnage appartient à un seul JdR ;
+- un joueur appartient à un seul JdR et peut être associé à plusieurs personnages ;
+- le niveau d'un personnage, s'il existe, appartient à sa classe ;
 - le slug d'un personnage est unique dans le périmètre d'un JdR ;
 - un item appartient au catalogue d'un seul JdR ;
 - un personnage contient exactement une valeur de base par stat du JdR ;
 - un trait référencé par un personnage ou un item doit appartenir au même JdR ;
 - un item ne peut référencer qu'un trait de type `Objet` ;
-- une ressource possédée par un personnage doit référencer une ressource du même JdR ;
-- une ressource `group` ne peut pas être possédée individuellement par un personnage ;
-- chaque personnage possède obligatoirement toutes les ressources `all` du JdR ;
+- chaque personnage possède toutes les ressources `CHARACTER` définies par son JdR ;
+- chaque groupe possède toutes les ressources `GROUP` définies par son JdR ;
+- une ressource possédée peut également être locale à un personnage ou à un groupe ;
+- les slugs des ressources possédées sont uniques pour leur propriétaire ;
 - si un item est `unique`, la quantité possédée est toujours 1 ; si non-unique, la quantité est un entier >= 1 ;
 - toutes les valeurs numériques (stats, ressources, modificateurs) sont des nombres finis ;
 - les champs texte libre du JdR et du personnage sont optionnels et peuvent être vides.
@@ -233,7 +238,7 @@ Règles :
 - gestion d'authentification et droits fins ;
 - historique des modifications ;
 - moteur de règles avancé au-delà des modificateurs de traits ;
-- import/export avancé ;
+- export JSON ;
 - gestion multi-session d'un même JdR avec états séparés ;
 - optimisation pour gros volumes de données ;
 - UI riche au-delà des pages minimales nécessaires.
@@ -243,7 +248,6 @@ Règles :
 ## 6. Questions ouvertes (ou depuis fixées)
 
 - Les noms des personnages doivent-ils être uniques dans un JdR ou seul leur slug ? **À trancher avant l'API édition**
-- Une ressource `specific` peut-elle exister plusieurs fois sur un même personnage si le besoin métier apparaît ? **À trancher avant l'API édition**
 
 ---
 
@@ -265,7 +269,7 @@ libs/jdr/domain/src/lib/
     Resource.ts
     ResourceType.ts
     CharacterResource.ts
-    GroupResourceValue.ts
+    GroupResource.ts
   items/
     Item.ts
     OwnedItem.ts
@@ -399,21 +403,21 @@ Critère de sortie : environnement local alimenté automatiquement avec un JdR d
 
 ## 10. Risques et inconnues
 
-| Risque / Inconnu | Impact | Statut | Commentaires |
-| --- | --- | --- | --- |
-| Convention de génération des slugs (normalisation et collisions) | Moyen | 🟢 RÉSOLU | Implémenté dans `Slug.ts` |
-| Forme canonique du domain | Fort | � VALIDÉ | Domain complet + lancers de dé |
-| Endpoints backend (CRUD + rollDice) | Moyen | 🟢 VALIDÉ | POST roll, GET rolls implémentés |
-| Routage front et pages | Moyen | 🟡 EN COURS (Étape 3) | À démarrer |
-| Feed continu de lancers | Moyen | 🟡 À IMPLÉMENTER | Polling ou WebSocket côté front |
-| Modèle de feed de données (seed) | Moyen | 🟡 À DÉFINIR (Étape 4) | À décider avec toi |
-| Gestion des collisions de noms personnage | Moyen | 🟡 À TRANCHER | Slug vs nom unique ? |
+| Risque / Inconnu                                                 | Impact | Statut                 | Commentaires                     |
+| ---------------------------------------------------------------- | ------ | ---------------------- | -------------------------------- |
+| Convention de génération des slugs (normalisation et collisions) | Moyen  | 🟢 RÉSOLU              | Implémenté dans `Slug.ts`        |
+| Forme canonique du domain                                        | Fort   | � VALIDÉ               | Domain complet + lancers de dé   |
+| Endpoints backend (CRUD + rollDice)                              | Moyen  | 🟢 VALIDÉ              | POST roll, GET rolls implémentés |
+| Routage front et pages                                           | Moyen  | 🟡 EN COURS (Étape 3)  | À démarrer                       |
+| Feed continu de lancers                                          | Moyen  | 🟡 À IMPLÉMENTER       | Polling ou WebSocket côté front  |
+| Modèle de feed de données (seed)                                 | Moyen  | 🟡 À DÉFINIR (Étape 4) | À décider avec toi               |
+| Gestion des collisions de noms personnage                        | Moyen  | 🟡 À TRANCHER          | Slug vs nom unique ?             |
 
 ---
 
 ## 11. Résumé de la stratégie
 
-**Lotissement révisé** : 
+**Lotissement révisé** :
 
 1. ✅ Domain + entités (validé)
 2. ✅ Backend CRUD + lancers de dé (validé + implémenté)

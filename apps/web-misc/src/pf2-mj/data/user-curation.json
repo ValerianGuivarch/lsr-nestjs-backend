@@ -1,0 +1,1516 @@
+{
+  "excludedCampaignIds": [
+    "free-rpg-little-trouble",
+    "chronicles-of-the-pathfinder-society"
+  ],
+  "includedCampaignIds": [
+    "extinction-curse",
+    "bounty-06-the-road-from-otari"
+  ],
+  "excludedScenarioIds": [],
+  "playabilityByCampaign": {
+    "crown-of-the-kobold-king": "Prêt",
+    "community-honor": "À adapter",
+    "claws-of-the-tyrant": "À adapter",
+    "bounty-sodden-stories": "À adapter"
+  },
+  "playabilityByScenario": {},
+  "progressByCampaign": {
+    "agents-of-edgewatch": "À jouer",
+    "crown-of-the-kobold-king": "À jouer",
+    "community-escort": "Joué",
+    "quest-15-in-the-footsteps-of-horror": "À jouer"
+  },
+  "progressByScenario": {
+    "pfs-season-1-1-04": "À jouer",
+    "pfs-season-1-1-01": "En cours",
+    "pfs-season-1-intro": "À jouer"
+  },
+  "levelsByCampaign": {
+    "agents-of-edgewatch": "1–20",
+    "age-of-ashes": "1–20",
+    "seven-dooms-for-sandpoint": "4–11",
+    "blood-lords": "1–20",
+    "strength-of-thousands": "1–20",
+    "wardens-of-wildwood": "5–13",
+    "triumph-of-the-tusk": "3–11",
+    "revenge-of-the-runelords": "12–20",
+    "hellbreakers": "1–10",
+    "kingmaker": "1–20",
+    "abomination-vaults": "1–10",
+    "crown-of-the-kobold-king": "1–6",
+    "extinction-curse": "1–20",
+    "curtain-call": "11–20",
+    "fists-of-the-ruby-phoenix": "11–20",
+    "gatewalkers": "1–10",
+    "outlaws-of-alkenstar": "1–10",
+    "quest-for-the-frozen-flame": "1–10",
+    "season-of-ghosts": "1–12",
+    "shades-of-blood": "1–10",
+    "sky-kings-tomb": "1–10",
+    "spore-war": "11–20",
+    "stolen-fate": "11–20",
+    "pfs-season-1": "Variables",
+    "pfs-season-2": "Variables",
+    "pfs-season-3": "Variables",
+    "pfs-season-4": "Variables",
+    "pfs-season-5": "Variables",
+    "pfs-season-6": "Variables",
+    "pfs-season-7": "Variables",
+    "pfs-season-8": "Variables",
+    "bounty-15-treasure-off-the-coast": "1",
+    "bounty-18-from-family-lost": "3",
+    "bounty-sodden-stories": "1",
+    "quest-02-unforgiving-fire": "1–4",
+    "quest-15-in-the-footsteps-of-horror": "1–4",
+    "quest-17-escorting-a-mirage": "1–4",
+    "quest-18-student-exchange": "1–4",
+    "rose-street-revenge": "1",
+    "claws-of-the-tyrant": "Variables",
+    "shadows-at-sundown": "11–13",
+    "the-enmity-cycle": "4–6",
+    "troubles-in-otari": "2–4",
+    "a-fistful-of-flowers": "3",
+    "the-dead-gods-hand": "1–6",
+    "prey-for-death": "Niveau 14 au départ",
+    "rusthenge": "1–3",
+    "malevolence": "3–6",
+    "the-slithering": "5–8",
+    "night-of-the-gray-death": "16–18",
+    "fall-of-plaguestone": "1–4",
+    "chronicles-of-the-pathfinder-society": "1–6",
+    "a-few-flowers-more": "4",
+    "community-honor": "1–3",
+    "community-midnight-demons": "1",
+    "bastion-of-blasphemies": "5–13",
+    "hells-destiny": "10–20",
+    "myth-speaker": "1–10",
+    "waking-tigers": "1–11",
+    "vaultlines": "11–20",
+    "quest-09-wayfinder-origins": "3–6",
+    "quest-19-the-elsewhere-feast": "1–4",
+    "troubles-in-grayce": "2–4",
+    "one-shot-sundered-waves": "5",
+    "one-shot-dinner-at-lionlodge": "4",
+    "one-shot-head-shot-the-rot": "3",
+    "one-shot-mark-of-the-mantis": "6",
+    "free-rpg-little-trouble": "1",
+    "free-rpg-threshold-of-knowledge": "1",
+    "free-rpg-torment-and-legacy": "1",
+    "quest-03-grehunde-s-gorget": "1–4",
+    "quest-20-the-dacilane-academy-s-show-must-go-on": "1–4",
+    "bounty-03-shadows-and-scarecrows": "1",
+    "bounty-06-the-road-from-otari": "1",
+    "bounty-08-the-tireless-path": "1",
+    "bounty-12-somewhere-below": "1",
+    "bounty-13-the-blackwood-abundance": "1",
+    "quest-08-shadows-of-the-black-sovereign": "3–6",
+    "bounty-09-fishing-in-anthusis": "1",
+    "bounty-11-forged-facade": "1",
+    "bounty-14-the-blackwood-truce": "1",
+    "bounty-19-grim-tidings": "3"
+  },
+  "levelsByScenario": {
+    "pfs-season-1-intro": "1–2",
+    "pfs-season-1-1-00": "5",
+    "pfs-season-1-1-01": "1–4",
+    "pfs-season-1-1-02": "1–4",
+    "pfs-season-1-1-03": "1–4",
+    "pfs-season-1-1-04": "1–4",
+    "pfs-season-1-1-05": "1–4",
+    "pfs-season-1-1-06": "1–4",
+    "pfs-season-1-1-07": "1–4",
+    "pfs-season-1-1-08": "1–4",
+    "pfs-season-1-1-09": "3–6",
+    "pfs-season-1-1-10": "1–4",
+    "pfs-season-1-1-11": "1–4",
+    "pfs-season-1-1-12": "1–4",
+    "pfs-season-1-1-13": "3–6",
+    "pfs-season-1-1-14": "1–4",
+    "pfs-season-1-1-15": "1–4",
+    "pfs-season-1-1-16": "3–6",
+    "pfs-season-1-1-17": "3–6",
+    "pfs-season-1-1-18": "1–4",
+    "pfs-season-1-1-19": "3–6",
+    "pfs-season-1-1-20": "3–6",
+    "pfs-season-1-1-21": "5–8",
+    "pfs-season-1-1-22": "1–4",
+    "pfs-season-1-1-23": "3–6",
+    "pfs-season-1-1-24": "5–8",
+    "pfs-season-1-1-25": "5–8",
+    "pfs-season-2-intro": "1–2",
+    "pfs-season-2-2-00": "7–8",
+    "pfs-season-2-2-01": "3–4",
+    "pfs-season-2-2-02": "3–4",
+    "pfs-season-2-2-03": "1–4",
+    "pfs-season-2-2-04": "3–6",
+    "pfs-season-2-2-05": "1–4",
+    "pfs-season-2-2-06": "3–6",
+    "pfs-season-2-2-07": "5–8",
+    "pfs-season-2-2-08": "5–8",
+    "pfs-season-2-2-09": "1–4",
+    "pfs-season-2-2-10": "5–8",
+    "pfs-season-2-2-11": "1",
+    "pfs-season-2-2-12": "3–6",
+    "pfs-season-2-2-13": "1–4",
+    "pfs-season-2-2-14": "3–6",
+    "pfs-season-2-2-15": "3–6",
+    "pfs-season-2-2-16": "5–8",
+    "pfs-season-2-2-17": "3–6",
+    "pfs-season-2-2-18": "3–6",
+    "pfs-season-2-2-19": "1–4",
+    "pfs-season-2-2-20": "5–8",
+    "pfs-season-2-2-21": "1–4",
+    "pfs-season-2-2-22": "7–10",
+    "pfs-season-2-2-23": "3–6",
+    "pfs-season-2-2-24": "7–10",
+    "pfs-season-3-intro": "1–4",
+    "pfs-season-3-3-01": "1–4",
+    "pfs-season-3-3-02": "1–4",
+    "pfs-season-3-3-03": "3–6",
+    "pfs-season-3-3-04": "3–6",
+    "pfs-season-3-3-05": "1–4",
+    "pfs-season-3-3-06": "3–6",
+    "pfs-season-3-3-07": "3–6",
+    "pfs-season-3-3-08": "1–4",
+    "pfs-season-3-3-09": "5–8",
+    "pfs-season-3-3-10": "1–4",
+    "pfs-season-3-3-11": "3–6",
+    "pfs-season-3-3-12": "1–4",
+    "pfs-season-3-3-13": "3–6",
+    "pfs-season-3-3-14": "5–8",
+    "pfs-season-3-3-15": "9–12",
+    "pfs-season-3-3-16": "3–6",
+    "pfs-season-3-3-17": "5–8",
+    "pfs-season-3-3-18": "1–4",
+    "pfs-season-3-3-19": "7–10",
+    "pfs-season-3-3-98": "1–4",
+    "pfs-season-3-3-99": "1–4",
+    "pfs-season-4-intro": "1–4",
+    "pfs-season-4-4-02": "1–4",
+    "pfs-season-4-4-03": "5–8",
+    "pfs-season-4-4-04": "3–6",
+    "pfs-season-4-4-05": "1–4",
+    "pfs-season-4-4-06": "7–10",
+    "pfs-season-4-4-07": "5–8",
+    "pfs-season-4-4-08": "3–6",
+    "pfs-season-4-4-09": "5–8",
+    "pfs-season-4-4-10": "1–4",
+    "pfs-season-4-4-11": "7–10",
+    "pfs-season-4-4-12": "1–4",
+    "pfs-season-4-4-13": "1–4",
+    "pfs-season-4-4-14": "3–6",
+    "pfs-season-4-4-15": "9–12",
+    "pfs-season-4-4-16": "3–6",
+    "pfs-season-4-4-17": "7–10",
+    "pfs-season-4-4-99": "1–8",
+    "pfs-season-5-5-01": "1–4",
+    "pfs-season-5-5-02": "3–6",
+    "pfs-season-5-5-03": "5–8",
+    "pfs-season-5-5-04": "1–4",
+    "pfs-season-5-5-05": "3–6",
+    "pfs-season-5-5-06": "7–10",
+    "pfs-season-5-5-07": "1–4",
+    "pfs-season-5-5-08": "5–8",
+    "pfs-season-5-5-09": "5–8",
+    "pfs-season-5-5-10": "1–4",
+    "pfs-season-5-5-11": "7–10",
+    "pfs-season-5-5-12": "1–4",
+    "pfs-season-5-5-13": "5–8",
+    "pfs-season-5-5-14": "3–6",
+    "pfs-season-5-5-15": "5–8",
+    "pfs-season-5-5-16": "3–6",
+    "pfs-season-5-5-17": "1–4",
+    "pfs-season-5-5-18": "9–12",
+    "pfs-season-5-5-19": "3–6",
+    "pfs-season-5-5-20": "7–10",
+    "pfs-season-6-intro": "1–4",
+    "pfs-season-6-6-01": "1–4",
+    "pfs-season-6-6-02": "1–4",
+    "pfs-season-6-6-03": "5–8",
+    "pfs-season-6-6-04": "3–6",
+    "pfs-season-6-6-05": "1–4",
+    "pfs-season-6-6-06": "3–6",
+    "pfs-season-6-6-07": "7–10",
+    "pfs-season-6-6-08": "1–4",
+    "pfs-season-6-6-09": "9–12",
+    "pfs-season-6-6-10": "5–8",
+    "pfs-season-6-6-11": "7–10",
+    "pfs-season-6-6-12": "3–6",
+    "pfs-season-6-6-13": "1–4",
+    "pfs-season-6-6-14": "7–10",
+    "pfs-season-6-6-15": "5–8",
+    "pfs-season-6-6-16": "5–8",
+    "pfs-season-6-6-17": "7–10",
+    "pfs-season-6-6-18": "3–6",
+    "pfs-season-6-6-19": "11–14",
+    "pfs-season-6-6-20": "9–12",
+    "pfs-season-8-8-00": "1–11"
+  },
+  "placesByCampaign": {
+    "agents-of-edgewatch": [
+      "Absalom"
+    ],
+    "age-of-ashes": [
+      "Isger",
+      "Breachill",
+      "Citadelle Altaerein",
+      "Cercle d’Alseta",
+      "Étendue du Mwangi",
+      "Katapesh",
+      "Mengkare"
+    ],
+    "seven-dooms-for-sandpoint": [
+      "Pointesable",
+      "Varisie"
+    ],
+    "blood-lords": [
+      "Geb",
+      "Graydirge",
+      "Mechitar"
+    ],
+    "strength-of-thousands": [
+      "Nantambu",
+      "Magaambya",
+      "Étendue du Mwangi",
+      "Mzali"
+    ],
+    "wardens-of-wildwood": [
+      "Bois Sauvage"
+    ],
+    "triumph-of-the-tusk": [
+      "Belkzen"
+    ],
+    "revenge-of-the-runelords": [
+      "Terres des Sagas",
+      "Thassilon"
+    ],
+    "hellbreakers": [
+      "Isger",
+      "Chéliax"
+    ],
+    "kingmaker": [
+      "Terres Volées"
+    ],
+    "abomination-vaults": [
+      "Otari",
+      "Gauntlight"
+    ],
+    "crown-of-the-kobold-king": [
+      "Andoran",
+      "Creux du Faucon"
+    ],
+    "extinction-curse": [
+      "Île de la Pierre-Étoile"
+    ],
+    "bounty-sodden-stories": [
+      "Hyrantam",
+      "Terres Détrempées",
+      "Lirgen",
+      "Yamasa",
+      "Œil d’Abendego"
+    ],
+    "quest-15-in-the-footsteps-of-horror": [
+      "Absalom",
+      "Île de Kortos",
+      "Citadelle du Néant",
+      "Plan de l’Ombre"
+    ],
+    "quest-17-escorting-a-mirage": [
+      "Merab"
+    ],
+    "quest-18-student-exchange": [
+      "Nantambu",
+      "Magaambya",
+      "Étendue du Mwangi"
+    ],
+    "rose-street-revenge": [
+      "Absalom"
+    ],
+    "claws-of-the-tyrant": [
+      "Terres des Tombes"
+    ],
+    "shadows-at-sundown": [
+      "Korvosa"
+    ],
+    "the-enmity-cycle": [
+      "Thuvie"
+    ],
+    "troubles-in-otari": [
+      "Otari"
+    ],
+    "the-dead-gods-hand": [
+      "Absalom",
+      "Sanctum d’Aroden"
+    ],
+    "rusthenge": [
+      "Île de Chakikoth",
+      "Iron Harbor",
+      "Rusthenge"
+    ],
+    "malevolence": [
+      "Ravounel",
+      "Manoir Xarwin"
+    ],
+    "the-slithering": [
+      "Kibwe",
+      "Étendue du Mwangi"
+    ],
+    "night-of-the-gray-death": [
+      "Galt"
+    ],
+    "fall-of-plaguestone": [
+      "Etran’s Folly",
+      "Isger"
+    ],
+    "troubles-in-grayce": [
+      "Grayce",
+      "Ustalav"
+    ],
+    "community-midnight-demons": [
+      "Soteria",
+      "Port-Énigme",
+      "Varisie"
+    ],
+    "community-handful-gold": [
+      "Temple boggard"
+    ],
+    "bastion-of-blasphemies": [
+      "Ustalav",
+      "Bastardhall"
+    ],
+    "curtain-call": [
+      "Kintargo",
+      "Ravounel"
+    ],
+    "fists-of-the-ruby-phoenix": [
+      "Tian Xia",
+      "Bonmu",
+      "Goka"
+    ],
+    "gatewalkers": [
+      "Sevenarches",
+      "Royaumes fluviaux",
+      "Castrovel",
+      "Lepidstadt"
+    ],
+    "hells-destiny": [
+      "Chéliax",
+      "Corentyn",
+      "Enfer"
+    ],
+    "myth-speaker": [
+      "Iblydos",
+      "Bailax"
+    ],
+    "outlaws-of-alkenstar": [
+      "Alkenstar",
+      "Désert de la Cicatrice magique"
+    ],
+    "quest-for-the-frozen-flame": [
+      "Royaume des Seigneurs des Mammouths",
+      "Vallée perdue du Mammouth",
+      "Hillcross"
+    ],
+    "season-of-ghosts": [
+      "Willowshore",
+      "Shenmen",
+      "Forêt des Spectres",
+      "Tian Xia"
+    ],
+    "shades-of-blood": [
+      "Talmandor’s Bounty",
+      "Ruines d’Azlant",
+      "Ancienne prison azlantienne"
+    ],
+    "sky-kings-tomb": [
+      "Highhelm",
+      "Terres Sombres"
+    ],
+    "spore-war": [
+      "Kyonin",
+      "Tanglebriar"
+    ],
+    "stolen-fate": [
+      "Absalom",
+      "Grand Bazar",
+      "Golarion"
+    ],
+    "waking-tigers": [
+      "Hwanggot"
+    ],
+    "vaultlines": [
+      "Terres Sombres"
+    ],
+    "bounty-15-treasure-off-the-coast": [
+      "Kintargo",
+      "Côte de Ravounel"
+    ],
+    "bounty-18-from-family-lost": [
+      "Bulviss",
+      "Mendev"
+    ],
+    "quest-02-unforgiving-fire": [
+      "Jalmeray"
+    ],
+    "quest-09-wayfinder-origins": [
+      "Île non cartographiée",
+      "Ruines azlantiennes"
+    ],
+    "quest-19-the-elsewhere-feast": [
+      "Premier Monde"
+    ],
+    "prey-for-death": [
+      "Golarion"
+    ],
+    "chronicles-of-the-pathfinder-society": [
+      "Absalom",
+      "Royaumes fluviaux",
+      "Golarion"
+    ],
+    "a-few-flowers-more": [
+      "Forêt Verdoyante"
+    ],
+    "one-shot-sundered-waves": [
+      "Océan Arcadien"
+    ],
+    "one-shot-dinner-at-lionlodge": [
+      "Lionlodge"
+    ],
+    "one-shot-head-shot-the-rot": [
+      "Alkenstar"
+    ],
+    "one-shot-mark-of-the-mantis": [
+      "Absalom",
+      "Quartier des Pétales"
+    ],
+    "free-rpg-little-trouble": [
+      "Absalom"
+    ],
+    "free-rpg-threshold-of-knowledge": [
+      "Magaambya",
+      "Nantambu"
+    ],
+    "free-rpg-torment-and-legacy": [
+      "Salvoy"
+    ],
+    "quest-03-grehunde-s-gorget": [
+      "Iceferry",
+      "Terres des Rois des Linnorms"
+    ],
+    "quest-20-the-dacilane-academy-s-show-must-go-on": [
+      "Absalom",
+      "Académie Dacilane",
+      "Muse de la Rose"
+    ],
+    "bounty-03-shadows-and-scarecrows": [
+      "Nidal"
+    ],
+    "bounty-06-the-road-from-otari": [
+      "Otari",
+      "Absalom",
+      "Île de Kortos"
+    ],
+    "bounty-08-the-tireless-path": [
+      "Grayce"
+    ],
+    "bounty-12-somewhere-below": [
+      "Cavernes non précisées"
+    ],
+    "bounty-13-the-blackwood-abundance": [
+      "Marais de Blackwood",
+      "Enclave iruxi de Tskikha",
+      "Ruines azlantiennes"
+    ],
+    "quest-08-shadows-of-the-black-sovereign": [
+      "Numérie"
+    ],
+    "bounty-09-fishing-in-anthusis": [
+      "Anthusis",
+      "Vidrian",
+      "Étendue du Mwangi"
+    ],
+    "bounty-11-forged-facade": [
+      "Galt"
+    ],
+    "bounty-14-the-blackwood-truce": [
+      "Blackwood",
+      "Ruines explorées par la Société",
+      "Égouts"
+    ],
+    "bounty-19-grim-tidings": [
+      "Irrisen",
+      "Forêt de Hoarwood"
+    ]
+  },
+  "placeRenames": {
+    "Mwangui": "Étendue du Mwangi"
+  },
+  "deletedPlaces": [
+    "Portes aiudara",
+    "À confirmer"
+  ],
+  "customPlaces": [],
+  "schemaVersion": 2,
+  "placesByScenario": {},
+  "entries": {
+    "a-few-flowers-more": {
+      "levelsOverride": "4",
+      "placesOverride": [
+        "Forêt Verdoyante"
+      ]
+    },
+    "a-fistful-of-flowers": {
+      "levelsOverride": "3"
+    },
+    "abomination-vaults": {
+      "levelsOverride": "1–10",
+      "placesOverride": [
+        "Otari",
+        "Gauntlight"
+      ]
+    },
+    "age-of-ashes": {
+      "levelsOverride": "1–20",
+      "placesOverride": [
+        "Isger",
+        "Breachill",
+        "Citadelle Altaerein",
+        "Cercle d’Alseta",
+        "Étendue du Mwangi",
+        "Katapesh",
+        "Mengkare"
+      ]
+    },
+    "agents-of-edgewatch": {
+      "progress": "À jouer",
+      "levelsOverride": "1–20",
+      "placesOverride": [
+        "Absalom"
+      ]
+    },
+    "bastion-of-blasphemies": {
+      "levelsOverride": "5–13",
+      "placesOverride": [
+        "Ustalav",
+        "Bastardhall"
+      ]
+    },
+    "blood-lords": {
+      "levelsOverride": "1–20",
+      "placesOverride": [
+        "Geb",
+        "Graydirge",
+        "Mechitar"
+      ]
+    },
+    "bounty-03-shadows-and-scarecrows": {
+      "levelsOverride": "1",
+      "placesOverride": [
+        "Nidal"
+      ]
+    },
+    "bounty-06-the-road-from-otari": {
+      "levelsOverride": "1",
+      "placesOverride": [
+        "Otari",
+        "Absalom",
+        "Île de Kortos"
+      ],
+      "excluded": false
+    },
+    "bounty-08-the-tireless-path": {
+      "levelsOverride": "1",
+      "placesOverride": [
+        "Grayce"
+      ]
+    },
+    "bounty-09-fishing-in-anthusis": {
+      "levelsOverride": "1",
+      "placesOverride": [
+        "Anthusis",
+        "Vidrian",
+        "Étendue du Mwangi"
+      ]
+    },
+    "bounty-11-forged-facade": {
+      "levelsOverride": "1",
+      "placesOverride": [
+        "Galt"
+      ]
+    },
+    "bounty-12-somewhere-below": {
+      "levelsOverride": "1",
+      "placesOverride": [
+        "Cavernes non précisées"
+      ]
+    },
+    "bounty-13-the-blackwood-abundance": {
+      "levelsOverride": "1",
+      "placesOverride": [
+        "Marais de Blackwood",
+        "Enclave iruxi de Tskikha",
+        "Ruines azlantiennes"
+      ]
+    },
+    "bounty-14-the-blackwood-truce": {
+      "levelsOverride": "1",
+      "placesOverride": [
+        "Blackwood",
+        "Ruines explorées par la Société",
+        "Égouts"
+      ]
+    },
+    "bounty-15-treasure-off-the-coast": {
+      "levelsOverride": "1",
+      "placesOverride": [
+        "Kintargo",
+        "Côte de Ravounel"
+      ]
+    },
+    "bounty-18-from-family-lost": {
+      "levelsOverride": "3",
+      "placesOverride": [
+        "Bulviss",
+        "Mendev"
+      ]
+    },
+    "bounty-19-grim-tidings": {
+      "levelsOverride": "3",
+      "placesOverride": [
+        "Irrisen",
+        "Forêt de Hoarwood"
+      ]
+    },
+    "bounty-sodden-stories": {
+      "playability": "À adapter",
+      "levelsOverride": "1",
+      "placesOverride": [
+        "Hyrantam",
+        "Terres Détrempées",
+        "Lirgen",
+        "Yamasa",
+        "Œil d’Abendego"
+      ]
+    },
+    "chronicles-of-the-pathfinder-society": {
+      "levelsOverride": "1–6",
+      "placesOverride": [
+        "Absalom",
+        "Royaumes fluviaux",
+        "Golarion"
+      ],
+      "excluded": true
+    },
+    "claws-of-the-tyrant": {
+      "playability": "À adapter",
+      "levelsOverride": "Variables",
+      "placesOverride": [
+        "Terres des Tombes"
+      ]
+    },
+    "community-escort": {
+      "progress": "Joué"
+    },
+    "community-handful-gold": {
+      "placesOverride": [
+        "Temple boggard"
+      ]
+    },
+    "community-honor": {
+      "playability": "À adapter",
+      "levelsOverride": "1–3"
+    },
+    "community-midnight-demons": {
+      "levelsOverride": "1",
+      "placesOverride": [
+        "Soteria",
+        "Port-Énigme",
+        "Varisie"
+      ]
+    },
+    "crown-of-the-kobold-king": {
+      "playability": "Prêt",
+      "progress": "À jouer",
+      "levelsOverride": "1–6",
+      "placesOverride": [
+        "Andoran",
+        "Creux du Faucon"
+      ]
+    },
+    "curtain-call": {
+      "levelsOverride": "11–20",
+      "placesOverride": [
+        "Kintargo",
+        "Ravounel"
+      ]
+    },
+    "extinction-curse": {
+      "excluded": false,
+      "levelsOverride": "1–20",
+      "placesOverride": [
+        "Île de la Pierre-Étoile"
+      ]
+    },
+    "fall-of-plaguestone": {
+      "levelsOverride": "1–4",
+      "placesOverride": [
+        "Etran’s Folly",
+        "Isger"
+      ]
+    },
+    "fists-of-the-ruby-phoenix": {
+      "levelsOverride": "11–20",
+      "placesOverride": [
+        "Tian Xia",
+        "Bonmu",
+        "Goka"
+      ]
+    },
+    "free-rpg-little-trouble": {
+      "excluded": true,
+      "levelsOverride": "1",
+      "placesOverride": [
+        "Absalom"
+      ]
+    },
+    "free-rpg-threshold-of-knowledge": {
+      "levelsOverride": "1",
+      "placesOverride": [
+        "Magaambya",
+        "Nantambu"
+      ]
+    },
+    "free-rpg-torment-and-legacy": {
+      "levelsOverride": "1",
+      "placesOverride": [
+        "Salvoy"
+      ]
+    },
+    "gatewalkers": {
+      "levelsOverride": "1–10",
+      "placesOverride": [
+        "Sevenarches",
+        "Royaumes fluviaux",
+        "Castrovel",
+        "Lepidstadt"
+      ]
+    },
+    "hellbreakers": {
+      "levelsOverride": "1–10",
+      "placesOverride": [
+        "Isger",
+        "Chéliax"
+      ]
+    },
+    "hells-destiny": {
+      "levelsOverride": "10–20",
+      "placesOverride": [
+        "Chéliax",
+        "Corentyn",
+        "Enfer"
+      ]
+    },
+    "kingmaker": {
+      "levelsOverride": "1–20",
+      "placesOverride": [
+        "Terres Volées"
+      ]
+    },
+    "malevolence": {
+      "levelsOverride": "3–6",
+      "placesOverride": [
+        "Ravounel",
+        "Manoir Xarwin"
+      ]
+    },
+    "myth-speaker": {
+      "levelsOverride": "1–10",
+      "placesOverride": [
+        "Iblydos",
+        "Bailax"
+      ]
+    },
+    "night-of-the-gray-death": {
+      "levelsOverride": "16–18",
+      "placesOverride": [
+        "Galt"
+      ]
+    },
+    "one-shot-dinner-at-lionlodge": {
+      "levelsOverride": "4",
+      "placesOverride": [
+        "Lionlodge"
+      ]
+    },
+    "one-shot-head-shot-the-rot": {
+      "levelsOverride": "3",
+      "placesOverride": [
+        "Alkenstar"
+      ]
+    },
+    "one-shot-mark-of-the-mantis": {
+      "levelsOverride": "6",
+      "placesOverride": [
+        "Absalom",
+        "Quartier des Pétales"
+      ]
+    },
+    "one-shot-sundered-waves": {
+      "levelsOverride": "5",
+      "placesOverride": [
+        "Océan Arcadien"
+      ]
+    },
+    "outlaws-of-alkenstar": {
+      "levelsOverride": "1–10",
+      "placesOverride": [
+        "Alkenstar",
+        "Désert de la Cicatrice magique"
+      ]
+    },
+    "pfs-season-1": {
+      "levelsOverride": "Variables"
+    },
+    "pfs-season-1-1-00": {
+      "levelsOverride": "5"
+    },
+    "pfs-season-1-1-01": {
+      "levelsOverride": "1–4",
+      "progress": "En cours"
+    },
+    "pfs-season-1-1-02": {
+      "levelsOverride": "1–4"
+    },
+    "pfs-season-1-1-03": {
+      "levelsOverride": "1–4"
+    },
+    "pfs-season-1-1-04": {
+      "progress": "À jouer",
+      "levelsOverride": "1–4"
+    },
+    "pfs-season-1-1-05": {
+      "levelsOverride": "1–4"
+    },
+    "pfs-season-1-1-06": {
+      "levelsOverride": "1–4"
+    },
+    "pfs-season-1-1-07": {
+      "levelsOverride": "1–4"
+    },
+    "pfs-season-1-1-08": {
+      "levelsOverride": "1–4"
+    },
+    "pfs-season-1-1-09": {
+      "levelsOverride": "3–6"
+    },
+    "pfs-season-1-1-10": {
+      "levelsOverride": "1–4"
+    },
+    "pfs-season-1-1-11": {
+      "levelsOverride": "1–4"
+    },
+    "pfs-season-1-1-12": {
+      "levelsOverride": "1–4"
+    },
+    "pfs-season-1-1-13": {
+      "levelsOverride": "3–6"
+    },
+    "pfs-season-1-1-14": {
+      "levelsOverride": "1–4"
+    },
+    "pfs-season-1-1-15": {
+      "levelsOverride": "1–4"
+    },
+    "pfs-season-1-1-16": {
+      "levelsOverride": "3–6"
+    },
+    "pfs-season-1-1-17": {
+      "levelsOverride": "3–6"
+    },
+    "pfs-season-1-1-18": {
+      "levelsOverride": "1–4"
+    },
+    "pfs-season-1-1-19": {
+      "levelsOverride": "3–6"
+    },
+    "pfs-season-1-1-20": {
+      "levelsOverride": "3–6"
+    },
+    "pfs-season-1-1-21": {
+      "levelsOverride": "5–8"
+    },
+    "pfs-season-1-1-22": {
+      "levelsOverride": "1–4"
+    },
+    "pfs-season-1-1-23": {
+      "levelsOverride": "3–6"
+    },
+    "pfs-season-1-1-24": {
+      "levelsOverride": "5–8"
+    },
+    "pfs-season-1-1-25": {
+      "levelsOverride": "5–8"
+    },
+    "pfs-season-1-intro": {
+      "levelsOverride": "1–2",
+      "progress": "À jouer"
+    },
+    "pfs-season-2": {
+      "levelsOverride": "Variables"
+    },
+    "pfs-season-2-2-00": {
+      "levelsOverride": "7–8"
+    },
+    "pfs-season-2-2-01": {
+      "levelsOverride": "3–4"
+    },
+    "pfs-season-2-2-02": {
+      "levelsOverride": "3–4"
+    },
+    "pfs-season-2-2-03": {
+      "levelsOverride": "1–4"
+    },
+    "pfs-season-2-2-04": {
+      "levelsOverride": "3–6"
+    },
+    "pfs-season-2-2-05": {
+      "levelsOverride": "1–4"
+    },
+    "pfs-season-2-2-06": {
+      "levelsOverride": "3–6"
+    },
+    "pfs-season-2-2-07": {
+      "levelsOverride": "5–8"
+    },
+    "pfs-season-2-2-08": {
+      "levelsOverride": "5–8"
+    },
+    "pfs-season-2-2-09": {
+      "levelsOverride": "1–4"
+    },
+    "pfs-season-2-2-10": {
+      "levelsOverride": "5–8"
+    },
+    "pfs-season-2-2-11": {
+      "levelsOverride": "1"
+    },
+    "pfs-season-2-2-12": {
+      "levelsOverride": "3–6"
+    },
+    "pfs-season-2-2-13": {
+      "levelsOverride": "1–4"
+    },
+    "pfs-season-2-2-14": {
+      "levelsOverride": "3–6"
+    },
+    "pfs-season-2-2-15": {
+      "levelsOverride": "3–6"
+    },
+    "pfs-season-2-2-16": {
+      "levelsOverride": "5–8"
+    },
+    "pfs-season-2-2-17": {
+      "levelsOverride": "3–6"
+    },
+    "pfs-season-2-2-18": {
+      "levelsOverride": "3–6"
+    },
+    "pfs-season-2-2-19": {
+      "levelsOverride": "1–4"
+    },
+    "pfs-season-2-2-20": {
+      "levelsOverride": "5–8"
+    },
+    "pfs-season-2-2-21": {
+      "levelsOverride": "1–4"
+    },
+    "pfs-season-2-2-22": {
+      "levelsOverride": "7–10"
+    },
+    "pfs-season-2-2-23": {
+      "levelsOverride": "3–6"
+    },
+    "pfs-season-2-2-24": {
+      "levelsOverride": "7–10"
+    },
+    "pfs-season-2-intro": {
+      "levelsOverride": "1–2"
+    },
+    "pfs-season-3": {
+      "levelsOverride": "Variables"
+    },
+    "pfs-season-3-3-01": {
+      "levelsOverride": "1–4"
+    },
+    "pfs-season-3-3-02": {
+      "levelsOverride": "1–4"
+    },
+    "pfs-season-3-3-03": {
+      "levelsOverride": "3–6"
+    },
+    "pfs-season-3-3-04": {
+      "levelsOverride": "3–6"
+    },
+    "pfs-season-3-3-05": {
+      "levelsOverride": "1–4"
+    },
+    "pfs-season-3-3-06": {
+      "levelsOverride": "3–6"
+    },
+    "pfs-season-3-3-07": {
+      "levelsOverride": "3–6"
+    },
+    "pfs-season-3-3-08": {
+      "levelsOverride": "1–4"
+    },
+    "pfs-season-3-3-09": {
+      "levelsOverride": "5–8"
+    },
+    "pfs-season-3-3-10": {
+      "levelsOverride": "1–4"
+    },
+    "pfs-season-3-3-11": {
+      "levelsOverride": "3–6"
+    },
+    "pfs-season-3-3-12": {
+      "levelsOverride": "1–4"
+    },
+    "pfs-season-3-3-13": {
+      "levelsOverride": "3–6"
+    },
+    "pfs-season-3-3-14": {
+      "levelsOverride": "5–8"
+    },
+    "pfs-season-3-3-15": {
+      "levelsOverride": "9–12"
+    },
+    "pfs-season-3-3-16": {
+      "levelsOverride": "3–6"
+    },
+    "pfs-season-3-3-17": {
+      "levelsOverride": "5–8"
+    },
+    "pfs-season-3-3-18": {
+      "levelsOverride": "1–4"
+    },
+    "pfs-season-3-3-19": {
+      "levelsOverride": "7–10"
+    },
+    "pfs-season-3-3-98": {
+      "levelsOverride": "1–4"
+    },
+    "pfs-season-3-3-99": {
+      "levelsOverride": "1–4"
+    },
+    "pfs-season-4": {
+      "levelsOverride": "Variables"
+    },
+    "pfs-season-4-4-02": {
+      "levelsOverride": "1–4"
+    },
+    "pfs-season-4-4-03": {
+      "levelsOverride": "5–8"
+    },
+    "pfs-season-4-4-04": {
+      "levelsOverride": "3–6"
+    },
+    "pfs-season-4-4-05": {
+      "levelsOverride": "1–4"
+    },
+    "pfs-season-4-4-06": {
+      "levelsOverride": "7–10"
+    },
+    "pfs-season-4-4-07": {
+      "levelsOverride": "5–8"
+    },
+    "pfs-season-4-4-08": {
+      "levelsOverride": "3–6"
+    },
+    "pfs-season-4-4-09": {
+      "levelsOverride": "5–8"
+    },
+    "pfs-season-4-4-10": {
+      "levelsOverride": "1–4"
+    },
+    "pfs-season-4-4-11": {
+      "levelsOverride": "7–10"
+    },
+    "pfs-season-4-4-12": {
+      "levelsOverride": "1–4"
+    },
+    "pfs-season-4-4-13": {
+      "levelsOverride": "1–4"
+    },
+    "pfs-season-4-4-14": {
+      "levelsOverride": "3–6"
+    },
+    "pfs-season-4-4-15": {
+      "levelsOverride": "9–12"
+    },
+    "pfs-season-4-4-16": {
+      "levelsOverride": "3–6"
+    },
+    "pfs-season-4-4-17": {
+      "levelsOverride": "7–10"
+    },
+    "pfs-season-4-4-99": {
+      "levelsOverride": "1–8"
+    },
+    "pfs-season-4-intro": {
+      "levelsOverride": "1–4"
+    },
+    "pfs-season-5": {
+      "levelsOverride": "Variables"
+    },
+    "pfs-season-5-5-01": {
+      "levelsOverride": "1–4"
+    },
+    "pfs-season-5-5-02": {
+      "levelsOverride": "3–6"
+    },
+    "pfs-season-5-5-03": {
+      "levelsOverride": "5–8"
+    },
+    "pfs-season-5-5-04": {
+      "levelsOverride": "1–4"
+    },
+    "pfs-season-5-5-05": {
+      "levelsOverride": "3–6"
+    },
+    "pfs-season-5-5-06": {
+      "levelsOverride": "7–10"
+    },
+    "pfs-season-5-5-07": {
+      "levelsOverride": "1–4"
+    },
+    "pfs-season-5-5-08": {
+      "levelsOverride": "5–8"
+    },
+    "pfs-season-5-5-09": {
+      "levelsOverride": "5–8"
+    },
+    "pfs-season-5-5-10": {
+      "levelsOverride": "1–4"
+    },
+    "pfs-season-5-5-11": {
+      "levelsOverride": "7–10"
+    },
+    "pfs-season-5-5-12": {
+      "levelsOverride": "1–4"
+    },
+    "pfs-season-5-5-13": {
+      "levelsOverride": "5–8"
+    },
+    "pfs-season-5-5-14": {
+      "levelsOverride": "3–6"
+    },
+    "pfs-season-5-5-15": {
+      "levelsOverride": "5–8"
+    },
+    "pfs-season-5-5-16": {
+      "levelsOverride": "3–6"
+    },
+    "pfs-season-5-5-17": {
+      "levelsOverride": "1–4"
+    },
+    "pfs-season-5-5-18": {
+      "levelsOverride": "9–12"
+    },
+    "pfs-season-5-5-19": {
+      "levelsOverride": "3–6"
+    },
+    "pfs-season-5-5-20": {
+      "levelsOverride": "7–10"
+    },
+    "pfs-season-6": {
+      "levelsOverride": "Variables"
+    },
+    "pfs-season-6-6-01": {
+      "levelsOverride": "1–4"
+    },
+    "pfs-season-6-6-02": {
+      "levelsOverride": "1–4"
+    },
+    "pfs-season-6-6-03": {
+      "levelsOverride": "5–8"
+    },
+    "pfs-season-6-6-04": {
+      "levelsOverride": "3–6"
+    },
+    "pfs-season-6-6-05": {
+      "levelsOverride": "1–4"
+    },
+    "pfs-season-6-6-06": {
+      "levelsOverride": "3–6"
+    },
+    "pfs-season-6-6-07": {
+      "levelsOverride": "7–10"
+    },
+    "pfs-season-6-6-08": {
+      "levelsOverride": "1–4"
+    },
+    "pfs-season-6-6-09": {
+      "levelsOverride": "9–12"
+    },
+    "pfs-season-6-6-10": {
+      "levelsOverride": "5–8"
+    },
+    "pfs-season-6-6-11": {
+      "levelsOverride": "7–10"
+    },
+    "pfs-season-6-6-12": {
+      "levelsOverride": "3–6"
+    },
+    "pfs-season-6-6-13": {
+      "levelsOverride": "1–4"
+    },
+    "pfs-season-6-6-14": {
+      "levelsOverride": "7–10"
+    },
+    "pfs-season-6-6-15": {
+      "levelsOverride": "5–8"
+    },
+    "pfs-season-6-6-16": {
+      "levelsOverride": "5–8"
+    },
+    "pfs-season-6-6-17": {
+      "levelsOverride": "7–10"
+    },
+    "pfs-season-6-6-18": {
+      "levelsOverride": "3–6"
+    },
+    "pfs-season-6-6-19": {
+      "levelsOverride": "11–14"
+    },
+    "pfs-season-6-6-20": {
+      "levelsOverride": "9–12"
+    },
+    "pfs-season-7": {
+      "levelsOverride": "Variables"
+    },
+    "pfs-season-8": {
+      "levelsOverride": "Variables"
+    },
+    "pfs-season-8-8-00": {
+      "levelsOverride": "1–11"
+    },
+    "prey-for-death": {
+      "levelsOverride": "Niveau 14 au départ",
+      "placesOverride": [
+        "Golarion"
+      ]
+    },
+    "quest-02-unforgiving-fire": {
+      "levelsOverride": "1–4",
+      "placesOverride": [
+        "Jalmeray"
+      ]
+    },
+    "quest-03-grehunde-s-gorget": {
+      "levelsOverride": "1–4",
+      "placesOverride": [
+        "Iceferry",
+        "Terres des Rois des Linnorms"
+      ]
+    },
+    "quest-08-shadows-of-the-black-sovereign": {
+      "levelsOverride": "3–6",
+      "placesOverride": [
+        "Numérie"
+      ]
+    },
+    "quest-09-wayfinder-origins": {
+      "levelsOverride": "3–6",
+      "placesOverride": [
+        "Île non cartographiée",
+        "Ruines azlantiennes"
+      ]
+    },
+    "quest-15-in-the-footsteps-of-horror": {
+      "levelsOverride": "1–4",
+      "placesOverride": [
+        "Absalom",
+        "Île de Kortos",
+        "Citadelle du Néant",
+        "Plan de l’Ombre"
+      ],
+      "progress": "À jouer"
+    },
+    "quest-17-escorting-a-mirage": {
+      "levelsOverride": "1–4",
+      "placesOverride": [
+        "Merab"
+      ]
+    },
+    "quest-18-student-exchange": {
+      "levelsOverride": "1–4",
+      "placesOverride": [
+        "Nantambu",
+        "Magaambya",
+        "Étendue du Mwangi"
+      ]
+    },
+    "quest-19-the-elsewhere-feast": {
+      "levelsOverride": "1–4",
+      "placesOverride": [
+        "Premier Monde"
+      ]
+    },
+    "quest-20-the-dacilane-academy-s-show-must-go-on": {
+      "levelsOverride": "1–4",
+      "placesOverride": [
+        "Absalom",
+        "Académie Dacilane",
+        "Muse de la Rose"
+      ]
+    },
+    "quest-for-the-frozen-flame": {
+      "levelsOverride": "1–10",
+      "placesOverride": [
+        "Royaume des Seigneurs des Mammouths",
+        "Vallée perdue du Mammouth",
+        "Hillcross"
+      ]
+    },
+    "revenge-of-the-runelords": {
+      "levelsOverride": "12–20",
+      "placesOverride": [
+        "Terres des Sagas",
+        "Thassilon"
+      ]
+    },
+    "rose-street-revenge": {
+      "levelsOverride": "1",
+      "placesOverride": [
+        "Absalom"
+      ]
+    },
+    "rusthenge": {
+      "levelsOverride": "1–3",
+      "placesOverride": [
+        "Île de Chakikoth",
+        "Iron Harbor",
+        "Rusthenge"
+      ]
+    },
+    "season-of-ghosts": {
+      "levelsOverride": "1–12",
+      "placesOverride": [
+        "Willowshore",
+        "Shenmen",
+        "Forêt des Spectres",
+        "Tian Xia"
+      ]
+    },
+    "seven-dooms-for-sandpoint": {
+      "levelsOverride": "4–11",
+      "placesOverride": [
+        "Pointesable",
+        "Varisie"
+      ]
+    },
+    "shades-of-blood": {
+      "levelsOverride": "1–10",
+      "placesOverride": [
+        "Talmandor’s Bounty",
+        "Ruines d’Azlant",
+        "Ancienne prison azlantienne"
+      ]
+    },
+    "shadows-at-sundown": {
+      "levelsOverride": "11–13",
+      "placesOverride": [
+        "Korvosa"
+      ]
+    },
+    "sky-kings-tomb": {
+      "levelsOverride": "1–10",
+      "placesOverride": [
+        "Highhelm",
+        "Terres Sombres"
+      ]
+    },
+    "spore-war": {
+      "levelsOverride": "11–20",
+      "placesOverride": [
+        "Kyonin",
+        "Tanglebriar"
+      ]
+    },
+    "stolen-fate": {
+      "levelsOverride": "11–20",
+      "placesOverride": [
+        "Absalom",
+        "Grand Bazar",
+        "Golarion"
+      ]
+    },
+    "strength-of-thousands": {
+      "levelsOverride": "1–20",
+      "placesOverride": [
+        "Nantambu",
+        "Magaambya",
+        "Étendue du Mwangi",
+        "Mzali"
+      ]
+    },
+    "the-dead-gods-hand": {
+      "levelsOverride": "1–6",
+      "placesOverride": [
+        "Absalom",
+        "Sanctum d’Aroden"
+      ]
+    },
+    "the-enmity-cycle": {
+      "levelsOverride": "4–6",
+      "placesOverride": [
+        "Thuvie"
+      ]
+    },
+    "the-slithering": {
+      "levelsOverride": "5–8",
+      "placesOverride": [
+        "Kibwe",
+        "Étendue du Mwangi"
+      ]
+    },
+    "triumph-of-the-tusk": {
+      "levelsOverride": "3–11",
+      "placesOverride": [
+        "Belkzen"
+      ]
+    },
+    "troubles-in-grayce": {
+      "levelsOverride": "2–4",
+      "placesOverride": [
+        "Grayce",
+        "Ustalav"
+      ]
+    },
+    "troubles-in-otari": {
+      "levelsOverride": "2–4",
+      "placesOverride": [
+        "Otari"
+      ]
+    },
+    "vaultlines": {
+      "levelsOverride": "11–20",
+      "placesOverride": [
+        "Terres Sombres"
+      ]
+    },
+    "waking-tigers": {
+      "levelsOverride": "1–11",
+      "placesOverride": [
+        "Hwanggot"
+      ]
+    },
+    "wardens-of-wildwood": {
+      "levelsOverride": "5–13",
+      "placesOverride": [
+        "Bois Sauvage"
+      ]
+    }
+  }
+}

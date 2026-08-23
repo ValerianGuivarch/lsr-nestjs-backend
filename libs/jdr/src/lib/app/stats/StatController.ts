@@ -22,7 +22,11 @@ export class StatController {
   }
 
   @Put(':jdrSlug/stats/:statSlug')
-  async updateStat(@Param('jdrSlug') jdrSlug: string, @Param('statSlug') statSlug: string, @Body() body: UpdateStatRequest): Promise<JdrDto> {
+  async updateStat(
+    @Param('jdrSlug') jdrSlug: string,
+    @Param('statSlug') statSlug: string,
+    @Body() body: UpdateStatRequest
+  ): Promise<JdrDto> {
     await this.statService.update(jdrSlug, statSlug, body)
     return JdrDto.from(await this.jdrService.findOneBySlug(jdrSlug))
   }

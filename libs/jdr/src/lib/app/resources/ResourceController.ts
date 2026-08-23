@@ -3,7 +3,7 @@ import { ApiTags } from '@nestjs/swagger'
 import { JdrService } from '../../domain/jdr/JdrService'
 import { JdrDto } from '../jdr/dto/JdrDto'
 import { ResourceService } from '../../domain/resources/ResourceService'
-import { AddResourceRequest, UpdateGroupResourceRequest, UpdateResourceRequest } from './dto/ResourceRequests'
+import { AddResourceRequest, UpdateResourceRequest } from './dto/ResourceRequests'
 
 // Resource mutations still respond with the full recomposed Jdr to preserve the existing frontend contract.
 @Controller('api/v1/jdr')
@@ -22,24 +22,21 @@ export class ResourceController {
   }
 
   @Put(':jdrSlug/resources/:resourceSlug')
-  async updateResource(@Param('jdrSlug') jdrSlug: string, @Param('resourceSlug') resourceSlug: string, @Body() body: UpdateResourceRequest): Promise<JdrDto> {
+  async updateResource(
+    @Param('jdrSlug') jdrSlug: string,
+    @Param('resourceSlug') resourceSlug: string,
+    @Body() body: UpdateResourceRequest
+  ): Promise<JdrDto> {
     await this.resourceService.update(jdrSlug, resourceSlug, body)
     return JdrDto.from(await this.jdrService.findOneBySlug(jdrSlug))
   }
 
   @Delete(':jdrSlug/resources/:resourceSlug')
-  async removeResource(@Param('jdrSlug') jdrSlug: string, @Param('resourceSlug') resourceSlug: string): Promise<JdrDto> {
-    await this.resourceService.remove(jdrSlug, resourceSlug)
-    return JdrDto.from(await this.jdrService.findOneBySlug(jdrSlug))
-  }
-
-  @Put(':jdrSlug/group-resources/:resourceSlug')
-  async updateGroupResource(
+  async removeResource(
     @Param('jdrSlug') jdrSlug: string,
-    @Param('resourceSlug') resourceSlug: string,
-    @Body() body: UpdateGroupResourceRequest
+    @Param('resourceSlug') resourceSlug: string
   ): Promise<JdrDto> {
-    await this.resourceService.updateGroupResource(jdrSlug, resourceSlug, body.value)
+    await this.resourceService.remove(jdrSlug, resourceSlug)
     return JdrDto.from(await this.jdrService.findOneBySlug(jdrSlug))
   }
 }

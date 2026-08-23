@@ -22,7 +22,11 @@ export class ItemController {
   }
 
   @Put(':jdrSlug/items/:itemSlug')
-  async updateItem(@Param('jdrSlug') jdrSlug: string, @Param('itemSlug') itemSlug: string, @Body() body: UpdateItemRequest): Promise<JdrDto> {
+  async updateItem(
+    @Param('jdrSlug') jdrSlug: string,
+    @Param('itemSlug') itemSlug: string,
+    @Body() body: UpdateItemRequest
+  ): Promise<JdrDto> {
     await this.itemService.update(jdrSlug, itemSlug, body)
     return JdrDto.from(await this.jdrService.findOneBySlug(jdrSlug))
   }

@@ -5,6 +5,10 @@ JWT_SECRET=changeme
 # http
 PORT=8081
 YEARDIARY_PORT=8080
+# PF2 MJ: PDFs stay outside the repository. Default from the repository root: ../../PF2/MJ
+# PF2_LIBRARY_ROOT=../../PF2/MJ
+# PF2_DATA_ROOT=apps/web-misc/src/pf2-mj/data
+# PF2_IMAGE_ROOT=../../PF2/pnj
 HOST=127.0.0.1
 
 # jdr admin (apps/admin-jdr) - Basic Auth gating the admin frontend only, not the JDR API

@@ -40,10 +40,17 @@ export default function JdrSelectionPage() {
 
       <Field>
         <label htmlFor="jdr-select">JdR</label>
-        <select id="jdr-select" value={jdrSlug} onChange={(e) => handleJdrChange(e.target.value)} disabled={loadingJdrs}>
+        <select
+          id="jdr-select"
+          value={jdrSlug}
+          onChange={(e) => handleJdrChange(e.target.value)}
+          disabled={loadingJdrs}
+        >
           <option value="">-- Selectionner un JdR --</option>
           {jdrs?.map((j) => (
-            <option key={j.slug} value={j.slug}>{j.name}</option>
+            <option key={j.slug} value={j.slug}>
+              {j.name}
+            </option>
           ))}
         </select>
       </Field>
@@ -58,7 +65,9 @@ export default function JdrSelectionPage() {
         >
           <option value="">-- Selectionner un personnage --</option>
           {publicCharacters.map((c) => (
-            <option key={c.slug} value={c.slug}>{c.name}</option>
+            <option key={c.slug} value={c.slug}>
+              {c.name}
+            </option>
           ))}
         </select>
       </Field>

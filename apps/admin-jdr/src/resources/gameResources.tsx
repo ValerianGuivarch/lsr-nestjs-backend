@@ -1,11 +1,28 @@
-import { Create, Datagrid, Edit, List, NumberInput, required, SimpleForm, TextField, TextInput } from 'react-admin'
+import {
+  Create,
+  Datagrid,
+  Edit,
+  List,
+  NumberInput,
+  required,
+  SelectInput,
+  SimpleForm,
+  TextField,
+  TextInput
+} from 'react-admin'
+
+const OWNER_CHOICES = [
+  { id: 'CHARACTER', name: 'Personnages' },
+  { id: 'GROUP', name: 'Groupes' }
+]
 
 export function GameResourceList() {
   return (
     <List>
       <Datagrid rowClick="edit">
         <TextField source="name" label="Nom" />
-        <TextField source="type" label="Type" />
+        <TextField source="ownerType" label="Propriétaires" />
+        <TextField source="defaultValue" label="Valeur par défaut" />
         <TextField source="slug" label="Slug" />
       </Datagrid>
     </List>
@@ -17,8 +34,8 @@ export function GameResourceEdit() {
     <Edit>
       <SimpleForm>
         <TextInput source="name" label="Nom" validate={required()} />
-        <TextInput source="type" label="Type" validate={required()} helperText="ex: specific, all" />
-        <NumberInput source="groupValue" label="Valeur du pool de groupe" min={0} helperText="Réserve partagée par toute l'équipe, indépendante des personnages" />
+        <TextField source="ownerType" label="Propriétaires" />
+        <NumberInput source="defaultValue" label="Valeur par défaut" />
       </SimpleForm>
     </Edit>
   )
@@ -29,7 +46,14 @@ export function GameResourceCreate() {
     <Create redirect="edit">
       <SimpleForm>
         <TextInput source="name" label="Nom" validate={required()} />
-        <TextInput source="type" label="Type" validate={required()} helperText="ex: specific, all" />
+        <SelectInput
+          source="ownerType"
+          label="Propriétaires"
+          choices={OWNER_CHOICES}
+          defaultValue="CHARACTER"
+          validate={required()}
+        />
+        <NumberInput source="defaultValue" label="Valeur par défaut" defaultValue={0} />
       </SimpleForm>
     </Create>
   )

@@ -22,7 +22,8 @@ const lotLabels = {
 const profileDescriptions = {
   full: 'Tous les lots actifs',
   jdr: 'Lot JDR uniquement',
-  yeardiary: 'Lot YearDiary uniquement'
+  yeardiary: 'Lot YearDiary uniquement',
+  pf2: 'PF2 MJ uniquement (API + interface sur /pf2-mj)'
 }
 
 const defaultConfig = {
@@ -69,7 +70,8 @@ function createLotProfile(enabledLots) {
 const builtInProfiles = {
   full: createLotProfile(lotKeys),
   jdr: createLotProfile(['jdr']),
-  yeardiary: createLotProfile(['yeardiary'])
+  yeardiary: createLotProfile(['yeardiary']),
+  pf2: { backendUnified: false, frontendShell: false, pf2Mj: true, stopPortsBeforeLaunch: false, domains: { jdr: false, yeardiary: false } }
 }
 
 function defaultRunnerConfig() {
@@ -118,6 +120,7 @@ function printProfiles(runnerConfig) {
   console.log('\nExemples:')
   console.log('npm run launch -- --profile full')
   console.log('npm run launch -- --profile jdr')
+  console.log('npm run launch -- --profile pf2')
   console.log('npm run launch -- --config')
 }
 
@@ -377,6 +380,10 @@ async function main() {
 
   if (config.frontendShell) {
     processes.push(startProcess('frontend-shell', 'dev:frontend', {}, { critical: false }))
+  }
+
+  if (config.pf2Mj) {
+    processes.push(startProcess('pf2-mj', 'dev:pf2-mj', {}, { critical: true }))
   }
 
   if (processes.length === 0) {

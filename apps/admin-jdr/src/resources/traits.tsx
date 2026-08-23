@@ -22,7 +22,10 @@ const TRAIT_TYPE_CHOICES = [
 ]
 
 function ModifiersInput() {
-  const { data: stats } = useGetList('stats', { pagination: { page: 1, perPage: 200 }, sort: { field: 'name', order: 'ASC' } })
+  const { data: stats } = useGetList('stats', {
+    pagination: { page: 1, perPage: 200 },
+    sort: { field: 'name', order: 'ASC' }
+  })
   const statChoices = (stats ?? []).map((s) => ({ id: s.slug, name: s.name }))
 
   return (
@@ -65,7 +68,13 @@ export function TraitCreate() {
     <Create redirect="edit">
       <SimpleForm>
         <TextInput source="name" label="Nom" validate={required()} />
-        <SelectInput source="type" label="Type" choices={TRAIT_TYPE_CHOICES} defaultValue="Normal" validate={required()} />
+        <SelectInput
+          source="type"
+          label="Type"
+          choices={TRAIT_TYPE_CHOICES}
+          defaultValue="Normal"
+          validate={required()}
+        />
         <NumberInput source="level" label="Niveau" />
         <ModifiersInput />
       </SimpleForm>

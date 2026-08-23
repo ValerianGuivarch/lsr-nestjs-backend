@@ -1,15 +1,13 @@
-import { IsNumber, IsOptional, IsString } from 'class-validator'
+import { IsEnum, IsNumber, IsOptional, IsString } from 'class-validator'
+import { ResourceOwnerType } from '../../../domain/resources/ResourceType'
 
 export class AddResourceRequest {
   @IsString() name: string
-  @IsString() type: string
+  @IsEnum(ResourceOwnerType) ownerType: ResourceOwnerType
+  @IsOptional() @IsNumber() defaultValue?: number
 }
 
 export class UpdateResourceRequest {
   @IsOptional() @IsString() name?: string
-  @IsOptional() @IsString() type?: string
-}
-
-export class UpdateGroupResourceRequest {
-  @IsNumber() value: number
+  @IsOptional() @IsNumber() defaultValue?: number
 }

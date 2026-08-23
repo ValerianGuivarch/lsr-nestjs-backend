@@ -8,7 +8,10 @@ import { useSelectedJdrSlug } from './useSelectedJdrSlug'
 export function JdrSwitcher() {
   const queryClient = useQueryClient()
   const selectedSlug = useSelectedJdrSlug()
-  const { data: jdrs, isPending } = useGetList('jdrs', { pagination: { page: 1, perPage: 100 }, sort: { field: 'name', order: 'ASC' } })
+  const { data: jdrs, isPending } = useGetList('jdrs', {
+    pagination: { page: 1, perPage: 100 },
+    sort: { field: 'name', order: 'ASC' }
+  })
 
   if (isPending) return null
 

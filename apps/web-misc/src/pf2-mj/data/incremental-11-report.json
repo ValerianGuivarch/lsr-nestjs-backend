@@ -1,0 +1,29 @@
+{
+  "generatedAt": "2026-08-16",
+  "newCampaignEntries": [
+    "bounty-03-shadows-and-scarecrows",
+    "bounty-06-the-road-from-otari",
+    "bounty-08-the-tireless-path",
+    "bounty-12-somewhere-below",
+    "bounty-13-the-blackwood-abundance",
+    "quest-08-shadows-of-the-black-sovereign"
+  ],
+  "newlyPresentPfsItems": [
+    "pfs-season-1-1-06",
+    "pfs-season-3-3-02",
+    "pfs-season-3-3-05",
+    "pfs-season-4-4-02",
+    "pfs-season-4-4-09"
+  ],
+  "strengthOfThousandsVolume1": "absent_confirmé",
+  "roadFromOtari": {
+    "classification": "Bounty #6",
+    "expectedFolder": "Campagnes/Pathfinder Society/Quêtes et Bounties/"
+  },
+  "remainingGenericPlaceholders": {
+    "premise": [],
+    "rationale": [],
+    "adaptation": []
+  },
+  "documentFileIdsPending": 11
+}

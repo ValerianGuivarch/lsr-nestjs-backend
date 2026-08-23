@@ -8,7 +8,14 @@ export default defineConfig(() => {
   // In real prod, nginx forwards /apil7r/* straight to the unified backend (which rewrites it internally).
   // Locally (dev or vite preview), there's no nginx, so proxy it ourselves to the same backend port.
   const backendTarget = process.env.VITE_BACKEND_ORIGIN ?? 'http://localhost:8081'
-  const apiProxy = { '/apil7r': { target: backendTarget, changeOrigin: true } }
+  const apiProxy = {
+    '/apil7r/pf2-mj': {
+      target: process.env.PF2_BACKEND_ORIGIN ?? 'http://localhost:3333',
+      changeOrigin: true,
+      rewrite: (path: string) => path.replace(/^\/apil7r\/pf2-mj/, '/api/v1/pf2-mj')
+    },
+    '/apil7r': { target: backendTarget, changeOrigin: true }
+  }
 
   return {
     root: import.meta.dirname,

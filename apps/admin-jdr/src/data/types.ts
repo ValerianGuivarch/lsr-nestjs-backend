@@ -27,12 +27,8 @@ export interface TraitEntity {
 export interface GameResourceEntity {
   slug: string
   name: string
-  type: string
-}
-
-export interface GroupResourceEntity {
-  resourceSlug: string
-  value: number
+  ownerType: 'CHARACTER' | 'GROUP'
+  defaultValue: number
 }
 
 export interface ItemEntity {
@@ -48,25 +44,24 @@ export interface GroupItemEntity {
   quantity: number
 }
 
-export interface ClassResourceEntity {
-  resourceSlug: string
-  resourceType: string
-  defaultValue: number
-  behavior: 'fixed' | 'scalable'
-}
-
 export interface ClassEntity {
   slug: string
   name: string
   text: string
-  level: number
-  resources: ClassResourceEntity[]
+  levels: string[]
+}
+
+export interface PlayerEntity {
+  slug: string
+  name: string
 }
 
 export interface GroupEntity {
   slug: string
   name: string
+  playerSlug: string | null
   text: string
+  resources: Array<{ resourceSlug: string; name: string; value: number }>
 }
 
 export interface CharacterStatEntity {
@@ -77,6 +72,7 @@ export interface CharacterStatEntity {
 
 export interface CharacterResourceEntity {
   resourceSlug: string
+  name: string
   value: number
 }
 
@@ -90,7 +86,7 @@ export interface CharacterEntity {
   name: string
   classSlug: string | null
   groupSlugs: string[]
-  classLevel: number
+  classLevel: string | null
   isPlayable: boolean
   public: boolean
   text: string
@@ -122,10 +118,10 @@ export interface JdrAggregate {
   stats: StatEntity[]
   traits: TraitEntity[]
   resources: GameResourceEntity[]
-  groupResources: GroupResourceEntity[]
   items: ItemEntity[]
   groupItems: GroupItemEntity[]
   characters: CharacterEntity[]
+  players: PlayerEntity[]
   classes: ClassEntity[]
   groups: GroupEntity[]
 }

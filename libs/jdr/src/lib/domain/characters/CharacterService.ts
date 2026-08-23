@@ -34,7 +34,11 @@ export class CharacterService {
     return this.characterProvider.removeCharacterTrait(jdrSlug, characterSlug, traitSlug)
   }
 
-  addCharacterItem(jdrSlug: string, characterSlug: string, p: { itemSlug: string; quantity?: number }): Promise<Character> {
+  addCharacterItem(
+    jdrSlug: string,
+    characterSlug: string,
+    p: { itemSlug: string; quantity?: number }
+  ): Promise<Character> {
     return this.characterProvider.addCharacterItem(jdrSlug, characterSlug, p)
   }
 
@@ -46,8 +50,21 @@ export class CharacterService {
     return this.characterProvider.updateCharacterStat(jdrSlug, characterSlug, statSlug, value)
   }
 
-  updateCharacterResource(jdrSlug: string, characterSlug: string, resourceSlug: string, value: number): Promise<Character> {
+  updateCharacterResource(
+    jdrSlug: string,
+    characterSlug: string,
+    resourceSlug: string,
+    value: number
+  ): Promise<Character> {
     return this.characterProvider.updateCharacterResource(jdrSlug, characterSlug, resourceSlug, value)
+  }
+
+  addCharacterResource(
+    jdrSlug: string,
+    characterSlug: string,
+    p: { name: string; value?: number }
+  ): Promise<Character> {
+    return this.characterProvider.addCharacterResource(jdrSlug, characterSlug, p)
   }
 
   removeCharacterResource(jdrSlug: string, characterSlug: string, resourceSlug: string): Promise<void> {

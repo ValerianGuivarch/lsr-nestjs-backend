@@ -1,0 +1,733 @@
+{
+  "generatedAt": "2026-08-15T23:01:11.218Z",
+  "canonicalUntouched": true,
+  "scannedFiles": 181,
+  "knownFiles": 157,
+  "proposals": [
+    {
+      "kind": "nouveau_fichier",
+      "status": "à_examiner",
+      "file": {
+        "id": "pdf-6523902bb5c6-0612aa23",
+        "path": "Campagnes/Pathfinder Society/Quêtes et Bounties/PFS Bounty - 15 - Treasure off the Coast (en).pdf",
+        "filename": "PFS Bounty - 15 - Treasure off the Coast (en).pdf",
+        "extension": ".pdf",
+        "bytes": 3053179,
+        "modifiedAt": "2026-08-15T08:06:19.129Z",
+        "sha256": "6523902bb5c64095f00c7f8ce7acfaf88177528b0eff742334a95f87d1291909",
+        "pages": 12,
+        "encrypted": false,
+        "metadata": {
+          "title": null,
+          "subject": null,
+          "author": null,
+          "creator": null
+        },
+        "roleHint": "bounty",
+        "languageHint": "en",
+        "translationVariant": false,
+        "textLayer": "présente",
+        "textCharactersFirstPages": 18038,
+        "pdfInfoError": null
+      },
+      "proposedAssociation": null,
+      "reason": "Nouveau fichier non présent dans le référentiel canonique."
+    },
+    {
+      "kind": "nouveau_fichier",
+      "status": "à_examiner",
+      "file": {
+        "id": "pdf-6f6cc283a663-ad4afbf2",
+        "path": "Campagnes/Pathfinder Society/Quêtes et Bounties/PFS Bounty - 18 - From Family Lost (en).pdf",
+        "filename": "PFS Bounty - 18 - From Family Lost (en).pdf",
+        "extension": ".pdf",
+        "bytes": 2101616,
+        "modifiedAt": "2026-08-15T08:06:07.684Z",
+        "sha256": "6f6cc283a6630a1f73e60f05953484d10ca3c2e771a2628aca957410a73625fe",
+        "pages": 12,
+        "encrypted": false,
+        "metadata": {
+          "title": null,
+          "subject": null,
+          "author": null,
+          "creator": null
+        },
+        "roleHint": "bounty",
+        "languageHint": "en",
+        "translationVariant": false,
+        "textLayer": "présente",
+        "textCharactersFirstPages": 16225,
+        "pdfInfoError": null
+      },
+      "proposedAssociation": null,
+      "reason": "Nouveau fichier non présent dans le référentiel canonique."
+    },
+    {
+      "kind": "nouveau_fichier",
+      "status": "à_examiner",
+      "file": {
+        "id": "pdf-50438e2b08b4-b0ac3530",
+        "path": "Campagnes/Pathfinder Society/Quêtes et Bounties/PFS Quest - 02 - Unforgiving Fire (en).pdf",
+        "filename": "PFS Quest - 02 - Unforgiving Fire (en).pdf",
+        "extension": ".pdf",
+        "bytes": 3074504,
+        "modifiedAt": "2026-08-15T22:36:31.081Z",
+        "sha256": "50438e2b08b4eaa5a2991da4af89420d83d500c31d9318cb6cf98157d18ee73a",
+        "pages": 20,
+        "encrypted": false,
+        "metadata": {
+          "title": "PZOPFQ0002E.pdf",
+          "subject": null,
+          "author": "Copyright 2019 Paizo Inc.",
+          "creator": "Adobe InDesign 14.0 (Macintosh)"
+        },
+        "roleHint": "quest",
+        "languageHint": "en",
+        "translationVariant": false,
+        "textLayer": "présente",
+        "textCharactersFirstPages": 17587,
+        "pdfInfoError": null
+      },
+      "proposedAssociation": null,
+      "reason": "Nouveau fichier non présent dans le référentiel canonique."
+    },
+    {
+      "kind": "nouveau_fichier",
+      "status": "à_examiner",
+      "file": {
+        "id": "pdf-55d2e96205ae-9925105a",
+        "path": "Campagnes/Pathfinder Society/Quêtes et Bounties/PFS Quest - 03 - Grehunde's Gorget (en).pdf",
+        "filename": "PFS Quest - 03 - Grehunde's Gorget (en).pdf",
+        "extension": ".pdf",
+        "bytes": 2605677,
+        "modifiedAt": "2026-08-15T22:34:55.116Z",
+        "sha256": "55d2e96205ae13f15fb70fdb84702815d753b1c9671ff45c52a3a5c93b7521ae",
+        "pages": 12,
+        "encrypted": false,
+        "metadata": {
+          "title": "PZOPFQ0003E.pdf",
+          "subject": null,
+          "author": "Copyright 2019 Paizo Inc.",
+          "creator": "Adobe InDesign 14.0 (Macintosh)"
+        },
+        "roleHint": "quest",
+        "languageHint": "en",
+        "translationVariant": false,
+        "textLayer": "présente",
+        "textCharactersFirstPages": 16453,
+        "pdfInfoError": null
+      },
+      "proposedAssociation": null,
+      "reason": "Nouveau fichier non présent dans le référentiel canonique."
+    },
+    {
+      "kind": "nouveau_fichier",
+      "status": "à_examiner",
+      "file": {
+        "id": "pdf-2f40e5e51b0a-388bb548",
+        "path": "Campagnes/Pathfinder Society/Quêtes et Bounties/PFS Quest - 09 - Wayfinder Origins (en).pdf",
+        "filename": "PFS Quest - 09 - Wayfinder Origins (en).pdf",
+        "extension": ".pdf",
+        "bytes": 2092480,
+        "modifiedAt": "2026-08-15T22:36:36.630Z",
+        "sha256": "2f40e5e51b0aed04c204410e3042d8e2a7824ef8493daff8f427dfb5ceef8a52",
+        "pages": 21,
+        "encrypted": false,
+        "metadata": {
+          "title": null,
+          "subject": null,
+          "author": null,
+          "creator": null
+        },
+        "roleHint": "quest",
+        "languageHint": "en",
+        "translationVariant": false,
+        "textLayer": "présente",
+        "textCharactersFirstPages": 14907,
+        "pdfInfoError": null
+      },
+      "proposedAssociation": null,
+      "reason": "Nouveau fichier non présent dans le référentiel canonique."
+    },
+    {
+      "kind": "nouveau_fichier",
+      "status": "à_examiner",
+      "file": {
+        "id": "pdf-e55aac51bff4-223f3a28",
+        "path": "Campagnes/Pathfinder Society/Quêtes et Bounties/PFS Quest - 19 - The Elsewhere Feast (en).pdf",
+        "filename": "PFS Quest - 19 - The Elsewhere Feast (en).pdf",
+        "extension": ".pdf",
+        "bytes": 2897807,
+        "modifiedAt": "2026-08-15T22:41:32.690Z",
+        "sha256": "e55aac51bff491032a2fcca240d45a2736de78e80d46909d55f671268eb460f5",
+        "pages": 30,
+        "encrypted": false,
+        "metadata": {
+          "title": null,
+          "subject": null,
+          "author": null,
+          "creator": null
+        },
+        "roleHint": "quest",
+        "languageHint": "en",
+        "translationVariant": false,
+        "textLayer": "présente",
+        "textCharactersFirstPages": 12919,
+        "pdfInfoError": null
+      },
+      "proposedAssociation": null,
+      "reason": "Nouveau fichier non présent dans le référentiel canonique."
+    },
+    {
+      "kind": "nouveau_fichier",
+      "status": "à_examiner",
+      "file": {
+        "id": "pdf-494f8a4c89ae-9385d197",
+        "path": "Campagnes/Pathfinder Society/Quêtes et Bounties/PFS Quest - 20 - The Dacilane Academy's Show Must Go On (en).pdf",
+        "filename": "PFS Quest - 20 - The Dacilane Academy's Show Must Go On (en).pdf",
+        "extension": ".pdf",
+        "bytes": 3588600,
+        "modifiedAt": "2026-08-15T22:41:55.673Z",
+        "sha256": "494f8a4c89ae30a4ff782ce76dc2535af4ed9cce93726f9d38dfd3903311ad92",
+        "pages": 31,
+        "encrypted": false,
+        "metadata": {
+          "title": null,
+          "subject": null,
+          "author": null,
+          "creator": null
+        },
+        "roleHint": "quest",
+        "languageHint": "en",
+        "translationVariant": false,
+        "textLayer": "présente",
+        "textCharactersFirstPages": 9573,
+        "pdfInfoError": null
+      },
+      "proposedAssociation": null,
+      "reason": "Nouveau fichier non présent dans le référentiel canonique."
+    },
+    {
+      "kind": "nouveau_fichier",
+      "status": "à_examiner",
+      "file": {
+        "id": "pdf-d5040ba2a7f4-f74fcb38",
+        "path": "Campagnes/Pathfinder Society/Saison 1 - Year of the Open Road/PFS - S01-10 - Tarnbreaker's Trail (en).pdf",
+        "filename": "PFS - S01-10 - Tarnbreaker's Trail (en).pdf",
+        "extension": ".pdf",
+        "bytes": 3429033,
+        "modifiedAt": "2026-08-15T22:37:44.481Z",
+        "sha256": "d5040ba2a7f4ece520b42a8202d97883108e95d0bc853d5d4afd1df370c73a21",
+        "pages": 34,
+        "encrypted": false,
+        "metadata": {
+          "title": null,
+          "subject": null,
+          "author": null,
+          "creator": null
+        },
+        "roleHint": "scenario_pfs",
+        "languageHint": "en",
+        "translationVariant": false,
+        "textLayer": "présente",
+        "textCharactersFirstPages": 20185,
+        "pdfInfoError": null
+      },
+      "proposedAssociation": null,
+      "reason": "Nouveau fichier non présent dans le référentiel canonique."
+    },
+    {
+      "kind": "nouveau_fichier",
+      "status": "à_examiner",
+      "file": {
+        "id": "pdf-d2b516127484-86a2ccb3",
+        "path": "Campagnes/Pathfinder Society/Saison 1 - Year of the Open Road/PFS - S01-13 - Devil at the Crossroads (en).pdf",
+        "filename": "PFS - S01-13 - Devil at the Crossroads (en).pdf",
+        "extension": ".pdf",
+        "bytes": 4045994,
+        "modifiedAt": "2026-08-15T22:41:16.120Z",
+        "sha256": "d2b5161274845d3271181215fb4c8efbd489767b5e099b9ec2047d046c2aa89d",
+        "pages": 40,
+        "encrypted": false,
+        "metadata": {
+          "title": null,
+          "subject": null,
+          "author": null,
+          "creator": null
+        },
+        "roleHint": "scenario_pfs",
+        "languageHint": "en",
+        "translationVariant": false,
+        "textLayer": "présente",
+        "textCharactersFirstPages": 17508,
+        "pdfInfoError": null
+      },
+      "proposedAssociation": null,
+      "reason": "Nouveau fichier non présent dans le référentiel canonique."
+    },
+    {
+      "kind": "nouveau_fichier",
+      "status": "à_examiner",
+      "file": {
+        "id": "pdf-0d6716a921ae-33fd8988",
+        "path": "Campagnes/Pathfinder Society/Saison 1 - Year of the Open Road/PFS - S01-19 - Iolite Squad Alpha (en).pdf",
+        "filename": "PFS - S01-19 - Iolite Squad Alpha (en).pdf",
+        "extension": ".pdf",
+        "bytes": 3319320,
+        "modifiedAt": "2026-08-15T22:36:58.625Z",
+        "sha256": "0d6716a921aedd8b2be549658168049b0594666bbdc554a2aecb590f983d9661",
+        "pages": 30,
+        "encrypted": false,
+        "metadata": {
+          "title": null,
+          "subject": null,
+          "author": null,
+          "creator": null
+        },
+        "roleHint": "scenario_pfs",
+        "languageHint": "en",
+        "translationVariant": false,
+        "textLayer": "présente",
+        "textCharactersFirstPages": 17162,
+        "pdfInfoError": null
+      },
+      "proposedAssociation": null,
+      "reason": "Nouveau fichier non présent dans le référentiel canonique."
+    },
+    {
+      "kind": "nouveau_fichier",
+      "status": "à_examiner",
+      "file": {
+        "id": "pdf-b0b293b0e687-bf9a8c61",
+        "path": "Campagnes/Pathfinder Society/Saison 1 - Year of the Open Road/PFS - S01-25 - Grim Symphony (en).pdf",
+        "filename": "PFS - S01-25 - Grim Symphony (en).pdf",
+        "extension": ".pdf",
+        "bytes": 2742587,
+        "modifiedAt": "2026-08-15T22:40:05.558Z",
+        "sha256": "b0b293b0e687013c36cb965cc26815571905564450b1eb7aaf892c5feaada205",
+        "pages": 29,
+        "encrypted": false,
+        "metadata": {
+          "title": null,
+          "subject": null,
+          "author": null,
+          "creator": null
+        },
+        "roleHint": "scenario_pfs",
+        "languageHint": "en",
+        "translationVariant": false,
+        "textLayer": "présente",
+        "textCharactersFirstPages": 20922,
+        "pdfInfoError": null
+      },
+      "proposedAssociation": null,
+      "reason": "Nouveau fichier non présent dans le référentiel canonique."
+    },
+    {
+      "kind": "nouveau_fichier",
+      "status": "à_examiner",
+      "file": {
+        "id": "pdf-b1ee30e93377-5d26929c",
+        "path": "Campagnes/Pathfinder Society/Saison 2 - Year of Corruption's Reach/PFS - S02-00 - The King in Thorns (en).pdf",
+        "filename": "PFS - S02-00 - The King in Thorns (en).pdf",
+        "extension": ".pdf",
+        "bytes": 4384671,
+        "modifiedAt": "2026-08-15T22:37:22.994Z",
+        "sha256": "b1ee30e93377cbe8cdfa9ccd262969d75b764c271a89bfb00d94ac27684ae8e0",
+        "pages": 45,
+        "encrypted": false,
+        "metadata": {
+          "title": null,
+          "subject": null,
+          "author": null,
+          "creator": null
+        },
+        "roleHint": "scenario_pfs",
+        "languageHint": "en",
+        "translationVariant": false,
+        "textLayer": "présente",
+        "textCharactersFirstPages": 20208,
+        "pdfInfoError": null
+      },
+      "proposedAssociation": null,
+      "reason": "Nouveau fichier non présent dans le référentiel canonique."
+    },
+    {
+      "kind": "nouveau_fichier",
+      "status": "à_examiner",
+      "file": {
+        "id": "pdf-41cd19afa4aa-e2a35808",
+        "path": "Campagnes/Pathfinder Society/Saison 2 - Year of Corruption's Reach/PFS - S02-01 - Citadel of Corruption (en).pdf",
+        "filename": "PFS - S02-01 - Citadel of Corruption (en).pdf",
+        "extension": ".pdf",
+        "bytes": 2361955,
+        "modifiedAt": "2026-08-15T22:39:06.264Z",
+        "sha256": "41cd19afa4aac3d0cbd347f668c3d04d8d9ea5faa673cd5cdc4e2b49970785b0",
+        "pages": 31,
+        "encrypted": false,
+        "metadata": {
+          "title": null,
+          "subject": null,
+          "author": null,
+          "creator": null
+        },
+        "roleHint": "scenario_pfs",
+        "languageHint": "en",
+        "translationVariant": false,
+        "textLayer": "présente",
+        "textCharactersFirstPages": 21933,
+        "pdfInfoError": null
+      },
+      "proposedAssociation": null,
+      "reason": "Nouveau fichier non présent dans le référentiel canonique."
+    },
+    {
+      "kind": "nouveau_fichier",
+      "status": "à_examiner",
+      "file": {
+        "id": "pdf-37f15122c8c4-4bfdfced",
+        "path": "Campagnes/Pathfinder Society/Saison 2 - Year of Corruption's Reach/PFS - S02-08 - A Frosty Mug (en).pdf",
+        "filename": "PFS - S02-08 - A Frosty Mug (en).pdf",
+        "extension": ".pdf",
+        "bytes": 3762946,
+        "modifiedAt": "2026-08-15T22:36:46.125Z",
+        "sha256": "37f15122c8c436bc28e0c366a7757385ec08fea12ba6a56feda434a6d0d72d90",
+        "pages": 34,
+        "encrypted": false,
+        "metadata": {
+          "title": null,
+          "subject": null,
+          "author": null,
+          "creator": null
+        },
+        "roleHint": "scenario_pfs",
+        "languageHint": "en",
+        "translationVariant": false,
+        "textLayer": "présente",
+        "textCharactersFirstPages": 18260,
+        "pdfInfoError": null
+      },
+      "proposedAssociation": null,
+      "reason": "Nouveau fichier non présent dans le référentiel canonique."
+    },
+    {
+      "kind": "nouveau_fichier",
+      "status": "à_examiner",
+      "file": {
+        "id": "pdf-59bf4814de9c-d106cdc8",
+        "path": "Campagnes/Pathfinder Society/Saison 2 - Year of Corruption's Reach/PFS - S02-10 - In Burning Dawn (en).pdf",
+        "filename": "PFS - S02-10 - In Burning Dawn (en).pdf",
+        "extension": ".pdf",
+        "bytes": 2913108,
+        "modifiedAt": "2026-08-15T22:37:53.463Z",
+        "sha256": "59bf4814de9cd9c8240382a5a71a879b449e4b839d63e2ac3163751cd09c0140",
+        "pages": 31,
+        "encrypted": false,
+        "metadata": {
+          "title": null,
+          "subject": null,
+          "author": null,
+          "creator": null
+        },
+        "roleHint": "scenario_pfs",
+        "languageHint": "en",
+        "translationVariant": false,
+        "textLayer": "présente",
+        "textCharactersFirstPages": 15643,
+        "pdfInfoError": null
+      },
+      "proposedAssociation": null,
+      "reason": "Nouveau fichier non présent dans le référentiel canonique."
+    },
+    {
+      "kind": "nouveau_fichier",
+      "status": "à_examiner",
+      "file": {
+        "id": "pdf-8d5adae77a5d-7bf6caf0",
+        "path": "Campagnes/Pathfinder Society/Saison 2 - Year of Corruption's Reach/PFS - S02-17 - The Lost Maid of Anactoria (en).pdf",
+        "filename": "PFS - S02-17 - The Lost Maid of Anactoria (en).pdf",
+        "extension": ".pdf",
+        "bytes": 3509967,
+        "modifiedAt": "2026-08-15T22:43:36.137Z",
+        "sha256": "8d5adae77a5d5f857bfadc68ae62b70db66cd129d3a0ac22d26c6ace6c84b085",
+        "pages": 31,
+        "encrypted": false,
+        "metadata": {
+          "title": null,
+          "subject": null,
+          "author": null,
+          "creator": null
+        },
+        "roleHint": "scenario_pfs",
+        "languageHint": "en",
+        "translationVariant": false,
+        "textLayer": "présente",
+        "textCharactersFirstPages": 19348,
+        "pdfInfoError": null
+      },
+      "proposedAssociation": null,
+      "reason": "Nouveau fichier non présent dans le référentiel canonique."
+    },
+    {
+      "kind": "nouveau_fichier",
+      "status": "à_examiner",
+      "file": {
+        "id": "pdf-45f352ab5789-9abab2db",
+        "path": "Campagnes/Pathfinder Society/Saison 3 - Year of Shattered Sanctuaries/PFS - S03-07 - The Locked Lodge (en).pdf",
+        "filename": "PFS - S03-07 - The Locked Lodge (en).pdf",
+        "extension": ".pdf",
+        "bytes": 2774180,
+        "modifiedAt": "2026-08-15T22:41:49.538Z",
+        "sha256": "45f352ab5789a6fd7e8ceef414b03670e8c59457e0a9070a3afec08118ac3772",
+        "pages": 32,
+        "encrypted": false,
+        "metadata": {
+          "title": null,
+          "subject": null,
+          "author": null,
+          "creator": null
+        },
+        "roleHint": "scenario_pfs",
+        "languageHint": "en",
+        "translationVariant": false,
+        "textLayer": "présente",
+        "textCharactersFirstPages": 17770,
+        "pdfInfoError": null
+      },
+      "proposedAssociation": null,
+      "reason": "Nouveau fichier non présent dans le référentiel canonique."
+    },
+    {
+      "kind": "nouveau_fichier",
+      "status": "à_examiner",
+      "file": {
+        "id": "pdf-f30a4d77ee48-6486c366",
+        "path": "Campagnes/Pathfinder Society/Saison 3 - Year of Shattered Sanctuaries/PFS - S03-09 - The Secluded Siege (en).pdf",
+        "filename": "PFS - S03-09 - The Secluded Siege (en).pdf",
+        "extension": ".pdf",
+        "bytes": 2705027,
+        "modifiedAt": "2026-08-15T22:37:13.506Z",
+        "sha256": "f30a4d77ee48bed5c12dfc6b10a7dffd19e58e4036a3047e3c3a70af1afababe",
+        "pages": 32,
+        "encrypted": false,
+        "metadata": {
+          "title": null,
+          "subject": null,
+          "author": null,
+          "creator": null
+        },
+        "roleHint": "scenario_pfs",
+        "languageHint": "en",
+        "translationVariant": false,
+        "textLayer": "présente",
+        "textCharactersFirstPages": 16232,
+        "pdfInfoError": null
+      },
+      "proposedAssociation": null,
+      "reason": "Nouveau fichier non présent dans le référentiel canonique."
+    },
+    {
+      "kind": "nouveau_fichier",
+      "status": "à_examiner",
+      "file": {
+        "id": "pdf-1b2f6890cd96-abb9e885",
+        "path": "Campagnes/Pathfinder Society/Saison 3 - Year of Shattered Sanctuaries/PFS - S03-99 - Fate in the Future (en).pdf",
+        "filename": "PFS - S03-99 - Fate in the Future (en).pdf",
+        "extension": ".pdf",
+        "bytes": 6474207,
+        "modifiedAt": "2026-08-15T22:34:17.257Z",
+        "sha256": "1b2f6890cd96a3854659429af267ff493ba7674454949421d3272f03b38fa889",
+        "pages": 141,
+        "encrypted": false,
+        "metadata": {
+          "title": null,
+          "subject": null,
+          "author": null,
+          "creator": null
+        },
+        "roleHint": "scenario_pfs",
+        "languageHint": "en",
+        "translationVariant": false,
+        "textLayer": "présente",
+        "textCharactersFirstPages": 17634,
+        "pdfInfoError": null
+      },
+      "proposedAssociation": null,
+      "reason": "Nouveau fichier non présent dans le référentiel canonique."
+    },
+    {
+      "kind": "nouveau_fichier",
+      "status": "à_examiner",
+      "file": {
+        "id": "pdf-806b0d0121f1-73b593b7",
+        "path": "Campagnes/Pathfinder Society/Saison 4 - Year of Boundless Wonder/PFS - S04-03 - Linnorm's Legacy (en).pdf",
+        "filename": "PFS - S04-03 - Linnorm's Legacy (en).pdf",
+        "extension": ".pdf",
+        "bytes": 2839353,
+        "modifiedAt": "2026-08-15T22:34:24.317Z",
+        "sha256": "806b0d0121f19fa7991f7236acd74185818324303a6a15999eb8608ec44f194f",
+        "pages": 30,
+        "encrypted": false,
+        "metadata": {
+          "title": null,
+          "subject": null,
+          "author": null,
+          "creator": null
+        },
+        "roleHint": "scenario_pfs",
+        "languageHint": "en",
+        "translationVariant": false,
+        "textLayer": "présente",
+        "textCharactersFirstPages": 21704,
+        "pdfInfoError": null
+      },
+      "proposedAssociation": null,
+      "reason": "Nouveau fichier non présent dans le référentiel canonique."
+    },
+    {
+      "kind": "nouveau_fichier",
+      "status": "à_examiner",
+      "file": {
+        "id": "pdf-52e3190e7cd4-5f83e51c",
+        "path": "Campagnes/Pathfinder Society/Saison 5 - Year of Unfettered Exploration/PFS - S05-06 - Ukuja, The First Wall (en).pdf",
+        "filename": "PFS - S05-06 - Ukuja, The First Wall (en).pdf",
+        "extension": ".pdf",
+        "bytes": 3973267,
+        "modifiedAt": "2026-08-15T07:42:18.663Z",
+        "sha256": "52e3190e7cd4e60deb0f4b59efdb2b2a17357b5e36f9c136927a166fb4669106",
+        "pages": 40,
+        "encrypted": false,
+        "metadata": {
+          "title": null,
+          "subject": null,
+          "author": null,
+          "creator": null
+        },
+        "roleHint": "scenario_pfs",
+        "languageHint": "en",
+        "translationVariant": false,
+        "textLayer": "présente",
+        "textCharactersFirstPages": 13548,
+        "pdfInfoError": null
+      },
+      "proposedAssociation": null,
+      "reason": "Nouveau fichier non présent dans le référentiel canonique."
+    },
+    {
+      "kind": "nouveau_fichier",
+      "status": "à_examiner",
+      "file": {
+        "id": "pdf-5b527b9716eb-7fa625fc",
+        "path": "Campagnes/Pathfinder Society/Saison 5 - Year of Unfettered Exploration/PFS - S05-07 - Sewer Dragon Crisis (en).pdf",
+        "filename": "PFS - S05-07 - Sewer Dragon Crisis (en).pdf",
+        "extension": ".pdf",
+        "bytes": 3813404,
+        "modifiedAt": "2026-08-15T22:37:31.719Z",
+        "sha256": "5b527b9716eb4f701185fe33ac02ff19f2112f4a43cdd46e6997c77fdcc85867",
+        "pages": 37,
+        "encrypted": false,
+        "metadata": {
+          "title": null,
+          "subject": null,
+          "author": null,
+          "creator": null
+        },
+        "roleHint": "scenario_pfs",
+        "languageHint": "en",
+        "translationVariant": false,
+        "textLayer": "présente",
+        "textCharactersFirstPages": 18372,
+        "pdfInfoError": null
+      },
+      "proposedAssociation": null,
+      "reason": "Nouveau fichier non présent dans le référentiel canonique."
+    },
+    {
+      "kind": "nouveau_fichier",
+      "status": "à_examiner",
+      "file": {
+        "id": "pdf-23ccfaee5998-8ae0fc68",
+        "path": "Campagnes/Pathfinder Society/Saison 6 - Year of Immortal Influence/PFS - S06-01 - Intro, Year of Immortal Influence (en).pdf",
+        "filename": "PFS - S06-01 - Intro, Year of Immortal Influence (en).pdf",
+        "extension": ".pdf",
+        "bytes": 3622430,
+        "modifiedAt": "2026-08-15T22:39:35.688Z",
+        "sha256": "23ccfaee5998349f19c854df0f6b4d201243d1a0f328271b3b95aaf540ec2f8e",
+        "pages": 54,
+        "encrypted": false,
+        "metadata": {
+          "title": null,
+          "subject": null,
+          "author": null,
+          "creator": null
+        },
+        "roleHint": "scenario_pfs",
+        "languageHint": "en",
+        "translationVariant": false,
+        "textLayer": "présente",
+        "textCharactersFirstPages": 12609,
+        "pdfInfoError": null
+      },
+      "proposedAssociation": null,
+      "reason": "Nouveau fichier non présent dans le référentiel canonique."
+    },
+    {
+      "kind": "nouveau_fichier",
+      "status": "à_examiner",
+      "file": {
+        "id": "pdf-dd55a0fe6b68-a32fb3fc",
+        "path": "Campagnes/Pathfinder Society/Saison 6 - Year of Immortal Influence/PFS - S06-07 - A God Falls Where Magic Fails (en).pdf",
+        "filename": "PFS - S06-07 - A God Falls Where Magic Fails (en).pdf",
+        "extension": ".pdf",
+        "bytes": 2666422,
+        "modifiedAt": "2026-08-15T22:39:21.051Z",
+        "sha256": "dd55a0fe6b6860d9b1c5035525e261c46f29f270e27a79f3240a93e716bcb5e5",
+        "pages": 42,
+        "encrypted": false,
+        "metadata": {
+          "title": null,
+          "subject": null,
+          "author": null,
+          "creator": null
+        },
+        "roleHint": "scenario_pfs",
+        "languageHint": "en",
+        "translationVariant": false,
+        "textLayer": "présente",
+        "textCharactersFirstPages": 15780,
+        "pdfInfoError": null
+      },
+      "proposedAssociation": null,
+      "reason": "Nouveau fichier non présent dans le référentiel canonique."
+    },
+    {
+      "kind": "nouveau_fichier",
+      "status": "à_examiner",
+      "file": {
+        "id": "pdf-962ffcbdc4cd-93e2743b",
+        "path": "Campagnes/Scénarios/Playtests/PF2 Playtest - Scenario 01 - The Rose Street Revenge (en).pdf",
+        "filename": "PF2 Playtest - Scenario 01 - The Rose Street Revenge (en).pdf",
+        "extension": ".pdf",
+        "bytes": 2995068,
+        "modifiedAt": "2026-08-15T22:34:03.309Z",
+        "sha256": "962ffcbdc4cd5f030d2da7bc8fdf07f628b816791b4656ed5e974a80f3aa1d7e",
+        "pages": 34,
+        "encrypted": false,
+        "metadata": {
+          "title": null,
+          "subject": null,
+          "author": null,
+          "creator": null
+        },
+        "roleHint": "aventure_autonome",
+        "languageHint": "en",
+        "translationVariant": false,
+        "textLayer": "présente",
+        "textCharactersFirstPages": 16153,
+        "pdfInfoError": null
+      },
+      "proposedAssociation": null,
+      "reason": "Nouveau fichier non présent dans le référentiel canonique."
+    }
+  ]
+}

@@ -1,4 +1,16 @@
-import { Create, Datagrid, Edit, List, required, SimpleForm, TextField, TextInput } from 'react-admin'
+import {
+  ArrayInput,
+  Create,
+  Datagrid,
+  Edit,
+  List,
+  NumberInput,
+  required,
+  SimpleForm,
+  SimpleFormIterator,
+  TextField,
+  TextInput
+} from 'react-admin'
 
 export function GroupList() {
   return (
@@ -17,6 +29,12 @@ export function GroupEdit() {
       <SimpleForm>
         <TextInput source="name" label="Nom" validate={required()} />
         <TextInput source="text" label="Description" multiline fullWidth />
+        <ArrayInput source="resources" label="Ressources">
+          <SimpleFormIterator inline>
+            <TextInput source="name" label="Nom" validate={required()} />
+            <NumberInput source="value" label="Valeur" />
+          </SimpleFormIterator>
+        </ArrayInput>
       </SimpleForm>
     </Edit>
   )

@@ -26,4 +26,3 @@ export class JdrService {
     return this.jdrProvider.delete(jdrSlug)
   }
 }
-

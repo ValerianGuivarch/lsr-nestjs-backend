@@ -3,7 +3,12 @@ import { ApiTags } from '@nestjs/swagger'
 import { JdrService } from '../../domain/jdr/JdrService'
 import { JdrDto } from '../jdr/dto/JdrDto'
 import { GroupService } from '../../domain/groups/GroupService'
-import { AddGroupRequest, UpdateGroupRequest } from './dto/GroupRequests'
+import {
+  AddGroupRequest,
+  AddGroupResourceRequest,
+  UpdateGroupRequest,
+  UpdateGroupResourceRequest
+} from './dto/GroupRequests'
 
 // Group mutations still respond with the full recomposed Jdr to preserve the existing frontend contract.
 @Controller('api/v1/jdr')
@@ -22,7 +27,11 @@ export class GroupController {
   }
 
   @Put(':jdrSlug/groups/:groupSlug')
-  async updateGroup(@Param('jdrSlug') jdrSlug: string, @Param('groupSlug') groupSlug: string, @Body() body: UpdateGroupRequest): Promise<JdrDto> {
+  async updateGroup(
+    @Param('jdrSlug') jdrSlug: string,
+    @Param('groupSlug') groupSlug: string,
+    @Body() body: UpdateGroupRequest
+  ): Promise<JdrDto> {
     await this.groupService.update(jdrSlug, groupSlug, body)
     return JdrDto.from(await this.jdrService.findOneBySlug(jdrSlug))
   }
@@ -30,6 +39,38 @@ export class GroupController {
   @Delete(':jdrSlug/groups/:groupSlug')
   async removeGroup(@Param('jdrSlug') jdrSlug: string, @Param('groupSlug') groupSlug: string): Promise<JdrDto> {
     await this.groupService.remove(jdrSlug, groupSlug)
+    return JdrDto.from(await this.jdrService.findOneBySlug(jdrSlug))
+  }
+
+  @HttpCode(HttpStatus.CREATED)
+  @Post(':jdrSlug/groups/:groupSlug/resources')
+  async addGroupResource(
+    @Param('jdrSlug') jdrSlug: string,
+    @Param('groupSlug') groupSlug: string,
+    @Body() body: AddGroupResourceRequest
+  ): Promise<JdrDto> {
+    await this.groupService.addGroupResource(jdrSlug, groupSlug, body)
+    return JdrDto.from(await this.jdrService.findOneBySlug(jdrSlug))
+  }
+
+  @Put(':jdrSlug/groups/:groupSlug/resources/:resourceSlug')
+  async updateGroupResource(
+    @Param('jdrSlug') jdrSlug: string,
+    @Param('groupSlug') groupSlug: string,
+    @Param('resourceSlug') resourceSlug: string,
+    @Body() body: UpdateGroupResourceRequest
+  ): Promise<JdrDto> {
+    await this.groupService.updateGroupResource(jdrSlug, groupSlug, resourceSlug, body.value)
+    return JdrDto.from(await this.jdrService.findOneBySlug(jdrSlug))
+  }
+
+  @Delete(':jdrSlug/groups/:groupSlug/resources/:resourceSlug')
+  async removeGroupResource(
+    @Param('jdrSlug') jdrSlug: string,
+    @Param('groupSlug') groupSlug: string,
+    @Param('resourceSlug') resourceSlug: string
+  ): Promise<JdrDto> {
+    await this.groupService.removeGroupResource(jdrSlug, groupSlug, resourceSlug)
     return JdrDto.from(await this.jdrService.findOneBySlug(jdrSlug))
   }
 }

@@ -46,7 +46,9 @@ const Home: React.FC = () => {
   const apps: AppLink[] = [
     ...(features?.jdr !== false ? [{ label: 'JDR', description: 'Fiches de personnage (nécessite un lien de perso)', href: '/jdr' }] : []),
     { label: 'Admin JDR', description: 'Back-office des JDR', href: buildDevUrl(4203) },
-    ...(features?.pf2 !== false ? [{ label: 'PF2', description: 'Compendium Pathfinder 2', href: '/pf2' }] : []),
+    ...(features?.pf2 !== false
+      ? [{ label: 'PF2 MJ', description: 'Catalogue, scénarios et référentiels Pathfinder 2', href: '/pf2-mj' }]
+      : []),
     ...(features?.diary ? [{ label: 'Diary', description: 'Journal annuel', href: '/diary' }] : []),
     { label: 'Foussier', description: 'Calcul de crampillons', href: '/foussier' }
   ]

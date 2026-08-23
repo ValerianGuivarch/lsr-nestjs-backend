@@ -1,10 +1,17 @@
-import { CreateParams, DataProvider, DeleteParams, GetListParams, GetOneParams, RaRecord, UpdateParams } from 'react-admin'
+import {
+  CreateParams,
+  DataProvider,
+  DeleteParams,
+  GetListParams,
+  GetOneParams,
+  RaRecord,
+  UpdateParams
+} from 'react-admin'
 import { jdrApi } from './jdrApi'
 import { jdrAggregateStore } from './aggregateStore'
 import {
   CharacterEntity,
   ClassEntity,
-  ClassResourceEntity,
   GameResourceEntity,
   GroupEntity,
   ItemEntity,
@@ -63,11 +70,7 @@ function newIds(before: string[], after: string[]): string[] {
 
 const toStatRecord = (e: StatEntity) => ({ id: e.slug, ...e })
 const toTraitRecord = (e: TraitEntity) => ({ id: e.slug, ...e })
-const toGameResourceRecord = (e: GameResourceEntity, aggregate: JdrAggregate) => ({
-  id: e.slug,
-  ...e,
-  groupValue: aggregate.groupResources.find((gr) => gr.resourceSlug === e.slug)?.value ?? 0
-})
+const toGameResourceRecord = (e: GameResourceEntity) => ({ id: e.slug, ...e })
 const toItemRecord = (e: ItemEntity, aggregate: JdrAggregate) => ({
   id: e.slug,
   ...e,
@@ -76,6 +79,7 @@ const toItemRecord = (e: ItemEntity, aggregate: JdrAggregate) => ({
 const toClassRecord = (e: ClassEntity) => ({ id: e.slug, ...e })
 const toGroupRecord = (e: GroupEntity) => ({ id: e.slug, ...e })
 const toCharacterRecord = (e: CharacterEntity) => ({ id: e.slug, ...e })
+const toPlayerRecord = (e: { slug: string; name: string }) => ({ id: e.slug, ...e })
 
 /** Full, unfiltered/unsorted set of records for a resource - the shared basis for getList/getOne/getMany. */
 async function fetchAllRecords(resource: string): Promise<RaRecord[]> {
@@ -93,7 +97,7 @@ async function fetchAllRecords(resource: string): Promise<RaRecord[]> {
     case 'traits':
       return aggregate.traits.map(toTraitRecord)
     case 'resources':
-      return aggregate.resources.map((e) => toGameResourceRecord(e, aggregate))
+      return aggregate.resources.map(toGameResourceRecord)
     case 'items':
       return aggregate.items.map((e) => toItemRecord(e, aggregate))
     case 'classes':
@@ -102,6 +106,8 @@ async function fetchAllRecords(resource: string): Promise<RaRecord[]> {
       return aggregate.groups.map(toGroupRecord)
     case 'characters':
       return aggregate.characters.map(toCharacterRecord)
+    case 'players':
+      return aggregate.players.map(toPlayerRecord)
     case 'rolls': {
       const rolls = await jdrApi.getLastRolls(aggregate.slug)
       return rolls.map((r) => ({ id: r.id, ...r }))
@@ -142,7 +148,10 @@ export const dataProvider: DataProvider = {
       const before = (await jdrApi.findAll()).map((j) => j.slug)
       await jdrApi.createJdr(params.data)
       const after = await jdrApi.findAll()
-      const [id] = newIds(before, after.map((j) => j.slug))
+      const [id] = newIds(
+        before,
+        after.map((j) => j.slug)
+      )
       const created = after.find((j) => j.slug === id)!
       return { data: { id: created.slug, ...created } }
     }
@@ -159,13 +168,24 @@ export const dataProvider: DataProvider = {
         aggregate = await jdrApi.addTrait(jdrSlug, params.data)
         break
       case 'resources':
-        aggregate = await jdrApi.addResource(jdrSlug, { name: params.data.name, type: params.data.type })
+        aggregate = await jdrApi.addResource(jdrSlug, {
+          name: params.data.name,
+          ownerType: params.data.ownerType,
+          defaultValue: params.data.defaultValue
+        })
         break
       case 'items':
         aggregate = await jdrApi.addItem(jdrSlug, params.data)
         break
       case 'classes':
-        aggregate = await jdrApi.addClass(jdrSlug, { name: params.data.name, level: params.data.level ?? 1, text: params.data.text })
+        aggregate = await jdrApi.addClass(jdrSlug, {
+          name: params.data.name,
+          levels: params.data.levels ?? [],
+          text: params.data.text
+        })
+        break
+      case 'players':
+        aggregate = await jdrApi.addPlayer(jdrSlug, { name: params.data.name })
         break
       case 'groups':
         aggregate = await jdrApi.addGroup(jdrSlug, { name: params.data.name, text: params.data.text })
@@ -181,7 +201,10 @@ export const dataProvider: DataProvider = {
 
     const beforeIds = getEntitiesOf(resource, before).map((e) => e.slug)
     const afterEntities = getEntitiesOf(resource, aggregate)
-    const [newId] = newIds(beforeIds, afterEntities.map((e) => e.slug))
+    const [newId] = newIds(
+      beforeIds,
+      afterEntities.map((e) => e.slug)
+    )
     const created = afterEntities.find((e) => e.slug === newId)!
     return { data: { id: created.slug, ...created } }
   },
@@ -206,11 +229,10 @@ export const dataProvider: DataProvider = {
         aggregate = await jdrApi.updateTrait(jdrSlug, id, params.data)
         break
       case 'resources': {
-        aggregate = await jdrApi.updateResource(jdrSlug, id, { name: params.data.name, type: params.data.type })
-        const previousGroupValue = params.previousData?.groupValue ?? 0
-        if (params.data.groupValue !== undefined && params.data.groupValue !== previousGroupValue) {
-          aggregate = await jdrApi.updateGroupResource(jdrSlug, id, Number(params.data.groupValue))
-        }
+        aggregate = await jdrApi.updateResource(jdrSlug, id, {
+          name: params.data.name,
+          defaultValue: params.data.defaultValue
+        })
         break
       }
       case 'items': {
@@ -226,10 +248,17 @@ export const dataProvider: DataProvider = {
         break
       }
       case 'classes':
-        aggregate = await updateClass(jdrSlug, id, params)
+        aggregate = await jdrApi.updateClass(jdrSlug, id, {
+          name: params.data.name,
+          levels: params.data.levels,
+          text: params.data.text
+        })
+        break
+      case 'players':
+        aggregate = await jdrApi.updatePlayer(jdrSlug, id, { name: params.data.name })
         break
       case 'groups':
-        aggregate = await jdrApi.updateGroup(jdrSlug, id, { name: params.data.name, text: params.data.text })
+        aggregate = await updateGroup(jdrSlug, id, params)
         break
       case 'characters':
         aggregate = await updateCharacter(jdrSlug, id, params)
@@ -305,6 +334,8 @@ function removeOne(resource: string, jdrSlug: string, id: string): Promise<JdrAg
       return jdrApi.removeGroup(jdrSlug, id)
     case 'characters':
       return jdrApi.removeCharacter(jdrSlug, id)
+    case 'players':
+      return jdrApi.removePlayer(jdrSlug, id)
     default:
       throw new Error(`Delete not supported for resource: ${resource}`)
   }
@@ -326,33 +357,30 @@ function getEntitiesOf(resource: string, aggregate: JdrAggregate): { slug: strin
       return aggregate.groups
     case 'characters':
       return aggregate.characters
+    case 'players':
+      return aggregate.players
     default:
       return []
   }
 }
 
-// Class resources only support add/remove (no update endpoint), so a changed value is
-// applied as a remove-then-re-add of that resourceSlug.
-async function updateClass(jdrSlug: string, classSlug: string, params: UpdateParams): Promise<JdrAggregate> {
-  let aggregate = await jdrApi.updateClass(jdrSlug, classSlug, { name: params.data.name, level: params.data.level, text: params.data.text })
+async function updateGroup(jdrSlug: string, groupSlug: string, params: UpdateParams): Promise<JdrAggregate> {
+  let aggregate = await jdrApi.updateGroup(jdrSlug, groupSlug, { name: params.data.name, text: params.data.text })
+  const previous: Array<{ resourceSlug: string; name: string; value: number }> = params.previousData?.resources ?? []
+  const next: Array<{ resourceSlug?: string; name: string; value: number }> = params.data.resources ?? []
+  const nextExistingSlugs = new Set(next.flatMap((r) => (r.resourceSlug ? [r.resourceSlug] : [])))
 
-  const previous: ClassResourceEntity[] = params.previousData?.resources ?? []
-  const next: ClassResourceEntity[] = params.data.resources ?? []
+  for (const removed of previous.filter((r) => !nextExistingSlugs.has(r.resourceSlug))) {
+    aggregate = await jdrApi.removeGroupResource(jdrSlug, groupSlug, removed.resourceSlug)
+  }
   const previousBySlug = new Map(previous.map((r) => [r.resourceSlug, r]))
-  const nextSlugs = new Set(next.map((r) => r.resourceSlug))
-
-  for (const removed of previous.filter((r) => !nextSlugs.has(r.resourceSlug))) {
-    aggregate = await jdrApi.removeClassResource(jdrSlug, classSlug, removed.resourceSlug)
+  for (const resource of next) {
+    if (!resource.resourceSlug) {
+      aggregate = await jdrApi.addGroupResource(jdrSlug, groupSlug, resource.name, resource.value)
+    } else if (previousBySlug.get(resource.resourceSlug)?.value !== resource.value) {
+      aggregate = await jdrApi.updateGroupResource(jdrSlug, groupSlug, resource.resourceSlug, resource.value)
+    }
   }
-
-  for (const entry of next) {
-    const before = previousBySlug.get(entry.resourceSlug)
-    const changed = !before || before.resourceType !== entry.resourceType || before.defaultValue !== entry.defaultValue || before.behavior !== entry.behavior
-    if (!changed) continue
-    if (before) aggregate = await jdrApi.removeClassResource(jdrSlug, classSlug, entry.resourceSlug)
-    aggregate = await jdrApi.addClassResource(jdrSlug, classSlug, entry)
-  }
-
   return aggregate
 }
 
@@ -361,6 +389,7 @@ async function updateClass(jdrSlug: string, classSlug: string, params: UpdatePar
 async function updateCharacter(jdrSlug: string, characterSlug: string, params: UpdateParams): Promise<JdrAggregate> {
   let aggregate = await jdrApi.updateCharacter(jdrSlug, characterSlug, {
     name: params.data.name,
+    playerSlug: params.data.playerSlug || undefined,
     classSlug: params.data.classSlug || undefined,
     classLevel: params.data.classLevel,
     isPlayable: params.data.isPlayable,
@@ -400,14 +429,19 @@ async function updateCharacter(jdrSlug: string, characterSlug: string, params: U
     aggregate = await jdrApi.addCharacterItem(jdrSlug, characterSlug, item.itemSlug, item.quantity)
   }
 
-  const previousResources: { resourceSlug: string; value: number }[] = params.previousData?.resources ?? []
-  const nextResources: { resourceSlug: string; value: number }[] = params.data.resources ?? []
+  const previousResources: { resourceSlug: string; name: string; value: number }[] =
+    params.previousData?.resources ?? []
+  const nextResources: { resourceSlug?: string; name: string; value: number }[] = params.data.resources ?? []
   const previousResourcesBySlug = new Map(previousResources.map((r) => [r.resourceSlug, r]))
-  const nextResourceSlugs = new Set(nextResources.map((r) => r.resourceSlug))
+  const nextResourceSlugs = new Set(nextResources.flatMap((r) => (r.resourceSlug ? [r.resourceSlug] : [])))
   for (const removed of previousResources.filter((r) => !nextResourceSlugs.has(r.resourceSlug))) {
     aggregate = await jdrApi.removeCharacterResource(jdrSlug, characterSlug, removed.resourceSlug)
   }
   for (const resource of nextResources) {
+    if (!resource.resourceSlug) {
+      aggregate = await jdrApi.addCharacterResource(jdrSlug, characterSlug, resource.name, resource.value)
+      continue
+    }
     const before = previousResourcesBySlug.get(resource.resourceSlug)
     if (before && before.value === resource.value) continue
     aggregate = await jdrApi.updateCharacterResource(jdrSlug, characterSlug, resource.resourceSlug, resource.value)

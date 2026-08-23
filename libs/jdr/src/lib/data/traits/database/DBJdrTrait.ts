@@ -1,4 +1,13 @@
-import { Entity, Column, PrimaryColumn, ManyToOne, JoinColumn, OneToMany, CreateDateColumn, UpdateDateColumn } from 'typeorm'
+import {
+  Entity,
+  Column,
+  PrimaryColumn,
+  ManyToOne,
+  JoinColumn,
+  OneToMany,
+  CreateDateColumn,
+  UpdateDateColumn
+} from 'typeorm'
 import { TraitType } from '../../../domain/traits/TraitType'
 import { DBJdr } from '../../jdr/database/DBJdr'
 import { DBJdrTraitModifier } from './DBJdrTraitModifier'

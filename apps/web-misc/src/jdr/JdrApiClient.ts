@@ -27,16 +27,17 @@ export interface CharacterStatDto {
 export interface CharacterDto {
   slug: string
   name: string
+  playerSlug: string | null
   classSlug: string | null
   groupSlugs: string[]
-  classLevel: number
+  classLevel: string | null
   isPlayable: boolean
   public: boolean
   text: string
   stats: CharacterStatDto[]
   traitSlugs: string[]
   items: Array<{ itemSlug: string; quantity: number }>
-  resources: Array<{ resourceSlug: string; value: number }>
+  resources: Array<{ resourceSlug: string; name: string; value: number }>
 }
 
 export interface ItemDto {
@@ -64,33 +65,22 @@ export interface StatDto {
 export interface ResourceDto {
   slug: string
   name: string
-  type: string
-}
-
-export interface GroupResourceDto {
-  resourceSlug: string
-  value: number
-}
-
-export interface JdrClassResourceDto {
-  resourceSlug: string
-  resourceType: string
+  ownerType: 'CHARACTER' | 'GROUP'
   defaultValue: number
-  behavior: 'fixed' | 'scalable'
 }
 
 export interface JdrClassDto {
   slug: string
   name: string
   text: string
-  level: number
-  resources: JdrClassResourceDto[]
+  levels: string[]
 }
 
 export interface JdrGroupDto {
   slug: string
   name: string
   text: string
+  resources: Array<{ resourceSlug: string; name: string; value: number }>
 }
 
 export interface JdrSummaryDto {
@@ -105,10 +95,10 @@ export interface JdrDto {
   stats: StatDto[]
   traits: TraitDto[]
   resources: ResourceDto[]
-  groupResources: GroupResourceDto[]
   items: ItemDto[]
   groupItems: Array<{ itemSlug: string; quantity: number }>
   characters: CharacterDto[]
+  players: Array<{ slug: string; name: string }>
   classes: JdrClassDto[]
   groups: JdrGroupDto[]
 }
@@ -133,7 +123,13 @@ export class JdrApiClient {
     return res.json()
   }
 
-  static async rollDice(jdrSlug: string, characterSlug: string, statSlug: string, rollState: RollState = 'normal', text?: string | null): Promise<DiceRollDto> {
+  static async rollDice(
+    jdrSlug: string,
+    characterSlug: string,
+    statSlug: string,
+    rollState: RollState = 'normal',
+    text?: string | null
+  ): Promise<DiceRollDto> {
     const res = await fetch(`${API_BASE}/${jdrSlug}/characters/${characterSlug}/roll/${statSlug}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -153,7 +149,12 @@ export class JdrApiClient {
     return res.json()
   }
 
-  static async updateCharacterResource(jdrSlug: string, characterSlug: string, resourceSlug: string, value: number): Promise<JdrDto> {
+  static async updateCharacterResource(
+    jdrSlug: string,
+    characterSlug: string,
+    resourceSlug: string,
+    value: number
+  ): Promise<JdrDto> {
     const res = await fetch(`${API_BASE}/${jdrSlug}/characters/${characterSlug}/resources/${resourceSlug}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },

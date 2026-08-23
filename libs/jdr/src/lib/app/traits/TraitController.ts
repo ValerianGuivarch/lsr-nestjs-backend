@@ -22,7 +22,11 @@ export class TraitController {
   }
 
   @Put(':jdrSlug/traits/:traitSlug')
-  async updateTrait(@Param('jdrSlug') jdrSlug: string, @Param('traitSlug') traitSlug: string, @Body() body: UpdateTraitRequest): Promise<JdrDto> {
+  async updateTrait(
+    @Param('jdrSlug') jdrSlug: string,
+    @Param('traitSlug') traitSlug: string,
+    @Body() body: UpdateTraitRequest
+  ): Promise<JdrDto> {
     await this.traitService.update(jdrSlug, traitSlug, body)
     return JdrDto.from(await this.jdrService.findOneBySlug(jdrSlug))
   }

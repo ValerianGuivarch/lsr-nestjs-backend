@@ -7,6 +7,8 @@ import { App } from './app/app'
 import Foussier from './foussier/Foussier'
 import Home from './home/Home'
 import { Pf2App } from './pf2/Pf2App'
+import { Pf2MjApp } from './pf2-mj/Pf2MjApp'
+import './pf2-mj/globals.css'
 import CharacterPage from './jdr/CharacterPage'
 import JdrSelectionPage from './jdr/JdrSelectionPage'
 import Diary from './diary/Diary'
@@ -28,6 +30,7 @@ root.render(
           <Route path="/" element={<Home />} />
           <Route path="/foussier" element={<Foussier />} />
           <Route path="/pf2" element={<Pf2App />} />
+          <Route path="/pf2-mj/*" element={<Pf2MjApp />} />
           <Route path="/jdr" element={<JdrSelectionPage />} />
           <Route path="/jdr/:jdrSlug/characters/:characterSlug" element={<CharacterPage />} />
           <Route path="/diary" element={<Diary />} />

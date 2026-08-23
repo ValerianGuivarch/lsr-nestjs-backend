@@ -3,7 +3,7 @@ import { ApiTags } from '@nestjs/swagger'
 import { JdrService } from '../../domain/jdr/JdrService'
 import { JdrDto } from '../jdr/dto/JdrDto'
 import { ClassService } from '../../domain/classes/ClassService'
-import { AddClassRequest, AddClassResourceRequest, UpdateClassRequest } from './dto/ClassRequests'
+import { AddClassRequest, UpdateClassRequest } from './dto/ClassRequests'
 
 // Class mutations still respond with the full recomposed Jdr to preserve the existing frontend contract.
 @Controller('api/v1/jdr')
@@ -22,7 +22,11 @@ export class ClassController {
   }
 
   @Put(':jdrSlug/classes/:classSlug')
-  async updateClass(@Param('jdrSlug') jdrSlug: string, @Param('classSlug') classSlug: string, @Body() body: UpdateClassRequest): Promise<JdrDto> {
+  async updateClass(
+    @Param('jdrSlug') jdrSlug: string,
+    @Param('classSlug') classSlug: string,
+    @Body() body: UpdateClassRequest
+  ): Promise<JdrDto> {
     await this.classService.update(jdrSlug, classSlug, body)
     return JdrDto.from(await this.jdrService.findOneBySlug(jdrSlug))
   }
@@ -30,27 +34,6 @@ export class ClassController {
   @Delete(':jdrSlug/classes/:classSlug')
   async removeClass(@Param('jdrSlug') jdrSlug: string, @Param('classSlug') classSlug: string): Promise<JdrDto> {
     await this.classService.remove(jdrSlug, classSlug)
-    return JdrDto.from(await this.jdrService.findOneBySlug(jdrSlug))
-  }
-
-  @HttpCode(HttpStatus.CREATED)
-  @Post(':jdrSlug/classes/:classSlug/resources')
-  async addClassResource(
-    @Param('jdrSlug') jdrSlug: string,
-    @Param('classSlug') classSlug: string,
-    @Body() body: AddClassResourceRequest
-  ): Promise<JdrDto> {
-    await this.classService.addClassResource(jdrSlug, classSlug, body)
-    return JdrDto.from(await this.jdrService.findOneBySlug(jdrSlug))
-  }
-
-  @Delete(':jdrSlug/classes/:classSlug/resources/:resourceSlug')
-  async removeClassResource(
-    @Param('jdrSlug') jdrSlug: string,
-    @Param('classSlug') classSlug: string,
-    @Param('resourceSlug') resourceSlug: string
-  ): Promise<JdrDto> {
-    await this.classService.removeClassResource(jdrSlug, classSlug, resourceSlug)
     return JdrDto.from(await this.jdrService.findOneBySlug(jdrSlug))
   }
 }

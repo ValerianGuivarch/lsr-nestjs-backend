@@ -2,9 +2,9 @@ import { Character } from '../characters/Character'
 import { Item } from '../items/Item'
 import { OwnedItem } from '../items/OwnedItem'
 import { CharacterResource } from '../resources/CharacterResource'
-import { GroupResourceValue } from '../resources/GroupResourceValue'
+import { GroupResource } from '../resources/GroupResource'
 import { Resource } from '../resources/Resource'
-import { ResourceType } from '../resources/ResourceType'
+import { ResourceOwnerType } from '../resources/ResourceType'
 import { Slug } from '../shared/Slug'
 import { CharacterStat } from '../stats/CharacterStat'
 import { Stat } from '../stats/Stat'
@@ -12,6 +12,7 @@ import { StatModifier } from '../stats/StatModifier'
 import { Trait } from '../traits/Trait'
 import { TraitType } from '../traits/TraitType'
 import { Jdr } from './Jdr'
+import { JdrGroup } from '../groups/JdrGroup'
 
 export const createSampleJdr = (): Jdr => {
   const jdrName = 'Chroniques Brumeuses'
@@ -31,11 +32,21 @@ export const createSampleJdr = (): Jdr => {
     modifiers: [new StatModifier({ statSlug: force.slug, value: 1 })]
   }
 
-  const pointsDeDestin = new Resource({ jdrSlug, name: 'Points de destin', type: ResourceType.ALL })
-  const orDuGroupe = new Resource({ jdrSlug, name: 'Or du groupe', type: ResourceType.GROUP })
+  const pointsDeDestin = new Resource({ jdrSlug, name: 'Points de destin', ownerType: ResourceOwnerType.CHARACTER })
+  const orDuGroupe = new Resource({ jdrSlug, name: 'Or du groupe', ownerType: ResourceOwnerType.GROUP })
+  const aventuriers = new JdrGroup({
+    jdrSlug,
+    name: 'Aventuriers',
+    resources: [new GroupResource({ resourceSlug: orDuGroupe.slug, name: orDuGroupe.name, value: 100 })]
+  })
 
   // Item catalog
-  const armureLourde = new Item({ jdrSlug, name: 'Armure lourde', unique: true, modifiers: [new StatModifier({ statSlug: force.slug, value: -1 })] })
+  const armureLourde = new Item({
+    jdrSlug,
+    name: 'Armure lourde',
+    unique: true,
+    modifiers: [new StatModifier({ statSlug: force.slug, value: -1 })]
+  })
   const potionDeSoin = new Item({ jdrSlug, name: 'Potion de soin', unique: false })
   const charretteCommune = new Item({ jdrSlug, name: 'Charrette commune', unique: true })
 
@@ -51,7 +62,7 @@ export const createSampleJdr = (): Jdr => {
       new OwnedItem({ itemSlug: armureLourde.slug }),
       new OwnedItem({ itemSlug: potionDeSoin.slug, quantity: 3 })
     ],
-    resources: [new CharacterResource({ resourceSlug: pointsDeDestin.slug, value: 2 })]
+    resources: [new CharacterResource({ resourceSlug: pointsDeDestin.slug, name: pointsDeDestin.name, value: 2 })]
   })
 
   return new Jdr({
@@ -61,9 +72,9 @@ export const createSampleJdr = (): Jdr => {
     stats: [force, intelligence],
     traits: [robuste],
     resources: [pointsDeDestin, orDuGroupe],
-    groupResources: [new GroupResourceValue({ resourceSlug: orDuGroupe.slug, value: 100 })],
     items: [armureLourde, potionDeSoin, charretteCommune],
     groupItems: [new OwnedItem({ itemSlug: charretteCommune.slug })],
-    characters: [alice]
+    characters: [alice],
+    groups: [aventuriers]
   })
 }

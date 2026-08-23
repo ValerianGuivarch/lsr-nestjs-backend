@@ -1,4 +1,13 @@
-import { Entity, Column, PrimaryColumn, ManyToOne, JoinColumn, OneToMany, CreateDateColumn, UpdateDateColumn } from 'typeorm'
+import {
+  Entity,
+  Column,
+  PrimaryColumn,
+  ManyToOne,
+  JoinColumn,
+  OneToMany,
+  CreateDateColumn,
+  UpdateDateColumn
+} from 'typeorm'
 import { DBJdr } from '../../jdr/database/DBJdr'
 import { DBJdrItemModifier } from './jdr-item-modifier.db'
 
@@ -38,4 +47,3 @@ export class DBJdrItem {
 }
 
 export type DBJdrItemToCreate = Pick<DBJdrItem, 'jdrSlug' | 'slug' | 'name' | 'description' | 'unique'>
-

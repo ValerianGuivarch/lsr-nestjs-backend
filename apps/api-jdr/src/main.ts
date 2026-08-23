@@ -1,9 +1,25 @@
 import { JdrModule } from 'jdr'
 import { bootstrapApi } from 'shared'
+import { Module } from '@nestjs/common'
+import { ConfigModule } from '@nestjs/config'
+import { Pf2MjModule } from './pf2-mj/Pf2MjModule'
+
+@Module({
+  imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+      // eslint-disable-next-line no-process-env
+      load: [() => ({ http: { host: process.env['HOST'] ?? '0.0.0.0', port: Number(process.env['JDR_PORT'] ?? 3003) } })]
+    }),
+    JdrModule,
+    Pf2MjModule
+  ]
+})
+class ApiModule {}
 
 async function bootstrap(): Promise<void> {
   await bootstrapApi({
-    rootModule: JdrModule,
+    rootModule: ApiModule,
     appName: 'JdR',
     swaggerTag: 'JdR',
     swaggerPath: 'api/jdr',

@@ -27,24 +27,36 @@ libs/jdr/src/lib/
   jdr.module.ts            <- single composition root: wires every slice together
 ```
 
-A slice's three folders never know about each other's *internals* — `app` depends on
+A slice's three folders never know about each other's _internals_ — `app` depends on
 `domain` (service + entity types), `data` depends on `domain` (port + entity types), and
 `domain` depends on nothing NestJS/TypeORM-specific. Only `jdr.module.ts` wires the concrete
 `data` provider to the `domain` port via a DI token (e.g. `'ITraitProvider' -> TraitProvider`).
 
 ## Slices
 
-| Slice | Entity | Notes |
-|---|---|---|
-| `jdr` | `Jdr` (root aggregate) | Only owns root CRUD (`findAll`, `findOneBySlug`, `create`, `update`, `delete`). Composes the full `Jdr` by calling every other slice's mapper. |
-| `traits` | `Trait` | Pilot slice — `Trait`/`TraitType` are plain interfaces (not classes). |
-| `stats` | `Stat` | |
-| `resources` | `Resource`, `GroupResourceValue` | |
-| `items` | `Item`, `OwnedItem` (group-owned) | |
-| `classes` | `JdrClass`, `ClassResourceProfile` | |
-| `groups` | `JdrGroup` | |
-| `characters` | `Character` (+ nested `CharacterStat`/`CharacterResource`/owned items) | Most complex slice: seeds stats/resources on creation, owns all character-scoped link tables. |
-| `rolls` | `DiceRoll` | Needs the fully composed `Jdr` (via `JdrMapper`) to compute final stat values before rolling. |
+| Slice        | Entity                                                                 | Notes                                                                                                                                          |
+| ------------ | ---------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| `jdr`        | `Jdr` (root aggregate)                                                 | Only owns root CRUD (`findAll`, `findOneBySlug`, `create`, `update`, `delete`). Composes the full `Jdr` by calling every other slice's mapper. |
+| `traits`     | `Trait`                                                                | Pilot slice — `Trait`/`TraitType` are plain interfaces (not classes).                                                                          |
+| `stats`      | `Stat`                                                                 |                                                                                                                                                |
+| `resources`  | `Resource`, `CharacterResource`, `GroupResource`                       | JdR definitions are copied to every new owner; owners may also have local resources.                                                           |
+| `items`      | `Item`, `OwnedItem` (group-owned)                                      |                                                                                                                                                |
+| `classes`    | `JdrClass`                                                             | Character classification only; resources are independent from classes.                                                                         |
+| `groups`     | `JdrGroup` (+ nested `GroupResource`)                                  |                                                                                                                                                |
+| `characters` | `Character` (+ nested `CharacterStat`/`CharacterResource`/owned items) | Most complex slice: seeds stats/resources on creation, owns all character-scoped link tables.                                                  |
+| `players`    | `Player`                                                               | A player belongs to one JdR and may own several characters.                                                                                    |
+| `rolls`      | `DiceRoll`                                                             | Needs the fully composed `Jdr` (via `JdrMapper`) to compute final stat values before rolling.                                                  |
+
+## Complete JSON import
+
+`POST /api/v1/jdr/import` accepts a versioned document (`{ "version": 1, "jdr": { ... } }`)
+containing a complete aggregate: stats, resources, named class levels, groups, players, traits,
+items and characters with all their links. The import is atomic and only creates a new JdR; an
+existing slug is rejected rather than overwritten. Missing character stats are initialized to
+`2`, and missing character/group resources are copied from their JdR definitions.
+
+The React Admin application exposes this endpoint through the **Import JSON** page. A complete
+example is available in `support/hp-jdr-import.json`.
 
 ## Why every mutation still returns the full `Jdr`
 
@@ -128,43 +140,41 @@ All tables live on the same SQLite connection (`jdr-sqlite`, registered once by
 `data/database/jdr-sqlite.module.ts`). `jdr_*` is the root aggregate; every other table is
 scoped to it via a `jdrSlug` column that's part of its composite primary key.
 
-Two kinds of relationships appear below:
-- **solid, real FK** — an actual TypeORM `@ManyToOne` + `@JoinColumn` (enforced, `onDelete: CASCADE`).
-- **soft reference (no FK)** — the child table only stores the target's `slug` as a plain
-  column (e.g. `statSlug`, `itemSlug`). There's no DB-level constraint; the mapper resolves it
-  in application code. These are called out explicitly in the relationship label.
+Most catalog links are composite foreign keys (`jdrSlug` + entity slug) and are enforced by
+SQLite. Character and group resources are the exception: they may be local to their owner, so
+their `resourceSlug` is intentionally not required to reference a JdR-level definition.
 
 ```mermaid
 erDiagram
     JDR ||--o{ STAT : "real FK"
     JDR ||--o{ TRAIT : "real FK"
     JDR ||--o{ RESOURCE : "real FK"
-    JDR ||--o{ GROUP_RESOURCE : "real FK"
     JDR ||--o{ ITEM : "real FK"
     JDR ||--o{ GROUP_ITEM : "real FK"
     JDR ||--o{ CHARACTER : "real FK"
+    JDR ||--o{ PLAYER : "real FK"
     JDR ||--o{ JDR_CLASS : "real FK"
     JDR ||--o{ GROUP : "real FK"
     JDR ||--o{ DICE_ROLL : "jdrSlug column, no FK"
 
     TRAIT ||--o{ TRAIT_MODIFIER : "real FK"
 
-    RESOURCE ||--o| GROUP_RESOURCE : "real FK (1:1, only if type=GROUP)"
-    RESOURCE ||--o{ CHARACTER_RESOURCE : "soft ref by resourceSlug (M:N w/ CHARACTER)"
-    RESOURCE ||--o{ CLASS_RESOURCE : "soft ref by resourceSlug (M:N w/ JDR_CLASS)"
+    RESOURCE ||--o{ CHARACTER_RESOURCE : "copied default or local resource"
+    RESOURCE ||--o{ GROUP_RESOURCE : "copied default or local resource"
 
     ITEM ||--o{ ITEM_MODIFIER : "real FK"
     ITEM ||--o| GROUP_ITEM : "real FK (1:1, group inventory qty)"
-    ITEM ||--o{ CHARACTER_ITEM : "soft ref by itemSlug (M:N w/ CHARACTER)"
+    ITEM ||--o{ CHARACTER_ITEM : "composite FK"
 
-    JDR_CLASS ||--o{ CLASS_RESOURCE : "real FK"
-    JDR_CLASS ||--o{ CHARACTER : "soft ref by classSlug (optional, 1:N)"
+    JDR_CLASS ||--o{ CHARACTER : "composite FK; provider clears before delete"
+    PLAYER ||--o{ CHARACTER : "composite FK; nullable owner"
 
-    GROUP ||--o{ CHARACTER_GROUP : "soft ref by groupSlug (M:N w/ CHARACTER)"
+    GROUP ||--o{ CHARACTER_GROUP : "composite FK (M:N w/ CHARACTER)"
+    GROUP ||--o{ GROUP_RESOURCE : "real FK"
 
-    STAT ||--o{ CHARACTER_STAT : "soft ref by statSlug (M:N w/ CHARACTER)"
+    STAT ||--o{ CHARACTER_STAT : "composite FK (M:N w/ CHARACTER)"
 
-    TRAIT ||--o{ CHARACTER_TRAIT : "soft ref by traitSlug (M:N w/ CHARACTER)"
+    TRAIT ||--o{ CHARACTER_TRAIT : "composite FK (M:N w/ CHARACTER)"
 
     CHARACTER ||--o{ CHARACTER_STAT : "real FK"
     CHARACTER ||--o{ CHARACTER_TRAIT : "real FK"
@@ -193,18 +203,21 @@ erDiagram
     TRAIT_MODIFIER {
         varchar jdrSlug PK "FK -> JDR"
         varchar traitSlug PK "FK -> TRAIT"
-        varchar statSlug PK "soft ref, no FK"
+        varchar statSlug PK "FK -> STAT"
         int value
     }
     RESOURCE {
         varchar jdrSlug PK "FK -> JDR"
         varchar slug PK
         varchar name
-        varchar type "SINGLE | GROUP | ALL"
+        varchar ownerType "CHARACTER | GROUP"
+        int defaultValue
     }
     GROUP_RESOURCE {
-        varchar jdrSlug PK "FK -> JDR"
-        varchar resourceSlug PK "FK -> RESOURCE"
+        varchar jdrSlug PK
+        varchar groupSlug PK "FK -> GROUP"
+        varchar resourceSlug PK "definition slug or local slug"
+        varchar name
         int value
     }
     ITEM {
@@ -217,7 +230,7 @@ erDiagram
     ITEM_MODIFIER {
         varchar jdrSlug PK "FK -> JDR"
         varchar itemSlug PK "FK -> ITEM"
-        varchar statSlug PK "soft ref, no FK"
+        varchar statSlug PK "FK -> STAT"
         int value
     }
     GROUP_ITEM {
@@ -230,15 +243,12 @@ erDiagram
         varchar slug PK
         varchar name
         varchar text
-        int level
+        json levels
     }
-    CLASS_RESOURCE {
+    PLAYER {
         varchar jdrSlug PK "FK -> JDR"
-        varchar classSlug PK "FK -> JDR_CLASS"
-        varchar resourceSlug PK "soft ref, no FK"
-        varchar resourceType
-        int defaultValue
-        varchar behavior "fixed | scalable"
+        varchar slug PK
+        varchar name
     }
     GROUP {
         varchar jdrSlug PK "FK -> JDR"
@@ -250,38 +260,40 @@ erDiagram
         varchar jdrSlug PK "FK -> JDR"
         varchar slug PK
         varchar name
-        varchar classSlug "nullable, soft ref, no FK"
-        int classLevel
+        varchar playerSlug "nullable, FK -> PLAYER"
+        varchar classSlug "nullable, FK -> JDR_CLASS"
+        varchar classLevel "nullable named level"
         boolean isPlayable
         varchar text
     }
     CHARACTER_STAT {
         varchar jdrSlug PK "FK -> JDR"
         varchar characterSlug PK "FK -> CHARACTER"
-        varchar statSlug PK "soft ref, no FK"
+        varchar statSlug PK "FK -> STAT"
         int value
     }
     CHARACTER_TRAIT {
         varchar jdrSlug PK "FK -> JDR"
         varchar characterSlug PK "FK -> CHARACTER"
-        varchar traitSlug PK "soft ref, no FK"
+        varchar traitSlug PK "FK -> TRAIT"
     }
     CHARACTER_ITEM {
         varchar jdrSlug PK "FK -> JDR"
         varchar characterSlug PK "FK -> CHARACTER"
-        varchar itemSlug PK "soft ref, no FK"
+        varchar itemSlug PK "FK -> ITEM"
         int quantity
     }
     CHARACTER_RESOURCE {
         varchar jdrSlug PK "FK -> JDR"
         varchar characterSlug PK "FK -> CHARACTER"
-        varchar resourceSlug PK "soft ref, no FK"
+        varchar resourceSlug PK "definition slug or local slug"
+        varchar name
         int value
     }
     CHARACTER_GROUP {
         varchar jdrSlug PK "FK -> JDR"
         varchar characterSlug PK "FK -> CHARACTER"
-        varchar groupSlug PK "soft ref, no FK"
+        varchar groupSlug PK "FK -> GROUP"
     }
     DICE_ROLL {
         uuid id PK
@@ -301,16 +313,12 @@ erDiagram
 ```
 
 Notable design points:
-- **Many-to-many via join table + soft reference**: `CHARACTER_STAT`, `CHARACTER_TRAIT`,
-  `CHARACTER_ITEM`, `CHARACTER_RESOURCE` and `CHARACTER_GROUP` are all M:N join tables between
-  `CHARACTER` and their respective entity, but only the `CHARACTER` side is a real FK — the
-  other side (`statSlug`, `traitSlug`, `itemSlug`, `resourceSlug`, `groupSlug`) is a plain
-  string column resolved by the slice's mapper, not a DB constraint.
-- **`GROUP_RESOURCE` / `GROUP_ITEM`** aren't tied to an actual `GROUP` entity — they represent
-  the jdr's shared/group-wide pool (one row per `RESOURCE`/`ITEM`), hence the 1:1 cardinality.
-- **`CHARACTER.classSlug`** is nullable and unenforced (no `@ManyToOne` in code) — a character
-  may have no class, and deleting a class just nulls it out (`ClassProvider.remove`), it
-  doesn't cascade-delete characters.
+
+- **Catalog links are real foreign keys** for stats, traits, items, classes and groups.
+- **Resources are owned values**: a JdR definition supplies a name, owner type and default
+  value. It is copied to each matching character or group. Additional local resources are
+  allowed, which is why owned-resource slugs are not mandatory foreign keys.
+- **`CHARACTER.classSlug`** is nullable; class deletion clears references before deleting the class.
 - **`DICE_ROLL`** denormalizes `characterName`/`statName` at roll time (a historical roll log
   should still read correctly even if the character/stat is later renamed or deleted) — it's
   intentionally not a live join.
@@ -341,19 +349,17 @@ Vue textuelle de la structure des données, en partant de la racine `Jdr` :
 - **`Jdr`** (aggrégat racine, identifié par son `slug`)
   - possède des **`Stat`** (les caractéristiques disponibles, ex. Force, Agilité)
   - possède des **`Trait`** (chacun avec ses **`TraitModifier`**, qui appliquent un bonus/malus à une `Stat`)
-  - possède des **`Resource`** (ex. Points de vie, Mana), typées `SINGLE` / `GROUP` / `ALL`
-    - une `Resource` de type `GROUP` a une **`GroupResourceValue`** (valeur partagée par le groupe)
+  - possède des définitions de **`Resource`** pour les personnages ou pour les groupes, avec une valeur par défaut
   - possède des **`Item`** (chacun avec ses **`ItemModifier`**, comme les traits)
     - un `Item` peut avoir un **`OwnedItem`** au niveau du groupe (quantité en inventaire commun)
-  - possède des **`JdrClass`** (classes de personnage)
-    - chaque classe référence des `Resource` via **`ClassResourceProfile`** (valeur par défaut, comportement `fixed`/`scalable`)
-  - possède des **`JdrGroup`** (groupes de personnages)
+  - possède des **`JdrClass`** (classes de personnage, indépendantes des ressources)
+  - possède des **`JdrGroup`** (groupes de personnages), chacun avec ses propres valeurs de ressources
   - possède des **`Character`** (personnages), chacun :
     - peut appartenir à une **`JdrClass`** (référence souple par `classSlug`, optionnelle)
     - a ses propres valeurs de `Stat` (via `CharacterStat`)
     - a ses propres `Trait` (via `CharacterTrait`)
     - a ses propres `Item` en inventaire (via `CharacterItem`, avec quantité)
-    - a ses propres valeurs de `Resource` (via `CharacterResource`)
+    - reçoit les ressources personnage du JdR à sa création et peut avoir des ressources locales supplémentaires
     - appartient à un ou plusieurs `JdrGroup` (via `CharacterGroup`)
   - conserve un historique de **`DiceRoll`** (jets de dés), chacun figeant un instantané
     (nom du personnage, nom de la stat, valeur finale calculée) au moment du jet

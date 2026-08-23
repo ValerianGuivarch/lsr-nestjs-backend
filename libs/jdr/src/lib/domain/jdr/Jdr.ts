@@ -3,9 +3,9 @@ import { JdrClass } from '../classes/JdrClass'
 import { JdrGroup } from '../groups/JdrGroup'
 import { Item } from '../items/Item'
 import { OwnedItem } from '../items/OwnedItem'
-import { GroupResourceValue } from '../resources/GroupResourceValue'
+import { Player } from '../players/Player'
 import { Resource } from '../resources/Resource'
-import { ResourceType } from '../resources/ResourceType'
+import { ResourceOwnerType } from '../resources/ResourceType'
 import { Slug } from '../shared/Slug'
 import { Stat } from '../stats/Stat'
 import { Trait } from '../traits/Trait'
@@ -18,10 +18,10 @@ export class Jdr {
   stats: Stat[]
   traits: Trait[]
   resources: Resource[]
-  groupResources: GroupResourceValue[]
   items: Item[]
   groupItems: OwnedItem[]
   characters: Character[]
+  players: Player[]
   classes: JdrClass[]
   groups: JdrGroup[]
 
@@ -32,10 +32,10 @@ export class Jdr {
     stats?: Stat[]
     traits?: Trait[]
     resources?: Resource[]
-    groupResources?: GroupResourceValue[]
     items?: Item[]
     groupItems?: OwnedItem[]
     characters?: Character[]
+    players?: Player[]
     classes?: JdrClass[]
     groups?: JdrGroup[]
   }) {
@@ -45,10 +45,10 @@ export class Jdr {
     this.stats = p.stats ?? []
     this.traits = p.traits ?? []
     this.resources = p.resources ?? []
-    this.groupResources = p.groupResources ?? []
     this.items = p.items ?? []
     this.groupItems = p.groupItems ?? []
     this.characters = p.characters ?? []
+    this.players = p.players ?? []
     this.classes = p.classes ?? []
     this.groups = p.groups ?? []
 
@@ -62,25 +62,53 @@ export class Jdr {
     this.traits.forEach((trait) => this.assertOwnedByCurrentJdr(trait.jdrSlug, `trait ${trait.slug}`))
     this.resources.forEach((resource) => this.assertOwnedByCurrentJdr(resource.jdrSlug, `resource ${resource.slug}`))
     this.items.forEach((item) => this.assertOwnedByCurrentJdr(item.jdrSlug, `item ${item.slug}`))
-    this.characters.forEach((character) => this.assertOwnedByCurrentJdr(character.jdrSlug, `character ${character.slug}`))
+    this.characters.forEach((character) =>
+      this.assertOwnedByCurrentJdr(character.jdrSlug, `character ${character.slug}`)
+    )
+    this.players.forEach((player) => this.assertOwnedByCurrentJdr(player.jdrSlug, `player ${player.slug}`))
     this.classes.forEach((clazz) => this.assertOwnedByCurrentJdr(clazz.jdrSlug, `class ${clazz.slug}`))
     this.groups.forEach((group) => this.assertOwnedByCurrentJdr(group.jdrSlug, `group ${group.slug}`))
 
     // Slug uniqueness within JdR
-    this.assertUnique(this.stats.map((s) => s.slug), 'stat slug must be unique in JdR')
-    this.assertUnique(this.traits.map((t) => t.slug), 'trait slug must be unique in JdR')
-    this.assertUnique(this.resources.map((r) => r.slug), 'resource slug must be unique in JdR')
-    this.assertUnique(this.items.map((i) => i.slug), 'item slug must be unique in JdR')
-    this.assertUnique(this.characters.map((c) => c.slug), 'character slug must be unique in JdR')
-    this.assertUnique(this.classes.map((c) => c.slug), 'class slug must be unique in JdR')
-    this.assertUnique(this.groups.map((g) => g.slug), 'group slug must be unique in JdR')
+    this.assertUnique(
+      this.stats.map((s) => s.slug),
+      'stat slug must be unique in JdR'
+    )
+    this.assertUnique(
+      this.traits.map((t) => t.slug),
+      'trait slug must be unique in JdR'
+    )
+    this.assertUnique(
+      this.resources.map((r) => r.slug),
+      'resource slug must be unique in JdR'
+    )
+    this.assertUnique(
+      this.items.map((i) => i.slug),
+      'item slug must be unique in JdR'
+    )
+    this.assertUnique(
+      this.characters.map((c) => c.slug),
+      'character slug must be unique in JdR'
+    )
+    this.assertUnique(
+      this.players.map((p) => p.slug),
+      'player slug must be unique in JdR'
+    )
+    this.assertUnique(
+      this.classes.map((c) => c.slug),
+      'class slug must be unique in JdR'
+    )
+    this.assertUnique(
+      this.groups.map((g) => g.slug),
+      'group slug must be unique in JdR'
+    )
 
     const statSlugs = new Set(this.stats.map((s) => s.slug))
     const traitMap = new Map(this.traits.map((t) => [t.slug, t]))
-    const resourceMap = new Map(this.resources.map((r) => [r.slug, r]))
     const itemMap = new Map(this.items.map((i) => [i.slug, i]))
     const classMap = new Map(this.classes.map((c) => [c.slug, c]))
     const groupMap = new Map(this.groups.map((g) => [g.slug, g]))
+    const playerMap = new Map(this.players.map((p) => [p.slug, p]))
 
     // Trait modifiers must reference known stats
     this.traits.forEach((trait) => {
@@ -100,11 +128,10 @@ export class Jdr {
       })
     })
 
-    // Group resources must exactly cover GROUP resources
-    const groupResourceSlugs = this.resources.filter((r) => r.type === ResourceType.GROUP).map((r) => r.slug)
-    const allResourceSlugs = this.resources.filter((r) => r.type === ResourceType.ALL).map((r) => r.slug)
-
-    this.assertSameSet(groupResourceSlugs, this.groupResources.map((r) => r.resourceSlug), 'group resource values must match group resources')
+    const characterResourceSlugs = this.resources
+      .filter((r) => r.ownerType === ResourceOwnerType.CHARACTER)
+      .map((r) => r.slug)
+    const groupResourceSlugs = this.resources.filter((r) => r.ownerType === ResourceOwnerType.GROUP).map((r) => r.slug)
 
     // Group item ownerships: item must exist in catalog, quantity must respect unique flag
     this.groupItems.forEach((ownedItem) => {
@@ -128,6 +155,16 @@ export class Jdr {
       if (character.classSlug && !classMap.has(character.classSlug)) {
         throw new Error(`character ${character.slug} references unknown class ${character.classSlug}`)
       }
+      if (character.playerSlug && !playerMap.has(character.playerSlug)) {
+        throw new Error(`character ${character.slug} references unknown player ${character.playerSlug}`)
+      }
+      if (character.classLevel) {
+        const clazz = character.classSlug ? classMap.get(character.classSlug) : undefined
+        if (!clazz) throw new Error(`character ${character.slug} has a class level without a class`)
+        if (!clazz.levels.includes(character.classLevel)) {
+          throw new Error(`character ${character.slug} references unknown level ${character.classLevel}`)
+        }
+      }
 
       character.groupSlugs.forEach((groupSlug) => {
         if (!groupMap.has(groupSlug)) {
@@ -149,25 +186,36 @@ export class Jdr {
           throw new Error(`character ${character.slug} owns unknown item ${ownedItem.itemSlug}`)
         }
         if (item.unique && ownedItem.quantity !== 1) {
-          throw new Error(`character ${character.slug} owns unique item ${item.slug} with quantity ${ownedItem.quantity}, must be 1`)
+          throw new Error(
+            `character ${character.slug} owns unique item ${item.slug} with quantity ${ownedItem.quantity}, must be 1`
+          )
         }
       })
 
-      // Resources: must exist in JdR, must not be GROUP; all ALL resources must be owned
-      character.resources.forEach((resourceValue) => {
-        const resource = resourceMap.get(resourceValue.resourceSlug)
-        if (!resource) {
-          throw new Error(`character ${character.slug} references unknown resource ${resourceValue.resourceSlug}`)
-        }
-        if (resource.type === ResourceType.GROUP) {
-          throw new Error(`character ${character.slug} cannot own group resource ${resource.slug}`)
+      const characterResourceValues = character.resources.map((r) => r.resourceSlug)
+      this.assertUnique(characterResourceValues, `character ${character.slug} resource slug must be unique`)
+      groupResourceSlugs.forEach((resourceSlug) => {
+        if (characterResourceValues.includes(resourceSlug)) {
+          throw new Error(`character ${character.slug} cannot own group resource ${resourceSlug}`)
         }
       })
+      characterResourceSlugs.forEach((resourceSlug) => {
+        if (!characterResourceValues.includes(resourceSlug)) {
+          throw new Error(`character ${character.slug} must own JdR resource ${resourceSlug}`)
+        }
+      })
+    })
 
-      const ownedAllResources = character.resources
-        .map((r) => r.resourceSlug)
-        .filter((resourceSlug) => resourceMap.get(resourceSlug)?.type === ResourceType.ALL)
-      this.assertSameSet(allResourceSlugs, ownedAllResources, `character ${character.slug} must own all ALL resources`)
+    this.groups.forEach((group) => {
+      const values = group.resources.map((r) => r.resourceSlug)
+      this.assertUnique(values, `group ${group.slug} resource slug must be unique`)
+      characterResourceSlugs.forEach((resourceSlug) => {
+        if (values.includes(resourceSlug))
+          throw new Error(`group ${group.slug} cannot own character resource ${resourceSlug}`)
+      })
+      groupResourceSlugs.forEach((resourceSlug) => {
+        if (!values.includes(resourceSlug)) throw new Error(`group ${group.slug} must own JdR resource ${resourceSlug}`)
+      })
     })
   }
 

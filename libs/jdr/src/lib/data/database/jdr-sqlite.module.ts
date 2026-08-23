@@ -17,8 +17,8 @@ import { DBJdrCharacterResource } from '../characters/database/jdr-character-res
 import { DBJdrCharacterGroup } from '../characters/database/jdr-character-group.db'
 import { DBJdrDiceRoll } from '../rolls/database/jdr-dice-roll.db'
 import { DBJdrClass } from '../classes/database/jdr-class.db'
-import { DBJdrClassResource } from '../classes/database/jdr-class-resource.db'
 import { DBJdrGroup } from '../groups/database/jdr-group.db'
+import { DBJdrPlayer } from '../players/database/jdr-player.db'
 
 const jdrEntities = [
   DBJdr,
@@ -38,8 +38,8 @@ const jdrEntities = [
   DBJdrCharacterGroup,
   DBJdrDiceRoll,
   DBJdrClass,
-  DBJdrClassResource,
-  DBJdrGroup
+  DBJdrGroup,
+  DBJdrPlayer
 ]
 
 @Module({
