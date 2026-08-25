@@ -1,0 +1,7 @@
+{
+  "name": "web-golarion-map",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/web-golarion-map/src",
+  "projectType": "application",
+  "tags": []
+}

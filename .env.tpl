@@ -9,6 +9,9 @@ YEARDIARY_PORT=8080
 # PF2_LIBRARY_ROOT=../../PF2/MJ
 # PF2_DATA_ROOT=apps/web-misc/src/pf2-mj/data
 # PF2_IMAGE_ROOT=../../PF2/pnj
+# Carte de Golarion : ressources lourdes externes au dépôt (PMTiles, sprites, polices, index)
+# GOLARION_MAP_ASSETS_DIR=../../GolarionMapData
+# GOLARION_MAP_PUBLIC_ORIGIN=
 HOST=127.0.0.1
 
 # jdr admin (apps/admin-jdr) - Basic Auth gating the admin frontend only, not the JDR API

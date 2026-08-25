@@ -1,0 +1,137 @@
+@import "pure-context-menu/styles.min.css";
+
+body {
+	margin: 0;
+	padding: 0;
+	background-color: transparent;
+}
+
+a {
+	color: #224897;
+	text-decoration: none;
+	&:hover {
+		color: #4b77d6;
+		text-decoration: underline;
+	}
+	&:visited {
+		color: #433d80;
+	}
+	&:active {
+		color: #233566;
+	}
+}
+
+#map-container {
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	width: 100%;
+	background: black url(stars.webp) 0% 0%/cover;
+	
+	&.embedded {
+		background: transparent;
+	}
+}
+
+.embedded {
+	.maplibregl-ctrl-scale {
+		background: transparent;
+		height: 5px;
+		margin-bottom: 15px !important;
+	}
+}
+
+.maplibregl-popup-content {
+	padding-top: 0;
+}
+
+.wiki-popup {
+	margin: -5px 0 -10px 0;
+
+	p {
+		margin-bottom: 0;
+	}
+	
+	h3 {
+		font-size: 120%;
+		font-weight: bold;
+		width: 100%;
+		border-bottom: 1px solid gray;
+		margin-right: .5rem;
+		margin-bottom: 0;
+	}
+
+	ul {
+		margin: 0;
+		padding-left: 1.5em;
+	}
+
+	h3 + p {
+		margin-top: .25em;
+	}
+}
+
+.pure-context-menu.dropdown-menu {
+	font-family: arial;
+	padding: .2em;
+	color: #222;
+}
+
+.time-slider-container {
+	padding: 2em .75em .5em .75em;
+	position: relative;
+
+	>#time-slider {
+		margin: 0;
+	}
+
+	>label {
+		position: absolute;
+		width: 100%;
+		font-size: 16px;
+		top: .35em;
+		left: 0;
+		text-align: center;
+	}
+}
+
+.golarion-search-control {
+	>.golarion-search-wrapper>.golarion-search-input {
+		border: 0;
+		border-radius: 4px;
+	}
+	
+	>.golarion-search-results {
+		background-color: white;
+		padding: .5em 0;
+		border-radius: .5em;
+		pointer-events: auto;
+		cursor: pointer;
+		display: none;
+		max-width: 600px;
+
+		>.golarion-search-result-item {
+			display: grid;
+			grid-template-columns: auto minmax(0, max-content);
+			padding: .2em 1em;
+			>.golarion-result-category {
+				color: #aaa;
+			}
+
+			&:hover,&.selected {
+				background-color: #aae;
+			}
+
+			&.selected:hover {
+				background-color: #88f;
+			}
+		}
+	}
+}
+
+.gm-hex-grid-toggle {
+	width: auto !important;
+	padding: 0 .6em;
+	font-size: 12px;
+	font-weight: bold;
+}

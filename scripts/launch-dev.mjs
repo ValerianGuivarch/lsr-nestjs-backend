@@ -23,7 +23,8 @@ const profileDescriptions = {
   full: 'Tous les lots actifs',
   jdr: 'Lot JDR uniquement',
   yeardiary: 'Lot YearDiary uniquement',
-  pf2: 'PF2 MJ uniquement (API + interface sur /pf2-mj)'
+  pf2: 'PF2 MJ uniquement (API + interface sur /pf2-mj)',
+  'jdr-golarion': 'Administration JdR + carte de Golarion'
 }
 
 const defaultConfig = {
@@ -71,7 +72,8 @@ const builtInProfiles = {
   full: createLotProfile(lotKeys),
   jdr: createLotProfile(['jdr']),
   yeardiary: createLotProfile(['yeardiary']),
-  pf2: { backendUnified: false, frontendShell: false, pf2Mj: true, stopPortsBeforeLaunch: false, domains: { jdr: false, yeardiary: false } }
+  pf2: { backendUnified: false, frontendShell: false, pf2Mj: true, stopPortsBeforeLaunch: false, domains: { jdr: false, yeardiary: false } },
+  'jdr-golarion': { backendUnified: false, frontendShell: false, jdrGolarion: true, stopPortsBeforeLaunch: false, domains: { jdr: true, yeardiary: false } }
 }
 
 function defaultRunnerConfig() {
@@ -121,6 +123,7 @@ function printProfiles(runnerConfig) {
   console.log('npm run launch -- --profile full')
   console.log('npm run launch -- --profile jdr')
   console.log('npm run launch -- --profile pf2')
+  console.log('npm run launch -- --profile jdr-golarion')
   console.log('npm run launch -- --config')
 }
 
@@ -384,6 +387,10 @@ async function main() {
 
   if (config.pf2Mj) {
     processes.push(startProcess('pf2-mj', 'dev:pf2-mj', {}, { critical: true }))
+  }
+
+  if (config.jdrGolarion) {
+    processes.push(startProcess('jdr-golarion', 'dev:jdr-golarion', {}, { critical: true }))
   }
 
   if (processes.length === 0) {
