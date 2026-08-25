@@ -14,7 +14,6 @@ import NewTab from "./tools/NewTab.js";
 import { CompactAttributionControl } from "./tools/CompactAttributionControl.js";
 import { GolarionMap } from "./tools/GolarionMap.js";
 import SearchControl from "./tools/SearchControl.js";
-import TimeSliderControl from "./tools/TimeSliderControl.js";
 import HexGridControl from "./tools/HexGridControl.js";
 import { startupOptions } from "./URLOptions.js";
 import { addSpecialURLOptions } from "./tools/special-url-options";
@@ -22,6 +21,25 @@ import { debug } from "./utils/debug";
 import { ProjectionControl } from "./tools/ProjectionControl";
 
 var root = `${location.protocol}//${location.host}`;
+export const mapAudience = window.location.pathname.split('/').filter(Boolean)[0]?.toLowerCase() === 'pj' ? 'pj' : 'mj';
+
+if (window.location.pathname === '/') {
+  window.history.replaceState(null, '', `/mj${window.location.search}${window.location.hash}`);
+}
+document.body.dataset.mapAudience = mapAudience;
+document.title = `Carte de Golarion — mode ${mapAudience.toUpperCase()}`;
+
+const absoluteAssetUrl = (value: string) => /^[a-z][a-z\d+.-]*:\/\//i.test(value)
+  ? value
+  : `${window.location.origin}/${value.replace(/^\/+/, '')}`;
+
+const runtimeStyle = {
+  ...style,
+  sprite: typeof style.sprite === 'string'
+    ? absoluteAssetUrl(style.sprite)
+    : style.sprite?.map(sprite => ({...sprite, url: absoluteAssetUrl(sprite.url)})),
+  glyphs: style.glyphs ? absoluteAssetUrl(style.glyphs) : undefined,
+};
 
 let pmtilesProt = new Protocol();
 //add custom tile caching
@@ -53,7 +71,7 @@ export const map = new Map({
   hash: 'location',
   attributionControl: false,
   pitchWithRotate: startupOptions.embedded?false:true,
-  style: style,
+  style: runtimeStyle,
   pixelRatio: Math.max(window.devicePixelRatio || 1, 2),
   validateStyle: debug,
   canvasContextAttributes: {
@@ -69,16 +87,16 @@ map.touchZoomRotate.disableRotation();
 map.on('error', function(err) {
   console.log(err.error.message);
 });
-let timeSlider = new TimeSliderControl(golarionMap);
 
 addSpecialURLOptions(golarionMap);
 
 if(!startupOptions.embedded) {
   map.addControl(new ProjectionControl(golarionMap));
   map.addControl(new NavigationControl({showCompass: true}));
-  map.addControl(timeSlider, 'top-left');
   map.addControl(new SearchControl(golarionMap), 'top-left');
-  map.addControl(new HexGridControl(), 'top-right');
+  if (mapAudience === 'mj') {
+    map.addControl(new HexGridControl(), 'top-right');
+  }
 }
 map.addControl(new ScaleControl({
   unit: 'imperial',
@@ -89,16 +107,17 @@ map.addControl(new ScaleControl({
   maxWidth: startupOptions.embedded?50:100,
 }));
 map.addControl(new CompactAttributionControl(startupOptions.embedded));
-let measureControl = new MeasureControl(golarionMap);
-map.addControl(measureControl);
+if (mapAudience === 'mj') {
+  const measureControl = new MeasureControl(golarionMap);
+  map.addControl(measureControl);
+  makeLocationsClickable(golarionMap);
+  addRightClickMenu(golarionMap, measureControl);
+}
 if(startupOptions.embedded) {
   map.addControl(new NewTab());
   //attribution._toggleAttribution();
   //map.once('load', e=>attribution._toggleAttribution());
 }
-
-makeLocationsClickable(golarionMap);
-addRightClickMenu(golarionMap, measureControl);
 
 //change label orientation if bearing != 0
 function changeStyleWithBearing() {

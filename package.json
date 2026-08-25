@@ -36,6 +36,7 @@
     "dev:golarion-map": "nx serve web-golarion-map",
     "build:golarion-map": "nx build web-golarion-map",
     "preview:golarion-map": "nx preview web-golarion-map",
+    "start:golarion-map": "node apps/web-golarion-map/server.mjs",
     "dev:jdr-golarion": "bash -c 'trap \"kill 0\" SIGINT SIGTERM EXIT; npm run dev:jdr-admin & npm run dev:golarion-map & wait'",
     "prod:yeardiary": "node dist/src/main/main-yeardiary.js",
     "prod:all": "bash -c 'trap \"kill 0\" SIGINT SIGTERM EXIT; npm run start:prod & wait'",

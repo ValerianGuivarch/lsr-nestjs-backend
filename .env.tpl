@@ -12,6 +12,8 @@ YEARDIARY_PORT=8080
 # Carte de Golarion : ressources lourdes externes au dépôt (PMTiles, sprites, polices, index)
 # GOLARION_MAP_ASSETS_DIR=../../GolarionMapData
 # GOLARION_MAP_PUBLIC_ORIGIN=
+# GOLARION_MAP_HOST=0.0.0.0
+# GOLARION_MAP_PORT=4204
 HOST=127.0.0.1
 
 # jdr admin (apps/admin-jdr) - Basic Auth gating the admin frontend only, not the JDR API

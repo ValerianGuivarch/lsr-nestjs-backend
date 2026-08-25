@@ -2,6 +2,13 @@
 
 Cette application Vite est servie sur le port `4204`. Elle est indépendante de l’administration JdR (`4203`) et utilise les ressources cartographiques d’un dossier externe au dépôt.
 
+## Modes d’affichage
+
+- `/pj` : carte joueur sans fenêtre au clic sur les lieux, sans menu contextuel, mesure ni grille hexagonale.
+- `/mj` : carte maître du jeu avec détails au clic, mesure, menu contextuel et grille hexagonale.
+
+La barre d’évolution temporelle est désactivée dans les deux modes. En ouvrant la racine `/`, l’application utilise automatiquement le mode MJ.
+
 ## Ressources externes
 
 Par défaut, l’application attend `~/GolarionMapData`, soit `../../GolarionMapData` depuis la racine habituelle du dépôt `~/IdeaProjects/lsr-nestjs-backend`.
