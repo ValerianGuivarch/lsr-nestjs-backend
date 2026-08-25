@@ -19,15 +19,70 @@ import { startupOptions } from "./URLOptions.js";
 import { addSpecialURLOptions } from "./tools/special-url-options";
 import { debug } from "./utils/debug";
 import { ProjectionControl } from "./tools/ProjectionControl";
+import PlayerDetailControl, {type PlayerDetailLevel} from "./tools/PlayerDetailControl";
 
 var root = `${location.protocol}//${location.host}`;
 export const mapAudience = window.location.pathname.split('/').filter(Boolean)[0]?.toLowerCase() === 'pj' ? 'pj' : 'mj';
+const requestedPlayerDetail = new URLSearchParams(window.location.search).get('detail');
+export const playerDetail: PlayerDetailLevel = ['essential', 'standard', 'detailed'].includes(requestedPlayerDetail ?? '')
+  ? requestedPlayerDetail as PlayerDetailLevel
+  : 'standard';
 
 if (window.location.pathname === '/') {
   window.history.replaceState(null, '', `/mj${window.location.search}${window.location.hash}`);
 }
 document.body.dataset.mapAudience = mapAudience;
+document.body.dataset.playerDetail = mapAudience === 'pj' ? playerDetail : 'mj';
 document.title = `Carte de Golarion — mode ${mapAudience.toUpperCase()}`;
+
+const essentialPlayerLayerIds = new Set([
+  'background',
+  'fill_geometry',
+  'borders-regions',
+  'borders-subregions',
+  'borders-nations',
+  'symbol_line-labels',
+  'location-icons',
+  'location-labels',
+  'symbol_region-labels',
+  'symbol_subregion-labels',
+  'symbol_nation-labels',
+]);
+const standardPlayerLayerIds = new Set([
+  ...essentialPlayerLayerIds,
+  'borders-provinces',
+  'symbol_province-labels',
+]);
+const essentialPlayerCityIcons = [
+  'city-major',
+  'city-major-capital',
+  'city-large',
+  'city-large-capital',
+  'city-medium-capital',
+  'city-small-capital',
+];
+const standardPlayerCityIcons = [...essentialPlayerCityIcons, 'city-medium'];
+const activePlayerLayerIds = playerDetail === 'essential' ? essentialPlayerLayerIds : standardPlayerLayerIds;
+const activePlayerCityIcons = playerDetail === 'essential' ? essentialPlayerCityIcons : standardPlayerCityIcons;
+const playerCityFilter = ['in', ['get', 'icon'], ['literal', activePlayerCityIcons]] as const;
+
+const audienceLayers = mapAudience === 'pj'
+  ? playerDetail === 'detailed'
+    ? style.layers
+    : style.layers
+      .filter(layer => activePlayerLayerIds.has(layer.id))
+      .map(layer => {
+        if (layer.id === 'location-icons') return {...layer, filter: playerCityFilter};
+        if (layer.id === 'location-labels') {
+          const existingFilter = 'filter' in layer ? layer.filter : undefined;
+          return {...layer, filter: existingFilter ? ['all', playerCityFilter, existingFilter] : playerCityFilter};
+        }
+        return layer;
+      }) as typeof style.layers
+  : style.layers;
+const playerMaxZoom = playerDetail === 'essential' ? 7 : playerDetail === 'standard' ? 9 : 12;
+document.body.dataset.mapLayerCount = String(audienceLayers.length);
+document.body.dataset.mapMaxZoom = mapAudience === 'pj' ? String(playerMaxZoom) : 'default';
 
 const absoluteAssetUrl = (value: string) => /^[a-z][a-z\d+.-]*:\/\//i.test(value)
   ? value
@@ -35,6 +90,7 @@ const absoluteAssetUrl = (value: string) => /^[a-z][a-z\d+.-]*:\/\//i.test(value
 
 const runtimeStyle = {
   ...style,
+  layers: audienceLayers,
   sprite: typeof style.sprite === 'string'
     ? absoluteAssetUrl(style.sprite)
     : style.sprite?.map(sprite => ({...sprite, url: absoluteAssetUrl(sprite.url)})),
@@ -72,6 +128,7 @@ export const map = new Map({
   attributionControl: false,
   pitchWithRotate: startupOptions.embedded?false:true,
   style: runtimeStyle,
+  ...(mapAudience === 'pj' ? {maxZoom: playerMaxZoom} : {}),
   pixelRatio: Math.max(window.devicePixelRatio || 1, 2),
   validateStyle: debug,
   canvasContextAttributes: {
@@ -93,9 +150,14 @@ addSpecialURLOptions(golarionMap);
 if(!startupOptions.embedded) {
   map.addControl(new ProjectionControl(golarionMap));
   map.addControl(new NavigationControl({showCompass: true}));
-  map.addControl(new SearchControl(golarionMap), 'top-left');
   if (mapAudience === 'mj') {
+    map.addControl(new SearchControl(golarionMap), 'top-left');
     map.addControl(new HexGridControl(), 'top-right');
+  } else {
+    map.addControl(new PlayerDetailControl(playerDetail), 'top-right');
+    if (playerDetail === 'detailed') {
+      map.addControl(new SearchControl(golarionMap), 'top-left');
+    }
   }
 }
 map.addControl(new ScaleControl({

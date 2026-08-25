@@ -135,3 +135,22 @@ a {
 	font-size: 12px;
 	font-weight: bold;
 }
+
+.player-detail-control {
+	padding: .45em .6em;
+	background: rgba(255, 255, 255, .92);
+	font: 12px/1.2 Arial, sans-serif;
+
+	label {
+		display: grid;
+		gap: .25em;
+		font-weight: bold;
+	}
+
+	select {
+		border: 1px solid #999;
+		border-radius: 3px;
+		background: white;
+		font: inherit;
+	}
+}
