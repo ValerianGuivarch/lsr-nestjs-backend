@@ -241,7 +241,7 @@ export class MediaService {
   }
 
   private toDto(entity: MediaEntity) {
-    const path = `/api/v1/media/files/${entity.filename.split('/').map(encodeURIComponent).join('/')}`
+    const path = `/api/media/files/${entity.filename.split('/').map(encodeURIComponent).join('/')}`
     return {
       id: entity.id,
       name: entity.name,

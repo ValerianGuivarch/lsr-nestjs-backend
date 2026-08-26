@@ -3,7 +3,9 @@ import { ApiTags } from '@nestjs/swagger'
 import { FastifyReply, FastifyRequest } from 'fastify'
 import { Pf2MjService } from './Pf2MjService'
 
-@Controller('api/v1/pf2-mj')
+// Le NAS historique traduit /apil7r/* vers /api/*. Les deux préfixes restent
+// intentionnellement actifs et partagent cette unique implémentation.
+@Controller(['api/pf2-mj', 'api/v1/pf2-mj'])
 @ApiTags('PF2 MJ')
 export class Pf2MjController {
   constructor(private readonly service: Pf2MjService) {}

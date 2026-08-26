@@ -13,7 +13,7 @@ export default defineConfig(({ mode }) => {
     '/apil7r/pf2-mj': {
       target: env.PF2_BACKEND_ORIGIN ?? jdrTarget,
       changeOrigin: true,
-      rewrite: (path: string) => path.replace(/^\/apil7r\/pf2-mj/, '/api/v1/pf2-mj')
+      rewrite: (path: string) => path.replace(/^\/apil7r\/pf2-mj/, '/api/pf2-mj')
     },
     '/apil7r/jdr': {
       target: jdrTarget,
@@ -23,7 +23,7 @@ export default defineConfig(({ mode }) => {
     '/apil7r/media': {
       target: jdrTarget,
       changeOrigin: true,
-      rewrite: (path: string) => path.replace(/^\/apil7r\/media/, '/api/v1/media')
+      rewrite: (path: string) => path.replace(/^\/apil7r\/media/, '/api/media')
     },
     '/apil7r/v1/diaries': {
       target: diaryTarget,

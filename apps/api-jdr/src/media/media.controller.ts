@@ -3,7 +3,8 @@ import { ApiTags } from '@nestjs/swagger'
 import { FastifyReply, FastifyRequest } from 'fastify'
 import { MediaService, PortraitAlreadyExistsError } from './media.service'
 
-@Controller('api/v1/media')
+// Alias rétrocompatible pour le proxy public /apil7r -> /api.
+@Controller(['api/media', 'api/v1/media'])
 @ApiTags('Media')
 export class MediaController {
   constructor(private readonly service: MediaService) {}
