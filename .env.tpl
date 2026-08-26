@@ -17,6 +17,8 @@ JDR_PORT=3333
 # GOLARION_MAP_PORT=4204
 # Niveau de détail fixe de la carte PJ : essential, standard ou detailed
 # GOLARION_MAP_PJ_DETAIL=standard
+# NAS public : désactive le WebSocket de hot reload Vite derrière nginx.
+# VITE_DISABLE_HMR=true
 HOST=127.0.0.1
 
 # jdr admin (apps/admin-jdr) - Basic Auth gating the admin frontend only, not the JDR API

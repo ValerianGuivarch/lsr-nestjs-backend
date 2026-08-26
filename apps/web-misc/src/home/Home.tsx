@@ -20,11 +20,11 @@ type AppLink = {
   href: string
 }
 
-function externalAppUrl(subdomain: 'admin' | 'maps', localPort: number, path = ''): string {
-  if (import.meta.env.DEV) {
-    return `${window.location.protocol}//${window.location.hostname}:${localPort}${path}`
-  }
-  return `https://${subdomain}.l7r.fr${path}`
+function externalAppUrl(subdomain: 'admin' | 'map', localPort: number, path = ''): string {
+  const isPublicDashboard = ['l7r.fr', 'www.l7r.fr'].includes(window.location.hostname)
+  return isPublicDashboard
+    ? `https://${subdomain}.l7r.fr${path}`
+    : `${window.location.protocol}//${window.location.hostname}:${localPort}${path}`
 }
 
 const Home: React.FC = () => {
@@ -34,8 +34,8 @@ const Home: React.FC = () => {
     { label: 'PF2', description: 'Référentiel Pathfinder 2', href: '/pf2' },
     { label: 'PF2 MJ', description: 'Catalogue, scénarios et référentiels Pathfinder 2', href: '/pf2-mj' },
     { label: 'Diary', description: 'Journal annuel', href: '/diary' },
-    { label: 'Carte — PJ', description: 'Carte de Golarion, vue joueurs', href: externalAppUrl('maps', 4204, '/pj') },
-    { label: 'Carte — MJ', description: 'Carte de Golarion, vue maître du jeu', href: externalAppUrl('maps', 4204, '/mj') },
+    { label: 'Carte — PJ', description: 'Carte de Golarion, vue joueurs', href: externalAppUrl('map', 4204, '/pj') },
+    { label: 'Carte — MJ', description: 'Carte de Golarion, vue maître du jeu', href: externalAppUrl('map', 4204, '/mj') },
     { label: 'Foussier', description: 'Calcul de crampillons', href: '/foussier' }
   ]
 

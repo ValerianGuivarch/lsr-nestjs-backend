@@ -8,6 +8,7 @@ export default defineConfig(({ mode }) => {
   const env = { ...loadEnv(mode, '../..', ''), ...process.env }
   const jdrTarget = env.JDR_BACKEND_ORIGIN ?? `http://localhost:${env.JDR_PORT ?? 3333}`
   const diaryTarget = env.YEARDIARY_BACKEND_ORIGIN ?? `http://localhost:${env.YEARDIARY_PORT ?? 8081}`
+  const disableHmr = env.VITE_DISABLE_HMR === 'true'
   const apiProxy = {
     '/apil7r/pf2-mj': {
       target: env.PF2_BACKEND_ORIGIN ?? jdrTarget,
@@ -34,6 +35,7 @@ export default defineConfig(({ mode }) => {
       port: 3000,
       host: 'localhost',
       allowedHosts: ['l7r.fr', 'www.l7r.fr'],
+      hmr: disableHmr ? false : undefined,
       proxy: apiProxy
     },
     preview: {
