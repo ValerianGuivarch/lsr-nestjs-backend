@@ -9,12 +9,19 @@ services:
       MYSQL_ROOT_PASSWORD: ${BOOKSTACK_DB_ROOT_PASSWORD}
     volumes:
       - ${BOOKSTACK_DATA_ROOT:-./data/bookstack}/database:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "healthcheck.sh --connect --innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 15s
 
   bookstack:
     image: lscr.io/linuxserver/bookstack:latest
     restart: unless-stopped
     depends_on:
-      - bookstack-db
+      bookstack-db:
+        condition: service_healthy
     ports:
       - "${BOOKSTACK_PORT:-4205}:80"
     environment:
