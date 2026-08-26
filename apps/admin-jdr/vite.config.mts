@@ -7,8 +7,8 @@ import { basicAuthPlugin } from './basic-auth.plugin.mts'
 
 export default defineConfig(({ mode }) => {
   // Root .env lives two levels up from this app (workspace root), not in this app's own folder.
-  const env = { ...process.env, ...loadEnv(mode, '../..', '') }
-  const backendPort = env.JDR_PORT || env.PORT || '8081'
+  const env = { ...loadEnv(mode, '../..', ''), ...process.env }
+  const backendPort = env.JDR_PORT || '3333'
 
   return {
     root: import.meta.dirname,

@@ -2,9 +2,13 @@ import { createReadStream, existsSync, statSync } from 'node:fs'
 import { createServer } from 'node:http'
 import { homedir } from 'node:os'
 import { dirname, extname, resolve, sep } from 'node:path'
+import { loadEnvFile } from 'node:process'
 import { fileURLToPath } from 'node:url'
 
 const appRoot = dirname(fileURLToPath(import.meta.url))
+const workspaceRoot = resolve(appRoot, '../..')
+const envPath = resolve(workspaceRoot, '.env')
+if (existsSync(envPath)) loadEnvFile(envPath)
 const buildRoot = resolve(appRoot, '../../dist/apps/web-golarion-map')
 const defaultAssetsRoot = resolve(appRoot, '../../../../GolarionMapData')
 const legacyAssetsRoot = resolve(homedir(), 'Developer/golarion-map-build/mapping/frontend/public')
@@ -16,6 +20,11 @@ const assetsRoot = configuredAssetsRoot
   ?? defaultAssetsRoot
 const host = process.env.GOLARION_MAP_HOST ?? '0.0.0.0'
 const port = Number(process.env.GOLARION_MAP_PORT ?? 4204)
+const requestedPlayerDetail = process.env.GOLARION_MAP_PJ_DETAIL?.trim().toLowerCase()
+const playerDetail = ['essential', 'standard', 'detailed'].includes(requestedPlayerDetail)
+  ? requestedPlayerDetail
+  : 'standard'
+const runtimeConfigSource = `window.GOLARION_MAP_CONFIG=${JSON.stringify({ playerDetail })};`
 
 const mimeTypes = {
   '.css': 'text/css; charset=utf-8',
@@ -104,6 +113,14 @@ const server = createServer((request, response) => {
   }
 
   const pathname = new URL(request.url ?? '/', 'http://localhost').pathname
+  if (pathname === '/runtime-config.js') {
+    response.writeHead(200, {
+      'Cache-Control': 'no-store',
+      'Content-Type': 'text/javascript; charset=utf-8'
+    })
+    response.end(runtimeConfigSource)
+    return
+  }
   const file = resolvePublicFile(buildRoot, pathname) ?? resolvePublicFile(assetsRoot, pathname)
   if (file) {
     sendFile(request, response, file)

@@ -4,7 +4,8 @@ NODE_ENV=production
 JWT_SECRET=changeme
 # http
 PORT=8081
-YEARDIARY_PORT=8080
+YEARDIARY_PORT=8081
+JDR_PORT=3333
 # PF2 MJ: PDFs stay outside the repository. Default from the repository root: ../../PF2/MJ
 # PF2_LIBRARY_ROOT=../../PF2/MJ
 # PF2_DATA_ROOT=apps/web-misc/src/pf2-mj/data
@@ -14,6 +15,8 @@ YEARDIARY_PORT=8080
 # GOLARION_MAP_PUBLIC_ORIGIN=
 # GOLARION_MAP_HOST=0.0.0.0
 # GOLARION_MAP_PORT=4204
+# Niveau de détail fixe de la carte PJ : essential, standard ou detailed
+# GOLARION_MAP_PJ_DETAIL=standard
 HOST=127.0.0.1
 
 # jdr admin (apps/admin-jdr) - Basic Auth gating the admin frontend only, not the JDR API

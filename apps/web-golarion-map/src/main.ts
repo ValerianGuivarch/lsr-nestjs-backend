@@ -19,14 +19,12 @@ import { startupOptions } from "./URLOptions.js";
 import { addSpecialURLOptions } from "./tools/special-url-options";
 import { debug } from "./utils/debug";
 import { ProjectionControl } from "./tools/ProjectionControl";
-import PlayerDetailControl, {type PlayerDetailLevel} from "./tools/PlayerDetailControl";
+
+type PlayerDetailLevel = 'essential' | 'standard' | 'detailed';
 
 var root = `${location.protocol}//${location.host}`;
 export const mapAudience = window.location.pathname.split('/').filter(Boolean)[0]?.toLowerCase() === 'pj' ? 'pj' : 'mj';
-const requestedPlayerDetail = new URLSearchParams(window.location.search).get('detail');
-export const playerDetail: PlayerDetailLevel = ['essential', 'standard', 'detailed'].includes(requestedPlayerDetail ?? '')
-  ? requestedPlayerDetail as PlayerDetailLevel
-  : 'standard';
+export const playerDetail: PlayerDetailLevel = window.GOLARION_MAP_CONFIG?.playerDetail ?? 'standard';
 
 if (window.location.pathname === '/') {
   window.history.replaceState(null, '', `/mj${window.location.search}${window.location.hash}`);
@@ -153,11 +151,8 @@ if(!startupOptions.embedded) {
   if (mapAudience === 'mj') {
     map.addControl(new SearchControl(golarionMap), 'top-left');
     map.addControl(new HexGridControl(), 'top-right');
-  } else {
-    map.addControl(new PlayerDetailControl(playerDetail), 'top-right');
-    if (playerDetail === 'detailed') {
-      map.addControl(new SearchControl(golarionMap), 'top-left');
-    }
+  } else if (playerDetail === 'detailed') {
+    map.addControl(new SearchControl(golarionMap), 'top-left');
   }
 }
 map.addControl(new ScaleControl({

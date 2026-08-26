@@ -1,20 +1,30 @@
 /// <reference types='vitest' />
-import { defineConfig } from 'vite'
+import { defineConfig, loadEnv } from 'vite'
 import react from '@vitejs/plugin-react'
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin'
 import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin'
 
-export default defineConfig(() => {
-  // In real prod, nginx forwards /apil7r/* straight to the unified backend (which rewrites it internally).
-  // Locally (dev or vite preview), there's no nginx, so proxy it ourselves to the same backend port.
-  const backendTarget = process.env.VITE_BACKEND_ORIGIN ?? 'http://localhost:8081'
+export default defineConfig(({ mode }) => {
+  const env = { ...loadEnv(mode, '../..', ''), ...process.env }
+  const jdrTarget = env.JDR_BACKEND_ORIGIN ?? `http://localhost:${env.JDR_PORT ?? 3333}`
+  const diaryTarget = env.YEARDIARY_BACKEND_ORIGIN ?? `http://localhost:${env.YEARDIARY_PORT ?? 8081}`
   const apiProxy = {
     '/apil7r/pf2-mj': {
-      target: process.env.PF2_BACKEND_ORIGIN ?? 'http://localhost:3333',
+      target: env.PF2_BACKEND_ORIGIN ?? jdrTarget,
       changeOrigin: true,
       rewrite: (path: string) => path.replace(/^\/apil7r\/pf2-mj/, '/api/v1/pf2-mj')
     },
-    '/apil7r': { target: backendTarget, changeOrigin: true }
+    '/apil7r/jdr': {
+      target: jdrTarget,
+      changeOrigin: true,
+      rewrite: (path: string) => path.replace(/^\/apil7r\/jdr/, '/api/v1/jdr')
+    },
+    '/apil7r/v1/diaries': {
+      target: diaryTarget,
+      changeOrigin: true,
+      rewrite: (path: string) => path.replace(/^\/apil7r\/v1\/diaries/, '/api/v1/diaries')
+    },
+    '/apil7r': { target: diaryTarget, changeOrigin: true }
   }
 
   return {

@@ -372,13 +372,20 @@ async function main() {
   const processes = []
 
   if (config.backendUnified) {
-    processes.push(
-      startProcess('backend-unified', 'dev:backend', {
-        PORT: '8081',
-        ENABLE_JDR: String(config.domains.jdr),
-        ENABLE_YEARDIARY: String(config.domains.yeardiary)
-      }, { critical: true })
-    )
+    if (config.domains.jdr) {
+      processes.push(startProcess('api-jdr', 'dev:api:jdr', { JDR_PORT: process.env.JDR_PORT ?? '3333' }, { critical: true }))
+    }
+
+    if (config.domains.yeardiary) {
+      processes.push(
+        startProcess(
+          'api-yeardiary',
+          'dev:api:yeardiary',
+          { YEARDIARY_PORT: process.env.YEARDIARY_PORT ?? '8081' },
+          { critical: true }
+        )
+      )
+    }
   }
 
   if (config.frontendShell) {
