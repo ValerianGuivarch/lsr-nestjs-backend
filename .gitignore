@@ -43,6 +43,7 @@ support/docker-dev-starter/smtp4dev
 support/docker-prod/mongo-data
 support/docker-prod/mongo-share
 support/docker-prod/smtp4dev
+/support/bookstack/data/
 
 # dotenv environment variables file
 .env

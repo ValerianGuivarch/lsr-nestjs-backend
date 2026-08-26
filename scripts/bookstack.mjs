@@ -1,4 +1,6 @@
 import { spawnSync } from 'node:child_process'
+import { mkdir, readFile } from 'node:fs/promises'
+import { resolve } from 'node:path'
 import process from 'node:process'
 
 const action = process.argv[2] ?? 'up'
@@ -11,6 +13,36 @@ const actionArgs = {
 if (!actionArgs) {
   console.error(`Action BookStack inconnue : ${action}`)
   process.exit(2)
+}
+
+async function readDotEnv() {
+  try {
+    const source = await readFile('.env', 'utf8')
+    return Object.fromEntries(source.split(/\r?\n/).flatMap(line => {
+      const match = /^\s*([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*?)\s*$/.exec(line)
+      if (!match || line.trimStart().startsWith('#')) return []
+      return [[match[1], match[2].replace(/^(?:"|')|(?:"|')$/g, '')]]
+    }))
+  } catch {
+    return {}
+  }
+}
+
+const dotEnv = await readDotEnv()
+const setting = name => process.env[name] || dotEnv[name] || ''
+
+if (action === 'up') {
+  const missing = ['BOOKSTACK_APP_KEY', 'BOOKSTACK_DB_PASSWORD', 'BOOKSTACK_DB_ROOT_PASSWORD']
+    .filter(name => !setting(name))
+  if (missing.length) {
+    console.error(`BookStack requiert ces variables dans .env : ${missing.join(', ')}`)
+    console.error('Générez la clé avec : openssl rand -base64 32')
+    process.exit(1)
+  }
+
+  const configuredRoot = setting('BOOKSTACK_DATA_ROOT') || './data/bookstack'
+  const dataRoot = resolve('support/bookstack', configuredRoot)
+  await Promise.all([mkdir(resolve(dataRoot, 'database'), { recursive: true }), mkdir(resolve(dataRoot, 'config'), { recursive: true })])
 }
 
 const candidates = [
