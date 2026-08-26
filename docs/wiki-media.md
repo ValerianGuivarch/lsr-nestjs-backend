@@ -4,10 +4,12 @@ Ces deux services sont indépendants du démarrage habituel de l'application.
 
 | Service | Port local par défaut | URL publique | Démarrage |
 | --- | ---: | --- | --- |
-| BookStack | 4205 | `https://wiki.l7r.fr` | `npm run wiki` |
+| BookStack | 4205 | `https://wiki.l7r.fr` | `npm run start` ou `npm run wiki` |
 | Médiathèque React | 4206 | `https://media.l7r.fr` | `npm run start` ou `npm run media` |
 
 ## Wiki BookStack
+
+BookStack démarre automatiquement en arrière-plan avec `npm run start`. Pour le lancer seul, utiliser `npm run wiki`. Comme il tourne dans Docker, il reste actif après l'arrêt des applications Node ; `npm run wiki:down` l'arrête explicitement.
 
 Copier les variables ci-dessous dans `.env` (sans les commiter) :
 
