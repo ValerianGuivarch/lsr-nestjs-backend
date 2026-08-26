@@ -33,12 +33,9 @@ const Home: React.FC = () => {
     { label: 'Admin JDR', description: 'Back-office des JDR', href: externalAppUrl('admin', 4203) },
     { label: 'PF2', description: 'Référentiel Pathfinder 2', href: '/pf2' },
     { label: 'PF2 MJ', description: 'Catalogue, scénarios et référentiels Pathfinder 2', href: '/pf2-mj' },
-    { label: 'Diary', description: 'Journal annuel', href: '/diary' },
     { label: 'Médiathèque', description: 'Images et portraits partagés', href: externalAppUrl('media', 4206) },
     { label: 'Wiki', description: 'Livres, pages et recherche', href: externalAppUrl('wiki', 4205) },
-    { label: 'Carte — PJ', description: 'Carte de Golarion, vue joueurs', href: externalAppUrl('map', 4204, '/pj') },
-    { label: 'Carte — MJ', description: 'Carte de Golarion, vue maître du jeu', href: externalAppUrl('map', 4204, '/mj') },
-    { label: 'Foussier', description: 'Calcul de crampillons', href: '/foussier' }
+    { label: 'Carte — PJ', description: 'Carte de Golarion, vue joueurs', href: externalAppUrl('map', 4204, '/pj') }
   ]
 
   return (
