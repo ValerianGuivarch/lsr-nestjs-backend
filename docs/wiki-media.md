@@ -5,7 +5,7 @@ Ces deux services sont indépendants du démarrage habituel de l'application.
 | Service | Port local par défaut | URL publique | Démarrage |
 | --- | ---: | --- | --- |
 | BookStack | 4205 | `https://wiki.l7r.fr` | `npm run wiki` |
-| Médiathèque React | 4206 | `https://media.l7r.fr` | `npm run dev:media` |
+| Médiathèque React | 4206 | `https://media.l7r.fr` | `npm run start` ou `npm run media` |
 
 ## Wiki BookStack
 
@@ -33,6 +33,8 @@ npm run wiki:down
 Sur le NAS, créer un proxy inverse `wiki.l7r.fr` HTTPS vers `http://127.0.0.1:4205`. BookStack n'est relié ni à Foundry ni aux données de jeu.
 
 ## Médiathèque
+
+La médiathèque démarre automatiquement avec `npm run start`. Pour la lancer seule, utiliser `npm run media`.
 
 Les métadonnées sont dans la base SQLite JDR ; les fichiers restent hors base, dans :
 
