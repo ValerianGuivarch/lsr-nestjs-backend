@@ -16,13 +16,15 @@ export default defineConfig(({ mode }) => {
     server: {
       port: 4203,
       host: 'localhost',
+      allowedHosts: ['admin.l7r.fr'],
       proxy: {
         '/api': { target: `http://localhost:${backendPort}`, changeOrigin: true }
       }
     },
     preview: {
       port: 4203,
-      host: 'localhost'
+      host: 'localhost',
+      allowedHosts: ['admin.l7r.fr']
     },
     plugins: [react(), nxViteTsPaths(), nxCopyAssetsPlugin(['*.md']), basicAuthPlugin(env.ADMIN_USERNAME, env.ADMIN_PASSWORD)],
     build: {

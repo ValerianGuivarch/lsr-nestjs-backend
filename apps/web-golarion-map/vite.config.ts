@@ -85,11 +85,13 @@ export default defineConfig(({ command, isPreview, mode }): UserConfig => {
     server: {
       port: mapPort,
       host: mapHost,
+      allowedHosts: ['maps.l7r.fr'],
       strictPort: true
     },
     preview: {
       port: mapPort,
       host: mapHost,
+      allowedHosts: ['maps.l7r.fr'],
       strictPort: true
     },
     build: {

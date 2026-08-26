@@ -212,12 +212,6 @@ export function Pf2App() {
 
   return (
     <main className="pf2-page">
-      <a
-        href="/"
-        style={{ position: 'fixed', top: '0.5rem', left: '0.5rem', zIndex: 1000, fontSize: '0.8rem' }}
-      >
-        ← Apps
-      </a>
       <header className="pf2-hero">
         <p className="pf2-eyebrow">PF2 helper</p>
         <h1>Helper Pathfinder</h1>
@@ -429,4 +423,3 @@ export function Pf2App() {
     </main>
   )
 }
-

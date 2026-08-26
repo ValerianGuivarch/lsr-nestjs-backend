@@ -1,6 +1,5 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
-import { useQuery } from '@tanstack/react-query'
 import styled, { createGlobalStyle } from 'styled-components'
 
 const GlobalStyle = createGlobalStyle`
@@ -21,35 +20,22 @@ type AppLink = {
   href: string
 }
 
-interface FeaturesConfig {
-  pf2: boolean
-  jdr: boolean
-  diary: boolean
-}
-
-// Admin JDR is a separate react-admin app, kept on its own dev port.
-function buildDevUrl(port: number): string {
-  return `${window.location.protocol}//${window.location.hostname}:${port}`
-}
-
-async function fetchFeatures(): Promise<FeaturesConfig> {
-  const res = await fetch('/apil7r/config/features')
-  if (!res.ok) throw new Error(`Failed to fetch feature config: ${res.statusText}`)
-  const body = await res.json()
-  return body.features
+function externalAppUrl(subdomain: 'admin' | 'maps', localPort: number, path = ''): string {
+  if (import.meta.env.DEV) {
+    return `${window.location.protocol}//${window.location.hostname}:${localPort}${path}`
+  }
+  return `https://${subdomain}.l7r.fr${path}`
 }
 
 const Home: React.FC = () => {
-  // Backend-driven flags decide what shows in the menu; a hidden app (e.g. diary) still works via a direct link.
-  const { data: features } = useQuery({ queryKey: ['features'], queryFn: fetchFeatures })
-
   const apps: AppLink[] = [
-    ...(features?.jdr !== false ? [{ label: 'JDR', description: 'Fiches de personnage (nécessite un lien de perso)', href: '/jdr' }] : []),
-    { label: 'Admin JDR', description: 'Back-office des JDR', href: buildDevUrl(4203) },
-    ...(features?.pf2 !== false
-      ? [{ label: 'PF2 MJ', description: 'Catalogue, scénarios et référentiels Pathfinder 2', href: '/pf2-mj' }]
-      : []),
-    ...(features?.diary ? [{ label: 'Diary', description: 'Journal annuel', href: '/diary' }] : []),
+    { label: 'JDR', description: 'Fiches de personnage', href: '/jdr' },
+    { label: 'Admin JDR', description: 'Back-office des JDR', href: externalAppUrl('admin', 4203) },
+    { label: 'PF2', description: 'Référentiel Pathfinder 2', href: '/pf2' },
+    { label: 'PF2 MJ', description: 'Catalogue, scénarios et référentiels Pathfinder 2', href: '/pf2-mj' },
+    { label: 'Diary', description: 'Journal annuel', href: '/diary' },
+    { label: 'Carte — PJ', description: 'Carte de Golarion, vue joueurs', href: externalAppUrl('maps', 4204, '/pj') },
+    { label: 'Carte — MJ', description: 'Carte de Golarion, vue maître du jeu', href: externalAppUrl('maps', 4204, '/mj') },
     { label: 'Foussier', description: 'Calcul de crampillons', href: '/foussier' }
   ]
 
