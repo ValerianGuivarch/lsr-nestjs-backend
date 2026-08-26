@@ -64,9 +64,27 @@ Vérifier puis recharger nginx :
 sudo nginx -t && sudo nginx -s reload
 ```
 
+## Démarrage indépendant de la carte
+
+La carte n'est volontairement plus lancée par `npm run start`. Son traitement de données est coûteux et ralentissait toutes les autres applications.
+
+Après une installation ou une mise à jour de la carte, construire ses fichiers une seule fois :
+
+```bash
+npm run build:golarion-map
+```
+
+Ensuite, la lancer dans son propre terminal ou sa propre session `tmux` :
+
+```bash
+npm run map
+```
+
+Cette commande sert directement le build sur le port `4204` sans démarrer Vite ni recalculer les ressources. Pour modifier activement le code de la carte, utiliser `npm run map:dev` à la place.
+
 ## Vérifications locales
 
-Après `npm run start` :
+Après `npm run start` dans un terminal et `npm run map` dans un autre :
 
 ```bash
 curl -I http://127.0.0.1:4203
