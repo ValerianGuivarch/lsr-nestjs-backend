@@ -20,6 +20,11 @@ export default defineConfig(({ mode }) => {
       changeOrigin: true,
       rewrite: (path: string) => path.replace(/^\/apil7r\/jdr/, '/api/v1/jdr')
     },
+    '/apil7r/media': {
+      target: jdrTarget,
+      changeOrigin: true,
+      rewrite: (path: string) => path.replace(/^\/apil7r\/media/, '/api/v1/media')
+    },
     '/apil7r/v1/diaries': {
       target: diaryTarget,
       changeOrigin: true,

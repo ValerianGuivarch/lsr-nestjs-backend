@@ -19,6 +19,17 @@ JDR_PORT=3333
 # GOLARION_MAP_PJ_DETAIL=standard
 # NAS public : désactive le WebSocket de hot reload Vite derrière nginx.
 # VITE_DISABLE_HMR=true
+# Media: fichiers hors base de données. Peut pointer vers Foundry Data/assets/l7r.
+# MEDIA_ROOT=../../media
+# MEDIA_PUBLIC_BASE_URL=https://media.l7r.fr
+# MEDIA_PORT=4206
+# Wiki BookStack (valeurs d’exemple : remplacer les mots de passe et APP_KEY hors Git).
+# BOOKSTACK_PORT=4205
+# BOOKSTACK_APP_URL=https://wiki.l7r.fr
+# BOOKSTACK_APP_KEY=base64:replace-with-a-generated-key
+# BOOKSTACK_DB_PASSWORD=replace-with-a-strong-password
+# BOOKSTACK_DB_ROOT_PASSWORD=replace-with-another-strong-password
+# BOOKSTACK_DATA_ROOT=./data/bookstack
 HOST=127.0.0.1
 
 # jdr admin (apps/admin-jdr) - Basic Auth gating the admin frontend only, not the JDR API

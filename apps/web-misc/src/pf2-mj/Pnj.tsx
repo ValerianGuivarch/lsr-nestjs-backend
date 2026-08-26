@@ -9,6 +9,7 @@ type Pnj={
   factions:{faction_id:string;role:string;statut:string}[];
   tags:string[];
   image:string;
+  portraitMediaId?:string;
   aliases?:string[];
   lieux?:string[];
   regions?:string[];
@@ -25,6 +26,7 @@ type Draft={
   factions:string;
   tags:string;
   image:string;
+  portraitMediaId:string;
   aliases:string;
   lieux:string;
   regions:string;
@@ -36,7 +38,7 @@ type Draft={
 };
 
 const emptyDraft:Draft={
-  nom:"",description:"",factions:"",tags:"",image:"",aliases:"",lieux:"",regions:"",evenements:"",role:"",
+  nom:"",description:"",factions:"",tags:"",image:"",portraitMediaId:"",aliases:"",lieux:"",regions:"",evenements:"",role:"",
   importance:"Secondaire",statut:"Actif",notes:""
 };
 
@@ -47,6 +49,7 @@ const jsonTemplate=[{
   factions:[],
   tags:[],
   image:"",
+  portraitMediaId:"",
   aliases:[],
   lieux:[],
   regions:[],
@@ -71,12 +74,18 @@ const resolveImageSrc=(value:string)=>{
   return `/${image.replace(/^\.\//,"")}`;
 };
 
+export const resolvePnjImage=(pnj:Pick<Pnj,"portraitMediaId"|"image">)=>{
+  if(pnj.portraitMediaId)return `/apil7r/media/${encodeURIComponent(pnj.portraitMediaId)}/file`;
+  return resolveImageSrc(pnj.image??"");
+};
+
 const draftFromPnj=(p:Pnj):Draft=>({
   nom:p.nom,
   description:p.description??"",
   factions:(p.factions??[]).map(f=>f.faction_id).join(", "),
   tags:(p.tags??[]).join(", "),
   image:p.image??"",
+  portraitMediaId:p.portraitMediaId??"",
   aliases:(p.aliases??[]).join(", "),
   lieux:(p.lieux??[]).join(", "),
   regions:(p.regions??[]).join(", "),
@@ -138,6 +147,8 @@ export default function PnjPage(){
   const [importText,setImportText]=useState("");
   const [imageUrl,setImageUrl]=useState("");
   const [imageBusy,setImageBusy]=useState(false);
+  const [portraits,setPortraits]=useState<{id:string;name:string;url:string}[]>([]);
+  const [portraitQuery,setPortraitQuery]=useState("");
 
   const load=async()=>{
     const get=async(url:string)=>{const response=await fetch(url,{cache:"no-store"});if(!response.ok)throw new Error(`Impossible de charger ${url}.`);const payload=await response.json();return Array.isArray(payload)?payload:payload.items??[]};
@@ -146,6 +157,13 @@ export default function PnjPage(){
   };
 
   useEffect(()=>{load().catch(error=>setMessage(error instanceof Error?error.message:String(error)))},[]);
+
+  const loadPortraits=async(search="")=>{
+    const response=await fetch(`/apil7r/media?type=portrait&search=${encodeURIComponent(search)}`,{cache:"no-store"});
+    if(!response.ok)throw new Error("Impossible de charger les portraits de la médiathèque.");
+    const payload=await response.json();
+    setPortraits(Array.isArray(payload)?payload:payload.items??[]);
+  };
 
   const factionNames=useMemo(()=>new Map(factionRefs.map(item=>[item.id,item.nom])),[factionRefs]);
   const lieuNames=useMemo(()=>new Map(lieuRefs.map(item=>[item.id,item.nom])),[lieuRefs]);
@@ -174,6 +192,8 @@ export default function PnjPage(){
     setEditingId(null);
     setDraft(emptyDraft);
     setImageUrl("");
+    setPortraitQuery("");
+    void loadPortraits().catch(error=>setMessage(error instanceof Error?error.message:String(error)));
     setShowEditor(true);
   };
 
@@ -181,6 +201,8 @@ export default function PnjPage(){
     setEditingId(p.id);
     setDraft(draftFromPnj(p));
     setImageUrl("");
+    setPortraitQuery("");
+    void loadPortraits().catch(error=>setMessage(error instanceof Error?error.message:String(error)));
     setSelected(null);
     setShowEditor(true);
   };
@@ -198,10 +220,18 @@ export default function PnjPage(){
     if(file.size>10*1024*1024){setMessage("Image trop volumineuse (maximum 10 Mo).");return}
     setImageBusy(true);setMessage("");
     try{
-      const form=new FormData();form.set("file",file);form.set("pnjId",editingId??(slug(draft.nom)||"pnj"));
-      const response=await fetch("/apil7r/pf2-mj/pnj/image",{method:"POST",body:form});const payload=await response.json().catch(()=>null);
-      if(!response.ok||typeof payload?.path!=="string")throw new Error(payload?.error||"Impossible d’envoyer l’image.");
-      setDraft(current=>({...current,image:payload.path}));setMessage(`Image ${source}.`);
+      const form=new FormData();form.set("file",file);
+      let response:Response;
+      if(draft.portraitMediaId){response=await fetch(`/apil7r/media/${encodeURIComponent(draft.portraitMediaId)}/image`,{method:"POST",body:form})}
+      else {form.set("name",draft.nom.trim()||"Portrait PNJ");form.set("type","portrait");response=await fetch("/apil7r/media",{method:"POST",body:form})}
+      let payload=await response.json().catch(()=>null);
+      if(response.status===409&&payload?.existing?.id){
+        if(!window.confirm(`Le portrait « ${payload.existing.name} » existe déjà. Le remplacer ?`)){setMessage("Portrait existant non modifié.");return}
+        form.set("file",file);
+        response=await fetch(`/apil7r/media/${encodeURIComponent(payload.existing.id)}/image`,{method:"POST",body:form});payload=await response.json().catch(()=>null);
+      }
+      if(!response.ok||typeof payload?.id!=="string")throw new Error(payload?.message||payload?.error||"Impossible d’envoyer l’image.");
+      setDraft(current=>({...current,portraitMediaId:payload.id}));void loadPortraits(portraitQuery);setMessage(`Portrait ${source} dans la médiathèque.`);
     }catch(error){setMessage(error instanceof Error?error.message:String(error))}finally{setImageBusy(false)}
   };
 
@@ -209,9 +239,9 @@ export default function PnjPage(){
     if(!imageUrl.trim()){setMessage("Indique une URL d’image.");return}
     setImageBusy(true);setMessage("");
     try{
-      const response=await fetch("/apil7r/pf2-mj/pnj/image-from-url",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({url:imageUrl.trim(),pnjId:editingId??(slug(draft.nom)||"pnj")})});const payload=await response.json().catch(()=>null);
-      if(!response.ok||typeof payload?.path!=="string")throw new Error(payload?.error||"Impossible de récupérer cette URL.");
-      setDraft(current=>({...current,image:payload.path}));setImageUrl("");setMessage("Image importée.");
+      const response=await fetch("/apil7r/media/import-url",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({url:imageUrl.trim(),name:draft.nom.trim()||"Portrait PNJ",type:"portrait"})});const payload=await response.json().catch(()=>null);
+      if(!response.ok||typeof payload?.id!=="string")throw new Error(payload?.message||payload?.error||"Impossible de récupérer cette URL.");
+      setDraft(current=>({...current,portraitMediaId:payload.id}));setImageUrl("");void loadPortraits(portraitQuery);setMessage("Portrait importé dans la médiathèque.");
     }catch(error){setMessage(error instanceof Error?error.message:String(error))}finally{setImageBusy(false)}
   };
 
@@ -239,6 +269,7 @@ export default function PnjPage(){
         factions:csv(draft.factions).map(faction_id=>({faction_id,role:"",statut:"Actuel"})),
         tags:csv(draft.tags),
         image:draft.image.trim(),
+        portraitMediaId:draft.portraitMediaId||undefined,
         aliases:csv(draft.aliases),
         lieux:csv(draft.lieux),
         regions:csv(draft.regions),
@@ -277,6 +308,7 @@ export default function PnjPage(){
         factions:Array.isArray(raw.factions)?raw.factions.filter((value:any)=>value&&typeof value.faction_id==="string"):[],
         tags:Array.isArray(raw.tags)?raw.tags:[],
         image:raw.image||"",
+        portraitMediaId:typeof raw.portraitMediaId==="string"?raw.portraitMediaId:undefined,
         aliases:Array.isArray(raw.aliases)?raw.aliases:[],
         lieux:Array.isArray(raw.lieux)?raw.lieux:[],
         regions:Array.isArray(raw.regions)?raw.regions:[],
@@ -314,10 +346,11 @@ export default function PnjPage(){
   };
 
   const copyImage=async(p:Pnj)=>{
-    if(!p.image){setMessage(`Aucune image définie pour ${p.nom}.`);return}
+    const image=resolvePnjImage(p);
+    if(!image){setMessage(`Aucune image définie pour ${p.nom}.`);return}
     try{
       if(!navigator.clipboard||typeof ClipboardItem==="undefined")throw new Error("Le navigateur ne permet pas la copie d’image dans le presse-papiers.");
-      const png=await imageAsPng(resolveImageSrc(p.image));
+      const png=await imageAsPng(image);
       await navigator.clipboard.write([new ClipboardItem({"image/png":png})]);
       setMessage(`Image de ${p.nom} copiée dans le presse-papiers.`);
     }catch(error){setMessage(`${error instanceof Error?error.message:String(error)} Une URL distante peut refuser la copie via CORS.`)}
@@ -325,7 +358,7 @@ export default function PnjPage(){
 
   return <main className="pnj-page">
     <style>{`
-      .pnj-page{max-width:1500px;margin:0 auto;padding:24px;color:#252a25}.pnj-toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px}.pnj-toolbar h1{font-size:24px;margin:0 auto 0 0}.pnj-button{border:1px solid #c9b98f;background:#fffaf0;color:#6e5319;border-radius:8px;padding:9px 12px;font:inherit;font-weight:700;cursor:pointer}.pnj-button.primary{background:#765719;color:#fff;border-color:#765719}.pnj-button:disabled{opacity:.55;cursor:not-allowed}.pnj-message{min-height:22px;margin:4px 0 12px;color:#5d614f;font-size:13px}.pnj-filters{display:grid;grid-template-columns:minmax(220px,2fr) repeat(4,minmax(130px,1fr));gap:9px;margin-bottom:18px}.pnj-filters input,.pnj-filters select,.pnj-form input,.pnj-form select,.pnj-form textarea{width:100%;box-sizing:border-box;border:1px solid #d6cdbd;border-radius:8px;background:#fffdf8;padding:9px 10px;font:inherit;color:inherit}.pnj-count{font-size:12px;color:#71756c;margin:0 0 8px}.pnj-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px}.pnj-card{border:1px solid #ded7cb;background:#fffdf9;border-radius:12px;overflow:hidden;min-width:0}.pnj-card-image{display:block;width:100%;aspect-ratio:4/3;object-fit:cover;background:#ece8df;cursor:copy;border:0;padding:0}.pnj-card-image.placeholder{display:grid;place-items:center;font-size:42px;color:#8c877d}.pnj-card-body{padding:12px}.pnj-card h2{font-size:17px;margin:0 0 4px}.pnj-role{font-size:12px;color:#777269;margin-bottom:8px}.pnj-description{font-size:13px;line-height:1.45;margin:0 0 9px}.pnj-chips{display:flex;gap:5px;flex-wrap:wrap}.pnj-chip{border:1px solid #d9cfba;border-radius:999px;padding:3px 7px;font-size:10px;background:#faf5e9}.pnj-chip.faction{border-color:#bca66e;background:#fff7de}.pnj-card-more{width:100%;border:0;border-top:1px solid #eee7da;background:#faf7f0;padding:8px;cursor:pointer;font:inherit;font-size:11px;font-weight:700;color:#66542b}.pnj-dialog-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.35);display:grid;place-items:center;padding:20px;z-index:50}.pnj-dialog{width:min(780px,100%);max-height:90vh;overflow:auto;background:#fffdf9;border-radius:14px;padding:18px}.pnj-dialog-head{display:flex;align-items:center;gap:8px;margin-bottom:12px}.pnj-dialog-head h2{margin:0 auto 0 0}.pnj-form{display:grid;grid-template-columns:1fr 1fr;gap:10px}.pnj-form .wide{grid-column:1/-1}.pnj-form label{font-size:12px;font-weight:700;display:grid;gap:5px}.pnj-dialog-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:14px}.pnj-detail-image{width:180px;max-width:38%;aspect-ratio:1;object-fit:cover;border-radius:10px;cursor:copy;float:left;margin:0 14px 10px 0}.pnj-detail dl{display:grid;grid-template-columns:110px 1fr;gap:7px 10px;font-size:13px}.pnj-detail dt{font-weight:700;color:#6b675f}.pnj-detail dd{margin:0}.pnj-empty{padding:40px;text-align:center;border:1px dashed #cfc7b8;border-radius:12px;color:#777}.pnj-hint{font-size:11px;color:#777;margin-top:6px}.pnj-import-textarea{width:100%;box-sizing:border-box;min-height:420px;resize:vertical;border:1px solid #cfc6b6;border-radius:9px;background:#fffdf8;padding:12px;font:12px/1.5 ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono",monospace;color:#252a25;tab-size:2}.pnj-import-help{font-size:12px;line-height:1.45;color:#6d6b65;margin:0 0 10px}.pnj-import-tools{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 0}.pnj-image-drop{grid-column:1/-1;min-height:190px;border:2px dashed #c9b98f;border-radius:12px;background:#faf7f0;display:grid;place-items:center;text-align:center;padding:14px;outline:none;cursor:pointer}.pnj-image-drop:focus{border-color:#765719;box-shadow:0 0 0 3px #eadfbf}.pnj-image-drop img{width:150px;height:150px;object-fit:cover;border-radius:9px;border:1px solid #d6cdbd}.pnj-image-drop strong{display:block;margin:7px 0 3px}.pnj-image-drop small{display:block;color:#6d6b65}.pnj-image-tools{grid-column:1/-1;display:flex;gap:8px;align-items:center;flex-wrap:wrap}.pnj-image-tools input{flex:1;min-width:220px}.pnj-file-choice input{display:none}@media(max-width:900px){.pnj-filters{grid-template-columns:1fr 1fr}.pnj-filters input{grid-column:1/-1}}@media(max-width:560px){.pnj-page{padding:14px}.pnj-filters,.pnj-form{grid-template-columns:1fr}.pnj-form .wide{grid-column:auto}.pnj-grid{grid-template-columns:1fr 1fr}.pnj-toolbar h1{width:100%;margin-bottom:4px}}@media(max-width:390px){.pnj-grid{grid-template-columns:1fr}}
+      .pnj-page{max-width:1500px;margin:0 auto;padding:24px;color:#252a25}.pnj-toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px}.pnj-toolbar h1{font-size:24px;margin:0 auto 0 0}.pnj-button{border:1px solid #c9b98f;background:#fffaf0;color:#6e5319;border-radius:8px;padding:9px 12px;font:inherit;font-weight:700;cursor:pointer}.pnj-button.primary{background:#765719;color:#fff;border-color:#765719}.pnj-button:disabled{opacity:.55;cursor:not-allowed}.pnj-message{min-height:22px;margin:4px 0 12px;color:#5d614f;font-size:13px}.pnj-filters{display:grid;grid-template-columns:minmax(220px,2fr) repeat(4,minmax(130px,1fr));gap:9px;margin-bottom:18px}.pnj-filters input,.pnj-filters select,.pnj-form input,.pnj-form select,.pnj-form textarea{width:100%;box-sizing:border-box;border:1px solid #d6cdbd;border-radius:8px;background:#fffdf8;padding:9px 10px;font:inherit;color:inherit}.pnj-count{font-size:12px;color:#71756c;margin:0 0 8px}.pnj-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px}.pnj-card{border:1px solid #ded7cb;background:#fffdf9;border-radius:12px;overflow:hidden;min-width:0}.pnj-card-image{display:block;width:100%;aspect-ratio:4/3;object-fit:cover;background:#ece8df;cursor:copy;border:0;padding:0}.pnj-card-image.placeholder{display:grid;place-items:center;font-size:42px;color:#8c877d}.pnj-card-body{padding:12px}.pnj-card h2{font-size:17px;margin:0 0 4px}.pnj-role{font-size:12px;color:#777269;margin-bottom:8px}.pnj-description{font-size:13px;line-height:1.45;margin:0 0 9px}.pnj-chips{display:flex;gap:5px;flex-wrap:wrap}.pnj-chip{border:1px solid #d9cfba;border-radius:999px;padding:3px 7px;font-size:10px;background:#faf5e9}.pnj-chip.faction{border-color:#bca66e;background:#fff7de}.pnj-card-more{width:100%;border:0;border-top:1px solid #eee7da;background:#faf7f0;padding:8px;cursor:pointer;font:inherit;font-size:11px;font-weight:700;color:#66542b}.pnj-dialog-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.35);display:grid;place-items:center;padding:20px;z-index:50}.pnj-dialog{width:min(780px,100%);max-height:90vh;overflow:auto;background:#fffdf9;border-radius:14px;padding:18px}.pnj-dialog-head{display:flex;align-items:center;gap:8px;margin-bottom:12px}.pnj-dialog-head h2{margin:0 auto 0 0}.pnj-form{display:grid;grid-template-columns:1fr 1fr;gap:10px}.pnj-form .wide{grid-column:1/-1}.pnj-form label{font-size:12px;font-weight:700;display:grid;gap:5px}.pnj-dialog-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:14px}.pnj-detail-image{width:180px;max-width:38%;aspect-ratio:1;object-fit:cover;border-radius:10px;cursor:copy;float:left;margin:0 14px 10px 0}.pnj-detail dl{display:grid;grid-template-columns:110px 1fr;gap:7px 10px;font-size:13px}.pnj-detail dt{font-weight:700;color:#6b675f}.pnj-detail dd{margin:0}.pnj-empty{padding:40px;text-align:center;border:1px dashed #cfc7b8;border-radius:12px;color:#777}.pnj-hint{font-size:11px;color:#777;margin-top:6px}.pnj-import-textarea{width:100%;box-sizing:border-box;min-height:420px;resize:vertical;border:1px solid #cfc6b6;border-radius:9px;background:#fffdf8;padding:12px;font:12px/1.5 ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono",monospace;color:#252a25;tab-size:2}.pnj-import-help{font-size:12px;line-height:1.45;color:#6d6b65;margin:0 0 10px}.pnj-import-tools{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 0}.pnj-image-drop{grid-column:1/-1;min-height:190px;border:2px dashed #c9b98f;border-radius:12px;background:#faf7f0;display:grid;place-items:center;text-align:center;padding:14px;outline:none;cursor:pointer}.pnj-image-drop:focus{border-color:#765719;box-shadow:0 0 0 3px #eadfbf}.pnj-image-drop img{width:150px;height:150px;object-fit:cover;border-radius:9px;border:1px solid #d6cdbd}.pnj-image-drop strong{display:block;margin:7px 0 3px}.pnj-image-drop small{display:block;color:#6d6b65}.pnj-image-tools{grid-column:1/-1;display:flex;gap:8px;align-items:center;flex-wrap:wrap}.pnj-image-tools input{flex:1;min-width:220px}.pnj-file-choice input{display:none}.pnj-portrait-picker{grid-column:1/-1;display:grid;grid-template-columns:repeat(auto-fill,minmax(108px,1fr));gap:8px;max-height:220px;overflow:auto;padding:8px;border:1px solid #ded7cb;border-radius:9px;background:#fffaf3}.pnj-portrait-choice{padding:5px;border:2px solid transparent;border-radius:8px;background:#fff;cursor:pointer;font:inherit;text-align:left}.pnj-portrait-choice.selected{border-color:#765719;background:#fff8e9}.pnj-portrait-choice img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:5px;display:block}.pnj-portrait-choice span{font-size:11px;display:block;padding:4px 1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}@media(max-width:900px){.pnj-filters{grid-template-columns:1fr 1fr}.pnj-filters input{grid-column:1/-1}}@media(max-width:560px){.pnj-page{padding:14px}.pnj-filters,.pnj-form{grid-template-columns:1fr}.pnj-form .wide{grid-column:auto}.pnj-grid{grid-template-columns:1fr 1fr}.pnj-toolbar h1{width:100%;margin-bottom:4px}}@media(max-width:390px){.pnj-grid{grid-template-columns:1fr}}
     `}</style>
 
     <div className="pnj-toolbar">
@@ -350,7 +383,7 @@ export default function PnjPage(){
 
     {filtered.length?<section className="pnj-grid">
       {filtered.map(p=><article className="pnj-card" key={p.id}>
-        {p.image?<img className="pnj-card-image" src={resolveImageSrc(p.image)} alt={`Portrait de ${p.nom}`} title="Cliquer pour copier l'image" onClick={()=>copyImage(p)}/>:<button className="pnj-card-image placeholder" onClick={()=>setSelected(p)} aria-label={`Ouvrir ${p.nom}`}>?</button>}
+        {resolvePnjImage(p)?<img className="pnj-card-image" src={resolvePnjImage(p)} alt={`Portrait de ${p.nom}`} title="Cliquer pour copier l'image" onClick={()=>copyImage(p)}/>:<button className="pnj-card-image placeholder" onClick={()=>setSelected(p)} aria-label={`Ouvrir ${p.nom}`}>?</button>}
         <div className="pnj-card-body">
           <h2>{p.nom}</h2>
           <div className="pnj-role">{[p.role,p.importance,p.statut].filter(Boolean).join(" · ")}</div>
@@ -388,12 +421,17 @@ export default function PnjPage(){
           <label>Régions (IDs)<input list="pnj-regions" value={draft.regions} onChange={e=>setDraft({...draft,regions:e.target.value})}/><datalist id="pnj-regions">{regionRefs.map(item=><option key={item.id} value={item.id}>{item.nom}</option>)}</datalist></label>
           <label>Événements (IDs)<input list="pnj-events" value={draft.evenements} onChange={e=>setDraft({...draft,evenements:e.target.value})}/><datalist id="pnj-events">{eventRefs.map(item=><option key={item.id} value={item.id}>{item.nom}</option>)}</datalist></label>
           <label>Alias<input value={draft.aliases} onChange={e=>setDraft({...draft,aliases:e.target.value})}/></label>
+          <label className="wide">Portrait de la médiathèque<input value={portraitQuery} onChange={event=>{const value=event.target.value;setPortraitQuery(value);void loadPortraits(value).catch(error=>setMessage(error instanceof Error?error.message:String(error)))}} placeholder="Rechercher ou sélectionner un portrait existant"/></label>
+          <div className="pnj-portrait-picker">
+            {portraits.map(portrait=><button type="button" key={portrait.id} className={`pnj-portrait-choice ${draft.portraitMediaId===portrait.id?"selected":""}`} onClick={()=>setDraft(current=>({...current,portraitMediaId:portrait.id}))}><img src={portrait.url} alt=""/><span>{portrait.name}</span></button>)}
+            {!portraits.length&&<span className="pnj-hint">Aucun portrait trouvé : ajoute-en un ci-dessous.</span>}
+          </div>
           <div className="pnj-image-drop" tabIndex={0} role="group" aria-label="Dépose, choisis ou colle une image ici" onPaste={pasteImage} onDragOver={event=>event.preventDefault()} onDrop={dropImage}>
-            {draft.image?<><img src={resolveImageSrc(draft.image)} alt="Aperçu du portrait"/><strong>{imageBusy?"Envoi de l’image…":"Portrait actuel — dépose, choisis ou colle une image pour le remplacer"}</strong><small>{draft.image}</small></>:<div><strong>{imageBusy?"Envoi de l’image…":"Dépose, choisis ou colle une image ici"}</strong><small>Cmd/Ctrl+V pour coller une image</small></div>}
+            {resolvePnjImage(draft)?<><img src={resolvePnjImage(draft)} alt="Aperçu du portrait"/><strong>{imageBusy?"Envoi de l’image…":"Portrait actuel — dépose, choisis ou colle une image pour le remplacer"}</strong><small>{draft.portraitMediaId?"Géré par la médiathèque":`Image historique : ${draft.image}`}</small></>:<div><strong>{imageBusy?"Envoi de l’image…":"Dépose, choisis ou colle une image ici"}</strong><small>Cmd/Ctrl+V pour coller une image dans la médiathèque</small></div>}
           </div>
           <div className="pnj-image-tools">
-            <label className="pnj-button pnj-file-choice">{draft.image?"Remplacer l’image":"Choisir une image"}<input type="file" accept="image/png,image/jpeg,image/webp,image/gif" disabled={imageBusy} onChange={event=>{const file=event.target.files?.[0];event.target.value="";if(file)void uploadImage(file,"envoyée")}}/></label>
-            {draft.image&&<button type="button" className="pnj-button" disabled={imageBusy} onClick={()=>setDraft(current=>({...current,image:""}))}>Retirer l’image</button>}
+            <label className="pnj-button pnj-file-choice">{resolvePnjImage(draft)?"Remplacer le portrait":"Choisir une image"}<input type="file" accept="image/png,image/jpeg,image/webp,image/gif" disabled={imageBusy} onChange={event=>{const file=event.target.files?.[0];event.target.value="";if(file)void uploadImage(file,"envoyée")}}/></label>
+            {draft.portraitMediaId&&<button type="button" className="pnj-button" disabled={imageBusy} onClick={()=>setDraft(current=>({...current,portraitMediaId:""}))}>Utiliser l’image historique</button>}
           </div>
           <div className="pnj-image-tools"><input value={imageUrl} onChange={event=>setImageUrl(event.target.value)} placeholder="https://… — importer et stocker localement"/><button type="button" className="pnj-button" disabled={imageBusy||!imageUrl.trim()} onClick={importImageUrl}>Importer l’image</button></div>
           <label>Importance<select value={draft.importance} onChange={e=>setDraft({...draft,importance:e.target.value as Draft["importance"]})}><option>Majeure</option><option>Récurrente</option><option>Secondaire</option><option>Figurant</option></select></label>
@@ -407,7 +445,7 @@ export default function PnjPage(){
     {selected&&<div className="pnj-dialog-backdrop" onMouseDown={e=>{if(e.target===e.currentTarget)setSelected(null)}}>
       <article className="pnj-dialog pnj-detail" role="dialog" aria-modal="true" aria-label={selected.nom}>
         <div className="pnj-dialog-head"><h2>{selected.nom}</h2><button className="pnj-button primary" onClick={()=>openEdit(selected)}>Modifier</button><button className="pnj-button" onClick={()=>setSelected(null)}>Fermer</button></div>
-        {selected.image&&<img className="pnj-detail-image" src={resolveImageSrc(selected.image)} alt={`Portrait de ${selected.nom}`} title="Cliquer pour copier l'image" onClick={()=>copyImage(selected)}/>} 
+        {resolvePnjImage(selected) ? <img className="pnj-detail-image" src={resolvePnjImage(selected)} alt={`Portrait de ${selected.nom}`} title="Cliquer pour copier l'image" onClick={()=>copyImage(selected)}/> : null}
         <p>{selected.description}</p>
         <dl>
           <dt>Rôle</dt><dd>{selected.role||"—"}</dd>

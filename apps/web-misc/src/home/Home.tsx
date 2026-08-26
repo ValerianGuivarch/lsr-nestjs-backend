@@ -20,7 +20,7 @@ type AppLink = {
   href: string
 }
 
-function externalAppUrl(subdomain: 'admin' | 'map', localPort: number, path = ''): string {
+function externalAppUrl(subdomain: 'admin' | 'map' | 'media' | 'wiki', localPort: number, path = ''): string {
   const isPublicDashboard = ['l7r.fr', 'www.l7r.fr'].includes(window.location.hostname)
   return isPublicDashboard
     ? `https://${subdomain}.l7r.fr${path}`
@@ -34,6 +34,8 @@ const Home: React.FC = () => {
     { label: 'PF2', description: 'Référentiel Pathfinder 2', href: '/pf2' },
     { label: 'PF2 MJ', description: 'Catalogue, scénarios et référentiels Pathfinder 2', href: '/pf2-mj' },
     { label: 'Diary', description: 'Journal annuel', href: '/diary' },
+    { label: 'Médiathèque', description: 'Images et portraits partagés', href: externalAppUrl('media', 4206) },
+    { label: 'Wiki', description: 'Livres, pages et recherche', href: externalAppUrl('wiki', 4205) },
     { label: 'Carte — PJ', description: 'Carte de Golarion, vue joueurs', href: externalAppUrl('map', 4204, '/pj') },
     { label: 'Carte — MJ', description: 'Carte de Golarion, vue maître du jeu', href: externalAppUrl('map', 4204, '/mj') },
     { label: 'Foussier', description: 'Calcul de crampillons', href: '/foussier' }
