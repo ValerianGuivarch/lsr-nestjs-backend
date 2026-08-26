@@ -33,11 +33,13 @@ export default defineConfig(({ mode }) => {
     server: {
       port: 3000,
       host: 'localhost',
+      allowedHosts: ['l7r.fr', 'www.l7r.fr'],
       proxy: apiProxy
     },
     preview: {
       port: 3000,
       host: 'localhost',
+      allowedHosts: ['l7r.fr', 'www.l7r.fr'],
       proxy: apiProxy
     },
     plugins: [react(), nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
