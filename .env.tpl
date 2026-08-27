@@ -22,6 +22,9 @@ JDR_PORT=3333
 # NAS public : désactive le WebSocket de hot reload Vite derrière nginx.
 # VITE_DISABLE_HMR=true
 # Wiki XWiki et Foundry REST relay : voir support/xwiki/ et support/foundry-rest/ (services independants, .env dedies).
+# Intégration Foundry REST (api-jdr → relay local/self-hosted → monde Foundry).
+# FOUNDRY_REST_URL=http://127.0.0.1:3010
+# FOUNDRY_REST_API_KEY=remplacer-par-la-cle-du-relay
 HOST=127.0.0.1
 
 # jdr admin (apps/admin-jdr) - Basic Auth gating the admin frontend only, not the JDR API
