@@ -12,10 +12,10 @@ services:
       APP_ENV: production
       PORT: 3010
       DB_TYPE: sqlite
+      DATA_DIR: /app/data
       FRONTEND_URL: ${FRONTEND_URL}
       MONTHLY_REQUEST_LIMIT: 0
       PER_MINUTE_REQUEST_LIMIT: 300
     volumes:
       - ${RELAY_DATA_ROOT}:/app/data
-    command: pnpm local:sqlite
 
