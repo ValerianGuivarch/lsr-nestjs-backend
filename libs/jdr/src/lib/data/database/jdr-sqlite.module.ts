@@ -49,7 +49,7 @@ const jdrEntities = [
       name: 'jdr-sqlite',
       type: 'sqlite',
       // eslint-disable-next-line no-process-env
-      database: process.env['JDR_SQLITE_DATABASE'] || 'jdr-database.sqlite',
+      database: process.env['JDR_SQLITE_DATABASE'] || process.env['SQLITE_PATH'] || 'jdr-database.sqlite',
       entities: jdrEntities,
       synchronize: true
     }),

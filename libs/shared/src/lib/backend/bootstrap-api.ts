@@ -123,10 +123,12 @@ export async function bootstrapApi(p: BootstrapApiOptions): Promise<void> {
   // Configure Socket.IO adapter for WebSocket gateway support
   app.useWebSocketAdapter(new IoAdapter(app))
 
+  const configuredOrigins = process.env['CORS_ORIGINS']?.split(',').map((origin) => origin.trim()).filter(Boolean)
   app.enableCors({
-    origin: [
+    origin: configuredOrigins?.length ? configuredOrigins : [
       'https://photos.mariage-mickael-valerian.fr',
       'https://l7r.fr',
+      'https://pf2.l7r.fr',
       'http://localhost:3000',
       'http://localhost:4200',
       'http://localhost:4202',
@@ -164,6 +166,7 @@ export async function bootstrapApi(p: BootstrapApiOptions): Promise<void> {
   const host = configService.get<string>('HOST') ?? configService.get<string>('http.host') ?? '0.0.0.0'
   const candidatePort =
     parsePort(configService.get<string>(p.portEnvKey)) ??
+    parsePort(configService.get<string>('API_PORT')) ??
     parsePort(configService.get<number>('PORT')) ??
     parsePort(configService.get<number>('http.port'))
 

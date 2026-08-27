@@ -1,8 +1,10 @@
-
-.git
-.idea
-.env
 node_modules
 dist
-support
-Dockerfile
+.git
+.nx
+coverage
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+support/xwiki/data
+support/foundry-rest/data

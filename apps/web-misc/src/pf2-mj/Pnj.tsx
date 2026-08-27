@@ -77,6 +77,7 @@ export const resolvePnjImage=(pnj:Pick<Pnj,"portrait"|"image">)=>{
   const portrait=pnj.portrait?.trim()??"";
   const match=/^assets\/l7r\/portraits\/pnj\/([^/]+)$/i.exec(portrait);
   if(match)return `/apil7r/pf2-mj/portraits/${encodeURIComponent(match[1])}`;
+  if(/^portraits\/[^/]+$/i.test(portrait))return `/apil7r/pf2-mj/portraits/${encodeURIComponent(portrait.split("/").at(-1)??"")}`;
   if(/^https?:\/\//i.test(portrait))return portrait;
   return resolveImageSrc(pnj.image??"");
 };
@@ -213,7 +214,7 @@ export default function PnjPage(){
       const form=new FormData();form.set("file",file);form.set("pnjId",editingId??(slug(draft.nom)||"pnj"));
       const response=await fetch("/apil7r/pf2-mj/pnj/portrait",{method:"POST",body:form});const payload=await response.json().catch(()=>null);
       if(!response.ok||typeof payload?.portrait!=="string")throw new Error(payload?.message||payload?.error||"Impossible d’envoyer l’image.");
-      setDraft(current=>({...current,portrait:payload.portrait}));setMessage(`Portrait ${source} dans les assets Foundry.`);
+      setDraft(current=>({...current,portrait:payload.portrait}));setMessage(`Portrait ${source} enregistré dans le stockage PF2.`);
     }catch(error){setMessage(error instanceof Error?error.message:String(error))}finally{setImageBusy(false)}
   };
 
@@ -223,7 +224,7 @@ export default function PnjPage(){
     try{
       const response=await fetch("/apil7r/pf2-mj/pnj/portrait-from-url",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({url:imageUrl.trim(),pnjId:editingId??(slug(draft.nom)||"pnj")})});const payload=await response.json().catch(()=>null);
       if(!response.ok||typeof payload?.portrait!=="string")throw new Error(payload?.message||payload?.error||"Impossible de récupérer cette URL.");
-      setDraft(current=>({...current,portrait:payload.portrait}));setImageUrl("");setMessage("Portrait importé dans les assets Foundry.");
+      setDraft(current=>({...current,portrait:payload.portrait}));setImageUrl("");setMessage("Portrait importé dans le stockage PF2.");
     }catch(error){setMessage(error instanceof Error?error.message:String(error))}finally{setImageBusy(false)}
   };
 
@@ -404,7 +405,7 @@ export default function PnjPage(){
           <label>Événements (IDs)<input list="pnj-events" value={draft.evenements} onChange={e=>setDraft({...draft,evenements:e.target.value})}/><datalist id="pnj-events">{eventRefs.map(item=><option key={item.id} value={item.id}>{item.nom}</option>)}</datalist></label>
           <label>Alias<input value={draft.aliases} onChange={e=>setDraft({...draft,aliases:e.target.value})}/></label>
           <div className="pnj-image-drop" tabIndex={0} role="group" aria-label="Dépose, choisis ou colle une image ici" onPaste={pasteImage} onDragOver={event=>event.preventDefault()} onDrop={dropImage}>
-            {resolvePnjImage(draft)?<><img src={resolvePnjImage(draft)} alt="Aperçu du portrait"/><strong>{imageBusy?"Envoi de l’image…":"Portrait actuel — dépose, choisis ou colle une image pour le remplacer"}</strong><small>{draft.portrait?draft.portrait:`Image historique : ${draft.image}`}</small></>:<div><strong>{imageBusy?"Envoi de l’image…":"Dépose, choisis ou colle une image ici"}</strong><small>Le fichier sera stocké dans les assets Foundry.</small></div>}
+            {resolvePnjImage(draft)?<><img src={resolvePnjImage(draft)} alt="Aperçu du portrait"/><strong>{imageBusy?"Envoi de l’image…":"Portrait actuel — dépose, choisis ou colle une image pour le remplacer"}</strong><small>{draft.portrait?draft.portrait:`Image historique : ${draft.image}`}</small></>:<div><strong>{imageBusy?"Envoi de l’image…":"Dépose, choisis ou colle une image ici"}</strong><small>Le fichier sera stocké dans le stockage PF2.</small></div>}
           </div>
           <div className="pnj-image-tools">
             <label className="pnj-button pnj-file-choice">{resolvePnjImage(draft)?"Remplacer le portrait":"Choisir une image"}<input type="file" accept="image/png,image/jpeg,image/webp,image/gif" disabled={imageBusy} onChange={event=>{const file=event.target.files?.[0];event.target.value="";if(file)void uploadImage(file,"envoyée")}}/></label>

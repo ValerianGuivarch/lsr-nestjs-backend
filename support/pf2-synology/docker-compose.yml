@@ -1,0 +1,48 @@
+services:
+  pf2-api:
+    build:
+      context: ${PF2_SOURCE_DIR:-./source}
+      dockerfile: support/pf2-synology/Dockerfile.api
+    restart: unless-stopped
+    env_file: ${PF2_ENV_FILE:-.env}
+    environment:
+      HOST: 0.0.0.0
+      JDR_PORT: ${API_PORT:-3333}
+      SQLITE_PATH: /app/data/pf2.sqlite
+      JDR_SQLITE_DATABASE: /app/data/pf2.sqlite
+      STORAGE_PATH: /app/storage
+      FOUNDRY_ASSETS_ROOT: /app/legacy-foundry-assets
+    volumes:
+      - ${PF2_DATA_DIR:-./data}:/app/data
+      - ${PF2_STORAGE_DIR:-./storage}:/app/storage
+      - ${PF2_BACKUPS_DIR:-./backups}:/app/backups
+      - ${PF2_LEGACY_FOUNDRY_ASSETS_DIR:-./storage/legacy-foundry-assets}:/app/legacy-foundry-assets:ro
+    ports:
+      - "${API_PORT:-3333}:3333"
+
+  pf2-web:
+    build:
+      context: ${PF2_SOURCE_DIR:-./source}
+      dockerfile: support/pf2-synology/Dockerfile.web
+    restart: unless-stopped
+    depends_on:
+      - pf2-api
+    ports:
+      - "${WEB_PORT:-8080}:80"
+
+  # Réservé à une future façade wiki qui lira uniquement l'API Nest.
+  # L'actuel XWiki historique est conservé dans ../xwiki mais ne peut pas
+  # partager SQLite, car XWiki requiert sa propre base MariaDB.
+  pf2-wiki:
+    image: nginx:1.27-alpine
+    profiles: [future]
+    depends_on:
+      - pf2-api
+
+  # Point d'extension pour le futur bot Discord, sans base ni dépendance Foundry.
+  pf2-bot:
+    image: alpine:3.20
+    profiles: [future]
+    depends_on:
+      - pf2-api
+    command: ["sh", "-c", "echo 'pf2-bot placeholder: consumes pf2-api only'; sleep infinity"]

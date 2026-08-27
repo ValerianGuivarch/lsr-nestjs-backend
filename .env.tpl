@@ -9,6 +9,11 @@ JDR_PORT=3333
 # PF2 MJ: PDFs stay outside the repository. Default from the repository root: ../../PF2/MJ
 # PF2_LIBRARY_ROOT=../../PF2/MJ
 # PF2_DATA_ROOT=apps/web-misc/src/pf2-mj/data
+# Persistance PF2 : SQLite contient les référentiels et la curation ; les médias restent sur disque.
+# SQLITE_PATH=/app/data/pf2.sqlite
+# STORAGE_PATH=/app/storage
+# API_BASE_URL=http://127.0.0.1:3333
+# CORS_ORIGINS=http://localhost:3000,https://pf2.l7r.fr
 # Portraits PNJ PF2 MJ : répertoire d'assets partagé avec Foundry VTT.
 # En production : /volume1/docker/foundry/data/Data/assets/l7r
 # FOUNDRY_ASSETS_ROOT=../../FoundryVTT/Data/assets/l7r

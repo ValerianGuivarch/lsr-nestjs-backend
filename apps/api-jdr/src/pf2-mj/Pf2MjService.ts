@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common'
-import { randomBytes } from 'node:crypto'
 import { lookup } from 'node:dns/promises'
 import { createReadStream } from 'node:fs'
-import { mkdir, readdir, readFile, rename, rm, stat, writeFile } from 'node:fs/promises'
-import { basename, dirname, relative, resolve, sep } from 'node:path'
+import { readdir, readFile, stat } from 'node:fs/promises'
+import { basename, relative, resolve, sep } from 'node:path'
 import sharp from 'sharp'
+import { Pf2PersistenceService } from '../pf2-storage/Pf2PersistenceService'
 
 const referenceFiles = {
   pnj: 'pf2_personnages.json',
@@ -21,21 +21,17 @@ const PORTRAIT_INPUT_TYPES = new Set(['image/png', 'image/jpeg', 'image/webp', '
 
 @Injectable()
 export class Pf2MjService {
-  private readonly dataRoot = resolve(process.env['PF2_DATA_ROOT'] ?? 'apps/web-misc/src/pf2-mj/data')
   // The repository sits in ~/IdeaProjects/lsr-nestjs-backend locally, so this resolves to ~/PF2/MJ.
   private readonly libraryRoot = resolve(process.env['PF2_LIBRARY_ROOT'] ?? '../../PF2/MJ')
-  private readonly foundryAssetsRoot = resolve(process.env['FOUNDRY_ASSETS_ROOT'] ?? '../../FoundryVTT/Data/assets/l7r')
-  private readonly portraitRoot = resolve(this.foundryAssetsRoot, 'portraits', 'pnj')
+  private readonly legacyPortraitRoot = resolve(process.env['FOUNDRY_ASSETS_ROOT'] ?? '../../FoundryVTT/Data/assets/l7r', 'portraits', 'pnj')
+  constructor(private readonly persistence: Pf2PersistenceService) {}
 
   isReferenceKind(value: string): value is ReferenceKind {
     return value in referenceFiles
   }
 
   async readReference(kind: ReferenceKind): Promise<Record<string, unknown>[]> {
-    const payload = JSON.parse(await readFile(resolve(this.dataRoot, referenceFiles[kind]), 'utf8')) as unknown
-    const items = Array.isArray(payload) ? payload : this.asObject(payload).items
-    if (!Array.isArray(items)) return []
-    return items.filter((item): item is Record<string, unknown> => Boolean(item && typeof item === 'object'))
+    return this.persistence.readReference(kind)
   }
 
   async updateReference(kind: ReferenceKind, body: unknown): Promise<{ items: Record<string, unknown>[]; added: number; updated: number }> {
@@ -56,12 +52,12 @@ export class Pf2MjService {
     })
 
     const items = [...byId.values()].sort((left, right) => this.name(left).localeCompare(this.name(right), 'fr'))
-    await this.writeJson(resolve(this.dataRoot, referenceFiles[kind]), items)
+    await this.persistence.replaceReference(kind, items)
     return { items, added, updated }
   }
 
   async readCuration(): Promise<Record<string, unknown>> {
-    return this.asObject(JSON.parse(await readFile(resolve(this.dataRoot, 'user-curation.json'), 'utf8')))
+    return this.persistence.readCuration()
   }
 
   async updateCuration(body: unknown): Promise<Record<string, unknown>> {
@@ -101,7 +97,7 @@ export class Pf2MjService {
       entries[id] = entry
     }
 
-    await this.writeJson(resolve(this.dataRoot, 'user-curation.json'), data)
+    await this.persistence.saveCuration(data)
     return data
   }
 
@@ -116,7 +112,7 @@ export class Pf2MjService {
 
   async scanLibrary(): Promise<Record<string, unknown>> {
     const files = await this.walkPdfFiles(this.libraryRoot)
-    const catalogue = JSON.parse(await readFile(resolve(this.dataRoot, 'catalogue-pf2.json'), 'utf8')) as { files?: unknown }
+    const catalogue = JSON.parse(await readFile(resolve(process.env['PF2_DATA_ROOT'] ?? 'apps/web-misc/src/pf2-mj/data', 'catalogue-pf2.json'), 'utf8')) as { files?: unknown }
     const known = new Set(
       Array.isArray(catalogue.files)
         ? catalogue.files
@@ -142,15 +138,8 @@ export class Pf2MjService {
 
   async savePnjPortrait(bytes: Uint8Array, mimeType: string, pnjId: string): Promise<string> {
     const prepared = await this.preparePortrait(bytes, mimeType)
-    const slug = this.portraitSlug(pnjId)
-    const filename = `${slug}.${prepared.extension}`
-    const target = resolve(this.portraitRoot, filename)
-    await mkdir(this.portraitRoot, { recursive: true })
-    const temporary = `${target}.${randomBytes(4).toString('hex')}.tmp`
-    await writeFile(temporary, prepared.bytes)
-    await rename(temporary, target)
-    await Promise.all(['webp', 'gif'].filter((extension) => extension !== prepared.extension).map((extension) => rm(resolve(this.portraitRoot, `${slug}.${extension}`), { force: true })))
-    return `assets/l7r/portraits/pnj/${filename}`
+    const portrait = await this.persistence.savePortrait(prepared.bytes, prepared.extension, pnjId, prepared.extension === 'gif' ? 'image/gif' : 'image/webp')
+    return portrait.path
   }
 
   async importPnjPortrait(urlValue: unknown, pnjId: string): Promise<string> {
@@ -161,8 +150,14 @@ export class Pf2MjService {
   async resolvePnjPortrait(encodedFilename: string): Promise<{ stream: ReturnType<typeof createReadStream>; size: number; filename: string }> {
     const filename = decodeURIComponent(encodedFilename)
     if (basename(filename) !== filename || !/\.(?:webp|gif)$/i.test(filename)) throw new Error('Chemin refusé')
-    const target = resolve(this.portraitRoot, filename)
-    const info = await stat(target)
+    let target = this.persistence.portraitPath(filename)
+    let info
+    try {
+      info = await stat(target)
+    } catch {
+      target = resolve(this.legacyPortraitRoot, filename)
+      info = await stat(target)
+    }
     if (!info.isFile()) throw new Error('Image introuvable')
     return { stream: createReadStream(target), size: info.size, filename }
   }
@@ -198,7 +193,7 @@ export class Pf2MjService {
       const chunks: Uint8Array[] = []
       let size = 0
       try {
-        while (true) {
+        for (;;) {
           const { done, value } = await reader.read()
           if (done) break
           size += value.byteLength
@@ -222,10 +217,6 @@ export class Pf2MjService {
     if (!addresses.length || addresses.some((entry) => this.isPrivateAddress(entry.address))) throw new Error('Cette adresse n’est pas autorisée.')
   }
 
-  private portraitSlug(value: string): string {
-    return value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'pnj'
-  }
-
   private async walkPdfFiles(directory: string): Promise<string[]> {
     const entries = await readdir(directory, { withFileTypes: true })
     const nested = await Promise.all(entries.map(async (entry) => {
@@ -241,13 +232,6 @@ export class Pf2MjService {
     if (value === '::1' || value === '::' || value.startsWith('fc') || value.startsWith('fd') || value.startsWith('fe80:')) return true
     const parts = value.split('.').map(Number)
     return parts.length === 4 && (parts[0] === 10 || parts[0] === 127 || parts[0] === 0 || (parts[0] === 169 && parts[1] === 254) || (parts[0] === 172 && parts[1] >= 16 && parts[1] <= 31) || (parts[0] === 192 && parts[1] === 168))
-  }
-
-  private async writeJson(path: string, value: unknown): Promise<void> {
-    await mkdir(dirname(path), { recursive: true })
-    const temporary = `${path}.tmp`
-    await writeFile(temporary, `${JSON.stringify(value, null, 2)}\n`, 'utf8')
-    await rename(temporary, path)
   }
 
   private identifier(item: Record<string, unknown>): string {
