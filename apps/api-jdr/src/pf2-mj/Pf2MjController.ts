@@ -33,32 +33,33 @@ export class Pf2MjController {
     }
   }
 
-  @Post('pnj/image')
-  async uploadPnjImage(@Req() request: FastifyRequest): Promise<{ path: string }> {
+  @Post('pnj/portrait')
+  async uploadPnjPortrait(@Req() request: FastifyRequest): Promise<{ portrait: string }> {
     try {
       const file = await request.file()
       if (!file) throw new Error('Fichier image manquant.')
       const pnjField = file.fields.pnjId
       const pnjId = !Array.isArray(pnjField) && pnjField?.type === 'field' && typeof pnjField.value === 'string' ? pnjField.value.trim() : 'pnj'
-      return { path: await this.service.savePnjImage(await file.toBuffer(), file.mimetype, pnjId) }
+      return { portrait: await this.service.savePnjPortrait(await file.toBuffer(), file.mimetype, pnjId) }
     } catch (error) {
       throw new HttpException(error instanceof Error ? error.message : 'Impossible d’envoyer l’image.', HttpStatus.BAD_REQUEST)
     }
   }
 
-  @Post('pnj/image-from-url')
-  async importPnjImage(@Body() body: { url?: unknown; pnjId?: unknown }): Promise<{ path: string }> {
+  @Post('pnj/portrait-from-url')
+  async importPnjPortrait(@Body() body: { url?: unknown; pnjId?: unknown }): Promise<{ portrait: string }> {
     try {
-      return { path: await this.service.importPnjImage(body?.url, typeof body?.pnjId === 'string' ? body.pnjId : 'pnj') }
+      return { portrait: await this.service.importPnjPortrait(body?.url, typeof body?.pnjId === 'string' ? body.pnjId : 'pnj') }
     } catch (error) {
       throw new HttpException(error instanceof Error ? error.message : 'Impossible d’importer l’image.', HttpStatus.BAD_REQUEST)
     }
   }
 
-  @Get('pnj-images/*')
-  async pnjImage(@Param('*') filename: string, @Res() reply: FastifyReply): Promise<void> {
+  @Get('portraits/*')
+  async pnjPortrait(@Param('*') filename: string, @Res() reply: FastifyReply): Promise<void> {
     try {
-      const image = await this.service.resolvePnjImage(filename)
+      const image = await this.service.resolvePnjPortrait(filename)
+      reply.header('Content-Type', image.filename.endsWith('.gif') ? 'image/gif' : 'image/webp')
       reply.header('Content-Length', String(image.size))
       reply.header('Content-Disposition', `inline; filename*=UTF-8''${encodeURIComponent(image.filename)}`)
       await reply.send(image.stream)

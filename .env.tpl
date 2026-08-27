@@ -9,7 +9,9 @@ JDR_PORT=3333
 # PF2 MJ: PDFs stay outside the repository. Default from the repository root: ../../PF2/MJ
 # PF2_LIBRARY_ROOT=../../PF2/MJ
 # PF2_DATA_ROOT=apps/web-misc/src/pf2-mj/data
-# PF2_IMAGE_ROOT=../../PF2/pnj
+# Portraits PNJ PF2 MJ : répertoire d'assets partagé avec Foundry VTT.
+# En production : /volume1/docker/foundry/data/Data/assets/l7r
+# FOUNDRY_ASSETS_ROOT=../../FoundryVTT/Data/assets/l7r
 # Carte de Golarion : ressources lourdes externes au dépôt (PMTiles, sprites, polices, index)
 # GOLARION_MAP_ASSETS_DIR=../../GolarionMapData
 # GOLARION_MAP_PUBLIC_ORIGIN=
@@ -19,17 +21,7 @@ JDR_PORT=3333
 # GOLARION_MAP_PJ_DETAIL=standard
 # NAS public : désactive le WebSocket de hot reload Vite derrière nginx.
 # VITE_DISABLE_HMR=true
-# Media: fichiers hors base de données. Peut pointer vers Foundry Data/assets/l7r.
-# MEDIA_ROOT=../../media
-# MEDIA_PUBLIC_BASE_URL=https://media.l7r.fr
-# MEDIA_PORT=4206
-# Wiki BookStack (valeurs d’exemple : remplacer les mots de passe et APP_KEY hors Git).
-# BOOKSTACK_PORT=4205
-# BOOKSTACK_APP_URL=https://wiki.l7r.fr
-# BOOKSTACK_APP_KEY=base64:replace-with-a-generated-key
-# BOOKSTACK_DB_PASSWORD=replace-with-a-strong-password
-# BOOKSTACK_DB_ROOT_PASSWORD=replace-with-another-strong-password
-# BOOKSTACK_DATA_ROOT=./data/bookstack
+# Wiki XWiki et Foundry REST relay : voir support/xwiki/ et support/foundry-rest/ (services independants, .env dedies).
 HOST=127.0.0.1
 
 # jdr admin (apps/admin-jdr) - Basic Auth gating the admin frontend only, not the JDR API
@@ -43,13 +35,15 @@ API_URL=http://127.0.0.1:8081/api/v1
 # year diary
 FRONTEND_URL=http://127.0.0.1:3000
 
-# database
-DB_URI=postgres://postgres:postgres@localhost:5432/default-database
-DB_HOST=127.0.0.1
-DB_PORT=5432
-DB_USER=postgres
-DB_PASSWORD=postgres
-DB_NAME=starter-database
+# PostgreSQL est historique et n'est pas nécessaire à cette branche : api-jdr
+# et api-yeardiary utilisent SQLite. Ces variables ne sont à définir que pour
+# les anciens composants ou une autre branche qui les requiert.
+# DB_URI=postgres://postgres:postgres@localhost:5432/default-database
+# DB_HOST=127.0.0.1
+# DB_PORT=5432
+# DB_USER=postgres
+# DB_PASSWORD=postgres
+# DB_NAME=starter-database
 
 #super admin
 SUPER_ADMIN_EMAIL=superadmin@email.com

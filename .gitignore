@@ -43,7 +43,6 @@ support/docker-dev-starter/smtp4dev
 support/docker-prod/mongo-data
 support/docker-prod/mongo-share
 support/docker-prod/smtp4dev
-/support/bookstack/data/
 
 # dotenv environment variables file
 .env
@@ -68,5 +67,12 @@ config-runner.json
 
 # Local sqlite databases
 *.sqlite
+*.sqlite-shm
+*.sqlite-wal
 support/xwiki/.env
 support/foundry-rest/.env
+/support/xwiki/data/
+/support/foundry-rest/data/
+
+# Synology metadata
+**/@eaDir/

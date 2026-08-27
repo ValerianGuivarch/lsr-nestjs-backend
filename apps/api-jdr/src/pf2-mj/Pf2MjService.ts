@@ -2,8 +2,9 @@ import { Injectable } from '@nestjs/common'
 import { randomBytes } from 'node:crypto'
 import { lookup } from 'node:dns/promises'
 import { createReadStream } from 'node:fs'
-import { mkdir, readdir, readFile, rename, stat, writeFile } from 'node:fs/promises'
+import { mkdir, readdir, readFile, rename, rm, stat, writeFile } from 'node:fs/promises'
 import { basename, dirname, relative, resolve, sep } from 'node:path'
+import sharp from 'sharp'
 
 const referenceFiles = {
   pnj: 'pf2_personnages.json',
@@ -15,12 +16,16 @@ const referenceFiles = {
 
 export type ReferenceKind = keyof typeof referenceFiles
 
+const MAX_PORTRAIT_BYTES = 10 * 1024 * 1024
+const PORTRAIT_INPUT_TYPES = new Set(['image/png', 'image/jpeg', 'image/webp', 'image/gif'])
+
 @Injectable()
 export class Pf2MjService {
   private readonly dataRoot = resolve(process.env['PF2_DATA_ROOT'] ?? 'apps/web-misc/src/pf2-mj/data')
   // The repository sits in ~/IdeaProjects/lsr-nestjs-backend locally, so this resolves to ~/PF2/MJ.
   private readonly libraryRoot = resolve(process.env['PF2_LIBRARY_ROOT'] ?? '../../PF2/MJ')
-  private readonly imageRoot = resolve(process.env['PF2_IMAGE_ROOT'] ?? '../../PF2/pnj')
+  private readonly foundryAssetsRoot = resolve(process.env['FOUNDRY_ASSETS_ROOT'] ?? '../../FoundryVTT/Data/assets/l7r')
+  private readonly portraitRoot = resolve(this.foundryAssetsRoot, 'portraits', 'pnj')
 
   isReferenceKind(value: string): value is ReferenceKind {
     return value in referenceFiles
@@ -135,41 +140,90 @@ export class Pf2MjService {
     }
   }
 
-  async savePnjImage(bytes: Uint8Array, mimeType: string, pnjId: string): Promise<string> {
-    if (!bytes.length) throw new Error('Image vide.')
-    if (bytes.byteLength > 10 * 1024 * 1024) throw new Error('Image trop volumineuse (maximum 10 Mo).')
-    const extensions: Record<string, string> = { 'image/png': 'png', 'image/jpeg': 'jpg', 'image/webp': 'webp', 'image/gif': 'gif' }
-    const type = mimeType.split(';', 1)[0].trim().toLowerCase()
-    const extension = extensions[type]
-    if (!extension) throw new Error('Format non supporté. Utilise PNG, JPEG, WebP ou GIF.')
-    const slug = pnjId.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'pnj'
-    const filename = `${slug}-${randomBytes(3).toString('hex')}.${extension}`
-    await mkdir(this.imageRoot, { recursive: true })
-    await writeFile(resolve(this.imageRoot, filename), bytes, { flag: 'wx' })
-    return `/apil7r/pf2-mj/pnj-images/${encodeURIComponent(filename)}`
+  async savePnjPortrait(bytes: Uint8Array, mimeType: string, pnjId: string): Promise<string> {
+    const prepared = await this.preparePortrait(bytes, mimeType)
+    const slug = this.portraitSlug(pnjId)
+    const filename = `${slug}.${prepared.extension}`
+    const target = resolve(this.portraitRoot, filename)
+    await mkdir(this.portraitRoot, { recursive: true })
+    const temporary = `${target}.${randomBytes(4).toString('hex')}.tmp`
+    await writeFile(temporary, prepared.bytes)
+    await rename(temporary, target)
+    await Promise.all(['webp', 'gif'].filter((extension) => extension !== prepared.extension).map((extension) => rm(resolve(this.portraitRoot, `${slug}.${extension}`), { force: true })))
+    return `assets/l7r/portraits/pnj/${filename}`
   }
 
-  async importPnjImage(urlValue: unknown, pnjId: string): Promise<string> {
-    if (typeof urlValue !== 'string') throw new Error('URL manquante.')
-    let url: URL
-    try { url = new URL(urlValue) } catch { throw new Error('URL invalide.') }
-    if (!['http:', 'https:'].includes(url.protocol) || url.username || url.password || this.isPrivateAddress(url.hostname))
-      throw new Error('Cette adresse n’est pas autorisée.')
-    const addresses = await lookup(url.hostname, { all: true })
-    if (!addresses.length || addresses.some((entry) => this.isPrivateAddress(entry.address))) throw new Error('Cette adresse n’est pas autorisée.')
-    const response = await fetch(url, { redirect: 'error', signal: AbortSignal.timeout(15_000) })
-    if (!response.ok) throw new Error('Impossible de récupérer cette URL.')
-    if (Number(response.headers.get('content-length') ?? 0) > 10 * 1024 * 1024) throw new Error('Image trop volumineuse (maximum 10 Mo).')
-    return this.savePnjImage(new Uint8Array(await response.arrayBuffer()), response.headers.get('content-type') ?? '', pnjId)
+  async importPnjPortrait(urlValue: unknown, pnjId: string): Promise<string> {
+    const { bytes, mimeType } = await this.downloadPortrait(urlValue)
+    return this.savePnjPortrait(bytes, mimeType, pnjId)
   }
 
-  async resolvePnjImage(encodedFilename: string): Promise<{ stream: ReturnType<typeof createReadStream>; size: number; filename: string }> {
+  async resolvePnjPortrait(encodedFilename: string): Promise<{ stream: ReturnType<typeof createReadStream>; size: number; filename: string }> {
     const filename = decodeURIComponent(encodedFilename)
-    if (basename(filename) !== filename) throw new Error('Chemin refusé')
-    const target = resolve(this.imageRoot, filename)
+    if (basename(filename) !== filename || !/\.(?:webp|gif)$/i.test(filename)) throw new Error('Chemin refusé')
+    const target = resolve(this.portraitRoot, filename)
     const info = await stat(target)
     if (!info.isFile()) throw new Error('Image introuvable')
     return { stream: createReadStream(target), size: info.size, filename }
+  }
+
+  private async preparePortrait(value: Uint8Array, mimeType: string): Promise<{ bytes: Buffer; extension: 'webp' | 'gif' }> {
+    if (!value.byteLength) throw new Error('Image vide.')
+    if (value.byteLength > MAX_PORTRAIT_BYTES) throw new Error('Image trop volumineuse (maximum 10 Mo).')
+    const type = mimeType.split(';', 1)[0].trim().toLowerCase()
+    if (!PORTRAIT_INPUT_TYPES.has(type)) throw new Error('Format non supporté. Utilise PNG, JPEG, WebP ou GIF.')
+    const bytes = Buffer.from(value)
+    await sharp(bytes, { animated: true }).metadata().catch(() => { throw new Error('Le fichier ne contient pas une image valide.') })
+    if (type === 'image/gif') return { bytes, extension: 'gif' }
+    return { bytes: await sharp(bytes).rotate().webp({ quality: 88 }).toBuffer(), extension: 'webp' }
+  }
+
+  private async downloadPortrait(urlValue: unknown): Promise<{ bytes: Uint8Array; mimeType: string }> {
+    if (typeof urlValue !== 'string') throw new Error('URL manquante.')
+    let url: URL
+    try { url = new URL(urlValue) } catch { throw new Error('URL invalide.') }
+    for (let redirects = 0; redirects < 4; redirects++) {
+      await this.assertPublicUrl(url)
+      const response = await fetch(url, { redirect: 'manual', signal: AbortSignal.timeout(15_000) })
+      if ([301, 302, 303, 307, 308].includes(response.status)) {
+        const location = response.headers.get('location')
+        if (!location) throw new Error('Redirection invalide.')
+        url = new URL(location, url)
+        continue
+      }
+      if (!response.ok || !response.headers.get('content-type')?.toLowerCase().startsWith('image/')) throw new Error('Impossible de récupérer cette URL.')
+      if (Number(response.headers.get('content-length') ?? 0) > MAX_PORTRAIT_BYTES) throw new Error('Image trop volumineuse (maximum 10 Mo).')
+      const reader = response.body?.getReader()
+      if (!reader) throw new Error('Impossible de récupérer cette URL.')
+      const chunks: Uint8Array[] = []
+      let size = 0
+      try {
+        while (true) {
+          const { done, value } = await reader.read()
+          if (done) break
+          size += value.byteLength
+          if (size > MAX_PORTRAIT_BYTES) {
+            await reader.cancel()
+            throw new Error('Image trop volumineuse (maximum 10 Mo).')
+          }
+          chunks.push(value)
+        }
+      } finally {
+        reader.releaseLock()
+      }
+      return { bytes: Buffer.concat(chunks.map((chunk) => Buffer.from(chunk)), size), mimeType: response.headers.get('content-type') ?? '' }
+    }
+    throw new Error('Trop de redirections.')
+  }
+
+  private async assertPublicUrl(url: URL): Promise<void> {
+    if (!['http:', 'https:'].includes(url.protocol) || url.username || url.password || this.isPrivateAddress(url.hostname)) throw new Error('Cette adresse n’est pas autorisée.')
+    const addresses = await lookup(url.hostname, { all: true })
+    if (!addresses.length || addresses.some((entry) => this.isPrivateAddress(entry.address))) throw new Error('Cette adresse n’est pas autorisée.')
+  }
+
+  private portraitSlug(value: string): string {
+    return value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'pnj'
   }
 
   private async walkPdfFiles(directory: string): Promise<string[]> {

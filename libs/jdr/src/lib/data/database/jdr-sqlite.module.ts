@@ -51,9 +51,6 @@ const jdrEntities = [
       // eslint-disable-next-line no-process-env
       database: process.env['JDR_SQLITE_DATABASE'] || 'jdr-database.sqlite',
       entities: jdrEntities,
-      // api-jdr can add small, independent domains (such as Media) without
-      // making this shared library depend on an application package.
-      autoLoadEntities: true,
       synchronize: true
     }),
     TypeOrmModule.forFeature(jdrEntities, 'jdr-sqlite')
