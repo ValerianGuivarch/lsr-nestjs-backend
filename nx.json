@@ -16,6 +16,9 @@
     },
     {
       "plugin": "@nx/docker",
+      "exclude": [
+        "support/foundry-rest/**"
+      ],
       "options": {
         "buildTarget": {
           "name": "docker:build"
@@ -54,8 +57,13 @@
   "targetDefaults": {
     "@nx/js:tsc": {
       "cache": true,
-      "dependsOn": ["^build"],
-      "inputs": ["default", "^default"]
+      "dependsOn": [
+        "^build"
+      ],
+      "inputs": [
+        "default",
+        "^default"
+      ]
     }
   },
   "generators": {

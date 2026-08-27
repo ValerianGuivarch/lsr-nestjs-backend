@@ -2,6 +2,7 @@ import { JdrModule } from 'jdr'
 import { bootstrapApi } from 'shared'
 import { Module } from '@nestjs/common'
 import { ConfigModule } from '@nestjs/config'
+import { FoundryRelayModule } from './foundry/FoundryRelayModule'
 import { Pf2MjModule } from './pf2-mj/Pf2MjModule'
 
 @Module({
@@ -12,7 +13,8 @@ import { Pf2MjModule } from './pf2-mj/Pf2MjModule'
       load: [() => ({ http: { host: process.env['HOST'] ?? '0.0.0.0', port: Number(process.env['JDR_PORT'] ?? 3003) } })]
     }),
     JdrModule,
-    Pf2MjModule
+    Pf2MjModule,
+    FoundryRelayModule
   ]
 })
 class ApiModule {}
