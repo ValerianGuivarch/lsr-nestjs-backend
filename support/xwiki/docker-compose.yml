@@ -1,0 +1,36 @@
+services:
+  db:
+    image: mariadb:12
+    container_name: xwiki-mariadb-db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_DATABASE: ${DB_DATABASE}
+    volumes:
+      - ${XWIKI_DATA_ROOT}/database:/var/lib/mysql
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    command:
+      - "--character-set-server=utf8mb4"
+      - "--collation-server=utf8mb4_bin"
+      - "--explicit-defaults-for-timestamp=1"
+
+  web:
+    image: xwiki:${XWIKI_VERSION}-mariadb-tomcat
+    container_name: xwiki
+    init: true
+    restart: unless-stopped
+    depends_on:
+      - db
+    ports:
+      - "4205:8080"
+    environment:
+      XWIKI_VERSION: ${XWIKI_VERSION}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_DATABASE: ${DB_DATABASE}
+      DB_HOST: xwiki-mariadb-db
+    volumes:
+      - ${XWIKI_DATA_ROOT}/xwiki:/usr/local/xwiki
+

@@ -1438,12 +1438,12 @@
     "factions": [
       {
         "faction_id": "faction_societe_des_eclaireurs",
-        "role": "Cheffe de l'Alliance des Émissaires",
+        "role": "",
         "statut": "Actuel"
       },
       {
         "faction_id": "faction_alliance_des_emissaires",
-        "role": "Cheffe de faction",
+        "role": "",
         "statut": "Actuel"
       }
     ],
@@ -1453,19 +1453,19 @@
       "Chef de faction"
     ],
     "image": "",
+    "portraitMediaId": "9d92ebd4-6346-488e-bc88-260a6d9e0ce9",
     "aliases": [],
     "lieux": [
       "lieu_absalom"
     ],
-    "role": "Cheffe de l'Alliance des Émissaires",
-    "importance": "Principale",
-    "statut": "Actif",
-    "notes": "",
-    "source": "Lost Omens: Pathfinder Society Guide; PFS 1-01",
     "regions": [
       "region_absalom_et_l_ile_de_la_pierre_etoile"
     ],
-    "evenements": []
+    "evenements": [],
+    "role": "Cheffe de l'Alliance des Émissaires",
+    "importance": "Principale",
+    "statut": "Actif",
+    "notes": ""
   },
   {
     "id": "npc_geb",
@@ -1494,17 +1494,17 @@
   },
   {
     "id": "npc_gorm_greathammer",
-    "nom": "Gorm Greathammer",
+    "nom": "Gorm Granmarteau",
     "description": "Érudit et diplomate nain qui dirige les Grandes Archives. Il pousse les Éclaireurs à documenter précisément leurs découvertes et à préserver connaissances, artefacts et contexte historique.",
     "factions": [
       {
         "faction_id": "faction_societe_des_eclaireurs",
-        "role": "Chef des Grandes Archives",
+        "role": "",
         "statut": "Actuel"
       },
       {
         "faction_id": "faction_grandes_archives",
-        "role": "Chef de faction",
+        "role": "",
         "statut": "Actuel"
       }
     ],
@@ -1519,15 +1519,14 @@
     "lieux": [
       "lieu_absalom"
     ],
-    "role": "Chef des Grandes Archives",
-    "importance": "Principale",
-    "statut": "Actif",
-    "notes": "",
-    "source": "Lost Omens: Pathfinder Society Guide; PFS 1-01",
     "regions": [
       "region_absalom_et_l_ile_de_la_pierre_etoile"
     ],
-    "evenements": []
+    "evenements": [],
+    "role": "Chef des Grandes Archives",
+    "importance": "Principale",
+    "statut": "Actif",
+    "notes": ""
   },
   {
     "id": "npc_grandmaster_torch",

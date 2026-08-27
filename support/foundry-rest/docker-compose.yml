@@ -1,0 +1,21 @@
+services:
+  relay:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: l7r/foundry-rest-relay:arm64
+    container_name: foundryvtt-rest-api-relay
+    restart: unless-stopped
+    ports:
+      - "3010:3010"
+    environment:
+      APP_ENV: production
+      PORT: 3010
+      DB_TYPE: sqlite
+      FRONTEND_URL: ${FRONTEND_URL}
+      MONTHLY_REQUEST_LIMIT: 0
+      PER_MINUTE_REQUEST_LIMIT: 300
+    volumes:
+      - ${RELAY_DATA_ROOT}:/app/data
+    command: pnpm local:sqlite
+

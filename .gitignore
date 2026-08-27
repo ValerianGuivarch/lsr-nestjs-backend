@@ -68,3 +68,5 @@ config-runner.json
 
 # Local sqlite databases
 *.sqlite
+support/xwiki/.env
+support/foundry-rest/.env

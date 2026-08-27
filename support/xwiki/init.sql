@@ -1,0 +1,4 @@
+GRANT ALL PRIVILEGES ON *.* TO 'xwiki'@'%';
+GRANT PROCESS ON *.* TO 'xwiki'@'%';
+FLUSH PRIVILEGES;
+
