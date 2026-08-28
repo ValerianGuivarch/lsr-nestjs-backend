@@ -32,6 +32,11 @@ JDR_PORT=3333
 # FOUNDRY_REST_API_KEY=remplacer-par-la-cle-du-relay
 # Scope Foundry du flag XPC : doit correspondre à l'id du Toolkit Foundry.
 # FOUNDRY_XPC_FLAG_SCOPE=pf2e-val-toolkit
+
+# Discord PF2-Bot (laissez ces valeurs vides pour désactiver Discord).
+DISCORD_BOT_TOKEN=
+DISCORD_CLIENT_ID=
+DISCORD_GUILD_ID=
 HOST=127.0.0.1
 
 # jdr admin (apps/admin-jdr) - Basic Auth gating the admin frontend only, not the JDR API
