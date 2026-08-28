@@ -30,6 +30,8 @@ JDR_PORT=3333
 # Intégration Foundry REST (api-jdr → relay local/self-hosted → monde Foundry).
 # FOUNDRY_REST_URL=http://127.0.0.1:3010
 # FOUNDRY_REST_API_KEY=remplacer-par-la-cle-du-relay
+# Scope Foundry du flag XPC : doit correspondre à l'id du Toolkit Foundry.
+# FOUNDRY_XPC_FLAG_SCOPE=pf2e-val-toolkit
 HOST=127.0.0.1
 
 # jdr admin (apps/admin-jdr) - Basic Auth gating the admin frontend only, not the JDR API

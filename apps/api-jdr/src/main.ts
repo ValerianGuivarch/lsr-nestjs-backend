@@ -5,6 +5,7 @@ import { ConfigModule } from '@nestjs/config'
 import { FoundryRelayModule } from './foundry/FoundryRelayModule'
 import { Pf2MjModule } from './pf2-mj/Pf2MjModule'
 import { HealthModule } from './health/HealthModule'
+import { Pf2SessionsModule } from './pf2-sessions/Pf2SessionsModule'
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { HealthModule } from './health/HealthModule'
     }),
     JdrModule,
     Pf2MjModule,
+    Pf2SessionsModule,
     HealthModule,
     FoundryRelayModule
   ]

@@ -39,4 +39,19 @@ export class FoundryRelayController {
   addPlayerXp(@Param('uuid') uuid: string, @Body() body: { added?: unknown }): Promise<unknown> {
     return this.foundry.addPlayerXp(uuid, body?.added)
   }
+
+  @Get('players/:uuid/xpc')
+  playerXpc(@Param('uuid') uuid: string): Promise<unknown> {
+    return this.foundry.getPlayerXpc(uuid)
+  }
+
+  @Put('players/:uuid/xpc')
+  setPlayerXpc(@Param('uuid') uuid: string, @Body() body: { xpc?: unknown }): Promise<unknown> {
+    return this.foundry.setPlayerXpc(uuid, body?.xpc)
+  }
+
+  @Post('players/:uuid/xpc/add')
+  addPlayerXpc(@Param('uuid') uuid: string, @Body() body: { added?: unknown }): Promise<unknown> {
+    return this.foundry.addPlayerXpc(uuid, body?.added)
+  }
 }

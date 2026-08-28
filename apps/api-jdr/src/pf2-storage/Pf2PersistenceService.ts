@@ -2,6 +2,7 @@ import { Injectable, OnModuleInit } from '@nestjs/common'
 import { InjectDataSource } from '@nestjs/typeorm'
 import { readFile, mkdir, writeFile } from 'node:fs/promises'
 import { basename, dirname, resolve } from 'node:path'
+import { randomUUID } from 'node:crypto'
 import { DataSource, EntityManager } from 'typeorm'
 
 export type Pf2RecordKind = 'pnj' | 'faction' | 'lieu' | 'region' | 'evenement' | 'scenario' | 'session' | 'catalogue' | 'curation'
@@ -16,6 +17,9 @@ const referenceFiles = {
 
 type ReferenceKind = keyof typeof referenceFiles
 type RecordRow = { id: string; name: string | null; payload: string }
+type SessionRow = { id: string; date: string; title: string; participants: string; long_summary_author: string | null; short_summary_author: string | null; session_xp: number; long_summary_xp: number; short_summary_xp: number; long_summary: string; short_summary: string; created_at: string; updated_at: string }
+export type Pf2Session = { id: string; date: string; title: string; participants: string[]; longSummaryAuthor: string | null; shortSummaryAuthor: string | null; sessionXp: number; longSummaryXp: number; shortSummaryXp: number; longSummary: string; shortSummary: string; createdAt: string; updatedAt: string }
+export type Pf2SessionInput = { id?: unknown; date?: unknown; title?: unknown; participants?: unknown; longSummaryAuthor?: unknown; shortSummaryAuthor?: unknown; sessionXp?: unknown; longSummaryXp?: unknown; shortSummaryXp?: unknown; longSummary?: unknown; shortSummary?: unknown }
 
 @Injectable()
 export class Pf2PersistenceService implements OnModuleInit {
@@ -55,6 +59,33 @@ export class Pf2PersistenceService implements OnModuleInit {
     await this.upsert('curation', 'user-curation', 'user-curation', value)
   }
 
+  async listSessions(): Promise<Pf2Session[]> {
+    const rows = await this.dataSource.query('SELECT id, date, title, participants, long_summary_author, short_summary_author, session_xp, long_summary_xp, short_summary_xp, long_summary, short_summary, created_at, updated_at FROM pf2_session ORDER BY date DESC, created_at DESC') as SessionRow[]
+    return rows.map((row) => this.session(row))
+  }
+
+  async getSession(id: string): Promise<Pf2Session | null> {
+    const rows = await this.dataSource.query('SELECT id, date, title, participants, long_summary_author, short_summary_author, session_xp, long_summary_xp, short_summary_xp, long_summary, short_summary, created_at, updated_at FROM pf2_session WHERE id = ?', [id]) as SessionRow[]
+    return rows[0] ? this.session(rows[0]) : null
+  }
+
+  async createSession(input: Pf2SessionInput): Promise<Pf2Session> {
+    const id = input.id === undefined ? randomUUID() : this.requiredSessionId(input.id)
+    const session = this.sessionInput(input)
+    await this.dataSource.query('INSERT INTO pf2_session (id, date, title, participants, long_summary_author, short_summary_author, session_xp, long_summary_xp, short_summary_xp, long_summary, short_summary, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)', [id, session.date, session.title, JSON.stringify(session.participants), session.longSummaryAuthor, session.shortSummaryAuthor, session.sessionXp, session.longSummaryXp, session.shortSummaryXp, session.longSummary, session.shortSummary])
+    const created = await this.getSession(id)
+    if (!created) throw new Error('La séance créée est introuvable.')
+    return created
+  }
+
+  async updateSession(id: string, input: Pf2SessionInput): Promise<Pf2Session | null> {
+    const current = await this.getSession(this.requiredSessionId(id))
+    if (!current) return null
+    const session = this.sessionInput(input, current)
+    await this.dataSource.query('UPDATE pf2_session SET date = ?, title = ?, participants = ?, long_summary_author = ?, short_summary_author = ?, session_xp = ?, long_summary_xp = ?, short_summary_xp = ?, long_summary = ?, short_summary = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?', [session.date, session.title, JSON.stringify(session.participants), session.longSummaryAuthor, session.shortSummaryAuthor, session.sessionXp, session.longSummaryXp, session.shortSummaryXp, session.longSummary, session.shortSummary, current.id])
+    return this.getSession(current.id)
+  }
+
   async savePortrait(bytes: Uint8Array, extension: 'webp' | 'gif', pnjId: string, mimeType: string): Promise<{ path: string; absolutePath: string }> {
     const filename = `${this.slug(pnjId)}.${extension}`
     const relativePath = `portraits/${filename}`
@@ -75,10 +106,52 @@ export class Pf2PersistenceService implements OnModuleInit {
 
   private async migrate(): Promise<void> {
     await this.dataSource.query('CREATE TABLE IF NOT EXISTS pf2_schema_migration (id TEXT PRIMARY KEY, applied_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)')
-    await this.dataSource.query('CREATE TABLE IF NOT EXISTS pf2_record (kind TEXT NOT NULL, id TEXT NOT NULL, name TEXT, payload TEXT NOT NULL, created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP, updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (kind, id))')
-    await this.dataSource.query('CREATE INDEX IF NOT EXISTS idx_pf2_record_kind_name ON pf2_record (kind, name)')
-    await this.dataSource.query('CREATE TABLE IF NOT EXISTS pf2_media (id TEXT PRIMARY KEY, category TEXT NOT NULL, path TEXT NOT NULL UNIQUE, original_name TEXT, mime_type TEXT, size_bytes INTEGER, created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP, updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)')
-    await this.dataSource.query("INSERT OR IGNORE INTO pf2_schema_migration (id) VALUES ('001-initial-pf2-storage')")
+    await this.applyMigration('001-initial-pf2-storage', async (manager) => {
+      await manager.query('CREATE TABLE IF NOT EXISTS pf2_record (kind TEXT NOT NULL, id TEXT NOT NULL, name TEXT, payload TEXT NOT NULL, created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP, updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (kind, id))')
+      await manager.query('CREATE INDEX IF NOT EXISTS idx_pf2_record_kind_name ON pf2_record (kind, name)')
+      await manager.query('CREATE TABLE IF NOT EXISTS pf2_media (id TEXT PRIMARY KEY, category TEXT NOT NULL, path TEXT NOT NULL UNIQUE, original_name TEXT, mime_type TEXT, size_bytes INTEGER, created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP, updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)')
+    })
+    await this.applyMigration('002-pf2-sessions', async (manager) => {
+      await this.createSessionTable(manager)
+    })
+    await this.applyMigration('003-normalize-pf2-sessions', async (manager) => {
+      const columns = await manager.query('PRAGMA table_info(pf2_session)') as Array<{ name: string }>
+      if (columns.some((column) => column.name === 'date') && columns.some((column) => column.name === 'title')) return
+      const legacyRows = await manager.query('SELECT * FROM pf2_session') as Array<Record<string, unknown>>
+      await manager.query('ALTER TABLE pf2_session RENAME TO pf2_session_legacy_002')
+      await this.createSessionTable(manager)
+      for (const row of legacyRows) {
+        const metadata = this.legacyMetadata(row.metadata)
+        const id = this.requiredSessionId(row.id)
+        const date = this.legacyDate(row.occurred_on, metadata.date ?? metadata.occurredOn)
+        const title = this.legacyTitle(metadata.title, id)
+        const participants = this.participants(metadata.participants, [])
+        const longSummaryAuthor = this.playerId(metadata.longSummaryAuthor ?? metadata.long_summary_author, null)
+        const shortSummaryAuthor = this.playerId(metadata.shortSummaryAuthor ?? metadata.short_summary_author, null)
+        const sessionXp = this.experience(metadata.sessionXp ?? metadata.session_xp, 'sessionXp', 0)
+        const longSummaryXp = this.experience(metadata.longSummaryXp ?? metadata.long_summary_xp, 'longSummaryXp', 0)
+        const shortSummaryXp = this.experience(metadata.shortSummaryXp ?? metadata.short_summary_xp, 'shortSummaryXp', 0)
+        const longSummary = this.text(metadata.longSummary ?? metadata.long_summary, 'longSummary', '')
+        const shortSummary = this.text(metadata.shortSummary ?? metadata.short_summary, 'shortSummary', '')
+        await manager.query('INSERT INTO pf2_session (id, date, title, participants, long_summary_author, short_summary_author, session_xp, long_summary_xp, short_summary_xp, long_summary, short_summary, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, COALESCE(?, CURRENT_TIMESTAMP), COALESCE(?, CURRENT_TIMESTAMP))', [id, date, title, JSON.stringify(participants), longSummaryAuthor, shortSummaryAuthor, sessionXp, longSummaryXp, shortSummaryXp, longSummary, shortSummary, row.created_at, row.updated_at])
+      }
+    })
+  }
+
+  private async createSessionTable(manager: EntityManager): Promise<void> {
+    await manager.query("CREATE TABLE IF NOT EXISTS pf2_session (id TEXT PRIMARY KEY, date TEXT NOT NULL, title TEXT NOT NULL, participants TEXT NOT NULL DEFAULT '[]', long_summary_author TEXT, short_summary_author TEXT, session_xp INTEGER NOT NULL DEFAULT 0, long_summary_xp INTEGER NOT NULL DEFAULT 0, short_summary_xp INTEGER NOT NULL DEFAULT 0, long_summary TEXT NOT NULL DEFAULT '', short_summary TEXT NOT NULL DEFAULT '', created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP, updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)")
+    await manager.query('CREATE INDEX IF NOT EXISTS idx_pf2_session_date ON pf2_session (date)')
+  }
+
+  private async applyMigration(id: string, apply: (manager: EntityManager) => Promise<void>): Promise<void> {
+    const rows = await this.dataSource.query('SELECT id FROM pf2_schema_migration WHERE id = ?', [id]) as Array<{ id: string }>
+    if (rows.length) return
+    await this.dataSource.transaction(async (manager) => {
+      const applied = await manager.query('SELECT id FROM pf2_schema_migration WHERE id = ?', [id]) as Array<{ id: string }>
+      if (applied.length) return
+      await apply(manager)
+      await manager.query('INSERT INTO pf2_schema_migration (id) VALUES (?)', [id])
+    })
   }
 
   private async ensureStorageDirectories(): Promise<void> {
@@ -134,6 +207,31 @@ export class Pf2PersistenceService implements OnModuleInit {
 
   private name(item: Record<string, unknown>): string { return typeof item.nom === 'string' ? item.nom.trim() : this.title(item) }
   private title(item: Record<string, unknown>): string { return typeof item.titleFr === 'string' ? item.titleFr : typeof item.titleOriginal === 'string' ? item.titleOriginal : typeof item.id === 'string' ? item.id : '' }
+  private session(row: SessionRow): Pf2Session { return { id: row.id, date: row.date, title: row.title, participants: this.participants(JSON.parse(row.participants), []), longSummaryAuthor: row.long_summary_author, shortSummaryAuthor: row.short_summary_author, sessionXp: row.session_xp, longSummaryXp: row.long_summary_xp, shortSummaryXp: row.short_summary_xp, longSummary: row.long_summary, shortSummary: row.short_summary, createdAt: row.created_at, updatedAt: row.updated_at } }
+  private sessionInput(input: Pf2SessionInput, current?: Pf2Session): Omit<Pf2Session, 'id' | 'createdAt' | 'updatedAt'> {
+    return {
+      date: this.date(input.date, current?.date),
+      title: this.text(input.title, 'title', current?.title, true),
+      participants: this.participants(input.participants, current?.participants ?? []),
+      longSummaryAuthor: this.playerId(input.longSummaryAuthor, current?.longSummaryAuthor ?? null),
+      shortSummaryAuthor: this.playerId(input.shortSummaryAuthor, current?.shortSummaryAuthor ?? null),
+      sessionXp: this.experience(input.sessionXp, 'sessionXp', current?.sessionXp ?? 0),
+      longSummaryXp: this.experience(input.longSummaryXp, 'longSummaryXp', current?.longSummaryXp ?? 0),
+      shortSummaryXp: this.experience(input.shortSummaryXp, 'shortSummaryXp', current?.shortSummaryXp ?? 0),
+      longSummary: this.text(input.longSummary, 'longSummary', current?.longSummary ?? ''),
+      shortSummary: this.text(input.shortSummary, 'shortSummary', current?.shortSummary ?? '')
+    }
+  }
+  private sessionId(value: unknown): string | null { return typeof value === 'string' && /^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$/.test(value) ? value : null }
+  private requiredSessionId(value: unknown): string { const id = this.sessionId(value); if (!id) throw new Error('Identifiant de séance invalide.'); return id }
+  private date(value: unknown, fallback?: string): string { const date = value === undefined ? fallback : value; if (typeof date !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(date)) throw new Error('Date de séance obligatoire et invalide (YYYY-MM-DD attendu).'); return date }
+  private legacyDate(...values: unknown[]): string { for (const value of values) if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value)) return value; return '1970-01-01' }
+  private legacyTitle(value: unknown, id: string): string { return typeof value === 'string' && value.trim() ? value.trim() : `Séance migrée ${id}` }
+  private text(value: unknown, label: string, fallback: string, required = false): string { const text = value === undefined ? fallback : value; if (typeof text !== 'string' || (required && !text.trim())) throw new Error(`${label} est obligatoire.`); return text.trim() }
+  private participants(value: unknown, fallback: string[]): string[] { const items = value === undefined ? fallback : value; if (!Array.isArray(items) || items.some((item) => typeof item !== 'string' || !item.trim())) throw new Error('participants doit être une liste d’identifiants de PJ.') ; return [...new Set(items.map((item) => item.trim()))] }
+  private playerId(value: unknown, fallback: string | null): string | null { const id = value === undefined ? fallback : value; if (id === null || id === '') return null; if (typeof id !== 'string' || !id.trim()) throw new Error('Identifiant de PJ invalide.'); return id.trim() }
+  private experience(value: unknown, label: string, fallback: number): number { const xp = value === undefined ? fallback : value; if (typeof xp !== 'number' || !Number.isInteger(xp) || xp < 0) throw new Error(`${label} doit être un entier positif ou nul.`); return xp }
+  private legacyMetadata(value: unknown): Record<string, unknown> { if (typeof value !== 'string') return {}; try { return this.object(JSON.parse(value)) } catch { return {} } }
   private slug(value: string): string { return value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'pnj' }
   private object(value: unknown): Record<string, unknown> { return this.isObject(value) ? value : {} }
   private isObject(value: unknown): value is Record<string, unknown> { return Boolean(value) && typeof value === 'object' && !Array.isArray(value) }
