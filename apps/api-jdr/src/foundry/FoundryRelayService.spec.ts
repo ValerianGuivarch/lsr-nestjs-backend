@@ -53,4 +53,51 @@ describe('FoundryRelayService', () => {
     await expect(new FoundryRelayService().getPlayerXpc('Actor.hero')).resolves.toEqual({ uuid: 'Actor.hero', xpc: 1_674, level: 3, xp: 430 })
     expect(fetchMock).toHaveBeenCalledWith(expect.stringContaining('/update?clientId=world-1&uuid=Actor.hero'), expect.objectContaining({ body: JSON.stringify({ data: { 'flags.pf2e-val-toolkit.xpc': 1_674 } }) }))
   })
+
+  it('reads only root world Actors and limits detail requests while selecting PF2e characters', async () => {
+    const rootActors = ['zara', 'bryn', 'nora', 'aimee', 'npc', 'dorian']
+    const requestedActors: string[] = []
+    let activeGets = 0
+    let maximumConcurrentGets = 0
+    const fetchMock = jest.spyOn(global, 'fetch').mockImplementation(async (input) => {
+      const url = String(input)
+      if (url.endsWith('/clients')) return new Response(JSON.stringify({ clients: [{ clientId: 'world-1', isOnline: true }] }))
+      if (url.includes('/structure?')) {
+        return new Response(JSON.stringify({
+          data: {
+            entities: {
+              actors: rootActors.map((id) => ({ uuid: `Actor.${id}`, name: id })),
+              folders: [{ entities: { actors: [{ uuid: 'Actor.folder-npc', name: 'Ne pas charger' }] } }],
+              compendiums: [{ entities: { actors: [{ uuid: 'Compendium.pf2e.actors.Actor.nope', name: 'Ne pas charger' }] } }]
+            }
+          }
+        }))
+      }
+      if (url.includes('/get?')) {
+        const uuid = new URL(url).searchParams.get('uuid')
+        if (!uuid) throw new Error('Missing Actor UUID')
+        requestedActors.push(uuid)
+        activeGets += 1
+        maximumConcurrentGets = Math.max(maximumConcurrentGets, activeGets)
+        await new Promise((resolve) => setTimeout(resolve, 1))
+        activeGets -= 1
+        const id = uuid.replace('Actor.', '')
+        return new Response(JSON.stringify({ entity: [{ uuid, name: id === 'aimee' ? 'Aimée' : id, type: id === 'npc' ? 'npc' : 'character', flags: { 'pf2e-val-toolkit': { xpc: 0 } } }] }))
+      }
+      throw new Error(`Unexpected URL: ${url}`)
+    })
+
+    await expect(new FoundryRelayService().listPlayers()).resolves.toEqual([
+      { uuid: 'Actor.aimee', name: 'Aimée', xpc: 0, level: 1, xp: 0 },
+      { uuid: 'Actor.bryn', name: 'bryn', xpc: 0, level: 1, xp: 0 },
+      { uuid: 'Actor.dorian', name: 'dorian', xpc: 0, level: 1, xp: 0 },
+      { uuid: 'Actor.nora', name: 'nora', xpc: 0, level: 1, xp: 0 },
+      { uuid: 'Actor.zara', name: 'zara', xpc: 0, level: 1, xp: 0 }
+    ])
+    expect(fetchMock).toHaveBeenCalledWith(expect.stringContaining('includeEntityData=false'), expect.anything())
+    expect(fetchMock).not.toHaveBeenCalledWith(expect.stringContaining('includeEntityData=true'), expect.anything())
+    expect(requestedActors).toEqual(expect.arrayContaining(rootActors.map((id) => `Actor.${id}`)))
+    expect(requestedActors).not.toContain('Actor.folder-npc')
+    expect(maximumConcurrentGets).toBeLessThanOrEqual(4)
+  })
 })

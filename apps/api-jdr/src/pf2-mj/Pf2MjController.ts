@@ -1,6 +1,8 @@
 import { Body, Controller, Get, HttpException, HttpStatus, Param, Post, Req, Res } from '@nestjs/common'
 import { ApiTags } from '@nestjs/swagger'
+import { MultipartFile } from '@fastify/multipart'
 import { FastifyReply, FastifyRequest } from 'fastify'
+import { FoundryRelayService } from '../foundry/FoundryRelayService'
 import { Pf2MjService } from './Pf2MjService'
 
 // Le NAS historique traduit /apil7r/* vers /api/*. Les deux préfixes restent
@@ -8,7 +10,13 @@ import { Pf2MjService } from './Pf2MjService'
 @Controller(['api/pf2-mj', 'api/v1/pf2-mj'])
 @ApiTags('PF2 MJ')
 export class Pf2MjController {
-  constructor(private readonly service: Pf2MjService) {}
+  constructor(private readonly service: Pf2MjService, private readonly foundry: FoundryRelayService) {}
+
+  @Get('actors')
+  async actors(): Promise<Array<{ id: string; name: string }>> {
+    const players = await this.foundry.listPlayers()
+    return players.map(({ uuid, name }) => ({ id: uuid, name })).sort((left, right) => left.name.localeCompare(right.name, 'fr'))
+  }
 
   @Get('curation')
   curation(): Promise<Record<string, unknown>> {
@@ -36,7 +44,7 @@ export class Pf2MjController {
   @Post('pnj/portrait')
   async uploadPnjPortrait(@Req() request: FastifyRequest): Promise<{ portrait: string }> {
     try {
-      const file = await request.file()
+      const file = await (request as FastifyRequest & { file: () => Promise<MultipartFile | undefined> }).file()
       if (!file) throw new Error('Fichier image manquant.')
       const pnjField = file.fields.pnjId
       const pnjId = !Array.isArray(pnjField) && pnjField?.type === 'field' && typeof pnjField.value === 'string' ? pnjField.value.trim() : 'pnj'

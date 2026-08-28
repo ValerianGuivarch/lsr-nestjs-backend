@@ -18,11 +18,11 @@ export class FoundryRelayService {
   private readonly baseUrl = (process.env['FOUNDRY_REST_URL'] ?? 'http://127.0.0.1:3010').replace(/\/$/, '')
   private readonly apiKey = process.env['FOUNDRY_REST_API_KEY']
 
-  private async request(path: string, init: RequestInit = {}): Promise<unknown> {
+  private async request(path: string, init: RequestInit = {}, timeoutMs = 10_000): Promise<unknown> {
     if (!this.apiKey) throw new ServiceUnavailableException('FOUNDRY_REST_API_KEY is not configured')
     let response: Response
     try {
-      response = await fetch(`${this.baseUrl}${path}`, { ...init, headers: { accept: 'application/json', 'x-api-key': this.apiKey, ...init.headers }, signal: AbortSignal.timeout(10_000) })
+      response = await fetch(`${this.baseUrl}${path}`, { ...init, headers: { accept: 'application/json', 'x-api-key': this.apiKey, ...init.headers }, signal: AbortSignal.timeout(timeoutMs) })
     } catch (error) {
       throw new ServiceUnavailableException({ message: 'Foundry REST Relay is offline', cause: error instanceof Error ? error.message : undefined })
     }
@@ -36,18 +36,18 @@ export class FoundryRelayService {
   listClients(): Promise<unknown> { return this.request('/clients') }
 
   async listActors(): Promise<WorldActor[]> {
-    const params = new URLSearchParams({ clientId: await this.onlineClientId(), types: 'Actor', recursive: 'true', includeEntityData: 'false' })
-    return this.collectWorldActors(await this.request(`/structure?${params}`))
+    return this.listRootWorldActors(await this.onlineClientId())
   }
 
   async getActor(uuid: string): Promise<unknown> {
-    const params = new URLSearchParams({ clientId: await this.onlineClientId(), uuid: this.actorUuid(uuid) })
-    return this.request(`/get?${params}`)
+    return this.getActorFromWorld(await this.onlineClientId(), this.actorUuid(uuid))
   }
 
   async listPlayers(): Promise<PlayerSummary[]> {
-    const players = await Promise.all((await this.listActors()).map((actor) => this.playerFromActor(actor.uuid)))
-    return players.filter((player): player is PlayerSummary => player !== null)
+    const clientId = await this.onlineClientId()
+    const actors = await this.listRootWorldActors(clientId)
+    const players = await this.mapWithConcurrency(actors, 4, (actor) => this.playerFromActor(actor.uuid, true, clientId))
+    return players.filter((player): player is PlayerSummary => player !== null).sort((left, right) => left.name.localeCompare(right.name, 'fr'))
   }
 
   async getPlayerXp(uuid: string): Promise<{ uuid: string; xp: number; level: number }> {
@@ -86,9 +86,9 @@ export class FoundryRelayService {
     return { uuid: player.uuid, before: player.xpc, added, after: state.xpc, level: state.level, xp: state.xp }
   }
 
-  private async writeCareer(uuid: string, xpc: number): Promise<{ uuid: string; xpc: number; level: number; xp: number }> {
+  private async writeCareer(uuid: string, xpc: number, clientId?: string): Promise<{ uuid: string; xpc: number; level: number; xp: number }> {
     const state = this.careerState(xpc)
-    await this.updateActor(uuid, { [this.xpcPath()]: state.xpc })
+    await this.updateActor(uuid, { [this.xpcPath()]: state.xpc }, clientId)
     return { uuid, ...state }
   }
 
@@ -121,9 +121,19 @@ export class FoundryRelayService {
     return threshold + Math.floor((xp / XP_PER_LEVEL) * (nextThreshold - threshold))
   }
 
-  private async updateActor(uuid: string, data: Record<string, number>): Promise<void> {
-    const params = new URLSearchParams({ clientId: await this.onlineClientId(), uuid })
+  private async updateActor(uuid: string, data: Record<string, number>, clientId?: string): Promise<void> {
+    const params = new URLSearchParams({ clientId: clientId ?? await this.onlineClientId(), uuid })
     await this.request(`/update?${params}`, { method: 'PUT', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ data }) })
+  }
+
+  private async listRootWorldActors(clientId: string): Promise<WorldActor[]> {
+    const params = new URLSearchParams({ clientId, types: 'Actor', recursive: 'true', includeEntityData: 'false' })
+    return this.collectRootWorldActors(await this.request(`/structure?${params}`, {}, 30_000))
+  }
+
+  private async getActorFromWorld(clientId: string, uuid: string): Promise<unknown> {
+    const params = new URLSearchParams({ clientId, uuid })
+    return this.request(`/get?${params}`, {}, 30_000)
   }
 
   private async onlineClientId(): Promise<string> {
@@ -144,16 +154,16 @@ export class FoundryRelayService {
     return player
   }
 
-  private async playerFromActor(uuid: string, migrate = true): Promise<PlayerSummary | null> {
-    const entity = this.unwrapEntity(await this.getActor(uuid))
+  private async playerFromActor(uuid: string, migrate = true, clientId?: string): Promise<PlayerSummary | null> {
+    const entity = this.unwrapEntity(clientId ? await this.getActorFromWorld(clientId, uuid) : await this.getActor(uuid))
     if (entity.type !== 'character') return null
     const flags = this.object(this.object(entity.flags)[this.xpcFlagScope()])
     if (!this.isNonNegativeInteger(flags.xpc)) {
       const legacy = this.legacyState(entity)
       const migrated = this.xpcFromPf2Progress(legacy.level, legacy.xp)
       if (migrate) {
-        await this.writeCareer(uuid, migrated)
-        return this.playerFromActor(uuid, false)
+        await this.writeCareer(uuid, migrated, clientId)
+        return this.playerFromActor(uuid, false, clientId)
       }
       return { uuid, name: this.playerName(entity, uuid), ...this.careerState(migrated) }
     }
@@ -188,17 +198,31 @@ export class FoundryRelayService {
     return resolved
   }
 
-  private collectWorldActors(value: unknown): WorldActor[] {
-    const found = new Map<string, WorldActor>()
-    const visit = (candidate: unknown): void => {
-      if (Array.isArray(candidate)) return candidate.forEach(visit)
+  private collectRootWorldActors(value: unknown): WorldActor[] {
+    const root = this.object(value)
+    const data = this.object(root.data)
+    const entities = this.object(data.entities ?? root.entities)
+    const actors = Array.isArray(entities.actors) ? entities.actors : []
+    return actors.flatMap((candidate) => {
       const item = this.object(candidate)
       const uuid = typeof item.uuid === 'string' ? item.uuid : ''
-      if (/^Actor\.[A-Za-z0-9]+$/.test(uuid)) found.set(uuid, { uuid, name: typeof item.name === 'string' ? item.name : uuid, type: typeof item.type === 'string' ? item.type : undefined })
-      Object.values(item).forEach(visit)
+      if (!/^Actor\.[A-Za-z0-9]+$/.test(uuid)) return []
+      return [{ uuid, name: typeof item.name === 'string' ? item.name : uuid, type: typeof item.type === 'string' ? item.type : undefined }]
+    }).sort((left, right) => left.name.localeCompare(right.name, 'fr'))
+  }
+
+  private async mapWithConcurrency<T, Result>(items: T[], limit: number, mapper: (item: T) => Promise<Result>): Promise<Result[]> {
+    const results = new Array<Result>(items.length)
+    let nextIndex = 0
+    const worker = async (): Promise<void> => {
+      while (nextIndex < items.length) {
+        const index = nextIndex
+        nextIndex += 1
+        results[index] = await mapper(items[index])
+      }
     }
-    visit(value)
-    return [...found.values()].sort((left, right) => left.name.localeCompare(right.name, 'fr'))
+    await Promise.all(Array.from({ length: Math.min(limit, items.length) }, worker))
+    return results
   }
 
   private isNonNegativeInteger(value: unknown): value is number { return typeof value === 'number' && Number.isInteger(value) && value >= 0 }
