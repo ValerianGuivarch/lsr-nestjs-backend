@@ -31,6 +31,7 @@ services:
       DB_PASSWORD: ${DB_PASSWORD}
       DB_DATABASE: ${DB_DATABASE}
       DB_HOST: xwiki-mariadb-db
+      JAVA_OPTS: "-Xmx768m"
     volumes:
       - ${XWIKI_DATA_ROOT}/xwiki:/usr/local/xwiki
-
+      - ./xwiki.properties:/usr/local/tomcat/webapps/ROOT/WEB-INF/xwiki.properties
