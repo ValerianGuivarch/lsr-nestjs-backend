@@ -76,7 +76,8 @@ describe('Pf2PersistenceService', () => {
       { id: '002-pf2-sessions' },
       { id: '003-normalize-pf2-sessions' },
       { id: '004-session-long-summary-link' },
-      { id: '005-session-number' }
+      { id: '005-session-number' },
+      { id: '006-session-discord-message' }
     ])
 
     await currentDataSource().destroy()
@@ -89,7 +90,8 @@ describe('Pf2PersistenceService', () => {
       { id: '002-pf2-sessions' },
       { id: '003-normalize-pf2-sessions' },
       { id: '004-session-long-summary-link' },
-      { id: '005-session-number' }
+      { id: '005-session-number' },
+      { id: '006-session-discord-message' }
     ])
   })
 

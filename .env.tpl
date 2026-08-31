@@ -37,6 +37,9 @@ JDR_PORT=3333
 DISCORD_BOT_TOKEN=
 DISCORD_CLIENT_ID=
 DISCORD_GUILD_ID=
+# Synchronisation des résumés courts (les valeurs par défaut sont test / valerian0276).
+DISCORD_SUMMARIES_CHANNEL_NAME=test
+DISCORD_SUMMARIES_MENTION_USERNAME=valerian0276
 HOST=127.0.0.1
 
 # jdr admin (apps/admin-jdr) - Basic Auth gating the admin frontend only, not the JDR API

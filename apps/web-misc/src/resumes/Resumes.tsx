@@ -6,7 +6,8 @@ type Actor = { id: string; name: string }
 type Resume = { id: string; sessionNumber: number; date: string; title: string; participants: string[]; longSummaryAuthor: string | null; shortSummaryAuthor: string | null; sessionXp: number; longSummaryXp: number; shortSummaryXp: number; longSummaryUrl: string; shortSummary: string }
 type Draft = Omit<Resume, 'id'>
 
-const endpoint = '/apil7r/api/pf2-mj'
+// Le proxy historique /apil7r ajoute déjà le préfixe /api côté NestJS.
+const endpoint = '/apil7r/pf2-mj'
 const blank = (sessionNumber = 1): Draft => ({ sessionNumber, date: '', title: '', participants: [], longSummaryAuthor: null, shortSummaryAuthor: null, sessionXp: 0, longSummaryXp: 0, shortSummaryXp: 0, longSummaryUrl: '', shortSummary: '' })
 const errorText = (error: unknown) => error instanceof Error ? error.message : 'Une erreur est survenue.'
 
