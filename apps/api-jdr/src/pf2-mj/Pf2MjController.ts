@@ -13,9 +13,9 @@ export class Pf2MjController {
   constructor(private readonly service: Pf2MjService, private readonly foundry: FoundryRelayService) {}
 
   @Get('actors')
-  async actors(): Promise<Array<{ id: string; name: string }>> {
-    const players = await this.foundry.listPlayers()
-    return players.map(({ uuid, name }) => ({ id: uuid, name })).sort((left, right) => left.name.localeCompare(right.name, 'fr'))
+  async actors(): Promise<Array<{ uuid: string; name: string }>> {
+    const actors = await this.foundry.listActors()
+    return actors.map(({ uuid, name }) => ({ uuid, name })).sort((left, right) => left.name.localeCompare(right.name, 'fr'))
   }
 
   @Get('curation')
