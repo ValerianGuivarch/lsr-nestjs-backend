@@ -15,7 +15,8 @@ export class Pf2MjController {
   @Get('actors')
   async actors(): Promise<Array<{ uuid: string; name: string }>> {
     const actors = await this.foundry.listActors()
-    return actors.map(({ uuid, name }) => ({ uuid, name })).sort((left, right) => left.name.localeCompare(right.name, 'fr'))
+    const excluded = new Set((process.env['PF2_RESUMES_EXCLUDED_ACTOR_UUIDS'] ?? 'Actor.w6XEy0w1OSAiSEGi,Actor.xxxPF2ExPARTYxxx').split(',').map((uuid) => uuid.trim()).filter(Boolean))
+    return actors.filter(({ uuid }) => !excluded.has(uuid)).map(({ uuid, name }) => ({ uuid, name })).sort((left, right) => left.name.localeCompare(right.name, 'fr'))
   }
 
   @Get('curation')

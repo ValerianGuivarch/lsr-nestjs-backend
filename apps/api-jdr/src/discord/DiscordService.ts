@@ -2,6 +2,7 @@ import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/commo
 import { Client, Events, GatewayIntentBits, Interaction, Message, MessageCreateOptions, REST, Routes, TextChannel, ThreadAutoArchiveDuration } from 'discord.js'
 import { DiscordCommandsService } from './DiscordCommandsService'
 import type { Pf2Session } from '../pf2-storage/Pf2PersistenceService'
+import { FoundryRelayService } from '../foundry/FoundryRelayService'
 
 export type DiscordResumeSync = { status: 'skipped' | 'created' | 'updated' | 'failed'; messageId?: string; reason?: string }
 
@@ -10,7 +11,7 @@ export class DiscordService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(DiscordService.name)
   private client: Client | null = null
 
-  constructor(private readonly commands: DiscordCommandsService) {}
+  constructor(private readonly commands: DiscordCommandsService, private readonly foundry: FoundryRelayService) {}
 
   async onModuleInit(): Promise<void> {
     const config = this.config()
@@ -54,7 +55,7 @@ export class DiscordService implements OnModuleInit, OnModuleDestroy {
       const existing = await this.findResumeMessage(channel, resume)
       const payload = await this.resumeMessagePayload(resume, config)
       if (existing) {
-        await existing.edit({ content: payload.content, embeds: payload.embeds, allowedMentions: payload.allowedMentions })
+        await existing.edit({ content: payload.content, allowedMentions: payload.allowedMentions })
         return { status: 'updated', messageId: existing.id }
       }
       const created = await channel.send(payload)
@@ -94,17 +95,19 @@ export class DiscordService implements OnModuleInit, OnModuleDestroy {
   }
 
   private isResumeMessage(message: Message, resumeId: string): boolean {
-    return message.author.id === this.client?.user?.id && message.embeds.some((embed) => embed.footer?.text === this.resumeSignature(resumeId))
+    return message.author.id === this.client?.user?.id && message.content.includes(this.resumeSignature(resumeId))
   }
 
   private async resumeMessagePayload(resume: Pf2Session, config: DiscordConfig): Promise<MessageCreateOptions> {
     const userId = await this.findMentionedUserId(config)
-    const title = resume.title.trim() || `Résumé #${resume.sessionNumber}`
-    const facts = [resume.date && `Date : ${resume.date}`, resume.shortSummaryAuthor && `Auteur : ${resume.shortSummaryAuthor}`, resume.shortSummaryXp > 0 && `XP résumé : ${resume.shortSummaryXp}`, resume.sessionXp > 0 && `XP séance : ${resume.sessionXp}`].filter(Boolean).join('\n')
+    const title = resume.title.trim()
+    const names = new Map((await this.foundry.listActors()).map((actor) => [actor.uuid, actor.name]))
+    const label = (uuid: string) => names.get(uuid) ?? uuid
+    const participants = resume.participants.map(label).join(', ')
+    const facts = [participants && `PJ : ${participants}`, resume.sessionXp > 0 && `XP total : ${resume.sessionXp * resume.participants.length}, soit ${resume.sessionXp} par PJ`, resume.shortSummaryAuthor && `Auteur du résumé : ${label(resume.shortSummaryAuthor)} (+${resume.shortSummaryXp} XP)`, resume.longSummaryAuthor && `Version longue : ${label(resume.longSummaryAuthor)} (+${resume.longSummaryXp} XP)${resume.longSummaryUrl ? `, disponible ici : ${resume.longSummaryUrl}` : ''}`].filter(Boolean).join('\n')
     return {
-      content: userId ? `<@${userId}>` : undefined,
+      content: [userId && `<@${userId}>`, `**Séance #${resume.sessionNumber}${title ? ` — ${title}` : ''}**`, resume.date && `*${resume.date}*`, resume.shortSummary, '**Informations**', facts || 'Aucune information complémentaire.', `-# ${this.resumeSignature(resume.id)}`].filter(Boolean).join('\n\n'),
       allowedMentions: userId ? { users: [userId] } : { parse: [] },
-      embeds: [{ title: `Séance #${resume.sessionNumber} — ${title}`, description: resume.shortSummary.slice(0, 4_000), fields: facts ? [{ name: 'Informations', value: facts }] : [], footer: { text: this.resumeSignature(resume.id) } }]
     }
   }
 

@@ -23,7 +23,7 @@ describe('DiscordService summary synchronization', () => {
   })
 
   function serviceWith(channel: Record<string, unknown>): DiscordService {
-    const service = new DiscordService(new DiscordCommandsService())
+    const service = new DiscordService(new DiscordCommandsService(), { listActors: jest.fn().mockResolvedValue([]) } as never)
     const guild = {
       channels: { fetch: jest.fn().mockResolvedValue(undefined), cache: { find: (predicate: (value: unknown) => boolean) => predicate(channel) ? channel : undefined } },
       members: { fetch: jest.fn().mockResolvedValue(new Collection([['member', { user: { id: 'user-1', username: 'valerian0276' } }]])) }
@@ -44,7 +44,7 @@ describe('DiscordService summary synchronization', () => {
   })
 
   it('edits an existing Discord message without creating another thread', async () => {
-    const existing = { id: 'message-1', author: { id: 'bot-1' }, embeds: [{ footer: { text: 'pf2-resume:resume-1' } }], edit: jest.fn().mockResolvedValue(undefined), startThread: jest.fn() }
+    const existing = { id: 'message-1', author: { id: 'bot-1' }, content: '-# pf2-resume:resume-1', edit: jest.fn().mockResolvedValue(undefined), startThread: jest.fn() }
     const channel = { name: 'test', isTextBased: () => true, messages: { fetch: jest.fn().mockResolvedValue(existing) }, send: jest.fn() }
     const result = await serviceWith(channel).synchronizeResumeShortSummary(resume({ discordMessageId: 'message-1', shortSummary: 'Texte corrigé.' }))
     expect(result).toEqual({ status: 'updated', messageId: 'message-1' })
@@ -63,7 +63,7 @@ describe('DiscordService summary synchronization', () => {
   })
 
   it('does nothing for an empty short summary', async () => {
-    const service = new DiscordService(new DiscordCommandsService())
+    const service = new DiscordService(new DiscordCommandsService(), { listActors: jest.fn().mockResolvedValue([]) } as never)
     await expect(service.synchronizeResumeShortSummary(resume({ shortSummary: '' }))).resolves.toEqual({ status: 'skipped', reason: 'Résumé court vide.' })
   })
 })
