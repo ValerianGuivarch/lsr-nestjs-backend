@@ -87,6 +87,14 @@ export class Pf2PersistenceService implements OnModuleInit {
     await this.dataSource.query('UPDATE pf2_session SET session_number = ?, date = ?, title = ?, participants = ?, long_summary_author = ?, short_summary_author = ?, session_xp = ?, long_summary_xp = ?, short_summary_xp = ?, long_summary_url = ?, short_summary = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?', [session.sessionNumber, session.date, session.title, JSON.stringify(session.participants), session.longSummaryAuthor, session.shortSummaryAuthor, session.sessionXp, session.longSummaryXp, session.shortSummaryXp, session.longSummaryUrl, session.shortSummary, current.id])
     return this.getSession(current.id)
   }
+  async deleteSession(id: string): Promise<void> {
+  const sessionId = this.requiredSessionId(id)
+
+  await this.dataSource.query(
+    'DELETE FROM pf2_session WHERE id = ?',
+    [sessionId],
+  )
+}
 
   async savePortrait(bytes: Uint8Array, extension: 'webp' | 'gif', pnjId: string, mimeType: string): Promise<{ path: string; absolutePath: string }> {
     const filename = `${this.slug(pnjId)}.${extension}`
