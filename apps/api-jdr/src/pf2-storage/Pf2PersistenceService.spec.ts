@@ -49,6 +49,7 @@ describe('Pf2PersistenceService', () => {
     const first = await open()
     const created = await first.createSession({
       id: 'seance-001',
+      sessionNumber: 1,
       date: '2026-08-28',
       title: 'Premier test',
       participants: ['Actor.yaz', 'Actor.pepin'],
@@ -60,31 +61,35 @@ describe('Pf2PersistenceService', () => {
       longSummaryUrl: 'https://wiki.example.test/seances/001',
       shortSummary: 'Résumé court'
     })
-    expect(created).toMatchObject({ id: 'seance-001', date: '2026-08-28', title: 'Premier test', participants: ['Actor.yaz', 'Actor.pepin'], longSummaryAuthor: 'Actor.pepin', shortSummaryAuthor: 'Actor.yaz', sessionXp: 400, longSummaryXp: 60, shortSummaryXp: 30, longSummaryUrl: 'https://wiki.example.test/seances/001', shortSummary: 'Résumé court' })
+    expect(created).toMatchObject({ id: 'seance-001', sessionNumber: 1, date: '2026-08-28', title: 'Premier test', participants: ['Actor.yaz', 'Actor.pepin'], longSummaryAuthor: 'Actor.pepin', shortSummaryAuthor: 'Actor.yaz', sessionXp: 400, longSummaryXp: 60, shortSummaryXp: 30, longSummaryUrl: 'https://wiki.example.test/seances/001', shortSummary: 'Résumé court' })
     await expect(first.getSession('seance-001')).resolves.toEqual(expect.objectContaining({ title: 'Premier test' }))
 
     await expect(first.updateSession('seance-001', { title: 'Premier test corrigé', sessionXp: 450, shortSummary: 'Résumé court corrigé' })).resolves.toEqual(expect.objectContaining({ title: 'Premier test corrigé', sessionXp: 450, shortSummary: 'Résumé court corrigé', longSummaryUrl: 'https://wiki.example.test/seances/001' }))
-    await expect(first.createSession({ title: 'Sans date' })).rejects.toThrow('Date de séance obligatoire')
-    await expect(first.createSession({ date: '2026-08-28' })).rejects.toThrow('title est obligatoire')
+    await expect(first.createSession({ title: 'Sans numéro' })).rejects.toThrow('numéro de résumé est obligatoire')
+    await expect(first.createSession({ sessionNumber: 2 })).resolves.toEqual(expect.objectContaining({ sessionNumber: 2, title: '', date: '' }))
+    await expect(first.createSession({ sessionNumber: 1 })).rejects.toThrow('existe déjà')
+    expect((await first.listSessions()).map((session) => session.sessionNumber)).toEqual([1, 2])
 
     await first.onModuleInit()
     expect(await currentDataSource().query('SELECT id FROM pf2_schema_migration ORDER BY id')).toEqual([
       { id: '001-initial-pf2-storage' },
       { id: '002-pf2-sessions' },
       { id: '003-normalize-pf2-sessions' },
-      { id: '004-session-long-summary-link' }
+      { id: '004-session-long-summary-link' },
+      { id: '005-session-number' }
     ])
 
     await currentDataSource().destroy()
     dataSource = undefined
 
     const reopened = await open()
-    expect(await reopened.listSessions()).toEqual([expect.objectContaining({ id: 'seance-001', date: '2026-08-28', title: 'Premier test corrigé', sessionXp: 450, shortSummary: 'Résumé court corrigé' })])
+    expect(await reopened.listSessions()).toEqual(expect.arrayContaining([expect.objectContaining({ id: 'seance-001', sessionNumber: 1, date: '2026-08-28', title: 'Premier test corrigé', sessionXp: 450, shortSummary: 'Résumé court corrigé' }), expect.objectContaining({ sessionNumber: 2, title: '', date: '' })]))
     expect(await currentDataSource().query('SELECT id FROM pf2_schema_migration ORDER BY id')).toEqual([
       { id: '001-initial-pf2-storage' },
       { id: '002-pf2-sessions' },
       { id: '003-normalize-pf2-sessions' },
-      { id: '004-session-long-summary-link' }
+      { id: '004-session-long-summary-link' },
+      { id: '005-session-number' }
     ])
   })
 
@@ -101,7 +106,7 @@ describe('Pf2PersistenceService', () => {
     const service = new Pf2PersistenceService(dataSource)
     await service.onModuleInit()
 
-    await expect(service.getSession('seance-legacy')).resolves.toEqual(expect.objectContaining({ id: 'seance-legacy', date: '2026-08-27', title: 'Séance existante', participants: ['Actor.yaz'], sessionXp: 300, longSummaryUrl: 'https://wiki.example.test/seances/legacy' }))
+    await expect(service.getSession('seance-legacy')).resolves.toEqual(expect.objectContaining({ id: 'seance-legacy', sessionNumber: 1, date: '2026-08-27', title: 'Séance existante', participants: ['Actor.yaz'], sessionXp: 300, longSummaryUrl: 'https://wiki.example.test/seances/legacy' }))
     expect(await currentDataSource().query("SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'pf2_session_legacy_002'")).toEqual([{ name: 'pf2_session_legacy_002' }])
   })
 })

@@ -17,9 +17,9 @@ const referenceFiles = {
 
 type ReferenceKind = keyof typeof referenceFiles
 type RecordRow = { id: string; name: string | null; payload: string }
-type SessionRow = { id: string; date: string; title: string; participants: string; long_summary_author: string | null; short_summary_author: string | null; session_xp: number; long_summary_xp: number; short_summary_xp: number; long_summary_url: string; short_summary: string; created_at: string; updated_at: string }
-export type Pf2Session = { id: string; date: string; title: string; participants: string[]; longSummaryAuthor: string | null; shortSummaryAuthor: string | null; sessionXp: number; longSummaryXp: number; shortSummaryXp: number; longSummaryUrl: string; shortSummary: string; createdAt: string; updatedAt: string }
-export type Pf2SessionInput = { id?: unknown; date?: unknown; title?: unknown; participants?: unknown; longSummaryAuthor?: unknown; shortSummaryAuthor?: unknown; sessionXp?: unknown; longSummaryXp?: unknown; shortSummaryXp?: unknown; longSummaryUrl?: unknown; shortSummary?: unknown }
+type SessionRow = { id: string; session_number: number; date: string; title: string; participants: string; long_summary_author: string | null; short_summary_author: string | null; session_xp: number; long_summary_xp: number; short_summary_xp: number; long_summary_url: string; short_summary: string; created_at: string; updated_at: string }
+export type Pf2Session = { id: string; sessionNumber: number; date: string; title: string; participants: string[]; longSummaryAuthor: string | null; shortSummaryAuthor: string | null; sessionXp: number; longSummaryXp: number; shortSummaryXp: number; longSummaryUrl: string; shortSummary: string; createdAt: string; updatedAt: string }
+export type Pf2SessionInput = { id?: unknown; sessionNumber?: unknown; date?: unknown; title?: unknown; participants?: unknown; longSummaryAuthor?: unknown; shortSummaryAuthor?: unknown; sessionXp?: unknown; longSummaryXp?: unknown; shortSummaryXp?: unknown; longSummaryUrl?: unknown; shortSummary?: unknown }
 
 @Injectable()
 export class Pf2PersistenceService implements OnModuleInit {
@@ -60,19 +60,20 @@ export class Pf2PersistenceService implements OnModuleInit {
   }
 
   async listSessions(): Promise<Pf2Session[]> {
-    const rows = await this.dataSource.query('SELECT id, date, title, participants, long_summary_author, short_summary_author, session_xp, long_summary_xp, short_summary_xp, long_summary_url, short_summary, created_at, updated_at FROM pf2_session ORDER BY date ASC, created_at ASC') as SessionRow[]
+    const rows = await this.dataSource.query('SELECT id, session_number, date, title, participants, long_summary_author, short_summary_author, session_xp, long_summary_xp, short_summary_xp, long_summary_url, short_summary, created_at, updated_at FROM pf2_session ORDER BY session_number ASC') as SessionRow[]
     return rows.map((row) => this.session(row))
   }
 
   async getSession(id: string): Promise<Pf2Session | null> {
-    const rows = await this.dataSource.query('SELECT id, date, title, participants, long_summary_author, short_summary_author, session_xp, long_summary_xp, short_summary_xp, long_summary_url, short_summary, created_at, updated_at FROM pf2_session WHERE id = ?', [id]) as SessionRow[]
+    const rows = await this.dataSource.query('SELECT id, session_number, date, title, participants, long_summary_author, short_summary_author, session_xp, long_summary_xp, short_summary_xp, long_summary_url, short_summary, created_at, updated_at FROM pf2_session WHERE id = ?', [id]) as SessionRow[]
     return rows[0] ? this.session(rows[0]) : null
   }
 
   async createSession(input: Pf2SessionInput): Promise<Pf2Session> {
     const id = input.id === undefined ? randomUUID() : this.requiredSessionId(input.id)
     const session = this.sessionInput(input)
-    await this.dataSource.query('INSERT INTO pf2_session (id, date, title, participants, long_summary_author, short_summary_author, session_xp, long_summary_xp, short_summary_xp, long_summary_url, short_summary, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)', [id, session.date, session.title, JSON.stringify(session.participants), session.longSummaryAuthor, session.shortSummaryAuthor, session.sessionXp, session.longSummaryXp, session.shortSummaryXp, session.longSummaryUrl, session.shortSummary])
+    await this.assertAvailableSessionNumber(session.sessionNumber)
+    await this.dataSource.query('INSERT INTO pf2_session (id, session_number, date, title, participants, long_summary_author, short_summary_author, session_xp, long_summary_xp, short_summary_xp, long_summary_url, short_summary, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)', [id, session.sessionNumber, session.date, session.title, JSON.stringify(session.participants), session.longSummaryAuthor, session.shortSummaryAuthor, session.sessionXp, session.longSummaryXp, session.shortSummaryXp, session.longSummaryUrl, session.shortSummary])
     const created = await this.getSession(id)
     if (!created) throw new Error('La séance créée est introuvable.')
     return created
@@ -82,7 +83,8 @@ export class Pf2PersistenceService implements OnModuleInit {
     const current = await this.getSession(this.requiredSessionId(id))
     if (!current) return null
     const session = this.sessionInput(input, current)
-    await this.dataSource.query('UPDATE pf2_session SET date = ?, title = ?, participants = ?, long_summary_author = ?, short_summary_author = ?, session_xp = ?, long_summary_xp = ?, short_summary_xp = ?, long_summary_url = ?, short_summary = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?', [session.date, session.title, JSON.stringify(session.participants), session.longSummaryAuthor, session.shortSummaryAuthor, session.sessionXp, session.longSummaryXp, session.shortSummaryXp, session.longSummaryUrl, session.shortSummary, current.id])
+    await this.assertAvailableSessionNumber(session.sessionNumber, current.id)
+    await this.dataSource.query('UPDATE pf2_session SET session_number = ?, date = ?, title = ?, participants = ?, long_summary_author = ?, short_summary_author = ?, session_xp = ?, long_summary_xp = ?, short_summary_xp = ?, long_summary_url = ?, short_summary = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?', [session.sessionNumber, session.date, session.title, JSON.stringify(session.participants), session.longSummaryAuthor, session.shortSummaryAuthor, session.sessionXp, session.longSummaryXp, session.shortSummaryXp, session.longSummaryUrl, session.shortSummary, current.id])
     return this.getSession(current.id)
   }
 
@@ -145,6 +147,20 @@ export class Pf2PersistenceService implements OnModuleInit {
       // already links become the new explicit link field.
       await manager.query("UPDATE pf2_session SET long_summary_url = long_summary WHERE long_summary_url = '' AND (long_summary LIKE 'http://%' OR long_summary LIKE 'https://%')")
     })
+    await this.applyMigration('005-session-number', async (manager) => {
+      const columns = await manager.query('PRAGMA table_info(pf2_session)') as Array<{ name: string }>
+      if (!columns.some((column) => column.name === 'session_number')) {
+        await manager.query('ALTER TABLE pf2_session ADD COLUMN session_number INTEGER NOT NULL DEFAULT 0')
+      }
+      const unnumbered = await manager.query('SELECT id FROM pf2_session WHERE session_number = 0 ORDER BY date ASC, created_at ASC') as Array<{ id: string }>
+      const current = await manager.query('SELECT MAX(session_number) AS maximum FROM pf2_session') as Array<{ maximum: number | null }>
+      let next = Number(current[0]?.maximum ?? 0)
+      for (const row of unnumbered) {
+        next += 1
+        await manager.query('UPDATE pf2_session SET session_number = ? WHERE id = ?', [next, row.id])
+      }
+      await manager.query('CREATE UNIQUE INDEX IF NOT EXISTS idx_pf2_session_number ON pf2_session (session_number)')
+    })
   }
 
   private async createSessionTable(manager: EntityManager): Promise<void> {
@@ -204,6 +220,11 @@ export class Pf2PersistenceService implements OnModuleInit {
     await manager.query('INSERT INTO pf2_record (kind, id, name, payload, created_at, updated_at) VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP) ON CONFLICT(kind, id) DO UPDATE SET name = excluded.name, payload = excluded.payload, updated_at = CURRENT_TIMESTAMP', [kind, id, name, JSON.stringify(payload)])
   }
 
+  private async assertAvailableSessionNumber(sessionNumber: number, exceptId?: string): Promise<void> {
+    const rows = await this.dataSource.query('SELECT id FROM pf2_session WHERE session_number = ? AND id <> ?', [sessionNumber, exceptId ?? '']) as Array<{ id: string }>
+    if (rows.length) throw new Error(`Le numéro de résumé ${sessionNumber} existe déjà.`)
+  }
+
   private async readJson(filename: string): Promise<unknown> {
     return JSON.parse(await readFile(resolve(this.seedRoot, filename), 'utf8')) as unknown
   }
@@ -216,11 +237,12 @@ export class Pf2PersistenceService implements OnModuleInit {
 
   private name(item: Record<string, unknown>): string { return typeof item.nom === 'string' ? item.nom.trim() : this.title(item) }
   private title(item: Record<string, unknown>): string { return typeof item.titleFr === 'string' ? item.titleFr : typeof item.titleOriginal === 'string' ? item.titleOriginal : typeof item.id === 'string' ? item.id : '' }
-  private session(row: SessionRow): Pf2Session { return { id: row.id, date: row.date, title: row.title, participants: this.participants(JSON.parse(row.participants), []), longSummaryAuthor: row.long_summary_author, shortSummaryAuthor: row.short_summary_author, sessionXp: row.session_xp, longSummaryXp: row.long_summary_xp, shortSummaryXp: row.short_summary_xp, longSummaryUrl: row.long_summary_url, shortSummary: row.short_summary, createdAt: row.created_at, updatedAt: row.updated_at } }
+  private session(row: SessionRow): Pf2Session { return { id: row.id, sessionNumber: row.session_number, date: row.date, title: row.title, participants: this.participants(JSON.parse(row.participants), []), longSummaryAuthor: row.long_summary_author, shortSummaryAuthor: row.short_summary_author, sessionXp: row.session_xp, longSummaryXp: row.long_summary_xp, shortSummaryXp: row.short_summary_xp, longSummaryUrl: row.long_summary_url, shortSummary: row.short_summary, createdAt: row.created_at, updatedAt: row.updated_at } }
   private sessionInput(input: Pf2SessionInput, current?: Pf2Session): Omit<Pf2Session, 'id' | 'createdAt' | 'updatedAt'> {
     return {
-      date: this.date(input.date, current?.date),
-      title: this.text(input.title, 'title', current?.title, true),
+      sessionNumber: this.sessionNumber(input.sessionNumber, current?.sessionNumber),
+      date: this.optionalDate(input.date, current?.date ?? ''),
+      title: this.text(input.title, 'title', current?.title ?? ''),
       participants: this.participants(input.participants, current?.participants ?? []),
       longSummaryAuthor: this.playerId(input.longSummaryAuthor, current?.longSummaryAuthor ?? null),
       shortSummaryAuthor: this.playerId(input.shortSummaryAuthor, current?.shortSummaryAuthor ?? null),
@@ -233,7 +255,8 @@ export class Pf2PersistenceService implements OnModuleInit {
   }
   private sessionId(value: unknown): string | null { return typeof value === 'string' && /^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$/.test(value) ? value : null }
   private requiredSessionId(value: unknown): string { const id = this.sessionId(value); if (!id) throw new Error('Identifiant de séance invalide.'); return id }
-  private date(value: unknown, fallback?: string): string { const date = value === undefined ? fallback : value; if (typeof date !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(date)) throw new Error('Date de séance obligatoire et invalide (YYYY-MM-DD attendu).'); return date }
+  private optionalDate(value: unknown, fallback: string): string { const date = value === undefined ? fallback : value; if (typeof date !== 'string' || (date && !/^\d{4}-\d{2}-\d{2}$/.test(date))) throw new Error('date doit être vide ou au format YYYY-MM-DD.'); return date }
+  private sessionNumber(value: unknown, fallback?: number): number { const number = value === undefined ? fallback : value; if (typeof number !== 'number' || !Number.isInteger(number) || number < 1) throw new Error('Le numéro de résumé est obligatoire et doit être un entier positif.'); return number }
   private legacyDate(...values: unknown[]): string { for (const value of values) if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value)) return value; return '1970-01-01' }
   private legacyTitle(value: unknown, id: string): string { return typeof value === 'string' && value.trim() ? value.trim() : `Séance migrée ${id}` }
   private text(value: unknown, label: string, fallback: string, required = false): string { const text = value === undefined ? fallback : value; if (typeof text !== 'string' || (required && !text.trim())) throw new Error(`${label} est obligatoire.`); return text.trim() }

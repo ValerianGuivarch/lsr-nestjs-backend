@@ -33,6 +33,7 @@ const Home: React.FC = () => {
     { label: 'Admin JDR', description: 'Back-office des JDR', href: externalAppUrl('admin', 4203) },
     { label: 'PF2', description: 'Référentiel Pathfinder 2', href: '/pf2' },
     { label: 'PF2 MJ', description: 'Catalogue, scénarios et référentiels Pathfinder 2', href: '/pf2-mj' },
+    { label: 'Résumés', description: 'Chroniques et XP de campagne', href: '/résumés' },
     { label: 'Wiki', description: 'Livres, pages et recherche', href: externalAppUrl('wiki', 4205) },
     { label: 'Carte — PJ', description: 'Carte de Golarion, vue joueurs', href: externalAppUrl('map', 4204, '/pj') }
   ]
