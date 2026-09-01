@@ -38,22 +38,23 @@ function externalAppUrl(subdomain: 'admin' | 'map' | 'wiki', localPort: number, 
 const Home: React.FC = () => {
   const sections: AppSection[] = [
     {
+      title: 'Pathfinder 2',
+      description: 'Campagne, ressources de jeu et outils pour les joueurs.',
+      apps: [
+        { label: 'Accès jeu PF2', description: 'Ouvrir la table de jeu Pathfinder 2', href: 'https://pf2.l7r.fr' },
+        { label: 'Résumés', description: 'Chroniques et XP de campagne', href: '/résumés' },
+        { label: 'Wiki', description: 'Livres, pages et recherche', href: externalAppUrl('wiki', 4205) },
+        { label: 'Carte — PJ', description: 'Carte de Golarion, vue joueurs', href: externalAppUrl('map', 4204, '/pj') },
+        { label: 'PF2', description: 'Référentiel Pathfinder 2', href: '/pf2' },
+        { label: 'PF2 Admin', description: 'Catalogue, scénarios et référentiels MJ', href: '/pf2-mj', admin: true }
+      ]
+    },
+    {
       title: 'JDR',
       description: 'Fiches de personnage et gestion des autres jeux.',
       apps: [
         { label: 'JDR', description: 'Fiches de personnage', href: '/jdr' },
         { label: 'Admin JDR', description: 'Back-office des JDR', href: externalAppUrl('admin', 4203), admin: true }
-      ]
-    },
-    {
-      title: 'Pathfinder 2',
-      description: 'Campagne, ressources de jeu et outils pour les joueurs.',
-      apps: [
-        { label: 'PF2', description: 'Référentiel Pathfinder 2', href: '/pf2' },
-        { label: 'PF2 Admin', description: 'Catalogue, scénarios et référentiels MJ', href: '/pf2-mj', admin: true },
-        { label: 'Résumés', description: 'Chroniques et XP de campagne', href: '/résumés' },
-        { label: 'Wiki', description: 'Livres, pages et recherche', href: externalAppUrl('wiki', 4205) },
-        { label: 'Carte — PJ', description: 'Carte de Golarion, vue joueurs', href: externalAppUrl('map', 4204, '/pj') }
       ]
     }
   ]
@@ -110,19 +111,6 @@ const Home: React.FC = () => {
           </Section>
         ))}
 
-        <ToolsSection>
-          <SectionHeading>
-            <SectionTitle>Outils</SectionTitle>
-            <SectionDescription>Utilitaires indépendants de la campagne.</SectionDescription>
-          </SectionHeading>
-          <Grid>
-            <Card as={Link} to="/foussier">
-              <CardKind>Outil</CardKind>
-              <CardLabel>Foussier</CardLabel>
-              <CardDescription>Calculateur d’agrafage et de clôture.</CardDescription>
-            </Card>
-          </Grid>
-        </ToolsSection>
       </Container>
     </>
   )
@@ -163,10 +151,6 @@ const Intro = styled.p`
 const Section = styled.section`
   padding: 1.4rem 0 2rem;
   border-top: 1px solid rgba(255, 255, 255, 0.11);
-`
-
-const ToolsSection = styled(Section)`
-  padding-bottom: 0;
 `
 
 const SectionHeading = styled.div`
