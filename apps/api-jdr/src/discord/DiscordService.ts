@@ -169,7 +169,6 @@ export class DiscordService implements OnModuleInit, OnModuleDestroy {
 
       const payload = await this.resumeMessagePayload(
         resume,
-        config,
       )
 
       /**
@@ -332,11 +331,7 @@ export class DiscordService implements OnModuleInit, OnModuleDestroy {
 
   private async resumeMessagePayload(
     resume: Pf2Session,
-    config: DiscordConfig,
   ): Promise<MessageCreateOptions> {
-    const userId =
-      await this.findMentionedUserId(config)
-
     const title = resume.title.trim()
 
     /**
@@ -435,23 +430,8 @@ export class DiscordService implements OnModuleInit, OnModuleDestroy {
           Boolean(id),
       )
 
-    /**
-     * Mention générale configurée
-     * + mentions des joueurs concernés.
-     */
-    const allowedUserIds = [
-      ...(userId
-        ? [userId]
-        : []),
-
-      ...actorMentionIds,
-    ]
-
     return {
       content: [
-        userId &&
-          `<@${userId}>`,
-
         `**Séance #${resume.sessionNumber}${
           title
             ? ` — ${title}`
@@ -478,7 +458,7 @@ export class DiscordService implements OnModuleInit, OnModuleDestroy {
       allowedMentions: {
         users: [
           ...new Set(
-            allowedUserIds,
+            actorMentionIds,
           ),
         ],
       },
@@ -610,69 +590,6 @@ export class DiscordService implements OnModuleInit, OnModuleDestroy {
     return `${actorName} <@${discordId}>`
   }
 
-  /**
-   * Mention générale configurée,
-   * actuellement valerian0276 par défaut.
-   */
-  private async findMentionedUserId(
-    config: DiscordConfig,
-  ): Promise<string | null> {
-    const client =
-      this.requireClient()
-
-    const guild =
-      await client.guilds.fetch(
-        config.guildId,
-      )
-
-    const members =
-      await guild.members.fetch({
-        query:
-          config.mentionUsername,
-        limit: 10,
-      })
-
-    const expected =
-      this.normalizePlayerName(
-        config.mentionUsername,
-      )
-
-    const member =
-      members.find(
-        (candidate) => {
-          const username =
-            this.normalizePlayerName(
-              candidate.user.username,
-            )
-
-          const globalName =
-            candidate.user.globalName
-              ? this.normalizePlayerName(
-                  candidate.user.globalName,
-                )
-              : null
-
-          return (
-            username ===
-              expected ||
-            globalName ===
-              expected
-          )
-        },
-      )
-
-    if (!member) {
-      this.logger.warn(
-        `Discord user not found for summary mention: ${config.mentionUsername}`,
-      )
-    }
-
-    return (
-      member?.user.id ??
-      null
-    )
-  }
-
   private resumeSignature(
     id: string,
   ): string {
@@ -719,13 +636,7 @@ export class DiscordService implements OnModuleInit, OnModuleDestroy {
           process.env[
             'DISCORD_SUMMARIES_CHANNEL_NAME'
           ]?.trim() ||
-          'test',
-
-        mentionUsername:
-          process.env[
-            'DISCORD_SUMMARIES_MENTION_USERNAME'
-          ]?.trim() ||
-          'valerian0276',
+          'résumés-courts',
       }
     }
 
@@ -755,5 +666,4 @@ type DiscordConfig = {
   clientId: string
   guildId: string
   summaryChannelName: string
-  mentionUsername: string
 }

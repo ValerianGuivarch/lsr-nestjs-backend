@@ -5,7 +5,8 @@ import { basename, dirname, resolve } from 'node:path'
 import { randomUUID } from 'node:crypto'
 import { DataSource, EntityManager } from 'typeorm'
 
-export type Pf2RecordKind = 'pnj' | 'faction' | 'lieu' | 'region' | 'evenement' | 'scenario' | 'session' | 'catalogue' | 'curation'
+export type Pf2RecordKind = 'pnj' | 'faction' | 'lieu' | 'region' | 'evenement' | 'scenario' | 'session' | 'catalogue' | 'curation' | 'foundry-actor-cache'
+export type FoundryActorCacheEntry = { uuid: string; name: string }
 
 const referenceFiles = {
   pnj: 'pf2_personnages.json',
@@ -57,6 +58,26 @@ export class Pf2PersistenceService implements OnModuleInit {
 
   async saveCuration(value: Record<string, unknown>): Promise<void> {
     await this.upsert('curation', 'user-curation', 'user-curation', value)
+  }
+
+  async saveFoundryActorCache(actors: FoundryActorCacheEntry[]): Promise<void> {
+    await this.upsert('foundry-actor-cache', 'latest', 'Derniers Actors Foundry', {
+      actors,
+      cachedAt: new Date().toISOString()
+    })
+  }
+
+  async readFoundryActorCache(): Promise<FoundryActorCacheEntry[]> {
+    const cached = await this.get('foundry-actor-cache', 'latest')
+    const actors = cached?.actors
+    if (!Array.isArray(actors)) return []
+
+    return actors.flatMap((actor) => {
+      if (!this.isObject(actor)) return []
+      const uuid = typeof actor.uuid === 'string' ? actor.uuid : ''
+      const name = typeof actor.name === 'string' ? actor.name : ''
+      return uuid && name ? [{ uuid, name }] : []
+    })
   }
 
   async listSessions(): Promise<Pf2Session[]> {

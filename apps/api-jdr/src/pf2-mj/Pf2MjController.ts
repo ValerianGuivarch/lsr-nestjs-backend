@@ -1,22 +1,38 @@
-import { Body, Controller, Get, HttpException, HttpStatus, Param, Post, Req, Res } from '@nestjs/common'
+import { Body, Controller, Get, HttpException, HttpStatus, Logger, Param, Post, Req, Res } from '@nestjs/common'
 import { ApiTags } from '@nestjs/swagger'
 import { MultipartFile } from '@fastify/multipart'
 import { FastifyReply, FastifyRequest } from 'fastify'
 import { FoundryRelayService } from '../foundry/FoundryRelayService'
 import { Pf2MjService } from './Pf2MjService'
 
+// Le sélecteur des résumés ne propose que les PJ. La convention de nommage
+// Foundry de la table est « Nom du PJ (Nom du joueur) ».
+const playerActorName = /^\S(?:.*\S)?\s+\([^()]+\)$/u
+
 // Le NAS historique traduit /apil7r/* vers /api/*. Les deux préfixes restent
 // intentionnellement actifs et partagent cette unique implémentation.
 @Controller(['api/pf2-mj', 'api/v1/pf2-mj'])
 @ApiTags('PF2 MJ')
 export class Pf2MjController {
+  private readonly logger = new Logger(Pf2MjController.name)
   constructor(private readonly service: Pf2MjService, private readonly foundry: FoundryRelayService) {}
 
   @Get('actors')
   async actors(): Promise<Array<{ uuid: string; name: string }>> {
-    const actors = await this.foundry.listActors()
+    let actors: Array<{ uuid: string; name: string }>
+    try {
+      actors = await this.foundry.listActors()
+      await this.service.saveResumeActorCache(actors)
+    } catch (error) {
+      actors = await this.service.readResumeActorCache()
+      if (!actors.length) throw error
+      this.logger.warn('Foundry indisponible : liste de PJ servie depuis le cache SQLite.')
+    }
     const excluded = new Set((process.env['PF2_RESUMES_EXCLUDED_ACTOR_UUIDS'] ?? 'Actor.w6XEy0w1OSAiSEGi,Actor.xxxPF2ExPARTYxxx').split(',').map((uuid) => uuid.trim()).filter(Boolean))
-    return actors.filter(({ uuid }) => !excluded.has(uuid)).map(({ uuid, name }) => ({ uuid, name })).sort((left, right) => left.name.localeCompare(right.name, 'fr'))
+    return actors
+      .filter(({ uuid, name }) => !excluded.has(uuid) && playerActorName.test(name.trim()))
+      .map(({ uuid, name }) => ({ uuid, name }))
+      .sort((left, right) => left.name.localeCompare(right.name, 'fr'))
   }
 
   @Get('curation')

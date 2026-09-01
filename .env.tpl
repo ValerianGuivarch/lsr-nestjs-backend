@@ -40,9 +40,8 @@ VITE_DASHBOARD_ADMIN_PASSWORD=admin
 DISCORD_BOT_TOKEN=
 DISCORD_CLIENT_ID=
 DISCORD_GUILD_ID=
-# Synchronisation des résumés courts (les valeurs par défaut sont test / valerian0276).
-DISCORD_SUMMARIES_CHANNEL_NAME=test
-DISCORD_SUMMARIES_MENTION_USERNAME=valerian0276
+# Synchronisation des résumés courts.
+DISCORD_SUMMARIES_CHANNEL_NAME=résumés-courts
 # Actors Foundry hors PJ à masquer dans les résumés (familier, Actor de groupe, etc.).
 PF2_RESUMES_EXCLUDED_ACTOR_UUIDS=Actor.w6XEy0w1OSAiSEGi,Actor.xxxPF2ExPARTYxxx
 HOST=127.0.0.1

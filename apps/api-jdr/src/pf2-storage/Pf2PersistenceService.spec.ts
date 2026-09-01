@@ -45,6 +45,23 @@ describe('Pf2PersistenceService', () => {
     return dataSource
   }
 
+  it('preserves the latest Foundry actor cache across SQLite reopen', async () => {
+    const first = await open()
+    await first.saveFoundryActorCache([
+      { uuid: 'Actor.yaz', name: 'Yaz Lorok (Gus)' },
+      { uuid: 'Actor.pepin', name: 'Pépin (Eric)' }
+    ])
+
+    await currentDataSource().destroy()
+    dataSource = undefined
+
+    const reopened = await open()
+    await expect(reopened.readFoundryActorCache()).resolves.toEqual([
+      { uuid: 'Actor.yaz', name: 'Yaz Lorok (Gus)' },
+      { uuid: 'Actor.pepin', name: 'Pépin (Eric)' }
+    ])
+  })
+
   it('creates, updates, migrates and preserves complete sessions', async () => {
     const first = await open()
     const created = await first.createSession({

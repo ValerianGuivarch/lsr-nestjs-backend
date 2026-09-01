@@ -15,6 +15,7 @@ const referenceFiles = {
 } as const
 
 export type ReferenceKind = keyof typeof referenceFiles
+export type ResumeActorReference = { uuid: string; name: string }
 
 const MAX_PORTRAIT_BYTES = 10 * 1024 * 1024
 const PORTRAIT_INPUT_TYPES = new Set(['image/png', 'image/jpeg', 'image/webp', 'image/gif'])
@@ -58,6 +59,14 @@ export class Pf2MjService {
 
   async readCuration(): Promise<Record<string, unknown>> {
     return this.persistence.readCuration()
+  }
+
+  async saveResumeActorCache(actors: ResumeActorReference[]): Promise<void> {
+    await this.persistence.saveFoundryActorCache(actors)
+  }
+
+  async readResumeActorCache(): Promise<ResumeActorReference[]> {
+    return this.persistence.readFoundryActorCache()
   }
 
   async updateCuration(body: unknown): Promise<Record<string, unknown>> {

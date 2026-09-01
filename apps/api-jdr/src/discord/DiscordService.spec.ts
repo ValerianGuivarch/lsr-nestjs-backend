@@ -8,18 +8,20 @@ const resume = (overrides: Partial<Pf2Session> = {}): Pf2Session => ({
 })
 
 describe('DiscordService summary synchronization', () => {
-  const original = { token: process.env.DISCORD_BOT_TOKEN, client: process.env.DISCORD_CLIENT_ID, guild: process.env.DISCORD_GUILD_ID }
+  const original = { token: process.env.DISCORD_BOT_TOKEN, client: process.env.DISCORD_CLIENT_ID, guild: process.env.DISCORD_GUILD_ID, channel: process.env.DISCORD_SUMMARIES_CHANNEL_NAME }
 
   beforeEach(() => {
     process.env.DISCORD_BOT_TOKEN = 'token'
     process.env.DISCORD_CLIENT_ID = 'client'
     process.env.DISCORD_GUILD_ID = 'guild'
+    process.env.DISCORD_SUMMARIES_CHANNEL_NAME = 'résumés-courts'
   })
 
   afterEach(() => {
     process.env.DISCORD_BOT_TOKEN = original.token
     process.env.DISCORD_CLIENT_ID = original.client
     process.env.DISCORD_GUILD_ID = original.guild
+    process.env.DISCORD_SUMMARIES_CHANNEL_NAME = original.channel
   })
 
   function serviceWith(channel: Record<string, unknown>): DiscordService {
@@ -35,7 +37,7 @@ describe('DiscordService summary synchronization', () => {
   it('creates one message and one thread for a new short summary', async () => {
     const thread = { send: jest.fn().mockResolvedValue(undefined) }
     const created = { id: 'message-1', startThread: jest.fn().mockResolvedValue(thread) }
-    const channel = { name: 'test', isTextBased: () => true, messages: { fetch: jest.fn().mockImplementation((value: unknown) => typeof value === 'string' ? Promise.reject(new Error('Unknown Message')) : Promise.resolve(new Collection())) }, send: jest.fn().mockResolvedValue(created) }
+    const channel = { name: 'résumés-courts', isTextBased: () => true, messages: { fetch: jest.fn().mockImplementation((value: unknown) => typeof value === 'string' ? Promise.reject(new Error('Unknown Message')) : Promise.resolve(new Collection())) }, send: jest.fn().mockResolvedValue(created) }
     const result = await serviceWith(channel).synchronizeResumeShortSummary(resume())
     expect(result).toEqual({ status: 'created', messageId: 'message-1' })
     expect(channel.send).toHaveBeenCalledTimes(1)
@@ -45,7 +47,7 @@ describe('DiscordService summary synchronization', () => {
 
   it('edits an existing Discord message without creating another thread', async () => {
     const existing = { id: 'message-1', author: { id: 'bot-1' }, content: '-# pf2-resume:resume-1', edit: jest.fn().mockResolvedValue(undefined), startThread: jest.fn() }
-    const channel = { name: 'test', isTextBased: () => true, messages: { fetch: jest.fn().mockResolvedValue(existing) }, send: jest.fn() }
+    const channel = { name: 'résumés-courts', isTextBased: () => true, messages: { fetch: jest.fn().mockResolvedValue(existing) }, send: jest.fn() }
     const result = await serviceWith(channel).synchronizeResumeShortSummary(resume({ discordMessageId: 'message-1', shortSummary: 'Texte corrigé.' }))
     expect(result).toEqual({ status: 'updated', messageId: 'message-1' })
     expect(existing.edit).toHaveBeenCalledTimes(1)
@@ -56,7 +58,7 @@ describe('DiscordService summary synchronization', () => {
   it('recreates a deleted message and its thread after Discord confirms it is absent', async () => {
     const thread = { send: jest.fn().mockResolvedValue(undefined) }
     const created = { id: 'message-2', startThread: jest.fn().mockResolvedValue(thread) }
-    const channel = { name: 'test', isTextBased: () => true, messages: { fetch: jest.fn().mockImplementation((value: unknown) => typeof value === 'string' ? Promise.reject(new Error('Unknown Message')) : Promise.resolve(new Collection())) }, send: jest.fn().mockResolvedValue(created) }
+    const channel = { name: 'résumés-courts', isTextBased: () => true, messages: { fetch: jest.fn().mockImplementation((value: unknown) => typeof value === 'string' ? Promise.reject(new Error('Unknown Message')) : Promise.resolve(new Collection())) }, send: jest.fn().mockResolvedValue(created) }
     const result = await serviceWith(channel).synchronizeResumeShortSummary(resume({ discordMessageId: 'deleted-message' }))
     expect(result).toEqual({ status: 'created', messageId: 'message-2' })
     expect(created.startThread).toHaveBeenCalledTimes(1)

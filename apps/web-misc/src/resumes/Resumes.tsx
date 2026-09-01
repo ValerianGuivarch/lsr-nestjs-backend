@@ -27,6 +27,7 @@ type Draft = Omit<Resume, 'id'>
 
 // Le proxy historique /apil7r ajoute déjà le préfixe /api côté NestJS.
 const endpoint = '/apil7r/pf2-mj'
+const playerActorName = /^\S(?:.*\S)?\s+\([^()]+\)$/u
 
 const blank = (sessionNumber = 1): Draft => ({
   sessionNumber,
@@ -85,8 +86,18 @@ export default function Resumes() {
       )
 
       if (actorResponse.ok) {
+        const loadedActors: Actor[] =
+          await actorResponse.json()
+
+        // Garde-fou côté interface : seuls les PJ nommés « PJ (joueur) »
+        // peuvent être sélectionnés, même si une ancienne API répond encore.
         setActors(
-          await actorResponse.json(),
+          loadedActors.filter(
+            (actor) =>
+              playerActorName.test(
+                actor.name.trim(),
+              ),
+          ),
         )
       } else {
         setNotice(
@@ -522,6 +533,7 @@ export default function Resumes() {
             className="resume-editor"
             onSubmit={save}
           >
+            <div className="resume-editor-content">
             <header>
               <div>
                 <small>
@@ -894,15 +906,18 @@ export default function Resumes() {
                 uniquement le lien.
               </small>
             </label>
+            </div>
 
-            <button
-              className="resume-save"
-              type="submit"
-            >
-              {editedId
-                ? 'Enregistrer'
-                : 'Créer le résumé'}
-            </button>
+            <footer className="resume-editor-actions">
+              <button
+                className="resume-save"
+                type="submit"
+              >
+                {editedId
+                  ? 'Enregistrer'
+                  : 'Créer le résumé'}
+              </button>
+            </footer>
           </form>
         </div>
       )}
