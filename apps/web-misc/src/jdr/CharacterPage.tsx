@@ -4,6 +4,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import styled from 'styled-components'
 import { JdrApiClient, RollState } from './JdrApiClient'
 import { DiceRollFeed } from './DiceRollFeed'
+import './jdr.css'
 
 const ROLL_STATES: Array<{ value: RollState; label: string }> = [
   { value: 'normal', label: 'Normal' },
@@ -82,9 +83,9 @@ export default function CharacterPage() {
     }
   }
 
-  if (loading) return <StatusShell>Chargement du personnage...</StatusShell>
-  if (error) return <StatusShell>Erreur: {(error as Error).message}</StatusShell>
-  if (!jdr || !character) return <StatusShell>Personnage non trouvé</StatusShell>
+  if (loading) return <StatusShell className="jdr-page">Chargement du personnage...</StatusShell>
+  if (error) return <StatusShell className="jdr-page">Erreur: {(error as Error).message}</StatusShell>
+  if (!jdr || !character) return <StatusShell className="jdr-page">Personnage non trouvé</StatusShell>
 
   const selectedClass = character.classSlug ? jdr.classes.find((c) => c.slug === character.classSlug) : undefined
   const selectedGroups = jdr.groups.filter((g) => character.groupSlugs.includes(g.slug))
@@ -419,7 +420,7 @@ const StatusShell = styled.div`
   min-height: 50vh;
   display: grid;
   place-items: center;
-  color: #6f4f37;
+  color: #f1dfbf;
   font-size: 1.05rem;
 `
 

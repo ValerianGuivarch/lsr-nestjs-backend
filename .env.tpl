@@ -26,6 +26,9 @@ JDR_PORT=3333
 # GOLARION_MAP_PJ_DETAIL=standard
 # NAS public : désactive le WebSocket de hot reload Vite derrière nginx.
 # VITE_DISABLE_HMR=true
+# Portail d'applications : barrière anti-clic pour les liens d'administration.
+# Ce mot de passe est volontairement côté navigateur ; il ne remplace pas une authentification serveur.
+VITE_DASHBOARD_ADMIN_PASSWORD=admin
 # Wiki XWiki et Foundry REST relay : voir support/xwiki/ et support/foundry-rest/ (services independants, .env dedies).
 # Intégration Foundry REST (api-jdr → relay local/self-hosted → monde Foundry).
 # FOUNDRY_REST_URL=http://127.0.0.1:3010

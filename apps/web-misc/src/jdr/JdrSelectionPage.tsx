@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import styled from 'styled-components'
 import { JdrApiClient } from './JdrApiClient'
+import './jdr.css'
 
 export default function JdrSelectionPage() {
   const navigate = useNavigate()
@@ -35,47 +36,49 @@ export default function JdrSelectionPage() {
   }
 
   return (
-    <Container>
-      <Title>Choisir un personnage</Title>
+    <main className="jdr-page jdr-selection-page">
+      <Container>
+        <Title>Choisir un personnage</Title>
 
-      <Field>
-        <label htmlFor="jdr-select">JdR</label>
-        <select
-          id="jdr-select"
-          value={jdrSlug}
-          onChange={(e) => handleJdrChange(e.target.value)}
-          disabled={loadingJdrs}
-        >
-          <option value="">-- Selectionner un JdR --</option>
-          {jdrs?.map((j) => (
-            <option key={j.slug} value={j.slug}>
-              {j.name}
-            </option>
-          ))}
-        </select>
-      </Field>
+        <Field>
+          <label htmlFor="jdr-select">JdR</label>
+          <select
+            id="jdr-select"
+            value={jdrSlug}
+            onChange={(e) => handleJdrChange(e.target.value)}
+            disabled={loadingJdrs}
+          >
+            <option value="">-- Selectionner un JdR --</option>
+            {jdrs?.map((j) => (
+              <option key={j.slug} value={j.slug}>
+                {j.name}
+              </option>
+            ))}
+          </select>
+        </Field>
 
-      <Field>
-        <label htmlFor="character-select">Personnage</label>
-        <select
-          id="character-select"
-          value={characterSlug}
-          onChange={(e) => setCharacterSlug(e.target.value)}
-          disabled={!jdrSlug || loadingJdr}
-        >
-          <option value="">-- Selectionner un personnage --</option>
-          {publicCharacters.map((c) => (
-            <option key={c.slug} value={c.slug}>
-              {c.name}
-            </option>
-          ))}
-        </select>
-      </Field>
+        <Field>
+          <label htmlFor="character-select">Personnage</label>
+          <select
+            id="character-select"
+            value={characterSlug}
+            onChange={(e) => setCharacterSlug(e.target.value)}
+            disabled={!jdrSlug || loadingJdr}
+          >
+            <option value="">-- Selectionner un personnage --</option>
+            {publicCharacters.map((c) => (
+              <option key={c.slug} value={c.slug}>
+                {c.name}
+              </option>
+            ))}
+          </select>
+        </Field>
 
-      <ValidateButton onClick={handleValidate} disabled={!jdrSlug || !characterSlug}>
-        Valider
-      </ValidateButton>
-    </Container>
+        <ValidateButton onClick={handleValidate} disabled={!jdrSlug || !characterSlug}>
+          Valider
+        </ValidateButton>
+      </Container>
+    </main>
   )
 }
 
