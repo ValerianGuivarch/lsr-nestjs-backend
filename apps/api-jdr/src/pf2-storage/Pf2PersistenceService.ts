@@ -130,6 +130,13 @@ export class Pf2PersistenceService implements OnModuleInit {
     return { path: relativePath, absolutePath }
   }
 
+  async readPortrait(relativePath: string): Promise<{ bytes: Uint8Array; filename: string; mimeType: string }> {
+    const filename = basename(relativePath)
+    if (relativePath !== `portraits/${filename}` || !/\.(?:webp|gif)$/i.test(filename)) throw new Error('Chemin de portrait invalide.')
+    const bytes = await readFile(this.portraitPath(filename))
+    return { bytes, filename, mimeType: filename.endsWith('.gif') ? 'image/gif' : 'image/webp' }
+  }
+
   portraitPath(filename: string): string {
     if (basename(filename) !== filename) throw new Error('Chemin refusé')
     return resolve(this.storageRoot, 'portraits', filename)

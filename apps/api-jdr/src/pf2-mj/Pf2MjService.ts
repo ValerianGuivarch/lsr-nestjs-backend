@@ -5,6 +5,7 @@ import { readdir, readFile, stat } from 'node:fs/promises'
 import { basename, relative, resolve, sep } from 'node:path'
 import sharp from 'sharp'
 import { Pf2PersistenceService } from '../pf2-storage/Pf2PersistenceService'
+import { FoundryNpcSummary, FoundryRelayService } from '../foundry/FoundryRelayService'
 
 const referenceFiles = {
   pnj: 'pf2_personnages.json',
@@ -25,7 +26,7 @@ export class Pf2MjService {
   // The repository sits in ~/IdeaProjects/lsr-nestjs-backend locally, so this resolves to ~/PF2/MJ.
   private readonly libraryRoot = resolve(process.env['PF2_LIBRARY_ROOT'] ?? '../../PF2/MJ')
   private readonly legacyPortraitRoot = resolve(process.env['FOUNDRY_ASSETS_ROOT'] ?? '../../FoundryVTT/Data/assets/l7r', 'portraits', 'pnj')
-  constructor(private readonly persistence: Pf2PersistenceService) {}
+  constructor(private readonly persistence: Pf2PersistenceService, private readonly foundry: FoundryRelayService) {}
 
   isReferenceKind(value: string): value is ReferenceKind {
     return value in referenceFiles
@@ -156,6 +157,50 @@ export class Pf2MjService {
     return this.savePnjPortrait(bytes, mimeType, pnjId)
   }
 
+  async saveAndSyncPnjPortrait(bytes: Uint8Array, mimeType: string, pnjId: string): Promise<{ portrait: string; local: 'success'; foundry: 'not-linked' | 'synchronized' | 'unavailable'; foundryMessage?: string }> {
+    const portrait = await this.savePnjPortrait(bytes, mimeType, pnjId)
+    return this.syncPortraitForPnj(pnjId, portrait)
+  }
+
+  async importAndSyncPnjPortrait(urlValue: unknown, pnjId: string): Promise<{ portrait: string; local: 'success'; foundry: 'not-linked' | 'synchronized' | 'unavailable'; foundryMessage?: string }> {
+    const portrait = await this.importPnjPortrait(urlValue, pnjId)
+    return this.syncPortraitForPnj(pnjId, portrait)
+  }
+
+  async foundryForPnj(id: string): Promise<{ actorUuid: string | null; actor: FoundryNpcSummary | null; status: 'not-linked' | 'available' | 'unavailable'; message?: string }> {
+    const pnj = await this.requirePnj(id)
+    const actorUuid = this.foundryActorUuid(pnj)
+    if (!actorUuid) return { actorUuid: null, actor: null, status: 'not-linked' }
+    try { return { actorUuid, actor: await this.foundry.getNpcSummary(actorUuid), status: 'available' } }
+    catch (error) { return { actorUuid, actor: null, status: 'unavailable', message: this.errorMessage(error) } }
+  }
+
+  async listFoundryActorCandidates(): Promise<Array<{ uuid: string; name: string; type: string }>> { return this.foundry.listNpcCandidates() }
+
+  async associateFoundryActor(id: string, actorUuid: unknown): Promise<Record<string, unknown>> {
+    if (typeof actorUuid !== 'string' || !/^Actor\.[A-Za-z0-9]+$/.test(actorUuid)) throw new Error('UUID Actor Foundry invalide.')
+    // Confirm the target exists before persisting the stable association.
+    await this.foundry.getNpcSummary(actorUuid)
+    return this.updatePnj(id, { foundryActorUuid: actorUuid })
+  }
+
+  async detachFoundryActor(id: string): Promise<Record<string, unknown>> { return this.updatePnj(id, { foundryActorUuid: null }) }
+
+  async createFoundryPlaceholder(id: string): Promise<{ pnj: Record<string, unknown>; actor: { uuid: string; name: string }; portrait: string | null }> {
+    const pnj = await this.requirePnj(id)
+    if (this.foundryActorUuid(pnj)) throw new Error('Ce PNJ possède déjà un Actor Foundry associé.')
+    const portrait = typeof pnj.portrait === 'string' && /^portraits\/[^/]+\.(?:webp|gif)$/i.test(pnj.portrait) ? await this.uploadPortraitToFoundry(pnj.portrait) : null
+    const actor = await this.foundry.createNpcPlaceholder(this.name(pnj), portrait)
+    const updated = await this.updatePnj(id, { foundryActorUuid: actor.uuid })
+    return { pnj: updated, actor, portrait }
+  }
+
+  async resyncPnjPortrait(id: string): Promise<{ portrait: string; local: 'success'; foundry: 'not-linked' | 'synchronized' | 'unavailable'; foundryMessage?: string }> {
+    const pnj = await this.requirePnj(id)
+    if (typeof pnj.portrait !== 'string' || !/^portraits\/[^/]+\.(?:webp|gif)$/i.test(pnj.portrait)) throw new Error('Ce PNJ ne possède pas de portrait local synchronisable.')
+    return this.syncPortraitForPnj(id, pnj.portrait)
+  }
+
   async resolvePnjPortrait(encodedFilename: string): Promise<{ stream: ReturnType<typeof createReadStream>; size: number; filename: string }> {
     const filename = decodeURIComponent(encodedFilename)
     if (basename(filename) !== filename || !/\.(?:webp|gif)$/i.test(filename)) throw new Error('Chemin refusé')
@@ -181,6 +226,40 @@ export class Pf2MjService {
     if (type === 'image/gif') return { bytes, extension: 'gif' }
     return { bytes: await sharp(bytes).rotate().webp({ quality: 88 }).toBuffer(), extension: 'webp' }
   }
+
+  private async syncPortraitForPnj(id: string, portrait: string): Promise<{ portrait: string; local: 'success'; foundry: 'not-linked' | 'synchronized' | 'unavailable'; foundryMessage?: string }> {
+    const pnj = await this.requirePnj(id)
+    const actorUuid = this.foundryActorUuid(pnj)
+    if (!actorUuid) return { portrait, local: 'success', foundry: 'not-linked' }
+    try {
+      const foundryPortrait = await this.uploadPortraitToFoundry(portrait)
+      await this.foundry.syncActorPortrait(actorUuid, foundryPortrait)
+      return { portrait, local: 'success', foundry: 'synchronized' }
+    } catch (error) {
+      return { portrait, local: 'success', foundry: 'unavailable', foundryMessage: this.errorMessage(error) }
+    }
+  }
+
+  private async uploadPortraitToFoundry(portrait: string): Promise<string> {
+    const media = await this.persistence.readPortrait(portrait)
+    return this.foundry.uploadPortrait(media.bytes, media.filename, media.mimeType)
+  }
+
+  private async requirePnj(id: string): Promise<Record<string, unknown>> {
+    const pnj = (await this.readReference('pnj')).find((item) => this.identifier(item) === id)
+    if (!pnj) throw new Error('PNJ introuvable.')
+    return pnj
+  }
+
+  private async updatePnj(id: string, patch: Record<string, unknown>): Promise<Record<string, unknown>> {
+    const pnj = await this.requirePnj(id)
+    const item = { ...pnj, ...patch }
+    await this.updateReference('pnj', { action: 'upsert', item })
+    return item
+  }
+
+  private foundryActorUuid(pnj: Record<string, unknown>): string | null { return typeof pnj.foundryActorUuid === 'string' && /^Actor\.[A-Za-z0-9]+$/.test(pnj.foundryActorUuid) ? pnj.foundryActorUuid : null }
+  private errorMessage(error: unknown): string { return error instanceof Error ? error.message : 'Foundry indisponible.' }
 
   private async downloadPortrait(urlValue: unknown): Promise<{ bytes: Uint8Array; mimeType: string }> {
     if (typeof urlValue !== 'string') throw new Error('URL manquante.')

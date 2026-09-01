@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpException, HttpStatus, Logger, Param, Post, Req, Res } from '@nestjs/common'
+import { Body, Controller, Delete, Get, HttpException, HttpStatus, Logger, Param, Post, Put, Req, Res } from '@nestjs/common'
 import { ApiTags } from '@nestjs/swagger'
 import { MultipartFile } from '@fastify/multipart'
 import { FastifyReply, FastifyRequest } from 'fastify'
@@ -71,6 +71,17 @@ export class Pf2MjController {
     }
   }
 
+  @Post('pnj/:id/portrait')
+  async uploadAndSyncPnjPortrait(@Param('id') id: string, @Req() request: FastifyRequest): Promise<unknown> {
+    try {
+      const file = await (request as FastifyRequest & { file: () => Promise<MultipartFile | undefined> }).file()
+      if (!file) throw new Error('Fichier image manquant.')
+      return await this.service.saveAndSyncPnjPortrait(await file.toBuffer(), file.mimetype, id)
+    } catch (error) {
+      throw new HttpException(error instanceof Error ? error.message : 'Impossible d’envoyer l’image.', HttpStatus.BAD_REQUEST)
+    }
+  }
+
   @Post('pnj/portrait-from-url')
   async importPnjPortrait(@Body() body: { url?: unknown; pnjId?: unknown }): Promise<{ portrait: string }> {
     try {
@@ -78,6 +89,42 @@ export class Pf2MjController {
     } catch (error) {
       throw new HttpException(error instanceof Error ? error.message : 'Impossible d’importer l’image.', HttpStatus.BAD_REQUEST)
     }
+  }
+
+  @Post('pnj/:id/portrait/url')
+  async importAndSyncPnjPortrait(@Param('id') id: string, @Body() body: { url?: unknown }): Promise<unknown> {
+    try { return await this.service.importAndSyncPnjPortrait(body?.url, id) }
+    catch (error) { throw new HttpException(error instanceof Error ? error.message : 'Impossible d’importer l’image.', HttpStatus.BAD_REQUEST) }
+  }
+
+  @Get('pnj/:id/foundry')
+  foundryForPnj(@Param('id') id: string): Promise<unknown> { return this.service.foundryForPnj(id) }
+
+  @Get('pnj/foundry/candidates')
+  foundryCandidates(): Promise<unknown> { return this.service.listFoundryActorCandidates() }
+
+  @Put('pnj/:id/foundry')
+  async associateFoundryActor(@Param('id') id: string, @Body() body: { actorUuid?: unknown }): Promise<unknown> {
+    try { return await this.service.associateFoundryActor(id, body?.actorUuid) }
+    catch (error) { throw new HttpException(error instanceof Error ? error.message : 'Association Foundry impossible.', HttpStatus.BAD_REQUEST) }
+  }
+
+  @Delete('pnj/:id/foundry')
+  async detachFoundryActor(@Param('id') id: string): Promise<unknown> {
+    try { return await this.service.detachFoundryActor(id) }
+    catch (error) { throw new HttpException(error instanceof Error ? error.message : 'Dissociation Foundry impossible.', HttpStatus.BAD_REQUEST) }
+  }
+
+  @Post('pnj/:id/foundry/create-placeholder')
+  async createFoundryPlaceholder(@Param('id') id: string): Promise<unknown> {
+    try { return await this.service.createFoundryPlaceholder(id) }
+    catch (error) { throw new HttpException(error instanceof Error ? error.message : 'Création du pion impossible.', HttpStatus.BAD_REQUEST) }
+  }
+
+  @Post('pnj/:id/foundry/sync-portrait')
+  async syncFoundryPortrait(@Param('id') id: string): Promise<unknown> {
+    try { return await this.service.resyncPnjPortrait(id) }
+    catch (error) { throw new HttpException(error instanceof Error ? error.message : 'Synchronisation du portrait impossible.', HttpStatus.BAD_REQUEST) }
   }
 
   @Get('portraits/*')

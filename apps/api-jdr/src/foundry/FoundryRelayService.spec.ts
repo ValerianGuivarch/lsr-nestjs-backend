@@ -100,4 +100,37 @@ describe('FoundryRelayService', () => {
     expect(requestedActors).not.toContain('Actor.folder-npc')
     expect(maximumConcurrentGets).toBeLessThanOrEqual(4)
   })
+
+  it('uploads a portrait then updates only the Actor portrait and an uncustomized token', async () => {
+    const requests: Array<{ url: string; body: unknown }> = []
+    jest.spyOn(global, 'fetch').mockImplementation(async (input, init) => {
+      const url = String(input)
+      requests.push({ url, body: init?.body ? JSON.parse(String(init.body)) : undefined })
+      if (url.endsWith('/clients')) return new Response(JSON.stringify({ clients: [{ clientId: 'world-1', isOnline: true }] }))
+      if (url.includes('/upload?')) return new Response(JSON.stringify({ success: true, path: 'assets/l7r/portraits/janira.webp' }))
+      if (url.includes('/get?')) return new Response(JSON.stringify({ entity: [{ uuid: 'Actor.janira', name: 'Janira Gavix', type: 'npc', img: 'old.webp', prototypeToken: { texture: { src: 'old.webp' } } }] }))
+      if (url.includes('/update?')) return new Response(JSON.stringify({ success: true }))
+      throw new Error(`Unexpected URL: ${url}`)
+    })
+
+    const service = new FoundryRelayService()
+    await expect(service.uploadPortrait(Buffer.from('image'), 'janira.webp', 'image/webp')).resolves.toBe('assets/l7r/portraits/janira.webp')
+    await service.syncActorPortrait('Actor.janira', 'assets/l7r/portraits/janira.webp')
+
+    expect(requests.find((request) => request.url.includes('/upload?'))?.body).toEqual(expect.objectContaining({ path: 'assets/l7r/portraits', filename: 'janira.webp', source: 'data', mimeType: 'image/webp', overwrite: true, fileData: Buffer.from('image').toString('base64') }))
+    expect(requests.find((request) => request.url.includes('/update?'))?.body).toEqual({ data: { img: 'assets/l7r/portraits/janira.webp', 'prototypeToken.texture.src': 'assets/l7r/portraits/janira.webp' } })
+  })
+
+  it('creates one minimal NPC placeholder through the verified Relay create contract', async () => {
+    jest.spyOn(global, 'fetch').mockImplementation(async (input, init) => {
+      const url = String(input)
+      if (url.endsWith('/clients')) return new Response(JSON.stringify({ clients: [{ clientId: 'world-1', isOnline: true }] }))
+      if (url.includes('/create?')) {
+        expect(JSON.parse(String(init?.body))).toEqual({ entityType: 'Actor', data: { name: 'Janira Gavix', type: 'npc', img: 'assets/l7r/portraits/janira.webp', prototypeToken: { texture: { src: 'assets/l7r/portraits/janira.webp' } } } })
+        return new Response(JSON.stringify({ type: 'create-result', uuid: 'Actor.janira', entity: { name: 'Janira Gavix' } }))
+      }
+      throw new Error(`Unexpected URL: ${url}`)
+    })
+    await expect(new FoundryRelayService().createNpcPlaceholder('Janira Gavix', 'assets/l7r/portraits/janira.webp')).resolves.toEqual({ uuid: 'Actor.janira', name: 'Janira Gavix' })
+  })
 })

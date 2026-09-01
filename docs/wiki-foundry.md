@@ -33,19 +33,21 @@ npm run foundry:relay:build
 
 ## Portraits PNJ PF2 MJ
 
-PF2 MJ est la source structurée des PNJ. Un portrait est un unique fichier Foundry, et non plus une entrée de médiathèque :
+PF2 MJ est la source structurée des PNJ. Le fichier source est conservé par
+l'application dans `STORAGE_PATH/portraits/`, indexé dans SQLite (`pf2_media`).
+Lorsqu'un PNJ est lié à un Actor, l'API le téléverse via le Relay vers Foundry.
+Le chemin Foundry produit est stable :
 
 ```text
-<FOUNDRY_ASSETS_ROOT>/portraits/pnj/<id-pnj>.webp
+assets/l7r/portraits/<id-pnj>.webp
 ```
 
-Configurer notamment sur le NAS :
-
-```dotenv
-FOUNDRY_ASSETS_ROOT=/volume1/docker/foundry/data/Data/assets/l7r
-```
-
-Foundry utilise alors le même fichier sous `assets/l7r/portraits/pnj/<id-pnj>.webp`. Le champ enregistré dans les données du PNJ est ce chemin Foundry simple et stable. L'outil MJ affiche le fichier via `GET /api/pf2-mj/portraits/<fichier>` et propose l'envoi de fichier, le glisser-déposer, le collage d'image, l'import par URL et le remplacement.
+Le champ `portrait` du PNJ conserve le chemin local `portraits/<id-pnj>.webp` et
+`foundryActorUuid` garde l'association stable avec l'Actor. L'outil MJ affiche
+le fichier via `GET /api/pf2-mj/portraits/<fichier>` et propose l'envoi de
+fichier, le glisser-déposer, le collage d'image, l'import par URL et le
+remplacement. `FOUNDRY_ASSETS_ROOT` reste une compatibilité de lecture pour les
+portraits historiques, mais n'est plus requis pour les nouveaux.
 
 Les anciens champs `image` restent affichables comme repli afin de ne pas casser les données existantes. Les nouveaux portraits n'utilisent ni identifiant de médiathèque ni API de média générique.
 

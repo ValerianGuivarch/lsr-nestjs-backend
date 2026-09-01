@@ -2,6 +2,7 @@ import { BadGatewayException, BadRequestException, Injectable, ServiceUnavailabl
 
 type RelayClient = { clientId?: unknown; isOnline?: unknown }
 type WorldActor = { uuid: string; name: string; type?: string }
+export type FoundryNpcSummary = { uuid: string; name: string; type: string; level: number | null; hp: number | null; img: string | null }
 type PlayerSummary = { uuid: string; name: string; level: number; xp: number; xpc: number }
 type CareerState = { xpc: number; level: number; xp: number }
 const XP_PER_LEVEL = 1_000
@@ -41,6 +42,75 @@ export class FoundryRelayService {
 
   async getActor(uuid: string): Promise<unknown> {
     return this.getActorFromWorld(await this.onlineClientId(), this.actorUuid(uuid))
+  }
+
+  async getNpcSummary(uuid: string): Promise<FoundryNpcSummary> {
+    const entity = this.unwrapEntity(await this.getActor(uuid))
+    const system = this.object(entity.system)
+    const attributes = this.object(system.attributes)
+    const hp = this.object(attributes.hp)
+    const details = this.object(system.details)
+    const level = this.object(details.level)
+    return {
+      uuid: this.actorUuid(uuid),
+      name: typeof entity.name === 'string' ? entity.name : uuid,
+      type: typeof entity.type === 'string' ? entity.type : 'unknown',
+      level: this.integerOrNull(level.value),
+      hp: this.integerOrNull(hp.value),
+      img: typeof entity.img === 'string' ? entity.img : null
+    }
+  }
+
+  async listNpcCandidates(): Promise<Array<{ uuid: string; name: string; type: string }>> {
+    const clientId = await this.onlineClientId()
+    const actors = await this.listRootWorldActors(clientId)
+    const details = await this.mapWithConcurrency(actors, 4, async (actor) => {
+      const entity = this.unwrapEntity(await this.getActorFromWorld(clientId, actor.uuid))
+      return { uuid: actor.uuid, name: typeof entity.name === 'string' ? entity.name : actor.name, type: typeof entity.type === 'string' ? entity.type : 'unknown' }
+    })
+    return details.filter((actor) => actor.type === 'npc' || actor.type === 'character').sort((left, right) => left.name.localeCompare(right.name, 'fr'))
+  }
+
+  async createNpcPlaceholder(name: string, portraitPath: string | null): Promise<{ uuid: string; name: string }> {
+    const clientId = await this.onlineClientId()
+    const data: Record<string, unknown> = { name, type: 'npc' }
+    if (portraitPath) {
+      data.img = portraitPath
+      data.prototypeToken = { texture: { src: portraitPath } }
+    }
+    const result = await this.request(`/create?${new URLSearchParams({ clientId })}`, {
+      method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ entityType: 'Actor', data })
+    }, 30_000)
+    const response = this.object(result)
+    const entity = this.object(response.entity)
+    const id = typeof response.uuid === 'string' ? response.uuid : typeof entity.uuid === 'string' ? entity.uuid : typeof entity.id === 'string' ? `Actor.${entity.id}` : ''
+    if (!/^Actor\.[A-Za-z0-9]+$/.test(id)) throw new BadGatewayException('Le Relay n’a pas renvoyé l’UUID du nouvel Actor.')
+    return { uuid: id, name: typeof entity.name === 'string' ? entity.name : name }
+  }
+
+  async uploadPortrait(bytes: Uint8Array, filename: string, mimeType: string): Promise<string> {
+    if (!/^[a-z0-9][a-z0-9-]*\.(?:webp|gif)$/i.test(filename)) throw new BadRequestException('Nom de portrait Foundry invalide.')
+    const clientId = await this.onlineClientId()
+    await this.request(`/upload?${new URLSearchParams({ clientId })}`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ path: 'assets/l7r/portraits', filename, source: 'data', mimeType, overwrite: true, fileData: Buffer.from(bytes).toString('base64') })
+    }, 30_000)
+    return `assets/l7r/portraits/${filename}`
+  }
+
+  async syncActorPortrait(uuid: string, portraitPath: string): Promise<void> {
+    const actorUuid = this.actorUuid(uuid)
+    const entity = this.unwrapEntity(await this.getActor(actorUuid))
+    const currentImage = typeof entity.img === 'string' ? entity.img : ''
+    const prototypeToken = this.object(entity.prototypeToken)
+    const texture = this.object(prototypeToken.texture)
+    const currentTokenImage = typeof texture.src === 'string' ? texture.src : ''
+    const data: Record<string, string> = { img: portraitPath }
+    // A token explicitly customized in Foundry remains untouched. Empty or
+    // portrait-aligned tokens stay aligned with the application portrait.
+    if (!currentTokenImage || currentTokenImage === currentImage) data['prototypeToken.texture.src'] = portraitPath
+    await this.updateActor(actorUuid, data)
   }
 
   async listPlayers(): Promise<PlayerSummary[]> {
@@ -121,7 +191,7 @@ export class FoundryRelayService {
     return threshold + Math.floor((xp / XP_PER_LEVEL) * (nextThreshold - threshold))
   }
 
-  private async updateActor(uuid: string, data: Record<string, number>, clientId?: string): Promise<void> {
+  private async updateActor(uuid: string, data: Record<string, number | string>, clientId?: string): Promise<void> {
     const params = new URLSearchParams({ clientId: clientId ?? await this.onlineClientId(), uuid })
     await this.request(`/update?${params}`, { method: 'PUT', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ data }) })
   }
@@ -231,4 +301,5 @@ export class FoundryRelayService {
   private legacyXpValue(value: unknown, label: string): number { const xp = this.nonNegativeInteger(value, label); if (xp > XP_PER_LEVEL) throw new BadRequestException(`${label} doit être un entier entre 0 et 1000.`); return xp }
 
   private object(value: unknown): Record<string, unknown> { return value && typeof value === 'object' && !Array.isArray(value) ? value as Record<string, unknown> : {} }
+  private integerOrNull(value: unknown): number | null { const number = typeof value === 'number' ? value : Number(value); return Number.isInteger(number) ? number : null }
 }

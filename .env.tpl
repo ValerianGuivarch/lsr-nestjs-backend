@@ -14,8 +14,10 @@ JDR_PORT=3333
 # STORAGE_PATH=/app/storage
 # API_BASE_URL=http://127.0.0.1:3333
 # CORS_ORIGINS=http://localhost:3000,https://pf2.l7r.fr
-# Portraits PNJ PF2 MJ : répertoire d'assets partagé avec Foundry VTT.
-# En production : /volume1/docker/foundry/data/Data/assets/l7r
+# Ancienne bibliothèque de portraits Foundry, lue uniquement comme repli pour
+# les PNJ historiques. Les nouveaux portraits sont stockés dans STORAGE_PATH et
+# téléversés vers Foundry par le Relay.
+# En production historique : /volume1/docker/foundry/data/Data/assets/l7r
 # FOUNDRY_ASSETS_ROOT=../../FoundryVTT/Data/assets/l7r
 # Carte de Golarion : ressources lourdes externes au dépôt (PMTiles, sprites, polices, index)
 # GOLARION_MAP_ASSETS_DIR=../../GolarionMapData
