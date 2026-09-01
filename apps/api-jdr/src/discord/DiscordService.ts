@@ -432,21 +432,25 @@ export class DiscordService implements OnModuleInit, OnModuleDestroy {
 
     return {
       content: [
-        `**Séance #${resume.sessionNumber}${
-          title
-            ? ` — ${title}`
-            : ''
-        }**`,
-
-        resume.date &&
-          `*${resume.date}*`,
+        [
+          `**Séance #${resume.sessionNumber}${
+            title
+              ? ` — ${title}`
+              : ''
+          }**`,
+          resume.date &&
+            `*${resume.date}*`,
+        ]
+          .filter(Boolean)
+          .join('\n'),
 
         resume.shortSummary,
 
-        '**Informations**',
-
-        facts ||
-          'Aucune information complémentaire.',
+        [
+          '**Informations**',
+          facts ||
+            'Aucune information complémentaire.',
+        ].join('\n'),
 
         `-# ${this.resumeSignature(
           resume.id,

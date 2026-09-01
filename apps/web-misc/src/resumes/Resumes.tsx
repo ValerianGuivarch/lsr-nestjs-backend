@@ -169,6 +169,28 @@ export default function Resumes() {
     setEditedId(null)
   }
 
+  const toggleParticipant = (
+    uuid: string,
+  ) => {
+    setDraft(
+      (current) => ({
+        ...current,
+        participants:
+          current.participants.includes(
+            uuid,
+          )
+            ? current.participants.filter(
+                (participant) =>
+                  participant !== uuid,
+              )
+            : [
+                ...current.participants,
+                uuid,
+              ],
+      }),
+    )
+  }
+
   const save = async (
     event: FormEvent,
   ) => {
@@ -629,53 +651,34 @@ export default function Resumes() {
               </label>
             </div>
 
-            <label>
-              Participants
+            <fieldset className="resume-participants">
+              <legend>
+                Participants
+              </legend>
 
-              <select
-                multiple
-                value={
-                  draft.participants
-                }
-                onChange={(
-                  event,
-                ) =>
-                  setDraft({
-                    ...draft,
-                    participants: [
-                      ...event
-                        .target
-                        .selectedOptions,
-                    ].map(
-                      (
-                        option,
-                      ) =>
-                        option.value,
-                    ),
-                  })
-                }
-              >
+              <div className="resume-participant-list">
                 {actors.map(
                   (actor) => (
-                    <option
-                      key={
-                        actor.uuid
-                      }
-                      value={
-                        actor.uuid
-                      }
+                    <label
+                      className="resume-participant"
+                      key={actor.uuid}
                     >
-                      {actor.name}
-                    </option>
+                      <input
+                        type="checkbox"
+                        checked={draft.participants.includes(actor.uuid)}
+                        onChange={() =>
+                          toggleParticipant(actor.uuid)
+                        }
+                      />
+
+                      <span>
+                        {actor.name}
+                      </span>
+                    </label>
                   ),
                 )}
-              </select>
-
-              <small>
-                ⌘/Ctrl-clic pour plusieurs
-                PJ.
-              </small>
-            </label>
+              </div>
+            </fieldset>
 
             <div className="resume-form-triple">
               <label>
