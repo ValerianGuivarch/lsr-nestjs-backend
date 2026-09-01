@@ -40,4 +40,14 @@ describe('Pf2MjController', () => {
     expect(service.saveResumeActorCache).not.toHaveBeenCalled()
     expect(service.readResumeActorCache).toHaveBeenCalledTimes(1)
   })
+  it('exposes the live resource-bundle inventory', async () => {
+    const foundry = { listActors: jest.fn() }
+    const inventory = { schemaVersion: 1, inventoryKnown: true, scannedAt: '2026-09-01T00:00:00.000Z', totalOnDisk: 1, bundles: [] }
+    const service = { resourceBundles: jest.fn().mockResolvedValue(inventory) }
+    const controller = new Pf2MjController(service as unknown as Pf2MjService, foundry as unknown as FoundryRelayService)
+
+    await expect(controller.resourceBundles()).resolves.toEqual(inventory)
+    expect(service.resourceBundles).toHaveBeenCalledTimes(1)
+  })
+
 })

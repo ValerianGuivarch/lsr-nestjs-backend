@@ -1,13 +1,36 @@
-# PF2 MJ
+# PF2 MJ — catalogue V3
 
-L’interface est disponible sur `/pf2-mj` via `npm run dev:pf2-mj` ou `npm run launch -- --profile pf2`.
+L’interface reste disponible sur `/pf2-mj`.
 
-Les données JSON sont versionnées dans `data/`. Les documents PDF ne sont pas copiés dans ce dépôt : l’API les lit depuis `PF2_LIBRARY_ROOT`, qui vaut par défaut `../../PF2/MJ` depuis la racine du dépôt. Sur un NAS, définissez cette variable vers le dossier partagé contenant `MJ`.
+La V3 sépare explicitement :
 
-Les portraits de PNJ sont enregistrés dans `STORAGE_PATH/portraits/`, indexés
-dans `pf2_media`, puis téléversés à la demande via le Relay vers
-`assets/l7r/portraits/` dans Foundry. `FOUNDRY_ASSETS_ROOT` ne sert plus qu'à
-lire les portraits historiques en repli ; aucun nouveau portrait ne dépend du
-chemin NAS historique.
+- les conteneurs non jouables (campagnes, saisons, collections) ;
+- les unités jouables, seules proposées dans « Trouver une partie » ;
+- les composants secondaires (guides, cartes, compilations, ressources) ;
+- les documents PDF physiques ;
+- les ZIP de ressources Foundry.
 
-Les liens vers les documents passent tous par l’API du serveur en cours d’exécution. Ainsi, un clic ouvre le PDF accessible depuis la machine (ou le NAS) qui héberge l’application.
+Le fichier `data/catalogue-pf2.json` reste en schéma V2 pendant la migration. `catalogue.ts` construit le modèle V3 à l’exécution en conservant les ids historiques et les associations documentaires.
+
+## Scanner local
+
+Le backend scanne maintenant :
+
+- `.pdf` et `.pd` ;
+- les PDF dont le nom contient `(info)` / `(information)` ;
+- tous les `.zip` présents sous `PF2_LIBRARY_ROOT`.
+
+Les ZIP sont associés par titre, alias, numéro PFS et chemin. Un ZIP associé à une campagne reçoit `scope: descendants` et couvre donc ses épisodes. Un ZIP associé à une unité jouable reçoit `scope: exact`.
+
+L’inventaire ZIP est servi par :
+
+- `GET /api/pf2-mj/resource-bundles` ;
+- `POST /api/pf2-mj/local-scan` pour le rapport PDF + ZIP complet.
+
+Une association incertaine reste `review` et n’est jamais assimilée silencieusement à un ZIP confirmé.
+
+## Curation
+
+Toutes les nouvelles écritures passent par `curation.byId[id]`. Les anciennes structures sont conservées pour lecture rétrocompatible ; elles ne sont pas détruites pendant cette étape.
+
+Voir `ARCHITECTURE_V3.md` pour le modèle détaillé.

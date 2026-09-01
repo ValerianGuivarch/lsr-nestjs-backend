@@ -49,6 +49,15 @@ export class Pf2MjController {
     }
   }
 
+  @Get('resource-bundles')
+  async resourceBundles(): Promise<unknown> {
+    try {
+      return await this.service.resourceBundles()
+    } catch (error) {
+      throw new HttpException(error instanceof Error ? error.message : 'Inventaire ZIP impossible', HttpStatus.BAD_REQUEST)
+    }
+  }
+
   @Post('local-scan')
   async localScan(): Promise<Record<string, unknown>> {
     try {

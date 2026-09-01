@@ -9,7 +9,6 @@ type Pnj={
   factions:{faction_id:string;role:string;statut:string}[];
   tags:string[];
   portrait?:string;
-  foundryActorUuid?:string|null;
   image?:string;
   aliases?:string[];
   lieux?:string[];
@@ -27,7 +26,6 @@ type Draft={
   factions:string;
   tags:string;
   portrait:string;
-  foundryActorUuid:string;
   image:string;
   aliases:string;
   lieux:string;
@@ -40,7 +38,7 @@ type Draft={
 };
 
 const emptyDraft:Draft={
-  nom:"",description:"",factions:"",tags:"",portrait:"",foundryActorUuid:"",image:"",aliases:"",lieux:"",regions:"",evenements:"",role:"",
+  nom:"",description:"",factions:"",tags:"",portrait:"",image:"",aliases:"",lieux:"",regions:"",evenements:"",role:"",
   importance:"Secondaire",statut:"Actif",notes:""
 };
 
@@ -51,7 +49,6 @@ const jsonTemplate=[{
   factions:[],
   tags:[],
   portrait:"",
-  foundryActorUuid:null,
   aliases:[],
   lieux:[],
   regions:[],
@@ -91,7 +88,6 @@ const draftFromPnj=(p:Pnj):Draft=>({
   factions:(p.factions??[]).map(f=>f.faction_id).join(", "),
   tags:(p.tags??[]).join(", "),
   portrait:p.portrait??"",
-  foundryActorUuid:p.foundryActorUuid??"",
   image:p.image??"",
   aliases:(p.aliases??[]).join(", "),
   lieux:(p.lieux??[]).join(", "),
@@ -155,11 +151,6 @@ export default function PnjPage(){
   const [importText,setImportText]=useState("");
   const [imageUrl,setImageUrl]=useState("");
   const [imageBusy,setImageBusy]=useState(false);
-  const [foundryInfo,setFoundryInfo]=useState<{actorUuid:string|null;actor:{uuid:string;name:string;type:string;level:number|null;hp:number|null;img:string|null}|null;status:"not-linked"|"available"|"unavailable";message?:string}|null>(null);
-  const [foundryCandidates,setFoundryCandidates]=useState<{uuid:string;name:string;type:string}[]>([]);
-  const [foundryBusy,setFoundryBusy]=useState(false);
-  const [showFoundryAssociator,setShowFoundryAssociator]=useState(false);
-  const [foundryQuery,setFoundryQuery]=useState("");
 
   const load=async()=>{
     const get=async(url:string)=>{const response=await fetch(url,{cache:"no-store"});if(!response.ok)throw new Error(`Impossible de charger ${url}.`);const payload=await response.json();return Array.isArray(payload)?payload:payload.items??[]};
@@ -167,8 +158,7 @@ export default function PnjPage(){
     setPnjs(people);setFactionRefs(factions);setLieuRefs(lieux);setRegionRefs(regions);setEventRefs(events);
   };
 
-  useEffect(()=>{void Promise.resolve().then(load).catch(error=>setMessage(error instanceof Error?error.message:String(error)))},[]);
-  useEffect(()=>{if(!selected){queueMicrotask(()=>setFoundryInfo(null));return}void fetch(`/apil7r/pf2-mj/pnj/${encodeURIComponent(selected.id)}/foundry`,{cache:"no-store"}).then(async response=>{const payload=await response.json();if(!response.ok)throw new Error(payload?.message??"Foundry indisponible.");setFoundryInfo(payload)}).catch(error=>setFoundryInfo({actorUuid:selected.foundryActorUuid??null,actor:null,status:"unavailable",message:error instanceof Error?error.message:String(error)}))},[selected]);
+  useEffect(()=>{load().catch(error=>setMessage(error instanceof Error?error.message:String(error)))},[]);
 
   const factionNames=useMemo(()=>new Map(factionRefs.map(item=>[item.id,item.nom])),[factionRefs]);
   const lieuNames=useMemo(()=>new Map(lieuRefs.map(item=>[item.id,item.nom])),[lieuRefs]);
@@ -222,9 +212,9 @@ export default function PnjPage(){
     setImageBusy(true);setMessage("");
     try{
       const form=new FormData();form.set("file",file);form.set("pnjId",editingId??(slug(draft.nom)||"pnj"));
-      const response=await fetch(editingId?`/apil7r/pf2-mj/pnj/${encodeURIComponent(editingId)}/portrait`:"/apil7r/pf2-mj/pnj/portrait",{method:"POST",body:form});const payload=await response.json().catch(()=>null);
+      const response=await fetch("/apil7r/pf2-mj/pnj/portrait",{method:"POST",body:form});const payload=await response.json().catch(()=>null);
       if(!response.ok||typeof payload?.portrait!=="string")throw new Error(payload?.message||payload?.error||"Impossible d’envoyer l’image.");
-      setDraft(current=>({...current,portrait:payload.portrait}));setMessage(`Portrait ${source} enregistré.${payload?.foundry==="synchronized"?" Foundry synchronisé.":payload?.foundry==="unavailable"?" Portrait local conservé ; Foundry indisponible.":""}`);
+      setDraft(current=>({...current,portrait:payload.portrait}));setMessage(`Portrait ${source} enregistré dans le stockage PF2.`);
     }catch(error){setMessage(error instanceof Error?error.message:String(error))}finally{setImageBusy(false)}
   };
 
@@ -232,7 +222,7 @@ export default function PnjPage(){
     if(!imageUrl.trim()){setMessage("Indique une URL d’image.");return}
     setImageBusy(true);setMessage("");
     try{
-      const response=await fetch(editingId?`/apil7r/pf2-mj/pnj/${encodeURIComponent(editingId)}/portrait/url`:"/apil7r/pf2-mj/pnj/portrait-from-url",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({url:imageUrl.trim(),pnjId:editingId??(slug(draft.nom)||"pnj")})});const payload=await response.json().catch(()=>null);
+      const response=await fetch("/apil7r/pf2-mj/pnj/portrait-from-url",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({url:imageUrl.trim(),pnjId:editingId??(slug(draft.nom)||"pnj")})});const payload=await response.json().catch(()=>null);
       if(!response.ok||typeof payload?.portrait!=="string")throw new Error(payload?.message||payload?.error||"Impossible de récupérer cette URL.");
       setDraft(current=>({...current,portrait:payload.portrait}));setImageUrl("");setMessage("Portrait importé dans le stockage PF2.");
     }catch(error){setMessage(error instanceof Error?error.message:String(error))}finally{setImageBusy(false)}
@@ -262,7 +252,6 @@ export default function PnjPage(){
         factions:csv(draft.factions).map(faction_id=>({faction_id,role:"",statut:"Actuel"})),
         tags:csv(draft.tags),
         portrait:draft.portrait||undefined,
-        foundryActorUuid:draft.foundryActorUuid||null,
         image:draft.image.trim()||undefined,
         aliases:csv(draft.aliases),
         lieux:csv(draft.lieux),
@@ -302,7 +291,6 @@ export default function PnjPage(){
         factions:Array.isArray(raw.factions)?raw.factions.filter((value:any)=>value&&typeof value.faction_id==="string"):[],
         tags:Array.isArray(raw.tags)?raw.tags:[],
         portrait:typeof raw.portrait==="string"?raw.portrait:undefined,
-        foundryActorUuid:typeof raw.foundryActorUuid==="string"?raw.foundryActorUuid:null,
         image:raw.image||undefined,
         aliases:Array.isArray(raw.aliases)?raw.aliases:[],
         lieux:Array.isArray(raw.lieux)?raw.lieux:[],
@@ -340,13 +328,6 @@ export default function PnjPage(){
     const a=document.createElement("a");a.href=url;a.download=filename;a.click();URL.revokeObjectURL(url);
   };
 
-  const updateSelected=(pnj:Pnj)=>{setPnjs(items=>items.map(item=>item.id===pnj.id?pnj:item));setSelected(pnj);setFoundryInfo(null)};
-  const loadFoundryCandidates=async()=>{setFoundryBusy(true);setMessage("");try{const response=await fetch("/apil7r/pf2-mj/pnj/foundry/candidates",{cache:"no-store"});const payload=await response.json();if(!response.ok)throw new Error(payload?.message??"Foundry indisponible.");setFoundryCandidates(Array.isArray(payload)?payload:[]);setShowFoundryAssociator(true)}catch(error){setMessage(error instanceof Error?error.message:String(error))}finally{setFoundryBusy(false)}};
-  const associateFoundry=async(actorUuid:string)=>{if(!selected)return;setFoundryBusy(true);try{const response=await fetch(`/apil7r/pf2-mj/pnj/${encodeURIComponent(selected.id)}/foundry`,{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify({actorUuid})});const payload=await response.json();if(!response.ok)throw new Error(payload?.message??"Association impossible.");updateSelected(payload as Pnj);setShowFoundryAssociator(false);setMessage("Actor Foundry associé.")}catch(error){setMessage(error instanceof Error?error.message:String(error))}finally{setFoundryBusy(false)}};
-  const detachFoundry=async()=>{if(!selected||!window.confirm("Dissocier cet Actor ? Il ne sera pas supprimé de Foundry."))return;setFoundryBusy(true);try{const response=await fetch(`/apil7r/pf2-mj/pnj/${encodeURIComponent(selected.id)}/foundry`,{method:"DELETE"});const payload=await response.json();if(!response.ok)throw new Error(payload?.message??"Dissociation impossible.");updateSelected(payload as Pnj);setMessage("Actor Foundry dissocié ; aucun Actor n’a été supprimé.")}catch(error){setMessage(error instanceof Error?error.message:String(error))}finally{setFoundryBusy(false)}};
-  const createFoundryPlaceholder=async()=>{if(!selected||!window.confirm(`Créer un Actor PNJ minimal pour ${selected.nom} ?`))return;setFoundryBusy(true);try{const response=await fetch(`/apil7r/pf2-mj/pnj/${encodeURIComponent(selected.id)}/foundry/create-placeholder`,{method:"POST"});const payload=await response.json();if(!response.ok)throw new Error(payload?.message??"Création du pion impossible.");updateSelected(payload.pnj as Pnj);setMessage(`Pion Foundry créé : ${payload.actor.uuid}.`)}catch(error){setMessage(error instanceof Error?error.message:String(error))}finally{setFoundryBusy(false)}};
-  const syncFoundryPortrait=async()=>{if(!selected)return;setFoundryBusy(true);try{const response=await fetch(`/apil7r/pf2-mj/pnj/${encodeURIComponent(selected.id)}/foundry/sync-portrait`,{method:"POST"});const payload=await response.json();if(!response.ok)throw new Error(payload?.message??"Synchronisation impossible.");setFoundryInfo(current=>current?{...current,status:payload.foundry==="synchronized"?"available":"unavailable"}:current);setMessage(payload.foundry==="synchronized"?"Portrait synchronisé dans Foundry.":"Portrait local conservé ; Foundry indisponible.")}catch(error){setMessage(error instanceof Error?error.message:String(error))}finally{setFoundryBusy(false)}};
-
   const copyImage=async(p:Pnj)=>{
     const image=resolvePnjImage(p);
     if(!image){setMessage(`Aucune image définie pour ${p.nom}.`);return}
@@ -360,7 +341,7 @@ export default function PnjPage(){
 
   return <main className="pnj-page">
     <style>{`
-      .pnj-page{max-width:1500px;margin:0 auto;padding:24px;color:#252a25}.pnj-toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px}.pnj-toolbar h1{font-size:24px;margin:0 auto 0 0}.pnj-button{border:1px solid #c9b98f;background:#fffaf0;color:#6e5319;border-radius:8px;padding:9px 12px;font:inherit;font-weight:700;cursor:pointer}.pnj-button.primary{background:#765719;color:#fff;border-color:#765719}.pnj-button:disabled{opacity:.55;cursor:not-allowed}.pnj-message{min-height:22px;margin:4px 0 12px;color:#5d614f;font-size:13px}.pnj-filters{display:grid;grid-template-columns:minmax(220px,2fr) repeat(4,minmax(130px,1fr));gap:9px;margin-bottom:18px}.pnj-filters input,.pnj-filters select,.pnj-form input,.pnj-form select,.pnj-form textarea,.pnj-dialog>input{width:100%;box-sizing:border-box;border:1px solid #d6cdbd;border-radius:8px;background:#fffdf8;padding:9px 10px;font:inherit;color:inherit}.pnj-count{font-size:12px;color:#71756c;margin:0 0 8px}.pnj-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px}.pnj-card{border:1px solid #ded7cb;background:#fffdf9;border-radius:12px;overflow:hidden;min-width:0}.pnj-card-image{display:block;width:100%;aspect-ratio:4/3;object-fit:cover;background:#ece8df;cursor:copy;border:0;padding:0}.pnj-card-image.placeholder{display:grid;place-items:center;font-size:42px;color:#8c877d}.pnj-card-body{padding:12px}.pnj-card h2{font-size:17px;margin:0 0 4px}.pnj-role{font-size:12px;color:#777269;margin-bottom:8px}.pnj-description{font-size:13px;line-height:1.45;margin:0 0 9px}.pnj-chips{display:flex;gap:5px;flex-wrap:wrap}.pnj-chip{border:1px solid #d9cfba;border-radius:999px;padding:3px 7px;font-size:10px;background:#faf5e9}.pnj-chip.faction{border-color:#bca66e;background:#fff7de}.pnj-card-more{width:100%;border:0;border-top:1px solid #eee7da;background:#faf7f0;padding:8px;cursor:pointer;font:inherit;font-size:11px;font-weight:700;color:#66542b}.pnj-dialog-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.35);display:grid;place-items:center;padding:20px;z-index:50}.pnj-dialog{width:min(780px,100%);max-height:90vh;overflow:auto;background:#fffdf9;border-radius:14px;padding:18px}.pnj-dialog-head{display:flex;align-items:center;gap:8px;margin-bottom:12px}.pnj-dialog-head h2{margin:0 auto 0 0}.pnj-form{display:grid;grid-template-columns:1fr 1fr;gap:10px}.pnj-form .wide{grid-column:1/-1}.pnj-form label{font-size:12px;font-weight:700;display:grid;gap:5px}.pnj-dialog-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:14px}.pnj-detail-image{width:180px;max-width:38%;aspect-ratio:1;object-fit:cover;border-radius:10px;cursor:copy;float:left;margin:0 14px 10px 0}.pnj-detail dl{display:grid;grid-template-columns:110px 1fr;gap:7px 10px;font-size:13px}.pnj-detail dt{font-weight:700;color:#6b675f}.pnj-detail dd{margin:0}.pnj-empty{padding:40px;text-align:center;border:1px dashed #cfc7b8;border-radius:12px;color:#777}.pnj-hint{font-size:11px;color:#777;margin-top:6px}.pnj-import-textarea{width:100%;box-sizing:border-box;min-height:420px;resize:vertical;border:1px solid #cfc6b6;border-radius:9px;background:#fffdf8;padding:12px;font:12px/1.5 ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono",monospace;color:#252a25;tab-size:2}.pnj-import-help{font-size:12px;line-height:1.45;color:#6d6b65;margin:0 0 10px}.pnj-import-tools{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 0}.pnj-image-drop{grid-column:1/-1;min-height:190px;border:2px dashed #c9b98f;border-radius:12px;background:#faf7f0;display:grid;place-items:center;text-align:center;padding:14px;outline:none;cursor:pointer}.pnj-image-drop:focus{border-color:#765719;box-shadow:0 0 0 3px #eadfbf}.pnj-image-drop img{width:150px;height:150px;object-fit:cover;border-radius:9px;border:1px solid #d6cdbd}.pnj-image-drop strong{display:block;margin:7px 0 3px}.pnj-image-drop small{display:block;color:#6d6b65}.pnj-image-tools{grid-column:1/-1;display:flex;gap:8px;align-items:center;flex-wrap:wrap}.pnj-image-tools input{flex:1;min-width:220px}.pnj-file-choice input{display:none}.pnj-foundry-section{clear:both;border-top:1px solid #ded7cb;margin-top:18px;padding-top:12px}.pnj-foundry-section h3{margin:0 0 8px}.pnj-foundry-section p{font-size:13px}.pnj-foundry-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.pnj-foundry-candidates{display:grid;gap:8px;margin-top:12px;max-height:46vh;overflow:auto}.pnj-foundry-candidate{display:grid;grid-template-columns:1fr auto;gap:3px 10px;text-align:left;border:1px solid #ded7cb;background:#fffdf9;border-radius:8px;padding:10px;cursor:pointer;font:inherit;color:inherit}.pnj-foundry-candidate small{grid-column:1;color:#6d6b65}.pnj-foundry-candidate span{grid-column:2;grid-row:1/3;color:#765719;font-weight:700;align-self:center}@media(max-width:900px){.pnj-filters{grid-template-columns:1fr 1fr}.pnj-filters input{grid-column:1/-1}}@media(max-width:560px){.pnj-page{padding:14px}.pnj-filters,.pnj-form{grid-template-columns:1fr}.pnj-form .wide{grid-column:auto}.pnj-grid{grid-template-columns:1fr 1fr}.pnj-toolbar h1{width:100%;margin-bottom:4px}}@media(max-width:390px){.pnj-grid{grid-template-columns:1fr}}
+      .pnj-page{max-width:1500px;margin:0 auto;padding:24px;color:#252a25}.pnj-toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px}.pnj-toolbar h1{font-size:24px;margin:0 auto 0 0}.pnj-button{border:1px solid #c9b98f;background:#fffaf0;color:#6e5319;border-radius:8px;padding:9px 12px;font:inherit;font-weight:700;cursor:pointer}.pnj-button.primary{background:#765719;color:#fff;border-color:#765719}.pnj-button:disabled{opacity:.55;cursor:not-allowed}.pnj-message{min-height:22px;margin:4px 0 12px;color:#5d614f;font-size:13px}.pnj-filters{display:grid;grid-template-columns:minmax(220px,2fr) repeat(4,minmax(130px,1fr));gap:9px;margin-bottom:18px}.pnj-filters input,.pnj-filters select,.pnj-form input,.pnj-form select,.pnj-form textarea{width:100%;box-sizing:border-box;border:1px solid #d6cdbd;border-radius:8px;background:#fffdf8;padding:9px 10px;font:inherit;color:inherit}.pnj-count{font-size:12px;color:#71756c;margin:0 0 8px}.pnj-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px}.pnj-card{border:1px solid #ded7cb;background:#fffdf9;border-radius:12px;overflow:hidden;min-width:0}.pnj-card-image{display:block;width:100%;aspect-ratio:4/3;object-fit:cover;background:#ece8df;cursor:copy;border:0;padding:0}.pnj-card-image.placeholder{display:grid;place-items:center;font-size:42px;color:#8c877d}.pnj-card-body{padding:12px}.pnj-card h2{font-size:17px;margin:0 0 4px}.pnj-role{font-size:12px;color:#777269;margin-bottom:8px}.pnj-description{font-size:13px;line-height:1.45;margin:0 0 9px}.pnj-chips{display:flex;gap:5px;flex-wrap:wrap}.pnj-chip{border:1px solid #d9cfba;border-radius:999px;padding:3px 7px;font-size:10px;background:#faf5e9}.pnj-chip.faction{border-color:#bca66e;background:#fff7de}.pnj-card-more{width:100%;border:0;border-top:1px solid #eee7da;background:#faf7f0;padding:8px;cursor:pointer;font:inherit;font-size:11px;font-weight:700;color:#66542b}.pnj-dialog-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.35);display:grid;place-items:center;padding:20px;z-index:50}.pnj-dialog{width:min(780px,100%);max-height:90vh;overflow:auto;background:#fffdf9;border-radius:14px;padding:18px}.pnj-dialog-head{display:flex;align-items:center;gap:8px;margin-bottom:12px}.pnj-dialog-head h2{margin:0 auto 0 0}.pnj-form{display:grid;grid-template-columns:1fr 1fr;gap:10px}.pnj-form .wide{grid-column:1/-1}.pnj-form label{font-size:12px;font-weight:700;display:grid;gap:5px}.pnj-dialog-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:14px}.pnj-detail-image{width:180px;max-width:38%;aspect-ratio:1;object-fit:cover;border-radius:10px;cursor:copy;float:left;margin:0 14px 10px 0}.pnj-detail dl{display:grid;grid-template-columns:110px 1fr;gap:7px 10px;font-size:13px}.pnj-detail dt{font-weight:700;color:#6b675f}.pnj-detail dd{margin:0}.pnj-empty{padding:40px;text-align:center;border:1px dashed #cfc7b8;border-radius:12px;color:#777}.pnj-hint{font-size:11px;color:#777;margin-top:6px}.pnj-import-textarea{width:100%;box-sizing:border-box;min-height:420px;resize:vertical;border:1px solid #cfc6b6;border-radius:9px;background:#fffdf8;padding:12px;font:12px/1.5 ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono",monospace;color:#252a25;tab-size:2}.pnj-import-help{font-size:12px;line-height:1.45;color:#6d6b65;margin:0 0 10px}.pnj-import-tools{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 0}.pnj-image-drop{grid-column:1/-1;min-height:190px;border:2px dashed #c9b98f;border-radius:12px;background:#faf7f0;display:grid;place-items:center;text-align:center;padding:14px;outline:none;cursor:pointer}.pnj-image-drop:focus{border-color:#765719;box-shadow:0 0 0 3px #eadfbf}.pnj-image-drop img{width:150px;height:150px;object-fit:cover;border-radius:9px;border:1px solid #d6cdbd}.pnj-image-drop strong{display:block;margin:7px 0 3px}.pnj-image-drop small{display:block;color:#6d6b65}.pnj-image-tools{grid-column:1/-1;display:flex;gap:8px;align-items:center;flex-wrap:wrap}.pnj-image-tools input{flex:1;min-width:220px}.pnj-file-choice input{display:none}@media(max-width:900px){.pnj-filters{grid-template-columns:1fr 1fr}.pnj-filters input{grid-column:1/-1}}@media(max-width:560px){.pnj-page{padding:14px}.pnj-filters,.pnj-form{grid-template-columns:1fr}.pnj-form .wide{grid-column:auto}.pnj-grid{grid-template-columns:1fr 1fr}.pnj-toolbar h1{width:100%;margin-bottom:4px}}@media(max-width:390px){.pnj-grid{grid-template-columns:1fr}}
     `}</style>
 
     <div className="pnj-toolbar">
@@ -439,14 +420,6 @@ export default function PnjPage(){
       </section>
     </div>}
 
-    {showFoundryAssociator&&selected&&<div className="pnj-dialog-backdrop" onMouseDown={e=>{if(e.target===e.currentTarget&&!foundryBusy)setShowFoundryAssociator(false)}}>
-      <section className="pnj-dialog" role="dialog" aria-modal="true" aria-label="Associer un Actor Foundry">
-        <div className="pnj-dialog-head"><h2>Associer un Actor Foundry</h2><button className="pnj-button" disabled={foundryBusy} onClick={()=>setShowFoundryAssociator(false)}>Fermer</button></div>
-        <input value={foundryQuery} onChange={event=>setFoundryQuery(event.target.value)} placeholder="Rechercher par nom ou UUID…"/>
-        <div className="pnj-foundry-candidates">{foundryCandidates.filter(actor=>normalize(`${actor.name} ${actor.uuid}`).includes(normalize(foundryQuery))).map(actor=><button type="button" className="pnj-foundry-candidate" disabled={foundryBusy} key={actor.uuid} onClick={()=>void associateFoundry(actor.uuid)}><strong>{actor.name}</strong><small>{actor.type} · {actor.uuid}</small><span>Associer</span></button>)}</div>
-      </section>
-    </div>}
-
     {selected&&<div className="pnj-dialog-backdrop" onMouseDown={e=>{if(e.target===e.currentTarget)setSelected(null)}}>
       <article className="pnj-dialog pnj-detail" role="dialog" aria-modal="true" aria-label={selected.nom}>
         <div className="pnj-dialog-head"><h2>{selected.nom}</h2><button className="pnj-button primary" onClick={()=>openEdit(selected)}>Modifier</button><button className="pnj-button" onClick={()=>setSelected(null)}>Fermer</button></div>
@@ -464,16 +437,6 @@ export default function PnjPage(){
           <dt>Statut</dt><dd>{selected.statut||"—"}</dd>
           <dt>Notes MJ</dt><dd>{selected.notes||"—"}</dd>
         </dl>
-        <section className="pnj-foundry-section">
-          <h3>Foundry</h3>
-          {!foundryInfo?<p>Vérification de l’Actor associé…</p>:foundryInfo.status==="not-linked"?<p>Aucun Actor associé.</p>:foundryInfo.status==="unavailable"?<p>Actor associé <code>{foundryInfo.actorUuid}</code>, mais Foundry est indisponible ou l’Actor est introuvable.</p>:<div><strong>✓ {foundryInfo.actor?.name}</strong><br/><code>{foundryInfo.actorUuid}</code><br/><small>{foundryInfo.actor?.type}{foundryInfo.actor?.level!==null?` · niveau ${foundryInfo.actor?.level}`:""}{foundryInfo.actor?.hp!==null?` · PV ${foundryInfo.actor?.hp}`:""}</small></div>}
-          <div className="pnj-foundry-actions">
-            {!selected.foundryActorUuid&&<button className="pnj-button primary" disabled={foundryBusy} onClick={()=>void createFoundryPlaceholder()}>Créer un pion</button>}
-            {!selected.foundryActorUuid&&<button className="pnj-button" disabled={foundryBusy} onClick={()=>void loadFoundryCandidates()}>Associer un Actor existant</button>}
-            {selected.foundryActorUuid&&<><button className="pnj-button" disabled={foundryBusy||!selected.portrait} onClick={()=>void syncFoundryPortrait()}>Resynchroniser le portrait</button><button className="pnj-button" disabled={foundryBusy} onClick={()=>void loadFoundryCandidates()}>Changer l’association</button><button className="pnj-button" disabled={foundryBusy} onClick={()=>void detachFoundry()}>Dissocier</button></>}
-            <button className="pnj-button" disabled title="La génération complète des statistiques PF2 n’est pas encore implémentée.">Générer / compléter PF2</button>
-          </div>
-        </section>
       </article>
     </div>}
   </main>;
