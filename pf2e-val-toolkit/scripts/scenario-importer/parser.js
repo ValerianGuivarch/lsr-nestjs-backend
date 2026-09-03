@@ -102,6 +102,17 @@ export function validateScenarioData(data) {
     );
   }
 
+  if (data.packageVersion != null && (!Number.isInteger(data.packageVersion) || data.packageVersion < 1)) {
+    errors.push("packageVersion doit être un entier positif.");
+  }
+  if (data.npcs != null && !Array.isArray(data.npcs)) {
+    errors.push("Le champ npcs doit être un tableau.");
+  }
+  for (const [index, npc] of (data.npcs ?? []).entries()) {
+    if (!npc?.key) errors.push(`npcs[${index}].key est manquant.`);
+    if (!npc?.npcId && !npc?.name) errors.push(`npcs[${index}] doit contenir npcId ou name.`);
+  }
+
   if (!Array.isArray(data.actors)) {
     errors.push(
       "Le champ actors doit être un tableau."
@@ -138,6 +149,13 @@ export function validateScenarioData(data) {
       errors.push(
         `actors[${index}] doit avoir uuid ou lookup.`
       );
+    }
+
+    if (actor?.type === "narrative") {
+      if (!actor.npcId) errors.push(`actors[${index}].npcId est manquant.`);
+      if (!actor.actor || !["reference", "custom"].includes(actor.actor.type)) {
+        errors.push(`actors[${index}].actor doit être une définition reference ou custom.`);
+      }
     }
 
     if (

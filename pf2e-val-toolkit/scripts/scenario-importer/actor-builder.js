@@ -64,6 +64,13 @@ export async function createCustomNpc(definition, folder) {
   return { status: "created", actor };
 }
 
+export async function linkNarrativeNpc(actor, npcId, definition = {}) {
+  if (!npcId) throw new Error("npcId narratif manquant.");
+  await actor.setFlag("pf2e-val-toolkit", "npcId", npcId);
+  await actor.setFlag("pf2e-val-toolkit", "scenarioActorKey", definition.key ?? null);
+  return actor;
+}
+
 export async function importCompendiumActor(sourceActor, folder, definition = {}) {
   const sourceUuid = sourceActor.uuid;
 

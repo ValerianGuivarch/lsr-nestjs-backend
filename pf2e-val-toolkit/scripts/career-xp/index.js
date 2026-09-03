@@ -622,7 +622,7 @@ async function initialReconciliation() {
   }
 }
 
-function resumesApiUrl() {
+export function pf2MjApiUrl() {
   return String(
     game.settings.get(MODULE_ID, RESUMES_API_SETTING) ||
     DEFAULT_RESUMES_API_BASE_URL
@@ -657,7 +657,7 @@ export function experienceFromResumes(actor, resumes) {
 }
 
 async function fetchResumes() {
-  const response = await fetch(`${resumesApiUrl()}/sessions`, {
+  const response = await fetch(`${pf2MjApiUrl()}/sessions`, {
     headers: { Accept: "application/json" },
     signal: AbortSignal.timeout(15_000)
   });

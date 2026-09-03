@@ -1,11 +1,12 @@
 import { validateScenarioData } from "./parser.js";
 import { findActorInCompendiums } from "./compendium-resolver.js";
-import { createCustomNpc, importCompendiumActor } from "./actor-builder.js";
+import { createCustomNpc, importCompendiumActor, linkNarrativeNpc } from "./actor-builder.js";
 import { ensureScenarioFolderTree } from "./folder-manager.js";
 import { createOrUpdateScenarioJournal } from "./journal-builder.js";
 import { createOrUpdateScenarioScenes } from "./scene-builder.js";
 import { resolveScenarioAssets } from "./asset-resolver.js";
 import { loadScenarioPackage } from "./package-importer.js";
+import { pf2MjApiUrl } from "../career-xp/index.js";
 
 async function selectScenarioFile() {
   const input = document.createElement("input");
@@ -114,6 +115,20 @@ async function processCustom(definition, folder) {
   };
 }
 
+async function processNarrative(definition, folder, scenarioId) {
+  const existing = game.actors.find(actor => actor.getFlag("pf2e-val-toolkit", "npcId") === definition.npcId);
+  if (existing) {
+    await linkNarrativeNpc(existing, definition.npcId, definition);
+    return { key: definition.key, name: definition.name, type: "narrative", status: "existing", uuid: existing.uuid, actor: existing, npcId: definition.npcId };
+  }
+  const actorDefinition = { ...definition.actor, key: definition.key, name: definition.name, image: definition.image };
+  const result = actorDefinition.type === "reference"
+    ? await processReference(actorDefinition, folder, scenarioId)
+    : await processCustom(actorDefinition, folder);
+  if (result.actor) await linkNarrativeNpc(result.actor, definition.npcId, definition);
+  return { ...result, type: "narrative", npcId: definition.npcId };
+}
+
 function actorLibraryFor(data) {
   return {
     root: data.actorLibrary?.root ?? "MJ",
@@ -177,6 +192,8 @@ async function runScenarioImport(rawData) {
         );
       } else if (definition.type === "custom") {
         results.push(await processCustom(definition, actorFolders.scenario));
+      } else if (definition.type === "narrative") {
+        results.push(await processNarrative(definition, actorFolders.scenario, data.scenario.id));
       } else {
         results.push({
           key: definition.key,
@@ -258,6 +275,27 @@ function showSummary(data, result) {
   result.journal?.sheet?.render(true);
 }
 
+async function notifyApplicationDeployment(data, result) {
+  const failedActors = result.results.filter(item => ["missing", "error"].includes(item.status));
+  const failedScenes = (result.scenes ?? []).filter(item => ["invalid", "error"].includes(item.status));
+  if (failedActors.length || failedScenes.length) {
+    console.warn("PF2e Val Toolkit | Déploiement non signalé : import partiel.");
+    return;
+  }
+  try {
+    const response = await fetch(`${pf2MjApiUrl()}/scenario-packages/${encodeURIComponent(data.scenario.id)}/deployed`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Accept: "application/json" },
+      body: JSON.stringify({ packageVersion: data.packageVersion ?? 1, worldId: game.world.id, actorUuids: result.results.map(item => item.uuid).filter(Boolean), sceneUuids: (result.scenes ?? []).map(item => item.uuid).filter(Boolean) }),
+      signal: AbortSignal.timeout(10_000)
+    });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    console.info(`PF2e Val Toolkit | Déploiement signalé : ${data.scenario.id}.`);
+  } catch (error) {
+    console.warn("PF2e Val Toolkit | API indisponible : import Foundry conservé.", error);
+  }
+}
+
 async function importScenario() {
   const file = await selectScenarioFile();
   if (!file) return;
@@ -273,6 +311,7 @@ async function importScenario() {
 
     const result = await runScenarioImport(data);
     showSummary(data, result);
+    await notifyApplicationDeployment(data, result);
   } catch (error) {
     console.error("PF2e Val Toolkit | Erreur d'import", error);
     ui.notifications.error("Impossible d'importer le scénario.");
