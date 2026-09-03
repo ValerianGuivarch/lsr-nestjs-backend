@@ -536,3 +536,22 @@
 /* V3: présence réelle issue du scan local */
 .pf2-mj-v3 .document-row.presence-missing{opacity:.62}
 .pf2-mj-v3 .document-row.presence-missing a{text-decoration:line-through}
+
+
+/* PF2 geography picker V3 */
+.pf2-mj-v3 .geo-picker{position:relative;min-width:0;height:40px;z-index:8}
+.pf2-mj-v3 .geo-picker-trigger{width:100%;height:40px;display:flex;align-items:center;justify-content:space-between;gap:8px;border:1px solid var(--line);border-radius:5px;background:var(--panel);color:var(--text);padding:0 10px;font-size:9px;text-align:left}
+.pf2-mj-v3 .geo-picker-trigger span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.pf2-mj-v3 .geo-picker-trigger b{color:var(--muted);font-size:9px}
+.pf2-mj-v3 .geo-picker-trigger.active{border-color:#c8ac6e;background:#fffaf0}
+.pf2-mj-v3 .geo-picker-popover{position:absolute;top:calc(100% + 5px);left:0;width:min(440px,calc(100vw - 32px));border:1px solid var(--line);border-radius:8px;background:var(--panel);box-shadow:0 14px 38px rgba(35,31,24,.18);overflow:hidden;z-index:100}
+.pf2-mj-v3 .geo-picker-search{display:grid;grid-template-columns:auto 1fr;align-items:center;gap:7px;padding:9px;border-bottom:1px solid var(--line);background:#faf8f2}.pf2-mj-v3 .geo-picker-search span{color:var(--muted)}
+.pf2-mj-v3 .geo-picker-search input{width:100%;border:1px solid var(--line);border-radius:5px;background:var(--panel);color:var(--text);padding:8px 9px;outline:0;font-size:10px}.pf2-mj-v3 .geo-picker-search input:focus{border-color:#b89b5e}
+.pf2-mj-v3 .geo-picker-scroll{max-height:440px;overflow:auto;padding:6px}
+.pf2-mj-v3 .geo-picker-all,.pf2-mj-v3 .geo-picker-orphan,.pf2-mj-v3 .geo-picker-search-result{width:100%;border:0;border-radius:5px;background:transparent;color:var(--text);padding:8px 9px;text-align:left;font-size:9px}.pf2-mj-v3 .geo-picker-all:hover,.pf2-mj-v3 .geo-picker-orphan:hover,.pf2-mj-v3 .geo-picker-search-result:hover{background:#f4efe3}
+.pf2-mj-v3 .geo-picker-row{display:grid;grid-template-columns:22px 1fr;align-items:stretch;padding-left:calc(var(--geo-depth) * 15px);border-radius:5px}.pf2-mj-v3 .geo-picker-row:hover{background:#f4efe3}.pf2-mj-v3 .geo-picker-row.selected{background:#f5e9c9}
+.pf2-mj-v3 .geo-picker-chevron{border:0;background:transparent;color:var(--muted);padding:0;cursor:pointer}.pf2-mj-v3 .geo-picker-spacer{width:22px}
+.pf2-mj-v3 .geo-picker-choice{border:0;background:transparent;color:var(--text);padding:8px 7px;text-align:left;display:grid;gap:2px;cursor:pointer;font-size:9px}.pf2-mj-v3 .geo-picker-choice small,.pf2-mj-v3 .geo-picker-search-result small{display:block;color:var(--muted);font-size:7px;margin-top:2px}
+.pf2-mj-v3 .geo-picker-unclassified{margin-top:6px;padding-top:6px;border-top:1px solid var(--line)}.pf2-mj-v3 .geo-picker-unclassified-toggle{width:100%;display:flex;align-items:center;justify-content:space-between;border:0;background:transparent;color:var(--muted);padding:7px 9px;text-align:left;font-size:8px;font-weight:700}.pf2-mj-v3 .geo-picker-unclassified-toggle b{min-width:22px;border-radius:999px;background:#ebe6da;padding:2px 5px;text-align:center;font-size:7px}
+.pf2-mj-v3 .geo-picker-orphan{padding-left:31px}.pf2-mj-v3 .geo-picker-empty{padding:14px 10px;color:var(--muted);font-size:9px;text-align:center}
+.pf2-mj-v3 .geo-picker .selected{font-weight:700;color:#765719}
+@media(max-width:760px){.pf2-mj-v3 .geo-picker-popover{position:fixed;left:16px;right:16px;top:18vh;width:auto;max-height:68vh}.pf2-mj-v3 .geo-picker-scroll{max-height:54vh}}

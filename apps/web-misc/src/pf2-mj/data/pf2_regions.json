@@ -34,7 +34,7 @@
     "id": "region_absalom_et_l_ile_de_la_pierre_etoile",
     "nom": "Absalom et l'île de la Pierre-Étoile",
     "type": "Cité-État",
-    "parent_id": "region_region_de_la_mer_interieure",
+    "parent_id": "region_kortos",
     "capitale_lieu_id": "lieu_absalom",
     "description": "Puissante cité-État insulaire au centre de la mer Intérieure, siège de la Société des Éclaireurs et de la Pierre-Étoile.",
     "histoire": "Fondée par Aroden en 1 AR, Absalom a survécu à d'innombrables sièges et demeure un carrefour politique, religieux et commercial mondial.",
@@ -1608,6 +1608,39 @@
     "statut": "Actif",
     "notes": "",
     "source": "Lost Omens: World Guide",
+    "evenements": []
+  },
+  {
+    "id": "region_kortos",
+    "nom": "Île de Kortos",
+    "type": "Île / région",
+    "parent_id": "region_region_de_la_mer_interieure",
+    "capitale_lieu_id": "lieu_absalom",
+    "description": "Île de la Pierre-Étoile au centre de la mer Intérieure. Absalom se trouve sur l’île et constitue son principal centre urbain.",
+    "histoire": "",
+    "gouvernement": "",
+    "culture": "",
+    "religions": [],
+    "factions": [],
+    "personnages_cles": [],
+    "lieux_cles": [
+      "lieu_absalom"
+    ],
+    "relations": [],
+    "tags": [
+      "Kortos",
+      "Pierre-Étoile"
+    ],
+    "image": "",
+    "aliases": [
+      "Kortos",
+      "Isle of Kortos",
+      "Starstone Isle",
+      "Île de la Pierre-Étoile"
+    ],
+    "statut": "Actif",
+    "notes": "",
+    "source": "Lost Omens: Absalom",
     "evenements": []
   }
 ]

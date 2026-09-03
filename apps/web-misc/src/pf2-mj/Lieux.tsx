@@ -1,6 +1,7 @@
 "use client";
 
 import {ChangeEvent,useEffect,useMemo,useState} from "react";
+import {regionContains} from "./geography";
 
 type Lieu={id:string;nom:string;type:string;region_id?:string|null;parent_id?:string|null;description:string;histoire?:string;factions:string[];personnages_cles:string[];tags:string[];image:string;aliases:string[];statut:string;notes?:string;source?:string;evenements:string[]};
 type RefItem={id:string;nom:string};
@@ -24,7 +25,7 @@ export default function LieuxPage(){
   const maps=useMemo(()=>({lieux:new Map(items.map(x=>[x.id,x.nom])),pnjs:new Map(pnjs.map(x=>[x.id,x.nom])),factions:new Map(factions.map(x=>[x.id,x.nom])),regions:new Map(regions.map(x=>[x.id,x.nom])),events:new Map(events.map(x=>[x.id,x.nom]))}),[items,pnjs,factions,regions,events]);
   const name=(k:keyof typeof maps,id?:string|null)=>id?(maps[k].get(id)??id):"—";
   const types=useMemo(()=>unique(items.map(x=>x.type)),[items]),statuts=useMemo(()=>unique(items.map(x=>x.statut)),[items]);
-  const filtered=useMemo(()=>{const q=normalize(query.trim());return items.filter(x=>{const h=normalize([x.nom,x.type,x.description,x.histoire,x.source,...x.tags,...x.aliases].filter(Boolean).join(" "));return(!q||h.includes(q))&&(!type||x.type===type)&&(!region||x.region_id===region)&&(!statut||x.statut===statut)}).sort((a,b)=>a.nom.localeCompare(b.nom,"fr"))},[items,query,type,region,statut]);
+  const filtered=useMemo(()=>{const q=normalize(query.trim());return items.filter(x=>{const h=normalize([x.nom,x.type,x.description,x.histoire,x.source,...x.tags,...x.aliases].filter(Boolean).join(" "));return(!q||h.includes(q))&&(!type||x.type===type)&&(!region||regionContains(region,x.region_id))&&(!statut||x.statut===statut)}).sort((a,b)=>a.nom.localeCompare(b.nom,"fr"))},[items,query,type,region,statut]);
   const save=async()=>{if(!draft.nom.trim()){setMessage("Le nom est obligatoire.");return}setBusy(true);try{const item:Lieu={id:slugId(draft.nom),nom:draft.nom.trim(),type:draft.type||"Site",region_id:draft.region_id||null,parent_id:draft.parent_id||null,description:draft.description.trim(),histoire:draft.histoire.trim(),factions:csv(draft.factions),personnages_cles:csv(draft.personnages_cles),tags:csv(draft.tags),image:draft.image.trim(),aliases:csv(draft.aliases),statut:draft.statut||"Actif",notes:draft.notes.trim(),source:draft.source.trim(),evenements:csv(draft.evenements)};
     const r=await fetch("/apil7r/pf2-mj/lieux",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"upsert",item})});const p=await r.json().catch(()=>null);if(!r.ok)throw new Error(p?.error||`Erreur HTTP ${r.status}`);setItems(p.items);setDraft(emptyDraft);setShowAdd(false);setSelected(item);setMessage(`${item.nom} enregistré.`)
   }catch(e){setMessage(e instanceof Error?e.message:String(e))}finally{setBusy(false)}};

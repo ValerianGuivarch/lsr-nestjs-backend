@@ -14,7 +14,6 @@
       "Vivant",
       "Dirigeant"
     ],
-    "image": "https://www.worldanvil.com/uploads/images/f790af6df551667b35bdf2728e98926f.png",
     "aliases": [],
     "lieux": [
       "lieu_egorian"
@@ -27,7 +26,8 @@
     "regions": [
       "region_cheliax"
     ],
-    "evenements": []
+    "evenements": [],
+    "portrait": "assets/l7r/portraits/pnj/npc-abrogail-thrune-ii.png"
   },
   {
     "id": "npc_abstalar_zantus",
@@ -38,7 +38,6 @@
       "Vivant",
       "Prêtre"
     ],
-    "image": "",
     "aliases": [],
     "lieux": [
       "lieu_cathedrale_de_pointesable",
@@ -52,7 +51,8 @@
     "regions": [
       "region_varisie"
     ],
-    "evenements": []
+    "evenements": [],
+    "portrait": "assets/l7r/portraits/pnj/npc-abstalar-zantus.jpg"
   },
   {
     "id": "npc_adolphus",
@@ -70,7 +70,6 @@
       "Fondateur",
       "Éclaireur"
     ],
-    "image": "",
     "aliases": [],
     "lieux": [
       "lieu_quantium"
@@ -107,7 +106,6 @@
       "Vivant",
       "Hellknight"
     ],
-    "image": "",
     "aliases": [],
     "lieux": [
       "lieu_citadelle_altaerein"
@@ -132,7 +130,6 @@
       "Runelord",
       "Antagoniste"
     ],
-    "image": "",
     "aliases": [],
     "lieux": [],
     "role": "Ancienne seigneur des runes de la Colère",
@@ -146,7 +143,8 @@
     ],
     "evenements": [
       "event_crise_des_seigneurs_runes_de_varisie"
-    ]
+    ],
+    "portrait": "assets/l7r/portraits/pnj/npc-alaznist.webp"
   },
   {
     "id": "npc_amara_li",
@@ -163,7 +161,6 @@
       "Vivant",
       "Capitaine-aventurier"
     ],
-    "image": "",
     "aliases": [],
     "lieux": [],
     "role": "Capitaine-aventurière au Minkai",
@@ -192,7 +189,6 @@
       "Éclaireur",
       "Grande Loge"
     ],
-    "image": "",
     "aliases": [
       "Old Mutton Chops"
     ],
@@ -207,7 +203,8 @@
     "regions": [
       "region_absalom_et_l_ile_de_la_pierre_etoile"
     ],
-    "evenements": []
+    "evenements": [],
+    "portrait": "assets/l7r/portraits/pnj/npc-ambrus-valsin.webp"
   },
   {
     "id": "npc_ameiko_kaijitsu",
@@ -225,7 +222,6 @@
       "Dirigeant",
       "Aventurier"
     ],
-    "image": "",
     "aliases": [],
     "lieux": [
       "lieu_kasai"
@@ -238,7 +234,8 @@
     "regions": [
       "region_minkai"
     ],
-    "evenements": []
+    "evenements": [],
+    "portrait": "assets/l7r/portraits/pnj/npc-ameiko-kaijitsu.webp"
   },
   {
     "id": "npc_amenopheus",
@@ -256,7 +253,6 @@
       "Érudit",
       "Contact"
     ],
-    "image": "",
     "aliases": [],
     "lieux": [],
     "role": "Sage de Saphir et ancien chef de faction",
@@ -279,7 +275,6 @@
       "Dirigeant",
       "Terrien"
     ],
-    "image": "",
     "aliases": [],
     "lieux": [
       "lieu_whitethrone"
@@ -309,7 +304,6 @@
       "Vivant",
       "Dirigeant"
     ],
-    "image": "",
     "aliases": [],
     "lieux": [
       "lieu_almas"
@@ -334,7 +328,6 @@
       "Dirigeant",
       "Nain"
     ],
-    "image": "",
     "aliases": [],
     "lieux": [
       "lieu_dongun_hold"
@@ -365,7 +358,6 @@
       "Éclaireur",
       "Mage"
     ],
-    "image": "",
     "aliases": [],
     "lieux": [
       "lieu_absalom"
@@ -390,7 +382,6 @@
       "Liche",
       "Mythique"
     ],
-    "image": "",
     "aliases": [],
     "lieux": [],
     "role": "Ancienne héraut d'Aroden et liche libérée",
@@ -401,7 +392,8 @@
     "regions": [
       "region_region_de_la_mer_interieure"
     ],
-    "evenements": []
+    "evenements": [],
+    "portrait": "assets/l7r/portraits/pnj/npc-arazni.webp"
   },
   {
     "id": "npc_ardax_le_cheveu_blanc",
@@ -413,7 +405,6 @@
       "Dirigeant",
       "Orc"
     ],
-    "image": "",
     "aliases": [
       "Ardax White-Hair"
     ],
@@ -440,7 +431,6 @@
       "Antagoniste",
       "Historique"
     ],
-    "image": "",
     "aliases": [],
     "lieux": [],
     "role": "Architecte de la Plaie du Monde",
@@ -453,7 +443,8 @@
     ],
     "evenements": [
       "event_fermeture_de_la_plaie_du_monde"
-    ]
+    ],
+    "portrait": "assets/l7r/portraits/pnj/npc-areelu-vorlesh.webp"
   },
   {
     "id": "npc_argrinyxia",
@@ -465,7 +456,6 @@
       "Dragon",
       "Ombre"
     ],
-    "image": "",
     "aliases": [],
     "lieux": [
       "lieu_absalom_de_l_ombre"
@@ -492,7 +482,6 @@
       "Divinité",
       "Historique"
     ],
-    "image": "",
     "aliases": [],
     "lieux": [
       "lieu_absalom"
@@ -508,7 +497,8 @@
     "evenements": [
       "event_fondation_d_absalom",
       "event_mort_d_aroden"
-    ]
+    ],
+    "portrait": "assets/l7r/portraits/pnj/npc-aroden.webp"
   },
   {
     "id": "npc_artokus_kirran",
@@ -519,7 +509,6 @@
       "Vivant",
       "Alchimiste"
     ],
-    "image": "",
     "aliases": [],
     "lieux": [],
     "role": "Créateur de l'élixir d'orchidée solaire",
@@ -547,7 +536,6 @@
       "Vivant",
       "Officier"
     ],
-    "image": "",
     "aliases": [
       "Asilia of Gyr"
     ],
@@ -574,7 +562,6 @@
       "Guenaude",
       "Antagoniste"
     ],
-    "image": "",
     "aliases": [],
     "lieux": [],
     "role": "Antagoniste récurrente de la Société",
@@ -596,7 +583,6 @@
       "Vivant",
       "Espion"
     ],
-    "image": "",
     "aliases": [],
     "lieux": [],
     "role": "Maître-espion de Vidrian",
@@ -625,7 +611,6 @@
       "Noble",
       "Politique"
     ],
-    "image": "",
     "aliases": [
       "Avid of House Arnsen"
     ],
@@ -652,7 +637,6 @@
       "Dirigeant",
       "Hobgobelin"
     ],
-    "image": "",
     "aliases": [],
     "lieux": [],
     "role": "Générale et dirigeante d'Oprak",
@@ -675,7 +659,6 @@
       "Sorcière",
       "Mythique"
     ],
-    "image": "",
     "aliases": [],
     "lieux": [],
     "role": "Sorcière mythique et fondatrice d'Irrisen",
@@ -686,7 +669,8 @@
     "regions": [
       "region_irrisen"
     ],
-    "evenements": []
+    "evenements": [],
+    "portrait": "assets/l7r/portraits/pnj/npc-baba-yaga.webp"
   },
   {
     "id": "npc_baloku_ulameni",
@@ -704,7 +688,6 @@
       "Capitaine-aventurier",
       "Archéologue"
     ],
-    "image": "",
     "aliases": [],
     "lieux": [
       "lieu_sothis"
@@ -729,7 +712,6 @@
       "Runelord",
       "Mage"
     ],
-    "image": "",
     "aliases": [],
     "lieux": [
       "lieu_xin_edasseril"
@@ -744,7 +726,8 @@
     ],
     "evenements": [
       "event_crise_des_seigneurs_runes_de_varisie"
-    ]
+    ],
+    "portrait": "assets/l7r/portraits/pnj/npc-belimarius.webp"
   },
   {
     "id": "npc_belor_hemlock",
@@ -761,7 +744,6 @@
       "Vivant",
       "Officier"
     ],
-    "image": "",
     "aliases": [],
     "lieux": [
       "lieu_pointesable"
@@ -774,7 +756,8 @@
     "regions": [
       "region_varisie"
     ],
-    "evenements": []
+    "evenements": [],
+    "portrait": "assets/l7r/portraits/pnj/npc-belor-hemlock.webp"
   },
   {
     "id": "npc_bjersig_torrsen",
@@ -791,7 +774,6 @@
       "Vivant",
       "Capitaine-aventurier"
     ],
-    "image": "",
     "aliases": [],
     "lieux": [
       "lieu_iceferry"
@@ -816,7 +798,6 @@
       "Érudit",
       "Thassilon"
     ],
-    "image": "",
     "aliases": [],
     "lieux": [
       "lieu_pointesable"
@@ -829,7 +810,8 @@
     "regions": [
       "region_varisie"
     ],
-    "evenements": []
+    "evenements": [],
+    "portrait": "assets/l7r/portraits/pnj/npc-brodert-quink.jpg"
   },
   {
     "id": "npc_calisro_benarry",
@@ -852,7 +834,6 @@
       "Éclaireur",
       "Chef de faction"
     ],
-    "image": "",
     "aliases": [],
     "lieux": [
       "lieu_absalom"
@@ -876,7 +857,6 @@
       "Vivant",
       "Dirigeant"
     ],
-    "image": "",
     "aliases": [
       "Camilia Dranoch"
     ],
@@ -909,7 +889,6 @@
       "Érudit",
       "Éclaireur"
     ],
-    "image": "",
     "aliases": [],
     "lieux": [
       "lieu_magnimar"
@@ -934,7 +913,6 @@
       "Divinité",
       "Technologie"
     ],
-    "image": "",
     "aliases": [],
     "lieux": [],
     "role": "Déesse de la conscience et de la technologie",
@@ -945,7 +923,8 @@
     "regions": [
       "region_numeria"
     ],
-    "evenements": []
+    "evenements": [],
+    "portrait": "assets/l7r/portraits/pnj/npc-casandalee.webp"
   },
   {
     "id": "npc_celedo_de_la_maison_morilla",
@@ -963,7 +942,6 @@
       "Noble",
       "Espion"
     ],
-    "image": "",
     "aliases": [
       "Celedo of House Morilla"
     ],
@@ -989,7 +967,6 @@
       "Disparu",
       "Conquérant"
     ],
-    "image": "",
     "aliases": [
       "Choral the Conqueror"
     ],
@@ -1019,7 +996,6 @@
       "Vivant",
       "Chevalier"
     ],
-    "image": "",
     "aliases": [],
     "lieux": [],
     "role": "Dirigeante des Chevaliers de Lastwall",
@@ -1048,7 +1024,6 @@
       "Capitaine-aventurier",
       "Kellide"
     ],
-    "image": "",
     "aliases": [],
     "lieux": [
       "lieu_hajoth_hakados"
@@ -1074,7 +1049,6 @@
       "Dragon",
       "Antagoniste"
     ],
-    "image": "",
     "aliases": [],
     "lieux": [],
     "role": "Dieu draconique de la destruction",
@@ -1087,7 +1061,8 @@
     ],
     "evenements": [
       "event_conflit_contre_la_triade_ecarlate"
-    ]
+    ],
+    "portrait": "assets/l7r/portraits/pnj/npc-dahak.webp"
   },
   {
     "id": "npc_darchana_de_la_maison_madinani",
@@ -1110,7 +1085,6 @@
       "Mage",
       "Politique"
     ],
-    "image": "",
     "aliases": [
       "Darchana of House Madinani"
     ],
@@ -1136,7 +1110,6 @@
       "Vivant",
       "Diplomate"
     ],
-    "image": "",
     "aliases": [],
     "lieux": [],
     "role": "Diplomate qadiran",
@@ -1160,7 +1133,6 @@
       "Seigneur démon",
       "Antagoniste"
     ],
-    "image": "",
     "aliases": [],
     "lieux": [],
     "role": "Seigneur démon vaincu",
@@ -1173,7 +1145,8 @@
     ],
     "evenements": [
       "event_fermeture_de_la_plaie_du_monde"
-    ]
+    ],
+    "portrait": "assets/l7r/portraits/pnj/npc-deskari.webp"
   },
   {
     "id": "npc_drandle_dreng",
@@ -1191,7 +1164,6 @@
       "Éclaireur",
       "Capitaine-aventurier"
     ],
-    "image": "",
     "aliases": [],
     "lieux": [
       "lieu_absalom"
@@ -1222,7 +1194,6 @@
       "Fondateur",
       "Explorateur"
     ],
-    "image": "",
     "aliases": [],
     "lieux": [],
     "role": "Explorateur légendaire de la Société",
@@ -1250,7 +1221,6 @@
       "Espion",
       "Informateur"
     ],
-    "image": "",
     "aliases": [],
     "lieux": [
       "lieu_absalom"
@@ -1286,7 +1256,6 @@
       "Éclaireur",
       "Chef de faction"
     ],
-    "image": "",
     "aliases": [],
     "lieux": [
       "lieu_absalom"
@@ -1299,7 +1268,8 @@
     "regions": [
       "region_absalom_et_l_ile_de_la_pierre_etoile"
     ],
-    "evenements": []
+    "evenements": [],
+    "portrait": "assets/l7r/portraits/pnj/npc-eando-kline.webp"
   },
   {
     "id": "npc_emaliza_zandivar",
@@ -1317,7 +1287,6 @@
       "Antagoniste",
       "Politique"
     ],
-    "image": "",
     "aliases": [],
     "lieux": [
       "lieu_promise"
@@ -1349,7 +1318,6 @@
       "Vivant",
       "Dirigeant"
     ],
-    "image": "",
     "aliases": [],
     "lieux": [
       "lieu_oppara"
@@ -1380,7 +1348,6 @@
       "Capitaine-aventurier",
       "Gnome"
     ],
-    "image": "",
     "aliases": [],
     "lieux": [
       "lieu_caliphas"
@@ -1411,7 +1378,6 @@
       "Fondateur",
       "Éclaireur"
     ],
-    "image": "",
     "aliases": [
       "Eylisie"
     ],
@@ -1452,7 +1418,6 @@
       "Éclaireur",
       "Chef de faction"
     ],
-    "image": "",
     "aliases": [],
     "lieux": [
       "lieu_absalom"
@@ -1464,7 +1429,8 @@
     "role": "Cheffe de l'Alliance des Émissaires",
     "importance": "Principale",
     "statut": "Actif",
-    "notes": ""
+    "notes": "",
+    "portrait": "assets/l7r/portraits/pnj/npc-fola-barun.webp"
   },
   {
     "id": "npc_geb",
@@ -1476,7 +1442,6 @@
       "Nécromancien",
       "Dirigeant"
     ],
-    "image": "",
     "aliases": [],
     "lieux": [
       "lieu_mechitar"
@@ -1489,7 +1454,8 @@
     "regions": [
       "region_geb"
     ],
-    "evenements": []
+    "evenements": [],
+    "portrait": "assets/l7r/portraits/pnj/npc-geb.webp"
   },
   {
     "id": "npc_gorm_greathammer",
@@ -1513,7 +1479,6 @@
       "Chef de faction",
       "Nain"
     ],
-    "image": "",
     "aliases": [],
     "lieux": [
       "lieu_absalom"
@@ -1537,7 +1502,6 @@
       "Espion",
       "Contact"
     ],
-    "image": "",
     "aliases": [],
     "lieux": [
       "lieu_absalom"
@@ -1550,7 +1514,8 @@
     "regions": [
       "region_absalom_et_l_ile_de_la_pierre_etoile"
     ],
-    "evenements": []
+    "evenements": [],
+    "portrait": "assets/l7r/portraits/pnj/npc-grandmaster-torch.webp"
   },
   {
     "id": "npc_gregaro_voth",
@@ -1568,7 +1533,6 @@
       "Fondateur",
       "Éclaireur"
     ],
-    "image": "",
     "aliases": [],
     "lieux": [
       "lieu_absalom"
@@ -1604,7 +1568,6 @@
       "Vivant",
       "Officier"
     ],
-    "image": "",
     "aliases": [],
     "lieux": [
       "lieu_absalom"
@@ -1635,7 +1598,6 @@
       "Criminel",
       "Contact"
     ],
-    "image": "",
     "aliases": [],
     "lieux": [
       "lieu_absalom"
@@ -1659,7 +1621,6 @@
       "Disparu",
       "Dirigeant"
     ],
-    "image": "",
     "aliases": [
       "Lord Gyr",
       "Gyr of Gixx"
@@ -1675,7 +1636,8 @@
     "regions": [
       "region_absalom_et_l_ile_de_la_pierre_etoile"
     ],
-    "evenements": []
+    "evenements": [],
+    "portrait": "assets/l7r/portraits/pnj/npc-gyr-de-gixx.webp"
   },
   {
     "id": "npc_hamaria_blakros",
@@ -1693,7 +1655,6 @@
       "Noble",
       "Marchand"
     ],
-    "image": "",
     "aliases": [],
     "lieux": [
       "lieu_absalom"
@@ -1717,7 +1678,6 @@
       "Vivant",
       "Guérisseur"
     ],
-    "image": "",
     "aliases": [],
     "lieux": [
       "lieu_pointesable"
@@ -1742,7 +1702,6 @@
       "Mage",
       "Planaire"
     ],
-    "image": "",
     "aliases": [],
     "lieux": [],
     "role": "Sorcière et exploratrice planaire",
@@ -1764,7 +1723,6 @@
       "Vivant",
       "Diplomate"
     ],
-    "image": "",
     "aliases": [],
     "lieux": [
       "lieu_katapesh"
@@ -1788,7 +1746,6 @@
       "Vivant",
       "Diplomate"
     ],
-    "image": "",
     "aliases": [],
     "lieux": [],
     "role": "Diplomate qadiran",
@@ -1812,7 +1769,6 @@
       "Criminel",
       "Antagoniste"
     ],
-    "image": "",
     "aliases": [],
     "lieux": [
       "lieu_absalom"
@@ -1843,7 +1799,6 @@
       "Capitaine-aventurier",
       "Nain"
     ],
-    "image": "",
     "aliases": [],
     "lieux": [
       "lieu_tymon"
@@ -1868,7 +1823,6 @@
       "Mage",
       "Éducateur"
     ],
-    "image": "",
     "aliases": [],
     "lieux": [
       "lieu_pointesable"
@@ -1899,7 +1853,6 @@
       "Fondateur",
       "Éclaireur"
     ],
-    "image": "",
     "aliases": [],
     "lieux": [],
     "role": "Fondatrice et exploratrice",
@@ -1924,7 +1877,6 @@
       "Officier",
       "Allié"
     ],
-    "image": "",
     "aliases": [],
     "lieux": [
       "lieu_promise"
@@ -1949,7 +1901,6 @@
       "Héros",
       "Demi-orque"
     ],
-    "image": "",
     "aliases": [],
     "lieux": [],
     "role": "Héroïne de la Plaie du Monde",
@@ -1973,7 +1924,6 @@
       "Vivant",
       "Dirigeant"
     ],
-    "image": "",
     "aliases": [],
     "lieux": [
       "lieu_nerosyan"
@@ -2003,7 +1953,6 @@
       "Vivant",
       "Assassin"
     ],
-    "image": "",
     "aliases": [],
     "lieux": [
       "lieu_ilizmagorti"
@@ -2028,7 +1977,6 @@
       "Conteur",
       "Explorateur"
     ],
-    "image": "",
     "aliases": [
       "Janatino"
     ],
@@ -2059,7 +2007,6 @@
       "Éclaireur",
       "Grande Loge"
     ],
-    "image": "https://cdn.paizo.com/image/content/Blog/072419_JaniraGavix.jpg",
     "aliases": [],
     "lieux": [
       "lieu_absalom"
@@ -2071,7 +2018,8 @@
     "role": "Initiatrice en chef",
     "importance": "Principale",
     "statut": "Actif",
-    "notes": ""
+    "notes": "",
+    "portrait": "assets/l7r/portraits/pnj/npc-janira-gavix.webp"
   },
   {
     "id": "npc_jonis_flakfatter",
@@ -2094,7 +2042,6 @@
       "Antagoniste",
       "Cultiste"
     ],
-    "image": "",
     "aliases": [
       "The Infector"
     ],
@@ -2126,7 +2073,6 @@
       "Vivant",
       "Capitaine-aventurier"
     ],
-    "image": "",
     "aliases": [],
     "lieux": [
       "lieu_nerosyan"
@@ -2156,7 +2102,6 @@
       "Vivant",
       "Criminel"
     ],
-    "image": "",
     "aliases": [],
     "lieux": [
       "lieu_pointesable"
@@ -2186,7 +2131,6 @@
       "Vivant",
       "Chevalier"
     ],
-    "image": "",
     "aliases": [],
     "lieux": [],
     "role": "Dirigeante des Chevaliers de Lastwall",
@@ -2209,7 +2153,6 @@
       "Runelord",
       "Antagoniste"
     ],
-    "image": "",
     "aliases": [],
     "lieux": [],
     "role": "Ancien seigneur des runes de l'Avarice",
@@ -2223,7 +2166,8 @@
     ],
     "evenements": [
       "event_crise_des_seigneurs_runes_de_varisie"
-    ]
+    ],
+    "portrait": "assets/l7r/portraits/pnj/npc-karzoug.webp"
   },
   {
     "id": "npc_kassi_aziril",
@@ -2234,7 +2178,6 @@
       "Vivant",
       "Médecin"
     ],
-    "image": "",
     "aliases": [],
     "lieux": [],
     "role": "Médecin et chercheuse",
@@ -2256,7 +2199,6 @@
       "Vivant",
       "Notable"
     ],
-    "image": "",
     "aliases": [],
     "lieux": [
       "lieu_pointesable"
@@ -2286,7 +2228,6 @@
       "Vivant",
       "Dirigeant"
     ],
-    "image": "",
     "aliases": [],
     "lieux": [
       "lieu_pointesable"
@@ -2299,7 +2240,8 @@
     "regions": [
       "region_varisie"
     ],
-    "evenements": []
+    "evenements": [],
+    "portrait": "assets/l7r/portraits/pnj/npc-kendra-deverin.webp"
   },
   {
     "id": "npc_kerinha_napsunar",
@@ -2317,7 +2259,6 @@
       "Fondateur",
       "Explorateur"
     ],
-    "image": "",
     "aliases": [],
     "lieux": [],
     "role": "Fondatrice de la Société",
@@ -2344,7 +2285,6 @@
       "Vivant",
       "Dirigeant"
     ],
-    "image": "",
     "aliases": [],
     "lieux": [
       "lieu_starfall"
@@ -2368,7 +2308,6 @@
       "Vivant",
       "Dirigeant"
     ],
-    "image": "",
     "aliases": [
       "Prince de Rubis"
     ],
@@ -2400,7 +2339,6 @@
       "Vivant",
       "Criminel"
     ],
-    "image": "",
     "aliases": [],
     "lieux": [],
     "role": "Trafiquant et ancien de la Ligue Technique",
@@ -2434,7 +2372,6 @@
       "Éclaireur",
       "Grande Loge"
     ],
-    "image": "",
     "aliases": [],
     "lieux": [
       "lieu_absalom"
@@ -2465,7 +2402,6 @@
       "Antagoniste",
       "Esclavagiste"
     ],
-    "image": "",
     "aliases": [],
     "lieux": [
       "lieu_kintargo"
@@ -2497,7 +2433,6 @@
       "Vivant",
       "Abolitionniste"
     ],
-    "image": "",
     "aliases": [],
     "lieux": [],
     "role": "Dirigeante du Réseau Bellflower",
@@ -2526,7 +2461,6 @@
       "Antagoniste",
       "Cultiste"
     ],
-    "image": "",
     "aliases": [],
     "lieux": [
       "lieu_citadelle_altaerein"
@@ -2563,7 +2497,6 @@
       "Vivant",
       "Ombre"
     ],
-    "image": "",
     "aliases": [],
     "lieux": [
       "lieu_absalom_de_l_ombre"
@@ -2601,7 +2534,6 @@
       "Éclaireur",
       "Grande Loge"
     ],
-    "image": "",
     "aliases": [],
     "lieux": [
       "lieu_absalom"
@@ -2631,7 +2563,6 @@
       "Vivant",
       "Abolitionniste"
     ],
-    "image": "",
     "aliases": [],
     "lieux": [],
     "role": "Dirigeant du Réseau Bellflower",
@@ -2654,7 +2585,6 @@
       "Dragon",
       "Dirigeant"
     ],
-    "image": "",
     "aliases": [],
     "lieux": [
       "lieu_promise"
@@ -2687,7 +2617,6 @@
       "Espion",
       "Mage"
     ],
-    "image": "",
     "aliases": [],
     "lieux": [
       "lieu_kintargo"
@@ -2718,7 +2647,6 @@
       "Capitaine-aventurier",
       "Mage"
     ],
-    "image": "",
     "aliases": [],
     "lieux": [],
     "role": "Capitaine-aventurier",
@@ -2740,7 +2668,6 @@
       "Vivant",
       "Guerrier"
     ],
-    "image": "",
     "aliases": [],
     "lieux": [],
     "role": "Roi linnorm",
@@ -2773,7 +2700,6 @@
       "Vivant",
       "Capitaine-aventurier"
     ],
-    "image": "",
     "aliases": [],
     "lieux": [
       "lieu_xer"
@@ -2804,7 +2730,6 @@
       "Juge",
       "Politique"
     ],
-    "image": "",
     "aliases": [
       "Neferpatra of House Ahnkamen"
     ],
@@ -2830,7 +2755,6 @@
       "Disparu",
       "Archimage"
     ],
-    "image": "",
     "aliases": [],
     "lieux": [
       "lieu_quantium"
@@ -2845,7 +2769,8 @@
     ],
     "evenements": [
       "event_siege_de_nex_contre_absalom"
-    ]
+    ],
+    "portrait": "assets/l7r/portraits/pnj/npc-nex.webp"
   },
   {
     "id": "npc_nigel_aldain",
@@ -2868,7 +2793,6 @@
       "Conservateur",
       "Érudit"
     ],
-    "image": "",
     "aliases": [],
     "lieux": [
       "lieu_absalom"
@@ -2899,7 +2823,6 @@
       "Elfe",
       "Diplomate"
     ],
-    "image": "",
     "aliases": [],
     "lieux": [],
     "role": "Diplomate ekujae",
@@ -2922,7 +2845,6 @@
       "Divinité",
       "Rédemption"
     ],
-    "image": "",
     "aliases": [],
     "lieux": [],
     "role": "Déesse de la rédemption",
@@ -2933,7 +2855,8 @@
     "regions": [
       "region_elysium"
     ],
-    "evenements": []
+    "evenements": [],
+    "portrait": "assets/l7r/portraits/pnj/npc-nocticula.webp"
   },
   {
     "id": "npc_nolly_peltry",
@@ -2945,7 +2868,6 @@
       "Enquêteur",
       "Allié"
     ],
-    "image": "",
     "aliases": [],
     "lieux": [
       "lieu_kintargo"
@@ -2976,7 +2898,6 @@
       "Capitaine-aventurier",
       "Alchimiste"
     ],
-    "image": "",
     "aliases": [],
     "lieux": [
       "lieu_sothis"
@@ -3007,7 +2928,6 @@
       "Fondateur",
       "Administrateur"
     ],
-    "image": "",
     "aliases": [],
     "lieux": [
       "lieu_absalom"
@@ -3034,7 +2954,6 @@
       "Politique",
       "Minotaure"
     ],
-    "image": "",
     "aliases": [],
     "lieux": [
       "lieu_absalom"
@@ -3047,7 +2966,8 @@
     "regions": [
       "region_absalom_et_l_ile_de_la_pierre_etoile"
     ],
-    "evenements": []
+    "evenements": [],
+    "portrait": "assets/l7r/portraits/pnj/npc-nuar-spiritskin.webp"
   },
   {
     "id": "npc_olansa_terimor",
@@ -3070,7 +2990,6 @@
       "Antagoniste",
       "Politique"
     ],
-    "image": "",
     "aliases": [
       "The Gray Queen"
     ],
@@ -3096,7 +3015,6 @@
       "Vivant",
       "Vigilante"
     ],
-    "image": "",
     "aliases": [
       "Sapphire Butterfly"
     ],
@@ -3128,7 +3046,6 @@
       "Vivant",
       "Capitaine-aventurier"
     ],
-    "image": "",
     "aliases": [
       "Rahmivati Melipdra"
     ],
@@ -3161,7 +3078,6 @@
       "Dirigeant",
       "Mage"
     ],
-    "image": "",
     "aliases": [],
     "lieux": [
       "lieu_thronestep"
@@ -3174,7 +3090,8 @@
     "regions": [
       "region_razmiran"
     ],
-    "evenements": []
+    "evenements": [],
+    "portrait": "assets/l7r/portraits/pnj/npc-razmir.webp"
   },
   {
     "id": "npc_reginald_vancaskerkin",
@@ -3197,7 +3114,6 @@
       "Antagoniste",
       "Criminel"
     ],
-    "image": "",
     "aliases": [
       "The Rumormonger"
     ],
@@ -3230,7 +3146,6 @@
       "Héros",
       "Chevalier"
     ],
-    "image": "",
     "aliases": [
       "Queen Galfrey"
     ],
@@ -3257,7 +3172,6 @@
       "Anadi",
       "Explorateur"
     ],
-    "image": "",
     "aliases": [],
     "lieux": [
       "lieu_citadelle_altaerein"
@@ -3295,7 +3209,6 @@
       "Ombre",
       "Politique"
     ],
-    "image": "",
     "aliases": [],
     "lieux": [
       "lieu_absalom_de_l_ombre"
@@ -3334,7 +3247,6 @@
       "Capitaine-aventurier",
       "Gnome"
     ],
-    "image": "",
     "aliases": [],
     "lieux": [
       "lieu_quantium"
@@ -3367,7 +3279,6 @@
       "Fondateur",
       "Explorateur"
     ],
-    "image": "",
     "aliases": [],
     "lieux": [
       "lieu_absalom"
@@ -3397,7 +3308,6 @@
       "Elfe",
       "Rôdeur"
     ],
-    "image": "",
     "aliases": [],
     "lieux": [],
     "role": "Rôdeuse et protectrice de la région",
@@ -3408,7 +3318,8 @@
     "regions": [
       "region_varisie"
     ],
-    "evenements": []
+    "evenements": [],
+    "portrait": "assets/l7r/portraits/pnj/npc-shalelu-andosana.webp"
   },
   {
     "id": "npc_sheila_heidmarch",
@@ -3431,7 +3342,6 @@
       "Éclaireur",
       "Capitaine-aventurier"
     ],
-    "image": "",
     "aliases": [],
     "lieux": [
       "lieu_magnimar"
@@ -3444,7 +3354,8 @@
     "regions": [
       "region_varisie"
     ],
-    "evenements": []
+    "evenements": [],
+    "portrait": "assets/l7r/portraits/pnj/npc-sheila-heidmarch.jpg"
   },
   {
     "id": "npc_shevala_iorae",
@@ -3462,7 +3373,6 @@
       "Éclaireur",
       "Capitaine-aventurier"
     ],
-    "image": "",
     "aliases": [],
     "lieux": [
       "lieu_absalom"
@@ -3488,7 +3398,6 @@
       "Vivant",
       "Amiral"
     ],
-    "image": "",
     "aliases": [],
     "lieux": [],
     "role": "Amirale de Vidrian",
@@ -3516,7 +3425,6 @@
       "Vivant",
       "Résistance"
     ],
-    "image": "",
     "aliases": [
       "Sihar des Bright Lions"
     ],
@@ -3554,7 +3462,6 @@
       "Éclaireur",
       "Grande Loge"
     ],
-    "image": "",
     "aliases": [],
     "lieux": [
       "lieu_absalom"
@@ -3579,7 +3486,6 @@
       "Runelord",
       "Mage"
     ],
-    "image": "",
     "aliases": [],
     "lieux": [
       "lieu_eurythnia"
@@ -3594,7 +3500,8 @@
     ],
     "evenements": [
       "event_crise_des_seigneurs_runes_de_varisie"
-    ]
+    ],
+    "portrait": "assets/l7r/portraits/pnj/npc-sorshen.webp"
   },
   {
     "id": "npc_taargick",
@@ -3606,7 +3513,6 @@
       "Historique",
       "Nain"
     ],
-    "image": "",
     "aliases": [],
     "lieux": [],
     "role": "Premier Haut Roi des nains",
@@ -3635,7 +3541,6 @@
       "Liche",
       "Antagoniste"
     ],
-    "image": "",
     "aliases": [
       "Tyran qui Murmure",
       "Whispering Tyrant"
@@ -3652,7 +3557,8 @@
     "evenements": [
       "event_destruction_de_lastwall",
       "event_attaque_de_tar_baphon_contre_absalom"
-    ]
+    ],
+    "portrait": "assets/l7r/portraits/pnj/npc-tar-baphon.webp"
   },
   {
     "id": "npc_telandia_edasseril",
@@ -3664,7 +3570,6 @@
       "Dirigeant",
       "Elfe"
     ],
-    "image": "",
     "aliases": [],
     "lieux": [
       "lieu_iadara"
@@ -3677,7 +3582,8 @@
     "regions": [
       "region_kyonin"
     ],
-    "evenements": []
+    "evenements": [],
+    "portrait": "assets/l7r/portraits/pnj/npc-telandia-edasseril.jpg"
   },
   {
     "id": "npc_tessa_fairwind",
@@ -3695,7 +3601,6 @@
       "Pirate",
       "Dirigeant"
     ],
-    "image": "",
     "aliases": [],
     "lieux": [
       "lieu_port_peril"
@@ -3719,7 +3624,6 @@
       "Vivant",
       "Guerrier"
     ],
-    "image": "",
     "aliases": [],
     "lieux": [],
     "role": "Roi linnorm",
@@ -3748,7 +3652,6 @@
       "Noble",
       "Politique"
     ],
-    "image": "",
     "aliases": [],
     "lieux": [
       "lieu_pointesable"
@@ -3779,7 +3682,6 @@
       "Fondateur",
       "Explorateur"
     ],
-    "image": "",
     "aliases": [],
     "lieux": [],
     "role": "Fondatrice et organisatrice du premier Decemvirat",
@@ -3814,7 +3716,6 @@
       "Vivant",
       "Hellknight"
     ],
-    "image": "",
     "aliases": [],
     "lieux": [],
     "role": "Lictor de l'Ordre du Scourge",
@@ -3837,7 +3738,6 @@
       "Seigneur démon",
       "Antagoniste"
     ],
-    "image": "",
     "aliases": [],
     "lieux": [],
     "role": "Seigneur démon de Tanglebriar",
@@ -3849,7 +3749,8 @@
       "region_tanglebriar",
       "region_kyonin"
     ],
-    "evenements": []
+    "evenements": [],
+    "portrait": "assets/l7r/portraits/pnj/npc-treerazer.webp"
   },
   {
     "id": "npc_ulthun_ii",
@@ -3867,7 +3768,6 @@
       "Chevalier",
       "Dirigeant"
     ],
-    "image": "",
     "aliases": [],
     "lieux": [
       "lieu_absalom"
@@ -3902,7 +3802,6 @@
       "Antagoniste",
       "Criminel"
     ],
-    "image": "",
     "aliases": [],
     "lieux": [
       "lieu_katapesh"
@@ -3935,7 +3834,6 @@
       "Dragon",
       "Antagoniste"
     ],
-    "image": "",
     "aliases": [],
     "lieux": [
       "lieu_katapesh"
@@ -3966,7 +3864,6 @@
       "Mage",
       "Mythique"
     ],
-    "image": "",
     "aliases": [
       "Old-Mage Jatembe",
       "Jatembe"
@@ -3994,7 +3891,6 @@
       "Nécromancien",
       "Antagoniste"
     ],
-    "image": "",
     "aliases": [],
     "lieux": [
       "lieu_brechemur"
@@ -4025,7 +3921,6 @@
       "Gobelin",
       "Diplomate"
     ],
-    "image": "",
     "aliases": [],
     "lieux": [
       "lieu_brechemur"
@@ -4049,7 +3944,6 @@
       "Vivant",
       "Guerrier"
     ],
-    "image": "",
     "aliases": [
       "Estrid la Blanche"
     ],
@@ -4085,7 +3979,6 @@
       "Antagoniste",
       "Cultiste"
     ],
-    "image": "",
     "aliases": [
       "The Skinner"
     ],
@@ -4117,7 +4010,6 @@
       "Vivant",
       "Dirigeant"
     ],
-    "image": "",
     "aliases": [],
     "lieux": [
       "lieu_absalom"
@@ -4142,7 +4034,6 @@
       "Runelord",
       "Antagoniste"
     ],
-    "image": "",
     "aliases": [],
     "lieux": [],
     "role": "Ancien seigneur des runes de l'Orgueil",
@@ -4156,7 +4047,8 @@
     ],
     "evenements": [
       "event_crise_des_seigneurs_runes_de_varisie"
-    ]
+    ],
+    "portrait": "assets/l7r/portraits/pnj/npc-xanderghul.webp"
   },
   {
     "id": "npc_xerbystes_ii",
@@ -4168,7 +4060,6 @@
       "Dirigeant",
       "Diplomate"
     ],
-    "image": "",
     "aliases": [],
     "lieux": [
       "lieu_katheer"
@@ -4194,7 +4085,6 @@
       "Archimage",
       "Historique"
     ],
-    "image": "",
     "aliases": [],
     "lieux": [],
     "role": "Fondateur de Thassilon",
@@ -4223,7 +4113,6 @@
       "Éclaireur",
       "Archiviste"
     ],
-    "image": "",
     "aliases": [],
     "lieux": [
       "lieu_absalom"

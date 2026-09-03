@@ -59,9 +59,9 @@ export class Pf2MjController {
   }
 
   @Post('local-scan')
-  async localScan(): Promise<Record<string, unknown>> {
+  async localScan(@Body() body: { apply?: unknown } = {}): Promise<Record<string, unknown>> {
     try {
-      return await this.service.scanLibrary()
+      return await this.service.scanLibrary(body.apply === true)
     } catch (error) {
       throw new HttpException(error instanceof Error ? error.message : 'Analyse impossible', HttpStatus.BAD_REQUEST)
     }
@@ -136,11 +136,12 @@ export class Pf2MjController {
     catch (error) { throw new HttpException(error instanceof Error ? error.message : 'Synchronisation du portrait impossible.', HttpStatus.BAD_REQUEST) }
   }
 
-  @Get('portraits/*')
-  async pnjPortrait(@Param('*') filename: string, @Res() reply: FastifyReply): Promise<void> {
+  @Get('portraits/:filename')
+  async pnjPortrait(@Param('filename') filename: string, @Res() reply: FastifyReply): Promise<void> {
     try {
       const image = await this.service.resolvePnjPortrait(filename)
-      reply.header('Content-Type', image.filename.endsWith('.gif') ? 'image/gif' : 'image/webp')
+      reply.header('Content-Type', image.mimeType)
+      reply.header('Cache-Control', 'no-store, no-cache, must-revalidate')
       reply.header('Content-Length', String(image.size))
       reply.header('Content-Disposition', `inline; filename*=UTF-8''${encodeURIComponent(image.filename)}`)
       await reply.send(image.stream)

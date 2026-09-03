@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
+import GeographyPicker from './GeographyPicker'
 import {
   allPlaces,
   applyLocalScanInventory,
@@ -15,6 +16,7 @@ import {
   containerTypeLabel,
   containers,
   currentDocuments,
+  documentHref,
   documentPresence,
   documentsForTarget,
   frenchStateLabel,
@@ -49,6 +51,7 @@ import FactionsPage from './Factions'
 import LieuxPage from './Lieux'
 import RegionsPage from './Regions'
 import EvenementsPage from './Evenements'
+import { expandedPlaceLabels, geographyTreeOptions, matchesPlaceFilter, placeDisplay } from './geography'
 
 type View = 'find' | 'library' | 'prepare' | 'documents' | 'chronology' | 'excluded' | 'settings' | 'pnj' | 'factions' | 'lieux' | 'regions' | 'evenements'
 type PreparationTab = 'pdf' | 'translation' | 'zip' | 'info' | 'uncertain' | 'metadata'
@@ -106,6 +109,8 @@ type ScanReport = {
     translations: number
     translationsCertain: number
     removed: number
+    relocated?: number
+    ignoredMetadata?: number
     information?: number
     informationAdded?: number
     zips?: number
@@ -117,6 +122,9 @@ type ScanReport = {
   informationPdfs?: string[]
   addedInformationPdfs?: string[]
   pdfPaths?: string[]
+  pdfAliases?: Record<string, string>
+  relocations?: { cataloguePath: string; diskPath: string; reason: 'normalized-path' | 'unique-filename' }[]
+  ignoredMetadataFiles?: number
   newPdfs: string[]
   removed: string[]
   resourceInventory?: ResourceBundleInventory
@@ -270,11 +278,11 @@ function matchesFilters(unit: PlayableUnit, filters: Filters, curation: Curation
   const progress = effectiveProgress(unit, override)
   const year = yearOf(unit)
   const parentNames = ancestorContainers(unit).map(titleOf)
-  const haystack = [titleOf(unit), unit.titles.original ?? '', unit.synopsis ?? '', unit.contextSynopsis ?? '', unit.narrativeThread ?? '', ...locations.map((location) => location.id), ...unit.arcIds.map((id) => arcMap.get(id)?.titleFr ?? id), ...parentNames].join(' ').toLowerCase()
+  const haystack = [titleOf(unit), unit.titles.original ?? '', unit.synopsis ?? '', unit.contextSynopsis ?? '', unit.narrativeThread ?? '', ...locations.flatMap((location) => expandedPlaceLabels(location.id)), ...unit.arcIds.map((id) => arcMap.get(id)?.titleFr ?? id), ...parentNames].join(' ').toLowerCase()
 
   if (filters.query && !haystack.includes(filters.query.toLowerCase())) return false
   if (filters.level && !supportsLevel(levels, Number(filters.level))) return false
-  if (filters.place && !locations.some((location) => location.id === filters.place)) return false
+  if (filters.place && !matchesPlaceFilter(locations.map((location) => location.id), filters.place)) return false
   if (filters.type && unit.playableType !== filters.type) return false
   if (filters.relevance && relevance !== filters.relevance) return false
   if (filters.playability && playability !== filters.playability) return false
@@ -296,7 +304,7 @@ function matchesFilters(unit: PlayableUnit, filters: Filters, curation: Curation
 }
 
 function FilterBar({ filters, setFilters, units, showBundle = false }: { filters: Filters; setFilters: (filters: Filters) => void; units: PlayableUnit[]; showBundle?: boolean }) {
-  const places = useMemo(() => unique([...allPlaces, ...units.flatMap((unit) => unit.locations.map((location) => location.id))]), [units])
+  const places = useMemo(() => geographyTreeOptions(unique([...allPlaces, ...units.flatMap((unit) => unit.locations.map((location) => location.id))])), [units])
   const relevances = useMemo(() => unique(units.map((unit) => relevanceOf(unit))), [units])
   const types = useMemo(() => unique(units.map((unit) => unit.playableType)), [units])
   const threads = useMemo(() => unique(units.map((unit) => unit.narrativeThread ?? '')), [units])
@@ -306,7 +314,7 @@ function FilterBar({ filters, setFilters, units, showBundle = false }: { filters
   return <div className="finder-tools">
     <label className="search finder-search">⌕<input value={filters.query} onChange={(event) => update('query', event.target.value)} placeholder="Titre, campagne, lieu, arc, fil narratif…" /></label>
     <select value={filters.level} onChange={(event) => update('level', event.target.value)}><option value="">Tous niveaux</option>{Array.from({ length: 20 }, (_, index) => <option key={index + 1}>{index + 1}</option>)}</select>
-    <select value={filters.place} onChange={(event) => update('place', event.target.value)}><option value="">Tous lieux</option>{places.map((place) => <option key={place}>{place}</option>)}</select>
+    <GeographyPicker value={filters.place} options={places} onChange={(value) => update('place', value)} />
     <select value={filters.french} onChange={(event) => update('french', event.target.value)}><option value="">Toutes langues</option><option value="ready">Prêt en français</option><option value="official">FR officiel</option><option value="translated">Traduit FR</option><option value="partial">FR partiel</option><option value="none">Pas de FR</option></select>
     <select value={filters.availability} onChange={(event) => update('availability', event.target.value)}><option value="">Toute disponibilité</option><option value="complete">Complet</option><option value="informationOnly">Info seule</option><option value="partial">Partiel</option><option value="absent">Absent</option><option value="uncertain">Incertain</option></select>
     <select value={filters.relevance} onChange={(event) => update('relevance', event.target.value)}><option value="">Toute pertinence</option>{relevances.map((value) => <option key={value}>{value}</option>)}</select>
@@ -351,7 +359,7 @@ function PlayableRow({ unit, curation, onOpen, onUpdate }: { unit: PlayableUnit;
     </div>
     <div className="entry-facts">
       <div><small>Niveaux</small><strong>{levelLabel(levels)}</strong><SourceBadge source={levels.source} /></div>
-      <div><small>Lieux</small><strong>{locations.length ? unique(locations.map((location) => location.id)).join(', ') : 'À documenter'}</strong>{locations[0] && <SourceBadge source={locations[0].source} />}</div>
+      <div><small>Lieux</small><strong>{locations.length ? unique(locations.map((location) => placeDisplay(location.id))).join(', ') : 'À documenter'}</strong>{locations[0] && <SourceBadge source={locations[0].source} />}</div>
       <div><small>Pertinence</small><strong className={`relevance r-${tone(relevance)}`}>{relevance}</strong></div>
       <label><small>Jouabilité</small><select value={playability} onChange={(event) => onUpdate(unit.id, 'playability', event.target.value)}>{playabilityOptions.map((value) => <option key={value}>{value}</option>)}</select></label>
       <label><small>Suivi</small><select value={progress} onChange={(event) => onUpdate(unit.id, 'progress', event.target.value)}>{progressOptions.map((value) => <option key={value}>{value}</option>)}</select></label>
@@ -452,7 +460,7 @@ function DocumentsView({ resourceVersion }: { resourceVersion: number }) {
 function DocumentRow({ document }: { document: CatalogueDocument }) {
   const target = document.targetId ? playableMap.get(document.targetId) ?? containerMap.get(document.targetId) : null
   const presence = documentPresence(document)
-  return <article className={`document-row association-${document.association.status} presence-${presence}`}><div><small>{document.role === 'information' ? 'ⓘ INFO DE REMPLACEMENT' : document.role.toUpperCase()}</small><a href={document.href} target="_blank" rel="noreferrer">{document.filename}</a><span>{document.pages ? `${document.pages} pages · ` : ''}{document.language} · {document.rawVariant}</span></div><div><small>Association</small><strong>{target ? titleOf(target) : document.targetId || 'Non associée'}</strong><em>{document.association.status === 'confirmed' ? 'confirmée' : document.association.status === 'review' ? 'à vérifier' : 'non associée'} · {presence === 'present' ? 'présent' : presence === 'missing' ? 'absent du disque' : 'non scanné'}</em></div></article>
+  return <article className={`document-row association-${document.association.status} presence-${presence}`}><div><small>{document.role === 'information' ? 'ⓘ INFO DE REMPLACEMENT' : document.role.toUpperCase()}</small><a href={documentHref(document)} target="_blank" rel="noreferrer">{document.filename}</a><span>{document.pages ? `${document.pages} pages · ` : ''}{document.language} · {document.rawVariant}</span></div><div><small>Association</small><strong>{target ? titleOf(target) : document.targetId || 'Non associée'}</strong><em>{document.association.status === 'confirmed' ? 'confirmée' : document.association.status === 'review' ? 'à vérifier' : 'non associée'} · {presence === 'present' ? 'présent' : presence === 'missing' ? 'absent du disque' : 'non scanné'}</em></div></article>
 }
 
 function ChronologyView({ units, onOpen }: { units: PlayableUnit[]; onOpen: (unit: PlayableUnit) => void }) {
@@ -477,7 +485,7 @@ function PlayableDetail({ unit, curation, onClose, onUpdate, placeOptions }: { u
   const availability = availabilityOf(unit)
   const bundle = resourceBundleAvailability(unit)
   const [levelsDraft, setLevelsDraft] = useState(levelLabel(levels) === 'À documenter' ? '' : levelLabel(levels))
-  const [placesDraft, setPlacesDraft] = useState(unique(locations.map((location) => location.id)).join(', '))
+  const [placesDraft, setPlacesDraft] = useState(unique(locations.map((location) => placeDisplay(location.id))).join(', '))
   const components = componentsOf(unit.id)
   const targetIds = [unit.id, ...components.map((component) => component.id)]
   const unitDocuments = currentDocuments().filter((document) => document.targetId && targetIds.includes(document.targetId))
@@ -492,7 +500,7 @@ function PlayableDetail({ unit, curation, onClose, onUpdate, placeOptions }: { u
     {unit.gmDetails && <section className="detail-section gm-details"><h3>Détails MJ</h3><p>{unit.gmDetails}</p></section>}
     {unit.migration.issues.length > 0 && <section className="detail-section migration-warning"><h3>À revoir après migration</h3><ul>{unit.migration.issues.map((issue) => <li key={issue}>{issue}</li>)}</ul></section>}
     {components.length > 0 && <section className="detail-section"><h3>Composants de l’œuvre</h3><div className="part-list">{components.map((component) => <article key={component.id}><strong>{componentTypeLabel(component.componentType)} · {titleOf(component)}</strong><span>{component.notes}</span><Badge>{component.requiredForCore ? 'Requis' : 'Facultatif'}</Badge></article>)}</div></section>}
-    <section className="detail-section"><h3>Documents</h3><div className="pdfs">{unitDocuments.length ? unitDocuments.map((document) => <a className={document.isInformationFallback ? 'info-document' : ''} key={document.id} href={document.href} target="_blank" rel="noreferrer">{document.isInformationFallback ? 'ⓘ' : '📖'} {document.filename} · {document.rawVariant}</a>) : <span className="missing">× Aucun document associé</span>}</div></section>
+    <section className="detail-section"><h3>Documents</h3><div className="pdfs">{unitDocuments.length ? unitDocuments.map((document) => <a className={document.isInformationFallback ? 'info-document' : ''} key={document.id} href={documentHref(document)} target="_blank" rel="noreferrer">{document.isInformationFallback ? 'ⓘ' : '📖'} {document.filename} · {document.rawVariant}</a>) : <span className="missing">× Aucun document associé</span>}</div></section>
     <button className={`curation-button ${isExcluded(unit, override) ? 'restore' : 'exclude'}`} onClick={() => onUpdate(unit.id, 'excluded', !isExcluded(unit, override))}>{isExcluded(unit, override) ? '↩ Réintégrer' : '× Écarter cette unité'}</button>
   </Modal>
 }
@@ -504,7 +512,7 @@ function ContainerDetail({ container, curation, onClose, onOpenPlayable, onUpdat
   return <Modal onClose={onClose}>
     <div className="detail-head"><small>{containerTypeLabel(container.containerType)} · CONTENEUR NON JOUABLE</small><h2>{titleOf(container)}</h2>{originalTitleOf(container) && <em>{originalTitleOf(container)}</em>}<div className="badges"><Badge>{levelLabel(container.levels)}</Badge><Badge>{children.length} unités jouables</Badge><Badge>{container.migration.status === 'ready' ? 'Structure prête' : 'À revoir'}</Badge></div></div>
     <section className="detail-section synopsis-long"><h3>Synthèse</h3><p>{container.synopsis || 'Synopsis de collection non renseigné.'}</p></section>
-    <dl className="detail-grid"><div><dt>Niveaux affichés</dt><dd>{levelLabel(container.levels)}<SourceBadge source={container.levels.source} /></dd></div><div><dt>Lieux</dt><dd>{container.locations.length ? unique(container.locations.map((location) => location.id)).join(', ') : 'Agrégés depuis les enfants / à documenter'}{container.locations[0] && <SourceBadge source={container.locations[0].source} />}</dd></div></dl>
+    <dl className="detail-grid"><div><dt>Niveaux affichés</dt><dd>{levelLabel(container.levels)}<SourceBadge source={container.levels.source} /></dd></div><div><dt>Lieux</dt><dd>{container.locations.length ? unique(container.locations.map((location) => placeDisplay(location.id))).join(', ') : 'Agrégés depuis les enfants / à documenter'}{container.locations[0] && <SourceBadge source={container.locations[0].source} />}</dd></div></dl>
     {container.migration.issues.length > 0 && <section className="detail-section migration-warning"><h3>Décisions de migration</h3><ul>{container.migration.issues.map((issue) => <li key={issue}>{issue}</li>)}</ul></section>}
     <section className="detail-section"><h3>Unités jouables</h3>{children.length ? <div className="compact-playables">{children.map((unit) => <button key={unit.id} onClick={() => onOpenPlayable(unit)}><span>▶</span><strong>{titleOf(unit)}</strong><small>{levelLabel(unit.levels)} · {availabilityLabel(availabilityOf(unit).coreMaterial)}</small></button>)}</div> : <p className="missing">Aucune unité jouable explicite : cette campagne doit être découpée avant d’être fiable dans « Trouver une partie ».</p>}</section>
     {components.length > 0 && <section className="detail-section"><h3>Composants / ressources</h3><div className="part-list">{components.map((component) => <ComponentCard component={component} key={component.id} />)}</div></section>}
@@ -519,17 +527,20 @@ function ComponentCard({ component }: { component: Component }) {
 
 function ScanPanel({ report, onClose }: { report: ScanReport; onClose: () => void }) {
   const changes = report.summary.added + report.summary.removed
+  const relocated = report.summary.relocated ?? report.relocations?.length ?? 0
+  const ignoredMetadata = report.summary.ignoredMetadata ?? report.ignoredMetadataFiles ?? 0
   const zips = report.summary.zips ?? report.resourceInventory?.totalOnDisk ?? 0
   const zipsAssociated = report.summary.zipsAssociated ?? report.resourceInventory?.bundles.filter((bundle) => bundle.associationStatus !== 'unassociated').length ?? 0
   const zipsToReview = report.summary.zipsToReview ?? report.resourceInventory?.bundles.filter((bundle) => bundle.associationStatus === 'review').length ?? 0
   const infoCount = report.summary.information ?? report.informationPdfs?.length ?? 0
 
   return <section className={`scan-report ${changes ? '' : 'empty'}`}>
-    <div className="scan-report-head"><div><small>SCAN BIBLIOTHÈQUE</small><h2>{changes ? `${report.summary.added} ajout${report.summary.added > 1 ? 's' : ''} · ${report.summary.removed} absence${report.summary.removed > 1 ? 's' : ''}` : 'Bibliothèque synchronisée avec le catalogue connu'}</h2><p>{report.totalOnDisk} PDF · {zips} ZIP ressources · {infoCount} PDF « info ». {zipsAssociated}/{zips} ZIP associés{zipsToReview ? `, dont ${zipsToReview} à vérifier` : ''}.</p></div><button onClick={onClose}>×</button></div>
+    <div className="scan-report-head"><div><small>SCAN BIBLIOTHÈQUE</small><h2>{changes ? `${report.summary.added} ajout${report.summary.added > 1 ? 's' : ''} · ${report.summary.removed} absence${report.summary.removed > 1 ? 's' : ''}` : 'Bibliothèque synchronisée avec le catalogue connu'}</h2><p>{report.totalOnDisk} PDF · {zips} ZIP ressources · {infoCount} PDF « info ». {zipsAssociated}/{zips} ZIP associés{zipsToReview ? `, dont ${zipsToReview} à vérifier` : ''}.{relocated ? ` ${relocated} chemin${relocated > 1 ? 's' : ''} retrouvé${relocated > 1 ? 's' : ''} automatiquement.` : ''}{ignoredMetadata ? ` ${ignoredMetadata} fichier${ignoredMetadata > 1 ? 's' : ''} macOS ignoré${ignoredMetadata > 1 ? 's' : ''}.` : ''}</p></div><button onClick={onClose}>×</button></div>
     {(changes > 0 || (report.addedInformationPdfs?.length ?? 0) > 0 || zipsToReview > 0) && <div className="scan-report-groups">
       {(report.addedInformationPdfs?.length ?? 0) > 0 && <section><h3>Nouveaux PDF « info »</h3><ul>{report.addedInformationPdfs!.map((path) => <li key={path}><strong>{fileName(path)}</strong><span>Substitut documentaire à associer / vérifier.</span></li>)}</ul></section>}
       {report.newPdfs.length > 0 && <section><h3>Nouveaux PDF à classer</h3><ul>{report.newPdfs.map((path) => <li key={path}><strong>{fileName(path)}</strong><span>{path}</span></li>)}</ul></section>}
-      {report.removed.length > 0 && <section><h3>PDF absents du dossier MJ</h3><ul>{report.removed.map((path) => <li key={path}><strong>{fileName(path)}</strong><span>{path}</span></li>)}</ul></section>}
+      {(report.relocations?.length ?? 0) > 0 && <section><h3>Chemins retrouvés automatiquement</h3><ul>{report.relocations?.map((item) => <li key={`${item.cataloguePath}->${item.diskPath}`}><strong>{fileName(item.diskPath)}</strong><span>{item.cataloguePath} → {item.diskPath}</span></li>)}</ul></section>}
+      {report.removed.length > 0 && <section><h3>PDF réellement absents du dossier MJ</h3><ul>{report.removed.map((path) => <li key={path}><strong>{fileName(path)}</strong><span>{path}</span></li>)}</ul></section>}
       {zipsToReview > 0 && <section><h3>ZIP à vérifier</h3><ul>{report.resourceInventory?.bundles.filter((bundle) => bundle.associationStatus === 'review').map((bundle) => <li key={bundle.id}><strong>{bundle.filename}</strong><span>{bundle.targetId ? `Association probable : ${bundle.targetId}` : bundle.path}</span></li>)}</ul></section>}
     </div>}
   </section>

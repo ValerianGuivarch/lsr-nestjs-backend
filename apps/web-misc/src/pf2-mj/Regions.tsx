@@ -1,6 +1,7 @@
 "use client";
 
 import {ChangeEvent,useEffect,useMemo,useState} from "react";
+import {regionContains} from "./geography";
 
 type Region={
   id:string;nom:string;type:string;parent_id?:string|null;capitale_lieu_id?:string|null;description:string;histoire?:string;
@@ -37,7 +38,7 @@ export default function RegionsPage(){
   const name=(k:keyof typeof maps,id?:string|null)=>id?(maps[k].get(id)??id):"—";
   const types=useMemo(()=>unique(items.map(x=>x.type)),[items]),statuts=useMemo(()=>unique(items.map(x=>x.statut)),[items]);
   const filtered=useMemo(()=>{const q=normalize(query.trim());return items.filter(x=>{const h=normalize([x.nom,x.type,x.description,x.histoire,x.gouvernement,x.culture,x.source,...x.tags,...x.aliases].filter(Boolean).join(" "));
-    return(!q||h.includes(q))&&(!type||x.type===type)&&(!statut||x.statut===statut)&&(!parent||x.parent_id===parent)}).sort((a,b)=>a.nom.localeCompare(b.nom,"fr"))},[items,query,type,statut,parent]);
+    return(!q||h.includes(q))&&(!type||x.type===type)&&(!statut||x.statut===statut)&&(!parent||regionContains(parent,x.id))}).sort((a,b)=>a.nom.localeCompare(b.nom,"fr"))},[items,query,type,statut,parent]);
   const save=async()=>{if(!draft.nom.trim()){setMessage("Le nom est obligatoire.");return}setBusy(true);try{const item:Region={id:slugId(draft.nom),nom:draft.nom.trim(),type:draft.type||"Nation",parent_id:draft.parent_id||null,
     capitale_lieu_id:draft.capitale_lieu_id||null,description:draft.description.trim(),histoire:draft.histoire.trim(),gouvernement:draft.gouvernement.trim(),culture:draft.culture.trim(),religions:csv(draft.religions),factions:csv(draft.factions),
     personnages_cles:csv(draft.personnages_cles),lieux_cles:csv(draft.lieux_cles),relations:parseJson(draft.relations),tags:csv(draft.tags),image:draft.image.trim(),aliases:csv(draft.aliases),statut:draft.statut||"Actif",notes:draft.notes.trim(),source:draft.source.trim(),evenements:csv(draft.evenements)};

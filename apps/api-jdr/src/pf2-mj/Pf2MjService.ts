@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common'
 import { lookup } from 'node:dns/promises'
 import { createReadStream } from 'node:fs'
-import { readdir, readFile, stat } from 'node:fs/promises'
+import { mkdir, readdir, readFile, rename, stat, writeFile } from 'node:fs/promises'
 import { basename, relative, resolve, sep } from 'node:path'
 import sharp from 'sharp'
 import { Pf2PersistenceService } from '../pf2-storage/Pf2PersistenceService'
@@ -48,6 +48,40 @@ type ScanTarget = {
 }
 
 type ScanCatalogue = {
+  schemaVersion?: unknown
+  documents?: Array<{
+    id?: unknown
+    filename?: unknown
+    path?: unknown
+    targetId?: unknown
+    targetKind?: unknown
+    role?: unknown
+    libraryCategory?: unknown
+    isInformationFallback?: unknown
+    association?: { status?: unknown; confidence?: unknown; evidence?: unknown }
+  }>
+  containers?: Array<{
+    id?: unknown
+    containerType?: unknown
+    parentId?: unknown
+    titles?: { fr?: unknown; original?: unknown; aliases?: unknown }
+    season?: unknown
+  }>
+  playableUnits?: Array<{
+    id?: unknown
+    playableType?: unknown
+    parentId?: unknown
+    titles?: { fr?: unknown; original?: unknown; aliases?: unknown }
+    number?: unknown
+  }>
+  components?: Array<{
+    id?: unknown
+    componentType?: unknown
+    ownerId?: unknown
+    titles?: { fr?: unknown; original?: unknown; aliases?: unknown }
+    number?: unknown
+  }>
+  reconciliation?: { pending?: unknown; relocationsApplied?: unknown; notes?: unknown }
   files?: Array<{ path?: unknown }>
   entries?: Array<{
     id?: unknown
@@ -84,7 +118,9 @@ export class Pf2MjService {
   // The repository sits in ~/IdeaProjects/lsr-nestjs-backend locally, so this resolves to ~/PF2/MJ.
   private readonly libraryRoot = resolve(process.env['PF2_LIBRARY_ROOT'] ?? '../../PF2/MJ')
   private readonly dataRoot = resolve(process.env['PF2_DATA_ROOT'] ?? 'apps/web-misc/src/pf2-mj/data')
-  private readonly legacyPortraitRoot = resolve(process.env['FOUNDRY_ASSETS_ROOT'] ?? '../../FoundryVTT/Data/assets/l7r', 'portraits', 'pnj')
+  private readonly foundryAssetsRoot = resolve(process.env['FOUNDRY_ASSETS_ROOT'] ?? '../../FoundryVTT/Data/assets/l7r')
+  private readonly foundryPortraitRoot = resolve(this.foundryAssetsRoot, 'portraits', 'pnj')
+  private readonly foundryPortraitPrefix = 'assets/l7r/portraits/pnj'
   constructor(private readonly persistence: Pf2PersistenceService, private readonly foundry: FoundryRelayService) {}
 
   isReferenceKind(value: string): value is ReferenceKind {
@@ -92,7 +128,13 @@ export class Pf2MjService {
   }
 
   async readReference(kind: ReferenceKind): Promise<Record<string, unknown>[]> {
-    return this.persistence.readReference(kind)
+    const items = await this.persistence.readReference(kind)
+    // Les anciennes données pouvaient contenir `image: https://…` ou
+    // `portrait: https://…`. Elles ne doivent plus jamais sortir vers le
+    // navigateur : un portrait PF2 est désormais obligatoirement un asset
+    // Foundry local. Le script de migration peut ensuite matérialiser les
+    // sources distantes dans ce dossier sans exposition CORS.
+    return kind === 'pnj' ? items.map((item) => this.normalizePnjRecord(item)) : items
   }
 
   async updateReference(kind: ReferenceKind, body: unknown): Promise<{ items: Record<string, unknown>[]; added: number; updated: number }> {
@@ -105,7 +147,7 @@ export class Pf2MjService {
     let added = 0
     let updated = 0
     rawItems.forEach((raw) => {
-      const item = this.asObject(raw)
+      const item = this.normalizeReferenceItem(kind, this.asObject(raw))
       const id = this.identifier(item)
       if (byId.has(id)) updated++
       else added++
@@ -118,7 +160,10 @@ export class Pf2MjService {
   }
 
   async readCuration(): Promise<Record<string, unknown>> {
-    return this.persistence.readCuration()
+    const current = await this.persistence.readCuration()
+    const normalized = this.normalizeCuration(current)
+    if (JSON.stringify(normalized) !== JSON.stringify(current)) await this.persistence.saveCuration(normalized)
+    return normalized
   }
 
   async saveResumeActorCache(actors: ResumeActorReference[]): Promise<void> {
@@ -212,19 +257,13 @@ export class Pf2MjService {
     return this.buildResourceInventory(catalogue, files.zips)
   }
 
-  async scanLibrary(): Promise<Record<string, unknown>> {
+  async scanLibrary(apply = false): Promise<Record<string, unknown>> {
     const disk = await this.walkLibraryFiles(this.libraryRoot)
     const catalogue = await this.readScanCatalogue()
-    const known = new Set(
-      Array.isArray(catalogue.files)
-        ? catalogue.files
-            .map((item) => (typeof item.path === 'string' ? this.normalizedPath(item.path) : ''))
-            .filter(Boolean)
-        : []
-    )
-    const available = new Set(disk.pdfs)
-    const added = disk.pdfs.filter((path) => !known.has(path))
-    const removed = [...known].filter((path) => !available.has(path))
+    const knownPaths = this.catalogueDocumentPaths(catalogue)
+    const reconciliation = this.reconcilePdfPaths(knownPaths, disk.pdfs)
+    const added = reconciliation.added
+    const removed = reconciliation.removed
     const informationPdfs = disk.pdfs.filter((path) => this.isInformationPdf(path))
     const addedInformationPdfs = added.filter((path) => this.isInformationPdf(path))
     const resourceInventory = this.buildResourceInventory(catalogue, disk.zips)
@@ -244,15 +283,23 @@ export class Pf2MjService {
         : null
     }).filter((value): value is NonNullable<typeof value> => Boolean(value))
 
+    if (apply) {
+      const sync = await this.applyCatalogueReconciliation(catalogue, reconciliation, added, targetIndex)
+      const refreshed = await this.scanLibrary(false)
+      return { ...refreshed, sync }
+    }
+
     return {
       scannedAt: resourceInventory.scannedAt,
       totalOnDisk: disk.pdfs.length,
-      knownInCatalogue: known.size,
+      knownInCatalogue: knownPaths.length,
       summary: {
         added: added.length,
         translations: 0,
         translationsCertain: 0,
         removed: removed.length,
+        relocated: reconciliation.relocations.length,
+        ignoredMetadata: disk.ignoredMetadata,
         information: informationPdfs.length,
         informationAdded: addedInformationPdfs.length,
         zips: disk.zips.length,
@@ -264,6 +311,9 @@ export class Pf2MjService {
       informationPdfs,
       addedInformationPdfs,
       pdfPaths: disk.pdfs,
+      pdfAliases: Object.fromEntries(reconciliation.relocations.map((item) => [item.cataloguePath, item.diskPath])),
+      relocations: reconciliation.relocations,
+      ignoredMetadataFiles: disk.ignoredMetadata,
       newPdfs: added,
       removed,
       resourceInventory
@@ -272,8 +322,14 @@ export class Pf2MjService {
 
   async savePnjPortrait(bytes: Uint8Array, mimeType: string, pnjId: string): Promise<string> {
     const prepared = await this.preparePortrait(bytes, mimeType)
-    const portrait = await this.persistence.savePortrait(prepared.bytes, prepared.extension, pnjId, prepared.extension === 'gif' ? 'image/gif' : 'image/webp')
-    return portrait.path
+    const stem = this.safePortraitStem(pnjId)
+    const filename = `${stem}.${prepared.extension}`
+    await mkdir(this.foundryPortraitRoot, { recursive: true })
+    const target = resolve(this.foundryPortraitRoot, filename)
+    const temporary = resolve(this.foundryPortraitRoot, `.${filename}.${process.pid}.${Date.now()}.tmp`)
+    await writeFile(temporary, prepared.bytes)
+    await rename(temporary, target)
+    return `${this.foundryPortraitPrefix}/${filename}`
   }
 
   async importPnjPortrait(urlValue: unknown, pnjId: string): Promise<string> {
@@ -283,11 +339,16 @@ export class Pf2MjService {
 
   async saveAndSyncPnjPortrait(bytes: Uint8Array, mimeType: string, pnjId: string): Promise<{ portrait: string; local: 'success'; foundry: 'not-linked' | 'synchronized' | 'unavailable'; foundryMessage?: string }> {
     const portrait = await this.savePnjPortrait(bytes, mimeType, pnjId)
+    // Pour un PNJ existant, l'upload est une vraie modification : on persiste
+    // immédiatement le chemin Foundry afin qu'un abandon du dialogue n'introduise
+    // pas de divergence entre l'Actor et le référentiel PF2-MJ.
+    await this.updatePnj(pnjId, { portrait })
     return this.syncPortraitForPnj(pnjId, portrait)
   }
 
   async importAndSyncPnjPortrait(urlValue: unknown, pnjId: string): Promise<{ portrait: string; local: 'success'; foundry: 'not-linked' | 'synchronized' | 'unavailable'; foundryMessage?: string }> {
     const portrait = await this.importPnjPortrait(urlValue, pnjId)
+    await this.updatePnj(pnjId, { portrait })
     return this.syncPortraitForPnj(pnjId, portrait)
   }
 
@@ -313,7 +374,8 @@ export class Pf2MjService {
   async createFoundryPlaceholder(id: string): Promise<{ pnj: Record<string, unknown>; actor: { uuid: string; name: string }; portrait: string | null }> {
     const pnj = await this.requirePnj(id)
     if (this.foundryActorUuid(pnj)) throw new Error('Ce PNJ possède déjà un Actor Foundry associé.')
-    const portrait = typeof pnj.portrait === 'string' && /^portraits\/[^/]+\.(?:webp|gif)$/i.test(pnj.portrait) ? await this.uploadPortraitToFoundry(pnj.portrait) : null
+    const portrait = this.normalizePortraitPath(pnj.portrait)
+    if (portrait) await this.assertFoundryPortraitExists(portrait)
     const actor = await this.foundry.createNpcPlaceholder(this.name(pnj), portrait)
     const updated = await this.updatePnj(id, { foundryActorUuid: actor.uuid })
     return { pnj: updated, actor, portrait }
@@ -321,23 +383,21 @@ export class Pf2MjService {
 
   async resyncPnjPortrait(id: string): Promise<{ portrait: string; local: 'success'; foundry: 'not-linked' | 'synchronized' | 'unavailable'; foundryMessage?: string }> {
     const pnj = await this.requirePnj(id)
-    if (typeof pnj.portrait !== 'string' || !/^portraits\/[^/]+\.(?:webp|gif)$/i.test(pnj.portrait)) throw new Error('Ce PNJ ne possède pas de portrait local synchronisable.')
-    return this.syncPortraitForPnj(id, pnj.portrait)
+    const portrait = this.normalizePortraitPath(pnj.portrait)
+    if (!portrait) throw new Error('Ce PNJ ne possède pas de portrait Foundry synchronisable.')
+    return this.syncPortraitForPnj(id, portrait)
   }
 
-  async resolvePnjPortrait(encodedFilename: string): Promise<{ stream: ReturnType<typeof createReadStream>; size: number; filename: string }> {
+  async resolvePnjPortrait(encodedFilename: string): Promise<{ stream: ReturnType<typeof createReadStream>; size: number; filename: string; mimeType: string }> {
     const filename = decodeURIComponent(encodedFilename)
-    if (basename(filename) !== filename || !/\.(?:webp|gif)$/i.test(filename)) throw new Error('Chemin refusé')
-    let target = this.persistence.portraitPath(filename)
-    let info
-    try {
-      info = await stat(target)
-    } catch {
-      target = resolve(this.legacyPortraitRoot, filename)
-      info = await stat(target)
-    }
+    if (basename(filename) !== filename || !/\.(?:webp|gif|png|jpe?g)$/i.test(filename)) throw new Error('Chemin refusé')
+    const target = resolve(this.foundryPortraitRoot, filename)
+    if (target !== this.foundryPortraitRoot && !target.startsWith(`${this.foundryPortraitRoot}${sep}`)) throw new Error('Chemin refusé')
+    const info = await stat(target)
     if (!info.isFile()) throw new Error('Image introuvable')
-    return { stream: createReadStream(target), size: info.size, filename }
+    const extension = filename.split('.').at(-1)?.toLowerCase()
+    const mimeType = extension === 'gif' ? 'image/gif' : extension === 'png' ? 'image/png' : extension === 'jpg' || extension === 'jpeg' ? 'image/jpeg' : 'image/webp'
+    return { stream: createReadStream(target), size: info.size, filename, mimeType }
   }
 
   private async preparePortrait(value: Uint8Array, mimeType: string): Promise<{ bytes: Buffer; extension: 'webp' | 'gif' }> {
@@ -351,22 +411,67 @@ export class Pf2MjService {
     return { bytes: await sharp(bytes).rotate().webp({ quality: 88 }).toBuffer(), extension: 'webp' }
   }
 
-  private async syncPortraitForPnj(id: string, portrait: string): Promise<{ portrait: string; local: 'success'; foundry: 'not-linked' | 'synchronized' | 'unavailable'; foundryMessage?: string }> {
+  private async syncPortraitForPnj(id: string, portraitValue: string): Promise<{ portrait: string; local: 'success'; foundry: 'not-linked' | 'synchronized' | 'unavailable'; foundryMessage?: string }> {
+    const portrait = this.normalizePortraitPath(portraitValue)
+    if (!portrait) throw new Error('Portrait Foundry invalide.')
+    await this.assertFoundryPortraitExists(portrait)
     const pnj = await this.requirePnj(id)
     const actorUuid = this.foundryActorUuid(pnj)
     if (!actorUuid) return { portrait, local: 'success', foundry: 'not-linked' }
     try {
-      const foundryPortrait = await this.uploadPortraitToFoundry(portrait)
-      await this.foundry.syncActorPortrait(actorUuid, foundryPortrait)
+      // Le fichier est déjà dans Foundry : on ne le ré-uploade pas via le relay.
+      // L'Actor référence exactement le même asset que PF2-MJ.
+      await this.foundry.syncActorPortrait(actorUuid, portrait)
       return { portrait, local: 'success', foundry: 'synchronized' }
     } catch (error) {
       return { portrait, local: 'success', foundry: 'unavailable', foundryMessage: this.errorMessage(error) }
     }
   }
 
-  private async uploadPortraitToFoundry(portrait: string): Promise<string> {
-    const media = await this.persistence.readPortrait(portrait)
-    return this.foundry.uploadPortrait(media.bytes, media.filename, media.mimeType)
+  private normalizeReferenceItem(kind: ReferenceKind, item: Record<string, unknown>): Record<string, unknown> {
+    return kind === 'pnj' ? this.normalizePnjRecord(item) : item
+  }
+
+  private normalizePnjRecord(item: Record<string, unknown>): Record<string, unknown> {
+    const normalized = { ...item }
+    // `image` était l'ancien champ permettant les hotlinks. Il est supprimé de
+    // la donnée active, même lorsqu'il contient une URL valide.
+    delete normalized.image
+    const portrait = this.normalizePortraitPath(normalized.portrait)
+    if (portrait) normalized.portrait = portrait
+    else delete normalized.portrait
+    return normalized
+  }
+
+  private normalizePortraitPath(value: unknown): string | null {
+    if (typeof value !== 'string') return null
+    const trimmed = value.trim().replace(/^\/+/, '')
+    if (!trimmed || /^https?:\/\//i.test(trimmed)) return null
+    const current = /^assets\/l7r\/portraits\/pnj\/([^/]+\.(?:webp|gif|png|jpe?g))$/i.exec(trimmed)
+    if (current) return `${this.foundryPortraitPrefix}/${current[1]}`
+    // Compatibilité de lecture avec la V3.2. Une prochaine écriture convertit
+    // automatiquement `portraits/foo.webp` vers le chemin Foundry canonique.
+    const legacy = /^portraits\/([^/]+\.(?:webp|gif|png|jpe?g))$/i.exec(trimmed)
+    return legacy ? `${this.foundryPortraitPrefix}/${legacy[1]}` : null
+  }
+
+  private portraitFilename(portrait: string): string {
+    const normalized = this.normalizePortraitPath(portrait)
+    if (!normalized) throw new Error('Portrait Foundry invalide.')
+    return normalized.split('/').at(-1) as string
+  }
+
+  private async assertFoundryPortraitExists(portrait: string): Promise<void> {
+    const filename = this.portraitFilename(portrait)
+    const target = resolve(this.foundryPortraitRoot, filename)
+    const info = await stat(target)
+    if (!info.isFile()) throw new Error(`Portrait Foundry introuvable : ${portrait}`)
+  }
+
+  private safePortraitStem(value: string): string {
+    const stem = value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+    if (!stem) throw new Error('Identifiant de PNJ invalide pour le portrait.')
+    return stem.slice(0, 120)
   }
 
   private async requirePnj(id: string): Promise<Record<string, unknown>> {
@@ -433,21 +538,94 @@ export class Pf2MjService {
     return JSON.parse(await readFile(resolve(this.dataRoot, 'catalogue-pf2.json'), 'utf8')) as ScanCatalogue
   }
 
-  private async walkLibraryFiles(directory: string): Promise<{ pdfs: string[]; zips: string[] }> {
+  private async walkLibraryFiles(directory: string): Promise<{ pdfs: string[]; zips: string[]; ignoredMetadata: number }> {
     const entries = await readdir(directory, { withFileTypes: true })
     const nested = await Promise.all(entries.map(async (entry) => {
+      // Les fichiers AppleDouble `._foo.pdf` sont des métadonnées macOS, pas des PDF réels.
+      // Même chose pour les répertoires __MACOSX et quelques fichiers techniques courants.
+      if (entry.name === '__MACOSX' || entry.name === '.DS_Store' || entry.name.startsWith('._')) {
+        return { pdfs: [] as string[], zips: [] as string[], ignoredMetadata: 1 }
+      }
       const target = resolve(directory, entry.name)
       if (entry.isDirectory()) return this.walkLibraryFiles(target)
-      if (!entry.isFile()) return { pdfs: [] as string[], zips: [] as string[] }
+      if (!entry.isFile()) return { pdfs: [] as string[], zips: [] as string[], ignoredMetadata: 0 }
       const path = this.normalizedPath(relative(this.libraryRoot, target))
-      if (/\.(?:pdf|pd)$/i.test(entry.name)) return { pdfs: [path], zips: [] }
-      if (/\.zip$/i.test(entry.name)) return { pdfs: [], zips: [path] }
-      return { pdfs: [], zips: [] }
+      if (/\.(?:pdf|pd)$/i.test(entry.name)) return { pdfs: [path], zips: [], ignoredMetadata: 0 }
+      if (/\.zip$/i.test(entry.name)) return { pdfs: [], zips: [path], ignoredMetadata: 0 }
+      return { pdfs: [], zips: [], ignoredMetadata: 0 }
     }))
     return {
       pdfs: nested.flatMap((item) => item.pdfs).sort((left, right) => left.localeCompare(right, 'fr')),
-      zips: nested.flatMap((item) => item.zips).sort((left, right) => left.localeCompare(right, 'fr'))
+      zips: nested.flatMap((item) => item.zips).sort((left, right) => left.localeCompare(right, 'fr')),
+      ignoredMetadata: nested.reduce((total, item) => total + item.ignoredMetadata, 0)
     }
+  }
+
+  private reconcilePdfPaths(knownPaths: string[], diskPaths: string[]): {
+    added: string[]
+    removed: string[]
+    relocations: Array<{ cataloguePath: string; diskPath: string; reason: 'normalized-path' | 'unique-filename' }>
+  } {
+    const known = [...new Set(knownPaths.map((path) => this.normalizedPath(path)))]
+    const disk = [...new Set(diskPaths.map((path) => this.normalizedPath(path)))]
+    const diskExact = new Set(disk)
+    const exactKnown = new Set(known.filter((path) => diskExact.has(path)))
+    const unmatchedKnown = known.filter((path) => !exactKnown.has(path))
+    const unmatchedDisk = disk.filter((path) => !exactKnown.has(path))
+
+    const relocations: Array<{ cataloguePath: string; diskPath: string; reason: 'normalized-path' | 'unique-filename' }> = []
+    const usedKnown = new Set<string>()
+    const usedDisk = new Set<string>()
+
+    const pairUnique = (
+      knownKey: (path: string) => string,
+      diskKey: (path: string) => string,
+      reason: 'normalized-path' | 'unique-filename'
+    ) => {
+      const knownByKey = new Map<string, string[]>()
+      const diskByKey = new Map<string, string[]>()
+      for (const path of unmatchedKnown) {
+        if (usedKnown.has(path)) continue
+        const key = knownKey(path)
+        if (!key) continue
+        knownByKey.set(key, [...(knownByKey.get(key) ?? []), path])
+      }
+      for (const path of unmatchedDisk) {
+        if (usedDisk.has(path)) continue
+        const key = diskKey(path)
+        if (!key) continue
+        diskByKey.set(key, [...(diskByKey.get(key) ?? []), path])
+      }
+      for (const [key, oldPaths] of knownByKey) {
+        const newPaths = diskByKey.get(key) ?? []
+        if (oldPaths.length !== 1 || newPaths.length !== 1) continue
+        const cataloguePath = oldPaths[0]
+        const diskPath = newPaths[0]
+        usedKnown.add(cataloguePath)
+        usedDisk.add(diskPath)
+        relocations.push({ cataloguePath, diskPath, reason })
+      }
+    }
+
+    // 1. Même chemin logique après normalisation Unicode / ponctuation.
+    pairUnique((path) => this.pathIdentity(path), (path) => this.pathIdentity(path), 'normalized-path')
+    // 2. Même nom logique mais fichier déplacé dans un autre dossier. Uniquement si la correspondance est unique.
+    pairUnique((path) => this.filenameIdentity(path), (path) => this.filenameIdentity(path), 'unique-filename')
+
+    return {
+      added: unmatchedDisk.filter((path) => !usedDisk.has(path)),
+      removed: unmatchedKnown.filter((path) => !usedKnown.has(path)),
+      relocations: relocations.sort((left, right) => left.cataloguePath.localeCompare(right.cataloguePath, 'fr'))
+    }
+  }
+
+  private pathIdentity(path: string): string {
+    return this.matchText(this.normalizedPath(path).replace(/\.(?:pdf|pd)$/i, ''))
+  }
+
+  private filenameIdentity(path: string): string {
+    const filename = this.normalizedPath(path).split('/').at(-1) ?? path
+    return this.matchText(filename.replace(/\.(?:pdf|pd)$/i, ''))
   }
 
   private buildResourceInventory(catalogue: ScanCatalogue, zipPaths: string[]): ResourceBundleInventory {
@@ -471,53 +649,115 @@ export class Pf2MjService {
     return { schemaVersion: 1, inventoryKnown: true, scannedAt, totalOnDisk: zipPaths.length, bundles }
   }
 
+  private catalogueDocumentPaths(catalogue: ScanCatalogue): string[] {
+    if (Number(catalogue.schemaVersion) === 3 && Array.isArray(catalogue.documents)) {
+      return catalogue.documents.map((item) => typeof item.path === 'string' ? this.normalizedPath(item.path) : '').filter(Boolean)
+    }
+    return Array.isArray(catalogue.files) ? catalogue.files.map((item) => typeof item.path === 'string' ? this.normalizedPath(item.path) : '').filter(Boolean) : []
+  }
+
+  private async applyCatalogueReconciliation(catalogue: ScanCatalogue, reconciliation: { relocations: Array<{ cataloguePath: string; diskPath: string; reason: 'normalized-path' | 'unique-filename' }> }, added: string[], targets: ScanTarget[]): Promise<{ changed: boolean; relocated: number; inventoried: number; review: number }> {
+    if (Number(catalogue.schemaVersion) !== 3 || !Array.isArray(catalogue.documents)) throw new Error('La synchronisation automatique nécessite le catalogue V3.')
+    let relocated = 0
+    const documents = catalogue.documents
+    for (const relocation of reconciliation.relocations) {
+      const document = documents.find((item) => typeof item.path === 'string' && this.normalizedPath(item.path) === this.normalizedPath(relocation.cataloguePath))
+      if (!document) continue
+      document.path = relocation.diskPath
+      document.filename = relocation.diskPath.split('/').at(-1) ?? relocation.diskPath
+      relocated++
+    }
+
+    const pending = Array.isArray(catalogue.reconciliation?.pending) ? [...catalogue.reconciliation!.pending as unknown[]] : []
+    let review = 0
+    for (const path of added) {
+      const filename = path.split('/').at(-1) ?? path
+      const match = this.matchTarget(path, targets, false)
+      const info = this.isInformationPdf(path)
+      const category = this.documentCategory(path)
+      const target = match.targetId ? targets.find((item) => item.id === match.targetId) : undefined
+      const status: 'confirmed' | 'review' | 'unassociated' = category === 'rules' || category === 'setting' ? 'confirmed' : match.status === 'confirmed' ? 'confirmed' : 'review'
+      if (status === 'review') review++
+      const normalized = this.normalizedPath(path)
+      if (documents.some((item) => typeof item.path === 'string' && this.normalizedPath(item.path) === normalized)) continue
+      documents.push({
+        id: `scan-${this.slug(path.replace(/\.(?:pdf|pd)$/i, ''))}`,
+        filename,
+        path,
+        targetId: match.targetId,
+        targetKind: target?.kind ?? null,
+        role: info ? 'information' : category === 'map' || category === 'playerGuide' || category === 'rules' || category === 'setting' ? 'resource' : 'core',
+        libraryCategory: category,
+        isInformationFallback: info,
+        association: { status, confidence: match.score, evidence: status === 'confirmed' && !match.targetId ? [`Catégorie ${category} déterminée par le chemin`] : match.evidence }
+      })
+      if (status !== 'confirmed') pending.push({ path, reason: 'Association automatique à vérifier', candidateId: match.targetId, evidence: match.evidence })
+    }
+    catalogue.reconciliation = { ...(catalogue.reconciliation ?? {}), pending, relocationsApplied: [...(Array.isArray(catalogue.reconciliation?.relocationsApplied) ? catalogue.reconciliation!.relocationsApplied as unknown[] : []), ...reconciliation.relocations.map((item) => ({ from: item.cataloguePath, to: item.diskPath }))] }
+    const target = resolve(this.dataRoot, 'catalogue-pf2.json')
+    const temp = `${target}.tmp`
+    await writeFile(temp, `${JSON.stringify(catalogue, null, 2)}\n`, 'utf8')
+    await rename(temp, target)
+    return { changed: relocated > 0 || added.length > 0, relocated, inventoried: added.length, review }
+  }
+
+  private documentCategory(path: string): 'adventure' | 'map' | 'playerGuide' | 'rules' | 'setting' | 'information' | 'other' {
+    const filename = path.split('/').at(-1) ?? path
+    if (this.isInformationPdf(path)) return 'information'
+    if (/^Règles\//i.test(path)) return 'rules'
+    if (/^Univers\//i.test(path)) return 'setting'
+    if (/\(map\)/i.test(filename) || /\/Cartes\//i.test(path)) return 'map'
+    if (/\(player\)/i.test(filename) || /\/Guides joueurs\//i.test(path)) return 'playerGuide'
+    if (/^Campagnes\//i.test(path)) return 'adventure'
+    return 'other'
+  }
+
   private scanTargets(catalogue: ScanCatalogue): ScanTarget[] {
     const result: ScanTarget[] = []
-    const playablePartKinds = new Set(['volume_aventure', 'aventure_autonome', 'one_shot', 'aventure_communautaire'])
 
+    if (Number(catalogue.schemaVersion) === 3 && (catalogue.playableUnits || catalogue.containers || catalogue.components)) {
+      for (const container of catalogue.containers ?? []) {
+        const id = typeof container.id === 'string' ? container.id : ''
+        if (!id) continue
+        const titles = this.asObject(container.titles)
+        const isCampaign = container.containerType === 'campaign'
+        result.push({ id, kind: 'container', isCampaign, parentId: typeof container.parentId === 'string' ? container.parentId : null, labels: this.scanLabels(titles.fr, titles.original, titles.aliases, id), numbers: this.scanNumbers(container.season) })
+      }
+      for (const unit of catalogue.playableUnits ?? []) {
+        const id = typeof unit.id === 'string' ? unit.id : ''
+        if (!id) continue
+        const titles = this.asObject(unit.titles)
+        result.push({ id, kind: 'playable', isCampaign: false, parentId: typeof unit.parentId === 'string' ? unit.parentId : null, labels: this.scanLabels(titles.fr, titles.original, titles.aliases, id), numbers: this.scanNumbers(unit.number) })
+      }
+      for (const component of catalogue.components ?? []) {
+        const id = typeof component.id === 'string' ? component.id : ''
+        if (!id) continue
+        const titles = this.asObject(component.titles)
+        result.push({ id, kind: 'component', isCampaign: false, parentId: typeof component.ownerId === 'string' ? component.ownerId : null, labels: this.scanLabels(titles.fr, titles.original, titles.aliases, id), numbers: this.scanNumbers(component.number) })
+      }
+      return result
+    }
+
+    const playablePartKinds = new Set(['volume_aventure', 'aventure_autonome', 'one_shot', 'aventure_communautaire'])
     for (const entry of catalogue.entries ?? []) {
       const id = typeof entry.id === 'string' ? entry.id : ''
       if (!id) continue
       const kind = typeof entry.kind === 'string' ? entry.kind : ''
       const isCampaign = kind === 'campaign'
-      result.push({
-        id,
-        kind: isCampaign ? 'container' : 'playable',
-        isCampaign,
-        parentId: typeof entry.collectionId === 'string' ? entry.collectionId : null,
-        labels: this.scanLabels(entry.titleFr, entry.titleOriginal, entry.aliases, id),
-        numbers: this.scanNumbers(entry.number)
-      })
-
+      result.push({ id, kind: isCampaign ? 'container' : 'playable', isCampaign, parentId: typeof entry.collectionId === 'string' ? entry.collectionId : null, labels: this.scanLabels(entry.titleFr, entry.titleOriginal, entry.aliases, id), numbers: this.scanNumbers(entry.number) })
       for (const part of entry.parts ?? []) {
         const partId = typeof part.id === 'string' ? part.id : ''
         if (!partId) continue
         const partKind = typeof part.kind === 'string' ? part.kind : ''
-        result.push({
-          id: partId,
-          kind: isCampaign && playablePartKinds.has(partKind) ? 'playable' : 'component',
-          isCampaign: false,
-          parentId: id,
-          labels: this.scanLabels(part.titleFr, part.titleOriginal, [], partId),
-          numbers: this.scanNumbers(part.number, part.sequence)
-        })
+        result.push({ id: partId, kind: isCampaign && playablePartKinds.has(partKind) ? 'playable' : 'component', isCampaign: false, parentId: id, labels: this.scanLabels(part.titleFr, part.titleOriginal, [], partId), numbers: this.scanNumbers(part.number, part.sequence) })
       }
     }
-
     for (const collection of catalogue.collections ?? []) {
       const id = typeof collection.id === 'string' ? collection.id : ''
       if (!id) continue
       const season = typeof collection.season === 'number' ? collection.season : null
-      result.push({
-        id,
-        kind: 'container',
-        isCampaign: false,
-        parentId: typeof collection.parentId === 'string' ? collection.parentId : null,
-        labels: this.scanLabels(collection.titleFr, collection.titleOriginal, [], id),
-        numbers: season === null ? [] : [String(season)]
-      })
+      result.push({ id, kind: 'container', isCampaign: false, parentId: typeof collection.parentId === 'string' ? collection.parentId : null, labels: this.scanLabels(collection.titleFr, collection.titleOriginal, [], id), numbers: season === null ? [] : [String(season)] })
     }
-
     return result
   }
 
@@ -644,7 +884,7 @@ export class Pf2MjService {
   }
 
   private normalizedPath(value: string): string {
-    return value.replace(/\\/g, '/').replace(/^\/+/, '')
+    return value.normalize('NFC').replace(/\\/g, '/').replace(/^\/+/, '')
   }
 
   private matchText(value: string): string {
@@ -668,6 +908,25 @@ export class Pf2MjService {
     if (value === '::1' || value === '::' || value.startsWith('fc') || value.startsWith('fd') || value.startsWith('fe80:')) return true
     const parts = value.split('.').map(Number)
     return parts.length === 4 && (parts[0] === 10 || parts[0] === 127 || parts[0] === 0 || (parts[0] === 169 && parts[1] === 254) || (parts[0] === 172 && parts[1] >= 16 && parts[1] <= 31) || (parts[0] === 192 && parts[1] === 168))
+  }
+
+  private normalizeCuration(value: Record<string, unknown>): Record<string, unknown> {
+    const data = { ...value }
+    const byId = { ...this.asObject(data.byId), ...this.asObject(data.entries) }
+    const set = (id: string, field: string, fieldValue: unknown, overwrite = false) => {
+      if (!id) return
+      const entry = { ...this.asObject(byId[id]) }
+      if (overwrite || entry[field] === undefined) entry[field] = fieldValue
+      byId[id] = entry
+    }
+    this.strings(data.excludedCampaignIds).forEach((id) => set(id, 'inclusion', 'excluded'))
+    this.strings(data.includedCampaignIds).forEach((id) => set(id, 'inclusion', 'reinstated'))
+    this.strings(data.excludedScenarioIds).forEach((id) => set(id, 'inclusion', 'excluded'))
+    const maps: Array<[string, string]> = [['playabilityByCampaign','playability'],['playabilityByScenario','playability'],['progressByCampaign','progress'],['progressByScenario','progress'],['levelsByCampaign','levelsOverride'],['levelsByScenario','levelsOverride'],['placesByCampaign','placesOverride'],['placesByScenario','placesOverride']]
+    for (const [source, field] of maps) for (const [id, fieldValue] of Object.entries(this.asObject(data[source]))) set(id, field, fieldValue)
+    data.schemaVersion = 3
+    data.byId = byId
+    return data
   }
 
   private identifier(item: Record<string, unknown>): string {

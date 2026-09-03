@@ -1,94 +1,14 @@
 {
-  "generatedAt": "2026-08-16",
-  "reason": "Le rapport textuel du scan ne contient pas les SHA-256 nécessaires pour reconstruire les fileId du library-scan.",
+  "generatedAt": "2026-09-01",
+  "reason": "Réconciliation bibliothèque 2026-09-01 : seuls les fichiers dont la cible éditoriale reste réellement ambiguë sont conservés ici.",
   "items": [
     {
-      "catalogueId": "bounty-03-shadows-and-scarecrows",
-      "itemId": "bounty-03-shadows-and-scarecrows-main",
-      "filename": "689114703-Pathfinder-2e-03-Shadows-Scarecrows.pdf",
-      "expectedPath": "Campagnes/Pathfinder Society/Quêtes et Bounties/PFS Bounty - 03 - Shadows and Scarecrows (en).pdf",
-      "currentPath": null,
-      "status": "fileId_à_rattacher"
+      "path": "Ressources/Cartes/War for the Crown - Tome 2 - Songbird, Scion, Saboteur (map).pdf",
+      "reason": "Cible éditoriale absente ou ambiguë dans le catalogue ; association manuelle recommandée."
     },
     {
-      "catalogueId": "bounty-06-the-road-from-otari",
-      "itemId": "bounty-06-the-road-from-otari-main",
-      "filename": "637606077-6-The-Road-From-Otari-1.pdf",
-      "expectedPath": "Campagnes/Pathfinder Society/Quêtes et Bounties/PFS Bounty - 06 - The Road from Otari (en).pdf",
-      "currentPath": "Campagnes/Scénarios/637606077-6-The-Road-From-Otari-1.pdf",
-      "status": "fileId_à_rattacher"
-    },
-    {
-      "catalogueId": "bounty-08-the-tireless-path",
-      "itemId": "bounty-08-the-tireless-path-main",
-      "filename": "689114714-Pathfinder-2e-08-The-Tireless-Path.pdf",
-      "expectedPath": "Campagnes/Pathfinder Society/Quêtes et Bounties/PFS Bounty - 08 - The Tireless Path (en).pdf",
-      "currentPath": null,
-      "status": "fileId_à_rattacher"
-    },
-    {
-      "catalogueId": "bounty-12-somewhere-below",
-      "itemId": "bounty-12-somewhere-below-main",
-      "filename": "689114956-Pathfinder-2e-12-Somewhere-Below.pdf",
-      "expectedPath": "Campagnes/Pathfinder Society/Quêtes et Bounties/PFS Bounty - 12 - Somewhere Below (en).pdf",
-      "currentPath": null,
-      "status": "fileId_à_rattacher"
-    },
-    {
-      "catalogueId": "bounty-13-the-blackwood-abundance",
-      "itemId": "bounty-13-the-blackwood-abundance-main",
-      "filename": "696904240-Pathfinder-2e-13-The-Blackwood-Abundance.pdf",
-      "expectedPath": "Campagnes/Pathfinder Society/Quêtes et Bounties/PFS Bounty - 13 - The Blackwood Abundance (en).pdf",
-      "currentPath": null,
-      "status": "fileId_à_rattacher"
-    },
-    {
-      "catalogueId": "quest-08-shadows-of-the-black-sovereign",
-      "itemId": "quest-08-shadows-of-the-black-sovereign-main",
-      "filename": "671866527-PF2-Quest-08-Shadows-of-the-Black-Sovereign.pdf",
-      "expectedPath": "Campagnes/Pathfinder Society/Quêtes et Bounties/PFS Quest - 08 - Shadows of the Black Sovereign (en).pdf",
-      "currentPath": null,
-      "status": "fileId_à_rattacher"
-    },
-    {
-      "catalogueId": null,
-      "itemId": "pfs-season-1-1-06",
-      "filename": "730622254-1-06-Lost-on-the-Spirit-Road.pdf",
-      "expectedPath": "Campagnes/Pathfinder Society/Saison 1 - Year of the Open Road/PFS - S01-06 - Lost on the Spirit Road (en).pdf",
-      "currentPath": null,
-      "status": "fileId_à_rattacher"
-    },
-    {
-      "catalogueId": null,
-      "itemId": "pfs-season-3-3-02",
-      "filename": "911522569-PF2-S03-02-the-East-Hill-Haunting.pdf",
-      "expectedPath": "Campagnes/Pathfinder Society/Saison 3 - Year of Shattered Sanctuaries/PFS - S03-02 - The East Hill Haunting (en).pdf",
-      "currentPath": null,
-      "status": "fileId_à_rattacher"
-    },
-    {
-      "catalogueId": null,
-      "itemId": "pfs-season-3-3-05",
-      "filename": "911522619-PF2-S03-05-Inheritor-s-Rite.pdf",
-      "expectedPath": "Campagnes/Pathfinder Society/Saison 3 - Year of Shattered Sanctuaries/PFS - S03-05 - Inheritor's Rite (en).pdf",
-      "currentPath": null,
-      "status": "fileId_à_rattacher"
-    },
-    {
-      "catalogueId": null,
-      "itemId": "pfs-season-4-4-02",
-      "filename": "911522546-PF2-S04-02-Return-to-the-Grave.pdf",
-      "expectedPath": "Campagnes/Pathfinder Society/Saison 4 - Year of Boundless Wonder/PFS - S04-02 - Return to the Grave (en).pdf",
-      "currentPath": null,
-      "status": "fileId_à_rattacher"
-    },
-    {
-      "catalogueId": null,
-      "itemId": "pfs-season-4-4-09",
-      "filename": "911522553-PF2-S04-09-Killer-in-the-Golden-Mask.pdf",
-      "expectedPath": "Campagnes/Pathfinder Society/Saison 4 - Year of Boundless Wonder/PFS - S04-09 - Killer in the Golden Mask (en).pdf",
-      "currentPath": null,
-      "status": "fileId_à_rattacher"
+      "path": "Ressources/Guides joueurs/Pathfinder Adventure Path - Player's Guide (player).pdf",
+      "reason": "Cible éditoriale absente ou ambiguë dans le catalogue ; association manuelle recommandée."
     }
   ]
 }

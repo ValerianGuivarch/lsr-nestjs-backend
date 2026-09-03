@@ -4,7 +4,7 @@ import { join } from 'node:path'
 import { Pf2MjService } from './Pf2MjService'
 
 describe('Pf2MjService', () => {
-  const pnj = { id: 'janira-gavix', nom: 'Janira Gavix', description: '', factions: [], tags: [], portrait: 'portraits/janira-gavix.webp' }
+  const pnj = { id: 'janira-gavix', nom: 'Janira Gavix', description: '', factions: [], tags: [], portrait: 'assets/l7r/portraits/pnj/janira-gavix.webp' }
 
   function serviceFor(foundryOverrides: Record<string, jest.Mock> = {}, pnjValue: Record<string, unknown> = pnj, persistenceOverrides: Record<string, jest.Mock> = {}) {
     const persistence = {
@@ -29,22 +29,24 @@ describe('Pf2MjService', () => {
   describe('portraits Foundry', () => {
     it('stores a portrait locally without requiring Foundry when no Actor is linked', async () => {
       const { service, foundry } = serviceFor()
-      jest.spyOn(service, 'savePnjPortrait').mockResolvedValue('portraits/janira-gavix.webp')
-      await expect(service.saveAndSyncPnjPortrait(Buffer.from('image'), 'image/webp', 'janira-gavix')).resolves.toMatchObject({ portrait: 'portraits/janira-gavix.webp', local: 'success', foundry: 'not-linked' })
+      jest.spyOn(service, 'savePnjPortrait').mockResolvedValue('assets/l7r/portraits/pnj/janira-gavix.webp')
+      await expect(service.saveAndSyncPnjPortrait(Buffer.from('image'), 'image/webp', 'janira-gavix')).resolves.toMatchObject({ portrait: 'assets/l7r/portraits/pnj/janira-gavix.webp', local: 'success', foundry: 'not-linked' })
       expect(foundry.uploadPortrait).not.toHaveBeenCalled()
     })
 
     it('keeps local storage successful when Foundry is offline', async () => {
-      const { service, foundry } = serviceFor({ uploadPortrait: jest.fn().mockRejectedValue(new Error('Relay offline')) }, { ...pnj, foundryActorUuid: 'Actor.janira' })
-      jest.spyOn(service, 'savePnjPortrait').mockResolvedValue('portraits/janira-gavix.webp')
+      const { service, foundry } = serviceFor({ syncActorPortrait: jest.fn().mockRejectedValue(new Error('Relay offline')) }, { ...pnj, foundryActorUuid: 'Actor.janira' })
+      jest.spyOn(service, 'savePnjPortrait').mockResolvedValue('assets/l7r/portraits/pnj/janira-gavix.webp')
+      jest.spyOn(service as any, 'assertFoundryPortraitExists').mockResolvedValue(undefined)
       await expect(service.saveAndSyncPnjPortrait(Buffer.from('image'), 'image/webp', 'janira-gavix')).resolves.toMatchObject({ local: 'success', foundry: 'unavailable', foundryMessage: 'Relay offline' })
-      expect(foundry.syncActorPortrait).not.toHaveBeenCalled()
+      expect(foundry.syncActorPortrait).toHaveBeenCalledWith('Actor.janira', 'assets/l7r/portraits/pnj/janira-gavix.webp')
     })
 
     it('syncs the existing Actor UUID and never depends on the PNJ name', async () => {
       const { service, foundry } = serviceFor({}, { ...pnj, nom: 'Janira renommée', foundryActorUuid: 'Actor.janira' })
+      jest.spyOn(service as any, 'assertFoundryPortraitExists').mockResolvedValue(undefined)
       await expect(service.resyncPnjPortrait('janira-gavix')).resolves.toMatchObject({ local: 'success', foundry: 'synchronized' })
-      expect(foundry.syncActorPortrait).toHaveBeenCalledWith('Actor.janira', 'assets/l7r/portraits/janira-gavix.webp')
+      expect(foundry.syncActorPortrait).toHaveBeenCalledWith('Actor.janira', 'assets/l7r/portraits/pnj/janira-gavix.webp')
     })
 
     it('refuses creating a duplicate placeholder when an Actor is already linked', async () => {
@@ -79,6 +81,86 @@ describe('Pf2MjService', () => {
   })
 
   describe('library scan V3', () => {
+    it('ignores macOS AppleDouble files and reconciles renamed Unicode paths', async () => {
+      const root = await mkdtemp(join(tmpdir(), 'pf2-mj-scan-reconcile-'))
+      const library = join(root, 'library')
+      const dataRoot = join(root, 'data')
+      const previousLibrary = process.env['PF2_LIBRARY_ROOT']
+      const previousData = process.env['PF2_DATA_ROOT']
+
+      try {
+        await mkdir(join(library, 'Campagnes'), { recursive: true })
+        await mkdir(dataRoot, { recursive: true })
+        const diskName = 'Campagne - Blood Lords - Tome 2\uf0226 (en).pdf'
+        const oldPath = 'Campagnes/Campagne - Blood Lords - Tome 2:6 (en).pdf'
+        await writeFile(join(library, 'Campagnes', diskName), 'pdf')
+        await writeFile(join(library, 'Campagnes', `._${diskName}`), 'appledouble')
+        await writeFile(join(dataRoot, 'catalogue-pf2.json'), JSON.stringify({
+          files: [{ path: oldPath }],
+          collections: [],
+          entries: []
+        }))
+
+        process.env['PF2_LIBRARY_ROOT'] = library
+        process.env['PF2_DATA_ROOT'] = dataRoot
+        const { service } = serviceFor()
+        const report = await service.scanLibrary() as {
+          totalOnDisk: number
+          summary: { added: number; removed: number; relocated: number; ignoredMetadata: number }
+          pdfAliases: Record<string, string>
+          newPdfs: string[]
+          removed: string[]
+        }
+
+        expect(report.totalOnDisk).toBe(1)
+        expect(report.summary).toMatchObject({ added: 0, removed: 0, relocated: 1, ignoredMetadata: 1 })
+        expect(report.newPdfs).toEqual([])
+        expect(report.removed).toEqual([])
+        expect(report.pdfAliases[oldPath]).toBe(`Campagnes/${diskName}`)
+      } finally {
+        if (previousLibrary === undefined) delete process.env['PF2_LIBRARY_ROOT']; else process.env['PF2_LIBRARY_ROOT'] = previousLibrary
+        if (previousData === undefined) delete process.env['PF2_DATA_ROOT']; else process.env['PF2_DATA_ROOT'] = previousData
+        await rm(root, { recursive: true, force: true })
+      }
+    })
+
+    it('persists a safe V3 reconciliation and makes the next scan clean', async () => {
+      const root = await mkdtemp(join(tmpdir(), 'pf2-mj-scan-apply-'))
+      const library = join(root, 'library')
+      const dataRoot = join(root, 'data')
+      const previousLibrary = process.env['PF2_LIBRARY_ROOT']
+      const previousData = process.env['PF2_DATA_ROOT']
+
+      try {
+        await mkdir(join(library, 'Campagnes'), { recursive: true })
+        await mkdir(dataRoot, { recursive: true })
+        const path = 'Campagnes/PFS - S01-01 - The Absalom Initiation (en).pdf'
+        await writeFile(join(library, path), 'pdf')
+        await writeFile(join(dataRoot, 'catalogue-pf2.json'), JSON.stringify({
+          schemaVersion: 3,
+          containers: [],
+          components: [],
+          playableUnits: [{ id: 'pfs-season-1-1-01', playableType: 'pfsScenario', parentId: null, number: '1-01', titles: { fr: null, original: 'The Absalom Initiation', aliases: [] } }],
+          documents: [],
+          reconciliation: { pending: [], relocationsApplied: [], notes: [] }
+        }))
+
+        process.env['PF2_LIBRARY_ROOT'] = library
+        process.env['PF2_DATA_ROOT'] = dataRoot
+        const { service } = serviceFor()
+        const applied = await service.scanLibrary(true) as { summary: { added: number; removed: number }; sync: { inventoried: number; review: number } }
+        expect(applied.summary).toMatchObject({ added: 0, removed: 0 })
+        expect(applied.sync).toMatchObject({ inventoried: 1, review: 0 })
+
+        const catalogue = JSON.parse(await (await import('node:fs/promises')).readFile(join(dataRoot, 'catalogue-pf2.json'), 'utf8')) as { documents: Array<{ path: string; targetId: string; association: { status: string } }> }
+        expect(catalogue.documents).toEqual([expect.objectContaining({ path, targetId: 'pfs-season-1-1-01', association: expect.objectContaining({ status: 'confirmed' }) })])
+      } finally {
+        if (previousLibrary === undefined) delete process.env['PF2_LIBRARY_ROOT']; else process.env['PF2_LIBRARY_ROOT'] = previousLibrary
+        if (previousData === undefined) delete process.env['PF2_DATA_ROOT']; else process.env['PF2_DATA_ROOT'] = previousData
+        await rm(root, { recursive: true, force: true })
+      }
+    })
+
     it('detects info PDFs, resource ZIPs and campaign inheritance targets', async () => {
       const root = await mkdtemp(join(tmpdir(), 'pf2-mj-scan-'))
       const library = join(root, 'library')

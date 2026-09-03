@@ -1,352 +1,707 @@
 {
-  "pfs-season-1-intro": {
-    "relevance": "Très haute",
-    "synopsis": "Une recrue disparaît pendant sa Confirmation. Plutôt que d’envoyer des agents confirmés, la Société rassemble plusieurs initiés pour une rare Confirmation de groupe : retrouver la disparue, poursuivre sa mission et prouver qu’ils savent agir comme de véritables Éclaireurs.",
-    "rationale": "Excellent scénario d’entrée pour une table ouverte : il justifie immédiatement une équipe composée de nouvelles recrues, présente les attentes de la Société et peut être rejoué dans l’esprit pour intégrer de nouveaux personnages sans exiger de métaplot préalable."
+  "bounty-04-cat-s-cradle": {
+    "rationale": "Très bon format d'une séance courte pour niveau 1 ; facile à insérer comme mission opportuniste sur la Voie Dorée.",
+    "relevance": "Haute",
+    "synopsis": "Sur les routes de la Voie Dorée, un marchand a été dépouillé d'une boîte-puzzle transmise dans sa famille et engage des aventuriers pour la retrouver. La piste entraîne les héros dans le désert, où ils doivent combiner enquête et poursuite afin de récupérer l'héritage avant qu'il ne disparaisse définitivement."
+  },
+  "bounty-16-boom-town-betrayal": {
+    "rationale": "Bounty d'enquête urbaine courte et souple, excellente pour une équipe de niveau 1 à Absalom.",
+    "relevance": "Haute",
+    "synopsis": "Dans les rues d'Absalom, une personne affirme que ses parents ont été ruinés par les manœuvres d'un noble taldorien et demande à des aventuriers de réparer l'injustice. L'affaire semble simple au départ, mais l'enquête révèle rapidement que le récit initial ne présente pas toute la situation et oblige les héros à déterminer qui manipule réellement qui."
   },
   "pfs-season-1-1-00": {
+    "rationale": "Très bon scénario d’archives et d’histoire institutionnelle pour Tsuyi. Il enrichit la mémoire de la Société, mais son niveau et son rôle de scénario spécial le rendent moins adapté comme mission d’accueil que les scénarios d’initiation.",
     "relevance": "Haute",
-    "synopsis": "Après la disparition de documents importants dans les archives de la Grande Loge, des Éclaireurs expérimentés sont envoyés à la Maison du Nexus, à Quantium, pour consulter des copies liées aux origines de la Société et au Pacte de la Route ouverte. D’autres groupes convoitent cependant les mêmes secrets.",
-    "rationale": "Très bon scénario d’archives et d’histoire institutionnelle pour Tsuyi. Il enrichit la mémoire de la Société, mais son niveau et son rôle de scénario spécial le rendent moins adapté comme mission d’accueil que les scénarios d’initiation."
+    "synopsis": "Après la disparition de documents importants dans les archives de la Grande Loge, des Éclaireurs expérimentés sont envoyés à la Maison du Nexus, à Quantium, pour consulter des copies liées aux origines de la Société et au Pacte de la Route ouverte. D’autres groupes convoitent cependant les mêmes secrets."
   },
   "pfs-season-1-1-01": {
+    "rationale": "Presque idéal pour ton format : quatre objectifs séparables, Absalom comme base commune, représentants de factions récurrents et excellente intégration de nouvelles recrues. Les contacts créés peuvent continuer d’exister bien après le scénario.",
     "relevance": "Très haute",
-    "synopsis": "À Absalom, les agents accomplissent quatre petites missions confiées par des figures importantes des factions de la Société. Chacune les entraîne dans un autre secteur de la ville et leur fait découvrir des contacts, méthodes et problèmes différents de la Grande Loge.",
-    "rationale": "Presque idéal pour ton format : quatre objectifs séparables, Absalom comme base commune, représentants de factions récurrents et excellente intégration de nouvelles recrues. Les contacts créés peuvent continuer d’exister bien après le scénario."
+    "synopsis": "À Absalom, les agents accomplissent quatre petites missions confiées par des figures importantes des factions de la Société. Chacune les entraîne dans un autre secteur de la ville et leur fait découvrir des contacts, méthodes et problèmes différents de la Grande Loge."
+  },
+  "pfs-season-1-1-02": {
+    "rationale": "Enquête rurale autonome, forte identité de lieu et excellente porte d'entrée vers les Royaumes Fluviaux.",
+    "relevance": "Haute",
+    "synopsis": "Dans le village de Shimmerford, aux Royaumes Fluviaux, une vieille légende locale autour de la Sorcière Moustique semble soudain prendre corps lorsque des attaques inquiétantes se multiplient. Les Éclaireurs doivent confronter folklore, témoignages et indices matériels afin de déterminer ce qui menace réellement la communauté."
+  },
+  "pfs-season-1-1-03": {
+    "rationale": "Très pertinent pour le fil Tar-Baphon : mission de sauvetage, patrimoine menacé et conséquences directement réutilisables.",
+    "relevance": "Très haute",
+    "synopsis": "Dans les Terres des Tombes, des Éclaireurs et des réfugiés ont disparu alors qu'ils tentaient de sauver des textes et des trésors culturels menacés par les morts-vivants. Une équipe doit les retrouver, récupérer ce qui peut encore l'être et ressortir avant que les forces hostiles ne ferment toute possibilité de retraite."
   },
   "pfs-season-1-1-04": {
+    "rationale": "Mission autonome très facile à insérer entre deux arcs : départ d’Absalom, objectif matériel clair et exploration de l’île de Kortos. Elle enrichit la géographie proche de la Grande Loge même sans accroche personnelle forte.",
     "relevance": "Haute",
-    "synopsis": "Une expédition de la Société a fait naufrage sur l’île de Kortos en rapportant des reliques et des cartes. Les agents doivent gagner le site de l’épave dans l’Immenwood, récupérer ce qui peut l’être et composer avec les habitants et dangers de cette forêt avant de ramener les découvertes à Absalom.",
-    "rationale": "Mission autonome très facile à insérer entre deux arcs : départ d’Absalom, objectif matériel clair et exploration de l’île de Kortos. Elle enrichit la géographie proche de la Grande Loge même sans accroche personnelle forte."
+    "synopsis": "Une expédition de la Société a fait naufrage sur l’île de Kortos en rapportant des reliques et des cartes. Les agents doivent gagner le site de l’épave dans l’Immenwood, récupérer ce qui peut l’être et composer avec les habitants et dangers de cette forêt avant de ramener les découvertes à Absalom."
   },
-  "pfs-season-1-1-09": {
+  "pfs-season-1-1-05": {
+    "rationale": "Très bonne mission d'exploration logistique, facilement détachable du métaplot et compatible avec une équipe variable.",
     "relevance": "Haute",
-    "synopsis": "Après un voyage maritime le long de la côte garundienne, les agents font naufrage près d’un village iruxi puis gagnent un ancien observatoire enfoui dans la jungle du Mwangi.",
-    "rationale": "Très bonne rencontre entre les fils d’Elyn et de Vaga : navigation, ciel, observatoire et Mwangi. Elle peut aussi préparer les recherches sur Lirgen sans en révéler trop tôt les réponses."
-  },
-  "pfs-season-1-1-11": {
-    "relevance": "Haute",
-    "synopsis": "À l’ancienne tour de Diggen’s Rest, entre Andoran et Galt, les agents recherchent l’héritage volontairement oublié d’une Éclaireuse et affrontent les conséquences d’idéaux révolutionnaires devenus dangereux.",
-    "rationale": "Pertinent pour Elyn grâce à l’ancrage andorénien et pour la campagne grâce au thème des récits d’Éclaireurs effacés ; bon scénario d’archives et de rébellion."
-  },
-  "pfs-season-1-1-12": {
-    "relevance": "Haute",
-    "synopsis": "Dans la cité de Xin-Edasseril, les agents aident des habitants à fuir le régime autoritaire de la seigneure des runes Belimarius et organisent leur passage vers Magnimar au milieu d’une surveillance étroite.",
-    "rationale": "Alimente directement le fil thassilonien et montre les conséquences humaines du retour de l’ancien Thassilon. Très facile à transformer en opération d’exfiltration pour une équipe variable."
-  },
-  "pfs-season-1-1-14": {
-    "relevance": "Moyenne",
-    "synopsis": "À Katapesh, le marchand gobelin Yigrig Moneymaker tente de renforcer les liens commerciaux de son clan, mais les gobelins sont pris pour cible par une faune devenue anormalement agressive, notamment des lions. Les agents doivent comprendre l’origine des attaques avant que la communauté ne soit décimée.",
-    "rationale": "Bonne mission régionale avec une communauté persistante et une enquête clairement délimitée. Elle peut prolonger un passage à Katapesh ou L’Âge des Cendres, mais touche moins directement les grands fils personnels actuels."
-  },
-  "pfs-season-1-1-15": {
-    "relevance": "Très haute",
-    "synopsis": "Dans la forêt de Finadar en Iobarie, une catastrophe végétale née après un immense incendie implique des léschys, des communautés locales et une croissance devenue incontrôlable ; le conflit peut se résoudre par le dialogue ou le combat.",
-    "rationale": "Accroche exceptionnelle pour Pépin : nature animée, corruption possible et responsabilité morale. À utiliser sans décider automatiquement que la même cause explique le drame d’Églantine."
-  },
-  "pfs-season-1-1-18": {
-    "relevance": "Très haute",
-    "synopsis": "Le prêtre masqué Narsen propose à la Société d’établir une loge dans un ancien fort près de Xer, au Razmiran. Les premiers agents envoyés sur place doivent superviser les réparations, gagner une place dans la communauté et empêcher que l’installation ne tourne au désastre.",
-    "rationale": "Créer une nouvelle loge est exactement le type de conséquence durable utile à une table ouverte. Le Razmiran ajoute propagande religieuse, diplomatie et questions sur la divinité qui peuvent nourrir les recherches de Tsuyi."
-  },
-  "pfs-season-1-1-20": {
-    "relevance": "Très haute",
-    "synopsis": "Les agents traversent les Terres Détrempées puis la jungle du Mwangi sur les traces d’une expédition commune menée autrefois par plusieurs Éclaireurs légendaires, jusqu’à un site oublié près de la Defaka.",
-    "rationale": "Croisement direct Elyn-Vaga : Lirgen, Œil d’Abendego, Mwangi et histoire de la Société. C’est une pièce majeure pour relier leurs recherches sans fusionner leurs destins."
-  },
-  "pfs-season-1-1-21": {
-    "relevance": "Très haute",
-    "synopsis": "Eliza Petulengro charge les agents d’emprunter le Labyrinthe de la Route ouverte entre Absalom et Woodsedge et d’enquêter sur les anomalies qui menacent ce réseau magique essentiel à la Société.",
-    "rationale": "Le Labyrinthe est un outil structurel majeur pour justifier une table ouverte mondiale : il explique les déplacements rapides, fournit un front persistant et permet à différentes équipes de réparer ou découvrir des routes qui profiteront aux suivantes."
-  },
-  "pfs-season-2-2-02": {
-    "relevance": "Très haute",
-    "synopsis": "Sur l’île de Kayajima, au large du Minkai, la Société veut établir la loge des Trois Portes. Les agents doivent explorer les environs du mont de la Mer et du Ciel, traiter avec les communautés et esprits locaux et montrer que cette implantation peut devenir un partenariat plutôt qu’une intrusion.",
-    "rationale": "Excellente mission de fondation de base : la loge et ses habitants restent disponibles pour de futures équipes. Elle ouvre durablement Tian Xia et offre de fortes accroches pour Pen-Pen et Tsuyi."
-  },
-  "pfs-season-2-2-03": {
-    "relevance": "Haute",
-    "synopsis": "À Min-Khadaim, l’expédition installée dans une ancienne cité cyclopéenne perd le contact avec l’un de ses membres. Les agents découvrent qu’un rituel dangereux et les conséquences des précédentes explorations menacent désormais le camp.",
-    "rationale": "Très bonne suite de front persistant en Iobarie : ce qui a été découvert ou dérangé lors d’une mission précédente affecte directement la suivante. Elle gagne beaucoup à être jouée après The Blooming Catastrophe."
-  },
-  "pfs-season-2-2-04": {
-    "relevance": "Moyenne",
-    "synopsis": "À Port Valen, en Arcadie, les agents suivent l’héritage du roi linnorm Ulvass et les épreuves d’une communauté issue de voyageurs ulfens cherchant le légendaire Valenhall.",
-    "rationale": "Bonne ouverture vers l’Arcadie et future base locale, mais peu de liens directs avec les personnages documentés."
-  },
-  "pfs-season-2-2-05": {
-    "relevance": "Très haute",
-    "synopsis": "Sous Absalom, une machine de forage a éventré le territoire des Dragons des Égouts et libéré des prédateurs. Les agents doivent aider la tribu de Yiddlepode et comprendre ce qui creuse sous la ville.",
-    "rationale": "Scénario personnel évident pour Zab : Dragons des Égouts, sous-sols d’Absalom et protection d’une communauté vulnérable. Parfait pour rendre ses relations persistantes."
-  },
-  "pfs-season-2-2-07": {
-    "relevance": "Haute",
-    "synopsis": "Après une nouvelle crise au musée Blakros, la Société enquête sur son conservateur Nigel Aldain, une demeure familiale et les manipulations qui menacent l’institution avant de retourner dans le musée.",
-    "rationale": "Très bon dossier urbain d’Absalom et excellente porte vers les Blakros, essentiels au fil Shadow Absalom. Adaptable en enquête menée par plusieurs équipes."
-  },
-  "pfs-season-2-2-09": {
-    "relevance": "Haute",
-    "synopsis": "À quelques rues de la Grande Loge, l’académie Dacilane est frappée par des phénomènes inquiétants liés aux enfants d’agents et aux secrets que l’école abrite.",
-    "rationale": "Renforce Absalom comme ville vivante et donne des enjeux civils aux Éclaireurs. Utile pour Zab et pour montrer les familles affectées par les missions de la Société."
-  },
-  "pfs-season-2-2-11": {
-    "relevance": "Très haute",
-    "synopsis": "La Société organise les Pathfinder Trials, une série d’épreuves destinées à sélectionner et former de nouveaux agents. Les candidats doivent montrer exploration, coopération, jugement et capacité à représenter l’organisation, pas seulement leur efficacité au combat.",
-    "rationale": "Excellent outil récurrent d’intégration pour un vivier de PJ. On peut s’en servir comme événement de recrutement, session d’accueil ou référence institutionnelle expliquant comment de nouveaux Éclaireurs rejoignent une table ouverte."
-  },
-  "pfs-season-2-2-12": {
-    "relevance": "Moyenne",
-    "synopsis": "En Oprak, la Société tente de construire une relation diplomatique avec la jeune nation hobgobeline tandis que le Consortium Aspis cherche à exploiter ses ressources et sabote les négociations.",
-    "rationale": "Mission diplomatique très compatible avec la table ouverte et utile pour développer une faction, mais sans accroche personnelle forte à ce stade."
-  },
-  "pfs-season-2-2-13": {
-    "relevance": "Haute",
-    "synopsis": "À Oppara, les agents infiltrent des combats clandestins utilisés par la Neuvième Armée pour recruter des opposants à la grande-princesse Eutropia et identifier les organisateurs du réseau.",
-    "rationale": "Bon scénario d’infiltration politique lié à Morilla, donc intéressant pour Zab. Il ouvre aussi un arc taldien réutilisable par d’autres équipes."
-  },
-  "pfs-season-2-2-14": {
-    "relevance": "Haute",
-    "synopsis": "Dans les ruines cyclopéennes de Min-Khadaim, l’expédition d’Iobarie est menacée par un incendie et par ce que la Société a réveillé en explorant la cité.",
-    "rationale": "Suite importante du fil Finadar, adaptée à Pépin et au suivi d’un front persistant. Plus forte si les précédentes missions d’Iobarie ont déjà été jouées."
-  },
-  "pfs-season-2-2-16": {
-    "relevance": "Haute",
-    "synopsis": "À Sedeq, une fête organisée par le puissant lieur de génies Corvius Vayn dégénère lorsqu’une série de souhaits incontrôlés provoque une crise. Les autorités demandent à la Société d’évaluer la situation et de mettre fin aux effets les plus dangereux de cette magie.",
-    "rationale": "Mission autonome avec un lieu, un commanditaire et des conséquences sociales clairs. Le contexte des génies, de Sedeq et de l’exploitation de créatures liées peut nourrir le fil abolitionniste sans transformer automatiquement Vayn en grand antagoniste de toute la campagne."
-  },
-  "pfs-season-2-2-18": {
-    "relevance": "Très haute",
-    "synopsis": "En Iobarie, le devin kobold Urwal suit des rêves et présages apparemment absurdes pour retrouver un dirigeant disparu. Sa marche entraîne les agents à travers la région et révèle que ses visions signalent un déséquilibre bien réel.",
-    "rationale": "Urwal est un contact mémorable et le scénario poursuit un front déjà persistant en Iobarie. Très pertinent pour Pépin et Zab, tout en laissant les causes de leurs histoires personnelles distinctes de cette affaire."
-  },
-  "pfs-season-2-2-19": {
-    "relevance": "Haute",
-    "synopsis": "Dans la vallée de Sombrelune et sur les pentes du pic de Droskar, les agents recherchent les traces de l’ancien empire nain de Tar Khadurrm et d’un site englouti depuis la Fracture.",
-    "rationale": "Bonne mission archéologique et historique pour Tsuyi ; elle peut enrichir les archives de la Société, même si elle touche peu aux autres fils personnels."
-  },
-  "pfs-season-2-2-20": {
-    "relevance": "Moyenne",
-    "synopsis": "Dans la Cicatrice de Sarkoris, les agents aident le clan Farheaven à défendre son bastion et son retour au pays contre les menaces demeurées après la fermeture de la Plaie du Monde.",
-    "rationale": "Excellent exemple de front militaire persistant et de reconstruction, mais les personnages actuels ont peu d’attaches directes avec Sarkoris."
-  },
-  "pfs-season-2-2-21": {
-    "relevance": "Haute",
-    "synopsis": "Depuis Aspenthar, les agents traversent le désert thuvien vers des ruines associées aux divs d’Ahriman et à une menace pesant sur les ressources en eau.",
-    "rationale": "Renforce Thuvie, les divs et l’histoire antique ; utile pour préparer The Enmity Cycle et les recherches de Tsuyi, avec une mission autonome claire."
-  },
-  "pfs-season-2-2-23": {
-    "relevance": "Haute",
-    "synopsis": "Quatre agents disparaissent à Hinji, en Chéliax, alors qu’ils cataloguaient les héritages de la maison Junianis. Une équipe plus expérimentée est envoyée pour retrouver les disparus, comprendre qui les a pris pour cible et déterminer ce que leurs recherches avaient mis au jour.",
-    "rationale": "Très bon scénario de conséquences institutionnelles : une équipe vient littéralement reprendre le dossier d’une autre. Le Chéliax, les archives familiales et les traces effacées offrent aussi de bonnes accroches pour Tsuyi et Éos."
-  },
-  "pfs-season-3-3-06": {
-    "relevance": "Très haute",
-    "synopsis": "Après plusieurs incidents à la Grande Loge, les agents découvrent que des ombres agissent au cœur même d’Absalom. L’enquête révèle une opération liée à l’Alliance d’Onyx et à sa nouvelle dirigeante, Sarnia Blakros.",
-    "rationale": "Premier pilier de Shadow Absalom : indispensable pour Sashka, les Blakros et la sécurité de la Grande Loge. Doit être suivi comme un véritable métaplot persistant."
-  },
-  "pfs-season-3-3-16": {
-    "relevance": "Haute",
-    "synopsis": "À Oppara, une vague de crimes vise les biens et alliés de la grande-princesse Eutropia. Lady Gloriana Morilla prépare une fausse fuite pour attirer les responsables au grand jour, et les agents doivent l’aider à transformer ce piège politique en preuve exploitable.",
-    "rationale": "Très fort si Morilla et l’arc taldien ont déjà été introduits : le scénario fait revenir une alliée importante et laisse des conséquences politiques persistantes. Il est moins central comme mission isolée sans ce contexte."
-  },
-  "pfs-season-3-3-19": {
-    "relevance": "Très haute",
-    "synopsis": "Les agents traversent le Plan de l’Ombre pour enquêter directement dans Shadow Absalom, comprendre les attaques attribuées à l’Alliance d’Onyx et démêler les manipulations qui menacent sa trêve avec la Société.",
-    "rationale": "Convergence majeure pour Sashka, Absalom et les Blakros. À réserver après Struck by Shadows et les éléments manquants de l’arc afin de préserver les révélations."
-  },
-  "pfs-season-3-3-98": {
-    "relevance": "Très haute",
-    "synopsis": "Plusieurs équipes de la Société lancent une expédition dans les ruines du pic de Droskar afin d’atteindre la cité naine perdue de Raseri Kanton. Le Consortium Aspis poursuit le même objectif et chaque groupe doit contribuer à l’exploration et à la course collective.",
-    "rationale": "Le format interactif multi-table est presque une démonstration native de ton concept : équipes différentes, objectifs parallèles, informations et succès partagés. Même adapté à une seule table, il fournit un excellent modèle d’expédition collective persistante."
-  },
-  "pfs-season-4-intro": {
-    "relevance": "Très haute",
-    "synopsis": "La Société doit inventorier et comprendre un immense ensemble de reliques et d’objets étranges récemment arrivés dans ses caveaux. Les agents examinent les pièces les plus problématiques et découvrent que plusieurs peuvent ouvrir de nouveaux dossiers à travers Golarion.",
-    "rationale": "Excellent générateur de tableau de missions : chaque relique peut devenir l’accroche d’une équipe différente, tandis que les caveaux d’Absalom restent le point commun. C’est une transition très naturelle vers une campagne ouverte mondiale."
-  },
-  "pfs-season-4-4-04": {
-    "relevance": "Très haute",
-    "synopsis": "Dans le désert de Thuvie, les agents suivent une dague calamiteuse jusqu’à une ancienne machine de guerre du Jistka et recherchent le cœur qui pourrait l’activer ou la neutraliser.",
-    "rationale": "Accroche prioritaire pour Éos : Jistka, technologie antique et finalité des créations. Il faut conserver ouverte l’identité de l’homme aux yeux verts."
-  },
-  "pfs-season-4-4-06": {
-    "relevance": "Très haute",
-    "synopsis": "Une clé de cristal reçue par la Société capte un signal provenant du laboratoire électrique des Érudits d’Ardis, près de l’ancienne capitale d’Ustalav. Les agents enquêtent sur leurs expériences interplanaires.",
-    "rationale": "Très fort pour Éos et Elyn : technologie, plans, âme et signal mystérieux. Peut alimenter leurs questions sans attribuer prématurément une source unique à leurs pouvoirs."
-  },
-  "pfs-season-4-4-07": {
-    "relevance": "Très haute",
-    "synopsis": "Au Grand Bazar d’Absalom, la Société cherche à identifier et gérer plusieurs objets étranges de son nouveau trésor. Les agents doivent obtenir l’aide de marchands spécialisés en échangeant services et faveurs, avec Biglock comme premier contact.",
-    "rationale": "Très adapté à une table ouverte : Absalom, réseau de boutiques et de faveurs, petits objectifs indépendants et contacts réutilisables. Les conséquences peuvent rester visibles sous forme de dettes, accès privilégiés et réputation auprès des commerçants."
-  },
-  "pfs-season-4-4-08": {
-    "relevance": "Très haute",
-    "synopsis": "En Thuvie, plusieurs forces convergent vers un ancien automate de guerre lié à la dague calamiteuse. Les agents doivent atteindre la machine, comprendre son histoire et décider quel rôle ils joueront dans le choix de son propre destin.",
-    "rationale": "Suite majeure du fil jistkan et très forte pour Éos : technologie ancienne, identité d’une création et autonomie morale. L’arc gagne à être joué après 4-04, mais l’objectif reste assez clair pour une équipe dédiée."
-  },
-  "pfs-season-4-4-10": {
-    "relevance": "Très haute",
-    "synopsis": "À Quantium, un crâne parlant issu du trésor de l’Alliance d’Onyx conduit les agents dans le manoir d’une arcaniste de Nex, rempli de recherches, défenses et secrets magiques.",
-    "rationale": "Prioritaire pour Yaz et Jilkra : Nex, magie créatrice et mondes artificiels. Il offre des indices possibles sans devoir révéler le secret du roman de Larantis."
-  },
-  "pfs-season-4-4-11": {
-    "relevance": "Très haute",
-    "synopsis": "Après les événements du laboratoire électrique, plusieurs membres des Érudits d’Ardis ont été emprisonnés dans un château volant du Plan de l’Ombre par un ennemi de longue date. Des agents expérimentés sont envoyés pour infiltrer la forteresse et les libérer.",
-    "rationale": "Mission de sauvetage à forte continuité : elle récompense le suivi d’un scénario précédent tout en reliant technologie, Plan de l’Ombre et PNJ récurrents. Très pertinente pour Sashka et Éos."
-  },
-  "pfs-season-4-4-13": {
-    "relevance": "Moyenne",
-    "synopsis": "En Arcadie, les agents escortent une ancienne arme stellaire jusqu’au dernier artisan capable de la réparer. Ils doivent convaincre ce spécialiste de les aider et faire face à ceux qui veulent détourner ou détruire l’artefact avant son retour vers son foyer d’origine.",
-    "rationale": "Bonne mission d’escorte et de diplomatie qui développe Port Valen et l’Arcadie, avec un objet dont le sort peut devenir persistant. Elle reste néanmoins périphérique par rapport aux fils personnels prioritaires."
-  },
-  "pfs-season-4-4-16": {
-    "relevance": "Moyenne",
-    "synopsis": "À l’académie Dacilane, une guerre de farces destinée à réveiller l’attention des élèves dégénère et révèle un problème que les enfants et les agents doivent résoudre ensemble.",
-    "rationale": "Excellent épisode léger pour faire vivre Absalom et les familles de la Société, mais peu de progression des grands métaplots."
-  },
-  "pfs-season-5-intro": {
-    "relevance": "Très haute",
-    "synopsis": "Cette entrée fait doublon fonctionnel avec le scénario canonique 5-01, Intro: Year of Unfettered Exploration : après la défaite d’Aslynn, Fola Barun demande aux agents d’accompagner une visite du Labyrinthe de la Route ouverte, dont l’exploration fait apparaître de nouvelles portes.",
-    "rationale": "Le contenu est excellent pour ton format, mais cet ID n’apparaît pas comme entrée distincte dans le catalogue canonique actuel. À conserver seulement comme alias/compatibilité si ton pipeline l’utilise ; la donnée de référence doit être 5-01."
-  },
-  "pfs-season-5-5-01": {
-    "relevance": "Très haute",
-    "synopsis": "Après la défaite d’Aslynn, Fola Barun demande aux agents d’accompagner une visite du Labyrinthe de la Route ouverte. En explorant ses passages avec un invité, ils provoquent l’apparition de nouvelles portes et découvrent que le réseau peut désormais mener vers des horizons inattendus.",
-    "rationale": "Point de départ structurel majeur : le Labyrinthe explique naturellement pourquoi une équipe différente peut partir vers presque n’importe quelle région. Les nouvelles portes deviennent des ressources persistantes pour toute la campagne."
-  },
-  "pfs-season-5-5-04": {
-    "relevance": "Haute",
-    "synopsis": "Dans le premier volet d’Equal Exchanges, Waterfall envoie les agents en Hwanggot pour rencontrer la dragonne du monde souterrain Valashinaz. Son assistant kobold Purepurin a toutefois laissé les caveaux se remplir de problèmes qu’il faut résoudre avant que les véritables négociations puissent commencer.",
-    "rationale": "Très bon début de relation persistante avec Valashinaz et la Hwanggot. Le scénario fonctionne comme mission autonome, mais sa pleine valeur apparaît surtout lorsque les épisodes suivants d’Equal Exchanges réutilisent les accords et personnages établis ici."
-  },
-  "pfs-season-5-5-06": {
-    "relevance": "Très haute",
-    "synopsis": "Une nouvelle porte du Labyrinthe mène à Ukuja, cité fortifiée des Orcs matanji dans l’Étendue du Mwangi. Les agents y sont rapidement soupçonnés dans une affaire liée à un complot fiélon et doivent prouver leur innocence tout en identifiant le véritable responsable.",
-    "rationale": "Croisement très fort entre Mwangi, diplomatie et identité orque pour Vaga et Yaz. Ukuja peut rester un contact durable de la Société, et la réputation créée par une équipe peut influencer toutes les suivantes."
-  },
-  "pfs-season-5-5-10": {
-    "relevance": "Très haute",
-    "synopsis": "Les recherches de la capitaine Safa sur une mystérieuse Bienfaitrice révèlent qu’une rakshasa agit entre le Qadira, le Nex et le Jalmeray. À Niswan, les agents participent à une vente aux enchères afin de reconnaître son réseau, identifier ses alliés et décider jusqu’où intervenir.",
-    "rationale": "Très bon pont entre le réseau de Safa, Jalmeray et les Terres impossibles de Yaz et Jilkra. La Bienfaitrice est un antagoniste récurrent idéal pour plusieurs équipes, et cette mission prépare naturellement le dénouement de 5-20."
-  },
-  "pfs-season-5-5-11": {
-    "relevance": "Haute",
-    "synopsis": "Dans l’océan Arcadien, Waterfall envoie les agents explorer un laboratoire abandonné consacré à des expériences occultes. L’expédition révèle une âme et des souvenirs oubliés qui éclairent le passé de Waterfall et font progresser le sous-arc Equal Exchanges.",
-    "rationale": "Bonne exploration autonome avec une forte récompense narrative pour un PNJ récurrent. Elle fonctionne surtout si Waterfall et les échanges précédents ont déjà été établis, mais les informations découvertes peuvent être archivées et transmises à d’autres équipes."
-  },
-  "pfs-season-5-5-12": {
-    "relevance": "Très haute",
-    "synopsis": "Le Labyrinthe de la Route ouverte commence à déposer des agents aux mauvaises destinations. Sigvard Tornkvist charge une équipe d’identifier la cause de ces erreurs et de rendre les routes de la Société à nouveau fiables.",
-    "rationale": "Très forte valeur structurelle pour une table ouverte : la mission touche directement le système qui permet aux équipes de circuler dans le monde. Toute réparation ou nouvelle anomalie peut avoir des effets visibles sur les prochaines séances."
-  },
-  "pfs-season-5-5-13": {
-    "relevance": "Haute",
-    "synopsis": "Une mission apparemment simple consiste à livrer une lettre, mais le trajet conduit les agents dans un labyrinthe de haies magique où deux connaissances aux doigts particulièrement agiles compliquent rapidement la tâche.",
-    "rationale": "Mission courte et facilement isolable, utile pour respirer entre deux métaplots plus lourds. Elle apporte moins aux grands fils personnels, mais sa simplicité la rend adaptée à une équipe ponctuelle."
-  },
-  "pfs-season-5-5-14": {
-    "relevance": "Moyenne",
-    "synopsis": "À Daggermark, la Société cherche à préserver son approvisionnement en antitoxines en négociant l’accès à un réactif alchimique rare au milieu des intérêts concurrents de la capitale des assassins.",
-    "rationale": "Mission logistique parfaite pour un monde persistant et potentiellement amusante pour Tsuyi l’alchimiste, mais secondaire face à ses recherches historiques."
-  },
-  "pfs-season-5-5-17": {
-    "relevance": "Haute",
-    "synopsis": "En mer près de la Nouvelle-Thassilon, les agents rencontrent des marins déplacés par le retour brutal de Xin-Edasseril depuis la Dimension du Temps et affrontent les conséquences encore actives de cet événement.",
-    "rationale": "Très bon prolongement thassilonien et scénario de conséquence mondiale. Pertinent pour Tsuyi et pour préparer Revenge of the Runelords."
-  },
-  "pfs-season-5-5-19": {
-    "relevance": "Haute",
-    "synopsis": "Près de Nérosyan, des marchands découvrent qu’un ancien site rituel démoniaque, supposé abandonné après une opération de cultistes, reste dangereux. Jorsal of Lauterbury envoie les agents examiner les lieux et déterminer ce que les responsables ont laissé derrière eux.",
-    "rationale": "Bon scénario d’enquête sur les conséquences d’une menace déjà passée : une équipe intervient après les événements principaux, ce qui correspond bien à un monde persistant. Il prépare également le fil de Hesla et de Sarkoris sans exiger qu’elle soit au centre de chaque scène."
-  },
-  "pfs-season-5-5-20": {
-    "relevance": "Très haute",
-    "synopsis": "Safa a localisé à Niswan le manoir de la Bienfaitrice, la rakshasa suivie depuis plusieurs missions. Les agents doivent s’y introduire, réunir les preuves de son complot contre la ville et la pousser enfin dans ses retranchements.",
-    "rationale": "Excellent dénouement d’un antagoniste suivi par plusieurs équipes : les indices des missions précédentes convergent, mais l’opération finale reste un dossier clair. Très utile pour relier Jalmeray, Nex et les fils abolitionnistes."
-  },
-  "pfs-season-6-6-02": {
-    "relevance": "Très haute",
-    "synopsis": "À la loge des Trois Portes de Kayajima, une journée de tâches ordinaires bascule lorsqu’un dieu meurt et qu’une pluie étrange tombe sur l’île. Les agents doivent protéger la loge et ses voisins tout en comprenant les premières conséquences locales du Godsrain.",
-    "rationale": "Très bon exemple de base persistante frappée par un événement mondial : les mêmes PNJ et lieux vus auparavant changent sous les yeux d’une nouvelle équipe. Fort pour Tian Xia, Pen-Pen et la continuité de la loge."
-  },
-  "pfs-season-6-6-03": {
-    "relevance": "Très haute",
-    "synopsis": "À Manaket, au Rahadoum, plusieurs apprentis de Kassi Azaril développent des pouvoirs après le Godsrain. Des gardes radicalisés les prennent pour cible et Kassi demande à la Société de les escorter hors de danger sans transformer l’opération en conflit religieux.",
-    "rationale": "Très fort pour les thèmes de pouvoir divin, destin et responsabilité qui touchent Elyn et Tsuyi. L’objectif d’extraction est parfaitement compatible avec une équipe variable, et le contexte rahadoumi oblige à traiter les conséquences sociales du Godsrain."
-  },
-  "pfs-season-6-6-04": {
-    "relevance": "Haute",
-    "synopsis": "À Absalom, Hesla Embersplitter organise dans le Quartier étranger un carnaval caritatif au bénéfice des Chevaliers du Dernier Rempart. Les agents y surveillent aussi des élèves de Dacilane lorsqu’une tempête liée aux bouleversements récents frappe les Flaques et transforme la fête en crise.",
-    "rationale": "Excellent épisode urbain avec des PNJ et institutions déjà connus, donc très efficace pour rendre Absalom vivante. Il nourrit le fil Hesla et Zab sans être indispensable au métaplot principal."
-  },
-  "pfs-season-6-6-05": {
-    "relevance": "Très haute",
-    "synopsis": "Le village de l’Arbre-d’Argent, dans la Forêt des Esprits, est coupé du reste de la région par un brouillard mystérieux. Les agents doivent traverser les épreuves imposées par les kami protecteurs et découvrir la menace plus dangereuse qui se cache derrière l’isolement.",
-    "rationale": "Très forte mission Tian Xia pour Pen-Pen et Tsuyi : esprits, communauté persistante et conséquences surnaturelles. Elle peut aussi intéresser Pépin par son rapport au vivant sans confondre les traditions spirituelles du lieu avec les léschys."
-  },
-  "pfs-season-6-6-06": {
-    "relevance": "Très haute",
-    "synopsis": "Au plus profond du Fangwood, le village léschy de Compost Watch cesse de donner des nouvelles après un appel de détresse. Les agents découvrent qu’un déséquilibre entre vie, mort et nature menace la communauté et sa forêt sacrée.",
-    "rationale": "Accroche exceptionnelle pour Pépin et excellent front local persistant : une communauté entière peut être sauvée, transformée ou devenir une alliée durable. Le scénario permet d’aborder corruption et cycle naturel sans imposer une réponse à son passé."
-  },
-  "pfs-season-6-6-08": {
-    "relevance": "Moyenne",
-    "synopsis": "En Irrisen, la reine Anastasia prépare un projet de modernisation des transports et demande l’avis de voyageurs expérimentés. Des gobelins des glaces attaquent l’entreprise sous l’influence d’une fée mécontente, et les agents doivent empêcher que le conflit ne fasse dérailler le projet.",
-    "rationale": "Bonne mission de diplomatie et de folklore avec des conséquences concrètes sur les déplacements en Irrisen. Elle est agréable pour Pen-Pen, mais touche moins directement les fils prioritaires que les autres scénarios de la saison."
-  },
-  "pfs-season-6-6-09": {
-    "relevance": "Très haute",
-    "synopsis": "La Société localise un immense fragment issu du Godsrain dans le Plan de l’Ombre, au voisinage des Terres des Tombes. Les agents embarquent sur un aéronef capable de voyager entre les plans et se lancent dans une course pour récupérer le warshard avant les forces liées au Tyran qui Murmure.",
-    "rationale": "Convergence majeure : Godsrain, Ombre, Terres des Tombes et Tar-Baphon. Elle touche directement plusieurs fils de la campagne et utilise un moyen de transport institutionnel qui convient parfaitement à des opérations spécialisées."
-  },
-  "pfs-season-6-6-10": {
-    "relevance": "Très haute",
-    "synopsis": "À la frontière de la Numérie et de l’Ustalav, les agents explorent le Manoir de la Météorite broyée, ancien bastion de la Ligue Technique aujourd’hui occupé par la Voie des Murmures. Ils y découvrent des recherches dangereuses et une dirigeante prête à négocier des informations en échange de temps pour achever son travail.",
-    "rationale": "Très fort pour Éos et Tsuyi : technologie numérienne, archives sensibles, Voie des Murmures et choix moral sur ce qu’il faut laisser étudier ou détruire. Les informations obtenues peuvent alimenter durablement plusieurs dossiers."
-  },
-  "pfs-season-6-6-11": {
-    "relevance": "Très haute",
-    "synopsis": "La Société demande à la dragonne Valashinaz d’examiner les warshards. En échange de son expertise, elle exige que les agents règlent le problème d’un jeune dragon qui s’est installé trop près de son territoire, par la négociation ou par la force.",
-    "rationale": "Très bonne réutilisation d’une relation créée dans les saisons précédentes et fort croisement Godsrain/Tian Xia/savoir draconique. Le choix sur le jeune dragon peut modifier durablement la relation avec Valashinaz."
-  },
-  "pfs-season-6-6-16": {
-    "relevance": "Très haute",
-    "synopsis": "À Absalom, des informations inquiétantes conduisent les agents à Ember Manor, propriété liée à Hesla Embersplitter. Le domaine a été occupé par des cultistes du Ver Hurlant et a reçu une cargaison gigantesque : une dépouille démoniaque fossilisée dont l’usage pourrait menacer le cœur même de la ville.",
-    "rationale": "Convergence urbaine majeure pour le fil Hesla et Zab : enquête dans un lieu persistant d’Absalom, culte identifiable et menace physique qui peut laisser des traces durables. À jouer après les apparitions précédentes de Hesla pour que la révélation ait du poids."
-  },
-  "pfs-season-8-8-00": {
-    "relevance": "Moyenne",
-    "synopsis": "The Cosmic Captive est un ancien spécial interactif Pathfinder Society de première édition : plusieurs tables coopèrent autour d’Aucturn’s Tear et de portails menant à une entité cosmique captive. Le résultat dépend des réussites coordonnées des différentes équipes.",
-    "rationale": "Le format multi-table correspond remarquablement à une table ouverte et peut inspirer une grande convergence cosmique. En revanche, ce n’est pas un scénario PF2 de la Saison 8 actuelle : il doit être traité comme matériau legacy et converti avant utilisation."
+    "synopsis": "Pour ouvrir une nouvelle route commerciale entre l'Isger et le Molthune en évitant les taxes de la Druma, la Société accepte une prime consistant à reconnaître un passage dans les monts Menador. Les agents affrontent terrain difficile, concurrence et dangers locaux tout en devant produire un itinéraire réellement exploitable."
   },
   "pfs-season-1-1-06": {
+    "rationale": "Très bonne porte d’entrée vers le Minkai et la Forêt des Esprits, avec un format qui accepte naturellement différentes équipes. Les relations avec le village et les esprits peuvent devenir persistantes, et le caractère répétable le rend utile pour plusieurs groupes.",
     "relevance": "Très haute",
-    "synopsis": "Une cargaison de reliques destinée au Minkai disparaît dans la Forêt des Esprits. Les agents gagnent un village isolé pour retrouver l’expédition et doivent composer avec les kami, les habitants et les nombreux secrets de cette forêt. Le scénario est répétable et prévoit plusieurs variantes expliquant la disparition.",
-    "rationale": "Très bonne porte d’entrée vers le Minkai et la Forêt des Esprits, avec un format qui accepte naturellement différentes équipes. Les relations avec le village et les esprits peuvent devenir persistantes, et le caractère répétable le rend utile pour plusieurs groupes."
+    "synopsis": "Une cargaison de reliques destinée au Minkai disparaît dans la Forêt des Esprits. Les agents gagnent un village isolé pour retrouver l’expédition et doivent composer avec les kami, les habitants et les nombreux secrets de cette forêt. Le scénario est répétable et prévoit plusieurs variantes expliquant la disparition."
   },
-  "pfs-season-3-3-02": {
+  "pfs-season-1-1-07": {
+    "rationale": "Excellente mission urbaine pour le fil Absalom, avec un lieu récurrent et des conséquences institutionnelles faciles à conserver.",
     "relevance": "Très haute",
-    "synopsis": "À Almas, la Société doit défendre son droit sur une loge dont la possession est contestée. Une apparition fantomatique semble accuser les Éclaireurs d’un acte terrible, forçant les agents à enquêter sur le message et sur la véritable histoire de la « hantise d’East Hill ». C’est le premier volet de l’arc d’Almas de l’Année des Sanctuaires brisés.",
-    "rationale": "Une loge menacée, une enquête historique et des conséquences institutionnelles qui se prolongent dans 3-05 : excellent matériau de table ouverte. La réussite ou l’échec doit modifier la situation juridique et la réputation de la Société à Almas."
-  },
-  "pfs-season-3-3-05": {
-    "relevance": "Très haute",
-    "synopsis": "La loge de la Société installée dans la cathédrale d’Aroden à Almas fait face à une revendication juridique légitime de l’Église d’Iomédae. Les agents doivent préparer une défense, convaincre un collège de juges et protéger la loge lorsque des ennemis profitent du conflit pour agir. Le scénario conclut l’arc commencé dans The East Hill Haunting.",
-    "rationale": "Difficile de faire plus adapté à un monde persistant : le statut même d’une loge dépend du résultat de la mission. Les preuves réunies auparavant, les relations avec les autorités et les conséquences judiciaires peuvent être portées par plusieurs équipes."
-  },
-  "pfs-season-4-4-02": {
-    "relevance": "Très haute",
-    "synopsis": "Dans les Terres des Tombes, un agent de la Société a choisi de rester après la chute du Dernier Rempart afin de protéger un petit établissement de réfugiés. Lorsque les forces du Tyran qui Murmure se rapprochent, il parvient à rejoindre une loge d’Ustalav et demande de l’aide. Les Éclaireurs doivent retourner derrière les lignes ennemies pour secourir la communauté.",
-    "rationale": "Mission de secours directement liée à Tar-Baphon, avec un village dont le sort peut devenir une conséquence durable. L’objectif est très clair, l’équipe peut être composée librement et les survivants peuvent rester des contacts récurrents dans les Terres des Tombes."
-  },
-  "pfs-season-4-4-09": {
-    "relevance": "Très haute",
-    "synopsis": "Des attaques de vampires se multiplient dans les bois près de la Loge exaltée et menacent l’alliance fragile entre la Société et l’Église de Razmir. Narsen envoie les agents traquer un vampire portant un masque d’or dans la Forêt exaltée. L’enquête oblige les Éclaireurs à démêler meurtres, politique razmirienne et loyautés incertaines.",
-    "rationale": "La Loge exaltée est une base persistante déjà créée par d’autres scénarios, et cette affaire peut modifier son alliance avec le Razmiran. L’enquête vampirique et les choix diplomatiques offrent des conséquences fortes pour les équipes suivantes."
+    "synopsis": "Dans le quartier des Flaques d'Absalom, un roi gobelin revendique un ancien théâtre dont les fondations donnent accès à des ruines plus anciennes encore. Les Éclaireurs doivent négocier leurs droits d'exploration, comprendre les enjeux du lieu et agir avant que d'autres ne s'emparent de la découverte."
   },
   "pfs-season-1-1-08": {
+    "rationale": "Une ancienne loge de la Société, une crise politique et des conséquences capables de modifier un royaume : le scénario est presque idéal pour un Golarion persistant. Les rapports d’une équipe peuvent servir directement de contexte aux équipes suivantes, notamment aux scénarios qui poursuivent le fil d’Artume.",
     "relevance": "Très haute",
-    "synopsis": "La Société envoie les agents dans le petit royaume fluvial d’Artume pour enquêter sur les traces d’une ancienne loge abandonnée et sur un chapitre oublié de son passé. Cette recherche les entraîne au cœur de tensions politiques croissantes, alors qu’une révolution menace d’embraser le royaume. Les choix et interventions des Éclaireurs peuvent influencer durablement l’avenir politique d’Artume.",
-    "rationale": "Une ancienne loge de la Société, une crise politique et des conséquences capables de modifier un royaume : le scénario est presque idéal pour un Golarion persistant. Les rapports d’une équipe peuvent servir directement de contexte aux équipes suivantes, notamment aux scénarios qui poursuivent le fil d’Artume."
+    "synopsis": "La Société envoie les agents dans le petit royaume fluvial d’Artume pour enquêter sur les traces d’une ancienne loge abandonnée et sur un chapitre oublié de son passé. Cette recherche les entraîne au cœur de tensions politiques croissantes, alors qu’une révolution menace d’embraser le royaume. Les choix et interventions des Éclaireurs peuvent influencer durablement l’avenir politique d’Artume."
+  },
+  "pfs-season-1-1-09": {
+    "rationale": "Très bonne rencontre entre les fils d’Elyn et de Vaga : navigation, ciel, observatoire et Mwangi. Elle peut aussi préparer les recherches sur Lirgen sans en révéler trop tôt les réponses.",
+    "relevance": "Haute",
+    "synopsis": "Après un voyage maritime le long de la côte garundienne, les agents font naufrage près d’un village iruxi puis gagnent un ancien observatoire enfoui dans la jungle du Mwangi."
+  },
+  "pfs-season-1-1-10": {
+    "rationale": "Mission d'exploration et de réputation très autonome, idéale pour varier les équipes sans perdre les conséquences.",
+    "relevance": "Haute",
+    "synopsis": "Dans les Terres des Rois des Linnorms, les Éclaireurs participent au Balgirdtrek, une épreuve de voyage et d'endurance associée à une tradition locale importante. Leur mission consiste autant à documenter l'événement et gagner le respect des habitants qu'à survivre aux difficultés du parcours."
+  },
+  "pfs-season-1-1-11": {
+    "rationale": "Pertinent pour Elyn grâce à l’ancrage andorénien et pour la campagne grâce au thème des récits d’Éclaireurs effacés ; bon scénario d’archives et de rébellion.",
+    "relevance": "Haute",
+    "synopsis": "À l’ancienne tour de Diggen’s Rest, entre Andoran et Galt, les agents recherchent l’héritage volontairement oublié d’une Éclaireuse et affrontent les conséquences d’idéaux révolutionnaires devenus dangereux."
+  },
+  "pfs-season-1-1-12": {
+    "rationale": "Alimente directement le fil thassilonien et montre les conséquences humaines du retour de l’ancien Thassilon. Très facile à transformer en opération d’exfiltration pour une équipe variable.",
+    "relevance": "Haute",
+    "synopsis": "Dans la cité de Xin-Edasseril, les agents aident des habitants à fuir le régime autoritaire de la seigneure des runes Belimarius et organisent leur passage vers Magnimar au milieu d’une surveillance étroite."
+  },
+  "pfs-season-1-1-13": {
+    "rationale": "Bonne connexion à Sarkoris et aux relations de long terme de la Société ; plus pertinente qu'un simple scénario isolé.",
+    "relevance": "Haute",
+    "synopsis": "Dans la Cicatrice de Sarkoris, un contact commercial lié aux alliés de la Société est menacé par un complot infernal. Les Éclaireurs doivent comprendre l'influence d'un esprit fiélon et empêcher que ses manœuvres ne détruisent les relations fragiles en cours de reconstruction."
+  },
+  "pfs-season-1-1-14": {
+    "rationale": "Bonne mission régionale avec une communauté persistante et une enquête clairement délimitée. Elle peut prolonger un passage à Katapesh ou L’Âge des Cendres, mais touche moins directement les grands fils personnels actuels.",
+    "relevance": "Moyenne",
+    "synopsis": "À Katapesh, le marchand gobelin Yigrig Moneymaker tente de renforcer les liens commerciaux de son clan, mais les gobelins sont pris pour cible par une faune devenue anormalement agressive, notamment des lions. Les agents doivent comprendre l’origine des attaques avant que la communauté ne soit décimée."
+  },
+  "pfs-season-1-1-15": {
+    "rationale": "Accroche exceptionnelle pour Pépin : nature animée, corruption possible et responsabilité morale. À utiliser sans décider automatiquement que la même cause explique le drame d’Églantine.",
+    "relevance": "Très haute",
+    "synopsis": "Dans la forêt de Finadar en Iobarie, une catastrophe végétale née après un immense incendie implique des léschys, des communautés locales et une croissance devenue incontrôlable ; le conflit peut se résoudre par le dialogue ou le combat."
+  },
+  "pfs-season-1-1-16": {
+    "rationale": "Très forte valeur de continuité grâce au diptyque Bhopan et à ses relations politiques/féeriques persistantes.",
+    "relevance": "Très haute",
+    "synopsis": "La Société obtient enfin l'occasion de renouer avec Bhopan, territoire presque fermé aux étrangers depuis des siècles. Les agents doivent gagner la confiance de ses habitants féeriques lors d'un bal masqué, comprendre les intérêts cachés qui s'y affrontent et ouvrir la voie à une relation durable."
+  },
+  "pfs-season-1-1-17": {
+    "rationale": "Conclusion directe de Bhopan et préparation du métaplot du Monarque-Épines : continuité très forte.",
+    "relevance": "Très haute",
+    "synopsis": "Après les premiers contacts établis à Bhopan, les Éclaireurs doivent quitter l'île avec un objet susceptible de contrecarrer les ambitions du Monarque-Épines. Leur adversaire tente toutefois de les arrêter en manipulant la population et en transformant les liens créés précédemment en obstacles."
+  },
+  "pfs-season-1-1-18": {
+    "rationale": "Créer une nouvelle loge est exactement le type de conséquence durable utile à une table ouverte. Le Razmiran ajoute propagande religieuse, diplomatie et questions sur la divinité qui peuvent nourrir les recherches de Tsuyi.",
+    "relevance": "Très haute",
+    "synopsis": "Le prêtre masqué Narsen propose à la Société d’établir une loge dans un ancien fort près de Xer, au Razmiran. Les premiers agents envoyés sur place doivent superviser les réparations, gagner une place dans la communauté et empêcher que l’installation ne tourne au désastre."
+  },
+  "pfs-season-1-1-19": {
+    "rationale": "Mission diplomatique et de mentorat, utile pour installer Oprak comme relation persistante de la Société.",
+    "relevance": "Haute",
+    "synopsis": "En Oprak, la Société accompagne l'escouade hobgobeline Iolite Alpha lors d'une épreuve de terrain destinée à préparer de futurs échanges entre organisations. Les Éclaireurs doivent conseiller ces recrues sans se substituer à elles, tout en traversant une mission où coopération et perception culturelle comptent autant que les combats."
+  },
+  "pfs-season-1-1-20": {
+    "rationale": "Croisement direct Elyn-Vaga : Lirgen, Œil d’Abendego, Mwangi et histoire de la Société. C’est une pièce majeure pour relier leurs recherches sans fusionner leurs destins.",
+    "relevance": "Très haute",
+    "synopsis": "Les agents traversent les Terres Détrempées puis la jungle du Mwangi sur les traces d’une expédition commune menée autrefois par plusieurs Éclaireurs légendaires, jusqu’à un site oublié près de la Defaka."
+  },
+  "pfs-season-1-1-21": {
+    "rationale": "Le Labyrinthe est un outil structurel majeur pour justifier une table ouverte mondiale : il explique les déplacements rapides, fournit un front persistant et permet à différentes équipes de réparer ou découvrir des routes qui profiteront aux suivantes.",
+    "relevance": "Très haute",
+    "synopsis": "Eliza Petulengro charge les agents d’emprunter le Labyrinthe de la Route ouverte entre Absalom et Woodsedge et d’enquêter sur les anomalies qui menacent ce réseau magique essentiel à la Société."
+  },
+  "pfs-season-1-1-22": {
+    "rationale": "Bonne enquête urbaine avec effets communautaires durables, facilement exploitable hors d'un groupe fixe.",
+    "relevance": "Haute",
+    "synopsis": "À Cassomir, dans le Taldor, le quartier de l'Amiral connaît un déclin économique et social anormalement profond. Les Éclaireurs enquêtent sur les causes de cette détérioration et découvrent qu'une influence volontaire pousse la communauté vers l'effondrement."
+  },
+  "pfs-season-1-1-23": {
+    "rationale": "Diplomatie, enquête et lien avec Vidrian : bon scénario pour enrichir le réseau d'alliés de la campagne.",
+    "relevance": "Haute",
+    "synopsis": "La Société participe à des négociations commerciales à Ekkeshikaar, où les intérêts de Vidrian et d'une communauté iruxi doivent être conciliés. Une tentative de sabotage menace les pourparlers, obligeant les agents à protéger le processus diplomatique tout en identifiant qui cherche à le faire échouer."
+  },
+  "pfs-season-1-1-24": {
+    "rationale": "Très bon scénario d'exploration à identité forte ; la route créée peut devenir une infrastructure persistante.",
+    "relevance": "Haute",
+    "synopsis": "En Numérie, les Éclaireurs reconnaissent un itinéraire de caravane dans un territoire où bassins toxiques, mutants, robots et trafiquants de technologie rendent chaque étape dangereuse. Ils doivent produire une route praticable tout en empêchant que les menaces technologiques locales n'en compromettent l'usage futur."
+  },
+  "pfs-season-1-1-25": {
+    "rationale": "Fort potentiel d'horreur érudite et de ressources persistantes pour les Grandes Archives.",
+    "relevance": "Haute",
+    "synopsis": "En Ustalav, un médecin installé dans une ancienne forteresse mène des expériences inquiétantes sur la frontière entre les vivants et les morts. En échange de l'accès à une bibliothèque ancienne, les Éclaireurs acceptent de sécuriser le lieu et découvrent que la recherche du savant a des conséquences bien plus dangereuses qu'annoncé."
+  },
+  "pfs-season-1-intro": {
+    "rationale": "Excellent scénario d’entrée pour une table ouverte : il justifie immédiatement une équipe composée de nouvelles recrues, présente les attentes de la Société et peut être rejoué dans l’esprit pour intégrer de nouveaux personnages sans exiger de métaplot préalable.",
+    "relevance": "Très haute",
+    "synopsis": "Une recrue disparaît pendant sa Confirmation. Plutôt que d’envoyer des agents confirmés, la Société rassemble plusieurs initiés pour une rare Confirmation de groupe : retrouver la disparue, poursuivre sa mission et prouver qu’ils savent agir comme de véritables Éclaireurs."
+  },
+  "pfs-season-2-2-00": {
+    "rationale": "Conclusion majeure du Monarque-Épines et exploration liée à l'histoire de la Société : priorité narrative très élevée.",
+    "relevance": "Très haute",
+    "synopsis": "Dans l'Étendue Mwangi, une importante force de la Société franchit un portail magique dont les mystères remontent aux premiers Éclaireurs. Au-delà se trouvent des secrets féeriques anciens et le cœur du plan du Monarque-Épines, que les agents doivent mettre définitivement hors d'état de nuire."
+  },
+  "pfs-season-2-2-01": {
+    "rationale": "Point d'ancrage essentiel de l'arc iobarien et création d'une base de campagne réutilisable.",
+    "relevance": "Très haute",
+    "synopsis": "En Iobarie, la Société établit une nouvelle loge sur un site de ruines cyclopéennes afin d'étudier un passé encore mal compris. Les premiers travaux d'exploration révèlent cependant qu'une menace ancienne subsiste au cœur des fouilles et met en danger le projet d'implantation."
+  },
+  "pfs-season-2-2-02": {
+    "rationale": "Excellente mission de fondation de base : la loge et ses habitants restent disponibles pour de futures équipes. Elle ouvre durablement Tian Xia et offre de fortes accroches pour Pen-Pen et Tsuyi.",
+    "relevance": "Très haute",
+    "synopsis": "Sur l’île de Kayajima, au large du Minkai, la Société veut établir la loge des Trois Portes. Les agents doivent explorer les environs du mont de la Mer et du Ciel, traiter avec les communautés et esprits locaux et montrer que cette implantation peut devenir un partenariat plutôt qu’une intrusion."
+  },
+  "pfs-season-2-2-03": {
+    "rationale": "Très bonne suite de front persistant en Iobarie : ce qui a été découvert ou dérangé lors d’une mission précédente affecte directement la suivante. Elle gagne beaucoup à être jouée après The Blooming Catastrophe.",
+    "relevance": "Haute",
+    "synopsis": "À Min-Khadaim, l’expédition installée dans une ancienne cité cyclopéenne perd le contact avec l’un de ses membres. Les agents découvrent qu’un rituel dangereux et les conséquences des précédentes explorations menacent désormais le camp."
+  },
+  "pfs-season-2-2-04": {
+    "rationale": "Bonne ouverture vers l’Arcadie et future base locale, mais peu de liens directs avec les personnages documentés.",
+    "relevance": "Moyenne",
+    "synopsis": "À Port Valen, en Arcadie, les agents suivent l’héritage du roi linnorm Ulvass et les épreuves d’une communauté issue de voyageurs ulfens cherchant le légendaire Valenhall."
+  },
+  "pfs-season-2-2-05": {
+    "rationale": "Scénario personnel évident pour Zab : Dragons des Égouts, sous-sols d’Absalom et protection d’une communauté vulnérable. Parfait pour rendre ses relations persistantes.",
+    "relevance": "Très haute",
+    "synopsis": "Sous Absalom, une machine de forage a éventré le territoire des Dragons des Égouts et libéré des prédateurs. Les agents doivent aider la tribu de Yiddlepode et comprendre ce qui creuse sous la ville."
+  },
+  "pfs-season-2-2-06": {
+    "rationale": "Mission d'action autonome mais utile pour consolider un allié de la Société à Jalmeray.",
+    "relevance": "Haute",
+    "synopsis": "Sur une île au large de Jalmeray, le Monastère des Vagues Impossibles à Briser est attaqué par une force de créatures marines qui veut s'emparer de son temple sous-marin récemment reconstruit. Les Éclaireurs arrivent au plus fort de l'assaut et doivent combattre sous l'eau pour sauver leurs alliés et préserver le sanctuaire."
+  },
+  "pfs-season-2-2-07": {
+    "rationale": "Très bon dossier urbain d’Absalom et excellente porte vers les Blakros, essentiels au fil Shadow Absalom. Adaptable en enquête menée par plusieurs équipes.",
+    "relevance": "Haute",
+    "synopsis": "Après une nouvelle crise au musée Blakros, la Société enquête sur son conservateur Nigel Aldain, une demeure familiale et les manipulations qui menacent l’institution avant de retourner dans le musée."
+  },
+  "pfs-season-2-2-08": {
+    "rationale": "Très bon scénario de découverte régionale, socialement riche et propice à créer de nouveaux contacts persistants.",
+    "relevance": "Haute",
+    "synopsis": "Inquiets du silence venu d'Irrisen, des Éclaireurs franchissent un passage discret depuis les Terres des Rois des Linnorms pour reconnaître la situation. Ils découvrent un territoire où soldats venus d'un autre monde et sorcières de l'hiver se disputent le pouvoir, transformant une mission de renseignement en crise diplomatique et surnaturelle."
+  },
+  "pfs-season-2-2-09": {
+    "rationale": "Renforce Absalom comme ville vivante et donne des enjeux civils aux Éclaireurs. Utile pour Zab et pour montrer les familles affectées par les missions de la Société.",
+    "relevance": "Haute",
+    "synopsis": "À quelques rues de la Grande Loge, l’académie Dacilane est frappée par des phénomènes inquiétants liés aux enfants d’agents et aux secrets que l’école abrite."
+  },
+  "pfs-season-2-2-10": {
+    "rationale": "Très haute pertinence pour le fil Belkzen et pour les relations institutionnelles de la Société.",
+    "relevance": "Très haute",
+    "synopsis": "Après que le chef orque Ardax a repoussé les avances du Tyran qui Murmure, la Société cherche à ouvrir un dialogue avec le Belkzen en passant par ses alliés des Soleils Ardents. Les Éclaireurs découvrent toutefois que toutes les communautés orques ne souhaitent pas cette évolution et doivent empêcher les tensions internes de faire échouer le rapprochement."
+  },
+  "pfs-season-2-2-11": {
+    "rationale": "Excellent outil récurrent d’intégration pour un vivier de PJ. On peut s’en servir comme événement de recrutement, session d’accueil ou référence institutionnelle expliquant comment de nouveaux Éclaireurs rejoignent une table ouverte.",
+    "relevance": "Très haute",
+    "synopsis": "La Société organise les Pathfinder Trials, une série d’épreuves destinées à sélectionner et former de nouveaux agents. Les candidats doivent montrer exploration, coopération, jugement et capacité à représenter l’organisation, pas seulement leur efficacité au combat."
+  },
+  "pfs-season-2-2-12": {
+    "rationale": "Mission diplomatique très compatible avec la table ouverte et utile pour développer une faction, mais sans accroche personnelle forte à ce stade.",
+    "relevance": "Moyenne",
+    "synopsis": "En Oprak, la Société tente de construire une relation diplomatique avec la jeune nation hobgobeline tandis que le Consortium Aspis cherche à exploiter ses ressources et sabote les négociations."
+  },
+  "pfs-season-2-2-13": {
+    "rationale": "Bon scénario d’infiltration politique lié à Morilla, donc intéressant pour Zab. Il ouvre aussi un arc taldien réutilisable par d’autres équipes.",
+    "relevance": "Haute",
+    "synopsis": "À Oppara, les agents infiltrent des combats clandestins utilisés par la Neuvième Armée pour recruter des opposants à la grande-princesse Eutropia et identifier les organisateurs du réseau."
+  },
+  "pfs-season-2-2-14": {
+    "rationale": "Suite importante du fil Finadar, adaptée à Pépin et au suivi d’un front persistant. Plus forte si les précédentes missions d’Iobarie ont déjà été jouées.",
+    "relevance": "Haute",
+    "synopsis": "Dans les ruines cyclopéennes de Min-Khadaim, l’expédition d’Iobarie est menacée par un incendie et par ce que la Société a réveillé en explorant la cité."
+  },
+  "pfs-season-2-2-15": {
+    "rationale": "Mission culturellement forte qui consolide une alliance sarkorienne utile à long terme.",
+    "relevance": "Haute",
+    "synopsis": "Pour renforcer ses liens avec le clan de Farheaven, la Société envoie une équipe dans la cité perdue de Storasta, toujours infestée de démons. Les agents doivent y récupérer les dépouilles de morts honorés afin de permettre aux Sarkoriens de renouer avec une part de leur mémoire et de leurs rites."
+  },
+  "pfs-season-2-2-16": {
+    "rationale": "Mission autonome avec un lieu, un commanditaire et des conséquences sociales clairs. Le contexte des génies, de Sedeq et de l’exploitation de créatures liées peut nourrir le fil abolitionniste sans transformer automatiquement Vayn en grand antagoniste de toute la campagne.",
+    "relevance": "Haute",
+    "synopsis": "À Sedeq, une fête organisée par le puissant lieur de génies Corvius Vayn dégénère lorsqu’une série de souhaits incontrôlés provoque une crise. Les autorités demandent à la Société d’évaluer la situation et de mettre fin aux effets les plus dangereux de cette magie."
+  },
+  "pfs-season-2-2-17": {
+    "rationale": "Enquête locale mémorable avec rivalité Aspis ; très facile à intégrer comme dossier autonome.",
+    "relevance": "Haute",
+    "synopsis": "Dans le village ustalavien d'Anactoria, la célébrité locale — une dépouille momifiée conservée dans les marais — a disparu. Les Éclaireurs arrivent au moment où le Consortium Aspis s'intéresse lui aussi à l'affaire et doivent démêler concurrence, folklore local et véritable cause de la disparition."
+  },
+  "pfs-season-2-2-18": {
+    "rationale": "Urwal est un contact mémorable et le scénario poursuit un front déjà persistant en Iobarie. Très pertinent pour Pépin et Zab, tout en laissant les causes de leurs histoires personnelles distinctes de cette affaire.",
+    "relevance": "Très haute",
+    "synopsis": "En Iobarie, le devin kobold Urwal suit des rêves et présages apparemment absurdes pour retrouver un dirigeant disparu. Sa marche entraîne les agents à travers la région et révèle que ses visions signalent un déséquilibre bien réel."
+  },
+  "pfs-season-2-2-19": {
+    "rationale": "Bonne mission archéologique et historique pour Tsuyi ; elle peut enrichir les archives de la Société, même si elle touche peu aux autres fils personnels.",
+    "relevance": "Haute",
+    "synopsis": "Dans la vallée de Sombrelune et sur les pentes du pic de Droskar, les agents recherchent les traces de l’ancien empire nain de Tar Khadurrm et d’un site englouti depuis la Fracture."
+  },
+  "pfs-season-2-2-20": {
+    "rationale": "Excellent exemple de front militaire persistant et de reconstruction, mais les personnages actuels ont peu d’attaches directes avec Sarkoris.",
+    "relevance": "Moyenne",
+    "synopsis": "Dans la Cicatrice de Sarkoris, les agents aident le clan Farheaven à défendre son bastion et son retour au pays contre les menaces demeurées après la fermeture de la Plaie du Monde."
+  },
+  "pfs-season-2-2-21": {
+    "rationale": "Renforce Thuvie, les divs et l’histoire antique ; utile pour préparer The Enmity Cycle et les recherches de Tsuyi, avec une mission autonome claire.",
+    "relevance": "Haute",
+    "synopsis": "Depuis Aspenthar, les agents traversent le désert thuvien vers des ruines associées aux divs d’Ahriman et à une menace pesant sur les ressources en eau."
+  },
+  "pfs-season-2-2-22": {
+    "rationale": "Épisode de métaplot critique avec conséquences directes sur la fin de saison.",
+    "relevance": "Très haute",
+    "synopsis": "La Société rassemble ses alliés pour accomplir un rituel capable de localiser l'un de ses dirigeants, désormais sous l'emprise d'une force malveillante. Lorsque l'opération révèle qu'une nouvelle menace se trouve beaucoup plus près de ses bases qu'attendu, une équipe doit la traquer et l'affronter avant que la crise ne gagne une échelle mondiale."
+  },
+  "pfs-season-2-2-23": {
+    "rationale": "Très bon scénario de conséquences institutionnelles : une équipe vient littéralement reprendre le dossier d’une autre. Le Chéliax, les archives familiales et les traces effacées offrent aussi de bonnes accroches pour Tsuyi et Éos.",
+    "relevance": "Haute",
+    "synopsis": "Quatre agents disparaissent à Hinji, en Chéliax, alors qu’ils cataloguaient les héritages de la maison Junianis. Une équipe plus expérimentée est envoyée pour retrouver les disparus, comprendre qui les a pris pour cible et déterminer ce que leurs recherches avaient mis au jour."
+  },
+  "pfs-season-2-2-24": {
+    "rationale": "Finale de métaplot de saison ; très haute priorité si la campagne suit les conséquences institutionnelles de la Société.",
+    "relevance": "Très haute",
+    "synopsis": "Les explorations de la Société en Iobarie ont réactivé un rituel démoniaque vieux de plusieurs millénaires et la forêt de Finadar brûle tandis que les agents sont dispersés dans la région. Les Éclaireurs les plus expérimentés doivent coordonner la réponse, interrompre le rituel puis affronter l'esprit à l'origine du plan avant qu'il n'ouvre la voie à une menace démoniaque plus vaste."
+  },
+  "pfs-season-2-intro": {
+    "rationale": "Excellent scénario d'introduction et première pierre de l'arc Blackwood ; parfaitement adapté aux équipes variables.",
+    "relevance": "Très haute",
+    "synopsis": "Après leur Confirmation, de jeunes Éclaireurs participent à plusieurs missions courtes commanditées par les grandes factions de la Société autour des ruines récemment découvertes dans le marais de Blackwood. L'objectif est de montrer comment exploration, diplomatie, collecte de savoir et protection des découvertes se complètent au sein d'une même organisation."
+  },
+  "pfs-season-3-3-01": {
+    "rationale": "Ouverture structurelle de la saison et premier chapitre d'un arc en quatre parties : priorité maximale.",
+    "relevance": "Très haute",
+    "synopsis": "Alors que des demandes d'aide affluent vers la Grande Loge depuis toute la mer Intérieure, un agent récemment admis fait une découverte inquiétante. En aidant un allié proche de la Société, les Éclaireurs mettent au jour les premiers éléments d'un complot capable de fracturer l'organisation elle-même."
+  },
+  "pfs-season-3-3-02": {
+    "rationale": "Une loge menacée, une enquête historique et des conséquences institutionnelles qui se prolongent dans 3-05 : excellent matériau de table ouverte. La réussite ou l’échec doit modifier la situation juridique et la réputation de la Société à Almas.",
+    "relevance": "Très haute",
+    "synopsis": "À Almas, la Société doit défendre son droit sur une loge dont la possession est contestée. Une apparition fantomatique semble accuser les Éclaireurs d’un acte terrible, forçant les agents à enquêter sur le message et sur la véritable histoire de la « hantise d’East Hill ». C’est le premier volet de l’arc d’Almas de l’Année des Sanctuaires brisés."
+  },
+  "pfs-season-3-3-03": {
+    "rationale": "Très bon dossier Mwangi fondé sur la restitution et la diplomatie, avec des conséquences relationnelles durables.",
+    "relevance": "Très haute",
+    "synopsis": "À Anthusis, au Vidrian, une cloche magique issue du peuple halfling Song'o de la Jungle Rieuse est apparue après avoir été pillée. Les Éclaireurs doivent retrouver son origine, comprendre à qui elle appartient réellement et organiser son retour sans aggraver les tensions nées du vol."
+  },
+  "pfs-season-3-3-04": {
+    "rationale": "Arc strict en deux parties dans un territoire hostile ; très bonne continuité institutionnelle.",
+    "relevance": "Très haute",
+    "synopsis": "Un capitaine d'aventure indispensable aux opérations clandestines de la Société au Chéliax a disparu. Les agents doivent enquêter discrètement dans un environnement hostile à l'organisation, retrouver sa piste et comprendre pourquoi les activités locales des Éclaireurs sont soudain visées."
+  },
+  "pfs-season-3-3-05": {
+    "rationale": "Difficile de faire plus adapté à un monde persistant : le statut même d’une loge dépend du résultat de la mission. Les preuves réunies auparavant, les relations avec les autorités et les conséquences judiciaires peuvent être portées par plusieurs équipes.",
+    "relevance": "Très haute",
+    "synopsis": "La loge de la Société installée dans la cathédrale d’Aroden à Almas fait face à une revendication juridique légitime de l’Église d’Iomédae. Les agents doivent préparer une défense, convaincre un collège de juges et protéger la loge lorsque des ennemis profitent du conflit pour agir. Le scénario conclut l’arc commencé dans The East Hill Haunting."
+  },
+  "pfs-season-3-3-06": {
+    "rationale": "Premier pilier de Shadow Absalom : indispensable pour Sashka, les Blakros et la sécurité de la Grande Loge. Doit être suivi comme un véritable métaplot persistant.",
+    "relevance": "Très haute",
+    "synopsis": "Après plusieurs incidents à la Grande Loge, les agents découvrent que des ombres agissent au cœur même d’Absalom. L’enquête révèle une opération liée à l’Alliance d’Onyx et à sa nouvelle dirigeante, Sarnia Blakros."
+  },
+  "pfs-season-3-3-07": {
+    "rationale": "Conclusion d'un arc strict ; excellente mission d'infiltration avec conséquences durables pour la loge du Chéliax.",
+    "relevance": "Très haute",
+    "synopsis": "La piste du capitaine disparu conduit les Éclaireurs vers un site contrôlé par les Hellknights au Chéliax. Ils doivent s'y introduire, secourir leur responsable et découvrir pourquoi les Hellknights ont décidé de frapper les réseaux de la Société."
+  },
+  "pfs-season-3-3-08": {
+    "rationale": "Création et sauvegarde d'une loge persistante, suivie par un second scénario : très forte valeur de campagne.",
+    "relevance": "Très haute",
+    "synopsis": "À Sedeq, la nouvelle loge de la Société semble s'être dégradée de façon inexplicable alors même que plusieurs personnes attendues n'y sont jamais arrivées. Un génie impose en outre trois tâches aux agents, qui doivent comprendre le lien entre ces anomalies et sauver les fondations du projet qadirien."
+  },
+  "pfs-season-3-3-09": {
+    "rationale": "Arc strict, base locale et risque politique : excellente matière de campagne persistante.",
+    "relevance": "Très haute",
+    "synopsis": "À Sothis, une poussée de morts-vivants menace le Sandswept Hall, installation que la Société doit protéger sans attirer l'attention du Prince Rubis sur l'ampleur du problème. Les Éclaireurs doivent contenir l'incident et identifier la source de l'activité nécromantique avant que le secret ne devienne impossible à garder."
+  },
+  "pfs-season-3-3-10": {
+    "rationale": "Exploration archéologique très autonome et bonne source de savoir durable pour la Société.",
+    "relevance": "Haute",
+    "synopsis": "La découverte d'un complexe nain dans les profondeurs de Droskar's Crag pousse la Société à organiser une nouvelle exploration des ruines de l'ancien empire de Tar Khadurrn. Les agents doivent progresser plus loin que les précédentes équipes et documenter ce qui a survécu sous la montagne."
+  },
+  "pfs-season-3-3-11": {
+    "rationale": "Enquête politique en deux parties, très propice à une continuité de preuves et de réputation.",
+    "relevance": "Très haute",
+    "synopsis": "À Oppara, des crimes visant des biens liés à l'impératrice Eutropia semblent utiliser des wayfinders modifiés par Muesello. Les Éclaireurs doivent retrouver un capitaine d'aventure, comprendre comment ces objets sont impliqués et déjouer une conspiration avant qu'elle ne compromette la Société au Taldor."
+  },
+  "pfs-season-3-3-12": {
+    "rationale": "Conclusion d'un arc de loge : conséquences concrètes et très réutilisables dans une table ouverte.",
+    "relevance": "Très haute",
+    "synopsis": "La loge de Sedeq s'apprête enfin à célébrer son ouverture, mais un adversaire ayant suivi les progrès de la Société transforme l'événement en piège. Les agents doivent protéger les personnes réunies, identifier l'attaque et empêcher que la nouvelle implantation ne soit détruite au moment même où elle devient publique."
+  },
+  "pfs-season-3-3-13": {
+    "rationale": "Très utile pour justifier la mobilité de la table ouverte et maintenir un accès arcadien persistant.",
+    "relevance": "Très haute",
+    "synopsis": "Près de Port Valen en Arcadie, une gardienne féerique entretient le lien avec le Labyrinthe de la Route ouverte à condition que des héros accomplissent périodiquement des actes dignes de sa confiance. Les Éclaireurs doivent relever les épreuves de la Forêt des Épreuves afin de préserver ce passage stratégique."
+  },
+  "pfs-season-3-3-14": {
+    "rationale": "Conclusion d'un arc strict avec sauvetage et contrôle d'une menace persistante : très forte valeur de campagne.",
+    "relevance": "Très haute",
+    "synopsis": "Après les premiers incidents du Sandswept Hall, une équipe de reconnaissance a disparu au-delà de la brèche reliant le site à un espace dangereux. Les Éclaireurs doivent franchir à leur tour cette frontière, retrouver les agents perdus et empêcher les morts-vivants de transformer l'ouverture en menace permanente pour Sothis."
+  },
+  "pfs-season-3-3-15": {
+    "rationale": "Mission de haut niveau centrée sur des dirigeants récurrents et des secrets institutionnels ; forte pertinence pour la Société.",
+    "relevance": "Très haute",
+    "synopsis": "Effeflinn Whyst et Kreighton Shaine empruntent un passage dangereux depuis la Grande Loge et entraînent des Éclaireurs dans la Caverne du Chant brisé. L'expédition expose un lieu hostile ainsi qu'une part d'histoire commune que plusieurs figures importantes de la Société avaient laissée enfouie."
+  },
+  "pfs-season-3-3-16": {
+    "rationale": "Très fort si Morilla et l’arc taldien ont déjà été introduits : le scénario fait revenir une alliée importante et laisse des conséquences politiques persistantes. Il est moins central comme mission isolée sans ce contexte.",
+    "relevance": "Haute",
+    "synopsis": "À Oppara, une vague de crimes vise les biens et alliés de la grande-princesse Eutropia. Lady Gloriana Morilla prépare une fausse fuite pour attirer les responsables au grand jour, et les agents doivent l’aider à transformer ce piège politique en preuve exploitable."
+  },
+  "pfs-season-3-3-17": {
+    "rationale": "Chapitre critique d'un arc en quatre parties et scénario onirique très distinctif ; priorité maximale si l'arc est suivi.",
+    "relevance": "Très haute",
+    "synopsis": "Des rêves partagés frappent la Grande Loge et semblent provenir d'une île poussiéreuse qui n'existe que dans un paysage onirique. Les Éclaireurs doivent entrer dans ce rêve, retrouver la personne qui appelle à l'aide et comprendre comment cette crise s'inscrit dans le complot autour d'Absalom de l'Ombre."
+  },
+  "pfs-season-3-3-18": {
+    "rationale": "Bonne mission de protection liée à une infrastructure majeure de la Société ; excellente transition vers le spécial 3-99.",
+    "relevance": "Haute",
+    "synopsis": "Des élèves de l'Académie Dacilane visitent la loge de Woodsedge et le Labyrinthe de la Route ouverte pour une sortie pédagogique qui tourne rapidement à la catastrophe. Les Éclaireurs doivent protéger les étudiants, rétablir la situation et éviter qu'une démonstration destinée à inspirer la prochaine génération ne devienne un drame."
+  },
+  "pfs-season-3-3-19": {
+    "rationale": "Convergence majeure pour Sashka, Absalom et les Blakros. À réserver après Struck by Shadows et les éléments manquants de l’arc afin de préserver les révélations.",
+    "relevance": "Très haute",
+    "synopsis": "Les agents traversent le Plan de l’Ombre pour enquêter directement dans Shadow Absalom, comprendre les attaques attribuées à l’Alliance d’Onyx et démêler les manipulations qui menacent sa trêve avec la Société."
+  },
+  "pfs-season-3-3-98": {
+    "rationale": "Le format interactif multi-table est presque une démonstration native de ton concept : équipes différentes, objectifs parallèles, informations et succès partagés. Même adapté à une seule table, il fournit un excellent modèle d’expédition collective persistante.",
+    "relevance": "Très haute",
+    "synopsis": "Plusieurs équipes de la Société lancent une expédition dans les ruines du pic de Droskar afin d’atteindre la cité naine perdue de Raseri Kanton. Le Consortium Aspis poursuit le même objectif et chaque groupe doit contribuer à l’exploration et à la course collective."
+  },
+  "pfs-season-3-3-99": {
+    "rationale": "Spécial de fin de saison, anomalie temporelle et lien inter-époques : très forte pertinence pour le fil du destin et de l'histoire.",
+    "relevance": "Très haute",
+    "synopsis": "Une anomalie du Labyrinthe de la Route ouverte transporte les Éclaireurs très loin de Woodsedge et les confronte à un secret qui relie plusieurs époques. Pour retrouver leur chemin, ils doivent comprendre ce phénomène temporel et préserver des informations dont les conséquences dépassent largement leur présent."
+  },
+  "pfs-season-4-4-02": {
+    "rationale": "Mission de secours directement liée à Tar-Baphon, avec un village dont le sort peut devenir une conséquence durable. L’objectif est très clair, l’équipe peut être composée librement et les survivants peuvent rester des contacts récurrents dans les Terres des Tombes.",
+    "relevance": "Très haute",
+    "synopsis": "Dans les Terres des Tombes, un agent de la Société a choisi de rester après la chute du Dernier Rempart afin de protéger un petit établissement de réfugiés. Lorsque les forces du Tyran qui Murmure se rapprochent, il parvient à rejoindre une loge d’Ustalav et demande de l’aide. Les Éclaireurs doivent retourner derrière les lignes ennemies pour secourir la communauté."
+  },
+  "pfs-season-4-4-03": {
+    "rationale": "Diplomatie nordique et mission de protection inhabituelle ; bonne source d'alliés persistants.",
+    "relevance": "Haute",
+    "synopsis": "À Halgrim, les Éclaireurs soutiennent une démarche diplomatique impliquant le roi Estrid et doivent en parallèle veiller sur cinq jeunes linnorms. Cette responsabilité les conduit jusqu'à l'Île des Ancêtres, où la garde de créatures aussi prestigieuses devient une véritable mission d'exploration et de confiance."
+  },
+  "pfs-season-4-4-04": {
+    "rationale": "Accroche prioritaire pour Éos : Jistka, technologie antique et finalité des créations. Il faut conserver ouverte l’identité de l’homme aux yeux verts.",
+    "relevance": "Très haute",
+    "synopsis": "Dans le désert de Thuvie, les agents suivent une dague calamiteuse jusqu’à une ancienne machine de guerre du Jistka et recherchent le cœur qui pourrait l’activer ou la neutraliser."
+  },
+  "pfs-season-4-4-05": {
+    "rationale": "Ouverture d'un arc strict au Nex, très pertinente pour les fils liés à la magie créatrice et aux identités altérées.",
+    "relevance": "Très haute",
+    "synopsis": "À Quantium, les Éclaireurs rencontrent un crâne parlant et lumineux ainsi qu'une personne amnésique dont l'identité semble liée à d'anciens secrets des arcanistes du Nex. Ils doivent mener recherches et investigations pour reconstruire cette identité avant que d'autres ne s'emparent de ce qu'elle représente."
+  },
+  "pfs-season-4-4-06": {
+    "rationale": "Très fort pour Éos et Elyn : technologie, plans, âme et signal mystérieux. Peut alimenter leurs questions sans attribuer prématurément une source unique à leurs pouvoirs.",
+    "relevance": "Très haute",
+    "synopsis": "Une clé de cristal reçue par la Société capte un signal provenant du laboratoire électrique des Érudits d’Ardis, près de l’ancienne capitale d’Ustalav. Les agents enquêtent sur leurs expériences interplanaires."
+  },
+  "pfs-season-4-4-07": {
+    "rationale": "Très adapté à une table ouverte : Absalom, réseau de boutiques et de faveurs, petits objectifs indépendants et contacts réutilisables. Les conséquences peuvent rester visibles sous forme de dettes, accès privilégiés et réputation auprès des commerçants.",
+    "relevance": "Très haute",
+    "synopsis": "Au Grand Bazar d’Absalom, la Société cherche à identifier et gérer plusieurs objets étranges de son nouveau trésor. Les agents doivent obtenir l’aide de marchands spécialisés en échangeant services et faveurs, avec Biglock comme premier contact."
+  },
+  "pfs-season-4-4-08": {
+    "rationale": "Suite majeure du fil jistkan et très forte pour Éos : technologie ancienne, identité d’une création et autonomie morale. L’arc gagne à être joué après 4-04, mais l’objectif reste assez clair pour une équipe dédiée.",
+    "relevance": "Très haute",
+    "synopsis": "En Thuvie, plusieurs forces convergent vers un ancien automate de guerre lié à la dague calamiteuse. Les agents doivent atteindre la machine, comprendre son histoire et décider quel rôle ils joueront dans le choix de son propre destin."
+  },
+  "pfs-season-4-4-09": {
+    "rationale": "La Loge exaltée est une base persistante déjà créée par d’autres scénarios, et cette affaire peut modifier son alliance avec le Razmiran. L’enquête vampirique et les choix diplomatiques offrent des conséquences fortes pour les équipes suivantes.",
+    "relevance": "Très haute",
+    "synopsis": "Des attaques de vampires se multiplient dans les bois près de la Loge exaltée et menacent l’alliance fragile entre la Société et l’Église de Razmir. Narsen envoie les agents traquer un vampire portant un masque d’or dans la Forêt exaltée. L’enquête oblige les Éclaireurs à démêler meurtres, politique razmirienne et loyautés incertaines."
+  },
+  "pfs-season-4-4-10": {
+    "rationale": "Prioritaire pour Yaz et Jilkra : Nex, magie créatrice et mondes artificiels. Il offre des indices possibles sans devoir révéler le secret du roman de Larantis.",
+    "relevance": "Très haute",
+    "synopsis": "À Quantium, un crâne parlant issu du trésor de l’Alliance d’Onyx conduit les agents dans le manoir d’une arcaniste de Nex, rempli de recherches, défenses et secrets magiques."
+  },
+  "pfs-season-4-4-11": {
+    "rationale": "Mission de sauvetage à forte continuité : elle récompense le suivi d’un scénario précédent tout en reliant technologie, Plan de l’Ombre et PNJ récurrents. Très pertinente pour Sashka et Éos.",
+    "relevance": "Très haute",
+    "synopsis": "Après les événements du laboratoire électrique, plusieurs membres des Érudits d’Ardis ont été emprisonnés dans un château volant du Plan de l’Ombre par un ennemi de longue date. Des agents expérimentés sont envoyés pour infiltrer la forteresse et les libérer."
+  },
+  "pfs-season-4-4-12": {
+    "rationale": "Arc technologique et diplomatique en Arcadie, excellent pour créer des conséquences et des accès géographiques persistants.",
+    "relevance": "Très haute",
+    "synopsis": "En Arcadie, la Société tente d'obtenir l'accès à Segada et de négocier autour d'une arme stellaire arcadienne endommagée. Les agents doivent convaincre les autorités locales tout en survivant à une attaque destinée à faire échouer les pourparlers et à s'emparer du dispositif."
+  },
+  "pfs-season-4-4-13": {
+    "rationale": "Bonne mission d’escorte et de diplomatie qui développe Port Valen et l’Arcadie, avec un objet dont le sort peut devenir persistant. Elle reste néanmoins périphérique par rapport aux fils personnels prioritaires.",
+    "relevance": "Moyenne",
+    "synopsis": "En Arcadie, les agents escortent une ancienne arme stellaire jusqu’au dernier artisan capable de la réparer. Ils doivent convaincre ce spécialiste de les aider et faire face à ceux qui veulent détourner ou détruire l’artefact avant son retour vers son foyer d’origine."
+  },
+  "pfs-season-4-4-14": {
+    "rationale": "Bonne suite thématique aux dossiers de Sedeq et forte valeur morale/diplomatique pour la campagne.",
+    "relevance": "Haute",
+    "synopsis": "À Sedeq, un génie demande à la Société de réparer une injustice commise par un ancien maître qui continue d'exploiter des êtres élémentaires. Les Éclaireurs doivent infiltrer la propriété, libérer les captifs et confronter le responsable sans transformer une mission de justice en nouveau cycle de domination."
+  },
+  "pfs-season-4-4-15": {
+    "rationale": "Très haute pertinence pour le fil Belkzen, avec des alliés récurrents et une continuité directe des relations orques.",
+    "relevance": "Très haute",
+    "synopsis": "Au Belkzen, le lieutenant Geir prépare une opération contre les forces du Whispering Way avec l'appui de Mahja, d'Ardax et des Soleils Ardents. Les Éclaireurs rejoignent cette coalition et doivent contribuer à une bataille où l'avenir politique et spirituel de plusieurs communautés orques est en jeu."
+  },
+  "pfs-season-4-4-16": {
+    "rationale": "Excellent épisode léger pour faire vivre Absalom et les familles de la Société, mais peu de progression des grands métaplots.",
+    "relevance": "Moyenne",
+    "synopsis": "À l’académie Dacilane, une guerre de farces destinée à réveiller l’attention des élèves dégénère et révèle un problème que les enfants et les agents doivent résoudre ensemble."
+  },
+  "pfs-season-4-4-17": {
+    "rationale": "Affrontement direct avec une adversaire récurrente et préparation de fin de métaplot : très haute priorité.",
+    "relevance": "Très haute",
+    "synopsis": "En Thuvie, la Société met en place un piège destiné à attirer Aslynn en utilisant Zarta Dralneen comme appât et un breuvage lié aux rêves. Les Éclaireurs doivent sécuriser le rituel, empêcher la sorcière d'en retourner les mécanismes contre eux et profiter de l'occasion pour resserrer l'étau autour d'une ennemie ancienne."
+  },
+  "pfs-season-4-4-99": {
+    "rationale": "Très forte pertinence pour le fil des forêts et de la corruption ; spécial permettant de matérialiser des conséquences régionales.",
+    "relevance": "Très haute",
+    "synopsis": "La reine de Kyonin demande l'aide de la Société lorsqu'un noble elfe obsédé par les démons menace une communauté et la forêt qui l'entoure. Plusieurs équipes doivent enquêter, protéger les habitants et empêcher que la corruption ne se propage au cœur d'un territoire particulièrement sensible aux influences abyssales."
+  },
+  "pfs-season-4-intro": {
+    "rationale": "Excellent générateur de tableau de missions : chaque relique peut devenir l’accroche d’une équipe différente, tandis que les caveaux d’Absalom restent le point commun. C’est une transition très naturelle vers une campagne ouverte mondiale.",
+    "relevance": "Très haute",
+    "synopsis": "La Société doit inventorier et comprendre un immense ensemble de reliques et d’objets étranges récemment arrivés dans ses caveaux. Les agents examinent les pièces les plus problématiques et découvrent que plusieurs peuvent ouvrir de nouveaux dossiers à travers Golarion."
+  },
+  "pfs-season-5-5-01": {
+    "rationale": "Point de départ structurel majeur : le Labyrinthe explique naturellement pourquoi une équipe différente peut partir vers presque n’importe quelle région. Les nouvelles portes deviennent des ressources persistantes pour toute la campagne.",
+    "relevance": "Très haute",
+    "synopsis": "Après la défaite d’Aslynn, Fola Barun demande aux agents d’accompagner une visite du Labyrinthe de la Route ouverte. En explorant ses passages avec un invité, ils provoquent l’apparition de nouvelles portes et découvrent que le réseau peut désormais mener vers des horizons inattendus."
+  },
+  "pfs-season-5-5-02": {
+    "rationale": "Retour majeur sur l'arc Blackwood et excellente continuité de site : très haute pertinence.",
+    "relevance": "Très haute",
+    "synopsis": "Le site archéologique de Blackwood, jusque-là assez sûr pour servir à la formation, est bouleversé par les changements récents des plans élémentaires. Des initiés de la Société et les alliés iruxi de Tskikha ne donnent plus signe de vie ; les Éclaireurs doivent pénétrer dans les ruines azlantes transformées et les retrouver."
+  },
+  "pfs-season-5-5-03": {
+    "rationale": "Heist urbain autonome, très lisible en une séance et riche en conséquences de réputation.",
+    "relevance": "Haute",
+    "synopsis": "À Magnimar, les Éclaireurs doivent escorter un objet précieux destiné à un puissant allié potentiel, mais celui-ci est volé dans le manoir Heidmarch avant même de leur être confié. Une course à travers la ville commence pour retrouver le voleur et récupérer le présent diplomatique avant que l'incident ne ruine l'opération."
+  },
+  "pfs-season-5-5-04": {
+    "rationale": "Très bon début de relation persistante avec Valashinaz et la Hwanggot. Le scénario fonctionne comme mission autonome, mais sa pleine valeur apparaît surtout lorsque les épisodes suivants d’Equal Exchanges réutilisent les accords et personnages établis ici.",
+    "relevance": "Haute",
+    "synopsis": "Dans le premier volet d’Equal Exchanges, Waterfall envoie les agents en Hwanggot pour rencontrer la dragonne du monde souterrain Valashinaz. Son assistant kobold Purepurin a toutefois laissé les caveaux se remplir de problèmes qu’il faut résoudre avant que les véritables négociations puissent commencer."
+  },
+  "pfs-season-5-5-05": {
+    "rationale": "Métaplot d'exploration, Azlant et communauté inhabituelle : très bon potentiel de récurrence et de choix nuancés.",
+    "relevance": "Très haute",
+    "synopsis": "Une étude du Labyrinthe est interrompue par Marcon Tinol, allié goule de longue date, qui révèle l'existence d'un refuge établi en Azlant pour des goules souhaitant vivre à l'écart des humains. L'arrivée récente de Ghessa et ses visites dans d'anciens caveaux arodenites inquiètent la communauté ; les Éclaireurs doivent vérifier son histoire sans condamner le refuge par préjugé."
+  },
+  "pfs-season-5-5-06": {
+    "rationale": "Croisement très fort entre Mwangi, diplomatie et identité orque pour Vaga et Yaz. Ukuja peut rester un contact durable de la Société, et la réputation créée par une équipe peut influencer toutes les suivantes.",
+    "relevance": "Très haute",
+    "synopsis": "Une nouvelle porte du Labyrinthe mène à Ukuja, cité fortifiée des Orcs matanji dans l’Étendue du Mwangi. Les agents y sont rapidement soupçonnés dans une affaire liée à un complot fiélon et doivent prouver leur innocence tout en identifiant le véritable responsable."
+  },
+  "pfs-season-5-5-07": {
+    "rationale": "Très haute pertinence pour Absalom : alliés récurrents, politique locale et conséquence durable sur le réseau souterrain.",
+    "relevance": "Très haute",
+    "synopsis": "Après la révélation du rôle de Drandle Dreng comme membre du Décemvirat, les Dragons des Égouts d'Absalom perdent un soutien politique majeur. Le maître des pièges Tok conteste désormais la cheffe Yiddlepode et les Éclaireurs doivent empêcher cette crise interne de briser une alliance dont dépend aussi la stabilité des profondeurs de la ville."
+  },
+  "pfs-season-5-5-08": {
+    "rationale": "Très bon scénario répétable ancré dans une communauté arcadienne déjà connue ; relation locale facilement persistante.",
+    "relevance": "Haute",
+    "synopsis": "À Niishan en Arcadie, la Société est invitée à prendre part au Festival du Feu et à défendre le bûcher sacré contre les esprits et morts-vivants qui apparaissent traditionnellement pendant la cérémonie. Un observateur hostile attend toutefois que les défenseurs s'épuisent pour frapper la communauté au pire moment."
+  },
+  "pfs-season-5-5-09": {
+    "rationale": "Chapitre central d'Equal Exchanges, exploration de Minata et négociation avec une puissance draconique : très haute pertinence.",
+    "relevance": "Très haute",
+    "synopsis": "Dans le cadre de l'accord secret entre Waterfall et le dragon souterrain Valashinaz, les Éclaireurs gagnent une petite île de Minata afin de récupérer des skymétaux dans un ancien temple. Le site que l'on croyait abandonné est désormais occupé, et les agents doivent composer avec ces nouveaux habitants tout en évitant les akatas gardés par Valashinaz."
+  },
+  "pfs-season-5-5-10": {
+    "rationale": "Très bon pont entre le réseau de Safa, Jalmeray et les Terres impossibles de Yaz et Jilkra. La Bienfaitrice est un antagoniste récurrent idéal pour plusieurs équipes, et cette mission prépare naturellement le dénouement de 5-20.",
+    "relevance": "Très haute",
+    "synopsis": "Les recherches de la capitaine Safa sur une mystérieuse Bienfaitrice révèlent qu’une rakshasa agit entre le Qadira, le Nex et le Jalmeray. À Niswan, les agents participent à une vente aux enchères afin de reconnaître son réseau, identifier ses alliés et décider jusqu’où intervenir."
+  },
+  "pfs-season-5-5-11": {
+    "rationale": "Bonne exploration autonome avec une forte récompense narrative pour un PNJ récurrent. Elle fonctionne surtout si Waterfall et les échanges précédents ont déjà été établis, mais les informations découvertes peuvent être archivées et transmises à d’autres équipes.",
+    "relevance": "Haute",
+    "synopsis": "Dans l’océan Arcadien, Waterfall envoie les agents explorer un laboratoire abandonné consacré à des expériences occultes. L’expédition révèle une âme et des souvenirs oubliés qui éclairent le passé de Waterfall et font progresser le sous-arc Equal Exchanges."
+  },
+  "pfs-season-5-5-12": {
+    "rationale": "Très forte valeur structurelle pour une table ouverte : la mission touche directement le système qui permet aux équipes de circuler dans le monde. Toute réparation ou nouvelle anomalie peut avoir des effets visibles sur les prochaines séances.",
+    "relevance": "Très haute",
+    "synopsis": "Le Labyrinthe de la Route ouverte commence à déposer des agents aux mauvaises destinations. Sigvard Tornkvist charge une équipe d’identifier la cause de ces erreurs et de rendre les routes de la Société à nouveau fiables."
+  },
+  "pfs-season-5-5-13": {
+    "rationale": "Mission courte et facilement isolable, utile pour respirer entre deux métaplots plus lourds. Elle apporte moins aux grands fils personnels, mais sa simplicité la rend adaptée à une équipe ponctuelle.",
+    "relevance": "Haute",
+    "synopsis": "Une mission apparemment simple consiste à livrer une lettre, mais le trajet conduit les agents dans un labyrinthe de haies magique où deux connaissances aux doigts particulièrement agiles compliquent rapidement la tâche."
+  },
+  "pfs-season-5-5-14": {
+    "rationale": "Mission logistique parfaite pour un monde persistant et potentiellement amusante pour Tsuyi l’alchimiste, mais secondaire face à ses recherches historiques.",
+    "relevance": "Moyenne",
+    "synopsis": "À Daggermark, la Société cherche à préserver son approvisionnement en antitoxines en négociant l’accès à un réactif alchimique rare au milieu des intérêts concurrents de la capitale des assassins."
+  },
+  "pfs-season-5-5-15": {
+    "rationale": "Très haute pertinence pour le fil Belkzen et la continuité de Mahja/Soleils Ardents.",
+    "relevance": "Très haute",
+    "synopsis": "À Freedom Town, les Soleils Ardents protègent le corps de Mahja Firehair pendant que son âme traverse le Crucible, mais des attaques étranges se multiplient autour de la communauté. La Société est appelée à déterminer si les assaillants servent le Tyran qui Murmure ou une autre puissance et à empêcher qu'ils n'interrompent l'épreuve de Mahja."
+  },
+  "pfs-season-5-5-16": {
+    "rationale": "Enquête sociale solide dans un lieu récurrent, avec potentiel de liens futurs vers Kaer Maga et la Thassilon.",
+    "relevance": "Haute",
+    "synopsis": "À Kaer Maga, des habitants pauvres disparaissent et l'explication commode d'une émigration vers la Nouvelle Thassilon ne convainc pas une journaliste indépendante. Faute d'autorité locale prête à enquêter, elle demande à la Société de vérifier ce qui arrive réellement aux disparus et d'intervenir si un réseau les exploite."
+  },
+  "pfs-season-5-5-17": {
+    "rationale": "Très bon prolongement thassilonien et scénario de conséquence mondiale. Pertinent pour Tsuyi et pour préparer Revenge of the Runelords.",
+    "relevance": "Haute",
+    "synopsis": "En mer près de la Nouvelle-Thassilon, les agents rencontrent des marins déplacés par le retour brutal de Xin-Edasseril depuis la Dimension du Temps et affrontent les conséquences encore actives de cet événement."
+  },
+  "pfs-season-5-5-18": {
+    "rationale": "Final de métaplot de haut niveau, directement dépendant des trois chapitres précédents : priorité très élevée.",
+    "relevance": "Très haute",
+    "synopsis": "Waterfall demande aux Éclaireurs les plus expérimentés d'entrer dans un paysage mental relié à son esprit afin de rompre une connexion dangereuse avec des entités étrangères. L'équipe doit traverser cette tapisserie psychique, comprendre ce qui s'y est accroché et conclure l'échange entamé avec Valashinaz sans laisser l'accord coûter l'intégrité de Waterfall."
+  },
+  "pfs-season-5-5-19": {
+    "rationale": "Bon scénario d’enquête sur les conséquences d’une menace déjà passée : une équipe intervient après les événements principaux, ce qui correspond bien à un monde persistant. Il prépare également le fil de Hesla et de Sarkoris sans exiger qu’elle soit au centre de chaque scène.",
+    "relevance": "Haute",
+    "synopsis": "Près de Nérosyan, des marchands découvrent qu’un ancien site rituel démoniaque, supposé abandonné après une opération de cultistes, reste dangereux. Jorsal of Lauterbury envoie les agents examiner les lieux et déterminer ce que les responsables ont laissé derrière eux."
+  },
+  "pfs-season-5-5-20": {
+    "rationale": "Excellent dénouement d’un antagoniste suivi par plusieurs équipes : les indices des missions précédentes convergent, mais l’opération finale reste un dossier clair. Très utile pour relier Jalmeray, Nex et les fils abolitionnistes.",
+    "relevance": "Très haute",
+    "synopsis": "Safa a localisé à Niswan le manoir de la Bienfaitrice, la rakshasa suivie depuis plusieurs missions. Les agents doivent s’y introduire, réunir les preuves de son complot contre la ville et la pousser enfin dans ses retranchements."
+  },
+  "pfs-season-5-intro": {
+    "rationale": "Le contenu est excellent pour ton format, mais cet ID n’apparaît pas comme entrée distincte dans le catalogue canonique actuel. À conserver seulement comme alias/compatibilité si ton pipeline l’utilise ; la donnée de référence doit être 5-01.",
+    "relevance": "Très haute",
+    "synopsis": "Cette entrée fait doublon fonctionnel avec le scénario canonique 5-01, Intro: Year of Unfettered Exploration : après la défaite d’Aslynn, Fola Barun demande aux agents d’accompagner une visite du Labyrinthe de la Route ouverte, dont l’exploration fait apparaître de nouvelles portes."
+  },
+  "pfs-season-6-6-00": {
+    "rationale": "Exploration exceptionnelle rendue possible par un événement mondial et spécial multi-table : très haute valeur de découverte.",
+    "relevance": "Très haute",
+    "synopsis": "Lorsque l'Œil d'Abendego se retire temporairement, une épave de la Société et une île ancienne apparaissent dans une zone normalement inaccessible. Plusieurs équipes d'Éclaireurs doivent affronter tempêtes, mer dangereuse et rivaux pirates pour explorer le site avant le retour de la catastrophe et comprendre son lien avec d'anciennes prophéties et des forces démoniaques."
+  },
+  "pfs-season-6-6-01": {
+    "rationale": "Excellente ouverture de saison, enquête sociale à Absalom et lien direct avec Tar-Baphon : très haute pertinence.",
+    "relevance": "Très haute",
+    "synopsis": "À Absalom, les Éclaireurs assistent à un dîner de bienfaisance au profit des Chevaliers de Dernier-Rempart lorsque des traces d'un rituel étrange sont découvertes. Au milieu des notables, des factions politiques et des critiques de la Société, les agents doivent enquêter avant que la soirée ne se transforme en meurtre."
+  },
+  "pfs-season-6-6-02": {
+    "rationale": "Très bon exemple de base persistante frappée par un événement mondial : les mêmes PNJ et lieux vus auparavant changent sous les yeux d’une nouvelle équipe. Fort pour Tian Xia, Pen-Pen et la continuité de la loge.",
+    "relevance": "Très haute",
+    "synopsis": "À la loge des Trois Portes de Kayajima, une journée de tâches ordinaires bascule lorsqu’un dieu meurt et qu’une pluie étrange tombe sur l’île. Les agents doivent protéger la loge et ses voisins tout en comprenant les premières conséquences locales du Godsrain."
+  },
+  "pfs-season-6-6-03": {
+    "rationale": "Très fort pour les thèmes de pouvoir divin, destin et responsabilité qui touchent Elyn et Tsuyi. L’objectif d’extraction est parfaitement compatible avec une équipe variable, et le contexte rahadoumi oblige à traiter les conséquences sociales du Godsrain.",
+    "relevance": "Très haute",
+    "synopsis": "À Manaket, au Rahadoum, plusieurs apprentis de Kassi Azaril développent des pouvoirs après le Godsrain. Des gardes radicalisés les prennent pour cible et Kassi demande à la Société de les escorter hors de danger sans transformer l’opération en conflit religieux."
+  },
+  "pfs-season-6-6-04": {
+    "rationale": "Excellent épisode urbain avec des PNJ et institutions déjà connus, donc très efficace pour rendre Absalom vivante. Il nourrit le fil Hesla et Zab sans être indispensable au métaplot principal.",
+    "relevance": "Haute",
+    "synopsis": "À Absalom, Hesla Embersplitter organise dans le Quartier étranger un carnaval caritatif au bénéfice des Chevaliers du Dernier Rempart. Les agents y surveillent aussi des élèves de Dacilane lorsqu’une tempête liée aux bouleversements récents frappe les Flaques et transforme la fête en crise."
+  },
+  "pfs-season-6-6-05": {
+    "rationale": "Très forte mission Tian Xia pour Pen-Pen et Tsuyi : esprits, communauté persistante et conséquences surnaturelles. Elle peut aussi intéresser Pépin par son rapport au vivant sans confondre les traditions spirituelles du lieu avec les léschys.",
+    "relevance": "Très haute",
+    "synopsis": "Le village de l’Arbre-d’Argent, dans la Forêt des Esprits, est coupé du reste de la région par un brouillard mystérieux. Les agents doivent traverser les épreuves imposées par les kami protecteurs et découvrir la menace plus dangereuse qui se cache derrière l’isolement."
+  },
+  "pfs-season-6-6-06": {
+    "rationale": "Accroche exceptionnelle pour Pépin et excellent front local persistant : une communauté entière peut être sauvée, transformée ou devenir une alliée durable. Le scénario permet d’aborder corruption et cycle naturel sans imposer une réponse à son passé.",
+    "relevance": "Très haute",
+    "synopsis": "Au plus profond du Fangwood, le village léschy de Compost Watch cesse de donner des nouvelles après un appel de détresse. Les agents découvrent qu’un déséquilibre entre vie, mort et nature menace la communauté et sa forêt sacrée."
+  },
+  "pfs-season-6-6-07": {
+    "rationale": "Très forte pertinence pour Nex/Geb et pour le suivi matériel des fragments du Godsrain.",
+    "relevance": "Très haute",
+    "synopsis": "Un éclat divin tombé près d'Oenopion s'est retrouvé absorbé par une vase qui se dirige maintenant vers les Terres de Mana. Les Éclaireurs doivent la poursuivre dans une région où les services mercenaires, les anomalies magiques et les rivalités locales compliquent la récupération de cette manifestation du Godsrain."
+  },
+  "pfs-season-6-6-08": {
+    "rationale": "Bonne mission de diplomatie et de folklore avec des conséquences concrètes sur les déplacements en Irrisen. Elle est agréable pour Pen-Pen, mais touche moins directement les fils prioritaires que les autres scénarios de la saison.",
+    "relevance": "Moyenne",
+    "synopsis": "En Irrisen, la reine Anastasia prépare un projet de modernisation des transports et demande l’avis de voyageurs expérimentés. Des gobelins des glaces attaquent l’entreprise sous l’influence d’une fée mécontente, et les agents doivent empêcher que le conflit ne fasse dérailler le projet."
+  },
+  "pfs-season-6-6-09": {
+    "rationale": "Convergence majeure : Godsrain, Ombre, Terres des Tombes et Tar-Baphon. Elle touche directement plusieurs fils de la campagne et utilise un moyen de transport institutionnel qui convient parfaitement à des opérations spécialisées.",
+    "relevance": "Très haute",
+    "synopsis": "La Société localise un immense fragment issu du Godsrain dans le Plan de l’Ombre, au voisinage des Terres des Tombes. Les agents embarquent sur un aéronef capable de voyager entre les plans et se lancent dans une course pour récupérer le warshard avant les forces liées au Tyran qui Murmure."
+  },
+  "pfs-season-6-6-10": {
+    "rationale": "Très fort pour Éos et Tsuyi : technologie numérienne, archives sensibles, Voie des Murmures et choix moral sur ce qu’il faut laisser étudier ou détruire. Les informations obtenues peuvent alimenter durablement plusieurs dossiers.",
+    "relevance": "Très haute",
+    "synopsis": "À la frontière de la Numérie et de l’Ustalav, les agents explorent le Manoir de la Météorite broyée, ancien bastion de la Ligue Technique aujourd’hui occupé par la Voie des Murmures. Ils y découvrent des recherches dangereuses et une dirigeante prête à négocier des informations en échange de temps pour achever son travail."
+  },
+  "pfs-season-6-6-11": {
+    "rationale": "Très bonne réutilisation d’une relation créée dans les saisons précédentes et fort croisement Godsrain/Tian Xia/savoir draconique. Le choix sur le jeune dragon peut modifier durablement la relation avec Valashinaz.",
+    "relevance": "Très haute",
+    "synopsis": "La Société demande à la dragonne Valashinaz d’examiner les warshards. En échange de son expertise, elle exige que les agents règlent le problème d’un jeune dragon qui s’est installé trop près de son territoire, par la négociation ou par la force."
+  },
+  "pfs-season-6-6-12": {
+    "rationale": "Crise de base institutionnelle avec choix de pertes et de sauvetage : très haute valeur pour une campagne persistante.",
+    "relevance": "Très haute",
+    "synopsis": "La couverture de Greensteeples Manor, installation de la Société au Chéliax, est compromise et les Hellknights reçoivent l'ordre de brûler le site et d'arrêter ses occupants. Les Éclaireurs doivent évacuer les personnes vulnérables, sauver les secrets indispensables et décider ce qui peut être sacrifié pour préserver le réseau clandestin."
+  },
+  "pfs-season-6-6-13": {
+    "rationale": "Mission archéologique compacte avec enjeu de patronage ; bonne source de relations et de ressources persistantes.",
+    "relevance": "Haute",
+    "synopsis": "En Druma, un glissement de terrain met au jour le caveau perdu d'un ancien kalistocrate. Un commanditaire de la Société souhaite récupérer un objet précis à l'intérieur, mais l'accès nouvellement ouvert attire rapidement d'autres intérêts et transforme une fouille opportuniste en véritable course à l'héritage."
+  },
+  "pfs-season-6-6-14": {
+    "rationale": "Métaplot critique autour de Sarkoris, Hesla et Deskari ; priorité maximale avant la conclusion de saison.",
+    "relevance": "Très haute",
+    "synopsis": "Dans la Cicatrice de Sarkoris, la Société suit Hesla et le culte du Ver Hurlant jusqu'aux cavernes de la Gorge de Deskari. Les Éclaireurs doivent comprendre ce que le culte recherche, sécuriser les indices et empêcher que les vestiges démoniaques du lieu ne soient utilisés pour un plan plus vaste."
+  },
+  "pfs-season-6-6-15": {
+    "rationale": "Exploration azlante et continuité de Kaer Maga avec un nouveau PNJ institutionnel récurrent ; forte valeur documentaire.",
+    "relevance": "Très haute",
+    "synopsis": "Les cercles de téléportation découverts à Kaer Maga sont reliés à l'érudite azlante Lesolethe, qui avait scellé une structure plus ancienne encore avant de disparaître. Sous la direction de la ambitieuse Zinthyra Tannol, les Éclaireurs gagnent son laboratoire principal dans l'Azlant brisé afin d'y retrouver la clé donnant accès à ce site oublié."
+  },
+  "pfs-season-6-6-16": {
+    "rationale": "Convergence urbaine majeure pour le fil Hesla et Zab : enquête dans un lieu persistant d’Absalom, culte identifiable et menace physique qui peut laisser des traces durables. À jouer après les apparitions précédentes de Hesla pour que la révélation ait du poids.",
+    "relevance": "Très haute",
+    "synopsis": "À Absalom, des informations inquiétantes conduisent les agents à Ember Manor, propriété liée à Hesla Embersplitter. Le domaine a été occupé par des cultistes du Ver Hurlant et a reçu une cargaison gigantesque : une dépouille démoniaque fossilisée dont l’usage pourrait menacer le cœur même de la ville."
+  },
+  "pfs-season-6-6-17": {
+    "rationale": "Métaplot Godsrain, infiltration chélaxienne et technologie divine : très haute pertinence.",
+    "relevance": "Très haute",
+    "synopsis": "Un dispositif capable de repérer les éclats divins conduit la Société vers un laboratoire d'armes secret au Chéliax. Pendant que des alliés détournent l'attention et tiennent les défenses extérieures, les Éclaireurs doivent infiltrer le complexe, identifier les recherches en cours et empêcher que le pouvoir du Godsrain ne soit transformé en arme."
+  },
+  "pfs-season-6-6-18": {
+    "rationale": "Enquête de réputation avec rivalité Aspis et savoir sur le Godsrain : excellente mission institutionnelle.",
+    "relevance": "Très haute",
+    "synopsis": "Au Taldor, un symposium consacré aux conséquences du Godsrain réunit chercheurs et spécialistes, mais le Consortium Aspis vole des travaux et tente d'en faire porter la responsabilité aux Éclaireurs. Les agents doivent récupérer les recherches, démontrer leur innocence et empêcher leurs rivaux de contrôler le récit scientifique de la catastrophe."
+  },
+  "pfs-season-6-6-19": {
+    "rationale": "Épisode de haut niveau directement lié au retour d'une menace historique de Sarkoris ; priorité maximale.",
+    "relevance": "Très haute",
+    "synopsis": "Des séismes secouent Pimatsih en Sarkoris tandis qu'Hesla et ses alliés manient Riftcarver dans le cadre d'un plan lié aux forces démoniaques du passé. Les Éclaireurs de très haut niveau doivent intervenir alors qu'une menace que l'on croyait définitivement vaincue recommence à peser sur la région."
+  },
+  "pfs-season-6-6-20": {
+    "rationale": "Final de saison à Absalom, synthèse de nombreux fils et résolution d'un artefact majeur : priorité maximale.",
+    "relevance": "Très haute",
+    "synopsis": "De retour à Absalom, la direction de la Société comprend enfin le plan d'Hesla et l'histoire du culte qui l'accompagne. Zarta prépare un rituel destiné à détruire Riftcarver ; les Éclaireurs doivent rassembler les soutiens nécessaires, sécuriser l'opération et affronter Hesla lorsqu'elle vient empêcher la destruction de l'artefact."
+  },
+  "pfs-season-8-8-00": {
+    "rationale": "Le format multi-table correspond remarquablement à une table ouverte et peut inspirer une grande convergence cosmique. En revanche, ce n’est pas un scénario PF2 de la Saison 8 actuelle : il doit être traité comme matériau legacy et converti avant utilisation.",
+    "relevance": "Moyenne",
+    "synopsis": "The Cosmic Captive est un ancien spécial interactif Pathfinder Society de première édition : plusieurs tables coopèrent autour d’Aucturn’s Tear et de portails menant à une entité cosmique captive. Le résultat dépend des réussites coordonnées des différentes équipes."
+  },
+  "pfs1e-47-the-darkest-vengeance": {
+    "rationale": "Intéressant comme archive/adaptation Ustalav, mais secondaire par rapport au catalogue PF2 natif.",
+    "relevance": "Moyenne",
+    "synopsis": "En Ustalav, une loge récemment ouverte de la Société cesse soudainement de donner de ses nouvelles. Des Éclaireurs sont envoyés enquêter et découvrent qu'une menace ancienne a pris le contrôle d'un puissant artefact ustalavien, mettant à la fois les agents disparus et l'implantation locale en danger."
+  },
+  "quest-10-the-broken-scales": {
+    "rationale": "Courte mission très pertinente pour Absalom et pour construire la relation durable avec les Dragons des Égouts.",
+    "relevance": "Très haute",
+    "synopsis": "À Absalom, Drandle Dreng demande aux Éclaireurs de vérifier la situation des Dragons des Égouts, alliés kobolds installés sous la ville. Une mission de contrôle se transforme en course pour retrouver et secourir des membres du clan tout en comprenant ce qui menace leur communauté."
+  },
+  "quest-11-a-parchment-tree": {
+    "rationale": "Bonne mission d'enquête sociale et documentaire, idéale pour introduire Katheer et la Qadira.",
+    "relevance": "Haute",
+    "synopsis": "À Katheer, en Qadira, Esmayl demande à la Société de vérifier une affaire de généalogie dont dépendent des intérêts familiaux et commerciaux. Les Éclaireurs doivent retrouver des documents dans et autour des bazars de la capitale, tout en composant avec des familles rivales prêtes à employer tromperie ou violence pour imposer leur version de l'héritage."
+  },
+  "quest-23-lacking-respect": {
+    "rationale": "Courte mission régionale avec contexte politique fort ; très utile pour rendre l'Irrisen actuel vivant.",
+    "relevance": "Haute",
+    "synopsis": "En Irrisen, des bandits nostalgiques de l'époque où la peur et la violence dominaient davantage la région refusent les changements récents et s'en prennent aux habitants près de la frontière occidentale. Les Éclaireurs doivent mettre fin à leurs exactions et comprendre comment ce ressentiment politique alimente leur violence."
   }
 }

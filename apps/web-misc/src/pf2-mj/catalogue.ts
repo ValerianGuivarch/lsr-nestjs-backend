@@ -177,6 +177,7 @@ export type ResourceBundleInventory = {
 
 export type LocalScanInventory = {
   pdfPaths?: string[]
+  pdfAliases?: Record<string, string>
   classifiedNewPdfs?: Array<{
     path: string
     entryId: string
@@ -675,7 +676,7 @@ export const documents: CatalogueDocument[] = raw.files.map((file) => {
     entityKind: 'document',
     filename: file.filename,
     path: file.path,
-    href: `/bibliotheque/${file.path.split('/').map(encodeURIComponent).join('/')}`,
+    href: `/apil7r/pf2-mj/bibliotheque/${file.path.split('/').map(encodeURIComponent).join('/')}`,
     pages: file.pages ?? null,
     language: languageOfFile(file),
     variant: variantOf(rawVariant, file),
@@ -699,6 +700,7 @@ export let resourceInventoryKnown = bundleRaw.inventoryKnown
 export let resourceBundles: ResourceBundle[] = bundleRaw.bundles ?? []
 
 let runtimePdfPaths: Set<string> | null = null
+let runtimePdfAliases = new Map<string, string>()
 let runtimeInformationDocuments: CatalogueDocument[] = []
 
 export function applyResourceBundleInventory(inventory: ResourceBundleInventory | null | undefined): void {
@@ -709,13 +711,14 @@ export function applyResourceBundleInventory(inventory: ResourceBundleInventory 
 
 export function applyLocalScanInventory(scan: LocalScanInventory | null | undefined): void {
   if (!scan) return
-  if (Array.isArray(scan.pdfPaths)) runtimePdfPaths = new Set(scan.pdfPaths.map((path) => path.replace(/\\/g, '/')))
+  if (Array.isArray(scan.pdfPaths)) runtimePdfPaths = new Set(scan.pdfPaths.map((path) => normalizeRuntimePath(path)))
+  runtimePdfAliases = new Map(Object.entries(scan.pdfAliases ?? {}).map(([from, to]) => [normalizeRuntimePath(from), normalizeRuntimePath(to)]))
   if (scan.resourceInventory) applyResourceBundleInventory(scan.resourceInventory)
 
   runtimeInformationDocuments = (scan.classifiedNewPdfs ?? [])
     .filter((item) => item.informationOnly && item.entryId)
     .map((item, index): CatalogueDocument => {
-      const path = item.path.replace(/\\/g, '/')
+      const path = normalizeRuntimePath(item.path)
       const filename = path.split('/').at(-1) ?? path
       const targetId = item.entryId
       return {
@@ -723,7 +726,7 @@ export function applyLocalScanInventory(scan: LocalScanInventory | null | undefi
         entityKind: 'document',
         filename,
         path,
-        href: `/bibliotheque/${path.split('/').map(encodeURIComponent).join('/')}`,
+        href: `/apil7r/pf2-mj/bibliotheque/${path.split('/').map(encodeURIComponent).join('/')}`,
         pages: null,
         language: 'INCONNUE',
         variant: 'other',
@@ -748,10 +751,25 @@ export function currentDocuments(): CatalogueDocument[] {
   return [...documents, ...runtimeInformationDocuments.filter((document) => !staticPaths.has(document.path))]
 }
 
+function normalizeRuntimePath(path: string): string {
+  return path.normalize('NFC').replace(/\\/g, '/').replace(/^\/+/, '')
+}
+
+export function resolvedDocumentPath(document: CatalogueDocument): string {
+  const path = normalizeRuntimePath(document.path)
+  return runtimePdfAliases.get(path) ?? path
+}
+
+export function documentHref(document: CatalogueDocument): string {
+  const path = resolvedDocumentPath(document)
+  return `/apil7r/pf2-mj/bibliotheque/${path.split('/').map(encodeURIComponent).join('/')}`
+}
+
 export function documentPresence(document: CatalogueDocument): 'present' | 'missing' | 'unknown' {
   if (document.runtime) return 'present'
   if (!runtimePdfPaths) return 'unknown'
-  return runtimePdfPaths.has(document.path.replace(/\\/g, '/')) ? 'present' : 'missing'
+  const path = resolvedDocumentPath(document)
+  return runtimePdfPaths.has(path) ? 'present' : 'missing'
 }
 
 export function playableTypeLabel(type: PlayableType): string { return playableLabels[type] }
