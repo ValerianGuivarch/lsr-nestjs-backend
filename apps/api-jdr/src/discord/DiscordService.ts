@@ -63,6 +63,8 @@ export class DiscordService implements OnModuleInit, OnModuleDestroy {
     elena: '689036096767524866',
 
     guilhem: '448500183186145291',
+
+    arthur: '557907871212503050',
   }
 
   constructor(
