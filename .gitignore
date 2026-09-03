@@ -76,3 +76,26 @@ support/foundry-rest/.env
 
 # Synology metadata
 **/@eaDir/
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+
+# macOS
+.DS_Store
+._*
+
+# Generated archives
+pf2-portraits-*.zip
+
+# macOS metadata
+.DS_Store
+._*
+
+# Local backup folders
+.pf2-*-backup-*/
+
+# Generated ZIP artifacts
+pf2-portraits-*.zip
+._pf2-portraits-*.zip
