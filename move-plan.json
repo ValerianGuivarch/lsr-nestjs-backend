@@ -1,0 +1,1891 @@
+{
+  "schemaVersion": 1,
+  "root": "~/services/pf2-data",
+  "moves": [
+    {
+      "fileId": "pdf-a72483dfc1da-d9de752a",
+      "from": "Campagnes/Campagne - Agents d'Absalom - Guide des joueurs.pdf",
+      "to": "Campagnes/Campagnes longues/Agents of Edgewatch/Guides joueurs/Campagne - Agents d'Absalom - Guide des joueurs.pdf"
+    },
+    {
+      "fileId": "pdf-3844e91f3a27-bde344e8",
+      "from": "Campagnes/Campagne - Agents d'Absalom - Volume 1.pdf",
+      "to": "Campagnes/Campagnes longues/Agents of Edgewatch/Documents/Campagne - Agents d'Absalom - Volume 1.pdf"
+    },
+    {
+      "fileId": "pdf-1f716c76a051-4f863a1f",
+      "from": "Campagnes/Campagne - Agents d'Absalom - Volume 2.pdf",
+      "to": "Campagnes/Campagnes longues/Agents of Edgewatch/Documents/Campagne - Agents d'Absalom - Volume 2.pdf"
+    },
+    {
+      "fileId": "pdf-9e2bf7a4d984-33316a3d",
+      "from": "Campagnes/Campagne - Blood Lords - Tome 26 (en).pdf",
+      "to": "Campagnes/Campagnes longues/Blood Lords/Episodes/02 - Graveclaw/Documents/Campagne - Blood Lords - Tome 26 (en).pdf"
+    },
+    {
+      "fileId": "pdf-1fef39829183-eccb6db4",
+      "from": "Campagnes/Campagne - Blood Lords - Tome 36 (en).pdf",
+      "to": "Campagnes/Campagnes longues/Blood Lords/Episodes/03 - Field of Maidens/Documents/Campagne - Blood Lords - Tome 36 (en).pdf"
+    },
+    {
+      "fileId": "pdf-28a2ae67abbc-64e4eb75",
+      "from": "Campagnes/Campagne - Blood Lords - Tome 46 (en).pdf",
+      "to": "Campagnes/Campagnes longues/Blood Lords/Episodes/04 - The Ghouls Hunger/Documents/Campagne - Blood Lords - Tome 46 (en).pdf"
+    },
+    {
+      "fileId": "pdf-5d91b02e3bc5-0b6533ad",
+      "from": "Campagnes/Campagne - Fléau de Pointesable - Guide des joueurs.pdf",
+      "to": "Campagnes/Campagnes longues/Seven Dooms for Sandpoint/Guides joueurs/Campagne - Fléau de Pointesable - Guide des joueurs.pdf"
+    },
+    {
+      "fileId": "pdf-22c3df5b2f76-84a94bc6",
+      "from": "Campagnes/Campagne - Fléau de Pointesable - Livre de campagne.pdf",
+      "to": "Campagnes/Campagnes longues/Seven Dooms for Sandpoint/Documents/Campagne - Fléau de Pointesable - Livre de campagne.pdf"
+    },
+    {
+      "fileId": "pdf-461b83bb06b4-f889d3cd",
+      "from": "Campagnes/Campagne - Hellbreakers (en).pdf",
+      "to": "Campagnes/Campagnes longues/Hellbreakers/Documents/Campagne - Hellbreakers (en).pdf"
+    },
+    {
+      "fileId": "pdf-5a8d8e142577-f5f2bad1",
+      "from": "Campagnes/Campagne - Kingmaker - Guide des compagnons.pdf",
+      "to": "Campagnes/Campagnes longues/Kingmaker/Guides et compagnons/Campagne - Kingmaker - Guide des compagnons.pdf"
+    },
+    {
+      "fileId": "pdf-57238bcd84ea-8ec1f874",
+      "from": "Campagnes/Campagne - Kingmaker - Guide des joueurs.pdf",
+      "to": "Campagnes/Campagnes longues/Kingmaker/Guides joueurs/Campagne - Kingmaker - Guide des joueurs.pdf"
+    },
+    {
+      "fileId": "pdf-be8e7c61554c-60959e9e",
+      "from": "Campagnes/Campagne - Kingmaker - Livre de campagne.pdf",
+      "to": "Campagnes/Campagnes longues/Kingmaker/Documents/Campagne - Kingmaker - Livre de campagne.pdf"
+    },
+    {
+      "fileId": "pdf-3734de5ff32a-58c3df4f",
+      "from": "Campagnes/Campagne - L'Âge des Cendres - Tome 1 - La Colline du chevalier infernal.pdf",
+      "to": "Campagnes/Campagnes longues/Age of Ashes/Episodes/01 - La Colline du chevalier infernal/Documents/Campagne - L'Âge des Cendres - Tome 1 - La Colline du chevalier infernal.pdf"
+    },
+    {
+      "fileId": "pdf-e627905c7d1c-f678e9d1",
+      "from": "Campagnes/Campagne - L'Âge des Cendres - Tome 2 - La Secte des braises.pdf",
+      "to": "Campagnes/Campagnes longues/Age of Ashes/Episodes/02 - La Secte des braises/Documents/Campagne - L'Âge des Cendres - Tome 2 - La Secte des braises.pdf"
+    },
+    {
+      "fileId": "pdf-c14069899b4e-c8cf29d2",
+      "from": "Campagnes/Campagne - L'Âge des Cendres - Tome 3 - Brûlons demain.pdf",
+      "to": "Campagnes/Campagnes longues/Age of Ashes/Episodes/03 - Brûlons demain/Documents/Campagne - L'Âge des Cendres - Tome 3 - Brûlons demain.pdf"
+    },
+    {
+      "fileId": "pdf-6e8f7f4d98f9-2a5273b8",
+      "from": "Campagnes/Campagne - L'Âge des Cendres - Tome 4 - Les Flammes de la cité hantée.pdf",
+      "to": "Campagnes/Campagnes longues/Age of Ashes/Episodes/04 - Les Flammes de la cité hantée/Documents/Campagne - L'Âge des Cendres - Tome 4 - Les Flammes de la cité hantée.pdf"
+    },
+    {
+      "fileId": "pdf-7ba411a58f86-6ada29b7",
+      "from": "Campagnes/Campagne - L'Âge des Cendres - Tome 5 - Contre la Triade écarlate.pdf",
+      "to": "Campagnes/Campagnes longues/Age of Ashes/Episodes/05 - Contre la Triade écarlate/Documents/Campagne - L'Âge des Cendres - Tome 5 - Contre la Triade écarlate.pdf"
+    },
+    {
+      "fileId": "pdf-e45054085099-00987ecd",
+      "from": "Campagnes/Campagne - L'Âge des Cendres - Tome 6 - Promesses brisées.pdf",
+      "to": "Campagnes/Campagnes longues/Age of Ashes/Episodes/06 - Promesses brisées/Documents/Campagne - L'Âge des Cendres - Tome 6 - Promesses brisées.pdf"
+    },
+    {
+      "fileId": "pdf-cc105cfbf9ec-e753ef25",
+      "from": "Campagnes/Campagne - La Couronne du roi kobold - Mini-campagne.pdf",
+      "to": "Campagnes/Aventures autonomes/Crown of the Kobold King/Documents/Campagne - La Couronne du roi kobold - Mini-campagne.pdf"
+    },
+    {
+      "fileId": "pdf-dbb9faaa5523-79fb435b",
+      "from": "Campagnes/Campagne - Le Caveau des Abominations - Guide des joueurs.pdf",
+      "to": "Campagnes/Campagnes longues/Abomination Vaults/Guides joueurs/Campagne - Le Caveau des Abominations - Guide des joueurs.pdf"
+    },
+    {
+      "fileId": "pdf-dd1f25ab0595-c73b74e6",
+      "from": "Campagnes/Campagne - Le Caveau des Abominations - Livre de campagne.pdf",
+      "to": "Campagnes/Campagnes longues/Abomination Vaults/Documents/Campagne - Le Caveau des Abominations - Livre de campagne.pdf"
+    },
+    {
+      "fileId": "pdf-e36cef4f4e82-c8002332",
+      "from": "Campagnes/Campagne - Quest for the Frozen Flame - Tome 33 - Burning Tundra (en).pdf",
+      "to": "Campagnes/Campagnes longues/Quest for the Frozen Flame/Episodes/03 - Burning Tundra/Documents/Campagne - Quest for the Frozen Flame - Tome 33 - Burning Tundra (en).pdf"
+    },
+    {
+      "fileId": "pdf-325a832b82e2-bbbe9aed",
+      "from": "Campagnes/Campagne - Revenge of the Runelords - Tome 1 (en).pdf",
+      "to": "Campagnes/Campagnes longues/Revenge of the Runelords/Episodes/01 - Lord of the Trinity Star/Documents/Campagne - Revenge of the Runelords - Tome 1 (en).pdf"
+    },
+    {
+      "fileId": "pdf-4901980737ec-11c59df8",
+      "from": "Campagnes/Campagne - Sentence d'Extinction - Guide des joueurs.pdf",
+      "to": "Campagnes/Campagnes longues/Extinction Curse/Guides joueurs/Campagne - Sentence d'Extinction - Guide des joueurs.pdf"
+    },
+    {
+      "fileId": "pdf-101450067d88-ec659731",
+      "from": "Campagnes/Campagne - Strength of Thousands - Tome 4 (en).pdf",
+      "to": "Campagnes/Campagnes longues/Strength of Thousands/Episodes/04 - Secrets of the Temple-City/Documents/Campagne - Strength of Thousands - Tome 4 (en).pdf"
+    },
+    {
+      "fileId": "pdf-e3b5aa749001-06f6040f",
+      "from": "Campagnes/Campagne - Strength of Thousands - Tome 5 (en).pdf",
+      "to": "Campagnes/Campagnes longues/Strength of Thousands/Episodes/05 - Doorway to the Red Star/Documents/Campagne - Strength of Thousands - Tome 5 (en).pdf"
+    },
+    {
+      "fileId": "pdf-085ac01c21df-18c682f0",
+      "from": "Campagnes/Campagne - Strength of Thousands - Tome 6 (en).pdf",
+      "to": "Campagnes/Campagnes longues/Strength of Thousands/Episodes/06 - Shadows of the Ancients/Documents/Campagne - Strength of Thousands - Tome 6 (en).pdf"
+    },
+    {
+      "fileId": "pdf-c7a3d939d14b-c7f86ae5",
+      "from": "Campagnes/Campagne - Triumph of the Tusk - Tome 33 (en).pdf",
+      "to": "Campagnes/Campagnes longues/Triumph of the Tusk/Episodes/03 - Destroyer’s Doom/Documents/Campagne - Triumph of the Tusk - Tome 33 (en).pdf"
+    },
+    {
+      "fileId": "pdf-f9a4ba51b7c3-4b3f8d52",
+      "from": "Campagnes/Campagne - Wardens of Wildwood - Tome 13 (en).pdf",
+      "to": "Campagnes/Campagnes longues/Wardens of Wildwood/Episodes/01 - Pactbreaker/Documents/Campagne - Wardens of Wildwood - Tome 13 (en).pdf"
+    },
+    {
+      "fileId": "pdf-0058c098f1c1-0501ab8c",
+      "from": "Campagnes/Campagne - Wardens of Wildwood - Tome 13 (fr trad).pdf",
+      "to": "Campagnes/Campagnes longues/Wardens of Wildwood/Episodes/01 - Pactbreaker/Documents/Campagne - Wardens of Wildwood - Tome 13 (fr trad).pdf"
+    },
+    {
+      "fileId": "pdf-5d8d62b4b05b-7f29a8af",
+      "from": "Campagnes/Campagne - Wardens of Wildwood - Tome 23 (en).pdf",
+      "to": "Campagnes/Campagnes longues/Wardens of Wildwood/Episodes/02 - Severed at the Root/Documents/Campagne - Wardens of Wildwood - Tome 23 (en).pdf"
+    },
+    {
+      "fileId": "pdf-c1c538d9a8ca-e7cf592c",
+      "from": "Campagnes/Pathfinder Society/PFS Intro - The Second Confirmation (en).pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 01 - Year of the Open Road/Scénarios/Intro - The Second Confirmation/Documents/PFS Intro - The Second Confirmation (en).pdf"
+    },
+    {
+      "fileId": "pdf-67323742bf52-5e13acfd",
+      "from": "Campagnes/Pathfinder Society/Quêtes et Bounties/PFS Bounty - 03 - Shadows and Scarecrows (en).pdf",
+      "to": "Campagnes/Pathfinder Society/Bounties/Bounty 03 — Shadows and Scarecrows/Documents/PFS Bounty - 03 - Shadows and Scarecrows (en).pdf"
+    },
+    {
+      "fileId": "pdf-e5d5b2a3cabb-001d7813",
+      "from": "Campagnes/Pathfinder Society/Quêtes et Bounties/PFS Bounty - 06 - The Road from Otari (en) - trad.pdf",
+      "to": "Campagnes/Pathfinder Society/Bounties/Bounty 06 — The Road from Otari/Documents/PFS Bounty - 06 - The Road from Otari (en) - trad.pdf"
+    },
+    {
+      "fileId": "pdf-24ce48c99e7a-ec6b7264",
+      "from": "Campagnes/Pathfinder Society/Quêtes et Bounties/PFS Bounty - 06 - The Road from Otari (en).pdf",
+      "to": "Campagnes/Pathfinder Society/Bounties/Bounty 06 — The Road from Otari/Documents/PFS Bounty - 06 - The Road from Otari (en).pdf"
+    },
+    {
+      "fileId": "pdf-12506ccb724d-5439c0ec",
+      "from": "Campagnes/Pathfinder Society/Quêtes et Bounties/PFS Bounty - 08 - The Tireless Path (en).pdf",
+      "to": "Campagnes/Pathfinder Society/Bounties/Bounty 08 — The Tireless Path/Documents/PFS Bounty - 08 - The Tireless Path (en).pdf"
+    },
+    {
+      "fileId": "pdf-f8683e605700-b63a01c4",
+      "from": "Campagnes/Pathfinder Society/Quêtes et Bounties/PFS Bounty - 09 - Fishing in Anthusis (en).pdf",
+      "to": "Campagnes/Pathfinder Society/Bounties/Bounty #9 - Fishing in Anthusis/Documents/PFS Bounty - 09 - Fishing in Anthusis (en).pdf"
+    },
+    {
+      "fileId": "pdf-6d802876d565-3ee08454",
+      "from": "Campagnes/Pathfinder Society/Quêtes et Bounties/PFS Bounty - 11 - Forged Facade (en).pdf",
+      "to": "Campagnes/Pathfinder Society/Bounties/Bounty #11 - Forged Facade/Documents/PFS Bounty - 11 - Forged Facade (en).pdf"
+    },
+    {
+      "fileId": "pdf-081f9172a9d2-64993784",
+      "from": "Campagnes/Pathfinder Society/Quêtes et Bounties/PFS Bounty - 12 - Somewhere Below (en).pdf",
+      "to": "Campagnes/Pathfinder Society/Bounties/Bounty 12 — Somewhere Below/Documents/PFS Bounty - 12 - Somewhere Below (en).pdf"
+    },
+    {
+      "fileId": "pdf-d5092c862bc9-50034170",
+      "from": "Campagnes/Pathfinder Society/Quêtes et Bounties/PFS Bounty - 13 - The Blackwood Abundance (en).pdf",
+      "to": "Campagnes/Pathfinder Society/Bounties/Bounty 13 — The Blackwood Abundance/Documents/PFS Bounty - 13 - The Blackwood Abundance (en).pdf"
+    },
+    {
+      "fileId": "pdf-24acd091f399-1c4516a6",
+      "from": "Campagnes/Pathfinder Society/Quêtes et Bounties/PFS Bounty - 14 - The Blackwood Truce (en).pdf",
+      "to": "Campagnes/Pathfinder Society/Bounties/Bounty #14 - The Blackwood Truce/Documents/PFS Bounty - 14 - The Blackwood Truce (en).pdf"
+    },
+    {
+      "fileId": "pdf-5c974d7a76a4-badc16e2",
+      "from": "Campagnes/Pathfinder Society/Quêtes et Bounties/PFS Bounty - 14 - The Blackwood Truce (fr trad).pdf",
+      "to": "Campagnes/Pathfinder Society/Bounties/Bounty #14 - The Blackwood Truce/Documents/PFS Bounty - 14 - The Blackwood Truce (fr trad).pdf"
+    },
+    {
+      "fileId": "pdf-6523902bb5c6-0612aa23",
+      "from": "Campagnes/Pathfinder Society/Quêtes et Bounties/PFS Bounty - 15 - Treasure off the Coast (en).pdf",
+      "to": "Campagnes/Pathfinder Society/Bounties/Bounty 15 — Treasure off the Coast/Documents/PFS Bounty - 15 - Treasure off the Coast (en).pdf"
+    },
+    {
+      "fileId": "pdf-348448b23d75-da6916e7",
+      "from": "Campagnes/Pathfinder Society/Quêtes et Bounties/PFS Bounty - 17 - Sodden Stories (en).pdf",
+      "to": "Campagnes/Pathfinder Society/Bounties/Bounty #17 - Sodden Stories/Documents/PFS Bounty - 17 - Sodden Stories (en).pdf"
+    },
+    {
+      "fileId": "pdf-8d0a7da846ef-b95f4372",
+      "from": "Campagnes/Pathfinder Society/Quêtes et Bounties/PFS Bounty - 17 - Sodden Stories (fr trad).pdf",
+      "to": "Campagnes/Pathfinder Society/Bounties/Bounty #17 - Sodden Stories/Documents/PFS Bounty - 17 - Sodden Stories (fr trad).pdf"
+    },
+    {
+      "fileId": "pdf-6f6cc283a663-ad4afbf2",
+      "from": "Campagnes/Pathfinder Society/Quêtes et Bounties/PFS Bounty - 18 - From Family Lost (en).pdf",
+      "to": "Campagnes/Pathfinder Society/Bounties/Bounty 18 — From Family Lost/Documents/PFS Bounty - 18 - From Family Lost (en).pdf"
+    },
+    {
+      "fileId": "pdf-11c1e41dcdd8-8d56656f",
+      "from": "Campagnes/Pathfinder Society/Quêtes et Bounties/PFS Bounty - 19 - Grim Tidings (en).pdf",
+      "to": "Campagnes/Pathfinder Society/Bounties/Bounty #19 - Grim Tidings/Documents/PFS Bounty - 19 - Grim Tidings (en).pdf"
+    },
+    {
+      "fileId": "pdf-50438e2b08b4-b0ac3530",
+      "from": "Campagnes/Pathfinder Society/Quêtes et Bounties/PFS Quest - 02 - Unforgiving Fire (en).pdf",
+      "to": "Campagnes/Pathfinder Society/Quests/Quest 02 — Unforgiving Fire/Documents/PFS Quest - 02 - Unforgiving Fire (en).pdf"
+    },
+    {
+      "fileId": "pdf-55d2e96205ae-9925105a",
+      "from": "Campagnes/Pathfinder Society/Quêtes et Bounties/PFS Quest - 03 - Grehunde's Gorget (en).pdf",
+      "to": "Campagnes/Pathfinder Society/Quests/Quest 03 — Grehunde's Gorget/Documents/PFS Quest - 03 - Grehunde's Gorget (en).pdf"
+    },
+    {
+      "fileId": "pdf-fd342b9738d6-3f233348",
+      "from": "Campagnes/Pathfinder Society/Quêtes et Bounties/PFS Quest - 08 - Shadows of the Black Sovereign (en).pdf",
+      "to": "Campagnes/Pathfinder Society/Quests/Quest 08 — Shadows of the Black Sovereign/Documents/PFS Quest - 08 - Shadows of the Black Sovereign (en).pdf"
+    },
+    {
+      "fileId": "pdf-2f40e5e51b0a-388bb548",
+      "from": "Campagnes/Pathfinder Society/Quêtes et Bounties/PFS Quest - 09 - Wayfinder Origins (en).pdf",
+      "to": "Campagnes/Pathfinder Society/Quests/Quest 09 — Wayfinder Origins/Documents/PFS Quest - 09 - Wayfinder Origins (en).pdf"
+    },
+    {
+      "fileId": "pdf-b6a308e52eea-935c9907",
+      "from": "Campagnes/Pathfinder Society/Quêtes et Bounties/PFS Quest - 15 - In the Footsteps of Horror (en).pdf",
+      "to": "Campagnes/Pathfinder Society/Quests/Quest 15 — In the Footsteps of Horror/Documents/PFS Quest - 15 - In the Footsteps of Horror (en).pdf"
+    },
+    {
+      "fileId": "pdf-7d6c95705d07-b1c7a730",
+      "from": "Campagnes/Pathfinder Society/Quêtes et Bounties/PFS Quest - 15 - In the Footsteps of Horror (fr trad).pdf",
+      "to": "Campagnes/Pathfinder Society/Quests/Quest 15 — In the Footsteps of Horror/Documents/PFS Quest - 15 - In the Footsteps of Horror (fr trad).pdf"
+    },
+    {
+      "fileId": "pdf-4b986a436f73-3e87dd43",
+      "from": "Campagnes/Pathfinder Society/Quêtes et Bounties/PFS Quest - 17 - Escorting a Mirage (en).pdf",
+      "to": "Campagnes/Pathfinder Society/Quests/Quest 17 — Escorting a Mirage/Documents/PFS Quest - 17 - Escorting a Mirage (en).pdf"
+    },
+    {
+      "fileId": "pdf-46c017e42ac6-254e4117",
+      "from": "Campagnes/Pathfinder Society/Quêtes et Bounties/PFS Quest - 17 - Escorting a Mirage (fr trad).pdf",
+      "to": "Campagnes/Pathfinder Society/Quests/Quest 17 — Escorting a Mirage/Documents/PFS Quest - 17 - Escorting a Mirage (fr trad).pdf"
+    },
+    {
+      "fileId": "pdf-ad8b52376471-fe543774",
+      "from": "Campagnes/Pathfinder Society/Quêtes et Bounties/PFS Quest - 18 - Student Exchange (en).pdf",
+      "to": "Campagnes/Pathfinder Society/Quests/Quest 18 — Student Exchange/Documents/PFS Quest - 18 - Student Exchange (en).pdf"
+    },
+    {
+      "fileId": "pdf-240cf6e4d50c-a322c82e",
+      "from": "Campagnes/Pathfinder Society/Quêtes et Bounties/PFS Quest - 18 - Student Exchange (fr trad).pdf",
+      "to": "Campagnes/Pathfinder Society/Quests/Quest 18 — Student Exchange/Documents/PFS Quest - 18 - Student Exchange (fr trad).pdf"
+    },
+    {
+      "fileId": "pdf-e55aac51bff4-223f3a28",
+      "from": "Campagnes/Pathfinder Society/Quêtes et Bounties/PFS Quest - 19 - The Elsewhere Feast (en).pdf",
+      "to": "Campagnes/Pathfinder Society/Quests/Quest 19 — The Elsewhere Feast/Documents/PFS Quest - 19 - The Elsewhere Feast (en).pdf"
+    },
+    {
+      "fileId": "pdf-d931368457f2-c26d3719",
+      "from": "Campagnes/Pathfinder Society/Quêtes et Bounties/PFS Quest - 20 - The Dacilane Academy's Show Must Go On (en) - trad.pdf",
+      "to": "Campagnes/Pathfinder Society/Quests/Quest 20 — The Dacilane Academy's Show Must Go On/Documents/PFS Quest - 20 - The Dacilane Academy's Show Must Go On (en) - trad.pdf"
+    },
+    {
+      "fileId": "pdf-494f8a4c89ae-9385d197",
+      "from": "Campagnes/Pathfinder Society/Quêtes et Bounties/PFS Quest - 20 - The Dacilane Academy's Show Must Go On (en).pdf",
+      "to": "Campagnes/Pathfinder Society/Quests/Quest 20 — The Dacilane Academy's Show Must Go On/Documents/PFS Quest - 20 - The Dacilane Academy's Show Must Go On (en).pdf"
+    },
+    {
+      "fileId": "pdf-631ef30ba67c-290e0573",
+      "from": "Campagnes/Pathfinder Society/Saison 1 - Year of the Open Road/PFS - S01-00 - Origin of the Open Road (en).pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 01 - Year of the Open Road/Scénarios/01-00 - Origin of the Open Road/Documents/PFS - S01-00 - Origin of the Open Road (en).pdf"
+    },
+    {
+      "fileId": "pdf-6f21e97d3d13-d66224df",
+      "from": "Campagnes/Pathfinder Society/Saison 1 - Year of the Open Road/PFS - S01-00 - Origin of the Open Road (fr trad).pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 01 - Year of the Open Road/Scénarios/01-00 - Origin of the Open Road/Documents/PFS - S01-00 - Origin of the Open Road (fr trad).pdf"
+    },
+    {
+      "fileId": "pdf-04b1c2c1434a-e5ca6be4",
+      "from": "Campagnes/Pathfinder Society/Saison 1 - Year of the Open Road/PFS - S01-01 - The Absalom Initiation (en).pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 01 - Year of the Open Road/Scénarios/01-01 - The Absalom Initiation/Documents/PFS - S01-01 - The Absalom Initiation (en).pdf"
+    },
+    {
+      "fileId": "pdf-376800b71050-b6cb2b6f",
+      "from": "Campagnes/Pathfinder Society/Saison 1 - Year of the Open Road/PFS - S01-01 - The Absalom Initiation (fr trad).pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 01 - Year of the Open Road/Scénarios/01-01 - The Absalom Initiation/Documents/PFS - S01-01 - The Absalom Initiation (fr trad).pdf"
+    },
+    {
+      "fileId": "pdf-a51c371e5566-5990acbb",
+      "from": "Campagnes/Pathfinder Society/Saison 1 - Year of the Open Road/PFS - S01-04 - Bandits of Immenwood (en).pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 01 - Year of the Open Road/Scénarios/01-04 - Bandits of Immenwood/Documents/PFS - S01-04 - Bandits of Immenwood (en).pdf"
+    },
+    {
+      "fileId": "pdf-77fc9a8f6ef1-9c4f339c",
+      "from": "Campagnes/Pathfinder Society/Saison 1 - Year of the Open Road/PFS - S01-04 - Bandits of Immenwood (fr trad).pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 01 - Year of the Open Road/Scénarios/01-04 - Bandits of Immenwood/Documents/PFS - S01-04 - Bandits of Immenwood (fr trad).pdf"
+    },
+    {
+      "fileId": "pdf-4a9cd85fbd88-107e75e5",
+      "from": "Campagnes/Pathfinder Society/Saison 1 - Year of the Open Road/PFS - S01-06 - Lost on the Spirit Road (en).pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 01 - Year of the Open Road/Scénarios/01-06 - Lost on the Spirit Road/Documents/PFS - S01-06 - Lost on the Spirit Road (en).pdf"
+    },
+    {
+      "fileId": "pdf-ff76e79ae6cf-67975cc1",
+      "from": "Campagnes/Pathfinder Society/Saison 1 - Year of the Open Road/PFS - S01-08 - Revolution on the Riverside (en).pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 01 - Year of the Open Road/Scénarios/01-08 - Revolution on the Riverside/Documents/PFS - S01-08 - Revolution on the Riverside (en).pdf"
+    },
+    {
+      "fileId": "pdf-805cd32a0c22-cd1e5560",
+      "from": "Campagnes/Pathfinder Society/Saison 1 - Year of the Open Road/PFS - S01-08 - Revolution on the Riverside (fr trad).pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 01 - Year of the Open Road/Scénarios/01-08 - Revolution on the Riverside/Documents/PFS - S01-08 - Revolution on the Riverside (fr trad).pdf"
+    },
+    {
+      "fileId": "pdf-98492555140c-2ded93bb",
+      "from": "Campagnes/Pathfinder Society/Saison 1 - Year of the Open Road/PFS - S01-09 - Star-Crossed Voyages (en).pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 01 - Year of the Open Road/Scénarios/01-09 - Star-Crossed Voyages/Documents/PFS - S01-09 - Star-Crossed Voyages (en).pdf"
+    },
+    {
+      "fileId": "pdf-f63612c99cb2-4a69ece2",
+      "from": "Campagnes/Pathfinder Society/Saison 1 - Year of the Open Road/PFS - S01-09 - Star-Crossed Voyages (fr trad).pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 01 - Year of the Open Road/Scénarios/01-09 - Star-Crossed Voyages/Documents/PFS - S01-09 - Star-Crossed Voyages (fr trad).pdf"
+    },
+    {
+      "fileId": "pdf-d5040ba2a7f4-f74fcb38",
+      "from": "Campagnes/Pathfinder Society/Saison 1 - Year of the Open Road/PFS - S01-10 - Tarnbreaker's Trail (en).pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 01 - Year of the Open Road/Scénarios/01-10 - Tarnbreaker’s Trail/Documents/PFS - S01-10 - Tarnbreaker's Trail (en).pdf"
+    },
+    {
+      "fileId": "pdf-2e13091c9e54-af5fae8d",
+      "from": "Campagnes/Pathfinder Society/Saison 1 - Year of the Open Road/PFS - S01-11 - Flames of Rebellion (en).pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 01 - Year of the Open Road/Scénarios/01-11 - Flames of Rebellion/Documents/PFS - S01-11 - Flames of Rebellion (en).pdf"
+    },
+    {
+      "fileId": "pdf-82060464d1de-9702af4d",
+      "from": "Campagnes/Pathfinder Society/Saison 1 - Year of the Open Road/PFS - S01-11 - Flames of Rebellion (fr trad).pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 01 - Year of the Open Road/Scénarios/01-11 - Flames of Rebellion/Documents/PFS - S01-11 - Flames of Rebellion (fr trad).pdf"
+    },
+    {
+      "fileId": "pdf-799e503851cf-d02398c1",
+      "from": "Campagnes/Pathfinder Society/Saison 1 - Year of the Open Road/PFS - S01-12 - The Burden of Envy (en).pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 01 - Year of the Open Road/Scénarios/01-12 - The Burden of Envy/Documents/PFS - S01-12 - The Burden of Envy (en).pdf"
+    },
+    {
+      "fileId": "pdf-2a2e28087769-3fde44cf",
+      "from": "Campagnes/Pathfinder Society/Saison 1 - Year of the Open Road/PFS - S01-12 - The Burden of Envy (fr trad).pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 01 - Year of the Open Road/Scénarios/01-12 - The Burden of Envy/Documents/PFS - S01-12 - The Burden of Envy (fr trad).pdf"
+    },
+    {
+      "fileId": "pdf-d2b516127484-86a2ccb3",
+      "from": "Campagnes/Pathfinder Society/Saison 1 - Year of the Open Road/PFS - S01-13 - Devil at the Crossroads (en).pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 01 - Year of the Open Road/Scénarios/01-13 - Devil at the Crossroads/Documents/PFS - S01-13 - Devil at the Crossroads (en).pdf"
+    },
+    {
+      "fileId": "pdf-8f67f142531e-c489d67b",
+      "from": "Campagnes/Pathfinder Society/Saison 1 - Year of the Open Road/PFS - S01-14 - Lions of Katapesh (en).pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 01 - Year of the Open Road/Scénarios/01-14 - Lions of Katapesh/Documents/PFS - S01-14 - Lions of Katapesh (en).pdf"
+    },
+    {
+      "fileId": "pdf-94db3c64fa32-be84dd4b",
+      "from": "Campagnes/Pathfinder Society/Saison 1 - Year of the Open Road/PFS - S01-14 - Lions of Katapesh (fr trad).pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 01 - Year of the Open Road/Scénarios/01-14 - Lions of Katapesh/Documents/PFS - S01-14 - Lions of Katapesh (fr trad).pdf"
+    },
+    {
+      "fileId": "pdf-0222af840c0b-dbf9f1f3",
+      "from": "Campagnes/Pathfinder Society/Saison 1 - Year of the Open Road/PFS - S01-15 - The Blooming Catastrophe (en).pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 01 - Year of the Open Road/Scénarios/01-15 - The Blooming Catastrophe/Documents/PFS - S01-15 - The Blooming Catastrophe (en).pdf"
+    },
+    {
+      "fileId": "pdf-df0c9b87077f-b1192b6e",
+      "from": "Campagnes/Pathfinder Society/Saison 1 - Year of the Open Road/PFS - S01-15 - The Blooming Catastrophe (fr trad).pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 01 - Year of the Open Road/Scénarios/01-15 - The Blooming Catastrophe/Documents/PFS - S01-15 - The Blooming Catastrophe (fr trad).pdf"
+    },
+    {
+      "fileId": "pdf-cbb815c8c5b1-4d2091e8",
+      "from": "Campagnes/Pathfinder Society/Saison 1 - Year of the Open Road/PFS - S01-18 - Lodge of the Living God (en).pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 01 - Year of the Open Road/Scénarios/01-18 - Lodge of the Living God/Documents/PFS - S01-18 - Lodge of the Living God (en).pdf"
+    },
+    {
+      "fileId": "pdf-f058a0785ee1-bfe0490f",
+      "from": "Campagnes/Pathfinder Society/Saison 1 - Year of the Open Road/PFS - S01-18 - Lodge of the Living God (fr trad).pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 01 - Year of the Open Road/Scénarios/01-18 - Lodge of the Living God/Documents/PFS - S01-18 - Lodge of the Living God (fr trad).pdf"
+    },
+    {
+      "fileId": "pdf-0d6716a921ae-33fd8988",
+      "from": "Campagnes/Pathfinder Society/Saison 1 - Year of the Open Road/PFS - S01-19 - Iolite Squad Alpha (en).pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 01 - Year of the Open Road/Scénarios/01-19 - Iolite Squad Alpha/Documents/PFS - S01-19 - Iolite Squad Alpha (en).pdf"
+    },
+    {
+      "fileId": "pdf-4848ba320d55-aaae938f",
+      "from": "Campagnes/Pathfinder Society/Saison 1 - Year of the Open Road/PFS - S01-20 - The Lost Legend (en).pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 01 - Year of the Open Road/Scénarios/01-20 - The Lost Legend/Documents/PFS - S01-20 - The Lost Legend (en).pdf"
+    },
+    {
+      "fileId": "pdf-ce6bbb4a2eea-d70d6781",
+      "from": "Campagnes/Pathfinder Society/Saison 1 - Year of the Open Road/PFS - S01-20 - The Lost Legend (fr trad).pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 01 - Year of the Open Road/Scénarios/01-20 - The Lost Legend/Documents/PFS - S01-20 - The Lost Legend (fr trad).pdf"
+    },
+    {
+      "fileId": "pdf-7b5040d5b6a9-13d2c273",
+      "from": "Campagnes/Pathfinder Society/Saison 1 - Year of the Open Road/PFS - S01-21 - Mistress of the Maze (en).pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 01 - Year of the Open Road/Scénarios/01-21 - Mistress of the Maze/Documents/PFS - S01-21 - Mistress of the Maze (en).pdf"
+    },
+    {
+      "fileId": "pdf-54899e5c4034-c1b51dd2",
+      "from": "Campagnes/Pathfinder Society/Saison 1 - Year of the Open Road/PFS - S01-21 - Mistress of the Maze (fr trad).pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 01 - Year of the Open Road/Scénarios/01-21 - Mistress of the Maze/Documents/PFS - S01-21 - Mistress of the Maze (fr trad).pdf"
+    },
+    {
+      "fileId": "pdf-b0b293b0e687-bf9a8c61",
+      "from": "Campagnes/Pathfinder Society/Saison 1 - Year of the Open Road/PFS - S01-25 - Grim Symphony (en).pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 01 - Year of the Open Road/Scénarios/01-25 - Grim Symphony/Documents/PFS - S01-25 - Grim Symphony (en).pdf"
+    },
+    {
+      "fileId": "pdf-b1ee30e93377-5d26929c",
+      "from": "Campagnes/Pathfinder Society/Saison 2 - Year of Corruption's Reach/PFS - S02-00 - The King in Thorns (en).pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 02 - Year of Corruption's Reach/Scénarios/02-00 - The King in Thorns/Documents/PFS - S02-00 - The King in Thorns (en).pdf"
+    },
+    {
+      "fileId": "pdf-41cd19afa4aa-e2a35808",
+      "from": "Campagnes/Pathfinder Society/Saison 2 - Year of Corruption's Reach/PFS - S02-01 - Citadel of Corruption (en).pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 02 - Year of Corruption's Reach/Scénarios/02-01 - Citadel of Corruption/Documents/PFS - S02-01 - Citadel of Corruption (en).pdf"
+    },
+    {
+      "fileId": "pdf-d98764c343e1-db522b9d",
+      "from": "Campagnes/Pathfinder Society/Saison 2 - Year of Corruption's Reach/PFS - S02-02 - Mountain of Sea and Sky (en).pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 02 - Year of Corruption's Reach/Scénarios/02-02 - Mountain of Sea and Sky/Documents/PFS - S02-02 - Mountain of Sea and Sky (en).pdf"
+    },
+    {
+      "fileId": "pdf-16ebab4ba8d6-977232d2",
+      "from": "Campagnes/Pathfinder Society/Saison 2 - Year of Corruption's Reach/PFS - S02-03 - Catastrophe's Spark (en).pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 02 - Year of Corruption's Reach/Scénarios/02-03 - Catastrophe’s Spark/Documents/PFS - S02-03 - Catastrophe's Spark (en).pdf"
+    },
+    {
+      "fileId": "pdf-6c7305fd6a4b-c6ca8057",
+      "from": "Campagnes/Pathfinder Society/Saison 2 - Year of Corruption's Reach/PFS - S02-03 - Catastrophe's Spark (fr trad).pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 02 - Year of Corruption's Reach/Scénarios/02-03 - Catastrophe’s Spark/Documents/PFS - S02-03 - Catastrophe's Spark (fr trad).pdf"
+    },
+    {
+      "fileId": "pdf-612dc446b3ed-b19cd622",
+      "from": "Campagnes/Pathfinder Society/Saison 2 - Year of Corruption's Reach/PFS - S02-04 - Path of Kings (en).pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 02 - Year of Corruption's Reach/Scénarios/02-04 - Path of Kings/Documents/PFS - S02-04 - Path of Kings (en).pdf"
+    },
+    {
+      "fileId": "pdf-65cb535c1df3-64e26334",
+      "from": "Campagnes/Pathfinder Society/Saison 2 - Year of Corruption's Reach/PFS - S02-05 - Balancing the Scales (en).pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 02 - Year of Corruption's Reach/Scénarios/02-05 - Balancing the Scales/Documents/PFS - S02-05 - Balancing the Scales (en).pdf"
+    },
+    {
+      "fileId": "pdf-d8487b0e9706-b47aa28d",
+      "from": "Campagnes/Pathfinder Society/Saison 2 - Year of Corruption's Reach/PFS - S02-05 - Balancing the Scales (fr trad).pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 02 - Year of Corruption's Reach/Scénarios/02-05 - Balancing the Scales/Documents/PFS - S02-05 - Balancing the Scales (fr trad).pdf"
+    },
+    {
+      "fileId": "pdf-1dcd3cb42d88-1f0b8039",
+      "from": "Campagnes/Pathfinder Society/Saison 2 - Year of Corruption's Reach/PFS - S02-07 - The Blakros Deception (en).pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 02 - Year of Corruption's Reach/Scénarios/02-07 - The Blakros Deception/Documents/PFS - S02-07 - The Blakros Deception (en).pdf"
+    },
+    {
+      "fileId": "pdf-37f15122c8c4-4bfdfced",
+      "from": "Campagnes/Pathfinder Society/Saison 2 - Year of Corruption's Reach/PFS - S02-08 - A Frosty Mug (en).pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 02 - Year of Corruption's Reach/Scénarios/02-08 - A Frosty Mug/Documents/PFS - S02-08 - A Frosty Mug (en).pdf"
+    },
+    {
+      "fileId": "pdf-002589fc14b6-457d3c5f",
+      "from": "Campagnes/Pathfinder Society/Saison 2 - Year of Corruption's Reach/PFS - S02-09 - The Seven Secrets of Dacilane Academy (en).pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 02 - Year of Corruption's Reach/Scénarios/02-09 - The Seven Secrets of Dacilane Academy/Documents/PFS - S02-09 - The Seven Secrets of Dacilane Academy (en).pdf"
+    },
+    {
+      "fileId": "pdf-2b80cc279b25-c483bce7",
+      "from": "Campagnes/Pathfinder Society/Saison 2 - Year of Corruption's Reach/PFS - S02-09 - The Seven Secrets of Dacilane Academy (fr trad).pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 02 - Year of Corruption's Reach/Scénarios/02-09 - The Seven Secrets of Dacilane Academy/Documents/PFS - S02-09 - The Seven Secrets of Dacilane Academy (fr trad).pdf"
+    },
+    {
+      "fileId": "pdf-59bf4814de9c-d106cdc8",
+      "from": "Campagnes/Pathfinder Society/Saison 2 - Year of Corruption's Reach/PFS - S02-10 - In Burning Dawn (en).pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 02 - Year of Corruption's Reach/Scénarios/02-10 - In Burning Dawn/Documents/PFS - S02-10 - In Burning Dawn (en).pdf"
+    },
+    {
+      "fileId": "pdf-cd6a23f244d9-82d7ce8b",
+      "from": "Campagnes/Pathfinder Society/Saison 2 - Year of Corruption's Reach/PFS - S02-11 - The Pathfinder Trials (en) - trad.pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 02 - Year of Corruption's Reach/Scénarios/02-11 - The Pathfinder Trials/Documents/PFS - S02-11 - The Pathfinder Trials (en) - trad.pdf"
+    },
+    {
+      "fileId": "pdf-9216866b0f03-ecbf53fe",
+      "from": "Campagnes/Pathfinder Society/Saison 2 - Year of Corruption's Reach/PFS - S02-11 - The Pathfinder Trials (en).pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 02 - Year of Corruption's Reach/Scénarios/02-11 - The Pathfinder Trials/Documents/PFS - S02-11 - The Pathfinder Trials (en).pdf"
+    },
+    {
+      "fileId": "pdf-1d829e7c42e9-8e35ca57",
+      "from": "Campagnes/Pathfinder Society/Saison 2 - Year of Corruption's Reach/PFS - S02-12 - Snakes in the Grass (en).pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 02 - Year of Corruption's Reach/Scénarios/02-12 - Snakes in the Grass/Documents/PFS - S02-12 - Snakes in the Grass (en).pdf"
+    },
+    {
+      "fileId": "pdf-911061d22f52-f63ff366",
+      "from": "Campagnes/Pathfinder Society/Saison 2 - Year of Corruption's Reach/PFS - S02-13 - A Gilded Test (en).pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 02 - Year of Corruption's Reach/Scénarios/02-13 - A Gilded Test/Documents/PFS - S02-13 - A Gilded Test (en).pdf"
+    },
+    {
+      "fileId": "pdf-c103073b3382-bcbff3b1",
+      "from": "Campagnes/Pathfinder Society/Saison 2 - Year of Corruption's Reach/PFS - S02-13 - A Gilded Test (fr trad).pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 02 - Year of Corruption's Reach/Scénarios/02-13 - A Gilded Test/Documents/PFS - S02-13 - A Gilded Test (fr trad).pdf"
+    },
+    {
+      "fileId": "pdf-a838b98a5f82-842115ae",
+      "from": "Campagnes/Pathfinder Society/Saison 2 - Year of Corruption's Reach/PFS - S02-14 - Lost in Flames (en).pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 02 - Year of Corruption's Reach/Scénarios/02-14 - Lost in Flames/Documents/PFS - S02-14 - Lost in Flames (en).pdf"
+    },
+    {
+      "fileId": "pdf-32b56b96813d-f4737e2b",
+      "from": "Campagnes/Pathfinder Society/Saison 2 - Year of Corruption's Reach/PFS - S02-16 - Freedom for Wishes (en).pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 02 - Year of Corruption's Reach/Scénarios/02-16 - Freedom for Wishes/Documents/PFS - S02-16 - Freedom for Wishes (en).pdf"
+    },
+    {
+      "fileId": "pdf-8d5adae77a5d-7bf6caf0",
+      "from": "Campagnes/Pathfinder Society/Saison 2 - Year of Corruption's Reach/PFS - S02-17 - The Lost Maid of Anactoria (en).pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 02 - Year of Corruption's Reach/Scénarios/02-17 - Lost Maid of Anactoria/Documents/PFS - S02-17 - The Lost Maid of Anactoria (en).pdf"
+    },
+    {
+      "fileId": "pdf-e5b78aa56be4-56134420",
+      "from": "Campagnes/Pathfinder Society/Saison 2 - Year of Corruption's Reach/PFS - S02-18 - The Fanciful March of Urwal (en).pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 02 - Year of Corruption's Reach/Scénarios/02-18 - The Fanciful March of Urwal/Documents/PFS - S02-18 - The Fanciful March of Urwal (en).pdf"
+    },
+    {
+      "fileId": "pdf-aaddd52695b4-ec7422a1",
+      "from": "Campagnes/Pathfinder Society/Saison 2 - Year of Corruption's Reach/PFS - S02-18 - The Fanciful March of Urwal (fr trad).pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 02 - Year of Corruption's Reach/Scénarios/02-18 - The Fanciful March of Urwal/Documents/PFS - S02-18 - The Fanciful March of Urwal (fr trad).pdf"
+    },
+    {
+      "fileId": "pdf-e98133a11f54-78c02030",
+      "from": "Campagnes/Pathfinder Society/Saison 2 - Year of Corruption's Reach/PFS - S02-19 - Enter the Pallid Peak (en).pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 02 - Year of Corruption's Reach/Scénarios/02-19 - Enter the Pallid Peak/Documents/PFS - S02-19 - Enter the Pallid Peak (en).pdf"
+    },
+    {
+      "fileId": "pdf-a6ffd6860268-16a62787",
+      "from": "Campagnes/Pathfinder Society/Saison 2 - Year of Corruption's Reach/PFS - S02-20 - Breaking the Storm - Bastion in Embers (en).pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 02 - Year of Corruption's Reach/Scénarios/02-20 - Breaking the Storm - Bastion in Embers/Documents/PFS - S02-20 - Breaking the Storm - Bastion in Embers (en).pdf"
+    },
+    {
+      "fileId": "pdf-1583844dabc5-71dca23e",
+      "from": "Campagnes/Pathfinder Society/Saison 2 - Year of Corruption's Reach/PFS - S02-21 - In Pursuit of Water (en).pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 02 - Year of Corruption's Reach/Scénarios/02-21 - In Pursuit of Water/Documents/PFS - S02-21 - In Pursuit of Water (en).pdf"
+    },
+    {
+      "fileId": "pdf-76823f8128e5-a47def29",
+      "from": "Campagnes/Pathfinder Society/Saison 2 - Year of Corruption's Reach/PFS - S02-23 - An Agent's Obligation (en).pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 02 - Year of Corruption's Reach/Scénarios/02-23 - An Agent’s Obligation/Documents/PFS - S02-23 - An Agent's Obligation (en).pdf"
+    },
+    {
+      "fileId": "pdf-202b4a0a348b-95ceff1e",
+      "from": "Campagnes/Pathfinder Society/Saison 3 - Year of Shattered Sanctuaries/PFS - S03-02 - The East Hill Haunting (en).pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 03 - Year of Shattered Sanctuaries/Scénarios/03-02 - The East Hill Haunting/Documents/PFS - S03-02 - The East Hill Haunting (en).pdf"
+    },
+    {
+      "fileId": "pdf-eb86cb4a4c59-a66afbbb",
+      "from": "Campagnes/Pathfinder Society/Saison 3 - Year of Shattered Sanctuaries/PFS - S03-05 - Inheritor's Rite (en).pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 03 - Year of Shattered Sanctuaries/Scénarios/03-05 - Inheritor’s Rite/Documents/PFS - S03-05 - Inheritor's Rite (en).pdf"
+    },
+    {
+      "fileId": "pdf-4a6d599f2c87-35264f9b",
+      "from": "Campagnes/Pathfinder Society/Saison 3 - Year of Shattered Sanctuaries/PFS - S03-06 - Struck by Shadows (en).pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 03 - Year of Shattered Sanctuaries/Scénarios/03-06 - Struck by Shadows/Documents/PFS - S03-06 - Struck by Shadows (en).pdf"
+    },
+    {
+      "fileId": "pdf-18836dd1c55b-01c927d2",
+      "from": "Campagnes/Pathfinder Society/Saison 3 - Year of Shattered Sanctuaries/PFS - S03-06 - Struck by Shadows (fr trad).pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 03 - Year of Shattered Sanctuaries/Scénarios/03-06 - Struck by Shadows/Documents/PFS - S03-06 - Struck by Shadows (fr trad).pdf"
+    },
+    {
+      "fileId": "pdf-45f352ab5789-9abab2db",
+      "from": "Campagnes/Pathfinder Society/Saison 3 - Year of Shattered Sanctuaries/PFS - S03-07 - The Locked Lodge (en).pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 03 - Year of Shattered Sanctuaries/Scénarios/03-07 - The Locked Lodge/Documents/PFS - S03-07 - The Locked Lodge (en).pdf"
+    },
+    {
+      "fileId": "pdf-f30a4d77ee48-6486c366",
+      "from": "Campagnes/Pathfinder Society/Saison 3 - Year of Shattered Sanctuaries/PFS - S03-09 - The Secluded Siege (en).pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 03 - Year of Shattered Sanctuaries/Scénarios/03-09 - The Secluded Siege/Documents/PFS - S03-09 - The Secluded Siege (en).pdf"
+    },
+    {
+      "fileId": "pdf-5ebcf7b6b5a8-690eb3e4",
+      "from": "Campagnes/Pathfinder Society/Saison 3 - Year of Shattered Sanctuaries/PFS - S03-16 - Escape from Oppara (en).pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 03 - Year of Shattered Sanctuaries/Scénarios/03-16 - Escape from Oppara/Documents/PFS - S03-16 - Escape from Oppara (en).pdf"
+    },
+    {
+      "fileId": "pdf-e4cd2fef22cb-d5295f48",
+      "from": "Campagnes/Pathfinder Society/Saison 3 - Year of Shattered Sanctuaries/PFS - S03-19 - Mean Streets of Shadow Absalom (en).pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 03 - Year of Shattered Sanctuaries/Scénarios/03-19 - Mean Streets of Shadow Absalom/Documents/PFS - S03-19 - Mean Streets of Shadow Absalom (en).pdf"
+    },
+    {
+      "fileId": "pdf-72abd1917496-3b893322",
+      "from": "Campagnes/Pathfinder Society/Saison 3 - Year of Shattered Sanctuaries/PFS - S03-19 - Mean Streets of Shadow Absalom (fr trad).pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 03 - Year of Shattered Sanctuaries/Scénarios/03-19 - Mean Streets of Shadow Absalom/Documents/PFS - S03-19 - Mean Streets of Shadow Absalom (fr trad).pdf"
+    },
+    {
+      "fileId": "pdf-2f9fad3ad1fa-8c2ed3c2",
+      "from": "Campagnes/Pathfinder Society/Saison 3 - Year of Shattered Sanctuaries/PFS - S03-98 - Expedition into Pallid Peril (en).pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 03 - Year of Shattered Sanctuaries/Scénarios/03-98 - Expedition Into Pallid Peril/Documents/PFS - S03-98 - Expedition into Pallid Peril (en).pdf"
+    },
+    {
+      "fileId": "pdf-1b2f6890cd96-abb9e885",
+      "from": "Campagnes/Pathfinder Society/Saison 3 - Year of Shattered Sanctuaries/PFS - S03-99 - Fate in the Future (en).pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 03 - Year of Shattered Sanctuaries/Scénarios/03-99 - Fate in the Future/Documents/PFS - S03-99 - Fate in the Future (en).pdf"
+    },
+    {
+      "fileId": "pdf-f890f4df39fd-6ee082b6",
+      "from": "Campagnes/Pathfinder Society/Saison 4 - Year of Boundless Wonder/PFS - S04-01 - Intro - Year of Boundless Wonder (en).pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 04 - Year of Boundless Wonder/Scénarios/Intro - Year of Boundless Wonder/Documents/PFS - S04-01 - Intro - Year of Boundless Wonder (en).pdf"
+    },
+    {
+      "fileId": "pdf-c7561d554070-a20732e5",
+      "from": "Campagnes/Pathfinder Society/Saison 4 - Year of Boundless Wonder/PFS - S04-02 - Return to the Grave (en).pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 04 - Year of Boundless Wonder/Scénarios/04-02 - Return to the Grave/Documents/PFS - S04-02 - Return to the Grave (en).pdf"
+    },
+    {
+      "fileId": "pdf-806b0d0121f1-73b593b7",
+      "from": "Campagnes/Pathfinder Society/Saison 4 - Year of Boundless Wonder/PFS - S04-03 - Linnorm's Legacy (en).pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 04 - Year of Boundless Wonder/Scénarios/04-03 - Linnorm’s Legacy/Documents/PFS - S04-03 - Linnorm's Legacy (en).pdf"
+    },
+    {
+      "fileId": "pdf-dc76798ecdd7-7bb54b5f",
+      "from": "Campagnes/Pathfinder Society/Saison 4 - Year of Boundless Wonder/PFS - S04-04 - To Seek the Heart of Calamity (en).pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 04 - Year of Boundless Wonder/Scénarios/04-04 - To Seek the Heart of Calamity/Documents/PFS - S04-04 - To Seek the Heart of Calamity (en).pdf"
+    },
+    {
+      "fileId": "pdf-e35c5b27f619-dd17ca43",
+      "from": "Campagnes/Pathfinder Society/Saison 4 - Year of Boundless Wonder/PFS - S04-04 - To Seek the Heart of Calamity (fr trad).pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 04 - Year of Boundless Wonder/Scénarios/04-04 - To Seek the Heart of Calamity/Documents/PFS - S04-04 - To Seek the Heart of Calamity (fr trad).pdf"
+    },
+    {
+      "fileId": "pdf-c972f6ca9925-a8926401",
+      "from": "Campagnes/Pathfinder Society/Saison 4 - Year of Boundless Wonder/PFS - S04-06 - Signal from the Electric Laboratory (en).pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 04 - Year of Boundless Wonder/Scénarios/04-06 - Signal from the Electric Laboratory/Documents/PFS - S04-06 - Signal from the Electric Laboratory (en).pdf"
+    },
+    {
+      "fileId": "pdf-a7ca07bb907a-a6349b9c",
+      "from": "Campagnes/Pathfinder Society/Saison 4 - Year of Boundless Wonder/PFS - S04-07 - A Most Wondrous Exchange (en).pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 04 - Year of Boundless Wonder/Scénarios/04-07 - A Most Wondrous Exchange!/Documents/PFS - S04-07 - A Most Wondrous Exchange (en).pdf"
+    },
+    {
+      "fileId": "pdf-a06e1abbfeb9-91cbc54a",
+      "from": "Campagnes/Pathfinder Society/Saison 4 - Year of Boundless Wonder/PFS - S04-08 - Battle for Star's Fate (en).pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 04 - Year of Boundless Wonder/Scénarios/04-08 - Battle for Star’s Fate/Documents/PFS - S04-08 - Battle for Star's Fate (en).pdf"
+    },
+    {
+      "fileId": "pdf-7c6312dea8d3-aa705b8c",
+      "from": "Campagnes/Pathfinder Society/Saison 4 - Year of Boundless Wonder/PFS - S04-08 - Battle for Star's Fate (fr trad).pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 04 - Year of Boundless Wonder/Scénarios/04-08 - Battle for Star’s Fate/Documents/PFS - S04-08 - Battle for Star's Fate (fr trad).pdf"
+    },
+    {
+      "fileId": "pdf-feb82966d2b5-c4c48c83",
+      "from": "Campagnes/Pathfinder Society/Saison 4 - Year of Boundless Wonder/PFS - S04-09 - Killer in the Golden Mask (en).pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 04 - Year of Boundless Wonder/Scénarios/04-09 - Killer in the Golden Mask/Documents/PFS - S04-09 - Killer in the Golden Mask (en).pdf"
+    },
+    {
+      "fileId": "pdf-ea68ec56bb8f-01663e73",
+      "from": "Campagnes/Pathfinder Society/Saison 4 - Year of Boundless Wonder/PFS - S04-10 - Arclord's Abode (en).pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 04 - Year of Boundless Wonder/Scénarios/04-10 - Arclord’s Abode/Documents/PFS - S04-10 - Arclord's Abode (en).pdf"
+    },
+    {
+      "fileId": "pdf-86a8b231df07-eeefc2a4",
+      "from": "Campagnes/Pathfinder Society/Saison 4 - Year of Boundless Wonder/PFS - S04-10 - Arclord's Abode (fr trad).pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 04 - Year of Boundless Wonder/Scénarios/04-10 - Arclord’s Abode/Documents/PFS - S04-10 - Arclord's Abode (fr trad).pdf"
+    },
+    {
+      "fileId": "pdf-d9973f9aafd6-f5f613b3",
+      "from": "Campagnes/Pathfinder Society/Saison 4 - Year of Boundless Wonder/PFS - S04-11 - Prisoners of the Electric Castle (en).pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 04 - Year of Boundless Wonder/Scénarios/04-11 - Prisoners of the Electric Castle/Documents/PFS - S04-11 - Prisoners of the Electric Castle (en).pdf"
+    },
+    {
+      "fileId": "pdf-e21fb86de1cd-6dc9f435",
+      "from": "Campagnes/Pathfinder Society/Saison 4 - Year of Boundless Wonder/PFS - S04-13 - Within the Prairies (en).pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 04 - Year of Boundless Wonder/Scénarios/04-13 - Within the Prairies/Documents/PFS - S04-13 - Within the Prairies (en).pdf"
+    },
+    {
+      "fileId": "pdf-7f6506f6a5ff-97812e87",
+      "from": "Campagnes/Pathfinder Society/Saison 4 - Year of Boundless Wonder/PFS - S04-16 - Dacilane Academy's First Great Prank War (en).pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 04 - Year of Boundless Wonder/Scénarios/04-16 - Dacilane Academy’s First Great Prank War/Documents/PFS - S04-16 - Dacilane Academy's First Great Prank War (en).pdf"
+    },
+    {
+      "fileId": "pdf-1d24f8c8fe91-55753310",
+      "from": "Campagnes/Pathfinder Society/Saison 5 - Year of Unfettered Exploration/PFS - S05-01 - Intro - Year of Unfettered Exploration (en).pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 05 - Year of Unfettered Exploration/Scénarios/05-01 - Intro - Year of Unfettered Exploration/Documents/PFS - S05-01 - Intro - Year of Unfettered Exploration (en).pdf"
+    },
+    {
+      "fileId": "pdf-3295903f9447-3a9430f5",
+      "from": "Campagnes/Pathfinder Society/Saison 5 - Year of Unfettered Exploration/PFS - S05-04 - Equal Exchanges - Necessary Introduction (en).pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 05 - Year of Unfettered Exploration/Scénarios/05-04 - Equal Exchanges – Necessary Introductions/Documents/PFS - S05-04 - Equal Exchanges - Necessary Introduction (en).pdf"
+    },
+    {
+      "fileId": "pdf-52e3190e7cd4-5f83e51c",
+      "from": "Campagnes/Pathfinder Society/Saison 5 - Year of Unfettered Exploration/PFS - S05-06 - Ukuja, The First Wall (en).pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 05 - Year of Unfettered Exploration/Scénarios/05-06 - Ukuja, the First Wall/Documents/PFS - S05-06 - Ukuja, The First Wall (en).pdf"
+    },
+    {
+      "fileId": "pdf-5b527b9716eb-7fa625fc",
+      "from": "Campagnes/Pathfinder Society/Saison 5 - Year of Unfettered Exploration/PFS - S05-07 - Sewer Dragon Crisis (en).pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 05 - Year of Unfettered Exploration/Scénarios/05-07 - Sewer Dragon Crisis/Documents/PFS - S05-07 - Sewer Dragon Crisis (en).pdf"
+    },
+    {
+      "fileId": "pdf-6b610d87e04b-6283400a",
+      "from": "Campagnes/Pathfinder Society/Saison 5 - Year of Unfettered Exploration/PFS - S05-10 - The Crocodile's Smile (en).pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 05 - Year of Unfettered Exploration/Scénarios/05-10 - The Crocodile’s Smile/Documents/PFS - S05-10 - The Crocodile's Smile (en).pdf"
+    },
+    {
+      "fileId": "pdf-ce7739bf5655-38932c9a",
+      "from": "Campagnes/Pathfinder Society/Saison 5 - Year of Unfettered Exploration/PFS - S05-11 - Equal Exchanges - The Hidden Current (en).pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 05 - Year of Unfettered Exploration/Scénarios/05-11 - Equal Exchanges – The Hidden Current/Documents/PFS - S05-11 - Equal Exchanges - The Hidden Current (en).pdf"
+    },
+    {
+      "fileId": "pdf-dc43faa3b34b-62fb6bf2",
+      "from": "Campagnes/Pathfinder Society/Saison 5 - Year of Unfettered Exploration/PFS - S05-12 - Mischief in the Maze (en).pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 05 - Year of Unfettered Exploration/Scénarios/05-12 - Mischief in the Maze/Documents/PFS - S05-12 - Mischief in the Maze (en).pdf"
+    },
+    {
+      "fileId": "pdf-702380840584-f0058e07",
+      "from": "Campagnes/Pathfinder Society/Saison 5 - Year of Unfettered Exploration/PFS - S05-12 - Mischief in the Maze (fr trad).pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 05 - Year of Unfettered Exploration/Scénarios/05-12 - Mischief in the Maze/Documents/PFS - S05-12 - Mischief in the Maze (fr trad).pdf"
+    },
+    {
+      "fileId": "pdf-c472b0c29757-02419694",
+      "from": "Campagnes/Pathfinder Society/Saison 5 - Year of Unfettered Exploration/PFS - S05-13 - Thick as Thieves (en).pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 05 - Year of Unfettered Exploration/Scénarios/05-13 - Thick as Thieves/Documents/PFS - S05-13 - Thick as Thieves (en).pdf"
+    },
+    {
+      "fileId": "pdf-e52f56be4e4e-c1b878b3",
+      "from": "Campagnes/Pathfinder Society/Saison 5 - Year of Unfettered Exploration/PFS - S05-14 - Poisonous Council (en).pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 05 - Year of Unfettered Exploration/Scénarios/05-14 - Poisonous Council/Documents/PFS - S05-14 - Poisonous Council (en).pdf"
+    },
+    {
+      "fileId": "pdf-d027bbbe9f57-cfd8a867",
+      "from": "Campagnes/Pathfinder Society/Saison 5 - Year of Unfettered Exploration/PFS - S05-17 - Stranded on Yesterday's Tide (en).pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 05 - Year of Unfettered Exploration/Scénarios/05-17 - Stranded on Yesterday’s Tide/Documents/PFS - S05-17 - Stranded on Yesterday's Tide (en).pdf"
+    },
+    {
+      "fileId": "pdf-6c7dcefc8f38-5eadd350",
+      "from": "Campagnes/Pathfinder Society/Saison 5 - Year of Unfettered Exploration/PFS - S05-19 - Demonic Afterparty (en).pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 05 - Year of Unfettered Exploration/Scénarios/05-19 - Demonic Afterparty/Documents/PFS - S05-19 - Demonic Afterparty (en).pdf"
+    },
+    {
+      "fileId": "pdf-6c87d9bbbbb5-f33b7465",
+      "from": "Campagnes/Pathfinder Society/Saison 5 - Year of Unfettered Exploration/PFS - S05-20 - The Rakshasa's Court (en).pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 05 - Year of Unfettered Exploration/Scénarios/05-20 - The Rakshasa’s Court/Documents/PFS - S05-20 - The Rakshasa's Court (en).pdf"
+    },
+    {
+      "fileId": "pdf-23ccfaee5998-8ae0fc68",
+      "from": "Campagnes/Pathfinder Society/Saison 6 - Year of Immortal Influence/PFS - S06-01 - Intro, Year of Immortal Influence (en).pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 06 - Year of Immortal Influence/Scénarios/06-01 - Intro - Year of Immortal Influence/Documents/PFS - S06-01 - Intro, Year of Immortal Influence (en).pdf"
+    },
+    {
+      "fileId": "pdf-ab8c83ed278a-52c8dd96",
+      "from": "Campagnes/Pathfinder Society/Saison 6 - Year of Immortal Influence/PFS - S06-02 - Rain Falls on the Mountain of Sea and Sky (en).pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 06 - Year of Immortal Influence/Scénarios/06-02 - Rain Falls on the Mountain of Sea and Sky/Documents/PFS - S06-02 - Rain Falls on the Mountain of Sea and Sky (en).pdf"
+    },
+    {
+      "fileId": "pdf-3c3c994b5864-da206d05",
+      "from": "Campagnes/Pathfinder Society/Saison 6 - Year of Immortal Influence/PFS - S06-03 - Godsrain in a Godless Land (en).pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 06 - Year of Immortal Influence/Scénarios/06-03 - Godsrain in a Godless Land/Documents/PFS - S06-03 - Godsrain in a Godless Land (en).pdf"
+    },
+    {
+      "fileId": "pdf-fa7e5b4f75c7-6bad64da",
+      "from": "Campagnes/Pathfinder Society/Saison 6 - Year of Immortal Influence/PFS - S06-04 - An Enkindled Carnival (en).pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 06 - Year of Immortal Influence/Scénarios/06-04 - An Enkindled Carnival/Documents/PFS - S06-04 - An Enkindled Carnival (en).pdf"
+    },
+    {
+      "fileId": "pdf-71f14e81d882-6f475043",
+      "from": "Campagnes/Pathfinder Society/Saison 6 - Year of Immortal Influence/PFS - S06-05 - Silver Bark, Golden Blades (en).pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 06 - Year of Immortal Influence/Scénarios/06-05 - Silver Bark, Golden Blades/Documents/PFS - S06-05 - Silver Bark, Golden Blades (en).pdf"
+    },
+    {
+      "fileId": "pdf-670d0864efa4-b1bcc505",
+      "from": "Campagnes/Pathfinder Society/Saison 6 - Year of Immortal Influence/PFS - S06-05 - Silver Bark, Golden Blades (fr trad).pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 06 - Year of Immortal Influence/Scénarios/06-05 - Silver Bark, Golden Blades/Documents/PFS - S06-05 - Silver Bark, Golden Blades (fr trad).pdf"
+    },
+    {
+      "fileId": "pdf-5d92b40b7eda-20bbc3e4",
+      "from": "Campagnes/Pathfinder Society/Saison 6 - Year of Immortal Influence/PFS - S06-06 - Rotten Apples (en).pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 06 - Year of Immortal Influence/Scénarios/06-06 - Rotten Apples/Documents/PFS - S06-06 - Rotten Apples (en).pdf"
+    },
+    {
+      "fileId": "pdf-ebbd4857f186-48ee0a57",
+      "from": "Campagnes/Pathfinder Society/Saison 6 - Year of Immortal Influence/PFS - S06-06 - Rotten Apples (fr trad).pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 06 - Year of Immortal Influence/Scénarios/06-06 - Rotten Apples/Documents/PFS - S06-06 - Rotten Apples (fr trad).pdf"
+    },
+    {
+      "fileId": "pdf-dd55a0fe6b68-a32fb3fc",
+      "from": "Campagnes/Pathfinder Society/Saison 6 - Year of Immortal Influence/PFS - S06-07 - A God Falls Where Magic Fails (en).pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 06 - Year of Immortal Influence/Scénarios/06-07 - A God Falls Where Magic Fails/Documents/PFS - S06-07 - A God Falls Where Magic Fails (en).pdf"
+    },
+    {
+      "fileId": "pdf-7b3802f7b0bf-b9cf556d",
+      "from": "Campagnes/Pathfinder Society/Saison 6 - Year of Immortal Influence/PFS - S06-08 - Upon Wheels and Rime (en).pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 06 - Year of Immortal Influence/Scénarios/06-08 - Upon Wheels and Rime/Documents/PFS - S06-08 - Upon Wheels and Rime (en).pdf"
+    },
+    {
+      "fileId": "pdf-cc9e46062590-3e33d854",
+      "from": "Campagnes/Pathfinder Society/Saison 6 - Year of Immortal Influence/PFS - S06-10 - Once in Whispers (en).pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 06 - Year of Immortal Influence/Scénarios/06-10 - Once in Whispers/Documents/PFS - S06-10 - Once in Whispers (en).pdf"
+    },
+    {
+      "fileId": "pdf-badda444414b-44cd7498",
+      "from": "Campagnes/Pathfinder Society/Saison 6 - Year of Immortal Influence/PFS - S06-11 - The Godsrain and the Dragon (en).pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 06 - Year of Immortal Influence/Scénarios/06-11 - The Godsrain and the Dragon/Documents/PFS - S06-11 - The Godsrain and the Dragon (en).pdf"
+    },
+    {
+      "fileId": "pdf-9f81679c2d66-a7dba834",
+      "from": "Campagnes/Pathfinder Society/Saison 6 - Year of Immortal Influence/PFS - S06-16 - The Heart of the City (en).pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 06 - Year of Immortal Influence/Scénarios/06-16 - The Heart of the City/Documents/PFS - S06-16 - The Heart of the City (en).pdf"
+    },
+    {
+      "fileId": "pdf-ce53b36b4af2-e359818c",
+      "from": "Campagnes/Pathfinder Society/Saison 8 - Year of Clockwork Mystery/PFS - S08-00 - The Cosmic Captive (en).pdf",
+      "to": "Campagnes/Pathfinder Society/Legacy/PFS 1e/8-00 - The Cosmic Captive/Documents/PFS - S08-00 - The Cosmic Captive (en).pdf"
+    },
+    {
+      "fileId": "pdf-ff2b631d6e77-3fb139b1",
+      "from": "Campagnes/Scénarios/Playtests/PF2 Playtest - Scenario 01 - The Rose Street Revenge (en) - trad.pdf",
+      "to": "Campagnes/Aventures autonomes/The Rose Street Revenge/Documents/PF2 Playtest - Scenario 01 - The Rose Street Revenge (en) - trad.pdf"
+    },
+    {
+      "fileId": "pdf-962ffcbdc4cd-93e2743b",
+      "from": "Campagnes/Scénarios/Playtests/PF2 Playtest - Scenario 01 - The Rose Street Revenge (en).pdf",
+      "to": "Campagnes/Aventures autonomes/The Rose Street Revenge/Documents/PF2 Playtest - Scenario 01 - The Rose Street Revenge (en).pdf"
+    },
+    {
+      "fileId": "pdf-04ca9a015790-9218ac69",
+      "from": "Campagnes/Scénarios/Scénario - A Fistful of Flowers (en).pdf",
+      "to": "Campagnes/Aventures autonomes/A Fistful of Flowers/Documents/Scénario - A Fistful of Flowers (en).pdf"
+    },
+    {
+      "fileId": "pdf-365bbef5aa2f-95f98e58",
+      "from": "Campagnes/Scénarios/Scénario - A Fistful of Flowers (fr trad).pdf",
+      "to": "Campagnes/Aventures autonomes/A Fistful of Flowers/Documents/Scénario - A Fistful of Flowers (fr trad).pdf"
+    },
+    {
+      "fileId": "pdf-0a8a4bf7a125-46846636",
+      "from": "Campagnes/Scénarios/Scénario - Claws of the Tyrant (en).pdf",
+      "to": "Campagnes/Aventures autonomes/Claws of the Tyrant/Documents/Scénario - Claws of the Tyrant (en).pdf"
+    },
+    {
+      "fileId": "pdf-1616e9fe94ae-66160e41",
+      "from": "Campagnes/Scénarios/Scénario - Claws of the Tyrant (fr trad).pdf",
+      "to": "Campagnes/Aventures autonomes/Claws of the Tyrant/Documents/Scénario - Claws of the Tyrant (fr trad).pdf"
+    },
+    {
+      "fileId": "pdf-8a3d53d52b65-5f4439ea",
+      "from": "Campagnes/Scénarios/Scénario - L'Acolyte perdue.pdf",
+      "to": "Campagnes/Communauté/L’Acolyte perdue/Documents/Scénario - L'Acolyte perdue.pdf"
+    },
+    {
+      "fileId": "pdf-abb8fb27bfa4-8d76c37e",
+      "from": "Campagnes/Scénarios/Scénario - L'Escorte.pdf",
+      "to": "Campagnes/Communauté/L’Escorte/Documents/Scénario - L'Escorte.pdf"
+    },
+    {
+      "fileId": "pdf-cc8ddafd5792-cf515902",
+      "from": "Campagnes/Scénarios/Scénario - La Vengeance de l'honneur.pdf",
+      "to": "Campagnes/Communauté/La Vengeance de l’honneur/Documents/Scénario - La Vengeance de l'honneur.pdf"
+    },
+    {
+      "fileId": "pdf-2258c3809807-f05bc0c9",
+      "from": "Campagnes/Scénarios/Scénario - Les Démons de minuit.pdf",
+      "to": "Campagnes/Communauté/Les Démons de minuit/Documents/Scénario - Les Démons de minuit.pdf"
+    },
+    {
+      "fileId": "pdf-bade88b21442-164d2b6e",
+      "from": "Campagnes/Scénarios/Scénario - Pour une poignée d'or.pdf",
+      "to": "Campagnes/Communauté/Pour une poignée d’or/Documents/Scénario - Pour une poignée d'or.pdf"
+    },
+    {
+      "fileId": "pdf-b8c297a7b85a-f3009094",
+      "from": "Campagnes/Scénarios/Scénario - Prey for Death (en).pdf",
+      "to": "Campagnes/Aventures autonomes/Prey for Death/Documents/Scénario - Prey for Death (en).pdf"
+    },
+    {
+      "fileId": "pdf-c90912f7cd2a-9aef28e6",
+      "from": "Campagnes/Scénarios/Scénario - Shadows at Sundown (en).pdf",
+      "to": "Campagnes/Aventures autonomes/Shadows at Sundown/Documents/Scénario - Shadows at Sundown (en).pdf"
+    },
+    {
+      "fileId": "pdf-a34b0414f950-8c3c9ee5",
+      "from": "Campagnes/Scénarios/Scénario - The Enmity Cycle (en).pdf",
+      "to": "Campagnes/Aventures autonomes/The Enmity Cycle/Documents/Scénario - The Enmity Cycle (en).pdf"
+    },
+    {
+      "fileId": "pdf-f140ad450b79-196f046b",
+      "from": "Campagnes/Scénarios/Scénario - Trouble en Otarie.pdf",
+      "to": "Campagnes/Aventures autonomes/Troubles in Otari/Documents/Scénario - Trouble en Otarie.pdf"
+    },
+    {
+      "fileId": "pdf-f2004b2afe01-aad1d463",
+      "from": "Campagnes/Scénarios/Scénario - Troubles in Grayce (en).pdf",
+      "to": "Campagnes/Aventures autonomes/Troubles in Grayce/Documents/Scénario - Troubles in Grayce (en).pdf"
+    },
+    {
+      "fileId": "pdf-dae5e3323fdd-c4680d8e",
+      "from": "Règles/AideMJ.pdf",
+      "to": "Références/Règles/AideMJ.pdf"
+    },
+    {
+      "fileId": "pdf-94d29448d2ca-736f2c68",
+      "from": "Règles/Règles - Bestiaire 1.pdf",
+      "to": "Références/Règles/Règles - Bestiaire 1.pdf"
+    },
+    {
+      "fileId": "pdf-394190658c61-163b150f",
+      "from": "Règles/Règles - Bestiaire 2.pdf",
+      "to": "Références/Règles/Règles - Bestiaire 2.pdf"
+    },
+    {
+      "fileId": "pdf-2a178cb651e9-21b34600",
+      "from": "Règles/Règles - Bestiaire 3.pdf",
+      "to": "Références/Règles/Règles - Bestiaire 3.pdf"
+    },
+    {
+      "fileId": "pdf-24cf1f1837ed-9111c35e",
+      "from": "Règles/Règles - Bestiaire Howl of the Wild (en).pdf",
+      "to": "Références/Règles/Règles - Bestiaire Howl of the Wild (en).pdf"
+    },
+    {
+      "fileId": "pdf-c2ae9647cdc7-7a6439a5",
+      "from": "Règles/Règles - Les Secrets de la magie.pdf",
+      "to": "Références/Règles/Règles - Les Secrets de la magie.pdf"
+    },
+    {
+      "fileId": "pdf-27f0c80a42ac-808fae9e",
+      "from": "Règles/Règles - Livre du MJ.pdf",
+      "to": "Références/Règles/Règles - Livre du MJ.pdf"
+    },
+    {
+      "fileId": "pdf-b1fac7159bc8-23c2812b",
+      "from": "Règles/Règles - Écran du MJ.pdf",
+      "to": "Références/Règles/Règles - Écran du MJ.pdf"
+    },
+    {
+      "fileId": "pdf-f313a23030ba-0d3840ad",
+      "from": "Univers/Univers - Absalom, la cité des Prédictions Perdues.pdf",
+      "to": "Références/Univers/Univers - Absalom, la cité des Prédictions Perdues.pdf"
+    },
+    {
+      "fileId": "pdf-b110b5c4d0a5-823df875",
+      "from": "Univers/Univers - Dieux et magie des Prédictions Perdues.pdf",
+      "to": "Références/Univers/Univers - Dieux et magie des Prédictions Perdues.pdf"
+    },
+    {
+      "fileId": "pdf-588ddcaf5153-0d9e5530",
+      "from": "Univers/Univers - Guide des ascendances des Prédictions Perdues.pdf",
+      "to": "Références/Univers/Univers - Guide des ascendances des Prédictions Perdues.pdf"
+    },
+    {
+      "fileId": "pdf-f92b39f4071e-5f8bdfb7",
+      "from": "Univers/Univers - Guide des personnages des Prédictions Perdues.pdf",
+      "to": "Références/Univers/Univers - Guide des personnages des Prédictions Perdues.pdf"
+    },
+    {
+      "fileId": "pdf-60164410f063-e462ff2a",
+      "from": "Univers/Univers - Guide du monde des Prédictions Perdues.pdf",
+      "to": "Références/Univers/Univers - Guide du monde des Prédictions Perdues.pdf"
+    },
+    {
+      "fileId": "pdf-8cb7111fa710-a4c8df7c",
+      "from": "Univers/Univers - Impossible-Lands (en).pdf",
+      "to": "Références/Univers/Univers - Impossible-Lands (en).pdf"
+    },
+    {
+      "fileId": "pdf-a5b7095e19bb-1c546753",
+      "from": "Univers/Univers - L'Étendue du Mwangi.pdf",
+      "to": "Références/Univers/Univers - L'Étendue du Mwangi.pdf"
+    },
+    {
+      "fileId": "pdf-6c31320db7e2-f2404ce4",
+      "from": "Univers/Univers - Le Grand Bazar.pdf",
+      "to": "Références/Univers/Univers - Le Grand Bazar.pdf"
+    },
+    {
+      "fileId": "pdf-808e70ae2bd6-39e2031b",
+      "from": "Univers/Univers - Légendes des Prédictions Perdues.pdf",
+      "to": "Références/Univers/Univers - Légendes des Prédictions Perdues.pdf"
+    },
+    {
+      "fileId": "pdf-b4c330e5ea27-b5d466db",
+      "from": "Univers/Univers - Manuel des plans et des mondes lointains.pdf",
+      "to": "Références/Univers/Univers - Manuel des plans et des mondes lointains.pdf"
+    },
+    {
+      "fileId": "pdf-eea07108b0c5-e2c9dfb7",
+      "from": "Univers/Univers - Société des Éclaireurs des Prédictions Perdues.pdf",
+      "to": "Références/Univers/Univers - Société des Éclaireurs des Prédictions Perdues.pdf"
+    },
+    {
+      "fileId": "pdf-84e812e96d8c-756c3776",
+      "from": "Univers/Univers  Règles - Draconic Codex (en).pdf",
+      "to": "Références/Univers/Univers  Règles - Draconic Codex (en).pdf"
+    },
+    {
+      "fileId": "pdf-1fd415cf35f0-74bb8a6e",
+      "from": "Campagnes/Pathfinder Society/PFS Intro - The Second Confirmation (en) - trad.pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 01 - Year of the Open Road/Scénarios/Intro - The Second Confirmation/Documents/PFS Intro - The Second Confirmation (en) - trad.pdf"
+    },
+    {
+      "fileId": "pdf-dc46556d571b-9af564f5",
+      "from": "Campagnes/Pathfinder Society/Quêtes et Bounties/PFS Bounty - 03 - Shadows and Scarecrows (en) - trad.pdf",
+      "to": "Campagnes/Pathfinder Society/Bounties/Bounty 03 — Shadows and Scarecrows/Documents/PFS Bounty - 03 - Shadows and Scarecrows (en) - trad.pdf"
+    },
+    {
+      "fileId": "pdf-f351c630597f-3fd643bf",
+      "from": "Campagnes/Pathfinder Society/Quêtes et Bounties/PFS Bounty - 08 - The Tireless Path (en) - trad.pdf",
+      "to": "Campagnes/Pathfinder Society/Bounties/Bounty 08 — The Tireless Path/Documents/PFS Bounty - 08 - The Tireless Path (en) - trad.pdf"
+    },
+    {
+      "fileId": "pdf-78f0a67f4e29-f67dca2b",
+      "from": "Campagnes/Pathfinder Society/Quêtes et Bounties/PFS Bounty - 09 - Fishing in Anthusis (en) - trad.pdf",
+      "to": "Campagnes/Pathfinder Society/Bounties/Bounty #9 - Fishing in Anthusis/Documents/PFS Bounty - 09 - Fishing in Anthusis (en) - trad.pdf"
+    },
+    {
+      "fileId": "pdf-7e2a29a263b3-a2056782",
+      "from": "Campagnes/Pathfinder Society/Quêtes et Bounties/PFS Bounty - 11 - Forged Facade (en) - trad.pdf",
+      "to": "Campagnes/Pathfinder Society/Bounties/Bounty #11 - Forged Facade/Documents/PFS Bounty - 11 - Forged Facade (en) - trad.pdf"
+    },
+    {
+      "fileId": "pdf-4466f82088d5-ddbe0015",
+      "from": "Campagnes/Pathfinder Society/Quêtes et Bounties/PFS Bounty - 13 - The Blackwood Abundance (en) - trad.pdf",
+      "to": "Campagnes/Pathfinder Society/Bounties/Bounty 13 — The Blackwood Abundance/Documents/PFS Bounty - 13 - The Blackwood Abundance (en) - trad.pdf"
+    },
+    {
+      "fileId": "pdf-8d0a7da846ef-3f3151d2",
+      "from": "Campagnes/Pathfinder Society/Quêtes et Bounties/PFS Bounty - 17 - Sodden Stories (en) - trad.pdf",
+      "to": "Campagnes/Pathfinder Society/Bounties/Bounty #17 - Sodden Stories/Documents/PFS Bounty - 17 - Sodden Stories (en) - trad.pdf"
+    },
+    {
+      "fileId": "pdf-fae43a02d243-47966cf5",
+      "from": "Campagnes/Pathfinder Society/Quêtes et Bounties/PFS Bounty - 18 - From Family Lost (en) - trad.pdf",
+      "to": "Campagnes/Pathfinder Society/Bounties/Bounty 18 — From Family Lost/Documents/PFS Bounty - 18 - From Family Lost (en) - trad.pdf"
+    },
+    {
+      "fileId": "pdf-a293d9648e72-2a23f0aa",
+      "from": "Campagnes/Pathfinder Society/Quêtes et Bounties/PFS Bounty - 19 - Grim Tidings (en) - trad.pdf",
+      "to": "Campagnes/Pathfinder Society/Bounties/Bounty #19 - Grim Tidings/Documents/PFS Bounty - 19 - Grim Tidings (en) - trad.pdf"
+    },
+    {
+      "fileId": "pdf-7280f42ef203-2e31b1b5",
+      "from": "Campagnes/Pathfinder Society/Quêtes et Bounties/PFS Quest - 02 - Unforgiving Fire (en) - trad.pdf",
+      "to": "Campagnes/Pathfinder Society/Quests/Quest 02 — Unforgiving Fire/Documents/PFS Quest - 02 - Unforgiving Fire (en) - trad.pdf"
+    },
+    {
+      "fileId": "pdf-df6b83df4170-fa10d5e0",
+      "from": "Campagnes/Pathfinder Society/Quêtes et Bounties/PFS Quest - 03 - Grehunde's Gorget (en) - trad.pdf",
+      "to": "Campagnes/Pathfinder Society/Quests/Quest 03 — Grehunde's Gorget/Documents/PFS Quest - 03 - Grehunde's Gorget (en) - trad.pdf"
+    },
+    {
+      "fileId": "pdf-c10f32a4b43d-4b998cb7",
+      "from": "Campagnes/Pathfinder Society/Quêtes et Bounties/PFS Quest - 08 - Shadows of the Black Sovereign (en) - trad.pdf",
+      "to": "Campagnes/Pathfinder Society/Quests/Quest 08 — Shadows of the Black Sovereign/Documents/PFS Quest - 08 - Shadows of the Black Sovereign (en) - trad.pdf"
+    },
+    {
+      "fileId": "pdf-d0bd6374bb4e-cd7aef83",
+      "from": "Campagnes/Pathfinder Society/Quêtes et Bounties/PFS Quest - 09 - Wayfinder Origins (en) - trad.pdf",
+      "to": "Campagnes/Pathfinder Society/Quests/Quest 09 — Wayfinder Origins/Documents/PFS Quest - 09 - Wayfinder Origins (en) - trad.pdf"
+    },
+    {
+      "fileId": "pdf-ba66f9388ef0-0ad99d9d",
+      "from": "Campagnes/Pathfinder Society/Quêtes et Bounties/PFS Quest - 19 - The Elsewhere Feast (en) - trad.pdf",
+      "to": "Campagnes/Pathfinder Society/Quests/Quest 19 — The Elsewhere Feast/Documents/PFS Quest - 19 - The Elsewhere Feast (en) - trad.pdf"
+    },
+    {
+      "fileId": "pdf-751d4ddaa611-710495f3",
+      "from": "Campagnes/Pathfinder Society/Saison 1 - Year of the Open Road/PFS - S01-06 - Lost on the Spirit Road (en) - trad.pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 01 - Year of the Open Road/Scénarios/01-06 - Lost on the Spirit Road/Documents/PFS - S01-06 - Lost on the Spirit Road (en) - trad.pdf"
+    },
+    {
+      "fileId": "pdf-9f45d2b3537b-4b21f124",
+      "from": "Campagnes/Pathfinder Society/Saison 1 - Year of the Open Road/PFS - S01-10 - Tarnbreaker's Trail (en) - trad.pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 01 - Year of the Open Road/Scénarios/01-10 - Tarnbreaker’s Trail/Documents/PFS - S01-10 - Tarnbreaker's Trail (en) - trad.pdf"
+    },
+    {
+      "fileId": "pdf-dd0eb4258b75-27e2caca",
+      "from": "Campagnes/Pathfinder Society/Saison 1 - Year of the Open Road/PFS - S01-13 - Devil at the Crossroads (en) - trad.pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 01 - Year of the Open Road/Scénarios/01-13 - Devil at the Crossroads/Documents/PFS - S01-13 - Devil at the Crossroads (en) - trad.pdf"
+    },
+    {
+      "fileId": "pdf-25424ca77faa-bc98cf4a",
+      "from": "Campagnes/Pathfinder Society/Saison 1 - Year of the Open Road/PFS - S01-19 - Iolite Squad Alpha (en) - trad.pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 01 - Year of the Open Road/Scénarios/01-19 - Iolite Squad Alpha/Documents/PFS - S01-19 - Iolite Squad Alpha (en) - trad.pdf"
+    },
+    {
+      "fileId": "pdf-38e1a972afd2-6e186489",
+      "from": "Campagnes/Pathfinder Society/Saison 1 - Year of the Open Road/PFS - S01-25 - Grim Symphony (en) - trad.pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 01 - Year of the Open Road/Scénarios/01-25 - Grim Symphony/Documents/PFS - S01-25 - Grim Symphony (en) - trad.pdf"
+    },
+    {
+      "fileId": "pdf-6c8bf2cd6a48-2cc86e83",
+      "from": "Campagnes/Pathfinder Society/Saison 2 - Year of Corruption's Reach/PFS - S02-00 - The King in Thorns (en) - trad.pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 02 - Year of Corruption's Reach/Scénarios/02-00 - The King in Thorns/Documents/PFS - S02-00 - The King in Thorns (en) - trad.pdf"
+    },
+    {
+      "fileId": "pdf-e881f4fa584e-7aeeed1b",
+      "from": "Campagnes/Pathfinder Society/Saison 2 - Year of Corruption's Reach/PFS - S02-01 - Citadel of Corruption (en) - trad.pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 02 - Year of Corruption's Reach/Scénarios/02-01 - Citadel of Corruption/Documents/PFS - S02-01 - Citadel of Corruption (en) - trad.pdf"
+    },
+    {
+      "fileId": "pdf-39476fc54217-81d9d88e",
+      "from": "Campagnes/Pathfinder Society/Saison 2 - Year of Corruption's Reach/PFS - S02-02 - Mountain of Sea and Sky (en) - trad.pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 02 - Year of Corruption's Reach/Scénarios/02-02 - Mountain of Sea and Sky/Documents/PFS - S02-02 - Mountain of Sea and Sky (en) - trad.pdf"
+    },
+    {
+      "fileId": "pdf-04ed9f200994-bd3e299a",
+      "from": "Campagnes/Pathfinder Society/Saison 2 - Year of Corruption's Reach/PFS - S02-04 - Path of Kings (en) - trad.pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 02 - Year of Corruption's Reach/Scénarios/02-04 - Path of Kings/Documents/PFS - S02-04 - Path of Kings (en) - trad.pdf"
+    },
+    {
+      "fileId": "pdf-7604236997d2-47af1f10",
+      "from": "Campagnes/Pathfinder Society/Saison 2 - Year of Corruption's Reach/PFS - S02-07 - The Blakros Deception (en) - trad.pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 02 - Year of Corruption's Reach/Scénarios/02-07 - The Blakros Deception/Documents/PFS - S02-07 - The Blakros Deception (en) - trad.pdf"
+    },
+    {
+      "fileId": "pdf-609fa85f1184-dcced14e",
+      "from": "Campagnes/Pathfinder Society/Saison 2 - Year of Corruption's Reach/PFS - S02-08 - A Frosty Mug (en) - trad.pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 02 - Year of Corruption's Reach/Scénarios/02-08 - A Frosty Mug/Documents/PFS - S02-08 - A Frosty Mug (en) - trad.pdf"
+    },
+    {
+      "fileId": "pdf-8a0296ca136d-dbf8e130",
+      "from": "Campagnes/Pathfinder Society/Saison 2 - Year of Corruption's Reach/PFS - S02-10 - In Burning Dawn (en) - trad.pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 02 - Year of Corruption's Reach/Scénarios/02-10 - In Burning Dawn/Documents/PFS - S02-10 - In Burning Dawn (en) - trad.pdf"
+    },
+    {
+      "fileId": "pdf-2915dbfa7f66-150abfc6",
+      "from": "Campagnes/Pathfinder Society/Saison 2 - Year of Corruption's Reach/PFS - S02-12 - Snakes in the Grass (en) - trad.pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 02 - Year of Corruption's Reach/Scénarios/02-12 - Snakes in the Grass/Documents/PFS - S02-12 - Snakes in the Grass (en) - trad.pdf"
+    },
+    {
+      "fileId": "pdf-c63820427f73-08df610d",
+      "from": "Campagnes/Pathfinder Society/Saison 2 - Year of Corruption's Reach/PFS - S02-14 - Lost in Flames (en) - trad.pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 02 - Year of Corruption's Reach/Scénarios/02-14 - Lost in Flames/Documents/PFS - S02-14 - Lost in Flames (en) - trad.pdf"
+    },
+    {
+      "fileId": "pdf-eafb4385533b-3ea8536c",
+      "from": "Campagnes/Pathfinder Society/Saison 2 - Year of Corruption's Reach/PFS - S02-16 - Freedom for Wishes (en) - trad.pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 02 - Year of Corruption's Reach/Scénarios/02-16 - Freedom for Wishes/Documents/PFS - S02-16 - Freedom for Wishes (en) - trad.pdf"
+    },
+    {
+      "fileId": "pdf-2800bd00be27-7081f73e",
+      "from": "Campagnes/Pathfinder Society/Saison 2 - Year of Corruption's Reach/PFS - S02-17 - The Lost Maid of Anactoria (en) - trad.pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 02 - Year of Corruption's Reach/Scénarios/02-17 - Lost Maid of Anactoria/Documents/PFS - S02-17 - The Lost Maid of Anactoria (en) - trad.pdf"
+    },
+    {
+      "fileId": "pdf-ae14ac891f96-42157f97",
+      "from": "Campagnes/Pathfinder Society/Saison 2 - Year of Corruption's Reach/PFS - S02-19 - Enter the Pallid Peak (en) - trad.pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 02 - Year of Corruption's Reach/Scénarios/02-19 - Enter the Pallid Peak/Documents/PFS - S02-19 - Enter the Pallid Peak (en) - trad.pdf"
+    },
+    {
+      "fileId": "pdf-e4c352ffe4fd-fb983b22",
+      "from": "Campagnes/Pathfinder Society/Saison 2 - Year of Corruption's Reach/PFS - S02-20 - Breaking the Storm - Bastion in Embers (en) - trad.pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 02 - Year of Corruption's Reach/Scénarios/02-20 - Breaking the Storm - Bastion in Embers/Documents/PFS - S02-20 - Breaking the Storm - Bastion in Embers (en) - trad.pdf"
+    },
+    {
+      "fileId": "pdf-1bda4a152cee-20bd496f",
+      "from": "Campagnes/Pathfinder Society/Saison 2 - Year of Corruption's Reach/PFS - S02-21 - In Pursuit of Water (en) - trad.pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 02 - Year of Corruption's Reach/Scénarios/02-21 - In Pursuit of Water/Documents/PFS - S02-21 - In Pursuit of Water (en) - trad.pdf"
+    },
+    {
+      "fileId": "pdf-a6ef2ef1387b-af9ce8f1",
+      "from": "Campagnes/Pathfinder Society/Saison 2 - Year of Corruption's Reach/PFS - S02-23 - An Agent's Obligation (en) - trad.pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 02 - Year of Corruption's Reach/Scénarios/02-23 - An Agent’s Obligation/Documents/PFS - S02-23 - An Agent's Obligation (en) - trad.pdf"
+    },
+    {
+      "fileId": "pdf-bb791546b535-ed69444f",
+      "from": "Campagnes/Campagne - Blood Lords - Tome 26 (en) - trad.pdf",
+      "to": "Campagnes/Campagnes longues/Blood Lords/Episodes/02 - Graveclaw/Documents/Campagne - Blood Lords - Tome 26 (en) - trad.pdf"
+    },
+    {
+      "fileId": "pdf-d9a42ad4cba8-c616a3ee",
+      "from": "Campagnes/Campagne - Blood Lords - Tome 36 (en) - trad.pdf",
+      "to": "Campagnes/Campagnes longues/Blood Lords/Episodes/03 - Field of Maidens/Documents/Campagne - Blood Lords - Tome 36 (en) - trad.pdf"
+    },
+    {
+      "fileId": "pdf-d5e3add925aa-f83388fa",
+      "from": "Campagnes/Campagne - Blood Lords - Tome 46 (en) - trad.pdf",
+      "to": "Campagnes/Campagnes longues/Blood Lords/Episodes/04 - The Ghouls Hunger/Documents/Campagne - Blood Lords - Tome 46 (en) - trad.pdf"
+    },
+    {
+      "fileId": "pdf-44813015e56c-8a63b70c",
+      "from": "Campagnes/Campagne - Quest for the Frozen Flame - Tome 33 - Burning Tundra (en) - trad.pdf",
+      "to": "Campagnes/Campagnes longues/Quest for the Frozen Flame/Episodes/03 - Burning Tundra/Documents/Campagne - Quest for the Frozen Flame - Tome 33 - Burning Tundra (en) - trad.pdf"
+    },
+    {
+      "fileId": "pdf-4b4a1810958b-50ecdec9",
+      "from": "Campagnes/Campagne - Strength of Thousands - Tome 4 (en) - trad.pdf",
+      "to": "Campagnes/Campagnes longues/Strength of Thousands/Episodes/04 - Secrets of the Temple-City/Documents/Campagne - Strength of Thousands - Tome 4 (en) - trad.pdf"
+    },
+    {
+      "fileId": "pdf-0f56e2b91155-9bc7bd29",
+      "from": "Campagnes/Campagne - Strength of Thousands - Tome 5 (en) - trad.pdf",
+      "to": "Campagnes/Campagnes longues/Strength of Thousands/Episodes/05 - Doorway to the Red Star/Documents/Campagne - Strength of Thousands - Tome 5 (en) - trad.pdf"
+    },
+    {
+      "fileId": "pdf-12ba5cd2ff2b-e7ba2a61",
+      "from": "Campagnes/Campagne - Strength of Thousands - Tome 6 (en) - trad.pdf",
+      "to": "Campagnes/Campagnes longues/Strength of Thousands/Episodes/06 - Shadows of the Ancients/Documents/Campagne - Strength of Thousands - Tome 6 (en) - trad.pdf"
+    },
+    {
+      "fileId": "pdf-b5a5c0d6ca30-1e21cddb",
+      "from": "Campagnes/Campagne - Triumph of the Tusk - Tome 33 (en) - trad.pdf",
+      "to": "Campagnes/Campagnes longues/Triumph of the Tusk/Episodes/03 - Destroyer’s Doom/Documents/Campagne - Triumph of the Tusk - Tome 33 (en) - trad.pdf"
+    },
+    {
+      "fileId": "pdf-af7f2071e65a-e161c90b",
+      "from": "Campagnes/Campagne - Wardens of Wildwood - Tome 23 (en) - trad.pdf",
+      "to": "Campagnes/Campagnes longues/Wardens of Wildwood/Episodes/02 - Severed at the Root/Documents/Campagne - Wardens of Wildwood - Tome 23 (en) - trad.pdf"
+    },
+    {
+      "fileId": "pdf-0f670690bd20-7c0fee5c",
+      "from": "Campagnes/Pathfinder Society/Saison 3 - Year of Shattered Sanctuaries/PFS - S03-02 - The East Hill Haunting (en) - trad.pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 03 - Year of Shattered Sanctuaries/Scénarios/03-02 - The East Hill Haunting/Documents/PFS - S03-02 - The East Hill Haunting (en) - trad.pdf"
+    },
+    {
+      "fileId": "pdf-114be0cd5e48-37e42a71",
+      "from": "Campagnes/Pathfinder Society/Saison 3 - Year of Shattered Sanctuaries/PFS - S03-05 - Inheritor's Rite (en) - trad.pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 03 - Year of Shattered Sanctuaries/Scénarios/03-05 - Inheritor’s Rite/Documents/PFS - S03-05 - Inheritor's Rite (en) - trad.pdf"
+    },
+    {
+      "fileId": "pdf-18836dd1c55b-1fa7a2dc",
+      "from": "Campagnes/Pathfinder Society/Saison 3 - Year of Shattered Sanctuaries/PFS - S03-06 - Struck by Shadows (en) - trad.pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 03 - Year of Shattered Sanctuaries/Scénarios/03-06 - Struck by Shadows/Documents/PFS - S03-06 - Struck by Shadows (en) - trad.pdf"
+    },
+    {
+      "fileId": "pdf-9783aae42375-3ee9e41e",
+      "from": "Campagnes/Pathfinder Society/Saison 3 - Year of Shattered Sanctuaries/PFS - S03-07 - The Locked Lodge (en) - trad.pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 03 - Year of Shattered Sanctuaries/Scénarios/03-07 - The Locked Lodge/Documents/PFS - S03-07 - The Locked Lodge (en) - trad.pdf"
+    },
+    {
+      "fileId": "pdf-a190e9cb3288-e82014b8",
+      "from": "Campagnes/Pathfinder Society/Saison 3 - Year of Shattered Sanctuaries/PFS - S03-09 - The Secluded Siege (en) - trad.pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 03 - Year of Shattered Sanctuaries/Scénarios/03-09 - The Secluded Siege/Documents/PFS - S03-09 - The Secluded Siege (en) - trad.pdf"
+    },
+    {
+      "fileId": "pdf-42f74cc29af3-073c4471",
+      "from": "Campagnes/Pathfinder Society/Saison 3 - Year of Shattered Sanctuaries/PFS - S03-16 - Escape from Oppara (en) - trad.pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 03 - Year of Shattered Sanctuaries/Scénarios/03-16 - Escape from Oppara/Documents/PFS - S03-16 - Escape from Oppara (en) - trad.pdf"
+    },
+    {
+      "fileId": "pdf-5f933ce0a542-56eca05c",
+      "from": "Campagnes/Pathfinder Society/Saison 3 - Year of Shattered Sanctuaries/PFS - S03-98 - Expedition into Pallid Peril (en) - trad.pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 03 - Year of Shattered Sanctuaries/Scénarios/03-98 - Expedition Into Pallid Peril/Documents/PFS - S03-98 - Expedition into Pallid Peril (en) - trad.pdf"
+    },
+    {
+      "fileId": "pdf-8b84b4495405-039b0a08",
+      "from": "Campagnes/Pathfinder Society/Saison 3 - Year of Shattered Sanctuaries/PFS - S03-99 - Fate in the Future (en) - trad.pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 03 - Year of Shattered Sanctuaries/Scénarios/03-99 - Fate in the Future/Documents/PFS - S03-99 - Fate in the Future (en) - trad.pdf"
+    },
+    {
+      "fileId": "pdf-768f0bae115f-55985396",
+      "from": "Campagnes/Pathfinder Society/Saison 4 - Year of Boundless Wonder/PFS - S04-01 - Intro - Year of Boundless Wonder (en) - trad.pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 04 - Year of Boundless Wonder/Scénarios/Intro - Year of Boundless Wonder/Documents/PFS - S04-01 - Intro - Year of Boundless Wonder (en) - trad.pdf"
+    },
+    {
+      "fileId": "pdf-eaa764b5fe49-cae93173",
+      "from": "Campagnes/Pathfinder Society/Saison 4 - Year of Boundless Wonder/PFS - S04-02 - Return to the Grave (en) - trad.pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 04 - Year of Boundless Wonder/Scénarios/04-02 - Return to the Grave/Documents/PFS - S04-02 - Return to the Grave (en) - trad.pdf"
+    },
+    {
+      "fileId": "pdf-9ce64ad36ea0-b5b4cd77",
+      "from": "Campagnes/Pathfinder Society/Saison 4 - Year of Boundless Wonder/PFS - S04-03 - Linnorm's Legacy (en) - trad.pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 04 - Year of Boundless Wonder/Scénarios/04-03 - Linnorm’s Legacy/Documents/PFS - S04-03 - Linnorm's Legacy (en) - trad.pdf"
+    },
+    {
+      "fileId": "pdf-332dab8d27a4-df907a76",
+      "from": "Campagnes/Pathfinder Society/Saison 4 - Year of Boundless Wonder/PFS - S04-06 - Signal from the Electric Laboratory (en) - trad.pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 04 - Year of Boundless Wonder/Scénarios/04-06 - Signal from the Electric Laboratory/Documents/PFS - S04-06 - Signal from the Electric Laboratory (en) - trad.pdf"
+    },
+    {
+      "fileId": "pdf-2d009de9f56c-85b8269b",
+      "from": "Campagnes/Pathfinder Society/Saison 4 - Year of Boundless Wonder/PFS - S04-07 - A Most Wondrous Exchange (en) - trad.pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 04 - Year of Boundless Wonder/Scénarios/04-07 - A Most Wondrous Exchange!/Documents/PFS - S04-07 - A Most Wondrous Exchange (en) - trad.pdf"
+    },
+    {
+      "fileId": "pdf-809e5499e80d-efdeda53",
+      "from": "Campagnes/Pathfinder Society/Saison 4 - Year of Boundless Wonder/PFS - S04-09 - Killer in the Golden Mask (en) - trad.pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 04 - Year of Boundless Wonder/Scénarios/04-09 - Killer in the Golden Mask/Documents/PFS - S04-09 - Killer in the Golden Mask (en) - trad.pdf"
+    },
+    {
+      "fileId": "pdf-6f14328c61d4-304d07d0",
+      "from": "Campagnes/Pathfinder Society/Saison 4 - Year of Boundless Wonder/PFS - S04-11 - Prisoners of the Electric Castle (en) - trad.pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 04 - Year of Boundless Wonder/Scénarios/04-11 - Prisoners of the Electric Castle/Documents/PFS - S04-11 - Prisoners of the Electric Castle (en) - trad.pdf"
+    },
+    {
+      "fileId": "pdf-a6d445ee4ebd-a321e704",
+      "from": "Campagnes/Pathfinder Society/Saison 4 - Year of Boundless Wonder/PFS - S04-13 - Within the Prairies (en) - trad.pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 04 - Year of Boundless Wonder/Scénarios/04-13 - Within the Prairies/Documents/PFS - S04-13 - Within the Prairies (en) - trad.pdf"
+    },
+    {
+      "fileId": "pdf-2a18312a6b01-f213074f",
+      "from": "Campagnes/Pathfinder Society/Saison 4 - Year of Boundless Wonder/PFS - S04-16 - Dacilane Academy's First Great Prank War (en) - trad.pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 04 - Year of Boundless Wonder/Scénarios/04-16 - Dacilane Academy’s First Great Prank War/Documents/PFS - S04-16 - Dacilane Academy's First Great Prank War (en) - trad.pdf"
+    },
+    {
+      "fileId": "pdf-aa1a63fd8c0a-ef690b6d",
+      "from": "Campagnes/Pathfinder Society/Saison 5 - Year of Unfettered Exploration/PFS - S05-01 - Intro - Year of Unfettered Exploration (en) - trad.pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 05 - Year of Unfettered Exploration/Scénarios/05-01 - Intro - Year of Unfettered Exploration/Documents/PFS - S05-01 - Intro - Year of Unfettered Exploration (en) - trad.pdf"
+    },
+    {
+      "fileId": "pdf-33df46025100-a8d510a6",
+      "from": "Campagnes/Pathfinder Society/Saison 5 - Year of Unfettered Exploration/PFS - S05-04 - Equal Exchanges - Necessary Introduction (en) - trad.pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 05 - Year of Unfettered Exploration/Scénarios/05-04 - Equal Exchanges – Necessary Introductions/Documents/PFS - S05-04 - Equal Exchanges - Necessary Introduction (en) - trad.pdf"
+    },
+    {
+      "fileId": "pdf-871ef9869916-9ad1c900",
+      "from": "Campagnes/Pathfinder Society/Saison 5 - Year of Unfettered Exploration/PFS - S05-06 - Ukuja, The First Wall (en) - trad.pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 05 - Year of Unfettered Exploration/Scénarios/05-06 - Ukuja, the First Wall/Documents/PFS - S05-06 - Ukuja, The First Wall (en) - trad.pdf"
+    },
+    {
+      "fileId": "pdf-81979ce0a0cb-3c672ce6",
+      "from": "Campagnes/Pathfinder Society/Saison 5 - Year of Unfettered Exploration/PFS - S05-07 - Sewer Dragon Crisis (en) - trad.pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 05 - Year of Unfettered Exploration/Scénarios/05-07 - Sewer Dragon Crisis/Documents/PFS - S05-07 - Sewer Dragon Crisis (en) - trad.pdf"
+    },
+    {
+      "fileId": "pdf-c0a8d9ed7ab1-499d59c7",
+      "from": "Campagnes/Pathfinder Society/Saison 5 - Year of Unfettered Exploration/PFS - S05-10 - The Crocodile's Smile (en) - trad.pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 05 - Year of Unfettered Exploration/Scénarios/05-10 - The Crocodile’s Smile/Documents/PFS - S05-10 - The Crocodile's Smile (en) - trad.pdf"
+    },
+    {
+      "fileId": "pdf-8fe309c2eee7-090ef838",
+      "from": "Campagnes/Pathfinder Society/Saison 5 - Year of Unfettered Exploration/PFS - S05-11 - Equal Exchanges - The Hidden Current (en) - trad.pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 05 - Year of Unfettered Exploration/Scénarios/05-11 - Equal Exchanges – The Hidden Current/Documents/PFS - S05-11 - Equal Exchanges - The Hidden Current (en) - trad.pdf"
+    },
+    {
+      "fileId": "pdf-b388ba1ff16b-759d97a0",
+      "from": "Campagnes/Pathfinder Society/Saison 5 - Year of Unfettered Exploration/PFS - S05-13 - Thick as Thieves (en) - trad.pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 05 - Year of Unfettered Exploration/Scénarios/05-13 - Thick as Thieves/Documents/PFS - S05-13 - Thick as Thieves (en) - trad.pdf"
+    },
+    {
+      "fileId": "pdf-579ef8db7207-4f376dfb",
+      "from": "Campagnes/Pathfinder Society/Saison 5 - Year of Unfettered Exploration/PFS - S05-14 - Poisonous Council (en) - trad.pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 05 - Year of Unfettered Exploration/Scénarios/05-14 - Poisonous Council/Documents/PFS - S05-14 - Poisonous Council (en) - trad.pdf"
+    },
+    {
+      "fileId": "pdf-18576236ab84-c21c6140",
+      "from": "Campagnes/Pathfinder Society/Saison 5 - Year of Unfettered Exploration/PFS - S05-17 - Stranded on Yesterday's Tide (en) - trad.pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 05 - Year of Unfettered Exploration/Scénarios/05-17 - Stranded on Yesterday’s Tide/Documents/PFS - S05-17 - Stranded on Yesterday's Tide (en) - trad.pdf"
+    },
+    {
+      "fileId": "pdf-b1a47e9115b8-8818c66f",
+      "from": "Campagnes/Pathfinder Society/Saison 5 - Year of Unfettered Exploration/PFS - S05-19 - Demonic Afterparty (en) - trad.pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 05 - Year of Unfettered Exploration/Scénarios/05-19 - Demonic Afterparty/Documents/PFS - S05-19 - Demonic Afterparty (en) - trad.pdf"
+    },
+    {
+      "fileId": "pdf-0f8caf13b4d3-36ac8f44",
+      "from": "Campagnes/Pathfinder Society/Saison 5 - Year of Unfettered Exploration/PFS - S05-20 - The Rakshasa's Court (en) - trad.pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 05 - Year of Unfettered Exploration/Scénarios/05-20 - The Rakshasa’s Court/Documents/PFS - S05-20 - The Rakshasa's Court (en) - trad.pdf"
+    },
+    {
+      "fileId": "pdf-ae82ff543347-b2de71a7",
+      "from": "Campagnes/Pathfinder Society/Saison 6 - Year of Immortal Influence/PFS - S06-01 - Intro, Year of Immortal Influence (en) - trad.pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 06 - Year of Immortal Influence/Scénarios/06-01 - Intro - Year of Immortal Influence/Documents/PFS - S06-01 - Intro, Year of Immortal Influence (en) - trad.pdf"
+    },
+    {
+      "fileId": "pdf-d0f20596a8ef-65f269bc",
+      "from": "Campagnes/Pathfinder Society/Saison 6 - Year of Immortal Influence/PFS - S06-02 - Rain Falls on the Mountain of Sea and Sky (en) - trad.pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 06 - Year of Immortal Influence/Scénarios/06-02 - Rain Falls on the Mountain of Sea and Sky/Documents/PFS - S06-02 - Rain Falls on the Mountain of Sea and Sky (en) - trad.pdf"
+    },
+    {
+      "fileId": "pdf-0783bade40b5-0f0932b5",
+      "from": "Campagnes/Pathfinder Society/Saison 6 - Year of Immortal Influence/PFS - S06-03 - Godsrain in a Godless Land (en) - trad.pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 06 - Year of Immortal Influence/Scénarios/06-03 - Godsrain in a Godless Land/Documents/PFS - S06-03 - Godsrain in a Godless Land (en) - trad.pdf"
+    },
+    {
+      "fileId": "pdf-7c4e8c975477-336d4197",
+      "from": "Campagnes/Pathfinder Society/Saison 6 - Year of Immortal Influence/PFS - S06-04 - An Enkindled Carnival (en) - trad.pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 06 - Year of Immortal Influence/Scénarios/06-04 - An Enkindled Carnival/Documents/PFS - S06-04 - An Enkindled Carnival (en) - trad.pdf"
+    },
+    {
+      "fileId": "pdf-fba9593a8f1b-46c3422a",
+      "from": "Campagnes/Pathfinder Society/Saison 6 - Year of Immortal Influence/PFS - S06-07 - A God Falls Where Magic Fails (en) - trad.pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 06 - Year of Immortal Influence/Scénarios/06-07 - A God Falls Where Magic Fails/Documents/PFS - S06-07 - A God Falls Where Magic Fails (en) - trad.pdf"
+    },
+    {
+      "fileId": "pdf-554af9453b1c-6f5a2abf",
+      "from": "Campagnes/Pathfinder Society/Saison 6 - Year of Immortal Influence/PFS - S06-08 - Upon Wheels and Rime (en) - trad.pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 06 - Year of Immortal Influence/Scénarios/06-08 - Upon Wheels and Rime/Documents/PFS - S06-08 - Upon Wheels and Rime (en) - trad.pdf"
+    },
+    {
+      "fileId": "pdf-ae90c6aa5e87-a18bad19",
+      "from": "Campagnes/Pathfinder Society/Saison 6 - Year of Immortal Influence/PFS - S06-10 - Once in Whispers (en) - trad.pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 06 - Year of Immortal Influence/Scénarios/06-10 - Once in Whispers/Documents/PFS - S06-10 - Once in Whispers (en) - trad.pdf"
+    },
+    {
+      "fileId": "pdf-cc4ca5d625d6-dc1323fa",
+      "from": "Campagnes/Pathfinder Society/Saison 6 - Year of Immortal Influence/PFS - S06-11 - The Godsrain and the Dragon (en) - trad.pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 06 - Year of Immortal Influence/Scénarios/06-11 - The Godsrain and the Dragon/Documents/PFS - S06-11 - The Godsrain and the Dragon (en) - trad.pdf"
+    },
+    {
+      "fileId": "pdf-853610a9501e-75987706",
+      "from": "Campagnes/Pathfinder Society/Saison 6 - Year of Immortal Influence/PFS - S06-16 - The Heart of the City (en) - trad.pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 06 - Year of Immortal Influence/Scénarios/06-16 - The Heart of the City/Documents/PFS - S06-16 - The Heart of the City (en) - trad.pdf"
+    },
+    {
+      "fileId": "pdf-15311fc03a60-bbbdbf8d",
+      "from": "Campagnes/Pathfinder Society/Saison 8 - Year of Clockwork Mystery/PFS - S08-00 - The Cosmic Captive (en) - trad.pdf",
+      "to": "Campagnes/Pathfinder Society/Legacy/PFS 1e/8-00 - The Cosmic Captive/Documents/PFS - S08-00 - The Cosmic Captive (en) - trad.pdf"
+    },
+    {
+      "fileId": "pdf-b7cb27d53a4f-28636701",
+      "from": "Campagnes/Scénarios/Scénario - Prey for Death (en) - trad.pdf",
+      "to": "Campagnes/Aventures autonomes/Prey for Death/Documents/Scénario - Prey for Death (en) - trad.pdf"
+    },
+    {
+      "fileId": "pdf-a478384376be-8f550896",
+      "from": "Campagnes/Scénarios/Scénario - Shadows at Sundown (en) - trad.pdf",
+      "to": "Campagnes/Aventures autonomes/Shadows at Sundown/Documents/Scénario - Shadows at Sundown (en) - trad.pdf"
+    },
+    {
+      "fileId": "pdf-c86fb2251991-0c69e591",
+      "from": "Campagnes/Scénarios/Scénario - The Enmity Cycle (en) - trad.pdf",
+      "to": "Campagnes/Aventures autonomes/The Enmity Cycle/Documents/Scénario - The Enmity Cycle (en) - trad.pdf"
+    },
+    {
+      "fileId": "pdf-a0a0e68d78d4-a810d10d",
+      "from": "Campagnes/Scénarios/Scénario - Troubles in Grayce (en) - trad.pdf",
+      "to": "Campagnes/Aventures autonomes/Troubles in Grayce/Documents/Scénario - Troubles in Grayce (en) - trad.pdf"
+    },
+    {
+      "fileId": "pdf-ee594efaeace-e596886a",
+      "from": "Campagnes/Campagne - Hellbreakers (en) - trad.pdf",
+      "to": "Campagnes/Campagnes longues/Hellbreakers/Documents/Campagne - Hellbreakers (en) - trad.pdf"
+    },
+    {
+      "fileId": "pdf-61603b46d50c-5e238487",
+      "from": "Campagnes/Campagne - Revenge of the Runelords - Tome 1 (en) - trad.pdf",
+      "to": "Campagnes/Campagnes longues/Revenge of the Runelords/Episodes/01 - Lord of the Trinity Star/Documents/Campagne - Revenge of the Runelords - Tome 1 (en) - trad.pdf"
+    },
+    {
+      "fileId": "pdf-7295c1d07ce8-52187dae",
+      "from": "Campagnes/Pathfinder Society/Saison 6 - Year of Immortal Influence/PFS - S06-09 - The Power of Legends (en).pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 06 - Year of Immortal Influence/Scénarios/06-09 - The Power of Legends/Documents/PFS - S06-09 - The Power of Legends (en).pdf"
+    },
+    {
+      "fileId": "pdf-358bcb4386c1-6ebd157d",
+      "from": "Campagnes/Pathfinder Society/Saison 6 - Year of Immortal Influence/PFS - S06-09 - The Power of Legends (en) - trad.pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 06 - Year of Immortal Influence/Scénarios/06-09 - The Power of Legends/Documents/PFS - S06-09 - The Power of Legends (en) - trad.pdf"
+    },
+    {
+      "fileId": "pdf-local-98c2770db316c7d5",
+      "from": "Campagnes/Aventure - Rusthenge - Bible MJ détaillée (info).pdf",
+      "to": "Campagnes/Aventures autonomes/Rusthenge/Infos/Aventure - Rusthenge - Bible MJ détaillée (info).pdf"
+    },
+    {
+      "fileId": "pdf-local-d4318fa5d5c36d1e",
+      "from": "Campagnes/Aventure - Threshold of Knowledge - Bible MJ détaillée (info).pdf",
+      "to": "Campagnes/Aventures autonomes/Threshold of Knowledge/Infos/Aventure - Threshold of Knowledge - Bible MJ détaillée (info).pdf"
+    },
+    {
+      "fileId": "pdf-local-d88e3ac6118ad442",
+      "from": "Campagnes/Campagne - Abomination Vaults - Tome 23 - Hands of the Devil (en).pdf",
+      "to": "Campagnes/Campagnes longues/Abomination Vaults/Episodes/02 - Hands of the Devil/Documents/Campagne - Abomination Vaults - Tome 23 - Hands of the Devil (en).pdf"
+    },
+    {
+      "fileId": "pdf-local-94569ecf7961277b",
+      "from": "Campagnes/Campagne - Curtain Call - Tome 13 - Stage Fright (en).pdf",
+      "to": "Campagnes/Campagnes longues/Curtain Call/Episodes/01 - Stage Fright/Documents/Campagne - Curtain Call - Tome 13 - Stage Fright (en).pdf"
+    },
+    {
+      "fileId": "pdf-local-e2c449ce8d085455",
+      "from": "Campagnes/Campagne - Curtain Call - Tome 23 - Singer, Stalker, Skinsaw Man (en).pdf",
+      "to": "Campagnes/Campagnes longues/Curtain Call/Episodes/02 - Singer, Stalker, Skinsaw Man/Documents/Campagne - Curtain Call - Tome 23 - Singer, Stalker, Skinsaw Man (en).pdf"
+    },
+    {
+      "fileId": "pdf-local-5e16c141f87ea39c",
+      "from": "Campagnes/Campagne - Extinction Curse - Dossier MJ spoilers (info).pdf",
+      "to": "Campagnes/Campagnes longues/Extinction Curse/Infos/Campagne - Extinction Curse - Dossier MJ spoilers (info).pdf"
+    },
+    {
+      "fileId": "pdf-local-02184c019bde66f9",
+      "from": "Campagnes/Campagne - Extinction Curse - Règles de cirque (info).pdf",
+      "to": "Campagnes/Campagnes longues/Extinction Curse/Infos/Campagne - Extinction Curse - Règles de cirque (info).pdf"
+    },
+    {
+      "fileId": "pdf-local-87942e5f975d2796",
+      "from": "Campagnes/Campagne - Extinction Curse - Tome 16 - The Show Must Go On (en).pdf",
+      "to": "Campagnes/Campagnes longues/Extinction Curse/Episodes/01 - The Show Must Go On/Documents/Campagne - Extinction Curse - Tome 16 - The Show Must Go On (en).pdf"
+    },
+    {
+      "fileId": "pdf-local-9c65ae4bc01a31c9",
+      "from": "Campagnes/Campagne - Extinction Curse - Tome 26 - Legacy of the Lost God (en).pdf",
+      "to": "Campagnes/Campagnes longues/Extinction Curse/Episodes/02 - Legacy of the Lost God/Documents/Campagne - Extinction Curse - Tome 26 - Legacy of the Lost God (en).pdf"
+    },
+    {
+      "fileId": "pdf-local-64bcb9df0d073e6f",
+      "from": "Campagnes/Campagne - Extinction Curse - Tome 36 - Life's Long Shadows (en).pdf",
+      "to": "Campagnes/Campagnes longues/Extinction Curse/Episodes/03 - Life’s Long Shadows/Documents/Campagne - Extinction Curse - Tome 36 - Life's Long Shadows (en).pdf"
+    },
+    {
+      "fileId": "pdf-local-e04d7426414dfbcd",
+      "from": "Campagnes/Campagne - Fists of the Ruby Phoenix - Tome 13 - Despair on Danger Island (en).pdf",
+      "to": "Campagnes/Campagnes longues/Fists of the Ruby Phoenix/Episodes/01 - Despair on Danger Island/Documents/Campagne - Fists of the Ruby Phoenix - Tome 13 - Despair on Danger Island (en).pdf"
+    },
+    {
+      "fileId": "pdf-local-8cf4ee192fd63e39",
+      "from": "Campagnes/Campagne - Gatewalkers - Tome 23 - They Watched the Stars (en).pdf",
+      "to": "Campagnes/Campagnes longues/Gatewalkers/Episodes/02 - They Watched the Stars/Documents/Campagne - Gatewalkers - Tome 23 - They Watched the Stars (en).pdf"
+    },
+    {
+      "fileId": "pdf-local-1e352f6e50558d97",
+      "from": "Campagnes/Campagne - Gatewalkers - Tome 33 - Dreamers of the Nameless Spires (en).pdf",
+      "to": "Campagnes/Campagnes longues/Gatewalkers/Episodes/03 - Dreamers of the Nameless Spires/Documents/Campagne - Gatewalkers - Tome 33 - Dreamers of the Nameless Spires (en).pdf"
+    },
+    {
+      "fileId": "pdf-local-7cbb77b83ec5a501",
+      "from": "Campagnes/Campagne - Outlaws of Alkenstar - Tome 23 - Cradle of Quartz (en).pdf",
+      "to": "Campagnes/Campagnes longues/Outlaws of Alkenstar/Episodes/02 - Cradle of Quartz/Documents/Campagne - Outlaws of Alkenstar - Tome 23 - Cradle of Quartz (en).pdf"
+    },
+    {
+      "fileId": "pdf-local-f5a55956a6894123",
+      "from": "Campagnes/Campagne - Outlaws of Alkenstar - Tome 33 - The Smoking Gun (en).pdf",
+      "to": "Campagnes/Campagnes longues/Outlaws of Alkenstar/Episodes/03 - The Smoking Gun/Documents/Campagne - Outlaws of Alkenstar - Tome 33 - The Smoking Gun (en).pdf"
+    },
+    {
+      "fileId": "pdf-local-bc59d9e270eda8e6",
+      "from": "Campagnes/Campagne - Season of Ghosts - Tome 14 - The Summer That Never Was (en).pdf",
+      "to": "Campagnes/Campagnes longues/Season of Ghosts/Episodes/01 - The Summer That Never Was/Documents/Campagne - Season of Ghosts - Tome 14 - The Summer That Never Was (en).pdf"
+    },
+    {
+      "fileId": "pdf-local-821eb84e03adad12",
+      "from": "Campagnes/Campagne - Season of Ghosts - Tome 24 - Let the Leaves Fall (en).pdf",
+      "to": "Campagnes/Campagnes longues/Season of Ghosts/Episodes/02 - Let the Leaves Fall/Documents/Campagne - Season of Ghosts - Tome 24 - Let the Leaves Fall (en).pdf"
+    },
+    {
+      "fileId": "pdf-local-98fe40527bcb7c05",
+      "from": "Campagnes/Campagne - Season of Ghosts - Tome 34 - No Breath to Cry (en).pdf",
+      "to": "Campagnes/Campagnes longues/Season of Ghosts/Episodes/03 - No Breath to Cry/Documents/Campagne - Season of Ghosts - Tome 34 - No Breath to Cry (en).pdf"
+    },
+    {
+      "fileId": "pdf-local-097b83f24f70c52f",
+      "from": "Campagnes/Campagne - Shades of Blood - Tome 23 - The Broken Palace (en).pdf",
+      "to": "Campagnes/Campagnes longues/Shades of Blood/Episodes/02 - The Broken Palace/Documents/Campagne - Shades of Blood - Tome 23 - The Broken Palace (en).pdf"
+    },
+    {
+      "fileId": "pdf-local-9117155f57710a2b",
+      "from": "Campagnes/Campagne - Shades of Blood - Tome 33 - To Blot Out the Sun (en).pdf",
+      "to": "Campagnes/Campagnes longues/Shades of Blood/Episodes/03 - To Blot Out the Sun/Documents/Campagne - Shades of Blood - Tome 33 - To Blot Out the Sun (en).pdf"
+    },
+    {
+      "fileId": "pdf-local-716a0969c6a9f2da",
+      "from": "Campagnes/Campagne - Sky King's Tomb - Tome 23 - Cult of the Cave Worm (en).pdf",
+      "to": "Campagnes/Campagnes longues/Sky King's Tomb/Episodes/02 - Cult of the Cave Worm/Documents/Campagne - Sky King's Tomb - Tome 23 - Cult of the Cave Worm (en).pdf"
+    },
+    {
+      "fileId": "pdf-local-c5c9862f166bed10",
+      "from": "Campagnes/Campagne - Spore War - Tome 13 - Whispers in the Dirt (en).pdf",
+      "to": "Campagnes/Campagnes longues/Spore War/Episodes/01 - Whispers in the Dirt/Documents/Campagne - Spore War - Tome 13 - Whispers in the Dirt (en).pdf"
+    },
+    {
+      "fileId": "pdf-local-d458e5e1bfde6f98",
+      "from": "Campagnes/Campagne - Stolen Fate - Tome 33 - The Destiny War (en).pdf",
+      "to": "Campagnes/Campagnes longues/Stolen Fate/Episodes/02 - The Destiny War/Documents/Campagne - Stolen Fate - Tome 33 - The Destiny War (en).pdf"
+    },
+    {
+      "fileId": "pdf-local-ede31693e2c490e1",
+      "from": "Campagnes/Pathfinder Society/Legacy - PFS 1e/PFS 1e - 47 - The Darkest Vengeance (en).pdf",
+      "to": "Campagnes/Pathfinder Society/Legacy/PFS 1e/47 - The Darkest Vengeance/Documents/PFS 1e - 47 - The Darkest Vengeance (en).pdf"
+    },
+    {
+      "fileId": "pdf-local-a1660bd9f8a77d61",
+      "from": "Campagnes/Pathfinder Society/Quêtes et Bounties/PFS - Bounty 04 - Cat's Cradle (en).pdf",
+      "to": "Campagnes/Pathfinder Society/Bounties/Bounty 04 — Cat's Cradle/Documents/PFS - Bounty 04 - Cat's Cradle (en).pdf"
+    },
+    {
+      "fileId": "pdf-local-0487e85390723bf0",
+      "from": "Campagnes/Pathfinder Society/Quêtes et Bounties/PFS - Bounty 14 - The Blackwood Truce (en).pdf",
+      "to": "Campagnes/Pathfinder Society/Bounties/Bounty #14 - The Blackwood Truce/Documents/PFS - Bounty 14 - The Blackwood Truce (en).pdf"
+    },
+    {
+      "fileId": "pdf-local-1c80c32ff84c843b",
+      "from": "Campagnes/Pathfinder Society/Quêtes et Bounties/PFS - Quest 10 - The Broken Scales (en).pdf",
+      "to": "Campagnes/Pathfinder Society/Quests/Quest 10 — The Broken Scales/Documents/PFS - Quest 10 - The Broken Scales (en).pdf"
+    },
+    {
+      "fileId": "pdf-local-0b0ee1f702e9e758",
+      "from": "Campagnes/Pathfinder Society/Quêtes et Bounties/PFS - Quest 11 - A Parchment Tree (en).pdf",
+      "to": "Campagnes/Pathfinder Society/Quests/Quest 11 — A Parchment Tree/Documents/PFS - Quest 11 - A Parchment Tree (en).pdf"
+    },
+    {
+      "fileId": "pdf-local-925239ed64982813",
+      "from": "Campagnes/Pathfinder Society/Quêtes et Bounties/PFS - Quest 16 - Boom Town Betrayal (en).pdf",
+      "to": "Campagnes/Pathfinder Society/Bounties/Bounty 16 — Boom Town Betrayal/Documents/PFS - Quest 16 - Boom Town Betrayal (en).pdf"
+    },
+    {
+      "fileId": "pdf-local-38b4ab4ba363e6ea",
+      "from": "Campagnes/Pathfinder Society/Quêtes et Bounties/PFS - Quest 23 - Lacking Respect (en).pdf",
+      "to": "Campagnes/Pathfinder Society/Quests/Quest 23 — Lacking Respect/Documents/PFS - Quest 23 - Lacking Respect (en).pdf"
+    },
+    {
+      "fileId": "pdf-local-e127e24a4ac8df64",
+      "from": "Campagnes/Pathfinder Society/Saison 2 - Year of Corruption's Reach/PFS - S02-15 - A Dirge for Sarkoris (en).pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 02 - Year of Corruption's Reach/Scénarios/02-15 - A Dirge for Sarkoris/Documents/PFS - S02-15 - A Dirge for Sarkoris (en).pdf"
+    },
+    {
+      "fileId": "pdf-local-400bd56dce65e49b",
+      "from": "Campagnes/Pathfinder Society/Saison 3 - Year of Shattered Sanctuaries/PFS - S03-03 - Echoes of Desperation (en).pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 03 - Year of Shattered Sanctuaries/Scénarios/03-03 - Echoes of Desperation/Documents/PFS - S03-03 - Echoes of Desperation (en).pdf"
+    },
+    {
+      "fileId": "pdf-local-7ca1ecbbf33ea0bb",
+      "from": "Campagnes/Pathfinder Society/Saison 3 - Year of Shattered Sanctuaries/PFS - S03-17 - Dreams of a Dustbound Isle (info).pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 03 - Year of Shattered Sanctuaries/Scénarios/03-17 - Dreams of a Dustbound Isle/Infos/PFS - S03-17 - Dreams of a Dustbound Isle (info).pdf"
+    },
+    {
+      "fileId": "pdf-local-4ab844acd1bd4067",
+      "from": "Campagnes/Pathfinder Society/Saison 3 - Year of Shattered Sanctuaries/PFS - S03-18 - Dacilane Academy's Delightful Disaster (en).pdf",
+      "to": "Campagnes/Pathfinder Society/Saisons/Saison 03 - Year of Shattered Sanctuaries/Scénarios/03-18 - Dacilane Academy’s Delightful Disaster/Documents/PFS - S03-18 - Dacilane Academy's Delightful Disaster (en).pdf"
+    },
+    {
+      "fileId": "pdf-local-0d85d031dc2d90b4",
+      "from": "Règles/Règles - Battlecry! (en).pdf",
+      "to": "Références/Règles/Règles - Battlecry! (en).pdf"
+    },
+    {
+      "fileId": "pdf-local-507e08a63d748c21",
+      "from": "Règles/Règles - Lost Omens - Firebrands (en).pdf",
+      "to": "Références/Règles/Règles - Lost Omens - Firebrands (en).pdf"
+    },
+    {
+      "fileId": "pdf-local-8440c162b908e258",
+      "from": "Règles/Règles - Lost Omens - Highhelm (en).pdf",
+      "to": "Références/Règles/Règles - Lost Omens - Highhelm (en).pdf"
+    },
+    {
+      "fileId": "pdf-local-b3ddafcd7b19895a",
+      "from": "Règles/Règles - Lost Omens - Shining Kingdoms (en).pdf",
+      "to": "Références/Règles/Règles - Lost Omens - Shining Kingdoms (en).pdf"
+    },
+    {
+      "fileId": "pdf-local-249673c5c156f5e3",
+      "from": "Règles/Règles - Mythic - Alternate Mythic Rules (en).pdf",
+      "to": "Références/Règles/Règles - Mythic - Alternate Mythic Rules (en).pdf"
+    },
+    {
+      "fileId": "pdf-local-7cd58df66e95ee75",
+      "from": "Ressources/Cartes/Agents of Edgewatch - Tome 2 - Sixty Feet Under (map).pdf",
+      "to": "Campagnes/Campagnes longues/Agents of Edgewatch/Cartes/Agents of Edgewatch - Tome 2 - Sixty Feet Under (map).pdf"
+    },
+    {
+      "fileId": "pdf-local-46d18dc1dbbc26a4",
+      "from": "Ressources/Cartes/Agents of Edgewatch - Tome 4 - Assault on Hunting Lodge Seven (map).pdf",
+      "to": "Campagnes/Campagnes longues/Agents of Edgewatch/Cartes/Agents of Edgewatch - Tome 4 - Assault on Hunting Lodge Seven (map).pdf"
+    },
+    {
+      "fileId": "pdf-local-4bc4a8d0f579ced4",
+      "from": "Ressources/Cartes/Age of Ashes - Tome 3 - Tomorrow Must Burn (map).pdf",
+      "to": "Campagnes/Campagnes longues/Age of Ashes/Episodes/03 - Brûlons demain/Cartes/Age of Ashes - Tome 3 - Tomorrow Must Burn (map).pdf"
+    },
+    {
+      "fileId": "pdf-local-a672840a6816904d",
+      "from": "Ressources/Cartes/Age of Ashes - Tome 4 - To Bloom Below the Web (map).pdf",
+      "to": "Campagnes/Campagnes longues/Age of Ashes/Episodes/04 - Les Flammes de la cité hantée/Cartes/Age of Ashes - Tome 4 - To Bloom Below the Web (map).pdf"
+    },
+    {
+      "fileId": "pdf-local-9961925bcd8c9128",
+      "from": "Ressources/Cartes/Age of Ashes - Tome 5 - Against the Scarlet Triad (map).pdf",
+      "to": "Campagnes/Campagnes longues/Age of Ashes/Episodes/05 - Contre la Triade écarlate/Cartes/Age of Ashes - Tome 5 - Against the Scarlet Triad (map).pdf"
+    },
+    {
+      "fileId": "pdf-local-69701e2e039a9d9a",
+      "from": "Ressources/Cartes/Blood Lords - Tome 3 - Field of Maidens (map).pdf",
+      "to": "Campagnes/Campagnes longues/Blood Lords/Episodes/03 - Field of Maidens/Cartes/Blood Lords - Tome 3 - Field of Maidens (map).pdf"
+    },
+    {
+      "fileId": "pdf-local-a62341d633d83d02",
+      "from": "Ressources/Cartes/Curtain Call - Tome 1 - Stage Fright (map).pdf",
+      "to": "Campagnes/Campagnes longues/Curtain Call/Episodes/01 - Stage Fright/Cartes/Curtain Call - Tome 1 - Stage Fright (map).pdf"
+    },
+    {
+      "fileId": "pdf-local-0ca472d8a4615eee",
+      "from": "Ressources/Cartes/Curtain Call - Tome 2 - Singer, Stalker, Skinsaw Man (map).pdf",
+      "to": "Campagnes/Campagnes longues/Curtain Call/Episodes/02 - Singer, Stalker, Skinsaw Man/Cartes/Curtain Call - Tome 2 - Singer, Stalker, Skinsaw Man (map).pdf"
+    },
+    {
+      "fileId": "pdf-local-20073566f319419a",
+      "from": "Ressources/Cartes/Curtain Call - Tome 3 - Bring the House Down (map).pdf",
+      "to": "Campagnes/Campagnes longues/Curtain Call/Episodes/03 - Bring Down the House/Cartes/Curtain Call - Tome 3 - Bring the House Down (map).pdf"
+    },
+    {
+      "fileId": "pdf-local-b11908464d9946fc",
+      "from": "Ressources/Cartes/Extinction Curse - Tome 2 - Legacy of the Lost God (map).pdf",
+      "to": "Campagnes/Campagnes longues/Extinction Curse/Episodes/02 - Legacy of the Lost God/Cartes/Extinction Curse - Tome 2 - Legacy of the Lost God (map).pdf"
+    },
+    {
+      "fileId": "pdf-local-bdbe18d9ffe654d4",
+      "from": "Ressources/Cartes/Extinction Curse - Tome 5 - Lord of the Black Sands (map).pdf",
+      "to": "Campagnes/Campagnes longues/Extinction Curse/Episodes/05 - Lord of the Black Sands/Cartes/Extinction Curse - Tome 5 - Lord of the Black Sands (map).pdf"
+    },
+    {
+      "fileId": "pdf-local-dd9674033bf2fecf",
+      "from": "Ressources/Cartes/Fists of the Ruby Phoenix - Tome 2 - Ready Fight! (map).pdf",
+      "to": "Campagnes/Campagnes longues/Fists of the Ruby Phoenix/Episodes/02 - Ready? Fight!/Cartes/Fists of the Ruby Phoenix - Tome 2 - Ready Fight! (map).pdf"
+    },
+    {
+      "fileId": "pdf-local-7b5516167517e880",
+      "from": "Ressources/Cartes/Kingmaker - Interactive Maps (map).pdf",
+      "to": "Campagnes/Campagnes longues/Kingmaker/Cartes/Kingmaker - Interactive Maps (map).pdf"
+    },
+    {
+      "fileId": "pdf-local-c1e4cd40a764d97c",
+      "from": "Ressources/Cartes/Revenge of the Runelords - Tome 1 - Lord of the Trinity Star (map).pdf",
+      "to": "Campagnes/Campagnes longues/Revenge of the Runelords/Episodes/01 - Lord of the Trinity Star/Cartes/Revenge of the Runelords - Tome 1 - Lord of the Trinity Star (map).pdf"
+    },
+    {
+      "fileId": "pdf-local-41d03fbcfc3a0769",
+      "from": "Ressources/Cartes/Season of Ghosts - Tome 3 - No Breath to Cry (map).pdf",
+      "to": "Campagnes/Campagnes longues/Season of Ghosts/Episodes/03 - No Breath to Cry/Cartes/Season of Ghosts - Tome 3 - No Breath to Cry (map).pdf"
+    },
+    {
+      "fileId": "pdf-local-ac8c1d3c093965f1",
+      "from": "Ressources/Cartes/Shades of Blood - Tome 1 - Thirst for Blood (map).pdf",
+      "to": "Campagnes/Campagnes longues/Shades of Blood/Episodes/01 - Thirst for Blood/Cartes/Shades of Blood - Tome 1 - Thirst for Blood (map).pdf"
+    },
+    {
+      "fileId": "pdf-local-c61fef2e01ca453c",
+      "from": "Ressources/Cartes/Spore War - Tome 1 - Whispers in the Dirt (map).pdf",
+      "to": "Campagnes/Campagnes longues/Spore War/Episodes/01 - Whispers in the Dirt/Cartes/Spore War - Tome 1 - Whispers in the Dirt (map).pdf"
+    },
+    {
+      "fileId": "pdf-local-432aa543456880ee",
+      "from": "Ressources/Cartes/Spore War - Tome 2 - The Secret of Deathstalk Tower (map).pdf",
+      "to": "Campagnes/Campagnes longues/Spore War/Episodes/02 - The Secret of Deathstalk Tower/Cartes/Spore War - Tome 2 - The Secret of Deathstalk Tower (map).pdf"
+    },
+    {
+      "fileId": "pdf-local-60977b1b1006439f",
+      "from": "Ressources/Cartes/Stolen Fate - Tome 1 - The Choosing (map).pdf",
+      "to": "Campagnes/Campagnes longues/Stolen Fate/Episodes/01 - The Choosing/Cartes/Stolen Fate - Tome 1 - The Choosing (map).pdf"
+    },
+    {
+      "fileId": "pdf-local-d5a0b32e9274565b",
+      "from": "Ressources/Cartes/Strength of Thousands - Tome 3 - Hurricane's Howl (map).pdf",
+      "to": "Campagnes/Campagnes longues/Strength of Thousands/Episodes/03 - Hurricane’s Howl/Cartes/Strength of Thousands - Tome 3 - Hurricane's Howl (map).pdf"
+    },
+    {
+      "fileId": "pdf-local-f0742f855dbc7fd9",
+      "from": "Ressources/Cartes/Strength of Thousands - Tome 4 - Secrets of the Temple-City (map).pdf",
+      "to": "Campagnes/Campagnes longues/Strength of Thousands/Episodes/04 - Secrets of the Temple-City/Cartes/Strength of Thousands - Tome 4 - Secrets of the Temple-City (map).pdf"
+    },
+    {
+      "fileId": "pdf-local-915dd29fb3caed96",
+      "from": "Ressources/Cartes/Strength of Thousands - Tome 5 - Doorway to the Red Star (map).pdf",
+      "to": "Campagnes/Campagnes longues/Strength of Thousands/Episodes/05 - Doorway to the Red Star/Cartes/Strength of Thousands - Tome 5 - Doorway to the Red Star (map).pdf"
+    },
+    {
+      "fileId": "pdf-local-945fd399ada8fc86",
+      "from": "Ressources/Cartes/Strength of Thousands - Tome 6 - Shadows of the Ancients (map).pdf",
+      "to": "Campagnes/Campagnes longues/Strength of Thousands/Episodes/06 - Shadows of the Ancients/Cartes/Strength of Thousands - Tome 6 - Shadows of the Ancients (map).pdf"
+    },
+    {
+      "fileId": "pdf-local-8dd75dd45a8bb599",
+      "from": "Ressources/Cartes/Triumph of the Tusk - Tome 1 - The Resurrection Flood (map).pdf",
+      "to": "Campagnes/Campagnes longues/Triumph of the Tusk/Episodes/01 - The Resurrection Flood/Cartes/Triumph of the Tusk - Tome 1 - The Resurrection Flood (map).pdf"
+    },
+    {
+      "fileId": "pdf-local-ef4c8a84509dd316",
+      "from": "Ressources/Cartes/Triumph of the Tusk - Tome 2 - Hoof, Cinder, and Storm (map).pdf",
+      "to": "Campagnes/Campagnes longues/Triumph of the Tusk/Episodes/02 - Hoof, Cinder, and Storm/Cartes/Triumph of the Tusk - Tome 2 - Hoof, Cinder, and Storm (map).pdf"
+    },
+    {
+      "fileId": "pdf-local-ea24c02fa1b5c581",
+      "from": "Ressources/Cartes/Wardens of Wildwood - Tome 1 - Pactbreaker (map).pdf",
+      "to": "Campagnes/Campagnes longues/Wardens of Wildwood/Episodes/01 - Pactbreaker/Cartes/Wardens of Wildwood - Tome 1 - Pactbreaker (map).pdf"
+    },
+    {
+      "fileId": "pdf-local-a9a28534b7ea56b1",
+      "from": "Ressources/Cartes/Wardens of Wildwood - Tome 2 - Severed at the Root (map).pdf",
+      "to": "Campagnes/Campagnes longues/Wardens of Wildwood/Episodes/02 - Severed at the Root/Cartes/Wardens of Wildwood - Tome 2 - Severed at the Root (map).pdf"
+    },
+    {
+      "fileId": "pdf-local-6c68471bcf4a2d99",
+      "from": "Ressources/Cartes/War for the Crown - Tome 2 - Songbird, Scion, Saboteur (map).pdf",
+      "to": "À classer/Cartes/War for the Crown - Tome 2 - Songbird, Scion, Saboteur (map).pdf"
+    },
+    {
+      "fileId": "pdf-local-3c6a359bfab2ea08",
+      "from": "Ressources/Guides joueurs/Age of Ashes - Player's Guide (player).pdf",
+      "to": "Campagnes/Campagnes longues/Age of Ashes/Guides joueurs/Age of Ashes - Player's Guide (player).pdf"
+    },
+    {
+      "fileId": "pdf-local-244ac65bae6dfe31",
+      "from": "Ressources/Guides joueurs/Curtain Call - Player's Guide (player).pdf",
+      "to": "Campagnes/Campagnes longues/Curtain Call/Guides joueurs/Curtain Call - Player's Guide (player).pdf"
+    },
+    {
+      "fileId": "pdf-local-79fe0361e2797160",
+      "from": "Ressources/Guides joueurs/Fists of the Ruby Phoenix - Player's Guide (player).pdf",
+      "to": "Campagnes/Campagnes longues/Fists of the Ruby Phoenix/Guides joueurs/Fists of the Ruby Phoenix - Player's Guide (player).pdf"
+    },
+    {
+      "fileId": "pdf-local-67143a05c3b65348",
+      "from": "Ressources/Guides joueurs/Gatewalkers - Player's Guide (player).pdf",
+      "to": "Campagnes/Campagnes longues/Gatewalkers/Guides joueurs/Gatewalkers - Player's Guide (player).pdf"
+    },
+    {
+      "fileId": "pdf-local-3b667311a769ba02",
+      "from": "Ressources/Guides joueurs/Head-Shot the Rot - Pregenerated Characters (player).pdf",
+      "to": "Campagnes/Aventures autonomes/Head Shot the Rot/Documents/Head-Shot the Rot - Pregenerated Characters (player).pdf"
+    },
+    {
+      "fileId": "pdf-local-63a0a8d68fa56b64",
+      "from": "Ressources/Guides joueurs/Hellbreakers - Player's Guide (player).pdf",
+      "to": "Campagnes/Campagnes longues/Hellbreakers/Guides joueurs/Hellbreakers - Player's Guide (player).pdf"
+    },
+    {
+      "fileId": "pdf-local-88977649cf432fd9",
+      "from": "Ressources/Guides joueurs/Pathfinder Adventure Path - Player's Guide (player).pdf",
+      "to": "À classer/Guides joueurs/Pathfinder Adventure Path - Player's Guide (player).pdf"
+    },
+    {
+      "fileId": "pdf-local-8c293392184ae495",
+      "from": "Ressources/Guides joueurs/Quest for the Frozen Flame - Player's Guide (player).pdf",
+      "to": "Campagnes/Campagnes longues/Quest for the Frozen Flame/Guides joueurs/Quest for the Frozen Flame - Player's Guide (player).pdf"
+    },
+    {
+      "fileId": "pdf-local-a30987d40108647a",
+      "from": "Ressources/Guides joueurs/Revenge of the Runelords - Player's Guide (player).pdf",
+      "to": "Campagnes/Campagnes longues/Revenge of the Runelords/Guides joueurs/Revenge of the Runelords - Player's Guide (player).pdf"
+    },
+    {
+      "fileId": "pdf-local-a791e5016cbb2b89",
+      "from": "Ressources/Guides joueurs/Season of Ghosts - Player's Guide (player).pdf",
+      "to": "Campagnes/Campagnes longues/Season of Ghosts/Guides joueurs/Season of Ghosts - Player's Guide (player).pdf"
+    },
+    {
+      "fileId": "pdf-local-66b031889e27c3d9",
+      "from": "Ressources/Guides joueurs/Spore War - Player's Guide (player).pdf",
+      "to": "Campagnes/Campagnes longues/Spore War/Guides joueurs/Spore War - Player's Guide (player).pdf"
+    },
+    {
+      "fileId": "pdf-local-9b02274b577d3b38",
+      "from": "Ressources/Guides joueurs/Stolen Fate - Player's Guide (player).pdf",
+      "to": "Campagnes/Campagnes longues/Stolen Fate/Guides joueurs/Stolen Fate - Player's Guide (player).pdf"
+    },
+    {
+      "fileId": "pdf-local-e13f9184146f2986",
+      "from": "Ressources/Guides joueurs/Triumph of the Tusk - Player's Guide (player).pdf",
+      "to": "Campagnes/Campagnes longues/Triumph of the Tusk/Guides joueurs/Triumph of the Tusk - Player's Guide (player).pdf"
+    },
+    {
+      "fileId": "pdf-local-a4452f25b7ec0dd1",
+      "from": "Ressources/Guides joueurs/Wardens of Wildwood - Player's Guide (player).pdf",
+      "to": "Campagnes/Campagnes longues/Wardens of Wildwood/Guides joueurs/Wardens of Wildwood - Player's Guide (player).pdf"
+    },
+    {
+      "fileId": "pdf-local-658886de9a4f4bfe",
+      "from": "Univers/Univers - Dieux de Golarion - Référence approfondie 4720 (info).pdf",
+      "to": "Références/Univers/Univers - Dieux de Golarion - Référence approfondie 4720 (info).pdf"
+    },
+    {
+      "fileId": "pdf-local-8cd9af005b3024a9",
+      "from": "Univers/Univers - Pathfinder Society - Guide Organized Play v1.1 (info).pdf",
+      "to": "Références/Univers/Univers - Pathfinder Society - Guide Organized Play v1.1 (info).pdf"
+    }
+  ]
+}

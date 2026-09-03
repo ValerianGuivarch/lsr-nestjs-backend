@@ -1,0 +1,771 @@
+{
+  "generatedAt": "2026-09-01T18:21:47+02:00",
+  "physicalPdfCount": 377,
+  "cataloguePdfCount": 377,
+  "existingFilesReused": 294,
+  "pathsUpdated": 21,
+  "newFilesIntegrated": 83,
+  "newPlayableEntriesCreated": [
+    "bounty-04-cat-s-cradle",
+    "quest-10-the-broken-scales",
+    "quest-11-a-parchment-tree",
+    "quest-16-boom-town-betrayal",
+    "quest-23-lacking-respect",
+    "pfs1e-47-the-darkest-vengeance"
+  ],
+  "newFilesAssociated": 74,
+  "intentionalReferenceFilesUnassociated": [
+    "Règles/Règles - Battlecry! (en).pdf",
+    "Règles/Règles - Lost Omens - Firebrands (en).pdf",
+    "Règles/Règles - Lost Omens - Highhelm (en).pdf",
+    "Règles/Règles - Lost Omens - Shining Kingdoms (en).pdf",
+    "Règles/Règles - Mythic - Alternate Mythic Rules (en).pdf",
+    "Univers/Univers - Dieux de Golarion - Référence approfondie 4720 (info).pdf",
+    "Univers/Univers - Pathfinder Society - Guide Organized Play v1.1 (info).pdf"
+  ],
+  "filesStillNeedingManualAssociation": [
+    "Ressources/Cartes/War for the Crown - Tome 2 - Songbird, Scion, Saboteur (map).pdf",
+    "Ressources/Guides joueurs/Pathfinder Adventure Path - Player's Guide (player).pdf"
+  ],
+  "resourceZipCount": 0,
+  "relocations": [
+    {
+      "from": "Campagnes/Campagne - Blood Lords - Tome 2:6 (en).pdf",
+      "to": "Campagnes/Campagne - Blood Lords - Tome 26 (en).pdf"
+    },
+    {
+      "from": "Campagnes/Campagne - Blood Lords - Tome 3:6 (en).pdf",
+      "to": "Campagnes/Campagne - Blood Lords - Tome 36 (en).pdf"
+    },
+    {
+      "from": "Campagnes/Campagne - Blood Lords - Tome 4:6 (en).pdf",
+      "to": "Campagnes/Campagne - Blood Lords - Tome 46 (en).pdf"
+    },
+    {
+      "from": "Campagnes/Campagne - Quest for the Frozen Flame - Tome 3:3 - Burning Tundra (en).pdf",
+      "to": "Campagnes/Campagne - Quest for the Frozen Flame - Tome 33 - Burning Tundra (en).pdf"
+    },
+    {
+      "from": "Campagnes/Campagne - Triumph of the Tusk - Tome 3:3 (en).pdf",
+      "to": "Campagnes/Campagne - Triumph of the Tusk - Tome 33 (en).pdf"
+    },
+    {
+      "from": "Campagnes/Campagne - Wardens of Wildwood - Tome 1:3 (en).pdf",
+      "to": "Campagnes/Campagne - Wardens of Wildwood - Tome 13 (en).pdf"
+    },
+    {
+      "from": "Campagnes/Campagne - Wardens of Wildwood - Tome 1:3 (fr trad).pdf",
+      "to": "Campagnes/Campagne - Wardens of Wildwood - Tome 13 (fr trad).pdf"
+    },
+    {
+      "from": "Campagnes/Campagne - Wardens of Wildwood - Tome 2:3 (en).pdf",
+      "to": "Campagnes/Campagne - Wardens of Wildwood - Tome 23 (en).pdf"
+    },
+    {
+      "from": "Règles/Règles - Bestiaire Howl of the Wild (en).pdf",
+      "to": "Règles/Règles - Bestiaire Howl of the Wild (en).pdf"
+    },
+    {
+      "from": "Règles/Règles - Livre du MJ.pdf",
+      "to": "Règles/Règles - Livre du MJ.pdf"
+    },
+    {
+      "from": "Univers/Univers : Règles - Draconic Codex (en).pdf",
+      "to": "Univers/Univers  Règles - Draconic Codex (en).pdf"
+    },
+    {
+      "from": "Campagnes/Campagne - Blood Lords - Tome 2:6 (en) - trad.pdf",
+      "to": "Campagnes/Campagne - Blood Lords - Tome 26 (en) - trad.pdf"
+    },
+    {
+      "from": "Campagnes/Campagne - Blood Lords - Tome 3:6 (en) - trad.pdf",
+      "to": "Campagnes/Campagne - Blood Lords - Tome 36 (en) - trad.pdf"
+    },
+    {
+      "from": "Campagnes/Campagne - Blood Lords - Tome 4:6 (en) - trad.pdf",
+      "to": "Campagnes/Campagne - Blood Lords - Tome 46 (en) - trad.pdf"
+    },
+    {
+      "from": "Campagnes/Campagne - Quest for the Frozen Flame - Tome 3:3 - Burning Tundra (en) - trad.pdf",
+      "to": "Campagnes/Campagne - Quest for the Frozen Flame - Tome 33 - Burning Tundra (en) - trad.pdf"
+    },
+    {
+      "from": "Campagnes/Campagne - Triumph of the Tusk - Tome 3:3 (en) - trad.pdf",
+      "to": "Campagnes/Campagne - Triumph of the Tusk - Tome 33 (en) - trad.pdf"
+    },
+    {
+      "from": "Campagnes/Campagne - Wardens of Wildwood - Tome 2:3 (en) - trad.pdf",
+      "to": "Campagnes/Campagne - Wardens of Wildwood - Tome 23 (en) - trad.pdf"
+    },
+    {
+      "from": "Campagnes/Scénarios/Scénario - Prey for Death (en) - trad.pdf",
+      "to": "Campagnes/Scénarios/Scénario - Prey for Death (en) - trad.pdf"
+    },
+    {
+      "from": "Campagnes/Scénarios/Scénario - Shadows at Sundown (en) - trad.pdf",
+      "to": "Campagnes/Scénarios/Scénario - Shadows at Sundown (en) - trad.pdf"
+    },
+    {
+      "from": "Campagnes/Scénarios/Scénario - The Enmity Cycle (en) - trad.pdf",
+      "to": "Campagnes/Scénarios/Scénario - The Enmity Cycle (en) - trad.pdf"
+    },
+    {
+      "from": "Campagnes/Scénarios/Scénario - Troubles in Grayce (en) - trad.pdf",
+      "to": "Campagnes/Scénarios/Scénario - Troubles in Grayce (en) - trad.pdf"
+    }
+  ],
+  "associations": [
+    {
+      "path": "Campagnes/Aventure - Rusthenge - Bible MJ détaillée (info).pdf",
+      "targetId": "rusthenge-main",
+      "variant": "information",
+      "completeness": "complet"
+    },
+    {
+      "path": "Campagnes/Aventure - Threshold of Knowledge - Bible MJ détaillée (info).pdf",
+      "targetId": "free-rpg-threshold-of-knowledge-main",
+      "variant": "information",
+      "completeness": "complet"
+    },
+    {
+      "path": "Campagnes/Campagne - Abomination Vaults - Tome 23 - Hands of the Devil (en).pdf",
+      "targetId": "abomination-vaults-volume-2",
+      "variant": "anglais",
+      "completeness": "complet"
+    },
+    {
+      "path": "Campagnes/Campagne - Curtain Call - Tome 13 - Stage Fright (en).pdf",
+      "targetId": "curtain-call-volume-1",
+      "variant": "anglais",
+      "completeness": "complet"
+    },
+    {
+      "path": "Campagnes/Campagne - Curtain Call - Tome 23 - Singer, Stalker, Skinsaw Man (en).pdf",
+      "targetId": "curtain-call-volume-2",
+      "variant": "anglais",
+      "completeness": "complet"
+    },
+    {
+      "path": "Campagnes/Campagne - Extinction Curse - Dossier MJ spoilers (info).pdf",
+      "targetId": "extinction-curse-info-campagne-extinction-curse-dossier-mj-spoilers",
+      "variant": "information",
+      "completeness": "complet"
+    },
+    {
+      "path": "Campagnes/Campagne - Extinction Curse - Règles de cirque (info).pdf",
+      "targetId": "extinction-curse-info-campagne-extinction-curse-regles-de-cirque",
+      "variant": "information",
+      "completeness": "complet"
+    },
+    {
+      "path": "Campagnes/Campagne - Extinction Curse - Tome 16 - The Show Must Go On (en).pdf",
+      "targetId": "extinction-curse-volume-1",
+      "variant": "anglais",
+      "completeness": "complet"
+    },
+    {
+      "path": "Campagnes/Campagne - Extinction Curse - Tome 26 - Legacy of the Lost God (en).pdf",
+      "targetId": "extinction-curse-volume-2",
+      "variant": "anglais",
+      "completeness": "complet"
+    },
+    {
+      "path": "Campagnes/Campagne - Extinction Curse - Tome 36 - Life's Long Shadows (en).pdf",
+      "targetId": "extinction-curse-volume-3",
+      "variant": "anglais",
+      "completeness": "complet"
+    },
+    {
+      "path": "Campagnes/Campagne - Fists of the Ruby Phoenix - Tome 13 - Despair on Danger Island (en).pdf",
+      "targetId": "fists-of-the-ruby-phoenix-volume-1",
+      "variant": "anglais",
+      "completeness": "complet"
+    },
+    {
+      "path": "Campagnes/Campagne - Gatewalkers - Tome 23 - They Watched the Stars (en).pdf",
+      "targetId": "gatewalkers-volume-2",
+      "variant": "anglais",
+      "completeness": "complet"
+    },
+    {
+      "path": "Campagnes/Campagne - Gatewalkers - Tome 33 - Dreamers of the Nameless Spires (en).pdf",
+      "targetId": "gatewalkers-volume-3",
+      "variant": "anglais",
+      "completeness": "complet"
+    },
+    {
+      "path": "Campagnes/Campagne - Outlaws of Alkenstar - Tome 23 - Cradle of Quartz (en).pdf",
+      "targetId": "outlaws-of-alkenstar-volume-2",
+      "variant": "anglais",
+      "completeness": "complet"
+    },
+    {
+      "path": "Campagnes/Campagne - Outlaws of Alkenstar - Tome 33 - The Smoking Gun (en).pdf",
+      "targetId": "outlaws-of-alkenstar-volume-3",
+      "variant": "anglais",
+      "completeness": "complet"
+    },
+    {
+      "path": "Campagnes/Campagne - Season of Ghosts - Tome 14 - The Summer That Never Was (en).pdf",
+      "targetId": "season-of-ghosts-volume-1",
+      "variant": "anglais",
+      "completeness": "complet"
+    },
+    {
+      "path": "Campagnes/Campagne - Season of Ghosts - Tome 24 - Let the Leaves Fall (en).pdf",
+      "targetId": "season-of-ghosts-volume-2",
+      "variant": "anglais",
+      "completeness": "complet"
+    },
+    {
+      "path": "Campagnes/Campagne - Season of Ghosts - Tome 34 - No Breath to Cry (en).pdf",
+      "targetId": "season-of-ghosts-volume-3",
+      "variant": "anglais",
+      "completeness": "complet"
+    },
+    {
+      "path": "Campagnes/Campagne - Shades of Blood - Tome 23 - The Broken Palace (en).pdf",
+      "targetId": "shades-of-blood-volume-2",
+      "variant": "anglais",
+      "completeness": "complet"
+    },
+    {
+      "path": "Campagnes/Campagne - Shades of Blood - Tome 33 - To Blot Out the Sun (en).pdf",
+      "targetId": "shades-of-blood-volume-3",
+      "variant": "anglais",
+      "completeness": "complet"
+    },
+    {
+      "path": "Campagnes/Campagne - Sky King's Tomb - Tome 23 - Cult of the Cave Worm (en).pdf",
+      "targetId": "sky-kings-tomb-volume-2",
+      "variant": "anglais",
+      "completeness": "complet"
+    },
+    {
+      "path": "Campagnes/Campagne - Spore War - Tome 13 - Whispers in the Dirt (en).pdf",
+      "targetId": "spore-war-volume-1",
+      "variant": "anglais",
+      "completeness": "complet"
+    },
+    {
+      "path": "Campagnes/Campagne - Stolen Fate - Tome 33 - The Destiny War (en).pdf",
+      "targetId": "stolen-fate-volume-2",
+      "variant": "anglais",
+      "completeness": "complet"
+    },
+    {
+      "path": "Campagnes/Pathfinder Society/Legacy - PFS 1e/PFS 1e - 47 - The Darkest Vengeance (en).pdf",
+      "targetId": "pfs1e-47-the-darkest-vengeance",
+      "variant": "anglais",
+      "completeness": "complet"
+    },
+    {
+      "path": "Campagnes/Pathfinder Society/Quêtes et Bounties/PFS - Bounty 04 - Cat's Cradle (en).pdf",
+      "targetId": "bounty-04-cat-s-cradle",
+      "variant": "anglais",
+      "completeness": "complet"
+    },
+    {
+      "path": "Campagnes/Pathfinder Society/Quêtes et Bounties/PFS - Bounty 14 - The Blackwood Truce (en).pdf",
+      "targetId": "bounty-14-the-blackwood-truce",
+      "variant": "anglais",
+      "completeness": "complet"
+    },
+    {
+      "path": "Campagnes/Pathfinder Society/Quêtes et Bounties/PFS - Quest 10 - The Broken Scales (en).pdf",
+      "targetId": "quest-10-the-broken-scales",
+      "variant": "anglais",
+      "completeness": "complet"
+    },
+    {
+      "path": "Campagnes/Pathfinder Society/Quêtes et Bounties/PFS - Quest 11 - A Parchment Tree (en).pdf",
+      "targetId": "quest-11-a-parchment-tree",
+      "variant": "anglais",
+      "completeness": "complet"
+    },
+    {
+      "path": "Campagnes/Pathfinder Society/Quêtes et Bounties/PFS - Quest 16 - Boom Town Betrayal (en).pdf",
+      "targetId": "quest-16-boom-town-betrayal",
+      "variant": "anglais",
+      "completeness": "complet"
+    },
+    {
+      "path": "Campagnes/Pathfinder Society/Quêtes et Bounties/PFS - Quest 23 - Lacking Respect (en).pdf",
+      "targetId": "quest-23-lacking-respect",
+      "variant": "anglais",
+      "completeness": "complet"
+    },
+    {
+      "path": "Campagnes/Pathfinder Society/Saison 2 - Year of Corruption's Reach/PFS - S02-15 - A Dirge for Sarkoris (en).pdf",
+      "targetId": "pfs-season-2-2-15",
+      "variant": "anglais",
+      "completeness": "complet"
+    },
+    {
+      "path": "Campagnes/Pathfinder Society/Saison 3 - Year of Shattered Sanctuaries/PFS - S03-03 - Echoes of Desperation (en).pdf",
+      "targetId": "pfs-season-3-3-03",
+      "variant": "anglais",
+      "completeness": "complet"
+    },
+    {
+      "path": "Campagnes/Pathfinder Society/Saison 3 - Year of Shattered Sanctuaries/PFS - S03-17 - Dreams of a Dustbound Isle (info).pdf",
+      "targetId": "pfs-season-3-3-17",
+      "variant": "information",
+      "completeness": "complet"
+    },
+    {
+      "path": "Campagnes/Pathfinder Society/Saison 3 - Year of Shattered Sanctuaries/PFS - S03-18 - Dacilane Academy's Delightful Disaster (en).pdf",
+      "targetId": "pfs-season-3-3-18",
+      "variant": "anglais",
+      "completeness": "complet"
+    },
+    {
+      "path": "Ressources/Cartes/Agents of Edgewatch - Tome 2 - Sixty Feet Under (map).pdf",
+      "targetId": "agents-of-edgewatch-map-volume-2",
+      "variant": "ressource",
+      "completeness": "complet"
+    },
+    {
+      "path": "Ressources/Cartes/Agents of Edgewatch - Tome 4 - Assault on Hunting Lodge Seven (map).pdf",
+      "targetId": "agents-of-edgewatch-map-volume-4",
+      "variant": "ressource",
+      "completeness": "complet"
+    },
+    {
+      "path": "Ressources/Cartes/Age of Ashes - Tome 3 - Tomorrow Must Burn (map).pdf",
+      "targetId": "age-of-ashes-map-volume-3",
+      "variant": "ressource",
+      "completeness": "complet"
+    },
+    {
+      "path": "Ressources/Cartes/Age of Ashes - Tome 4 - To Bloom Below the Web (map).pdf",
+      "targetId": "age-of-ashes-map-volume-4",
+      "variant": "ressource",
+      "completeness": "complet"
+    },
+    {
+      "path": "Ressources/Cartes/Age of Ashes - Tome 5 - Against the Scarlet Triad (map).pdf",
+      "targetId": "age-of-ashes-map-volume-5",
+      "variant": "ressource",
+      "completeness": "complet"
+    },
+    {
+      "path": "Ressources/Cartes/Blood Lords - Tome 3 - Field of Maidens (map).pdf",
+      "targetId": "blood-lords-map-volume-3",
+      "variant": "ressource",
+      "completeness": "complet"
+    },
+    {
+      "path": "Ressources/Cartes/Curtain Call - Tome 1 - Stage Fright (map).pdf",
+      "targetId": "curtain-call-map-volume-1",
+      "variant": "ressource",
+      "completeness": "complet"
+    },
+    {
+      "path": "Ressources/Cartes/Curtain Call - Tome 2 - Singer, Stalker, Skinsaw Man (map).pdf",
+      "targetId": "curtain-call-map-volume-2",
+      "variant": "ressource",
+      "completeness": "complet"
+    },
+    {
+      "path": "Ressources/Cartes/Curtain Call - Tome 3 - Bring the House Down (map).pdf",
+      "targetId": "curtain-call-map-volume-3",
+      "variant": "ressource",
+      "completeness": "complet"
+    },
+    {
+      "path": "Ressources/Cartes/Extinction Curse - Tome 2 - Legacy of the Lost God (map).pdf",
+      "targetId": "extinction-curse-map-volume-2",
+      "variant": "ressource",
+      "completeness": "complet"
+    },
+    {
+      "path": "Ressources/Cartes/Extinction Curse - Tome 5 - Lord of the Black Sands (map).pdf",
+      "targetId": "extinction-curse-map-volume-5",
+      "variant": "ressource",
+      "completeness": "complet"
+    },
+    {
+      "path": "Ressources/Cartes/Fists of the Ruby Phoenix - Tome 2 - Ready Fight! (map).pdf",
+      "targetId": "fists-of-the-ruby-phoenix-map-volume-2",
+      "variant": "ressource",
+      "completeness": "complet"
+    },
+    {
+      "path": "Ressources/Cartes/Kingmaker - Interactive Maps (map).pdf",
+      "targetId": "kingmaker-interactive-maps",
+      "variant": "ressource",
+      "completeness": "complet"
+    },
+    {
+      "path": "Ressources/Cartes/Revenge of the Runelords - Tome 1 - Lord of the Trinity Star (map).pdf",
+      "targetId": "revenge-of-the-runelords-map-volume-1",
+      "variant": "ressource",
+      "completeness": "complet"
+    },
+    {
+      "path": "Ressources/Cartes/Season of Ghosts - Tome 3 - No Breath to Cry (map).pdf",
+      "targetId": "season-of-ghosts-map-volume-3",
+      "variant": "ressource",
+      "completeness": "complet"
+    },
+    {
+      "path": "Ressources/Cartes/Shades of Blood - Tome 1 - Thirst for Blood (map).pdf",
+      "targetId": "shades-of-blood-map-volume-1",
+      "variant": "ressource",
+      "completeness": "complet"
+    },
+    {
+      "path": "Ressources/Cartes/Spore War - Tome 1 - Whispers in the Dirt (map).pdf",
+      "targetId": "spore-war-map-volume-1",
+      "variant": "ressource",
+      "completeness": "complet"
+    },
+    {
+      "path": "Ressources/Cartes/Spore War - Tome 2 - The Secret of Deathstalk Tower (map).pdf",
+      "targetId": "spore-war-map-volume-2",
+      "variant": "ressource",
+      "completeness": "complet"
+    },
+    {
+      "path": "Ressources/Cartes/Stolen Fate - Tome 1 - The Choosing (map).pdf",
+      "targetId": "stolen-fate-map-volume-1",
+      "variant": "ressource",
+      "completeness": "complet"
+    },
+    {
+      "path": "Ressources/Cartes/Strength of Thousands - Tome 3 - Hurricane's Howl (map).pdf",
+      "targetId": "strength-of-thousands-map-volume-3",
+      "variant": "ressource",
+      "completeness": "complet"
+    },
+    {
+      "path": "Ressources/Cartes/Strength of Thousands - Tome 4 - Secrets of the Temple-City (map).pdf",
+      "targetId": "strength-of-thousands-map-volume-4",
+      "variant": "ressource",
+      "completeness": "complet"
+    },
+    {
+      "path": "Ressources/Cartes/Strength of Thousands - Tome 5 - Doorway to the Red Star (map).pdf",
+      "targetId": "strength-of-thousands-map-volume-5",
+      "variant": "ressource",
+      "completeness": "complet"
+    },
+    {
+      "path": "Ressources/Cartes/Strength of Thousands - Tome 6 - Shadows of the Ancients (map).pdf",
+      "targetId": "strength-of-thousands-map-volume-6",
+      "variant": "ressource",
+      "completeness": "complet"
+    },
+    {
+      "path": "Ressources/Cartes/Triumph of the Tusk - Tome 1 - The Resurrection Flood (map).pdf",
+      "targetId": "triumph-of-the-tusk-map-volume-1",
+      "variant": "ressource",
+      "completeness": "complet"
+    },
+    {
+      "path": "Ressources/Cartes/Triumph of the Tusk - Tome 2 - Hoof, Cinder, and Storm (map).pdf",
+      "targetId": "triumph-of-the-tusk-map-volume-2",
+      "variant": "ressource",
+      "completeness": "complet"
+    },
+    {
+      "path": "Ressources/Cartes/Wardens of Wildwood - Tome 1 - Pactbreaker (map).pdf",
+      "targetId": "wardens-of-wildwood-map-volume-1",
+      "variant": "ressource",
+      "completeness": "complet"
+    },
+    {
+      "path": "Ressources/Cartes/Wardens of Wildwood - Tome 2 - Severed at the Root (map).pdf",
+      "targetId": "wardens-of-wildwood-map-volume-2",
+      "variant": "ressource",
+      "completeness": "complet"
+    },
+    {
+      "path": "Ressources/Guides joueurs/Age of Ashes - Player's Guide (player).pdf",
+      "targetId": "age-of-ashes-player-guide",
+      "variant": "anglais",
+      "completeness": "complet"
+    },
+    {
+      "path": "Ressources/Guides joueurs/Curtain Call - Player's Guide (player).pdf",
+      "targetId": "curtain-call-player-guide",
+      "variant": "anglais",
+      "completeness": "complet"
+    },
+    {
+      "path": "Ressources/Guides joueurs/Fists of the Ruby Phoenix - Player's Guide (player).pdf",
+      "targetId": "fists-of-the-ruby-phoenix-player-guide",
+      "variant": "anglais",
+      "completeness": "complet"
+    },
+    {
+      "path": "Ressources/Guides joueurs/Gatewalkers - Player's Guide (player).pdf",
+      "targetId": "gatewalkers-player-guide",
+      "variant": "anglais",
+      "completeness": "complet"
+    },
+    {
+      "path": "Ressources/Guides joueurs/Head-Shot the Rot - Pregenerated Characters (player).pdf",
+      "targetId": "one-shot-head-shot-the-rot-pregenerated-characters",
+      "variant": "anglais",
+      "completeness": "complet"
+    },
+    {
+      "path": "Ressources/Guides joueurs/Hellbreakers - Player's Guide (player).pdf",
+      "targetId": "hellbreakers-player-guide",
+      "variant": "anglais",
+      "completeness": "complet"
+    },
+    {
+      "path": "Ressources/Guides joueurs/Quest for the Frozen Flame - Player's Guide (player).pdf",
+      "targetId": "quest-for-the-frozen-flame-player-guide",
+      "variant": "anglais",
+      "completeness": "complet"
+    },
+    {
+      "path": "Ressources/Guides joueurs/Revenge of the Runelords - Player's Guide (player).pdf",
+      "targetId": "revenge-of-the-runelords-player-guide",
+      "variant": "anglais",
+      "completeness": "complet"
+    },
+    {
+      "path": "Ressources/Guides joueurs/Season of Ghosts - Player's Guide (player).pdf",
+      "targetId": "season-of-ghosts-player-guide",
+      "variant": "anglais",
+      "completeness": "complet"
+    },
+    {
+      "path": "Ressources/Guides joueurs/Spore War - Player's Guide (player).pdf",
+      "targetId": "spore-war-player-guide",
+      "variant": "anglais",
+      "completeness": "complet"
+    },
+    {
+      "path": "Ressources/Guides joueurs/Stolen Fate - Player's Guide (player).pdf",
+      "targetId": "stolen-fate-player-guide",
+      "variant": "anglais",
+      "completeness": "complet"
+    },
+    {
+      "path": "Ressources/Guides joueurs/Triumph of the Tusk - Player's Guide (player).pdf",
+      "targetId": "triumph-of-the-tusk-player-guide",
+      "variant": "anglais",
+      "completeness": "complet"
+    },
+    {
+      "path": "Ressources/Guides joueurs/Wardens of Wildwood - Player's Guide (player).pdf",
+      "targetId": "wardens-of-wildwood-player-guide",
+      "variant": "anglais",
+      "completeness": "complet"
+    }
+  ],
+  "legacyInvalidAssociationsFixed": 41,
+  "legacyInvalidAssociationFixes": [
+    {
+      "path": "Campagnes/Pathfinder Society/Quêtes et Bounties/PFS Bounty - 03 - Shadows and Scarecrows (en).pdf",
+      "fromItemId": "bounty-03-shadows-and-scarecrows-main",
+      "toItemId": "bounty-03-shadows-and-scarecrows"
+    },
+    {
+      "path": "Campagnes/Pathfinder Society/Quêtes et Bounties/PFS Bounty - 06 - The Road from Otari (en) - trad.pdf",
+      "fromItemId": "bounty-06-the-road-from-otari-main",
+      "toItemId": "bounty-06-the-road-from-otari"
+    },
+    {
+      "path": "Campagnes/Pathfinder Society/Quêtes et Bounties/PFS Bounty - 06 - The Road from Otari (en).pdf",
+      "fromItemId": "bounty-06-the-road-from-otari-main",
+      "toItemId": "bounty-06-the-road-from-otari"
+    },
+    {
+      "path": "Campagnes/Pathfinder Society/Quêtes et Bounties/PFS Bounty - 08 - The Tireless Path (en).pdf",
+      "fromItemId": "bounty-08-the-tireless-path-main",
+      "toItemId": "bounty-08-the-tireless-path"
+    },
+    {
+      "path": "Campagnes/Pathfinder Society/Quêtes et Bounties/PFS Bounty - 09 - Fishing in Anthusis (en).pdf",
+      "fromItemId": "bounty-09-fishing-in-anthusis-main",
+      "toItemId": "bounty-09-fishing-in-anthusis"
+    },
+    {
+      "path": "Campagnes/Pathfinder Society/Quêtes et Bounties/PFS Bounty - 11 - Forged Facade (en).pdf",
+      "fromItemId": "bounty-11-forged-facade-main",
+      "toItemId": "bounty-11-forged-facade"
+    },
+    {
+      "path": "Campagnes/Pathfinder Society/Quêtes et Bounties/PFS Bounty - 12 - Somewhere Below (en).pdf",
+      "fromItemId": "bounty-12-somewhere-below-main",
+      "toItemId": "bounty-12-somewhere-below"
+    },
+    {
+      "path": "Campagnes/Pathfinder Society/Quêtes et Bounties/PFS Bounty - 13 - The Blackwood Abundance (en).pdf",
+      "fromItemId": "bounty-13-the-blackwood-abundance-main",
+      "toItemId": "bounty-13-the-blackwood-abundance"
+    },
+    {
+      "path": "Campagnes/Pathfinder Society/Quêtes et Bounties/PFS Bounty - 14 - The Blackwood Truce (en).pdf",
+      "fromItemId": "bounty-14-the-blackwood-truce-main",
+      "toItemId": "bounty-14-the-blackwood-truce"
+    },
+    {
+      "path": "Campagnes/Pathfinder Society/Quêtes et Bounties/PFS Bounty - 14 - The Blackwood Truce (fr trad).pdf",
+      "fromItemId": "bounty-14-the-blackwood-truce-main",
+      "toItemId": "bounty-14-the-blackwood-truce"
+    },
+    {
+      "path": "Campagnes/Pathfinder Society/Quêtes et Bounties/PFS Bounty - 15 - Treasure off the Coast (en).pdf",
+      "fromItemId": "bounty-15-treasure-off-the-coast-main",
+      "toItemId": "bounty-15-treasure-off-the-coast"
+    },
+    {
+      "path": "Campagnes/Pathfinder Society/Quêtes et Bounties/PFS Bounty - 17 - Sodden Stories (en).pdf",
+      "fromItemId": "bounty-sodden-stories-main",
+      "toItemId": "bounty-sodden-stories"
+    },
+    {
+      "path": "Campagnes/Pathfinder Society/Quêtes et Bounties/PFS Bounty - 17 - Sodden Stories (fr trad).pdf",
+      "fromItemId": "bounty-sodden-stories-main",
+      "toItemId": "bounty-sodden-stories"
+    },
+    {
+      "path": "Campagnes/Pathfinder Society/Quêtes et Bounties/PFS Bounty - 18 - From Family Lost (en).pdf",
+      "fromItemId": "bounty-18-from-family-lost-main",
+      "toItemId": "bounty-18-from-family-lost"
+    },
+    {
+      "path": "Campagnes/Pathfinder Society/Quêtes et Bounties/PFS Bounty - 19 - Grim Tidings (en).pdf",
+      "fromItemId": "bounty-19-grim-tidings-main",
+      "toItemId": "bounty-19-grim-tidings"
+    },
+    {
+      "path": "Campagnes/Pathfinder Society/Quêtes et Bounties/PFS Quest - 02 - Unforgiving Fire (en).pdf",
+      "fromItemId": "quest-02-unforgiving-fire-main",
+      "toItemId": "quest-02-unforgiving-fire"
+    },
+    {
+      "path": "Campagnes/Pathfinder Society/Quêtes et Bounties/PFS Quest - 03 - Grehunde's Gorget (en).pdf",
+      "fromItemId": "quest-03-grehunde-s-gorget-main",
+      "toItemId": "quest-03-grehunde-s-gorget"
+    },
+    {
+      "path": "Campagnes/Pathfinder Society/Quêtes et Bounties/PFS Quest - 08 - Shadows of the Black Sovereign (en).pdf",
+      "fromItemId": "quest-08-shadows-of-the-black-sovereign-main",
+      "toItemId": "quest-08-shadows-of-the-black-sovereign"
+    },
+    {
+      "path": "Campagnes/Pathfinder Society/Quêtes et Bounties/PFS Quest - 09 - Wayfinder Origins (en).pdf",
+      "fromItemId": "quest-09-wayfinder-origins-main",
+      "toItemId": "quest-09-wayfinder-origins"
+    },
+    {
+      "path": "Campagnes/Pathfinder Society/Quêtes et Bounties/PFS Quest - 15 - In the Footsteps of Horror (en).pdf",
+      "fromItemId": "quest-15-in-the-footsteps-of-horror-main",
+      "toItemId": "quest-15-in-the-footsteps-of-horror"
+    },
+    {
+      "path": "Campagnes/Pathfinder Society/Quêtes et Bounties/PFS Quest - 15 - In the Footsteps of Horror (fr trad).pdf",
+      "fromItemId": "quest-15-in-the-footsteps-of-horror-main",
+      "toItemId": "quest-15-in-the-footsteps-of-horror"
+    },
+    {
+      "path": "Campagnes/Pathfinder Society/Quêtes et Bounties/PFS Quest - 17 - Escorting a Mirage (en).pdf",
+      "fromItemId": "quest-17-escorting-a-mirage-main",
+      "toItemId": "quest-17-escorting-a-mirage"
+    },
+    {
+      "path": "Campagnes/Pathfinder Society/Quêtes et Bounties/PFS Quest - 17 - Escorting a Mirage (fr trad).pdf",
+      "fromItemId": "quest-17-escorting-a-mirage-main",
+      "toItemId": "quest-17-escorting-a-mirage"
+    },
+    {
+      "path": "Campagnes/Pathfinder Society/Quêtes et Bounties/PFS Quest - 18 - Student Exchange (en).pdf",
+      "fromItemId": "quest-18-student-exchange-main",
+      "toItemId": "quest-18-student-exchange"
+    },
+    {
+      "path": "Campagnes/Pathfinder Society/Quêtes et Bounties/PFS Quest - 18 - Student Exchange (fr trad).pdf",
+      "fromItemId": "quest-18-student-exchange-main",
+      "toItemId": "quest-18-student-exchange"
+    },
+    {
+      "path": "Campagnes/Pathfinder Society/Quêtes et Bounties/PFS Quest - 19 - The Elsewhere Feast (en).pdf",
+      "fromItemId": "quest-19-the-elsewhere-feast-main",
+      "toItemId": "quest-19-the-elsewhere-feast"
+    },
+    {
+      "path": "Campagnes/Pathfinder Society/Quêtes et Bounties/PFS Quest - 20 - The Dacilane Academy's Show Must Go On (en) - trad.pdf",
+      "fromItemId": "quest-20-the-dacilane-academy-s-show-must-go-on-main",
+      "toItemId": "quest-20-the-dacilane-academy-s-show-must-go-on"
+    },
+    {
+      "path": "Campagnes/Pathfinder Society/Quêtes et Bounties/PFS Quest - 20 - The Dacilane Academy's Show Must Go On (en).pdf",
+      "fromItemId": "quest-20-the-dacilane-academy-s-show-must-go-on-main",
+      "toItemId": "quest-20-the-dacilane-academy-s-show-must-go-on"
+    },
+    {
+      "path": "Campagnes/Pathfinder Society/Quêtes et Bounties/PFS Bounty - 03 - Shadows and Scarecrows (en) - trad.pdf",
+      "fromItemId": "bounty-03-shadows-and-scarecrows-main",
+      "toItemId": "bounty-03-shadows-and-scarecrows"
+    },
+    {
+      "path": "Campagnes/Pathfinder Society/Quêtes et Bounties/PFS Bounty - 08 - The Tireless Path (en) - trad.pdf",
+      "fromItemId": "bounty-08-the-tireless-path-main",
+      "toItemId": "bounty-08-the-tireless-path"
+    },
+    {
+      "path": "Campagnes/Pathfinder Society/Quêtes et Bounties/PFS Bounty - 09 - Fishing in Anthusis (en) - trad.pdf",
+      "fromItemId": "bounty-09-fishing-in-anthusis-main",
+      "toItemId": "bounty-09-fishing-in-anthusis"
+    },
+    {
+      "path": "Campagnes/Pathfinder Society/Quêtes et Bounties/PFS Bounty - 11 - Forged Facade (en) - trad.pdf",
+      "fromItemId": "bounty-11-forged-facade-main",
+      "toItemId": "bounty-11-forged-facade"
+    },
+    {
+      "path": "Campagnes/Pathfinder Society/Quêtes et Bounties/PFS Bounty - 13 - The Blackwood Abundance (en) - trad.pdf",
+      "fromItemId": "bounty-13-the-blackwood-abundance-main",
+      "toItemId": "bounty-13-the-blackwood-abundance"
+    },
+    {
+      "path": "Campagnes/Pathfinder Society/Quêtes et Bounties/PFS Bounty - 17 - Sodden Stories (en) - trad.pdf",
+      "fromItemId": "bounty-sodden-stories-main",
+      "toItemId": "bounty-sodden-stories"
+    },
+    {
+      "path": "Campagnes/Pathfinder Society/Quêtes et Bounties/PFS Bounty - 18 - From Family Lost (en) - trad.pdf",
+      "fromItemId": "bounty-18-from-family-lost-main",
+      "toItemId": "bounty-18-from-family-lost"
+    },
+    {
+      "path": "Campagnes/Pathfinder Society/Quêtes et Bounties/PFS Bounty - 19 - Grim Tidings (en) - trad.pdf",
+      "fromItemId": "bounty-19-grim-tidings-main",
+      "toItemId": "bounty-19-grim-tidings"
+    },
+    {
+      "path": "Campagnes/Pathfinder Society/Quêtes et Bounties/PFS Quest - 02 - Unforgiving Fire (en) - trad.pdf",
+      "fromItemId": "quest-02-unforgiving-fire-main",
+      "toItemId": "quest-02-unforgiving-fire"
+    },
+    {
+      "path": "Campagnes/Pathfinder Society/Quêtes et Bounties/PFS Quest - 03 - Grehunde's Gorget (en) - trad.pdf",
+      "fromItemId": "quest-03-grehunde-s-gorget-main",
+      "toItemId": "quest-03-grehunde-s-gorget"
+    },
+    {
+      "path": "Campagnes/Pathfinder Society/Quêtes et Bounties/PFS Quest - 08 - Shadows of the Black Sovereign (en) - trad.pdf",
+      "fromItemId": "quest-08-shadows-of-the-black-sovereign-main",
+      "toItemId": "quest-08-shadows-of-the-black-sovereign"
+    },
+    {
+      "path": "Campagnes/Pathfinder Society/Quêtes et Bounties/PFS Quest - 09 - Wayfinder Origins (en) - trad.pdf",
+      "fromItemId": "quest-09-wayfinder-origins-main",
+      "toItemId": "quest-09-wayfinder-origins"
+    },
+    {
+      "path": "Campagnes/Pathfinder Society/Quêtes et Bounties/PFS Quest - 19 - The Elsewhere Feast (en) - trad.pdf",
+      "fromItemId": "quest-19-the-elsewhere-feast-main",
+      "toItemId": "quest-19-the-elsewhere-feast"
+    }
+  ]
+}
