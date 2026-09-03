@@ -4,6 +4,7 @@ import { MultipartFile } from '@fastify/multipart'
 import { FastifyReply, FastifyRequest } from 'fastify'
 import { FoundryRelayService } from '../foundry/FoundryRelayService'
 import { Pf2MjService } from './Pf2MjService'
+import { ScenarioPackageService } from './ScenarioPackageService'
 
 // Le sélecteur des résumés ne propose que les PJ. La convention de nommage
 // Foundry de la table est « Nom du PJ (Nom du joueur) ».
@@ -15,7 +16,33 @@ const playerActorName = /^\S(?:.*\S)?\s+\([^()]+\)$/u
 @ApiTags('PF2 MJ')
 export class Pf2MjController {
   private readonly logger = new Logger(Pf2MjController.name)
-  constructor(private readonly service: Pf2MjService, private readonly foundry: FoundryRelayService) {}
+  constructor(private readonly service: Pf2MjService, private readonly foundry: FoundryRelayService, private readonly scenarioPackages: ScenarioPackageService) {}
+
+  @Get('npc-registry')
+  npcRegistry(): Promise<unknown[]> { return this.scenarioPackages.registry() }
+
+  @Get('pnj/:id/scenarios')
+  scenariosForPnj(@Param('id') id: string): Promise<unknown[]> { return this.scenarioPackages.scenariosForNpc(id) }
+
+  @Get('scenarios/:id/npcs')
+  npcsForScenario(@Param('id') id: string): Promise<unknown[]> { return this.scenarioPackages.npcsForScenario(id) }
+
+  @Get('campaigns/:id/npcs')
+  npcsForCampaign(@Param('id') id: string): Promise<unknown[]> { return this.scenarioPackages.npcsForCampaign(id) }
+
+  @Get('scenario-packages/:id')
+  packageForScenario(@Param('id') id: string): Promise<unknown> { return this.scenarioPackages.packageForScenario(id) }
+
+  @Post('scenario-packages/import')
+  async importScenarioPackage(@Req() request: FastifyRequest): Promise<unknown> {
+    try {
+      const file = await (request as FastifyRequest & { file: () => Promise<MultipartFile | undefined> }).file()
+      if (!file || !file.filename.toLowerCase().endsWith('.zip')) throw new Error('Envoie un fichier ZIP de scénario.')
+      return await this.scenarioPackages.importZip(await file.toBuffer(), file.filename)
+    } catch (error) {
+      throw new HttpException(error instanceof Error ? error.message : 'Import du package impossible.', HttpStatus.BAD_REQUEST)
+    }
+  }
 
   @Get('actors')
   async actors(): Promise<Array<{ uuid: string; name: string }>> {

@@ -94,7 +94,8 @@ describe('Pf2PersistenceService', () => {
       { id: '003-normalize-pf2-sessions' },
       { id: '004-session-long-summary-link' },
       { id: '005-session-number' },
-      { id: '006-session-discord-message' }
+      { id: '006-session-discord-message' },
+      { id: '007-scenario-packages-and-npcs' }
     ])
 
     await currentDataSource().destroy()
@@ -108,8 +109,20 @@ describe('Pf2PersistenceService', () => {
       { id: '003-normalize-pf2-sessions' },
       { id: '004-session-long-summary-link' },
       { id: '005-session-number' },
-      { id: '006-session-discord-message' }
+      { id: '006-session-discord-message' },
+      { id: '007-scenario-packages-and-npcs' }
     ])
+  })
+
+  it('keeps explicit scenario-to-PNJ relations across a reopen', async () => {
+    const first = await open()
+    await first.saveRecord('pnj', { id: 'captain-vara', nom: 'Capitaine Vara', description: '' })
+    await first.replaceScenarioNpcLinks('pfs-s01-01', [{ scenarioId: 'pfs-s01-01', npcId: 'captain-vara', role: 'alliée', importance: 'Récurrente', sourcePage: '8', notes: null }])
+    await currentDataSource().destroy()
+    dataSource = undefined
+    const reopened = await open()
+    await expect(reopened.listScenarioNpcLinks('pfs-s01-01')).resolves.toEqual([expect.objectContaining({ npcId: 'captain-vara', role: 'alliée' })])
+    await expect(reopened.listNpcScenarioLinks('captain-vara')).resolves.toEqual([expect.objectContaining({ scenarioId: 'pfs-s01-01' })])
   })
 
   it('upgrades the previously generated generic session schema without losing its row', async () => {

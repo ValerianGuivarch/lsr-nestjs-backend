@@ -1,0 +1,42 @@
+{
+  "id": "pf2e-val-toolkit",
+  "title": "PF2e Val Toolkit",
+  "description": "Personal toolkit for Pathfinder 2e campaigns in Foundry VTT.",
+  "version": "0.31.1",
+  "authors": [
+    {
+      "name": "Val"
+    }
+  ],
+  "compatibility": {
+    "minimum": "14",
+    "verified": "14"
+  },
+  "relationships": {
+    "systems": [
+      {
+        "id": "pf2e",
+        "type": "system",
+        "compatibility": {}
+      }
+    ]
+  },
+  "esmodules": [
+    "scripts/main.js"
+  ],
+  "styles": [
+    "styles/combat-movement.css",
+    "styles/actions-browser.css",
+    "styles/merchant-integration.css",
+    "styles/native-merchant.css",
+    "styles/conditions-browser.css",
+    "styles/career-xp.css"
+  ],
+  "languages": [
+    {
+      "lang": "fr",
+      "name": "Français",
+      "path": "lang/fr.json"
+    }
+  ]
+}

@@ -1,0 +1,537 @@
+{
+  "formatVersion": 3,
+  "library": {
+    "root": "Campagnes",
+    "category": "Agents d'Absalom",
+    "collection": "Volume 2"
+  },
+  "scenario": {
+    "id": "AOE-06",
+    "name": "Les ruines du siège radieux",
+    "tier": "18–20",
+    "source": "Agents d'Absalom — Volume 2",
+    "summary": "La campagne s’achève dans les ruines liées au siège Radieux, où les agents affrontent les derniers plans du Quatuor du Crépuscule et des gardiens d’une puissance extrême."
+  },
+  "journal": {
+    "title": "AOE-06 — Les ruines du siège radieux"
+  },
+  "actors": [
+    {
+      "key": "le-remonteur",
+      "name": "Le Remonteur",
+      "type": "reference",
+      "lookup": "Le Remonteur",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "hazard",
+      "note": "Niveau 19 — relevé dans le PDF p. 131"
+    },
+    {
+      "key": "veksciralenix",
+      "name": "Veksciralenix",
+      "type": "reference",
+      "lookup": "Veksciralenix",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 20 — relevé dans le PDF p. 149"
+    },
+    {
+      "key": "imenteshs-veloces",
+      "name": "Imenteshs Véloces",
+      "type": "reference",
+      "lookup": "Imenteshs Véloces",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 17 — relevé dans le PDF p. 147"
+    },
+    {
+      "key": "blune-bandrevaleur",
+      "name": "Blune Bandrevaleur",
+      "type": "reference",
+      "lookup": "Blune Bandrevaleur",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 20 — relevé dans le PDF p. 145"
+    },
+    {
+      "key": "flagorneurs-illusoires-de-blune",
+      "name": "Flagorneurs Illusoires De Blune",
+      "type": "reference",
+      "lookup": "Flagorneurs Illusoires De Blune",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 16 — relevé dans le PDF p. 145"
+    },
+    {
+      "key": "nenchuuj",
+      "name": "Nenchuuj",
+      "type": "reference",
+      "lookup": "Nenchuuj",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 19 — relevé dans le PDF p. 146"
+    },
+    {
+      "key": "hegessiks",
+      "name": "Hegessiks",
+      "type": "reference",
+      "lookup": "Hegessiks",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 15 — relevé dans le PDF p. 147"
+    },
+    {
+      "key": "hestriviniaas",
+      "name": "Hestriviniaas",
+      "type": "reference",
+      "lookup": "Hestriviniaas",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 22 — relevé dans le PDF p. 147"
+    },
+    {
+      "key": "mages-chaotiques-hunduns",
+      "name": "Mages Chaotiques Hunduns",
+      "type": "reference",
+      "lookup": "Mages Chaotiques Hunduns",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 18 — relevé dans le PDF p. 150"
+    },
+    {
+      "key": "il-setsya-benie-des-wyrms",
+      "name": "Il’Setsya Bénie-Des-Wyrms",
+      "type": "reference",
+      "lookup": "Il’Setsya Bénie-Des-Wyrms",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 18 — relevé dans le PDF p. 151"
+    },
+    {
+      "key": "agent-de-la-reine-grise",
+      "name": "Agent De La Reine Grise",
+      "type": "reference",
+      "lookup": "Agent De La Reine Grise",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 19 — relevé dans le PDF p. 153"
+    },
+    {
+      "key": "glyphe-inferieur-de-kharnas",
+      "name": "Glyphe Inférieur De Kharnas",
+      "type": "reference",
+      "lookup": "Glyphe Inférieur De Kharnas",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "hazard",
+      "note": "Niveau 17 — relevé dans le PDF p. 162"
+    },
+    {
+      "key": "faille-planaire-superieure",
+      "name": "Faille Planaire Supérieure",
+      "type": "reference",
+      "lookup": "Faille Planaire Supérieure",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "hazard",
+      "note": "Niveau 21 — relevé dans le PDF p. 162"
+    },
+    {
+      "key": "gardiens-radiants-d-elite",
+      "name": "Gardiens Radiants D’Élite",
+      "type": "reference",
+      "lookup": "Gardiens Radiants D’Élite",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 18 — relevé dans le PDF p. 163"
+    },
+    {
+      "key": "peintures-vivantes",
+      "name": "Peintures Vivantes",
+      "type": "reference",
+      "lookup": "Peintures Vivantes",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "hazard",
+      "note": "Niveau 19 — relevé dans le PDF p. 164"
+    },
+    {
+      "key": "ghaeles-de-kharnas",
+      "name": "Ghaéles De Kharnas",
+      "type": "reference",
+      "lookup": "Ghaéles De Kharnas",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 17 — relevé dans le PDF p. 164"
+    },
+    {
+      "key": "l-accueil-du-fielon-hilare",
+      "name": "L’Accueil Du Fiélon Hilare",
+      "type": "reference",
+      "lookup": "L’Accueil Du Fiélon Hilare",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "hazard",
+      "note": "Niveau 20 — relevé dans le PDF p. 166"
+    },
+    {
+      "key": "golems-d-adamantium",
+      "name": "Golems D’Adamantium",
+      "type": "reference",
+      "lookup": "Golems D’Adamantium",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 18 — relevé dans le PDF p. 167"
+    },
+    {
+      "key": "liches-d-elite",
+      "name": "Liches D’Élite",
+      "type": "reference",
+      "lookup": "Liches D’Élite",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 13 — relevé dans le PDF p. 168"
+    },
+    {
+      "key": "de-kharnas",
+      "name": "De Kharnas",
+      "type": "reference",
+      "lookup": "De Kharnas",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 17 — relevé dans le PDF p. 175"
+    },
+    {
+      "key": "maruts-d-elite",
+      "name": "Maruts D’Élite",
+      "type": "reference",
+      "lookup": "Maruts D’Élite",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 16 — relevé dans le PDF p. 170"
+    },
+    {
+      "key": "ulressia-la-sainte",
+      "name": "Ulressia La Sainte",
+      "type": "reference",
+      "lookup": "Ulressia La Sainte",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 19 — relevé dans le PDF p. 171"
+    },
+    {
+      "key": "avsheros-le-traitre",
+      "name": "Avsheros Le Traître",
+      "type": "reference",
+      "lookup": "Avsheros Le Traître",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 23 — relevé dans le PDF p. 174"
+    },
+    {
+      "key": "shemhazians-d-elite",
+      "name": "Shemhazians D’Élite",
+      "type": "reference",
+      "lookup": "Shemhazians D’Élite",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 17 — relevé dans le PDF p. 179"
+    },
+    {
+      "key": "priere-de-noirs-doigts",
+      "name": "Prière De Noirs Doigts",
+      "type": "reference",
+      "lookup": "Prière De Noirs Doigts",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "hazard",
+      "note": "Niveau 19 — relevé dans le PDF p. 181"
+    },
+    {
+      "key": "xirikles",
+      "name": "Xirikles",
+      "type": "reference",
+      "lookup": "Xirikles",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 20 — relevé dans le PDF p. 182"
+    },
+    {
+      "key": "parangons-excorions",
+      "name": "Parangons Excorions",
+      "type": "reference",
+      "lookup": "Parangons Excorions",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 18 — relevé dans le PDF p. 182"
+    },
+    {
+      "key": "depiauteuse-daemonique",
+      "name": "Dépiauteuse Daémonique",
+      "type": "reference",
+      "lookup": "Dépiauteuse Daémonique",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 20 — relevé dans le PDF p. 183"
+    },
+    {
+      "key": "purrodaemons-d-elite",
+      "name": "Purrodaémons D’Élite",
+      "type": "reference",
+      "lookup": "Purrodaémons D’Élite",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 19 — relevé dans le PDF p. 184"
+    },
+    {
+      "key": "champ-d-opposition",
+      "name": "Champ D’Opposition",
+      "type": "reference",
+      "lookup": "Champ D’Opposition",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "hazard",
+      "note": "Niveau 20 — relevé dans le PDF p. 185"
+    },
+    {
+      "key": "colporteur-de-rumeurs-daemonique",
+      "name": "Colporteur De Rumeurs Daémonique",
+      "type": "reference",
+      "lookup": "Colporteur De Rumeurs Daémonique",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 22 — relevé dans le PDF p. 186"
+    },
+    {
+      "key": "vrilles-noires-d-encre",
+      "name": "Vrilles Noires D’Encre",
+      "type": "reference",
+      "lookup": "Vrilles Noires D’Encre",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "hazard",
+      "note": "Niveau 20 — relevé dans le PDF p. 186"
+    },
+    {
+      "key": "infector-daemonique",
+      "name": "Infector Daémonique",
+      "type": "reference",
+      "lookup": "Infector Daémonique",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 22 — relevé dans le PDF p. 188"
+    },
+    {
+      "key": "hordes-daemons-d-elite",
+      "name": "Hordes Daémons D’Élite",
+      "type": "reference",
+      "lookup": "Hordes Daémons D’Élite",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 16 — relevé dans le PDF p. 189"
+    }
+  ],
+  "encounters": [
+    {
+      "id": "CH1",
+      "name": "Chapitre 1 — L’excavateur fou",
+      "location": "Absalom",
+      "notes": "Index des créatures et dangers rencontrés dans ce chapitre. Les quantités exactes restent indiquées dans le PDF lorsque plusieurs occurrences utilisent la même fiche.",
+      "groups": [
+        {
+          "tier": "Niveaux 18–20",
+          "creatures": [
+            {
+              "actor": "le-remonteur",
+              "count": "selon la rencontre",
+              "note": "Niveau 19 — PDF p. 131"
+            },
+            {
+              "actor": "veksciralenix",
+              "count": "selon la rencontre",
+              "note": "Niveau 20 — PDF p. 149"
+            },
+            {
+              "actor": "imenteshs-veloces",
+              "count": "selon la rencontre",
+              "note": "Niveau 17 — PDF p. 147"
+            },
+            {
+              "actor": "blune-bandrevaleur",
+              "count": "selon la rencontre",
+              "note": "Niveau 20 — PDF p. 145"
+            },
+            {
+              "actor": "flagorneurs-illusoires-de-blune",
+              "count": "selon la rencontre",
+              "note": "Niveau 16 — PDF p. 145"
+            },
+            {
+              "actor": "nenchuuj",
+              "count": "selon la rencontre",
+              "note": "Niveau 19 — PDF p. 146"
+            },
+            {
+              "actor": "hegessiks",
+              "count": "selon la rencontre",
+              "note": "Niveau 15 — PDF p. 147"
+            },
+            {
+              "actor": "hestriviniaas",
+              "count": "selon la rencontre",
+              "note": "Niveau 22 — PDF p. 147"
+            },
+            {
+              "actor": "mages-chaotiques-hunduns",
+              "count": "selon la rencontre",
+              "note": "Niveau 18 — PDF p. 150"
+            },
+            {
+              "actor": "il-setsya-benie-des-wyrms",
+              "count": "selon la rencontre",
+              "note": "Niveau 18 — PDF p. 151"
+            },
+            {
+              "actor": "agent-de-la-reine-grise",
+              "count": "selon la rencontre",
+              "note": "Niveau 19 — PDF p. 153"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "CH2",
+      "name": "Chapitre 2 — L’Étincelle radieuse",
+      "location": "Absalom",
+      "notes": "Index des créatures et dangers rencontrés dans ce chapitre. Les quantités exactes restent indiquées dans le PDF lorsque plusieurs occurrences utilisent la même fiche.",
+      "groups": [
+        {
+          "tier": "Niveaux 18–20",
+          "creatures": [
+            {
+              "actor": "glyphe-inferieur-de-kharnas",
+              "count": "selon la rencontre",
+              "note": "Niveau 17 — PDF p. 162"
+            },
+            {
+              "actor": "faille-planaire-superieure",
+              "count": "selon la rencontre",
+              "note": "Niveau 21 — PDF p. 162"
+            },
+            {
+              "actor": "gardiens-radiants-d-elite",
+              "count": "selon la rencontre",
+              "note": "Niveau 18 — PDF p. 163"
+            },
+            {
+              "actor": "peintures-vivantes",
+              "count": "selon la rencontre",
+              "note": "Niveau 19 — PDF p. 164"
+            },
+            {
+              "actor": "ghaeles-de-kharnas",
+              "count": "selon la rencontre",
+              "note": "Niveau 17 — PDF p. 164"
+            },
+            {
+              "actor": "l-accueil-du-fielon-hilare",
+              "count": "selon la rencontre",
+              "note": "Niveau 20 — PDF p. 166"
+            },
+            {
+              "actor": "golems-d-adamantium",
+              "count": "selon la rencontre",
+              "note": "Niveau 18 — PDF p. 167"
+            },
+            {
+              "actor": "liches-d-elite",
+              "count": "selon la rencontre",
+              "note": "Niveau 13 — PDF p. 168"
+            },
+            {
+              "actor": "maruts-d-elite",
+              "count": "selon la rencontre",
+              "note": "Niveau 16 — PDF p. 170"
+            },
+            {
+              "actor": "ulressia-la-sainte",
+              "count": "selon la rencontre",
+              "note": "Niveau 19 — PDF p. 171"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "CH3",
+      "name": "Chapitre 3 — La tour de la Reine grise",
+      "location": "Absalom",
+      "notes": "Index des créatures et dangers rencontrés dans ce chapitre. Les quantités exactes restent indiquées dans le PDF lorsque plusieurs occurrences utilisent la même fiche.",
+      "groups": [
+        {
+          "tier": "Niveaux 18–20",
+          "creatures": [
+            {
+              "actor": "de-kharnas",
+              "count": "selon la rencontre",
+              "note": "Niveau 17 — PDF p. 175"
+            },
+            {
+              "actor": "avsheros-le-traitre",
+              "count": "selon la rencontre",
+              "note": "Niveau 23 — PDF p. 174"
+            },
+            {
+              "actor": "shemhazians-d-elite",
+              "count": "selon la rencontre",
+              "note": "Niveau 17 — PDF p. 179"
+            },
+            {
+              "actor": "priere-de-noirs-doigts",
+              "count": "selon la rencontre",
+              "note": "Niveau 19 — PDF p. 181"
+            },
+            {
+              "actor": "xirikles",
+              "count": "selon la rencontre",
+              "note": "Niveau 20 — PDF p. 182"
+            },
+            {
+              "actor": "parangons-excorions",
+              "count": "selon la rencontre",
+              "note": "Niveau 18 — PDF p. 182"
+            },
+            {
+              "actor": "depiauteuse-daemonique",
+              "count": "selon la rencontre",
+              "note": "Niveau 20 — PDF p. 183"
+            },
+            {
+              "actor": "purrodaemons-d-elite",
+              "count": "selon la rencontre",
+              "note": "Niveau 19 — PDF p. 184"
+            },
+            {
+              "actor": "champ-d-opposition",
+              "count": "selon la rencontre",
+              "note": "Niveau 20 — PDF p. 185"
+            },
+            {
+              "actor": "colporteur-de-rumeurs-daemonique",
+              "count": "selon la rencontre",
+              "note": "Niveau 22 — PDF p. 186"
+            },
+            {
+              "actor": "vrilles-noires-d-encre",
+              "count": "selon la rencontre",
+              "note": "Niveau 20 — PDF p. 186"
+            },
+            {
+              "actor": "infector-daemonique",
+              "count": "selon la rencontre",
+              "note": "Niveau 22 — PDF p. 188"
+            },
+            {
+              "actor": "hordes-daemons-d-elite",
+              "count": "selon la rencontre",
+              "note": "Niveau 16 — PDF p. 189"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

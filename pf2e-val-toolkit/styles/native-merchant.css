@@ -1,0 +1,53 @@
+/* Native PF2e merchant -----------------------------------------------------
+   Player-facing purchase button. It lives inside the flexible name column so
+   it doesn't disturb PF2e's price / quantity / bulk grid. */
+
+.pf2e.actor.loot
+.inventory-list
+li[data-item-id]
+> .data
+> .item-name
+> .pf2e-val-native-buy {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin-left: auto;
+  padding: 0.12rem 0.42rem;
+  min-height: 1.4rem;
+  border: 1px solid var(--secondary, #5e0000);
+  border-radius: 3px;
+  background: rgba(94, 0, 0, 0.92);
+  color: white;
+  font-size: 0.72rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.pf2e.actor.loot
+.inventory-list
+li[data-item-id]
+> .data
+> .item-name
+> .pf2e-val-native-buy:hover {
+  filter: brightness(1.12);
+}
+
+.pf2e.actor.loot
+.inventory-list
+li[data-item-id]
+> .data
+> .item-name
+> .pf2e-val-native-buy:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}
+
+.pf2e.actor.loot
+.inventory-list
+li[data-item-id]
+> .data
+> .item-name
+> .pf2e-val-native-buy.is-missing-buyer {
+  border-style: dashed;
+}

@@ -1,0 +1,469 @@
+{
+  "formatVersion": 5,
+  "library": {
+    "root": "Campagnes",
+    "category": "Société des Éclaireurs",
+    "collection": "Saison 1 - Year of the Open Road"
+  },
+  "actorLibrary": {
+    "root": "MJ",
+    "category": "Société des Éclaireurs",
+    "collection": "Saison 1 - Year of the Open Road"
+  },
+  "scenario": {
+    "id": "PFS-S01-04",
+    "name": "Bandits d’Immenwood",
+    "tier": "1–4",
+    "source": "Pathfinder Society Scenario #1–04 — Bandits of Immenwood",
+    "summary": "Mission d’escorte entre Otari et Absalom : les Éclaireurs doivent ramener à la Grande Loge le chargement du Durvin’s Query à travers l’Immenwood, tandis que l’Écaille de la Tempête Rejetée attire animaux, bandits et créatures marines."
+  },
+  "journal": {
+    "title": "S01-04 — Bandits d’Immenwood"
+  },
+  "actors": [
+    {
+      "key": "riding-horse",
+      "name": "Cheval de selle",
+      "type": "reference",
+      "uuid": "Compendium.pf2e.pathfinder-monster-core.CLf9k9A9ApTAkZeL",
+      "lookup": "Riding Horse",
+      "actorType": "npc"
+    },
+    {
+      "key": "frog-swarm",
+      "name": "Nuée de grenouilles",
+      "type": "reference",
+      "uuid": "Compendium.pf2e.pfs-season-1-bestiary.y14EZYMrfejrAuPI",
+      "lookup": "Frog Swarm",
+      "preferredPack": "pf2e.pfs-season-1-bestiary",
+      "actorType": "npc"
+    },
+    {
+      "key": "osprey",
+      "name": "Balbuzard",
+      "type": "reference",
+      "uuid": "Compendium.pf2e.pfs-season-1-bestiary.EKwisoYBBn9femPg",
+      "lookup": "Osprey",
+      "preferredPack": "pf2e.pfs-season-1-bestiary",
+      "actorType": "npc"
+    },
+    {
+      "key": "giant-osprey",
+      "name": "Balbuzard géant",
+      "type": "reference",
+      "uuid": "Compendium.pf2e.pfs-season-1-bestiary.RYhsJ69TGrcvtfaM",
+      "lookup": "Giant Osprey",
+      "preferredPack": "pf2e.pfs-season-1-bestiary",
+      "actorType": "npc"
+    },
+    {
+      "key": "deadfall-trap-12",
+      "name": "Piège assommoir — sous-tier 1–2",
+      "type": "reference",
+      "uuid": "Compendium.pf2e.pfs-season-1-bestiary.oGYYCFUoopC8MSYS",
+      "lookup": "Deadfall Trap (1-2)",
+      "preferredPack": "pf2e.pfs-season-1-bestiary",
+      "actorType": "hazard"
+    },
+    {
+      "key": "deadfall-trap-34",
+      "name": "Piège assommoir — sous-tier 3–4",
+      "type": "reference",
+      "uuid": "Compendium.pf2e.pfs-season-1-bestiary.xKfj6ctW8fKEfrxp",
+      "lookup": "Deadfall Trap (3-4)",
+      "preferredPack": "pf2e.pfs-season-1-bestiary",
+      "actorType": "hazard"
+    },
+    {
+      "key": "squirrel-swarm",
+      "name": "Nuée d’écureuils",
+      "type": "reference",
+      "uuid": "Compendium.pf2e.pfs-season-1-bestiary.l8PzmglYbEtM5Xy6",
+      "lookup": "Squirrel Swarm (1-04)",
+      "preferredPack": "pf2e.pfs-season-1-bestiary",
+      "actorType": "npc"
+    },
+    {
+      "key": "rabid-squirrel-swarm",
+      "name": "Nuée d’écureuils rabiques",
+      "type": "reference",
+      "uuid": "Compendium.pf2e.pfs-season-1-bestiary.glxrhALybtp9WYh9",
+      "lookup": "Rabid Squirrel Swarm",
+      "preferredPack": "pf2e.pfs-season-1-bestiary",
+      "actorType": "npc"
+    },
+    {
+      "key": "ankle-trap-12",
+      "name": "Piège de cheville — sous-tier 1–2",
+      "type": "reference",
+      "uuid": "Compendium.pf2e.pfs-season-1-bestiary.91rxlFyg6uGC16RJ",
+      "lookup": "Ankle Trap (1-2)",
+      "preferredPack": "pf2e.pfs-season-1-bestiary",
+      "actorType": "hazard"
+    },
+    {
+      "key": "ankle-trap-34",
+      "name": "Piège de cheville — sous-tier 3–4",
+      "type": "reference",
+      "uuid": "Compendium.pf2e.pfs-season-1-bestiary.H3Iz5JJCXBLxR499",
+      "lookup": "Ankle Trap (3-4)",
+      "preferredPack": "pf2e.pfs-season-1-bestiary",
+      "actorType": "hazard"
+    },
+    {
+      "key": "halfling-druid-12",
+      "name": "Druide halfelin — sous-tier 1–2",
+      "type": "reference",
+      "uuid": "Compendium.pf2e.pfs-season-1-bestiary.eWlUE6xrNLGMcfMX",
+      "lookup": "Halfling Druid (1-2)",
+      "preferredPack": "pf2e.pfs-season-1-bestiary",
+      "actorType": "npc"
+    },
+    {
+      "key": "halfling-druid-34",
+      "name": "Druide halfelin — sous-tier 3–4",
+      "type": "reference",
+      "uuid": "Compendium.pf2e.pfs-season-1-bestiary.Jfm63bPimFxf3u1T",
+      "lookup": "Halfling Druid (3-4)",
+      "preferredPack": "pf2e.pfs-season-1-bestiary",
+      "actorType": "npc"
+    },
+    {
+      "key": "animal-companion-wolf-12",
+      "name": "Compagnon animal (loup) — sous-tier 1–2",
+      "type": "reference",
+      "uuid": "Compendium.pf2e.pfs-season-1-bestiary.czYt4Yp6ZeGnzyV6",
+      "lookup": "Animal Companion (Wolf) (1-2)",
+      "preferredPack": "pf2e.pfs-season-1-bestiary",
+      "actorType": "npc"
+    },
+    {
+      "key": "animal-companion-wolf-34",
+      "name": "Compagnon animal (loup) — sous-tier 3–4",
+      "type": "reference",
+      "uuid": "Compendium.pf2e.pfs-season-1-bestiary.9KauvSo8zxsaBWRc",
+      "lookup": "Animal Companion (Wolf) (3-4)",
+      "preferredPack": "pf2e.pfs-season-1-bestiary",
+      "actorType": "npc"
+    },
+    {
+      "key": "wolf",
+      "name": "Loup",
+      "type": "reference",
+      "uuid": "Compendium.pf2e.pathfinder-monster-core.BN5Lb6IsQ9Wyu3rL",
+      "lookup": "Wolf",
+      "actorType": "npc"
+    },
+    {
+      "key": "zephyr-hawk",
+      "name": "Faucon zéphyr",
+      "type": "reference",
+      "uuid": "Compendium.pf2e.pathfinder-monster-core.sAfjpjAS56jtrUbi",
+      "lookup": "Zephyr Hawk",
+      "actorType": "npc"
+    },
+    {
+      "key": "living-whirlwind",
+      "name": "Tourbillon vivant",
+      "type": "reference",
+      "uuid": "Compendium.pf2e.pathfinder-monster-core.XgGeD4fz5m7nQQlN",
+      "lookup": "Living Whirlwind",
+      "actorType": "npc"
+    },
+    {
+      "key": "vengeant-thorn-12",
+      "name": "Vengeant Thorn — sous-tier 1–2",
+      "type": "reference",
+      "uuid": "Compendium.pf2e.pfs-season-1-bestiary.NmkeNdV7SWYG7bYe",
+      "lookup": "Vengeant Thorn (1-2)",
+      "preferredPack": "pf2e.pfs-season-1-bestiary",
+      "actorType": "npc"
+    },
+    {
+      "key": "vengeant-thorn-34",
+      "name": "Vengeant Thorn — sous-tier 3–4",
+      "type": "reference",
+      "uuid": "Compendium.pf2e.pfs-season-1-bestiary.FXwYc62zORdcfnYb",
+      "lookup": "Vengeant Thorn (3-4)",
+      "preferredPack": "pf2e.pfs-season-1-bestiary",
+      "actorType": "npc"
+    },
+    {
+      "key": "reefclaw-spawn",
+      "name": "Rejeton de pince des récifs",
+      "type": "reference",
+      "uuid": "Compendium.pf2e.pfs-season-1-bestiary.0DudqNVGfXC39umi",
+      "lookup": "Reefclaw Spawn",
+      "preferredPack": "pf2e.pfs-season-1-bestiary",
+      "actorType": "npc"
+    },
+    {
+      "key": "sea-devil-scout",
+      "name": "Éclaireur diable des mers",
+      "type": "reference",
+      "uuid": "Compendium.pf2e.pathfinder-bestiary.PXru127aJljwKhSy",
+      "lookup": "Sea Devil Scout",
+      "actorType": "npc"
+    }
+  ],
+  "encounters": [
+    {
+      "id": "A",
+      "name": "Les grenouilles dans les écuries",
+      "location": "Otari",
+      "sourcePage": 8,
+      "notes": "Rencontre triviale. Le wagon commence avec 20 points de cargaison. Les deux chevaux de selle sont attelés au wagon.",
+      "groups": [
+        {
+          "tier": "Sous-tier 1–2",
+          "creatures": [
+            {
+              "actor": "riding-horse",
+              "count": 2,
+              "note": "Alliés / animaux de trait."
+            },
+            {
+              "actor": "frog-swarm",
+              "count": 1
+            }
+          ]
+        },
+        {
+          "tier": "Sous-tier 3–4",
+          "creatures": [
+            {
+              "actor": "riding-horse",
+              "count": 2,
+              "note": "Alliés / animaux de trait."
+            },
+            {
+              "actor": "frog-swarm",
+              "count": 2
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "B1",
+      "name": "Attaque des balbuzards",
+      "location": "Route de l’Immenwood",
+      "sourcePage": 10,
+      "notes": "Rencontre modérée. Les oiseaux cherchent d’abord à déchirer la bâche du wagon puis à emporter la cargaison.",
+      "groups": [
+        {
+          "tier": "Sous-tier 1–2",
+          "creatures": [
+            {
+              "actor": "riding-horse",
+              "count": 2,
+              "note": "Alliés / animaux de trait."
+            },
+            {
+              "actor": "osprey",
+              "count": 4
+            }
+          ]
+        },
+        {
+          "tier": "Sous-tier 3–4",
+          "creatures": [
+            {
+              "actor": "riding-horse",
+              "count": 2,
+              "note": "Alliés / animaux de trait."
+            },
+            {
+              "actor": "giant-osprey",
+              "count": 2
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "B2",
+      "name": "Arbre abattu",
+      "location": "Route de l’Immenwood",
+      "sourcePage": 10,
+      "notes": "Rencontre faible. Un druide halfelin observe l’embuscade et peut être combattu s’il est repéré ; s’il est neutralisé ici, retirer un druide et son compagnon loup de B3.",
+      "groups": [
+        {
+          "tier": "Sous-tier 1–2",
+          "creatures": [
+            {
+              "actor": "riding-horse",
+              "count": 2,
+              "note": "Alliés / animaux de trait."
+            },
+            {
+              "actor": "deadfall-trap-12",
+              "count": 1
+            },
+            {
+              "actor": "squirrel-swarm",
+              "count": 1
+            },
+            {
+              "actor": "halfling-druid-12",
+              "count": 1,
+              "note": "Observateur caché ; combat seulement s’il est repéré."
+            }
+          ]
+        },
+        {
+          "tier": "Sous-tier 3–4",
+          "creatures": [
+            {
+              "actor": "riding-horse",
+              "count": 2,
+              "note": "Alliés / animaux de trait."
+            },
+            {
+              "actor": "deadfall-trap-34",
+              "count": 1
+            },
+            {
+              "actor": "rabid-squirrel-swarm",
+              "count": 3
+            },
+            {
+              "actor": "halfling-druid-34",
+              "count": 1,
+              "note": "Observateur caché ; utiliser la fiche de B3 s’il est affronté."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "B3",
+      "name": "Embuscade des loups",
+      "location": "Route de l’Immenwood",
+      "sourcePage": 12,
+      "notes": "Rencontre modérée. Si le druide de B2 a été capturé ou vaincu, retirer un druide et son compagnon animal de cette rencontre.",
+      "groups": [
+        {
+          "tier": "Sous-tier 1–2",
+          "creatures": [
+            {
+              "actor": "riding-horse",
+              "count": 2,
+              "note": "Alliés / animaux de trait, premières cibles des attaquants."
+            },
+            {
+              "actor": "ankle-trap-12",
+              "count": 1
+            },
+            {
+              "actor": "halfling-druid-12",
+              "count": 2
+            },
+            {
+              "actor": "animal-companion-wolf-12",
+              "count": 2
+            }
+          ]
+        },
+        {
+          "tier": "Sous-tier 3–4",
+          "creatures": [
+            {
+              "actor": "riding-horse",
+              "count": 2,
+              "note": "Alliés / animaux de trait, premières cibles des attaquants."
+            },
+            {
+              "actor": "ankle-trap-34",
+              "count": 1
+            },
+            {
+              "actor": "halfling-druid-34",
+              "count": 2
+            },
+            {
+              "actor": "animal-companion-wolf-34",
+              "count": 2
+            },
+            {
+              "actor": "wolf",
+              "count": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "B4",
+      "name": "Tempête (rencontre optionnelle)",
+      "location": "Immenwood — campement nocturne",
+      "sourcePage": 12,
+      "notes": "Rencontre modérée optionnelle, uniquement si les PJ s’arrêtent pour la nuit. Elle peut se reproduire chaque nuit tant que l’Écaille est présente.",
+      "groups": [
+        {
+          "tier": "Sous-tier 1–2",
+          "creatures": [
+            {
+              "actor": "zephyr-hawk",
+              "count": 1
+            }
+          ]
+        },
+        {
+          "tier": "Sous-tier 3–4",
+          "creatures": [
+            {
+              "actor": "living-whirlwind",
+              "count": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "C",
+      "name": "Route de la Haute Côte",
+      "location": "Sortie de l’Immenwood, côte sud de Kortos",
+      "sourcePage": 13,
+      "notes": "Rencontre sévère finale autour de l’Écaille de la Tempête Rejetée. Pour le sous-tier 3–4, l’appendice p. 29 indique 2 éclaireurs diables des mers, tandis que la carte p. 16 n’en marque qu’un ; ce fichier suit le nombre explicite de l’appendice.",
+      "groups": [
+        {
+          "tier": "Sous-tier 1–2",
+          "creatures": [
+            {
+              "actor": "riding-horse",
+              "count": 2,
+              "note": "Alliés / animaux de trait."
+            },
+            {
+              "actor": "vengeant-thorn-12",
+              "count": 1
+            },
+            {
+              "actor": "reefclaw-spawn",
+              "count": 1
+            }
+          ]
+        },
+        {
+          "tier": "Sous-tier 3–4",
+          "creatures": [
+            {
+              "actor": "riding-horse",
+              "count": 2,
+              "note": "Alliés / animaux de trait."
+            },
+            {
+              "actor": "vengeant-thorn-34",
+              "count": 1
+            },
+            {
+              "actor": "sea-devil-scout",
+              "count": 2
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

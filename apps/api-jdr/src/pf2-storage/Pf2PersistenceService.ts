@@ -7,6 +7,8 @@ import { DataSource, EntityManager } from 'typeorm'
 
 export type Pf2RecordKind = 'pnj' | 'faction' | 'lieu' | 'region' | 'evenement' | 'scenario' | 'session' | 'catalogue' | 'curation' | 'foundry-actor-cache'
 export type FoundryActorCacheEntry = { uuid: string; name: string }
+export type ScenarioNpcLink = { scenarioId: string; npcId: string; role: string | null; importance: string | null; sourcePage: string | null; notes: string | null }
+export type ScenarioPackage = { scenarioId: string; packageVersion: number; status: 'available' | 'integrated' | 'obsolete'; filename: string; manifest: Record<string, unknown>; importedAt: string; updatedAt: string }
 
 const referenceFiles = {
   pnj: 'pf2_personnages.json',
@@ -78,6 +80,41 @@ export class Pf2PersistenceService implements OnModuleInit {
       const name = typeof actor.name === 'string' ? actor.name : ''
       return uuid && name ? [{ uuid, name }] : []
     })
+  }
+
+  async listRecords(kind: Pf2RecordKind): Promise<Record<string, unknown>[]> { return this.list(kind) }
+  async getRecord(kind: Pf2RecordKind, id: string): Promise<Record<string, unknown> | null> { return this.get(kind, id) }
+  async saveRecord(kind: Pf2RecordKind, item: Record<string, unknown>): Promise<void> { await this.upsert(kind, this.identifier(item), this.name(item), item) }
+
+  async replaceScenarioNpcLinks(scenarioId: string, links: ScenarioNpcLink[]): Promise<void> {
+    await this.dataSource.transaction(async manager => {
+      await manager.query('DELETE FROM pf2_scenario_npc WHERE scenario_id = ?', [scenarioId])
+      for (const link of links) await manager.query(
+        'INSERT INTO pf2_scenario_npc (scenario_id, npc_id, role, importance, source_page, notes, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)',
+        [scenarioId, link.npcId, link.role, link.importance, link.sourcePage, link.notes]
+      )
+    })
+  }
+
+  async listScenarioNpcLinks(scenarioId: string): Promise<ScenarioNpcLink[]> {
+    return this.dataSource.query('SELECT scenario_id AS scenarioId, npc_id AS npcId, role, importance, source_page AS sourcePage, notes FROM pf2_scenario_npc WHERE scenario_id = ? ORDER BY importance DESC, npc_id', [scenarioId]) as Promise<ScenarioNpcLink[]>
+  }
+
+  async listNpcScenarioLinks(npcId: string): Promise<ScenarioNpcLink[]> {
+    return this.dataSource.query('SELECT scenario_id AS scenarioId, npc_id AS npcId, role, importance, source_page AS sourcePage, notes FROM pf2_scenario_npc WHERE npc_id = ? ORDER BY scenario_id', [npcId]) as Promise<ScenarioNpcLink[]>
+  }
+
+  async saveScenarioPackage(input: Omit<ScenarioPackage, 'importedAt' | 'updatedAt'>): Promise<void> {
+    await this.dataSource.query(
+      'INSERT INTO pf2_scenario_package (scenario_id, package_version, status, filename, manifest, imported_at, updated_at) VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP) ON CONFLICT(scenario_id) DO UPDATE SET package_version = excluded.package_version, status = excluded.status, filename = excluded.filename, manifest = excluded.manifest, updated_at = CURRENT_TIMESTAMP',
+      [input.scenarioId, input.packageVersion, input.status, input.filename, JSON.stringify(input.manifest)]
+    )
+  }
+
+  async getScenarioPackage(scenarioId: string): Promise<ScenarioPackage | null> {
+    const rows = await this.dataSource.query('SELECT scenario_id, package_version, status, filename, manifest, imported_at, updated_at FROM pf2_scenario_package WHERE scenario_id = ?', [scenarioId]) as Array<{ scenario_id: string; package_version: number; status: ScenarioPackage['status']; filename: string; manifest: string; imported_at: string; updated_at: string }>
+    const row = rows[0]
+    return row ? { scenarioId: row.scenario_id, packageVersion: row.package_version, status: row.status, filename: row.filename, manifest: this.object(JSON.parse(row.manifest)), importedAt: row.imported_at, updatedAt: row.updated_at } : null
   }
 
   async listSessions(): Promise<Pf2Session[]> {
@@ -203,6 +240,13 @@ export class Pf2PersistenceService implements OnModuleInit {
         await manager.query('ALTER TABLE pf2_session ADD COLUMN discord_message_id TEXT')
       }
     })
+    await this.applyMigration('007-scenario-packages-and-npcs', async (manager) => {
+      await manager.query("CREATE TABLE IF NOT EXISTS pf2_scenario_package (scenario_id TEXT PRIMARY KEY, package_version INTEGER NOT NULL, status TEXT NOT NULL, filename TEXT NOT NULL, manifest TEXT NOT NULL, imported_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP, updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)")
+      // pf2_record has the composite key (kind, id), therefore `id` alone
+      // cannot be a SQLite foreign key. Existence is checked by the service.
+      await manager.query("CREATE TABLE IF NOT EXISTS pf2_scenario_npc (scenario_id TEXT NOT NULL, npc_id TEXT NOT NULL, role TEXT, importance TEXT, source_page TEXT, notes TEXT, created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP, updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (scenario_id, npc_id))")
+      await manager.query('CREATE INDEX IF NOT EXISTS idx_pf2_scenario_npc_npc ON pf2_scenario_npc (npc_id)')
+    })
   }
 
   private async createSessionTable(manager: EntityManager): Promise<void> {
@@ -222,7 +266,7 @@ export class Pf2PersistenceService implements OnModuleInit {
   }
 
   private async ensureStorageDirectories(): Promise<void> {
-    await Promise.all(['portraits', 'illustrations', 'maps', 'documents'].map((directory) => mkdir(resolve(this.storageRoot, directory), { recursive: true })))
+    await Promise.all(['portraits', 'illustrations', 'maps', 'documents', 'documents/scenario-packages'].map((directory) => mkdir(resolve(this.storageRoot, directory), { recursive: true })))
   }
 
   private async seedCurrentData(): Promise<void> {

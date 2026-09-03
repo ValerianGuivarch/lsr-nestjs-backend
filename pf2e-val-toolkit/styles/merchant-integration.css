@@ -1,0 +1,30 @@
+/* PF2e Merchant integration -------------------------------------------------
+   Small player-facing badge added by PF2e Val Toolkit. */
+
+#pf2e-cd-mer-root .pf2e-val-merchant-viewer {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 6px;
+  padding: 3px 10px;
+  border: 1px solid rgba(212, 169, 72, 0.55);
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.24);
+  color: rgba(255, 244, 214, 0.94);
+  font-family: "Eczar", "Cinzel", Georgia, serif;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  line-height: 1.2;
+}
+
+#pf2e-cd-mer-root .pf2e-val-merchant-viewer i {
+  font-size: 11px;
+  opacity: 0.9;
+}
+
+#pf2e-cd-mer-root .pf2e-val-merchant-viewer.is-missing {
+  border-color: rgba(230, 177, 73, 0.85);
+  background: rgba(70, 34, 10, 0.48);
+}

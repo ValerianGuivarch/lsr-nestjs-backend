@@ -18,6 +18,7 @@ type Pnj={
   statut?:"Actif"|"Disparu"|"Mort"|"Inconnu";
   notes?:string;
 };
+type ScenarioLink={scenarioId:string;role?:string|null;importance?:string|null;titleFr?:string;titleOriginal?:string;nom?:string};
 
 type Draft={
   nom:string;
@@ -127,6 +128,7 @@ export default function PnjPage(){
   const [lieu,setLieu]=useState("");
   const [importance,setImportance]=useState("");
   const [selected,setSelected]=useState<Pnj|null>(null);
+  const [selectedScenarios,setSelectedScenarios]=useState<ScenarioLink[]>([]);
   const [showEditor,setShowEditor]=useState(false);
   const [editingId,setEditingId]=useState<string|null>(null);
   const [draft,setDraft]=useState<Draft>(emptyDraft);
@@ -145,6 +147,13 @@ export default function PnjPage(){
   };
 
   useEffect(()=>{load().catch(error=>setMessage(error instanceof Error?error.message:String(error)))},[]);
+  useEffect(()=>{
+    if(!selected){setSelectedScenarios([]);return}
+    fetch(`/apil7r/pf2-mj/pnj/${encodeURIComponent(selected.id)}/scenarios`,{cache:"no-store"})
+      .then(response=>response.ok?response.json():[])
+      .then(value=>setSelectedScenarios(Array.isArray(value)?value:[]))
+      .catch(()=>setSelectedScenarios([]));
+  },[selected]);
 
   const factionNames=useMemo(()=>new Map(factionRefs.map(item=>[item.id,item.nom])),[factionRefs]);
   const lieuNames=useMemo(()=>new Map(lieuRefs.map(item=>[item.id,item.nom])),[lieuRefs]);
@@ -461,6 +470,7 @@ export default function PnjPage(){
           <dt>Importance</dt><dd>{selected.importance||"—"}</dd>
           <dt>Statut</dt><dd>{selected.statut||"—"}</dd>
           <dt>Notes MJ</dt><dd>{selected.notes||"—"}</dd>
+          <dt>Scénarios liés</dt><dd>{selectedScenarios.length?selectedScenarios.map(link=>`${link.titleFr||link.titleOriginal||link.nom||link.scenarioId}${link.role?` — ${link.role}`:""}`).join(" · "):"—"}</dd>
         </dl>
       </article>
     </div>}

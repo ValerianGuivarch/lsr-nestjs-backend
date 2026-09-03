@@ -1,0 +1,366 @@
+{
+  "formatVersion": 4,
+  "library": {
+    "root": "Campagnes",
+    "category": "Société des Éclaireurs",
+    "collection": "Introductions"
+  },
+  "actorLibrary": {
+    "root": "MJ",
+    "category": "Société des Éclaireurs",
+    "collection": "Introductions"
+  },
+  "scenario": {
+    "id": "PFS-INTRO-01",
+    "name": "La Seconde Confirmation",
+    "tier": "1–2",
+    "source": "Pathfinder Society Intro n°1 — The Second Confirmation",
+    "summary": "Une Confirmation collective conduit les initiés d’Absalom à Cassomir puis dans le marais de Blackwood, à la recherche de Rain in Cloudy Day et de ruines azlantes."
+  },
+  "journal": {
+    "title": "Intro n°1 — La Seconde Confirmation"
+  },
+  "actors": [
+    {
+      "key": "rain",
+      "name": "Rain in Cloudy Day",
+      "type": "reference",
+      "uuid": "Compendium.pf2e.pfs-introductions-bestiary.RPqISpa2Jq8Jy3dh",
+      "lookup": "Rain In Cloudy Day",
+      "actorType": "npc"
+    },
+    {
+      "key": "swampy-quicksand",
+      "name": "Sables mouvants marécageux",
+      "type": "reference",
+      "uuid": "Compendium.pf2e.pfs-introductions-bestiary.7u3dkPN8iSpW4QPB",
+      "lookup": "Swampy Quicksand",
+      "actorType": "hazard"
+    },
+    {
+      "key": "ball-python",
+      "name": "Python royal",
+      "type": "reference",
+      "lookup": "Ball Python",
+      "preferredPack": "pf2e.pfs-introductions-bestiary",
+      "actorType": "npc"
+    },
+    {
+      "key": "festrog",
+      "name": "Festrog",
+      "type": "reference",
+      "lookup": "Festrog",
+      "actorType": "npc"
+    },
+    {
+      "key": "giant-frog",
+      "name": "Grenouille géante",
+      "type": "reference",
+      "lookup": "Giant Frog",
+      "actorType": "npc"
+    },
+    {
+      "key": "swamp-ooze",
+      "name": "Vase des marais",
+      "type": "reference",
+      "uuid": "Compendium.pf2e.pfs-introductions-bestiary.j7hidXUeUNJtQEW4",
+      "lookup": "Swamp Ooze",
+      "actorType": "npc"
+    },
+    {
+      "key": "ghoul",
+      "name": "Goule",
+      "type": "reference",
+      "lookup": "Ghoul",
+      "actorType": "npc"
+    },
+    {
+      "key": "weak-living-boulder",
+      "name": "Rocher vivant affaibli",
+      "type": "reference",
+      "lookup": "Weak Living Boulder",
+      "preferredPack": "pf2e.pfs-introductions-bestiary",
+      "actorType": "npc"
+    },
+    {
+      "key": "sun-scorched-shadow-drake",
+      "name": "Drake d’ombre brûlé par le soleil",
+      "type": "reference",
+      "lookup": "Sun-Scorched Shadow Drake",
+      "preferredPack": "pf2e.pfs-introductions-bestiary",
+      "actorType": "npc"
+    },
+    {
+      "key": "choker",
+      "name": "Choker",
+      "type": "reference",
+      "lookup": "Choker",
+      "actorType": "npc"
+    },
+    {
+      "key": "draugr",
+      "name": "Draugr",
+      "type": "reference",
+      "uuid": "Compendium.pf2e.pathfinder-monster-core-2.lCDygpomjUnutb5b",
+      "lookup": "Draugr",
+      "actorType": "npc"
+    },
+    {
+      "key": "dretch",
+      "name": "Dretch",
+      "type": "reference",
+      "lookup": "Dretch",
+      "actorType": "npc"
+    },
+    {
+      "key": "mudwretch",
+      "name": "Mudwretch",
+      "type": "reference",
+      "lookup": "Mudwretch",
+      "actorType": "npc"
+    },
+    {
+      "key": "brown-mold",
+      "name": "Moisissure brune",
+      "type": "reference",
+      "uuid": "Compendium.pf2e.hazards.Q8bXKgDm8eguqThB",
+      "lookup": "Brown Mold",
+      "actorType": "hazard"
+    },
+    {
+      "key": "spear-launcher",
+      "name": "Lanceur de lances",
+      "type": "reference",
+      "lookup": "Spear Launcher",
+      "preferredPack": "pf2e.pfs-introductions-bestiary",
+      "actorType": "hazard"
+    },
+    {
+      "key": "ancient-summoning-rune",
+      "name": "Rune d’invocation ancienne",
+      "type": "reference",
+      "lookup": "Ancient Summoning Rune",
+      "preferredPack": "pf2e.pfs-introductions-bestiary",
+      "actorType": "hazard"
+    },
+    {
+      "key": "grothlut",
+      "name": "Grothlut",
+      "type": "reference",
+      "lookup": "Grothlut",
+      "actorType": "npc"
+    },
+    {
+      "key": "necrophidius",
+      "name": "Nécrophidius",
+      "type": "reference",
+      "lookup": "Necrophidius",
+      "actorType": "npc"
+    },
+    {
+      "key": "snapping-flytrap",
+      "name": "Attrape-mouche claquante",
+      "type": "reference",
+      "lookup": "Snapping Flytrap",
+      "actorType": "npc"
+    }
+  ],
+  "encounters": [
+    {
+      "id": "MARais-DANGER",
+      "name": "Dans le marais — Sables mouvants",
+      "location": "Marais de Blackwood",
+      "sourcePage": 9,
+      "groups": [
+        {
+          "tier": "Niveaux 1–2",
+          "creatures": [
+            {
+              "actor": "swampy-quicksand",
+              "count": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "A",
+      "name": "Sentier du marais",
+      "location": "Marais de Blackwood",
+      "sourcePage": 10,
+      "notes": "Choisir une option ou la déterminer aléatoirement (1d4).",
+      "groups": [
+        {
+          "tier": "Niveaux 1–2",
+          "choices": [
+            {
+              "label": "Rencontre aléatoire",
+              "options": [
+                {
+                  "actor": "ball-python",
+                  "label": "2 pythons royaux"
+                },
+                {
+                  "actor": "festrog",
+                  "label": "2 festrogs"
+                },
+                {
+                  "actor": "giant-frog",
+                  "label": "2 grenouilles géantes"
+                },
+                {
+                  "actor": "swamp-ooze",
+                  "label": "2 vases des marais"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "B",
+      "name": "Ruines du marais",
+      "location": "Enclave de Tskikha",
+      "sourcePage": 13,
+      "notes": "Rain in Cloudy Day combat aux côtés des PJ dans toutes les options.",
+      "groups": [
+        {
+          "tier": "Niveaux 1–2",
+          "creatures": [
+            {
+              "actor": "rain",
+              "count": 1
+            }
+          ],
+          "choices": [
+            {
+              "label": "Attaquants",
+              "options": [
+                {
+                  "actor": "ghoul",
+                  "label": "2 goules"
+                },
+                {
+                  "actor": "weak-living-boulder",
+                  "label": "2 rochers vivants affaiblis"
+                },
+                {
+                  "actor": "sun-scorched-shadow-drake",
+                  "label": "2 drakes d’ombre brûlés par le soleil"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "C1",
+      "name": "Chambre d’entrée",
+      "location": "Ruines azlantes",
+      "sourcePage": 15,
+      "notes": "Choisir une option ou la déterminer aléatoirement (1d4).",
+      "groups": [
+        {
+          "tier": "Niveaux 1–2",
+          "choices": [
+            {
+              "label": "Gardien de la chambre",
+              "options": [
+                {
+                  "actor": "choker",
+                  "label": "1 choker"
+                },
+                {
+                  "actor": "draugr",
+                  "label": "1 draugr"
+                },
+                {
+                  "actor": "dretch",
+                  "label": "1 dretch"
+                },
+                {
+                  "actor": "mudwretch",
+                  "label": "1 mudwretch"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "C2",
+      "name": "Cavernes",
+      "location": "Ruines azlantes",
+      "sourcePage": 17,
+      "groups": [
+        {
+          "tier": "Niveaux 1–2",
+          "creatures": [
+            {
+              "actor": "brown-mold",
+              "count": 3,
+              "note": "Trois plaques réparties dans trois des six emplacements possibles."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "C3",
+      "name": "Couloirs piégés",
+      "location": "Ruines azlantes",
+      "sourcePage": 17,
+      "groups": [
+        {
+          "tier": "Niveaux 1–2",
+          "creatures": [
+            {
+              "actor": "spear-launcher",
+              "count": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "C4",
+      "name": "Chambre centrale",
+      "location": "Ruines azlantes",
+      "sourcePage": 18,
+      "notes": "La rune invoque une version affaiblie d’une créature rencontrée en B. Le gardien permanent est choisi parmi trois options.",
+      "groups": [
+        {
+          "tier": "Niveaux 1–2",
+          "creatures": [
+            {
+              "actor": "ancient-summoning-rune",
+              "count": 1
+            }
+          ],
+          "choices": [
+            {
+              "label": "Gardien permanent",
+              "options": [
+                {
+                  "actor": "grothlut",
+                  "label": "1 grothlut"
+                },
+                {
+                  "actor": "necrophidius",
+                  "label": "1 nécrophidius"
+                },
+                {
+                  "actor": "snapping-flytrap",
+                  "label": "1 attrape-mouche claquante"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
