@@ -478,6 +478,41 @@ function Stats({ active }: { active: PlayableUnit[] }) {
   return <section className="stats stats-v3"><div><b>▶</b><p><strong>{active.length}</strong><small>UNITÉS JOUABLES</small></p></div><div><b>✓</b><p><strong>{complete}</strong><small>PDF COMPLETS</small></p></div><div><b>文</b><p><strong>{readyFr}</strong><small>PRÊTES EN FR</small></p></div><div><b>ⓘ</b><p><strong>{infoOnly}</strong><small>INFO SEULES</small></p></div><div><b>▣</b><p><strong>{zipMissing ?? '—'}</strong><small>ZIP MANQUANTS</small></p></div><div><b>!</b><p><strong>{review}</strong><small>MÉTADONNÉES À VOIR</small></p></div></section>
 }
 
+type ScenarioPackageStatus = { scenarioId: string; packageVersion: number; status: string; filename: string; importedAt: string; updatedAt: string } | null
+type LinkedNpc = { npcId: string; nom?: string; role?: string | null; importance?: string | null }
+
+function ScenarioPackagePanel({ scenarioId }: { scenarioId: string }) {
+  const [status, setStatus] = useState<ScenarioPackageStatus>(null)
+  const [npcs, setNpcs] = useState<LinkedNpc[]>([])
+  const [message, setMessage] = useState('')
+  const [busy, setBusy] = useState(false)
+  const load = () => Promise.all([
+    fetch(`/apil7r/pf2-mj/scenario-packages/${encodeURIComponent(scenarioId)}`, { cache: 'no-store' }).then((response) => response.ok ? response.json() : null),
+    fetch(`/apil7r/pf2-mj/scenarios/${encodeURIComponent(scenarioId)}/npcs`, { cache: 'no-store' }).then((response) => response.ok ? response.json() : [])
+  ]).then(([packageStatus, linkedNpcs]) => { setStatus(packageStatus); setNpcs(Array.isArray(linkedNpcs) ? linkedNpcs : []) }).catch(() => setMessage('État du package indisponible.'))
+  useEffect(() => { void load() }, [scenarioId])
+  const importPackage = async (file: File | undefined) => {
+    if (!file) return
+    if (!file.name.toLowerCase().endsWith('.zip')) { setMessage('Sélectionne un fichier ZIP.'); return }
+    setBusy(true); setMessage('')
+    try {
+      const body = new FormData(); body.set('file', file)
+      const response = await fetch('/apil7r/pf2-mj/scenario-packages/import', { method: 'POST', body })
+      const payload = await response.json().catch(() => null)
+      if (!response.ok) throw new Error(payload?.message ?? payload?.error ?? 'Import impossible.')
+      if (payload.scenarioId !== scenarioId) throw new Error(`Ce ZIP concerne « ${payload.scenarioId} », pas ce scénario.`)
+      setMessage(payload.state === 'unchanged' ? 'Version déjà intégrée.' : `Package v${payload.packageVersion} intégré.`)
+      await load()
+    } catch (error) { setMessage(error instanceof Error ? error.message : 'Import impossible.') } finally { setBusy(false) }
+  }
+  return <section className="detail-section scenario-package-panel"><h3>Package Foundry</h3>
+    {status ? <p><strong>v{status.packageVersion}</strong> · {status.status === 'deployed' ? 'déployé dans Foundry' : status.status === 'integrated' ? 'intégré dans l’application' : status.status} · {status.filename}</p> : <p className="missing">Aucun package intégré.</p>}
+    {npcs.length > 0 && <div className="badges">{npcs.map((npc) => <Badge key={npc.npcId}>{npc.nom || npc.npcId}{npc.role ? ` · ${npc.role}` : ''}</Badge>)}</div>}
+    <label className="package-upload"><span>{busy ? 'Import en cours…' : 'Intégrer un ZIP'}</span><input type="file" accept=".zip,application/zip" disabled={busy} onChange={(event) => { void importPackage(event.target.files?.[0]) }} /></label>
+    {message && <p className="package-message">{message}</p>}
+  </section>
+}
+
 function PlayableDetail({ unit, curation, onClose, onUpdate, placeOptions }: { unit: PlayableUnit; curation: Curation; onClose: () => void; onUpdate: (id: string, field: string, value: unknown) => void; placeOptions: string[] }) {
   const override = resolvePlayableOverride(curation, unit)
   const levels = effectiveLevels(unit, override)
@@ -500,6 +535,7 @@ function PlayableDetail({ unit, curation, onClose, onUpdate, placeOptions }: { u
     {unit.gmDetails && <section className="detail-section gm-details"><h3>Détails MJ</h3><p>{unit.gmDetails}</p></section>}
     {unit.migration.issues.length > 0 && <section className="detail-section migration-warning"><h3>À revoir après migration</h3><ul>{unit.migration.issues.map((issue) => <li key={issue}>{issue}</li>)}</ul></section>}
     {components.length > 0 && <section className="detail-section"><h3>Composants de l’œuvre</h3><div className="part-list">{components.map((component) => <article key={component.id}><strong>{componentTypeLabel(component.componentType)} · {titleOf(component)}</strong><span>{component.notes}</span><Badge>{component.requiredForCore ? 'Requis' : 'Facultatif'}</Badge></article>)}</div></section>}
+    <ScenarioPackagePanel scenarioId={unit.id} />
     <section className="detail-section"><h3>Documents</h3><div className="pdfs">{unitDocuments.length ? unitDocuments.map((document) => <a className={document.isInformationFallback ? 'info-document' : ''} key={document.id} href={documentHref(document)} target="_blank" rel="noreferrer">{document.isInformationFallback ? 'ⓘ' : '📖'} {document.filename} · {document.rawVariant}</a>) : <span className="missing">× Aucun document associé</span>}</div></section>
     <button className={`curation-button ${isExcluded(unit, override) ? 'restore' : 'exclude'}`} onClick={() => onUpdate(unit.id, 'excluded', !isExcluded(unit, override))}>{isExcluded(unit, override) ? '↩ Réintégrer' : '× Écarter cette unité'}</button>
   </Modal>

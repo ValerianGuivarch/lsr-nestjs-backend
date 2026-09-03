@@ -8,7 +8,7 @@ import { DataSource, EntityManager } from 'typeorm'
 export type Pf2RecordKind = 'pnj' | 'faction' | 'lieu' | 'region' | 'evenement' | 'scenario' | 'session' | 'catalogue' | 'curation' | 'foundry-actor-cache'
 export type FoundryActorCacheEntry = { uuid: string; name: string }
 export type ScenarioNpcLink = { scenarioId: string; npcId: string; role: string | null; importance: string | null; sourcePage: string | null; notes: string | null }
-export type ScenarioPackage = { scenarioId: string; packageVersion: number; status: 'available' | 'integrated' | 'obsolete'; filename: string; manifest: Record<string, unknown>; importedAt: string; updatedAt: string }
+export type ScenarioPackage = { scenarioId: string; packageVersion: number; status: 'available' | 'integrated' | 'deployed' | 'obsolete'; filename: string; manifest: Record<string, unknown>; importedAt: string; updatedAt: string }
 
 const referenceFiles = {
   pnj: 'pf2_personnages.json',

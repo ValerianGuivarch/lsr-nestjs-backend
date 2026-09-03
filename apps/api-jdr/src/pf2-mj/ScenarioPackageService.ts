@@ -38,6 +38,14 @@ export class ScenarioPackageService {
   }
 
   async packageForScenario(scenarioId: string): Promise<unknown> { return this.persistence.getScenarioPackage(scenarioId) }
+  async markDeployed(scenarioId: string, body: unknown): Promise<unknown> {
+    const packageStatus = await this.persistence.getScenarioPackage(scenarioId)
+    if (!packageStatus) throw new Error('Ce package doit être intégré dans l’application avant son déploiement Foundry.')
+    const input = body && typeof body === 'object' ? body as Record<string, unknown> : {}
+    if (input.packageVersion !== undefined && input.packageVersion !== packageStatus.packageVersion) throw new Error(`Version déployée invalide : l’application attend v${packageStatus.packageVersion}.`)
+    await this.persistence.saveScenarioPackage({ ...packageStatus, status: 'deployed' })
+    return this.persistence.getScenarioPackage(scenarioId)
+  }
   async npcsForScenario(scenarioId: string): Promise<unknown[]> {
     const links = await this.persistence.listScenarioNpcLinks(scenarioId)
     return Promise.all(links.map(async link => ({ ...(await this.persistence.getRecord('pnj', link.npcId)), ...link })))

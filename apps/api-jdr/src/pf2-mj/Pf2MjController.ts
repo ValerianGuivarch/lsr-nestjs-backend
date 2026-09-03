@@ -33,6 +33,12 @@ export class Pf2MjController {
   @Get('scenario-packages/:id')
   packageForScenario(@Param('id') id: string): Promise<unknown> { return this.scenarioPackages.packageForScenario(id) }
 
+  @Post('scenario-packages/:id/deployed')
+  async markScenarioPackageDeployed(@Param('id') id: string, @Body() body: unknown): Promise<unknown> {
+    try { return await this.scenarioPackages.markDeployed(id, body) }
+    catch (error) { throw new HttpException(error instanceof Error ? error.message : 'Mise à jour du déploiement impossible.', HttpStatus.BAD_REQUEST) }
+  }
+
   @Post('scenario-packages/import')
   async importScenarioPackage(@Req() request: FastifyRequest): Promise<unknown> {
     try {
