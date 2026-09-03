@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, HttpException, HttpStatus, Logger, Param, Post, Put, Req, Res } from '@nestjs/common'
+import { Body, Controller, Delete, Get, HttpException, HttpStatus, Logger, Param, Post, Put, Query, Req, Res } from '@nestjs/common'
 import { ApiTags } from '@nestjs/swagger'
 import { MultipartFile } from '@fastify/multipart'
 import { FastifyReply, FastifyRequest } from 'fastify'
@@ -66,6 +66,24 @@ export class Pf2MjController {
       .filter(({ uuid, name }) => !excluded.has(uuid) && playerActorName.test(name.trim()))
       .map(({ uuid, name }) => ({ uuid, name }))
       .sort((left, right) => left.name.localeCompare(right.name, 'fr'))
+  }
+
+  @Get('catalogue')
+  catalogue(): Promise<Record<string, unknown>> { return this.service.catalogue() }
+
+  @Get('geography')
+  geography(): Promise<Record<string, unknown>> { return this.service.geography() }
+
+  @Get('data-export/:domain')
+  async exportData(@Param('domain') domain: string, @Query('id') id?: string): Promise<Record<string, unknown>> {
+    try { return await this.service.exportData(domain, id) }
+    catch (error) { throw new HttpException(error instanceof Error ? error.message : 'Export impossible.', HttpStatus.BAD_REQUEST) }
+  }
+
+  @Post('data-import/:domain')
+  async importData(@Param('domain') domain: string, @Query('dryRun') dryRun: string | undefined, @Body() body: unknown): Promise<Record<string, unknown>> {
+    try { return await this.service.importData(domain, body, dryRun === '1' || dryRun === 'true') }
+    catch (error) { throw new HttpException(error instanceof Error ? error.message : 'Import impossible.', HttpStatus.BAD_REQUEST) }
   }
 
   @Get('curation')

@@ -34,3 +34,9 @@ Une association incertaine reste `review` et n’est jamais assimilée silencieu
 Toutes les nouvelles écritures passent par `curation.byId[id]`. Les anciennes structures sont conservées pour lecture rétrocompatible ; elles ne sont pas détruites pendant cette étape.
 
 Voir `ARCHITECTURE_V3.md` pour le modèle détaillé.
+
+## Source de vérité SQLite
+
+Le catalogue et la géographie ne sont plus importés directement depuis les JSON du frontend. Ils sont chargés via l'API depuis `pf2.sqlite`. Les anciennes sources sont archivées dans `data/old/` pour bootstrap/rollback uniquement.
+
+Les données partageables se récupèrent via `data-export/*` et se réimportent via `data-import/*` (avec `?dryRun=true` pour une validation sans écriture). Voir `PF2_SQLITE_MIGRATION.md` à la racine du dépôt.

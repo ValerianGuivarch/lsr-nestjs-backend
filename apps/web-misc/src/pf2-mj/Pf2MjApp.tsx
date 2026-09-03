@@ -21,6 +21,7 @@ import {
   documentsForTarget,
   frenchStateLabel,
   levelLabel,
+  loadCatalogueFromApi,
   migrationIssues,
   parseLevelRange,
   playableMap,
@@ -51,7 +52,7 @@ import FactionsPage from './Factions'
 import LieuxPage from './Lieux'
 import RegionsPage from './Regions'
 import EvenementsPage from './Evenements'
-import { expandedPlaceLabels, geographyTreeOptions, matchesPlaceFilter, placeDisplay } from './geography'
+import { expandedPlaceLabels, geographyTreeOptions, loadGeographyFromApi, matchesPlaceFilter, placeDisplay } from './geography'
 
 type View = 'find' | 'library' | 'prepare' | 'documents' | 'chronology' | 'excluded' | 'settings' | 'pnj' | 'factions' | 'lieux' | 'regions' | 'evenements'
 type PreparationTab = 'pdf' | 'translation' | 'zip' | 'info' | 'uncertain' | 'metadata'
@@ -561,7 +562,7 @@ function ComponentCard({ component }: { component: Component }) {
   return <article><strong>{componentTypeLabel(component.componentType)} · {titleOf(component)}</strong><span>{component.notes || `${linked.length} document${linked.length > 1 ? 's' : ''}`}</span><Badge>{component.requiredForCore ? 'Requis' : 'Facultatif'}</Badge></article>
 }
 
-function ScanPanel({ report, onClose }: { report: ScanReport; onClose: () => void }) {
+function ScanPanel({ report, onClose, onApply }: { report: ScanReport; onClose: () => void; onApply: () => void }) {
   const changes = report.summary.added + report.summary.removed
   const relocated = report.summary.relocated ?? report.relocations?.length ?? 0
   const ignoredMetadata = report.summary.ignoredMetadata ?? report.ignoredMetadataFiles ?? 0
@@ -579,12 +580,39 @@ function ScanPanel({ report, onClose }: { report: ScanReport; onClose: () => voi
       {report.removed.length > 0 && <section><h3>PDF réellement absents du dossier MJ</h3><ul>{report.removed.map((path) => <li key={path}><strong>{fileName(path)}</strong><span>{path}</span></li>)}</ul></section>}
       {zipsToReview > 0 && <section><h3>ZIP à vérifier</h3><ul>{report.resourceInventory?.bundles.filter((bundle) => bundle.associationStatus === 'review').map((bundle) => <li key={bundle.id}><strong>{bundle.filename}</strong><span>{bundle.targetId ? `Association probable : ${bundle.targetId}` : bundle.path}</span></li>)}</ul></section>}
     </div>}
+    {(changes > 0 || relocated > 0 || zips > 0) && <div className="scan-apply"><button onClick={onApply}>Appliquer ce scan dans SQLite</button><span>Les associations incertaines restent marquées « à vérifier ».</span></div>}
   </section>
 }
 
 function Settings({ places, onOperation }: { places: string[]; onOperation: (operation: string, from?: string, to?: string) => void }) {
   const [draft, setDraft] = useState('')
-  return <section className="settings-view"><div className="settings-intro"><small>RÉFÉRENTIEL LOCAL</small><h2>Lieux & migration</h2><p>La cible V3 centralise la curation par id. La lecture reste compatible avec les anciennes maps campagne/scénario.</p></div><div className="settings-card"><div className="add-place"><input value={draft} onChange={(event) => setDraft(event.target.value)} placeholder="Ajouter un lieu…" /><button onClick={() => { if (draft.trim()) { onOperation('place-add', undefined, draft.trim()); setDraft('') } }}>Ajouter</button></div><div className="place-cloud">{places.map((place) => <Badge key={place}>{place}</Badge>)}</div></div><div className="settings-card migration-summary"><h3>Migration runtime V2 → V3</h3><p>Le JSON canonique V2 n’est pas détruit : <code>catalogue.ts</code> le normalise à l’exécution en conteneurs, unités jouables, composants et documents.</p><dl><div><dt>Conteneurs</dt><dd>{containers.length}</dd></div><div><dt>Unités jouables</dt><dd>{playableUnits.length}</dd></div><div><dt>Documents</dt><dd>{currentDocuments().length}</dd></div><div><dt>Points à revoir</dt><dd>{migrationIssues.length}</dd></div><div><dt>Inventaire ZIP</dt><dd>{resourceInventoryKnown ? 'actif' : 'en attente du scan'}</dd></div></dl></div></section>
+  const [transferMessage, setTransferMessage] = useState('')
+
+  const importData = async (domain: 'geography' | 'catalogue', file?: File) => {
+    if (!file) return
+    setTransferMessage(`Validation de ${file.name}…`)
+    try {
+      const payload = JSON.parse(await file.text())
+      const dryResponse = await fetch(`/apil7r/pf2-mj/data-import/${domain}?dryRun=true`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
+      const dry = await dryResponse.json().catch(() => null)
+      if (!dryResponse.ok) throw new Error(dry?.message || dry?.error || `Erreur HTTP ${dryResponse.status}`)
+      if (!window.confirm(`Validation réussie pour ${domain}. Appliquer maintenant les changements dans pf2.sqlite ?\n\n${JSON.stringify(dry.summary ?? dry, null, 2)}`)) { setTransferMessage('Import annulé après validation.'); return }
+      const response = await fetch(`/apil7r/pf2-mj/data-import/${domain}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
+      const result = await response.json().catch(() => null)
+      if (!response.ok) throw new Error(result?.message || result?.error || `Erreur HTTP ${response.status}`)
+      setTransferMessage('Import appliqué dans pf2.sqlite. Rechargement…')
+      window.location.reload()
+    } catch (caught) {
+      setTransferMessage(caught instanceof Error ? caught.message : 'Import impossible.')
+    }
+  }
+
+  return <section className="settings-view">
+    <div className="settings-intro"><small>RÉFÉRENTIEL LOCAL</small><h2>Données & migration</h2><p>SQLite est la source de vérité. Les exports JSON sont des formats d’échange éditables : ils ne modifient la base qu’après réimport.</p></div>
+    <div className="settings-card"><div className="add-place"><input value={draft} onChange={(event) => setDraft(event.target.value)} placeholder="Ajouter un lieu…" /><button onClick={() => { if (draft.trim()) { onOperation('place-add', undefined, draft.trim()); setDraft('') } }}>Ajouter</button></div><div className="place-cloud">{places.map((place) => <Badge key={place}>{place}</Badge>)}</div></div>
+    <div className="settings-card migration-summary"><h3>Catalogue SQLite</h3><p>Le catalogue est chargé depuis <code>pf2.sqlite</code> puis normalisé à l’exécution en conteneurs, unités jouables, composants et documents. Les anciens JSON sont conservés uniquement comme archives de migration.</p><dl><div><dt>Conteneurs</dt><dd>{containers.length}</dd></div><div><dt>Unités jouables</dt><dd>{playableUnits.length}</dd></div><div><dt>Documents</dt><dd>{currentDocuments().length}</dd></div><div><dt>Points à revoir</dt><dd>{migrationIssues.length}</dd></div><div><dt>Inventaire ZIP</dt><dd>{resourceInventoryKnown ? 'actif' : 'en attente du scan'}</dd></div></dl></div>
+    <div className="settings-card"><h3>Import / export JSON</h3><p>Exporte un domaine, retravaille-le ou partage-le, puis réimporte-le. Chaque import est d’abord validé en mode simulation.</p><div className="data-transfer-actions"><a className="refresh" href="/apil7r/pf2-mj/data-export/geography" target="_blank" rel="noreferrer">Exporter géographie</a><a className="refresh" href="/apil7r/pf2-mj/data-export/catalogue" target="_blank" rel="noreferrer">Exporter catalogue</a></div><div className="data-transfer-actions"><label>Importer géographie <input type="file" accept="application/json,.json" onChange={(event) => { const file=event.target.files?.[0]; event.target.value=''; void importData('geography', file) }} /></label><label>Importer catalogue <input type="file" accept="application/json,.json" onChange={(event) => { const file=event.target.files?.[0]; event.target.value=''; void importData('catalogue', file) }} /></label></div>{transferMessage && <p>{transferMessage}</p>}</div>
+  </section>
 }
 
 export function Pf2MjApp() {
@@ -595,12 +623,18 @@ export function Pf2MjApp() {
   const [error, setError] = useState('')
   const [curation, setCuration] = useState<Curation>({})
   const [resourceRevision, setResourceRevision] = useState(0)
+  const [catalogueRevision, setCatalogueRevision] = useState(0)
 
   useEffect(() => {
-    fetch('/apil7r/pf2-mj/curation').then((response) => response.ok ? response.json() : Promise.reject()).then(setCuration).catch(() => setError('Impossible de charger la curation MJ.'))
+    Promise.all([
+      loadCatalogueFromApi(),
+      loadGeographyFromApi(),
+      fetch('/apil7r/pf2-mj/curation').then((response) => response.ok ? response.json() : Promise.reject()).then(setCuration),
+    ]).then(() => setCatalogueRevision((value) => value + 1)).catch(() => setError('Impossible de charger les données PF2 depuis SQLite.'))
   }, [])
 
   useEffect(() => {
+    if (!catalogueRevision) return
     fetch('/apil7r/pf2-mj/local-scan', { method: 'POST' })
       .then((response) => response.ok ? response.json() : Promise.reject())
       .then((inventory: ScanReport) => {
@@ -610,11 +644,11 @@ export function Pf2MjApp() {
       .catch(() => {
         // Un scan indisponible reste « inconnu » : on ne fabrique ni PDF ni ZIP manquants.
       })
-  }, [])
+  }, [catalogueRevision])
 
-  const active = useMemo(() => playableUnits.filter((unit) => !isExcluded(unit, resolvePlayableOverride(curation, unit))), [curation])
-  const excluded = useMemo(() => playableUnits.filter((unit) => isExcluded(unit, resolvePlayableOverride(curation, unit))), [curation])
-  const placeOptions = useMemo(() => unique([...allPlaces, ...(curation.customPlaces ?? [])]), [curation])
+  const active = useMemo(() => playableUnits.filter((unit) => !isExcluded(unit, resolvePlayableOverride(curation, unit))), [curation, catalogueRevision])
+  const excluded = useMemo(() => playableUnits.filter((unit) => isExcluded(unit, resolvePlayableOverride(curation, unit))), [curation, catalogueRevision])
+  const placeOptions = useMemo(() => unique([...allPlaces, ...(curation.customPlaces ?? [])]), [curation, catalogueRevision])
   const missingTranslations = active.filter((unit) => availabilityOf(unit).original === 'complete' && !availabilityOf(unit).readyInFrench).length
   const missingZips = resourceInventoryKnown ? active.filter((unit) => resourceBundleAvailability(unit).status === 'missing').length : null
   const documentCount = currentDocuments().length
@@ -639,6 +673,24 @@ export function Pf2MjApp() {
       if (!response.ok) throw new Error(typeof payload?.error === 'string' ? payload.error : 'Impossible d’enregistrer le lieu.')
       setCuration(payload)
     } catch (caught) { setError(caught instanceof Error ? caught.message : 'Impossible d’enregistrer le lieu.') }
+  }
+
+  const applyScan = async () => {
+    setScanStatus('scanning')
+    try {
+      const response = await fetch('/apil7r/pf2-mj/local-scan', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ apply: true }) })
+      if (!response.ok) throw new Error('Synchronisation SQLite impossible.')
+      const payload = await response.json() as ScanReport
+      await loadCatalogueFromApi()
+      applyLocalScanInventory(payload)
+      setCatalogueRevision((value) => value + 1)
+      setResourceRevision((value) => value + 1)
+      setScan(payload)
+      setScanStatus('done')
+    } catch (caught) {
+      setScanStatus('error')
+      setError(caught instanceof Error ? caught.message : 'Synchronisation SQLite impossible.')
+    }
   }
 
   const refresh = async () => {
@@ -680,7 +732,7 @@ export function Pf2MjApp() {
   return <main className="pf2-mj pf2-mj-v3">
     <header><button className="brand brand-button" onClick={() => setView('find')}><b>✦</b><span><strong>PATHFINDER 2</strong><small>GESTION MJ · MODÈLE V3</small></span></button><div className="header-right"><span><i />{missingTranslations} trad. manquante{missingTranslations > 1 ? 's' : ''} · {missingZips === null ? 'ZIP à inventorier' : `${missingZips} ZIP manquant${missingZips > 1 ? 's' : ''}`} · {documentCount} PDF</span><em>MJ</em></div></header>
     <div className="layout"><aside><nav>{nav.map(([id, icon, label, count]) => <button key={id} className={view === id ? 'active' : ''} onClick={() => setView(id)}><span>{icon}</span>{label}<b>{count}</b></button>)}</nav><section><p>PRINCIPES V3</p><span className="aside-rule">▶ Unité jouable = seule recherche</span><span className="aside-rule">▣ Campagne = conteneur</span><span className="aside-rule">◇ Guide/carte = ressource</span><span className="aside-rule">ⓘ Info = substitut distinct</span></section><div className="scan-note"><b>V3</b><strong>Adaptateur sans perte</strong><p>Le catalogue V2 reste la source pendant la migration. Les nouvelles entités sont normalisées à l’exécution.</p></div></aside>
-      <section className="content">{!isReferenceView && <><div className="page-title"><div><small>TABLE OUVERTE · GOLARION PERSISTANT</small><h1>{headings[view][0]}</h1><p>{headings[view][1]}</p></div><button className="refresh" onClick={refresh}>{scanStatus === 'scanning' ? '↻ Détection…' : scanStatus === 'done' ? '✓ Rapport prêt' : scanStatus === 'error' ? '! Réessayer' : '↻ Scanner PDF & ZIP'}</button></div>{error && <div className="notice"><strong>Attention</strong><p>{error}</p></div>}{scan && <ScanPanel report={scan} onClose={() => setScan(null)} />}{!['excluded', 'settings', 'documents'].includes(view) && <Stats active={active} />}{view === 'find' && <FinderView active={active} curation={curation} onOpen={setSelected} onUpdate={update} resourceVersion={resourceRevision} />}{view === 'library' && <LibraryView curation={curation} onOpen={setSelected} onOpenPlayable={setSelected} onUpdate={update} />}{view === 'prepare' && <PreparationView active={active} curation={curation} onOpen={setSelected} onUpdate={update} resourceVersion={resourceRevision} />}{view === 'documents' && <DocumentsView resourceVersion={resourceRevision} />}{view === 'chronology' && <ChronologyView units={active} onOpen={setSelected} />}{view === 'excluded' && <PlayableList units={sortPlayables(excluded, curation)} curation={curation} onOpen={setSelected} onUpdate={update} />}{view === 'settings' && <Settings places={placeOptions} onOperation={placeOperation} />}</>}{view === 'pnj' && <PnjPage />}{view === 'factions' && <FactionsPage />}{view === 'lieux' && <LieuxPage />}{view === 'regions' && <RegionsPage />}{view === 'evenements' && <EvenementsPage />}</section>
+      <section className="content">{!isReferenceView && <><div className="page-title"><div><small>TABLE OUVERTE · GOLARION PERSISTANT</small><h1>{headings[view][0]}</h1><p>{headings[view][1]}</p></div><button className="refresh" onClick={refresh}>{scanStatus === 'scanning' ? '↻ Détection…' : scanStatus === 'done' ? '✓ Rapport prêt' : scanStatus === 'error' ? '! Réessayer' : '↻ Scanner PDF & ZIP'}</button></div>{error && <div className="notice"><strong>Attention</strong><p>{error}</p></div>}{scan && <ScanPanel report={scan} onClose={() => setScan(null)} onApply={applyScan} />}{!['excluded', 'settings', 'documents'].includes(view) && <Stats active={active} />}{view === 'find' && <FinderView active={active} curation={curation} onOpen={setSelected} onUpdate={update} resourceVersion={resourceRevision} />}{view === 'library' && <LibraryView curation={curation} onOpen={setSelected} onOpenPlayable={setSelected} onUpdate={update} />}{view === 'prepare' && <PreparationView active={active} curation={curation} onOpen={setSelected} onUpdate={update} resourceVersion={resourceRevision} />}{view === 'documents' && <DocumentsView resourceVersion={resourceRevision} />}{view === 'chronology' && <ChronologyView units={active} onOpen={setSelected} />}{view === 'excluded' && <PlayableList units={sortPlayables(excluded, curation)} curation={curation} onOpen={setSelected} onUpdate={update} />}{view === 'settings' && <Settings places={placeOptions} onOperation={placeOperation} />}</>}{view === 'pnj' && <PnjPage />}{view === 'factions' && <FactionsPage />}{view === 'lieux' && <LieuxPage />}{view === 'regions' && <RegionsPage />}{view === 'evenements' && <EvenementsPage />}</section>
     </div>
     {selected?.entityKind === 'playable' && <PlayableDetail unit={selected} curation={curation} onClose={() => setSelected(null)} onUpdate={update} placeOptions={placeOptions} />}
     {selected?.entityKind === 'container' && <ContainerDetail container={selected} curation={curation} onClose={() => setSelected(null)} onOpenPlayable={(unit) => setSelected(unit)} onUpdate={update} />}

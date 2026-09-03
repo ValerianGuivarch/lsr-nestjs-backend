@@ -1,6 +1,3 @@
-import canonical from './data/catalogue-pf2.json'
-import bundleInventory from './data/resource-bundles.json'
-
 export type Playability = 'Prêt' | 'À adapter' | 'Simple inspiration'
 export type Progress = 'Non spécifié' | 'À jouer' | 'En cours' | 'Joué'
 export type Usage = 'CORE' | 'OPTION' | 'RÉSERVE' | 'ÉCARTÉ' | 'ENDGAME' | 'FUTUR'
@@ -301,13 +298,8 @@ type RawCatalogue = {
   narrativeThreads?: NarrativeThread[]
 }
 
-const raw = canonical as unknown as RawCatalogue
-const bundleRaw = bundleInventory as unknown as {
-  schemaVersion: number
-  inventoryKnown: boolean
-  scannedAt: string | null
-  bundles: ResourceBundle[]
-}
+const emptyRaw: RawCatalogue = { schemaVersion: 2, meta: {}, files: [], entries: [], collections: [], arcs: [], sections: [], narrativeThreads: [] }
+let raw: RawCatalogue = emptyRaw
 
 const infoPattern = /(?:^|[\s._(\[-])(?:info|information)(?:[\s._)\]-]|$)/i
 const playablePartKinds = new Set(['volume_aventure', 'aventure_autonome', 'one_shot', 'aventure_communautaire'])
@@ -457,170 +449,27 @@ function collectionType(collection: RawCollection): ContainerType {
   return 'collection'
 }
 
-export const sections: CatalogueSection[] = raw.sections.slice().sort((a, b) => a.order - b.order)
-export const arcs: Arc[] = raw.arcs
-export const arcMap = new Map(arcs.map((arc) => [arc.id, arc]))
-export const narrativeThreads: NarrativeThread[] = raw.narrativeThreads ?? []
-
-const campaignEntries = raw.entries.filter((entry) => entry.kind === 'campaign')
-const campaignIds = new Set(campaignEntries.map((entry) => entry.id))
-
-const collectionContainers: Container[] = raw.collections.map((collection) => ({
-  id: collection.id,
-  entityKind: 'container',
-  containerType: collectionType(collection),
-  sectionId: collection.sectionId,
-  parentId: collection.parentId,
-  titles: titles(collection.titleFr, collection.titleOriginal ?? null),
-  order: collection.order,
-  season: collection.season,
-  synopsis: null,
-  gmDetails: null,
-  locations: (collection.aggregateRegions ?? []).map((id) => ({ id, role: 'secondary', source: { kind: 'aggregate', entityId: collection.id } })),
-  levels: parseLevelRange(collection.levels ?? null, { kind: 'aggregate', entityId: collection.id }),
-  relevance: { value: 'À évaluer', source: { kind: 'aggregate', entityId: collection.id } },
-  editorialStatus: null,
-  chronology: { yearAR: null, estimated: true, period: null },
-  arcIds: [],
-  migration: { status: 'ready', issues: [] },
-}))
-
-const campaignContainers: Container[] = campaignEntries.map((entry) => {
-  const playableChildren = entry.parts.filter((part) => playablePartKinds.has(part.kind))
-  const issues: string[] = []
-  if (!playableChildren.length) issues.push('Découpage en unités jouables à créer : aucune part jouable explicite dans le schéma V2.')
-  if (playableChildren.some((part) => !part.levels)) issues.push('Niveaux d’un ou plusieurs épisodes à documenter.')
-  return {
-    id: entry.id,
-    entityKind: 'container',
-    containerType: 'campaign',
-    sectionId: entry.sectionId,
-    parentId: entry.collectionId,
-    titles: titles(entry.titleFr, entry.titleOriginal, entry.aliases),
-    order: 0,
-    synopsis: entry.synopsis,
-    gmDetails: entry.gmDetails,
-    locations: directLocations(entry),
-    levels: parseLevelRange(entry.levels, { kind: 'aggregate', entityId: entry.id, note: 'Plage globale de la campagne, non héritée automatiquement par les épisodes.' }),
-    relevance: { value: relevanceOfRaw(entry), source: { kind: 'direct', entityId: entry.id } },
-    editorialStatus: entry.story.usage ?? null,
-    chronology: { yearAR: entry.timeline?.yearAR ?? null, estimated: entry.timeline?.estimated ?? true, period: entry.story.period ?? null },
-    arcIds: entry.arcIds,
-    legacyEntryId: entry.id,
-    migration: { status: issues.length ? 'needsReview' : 'ready', issues },
-  }
-})
-
-export const containers: Container[] = [...collectionContainers, ...campaignContainers]
-export const containerMap = new Map(containers.map((container) => [container.id, container]))
-
-const directPlayableUnits: PlayableUnit[] = raw.entries.filter((entry) => entry.kind !== 'campaign').map((entry) => {
-  const levels = parseLevelRange(entry.levels, { kind: 'direct', entityId: entry.id })
-  const issues: string[] = []
-  if (levels.rangeType === 'unknown') issues.push('Niveaux à documenter ou à vérifier.')
-  if (!entry.regions.length && entry.locationStatus !== 'variable') issues.push('Lieux à documenter.')
-  return {
-    id: entry.id,
-    entityKind: 'playable',
-    playableType: playableTypeFromEntry(entry),
-    sectionId: entry.sectionId,
-    parentId: entry.collectionId,
-    legacyEntryId: entry.id,
-    legacyEntryKind: entry.kind,
-    number: entry.number ?? null,
-    titles: titles(entry.titleFr, entry.titleOriginal, entry.aliases),
-    levels,
-    locations: directLocations(entry),
-    synopsis: entry.synopsis,
-    contextSynopsis: null,
-    gmDetails: entry.gmDetails,
-    relevance: { value: relevanceOfRaw(entry), source: { kind: 'direct', entityId: entry.id } },
-    playability: defaultPlayability(entry),
-    tracking: 'Non spécifié',
-    editorialStatus: entry.story.usage ?? null,
-    chronology: { yearAR: entry.timeline?.yearAR ?? null, estimated: entry.timeline?.estimated ?? true, period: entry.story.period ?? null },
-    arcIds: entry.arcIds,
-    narrativeThread: entry.story.thread ?? null,
-    characterHooks: entry.characterHooks,
-    organizedPlay: entry.organizedPlay,
-    migration: { status: issues.length ? 'needsReview' : 'ready', issues },
-  }
-})
-
-const campaignEpisodeUnits: PlayableUnit[] = campaignEntries.flatMap((entry) =>
-  entry.parts.filter((part) => playablePartKinds.has(part.kind)).map((part) => {
-    const levels = parseLevelRange(part.levels, { kind: 'direct', entityId: part.id })
-    const issues: string[] = []
-    if (levels.rangeType === 'unknown') issues.push('Niveaux de l’épisode inconnus : la plage globale de campagne n’est volontairement pas héritée.')
-    if (!part.titleFr && !part.titleOriginal) issues.push('Titre propre de l’épisode à documenter.')
-    return {
-      id: part.id,
-      entityKind: 'playable',
-      playableType: playableTypeFromPart(part),
-      sectionId: entry.sectionId,
-      parentId: entry.id,
-      legacyEntryId: entry.id,
-      legacyEntryKind: entry.kind,
-      number: part.number ?? (part.sequence ? String(part.sequence) : null),
-      titles: titles(part.titleFr, part.titleOriginal),
-      levels,
-      locations: inheritedLocations(entry),
-      synopsis: null,
-      contextSynopsis: entry.synopsis,
-      gmDetails: null,
-      relevance: { value: relevanceOfRaw(entry), source: { kind: 'inherited', entityId: entry.id } },
-      playability: defaultPlayability(entry),
-      tracking: 'Non spécifié',
-      editorialStatus: entry.story.usage ?? null,
-      chronology: { yearAR: entry.timeline?.yearAR ?? null, estimated: entry.timeline?.estimated ?? true, period: entry.story.period ?? null },
-      arcIds: entry.arcIds,
-      narrativeThread: entry.story.thread ?? null,
-      characterHooks: entry.characterHooks,
-      migration: { status: issues.length ? 'needsReview' : 'ready', issues, generatedFromPart: true },
-    }
-  }),
-)
-
-export const playableUnits: PlayableUnit[] = [...directPlayableUnits, ...campaignEpisodeUnits]
-export const playableMap = new Map(playableUnits.map((unit) => [unit.id, unit]))
-
-export const components: Component[] = raw.entries.flatMap((entry) =>
-  entry.parts.filter((part) => !(entry.kind === 'campaign' && playablePartKinds.has(part.kind))).map((part) => ({
-    id: part.id,
-    entityKind: 'component' as const,
-    componentType: componentType(part),
-    ownerId: entry.id,
-    titles: titles(part.titleFr, part.titleOriginal),
-    order: part.sequence ?? null,
-    number: part.number ?? null,
-    levels: parseLevelRange(part.levels, { kind: 'direct', entityId: part.id }),
-    requiredForCore: Boolean(part.requiredForCore),
-    notes: part.notes ?? '',
-    legacyEntryId: entry.id,
-    rawKind: part.kind,
-  })),
-)
-export const componentMap = new Map(components.map((component) => [component.id, component]))
-
-const rawEntryMap = new Map(raw.entries.map((entry) => [entry.id, entry]))
-const rawPartMap = new Map(raw.entries.flatMap((entry) => entry.parts.map((part) => [part.id, { entry, part }] as const)))
-const rawFileMap = new Map(raw.files.map((file) => [file.id, file]))
-
-function variantOf(rawVariant: string | undefined, file: RawFile): DocumentVariant {
-  if (rawVariant === 'fr_officiel') return 'officialFr'
-  if (rawVariant === 'français') return 'french'
-  if (rawVariant === 'traduction_partielle') return 'translationPartial'
-  if (rawVariant === 'traduction_non_officielle') return 'translationUnofficial'
-  if (rawVariant === 'anglais') return 'original'
-  if (file.translationVariant) return 'translationUnofficial'
-  return 'other'
-}
-
-function languageOfFile(file: RawFile): Langue {
-  if (file.languageHint === 'fr') return 'FR'
-  if (file.languageHint === 'en') return 'EN'
-  return 'INCONNUE'
-}
+export let sections: CatalogueSection[] = []
+export let arcs: Arc[] = []
+export let arcMap = new Map<string, Arc>()
+export let narrativeThreads: NarrativeThread[] = []
+export let containers: Container[] = []
+export let containerMap = new Map<string, Container>()
+export let playableUnits: PlayableUnit[] = []
+export let playableMap = new Map<string, PlayableUnit>()
+export let components: Component[] = []
+export let componentMap = new Map<string, Component>()
+export let documents: CatalogueDocument[] = []
+export let documentMap = new Map<string, CatalogueDocument>()
+export let migrationIssues: Array<{ entityId: string; entityKind: 'container' | 'playable' | 'document'; message: string }> = []
+export let allPlaces: string[] = []
+export let scanMeta = { total: 0, verifiedAt: null as string | null, sourceSchemaVersion: 0, runtimeSchemaVersion: 3, resourceInventoryKnown: false, resourceBundles: 0 }
+let campaignEntries: RawEntry[] = []
+let campaignIds = new Set<string>()
+let rawEntryMap = new Map<string, RawEntry>()
+let rawPartMap = new Map<string, { entry: RawEntry; part: RawPart }>()
+let rawFileMap = new Map<string, RawFile>()
+export let legacy = { entries: [] as RawEntry[], collections: [] as RawCollection[], files: [] as RawFile[], rawEntryMap, rawPartMap, rawFileMap, campaignIds }
 
 function targetKindOf(targetId: string | null): CatalogueDocument['targetKind'] {
   if (!targetId) return null
@@ -630,74 +479,276 @@ function targetKindOf(targetId: string | null): CatalogueDocument['targetKind'] 
   return null
 }
 
-function associationStatus(file: RawFile): AssociationStatus {
-  if (!file.association?.itemId || file.association.status === 'non_associé') return 'unassociated'
-  const confidence = normalizeText(file.association.confidence ?? '')
-  if (confidence.includes('confirm') || confidence.includes('certain')) return 'confirmed'
-  return 'review'
-}
+function rebuildCatalogue(): void {
+  sections = raw.sections.slice().sort((a, b) => a.order - b.order)
+  arcs = raw.arcs
+  arcMap = new Map(arcs.map((arc) => [arc.id, arc]))
+  narrativeThreads = raw.narrativeThreads ?? []
 
-function linkedVariant(fileId: string): { variant: string; completeness: string; evidence: string[] } | null {
-  for (const entry of raw.entries) {
-    const direct = entry.documents.find((document) => document.fileId === fileId)
-    if (direct) return { variant: direct.variant, completeness: direct.completeness, evidence: direct.evidence ?? [] }
-    for (const part of entry.parts) {
-      const linked = part.documents?.find((document) => document.fileId === fileId)
-      if (linked) return { variant: linked.variant, completeness: linked.completeness, evidence: linked.evidence ?? [] }
+  campaignEntries = raw.entries.filter((entry) => entry.kind === 'campaign')
+  campaignIds = new Set(campaignEntries.map((entry) => entry.id))
+
+  const collectionContainers: Container[] = raw.collections.map((collection) => ({
+    id: collection.id,
+    entityKind: 'container',
+    containerType: collectionType(collection),
+    sectionId: collection.sectionId,
+    parentId: collection.parentId,
+    titles: titles(collection.titleFr, collection.titleOriginal ?? null),
+    order: collection.order,
+    season: collection.season,
+    synopsis: null,
+    gmDetails: null,
+    locations: (collection.aggregateRegions ?? []).map((id) => ({ id, role: 'secondary', source: { kind: 'aggregate', entityId: collection.id } })),
+    levels: parseLevelRange(collection.levels ?? null, { kind: 'aggregate', entityId: collection.id }),
+    relevance: { value: 'À évaluer', source: { kind: 'aggregate', entityId: collection.id } },
+    editorialStatus: null,
+    chronology: { yearAR: null, estimated: true, period: null },
+    arcIds: [],
+    migration: { status: 'ready', issues: [] },
+  }))
+
+  const campaignContainers: Container[] = campaignEntries.map((entry) => {
+    const playableChildren = entry.parts.filter((part) => playablePartKinds.has(part.kind))
+    const issues: string[] = []
+    if (!playableChildren.length) issues.push('Découpage en unités jouables à créer : aucune part jouable explicite dans le schéma V2.')
+    if (playableChildren.some((part) => !part.levels)) issues.push('Niveaux d’un ou plusieurs épisodes à documenter.')
+    return {
+      id: entry.id,
+      entityKind: 'container',
+      containerType: 'campaign',
+      sectionId: entry.sectionId,
+      parentId: entry.collectionId,
+      titles: titles(entry.titleFr, entry.titleOriginal, entry.aliases),
+      order: 0,
+      synopsis: entry.synopsis,
+      gmDetails: entry.gmDetails,
+      locations: directLocations(entry),
+      levels: parseLevelRange(entry.levels, { kind: 'aggregate', entityId: entry.id, note: 'Plage globale de la campagne, non héritée automatiquement par les épisodes.' }),
+      relevance: { value: relevanceOfRaw(entry), source: { kind: 'direct', entityId: entry.id } },
+      editorialStatus: entry.story.usage ?? null,
+      chronology: { yearAR: entry.timeline?.yearAR ?? null, estimated: entry.timeline?.estimated ?? true, period: entry.story.period ?? null },
+      arcIds: entry.arcIds,
+      legacyEntryId: entry.id,
+      migration: { status: issues.length ? 'needsReview' : 'ready', issues },
     }
+  })
+
+  containers = [...collectionContainers, ...campaignContainers]
+  containerMap = new Map(containers.map((container) => [container.id, container]))
+
+  const directPlayableUnits: PlayableUnit[] = raw.entries.filter((entry) => entry.kind !== 'campaign').map((entry) => {
+    const levels = parseLevelRange(entry.levels, { kind: 'direct', entityId: entry.id })
+    const issues: string[] = []
+    if (levels.rangeType === 'unknown') issues.push('Niveaux à documenter ou à vérifier.')
+    if (!entry.regions.length && entry.locationStatus !== 'variable') issues.push('Lieux à documenter.')
+    return {
+      id: entry.id,
+      entityKind: 'playable',
+      playableType: playableTypeFromEntry(entry),
+      sectionId: entry.sectionId,
+      parentId: entry.collectionId,
+      legacyEntryId: entry.id,
+      legacyEntryKind: entry.kind,
+      number: entry.number ?? null,
+      titles: titles(entry.titleFr, entry.titleOriginal, entry.aliases),
+      levels,
+      locations: directLocations(entry),
+      synopsis: entry.synopsis,
+      contextSynopsis: null,
+      gmDetails: entry.gmDetails,
+      relevance: { value: relevanceOfRaw(entry), source: { kind: 'direct', entityId: entry.id } },
+      playability: defaultPlayability(entry),
+      tracking: 'Non spécifié',
+      editorialStatus: entry.story.usage ?? null,
+      chronology: { yearAR: entry.timeline?.yearAR ?? null, estimated: entry.timeline?.estimated ?? true, period: entry.story.period ?? null },
+      arcIds: entry.arcIds,
+      narrativeThread: entry.story.thread ?? null,
+      characterHooks: entry.characterHooks,
+      organizedPlay: entry.organizedPlay,
+      migration: { status: issues.length ? 'needsReview' : 'ready', issues },
+    }
+  })
+
+  const campaignEpisodeUnits: PlayableUnit[] = campaignEntries.flatMap((entry) =>
+    entry.parts.filter((part) => playablePartKinds.has(part.kind)).map((part) => {
+      const levels = parseLevelRange(part.levels, { kind: 'direct', entityId: part.id })
+      const issues: string[] = []
+      if (levels.rangeType === 'unknown') issues.push('Niveaux de l’épisode inconnus : la plage globale de campagne n’est volontairement pas héritée.')
+      if (!part.titleFr && !part.titleOriginal) issues.push('Titre propre de l’épisode à documenter.')
+      return {
+        id: part.id,
+        entityKind: 'playable',
+        playableType: playableTypeFromPart(part),
+        sectionId: entry.sectionId,
+        parentId: entry.id,
+        legacyEntryId: entry.id,
+        legacyEntryKind: entry.kind,
+        number: part.number ?? (part.sequence ? String(part.sequence) : null),
+        titles: titles(part.titleFr, part.titleOriginal),
+        levels,
+        locations: inheritedLocations(entry),
+        synopsis: null,
+        contextSynopsis: entry.synopsis,
+        gmDetails: null,
+        relevance: { value: relevanceOfRaw(entry), source: { kind: 'inherited', entityId: entry.id } },
+        playability: defaultPlayability(entry),
+        tracking: 'Non spécifié',
+        editorialStatus: entry.story.usage ?? null,
+        chronology: { yearAR: entry.timeline?.yearAR ?? null, estimated: entry.timeline?.estimated ?? true, period: entry.story.period ?? null },
+        arcIds: entry.arcIds,
+        narrativeThread: entry.story.thread ?? null,
+        characterHooks: entry.characterHooks,
+        migration: { status: issues.length ? 'needsReview' : 'ready', issues, generatedFromPart: true },
+      }
+    }),
+  )
+
+  playableUnits = [...directPlayableUnits, ...campaignEpisodeUnits]
+  playableMap = new Map(playableUnits.map((unit) => [unit.id, unit]))
+
+  components = raw.entries.flatMap((entry) =>
+    entry.parts.filter((part) => !(entry.kind === 'campaign' && playablePartKinds.has(part.kind))).map((part) => ({
+      id: part.id,
+      entityKind: 'component' as const,
+      componentType: componentType(part),
+      ownerId: entry.id,
+      titles: titles(part.titleFr, part.titleOriginal),
+      order: part.sequence ?? null,
+      number: part.number ?? null,
+      levels: parseLevelRange(part.levels, { kind: 'direct', entityId: part.id }),
+      requiredForCore: Boolean(part.requiredForCore),
+      notes: part.notes ?? '',
+      legacyEntryId: entry.id,
+      rawKind: part.kind,
+    })),
+  )
+  componentMap = new Map(components.map((component) => [component.id, component]))
+
+  rawEntryMap = new Map(raw.entries.map((entry) => [entry.id, entry]))
+  rawPartMap = new Map(raw.entries.flatMap((entry) => entry.parts.map((part) => [part.id, { entry, part }] as const)))
+  rawFileMap = new Map(raw.files.map((file) => [file.id, file]))
+
+  function variantOf(rawVariant: string | undefined, file: RawFile): DocumentVariant {
+    if (rawVariant === 'fr_officiel') return 'officialFr'
+    if (rawVariant === 'français') return 'french'
+    if (rawVariant === 'traduction_partielle') return 'translationPartial'
+    if (rawVariant === 'traduction_non_officielle') return 'translationUnofficial'
+    if (rawVariant === 'anglais') return 'original'
+    if (file.translationVariant) return 'translationUnofficial'
+    return 'other'
   }
-  return null
-}
 
-function targetForFile(file: RawFile): string | null {
-  const itemId = file.association?.itemId ?? null
-  if (itemId && (playableMap.has(itemId) || componentMap.has(itemId) || containerMap.has(itemId))) return itemId
-  const campaignId = file.association?.campaignId ?? null
-  if (campaignId && containerMap.has(campaignId)) return campaignId
-  return null
-}
-
-function roleForTarget(targetId: string | null, isInfo: boolean): DocumentRole {
-  if (isInfo) return 'information'
-  if (!targetId) return 'resource'
-  const component = componentMap.get(targetId)
-  if (component) return component.requiredForCore ? 'core' : 'resource'
-  return playableMap.has(targetId) ? 'core' : 'optional'
-}
-
-export const documents: CatalogueDocument[] = raw.files.map((file) => {
-  const link = linkedVariant(file.id)
-  const targetId = targetForFile(file)
-  const isInfo = infoPattern.test(file.filename)
-  const rawVariant = link?.variant ?? (file.translationVariant ? 'traduction_non_officielle' : file.languageHint === 'en' ? 'anglais' : 'français')
-  const completeness = link?.completeness === 'complet' ? 'complete' : link?.completeness === 'partiel' ? 'partial' : 'unknown'
-  return {
-    id: file.id,
-    entityKind: 'document',
-    filename: file.filename,
-    path: file.path,
-    href: `/apil7r/pf2-mj/bibliotheque/${file.path.split('/').map(encodeURIComponent).join('/')}`,
-    pages: file.pages ?? null,
-    language: languageOfFile(file),
-    variant: variantOf(rawVariant, file),
-    rawVariant,
-    role: roleForTarget(targetId, isInfo),
-    completeness,
-    targetId,
-    targetKind: targetKindOf(targetId),
-    association: {
-      status: associationStatus(file),
-      confidence: file.association?.confidence ?? null,
-      evidence: [...new Set([...(file.association?.evidence ?? []), ...(link?.evidence ?? [])])],
-    },
-    isInformationFallback: isInfo,
+  function languageOfFile(file: RawFile): Langue {
+    if (file.languageHint === 'fr') return 'FR'
+    if (file.languageHint === 'en') return 'EN'
+    return 'INCONNUE'
   }
-})
 
-export const documentMap = new Map(documents.map((document) => [document.id, document]))
+  function targetKindOf(targetId: string | null): CatalogueDocument['targetKind'] {
+    if (!targetId) return null
+    if (playableMap.has(targetId)) return 'playable'
+    if (containerMap.has(targetId)) return 'container'
+    if (componentMap.has(targetId)) return 'component'
+    return null
+  }
 
-export let resourceInventoryKnown = bundleRaw.inventoryKnown
-export let resourceBundles: ResourceBundle[] = bundleRaw.bundles ?? []
+  function associationStatus(file: RawFile): AssociationStatus {
+    if (!file.association?.itemId || file.association.status === 'non_associé') return 'unassociated'
+    const confidence = normalizeText(file.association.confidence ?? '')
+    if (confidence.includes('confirm') || confidence.includes('certain')) return 'confirmed'
+    return 'review'
+  }
+
+  function linkedVariant(fileId: string): { variant: string; completeness: string; evidence: string[] } | null {
+    for (const entry of raw.entries) {
+      const direct = entry.documents.find((document) => document.fileId === fileId)
+      if (direct) return { variant: direct.variant, completeness: direct.completeness, evidence: direct.evidence ?? [] }
+      for (const part of entry.parts) {
+        const linked = part.documents?.find((document) => document.fileId === fileId)
+        if (linked) return { variant: linked.variant, completeness: linked.completeness, evidence: linked.evidence ?? [] }
+      }
+    }
+    return null
+  }
+
+  function targetForFile(file: RawFile): string | null {
+    const itemId = file.association?.itemId ?? null
+    if (itemId && (playableMap.has(itemId) || componentMap.has(itemId) || containerMap.has(itemId))) return itemId
+    const campaignId = file.association?.campaignId ?? null
+    if (campaignId && containerMap.has(campaignId)) return campaignId
+    return null
+  }
+
+  function roleForTarget(targetId: string | null, isInfo: boolean): DocumentRole {
+    if (isInfo) return 'information'
+    if (!targetId) return 'resource'
+    const component = componentMap.get(targetId)
+    if (component) return component.requiredForCore ? 'core' : 'resource'
+    return playableMap.has(targetId) ? 'core' : 'optional'
+  }
+
+  documents = raw.files.map((file) => {
+    const link = linkedVariant(file.id)
+    const targetId = targetForFile(file)
+    const isInfo = infoPattern.test(file.filename)
+    const rawVariant = link?.variant ?? (file.translationVariant ? 'traduction_non_officielle' : file.languageHint === 'en' ? 'anglais' : 'français')
+    const completeness = link?.completeness === 'complet' ? 'complete' : link?.completeness === 'partiel' ? 'partial' : 'unknown'
+    return {
+      id: file.id,
+      entityKind: 'document',
+      filename: file.filename,
+      path: file.path,
+      href: `/apil7r/pf2-mj/bibliotheque/${file.path.split('/').map(encodeURIComponent).join('/')}`,
+      pages: file.pages ?? null,
+      language: languageOfFile(file),
+      variant: variantOf(rawVariant, file),
+      rawVariant,
+      role: roleForTarget(targetId, isInfo),
+      completeness,
+      targetId,
+      targetKind: targetKindOf(targetId),
+      association: {
+        status: associationStatus(file),
+        confidence: file.association?.confidence ?? null,
+        evidence: [...new Set([...(file.association?.evidence ?? []), ...(link?.evidence ?? [])])],
+      },
+      isInformationFallback: isInfo,
+    }
+  })
+
+  documentMap = new Map(documents.map((document) => [document.id, document]))
+
+
+  migrationIssues = [
+    ...containers.flatMap((container) => container.migration.issues.map((message) => ({ entityId: container.id, entityKind: 'container' as const, message }))),
+    ...playableUnits.flatMap((unit) => unit.migration.issues.map((message) => ({ entityId: unit.id, entityKind: 'playable' as const, message }))),
+    ...documents.filter((document) => document.association.status !== 'confirmed').map((document) => ({ entityId: document.id, entityKind: 'document' as const, message: document.association.status === 'unassociated' ? 'Document non associé.' : 'Association documentaire à vérifier.' })),
+  ]
+  allPlaces = [...new Set(playableUnits.flatMap((unit) => unit.locations.map((location) => location.id)))].sort((a, b) => a.localeCompare(b, 'fr'))
+  scanMeta = { total: raw.files.length, verifiedAt: raw.meta.lastVerifiedAt ?? null, sourceSchemaVersion: raw.schemaVersion, runtimeSchemaVersion: 3, resourceInventoryKnown, resourceBundles: resourceBundles.length }
+  legacy = { entries: raw.entries, collections: raw.collections, files: raw.files, rawEntryMap, rawPartMap, rawFileMap, campaignIds }
+}
+
+export function applyCatalogueSnapshot(value: unknown): void {
+  const candidate = value && typeof value === 'object' && !Array.isArray(value) ? value as RawCatalogue : emptyRaw
+  raw = {
+    schemaVersion: Number(candidate.schemaVersion ?? 2),
+    meta: candidate.meta ?? {}, files: Array.isArray(candidate.files) ? candidate.files : [], entries: Array.isArray(candidate.entries) ? candidate.entries : [],
+    collections: Array.isArray(candidate.collections) ? candidate.collections : [], arcs: Array.isArray(candidate.arcs) ? candidate.arcs : [], sections: Array.isArray(candidate.sections) ? candidate.sections : [],
+    narrativeThreads: Array.isArray(candidate.narrativeThreads) ? candidate.narrativeThreads : []
+  }
+  rebuildCatalogue()
+}
+
+export async function loadCatalogueFromApi(): Promise<void> {
+  const response = await fetch('/apil7r/pf2-mj/catalogue', { cache: 'no-store' })
+  if (!response.ok) throw new Error(`Impossible de charger le catalogue PF2 (HTTP ${response.status}).`)
+  applyCatalogueSnapshot(await response.json())
+}
+
+export let resourceInventoryKnown = false
+export let resourceBundles: ResourceBundle[] = []
 
 let runtimePdfPaths: Set<string> | null = null
 let runtimePdfAliases = new Map<string, string>()
@@ -707,6 +758,7 @@ export function applyResourceBundleInventory(inventory: ResourceBundleInventory 
   if (!inventory) return
   resourceInventoryKnown = Boolean(inventory.inventoryKnown)
   resourceBundles = Array.isArray(inventory.bundles) ? inventory.bundles : []
+  scanMeta = { ...scanMeta, resourceInventoryKnown, resourceBundles: resourceBundles.length }
 }
 
 export function applyLocalScanInventory(scan: LocalScanInventory | null | undefined): void {
@@ -955,30 +1007,4 @@ export function relevanceOf(entity: PlayableUnit | Container): string { return e
 export function yearOf(entity: PlayableUnit | Container): number | null { return entity.chronology.yearAR }
 export function isPfsPlayable(unit: PlayableUnit): boolean { return ['pfsScenario', 'pfsIntro', 'pfsSpecial', 'quest', 'bounty'].includes(unit.playableType) }
 
-export const migrationIssues = [
-  ...containers.flatMap((container) => container.migration.issues.map((message) => ({ entityId: container.id, entityKind: 'container' as const, message }))),
-  ...playableUnits.flatMap((unit) => unit.migration.issues.map((message) => ({ entityId: unit.id, entityKind: 'playable' as const, message }))),
-  ...documents.filter((document) => document.association.status !== 'confirmed').map((document) => ({ entityId: document.id, entityKind: 'document' as const, message: document.association.status === 'unassociated' ? 'Document non associé.' : 'Association documentaire à vérifier.' })),
-]
 
-export const allPlaces = [...new Set(playableUnits.flatMap((unit) => unit.locations.map((location) => location.id)))].sort((a, b) => a.localeCompare(b, 'fr'))
-
-export const scanMeta = {
-  total: raw.files.length,
-  verifiedAt: raw.meta.lastVerifiedAt ?? null,
-  sourceSchemaVersion: raw.schemaVersion,
-  runtimeSchemaVersion: 3,
-  resourceInventoryKnown,
-  resourceBundles: resourceBundles.length,
-}
-
-// Export du V2 pour les écrans/diagnostics de migration uniquement.
-export const legacy = {
-  entries: raw.entries,
-  collections: raw.collections,
-  files: raw.files,
-  rawEntryMap,
-  rawPartMap,
-  rawFileMap,
-  campaignIds,
-}

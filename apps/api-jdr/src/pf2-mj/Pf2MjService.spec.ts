@@ -14,6 +14,10 @@ describe('Pf2MjService', () => {
       replaceReference: jest.fn(),
       readCuration: jest.fn().mockResolvedValue({}),
       saveCuration: jest.fn(),
+      readCatalogueSnapshot: jest.fn().mockResolvedValue({ schemaVersion: 2, files: [], entries: [], collections: [] }),
+      replaceCatalogueSnapshot: jest.fn(),
+      replaceScannedZipAssets: jest.fn(),
+      readGeographyConfig: jest.fn().mockResolvedValue({ aliases: {}, parents: {} }),
       ...persistenceOverrides
     }
     const foundry = {
@@ -95,15 +99,11 @@ describe('Pf2MjService', () => {
         const oldPath = 'Campagnes/Campagne - Blood Lords - Tome 2:6 (en).pdf'
         await writeFile(join(library, 'Campagnes', diskName), 'pdf')
         await writeFile(join(library, 'Campagnes', `._${diskName}`), 'appledouble')
-        await writeFile(join(dataRoot, 'catalogue-pf2.json'), JSON.stringify({
-          files: [{ path: oldPath }],
-          collections: [],
-          entries: []
-        }))
+        const catalogue = { schemaVersion: 2, files: [{ id: 'old', path: oldPath }], collections: [], entries: [] }
 
         process.env['PF2_LIBRARY_ROOT'] = library
         process.env['PF2_DATA_ROOT'] = dataRoot
-        const { service } = serviceFor()
+        const { service } = serviceFor({}, pnj, { readCatalogueSnapshot: jest.fn().mockResolvedValue(catalogue) })
         const report = await service.scanLibrary() as {
           totalOnDisk: number
           summary: { added: number; removed: number; relocated: number; ignoredMetadata: number }
@@ -136,27 +136,51 @@ describe('Pf2MjService', () => {
         await mkdir(dataRoot, { recursive: true })
         const path = 'Campagnes/PFS - S01-01 - The Absalom Initiation (en).pdf'
         await writeFile(join(library, path), 'pdf')
-        await writeFile(join(dataRoot, 'catalogue-pf2.json'), JSON.stringify({
+        let catalogue: Record<string, unknown> = {
           schemaVersion: 3,
           containers: [],
           components: [],
           playableUnits: [{ id: 'pfs-season-1-1-01', playableType: 'pfsScenario', parentId: null, number: '1-01', titles: { fr: null, original: 'The Absalom Initiation', aliases: [] } }],
           documents: [],
           reconciliation: { pending: [], relocationsApplied: [], notes: [] }
-        }))
+        }
 
         process.env['PF2_LIBRARY_ROOT'] = library
         process.env['PF2_DATA_ROOT'] = dataRoot
-        const { service } = serviceFor()
+        const { service, persistence } = serviceFor({}, pnj, {
+          readCatalogueSnapshot: jest.fn().mockImplementation(async () => structuredClone(catalogue)),
+          replaceCatalogueSnapshot: jest.fn().mockImplementation(async (next) => { catalogue = structuredClone(next) })
+        })
         const applied = await service.scanLibrary(true) as { summary: { added: number; removed: number }; sync: { inventoried: number; review: number } }
         expect(applied.summary).toMatchObject({ added: 0, removed: 0 })
         expect(applied.sync).toMatchObject({ inventoried: 1, review: 0 })
-
-        const catalogue = JSON.parse(await (await import('node:fs/promises')).readFile(join(dataRoot, 'catalogue-pf2.json'), 'utf8')) as { documents: Array<{ path: string; targetId: string; association: { status: string } }> }
-        expect(catalogue.documents).toEqual([expect.objectContaining({ path, targetId: 'pfs-season-1-1-01', association: expect.objectContaining({ status: 'confirmed' }) })])
+        expect(persistence.replaceCatalogueSnapshot).toHaveBeenCalled()
+        expect((catalogue.documents as Array<{ path: string; targetId: string; association: { status: string } }>)).toEqual([expect.objectContaining({ path, targetId: 'pfs-season-1-1-01', association: expect.objectContaining({ status: 'confirmed' }) })])
       } finally {
         if (previousLibrary === undefined) delete process.env['PF2_LIBRARY_ROOT']; else process.env['PF2_LIBRARY_ROOT'] = previousLibrary
         if (previousData === undefined) delete process.env['PF2_DATA_ROOT']; else process.env['PF2_DATA_ROOT'] = previousData
+        await rm(root, { recursive: true, force: true })
+      }
+    })
+
+    it('detects a newly added translation and its unique original PDF', async () => {
+      const root = await mkdtemp(join(tmpdir(), 'pf2-mj-scan-translation-'))
+      const library = join(root, 'library')
+      const previousLibrary = process.env['PF2_LIBRARY_ROOT']
+      try {
+        await mkdir(join(library, 'PFS'), { recursive: true })
+        const original = 'PFS/PFS - S01-01 - The Absalom Initiation (en).pdf'
+        const translation = 'PFS/PFS - S01-01 - The Absalom Initiation (en) - trad.pdf'
+        await writeFile(join(library, original), 'pdf')
+        await writeFile(join(library, translation), 'pdf')
+        process.env['PF2_LIBRARY_ROOT'] = library
+        const catalogue = { schemaVersion: 2, files: [], collections: [], entries: [{ id: 'pfs-s01-01', kind: 'pfs-scenario', titleOriginal: 'The Absalom Initiation', aliases: [], number: '1-01', collectionId: null, parts: [] }] }
+        const { service } = serviceFor({}, pnj, { readCatalogueSnapshot: jest.fn().mockResolvedValue(catalogue) })
+        const report = await service.scanLibrary() as { summary: { translations: number; translationsCertain: number }; translations: Array<{ path: string; originalPath: string | null; association: string }> }
+        expect(report.summary).toMatchObject({ translations: 1, translationsCertain: 1 })
+        expect(report.translations).toEqual([{ path: translation, originalPath: original, association: 'certaine' }])
+      } finally {
+        if (previousLibrary === undefined) delete process.env['PF2_LIBRARY_ROOT']; else process.env['PF2_LIBRARY_ROOT'] = previousLibrary
         await rm(root, { recursive: true, force: true })
       }
     })
@@ -175,23 +199,16 @@ describe('Pf2MjService', () => {
         await writeFile(join(library, 'Campagnes', "Campagne - L'Âge des Cendres (ressources).zip"), 'zip')
         await writeFile(join(library, 'PFS', 'PFS 1-01 (ressources).zip'), 'zip')
         await writeFile(join(library, 'PFS', 'PFS 1-01 (info).pdf'), 'pdf')
-        await writeFile(join(dataRoot, 'catalogue-pf2.json'), JSON.stringify({
-          files: [],
-          collections: [],
-          entries: [
-            {
-              id: 'age-of-ashes', kind: 'campaign', titleFr: 'L’Âge des Cendres', titleOriginal: 'Age of Ashes', aliases: [], collectionId: null,
-              parts: [{ id: 'age-of-ashes-volume-1', kind: 'volume_aventure', titleFr: 'La Colline du chevalier infernal', sequence: 1 }]
-            },
-            {
-              id: 'pfs-season-1-1-01', kind: 'pfs-scenario', titleFr: null, titleOriginal: 'The Absalom Initiation', aliases: [], number: '1-01', collectionId: 'pfs-season-1', parts: []
-            }
+        const catalogue = {
+          schemaVersion: 2, files: [], collections: [], entries: [
+            { id: 'age-of-ashes', kind: 'campaign', titleFr: 'L’Âge des Cendres', titleOriginal: 'Age of Ashes', aliases: [], collectionId: null, parts: [{ id: 'age-of-ashes-volume-1', kind: 'volume_aventure', titleFr: 'La Colline du chevalier infernal', sequence: 1 }] },
+            { id: 'pfs-season-1-1-01', kind: 'pfs-scenario', titleFr: null, titleOriginal: 'The Absalom Initiation', aliases: [], number: '1-01', collectionId: 'pfs-season-1', parts: [] }
           ]
-        }))
+        }
 
         process.env['PF2_LIBRARY_ROOT'] = library
         process.env['PF2_DATA_ROOT'] = dataRoot
-        const { service } = serviceFor()
+        const { service } = serviceFor({}, pnj, { readCatalogueSnapshot: jest.fn().mockResolvedValue(catalogue) })
         const report = await service.scanLibrary() as {
           summary: { information: number; zips: number }
           addedInformationPdfs: string[]

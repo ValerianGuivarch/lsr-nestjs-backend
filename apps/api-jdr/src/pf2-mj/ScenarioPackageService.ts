@@ -52,12 +52,17 @@ export class ScenarioPackageService {
   }
   async scenariosForNpc(npcId: string): Promise<unknown[]> {
     const links = await this.persistence.listNpcScenarioLinks(npcId)
-    return Promise.all(links.map(async link => ({ ...(await this.persistence.getRecord('scenario', link.scenarioId)), ...link })))
+    return Promise.all(links.map(async link => ({ ...((await this.persistence.getCatalogueEntity(link.scenarioId)) ?? (await this.persistence.getRecord('scenario', link.scenarioId)) ?? { id: link.scenarioId }), ...link })))
   }
   async npcsForCampaign(campaignId: string): Promise<unknown[]> {
-    const scenarios = await this.persistence.listRecords('scenario')
-    const matching = scenarios.filter(scenario => scenario.collectionId === campaignId || scenario.parentId === campaignId || scenario.id === campaignId)
-    const links = (await Promise.all(matching.map(scenario => this.persistence.listScenarioNpcLinks(String(scenario.id))))).flat()
+    const scenarios = await this.persistence.listCatalogueEntries()
+    const scenarioIds = new Set<string>()
+    for (const scenario of scenarios) {
+      if (scenario.collectionId !== campaignId && scenario.id !== campaignId) continue
+      if (typeof scenario.id === 'string') scenarioIds.add(scenario.id)
+      if (scenario.id === campaignId && Array.isArray(scenario.parts)) for (const part of scenario.parts) if (part && typeof part === 'object' && typeof (part as Record<string, unknown>).id === 'string') scenarioIds.add(String((part as Record<string, unknown>).id))
+    }
+    const links = (await Promise.all([...scenarioIds].map(scenarioId => this.persistence.listScenarioNpcLinks(scenarioId)))).flat()
     const unique = [...new Map(links.map(link => [link.npcId, link])).values()]
     return Promise.all(unique.map(async link => ({ ...(await this.persistence.getRecord('pnj', link.npcId)), ...link })))
   }

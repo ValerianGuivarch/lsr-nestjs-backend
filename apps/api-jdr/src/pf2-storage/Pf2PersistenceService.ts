@@ -5,17 +5,21 @@ import { basename, dirname, resolve } from 'node:path'
 import { randomUUID } from 'node:crypto'
 import { DataSource, EntityManager } from 'typeorm'
 
-export type Pf2RecordKind = 'pnj' | 'faction' | 'lieu' | 'region' | 'evenement' | 'scenario' | 'session' | 'catalogue' | 'curation' | 'foundry-actor-cache'
+export type Pf2RecordKind = 'pnj' | 'faction' | 'lieu' | 'region' | 'evenement' | 'scenario' | 'session' | 'catalogue' | 'curation' | 'foundry-actor-cache' | 'geography-config'
 export type FoundryActorCacheEntry = { uuid: string; name: string }
 export type ScenarioNpcLink = { scenarioId: string; npcId: string; role: string | null; importance: string | null; sourcePage: string | null; notes: string | null }
 export type ScenarioPackage = { scenarioId: string; packageVersion: number; status: 'available' | 'integrated' | 'deployed' | 'obsolete'; filename: string; manifest: Record<string, unknown>; importedAt: string; updatedAt: string }
 
+export type CatalogueEntityKind = 'meta' | 'section' | 'collection' | 'entry' | 'arc' | 'thread'
+export type CatalogueEntity = { entityKind: CatalogueEntityKind; id: string; parentId: string | null; subtype: string | null; name: string | null; sortOrder: number; payload: Record<string, unknown> }
+export type LibraryAsset = { id: string; path: string; filename: string; assetType: string; targetId: string | null; targetKind: string | null; role: string | null; language: string | null; variant: string | null; completeness: string | null; translationOf: string | null; associationStatus: string; associationScore: number | null; evidence: string[]; metadata: Record<string, unknown>; present: boolean; lastSeenAt: string | null; sortOrder: number }
+
 const referenceFiles = {
-  pnj: 'pf2_personnages.json',
-  factions: 'pf2_factions.json',
-  lieux: 'pf2_lieux.json',
-  regions: 'pf2_regions.json',
-  evenements: 'pf2_evenements.json'
+  pnj: 'old/pf2_personnages.json',
+  factions: 'old/pf2_factions.json',
+  lieux: 'old/pf2_lieux.json',
+  regions: 'old/pf2_regions.json',
+  evenements: 'old/pf2_evenements.json'
 } as const
 
 type ReferenceKind = keyof typeof referenceFiles
@@ -115,6 +119,117 @@ export class Pf2PersistenceService implements OnModuleInit {
     const rows = await this.dataSource.query('SELECT scenario_id, package_version, status, filename, manifest, imported_at, updated_at FROM pf2_scenario_package WHERE scenario_id = ?', [scenarioId]) as Array<{ scenario_id: string; package_version: number; status: ScenarioPackage['status']; filename: string; manifest: string; imported_at: string; updated_at: string }>
     const row = rows[0]
     return row ? { scenarioId: row.scenario_id, packageVersion: row.package_version, status: row.status, filename: row.filename, manifest: this.object(JSON.parse(row.manifest)), importedAt: row.imported_at, updatedAt: row.updated_at } : null
+  }
+
+  async catalogueEntityCount(): Promise<number> {
+    const rows = await this.dataSource.query('SELECT COUNT(*) AS count FROM pf2_catalogue_entity') as Array<{ count: number }>
+    return Number(rows[0]?.count ?? 0)
+  }
+
+  async readCatalogueSnapshot(): Promise<Record<string, unknown>> {
+    const rows = await this.dataSource.query('SELECT entity_kind, id, parent_id, subtype, name, sort_order, payload FROM pf2_catalogue_entity ORDER BY entity_kind, sort_order, id') as Array<{ entity_kind: CatalogueEntityKind; id: string; parent_id: string | null; subtype: string | null; name: string | null; sort_order: number; payload: string }>
+    const metaRow = rows.find((row) => row.entity_kind === 'meta' && row.id === 'canonical')
+    const metaPayload = metaRow ? this.object(JSON.parse(metaRow.payload)) : {}
+    const byKind = (kind: CatalogueEntityKind) => rows.filter((row) => row.entity_kind === kind).sort((a, b) => a.sort_order - b.sort_order || a.id.localeCompare(b.id)).map((row) => this.object(JSON.parse(row.payload)))
+    const assets = (await this.listLibraryAssets()).filter((asset) => asset.assetType !== 'zip')
+    return {
+      ...this.object(metaPayload.extras),
+      schemaVersion: Number(metaPayload.schemaVersion ?? 2),
+      meta: this.object(metaPayload.meta),
+      files: assets.map((asset) => this.assetToCatalogueFile(asset)),
+      entries: byKind('entry'),
+      collections: byKind('collection'),
+      arcs: byKind('arc'),
+      sections: byKind('section'),
+      narrativeThreads: byKind('thread'),
+      ...(metaPayload.reconciliation ? { reconciliation: metaPayload.reconciliation } : {})
+    }
+  }
+
+  async replaceCatalogueSnapshot(value: Record<string, unknown>): Promise<void> {
+    const snapshot = this.object(value)
+    const rows: CatalogueEntity[] = []
+    const push = (entityKind: CatalogueEntityKind, raw: unknown, index: number, parentId: string | null = null, subtype: string | null = null) => {
+      if (!this.isObject(raw)) return
+      const id = typeof raw.id === 'string' && raw.id.trim() ? raw.id.trim() : `${entityKind}-${index + 1}`
+      const name = this.catalogueEntityName(raw)
+      rows.push({ entityKind, id, parentId, subtype, name, sortOrder: index, payload: raw })
+    }
+    const managedKeys = new Set(['schemaVersion', 'meta', 'files', 'entries', 'collections', 'arcs', 'sections', 'narrativeThreads', 'reconciliation'])
+    const extras = Object.fromEntries(Object.entries(snapshot).filter(([key]) => !managedKeys.has(key)))
+    rows.push({ entityKind: 'meta', id: 'canonical', parentId: null, subtype: null, name: 'Catalogue PF2', sortOrder: 0, payload: { schemaVersion: Number(snapshot.schemaVersion ?? 2), meta: this.object(snapshot.meta), reconciliation: snapshot.reconciliation ?? null, extras } })
+    const sections = Array.isArray(snapshot.sections) ? snapshot.sections : []
+    sections.forEach((item, index) => push('section', item, index))
+    const collections = Array.isArray(snapshot.collections) ? snapshot.collections : []
+    collections.forEach((item, index) => {
+      const row = this.isObject(item) ? item : {}
+      push('collection', row, index, typeof row.parentId === 'string' ? row.parentId : null, typeof row.kind === 'string' ? row.kind : null)
+    })
+    const entries = Array.isArray(snapshot.entries) ? snapshot.entries : []
+    entries.forEach((item, index) => {
+      const row = this.isObject(item) ? item : {}
+      push('entry', row, index, typeof row.collectionId === 'string' ? row.collectionId : null, typeof row.kind === 'string' ? row.kind : null)
+    })
+    const arcs = Array.isArray(snapshot.arcs) ? snapshot.arcs : []
+    arcs.forEach((item, index) => push('arc', item, index))
+    const threads = Array.isArray(snapshot.narrativeThreads) ? snapshot.narrativeThreads : []
+    threads.forEach((item, index) => push('thread', item, index))
+    const files = Array.isArray(snapshot.files) ? snapshot.files : []
+    const assets = files.flatMap((item, index) => this.catalogueFileToAsset(item, index))
+
+    await this.dataSource.transaction(async (manager) => {
+      await manager.query('DELETE FROM pf2_catalogue_entity')
+      await manager.query("DELETE FROM pf2_library_asset WHERE asset_type <> 'zip'")
+      for (const row of rows) await manager.query(
+        'INSERT INTO pf2_catalogue_entity (entity_kind, id, parent_id, subtype, name, sort_order, payload, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)',
+        [row.entityKind, row.id, row.parentId, row.subtype, row.name, row.sortOrder, JSON.stringify(row.payload)]
+      )
+      for (const asset of assets) await this.upsertLibraryAsset(asset, manager)
+    })
+  }
+
+  async getCatalogueEntity(id: string): Promise<Record<string, unknown> | null> {
+    const rows = await this.dataSource.query("SELECT payload FROM pf2_catalogue_entity WHERE id = ? AND entity_kind IN ('entry','collection') ORDER BY CASE entity_kind WHEN 'entry' THEN 0 ELSE 1 END LIMIT 1", [id]) as Array<{ payload: string }>
+    return rows[0] ? this.object(JSON.parse(rows[0].payload)) : null
+  }
+
+  async listCatalogueEntries(): Promise<Record<string, unknown>[]> {
+    const rows = await this.dataSource.query("SELECT payload FROM pf2_catalogue_entity WHERE entity_kind = 'entry' ORDER BY sort_order, id") as Array<{ payload: string }>
+    return rows.map((row) => this.object(JSON.parse(row.payload)))
+  }
+
+  async readGeographyConfig(): Promise<Record<string, unknown>> {
+    return (await this.get('geography-config', 'canonical')) ?? { aliases: {}, parents: {} }
+  }
+
+  async saveGeographyConfig(value: Record<string, unknown>): Promise<void> {
+    await this.upsert('geography-config', 'canonical', 'Géographie PF2', value)
+  }
+
+  async replaceScannedZipAssets(bundles: Array<{ id: string; filename: string; path: string; targetId: string | null; scope: string; associationStatus: string; associationScore: number | null; evidence: string[] }>, scannedAt: string): Promise<void> {
+    await this.dataSource.transaction(async (manager) => {
+      await manager.query("UPDATE pf2_library_asset SET present = 0, updated_at = CURRENT_TIMESTAMP WHERE asset_type = 'zip'")
+      for (const [index, bundle] of bundles.entries()) await this.upsertLibraryAsset({
+        id: bundle.id, path: bundle.path, filename: bundle.filename, assetType: 'zip', targetId: bundle.targetId, targetKind: null,
+        role: 'resource', language: null, variant: null, completeness: null, translationOf: null,
+        associationStatus: bundle.associationStatus, associationScore: bundle.associationScore, evidence: bundle.evidence,
+        metadata: { scope: bundle.scope }, present: true, lastSeenAt: scannedAt, sortOrder: index
+      }, manager)
+    })
+  }
+
+  async listLibraryAssets(): Promise<LibraryAsset[]> {
+    const rows = await this.dataSource.query('SELECT id, path, filename, asset_type, target_id, target_kind, role, language, variant, completeness, translation_of, association_status, association_score, evidence, metadata, present, last_seen_at, sort_order FROM pf2_library_asset ORDER BY sort_order, path') as Array<Record<string, unknown>>
+    return rows.map((row) => ({
+      id: String(row.id), path: String(row.path), filename: String(row.filename), assetType: String(row.asset_type),
+      targetId: typeof row.target_id === 'string' ? row.target_id : null, targetKind: typeof row.target_kind === 'string' ? row.target_kind : null,
+      role: typeof row.role === 'string' ? row.role : null, language: typeof row.language === 'string' ? row.language : null,
+      variant: typeof row.variant === 'string' ? row.variant : null, completeness: typeof row.completeness === 'string' ? row.completeness : null,
+      translationOf: typeof row.translation_of === 'string' ? row.translation_of : null, associationStatus: String(row.association_status ?? 'unassociated'),
+      associationScore: typeof row.association_score === 'number' ? row.association_score : row.association_score === null || row.association_score === undefined ? null : Number(row.association_score),
+      evidence: this.stringArrayJson(row.evidence), metadata: this.objectJson(row.metadata), present: Number(row.present) !== 0,
+      lastSeenAt: typeof row.last_seen_at === 'string' ? row.last_seen_at : null, sortOrder: Number(row.sort_order ?? 0)
+    }))
   }
 
   async listSessions(): Promise<Pf2Session[]> {
@@ -247,6 +362,14 @@ export class Pf2PersistenceService implements OnModuleInit {
       await manager.query("CREATE TABLE IF NOT EXISTS pf2_scenario_npc (scenario_id TEXT NOT NULL, npc_id TEXT NOT NULL, role TEXT, importance TEXT, source_page TEXT, notes TEXT, created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP, updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (scenario_id, npc_id))")
       await manager.query('CREATE INDEX IF NOT EXISTS idx_pf2_scenario_npc_npc ON pf2_scenario_npc (npc_id)')
     })
+    await this.applyMigration('008-catalogue-and-library-assets', async (manager) => {
+      await manager.query("CREATE TABLE IF NOT EXISTS pf2_catalogue_entity (entity_kind TEXT NOT NULL, id TEXT NOT NULL, parent_id TEXT, subtype TEXT, name TEXT, sort_order INTEGER NOT NULL DEFAULT 0, payload TEXT NOT NULL, created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP, updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (entity_kind, id))")
+      await manager.query('CREATE INDEX IF NOT EXISTS idx_pf2_catalogue_entity_parent ON pf2_catalogue_entity (parent_id)')
+      await manager.query('CREATE INDEX IF NOT EXISTS idx_pf2_catalogue_entity_kind_subtype ON pf2_catalogue_entity (entity_kind, subtype)')
+      await manager.query("CREATE TABLE IF NOT EXISTS pf2_library_asset (id TEXT PRIMARY KEY, path TEXT NOT NULL UNIQUE, filename TEXT NOT NULL, asset_type TEXT NOT NULL, target_id TEXT, target_kind TEXT, role TEXT, language TEXT, variant TEXT, completeness TEXT, translation_of TEXT, association_status TEXT NOT NULL DEFAULT 'unassociated', association_score REAL, evidence TEXT NOT NULL DEFAULT '[]', metadata TEXT NOT NULL DEFAULT '{}', present INTEGER NOT NULL DEFAULT 1, last_seen_at TEXT, sort_order INTEGER NOT NULL DEFAULT 0, created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP, updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)")
+      await manager.query('CREATE INDEX IF NOT EXISTS idx_pf2_library_asset_target ON pf2_library_asset (target_id, target_kind)')
+      await manager.query('CREATE INDEX IF NOT EXISTS idx_pf2_library_asset_type ON pf2_library_asset (asset_type)')
+    })
   }
 
   private async createSessionTable(manager: EntityManager): Promise<void> {
@@ -278,12 +401,37 @@ export class Pf2PersistenceService implements OnModuleInit {
       if (Array.isArray(items)) for (const item of items) if (this.isObject(item)) await this.upsert(recordKind, this.identifier(item), this.name(item), item)
     }
 
-    if (!(await this.get('curation', 'user-curation'))) await this.saveCuration(this.object(await this.readJson('user-curation.json')))
-    const catalogue = await this.readJson('catalogue-pf2.json')
-    if (!(await this.get('catalogue', 'canonical'))) await this.upsert('catalogue', 'canonical', 'Catalogue PF2 canonique', this.object(catalogue))
-    if (!(await this.count('scenario'))) {
-      const entries = this.object(catalogue).entries
-      if (Array.isArray(entries)) for (const entry of entries) if (this.isObject(entry)) await this.upsert('scenario', this.identifier(entry), this.title(entry), entry)
+    const previousCatalogueMarker = await this.get('catalogue', 'canonical')
+    const referencesAlreadyReconciled = previousCatalogueMarker?.legacyReferencesReconciled === true
+    if (!referencesAlreadyReconciled) {
+      for (const kind of Object.keys(referenceFiles) as ReferenceKind[]) {
+        const recordKind = kind === 'factions' ? 'faction' : kind === 'lieux' ? 'lieu' : kind === 'regions' ? 'region' : kind === 'evenements' ? 'evenement' : 'pnj'
+        const payload = await this.readJson(referenceFiles[kind])
+        const items = Array.isArray(payload) ? payload : this.object(payload).items
+        if (!Array.isArray(items)) continue
+        for (const item of items) {
+          if (!this.isObject(item)) continue
+          const id = this.identifier(item)
+          if (!(await this.get(recordKind, id))) await this.upsert(recordKind, id, this.name(item), item)
+        }
+      }
+    }
+
+    if (!(await this.get('curation', 'user-curation'))) await this.saveCuration(this.object(await this.readJson('old/user-curation.json')))
+    if (!(await this.get('geography-config', 'canonical'))) await this.saveGeographyConfig(this.object(await this.readJson('old/geography-overrides.json')))
+
+    if (!(await this.catalogueEntityCount())) {
+      const legacyCatalogue = this.object(await this.readJson('old/catalogue-pf2.json'))
+      await this.replaceCatalogueSnapshot(legacyCatalogue)
+    }
+    const catalogue = await this.readCatalogueSnapshot()
+    await this.upsert('catalogue', 'canonical', 'Catalogue PF2 migré vers SQLite', { migratedTo: 'pf2_catalogue_entity', assetsTable: 'pf2_library_asset', schemaVersion: catalogue.schemaVersion ?? 2, legacyReferencesReconciled: true })
+
+    const entries = Array.isArray(catalogue.entries) ? catalogue.entries : []
+    for (const entry of entries) {
+      if (!this.isObject(entry)) continue
+      const id = this.identifier(entry)
+      if (!(await this.get('scenario', id))) await this.upsert('scenario', id, this.title(entry), entry)
     }
   }
 
@@ -306,6 +454,55 @@ export class Pf2PersistenceService implements OnModuleInit {
     await manager.query('INSERT INTO pf2_record (kind, id, name, payload, created_at, updated_at) VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP) ON CONFLICT(kind, id) DO UPDATE SET name = excluded.name, payload = excluded.payload, updated_at = CURRENT_TIMESTAMP', [kind, id, name, JSON.stringify(payload)])
   }
 
+  private catalogueEntityName(item: Record<string, unknown>): string | null {
+    const titles = this.object(item.titles)
+    const candidates = [item.titleFr, item.titleOriginal, item.title, item.nom, titles.fr, titles.original, item.id]
+    const value = candidates.find((candidate) => typeof candidate === 'string' && candidate.trim())
+    return typeof value === 'string' ? value.trim() : null
+  }
+
+  private catalogueFileToAsset(value: unknown, sortOrder: number): LibraryAsset[] {
+    if (!this.isObject(value)) return []
+    const id = typeof value.id === 'string' && value.id.trim() ? value.id.trim() : `asset-${sortOrder + 1}`
+    const path = typeof value.path === 'string' ? value.path.trim() : ''
+    if (!path) return []
+    const filename = typeof value.filename === 'string' && value.filename.trim() ? value.filename.trim() : path.split('/').at(-1) ?? path
+    const association = this.object(value.association)
+    const language = typeof value.languageHint === 'string' ? value.languageHint : null
+    const variant = value.translationVariant === true ? 'translationUnofficial' : null
+    const targetId = typeof association.itemId === 'string' ? association.itemId : typeof association.campaignId === 'string' ? association.campaignId : null
+    const targetKind = typeof association.itemId === 'string' ? 'item' : typeof association.campaignId === 'string' ? 'container' : null
+    return [{
+      id, path, filename, assetType: path.toLowerCase().endsWith('.zip') ? 'zip' : 'pdf', targetId, targetKind,
+      role: typeof value.roleHint === 'string' ? value.roleHint : null, language, variant, completeness: null, translationOf: typeof value.translationOf === 'string' ? value.translationOf : null,
+      associationStatus: typeof association.status === 'string' ? association.status : 'unassociated', associationScore: null,
+      evidence: Array.isArray(association.evidence) ? association.evidence.filter((item): item is string => typeof item === 'string') : [],
+      metadata: value, present: true, lastSeenAt: null, sortOrder
+    }]
+  }
+
+  private assetToCatalogueFile(asset: LibraryAsset): Record<string, unknown> {
+    // `metadata` conserve le fichier catalogue original. Les colonnes dédiées
+    // servent aux recherches/indexations sans réécrire silencieusement le JSON
+    // lors d'un export : un aller-retour DB doit rester sans perte.
+    return { ...asset.metadata, id: asset.id, path: asset.path, filename: asset.filename }
+  }
+
+  private async upsertLibraryAsset(asset: LibraryAsset, manager: DataSource | EntityManager = this.dataSource): Promise<void> {
+    await manager.query(
+      'INSERT INTO pf2_library_asset (id, path, filename, asset_type, target_id, target_kind, role, language, variant, completeness, translation_of, association_status, association_score, evidence, metadata, present, last_seen_at, sort_order, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP) ON CONFLICT(id) DO UPDATE SET path = excluded.path, filename = excluded.filename, asset_type = excluded.asset_type, target_id = excluded.target_id, target_kind = excluded.target_kind, role = excluded.role, language = excluded.language, variant = excluded.variant, completeness = excluded.completeness, translation_of = excluded.translation_of, association_status = excluded.association_status, association_score = excluded.association_score, evidence = excluded.evidence, metadata = excluded.metadata, present = excluded.present, last_seen_at = excluded.last_seen_at, sort_order = excluded.sort_order, updated_at = CURRENT_TIMESTAMP',
+      [asset.id, asset.path, asset.filename, asset.assetType, asset.targetId, asset.targetKind, asset.role, asset.language, asset.variant, asset.completeness, asset.translationOf, asset.associationStatus, asset.associationScore, JSON.stringify(asset.evidence), JSON.stringify(asset.metadata), asset.present ? 1 : 0, asset.lastSeenAt, asset.sortOrder]
+    )
+  }
+
+  private stringArrayJson(value: unknown): string[] {
+    try { const parsed = typeof value === 'string' ? JSON.parse(value) : value; return Array.isArray(parsed) ? parsed.filter((item): item is string => typeof item === 'string') : [] } catch { return [] }
+  }
+
+  private objectJson(value: unknown): Record<string, unknown> {
+    try { return this.object(typeof value === 'string' ? JSON.parse(value) : value) } catch { return {} }
+  }
+
   private async assertAvailableSessionNumber(sessionNumber: number, exceptId?: string): Promise<void> {
     const rows = await this.dataSource.query('SELECT id FROM pf2_session WHERE session_number = ? AND id <> ?', [sessionNumber, exceptId ?? '']) as Array<{ id: string }>
     if (rows.length) throw new Error(`Le numéro de résumé ${sessionNumber} existe déjà.`)
@@ -316,7 +513,18 @@ export class Pf2PersistenceService implements OnModuleInit {
   }
 
   private async readJson(filename: string): Promise<unknown> {
-    return JSON.parse(await readFile(resolve(this.seedRoot, filename), 'utf8')) as unknown
+    try {
+      return JSON.parse(await readFile(resolve(this.seedRoot, filename), 'utf8')) as unknown
+    } catch (error) {
+      // Compatibilité de déploiement : pendant la première bascule, les seeds
+      // peuvent encore être à la racine de data/. Le runtime n'en dépend plus
+      // une fois SQLite initialisé, mais on évite qu'un simple overlay de code
+      // rende le redémarrage impossible avant le déplacement vers data/old/.
+      if (filename.startsWith('old/') && error instanceof Error && 'code' in error && (error as NodeJS.ErrnoException).code === 'ENOENT') {
+        return JSON.parse(await readFile(resolve(this.seedRoot, filename.slice(4)), 'utf8')) as unknown
+      }
+      throw error
+    }
   }
 
   private identifier(item: Record<string, unknown>): string {

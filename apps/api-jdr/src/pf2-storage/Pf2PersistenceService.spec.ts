@@ -14,11 +14,12 @@ describe('Pf2PersistenceService', () => {
   beforeEach(async () => {
     root = await mkdtemp(join(tmpdir(), 'pf2-persistence-'))
     const dataRoot = join(root, 'seed')
-    await mkdir(dataRoot, { recursive: true })
+    await mkdir(join(dataRoot, 'old'), { recursive: true })
     await Promise.all([
-      ...['pf2_personnages.json', 'pf2_factions.json', 'pf2_lieux.json', 'pf2_regions.json', 'pf2_evenements.json'].map((filename) => writeFile(join(dataRoot, filename), '[]')),
-      writeFile(join(dataRoot, 'user-curation.json'), '{}'),
-      writeFile(join(dataRoot, 'catalogue-pf2.json'), '{"entries":[]}')
+      ...['pf2_personnages.json', 'pf2_factions.json', 'pf2_lieux.json', 'pf2_regions.json', 'pf2_evenements.json'].map((filename) => writeFile(join(dataRoot, 'old', filename), '[]')),
+      writeFile(join(dataRoot, 'old', 'user-curation.json'), '{}'),
+      writeFile(join(dataRoot, 'old', 'geography-overrides.json'), '{"aliases":{},"parents":{}}'),
+      writeFile(join(dataRoot, 'old', 'catalogue-pf2.json'), '{"schemaVersion":2,"meta":{},"files":[],"entries":[],"collections":[],"arcs":[],"sections":[],"narrativeThreads":[]}')
     ])
     database = join(root, 'data', 'pf2.sqlite')
     process.env['PF2_DATA_ROOT'] = dataRoot
@@ -95,7 +96,8 @@ describe('Pf2PersistenceService', () => {
       { id: '004-session-long-summary-link' },
       { id: '005-session-number' },
       { id: '006-session-discord-message' },
-      { id: '007-scenario-packages-and-npcs' }
+      { id: '007-scenario-packages-and-npcs' },
+      { id: '008-catalogue-and-library-assets' }
     ])
 
     await currentDataSource().destroy()
@@ -110,8 +112,33 @@ describe('Pf2PersistenceService', () => {
       { id: '004-session-long-summary-link' },
       { id: '005-session-number' },
       { id: '006-session-discord-message' },
-      { id: '007-scenario-packages-and-npcs' }
+      { id: '007-scenario-packages-and-npcs' },
+      { id: '008-catalogue-and-library-assets' }
     ])
+  })
+
+  it('stores the catalogue and geography in SQLite and preserves edits across reopen', async () => {
+    const first = await open()
+    await first.replaceCatalogueSnapshot({
+      schemaVersion: 2,
+      meta: { title: 'Test' },
+      sections: [{ id: 'campaigns', title: 'Campagnes', order: 1, description: '' }],
+      collections: [{ id: 'pfs-s1', sectionId: 'campaigns', parentId: null, kind: 'pfs-season', titleFr: 'Saison 1', order: 1 }],
+      entries: [{ id: 'pfs-s01-01', sectionId: 'campaigns', collectionId: 'pfs-s1', kind: 'pfs-scenario', titleFr: 'Initiation', titleOriginal: 'Initiation', aliases: [], regions: [], arcIds: [], documents: [], parts: [], openTable: { rating: 3 }, story: {}, characterHooks: [] }],
+      files: [{ id: 'pdf-1', path: 'Campagnes/test.pdf', filename: 'test.pdf', languageHint: 'en', association: { status: 'associé', itemId: 'pfs-s01-01', confidence: 'confirmé' } }],
+      arcs: [], narrativeThreads: []
+    })
+    await first.saveGeographyConfig({ aliases: { Absalom: 'Absalom' }, parents: {} })
+
+    const snapshot = await first.readCatalogueSnapshot()
+    expect((snapshot.entries as Array<Record<string, unknown>>).map((entry) => entry.id)).toEqual(['pfs-s01-01'])
+    expect((snapshot.files as Array<Record<string, unknown>>)[0]).toEqual(expect.objectContaining({ id: 'pdf-1', path: 'Campagnes/test.pdf' }))
+
+    await currentDataSource().destroy()
+    dataSource = undefined
+    const reopened = await open()
+    await expect(reopened.readGeographyConfig()).resolves.toEqual({ aliases: { Absalom: 'Absalom' }, parents: {} })
+    expect(((await reopened.readCatalogueSnapshot()).entries as Array<Record<string, unknown>>)[0]).toEqual(expect.objectContaining({ id: 'pfs-s01-01' }))
   })
 
   it('keeps explicit scenario-to-PNJ relations across a reopen', async () => {

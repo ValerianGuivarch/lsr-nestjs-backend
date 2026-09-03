@@ -2,7 +2,7 @@
 
 ## Principe
 
-Le runtime V3 normalise le catalogue V2 sans le détruire :
+Le runtime V3 normalise une vue de catalogue stockée dans `pf2.sqlite`. Le JSON V2 historique est conservé dans `data/old/` uniquement comme archive/seed de migration :
 
 - `Container` : campagne, série, collection, saison PFS ; jamais proposé dans « Trouver une partie ».
 - `PlayableUnit` : seule entité jouable et filtrable.
@@ -45,7 +45,7 @@ Il donne l’état `Info seule` si le scénario complet n’est pas disponible. 
 
 ## ZIP ressources Foundry
 
-Les ZIP sont séparés des PDF. Le schéma cible est dans `data/resource-bundles.json`.
+Les ZIP sont séparés des PDF. Le schéma runtime est produit par le scan de `PF2_LIBRARY_ROOT` et les ZIP appliqués sont persistés dans `pf2_library_asset`. `data/old/resource-bundles.json` n'est plus une source runtime.
 
 Exemple campagne :
 
@@ -123,13 +123,13 @@ Le frontend V3 lit déjà `byId`, puis `entries`, puis les anciennes maps `...By
 
 ## Inventaire local runtime
 
-Au chargement de PF2 MJ, l'UI lance un scan léger via `/api/pf2-mj/local-scan`. Le résultat sert de couche runtime sans modifier le JSON canonique :
+Au chargement de PF2 MJ, l'UI charge d'abord le catalogue et la géographie depuis SQLite, puis lance un scan léger via `/api/pf2-mj/local-scan`. Le scan passif sert de couche runtime :
 
 - les chemins PDF réellement présents empêchent un fichier supprimé du disque de rester compté comme disponible ;
 - les nouveaux PDF `(info)` dont l'association est identifiable sont ajoutés temporairement comme documents d'information ;
-- l'inventaire ZIP remplace le fallback statique `resource-bundles.json` ;
+- l'inventaire ZIP est calculé depuis `pf2-data` ; lors d'un scan appliqué, il est persisté dans `pf2_library_asset` ;
 - une association ZIP `review` produit l'état `ZIP à vérifier`, jamais `ZIP disponible`.
 
 Le bouton « Scanner PDF & ZIP » relance le même inventaire et affiche les ajouts, suppressions, PDF info et ZIP à vérifier.
 
-Le scan runtime n'écrit volontairement pas dans `catalogue-pf2.json`. La migration persistée du canonique doit rester une opération séparée et contrôlée.
+Le scan passif n'écrit rien. Depuis l'UI, « Appliquer ce scan dans SQLite » appelle le même endpoint avec `apply=true` : les déplacements et nouveaux PDF sont alors intégrés au catalogue SQLite, et les ZIP sont enregistrés dans `pf2_library_asset`. Aucun fichier JSON canonique n'est réécrit.
