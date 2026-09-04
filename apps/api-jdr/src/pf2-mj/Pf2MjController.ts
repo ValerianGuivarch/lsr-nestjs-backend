@@ -21,11 +21,20 @@ export class Pf2MjController {
   @Get('npc-registry')
   npcRegistry(): Promise<unknown[]> { return this.scenarioPackages.registry() }
 
+  @Get('package-registry')
+  packageRegistry(): Promise<Record<string, unknown[]>> { return this.scenarioPackages.packageRegistry() }
+
   @Get('pnj/:id/scenarios')
   scenariosForPnj(@Param('id') id: string): Promise<unknown[]> { return this.scenarioPackages.scenariosForNpc(id) }
 
   @Get('scenarios/:id/npcs')
   npcsForScenario(@Param('id') id: string): Promise<unknown[]> { return this.scenarioPackages.npcsForScenario(id) }
+
+  @Get('scenarios/:id/relations')
+  relationsForScenario(@Param('id') id: string): Promise<Record<string, unknown[]>> { return this.scenarioPackages.relationsForScenario(id) }
+
+  @Get('scenarios/:id/export')
+  scenarioExport(@Param('id') id: string): Promise<Record<string, unknown>> { return this.scenarioPackages.scenarioExport(id) }
 
   @Get('campaigns/:id/npcs')
   npcsForCampaign(@Param('id') id: string): Promise<unknown[]> { return this.scenarioPackages.npcsForCampaign(id) }

@@ -3,10 +3,11 @@ import { Injectable } from '@nestjs/common'
 import { mkdir, writeFile } from 'node:fs/promises'
 import { basename, resolve } from 'node:path'
 import sharp from 'sharp'
-import { Pf2PersistenceService, ScenarioNpcLink } from '../pf2-storage/Pf2PersistenceService'
+import { Pf2PersistenceService, ScenarioNpcLink, ScenarioRelation, ScenarioRelationTargetKind } from '../pf2-storage/Pf2PersistenceService'
 
 type PackageNpc = { key?: unknown; npcId?: unknown; name?: unknown; aliases?: unknown; description?: unknown; portrait?: unknown; role?: unknown; importance?: unknown; sourcePage?: unknown; notes?: unknown }
-type ScenarioManifest = { packageVersion?: unknown; scenario?: { id?: unknown; name?: unknown }; npcs?: unknown; actors?: unknown; [key: string]: unknown }
+type PackageRelation = { key?: unknown; kind?: unknown; refId?: unknown; factionId?: unknown; eventId?: unknown; name?: unknown; aliases?: unknown; description?: unknown; role?: unknown; importance?: unknown; sourcePage?: unknown; notes?: unknown }
+type ScenarioManifest = { packageVersion?: unknown; scenario?: { id?: unknown; name?: unknown }; npcs?: unknown; places?: unknown; factions?: unknown; events?: unknown; actors?: unknown; [key: string]: unknown }
 
 @Injectable()
 export class ScenarioPackageService {
@@ -24,16 +25,27 @@ export class ScenarioPackageService {
     this.text(manifest.scenario?.name, 'scenario.name')
     const packageVersion = manifest.packageVersion === undefined ? 1 : this.version(manifest.packageVersion)
     if (manifest.npcs !== undefined && !Array.isArray(manifest.npcs)) throw new Error('npcs doit être un tableau.')
+    if (manifest.places !== undefined && !Array.isArray(manifest.places)) throw new Error('places doit être un tableau.')
+    if (manifest.factions !== undefined && !Array.isArray(manifest.factions)) throw new Error('factions doit être un tableau.')
+    if (manifest.events !== undefined && !Array.isArray(manifest.events)) throw new Error('events doit être un tableau.')
     if (manifest.actors !== undefined && !Array.isArray(manifest.actors)) throw new Error('actors doit être un tableau.')
     const existing = await this.persistence.getScenarioPackage(scenarioId)
     if (existing && existing.packageVersion > packageVersion) throw new Error(`Une version plus récente (${existing.packageVersion}) est déjà intégrée.`)
     const npcs = await this.resolveNpcs(scenarioId, (manifest.npcs ?? []) as PackageNpc[], zip)
+    const relations = await this.resolveRelations(scenarioId, manifest)
     const state: 'integrated' | 'unchanged' | 'updated' = existing?.packageVersion === packageVersion ? 'unchanged' : existing ? 'updated' : 'integrated'
     const packageDir = resolve(this.persistence.storageRoot, 'documents', 'scenario-packages', this.safeSegment(scenarioId))
     await mkdir(packageDir, { recursive: true })
     await writeFile(resolve(packageDir, `v${packageVersion}.zip`), bytes)
-    await this.persistence.replaceScenarioNpcLinks(scenarioId, npcs.links)
-    await this.persistence.saveScenarioPackage({ scenarioId, packageVersion, status: 'integrated', filename: basename(originalName) || `${scenarioId}.zip`, manifest })
+    await this.persistence.importScenarioPackageAtomically({
+      records: [...npcs.records, ...relations.records], npcLinks: npcs.links, relations: relations.links,
+      replaceRelationKinds: [
+        ...(manifest.places === undefined ? [] : ['lieu', 'region'] as ScenarioRelationTargetKind[]),
+        ...(manifest.factions === undefined ? [] : ['faction'] as ScenarioRelationTargetKind[]),
+        ...(manifest.events === undefined ? [] : ['evenement'] as ScenarioRelationTargetKind[])
+      ],
+      package: { scenarioId, packageVersion, status: 'integrated', filename: basename(originalName) || `${scenarioId}.zip`, manifest }
+    })
     return { scenarioId, packageVersion, state, npcs: npcs.items }
   }
 
@@ -49,6 +61,19 @@ export class ScenarioPackageService {
   async npcsForScenario(scenarioId: string): Promise<unknown[]> {
     const links = await this.persistence.listScenarioNpcLinks(scenarioId)
     return Promise.all(links.map(async link => ({ ...(await this.persistence.getRecord('pnj', link.npcId)), ...link })))
+  }
+  async relationsForScenario(scenarioId: string): Promise<Record<string, unknown[]>> {
+    const links = await this.persistence.listScenarioRelations(scenarioId)
+    const resolved = await Promise.all(links.map(async link => ({ ...(await this.persistence.getRecord(link.targetKind, link.targetId)), ...link })))
+    return { npcs: await this.npcsForScenario(scenarioId), places: resolved.filter(link => link.targetKind === 'lieu' || link.targetKind === 'region'), factions: resolved.filter(link => link.targetKind === 'faction'), events: resolved.filter(link => link.targetKind === 'evenement') }
+  }
+  async packageRegistry(): Promise<Record<string, unknown[]>> {
+    const compact = (kind: ScenarioRelationTargetKind | 'pnj') => this.persistence.listRecords(kind).then(records => records.map(record => ({ id: record.id, name: record.nom ?? record.name ?? record.title ?? record.id, aliases: Array.isArray(record.aliases) ? record.aliases : [], ...(kind === 'lieu' || kind === 'region' ? { kind } : {}) })))
+    const [npcs, lieu, region, factions, events] = await Promise.all([compact('pnj'), compact('lieu'), compact('region'), compact('faction'), compact('evenement')])
+    return { npcs, places: [...lieu, ...region], factions, events }
+  }
+  async scenarioExport(scenarioId: string): Promise<Record<string, unknown>> {
+    return { scenario: (await this.persistence.getCatalogueEntity(scenarioId)) ?? (await this.persistence.getRecord('scenario', scenarioId)) ?? { id: scenarioId }, ...(await this.relationsForScenario(scenarioId)) }
   }
   async scenariosForNpc(npcId: string): Promise<unknown[]> {
     const links = await this.persistence.listNpcScenarioLinks(npcId)
@@ -71,10 +96,11 @@ export class ScenarioPackageService {
     return Promise.all(pnjs.map(async pnj => ({ id: pnj.id, nom: pnj.nom, aliases: Array.isArray(pnj.aliases) ? pnj.aliases : [], portrait: pnj.portrait ?? null, scenarios: (await this.persistence.listNpcScenarioLinks(String(pnj.id))).map(link => link.scenarioId) })))
   }
 
-  private async resolveNpcs(scenarioId: string, definitions: PackageNpc[], zip: AdmZip): Promise<{ items: Array<{ id: string; name: string; created: boolean }>; links: ScenarioNpcLink[] }> {
+  private async resolveNpcs(scenarioId: string, definitions: PackageNpc[], zip: AdmZip): Promise<{ items: Array<{ id: string; name: string; created: boolean }>; links: ScenarioNpcLink[]; records: Array<{ kind: 'pnj'; item: Record<string, unknown> }> }> {
     const seen = new Set<string>()
     const items: Array<{ id: string; name: string; created: boolean }> = []
     const links: ScenarioNpcLink[] = []
+    const records: Array<{ kind: 'pnj'; item: Record<string, unknown> }> = []
     for (const definition of definitions) {
       if (!definition || typeof definition !== 'object') throw new Error('Chaque PNJ doit être un objet.')
       const key = this.id(definition.key, 'npcs[].key')
@@ -89,7 +115,7 @@ export class ScenarioPackageService {
           const nom = this.text(definition.name, `npcs[${key}].name`)
           const portrait = await this.materializePortrait(zip, definition.portrait, npcId)
           pnj = { id: npcId, nom, description: typeof definition.description === 'string' ? definition.description.trim() : '', aliases: this.strings(definition.aliases), portrait: portrait ?? undefined, factions: [], tags: [], role: typeof definition.role === 'string' ? definition.role.trim() : '', importance: typeof definition.importance === 'string' ? definition.importance.trim() : 'Secondaire', statut: 'Actif', notes: typeof definition.notes === 'string' ? definition.notes.trim() : '' }
-          await this.persistence.saveRecord('pnj', pnj)
+          records.push({ kind: 'pnj', item: pnj })
           created = true
         }
       }
@@ -98,7 +124,44 @@ export class ScenarioPackageService {
       items.push({ id: npcId, name: String(pnj.nom ?? npcId), created })
       links.push({ scenarioId, npcId, role: this.optional(definition.role), importance: this.optional(definition.importance), sourcePage: this.optional(definition.sourcePage), notes: this.optional(definition.notes) })
     }
-    return { items, links }
+    return { items, links, records }
+  }
+
+  private async resolveRelations(scenarioId: string, manifest: ScenarioManifest): Promise<{ links: ScenarioRelation[]; records: Array<{ kind: ScenarioRelationTargetKind; item: Record<string, unknown> }> }> {
+    const definitions: Array<{ kind: ScenarioRelationTargetKind; values: PackageRelation[] }> = [
+      { kind: 'lieu', values: (manifest.places ?? []) as PackageRelation[] },
+      { kind: 'faction', values: (manifest.factions ?? []) as PackageRelation[] },
+      { kind: 'evenement', values: (manifest.events ?? []) as PackageRelation[] }
+    ]
+    const output: ScenarioRelation[] = []
+    const records: Array<{ kind: ScenarioRelationTargetKind; item: Record<string, unknown> }> = []
+    const seen = new Set<string>()
+    for (const group of definitions) for (const definition of group.values) {
+      if (!definition || typeof definition !== 'object') throw new Error(`Chaque ${group.kind} doit être un objet.`)
+      const kind = group.kind === 'lieu' && definition.kind === 'region' ? 'region' : group.kind
+      if (group.kind === 'lieu' && definition.kind !== undefined && definition.kind !== 'lieu' && definition.kind !== 'region') throw new Error('places[].kind doit être lieu ou region.')
+      if (group.kind !== 'lieu' && definition.kind !== undefined && definition.kind !== group.kind) throw new Error(`kind invalide pour ${group.kind}.`)
+      const key = this.id(definition.key, `${group.kind}[].key`)
+      const reference = kind === 'faction' ? definition.factionId : kind === 'evenement' ? definition.eventId : definition.refId
+      let id = typeof reference === 'string' && reference.trim() ? reference.trim() : ''
+      let record = id ? await this.persistence.getRecord(kind, id) : null
+      if (id && !record) throw new Error(`${kind} inconnu : ${id}.`)
+      if (!record) {
+        id = `${scenarioId}--${key}`
+        record = await this.persistence.getRecord(kind, id)
+        if (!record) {
+          const raw = definition as Record<string, unknown>
+          const ignored = new Set(['key', 'kind', 'refId', 'factionId', 'eventId', 'role', 'importance', 'sourcePage', 'notes', 'name'])
+          record = { ...Object.fromEntries(Object.entries(raw).filter(([field]) => !ignored.has(field))), id, nom: this.text(definition.name, `${group.kind}[${key}].name`), aliases: this.strings(definition.aliases), description: this.optional(definition.description) ?? '', notes: this.optional(definition.notes) ?? '' }
+          records.push({ kind, item: record })
+        }
+      }
+      const identity = `${kind}:${id}`
+      if (seen.has(identity)) throw new Error(`Relation dupliquée : ${identity}.`)
+      seen.add(identity)
+      output.push({ scenarioId, targetKind: kind, targetId: id, role: this.optional(definition.role), importance: this.optional(definition.importance), sourcePage: this.optional(definition.sourcePage), notes: this.optional(definition.notes) })
+    }
+    return { links: output, records }
   }
 
   private id(value: unknown, label: string): string { const text = this.text(value, label); if (!/^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$/.test(text)) throw new Error(`${label} doit être un identifiant stable sans espace.`); return text }

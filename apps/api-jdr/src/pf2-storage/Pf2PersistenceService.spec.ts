@@ -97,7 +97,8 @@ describe('Pf2PersistenceService', () => {
       { id: '005-session-number' },
       { id: '006-session-discord-message' },
       { id: '007-scenario-packages-and-npcs' },
-      { id: '008-catalogue-and-library-assets' }
+      { id: '008-catalogue-and-library-assets' },
+      { id: '009-scenario-business-relations' }
     ])
 
     await currentDataSource().destroy()
@@ -113,7 +114,8 @@ describe('Pf2PersistenceService', () => {
       { id: '005-session-number' },
       { id: '006-session-discord-message' },
       { id: '007-scenario-packages-and-npcs' },
-      { id: '008-catalogue-and-library-assets' }
+      { id: '008-catalogue-and-library-assets' },
+      { id: '009-scenario-business-relations' }
     ])
   })
 
@@ -150,6 +152,31 @@ describe('Pf2PersistenceService', () => {
     const reopened = await open()
     await expect(reopened.listScenarioNpcLinks('pfs-s01-01')).resolves.toEqual([expect.objectContaining({ npcId: 'captain-vara', role: 'alliée' })])
     await expect(reopened.listNpcScenarioLinks('captain-vara')).resolves.toEqual([expect.objectContaining({ scenarioId: 'pfs-s01-01' })])
+  })
+
+  it('replaces scenario business relations and rejects an unknown target', async () => {
+    const service = await open()
+    await service.saveRecord('lieu', { id: 'lieu-quantium', nom: 'Quantium' })
+    await service.saveRecord('region', { id: 'region-nex', nom: 'Nex' })
+    await service.replaceScenarioRelations('pfs-s01-01', [
+      { scenarioId: 'pfs-s01-01', targetKind: 'lieu', targetId: 'lieu-quantium', role: 'Lieu principal', importance: 'Majeure', sourcePage: '12', notes: null },
+      { scenarioId: 'pfs-s01-01', targetKind: 'region', targetId: 'region-nex', role: null, importance: null, sourcePage: null, notes: null }
+    ])
+    await expect(service.listScenarioRelations('pfs-s01-01')).resolves.toHaveLength(2)
+    await service.replaceScenarioRelations('pfs-s01-01', [{ scenarioId: 'pfs-s01-01', targetKind: 'lieu', targetId: 'lieu-quantium', role: null, importance: null, sourcePage: null, notes: 'Mis à jour' }])
+    await expect(service.listScenarioRelations('pfs-s01-01')).resolves.toEqual([expect.objectContaining({ targetId: 'lieu-quantium', notes: 'Mis à jour' })])
+    await expect(service.replaceScenarioRelations('pfs-s01-01', [{ scenarioId: 'pfs-s01-01', targetKind: 'faction', targetId: 'inconnue', role: null, importance: null, sourcePage: null, notes: null }])).rejects.toThrow('faction inconnu')
+  })
+
+  it('keeps omitted relation families and clears an explicitly empty family atomically', async () => {
+    const service = await open()
+    await service.saveRecord('lieu', { id: 'lieu-quantium', nom: 'Quantium' })
+    await service.replaceScenarioRelations('pfs-s01-01', [{ scenarioId: 'pfs-s01-01', targetKind: 'lieu', targetId: 'lieu-quantium', role: null, importance: null, sourcePage: null, notes: null }])
+    const packageInput = { scenarioId: 'pfs-s01-01', packageVersion: 1, status: 'integrated' as const, filename: 'test.zip', manifest: {} }
+    await service.importScenarioPackageAtomically({ records: [], npcLinks: [], relations: [], replaceRelationKinds: [], package: packageInput })
+    await expect(service.listScenarioRelations('pfs-s01-01')).resolves.toHaveLength(1)
+    await service.importScenarioPackageAtomically({ records: [], npcLinks: [], relations: [], replaceRelationKinds: ['lieu', 'region'], package: packageInput })
+    await expect(service.listScenarioRelations('pfs-s01-01')).resolves.toEqual([])
   })
 
   it('upgrades the previously generated generic session schema without losing its row', async () => {

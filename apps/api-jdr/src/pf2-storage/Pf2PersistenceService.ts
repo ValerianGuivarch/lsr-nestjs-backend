@@ -8,6 +8,9 @@ import { DataSource, EntityManager } from 'typeorm'
 export type Pf2RecordKind = 'pnj' | 'faction' | 'lieu' | 'region' | 'evenement' | 'scenario' | 'session' | 'catalogue' | 'curation' | 'foundry-actor-cache' | 'geography-config'
 export type FoundryActorCacheEntry = { uuid: string; name: string }
 export type ScenarioNpcLink = { scenarioId: string; npcId: string; role: string | null; importance: string | null; sourcePage: string | null; notes: string | null }
+export type ScenarioRelationTargetKind = 'lieu' | 'region' | 'faction' | 'evenement'
+export type ScenarioRelation = { scenarioId: string; targetKind: ScenarioRelationTargetKind; targetId: string; role: string | null; importance: string | null; sourcePage: string | null; notes: string | null }
+export type ScenarioPackageImport = { records: Array<{ kind: Pf2RecordKind; item: Record<string, unknown> }>; npcLinks: ScenarioNpcLink[]; relations: ScenarioRelation[]; replaceRelationKinds: ScenarioRelationTargetKind[]; package: Omit<ScenarioPackage, 'importedAt' | 'updatedAt'> }
 export type ScenarioPackage = { scenarioId: string; packageVersion: number; status: 'available' | 'integrated' | 'deployed' | 'obsolete'; filename: string; manifest: Record<string, unknown>; importedAt: string; updatedAt: string }
 
 export type CatalogueEntityKind = 'meta' | 'section' | 'collection' | 'entry' | 'arc' | 'thread'
@@ -106,6 +109,42 @@ export class Pf2PersistenceService implements OnModuleInit {
 
   async listNpcScenarioLinks(npcId: string): Promise<ScenarioNpcLink[]> {
     return this.dataSource.query('SELECT scenario_id AS scenarioId, npc_id AS npcId, role, importance, source_page AS sourcePage, notes FROM pf2_scenario_npc WHERE npc_id = ? ORDER BY scenario_id', [npcId]) as Promise<ScenarioNpcLink[]>
+  }
+
+  async replaceScenarioRelations(scenarioId: string, relations: ScenarioRelation[]): Promise<void> {
+    await this.dataSource.transaction(async manager => {
+      for (const relation of relations) {
+        if (relation.scenarioId !== scenarioId) throw new Error('Relation de scénario incohérente.')
+        const records = await manager.query('SELECT 1 FROM pf2_record WHERE kind = ? AND id = ?', [relation.targetKind, relation.targetId]) as Array<{ 1: number }>
+        if (!records.length) throw new Error(`${relation.targetKind} inconnu : ${relation.targetId}.`)
+      }
+      await manager.query('DELETE FROM pf2_scenario_relation WHERE scenario_id = ?', [scenarioId])
+      for (const relation of relations) await manager.query(
+        'INSERT INTO pf2_scenario_relation (scenario_id, target_kind, target_id, role, importance, source_page, notes, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)',
+        [scenarioId, relation.targetKind, relation.targetId, relation.role, relation.importance, relation.sourcePage, relation.notes]
+      )
+    })
+  }
+
+  async importScenarioPackageAtomically(input: ScenarioPackageImport): Promise<void> {
+    await this.dataSource.transaction(async manager => {
+      for (const record of input.records) await this.upsert(record.kind, this.identifier(record.item), this.name(record.item), record.item, manager)
+      for (const relation of input.relations) {
+        const records = await manager.query('SELECT 1 FROM pf2_record WHERE kind = ? AND id = ?', [relation.targetKind, relation.targetId]) as Array<{ 1: number }>
+        if (!records.length) throw new Error(`${relation.targetKind} inconnu : ${relation.targetId}.`)
+      }
+      await manager.query('DELETE FROM pf2_scenario_npc WHERE scenario_id = ?', [input.package.scenarioId])
+      for (const link of input.npcLinks) await manager.query('INSERT INTO pf2_scenario_npc (scenario_id, npc_id, role, importance, source_page, notes, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)', [link.scenarioId, link.npcId, link.role, link.importance, link.sourcePage, link.notes])
+      if (input.replaceRelationKinds.length) {
+        await manager.query(`DELETE FROM pf2_scenario_relation WHERE scenario_id = ? AND target_kind IN (${input.replaceRelationKinds.map(() => '?').join(',')})`, [input.package.scenarioId, ...input.replaceRelationKinds])
+        for (const relation of input.relations) await manager.query('INSERT INTO pf2_scenario_relation (scenario_id, target_kind, target_id, role, importance, source_page, notes, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)', [relation.scenarioId, relation.targetKind, relation.targetId, relation.role, relation.importance, relation.sourcePage, relation.notes])
+      }
+      await manager.query('INSERT INTO pf2_scenario_package (scenario_id, package_version, status, filename, manifest, imported_at, updated_at) VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP) ON CONFLICT(scenario_id) DO UPDATE SET package_version = excluded.package_version, status = excluded.status, filename = excluded.filename, manifest = excluded.manifest, updated_at = CURRENT_TIMESTAMP', [input.package.scenarioId, input.package.packageVersion, input.package.status, input.package.filename, JSON.stringify(input.package.manifest)])
+    })
+  }
+
+  async listScenarioRelations(scenarioId: string): Promise<ScenarioRelation[]> {
+    return this.dataSource.query('SELECT scenario_id AS scenarioId, target_kind AS targetKind, target_id AS targetId, role, importance, source_page AS sourcePage, notes FROM pf2_scenario_relation WHERE scenario_id = ? ORDER BY target_kind, importance DESC, target_id', [scenarioId]) as Promise<ScenarioRelation[]>
   }
 
   async saveScenarioPackage(input: Omit<ScenarioPackage, 'importedAt' | 'updatedAt'>): Promise<void> {
@@ -369,6 +408,10 @@ export class Pf2PersistenceService implements OnModuleInit {
       await manager.query("CREATE TABLE IF NOT EXISTS pf2_library_asset (id TEXT PRIMARY KEY, path TEXT NOT NULL UNIQUE, filename TEXT NOT NULL, asset_type TEXT NOT NULL, target_id TEXT, target_kind TEXT, role TEXT, language TEXT, variant TEXT, completeness TEXT, translation_of TEXT, association_status TEXT NOT NULL DEFAULT 'unassociated', association_score REAL, evidence TEXT NOT NULL DEFAULT '[]', metadata TEXT NOT NULL DEFAULT '{}', present INTEGER NOT NULL DEFAULT 1, last_seen_at TEXT, sort_order INTEGER NOT NULL DEFAULT 0, created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP, updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)")
       await manager.query('CREATE INDEX IF NOT EXISTS idx_pf2_library_asset_target ON pf2_library_asset (target_id, target_kind)')
       await manager.query('CREATE INDEX IF NOT EXISTS idx_pf2_library_asset_type ON pf2_library_asset (asset_type)')
+    })
+    await this.applyMigration('009-scenario-business-relations', async (manager) => {
+      await manager.query("CREATE TABLE IF NOT EXISTS pf2_scenario_relation (scenario_id TEXT NOT NULL, target_kind TEXT NOT NULL CHECK (target_kind IN ('lieu','region','faction','evenement')), target_id TEXT NOT NULL, role TEXT, importance TEXT, source_page TEXT, notes TEXT, created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP, updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (scenario_id, target_kind, target_id))")
+      await manager.query('CREATE INDEX IF NOT EXISTS idx_pf2_scenario_relation_target ON pf2_scenario_relation (target_kind, target_id)')
     })
   }
 
