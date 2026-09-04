@@ -214,6 +214,16 @@
 .detail-section code{color:#2f653b;background:#edf4ec;padding:2px 5px;border-radius:3px}
 .detail-section .pdfs{display:flex;flex-direction:column;align-items:flex-start;gap:7px}
 .detail-section .pdfs a{display:inline-flex;padding:8px 10px;border:1px solid #cdbb8d;background:#fff7e3;border-radius:5px}
+.resource-list,.relation-groups{display:grid;gap:8px}
+.resource-list>div,.package-status{display:grid;gap:3px;padding:9px 10px;border:1px solid #ded5c3;border-radius:6px;background:#faf8f2}
+.resource-list small,.package-status small,.relation-groups>div>small{font-size:9px;letter-spacing:.08em;color:#786c54}
+.resource-list strong,.package-status strong{font-size:12px;color:#2d342d}
+.resource-list em,.package-status em{font-size:10px;color:#6a726a;font-style:normal}
+.package-integrate{margin:10px 0 5px;padding:9px 12px;border:0;border-radius:5px;background:#385e42;color:white;font-weight:700;cursor:pointer}
+.package-integrate:disabled{opacity:.55;cursor:wait}
+.relation-groups{grid-template-columns:repeat(2,minmax(0,1fr));margin-top:8px}
+.relation-groups>div{padding:8px;border:1px solid #e4ded0;border-radius:5px}.relation-groups .missing{margin:5px 0 0;font-size:10px}
+.relation-badges button{border:0;border-radius:12px;padding:4px 7px;background:#e7eee5;color:#344c38;font-size:10px;cursor:pointer}
 .document-list{display:grid;gap:7px}
 .document-list article{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px;border:1px solid var(--line);border-radius:7px;background:#faf8f2}
 .document-list article>div:first-child{display:grid;gap:3px}
@@ -230,7 +240,7 @@
 .detail-scenarios .pdfs{margin-top:8px}
 .modal:has(.detail-scenarios){width:min(760px,94vw)}
 @keyframes panel-in{from{transform:translateX(24px);opacity:.5}to{transform:translateX(0);opacity:1}}
-@media(max-width:760px){.modal{width:100%;padding:34px 20px}.detail-grid{grid-template-columns:1fr}.detail-grid>div:nth-last-child(2){border-bottom:1px solid #ebe5d9}}
+@media(max-width:760px){.modal{width:100%;padding:34px 20px}.detail-grid,.relation-groups{grid-template-columns:1fr}.detail-grid>div:nth-last-child(2){border-bottom:1px solid #ebe5d9}}
 @media(prefers-reduced-motion:reduce){.modal{animation:none}}
 
 /* Catalogue de travail en liste */

@@ -157,7 +157,7 @@ function sceneLibraryFor(data) {
   };
 }
 
-async function runScenarioImport(rawData) {
+export async function runScenarioImport(rawData) {
   const data = resolveScenarioAssets(rawData);
 
   const actorFolders = await ensureScenarioFolderTree(
@@ -234,6 +234,96 @@ async function runScenarioImport(rawData) {
   );
 
   return importResult;
+}
+
+async function fetchDeploymentClaim() {
+  const query = new URLSearchParams({
+    worldId: game.world.id,
+    clientId: game.user.id
+  });
+  const response = await fetch(`${pf2MjApiUrl()}/scenario-deployments/claim?${query}`, {
+    headers: { Accept: "application/json" },
+    signal: AbortSignal.timeout(15_000)
+  });
+  if (!response.ok) throw new Error(`Claim API HTTP ${response.status}`);
+  return response.json();
+}
+
+function deploymentResult(deployment, data, result, error = null) {
+  const actorErrors = result?.results?.filter(item => ["missing", "error"].includes(item.status)) ?? [];
+  const sceneErrors = result?.scenes?.filter(item => ["invalid", "error"].includes(item.status)) ?? [];
+  const errors = [
+    ...actorErrors.map(item => `Actor ${item.name ?? item.key ?? "inconnu"}: ${item.status}`),
+    ...sceneErrors.map(item => `Carte ${item.name ?? "inconnue"}: ${item.status}`),
+    ...(error ? [error instanceof Error ? error.message : String(error)] : [])
+  ];
+  return {
+    deploymentId: deployment.id,
+    claimToken: deployment.claimToken,
+    scenarioId: deployment.scenarioId,
+    packageVersion: deployment.packageVersion,
+    success: !errors.length,
+    actors: { total: result?.results?.length ?? 0, errors: actorErrors.length },
+    scenes: { total: result?.scenes?.length ?? 0, errors: sceneErrors.length },
+    journals: { imported: Boolean(result?.journal), uuid: result?.journal?.journal?.uuid ?? null },
+    errors
+  };
+}
+
+async function reportDeploymentResult(deployment, result) {
+  const response = await fetch(`${pf2MjApiUrl()}/scenario-deployments/${encodeURIComponent(deployment.id)}/result`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Accept: "application/json" },
+    body: JSON.stringify(result),
+    signal: AbortSignal.timeout(20_000)
+  });
+  if (!response.ok) throw new Error(`Résultat API HTTP ${response.status}`);
+  return response.json();
+}
+
+async function runClaimedDeployment(deployment) {
+  let result;
+  try {
+    const packageUrl = new URL(`${pf2MjApiUrl()}/scenario-deployments/${encodeURIComponent(deployment.id)}/package`);
+    packageUrl.searchParams.set("claimToken", deployment.claimToken);
+    const response = await fetch(packageUrl, { signal: AbortSignal.timeout(60_000) });
+    if (!response.ok) throw new Error(`Téléchargement du ZIP HTTP ${response.status}`);
+    const file = new File([await response.blob()], `${deployment.scenarioId}-v${deployment.packageVersion}.zip`, { type: "application/zip" });
+    const data = await loadScenarioInput(file);
+    if (data.scenario?.id !== deployment.scenarioId || Number(data.packageVersion ?? 1) !== deployment.packageVersion) {
+      throw new Error("Le ZIP reçu ne correspond pas à la demande de déploiement.");
+    }
+    const imported = await runScenarioImport(data);
+    showSummary(data, imported);
+    result = deploymentResult(deployment, data, imported);
+  } catch (error) {
+    result = deploymentResult(deployment, null, null, error);
+    console.error("PF2e Val Toolkit | Échec du déploiement piloté", error);
+  }
+  try {
+    await reportDeploymentResult(deployment, result);
+    if (result.success) ui.notifications.info(`Scénario ${deployment.scenarioId} synchronisé avec Foundry.`);
+    else ui.notifications.error(`Le déploiement de ${deployment.scenarioId} est incomplet.`);
+  } catch (error) {
+    console.warn("PF2e Val Toolkit | Résultat de déploiement non transmis", error);
+  }
+}
+
+function startDeploymentPoller() {
+  let running = false;
+  const poll = async () => {
+    if (running || !game.user.isGM) return;
+    running = true;
+    try {
+      const deployment = await fetchDeploymentClaim();
+      if (deployment?.id && deployment?.claimToken) await runClaimedDeployment(deployment);
+    } catch (error) {
+      // API down is normal while Foundry stays usable; avoid noisy UI alerts.
+      console.debug("PF2e Val Toolkit | File de déploiement indisponible", error);
+    } finally { running = false; }
+  };
+  void poll();
+  window.setInterval(() => { void poll(); }, 30_000);
 }
 
 function showSummary(data, result) {
@@ -321,4 +411,5 @@ async function importScenario() {
 export function initScenarioImporter() {
   game.pf2eValToolkit = game.pf2eValToolkit ?? {};
   game.pf2eValToolkit.importScenario = importScenario;
+  startDeploymentPoller();
 }

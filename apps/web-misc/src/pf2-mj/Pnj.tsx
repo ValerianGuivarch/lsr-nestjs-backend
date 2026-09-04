@@ -116,7 +116,7 @@ async function imageAsPng(url:string){
   }finally{URL.revokeObjectURL(objectUrl)}
 }
 
-export default function PnjPage(){
+export default function PnjPage({initialSelectedId}:{initialSelectedId?:string}){
   const [pnjs,setPnjs]=useState<Pnj[]>([]);
   const [factionRefs,setFactionRefs]=useState<{id:string;nom:string}[]>([]);
   const [lieuRefs,setLieuRefs]=useState<{id:string;nom:string}[]>([]);
@@ -147,6 +147,7 @@ export default function PnjPage(){
   };
 
   useEffect(()=>{load().catch(error=>setMessage(error instanceof Error?error.message:String(error)))},[]);
+  useEffect(()=>{if(initialSelectedId){const target=pnjs.find(item=>item.id===initialSelectedId);if(target)setSelected(target)}},[initialSelectedId,pnjs]);
   useEffect(()=>{
     if(!selected){setSelectedScenarios([]);return}
     fetch(`/apil7r/pf2-mj/pnj/${encodeURIComponent(selected.id)}/scenarios`,{cache:"no-store"})

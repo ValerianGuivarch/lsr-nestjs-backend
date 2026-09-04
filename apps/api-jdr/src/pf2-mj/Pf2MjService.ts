@@ -4,7 +4,7 @@ import { createReadStream } from 'node:fs'
 import { mkdir, readdir, readFile, rename, stat, writeFile } from 'node:fs/promises'
 import { basename, relative, resolve, sep } from 'node:path'
 import sharp from 'sharp'
-import { Pf2PersistenceService } from '../pf2-storage/Pf2PersistenceService'
+import { LibraryAsset, Pf2PersistenceService } from '../pf2-storage/Pf2PersistenceService'
 import { FoundryNpcSummary, FoundryRelayService } from '../foundry/FoundryRelayService'
 
 const referenceFiles = {
@@ -338,6 +338,26 @@ export class Pf2MjService {
     const catalogue = await this.readScanCatalogue()
     const files = await this.walkLibraryFiles(this.libraryRoot)
     return this.buildResourceInventory(catalogue, files.zips)
+  }
+
+  /** Assets already indexed by the local-library scan for one playable work. */
+  async libraryAssetsForScenario(scenarioId: string): Promise<LibraryAsset[]> {
+    return (await this.persistence.listLibraryAssets()).filter((asset) => asset.targetId === scenarioId)
+  }
+
+  /**
+   * Reads only a ZIP that was previously indexed for this exact scenario.
+   * The database never grants arbitrary filesystem access: its relative path is
+   * resolved again below the configured PF2 library root.
+   */
+  async readIndexedScenarioZip(scenarioId: string, assetId: string): Promise<{ asset: LibraryAsset; bytes: Buffer }> {
+    const asset = (await this.libraryAssetsForScenario(scenarioId)).find((candidate) => candidate.id === assetId)
+    if (!asset || asset.assetType !== 'zip' || !asset.present) throw new Error('Package ZIP indexé introuvable pour ce scénario.')
+    const target = resolve(this.libraryRoot, asset.path.replace(/^\/+/, ''))
+    if (target !== this.libraryRoot && !target.startsWith(`${this.libraryRoot}${sep}`)) throw new Error('Chemin du package refusé.')
+    const info = await stat(target)
+    if (!info.isFile() || !target.toLowerCase().endsWith('.zip')) throw new Error('Package ZIP introuvable sur le disque.')
+    return { asset, bytes: await readFile(target) }
   }
 
   async scanLibrary(apply = false): Promise<Record<string, unknown>> {

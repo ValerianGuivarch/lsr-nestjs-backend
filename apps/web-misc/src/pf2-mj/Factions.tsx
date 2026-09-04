@@ -52,7 +52,7 @@ const downloadJson=(filename:string,data:unknown)=>{
   const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download=filename;a.click();URL.revokeObjectURL(url);
 };
 
-export default function FactionsPage(){
+export default function FactionsPage({initialSelectedId}:{initialSelectedId?:string}){
   const [items,setItems]=useState<Faction[]>([]),[pnjs,setPnjs]=useState<RefItem[]>([]),[lieux,setLieux]=useState<RefItem[]>([]),
     [regions,setRegions]=useState<RefItem[]>([]),[events,setEvents]=useState<RefItem[]>([]);
   const [query,setQuery]=useState(""),[type,setType]=useState(""),[statut,setStatut]=useState(""),[parent,setParent]=useState("");
@@ -67,6 +67,7 @@ export default function FactionsPage(){
     setPnjs(p);setLieux(l);setRegions(r);setEvents(e);
   };
   useEffect(()=>{load().catch(e=>setMessage(e instanceof Error?e.message:String(e)))},[]);
+  useEffect(()=>{if(initialSelectedId){const target=items.find(item=>item.id===initialSelectedId);if(target)setSelected(target)}},[initialSelectedId,items]);
 
   const maps=useMemo(()=>({
     factions:new Map(items.map(x=>[x.id,x.nom])),pnjs:new Map(pnjs.map(x=>[x.id,x.nom])),

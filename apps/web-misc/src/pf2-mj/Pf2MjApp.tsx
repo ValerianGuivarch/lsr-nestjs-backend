@@ -55,6 +55,7 @@ import EvenementsPage from './Evenements'
 import { expandedPlaceLabels, geographyTreeOptions, loadGeographyFromApi, matchesPlaceFilter, placeDisplay } from './geography'
 
 type View = 'find' | 'library' | 'prepare' | 'documents' | 'chronology' | 'excluded' | 'settings' | 'pnj' | 'factions' | 'lieux' | 'regions' | 'evenements'
+type ReferenceView = 'pnj' | 'factions' | 'lieux' | 'regions' | 'evenements'
 type PreparationTab = 'pdf' | 'translation' | 'zip' | 'info' | 'uncertain' | 'metadata'
 type SelectedEntity = PlayableUnit | Container
 
@@ -481,16 +482,27 @@ function Stats({ active }: { active: PlayableUnit[] }) {
 
 type ScenarioPackageStatus = { scenarioId: string; packageVersion: number; status: string; filename: string; importedAt: string; updatedAt: string } | null
 type LinkedNpc = { npcId: string; nom?: string; role?: string | null; importance?: string | null }
+type ScenarioAsset = { id: string; filename: string; assetType: string; role: string | null; language: string | null; variant: string | null; present: boolean; associationStatus: string }
+type ScenarioRelations = { npcs: LinkedNpc[]; places: Array<{ targetId: string; targetKind: 'lieu' | 'region'; nom?: string; name?: string; role?: string | null }>; factions: Array<{ targetId: string; nom?: string; name?: string; role?: string | null }>; events: Array<{ targetId: string; nom?: string; name?: string; role?: string | null }> }
+type AvailableScenarioPackage = { asset: ScenarioAsset; packageVersion: number | null; scenarioName?: string; error?: string } | null
 
-function ScenarioPackagePanel({ scenarioId }: { scenarioId: string }) {
+function ScenarioPackagePanel({ scenarioId, onOpenReference }: { scenarioId: string; onOpenReference: (view: ReferenceView, id: string) => void }) {
   const [status, setStatus] = useState<ScenarioPackageStatus>(null)
-  const [npcs, setNpcs] = useState<LinkedNpc[]>([])
+  const [assets, setAssets] = useState<ScenarioAsset[]>([])
+  const [relations, setRelations] = useState<ScenarioRelations>({ npcs: [], places: [], factions: [], events: [] })
+  const [available, setAvailable] = useState<AvailableScenarioPackage>(null)
   const [message, setMessage] = useState('')
   const [busy, setBusy] = useState(false)
   const load = () => Promise.all([
     fetch(`/apil7r/pf2-mj/scenario-packages/${encodeURIComponent(scenarioId)}`, { cache: 'no-store' }).then((response) => response.ok ? response.json() : null),
-    fetch(`/apil7r/pf2-mj/scenarios/${encodeURIComponent(scenarioId)}/npcs`, { cache: 'no-store' }).then((response) => response.ok ? response.json() : [])
-  ]).then(([packageStatus, linkedNpcs]) => { setStatus(packageStatus); setNpcs(Array.isArray(linkedNpcs) ? linkedNpcs : []) }).catch(() => setMessage('État du package indisponible.'))
+    fetch(`/apil7r/pf2-mj/scenarios/${encodeURIComponent(scenarioId)}/resources`, { cache: 'no-store' }).then((response) => response.ok ? response.json() : []),
+    fetch(`/apil7r/pf2-mj/scenarios/${encodeURIComponent(scenarioId)}/relations`, { cache: 'no-store' }).then((response) => response.ok ? response.json() : { npcs: [], places: [], factions: [], events: [] }),
+    fetch(`/apil7r/pf2-mj/scenario-packages/${encodeURIComponent(scenarioId)}/available`, { cache: 'no-store' }).then((response) => response.ok ? response.json() : null)
+  ]).then(([packageStatus, scenarioAssets, scenarioRelations, availablePackage]) => {
+    setStatus(packageStatus); setAssets(Array.isArray(scenarioAssets) ? scenarioAssets : [])
+    setRelations(scenarioRelations && typeof scenarioRelations === 'object' ? scenarioRelations : { npcs: [], places: [], factions: [], events: [] })
+    setAvailable(availablePackage)
+  }).catch(() => setMessage('État du package indisponible.'))
   useEffect(() => { void load() }, [scenarioId])
   const importPackage = async (file: File | undefined) => {
     if (!file) return
@@ -506,15 +518,36 @@ function ScenarioPackagePanel({ scenarioId }: { scenarioId: string }) {
       await load()
     } catch (error) { setMessage(error instanceof Error ? error.message : 'Import impossible.') } finally { setBusy(false) }
   }
-  return <section className="detail-section scenario-package-panel"><h3>Package Foundry</h3>
-    {status ? <p><strong>v{status.packageVersion}</strong> · {status.status === 'deployed' ? 'déployé dans Foundry' : status.status === 'integrated' ? 'intégré dans l’application' : status.status} · {status.filename}</p> : <p className="missing">Aucun package intégré.</p>}
-    {npcs.length > 0 && <div className="badges">{npcs.map((npc) => <Badge key={npc.npcId}>{npc.nom || npc.npcId}{npc.role ? ` · ${npc.role}` : ''}</Badge>)}</div>}
-    <label className="package-upload"><span>{busy ? 'Import en cours…' : 'Intégrer un ZIP'}</span><input type="file" accept=".zip,application/zip" disabled={busy} onChange={(event) => { void importPackage(event.target.files?.[0]) }} /></label>
+  const integrateIndexed = async () => {
+    if (!available) return
+    setBusy(true); setMessage('')
+    try {
+      const response = await fetch(`/apil7r/pf2-mj/scenario-packages/${encodeURIComponent(scenarioId)}/integrate-library`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ assetId: available.asset.id }) })
+      const payload = await response.json().catch(() => null)
+      if (!response.ok) throw new Error(payload?.message ?? payload?.error ?? 'Intégration impossible.')
+      setMessage(payload.state === 'unchanged' ? 'Cette version est déjà intégrée.' : `Package v${payload.packageVersion} intégré.`)
+      await load()
+    } catch (error) { setMessage(error instanceof Error ? error.message : 'Intégration impossible.') } finally { setBusy(false) }
+  }
+  const assetLabel = (asset: ScenarioAsset) => asset.assetType === 'zip' ? 'Package ZIP' : asset.role === 'information' ? 'Document d’information' : asset.variant?.toLowerCase().includes('translation') ? 'Traduction' : asset.language === 'FR' ? 'PDF français' : 'PDF principal'
+  const referenceBadges = (items: Array<{ targetId?: string; npcId?: string; nom?: string; name?: string; role?: string | null; targetKind?: string }>, view: ReferenceView) => items.length ? <div className="badges relation-badges">{items.map((item) => { const id = item.targetId ?? item.npcId; const targetView: ReferenceView = item.targetKind === 'region' ? 'regions' : view; return <button key={id} onClick={() => { if (id) onOpenReference(targetView, id) }}>{item.nom || item.name || id}{item.role ? ` · ${item.role}` : ''}</button> })}</div> : <p className="missing">Aucun lien renseigné.</p>
+  const currentStatus = !status ? (available ? 'available' : '—') : available?.packageVersion !== null && available?.packageVersion !== undefined && available.packageVersion > status.packageVersion ? 'obsolete' : status.status
+  return <>
+    <section className="detail-section scenario-resources"><h3>Ressources associées</h3>
+      {assets.length ? <div className="resource-list">{assets.map((asset) => <div key={asset.id} className={asset.present ? '' : 'missing'}><small>{assetLabel(asset)}{asset.language ? ` · ${asset.language}` : ''}</small><strong>{asset.filename}</strong><em>{asset.present ? 'disponible' : 'absent'} · {asset.associationStatus === 'confirmed' ? 'association confirmée' : asset.associationStatus}</em></div>)}</div> : <p className="missing">Aucune ressource indexée pour ce scénario.</p>}
+    </section>
+    <section className="detail-section scenario-package-panel"><h3>Package Foundry</h3>
+      {available ? <div className="package-status"><small>PACKAGE ZIP DISPONIBLE</small><strong>{available.packageVersion === null ? 'Version illisible' : `v${available.packageVersion}`} · {available.asset.filename}</strong><em>{available.error || 'disponible dans la bibliothèque'}</em></div> : <p className="missing">Aucun ZIP associé et présent dans la bibliothèque.</p>}
+      {status ? <div className="package-status"><small>VERSION INTÉGRÉE DANS L’APPLICATION</small><strong>v{status.packageVersion} · {status.filename}</strong><em>statut : {currentStatus}</em></div> : <div className="package-status"><small>VERSION INTÉGRÉE DANS L’APPLICATION</small><strong>Aucune</strong><em>statut : {currentStatus}</em></div>}
+      {available && available.packageVersion !== null && <button className="package-integrate" disabled={busy} onClick={() => void integrateIndexed()}>{busy ? 'Intégration…' : status ? 'Mettre à jour depuis la bibliothèque' : 'Intégrer depuis la bibliothèque'}</button>}
+      <label className="package-upload"><span>{busy ? 'Import en cours…' : 'Ou importer un ZIP manuellement'}</span><input type="file" accept=".zip,application/zip" disabled={busy} onChange={(event) => { void importPackage(event.target.files?.[0]) }} /></label>
     {message && <p className="package-message">{message}</p>}
-  </section>
+    </section>
+    <section className="detail-section scenario-relations"><h3>Relations métier</h3><div className="relation-groups"><div><small>PNJ</small>{referenceBadges(relations.npcs, 'pnj')}</div><div><small>Lieux et régions</small>{referenceBadges(relations.places, 'lieux')}</div><div><small>Factions</small>{referenceBadges(relations.factions, 'factions')}</div><div><small>Événements</small>{referenceBadges(relations.events, 'evenements')}</div></div></section>
+  </>
 }
 
-function PlayableDetail({ unit, curation, onClose, onUpdate, placeOptions }: { unit: PlayableUnit; curation: Curation; onClose: () => void; onUpdate: (id: string, field: string, value: unknown) => void; placeOptions: string[] }) {
+function PlayableDetail({ unit, curation, onClose, onUpdate, placeOptions, onOpenReference }: { unit: PlayableUnit; curation: Curation; onClose: () => void; onUpdate: (id: string, field: string, value: unknown) => void; placeOptions: string[]; onOpenReference: (view: ReferenceView, id: string) => void }) {
   const override = resolvePlayableOverride(curation, unit)
   const levels = effectiveLevels(unit, override)
   const locations = effectiveLocations(unit, override)
@@ -523,8 +556,6 @@ function PlayableDetail({ unit, curation, onClose, onUpdate, placeOptions }: { u
   const [levelsDraft, setLevelsDraft] = useState(levelLabel(levels) === 'À documenter' ? '' : levelLabel(levels))
   const [placesDraft, setPlacesDraft] = useState(unique(locations.map((location) => placeDisplay(location.id))).join(', '))
   const components = componentsOf(unit.id)
-  const targetIds = [unit.id, ...components.map((component) => component.id)]
-  const unitDocuments = currentDocuments().filter((document) => document.targetId && targetIds.includes(document.targetId))
   const ancestors = ancestorContainers(unit)
 
   return <Modal onClose={onClose}>
@@ -536,8 +567,7 @@ function PlayableDetail({ unit, curation, onClose, onUpdate, placeOptions }: { u
     {unit.gmDetails && <section className="detail-section gm-details"><h3>Détails MJ</h3><p>{unit.gmDetails}</p></section>}
     {unit.migration.issues.length > 0 && <section className="detail-section migration-warning"><h3>À revoir après migration</h3><ul>{unit.migration.issues.map((issue) => <li key={issue}>{issue}</li>)}</ul></section>}
     {components.length > 0 && <section className="detail-section"><h3>Composants de l’œuvre</h3><div className="part-list">{components.map((component) => <article key={component.id}><strong>{componentTypeLabel(component.componentType)} · {titleOf(component)}</strong><span>{component.notes}</span><Badge>{component.requiredForCore ? 'Requis' : 'Facultatif'}</Badge></article>)}</div></section>}
-    <ScenarioPackagePanel scenarioId={unit.id} />
-    <section className="detail-section"><h3>Documents</h3><div className="pdfs">{unitDocuments.length ? unitDocuments.map((document) => <a className={document.isInformationFallback ? 'info-document' : ''} key={document.id} href={documentHref(document)} target="_blank" rel="noreferrer">{document.isInformationFallback ? 'ⓘ' : '📖'} {document.filename} · {document.rawVariant}</a>) : <span className="missing">× Aucun document associé</span>}</div></section>
+    <ScenarioPackagePanel scenarioId={unit.id} onOpenReference={onOpenReference} />
     <button className={`curation-button ${isExcluded(unit, override) ? 'restore' : 'exclude'}`} onClick={() => onUpdate(unit.id, 'excluded', !isExcluded(unit, override))}>{isExcluded(unit, override) ? '↩ Réintégrer' : '× Écarter cette unité'}</button>
   </Modal>
 }
@@ -677,6 +707,7 @@ function Settings({ places, onOperation }: { places: string[]; onOperation: (ope
 export function Pf2MjApp() {
   const [view, setView] = useState<View>('find')
   const [selected, setSelected] = useState<SelectedEntity | null>(null)
+  const [selectedReference, setSelectedReference] = useState<{ view: ReferenceView; id: string } | null>(null)
   const [scan, setScan] = useState<ScanReport | null>(null)
   const [scanStatus, setScanStatus] = useState('idle')
   const [error, setError] = useState('')
@@ -791,9 +822,9 @@ export function Pf2MjApp() {
   return <main className="pf2-mj pf2-mj-v3">
     <header><button className="brand brand-button" onClick={() => setView('find')}><b>✦</b><span><strong>PATHFINDER 2</strong><small>GESTION MJ · MODÈLE V3</small></span></button><div className="header-right"><span><i />{missingTranslations} trad. manquante{missingTranslations > 1 ? 's' : ''} · {missingZips === null ? 'ZIP à inventorier' : `${missingZips} ZIP manquant${missingZips > 1 ? 's' : ''}`} · {documentCount} PDF</span><em>MJ</em></div></header>
     <div className="layout"><aside><nav>{nav.map(([id, icon, label, count]) => <button key={id} className={view === id ? 'active' : ''} onClick={() => setView(id)}><span>{icon}</span>{label}<b>{count}</b></button>)}</nav><section><p>PRINCIPES V3</p><span className="aside-rule">▶ Unité jouable = seule recherche</span><span className="aside-rule">▣ Campagne = conteneur</span><span className="aside-rule">◇ Guide/carte = ressource</span><span className="aside-rule">ⓘ Info = substitut distinct</span></section><div className="scan-note"><b>V3</b><strong>SQLite comme source</strong><p>Le catalogue est chargé depuis SQLite puis normalisé sans perte pour l’interface V3.</p></div></aside>
-      <section className="content">{!isReferenceView && <><div className="page-title"><div><small>TABLE OUVERTE · GOLARION PERSISTANT</small><h1>{headings[view][0]}</h1><p>{headings[view][1]}</p></div><button className="refresh" onClick={refresh}>{scanStatus === 'scanning' ? '↻ Détection…' : scanStatus === 'done' ? '✓ Rapport prêt' : scanStatus === 'error' ? '! Réessayer' : '↻ Scanner PDF & ZIP'}</button></div>{error && <div className="notice"><strong>Attention</strong><p>{error}</p></div>}{scan && <ScanPanel report={scan} onClose={() => setScan(null)} onApply={applyScan} />}{!['excluded', 'settings', 'documents'].includes(view) && <Stats active={active} />}{view === 'find' && <FinderView active={active} curation={curation} onOpen={setSelected} onUpdate={update} resourceVersion={resourceRevision} />}{view === 'library' && <LibraryView curation={curation} onOpen={setSelected} onOpenPlayable={setSelected} onUpdate={update} />}{view === 'prepare' && <PreparationView active={active} curation={curation} onOpen={setSelected} onUpdate={update} resourceVersion={resourceRevision} />}{view === 'documents' && <DocumentsView resourceVersion={resourceRevision} />}{view === 'chronology' && <ChronologyView units={active} onOpen={setSelected} />}{view === 'excluded' && <PlayableList units={sortPlayables(excluded, curation)} curation={curation} onOpen={setSelected} onUpdate={update} />}{view === 'settings' && <Settings places={placeOptions} onOperation={placeOperation} />}</>}{view === 'pnj' && <PnjPage />}{view === 'factions' && <FactionsPage />}{view === 'lieux' && <LieuxPage />}{view === 'regions' && <RegionsPage />}{view === 'evenements' && <EvenementsPage />}</section>
+      <section className="content">{!isReferenceView && <><div className="page-title"><div><small>TABLE OUVERTE · GOLARION PERSISTANT</small><h1>{headings[view][0]}</h1><p>{headings[view][1]}</p></div><button className="refresh" onClick={refresh}>{scanStatus === 'scanning' ? '↻ Détection…' : scanStatus === 'done' ? '✓ Rapport prêt' : scanStatus === 'error' ? '! Réessayer' : '↻ Scanner PDF & ZIP'}</button></div>{error && <div className="notice"><strong>Attention</strong><p>{error}</p></div>}{scan && <ScanPanel report={scan} onClose={() => setScan(null)} onApply={applyScan} />}{!['excluded', 'settings', 'documents'].includes(view) && <Stats active={active} />}{view === 'find' && <FinderView active={active} curation={curation} onOpen={setSelected} onUpdate={update} resourceVersion={resourceRevision} />}{view === 'library' && <LibraryView curation={curation} onOpen={setSelected} onOpenPlayable={setSelected} onUpdate={update} />}{view === 'prepare' && <PreparationView active={active} curation={curation} onOpen={setSelected} onUpdate={update} resourceVersion={resourceRevision} />}{view === 'documents' && <DocumentsView resourceVersion={resourceRevision} />}{view === 'chronology' && <ChronologyView units={active} onOpen={setSelected} />}{view === 'excluded' && <PlayableList units={sortPlayables(excluded, curation)} curation={curation} onOpen={setSelected} onUpdate={update} />}{view === 'settings' && <Settings places={placeOptions} onOperation={placeOperation} />}</>}{view === 'pnj' && <PnjPage initialSelectedId={selectedReference?.view === 'pnj' ? selectedReference.id : undefined} />}{view === 'factions' && <FactionsPage initialSelectedId={selectedReference?.view === 'factions' ? selectedReference.id : undefined} />}{view === 'lieux' && <LieuxPage initialSelectedId={selectedReference?.view === 'lieux' ? selectedReference.id : undefined} />}{view === 'regions' && <RegionsPage initialSelectedId={selectedReference?.view === 'regions' ? selectedReference.id : undefined} />}{view === 'evenements' && <EvenementsPage initialSelectedId={selectedReference?.view === 'evenements' ? selectedReference.id : undefined} />}</section>
     </div>
-    {selected?.entityKind === 'playable' && <PlayableDetail unit={selected} curation={curation} onClose={() => setSelected(null)} onUpdate={update} placeOptions={placeOptions} />}
+    {selected?.entityKind === 'playable' && <PlayableDetail unit={selected} curation={curation} onClose={() => setSelected(null)} onUpdate={update} placeOptions={placeOptions} onOpenReference={(referenceView, id) => { setSelected(null); setSelectedReference({ view: referenceView, id }); setView(referenceView) }} />}
     {selected?.entityKind === 'container' && <ContainerDetail container={selected} curation={curation} onClose={() => setSelected(null)} onOpenPlayable={(unit) => setSelected(unit)} onUpdate={update} />}
   </main>
 }

@@ -45,4 +45,11 @@ describe('ScenarioPackageService', () => {
     const service = new ScenarioPackageService(persistence)
     await expect(service.importZip(zip({ scenario: { id: 'pfs-s01-02', name: 'Test' }, actors: [], npcs: [], places: [{ key: 'x', refId: 'lieu-inconnu' }] }), 'bad.zip')).rejects.toThrow('lieu inconnu')
   })
+
+  it('inspects an indexed ZIP without importing it', () => {
+    const service = new ScenarioPackageService(persistence)
+    const info = service.inspectZip(zip({ packageVersion: 4, scenario: { id: 'pfs-s01-03', name: 'Package trouvé' }, npcs: [] }))
+    expect(info).toMatchObject({ scenarioId: 'pfs-s01-03', scenarioName: 'Package trouvé', packageVersion: 4 })
+    expect(persistence.importScenarioPackageAtomically).not.toHaveBeenCalled()
+  })
 })

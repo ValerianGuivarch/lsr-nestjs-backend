@@ -10,8 +10,10 @@ export type FoundryActorCacheEntry = { uuid: string; name: string }
 export type ScenarioNpcLink = { scenarioId: string; npcId: string; role: string | null; importance: string | null; sourcePage: string | null; notes: string | null }
 export type ScenarioRelationTargetKind = 'lieu' | 'region' | 'faction' | 'evenement'
 export type ScenarioRelation = { scenarioId: string; targetKind: ScenarioRelationTargetKind; targetId: string; role: string | null; importance: string | null; sourcePage: string | null; notes: string | null }
-export type ScenarioPackageImport = { records: Array<{ kind: Pf2RecordKind; item: Record<string, unknown> }>; npcLinks: ScenarioNpcLink[]; relations: ScenarioRelation[]; replaceRelationKinds: ScenarioRelationTargetKind[]; package: Omit<ScenarioPackage, 'importedAt' | 'updatedAt'> }
-export type ScenarioPackage = { scenarioId: string; packageVersion: number; status: 'available' | 'integrated' | 'deployed' | 'obsolete'; filename: string; manifest: Record<string, unknown>; importedAt: string; updatedAt: string }
+export type ScenarioPackageImport = { records: Array<{ kind: Pf2RecordKind; item: Record<string, unknown> }>; npcLinks: ScenarioNpcLink[]; relations: ScenarioRelation[]; replaceRelationKinds: ScenarioRelationTargetKind[]; package: Omit<ScenarioPackage, 'importedAt' | 'updatedAt' | 'deployedVersion' | 'deployedAt'> }
+export type ScenarioPackage = { scenarioId: string; packageVersion: number; status: 'available' | 'integrated' | 'deployed' | 'obsolete'; filename: string; manifest: Record<string, unknown>; deployedVersion: number | null; deployedAt: string | null; importedAt: string; updatedAt: string }
+export type ScenarioDeploymentStatus = 'pending' | 'claimed' | 'success' | 'failed'
+export type ScenarioDeployment = { id: string; scenarioId: string; packageVersion: number; status: ScenarioDeploymentStatus; worldId: string | null; claimedBy: string | null; claimToken: string | null; leaseExpiresAt: string | null; error: string | null; result: Record<string, unknown> | null; createdAt: string; updatedAt: string; completedAt: string | null }
 
 export type CatalogueEntityKind = 'meta' | 'section' | 'collection' | 'entry' | 'arc' | 'thread'
 export type CatalogueEntity = { entityKind: CatalogueEntityKind; id: string; parentId: string | null; subtype: string | null; name: string | null; sortOrder: number; payload: Record<string, unknown> }
@@ -139,7 +141,7 @@ export class Pf2PersistenceService implements OnModuleInit {
         await manager.query(`DELETE FROM pf2_scenario_relation WHERE scenario_id = ? AND target_kind IN (${input.replaceRelationKinds.map(() => '?').join(',')})`, [input.package.scenarioId, ...input.replaceRelationKinds])
         for (const relation of input.relations) await manager.query('INSERT INTO pf2_scenario_relation (scenario_id, target_kind, target_id, role, importance, source_page, notes, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)', [relation.scenarioId, relation.targetKind, relation.targetId, relation.role, relation.importance, relation.sourcePage, relation.notes])
       }
-      await manager.query('INSERT INTO pf2_scenario_package (scenario_id, package_version, status, filename, manifest, imported_at, updated_at) VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP) ON CONFLICT(scenario_id) DO UPDATE SET package_version = excluded.package_version, status = excluded.status, filename = excluded.filename, manifest = excluded.manifest, updated_at = CURRENT_TIMESTAMP', [input.package.scenarioId, input.package.packageVersion, input.package.status, input.package.filename, JSON.stringify(input.package.manifest)])
+      await manager.query("INSERT INTO pf2_scenario_package (scenario_id, package_version, status, filename, manifest, imported_at, updated_at) VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP) ON CONFLICT(scenario_id) DO UPDATE SET package_version = excluded.package_version, status = CASE WHEN pf2_scenario_package.deployed_version IS NOT NULL AND pf2_scenario_package.deployed_version <> excluded.package_version THEN 'obsolete' ELSE excluded.status END, filename = excluded.filename, manifest = excluded.manifest, updated_at = CURRENT_TIMESTAMP", [input.package.scenarioId, input.package.packageVersion, input.package.status, input.package.filename, JSON.stringify(input.package.manifest)])
     })
   }
 
@@ -149,15 +151,59 @@ export class Pf2PersistenceService implements OnModuleInit {
 
   async saveScenarioPackage(input: Omit<ScenarioPackage, 'importedAt' | 'updatedAt'>): Promise<void> {
     await this.dataSource.query(
-      'INSERT INTO pf2_scenario_package (scenario_id, package_version, status, filename, manifest, imported_at, updated_at) VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP) ON CONFLICT(scenario_id) DO UPDATE SET package_version = excluded.package_version, status = excluded.status, filename = excluded.filename, manifest = excluded.manifest, updated_at = CURRENT_TIMESTAMP',
-      [input.scenarioId, input.packageVersion, input.status, input.filename, JSON.stringify(input.manifest)]
+      'INSERT INTO pf2_scenario_package (scenario_id, package_version, status, filename, manifest, deployed_version, deployed_at, imported_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP) ON CONFLICT(scenario_id) DO UPDATE SET package_version = excluded.package_version, status = excluded.status, filename = excluded.filename, manifest = excluded.manifest, deployed_version = excluded.deployed_version, deployed_at = excluded.deployed_at, updated_at = CURRENT_TIMESTAMP',
+      [input.scenarioId, input.packageVersion, input.status, input.filename, JSON.stringify(input.manifest), input.deployedVersion, input.deployedAt]
     )
   }
 
   async getScenarioPackage(scenarioId: string): Promise<ScenarioPackage | null> {
-    const rows = await this.dataSource.query('SELECT scenario_id, package_version, status, filename, manifest, imported_at, updated_at FROM pf2_scenario_package WHERE scenario_id = ?', [scenarioId]) as Array<{ scenario_id: string; package_version: number; status: ScenarioPackage['status']; filename: string; manifest: string; imported_at: string; updated_at: string }>
+    const rows = await this.dataSource.query('SELECT scenario_id, package_version, status, filename, manifest, deployed_version, deployed_at, imported_at, updated_at FROM pf2_scenario_package WHERE scenario_id = ?', [scenarioId]) as Array<{ scenario_id: string; package_version: number; status: ScenarioPackage['status']; filename: string; manifest: string; deployed_version: number | null; deployed_at: string | null; imported_at: string; updated_at: string }>
     const row = rows[0]
-    return row ? { scenarioId: row.scenario_id, packageVersion: row.package_version, status: row.status, filename: row.filename, manifest: this.object(JSON.parse(row.manifest)), importedAt: row.imported_at, updatedAt: row.updated_at } : null
+    return row ? { scenarioId: row.scenario_id, packageVersion: row.package_version, status: row.status, filename: row.filename, manifest: this.object(JSON.parse(row.manifest)), deployedVersion: row.deployed_version === null ? null : Number(row.deployed_version), deployedAt: row.deployed_at, importedAt: row.imported_at, updatedAt: row.updated_at } : null
+  }
+
+  async enqueueScenarioDeployment(scenarioId: string, packageVersion: number): Promise<ScenarioDeployment> {
+    return this.dataSource.transaction(async (manager) => {
+      const rows = await manager.query('SELECT * FROM pf2_scenario_deployment WHERE scenario_id = ? AND package_version = ?', [scenarioId, packageVersion]) as Array<Record<string, unknown>>
+      const existing = rows[0]
+      if (existing && String(existing.status) !== 'failed') return this.deployment(existing)
+      if (existing) {
+        await manager.query("UPDATE pf2_scenario_deployment SET status = 'pending', world_id = NULL, claimed_by = NULL, claim_token = NULL, lease_expires_at = NULL, error = NULL, result = NULL, completed_at = NULL, updated_at = CURRENT_TIMESTAMP WHERE id = ?", [existing.id])
+        return this.deployment((await manager.query('SELECT * FROM pf2_scenario_deployment WHERE id = ?', [existing.id]) as Array<Record<string, unknown>>)[0])
+      }
+      const id = randomUUID()
+      await manager.query("INSERT INTO pf2_scenario_deployment (id, scenario_id, package_version, status, created_at, updated_at) VALUES (?, ?, ?, 'pending', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)", [id, scenarioId, packageVersion])
+      return this.deployment((await manager.query('SELECT * FROM pf2_scenario_deployment WHERE id = ?', [id]) as Array<Record<string, unknown>>)[0])
+    })
+  }
+
+  async claimScenarioDeployment(worldId: string, claimedBy: string, leaseMs = 120_000): Promise<ScenarioDeployment | null> {
+    const now = new Date().toISOString()
+    await this.dataSource.query("UPDATE pf2_scenario_deployment SET status = 'pending', world_id = NULL, claimed_by = NULL, claim_token = NULL, lease_expires_at = NULL, updated_at = CURRENT_TIMESTAMP WHERE status = 'claimed' AND lease_expires_at IS NOT NULL AND lease_expires_at <= ?", [now])
+    const token = randomUUID()
+    const leaseExpiresAt = new Date(Date.now() + leaseMs).toISOString()
+    // One UPDATE selects and claims the oldest pending row. The status guard
+    // makes this safe when two GM clients poll the same SQLite database.
+    await this.dataSource.query("UPDATE pf2_scenario_deployment SET status = 'claimed', world_id = ?, claimed_by = ?, claim_token = ?, lease_expires_at = ?, updated_at = CURRENT_TIMESTAMP WHERE id = (SELECT id FROM pf2_scenario_deployment WHERE status = 'pending' ORDER BY created_at, id LIMIT 1) AND status = 'pending'", [worldId, claimedBy, token, leaseExpiresAt])
+    const rows = await this.dataSource.query('SELECT * FROM pf2_scenario_deployment WHERE claim_token = ?', [token]) as Array<Record<string, unknown>>
+    return rows[0] ? this.deployment(rows[0]) : null
+  }
+
+  async getScenarioDeployment(id: string): Promise<ScenarioDeployment | null> {
+    const rows = await this.dataSource.query('SELECT * FROM pf2_scenario_deployment WHERE id = ?', [id]) as Array<Record<string, unknown>>
+    return rows[0] ? this.deployment(rows[0]) : null
+  }
+
+  async finishScenarioDeployment(id: string, claimToken: string, result: Record<string, unknown>): Promise<ScenarioDeployment> {
+    return this.dataSource.transaction(async (manager) => {
+      const row = (await manager.query('SELECT * FROM pf2_scenario_deployment WHERE id = ?', [id]) as Array<Record<string, unknown>>)[0]
+      if (!row || String(row.status) !== 'claimed' || String(row.claim_token) !== claimToken) throw new Error('Demande de déploiement introuvable ou lease expiré.')
+      const success = result.success === true
+      const error = success ? null : this.deploymentError(result)
+      await manager.query("UPDATE pf2_scenario_deployment SET status = ?, error = ?, result = ?, completed_at = CURRENT_TIMESTAMP, lease_expires_at = NULL, updated_at = CURRENT_TIMESTAMP WHERE id = ?", [success ? 'success' : 'failed', error, JSON.stringify(result), id])
+      if (success) await manager.query("UPDATE pf2_scenario_package SET deployed_version = ?, deployed_at = CURRENT_TIMESTAMP, status = CASE WHEN package_version = ? THEN 'deployed' ELSE 'obsolete' END, updated_at = CURRENT_TIMESTAMP WHERE scenario_id = ?", [Number(row.package_version), Number(row.package_version), String(row.scenario_id)])
+      return this.deployment((await manager.query('SELECT * FROM pf2_scenario_deployment WHERE id = ?', [id]) as Array<Record<string, unknown>>)[0])
+    })
   }
 
   async catalogueEntityCount(): Promise<number> {
@@ -413,6 +459,13 @@ export class Pf2PersistenceService implements OnModuleInit {
       await manager.query("CREATE TABLE IF NOT EXISTS pf2_scenario_relation (scenario_id TEXT NOT NULL, target_kind TEXT NOT NULL CHECK (target_kind IN ('lieu','region','faction','evenement')), target_id TEXT NOT NULL, role TEXT, importance TEXT, source_page TEXT, notes TEXT, created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP, updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (scenario_id, target_kind, target_id))")
       await manager.query('CREATE INDEX IF NOT EXISTS idx_pf2_scenario_relation_target ON pf2_scenario_relation (target_kind, target_id)')
     })
+    await this.applyMigration('010-scenario-deployment-queue', async (manager) => {
+      const columns = await manager.query('PRAGMA table_info(pf2_scenario_package)') as Array<{ name: string }>
+      if (!columns.some((column) => column.name === 'deployed_version')) await manager.query('ALTER TABLE pf2_scenario_package ADD COLUMN deployed_version INTEGER')
+      if (!columns.some((column) => column.name === 'deployed_at')) await manager.query('ALTER TABLE pf2_scenario_package ADD COLUMN deployed_at TEXT')
+      await manager.query("CREATE TABLE IF NOT EXISTS pf2_scenario_deployment (id TEXT PRIMARY KEY, scenario_id TEXT NOT NULL, package_version INTEGER NOT NULL, status TEXT NOT NULL CHECK (status IN ('pending','claimed','success','failed')), world_id TEXT, claimed_by TEXT, claim_token TEXT, lease_expires_at TEXT, error TEXT, result TEXT, created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP, updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP, completed_at TEXT, UNIQUE (scenario_id, package_version))")
+      await manager.query("CREATE INDEX IF NOT EXISTS idx_pf2_scenario_deployment_claim ON pf2_scenario_deployment (status, lease_expires_at, created_at)")
+    })
   }
 
   private async createSessionTable(manager: EntityManager): Promise<void> {
@@ -605,6 +658,19 @@ export class Pf2PersistenceService implements OnModuleInit {
   private participants(value: unknown, fallback: string[]): string[] { const items = value === undefined ? fallback : value; if (!Array.isArray(items) || items.some((item) => typeof item !== 'string' || !item.trim())) throw new Error('participants doit être une liste d’identifiants de PJ.') ; return [...new Set(items.map((item) => item.trim()))] }
   private playerId(value: unknown, fallback: string | null): string | null { const id = value === undefined ? fallback : value; if (id === null || id === '') return null; if (typeof id !== 'string' || !id.trim()) throw new Error('Identifiant de PJ invalide.'); return id.trim() }
   private experience(value: unknown, label: string, fallback: number): number { const xp = value === undefined ? fallback : value; if (typeof xp !== 'number' || !Number.isInteger(xp) || xp < 0) throw new Error(`${label} doit être un entier positif ou nul.`); return xp }
+  private deployment(row: Record<string, unknown>): ScenarioDeployment {
+    return {
+      id: String(row.id), scenarioId: String(row.scenario_id), packageVersion: Number(row.package_version), status: String(row.status) as ScenarioDeploymentStatus,
+      worldId: typeof row.world_id === 'string' ? row.world_id : null, claimedBy: typeof row.claimed_by === 'string' ? row.claimed_by : null, claimToken: typeof row.claim_token === 'string' ? row.claim_token : null,
+      leaseExpiresAt: typeof row.lease_expires_at === 'string' ? row.lease_expires_at : null, error: typeof row.error === 'string' ? row.error : null,
+      result: row.result === null || row.result === undefined ? null : this.objectJson(row.result), createdAt: String(row.created_at), updatedAt: String(row.updated_at), completedAt: typeof row.completed_at === 'string' ? row.completed_at : null
+    }
+  }
+  private deploymentError(result: Record<string, unknown>): string {
+    if (typeof result.error === 'string' && result.error.trim()) return result.error.trim()
+    if (Array.isArray(result.errors) && result.errors.length) return result.errors.map(String).join(' | ')
+    return 'Le Toolkit Foundry a signalé un échec de déploiement.'
+  }
   private legacyMetadata(value: unknown): Record<string, unknown> { if (typeof value !== 'string') return {}; try { return this.object(JSON.parse(value)) } catch { return {} } }
   private slug(value: string): string { return value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'pnj' }
   private object(value: unknown): Record<string, unknown> { return this.isObject(value) ? value : {} }

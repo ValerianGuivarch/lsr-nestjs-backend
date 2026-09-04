@@ -98,7 +98,8 @@ describe('Pf2PersistenceService', () => {
       { id: '006-session-discord-message' },
       { id: '007-scenario-packages-and-npcs' },
       { id: '008-catalogue-and-library-assets' },
-      { id: '009-scenario-business-relations' }
+      { id: '009-scenario-business-relations' },
+      { id: '010-scenario-deployment-queue' }
     ])
 
     await currentDataSource().destroy()
@@ -115,7 +116,8 @@ describe('Pf2PersistenceService', () => {
       { id: '006-session-discord-message' },
       { id: '007-scenario-packages-and-npcs' },
       { id: '008-catalogue-and-library-assets' },
-      { id: '009-scenario-business-relations' }
+      { id: '009-scenario-business-relations' },
+      { id: '010-scenario-deployment-queue' }
     ])
   })
 
@@ -177,6 +179,36 @@ describe('Pf2PersistenceService', () => {
     await expect(service.listScenarioRelations('pfs-s01-01')).resolves.toHaveLength(1)
     await service.importScenarioPackageAtomically({ records: [], npcLinks: [], relations: [], replaceRelationKinds: ['lieu', 'region'], package: packageInput })
     await expect(service.listScenarioRelations('pfs-s01-01')).resolves.toEqual([])
+  })
+
+  it('claims one scenario deployment atomically and records only a successful deployed version', async () => {
+    const service = await open()
+    const packageInput = { scenarioId: 'pfs-s01-09', packageVersion: 3, status: 'integrated' as const, filename: 'pfs-s01-09.zip', manifest: {} }
+    await service.importScenarioPackageAtomically({ records: [], npcLinks: [], relations: [], replaceRelationKinds: [], package: packageInput })
+    const queued = await service.enqueueScenarioDeployment('pfs-s01-09', 3)
+    expect(queued.status).toBe('pending')
+    const [first, second] = await Promise.all([service.claimScenarioDeployment('world-a', 'gm-a'), service.claimScenarioDeployment('world-b', 'gm-b')])
+    const claimed = first ?? second
+    expect(claimed).toEqual(expect.objectContaining({ id: queued.id, status: 'claimed', scenarioId: 'pfs-s01-09', packageVersion: 3 }))
+    expect(first && second).toBeNull()
+    await service.finishScenarioDeployment(queued.id, claimed!.claimToken!, { deploymentId: queued.id, scenarioId: 'pfs-s01-09', packageVersion: 3, success: true, actors: {}, scenes: {}, journals: {}, errors: [] })
+    await expect(service.getScenarioPackage('pfs-s01-09')).resolves.toEqual(expect.objectContaining({ status: 'deployed', deployedVersion: 3 }))
+    const repeat = await service.enqueueScenarioDeployment('pfs-s01-09', 3)
+    expect(repeat).toEqual(expect.objectContaining({ id: queued.id, status: 'success' }))
+  })
+
+  it('reclaims an expired lease and keeps the prior package state after a failure', async () => {
+    const service = await open()
+    const packageInput = { scenarioId: 'pfs-s01-10', packageVersion: 2, status: 'integrated' as const, filename: 'pfs-s01-10.zip', manifest: {} }
+    await service.importScenarioPackageAtomically({ records: [], npcLinks: [], relations: [], replaceRelationKinds: [], package: packageInput })
+    const queued = await service.enqueueScenarioDeployment('pfs-s01-10', 2)
+    const abandoned = await service.claimScenarioDeployment('world-a', 'gm-a', -1)
+    const reclaimed = await service.claimScenarioDeployment('world-b', 'gm-b')
+    expect(reclaimed).toEqual(expect.objectContaining({ id: queued.id, status: 'claimed', claimedBy: 'gm-b' }))
+    expect(reclaimed!.claimToken).not.toBe(abandoned!.claimToken)
+    await service.finishScenarioDeployment(queued.id, reclaimed!.claimToken!, { deploymentId: queued.id, scenarioId: 'pfs-s01-10', packageVersion: 2, success: false, actors: {}, scenes: {}, journals: {}, errors: ['Foundry hors ligne'] })
+    await expect(service.getScenarioPackage('pfs-s01-10')).resolves.toEqual(expect.objectContaining({ status: 'integrated', deployedVersion: null }))
+    await expect(service.getScenarioDeployment(queued.id)).resolves.toEqual(expect.objectContaining({ status: 'failed', error: 'Foundry hors ligne' }))
   })
 
   it('upgrades the previously generated generic session schema without losing its row', async () => {

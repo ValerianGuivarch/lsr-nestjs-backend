@@ -33,6 +33,9 @@ export class Pf2MjController {
   @Get('scenarios/:id/relations')
   relationsForScenario(@Param('id') id: string): Promise<Record<string, unknown[]>> { return this.scenarioPackages.relationsForScenario(id) }
 
+  @Get('scenarios/:id/resources')
+  resourcesForScenario(@Param('id') id: string): Promise<unknown[]> { return this.service.libraryAssetsForScenario(id) }
+
   @Get('scenarios/:id/export')
   scenarioExport(@Param('id') id: string): Promise<Record<string, unknown>> { return this.scenarioPackages.scenarioExport(id) }
 
@@ -41,6 +44,63 @@ export class Pf2MjController {
 
   @Get('scenario-packages/:id')
   packageForScenario(@Param('id') id: string): Promise<unknown> { return this.scenarioPackages.packageForScenario(id) }
+
+  @Get('scenario-packages/:id/available')
+  async availablePackageForScenario(@Param('id') id: string): Promise<unknown> {
+    const assets = await this.service.libraryAssetsForScenario(id)
+    const asset = assets.find((candidate) => candidate.assetType === 'zip' && candidate.present)
+    if (!asset) return null
+    try {
+      const indexed = await this.service.readIndexedScenarioZip(id, asset.id)
+      const packageInfo = this.scenarioPackages.inspectZip(indexed.bytes)
+      if (packageInfo.scenarioId !== id) throw new Error(`Le package indexé vise « ${packageInfo.scenarioId} », pas ce scénario.`)
+      return { asset, packageVersion: packageInfo.packageVersion, scenarioName: packageInfo.scenarioName }
+    } catch (error) {
+      return { asset, packageVersion: null, error: error instanceof Error ? error.message : 'Package illisible.' }
+    }
+  }
+
+  @Post('scenario-packages/:id/integrate-library')
+  async integrateIndexedScenarioPackage(@Param('id') id: string, @Body() body: { assetId?: unknown } = {}): Promise<unknown> {
+    try {
+      if (typeof body.assetId !== 'string' || !body.assetId.trim()) throw new Error('assetId du ZIP indexé requis.')
+      const indexed = await this.service.readIndexedScenarioZip(id, body.assetId.trim())
+      const packageInfo = this.scenarioPackages.inspectZip(indexed.bytes)
+      if (packageInfo.scenarioId !== id) throw new Error(`Le package indexé vise « ${packageInfo.scenarioId} », pas ce scénario.`)
+      return await this.scenarioPackages.importZip(indexed.bytes, indexed.asset.filename)
+    } catch (error) {
+      throw new HttpException(error instanceof Error ? error.message : 'Intégration du package impossible.', HttpStatus.BAD_REQUEST)
+    }
+  }
+
+  @Post('scenario-packages/:id/deployments')
+  async requestScenarioDeployment(@Param('id') id: string): Promise<unknown> {
+    try { return await this.scenarioPackages.requestDeployment(id) }
+    catch (error) { throw new HttpException(error instanceof Error ? error.message : 'Création de la demande de déploiement impossible.', HttpStatus.BAD_REQUEST) }
+  }
+
+  @Get('scenario-deployments/claim')
+  async claimScenarioDeployment(@Query('worldId') worldId: string | undefined, @Query('clientId') clientId: string | undefined): Promise<unknown> {
+    try { return await this.scenarioPackages.claimDeployment(worldId, clientId) }
+    catch (error) { throw new HttpException(error instanceof Error ? error.message : 'Claim de déploiement impossible.', HttpStatus.BAD_REQUEST) }
+  }
+
+  @Get('scenario-deployments/:id/package')
+  async scenarioDeploymentPackage(@Param('id') id: string, @Query('claimToken') claimToken: string | undefined, @Res() reply: FastifyReply): Promise<void> {
+    try {
+      const packageZip = await this.scenarioPackages.deploymentZip(id, claimToken)
+      reply.header('Content-Type', 'application/zip')
+      reply.header('Content-Length', String(packageZip.bytes.byteLength))
+      reply.header('Content-Disposition', `attachment; filename*=UTF-8''${encodeURIComponent(packageZip.filename)}`)
+      await reply.send(packageZip.bytes)
+    } catch (error) { throw new HttpException(error instanceof Error ? error.message : 'ZIP de déploiement introuvable.', HttpStatus.BAD_REQUEST) }
+  }
+
+  @Post('scenario-deployments/:id/result')
+  async finishScenarioDeployment(@Param('id') id: string, @Body() body: unknown): Promise<unknown> {
+    try { return await this.scenarioPackages.finishDeployment(id, body) }
+    catch (error) { throw new HttpException(error instanceof Error ? error.message : 'Résultat de déploiement invalide.', HttpStatus.BAD_REQUEST) }
+  }
 
   @Post('scenario-packages/:id/deployed')
   async markScenarioPackageDeployed(@Param('id') id: string, @Body() body: unknown): Promise<unknown> {

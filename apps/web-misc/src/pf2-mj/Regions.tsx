@@ -26,7 +26,7 @@ const parseJson=(v:string)=>{try{return v.trim()?JSON.parse(v):[]}catch{return[]
 function isRegion(v:unknown):v is Region{if(!v||typeof v!=="object")return false;const x=v as Partial<Region>;return typeof x.nom==="string"&&typeof x.description==="string"&&Array.isArray(x.factions)&&Array.isArray(x.tags)&&typeof x.image==="string"}
 const downloadJson=(filename:string,data:unknown)=>{const blob=new Blob([JSON.stringify(data,null,2)+"\n"],{type:"application/json"});const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download=filename;a.click();URL.revokeObjectURL(url)};
 
-export default function RegionsPage(){
+export default function RegionsPage({initialSelectedId}:{initialSelectedId?:string}){
   const [items,setItems]=useState<Region[]>([]),[pnjs,setPnjs]=useState<RefItem[]>([]),[factions,setFactions]=useState<RefItem[]>([]),[lieux,setLieux]=useState<RefItem[]>([]),[events,setEvents]=useState<RefItem[]>([]);
   const [query,setQuery]=useState(""),[type,setType]=useState(""),[statut,setStatut]=useState(""),[parent,setParent]=useState("");
   const [selected,setSelected]=useState<Region|null>(null),[showAdd,setShowAdd]=useState(false),[draft,setDraft]=useState<Draft>(emptyDraft),[busy,setBusy]=useState(false),[message,setMessage]=useState("");
@@ -34,6 +34,7 @@ export default function RegionsPage(){
   const load=async()=>{const r=await fetch("/apil7r/pf2-mj/regions",{cache:"no-store"});if(!r.ok)throw new Error("Impossible de charger les régions.");const p=await r.json();setItems(Array.isArray(p)?p:p.items??[]);
     const [a,b,c,d]=await Promise.all([get("/apil7r/pf2-mj/pnj"),get("/apil7r/pf2-mj/factions"),get("/apil7r/pf2-mj/lieux"),get("/apil7r/pf2-mj/evenements")]);setPnjs(a);setFactions(b);setLieux(c);setEvents(d)};
   useEffect(()=>{load().catch(e=>setMessage(e instanceof Error?e.message:String(e)))},[]);
+  useEffect(()=>{if(initialSelectedId){const target=items.find(item=>item.id===initialSelectedId);if(target)setSelected(target)}},[initialSelectedId,items]);
   const maps=useMemo(()=>({regions:new Map(items.map(x=>[x.id,x.nom])),pnjs:new Map(pnjs.map(x=>[x.id,x.nom])),factions:new Map(factions.map(x=>[x.id,x.nom])),lieux:new Map(lieux.map(x=>[x.id,x.nom])),events:new Map(events.map(x=>[x.id,x.nom]))}),[items,pnjs,factions,lieux,events]);
   const name=(k:keyof typeof maps,id?:string|null)=>id?(maps[k].get(id)??id):"—";
   const types=useMemo(()=>unique(items.map(x=>x.type)),[items]),statuts=useMemo(()=>unique(items.map(x=>x.statut)),[items]);
