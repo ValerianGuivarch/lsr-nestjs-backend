@@ -38,6 +38,14 @@ export type ResourceBundleInventory = {
   bundles: ResourceBundleRecord[]
 }
 
+export type ScenarioLibraryAsset = LibraryAsset & {
+  /** The asset remains attached to this catalogue record; it is not copied to its parent. */
+  resourceTargetId: string
+  resourceScope: 'direct' | 'component'
+  resourceTargetLabel: string | null
+  libraryCategory: string | null
+}
+
 type ScanTarget = {
   id: string
   kind: 'container' | 'playable' | 'component'
@@ -340,9 +348,28 @@ export class Pf2MjService {
     return this.buildResourceInventory(catalogue, files.zips)
   }
 
-  /** Assets already indexed by the local-library scan for one playable work. */
-  async libraryAssetsForScenario(scenarioId: string): Promise<LibraryAsset[]> {
-    return (await this.persistence.listLibraryAssets()).filter((asset) => asset.targetId === scenarioId)
+  /**
+   * Assets indexed for an oeuvre and its catalogue-owned components.
+   *
+   * A PDF stays linked to the volume/guide it describes in `pf2_library_asset`.
+   * This projection only makes it visible on the parent campaign/scenario sheet;
+   * it never creates a second association in SQLite.
+   */
+  async libraryAssetsForScenario(scenarioId: string): Promise<ScenarioLibraryAsset[]> {
+    const catalogue = await this.readScanCatalogue()
+    const targets = this.scenarioResourceTargets(catalogue, scenarioId)
+    return (await this.persistence.listLibraryAssets())
+      .filter((asset) => asset.targetId !== null && targets.has(asset.targetId))
+      .map((asset) => {
+        const target = targets.get(asset.targetId!)!
+        return {
+          ...asset,
+          resourceTargetId: target.id,
+          resourceScope: target.id === scenarioId ? 'direct' : 'component',
+          resourceTargetLabel: target.label,
+          libraryCategory: this.firstText(asset.metadata.libraryCategory, asset.metadata.roleHint)
+        }
+      })
   }
 
   /**
@@ -645,6 +672,66 @@ export class Pf2MjService {
 
   private async readScanCatalogue(): Promise<ScanCatalogue> {
     return await this.persistence.readCatalogueSnapshot() as ScanCatalogue
+  }
+
+  private scenarioResourceTargets(catalogue: ScanCatalogue, scenarioId: string): Map<string, { id: string; label: string | null }> {
+    const targets = new Map<string, { id: string; label: string | null }>()
+    const add = (id: unknown, label: string | null) => {
+      if (typeof id !== 'string' || !id.trim() || targets.has(id)) return false
+      targets.set(id, { id, label })
+      return true
+    }
+    const title = (value: Record<string, unknown>): string | null => {
+      const titles = this.asObject(value.titles)
+      return this.firstText(titles.fr, titles.original, value.titleFr, value.titleOriginal, value.name)
+    }
+    add(scenarioId, null)
+
+    if (Number(catalogue.schemaVersion) === 3) {
+      const records = [
+        ...(catalogue.containers ?? []).map((value) => ({ value: this.asObject(value), parentId: value.parentId })),
+        ...(catalogue.playableUnits ?? []).map((value) => ({ value: this.asObject(value), parentId: value.parentId })),
+        ...(catalogue.components ?? []).map((value) => ({ value: this.asObject(value), parentId: value.ownerId }))
+      ]
+      let changed = true
+      while (changed) {
+        changed = false
+        for (const { value, parentId } of records) {
+          if (typeof parentId === 'string' && targets.has(parentId)) changed = add(value.id, title(value)) || changed
+        }
+      }
+      return targets
+    }
+
+    const entries = (catalogue.entries ?? []).map((value) => this.asObject(value))
+    const collections = (catalogue.collections ?? []).map((value) => this.asObject(value))
+    const addParts = (parts: unknown) => {
+      if (!Array.isArray(parts)) return false
+      let changed = false
+      for (const rawPart of parts) {
+        const part = this.asObject(rawPart)
+        changed = add(part.id, this.firstText(part.titleFr, part.titleOriginal, part.name)) || changed
+        changed = addParts(part.parts) || changed
+      }
+      return changed
+    }
+    let changed = true
+    while (changed) {
+      changed = false
+      for (const entry of entries) {
+        if (!targets.has(String(entry.id ?? '')) && typeof entry.collectionId === 'string' && targets.has(entry.collectionId)) changed = add(entry.id, this.firstText(entry.titleFr, entry.titleOriginal, entry.name)) || changed
+        if (targets.has(String(entry.id ?? ''))) changed = addParts(entry.parts) || changed
+      }
+      for (const collection of collections) {
+        if (typeof collection.parentId === 'string' && targets.has(collection.parentId)) changed = add(collection.id, this.firstText(collection.titleFr, collection.titleOriginal, collection.name)) || changed
+      }
+    }
+    return targets
+  }
+
+  private firstText(...values: unknown[]): string | null {
+    const value = values.find((candidate) => typeof candidate === 'string' && candidate.trim())
+    return typeof value === 'string' ? value.trim() : null
   }
 
   private async walkLibraryFiles(directory: string): Promise<{ pdfs: string[]; zips: string[]; ignoredMetadata: number }> {

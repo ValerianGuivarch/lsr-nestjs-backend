@@ -187,6 +187,7 @@ describe('Pf2PersistenceService', () => {
     await service.importScenarioPackageAtomically({ records: [], npcLinks: [], relations: [], replaceRelationKinds: [], package: packageInput })
     const queued = await service.enqueueScenarioDeployment('pfs-s01-09', 3)
     expect(queued.status).toBe('pending')
+    await expect(service.getLatestScenarioDeployment('pfs-s01-09')).resolves.toEqual(expect.objectContaining({ id: queued.id, status: 'pending' }))
     const [first, second] = await Promise.all([service.claimScenarioDeployment('world-a', 'gm-a'), service.claimScenarioDeployment('world-b', 'gm-b')])
     const claimed = first ?? second
     expect(claimed).toEqual(expect.objectContaining({ id: queued.id, status: 'claimed', scenarioId: 'pfs-s01-09', packageVersion: 3 }))

@@ -221,6 +221,9 @@
 .resource-list em,.package-status em{font-size:10px;color:#6a726a;font-style:normal}
 .package-integrate{margin:10px 0 5px;padding:9px 12px;border:0;border-radius:5px;background:#385e42;color:white;font-weight:700;cursor:pointer}
 .package-integrate:disabled{opacity:.55;cursor:wait}
+.package-deploy{display:block;background:#35536f}
+.deployment-state{display:grid;gap:3px;margin-top:8px;padding:9px 10px;border-radius:6px;border:1px solid #cdd7dc;background:#f2f7f8;color:#35536f}
+.deployment-state strong{font-size:12px}.deployment-state em{font-size:10px;font-style:normal;color:#65747a}.deployment-state.failed{border-color:#ddb3a9;background:#fff3ef;color:#8a382c}.deployment-state.success{border-color:#b9d2bd;background:#f0f8f0;color:#35613c}
 .relation-groups{grid-template-columns:repeat(2,minmax(0,1fr));margin-top:8px}
 .relation-groups>div{padding:8px;border:1px solid #e4ded0;border-radius:5px}.relation-groups .missing{margin:5px 0 0;font-size:10px}
 .relation-badges button{border:0;border-radius:12px;padding:4px 7px;background:#e7eee5;color:#344c38;font-size:10px;cursor:pointer}

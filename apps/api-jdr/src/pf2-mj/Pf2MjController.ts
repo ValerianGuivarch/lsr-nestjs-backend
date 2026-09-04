@@ -79,6 +79,9 @@ export class Pf2MjController {
     catch (error) { throw new HttpException(error instanceof Error ? error.message : 'Création de la demande de déploiement impossible.', HttpStatus.BAD_REQUEST) }
   }
 
+  @Get('scenario-packages/:id/deployments/latest')
+  latestScenarioDeployment(@Param('id') id: string): Promise<unknown> { return this.scenarioPackages.latestDeployment(id) }
+
   @Get('scenario-deployments/claim')
   async claimScenarioDeployment(@Query('worldId') worldId: string | undefined, @Query('clientId') clientId: string | undefined): Promise<unknown> {
     try { return await this.scenarioPackages.claimDeployment(worldId, clientId) }

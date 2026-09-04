@@ -15,6 +15,7 @@ describe('Pf2MjService', () => {
       readCuration: jest.fn().mockResolvedValue({}),
       saveCuration: jest.fn(),
       readCatalogueSnapshot: jest.fn().mockResolvedValue({ schemaVersion: 2, files: [], entries: [], collections: [] }),
+      listLibraryAssets: jest.fn().mockResolvedValue([]),
       replaceCatalogueSnapshot: jest.fn(),
       replaceScannedZipAssets: jest.fn(),
       readGeographyConfig: jest.fn().mockResolvedValue({ aliases: {}, parents: {} }),
@@ -85,6 +86,61 @@ describe('Pf2MjService', () => {
   })
 
   describe('library scan V3', () => {
+    it('projects component PDF resources onto their parent campaign without duplicating associations', async () => {
+      const assets = [
+        { id: 'agents-guide', filename: 'Guide.pdf', assetType: 'pdf', targetId: 'agents-of-edgewatch-guide', targetKind: 'item', role: 'resource', language: 'FR', variant: null, completeness: 'complete', translationOf: null, associationStatus: 'confirmed', associationScore: null, evidence: [], metadata: {}, present: true, lastSeenAt: null, sortOrder: 1 },
+        { id: 'agents-volume-1', filename: 'Volume 1.pdf', assetType: 'pdf', targetId: 'agents-of-edgewatch-volume-fr-1', targetKind: 'item', role: 'core', language: 'FR', variant: null, completeness: 'complete', translationOf: null, associationStatus: 'confirmed', associationScore: null, evidence: [], metadata: {}, present: true, lastSeenAt: null, sortOrder: 2 },
+        { id: 'agents-map', filename: 'Tome 2 (map).pdf', assetType: 'pdf', targetId: 'agents-of-edgewatch-map-volume-2', targetKind: 'item', role: 'resource', language: 'EN', variant: null, completeness: 'complete', translationOf: null, associationStatus: 'confirmed', associationScore: null, evidence: [], metadata: {}, present: true, lastSeenAt: null, sortOrder: 3 },
+        { id: 'other', filename: 'Other.pdf', assetType: 'pdf', targetId: 'other-campaign-volume-1', targetKind: 'item', role: 'core', language: 'EN', variant: null, completeness: 'complete', translationOf: null, associationStatus: 'confirmed', associationScore: null, evidence: [], metadata: {}, present: true, lastSeenAt: null, sortOrder: 4 }
+      ]
+      const catalogue = {
+        schemaVersion: 2, files: [], collections: [], entries: [{
+          id: 'agents-of-edgewatch', titleFr: 'Agents d’Absalom', titleOriginal: 'Agents of Edgewatch', parts: [
+            { id: 'agents-of-edgewatch-guide', titleFr: 'Guide des joueurs' },
+            { id: 'agents-of-edgewatch-volume-fr-1', titleFr: 'Volume français 1 sur 2' },
+            { id: 'agents-of-edgewatch-map-volume-2', titleFr: 'Cartes — Tome 2' }
+          ]
+        }]
+      }
+      const { service } = serviceFor({}, pnj, {
+        readCatalogueSnapshot: jest.fn().mockResolvedValue(catalogue),
+        listLibraryAssets: jest.fn().mockResolvedValue(assets)
+      })
+
+      await expect(service.libraryAssetsForScenario('agents-of-edgewatch')).resolves.toEqual(expect.arrayContaining([
+        expect.objectContaining({ id: 'agents-guide', resourceScope: 'component', resourceTargetLabel: 'Guide des joueurs' }),
+        expect.objectContaining({ id: 'agents-volume-1', resourceScope: 'component', resourceTargetLabel: 'Volume français 1 sur 2' }),
+        expect.objectContaining({ id: 'agents-map', resourceScope: 'component', resourceTargetLabel: 'Cartes — Tome 2' })
+      ]))
+      const result = await service.libraryAssetsForScenario('agents-of-edgewatch')
+      expect(result.map((asset) => asset.id)).not.toContain('other')
+      expect(result.map((asset) => asset.targetId)).toEqual([
+        'agents-of-edgewatch-guide',
+        'agents-of-edgewatch-volume-fr-1',
+        'agents-of-edgewatch-map-volume-2'
+      ])
+    })
+
+    it('also follows V3 container, playable and component ownership chains', async () => {
+      const { service } = serviceFor({}, pnj, {
+        readCatalogueSnapshot: jest.fn().mockResolvedValue({
+          schemaVersion: 3,
+          containers: [{ id: 'campaign', parentId: null, titles: { fr: 'Campagne' } }],
+          playableUnits: [{ id: 'chapter', parentId: 'campaign', titles: { fr: 'Chapitre' } }],
+          components: [{ id: 'chapter-volume', ownerId: 'chapter', titles: { fr: 'Volume 1' } }]
+        }),
+        listLibraryAssets: jest.fn().mockResolvedValue([
+          { id: 'chapter-pdf', filename: 'Chapitre.pdf', assetType: 'pdf', targetId: 'chapter', targetKind: 'playable', role: 'core', language: 'EN', variant: null, completeness: null, translationOf: null, associationStatus: 'confirmed', associationScore: null, evidence: [], metadata: {}, present: true, lastSeenAt: null, sortOrder: 1 },
+          { id: 'volume-info', filename: 'Volume (info).pdf', assetType: 'pdf', targetId: 'chapter-volume', targetKind: 'component', role: 'information', language: 'FR', variant: null, completeness: null, translationOf: null, associationStatus: 'confirmed', associationScore: null, evidence: [], metadata: {}, present: true, lastSeenAt: null, sortOrder: 2 }
+        ])
+      })
+
+      await expect(service.libraryAssetsForScenario('campaign')).resolves.toEqual(expect.arrayContaining([
+        expect.objectContaining({ id: 'chapter-pdf', resourceScope: 'component', resourceTargetLabel: 'Chapitre' }),
+        expect.objectContaining({ id: 'volume-info', resourceScope: 'component', resourceTargetLabel: 'Volume 1' })
+      ]))
+    })
+
     it('ignores macOS AppleDouble files and reconciles renamed Unicode paths', async () => {
       const root = await mkdtemp(join(tmpdir(), 'pf2-mj-scan-reconcile-'))
       const library = join(root, 'library')

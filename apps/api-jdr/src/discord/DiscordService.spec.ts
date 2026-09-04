@@ -25,7 +25,7 @@ describe('DiscordService summary synchronization', () => {
   })
 
   function serviceWith(channel: Record<string, unknown>): DiscordService {
-    const service = new DiscordService(new DiscordCommandsService(), { listActors: jest.fn().mockResolvedValue([]) } as never)
+    const service = new DiscordService(new DiscordCommandsService({ listSessions: jest.fn(), readFoundryActorCache: jest.fn(), saveFoundryActorCache: jest.fn() } as never, { listActors: jest.fn() } as never), { listActors: jest.fn().mockResolvedValue([]) } as never)
     const guild = {
       channels: { fetch: jest.fn().mockResolvedValue(undefined), cache: { find: (predicate: (value: unknown) => boolean) => predicate(channel) ? channel : undefined } },
       members: { fetch: jest.fn().mockResolvedValue(new Collection([['member', { user: { id: 'user-1', username: 'valerian0276' } }]])) }
@@ -65,7 +65,7 @@ describe('DiscordService summary synchronization', () => {
   })
 
   it('does nothing for an empty short summary', async () => {
-    const service = new DiscordService(new DiscordCommandsService(), { listActors: jest.fn().mockResolvedValue([]) } as never)
+    const service = new DiscordService(new DiscordCommandsService({ listSessions: jest.fn(), readFoundryActorCache: jest.fn(), saveFoundryActorCache: jest.fn() } as never, { listActors: jest.fn() } as never), { listActors: jest.fn().mockResolvedValue([]) } as never)
     await expect(service.synchronizeResumeShortSummary(resume({ shortSummary: '' }))).resolves.toEqual({ status: 'skipped', reason: 'Résumé court vide.' })
   })
 })

@@ -67,6 +67,7 @@ export class ScenarioPackageService {
   async claimDeployment(worldId: unknown, clientId: unknown): Promise<ScenarioDeployment | null> {
     return this.persistence.claimScenarioDeployment(this.id(worldId, 'worldId'), this.id(clientId, 'clientId'))
   }
+  async latestDeployment(scenarioId: string): Promise<ScenarioDeployment | null> { return this.persistence.getLatestScenarioDeployment(scenarioId) }
   async deploymentZip(id: string, claimToken: unknown): Promise<{ bytes: Buffer; filename: string; deployment: ScenarioDeployment }> {
     const deployment = await this.persistence.getScenarioDeployment(this.id(id, 'deploymentId'))
     if (!deployment || deployment.status !== 'claimed' || typeof claimToken !== 'string' || claimToken !== deployment.claimToken) throw new Error('Lease de déploiement invalide ou expiré.')

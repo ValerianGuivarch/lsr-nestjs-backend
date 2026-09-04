@@ -194,6 +194,11 @@ export class Pf2PersistenceService implements OnModuleInit {
     return rows[0] ? this.deployment(rows[0]) : null
   }
 
+  async getLatestScenarioDeployment(scenarioId: string): Promise<ScenarioDeployment | null> {
+    const rows = await this.dataSource.query('SELECT * FROM pf2_scenario_deployment WHERE scenario_id = ? ORDER BY created_at DESC, id DESC LIMIT 1', [scenarioId]) as Array<Record<string, unknown>>
+    return rows[0] ? this.deployment(rows[0]) : null
+  }
+
   async finishScenarioDeployment(id: string, claimToken: string, result: Record<string, unknown>): Promise<ScenarioDeployment> {
     return this.dataSource.transaction(async (manager) => {
       const row = (await manager.query('SELECT * FROM pf2_scenario_deployment WHERE id = ?', [id]) as Array<Record<string, unknown>>)[0]

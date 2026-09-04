@@ -480,9 +480,10 @@ function Stats({ active }: { active: PlayableUnit[] }) {
   return <section className="stats stats-v3"><div><b>▶</b><p><strong>{active.length}</strong><small>UNITÉS JOUABLES</small></p></div><div><b>✓</b><p><strong>{complete}</strong><small>PDF COMPLETS</small></p></div><div><b>文</b><p><strong>{readyFr}</strong><small>PRÊTES EN FR</small></p></div><div><b>ⓘ</b><p><strong>{infoOnly}</strong><small>INFO SEULES</small></p></div><div><b>▣</b><p><strong>{zipMissing ?? '—'}</strong><small>ZIP MANQUANTS</small></p></div><div><b>!</b><p><strong>{review}</strong><small>MÉTADONNÉES À VOIR</small></p></div></section>
 }
 
-type ScenarioPackageStatus = { scenarioId: string; packageVersion: number; status: string; filename: string; importedAt: string; updatedAt: string } | null
+type ScenarioPackageStatus = { scenarioId: string; packageVersion: number; status: string; filename: string; deployedVersion: number | null; deployedAt: string | null; importedAt: string; updatedAt: string } | null
+type ScenarioDeployment = { id: string; scenarioId: string; packageVersion: number; status: 'pending' | 'claimed' | 'success' | 'failed'; error: string | null; result: Record<string, unknown> | null } | null
 type LinkedNpc = { npcId: string; nom?: string; role?: string | null; importance?: string | null }
-type ScenarioAsset = { id: string; filename: string; assetType: string; role: string | null; language: string | null; variant: string | null; present: boolean; associationStatus: string }
+type ScenarioAsset = { id: string; filename: string; assetType: string; role: string | null; language: string | null; variant: string | null; present: boolean; associationStatus: string; resourceScope?: 'direct' | 'component'; resourceTargetLabel?: string | null; libraryCategory?: string | null }
 type ScenarioRelations = { npcs: LinkedNpc[]; places: Array<{ targetId: string; targetKind: 'lieu' | 'region'; nom?: string; name?: string; role?: string | null }>; factions: Array<{ targetId: string; nom?: string; name?: string; role?: string | null }>; events: Array<{ targetId: string; nom?: string; name?: string; role?: string | null }> }
 type AvailableScenarioPackage = { asset: ScenarioAsset; packageVersion: number | null; scenarioName?: string; error?: string } | null
 
@@ -491,19 +492,37 @@ function ScenarioPackagePanel({ scenarioId, onOpenReference }: { scenarioId: str
   const [assets, setAssets] = useState<ScenarioAsset[]>([])
   const [relations, setRelations] = useState<ScenarioRelations>({ npcs: [], places: [], factions: [], events: [] })
   const [available, setAvailable] = useState<AvailableScenarioPackage>(null)
+  const [deployment, setDeployment] = useState<ScenarioDeployment>(null)
   const [message, setMessage] = useState('')
   const [busy, setBusy] = useState(false)
   const load = () => Promise.all([
     fetch(`/apil7r/pf2-mj/scenario-packages/${encodeURIComponent(scenarioId)}`, { cache: 'no-store' }).then((response) => response.ok ? response.json() : null),
     fetch(`/apil7r/pf2-mj/scenarios/${encodeURIComponent(scenarioId)}/resources`, { cache: 'no-store' }).then((response) => response.ok ? response.json() : []),
     fetch(`/apil7r/pf2-mj/scenarios/${encodeURIComponent(scenarioId)}/relations`, { cache: 'no-store' }).then((response) => response.ok ? response.json() : { npcs: [], places: [], factions: [], events: [] }),
-    fetch(`/apil7r/pf2-mj/scenario-packages/${encodeURIComponent(scenarioId)}/available`, { cache: 'no-store' }).then((response) => response.ok ? response.json() : null)
-  ]).then(([packageStatus, scenarioAssets, scenarioRelations, availablePackage]) => {
+    fetch(`/apil7r/pf2-mj/scenario-packages/${encodeURIComponent(scenarioId)}/available`, { cache: 'no-store' }).then((response) => response.ok ? response.json() : null),
+    fetch(`/apil7r/pf2-mj/scenario-packages/${encodeURIComponent(scenarioId)}/deployments/latest`, { cache: 'no-store' }).then((response) => response.ok ? response.json() : null)
+  ]).then(([packageStatus, scenarioAssets, scenarioRelations, availablePackage, latestDeployment]) => {
     setStatus(packageStatus); setAssets(Array.isArray(scenarioAssets) ? scenarioAssets : [])
     setRelations(scenarioRelations && typeof scenarioRelations === 'object' ? scenarioRelations : { npcs: [], places: [], factions: [], events: [] })
     setAvailable(availablePackage)
+    setDeployment(latestDeployment)
   }).catch(() => setMessage('État du package indisponible.'))
   useEffect(() => { void load() }, [scenarioId])
+  useEffect(() => {
+    if (!deployment || !['pending', 'claimed'].includes(deployment.status)) return
+    let stopped = false
+    const refreshDeployment = async () => {
+      try {
+        const response = await fetch(`/apil7r/pf2-mj/scenario-packages/${encodeURIComponent(scenarioId)}/deployments/latest`, { cache: 'no-store' })
+        const next = response.ok ? await response.json() : null
+        if (stopped) return
+        setDeployment(next)
+        if (next?.status === 'success' || next?.status === 'failed') await load()
+      } catch { /* Le prochain intervalle réessaiera sans masquer l’état connu. */ }
+    }
+    const timer = window.setInterval(() => { void refreshDeployment() }, 3_000)
+    return () => { stopped = true; window.clearInterval(timer) }
+  }, [scenarioId, deployment?.id, deployment?.status])
   const importPackage = async (file: File | undefined) => {
     if (!file) return
     if (!file.name.toLowerCase().endsWith('.zip')) { setMessage('Sélectionne un fichier ZIP.'); return }
@@ -529,18 +548,43 @@ function ScenarioPackagePanel({ scenarioId, onOpenReference }: { scenarioId: str
       await load()
     } catch (error) { setMessage(error instanceof Error ? error.message : 'Intégration impossible.') } finally { setBusy(false) }
   }
-  const assetLabel = (asset: ScenarioAsset) => asset.assetType === 'zip' ? 'Package ZIP' : asset.role === 'information' ? 'Document d’information' : asset.variant?.toLowerCase().includes('translation') ? 'Traduction' : asset.language === 'FR' ? 'PDF français' : 'PDF principal'
+  const requestDeployment = async () => {
+    if (!status) return
+    setBusy(true); setMessage('')
+    try {
+      const response = await fetch(`/apil7r/pf2-mj/scenario-packages/${encodeURIComponent(scenarioId)}/deployments`, { method: 'POST' })
+      const payload = await response.json().catch(() => null)
+      if (!response.ok) throw new Error(payload?.message ?? payload?.error ?? 'Création de la demande impossible.')
+      setDeployment(payload)
+      setMessage('Demande envoyée à Foundry.')
+    } catch (error) { setMessage(error instanceof Error ? error.message : 'Création de la demande impossible.') } finally { setBusy(false) }
+  }
+  const assetLabel = (asset: ScenarioAsset) => {
+    const category = asset.libraryCategory?.toLowerCase()
+    const component = asset.resourceTargetLabel?.toLowerCase() ?? ''
+    if (asset.assetType === 'zip') return 'Package ZIP'
+    if (asset.variant?.toLowerCase().includes('translation')) return 'Traduction'
+    if (asset.role === 'information' || category === 'information') return 'Document d’information'
+    if (category === 'map' || /\bcarte|\bmap\b/.test(component)) return 'Carte'
+    if (category === 'playerguide' || /guide des joueurs/.test(component)) return 'Guide joueur'
+    if (asset.resourceScope === 'component' && /volume|tome|épisode|partie/.test(component)) return 'Volume / partie'
+    return asset.language?.toUpperCase() === 'FR' ? 'PDF français' : 'PDF principal'
+  }
   const referenceBadges = (items: Array<{ targetId?: string; npcId?: string; nom?: string; name?: string; role?: string | null; targetKind?: string }>, view: ReferenceView) => items.length ? <div className="badges relation-badges">{items.map((item) => { const id = item.targetId ?? item.npcId; const targetView: ReferenceView = item.targetKind === 'region' ? 'regions' : view; return <button key={id} onClick={() => { if (id) onOpenReference(targetView, id) }}>{item.nom || item.name || id}{item.role ? ` · ${item.role}` : ''}</button> })}</div> : <p className="missing">Aucun lien renseigné.</p>
   const currentStatus = !status ? (available ? 'available' : '—') : available?.packageVersion !== null && available?.packageVersion !== undefined && available.packageVersion > status.packageVersion ? 'obsolete' : status.status
+  const deploymentActive = deployment?.status === 'pending' || deployment?.status === 'claimed'
+  const deploymentLabel = deployment?.status === 'pending' ? 'En attente de Foundry' : deployment?.status === 'claimed' ? 'En cours d’import' : deployment?.status === 'success' ? 'Synchronisé' : deployment?.status === 'failed' ? 'Échec' : null
   return <>
     <section className="detail-section scenario-resources"><h3>Ressources associées</h3>
-      {assets.length ? <div className="resource-list">{assets.map((asset) => <div key={asset.id} className={asset.present ? '' : 'missing'}><small>{assetLabel(asset)}{asset.language ? ` · ${asset.language}` : ''}</small><strong>{asset.filename}</strong><em>{asset.present ? 'disponible' : 'absent'} · {asset.associationStatus === 'confirmed' ? 'association confirmée' : asset.associationStatus}</em></div>)}</div> : <p className="missing">Aucune ressource indexée pour ce scénario.</p>}
+      {assets.length ? <div className="resource-list">{assets.map((asset) => <div key={asset.id} className={asset.present ? '' : 'missing'}><small>{assetLabel(asset)}{asset.language ? ` · ${asset.language}` : ''}{asset.resourceScope === 'component' && asset.resourceTargetLabel ? ` · ${asset.resourceTargetLabel}` : ''}</small><strong>{asset.filename}</strong><em>{asset.present ? 'disponible' : 'absent'} · {asset.associationStatus === 'confirmed' ? 'association confirmée' : asset.associationStatus}</em></div>)}</div> : <p className="missing">Aucune ressource indexée pour ce scénario.</p>}
     </section>
     <section className="detail-section scenario-package-panel"><h3>Package Foundry</h3>
       {available ? <div className="package-status"><small>PACKAGE ZIP DISPONIBLE</small><strong>{available.packageVersion === null ? 'Version illisible' : `v${available.packageVersion}`} · {available.asset.filename}</strong><em>{available.error || 'disponible dans la bibliothèque'}</em></div> : <p className="missing">Aucun ZIP associé et présent dans la bibliothèque.</p>}
-      {status ? <div className="package-status"><small>VERSION INTÉGRÉE DANS L’APPLICATION</small><strong>v{status.packageVersion} · {status.filename}</strong><em>statut : {currentStatus}</em></div> : <div className="package-status"><small>VERSION INTÉGRÉE DANS L’APPLICATION</small><strong>Aucune</strong><em>statut : {currentStatus}</em></div>}
+      {status ? <><div className="package-status"><small>VERSION INTÉGRÉE DANS L’APPLICATION</small><strong>v{status.packageVersion} · {status.filename}</strong><em>statut : {currentStatus}</em></div><div className="package-status"><small>VERSION DÉPLOYÉE DANS FOUNDRY</small><strong>{status.deployedVersion === null ? 'Aucune' : `v${status.deployedVersion}`}</strong><em>{status.deployedVersion !== null && status.deployedVersion < status.packageVersion ? 'Foundry obsolète' : status.deployedVersion === status.packageVersion ? 'à jour' : 'non synchronisée'}</em></div></> : <div className="package-status"><small>VERSION INTÉGRÉE DANS L’APPLICATION</small><strong>Aucune</strong><em>statut : {currentStatus}</em></div>}
       {available && available.packageVersion !== null && <button className="package-integrate" disabled={busy} onClick={() => void integrateIndexed()}>{busy ? 'Intégration…' : status ? 'Mettre à jour depuis la bibliothèque' : 'Intégrer depuis la bibliothèque'}</button>}
       <label className="package-upload"><span>{busy ? 'Import en cours…' : 'Ou importer un ZIP manuellement'}</span><input type="file" accept=".zip,application/zip" disabled={busy} onChange={(event) => { void importPackage(event.target.files?.[0]) }} /></label>
+      {status && <button className="package-integrate package-deploy" disabled={busy || deploymentActive} onClick={() => void requestDeployment()}>{deploymentActive ? 'Synchronisation en cours…' : 'Synchroniser avec Foundry'}</button>}
+      {deploymentLabel && <div className={`deployment-state ${deployment?.status}`}><strong>{deploymentLabel}</strong>{deployment?.status === 'failed' && deployment.error && <em>{deployment.error}</em>}{deployment?.status && deployment.status !== 'failed' && <em>Package v{deployment?.packageVersion}</em>}</div>}
     {message && <p className="package-message">{message}</p>}
     </section>
     <section className="detail-section scenario-relations"><h3>Relations métier</h3><div className="relation-groups"><div><small>PNJ</small>{referenceBadges(relations.npcs, 'pnj')}</div><div><small>Lieux et régions</small>{referenceBadges(relations.places, 'lieux')}</div><div><small>Factions</small>{referenceBadges(relations.factions, 'factions')}</div><div><small>Événements</small>{referenceBadges(relations.events, 'evenements')}</div></div></section>
