@@ -102,8 +102,8 @@ export class ScenarioPackageService {
     const resolved = await Promise.all(links.map(async link => ({ ...(await this.persistence.getRecord(link.targetKind, link.targetId)), ...link })))
     return { npcs: await this.npcsForScenario(scenarioId), places: resolved.filter(link => link.targetKind === 'lieu' || link.targetKind === 'region'), factions: resolved.filter(link => link.targetKind === 'faction'), events: resolved.filter(link => link.targetKind === 'evenement') }
   }
-  async packageRegistry(): Promise<Record<string, unknown[]>> {
-    const compact = (kind: ScenarioRelationTargetKind | 'pnj') => this.persistence.listRecords(kind).then(records => records.map(record => ({ id: record.id, name: record.nom ?? record.name ?? record.title ?? record.id, aliases: Array.isArray(record.aliases) ? record.aliases : [], ...(kind === 'lieu' || kind === 'region' ? { kind } : {}) })))
+  async packageRegistry(includeExcluded = false): Promise<Record<string, unknown[]>> {
+    const compact = (kind: ScenarioRelationTargetKind | 'pnj') => this.persistence.listRecords(kind, { includeExcluded }).then(records => records.map(record => ({ id: record.id, name: record.nom ?? record.name ?? record.title ?? record.id, aliases: Array.isArray(record.aliases) ? record.aliases : [], ...(kind === 'lieu' || kind === 'region' ? { kind } : {}) })))
     const [npcs, lieu, region, factions, events] = await Promise.all([compact('pnj'), compact('lieu'), compact('region'), compact('faction'), compact('evenement')])
     return { npcs, places: [...lieu, ...region], factions, events }
   }
@@ -126,8 +126,8 @@ export class ScenarioPackageService {
     const unique = [...new Map(links.map(link => [link.npcId, link])).values()]
     return Promise.all(unique.map(async link => ({ ...(await this.persistence.getRecord('pnj', link.npcId)), ...link })))
   }
-  async registry(): Promise<unknown[]> {
-    const pnjs = await this.persistence.listRecords('pnj')
+  async registry(includeExcluded = false): Promise<unknown[]> {
+    const pnjs = await this.persistence.listRecords('pnj', { includeExcluded })
     return Promise.all(pnjs.map(async pnj => ({ id: pnj.id, nom: pnj.nom, aliases: Array.isArray(pnj.aliases) ? pnj.aliases : [], portrait: pnj.portrait ?? null, scenarios: (await this.persistence.listNpcScenarioLinks(String(pnj.id))).map(link => link.scenarioId) })))
   }
 
@@ -149,7 +149,7 @@ export class ScenarioPackageService {
         if (!pnj) {
           const nom = this.text(definition.name, `npcs[${key}].name`)
           const portrait = await this.materializePortrait(zip, definition.portrait, npcId)
-          pnj = { id: npcId, nom, description: typeof definition.description === 'string' ? definition.description.trim() : '', aliases: this.strings(definition.aliases), portrait: portrait ?? undefined, factions: [], tags: [], role: typeof definition.role === 'string' ? definition.role.trim() : '', importance: typeof definition.importance === 'string' ? definition.importance.trim() : 'Secondaire', statut: 'Actif', notes: typeof definition.notes === 'string' ? definition.notes.trim() : '' }
+          pnj = { id: npcId, nom, description: typeof definition.description === 'string' ? definition.description.trim() : '', aliases: this.strings(definition.aliases), portrait: portrait ?? undefined, factions: [], tags: [], role: typeof definition.role === 'string' ? definition.role.trim() : '', importance: typeof definition.importance === 'string' ? definition.importance.trim() : 'Secondaire', statut: 'Actif', notes: typeof definition.notes === 'string' ? definition.notes.trim() : '', scope: 'scenario', ownerScenarioId: scenarioId }
           records.push({ kind: 'pnj', item: pnj })
           created = true
         }
@@ -187,7 +187,7 @@ export class ScenarioPackageService {
         if (!record) {
           const raw = definition as Record<string, unknown>
           const ignored = new Set(['key', 'kind', 'refId', 'factionId', 'eventId', 'role', 'importance', 'sourcePage', 'notes', 'name'])
-          record = { ...Object.fromEntries(Object.entries(raw).filter(([field]) => !ignored.has(field))), id, nom: this.text(definition.name, `${group.kind}[${key}].name`), aliases: this.strings(definition.aliases), description: this.optional(definition.description) ?? '', notes: this.optional(definition.notes) ?? '' }
+          record = { ...Object.fromEntries(Object.entries(raw).filter(([field]) => !ignored.has(field))), id, nom: this.text(definition.name, `${group.kind}[${key}].name`), aliases: this.strings(definition.aliases), description: this.optional(definition.description) ?? '', notes: this.optional(definition.notes) ?? '', scope: 'scenario', ownerScenarioId: scenarioId }
           records.push({ kind, item: record })
         }
       }

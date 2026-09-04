@@ -33,9 +33,11 @@ describe('ScenarioPackageService', () => {
     records.set('faction:faction-aspis', { id: 'faction-aspis', nom: 'Aspis' })
     await service.importZip(zip({ scenario: { id: 'pfs-s01-01', name: 'Test' }, actors: [], npcs: [] }), 'old.zip')
     expect(relations).toEqual([])
-    const body = { packageVersion: 2, scenario: { id: 'pfs-s01-01', name: 'Test' }, actors: [], npcs: [], places: [{ key: 'quantium', kind: 'lieu', name: 'Quantium', type: 'Cité', parent_id: 'region-nex', region_id: 'region-nex', role: 'Lieu principal' }], factions: [{ key: 'aspis', factionId: 'faction-aspis' }], events: [] }
+    const body = { packageVersion: 2, scenario: { id: 'pfs-s01-01', name: 'Test' }, actors: [], npcs: [{ key: 'vara', name: 'Capitaine Vara' }], places: [{ key: 'quantium', kind: 'lieu', name: 'Quantium', type: 'Cité', parent_id: 'region-nex', region_id: 'region-nex', role: 'Lieu principal' }], factions: [{ key: 'aspis', factionId: 'faction-aspis' }], events: [] }
     await service.importZip(zip(body), 'v2.zip')
-    expect(records.get('lieu:pfs-s01-01--quantium')).toEqual(expect.objectContaining({ nom: 'Quantium', type: 'Cité', parent_id: 'region-nex', region_id: 'region-nex' }))
+    expect(records.get('lieu:pfs-s01-01--quantium')).toEqual(expect.objectContaining({ nom: 'Quantium', type: 'Cité', parent_id: 'region-nex', region_id: 'region-nex', scope: 'scenario', ownerScenarioId: 'pfs-s01-01' }))
+    expect(records.get('pnj:pfs-s01-01--vara')).toEqual(expect.objectContaining({ nom: 'Capitaine Vara', scope: 'scenario', ownerScenarioId: 'pfs-s01-01' }))
+    expect(records.get('faction:faction-aspis')).toEqual({ id: 'faction-aspis', nom: 'Aspis' })
     expect(relations).toHaveLength(2)
     await service.importZip(zip(body), 'v2.zip')
     expect([...records.keys()].filter(key => key === 'lieu:pfs-s01-01--quantium')).toHaveLength(1)

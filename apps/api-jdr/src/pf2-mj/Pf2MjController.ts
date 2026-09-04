@@ -19,10 +19,10 @@ export class Pf2MjController {
   constructor(private readonly service: Pf2MjService, private readonly foundry: FoundryRelayService, private readonly scenarioPackages: ScenarioPackageService) {}
 
   @Get('npc-registry')
-  npcRegistry(): Promise<unknown[]> { return this.scenarioPackages.registry() }
+  npcRegistry(@Query('includeExcluded') includeExcluded?: string): Promise<unknown[]> { return this.scenarioPackages.registry(includeExcluded === 'true') }
 
   @Get('package-registry')
-  packageRegistry(): Promise<Record<string, unknown[]>> { return this.scenarioPackages.packageRegistry() }
+  packageRegistry(@Query('includeExcluded') includeExcluded?: string): Promise<Record<string, unknown[]>> { return this.scenarioPackages.packageRegistry(includeExcluded === 'true') }
 
   @Get('pnj/:id/scenarios')
   scenariosForPnj(@Param('id') id: string): Promise<unknown[]> { return this.scenarioPackages.scenariosForNpc(id) }
@@ -287,9 +287,9 @@ export class Pf2MjController {
   }
 
   @Get(':kind')
-  async getReference(@Param('kind') kind: string): Promise<Record<string, unknown>[]> {
+  async getReference(@Param('kind') kind: string, @Query('includeExcluded') includeExcluded?: string): Promise<Record<string, unknown>[]> {
     if (!this.service.isReferenceKind(kind)) throw new HttpException('Référentiel inconnu', HttpStatus.NOT_FOUND)
-    return this.service.readReference(kind)
+    return this.service.readReference(kind, includeExcluded === 'true')
   }
 
   @Post(':kind')

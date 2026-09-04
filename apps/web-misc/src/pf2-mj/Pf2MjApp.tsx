@@ -154,7 +154,7 @@ const emptyFilters: Filters = {
 }
 
 const playabilityOptions: Playability[] = ['Prêt', 'À adapter', 'Simple inspiration']
-const progressOptions: Progress[] = ['Non spécifié', 'À jouer', 'En cours', 'Joué']
+const progressOptions: Progress[] = ['Non spécifié', 'À jouer', 'Sélectionné', 'En cours', 'Joué']
 const relevanceOrder: Record<string, number> = { 'Très haute': 0, Haute: 1, Moyenne: 2, Basse: 3, Aucune: 4, Variable: 5, 'À évaluer': 6 }
 const preparationTabs: Array<[PreparationTab, string]> = [
   ['pdf', 'PDF requis'], ['translation', 'Traductions'], ['zip', 'ZIP Foundry'], ['info', 'Info seules'], ['uncertain', 'À vérifier'], ['metadata', 'Métadonnées'],
@@ -255,7 +255,22 @@ function effectiveLocations(unit: PlayableUnit, override: ResolvedOverride): Loc
 function effectivePlayability(unit: PlayableUnit, override: ResolvedOverride): Playability { return override.playability ?? unit.playability }
 function effectiveProgress(unit: PlayableUnit, override: ResolvedOverride): Progress { return override.progress ?? unit.tracking }
 function effectiveRelevance(unit: PlayableUnit, override: ResolvedOverride): string { return override.relevance ?? relevanceOf(unit) }
-function isExcluded(unit: PlayableUnit, override: ResolvedOverride): boolean { return Boolean(override.excluded) || unit.playableType === 'legacy' || unit.editorialStatus === 'ÉCARTÉ' }
+
+function isContainerExcluded(container: Container, curation: Curation, seen = new Set<string>()): boolean {
+  const override = resolveContainerOverride(curation, container)
+  if (override.excluded !== undefined) return Boolean(override.excluded)
+  if (container.editorialStatus === 'ÉCARTÉ') return true
+  if (!container.parentId || seen.has(container.id)) return false
+  const parent = containerMap.get(container.parentId)
+  return parent ? isContainerExcluded(parent, curation, new Set([...seen, container.id])) : false
+}
+
+function isExcluded(unit: PlayableUnit, override: ResolvedOverride, curation?: Curation): boolean {
+  if (override.excluded !== undefined) return Boolean(override.excluded)
+  if (unit.playableType === 'legacy' || unit.editorialStatus === 'ÉCARTÉ') return true
+  const parent = unit.parentId ? containerMap.get(unit.parentId) : null
+  return Boolean(curation && parent && isContainerExcluded(parent, curation))
+}
 
 function sortPlayables(items: PlayableUnit[], curation: Curation): PlayableUnit[] {
   return items.slice().sort((a, b) => {
@@ -385,8 +400,9 @@ function FinderView({ active, curation, onOpen, onUpdate, resourceVersion }: { a
 }
 
 function ContainerTree({ container, curation, onOpen, onOpenPlayable, onUpdate, depth = 0 }: { container: Container; curation: Curation; onOpen: (container: Container) => void; onOpenPlayable: (unit: PlayableUnit) => void; onUpdate: (id: string, field: string, value: unknown) => void; depth?: number }) {
-  const childContainers = containers.filter((item) => item.parentId === container.id).sort((a, b) => a.order - b.order || titleOf(a).localeCompare(titleOf(b), 'fr'))
-  const childPlayables = playableUnits.filter((unit) => unit.parentId === container.id)
+  if (isContainerExcluded(container, curation)) return null
+  const childContainers = containers.filter((item) => item.parentId === container.id && !isContainerExcluded(item, curation)).sort((a, b) => a.order - b.order || titleOf(a).localeCompare(titleOf(b), 'fr'))
+  const childPlayables = playableUnits.filter((unit) => unit.parentId === container.id && !isExcluded(unit, resolvePlayableOverride(curation, unit), curation))
   const components = componentsOf(container.id)
   const descendantCount = playablesUnder(container.id).length
   return <details className={`library-node library-depth-${Math.min(depth, 3)}`} open={depth === 0 && container.containerType === 'campaign'}>
@@ -401,9 +417,10 @@ function ContainerTree({ container, curation, onOpen, onOpenPlayable, onUpdate, 
 
 function LibraryView({ curation, onOpen, onOpenPlayable, onUpdate }: { curation: Curation; onOpen: (container: Container) => void; onOpenPlayable: (unit: PlayableUnit) => void; onUpdate: (id: string, field: string, value: unknown) => void }) {
   return <div className="library-view">{sections.filter((section) => section.id !== 'legacy').map((section) => {
-    const roots = containers.filter((container) => container.sectionId === section.id && !container.parentId)
-    const directPlayables = playableUnits.filter((unit) => unit.sectionId === section.id && !unit.parentId)
-    return <section className="library-section" key={section.id}><div className="section-title"><div><small>SECTION</small><h2>{section.title}</h2><p>{section.description}</p></div><span>{playableUnits.filter((unit) => unit.sectionId === section.id).length}</span></div>{roots.map((container) => <ContainerTree key={container.id} container={container} curation={curation} onOpen={onOpen} onOpenPlayable={onOpenPlayable} onUpdate={onUpdate} />)}{directPlayables.length > 0 && <PlayableList units={sortPlayables(directPlayables, curation)} curation={curation} onOpen={onOpenPlayable} onUpdate={onUpdate} />}</section>
+    const roots = containers.filter((container) => container.sectionId === section.id && !container.parentId && !isContainerExcluded(container, curation))
+    const directPlayables = playableUnits.filter((unit) => unit.sectionId === section.id && !unit.parentId && !isExcluded(unit, resolvePlayableOverride(curation, unit), curation))
+    const visibleCount = playableUnits.filter((unit) => unit.sectionId === section.id && !isExcluded(unit, resolvePlayableOverride(curation, unit), curation)).length
+    return <section className="library-section" key={section.id}><div className="section-title"><div><small>SECTION</small><h2>{section.title}</h2><p>{section.description}</p></div><span>{visibleCount}</span></div>{roots.map((container) => <ContainerTree key={container.id} container={container} curation={curation} onOpen={onOpen} onOpenPlayable={onOpenPlayable} onUpdate={onUpdate} />)}{directPlayables.length > 0 && <PlayableList units={sortPlayables(directPlayables, curation)} curation={curation} onOpen={onOpenPlayable} onUpdate={onUpdate} />}</section>
   })}</div>
 }
 
@@ -480,12 +497,19 @@ function Stats({ active }: { active: PlayableUnit[] }) {
   return <section className="stats stats-v3"><div><b>▶</b><p><strong>{active.length}</strong><small>UNITÉS JOUABLES</small></p></div><div><b>✓</b><p><strong>{complete}</strong><small>PDF COMPLETS</small></p></div><div><b>文</b><p><strong>{readyFr}</strong><small>PRÊTES EN FR</small></p></div><div><b>ⓘ</b><p><strong>{infoOnly}</strong><small>INFO SEULES</small></p></div><div><b>▣</b><p><strong>{zipMissing ?? '—'}</strong><small>ZIP MANQUANTS</small></p></div><div><b>!</b><p><strong>{review}</strong><small>MÉTADONNÉES À VOIR</small></p></div></section>
 }
 
-type ScenarioPackageStatus = { scenarioId: string; packageVersion: number; status: string; filename: string; deployedVersion: number | null; deployedAt: string | null; importedAt: string; updatedAt: string } | null
+type ScenarioPackageStatus = { scenarioId: string; packageVersion: number; status: string; filename: string; deployedVersion: number | null; deployedAt: string | null; importedAt: string; updatedAt: string; manifest?: { actors?: unknown[] } } | null
 type ScenarioDeployment = { id: string; scenarioId: string; packageVersion: number; status: 'pending' | 'claimed' | 'success' | 'failed'; error: string | null; result: Record<string, unknown> | null } | null
-type LinkedNpc = { npcId: string; nom?: string; role?: string | null; importance?: string | null }
-type ScenarioAsset = { id: string; filename: string; assetType: string; role: string | null; language: string | null; variant: string | null; present: boolean; associationStatus: string; resourceScope?: 'direct' | 'component'; resourceTargetLabel?: string | null; libraryCategory?: string | null }
+type LinkedNpc = { id?: string; npcId: string; nom?: string; name?: string; portrait?: string; role?: string | null; importance?: string | null; factions?: Array<{ faction_id?: string; role?: string }>; regions?: string[] }
+type ScenarioAsset = { id: string; path: string; filename: string; assetType: string; role: string | null; language: string | null; variant: string | null; present: boolean; associationStatus: string; resourceScope?: 'direct' | 'component'; resourceTargetLabel?: string | null; libraryCategory?: string | null }
 type ScenarioRelations = { npcs: LinkedNpc[]; places: Array<{ targetId: string; targetKind: 'lieu' | 'region'; nom?: string; name?: string; role?: string | null }>; factions: Array<{ targetId: string; nom?: string; name?: string; role?: string | null }>; events: Array<{ targetId: string; nom?: string; name?: string; role?: string | null }> }
 type AvailableScenarioPackage = { asset: ScenarioAsset; packageVersion: number | null; scenarioName?: string; error?: string } | null
+type PackageActor = { key?: string; name?: string; type?: 'reference' | 'custom' | 'narrative'; uuid?: string; lookup?: unknown; npcId?: string; actor?: { type?: string; uuid?: string; lookup?: unknown } }
+type PackageRegistry = { factions: Array<{ id: string; name: string }>; places: Array<{ id: string; name: string; kind?: string }> }
+
+const pnjPortraitUrl = (portrait?: string) => {
+  const filename = /^assets\/l7r\/portraits\/pnj\/([^/]+\.(?:webp|gif|png|jpe?g))$/i.exec(portrait?.trim() ?? '')?.[1]
+  return filename ? `/apil7r/pf2-mj/portraits/${encodeURIComponent(filename)}` : ''
+}
 
 function ScenarioPackagePanel({ scenarioId, onOpenReference }: { scenarioId: string; onOpenReference: (view: ReferenceView, id: string) => void }) {
   const [status, setStatus] = useState<ScenarioPackageStatus>(null)
@@ -493,6 +517,7 @@ function ScenarioPackagePanel({ scenarioId, onOpenReference }: { scenarioId: str
   const [relations, setRelations] = useState<ScenarioRelations>({ npcs: [], places: [], factions: [], events: [] })
   const [available, setAvailable] = useState<AvailableScenarioPackage>(null)
   const [deployment, setDeployment] = useState<ScenarioDeployment>(null)
+  const [registry, setRegistry] = useState<PackageRegistry>({ factions: [], places: [] })
   const [message, setMessage] = useState('')
   const [busy, setBusy] = useState(false)
   const load = () => Promise.all([
@@ -500,12 +525,14 @@ function ScenarioPackagePanel({ scenarioId, onOpenReference }: { scenarioId: str
     fetch(`/apil7r/pf2-mj/scenarios/${encodeURIComponent(scenarioId)}/resources`, { cache: 'no-store' }).then((response) => response.ok ? response.json() : []),
     fetch(`/apil7r/pf2-mj/scenarios/${encodeURIComponent(scenarioId)}/relations`, { cache: 'no-store' }).then((response) => response.ok ? response.json() : { npcs: [], places: [], factions: [], events: [] }),
     fetch(`/apil7r/pf2-mj/scenario-packages/${encodeURIComponent(scenarioId)}/available`, { cache: 'no-store' }).then((response) => response.ok ? response.json() : null),
-    fetch(`/apil7r/pf2-mj/scenario-packages/${encodeURIComponent(scenarioId)}/deployments/latest`, { cache: 'no-store' }).then((response) => response.ok ? response.json() : null)
-  ]).then(([packageStatus, scenarioAssets, scenarioRelations, availablePackage, latestDeployment]) => {
+    fetch(`/apil7r/pf2-mj/scenario-packages/${encodeURIComponent(scenarioId)}/deployments/latest`, { cache: 'no-store' }).then((response) => response.ok ? response.json() : null),
+    fetch('/apil7r/pf2-mj/package-registry', { cache: 'no-store' }).then((response) => response.ok ? response.json() : null)
+  ]).then(([packageStatus, scenarioAssets, scenarioRelations, availablePackage, latestDeployment, packageRegistry]) => {
     setStatus(packageStatus); setAssets(Array.isArray(scenarioAssets) ? scenarioAssets : [])
     setRelations(scenarioRelations && typeof scenarioRelations === 'object' ? scenarioRelations : { npcs: [], places: [], factions: [], events: [] })
     setAvailable(availablePackage)
     setDeployment(latestDeployment)
+    setRegistry({ factions: Array.isArray(packageRegistry?.factions) ? packageRegistry.factions : [], places: Array.isArray(packageRegistry?.places) ? packageRegistry.places : [] })
   }).catch(() => setMessage('État du package indisponible.'))
   useEffect(() => { void load() }, [scenarioId])
   useEffect(() => {
@@ -574,9 +601,23 @@ function ScenarioPackagePanel({ scenarioId, onOpenReference }: { scenarioId: str
   const currentStatus = !status ? (available ? 'available' : '—') : available?.packageVersion !== null && available?.packageVersion !== undefined && available.packageVersion > status.packageVersion ? 'obsolete' : status.status
   const deploymentActive = deployment?.status === 'pending' || deployment?.status === 'claimed'
   const deploymentLabel = deployment?.status === 'pending' ? 'En attente de Foundry' : deployment?.status === 'claimed' ? 'En cours d’import' : deployment?.status === 'success' ? 'Synchronisé' : deployment?.status === 'failed' ? 'Échec' : null
+  const factionNames = new Map(registry.factions.map((faction) => [faction.id, faction.name]))
+  const placeNames = new Map(registry.places.map((place) => [place.id, place.name]))
+  const actors = Array.isArray(status?.manifest?.actors) ? status.manifest.actors.filter((value): value is PackageActor => Boolean(value && typeof value === 'object' && !Array.isArray(value))) : []
+  const bestiary = [...actors.filter((actor) => actor.type === 'reference' || actor.type === 'custom').reduce((groups, actor) => {
+    const source = actor.type === 'reference' ? (actor.uuid || (typeof actor.lookup === 'string' ? actor.lookup : 'Référence PF2')) : 'Acteur mécanique du package'
+    const key = `${actor.type}:${source}:${actor.name ?? actor.key ?? ''}`
+    const current = groups.get(key)
+    groups.set(key, current ? { ...current, quantity: current.quantity + 1 } : { name: actor.name || actor.key || 'Acteur sans nom', type: actor.type, source, quantity: 1 })
+    return groups
+  }, new Map<string, { name: string; type: 'reference' | 'custom'; source: string; quantity: number }>()).values()]
   return <>
     <section className="detail-section scenario-resources"><h3>Ressources associées</h3>
-      {assets.length ? <div className="resource-list">{assets.map((asset) => <div key={asset.id} className={asset.present ? '' : 'missing'}><small>{assetLabel(asset)}{asset.language ? ` · ${asset.language}` : ''}{asset.resourceScope === 'component' && asset.resourceTargetLabel ? ` · ${asset.resourceTargetLabel}` : ''}</small><strong>{asset.filename}</strong><em>{asset.present ? 'disponible' : 'absent'} · {asset.associationStatus === 'confirmed' ? 'association confirmée' : asset.associationStatus}</em></div>)}</div> : <p className="missing">Aucune ressource indexée pour ce scénario.</p>}
+      {assets.length ? <div className="resource-list">{assets.map((asset) => {
+        const openablePdf = asset.present && asset.assetType === 'pdf'
+        const href = openablePdf ? `/apil7r/pf2-mj/bibliotheque/${asset.path.split('/').map(encodeURIComponent).join('/')}` : null
+        return <div key={asset.id} className={asset.present ? '' : 'missing'}><small>{assetLabel(asset)}{asset.language ? ` · ${asset.language}` : ''}{asset.resourceScope === 'component' && asset.resourceTargetLabel ? ` · ${asset.resourceTargetLabel}` : ''}</small><strong>{asset.filename}</strong><em>{asset.present ? 'disponible' : 'absent'} · {asset.associationStatus === 'confirmed' ? 'association confirmée' : asset.associationStatus}</em>{href && <a className="resource-open" href={href} target="_blank" rel="noreferrer">Ouvrir le PDF ↗</a>}</div>
+      })}</div> : <p className="missing">Aucune ressource indexée pour ce scénario.</p>}
     </section>
     <section className="detail-section scenario-package-panel"><h3>Package Foundry</h3>
       {available ? <div className="package-status"><small>PACKAGE ZIP DISPONIBLE</small><strong>{available.packageVersion === null ? 'Version illisible' : `v${available.packageVersion}`} · {available.asset.filename}</strong><em>{available.error || 'disponible dans la bibliothèque'}</em></div> : <p className="missing">Aucun ZIP associé et présent dans la bibliothèque.</p>}
@@ -587,7 +628,9 @@ function ScenarioPackagePanel({ scenarioId, onOpenReference }: { scenarioId: str
       {deploymentLabel && <div className={`deployment-state ${deployment?.status}`}><strong>{deploymentLabel}</strong>{deployment?.status === 'failed' && deployment.error && <em>{deployment.error}</em>}{deployment?.status && deployment.status !== 'failed' && <em>Package v{deployment?.packageVersion}</em>}</div>}
     {message && <p className="package-message">{message}</p>}
     </section>
-    <section className="detail-section scenario-relations"><h3>Relations métier</h3><div className="relation-groups"><div><small>PNJ</small>{referenceBadges(relations.npcs, 'pnj')}</div><div><small>Lieux et régions</small>{referenceBadges(relations.places, 'lieux')}</div><div><small>Factions</small>{referenceBadges(relations.factions, 'factions')}</div><div><small>Événements</small>{referenceBadges(relations.events, 'evenements')}</div></div></section>
+    <section className="detail-section scenario-npcs"><h3>PNJ du scénario</h3>{relations.npcs.length ? <div className="scenario-npc-grid">{relations.npcs.map((npc) => { const id = npc.id ?? npc.npcId; const portrait = pnjPortraitUrl(npc.portrait); const faction = npc.factions?.[0]; const region = npc.regions?.[0]; return <button className="scenario-npc-card" key={id} onClick={() => onOpenReference('pnj', id)}><span className={`scenario-npc-portrait${portrait ? '' : ' placeholder'}`}>{portrait ? <img src={portrait} alt="" /> : '◆'}</span><span className="scenario-npc-copy"><strong>{npc.nom || npc.name || id}</strong><em>{npc.role || 'Rôle à préciser'}{npc.importance ? ` · ${npc.importance}` : ''}</em>{faction && <small>Faction · {factionNames.get(faction.faction_id ?? '') ?? faction.faction_id}</small>}{region && <small>Région · {placeNames.get(region) ?? region}</small>}</span></button> })}</div> : <p className="missing">Aucun PNJ narratif lié à ce scénario.</p>}</section>
+    <section className="detail-section scenario-bestiary"><h3>Bestiaire / acteurs du scénario</h3>{!status ? <p className="missing">Aucun package intégré : le bestiaire sera disponible après son intégration.</p> : bestiary.length ? <div className="scenario-bestiary-list">{bestiary.map((actor) => <article key={`${actor.type}-${actor.source}-${actor.name}`}><span className={`actor-kind ${actor.type}`}>{actor.type === 'reference' ? 'Référence' : 'Personnalisé'}</span><strong>{actor.name}</strong><em>{actor.type === 'reference' ? `Compendium PF2 · ${actor.source}` : actor.source}</em>{actor.quantity > 1 && <small>×{actor.quantity}</small>}</article>)}</div> : <p className="missing">Aucun acteur de bestiaire déclaré dans ce package.{actors.some((actor) => actor.type === 'narrative') ? ' Les acteurs narratifs sont présentés dans les PNJ ci-dessus.' : ''}</p>}</section>
+    <section className="detail-section scenario-relations"><h3>Relations métier</h3><div className="relation-groups"><div><small>Lieux et régions</small>{referenceBadges(relations.places, 'lieux')}</div><div><small>Factions</small>{referenceBadges(relations.factions, 'factions')}</div><div><small>Événements</small>{referenceBadges(relations.events, 'evenements')}</div></div></section>
   </>
 }
 
@@ -780,8 +823,8 @@ export function Pf2MjApp() {
       })
   }, [catalogueRevision])
 
-  const active = useMemo(() => playableUnits.filter((unit) => !isExcluded(unit, resolvePlayableOverride(curation, unit))), [curation, catalogueRevision])
-  const excluded = useMemo(() => playableUnits.filter((unit) => isExcluded(unit, resolvePlayableOverride(curation, unit))), [curation, catalogueRevision])
+  const active = useMemo(() => playableUnits.filter((unit) => !isExcluded(unit, resolvePlayableOverride(curation, unit), curation)), [curation, catalogueRevision])
+  const excluded = useMemo(() => playableUnits.filter((unit) => isExcluded(unit, resolvePlayableOverride(curation, unit), curation)), [curation, catalogueRevision])
   const placeOptions = useMemo(() => unique([...allPlaces, ...(curation.customPlaces ?? [])]), [curation, catalogueRevision])
   const missingTranslations = active.filter((unit) => availabilityOf(unit).original === 'complete' && !availabilityOf(unit).readyInFrench).length
   const missingZips = resourceInventoryKnown ? active.filter((unit) => resourceBundleAvailability(unit).status === 'missing').length : null

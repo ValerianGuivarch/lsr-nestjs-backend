@@ -1,5 +1,5 @@
 export type Playability = 'Prêt' | 'À adapter' | 'Simple inspiration'
-export type Progress = 'Non spécifié' | 'À jouer' | 'En cours' | 'Joué'
+export type Progress = 'Non spécifié' | 'À jouer' | 'Sélectionné' | 'En cours' | 'Joué'
 export type Usage = 'CORE' | 'OPTION' | 'RÉSERVE' | 'ÉCARTÉ' | 'ENDGAME' | 'FUTUR'
 export type Langue = 'FR' | 'EN' | 'INCONNUE'
 
@@ -1006,5 +1006,4 @@ export function locationLabel(locations: LocationFact[]): string {
 export function relevanceOf(entity: PlayableUnit | Container): string { return entity.relevance.value }
 export function yearOf(entity: PlayableUnit | Container): number | null { return entity.chronology.yearAR }
 export function isPfsPlayable(unit: PlayableUnit): boolean { return ['pfsScenario', 'pfsIntro', 'pfsSpecial', 'quest', 'bounty'].includes(unit.playableType) }
-
 

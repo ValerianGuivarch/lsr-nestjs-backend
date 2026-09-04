@@ -134,8 +134,8 @@ export class Pf2MjService {
     return value in referenceFiles
   }
 
-  async readReference(kind: ReferenceKind): Promise<Record<string, unknown>[]> {
-    const items = await this.persistence.readReference(kind)
+  async readReference(kind: ReferenceKind, includeExcluded = false): Promise<Record<string, unknown>[]> {
+    const items = await this.persistence.readReference(kind, { includeExcluded })
     // Les anciennes données pouvaient contenir `image: https://…` ou
     // `portrait: https://…`. Elles ne doivent plus jamais sortir vers le
     // navigateur : un portrait PF2 est désormais obligatoirement un asset
@@ -148,10 +148,10 @@ export class Pf2MjService {
     return this.persistence.readCatalogueSnapshot()
   }
 
-  async geography(): Promise<Record<string, unknown>> {
+  async geography(includeExcluded = false): Promise<Record<string, unknown>> {
     const [lieux, regions, config] = await Promise.all([
-      this.persistence.readReference('lieux'),
-      this.persistence.readReference('regions'),
+      this.persistence.readReference('lieux', { includeExcluded }),
+      this.persistence.readReference('regions', { includeExcluded }),
       this.persistence.readGeographyConfig()
     ])
     return { schemaVersion: 1, lieux, regions, aliases: this.asObject(config.aliases), parents: this.asObject(config.parents) }
@@ -164,9 +164,9 @@ export class Pf2MjService {
       const data = id ? this.catalogueSelection(catalogue, id) : catalogue
       return { _meta: { source: 'pf2.sqlite', generatedAt, domain, id: id ?? null, editable: true, requiresImportToApply: true }, data }
     }
-    if (domain === 'geography') return { _meta: { source: 'pf2.sqlite', generatedAt, domain, editable: true, requiresImportToApply: true }, data: await this.geography() }
+    if (domain === 'geography') return { _meta: { source: 'pf2.sqlite', generatedAt, domain, editable: true, requiresImportToApply: true }, data: await this.geography(true) }
     if (this.isReferenceKind(domain)) {
-      const items = await this.readReference(domain)
+      const items = await this.readReference(domain, true)
       const data = id ? items.find((item) => item.id === id) ?? null : items
       if (id && !data) throw new Error(`${domain} introuvable : ${id}.`)
       return { _meta: { source: 'pf2.sqlite', generatedAt, domain, id: id ?? null, editable: true, requiresImportToApply: true }, data }

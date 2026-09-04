@@ -1,4 +1,4 @@
-import { Injectable, OnModuleInit } from '@nestjs/common'
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common'
 import { InjectDataSource } from '@nestjs/typeorm'
 import { readFile, mkdir, writeFile } from 'node:fs/promises'
 import { basename, dirname, resolve } from 'node:path'
@@ -6,6 +6,8 @@ import { randomUUID } from 'node:crypto'
 import { DataSource, EntityManager } from 'typeorm'
 
 export type Pf2RecordKind = 'pnj' | 'faction' | 'lieu' | 'region' | 'evenement' | 'scenario' | 'session' | 'catalogue' | 'curation' | 'foundry-actor-cache' | 'geography-config'
+export type Pf2RecordScope = 'global' | 'scenario'
+export type ListRecordOptions = { includeExcluded?: boolean }
 export type FoundryActorCacheEntry = { uuid: string; name: string }
 export type ScenarioNpcLink = { scenarioId: string; npcId: string; role: string | null; importance: string | null; sourcePage: string | null; notes: string | null }
 export type ScenarioRelationTargetKind = 'lieu' | 'region' | 'faction' | 'evenement'
@@ -35,6 +37,7 @@ export type Pf2SessionInput = { id?: unknown; sessionNumber?: unknown; date?: un
 
 @Injectable()
 export class Pf2PersistenceService implements OnModuleInit {
+  private readonly logger = new Logger(Pf2PersistenceService.name)
   readonly storageRoot = resolve(process.env['STORAGE_PATH'] ?? 'storage')
   private readonly seedRoot = resolve(process.env['PF2_DATA_ROOT'] ?? 'apps/web-misc/src/pf2-mj/data')
 
@@ -51,15 +54,19 @@ export class Pf2PersistenceService implements OnModuleInit {
     return { sqlite: true, database: this.dataSource.options.database as string }
   }
 
-  async readReference(kind: ReferenceKind): Promise<Record<string, unknown>[]> {
-    return this.list(kind === 'factions' ? 'faction' : kind === 'lieux' ? 'lieu' : kind === 'regions' ? 'region' : kind === 'evenements' ? 'evenement' : 'pnj')
+  async readReference(kind: ReferenceKind, options: ListRecordOptions = {}): Promise<Record<string, unknown>[]> {
+    return this.listRecords(kind === 'factions' ? 'faction' : kind === 'lieux' ? 'lieu' : kind === 'regions' ? 'region' : kind === 'evenements' ? 'evenement' : 'pnj', options)
   }
 
   async replaceReference(kind: ReferenceKind, items: Record<string, unknown>[]): Promise<void> {
     const recordKind = kind === 'factions' ? 'faction' : kind === 'lieux' ? 'lieu' : kind === 'regions' ? 'region' : kind === 'evenements' ? 'evenement' : 'pnj'
+    // A normal editor only sees global records. Preserve scenario-owned records
+    // here so an import of the visible reference list never deletes hidden data.
+    const scenarioOwned = (await this.listAll(recordKind)).filter((item) => this.scopeOf(item) === 'scenario')
+    const merged = [...new Map([...scenarioOwned, ...items].map((item) => [this.identifier(item), item])).values()]
     await this.dataSource.transaction(async (manager) => {
       await manager.query('DELETE FROM pf2_record WHERE kind = ?', [recordKind])
-      for (const item of items) await this.upsert(recordKind, this.identifier(item), this.name(item), item, manager)
+      for (const item of merged) await this.upsert(recordKind, this.identifier(item), this.name(item), item, manager)
     })
   }
 
@@ -91,7 +98,12 @@ export class Pf2PersistenceService implements OnModuleInit {
     })
   }
 
-  async listRecords(kind: Pf2RecordKind): Promise<Record<string, unknown>[]> { return this.list(kind) }
+  async listRecords(kind: Pf2RecordKind, options: ListRecordOptions = {}): Promise<Record<string, unknown>[]> {
+    const records = await this.listAll(kind)
+    if (options.includeExcluded) return records
+    const excluded = await this.excludedScenarioOwners()
+    return records.filter((record) => this.scopeOf(record) !== 'scenario' || !excluded.has(this.ownerScenarioIdOf(record)))
+  }
   async getRecord(kind: Pf2RecordKind, id: string): Promise<Record<string, unknown> | null> { return this.get(kind, id) }
   async saveRecord(kind: Pf2RecordKind, item: Record<string, unknown>): Promise<void> { await this.upsert(kind, this.identifier(item), this.name(item), item) }
 
@@ -471,6 +483,22 @@ export class Pf2PersistenceService implements OnModuleInit {
       await manager.query("CREATE TABLE IF NOT EXISTS pf2_scenario_deployment (id TEXT PRIMARY KEY, scenario_id TEXT NOT NULL, package_version INTEGER NOT NULL, status TEXT NOT NULL CHECK (status IN ('pending','claimed','success','failed')), world_id TEXT, claimed_by TEXT, claim_token TEXT, lease_expires_at TEXT, error TEXT, result TEXT, created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP, updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP, completed_at TEXT, UNIQUE (scenario_id, package_version))")
       await manager.query("CREATE INDEX IF NOT EXISTS idx_pf2_scenario_deployment_claim ON pf2_scenario_deployment (status, lease_expires_at, created_at)")
     })
+    await this.applyMigration('011-scenario-record-scope', async (manager) => {
+      const packageRows = await manager.query('SELECT scenario_id FROM pf2_scenario_package') as Array<{ scenario_id: string }>
+      const scenarioIds = packageRows.map((row) => row.scenario_id).filter(Boolean).sort((left, right) => right.length - left.length)
+      const rows = await manager.query("SELECT kind, id, payload FROM pf2_record WHERE kind IN ('pnj', 'lieu', 'region', 'faction', 'evenement')") as Array<{ kind: Pf2RecordKind; id: string; payload: string }>
+      const ambiguous: string[] = []
+      for (const row of rows) {
+        let payload: Record<string, unknown>
+        try { payload = this.object(JSON.parse(row.payload)) } catch { continue }
+        if (payload.scope === 'scenario' && typeof payload.ownerScenarioId === 'string' && payload.ownerScenarioId.trim()) continue
+        const ownerScenarioId = scenarioIds.find((scenarioId) => row.id.startsWith(`${scenarioId}--`))
+        const next = ownerScenarioId ? { ...payload, scope: 'scenario', ownerScenarioId } : this.normalizedScope(row.kind, payload)
+        if (!ownerScenarioId && row.id.includes('--')) ambiguous.push(`${row.kind}:${row.id}`)
+        await manager.query('UPDATE pf2_record SET payload = ?, updated_at = CURRENT_TIMESTAMP WHERE kind = ? AND id = ?', [JSON.stringify(next), row.kind, row.id])
+      }
+      if (ambiguous.length) this.logger.warn(`Scope scénario non inféré pour ${ambiguous.length} ID(s) ambigu(s) : ${ambiguous.join(', ')}`)
+    })
   }
 
   private async createSessionTable(manager: EntityManager): Promise<void> {
@@ -536,9 +564,86 @@ export class Pf2PersistenceService implements OnModuleInit {
     }
   }
 
-  private async list(kind: Pf2RecordKind): Promise<Record<string, unknown>[]> {
+  private async listAll(kind: Pf2RecordKind): Promise<Record<string, unknown>[]> {
     const rows = await this.dataSource.query('SELECT id, name, payload FROM pf2_record WHERE kind = ? ORDER BY name COLLATE NOCASE, id', [kind]) as RecordRow[]
     return rows.map((row) => this.object(JSON.parse(row.payload)))
+  }
+
+  private scopeOf(record: Record<string, unknown>): Pf2RecordScope {
+    return record.scope === 'scenario' && typeof record.ownerScenarioId === 'string' && record.ownerScenarioId.trim() ? 'scenario' : 'global'
+  }
+
+  private normalizedScope(kind: Pf2RecordKind, record: Record<string, unknown>): Record<string, unknown> {
+    if (!(['pnj', 'lieu', 'region', 'faction', 'evenement'] as Pf2RecordKind[]).includes(kind)) return record
+    if (record.scope === 'scenario' && typeof record.ownerScenarioId === 'string' && record.ownerScenarioId.trim()) return { ...record, scope: 'scenario', ownerScenarioId: record.ownerScenarioId.trim() }
+    const next: Record<string, unknown> = { ...record, scope: 'global' }
+    delete next.ownerScenarioId
+    return next
+  }
+
+  private ownerScenarioIdOf(record: Record<string, unknown>): string {
+    return this.scopeOf(record) === 'scenario' ? String(record.ownerScenarioId).trim() : ''
+  }
+
+  private async excludedScenarioOwners(): Promise<Set<string>> {
+    const curation = await this.readCuration()
+    const catalogue = await this.readCatalogueSnapshot()
+    const parents = new Map<string, string>()
+    const addParent = (id: unknown, parentId: unknown) => {
+      if (typeof id === 'string' && id && typeof parentId === 'string' && parentId && id !== parentId) parents.set(id, parentId)
+    }
+    const addParts = (ownerId: unknown, value: unknown) => {
+      if (!Array.isArray(value)) return
+      for (const raw of value) {
+        const part = this.object(raw)
+        addParent(part.id, ownerId)
+        addParts(part.id, part.parts)
+      }
+    }
+    for (const entry of Array.isArray(catalogue.entries) ? catalogue.entries : []) {
+      const item = this.object(entry)
+      addParent(item.id, item.collectionId)
+      addParts(item.id, item.parts)
+      addParent(item.id, item.legacyEntryId)
+    }
+    for (const collection of Array.isArray(catalogue.collections) ? catalogue.collections : []) {
+      const item = this.object(collection)
+      addParent(item.id, item.parentId)
+      addParent(item.id, item.legacyEntryId)
+    }
+    for (const container of Array.isArray(catalogue.containers) ? catalogue.containers : []) addParent(this.object(container).id, this.object(container).parentId)
+    for (const playable of Array.isArray(catalogue.playableUnits) ? catalogue.playableUnits : []) {
+      const item = this.object(playable)
+      addParent(item.id, item.parentId)
+      addParent(item.id, item.legacyEntryId)
+    }
+    for (const component of Array.isArray(catalogue.components) ? catalogue.components : []) addParent(this.object(component).id, this.object(component).ownerId)
+
+    const direct = (id: string): boolean | undefined => {
+      const byId = this.object(curation.byId)
+      const entries = this.object(curation.entries)
+      const value = this.object(byId[id] ?? entries[id])
+      if (typeof value.excluded === 'boolean') return value.excluded
+      if (value.inclusion === 'excluded') return true
+      if (value.inclusion === 'reinstated') return false
+      if (this.strings(curation.includedCampaignIds).includes(id)) return false
+      if (this.strings(curation.excludedCampaignIds).includes(id) || this.strings(curation.excludedScenarioIds).includes(id)) return true
+      return undefined
+    }
+    const memo = new Map<string, boolean>()
+    const excluded = (id: string, visiting = new Set<string>()): boolean => {
+      if (memo.has(id)) return memo.get(id)!
+      if (visiting.has(id)) return false
+      const own = direct(id)
+      if (own !== undefined) { memo.set(id, own); return own }
+      const parent = parents.get(id)
+      const result = parent ? excluded(parent, new Set([...visiting, id])) : false
+      memo.set(id, result)
+      return result
+    }
+    const ownerIds = new Set<string>()
+    for (const kind of ['pnj', 'lieu', 'region', 'faction', 'evenement'] as Pf2RecordKind[]) for (const record of await this.listAll(kind)) if (this.scopeOf(record) === 'scenario') ownerIds.add(this.ownerScenarioIdOf(record))
+    return new Set([...ownerIds].filter((id) => excluded(id)))
   }
 
   private async get(kind: Pf2RecordKind, id: string): Promise<Record<string, unknown> | null> {
@@ -552,7 +657,8 @@ export class Pf2PersistenceService implements OnModuleInit {
   }
 
   private async upsert(kind: Pf2RecordKind, id: string, name: string, payload: Record<string, unknown>, manager: DataSource | EntityManager = this.dataSource): Promise<void> {
-    await manager.query('INSERT INTO pf2_record (kind, id, name, payload, created_at, updated_at) VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP) ON CONFLICT(kind, id) DO UPDATE SET name = excluded.name, payload = excluded.payload, updated_at = CURRENT_TIMESTAMP', [kind, id, name, JSON.stringify(payload)])
+    const stored = this.normalizedScope(kind, payload)
+    await manager.query('INSERT INTO pf2_record (kind, id, name, payload, created_at, updated_at) VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP) ON CONFLICT(kind, id) DO UPDATE SET name = excluded.name, payload = excluded.payload, updated_at = CURRENT_TIMESTAMP', [kind, id, name, JSON.stringify(stored)])
   }
 
   private catalogueEntityName(item: Record<string, unknown>): string | null {
@@ -599,6 +705,8 @@ export class Pf2PersistenceService implements OnModuleInit {
   private stringArrayJson(value: unknown): string[] {
     try { const parsed = typeof value === 'string' ? JSON.parse(value) : value; return Array.isArray(parsed) ? parsed.filter((item): item is string => typeof item === 'string') : [] } catch { return [] }
   }
+
+  private strings(value: unknown): string[] { return Array.isArray(value) ? value.filter((item): item is string => typeof item === 'string' && Boolean(item.trim())).map((item) => item.trim()) : [] }
 
   private objectJson(value: unknown): Record<string, unknown> {
     try { return this.object(typeof value === 'string' ? JSON.parse(value) : value) } catch { return {} }

@@ -99,7 +99,8 @@ describe('Pf2PersistenceService', () => {
       { id: '007-scenario-packages-and-npcs' },
       { id: '008-catalogue-and-library-assets' },
       { id: '009-scenario-business-relations' },
-      { id: '010-scenario-deployment-queue' }
+      { id: '010-scenario-deployment-queue' },
+      { id: '011-scenario-record-scope' }
     ])
 
     await currentDataSource().destroy()
@@ -117,7 +118,8 @@ describe('Pf2PersistenceService', () => {
       { id: '007-scenario-packages-and-npcs' },
       { id: '008-catalogue-and-library-assets' },
       { id: '009-scenario-business-relations' },
-      { id: '010-scenario-deployment-queue' }
+      { id: '010-scenario-deployment-queue' },
+      { id: '011-scenario-record-scope' }
     ])
   })
 
@@ -154,6 +156,30 @@ describe('Pf2PersistenceService', () => {
     const reopened = await open()
     await expect(reopened.listScenarioNpcLinks('pfs-s01-01')).resolves.toEqual([expect.objectContaining({ npcId: 'captain-vara', role: 'alliée' })])
     await expect(reopened.listNpcScenarioLinks('captain-vara')).resolves.toEqual([expect.objectContaining({ scenarioId: 'pfs-s01-01' })])
+  })
+
+  it('hides only scenario-owned records when their scenario is excluded and restores them on reactivation', async () => {
+    const service = await open()
+    await service.replaceCatalogueSnapshot({
+      schemaVersion: 2, meta: {}, files: [], collections: [], arcs: [], sections: [], narrativeThreads: [], entries: [
+        { id: 'campaign-a', sectionId: 'campaigns', collectionId: null, kind: 'campaign', titleFr: 'Campagne A', titleOriginal: null, aliases: [], regions: [], arcIds: [], documents: [], parts: [], openTable: {}, story: {}, characterHooks: [] },
+        { id: 'scenario-a', sectionId: 'campaigns', collectionId: 'campaign-a', kind: 'adventure', titleFr: 'Scénario A', titleOriginal: null, aliases: [], regions: [], arcIds: [], documents: [], parts: [], openTable: {}, story: {}, characterHooks: [] },
+        { id: 'scenario-b', sectionId: 'campaigns', collectionId: null, kind: 'adventure', titleFr: 'Scénario B', titleOriginal: null, aliases: [], regions: [], arcIds: [], documents: [], parts: [], openTable: {}, story: {}, characterHooks: [] }
+      ]
+    })
+    await service.saveRecord('pnj', { id: 'scenario-a--captain', nom: 'Capitaine spécifique', scope: 'scenario', ownerScenarioId: 'scenario-a' })
+    await service.saveRecord('lieu', { id: 'scenario-a--lair', nom: 'Repaire spécifique', scope: 'scenario', ownerScenarioId: 'scenario-a' })
+    await service.saveRecord('pnj', { id: 'global-ally', nom: 'Allié global', scope: 'global' })
+    await service.saveRecord('pnj', { id: 'global-shared', nom: 'Partagé avec scénario B', scope: 'global' })
+    await service.saveCuration({ byId: { 'campaign-a': { excluded: true } } })
+
+    expect((await service.listRecords('pnj')).map((record) => record.id)).toEqual(['global-ally', 'global-shared'])
+    expect((await service.listRecords('lieu')).map((record) => record.id)).toEqual([])
+    expect((await service.listRecords('pnj', { includeExcluded: true })).map((record) => record.id)).toEqual(['global-ally', 'scenario-a--captain', 'global-shared'])
+
+    await service.saveCuration({ byId: { 'campaign-a': { excluded: true }, 'scenario-a': { inclusion: 'reinstated' } } })
+    expect((await service.listRecords('pnj')).map((record) => record.id)).toEqual(['global-ally', 'scenario-a--captain', 'global-shared'])
+    expect((await service.listRecords('lieu')).map((record) => record.id)).toEqual(['scenario-a--lair'])
   })
 
   it('replaces scenario business relations and rejects an unknown target', async () => {
