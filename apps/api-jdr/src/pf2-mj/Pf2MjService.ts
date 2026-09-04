@@ -325,6 +325,13 @@ export class Pf2MjService {
       if (value === null || value === '' || (Array.isArray(value) && value.length === 0)) delete entry[field]
       else entry[field] = value
 
+      // "Écarté" is the single user-facing status. Keep the legacy exclusion
+      // flag in sync so existing catalogue, cascade and exports remain valid.
+      if (field === 'progress') {
+        if (value === 'Écarté') entry.excluded = true
+        else if (value !== null && value !== '') entry.excluded = false
+      }
+
       if (Object.keys(entry).length) byId[id] = entry
       else delete byId[id]
     }

@@ -623,6 +623,7 @@ export class Pf2PersistenceService implements OnModuleInit {
       const byId = this.object(curation.byId)
       const entries = this.object(curation.entries)
       const value = this.object(byId[id] ?? entries[id])
+      if (value.progress === 'Écarté') return true
       if (typeof value.excluded === 'boolean') return value.excluded
       if (value.inclusion === 'excluded') return true
       if (value.inclusion === 'reinstated') return false

@@ -1,5 +1,8 @@
+import { documentaryStatusForTargets as calculateDocumentaryStatus, type DocumentCoverage, type DocumentaryMode } from './documentaryStatus'
+export { documentaryStatusForTargets, type DocumentCoverage, type DocumentaryMode } from './documentaryStatus'
+
 export type Playability = 'Prêt' | 'À adapter' | 'Simple inspiration'
-export type Progress = 'Non spécifié' | 'À jouer' | 'Sélectionné' | 'En cours' | 'Joué'
+export type Progress = 'Non spécifié' | 'À jouer' | 'Sélectionné' | 'En cours' | 'Joué' | 'Écarté'
 export type Usage = 'CORE' | 'OPTION' | 'RÉSERVE' | 'ÉCARTÉ' | 'ENDGAME' | 'FUTUR'
 export type Langue = 'FR' | 'EN' | 'INCONNUE'
 
@@ -187,6 +190,10 @@ export type LocalScanInventory = {
 }
 
 export type AvailabilitySummary = {
+  coverage: DocumentCoverage
+  mode: DocumentaryMode
+  ready: boolean
+  // Champs historiques conservés pour les panneaux détaillés et la compatibilité.
   coreMaterial: AvailabilityState
   original: AvailabilityState
   officialFr: AvailabilityState
@@ -917,6 +924,14 @@ function targetFrenchMode(targetId: string): 'official' | 'translated' | 'french
 
 export function availabilityOf(unit: PlayableUnit): AvailabilitySummary {
   const targets = requirementTargetIds(unit)
+  const documentary = calculateDocumentaryStatus(targets.map((targetId) => documentsForTarget(targetId).map((document) => ({
+    present: documentPresence(document) !== 'missing',
+    associated: document.association.status !== 'unassociated',
+    information: document.isInformationFallback,
+    officialFr: document.variant === 'officialFr' || (document.variant === 'french' && document.language === 'FR'),
+    english: document.language === 'EN' && document.variant === 'original',
+    translation: document.variant === 'translationPartial' || document.variant === 'translationUnofficial',
+  }))))
   let present = 0
   let informationOnly = 0
   const missingTargetIds: string[] = []
@@ -928,15 +943,10 @@ export function availabilityOf(unit: PlayableUnit): AvailabilitySummary {
     else missingTargetIds.push(targetId)
   }
 
-  let coreMaterial: AvailabilityState
-  if (present === targets.length) coreMaterial = 'complete'
-  else if (missingTargetIds.length === 0 && informationOnly > 0) coreMaterial = 'informationOnly'
-  else if (present > 0 || informationOnly > 0 || targets.some((id) => documentsForTarget(id).some((document) => documentPresence(document) !== 'missing' && document.completeness === 'partial'))) coreMaterial = 'partial'
-  else if (targets.some((id) => documentsForTarget(id).some((document) => documentPresence(document) !== 'missing' && document.association.status === 'review'))) coreMaterial = 'uncertain'
-  else coreMaterial = 'absent'
+  const coreMaterial: AvailabilityState = documentary.coverage === 'complete' && documentary.mode === 'info' ? 'informationOnly' : documentary.coverage
 
   const frenchModes = targets.map(targetFrenchMode)
-  const readyInFrench = frenchModes.every((mode) => ['official', 'translated', 'frenchOriginal'].includes(mode))
+  const readyInFrench = documentary.ready
   let frenchState: FrenchState
   if (readyInFrench) {
     const onlyOfficial = frenchModes.every((mode) => mode === 'official' || mode === 'frenchOriginal')
@@ -950,6 +960,7 @@ export function availabilityOf(unit: PlayableUnit): AvailabilitySummary {
   const optionalPresent = optionalTargets.filter((component) => documentsForTarget(component.id).some((document) => documentPresence(document) !== 'missing' && document.association.status !== 'unassociated')).length
 
   return {
+    ...documentary,
     coreMaterial,
     original: statusAcrossTargets(targets, (document) => document.variant === 'original' || document.variant === 'french'),
     officialFr: statusAcrossTargets(targets, (document) => document.variant === 'officialFr' || (document.variant === 'french' && document.language === 'FR')),
@@ -959,6 +970,14 @@ export function availabilityOf(unit: PlayableUnit): AvailabilitySummary {
     readyInFrench,
     frenchState,
   }
+}
+
+export function documentaryCoverageLabel(coverage: DocumentCoverage): string {
+  return coverage === 'complete' ? 'COMPLET' : coverage === 'partial' ? 'PARTIEL' : 'ABSENT'
+}
+
+export function documentaryModeLabel(mode: DocumentaryMode): string {
+  return mode === 'fr' ? 'FR' : mode === 'en_trad' ? 'EN + TRAD' : mode === 'en' ? 'EN' : mode === 'info' ? 'INFO' : ''
 }
 
 export function resourceBundleAvailability(unit: PlayableUnit): ResourceBundleAvailability {
@@ -1006,4 +1025,3 @@ export function locationLabel(locations: LocationFact[]): string {
 export function relevanceOf(entity: PlayableUnit | Container): string { return entity.relevance.value }
 export function yearOf(entity: PlayableUnit | Container): number | null { return entity.chronology.yearAR }
 export function isPfsPlayable(unit: PlayableUnit): boolean { return ['pfsScenario', 'pfsIntro', 'pfsSpecial', 'quest', 'bounty'].includes(unit.playableType) }
-

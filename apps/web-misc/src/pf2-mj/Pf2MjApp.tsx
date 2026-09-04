@@ -8,7 +8,6 @@ import {
   ancestorContainers,
   arcMap,
   arcs,
-  availabilityLabel,
   availabilityOf,
   componentTypeLabel,
   componentsOf,
@@ -17,9 +16,10 @@ import {
   containers,
   currentDocuments,
   documentHref,
+  documentaryCoverageLabel,
+  documentaryModeLabel,
   documentPresence,
   documentsForTarget,
-  frenchStateLabel,
   levelLabel,
   loadCatalogueFromApi,
   migrationIssues,
@@ -154,7 +154,7 @@ const emptyFilters: Filters = {
 }
 
 const playabilityOptions: Playability[] = ['Prêt', 'À adapter', 'Simple inspiration']
-const progressOptions: Progress[] = ['Non spécifié', 'À jouer', 'Sélectionné', 'En cours', 'Joué']
+const progressOptions: Progress[] = ['Non spécifié', 'À jouer', 'Sélectionné', 'En cours', 'Joué', 'Écarté']
 const relevanceOrder: Record<string, number> = { 'Très haute': 0, Haute: 1, Moyenne: 2, Basse: 3, Aucune: 4, Variable: 5, 'À évaluer': 6 }
 const preparationTabs: Array<[PreparationTab, string]> = [
   ['pdf', 'PDF requis'], ['translation', 'Traductions'], ['zip', 'ZIP Foundry'], ['info', 'Info seules'], ['uncertain', 'À vérifier'], ['metadata', 'Métadonnées'],
@@ -253,11 +253,12 @@ function effectiveLocations(unit: PlayableUnit, override: ResolvedOverride): Loc
 }
 
 function effectivePlayability(unit: PlayableUnit, override: ResolvedOverride): Playability { return override.playability ?? unit.playability }
-function effectiveProgress(unit: PlayableUnit, override: ResolvedOverride): Progress { return override.progress ?? unit.tracking }
+function effectiveProgress(unit: PlayableUnit, override: ResolvedOverride): Progress { return override.excluded || override.progress === 'Écarté' ? 'Écarté' : override.progress ?? unit.tracking }
 function effectiveRelevance(unit: PlayableUnit, override: ResolvedOverride): string { return override.relevance ?? relevanceOf(unit) }
 
 function isContainerExcluded(container: Container, curation: Curation, seen = new Set<string>()): boolean {
   const override = resolveContainerOverride(curation, container)
+  if (override.progress === 'Écarté') return true
   if (override.excluded !== undefined) return Boolean(override.excluded)
   if (container.editorialStatus === 'ÉCARTÉ') return true
   if (!container.parentId || seen.has(container.id)) return false
@@ -266,6 +267,7 @@ function isContainerExcluded(container: Container, curation: Curation, seen = ne
 }
 
 function isExcluded(unit: PlayableUnit, override: ResolvedOverride, curation?: Curation): boolean {
+  if (override.progress === 'Écarté') return true
   if (override.excluded !== undefined) return Boolean(override.excluded)
   if (unit.playableType === 'legacy' || unit.editorialStatus === 'ÉCARTÉ') return true
   const parent = unit.parentId ? containerMap.get(unit.parentId) : null
@@ -304,18 +306,14 @@ function matchesFilters(unit: PlayableUnit, filters: Filters, curation: Curation
   if (filters.relevance && relevance !== filters.relevance) return false
   if (filters.playability && playability !== filters.playability) return false
   if (filters.progress && progress !== filters.progress) return false
-  if (filters.availability && availability.coreMaterial !== filters.availability) return false
+  if (filters.availability && availability.coverage !== filters.availability) return false
   if (filters.bundle && bundle.status !== filters.bundle) return false
   if (filters.arc && !unit.arcIds.includes(filters.arc)) return false
   if (filters.thread && unit.narrativeThread !== filters.thread) return false
   if (filters.yearFrom && (year === null || year < Number(filters.yearFrom))) return false
   if (filters.yearTo && (year === null || year > Number(filters.yearTo))) return false
 
-  if (filters.french === 'ready' && !availability.readyInFrench) return false
-  if (filters.french === 'official' && availability.frenchState !== 'official') return false
-  if (filters.french === 'translated' && !['translated', 'mixed'].includes(availability.frenchState)) return false
-  if (filters.french === 'partial' && availability.frenchState !== 'partial') return false
-  if (filters.french === 'none' && availability.frenchState !== 'none') return false
+  if (filters.french && availability.mode !== filters.french) return false
 
   return true
 }
@@ -332,8 +330,8 @@ function FilterBar({ filters, setFilters, units, showBundle = false }: { filters
     <label className="search finder-search">⌕<input value={filters.query} onChange={(event) => update('query', event.target.value)} placeholder="Titre, campagne, lieu, arc, fil narratif…" /></label>
     <select value={filters.level} onChange={(event) => update('level', event.target.value)}><option value="">Tous niveaux</option>{Array.from({ length: 20 }, (_, index) => <option key={index + 1}>{index + 1}</option>)}</select>
     <GeographyPicker value={filters.place} options={places} onChange={(value) => update('place', value)} />
-    <select value={filters.french} onChange={(event) => update('french', event.target.value)}><option value="">Toutes langues</option><option value="ready">Prêt en français</option><option value="official">FR officiel</option><option value="translated">Traduit FR</option><option value="partial">FR partiel</option><option value="none">Pas de FR</option></select>
-    <select value={filters.availability} onChange={(event) => update('availability', event.target.value)}><option value="">Toute disponibilité</option><option value="complete">Complet</option><option value="informationOnly">Info seule</option><option value="partial">Partiel</option><option value="absent">Absent</option><option value="uncertain">Incertain</option></select>
+    <select value={filters.french} onChange={(event) => update('french', event.target.value)}><option value="">Tous modes documentaires</option><option value="fr">FR</option><option value="en_trad">EN + traduction</option><option value="en">EN seul</option><option value="info">Info</option></select>
+    <select value={filters.availability} onChange={(event) => update('availability', event.target.value)}><option value="">Toute couverture</option><option value="complete">Complet</option><option value="partial">Partiel</option><option value="absent">Absent</option></select>
     <select value={filters.relevance} onChange={(event) => update('relevance', event.target.value)}><option value="">Toute pertinence</option>{relevances.map((value) => <option key={value}>{value}</option>)}</select>
     <select value={filters.playability} onChange={(event) => update('playability', event.target.value)}><option value="">Toute jouabilité</option>{playabilityOptions.map((value) => <option key={value}>{value}</option>)}</select>
     <select value={filters.progress} onChange={(event) => update('progress', event.target.value)}><option value="">Tous suivis</option>{progressOptions.map((value) => <option key={value}>{value}</option>)}</select>
@@ -351,8 +349,7 @@ function AvailabilityBadges({ unit }: { unit: PlayableUnit }) {
   const availability = availabilityOf(unit)
   const bundle = resourceBundleAvailability(unit)
   return <div className="availability-badges">
-    <Badge>{availabilityLabel(availability.coreMaterial)}</Badge>
-    <Badge>{frenchStateLabel(availability.frenchState)}</Badge>
+    <Badge>{availability.coverage === 'complete' && availability.mode !== 'none' ? `${documentaryCoverageLabel(availability.coverage)} · ${documentaryModeLabel(availability.mode)}` : documentaryCoverageLabel(availability.coverage)}</Badge>
     <Badge>{resourceBundleLabel(bundle)}</Badge>
   </div>
 }
@@ -427,11 +424,11 @@ function LibraryView({ curation, onOpen, onOpenPlayable, onUpdate }: { curation:
 function preparationMatch(unit: PlayableUnit, tab: PreparationTab): boolean {
   const availability = availabilityOf(unit)
   const bundle = resourceBundleAvailability(unit)
-  if (tab === 'pdf') return ['absent', 'partial'].includes(availability.coreMaterial)
-  if (tab === 'translation') return availability.original === 'complete' && !availability.readyInFrench
-  if (tab === 'zip') return bundle.status === 'missing' && ['complete', 'informationOnly'].includes(availability.coreMaterial)
-  if (tab === 'info') return availability.coreMaterial === 'informationOnly' || documentsForTarget(unit.id).some((document) => document.isInformationFallback)
-  if (tab === 'uncertain') return availability.coreMaterial === 'uncertain' || bundle.status === 'uncertain' || documentsForTarget(unit.id).some((document) => document.association.status === 'review')
+  if (tab === 'pdf') return ['absent', 'partial'].includes(availability.coverage)
+  if (tab === 'translation') return availability.coverage === 'complete' && availability.mode === 'en'
+  if (tab === 'zip') return bundle.status === 'missing' && availability.coverage === 'complete'
+  if (tab === 'info') return availability.mode === 'info' || documentsForTarget(unit.id).some((document) => document.isInformationFallback)
+  if (tab === 'uncertain') return bundle.status === 'uncertain' || documentsForTarget(unit.id).some((document) => document.association.status === 'review')
   return unit.migration.status === 'needsReview'
 }
 
@@ -489,9 +486,9 @@ function ChronologyView({ units, onOpen }: { units: PlayableUnit[]; onOpen: (uni
 }
 
 function Stats({ active }: { active: PlayableUnit[] }) {
-  const complete = active.filter((unit) => availabilityOf(unit).coreMaterial === 'complete').length
-  const infoOnly = active.filter((unit) => availabilityOf(unit).coreMaterial === 'informationOnly').length
-  const readyFr = active.filter((unit) => availabilityOf(unit).readyInFrench).length
+  const complete = active.filter((unit) => availabilityOf(unit).coverage === 'complete').length
+  const infoOnly = active.filter((unit) => availabilityOf(unit).mode === 'info').length
+  const readyFr = active.filter((unit) => availabilityOf(unit).ready).length
   const zipMissing = resourceInventoryKnown ? active.filter((unit) => resourceBundleAvailability(unit).status === 'missing').length : null
   const review = active.filter((unit) => unit.migration.status === 'needsReview').length
   return <section className="stats stats-v3"><div><b>▶</b><p><strong>{active.length}</strong><small>UNITÉS JOUABLES</small></p></div><div><b>✓</b><p><strong>{complete}</strong><small>PDF COMPLETS</small></p></div><div><b>文</b><p><strong>{readyFr}</strong><small>PRÊTES EN FR</small></p></div><div><b>ⓘ</b><p><strong>{infoOnly}</strong><small>INFO SEULES</small></p></div><div><b>▣</b><p><strong>{zipMissing ?? '—'}</strong><small>ZIP MANQUANTS</small></p></div><div><b>!</b><p><strong>{review}</strong><small>MÉTADONNÉES À VOIR</small></p></div></section>
@@ -647,15 +644,14 @@ function PlayableDetail({ unit, curation, onClose, onUpdate, placeOptions, onOpe
 
   return <Modal onClose={onClose}>
     <div className="detail-head"><small>{playableTypeLabel(unit.playableType)}{ancestors[0] ? ` · ${ancestors.map(titleOf).join(' · ')}` : ''}</small><h2>{unit.number && `${unit.number} · `}{titleOf(unit)}</h2>{originalTitleOf(unit) && <em>{originalTitleOf(unit)}</em>}<AvailabilityBadges unit={unit} /></div>
-    <div className="availability-grid"><div><small>Original</small><strong>{availabilityLabel(availability.original)}</strong></div><div><small>FR officiel</small><strong>{availabilityLabel(availability.officialFr)}</strong></div><div><small>Traduction</small><strong>{availabilityLabel(availability.translation)}</strong></div><div><small>Documents requis</small><strong>{availability.requiredDocuments.present}/{availability.requiredDocuments.required}</strong>{availability.requiredDocuments.informationOnly > 0 && <em> + {availability.requiredDocuments.informationOnly} info</em>}</div><div><small>ZIP Foundry</small><strong>{resourceBundleLabel(bundle)}</strong>{bundle.inheritedFromId && <em>hérité de {titleOf(containerMap.get(bundle.inheritedFromId)!)}</em>}</div></div>
-    <dl className="detail-grid"><div><dt>Niveaux</dt><dd><input value={levelsDraft} onChange={(event) => setLevelsDraft(event.target.value)} /><button onClick={() => onUpdate(unit.id, 'levelsOverride', levelsDraft)}>Enregistrer</button><SourceBadge source={levels.source} /></dd></div><div><dt>Lieux</dt><dd><input list="all-places" value={placesDraft} onChange={(event) => setPlacesDraft(event.target.value)} /><datalist id="all-places">{placeOptions.map((place) => <option key={place}>{place}</option>)}</datalist><button onClick={() => onUpdate(unit.id, 'placesOverride', placesDraft.split(',').map((value) => value.trim()).filter(Boolean))}>Remplacer</button>{locations.map((location) => <span className="location-provenance" key={`${location.id}-${location.source.kind}`}>{location.id}<SourceBadge source={location.source} /></span>)}</dd></div><div><dt>Chronologie</dt><dd>{yearOf(unit) ? `${unit.chronology.estimated ? '≈ ' : ''}${yearOf(unit)} AR` : unit.chronology.period || 'À documenter'}</dd></div><div><dt>Fil narratif</dt><dd>{unit.narrativeThread || '—'}</dd></div></dl>
+    <div className="availability-grid"><div><small>Couverture</small><strong>{documentaryCoverageLabel(availability.coverage)}</strong></div><div><small>Mode</small><strong>{documentaryModeLabel(availability.mode) || '—'}</strong></div><div><small>Prêt</small><strong>{availability.ready ? 'OK' : 'Non'}</strong></div><div><small>Documents requis</small><strong>{availability.requiredDocuments.present}/{availability.requiredDocuments.required}</strong>{availability.requiredDocuments.informationOnly > 0 && <em> + {availability.requiredDocuments.informationOnly} info</em>}</div><div><small>ZIP Foundry</small><strong>{resourceBundleLabel(bundle)}</strong>{bundle.inheritedFromId && <em>hérité de {titleOf(containerMap.get(bundle.inheritedFromId)!)}</em>}</div></div>
+    <dl className="detail-grid"><div><dt>Niveaux</dt><dd><input value={levelsDraft} onChange={(event) => setLevelsDraft(event.target.value)} /><button onClick={() => onUpdate(unit.id, 'levelsOverride', levelsDraft)}>Enregistrer</button><SourceBadge source={levels.source} /></dd></div><div><dt>Lieux</dt><dd><input list="all-places" value={placesDraft} onChange={(event) => setPlacesDraft(event.target.value)} /><datalist id="all-places">{placeOptions.map((place) => <option key={place}>{place}</option>)}</datalist><button onClick={() => onUpdate(unit.id, 'placesOverride', placesDraft.split(',').map((value) => value.trim()).filter(Boolean))}>Remplacer</button>{locations.map((location) => <span className="location-provenance" key={`${location.id}-${location.source.kind}`}>{location.id}<SourceBadge source={location.source} /></span>)}</dd></div><div><dt>Suivi</dt><dd><select value={effectiveProgress(unit, override)} onChange={(event) => onUpdate(unit.id, 'progress', event.target.value)}>{progressOptions.map((value) => <option key={value}>{value}</option>)}</select></dd></div><div><dt>Chronologie</dt><dd>{yearOf(unit) ? `${unit.chronology.estimated ? '≈ ' : ''}${yearOf(unit)} AR` : unit.chronology.period || 'À documenter'}</dd></div><div><dt>Fil narratif</dt><dd>{unit.narrativeThread || '—'}</dd></div></dl>
     {unit.arcIds.length > 0 && <section className="detail-section"><h3>Arcs PFS / transversaux</h3><div className="badges">{unit.arcIds.map((id) => <Badge key={id}>{arcMap.get(id)?.titleFr || id}</Badge>)}</div></section>}
     <section className="detail-section synopsis-long"><h3>Synopsis de l’unité</h3><p>{unit.synopsis || 'À documenter.'}</p>{!unit.synopsis && unit.contextSynopsis && <div className="inherited-context"><small>CONTEXTE HÉRITÉ DE LA CAMPAGNE</small><p>{unit.contextSynopsis}</p></div>}</section>
     {unit.gmDetails && <section className="detail-section gm-details"><h3>Détails MJ</h3><p>{unit.gmDetails}</p></section>}
     {unit.migration.issues.length > 0 && <section className="detail-section migration-warning"><h3>À revoir après migration</h3><ul>{unit.migration.issues.map((issue) => <li key={issue}>{issue}</li>)}</ul></section>}
     {components.length > 0 && <section className="detail-section"><h3>Composants de l’œuvre</h3><div className="part-list">{components.map((component) => <article key={component.id}><strong>{componentTypeLabel(component.componentType)} · {titleOf(component)}</strong><span>{component.notes}</span><Badge>{component.requiredForCore ? 'Requis' : 'Facultatif'}</Badge></article>)}</div></section>}
     <ScenarioPackagePanel scenarioId={unit.id} onOpenReference={onOpenReference} />
-    <button className={`curation-button ${isExcluded(unit, override) ? 'restore' : 'exclude'}`} onClick={() => onUpdate(unit.id, 'excluded', !isExcluded(unit, override))}>{isExcluded(unit, override) ? '↩ Réintégrer' : '× Écarter cette unité'}</button>
   </Modal>
 }
 
@@ -666,11 +662,10 @@ function ContainerDetail({ container, curation, onClose, onOpenPlayable, onUpdat
   return <Modal onClose={onClose}>
     <div className="detail-head"><small>{containerTypeLabel(container.containerType)} · CONTENEUR NON JOUABLE</small><h2>{titleOf(container)}</h2>{originalTitleOf(container) && <em>{originalTitleOf(container)}</em>}<div className="badges"><Badge>{levelLabel(container.levels)}</Badge><Badge>{children.length} unités jouables</Badge><Badge>{container.migration.status === 'ready' ? 'Structure prête' : 'À revoir'}</Badge></div></div>
     <section className="detail-section synopsis-long"><h3>Synthèse</h3><p>{container.synopsis || 'Synopsis de collection non renseigné.'}</p></section>
-    <dl className="detail-grid"><div><dt>Niveaux affichés</dt><dd>{levelLabel(container.levels)}<SourceBadge source={container.levels.source} /></dd></div><div><dt>Lieux</dt><dd>{container.locations.length ? unique(container.locations.map((location) => placeDisplay(location.id))).join(', ') : 'Agrégés depuis les enfants / à documenter'}{container.locations[0] && <SourceBadge source={container.locations[0].source} />}</dd></div></dl>
+    <dl className="detail-grid"><div><dt>Niveaux affichés</dt><dd>{levelLabel(container.levels)}<SourceBadge source={container.levels.source} /></dd></div><div><dt>Lieux</dt><dd>{container.locations.length ? unique(container.locations.map((location) => placeDisplay(location.id))).join(', ') : 'Agrégés depuis les enfants / à documenter'}{container.locations[0] && <SourceBadge source={container.locations[0].source} />}</dd></div><div><dt>Suivi</dt><dd><select value={override.excluded || override.progress === 'Écarté' ? 'Écarté' : override.progress ?? 'Non spécifié'} onChange={(event) => onUpdate(container.id, 'progress', event.target.value)}>{progressOptions.map((value) => <option key={value}>{value}</option>)}</select></dd></div></dl>
     {container.migration.issues.length > 0 && <section className="detail-section migration-warning"><h3>Décisions de migration</h3><ul>{container.migration.issues.map((issue) => <li key={issue}>{issue}</li>)}</ul></section>}
-    <section className="detail-section"><h3>Unités jouables</h3>{children.length ? <div className="compact-playables">{children.map((unit) => <button key={unit.id} onClick={() => onOpenPlayable(unit)}><span>▶</span><strong>{titleOf(unit)}</strong><small>{levelLabel(unit.levels)} · {availabilityLabel(availabilityOf(unit).coreMaterial)}</small></button>)}</div> : <p className="missing">Aucune unité jouable explicite : cette campagne doit être découpée avant d’être fiable dans « Trouver une partie ».</p>}</section>
+    <section className="detail-section"><h3>Unités jouables</h3>{children.length ? <div className="compact-playables">{children.map((unit) => { const status = availabilityOf(unit); return <button key={unit.id} onClick={() => onOpenPlayable(unit)}><span>▶</span><strong>{titleOf(unit)}</strong><small>{levelLabel(unit.levels)} · {status.coverage === 'complete' && status.mode !== 'none' ? `${documentaryCoverageLabel(status.coverage)} · ${documentaryModeLabel(status.mode)}` : documentaryCoverageLabel(status.coverage)}</small></button> })}</div> : <p className="missing">Aucune unité jouable explicite : cette campagne doit être découpée avant d’être fiable dans « Trouver une partie ».</p>}</section>
     {components.length > 0 && <section className="detail-section"><h3>Composants / ressources</h3><div className="part-list">{components.map((component) => <ComponentCard component={component} key={component.id} />)}</div></section>}
-    {container.legacyEntryId && <button className={`curation-button ${override.excluded ? 'restore' : 'exclude'}`} onClick={() => onUpdate(container.id, 'excluded', !override.excluded)}>{override.excluded ? '↩ Réintégrer la campagne' : '× Écarter la campagne'}</button>}
   </Modal>
 }
 
@@ -826,7 +821,7 @@ export function Pf2MjApp() {
   const active = useMemo(() => playableUnits.filter((unit) => !isExcluded(unit, resolvePlayableOverride(curation, unit), curation)), [curation, catalogueRevision])
   const excluded = useMemo(() => playableUnits.filter((unit) => isExcluded(unit, resolvePlayableOverride(curation, unit), curation)), [curation, catalogueRevision])
   const placeOptions = useMemo(() => unique([...allPlaces, ...(curation.customPlaces ?? [])]), [curation, catalogueRevision])
-  const missingTranslations = active.filter((unit) => availabilityOf(unit).original === 'complete' && !availabilityOf(unit).readyInFrench).length
+  const missingTranslations = active.filter((unit) => availabilityOf(unit).coverage === 'complete' && availabilityOf(unit).mode === 'en').length
   const missingZips = resourceInventoryKnown ? active.filter((unit) => resourceBundleAvailability(unit).status === 'missing').length : null
   const documentCount = currentDocuments().length
 
@@ -836,7 +831,11 @@ export function Pf2MjApp() {
       const response = await fetch('/apil7r/pf2-mj/curation', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ targetType: 'entry', id, field, value }) })
       const payload = await response.json().catch(() => null)
       if (!response.ok) throw new Error(typeof payload?.error === 'string' ? payload.error : 'Impossible d’enregistrer la modification.')
-      setCuration(payload)
+      // Read back the canonical SQLite value instead of trusting only the POST
+      // response: this catches a stale proxy/backend immediately and keeps a
+      // browser refresh consistent with what was actually saved.
+      const confirmed = await fetch('/apil7r/pf2-mj/curation', { cache: 'no-store' })
+      setCuration(confirmed.ok ? await confirmed.json() : payload)
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : 'Impossible d’enregistrer la modification.')
     }
@@ -897,7 +896,7 @@ export function Pf2MjApp() {
   const nav: Array<[View, string, string, number | string]> = [
     ['find', '▶', 'Trouver une partie', active.length],
     ['library', '▦', 'Bibliothèque', containers.length],
-    ['prepare', '◒', 'À préparer', active.filter((unit) => availabilityOf(unit).coreMaterial !== 'complete' || (resourceInventoryKnown && resourceBundleAvailability(unit).status === 'missing')).length],
+    ['prepare', '◒', 'À préparer', active.filter((unit) => !availabilityOf(unit).ready || (resourceInventoryKnown && resourceBundleAvailability(unit).status === 'missing')).length],
     ['documents', '⌁', 'Ressources PDF', documentCount],
     ['chronology', '◷', 'Chronologie', ''],
     ['excluded', '×', 'Écartés', excluded.length],
