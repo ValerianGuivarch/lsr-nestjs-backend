@@ -584,26 +584,85 @@ function ScanPanel({ report, onClose, onApply }: { report: ScanReport; onClose: 
   </section>
 }
 
+type DataTransferDomain = 'geography' | 'catalogue' | 'pnj' | 'factions' | 'lieux' | 'regions' | 'evenements' | 'curation'
+
+const transferDomains: Array<{ id: DataTransferDomain; label: string; note: string }> = [
+  { id: 'geography', label: 'Géographie complète', note: 'Lieux + régions + alias + hiérarchie.' },
+  { id: 'catalogue', label: 'Catalogue', note: 'Campagnes, scénarios, composants et documents.' },
+  { id: 'pnj', label: 'PNJ', note: 'Toutes les fiches PNJ.' },
+  { id: 'factions', label: 'Factions', note: 'Toutes les factions.' },
+  { id: 'evenements', label: 'Événements', note: 'Tous les événements.' },
+  { id: 'lieux', label: 'Lieux seuls', note: 'Sous-ensemble de la géographie, utile pour une retouche ciblée.' },
+  { id: 'regions', label: 'Régions seules', note: 'Sous-ensemble de la géographie, utile pour une retouche ciblée.' },
+  { id: 'curation', label: 'Curation', note: 'Inclusions, exclusions et ajustements utilisateur.' },
+]
+
+function transferDiffText(result: Record<string, unknown>): string {
+  const value = result.summary ?? result
+  if (!value || typeof value !== 'object') return JSON.stringify(result, null, 2)
+  const summary = value as Record<string, unknown>
+  const lines: string[] = []
+  Object.entries(summary).forEach(([key, raw]) => {
+    if (raw && typeof raw === 'object' && !Array.isArray(raw)) {
+      const item = raw as Record<string, unknown>
+      const parts = ['current', 'next', 'added', 'updated', 'removed'].filter((field) => typeof item[field] === 'number').map((field) => `${field}: ${item[field]}`)
+      lines.push(`${key}: ${parts.length ? parts.join(' · ') : JSON.stringify(raw)}`)
+    } else lines.push(`${key}: ${String(raw)}`)
+  })
+  return lines.join('\n') || JSON.stringify(result, null, 2)
+}
+
 function Settings({ places, onOperation }: { places: string[]; onOperation: (operation: string, from?: string, to?: string) => void }) {
   const [draft, setDraft] = useState('')
   const [transferMessage, setTransferMessage] = useState('')
+  const [transferBusy, setTransferBusy] = useState<DataTransferDomain | null>(null)
 
-  const importData = async (domain: 'geography' | 'catalogue', file?: File) => {
+  const exportData = async (domain: DataTransferDomain) => {
+    setTransferBusy(domain)
+    setTransferMessage(`Export ${domain} depuis pf2.sqlite…`)
+    try {
+      const response = await fetch(`/apil7r/pf2-mj/data-export/${domain}`)
+      const payload = await response.json().catch(() => null)
+      if (!response.ok) throw new Error(payload?.message || payload?.error || `Erreur HTTP ${response.status}`)
+      const blob = new Blob([`${JSON.stringify(payload, null, 2)}\n`], { type: 'application/json;charset=utf-8' })
+      const href = URL.createObjectURL(blob)
+      const anchor = document.createElement('a')
+      const date = new Date().toISOString().slice(0, 10)
+      anchor.href = href
+      anchor.download = `pf2-${domain}-${date}.json`
+      document.body.appendChild(anchor)
+      anchor.click()
+      anchor.remove()
+      URL.revokeObjectURL(href)
+      setTransferMessage(`Export ${domain} généré depuis pf2.sqlite.`)
+    } catch (caught) {
+      setTransferMessage(caught instanceof Error ? caught.message : 'Export impossible.')
+    } finally {
+      setTransferBusy(null)
+    }
+  }
+
+  const importData = async (domain: DataTransferDomain, file?: File) => {
     if (!file) return
+    setTransferBusy(domain)
     setTransferMessage(`Validation de ${file.name}…`)
     try {
       const payload = JSON.parse(await file.text())
       const dryResponse = await fetch(`/apil7r/pf2-mj/data-import/${domain}?dryRun=true`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
       const dry = await dryResponse.json().catch(() => null)
       if (!dryResponse.ok) throw new Error(dry?.message || dry?.error || `Erreur HTTP ${dryResponse.status}`)
-      if (!window.confirm(`Validation réussie pour ${domain}. Appliquer maintenant les changements dans pf2.sqlite ?\n\n${JSON.stringify(dry.summary ?? dry, null, 2)}`)) { setTransferMessage('Import annulé après validation.'); return }
+      const diff = transferDiffText(dry ?? {})
+      const warning = domain === 'catalogue' ? 'Un export catalogue ciblé est fusionné ; un export complet remplace le catalogue complet.' : domain === 'curation' ? 'La curation importée devient la nouvelle curation active.' : 'Un export complet de ce domaine devient le nouvel état du domaine : les éléments absents du fichier peuvent être supprimés.'
+      if (!window.confirm(`Validation réussie pour ${domain}.\n\n${diff}\n\n${warning}\n\nAppliquer maintenant dans pf2.sqlite ?`)) { setTransferMessage('Import annulé après validation.'); return }
       const response = await fetch(`/apil7r/pf2-mj/data-import/${domain}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
       const result = await response.json().catch(() => null)
       if (!response.ok) throw new Error(result?.message || result?.error || `Erreur HTTP ${response.status}`)
-      setTransferMessage('Import appliqué dans pf2.sqlite. Rechargement…')
+      setTransferMessage(`Import ${domain} appliqué dans pf2.sqlite. Rechargement…`)
       window.location.reload()
     } catch (caught) {
       setTransferMessage(caught instanceof Error ? caught.message : 'Import impossible.')
+    } finally {
+      setTransferBusy(null)
     }
   }
 
@@ -611,7 +670,7 @@ function Settings({ places, onOperation }: { places: string[]; onOperation: (ope
     <div className="settings-intro"><small>RÉFÉRENTIEL LOCAL</small><h2>Données & migration</h2><p>SQLite est la source de vérité. Les exports JSON sont des formats d’échange éditables : ils ne modifient la base qu’après réimport.</p></div>
     <div className="settings-card"><div className="add-place"><input value={draft} onChange={(event) => setDraft(event.target.value)} placeholder="Ajouter un lieu…" /><button onClick={() => { if (draft.trim()) { onOperation('place-add', undefined, draft.trim()); setDraft('') } }}>Ajouter</button></div><div className="place-cloud">{places.map((place) => <Badge key={place}>{place}</Badge>)}</div></div>
     <div className="settings-card migration-summary"><h3>Catalogue SQLite</h3><p>Le catalogue est chargé depuis <code>pf2.sqlite</code> puis normalisé à l’exécution en conteneurs, unités jouables, composants et documents. Les anciens JSON sont conservés uniquement comme archives de migration.</p><dl><div><dt>Conteneurs</dt><dd>{containers.length}</dd></div><div><dt>Unités jouables</dt><dd>{playableUnits.length}</dd></div><div><dt>Documents</dt><dd>{currentDocuments().length}</dd></div><div><dt>Points à revoir</dt><dd>{migrationIssues.length}</dd></div><div><dt>Inventaire ZIP</dt><dd>{resourceInventoryKnown ? 'actif' : 'en attente du scan'}</dd></div></dl></div>
-    <div className="settings-card"><h3>Import / export JSON</h3><p>Exporte un domaine, retravaille-le ou partage-le, puis réimporte-le. Chaque import est d’abord validé en mode simulation.</p><div className="data-transfer-actions"><a className="refresh" href="/apil7r/pf2-mj/data-export/geography" target="_blank" rel="noreferrer">Exporter géographie</a><a className="refresh" href="/apil7r/pf2-mj/data-export/catalogue" target="_blank" rel="noreferrer">Exporter catalogue</a></div><div className="data-transfer-actions"><label>Importer géographie <input type="file" accept="application/json,.json" onChange={(event) => { const file=event.target.files?.[0]; event.target.value=''; void importData('geography', file) }} /></label><label>Importer catalogue <input type="file" accept="application/json,.json" onChange={(event) => { const file=event.target.files?.[0]; event.target.value=''; void importData('catalogue', file) }} /></label></div>{transferMessage && <p>{transferMessage}</p>}</div>
+    <div className="settings-card"><h3>Import / export JSON</h3><p>Chaque bouton exporte l’état actuel de <code>pf2.sqlite</code>. Tu peux modifier le JSON ou me l’envoyer, puis le réimporter. L’application montre toujours le diff en simulation avant de demander confirmation.</p><div className="data-transfer-grid">{transferDomains.map((domain) => <div className="data-transfer-domain" key={domain.id}><div><strong>{domain.label}</strong><span>{domain.note}</span></div><div className="data-transfer-actions"><button className="refresh" disabled={transferBusy !== null} onClick={() => void exportData(domain.id)}>{transferBusy === domain.id ? 'Traitement…' : 'Exporter'}</button><label className={transferBusy !== null ? 'disabled' : ''}>Importer<input type="file" disabled={transferBusy !== null} accept="application/json,.json" onChange={(event) => { const file=event.target.files?.[0]; event.target.value=''; void importData(domain.id, file) }} /></label></div></div>)}</div>{transferMessage && <p className="data-transfer-message">{transferMessage}</p>}</div>
   </section>
 }
 
@@ -731,7 +790,7 @@ export function Pf2MjApp() {
 
   return <main className="pf2-mj pf2-mj-v3">
     <header><button className="brand brand-button" onClick={() => setView('find')}><b>✦</b><span><strong>PATHFINDER 2</strong><small>GESTION MJ · MODÈLE V3</small></span></button><div className="header-right"><span><i />{missingTranslations} trad. manquante{missingTranslations > 1 ? 's' : ''} · {missingZips === null ? 'ZIP à inventorier' : `${missingZips} ZIP manquant${missingZips > 1 ? 's' : ''}`} · {documentCount} PDF</span><em>MJ</em></div></header>
-    <div className="layout"><aside><nav>{nav.map(([id, icon, label, count]) => <button key={id} className={view === id ? 'active' : ''} onClick={() => setView(id)}><span>{icon}</span>{label}<b>{count}</b></button>)}</nav><section><p>PRINCIPES V3</p><span className="aside-rule">▶ Unité jouable = seule recherche</span><span className="aside-rule">▣ Campagne = conteneur</span><span className="aside-rule">◇ Guide/carte = ressource</span><span className="aside-rule">ⓘ Info = substitut distinct</span></section><div className="scan-note"><b>V3</b><strong>Adaptateur sans perte</strong><p>Le catalogue V2 reste la source pendant la migration. Les nouvelles entités sont normalisées à l’exécution.</p></div></aside>
+    <div className="layout"><aside><nav>{nav.map(([id, icon, label, count]) => <button key={id} className={view === id ? 'active' : ''} onClick={() => setView(id)}><span>{icon}</span>{label}<b>{count}</b></button>)}</nav><section><p>PRINCIPES V3</p><span className="aside-rule">▶ Unité jouable = seule recherche</span><span className="aside-rule">▣ Campagne = conteneur</span><span className="aside-rule">◇ Guide/carte = ressource</span><span className="aside-rule">ⓘ Info = substitut distinct</span></section><div className="scan-note"><b>V3</b><strong>SQLite comme source</strong><p>Le catalogue est chargé depuis SQLite puis normalisé sans perte pour l’interface V3.</p></div></aside>
       <section className="content">{!isReferenceView && <><div className="page-title"><div><small>TABLE OUVERTE · GOLARION PERSISTANT</small><h1>{headings[view][0]}</h1><p>{headings[view][1]}</p></div><button className="refresh" onClick={refresh}>{scanStatus === 'scanning' ? '↻ Détection…' : scanStatus === 'done' ? '✓ Rapport prêt' : scanStatus === 'error' ? '! Réessayer' : '↻ Scanner PDF & ZIP'}</button></div>{error && <div className="notice"><strong>Attention</strong><p>{error}</p></div>}{scan && <ScanPanel report={scan} onClose={() => setScan(null)} onApply={applyScan} />}{!['excluded', 'settings', 'documents'].includes(view) && <Stats active={active} />}{view === 'find' && <FinderView active={active} curation={curation} onOpen={setSelected} onUpdate={update} resourceVersion={resourceRevision} />}{view === 'library' && <LibraryView curation={curation} onOpen={setSelected} onOpenPlayable={setSelected} onUpdate={update} />}{view === 'prepare' && <PreparationView active={active} curation={curation} onOpen={setSelected} onUpdate={update} resourceVersion={resourceRevision} />}{view === 'documents' && <DocumentsView resourceVersion={resourceRevision} />}{view === 'chronology' && <ChronologyView units={active} onOpen={setSelected} />}{view === 'excluded' && <PlayableList units={sortPlayables(excluded, curation)} curation={curation} onOpen={setSelected} onUpdate={update} />}{view === 'settings' && <Settings places={placeOptions} onOperation={placeOperation} />}</>}{view === 'pnj' && <PnjPage />}{view === 'factions' && <FactionsPage />}{view === 'lieux' && <LieuxPage />}{view === 'regions' && <RegionsPage />}{view === 'evenements' && <EvenementsPage />}</section>
     </div>
     {selected?.entityKind === 'playable' && <PlayableDetail unit={selected} curation={curation} onClose={() => setSelected(null)} onUpdate={update} placeOptions={placeOptions} />}
