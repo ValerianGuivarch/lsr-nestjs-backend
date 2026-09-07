@@ -2,7 +2,7 @@
   "id": "pf2e-val-toolkit",
   "title": "PF2e Val Toolkit",
   "description": "Personal toolkit for Pathfinder 2e campaigns in Foundry VTT.",
-  "version": "0.31.1",
+  "version": "0.33.0",
   "authors": [
     {
       "name": "Val"

@@ -5,6 +5,10 @@ import { FastifyReply, FastifyRequest } from 'fastify'
 import { FoundryRelayService } from '../foundry/FoundryRelayService'
 import { Pf2MjService } from './Pf2MjService'
 import { ScenarioPackageService } from './ScenarioPackageService'
+import { ScenarioPreparationService } from './ScenarioPreparationService'
+import { FoundryReferenceLibraryService } from './FoundryReferenceLibraryService'
+import { GeneratedDownloadService } from './GeneratedDownloadService'
+import { ScenarioCampaignService } from './ScenarioCampaignService'
 
 // Le sélecteur des résumés ne propose que les PJ. La convention de nommage
 // Foundry de la table est « Nom du PJ (Nom du joueur) ».
@@ -16,7 +20,7 @@ const playerActorName = /^\S(?:.*\S)?\s+\([^()]+\)$/u
 @ApiTags('PF2 MJ')
 export class Pf2MjController {
   private readonly logger = new Logger(Pf2MjController.name)
-  constructor(private readonly service: Pf2MjService, private readonly foundry: FoundryRelayService, private readonly scenarioPackages: ScenarioPackageService) {}
+  constructor(private readonly service: Pf2MjService, private readonly foundry: FoundryRelayService, private readonly scenarioPackages: ScenarioPackageService, private readonly scenarioPreparation: ScenarioPreparationService, private readonly scenarioCampaigns: ScenarioCampaignService, private readonly referenceLibrary: FoundryReferenceLibraryService, private readonly generatedDownloads: GeneratedDownloadService) {}
 
   @Get('npc-registry')
   npcRegistry(@Query('includeExcluded') includeExcluded?: string): Promise<unknown[]> { return this.scenarioPackages.registry(includeExcluded === 'true') }
@@ -33,14 +37,150 @@ export class Pf2MjController {
   @Get('scenarios/:id/relations')
   relationsForScenario(@Param('id') id: string): Promise<Record<string, unknown[]>> { return this.scenarioPackages.relationsForScenario(id) }
 
+  @Get('scenario-registry')
+  scenarioRegistry(): Promise<unknown[]> { return this.scenarioPackages.scenarioRegistry() }
+
+  @Get('scenarios/:id/dependencies')
+  dependenciesForScenario(@Param('id') id: string): Promise<{ dependencies: unknown[]; dependents: unknown[] }> { return this.scenarioPackages.dependenciesForScenario(id) }
+
+  @Put('scenarios/:id/dependencies')
+  async replaceDependenciesForScenario(@Param('id') id: string, @Body() body: unknown): Promise<{ dependencies: unknown[]; dependents: unknown[] }> {
+    try { return await this.scenarioPackages.replaceDependenciesForScenario(id, body) }
+    catch (error) { throw new HttpException(error instanceof Error ? error.message : 'Mise à jour des dépendances impossible.', HttpStatus.BAD_REQUEST) }
+  }
+
   @Get('scenarios/:id/resources')
   resourcesForScenario(@Param('id') id: string): Promise<unknown[]> { return this.service.libraryAssetsForScenario(id) }
 
   @Get('scenarios/:id/export')
   scenarioExport(@Param('id') id: string): Promise<Record<string, unknown>> { return this.scenarioPackages.scenarioExport(id) }
 
+  @Get('scenarios/:id/ai-preparation')
+  async aiPreparationExport(@Param('id') id: string, @Res() reply: FastifyReply): Promise<void> {
+    try {
+      const task = await this.scenarioPreparation.exportTaskZip(id)
+      reply.header('Content-Type', 'application/zip')
+      reply.header('Content-Length', String(task.bytes.byteLength))
+      reply.header('Content-Disposition', `attachment; filename*=UTF-8''${encodeURIComponent(task.filename)}`)
+      await reply.send(task.bytes)
+    } catch (error) {
+      throw new HttpException(error instanceof Error ? error.message : 'Export de préparation IA impossible.', HttpStatus.BAD_REQUEST)
+    }
+  }
+
+  // PF2_AI_TWO_PASS_REFERENCE_LIBRARY_V1
+  @Get('foundry-reference-library/status')
+  foundryReferenceLibraryStatus(): Promise<Record<string, unknown>> { return this.referenceLibrary.status() }
+
+  @Post('foundry-reference-library/import')
+  async importFoundryReferenceLibrary(@Req() request: FastifyRequest): Promise<unknown> {
+    try {
+      const file = await (request as FastifyRequest & { file: () => Promise<MultipartFile | undefined> }).file()
+      if (!file || !file.filename.toLowerCase().endsWith('.json')) throw new Error('Envoie le JSON « PF2e Reference Library » exporté depuis Foundry.')
+      return await this.referenceLibrary.importLibrary(await file.toBuffer(), file.filename)
+    } catch (error) { throw new HttpException(error instanceof Error ? error.message : 'Import de la bibliothèque Foundry impossible.', HttpStatus.BAD_REQUEST) }
+  }
+
+  // PF2_ROBUST_DOWNLOADS_V2
+  @Post('downloads/prepare/ai-preflight/:id')
+  async prepareAiPreflightDownload(@Param('id') id: string): Promise<unknown> {
+    try {
+      const task = await this.scenarioPreparation.exportPreflightZip(id)
+      return await this.generatedDownloads.create(task.bytes, task.filename, 'application/zip')
+    } catch (error) {
+      throw new HttpException(error instanceof Error ? error.message : 'Préparation du téléchargement IA impossible.', HttpStatus.BAD_REQUEST)
+    }
+  }
+
+  @Post('downloads/prepare/ai-generation/:id')
+  async prepareAiGenerationDownload(@Param('id') id: string): Promise<unknown> {
+    try {
+      const task = await this.scenarioPreparation.exportGenerationZip(id)
+      return await this.generatedDownloads.create(task.bytes, task.filename, 'application/zip')
+    } catch (error) {
+      throw new HttpException(error instanceof Error ? error.message : 'Préparation du téléchargement IA impossible.', HttpStatus.BAD_REQUEST)
+    }
+  }
+
+  @Get('downloads/:token')
+  async generatedDownload(@Param('token') token: string, @Req() request: FastifyRequest, @Res() reply: FastifyReply): Promise<void> {
+    try {
+      const range = typeof request.headers.range === 'string' ? request.headers.range : undefined
+      const download = await this.generatedDownloads.open(token, range)
+      reply.status(download.statusCode)
+      for (const [name, value] of Object.entries(download.headers)) reply.header(name, value)
+      await reply.send(download.stream)
+    } catch (error) {
+      throw new HttpException(error instanceof Error ? error.message : 'Téléchargement indisponible.', HttpStatus.NOT_FOUND)
+    }
+  }
+
+  @Get('scenarios/:id/ai-preflight')
+  async aiPreflightExport(@Param('id') id: string, @Res() reply: FastifyReply): Promise<void> {
+    try {
+      const task = await this.scenarioPreparation.exportPreflightZip(id)
+      reply.header('Content-Type', 'application/zip')
+      reply.header('Content-Length', String(task.bytes.byteLength))
+      reply.header('Content-Disposition', `attachment; filename*=UTF-8''${encodeURIComponent(task.filename)}`)
+      await reply.send(task.bytes)
+    } catch (error) { throw new HttpException(error instanceof Error ? error.message : 'Export de préanalyse IA impossible.', HttpStatus.BAD_REQUEST) }
+  }
+
+  @Post('scenarios/:id/ai-required-data')
+  async importAiRequiredData(@Param('id') id: string, @Req() request: FastifyRequest): Promise<unknown> {
+    try {
+      const file = await (request as FastifyRequest & { file: () => Promise<MultipartFile | undefined> }).file()
+      if (!file || !file.filename.toLowerCase().endsWith('.json')) throw new Error('Envoie le required-data.json produit par la phase 1 IA.')
+      return await this.referenceLibrary.importRequiredData(id, await file.toBuffer(), file.filename)
+    } catch (error) { throw new HttpException(error instanceof Error ? error.message : 'Import de required-data.json impossible.', HttpStatus.BAD_REQUEST) }
+  }
+
+  @Get('scenarios/:id/ai-required-data')
+  aiRequiredDataStatus(@Param('id') id: string): Promise<unknown> { return this.referenceLibrary.requiredDataStatus(id) }
+
+  @Get('scenarios/:id/ai-generation')
+  async aiGenerationExport(@Param('id') id: string, @Res() reply: FastifyReply): Promise<void> {
+    try {
+      const task = await this.scenarioPreparation.exportGenerationZip(id)
+      reply.header('Content-Type', 'application/zip')
+      reply.header('Content-Length', String(task.bytes.byteLength))
+      reply.header('Content-Disposition', `attachment; filename*=UTF-8''${encodeURIComponent(task.filename)}`)
+      await reply.send(task.bytes)
+    } catch (error) { throw new HttpException(error instanceof Error ? error.message : 'Export de génération IA impossible.', HttpStatus.BAD_REQUEST) }
+  }
+
+  @Post('campaigns/:id/ai-response')
+  async importCampaignAiResponse(@Param('id') id: string, @Req() request: FastifyRequest): Promise<unknown> {
+    try {
+      const file = await (request as FastifyRequest & { file: () => Promise<MultipartFile | undefined> }).file()
+      if (!file || !file.filename.toLowerCase().endsWith('.zip')) throw new Error('Envoie le ZIP réponse IA de la campagne.')
+      return await this.scenarioPreparation.importCampaignResponseZip(id, await file.toBuffer(), file.filename)
+    } catch (error) {
+      throw new HttpException(error instanceof Error ? error.message : 'Import de la réponse IA de campagne impossible.', HttpStatus.BAD_REQUEST)
+    }
+  }
+
   @Get('campaigns/:id/npcs')
   npcsForCampaign(@Param('id') id: string): Promise<unknown[]> { return this.scenarioPackages.npcsForCampaign(id) }
+
+  // PF2_CAMPAIGN_MANAGEMENT_V1
+  @Get('campaigns/:id/status')
+  campaignStatus(@Param('id') id: string): Promise<Record<string, unknown>> { return this.scenarioCampaigns.status(id) }
+
+  @Get('campaigns/:id/reset-preview')
+  campaignResetPreview(@Param('id') id: string): Promise<Record<string, unknown>> { return this.scenarioCampaigns.resetPreview(id) }
+
+  @Post('campaigns/:id/deployments')
+  async synchronizeCampaign(@Param('id') id: string): Promise<Record<string, unknown>> {
+    try { return await this.scenarioCampaigns.synchronize(id) }
+    catch (error) { throw new HttpException(error instanceof Error ? error.message : 'Synchronisation de campagne impossible.', HttpStatus.BAD_REQUEST) }
+  }
+
+  @Post('campaigns/:id/reset')
+  async resetCampaign(@Param('id') id: string, @Body() body: unknown): Promise<Record<string, unknown>> {
+    try { return await this.scenarioCampaigns.reset(id, body) }
+    catch (error) { throw new HttpException(error instanceof Error ? error.message : 'Réinitialisation de campagne impossible.', HttpStatus.BAD_REQUEST) }
+  }
 
   @Get('scenario-packages/:id')
   packageForScenario(@Param('id') id: string): Promise<unknown> { return this.scenarioPackages.packageForScenario(id) }
@@ -81,6 +221,19 @@ export class Pf2MjController {
 
   @Get('scenario-packages/:id/deployments/latest')
   latestScenarioDeployment(@Param('id') id: string): Promise<unknown> { return this.scenarioPackages.latestDeployment(id) }
+
+  // PF2_SCENARIO_RESET_V1
+  @Get('scenario-packages/:id/reset-preview')
+  async scenarioResetPreview(@Param('id') id: string): Promise<unknown> {
+    try { return await this.scenarioPackages.scenarioResetPreview(id) }
+    catch (error) { throw new HttpException(error instanceof Error ? error.message : 'Prévisualisation du reset impossible.', HttpStatus.BAD_REQUEST) }
+  }
+
+  @Post('scenario-packages/:id/reset')
+  async resetScenario(@Param('id') id: string, @Body() body: unknown): Promise<unknown> {
+    try { return await this.scenarioPackages.resetScenario(id, body) }
+    catch (error) { throw new HttpException(error instanceof Error ? error.message : 'Réinitialisation du scénario impossible.', HttpStatus.BAD_REQUEST) }
+  }
 
   @Get('scenario-deployments/claim')
   async claimScenarioDeployment(@Query('worldId') worldId: string | undefined, @Query('clientId') clientId: string | undefined): Promise<unknown> {

@@ -12,10 +12,16 @@ export type FoundryActorCacheEntry = { uuid: string; name: string }
 export type ScenarioNpcLink = { scenarioId: string; npcId: string; role: string | null; importance: string | null; sourcePage: string | null; notes: string | null }
 export type ScenarioRelationTargetKind = 'lieu' | 'region' | 'faction' | 'evenement'
 export type ScenarioRelation = { scenarioId: string; targetKind: ScenarioRelationTargetKind; targetId: string; role: string | null; importance: string | null; sourcePage: string | null; notes: string | null }
+export type ScenarioDependencyType = 'required' | 'recommended'
+export type ScenarioDependency = { scenarioId: string; dependsOnScenarioId: string; relationType: ScenarioDependencyType; source: string | null; sourcePage: string | null; notes: string | null }
 export type ScenarioPackageImport = { records: Array<{ kind: Pf2RecordKind; item: Record<string, unknown> }>; npcLinks: ScenarioNpcLink[]; relations: ScenarioRelation[]; replaceRelationKinds: ScenarioRelationTargetKind[]; package: Omit<ScenarioPackage, 'importedAt' | 'updatedAt' | 'deployedVersion' | 'deployedAt'> }
 export type ScenarioPackage = { scenarioId: string; packageVersion: number; status: 'available' | 'integrated' | 'deployed' | 'obsolete'; filename: string; manifest: Record<string, unknown>; deployedVersion: number | null; deployedAt: string | null; importedAt: string; updatedAt: string }
 export type ScenarioDeploymentStatus = 'pending' | 'claimed' | 'success' | 'failed'
-export type ScenarioDeployment = { id: string; scenarioId: string; packageVersion: number; status: ScenarioDeploymentStatus; worldId: string | null; claimedBy: string | null; claimToken: string | null; leaseExpiresAt: string | null; error: string | null; result: Record<string, unknown> | null; createdAt: string; updatedAt: string; completedAt: string | null }
+export type ScenarioDeploymentOperation = 'deploy' | 'reset'
+export type ScenarioDeploymentEnqueueOptions = { operation?: ScenarioDeploymentOperation; payload?: Record<string, unknown> | null; batchId?: string | null; batchSequence?: number | null }
+export type ScenarioDeployment = { id: string; scenarioId: string; packageVersion: number; status: ScenarioDeploymentStatus; operation: ScenarioDeploymentOperation; payload: Record<string, unknown> | null; batchId: string | null; batchSequence: number | null; worldId: string | null; claimedBy: string | null; claimToken: string | null; leaseExpiresAt: string | null; error: string | null; result: Record<string, unknown> | null; createdAt: string; updatedAt: string; completedAt: string | null }
+export type ScenarioResetPreview = { scenarioIds: string[]; packages: number; deployments: number; scopedRecords: number; scopedRecordsByKind: Record<string, number>; preservedNpcLinks: number; preservedRelations: number }
+export type ScenarioResetResult = ScenarioResetPreview
 
 export type CatalogueEntityKind = 'meta' | 'section' | 'collection' | 'entry' | 'arc' | 'thread'
 export type CatalogueEntity = { entityKind: CatalogueEntityKind; id: string; parentId: string | null; subtype: string | null; name: string | null; sortOrder: number; payload: Record<string, unknown> }
@@ -161,6 +167,34 @@ export class Pf2PersistenceService implements OnModuleInit {
     return this.dataSource.query('SELECT scenario_id AS scenarioId, target_kind AS targetKind, target_id AS targetId, role, importance, source_page AS sourcePage, notes FROM pf2_scenario_relation WHERE scenario_id = ? ORDER BY target_kind, importance DESC, target_id', [scenarioId]) as Promise<ScenarioRelation[]>
   }
 
+  async replaceScenarioDependencies(scenarioId: string, links: ScenarioDependency[]): Promise<void> {
+    await this.dataSource.transaction(async (manager) => {
+      await manager.query('DELETE FROM pf2_scenario_dependency WHERE scenario_id = ?', [scenarioId])
+      for (const link of links) {
+        if (link.scenarioId !== scenarioId) throw new Error(`Dépendance incohérente : ${link.scenarioId} au lieu de ${scenarioId}.`)
+        if (link.dependsOnScenarioId === scenarioId) throw new Error('Un scénario ne peut pas dépendre de lui-même.')
+        await manager.query(
+          'INSERT INTO pf2_scenario_dependency (scenario_id, depends_on_scenario_id, relation_type, source, source_page, notes, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)',
+          [scenarioId, link.dependsOnScenarioId, link.relationType, link.source, link.sourcePage, link.notes]
+        )
+      }
+    })
+  }
+
+  async listScenarioDependencies(scenarioId: string): Promise<ScenarioDependency[]> {
+    return this.dataSource.query(
+      'SELECT scenario_id AS scenarioId, depends_on_scenario_id AS dependsOnScenarioId, relation_type AS relationType, source, source_page AS sourcePage, notes FROM pf2_scenario_dependency WHERE scenario_id = ? ORDER BY CASE relation_type WHEN \'required\' THEN 0 ELSE 1 END, depends_on_scenario_id',
+      [scenarioId]
+    ) as Promise<ScenarioDependency[]>
+  }
+
+  async listScenarioDependents(scenarioId: string): Promise<ScenarioDependency[]> {
+    return this.dataSource.query(
+      'SELECT scenario_id AS scenarioId, depends_on_scenario_id AS dependsOnScenarioId, relation_type AS relationType, source, source_page AS sourcePage, notes FROM pf2_scenario_dependency WHERE depends_on_scenario_id = ? ORDER BY CASE relation_type WHEN \'required\' THEN 0 ELSE 1 END, scenario_id',
+      [scenarioId]
+    ) as Promise<ScenarioDependency[]>
+  }
+
   async saveScenarioPackage(input: Omit<ScenarioPackage, 'importedAt' | 'updatedAt'>): Promise<void> {
     await this.dataSource.query(
       'INSERT INTO pf2_scenario_package (scenario_id, package_version, status, filename, manifest, deployed_version, deployed_at, imported_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP) ON CONFLICT(scenario_id) DO UPDATE SET package_version = excluded.package_version, status = excluded.status, filename = excluded.filename, manifest = excluded.manifest, deployed_version = excluded.deployed_version, deployed_at = excluded.deployed_at, updated_at = CURRENT_TIMESTAMP',
@@ -174,17 +208,22 @@ export class Pf2PersistenceService implements OnModuleInit {
     return row ? { scenarioId: row.scenario_id, packageVersion: row.package_version, status: row.status, filename: row.filename, manifest: this.object(JSON.parse(row.manifest)), deployedVersion: row.deployed_version === null ? null : Number(row.deployed_version), deployedAt: row.deployed_at, importedAt: row.imported_at, updatedAt: row.updated_at } : null
   }
 
-  async enqueueScenarioDeployment(scenarioId: string, packageVersion: number): Promise<ScenarioDeployment> {
+  async enqueueScenarioDeployment(scenarioId: string, packageVersion: number, options: ScenarioDeploymentEnqueueOptions = {}): Promise<ScenarioDeployment> {
+    const operation: ScenarioDeploymentOperation = options.operation ?? 'deploy'
+    const payload = options.payload ?? null
+    const batchId = options.batchId ?? null
+    const batchSequence = options.batchSequence ?? null
     return this.dataSource.transaction(async (manager) => {
       const rows = await manager.query('SELECT * FROM pf2_scenario_deployment WHERE scenario_id = ? AND package_version = ?', [scenarioId, packageVersion]) as Array<Record<string, unknown>>
       const existing = rows[0]
-      if (existing && String(existing.status) !== 'failed') return this.deployment(existing)
+      const reusableReset = operation === 'reset'
+      if (existing && String(existing.status) !== 'failed' && !reusableReset) return this.deployment(existing)
       if (existing) {
-        await manager.query("UPDATE pf2_scenario_deployment SET status = 'pending', world_id = NULL, claimed_by = NULL, claim_token = NULL, lease_expires_at = NULL, error = NULL, result = NULL, completed_at = NULL, updated_at = CURRENT_TIMESTAMP WHERE id = ?", [existing.id])
+        await manager.query("UPDATE pf2_scenario_deployment SET status = 'pending', operation = ?, payload = ?, batch_id = ?, batch_sequence = ?, world_id = NULL, claimed_by = NULL, claim_token = NULL, lease_expires_at = NULL, error = NULL, result = NULL, completed_at = NULL, updated_at = CURRENT_TIMESTAMP WHERE id = ?", [operation, payload ? JSON.stringify(payload) : null, batchId, batchSequence, existing.id])
         return this.deployment((await manager.query('SELECT * FROM pf2_scenario_deployment WHERE id = ?', [existing.id]) as Array<Record<string, unknown>>)[0])
       }
       const id = randomUUID()
-      await manager.query("INSERT INTO pf2_scenario_deployment (id, scenario_id, package_version, status, created_at, updated_at) VALUES (?, ?, ?, 'pending', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)", [id, scenarioId, packageVersion])
+      await manager.query("INSERT INTO pf2_scenario_deployment (id, scenario_id, package_version, status, operation, payload, batch_id, batch_sequence, created_at, updated_at) VALUES (?, ?, ?, 'pending', ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)", [id, scenarioId, packageVersion, operation, payload ? JSON.stringify(payload) : null, batchId, batchSequence])
       return this.deployment((await manager.query('SELECT * FROM pf2_scenario_deployment WHERE id = ?', [id]) as Array<Record<string, unknown>>)[0])
     })
   }
@@ -211,6 +250,94 @@ export class Pf2PersistenceService implements OnModuleInit {
     return rows[0] ? this.deployment(rows[0]) : null
   }
 
+  async getLatestSuccessfulScenarioDeployment(scenarioId: string): Promise<ScenarioDeployment | null> {
+    const rows = await this.dataSource.query("SELECT * FROM pf2_scenario_deployment WHERE scenario_id = ? AND status = 'success' AND operation = 'deploy' ORDER BY completed_at DESC, created_at DESC, id DESC LIMIT 1", [scenarioId]) as Array<Record<string, unknown>>
+    return rows[0] ? this.deployment(rows[0]) : null
+  }
+
+  async sharedNpcIdsForScenarioReset(scenarioIds: string[], resetScopeIds: string[] = scenarioIds): Promise<string[]> {
+    if (!scenarioIds.length) return []
+    const placeholders = scenarioIds.map(() => '?').join(',')
+    const rows = await this.dataSource.query(`SELECT scenario_id, npc_id FROM pf2_scenario_npc WHERE npc_id IN (SELECT DISTINCT npc_id FROM pf2_scenario_npc WHERE scenario_id IN (${placeholders}))`, scenarioIds) as Array<{ scenario_id: string; npc_id: string }>
+    const scope = new Set(resetScopeIds)
+    const shared = new Set<string>()
+    for (const row of rows) if (!scope.has(row.scenario_id)) shared.add(row.npc_id)
+    return [...shared].sort()
+  }
+
+  async previewScenarioApplicationReset(scenarioIds: string[]): Promise<ScenarioResetPreview> {
+    const ids = [...new Set(scenarioIds.filter(Boolean))]
+    if (!ids.length) return { scenarioIds: [], packages: 0, deployments: 0, scopedRecords: 0, scopedRecordsByKind: {}, preservedNpcLinks: 0, preservedRelations: 0 }
+    const placeholders = ids.map(() => '?').join(',')
+    const packageRows = await this.dataSource.query(`SELECT COUNT(*) AS count FROM pf2_scenario_package WHERE scenario_id IN (${placeholders})`, ids) as Array<{ count: number }>
+    const deploymentRows = await this.dataSource.query(`SELECT COUNT(*) AS count FROM pf2_scenario_deployment WHERE scenario_id IN (${placeholders})`, ids) as Array<{ count: number }>
+    const npcRows = await this.dataSource.query(`SELECT COUNT(*) AS count FROM pf2_scenario_npc WHERE scenario_id IN (${placeholders})`, ids) as Array<{ count: number }>
+    const relationRows = await this.dataSource.query(`SELECT COUNT(*) AS count FROM pf2_scenario_relation WHERE scenario_id IN (${placeholders})`, ids) as Array<{ count: number }>
+    const byKind: Record<string, number> = {}
+    let scopedRecords = 0
+    for (const kind of ['pnj', 'lieu', 'region', 'faction', 'evenement'] as Pf2RecordKind[]) {
+      for (const record of await this.listAll(kind)) {
+        if (this.scopeOf(record) !== 'scenario' || !ids.includes(this.ownerScenarioIdOf(record))) continue
+        scopedRecords += 1
+        byKind[kind] = (byKind[kind] ?? 0) + 1
+      }
+    }
+    return { scenarioIds: ids, packages: Number(packageRows[0]?.count ?? 0), deployments: Number(deploymentRows[0]?.count ?? 0), scopedRecords, scopedRecordsByKind: byKind, preservedNpcLinks: Number(npcRows[0]?.count ?? 0), preservedRelations: Number(relationRows[0]?.count ?? 0) }
+  }
+
+  async clearScenarioPreparationStatus(scenarioId: string): Promise<void> {
+    const curation = await this.readCuration()
+    const byId = this.object(curation.byId)
+    const entries = this.object(curation.entries)
+    for (const source of [byId, entries]) {
+      const entry = this.object(source[scenarioId])
+      delete entry.preparationStatus
+      delete entry.progress
+      if (Object.keys(entry).length) source[scenarioId] = entry
+      else delete source[scenarioId]
+    }
+    curation.byId = byId
+    if (Object.keys(entries).length) curation.entries = entries
+    for (const key of ['progressByCampaign', 'progressByScenario']) {
+      const legacy = this.object(curation[key])
+      delete legacy[scenarioId]
+      curation[key] = legacy
+    }
+    await this.saveCuration(curation)
+  }
+
+  async resetScenarioApplicationState(scenarioId: string, resetScopeIds: string[] = [scenarioId], deleteDeploymentHistory = true): Promise<ScenarioResetResult> {
+    const preview = await this.previewScenarioApplicationReset([scenarioId])
+    const scopeIds = [...new Set([scenarioId, ...resetScopeIds].filter(Boolean))]
+    const scopePlaceholders = scopeIds.map(() => '?').join(',')
+    const owned: Array<{ kind: Pf2RecordKind; id: string }> = []
+    for (const kind of ['pnj', 'lieu', 'region', 'faction', 'evenement'] as Pf2RecordKind[]) {
+      for (const record of await this.listAll(kind)) {
+        if (this.scopeOf(record) === 'scenario' && this.ownerScenarioIdOf(record) === scenarioId) owned.push({ kind, id: this.identifier(record) })
+      }
+    }
+    await this.dataSource.transaction(async manager => {
+      for (const item of owned) {
+        let usedOutsideScope = false
+        if (item.kind === 'pnj') {
+          const outside = await manager.query(`SELECT 1 FROM pf2_scenario_npc WHERE npc_id = ? AND scenario_id NOT IN (${scopePlaceholders}) LIMIT 1`, [item.id, ...scopeIds]) as unknown[]
+          usedOutsideScope = outside.length > 0
+        } else if (['lieu','region','faction','evenement'].includes(item.kind)) {
+          const outside = await manager.query(`SELECT 1 FROM pf2_scenario_relation WHERE target_kind = ? AND target_id = ? AND scenario_id NOT IN (${scopePlaceholders}) LIMIT 1`, [item.kind, item.id, ...scopeIds]) as unknown[]
+          usedOutsideScope = outside.length > 0
+        }
+        if (usedOutsideScope) continue
+        if (item.kind === 'pnj') await manager.query('DELETE FROM pf2_scenario_npc WHERE npc_id = ?', [item.id])
+        if (['lieu','region','faction','evenement'].includes(item.kind)) await manager.query('DELETE FROM pf2_scenario_relation WHERE target_kind = ? AND target_id = ?', [item.kind, item.id])
+        await manager.query('DELETE FROM pf2_record WHERE kind = ? AND id = ?', [item.kind, item.id])
+      }
+      await manager.query('DELETE FROM pf2_scenario_package WHERE scenario_id = ?', [scenarioId])
+      if (deleteDeploymentHistory) await manager.query('DELETE FROM pf2_scenario_deployment WHERE scenario_id = ?', [scenarioId])
+    })
+    await this.clearScenarioPreparationStatus(scenarioId)
+    return preview
+  }
+
   async finishScenarioDeployment(id: string, claimToken: string, result: Record<string, unknown>): Promise<ScenarioDeployment> {
     return this.dataSource.transaction(async (manager) => {
       const row = (await manager.query('SELECT * FROM pf2_scenario_deployment WHERE id = ?', [id]) as Array<Record<string, unknown>>)[0]
@@ -218,7 +345,11 @@ export class Pf2PersistenceService implements OnModuleInit {
       const success = result.success === true
       const error = success ? null : this.deploymentError(result)
       await manager.query("UPDATE pf2_scenario_deployment SET status = ?, error = ?, result = ?, completed_at = CURRENT_TIMESTAMP, lease_expires_at = NULL, updated_at = CURRENT_TIMESTAMP WHERE id = ?", [success ? 'success' : 'failed', error, JSON.stringify(result), id])
-      if (success) await manager.query("UPDATE pf2_scenario_package SET deployed_version = ?, deployed_at = CURRENT_TIMESTAMP, status = CASE WHEN package_version = ? THEN 'deployed' ELSE 'obsolete' END, updated_at = CURRENT_TIMESTAMP WHERE scenario_id = ?", [Number(row.package_version), Number(row.package_version), String(row.scenario_id)])
+      if (success && String(row.operation ?? 'deploy') === 'deploy') await manager.query("UPDATE pf2_scenario_package SET deployed_version = ?, deployed_at = CURRENT_TIMESTAMP, status = CASE WHEN package_version = ? THEN 'deployed' ELSE 'obsolete' END, updated_at = CURRENT_TIMESTAMP WHERE scenario_id = ?", [Number(row.package_version), Number(row.package_version), String(row.scenario_id)])
+      if (success && String(row.operation ?? 'deploy') === 'reset') await manager.query("UPDATE pf2_scenario_package SET deployed_version = NULL, deployed_at = NULL, status = 'integrated', updated_at = CURRENT_TIMESTAMP WHERE scenario_id = ?", [String(row.scenario_id)])
+      if (!success && row.batch_id) {
+        await manager.query("UPDATE pf2_scenario_deployment SET status = 'failed', error = ?, completed_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP WHERE batch_id = ? AND status = 'pending' AND COALESCE(batch_sequence, 0) > COALESCE(?, 0)", [`Lot interrompu après l'échec de ${String(row.scenario_id)}.`, String(row.batch_id), Number(row.batch_sequence ?? 0)])
+      }
       return this.deployment((await manager.query('SELECT * FROM pf2_scenario_deployment WHERE id = ?', [id]) as Array<Record<string, unknown>>)[0])
     })
   }
@@ -499,6 +630,19 @@ export class Pf2PersistenceService implements OnModuleInit {
       }
       if (ambiguous.length) this.logger.warn(`Scope scénario non inféré pour ${ambiguous.length} ID(s) ambigu(s) : ${ambiguous.join(', ')}`)
     })
+    await this.applyMigration('012-scenario-dependencies', async (manager) => {
+      await manager.query("CREATE TABLE IF NOT EXISTS pf2_scenario_dependency (scenario_id TEXT NOT NULL, depends_on_scenario_id TEXT NOT NULL, relation_type TEXT NOT NULL CHECK (relation_type IN ('required','recommended')), source TEXT, source_page TEXT, notes TEXT, created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP, updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP, CHECK (scenario_id <> depends_on_scenario_id), PRIMARY KEY (scenario_id, depends_on_scenario_id))")
+      await manager.query('CREATE INDEX IF NOT EXISTS idx_pf2_scenario_dependency_target ON pf2_scenario_dependency (depends_on_scenario_id, relation_type)')
+      await manager.query('CREATE INDEX IF NOT EXISTS idx_pf2_scenario_dependency_source ON pf2_scenario_dependency (scenario_id, relation_type)')
+    })
+    await this.applyMigration('013-scenario-deployment-operations', async (manager) => {
+      const columns = await manager.query('PRAGMA table_info(pf2_scenario_deployment)') as Array<{ name: string }>
+      if (!columns.some((column) => column.name === 'operation')) await manager.query("ALTER TABLE pf2_scenario_deployment ADD COLUMN operation TEXT NOT NULL DEFAULT 'deploy' CHECK (operation IN ('deploy','reset'))")
+      if (!columns.some((column) => column.name === 'payload')) await manager.query('ALTER TABLE pf2_scenario_deployment ADD COLUMN payload TEXT')
+      if (!columns.some((column) => column.name === 'batch_id')) await manager.query('ALTER TABLE pf2_scenario_deployment ADD COLUMN batch_id TEXT')
+      if (!columns.some((column) => column.name === 'batch_sequence')) await manager.query('ALTER TABLE pf2_scenario_deployment ADD COLUMN batch_sequence INTEGER')
+      await manager.query('CREATE INDEX IF NOT EXISTS idx_pf2_scenario_deployment_batch ON pf2_scenario_deployment (batch_id, batch_sequence, status)')
+    })
   }
 
   private async createSessionTable(manager: EntityManager): Promise<void> {
@@ -775,6 +919,10 @@ export class Pf2PersistenceService implements OnModuleInit {
   private deployment(row: Record<string, unknown>): ScenarioDeployment {
     return {
       id: String(row.id), scenarioId: String(row.scenario_id), packageVersion: Number(row.package_version), status: String(row.status) as ScenarioDeploymentStatus,
+      operation: String(row.operation ?? 'deploy') as ScenarioDeploymentOperation,
+      payload: row.payload === null || row.payload === undefined ? null : this.objectJson(row.payload),
+      batchId: typeof row.batch_id === 'string' ? row.batch_id : null,
+      batchSequence: row.batch_sequence === null || row.batch_sequence === undefined ? null : Number(row.batch_sequence),
       worldId: typeof row.world_id === 'string' ? row.world_id : null, claimedBy: typeof row.claimed_by === 'string' ? row.claimed_by : null, claimToken: typeof row.claim_token === 'string' ? row.claim_token : null,
       leaseExpiresAt: typeof row.lease_expires_at === 'string' ? row.lease_expires_at : null, error: typeof row.error === 'string' ? row.error : null,
       result: row.result === null || row.result === undefined ? null : this.objectJson(row.result), createdAt: String(row.created_at), updatedAt: String(row.updated_at), completedAt: typeof row.completed_at === 'string' ? row.completed_at : null

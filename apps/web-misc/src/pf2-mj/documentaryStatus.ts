@@ -25,5 +25,8 @@ export function documentaryStatusForTargets(targets: DocumentaryDocument[][]): D
       : every((target) => target.english) ? 'en'
         : every((target) => target.information) ? 'info'
           : 'none'
-  return { coverage, mode, ready: coverage === 'complete' && ['fr', 'en_trad', 'info'].includes(mode) }
+  const ready = coverage === 'complete' && every((target) =>
+    target.officialFr || (target.english && target.translation) || target.information
+  )
+  return { coverage, mode, ready }
 }

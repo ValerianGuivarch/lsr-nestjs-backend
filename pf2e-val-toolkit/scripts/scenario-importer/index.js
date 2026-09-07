@@ -1,12 +1,13 @@
 import { validateScenarioData } from "./parser.js";
 import { findActorInCompendiums } from "./compendium-resolver.js";
-import { createCustomNpc, importCompendiumActor, linkNarrativeNpc } from "./actor-builder.js";
+import { createCustomNpc, importCompendiumActor, linkNarrativeNpc, refreshNarrativeActor } from "./actor-builder.js";
 import { ensureScenarioFolderTree } from "./folder-manager.js";
 import { createOrUpdateScenarioJournal } from "./journal-builder.js";
 import { createOrUpdateScenarioScenes } from "./scene-builder.js";
 import { resolveScenarioAssets } from "./asset-resolver.js";
 import { loadScenarioPackage } from "./package-importer.js";
 import { pf2MjApiUrl } from "../career-xp/index.js";
+import { resetScenarioFromFoundry } from "./reset.js";
 
 async function selectScenarioFile() {
   const input = document.createElement("input");
@@ -51,7 +52,7 @@ async function loadScenarioInput(file) {
   );
 }
 
-async function processReference(definition, folder, scenarioId) {
+async function processReference(definition, folder, scenarioId, packageVersion) {
   const matches = await findActorInCompendiums(definition);
 
   if (!matches.length) {
@@ -81,7 +82,8 @@ async function processReference(definition, folder, scenarioId) {
     folder,
     {
       ...definition,
-      scenarioId
+      scenarioId,
+      packageVersion
     }
   );
 
@@ -101,8 +103,8 @@ async function processReference(definition, folder, scenarioId) {
   };
 }
 
-async function processCustom(definition, folder) {
-  const result = await createCustomNpc(definition, folder);
+async function processCustom(definition, folder, scenarioId, packageVersion) {
+  const result = await createCustomNpc(definition, folder, { scenarioId, packageVersion });
 
   return {
     key: definition.key,
@@ -115,16 +117,17 @@ async function processCustom(definition, folder) {
   };
 }
 
-async function processNarrative(definition, folder, scenarioId) {
+async function processNarrative(definition, folder, scenarioId, packageVersion) {
   const existing = game.actors.find(actor => actor.getFlag("pf2e-val-toolkit", "npcId") === definition.npcId);
   if (existing) {
+    const refreshed = await refreshNarrativeActor(existing, definition, folder, { scenarioId, packageVersion });
     await linkNarrativeNpc(existing, definition.npcId, definition);
-    return { key: definition.key, name: definition.name, type: "narrative", status: "existing", uuid: existing.uuid, actor: existing, npcId: definition.npcId };
+    return { key: definition.key, name: definition.name, type: "narrative", status: refreshed.status, uuid: existing.uuid, actor: existing, npcId: definition.npcId };
   }
   const actorDefinition = { ...definition.actor, key: definition.key, name: definition.name, image: definition.image };
   const result = actorDefinition.type === "reference"
-    ? await processReference(actorDefinition, folder, scenarioId)
-    : await processCustom(actorDefinition, folder);
+    ? await processReference(actorDefinition, folder, scenarioId, packageVersion)
+    : await processCustom(actorDefinition, folder, scenarioId, packageVersion);
   if (result.actor) await linkNarrativeNpc(result.actor, definition.npcId, definition);
   return { ...result, type: "narrative", npcId: definition.npcId };
 }
@@ -187,13 +190,14 @@ export async function runScenarioImport(rawData) {
           await processReference(
             definition,
             actorFolders.scenario,
-            data.scenario.id
+            data.scenario.id,
+            data.packageVersion ?? 1
           )
         );
       } else if (definition.type === "custom") {
-        results.push(await processCustom(definition, actorFolders.scenario));
+        results.push(await processCustom(definition, actorFolders.scenario, data.scenario.id, data.packageVersion ?? 1));
       } else if (definition.type === "narrative") {
-        results.push(await processNarrative(definition, actorFolders.scenario, data.scenario.id));
+        results.push(await processNarrative(definition, actorFolders.scenario, data.scenario.id, data.packageVersion ?? 1));
       } else {
         results.push({
           key: definition.key,
@@ -282,6 +286,23 @@ async function reportDeploymentResult(deployment, result) {
 }
 
 async function runClaimedDeployment(deployment) {
+  if (deployment.operation === "reset") {
+    let result;
+    try {
+      const reset = await resetScenarioFromFoundry(deployment);
+      result = { deploymentId: deployment.id, claimToken: deployment.claimToken, scenarioId: deployment.scenarioId, packageVersion: deployment.packageVersion, success: true, actors: {}, scenes: {}, journals: {}, reset, errors: [] };
+    } catch (error) {
+      result = { deploymentId: deployment.id, claimToken: deployment.claimToken, scenarioId: deployment.scenarioId, packageVersion: deployment.packageVersion, success: false, actors: {}, scenes: {}, journals: {}, reset: {}, errors: [error instanceof Error ? error.message : String(error)] };
+      console.error("PF2e Val Toolkit | Échec du reset scénario", error);
+    }
+    try {
+      await reportDeploymentResult(deployment, result);
+      if (result.success) ui.notifications.info(`Scénario ${deployment.scenarioId} retiré de Foundry.`);
+      else ui.notifications.error(`Le reset de ${deployment.scenarioId} a échoué.`);
+    } catch (error) { console.warn("PF2e Val Toolkit | Résultat de reset non transmis", error); }
+    return;
+  }
+
   let result;
   try {
     const packageUrl = new URL(`${pf2MjApiUrl()}/scenario-deployments/${encodeURIComponent(deployment.id)}/package`);
@@ -292,6 +313,10 @@ async function runClaimedDeployment(deployment) {
     const data = await loadScenarioInput(file);
     if (data.scenario?.id !== deployment.scenarioId || Number(data.packageVersion ?? 1) !== deployment.packageVersion) {
       throw new Error("Le ZIP reçu ne correspond pas à la demande de déploiement.");
+    }
+    const validationErrors = validateScenarioData(data);
+    if (validationErrors.length) {
+      throw new Error(`Package invalide : ${validationErrors.join(" | ")}`);
     }
     const imported = await runScenarioImport(data);
     showSummary(data, imported);

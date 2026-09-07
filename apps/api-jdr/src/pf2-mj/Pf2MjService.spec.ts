@@ -76,11 +76,29 @@ describe('Pf2MjService', () => {
       const result = await service.updateCuration({ id: 'age-of-ashes-volume-1', field: 'levels', value: '1–4' })
 
       expect(result).toMatchObject({
-        schemaVersion: 3,
+        schemaVersion: 4,
         byId: { 'age-of-ashes-volume-1': { levelsOverride: '1–4' } },
         entries: legacy.entries,
         levelsByCampaign: legacy.levelsByCampaign
       })
+      expect(persistence.saveCuration).toHaveBeenCalledWith(result)
+    })
+
+    it('migrates legacy progress into separate status axes', async () => {
+      const legacy = { schemaVersion: 3, byId: {
+        selected: { progress: 'Sélectionné' }, queued: { progress: 'À jouer' },
+        running: { progress: 'En cours' }, finished: { progress: 'Joué' }, excluded: { progress: 'Écarté' }
+      } }
+      const { service, persistence } = serviceFor({}, pnj, { readCuration: jest.fn().mockResolvedValue(structuredClone(legacy)) })
+      const result = await service.readCuration()
+      expect(result).toMatchObject({ schemaVersion: 4, byId: {
+        selected: { preparationStatus: 'selected', playStatus: 'none' },
+        queued: { preparationStatus: 'selected', playStatus: 'to_play' },
+        running: { preparationStatus: 'untreated', playStatus: 'in_progress' },
+        finished: { preparationStatus: 'untreated', playStatus: 'played' },
+        excluded: { excluded: true }
+      } })
+      for (const entry of Object.values(result.byId as Record<string, Record<string, unknown>>)) expect(entry.progress).toBeUndefined()
       expect(persistence.saveCuration).toHaveBeenCalledWith(result)
     })
   })
@@ -118,6 +136,93 @@ describe('Pf2MjService', () => {
         'agents-of-edgewatch-guide',
         'agents-of-edgewatch-volume-fr-1',
         'agents-of-edgewatch-map-volume-2'
+      ])
+    })
+
+    it('projects one physical compilation PDF onto every playable part that explicitly references its fileId', async () => {
+      const volume = {
+        id: 'pdf-volume-1',
+        filename: 'Volume 1.pdf',
+        path: 'Campaign/Volume 1.pdf',
+        assetType: 'pdf',
+        targetId: 'campaign-volume-1',
+        targetKind: 'item',
+        role: 'core',
+        language: 'FR',
+        variant: null,
+        completeness: 'complete',
+        translationOf: null,
+        associationStatus: 'confirmed',
+        associationScore: null,
+        evidence: [],
+        metadata: {},
+        present: true,
+        lastSeenAt: null,
+        sortOrder: 1
+      }
+
+      const catalogue = {
+        schemaVersion: 2,
+        files: [{
+          id: 'pdf-volume-1',
+          path: 'Campaign/Volume 1.pdf'
+        }],
+        collections: [],
+        entries: [{
+          id: 'campaign',
+          titleFr: 'Campagne',
+          parts: [
+            {
+              id: 'campaign-volume-1',
+              kind: 'compilation_campagne',
+              titleFr: 'Volume 1',
+              documents: [{ fileId: 'pdf-volume-1' }]
+            },
+            {
+              id: 'campaign-adventure-1',
+              kind: 'volume_aventure',
+              titleFr: 'Aventure 1',
+              documents: [{ fileId: 'pdf-volume-1' }]
+            },
+            {
+              id: 'campaign-adventure-2',
+              kind: 'volume_aventure',
+              titleFr: 'Aventure 2',
+              documents: [{ fileId: 'pdf-volume-1' }]
+            }
+          ]
+        }]
+      }
+
+      const { service } = serviceFor({}, pnj, {
+        readCatalogueSnapshot:
+          jest.fn().mockResolvedValue(catalogue),
+        listLibraryAssets:
+          jest.fn().mockResolvedValue([volume])
+      })
+
+      await expect(
+        service.libraryAssetsForScenario(
+          'campaign-adventure-1'
+        )
+      ).resolves.toEqual([
+        expect.objectContaining({
+          id: 'pdf-volume-1',
+          resourceTargetId: 'campaign-adventure-1',
+          resourceScope: 'direct'
+        })
+      ])
+
+      await expect(
+        service.libraryAssetsForScenario(
+          'campaign-adventure-2'
+        )
+      ).resolves.toEqual([
+        expect.objectContaining({
+          id: 'pdf-volume-1',
+          resourceTargetId: 'campaign-adventure-2',
+          resourceScope: 'direct'
+        })
       ])
     })
 

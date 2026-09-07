@@ -29,4 +29,15 @@ describe('documentaryStatusForTargets', () => {
     // `translation` is deliberately independent from legacy completeness metadata.
     expect(documentaryStatusForTargets([[document({ english: true }), document({ translation: true })]])).toMatchObject({ coverage: 'complete', mode: 'en_trad', ready: true })
   })
+
+  it('keeps an information-only source as a final usable documentary state', () => {
+    expect(documentaryStatusForTargets([[document({ information: true })]])).toMatchObject({ coverage: 'complete', mode: 'info', ready: true })
+  })
+
+  it('accepts mixed usable targets such as official FR plus an information substitute', () => {
+    expect(documentaryStatusForTargets([
+      [document({ officialFr: true })],
+      [document({ information: true })],
+    ])).toMatchObject({ coverage: 'complete', ready: true })
+  })
 })

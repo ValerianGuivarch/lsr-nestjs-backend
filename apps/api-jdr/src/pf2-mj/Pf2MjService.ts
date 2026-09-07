@@ -3,6 +3,7 @@ import { lookup } from 'node:dns/promises'
 import { createReadStream } from 'node:fs'
 import { mkdir, readdir, readFile, rename, stat, writeFile } from 'node:fs/promises'
 import { basename, relative, resolve, sep } from 'node:path'
+import { createHash } from 'node:crypto'
 import sharp from 'sharp'
 import { LibraryAsset, Pf2PersistenceService } from '../pf2-storage/Pf2PersistenceService'
 import { FoundryNpcSummary, FoundryRelayService } from '../foundry/FoundryRelayService'
@@ -90,7 +91,7 @@ type ScanCatalogue = {
     number?: unknown
   }>
   reconciliation?: { pending?: unknown; relocationsApplied?: unknown; notes?: unknown }
-  files?: Array<{ path?: unknown }>
+  files?: Array<{ id?: unknown; path?: unknown; filename?: unknown; sha256?: unknown; bytes?: unknown; metadata?: unknown }>
   entries?: Array<{
     id?: unknown
     kind?: unknown
@@ -106,7 +107,9 @@ type ScanCatalogue = {
       titleOriginal?: unknown
       number?: unknown
       sequence?: unknown
+      documents?: Array<{ fileId?: unknown }>
     }>
+    documents?: Array<{ fileId?: unknown }>
   }>
   collections?: Array<{
     id?: unknown
@@ -273,7 +276,7 @@ export class Pf2MjService {
     // Les anciennes maps restent intactes pour la lecture rétrocompatible.
     const byId = this.asObject(data.byId)
     data.byId = byId
-    data.schemaVersion = 3
+    data.schemaVersion = 4
 
     if (input.operation === 'place-add') {
       const value = typeof input.to === 'string' ? input.to.trim() : ''
@@ -298,15 +301,18 @@ export class Pf2MjService {
       const id = typeof input.id === 'string' ? input.id.trim() : ''
       const aliases: Record<string, string> = {
         levels: 'levelsOverride',
-        places: 'placesOverride',
-        tracking: 'progress'
+        places: 'placesOverride'
       }
       const field = aliases[String(input.field)] ?? String(input.field ?? '')
       const allowed = new Set([
         'excluded',
+        'excludedReason',
+        'exclusionStatus',
         'inclusion',
         'playability',
-        'progress',
+        'progress', // compatibilité V3
+        'preparationStatus',
+        'playStatus',
         'levelsOverride',
         'placesOverride',
         'relevance',
@@ -317,19 +323,55 @@ export class Pf2MjService {
       const value =
         field === 'excluded'
           ? (input.value ?? input.excluded)
+          : field === 'excludedReason'
+            ? (input.value ?? input.excludedReason)
           : field === 'placesOverride'
             ? (input.value ?? input.places)
             : input.value
 
       const entry = this.asObject(byId[id])
-      if (value === null || value === '' || (Array.isArray(value) && value.length === 0)) delete entry[field]
-      else entry[field] = value
 
-      // "Écarté" is the single user-facing status. Keep the legacy exclusion
-      // flag in sync so existing catalogue, cascade and exports remain valid.
-      if (field === 'progress') {
-        if (value === 'Écarté') entry.excluded = true
-        else if (value !== null && value !== '') entry.excluded = false
+      // PF2_EXCLUSION_STATUS_ATOMIC_V1      // PF2_EXCLUSION_CASCADE_V1
+      if (field === 'exclusionStatus') {
+        if (!['active', 'later', 'rejected'].includes(String(value))) throw new Error('Statut d’exclusion invalide.')
+        const status = String(value) as 'active' | 'later' | 'rejected'
+        const applyStatus = (targetId: string) => {
+          const target = this.asObject(byId[targetId])
+          if (status === 'active') {
+            target.excluded = false
+            delete target.excludedReason
+          } else {
+            target.excluded = true
+            target.excludedReason = status === 'later' ? 'later' : 'rejected'
+          }
+          if (Object.keys(target).length) byId[targetId] = target
+          else delete byId[targetId]
+        }
+
+        applyStatus(id)
+        const catalogue = await this.readScanCatalogue()
+        const targets = this.scanTargets(catalogue)
+        const root = targets.find((target) => target.id === id)
+        if (root?.kind === 'container') {
+          const descendants = this.curationDescendantTargets(targets, id)
+          for (const descendant of descendants) {
+            if (descendant.kind === 'container' || descendant.kind === 'playable') applyStatus(descendant.id)
+          }
+        }
+      } else if (field === 'progress') {
+        delete entry.progress
+        const migrated = this.legacyProgressStatus(value)
+        if (value !== null && value !== '' && value !== 'Écarté') entry.excluded = false
+        if (migrated.excluded !== undefined) entry.excluded = migrated.excluded
+        if (entry.excluded === false) entry.excludedReason = null
+        if (migrated.preparationStatus !== undefined) entry.preparationStatus = migrated.preparationStatus
+        if (migrated.playStatus !== undefined) entry.playStatus = migrated.playStatus
+        if (value === null || value === '' || value === 'Non spécifié') { delete entry.preparationStatus; delete entry.playStatus }
+      } else {
+        if (field === 'preparationStatus' && value !== null && value !== '' && !['untreated','selected','ready'].includes(String(value))) throw new Error('Statut de préparation invalide.')
+        if (field === 'playStatus' && value !== null && value !== '' && !['none','to_play','in_progress','played'].includes(String(value))) throw new Error('Statut de jeu invalide.')
+        if (value === null || value === '' || (Array.isArray(value) && value.length === 0)) delete entry[field]
+        else entry[field] = value
       }
 
       if (Object.keys(entry).length) byId[id] = entry
@@ -365,17 +407,33 @@ export class Pf2MjService {
   async libraryAssetsForScenario(scenarioId: string): Promise<ScenarioLibraryAsset[]> {
     const catalogue = await this.readScanCatalogue()
     const targets = this.scenarioResourceTargets(catalogue, scenarioId)
+    const linkedFiles = this.scenarioDocumentLinks(catalogue, targets)
+
     return (await this.persistence.listLibraryAssets())
-      .filter((asset) => asset.targetId !== null && targets.has(asset.targetId))
-      .map((asset) => {
-        const target = targets.get(asset.targetId!)!
-        return {
+      .flatMap((asset) => {
+        const attachedTarget =
+          asset.targetId !== null
+            ? targets.get(asset.targetId)
+            : undefined
+
+        const linkedTarget = linkedFiles.get(asset.id)
+        const target = attachedTarget ?? linkedTarget
+
+        if (!target) return []
+
+        return [{
           ...asset,
           resourceTargetId: target.id,
-          resourceScope: target.id === scenarioId ? 'direct' : 'component',
+          resourceScope:
+            target.id === scenarioId
+              ? 'direct'
+              : 'component',
           resourceTargetLabel: target.label,
-          libraryCategory: this.firstText(asset.metadata.libraryCategory, asset.metadata.roleHint)
-        }
+          libraryCategory: this.firstText(
+            asset.metadata.libraryCategory,
+            asset.metadata.roleHint
+          )
+        }]
       })
   }
 
@@ -394,11 +452,21 @@ export class Pf2MjService {
     return { asset, bytes: await readFile(target) }
   }
 
+  async readIndexedScenarioPdf(scenarioId: string, assetId: string): Promise<{ asset: ScenarioLibraryAsset; bytes: Buffer }> {
+    const asset = (await this.libraryAssetsForScenario(scenarioId)).find((candidate) => candidate.id === assetId)
+    if (!asset || asset.assetType !== 'pdf' || !asset.present) throw new Error('PDF indexé introuvable pour ce scénario.')
+    const target = resolve(this.libraryRoot, asset.path.replace(/^\/+/, ''))
+    if (target !== this.libraryRoot && !target.startsWith(`${this.libraryRoot}${sep}`)) throw new Error('Chemin du PDF refusé.')
+    const info = await stat(target)
+    if (!info.isFile() || !target.toLowerCase().endsWith('.pdf')) throw new Error('PDF introuvable sur le disque.')
+    return { asset, bytes: await readFile(target) }
+  }
+
   async scanLibrary(apply = false): Promise<Record<string, unknown>> {
     const disk = await this.walkLibraryFiles(this.libraryRoot)
     const catalogue = await this.readScanCatalogue()
     const knownPaths = this.catalogueDocumentPaths(catalogue)
-    const reconciliation = this.reconcilePdfPaths(knownPaths, disk.pdfs)
+    const reconciliation = await this.reconcilePdfPaths(catalogue, knownPaths, disk.pdfs)
     const added = reconciliation.added
     const removed = reconciliation.removed
     const informationPdfs = disk.pdfs.filter((path) => this.isInformationPdf(path))
@@ -681,6 +749,50 @@ export class Pf2MjService {
     return await this.persistence.readCatalogueSnapshot() as ScanCatalogue
   }
 
+  private scenarioDocumentLinks(
+    catalogue: ScanCatalogue,
+    targets: Map<string, { id: string; label: string | null }>
+  ): Map<string, { id: string; label: string | null }> {
+    const linked = new Map<
+      string,
+      { id: string; label: string | null }
+    >()
+
+    const addLinks = (
+      targetId: unknown,
+      documents: unknown
+    ) => {
+      if (
+        typeof targetId !== 'string' ||
+        !targets.has(targetId) ||
+        !Array.isArray(documents)
+      ) return
+
+      const target = targets.get(targetId)!
+
+      for (const rawLink of documents) {
+        const link = this.asObject(rawLink)
+
+        if (
+          typeof link.fileId === 'string' &&
+          !linked.has(link.fileId)
+        ) {
+          linked.set(link.fileId, target)
+        }
+      }
+    }
+
+    for (const entry of catalogue.entries ?? []) {
+      addLinks(entry.id, entry.documents)
+
+      for (const part of entry.parts ?? []) {
+        addLinks(part.id, part.documents)
+      }
+    }
+
+    return linked
+  }
+
   private scenarioResourceTargets(catalogue: ScanCatalogue, scenarioId: string): Map<string, { id: string; label: string | null }> {
     const targets = new Map<string, { id: string; label: string | null }>()
     const add = (id: unknown, label: string | null) => {
@@ -764,11 +876,12 @@ export class Pf2MjService {
     }
   }
 
-  private reconcilePdfPaths(knownPaths: string[], diskPaths: string[]): {
+  // PF2_SCAN_SHA256_RELOCATION_V1
+  private async reconcilePdfPaths(catalogue: ScanCatalogue, knownPaths: string[], diskPaths: string[]): Promise<{
     added: string[]
     removed: string[]
-    relocations: Array<{ cataloguePath: string; diskPath: string; reason: 'normalized-path' | 'unique-filename' }>
-  } {
+    relocations: Array<{ cataloguePath: string; diskPath: string; reason: 'normalized-path' | 'unique-filename' | 'sha256' | 'sha256' }>
+  }> {
     const known = [...new Set(knownPaths.map((path) => this.normalizedPath(path)))]
     const disk = [...new Set(diskPaths.map((path) => this.normalizedPath(path)))]
     const diskExact = new Set(disk)
@@ -776,15 +889,11 @@ export class Pf2MjService {
     const unmatchedKnown = known.filter((path) => !exactKnown.has(path))
     const unmatchedDisk = disk.filter((path) => !exactKnown.has(path))
 
-    const relocations: Array<{ cataloguePath: string; diskPath: string; reason: 'normalized-path' | 'unique-filename' }> = []
+    const relocations: Array<{ cataloguePath: string; diskPath: string; reason: 'normalized-path' | 'unique-filename' | 'sha256' | 'sha256' }> = []
     const usedKnown = new Set<string>()
     const usedDisk = new Set<string>()
 
-    const pairUnique = (
-      knownKey: (path: string) => string,
-      diskKey: (path: string) => string,
-      reason: 'normalized-path' | 'unique-filename'
-    ) => {
+    const pairUnique = (knownKey: (path: string) => string, diskKey: (path: string) => string, reason: 'normalized-path' | 'unique-filename' | 'sha256' | 'sha256') => {
       const knownByKey = new Map<string, string[]>()
       const diskByKey = new Map<string, string[]>()
       for (const path of unmatchedKnown) {
@@ -810,16 +919,51 @@ export class Pf2MjService {
       }
     }
 
-    // 1. Même chemin logique après normalisation Unicode / ponctuation.
     pairUnique((path) => this.pathIdentity(path), (path) => this.pathIdentity(path), 'normalized-path')
-    // 2. Même nom logique mais fichier déplacé dans un autre dossier. Uniquement si la correspondance est unique.
     pairUnique((path) => this.filenameIdentity(path), (path) => this.filenameIdentity(path), 'unique-filename')
+
+    const knownHash = new Map<string, string>()
+    for (const file of catalogue.files ?? []) {
+      const path = typeof file.path === 'string' ? this.normalizedPath(file.path) : ''
+      if (!path || !unmatchedKnown.includes(path) || usedKnown.has(path)) continue
+      const metadata = this.asObject(file.metadata)
+      const hash = typeof file.sha256 === 'string' ? file.sha256 : typeof metadata.sha256 === 'string' ? metadata.sha256 : ''
+      if (hash) knownHash.set(path, hash)
+    }
+
+    const diskHash = new Map<string, string>()
+    for (const path of unmatchedDisk) {
+      if (usedDisk.has(path)) continue
+      const fingerprint = await this.libraryFileFingerprint(path)
+      diskHash.set(path, fingerprint.sha256)
+    }
+
+    const knownByHash = new Map<string, string[]>()
+    const diskByHash = new Map<string, string[]>()
+    for (const [path, hash] of knownHash) knownByHash.set(hash, [...(knownByHash.get(hash) ?? []), path])
+    for (const [path, hash] of diskHash) diskByHash.set(hash, [...(diskByHash.get(hash) ?? []), path])
+    for (const [hash, oldPaths] of knownByHash) {
+      const newPaths = diskByHash.get(hash) ?? []
+      if (oldPaths.length !== 1 || newPaths.length !== 1) continue
+      const cataloguePath = oldPaths[0]
+      const diskPath = newPaths[0]
+      usedKnown.add(cataloguePath)
+      usedDisk.add(diskPath)
+      relocations.push({ cataloguePath, diskPath, reason: 'sha256' })
+    }
 
     return {
       added: unmatchedDisk.filter((path) => !usedDisk.has(path)),
       removed: unmatchedKnown.filter((path) => !usedKnown.has(path)),
       relocations: relocations.sort((left, right) => left.cataloguePath.localeCompare(right.cataloguePath, 'fr'))
     }
+  }
+
+  private async libraryFileFingerprint(relativePath: string): Promise<{ sha256: string; bytes: number }> {
+    const target = resolve(this.libraryRoot, this.normalizedPath(relativePath))
+    if (target !== this.libraryRoot && !target.startsWith(`${this.libraryRoot}${sep}`)) throw new Error('Chemin de bibliothèque refusé.')
+    const bytes = await readFile(target)
+    return { sha256: createHash('sha256').update(bytes).digest('hex'), bytes: bytes.length }
   }
 
   private pathIdentity(path: string): string {
@@ -859,7 +1003,7 @@ export class Pf2MjService {
     return Array.isArray(catalogue.files) ? catalogue.files.map((item) => typeof item.path === 'string' ? this.normalizedPath(item.path) : '').filter(Boolean) : []
   }
 
-  private async applyCatalogueReconciliation(catalogue: ScanCatalogue, reconciliation: { relocations: Array<{ cataloguePath: string; diskPath: string; reason: 'normalized-path' | 'unique-filename' }> }, added: string[], targets: ScanTarget[]): Promise<{ changed: boolean; relocated: number; inventoried: number; review: number }> {
+  private async applyCatalogueReconciliation(catalogue: ScanCatalogue, reconciliation: { relocations: Array<{ cataloguePath: string; diskPath: string; reason: 'normalized-path' | 'unique-filename' | 'sha256' }> }, added: string[], targets: ScanTarget[]): Promise<{ changed: boolean; relocated: number; inventoried: number; review: number }> {
     const version = Number(catalogue.schemaVersion)
     const documents = version === 3 && Array.isArray(catalogue.documents) ? catalogue.documents : null
     const files = Array.isArray(catalogue.files) ? catalogue.files as Array<Record<string, unknown>> : null
@@ -888,6 +1032,7 @@ export class Pf2MjService {
       const normalized = this.normalizedPath(path)
       const collection = documents ?? files!
       if (collection.some((item) => typeof item.path === 'string' && this.normalizedPath(item.path) === normalized)) continue
+      const fingerprint = await this.libraryFileFingerprint(path)
       const translation = this.isTranslationPdf(path)
       const originalCandidates = translation ? (files ?? []).filter((item) => typeof item.path === 'string' && !this.isTranslationPdf(String(item.path)) && this.translationIdentity(String(item.path)) === this.translationIdentity(path)) : []
       const originalId = originalCandidates.length === 1 && typeof originalCandidates[0].id === 'string' ? originalCandidates[0].id : null
@@ -904,7 +1049,7 @@ export class Pf2MjService {
       } else {
         files!.push({
           id: `scan-${this.slug(path.replace(/\.(?:pdf|pd)$/i, ''))}`,
-          filename, path, extension: 'pdf', pages: null,
+          filename, path, extension: 'pdf', bytes: fingerprint.bytes, sha256: fingerprint.sha256, pages: null,
           roleHint: info ? 'information' : category,
           languageHint: translation ? 'fr' : this.languageHint(path),
           translationVariant: translation,
@@ -981,6 +1126,22 @@ export class Pf2MjService {
       if (!id) continue
       const season = typeof collection.season === 'number' ? collection.season : null
       result.push({ id, kind: 'container', isCampaign: false, parentId: typeof collection.parentId === 'string' ? collection.parentId : null, labels: this.scanLabels(collection.titleFr, collection.titleOriginal, [], id), numbers: season === null ? [] : [String(season)] })
+    }
+    return result
+  }
+
+  private curationDescendantTargets(targets: ScanTarget[], rootId: string): ScanTarget[] {
+    const result: ScanTarget[] = []
+    const queue = [rootId]
+    const seen = new Set<string>([rootId])
+    while (queue.length) {
+      const parentId = queue.shift()!
+      for (const target of targets) {
+        if (target.parentId !== parentId || seen.has(target.id)) continue
+        seen.add(target.id)
+        result.push(target)
+        queue.push(target.id)
+      }
     }
     return result
   }
@@ -1236,21 +1397,51 @@ export class Pf2MjService {
 
   private normalizeCuration(value: Record<string, unknown>): Record<string, unknown> {
     const data = { ...value }
-    const byId = { ...this.asObject(data.byId), ...this.asObject(data.entries) }
-    const set = (id: string, field: string, fieldValue: unknown, overwrite = false) => {
+    // V4 : entries est legacy ; byId doit gagner en cas de conflit.
+    const byId = { ...this.asObject(data.entries), ...this.asObject(data.byId) }
+    const set = (id: string, field: string, fieldValue: unknown) => {
       if (!id) return
       const entry = { ...this.asObject(byId[id]) }
-      if (overwrite || entry[field] === undefined) entry[field] = fieldValue
+      if (entry[field] === undefined) entry[field] = fieldValue
+      byId[id] = entry
+    }
+    const migrate = (id: string, progress: unknown) => {
+      const m = this.legacyProgressStatus(progress)
+      if (m.excluded !== undefined) set(id, 'excluded', m.excluded)
+      if (m.preparationStatus !== undefined) set(id, 'preparationStatus', m.preparationStatus)
+      if (m.playStatus !== undefined) set(id, 'playStatus', m.playStatus)
+    }
+    for (const [id, raw] of Object.entries(byId)) {
+      const entry = { ...this.asObject(raw) }
+      if (entry.progress !== undefined) {
+        const m = this.legacyProgressStatus(entry.progress)
+        if (entry.excluded === undefined && m.excluded !== undefined) entry.excluded = m.excluded
+        if (entry.preparationStatus === undefined && m.preparationStatus !== undefined) entry.preparationStatus = m.preparationStatus
+        if (entry.playStatus === undefined && m.playStatus !== undefined) entry.playStatus = m.playStatus
+        delete entry.progress
+      }
+      if (entry.excluded === true && entry.excludedReason === undefined) entry.excludedReason = 'rejected'
+      if (entry.excluded === false && entry.excludedReason !== undefined) delete entry.excludedReason
       byId[id] = entry
     }
     this.strings(data.excludedCampaignIds).forEach((id) => set(id, 'inclusion', 'excluded'))
     this.strings(data.includedCampaignIds).forEach((id) => set(id, 'inclusion', 'reinstated'))
     this.strings(data.excludedScenarioIds).forEach((id) => set(id, 'inclusion', 'excluded'))
-    const maps: Array<[string, string]> = [['playabilityByCampaign','playability'],['playabilityByScenario','playability'],['progressByCampaign','progress'],['progressByScenario','progress'],['levelsByCampaign','levelsOverride'],['levelsByScenario','levelsOverride'],['placesByCampaign','placesOverride'],['placesByScenario','placesOverride']]
+    const maps: Array<[string, string]> = [['playabilityByCampaign','playability'],['playabilityByScenario','playability'],['levelsByCampaign','levelsOverride'],['levelsByScenario','levelsOverride'],['placesByCampaign','placesOverride'],['placesByScenario','placesOverride']]
     for (const [source, field] of maps) for (const [id, fieldValue] of Object.entries(this.asObject(data[source]))) set(id, field, fieldValue)
-    data.schemaVersion = 3
+    for (const source of ['progressByCampaign','progressByScenario']) for (const [id, progress] of Object.entries(this.asObject(data[source]))) migrate(id, progress)
+    data.schemaVersion = 4
     data.byId = byId
     return data
+  }
+
+  private legacyProgressStatus(value: unknown): { excluded?: boolean; preparationStatus?: 'untreated' | 'selected' | 'ready'; playStatus?: 'none' | 'to_play' | 'in_progress' | 'played' } {
+    if (value === 'Écarté') return { excluded: true }
+    if (value === 'Sélectionné') return { preparationStatus: 'selected', playStatus: 'none' }
+    if (value === 'À jouer') return { preparationStatus: 'selected', playStatus: 'to_play' }
+    if (value === 'En cours') return { preparationStatus: 'untreated', playStatus: 'in_progress' }
+    if (value === 'Joué') return { preparationStatus: 'untreated', playStatus: 'played' }
+    return {}
   }
 
   private identifier(item: Record<string, unknown>): string {

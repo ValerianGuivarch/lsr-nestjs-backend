@@ -9,6 +9,7 @@ import {
   arcMap,
   arcs,
   availabilityOf,
+  availabilityLabel,
   componentTypeLabel,
   componentsOf,
   containerMap,
@@ -16,7 +17,6 @@ import {
   containers,
   currentDocuments,
   documentHref,
-  documentaryCoverageLabel,
   documentaryModeLabel,
   documentPresence,
   documentsForTarget,
@@ -56,8 +56,10 @@ import { expandedPlaceLabels, geographyTreeOptions, loadGeographyFromApi, matche
 
 type View = 'find' | 'library' | 'prepare' | 'documents' | 'chronology' | 'excluded' | 'settings' | 'pnj' | 'factions' | 'lieux' | 'regions' | 'evenements'
 type ReferenceView = 'pnj' | 'factions' | 'lieux' | 'regions' | 'evenements'
-type PreparationTab = 'pdf' | 'translation' | 'zip' | 'info' | 'uncertain' | 'metadata'
+type PreparationTab = 'pdf' | 'translation' | 'zip' | 'info' | 'description' | 'uncertain' | 'metadata'
 type SelectedEntity = PlayableUnit | Container
+type PreparationStatus = 'untreated' | 'selected' | 'ready'
+type PlayStatus = 'none' | 'to_play' | 'in_progress' | 'played'
 
 type StructuredLocationOverride = {
   mode: 'replace' | 'merge'
@@ -68,9 +70,13 @@ type StructuredLocationOverride = {
 
 type EntryOverride = {
   excluded?: boolean
+  excludedReason?: 'later' | 'rejected' | null
   inclusion?: 'default' | 'excluded' | 'reinstated'
   playability?: Playability
+  /** Legacy V3, lecture de transition uniquement. */
   progress?: Progress
+  preparationStatus?: PreparationStatus
+  playStatus?: PlayStatus
   levelsOverride?: string
   placesOverride?: string[]
   relevance?: string
@@ -140,24 +146,31 @@ type Filters = {
   availability: string
   relevance: string
   playability: string
-  progress: string
+  preparationStatus: string
+  playStatus: string
   type: string
   yearFrom: string
   yearTo: string
   arc: string
   thread: string
   bundle: string
+  description: string
 }
 
 const emptyFilters: Filters = {
-  query: '', level: '', place: '', french: '', availability: '', relevance: '', playability: '', progress: '', type: '', yearFrom: '', yearTo: '', arc: '', thread: '', bundle: '',
+  query: '', level: '', place: '', french: '', availability: '', relevance: '', playability: '', preparationStatus: '', playStatus: '', type: '', yearFrom: '', yearTo: '', arc: '', thread: '', bundle: '', description: '',
 }
 
 const playabilityOptions: Playability[] = ['Prêt', 'À adapter', 'Simple inspiration']
-const progressOptions: Progress[] = ['Non spécifié', 'À jouer', 'Sélectionné', 'En cours', 'Joué', 'Écarté']
+const preparationOptions: Array<[PreparationStatus, string]> = [
+  ['untreated', 'Non traité'], ['selected', 'Sélectionné'], ['ready', 'Prêt (automatique)'],
+]
+const playStatusOptions: Array<[PlayStatus, string]> = [
+  ['none', '—'], ['to_play', 'À jouer'], ['in_progress', 'En cours'], ['played', 'Joué'],
+]
 const relevanceOrder: Record<string, number> = { 'Très haute': 0, Haute: 1, Moyenne: 2, Basse: 3, Aucune: 4, Variable: 5, 'À évaluer': 6 }
 const preparationTabs: Array<[PreparationTab, string]> = [
-  ['pdf', 'PDF requis'], ['translation', 'Traductions'], ['zip', 'ZIP Foundry'], ['info', 'Info seules'], ['uncertain', 'À vérifier'], ['metadata', 'Métadonnées'],
+  ['pdf', 'PDF requis'], ['translation', 'Traductions'], ['zip', 'ZIP Foundry'], ['info', 'Info seules'], ['description', 'Descriptions'], ['uncertain', 'À vérifier'], ['metadata', 'Métadonnées'],
 ]
 
 const tone = (value: string) => value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-')
@@ -186,6 +199,15 @@ function genericOverride(curation: Curation, id: string): EntryOverride {
   return curation.byId?.[id] ?? curation.entries?.[id] ?? {}
 }
 
+function legacyProgressStatus(progress?: Progress): Pick<EntryOverride, 'excluded' | 'preparationStatus' | 'playStatus'> {
+  if (progress === 'Écarté') return { excluded: true }
+  if (progress === 'Sélectionné') return { preparationStatus: 'selected', playStatus: 'none' }
+  if (progress === 'À jouer') return { preparationStatus: 'selected', playStatus: 'to_play' }
+  if (progress === 'En cours') return { preparationStatus: 'untreated', playStatus: 'in_progress' }
+  if (progress === 'Joué') return { preparationStatus: 'untreated', playStatus: 'played' }
+  return {}
+}
+
 function legacyOverride(curation: Curation, id: string, scenario: boolean): EntryOverride {
   const generic = genericOverride(curation, id)
   const excludedCampaignIds = curation.excludedCampaignIds ?? []
@@ -193,11 +215,14 @@ function legacyOverride(curation: Curation, id: string, scenario: boolean): Entr
   const excludedScenarioIds = curation.excludedScenarioIds ?? []
   const excludedLegacy = scenario ? excludedScenarioIds.includes(id) : excludedCampaignIds.includes(id)
   const reinstatedLegacy = !scenario && includedCampaignIds.includes(id)
+  const progress = generic.progress ?? (scenario ? curation.progressByScenario?.[id] : curation.progressByCampaign?.[id])
+  const migrated = legacyProgressStatus(progress)
   return {
     ...generic,
-    excluded: generic.excluded ?? (generic.inclusion === 'excluded' ? true : generic.inclusion === 'reinstated' ? false : reinstatedLegacy ? false : excludedLegacy),
+    excluded: generic.excluded ?? migrated.excluded ?? (generic.inclusion === 'excluded' ? true : generic.inclusion === 'reinstated' ? false : reinstatedLegacy ? false : excludedLegacy),
     playability: generic.playability ?? (scenario ? curation.playabilityByScenario?.[id] : curation.playabilityByCampaign?.[id]),
-    progress: generic.progress ?? (scenario ? curation.progressByScenario?.[id] : curation.progressByCampaign?.[id]),
+    preparationStatus: generic.preparationStatus ?? migrated.preparationStatus,
+    playStatus: generic.playStatus ?? migrated.playStatus,
     levelsOverride: generic.levelsOverride ?? (scenario ? curation.levelsByScenario?.[id] : curation.levelsByCampaign?.[id]),
     placesOverride: generic.placesOverride ?? (scenario ? curation.placesByScenario?.[id] : curation.placesByCampaign?.[id]),
   }
@@ -215,6 +240,7 @@ function resolvePlayableOverride(curation: Curation, unit: PlayableUnit): Resolv
   return {
     ...direct,
     excluded: direct.excluded ?? parent.excluded,
+    excludedReason: direct.excludedReason ?? parent.excludedReason ?? null,
     playability: direct.playability ?? parent.playability,
     // Les niveaux et le suivi ne sont volontairement pas hérités d'une campagne globale.
     placesOverride: direct.placesOverride ?? parent.placesOverride,
@@ -253,8 +279,47 @@ function effectiveLocations(unit: PlayableUnit, override: ResolvedOverride): Loc
 }
 
 function effectivePlayability(unit: PlayableUnit, override: ResolvedOverride): Playability { return override.playability ?? unit.playability }
-function effectiveProgress(unit: PlayableUnit, override: ResolvedOverride): Progress { return override.excluded || override.progress === 'Écarté' ? 'Écarté' : override.progress ?? unit.tracking }
+function effectivePreparationStatus(override: ResolvedOverride): PreparationStatus { return override.preparationStatus ?? 'untreated' }
+function effectivePlayStatus(override: ResolvedOverride): PlayStatus { return override.playStatus ?? 'none' }
 function effectiveRelevance(unit: PlayableUnit, override: ResolvedOverride): string { return override.relevance ?? relevanceOf(unit) }
+
+// PF2_PREP_FILTERS_INFO_V1
+function hasText(value: string | null | undefined): boolean {
+  return typeof value === 'string' && value.trim().length > 0
+}
+
+function descriptionFacts(unit: PlayableUnit) {
+  const ownSynopsis = hasText(unit.synopsis)
+  const inheritedSynopsis = !ownSynopsis && hasText(unit.contextSynopsis)
+  const gmDetails = hasText(unit.gmDetails)
+  return {
+    ownSynopsis,
+    inheritedSynopsis,
+    gmDetails,
+    needsWork: !ownSynopsis || !gmDetails,
+    complete: ownSynopsis && gmDetails,
+  }
+}
+
+function matchesDescriptionFilter(unit: PlayableUnit, filter: string): boolean {
+  if (!filter) return true
+  const facts = descriptionFacts(unit)
+  if (filter === 'needsWork') return facts.needsWork
+  if (filter === 'complete') return facts.complete
+  if (filter === 'inherited') return facts.inheritedSynopsis
+  if (filter === 'missingSynopsis') return !facts.ownSynopsis
+  if (filter === 'missingGmDetails') return !facts.gmDetails
+  return true
+}
+
+function documentStatusLabel(unit: PlayableUnit): string {
+  const availability = availabilityOf(unit)
+  if (availability.coreMaterial === 'informationOnly') return 'INFO'
+  if (availability.coreMaterial === 'complete' && availability.mode !== 'none') {
+    return `COMPLET · ${documentaryModeLabel(availability.mode)}`
+  }
+  return availabilityLabel(availability.coreMaterial).toUpperCase()
+}
 
 function isContainerExcluded(container: Container, curation: Curation, seen = new Set<string>()): boolean {
   const override = resolveContainerOverride(curation, container)
@@ -264,6 +329,35 @@ function isContainerExcluded(container: Container, curation: Curation, seen = ne
   if (!container.parentId || seen.has(container.id)) return false
   const parent = containerMap.get(container.parentId)
   return parent ? isContainerExcluded(parent, curation, new Set([...seen, container.id])) : false
+}
+
+// PF2_EXCLUDED_REASON_LATER_V1
+function exclusionUiValue(override: ResolvedOverride, excluded: boolean): 'active' | 'later' | 'rejected' {
+  if (!excluded) return 'active'
+  return override.excludedReason === 'later' ? 'later' : 'rejected'
+}
+
+function explicitContainerExclusion(container: Container, curation: Curation): boolean {
+  const override = resolveContainerOverride(curation, container)
+  return override.progress === 'Écarté' || override.excluded === true || container.editorialStatus === 'ÉCARTÉ'
+}
+
+function explicitPlayableExclusion(unit: PlayableUnit, curation: Curation): boolean {
+  const override = resolvePlayableOverride(curation, unit)
+  return override.progress === 'Écarté' || override.excluded === true || unit.playableType === 'legacy' || unit.editorialStatus === 'ÉCARTÉ'
+}
+
+function ExclusionSelect({ id, override, excluded, onUpdate }: {
+  id: string
+  override: ResolvedOverride
+  excluded: boolean
+  onUpdate: (id: string, field: string, value: unknown) => void
+}) {
+  return <select value={exclusionUiValue(override, excluded)} onChange={(event) => onUpdate(id, 'exclusionStatus', event.target.value)}>
+    <option value="active">Actif</option>
+    <option value="later">Plus tard</option>
+    <option value="rejected">Écarté</option>
+  </select>
 }
 
 function isExcluded(unit: PlayableUnit, override: ResolvedOverride, curation?: Curation): boolean {
@@ -294,7 +388,8 @@ function matchesFilters(unit: PlayableUnit, filters: Filters, curation: Curation
   const bundle = resourceBundleAvailability(unit)
   const relevance = effectiveRelevance(unit, override)
   const playability = effectivePlayability(unit, override)
-  const progress = effectiveProgress(unit, override)
+  const preparationStatus = effectivePreparationStatus(override)
+  const playStatus = effectivePlayStatus(override)
   const year = yearOf(unit)
   const parentNames = ancestorContainers(unit).map(titleOf)
   const haystack = [titleOf(unit), unit.titles.original ?? '', unit.synopsis ?? '', unit.contextSynopsis ?? '', unit.narrativeThread ?? '', ...locations.flatMap((location) => expandedPlaceLabels(location.id)), ...unit.arcIds.map((id) => arcMap.get(id)?.titleFr ?? id), ...parentNames].join(' ').toLowerCase()
@@ -305,9 +400,15 @@ function matchesFilters(unit: PlayableUnit, filters: Filters, curation: Curation
   if (filters.type && unit.playableType !== filters.type) return false
   if (filters.relevance && relevance !== filters.relevance) return false
   if (filters.playability && playability !== filters.playability) return false
-  if (filters.progress && progress !== filters.progress) return false
-  if (filters.availability && availability.coverage !== filters.availability) return false
+  if (filters.preparationStatus && preparationStatus !== filters.preparationStatus) return false
+  if (filters.playStatus && playStatus !== filters.playStatus) return false
+  if (filters.availability) {
+    if (filters.availability === 'usable') {
+      if (!['complete', 'informationOnly'].includes(availability.coreMaterial)) return false
+    } else if (availability.coreMaterial !== filters.availability) return false
+  }
   if (filters.bundle && bundle.status !== filters.bundle) return false
+  if (!matchesDescriptionFilter(unit, filters.description)) return false
   if (filters.arc && !unit.arcIds.includes(filters.arc)) return false
   if (filters.thread && unit.narrativeThread !== filters.thread) return false
   if (filters.yearFrom && (year === null || year < Number(filters.yearFrom))) return false
@@ -331,14 +432,16 @@ function FilterBar({ filters, setFilters, units, showBundle = false }: { filters
     <select value={filters.level} onChange={(event) => update('level', event.target.value)}><option value="">Tous niveaux</option>{Array.from({ length: 20 }, (_, index) => <option key={index + 1}>{index + 1}</option>)}</select>
     <GeographyPicker value={filters.place} options={places} onChange={(value) => update('place', value)} />
     <select value={filters.french} onChange={(event) => update('french', event.target.value)}><option value="">Tous modes documentaires</option><option value="fr">FR</option><option value="en_trad">EN + traduction</option><option value="en">EN seul</option><option value="info">Info</option></select>
-    <select value={filters.availability} onChange={(event) => update('availability', event.target.value)}><option value="">Toute couverture</option><option value="complete">Complet</option><option value="partial">Partiel</option><option value="absent">Absent</option></select>
+    <select value={filters.availability} onChange={(event) => update('availability', event.target.value)}><option value="">Tous documents</option><option value="usable">Utilisable (complet ou info)</option><option value="complete">Complet</option><option value="informationOnly">Info</option><option value="partial">Partiel</option><option value="absent">Absent</option><option value="uncertain">À vérifier</option></select>
     <select value={filters.relevance} onChange={(event) => update('relevance', event.target.value)}><option value="">Toute pertinence</option>{relevances.map((value) => <option key={value}>{value}</option>)}</select>
     <select value={filters.playability} onChange={(event) => update('playability', event.target.value)}><option value="">Toute jouabilité</option>{playabilityOptions.map((value) => <option key={value}>{value}</option>)}</select>
-    <select value={filters.progress} onChange={(event) => update('progress', event.target.value)}><option value="">Tous suivis</option>{progressOptions.map((value) => <option key={value}>{value}</option>)}</select>
+    <select value={filters.preparationStatus} onChange={(event) => update('preparationStatus', event.target.value)}><option value="">Toute préparation</option>{preparationOptions.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select>
+    <select value={filters.playStatus} onChange={(event) => update('playStatus', event.target.value)}><option value="">Tout cycle de jeu</option>{playStatusOptions.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select>
     <select value={filters.type} onChange={(event) => update('type', event.target.value)}><option value="">Tous types</option>{types.map((value) => <option key={value} value={value}>{playableTypeLabel(value as PlayableUnit['playableType'])}</option>)}</select>
     <select value={filters.arc} onChange={(event) => update('arc', event.target.value)}><option value="">Tous arcs</option>{arcs.map((arc) => <option key={arc.id} value={arc.id}>{arc.titleFr}</option>)}</select>
     <select value={filters.thread} onChange={(event) => update('thread', event.target.value)}><option value="">Tous fils narratifs</option>{threads.map((value) => <option key={value}>{value}</option>)}</select>
     {showBundle && <select value={filters.bundle} onChange={(event) => update('bundle', event.target.value)}><option value="">Tous ZIP</option><option value="present">ZIP disponible</option><option value="missing">ZIP manquant</option><option value="uncertain">ZIP à vérifier</option><option value="unknown">ZIP non inventorié</option></select>}
+    <select value={filters.description} onChange={(event) => update('description', event.target.value)}><option value="">Toutes descriptions</option><option value="needsWork">À compléter</option><option value="complete">Complète</option><option value="inherited">Seulement héritée</option><option value="missingSynopsis">Synopsis propre manquant</option><option value="missingGmDetails">Détails MJ manquants</option></select>
     <label className="year-filter"><small>AR de</small><input type="number" value={filters.yearFrom} onChange={(event) => update('yearFrom', event.target.value)} placeholder="4700" /></label>
     <label className="year-filter"><small>à</small><input type="number" value={filters.yearTo} onChange={(event) => update('yearTo', event.target.value)} placeholder="4730" /></label>
     {activeCount > 0 && <button className="filter-reset" onClick={() => setFilters(emptyFilters)}>Effacer {activeCount} filtre{activeCount > 1 ? 's' : ''}</button>}
@@ -349,7 +452,7 @@ function AvailabilityBadges({ unit }: { unit: PlayableUnit }) {
   const availability = availabilityOf(unit)
   const bundle = resourceBundleAvailability(unit)
   return <div className="availability-badges">
-    <Badge>{availability.coverage === 'complete' && availability.mode !== 'none' ? `${documentaryCoverageLabel(availability.coverage)} · ${documentaryModeLabel(availability.mode)}` : documentaryCoverageLabel(availability.coverage)}</Badge>
+    <Badge>{documentStatusLabel(unit)}</Badge>
     <Badge>{resourceBundleLabel(bundle)}</Badge>
   </div>
 }
@@ -359,7 +462,8 @@ function PlayableRow({ unit, curation, onOpen, onUpdate }: { unit: PlayableUnit;
   const levels = effectiveLevels(unit, override)
   const locations = effectiveLocations(unit, override)
   const playability = effectivePlayability(unit, override)
-  const progress = effectiveProgress(unit, override)
+  const preparationStatus = effectivePreparationStatus(override)
+  const playStatus = effectivePlayStatus(override)
   const relevance = effectiveRelevance(unit, override)
   const parent = unit.parentId ? containerMap.get(unit.parentId) : null
 
@@ -376,7 +480,9 @@ function PlayableRow({ unit, curation, onOpen, onUpdate }: { unit: PlayableUnit;
       <div><small>Lieux</small><strong>{locations.length ? unique(locations.map((location) => placeDisplay(location.id))).join(', ') : 'À documenter'}</strong>{locations[0] && <SourceBadge source={locations[0].source} />}</div>
       <div><small>Pertinence</small><strong className={`relevance r-${tone(relevance)}`}>{relevance}</strong></div>
       <label><small>Jouabilité</small><select value={playability} onChange={(event) => onUpdate(unit.id, 'playability', event.target.value)}>{playabilityOptions.map((value) => <option key={value}>{value}</option>)}</select></label>
-      <label><small>Suivi</small><select value={progress} onChange={(event) => onUpdate(unit.id, 'progress', event.target.value)}>{progressOptions.map((value) => <option key={value}>{value}</option>)}</select></label>
+      <label><small>Préparation</small><select value={preparationStatus} onChange={(event) => onUpdate(unit.id, 'preparationStatus', event.target.value)}>{preparationOptions.map(([value, label]) => <option key={value} value={value} disabled={value === 'ready'}>{label}</option>)}</select></label>
+      <label><small>Jeu</small><select value={playStatus} onChange={(event) => onUpdate(unit.id, 'playStatus', event.target.value)}>{playStatusOptions.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
+      <label><small>Exclusion</small><ExclusionSelect id={unit.id} override={override} excluded={isExcluded(unit, override, curation)} onUpdate={onUpdate} /></label>
     </div>
     <div className="entry-actions"><button onClick={() => onOpen(unit)}>Détails →</button></div>
   </article>
@@ -384,6 +490,32 @@ function PlayableRow({ unit, curation, onOpen, onUpdate }: { unit: PlayableUnit;
 
 function PlayableList({ units, curation, onOpen, onUpdate, empty = 'Aucune unité jouable.' }: { units: PlayableUnit[]; curation: Curation; onOpen: (unit: PlayableUnit) => void; onUpdate: (id: string, field: string, value: unknown) => void; empty?: string }) {
   return <div className="entry-list">{units.length ? units.map((unit) => <PlayableRow key={unit.id} unit={unit} curation={curation} onOpen={onOpen} onUpdate={onUpdate} />) : <p className="empty-state">{empty}</p>}</div>
+}
+
+function ExcludedView({ curation, onOpenContainer, onOpenPlayable, onUpdate }: {
+  curation: Curation
+  onOpenContainer: (container: Container) => void
+  onOpenPlayable: (unit: PlayableUnit) => void
+  onUpdate: (id: string, field: string, value: unknown) => void
+}) {
+  const explicitContainers = containers.filter((container) => explicitContainerExclusion(container, curation)).sort((a, b) => titleOf(a).localeCompare(titleOf(b), 'fr'))
+  const explicitPlayables = playableUnits.filter((unit) => explicitPlayableExclusion(unit, curation)).sort((a, b) => titleOf(a).localeCompare(titleOf(b), 'fr'))
+  const laterContainers = explicitContainers.filter((container) => resolveContainerOverride(curation, container).excludedReason === 'later')
+  const rejectedContainers = explicitContainers.filter((container) => resolveContainerOverride(curation, container).excludedReason !== 'later')
+  const laterPlayables = explicitPlayables.filter((unit) => resolvePlayableOverride(curation, unit).excludedReason === 'later')
+  const rejectedPlayables = explicitPlayables.filter((unit) => resolvePlayableOverride(curation, unit).excludedReason !== 'later')
+
+  const renderContainers = (items: Container[]) => items.length ? <div className="excluded-scenarios">
+    {items.map((container) => {
+      const override = resolveContainerOverride(curation, container)
+      const count = playablesUnder(container.id).length
+      return <article key={container.id}><div><small>{containerTypeLabel(container.containerType)}</small><strong>{titleOf(container)}</strong><span>{count} unité{count > 1 ? 's' : ''} jouable{count > 1 ? 's' : ''}</span></div><ExclusionSelect id={container.id} override={override} excluded={isContainerExcluded(container, curation)} onUpdate={onUpdate} /><button onClick={() => onOpenContainer(container)}>Détails →</button></article>
+    })}
+  </div> : <p className="empty-state">Aucun conteneur.</p>
+
+  const section = (title: string, cs: Container[], ps: PlayableUnit[]) => <section className="detail-section"><h3>{title} · {cs.length + ps.length}</h3>{cs.length > 0 && <><h4>Campagnes / collections</h4>{renderContainers(cs)}</>}{ps.length > 0 && <><h4>Unités jouables</h4><PlayableList units={ps} curation={curation} onOpen={onOpenPlayable} onUpdate={onUpdate} /></>}{cs.length === 0 && ps.length === 0 && <p className="empty-state">Rien ici.</p>}</section>
+
+  return <div className="excluded-view">{section('Plus tard', laterContainers, laterPlayables)}{section('Écartés', rejectedContainers, rejectedPlayables)}</div>
 }
 
 function FinderView({ active, curation, onOpen, onUpdate, resourceVersion }: { active: PlayableUnit[]; curation: Curation; onOpen: (unit: PlayableUnit) => void; onUpdate: (id: string, field: string, value: unknown) => void; resourceVersion: number }) {
@@ -424,11 +556,14 @@ function LibraryView({ curation, onOpen, onOpenPlayable, onUpdate }: { curation:
 function preparationMatch(unit: PlayableUnit, tab: PreparationTab): boolean {
   const availability = availabilityOf(unit)
   const bundle = resourceBundleAvailability(unit)
-  if (tab === 'pdf') return ['absent', 'partial'].includes(availability.coverage)
-  if (tab === 'translation') return availability.coverage === 'complete' && availability.mode === 'en'
-  if (tab === 'zip') return bundle.status === 'missing' && availability.coverage === 'complete'
-  if (tab === 'info') return availability.mode === 'info' || documentsForTarget(unit.id).some((document) => document.isInformationFallback)
-  if (tab === 'uncertain') return bundle.status === 'uncertain' || documentsForTarget(unit.id).some((document) => document.association.status === 'review')
+  // PF2_INFO_EXCLUDES_PDF_REQUIRED_V1
+  const hasInformationFallback = documentsForTarget(unit.id).some((document) => document.isInformationFallback)
+  if (tab === 'pdf') return !hasInformationFallback && ['absent', 'partial'].includes(availability.coreMaterial)
+  if (tab === 'translation') return availability.coreMaterial === 'complete' && availability.mode === 'en'
+  if (tab === 'zip') return bundle.status === 'missing' && (hasInformationFallback || ['complete', 'informationOnly'].includes(availability.coreMaterial))
+  if (tab === 'info') return hasInformationFallback || availability.coreMaterial === 'informationOnly'
+  if (tab === 'description') return descriptionFacts(unit).needsWork
+  if (tab === 'uncertain') return bundle.status === 'uncertain' || availability.coreMaterial === 'uncertain' || documentsForTarget(unit.id).some((document) => document.association.status === 'review')
   return unit.migration.status === 'needsReview'
 }
 
@@ -441,7 +576,8 @@ function PreparationView({ active, curation, onOpen, onUpdate, resourceVersion }
     <div className="prepare-tabs">{preparationTabs.map(([id, label]) => <button key={id} className={tab === id ? 'active' : ''} onClick={() => { setTab(id); setFilters(emptyFilters) }}>{label}<b>{active.filter((unit) => preparationMatch(unit, id)).length}</b></button>)}</div>
     {tab === 'zip' && !resourceInventoryKnown && <div className="notice"><strong>Inventaire ZIP en attente</strong><p>Le backend n’a pas encore répondu. Tant que le scan n’est pas disponible, aucun contenu n’est déclaré à tort comme « ZIP manquant ».</p></div>}
     {tab === 'info' && <div className="notice info-notice"><strong>« Info seule » est un état distinct</strong><p>Un PDF nommé avec « (info) » est traité comme substitut documentaire : il n’est ni considéré comme le scénario complet, ni comme une absence totale.</p></div>}
-    <FilterBar filters={filters} setFilters={setFilters} units={base} showBundle={tab === 'zip'} />
+    {tab === 'description' && <div className="notice info-notice"><strong>Descriptions à compléter</strong><p>Cette vue cible les unités sans synopsis propre ou sans détails MJ. Une description héritée de la campagne ne compte pas comme synopsis propre.</p></div>}
+    <FilterBar filters={filters} setFilters={setFilters} units={base} showBundle />
     <div className="section-title"><h2>{preparationTabs.find(([id]) => id === tab)?.[1]}</h2><span>{found.length}</span></div>
     <PlayableList units={found} curation={curation} onOpen={onOpen} onUpdate={onUpdate} empty="Rien à traiter dans cette catégorie." />
   </div>
@@ -495,43 +631,128 @@ function Stats({ active }: { active: PlayableUnit[] }) {
 }
 
 type ScenarioPackageStatus = { scenarioId: string; packageVersion: number; status: string; filename: string; deployedVersion: number | null; deployedAt: string | null; importedAt: string; updatedAt: string; manifest?: { actors?: unknown[] } } | null
-type ScenarioDeployment = { id: string; scenarioId: string; packageVersion: number; status: 'pending' | 'claimed' | 'success' | 'failed'; error: string | null; result: Record<string, unknown> | null } | null
+type ScenarioDeployment = { id: string; scenarioId: string; packageVersion: number; status: 'pending' | 'claimed' | 'success' | 'failed'; operation?: 'deploy' | 'reset'; error: string | null; result: Record<string, unknown> | null } | null
 type LinkedNpc = { id?: string; npcId: string; nom?: string; name?: string; portrait?: string; role?: string | null; importance?: string | null; factions?: Array<{ faction_id?: string; role?: string }>; regions?: string[] }
 type ScenarioAsset = { id: string; path: string; filename: string; assetType: string; role: string | null; language: string | null; variant: string | null; present: boolean; associationStatus: string; resourceScope?: 'direct' | 'component'; resourceTargetLabel?: string | null; libraryCategory?: string | null }
 type ScenarioRelations = { npcs: LinkedNpc[]; places: Array<{ targetId: string; targetKind: 'lieu' | 'region'; nom?: string; name?: string; role?: string | null }>; factions: Array<{ targetId: string; nom?: string; name?: string; role?: string | null }>; events: Array<{ targetId: string; nom?: string; name?: string; role?: string | null }> }
+type LinkedScenarioDependency = { scenarioId: string; dependsOnScenarioId: string; relationType: 'required' | 'recommended'; source?: string | null; sourcePage?: string | null; notes?: string | null; scenario?: { id?: string; name?: string; titleFr?: string; titleOriginal?: string } }
+type ScenarioDependencies = { dependencies: LinkedScenarioDependency[]; dependents: LinkedScenarioDependency[] }
 type AvailableScenarioPackage = { asset: ScenarioAsset; packageVersion: number | null; scenarioName?: string; error?: string } | null
 type PackageActor = { key?: string; name?: string; type?: 'reference' | 'custom' | 'narrative'; uuid?: string; lookup?: unknown; npcId?: string; actor?: { type?: string; uuid?: string; lookup?: unknown } }
 type PackageRegistry = { factions: Array<{ id: string; name: string }>; places: Array<{ id: string; name: string; kind?: string }> }
+type FoundryReferenceLibraryStatus = { available: boolean; actorCount: number; itemCount: number; actorSourceCount: number; itemSourceCount: number; size: number; updatedAt: string | null; metadata?: { foundryVersion?: string | null; systemVersion?: string | null } }
+type AiRequiredRequest = { requestId: string; kind: string; subject: { uuid: string; name: string | null }; reason: string; required: boolean; available: boolean; indexName: string | null; sourceType: 'Actor' | 'Item' }
+type AiRequiredDataStatus = { targetId: string; targetKind: 'scenario' | 'campaign'; status: 'ready' | 'needs_more_data' | 'blocked'; requests: AiRequiredRequest[]; unresolved: unknown[]; requiredMissing: number; availableCount: number; importedAt: string | null } | null
+
+type CampaignChildPackageState = { scenarioId: string; name: string; order: number | null; appVersion: number | null; foundryVersion: number | null; upToDate: boolean; package: ScenarioPackageStatus; latestDeployment: (NonNullable<ScenarioDeployment> & { operation?: 'deploy' | 'reset' }) | null }
+type CampaignState = { campaignId: string; name: string; children: CampaignChildPackageState[]; summary: { total: number; integrated: number; synchronized: number; pending: number; failed: number } }
+type CampaignResetPreview = { campaignId: string; name: string; confirmationText: string; application: { packages: number; deployments: number; scopedRecords: number; preservedNpcLinks: number; preservedRelations: number }; foundryKnown: { actors: number; scenes: number; journals: number; note: string }; preserveNpcIds: string[] }
+
+type ScenarioResetPreview = { scenarioId: string; name: string; confirmationText: string; application: { packages: number; deployments: number; scopedRecords: number; preservedNpcLinks: number; preservedRelations: number }; foundryKnown: { version: number | null; actors: number; scenes: number; journals: number; state: 'present' | 'reset' | 'unknown'; note: string }; preserveNpcIds: string[] }
 
 const pnjPortraitUrl = (portrait?: string) => {
   const filename = /^assets\/l7r\/portraits\/pnj\/([^/]+\.(?:webp|gif|png|jpe?g))$/i.exec(portrait?.trim() ?? '')?.[1]
   return filename ? `/apil7r/pf2-mj/portraits/${encodeURIComponent(filename)}` : ''
 }
 
-function ScenarioPackagePanel({ scenarioId, onOpenReference }: { scenarioId: string; onOpenReference: (view: ReferenceView, id: string) => void }) {
+function CampaignOperationsPanel({ campaignId, onOpenPlayable }: { campaignId: string; onOpenPlayable: (unit: PlayableUnit) => void }) {
+  const [state, setState] = useState<CampaignState | null>(null)
+  const [preview, setPreview] = useState<CampaignResetPreview | null>(null)
+  const [message, setMessage] = useState('')
+  const [busy, setBusy] = useState(false)
+  const load = async () => {
+    try {
+      const [statusResponse, previewResponse] = await Promise.all([
+        fetch(`/apil7r/pf2-mj/campaigns/${encodeURIComponent(campaignId)}/status`, { cache: 'no-store' }),
+        fetch(`/apil7r/pf2-mj/campaigns/${encodeURIComponent(campaignId)}/reset-preview`, { cache: 'no-store' })
+      ])
+      if (statusResponse.ok) setState(await statusResponse.json())
+      if (previewResponse.ok) setPreview(await previewResponse.json())
+    } catch { }
+  }
+  useEffect(() => { void load(); const timer = window.setInterval(() => { void load() }, 4_000); return () => window.clearInterval(timer) }, [campaignId])
+  const synchronize = async () => {
+    setBusy(true); setMessage('')
+    try {
+      const response = await fetch(`/apil7r/pf2-mj/campaigns/${encodeURIComponent(campaignId)}/deployments`, { method: 'POST' })
+      const payload = await response.json().catch(() => null)
+      if (!response.ok) throw new Error(payload?.message ?? 'Synchronisation de campagne impossible.')
+      setMessage(payload.state === 'up-to-date' ? 'Toute la campagne est déjà à jour dans Foundry.' : `${payload.queued?.length ?? 0} aventure(s) placée(s) dans la file Foundry. Le lot s’arrête au premier échec.`)
+      await load()
+    } catch (error) { setMessage(error instanceof Error ? error.message : 'Synchronisation impossible.') } finally { setBusy(false) }
+  }
+  const reset = async (mode: 'app' | 'foundry' | 'all') => {
+    if (!preview) return
+    const confirmation = window.prompt(`Cette action est destructive.\n\nTape exactement :\n${preview.confirmationText}`)
+    if (confirmation === null) return
+    if (confirmation !== preview.confirmationText) { setMessage('Confirmation incorrecte : aucune suppression effectuée.'); return }
+    setBusy(true); setMessage('')
+    try {
+      const response = await fetch(`/apil7r/pf2-mj/campaigns/${encodeURIComponent(campaignId)}/reset`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ mode, confirm: confirmation }) })
+      const payload = await response.json().catch(() => null)
+      if (!response.ok) throw new Error(payload?.message ?? 'Réinitialisation impossible.')
+      setMessage(mode === 'app' ? 'État de préparation de l’application réinitialisé. Les liens globaux et dépendances sont conservés.' : mode === 'foundry' ? 'Nettoyage Foundry placé dans la file.' : 'Reset complet placé dans la file Foundry ; chaque aventure sera nettoyée côté application après son reset Foundry réussi.')
+      await load()
+    } catch (error) { setMessage(error instanceof Error ? error.message : 'Réinitialisation impossible.') } finally { setBusy(false) }
+  }
+  const attemptLabel = (child: CampaignChildPackageState) => {
+    const deployment = child.latestDeployment
+    if (!deployment) return 'aucune tentative'
+    if (deployment.operation === 'reset') return deployment.status === 'success' ? 'reset terminé' : deployment.status === 'failed' ? 'reset en échec' : 'reset en cours'
+    return `dernier essai v${deployment.packageVersion} · ${deployment.status === 'success' ? 'succès' : deployment.status === 'failed' ? 'échec' : deployment.status === 'claimed' ? 'import en cours' : 'en attente'}`
+  }
+  return <section className="detail-section campaign-operations"><h3>État & synchronisation de la campagne</h3>
+    {state ? <><div className="campaign-summary"><strong>{state.summary.synchronized}/{state.summary.total} à jour dans Foundry</strong><span>{state.summary.integrated}/{state.summary.total} packages intégrés{state.summary.failed ? ` · ${state.summary.failed} échec(s)` : ''}</span></div>
+      <div className="campaign-child-status">{state.children.map((child) => <button key={child.scenarioId} onClick={() => { const unit = playableMap.get(child.scenarioId); if (unit) onOpenPlayable(unit) }}><span className={child.upToDate ? 'ok' : child.latestDeployment?.status === 'failed' ? 'failed' : ''}>{child.upToDate ? '✓' : child.latestDeployment?.status === 'failed' ? '!' : '•'}</span><strong>{child.name}</strong><small>App {child.appVersion === null ? '—' : `v${child.appVersion}`} · Foundry {child.foundryVersion === null ? '—' : `v${child.foundryVersion}`}</small><em>{attemptLabel(child)}</em></button>)}</div>
+      <button className="package-integrate package-deploy" disabled={busy || state.summary.integrated === 0} onClick={() => void synchronize()}>{busy ? 'Traitement…' : 'Synchroniser toute la campagne avec Foundry'}</button></> : <p className="missing">État de campagne indisponible.</p>}
+    {preview && <div className="campaign-reset-box"><h4>Réinitialiser</h4><p><strong>Application :</strong> {preview.application.packages} package(s), {preview.application.deployments} historique(s) de déploiement actuellement connu(s) et jusqu’à {preview.application.scopedRecords} donnée(s) propres aux scénarios. Les liens vers des fiches globales restent conservés ; une fiche créée par la campagne mais réutilisée hors de celle-ci est protégée.</p><p><strong>Foundry connu :</strong> ≈ {preview.foundryKnown.actors} Actor(s), {preview.foundryKnown.scenes} scène(s), {preview.foundryKnown.journals} journal(aux). {preview.preserveNpcIds.length ? `${preview.preserveNpcIds.length} PNJ partagé(s) hors campagne seront protégés.` : ''}</p><div className="campaign-reset-actions"><button disabled={busy} onClick={() => void reset('app')}>Application uniquement</button><button disabled={busy} onClick={() => void reset('foundry')}>Foundry uniquement</button><button className="danger" disabled={busy} onClick={() => void reset('all')}>Tout recommencer</button></div><small>{preview.foundryKnown.note}</small></div>}
+    {message && <p className="package-message">{message}</p>}
+  </section>
+}
+
+function ScenarioPackagePanel({ scenarioId, onOpenReference, preparationStatus, allowAiExport = false, aiExportKind = 'scenario' }: { scenarioId: string; onOpenReference: (view: ReferenceView, id: string) => void; preparationStatus: PreparationStatus; allowAiExport?: boolean; aiExportKind?: 'scenario' | 'campaign' }) {
   const [status, setStatus] = useState<ScenarioPackageStatus>(null)
   const [assets, setAssets] = useState<ScenarioAsset[]>([])
   const [relations, setRelations] = useState<ScenarioRelations>({ npcs: [], places: [], factions: [], events: [] })
+  const [dependencies, setDependencies] = useState<ScenarioDependencies>({ dependencies: [], dependents: [] })
   const [available, setAvailable] = useState<AvailableScenarioPackage>(null)
   const [deployment, setDeployment] = useState<ScenarioDeployment>(null)
+  const [resetPreview, setResetPreview] = useState<ScenarioResetPreview | null>(null)
   const [registry, setRegistry] = useState<PackageRegistry>({ factions: [], places: [] })
   const [message, setMessage] = useState('')
   const [busy, setBusy] = useState(false)
+  const [referenceLibrary, setReferenceLibrary] = useState<FoundryReferenceLibraryStatus | null>(null)
+  const [requiredData, setRequiredData] = useState<AiRequiredDataStatus>(null)
   const load = () => Promise.all([
     fetch(`/apil7r/pf2-mj/scenario-packages/${encodeURIComponent(scenarioId)}`, { cache: 'no-store' }).then((response) => response.ok ? response.json() : null),
     fetch(`/apil7r/pf2-mj/scenarios/${encodeURIComponent(scenarioId)}/resources`, { cache: 'no-store' }).then((response) => response.ok ? response.json() : []),
     fetch(`/apil7r/pf2-mj/scenarios/${encodeURIComponent(scenarioId)}/relations`, { cache: 'no-store' }).then((response) => response.ok ? response.json() : { npcs: [], places: [], factions: [], events: [] }),
+    fetch(`/apil7r/pf2-mj/scenarios/${encodeURIComponent(scenarioId)}/dependencies`, { cache: 'no-store' }).then((response) => response.ok ? response.json() : { dependencies: [], dependents: [] }),
     fetch(`/apil7r/pf2-mj/scenario-packages/${encodeURIComponent(scenarioId)}/available`, { cache: 'no-store' }).then((response) => response.ok ? response.json() : null),
     fetch(`/apil7r/pf2-mj/scenario-packages/${encodeURIComponent(scenarioId)}/deployments/latest`, { cache: 'no-store' }).then((response) => response.ok ? response.json() : null),
+    fetch(`/apil7r/pf2-mj/scenario-packages/${encodeURIComponent(scenarioId)}/reset-preview`, { cache: 'no-store' }).then((response) => response.ok ? response.json() : null),
     fetch('/apil7r/pf2-mj/package-registry', { cache: 'no-store' }).then((response) => response.ok ? response.json() : null)
-  ]).then(([packageStatus, scenarioAssets, scenarioRelations, availablePackage, latestDeployment, packageRegistry]) => {
+  ]).then(([packageStatus, scenarioAssets, scenarioRelations, scenarioDependencies, availablePackage, latestDeployment, scenarioResetPreview, packageRegistry]) => {
     setStatus(packageStatus); setAssets(Array.isArray(scenarioAssets) ? scenarioAssets : [])
     setRelations(scenarioRelations && typeof scenarioRelations === 'object' ? scenarioRelations : { npcs: [], places: [], factions: [], events: [] })
+    setDependencies(scenarioDependencies && typeof scenarioDependencies === 'object' ? scenarioDependencies : { dependencies: [], dependents: [] })
     setAvailable(availablePackage)
     setDeployment(latestDeployment)
+    setResetPreview(scenarioResetPreview && typeof scenarioResetPreview === 'object' ? scenarioResetPreview : null)
     setRegistry({ factions: Array.isArray(packageRegistry?.factions) ? packageRegistry.factions : [], places: Array.isArray(packageRegistry?.places) ? packageRegistry.places : [] })
   }).catch(() => setMessage('État du package indisponible.'))
   useEffect(() => { void load() }, [scenarioId])
+  const loadAiSupport = async () => {
+    try {
+      const [libraryResponse, requiredResponse] = await Promise.all([
+        fetch('/apil7r/pf2-mj/foundry-reference-library/status', { cache: 'no-store' }),
+        fetch(`/apil7r/pf2-mj/scenarios/${encodeURIComponent(scenarioId)}/ai-required-data`, { cache: 'no-store' })
+      ])
+      setReferenceLibrary(libraryResponse.ok ? await libraryResponse.json() : null)
+      setRequiredData(requiredResponse.ok ? await requiredResponse.json() : null)
+    } catch { setReferenceLibrary(null); setRequiredData(null) }
+  }
+  useEffect(() => { void loadAiSupport() }, [scenarioId])
   useEffect(() => {
     if (!deployment || !['pending', 'claimed'].includes(deployment.status)) return
     let stopped = false
@@ -553,14 +774,72 @@ function ScenarioPackagePanel({ scenarioId, onOpenReference }: { scenarioId: str
     setBusy(true); setMessage('')
     try {
       const body = new FormData(); body.set('file', file)
-      const response = await fetch('/apil7r/pf2-mj/scenario-packages/import', { method: 'POST', body })
+      const endpoint = aiExportKind === 'campaign'
+        ? `/apil7r/pf2-mj/campaigns/${encodeURIComponent(scenarioId)}/ai-response`
+        : '/apil7r/pf2-mj/scenario-packages/import'
+      const response = await fetch(endpoint, { method: 'POST', body })
       const payload = await response.json().catch(() => null)
       if (!response.ok) throw new Error(payload?.message ?? payload?.error ?? 'Import impossible.')
-      if (payload.scenarioId !== scenarioId) throw new Error(`Ce ZIP concerne « ${payload.scenarioId} », pas ce scénario.`)
-      setMessage(payload.state === 'unchanged' ? 'Version déjà intégrée.' : `Package v${payload.packageVersion} intégré.`)
+      if (aiExportKind === 'campaign') {
+        if (payload.campaignId !== scenarioId) throw new Error(`Ce ZIP concerne « ${payload.campaignId} », pas cette campagne.`)
+        const count = Array.isArray(payload.imported) ? payload.imported.length : Number(payload.packageCount ?? 0)
+        const dependencies = Number(payload.dependencyCount ?? 0)
+        setMessage(`${count} package(s) enfant(s) intégré(s)${dependencies ? ` · ${dependencies} dépendance(s) fusionnée(s)` : ''}.`)
+      } else {
+        if (payload.scenarioId !== scenarioId) throw new Error(`Ce ZIP concerne « ${payload.scenarioId} », pas ce scénario.`)
+        setMessage(payload.state === 'unchanged' ? 'Version déjà intégrée.' : `Package v${payload.packageVersion} intégré.`)
+      }
       await load()
     } catch (error) { setMessage(error instanceof Error ? error.message : 'Import impossible.') } finally { setBusy(false) }
   }
+  // PF2_AI_TWO_PASS_REFERENCE_LIBRARY_V1
+  // PF2_ROBUST_DOWNLOADS_V2
+  const prepareLargeDownload = async (kind: 'ai-preflight' | 'ai-generation') => {
+    setBusy(true)
+    setMessage(kind === 'ai-preflight' ? 'Préparation de la préanalyse…' : 'Préparation du ZIP final…')
+    try {
+      const response = await fetch(`/apil7r/pf2-mj/downloads/prepare/${kind}/${encodeURIComponent(scenarioId)}`, { method: 'POST' })
+      const payload = await response.json().catch(() => null)
+      if (!response.ok) throw new Error(payload?.message ?? payload?.error ?? 'Préparation du téléchargement impossible.')
+      if (!payload?.token) throw new Error('Le serveur n’a pas renvoyé de token de téléchargement.')
+      const sizeMb = Number(payload.size ?? 0) / 1024 / 1024
+      setMessage(`Export prêt${sizeMb ? ` · ${sizeMb.toFixed(1)} Mio` : ''}. Le téléchargement démarre…`)
+      window.location.assign(`/apil7r/pf2-mj/downloads/${encodeURIComponent(payload.token)}`)
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : 'Préparation du téléchargement impossible.')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const importReferenceLibrary = async (file: File | undefined) => {
+    if (!file) return
+    if (!file.name.toLowerCase().endsWith('.json')) { setMessage('Sélectionne le JSON PF2e Reference Library exporté depuis Foundry.'); return }
+    setBusy(true); setMessage('')
+    try {
+      const body = new FormData(); body.set('file', file)
+      const response = await fetch('/apil7r/pf2-mj/foundry-reference-library/import', { method: 'POST', body })
+      const payload = await response.json().catch(() => null)
+      if (!response.ok) throw new Error(payload?.message ?? payload?.error ?? 'Import de la bibliothèque Foundry impossible.')
+      setMessage(`Bibliothèque Foundry importée · ${Number(payload.actorCount ?? 0)} Actors · ${Number(payload.itemCount ?? 0)} Items.`)
+      await loadAiSupport()
+    } catch (error) { setMessage(error instanceof Error ? error.message : 'Import de la bibliothèque Foundry impossible.') } finally { setBusy(false) }
+  }
+
+  const importRequiredData = async (file: File | undefined) => {
+    if (!file) return
+    if (!file.name.toLowerCase().endsWith('.json')) { setMessage('Sélectionne required-data.json.'); return }
+    setBusy(true); setMessage('')
+    try {
+      const body = new FormData(); body.set('file', file)
+      const response = await fetch(`/apil7r/pf2-mj/scenarios/${encodeURIComponent(scenarioId)}/ai-required-data`, { method: 'POST', body })
+      const payload = await response.json().catch(() => null)
+      if (!response.ok) throw new Error(payload?.message ?? payload?.error ?? 'Import de required-data.json impossible.')
+      setRequiredData(payload)
+      setMessage(`${Number(payload.requests?.length ?? 0)} demande(s) IA importée(s) · ${Number(payload.requiredMissing ?? 0)} requise(s) introuvable(s).`)
+    } catch (error) { setMessage(error instanceof Error ? error.message : 'Import de required-data.json impossible.') } finally { setBusy(false) }
+  }
+
   const integrateIndexed = async () => {
     if (!available) return
     setBusy(true); setMessage('')
@@ -583,6 +862,42 @@ function ScenarioPackagePanel({ scenarioId, onOpenReference }: { scenarioId: str
       setMessage('Demande envoyée à Foundry.')
     } catch (error) { setMessage(error instanceof Error ? error.message : 'Création de la demande impossible.') } finally { setBusy(false) }
   }
+  // PF2_SCENARIO_RESET_V1
+  const resetScenario = async (mode: 'app' | 'foundry' | 'all') => {
+    if (!resetPreview) return
+    const confirmation = window.prompt(`Cette action est destructive.\n\nTape exactement :\n${resetPreview.confirmationText}`)
+    if (confirmation === null) return
+    if (confirmation !== resetPreview.confirmationText) {
+      setMessage('Confirmation incorrecte : aucune suppression effectuée.')
+      return
+    }
+
+    setBusy(true); setMessage('')
+    try {
+      const response = await fetch(`/apil7r/pf2-mj/scenario-packages/${encodeURIComponent(scenarioId)}/reset`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ mode, confirm: confirmation })
+      })
+      const payload = await response.json().catch(() => null)
+      if (!response.ok) throw new Error(payload?.message ?? payload?.error ?? 'Réinitialisation impossible.')
+
+      if (mode === 'app') {
+        setMessage('Application réinitialisée. Le contenu Foundry éventuel est conservé.')
+      } else if (mode === 'foundry') {
+        setDeployment(payload?.deployment ?? null)
+        setMessage('Nettoyage de ce scénario placé dans la file Foundry.')
+      } else {
+        setDeployment(payload?.deployment ?? null)
+        setMessage('Reset complet placé dans la file Foundry. Les données propres au scénario seront nettoyées dans l’application après le reset Foundry réussi.')
+      }
+      await load()
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : 'Réinitialisation impossible.')
+    } finally {
+      setBusy(false)
+    }
+  }
   const assetLabel = (asset: ScenarioAsset) => {
     const category = asset.libraryCategory?.toLowerCase()
     const component = asset.resourceTargetLabel?.toLowerCase() ?? ''
@@ -597,7 +912,18 @@ function ScenarioPackagePanel({ scenarioId, onOpenReference }: { scenarioId: str
   const referenceBadges = (items: Array<{ targetId?: string; npcId?: string; nom?: string; name?: string; role?: string | null; targetKind?: string }>, view: ReferenceView) => items.length ? <div className="badges relation-badges">{items.map((item) => { const id = item.targetId ?? item.npcId; const targetView: ReferenceView = item.targetKind === 'region' ? 'regions' : view; return <button key={id} onClick={() => { if (id) onOpenReference(targetView, id) }}>{item.nom || item.name || id}{item.role ? ` · ${item.role}` : ''}</button> })}</div> : <p className="missing">Aucun lien renseigné.</p>
   const currentStatus = !status ? (available ? 'available' : '—') : available?.packageVersion !== null && available?.packageVersion !== undefined && available.packageVersion > status.packageVersion ? 'obsolete' : status.status
   const deploymentActive = deployment?.status === 'pending' || deployment?.status === 'claimed'
-  const deploymentLabel = deployment?.status === 'pending' ? 'En attente de Foundry' : deployment?.status === 'claimed' ? 'En cours d’import' : deployment?.status === 'success' ? 'Synchronisé' : deployment?.status === 'failed' ? 'Échec' : null
+  const deploymentOperation = deployment?.operation ?? 'deploy'
+  const deploymentLabel = deploymentOperation === 'reset'
+    ? deployment?.status === 'pending' ? 'Reset en attente de Foundry'
+      : deployment?.status === 'claimed' ? 'Reset Foundry en cours'
+        : deployment?.status === 'success' ? 'Reset Foundry terminé'
+          : deployment?.status === 'failed' ? 'Échec du reset Foundry'
+            : null
+    : deployment?.status === 'pending' ? 'En attente de Foundry'
+      : deployment?.status === 'claimed' ? 'En cours d’import'
+        : deployment?.status === 'success' ? (status ? 'Synchronisé' : 'Présent dans Foundry')
+          : deployment?.status === 'failed' ? 'Échec'
+            : null
   const factionNames = new Map(registry.factions.map((faction) => [faction.id, faction.name]))
   const placeNames = new Map(registry.places.map((place) => [place.id, place.name]))
   const actors = Array.isArray(status?.manifest?.actors) ? status.manifest.actors.filter((value): value is PackageActor => Boolean(value && typeof value === 'object' && !Array.isArray(value))) : []
@@ -609,6 +935,22 @@ function ScenarioPackagePanel({ scenarioId, onOpenReference }: { scenarioId: str
     return groups
   }, new Map<string, { name: string; type: 'reference' | 'custom'; source: string; quantity: number }>()).values()]
   return <>
+    {allowAiExport && <section className="detail-section scenario-ai-preparation"><h3>Préparation IA · 2 phases</h3>
+      <div className="package-status"><small>BIBLIOTHÈQUE DE RÉFÉRENCES FOUNDRY</small><strong>{referenceLibrary?.available ? `${referenceLibrary.actorCount} Actors · ${referenceLibrary.itemCount} Items` : 'Absente'}</strong><em>{referenceLibrary?.available ? `sources détaillées : ${referenceLibrary.actorSourceCount} Actors · ${referenceLibrary.itemSourceCount} Items${referenceLibrary.metadata?.systemVersion ? ` · PF2e ${referenceLibrary.metadata.systemVersion}` : ''}` : 'Exporte « PF2e Reference Library » depuis Foundry puis importe le JSON ici.'}</em></div>
+      <label className="package-upload"><span>{busy ? 'Import en cours…' : referenceLibrary?.available ? 'Remplacer la bibliothèque Foundry' : 'Importer la bibliothèque Foundry'}</span><input type="file" accept=".json,application/json" disabled={busy} onChange={(event) => { void importReferenceLibrary(event.target.files?.[0]); event.currentTarget.value = '' }} /></label>
+      {preparationStatus === 'selected'
+        ? referenceLibrary?.available
+          ? <><p><strong>Phase 1 :</strong> PDF + données de l’app + index Foundry léger. L’IA ne génère rien encore ; elle rend uniquement <code>required-data.json</code>.</p><button className="package-integrate" disabled={busy} onClick={() => void prepareLargeDownload('ai-preflight')}>{busy ? 'Préparation…' : 'Exporter la préanalyse IA'}</button></>
+          : <p className="missing">Importe d’abord la bibliothèque de références Foundry pour empêcher l’IA d’inventer des références de compendium.</p>
+        : preparationStatus === 'ready'
+          ? <p>{aiExportKind === 'campaign' ? 'Cette campagne est déjà marquée Prête. Un nouvel export nécessitera d’abord une nouvelle sélection explicite.' : 'Ce scénario est déjà marqué Prêt. Un nouvel export nécessitera d’abord une nouvelle sélection explicite.'}</p>
+          : <p className="missing">Passe « Préparation » à « Sélectionné » pour commencer la préanalyse IA.</p>}
+      <div className="package-status"><small>RETOUR DE PHASE 1</small><strong>{requiredData ? `${requiredData.requests.length} demande(s) · ${requiredData.availableCount} résolue(s)` : 'Aucun required-data.json'}</strong><em>{requiredData ? `${requiredData.status}${requiredData.requiredMissing ? ` · ${requiredData.requiredMissing} requise(s) introuvable(s)` : ''}` : 'Importe ici le JSON produit par l’IA.'}</em></div>
+      <label className="package-upload"><span>{busy ? 'Import en cours…' : 'Importer required-data.json'}</span><input type="file" accept=".json,application/json" disabled={busy} onChange={(event) => { void importRequiredData(event.target.files?.[0]); event.currentTarget.value = '' }} /></label>
+      {requiredData?.requests?.length ? <div className="resource-list">{requiredData.requests.map((request) => <div key={request.requestId} className={request.available ? '' : 'missing'}><small>{request.sourceType} · {request.kind}{request.required ? ' · requis' : ' · facultatif'}</small><strong>{request.subject.name || request.indexName || request.subject.uuid}</strong><em>{request.available ? 'source disponible dans le snapshot' : 'SOURCE INTROUVABLE'} · {request.reason}</em></div>)}</div> : null}
+      {requiredData && requiredData.status !== 'blocked' && requiredData.requiredMissing === 0 && preparationStatus === 'selected' && <><p><strong>Phase 2 :</strong> l’application reconstruit un ZIP autonome avec les mêmes PDF/contexte et seulement les sources Foundry détaillées demandées.</p><button className="package-integrate" disabled={busy} onClick={() => void prepareLargeDownload('ai-generation')}>{busy ? 'Préparation…' : 'Exporter le ZIP de génération finale'}</button></>}
+      {requiredData?.status === 'blocked' && <p className="missing">La préanalyse a déclaré cette cible bloquée. Examine les éléments unresolved avant de générer le package final.</p>}
+    </section>}
     <section className="detail-section scenario-resources"><h3>Ressources associées</h3>
       {assets.length ? <div className="resource-list">{assets.map((asset) => {
         const openablePdf = asset.present && asset.assetType === 'pdf'
@@ -616,17 +958,38 @@ function ScenarioPackagePanel({ scenarioId, onOpenReference }: { scenarioId: str
         return <div key={asset.id} className={asset.present ? '' : 'missing'}><small>{assetLabel(asset)}{asset.language ? ` · ${asset.language}` : ''}{asset.resourceScope === 'component' && asset.resourceTargetLabel ? ` · ${asset.resourceTargetLabel}` : ''}</small><strong>{asset.filename}</strong><em>{asset.present ? 'disponible' : 'absent'} · {asset.associationStatus === 'confirmed' ? 'association confirmée' : asset.associationStatus}</em>{href && <a className="resource-open" href={href} target="_blank" rel="noreferrer">Ouvrir le PDF ↗</a>}</div>
       })}</div> : <p className="missing">Aucune ressource indexée pour ce scénario.</p>}
     </section>
-    <section className="detail-section scenario-package-panel"><h3>Package Foundry</h3>
+    {aiExportKind === 'campaign' ? <section className="detail-section scenario-package-panel"><h3>Réponse IA de campagne</h3>
+      <p>L’enveloppe de campagne sera contrôlée puis ses packages enfants seront intégrés dans l’ordre. Les liens métier déjà présents sont conservés ; les dépendances proposées sont fusionnées avec les dépendances existantes.</p>
+      <label className="package-upload"><span>{busy ? 'Import en cours…' : 'Importer le ZIP réponse IA de campagne'}</span><input type="file" accept=".zip,application/zip" disabled={busy} onChange={(event) => { void importPackage(event.target.files?.[0]); event.currentTarget.value = '' }} /></label>
+      {message && <p className="package-message">{message}</p>}
+    </section> : <section className="detail-section scenario-package-panel"><h3>Package Foundry</h3>
       {available ? <div className="package-status"><small>PACKAGE ZIP DISPONIBLE</small><strong>{available.packageVersion === null ? 'Version illisible' : `v${available.packageVersion}`} · {available.asset.filename}</strong><em>{available.error || 'disponible dans la bibliothèque'}</em></div> : <p className="missing">Aucun ZIP associé et présent dans la bibliothèque.</p>}
       {status ? <><div className="package-status"><small>VERSION INTÉGRÉE DANS L’APPLICATION</small><strong>v{status.packageVersion} · {status.filename}</strong><em>statut : {currentStatus}</em></div><div className="package-status"><small>VERSION DÉPLOYÉE DANS FOUNDRY</small><strong>{status.deployedVersion === null ? 'Aucune' : `v${status.deployedVersion}`}</strong><em>{status.deployedVersion !== null && status.deployedVersion < status.packageVersion ? 'Foundry obsolète' : status.deployedVersion === status.packageVersion ? 'à jour' : 'non synchronisée'}</em></div></> : <div className="package-status"><small>VERSION INTÉGRÉE DANS L’APPLICATION</small><strong>Aucune</strong><em>statut : {currentStatus}</em></div>}
       {available && available.packageVersion !== null && <button className="package-integrate" disabled={busy} onClick={() => void integrateIndexed()}>{busy ? 'Intégration…' : status ? 'Mettre à jour depuis la bibliothèque' : 'Intégrer depuis la bibliothèque'}</button>}
-      <label className="package-upload"><span>{busy ? 'Import en cours…' : 'Ou importer un ZIP manuellement'}</span><input type="file" accept=".zip,application/zip" disabled={busy} onChange={(event) => { void importPackage(event.target.files?.[0]) }} /></label>
+      <label className="package-upload"><span>{busy ? 'Import en cours…' : 'Ou importer un ZIP manuellement'}</span><input type="file" accept=".zip,application/zip" disabled={busy} onChange={(event) => { void importPackage(event.target.files?.[0]); event.currentTarget.value = '' }} /></label>
       {status && <button className="package-integrate package-deploy" disabled={busy || deploymentActive} onClick={() => void requestDeployment()}>{deploymentActive ? 'Synchronisation en cours…' : 'Synchroniser avec Foundry'}</button>}
-      {deploymentLabel && <div className={`deployment-state ${deployment?.status}`}><strong>{deploymentLabel}</strong>{deployment?.status === 'failed' && deployment.error && <em>{deployment.error}</em>}{deployment?.status && deployment.status !== 'failed' && <em>Package v{deployment?.packageVersion}</em>}</div>}
+      {deploymentLabel && <div className={`deployment-state ${deployment?.status}`}><strong>{deploymentLabel}</strong>{deployment?.status === 'failed' && deployment.error && <em>{deployment.error}</em>}{deployment?.status && deployment.status !== 'failed' && <em>{deploymentOperation === 'reset' ? 'Nettoyage du scénario' : `Package v${deployment?.packageVersion}`}</em>}</div>}
+      {resetPreview && <div className="campaign-reset-box scenario-reset-box">
+        <h4>Réinitialiser le scénario</h4>
+        <p><strong>Application :</strong> {resetPreview.application.packages} package(s), {resetPreview.application.deployments} historique(s) de déploiement connu(s) et jusqu’à {resetPreview.application.scopedRecords} donnée(s) propres à ce scénario.</p>
+        <p><strong>Foundry connu :</strong> {resetPreview.foundryKnown.version === null ? (resetPreview.foundryKnown.state === 'reset' ? 'retiré' : 'version inconnue') : `v${resetPreview.foundryKnown.version}`} · ≈ {resetPreview.foundryKnown.actors} Actor(s), {resetPreview.foundryKnown.scenes} scène(s), {resetPreview.foundryKnown.journals} journal(aux). {resetPreview.preserveNpcIds.length ? `${resetPreview.preserveNpcIds.length} PNJ réutilisé(s) ailleurs seront protégés.` : ''}</p>
+        <div className="campaign-reset-actions">
+          <button disabled={busy || deploymentActive} onClick={() => void resetScenario('app')}>Application uniquement</button>
+          <button disabled={busy || deploymentActive} onClick={() => void resetScenario('foundry')}>Foundry uniquement</button>
+          <button className="danger" disabled={busy || deploymentActive} onClick={() => void resetScenario('all')}>Tout recommencer</button>
+        </div>
+        <small>{resetPreview.foundryKnown.note}</small>
+      </div>}
     {message && <p className="package-message">{message}</p>}
-    </section>
+    </section>}
     <section className="detail-section scenario-npcs"><h3>PNJ du scénario</h3>{relations.npcs.length ? <div className="scenario-npc-grid">{relations.npcs.map((npc) => { const id = npc.id ?? npc.npcId; const portrait = pnjPortraitUrl(npc.portrait); const faction = npc.factions?.[0]; const region = npc.regions?.[0]; return <button className="scenario-npc-card" key={id} onClick={() => onOpenReference('pnj', id)}><span className={`scenario-npc-portrait${portrait ? '' : ' placeholder'}`}>{portrait ? <img src={portrait} alt="" /> : '◆'}</span><span className="scenario-npc-copy"><strong>{npc.nom || npc.name || id}</strong><em>{npc.role || 'Rôle à préciser'}{npc.importance ? ` · ${npc.importance}` : ''}</em>{faction && <small>Faction · {factionNames.get(faction.faction_id ?? '') ?? faction.faction_id}</small>}{region && <small>Région · {placeNames.get(region) ?? region}</small>}</span></button> })}</div> : <p className="missing">Aucun PNJ narratif lié à ce scénario.</p>}</section>
     <section className="detail-section scenario-bestiary"><h3>Bestiaire / acteurs du scénario</h3>{!status ? <p className="missing">Aucun package intégré : le bestiaire sera disponible après son intégration.</p> : bestiary.length ? <div className="scenario-bestiary-list">{bestiary.map((actor) => <article key={`${actor.type}-${actor.source}-${actor.name}`}><span className={`actor-kind ${actor.type}`}>{actor.type === 'reference' ? 'Référence' : 'Personnalisé'}</span><strong>{actor.name}</strong><em>{actor.type === 'reference' ? `Compendium PF2 · ${actor.source}` : actor.source}</em>{actor.quantity > 1 && <small>×{actor.quantity}</small>}</article>)}</div> : <p className="missing">Aucun acteur de bestiaire déclaré dans ce package.{actors.some((actor) => actor.type === 'narrative') ? ' Les acteurs narratifs sont présentés dans les PNJ ci-dessus.' : ''}</p>}</section>
+    <section className="detail-section scenario-dependencies"><h3>Dépendances entre scénarios</h3>
+      <div className="relation-groups">
+        <div><small>À jouer avant / contexte préalable</small>{dependencies.dependencies.length ? <div className="badges relation-badges">{dependencies.dependencies.map((link) => <span key={link.dependsOnScenarioId} className="dependency-badge"><strong>{link.scenario?.name || link.scenario?.titleFr || link.dependsOnScenarioId}</strong> · {link.relationType === 'required' ? 'requis' : 'recommandé'}{link.sourcePage ? ` · p. ${link.sourcePage}` : ''}{link.source ? ` · ${link.source}` : ''}</span>)}</div> : <p className="missing">Aucune dépendance renseignée.</p>}</div>
+        <div><small>Scénarios qui dépendent de celui-ci</small>{dependencies.dependents.length ? <div className="badges relation-badges">{dependencies.dependents.map((link) => <span key={link.scenarioId} className="dependency-badge"><strong>{link.scenario?.name || link.scenario?.titleFr || link.scenarioId}</strong> · {link.relationType === 'required' ? 'requis' : 'recommandé'}</span>)}</div> : <p className="missing">Aucune suite liée.</p>}</div>
+      </div>
+    </section>
     <section className="detail-section scenario-relations"><h3>Relations métier</h3><div className="relation-groups"><div><small>Lieux et régions</small>{referenceBadges(relations.places, 'lieux')}</div><div><small>Factions</small>{referenceBadges(relations.factions, 'factions')}</div><div><small>Événements</small>{referenceBadges(relations.events, 'evenements')}</div></div></section>
   </>
 }
@@ -644,28 +1007,30 @@ function PlayableDetail({ unit, curation, onClose, onUpdate, placeOptions, onOpe
 
   return <Modal onClose={onClose}>
     <div className="detail-head"><small>{playableTypeLabel(unit.playableType)}{ancestors[0] ? ` · ${ancestors.map(titleOf).join(' · ')}` : ''}</small><h2>{unit.number && `${unit.number} · `}{titleOf(unit)}</h2>{originalTitleOf(unit) && <em>{originalTitleOf(unit)}</em>}<AvailabilityBadges unit={unit} /></div>
-    <div className="availability-grid"><div><small>Couverture</small><strong>{documentaryCoverageLabel(availability.coverage)}</strong></div><div><small>Mode</small><strong>{documentaryModeLabel(availability.mode) || '—'}</strong></div><div><small>Prêt</small><strong>{availability.ready ? 'OK' : 'Non'}</strong></div><div><small>Documents requis</small><strong>{availability.requiredDocuments.present}/{availability.requiredDocuments.required}</strong>{availability.requiredDocuments.informationOnly > 0 && <em> + {availability.requiredDocuments.informationOnly} info</em>}</div><div><small>ZIP Foundry</small><strong>{resourceBundleLabel(bundle)}</strong>{bundle.inheritedFromId && <em>hérité de {titleOf(containerMap.get(bundle.inheritedFromId)!)}</em>}</div></div>
-    <dl className="detail-grid"><div><dt>Niveaux</dt><dd><input value={levelsDraft} onChange={(event) => setLevelsDraft(event.target.value)} /><button onClick={() => onUpdate(unit.id, 'levelsOverride', levelsDraft)}>Enregistrer</button><SourceBadge source={levels.source} /></dd></div><div><dt>Lieux</dt><dd><input list="all-places" value={placesDraft} onChange={(event) => setPlacesDraft(event.target.value)} /><datalist id="all-places">{placeOptions.map((place) => <option key={place}>{place}</option>)}</datalist><button onClick={() => onUpdate(unit.id, 'placesOverride', placesDraft.split(',').map((value) => value.trim()).filter(Boolean))}>Remplacer</button>{locations.map((location) => <span className="location-provenance" key={`${location.id}-${location.source.kind}`}>{location.id}<SourceBadge source={location.source} /></span>)}</dd></div><div><dt>Suivi</dt><dd><select value={effectiveProgress(unit, override)} onChange={(event) => onUpdate(unit.id, 'progress', event.target.value)}>{progressOptions.map((value) => <option key={value}>{value}</option>)}</select></dd></div><div><dt>Chronologie</dt><dd>{yearOf(unit) ? `${unit.chronology.estimated ? '≈ ' : ''}${yearOf(unit)} AR` : unit.chronology.period || 'À documenter'}</dd></div><div><dt>Fil narratif</dt><dd>{unit.narrativeThread || '—'}</dd></div></dl>
+    <div className="availability-grid"><div><small>Document</small><strong>{documentStatusLabel(unit)}</strong></div><div><small>Mode</small><strong>{documentaryModeLabel(availability.mode) || (availability.coreMaterial === 'informationOnly' ? 'INFO' : '—')}</strong></div><div><small>Prêt</small><strong>{availability.ready ? 'OK' : 'Non'}</strong></div><div><small>Documents requis</small><strong>{availability.requiredDocuments.present}/{availability.requiredDocuments.required}</strong>{availability.requiredDocuments.informationOnly > 0 && <em> + {availability.requiredDocuments.informationOnly} info</em>}</div><div><small>ZIP Foundry</small><strong>{resourceBundleLabel(bundle)}</strong>{bundle.inheritedFromId && <em>hérité de {titleOf(containerMap.get(bundle.inheritedFromId)!)}</em>}</div></div>
+    <dl className="detail-grid"><div><dt>Niveaux</dt><dd><input value={levelsDraft} onChange={(event) => setLevelsDraft(event.target.value)} /><button onClick={() => onUpdate(unit.id, 'levelsOverride', levelsDraft)}>Enregistrer</button><SourceBadge source={levels.source} /></dd></div><div><dt>Lieux</dt><dd><input list="all-places" value={placesDraft} onChange={(event) => setPlacesDraft(event.target.value)} /><datalist id="all-places">{placeOptions.map((place) => <option key={place}>{place}</option>)}</datalist><button onClick={() => onUpdate(unit.id, 'placesOverride', placesDraft.split(',').map((value) => value.trim()).filter(Boolean))}>Remplacer</button>{locations.map((location) => <span className="location-provenance" key={`${location.id}-${location.source.kind}`}>{location.id}<SourceBadge source={location.source} /></span>)}</dd></div><div><dt>Préparation</dt><dd><select value={effectivePreparationStatus(override)} onChange={(event) => onUpdate(unit.id, 'preparationStatus', event.target.value)}>{preparationOptions.map(([value, label]) => <option key={value} value={value} disabled={value === 'ready'}>{label}</option>)}</select></dd></div><div><dt>Jeu</dt><dd><select value={effectivePlayStatus(override)} onChange={(event) => onUpdate(unit.id, 'playStatus', event.target.value)}>{playStatusOptions.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></dd></div><div><dt>Exclusion</dt><dd><ExclusionSelect id={unit.id} override={override} excluded={isExcluded(unit, override, curation)} onUpdate={onUpdate} /></dd></div><div><dt>Chronologie</dt><dd>{yearOf(unit) ? `${unit.chronology.estimated ? '≈ ' : ''}${yearOf(unit)} AR` : unit.chronology.period || 'À documenter'}</dd></div><div><dt>Fil narratif</dt><dd>{unit.narrativeThread || '—'}</dd></div></dl>
     {unit.arcIds.length > 0 && <section className="detail-section"><h3>Arcs PFS / transversaux</h3><div className="badges">{unit.arcIds.map((id) => <Badge key={id}>{arcMap.get(id)?.titleFr || id}</Badge>)}</div></section>}
     <section className="detail-section synopsis-long"><h3>Synopsis de l’unité</h3><p>{unit.synopsis || 'À documenter.'}</p>{!unit.synopsis && unit.contextSynopsis && <div className="inherited-context"><small>CONTEXTE HÉRITÉ DE LA CAMPAGNE</small><p>{unit.contextSynopsis}</p></div>}</section>
     {unit.gmDetails && <section className="detail-section gm-details"><h3>Détails MJ</h3><p>{unit.gmDetails}</p></section>}
     {unit.migration.issues.length > 0 && <section className="detail-section migration-warning"><h3>À revoir après migration</h3><ul>{unit.migration.issues.map((issue) => <li key={issue}>{issue}</li>)}</ul></section>}
     {components.length > 0 && <section className="detail-section"><h3>Composants de l’œuvre</h3><div className="part-list">{components.map((component) => <article key={component.id}><strong>{componentTypeLabel(component.componentType)} · {titleOf(component)}</strong><span>{component.notes}</span><Badge>{component.requiredForCore ? 'Requis' : 'Facultatif'}</Badge></article>)}</div></section>}
-    <ScenarioPackagePanel scenarioId={unit.id} onOpenReference={onOpenReference} />
+    <ScenarioPackagePanel scenarioId={unit.id} onOpenReference={onOpenReference} preparationStatus={effectivePreparationStatus(override)} allowAiExport />
   </Modal>
 }
 
-function ContainerDetail({ container, curation, onClose, onOpenPlayable, onUpdate }: { container: Container; curation: Curation; onClose: () => void; onOpenPlayable: (unit: PlayableUnit) => void; onUpdate: (id: string, field: string, value: unknown) => void }) {
+function ContainerDetail({ container, curation, onClose, onOpenPlayable, onUpdate, onOpenReference }: { container: Container; curation: Curation; onClose: () => void; onOpenPlayable: (unit: PlayableUnit) => void; onUpdate: (id: string, field: string, value: unknown) => void; onOpenReference: (view: ReferenceView, id: string) => void }) {
   const children = playablesUnder(container.id)
   const components = componentsOf(container.id)
   const override = resolveContainerOverride(curation, container)
   return <Modal onClose={onClose}>
     <div className="detail-head"><small>{containerTypeLabel(container.containerType)} · CONTENEUR NON JOUABLE</small><h2>{titleOf(container)}</h2>{originalTitleOf(container) && <em>{originalTitleOf(container)}</em>}<div className="badges"><Badge>{levelLabel(container.levels)}</Badge><Badge>{children.length} unités jouables</Badge><Badge>{container.migration.status === 'ready' ? 'Structure prête' : 'À revoir'}</Badge></div></div>
     <section className="detail-section synopsis-long"><h3>Synthèse</h3><p>{container.synopsis || 'Synopsis de collection non renseigné.'}</p></section>
-    <dl className="detail-grid"><div><dt>Niveaux affichés</dt><dd>{levelLabel(container.levels)}<SourceBadge source={container.levels.source} /></dd></div><div><dt>Lieux</dt><dd>{container.locations.length ? unique(container.locations.map((location) => placeDisplay(location.id))).join(', ') : 'Agrégés depuis les enfants / à documenter'}{container.locations[0] && <SourceBadge source={container.locations[0].source} />}</dd></div><div><dt>Suivi</dt><dd><select value={override.excluded || override.progress === 'Écarté' ? 'Écarté' : override.progress ?? 'Non spécifié'} onChange={(event) => onUpdate(container.id, 'progress', event.target.value)}>{progressOptions.map((value) => <option key={value}>{value}</option>)}</select></dd></div></dl>
+    <dl className="detail-grid"><div><dt>Niveaux affichés</dt><dd>{levelLabel(container.levels)}<SourceBadge source={container.levels.source} /></dd></div><div><dt>Lieux</dt><dd>{container.locations.length ? unique(container.locations.map((location) => placeDisplay(location.id))).join(', ') : 'Agrégés depuis les enfants / à documenter'}{container.locations[0] && <SourceBadge source={container.locations[0].source} />}</dd></div><div><dt>Préparation</dt><dd><select value={override.preparationStatus ?? 'untreated'} onChange={(event) => onUpdate(container.id, 'preparationStatus', event.target.value)}>{preparationOptions.map(([value, label]) => <option key={value} value={value} disabled={value === 'ready'}>{label}</option>)}</select></dd></div><div><dt>Jeu</dt><dd><select value={override.playStatus ?? 'none'} onChange={(event) => onUpdate(container.id, 'playStatus', event.target.value)}>{playStatusOptions.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></dd></div><div><dt>Exclusion</dt><dd><ExclusionSelect id={container.id} override={override} excluded={isContainerExcluded(container, curation)} onUpdate={onUpdate} /></dd></div></dl>
     {container.migration.issues.length > 0 && <section className="detail-section migration-warning"><h3>Décisions de migration</h3><ul>{container.migration.issues.map((issue) => <li key={issue}>{issue}</li>)}</ul></section>}
-    <section className="detail-section"><h3>Unités jouables</h3>{children.length ? <div className="compact-playables">{children.map((unit) => { const status = availabilityOf(unit); return <button key={unit.id} onClick={() => onOpenPlayable(unit)}><span>▶</span><strong>{titleOf(unit)}</strong><small>{levelLabel(unit.levels)} · {status.coverage === 'complete' && status.mode !== 'none' ? `${documentaryCoverageLabel(status.coverage)} · ${documentaryModeLabel(status.mode)}` : documentaryCoverageLabel(status.coverage)}</small></button> })}</div> : <p className="missing">Aucune unité jouable explicite : cette campagne doit être découpée avant d’être fiable dans « Trouver une partie ».</p>}</section>
+    <section className="detail-section"><h3>Unités jouables</h3>{children.length ? <div className="compact-playables">{children.map((unit) => { const status = availabilityOf(unit); return <button key={unit.id} onClick={() => onOpenPlayable(unit)}><span>▶</span><strong>{titleOf(unit)}</strong><small>{levelLabel(unit.levels)} · {documentStatusLabel(unit)}</small></button> })}</div> : <p className="missing">Aucune unité jouable explicite : cette campagne doit être découpée avant d’être fiable dans « Trouver une partie ».</p>}</section>
     {components.length > 0 && <section className="detail-section"><h3>Composants / ressources</h3><div className="part-list">{components.map((component) => <ComponentCard component={component} key={component.id} />)}</div></section>}
+    {container.containerType === 'campaign' && <CampaignOperationsPanel campaignId={container.id} onOpenPlayable={onOpenPlayable} />}
+    <ScenarioPackagePanel scenarioId={container.id} onOpenReference={onOpenReference} preparationStatus={override.preparationStatus ?? 'untreated'} allowAiExport={container.containerType === 'campaign'} aiExportKind="campaign" />
   </Modal>
 }
 
@@ -820,6 +1185,8 @@ export function Pf2MjApp() {
 
   const active = useMemo(() => playableUnits.filter((unit) => !isExcluded(unit, resolvePlayableOverride(curation, unit), curation)), [curation, catalogueRevision])
   const excluded = useMemo(() => playableUnits.filter((unit) => isExcluded(unit, resolvePlayableOverride(curation, unit), curation)), [curation, catalogueRevision])
+  const excludedContainerCount = useMemo(() => containers.filter((container) => explicitContainerExclusion(container, curation)).length, [curation, catalogueRevision])
+  const explicitExcludedPlayableCount = useMemo(() => playableUnits.filter((unit) => explicitPlayableExclusion(unit, curation)).length, [curation, catalogueRevision])
   const placeOptions = useMemo(() => unique([...allPlaces, ...(curation.customPlaces ?? [])]), [curation, catalogueRevision])
   const missingTranslations = active.filter((unit) => availabilityOf(unit).coverage === 'complete' && availabilityOf(unit).mode === 'en').length
   const missingZips = resourceInventoryKnown ? active.filter((unit) => resourceBundleAvailability(unit).status === 'missing').length : null
@@ -888,7 +1255,7 @@ export function Pf2MjApp() {
     prepare: ['À préparer', 'Repère les PDF, traductions, ZIP Foundry et métadonnées encore à compléter.'],
     documents: ['Ressources PDF', 'Inventaire physique séparé des œuvres et de leur jouabilité.'],
     chronology: ['Chronologie', 'Unités jouables replacées dans le calendrier de Golarion.'],
-    excluded: ['Écartés / archive', 'Contenus exclus, legacy ou volontairement sortis de la campagne active.'],
+    excluded: ['Mis de côté', '« Plus tard » et « Écarté » ont le même effet : ils sortent entièrement du catalogue actif, mais restent faciles à récupérer ici.'],
     settings: ['Paramètres', 'Référentiel local, curation et état de migration.'],
     pnj: ['PNJ', ''], factions: ['Factions', ''], lieux: ['Lieux', ''], regions: ['Régions', ''], evenements: ['Événements', ''],
   }
@@ -899,7 +1266,7 @@ export function Pf2MjApp() {
     ['prepare', '◒', 'À préparer', active.filter((unit) => !availabilityOf(unit).ready || (resourceInventoryKnown && resourceBundleAvailability(unit).status === 'missing')).length],
     ['documents', '⌁', 'Ressources PDF', documentCount],
     ['chronology', '◷', 'Chronologie', ''],
-    ['excluded', '×', 'Écartés', excluded.length],
+    ['excluded', '×', 'Mis de côté', excludedContainerCount + explicitExcludedPlayableCount],
     ['pnj', '♙', 'PNJ', ''], ['factions', '⚑', 'Factions', ''], ['lieux', '⌂', 'Lieux', ''], ['regions', '◉', 'Régions', ''], ['evenements', '◇', 'Événements', ''], ['settings', '⚙', 'Paramètres', ''],
   ]
 
@@ -908,9 +1275,9 @@ export function Pf2MjApp() {
   return <main className="pf2-mj pf2-mj-v3">
     <header><button className="brand brand-button" onClick={() => setView('find')}><b>✦</b><span><strong>PATHFINDER 2</strong><small>GESTION MJ · MODÈLE V3</small></span></button><div className="header-right"><span><i />{missingTranslations} trad. manquante{missingTranslations > 1 ? 's' : ''} · {missingZips === null ? 'ZIP à inventorier' : `${missingZips} ZIP manquant${missingZips > 1 ? 's' : ''}`} · {documentCount} PDF</span><em>MJ</em></div></header>
     <div className="layout"><aside><nav>{nav.map(([id, icon, label, count]) => <button key={id} className={view === id ? 'active' : ''} onClick={() => setView(id)}><span>{icon}</span>{label}<b>{count}</b></button>)}</nav><section><p>PRINCIPES V3</p><span className="aside-rule">▶ Unité jouable = seule recherche</span><span className="aside-rule">▣ Campagne = conteneur</span><span className="aside-rule">◇ Guide/carte = ressource</span><span className="aside-rule">ⓘ Info = substitut distinct</span></section><div className="scan-note"><b>V3</b><strong>SQLite comme source</strong><p>Le catalogue est chargé depuis SQLite puis normalisé sans perte pour l’interface V3.</p></div></aside>
-      <section className="content">{!isReferenceView && <><div className="page-title"><div><small>TABLE OUVERTE · GOLARION PERSISTANT</small><h1>{headings[view][0]}</h1><p>{headings[view][1]}</p></div><button className="refresh" onClick={refresh}>{scanStatus === 'scanning' ? '↻ Détection…' : scanStatus === 'done' ? '✓ Rapport prêt' : scanStatus === 'error' ? '! Réessayer' : '↻ Scanner PDF & ZIP'}</button></div>{error && <div className="notice"><strong>Attention</strong><p>{error}</p></div>}{scan && <ScanPanel report={scan} onClose={() => setScan(null)} onApply={applyScan} />}{!['excluded', 'settings', 'documents'].includes(view) && <Stats active={active} />}{view === 'find' && <FinderView active={active} curation={curation} onOpen={setSelected} onUpdate={update} resourceVersion={resourceRevision} />}{view === 'library' && <LibraryView curation={curation} onOpen={setSelected} onOpenPlayable={setSelected} onUpdate={update} />}{view === 'prepare' && <PreparationView active={active} curation={curation} onOpen={setSelected} onUpdate={update} resourceVersion={resourceRevision} />}{view === 'documents' && <DocumentsView resourceVersion={resourceRevision} />}{view === 'chronology' && <ChronologyView units={active} onOpen={setSelected} />}{view === 'excluded' && <PlayableList units={sortPlayables(excluded, curation)} curation={curation} onOpen={setSelected} onUpdate={update} />}{view === 'settings' && <Settings places={placeOptions} onOperation={placeOperation} />}</>}{view === 'pnj' && <PnjPage initialSelectedId={selectedReference?.view === 'pnj' ? selectedReference.id : undefined} />}{view === 'factions' && <FactionsPage initialSelectedId={selectedReference?.view === 'factions' ? selectedReference.id : undefined} />}{view === 'lieux' && <LieuxPage initialSelectedId={selectedReference?.view === 'lieux' ? selectedReference.id : undefined} />}{view === 'regions' && <RegionsPage initialSelectedId={selectedReference?.view === 'regions' ? selectedReference.id : undefined} />}{view === 'evenements' && <EvenementsPage initialSelectedId={selectedReference?.view === 'evenements' ? selectedReference.id : undefined} />}</section>
+      <section className="content">{!isReferenceView && <><div className="page-title"><div><small>TABLE OUVERTE · GOLARION PERSISTANT</small><h1>{headings[view][0]}</h1><p>{headings[view][1]}</p></div><button className="refresh" onClick={refresh}>{scanStatus === 'scanning' ? '↻ Détection…' : scanStatus === 'done' ? '✓ Rapport prêt' : scanStatus === 'error' ? '! Réessayer' : '↻ Scanner PDF & ZIP'}</button></div>{error && <div className="notice"><strong>Attention</strong><p>{error}</p></div>}{scan && <ScanPanel report={scan} onClose={() => setScan(null)} onApply={applyScan} />}{!['excluded', 'settings', 'documents'].includes(view) && <Stats active={active} />}{view === 'find' && <FinderView active={active} curation={curation} onOpen={setSelected} onUpdate={update} resourceVersion={resourceRevision} />}{view === 'library' && <LibraryView curation={curation} onOpen={setSelected} onOpenPlayable={setSelected} onUpdate={update} />}{view === 'prepare' && <PreparationView active={active} curation={curation} onOpen={setSelected} onUpdate={update} resourceVersion={resourceRevision} />}{view === 'documents' && <DocumentsView resourceVersion={resourceRevision} />}{view === 'chronology' && <ChronologyView units={active} onOpen={setSelected} />}{view === 'excluded' && <ExcludedView curation={curation} onOpenContainer={setSelected} onOpenPlayable={setSelected} onUpdate={update} />}{view === 'settings' && <Settings places={placeOptions} onOperation={placeOperation} />}</>}{view === 'pnj' && <PnjPage initialSelectedId={selectedReference?.view === 'pnj' ? selectedReference.id : undefined} />}{view === 'factions' && <FactionsPage initialSelectedId={selectedReference?.view === 'factions' ? selectedReference.id : undefined} />}{view === 'lieux' && <LieuxPage initialSelectedId={selectedReference?.view === 'lieux' ? selectedReference.id : undefined} />}{view === 'regions' && <RegionsPage initialSelectedId={selectedReference?.view === 'regions' ? selectedReference.id : undefined} />}{view === 'evenements' && <EvenementsPage initialSelectedId={selectedReference?.view === 'evenements' ? selectedReference.id : undefined} />}</section>
     </div>
     {selected?.entityKind === 'playable' && <PlayableDetail unit={selected} curation={curation} onClose={() => setSelected(null)} onUpdate={update} placeOptions={placeOptions} onOpenReference={(referenceView, id) => { setSelected(null); setSelectedReference({ view: referenceView, id }); setView(referenceView) }} />}
-    {selected?.entityKind === 'container' && <ContainerDetail container={selected} curation={curation} onClose={() => setSelected(null)} onOpenPlayable={(unit) => setSelected(unit)} onUpdate={update} />}
+    {selected?.entityKind === 'container' && <ContainerDetail container={selected} curation={curation} onClose={() => setSelected(null)} onOpenPlayable={(unit) => setSelected(unit)} onUpdate={update} onOpenReference={(referenceView, id) => { setSelected(null); setSelectedReference({ view: referenceView, id }); setView(referenceView) }} />}
   </main>
 }

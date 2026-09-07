@@ -122,16 +122,24 @@ export function resolveScenarioGrid(map) {
       );
     }
 
+    const paddingCells = Math.max(0, Math.trunc(Number(grid.paddingCells ?? 0)));
+
     return {
       type,
       size,
       distance,
       units,
-      shiftX: -boundsX,
-      shiftY: -boundsY,
+      // In measured mode, the first complete printed-grid intersection is
+      // intentionally placed after the requested outer margin. With v4 tasks
+      // paddingCells=1, giving one staging/cropped cell on every side.
+      shiftX: paddingCells * size - boundsX,
+      shiftY: paddingCells * size - boundsY,
       mode: "measured",
       columns,
       rows,
+      paddingCells,
+      sceneWidth: stableGridSize((columns + 2 * paddingCells) * size),
+      sceneHeight: stableGridSize((rows + 2 * paddingCells) * size),
       cellWidth,
       cellHeight,
       bounds: {
@@ -167,9 +175,11 @@ function sceneData(
     name: sceneName(map),
     folder: folder.id,
     width:
+      positiveNumber(grid.sceneWidth) ??
       positiveNumber(map.width) ??
       1500,
     height:
+      positiveNumber(grid.sceneHeight) ??
       positiveNumber(map.height) ??
       1000,
     padding: Number(map.padding ?? 0),
@@ -211,7 +221,10 @@ function sceneData(
       [MODULE_ID]: {
         scenarioId,
         scenarioMapKey: map.key,
-        gridMode: grid.mode
+        gridMode: grid.mode,
+        gridColumns: grid.columns ?? null,
+        gridRows: grid.rows ?? null,
+        paddingCells: grid.paddingCells ?? 0
       }
     }
   };
@@ -350,7 +363,12 @@ export async function createOrUpdateScenarioScenes(
         gridMode: resolvedGrid.mode,
         gridSize: resolvedGrid.size,
         shiftX: resolvedGrid.shiftX,
-        shiftY: resolvedGrid.shiftY
+        shiftY: resolvedGrid.shiftY,
+        columns: resolvedGrid.columns ?? null,
+        rows: resolvedGrid.rows ?? null,
+        paddingCells: resolvedGrid.paddingCells ?? 0,
+        sceneWidth: scene.width,
+        sceneHeight: scene.height
       });
     } catch (error) {
       console.error(

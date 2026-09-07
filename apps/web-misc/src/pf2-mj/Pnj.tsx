@@ -14,6 +14,7 @@ type Pnj={
   regions?:string[];
   evenements?:string[];
   role?:string;
+  roleplay?:string;
   importance?:"Majeure"|"Récurrente"|"Secondaire"|"Figurant";
   statut?:"Actif"|"Disparu"|"Mort"|"Inconnu";
   notes?:string;
@@ -31,13 +32,14 @@ type Draft={
   regions:string;
   evenements:string;
   role:string;
+  roleplay:string;
   importance:Pnj["importance"];
   statut:Pnj["statut"];
   notes:string;
 };
 
 const emptyDraft:Draft={
-  nom:"",description:"",factions:"",tags:"",portrait:"",aliases:"",lieux:"",regions:"",evenements:"",role:"",
+  nom:"",description:"",factions:"",tags:"",portrait:"",aliases:"",lieux:"",regions:"",evenements:"",role:"",roleplay:"",
   importance:"Secondaire",statut:"Actif",notes:""
 };
 
@@ -53,6 +55,7 @@ const jsonTemplate=[{
   regions:[],
   evenements:[],
   role:"",
+  roleplay:"",
   importance:"Secondaire",
   statut:"Actif",
   notes:""
@@ -81,6 +84,7 @@ const draftFromPnj=(p:Pnj):Draft=>({
   regions:(p.regions??[]).join(", "),
   evenements:(p.evenements??[]).join(", "),
   role:p.role??"",
+  roleplay:p.roleplay??"",
   importance:p.importance??"Secondaire",
   statut:p.statut??"Actif",
   notes:p.notes??""
@@ -168,7 +172,7 @@ export default function PnjPage({initialSelectedId}:{initialSelectedId?:string})
     const q=normalize(query.trim());
     return pnjs.filter(p=>{
       const haystack=normalize([
-        p.nom,p.description,p.role,p.notes,
+        p.nom,p.description,p.role,p.roleplay,p.notes,
         ...(p.aliases??[]),...p.factions.map(f=>`${factionNames.get(f.faction_id)??f.faction_id} ${f.role}`),...(p.tags??[]),...(p.lieux??[]).map(id=>lieuNames.get(id)??id),...(p.regions??[]).map(id=>regionNames.get(id)??id),...(p.evenements??[]).map(id=>eventNames.get(id)??id)
       ].filter(Boolean).join(" "));
       return (!q||haystack.includes(q))
@@ -262,6 +266,7 @@ export default function PnjPage({initialSelectedId}:{initialSelectedId?:string})
         regions:csv(draft.regions),
         evenements:csv(draft.evenements),
         role:draft.role.trim(),
+        roleplay:draft.roleplay.trim(),
         importance:draft.importance,
         statut:draft.statut,
         notes:draft.notes.trim()
@@ -300,6 +305,7 @@ export default function PnjPage({initialSelectedId}:{initialSelectedId?:string})
         regions:Array.isArray(raw.regions)?raw.regions:[],
         evenements:Array.isArray(raw.evenements)?raw.evenements:[],
         role:raw.role||"",
+        roleplay:raw.roleplay||"",
         importance:raw.importance,
         statut:raw.statut,
         notes:raw.notes||""
@@ -433,6 +439,7 @@ export default function PnjPage({initialSelectedId}:{initialSelectedId?:string})
           <label>Nom<input value={draft.nom} onChange={e=>setDraft({...draft,nom:e.target.value})}/></label>
           <label>Rôle<input value={draft.role} onChange={e=>setDraft({...draft,role:e.target.value})} placeholder="Venture-Captain, marchand…"/></label>
           <label className="wide">Description<textarea rows={4} value={draft.description} onChange={e=>setDraft({...draft,description:e.target.value})}/></label>
+          <label className="wide">Comment le jouer<textarea rows={4} value={draft.roleplay} onChange={e=>setDraft({...draft,roleplay:e.target.value})} placeholder="Tempérament, attitude, réactions, manière de parler ou de se comporter à la table…"/></label>
           <label>Factions (IDs)<input list="pnj-factions" value={draft.factions} onChange={e=>setDraft({...draft,factions:e.target.value})} placeholder="faction_societe_des_eclaireurs"/><datalist id="pnj-factions">{factionRefs.map(item=><option key={item.id} value={item.id}>{item.nom}</option>)}</datalist></label>
           <label>Tags<input value={draft.tags} onChange={e=>setDraft({...draft,tags:e.target.value})} placeholder="allié, marchand, occultisme"/></label>
           <label>Lieux (IDs)<input list="pnj-lieux" value={draft.lieux} onChange={e=>setDraft({...draft,lieux:e.target.value})}/><datalist id="pnj-lieux">{lieuRefs.map(item=><option key={item.id} value={item.id}>{item.nom}</option>)}</datalist></label>
@@ -462,6 +469,7 @@ export default function PnjPage({initialSelectedId}:{initialSelectedId?:string})
         <p>{selected.description}</p>
         <dl>
           <dt>Rôle</dt><dd>{selected.role||"—"}</dd>
+          <dt>Comment le jouer</dt><dd>{selected.roleplay||"—"}</dd>
           <dt>Factions</dt><dd>{selected.factions.map(value=>`${factionNames.get(value.faction_id)??value.faction_id}${value.role?` — ${value.role}`:""}${value.statut?` (${value.statut})`:""}`).join(" · ")||"—"}</dd>
           <dt>Tags</dt><dd>{selected.tags.join(" · ")||"—"}</dd>
           <dt>Lieux</dt><dd>{selected.lieux?.map(id=>lieuNames.get(id)??id).join(" · ")||"—"}</dd>

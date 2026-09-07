@@ -100,7 +100,9 @@ describe('Pf2PersistenceService', () => {
       { id: '008-catalogue-and-library-assets' },
       { id: '009-scenario-business-relations' },
       { id: '010-scenario-deployment-queue' },
-      { id: '011-scenario-record-scope' }
+      { id: '011-scenario-record-scope' },
+      { id: '012-scenario-dependencies' },
+      { id: '013-scenario-deployment-operations' }
     ])
 
     await currentDataSource().destroy()
@@ -119,7 +121,9 @@ describe('Pf2PersistenceService', () => {
       { id: '008-catalogue-and-library-assets' },
       { id: '009-scenario-business-relations' },
       { id: '010-scenario-deployment-queue' },
-      { id: '011-scenario-record-scope' }
+      { id: '011-scenario-record-scope' },
+      { id: '012-scenario-dependencies' },
+      { id: '013-scenario-deployment-operations' }
     ])
   })
 
@@ -196,6 +200,24 @@ describe('Pf2PersistenceService', () => {
     await expect(service.replaceScenarioRelations('pfs-s01-01', [{ scenarioId: 'pfs-s01-01', targetKind: 'faction', targetId: 'inconnue', role: null, importance: null, sourcePage: null, notes: null }])).rejects.toThrow('faction inconnu')
   })
 
+  it('stores directed scenario dependencies and exposes reverse dependents', async () => {
+    const service = await open()
+    await service.replaceScenarioDependencies('scenario-b', [
+      { scenarioId: 'scenario-b', dependsOnScenarioId: 'scenario-a', relationType: 'required', source: 'Ordre de campagne', sourcePage: null, notes: 'B suit A' },
+      { scenarioId: 'scenario-b', dependsOnScenarioId: 'scenario-c', relationType: 'recommended', source: 'Référence narrative', sourcePage: '18', notes: null }
+    ])
+    await expect(service.listScenarioDependencies('scenario-b')).resolves.toEqual([
+      expect.objectContaining({ dependsOnScenarioId: 'scenario-a', relationType: 'required' }),
+      expect.objectContaining({ dependsOnScenarioId: 'scenario-c', relationType: 'recommended', sourcePage: '18' })
+    ])
+    await expect(service.listScenarioDependents('scenario-a')).resolves.toEqual([
+      expect.objectContaining({ scenarioId: 'scenario-b', relationType: 'required' })
+    ])
+    await expect(service.replaceScenarioDependencies('scenario-b', [
+      { scenarioId: 'scenario-b', dependsOnScenarioId: 'scenario-b', relationType: 'required', source: null, sourcePage: null, notes: null }
+    ])).rejects.toThrow('lui-même')
+  })
+
   it('keeps omitted relation families and clears an explicitly empty family atomically', async () => {
     const service = await open()
     await service.saveRecord('lieu', { id: 'lieu-quantium', nom: 'Quantium' })
@@ -222,6 +244,29 @@ describe('Pf2PersistenceService', () => {
     await expect(service.getScenarioPackage('pfs-s01-09')).resolves.toEqual(expect.objectContaining({ status: 'deployed', deployedVersion: 3 }))
     const repeat = await service.enqueueScenarioDeployment('pfs-s01-09', 3)
     expect(repeat).toEqual(expect.objectContaining({ id: queued.id, status: 'success' }))
+  })
+
+  it('queues reset operations and clears only scenario-owned application data', async () => {
+    const service = await open()
+    await service.saveRecord('pnj', { id: 'global-contact', nom: 'Contact global' })
+    await service.saveRecord('pnj', { id: 'scenario-a--local', nom: 'Local', scope: 'scenario', ownerScenarioId: 'scenario-a' })
+    await service.replaceScenarioNpcLinks('scenario-a', [
+      { scenarioId: 'scenario-a', npcId: 'global-contact', role: null, importance: null, sourcePage: null, notes: null },
+      { scenarioId: 'scenario-a', npcId: 'scenario-a--local', role: null, importance: null, sourcePage: null, notes: null }
+    ])
+    await service.saveCuration({ schemaVersion: 4, byId: { 'scenario-a': { preparationStatus: 'selected', playStatus: 'played', excluded: false } } })
+    await service.importScenarioPackageAtomically({ records: [], npcLinks: await service.listScenarioNpcLinks('scenario-a'), relations: [], replaceRelationKinds: [], package: { scenarioId: 'scenario-a', packageVersion: 2, status: 'integrated', filename: 'a.zip', manifest: {} } })
+    const reset = await service.enqueueScenarioDeployment('scenario-a', 0, { operation: 'reset', payload: { cleanupApp: true }, batchId: 'batch-reset', batchSequence: 1 })
+    expect(reset).toEqual(expect.objectContaining({ operation: 'reset', batchId: 'batch-reset', packageVersion: 0 }))
+    const claimed = await service.claimScenarioDeployment('world-a', 'gm-a')
+    expect(claimed).toEqual(expect.objectContaining({ operation: 'reset', payload: { cleanupApp: true } }))
+    await service.finishScenarioDeployment(reset.id, claimed!.claimToken!, { deploymentId: reset.id, scenarioId: 'scenario-a', packageVersion: 0, success: true, errors: [] })
+    await service.resetScenarioApplicationState('scenario-a')
+    await expect(service.getScenarioPackage('scenario-a')).resolves.toBeNull()
+    await expect(service.getRecord('pnj', 'scenario-a--local')).resolves.toBeNull()
+    await expect(service.getRecord('pnj', 'global-contact')).resolves.toEqual(expect.objectContaining({ id: 'global-contact' }))
+    await expect(service.listScenarioNpcLinks('scenario-a')).resolves.toEqual([expect.objectContaining({ npcId: 'global-contact' })])
+    await expect(service.readCuration()).resolves.toEqual(expect.objectContaining({ byId: { 'scenario-a': expect.objectContaining({ playStatus: 'played', excluded: false }) } }))
   })
 
   it('reclaims an expired lease and keeps the prior package state after a failure', async () => {

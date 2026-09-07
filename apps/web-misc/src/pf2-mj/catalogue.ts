@@ -876,8 +876,34 @@ export function componentsOf(ownerId: string): Component[] {
   return components.filter((component) => component.ownerId === ownerId).sort((a, b) => (a.order ?? 999) - (b.order ?? 999) || titleOf(a).localeCompare(titleOf(b), 'fr'))
 }
 
+function linkedFileIdsForTarget(targetId: string): Set<string> {
+  const fileIds = new Set<string>()
+
+  const entry = rawEntryMap.get(targetId)
+  if (entry) {
+    for (const link of entry.documents ?? []) {
+      if (link?.fileId) fileIds.add(link.fileId)
+    }
+  }
+
+  const part = rawPartMap.get(targetId)?.part
+  if (part) {
+    for (const link of part.documents ?? []) {
+      if (link?.fileId) fileIds.add(link.fileId)
+    }
+  }
+
+  return fileIds
+}
+
 export function documentsForTarget(targetId: string): CatalogueDocument[] {
-  return currentDocuments().filter((document) => document.targetId === targetId)
+  const linkedFileIds = linkedFileIdsForTarget(targetId)
+
+  return currentDocuments().filter(
+    (document) =>
+      document.targetId === targetId ||
+      linkedFileIds.has(document.id)
+  )
 }
 
 function requirementTargetIds(unit: PlayableUnit): string[] {

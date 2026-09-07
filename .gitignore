@@ -99,3 +99,16 @@ pf2-portraits-*.zip
 # Generated ZIP artifacts
 pf2-portraits-*.zip
 ._pf2-portraits-*.zip
+
+# Local caches / macOS metadata
+.pnpm-store/
+.DS_Store
+._*
+__MACOSX/
+
+# Local/generated files
+.pnpm-store/
+storage/
+pf2-combined-fix-backup-*/
+apps/web-misc/src/pf2-mj/_backup-*/
+*.bak-*
