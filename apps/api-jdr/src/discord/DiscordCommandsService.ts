@@ -1,10 +1,11 @@
-import { Injectable } from '@nestjs/common'
+import { Injectable, Logger } from '@nestjs/common'
 import { ActionRowBuilder, ChatInputCommandInteraction, ModalBuilder, ModalSubmitInteraction, RESTPostAPIApplicationGuildCommandsJSONBody, SlashCommandBuilder, StringSelectMenuBuilder, StringSelectMenuInteraction, TextInputBuilder, TextInputStyle } from 'discord.js'
 import { FoundryRelayService } from '../foundry/FoundryRelayService'
 import { Pf2PersistenceService } from '../pf2-storage/Pf2PersistenceService'
 
 @Injectable()
 export class DiscordCommandsService {
+  private readonly logger = new Logger(DiscordCommandsService.name)
   private readonly pendingGames = new Map<string, { actors: Array<{ uuid: string; name: string; player: string; userId: string }>; userIds: string[]; selected?: Array<{ uuid: string; name: string; player: string; userId: string }> }>()
   constructor(private readonly persistence: Pf2PersistenceService, private readonly foundry: FoundryRelayService) {}
 
@@ -84,11 +85,12 @@ export class DiscordCommandsService {
     const users = ['joueur1', 'joueur2', 'joueur3', 'joueur4', 'joueur5', 'joueur6'].flatMap(name => { const user = interaction.options.getUser(name); return user ? [user] : [] })
     const userIds = [...new Set(users.map((user) => user.id))]
     const names = await this.actorNames()
-    const known = [...names.entries()].flatMap(([uuid, name]) => {
-      const player = this.playerName(name)
+    const actors = [...names.entries()].map(([uuid, name]) => ({ uuid, name, player: this.playerName(name) }))
+    const known = actors.flatMap(({ uuid, name, player }) => {
       const userId = this.discordId(player)
       return userId && userIds.includes(userId) ? [{ uuid, name, player, userId }] : []
     })
+    this.logger.log(`new-game: joueurs Discord=${userIds.join(', ')}; acteurs=${actors.map((actor) => `${actor.name} [${actor.player || 'sans joueur'}]`).join('; ') || 'aucun'}; PJ retenus=${known.map((actor) => actor.name).join(', ') || 'aucun'}`)
     const choices = known.slice(0, 25).map(actor => ({ label: actor.name.slice(0, 100), value: actor.uuid }))
     if (!choices.length) { await interaction.reply({ content: 'Aucun PJ associé aux joueurs indiqués. Les PJ doivent être nommés « Personnage (Joueur) ».', ephemeral: true }); return }
     const id = `pf2-new-game:${interaction.id}:players`
