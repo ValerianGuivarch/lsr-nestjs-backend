@@ -105,6 +105,7 @@ describe('Pf2PersistenceService', () => {
       { id: '012-session-publication' },
       { id: '013-scenario-deployment-operations' }
       , { id: '014-session-mission-dates' }
+      , { id: '015-session-in-game-dates' }
     ])
 
     await currentDataSource().destroy()
@@ -128,6 +129,7 @@ describe('Pf2PersistenceService', () => {
       { id: '012-session-publication' },
       { id: '013-scenario-deployment-operations' }
       , { id: '014-session-mission-dates' }
+      , { id: '015-session-in-game-dates' }
     ])
   })
 

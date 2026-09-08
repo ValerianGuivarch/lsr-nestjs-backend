@@ -1,4 +1,4 @@
-import { BadGatewayException, BadRequestException, Injectable, ServiceUnavailableException } from '@nestjs/common'
+import { BadGatewayException, BadRequestException, Injectable, Logger, ServiceUnavailableException } from '@nestjs/common'
 
 type RelayClient = { clientId?: unknown; isOnline?: unknown }
 type WorldActor = { uuid: string; name: string; type?: string }
@@ -16,6 +16,7 @@ const MAX_CAREER_LEVEL = 20
 
 @Injectable()
 export class FoundryRelayService {
+  private readonly logger = new Logger(FoundryRelayService.name)
   private readonly baseUrl = (process.env['FOUNDRY_REST_URL'] ?? 'http://127.0.0.1:3010').replace(/\/$/, '')
   private readonly apiKey = process.env['FOUNDRY_REST_API_KEY']
 
@@ -198,7 +199,14 @@ export class FoundryRelayService {
 
   private async listRootWorldActors(clientId: string): Promise<WorldActor[]> {
     const params = new URLSearchParams({ clientId, types: 'Actor', recursive: 'true', includeEntityData: 'false' })
-    return this.collectRootWorldActors(await this.request(`/structure?${params}`, {}, 30_000))
+    const structure = await this.request(`/structure?${params}`, {}, 30_000)
+    const actors = this.collectRootWorldActors(structure)
+    if (!actors.length) {
+      const root = this.object(structure)
+      const data = this.object(root.data)
+      this.logger.warn(`Structure Foundry sans Actor racine (clés racine=${Object.keys(root).join(',') || 'aucune'}; clés data=${Object.keys(data).join(',') || 'aucune'}).`)
+    }
+    return actors
   }
 
   private async getActorFromWorld(clientId: string, uuid: string): Promise<unknown> {

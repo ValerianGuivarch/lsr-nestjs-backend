@@ -280,7 +280,12 @@ export class Pf2MjController {
     let actors: Array<{ uuid: string; name: string }>
     try {
       actors = await this.foundry.listActors()
-      await this.service.saveResumeActorCache(actors)
+      if (actors.length) {
+        await this.service.saveResumeActorCache(actors)
+      } else {
+        actors = await this.service.readResumeActorCache()
+        this.logger.warn('Foundry a répondu sans Actor : liste de PJ servie depuis le cache SQLite, conservé intact.')
+      }
     } catch (error) {
       actors = await this.service.readResumeActorCache()
       if (!actors.length) throw error

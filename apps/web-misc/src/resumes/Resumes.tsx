@@ -12,7 +12,8 @@ type Resume = {
   id: string
   sessionNumber: number
   date: string
-  endDate: string
+  inGameStartDate: string
+  inGameEndDate: string
   title: string
   participants: string[]
   longSummaryAuthor: string | null
@@ -34,7 +35,8 @@ const playerActorName = /^\S(?:.*\S)?\s+\([^()]+\)$/u
 const blank = (sessionNumber = 1): Draft => ({
   sessionNumber,
   date: '',
-  endDate: '',
+  inGameStartDate: '',
+  inGameEndDate: '',
   title: '',
   participants: [],
   longSummaryAuthor: null,
@@ -388,8 +390,10 @@ export default function Resumes() {
                   <div className="resume-heading">
                     <div>
                       <small>
-                        {resume.date ||
-                          'Date non renseignée'}
+                        {[
+                          resume.date && `Jeu : ${resume.date}`,
+                          resume.inGameStartDate && `En jeu : ${resume.inGameStartDate}${resume.inGameEndDate ? ` → ${resume.inGameEndDate}` : ''}`,
+                        ].filter(Boolean).join(' · ') || 'Dates non renseignées'}
                       </small>
 
                       <h2>
@@ -607,9 +611,9 @@ export default function Resumes() {
               />
             </label>
 
-            <div className="resume-form-pair">
+            <div className="resume-form-triple">
               <label>
-                Date (optionnelle)
+                Date de jeu réelle (optionnelle)
 
                 <input
                   type="date"
@@ -631,12 +635,22 @@ export default function Resumes() {
               </label>
 
               <label>
-                Fin de mission (optionnelle)
+                Début en jeu (optionnel)
 
                 <input
                   type="date"
-                  value={draft.endDate}
-                  onChange={(event) => setDraft({ ...draft, endDate: event.target.value })}
+                  value={draft.inGameStartDate}
+                  onChange={(event) => setDraft({ ...draft, inGameStartDate: event.target.value })}
+                />
+              </label>
+
+              <label>
+                Fin en jeu (optionnelle)
+
+                <input
+                  type="date"
+                  value={draft.inGameEndDate}
+                  onChange={(event) => setDraft({ ...draft, inGameEndDate: event.target.value })}
                 />
               </label>
 

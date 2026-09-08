@@ -37,9 +37,9 @@ const referenceFiles = {
 
 type ReferenceKind = keyof typeof referenceFiles
 type RecordRow = { id: string; name: string | null; payload: string }
-type SessionRow = { id: string; session_number: number; date: string; end_date: string; title: string; participants: string; long_summary_author: string | null; short_summary_author: string | null; session_xp: number; long_summary_xp: number; short_summary_xp: number; long_summary_url: string; short_summary: string; discord_message_id: string | null; published: number; created_at: string; updated_at: string }
-export type Pf2Session = { id: string; sessionNumber: number; date: string; endDate: string; title: string; participants: string[]; longSummaryAuthor: string | null; shortSummaryAuthor: string | null; sessionXp: number; longSummaryXp: number; shortSummaryXp: number; longSummaryUrl: string; shortSummary: string; discordMessageId: string | null; published: boolean; createdAt: string; updatedAt: string }
-export type Pf2SessionInput = { id?: unknown; sessionNumber?: unknown; date?: unknown; endDate?: unknown; title?: unknown; participants?: unknown; longSummaryAuthor?: unknown; shortSummaryAuthor?: unknown; sessionXp?: unknown; longSummaryXp?: unknown; shortSummaryXp?: unknown; longSummaryUrl?: unknown; shortSummary?: unknown; published?: unknown }
+type SessionRow = { id: string; session_number: number; date: string; in_game_start_date: string; in_game_end_date: string; title: string; participants: string; long_summary_author: string | null; short_summary_author: string | null; session_xp: number; long_summary_xp: number; short_summary_xp: number; long_summary_url: string; short_summary: string; discord_message_id: string | null; published: number; created_at: string; updated_at: string }
+export type Pf2Session = { id: string; sessionNumber: number; date: string; inGameStartDate: string; inGameEndDate: string; title: string; participants: string[]; longSummaryAuthor: string | null; shortSummaryAuthor: string | null; sessionXp: number; longSummaryXp: number; shortSummaryXp: number; longSummaryUrl: string; shortSummary: string; discordMessageId: string | null; published: boolean; createdAt: string; updatedAt: string }
+export type Pf2SessionInput = { id?: unknown; sessionNumber?: unknown; date?: unknown; inGameStartDate?: unknown; inGameEndDate?: unknown; endDate?: unknown; title?: unknown; participants?: unknown; longSummaryAuthor?: unknown; shortSummaryAuthor?: unknown; sessionXp?: unknown; longSummaryXp?: unknown; shortSummaryXp?: unknown; longSummaryUrl?: unknown; shortSummary?: unknown; published?: unknown }
 
 @Injectable()
 export class Pf2PersistenceService implements OnModuleInit {
@@ -466,12 +466,12 @@ export class Pf2PersistenceService implements OnModuleInit {
   }
 
   async listSessions(): Promise<Pf2Session[]> {
-    const rows = await this.dataSource.query('SELECT id, session_number, date, end_date, title, participants, long_summary_author, short_summary_author, session_xp, long_summary_xp, short_summary_xp, long_summary_url, short_summary, discord_message_id, published, created_at, updated_at FROM pf2_session ORDER BY session_number ASC') as SessionRow[]
+    const rows = await this.dataSource.query('SELECT id, session_number, date, in_game_start_date, in_game_end_date, title, participants, long_summary_author, short_summary_author, session_xp, long_summary_xp, short_summary_xp, long_summary_url, short_summary, discord_message_id, published, created_at, updated_at FROM pf2_session ORDER BY session_number ASC') as SessionRow[]
     return rows.map((row) => this.session(row))
   }
 
   async getSession(id: string): Promise<Pf2Session | null> {
-    const rows = await this.dataSource.query('SELECT id, session_number, date, end_date, title, participants, long_summary_author, short_summary_author, session_xp, long_summary_xp, short_summary_xp, long_summary_url, short_summary, discord_message_id, published, created_at, updated_at FROM pf2_session WHERE id = ?', [id]) as SessionRow[]
+    const rows = await this.dataSource.query('SELECT id, session_number, date, in_game_start_date, in_game_end_date, title, participants, long_summary_author, short_summary_author, session_xp, long_summary_xp, short_summary_xp, long_summary_url, short_summary, discord_message_id, published, created_at, updated_at FROM pf2_session WHERE id = ?', [id]) as SessionRow[]
     return rows[0] ? this.session(rows[0]) : null
   }
 
@@ -479,7 +479,7 @@ export class Pf2PersistenceService implements OnModuleInit {
     const id = input.id === undefined ? randomUUID() : this.requiredSessionId(input.id)
     const session = this.sessionInput(input)
     await this.assertAvailableSessionNumber(session.sessionNumber)
-    await this.dataSource.query('INSERT INTO pf2_session (id, session_number, date, end_date, title, participants, long_summary_author, short_summary_author, session_xp, long_summary_xp, short_summary_xp, long_summary_url, short_summary, published, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)', [id, session.sessionNumber, session.date, session.endDate, session.title, JSON.stringify(session.participants), session.longSummaryAuthor, session.shortSummaryAuthor, session.sessionXp, session.longSummaryXp, session.shortSummaryXp, session.longSummaryUrl, session.shortSummary, session.published ? 1 : 0])
+    await this.dataSource.query('INSERT INTO pf2_session (id, session_number, date, in_game_start_date, in_game_end_date, title, participants, long_summary_author, short_summary_author, session_xp, long_summary_xp, short_summary_xp, long_summary_url, short_summary, published, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)', [id, session.sessionNumber, session.date, session.inGameStartDate, session.inGameEndDate, session.title, JSON.stringify(session.participants), session.longSummaryAuthor, session.shortSummaryAuthor, session.sessionXp, session.longSummaryXp, session.shortSummaryXp, session.longSummaryUrl, session.shortSummary, session.published ? 1 : 0])
     const created = await this.getSession(id)
     if (!created) throw new Error('La séance créée est introuvable.')
     return created
@@ -490,7 +490,7 @@ export class Pf2PersistenceService implements OnModuleInit {
     if (!current) return null
     const session = this.sessionInput(input, current)
     await this.assertAvailableSessionNumber(session.sessionNumber, current.id)
-    await this.dataSource.query('UPDATE pf2_session SET session_number = ?, date = ?, end_date = ?, title = ?, participants = ?, long_summary_author = ?, short_summary_author = ?, session_xp = ?, long_summary_xp = ?, short_summary_xp = ?, long_summary_url = ?, short_summary = ?, published = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?', [session.sessionNumber, session.date, session.endDate, session.title, JSON.stringify(session.participants), session.longSummaryAuthor, session.shortSummaryAuthor, session.sessionXp, session.longSummaryXp, session.shortSummaryXp, session.longSummaryUrl, session.shortSummary, session.published ? 1 : 0, current.id])
+    await this.dataSource.query('UPDATE pf2_session SET session_number = ?, date = ?, in_game_start_date = ?, in_game_end_date = ?, title = ?, participants = ?, long_summary_author = ?, short_summary_author = ?, session_xp = ?, long_summary_xp = ?, short_summary_xp = ?, long_summary_url = ?, short_summary = ?, published = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?', [session.sessionNumber, session.date, session.inGameStartDate, session.inGameEndDate, session.title, JSON.stringify(session.participants), session.longSummaryAuthor, session.shortSummaryAuthor, session.sessionXp, session.longSummaryXp, session.shortSummaryXp, session.longSummaryUrl, session.shortSummary, session.published ? 1 : 0, current.id])
     return this.getSession(current.id)
   }
   async deleteSession(id: string): Promise<void> {
@@ -653,10 +653,16 @@ export class Pf2PersistenceService implements OnModuleInit {
       const columns = await manager.query('PRAGMA table_info(pf2_session)') as Array<{ name: string }>
       if (!columns.some((column) => column.name === 'end_date')) await manager.query("ALTER TABLE pf2_session ADD COLUMN end_date TEXT NOT NULL DEFAULT ''")
     })
+    await this.applyMigration('015-session-in-game-dates', async (manager) => {
+      const columns = await manager.query('PRAGMA table_info(pf2_session)') as Array<{ name: string }>
+      if (!columns.some((column) => column.name === 'in_game_start_date')) await manager.query("ALTER TABLE pf2_session ADD COLUMN in_game_start_date TEXT NOT NULL DEFAULT ''")
+      if (!columns.some((column) => column.name === 'in_game_end_date')) await manager.query("ALTER TABLE pf2_session ADD COLUMN in_game_end_date TEXT NOT NULL DEFAULT ''")
+      if (columns.some((column) => column.name === 'end_date')) await manager.query("UPDATE pf2_session SET in_game_end_date = end_date WHERE in_game_end_date = '' AND end_date <> ''")
+    })
   }
 
   private async createSessionTable(manager: EntityManager): Promise<void> {
-    await manager.query("CREATE TABLE IF NOT EXISTS pf2_session (id TEXT PRIMARY KEY, date TEXT NOT NULL, end_date TEXT NOT NULL DEFAULT '', title TEXT NOT NULL, participants TEXT NOT NULL DEFAULT '[]', long_summary_author TEXT, short_summary_author TEXT, session_xp INTEGER NOT NULL DEFAULT 0, long_summary_xp INTEGER NOT NULL DEFAULT 0, short_summary_xp INTEGER NOT NULL DEFAULT 0, long_summary TEXT NOT NULL DEFAULT '', short_summary TEXT NOT NULL DEFAULT '', published INTEGER NOT NULL DEFAULT 0, created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP, updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)")
+    await manager.query("CREATE TABLE IF NOT EXISTS pf2_session (id TEXT PRIMARY KEY, date TEXT NOT NULL, in_game_start_date TEXT NOT NULL DEFAULT '', in_game_end_date TEXT NOT NULL DEFAULT '', title TEXT NOT NULL, participants TEXT NOT NULL DEFAULT '[]', long_summary_author TEXT, short_summary_author TEXT, session_xp INTEGER NOT NULL DEFAULT 0, long_summary_xp INTEGER NOT NULL DEFAULT 0, short_summary_xp INTEGER NOT NULL DEFAULT 0, long_summary TEXT NOT NULL DEFAULT '', short_summary TEXT NOT NULL DEFAULT '', published INTEGER NOT NULL DEFAULT 0, created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP, updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)")
     await manager.query('CREATE INDEX IF NOT EXISTS idx_pf2_session_date ON pf2_session (date)')
   }
 
@@ -899,12 +905,13 @@ export class Pf2PersistenceService implements OnModuleInit {
 
   private name(item: Record<string, unknown>): string { return typeof item.nom === 'string' ? item.nom.trim() : this.title(item) }
   private title(item: Record<string, unknown>): string { return typeof item.titleFr === 'string' ? item.titleFr : typeof item.titleOriginal === 'string' ? item.titleOriginal : typeof item.id === 'string' ? item.id : '' }
-  private session(row: SessionRow): Pf2Session { return { id: row.id, sessionNumber: row.session_number, date: row.date, endDate: row.end_date ?? '', title: row.title, participants: this.participants(JSON.parse(row.participants), []), longSummaryAuthor: row.long_summary_author, shortSummaryAuthor: row.short_summary_author, sessionXp: row.session_xp, longSummaryXp: row.long_summary_xp, shortSummaryXp: row.short_summary_xp, longSummaryUrl: row.long_summary_url, shortSummary: row.short_summary, discordMessageId: row.discord_message_id, published: Number(row.published) !== 0, createdAt: row.created_at, updatedAt: row.updated_at } }
+  private session(row: SessionRow): Pf2Session { return { id: row.id, sessionNumber: row.session_number, date: row.date, inGameStartDate: row.in_game_start_date ?? '', inGameEndDate: row.in_game_end_date ?? '', title: row.title, participants: this.participants(JSON.parse(row.participants), []), longSummaryAuthor: row.long_summary_author, shortSummaryAuthor: row.short_summary_author, sessionXp: row.session_xp, longSummaryXp: row.long_summary_xp, shortSummaryXp: row.short_summary_xp, longSummaryUrl: row.long_summary_url, shortSummary: row.short_summary, discordMessageId: row.discord_message_id, published: Number(row.published) !== 0, createdAt: row.created_at, updatedAt: row.updated_at } }
   private sessionInput(input: Pf2SessionInput, current?: Pf2Session): Omit<Pf2Session, 'id' | 'discordMessageId' | 'createdAt' | 'updatedAt'> {
     return {
       sessionNumber: this.sessionNumber(input.sessionNumber, current?.sessionNumber),
       date: this.optionalDate(input.date, current?.date ?? ''),
-      endDate: this.optionalDate(input.endDate, current?.endDate ?? ''),
+      inGameStartDate: this.optionalDate(input.inGameStartDate, current?.inGameStartDate ?? ''),
+      inGameEndDate: this.optionalDate(input.inGameEndDate ?? input.endDate, current?.inGameEndDate ?? ''),
       title: this.text(input.title, 'title', current?.title ?? ''),
       participants: this.participants(input.participants, current?.participants ?? []),
       longSummaryAuthor: this.playerId(input.longSummaryAuthor, current?.longSummaryAuthor ?? null),

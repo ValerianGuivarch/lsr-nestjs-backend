@@ -2,7 +2,7 @@ import { Pf2SessionsController } from './Pf2SessionsController'
 import type { Pf2Session } from '../pf2-storage/Pf2PersistenceService'
 
 describe('Pf2SessionsController', () => {
-  const resume: Pf2Session = { id: 'resume-1', sessionNumber: 1, date: '', endDate: '', title: '', participants: [], longSummaryAuthor: null, shortSummaryAuthor: null, sessionXp: 0, longSummaryXp: 0, shortSummaryXp: 0, longSummaryUrl: '', shortSummary: 'Texte court', discordMessageId: null, published: false, createdAt: '', updatedAt: '' }
+  const resume: Pf2Session = { id: 'resume-1', sessionNumber: 1, date: '', inGameStartDate: '', inGameEndDate: '', title: '', participants: [], longSummaryAuthor: null, shortSummaryAuthor: null, sessionXp: 0, longSummaryXp: 0, shortSummaryXp: 0, longSummaryUrl: '', shortSummary: 'Texte court', discordMessageId: null, published: false, createdAt: '', updatedAt: '' }
 
   it('keeps the SQLite save successful when Discord is unavailable', async () => {
     const persistence = { createSession: jest.fn().mockResolvedValue(resume), saveSessionDiscordMessageId: jest.fn() }

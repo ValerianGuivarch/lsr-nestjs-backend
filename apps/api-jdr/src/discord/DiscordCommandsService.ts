@@ -114,7 +114,7 @@ export class DiscordCommandsService {
   private async finishGame(interaction: StringSelectMenuInteraction, pending: { selected?: Array<{ uuid: string; name: string }> }, date: string, plan: { downtime: string[] }): Promise<void> {
     const sessions = await this.persistence.listSessions()
     const sessionNumber = Math.max(0, ...sessions.map((session) => session.sessionNumber)) + 1
-    const draft = await this.persistence.createSession({ sessionNumber, date, endDate: '', title: '', participants: (pending.selected ?? []).map((actor) => actor.uuid), published: false })
+    const draft = await this.persistence.createSession({ sessionNumber, date: '', inGameStartDate: date, inGameEndDate: '', title: '', participants: (pending.selected ?? []).map((actor) => actor.uuid), published: false })
     const content = `Brouillon créé : résumé n°${draft.sessionNumber}.\nDébut : ${this.displayDate(date)}. Fin : à renseigner.\n${plan.downtime.join('\n')}\n\nComplète puis publie le résumé dans l’application MJ.`
     await interaction.update({ content, components: [] })
   }
@@ -122,11 +122,11 @@ export class DiscordCommandsService {
   private async finishGameModal(interaction: ModalSubmitInteraction, pending: { selected?: Array<{ uuid: string; name: string }> }, date: string, plan: { downtime: string[] }): Promise<void> {
     const sessions = await this.persistence.listSessions()
     const sessionNumber = Math.max(0, ...sessions.map((session) => session.sessionNumber)) + 1
-    const draft = await this.persistence.createSession({ sessionNumber, date, endDate: '', title: '', participants: (pending.selected ?? []).map((actor) => actor.uuid), published: false })
+    const draft = await this.persistence.createSession({ sessionNumber, date: '', inGameStartDate: date, inGameEndDate: '', title: '', participants: (pending.selected ?? []).map((actor) => actor.uuid), published: false })
     await interaction.reply({ content: `Brouillon créé : résumé n°${draft.sessionNumber}.\nDébut : ${this.displayDate(date)}. Fin : à renseigner.\n${plan.downtime.join('\n')}\n\nComplète puis publie le résumé dans l’application MJ.`, ephemeral: true })
   }
 
-  private missionEnd(session: import('../pf2-storage/Pf2PersistenceService').Pf2Session): string { return session.endDate || session.date }
+  private missionEnd(session: import('../pf2-storage/Pf2PersistenceService').Pf2Session): string { return session.inGameEndDate || session.inGameStartDate }
   private today(): string { return new Date().toISOString().slice(0, 10) }
   private addDays(date: string, days: number): string { const value = new Date(`${date}T12:00:00Z`); value.setUTCDate(value.getUTCDate() + days); return value.toISOString().slice(0, 10) }
   private displayDate(date: string): string { const [year, month, day] = date.split('-').map(Number); const months = ['Abadius', 'Calistril', 'Pharast', 'Gozran', 'Desnus', 'Sarenith', 'Erastus', 'Arodus', 'Rova', 'Lamashan', 'Neth', 'Kuthona']; return `${day} ${months[month - 1]} ${year + 1694} AR (${day}/${String(month).padStart(2, '0')}/${year})` }
@@ -152,8 +152,13 @@ export class DiscordCommandsService {
         await this.persistence.saveFoundryActorCache(actors)
         return new Map(actors.map((actor) => [actor.uuid, actor.name]))
       }
-    } catch { /* Foundry remains optional for a Discord recap. */ }
-    return new Map((await this.persistence.readFoundryActorCache()).map((actor) => [actor.uuid, actor.name]))
+      this.logger.warn('new-game: le Relay a répondu mais la structure ne contient aucun Actor de monde.')
+    } catch (error) {
+      this.logger.warn(`new-game: lecture Foundry impossible : ${error instanceof Error ? error.message : String(error)}`)
+    }
+    const cached = await this.persistence.readFoundryActorCache()
+    this.logger.log(`new-game: cache Actors SQLite=${cached.length}`)
+    return new Map(cached.map((actor) => [actor.uuid, actor.name]))
   }
 
   private playerName(actorName: string): string {
