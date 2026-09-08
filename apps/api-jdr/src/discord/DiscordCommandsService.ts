@@ -16,6 +16,7 @@ export class DiscordCommandsService {
       new SlashCommandBuilder().setName('rec').setDescription('Récapitule les séances jouées par joueur.').toJSON(),
       new SlashCommandBuilder().setName('recap').setDescription('Récapitule les séances jouées par joueur.').toJSON(),
       new SlashCommandBuilder().setName('new-game').setDescription('Prépare une nouvelle mission PF2.').addUserOption(option => option.setName('joueur1').setDescription('Premier joueur').setRequired(true)).addUserOption(option => option.setName('joueur2').setDescription('Deuxième joueur')).addUserOption(option => option.setName('joueur3').setDescription('Troisième joueur')).addUserOption(option => option.setName('joueur4').setDescription('Quatrième joueur')).addUserOption(option => option.setName('joueur5').setDescription('Cinquième joueur')).addUserOption(option => option.setName('joueur6').setDescription('Sixième joueur')).toJSON(),
+      new SlashCommandBuilder().setName('finish-game').setDescription('Termine une mission et met à jour son résumé.').addIntegerOption(option => option.setName('numero').setDescription('Numéro du résumé à terminer')).addStringOption(option => option.setName('fin').setDescription('Date de fin en jeu : YYYY-MM-DD')).addIntegerOption(option => option.setName('jours').setDescription('Durée en jours, à partir du début en jeu').setMinValue(1)).addIntegerOption(option => option.setName('xp').setDescription('XP gagnée par PJ').setRequired(true).setMinValue(0)).toJSON(),
     ]
   }
 
@@ -30,6 +31,10 @@ export class DiscordCommandsService {
     }
     if (interaction.commandName === 'new-game') {
       await this.newGame(interaction as ChatInputCommandInteraction)
+      return true
+    }
+    if (interaction.commandName === 'finish-game') {
+      await this.finishGameCommand(interaction as ChatInputCommandInteraction)
       return true
     }
     return false
@@ -90,6 +95,38 @@ export class DiscordCommandsService {
     return true
   }
 
+  private async finishGameCommand(interaction: ChatInputCommandInteraction): Promise<void> {
+    const requestedNumber = interaction.options.getInteger('numero') ?? await this.lastBotSessionNumber(interaction)
+    if (!requestedNumber) { await interaction.reply({ content: 'Indique `numero`, ou utilise la commande dans un salon contenant une annonce récente du bot avec « Résumé n°… ». ', ephemeral: true }); return }
+    const endDate = interaction.options.getString('fin')?.trim() ?? ''
+    const days = interaction.options.getInteger('jours')
+    const xp = interaction.options.getInteger('xp', true)
+    if (Boolean(endDate) === (days !== null)) { await interaction.reply({ content: 'Indique soit `fin` (YYYY-MM-DD), soit `jours`, mais pas les deux.', ephemeral: true }); return }
+    if (endDate && !/^\d{4}-\d{2}-\d{2}$/.test(endDate)) { await interaction.reply({ content: 'La date de fin doit être au format YYYY-MM-DD.', ephemeral: true }); return }
+    const session = (await this.persistence.listSessions()).find((item) => item.sessionNumber === requestedNumber)
+    if (!session) { await interaction.reply({ content: `Aucun résumé n°${requestedNumber} n’existe.`, ephemeral: true }); return }
+    if (days !== null && !session.inGameStartDate) { await interaction.reply({ content: `Le résumé n°${requestedNumber} n’a pas de date de début en jeu : précise plutôt \`fin\`.`, ephemeral: true }); return }
+    const resolvedEndDate = endDate || this.addDays(session.inGameStartDate, Math.max(0, (days ?? 1) - 1))
+    const updated = await this.persistence.updateSession(session.id, { inGameEndDate: resolvedEndDate, sessionXp: xp })
+    await interaction.reply({ content: `Résumé n°${requestedNumber} mis à jour : fin en jeu le ${this.displayDate(resolvedEndDate)} ; ${xp} XP par PJ.`, ephemeral: true })
+    if (!updated) this.logger.warn(`finish-game: résumé ${requestedNumber} supprimé pendant la mise à jour.`)
+  }
+
+  private async lastBotSessionNumber(interaction: ChatInputCommandInteraction): Promise<number | null> {
+    const channel = interaction.channel
+    if (!channel?.isTextBased() || !('messages' in channel)) return null
+    try {
+      const messages = await channel.messages.fetch({ limit: 100 })
+      const botId = interaction.client.user?.id
+      const message = messages.find((item) => item.author.id === botId && /Résumé n°(\d+)/.test(item.content))
+      const match = message ? /Résumé n°(\d+)/.exec(message.content) : null
+      return match ? Number(match[1]) : null
+    } catch (error) {
+      this.logger.warn(`finish-game: impossible de lire l’historique Discord : ${error instanceof Error ? error.message : String(error)}`)
+      return null
+    }
+  }
+
   private async newGame(interaction: ChatInputCommandInteraction): Promise<void> {
     const users = ['joueur1', 'joueur2', 'joueur3', 'joueur4', 'joueur5', 'joueur6'].flatMap(name => { const user = interaction.options.getUser(name); return user ? [user] : [] })
     const userIds = [...new Set(users.map((user) => user.id))]
@@ -126,7 +163,7 @@ export class DiscordCommandsService {
     const draft = await this.persistence.createSession({ sessionNumber, date: '', inGameStartDate: date, inGameEndDate: '', title: '', participants: (pending.selected ?? []).map((actor) => actor.uuid), published: false })
     const content = `Brouillon créé : résumé n°${draft.sessionNumber}.\nDébut : ${this.displayDate(date)}. Fin : à renseigner.\n${plan.downtime.join('\n')}\n\nComplète puis publie le résumé dans l’application MJ.`
     const announcementId = `pf2-new-game:announce:${draft.id}`
-    this.pendingAnnouncements.set(announcementId, { content: `**Séance prévue**\nAvec : ${(pending.selected ?? []).map((actor) => `<@${actor.userId}>`).join(', ')}\nDébut de la mission : ${this.displayDate(date)}`, userIds: (pending.selected ?? []).map((actor) => actor.userId) })
+    this.pendingAnnouncements.set(announcementId, { content: `**Séance prévue — Résumé n°${draft.sessionNumber}**\nAvec : ${(pending.selected ?? []).map((actor) => `<@${actor.userId}>`).join(', ')}\nDébut de la mission : ${this.displayDate(date)}`, userIds: (pending.selected ?? []).map((actor) => actor.userId) })
     const publish = new ButtonBuilder().setCustomId(announcementId).setLabel('Publier l’annonce').setStyle(ButtonStyle.Primary)
     await interaction.update({ content, components: [new ActionRowBuilder<ButtonBuilder>().addComponents(publish)] })
   }
@@ -136,7 +173,7 @@ export class DiscordCommandsService {
     const sessionNumber = Math.max(0, ...sessions.map((session) => session.sessionNumber)) + 1
     const draft = await this.persistence.createSession({ sessionNumber, date: '', inGameStartDate: date, inGameEndDate: '', title: '', participants: (pending.selected ?? []).map((actor) => actor.uuid), published: false })
     const announcementId = `pf2-new-game:announce:${draft.id}`
-    this.pendingAnnouncements.set(announcementId, { content: `**Séance prévue**\nAvec : ${(pending.selected ?? []).map((actor) => `<@${actor.userId}>`).join(', ')}\nDébut de la mission : ${this.displayDate(date)}`, userIds: (pending.selected ?? []).map((actor) => actor.userId) })
+    this.pendingAnnouncements.set(announcementId, { content: `**Séance prévue — Résumé n°${draft.sessionNumber}**\nAvec : ${(pending.selected ?? []).map((actor) => `<@${actor.userId}>`).join(', ')}\nDébut de la mission : ${this.displayDate(date)}`, userIds: (pending.selected ?? []).map((actor) => actor.userId) })
     const publish = new ButtonBuilder().setCustomId(announcementId).setLabel('Publier l’annonce').setStyle(ButtonStyle.Primary)
     await interaction.reply({ content: `Brouillon créé : résumé n°${draft.sessionNumber}.\nDébut : ${this.displayDate(date)}. Fin : à renseigner.\n${plan.downtime.join('\n')}\n\nComplète puis publie le résumé dans l’application MJ.`, components: [new ActionRowBuilder<ButtonBuilder>().addComponents(publish)], ephemeral: true })
   }
@@ -144,7 +181,7 @@ export class DiscordCommandsService {
   private missionEnd(session: import('../pf2-storage/Pf2PersistenceService').Pf2Session): string { return session.inGameEndDate || session.inGameStartDate }
   private today(): string { return new Date().toISOString().slice(0, 10) }
   private addDays(date: string, days: number): string { const value = new Date(`${date}T12:00:00Z`); value.setUTCDate(value.getUTCDate() + days); return value.toISOString().slice(0, 10) }
-  private displayDate(date: string): string { const [year, month, day] = date.split('-').map(Number); const months = ['Abadius', 'Calistril', 'Pharast', 'Gozran', 'Desnus', 'Sarenith', 'Erastus', 'Arodus', 'Rova', 'Lamashan', 'Neth', 'Kuthona']; return `${day} ${months[month - 1]} ${year + 1694} AR (${day}/${String(month).padStart(2, '0')}/${year})` }
+  private displayDate(date: string): string { const [year, month, day] = date.split('-').map(Number); const months = ['Abadius', 'Calistril', 'Pharast', 'Gozran', 'Desnus', 'Sarenith', 'Erastus', 'Arodus', 'Rova', 'Lamashan', 'Neth', 'Kuthona']; return year >= 3000 ? `${day} ${months[month - 1]} ${year} AR` : `${day} ${months[month - 1]} ${year + 1694} AR (${day}/${String(month).padStart(2, '0')}/${year})` }
   private discordId(player: string): string | undefined { return ({ jupi: '308566148931387393', julien: '308566148931387393', valerian: '492387405760823297', valou: '492387405760823297', david: '688742453276180560', tom: '134346709487714304', sameh: '688791427253403679', arcady: '344733584441081857', eric: '399621722158137346', mana: '404629333534179338', marinella: '404629333534179338', nico: '688860103629340690', nicolas: '688860103629340690', gus: '671746679636099094', augustin: '671746679636099094', elena: '689036096767524866', guilhem: '448500183186145291', arthur: '557907871212503050' })[player.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim()] }
 
   private async recapMessage(): Promise<string> {
