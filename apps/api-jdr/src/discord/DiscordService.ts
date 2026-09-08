@@ -105,6 +105,11 @@ export class DiscordService implements OnModuleInit, OnModuleDestroy {
         void this.commands.handleModal(interaction).catch((error: unknown) => this.logger.error('Discord modal failed', error instanceof Error ? error.stack : undefined))
       })
 
+      client.on(Events.InteractionCreate, (interaction: Interaction) => {
+        if (!interaction.isButton()) return
+        void this.commands.handleButton(interaction).catch((error: unknown) => this.logger.error('Discord button failed', error instanceof Error ? error.stack : undefined))
+      })
+
       client.once(Events.ClientReady, (readyClient) =>
         this.logger.log(`Discord connected as ${readyClient.user.tag}`),
       )

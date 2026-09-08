@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common'
-import { ActionRowBuilder, ChatInputCommandInteraction, ModalBuilder, ModalSubmitInteraction, RESTPostAPIApplicationGuildCommandsJSONBody, SlashCommandBuilder, StringSelectMenuBuilder, StringSelectMenuInteraction, TextInputBuilder, TextInputStyle } from 'discord.js'
+import { ActionRowBuilder, ButtonBuilder, ButtonInteraction, ButtonStyle, ChatInputCommandInteraction, ModalBuilder, ModalSubmitInteraction, RESTPostAPIApplicationGuildCommandsJSONBody, SlashCommandBuilder, StringSelectMenuBuilder, StringSelectMenuInteraction, TextInputBuilder, TextInputStyle } from 'discord.js'
 import { FoundryRelayService } from '../foundry/FoundryRelayService'
 import { Pf2PersistenceService } from '../pf2-storage/Pf2PersistenceService'
 
@@ -7,6 +7,7 @@ import { Pf2PersistenceService } from '../pf2-storage/Pf2PersistenceService'
 export class DiscordCommandsService {
   private readonly logger = new Logger(DiscordCommandsService.name)
   private readonly pendingGames = new Map<string, { actors: Array<{ uuid: string; name: string; player: string; userId: string }>; userIds: string[]; selected?: Array<{ uuid: string; name: string; player: string; userId: string }> }>()
+  private readonly pendingAnnouncements = new Map<string, { content: string; userIds: string[] }>()
   constructor(private readonly persistence: Pf2PersistenceService, private readonly foundry: FoundryRelayService) {}
 
   definitions(): RESTPostAPIApplicationGuildCommandsJSONBody[] {
@@ -81,6 +82,14 @@ export class DiscordCommandsService {
     return true
   }
 
+  async handleButton(interaction: ButtonInteraction): Promise<boolean> {
+    const announcement = this.pendingAnnouncements.get(interaction.customId)
+    if (!announcement || !interaction.customId.startsWith('pf2-new-game:announce:')) return false
+    await interaction.reply({ content: announcement.content, allowedMentions: { users: announcement.userIds }, ephemeral: false })
+    this.pendingAnnouncements.delete(interaction.customId)
+    return true
+  }
+
   private async newGame(interaction: ChatInputCommandInteraction): Promise<void> {
     const users = ['joueur1', 'joueur2', 'joueur3', 'joueur4', 'joueur5', 'joueur6'].flatMap(name => { const user = interaction.options.getUser(name); return user ? [user] : [] })
     const userIds = [...new Set(users.map((user) => user.id))]
@@ -111,19 +120,25 @@ export class DiscordCommandsService {
     return { current, earliest: availability.map((item) => item.available).sort().at(-1) || current, downtime: availability.map((item) => `${item.actor.name} : ${item.missed} downtime (disponible le ${this.displayDate(item.available)})`) }
   }
 
-  private async finishGame(interaction: StringSelectMenuInteraction, pending: { selected?: Array<{ uuid: string; name: string }> }, date: string, plan: { downtime: string[] }): Promise<void> {
+  private async finishGame(interaction: StringSelectMenuInteraction, pending: { selected?: Array<{ uuid: string; name: string; userId: string }> }, date: string, plan: { downtime: string[] }): Promise<void> {
     const sessions = await this.persistence.listSessions()
     const sessionNumber = Math.max(0, ...sessions.map((session) => session.sessionNumber)) + 1
     const draft = await this.persistence.createSession({ sessionNumber, date: '', inGameStartDate: date, inGameEndDate: '', title: '', participants: (pending.selected ?? []).map((actor) => actor.uuid), published: false })
     const content = `Brouillon créé : résumé n°${draft.sessionNumber}.\nDébut : ${this.displayDate(date)}. Fin : à renseigner.\n${plan.downtime.join('\n')}\n\nComplète puis publie le résumé dans l’application MJ.`
-    await interaction.update({ content, components: [] })
+    const announcementId = `pf2-new-game:announce:${draft.id}`
+    this.pendingAnnouncements.set(announcementId, { content: `**Séance prévue**\nAvec : ${(pending.selected ?? []).map((actor) => `<@${actor.userId}>`).join(', ')}\nDébut de la mission : ${this.displayDate(date)}`, userIds: (pending.selected ?? []).map((actor) => actor.userId) })
+    const publish = new ButtonBuilder().setCustomId(announcementId).setLabel('Publier l’annonce').setStyle(ButtonStyle.Primary)
+    await interaction.update({ content, components: [new ActionRowBuilder<ButtonBuilder>().addComponents(publish)] })
   }
 
-  private async finishGameModal(interaction: ModalSubmitInteraction, pending: { selected?: Array<{ uuid: string; name: string }> }, date: string, plan: { downtime: string[] }): Promise<void> {
+  private async finishGameModal(interaction: ModalSubmitInteraction, pending: { selected?: Array<{ uuid: string; name: string; userId: string }> }, date: string, plan: { downtime: string[] }): Promise<void> {
     const sessions = await this.persistence.listSessions()
     const sessionNumber = Math.max(0, ...sessions.map((session) => session.sessionNumber)) + 1
     const draft = await this.persistence.createSession({ sessionNumber, date: '', inGameStartDate: date, inGameEndDate: '', title: '', participants: (pending.selected ?? []).map((actor) => actor.uuid), published: false })
-    await interaction.reply({ content: `Brouillon créé : résumé n°${draft.sessionNumber}.\nDébut : ${this.displayDate(date)}. Fin : à renseigner.\n${plan.downtime.join('\n')}\n\nComplète puis publie le résumé dans l’application MJ.`, ephemeral: true })
+    const announcementId = `pf2-new-game:announce:${draft.id}`
+    this.pendingAnnouncements.set(announcementId, { content: `**Séance prévue**\nAvec : ${(pending.selected ?? []).map((actor) => `<@${actor.userId}>`).join(', ')}\nDébut de la mission : ${this.displayDate(date)}`, userIds: (pending.selected ?? []).map((actor) => actor.userId) })
+    const publish = new ButtonBuilder().setCustomId(announcementId).setLabel('Publier l’annonce').setStyle(ButtonStyle.Primary)
+    await interaction.reply({ content: `Brouillon créé : résumé n°${draft.sessionNumber}.\nDébut : ${this.displayDate(date)}. Fin : à renseigner.\n${plan.downtime.join('\n')}\n\nComplète puis publie le résumé dans l’application MJ.`, components: [new ActionRowBuilder<ButtonBuilder>().addComponents(publish)], ephemeral: true })
   }
 
   private missionEnd(session: import('../pf2-storage/Pf2PersistenceService').Pf2Session): string { return session.inGameEndDate || session.inGameStartDate }
