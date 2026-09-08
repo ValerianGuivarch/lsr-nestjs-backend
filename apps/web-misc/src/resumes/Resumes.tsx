@@ -12,6 +12,7 @@ type Resume = {
   id: string
   sessionNumber: number
   date: string
+  endDate: string
   title: string
   participants: string[]
   longSummaryAuthor: string | null
@@ -21,6 +22,7 @@ type Resume = {
   shortSummaryXp: number
   longSummaryUrl: string
   shortSummary: string
+  published: boolean
 }
 
 type Draft = Omit<Resume, 'id'>
@@ -32,6 +34,7 @@ const playerActorName = /^\S(?:.*\S)?\s+\([^()]+\)$/u
 const blank = (sessionNumber = 1): Draft => ({
   sessionNumber,
   date: '',
+  endDate: '',
   title: '',
   participants: [],
   longSummaryAuthor: null,
@@ -41,6 +44,7 @@ const blank = (sessionNumber = 1): Draft => ({
   shortSummaryXp: 0,
   longSummaryUrl: '',
   shortSummary: '',
+  published: false,
 })
 
 const errorText = (error: unknown) =>
@@ -191,30 +195,27 @@ export default function Resumes() {
     )
   }
 
-  const save = async (
-    event: FormEvent,
-  ) => {
+  const save = async (event: Pick<FormEvent, 'preventDefault'>, publish = false) => {
     event.preventDefault()
 
     try {
       const response =
         await fetch(
-          editedId
+          publish && editedId
+            ? `${endpoint}/sessions/${encodeURIComponent(editedId)}/publish`
+            : editedId
             ? `${endpoint}/sessions/${encodeURIComponent(
                 editedId,
               )}`
             : `${endpoint}/sessions`,
           {
-            method:
-              editedId
-                ? 'PUT'
-                : 'POST',
+            method: publish && editedId ? 'POST' : editedId ? 'PUT' : 'POST',
             headers: {
               'Content-Type':
                 'application/json',
             },
             body: JSON.stringify(
-              draft,
+              { ...draft, published: publish ? true : draft.published },
             ),
           },
         )
@@ -630,6 +631,16 @@ export default function Resumes() {
               </label>
 
               <label>
+                Fin de mission (optionnelle)
+
+                <input
+                  type="date"
+                  value={draft.endDate}
+                  onChange={(event) => setDraft({ ...draft, endDate: event.target.value })}
+                />
+              </label>
+
+              <label>
                 Titre (optionnel)
 
                 <input
@@ -916,10 +927,9 @@ export default function Resumes() {
                 className="resume-save"
                 type="submit"
               >
-                {editedId
-                  ? 'Enregistrer'
-                  : 'Créer le résumé'}
+                {editedId ? 'Sauvegarder' : 'Créer le brouillon'}
               </button>
+              {editedId && !draft.published && <button className="resume-save" type="button" onClick={(event) => void save(event, true)}>Publier</button>}
             </footer>
           </form>
         </div>

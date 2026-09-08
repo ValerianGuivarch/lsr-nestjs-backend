@@ -85,7 +85,6 @@ export class DiscordService implements OnModuleInit, OnModuleDestroy {
 
       client.on(Events.InteractionCreate, (interaction: Interaction) => {
         if (!interaction.isChatInputCommand()) return
-
         void this.commands
           .handle(interaction)
           .catch((error: unknown) =>
@@ -94,6 +93,16 @@ export class DiscordService implements OnModuleInit, OnModuleDestroy {
               error instanceof Error ? error.stack : undefined,
             ),
           )
+      })
+
+      client.on(Events.InteractionCreate, (interaction: Interaction) => {
+        if (!interaction.isStringSelectMenu()) return
+        void this.commands.handleComponent(interaction).catch((error: unknown) => this.logger.error('Discord component failed', error instanceof Error ? error.stack : undefined))
+      })
+
+      client.on(Events.InteractionCreate, (interaction: Interaction) => {
+        if (!interaction.isModalSubmit()) return
+        void this.commands.handleModal(interaction).catch((error: unknown) => this.logger.error('Discord modal failed', error instanceof Error ? error.stack : undefined))
       })
 
       client.once(Events.ClientReady, (readyClient) =>

@@ -4,7 +4,7 @@ import { DiscordService } from './DiscordService'
 import type { Pf2Session } from '../pf2-storage/Pf2PersistenceService'
 
 const resume = (overrides: Partial<Pf2Session> = {}): Pf2Session => ({
-  id: 'resume-1', sessionNumber: 1, date: '2026-09-01', title: 'Le départ', participants: [], longSummaryAuthor: null, shortSummaryAuthor: 'Actor.valerian', sessionXp: 200, longSummaryXp: 0, shortSummaryXp: 50, longSummaryUrl: '', shortSummary: 'Les héros quittent Absalom.', discordMessageId: null, createdAt: '', updatedAt: '', ...overrides
+  id: 'resume-1', sessionNumber: 1, date: '2026-09-01', endDate: '', title: 'Le départ', participants: [], longSummaryAuthor: null, shortSummaryAuthor: 'Actor.valerian', sessionXp: 200, longSummaryXp: 0, shortSummaryXp: 50, longSummaryUrl: '', shortSummary: 'Les héros quittent Absalom.', discordMessageId: null, published: true, createdAt: '', updatedAt: '', ...overrides
 })
 
 describe('DiscordService summary synchronization', () => {

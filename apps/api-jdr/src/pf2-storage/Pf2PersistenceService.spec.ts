@@ -102,7 +102,9 @@ describe('Pf2PersistenceService', () => {
       { id: '010-scenario-deployment-queue' },
       { id: '011-scenario-record-scope' },
       { id: '012-scenario-dependencies' },
+      { id: '012-session-publication' },
       { id: '013-scenario-deployment-operations' }
+      , { id: '014-session-mission-dates' }
     ])
 
     await currentDataSource().destroy()
@@ -123,7 +125,9 @@ describe('Pf2PersistenceService', () => {
       { id: '010-scenario-deployment-queue' },
       { id: '011-scenario-record-scope' },
       { id: '012-scenario-dependencies' },
+      { id: '012-session-publication' },
       { id: '013-scenario-deployment-operations' }
+      , { id: '014-session-mission-dates' }
     ])
   })
 

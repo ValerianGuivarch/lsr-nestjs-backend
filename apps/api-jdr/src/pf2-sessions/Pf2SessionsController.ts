@@ -63,15 +63,12 @@ export class Pf2SessionsController {
     try {
       const resume =
         await this.persistence.createSession(
-          body ?? {},
+          { ...(body ?? {}), published: false },
         )
 
       return {
         resume,
-        discord:
-          await this.synchronizeDiscord(
-            resume,
-          ),
+        discord: { status: 'skipped', reason: 'Brouillon enregistré.' },
       }
     } catch (error) {
       throw new HttpException(
@@ -106,10 +103,7 @@ export class Pf2SessionsController {
 
       return {
         resume: session,
-        discord:
-          await this.synchronizeDiscord(
-            session,
-          ),
+        discord: { status: 'skipped', reason: 'Résumé enregistré. Utilise Publier pour synchroniser Discord.' },
       }
     } catch (error) {
       if (
@@ -126,6 +120,13 @@ export class Pf2SessionsController {
         HttpStatus.BAD_REQUEST,
       )
     }
+  }
+
+  @Post(':id/publish')
+  async publish(@Param('id') id: string, @Body() body: Pf2SessionInput): Promise<{ resume: Pf2Session; discord: DiscordResumeSync }> {
+    const resume = await this.persistence.updateSession(id, { ...(body ?? {}), published: true })
+    if (!resume) throw new NotFoundException('Séance introuvable.')
+    return { resume, discord: await this.synchronizeDiscord(resume) }
   }
 
   @Delete(':id')
@@ -177,6 +178,7 @@ export class Pf2SessionsController {
   private async synchronizeDiscord(
     resume: Pf2Session,
   ): Promise<DiscordResumeSync> {
+    if (!resume.published) return { status: 'skipped', reason: 'Brouillon non publié.' }
     const discord =
       await this.discord.synchronizeResumeShortSummary(
         resume,
