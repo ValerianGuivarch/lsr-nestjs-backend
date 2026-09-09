@@ -187,6 +187,16 @@ export class DiscordService implements OnModuleInit, OnModuleDestroy {
         resume,
       )
 
+      if (
+        typeof payload.content !== 'string' ||
+        payload.content.length > 2_000
+      ) {
+        return {
+          status: 'failed',
+          reason: `Le message Discord fait ${String(payload.content ?? '').length} caractères ; la limite est de 2 000.`,
+        }
+      }
+
       /**
        * Si le message existe déjà :
        * on l'édite, on ne recrée pas le message ni le thread.

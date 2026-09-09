@@ -31,6 +31,7 @@ type Draft = Omit<Resume, 'id'>
 // Le proxy historique /apil7r ajoute déjà le préfixe /api côté NestJS.
 const endpoint = '/apil7r/pf2-mj'
 const playerActorName = /^\S(?:.*\S)?\s+\([^()]+\)$/u
+const discordShortSummaryLimit = 1400
 
 const blank = (sessionNumber = 1): Draft => ({
   sessionNumber,
@@ -197,7 +198,7 @@ export default function Resumes() {
     )
   }
 
-  const save = async (event: Pick<FormEvent, 'preventDefault'>, publish = false) => {
+  const save = async (event: Pick<FormEvent, 'preventDefault'>, publish = false, unpublish = false) => {
     event.preventDefault()
 
     try {
@@ -217,7 +218,7 @@ export default function Resumes() {
                 'application/json',
             },
             body: JSON.stringify(
-              { ...draft, published: publish ? true : draft.published },
+              { ...draft, published: publish ? true : unpublish ? false : draft.published },
             ),
           },
         )
@@ -888,6 +889,7 @@ export default function Resumes() {
 
               <textarea
                 rows={6}
+                maxLength={discordShortSummaryLimit}
                 value={
                   draft.shortSummary
                 }
@@ -903,6 +905,10 @@ export default function Resumes() {
                   })
                 }
               />
+
+              <small>
+                {draft.shortSummary.length} / {discordShortSummaryLimit} caractères — marge incluse pour les informations Discord.
+              </small>
             </label>
 
             <label>
@@ -944,6 +950,7 @@ export default function Resumes() {
                 {editedId ? 'Sauvegarder' : 'Créer le brouillon'}
               </button>
               {editedId && !draft.published && <button className="resume-save" type="button" onClick={(event) => void save(event, true)}>Publier</button>}
+              {editedId && draft.published && <button className="resume-save" type="button" onClick={(event) => void save(event, false, true)}>Remettre en brouillon</button>}
             </footer>
           </form>
         </div>

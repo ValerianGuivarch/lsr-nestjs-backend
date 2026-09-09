@@ -126,7 +126,12 @@ export class Pf2SessionsController {
   async publish(@Param('id') id: string, @Body() body: Pf2SessionInput): Promise<{ resume: Pf2Session; discord: DiscordResumeSync }> {
     const resume = await this.persistence.updateSession(id, { ...(body ?? {}), published: true })
     if (!resume) throw new NotFoundException('Séance introuvable.')
-    return { resume, discord: await this.synchronizeDiscord(resume) }
+    const discord = await this.synchronizeDiscord(resume)
+    if (resume.shortSummary.trim() && discord.status !== 'created' && discord.status !== 'updated') {
+      await this.persistence.updateSession(id, { published: false })
+      throw new HttpException(discord.reason ?? 'Discord n’a pas confirmé la publication.', HttpStatus.BAD_REQUEST)
+    }
+    return { resume, discord }
   }
 
   @Delete(':id')
