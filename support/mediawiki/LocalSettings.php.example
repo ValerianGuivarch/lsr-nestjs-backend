@@ -143,9 +143,22 @@ wfLoadSkin( 'Vector' );
 wfLoadExtension( 'PF2Sessions' );
 $wgPF2SessionsApiBase = 'http://host.docker.internal:3333/api/pf2-mj';
 
+# PF2 — carnet joueur (SQLite via api-jdr ; aucun secret ici)
+wfLoadExtension( 'PF2PlayerCodex' );
+$wgPF2PlayerCodexApiBase = 'http://host.docker.internal:3333/api/pf2-mj';
+
 # PF2 — namespace canonique des résumés longs
 define( 'NS_PF2_SESSION', 3000 );
 define( 'NS_PF2_SESSION_TALK', 3001 );
 
 $wgExtraNamespaces[NS_PF2_SESSION] = 'Séance';
 $wgExtraNamespaces[NS_PF2_SESSION_TALK] = 'Discussion_Séance';
+
+define( 'NS_PF2_CHARACTER', 3002 );
+define( 'NS_PF2_CHARACTER_TALK', 3003 );
+define( 'NS_PF2_PLAYER_FACTION', 3004 );
+define( 'NS_PF2_PLAYER_FACTION_TALK', 3005 );
+$wgExtraNamespaces[NS_PF2_CHARACTER] = 'Personnage';
+$wgExtraNamespaces[NS_PF2_CHARACTER_TALK] = 'Discussion_Personnage';
+$wgExtraNamespaces[NS_PF2_PLAYER_FACTION] = 'Faction';
+$wgExtraNamespaces[NS_PF2_PLAYER_FACTION_TALK] = 'Discussion_Faction';

@@ -665,6 +665,17 @@ export class Pf2PersistenceService implements OnModuleInit {
         await manager.query('ALTER TABLE pf2_session DROP COLUMN long_summary_url')
       }
     })
+    await this.applyMigration('017-player-codex', async (manager) => {
+      // These tables deliberately do not reference pf2_record(kind=faction):
+      // player knowledge and MJ truth are separate domains.
+      await manager.query("CREATE TABLE IF NOT EXISTS pf2_player_character_profile (npc_id TEXT PRIMARY KEY, wiki_page_title TEXT NOT NULL UNIQUE, display_name TEXT NOT NULL, wiki_portrait_filename TEXT, created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP, updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)")
+      await manager.query("CREATE TABLE IF NOT EXISTS pf2_player_faction (id TEXT PRIMARY KEY, name TEXT NOT NULL, normalized_name TEXT NOT NULL UNIQUE, parent_faction_id TEXT, wiki_page_title TEXT NOT NULL UNIQUE, created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP, updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)")
+      await manager.query("CREATE TABLE IF NOT EXISTS pf2_player_character_faction (npc_id TEXT NOT NULL, player_faction_id TEXT NOT NULL, created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (npc_id, player_faction_id))")
+      await manager.query("CREATE TABLE IF NOT EXISTS pf2_character_presentation (id TEXT PRIMARY KEY, discord_message_id TEXT UNIQUE, discord_channel_id TEXT NOT NULL, source_npc_id TEXT, presented_name TEXT NOT NULL, show_name INTEGER NOT NULL DEFAULT 1, presented_image_url TEXT, created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP, updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)")
+      await manager.query('CREATE INDEX IF NOT EXISTS idx_pf2_player_profile_name ON pf2_player_character_profile (display_name)')
+      await manager.query('CREATE INDEX IF NOT EXISTS idx_pf2_player_faction_parent ON pf2_player_faction (parent_faction_id)')
+      await manager.query('CREATE INDEX IF NOT EXISTS idx_pf2_player_character_faction_faction ON pf2_player_character_faction (player_faction_id)')
+    })
   }
 
   private async createSessionTable(manager: EntityManager): Promise<void> {

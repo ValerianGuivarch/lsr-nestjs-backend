@@ -1,14 +1,16 @@
 import { Injectable, Logger } from '@nestjs/common'
-import { ActionRowBuilder, ButtonBuilder, ButtonInteraction, ButtonStyle, ChatInputCommandInteraction, ModalBuilder, ModalSubmitInteraction, RESTPostAPIApplicationGuildCommandsJSONBody, SlashCommandBuilder, StringSelectMenuBuilder, StringSelectMenuInteraction, TextInputBuilder, TextInputStyle } from 'discord.js'
+import { ActionRowBuilder, AutocompleteInteraction, ButtonBuilder, ButtonInteraction, ButtonStyle, ChatInputCommandInteraction, ModalBuilder, ModalSubmitInteraction, RESTPostAPIApplicationGuildCommandsJSONBody, SlashCommandBuilder, StringSelectMenuBuilder, StringSelectMenuInteraction, TextInputBuilder, TextInputStyle } from 'discord.js'
 import { FoundryRelayService } from '../foundry/FoundryRelayService'
 import { Pf2PersistenceService } from '../pf2-storage/Pf2PersistenceService'
+import { PlayerCodexService } from '../pf2-mj/PlayerCodexService'
+import { MediaWikiClientService } from '../pf2-mj/MediaWikiClientService'
 
 @Injectable()
 export class DiscordCommandsService {
   private readonly logger = new Logger(DiscordCommandsService.name)
   private readonly pendingGames = new Map<string, { actors: Array<{ uuid: string; name: string; player: string; userId: string }>; userIds: string[]; selected?: Array<{ uuid: string; name: string; player: string; userId: string }> }>()
   private readonly pendingAnnouncements = new Map<string, { content: string; userIds: string[] }>()
-  constructor(private readonly persistence: Pf2PersistenceService, private readonly foundry: FoundryRelayService) {}
+  constructor(private readonly persistence: Pf2PersistenceService, private readonly foundry: FoundryRelayService, private readonly playerCodex?: PlayerCodexService, private readonly mediaWiki?: MediaWikiClientService) {}
 
   definitions(): RESTPostAPIApplicationGuildCommandsJSONBody[] {
     return [
@@ -17,6 +19,7 @@ export class DiscordCommandsService {
       new SlashCommandBuilder().setName('recap').setDescription('Récapitule les séances jouées par joueur.').toJSON(),
       new SlashCommandBuilder().setName('new-game').setDescription('Prépare une nouvelle mission PF2.').addUserOption(option => option.setName('joueur1').setDescription('Premier joueur').setRequired(true)).addUserOption(option => option.setName('joueur2').setDescription('Deuxième joueur')).addUserOption(option => option.setName('joueur3').setDescription('Troisième joueur')).addUserOption(option => option.setName('joueur4').setDescription('Quatrième joueur')).addUserOption(option => option.setName('joueur5').setDescription('Cinquième joueur')).addUserOption(option => option.setName('joueur6').setDescription('Sixième joueur')).toJSON(),
       new SlashCommandBuilder().setName('finish-game').setDescription('Termine une mission et met à jour son résumé.').addIntegerOption(option => option.setName('xp').setDescription('XP gagnée par PJ').setRequired(true).setMinValue(0)).addIntegerOption(option => option.setName('numero').setDescription('Numéro du résumé à terminer')).addStringOption(option => option.setName('fin').setDescription('Date de fin en jeu : YYYY-MM-DD')).addIntegerOption(option => option.setName('jours').setDescription('Durée en jours, à partir du début en jeu').setMinValue(1)).toJSON(),
+      new SlashCommandBuilder().setName('personnage').setDescription('Présente un personnage au carnet joueur.').addStringOption(option => option.setName('personnage').setDescription('PNJ existant ou nom libre').setRequired(true).setAutocomplete(true)).addAttachmentOption(option => option.setName('portrait').setDescription('Portrait pour un personnage improvisé')).addBooleanOption(option => option.setName('afficher_nom').setDescription('Afficher le nom').setRequired(false)).toJSON(),
     ]
   }
 
@@ -37,7 +40,33 @@ export class DiscordCommandsService {
       await this.finishGameCommand(interaction as ChatInputCommandInteraction)
       return true
     }
+    if (interaction.commandName === 'personnage') { await this.presentCharacter(interaction as ChatInputCommandInteraction); return true }
     return false
+  }
+
+  async handleAutocomplete(interaction: AutocompleteInteraction): Promise<boolean> {
+    if (interaction.commandName !== 'personnage') return false
+    const focused = interaction.options.getFocused().toString()
+    const candidates = await this.playerCodex!.characterCandidates(focused)
+    await interaction.respond(candidates.map(candidate => ({ name: candidate.name, value: `npc:${candidate.id}` })))
+    return true
+  }
+
+  private async presentCharacter(interaction: ChatInputCommandInteraction): Promise<void> {
+    const value = interaction.options.getString('personnage', true).trim(); const attachment = interaction.options.getAttachment('portrait')
+    const showName = interaction.options.getBoolean('afficher_nom') ?? true
+    let sourceNpcId: string | null = null; let name = value; let portrait: string | null = attachment?.url ?? null
+    if (value.startsWith('npc:')) {
+      sourceNpcId = value.slice(4); const candidate = (await this.playerCodex!.characterCandidates('')).find(item => item.id === sourceNpcId)
+      if (!candidate) { await interaction.reply({ content: 'PNJ sélectionné invalide.', ephemeral: true }); return }
+      name = candidate.name; portrait ??= candidate.portrait
+    }
+    if (!sourceNpcId && !portrait) { await interaction.reply({ content: 'Un portrait est obligatoire pour un personnage improvisé.', ephemeral: true }); return }
+    const presentation = await this.playerCodex!.createPresentation({ name, sourceNpcId, portraitUrl: portrait, showName, channelId: interaction.channelId })
+    const button = new ButtonBuilder().setStyle(ButtonStyle.Primary).setCustomId(`pf2-character:create:${presentation.id}`).setLabel('Créer la fiche')
+    await interaction.reply({ content: showName ? presentation.name : '\u200b', files: portrait ? [portrait] : [], components: [new ActionRowBuilder<ButtonBuilder>().addComponents(button)], allowedMentions: { parse: [] } })
+    const message = await interaction.fetchReply()
+    await this.playerCodex!.savePresentationMessage(presentation.id, message.id, message.attachments.first()?.url ?? portrait)
   }
 
   async handleComponent(interaction: StringSelectMenuInteraction): Promise<boolean> {
@@ -76,6 +105,21 @@ export class DiscordCommandsService {
   }
 
   async handleModal(interaction: ModalSubmitInteraction): Promise<boolean> {
+    if (interaction.customId.startsWith('pf2-character:create:')) {
+      const presentationId = interaction.customId.slice('pf2-character:create:'.length)
+      const name = interaction.fields.getTextInputValue('name').trim()
+      const description = interaction.fields.getTextInputValue('description').trim()
+      const title = `Personnage:${name}`
+      try {
+        const presentation = await this.playerCodex!.presentation(presentationId)
+        const portrait = presentation.portraitUrl ? await this.mediaWiki!.uploadFromUrl(presentation.portraitUrl, name) : null
+        await this.mediaWiki!.createPage(title, description)
+        const profile = await this.playerCodex!.ensurePresentationCharacter(presentationId, name, title) as { npcId: string; wikiPageTitle: string }
+        if (portrait) await this.playerCodex!.updateCharacter(profile.npcId, { wikiPortraitFilename: portrait })
+        await interaction.reply({ content: `Fiche créée : ${this.mediaWiki!.pageUrl(profile.wikiPageTitle)}`, ephemeral: true })
+      } catch (error) { await interaction.reply({ content: error instanceof Error ? `Création impossible : ${error.message}` : 'Création impossible.', ephemeral: true }) }
+      return true
+    }
     if (!interaction.customId.startsWith('pf2-new-game:')) return false
     const pending = this.pendingGames.get(interaction.customId)
     if (!pending) { await interaction.reply({ content: 'Cette préparation a expiré. Relance `/new-game`.', ephemeral: true }); return true }
@@ -88,6 +132,20 @@ export class DiscordCommandsService {
   }
 
   async handleButton(interaction: ButtonInteraction): Promise<boolean> {
+    if (interaction.customId.startsWith('pf2-character:create:')) {
+      const presentationId = interaction.customId.slice('pf2-character:create:'.length)
+      try {
+        const presentation = await this.playerCodex!.presentation(presentationId)
+        if (presentation.sourceNpcId) {
+          try { const profile = await this.playerCodex!.character(presentation.sourceNpcId) as { wikiPageTitle: string }; await interaction.reply({ content: `Ce personnage existe déjà dans le carnet : ${this.mediaWiki!.pageUrl(profile.wikiPageTitle)}`, ephemeral: true }); return true } catch { /* profil absent : ouvrir le modal */ }
+        }
+        const modal = new ModalBuilder().setCustomId(interaction.customId).setTitle('Créer la fiche personnage')
+        modal.addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder().setCustomId('name').setLabel('Nom connu des joueurs').setStyle(TextInputStyle.Short).setValue(presentation.name).setRequired(true)))
+        modal.addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder().setCustomId('description').setLabel('Description initiale').setStyle(TextInputStyle.Paragraph).setRequired(false)))
+        await interaction.showModal(modal)
+      } catch (error) { await interaction.reply({ content: error instanceof Error ? error.message : 'Présentation introuvable.', ephemeral: true }) }
+      return true
+    }
     const announcement = this.pendingAnnouncements.get(interaction.customId)
     if (!announcement || !interaction.customId.startsWith('pf2-new-game:announce:')) return false
     await interaction.reply({ content: announcement.content, allowedMentions: { users: announcement.userIds }, ephemeral: false })

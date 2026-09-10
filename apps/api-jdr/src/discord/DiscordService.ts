@@ -84,6 +84,11 @@ export class DiscordService implements OnModuleInit, OnModuleDestroy {
       })
 
       client.on(Events.InteractionCreate, (interaction: Interaction) => {
+        if (!interaction.isAutocomplete()) return
+        void this.commands.handleAutocomplete(interaction).catch((error: unknown) => this.logger.error('Discord autocomplete failed', error instanceof Error ? error.stack : undefined))
+      })
+
+      client.on(Events.InteractionCreate, (interaction: Interaction) => {
         if (!interaction.isChatInputCommand()) return
         void this.commands
           .handle(interaction)

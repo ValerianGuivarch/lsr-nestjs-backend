@@ -1,0 +1,6 @@
+.pf2-player-card { display:inline-flex; flex-direction:column; gap:.45rem; width:14rem; min-height:10rem; margin:.5rem; padding:1rem; border:1px solid #a78b4f; border-radius:.4rem; vertical-align:top; }
+.pf2-player-card img { width:100%; max-height:11rem; object-fit:cover; }
+.pf2-player-card a { font-weight:bold; font-size:1.1rem; }
+.pf2-player-list { display:flex; flex-wrap:wrap; gap:.5rem; }
+#pf2-player-codex { margin:0 0 1.25rem; padding:.75rem; border:1px solid #a78b4f; border-radius:.4rem; }
+#pf2-player-codex button, #pf2-player-codex select, #pf2-player-codex input { margin:.25rem; }

@@ -25,3 +25,4 @@ services:
       - /home/valou/services/mediawiki-data/images:/var/www/html/images
       - ./LocalSettings.php:/var/www/html/LocalSettings.php
       - ./extensions/PF2Sessions:/var/www/html/extensions/PF2Sessions:ro
+      - ./extensions/PF2PlayerCodex:/var/www/html/extensions/PF2PlayerCodex:ro
