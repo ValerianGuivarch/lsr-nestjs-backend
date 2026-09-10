@@ -21,6 +21,22 @@ export class PlayerCodexService {
       return [{ id, name, portrait: typeof record.portrait === 'string' ? record.portrait : null }]
     }).slice(0, 25)
   }
+  async characterCandidate(id: string): Promise<{ id: string; name: string; portrait: string | null } | null> {
+    const record = await this.persistence.getRecord('pnj', id)
+    if (!record) return null
+    const name = typeof record.nom === 'string'
+      ? record.nom
+      : typeof record.name === 'string'
+        ? record.name
+        : ''
+    if (!name) return null
+    return {
+      id,
+      name,
+      portrait: typeof record.portrait === 'string' ? record.portrait : null,
+    }
+  }
+
   async createPresentation(input: { name: string; sourceNpcId?: string | null; portraitUrl?: string | null; showName?: boolean; channelId: string; messageId?: string | null }): Promise<{ id: string; name: string; showName: boolean; portraitUrl: string | null }> {
     const sourceNpcId = input.sourceNpcId ?? null
     if (sourceNpcId && !(await this.persistence.getRecord('pnj', sourceNpcId))) throw new NotFoundException('PNJ MJ introuvable.')

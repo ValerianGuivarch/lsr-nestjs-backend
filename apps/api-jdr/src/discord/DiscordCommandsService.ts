@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common'
+import { resolve } from 'node:path'
 import { ActionRowBuilder, AutocompleteInteraction, ButtonBuilder, ButtonInteraction, ButtonStyle, ChatInputCommandInteraction, ModalBuilder, ModalSubmitInteraction, RESTPostAPIApplicationGuildCommandsJSONBody, SlashCommandBuilder, StringSelectMenuBuilder, StringSelectMenuInteraction, TextInputBuilder, TextInputStyle } from 'discord.js'
 import { FoundryRelayService } from '../foundry/FoundryRelayService'
 import { Pf2PersistenceService } from '../pf2-storage/Pf2PersistenceService'
@@ -57,14 +58,47 @@ export class DiscordCommandsService {
     const showName = interaction.options.getBoolean('afficher_nom') ?? true
     let sourceNpcId: string | null = null; let name = value; let portrait: string | null = attachment?.url ?? null
     if (value.startsWith('npc:')) {
-      sourceNpcId = value.slice(4); const candidate = (await this.playerCodex!.characterCandidates('')).find(item => item.id === sourceNpcId)
-      if (!candidate) { await interaction.reply({ content: 'PNJ sélectionné invalide.', ephemeral: true }); return }
-      name = candidate.name; portrait ??= candidate.portrait
+      sourceNpcId = value.slice(4)
+      const candidate = await this.playerCodex!.characterCandidate(sourceNpcId)
+      if (!candidate) {
+        await interaction.reply({ content: 'PNJ sélectionné invalide.', ephemeral: true })
+        return
+      }
+      name = candidate.name
+      portrait ??= candidate.portrait
     }
     if (!sourceNpcId && !portrait) { await interaction.reply({ content: 'Un portrait est obligatoire pour un personnage improvisé.', ephemeral: true }); return }
-    const presentation = await this.playerCodex!.createPresentation({ name, sourceNpcId, portraitUrl: portrait, showName, channelId: interaction.channelId })
-    const button = new ButtonBuilder().setStyle(ButtonStyle.Primary).setCustomId(`pf2-character:create:${presentation.id}`).setLabel('Créer la fiche')
-    await interaction.reply({ content: showName ? presentation.name : '\u200b', files: portrait ? [portrait] : [], components: [new ActionRowBuilder<ButtonBuilder>().addComponents(button)], allowedMentions: { parse: [] } })
+    const presentation = await this.playerCodex!.createPresentation({
+      name,
+      sourceNpcId,
+      portraitUrl: portrait,
+      showName,
+      channelId: interaction.channelId,
+    })
+
+    let buttonLabel = 'Créer la fiche'
+    if (sourceNpcId) {
+      try {
+        await this.playerCodex!.character(sourceNpcId)
+        buttonLabel = 'Voir la fiche'
+      } catch {
+        // Pas encore de profil joueur.
+      }
+    }
+
+    const button = new ButtonBuilder()
+      .setStyle(ButtonStyle.Primary)
+      .setCustomId(`pf2-character:create:${presentation.id}`)
+      .setLabel(buttonLabel)
+
+    const discordPortrait = portrait ? this.discordPortraitSource(portrait) : null
+
+    await interaction.reply({
+      content: showName ? presentation.name : '\u200b',
+      files: discordPortrait ? [discordPortrait] : [],
+      components: [new ActionRowBuilder<ButtonBuilder>().addComponents(button)],
+      allowedMentions: { parse: [] },
+    })
     const message = await interaction.fetchReply()
     await this.playerCodex!.savePresentationMessage(presentation.id, message.id, message.attachments.first()?.url ?? portrait)
   }
@@ -151,6 +185,22 @@ export class DiscordCommandsService {
     await interaction.reply({ content: announcement.content, allowedMentions: { users: announcement.userIds }, ephemeral: false })
     this.pendingAnnouncements.delete(interaction.customId)
     return true
+  }
+
+  private discordPortraitSource(portrait: string): string {
+    const value = portrait.trim()
+    if (/^https?:\/\//i.test(value)) return value
+
+    const foundryPrefix = 'assets/l7r/'
+    if (value.startsWith(foundryPrefix)) {
+      const root = resolve(
+        process.env['FOUNDRY_ASSETS_ROOT'] ??
+          '../../FoundryVTT/Data/assets/l7r',
+      )
+      return resolve(root, value.slice(foundryPrefix.length))
+    }
+
+    return value
   }
 
   private async finishGameCommand(interaction: ChatInputCommandInteraction): Promise<void> {
