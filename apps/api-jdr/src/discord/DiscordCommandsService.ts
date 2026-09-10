@@ -197,7 +197,7 @@ export class DiscordCommandsService {
     return `**Récapitulatif des séances**\n${lines.join('\n')}`.slice(0, 2_000)
   }
 
-  private async actorNames(): Promise<Map<string, string>> {
+  async actorNames(): Promise<Map<string, string>> {
     try {
       const actors = await this.foundry.listActors()
       if (actors.length) {

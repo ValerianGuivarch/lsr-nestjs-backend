@@ -1,0 +1,27 @@
+services:
+  db:
+    image: mariadb:12
+    container_name: mediawiki-db
+    restart: unless-stopped
+    environment:
+      MARIADB_DATABASE: mediawiki
+      MARIADB_USER: mediawiki
+      MARIADB_PASSWORD: CHANGE_ME_DB_PASSWORD
+      MARIADB_ROOT_PASSWORD: CHANGE_ME_ROOT_PASSWORD
+    volumes:
+      - /home/valou/services/mediawiki-data/database:/var/lib/mysql
+
+  mediawiki:
+    image: mediawiki:latest
+    container_name: mediawiki
+    restart: unless-stopped
+    depends_on:
+      - db
+    ports:
+      - "4205:80"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - /home/valou/services/mediawiki-data/images:/var/www/html/images
+      - ./LocalSettings.php:/var/www/html/LocalSettings.php
+      - ./extensions/PF2Sessions:/var/www/html/extensions/PF2Sessions:ro

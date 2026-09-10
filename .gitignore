@@ -112,3 +112,5 @@ storage/
 pf2-combined-fix-backup-*/
 apps/web-misc/src/pf2-mj/_backup-*/
 *.bak-*
+
+support/mediawiki/LocalSettings.php

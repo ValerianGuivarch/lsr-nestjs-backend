@@ -1,0 +1,40 @@
+{
+  "name": "PF2Sessions",
+  "version": "0.2.0",
+  "author": ["PF2 project"],
+  "url": "https://wiki.l7r.fr",
+  "descriptionmsg": "pf2sessions-desc",
+  "type": "other",
+  "AutoloadClasses": {
+    "PF2SessionsHooks": "includes/PF2SessionsHooks.php",
+    "ApiPF2Sessions": "includes/ApiPF2Sessions.php",
+    "ApiPF2SessionUpdate": "includes/ApiPF2SessionUpdate.php",
+    "ApiPF2SessionPublication": "includes/ApiPF2SessionPublication.php"
+  },
+  "APIModules": {
+    "pf2sessions": "ApiPF2Sessions",
+    "pf2sessionupdate": "ApiPF2SessionUpdate",
+    "pf2sessionpublication": "ApiPF2SessionPublication"
+  },
+  "ResourceModules": {
+    "ext.pf2sessions": {
+      "scripts": ["resources/pf2-sessions.js"],
+      "styles": ["resources/pf2-sessions.css"],
+      "dependencies": ["mediawiki.api", "mediawiki.util"],
+      "localBasePath": "",
+      "remoteExtPath": "PF2Sessions"
+    }
+  },
+  "Hooks": {
+    "BeforePageDisplay": "PF2SessionsHooks::onBeforePageDisplay"
+  },
+  "MessagesDirs": {
+    "PF2Sessions": ["i18n"]
+  },
+  "config": {
+    "PF2SessionsApiBase": {
+      "value": "http://host.docker.internal:3333/api/pf2-mj"
+    }
+  },
+  "manifest_version": 2
+}

@@ -47,7 +47,6 @@ const editableFields: Array<keyof Pf2SessionInput> = [
   'sessionXp',
   'longSummaryXp',
   'shortSummaryXp',
-  'longSummaryUrl',
   'shortSummary',
 ]
 
@@ -237,7 +236,6 @@ export class Pf2WikiSessionsController {
       sessionXp: session.sessionXp,
       longSummaryXp: session.longSummaryXp,
       shortSummaryXp: session.shortSummaryXp,
-      longSummaryUrl: session.longSummaryUrl,
       shortSummary: session.shortSummary,
     }
   }

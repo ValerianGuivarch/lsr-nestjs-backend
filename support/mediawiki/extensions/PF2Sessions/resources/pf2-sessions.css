@@ -1,0 +1,75 @@
+#pf2-sessions{display:grid;gap:1rem;color:#202122}
+.pf2-session{border:1px solid var(--border-color-base,#a2a9b1);border-radius:10px;padding:1.1rem 1.25rem;background:#fff}
+.pf2-session-top{display:flex;justify-content:space-between;align-items:flex-start;gap:1rem}
+.pf2-session-kicker{font-size:.9rem;color:#54595d;margin-bottom:.3rem}
+.pf2-session-title{margin:0 0 .55rem!important;padding:0!important;border:0!important;font-size:1.45rem!important;color:#202122!important}
+.pf2-badges{display:flex;gap:.4rem;flex-wrap:wrap;justify-content:flex-end}
+.pf2-status{border:1px solid var(--border-color-base,#a2a9b1);border-radius:999px;padding:.15rem .5rem;font-size:.78rem;white-space:nowrap}
+.pf2-status-published,.pf2-status-complete{font-weight:600}
+.pf2-status-draft,.pf2-status-warning{color:#54595d}
+.pf2-session-meta{color:#54595d;margin:.2rem 0;line-height:1.45}
+.pf2-missing{color:#72777d;font-style:italic}
+.pf2-session-facts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.6rem 1rem;margin:1rem 0;padding:.8rem 0;border-top:1px solid var(--border-color-subtle,#eaecf0);border-bottom:1px solid var(--border-color-subtle,#eaecf0)}
+.pf2-session-facts>div{min-width:0}.pf2-session-facts dt{font-size:.8rem;color:#54595d;margin-bottom:.1rem}.pf2-session-facts dd{margin:0;font-weight:500;overflow-wrap:anywhere}
+.pf2-label{font-weight:600;margin-bottom:.35rem}.pf2-session-summary{line-height:1.62;color:#202122;white-space:normal}
+.pf2-session-actions,.pf2-editor-actions{display:flex;gap:.5rem;flex-wrap:wrap;margin-top:1rem}
+.pf2-button{box-sizing:border-box;border:1px solid var(--border-color-base,#a2a9b1);border-radius:4px;background:var(--background-color-interactive-subtle,#f8f9fa);color:#202122;font:inherit;padding:.42rem .7rem;cursor:pointer;text-decoration:none!important}
+.pf2-button:hover{background:var(--background-color-interactive-subtle--hover,#eaecf0)}.pf2-primary{font-weight:600}
+.pf2-editor{display:grid;gap:1rem}.pf2-editor-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.75rem 1rem}.pf2-editor label,.pf2-summary-editor{display:grid;gap:.3rem;font-weight:600}.pf2-span-2{grid-column:1/-1}
+.pf2-editor input,.pf2-editor select,.pf2-editor textarea{box-sizing:border-box;width:100%;font:inherit;color:#202122;background:#fff;border:1px solid var(--border-color-base,#a2a9b1);border-radius:4px;padding:.5rem .6rem}.pf2-editor textarea{min-height:12rem;resize:vertical;line-height:1.5}.pf2-summary-editor small{text-align:right;font-weight:400;color:#54595d}
+.pf2-participants{border:1px solid var(--border-color-subtle,#c8ccd1);border-radius:6px;padding:.7rem 1rem}.pf2-participant-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.35rem .8rem}.pf2-participant{font-weight:400!important;display:flex!important;align-items:center;gap:.35rem!important}.pf2-participant input{width:auto!important}
+.pf2-loading,.pf2-saving{opacity:.65;pointer-events:none}
+@media(max-width:800px){.pf2-session-top{display:block}.pf2-badges{justify-content:flex-start;margin:.45rem 0}.pf2-session-facts,.pf2-editor-grid,.pf2-participant-grid{grid-template-columns:1fr}.pf2-span-2{grid-column:auto}}
+
+
+/* Contraste PF2 : ne pas hériter du gris pâle de Vector */
+.pf2-session {
+    color: #202122;
+}
+
+.pf2-session-title {
+    color: #202122 !important;
+    font-weight: 700 !important;
+}
+
+.pf2-session-summary {
+    color: #202122 !important;
+}
+
+.pf2-session-facts dd {
+    color: #202122;
+}
+
+.pf2-label,
+.pf2-session-facts dt {
+    font-weight: 600;
+}
+
+.pf2-session-meta,
+.pf2-session-kicker {
+    color: #54595d;
+}
+
+.pf2-missing {
+    color: #72777d;
+}
+
+.pf2-editor label,
+.pf2-editor legend {
+    color: #202122;
+}
+
+/* PF2Sessions : ne jamais bloquer toute l'interface avec l'état loading */
+#pf2-sessions.pf2-loading {
+    pointer-events: auto !important;
+    opacity: 1 !important;
+}
+
+/* Résumé long MediaWiki */
+.pf2-long-summary-link.new {
+    color: #ba0000 !important;
+}
+
+.pf2-long-summary-link.new:hover {
+    color: #a00000 !important;
+}

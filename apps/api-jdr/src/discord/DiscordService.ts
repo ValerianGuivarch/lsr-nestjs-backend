@@ -355,6 +355,10 @@ export class DiscordService implements OnModuleInit, OnModuleDestroy {
     )
   }
 
+  private async actorNames(): Promise<Map<string, string>> {
+    return this.commands.actorNames()
+  }
+
   private async resumeMessagePayload(
     resume: Pf2Session,
   ): Promise<MessageCreateOptions> {
@@ -367,14 +371,7 @@ export class DiscordService implements OnModuleInit, OnModuleDestroy {
      * Actor.u5TLgUAsPlLH2lvJ
      * => "Tsuyi (Guilhem)"
      */
-    const names = new Map(
-      (
-        await this.foundry.listActors()
-      ).map((actor) => [
-        actor.uuid,
-        actor.name,
-      ]),
-    )
+    const names = await this.actorNames()
 
     /**
      * Exemple :
@@ -414,11 +411,7 @@ export class DiscordService implements OnModuleInit, OnModuleDestroy {
       resume.longSummaryAuthor &&
         `Version longue : ${label(
           resume.longSummaryAuthor,
-        )} (+${resume.longSummaryXp} XP)${
-          resume.longSummaryUrl
-            ? `, disponible ici : ${resume.longSummaryUrl}`
-            : ''
-        }`,
+        )} (+${resume.longSummaryXp} XP)`,
     ]
       .filter(Boolean)
       .join('\n')
