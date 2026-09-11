@@ -4,6 +4,10 @@ use MediaWiki\MediaWikiServices;
 
 class ApiPF2PlayerCodexUpdate extends ApiBase {
     public function execute() {
+        // Keep this before all MediaWiki calls: it confirms that the deployed
+        // extension is the expected version even if an early framework call
+        // fails with a generic internal_api_error.
+        error_log( '[PF2PlayerCodex] pf2playercodexupdate entered' );
         $user = $this->getUser();
         if ( !$user->isRegistered() || !$user->isAllowed( 'delete' ) ) {
             $this->dieWithError( 'Vous devez être administrateur pour modifier le carnet.' );
@@ -75,11 +79,6 @@ class ApiPF2PlayerCodexUpdate extends ApiBase {
         // In particular, wfDebugLog is not available in every MediaWiki runtime
         // used by this extension.
         error_log( $line );
-        try {
-            \MediaWiki\Logger\LoggerFactory::getInstance( 'PF2PlayerCodex' )->debug( $message );
-        } catch ( \Throwable $ignored ) {
-            // error_log above is deliberately the reliable fallback.
-        }
     }
 
     private function shortLog( $value ) {
