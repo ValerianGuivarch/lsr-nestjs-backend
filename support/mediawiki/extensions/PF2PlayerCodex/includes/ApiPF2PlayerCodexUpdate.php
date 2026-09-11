@@ -100,8 +100,11 @@ class ApiPF2PlayerCodexUpdate extends ApiBase {
     public function getAllowedParams() {
         return [
             'op' => [ ApiBase::PARAM_TYPE => 'string', ApiBase::PARAM_REQUIRED => true ],
-            'id' => [ ApiBase::PARAM_TYPE => 'string', ApiBase::PARAM_DEFAULT => '' ],
-            'target' => [ ApiBase::PARAM_TYPE => 'string', ApiBase::PARAM_DEFAULT => '' ],
+            // MediaWiki's API constant is PARAM_DFLT (not PARAM_DEFAULT).
+            // This method is evaluated before execute(), so the invalid former
+            // constant caused a generic internal_api_error with no proxy log.
+            'id' => [ ApiBase::PARAM_TYPE => 'string', ApiBase::PARAM_DFLT => '' ],
+            'target' => [ ApiBase::PARAM_TYPE => 'string', ApiBase::PARAM_DFLT => '' ],
             'payload' => [ ApiBase::PARAM_TYPE => 'string', ApiBase::PARAM_REQUIRED => true ],
         ];
     }
