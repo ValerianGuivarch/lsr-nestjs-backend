@@ -71,8 +71,15 @@ class ApiPF2PlayerCodexUpdate extends ApiBase {
 
     private function log( $message ) {
         $line = '[PF2PlayerCodex] ' . $message;
-        wfDebugLog( 'PF2PlayerCodex', $message );
+        // Native PHP logging must never prevent the API proxy from running.
+        // In particular, wfDebugLog is not available in every MediaWiki runtime
+        // used by this extension.
         error_log( $line );
+        try {
+            \MediaWiki\Logger\LoggerFactory::getInstance( 'PF2PlayerCodex' )->debug( $message );
+        } catch ( \Throwable $ignored ) {
+            // error_log above is deliberately the reliable fallback.
+        }
     }
 
     private function shortLog( $value ) {

@@ -328,14 +328,16 @@ export class DiscordCommandsService {
   }
 
   private async newGame(interaction: ChatInputCommandInteraction): Promise<void> {
-    const userIds = await this.discussionUserIds(interaction)
     const names = await this.actorNames()
     const actors = [...names.entries()].map(([uuid, name]) => ({ uuid, name, player: this.playerName(name) }))
-    const known = actors.flatMap(({ uuid, name, player }) => {
+    const knownActors = actors.flatMap(({ uuid, name, player }) => {
       const userId = this.discordId(player)
-      return userId && userIds.includes(userId) ? [{ uuid, name, player, userId }] : []
+      return userId ? [{ uuid, name, player, userId }] : []
     })
-    this.logger.log(`new-game: membres détectés=${userIds.join(', ')}; acteurs=${actors.map((actor) => `${actor.name} [${actor.player || 'sans joueur'}]`).join('; ') || 'aucun'}; PJ retenus=${known.map((actor) => actor.name).join(', ') || 'aucun'}`)
+    const discussion = await this.discussionUserIds(interaction, [...new Set(knownActors.map(actor => actor.userId))])
+    const userIds = discussion.userIds
+    const known = knownActors.filter(actor => userIds.includes(actor.userId))
+    this.logger.log(`new-game: auteurs=${discussion.authorIds.join(', ') || 'aucun'}; membres de fil=${discussion.threadMemberIds.join(', ') || 'aucun'}; membres du salon=${discussion.channelMemberIds.join(', ') || 'aucun'}; acteurs=${actors.map((actor) => `${actor.name} [joueur=${actor.player || 'inconnu'}, discord=${this.discordId(actor.player) ?? 'non associé'}, retenu=${userIds.includes(this.discordId(actor.player) ?? '') ? 'oui' : 'non'}]`).join('; ') || 'aucun'}; PJ retenus=${known.map((actor) => actor.name).join(', ') || 'aucun'}`)
     const choices = known.slice(0, 25).map(actor => ({ label: actor.name.slice(0, 100), value: actor.uuid }))
     if (!choices.length) { await interaction.reply({ content: 'Aucun PJ connu n’a été détecté parmi les auteurs récents de ce salon. Les PJ doivent être nommés « Personnage (Joueur) ».', ephemeral: true }); return }
     const id = `pf2-new-game:${interaction.id}:players`
@@ -345,17 +347,48 @@ export class DiscordCommandsService {
   }
 
   /** Discord n’expose pas les lecteurs d’un salon texte : on utilise les auteurs récents. */
-  private async discussionUserIds(interaction: ChatInputCommandInteraction): Promise<string[]> {
+  private async discussionUserIds(interaction: ChatInputCommandInteraction, candidateIds: string[]): Promise<{ userIds: string[]; authorIds: string[]; threadMemberIds: string[]; channelMemberIds: string[] }> {
     const userIds = new Set<string>([interaction.user.id])
+    const authorIds = new Set<string>([interaction.user.id])
+    const threadMemberIds = new Set<string>()
+    const channelMemberIds = new Set<string>()
     const channel = interaction.channel
-    if (!channel?.isTextBased() || !('messages' in channel)) return [...userIds]
-    try {
-      const messages = await channel.messages.fetch({ limit: 100 })
-      for (const message of messages.values()) userIds.add(message.author.id)
-    } catch (error) {
-      this.logger.warn(`new-game: impossible de lire les messages du salon : ${error instanceof Error ? error.message : String(error)}`)
+    if (channel?.isTextBased() && 'messages' in channel) {
+      try {
+        const messages = await channel.messages.fetch({ limit: 100 })
+        for (const message of messages.values()) {
+          userIds.add(message.author.id)
+          authorIds.add(message.author.id)
+        }
+      } catch (error) {
+        this.logger.warn(`new-game: impossible de lire les messages du salon : ${error instanceof Error ? error.message : String(error)}`)
+      }
     }
-    return [...userIds]
+    if (channel && 'isThread' in channel && channel.isThread()) {
+      try {
+        const members = await channel.members.fetch()
+        for (const member of members.values()) {
+          userIds.add(member.id)
+          threadMemberIds.add(member.id)
+        }
+      } catch (error) {
+        this.logger.warn(`new-game: impossible de lire les membres du fil : ${error instanceof Error ? error.message : String(error)}`)
+      }
+    }
+    if (channel && interaction.guild && 'permissionsFor' in channel) {
+      for (const userId of candidateIds) {
+        try {
+          const member = await interaction.guild.members.fetch(userId)
+          if (channel.permissionsFor(member)?.has(PermissionFlagsBits.ViewChannel)) {
+            userIds.add(userId)
+            channelMemberIds.add(userId)
+          }
+        } catch (error) {
+          this.logger.warn(`new-game: membre Discord ${userId} introuvable : ${error instanceof Error ? error.message : String(error)}`)
+        }
+      }
+    }
+    return { userIds: [...userIds], authorIds: [...authorIds], threadMemberIds: [...threadMemberIds], channelMemberIds: [...channelMemberIds] }
   }
 
   private async plan(actors: Array<{ uuid: string; name: string }>): Promise<{ current: string; earliest: string; interludes: string[] }> {
