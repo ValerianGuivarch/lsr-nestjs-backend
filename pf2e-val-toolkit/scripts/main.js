@@ -1,3 +1,4 @@
+import { initMapLibrary, registerMapLibrarySettings } from "./map-library/index.js";
 import { initScenarioImporter } from "./scenario-importer/index.js";
 import { initReferenceIndexExporter } from "./reference-index/index.js";
 import { initCombatMovement } from "./combat-movement/index.js";
@@ -23,6 +24,7 @@ Hooks.once("init", () => {
   registerGuidedActionSettings();
   registerCareerXpSettings();
   registerPortraitTokenSyncSettings();
+  registerMapLibrarySettings();
 });
 
 Hooks.once("ready", () => {
@@ -38,6 +40,7 @@ Hooks.once("ready", () => {
   initGeneralActionsBrowser();
   initCareerXp();
   initPortraitTokenSync();
+  initMapLibrary();
 
   if (!game.user.isGM) return;
 

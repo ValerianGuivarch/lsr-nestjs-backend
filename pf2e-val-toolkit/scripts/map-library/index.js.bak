@@ -1,0 +1,221 @@
+const MODULE_ID = "pf2e-val-toolkit";
+const TOKEN_FLAG = "mapLibrary";
+const WRAP_MARKER = Symbol.for("pf2e-val-toolkit.map-library.token-double-click");
+
+const MAPS = [
+  { id: "world", label: "Monde", setting: "mapLibraryWorldPath" },
+  { id: "inner-sea", label: "Mer Intérieure", setting: "mapLibraryInnerSeaPath" },
+  { id: "absalom", label: "Absalom", setting: "mapLibraryAbsalomPath" }
+];
+
+function escapeHtml(value) {
+  return foundry.utils.escapeHTML(String(value ?? ""));
+}
+
+function configuredMaps() {
+  return MAPS.map(entry => ({
+    ...entry,
+    path: String(game.settings.get(MODULE_ID, entry.setting) ?? "").trim()
+  })).filter(entry => entry.path);
+}
+
+function registerPathSetting(setting, name, hint) {
+  game.settings.register(MODULE_ID, setting, {
+    name,
+    hint,
+    scope: "world",
+    config: true,
+    type: String,
+    default: "",
+    restricted: true
+  });
+}
+
+export function registerMapLibrarySettings() {
+  registerPathSetting(
+    "mapLibraryWorldPath",
+    "Bibliothèque de cartes — Monde",
+    "Chemin Foundry de la carte du monde (ex. assets/l7r/maps/monde.webp)."
+  );
+  registerPathSetting(
+    "mapLibraryInnerSeaPath",
+    "Bibliothèque de cartes — Mer Intérieure",
+    "Chemin Foundry de la carte de la Mer Intérieure."
+  );
+  registerPathSetting(
+    "mapLibraryAbsalomPath",
+    "Bibliothèque de cartes — Absalom",
+    "Chemin Foundry de la carte d'Absalom."
+  );
+}
+
+function imagePopoutClass() {
+  return foundry?.applications?.apps?.ImagePopout ?? globalThis.ImagePopout ?? null;
+}
+
+async function openMap(entry) {
+  const Popout = imagePopoutClass();
+  if (Popout) {
+    try {
+      const app = new Popout(entry.path, {
+        title: entry.label,
+        shareable: false
+      });
+      app.render(true);
+      return;
+    } catch (error) {
+      console.warn("PF2e Val Toolkit | ImagePopout indisponible, fallback navigateur", error);
+    }
+  }
+
+  const url = foundry.utils.getRoute?.(entry.path) ?? entry.path;
+  window.open(url, "_blank", "noopener,noreferrer");
+}
+
+function libraryContent(maps) {
+  return `
+    <div class="pf2e-val-map-library-grid">
+      ${maps.map(entry => `
+        <button type="button" class="pf2e-val-map-library-card" data-map-id="${escapeHtml(entry.id)}">
+          <img src="${escapeHtml(entry.path)}" alt="${escapeHtml(entry.label)}">
+          <span>${escapeHtml(entry.label)}</span>
+        </button>
+      `).join("")}
+    </div>
+  `;
+}
+
+async function openLibraryDialog() {
+  const maps = configuredMaps();
+  if (!maps.length) {
+    ui.notifications.warn(
+      "Aucune carte n'est configurée. Renseignez les chemins dans Configuration du jeu > Paramètres du module > PF2e Val Toolkit."
+    );
+    return;
+  }
+
+  const DialogV2 = foundry.applications?.api?.DialogV2;
+  if (!DialogV2?.wait) {
+    const choice = window.prompt(
+      `Carte à ouvrir :\n${maps.map((entry, index) => `${index + 1}. ${entry.label}`).join("\n")}`,
+      "1"
+    );
+    if (choice === null) return;
+    const map = maps[Number.parseInt(choice, 10) - 1];
+    if (map) await openMap(map);
+    return;
+  }
+
+  await DialogV2.wait({
+    window: {
+      title: "Cartes du monde",
+      resizable: true
+    },
+    position: {
+      width: 1000,
+      height: 520
+    },
+    content: libraryContent(maps),
+    buttons: [
+      {
+        action: "close",
+        label: "Fermer",
+        icon: "fa-solid fa-xmark"
+      }
+    ],
+    render: (_event, dialog) => {
+      const element = dialog?.element ?? dialog;
+      element?.querySelectorAll?.("[data-map-id]").forEach(button => {
+        button.addEventListener("click", () => {
+          const map = maps.find(entry => entry.id === button.dataset.mapId);
+          if (map) void openMap(map);
+        });
+      });
+    },
+    close: () => null
+  });
+}
+
+function isMapLibraryToken(token) {
+  return token?.document?.getFlag?.(MODULE_ID, TOKEN_FLAG) === true;
+}
+
+function installTokenDoubleClickPatch() {
+  const TokenClass = foundry?.canvas?.placeables?.Token ?? globalThis.Token;
+  if (!TokenClass?.prototype?._onClickLeft2) {
+    throw new Error("Token._onClickLeft2 est introuvable.");
+  }
+
+  const current = TokenClass.prototype._onClickLeft2;
+  if (current[WRAP_MARKER]) return;
+
+  function mapLibraryTokenDoubleClick(event) {
+    if (!isMapLibraryToken(this)) {
+      return current.call(this, event);
+    }
+
+    const original = event?.originalEvent ?? event;
+    if (game.user?.isGM && original?.shiftKey) {
+      return current.call(this, event);
+    }
+
+    void openLibraryDialog();
+    return undefined;
+  }
+
+  mapLibraryTokenDoubleClick[WRAP_MARKER] = true;
+  TokenClass.prototype._onClickLeft2 = mapLibraryTokenDoubleClick;
+}
+
+async function setSelectedTokenEnabled(enabled) {
+  if (!game.user?.isGM) {
+    ui.notifications.warn("Seul le MJ peut configurer un token Bibliothèque de cartes.");
+    return false;
+  }
+
+  const controlled = canvas.tokens?.controlled ?? [];
+  if (controlled.length !== 1) {
+    ui.notifications.warn("Sélectionnez exactement un token.");
+    return false;
+  }
+
+  const token = controlled[0];
+  await token.document.setFlag(MODULE_ID, TOKEN_FLAG, Boolean(enabled));
+  ui.notifications.info(
+    enabled
+      ? `« ${token.name} » ouvre maintenant la Bibliothèque de cartes au double-clic.`
+      : `Bibliothèque de cartes désactivée pour « ${token.name} ».`
+  );
+  return true;
+}
+
+async function toggleSelectedToken() {
+  const controlled = canvas.tokens?.controlled ?? [];
+  if (controlled.length !== 1) {
+    ui.notifications.warn("Sélectionnez exactement un token.");
+    return false;
+  }
+  return setSelectedTokenEnabled(!isMapLibraryToken(controlled[0]));
+}
+
+function exposeApi() {
+  game.pf2eValToolkit ??= {};
+  game.pf2eValToolkit.mapLibrary = {
+    open: openLibraryDialog,
+    maps: configuredMaps,
+    enableSelectedToken: () => setSelectedTokenEnabled(true),
+    disableSelectedToken: () => setSelectedTokenEnabled(false),
+    toggleSelectedToken,
+    isEnabled: isMapLibraryToken
+  };
+}
+
+export function initMapLibrary() {
+  try {
+    installTokenDoubleClickPatch();
+    exposeApi();
+  } catch (error) {
+    console.error("PF2e Val Toolkit | Bibliothèque de cartes non initialisée", error);
+    ui.notifications.error("PF2e Val Toolkit : impossible d'initialiser la Bibliothèque de cartes.");
+  }
+}

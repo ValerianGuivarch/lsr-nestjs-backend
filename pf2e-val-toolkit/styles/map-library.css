@@ -1,0 +1,334 @@
+.pf2e-val-map-library-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+  width: min(1000px, 82vw);
+  max-height: 72vh;
+  overflow-y: auto;
+  padding: 8px;
+}
+
+.pf2e-val-map-library-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: stretch;
+
+  min-height: 300px;
+  padding: 10px;
+
+  border: 1px solid var(--color-border-light-2, #777);
+  border-radius: 8px;
+
+  background: var(--color-cool-5-75, rgba(20, 20, 30, 0.65));
+
+  cursor: pointer;
+  text-align: center;
+}
+
+.pf2e-val-map-library-card:hover {
+  box-shadow: 0 0 0 2px var(--color-warm-1, #d9a441);
+}
+
+.pf2e-val-map-library-card img {
+  display: block;
+
+  width: 100%;
+  height: 260px;
+
+  object-fit: contain;
+  object-position: center;
+
+  border: 0;
+  border-radius: 6px;
+
+  background: rgba(0, 0, 0, 0.25);
+}
+
+.pf2e-val-map-library-card span {
+  font-size: 1.05rem;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+/* === Viewer grande carte === */
+
+.pf2e-val-map-viewer {
+  height: 100%;
+  min-height: 65vh;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.pf2e-val-map-viewer-toolbar {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 2px;
+}
+
+.pf2e-val-map-viewer-toolbar button {
+  min-height: 32px;
+  padding: 4px 10px;
+  cursor: pointer;
+}
+
+.pf2e-val-map-viewer-toolbar [data-map-zoom-label] {
+  margin-left: 6px;
+  opacity: 0.8;
+  min-width: 52px;
+}
+
+.pf2e-val-map-viewer-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+
+  display: block;
+
+  background: rgba(0, 0, 0, 0.55);
+  border: 1px solid var(--color-border-light-2, #666);
+  border-radius: 5px;
+
+  text-align: center;
+}
+
+.pf2e-val-map-viewer-scroll img {
+  display: block;
+  max-width: none !important;
+  max-height: none !important;
+  width: auto;
+  height: auto;
+
+  margin: 12px auto;
+
+  object-fit: initial;
+  user-select: none;
+}
+
+/* =========================================================
+   Viewer cartes v2
+   ========================================================= */
+
+.pf2e-val-map-viewer {
+  display: flex !important;
+  flex-direction: column !important;
+  width: 100% !important;
+  height: 78vh !important;
+  min-height: 500px;
+  gap: 8px;
+}
+
+.pf2e-val-map-viewer-toolbar {
+  flex: 0 0 auto !important;
+
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+
+  width: 100% !important;
+  height: 42px !important;
+
+  gap: 6px !important;
+  padding: 4px 6px !important;
+
+  box-sizing: border-box;
+}
+
+.pf2e-val-map-viewer-toolbar button {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  flex: 0 0 auto !important;
+
+  width: auto !important;
+  min-width: 38px !important;
+  height: 34px !important;
+
+  margin: 0 !important;
+  padding: 4px 10px !important;
+
+  white-space: nowrap;
+}
+
+.pf2e-val-map-zoom-label {
+  display: inline-block;
+  flex: 0 0 auto;
+  min-width: 55px;
+
+  margin-left: 4px;
+
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.pf2e-val-map-viewer-scroll {
+  position: relative;
+
+  flex: 1 1 auto !important;
+
+  width: 100% !important;
+  min-height: 0 !important;
+
+  overflow: auto !important;
+
+  background: rgba(0, 0, 0, 0.6);
+
+  border: 1px solid
+    var(--color-border-light-2, #666);
+
+  border-radius: 5px;
+}
+
+.pf2e-val-map-viewer-canvas {
+  display: block;
+
+  width: max-content;
+  min-width: 100%;
+
+  height: max-content;
+  min-height: 100%;
+
+  padding: 12px;
+
+  box-sizing: border-box;
+}
+
+.pf2e-val-map-viewer-scroll img {
+  display: block !important;
+
+  max-width: none !important;
+  max-height: none !important;
+
+  margin: 0 auto !important;
+
+  object-fit: initial !important;
+
+  user-select: none;
+}
+
+/* ==========================================================
+   Viewer cartes indépendant — ne dépend pas de DialogV2
+   ========================================================== */
+
+.pf2e-val-map-overlay {
+  position: fixed !important;
+
+  left: 2.5vw !important;
+  right: 2.5vw !important;
+  top: 4vh !important;
+  bottom: 4vh !important;
+
+  z-index: 100000 !important;
+
+  display: flex !important;
+  flex-direction: column !important;
+
+  overflow: hidden !important;
+
+  background: #15151b;
+  border: 1px solid #777;
+  border-radius: 8px;
+
+  box-shadow: 0 0 30px rgba(0, 0, 0, .8);
+}
+
+.pf2e-val-map-overlay-header {
+  flex: 0 0 48px !important;
+
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+
+  padding: 6px 10px !important;
+
+  box-sizing: border-box;
+
+  background: #101014;
+  border-bottom: 1px solid #555;
+}
+
+.pf2e-val-map-overlay-tools {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+
+  gap: 6px !important;
+}
+
+.pf2e-val-map-overlay-tools button {
+  display: inline-flex !important;
+  flex: 0 0 auto !important;
+
+  align-items: center !important;
+  justify-content: center !important;
+
+  width: auto !important;
+  min-width: 36px !important;
+  height: 32px !important;
+
+  margin: 0 !important;
+  padding: 4px 9px !important;
+
+  white-space: nowrap !important;
+}
+
+.pf2e-val-map-overlay-tools [data-map-zoom-label] {
+  min-width: 52px;
+  text-align: center;
+}
+
+.pf2e-val-map-overlay-scroll {
+  position: relative !important;
+
+  flex: 1 1 0 !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+
+  overflow: auto !important;
+
+  scrollbar-width: auto;
+
+  background: #09090c;
+
+  cursor: grab;
+}
+
+.pf2e-val-map-overlay-scroll.is-panning {
+  cursor: grabbing;
+}
+
+.pf2e-val-map-overlay-stage {
+  display: grid !important;
+  place-items: center !important;
+
+  width: max-content !important;
+  height: max-content !important;
+
+  min-width: 100% !important;
+  min-height: 100% !important;
+
+  padding: 16px !important;
+
+  box-sizing: border-box;
+}
+
+.pf2e-val-map-overlay-stage img {
+  display: block !important;
+
+  flex: none !important;
+
+  max-width: none !important;
+  max-height: none !important;
+
+  margin: 0 !important;
+
+  object-fit: initial !important;
+
+  user-select: none !important;
+  pointer-events: none;
+}

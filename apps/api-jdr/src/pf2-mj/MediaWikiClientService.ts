@@ -5,7 +5,6 @@ import { Injectable, Logger, ServiceUnavailableException } from '@nestjs/common'
 export class MediaWikiClientService {
   private readonly logger = new Logger(MediaWikiClientService.name)
   private cookie = ''
-  private csrfToken: string | null = null
   private readonly apiUrl = process.env['PF2_MEDIAWIKI_API_URL']?.trim() ?? ''
   private readonly publicBase = (process.env['PF2_MEDIAWIKI_PUBLIC_BASE_URL']?.trim() ?? '').replace(/\/$/, '')
   private readonly username = process.env['PF2_MEDIAWIKI_BOT_USERNAME']?.trim() ?? ''
@@ -39,18 +38,50 @@ export class MediaWikiClientService {
     return data.upload.filename
   }
   private async token(): Promise<string> {
-    if (this.csrfToken) return this.csrfToken
-    if (!this.enabled()) throw new ServiceUnavailableException('MediaWiki n’est pas configuré.')
-    const loginToken = await this.request({ action: 'query', meta: 'tokens', type: 'login' }) as { query?: { tokens?: { logintoken?: string } } }
-    const token = loginToken.query?.tokens?.logintoken
-    if (!token) throw new ServiceUnavailableException('Token MediaWiki indisponible.')
-    const login = await this.request({ action: 'login', lgname: this.username, lgpassword: this.password, lgtoken: token }, 'POST') as { login?: { result?: string } }
-    if (login.login?.result !== 'Success') throw new ServiceUnavailableException('Authentification MediaWiki refusée.')
-    const csrf = await this.request({ action: 'query', meta: 'tokens' }) as { query?: { tokens?: { csrftoken?: string } } }
-    if (!csrf.query?.tokens?.csrftoken) throw new ServiceUnavailableException('Token CSRF MediaWiki indisponible.')
-    this.csrfToken = csrf.query.tokens.csrftoken
-    return this.csrfToken
+    if (!this.enabled()) {
+      throw new ServiceUnavailableException('MediaWiki n’est pas configuré.')
+    }
+
+    // S'assurer qu'une session authentifiée existe.
+    if (!this.cookie) {
+      const loginTokenResponse = await this.request({
+        action: 'query',
+        meta: 'tokens',
+        type: 'login',
+      }) as { query?: { tokens?: { logintoken?: string } } }
+
+      const loginToken = loginTokenResponse.query?.tokens?.logintoken
+      if (!loginToken) {
+        throw new ServiceUnavailableException('Token MediaWiki indisponible.')
+      }
+
+      const login = await this.request({
+        action: 'login',
+        lgname: this.username,
+        lgpassword: this.password,
+        lgtoken: loginToken,
+      }, 'POST') as { login?: { result?: string } }
+
+      if (login.login?.result !== 'Success') {
+        throw new ServiceUnavailableException('Authentification MediaWiki refusée.')
+      }
+    }
+
+    // Toujours demander un CSRF frais.
+    const csrf = await this.request({
+      action: 'query',
+      meta: 'tokens',
+      type: 'csrf',
+    }) as { query?: { tokens?: { csrftoken?: string } } }
+
+    const token = csrf.query?.tokens?.csrftoken
+    if (!token) {
+      throw new ServiceUnavailableException('Token CSRF MediaWiki indisponible.')
+    }
+
+    return token
   }
+
   private async request(values: Record<string, string>, method: 'GET' | 'POST' = 'GET'): Promise<unknown> {
     if (!this.apiUrl) throw new ServiceUnavailableException('MediaWiki n’est pas configuré.')
     const body = new URLSearchParams({ format: 'json', formatversion: '2', ...values })

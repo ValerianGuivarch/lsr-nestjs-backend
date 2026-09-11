@@ -4,3 +4,22 @@
 .pf2-player-list { display:flex; flex-wrap:wrap; gap:.5rem; }
 #pf2-player-codex { margin:0 0 1.25rem; padding:.75rem; border:1px solid #a78b4f; border-radius:.4rem; }
 #pf2-player-codex button, #pf2-player-codex select, #pf2-player-codex input { margin:.25rem; }
+
+.pf2-player-character-header {
+    display: flex;
+    gap: 1.25rem;
+    align-items: flex-start;
+    margin-bottom: 1.25rem;
+}
+
+.pf2-player-character-portrait {
+    width: 220px;
+    max-width: 40%;
+    max-height: 320px;
+    object-fit: contain;
+    border-radius: .4rem;
+}
+
+.pf2-player-character-header h2 {
+    margin-top: 0;
+}
