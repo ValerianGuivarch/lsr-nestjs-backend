@@ -27,13 +27,16 @@ export class DiscordCommandsService {
     ]
   }
 
-  async handle(interaction: Pick<ChatInputCommandInteraction, 'commandName' | 'reply'>): Promise<boolean> {
+  async handle(interaction: Pick<ChatInputCommandInteraction, 'commandName' | 'reply' | 'deferReply' | 'editReply'>): Promise<boolean> {
     if (interaction.commandName === 'ping') {
       await interaction.reply({ content: 'Pong !', ephemeral: true })
       return true
     }
     if (interaction.commandName === 'rec' || interaction.commandName === 'recap') {
-      await interaction.reply({ content: await this.recapMessage() })
+      // Actor names may require a Relay request. Discord interactions expire
+      // after three seconds unless they are acknowledged first.
+      await interaction.deferReply()
+      await interaction.editReply({ content: await this.recapMessage() })
       return true
     }
     if (interaction.commandName === 'new-game') {

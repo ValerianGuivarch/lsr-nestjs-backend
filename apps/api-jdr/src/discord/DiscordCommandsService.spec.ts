@@ -10,6 +10,8 @@ describe('DiscordCommandsService', () => {
 
   it('groups session participation by player and sorts the recap from least to most played', async () => {
     const reply = jest.fn().mockResolvedValue(undefined)
+    const deferReply = jest.fn().mockResolvedValue(undefined)
+    const editReply = jest.fn().mockResolvedValue(undefined)
     const persistence = {
       listSessions: jest.fn().mockResolvedValue([
         { participants: ['Actor.arthur', 'Actor.kian'] },
@@ -20,8 +22,9 @@ describe('DiscordCommandsService', () => {
       readFoundryActorCache: jest.fn(),
     }
     const service = new DiscordCommandsService(persistence as never, { listActors: jest.fn().mockResolvedValue([{ uuid: 'Actor.arthur', name: 'Ayla (Arthur)' }, { uuid: 'Actor.kian', name: 'Kian le Brave (Kian)' }]) } as never)
-    await expect(service.handle({ commandName: 'recap', reply } as never)).resolves.toBe(true)
-    expect(reply).toHaveBeenCalledWith({ content: '**Récapitulatif des séances**\n• Arthur — 2 séances\n• Kian — 2 séances' })
+    await expect(service.handle({ commandName: 'recap', reply, deferReply, editReply } as never)).resolves.toBe(true)
+    expect(deferReply).toHaveBeenCalledWith()
+    expect(editReply).toHaveBeenCalledWith({ content: '**Récapitulatif des séances**\n• Arthur — 2 séances\n• Kian — 2 séances' })
     expect(persistence.saveFoundryActorCache).toHaveBeenCalled()
   })
 
