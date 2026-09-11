@@ -63,8 +63,16 @@ export class PlayerCodexService {
       await this.persistence.saveRecord('pnj', { id: npcId, nom: presentation.name, description: '', aliases: [], factions: [], tags: [], statut: 'Actif', scope: 'global' })
       await this.db.query('UPDATE pf2_character_presentation SET source_npc_id=?, updated_at=CURRENT_TIMESTAMP WHERE id=?', [npcId, presentationId])
     }
-    try { return await this.createCharacter({ npcId, displayName, wikiPageTitle }) }
-    catch (error) { if (error instanceof ConflictException) return this.character(npcId); throw error }
+    try {
+      const profile = await this.createCharacter({ npcId, displayName, wikiPageTitle })
+      return { ...(profile as Record<string, unknown>), created: true }
+    } catch (error) {
+      if (error instanceof ConflictException) {
+        const profile = await this.character(npcId)
+        return { ...(profile as Record<string, unknown>), created: false }
+      }
+      throw error
+    }
   }
 
   async listCharacters(): Promise<unknown[]> {

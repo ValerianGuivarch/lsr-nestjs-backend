@@ -24,4 +24,13 @@ describe('DiscordCommandsService', () => {
     expect(reply).toHaveBeenCalledWith({ content: '**Récapitulatif des séances**\n• Arthur — 2 séances\n• Kian — 2 séances' })
     expect(persistence.saveFoundryActorCache).toHaveBeenCalled()
   })
+
+  it('uses the previous real-world day before 05:00 Europe/Paris for finish-game', () => {
+    const service = new DiscordCommandsService({} as never, {} as never)
+    const realDate = (value: string) => (service as unknown as { realDate: (date: Date) => string }).realDate(new Date(value))
+    expect(realDate('2026-09-11T22:00:00.000Z')).toBe('2026-09-11') // 00:00 Paris : veille
+    expect(realDate('2026-09-12T02:59:00.000Z')).toBe('2026-09-11') // 04:59 Paris
+    expect(realDate('2026-09-12T03:00:00.000Z')).toBe('2026-09-12') // 05:00 Paris
+    expect(realDate('2026-09-12T21:59:00.000Z')).toBe('2026-09-12') // 23:59 Paris
+  })
 })

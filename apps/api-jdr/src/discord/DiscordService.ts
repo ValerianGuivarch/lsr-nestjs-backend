@@ -1,4 +1,4 @@
-import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common'
+import { forwardRef, Inject, Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common'
 import {
   Client,
   Events,
@@ -68,7 +68,7 @@ export class DiscordService implements OnModuleInit, OnModuleDestroy {
   }
 
   constructor(
-    private readonly commands: DiscordCommandsService,
+    @Inject(forwardRef(() => DiscordCommandsService)) private readonly commands: DiscordCommandsService,
     private readonly foundry: FoundryRelayService,
   ) {}
 
@@ -254,7 +254,44 @@ export class DiscordService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
+  /** Publie une présentation une seule fois, après la création effective de sa fiche. */
+  async publishCharacterIntroduction(input: {
+    name: string
+    portraitUrl: string | null
+    description: string
+    wikiUrl: string
+  }): Promise<{ status: 'sent' | 'skipped' | 'failed'; reason?: string }> {
+    if (!this.client) return { status: 'skipped', reason: 'Discord indisponible ou désactivé.' }
+    const config = this.config()
+    if (!config) return { status: 'skipped', reason: 'Discord indisponible ou désactivé.' }
+
+    try {
+      const channel = await this.textChannel(config.characterChannelName, config)
+      await channel.send({
+        content: [
+          `**${input.name}**`,
+          input.description.trim(),
+          `Fiche wiki : ${input.wikiUrl}`,
+        ].filter(Boolean).join('\n\n'),
+        files: input.portraitUrl ? [input.portraitUrl] : [],
+        allowedMentions: { parse: [] },
+      })
+      return { status: 'sent' }
+    } catch (error) {
+      const reason = error instanceof Error ? error.message : 'Erreur Discord inconnue.'
+      this.logger.error(`Publication Discord du personnage « ${input.name} » impossible.`, error instanceof Error ? error.stack : undefined)
+      return { status: 'failed', reason }
+    }
+  }
+
   private async summaryChannel(
+    config: DiscordConfig,
+  ): Promise<TextChannel> {
+    return this.textChannel(config.summaryChannelName, config)
+  }
+
+  private async textChannel(
+    name: string,
     config: DiscordConfig,
   ): Promise<TextChannel> {
     const client = this.requireClient()
@@ -267,13 +304,13 @@ export class DiscordService implements OnModuleInit, OnModuleDestroy {
 
     const channel = guild.channels.cache.find(
       (candidate) =>
-        candidate.name === config.summaryChannelName &&
+        candidate.name === name &&
         candidate.isTextBased(),
     ) as TextChannel | undefined
 
     if (!channel) {
       throw new Error(
-        `Canal Discord introuvable : ${config.summaryChannelName}`,
+        `Canal Discord introuvable : ${name}`,
       )
     }
 
@@ -665,6 +702,11 @@ export class DiscordService implements OnModuleInit, OnModuleDestroy {
             'DISCORD_SUMMARIES_CHANNEL_NAME'
           ]?.trim() ||
           'résumés-courts',
+        characterChannelName:
+          process.env[
+            'DISCORD_CHARACTER_CHANNEL_NAME'
+          ]?.trim() ||
+          'personnages',
       }
     }
 
@@ -694,4 +736,5 @@ type DiscordConfig = {
   clientId: string
   guildId: string
   summaryChannelName: string
+  characterChannelName: string
 }

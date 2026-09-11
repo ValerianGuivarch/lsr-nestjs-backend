@@ -1,17 +1,19 @@
-import { Injectable, Logger } from '@nestjs/common'
+import { forwardRef, Inject, Injectable, Logger } from '@nestjs/common'
 import { resolve } from 'node:path'
-import { ActionRowBuilder, AutocompleteInteraction, ButtonBuilder, ButtonInteraction, ButtonStyle, ChatInputCommandInteraction, ModalBuilder, ModalSubmitInteraction, RESTPostAPIApplicationGuildCommandsJSONBody, SlashCommandBuilder, StringSelectMenuBuilder, StringSelectMenuInteraction, TextInputBuilder, TextInputStyle } from 'discord.js'
+import { ActionRowBuilder, AutocompleteInteraction, ButtonBuilder, ButtonInteraction, ButtonStyle, ChatInputCommandInteraction, ModalBuilder, ModalSubmitInteraction, PermissionFlagsBits, RESTPostAPIApplicationGuildCommandsJSONBody, SlashCommandBuilder, StringSelectMenuBuilder, StringSelectMenuInteraction, TextInputBuilder, TextInputStyle } from 'discord.js'
 import { FoundryRelayService } from '../foundry/FoundryRelayService'
 import { Pf2PersistenceService } from '../pf2-storage/Pf2PersistenceService'
 import { PlayerCodexService } from '../pf2-mj/PlayerCodexService'
 import { MediaWikiClientService } from '../pf2-mj/MediaWikiClientService'
+import { DiscordService } from './DiscordService'
 
 @Injectable()
 export class DiscordCommandsService {
   private readonly logger = new Logger(DiscordCommandsService.name)
   private readonly pendingGames = new Map<string, { actors: Array<{ uuid: string; name: string; player: string; userId: string }>; userIds: string[]; selected?: Array<{ uuid: string; name: string; player: string; userId: string }> }>()
   private readonly pendingAnnouncements = new Map<string, { content: string; userIds: string[] }>()
-  constructor(private readonly persistence: Pf2PersistenceService, private readonly foundry: FoundryRelayService, private readonly playerCodex?: PlayerCodexService, private readonly mediaWiki?: MediaWikiClientService) {}
+  private readonly pendingShortSummaries = new Map<string, { sessionId: string; sessionNumber: number; summary: string; requesterId: string; defaultAuthor: string; allowedAuthors: Array<{ uuid: string; name: string }> }>()
+  constructor(private readonly persistence: Pf2PersistenceService, private readonly foundry: FoundryRelayService, private readonly playerCodex?: PlayerCodexService, private readonly mediaWiki?: MediaWikiClientService, @Inject(forwardRef(() => DiscordService)) private readonly discord?: DiscordService) {}
 
   definitions(): RESTPostAPIApplicationGuildCommandsJSONBody[] {
     return [
@@ -20,6 +22,7 @@ export class DiscordCommandsService {
       new SlashCommandBuilder().setName('recap').setDescription('Récapitule les séances jouées par joueur.').toJSON(),
       new SlashCommandBuilder().setName('new-game').setDescription('Prépare une nouvelle mission PF2.').addUserOption(option => option.setName('joueur1').setDescription('Premier joueur').setRequired(true)).addUserOption(option => option.setName('joueur2').setDescription('Deuxième joueur')).addUserOption(option => option.setName('joueur3').setDescription('Troisième joueur')).addUserOption(option => option.setName('joueur4').setDescription('Quatrième joueur')).addUserOption(option => option.setName('joueur5').setDescription('Cinquième joueur')).addUserOption(option => option.setName('joueur6').setDescription('Sixième joueur')).toJSON(),
       new SlashCommandBuilder().setName('finish-game').setDescription('Termine une mission et met à jour son résumé.').addIntegerOption(option => option.setName('xp').setDescription('XP gagnée par PJ').setRequired(true).setMinValue(0)).addIntegerOption(option => option.setName('numero').setDescription('Numéro du résumé à terminer')).addStringOption(option => option.setName('fin').setDescription('Date de fin en jeu : YYYY-MM-DD')).addIntegerOption(option => option.setName('jours').setDescription('Durée en jours, à partir du début en jeu').setMinValue(1)).toJSON(),
+      new SlashCommandBuilder().setName('resume').setDescription('Édite le résumé court d’une séance.').addStringOption(option => option.setName('session').setDescription('Numéro de séance, si le contexte ne suffit pas').setAutocomplete(true)).toJSON(),
       new SlashCommandBuilder().setName('personnage').setDescription('Présente un personnage au carnet joueur.').addStringOption(option => option.setName('personnage').setDescription('PNJ existant ou nom libre').setRequired(true).setAutocomplete(true)).addAttachmentOption(option => option.setName('portrait').setDescription('Portrait pour un personnage improvisé')).addBooleanOption(option => option.setName('afficher_nom').setDescription('Afficher le nom').setRequired(false)).toJSON(),
     ]
   }
@@ -41,11 +44,18 @@ export class DiscordCommandsService {
       await this.finishGameCommand(interaction as ChatInputCommandInteraction)
       return true
     }
+    if (interaction.commandName === 'resume') { await this.resumeCommand(interaction as ChatInputCommandInteraction); return true }
     if (interaction.commandName === 'personnage') { await this.presentCharacter(interaction as ChatInputCommandInteraction); return true }
     return false
   }
 
   async handleAutocomplete(interaction: AutocompleteInteraction): Promise<boolean> {
+    if (interaction.commandName === 'resume') {
+      const term = interaction.options.getFocused().toString().trim()
+      const sessions = await this.persistence.listSessions()
+      await interaction.respond(sessions.filter(session => String(session.sessionNumber).includes(term) || session.title.toLocaleLowerCase().includes(term.toLocaleLowerCase())).sort((a, b) => b.sessionNumber - a.sessionNumber).slice(0, 25).map(session => ({ name: `#${session.sessionNumber} — ${session.title || 'Sans titre'}`.slice(0, 100), value: String(session.sessionNumber) })))
+      return true
+    }
     if (interaction.commandName !== 'personnage') return false
     const focused = interaction.options.getFocused().toString()
     const candidates = await this.playerCodex!.characterCandidates(focused)
@@ -104,6 +114,15 @@ export class DiscordCommandsService {
   }
 
   async handleComponent(interaction: StringSelectMenuInteraction): Promise<boolean> {
+    if (interaction.customId.startsWith('pf2-resume:')) {
+      const pending = this.pendingShortSummaries.get(interaction.customId)
+      if (!pending) { await interaction.reply({ content: 'Cette édition a expiré. Relance `/resume`.', ephemeral: true }); return true }
+      const author = interaction.values[0]
+      if (!pending.allowedAuthors.some(actor => actor.uuid === author)) { await interaction.reply({ content: 'Cet auteur n’est pas autorisé.', ephemeral: true }); return true }
+      await this.saveShortSummary(interaction, pending, author)
+      this.pendingShortSummaries.delete(interaction.customId)
+      return true
+    }
     if (!interaction.customId.startsWith('pf2-new-game:')) return false
     const pending = this.pendingGames.get(interaction.customId)
     if (!pending) { await interaction.reply({ content: 'Cette préparation a expiré. Relance `/new-game`.', ephemeral: true }); return true }
@@ -139,6 +158,21 @@ export class DiscordCommandsService {
   }
 
   async handleModal(interaction: ModalSubmitInteraction): Promise<boolean> {
+    if (interaction.customId.startsWith('pf2-resume:')) {
+      const pending = this.pendingShortSummaries.get(interaction.customId)
+      if (!pending) { await interaction.reply({ content: 'Cette édition a expiré. Relance `/resume`.', ephemeral: true }); return true }
+      const summary = interaction.fields.getTextInputValue('shortSummary').trim()
+      if (summary.length > 1400) { await interaction.reply({ content: 'Le résumé court ne peut pas dépasser 1400 caractères.', ephemeral: true }); return true }
+      pending.summary = summary
+      if (pending.allowedAuthors.length === 1) {
+        await this.saveShortSummary(interaction, pending, pending.allowedAuthors[0].uuid)
+        this.pendingShortSummaries.delete(interaction.customId)
+        return true
+      }
+      const select = new StringSelectMenuBuilder().setCustomId(interaction.customId).setPlaceholder('Choisis l’auteur du résumé court').addOptions(pending.allowedAuthors.map(actor => ({ label: actor.name.slice(0, 100), value: actor.uuid, default: actor.uuid === pending.defaultAuthor })))
+      await interaction.reply({ content: `Séance ${pending.sessionNumber} : choisis l’auteur.`, components: [new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(select)], ephemeral: true })
+      return true
+    }
     if (interaction.customId.startsWith('pf2-character:create:')) {
       const presentationId = interaction.customId.slice('pf2-character:create:'.length)
       const name = interaction.fields.getTextInputValue('name').trim()
@@ -148,21 +182,19 @@ export class DiscordCommandsService {
         const presentation = await this.playerCodex!.presentation(presentationId)
         const portrait = presentation.portraitUrl ? await this.mediaWiki!.uploadFromUrl(presentation.portraitUrl, name) : null
         await this.mediaWiki!.createPage(title, description)
-        const profile = await this.playerCodex!.ensurePresentationCharacter(presentationId, name, title) as { npcId: string; wikiPageTitle: string }
+        const profile = await this.playerCodex!.ensurePresentationCharacter(presentationId, name, title) as { npcId: string; wikiPageTitle: string; created: boolean }
         if (portrait) await this.playerCodex!.updateCharacter(profile.npcId, { wikiPortraitFilename: portrait })
         const pageUrl = this.mediaWiki!.pageUrl(profile.wikiPageTitle)
-        const publicDescription = description
-          ? description.slice(0, 1500)
-          : ''
-
-        await interaction.reply({
-          content: [
-            `**${name}**`,
-            publicDescription,
-            `Fiche wiki : ${pageUrl}`,
-          ].filter(Boolean).join('\\n\\n'),
-          allowedMentions: { parse: [] },
-        })
+        if (profile.created) {
+          const publication = await this.discord?.publishCharacterIntroduction({
+            name,
+            portraitUrl: presentation.portraitUrl,
+            description,
+            wikiUrl: pageUrl,
+          })
+          if (publication?.status === 'failed') this.logger.warn(`Fiche créée, mais publication Discord impossible : ${publication.reason}`)
+        }
+        await interaction.reply({ content: profile.created ? `Fiche créée : ${pageUrl}` : `Cette fiche existe déjà : ${pageUrl}`, ephemeral: true, allowedMentions: { parse: [] } })
       } catch (error) { await interaction.reply({ content: error instanceof Error ? `Création impossible : ${error.message}` : 'Création impossible.', ephemeral: true }) }
       return true
     }
@@ -227,9 +259,50 @@ export class DiscordCommandsService {
     if (!session) { await interaction.reply({ content: `Aucun résumé n°${requestedNumber} n’existe.`, ephemeral: true }); return }
     if (days !== null && !session.inGameStartDate) { await interaction.reply({ content: `Le résumé n°${requestedNumber} n’a pas de date de début en jeu : précise plutôt \`fin\`.`, ephemeral: true }); return }
     const resolvedEndDate = endDate || this.addDays(session.inGameStartDate, Math.max(0, (days ?? 1) - 1))
-    const updated = await this.persistence.updateSession(session.id, { inGameEndDate: resolvedEndDate, sessionXp: xp })
+    const updated = await this.persistence.updateSession(session.id, { inGameEndDate: resolvedEndDate, sessionXp: xp, ...(session.date ? {} : { date: this.realDate() }) })
     await interaction.reply({ content: `Résumé n°${requestedNumber} mis à jour : fin en jeu le ${this.displayDate(resolvedEndDate)} ; ${xp} XP par PJ.`, ephemeral: true })
     if (!updated) this.logger.warn(`finish-game: résumé ${requestedNumber} supprimé pendant la mise à jour.`)
+  }
+
+  private async resumeCommand(interaction: ChatInputCommandInteraction): Promise<void> {
+    const requested = interaction.options.getString('session')?.trim()
+    const number = requested ? Number(requested) : await this.lastBotSessionNumber(interaction)
+    if (!Number.isInteger(number) || !number) { await interaction.reply({ content: 'Indique `session`, ou utilise la commande dans le salon de l’annonce correspondante.', ephemeral: true }); return }
+    const session = (await this.persistence.listSessions()).find(item => item.sessionNumber === number)
+    if (!session) { await interaction.reply({ content: `Aucun résumé n°${number} n’existe.`, ephemeral: true }); return }
+    const names = await this.actorNames()
+    const allActors = [...names.entries()].filter(([uuid, name]) => /^\S(?:.*\S)?\s+\([^()]+\)$/u.test(name)).map(([uuid, name]) => ({ uuid, name }))
+    const admin = this.isAdmin(interaction)
+    const allowedAuthors = admin ? allActors : allActors.filter(actor => this.discordId(this.playerName(actor.name)) === interaction.user.id)
+    if (!allowedAuthors.length) { await interaction.reply({ content: 'Aucun PJ ne t’est associé.', ephemeral: true }); return }
+    const id = `pf2-resume:${interaction.id}`
+    const defaultAuthor = allowedAuthors.some(actor => actor.uuid === session.shortSummaryAuthor) ? session.shortSummaryAuthor! : allowedAuthors[0].uuid
+    this.pendingShortSummaries.set(id, { sessionId: session.id, sessionNumber: session.sessionNumber, summary: session.shortSummary, requesterId: interaction.user.id, defaultAuthor, allowedAuthors })
+    const modal = new ModalBuilder().setCustomId(id).setTitle(`Résumé court — séance ${session.sessionNumber}`)
+    modal.addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder().setCustomId('shortSummary').setLabel('Résumé court').setStyle(TextInputStyle.Paragraph).setMaxLength(1400).setRequired(false).setValue(session.shortSummary.slice(0, 1400))))
+    await interaction.showModal(modal)
+  }
+
+  private async saveShortSummary(interaction: Pick<ModalSubmitInteraction | StringSelectMenuInteraction, 'reply' | 'user'>, pending: { sessionId: string; sessionNumber: number; summary: string; requesterId: string; defaultAuthor: string; allowedAuthors: Array<{ uuid: string; name: string }> }, author: string): Promise<void> {
+    const current = await this.persistence.getSession(pending.sessionId)
+    if (interaction.user.id !== pending.requesterId || !current || !pending.allowedAuthors.some(actor => actor.uuid === author)) { await interaction.reply({ content: 'Séance, demandeur ou auteur invalide.', ephemeral: true }); return }
+    const updated = await this.persistence.updateSession(pending.sessionId, { shortSummary: pending.summary, shortSummaryAuthor: author })
+    if (!updated) { await interaction.reply({ content: 'Séance introuvable.', ephemeral: true }); return }
+    if (updated.published && this.discord) {
+      const sync = await this.discord.synchronizeResumeShortSummary(updated)
+      if (sync.status !== 'created' && sync.status !== 'updated') {
+        await this.persistence.updateSession(pending.sessionId, { shortSummary: current.shortSummary, shortSummaryAuthor: current.shortSummaryAuthor })
+        await interaction.reply({ content: sync.reason ?? 'Discord n’a pas confirmé la mise à jour du résumé.', ephemeral: true }); return
+      }
+      if (sync.messageId) await this.persistence.saveSessionDiscordMessageId(updated.id, sync.messageId)
+    }
+    const authorName = pending.allowedAuthors.find(actor => actor.uuid === author)?.name ?? author
+    await interaction.reply({ content: `Résumé court de la séance ${pending.sessionNumber} mis à jour pour ${authorName}.`, ephemeral: true })
+  }
+
+  private isAdmin(interaction: ChatInputCommandInteraction): boolean {
+    const configured = (process.env['DISCORD_ADMIN_USER_IDS'] ?? '').split(',').map(value => value.trim()).filter(Boolean)
+    return configured.includes(interaction.user.id) || Boolean(interaction.memberPermissions?.has(PermissionFlagsBits.ManageGuild))
   }
 
   private async lastBotSessionNumber(interaction: ChatInputCommandInteraction): Promise<number | null> {
@@ -299,6 +372,14 @@ export class DiscordCommandsService {
   }
 
   private missionEnd(session: import('../pf2-storage/Pf2PersistenceService').Pf2Session): string { return session.inGameEndDate || session.inGameStartDate }
+  private realDate(now = new Date()): string {
+    const zone = process.env['PF2_TIME_ZONE'] ?? 'Europe/Paris'
+    const parts = new Intl.DateTimeFormat('en-CA', { timeZone: zone, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', hourCycle: 'h23' }).formatToParts(now)
+    const value = (kind: Intl.DateTimeFormatPartTypes) => parts.find(part => part.type === kind)?.value ?? ''
+    const year = Number(value('year')); const month = Number(value('month')); const day = Number(value('day')); const hour = Number(value('hour'))
+    const local = new Date(Date.UTC(year, month - 1, day - (hour < 5 ? 1 : 0)))
+    return local.toISOString().slice(0, 10)
+  }
   private today(): string { return new Date().toISOString().slice(0, 10) }
   private addDays(date: string, days: number): string { const value = new Date(`${date}T12:00:00Z`); value.setUTCDate(value.getUTCDate() + days); return value.toISOString().slice(0, 10) }
   private displayDate(date: string): string { const [year, month, day] = date.split('-').map(Number); const months = ['Abadius', 'Calistril', 'Pharast', 'Gozran', 'Desnus', 'Sarenith', 'Erastus', 'Arodus', 'Rova', 'Lamashan', 'Neth', 'Kuthona']; return year >= 3000 ? `${day} ${months[month - 1]} ${year} AR` : `${day} ${months[month - 1]} ${year + 1694} AR (${day}/${String(month).padStart(2, '0')}/${year})` }

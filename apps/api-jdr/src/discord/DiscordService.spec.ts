@@ -4,7 +4,7 @@ import { DiscordService } from './DiscordService'
 import type { Pf2Session } from '../pf2-storage/Pf2PersistenceService'
 
 const resume = (overrides: Partial<Pf2Session> = {}): Pf2Session => ({
-  id: 'resume-1', sessionNumber: 1, date: '2026-09-01', inGameStartDate: '', inGameEndDate: '', title: 'Le départ', participants: [], longSummaryAuthor: null, shortSummaryAuthor: 'Actor.valerian', sessionXp: 200, longSummaryXp: 0, shortSummaryXp: 50, longSummaryUrl: '', shortSummary: 'Les héros quittent Absalom.', discordMessageId: null, published: true, createdAt: '', updatedAt: '', ...overrides
+  id: 'resume-1', sessionNumber: 1, date: '2026-09-01', inGameStartDate: '', inGameEndDate: '', title: 'Le départ', participants: [], longSummaryAuthor: null, shortSummaryAuthor: 'Actor.valerian', sessionXp: 200, longSummaryXp: 0, shortSummaryXp: 50, shortSummary: 'Les héros quittent Absalom.', discordMessageId: null, published: true, createdAt: '', updatedAt: '', ...overrides
 })
 
 describe('DiscordService summary synchronization', () => {
@@ -25,7 +25,7 @@ describe('DiscordService summary synchronization', () => {
   })
 
   function serviceWith(channel: Record<string, unknown>): DiscordService {
-    const service = new DiscordService(new DiscordCommandsService({ listSessions: jest.fn(), readFoundryActorCache: jest.fn(), saveFoundryActorCache: jest.fn() } as never, { listActors: jest.fn() } as never), { listActors: jest.fn().mockResolvedValue([]) } as never)
+    const service = new DiscordService(new DiscordCommandsService({ listSessions: jest.fn(), readFoundryActorCache: jest.fn().mockResolvedValue([]), saveFoundryActorCache: jest.fn() } as never, { listActors: jest.fn() } as never), { listActors: jest.fn().mockResolvedValue([]) } as never)
     const guild = {
       channels: { fetch: jest.fn().mockResolvedValue(undefined), cache: { find: (predicate: (value: unknown) => boolean) => predicate(channel) ? channel : undefined } },
       members: { fetch: jest.fn().mockResolvedValue(new Collection([['member', { user: { id: 'user-1', username: 'valerian0276' } }]])) }
@@ -65,7 +65,7 @@ describe('DiscordService summary synchronization', () => {
   })
 
   it('does nothing for an empty short summary', async () => {
-    const service = new DiscordService(new DiscordCommandsService({ listSessions: jest.fn(), readFoundryActorCache: jest.fn(), saveFoundryActorCache: jest.fn() } as never, { listActors: jest.fn() } as never), { listActors: jest.fn().mockResolvedValue([]) } as never)
+    const service = new DiscordService(new DiscordCommandsService({ listSessions: jest.fn(), readFoundryActorCache: jest.fn().mockResolvedValue([]), saveFoundryActorCache: jest.fn() } as never, { listActors: jest.fn() } as never), { listActors: jest.fn().mockResolvedValue([]) } as never)
     await expect(service.synchronizeResumeShortSummary(resume({ shortSummary: '' }))).resolves.toEqual({ status: 'skipped', reason: 'Résumé court vide.' })
   })
 })
