@@ -150,7 +150,19 @@ export class DiscordCommandsService {
         await this.mediaWiki!.createPage(title, description)
         const profile = await this.playerCodex!.ensurePresentationCharacter(presentationId, name, title) as { npcId: string; wikiPageTitle: string }
         if (portrait) await this.playerCodex!.updateCharacter(profile.npcId, { wikiPortraitFilename: portrait })
-        await interaction.reply({ content: `Fiche créée : ${this.mediaWiki!.pageUrl(profile.wikiPageTitle)}`, ephemeral: true })
+        const pageUrl = this.mediaWiki!.pageUrl(profile.wikiPageTitle)
+        const publicDescription = description
+          ? description.slice(0, 1500)
+          : ''
+
+        await interaction.reply({
+          content: [
+            `**${name}**`,
+            publicDescription,
+            `Fiche wiki : ${pageUrl}`,
+          ].filter(Boolean).join('\\n\\n'),
+          allowedMentions: { parse: [] },
+        })
       } catch (error) { await interaction.reply({ content: error instanceof Error ? `Création impossible : ${error.message}` : 'Création impossible.', ephemeral: true }) }
       return true
     }

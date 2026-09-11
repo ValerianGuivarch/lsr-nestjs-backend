@@ -8,6 +8,16 @@
 	function characterCard( character ) { var card = document.createElement( 'article' ); card.className = 'pf2-player-card'; if ( character.wikiPortraitFilename ) { var image = document.createElement( 'img' ); image.src = mw.util.getUrl( 'Special:FilePath/' + character.wikiPortraitFilename ); image.alt = ''; card.appendChild( image ); } card.appendChild( link( character.wikiPageTitle, character.displayName ) ); var factions = document.createElement( 'p' ); factions.textContent = character.factions.length ? 'Factions connues : ' + character.factions.map( function ( f ) { return f.name; } ).join( ', ' ) : 'Aucune faction connue.'; card.appendChild( factions ); return card; }
 	function listPage( data, root ) { root.appendChild( heading( 'Personnages connus' ) ); var search = document.createElement( 'input' ); search.placeholder = 'Rechercher un personnage'; root.appendChild( search ); var list = document.createElement( 'div' ); list.className = 'pf2-player-list'; root.appendChild( list ); function draw() { list.textContent = ''; data.characters.filter( function ( c ) { return c.displayName.toLocaleLowerCase().indexOf( search.value.toLocaleLowerCase() ) !== -1; } ).forEach( function ( c ) { list.appendChild( characterCard( c ) ); } ); } search.addEventListener( 'input', draw ); draw(); }
 	function characterPage( data, root, character ) {
+        var pageTitle =
+            document.querySelector( '.mw-page-title-main' ) ||
+            document.querySelector( '#firstHeading' );
+
+        if ( pageTitle ) {
+            pageTitle.textContent = character.displayName;
+        }
+
+        document.title = character.displayName + ' — ' + mw.config.get( 'wgSiteName' );
+
         var header = document.createElement( 'div' );
         header.className = 'pf2-player-character-header';
 
@@ -19,11 +29,6 @@
             header.appendChild( image );
         }
 
-        var identity = document.createElement( 'div' );
-        var title = document.createElement( 'h2' );
-        title.textContent = character.displayName;
-        identity.appendChild( title );
-        header.appendChild( identity );
 
         root.appendChild( header );
         root.appendChild( heading( 'Factions connues' ) ); var list = document.createElement( 'ul' ); root.appendChild( list ); character.factions.forEach( function ( faction ) { var item = document.createElement( 'li' ); item.appendChild( link( faction.wikiPageTitle, faction.name ) ); if ( data.canEdit ) { var remove = document.createElement( 'button' ); remove.textContent = 'Retirer'; remove.onclick = function () { request( 'removeFaction', character.npcId, faction.id, {} ).then( function () { window.location.reload(); } ); }; item.appendChild( remove ); } list.appendChild( item ); } ); if ( data.canEdit ) { var select = document.createElement( 'select' ); data.factions.filter( function ( f ) { return !character.factions.some( function ( current ) { return current.id === f.id; } ); } ).forEach( function ( f ) { var option = document.createElement( 'option' ); option.value = f.id; option.textContent = f.name; select.appendChild( option ); } ); var add = document.createElement( 'button' ); add.textContent = 'Ajouter une faction'; add.onclick = function () { if ( select.value ) { request( 'addFaction', character.npcId, '', { factionId: select.value } ).then( function () { window.location.reload(); } ); } }; root.appendChild( select ); root.appendChild( add ); } }

@@ -37,46 +37,134 @@ export class MediaWikiClientService {
     if (!response.ok || data.error || data.upload?.result !== 'Success' || !data.upload.filename) throw new ServiceUnavailableException(data.error?.info ?? 'Upload MediaWiki impossible.')
     return data.upload.filename
   }
-  private async token(): Promise<string> {
+  private async login(): Promise<void> {
     if (!this.enabled()) {
       throw new ServiceUnavailableException('MediaWiki n’est pas configuré.')
     }
 
-    // S'assurer qu'une session authentifiée existe.
-    if (!this.cookie) {
-      const loginTokenResponse = await this.request({
-        action: 'query',
-        meta: 'tokens',
-        type: 'login',
-      }) as { query?: { tokens?: { logintoken?: string } } }
+    // Repartir d'une session propre.
+    this.cookie = ''
 
-      const loginToken = loginTokenResponse.query?.tokens?.logintoken
-      if (!loginToken) {
-        throw new ServiceUnavailableException('Token MediaWiki indisponible.')
-      }
-
-      const login = await this.request({
-        action: 'login',
-        lgname: this.username,
-        lgpassword: this.password,
-        lgtoken: loginToken,
-      }, 'POST') as { login?: { result?: string } }
-
-      if (login.login?.result !== 'Success') {
-        throw new ServiceUnavailableException('Authentification MediaWiki refusée.')
+    const loginTokenResponse = await this.request({
+      action: 'query',
+      meta: 'tokens',
+      type: 'login',
+    }) as {
+      query?: {
+        tokens?: {
+          logintoken?: string
+        }
       }
     }
 
-    // Toujours demander un CSRF frais.
+    const loginToken =
+      loginTokenResponse.query?.tokens?.logintoken
+
+    if (!loginToken) {
+      throw new ServiceUnavailableException(
+        'Token de connexion MediaWiki indisponible.',
+      )
+    }
+
+    const login = await this.request({
+      action: 'login',
+      lgname: this.username,
+      lgpassword: this.password,
+      lgtoken: loginToken,
+    }, 'POST') as {
+      login?: {
+        result?: string
+        reason?: string
+      }
+    }
+
+    if (login.login?.result !== 'Success') {
+      throw new ServiceUnavailableException(
+        login.login?.reason ??
+          'Authentification MediaWiki refusée.',
+      )
+    }
+  }
+
+  private async isLoggedIn(): Promise<boolean> {
+    if (!this.cookie) return false
+
+    try {
+      const data = await this.request({
+        action: 'query',
+        meta: 'userinfo',
+      }) as {
+        query?: {
+          userinfo?: {
+            id?: number
+            anon?: boolean
+          }
+        }
+      }
+
+      const user = data.query?.userinfo
+
+      return Boolean(
+        user &&
+        !user.anon &&
+        Number(user.id ?? 0) > 0
+      )
+    } catch {
+      return false
+    }
+  }
+
+  private async token(): Promise<string> {
+    if (!this.enabled()) {
+      throw new ServiceUnavailableException(
+        'MediaWiki n’est pas configuré.',
+      )
+    }
+
+    if (!(await this.isLoggedIn())) {
+      await this.login()
+    }
+
     const csrf = await this.request({
       action: 'query',
       meta: 'tokens',
       type: 'csrf',
-    }) as { query?: { tokens?: { csrftoken?: string } } }
+    }) as {
+      query?: {
+        tokens?: {
+          csrftoken?: string
+        }
+      }
+    }
 
     const token = csrf.query?.tokens?.csrftoken
-    if (!token) {
-      throw new ServiceUnavailableException('Token CSRF MediaWiki indisponible.')
+
+    // "+\\" est le token CSRF typique d'une session anonyme.
+    if (!token || token === '+\\') {
+      // Une session a pu expirer entre userinfo et le token.
+      await this.login()
+
+      const retry = await this.request({
+        action: 'query',
+        meta: 'tokens',
+        type: 'csrf',
+      }) as {
+        query?: {
+          tokens?: {
+            csrftoken?: string
+          }
+        }
+      }
+
+      const retryToken = retry.query?.tokens?.csrftoken
+
+      if (!retryToken || retryToken === '+\\') {
+        throw new ServiceUnavailableException(
+          'Session MediaWiki non authentifiée.',
+        )
+      }
+
+      return retryToken
     }
 
     return token
@@ -86,11 +174,53 @@ export class MediaWikiClientService {
     if (!this.apiUrl) throw new ServiceUnavailableException('MediaWiki n’est pas configuré.')
     const body = new URLSearchParams({ format: 'json', formatversion: '2', ...values })
     const response = await fetch(method === 'GET' ? `${this.apiUrl}?${body}` : this.apiUrl, { method, headers: { ...(method === 'POST' ? { 'content-type': 'application/x-www-form-urlencoded' } : {}), ...(this.cookie ? { cookie: this.cookie } : {}) }, body: method === 'POST' ? body : undefined, signal: AbortSignal.timeout(15_000) })
-    const setCookies = typeof response.headers.getSetCookie === 'function' ? response.headers.getSetCookie() : []
-    if (setCookies.length) this.cookie = setCookies.map(value => value.split(';', 1)[0]).join('; ')
+    this.captureCookies(response)
     const data = await response.json() as { error?: { info?: string } }
     if (!response.ok || data.error) { this.logger.warn(`MediaWiki Action API: ${data.error?.info ?? response.status}`); throw new ServiceUnavailableException(data.error?.info ?? 'Erreur MediaWiki.') }
     return data
   }
+  private captureCookies(response: Response): void {
+    const setCookies =
+      typeof response.headers.getSetCookie === 'function'
+        ? response.headers.getSetCookie()
+        : []
+
+    if (!setCookies.length) return
+
+    const jar = new Map<string, string>()
+
+    for (const current of this.cookie.split(/;\s*/)) {
+      if (!current) continue
+
+      const separator = current.indexOf('=')
+      if (separator <= 0) continue
+
+      jar.set(
+        current.slice(0, separator),
+        current.slice(separator + 1),
+      )
+    }
+
+    for (const header of setCookies) {
+      const cookie = header.split(';', 1)[0]
+      const separator = cookie.indexOf('=')
+
+      if (separator <= 0) continue
+
+      const name = cookie.slice(0, separator)
+      const value = cookie.slice(separator + 1)
+
+      if (value) {
+        jar.set(name, value)
+      } else {
+        jar.delete(name)
+      }
+    }
+
+    this.cookie = [...jar.entries()]
+      .map(([name, value]) => `${name}=${value}`)
+      .join('; ')
+  }
+
   private fileStem(value: string): string { return value.normalize('NFKD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-zA-Z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 64) || 'personnage' }
 }
