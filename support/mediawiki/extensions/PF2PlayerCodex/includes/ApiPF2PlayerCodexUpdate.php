@@ -4,6 +4,18 @@ use MediaWiki\MediaWikiServices;
 
 class ApiPF2PlayerCodexUpdate extends ApiBase {
     public function execute() {
+        try {
+            $this->executeInternal();
+        } catch ( \Error $error ) {
+            // MediaWiki otherwise turns PHP Errors into the unhelpful generic
+            // internal_api_error_Error response. Surface the concrete message
+            // to the administrator who initiated this protected operation.
+            $this->log( 'Erreur PHP interne: ' . $error->getMessage() );
+            $this->dieWithError( 'Erreur interne PF2PlayerCodex : ' . $error->getMessage() );
+        }
+    }
+
+    private function executeInternal() {
         // Keep this before all MediaWiki calls: it confirms that the deployed
         // extension is the expected version even if an early framework call
         // fails with a generic internal_api_error.
