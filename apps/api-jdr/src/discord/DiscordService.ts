@@ -254,6 +254,16 @@ export class DiscordService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
+  /** Longueur du rendu qui sera réellement envoyé à Discord (informations incluses). */
+  async resumeMessageLength(
+    resume: Pf2Session,
+  ): Promise<number> {
+    const payload = await this.resumeMessagePayload(resume)
+    return typeof payload.content === 'string'
+      ? payload.content.length
+      : 0
+  }
+
   /** Publie une présentation une seule fois, après la création effective de sa fiche. */
   async publishCharacterIntroduction(input: {
     name: string
