@@ -4,7 +4,7 @@ import { randomUUID } from 'node:crypto'
 import { DataSource } from 'typeorm'
 import { Pf2PersistenceService } from '../pf2-storage/Pf2PersistenceService'
 
-type ProfileRow = { npc_id: string; wiki_page_title: string; display_name: string; wiki_portrait_filename: string | null; created_at: string; updated_at: string }
+type ProfileRow = { npc_id: string; wiki_page_title: string; display_name: string; wiki_portrait_filename: string | null; is_player: number; created_at: string; updated_at: string }
 type FactionRow = { id: string; name: string; normalized_name: string; parent_faction_id: string | null; wiki_page_title: string; created_at: string; updated_at: string }
 
 @Injectable()
@@ -71,27 +71,32 @@ export class PlayerCodexService {
     const rows = await this.db.query('SELECT * FROM pf2_player_character_profile ORDER BY display_name COLLATE NOCASE') as ProfileRow[]
     return Promise.all(rows.map(row => this.characterDto(row)))
   }
+  async listPlayers(): Promise<unknown[]> {
+    const rows = await this.db.query('SELECT * FROM pf2_player_character_profile WHERE is_player = 1 ORDER BY display_name COLLATE NOCASE') as ProfileRow[]
+    return Promise.all(rows.map(row => this.characterDto(row)))
+  }
   async character(npcId: string): Promise<unknown> {
     const rows = await this.db.query('SELECT * FROM pf2_player_character_profile WHERE npc_id = ?', [npcId]) as ProfileRow[]
     if (!rows[0]) throw new NotFoundException('Personnage introuvable dans le carnet joueur.')
     return this.characterDto(rows[0])
   }
-  async createCharacter(input: { npcId: string; displayName: string; wikiPageTitle: string; wikiPortraitFilename?: string | null }): Promise<unknown> {
+  async createCharacter(input: { npcId: string; displayName: string; wikiPageTitle: string; wikiPortraitFilename?: string | null; isPlayer?: boolean }): Promise<unknown> {
     const npc = await this.persistence.getRecord('pnj', input.npcId)
     if (!npc) throw new NotFoundException('PNJ MJ introuvable.')
     const displayName = this.required(input.displayName, 'Nom')
     const title = this.required(input.wikiPageTitle, 'Titre wiki')
     try {
-      await this.db.query('INSERT INTO pf2_player_character_profile (npc_id, wiki_page_title, display_name, wiki_portrait_filename) VALUES (?, ?, ?, ?)', [input.npcId, title, displayName, input.wikiPortraitFilename ?? null])
+      await this.db.query('INSERT INTO pf2_player_character_profile (npc_id, wiki_page_title, display_name, wiki_portrait_filename, is_player) VALUES (?, ?, ?, ?, ?)', [input.npcId, title, displayName, input.wikiPortraitFilename ?? null, input.isPlayer ? 1 : 0])
     } catch (error) { throw new ConflictException('Une fiche joueur existe déjà pour ce PNJ ou ce titre wiki est déjà utilisé.') }
     return this.character(input.npcId)
   }
-  async updateCharacter(npcId: string, input: { displayName?: unknown; wikiPortraitFilename?: unknown }): Promise<unknown> {
+  async updateCharacter(npcId: string, input: { displayName?: unknown; wikiPortraitFilename?: unknown; isPlayer?: unknown }): Promise<unknown> {
     await this.character(npcId)
     const name = typeof input.displayName === 'string' ? this.required(input.displayName, 'Nom') : null
     const portrait = typeof input.wikiPortraitFilename === 'string' ? input.wikiPortraitFilename.trim() || null : undefined
     if (name !== null) await this.db.query('UPDATE pf2_player_character_profile SET display_name = ?, updated_at = CURRENT_TIMESTAMP WHERE npc_id = ?', [name, npcId])
     if (portrait !== undefined) await this.db.query('UPDATE pf2_player_character_profile SET wiki_portrait_filename = ?, updated_at = CURRENT_TIMESTAMP WHERE npc_id = ?', [portrait, npcId])
+    if (typeof input.isPlayer === 'boolean') await this.db.query('UPDATE pf2_player_character_profile SET is_player = ?, updated_at = CURRENT_TIMESTAMP WHERE npc_id = ?', [input.isPlayer ? 1 : 0, npcId])
     return this.character(npcId)
   }
   async addCharacterFaction(npcId: string, factionId: string): Promise<unknown> {
@@ -121,7 +126,7 @@ export class PlayerCodexService {
   }
   private async characterDto(row: ProfileRow): Promise<unknown> {
     const factions = await this.db.query('SELECT f.id, f.name, f.wiki_page_title AS wikiPageTitle FROM pf2_player_faction f JOIN pf2_player_character_faction r ON r.player_faction_id=f.id WHERE r.npc_id=? ORDER BY f.name COLLATE NOCASE', [row.npc_id])
-    return { npcId: row.npc_id, wikiPageTitle: row.wiki_page_title, displayName: row.display_name, wikiPortraitFilename: row.wiki_portrait_filename, factions }
+    return { npcId: row.npc_id, wikiPageTitle: row.wiki_page_title, displayName: row.display_name, wikiPortraitFilename: row.wiki_portrait_filename, isPlayer: row.is_player === 1, factions }
   }
   private factionDto(row: FactionRow): unknown { return { id: row.id, name: row.name, parentFactionId: row.parent_faction_id, wikiPageTitle: row.wiki_page_title } }
   private async factionRow(id: string): Promise<FactionRow> { const rows = await this.db.query('SELECT * FROM pf2_player_faction WHERE id=?', [id]) as FactionRow[]; if (!rows[0]) throw new NotFoundException('Faction joueur introuvable.'); return rows[0] }

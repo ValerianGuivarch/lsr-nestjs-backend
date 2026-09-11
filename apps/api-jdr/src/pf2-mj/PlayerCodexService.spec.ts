@@ -45,4 +45,11 @@ describe('PlayerCodexService', () => {
     await expect(persistence.getRecord('pnj', profile.npcId)).resolves.toMatchObject({ nom: 'Orc cicatrisé' })
     await expect(codex.character(profile.npcId)).resolves.toMatchObject({ displayName: 'L’orc cicatrisé' })
   })
+  it('marks a normal player-codex character as PJ without introducing another entity type', async () => {
+    const { codex } = await open()
+    await codex.createCharacter({ npcId: 'janira', displayName: 'Janira', wikiPageTitle: 'Personnage:Janira', isPlayer: true })
+    await expect(codex.listPlayers()).resolves.toEqual([expect.objectContaining({ npcId: 'janira', isPlayer: true })])
+    await codex.updateCharacter('janira', { isPlayer: false })
+    await expect(codex.listPlayers()).resolves.toEqual([])
+  })
 })

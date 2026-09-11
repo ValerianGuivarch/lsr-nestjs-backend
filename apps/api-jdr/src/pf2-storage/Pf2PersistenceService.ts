@@ -676,6 +676,11 @@ export class Pf2PersistenceService implements OnModuleInit {
       await manager.query('CREATE INDEX IF NOT EXISTS idx_pf2_player_faction_parent ON pf2_player_faction (parent_faction_id)')
       await manager.query('CREATE INDEX IF NOT EXISTS idx_pf2_player_character_faction_faction ON pf2_player_character_faction (player_faction_id)')
     })
+    await this.applyMigration('018-player-character-is-player', async (manager) => {
+      const columns = await manager.query('PRAGMA table_info(pf2_player_character_profile)') as Array<{ name: string }>
+      if (!columns.some((column) => column.name === 'is_player')) await manager.query('ALTER TABLE pf2_player_character_profile ADD COLUMN is_player INTEGER NOT NULL DEFAULT 0')
+      await manager.query('CREATE INDEX IF NOT EXISTS idx_pf2_player_profile_is_player_name ON pf2_player_character_profile (is_player, display_name)')
+    })
   }
 
   private async createSessionTable(manager: EntityManager): Promise<void> {
