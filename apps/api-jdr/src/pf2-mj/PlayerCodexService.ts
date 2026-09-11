@@ -124,8 +124,8 @@ export class PlayerCodexService {
   }
   async listFactions(): Promise<unknown[]> { return (await this.db.query('SELECT * FROM pf2_player_faction ORDER BY name COLLATE NOCASE') as FactionRow[]).map(row => this.factionDto(row)) }
   async faction(id: string): Promise<unknown> { const rows = await this.db.query('SELECT * FROM pf2_player_faction WHERE id = ?', [id]) as FactionRow[]; if (!rows[0]) throw new NotFoundException('Faction joueur introuvable.'); return this.factionDto(rows[0]) }
-  async createFaction(input: { name: string; wikiPageTitle?: string }): Promise<unknown> {
-    const name = this.required(input.name, 'Nom'); const id = `player-faction-${randomUUID()}`; const title = input.wikiPageTitle?.trim() || `Faction:${name}`
+  async createFaction(input: { name?: unknown; wikiPageTitle?: unknown }): Promise<unknown> {
+    const name = this.required(input.name, 'Nom'); const id = `player-faction-${randomUUID()}`; const title = (typeof input.wikiPageTitle === 'string' ? input.wikiPageTitle.trim() : '') || `Faction:${name}`
     try {
       await this.db.query('INSERT INTO pf2_player_faction (id, name, normalized_name, parent_faction_id, wiki_page_title) VALUES (?, ?, ?, NULL, ?)', [id, name, this.normalized(name), title])
     } catch (error) {
@@ -167,5 +167,9 @@ export class PlayerCodexService {
   private async factionRow(id: string): Promise<FactionRow> { const rows = await this.db.query('SELECT * FROM pf2_player_faction WHERE id=?', [id]) as FactionRow[]; if (!rows[0]) throw new NotFoundException('Faction joueur introuvable.'); return rows[0] }
   private async isDescendant(candidate: string, ancestor: string): Promise<boolean> { let current: string | null = candidate; const seen = new Set<string>(); while (current && !seen.has(current)) { if (current === ancestor) return true; seen.add(current); current = (await this.factionRow(current)).parent_faction_id } return false }
   private normalized(value: string): string { return value.normalize('NFKC').trim().replace(/\s+/g, ' ').toLocaleLowerCase() }
-  private required(value: string, label: string): string { const result = value.trim().replace(/\s+/g, ' '); if (!result) throw new BadRequestException(`${label} obligatoire.`); return result }
+  private required(value: unknown, label: string): string {
+    const result = typeof value === 'string' ? value.trim().replace(/\s+/g, ' ') : ''
+    if (!result) throw new BadRequestException(`${label} obligatoire.`)
+    return result
+  }
 }

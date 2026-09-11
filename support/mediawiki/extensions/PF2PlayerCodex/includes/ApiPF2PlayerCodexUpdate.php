@@ -44,7 +44,10 @@ class ApiPF2PlayerCodexUpdate extends ApiBase {
             $this->dieWithError( 'Opération inconnue.' );
         }
 
-        $body = json_encode( $payload );
+        // HttpRequestFactory reliably serializes an array as a standard form
+        // POST. Use it for this small creation form; the JSON body variant was
+        // reaching Nest as an empty body in the deployed MediaWiki runtime.
+        $body = $op === 'createFaction' ? [ 'name' => $payload['name'] ?? '' ] : json_encode( $payload );
         if ( $body === false ) {
             $this->dieWithError( 'Données impossibles à sérialiser.' );
         }
@@ -61,7 +64,7 @@ class ApiPF2PlayerCodexUpdate extends ApiBase {
                     'method' => $method,
                     'timeout' => 15,
                     'postData' => $body,
-                    'headers' => [ 'Content-Type' => 'application/json' ],
+                    'headers' => $op === 'createFaction' ? [] : [ 'Content-Type' => 'application/json' ],
                 ],
                 __METHOD__
             );
