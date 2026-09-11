@@ -1,4 +1,4 @@
-import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common'
+import { BadRequestException, ConflictException, Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common'
 import { InjectDataSource } from '@nestjs/typeorm'
 import { randomUUID } from 'node:crypto'
 import { DataSource } from 'typeorm'
@@ -9,6 +9,7 @@ type FactionRow = { id: string; name: string; normalized_name: string; parent_fa
 
 @Injectable()
 export class PlayerCodexService {
+  private readonly logger = new Logger(PlayerCodexService.name)
   constructor(@InjectDataSource('pf2-sqlite') private readonly db: DataSource, private readonly persistence: Pf2PersistenceService) {}
 
   async characterCandidates(prefix: string): Promise<Array<{ id: string; name: string; portrait: string | null }>> {
@@ -125,8 +126,18 @@ export class PlayerCodexService {
   async faction(id: string): Promise<unknown> { const rows = await this.db.query('SELECT * FROM pf2_player_faction WHERE id = ?', [id]) as FactionRow[]; if (!rows[0]) throw new NotFoundException('Faction joueur introuvable.'); return this.factionDto(rows[0]) }
   async createFaction(input: { name: string; wikiPageTitle?: string }): Promise<unknown> {
     const name = this.required(input.name, 'Nom'); const id = `player-faction-${randomUUID()}`; const title = input.wikiPageTitle?.trim() || `Faction:${name}`
-    try { await this.db.query('INSERT INTO pf2_player_faction (id, name, normalized_name, parent_faction_id, wiki_page_title) VALUES (?, ?, ?, NULL, ?)', [id, name, this.normalized(name), title]) }
-    catch { const rows = await this.db.query('SELECT id FROM pf2_player_faction WHERE normalized_name = ?', [this.normalized(name)]) as Array<{ id: string }>; if (rows[0]) return this.faction(rows[0].id); throw new ConflictException('Titre wiki de faction déjà utilisé.') }
+    try {
+      await this.db.query('INSERT INTO pf2_player_faction (id, name, normalized_name, parent_faction_id, wiki_page_title) VALUES (?, ?, ?, NULL, ?)', [id, name, this.normalized(name), title])
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error)
+      if (/unique constraint|constraint failed/i.test(message)) {
+        const rows = await this.db.query('SELECT id FROM pf2_player_faction WHERE normalized_name = ?', [this.normalized(name)]) as Array<{ id: string }>
+        if (rows[0]) return this.faction(rows[0].id)
+        throw new ConflictException('Titre wiki de faction déjà utilisé.')
+      }
+      this.logger.error(`Création de faction impossible (SQLite) : ${message}`, error instanceof Error ? error.stack : undefined)
+      throw new InternalServerErrorException(`Création de faction impossible : ${message}`)
+    }
     return this.faction(id)
   }
   async deleteFaction(id: string): Promise<void> {
