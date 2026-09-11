@@ -15,7 +15,6 @@ describe('Pf2WikiSessionsController', () => {
     sessionXp: 100,
     longSummaryXp: 0,
     shortSummaryXp: 10,
-    longSummaryUrl: 'https://wiki.example.test/index.php/Test',
     shortSummary: 'Avant',
     discordMessageId: 'discord-1',
     published: true,
@@ -36,13 +35,13 @@ describe('Pf2WikiSessionsController', () => {
       {} as never,
     )
 
-    await expect(controller.list()).resolves.toEqual([
-      expect.objectContaining({
+    await expect(controller.list()).resolves.toEqual(expect.objectContaining({
+      sessions: [expect.objectContaining({
         id: 'resume-1',
         participantNames: ['Héros (Joueur)'],
         shortSummaryAuthorName: 'Héros (Joueur)',
-      }),
-    ])
+      })],
+    }))
   })
 
   it('updates only the short summary and resynchronizes Discord', async () => {
@@ -63,7 +62,7 @@ describe('Pf2WikiSessionsController', () => {
     )
 
     await expect(
-      controller.updateShortSummary('resume-1', { shortSummary: ' Après ' }),
+      controller.update('resume-1', { shortSummary: 'Après' }),
     ).resolves.toEqual(
       expect.objectContaining({ resume: updated }),
     )

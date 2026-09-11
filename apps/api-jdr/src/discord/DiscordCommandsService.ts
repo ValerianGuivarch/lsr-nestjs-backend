@@ -152,7 +152,7 @@ export class DiscordCommandsService {
       { label: `Date actuelle — ${this.displayDate(plan.current)}`, value: 'current' },
       { label: 'Choisir une autre date…', value: 'custom' },
     ])
-    await interaction.update({ content: `${selected.map(actor => actor.name).join(', ')}\n${plan.downtime.join('\n')}\n\nChoisis la date de début.`, components: [new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(select)] })
+    await interaction.update({ content: `${selected.map(actor => actor.name).join(', ')}\n${plan.interludes.join('\n')}\n\nChoisis la date de début.`, components: [new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(select)] })
     return true
   }
 
@@ -162,7 +162,7 @@ export class DiscordCommandsService {
       if (!pending) { await interaction.reply({ content: 'Cette édition a expiré. Relance `/resume`.', ephemeral: true }); return true }
       const title = interaction.fields.getTextInputValue('title').trim()
       const summary = interaction.fields.getTextInputValue('shortSummary').trim()
-      if (title.length > 120 || summary.length > 1100) { await interaction.reply({ content: 'Le titre ne peut pas dépasser 120 caractères et le résumé court 1 100 caractères.', ephemeral: true }); return true }
+      if (title.length > 120 || summary.length > 2000) { await interaction.reply({ content: 'Le titre ne peut pas dépasser 120 caractères et le résumé court 2 000 caractères.', ephemeral: true }); return true }
       pending.title = title
       pending.summary = summary
       if (pending.allowedAuthors.length === 1) {
@@ -281,7 +281,7 @@ export class DiscordCommandsService {
     this.pendingShortSummaries.set(id, { sessionId: session.id, sessionNumber: session.sessionNumber, title: session.title, summary: session.shortSummary, requesterId: interaction.user.id, defaultAuthor, allowedAuthors })
     const modal = new ModalBuilder().setCustomId(id).setTitle(`Résumé court — séance ${session.sessionNumber}`)
     modal.addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder().setCustomId('title').setLabel('Titre de la séance').setStyle(TextInputStyle.Short).setMaxLength(120).setRequired(false).setValue(session.title.slice(0, 120))))
-    modal.addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder().setCustomId('shortSummary').setLabel('Résumé court').setStyle(TextInputStyle.Paragraph).setMaxLength(1100).setRequired(false).setValue(session.shortSummary.slice(0, 1100))))
+    modal.addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder().setCustomId('shortSummary').setLabel('Résumé court').setStyle(TextInputStyle.Paragraph).setMaxLength(2000).setRequired(false).setValue(session.shortSummary.slice(0, 2000))))
     await interaction.showModal(modal)
   }
 
@@ -291,7 +291,7 @@ export class DiscordCommandsService {
     const candidate = { ...current, title: pending.title, shortSummary: pending.summary, shortSummaryAuthor: author }
     if (this.discord) {
       const length = await this.discord.resumeMessageLength(candidate)
-      if (length > 1850) { await interaction.reply({ content: `Le message Discord final ferait ${length} caractères ; réduis le titre ou le résumé (limite de sécurité : 1 850).`, ephemeral: true }); return }
+      if (length > 2000) { await interaction.reply({ content: `Le message Discord final ferait ${length} caractères ; réduis le titre ou le résumé pour rester sous la limite Discord de 2 000 caractères.`, ephemeral: true }); return }
     }
     const updated = await this.persistence.updateSession(pending.sessionId, { title: pending.title, shortSummary: pending.summary, shortSummaryAuthor: author })
     if (!updated) { await interaction.reply({ content: 'Séance introuvable.', ephemeral: true }); return }
@@ -358,7 +358,7 @@ export class DiscordCommandsService {
     return [...userIds]
   }
 
-  private async plan(actors: Array<{ uuid: string; name: string }>): Promise<{ current: string; earliest: string; downtime: string[] }> {
+  private async plan(actors: Array<{ uuid: string; name: string }>): Promise<{ current: string; earliest: string; interludes: string[] }> {
     const sessions = (await this.persistence.listSessions()).filter((session) => session.published)
     const current = sessions.map((session) => this.missionEnd(session)).filter(Boolean).sort().at(-1) || this.today()
     const availability = actors.map((actor) => {
@@ -367,28 +367,28 @@ export class DiscordCommandsService {
       const missed = last ? sessions.filter((session) => session.sessionNumber > last.sessionNumber).length : sessions.length
       return { actor, available, missed }
     })
-    return { current, earliest: availability.map((item) => item.available).sort().at(-1) || current, downtime: availability.map((item) => `${item.actor.name} : ${item.missed} downtime (disponible le ${this.displayDate(item.available)})`) }
+    return { current, earliest: availability.map((item) => item.available).sort().at(-1) || current, interludes: availability.map((item) => `${item.actor.name} : ${item.missed} interlude${item.missed > 1 ? 's' : ''}`) }
   }
 
-  private async finishGame(interaction: StringSelectMenuInteraction, pending: { selected?: Array<{ uuid: string; name: string; userId: string }> }, date: string, plan: { downtime: string[] }): Promise<void> {
+  private async finishGame(interaction: StringSelectMenuInteraction, pending: { selected?: Array<{ uuid: string; name: string; userId: string }> }, date: string, plan: { interludes: string[] }): Promise<void> {
     const sessions = await this.persistence.listSessions()
     const sessionNumber = Math.max(0, ...sessions.map((session) => session.sessionNumber)) + 1
     const draft = await this.persistence.createSession({ sessionNumber, date: '', inGameStartDate: date, inGameEndDate: '', title: '', participants: (pending.selected ?? []).map((actor) => actor.uuid), published: false })
-    const content = `Brouillon créé : résumé n°${draft.sessionNumber}.\nDébut : ${this.displayDate(date)}. Fin : à renseigner.\n${plan.downtime.join('\n')}\n\nComplète puis publie le résumé dans l’application MJ.`
+    const content = `Brouillon créé : résumé n°${draft.sessionNumber}.\nDébut : ${this.displayDate(date)}. Fin : à renseigner.\n${plan.interludes.join('\n')}\n\nComplète puis publie le résumé dans l’application MJ.`
     const announcementId = `pf2-new-game:announce:${draft.id}`
     this.pendingAnnouncements.set(announcementId, { content: `**Séance prévue — Résumé n°${draft.sessionNumber}**\nAvec : ${(pending.selected ?? []).map((actor) => `<@${actor.userId}>`).join(', ')}\nDébut de la mission : ${this.displayDate(date)}`, userIds: (pending.selected ?? []).map((actor) => actor.userId) })
     const publish = new ButtonBuilder().setCustomId(announcementId).setLabel('Publier l’annonce').setStyle(ButtonStyle.Primary)
     await interaction.update({ content, components: [new ActionRowBuilder<ButtonBuilder>().addComponents(publish)] })
   }
 
-  private async finishGameModal(interaction: ModalSubmitInteraction, pending: { selected?: Array<{ uuid: string; name: string; userId: string }> }, date: string, plan: { downtime: string[] }): Promise<void> {
+  private async finishGameModal(interaction: ModalSubmitInteraction, pending: { selected?: Array<{ uuid: string; name: string; userId: string }> }, date: string, plan: { interludes: string[] }): Promise<void> {
     const sessions = await this.persistence.listSessions()
     const sessionNumber = Math.max(0, ...sessions.map((session) => session.sessionNumber)) + 1
     const draft = await this.persistence.createSession({ sessionNumber, date: '', inGameStartDate: date, inGameEndDate: '', title: '', participants: (pending.selected ?? []).map((actor) => actor.uuid), published: false })
     const announcementId = `pf2-new-game:announce:${draft.id}`
     this.pendingAnnouncements.set(announcementId, { content: `**Séance prévue — Résumé n°${draft.sessionNumber}**\nAvec : ${(pending.selected ?? []).map((actor) => `<@${actor.userId}>`).join(', ')}\nDébut de la mission : ${this.displayDate(date)}`, userIds: (pending.selected ?? []).map((actor) => actor.userId) })
     const publish = new ButtonBuilder().setCustomId(announcementId).setLabel('Publier l’annonce').setStyle(ButtonStyle.Primary)
-    await interaction.reply({ content: `Brouillon créé : résumé n°${draft.sessionNumber}.\nDébut : ${this.displayDate(date)}. Fin : à renseigner.\n${plan.downtime.join('\n')}\n\nComplète puis publie le résumé dans l’application MJ.`, components: [new ActionRowBuilder<ButtonBuilder>().addComponents(publish)], ephemeral: true })
+    await interaction.reply({ content: `Brouillon créé : résumé n°${draft.sessionNumber}.\nDébut : ${this.displayDate(date)}. Fin : à renseigner.\n${plan.interludes.join('\n')}\n\nComplète puis publie le résumé dans l’application MJ.`, components: [new ActionRowBuilder<ButtonBuilder>().addComponents(publish)], ephemeral: true })
   }
 
   private missionEnd(session: import('../pf2-storage/Pf2PersistenceService').Pf2Session): string { return session.inGameEndDate || session.inGameStartDate }

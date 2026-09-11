@@ -78,6 +78,10 @@
                     link.href = mw.util.getUrl( title );
                     link.title = 'Lire le résumé long';
                 } else {
+                    if ( !state.canEdit ) {
+                        link.remove();
+                        return;
+                    }
                     link.classList.add( 'new' );
                     link.href = mw.util.getUrl( title, {
                         action: 'edit',
@@ -145,7 +149,8 @@
         var editButtons = state.canEdit
             ? '<button class="pf2-button pf2-primary" data-edit>Modifier</button>' +
               '<button class="pf2-button" data-publication="' + ( isPublished ? '0' : '1' ) + '">' +
-              ( isPublished ? 'Remettre en brouillon' : 'Publier' ) + '</button>'
+              ( isPublished ? 'Remettre en brouillon' : 'Publier' ) + '</button>' +
+              '<button class="pf2-button pf2-danger" data-delete>Supprimer</button>'
             : '';
 
         return '<article class="pf2-session" data-session-id="' + escapeHtml( session.id ) + '">' +
@@ -209,6 +214,12 @@
         if ( publication ) {
             publication.addEventListener( 'click', function () {
                 setPublication( session.id, publication.dataset.publication === '1' );
+            } );
+        }
+        var remove = article.querySelector( '[data-delete]' );
+        if ( remove ) {
+            remove.addEventListener( 'click', function () {
+                deleteSession( session.id );
             } );
         }
     }
@@ -279,6 +290,20 @@
             return load();
         } ).catch( function ( error ) {
             mw.notify( 'Impossible de modifier la publication : ' + error, { type: 'error' } );
+        } );
+    }
+
+    function deleteSession( id ) {
+        if ( !window.confirm( 'Supprimer définitivement cette séance de la base SQLite ?' ) ) { return; }
+        api.postWithToken( 'csrf', {
+            action: 'pf2sessiondelete',
+            format: 'json',
+            id: id
+        } ).then( function () {
+            mw.notify( 'Séance supprimée.', { type: 'success' } );
+            return load();
+        } ).catch( function ( error ) {
+            mw.notify( 'Impossible de supprimer la séance : ' + error, { type: 'error' } );
         } );
     }
 

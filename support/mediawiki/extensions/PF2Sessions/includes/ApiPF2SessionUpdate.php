@@ -40,8 +40,8 @@ class ApiPF2SessionUpdate extends ApiBase {
 
     private function requireEditor(): void {
         $user = $this->getUser();
-        if ( !$user->isRegistered() || !$user->isAllowed( 'edit' ) ) {
-            $this->dieWithError( 'Vous devez être connecté et autorisé à modifier le wiki.' );
+        if ( !$user->isRegistered() || !$user->isAllowed( 'delete' ) ) {
+            $this->dieWithError( 'Vous devez être administrateur pour modifier les séances.' );
         }
     }
 

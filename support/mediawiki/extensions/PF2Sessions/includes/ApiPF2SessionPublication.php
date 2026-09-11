@@ -5,8 +5,8 @@ use MediaWiki\MediaWikiServices;
 class ApiPF2SessionPublication extends ApiBase {
     public function execute() {
         $user = $this->getUser();
-        if ( !$user->isRegistered() || !$user->isAllowed( 'edit' ) ) {
-            $this->dieWithError( 'Vous devez être connecté et autorisé à modifier le wiki.' );
+        if ( !$user->isRegistered() || !$user->isAllowed( 'delete' ) ) {
+            $this->dieWithError( 'Vous devez être administrateur pour modifier la publication.' );
         }
 
         $params = $this->extractRequestParams();

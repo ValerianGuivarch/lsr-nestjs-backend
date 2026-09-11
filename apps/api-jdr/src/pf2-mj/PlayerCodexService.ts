@@ -113,6 +113,14 @@ export class PlayerCodexService {
     return this.character(npcId)
   }
   async removeCharacterFaction(npcId: string, factionId: string): Promise<void> { await this.db.query('DELETE FROM pf2_player_character_faction WHERE npc_id = ? AND player_faction_id = ?', [npcId, factionId]) }
+  async deleteCharacter(npcId: string): Promise<void> {
+    await this.character(npcId)
+    await this.db.transaction(async manager => {
+      await manager.query('DELETE FROM pf2_player_character_faction WHERE npc_id = ?', [npcId])
+      await manager.query('DELETE FROM pf2_character_presentation WHERE source_npc_id = ?', [npcId])
+      await manager.query('DELETE FROM pf2_player_character_profile WHERE npc_id = ?', [npcId])
+    })
+  }
   async listFactions(): Promise<unknown[]> { return (await this.db.query('SELECT * FROM pf2_player_faction ORDER BY name COLLATE NOCASE') as FactionRow[]).map(row => this.factionDto(row)) }
   async faction(id: string): Promise<unknown> { const rows = await this.db.query('SELECT * FROM pf2_player_faction WHERE id = ?', [id]) as FactionRow[]; if (!rows[0]) throw new NotFoundException('Faction joueur introuvable.'); return this.factionDto(rows[0]) }
   async createFaction(input: { name: string; wikiPageTitle?: string }): Promise<unknown> {
@@ -120,6 +128,14 @@ export class PlayerCodexService {
     try { await this.db.query('INSERT INTO pf2_player_faction (id, name, normalized_name, parent_faction_id, wiki_page_title) VALUES (?, ?, ?, NULL, ?)', [id, name, this.normalized(name), title]) }
     catch { const rows = await this.db.query('SELECT id FROM pf2_player_faction WHERE normalized_name = ?', [this.normalized(name)]) as Array<{ id: string }>; if (rows[0]) return this.faction(rows[0].id); throw new ConflictException('Titre wiki de faction déjà utilisé.') }
     return this.faction(id)
+  }
+  async deleteFaction(id: string): Promise<void> {
+    await this.faction(id)
+    await this.db.transaction(async manager => {
+      await manager.query('UPDATE pf2_player_faction SET parent_faction_id = NULL, updated_at = CURRENT_TIMESTAMP WHERE parent_faction_id = ?', [id])
+      await manager.query('DELETE FROM pf2_player_character_faction WHERE player_faction_id = ?', [id])
+      await manager.query('DELETE FROM pf2_player_faction WHERE id = ?', [id])
+    })
   }
   async updateFaction(id: string, input: { name?: unknown; parentFactionId?: unknown }): Promise<unknown> {
     const current = await this.factionRow(id)

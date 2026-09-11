@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpException,
   HttpStatus,
@@ -211,6 +212,14 @@ export class Pf2WikiSessionsController {
     }
 
     return { resume, discord }
+  }
+
+  @Delete(':id')
+  async remove(@Param('id') id: string): Promise<{ success: true; id: string }> {
+    const current = await this.persistence.getSession(id)
+    if (!current) throw new NotFoundException('Séance introuvable.')
+    await this.persistence.deleteSession(id)
+    return { success: true, id }
   }
 
   private editableInput(body: Record<string, unknown>): Pf2SessionInput {

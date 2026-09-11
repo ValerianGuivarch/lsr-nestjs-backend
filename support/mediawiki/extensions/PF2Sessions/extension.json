@@ -9,12 +9,14 @@
     "PF2SessionsHooks": "includes/PF2SessionsHooks.php",
     "ApiPF2Sessions": "includes/ApiPF2Sessions.php",
     "ApiPF2SessionUpdate": "includes/ApiPF2SessionUpdate.php",
-    "ApiPF2SessionPublication": "includes/ApiPF2SessionPublication.php"
+    "ApiPF2SessionPublication": "includes/ApiPF2SessionPublication.php",
+    "ApiPF2SessionDelete": "includes/ApiPF2SessionDelete.php"
   },
   "APIModules": {
     "pf2sessions": "ApiPF2Sessions",
     "pf2sessionupdate": "ApiPF2SessionUpdate",
-    "pf2sessionpublication": "ApiPF2SessionPublication"
+    "pf2sessionpublication": "ApiPF2SessionPublication",
+    "pf2sessiondelete": "ApiPF2SessionDelete"
   },
   "ResourceModules": {
     "ext.pf2sessions": {

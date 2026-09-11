@@ -10,10 +10,12 @@ export class PlayerCodexController {
   @Get('characters/:npcId') character(@Param('npcId') id: string): Promise<unknown> { return this.service.character(id) }
   @Post('characters') createCharacter(@Body() body: { npcId: string; displayName: string; wikiPageTitle: string; wikiPortraitFilename?: string | null; isPlayer?: boolean }): Promise<unknown> { return this.service.createCharacter(body) }
   @Patch('characters/:npcId') updateCharacter(@Param('npcId') id: string, @Body() body: { displayName?: unknown; wikiPortraitFilename?: unknown; isPlayer?: unknown }): Promise<unknown> { return this.service.updateCharacter(id, body) }
+  @Delete('characters/:npcId') async deleteCharacter(@Param('npcId') id: string): Promise<{ deleted: true }> { await this.service.deleteCharacter(id); return { deleted: true } }
   @Post('characters/:npcId/factions') addFaction(@Param('npcId') id: string, @Body() body: { factionId: string }): Promise<unknown> { return this.service.addCharacterFaction(id, body.factionId) }
   @Delete('characters/:npcId/factions/:factionId') async removeFaction(@Param('npcId') id: string, @Param('factionId') faction: string): Promise<{ removed: true }> { await this.service.removeCharacterFaction(id, faction); return { removed: true } }
   @Get('factions') factions(): Promise<unknown> { return this.service.listFactions() }
   @Get('factions/:id') faction(@Param('id') id: string): Promise<unknown> { return this.service.faction(id) }
   @Post('factions') createFaction(@Body() body: { name: string; wikiPageTitle?: string }): Promise<unknown> { return this.service.createFaction(body) }
   @Patch('factions/:id') updateFaction(@Param('id') id: string, @Body() body: { name?: unknown; parentFactionId?: unknown }): Promise<unknown> { return this.service.updateFaction(id, body) }
+  @Delete('factions/:id') async deleteFaction(@Param('id') id: string): Promise<{ deleted: true }> { await this.service.deleteFaction(id); return { deleted: true } }
 }

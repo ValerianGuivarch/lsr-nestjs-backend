@@ -52,4 +52,17 @@ describe('PlayerCodexService', () => {
     await codex.updateCharacter('janira', { isPlayer: false })
     await expect(codex.listPlayers()).resolves.toEqual([])
   })
+  it('removes only player-codex links and clears faction parents safely', async () => {
+    const { persistence, codex } = await open()
+    const parent = await codex.createFaction({ name: 'Parent' }) as { id: string }
+    const child = await codex.createFaction({ name: 'Enfant' }) as { id: string }
+    await codex.updateFaction(child.id, { parentFactionId: parent.id })
+    await codex.createCharacter({ npcId: 'janira', displayName: 'Janira', wikiPageTitle: 'Personnage:Janira' })
+    await codex.addCharacterFaction('janira', parent.id)
+    await codex.deleteCharacter('janira')
+    await expect(codex.character('janira')).rejects.toThrow('introuvable')
+    await expect(persistence.getRecord('pnj', 'janira')).resolves.toMatchObject({ nom: 'Janira Gavix' })
+    await codex.deleteFaction(parent.id)
+    await expect(codex.faction(child.id)).resolves.toMatchObject({ parentFactionId: null })
+  })
 })

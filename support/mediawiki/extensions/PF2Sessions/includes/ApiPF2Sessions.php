@@ -7,10 +7,10 @@ class ApiPF2Sessions extends ApiBase {
         $config = MediaWikiServices::getInstance()->getMainConfig();
         $base = rtrim( $config->get( 'PF2SessionsApiBase' ), '/' );
         $user = $this->getUser();
-        $canEdit = $user->isRegistered() && $user->isAllowed( 'edit' );
+        $canEdit = $user->isRegistered() && $user->isAllowed( 'delete' );
         // Les brouillons font partie de la chronologie publique : publication
         // contrôle l'envoi/validation finale, pas le droit de lecture.
-        // Les actions d'édition restent cependant protégées par canEdit.
+        // Les actions d'administration restent cependant protégées par canEdit.
         $url = $base . '/wiki/sessions?includeDrafts=1';
 
         $request = MediaWikiServices::getInstance()->getHttpRequestFactory()->create(
