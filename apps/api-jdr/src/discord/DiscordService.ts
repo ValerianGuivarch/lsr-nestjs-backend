@@ -183,7 +183,9 @@ export class DiscordService implements OnModuleInit, OnModuleDestroy {
 
     for (const channel of discovered.values()) {
       try {
+        this.logger.log(`Export Discord : lecture du salon « ${channel.name ?? channel.id} » (${channel.id}).`)
         const messages = await this.exportChannelMessages(channel, authors)
+        this.logger.log(`Export Discord : salon « ${channel.name ?? channel.id} » terminé (${messages.length} message${messages.length > 1 ? 's' : ''}).`)
         channels.push({
           id: channel.id,
           name: channel.name ?? channel.id,
@@ -210,6 +212,7 @@ export class DiscordService implements OnModuleInit, OnModuleDestroy {
   private async exportChannelMessages(channel: any, authors: DiscordFullExport['authors']): Promise<DiscordFullExport['channels'][number]['messages']> {
     const result: DiscordFullExport['channels'][number]['messages'] = []
     let before: string | undefined
+    let nextProgressAt = 1000
     do {
       const page = await channel.messages.fetch({ limit: 100, ...(before ? { before } : {}) })
       for (const message of page.values()) {
@@ -226,6 +229,10 @@ export class DiscordService implements OnModuleInit, OnModuleDestroy {
           content: message.content,
           replyToMessageId: message.reference?.messageId ?? null,
         })
+      }
+      if (result.length >= nextProgressAt) {
+        this.logger.log(`Export Discord : salon « ${channel.name ?? channel.id} » — ${result.length} messages lus.`)
+        nextProgressAt += 1000
       }
       before = page.last()?.id
       if (page.size < 100) break
