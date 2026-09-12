@@ -122,6 +122,17 @@ export class PlayerCodexService {
       await manager.query('DELETE FROM pf2_player_character_profile WHERE npc_id = ?', [npcId])
     })
   }
+  async deleteMjPnj(npcId: string): Promise<void> {
+    const pnj = await this.persistence.getRecord('pnj', npcId)
+    if (!pnj) throw new NotFoundException('PNJ MJ introuvable.')
+    const profiles = await this.db.query('SELECT wiki_page_title FROM pf2_player_character_profile WHERE npc_id = ?', [npcId]) as Array<{ wiki_page_title: string }>
+    if (profiles[0]) throw new ConflictException(`Ce personnage possède la fiche Wiki « ${profiles[0].wiki_page_title} ». Supprime-la d’abord depuis le Wiki.`)
+    await this.db.transaction(async manager => {
+      await manager.query('DELETE FROM pf2_scenario_npc WHERE npc_id = ?', [npcId])
+      await manager.query('DELETE FROM pf2_character_presentation WHERE source_npc_id = ?', [npcId])
+      await manager.query('DELETE FROM pf2_record WHERE kind = ? AND id = ?', ['pnj', npcId])
+    })
+  }
   async listFactions(): Promise<unknown[]> { return (await this.db.query('SELECT * FROM pf2_player_faction ORDER BY name COLLATE NOCASE') as FactionRow[]).map(row => this.factionDto(row)) }
   async faction(id: string): Promise<unknown> { const rows = await this.db.query('SELECT * FROM pf2_player_faction WHERE id = ?', [id]) as FactionRow[]; if (!rows[0]) throw new NotFoundException('Faction joueur introuvable.'); return this.factionDto(rows[0]) }
   async createFaction(input: { name?: unknown; wikiPageTitle?: unknown }): Promise<unknown> {

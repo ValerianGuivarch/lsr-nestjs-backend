@@ -65,4 +65,14 @@ describe('PlayerCodexService', () => {
     await codex.deleteFaction(parent.id)
     await expect(codex.faction(child.id)).resolves.toMatchObject({ parentFactionId: null })
   })
+  it('deletes an MJ-only PNJ but refuses when a Wiki character profile exists', async () => {
+    const { persistence, codex } = await open()
+    await codex.deleteMjPnj('janira')
+    await expect(persistence.getRecord('pnj', 'janira')).resolves.toBeNull()
+
+    await persistence.saveRecord('pnj', { id: 'janira', nom: 'Janira Gavix' })
+    await codex.createCharacter({ npcId: 'janira', displayName: 'Janira', wikiPageTitle: 'Personnage:Janira' })
+    await expect(codex.deleteMjPnj('janira')).rejects.toThrow('Supprime-la d’abord depuis le Wiki')
+    await expect(persistence.getRecord('pnj', 'janira')).resolves.toMatchObject({ nom: 'Janira Gavix' })
+  })
 })

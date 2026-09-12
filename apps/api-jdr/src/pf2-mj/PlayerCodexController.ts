@@ -7,6 +7,7 @@ export class PlayerCodexController {
   @Get('character-candidates') candidates(@Query('q') q = ''): Promise<unknown> { return this.service.characterCandidates(q) }
   @Get('characters') characters(): Promise<unknown> { return this.service.listCharacters() }
   @Get('players') players(): Promise<unknown> { return this.service.listPlayers() }
+  @Delete('mj-pnj/:npcId') async deleteMjPnj(@Param('npcId') id: string): Promise<{ deleted: true }> { await this.service.deleteMjPnj(id); return { deleted: true } }
   @Get('characters/:npcId') character(@Param('npcId') id: string): Promise<unknown> { return this.service.character(id) }
   @Post('characters') createCharacter(@Body() body: { npcId: string; displayName: string; wikiPageTitle: string; wikiPortraitFilename?: string | null; isPlayer?: boolean }): Promise<unknown> { return this.service.createCharacter(body) }
   @Patch('characters/:npcId') updateCharacter(@Param('npcId') id: string, @Body() body: { displayName?: unknown; wikiPortraitFilename?: unknown; isPlayer?: unknown }): Promise<unknown> { return this.service.updateCharacter(id, body) }

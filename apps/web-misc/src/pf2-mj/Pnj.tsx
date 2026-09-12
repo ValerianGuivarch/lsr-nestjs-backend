@@ -20,6 +20,7 @@ type Pnj={
   notes?:string;
 };
 type ScenarioLink={scenarioId:string;role?:string|null;importance?:string|null;titleFr?:string;titleOriginal?:string;nom?:string};
+type WikiCharacterProfile={wikiPageTitle:string};
 
 type Draft={
   nom:string;
@@ -133,6 +134,7 @@ export default function PnjPage({initialSelectedId}:{initialSelectedId?:string})
   const [importance,setImportance]=useState("");
   const [selected,setSelected]=useState<Pnj|null>(null);
   const [selectedScenarios,setSelectedScenarios]=useState<ScenarioLink[]>([]);
+  const [selectedWikiProfile,setSelectedWikiProfile]=useState<WikiCharacterProfile|null|undefined>(undefined);
   const [showEditor,setShowEditor]=useState(false);
   const [editingId,setEditingId]=useState<string|null>(null);
   const [draft,setDraft]=useState<Draft>(emptyDraft);
@@ -158,6 +160,16 @@ export default function PnjPage({initialSelectedId}:{initialSelectedId?:string})
       .then(response=>response.ok?response.json():[])
       .then(value=>setSelectedScenarios(Array.isArray(value)?value:[]))
       .catch(()=>setSelectedScenarios([]));
+  },[selected]);
+  useEffect(()=>{
+    if(!selected){setSelectedWikiProfile(undefined);return}
+    let cancelled=false;
+    setSelectedWikiProfile(undefined);
+    fetch(`/apil7r/pf2-mj/player-codex/characters/${encodeURIComponent(selected.id)}`,{cache:"no-store"})
+      .then(async response=>response.ok?await response.json():null)
+      .then(value=>{if(!cancelled)setSelectedWikiProfile(value&&typeof value.wikiPageTitle==="string"?value:null)})
+      .catch(()=>{if(!cancelled)setSelectedWikiProfile(null)});
+    return()=>{cancelled=true};
   },[selected]);
 
   const factionNames=useMemo(()=>new Map(factionRefs.map(item=>[item.id,item.nom])),[factionRefs]);
@@ -284,6 +296,20 @@ export default function PnjPage({initialSelectedId}:{initialSelectedId?:string})
       setMessage(`${saved.nom} ${editingId?"modifié":"enregistré"}.`);
     }catch(error){setMessage(error instanceof Error?error.message:String(error))}
     finally{setBusy(false)}
+  };
+
+  const deletePnj=async(p:Pnj)=>{
+    if(selectedWikiProfile){setMessage(`Suppression impossible : ${p.nom} possède la fiche Wiki « ${selectedWikiProfile.wikiPageTitle} ». Supprime-la d’abord depuis le Wiki.`);return}
+    if(!window.confirm(`Supprimer définitivement ${p.nom} du référentiel MJ ? Ses liens de scénario seront retirés. Le portrait physique sera conservé.`))return;
+    setBusy(true);setMessage("");
+    try{
+      const response=await fetch(`/apil7r/pf2-mj/player-codex/mj-pnj/${encodeURIComponent(p.id)}`,{method:"DELETE"});
+      const payload=await response.json().catch(()=>null);
+      if(!response.ok)throw new Error(payload?.message||payload?.error||`Erreur HTTP ${response.status}`);
+      setPnjs(current=>current.filter(item=>item.id!==p.id));
+      setSelected(null);
+      setMessage(`${p.nom} a été supprimé du référentiel MJ.`);
+    }catch(error){setMessage(error instanceof Error?error.message:String(error))}finally{setBusy(false)}
   };
 
   const importJson=async()=>{
@@ -464,7 +490,7 @@ export default function PnjPage({initialSelectedId}:{initialSelectedId?:string})
 
     {selected&&<div className="pnj-dialog-backdrop" onMouseDown={e=>{if(e.target===e.currentTarget)setSelected(null)}}>
       <article className="pnj-dialog pnj-detail" role="dialog" aria-modal="true" aria-label={selected.nom}>
-        <div className="pnj-dialog-head"><h2>{selected.nom}</h2><button className="pnj-button primary" onClick={()=>openEdit(selected)}>Modifier</button><button className="pnj-button" onClick={()=>setSelected(null)}>Fermer</button></div>
+        <div className="pnj-dialog-head"><h2>{selected.nom}</h2><button className="pnj-button primary" onClick={()=>openEdit(selected)}>Modifier</button>{selectedWikiProfile===null?<button className="pnj-button" disabled={busy} onClick={()=>void deletePnj(selected)}>Supprimer</button>:<span title={selectedWikiProfile?.wikiPageTitle?`Fiche Wiki liée : ${selectedWikiProfile.wikiPageTitle}`:"Vérification de la fiche Wiki…"}>{selectedWikiProfile?.wikiPageTitle?"Suppression à faire depuis le Wiki":"Vérification Wiki…"}</span>}<button className="pnj-button" onClick={()=>setSelected(null)}>Fermer</button></div>
         {resolvePnjImage(selected) ? <div className="pnj-detail-media"><img className="pnj-detail-image" src={resolvePnjImage(selected)} alt={`Portrait de ${selected.nom}`}/><CopyPortraitButton p={selected} detail/></div> : null}
         <p>{selected.description}</p>
         <dl>

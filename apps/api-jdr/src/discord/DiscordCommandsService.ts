@@ -20,6 +20,7 @@ export class DiscordCommandsService {
       new SlashCommandBuilder().setName('ping').setDescription('Vérifie que PF2-Bot répond.').toJSON(),
       new SlashCommandBuilder().setName('rec').setDescription('Récapitule les séances jouées par joueur.').toJSON(),
       new SlashCommandBuilder().setName('recap').setDescription('Récapitule les séances jouées par joueur.').toJSON(),
+      new SlashCommandBuilder().setName('export-full').setDescription('Exporte tous les messages texte du serveur en JSON.').toJSON(),
       new SlashCommandBuilder().setName('new-game').setDescription('Prépare une nouvelle mission PF2 depuis les PJ actifs dans ce salon.').toJSON(),
       new SlashCommandBuilder().setName('finish-game').setDescription('Termine une mission et met à jour son résumé.').addIntegerOption(option => option.setName('xp').setDescription('XP gagnée par PJ').setRequired(true).setMinValue(0)).addIntegerOption(option => option.setName('numero').setDescription('Numéro du résumé à terminer')).addStringOption(option => option.setName('fin').setDescription('Date de fin en jeu : YYYY-MM-DD')).addIntegerOption(option => option.setName('jours').setDescription('Durée en jours, à partir du début en jeu').setMinValue(1)).toJSON(),
       new SlashCommandBuilder().setName('resume').setDescription('Édite le résumé court d’une séance.').addStringOption(option => option.setName('session').setDescription('Numéro de séance, si le contexte ne suffit pas').setAutocomplete(true)).toJSON(),
@@ -39,6 +40,10 @@ export class DiscordCommandsService {
       await interaction.editReply({ content: await this.recapMessage() })
       return true
     }
+    if (interaction.commandName === 'export-full') {
+      await this.exportFull(interaction as ChatInputCommandInteraction)
+      return true
+    }
     if (interaction.commandName === 'new-game') {
       await this.newGame(interaction as ChatInputCommandInteraction)
       return true
@@ -50,6 +55,31 @@ export class DiscordCommandsService {
     if (interaction.commandName === 'resume') { await this.resumeCommand(interaction as ChatInputCommandInteraction); return true }
     if (interaction.commandName === 'personnage') { await this.presentCharacter(interaction as ChatInputCommandInteraction); return true }
     return false
+  }
+
+  private async exportFull(interaction: ChatInputCommandInteraction): Promise<void> {
+    if (!interaction.memberPermissions?.has(PermissionFlagsBits.ManageGuild)) {
+      await interaction.reply({ content: 'Cette commande est réservée aux administrateurs du serveur.', ephemeral: true })
+      return
+    }
+    await interaction.deferReply({ ephemeral: true })
+    try {
+      const exportData = await this.discord?.exportFullGuild()
+      if (!exportData) throw new Error('Discord est indisponible ou désactivé.')
+      const json = JSON.stringify(exportData, null, 2)
+      const bytes = Buffer.byteLength(json, 'utf8')
+      // Discord's normal attachment limit is at least 25 MiB. Refuse rather
+      // than silently returning an incomplete export.
+      if (bytes > 25 * 1024 * 1024) throw new Error(`Export trop volumineux (${Math.ceil(bytes / 1024 / 1024)} Mo). Aucun export partiel n’a été envoyé.`)
+      const stamp = exportData.exportedAt.slice(0, 10)
+      await interaction.editReply({
+        content: `${exportData.channels.length} salon(s)/fil(s), ${Object.keys(exportData.authors).length} auteur(s), ${exportData.skipped.length} élément(s) ignoré(s).`,
+        files: [{ attachment: Buffer.from(json, 'utf8'), name: `discord-export-${stamp}.json` }],
+      })
+    } catch (error) {
+      this.logger.error('Export Discord complet impossible', error instanceof Error ? error.stack : undefined)
+      await interaction.editReply({ content: `Export impossible : ${error instanceof Error ? error.message : String(error)}` })
+    }
   }
 
   async handleAutocomplete(interaction: AutocompleteInteraction): Promise<boolean> {

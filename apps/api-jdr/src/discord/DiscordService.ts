@@ -1,6 +1,7 @@
 import { forwardRef, Inject, Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common'
 import {
   Client,
+  ChannelType,
   Events,
   GatewayIntentBits,
   Interaction,
@@ -19,6 +20,16 @@ export type DiscordResumeSync = {
   status: 'skipped' | 'created' | 'updated' | 'failed'
   messageId?: string
   reason?: string
+}
+
+export type DiscordFullExport = {
+  schemaVersion: 1
+  exportedAt: string
+  guild: { id: string; name: string }
+  excluded: string[]
+  authors: Record<string, { username: string; globalName: string | null; bot: boolean }>
+  channels: Array<{ id: string; name: string; type: string; parentId: string | null; messages: Array<{ id: string; createdAt: string; editedAt: string | null; authorId: string; content: string; replyToMessageId: string | null }> }>
+  skipped: Array<{ id: string; name: string; reason: string }>
 }
 
 @Injectable()
@@ -152,6 +163,94 @@ export class DiscordService implements OnModuleInit, OnModuleDestroy {
   async onModuleDestroy(): Promise<void> {
     this.client?.destroy()
     this.client = null
+  }
+
+  async exportFullGuild(): Promise<DiscordFullExport> {
+    const config = this.config()
+    if (!this.client || !config) throw new Error('Discord est indisponible ou désactivé.')
+    const guild = await this.client.guilds.fetch(config.guildId)
+    const authors: DiscordFullExport['authors'] = {}
+    const channels: DiscordFullExport['channels'] = []
+    const skipped: DiscordFullExport['skipped'] = []
+    const discovered = new Map<string, any>()
+    const guildChannels = await guild.channels.fetch()
+
+    for (const channel of guildChannels.values()) {
+      if (!channel || channel.isThread?.() || !channel.isTextBased?.() || !('messages' in channel)) continue
+      discovered.set(channel.id, channel)
+      await this.discoverThreads(channel, discovered)
+    }
+
+    for (const channel of discovered.values()) {
+      try {
+        const messages = await this.exportChannelMessages(channel, authors)
+        channels.push({
+          id: channel.id,
+          name: channel.name ?? channel.id,
+          type: ChannelType[channel.type] ?? String(channel.type),
+          parentId: channel.parentId ?? null,
+          messages,
+        })
+      } catch (error) {
+        skipped.push({ id: channel.id, name: channel.name ?? channel.id, reason: error instanceof Error ? error.message : String(error) })
+      }
+    }
+
+    return {
+      schemaVersion: 1,
+      exportedAt: new Date().toISOString(),
+      guild: { id: guild.id, name: guild.name },
+      excluded: ['attachments', 'images', 'embeds', 'stickers', 'reactions'],
+      authors,
+      channels: channels.sort((left, right) => left.name.localeCompare(right.name, 'fr')),
+      skipped,
+    }
+  }
+
+  private async exportChannelMessages(channel: any, authors: DiscordFullExport['authors']): Promise<DiscordFullExport['channels'][number]['messages']> {
+    const result: DiscordFullExport['channels'][number]['messages'] = []
+    let before: string | undefined
+    do {
+      const page = await channel.messages.fetch({ limit: 100, ...(before ? { before } : {}) })
+      for (const message of page.values()) {
+        authors[message.author.id] ??= {
+          username: message.author.username,
+          globalName: message.author.globalName ?? null,
+          bot: message.author.bot,
+        }
+        result.push({
+          id: message.id,
+          createdAt: message.createdAt.toISOString(),
+          editedAt: message.editedTimestamp ? new Date(message.editedTimestamp).toISOString() : null,
+          authorId: message.author.id,
+          content: message.content,
+          replyToMessageId: message.reference?.messageId ?? null,
+        })
+      }
+      before = page.last()?.id
+      if (page.size < 100) break
+    } while (before)
+    return result.reverse()
+  }
+
+  private async discoverThreads(channel: any, discovered: Map<string, any>): Promise<void> {
+    if (!channel.threads) return
+    try {
+      const active = await channel.threads.fetchActive()
+      for (const thread of active.threads.values()) discovered.set(thread.id, thread)
+      for (const type of ['public', 'private'] as const) {
+        let before: Date | undefined
+        do {
+          const archived = await channel.threads.fetchArchived({ type, limit: 100, ...(before ? { before } : {}) })
+          for (const thread of archived.threads.values()) discovered.set(thread.id, thread)
+          const last = archived.threads.last()
+          before = last?.archiveTimestamp ? new Date(last.archiveTimestamp) : undefined
+          if (!archived.hasMore || !before) break
+        } while (before)
+      }
+    } catch (error) {
+      this.logger.warn(`Export Discord : fils incomplets pour ${channel.name ?? channel.id} : ${error instanceof Error ? error.message : String(error)}`)
+    }
   }
 
   async synchronizeResumeShortSummary(
