@@ -25,6 +25,15 @@ export type ScenarioResetResult = ScenarioResetPreview
 
 export type CatalogueEntityKind = 'meta' | 'section' | 'collection' | 'entry' | 'arc' | 'thread'
 export type CatalogueEntity = { entityKind: CatalogueEntityKind; id: string; parentId: string | null; subtype: string | null; name: string | null; sortOrder: number; payload: Record<string, unknown> }
+export type PlayableComponentContinuityMode = 'free' | 'soft_lock' | 'hard_lock'
+export type PlayableComponent = {
+  id: string
+  title: string
+  description: string
+  estimatedSessions?: { min: number; max: number }
+  continuity: { mode: PlayableComponentContinuityMode; returnToHubPossible: boolean; recommendedSameParty: boolean; notes: string }
+  order: number
+}
 export type LibraryAsset = { id: string; path: string; filename: string; assetType: string; targetId: string | null; targetKind: string | null; role: string | null; language: string | null; variant: string | null; completeness: string | null; translationOf: string | null; associationStatus: string; associationScore: number | null; evidence: string[]; metadata: Record<string, unknown>; present: boolean; lastSeenAt: string | null; sortOrder: number }
 
 const referenceFiles = {
@@ -431,6 +440,18 @@ export class Pf2PersistenceService implements OnModuleInit {
     return rows.map((row) => this.object(JSON.parse(row.payload)))
   }
 
+  /** Replaces only the narrative decomposition of one catalogue entry. */
+  async replacePlayableComponents(scenarioId: string, playableComponents: PlayableComponent[]): Promise<Record<string, unknown>> {
+    return this.dataSource.transaction(async (manager) => {
+      const rows = await manager.query("SELECT payload FROM pf2_catalogue_entity WHERE entity_kind = 'entry' AND id = ?", [scenarioId]) as Array<{ payload: string }>
+      if (!rows[0]) throw new Error(`Scénario introuvable : ${scenarioId}.`)
+      const entry = this.object(JSON.parse(rows[0].payload))
+      const next = { ...entry, playableComponents }
+      await manager.query("UPDATE pf2_catalogue_entity SET payload = ?, updated_at = CURRENT_TIMESTAMP WHERE entity_kind = 'entry' AND id = ?", [JSON.stringify(next), scenarioId])
+      return next
+    })
+  }
+
   async readGeographyConfig(): Promise<Record<string, unknown>> {
     return (await this.get('geography-config', 'canonical')) ?? { aliases: {}, parents: {} }
   }
@@ -680,6 +701,15 @@ export class Pf2PersistenceService implements OnModuleInit {
       const columns = await manager.query('PRAGMA table_info(pf2_player_character_profile)') as Array<{ name: string }>
       if (!columns.some((column) => column.name === 'is_player')) await manager.query('ALTER TABLE pf2_player_character_profile ADD COLUMN is_player INTEGER NOT NULL DEFAULT 0')
       await manager.query('CREATE INDEX IF NOT EXISTS idx_pf2_player_profile_is_player_name ON pf2_player_character_profile (is_player, display_name)')
+    })
+    await this.applyMigration('019-catalogue-playable-components', async (manager) => {
+      const rows = await manager.query("SELECT id, payload FROM pf2_catalogue_entity WHERE entity_kind = 'entry'") as Array<{ id: string; payload: string }>
+      for (const row of rows) {
+        let entry: Record<string, unknown>
+        try { entry = this.object(JSON.parse(row.payload)) } catch { continue }
+        if (Array.isArray(entry.playableComponents)) continue
+        await manager.query("UPDATE pf2_catalogue_entity SET payload = ?, updated_at = CURRENT_TIMESTAMP WHERE entity_kind = 'entry' AND id = ?", [JSON.stringify({ ...entry, playableComponents: [] }), row.id])
+      }
     })
   }
 

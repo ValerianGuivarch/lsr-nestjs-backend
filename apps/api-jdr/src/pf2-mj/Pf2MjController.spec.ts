@@ -13,7 +13,7 @@ describe('Pf2MjController', () => {
     ]
     const foundry = { listActors: jest.fn().mockResolvedValue(actors) }
     const service = { saveResumeActorCache: jest.fn(), readResumeActorCache: jest.fn() }
-    const controller = new Pf2MjController(service as unknown as Pf2MjService, foundry as unknown as FoundryRelayService)
+    const controller = new Pf2MjController(service as unknown as Pf2MjService, foundry as unknown as FoundryRelayService, {} as never, {} as never, {} as never, {} as never, {} as never)
 
     await expect(controller.actors()).resolves.toEqual([
       { uuid: 'Actor.pepin', name: 'Pépin (Eric)' },
@@ -32,7 +32,7 @@ describe('Pf2MjController', () => {
         { uuid: 'Actor.janira', name: 'Janira Gavix' }
       ])
     }
-    const controller = new Pf2MjController(service as unknown as Pf2MjService, foundry as unknown as FoundryRelayService)
+    const controller = new Pf2MjController(service as unknown as Pf2MjService, foundry as unknown as FoundryRelayService, {} as never, {} as never, {} as never, {} as never, {} as never)
 
     await expect(controller.actors()).resolves.toEqual([
       { uuid: 'Actor.yaz', name: 'Yaz Lorok (Gus)' }
@@ -44,7 +44,7 @@ describe('Pf2MjController', () => {
     const foundry = { listActors: jest.fn() }
     const inventory = { schemaVersion: 1, inventoryKnown: true, scannedAt: '2026-09-01T00:00:00.000Z', totalOnDisk: 1, bundles: [] }
     const service = { resourceBundles: jest.fn().mockResolvedValue(inventory) }
-    const controller = new Pf2MjController(service as unknown as Pf2MjService, foundry as unknown as FoundryRelayService)
+    const controller = new Pf2MjController(service as unknown as Pf2MjService, foundry as unknown as FoundryRelayService, {} as never, {} as never, {} as never, {} as never, {} as never)
 
     await expect(controller.resourceBundles()).resolves.toEqual(inventory)
     expect(service.resourceBundles).toHaveBeenCalledTimes(1)

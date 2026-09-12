@@ -37,6 +37,30 @@ export class Pf2MjController {
   @Get('scenarios/:id/relations')
   relationsForScenario(@Param('id') id: string): Promise<Record<string, unknown[]>> { return this.scenarioPackages.relationsForScenario(id) }
 
+  @Get('scenarios/:id/playable-components')
+  async playableComponentsForScenario(@Param('id') id: string): Promise<unknown> {
+    try { return { scenarioId: id, playableComponents: await this.service.playableComponentsForScenario(id) } }
+    catch (error) { throw new HttpException(error instanceof Error ? error.message : 'Lecture des composants jouables impossible.', HttpStatus.NOT_FOUND) }
+  }
+
+  @Put('scenarios/:id/playable-components')
+  async replacePlayableComponentsForScenario(@Param('id') id: string, @Body() body: unknown): Promise<unknown> {
+    try { return await this.service.replacePlayableComponents(id, body) }
+    catch (error) { throw new HttpException(error instanceof Error ? error.message : 'Mise à jour des composants jouables impossible.', HttpStatus.BAD_REQUEST) }
+  }
+
+  @Post('playable-components/import')
+  async importPlayableComponents(@Body() body: unknown): Promise<unknown> {
+    try { return await this.service.importPlayableComponents(body) }
+    catch (error) { throw new HttpException(error instanceof Error ? error.message : 'Import des composants jouables impossible.', HttpStatus.BAD_REQUEST) }
+  }
+
+  @Get('campaigns/:id/playable-components')
+  async playableComponentsForCampaign(@Param('id') id: string): Promise<unknown> {
+    try { return await this.service.campaignPlayableComponents(id) }
+    catch (error) { throw new HttpException(error instanceof Error ? error.message : 'Lecture des composants de campagne impossible.', HttpStatus.NOT_FOUND) }
+  }
+
   @Get('scenario-registry')
   scenarioRegistry(): Promise<unknown[]> { return this.scenarioPackages.scenarioRegistry() }
 

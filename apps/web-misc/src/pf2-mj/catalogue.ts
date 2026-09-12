@@ -61,6 +61,20 @@ export type Titles = {
   aliases: string[]
 }
 
+export type PlayableComponent = {
+  id: string
+  title: string
+  description: string
+  estimatedSessions?: { min: number; max: number }
+  continuity: {
+    mode: 'free' | 'soft_lock' | 'hard_lock'
+    returnToHubPossible: boolean
+    recommendedSameParty: boolean
+    notes: string
+  }
+  order: number
+}
+
 export type CatalogueSection = {
   id: string
   title: string
@@ -85,6 +99,8 @@ export type Container = {
   editorialStatus: Usage | null
   chronology: { yearAR: number | null; estimated: boolean; period: string | null }
   arcIds: string[]
+  /** Components narratifs jouables explicitement documentés for this campaign. */
+  playableComponents: PlayableComponent[]
   legacyEntryId?: string
   migration: { status: 'ready' | 'needsReview'; issues: string[] }
 }
@@ -112,6 +128,7 @@ export type PlayableUnit = {
   arcIds: string[]
   narrativeThread: string | null
   characterHooks: Array<{ characterId: string; rationale: string }>
+  playableComponents: PlayableComponent[]
   organizedPlay?: { repeatable?: boolean; ruleAsOf?: string }
   migration: { status: 'ready' | 'needsReview'; issues: string[]; generatedFromPart?: boolean }
 }
@@ -233,6 +250,7 @@ type RawPart = {
   requiredForCore?: boolean
   notes?: string
   documents?: RawDocumentLink[]
+  playableComponents?: unknown
 }
 type RawEntry = {
   id: string
@@ -263,6 +281,7 @@ type RawEntry = {
   timeline?: { yearAR: number | null; estimated: boolean }
   organizedPlay?: { repeatable?: boolean; ruleAsOf?: string }
   researchStatus?: string
+  playableComponents?: unknown
 }
 type RawCollection = {
   id: string
@@ -450,6 +469,23 @@ function componentType(part: RawPart): ComponentType {
   return map[part.kind] ?? 'other'
 }
 
+function playableComponentsOf(value: unknown): PlayableComponent[] {
+  if (!Array.isArray(value)) return []
+  return value.flatMap((rawComponent) => {
+    if (!rawComponent || typeof rawComponent !== 'object' || Array.isArray(rawComponent)) return []
+    const component = rawComponent as Record<string, unknown>
+    const continuity = component.continuity && typeof component.continuity === 'object' && !Array.isArray(component.continuity) ? component.continuity as Record<string, unknown> : {}
+    const mode = continuity.mode
+    if (typeof component.id !== 'string' || !component.id.trim() || typeof component.title !== 'string' || typeof component.description !== 'string' || !Number.isInteger(component.order) || !(['free', 'soft_lock', 'hard_lock'] as string[]).includes(String(mode)) || typeof continuity.returnToHubPossible !== 'boolean' || typeof continuity.recommendedSameParty !== 'boolean') return []
+    const duration = component.estimatedSessions && typeof component.estimatedSessions === 'object' && !Array.isArray(component.estimatedSessions) ? component.estimatedSessions as Record<string, unknown> : null
+    const estimatedSessions = duration && Number.isInteger(duration.min) && Number.isInteger(duration.max) && Number(duration.min) >= 0 && Number(duration.max) >= Number(duration.min) ? { min: Number(duration.min), max: Number(duration.max) } : undefined
+    return [{
+      id: component.id.trim(), title: component.title, description: component.description, order: Number(component.order), estimatedSessions,
+      continuity: { mode: mode as PlayableComponent['continuity']['mode'], returnToHubPossible: continuity.returnToHubPossible, recommendedSameParty: continuity.recommendedSameParty, notes: typeof continuity.notes === 'string' ? continuity.notes : '' }
+    }]
+  }).sort((left, right) => left.order - right.order)
+}
+
 function collectionType(collection: RawCollection): ContainerType {
   if (collection.kind === 'pfs-season') return 'pfsSeason'
   if (collection.kind === 'series') return 'series'
@@ -512,6 +548,7 @@ function rebuildCatalogue(): void {
     editorialStatus: null,
     chronology: { yearAR: null, estimated: true, period: null },
     arcIds: [],
+    playableComponents: [],
     migration: { status: 'ready', issues: [] },
   }))
 
@@ -536,6 +573,7 @@ function rebuildCatalogue(): void {
       editorialStatus: entry.story.usage ?? null,
       chronology: { yearAR: entry.timeline?.yearAR ?? null, estimated: entry.timeline?.estimated ?? true, period: entry.story.period ?? null },
       arcIds: entry.arcIds,
+      playableComponents: playableComponentsOf(entry.playableComponents),
       legacyEntryId: entry.id,
       migration: { status: issues.length ? 'needsReview' : 'ready', issues },
     }
@@ -572,6 +610,7 @@ function rebuildCatalogue(): void {
       arcIds: entry.arcIds,
       narrativeThread: entry.story.thread ?? null,
       characterHooks: entry.characterHooks,
+      playableComponents: playableComponentsOf(entry.playableComponents),
       organizedPlay: entry.organizedPlay,
       migration: { status: issues.length ? 'needsReview' : 'ready', issues },
     }
@@ -606,6 +645,7 @@ function rebuildCatalogue(): void {
         arcIds: entry.arcIds,
         narrativeThread: entry.story.thread ?? null,
         characterHooks: entry.characterHooks,
+        playableComponents: playableComponentsOf(part.playableComponents),
         migration: { status: issues.length ? 'needsReview' : 'ready', issues, generatedFromPart: true },
       }
     }),

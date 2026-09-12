@@ -76,13 +76,12 @@ describe('Pf2PersistenceService', () => {
       sessionXp: 400,
       longSummaryXp: 60,
       shortSummaryXp: 30,
-      longSummaryUrl: 'https://wiki.example.test/seances/001',
       shortSummary: 'Résumé court'
     })
-    expect(created).toMatchObject({ id: 'seance-001', sessionNumber: 1, date: '2026-08-28', title: 'Premier test', participants: ['Actor.yaz', 'Actor.pepin'], longSummaryAuthor: 'Actor.pepin', shortSummaryAuthor: 'Actor.yaz', sessionXp: 400, longSummaryXp: 60, shortSummaryXp: 30, longSummaryUrl: 'https://wiki.example.test/seances/001', shortSummary: 'Résumé court' })
+    expect(created).toMatchObject({ id: 'seance-001', sessionNumber: 1, date: '2026-08-28', title: 'Premier test', participants: ['Actor.yaz', 'Actor.pepin'], longSummaryAuthor: 'Actor.pepin', shortSummaryAuthor: 'Actor.yaz', sessionXp: 400, longSummaryXp: 60, shortSummaryXp: 30, shortSummary: 'Résumé court' })
     await expect(first.getSession('seance-001')).resolves.toEqual(expect.objectContaining({ title: 'Premier test' }))
 
-    await expect(first.updateSession('seance-001', { title: 'Premier test corrigé', sessionXp: 450, shortSummary: 'Résumé court corrigé' })).resolves.toEqual(expect.objectContaining({ title: 'Premier test corrigé', sessionXp: 450, shortSummary: 'Résumé court corrigé', longSummaryUrl: 'https://wiki.example.test/seances/001' }))
+    await expect(first.updateSession('seance-001', { title: 'Premier test corrigé', sessionXp: 450, shortSummary: 'Résumé court corrigé' })).resolves.toEqual(expect.objectContaining({ title: 'Premier test corrigé', sessionXp: 450, shortSummary: 'Résumé court corrigé' }))
     await expect(first.createSession({ title: 'Sans numéro' })).rejects.toThrow('numéro de résumé est obligatoire')
     await expect(first.createSession({ sessionNumber: 2 })).resolves.toEqual(expect.objectContaining({ sessionNumber: 2, title: '', date: '' }))
     await expect(first.createSession({ sessionNumber: 1 })).rejects.toThrow('existe déjà')
@@ -106,6 +105,10 @@ describe('Pf2PersistenceService', () => {
       { id: '013-scenario-deployment-operations' }
       , { id: '014-session-mission-dates' }
       , { id: '015-session-in-game-dates' }
+      , { id: '016-remove-session-long-summary-url' }
+      , { id: '017-player-codex' }
+      , { id: '018-player-character-is-player' }
+      , { id: '019-catalogue-playable-components' }
     ])
 
     await currentDataSource().destroy()
@@ -130,6 +133,10 @@ describe('Pf2PersistenceService', () => {
       { id: '013-scenario-deployment-operations' }
       , { id: '014-session-mission-dates' }
       , { id: '015-session-in-game-dates' }
+      , { id: '016-remove-session-long-summary-url' }
+      , { id: '017-player-codex' }
+      , { id: '018-player-character-is-player' }
+      , { id: '019-catalogue-playable-components' }
     ])
   })
 
@@ -155,6 +162,26 @@ describe('Pf2PersistenceService', () => {
     const reopened = await open()
     await expect(reopened.readGeographyConfig()).resolves.toEqual({ aliases: { Absalom: 'Absalom' }, parents: {} })
     expect(((await reopened.readCatalogueSnapshot()).entries as Array<Record<string, unknown>>)[0]).toEqual(expect.objectContaining({ id: 'pfs-s01-01' }))
+  })
+
+  it('adds an empty playableComponents array once and replaces only that field', async () => {
+    const service = await open()
+    await service.replaceCatalogueSnapshot({
+      schemaVersion: 2, meta: {}, files: [], collections: [], arcs: [], sections: [], narrativeThreads: [], entries: [{
+        id: 'scenario-components', sectionId: 'campaigns', collectionId: null, kind: 'adventure', titleFr: 'Scénario', titleOriginal: null,
+        aliases: ['Conservé'], regions: [], arcIds: [], documents: [], parts: [], notes: 'Ne pas modifier', openTable: {}, story: {}, characterHooks: []
+      }]
+    })
+    await currentDataSource().query("DELETE FROM pf2_schema_migration WHERE id = '019-catalogue-playable-components'")
+    await currentDataSource().query("UPDATE pf2_catalogue_entity SET payload = json_remove(payload, '$.playableComponents') WHERE id = 'scenario-components'")
+    await service.onModuleInit()
+    expect(await service.getCatalogueEntity('scenario-components')).toEqual(expect.objectContaining({ aliases: ['Conservé'], notes: 'Ne pas modifier', playableComponents: [] }))
+
+    await service.replacePlayableComponents('scenario-components', [{
+      id: 'opening', title: 'Ouverture', description: 'La mission commence.', order: 1,
+      continuity: { mode: 'free', returnToHubPossible: true, recommendedSameParty: false, notes: '' }
+    }])
+    expect(await service.getCatalogueEntity('scenario-components')).toEqual(expect.objectContaining({ aliases: ['Conservé'], notes: 'Ne pas modifier', playableComponents: [expect.objectContaining({ id: 'opening' })] }))
   })
 
   it('keeps explicit scenario-to-PNJ relations across a reopen', async () => {
@@ -302,7 +329,7 @@ describe('Pf2PersistenceService', () => {
     const service = new Pf2PersistenceService(dataSource)
     await service.onModuleInit()
 
-    await expect(service.getSession('seance-legacy')).resolves.toEqual(expect.objectContaining({ id: 'seance-legacy', sessionNumber: 1, date: '2026-08-27', title: 'Séance existante', participants: ['Actor.yaz'], sessionXp: 300, longSummaryUrl: 'https://wiki.example.test/seances/legacy' }))
+    await expect(service.getSession('seance-legacy')).resolves.toEqual(expect.objectContaining({ id: 'seance-legacy', sessionNumber: 1, date: '2026-08-27', title: 'Séance existante', participants: ['Actor.yaz'], sessionXp: 300 }))
     expect(await currentDataSource().query("SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'pf2_session_legacy_002'")).toEqual([{ name: 'pf2_session_legacy_002' }])
   })
 })

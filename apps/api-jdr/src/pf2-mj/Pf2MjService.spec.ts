@@ -15,6 +15,9 @@ describe('Pf2MjService', () => {
       readCuration: jest.fn().mockResolvedValue({}),
       saveCuration: jest.fn(),
       readCatalogueSnapshot: jest.fn().mockResolvedValue({ schemaVersion: 2, files: [], entries: [], collections: [] }),
+      getCatalogueEntity: jest.fn().mockResolvedValue(null),
+      replacePlayableComponents: jest.fn(),
+      listCatalogueEntries: jest.fn().mockResolvedValue([]),
       listLibraryAssets: jest.fn().mockResolvedValue([]),
       replaceCatalogueSnapshot: jest.fn(),
       replaceScannedZipAssets: jest.fn(),
@@ -100,6 +103,41 @@ describe('Pf2MjService', () => {
       } })
       for (const entry of Object.values(result.byId as Record<string, Record<string, unknown>>)) expect(entry.progress).toBeUndefined()
       expect(persistence.saveCuration).toHaveBeenCalledWith(result)
+    })
+  })
+
+  describe('composants jouables', () => {
+    const component = {
+      id: 'scene-ouverture', title: 'Ouverture', description: 'La mission commence.', order: 1,
+      estimatedSessions: { min: 1, max: 2 },
+      continuity: { mode: 'soft_lock', returnToHubPossible: true, recommendedSameParty: true, notes: 'Prévoir une transition.' }
+    }
+
+    it('replaces only validated narrative components for the selected scenario', async () => {
+      const { service, persistence } = serviceFor({}, pnj, { getCatalogueEntity: jest.fn().mockResolvedValue({ id: 'scenario-1', titleFr: 'Test' }), replacePlayableComponents: jest.fn().mockResolvedValue({}) })
+      await expect(service.replacePlayableComponents('scenario-1', { playableComponents: [component] })).resolves.toEqual({ scenarioId: 'scenario-1', playableComponents: [component] })
+      expect(persistence.replacePlayableComponents).toHaveBeenCalledWith('scenario-1', [component])
+    })
+
+    it('rejects incomplete components before any SQLite update', async () => {
+      const { service, persistence } = serviceFor({}, pnj, { replacePlayableComponents: jest.fn() })
+      await expect(service.replacePlayableComponents('scenario-1', { playableComponents: [{ ...component, continuity: { ...component.continuity, mode: 'unknown' } }] })).rejects.toThrow('Mode de continuité invalide')
+      expect(persistence.replacePlayableComponents).not.toHaveBeenCalled()
+    })
+
+    it('imports the same focused format with scenarioId', async () => {
+      const { service, persistence } = serviceFor({}, pnj, { replacePlayableComponents: jest.fn().mockResolvedValue({}) })
+      await expect(service.importPlayableComponents({ scenarioId: 'scenario-1', playableComponents: [component] })).resolves.toMatchObject({ scenarioId: 'scenario-1' })
+      expect(persistence.replacePlayableComponents).toHaveBeenCalledWith('scenario-1', [component])
+    })
+
+    it('aggregates campaign components without copying them onto the campaign', async () => {
+      const { service } = serviceFor({}, pnj, { listCatalogueEntries: jest.fn().mockResolvedValue([
+        { id: 'campaign-1', kind: 'campaign', playableComponents: [] },
+        { id: 'scenario-1', kind: 'adventure', collectionId: 'campaign-1', titleFr: 'Premier scénario', playableComponents: [component] },
+        { id: 'scenario-2', kind: 'adventure', collectionId: 'campaign-1', titleFr: 'Deuxième scénario', playableComponents: [] }
+      ]) })
+      await expect(service.campaignPlayableComponents('campaign-1')).resolves.toMatchObject({ totalScenarios: 2, documentedScenarios: 1, totalComponents: 1, scenarios: expect.arrayContaining([expect.objectContaining({ scenarioId: 'scenario-1', playableComponents: [component] })]) })
     })
   })
 

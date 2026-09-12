@@ -5,7 +5,7 @@ import { mkdir, readdir, readFile, rename, stat, writeFile } from 'node:fs/promi
 import { basename, relative, resolve, sep } from 'node:path'
 import { createHash } from 'node:crypto'
 import sharp from 'sharp'
-import { LibraryAsset, Pf2PersistenceService } from '../pf2-storage/Pf2PersistenceService'
+import { LibraryAsset, Pf2PersistenceService, type PlayableComponent, type PlayableComponentContinuityMode } from '../pf2-storage/Pf2PersistenceService'
 import { FoundryNpcSummary, FoundryRelayService } from '../foundry/FoundryRelayService'
 
 const referenceFiles = {
@@ -18,6 +18,8 @@ const referenceFiles = {
 
 export type ReferenceKind = keyof typeof referenceFiles
 export type ResumeActorReference = { uuid: string; name: string }
+
+export type PlayableComponentsImport = { scenarioId: string; playableComponents: PlayableComponent[] }
 
 export type ResourceBundleRecord = {
   id: string
@@ -149,6 +151,47 @@ export class Pf2MjService {
 
   async catalogue(): Promise<Record<string, unknown>> {
     return this.persistence.readCatalogueSnapshot()
+  }
+
+  async playableComponentsForScenario(scenarioId: string): Promise<PlayableComponent[]> {
+    const entry = await this.persistence.getCatalogueEntity(scenarioId)
+    if (!entry) throw new Error(`Scénario introuvable : ${scenarioId}.`)
+    return this.validatePlayableComponents(entry.playableComponents ?? [])
+  }
+
+  async replacePlayableComponents(scenarioId: string, body: unknown): Promise<{ scenarioId: string; playableComponents: PlayableComponent[] }> {
+    const payload = this.asObject(body)
+    const playableComponents = this.validatePlayableComponents(payload.playableComponents)
+    await this.persistence.replacePlayableComponents(scenarioId, playableComponents)
+    return { scenarioId, playableComponents }
+  }
+
+  async importPlayableComponents(body: unknown): Promise<{ scenarioId: string; playableComponents: PlayableComponent[] }> {
+    const payload = this.asObject(body)
+    const scenarioId = this.requiredString(payload.scenarioId, 'scenarioId')
+    return this.replacePlayableComponents(scenarioId, payload)
+  }
+
+  async campaignPlayableComponents(campaignId: string): Promise<Record<string, unknown>> {
+    const entries = await this.persistence.listCatalogueEntries()
+    const campaign = entries.find((entry) => entry.id === campaignId && entry.kind === 'campaign')
+    if (!campaign) throw new Error(`Campagne introuvable : ${campaignId}.`)
+    const scenarios = entries
+      .filter((entry) => entry.collectionId === campaignId && entry.kind !== 'campaign')
+      .map((entry) => ({
+        scenarioId: String(entry.id),
+        title: typeof entry.titleFr === 'string' && entry.titleFr.trim() ? entry.titleFr : typeof entry.titleOriginal === 'string' ? entry.titleOriginal : String(entry.id),
+        playableComponents: this.validatePlayableComponents(entry.playableComponents ?? [])
+      }))
+    const ownComponents = this.validatePlayableComponents(campaign.playableComponents ?? [])
+    return {
+      campaignId,
+      totalScenarios: scenarios.length,
+      documentedScenarios: scenarios.filter((scenario) => scenario.playableComponents.length > 0).length,
+      totalComponents: ownComponents.length + scenarios.reduce((total, scenario) => total + scenario.playableComponents.length, 0),
+      playableComponents: ownComponents,
+      scenarios
+    }
   }
 
   async geography(includeExcluded = false): Promise<Record<string, unknown>> {
@@ -1318,6 +1361,50 @@ export class Pf2MjService {
     this.validateUniqueIds(this.records(value.entries), 'entries')
     this.validateUniqueIds(this.records(value.collections), 'collections')
     this.validateUniqueIds(this.records(value.files), 'files')
+  }
+
+  private validatePlayableComponents(value: unknown): PlayableComponent[] {
+    if (!Array.isArray(value)) throw new Error('playableComponents doit être un tableau.')
+    const identifiers = new Set<string>()
+    const orders = new Set<number>()
+    return value.map((raw, index) => {
+      const component = this.asObject(raw)
+      const id = this.requiredString(component.id, `playableComponents[${index}].id`)
+      if (identifiers.has(id)) throw new Error(`playableComponents contient un id dupliqué : ${id}.`)
+      identifiers.add(id)
+      const title = this.requiredString(component.title, `playableComponents[${index}].title`)
+      const description = this.requiredString(component.description, `playableComponents[${index}].description`)
+      const order = this.requiredInteger(component.order, `playableComponents[${index}].order`, 0)
+      if (orders.has(order)) throw new Error(`playableComponents contient un ordre dupliqué : ${order}.`)
+      orders.add(order)
+      const continuity = this.asObject(component.continuity)
+      const mode = this.requiredString(continuity.mode, `playableComponents[${index}].continuity.mode`) as PlayableComponentContinuityMode
+      if (!(['free', 'soft_lock', 'hard_lock'] as string[]).includes(mode)) throw new Error(`Mode de continuité invalide : ${mode}.`)
+      if (typeof continuity.returnToHubPossible !== 'boolean') throw new Error(`playableComponents[${index}].continuity.returnToHubPossible doit être un booléen.`)
+      if (typeof continuity.recommendedSameParty !== 'boolean') throw new Error(`playableComponents[${index}].continuity.recommendedSameParty doit être un booléen.`)
+      const normalized: PlayableComponent = {
+        id, title, description, order,
+        continuity: { mode, returnToHubPossible: continuity.returnToHubPossible, recommendedSameParty: continuity.recommendedSameParty, notes: typeof continuity.notes === 'string' ? continuity.notes.trim() : '' }
+      }
+      if (component.estimatedSessions !== undefined) {
+        const duration = this.asObject(component.estimatedSessions)
+        const min = this.requiredInteger(duration.min, `playableComponents[${index}].estimatedSessions.min`, 0)
+        const max = this.requiredInteger(duration.max, `playableComponents[${index}].estimatedSessions.max`, min)
+        if (max < min) throw new Error(`playableComponents[${index}].estimatedSessions.max doit être supérieur ou égal à min.`)
+        normalized.estimatedSessions = { min, max }
+      }
+      return normalized
+    }).sort((left, right) => left.order - right.order)
+  }
+
+  private requiredString(value: unknown, label: string): string {
+    if (typeof value !== 'string' || !value.trim()) throw new Error(`${label} est obligatoire.`)
+    return value.trim()
+  }
+
+  private requiredInteger(value: unknown, label: string, minimum: number): number {
+    if (!Number.isInteger(value) || Number(value) < minimum) throw new Error(`${label} doit être un entier supérieur ou égal à ${minimum}.`)
+    return Number(value)
   }
 
   private validateUniqueIds(items: Record<string, unknown>[], label: string): void {
