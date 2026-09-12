@@ -55,7 +55,7 @@ import RegionsPage from './Regions'
 import EvenementsPage from './Evenements'
 import { expandedPlaceLabels, geographyTreeOptions, loadGeographyFromApi, matchesPlaceFilter, placeDisplay } from './geography'
 
-type View = 'find' | 'library' | 'prepare' | 'documents' | 'chronology' | 'excluded' | 'settings' | 'pnj' | 'factions' | 'lieux' | 'regions' | 'evenements'
+type View = 'find' | 'library' | 'prepare' | 'playable-components' | 'documents' | 'chronology' | 'excluded' | 'settings' | 'pnj' | 'factions' | 'lieux' | 'regions' | 'evenements'
 type ReferenceView = 'pnj' | 'factions' | 'lieux' | 'regions' | 'evenements'
 type PreparationTab = 'pdf' | 'translation' | 'zip' | 'info' | 'description' | 'uncertain' | 'metadata'
 type SelectedEntity = PlayableUnit | Container
@@ -82,6 +82,7 @@ type EntryOverride = {
   placesOverride?: string[]
   relevance?: string
   locations?: StructuredLocationOverride
+  playableComponentStatus?: Record<string, 'played'>
 }
 
 type Curation = {
@@ -1044,6 +1045,67 @@ function ComponentCard({ component }: { component: Component }) {
   return <article><strong>{componentTypeLabel(component.componentType)} · {titleOf(component)}</strong><span>{component.notes || `${linked.length} document${linked.length > 1 ? 's' : ''}`}</span><Badge>{component.requiredForCore ? 'Requis' : 'Facultatif'}</Badge></article>
 }
 
+type PlayableComponentsWork = { id: string; title: string; units: PlayableUnit[]; ownComponents?: PlayableComponent[] }
+
+function PlayableComponentsView({ curation, onUpdate, onImported }: { curation: Curation; onUpdate: (id: string, field: string, value: unknown) => void; onImported: () => Promise<void> }) {
+  const [message, setMessage] = useState('')
+  const [importing, setImporting] = useState<string | null>(null)
+  const selectedCampaigns = containers
+    .filter((container) => container.containerType === 'campaign' && effectivePreparationStatus(resolveContainerOverride(curation, container)) === 'selected')
+    .map((container): PlayableComponentsWork => ({ id: container.id, title: titleOf(container), units: playablesUnder(container.id), ownComponents: container.playableComponents }))
+  const coveredUnitIds = new Set(selectedCampaigns.flatMap((campaign) => campaign.units.map((unit) => unit.id)))
+  const selectedStandalone = playableUnits
+    .filter((unit) => !coveredUnitIds.has(unit.id) && effectivePreparationStatus(resolvePlayableOverride(curation, unit)) === 'selected' && !isExcluded(unit, resolvePlayableOverride(curation, unit), curation))
+  const works: PlayableComponentsWork[] = [...selectedCampaigns, ...selectedStandalone.map((unit) => ({ id: unit.id, title: titleOf(unit), units: [unit] }))]
+
+  const prompt = (work: PlayableComponentsWork, unit: PlayableUnit) => `Tu aides à documenter une campagne Pathfinder 2. À partir du PDF du scénario et/ou de l’extrait de catalogue ci-dessous, produis UNIQUEMENT un JSON valide pour l’import des composants jouables.\n\nŒuvre sélectionnée : ${work.title}\nScénario : ${titleOf(unit)}\nscenarioId : ${unit.id}\n\nRègles impératives :\n- Ne crée aucun découpage générique « Partie 1 », « Partie 2 ».\n- Si le document ne permet pas d’identifier une décomposition narrative fiable, retourne \"playableComponents\": [].\n- Chaque composant a un id stable en kebab-case, un titre, une description, order, estimatedSessions facultatif, et continuity.\n- continuity.mode vaut free, soft_lock ou hard_lock.\n- returnToHubPossible et recommendedSameParty sont des booléens.\n- Les composants sont dans l’ordre narratif réel.\n\nFormat exact attendu :\n${JSON.stringify({ scenarioId: unit.id, playableComponents: [{ id: 'exemple-ouverture', title: 'Ouverture', description: 'Résumé factuel de cette unité narrative.', estimatedSessions: { min: 1, max: 2 }, continuity: { mode: 'free', returnToHubPossible: true, recommendedSameParty: false, notes: '' }, order: 1 }] }, null, 2)}`
+
+  const copyPrompt = async (work: PlayableComponentsWork, unit: PlayableUnit) => {
+    try {
+      await navigator.clipboard.writeText(prompt(work, unit))
+      setMessage(`Prompt copié pour « ${titleOf(unit)} ».`)
+    } catch { setMessage('Copie impossible : autorise le presse-papier dans le navigateur.') }
+  }
+
+  const copySelectionPrompt = async () => {
+    const targets = works.flatMap((work) => work.units.map((unit) => `- ${work.title} → ${titleOf(unit)} (scenarioId: ${unit.id})`)).join('\n') || '- Aucun scénario sélectionné.'
+    const text = `Tu aides à documenter des scénarios Pathfinder 2. Je joins un ou plusieurs PDF de scénario et/ou un export du catalogue. Pour chaque scénario listé ci-dessous dont le document permet une décomposition narrative fiable, génère un JSON d’import distinct au format { scenarioId, playableComponents }. Ne crée jamais de « Partie 1/2 » générique : en cas de doute, retourne playableComponents: [].\n\nScénarios sélectionnés :\n${targets}\n\nChaque composant doit contenir id (kebab-case), title, description, order, estimatedSessions facultatif {min,max}, et continuity {mode: free|soft_lock|hard_lock, returnToHubPossible, recommendedSameParty, notes}.`
+    try { await navigator.clipboard.writeText(text); setMessage('Prompt général copié dans le presse-papier.') }
+    catch { setMessage('Copie impossible : autorise le presse-papier dans le navigateur.') }
+  }
+
+  const importComponents = async (unit: PlayableUnit, file?: File) => {
+    if (!file) return
+    setImporting(unit.id)
+    setMessage(`Lecture de ${file.name}…`)
+    try {
+      const parsed: unknown = JSON.parse(await file.text())
+      const data = parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed as Record<string, unknown> : {}
+      if (typeof data.scenarioId === 'string' && data.scenarioId !== unit.id) throw new Error(`Ce JSON vise « ${data.scenarioId} », pas « ${unit.id} ».`)
+      const response = await fetch('/apil7r/pf2-mj/playable-components/import', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ scenarioId: unit.id, playableComponents: data.playableComponents ?? parsed }) })
+      const payload = await response.json().catch(() => null)
+      if (!response.ok) throw new Error(payload?.message ?? payload?.error ?? 'Import impossible.')
+      await onImported()
+      setMessage(`Composants jouables importés pour « ${titleOf(unit)} ».`)
+    } catch (error) { setMessage(error instanceof Error ? error.message : 'Import impossible.') } finally { setImporting(null) }
+  }
+
+  const togglePlayed = (unit: PlayableUnit, componentId: string) => {
+    const current = resolvePlayableOverride(curation, unit).playableComponentStatus ?? {}
+    const next = { ...current }
+    if (next[componentId] === 'played') delete next[componentId]
+    else next[componentId] = 'played'
+    onUpdate(unit.id, 'playableComponentStatus', next)
+  }
+
+  return <section className="playable-components-view">
+    <div className="playable-components-intro"><div><small>SUIVI NARRATIF</small><h2>Composants jouables</h2><p>Campagnes et scénarios sélectionnés. Coche les unités déjà jouées ; l’absence de découpage reste volontairement neutre.</p></div><button className="component-prompt" onClick={() => void copySelectionPrompt()}>Prompt</button></div>
+    {!works.length && <div className="empty-components"><strong>Aucune œuvre sélectionnée.</strong><p>Dans une fiche campagne ou scénario, passe « Préparation » sur « Sélectionné » pour la suivre ici.</p></div>}
+    {works.map((work) => <section className="component-work" key={work.id}><header><div><small>{work.units.length > 1 ? 'CAMPAGNE' : 'SCÉNARIO'}</small><h3>{work.title}</h3></div><span>{work.units.reduce((total, unit) => total + unit.playableComponents.length, 0)} composant{work.units.reduce((total, unit) => total + unit.playableComponents.length, 0) > 1 ? 's' : ''}</span></header>{work.ownComponents?.length ? <PlayableComponentsSection components={work.ownComponents} /> : null}<div className="component-work-units">{work.units.map((unit) => { const status = resolvePlayableOverride(curation, unit).playableComponentStatus ?? {}; return <article key={unit.id}><div className="component-unit-head"><div><small>{unit.number ? `${unit.number} · ` : ''}{playableTypeLabel(unit.playableType)}</small><strong>{titleOf(unit)}</strong></div><div><button className="component-prompt" onClick={() => void copyPrompt(work, unit)}>Prompt</button><label className={`component-import${importing === unit.id ? ' disabled' : ''}`}>Importer<input type="file" accept="application/json,.json" disabled={importing !== null} onChange={(event) => { const file = event.target.files?.[0]; event.target.value = ''; void importComponents(unit, file) }} /></label></div></div>{unit.playableComponents.length ? <ul>{unit.playableComponents.map((component) => <li key={component.id}><label><input type="checkbox" checked={status[component.id] === 'played'} onChange={() => togglePlayed(unit, component.id)} /><span><strong>#{component.order} · {component.title}</strong><small>{component.estimatedSessions ? `${component.estimatedSessions.min}${component.estimatedSessions.min !== component.estimatedSessions.max ? `–${component.estimatedSessions.max}` : ''} séance${component.estimatedSessions.max > 1 ? 's' : ''} · ` : ''}{component.continuity.mode === 'free' ? 'Libre' : component.continuity.mode === 'soft_lock' ? 'Transition nécessaire' : 'Effet tunnel'}</small></span></label></li>)}</ul> : <p className="missing">Aucun composant renseigné. Utilise « Prompt » puis importe le JSON produit.</p>}</article> })}</div></section>)}
+    {message && <p className="playable-components-message">{message}</p>}
+  </section>
+}
+
 function PlayableComponentsSection({ components }: { components: PlayableComponent[] }) {
   const continuityLabel = (mode: PlayableComponent['continuity']['mode']) => mode === 'free' ? 'Libre' : mode === 'soft_lock' ? 'Transition nécessaire' : 'Effet tunnel'
   if (!components.length) return <section className="detail-section playable-components"><h3>Composants jouables</h3><p className="missing">Découpage narratif non renseigné.</p></section>
@@ -1260,10 +1322,16 @@ export function Pf2MjApp() {
     } catch { setScanStatus('error') }
   }
 
+  const reloadCatalogue = async () => {
+    await loadCatalogueFromApi()
+    setCatalogueRevision((value) => value + 1)
+  }
+
   const headings: Record<View, [string, string]> = {
     find: ['Trouver une partie', 'Recherche opérationnelle : uniquement des unités jouables.'],
     library: ['Bibliothèque / collections', 'Campagnes, saisons, séries et ressources structurent le catalogue sans polluer la recherche jouable.'],
     prepare: ['À préparer', 'Repère les PDF, traductions, ZIP Foundry et métadonnées encore à compléter.'],
+    'playable-components': ['Composants jouables', 'Suivi simple des campagnes et scénarios sélectionnés, dans leur ordre narratif.'],
     documents: ['Ressources PDF', 'Inventaire physique séparé des œuvres et de leur jouabilité.'],
     chronology: ['Chronologie', 'Unités jouables replacées dans le calendrier de Golarion.'],
     excluded: ['Mis de côté', '« Plus tard » et « Écarté » ont le même effet : ils sortent entièrement du catalogue actif, mais restent faciles à récupérer ici.'],
@@ -1275,6 +1343,7 @@ export function Pf2MjApp() {
     ['find', '▶', 'Trouver une partie', active.length],
     ['library', '▦', 'Bibliothèque', containers.length],
     ['prepare', '◒', 'À préparer', active.filter((unit) => !availabilityOf(unit).ready || (resourceInventoryKnown && resourceBundleAvailability(unit).status === 'missing')).length],
+    ['playable-components', '☑', 'Composants jouables', active.filter((unit) => effectivePreparationStatus(resolvePlayableOverride(curation, unit)) === 'selected').length],
     ['documents', '⌁', 'Ressources PDF', documentCount],
     ['chronology', '◷', 'Chronologie', ''],
     ['excluded', '×', 'Mis de côté', excludedContainerCount + explicitExcludedPlayableCount],
@@ -1286,7 +1355,7 @@ export function Pf2MjApp() {
   return <main className="pf2-mj pf2-mj-v3">
     <header><button className="brand brand-button" onClick={() => setView('find')}><b>✦</b><span><strong>PATHFINDER 2</strong><small>GESTION MJ · MODÈLE V3</small></span></button><div className="header-right"><span><i />{missingTranslations} trad. manquante{missingTranslations > 1 ? 's' : ''} · {missingZips === null ? 'ZIP à inventorier' : `${missingZips} ZIP manquant${missingZips > 1 ? 's' : ''}`} · {documentCount} PDF</span><em>MJ</em></div></header>
     <div className="layout"><aside><nav>{nav.map(([id, icon, label, count]) => <button key={id} className={view === id ? 'active' : ''} onClick={() => setView(id)}><span>{icon}</span>{label}<b>{count}</b></button>)}</nav><section><p>PRINCIPES V3</p><span className="aside-rule">▶ Unité jouable = seule recherche</span><span className="aside-rule">▣ Campagne = conteneur</span><span className="aside-rule">◇ Guide/carte = ressource</span><span className="aside-rule">ⓘ Info = substitut distinct</span></section><div className="scan-note"><b>V3</b><strong>SQLite comme source</strong><p>Le catalogue est chargé depuis SQLite puis normalisé sans perte pour l’interface V3.</p></div></aside>
-      <section className="content">{!isReferenceView && <><div className="page-title"><div><small>TABLE OUVERTE · GOLARION PERSISTANT</small><h1>{headings[view][0]}</h1><p>{headings[view][1]}</p></div><button className="refresh" onClick={refresh}>{scanStatus === 'scanning' ? '↻ Détection…' : scanStatus === 'done' ? '✓ Rapport prêt' : scanStatus === 'error' ? '! Réessayer' : '↻ Scanner PDF & ZIP'}</button></div>{error && <div className="notice"><strong>Attention</strong><p>{error}</p></div>}{scan && <ScanPanel report={scan} onClose={() => setScan(null)} onApply={applyScan} />}{!['excluded', 'settings', 'documents'].includes(view) && <Stats active={active} />}{view === 'find' && <FinderView active={active} curation={curation} onOpen={setSelected} onUpdate={update} resourceVersion={resourceRevision} />}{view === 'library' && <LibraryView curation={curation} onOpen={setSelected} onOpenPlayable={setSelected} onUpdate={update} />}{view === 'prepare' && <PreparationView active={active} curation={curation} onOpen={setSelected} onUpdate={update} resourceVersion={resourceRevision} />}{view === 'documents' && <DocumentsView resourceVersion={resourceRevision} />}{view === 'chronology' && <ChronologyView units={active} onOpen={setSelected} />}{view === 'excluded' && <ExcludedView curation={curation} onOpenContainer={setSelected} onOpenPlayable={setSelected} onUpdate={update} />}{view === 'settings' && <Settings places={placeOptions} onOperation={placeOperation} />}</>}{view === 'pnj' && <PnjPage initialSelectedId={selectedReference?.view === 'pnj' ? selectedReference.id : undefined} />}{view === 'factions' && <FactionsPage initialSelectedId={selectedReference?.view === 'factions' ? selectedReference.id : undefined} />}{view === 'lieux' && <LieuxPage initialSelectedId={selectedReference?.view === 'lieux' ? selectedReference.id : undefined} />}{view === 'regions' && <RegionsPage initialSelectedId={selectedReference?.view === 'regions' ? selectedReference.id : undefined} />}{view === 'evenements' && <EvenementsPage initialSelectedId={selectedReference?.view === 'evenements' ? selectedReference.id : undefined} />}</section>
+      <section className="content">{!isReferenceView && <><div className="page-title"><div><small>TABLE OUVERTE · GOLARION PERSISTANT</small><h1>{headings[view][0]}</h1><p>{headings[view][1]}</p></div><button className="refresh" onClick={refresh}>{scanStatus === 'scanning' ? '↻ Détection…' : scanStatus === 'done' ? '✓ Rapport prêt' : scanStatus === 'error' ? '! Réessayer' : '↻ Scanner PDF & ZIP'}</button></div>{error && <div className="notice"><strong>Attention</strong><p>{error}</p></div>}{scan && <ScanPanel report={scan} onClose={() => setScan(null)} onApply={applyScan} />}{!['excluded', 'settings', 'documents', 'playable-components'].includes(view) && <Stats active={active} />}{view === 'find' && <FinderView active={active} curation={curation} onOpen={setSelected} onUpdate={update} resourceVersion={resourceRevision} />}{view === 'library' && <LibraryView curation={curation} onOpen={setSelected} onOpenPlayable={setSelected} onUpdate={update} />}{view === 'prepare' && <PreparationView active={active} curation={curation} onOpen={setSelected} onUpdate={update} resourceVersion={resourceRevision} />}{view === 'playable-components' && <PlayableComponentsView curation={curation} onUpdate={update} onImported={reloadCatalogue} />}{view === 'documents' && <DocumentsView resourceVersion={resourceRevision} />}{view === 'chronology' && <ChronologyView units={active} onOpen={setSelected} />}{view === 'excluded' && <ExcludedView curation={curation} onOpenContainer={setSelected} onOpenPlayable={setSelected} onUpdate={update} />}{view === 'settings' && <Settings places={placeOptions} onOperation={placeOperation} />}</>}{view === 'pnj' && <PnjPage initialSelectedId={selectedReference?.view === 'pnj' ? selectedReference.id : undefined} />}{view === 'factions' && <FactionsPage initialSelectedId={selectedReference?.view === 'factions' ? selectedReference.id : undefined} />}{view === 'lieux' && <LieuxPage initialSelectedId={selectedReference?.view === 'lieux' ? selectedReference.id : undefined} />}{view === 'regions' && <RegionsPage initialSelectedId={selectedReference?.view === 'regions' ? selectedReference.id : undefined} />}{view === 'evenements' && <EvenementsPage initialSelectedId={selectedReference?.view === 'evenements' ? selectedReference.id : undefined} />}</section>
     </div>
     {selected?.entityKind === 'playable' && <PlayableDetail unit={selected} curation={curation} onClose={() => setSelected(null)} onUpdate={update} placeOptions={placeOptions} onOpenReference={(referenceView, id) => { setSelected(null); setSelectedReference({ view: referenceView, id }); setView(referenceView) }} />}
     {selected?.entityKind === 'container' && <ContainerDetail container={selected} curation={curation} onClose={() => setSelected(null)} onOpenPlayable={(unit) => setSelected(unit)} onUpdate={update} onOpenReference={(referenceView, id) => { setSelected(null); setSelectedReference({ view: referenceView, id }); setView(referenceView) }} />}

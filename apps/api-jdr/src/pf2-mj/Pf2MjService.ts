@@ -359,7 +359,8 @@ export class Pf2MjService {
         'levelsOverride',
         'placesOverride',
         'relevance',
-        'locations'
+        'locations',
+        'playableComponentStatus'
       ])
       if (!id || !allowed.has(field)) throw new Error('Entrée ou champ de curation invalide.')
 
@@ -413,6 +414,7 @@ export class Pf2MjService {
       } else {
         if (field === 'preparationStatus' && value !== null && value !== '' && !['untreated','selected','ready'].includes(String(value))) throw new Error('Statut de préparation invalide.')
         if (field === 'playStatus' && value !== null && value !== '' && !['none','to_play','in_progress','played'].includes(String(value))) throw new Error('Statut de jeu invalide.')
+        if (field === 'playableComponentStatus' && (value === null || typeof value !== 'object' || Array.isArray(value) || Object.values(value as Record<string, unknown>).some((status) => status !== 'played'))) throw new Error('Statut des composants jouables invalide.')
         if (value === null || value === '' || (Array.isArray(value) && value.length === 0)) delete entry[field]
         else entry[field] = value
       }
