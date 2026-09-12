@@ -91,7 +91,10 @@ export class DiscordService implements OnModuleInit, OnModuleDestroy {
 
     try {
       client = new Client({
-        intents: [GatewayIntentBits.Guilds],
+        // L’export historique doit recevoir `Message.content`. Cet intent est
+        // privilégié : il doit aussi être activé dans le portail développeur
+        // Discord, sinon l’API renvoie volontairement des contenus vides.
+        intents: [GatewayIntentBits.Guilds, GatewayIntentBits.MessageContent],
       })
 
       client.on(Events.InteractionCreate, (interaction: Interaction) => {
@@ -180,6 +183,8 @@ export class DiscordService implements OnModuleInit, OnModuleDestroy {
       discovered.set(channel.id, channel)
       await this.discoverThreads(channel, discovered)
     }
+
+    this.logger.log(`Export Discord : ${discovered.size} salon(s) ou fil(s) texte à parcourir.`)
 
     for (const channel of discovered.values()) {
       try {
