@@ -56,6 +56,8 @@ export class Pf2PersistenceService implements OnModuleInit {
   private readonly logger = new Logger(Pf2PersistenceService.name)
   readonly storageRoot = resolve(process.env['STORAGE_PATH'] ?? 'storage')
   private readonly seedRoot = resolve(process.env['PF2_DATA_ROOT'] ?? 'apps/web-misc/src/pf2-mj/data')
+  private migrationBackupHandled = false
+  private migrationBackupRequired = false
 
   constructor(@InjectDataSource('pf2-sqlite') private readonly dataSource: DataSource) {}
 
@@ -571,7 +573,15 @@ export class Pf2PersistenceService implements OnModuleInit {
   }
 
   private async migrate(): Promise<void> {
-    await this.dataSource.query('CREATE TABLE IF NOT EXISTS pf2_schema_migration (id TEXT PRIMARY KEY, applied_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)')
+    this.migrationBackupHandled = false
+    this.migrationBackupRequired = await this.hasExistingApplicationSchema()
+
+    const migrationTable = await this.dataSource.query("SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'pf2_schema_migration'") as Array<{ name: string }>
+    if (!migrationTable.length) {
+      if (this.migrationBackupRequired) await this.ensureMigrationBackup('001-initial-pf2-storage')
+      else this.migrationBackupHandled = true
+      await this.dataSource.query('CREATE TABLE pf2_schema_migration (id TEXT PRIMARY KEY, applied_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)')
+    }
     await this.applyMigration('001-initial-pf2-storage', async (manager) => {
       await manager.query('CREATE TABLE IF NOT EXISTS pf2_record (kind TEXT NOT NULL, id TEXT NOT NULL, name TEXT, payload TEXT NOT NULL, created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP, updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (kind, id))')
       await manager.query('CREATE INDEX IF NOT EXISTS idx_pf2_record_kind_name ON pf2_record (kind, name)')
@@ -733,6 +743,8 @@ export class Pf2PersistenceService implements OnModuleInit {
         await manager.query("UPDATE pf2_catalogue_entity SET payload = ?, updated_at = CURRENT_TIMESTAMP WHERE entity_kind = 'entry' AND id = ?", [JSON.stringify({ ...entry, playableComponents: [] }), row.id])
       }
     })
+
+    await this.assertDatabaseIntegrity(this.dataSource, 'base SQLite après migrations')
   }
 
   private async createSessionTable(manager: EntityManager): Promise<void> {
@@ -743,6 +755,7 @@ export class Pf2PersistenceService implements OnModuleInit {
   private async applyMigration(id: string, apply: (manager: EntityManager) => Promise<void>): Promise<void> {
     const rows = await this.dataSource.query('SELECT id FROM pf2_schema_migration WHERE id = ?', [id]) as Array<{ id: string }>
     if (rows.length) return
+    if (!this.migrationBackupHandled) await this.ensureMigrationBackup(id)
     await this.dataSource.transaction(async (manager) => {
       const applied = await manager.query('SELECT id FROM pf2_schema_migration WHERE id = ?', [id]) as Array<{ id: string }>
       if (applied.length) return
@@ -751,8 +764,60 @@ export class Pf2PersistenceService implements OnModuleInit {
     })
   }
 
+  private async hasExistingApplicationSchema(): Promise<boolean> {
+    const rows = await this.dataSource.query("SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%' AND name <> 'pf2_schema_migration' LIMIT 1") as Array<{ name: string }>
+    return rows.length > 0
+  }
+
+  private async ensureMigrationBackup(nextMigrationId: string): Promise<void> {
+    if (this.migrationBackupHandled) return
+    if (!this.migrationBackupRequired) {
+      this.migrationBackupHandled = true
+      return
+    }
+
+    const database = this.dataSource.options.database
+    if (typeof database !== 'string' || database === ':memory:') {
+      throw new Error(`Impossible de sauvegarder SQLite avant ${nextMigrationId} : chemin de base non persistant.`)
+    }
+
+    await this.assertDatabaseIntegrity(this.dataSource, 'base SQLite avant migrations')
+
+    const backupDirectory = resolve(this.storageRoot, 'backups', 'database')
+    await mkdir(backupDirectory, { recursive: true })
+    const prefix = nextMigrationId.match(/^\d+/)?.[0] ?? this.slug(nextMigrationId)
+    const timestamp = this.backupTimestamp(new Date())
+    const backupPath = resolve(backupDirectory, `pf2-before-${prefix}-${timestamp}.sqlite`)
+
+    await this.dataSource.query('VACUUM INTO ?', [backupPath])
+
+    const verification = new DataSource({ type: 'sqlite', database: backupPath })
+    try {
+      await verification.initialize()
+      await this.assertDatabaseIntegrity(verification, `backup SQLite ${backupPath}`)
+    } finally {
+      if (verification.isInitialized) await verification.destroy()
+    }
+
+    this.migrationBackupHandled = true
+    this.logger.log(`Backup SQLite pré-migration créé et vérifié avant ${nextMigrationId} : ${backupPath}`)
+  }
+
+  private async assertDatabaseIntegrity(dataSource: DataSource, label: string): Promise<void> {
+    const rows = await dataSource.query('PRAGMA integrity_check') as Array<Record<string, unknown>>
+    const messages = rows.flatMap((row) => Object.values(row)).map((value) => String(value))
+    if (messages.length !== 1 || messages[0].toLowerCase() !== 'ok') {
+      throw new Error(`${label} invalide : ${messages.join('; ') || 'aucun résultat de PRAGMA integrity_check'}`)
+    }
+  }
+
+  private backupTimestamp(date: Date): string {
+    const iso = date.toISOString()
+    return `${iso.slice(0, 10).replace(/-/g, '')}-${iso.slice(11, 19).replace(/:/g, '')}-${iso.slice(20, 23)}`
+  }
+
   private async ensureStorageDirectories(): Promise<void> {
-    await Promise.all(['portraits', 'illustrations', 'maps', 'documents', 'documents/scenario-packages'].map((directory) => mkdir(resolve(this.storageRoot, directory), { recursive: true })))
+    await Promise.all(['portraits', 'illustrations', 'maps', 'documents', 'documents/scenario-packages', 'backups/database'].map((directory) => mkdir(resolve(this.storageRoot, directory), { recursive: true })))
   }
 
   private async seedCurrentData(): Promise<void> {

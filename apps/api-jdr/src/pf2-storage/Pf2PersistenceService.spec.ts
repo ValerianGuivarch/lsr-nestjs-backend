@@ -1,4 +1,4 @@
-import { mkdtemp, mkdir, rm, writeFile } from 'node:fs/promises'
+import { mkdtemp, mkdir, readdir, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { DataSource } from 'typeorm'
@@ -44,6 +44,10 @@ describe('Pf2PersistenceService', () => {
   function currentDataSource(): DataSource {
     if (!dataSource) throw new Error('La source SQLite est fermée.')
     return dataSource
+  }
+
+  async function migrationBackups(): Promise<string[]> {
+    return (await readdir(join(root, 'storage', 'backups', 'database'))).filter((filename) => filename.endsWith('.sqlite')).sort()
   }
 
   it('preserves the latest Foundry actor cache across SQLite reopen', async () => {
@@ -138,6 +142,46 @@ describe('Pf2PersistenceService', () => {
       , { id: '018-player-character-is-player' }
       , { id: '019-catalogue-playable-components' }
     ])
+  })
+
+  it('creates and verifies one SQLite backup before applying a pending migration', async () => {
+    const service = await open()
+    await service.saveRecord('pnj', { id: 'backup-witness', name: 'Témoin de sauvegarde' })
+    await currentDataSource().query("DELETE FROM pf2_schema_migration WHERE id = '019-catalogue-playable-components'")
+
+    expect(await migrationBackups()).toEqual([])
+    await service.onModuleInit()
+
+    const backups = await migrationBackups()
+    expect(backups).toHaveLength(1)
+    expect(backups[0]).toMatch(/^pf2-before-019-\d{8}-\d{6}-\d{3}\.sqlite$/)
+
+    const backupDataSource = new DataSource({ type: 'sqlite', database: join(root, 'storage', 'backups', 'database', backups[0]) })
+    await backupDataSource.initialize()
+    try {
+      expect(await backupDataSource.query('PRAGMA integrity_check')).toEqual([{ integrity_check: 'ok' }])
+      expect(await backupDataSource.query("SELECT id FROM pf2_schema_migration WHERE id = '019-catalogue-playable-components'")).toEqual([])
+      const witness = await backupDataSource.query("SELECT payload FROM pf2_record WHERE kind = 'pnj' AND id = 'backup-witness'") as Array<{ payload: string }>
+      expect(JSON.parse(witness[0].payload)).toEqual(expect.objectContaining({ id: 'backup-witness', name: 'Témoin de sauvegarde' }))
+    } finally {
+      await backupDataSource.destroy()
+    }
+
+    expect(await currentDataSource().query("SELECT id FROM pf2_schema_migration WHERE id = '019-catalogue-playable-components'")).toEqual([{ id: '019-catalogue-playable-components' }])
+    expect(await currentDataSource().query('PRAGMA integrity_check')).toEqual([{ integrity_check: 'ok' }])
+
+    await service.onModuleInit()
+    expect(await migrationBackups()).toEqual(backups)
+  })
+
+  it('does not apply a pending migration when its pre-migration backup cannot be created', async () => {
+    const service = await open()
+    await currentDataSource().query("DELETE FROM pf2_schema_migration WHERE id = '019-catalogue-playable-components'")
+    await rm(join(root, 'storage', 'backups'), { recursive: true, force: true })
+    await writeFile(join(root, 'storage', 'backups'), 'blocked')
+
+    await expect(service.onModuleInit()).rejects.toThrow()
+    expect(await currentDataSource().query("SELECT id FROM pf2_schema_migration WHERE id = '019-catalogue-playable-components'")).toEqual([])
   })
 
   it('stores the catalogue and geography in SQLite and preserves edits across reopen', async () => {

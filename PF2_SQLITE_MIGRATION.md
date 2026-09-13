@@ -80,7 +80,24 @@ Il :
 
 ## Déploiement recommandé
 
-Avant copie :
+Les migrations SQLite sont maintenant protégées automatiquement au démarrage de l'API :
+
+1. si aucune migration n'est en attente, aucun backup n'est créé ;
+2. avant la première migration en attente, `PRAGMA integrity_check` doit répondre `ok` sur la base courante ;
+3. un snapshot cohérent est créé avec `VACUUM INTO` sous `STORAGE_PATH/backups/database/` ;
+4. le snapshot est rouvert et contrôlé avec `PRAGMA integrity_check` ;
+5. seulement après ce contrôle les migrations sont appliquées ;
+6. la base active est de nouveau contrôlée à la fin du lot de migrations.
+
+Le nom du snapshot indique la première migration qui allait être exécutée, par exemple :
+
+```text
+STORAGE_PATH/backups/database/pf2-before-020-20260913-150412-123.sqlite
+```
+
+Si la création ou la vérification du backup échoue, l'API doit refuser d'appliquer la migration. Une base neuve et vide ne génère pas de backup inutile lors de son bootstrap initial.
+
+Une copie manuelle supplémentaire reste possible avant une opération exceptionnelle :
 
 ```bash
 cd ~/services/lsr-nestjs-backend
