@@ -1069,7 +1069,7 @@ function PlayableComponentsView({ curation, onUpdate, onImported }: { curation: 
 
   const componentExample = { id: 'exemple-ouverture', title: 'Ouverture', description: 'Résumé factuel de cette unité narrative.', estimatedSessions: { min: 1, max: 2 }, continuity: { mode: 'free', returnToHubPossible: true, recommendedSameParty: false, notes: '' }, order: 1 }
   const scenarioPrompt = (work: PlayableComponentsWork, unit: PlayableUnit) => `Tu aides à documenter un scénario Pathfinder 2. Je joins son PDF et/ou son extrait de catalogue. Produis UNIQUEMENT le JSON valide ci-dessous.\n\nScénario : ${work.title}\nscenarioId : ${unit.id}\nDescription actuelle : ${unit.synopsis || 'non renseignée'}\n\nRègles : ne crée jamais de « Partie 1/2 » générique ; si le PDF ne permet pas une décomposition narrative fiable, retourne playableComponents: []. Chaque composant a un id en kebab-case, title, description, order, estimatedSessions facultatif et continuity.\n\n${JSON.stringify({ scenarioId: unit.id, playableComponents: [componentExample] }, null, 2)}`
-  const campaignPrompt = (sourceWork: PlayableComponentsWork) => {
+  const legacyCampaignPrompt = (sourceWork: PlayableComponentsWork) => {
     const campaignDescription = sourceWork.description ?? ''
     const context = {
       campaign: {
@@ -1102,6 +1102,26 @@ function PlayableComponentsView({ curation, onUpdate, onImported }: { curation: 
       }))
     }
     return `Tu aides à documenter une campagne Pathfinder 2. Je joins tous les PDF de la campagne et/ou l’extrait de catalogue. Produis UNIQUEMENT le JSON valide pour l’import global de la campagne.\n\nLa campagne a sa propre description courte. Chaque sous-scénario a aussi sa propre description courte, différente de celle de la campagne. Chaque composant jouable a sa description courte.\n\nRègles impératives :\n- Pars du brouillon ci-dessous : conserve les descriptions déjà correctes et complète/corrige seulement selon les PDF.\n- Renseigne description pour la campagne et pour CHAQUE sous-scénario, en français, de façon courte et factuelle (1 à 3 phrases).\n- Ne répète jamais la description de la campagne dans les sous-scénarios.\n- Conserve tous les scenarioId fournis, même lorsqu’un sous-scénario n’a aucun composant.\n- Ne crée jamais de « Partie 1/2 » générique. Si aucune décomposition narrative fiable n’est possible, retourne playableComponents: [].\n- Chaque composant doit garder id, title, description, order, estimatedSessions facultatif et continuity.\n\nBrouillon canonique à compléter :\n${JSON.stringify(draft, null, 2)}`
+  }
+
+  const campaignPrompt = (work: PlayableComponentsWork) => {
+    const context = work.units.map((unit) => ({
+      scenarioId: unit.id,
+      order: unit.number,
+      title: titleOf(unit),
+      originalTitle: originalTitleOf(unit),
+      levels: levelLabel(unit.levels),
+      locations: unique(unit.locations.map((location) => placeDisplay(location.id))),
+      documentsKnown: documentsForTarget(unit.id).map((document) => ({ filename: document.filename, language: document.language, role: document.role, variant: document.variant })),
+      descriptionCurrent: unit.synopsis ?? '',
+      playableComponentsCurrent: unit.playableComponents
+    }))
+    const draft = {
+      campaignId: work.id,
+      description: work.description ?? '',
+      scenarios: work.units.map((unit) => ({ scenarioId: unit.id, description: unit.synopsis ?? '', playableComponents: unit.playableComponents }))
+    }
+    return `PF2 — IMPORT CAMPAGNE\n\nTu documentes une campagne Pathfinder 2 pour un outil MJ. Tous les PDF de cette campagne sont joints à ce message. Ils sont la source de vérité.\n\nRéponds UNIQUEMENT avec le JSON final valide : pas de Markdown, pas de commentaire, pas de texte avant ou après.\n\nOBJECTIF\n- Décrire brièvement la campagne entière.\n- Décrire brièvement chacun de ses sous-scénarios.\n- Découper chaque sous-scénario en composants réellement jouables lorsque le PDF permet de le faire de manière fiable.\n\nRÈGLES\n- Description de campagne : 1 à 3 phrases françaises, factuelles, sur l’arc entier.\n- Description de scénario : 1 à 3 phrases françaises, uniquement sur cet épisode ; ne répète jamais le synopsis de campagne.\n- Un composant est une séquence jouable cohérente (mission, enquête, site, confrontation ou transition), jamais une page, un chapitre ou une « Partie 1/2 » artificielle.\n- Sa description indique ce que font les PJ et l’enjeu narratif.\n- Conserve les valeurs actuelles quand elles sont correctes ; les PDF priment. N’invente aucune information non établie.\n- Conserve TOUS les scenarioId, dans le même ordre. Si une découpe n’est pas établie par les PDF, laisse playableComponents: [].\n\nCONTINUITÉ\n- free : abordable sans enchaînement strict.\n- soft_lock : l’épisode précédent est fortement recommandé pour comprendre l’intrigue.\n- hard_lock : suit directement le précédent ; ne doit pas être sauté.\n- returnToHubPossible : true seulement si les PJ peuvent raisonnablement retourner à leur base/Absalom avant la suite.\n- recommendedSameParty : true seulement si changer de groupe ferait perdre un contexte narratif important.\n- notes : contrainte courte ou chaîne vide.\n- estimatedSessions : facultatif, seulement si les PDF permettent une estimation prudente : { "min": 1, "max": 2 }.\n\nCAMPAGNE\n${JSON.stringify({ id: work.id, title: work.title, descriptionCurrent: work.description ?? '' }, null, 2)}\n\nSOUS-SCÉNARIOS ET DOCUMENTS CONNUS\n${JSON.stringify(context, null, 2)}\n\nFORMAT DE SORTIE OBLIGATOIRE\nRetourne exactement cette structure et aucune clé supplémentaire :\n${JSON.stringify(draft, null, 2)}`
   }
 
   const unitProgress = (unit: PlayableUnit) => {
