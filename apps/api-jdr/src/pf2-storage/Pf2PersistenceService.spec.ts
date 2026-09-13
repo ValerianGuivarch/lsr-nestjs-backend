@@ -113,6 +113,7 @@ describe('Pf2PersistenceService', () => {
       , { id: '017-player-codex' }
       , { id: '018-player-character-is-player' }
       , { id: '019-catalogue-playable-components' }
+      , { id: '020-session-scenario-content' }
     ])
 
     await currentDataSource().destroy()
@@ -141,7 +142,60 @@ describe('Pf2PersistenceService', () => {
       , { id: '017-player-codex' }
       , { id: '018-player-character-is-player' }
       , { id: '019-catalogue-playable-components' }
+      , { id: '020-session-scenario-content' }
     ])
+  })
+
+  it('links sessions to catalogue scenarios and optional playable components', async () => {
+    const service = await open()
+    await service.replaceCatalogueSnapshot({
+      schemaVersion: 2,
+      meta: {},
+      files: [],
+      collections: [],
+      arcs: [],
+      sections: [],
+      narrativeThreads: [],
+      entries: [{
+        id: 'scenario-test',
+        kind: 'adventure',
+        titleFr: 'Scénario test',
+        playableComponents: [
+          { id: 'ouverture', title: 'Ouverture', description: 'Début', order: 1, continuity: { mode: 'free', returnToHubPossible: true, recommendedSameParty: false, notes: '' } },
+          { id: 'final', title: 'Final', description: 'Fin', order: 2, continuity: { mode: 'hard_lock', returnToHubPossible: false, recommendedSameParty: true, notes: '' } }
+        ]
+      }]
+    })
+
+    const created = await service.createSession({
+      id: 'session-content',
+      sessionNumber: 1,
+      content: [
+        { scenarioId: 'scenario-test', componentId: 'ouverture' },
+        { scenarioId: 'scenario-test', componentId: 'final' }
+      ]
+    })
+    expect(created.content).toEqual([
+      { scenarioId: 'scenario-test', componentId: 'ouverture', sortOrder: 0 },
+      { scenarioId: 'scenario-test', componentId: 'final', sortOrder: 1 }
+    ])
+    expect(await currentDataSource().query('SELECT session_id, scenario_id, component_id, sort_order FROM pf2_session_content WHERE session_id = ? ORDER BY sort_order', ['session-content'])).toEqual([
+      { session_id: 'session-content', scenario_id: 'scenario-test', component_id: 'ouverture', sort_order: 0 },
+      { session_id: 'session-content', scenario_id: 'scenario-test', component_id: 'final', sort_order: 1 }
+    ])
+
+    await service.updateSession('session-content', { title: 'Conserve les liens' })
+    expect((await service.getSession('session-content'))?.content).toHaveLength(2)
+
+    await service.updateSession('session-content', { content: [{ scenarioId: 'scenario-test', componentId: null }] })
+    expect((await service.getSession('session-content'))?.content).toEqual([{ scenarioId: 'scenario-test', componentId: null, sortOrder: 0 }])
+
+    await expect(service.updateSession('session-content', { content: [{ scenarioId: 'scenario-test', componentId: 'inconnu' }] })).rejects.toThrow('Composant jouable introuvable')
+    await expect(service.updateSession('session-content', { content: [{ scenarioId: 'scenario-inconnu' }] })).rejects.toThrow('Scénario de séance introuvable')
+    expect((await service.getSession('session-content'))?.content).toEqual([{ scenarioId: 'scenario-test', componentId: null, sortOrder: 0 }])
+
+    await service.deleteSession('session-content')
+    expect(await currentDataSource().query('SELECT * FROM pf2_session_content WHERE session_id = ?', ['session-content'])).toEqual([])
   })
 
   it('creates and verifies one SQLite backup before applying a pending migration', async () => {

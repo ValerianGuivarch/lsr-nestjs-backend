@@ -48,8 +48,10 @@ const referenceFiles = {
 type ReferenceKind = keyof typeof referenceFiles
 type RecordRow = { id: string; name: string | null; payload: string }
 type SessionRow = { id: string; session_number: number; date: string; in_game_start_date: string; in_game_end_date: string; title: string; participants: string; long_summary_author: string | null; short_summary_author: string | null; session_xp: number; long_summary_xp: number; short_summary_xp: number; short_summary: string; discord_message_id: string | null; published: number; created_at: string; updated_at: string }
-export type Pf2Session = { id: string; sessionNumber: number; date: string; inGameStartDate: string; inGameEndDate: string; title: string; participants: string[]; longSummaryAuthor: string | null; shortSummaryAuthor: string | null; sessionXp: number; longSummaryXp: number; shortSummaryXp: number; shortSummary: string; discordMessageId: string | null; published: boolean; createdAt: string; updatedAt: string }
-export type Pf2SessionInput = { id?: unknown; sessionNumber?: unknown; date?: unknown; inGameStartDate?: unknown; inGameEndDate?: unknown; endDate?: unknown; title?: unknown; participants?: unknown; longSummaryAuthor?: unknown; shortSummaryAuthor?: unknown; sessionXp?: unknown; longSummaryXp?: unknown; shortSummaryXp?: unknown; shortSummary?: unknown; published?: unknown }
+type SessionContentRow = { session_id: string; scenario_id: string; component_id: string; sort_order: number }
+export type Pf2SessionContentLink = { scenarioId: string; componentId: string | null; sortOrder: number }
+export type Pf2Session = { id: string; sessionNumber: number; date: string; inGameStartDate: string; inGameEndDate: string; title: string; participants: string[]; longSummaryAuthor: string | null; shortSummaryAuthor: string | null; sessionXp: number; longSummaryXp: number; shortSummaryXp: number; shortSummary: string; discordMessageId: string | null; published: boolean; content?: Pf2SessionContentLink[]; createdAt: string; updatedAt: string }
+export type Pf2SessionInput = { id?: unknown; sessionNumber?: unknown; date?: unknown; inGameStartDate?: unknown; inGameEndDate?: unknown; endDate?: unknown; title?: unknown; participants?: unknown; longSummaryAuthor?: unknown; shortSummaryAuthor?: unknown; sessionXp?: unknown; longSummaryXp?: unknown; shortSummaryXp?: unknown; shortSummary?: unknown; published?: unknown; content?: unknown }
 
 @Injectable()
 export class Pf2PersistenceService implements OnModuleInit {
@@ -512,19 +514,24 @@ export class Pf2PersistenceService implements OnModuleInit {
 
   async listSessions(): Promise<Pf2Session[]> {
     const rows = await this.dataSource.query('SELECT id, session_number, date, in_game_start_date, in_game_end_date, title, participants, long_summary_author, short_summary_author, session_xp, long_summary_xp, short_summary_xp, short_summary, discord_message_id, published, created_at, updated_at FROM pf2_session ORDER BY session_number ASC') as SessionRow[]
-    return rows.map((row) => this.session(row))
+    return this.attachSessionContent(rows.map((row) => this.session(row)))
   }
 
   async getSession(id: string): Promise<Pf2Session | null> {
     const rows = await this.dataSource.query('SELECT id, session_number, date, in_game_start_date, in_game_end_date, title, participants, long_summary_author, short_summary_author, session_xp, long_summary_xp, short_summary_xp, short_summary, discord_message_id, published, created_at, updated_at FROM pf2_session WHERE id = ?', [id]) as SessionRow[]
-    return rows[0] ? this.session(rows[0]) : null
+    if (!rows[0]) return null
+    return (await this.attachSessionContent([this.session(rows[0])]))[0] ?? null
   }
 
   async createSession(input: Pf2SessionInput): Promise<Pf2Session> {
     const id = input.id === undefined ? randomUUID() : this.requiredSessionId(input.id)
     const session = this.sessionInput(input)
+    const content = await this.sessionContentInput(input.content, [])
     await this.assertAvailableSessionNumber(session.sessionNumber)
-    await this.dataSource.query('INSERT INTO pf2_session (id, session_number, date, in_game_start_date, in_game_end_date, title, participants, long_summary_author, short_summary_author, session_xp, long_summary_xp, short_summary_xp, short_summary, published, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)', [id, session.sessionNumber, session.date, session.inGameStartDate, session.inGameEndDate, session.title, JSON.stringify(session.participants), session.longSummaryAuthor, session.shortSummaryAuthor, session.sessionXp, session.longSummaryXp, session.shortSummaryXp, session.shortSummary, session.published ? 1 : 0])
+    await this.dataSource.transaction(async (manager) => {
+      await manager.query('INSERT INTO pf2_session (id, session_number, date, in_game_start_date, in_game_end_date, title, participants, long_summary_author, short_summary_author, session_xp, long_summary_xp, short_summary_xp, short_summary, published, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)', [id, session.sessionNumber, session.date, session.inGameStartDate, session.inGameEndDate, session.title, JSON.stringify(session.participants), session.longSummaryAuthor, session.shortSummaryAuthor, session.sessionXp, session.longSummaryXp, session.shortSummaryXp, session.shortSummary, session.published ? 1 : 0])
+      await this.replaceSessionContent(id, content, manager)
+    })
     const created = await this.getSession(id)
     if (!created) throw new Error('La séance créée est introuvable.')
     return created
@@ -534,18 +541,22 @@ export class Pf2PersistenceService implements OnModuleInit {
     const current = await this.getSession(this.requiredSessionId(id))
     if (!current) return null
     const session = this.sessionInput(input, current)
+    const content = await this.sessionContentInput(input.content, current.content ?? [])
     await this.assertAvailableSessionNumber(session.sessionNumber, current.id)
-    await this.dataSource.query('UPDATE pf2_session SET session_number = ?, date = ?, in_game_start_date = ?, in_game_end_date = ?, title = ?, participants = ?, long_summary_author = ?, short_summary_author = ?, session_xp = ?, long_summary_xp = ?, short_summary_xp = ?, short_summary = ?, published = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?', [session.sessionNumber, session.date, session.inGameStartDate, session.inGameEndDate, session.title, JSON.stringify(session.participants), session.longSummaryAuthor, session.shortSummaryAuthor, session.sessionXp, session.longSummaryXp, session.shortSummaryXp, session.shortSummary, session.published ? 1 : 0, current.id])
+    await this.dataSource.transaction(async (manager) => {
+      await manager.query('UPDATE pf2_session SET session_number = ?, date = ?, in_game_start_date = ?, in_game_end_date = ?, title = ?, participants = ?, long_summary_author = ?, short_summary_author = ?, session_xp = ?, long_summary_xp = ?, short_summary_xp = ?, short_summary = ?, published = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?', [session.sessionNumber, session.date, session.inGameStartDate, session.inGameEndDate, session.title, JSON.stringify(session.participants), session.longSummaryAuthor, session.shortSummaryAuthor, session.sessionXp, session.longSummaryXp, session.shortSummaryXp, session.shortSummary, session.published ? 1 : 0, current.id])
+      await this.replaceSessionContent(current.id, content, manager)
+    })
     return this.getSession(current.id)
   }
-  async deleteSession(id: string): Promise<void> {
-  const sessionId = this.requiredSessionId(id)
 
-  await this.dataSource.query(
-    'DELETE FROM pf2_session WHERE id = ?',
-    [sessionId],
-  )
-}
+  async deleteSession(id: string): Promise<void> {
+    const sessionId = this.requiredSessionId(id)
+    await this.dataSource.transaction(async (manager) => {
+      await manager.query('DELETE FROM pf2_session_content WHERE session_id = ?', [sessionId])
+      await manager.query('DELETE FROM pf2_session WHERE id = ?', [sessionId])
+    })
+  }
 
   async savePortrait(bytes: Uint8Array, extension: 'webp' | 'gif', pnjId: string, mimeType: string): Promise<{ path: string; absolutePath: string }> {
     const filename = `${this.slug(pnjId)}.${extension}`
@@ -742,6 +753,11 @@ export class Pf2PersistenceService implements OnModuleInit {
         if (Array.isArray(entry.playableComponents)) continue
         await manager.query("UPDATE pf2_catalogue_entity SET payload = ?, updated_at = CURRENT_TIMESTAMP WHERE entity_kind = 'entry' AND id = ?", [JSON.stringify({ ...entry, playableComponents: [] }), row.id])
       }
+    })
+    await this.applyMigration('020-session-scenario-content', async (manager) => {
+      await manager.query("CREATE TABLE IF NOT EXISTS pf2_session_content (session_id TEXT NOT NULL, scenario_id TEXT NOT NULL, component_id TEXT NOT NULL DEFAULT '', sort_order INTEGER NOT NULL DEFAULT 0, created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (session_id, scenario_id, component_id), FOREIGN KEY (session_id) REFERENCES pf2_session(id) ON DELETE CASCADE)")
+      await manager.query('CREATE INDEX IF NOT EXISTS idx_pf2_session_content_scenario ON pf2_session_content (scenario_id, component_id, session_id)')
+      await manager.query('CREATE INDEX IF NOT EXISTS idx_pf2_session_content_session ON pf2_session_content (session_id, sort_order)')
     })
 
     await this.assertDatabaseIntegrity(this.dataSource, 'base SQLite après migrations')
@@ -1010,6 +1026,60 @@ export class Pf2PersistenceService implements OnModuleInit {
 
   private objectJson(value: unknown): Record<string, unknown> {
     try { return this.object(typeof value === 'string' ? JSON.parse(value) : value) } catch { return {} }
+  }
+
+  private async attachSessionContent(sessions: Pf2Session[]): Promise<Pf2Session[]> {
+    if (!sessions.length) return sessions
+    const placeholders = sessions.map(() => '?').join(', ')
+    const rows = await this.dataSource.query(`SELECT session_id, scenario_id, component_id, sort_order FROM pf2_session_content WHERE session_id IN (${placeholders}) ORDER BY session_id, sort_order, scenario_id, component_id`, sessions.map((session) => session.id)) as SessionContentRow[]
+    const bySession = new Map<string, Pf2SessionContentLink[]>()
+    for (const row of rows) {
+      const links = bySession.get(row.session_id) ?? []
+      links.push({ scenarioId: row.scenario_id, componentId: row.component_id || null, sortOrder: Number(row.sort_order ?? links.length) })
+      bySession.set(row.session_id, links)
+    }
+    return sessions.map((session) => ({ ...session, content: bySession.get(session.id) ?? [] }))
+  }
+
+  private async sessionContentInput(value: unknown, fallback: Pf2SessionContentLink[]): Promise<Pf2SessionContentLink[]> {
+    if (value === undefined) return fallback.map((link, index) => ({ scenarioId: link.scenarioId, componentId: link.componentId ?? null, sortOrder: index }))
+    if (!Array.isArray(value)) throw new Error('content doit être une liste de scénarios/composants joués.')
+
+    const links: Pf2SessionContentLink[] = []
+    const seen = new Set<string>()
+    for (const [index, raw] of value.entries()) {
+      if (!this.isObject(raw)) throw new Error(`content[${index}] doit être un objet.`)
+      const scenarioId = typeof raw.scenarioId === 'string' ? raw.scenarioId.trim() : ''
+      if (!scenarioId) throw new Error(`content[${index}].scenarioId est obligatoire.`)
+      const componentId = raw.componentId === null || raw.componentId === undefined || raw.componentId === '' ? null : typeof raw.componentId === 'string' ? raw.componentId.trim() : ''
+      if (componentId === '') throw new Error(`content[${index}].componentId est invalide.`)
+      const key = `${scenarioId}\u0000${componentId ?? ''}`
+      if (seen.has(key)) throw new Error(`Lien de séance dupliqué : ${scenarioId}${componentId ? ` / ${componentId}` : ''}.`)
+      seen.add(key)
+      links.push({ scenarioId, componentId, sortOrder: index })
+    }
+
+    const scenarioIds = [...new Set(links.map((link) => link.scenarioId))]
+    if (!scenarioIds.length) return links
+    const placeholders = scenarioIds.map(() => '?').join(', ')
+    const rows = await this.dataSource.query(`SELECT id, payload FROM pf2_catalogue_entity WHERE entity_kind = 'entry' AND id IN (${placeholders})`, scenarioIds) as Array<{ id: string; payload: string }>
+    const entries = new Map(rows.map((row) => [row.id, this.objectJson(row.payload)]))
+    for (const scenarioId of scenarioIds) if (!entries.has(scenarioId)) throw new Error(`Scénario de séance introuvable : ${scenarioId}.`)
+    for (const link of links) {
+      if (!link.componentId) continue
+      const entry = entries.get(link.scenarioId) ?? {}
+      const components = Array.isArray(entry.playableComponents) ? entry.playableComponents : []
+      const exists = components.some((raw) => this.isObject(raw) && raw.id === link.componentId)
+      if (!exists) throw new Error(`Composant jouable introuvable pour ${link.scenarioId} : ${link.componentId}.`)
+    }
+    return links
+  }
+
+  private async replaceSessionContent(sessionId: string, links: Pf2SessionContentLink[], manager: DataSource | EntityManager = this.dataSource): Promise<void> {
+    await manager.query('DELETE FROM pf2_session_content WHERE session_id = ?', [sessionId])
+    for (const link of links) {
+      await manager.query('INSERT INTO pf2_session_content (session_id, scenario_id, component_id, sort_order, created_at) VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)', [sessionId, link.scenarioId, link.componentId ?? '', link.sortOrder])
+    }
   }
 
   private async assertAvailableSessionNumber(sessionNumber: number, exceptId?: string): Promise<void> {

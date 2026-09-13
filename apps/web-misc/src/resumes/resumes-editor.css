@@ -77,3 +77,52 @@
   margin: 0;
   accent-color: #96712b;
 }
+
+.resume-missions {
+  min-width: 0;
+  margin: 0;
+  padding: 12px;
+  border: 1px solid #d8d0c0;
+  border-radius: 6px;
+  background: #fffaf0;
+}
+
+.resume-missions legend {
+  padding: 0 5px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #4e564e;
+}
+
+.resume-missions > p {
+  margin: 0 0 10px;
+  color: #737a73;
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.resume-mission-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: end;
+  margin-top: 8px;
+}
+
+.resume-mission-add,
+.resume-mission-remove {
+  border: 1px solid #cbb98b;
+  border-radius: 5px;
+  background: #fffdf8;
+  color: #70551b;
+  padding: 9px 10px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.resume-mission-add { margin-top: 10px; }
+.resume-mission-remove { white-space: nowrap; }
+
+@media (max-width: 640px) {
+  .resume-mission-row { grid-template-columns: 1fr; }
+}
