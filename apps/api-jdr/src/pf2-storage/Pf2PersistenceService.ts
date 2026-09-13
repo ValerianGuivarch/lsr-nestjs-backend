@@ -454,7 +454,7 @@ export class Pf2PersistenceService implements OnModuleInit {
   }
 
   /** Updates only specified playable parts of a campaign, while preserving all other catalogue metadata. */
-  async replaceCampaignPlayableComponents(campaignId: string, scenarios: CampaignPlayableComponentsScenario[]): Promise<Record<string, unknown>> {
+  async replaceCampaignPlayableComponents(campaignId: string, scenarios: CampaignPlayableComponentsScenario[], campaignDescription?: string): Promise<Record<string, unknown>> {
     return this.dataSource.transaction(async (manager) => {
       const rows = await manager.query("SELECT payload FROM pf2_catalogue_entity WHERE entity_kind = 'entry' AND id = ?", [campaignId]) as Array<{ payload: string }>
       if (!rows[0]) throw new Error(`Campagne introuvable : ${campaignId}.`)
@@ -467,7 +467,8 @@ export class Pf2PersistenceService implements OnModuleInit {
         const replacement = replacements.get(typeof part.id === 'string' ? part.id : '')
         return replacement ? { ...part, synopsis: replacement.description, playableComponents: replacement.playableComponents } : part
       })
-      const next = { ...campaign, parts: nextParts }
+      // An omitted description preserves existing data for old campaign JSON files.
+      const next = { ...campaign, ...(campaignDescription === undefined ? {} : { synopsis: campaignDescription }), parts: nextParts }
       await manager.query("UPDATE pf2_catalogue_entity SET payload = ?, updated_at = CURRENT_TIMESTAMP WHERE entity_kind = 'entry' AND id = ?", [JSON.stringify(next), campaignId])
       return next
     })

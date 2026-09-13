@@ -20,7 +20,7 @@ export type ReferenceKind = keyof typeof referenceFiles
 export type ResumeActorReference = { uuid: string; name: string }
 
 export type PlayableComponentsImport = { scenarioId: string; playableComponents: PlayableComponent[] }
-export type CampaignPlayableComponentsImport = { campaignId: string; scenarios: CampaignPlayableComponentsScenario[] }
+export type CampaignPlayableComponentsImport = { campaignId: string; description?: string; scenarios: CampaignPlayableComponentsScenario[] }
 
 export type ResourceBundleRecord = {
   id: string
@@ -201,6 +201,7 @@ export class Pf2MjService {
     const campaign = await this.persistence.getCatalogueEntity(campaignId)
     if (!campaign || campaign.kind !== 'campaign') throw new Error(`Campagne introuvable : ${campaignId}.`)
     if (!Array.isArray(payload.scenarios)) throw new Error('scenarios doit être un tableau.')
+    const description = payload.description === undefined ? undefined : this.requiredString(payload.description, 'description')
     const knownPartIds = new Set((Array.isArray(campaign.parts) ? campaign.parts : []).map((part) => this.asObject(part).id).filter((id): id is string => typeof id === 'string' && Boolean(id)))
     const seen = new Set<string>()
     const scenarios = payload.scenarios.map((raw, index): CampaignPlayableComponentsScenario => {
@@ -215,8 +216,8 @@ export class Pf2MjService {
         playableComponents: this.validatePlayableComponents(item.playableComponents)
       }
     })
-    await this.persistence.replaceCampaignPlayableComponents(campaignId, scenarios)
-    return { campaignId, scenarios }
+    await this.persistence.replaceCampaignPlayableComponents(campaignId, scenarios, description)
+    return { campaignId, ...(description === undefined ? {} : { description }), scenarios }
   }
 
   async geography(includeExcluded = false): Promise<Record<string, unknown>> {
