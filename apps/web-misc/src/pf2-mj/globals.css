@@ -246,6 +246,34 @@
 .component-work li strong{font-size:15px;color:#242a24}
 .component-work li small{font-size:12px;color:#566154}
 @media(max-width:800px){.component-work>header{flex-direction:column}.component-work-actions{width:100%;min-width:0;align-items:flex-start}.component-work-actions>span{text-align:left;max-width:none}.component-unit-head{grid-template-columns:1fr}.component-unit-head strong{font-size:18px}.component-work>header p,.component-unit-head p{font-size:14px}}
+
+/* Vue compacte : le titre ouvre le détail ; seule la case modifie le suivi. */
+.component-work>header{padding:14px 16px}
+.component-work h3{font-size:20px}
+.component-work>header p{font-size:13px;line-height:1.4}
+.component-work-actions{min-width:0;flex-direction:row;align-items:center}
+.component-work-actions>span{max-width:180px;font-size:11px;font-weight:650}
+.component-toggle,.component-prompt,.component-import{font-size:11px;padding:6px 8px}
+.component-work-units>article{padding:12px 16px}
+.component-unit-head{gap:12px}
+.component-unit-head small{margin-bottom:3px;font-size:10px}
+.component-unit-head strong{font-size:16px}
+.component-unit-head p{margin-top:4px;font-size:13px;line-height:1.35}
+.component-progress{margin-top:5px;font-size:11px}
+.component-work li.component-checklist-item{padding:8px 10px;border:1px solid #e5ddd0;border-radius:5px;background:#f7f5ef}
+.component-checklist-row{display:flex;align-items:flex-start;gap:8px}
+.component-checklist-row>input{flex:0 0 auto;width:16px;height:16px;margin:2px 0 0;accent-color:#8d6b27;cursor:pointer}
+.component-details-button{display:grid;flex:1;gap:2px;padding:0;border:0;background:transparent;color:inherit;text-align:left;cursor:pointer}
+.component-details-button:hover strong{text-decoration:underline;text-decoration-color:#9d7931;text-underline-offset:3px}
+.component-details-button strong{font-size:12px;color:#242a24}
+.component-details-button small{font-size:10px;color:#697168}
+.component-detail-panel{margin:8px 0 0 24px;padding:8px 10px;border-left:2px solid #b89956;background:#fffdf9;color:#485047;font-size:11px}
+.component-detail-panel p{margin:0 0 7px;line-height:1.4}
+.component-detail-panel dl{display:flex;flex-wrap:wrap;gap:4px 14px;margin:0}
+.component-detail-panel dl>div{display:flex;gap:4px}
+.component-detail-panel dt{font-weight:700;color:#71551b}
+.component-detail-panel dd{margin:0}
+@media(max-width:800px){.component-work>header{padding:13px}.component-work-actions{align-items:flex-start}.component-work-actions>span{max-width:none;text-align:left}.component-work h3{font-size:19px}.component-unit-head p{font-size:12px}}
 .package-integrate{margin:10px 0 5px;padding:9px 12px;border:0;border-radius:5px;background:#385e42;color:white;font-weight:700;cursor:pointer}
 .package-integrate:disabled{opacity:.55;cursor:wait}
 .package-deploy{display:block;background:#35536f}

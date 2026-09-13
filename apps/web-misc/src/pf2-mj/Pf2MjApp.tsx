@@ -1053,6 +1053,7 @@ function PlayableComponentsView({ curation, onUpdate, onImported }: { curation: 
   const [message, setMessage] = useState('')
   const [importing, setImporting] = useState<string | null>(null)
   const [expandedCampaignIds, setExpandedCampaignIds] = useState<Set<string>>(() => new Set())
+  const [expandedComponentKey, setExpandedComponentKey] = useState<string | null>(null)
   const selectedCampaigns = containers
     .filter((container) => {
       const override = resolveContainerOverride(curation, container)
@@ -1141,10 +1142,25 @@ function PlayableComponentsView({ curation, onUpdate, onImported }: { curation: 
     else next.add(campaignId)
     return next
   })
+  const copyText = async (text: string) => {
+    if (navigator.clipboard?.writeText) {
+      try { await navigator.clipboard.writeText(text); return }
+      catch { /* Fallback for browsers or embedded pages that deny Clipboard API. */ }
+    }
+    const area = document.createElement('textarea')
+    area.value = text
+    area.style.position = 'fixed'
+    area.style.opacity = '0'
+    document.body.append(area)
+    area.select()
+    const copied = document.execCommand('copy')
+    area.remove()
+    if (!copied) throw new Error('Copie refusée par le navigateur.')
+  }
 
   const copyPrompt = async (work: PlayableComponentsWork, unit?: PlayableUnit) => {
     try {
-      await navigator.clipboard.writeText(work.campaign ? campaignPrompt(work) : scenarioPrompt(work, unit!))
+      await copyText(work.campaign ? campaignPrompt(work) : scenarioPrompt(work, unit!))
       setMessage(`Prompt copié pour « ${work.title} ».`)
     } catch { setMessage('Copie impossible : autorise le presse-papier dans le navigateur.') }
   }
@@ -1152,7 +1168,7 @@ function PlayableComponentsView({ curation, onUpdate, onImported }: { curation: 
   const copySelectionPrompt = async () => {
     const targets = works.map((work) => `- ${work.campaign ? 'Campagne' : 'Scénario'} : ${work.title} (${work.id})`).join('\n') || '- Aucune œuvre sélectionnée.'
     const text = `Tu aides à documenter des œuvres Pathfinder 2. Je joins les PDF associés et/ou un export du catalogue. Selon le type :\n- scénario autonome : retourne { scenarioId, playableComponents };\n- campagne : retourne { campaignId, scenarios: [{ scenarioId, description, playableComponents }] }.\nNe crée jamais de découpage générique et ne répète jamais la description de campagne dans ses sous-scénarios. En cas de doute, utilise playableComponents: [].\n\nŒuvres sélectionnées :\n${targets}`
-    try { await navigator.clipboard.writeText(text); setMessage('Prompt général copié dans le presse-papier.') }
+    try { await copyText(text); setMessage('Prompt général copié dans le presse-papier.') }
     catch { setMessage('Copie impossible : autorise le presse-papier dans le navigateur.') }
   }
 
@@ -1217,7 +1233,31 @@ function PlayableComponentsView({ curation, onUpdate, onImported }: { curation: 
           const unitState = unitProgress(unit)
           return <article key={unit.id}>
             <div className="component-unit-head"><div><small>{unit.number ? `${unit.number} · ` : ''}{playableTypeLabel(unit.playableType)}</small><strong>{titleOf(unit)}</strong><p>{unit.synopsis || 'Description propre de ce scénario non renseignée.'}</p><em className="component-progress">{unitState.played}/{unitState.total} composant{unitState.total > 1 ? 's' : ''} joué{unitState.played > 1 ? 's' : ''}{unitState.completed ? ' · Scénario terminé' : ''}</em></div>{!work.campaign && <div><label className={`component-import${importing === unit.id ? ' disabled' : ''}`}>Importer<input type="file" accept="application/json,.json" disabled={importing !== null} onChange={(event) => { const file = event.target.files?.[0]; event.target.value = ''; void importComponents(unit, file) }} /></label></div>}</div>
-            {unit.playableComponents.length ? <ul>{unit.playableComponents.map((component) => <li key={component.id}><label><input type="checkbox" checked={status[component.id] === 'played'} onChange={() => togglePlayed(unit, component.id)} /><span><strong>#{component.order} · {component.title}</strong><small>{component.estimatedSessions ? `${component.estimatedSessions.min}${component.estimatedSessions.min !== component.estimatedSessions.max ? `–${component.estimatedSessions.max}` : ''} séance${component.estimatedSessions.max > 1 ? 's' : ''} · ` : ''}{component.continuity.mode === 'free' ? 'Libre' : component.continuity.mode === 'soft_lock' ? 'Transition nécessaire' : 'Effet tunnel'}</small></span></label></li>)}</ul> : <p className="missing">Aucun composant renseigné. {work.campaign ? 'Utilise « Prompt campagne » puis importe un seul JSON pour la campagne.' : 'Utilise « Prompt » puis importe le JSON produit.'}</p>}
+            {unit.playableComponents.length ? <ul>{unit.playableComponents.map((component) => {
+              const componentKey = `${unit.id}:${component.id}`
+              const detailsExpanded = expandedComponentKey === componentKey
+              const continuityLabel = component.continuity.mode === 'free' ? 'Libre' : component.continuity.mode === 'soft_lock' ? 'Transition nécessaire' : 'Effet tunnel'
+              return <li className="component-checklist-item" key={component.id}>
+                <div className="component-checklist-row">
+                  <input aria-label={`Marquer ${component.title} comme joué`} type="checkbox" checked={status[component.id] === 'played'} onChange={() => togglePlayed(unit, component.id)} />
+                  <button className="component-details-button" type="button" onClick={() => setExpandedComponentKey(detailsExpanded ? null : componentKey)} aria-expanded={detailsExpanded}>
+                    <strong>#{component.order} · {component.title}</strong>
+                    <small>{component.estimatedSessions ? `${component.estimatedSessions.min}${component.estimatedSessions.min !== component.estimatedSessions.max ? `–${component.estimatedSessions.max}` : ''} séance${component.estimatedSessions.max > 1 ? 's' : ''} · ` : ''}{continuityLabel} · {status[component.id] === 'played' ? 'Joué' : 'À jouer'}</small>
+                  </button>
+                </div>
+                {detailsExpanded && <div className="component-detail-panel">
+                  <p>{component.description || 'Description non renseignée.'}</p>
+                  <dl>
+                    <div><dt>Statut</dt><dd>{status[component.id] === 'played' ? 'Joué' : 'À jouer'}</dd></div>
+                    {component.estimatedSessions && <div><dt>Durée estimée</dt><dd>{component.estimatedSessions.min === component.estimatedSessions.max ? `${component.estimatedSessions.min} séance${component.estimatedSessions.min > 1 ? 's' : ''}` : `${component.estimatedSessions.min}–${component.estimatedSessions.max} séances`}</dd></div>}
+                    <div><dt>Continuité</dt><dd>{continuityLabel}</dd></div>
+                    <div><dt>Retour à la base</dt><dd>{component.continuity.returnToHubPossible ? 'Possible' : 'Non prévu'}</dd></div>
+                    {component.continuity.recommendedSameParty && <div><dt>Groupe</dt><dd>Même groupe recommandé</dd></div>}
+                    {component.continuity.notes && <div><dt>Note</dt><dd>{component.continuity.notes}</dd></div>}
+                  </dl>
+                </div>}
+              </li>
+            })}</ul> : <p className="missing">Aucun composant renseigné. {work.campaign ? 'Utilise « Prompt campagne » puis importe un seul JSON pour la campagne.' : 'Utilise « Prompt » puis importe le JSON produit.'}</p>}
           </article>
         })}</div>}
       </section>
