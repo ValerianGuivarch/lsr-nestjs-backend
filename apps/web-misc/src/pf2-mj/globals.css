@@ -223,6 +223,7 @@
 .resource-list em,.package-status em{font-size:10px;color:#6a726a;font-style:normal}
 .resource-list .resource-open{justify-self:start;margin-top:2px;border-radius:4px;padding:4px 7px;background:#e7eee5;color:#344c38;font-size:10px;font-weight:700;text-decoration:none}.resource-list .resource-open:hover{background:#d7e6d3}
 .component-progress{font-size:10px;color:#806937;font-style:normal}
+.component-toggle{border:0;background:transparent;color:#765719;font-size:10px;font-weight:700;cursor:pointer;padding:6px 4px;text-decoration:underline;text-underline-offset:2px}
 .package-integrate{margin:10px 0 5px;padding:9px 12px;border:0;border-radius:5px;background:#385e42;color:white;font-weight:700;cursor:pointer}
 .package-integrate:disabled{opacity:.55;cursor:wait}
 .package-deploy{display:block;background:#35536f}

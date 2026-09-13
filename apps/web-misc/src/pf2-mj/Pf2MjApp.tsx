@@ -1052,6 +1052,7 @@ type PlayableComponentsWork = { id: string; title: string; description: string |
 function PlayableComponentsView({ curation, onUpdate, onImported }: { curation: Curation; onUpdate: (id: string, field: string, value: unknown) => void; onImported: () => Promise<void> }) {
   const [message, setMessage] = useState('')
   const [importing, setImporting] = useState<string | null>(null)
+  const [expandedCampaignIds, setExpandedCampaignIds] = useState<Set<string>>(() => new Set())
   const selectedCampaigns = containers
     .filter((container) => {
       const override = resolveContainerOverride(curation, container)
@@ -1114,6 +1115,12 @@ function PlayableComponentsView({ curation, onUpdate, onImported }: { curation: 
     const units = work.units.map(unitProgress)
     return { played: units.reduce((total, unit) => total + unit.played, 0), total: units.reduce((total, unit) => total + unit.total, 0), completedScenarios: units.filter((unit) => unit.completed).length }
   }
+  const toggleCampaign = (campaignId: string) => setExpandedCampaignIds((current) => {
+    const next = new Set(current)
+    if (next.has(campaignId)) next.delete(campaignId)
+    else next.add(campaignId)
+    return next
+  })
 
   const copyPrompt = async (work: PlayableComponentsWork, unit?: PlayableUnit) => {
     try {
@@ -1172,7 +1179,29 @@ function PlayableComponentsView({ curation, onUpdate, onImported }: { curation: 
   return <section className="playable-components-view">
     <div className="playable-components-intro"><div><small>SUIVI NARRATIF</small><h2>Composants jouables</h2><p>Campagnes et scénarios sélectionnés. Coche les unités déjà jouées ; l’absence de découpage reste volontairement neutre.</p></div><button className="component-prompt" onClick={() => void copySelectionPrompt()}>Prompt</button></div>
     {!works.length && <div className="empty-components"><strong>Aucune œuvre à suivre.</strong><p>Dans une fiche campagne ou scénario, choisis « Sélectionné » puis un statut de jeu : « À jouer », « En cours » ou « Joué ».</p></div>}
-    {works.map((work) => { const progress = workProgress(work); return <section className="component-work" key={work.id}><header><div><small>{work.campaign ? 'CAMPAGNE' : 'SCÉNARIO'}</small><h3>{work.title}</h3>{work.description && <p>{work.description}</p>}</div><div className="component-work-actions"><button className="component-prompt" onClick={() => void copyPrompt(work)}>{work.campaign ? 'Prompt campagne' : 'Prompt'}</button>{work.campaign && <label className={`component-import${importing === work.id ? ' disabled' : ''}`}>Importer la campagne<input type="file" accept="application/json,.json" disabled={importing !== null} onChange={(event) => { const file = event.target.files?.[0]; event.target.value = ''; void importCampaign(work, file) }} /></label>}<span>{work.campaign && `${progress.completedScenarios}/${work.units.length} scénario${work.units.length > 1 ? 's' : ''} terminé${progress.completedScenarios > 1 ? 's' : ''} · `}{progress.played}/{progress.total} composant{progress.total > 1 ? 's' : ''} joué{progress.played > 1 ? 's' : ''}</span></div></header><div className="component-work-units">{work.units.map((unit) => { const status = resolvePlayableOverride(curation, unit).playableComponentStatus ?? {}; const unitState = unitProgress(unit); return <article key={unit.id}><div className="component-unit-head"><div><small>{unit.number ? `${unit.number} · ` : ''}{playableTypeLabel(unit.playableType)}</small><strong>{titleOf(unit)}</strong><p>{unit.synopsis || 'Description propre de ce scénario non renseignée.'}</p><em className="component-progress">{unitState.played}/{unitState.total} composant{unitState.total > 1 ? 's' : ''} joué{unitState.played > 1 ? 's' : ''}{unitState.completed ? ' · Scénario terminé' : ''}</em></div>{!work.campaign && <div><label className={`component-import${importing === unit.id ? ' disabled' : ''}`}>Importer<input type="file" accept="application/json,.json" disabled={importing !== null} onChange={(event) => { const file = event.target.files?.[0]; event.target.value = ''; void importComponents(unit, file) }} /></label></div>}</div>{unit.playableComponents.length ? <ul>{unit.playableComponents.map((component) => <li key={component.id}><label><input type="checkbox" checked={status[component.id] === 'played'} onChange={() => togglePlayed(unit, component.id)} /><span><strong>#{component.order} · {component.title}</strong><small>{component.estimatedSessions ? `${component.estimatedSessions.min}${component.estimatedSessions.min !== component.estimatedSessions.max ? `–${component.estimatedSessions.max}` : ''} séance${component.estimatedSessions.max > 1 ? 's' : ''} · ` : ''}{component.continuity.mode === 'free' ? 'Libre' : component.continuity.mode === 'soft_lock' ? 'Transition nécessaire' : 'Effet tunnel'}</small></span></label></li>)}</ul> : <p className="missing">Aucun composant renseigné. {work.campaign ? 'Utilise « Prompt campagne » puis importe un seul JSON pour la campagne.' : 'Utilise « Prompt » puis importe le JSON produit.'}</p>}</article> })}</div></section> })}
+    {works.map((work) => {
+      const progress = workProgress(work)
+      const expanded = !work.campaign || expandedCampaignIds.has(work.id)
+      return <section className={`component-work${work.campaign && !expanded ? ' is-collapsed' : ''}`} key={work.id}>
+        <header>
+          <div><small>{work.campaign ? 'CAMPAGNE' : 'SCÉNARIO'}</small><h3>{work.title}</h3>{work.description && <p>{work.description}</p>}</div>
+          <div className="component-work-actions">
+            {work.campaign && <button className="component-toggle" onClick={() => toggleCampaign(work.id)} aria-expanded={expanded}>{expanded ? 'Réduire' : `Développer · ${work.units.length} scénario${work.units.length > 1 ? 's' : ''}`}</button>}
+            <button className="component-prompt" onClick={() => void copyPrompt(work)}>{work.campaign ? 'Prompt campagne' : 'Prompt'}</button>
+            {work.campaign && <label className={`component-import${importing === work.id ? ' disabled' : ''}`}>Importer la campagne<input type="file" accept="application/json,.json" disabled={importing !== null} onChange={(event) => { const file = event.target.files?.[0]; event.target.value = ''; void importCampaign(work, file) }} /></label>}
+            <span>{work.campaign && `${progress.completedScenarios}/${work.units.length} scénario${work.units.length > 1 ? 's' : ''} terminé${progress.completedScenarios > 1 ? 's' : ''} · `}{progress.played}/{progress.total} composant{progress.total > 1 ? 's' : ''} joué{progress.played > 1 ? 's' : ''}</span>
+          </div>
+        </header>
+        {expanded && <div className="component-work-units">{work.units.map((unit) => {
+          const status = resolvePlayableOverride(curation, unit).playableComponentStatus ?? {}
+          const unitState = unitProgress(unit)
+          return <article key={unit.id}>
+            <div className="component-unit-head"><div><small>{unit.number ? `${unit.number} · ` : ''}{playableTypeLabel(unit.playableType)}</small><strong>{titleOf(unit)}</strong><p>{unit.synopsis || 'Description propre de ce scénario non renseignée.'}</p><em className="component-progress">{unitState.played}/{unitState.total} composant{unitState.total > 1 ? 's' : ''} joué{unitState.played > 1 ? 's' : ''}{unitState.completed ? ' · Scénario terminé' : ''}</em></div>{!work.campaign && <div><label className={`component-import${importing === unit.id ? ' disabled' : ''}`}>Importer<input type="file" accept="application/json,.json" disabled={importing !== null} onChange={(event) => { const file = event.target.files?.[0]; event.target.value = ''; void importComponents(unit, file) }} /></label></div>}</div>
+            {unit.playableComponents.length ? <ul>{unit.playableComponents.map((component) => <li key={component.id}><label><input type="checkbox" checked={status[component.id] === 'played'} onChange={() => togglePlayed(unit, component.id)} /><span><strong>#{component.order} · {component.title}</strong><small>{component.estimatedSessions ? `${component.estimatedSessions.min}${component.estimatedSessions.min !== component.estimatedSessions.max ? `–${component.estimatedSessions.max}` : ''} séance${component.estimatedSessions.max > 1 ? 's' : ''} · ` : ''}{component.continuity.mode === 'free' ? 'Libre' : component.continuity.mode === 'soft_lock' ? 'Transition nécessaire' : 'Effet tunnel'}</small></span></label></li>)}</ul> : <p className="missing">Aucun composant renseigné. {work.campaign ? 'Utilise « Prompt campagne » puis importe un seul JSON pour la campagne.' : 'Utilise « Prompt » puis importe le JSON produit.'}</p>}
+          </article>
+        })}</div>}
+      </section>
+    })}
     {message && <p className="playable-components-message">{message}</p>}
   </section>
 }
