@@ -39,6 +39,34 @@ const unique=(v:string[])=>[...new Set(v.filter(Boolean))].sort((a,b)=>a.localeC
 const parseJson=<T,>(value:string,fallback:T):T=>{try{return value.trim()?JSON.parse(value):fallback}catch{return fallback}};
 const clampRep=(n:number)=>Math.max(-50,Math.min(50,Number.isFinite(n)?n:0));
 const repLabel=(n:number)=>n>=30?"Révéré":n>=15?"Admiré":n>=5?"Apprécié":n>=-4?"Neutre":n>=-14?"Mal vu":n>=-29?"Détesté":"Traqué";
+const normalizeFaction=(x:any):Faction=>({
+  ...x,
+  id:typeof x?.id==="string"?x.id:"",
+  nom:typeof x?.nom==="string"?x.nom:"",
+  description:typeof x?.description==="string"?x.description:"",
+  description_joueurs:typeof x?.description_joueurs==="string"?x.description_joueurs:"",
+  type:typeof x?.type==="string"?x.type:"Organisation",
+  parent_id:x?.parent_id??null,
+  sous_factions:Array.isArray(x?.sous_factions)?x.sous_factions:[],
+  dirigeants:Array.isArray(x?.dirigeants)?x.dirigeants:[],
+  membres_cles:Array.isArray(x?.membres_cles)?x.membres_cles:[],
+  lieux:Array.isArray(x?.lieux)?x.lieux:[],
+  regions_influence:Array.isArray(x?.regions_influence)?x.regions_influence:[],
+  objectifs:Array.isArray(x?.objectifs)?x.objectifs:[],
+  histoire:typeof x?.histoire==="string"?x.histoire:"",
+  relations:Array.isArray(x?.relations)?x.relations:[],
+  tags:Array.isArray(x?.tags)?x.tags:[],
+  image:typeof x?.image==="string"?x.image:"",
+  aliases:Array.isArray(x?.aliases)?x.aliases:[],
+  statut:typeof x?.statut==="string"?x.statut:"Active",
+  notes:typeof x?.notes==="string"?x.notes:"",
+  source:typeof x?.source==="string"?x.source:"",
+  evenements:Array.isArray(x?.evenements)?x.evenements:[],
+  reputation_groupe:{
+    initiale:typeof x?.reputation_groupe?.initiale==="number"?x.reputation_groupe.initiale:0,
+    actuelle:typeof x?.reputation_groupe?.actuelle==="number"?x.reputation_groupe.actuelle:0,
+  },
+});
 
 function isFaction(value:unknown):value is Faction{
   if(!value||typeof value!=="object")return false;
@@ -61,7 +89,7 @@ export default function FactionsPage({initialSelectedId}:{initialSelectedId?:str
 
   const load=async()=>{
     const main=await fetch("/apil7r/pf2-mj/factions",{cache:"no-store"});if(!main.ok)throw new Error("Impossible de charger les factions.");
-    const payload=await main.json();setItems(Array.isArray(payload)?payload:payload.items??[]);
+    const payload=await main.json();const rawItems=Array.isArray(payload)?payload:payload.items??[];setItems(rawItems.map(normalizeFaction));
     const get=async(url:string)=>{try{const r=await fetch(url,{cache:"no-store"});if(!r.ok)return[];const p=await r.json();return Array.isArray(p)?p:p.items??[]}catch{return[]}};
     const [p,l,r,e]=await Promise.all([get("/apil7r/pf2-mj/pnj"),get("/apil7r/pf2-mj/lieux"),get("/apil7r/pf2-mj/regions"),get("/apil7r/pf2-mj/evenements")]);
     setPnjs(p);setLieux(l);setRegions(r);setEvents(e);
@@ -94,7 +122,7 @@ export default function FactionsPage({initialSelectedId}:{initialSelectedId?:str
         reputation_groupe:{initiale:clampRep(Number(draft.reputation_initiale)),actuelle:clampRep(Number(draft.reputation_actuelle))}};
       const response=await fetch("/apil7r/pf2-mj/factions",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"upsert",item})});
       const payload=await response.json().catch(()=>null);if(!response.ok)throw new Error(payload?.error||`Erreur HTTP ${response.status}`);
-      setItems(payload.items);setDraft(emptyDraft);setShowAdd(false);setSelected(item);setMessage(`${item.nom} enregistrée.`);
+      setItems((Array.isArray(payload.items)?payload.items:[]).map(normalizeFaction));setDraft(emptyDraft);setShowAdd(false);setSelected(item);setMessage(`${item.nom} enregistrée.`);
     }catch(e){setMessage(e instanceof Error?e.message:String(e))}finally{setBusy(false)}
   };
   const importJson=async(event:ChangeEvent<HTMLInputElement>)=>{
@@ -108,7 +136,7 @@ export default function FactionsPage({initialSelectedId}:{initialSelectedId?:str
       if(imported.some(x=>!isFaction(x)))throw new Error("Le JSON contient au moins une faction invalide.");
       const response=await fetch("/apil7r/pf2-mj/factions",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"import",items:imported})});
       const payload=await response.json().catch(()=>null);if(!response.ok)throw new Error(payload?.error||`Erreur HTTP ${response.status}`);
-      setItems(payload.items);setMessage(`${imported.length} faction${imported.length>1?"s":""} importée${imported.length>1?"s":""}.`);
+      setItems((Array.isArray(payload.items)?payload.items:[]).map(normalizeFaction));setMessage(`${imported.length} faction${imported.length>1?"s":""} importée${imported.length>1?"s":""}.`);
     }catch(e){setMessage(e instanceof Error?e.message:String(e))}finally{setBusy(false)}
   };
 

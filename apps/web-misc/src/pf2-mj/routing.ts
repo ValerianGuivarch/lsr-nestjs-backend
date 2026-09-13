@@ -1,13 +1,14 @@
 import type { Container, PlayableUnit } from './catalogue'
 
-export type View = 'find' | 'library' | 'prepare' | 'playable-components' | 'documents' | 'chronology' | 'excluded' | 'settings' | 'pnj' | 'factions' | 'lieux' | 'regions' | 'evenements'
+export type View = 'journal' | 'find' | 'library' | 'prepare' | 'maintenance' | 'documents' | 'chronology' | 'excluded' | 'settings' | 'pnj' | 'factions' | 'lieux' | 'regions' | 'evenements'
 export type ReferenceView = 'pnj' | 'factions' | 'lieux' | 'regions' | 'evenements'
 
 export const viewPaths: Record<View, string> = {
+  journal: '/pf2-mj/journal',
   find: '/pf2-mj/find',
   library: '/pf2-mj/catalogue',
   prepare: '/pf2-mj/prepare',
-  'playable-components': '/pf2-mj/playable-components',
+  maintenance: '/pf2-mj/maintenance',
   documents: '/pf2-mj/resources',
   chronology: '/pf2-mj/chronology',
   excluded: '/pf2-mj/excluded',
@@ -41,7 +42,7 @@ export function referenceHref(view: ReferenceView, id?: string): string {
 }
 
 export type Pf2Route =
-  | { kind: 'redirect' }
+  | { kind: 'redirect'; to?: string }
   | { kind: 'view'; view: View }
   | { kind: 'reference'; view: ReferenceView; id: string }
   | { kind: 'playable'; id: string }
@@ -55,7 +56,8 @@ function decodedRouteId(value?: string): string | null {
 
 export function resolvePf2Route(pathname: string): Pf2Route {
   const relative = pathname.replace(/^\/pf2-mj\/?/, '').replace(/\/+$/, '')
-  if (!relative) return { kind: 'redirect' }
+  if (!relative) return { kind: 'redirect', to: viewPaths.journal }
+  if (relative === 'playable-components') return { kind: 'redirect', to: viewPaths.journal }
   const [segment, rawId] = relative.split('/')
   const id = decodedRouteId(rawId)
 

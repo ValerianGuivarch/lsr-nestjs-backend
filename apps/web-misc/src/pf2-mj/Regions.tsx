@@ -23,6 +23,30 @@ const slugId=(v:string)=>"region_"+v.normalize("NFD").replace(/[\u0300-\u036f]/g
 const normalize=(v:string)=>v.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase();
 const unique=(v:string[])=>[...new Set(v.filter(Boolean))].sort((a,b)=>a.localeCompare(b,"fr"));
 const parseJson=(v:string)=>{try{return v.trim()?JSON.parse(v):[]}catch{return[]}};
+const normalizeRegion=(x:any):Region=>({
+  ...x,
+  id:typeof x?.id==="string"?x.id:"",
+  nom:typeof x?.nom==="string"?x.nom:"",
+  type:typeof x?.type==="string"?x.type:"Nation",
+  parent_id:x?.parent_id??null,
+  capitale_lieu_id:x?.capitale_lieu_id??null,
+  description:typeof x?.description==="string"?x.description:"",
+  histoire:typeof x?.histoire==="string"?x.histoire:"",
+  gouvernement:typeof x?.gouvernement==="string"?x.gouvernement:"",
+  culture:typeof x?.culture==="string"?x.culture:"",
+  religions:Array.isArray(x?.religions)?x.religions:[],
+  factions:Array.isArray(x?.factions)?x.factions:[],
+  personnages_cles:Array.isArray(x?.personnages_cles)?x.personnages_cles:[],
+  lieux_cles:Array.isArray(x?.lieux_cles)?x.lieux_cles:[],
+  relations:Array.isArray(x?.relations)?x.relations:[],
+  tags:Array.isArray(x?.tags)?x.tags:[],
+  image:typeof x?.image==="string"?x.image:"",
+  aliases:Array.isArray(x?.aliases)?x.aliases:[],
+  statut:typeof x?.statut==="string"?x.statut:"Actif",
+  notes:typeof x?.notes==="string"?x.notes:"",
+  source:typeof x?.source==="string"?x.source:"",
+  evenements:Array.isArray(x?.evenements)?x.evenements:[],
+});
 function isRegion(v:unknown):v is Region{if(!v||typeof v!=="object")return false;const x=v as Partial<Region>;return typeof x.nom==="string"&&typeof x.description==="string"&&Array.isArray(x.factions)&&Array.isArray(x.tags)&&typeof x.image==="string"}
 const downloadJson=(filename:string,data:unknown)=>{const blob=new Blob([JSON.stringify(data,null,2)+"\n"],{type:"application/json"});const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download=filename;a.click();URL.revokeObjectURL(url)};
 
@@ -31,7 +55,7 @@ export default function RegionsPage({initialSelectedId}:{initialSelectedId?:stri
   const [query,setQuery]=useState(""),[type,setType]=useState(""),[statut,setStatut]=useState(""),[parent,setParent]=useState("");
   const [selected,setSelected]=useState<Region|null>(null),[showAdd,setShowAdd]=useState(false),[draft,setDraft]=useState<Draft>(emptyDraft),[busy,setBusy]=useState(false),[message,setMessage]=useState("");
   const get=async(url:string)=>{try{const r=await fetch(url,{cache:"no-store"});if(!r.ok)return[];const p=await r.json();return Array.isArray(p)?p:p.items??[]}catch{return[]}};
-  const load=async()=>{const r=await fetch("/apil7r/pf2-mj/regions",{cache:"no-store"});if(!r.ok)throw new Error("Impossible de charger les régions.");const p=await r.json();setItems(Array.isArray(p)?p:p.items??[]);
+  const load=async()=>{const r=await fetch("/apil7r/pf2-mj/regions",{cache:"no-store"});if(!r.ok)throw new Error("Impossible de charger les régions.");const p=await r.json();const rawItems=Array.isArray(p)?p:p.items??[];setItems(rawItems.map(normalizeRegion));
     const [a,b,c,d]=await Promise.all([get("/apil7r/pf2-mj/pnj"),get("/apil7r/pf2-mj/factions"),get("/apil7r/pf2-mj/lieux"),get("/apil7r/pf2-mj/evenements")]);setPnjs(a);setFactions(b);setLieux(c);setEvents(d)};
   useEffect(()=>{load().catch(e=>setMessage(e instanceof Error?e.message:String(e)))},[]);
   useEffect(()=>{if(initialSelectedId){const target=items.find(item=>item.id===initialSelectedId);if(target)setSelected(target)}},[initialSelectedId,items]);
@@ -43,11 +67,11 @@ export default function RegionsPage({initialSelectedId}:{initialSelectedId?:stri
   const save=async()=>{if(!draft.nom.trim()){setMessage("Le nom est obligatoire.");return}setBusy(true);try{const item:Region={id:slugId(draft.nom),nom:draft.nom.trim(),type:draft.type||"Nation",parent_id:draft.parent_id||null,
     capitale_lieu_id:draft.capitale_lieu_id||null,description:draft.description.trim(),histoire:draft.histoire.trim(),gouvernement:draft.gouvernement.trim(),culture:draft.culture.trim(),religions:csv(draft.religions),factions:csv(draft.factions),
     personnages_cles:csv(draft.personnages_cles),lieux_cles:csv(draft.lieux_cles),relations:parseJson(draft.relations),tags:csv(draft.tags),image:draft.image.trim(),aliases:csv(draft.aliases),statut:draft.statut||"Actif",notes:draft.notes.trim(),source:draft.source.trim(),evenements:csv(draft.evenements)};
-    const r=await fetch("/apil7r/pf2-mj/regions",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"upsert",item})});const p=await r.json().catch(()=>null);if(!r.ok)throw new Error(p?.error||`Erreur HTTP ${r.status}`);setItems(p.items);setDraft(emptyDraft);setShowAdd(false);setSelected(item);setMessage(`${item.nom} enregistrée.`)
+    const r=await fetch("/apil7r/pf2-mj/regions",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"upsert",item})});const p=await r.json().catch(()=>null);if(!r.ok)throw new Error(p?.error||`Erreur HTTP ${r.status}`);setItems((Array.isArray(p.items)?p.items:[]).map(normalizeRegion));setDraft(emptyDraft);setShowAdd(false);setSelected(item);setMessage(`${item.nom} enregistrée.`)
   }catch(e){setMessage(e instanceof Error?e.message:String(e))}finally{setBusy(false)}};
   const importJson=async(event:ChangeEvent<HTMLInputElement>)=>{const file=event.target.files?.[0];event.target.value="";if(!file)return;setBusy(true);try{const parsed=JSON.parse(await file.text()),raw=Array.isArray(parsed)?parsed:Array.isArray(parsed?.items)?parsed.items:[parsed];
     const imported:Region[]=raw.map((x:any)=>({...x,id:x.id||slugId(x.nom||""),description:x.description||"",religions:Array.isArray(x.religions)?x.religions:[],factions:Array.isArray(x.factions)?x.factions:[],personnages_cles:Array.isArray(x.personnages_cles)?x.personnages_cles:[],lieux_cles:Array.isArray(x.lieux_cles)?x.lieux_cles:[],relations:Array.isArray(x.relations)?x.relations:[],tags:Array.isArray(x.tags)?x.tags:[],aliases:Array.isArray(x.aliases)?x.aliases:[],evenements:Array.isArray(x.evenements)?x.evenements:[],image:x.image||""}));
-    if(imported.some(x=>!isRegion(x)))throw new Error("Le JSON contient au moins une région invalide.");const r=await fetch("/apil7r/pf2-mj/regions",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"import",items:imported})});const p=await r.json().catch(()=>null);if(!r.ok)throw new Error(p?.error||`Erreur HTTP ${r.status}`);setItems(p.items);setMessage(`${imported.length} région${imported.length>1?"s":""} importée${imported.length>1?"s":""}.`)
+    if(imported.some(x=>!isRegion(x)))throw new Error("Le JSON contient au moins une région invalide.");const r=await fetch("/apil7r/pf2-mj/regions",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"import",items:imported})});const p=await r.json().catch(()=>null);if(!r.ok)throw new Error(p?.error||`Erreur HTTP ${r.status}`);setItems((Array.isArray(p.items)?p.items:[]).map(normalizeRegion));setMessage(`${imported.length} région${imported.length>1?"s":""} importée${imported.length>1?"s":""}.`)
   }catch(e){setMessage(e instanceof Error?e.message:String(e))}finally{setBusy(false)}};
 
   return <main className="rp"><style>{`.rp{max-width:1500px;margin:auto;padding:24px;color:#252a25}.bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.bar h1{margin-right:auto}.btn,.file{border:1px solid #c9b98f;background:#fffaf0;color:#6e5319;border-radius:8px;padding:9px 12px;font-weight:700;cursor:pointer}.btn.primary{background:#765719;color:white}.file input{display:none}.msg{min-height:24px;font-size:13px;color:#5d614f}.filters{display:grid;grid-template-columns:2fr repeat(3,1fr);gap:9px;margin:10px 0 18px}.filters input,.filters select,.form input,.form textarea,.form select{width:100%;box-sizing:border-box;border:1px solid #d6cdbd;border-radius:8px;background:#fffdf8;padding:9px}.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px}.card{border:1px solid #ded7cb;background:#fffdf9;border-radius:12px;overflow:hidden}.body{padding:13px}.card h2{margin:0 0 5px;font-size:17px}.meta{font-size:12px;color:#777}.desc{font-size:13px;line-height:1.45}.more{width:100%;border:0;border-top:1px solid #eee7da;background:#faf7f0;padding:8px;font-weight:700;color:#66542b;cursor:pointer}.back{position:fixed;inset:0;background:#0006;display:grid;place-items:center;padding:20px;z-index:50}.dialog{width:min(850px,100%);max-height:90vh;overflow:auto;background:#fffdf9;border-radius:14px;padding:18px}.head{display:flex;gap:10px;align-items:center}.head h2{margin-right:auto}.form{display:grid;grid-template-columns:1fr 1fr;gap:10px}.form .wide{grid-column:1/-1}.form label{font-size:12px;font-weight:700;display:grid;gap:5px}.actions{display:flex;justify-content:flex-end;gap:8px;margin-top:14px}.detail dl{display:grid;grid-template-columns:140px 1fr;gap:7px 10px;font-size:13px}.detail dd{margin:0}.count{font-size:12px;color:#777}@media(max-width:650px){.filters,.form{grid-template-columns:1fr}.form .wide{grid-column:auto}}`}</style>
