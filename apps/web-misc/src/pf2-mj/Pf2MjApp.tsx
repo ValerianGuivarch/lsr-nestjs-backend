@@ -1068,10 +1068,32 @@ function PlayableComponentsView({ curation, onUpdate, onImported }: { curation: 
 
   const componentExample = { id: 'exemple-ouverture', title: 'Ouverture', description: 'Résumé factuel de cette unité narrative.', estimatedSessions: { min: 1, max: 2 }, continuity: { mode: 'free', returnToHubPossible: true, recommendedSameParty: false, notes: '' }, order: 1 }
   const scenarioPrompt = (work: PlayableComponentsWork, unit: PlayableUnit) => `Tu aides à documenter un scénario Pathfinder 2. Je joins son PDF et/ou son extrait de catalogue. Produis UNIQUEMENT le JSON valide ci-dessous.\n\nScénario : ${work.title}\nscenarioId : ${unit.id}\nDescription actuelle : ${unit.synopsis || 'non renseignée'}\n\nRègles : ne crée jamais de « Partie 1/2 » générique ; si le PDF ne permet pas une décomposition narrative fiable, retourne playableComponents: []. Chaque composant a un id en kebab-case, title, description, order, estimatedSessions facultatif et continuity.\n\n${JSON.stringify({ scenarioId: unit.id, playableComponents: [componentExample] }, null, 2)}`
-  const campaignPrompt = (work: PlayableComponentsWork) => {
+  const campaignPrompt = (sourceWork: PlayableComponentsWork) => {
+    const campaignDescription = sourceWork.description ?? ''
+    const context = {
+      campaign: {
+        id: sourceWork.id,
+        title: sourceWork.title,
+        descriptionCurrent: campaignDescription,
+        attachedPdfInstruction: 'Tous les PDF de cette campagne sont fournis séparément avec ce prompt. Leur contenu est la source de vérité.'
+      },
+      scenarios: sourceWork.units.map((unit) => ({
+        scenarioId: unit.id,
+        order: unit.number,
+        title: titleOf(unit),
+        originalTitle: originalTitleOf(unit),
+        levels: levelLabel(unit.levels),
+        locations: unique(unit.locations.map((location) => placeDisplay(location.id))),
+        documentsKnown: documentsForTarget(unit.id).map((document) => ({ filename: document.filename, language: document.language, role: document.role, variant: document.variant })),
+        descriptionCurrent: unit.synopsis ?? '',
+        componentsCurrent: unit.playableComponents
+      }))
+    }
+    const instructions = `\n\nCONTEXTE DE RÉFÉRENCE (ne pas le retourner tel quel)\n${JSON.stringify(context, null, 2)}\n\nDÉFINITIONS OBLIGATOIRES\n- Un composant est une séquence jouable cohérente : mission, enquête, site, confrontation ou transition. Ce n’est ni un chapitre, ni une page, ni une « Partie 1 » générique.\n- description de campagne : 1 à 3 phrases factuelles sur l’arc entier. description de scénario : 1 à 3 phrases sur cet épisode uniquement, sans répéter la campagne. description de composant : ce que les PJ y font et son enjeu.\n- continuity.mode: free = abordable sans enchaînement strict ; soft_lock = l’épisode précédent est fortement recommandé pour comprendre l’intrigue ; hard_lock = suit directement le précédent et ne doit pas être sauté.\n- continuity.returnToHubPossible est true seulement si les PJ peuvent raisonnablement retourner à leur base/Absalom avant la suite.\n- continuity.recommendedSameParty est true seulement si changer de groupe ferait perdre un contexte narratif important.\n- continuity.notes est une contrainte courte, ou une chaîne vide. estimatedSessions est facultatif et seulement estimé prudemment depuis le PDF, sous la forme { "min": nombre, "max": nombre }.\n- Les PDF priment sur ce brouillon. Conserve toute information déjà correcte ; n’invente aucune information non établie.\n- Conserve tous les scenarioId et leur ordre. Pour une découpe impossible à établir, retourne playableComponents: [].\n\nFORMAT : retourne uniquement le JSON final, sans Markdown, commentaire ni clé supplémentaire.`
+    const work = { ...sourceWork, description: `${campaignDescription || 'non renseignée'}${instructions}` }
     const draft = {
       campaignId: work.id,
-      description: work.description ?? '',
+      description: campaignDescription,
       scenarios: work.units.map((unit) => ({
         scenarioId: unit.id,
         description: unit.synopsis ?? '',
