@@ -114,3 +114,6 @@ apps/web-misc/src/pf2-mj/_backup-*/
 *.bak-*
 
 support/mediawiki/LocalSettings.php
+
+# Local SQLite backups
+pf2.sqlite*.bak
