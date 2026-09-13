@@ -1160,7 +1160,9 @@ function PlayableComponentsView({ curation, onUpdate, onImported }: { curation: 
 
   const copyPrompt = async (work: PlayableComponentsWork, unit?: PlayableUnit) => {
     try {
-      await copyText(work.campaign ? campaignPrompt(work) : scenarioPrompt(work, unit!))
+      const scenarioUnit = unit ?? work.units[0]
+      if (!work.campaign && !scenarioUnit) throw new Error('Scénario introuvable.')
+      await copyText(work.campaign ? campaignPrompt(work) : scenarioPrompt(work, scenarioUnit!))
       setMessage(`Prompt copié pour « ${work.title} ».`)
     } catch { setMessage('Copie impossible : autorise le presse-papier dans le navigateur.') }
   }
