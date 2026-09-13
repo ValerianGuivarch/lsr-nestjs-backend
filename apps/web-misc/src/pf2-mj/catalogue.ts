@@ -249,6 +249,7 @@ type RawPart = {
   levels?: string | null
   requiredForCore?: boolean
   notes?: string
+  synopsis?: string | null
   documents?: RawDocumentLink[]
   playableComponents?: unknown
 }
@@ -634,8 +635,8 @@ function rebuildCatalogue(): void {
         titles: titles(part.titleFr, part.titleOriginal),
         levels,
         locations: inheritedLocations(entry),
-        synopsis: null,
-        contextSynopsis: entry.synopsis,
+        synopsis: part.synopsis ?? null,
+        contextSynopsis: part.synopsis ? null : entry.synopsis,
         gmDetails: null,
         relevance: { value: relevanceOfRaw(entry), source: { kind: 'inherited', entityId: entry.id } },
         playability: defaultPlayability(entry),

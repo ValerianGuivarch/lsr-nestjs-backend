@@ -5,7 +5,7 @@ import { mkdir, readdir, readFile, rename, stat, writeFile } from 'node:fs/promi
 import { basename, relative, resolve, sep } from 'node:path'
 import { createHash } from 'node:crypto'
 import sharp from 'sharp'
-import { LibraryAsset, Pf2PersistenceService, type PlayableComponent, type PlayableComponentContinuityMode } from '../pf2-storage/Pf2PersistenceService'
+import { LibraryAsset, Pf2PersistenceService, type CampaignPlayableComponentsScenario, type PlayableComponent, type PlayableComponentContinuityMode } from '../pf2-storage/Pf2PersistenceService'
 import { FoundryNpcSummary, FoundryRelayService } from '../foundry/FoundryRelayService'
 
 const referenceFiles = {
@@ -20,6 +20,7 @@ export type ReferenceKind = keyof typeof referenceFiles
 export type ResumeActorReference = { uuid: string; name: string }
 
 export type PlayableComponentsImport = { scenarioId: string; playableComponents: PlayableComponent[] }
+export type CampaignPlayableComponentsImport = { campaignId: string; scenarios: CampaignPlayableComponentsScenario[] }
 
 export type ResourceBundleRecord = {
   id: string
@@ -192,6 +193,30 @@ export class Pf2MjService {
       playableComponents: ownComponents,
       scenarios
     }
+  }
+
+  async importCampaignPlayableComponents(body: unknown): Promise<CampaignPlayableComponentsImport> {
+    const payload = this.asObject(body)
+    const campaignId = this.requiredString(payload.campaignId, 'campaignId')
+    const campaign = await this.persistence.getCatalogueEntity(campaignId)
+    if (!campaign || campaign.kind !== 'campaign') throw new Error(`Campagne introuvable : ${campaignId}.`)
+    if (!Array.isArray(payload.scenarios)) throw new Error('scenarios doit être un tableau.')
+    const knownPartIds = new Set((Array.isArray(campaign.parts) ? campaign.parts : []).map((part) => this.asObject(part).id).filter((id): id is string => typeof id === 'string' && Boolean(id)))
+    const seen = new Set<string>()
+    const scenarios = payload.scenarios.map((raw, index): CampaignPlayableComponentsScenario => {
+      const item = this.asObject(raw)
+      const scenarioId = this.requiredString(item.scenarioId, `scenarios[${index}].scenarioId`)
+      if (!knownPartIds.has(scenarioId)) throw new Error(`Sous-scénario inconnu pour cette campagne : ${scenarioId}.`)
+      if (seen.has(scenarioId)) throw new Error(`Sous-scénario dupliqué : ${scenarioId}.`)
+      seen.add(scenarioId)
+      return {
+        scenarioId,
+        description: this.requiredString(item.description, `scenarios[${index}].description`),
+        playableComponents: this.validatePlayableComponents(item.playableComponents)
+      }
+    })
+    await this.persistence.replaceCampaignPlayableComponents(campaignId, scenarios)
+    return { campaignId, scenarios }
   }
 
   async geography(includeExcluded = false): Promise<Record<string, unknown>> {

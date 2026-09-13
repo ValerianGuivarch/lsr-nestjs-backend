@@ -62,6 +62,8 @@ type SelectedEntity = PlayableUnit | Container
 type PreparationStatus = 'untreated' | 'selected' | 'ready'
 type PlayStatus = 'none' | 'to_play' | 'in_progress' | 'played'
 
+const trackedPlayStatuses = new Set<PlayStatus>(['to_play', 'in_progress', 'played'])
+
 type StructuredLocationOverride = {
   mode: 'replace' | 'merge'
   values?: string[]
@@ -1012,7 +1014,7 @@ function PlayableDetail({ unit, curation, onClose, onUpdate, placeOptions, onOpe
     <div className="availability-grid"><div><small>Document</small><strong>{documentStatusLabel(unit)}</strong></div><div><small>Mode</small><strong>{documentaryModeLabel(availability.mode) || (availability.coreMaterial === 'informationOnly' ? 'INFO' : '—')}</strong></div><div><small>Prêt</small><strong>{availability.ready ? 'OK' : 'Non'}</strong></div><div><small>Documents requis</small><strong>{availability.requiredDocuments.present}/{availability.requiredDocuments.required}</strong>{availability.requiredDocuments.informationOnly > 0 && <em> + {availability.requiredDocuments.informationOnly} info</em>}</div><div><small>ZIP Foundry</small><strong>{resourceBundleLabel(bundle)}</strong>{bundle.inheritedFromId && <em>hérité de {titleOf(containerMap.get(bundle.inheritedFromId)!)}</em>}</div></div>
     <dl className="detail-grid"><div><dt>Niveaux</dt><dd><input value={levelsDraft} onChange={(event) => setLevelsDraft(event.target.value)} /><button onClick={() => onUpdate(unit.id, 'levelsOverride', levelsDraft)}>Enregistrer</button><SourceBadge source={levels.source} /></dd></div><div><dt>Lieux</dt><dd><input list="all-places" value={placesDraft} onChange={(event) => setPlacesDraft(event.target.value)} /><datalist id="all-places">{placeOptions.map((place) => <option key={place}>{place}</option>)}</datalist><button onClick={() => onUpdate(unit.id, 'placesOverride', placesDraft.split(',').map((value) => value.trim()).filter(Boolean))}>Remplacer</button>{locations.map((location) => <span className="location-provenance" key={`${location.id}-${location.source.kind}`}>{location.id}<SourceBadge source={location.source} /></span>)}</dd></div><div><dt>Préparation</dt><dd><select value={effectivePreparationStatus(override)} onChange={(event) => onUpdate(unit.id, 'preparationStatus', event.target.value)}>{preparationOptions.map(([value, label]) => <option key={value} value={value} disabled={value === 'ready'}>{label}</option>)}</select></dd></div><div><dt>Jeu</dt><dd><select value={effectivePlayStatus(override)} onChange={(event) => onUpdate(unit.id, 'playStatus', event.target.value)}>{playStatusOptions.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></dd></div><div><dt>Exclusion</dt><dd><ExclusionSelect id={unit.id} override={override} excluded={isExcluded(unit, override, curation)} onUpdate={onUpdate} /></dd></div><div><dt>Chronologie</dt><dd>{yearOf(unit) ? `${unit.chronology.estimated ? '≈ ' : ''}${yearOf(unit)} AR` : unit.chronology.period || 'À documenter'}</dd></div><div><dt>Fil narratif</dt><dd>{unit.narrativeThread || '—'}</dd></div></dl>
     {unit.arcIds.length > 0 && <section className="detail-section"><h3>Arcs PFS / transversaux</h3><div className="badges">{unit.arcIds.map((id) => <Badge key={id}>{arcMap.get(id)?.titleFr || id}</Badge>)}</div></section>}
-    <section className="detail-section synopsis-long"><h3>Synopsis de l’unité</h3><p>{unit.synopsis || 'À documenter.'}</p>{!unit.synopsis && unit.contextSynopsis && <div className="inherited-context"><small>CONTEXTE HÉRITÉ DE LA CAMPAGNE</small><p>{unit.contextSynopsis}</p></div>}</section>
+    <section className="detail-section synopsis-long"><h3>Synopsis de l’unité</h3><p>{unit.synopsis || 'Description propre de ce scénario non renseignée.'}</p></section>
     <PlayableComponentsSection components={unit.playableComponents} />
     {unit.gmDetails && <section className="detail-section gm-details"><h3>Détails MJ</h3><p>{unit.gmDetails}</p></section>}
     {unit.migration.issues.length > 0 && <section className="detail-section migration-warning"><h3>À revoir après migration</h3><ul>{unit.migration.issues.map((issue) => <li key={issue}>{issue}</li>)}</ul></section>}
@@ -1045,31 +1047,39 @@ function ComponentCard({ component }: { component: Component }) {
   return <article><strong>{componentTypeLabel(component.componentType)} · {titleOf(component)}</strong><span>{component.notes || `${linked.length} document${linked.length > 1 ? 's' : ''}`}</span><Badge>{component.requiredForCore ? 'Requis' : 'Facultatif'}</Badge></article>
 }
 
-type PlayableComponentsWork = { id: string; title: string; units: PlayableUnit[]; ownComponents?: PlayableComponent[] }
+type PlayableComponentsWork = { id: string; title: string; description: string | null; units: PlayableUnit[]; campaign: boolean }
 
 function PlayableComponentsView({ curation, onUpdate, onImported }: { curation: Curation; onUpdate: (id: string, field: string, value: unknown) => void; onImported: () => Promise<void> }) {
   const [message, setMessage] = useState('')
   const [importing, setImporting] = useState<string | null>(null)
   const selectedCampaigns = containers
-    .filter((container) => container.containerType === 'campaign' && effectivePreparationStatus(resolveContainerOverride(curation, container)) === 'selected')
-    .map((container): PlayableComponentsWork => ({ id: container.id, title: titleOf(container), units: playablesUnder(container.id), ownComponents: container.playableComponents }))
+    .filter((container) => {
+      const override = resolveContainerOverride(curation, container)
+      return container.containerType === 'campaign' && effectivePreparationStatus(override) === 'selected' && trackedPlayStatuses.has(effectivePlayStatus(override))
+    })
+    .map((container): PlayableComponentsWork => ({ id: container.id, title: titleOf(container), description: container.synopsis, units: playablesUnder(container.id), campaign: true }))
   const coveredUnitIds = new Set(selectedCampaigns.flatMap((campaign) => campaign.units.map((unit) => unit.id)))
   const selectedStandalone = playableUnits
-    .filter((unit) => !coveredUnitIds.has(unit.id) && effectivePreparationStatus(resolvePlayableOverride(curation, unit)) === 'selected' && !isExcluded(unit, resolvePlayableOverride(curation, unit), curation))
-  const works: PlayableComponentsWork[] = [...selectedCampaigns, ...selectedStandalone.map((unit) => ({ id: unit.id, title: titleOf(unit), units: [unit] }))]
+    .filter((unit) => {
+      const override = resolvePlayableOverride(curation, unit)
+      return !coveredUnitIds.has(unit.id) && effectivePreparationStatus(override) === 'selected' && trackedPlayStatuses.has(effectivePlayStatus(override)) && !isExcluded(unit, override, curation)
+    })
+  const works: PlayableComponentsWork[] = [...selectedCampaigns, ...selectedStandalone.map((unit) => ({ id: unit.id, title: titleOf(unit), description: unit.synopsis, units: [unit], campaign: false }))]
 
-  const prompt = (work: PlayableComponentsWork, unit: PlayableUnit) => `Tu aides à documenter une campagne Pathfinder 2. À partir du PDF du scénario et/ou de l’extrait de catalogue ci-dessous, produis UNIQUEMENT un JSON valide pour l’import des composants jouables.\n\nŒuvre sélectionnée : ${work.title}\nScénario : ${titleOf(unit)}\nscenarioId : ${unit.id}\n\nRègles impératives :\n- Ne crée aucun découpage générique « Partie 1 », « Partie 2 ».\n- Si le document ne permet pas d’identifier une décomposition narrative fiable, retourne \"playableComponents\": [].\n- Chaque composant a un id stable en kebab-case, un titre, une description, order, estimatedSessions facultatif, et continuity.\n- continuity.mode vaut free, soft_lock ou hard_lock.\n- returnToHubPossible et recommendedSameParty sont des booléens.\n- Les composants sont dans l’ordre narratif réel.\n\nFormat exact attendu :\n${JSON.stringify({ scenarioId: unit.id, playableComponents: [{ id: 'exemple-ouverture', title: 'Ouverture', description: 'Résumé factuel de cette unité narrative.', estimatedSessions: { min: 1, max: 2 }, continuity: { mode: 'free', returnToHubPossible: true, recommendedSameParty: false, notes: '' }, order: 1 }] }, null, 2)}`
+  const componentExample = { id: 'exemple-ouverture', title: 'Ouverture', description: 'Résumé factuel de cette unité narrative.', estimatedSessions: { min: 1, max: 2 }, continuity: { mode: 'free', returnToHubPossible: true, recommendedSameParty: false, notes: '' }, order: 1 }
+  const scenarioPrompt = (work: PlayableComponentsWork, unit: PlayableUnit) => `Tu aides à documenter un scénario Pathfinder 2. Je joins son PDF et/ou son extrait de catalogue. Produis UNIQUEMENT le JSON valide ci-dessous.\n\nScénario : ${work.title}\nscenarioId : ${unit.id}\nDescription actuelle : ${unit.synopsis || 'non renseignée'}\n\nRègles : ne crée jamais de « Partie 1/2 » générique ; si le PDF ne permet pas une décomposition narrative fiable, retourne playableComponents: []. Chaque composant a un id en kebab-case, title, description, order, estimatedSessions facultatif et continuity.\n\n${JSON.stringify({ scenarioId: unit.id, playableComponents: [componentExample] }, null, 2)}`
+  const campaignPrompt = (work: PlayableComponentsWork) => `Tu aides à documenter une campagne Pathfinder 2. Je joins tous les PDF de la campagne et/ou l’extrait de catalogue. Produis UNIQUEMENT un JSON valide pour l’import global de la campagne.\n\nCampagne : ${work.title}\ncampaignId : ${work.id}\nDescription actuelle de la campagne : ${work.description || 'non renseignée'}\nSous-scénarios à documenter :\n${work.units.map((unit) => `- ${titleOf(unit)} | scenarioId: ${unit.id} | description actuelle : ${unit.synopsis || 'non renseignée'}`).join('\n')}\n\nRègles :\n- Un sous-scénario reçoit sa propre description courte, distincte de celle de la campagne.\n- Ne répète jamais la description de campagne dans les sous-scénarios.\n- Ne crée jamais de « Partie 1/2 » générique. Si aucune décomposition fiable n’est possible, retourne playableComponents: [].\n- Conserve tous les scenarioId fournis et produis un objet scenarios[] pour chacun.\n\n${JSON.stringify({ campaignId: work.id, scenarios: work.units.map((unit) => ({ scenarioId: unit.id, description: `Description propre de ${titleOf(unit)}.`, playableComponents: [componentExample] })) }, null, 2)}`
 
-  const copyPrompt = async (work: PlayableComponentsWork, unit: PlayableUnit) => {
+  const copyPrompt = async (work: PlayableComponentsWork, unit?: PlayableUnit) => {
     try {
-      await navigator.clipboard.writeText(prompt(work, unit))
-      setMessage(`Prompt copié pour « ${titleOf(unit)} ».`)
+      await navigator.clipboard.writeText(work.campaign ? campaignPrompt(work) : scenarioPrompt(work, unit!))
+      setMessage(`Prompt copié pour « ${work.title} ».`)
     } catch { setMessage('Copie impossible : autorise le presse-papier dans le navigateur.') }
   }
 
   const copySelectionPrompt = async () => {
-    const targets = works.flatMap((work) => work.units.map((unit) => `- ${work.title} → ${titleOf(unit)} (scenarioId: ${unit.id})`)).join('\n') || '- Aucun scénario sélectionné.'
-    const text = `Tu aides à documenter des scénarios Pathfinder 2. Je joins un ou plusieurs PDF de scénario et/ou un export du catalogue. Pour chaque scénario listé ci-dessous dont le document permet une décomposition narrative fiable, génère un JSON d’import distinct au format { scenarioId, playableComponents }. Ne crée jamais de « Partie 1/2 » générique : en cas de doute, retourne playableComponents: [].\n\nScénarios sélectionnés :\n${targets}\n\nChaque composant doit contenir id (kebab-case), title, description, order, estimatedSessions facultatif {min,max}, et continuity {mode: free|soft_lock|hard_lock, returnToHubPossible, recommendedSameParty, notes}.`
+    const targets = works.map((work) => `- ${work.campaign ? 'Campagne' : 'Scénario'} : ${work.title} (${work.id})`).join('\n') || '- Aucune œuvre sélectionnée.'
+    const text = `Tu aides à documenter des œuvres Pathfinder 2. Je joins les PDF associés et/ou un export du catalogue. Selon le type :\n- scénario autonome : retourne { scenarioId, playableComponents };\n- campagne : retourne { campaignId, scenarios: [{ scenarioId, description, playableComponents }] }.\nNe crée jamais de découpage générique et ne répète jamais la description de campagne dans ses sous-scénarios. En cas de doute, utilise playableComponents: [].\n\nŒuvres sélectionnées :\n${targets}`
     try { await navigator.clipboard.writeText(text); setMessage('Prompt général copié dans le presse-papier.') }
     catch { setMessage('Copie impossible : autorise le presse-papier dans le navigateur.') }
   }
@@ -1090,6 +1100,22 @@ function PlayableComponentsView({ curation, onUpdate, onImported }: { curation: 
     } catch (error) { setMessage(error instanceof Error ? error.message : 'Import impossible.') } finally { setImporting(null) }
   }
 
+  const importCampaign = async (work: PlayableComponentsWork, file?: File) => {
+    if (!file) return
+    setImporting(work.id)
+    setMessage(`Lecture de ${file.name}…`)
+    try {
+      const parsed: unknown = JSON.parse(await file.text())
+      const data = parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed as Record<string, unknown> : {}
+      if (typeof data.campaignId === 'string' && data.campaignId !== work.id) throw new Error(`Ce JSON vise « ${data.campaignId} », pas « ${work.id} ».`)
+      const response = await fetch(`/apil7r/pf2-mj/campaigns/${encodeURIComponent(work.id)}/playable-components/import`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) })
+      const payload = await response.json().catch(() => null)
+      if (!response.ok) throw new Error(payload?.message ?? payload?.error ?? 'Import de campagne impossible.')
+      await onImported()
+      setMessage(`Descriptions et composants importés pour « ${work.title} ».`)
+    } catch (error) { setMessage(error instanceof Error ? error.message : 'Import de campagne impossible.') } finally { setImporting(null) }
+  }
+
   const togglePlayed = (unit: PlayableUnit, componentId: string) => {
     const current = resolvePlayableOverride(curation, unit).playableComponentStatus ?? {}
     const next = { ...current }
@@ -1100,8 +1126,8 @@ function PlayableComponentsView({ curation, onUpdate, onImported }: { curation: 
 
   return <section className="playable-components-view">
     <div className="playable-components-intro"><div><small>SUIVI NARRATIF</small><h2>Composants jouables</h2><p>Campagnes et scénarios sélectionnés. Coche les unités déjà jouées ; l’absence de découpage reste volontairement neutre.</p></div><button className="component-prompt" onClick={() => void copySelectionPrompt()}>Prompt</button></div>
-    {!works.length && <div className="empty-components"><strong>Aucune œuvre sélectionnée.</strong><p>Dans une fiche campagne ou scénario, passe « Préparation » sur « Sélectionné » pour la suivre ici.</p></div>}
-    {works.map((work) => <section className="component-work" key={work.id}><header><div><small>{work.units.length > 1 ? 'CAMPAGNE' : 'SCÉNARIO'}</small><h3>{work.title}</h3></div><span>{work.units.reduce((total, unit) => total + unit.playableComponents.length, 0)} composant{work.units.reduce((total, unit) => total + unit.playableComponents.length, 0) > 1 ? 's' : ''}</span></header>{work.ownComponents?.length ? <PlayableComponentsSection components={work.ownComponents} /> : null}<div className="component-work-units">{work.units.map((unit) => { const status = resolvePlayableOverride(curation, unit).playableComponentStatus ?? {}; return <article key={unit.id}><div className="component-unit-head"><div><small>{unit.number ? `${unit.number} · ` : ''}{playableTypeLabel(unit.playableType)}</small><strong>{titleOf(unit)}</strong></div><div><button className="component-prompt" onClick={() => void copyPrompt(work, unit)}>Prompt</button><label className={`component-import${importing === unit.id ? ' disabled' : ''}`}>Importer<input type="file" accept="application/json,.json" disabled={importing !== null} onChange={(event) => { const file = event.target.files?.[0]; event.target.value = ''; void importComponents(unit, file) }} /></label></div></div>{unit.playableComponents.length ? <ul>{unit.playableComponents.map((component) => <li key={component.id}><label><input type="checkbox" checked={status[component.id] === 'played'} onChange={() => togglePlayed(unit, component.id)} /><span><strong>#{component.order} · {component.title}</strong><small>{component.estimatedSessions ? `${component.estimatedSessions.min}${component.estimatedSessions.min !== component.estimatedSessions.max ? `–${component.estimatedSessions.max}` : ''} séance${component.estimatedSessions.max > 1 ? 's' : ''} · ` : ''}{component.continuity.mode === 'free' ? 'Libre' : component.continuity.mode === 'soft_lock' ? 'Transition nécessaire' : 'Effet tunnel'}</small></span></label></li>)}</ul> : <p className="missing">Aucun composant renseigné. Utilise « Prompt » puis importe le JSON produit.</p>}</article> })}</div></section>)}
+    {!works.length && <div className="empty-components"><strong>Aucune œuvre à suivre.</strong><p>Dans une fiche campagne ou scénario, choisis « Sélectionné » puis un statut de jeu : « À jouer », « En cours » ou « Joué ».</p></div>}
+    {works.map((work) => <section className="component-work" key={work.id}><header><div><small>{work.campaign ? 'CAMPAGNE' : 'SCÉNARIO'}</small><h3>{work.title}</h3>{work.description && <p>{work.description}</p>}</div><div className="component-work-actions"><button className="component-prompt" onClick={() => void copyPrompt(work)}>{work.campaign ? 'Prompt campagne' : 'Prompt'}</button>{work.campaign && <label className={`component-import${importing === work.id ? ' disabled' : ''}`}>Importer la campagne<input type="file" accept="application/json,.json" disabled={importing !== null} onChange={(event) => { const file = event.target.files?.[0]; event.target.value = ''; void importCampaign(work, file) }} /></label>}<span>{work.units.reduce((total, unit) => total + unit.playableComponents.length, 0)} composant{work.units.reduce((total, unit) => total + unit.playableComponents.length, 0) > 1 ? 's' : ''}</span></div></header><div className="component-work-units">{work.units.map((unit) => { const status = resolvePlayableOverride(curation, unit).playableComponentStatus ?? {}; return <article key={unit.id}><div className="component-unit-head"><div><small>{unit.number ? `${unit.number} · ` : ''}{playableTypeLabel(unit.playableType)}</small><strong>{titleOf(unit)}</strong><p>{unit.synopsis || 'Description propre de ce scénario non renseignée.'}</p></div>{!work.campaign && <div><label className={`component-import${importing === unit.id ? ' disabled' : ''}`}>Importer<input type="file" accept="application/json,.json" disabled={importing !== null} onChange={(event) => { const file = event.target.files?.[0]; event.target.value = ''; void importComponents(unit, file) }} /></label></div>}</div>{unit.playableComponents.length ? <ul>{unit.playableComponents.map((component) => <li key={component.id}><label><input type="checkbox" checked={status[component.id] === 'played'} onChange={() => togglePlayed(unit, component.id)} /><span><strong>#{component.order} · {component.title}</strong><small>{component.estimatedSessions ? `${component.estimatedSessions.min}${component.estimatedSessions.min !== component.estimatedSessions.max ? `–${component.estimatedSessions.max}` : ''} séance${component.estimatedSessions.max > 1 ? 's' : ''} · ` : ''}{component.continuity.mode === 'free' ? 'Libre' : component.continuity.mode === 'soft_lock' ? 'Transition nécessaire' : 'Effet tunnel'}</small></span></label></li>)}</ul> : <p className="missing">Aucun composant renseigné. {work.campaign ? 'Utilise « Prompt campagne » puis importe un seul JSON pour la campagne.' : 'Utilise « Prompt » puis importe le JSON produit.'}</p>}</article> })}</div></section>)}
     {message && <p className="playable-components-message">{message}</p>}
   </section>
 }
@@ -1343,7 +1369,7 @@ export function Pf2MjApp() {
     ['find', '▶', 'Trouver une partie', active.length],
     ['library', '▦', 'Bibliothèque', containers.length],
     ['prepare', '◒', 'À préparer', active.filter((unit) => !availabilityOf(unit).ready || (resourceInventoryKnown && resourceBundleAvailability(unit).status === 'missing')).length],
-    ['playable-components', '☑', 'Composants jouables', active.filter((unit) => effectivePreparationStatus(resolvePlayableOverride(curation, unit)) === 'selected').length],
+    ['playable-components', '☑', 'Composants jouables', active.filter((unit) => { const override = resolvePlayableOverride(curation, unit); return effectivePreparationStatus(override) === 'selected' && trackedPlayStatuses.has(effectivePlayStatus(override)) }).length],
     ['documents', '⌁', 'Ressources PDF', documentCount],
     ['chronology', '◷', 'Chronologie', ''],
     ['excluded', '×', 'Mis de côté', excludedContainerCount + explicitExcludedPlayableCount],

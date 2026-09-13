@@ -34,6 +34,7 @@ export type PlayableComponent = {
   continuity: { mode: PlayableComponentContinuityMode; returnToHubPossible: boolean; recommendedSameParty: boolean; notes: string }
   order: number
 }
+export type CampaignPlayableComponentsScenario = { scenarioId: string; description: string; playableComponents: PlayableComponent[] }
 export type LibraryAsset = { id: string; path: string; filename: string; assetType: string; targetId: string | null; targetKind: string | null; role: string | null; language: string | null; variant: string | null; completeness: string | null; translationOf: string | null; associationStatus: string; associationScore: number | null; evidence: string[]; metadata: Record<string, unknown>; present: boolean; lastSeenAt: string | null; sortOrder: number }
 
 const referenceFiles = {
@@ -448,6 +449,26 @@ export class Pf2PersistenceService implements OnModuleInit {
       const entry = this.object(JSON.parse(rows[0].payload))
       const next = { ...entry, playableComponents }
       await manager.query("UPDATE pf2_catalogue_entity SET payload = ?, updated_at = CURRENT_TIMESTAMP WHERE entity_kind = 'entry' AND id = ?", [JSON.stringify(next), scenarioId])
+      return next
+    })
+  }
+
+  /** Updates only specified playable parts of a campaign, while preserving all other catalogue metadata. */
+  async replaceCampaignPlayableComponents(campaignId: string, scenarios: CampaignPlayableComponentsScenario[]): Promise<Record<string, unknown>> {
+    return this.dataSource.transaction(async (manager) => {
+      const rows = await manager.query("SELECT payload FROM pf2_catalogue_entity WHERE entity_kind = 'entry' AND id = ?", [campaignId]) as Array<{ payload: string }>
+      if (!rows[0]) throw new Error(`Campagne introuvable : ${campaignId}.`)
+      const campaign = this.object(JSON.parse(rows[0].payload))
+      if (campaign.kind !== 'campaign') throw new Error(`${campaignId} n’est pas une campagne.`)
+      const replacements = new Map(scenarios.map((scenario) => [scenario.scenarioId, scenario]))
+      const parts = Array.isArray(campaign.parts) ? campaign.parts : []
+      const nextParts = parts.map((rawPart) => {
+        const part = this.object(rawPart)
+        const replacement = replacements.get(typeof part.id === 'string' ? part.id : '')
+        return replacement ? { ...part, synopsis: replacement.description, playableComponents: replacement.playableComponents } : part
+      })
+      const next = { ...campaign, parts: nextParts }
+      await manager.query("UPDATE pf2_catalogue_entity SET payload = ?, updated_at = CURRENT_TIMESTAMP WHERE entity_kind = 'entry' AND id = ?", [JSON.stringify(next), campaignId])
       return next
     })
   }

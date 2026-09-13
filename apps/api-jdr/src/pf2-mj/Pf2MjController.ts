@@ -61,6 +61,14 @@ export class Pf2MjController {
     catch (error) { throw new HttpException(error instanceof Error ? error.message : 'Lecture des composants de campagne impossible.', HttpStatus.NOT_FOUND) }
   }
 
+  @Post('campaigns/:id/playable-components/import')
+  async importCampaignPlayableComponents(@Param('id') id: string, @Body() body: unknown): Promise<unknown> {
+    try {
+      const payload = body && typeof body === 'object' && !Array.isArray(body) ? { ...(body as Record<string, unknown>), campaignId: id } : { campaignId: id, scenarios: [] }
+      return await this.service.importCampaignPlayableComponents(payload)
+    } catch (error) { throw new HttpException(error instanceof Error ? error.message : 'Import des composants de campagne impossible.', HttpStatus.BAD_REQUEST) }
+  }
+
   @Get('scenario-registry')
   scenarioRegistry(): Promise<unknown[]> { return this.scenarioPackages.scenarioRegistry() }
 

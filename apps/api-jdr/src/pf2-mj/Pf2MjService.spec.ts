@@ -17,6 +17,7 @@ describe('Pf2MjService', () => {
       readCatalogueSnapshot: jest.fn().mockResolvedValue({ schemaVersion: 2, files: [], entries: [], collections: [] }),
       getCatalogueEntity: jest.fn().mockResolvedValue(null),
       replacePlayableComponents: jest.fn(),
+      replaceCampaignPlayableComponents: jest.fn(),
       listCatalogueEntries: jest.fn().mockResolvedValue([]),
       listLibraryAssets: jest.fn().mockResolvedValue([]),
       replaceCatalogueSnapshot: jest.fn(),
@@ -138,6 +139,28 @@ describe('Pf2MjService', () => {
         { id: 'scenario-2', kind: 'adventure', collectionId: 'campaign-1', titleFr: 'Deuxième scénario', playableComponents: [] }
       ]) })
       await expect(service.campaignPlayableComponents('campaign-1')).resolves.toMatchObject({ totalScenarios: 2, documentedScenarios: 1, totalComponents: 1, scenarios: expect.arrayContaining([expect.objectContaining({ scenarioId: 'scenario-1', playableComponents: [component] })]) })
+    })
+
+    it('imports a campaign once with a distinct description for every child scenario', async () => {
+      const campaign = { id: 'campaign-1', kind: 'campaign', synopsis: 'Synopsis de campagne.', parts: [{ id: 'scenario-1' }, { id: 'scenario-2' }] }
+      const { service, persistence } = serviceFor({}, pnj, { getCatalogueEntity: jest.fn().mockResolvedValue(campaign), replaceCampaignPlayableComponents: jest.fn().mockResolvedValue({}) })
+      await expect(service.importCampaignPlayableComponents({ campaignId: 'campaign-1', scenarios: [
+        { scenarioId: 'scenario-1', description: 'Le premier épisode.', playableComponents: [component] },
+        { scenarioId: 'scenario-2', description: 'Le second épisode.', playableComponents: [] }
+      ] })).resolves.toMatchObject({ campaignId: 'campaign-1', scenarios: [
+        { scenarioId: 'scenario-1', description: 'Le premier épisode.' },
+        { scenarioId: 'scenario-2', description: 'Le second épisode.' }
+      ] })
+      expect(persistence.replaceCampaignPlayableComponents).toHaveBeenCalledWith('campaign-1', [
+        expect.objectContaining({ scenarioId: 'scenario-1', description: 'Le premier épisode.' }),
+        expect.objectContaining({ scenarioId: 'scenario-2', description: 'Le second épisode.' })
+      ])
+    })
+
+    it('rejects a campaign import referring to a child outside that campaign', async () => {
+      const { service, persistence } = serviceFor({}, pnj, { getCatalogueEntity: jest.fn().mockResolvedValue({ id: 'campaign-1', kind: 'campaign', parts: [{ id: 'scenario-1' }] }) })
+      await expect(service.importCampaignPlayableComponents({ campaignId: 'campaign-1', scenarios: [{ scenarioId: 'other', description: 'Non.', playableComponents: [] }] })).rejects.toThrow('Sous-scénario inconnu')
+      expect(persistence.replaceCampaignPlayableComponents).not.toHaveBeenCalled()
     })
   })
 
