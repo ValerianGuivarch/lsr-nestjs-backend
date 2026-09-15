@@ -839,7 +839,7 @@
 /* PF2 Step 3 — Journal MJ et préparation contextualisée */
 .journal-status-board {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 10px;
   margin: 14px 0 18px;
 }
@@ -862,3 +862,13 @@
 @media (max-width: 900px) {
   .journal-status-board { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
+
+/* Journal MJ: cartes compactes, navigation et liens vers les séances */
+.component-work.is-collapsed>header{border-bottom:0}
+.component-work.is-collapsed>header p{display:none}
+.journal-detail-link{color:inherit;text-decoration:none}
+.journal-detail-link:hover{text-decoration:underline;text-underline-offset:3px}
+.journal-session-badge{display:inline-flex;width:max-content;margin-top:6px;padding:3px 7px;border:1px solid #c7b47f;border-radius:999px;background:#fff8e7;color:#71571e;font-size:10px;font-weight:700;line-height:1.2}
+.component-work-units>article.is-collapsed{padding-top:10px;padding-bottom:10px;background:#fbf8ef}
+.component-work-units>article.is-collapsed .component-progress{margin-top:4px}
+.scenario-toggle{white-space:nowrap}

@@ -198,6 +198,78 @@ describe('Pf2PersistenceService', () => {
     expect(await currentDataSource().query('SELECT * FROM pf2_session_content WHERE session_id = ?', ['session-content'])).toEqual([])
   })
 
+  it('links a session to a playable part nested inside a campaign', async () => {
+    const service = await open()
+
+    await service.replaceCatalogueSnapshot({
+      schemaVersion: 2,
+      meta: {},
+      files: [],
+      collections: [],
+      arcs: [],
+      sections: [],
+      narrativeThreads: [],
+      entries: [{
+        id: 'campaign-test',
+        kind: 'campaign',
+        titleFr: 'Campagne test',
+        playableComponents: [],
+        parts: [{
+          id: 'campaign-volume-1',
+          kind: 'volume_aventure',
+          titleOriginal: 'Volume 1',
+          playableComponents: [{
+            id: 'chapitre-1',
+            title: 'Chapitre 1',
+            description: 'Premier chapitre',
+            order: 1,
+            continuity: {
+              mode: 'free',
+              returnToHubPossible: true,
+              recommendedSameParty: false,
+              notes: '',
+            },
+          }],
+        }],
+      }],
+    })
+
+    const created = await service.createSession({
+      id: 'session-campaign-part',
+      sessionNumber: 1,
+      content: [{
+        scenarioId: 'campaign-volume-1',
+        componentId: 'chapitre-1',
+      }],
+    })
+
+    expect(created.content).toEqual([{
+      scenarioId: 'campaign-volume-1',
+      componentId: 'chapitre-1',
+      sortOrder: 0,
+    }])
+
+    await expect(
+      service.updateSession('session-campaign-part', {
+        content: [{
+          scenarioId: 'campaign-volume-1',
+          componentId: 'inconnu',
+        }],
+      }),
+    ).rejects.toThrow(
+      'Composant jouable introuvable pour campaign-volume-1',
+    )
+
+    await expect(
+      service.updateSession('session-campaign-part', {
+        content: [{
+          scenarioId: 'campaign-volume-inconnu',
+          componentId: null,
+        }],
+      }),
+    ).rejects.toThrow('Scénario de séance introuvable')
+  })
+
   it('creates and verifies one SQLite backup before applying a pending migration', async () => {
     const service = await open()
     await service.saveRecord('pnj', { id: 'backup-witness', name: 'Témoin de sauvegarde' })

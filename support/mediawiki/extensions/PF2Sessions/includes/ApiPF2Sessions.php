@@ -7,10 +7,11 @@ class ApiPF2Sessions extends ApiBase {
         $config = MediaWikiServices::getInstance()->getMainConfig();
         $base = rtrim( $config->get( 'PF2SessionsApiBase' ), '/' );
         $user = $this->getUser();
-        $canEdit = $user->isRegistered() && $user->isAllowed( 'delete' );
+        $canContribute = $user->isRegistered();
+        $canAdmin = $canContribute && $user->isAllowed( 'pf2sessions-admin' );
         // Les brouillons font partie de la chronologie publique : publication
         // contrôle l'envoi/validation finale, pas le droit de lecture.
-        // Les actions d'administration restent cependant protégées par canEdit.
+        // Les métadonnées MJ (scénario/composant) restent réservées aux admins.
         $url = $base . '/wiki/sessions?includeDrafts=1';
 
         $request = MediaWikiServices::getInstance()->getHttpRequestFactory()->create(
@@ -32,10 +33,19 @@ class ApiPF2Sessions extends ApiBase {
         // Les convertir explicitement en 0/1 pour le client JavaScript.
         foreach ( $data['sessions'] as &$session ) {
             $session['published'] = !empty( $session['published'] ) ? 1 : 0;
+            if ( !$canAdmin ) {
+                unset( $session['content'] );
+            }
         }
         unset( $session );
 
-        $data['canEdit'] = $canEdit ? 1 : 0;
+        if ( !$canAdmin ) {
+            $data['scenarios'] = [];
+        }
+        $data['canContribute'] = $canContribute ? 1 : 0;
+        $data['canAdmin'] = $canAdmin ? 1 : 0;
+        // Compatibilité avec un ancien JS mis en cache : ne jamais lui ouvrir les droits admin.
+        $data['canEdit'] = $canAdmin ? 1 : 0;
         $this->getResult()->addValue( null, 'pf2sessions', $data );
     }
 

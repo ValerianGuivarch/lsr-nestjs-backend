@@ -12,6 +12,11 @@ export class MediaWikiClientService {
 
   enabled(): boolean { return Boolean(this.apiUrl && this.publicBase && this.username && this.password) }
   pageUrl(title: string): string { return `${this.publicBase}/index.php?title=${encodeURIComponent(title.replace(/ /g, '_'))}` }
+  sessionsPageUrl(sessionNumber: number): string {
+    const title = process.env['PF2_MEDIAWIKI_SESSIONS_PAGE']?.trim() || 'Résumés longs de séances'
+    const number = Math.max(1, Math.trunc(Number(sessionNumber) || 1))
+    return `${this.pageUrl(title)}#pf2-session-${number}`
+  }
   async pageExists(title: string): Promise<boolean> {
     const data = await this.request({ action: 'query', titles: title }) as { query?: { pages?: Record<string, { missing?: unknown }> } }
     return Object.values(data.query?.pages ?? {}).some(page => !('missing' in page))

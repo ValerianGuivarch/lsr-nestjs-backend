@@ -5,7 +5,7 @@ use MediaWiki\MediaWikiServices;
 class ApiPF2SessionDelete extends ApiBase {
     public function execute() {
         $user = $this->getUser();
-        if ( !$user->isRegistered() || !$user->isAllowed( 'delete' ) ) {
+        if ( !$user->isRegistered() || !$user->isAllowed( 'pf2sessions-admin' ) ) {
             $this->dieWithError( 'Vous devez être administrateur pour supprimer une séance.' );
         }
 

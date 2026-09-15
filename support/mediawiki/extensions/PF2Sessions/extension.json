@@ -1,7 +1,9 @@
 {
   "name": "PF2Sessions",
-  "version": "0.2.0",
-  "author": ["PF2 project"],
+  "version": "0.3.0",
+  "author": [
+    "PF2 project"
+  ],
   "url": "https://wiki.l7r.fr",
   "descriptionmsg": "pf2sessions-desc",
   "type": "other",
@@ -20,9 +22,16 @@
   },
   "ResourceModules": {
     "ext.pf2sessions": {
-      "scripts": ["resources/pf2-sessions.js"],
-      "styles": ["resources/pf2-sessions.css"],
-      "dependencies": ["mediawiki.api", "mediawiki.util"],
+      "scripts": [
+        "resources/pf2-sessions.js"
+      ],
+      "styles": [
+        "resources/pf2-sessions.css"
+      ],
+      "dependencies": [
+        "mediawiki.api",
+        "mediawiki.util"
+      ],
       "localBasePath": "",
       "remoteExtPath": "PF2Sessions"
     }
@@ -31,12 +40,22 @@
     "BeforePageDisplay": "PF2SessionsHooks::onBeforePageDisplay"
   },
   "MessagesDirs": {
-    "PF2Sessions": ["i18n"]
+    "PF2Sessions": [
+      "i18n"
+    ]
   },
   "config": {
     "PF2SessionsApiBase": {
       "value": "http://host.docker.internal:3333/api/pf2-mj"
     }
   },
-  "manifest_version": 2
+  "manifest_version": 2,
+  "AvailableRights": [
+    "pf2sessions-admin"
+  ],
+  "GroupPermissions": {
+    "sysop": {
+      "pf2sessions-admin": true
+    }
+  }
 }

@@ -57,7 +57,7 @@ import EvenementsPage from './Evenements'
 import { expandedPlaceLabels, geographyTreeOptions, loadGeographyFromApi, matchesPlaceFilter, placeDisplay } from './geography'
 import { containerHref, playableHref, referenceHref, resolvePf2Route, viewPaths, type ReferenceView, type View } from './routing'
 
-type PreparationTab = 'pdf' | 'translation' | 'zip' | 'components'
+type PreparationTab = 'status' | 'pdf' | 'translation' | 'zip' | 'components'
 type MaintenanceTab = 'info' | 'description' | 'uncertain' | 'metadata'
 type LifecycleStatus = 'untracked' | 'retained' | 'to_play' | 'in_progress' | 'played' | 'later' | 'rejected'
 type SelectedEntity = PlayableUnit | Container
@@ -167,7 +167,7 @@ const emptyFilters: Filters = {
 const playabilityOptions: Playability[] = ['Prêt', 'À adapter', 'Simple inspiration']
 const relevanceOrder: Record<string, number> = { 'Très haute': 0, Haute: 1, Moyenne: 2, Basse: 3, Aucune: 4, Variable: 5, 'À évaluer': 6 }
 const preparationTabs: Array<[PreparationTab, string]> = [
-  ['pdf', 'PDF requis'], ['translation', 'Traductions'], ['zip', 'ZIP Foundry'], ['components', 'Découpage jouable'],
+  ['status', 'À planifier'], ['pdf', 'PDF requis'], ['translation', 'Traductions'], ['zip', 'ZIP Foundry'], ['components', 'Découpage jouable'],
 ]
 const maintenanceTabs: Array<[MaintenanceTab, string]> = [
   ['info', 'Info seules'], ['description', 'Descriptions'], ['uncertain', 'À vérifier'], ['metadata', 'Métadonnées'],
@@ -176,6 +176,8 @@ const lifecycleOptions: Array<[LifecycleStatus, string]> = [
   ['untracked', '—'], ['retained', 'Retenu'], ['to_play', 'À jouer'], ['in_progress', 'En cours'], ['played', 'Terminé'], ['later', 'Plus tard'], ['rejected', 'Écarté'],
 ]
 const lifecycleLabels = Object.fromEntries(lifecycleOptions) as Record<LifecycleStatus, string>
+const journalLifecycleStatuses = new Set<LifecycleStatus>(['to_play', 'in_progress', 'played'])
+const preparationLifecycleStatuses = new Set<LifecycleStatus>(['retained', 'to_play', 'in_progress'])
 
 const tone = (value: string) => value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-')
 const unique = (values: string[]) => [...new Set(values.filter(Boolean))].sort((a, b) => a.localeCompare(b, 'fr'))
@@ -572,7 +574,8 @@ function LibraryView({ curation, onOpen, onOpenPlayable, onUpdate }: { curation:
   })}</div>
 }
 
-function preparationMatch(unit: PlayableUnit, tab: PreparationTab): boolean {
+function preparationMatch(unit: PlayableUnit, tab: PreparationTab, curation: Curation): boolean {
+  if (tab === 'status') return effectiveLifecycleStatus(resolvePlayableOverride(curation, unit)) === 'retained'
   const availability = availabilityOf(unit)
   const bundle = resourceBundleAvailability(unit)
   const hasInformationFallback = documentsForTarget(unit.id).some((document) => document.isInformationFallback)
@@ -592,26 +595,26 @@ function maintenanceMatch(unit: PlayableUnit, tab: MaintenanceTab): boolean {
   return unit.migration.status === 'needsReview'
 }
 
-function isUpcoming(unit: PlayableUnit, curation: Curation): boolean {
+function isPreparationScope(unit: PlayableUnit, curation: Curation): boolean {
   const override = resolvePlayableOverride(curation, unit)
-  const playStatus = effectivePlayStatus(override)
-  return !isExcluded(unit, override, curation) && (playStatus === 'to_play' || playStatus === 'in_progress')
+  return !isExcluded(unit, override, curation) && preparationLifecycleStatuses.has(effectiveLifecycleStatus(override))
 }
 
 function PreparationView({ active, curation, onOpen, onUpdate, resourceVersion }: { active: PlayableUnit[]; curation: Curation; onOpen: (unit: PlayableUnit) => void; onUpdate: (id: string, field: string, value: unknown) => void; resourceVersion: number }) {
-  const [tab, setTab] = useState<PreparationTab>('pdf')
+  const [tab, setTab] = useState<PreparationTab>('status')
   const [filters, setFilters] = useState<Filters>(emptyFilters)
-  const scope = useMemo(() => active.filter((unit) => isUpcoming(unit, curation)), [active, curation])
-  const base = useMemo(() => scope.filter((unit) => preparationMatch(unit, tab)), [scope, tab, resourceVersion])
+  const scope = useMemo(() => active.filter((unit) => isPreparationScope(unit, curation)), [active, curation])
+  const base = useMemo(() => scope.filter((unit) => preparationMatch(unit, tab, curation)), [scope, tab, curation, resourceVersion])
   const found = useMemo(() => sortPlayables(base.filter((unit) => matchesFilters(unit, filters, curation)), curation), [base, curation, filters, resourceVersion])
   return <div className="prepare-view">
-    <div className="notice prepare-scope-notice"><strong>Seulement les prochaines parties</strong><p>Cette page ignore les œuvres simplement retenues, terminées ou mises de côté. Elle ne regarde que les scénarios « À jouer » et « En cours ».</p></div>
-    <div className="prepare-tabs">{preparationTabs.map(([id, label]) => <button key={id} className={tab === id ? 'active' : ''} onClick={() => { setTab(id); setFilters(emptyFilters) }}>{label}<b>{scope.filter((unit) => preparationMatch(unit, id)).length}</b></button>)}</div>
+    <div className="notice prepare-scope-notice"><strong>Retenus et prochaines parties</strong><p>Cette page contient les œuvres « Retenu », « À jouer » et « En cours ». Un scénario retenu reste à traiter tant que tu ne décides pas de l’ajouter au Journal MJ, de le remettre à plus tard ou de l’écarter.</p></div>
+    <div className="prepare-tabs">{preparationTabs.map(([id, label]) => <button key={id} className={tab === id ? 'active' : ''} onClick={() => { setTab(id); setFilters(emptyFilters) }}>{label}<b>{scope.filter((unit) => preparationMatch(unit, id, curation)).length}</b></button>)}</div>
+    {tab === 'status' && <div className="notice info-notice"><strong>À décider</strong><p>Ces scénarios sont retenus mais pas encore inscrits au Journal MJ. Change directement leur « Statut MJ » en « À jouer », « Plus tard » ou « Écarté ».</p></div>}
     {tab === 'zip' && !resourceInventoryKnown && <div className="notice"><strong>Inventaire ZIP en attente</strong><p>Le backend n’a pas encore répondu. Tant que le scan n’est pas disponible, aucun contenu n’est déclaré à tort comme « ZIP manquant ».</p></div>}
-    {tab === 'components' && <div className="notice info-notice"><strong>Découpage narratif optionnel</strong><p>Seuls les scénarios actuellement à jouer ou en cours apparaissent ici. Un découpage n’est pas un prérequis absolu : importe des composants lorsqu’ils sont utiles au suivi de la partie.</p></div>}
+    {tab === 'components' && <div className="notice info-notice"><strong>Découpage narratif optionnel</strong><p>Les scénarios retenus, à jouer ou en cours apparaissent ici. Un découpage n’est pas un prérequis absolu : importe des composants lorsqu’ils sont utiles au suivi de la partie.</p></div>}
     <FilterBar filters={filters} setFilters={setFilters} units={base} showBundle />
     <div className="section-title"><h2>{preparationTabs.find(([id]) => id === tab)?.[1]}</h2><span>{found.length}</span></div>
-    <PlayableList units={found} curation={curation} onOpen={onOpen} onUpdate={onUpdate} empty="Rien à traiter dans cette catégorie pour les prochaines parties." />
+    <PlayableList units={found} curation={curation} onOpen={onOpen} onUpdate={onUpdate} empty="Rien à traiter dans cette catégorie." />
   </div>
 }
 
@@ -1092,25 +1095,65 @@ function ComponentCard({ component }: { component: Component }) {
 }
 
 type PlayableComponentsWork = { id: string; title: string; description: string | null; units: PlayableUnit[]; campaign: boolean; status: LifecycleStatus }
+type JournalSessionLink = { scenarioId?: string; componentId?: string | null }
+type JournalSession = { sessionNumber?: number | string; content?: JournalSessionLink[] }
 
 function JournalView({ curation, onUpdate, onImported }: { curation: Curation; onUpdate: (id: string, field: string, value: unknown) => void; onImported: () => Promise<void> }) {
   const [message, setMessage] = useState('')
   const [importing, setImporting] = useState<string | null>(null)
-  const [expandedCampaignIds, setExpandedCampaignIds] = useState<Set<string>>(() => new Set())
+  const [expandedWorkIds, setExpandedWorkIds] = useState<Set<string>>(() => new Set())
+  const [expandedScenarioIds, setExpandedScenarioIds] = useState<Set<string>>(() => new Set())
   const [expandedComponentKey, setExpandedComponentKey] = useState<string | null>(null)
+  const [scenarioSessions, setScenarioSessions] = useState<Record<string, number[]>>({})
+  const [componentSessions, setComponentSessions] = useState<Record<string, number[]>>({})
+
+  useEffect(() => {
+    let cancelled = false
+    void fetch('/apil7r/pf2-mj/wiki/sessions', { cache: 'no-store' })
+      .then(async (response) => {
+        if (!response.ok) throw new Error('Séances indisponibles.')
+        return response.json() as Promise<{ sessions?: JournalSession[] }>
+      })
+      .then((payload) => {
+        if (cancelled) return
+        const byScenario = new Map<string, Set<number>>()
+        const byComponent = new Map<string, Set<number>>()
+        for (const session of Array.isArray(payload.sessions) ? payload.sessions : []) {
+          const sessionNumber = Number(session.sessionNumber)
+          if (!Number.isFinite(sessionNumber)) continue
+          for (const link of Array.isArray(session.content) ? session.content : []) {
+            const scenarioId = typeof link.scenarioId === 'string' ? link.scenarioId : ''
+            if (!scenarioId) continue
+            if (!byScenario.has(scenarioId)) byScenario.set(scenarioId, new Set())
+            byScenario.get(scenarioId)!.add(sessionNumber)
+            if (typeof link.componentId === 'string' && link.componentId) {
+              const key = `${scenarioId}:${link.componentId}`
+              if (!byComponent.has(key)) byComponent.set(key, new Set())
+              byComponent.get(key)!.add(sessionNumber)
+            }
+          }
+        }
+        setScenarioSessions(Object.fromEntries([...byScenario.entries()].map(([id, values]) => [id, [...values].sort((a, b) => a - b)])))
+        setComponentSessions(Object.fromEntries([...byComponent.entries()].map(([id, values]) => [id, [...values].sort((a, b) => a - b)])))
+      })
+      .catch(() => {
+        if (!cancelled) { setScenarioSessions({}); setComponentSessions({}) }
+      })
+    return () => { cancelled = true }
+  }, [])
   const selectedCampaigns = containers
     .filter((container) => {
       const override = resolveContainerOverride(curation, container)
-      return container.containerType === 'campaign' && effectiveLifecycleStatus(override, isContainerExcluded(container, curation)) !== 'untracked' && !isContainerExcluded(container, curation)
+      return container.containerType === 'campaign' && journalLifecycleStatuses.has(effectiveLifecycleStatus(override, isContainerExcluded(container, curation))) && !isContainerExcluded(container, curation)
     })
     .map((container): PlayableComponentsWork => { const override = resolveContainerOverride(curation, container); return { id: container.id, title: titleOf(container), description: container.synopsis, units: playablesUnder(container.id).filter((unit) => !isExcluded(unit, resolvePlayableOverride(curation, unit), curation)), campaign: true, status: effectiveLifecycleStatus(override) } })
   const coveredUnitIds = new Set(selectedCampaigns.flatMap((campaign) => campaign.units.map((unit) => unit.id)))
   const selectedStandalone = playableUnits
     .filter((unit) => {
       const override = resolvePlayableOverride(curation, unit)
-      return !coveredUnitIds.has(unit.id) && effectiveLifecycleStatus(override, isExcluded(unit, override, curation)) !== 'untracked' && !isExcluded(unit, override, curation)
+      return !coveredUnitIds.has(unit.id) && journalLifecycleStatuses.has(effectiveLifecycleStatus(override, isExcluded(unit, override, curation))) && !isExcluded(unit, override, curation)
     })
-  const statusRank: Record<LifecycleStatus, number> = { in_progress: 0, to_play: 1, retained: 2, played: 3, untracked: 4, later: 5, rejected: 6 }
+  const statusRank: Record<LifecycleStatus, number> = { in_progress: 0, to_play: 1, played: 2, retained: 3, untracked: 4, later: 5, rejected: 6 }
   const works: PlayableComponentsWork[] = [...selectedCampaigns, ...selectedStandalone.map((unit) => ({ id: unit.id, title: titleOf(unit), description: unit.synopsis, units: [unit], campaign: false, status: effectiveLifecycleStatus(resolvePlayableOverride(curation, unit)) }))].sort((a, b) => statusRank[a.status] - statusRank[b.status] || a.title.localeCompare(b.title, 'fr'))
 
   const componentExample = { id: 'exemple-ouverture', title: 'Ouverture', description: 'Résumé factuel de cette unité narrative.', estimatedSessions: { min: 1, max: 2 }, continuity: { mode: 'free', returnToHubPossible: true, recommendedSameParty: false, notes: '' }, order: 1 }
@@ -1181,12 +1224,19 @@ function JournalView({ curation, onUpdate, onImported }: { curation: Curation; o
     const units = work.units.map(unitProgress)
     return { played: units.reduce((total, unit) => total + unit.played, 0), total: units.reduce((total, unit) => total + unit.total, 0), completedScenarios: units.filter((unit) => unit.completed).length }
   }
-  const toggleCampaign = (campaignId: string) => setExpandedCampaignIds((current) => {
+  const toggleWork = (workId: string) => setExpandedWorkIds((current) => {
     const next = new Set(current)
-    if (next.has(campaignId)) next.delete(campaignId)
-    else next.add(campaignId)
+    if (next.has(workId)) next.delete(workId)
+    else next.add(workId)
     return next
   })
+  const toggleScenario = (scenarioId: string) => setExpandedScenarioIds((current) => {
+    const next = new Set(current)
+    if (next.has(scenarioId)) next.delete(scenarioId)
+    else next.add(scenarioId)
+    return next
+  })
+  const sessionLabel = (numbers: number[]) => numbers.length ? `${numbers.length > 1 ? 'Séances' : 'Séance'} ${numbers.map((number) => `#${number}`).join(', ')}` : ''
   const copyText = async (text: string) => {
     if (navigator.clipboard?.writeText) {
       try { await navigator.clipboard.writeText(text); return }
@@ -1260,43 +1310,49 @@ function JournalView({ curation, onUpdate, onImported }: { curation: Curation; o
   }
 
   return <section className="playable-components-view">
-    <div className="playable-components-intro"><div><small>JOURNAL DE QUÊTE MJ</small><h2>En cours, à jouer, retenus et terminés</h2><p>Le statut MJ décide ce qui entre dans ton journal. Les composants servent uniquement à suivre la progression narrative quand un découpage existe.</p></div><button className="component-prompt" onClick={() => void copySelectionPrompt()}>Prompt composants</button></div>
-    <div className="journal-status-board">{(['in_progress', 'to_play', 'retained', 'played'] as LifecycleStatus[]).map((status) => { const count = playableUnits.filter((unit) => { const override = resolvePlayableOverride(curation, unit); return !isExcluded(unit, override, curation) && effectiveLifecycleStatus(override) === status }).length; return <div key={status}><small>{lifecycleLabels[status]}</small><strong>{count}</strong></div> })}</div>
-    {!works.length && <div className="empty-components"><strong>Journal vide.</strong><p>Depuis une fiche ou le catalogue, passe une aventure à « Retenu », « À jouer », « En cours » ou « Terminé ».</p></div>}
+    <div className="playable-components-intro"><div><small>JOURNAL DE QUÊTE MJ</small><h2>En cours, à jouer et terminés</h2><p>Le Journal ne contient que les aventures réellement prévues, commencées ou terminées. « Retenu » reste dans « À faire pour jouer » jusqu’à décision.</p></div><button className="component-prompt" onClick={() => void copySelectionPrompt()}>Prompt composants</button></div>
+    <div className="journal-status-board">{(['in_progress', 'to_play', 'played'] as LifecycleStatus[]).map((status) => { const count = playableUnits.filter((unit) => { const override = resolvePlayableOverride(curation, unit); return !isExcluded(unit, override, curation) && effectiveLifecycleStatus(override) === status }).length; return <div key={status}><small>{lifecycleLabels[status]}</small><strong>{count}</strong></div> })}</div>
+    {!works.length && <div className="empty-components"><strong>Journal vide.</strong><p>Depuis une fiche, le catalogue ou « À faire pour jouer », passe une aventure à « À jouer », « En cours » ou « Terminé ».</p></div>}
     {works.map((work) => {
       const progress = workProgress(work)
-      const expanded = !work.campaign || expandedCampaignIds.has(work.id)
-      return <section className={`component-work${work.campaign && !expanded ? ' is-collapsed' : ''}`} key={work.id}>
+      const expanded = expandedWorkIds.has(work.id)
+      const workSessions = [...new Set(work.units.flatMap((unit) => scenarioSessions[unit.id] ?? []))].sort((a, b) => a - b)
+      const detailHref = work.campaign ? `/pf2-mj/campaigns/${encodeURIComponent(work.id)}` : playableHref(work.units[0])
+      return <section className={`component-work${!expanded ? ' is-collapsed' : ''}`} key={work.id}>
         <header>
-          <div><small>{work.campaign ? 'CAMPAGNE' : 'SCÉNARIO'} · {lifecycleLabels[work.status]}</small><h3>{work.title}</h3>{work.description && <p>{work.description}</p>}</div>
+          <div><small>{work.campaign ? 'CAMPAGNE' : 'SCÉNARIO'} · {lifecycleLabels[work.status]}</small><h3><Link className="journal-detail-link" to={detailHref}>{work.title}</Link></h3>{expanded && work.description && <p>{work.description}</p>}{workSessions.length > 0 && <span className="journal-session-badge">{sessionLabel(workSessions)}</span>}</div>
           <div className="component-work-actions">
-            {work.campaign && <button className="component-toggle" onClick={() => toggleCampaign(work.id)} aria-expanded={expanded}>{expanded ? 'Réduire' : `Développer · ${work.units.length} scénario${work.units.length > 1 ? 's' : ''}`}</button>}
-            <button className="component-prompt" onClick={() => void copyPrompt(work)}>{work.campaign ? 'Prompt campagne' : 'Prompt'}</button>
-            {work.campaign && <label className={`component-import${importing === work.id ? ' disabled' : ''}`}>Importer la campagne<input type="file" accept="application/json,.json" disabled={importing !== null} onChange={(event) => { const file = event.target.files?.[0]; event.target.value = ''; void importCampaign(work, file) }} /></label>}
+            <button className="component-toggle" onClick={() => toggleWork(work.id)} aria-expanded={expanded}>{expanded ? 'Réduire' : work.campaign ? `Développer · ${work.units.length} scénario${work.units.length > 1 ? 's' : ''}` : 'Développer'}</button>
+            {expanded && <button className="component-prompt" onClick={() => void copyPrompt(work)}>{work.campaign ? 'Prompt campagne' : 'Prompt'}</button>}
+            {expanded && work.campaign && <label className={`component-import${importing === work.id ? ' disabled' : ''}`}>Importer la campagne<input type="file" accept="application/json,.json" disabled={importing !== null} onChange={(event) => { const file = event.target.files?.[0]; event.target.value = ''; void importCampaign(work, file) }} /></label>}
             <span>{work.campaign && `${progress.completedScenarios}/${work.units.length} scénario${work.units.length > 1 ? 's' : ''} terminé${progress.completedScenarios > 1 ? 's' : ''} · `}{progress.played}/{progress.total} composant{progress.total > 1 ? 's' : ''} joué{progress.played > 1 ? 's' : ''}</span>
           </div>
         </header>
         {expanded && <div className="component-work-units">{work.units.map((unit) => {
           const status = resolvePlayableOverride(curation, unit).playableComponentStatus ?? {}
           const unitState = unitProgress(unit)
-          return <article key={unit.id}>
-            <div className="component-unit-head"><div><small>{unit.number ? `${unit.number} · ` : ''}{playableTypeLabel(unit.playableType)} · {lifecycleLabels[effectiveLifecycleStatus(resolvePlayableOverride(curation, unit))]}</small><strong>{titleOf(unit)}</strong><p>{unit.synopsis || 'Description propre de ce scénario non renseignée.'}</p><em className="component-progress">{unitState.played}/{unitState.total} composant{unitState.total > 1 ? 's' : ''} joué{unitState.played > 1 ? 's' : ''}{unitState.completed ? ' · Scénario terminé' : ''}</em></div>{!work.campaign && <div><label className={`component-import${importing === unit.id ? ' disabled' : ''}`}>Importer<input type="file" accept="application/json,.json" disabled={importing !== null} onChange={(event) => { const file = event.target.files?.[0]; event.target.value = ''; void importComponents(unit, file) }} /></label></div>}</div>
-            {unit.playableComponents.length ? <ul>{unit.playableComponents.map((component) => {
+          const unitSessions = scenarioSessions[unit.id] ?? []
+          const unitExpanded = !work.campaign || expandedScenarioIds.has(unit.id)
+          return <article className={unitExpanded ? '' : 'is-collapsed'} key={unit.id}>
+            <div className="component-unit-head"><div><small>{unit.number ? `${unit.number} · ` : ''}{playableTypeLabel(unit.playableType)} · {lifecycleLabels[effectiveLifecycleStatus(resolvePlayableOverride(curation, unit))]}</small><strong><Link className="journal-detail-link" to={playableHref(unit)}>{titleOf(unit)}</Link></strong>{unitSessions.length > 0 && <span className="journal-session-badge">{sessionLabel(unitSessions)}</span>}{unitExpanded && <p>{unit.synopsis || 'Description propre de ce scénario non renseignée.'}</p>}<em className="component-progress">{unitState.played}/{unitState.total} composant{unitState.total > 1 ? 's' : ''} joué{unitState.played > 1 ? 's' : ''}{unitState.completed ? ' · Scénario terminé' : ''}</em></div><div>{work.campaign && <button className="component-toggle scenario-toggle" type="button" onClick={() => toggleScenario(unit.id)} aria-expanded={unitExpanded}>{unitExpanded ? 'Réduire' : 'Développer'}</button>}{!work.campaign && <label className={`component-import${importing === unit.id ? ' disabled' : ''}`}>Importer<input type="file" accept="application/json,.json" disabled={importing !== null} onChange={(event) => { const file = event.target.files?.[0]; event.target.value = ''; void importComponents(unit, file) }} /></label>}</div></div>
+            {unitExpanded && (unit.playableComponents.length ? <ul>{unit.playableComponents.map((component) => {
               const componentKey = `${unit.id}:${component.id}`
               const detailsExpanded = expandedComponentKey === componentKey
               const continuityLabel = component.continuity.mode === 'free' ? 'Libre' : component.continuity.mode === 'soft_lock' ? 'Transition nécessaire' : 'Effet tunnel'
+              const playedSessions = componentSessions[componentKey] ?? []
               return <li className="component-checklist-item" key={component.id}>
                 <div className="component-checklist-row">
                   <input aria-label={`Marquer ${component.title} comme joué`} type="checkbox" checked={status[component.id] === 'played'} onChange={() => togglePlayed(unit, component.id)} />
                   <button className="component-details-button" type="button" onClick={() => setExpandedComponentKey(detailsExpanded ? null : componentKey)} aria-expanded={detailsExpanded}>
                     <strong>#{component.order} · {component.title}</strong>
-                    <small>{component.estimatedSessions ? `${component.estimatedSessions.min}${component.estimatedSessions.min !== component.estimatedSessions.max ? `–${component.estimatedSessions.max}` : ''} séance${component.estimatedSessions.max > 1 ? 's' : ''} · ` : ''}{continuityLabel} · {status[component.id] === 'played' ? 'Joué' : 'À jouer'}</small>
+                    <small>{component.estimatedSessions ? `${component.estimatedSessions.min}${component.estimatedSessions.min !== component.estimatedSessions.max ? `–${component.estimatedSessions.max}` : ''} séance${component.estimatedSessions.max > 1 ? 's' : ''} · ` : ''}{continuityLabel} · {status[component.id] === 'played' ? 'Joué' : 'À jouer'}{playedSessions.length > 0 ? ` · ${sessionLabel(playedSessions)}` : ''}</small>
                   </button>
                 </div>
                 {detailsExpanded && <div className="component-detail-panel">
                   <p>{component.description || 'Description non renseignée.'}</p>
                   <dl>
                     <div><dt>Statut</dt><dd>{status[component.id] === 'played' ? 'Joué' : 'À jouer'}</dd></div>
+                    {playedSessions.length > 0 && <div><dt>Joué pendant</dt><dd>{sessionLabel(playedSessions)}</dd></div>}
                     {component.estimatedSessions && <div><dt>Durée estimée</dt><dd>{component.estimatedSessions.min === component.estimatedSessions.max ? `${component.estimatedSessions.min} séance${component.estimatedSessions.min > 1 ? 's' : ''}` : `${component.estimatedSessions.min}–${component.estimatedSessions.max} séances`}</dd></div>}
                     <div><dt>Continuité</dt><dd>{continuityLabel}</dd></div>
                     <div><dt>Retour à la base</dt><dd>{component.continuity.returnToHubPossible ? 'Possible' : 'Non prévu'}</dd></div>
@@ -1305,7 +1361,7 @@ function JournalView({ curation, onUpdate, onImported }: { curation: Curation; o
                   </dl>
                 </div>}
               </li>
-            })}</ul> : <p className="missing">Aucun composant renseigné. {work.campaign ? 'Utilise « Prompt campagne » puis importe un seul JSON pour la campagne.' : 'Utilise « Prompt » puis importe le JSON produit.'}</p>}
+            })}</ul> : <p className="missing">Aucun composant renseigné. {work.campaign ? 'Utilise « Prompt campagne » puis importe un seul JSON pour la campagne.' : 'Utilise « Prompt » puis importe le JSON produit.'}</p>)}
           </article>
         })}</div>}
       </section>
@@ -1468,11 +1524,11 @@ export function Pf2MjApp() {
   const excludedContainerCount = useMemo(() => containers.filter((container) => explicitContainerExclusion(container, curation)).length, [curation, catalogueRevision])
   const explicitExcludedPlayableCount = useMemo(() => playableUnits.filter((unit) => explicitPlayableExclusion(unit, curation)).length, [curation, catalogueRevision])
   const placeOptions = useMemo(() => unique([...allPlaces, ...(curation.customPlaces ?? [])]), [curation, catalogueRevision])
-  const upcoming = active.filter((unit) => isUpcoming(unit, curation))
-  const missingTranslations = upcoming.filter((unit) => availabilityOf(unit).coverage === 'complete' && availabilityOf(unit).mode === 'en').length
-  const missingZips = resourceInventoryKnown ? upcoming.filter((unit) => resourceBundleAvailability(unit).status === 'missing').length : null
+  const preparationScope = active.filter((unit) => isPreparationScope(unit, curation))
+  const missingTranslations = preparationScope.filter((unit) => availabilityOf(unit).coverage === 'complete' && availabilityOf(unit).mode === 'en').length
+  const missingZips = resourceInventoryKnown ? preparationScope.filter((unit) => resourceBundleAvailability(unit).status === 'missing').length : null
   const documentCount = currentDocuments().length
-  const journalCampaignCount = containers.filter((container) => container.containerType === 'campaign' && !isContainerExcluded(container, curation) && effectiveLifecycleStatus(resolveContainerOverride(curation, container)) !== 'untracked').length
+  const journalCampaignCount = containers.filter((container) => container.containerType === 'campaign' && !isContainerExcluded(container, curation) && journalLifecycleStatuses.has(effectiveLifecycleStatus(resolveContainerOverride(curation, container)))).length
 
   const update = async (id: string, field: string, value: unknown) => {
     setError('')
@@ -1536,8 +1592,8 @@ export function Pf2MjApp() {
   const headings: Record<View, [string, string]> = {
     find: ['Trouver une partie', 'Recherche opérationnelle : uniquement des unités jouables.'],
     library: ['Catalogue', 'Campagnes, saisons, séries et ressources structurent le catalogue sans polluer la recherche jouable.'],
-    journal: ['Journal MJ', 'Ton journal de quête : ce que tu as retenu, prévu, commencé ou terminé.'],
-    prepare: ['À faire pour jouer', 'Uniquement les actions utiles aux scénarios « À jouer » et « En cours ».'],
+    journal: ['Journal MJ', 'Ton journal de quête : ce que tu as prévu, commencé ou terminé.'],
+    prepare: ['À faire pour jouer', 'Décisions et actions utiles pour les scénarios « Retenu », « À jouer » et « En cours ».'],
     maintenance: ['Maintenance du catalogue', 'Qualité des données, descriptions et associations à revoir sans polluer la préparation de partie.'],
     documents: ['Ressources PDF', 'Inventaire physique séparé des œuvres et de leur jouabilité.'],
     chronology: ['Chronologie', 'Unités jouables replacées dans le calendrier de Golarion.'],
@@ -1547,9 +1603,9 @@ export function Pf2MjApp() {
   }
 
   const nav: Array<[View, string, string, number | string]> = [
-    ['journal', '☑', 'Journal MJ', journalCampaignCount + active.filter((unit) => effectiveLifecycleStatus(resolvePlayableOverride(curation, unit)) !== 'untracked').length],
+    ['journal', '☑', 'Journal MJ', journalCampaignCount + active.filter((unit) => journalLifecycleStatuses.has(effectiveLifecycleStatus(resolvePlayableOverride(curation, unit)))).length],
     ['find', '▶', 'Trouver une partie', active.length],
-    ['prepare', '◒', 'À faire pour jouer', active.filter((unit) => isUpcoming(unit, curation) && preparationTabs.some(([tab]) => preparationMatch(unit, tab))).length],
+    ['prepare', '◒', 'À faire pour jouer', active.filter((unit) => isPreparationScope(unit, curation) && preparationTabs.some(([tab]) => preparationMatch(unit, tab, curation))).length],
     ['library', '▦', 'Catalogue', containers.length],
     ['documents', '⌁', 'Ressources PDF', documentCount],
     ['chronology', '◷', 'Chronologie', ''],
@@ -1574,8 +1630,8 @@ export function Pf2MjApp() {
   const routeMissing = (kind: string, id?: string) => <section className="route-not-found"><small>LIEN DIRECT</small><h2>{kind} introuvable</h2><p>{catalogueRevision ? `Aucune entrée ne correspond à « ${id ?? ''} » dans le catalogue SQLite courant.` : 'Chargement du catalogue SQLite…'}</p><Link to={viewPaths.library}>Retour au catalogue</Link></section>
 
   return <main className="pf2-mj pf2-mj-v3">
-    <header><Link className="brand brand-button" to={viewPaths.find}><b>✦</b><span><strong>PATHFINDER 2</strong><small>GESTION MJ · JOURNAL</small></span></Link><div className="header-right"><span><i />Prochaines parties · {missingTranslations} trad. manquante{missingTranslations > 1 ? 's' : ''} · {missingZips === null ? 'ZIP à inventorier' : `${missingZips} ZIP manquant${missingZips > 1 ? 's' : ''}`} · {documentCount} PDF</span><em>MJ</em></div></header>
-    <div className="layout"><aside><nav>{nav.map(([id, icon, label, count]) => <NavLink key={id} to={viewPaths[id]} className={() => routedView === id ? 'active' : ''}><span>{icon}</span>{label}<b>{count}</b></NavLink>)}</nav><section><p>REPÈRES MJ</p><span className="aside-rule">☑ Journal = ce que tu suis</span><span className="aside-rule">◒ Préparation = prochaines parties</span><span className="aside-rule">▣ Campagne = conteneur</span><span className="aside-rule">◇ Maintenance = qualité catalogue</span></section><div className="scan-note"><b>V3</b><strong>SQLite comme source</strong><p>Le catalogue est chargé depuis SQLite puis normalisé sans perte pour l’interface V3.</p></div></aside>
+    <header><Link className="brand brand-button" to={viewPaths.find}><b>✦</b><span><strong>PATHFINDER 2</strong><small>GESTION MJ · JOURNAL</small></span></Link><div className="header-right"><span><i />Préparation active · {missingTranslations} trad. manquante{missingTranslations > 1 ? 's' : ''} · {missingZips === null ? 'ZIP à inventorier' : `${missingZips} ZIP manquant${missingZips > 1 ? 's' : ''}`} · {documentCount} PDF</span><em>MJ</em></div></header>
+    <div className="layout"><aside><nav>{nav.map(([id, icon, label, count]) => <NavLink key={id} to={viewPaths[id]} className={() => routedView === id ? 'active' : ''}><span>{icon}</span>{label}<b>{count}</b></NavLink>)}</nav><section><p>REPÈRES MJ</p><span className="aside-rule">☑ Journal = prévu, en cours, terminé</span><span className="aside-rule">◒ Préparation = retenus + prochaines parties</span><span className="aside-rule">▣ Campagne = conteneur</span><span className="aside-rule">◇ Maintenance = qualité catalogue</span></section><div className="scan-note"><b>V3</b><strong>SQLite comme source</strong><p>Le catalogue est chargé depuis SQLite puis normalisé sans perte pour l’interface V3.</p></div></aside>
       <section className="content">
         {route.kind === 'not-found' ? routeMissing('Page') : null}
         {route.kind === 'playable' ? (selectedPlayable ? <PlayableDetail unit={selectedPlayable} curation={curation} onUpdate={update} placeOptions={placeOptions} onOpenReference={openReference} /> : routeMissing('Scénario', route.id)) : null}

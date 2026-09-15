@@ -5,14 +5,26 @@ import { FoundryRelayService } from '../foundry/FoundryRelayService'
 import { Pf2PersistenceService } from '../pf2-storage/Pf2PersistenceService'
 import { PlayerCodexService } from '../pf2-mj/PlayerCodexService'
 import { MediaWikiClientService } from '../pf2-mj/MediaWikiClientService'
-import { DiscordService } from './DiscordService'
+import { DiscordResumeSync, DiscordService } from './DiscordService'
+import { shortSummaryRewardForSession } from '../pf2-sessions/Pf2CareerXp'
 
 @Injectable()
 export class DiscordCommandsService {
   private readonly logger = new Logger(DiscordCommandsService.name)
   private readonly pendingGames = new Map<string, { actors: Array<{ uuid: string; name: string; player: string; userId: string }>; selected?: Array<{ uuid: string; name: string; player: string; userId: string }> }>()
   private readonly pendingAnnouncements = new Map<string, { content: string; userIds: string[] }>()
-  private readonly pendingShortSummaries = new Map<string, { sessionId: string; sessionNumber: number; title: string; summary: string; requesterId: string; defaultAuthor: string; allowedAuthors: Array<{ uuid: string; name: string }> }>()
+  private readonly pendingShortSummaries = new Map<string, {
+    sessionId: string
+    sessionNumber: number
+    requesterId: string
+    selectedAuthor: string
+    allowedAuthors: Array<{ uuid: string; name: string }>
+  }>()
+  private readonly pendingResumePublications = new Map<string, {
+    sessionId: string
+    requesterId: string
+    createdAt: number
+  }>()
   constructor(private readonly persistence: Pf2PersistenceService, private readonly foundry: FoundryRelayService, private readonly playerCodex?: PlayerCodexService, private readonly mediaWiki?: MediaWikiClientService, @Inject(forwardRef(() => DiscordService)) private readonly discord?: DiscordService) {}
 
   definitions(): RESTPostAPIApplicationGuildCommandsJSONBody[] {
@@ -23,7 +35,7 @@ export class DiscordCommandsService {
       new SlashCommandBuilder().setName('export-full').setDescription('Exporte tous les messages texte du serveur en JSON.').toJSON(),
       new SlashCommandBuilder().setName('new-game').setDescription('Prépare une nouvelle mission PF2 depuis les PJ actifs dans ce salon.').toJSON(),
       new SlashCommandBuilder().setName('finish-game').setDescription('Termine une mission et met à jour son résumé.').addIntegerOption(option => option.setName('xp').setDescription('XP gagnée par PJ').setRequired(true).setMinValue(0)).addIntegerOption(option => option.setName('numero').setDescription('Numéro du résumé à terminer')).addStringOption(option => option.setName('fin').setDescription('Date de fin en jeu : YYYY-MM-DD')).addIntegerOption(option => option.setName('jours').setDescription('Durée en jours, à partir du début en jeu').setMinValue(1)).toJSON(),
-      new SlashCommandBuilder().setName('resume').setDescription('Édite le résumé court d’une séance.').addStringOption(option => option.setName('session').setDescription('Numéro de séance, si le contexte ne suffit pas').setAutocomplete(true)).toJSON(),
+      new SlashCommandBuilder().setName('resume').setDescription('Édite le résumé court d’une séance.').addStringOption(option => option.setName('session').setDescription('Séance à résumer (la plus récente par défaut)').setAutocomplete(true)).addStringOption(option => option.setName('auteur').setDescription('Personnage auteur du résumé').setAutocomplete(true)).toJSON(),
       new SlashCommandBuilder().setName('personnage').setDescription('Présente un personnage au carnet joueur.').addStringOption(option => option.setName('personnage').setDescription('PNJ existant ou nom libre').setRequired(true).setAutocomplete(true)).addAttachmentOption(option => option.setName('portrait').setDescription('Portrait pour un personnage improvisé')).addBooleanOption(option => option.setName('afficher_nom').setDescription('Afficher le nom').setRequired(false)).toJSON(),
     ]
   }
@@ -84,9 +96,39 @@ export class DiscordCommandsService {
 
   async handleAutocomplete(interaction: AutocompleteInteraction): Promise<boolean> {
     if (interaction.commandName === 'resume') {
-      const term = interaction.options.getFocused().toString().trim()
-      const sessions = await this.persistence.listSessions()
-      await interaction.respond(sessions.filter(session => String(session.sessionNumber).includes(term) || session.title.toLocaleLowerCase().includes(term.toLocaleLowerCase())).sort((a, b) => b.sessionNumber - a.sessionNumber).slice(0, 25).map(session => ({ name: `#${session.sessionNumber} — ${session.title || 'Sans titre'}`.slice(0, 100), value: String(session.sessionNumber) })))
+      const focused = interaction.options.getFocused(true)
+      const term = focused.value.toString().trim().toLocaleLowerCase()
+
+      if (focused.name === 'session') {
+        const sessions = await this.persistence.listSessions()
+        await interaction.respond(
+          sessions
+            .filter(session =>
+              String(session.sessionNumber).includes(term) ||
+              session.title.toLocaleLowerCase().includes(term),
+            )
+            .sort((a, b) => b.sessionNumber - a.sessionNumber)
+            .slice(0, 25)
+            .map(session => ({
+              name: `#${session.sessionNumber} — ${session.title || 'Sans titre'}`.slice(0, 100),
+              value: String(session.sessionNumber),
+            })),
+        )
+        return true
+      }
+
+      if (focused.name === 'auteur') {
+        const authors = await this.summaryAuthors(interaction, true)
+        await interaction.respond(
+          authors
+            .filter(actor => actor.name.toLocaleLowerCase().includes(term))
+            .slice(0, 25)
+            .map(actor => ({ name: actor.name.slice(0, 100), value: actor.uuid })),
+        )
+        return true
+      }
+
+      await interaction.respond([])
       return true
     }
     if (interaction.commandName !== 'personnage') return false
@@ -147,15 +189,6 @@ export class DiscordCommandsService {
   }
 
   async handleComponent(interaction: StringSelectMenuInteraction): Promise<boolean> {
-    if (interaction.customId.startsWith('pf2-resume:')) {
-      const pending = this.pendingShortSummaries.get(interaction.customId)
-      if (!pending) { await interaction.reply({ content: 'Cette édition a expiré. Relance `/resume`.', ephemeral: true }); return true }
-      const author = interaction.values[0]
-      if (!pending.allowedAuthors.some(actor => actor.uuid === author)) { await interaction.reply({ content: 'Cet auteur n’est pas autorisé.', ephemeral: true }); return true }
-      await this.saveShortSummary(interaction, pending, author)
-      this.pendingShortSummaries.delete(interaction.customId)
-      return true
-    }
     if (!interaction.customId.startsWith('pf2-new-game:')) return false
     const pending = this.pendingGames.get(interaction.customId)
     if (!pending) { await interaction.reply({ content: 'Cette préparation a expiré. Relance `/new-game`.', ephemeral: true }); return true }
@@ -192,19 +225,39 @@ export class DiscordCommandsService {
   async handleModal(interaction: ModalSubmitInteraction): Promise<boolean> {
     if (interaction.customId.startsWith('pf2-resume:')) {
       const pending = this.pendingShortSummaries.get(interaction.customId)
-      if (!pending) { await interaction.reply({ content: 'Cette édition a expiré. Relance `/resume`.', ephemeral: true }); return true }
-      const title = interaction.fields.getTextInputValue('title').trim()
-      const summary = interaction.fields.getTextInputValue('shortSummary').trim()
-      if (title.length > 120 || summary.length > 2000) { await interaction.reply({ content: 'Le titre ne peut pas dépasser 120 caractères et le résumé court 2 000 caractères.', ephemeral: true }); return true }
-      pending.title = title
-      pending.summary = summary
-      if (pending.allowedAuthors.length === 1) {
-        await this.saveShortSummary(interaction, pending, pending.allowedAuthors[0].uuid)
-        this.pendingShortSummaries.delete(interaction.customId)
+
+      if (!pending) {
+        await interaction.reply({ content: 'Cette édition a expiré. Relance `/resume`.', ephemeral: true })
         return true
       }
-      const select = new StringSelectMenuBuilder().setCustomId(interaction.customId).setPlaceholder('Choisis l’auteur du résumé court').addOptions(pending.allowedAuthors.map(actor => ({ label: actor.name.slice(0, 100), value: actor.uuid, default: actor.uuid === pending.defaultAuthor })))
-      await interaction.reply({ content: `Séance ${pending.sessionNumber} : choisis l’auteur.`, components: [new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(select)], ephemeral: true })
+
+      if (interaction.user.id !== pending.requesterId) {
+        await interaction.reply({ content: 'Cette édition appartient à un autre utilisateur.', ephemeral: true })
+        return true
+      }
+
+      if (!pending.allowedAuthors.some(actor => actor.uuid === pending.selectedAuthor)) {
+        await interaction.reply({ content: 'Auteur invalide. Relance `/resume`.', ephemeral: true })
+        return true
+      }
+
+      const title = interaction.fields.getTextInputValue('title').trim()
+      const date = interaction.fields.getTextInputValue('date').trim()
+      const summary = interaction.fields.getTextInputValue('shortSummary').trim()
+
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+        await interaction.reply({ content: 'La date jouée doit être au format YYYY-MM-DD.', ephemeral: true })
+        return true
+      }
+
+      const saved = await this.saveShortSummary(
+        interaction,
+        pending,
+        pending.selectedAuthor,
+        { title, date, summary },
+      )
+
+      if (saved) this.pendingShortSummaries.delete(interaction.customId)
       return true
     }
     if (interaction.customId.startsWith('pf2-character:create:')) {
@@ -244,6 +297,35 @@ export class DiscordCommandsService {
   }
 
   async handleButton(interaction: ButtonInteraction): Promise<boolean> {
+    if (interaction.customId.startsWith('pf2-resume-publish:')) {
+      const pending = this.pendingResumePublications.get(interaction.customId)
+      if (!pending) {
+        await interaction.reply({ content: 'Ce bouton de publication a expiré. Relance `/resume`.', ephemeral: true })
+        return true
+      }
+      if (interaction.user.id !== pending.requesterId) {
+        await interaction.reply({ content: 'Ce bouton appartient à un autre utilisateur.', ephemeral: true })
+        return true
+      }
+
+      await interaction.deferReply({ ephemeral: true })
+      try {
+        if (!this.discord) throw new Error('Discord est indisponible ou désactivé.')
+        const result = await this.discord.setResumePublication(pending.sessionId, true)
+        this.pendingResumePublications.delete(interaction.customId)
+        await interaction.editReply({
+          content: `Séance #${result.resume.sessionNumber} publiée${result.discord.status === 'updated' ? ' et synchronisée' : ''}.`,
+          components: this.resumeWikiComponents(result.resume.sessionNumber),
+        })
+      } catch (error) {
+        await interaction.editReply({
+          content: `Publication impossible : ${error instanceof Error ? error.message : String(error)}`,
+          components: [],
+        })
+      }
+      return true
+    }
+
     if (interaction.customId.startsWith('pf2-character:create:')) {
       const presentationId = interaction.customId.slice('pf2-character:create:'.length)
       try {
@@ -299,48 +381,312 @@ export class DiscordCommandsService {
   }
 
   private async resumeCommand(interaction: ChatInputCommandInteraction): Promise<void> {
+    const sessions = await this.persistence.listSessions()
     const requested = interaction.options.getString('session')?.trim()
-    const number = requested ? Number(requested) : await this.lastBotSessionNumber(interaction)
-    if (!Number.isInteger(number) || !number) { await interaction.reply({ content: 'Indique `session`, ou utilise la commande dans le salon de l’annonce correspondante.', ephemeral: true }); return }
-    const session = (await this.persistence.listSessions()).find(item => item.sessionNumber === number)
-    if (!session) { await interaction.reply({ content: `Aucun résumé n°${number} n’existe.`, ephemeral: true }); return }
-    const names = await this.actorNames()
-    const allActors = [...names.entries()].filter(([uuid, name]) => /^\S(?:.*\S)?\s+\([^()]+\)$/u.test(name)).map(([uuid, name]) => ({ uuid, name }))
-    const admin = this.isAdmin(interaction)
-    const allowedAuthors = admin ? allActors : allActors.filter(actor => this.discordId(this.playerName(actor.name)) === interaction.user.id)
-    if (!allowedAuthors.length) { await interaction.reply({ content: 'Aucun PJ ne t’est associé.', ephemeral: true }); return }
+    const requestedNumber = requested ? Number(requested) : null
+
+    if (requested && (!Number.isInteger(requestedNumber) || !requestedNumber)) {
+      await interaction.reply({ content: 'La séance sélectionnée est invalide.', ephemeral: true })
+      return
+    }
+
+    const session = requestedNumber
+      ? sessions.find(item => item.sessionNumber === requestedNumber)
+      : [...sessions].sort((a, b) => b.sessionNumber - a.sessionNumber)[0]
+
+    if (!session) {
+      await interaction.reply({
+        content: requested
+          ? `Aucun résumé n°${requested} n’existe.`
+          : 'Aucune séance n’existe encore.',
+        ephemeral: true,
+      })
+      return
+    }
+
+    const allowedAuthors = await this.summaryAuthors(interaction)
+    if (!allowedAuthors.length) {
+      await interaction.reply({ content: 'Aucun PJ ne t’est associé.', ephemeral: true })
+      return
+    }
+
+    const requestedAuthor = interaction.options.getString('auteur')?.trim() ?? ''
+    let author = requestedAuthor
+
+    if (!author && session.shortSummaryAuthor && allowedAuthors.some(actor => actor.uuid === session.shortSummaryAuthor)) {
+      author = session.shortSummaryAuthor
+    }
+    if (!author && allowedAuthors.length === 1) author = allowedAuthors[0].uuid
+
+    if (!author) {
+      await interaction.reply({
+        content: 'Choisis le personnage auteur avec l’option `auteur` de `/resume`.',
+        ephemeral: true,
+      })
+      return
+    }
+
+    if (!allowedAuthors.some(actor => actor.uuid === author)) {
+      await interaction.reply({ content: 'Cet auteur n’est pas autorisé.', ephemeral: true })
+      return
+    }
+
     const id = `pf2-resume:${interaction.id}`
-    const defaultAuthor = allowedAuthors.some(actor => actor.uuid === session.shortSummaryAuthor) ? session.shortSummaryAuthor! : allowedAuthors[0].uuid
-    this.pendingShortSummaries.set(id, { sessionId: session.id, sessionNumber: session.sessionNumber, title: session.title, summary: session.shortSummary, requesterId: interaction.user.id, defaultAuthor, allowedAuthors })
-    const modal = new ModalBuilder().setCustomId(id).setTitle(`Résumé court — séance ${session.sessionNumber}`)
-    modal.addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder().setCustomId('title').setLabel('Titre de la séance').setStyle(TextInputStyle.Short).setMaxLength(120).setRequired(false).setValue(session.title.slice(0, 120))))
-    modal.addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder().setCustomId('shortSummary').setLabel('Résumé court').setStyle(TextInputStyle.Paragraph).setMaxLength(2000).setRequired(false).setValue(session.shortSummary.slice(0, 2000))))
+    const pending = {
+      sessionId: session.id,
+      sessionNumber: session.sessionNumber,
+      requesterId: interaction.user.id,
+      selectedAuthor: author,
+      allowedAuthors,
+    }
+    this.pendingShortSummaries.set(id, pending)
+    await this.showShortSummaryModal(interaction, id, pending, author)
+  }
+
+  private async showShortSummaryModal(
+    interaction: ChatInputCommandInteraction,
+    customId: string,
+    pending: {
+      sessionId: string
+      sessionNumber: number
+      requesterId: string
+      selectedAuthor: string
+      allowedAuthors: Array<{ uuid: string; name: string }>
+    },
+    author: string,
+  ): Promise<void> {
+    const [current, sessions] = await Promise.all([
+      this.persistence.getSession(pending.sessionId),
+      this.persistence.listSessions(),
+    ])
+
+    if (!current) {
+      await interaction.reply({ content: 'Séance introuvable.', ephemeral: true })
+      return
+    }
+
+    const authorEntry = pending.allowedAuthors.find(actor => actor.uuid === author)
+    if (!authorEntry) {
+      await interaction.reply({ content: 'Auteur invalide.', ephemeral: true })
+      return
+    }
+
+    const reward = shortSummaryRewardForSession(author, current, sessions)
+    const authorName = authorEntry.name.replace(/\s*\([^()]+\)\s*$/, '').trim()
+    const modal = new ModalBuilder()
+      .setCustomId(customId)
+      .setTitle(`Résumé #${pending.sessionNumber} — ${authorName}`.slice(0, 45))
+
+    const titleInput = new TextInputBuilder()
+      .setCustomId('title')
+      .setLabel('Titre')
+      .setStyle(TextInputStyle.Short)
+      .setMaxLength(120)
+      .setRequired(true)
+      .setValue((current.title || `Séance ${current.sessionNumber}`).slice(0, 120))
+
+    const dateInput = new TextInputBuilder()
+      .setCustomId('date')
+      .setLabel('Date jouée')
+      .setStyle(TextInputStyle.Short)
+      .setMaxLength(10)
+      .setRequired(true)
+      .setValue(current.date || this.realDate())
+
+    const levelInput = new TextInputBuilder()
+      .setCustomId('levelAtStart')
+      .setLabel('Niveau du personnage au début de la séance')
+      .setStyle(TextInputStyle.Short)
+      .setMaxLength(40)
+      .setRequired(false)
+      .setValue(`Niveau ${reward.levelAtStart} — bonus ${reward.xp} XP`)
+
+    const summaryInput = new TextInputBuilder()
+      .setCustomId('shortSummary')
+      .setLabel('Résumé court')
+      .setStyle(TextInputStyle.Paragraph)
+      .setMaxLength(1550)
+      .setRequired(false)
+
+    if (current.shortSummary) summaryInput.setValue(current.shortSummary.slice(0, 1550))
+
+    modal.addComponents(
+      new ActionRowBuilder<TextInputBuilder>().addComponents(titleInput),
+      new ActionRowBuilder<TextInputBuilder>().addComponents(dateInput),
+      new ActionRowBuilder<TextInputBuilder>().addComponents(levelInput),
+      new ActionRowBuilder<TextInputBuilder>().addComponents(summaryInput),
+    )
+
     await interaction.showModal(modal)
   }
 
-  private async saveShortSummary(interaction: Pick<ModalSubmitInteraction | StringSelectMenuInteraction, 'reply' | 'user'>, pending: { sessionId: string; sessionNumber: number; title: string; summary: string; requesterId: string; defaultAuthor: string; allowedAuthors: Array<{ uuid: string; name: string }> }, author: string): Promise<void> {
-    const current = await this.persistence.getSession(pending.sessionId)
-    if (interaction.user.id !== pending.requesterId || !current || !pending.allowedAuthors.some(actor => actor.uuid === author)) { await interaction.reply({ content: 'Séance, demandeur ou auteur invalide.', ephemeral: true }); return }
-    const candidate = { ...current, title: pending.title, shortSummary: pending.summary, shortSummaryAuthor: author }
-    if (this.discord) {
-      const length = await this.discord.resumeMessageLength(candidate)
-      if (length > 2000) { await interaction.reply({ content: `Le message Discord final ferait ${length} caractères ; réduis le titre ou le résumé pour rester sous la limite Discord de 2 000 caractères.`, ephemeral: true }); return }
+  private async saveShortSummary(
+    interaction: Pick<ModalSubmitInteraction, 'reply' | 'user'>,
+    pending: {
+      sessionId: string
+      sessionNumber: number
+      requesterId: string
+      selectedAuthor: string
+      allowedAuthors: Array<{ uuid: string; name: string }>
+    },
+    author: string,
+    values: { title: string; date: string; summary: string },
+  ): Promise<boolean> {
+    const [current, sessions] = await Promise.all([
+      this.persistence.getSession(pending.sessionId),
+      this.persistence.listSessions(),
+    ])
+
+    if (
+      interaction.user.id !== pending.requesterId ||
+      !current ||
+      !pending.allowedAuthors.some(actor => actor.uuid === author)
+    ) {
+      await interaction.reply({ content: 'Séance, demandeur ou auteur invalide.', ephemeral: true })
+      return false
     }
-    const updated = await this.persistence.updateSession(pending.sessionId, { title: pending.title, shortSummary: pending.summary, shortSummaryAuthor: author })
-    if (!updated) { await interaction.reply({ content: 'Séance introuvable.', ephemeral: true }); return }
-    if (updated.published && this.discord) {
-      const sync = await this.discord.synchronizeResumeShortSummary(updated)
-      if (sync.status !== 'created' && sync.status !== 'updated') {
-        await this.persistence.updateSession(pending.sessionId, { title: current.title, shortSummary: current.shortSummary, shortSummaryAuthor: current.shortSummaryAuthor })
-        await interaction.reply({ content: sync.reason ?? 'Discord n’a pas confirmé la mise à jour du résumé.', ephemeral: true }); return
-      }
-      if (sync.messageId) await this.persistence.saveSessionDiscordMessageId(updated.id, sync.messageId)
+
+    const reward = shortSummaryRewardForSession(author, current, sessions)
+    const shortSummaryXp = values.summary ? reward.xp : 0
+    const candidate = {
+      ...current,
+      title: values.title,
+      date: values.date,
+      shortSummary: values.summary,
+      shortSummaryAuthor: author,
+      shortSummaryXp,
     }
+
+    const finalLength = this.discord
+      ? await this.discord.resumeMessageLength(candidate)
+      : 0
+
+    const updated = await this.persistence.updateSession(pending.sessionId, {
+      title: values.title,
+      date: values.date,
+      shortSummary: values.summary,
+      shortSummaryAuthor: author,
+      shortSummaryXp,
+    })
+
+    if (!updated) {
+      await interaction.reply({ content: 'Séance introuvable.', ephemeral: true })
+      return false
+    }
+
     const authorName = pending.allowedAuthors.find(actor => actor.uuid === author)?.name ?? author
-    await interaction.reply({ content: `Résumé court de la séance ${pending.sessionNumber} mis à jour pour ${authorName}.`, ephemeral: true })
+    let syncNote = ''
+
+    if (updated.published && this.discord) {
+      if (finalLength > 2000) {
+        syncNote =
+          ` Déjà publiée, mais le message Discord final ferait ${finalLength}/2000 caractères : ` +
+          'raccourcis le résumé avant de republier.'
+      } else {
+        let sync: DiscordResumeSync
+        try {
+          sync = await this.discord.synchronizeResumeShortSummary(updated)
+        } catch (error) {
+          sync = {
+            status: 'failed',
+            reason: error instanceof Error ? error.message : 'erreur inattendue',
+          }
+        }
+
+        if (sync.status === 'created' || sync.status === 'updated') {
+          if (sync.messageId) {
+            await this.persistence.saveSessionDiscordMessageId(updated.id, sync.messageId)
+          }
+        } else {
+          syncNote =
+            ` Résumé enregistré, mais Discord n’a pas été synchronisé : ${sync.reason ?? 'raison inconnue'}.`
+        }
+      }
+    }
+
+    await interaction.reply({
+      content:
+        `Résumé court de la séance ${pending.sessionNumber} mis à jour — auteur : ${authorName}. ` +
+        `Niveau du personnage au début de la séance : ${reward.levelAtStart}; bonus : ${shortSummaryXp} XP.` +
+        syncNote,
+      components: [this.resumeActionsRow(updated.id, updated.sessionNumber, pending.requesterId)],
+      ephemeral: true,
+    })
+    return true
   }
 
-  private isAdmin(interaction: ChatInputCommandInteraction): boolean {
+  private resumeActionsRow(
+    sessionId: string,
+    sessionNumber: number,
+    requesterId: string,
+  ): ActionRowBuilder<ButtonBuilder> {
+    const row = new ActionRowBuilder<ButtonBuilder>()
+
+    if (this.mediaWiki?.enabled()) {
+      row.addComponents(
+        new ButtonBuilder()
+          .setStyle(ButtonStyle.Link)
+          .setLabel('Voir la fiche')
+          .setURL(this.mediaWiki.sessionsPageUrl(sessionNumber)),
+      )
+    }
+
+    for (const [id, pending] of this.pendingResumePublications) {
+      if (Date.now() - pending.createdAt > 6 * 60 * 60 * 1000) {
+        this.pendingResumePublications.delete(id)
+      }
+    }
+
+    const customId = `pf2-resume-publish:${Date.now().toString(36)}:${Math.random().toString(36).slice(2, 10)}`
+    this.pendingResumePublications.set(customId, { sessionId, requesterId, createdAt: Date.now() })
+    row.addComponents(
+      new ButtonBuilder()
+        .setCustomId(customId)
+        .setStyle(ButtonStyle.Success)
+        .setLabel('Publier'),
+    )
+
+    return row
+  }
+
+  private resumeWikiComponents(sessionNumber: number): ActionRowBuilder<ButtonBuilder>[] {
+    if (!this.mediaWiki?.enabled()) return []
+    return [
+      new ActionRowBuilder<ButtonBuilder>().addComponents(
+        new ButtonBuilder()
+          .setStyle(ButtonStyle.Link)
+          .setLabel('Voir la fiche')
+          .setURL(this.mediaWiki.sessionsPageUrl(sessionNumber)),
+      ),
+    ]
+  }
+
+  private async summaryAuthors(
+    interaction: Pick<ChatInputCommandInteraction, 'user' | 'memberPermissions'> | Pick<AutocompleteInteraction, 'user' | 'memberPermissions'>,
+    preferCache = false,
+  ): Promise<Array<{ uuid: string; name: string }>> {
+    let names: Map<string, string>
+
+    if (preferCache) {
+      const cached = await this.persistence.readFoundryActorCache()
+      names = cached.length
+        ? new Map(cached.map(actor => [actor.uuid, actor.name]))
+        : await this.actorNames()
+    } else {
+      names = await this.actorNames()
+    }
+
+    const allActors = [...names.entries()]
+      .filter(([, name]) => /^\S(?:.*\S)?\s+\([^()]+\)$/u.test(name))
+      .map(([uuid, name]) => ({ uuid, name }))
+      .sort((a, b) => a.name.localeCompare(b.name, 'fr'))
+
+    return this.isAdmin(interaction)
+      ? allActors
+      : allActors.filter(actor => this.discordId(this.playerName(actor.name)) === interaction.user.id)
+  }
+
+  private isAdmin(interaction: Pick<ChatInputCommandInteraction, 'user' | 'memberPermissions'> | Pick<AutocompleteInteraction, 'user' | 'memberPermissions'>): boolean {
     const configured = (process.env['DISCORD_ADMIN_USER_IDS'] ?? '').split(',').map(value => value.trim()).filter(Boolean)
     return configured.includes(interaction.user.id) || Boolean(interaction.memberPermissions?.has(PermissionFlagsBits.ManageGuild))
   }

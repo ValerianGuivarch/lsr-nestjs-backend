@@ -25,7 +25,11 @@ describe('DiscordService summary synchronization', () => {
   })
 
   function serviceWith(channel: Record<string, unknown>): DiscordService {
-    const service = new DiscordService(new DiscordCommandsService({ listSessions: jest.fn(), readFoundryActorCache: jest.fn().mockResolvedValue([]), saveFoundryActorCache: jest.fn() } as never, { listActors: jest.fn() } as never), { listActors: jest.fn().mockResolvedValue([]) } as never)
+    const service = new DiscordService(
+      new DiscordCommandsService({ listSessions: jest.fn(), readFoundryActorCache: jest.fn().mockResolvedValue([]), saveFoundryActorCache: jest.fn() } as never, { listActors: jest.fn() } as never),
+      { listActors: jest.fn().mockResolvedValue([]) } as never,
+      { listSessions: jest.fn().mockResolvedValue([]) } as never,
+    )
     const guild = {
       channels: { fetch: jest.fn().mockResolvedValue(undefined), cache: { find: (predicate: (value: unknown) => boolean) => predicate(channel) ? channel : undefined } },
       members: { fetch: jest.fn().mockResolvedValue(new Collection([['member', { user: { id: 'user-1', username: 'valerian0276' } }]])) }
@@ -65,7 +69,57 @@ describe('DiscordService summary synchronization', () => {
   })
 
   it('does nothing for an empty short summary', async () => {
-    const service = new DiscordService(new DiscordCommandsService({ listSessions: jest.fn(), readFoundryActorCache: jest.fn().mockResolvedValue([]), saveFoundryActorCache: jest.fn() } as never, { listActors: jest.fn() } as never), { listActors: jest.fn().mockResolvedValue([]) } as never)
+    const service = new DiscordService(
+      new DiscordCommandsService({ listSessions: jest.fn(), readFoundryActorCache: jest.fn().mockResolvedValue([]), saveFoundryActorCache: jest.fn() } as never, { listActors: jest.fn() } as never),
+      { listActors: jest.fn().mockResolvedValue([]) } as never,
+      { listSessions: jest.fn().mockResolvedValue([]) } as never,
+    )
     await expect(service.synchronizeResumeShortSummary(resume({ shortSummary: '' }))).resolves.toEqual({ status: 'skipped', reason: 'Résumé court vide.' })
   })
+
+  it('publishes a draft through the same shared publication path used by the wiki and Discord button', async () => {
+    let stored = resume({ published: false, discordMessageId: null, shortSummaryXp: 30 })
+    const persistence = {
+      getSession: jest.fn().mockImplementation(async () => ({ ...stored })),
+      listSessions: jest.fn().mockImplementation(async () => [{ ...stored }]),
+      updateSession: jest.fn().mockImplementation(async (_id: string, input: Partial<Pf2Session>) => {
+        stored = { ...stored, ...input }
+        return { ...stored }
+      }),
+      saveSessionDiscordMessageId: jest.fn().mockImplementation(async (_id: string, messageId: string) => {
+        stored = { ...stored, discordMessageId: messageId }
+      }),
+    }
+    const service = new DiscordService(
+      {} as never,
+      {} as never,
+      persistence as never,
+    )
+    jest.spyOn(service, 'synchronizeResumeShortSummary').mockResolvedValue({ status: 'created', messageId: 'published-message' })
+
+    const result = await service.setResumePublication('resume-1', true)
+
+    expect(result.resume.published).toBe(true)
+    expect(result.discord).toEqual({ status: 'created', messageId: 'published-message' })
+    expect(persistence.saveSessionDiscordMessageId).toHaveBeenCalledWith('resume-1', 'published-message')
+  })
+
+  it('rolls publication back when Discord refuses the summary', async () => {
+    let stored = resume({ published: false, discordMessageId: null, shortSummaryXp: 30 })
+    const persistence = {
+      getSession: jest.fn().mockImplementation(async () => ({ ...stored })),
+      listSessions: jest.fn().mockImplementation(async () => [{ ...stored }]),
+      updateSession: jest.fn().mockImplementation(async (_id: string, input: Partial<Pf2Session>) => {
+        stored = { ...stored, ...input }
+        return { ...stored }
+      }),
+      saveSessionDiscordMessageId: jest.fn(),
+    }
+    const service = new DiscordService({} as never, {} as never, persistence as never)
+    jest.spyOn(service, 'synchronizeResumeShortSummary').mockResolvedValue({ status: 'failed', reason: 'Trop long.' })
+
+    await expect(service.setResumePublication('resume-1', true)).rejects.toThrow('Trop long.')
+    expect(stored.published).toBe(false)
+  })
+
 })

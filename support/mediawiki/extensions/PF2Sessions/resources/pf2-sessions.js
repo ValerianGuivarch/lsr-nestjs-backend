@@ -7,7 +7,7 @@
     }
 
     var api = new mw.Api();
-    var state = { sessions: [], actors: [], canEdit: false };
+    var state = { sessions: [], actors: [], scenarios: [], canContribute: false, canAdmin: false };
 
     function escapeHtml( value ) {
         var div = document.createElement( 'div' );
@@ -49,9 +49,9 @@
             return link.dataset.wikiTitle;
         } );
 
-        var api = new mw.Api();
+        var wikiApi = new mw.Api();
 
-        api.get( {
+        wikiApi.get( {
             action: 'query',
             format: 'json',
             formatversion: 2,
@@ -78,7 +78,7 @@
                     link.href = mw.util.getUrl( title );
                     link.title = 'Lire le résumé long';
                 } else {
-                    if ( !state.canEdit ) {
+                    if ( !state.canContribute ) {
                         link.remove();
                         return;
                     }
@@ -107,6 +107,13 @@
             : escapeHtml( value );
     }
 
+    function summaryRewardText( level, xp ) {
+        if ( level === null || level === undefined || level === '' ) {
+            return '—';
+        }
+        return 'Niveau ' + level + ' (+' + Number( xp || 0 ) + ' XP)';
+    }
+
     function actorName( uuid ) {
         var actor = state.actors.find( function ( item ) { return item.uuid === uuid; } );
         return actor ? actor.name : uuid;
@@ -119,6 +126,95 @@
                 ( actor.uuid === selected ? ' selected' : '' ) + '>' +
                 escapeHtml( actor.name ) + '</option>';
         } ).join( '' );
+    }
+
+    function scenarioById( id ) {
+        return state.scenarios.find( function ( item ) { return item.id === id; } ) || null;
+    }
+
+    function scenarioDisplayName( scenario ) {
+        if ( !scenario ) {
+            return '';
+        }
+        return scenario.campaignTitle
+            ? scenario.campaignTitle + ' — ' + scenario.title
+            : scenario.title;
+    }
+
+    function scenarioOptions( selected ) {
+        var groups = new Map();
+        state.scenarios.forEach( function ( scenario ) {
+            var label = scenario.campaignTitle || 'Aventures indépendantes';
+            var list = groups.get( label ) || [];
+            list.push( scenario );
+            groups.set( label, list );
+        } );
+
+        var html = '<option value="">— Choisir —</option>';
+        Array.from( groups.entries() ).forEach( function ( pair ) {
+            html += '<optgroup label="' + escapeHtml( pair[ 0 ] ) + '">';
+            pair[ 1 ].forEach( function ( scenario ) {
+                html += '<option value="' + escapeHtml( scenario.id ) + '"' +
+                    ( scenario.id === selected ? ' selected' : '' ) + '>' +
+                    escapeHtml( scenario.title ) + '</option>';
+            } );
+            html += '</optgroup>';
+        } );
+        return html;
+    }
+
+    function componentOptions( scenarioId, selected ) {
+        var scenario = scenarioById( scenarioId );
+        var components = scenario && Array.isArray( scenario.playableComponents )
+            ? scenario.playableComponents
+            : [];
+        var html = '<option value="">Scénario entier / non précisé</option>';
+        components.forEach( function ( component ) {
+            html += '<option value="' + escapeHtml( component.id ) + '"' +
+                ( component.id === selected ? ' selected' : '' ) + '>' +
+                escapeHtml( component.title ) + '</option>';
+        } );
+        return html;
+    }
+
+    function sessionContentHtml( session ) {
+        var links = Array.isArray( session.content ) ? session.content : [];
+        if ( !links.length ) {
+            return '';
+        }
+        var badges = links.map( function ( link ) {
+            var scenario = scenarioById( link.scenarioId );
+            var component = scenario && Array.isArray( scenario.playableComponents )
+                ? scenario.playableComponents.find( function ( item ) { return item.id === link.componentId; } )
+                : null;
+            var label = scenario ? scenarioDisplayName( scenario ) : link.scenarioId;
+            if ( component ) {
+                label += ' · ' + component.title;
+            }
+            return '<span class="pf2-session-content-badge">' + escapeHtml( label ) + '</span>';
+        } ).join( '' );
+        return '<div class="pf2-session-content"><div class="pf2-label">Campagne / mission</div><div class="pf2-session-content-badges">' + badges + '</div></div>';
+    }
+
+    function contentRowHtml( link ) {
+        link = link || { scenarioId: '', componentId: null };
+        var scenario = scenarioById( link.scenarioId );
+        var hasComponents = scenario && Array.isArray( scenario.playableComponents ) && scenario.playableComponents.length > 0;
+        return '<div class="pf2-session-content-row" data-content-row>' +
+            '<label>Campagne / scénario<select data-content-scenario>' + scenarioOptions( link.scenarioId || '' ) + '</select></label>' +
+            '<label>Composant<select data-content-component' + ( hasComponents ? '' : ' disabled' ) + '>' + componentOptions( link.scenarioId || '', link.componentId || '' ) + '</select></label>' +
+            '<button class="pf2-button pf2-danger" type="button" data-content-remove>Retirer</button>' +
+            '</div>';
+    }
+
+    function contentEditorHtml( session ) {
+        var links = Array.isArray( session.content ) ? session.content : [];
+        return '<fieldset class="pf2-session-content-editor">' +
+            '<legend>Campagne / scénario joué</legend>' +
+            '<p>Cette liaison alimente le journal MJ. Le bouton d’association est réservé aux administrateurs du wiki.</p>' +
+            '<div data-content-rows>' + links.map( contentRowHtml ).join( '' ) + '</div>' +
+            '<button class="pf2-button" type="button" data-content-add>+ Associer à une campagne</button>' +
+            '</fieldset>';
     }
 
     function completeness( session ) {
@@ -146,14 +242,16 @@
         var completenessBadge = missing.length
             ? '<span class="pf2-status pf2-status-warning">' + missing.length + ' champ' + ( missing.length > 1 ? 's' : '' ) + ' à renseigner</span>'
             : '<span class="pf2-status pf2-status-complete">Complet</span>';
-        var editButtons = state.canEdit
+        var contributorButtons = state.canContribute
             ? '<button class="pf2-button pf2-primary" data-edit>Modifier</button>' +
               '<button class="pf2-button" data-publication="' + ( isPublished ? '0' : '1' ) + '">' +
-              ( isPublished ? 'Remettre en brouillon' : 'Publier' ) + '</button>' +
-              '<button class="pf2-button pf2-danger" data-delete>Supprimer</button>'
+              ( isPublished ? 'Remettre en brouillon' : 'Publier' ) + '</button>'
+            : '';
+        var adminButtons = state.canAdmin
+            ? '<button class="pf2-button pf2-danger" data-delete>Supprimer</button>'
             : '';
 
-        return '<article class="pf2-session" data-session-id="' + escapeHtml( session.id ) + '">' +
+        return '<article id="pf2-session-' + escapeHtml( session.sessionNumber ) + '" class="pf2-session" data-session-id="' + escapeHtml( session.id ) + '">' +
             '<div class="pf2-session-top"><div>' +
             '<div class="pf2-session-kicker">Séance ' + escapeHtml( session.sessionNumber ) + ' · ' + escapeHtml( formatDate( session.date ) ) + '</div>' +
             '<h2 class="pf2-session-title">' + escapeHtml( session.title || ( 'Séance ' + session.sessionNumber ) ) + '</h2>' +
@@ -161,17 +259,18 @@
             '<div class="pf2-session-meta">' + ( participants || '<span class="pf2-missing">Participants non renseignés</span>' ) + '</div>' +
             '<div class="pf2-session-meta">En jeu : ' + displayValue( session.inGameStartDate ) +
                 ( session.inGameEndDate ? ' → ' + escapeHtml( session.inGameEndDate ) : ' → <span class="pf2-missing">Non renseigné</span>' ) + '</div>' +
+            sessionContentHtml( session ) +
             '<dl class="pf2-session-facts">' +
               '<div><dt>XP séance</dt><dd>' + escapeHtml( session.sessionXp ) + '</dd></div>' +
               '<div><dt>Auteur résumé court</dt><dd>' + displayValue( session.shortSummaryAuthorName ) + '</dd></div>' +
-              '<div><dt>XP résumé court</dt><dd>' + escapeHtml( session.shortSummaryXp ) + '</dd></div>' +
+              '<div><dt>Niveau début — résumé court</dt><dd>' + escapeHtml( summaryRewardText( session.shortSummaryLevelAtStart, session.shortSummaryXp ) ) + '</dd></div>' +
               '<div><dt>Auteur résumé long</dt><dd>' + displayValue( session.longSummaryAuthorName ) + '</dd></div>' +
-              '<div><dt>XP résumé long</dt><dd>' + escapeHtml( session.longSummaryXp ) + '</dd></div>' +
+              '<div><dt>Niveau début — résumé long</dt><dd>' + escapeHtml( summaryRewardText( session.longSummaryLevelAtStart, session.longSummaryXp ) ) + '</dd></div>' +
             '</dl>' +
             '<div class="pf2-session-summary"><div class="pf2-label">Résumé court</div>' +
               ( session.shortSummary ? escapeHtml( session.shortSummary ).replace( /\n/g, '<br>' ) : '<span class="pf2-missing">Non renseigné</span>' ) +
             '</div>' +
-            '<div class="pf2-session-actions">' + editButtons + '</div>' +
+            '<div class="pf2-session-actions">' + contributorButtons + adminButtons + '</div>' +
             '</article>';
     }
 
@@ -189,13 +288,14 @@
               '<label>Date en jeu — début<input name="inGameStartDate" type="date" value="' + escapeHtml( session.inGameStartDate || '' ) + '"></label>' +
               '<label>Date en jeu — fin<input name="inGameEndDate" type="date" value="' + escapeHtml( session.inGameEndDate || '' ) + '"></label>' +
               '<label>XP séance<input name="sessionXp" type="number" min="0" step="1" value="' + escapeHtml( session.sessionXp ) + '"></label>' +
-              '<label>XP résumé court<input name="shortSummaryXp" type="number" min="0" step="1" value="' + escapeHtml( session.shortSummaryXp ) + '"></label>' +
               '<label>Auteur résumé court<select name="shortSummaryAuthor">' + selectOptions( session.shortSummaryAuthor, true ) + '</select></label>' +
-              '<label>XP résumé long<input name="longSummaryXp" type="number" min="0" step="1" value="' + escapeHtml( session.longSummaryXp ) + '"></label>' +
+              '<label>Niveau du personnage au début de la séance — résumé court<input data-short-summary-level type="text" readonly value="' + escapeHtml( summaryRewardText( session.shortSummaryLevelAtStart, session.shortSummaryXp ) ) + '"></label>' +
               '<label>Auteur résumé long<select name="longSummaryAuthor">' + selectOptions( session.longSummaryAuthor, true ) + '</select></label>' +
+              '<label>Niveau du personnage au début de la séance — résumé long<input data-long-summary-level type="text" readonly value="' + escapeHtml( summaryRewardText( session.longSummaryLevelAtStart, session.longSummaryXp ) ) + '"></label>' +
             '</div>' +
+            ( state.canAdmin ? contentEditorHtml( session ) : '' ) +
             '<fieldset class="pf2-participants"><legend>Participants</legend><div class="pf2-participant-grid">' + participantChecks + '</div></fieldset>' +
-            '<label class="pf2-summary-editor">Résumé court<textarea name="shortSummary" maxlength="1400" rows="12">' + escapeHtml( session.shortSummary || '' ) + '</textarea><small><span data-count>' + escapeHtml( ( session.shortSummary || '' ).length ) + '</span>/1400</small></label>' +
+            '<label class="pf2-summary-editor">Résumé court<textarea name="shortSummary" maxlength="1550" rows="12">' + escapeHtml( session.shortSummary || '' ) + '</textarea><small><span data-count>' + escapeHtml( ( session.shortSummary || '' ).length ) + '</span>/1550</small></label>' +
             '<div class="pf2-editor-actions"><button class="pf2-button pf2-primary" type="submit">Enregistrer</button><button class="pf2-button" type="button" data-cancel>Annuler</button></div>' +
         '</form>';
     }
@@ -224,12 +324,61 @@
         }
     }
 
+    function bindContentRow( row ) {
+        var scenarioSelect = row.querySelector( '[data-content-scenario]' );
+        var componentSelect = row.querySelector( '[data-content-component]' );
+        var remove = row.querySelector( '[data-content-remove]' );
+
+        scenarioSelect.addEventListener( 'change', function () {
+            var scenario = scenarioById( scenarioSelect.value );
+            var hasComponents = scenario && Array.isArray( scenario.playableComponents ) && scenario.playableComponents.length > 0;
+            componentSelect.innerHTML = componentOptions( scenarioSelect.value, '' );
+            componentSelect.disabled = !hasComponents;
+        } );
+
+        remove.addEventListener( 'click', function () {
+            row.remove();
+        } );
+    }
+
     function bindEditor( article, session ) {
         var form = article.querySelector( '[data-editor]' );
         var textarea = form.querySelector( 'textarea[name="shortSummary"]' );
         var count = form.querySelector( '[data-count]' );
+        var contentRows = form.querySelector( '[data-content-rows]' );
+        var addContent = form.querySelector( '[data-content-add]' );
+        var shortAuthor = form.querySelector( 'select[name="shortSummaryAuthor"]' );
+        var longAuthor = form.querySelector( 'select[name="longSummaryAuthor"]' );
+        var shortLevel = form.querySelector( '[data-short-summary-level]' );
+        var longLevel = form.querySelector( '[data-long-summary-level]' );
+
         textarea.addEventListener( 'input', function () { count.textContent = textarea.value.length; } );
+        shortAuthor.addEventListener( 'change', function () {
+            if ( shortAuthor.value !== ( session.shortSummaryAuthor || '' ) ) {
+                shortLevel.value = shortAuthor.value ? 'Calculé à l’enregistrement' : '—';
+            } else {
+                shortLevel.value = summaryRewardText( session.shortSummaryLevelAtStart, session.shortSummaryXp );
+            }
+        } );
+        longAuthor.addEventListener( 'change', function () {
+            if ( longAuthor.value !== ( session.longSummaryAuthor || '' ) ) {
+                longLevel.value = longAuthor.value ? 'Calculé à l’enregistrement' : '—';
+            } else {
+                longLevel.value = summaryRewardText( session.longSummaryLevelAtStart, session.longSummaryXp );
+            }
+        } );
         form.querySelector( '[data-cancel]' ).addEventListener( 'click', load );
+        if ( contentRows && addContent ) {
+            form.querySelectorAll( '[data-content-row]' ).forEach( bindContentRow );
+            addContent.addEventListener( 'click', function () {
+                var wrapper = document.createElement( 'div' );
+                wrapper.innerHTML = contentRowHtml( null );
+                var row = wrapper.firstElementChild;
+                contentRows.appendChild( row );
+                bindContentRow( row );
+            } );
+        }
+
         form.addEventListener( 'submit', function ( event ) {
             event.preventDefault();
             var data = new FormData( form );
@@ -240,13 +389,21 @@
                 inGameStartDate: String( data.get( 'inGameStartDate' ) || '' ),
                 inGameEndDate: String( data.get( 'inGameEndDate' ) || '' ),
                 sessionXp: Number( data.get( 'sessionXp' ) || 0 ),
-                shortSummaryXp: Number( data.get( 'shortSummaryXp' ) || 0 ),
-                longSummaryXp: Number( data.get( 'longSummaryXp' ) || 0 ),
                 shortSummaryAuthor: String( data.get( 'shortSummaryAuthor' ) || '' ) || null,
                 longSummaryAuthor: String( data.get( 'longSummaryAuthor' ) || '' ) || null,
                 shortSummary: String( data.get( 'shortSummary' ) || '' ).trim(),
                 participants: Array.from( form.querySelectorAll( '[data-participant]:checked' ) ).map( function ( item ) { return item.value; } )
             };
+            if ( state.canAdmin ) {
+                payload.content = Array.from( form.querySelectorAll( '[data-content-row]' ) ).map( function ( row ) {
+                    var scenarioId = row.querySelector( '[data-content-scenario]' ).value;
+                    var componentId = row.querySelector( '[data-content-component]' ).value;
+                    return scenarioId ? {
+                        scenarioId: scenarioId,
+                        componentId: componentId || null
+                    } : null;
+                } ).filter( Boolean );
+            }
             saveSession( session.id, payload, form );
         } );
     }
@@ -268,8 +425,14 @@
             format: 'json',
             id: id,
             payload: JSON.stringify( payload )
-        } ).then( function () {
-            mw.notify( 'Séance enregistrée.', { type: 'success' } );
+        } ).then( function ( response ) {
+            var result = response && response.pf2 ? response.pf2 : {};
+            var discord = result.discord || {};
+            if ( discord.status === 'failed' ) {
+                mw.notify( 'Séance enregistrée en base, mais Discord n’a pas été synchronisé : ' + ( discord.reason || 'raison inconnue' ), { type: 'warn' } );
+            } else {
+                mw.notify( 'Séance enregistrée.', { type: 'success' } );
+            }
             return load();
         } ).catch( function ( error ) {
             mw.notify( 'Impossible d’enregistrer la séance : ' + error, { type: 'error' } );
@@ -313,9 +476,13 @@
             var payload = data.pf2sessions || {};
             state.sessions = payload.sessions || [];
             state.actors = payload.actors || [];
-            state.canEdit = payload.canEdit === true ||
-                payload.canEdit === 1 ||
-                payload.canEdit === '1';
+            state.scenarios = payload.scenarios || [];
+            state.canContribute = payload.canContribute === true ||
+                payload.canContribute === 1 ||
+                payload.canContribute === '1';
+            state.canAdmin = payload.canAdmin === true ||
+                payload.canAdmin === 1 ||
+                payload.canAdmin === '1';
             render();
         } ).catch( function () {
             root.innerHTML = '<div class="errorbox">Impossible de charger les séances.</div>';

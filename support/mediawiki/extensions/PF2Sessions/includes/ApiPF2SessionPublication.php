@@ -5,8 +5,8 @@ use MediaWiki\MediaWikiServices;
 class ApiPF2SessionPublication extends ApiBase {
     public function execute() {
         $user = $this->getUser();
-        if ( !$user->isRegistered() || !$user->isAllowed( 'delete' ) ) {
-            $this->dieWithError( 'Vous devez être administrateur pour modifier la publication.' );
+        if ( !$user->isRegistered() ) {
+            $this->dieWithError( 'Vous devez être connecté pour modifier la publication.' );
         }
 
         $params = $this->extractRequestParams();
@@ -18,20 +18,30 @@ class ApiPF2SessionPublication extends ApiBase {
         $base = rtrim( $config->get( 'PF2SessionsApiBase' ), '/' );
         $url = $base . '/wiki/sessions/' . rawurlencode( $params['id'] ) . '/publication';
 
-        $request = MediaWikiServices::getInstance()->getHttpRequestFactory()->create(
-            $url,
-            [
-                'method' => 'POST',
-                'timeout' => 15,
-                'postData' => json_encode( [ 'published' => $params['published'] === '1' ] ),
-                'headers' => [ 'Content-Type' => 'application/json' ],
-            ],
-            __METHOD__
-        );
-        $status = $request->execute();
-        $data = json_decode( $request->getContent(), true );
-        if ( !$status->isOK() ) {
-            $message = is_array( $data ) && isset( $data['message'] ) ? $data['message'] : 'Impossible de modifier la publication.';
+        try {
+            $client = MediaWikiServices::getInstance()
+                ->getHttpRequestFactory()
+                ->createGuzzleClient();
+            $response = $client->request(
+                'POST',
+                $url,
+                [
+                    'timeout' => 15,
+                    'http_errors' => false,
+                    'headers' => [ 'Accept' => 'application/json' ],
+                    'json' => [ 'published' => $params['published'] === '1' ],
+                ]
+            );
+        } catch ( Throwable $error ) {
+            $this->dieWithError( 'Impossible de joindre l’API PF2.' );
+        }
+
+        $status = $response->getStatusCode();
+        $data = json_decode( (string)$response->getBody(), true );
+        if ( $status < 200 || $status >= 300 ) {
+            $message = is_array( $data ) && isset( $data['message'] )
+                ? $data['message']
+                : 'Impossible de modifier la publication.';
             $this->dieWithError( $message );
         }
         if ( !is_array( $data ) ) {

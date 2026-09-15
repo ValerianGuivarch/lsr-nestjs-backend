@@ -1061,17 +1061,64 @@ export class Pf2PersistenceService implements OnModuleInit {
 
     const scenarioIds = [...new Set(links.map((link) => link.scenarioId))]
     if (!scenarioIds.length) return links
-    const placeholders = scenarioIds.map(() => '?').join(', ')
-    const rows = await this.dataSource.query(`SELECT id, payload FROM pf2_catalogue_entity WHERE entity_kind = 'entry' AND id IN (${placeholders})`, scenarioIds) as Array<{ id: string; payload: string }>
-    const entries = new Map(rows.map((row) => [row.id, this.objectJson(row.payload)]))
-    for (const scenarioId of scenarioIds) if (!entries.has(scenarioId)) throw new Error(`Scénario de séance introuvable : ${scenarioId}.`)
+
+    // Une séance peut référencer :
+    // - une entrée de catalogue classique ;
+    // - une partie jouable imbriquée dans une campagne
+    //   (ex. extinction-curse-volume-1).
+    //
+    // Le wiki expose ces parties comme scénarios sélectionnables :
+    // la validation SQLite doit donc résoudre exactement les mêmes IDs.
+    const rows = await this.dataSource.query(
+      "SELECT id, payload FROM pf2_catalogue_entity WHERE entity_kind = 'entry'",
+    ) as Array<{ id: string; payload: string }>
+
+    const entries = new Map<string, Record<string, unknown>>()
+
+    for (const row of rows) {
+      const entry = this.objectJson(row.payload)
+
+      // L'entrée principale reste prioritaire si jamais un ID était dupliqué.
+      entries.set(row.id, entry)
+
+      const parts = Array.isArray(entry.parts) ? entry.parts : []
+      for (const rawPart of parts) {
+        if (!this.isObject(rawPart)) continue
+
+        const partId = typeof rawPart.id === 'string'
+          ? rawPart.id.trim()
+          : ''
+
+        if (!partId || entries.has(partId)) continue
+        entries.set(partId, rawPart)
+      }
+    }
+
+    for (const scenarioId of scenarioIds) {
+      if (!entries.has(scenarioId)) {
+        throw new Error(`Scénario de séance introuvable : ${scenarioId}.`)
+      }
+    }
+
     for (const link of links) {
       if (!link.componentId) continue
+
       const entry = entries.get(link.scenarioId) ?? {}
-      const components = Array.isArray(entry.playableComponents) ? entry.playableComponents : []
-      const exists = components.some((raw) => this.isObject(raw) && raw.id === link.componentId)
-      if (!exists) throw new Error(`Composant jouable introuvable pour ${link.scenarioId} : ${link.componentId}.`)
+      const components = Array.isArray(entry.playableComponents)
+        ? entry.playableComponents
+        : []
+
+      const exists = components.some(
+        (raw) => this.isObject(raw) && raw.id === link.componentId,
+      )
+
+      if (!exists) {
+        throw new Error(
+          `Composant jouable introuvable pour ${link.scenarioId} : ${link.componentId}.`,
+        )
+      }
     }
+
     return links
   }
 

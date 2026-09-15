@@ -11,7 +11,6 @@ import './pf2-mj/globals.css'
 import CharacterPage from './jdr/CharacterPage'
 import JdrSelectionPage from './jdr/JdrSelectionPage'
 import Diary from './diary/Diary'
-import Resumes from './resumes/Resumes'
 
 const queryClient = new QueryClient()
 
@@ -42,8 +41,6 @@ root.render(
         <Route path="/jdr" element={<JdrSelectionPage />} />
         <Route path="/jdr/:jdrSlug/characters/:characterSlug" element={<CharacterPage />} />
         <Route path="/diary" element={<Diary />} />
-        <Route path="/resumes" element={<Resumes />} />
-        <Route path="/résumés" element={<Resumes />} />
 
         {/* Old bookmarked/QR-coded links to a character sheet */}
         <Route path="/:jdrSlug/:characterSlug" element={<LegacyCharacterRedirect />} />

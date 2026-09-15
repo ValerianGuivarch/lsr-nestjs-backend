@@ -1,4 +1,4 @@
-import { forwardRef, Inject, Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common'
+import { BadGatewayException, forwardRef, Inject, Injectable, Logger, NotFoundException, OnModuleDestroy, OnModuleInit } from '@nestjs/common'
 import {
   Client,
   ChannelType,
@@ -13,8 +13,9 @@ import {
   ThreadAutoArchiveDuration,
 } from 'discord.js'
 import { DiscordCommandsService } from './DiscordCommandsService'
-import type { Pf2Session } from '../pf2-storage/Pf2PersistenceService'
+import { Pf2PersistenceService, type Pf2Session, type Pf2SessionInput } from '../pf2-storage/Pf2PersistenceService'
 import { FoundryRelayService } from '../foundry/FoundryRelayService'
+import { buildSummaryRewardLedger } from '../pf2-sessions/Pf2CareerXp'
 
 export type DiscordResumeSync = {
   status: 'skipped' | 'created' | 'updated' | 'failed'
@@ -81,6 +82,7 @@ export class DiscordService implements OnModuleInit, OnModuleDestroy {
   constructor(
     @Inject(forwardRef(() => DiscordCommandsService)) private readonly commands: DiscordCommandsService,
     private readonly foundry: FoundryRelayService,
+    private readonly persistence: Pf2PersistenceService,
   ) {}
 
   async onModuleInit(): Promise<void> {
@@ -166,6 +168,65 @@ export class DiscordService implements OnModuleInit, OnModuleDestroy {
   async onModuleDestroy(): Promise<void> {
     this.client?.destroy()
     this.client = null
+  }
+
+  /** Source unique de vérité pour publier / remettre en brouillon une séance. */
+  async setResumePublication(
+    id: string,
+    published: boolean,
+  ): Promise<{ resume: Pf2Session; discord: DiscordResumeSync }> {
+    const current = await this.persistence.getSession(id)
+    if (!current) throw new NotFoundException('Séance introuvable.')
+
+    const saved = await this.persistence.updateSession(id, { published })
+    if (!saved) throw new NotFoundException('Séance introuvable.')
+
+    await this.normalizeSummaryBonuses()
+    const resume = await this.persistence.getSession(id)
+    if (!resume) throw new NotFoundException('Séance introuvable.')
+
+    if (!published) {
+      return {
+        resume,
+        discord: { status: 'skipped', reason: 'Séance remise en brouillon.' },
+      }
+    }
+
+    const discord = await this.synchronizeResumeShortSummary(resume)
+
+    if (
+      resume.shortSummary.trim() &&
+      discord.status !== 'created' &&
+      discord.status !== 'updated'
+    ) {
+      await this.persistence.updateSession(id, { published: current.published })
+      throw new BadGatewayException(
+        discord.reason ?? 'Discord n’a pas confirmé la publication.',
+      )
+    }
+
+    if (discord.messageId) {
+      await this.persistence.saveSessionDiscordMessageId(id, discord.messageId)
+      resume.discordMessageId = discord.messageId
+    }
+
+    return { resume, discord }
+  }
+
+  private async normalizeSummaryBonuses(): Promise<void> {
+    const sessions = await this.persistence.listSessions()
+    const ledger = buildSummaryRewardLedger(sessions)
+
+    for (const session of sessions) {
+      const rewards = ledger.get(session.id)
+      const shortSummaryXp = rewards?.short.xp ?? 0
+      const longSummaryXp = rewards?.long.xp ?? 0
+      const update: Pf2SessionInput = {}
+
+      if (session.shortSummaryXp !== shortSummaryXp) update.shortSummaryXp = shortSummaryXp
+      if (session.longSummaryXp !== longSummaryXp) update.longSummaryXp = longSummaryXp
+      if (Object.keys(update).length) await this.persistence.updateSession(session.id, update)
+    }
   }
 
   async exportFullGuild(): Promise<DiscordFullExport> {

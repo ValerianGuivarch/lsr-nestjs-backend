@@ -20,6 +20,7 @@ import {
   DiscordResumeSync,
   DiscordService,
 } from '../discord/DiscordService'
+import { buildSummaryRewardLedger } from './Pf2CareerXp'
 
 @Controller([
   'api/pf2-mj/sessions',
@@ -33,7 +34,8 @@ export class Pf2SessionsController {
   ) {}
 
   @Get()
-  list(): Promise<Pf2Session[]> {
+  async list(): Promise<Pf2Session[]> {
+    await this.normalizeSummaryBonuses()
     return this.persistence.listSessions()
   }
 
@@ -61,10 +63,12 @@ export class Pf2SessionsController {
     discord: DiscordResumeSync
   }> {
     try {
-      const resume =
-        await this.persistence.createSession(
-          { ...(body ?? {}), published: false },
-        )
+      const input = { ...(body ?? {}), published: false } as Pf2SessionInput
+      delete (input as Record<string, unknown>).shortSummaryXp
+      delete (input as Record<string, unknown>).longSummaryXp
+      const created = await this.persistence.createSession(input)
+      await this.normalizeSummaryBonuses()
+      const resume = await this.persistence.getSession(created.id) ?? created
 
       return {
         resume,
@@ -89,17 +93,18 @@ export class Pf2SessionsController {
     discord: DiscordResumeSync
   }> {
     try {
-      const session =
-        await this.persistence.updateSession(
-          id,
-          body ?? {},
-        )
+      const input = { ...(body ?? {}) } as Pf2SessionInput
+      delete (input as Record<string, unknown>).shortSummaryXp
+      delete (input as Record<string, unknown>).longSummaryXp
+      const saved = await this.persistence.updateSession(id, input)
 
-      if (!session) {
-        throw new NotFoundException(
-          'Séance introuvable.',
-        )
+      if (!saved) {
+        throw new NotFoundException('Séance introuvable.')
       }
+
+      await this.normalizeSummaryBonuses()
+      const session = await this.persistence.getSession(id)
+      if (!session) throw new NotFoundException('Séance introuvable.')
 
       return {
         resume: session,
@@ -124,7 +129,13 @@ export class Pf2SessionsController {
 
   @Post(':id/publish')
   async publish(@Param('id') id: string, @Body() body: Pf2SessionInput): Promise<{ resume: Pf2Session; discord: DiscordResumeSync }> {
-    const resume = await this.persistence.updateSession(id, { ...(body ?? {}), published: true })
+    const input = { ...(body ?? {}), published: true } as Pf2SessionInput
+    delete (input as Record<string, unknown>).shortSummaryXp
+    delete (input as Record<string, unknown>).longSummaryXp
+    const saved = await this.persistence.updateSession(id, input)
+    if (!saved) throw new NotFoundException('Séance introuvable.')
+    await this.normalizeSummaryBonuses()
+    const resume = await this.persistence.getSession(id)
     if (!resume) throw new NotFoundException('Séance introuvable.')
     const discord = await this.synchronizeDiscord(resume)
     if (resume.shortSummary.trim() && discord.status !== 'created' && discord.status !== 'updated') {
@@ -158,6 +169,7 @@ export class Pf2SessionsController {
        * Suppression SQLite.
        */
       await this.persistence.deleteSession(id)
+      await this.normalizeSummaryBonuses()
 
       return {
         success: true,
@@ -177,6 +189,24 @@ export class Pf2SessionsController {
           : 'Impossible de supprimer la séance.',
         HttpStatus.BAD_REQUEST,
       )
+    }
+  }
+
+  private async normalizeSummaryBonuses(): Promise<void> {
+    const sessions = await this.persistence.listSessions()
+    const ledger = buildSummaryRewardLedger(sessions)
+
+    for (const session of sessions) {
+      const rewards = ledger.get(session.id)
+      const shortSummaryXp = rewards?.short.xp ?? 0
+      const longSummaryXp = rewards?.long.xp ?? 0
+      const update: Pf2SessionInput = {}
+
+      if (session.shortSummaryXp !== shortSummaryXp) update.shortSummaryXp = shortSummaryXp
+      if (session.longSummaryXp !== longSummaryXp) update.longSummaryXp = longSummaryXp
+      if (Object.keys(update).length) {
+        await this.persistence.updateSession(session.id, update)
+      }
     }
   }
 
