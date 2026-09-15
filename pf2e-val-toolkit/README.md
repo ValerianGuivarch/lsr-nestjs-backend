@@ -1114,3 +1114,11 @@ remet la numérotation à plat.
 - Foundry V14 : offsets via `Scene.shiftX/shiftY`, fond via
   `Scene.firstLevel.background.src`;
 - scènes importées toujours totalement visibles.
+
+## v0.35.0 — Tokens PNJ et PF2e HUD
+
+- Les noms des PNJ sont affichés pour tous et les doublons d’un même Actor
+  reçoivent un suffixe (`Gobelin A`, `Gobelin B`, etc.) sans écraser les noms
+  personnalisés.
+- PF2e HUD peut trier localement la sidebar Compétences et masquer les doublons
+  de « Se souvenir » lorsque son action générique native est disponible.

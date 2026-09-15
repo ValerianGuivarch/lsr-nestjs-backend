@@ -17,12 +17,22 @@ import {
   initCareerXp,
   registerCareerXpSettings
 } from "./career-xp/index.js";
+import {
+  initTokenNaming,
+  registerTokenNamingSettings
+} from "./token-naming.js";
+import {
+  initPf2eHudIntegration,
+  registerPf2eHudIntegrationSettings
+} from "./pf2e-hud-integration.js";
 
 Hooks.once("init", () => {
   console.log("PF2e Val Toolkit | Initialisation");
   applyTranslationOverrides();
   registerGuidedActionSettings();
   registerCareerXpSettings();
+  registerTokenNamingSettings();
+  registerPf2eHudIntegrationSettings();
   registerPortraitTokenSyncSettings();
   registerMapLibrarySettings();
 });
@@ -39,6 +49,8 @@ Hooks.once("ready", () => {
   initPatches();
   initGeneralActionsBrowser();
   initCareerXp();
+  initTokenNaming();
+  initPf2eHudIntegration();
   initPortraitTokenSync();
   initMapLibrary();
 
