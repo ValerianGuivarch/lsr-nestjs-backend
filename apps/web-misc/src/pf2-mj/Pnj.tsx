@@ -18,8 +18,12 @@ type Pnj={
   importance?:"Majeure"|"Récurrente"|"Secondaire"|"Figurant";
   statut?:"Actif"|"Disparu"|"Mort"|"Inconnu";
   notes?:string;
+  /** Dérivé de pf2_scenario_npc côté API, jamais édité séparément. */
+  transverse?:boolean;
+  scenarioLinks?:ScenarioLink[];
 };
-type ScenarioLink={scenarioId:string;role?:string|null;importance?:string|null;titleFr?:string;titleOriginal?:string;nom?:string};
+type ScenarioLink={scenarioId:string;role?:string|null;importance?:string|null;titleFr?:string;titleOriginal?:string;nom?:string;name?:string;campaignId?:string|null};
+type ScenarioFilter={id:string;name:string;parentId?:string|null;campaignId?:string|null;kind?:string|null;order?:number|null};
 type WikiCharacterProfile={wikiPageTitle:string};
 
 type Draft={
@@ -132,6 +136,10 @@ export default function PnjPage({initialSelectedId}:{initialSelectedId?:string})
   const [tag,setTag]=useState("");
   const [lieu,setLieu]=useState("");
   const [importance,setImportance]=useState("");
+  const [scenarioFilter,setScenarioFilter]=useState("");
+  const [hideSpecific,setHideSpecific]=useState(true);
+  const [campaignFilters,setCampaignFilters]=useState<ScenarioFilter[]>([]);
+  const [scenarioFilters,setScenarioFilters]=useState<ScenarioFilter[]>([]);
   const [selected,setSelected]=useState<Pnj|null>(null);
   const [selectedScenarios,setSelectedScenarios]=useState<ScenarioLink[]>([]);
   const [selectedWikiProfile,setSelectedWikiProfile]=useState<WikiCharacterProfile|null|undefined>(undefined);
@@ -148,8 +156,15 @@ export default function PnjPage({initialSelectedId}:{initialSelectedId?:string})
 
   const load=async()=>{
     const get=async(url:string)=>{const response=await fetch(url,{cache:"no-store"});if(!response.ok)throw new Error(`Impossible de charger ${url}.`);const payload=await response.json();return Array.isArray(payload)?payload:payload.items??[]};
-    const [people,factions,lieux,regions,events]=await Promise.all([get("/apil7r/pf2-mj/pnj"),get("/apil7r/pf2-mj/factions"),get("/apil7r/pf2-mj/lieux"),get("/apil7r/pf2-mj/regions"),get("/apil7r/pf2-mj/evenements")]);
-    setPnjs(people);setFactionRefs(factions);setLieuRefs(lieux);setRegionRefs(regions);setEventRefs(events);
+    const directory=await fetch("/apil7r/pf2-mj/pnj-directory",{cache:"no-store"});
+    if(!directory.ok)throw new Error("Impossible de charger le répertoire des PNJ.");
+    const directoryPayload=await directory.json() as {items?:Pnj[];filters?:{campaigns?:ScenarioFilter[];scenarios?:ScenarioFilter[]}};
+    const [factions,lieux,regions,events]=await Promise.all([get("/apil7r/pf2-mj/factions"),get("/apil7r/pf2-mj/lieux"),get("/apil7r/pf2-mj/regions"),get("/apil7r/pf2-mj/evenements")]);
+    setPnjs(Array.isArray(directoryPayload.items)?directoryPayload.items:[]);
+    setCampaignFilters(Array.isArray(directoryPayload.filters?.campaigns)?directoryPayload.filters.campaigns:[]);
+    setScenarioFilters(Array.isArray(directoryPayload.filters?.scenarios)?directoryPayload.filters.scenarios:[]);
+    setFactionRefs(factions);setLieuRefs(lieux);setRegionRefs(regions);setEventRefs(events);
+    return Array.isArray(directoryPayload.items)?directoryPayload.items:[];
   };
 
   useEffect(()=>{load().catch(error=>setMessage(error instanceof Error?error.message:String(error)))},[]);
@@ -158,7 +173,7 @@ export default function PnjPage({initialSelectedId}:{initialSelectedId?:string})
     if(!selected){setSelectedScenarios([]);return}
     fetch(`/apil7r/pf2-mj/pnj/${encodeURIComponent(selected.id)}/scenarios`,{cache:"no-store"})
       .then(response=>response.ok?response.json():[])
-      .then(value=>setSelectedScenarios(Array.isArray(value)?value:[]))
+      .then(value=>setSelectedScenarios(Array.isArray(value)?value:selected.scenarioLinks??[]))
       .catch(()=>setSelectedScenarios([]));
   },[selected]);
   useEffect(()=>{
@@ -182,6 +197,8 @@ export default function PnjPage({initialSelectedId}:{initialSelectedId?:string})
 
   const filtered=useMemo(()=>{
     const q=normalize(query.trim());
+    const selectedCampaign=scenarioFilter.startsWith("campaign:")?scenarioFilter.slice("campaign:".length):"";
+    const selectedScenario=scenarioFilter.startsWith("scenario:")?scenarioFilter.slice("scenario:".length):"";
     return pnjs.filter(p=>{
       const haystack=normalize([
         p.nom,p.description,p.role,p.roleplay,p.notes,
@@ -191,9 +208,12 @@ export default function PnjPage({initialSelectedId}:{initialSelectedId?:string})
         &&(!faction||p.factions.some(value=>value.faction_id===faction))
         &&(!tag||p.tags.includes(tag))
         &&(!lieu||(p.lieux??[]).includes(lieu))
-        &&(!importance||p.importance===importance);
+        &&(!importance||p.importance===importance)
+        &&(!selectedCampaign||p.scenarioLinks?.some(link=>link.campaignId===selectedCampaign))
+        &&(!selectedScenario||p.scenarioLinks?.some(link=>link.scenarioId===selectedScenario))
+        &&(Boolean(selectedCampaign||selectedScenario)||!hideSpecific||p.transverse!==false);
     }).sort((a,b)=>a.nom.localeCompare(b.nom,"fr"));
-  },[pnjs,query,faction,tag,lieu,importance]);
+  },[pnjs,query,faction,tag,lieu,importance,scenarioFilter,hideSpecific]);
 
   const openCreate=()=>{
     setEditingId(null);
@@ -286,8 +306,7 @@ export default function PnjPage({initialSelectedId}:{initialSelectedId?:string})
       const response=await fetch("/apil7r/pf2-mj/pnj",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"upsert",item})});
       const payload=await response.json().catch(()=>null);
       if(!response.ok)throw new Error(payload?.error||`Erreur HTTP ${response.status}`);
-      const items:Pnj[]=payload.items??[];
-      setPnjs(items);
+      const items=await load();
       const saved=items.find(p=>p.id===item.id)??item;
       setDraft(emptyDraft);
       setEditingId(null);
@@ -341,7 +360,7 @@ export default function PnjPage({initialSelectedId}:{initialSelectedId?:string})
       const response=await fetch("/apil7r/pf2-mj/pnj",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"import",items})});
       const payload=await response.json().catch(()=>null);
       if(!response.ok)throw new Error(payload?.error||`Erreur HTTP ${response.status}`);
-      setPnjs(payload.items);
+      await load();
       setShowImport(false);
       setImportText("");
       const summary=payload.summary;
@@ -406,7 +425,7 @@ export default function PnjPage({initialSelectedId}:{initialSelectedId?:string})
 
   return <main className="pnj-page">
     <style>{`
-      .pnj-page{max-width:1500px;margin:0 auto;padding:24px;color:#252a25}.pnj-toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px}.pnj-toolbar h1{font-size:24px;margin:0 auto 0 0}.pnj-button{border:1px solid #c9b98f;background:#fffaf0;color:#6e5319;border-radius:8px;padding:9px 12px;font:inherit;font-weight:700;cursor:pointer}.pnj-button.primary{background:#765719;color:#fff;border-color:#765719}.pnj-button:disabled{opacity:.55;cursor:not-allowed}.pnj-message{min-height:22px;margin:4px 0 12px;color:#5d614f;font-size:13px}.pnj-filters{display:grid;grid-template-columns:minmax(220px,2fr) repeat(4,minmax(130px,1fr));gap:9px;margin-bottom:18px}.pnj-filters input,.pnj-filters select,.pnj-form input,.pnj-form select,.pnj-form textarea{width:100%;box-sizing:border-box;border:1px solid #d6cdbd;border-radius:8px;background:#fffdf8;padding:9px 10px;font:inherit;color:inherit}.pnj-count{font-size:12px;color:#71756c;margin:0 0 8px}.pnj-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px}.pnj-card{position:relative;border:1px solid #ded7cb;background:#fffdf9;border-radius:12px;overflow:hidden;min-width:0}.pnj-card-media{position:relative}.pnj-card-image{display:block;width:100%;aspect-ratio:4/3;object-fit:cover;background:#ece8df;cursor:pointer;border:0;padding:0}.pnj-card-image.placeholder{display:grid;place-items:center;font-size:42px;color:#8c877d}.pnj-copy-portrait{position:absolute;top:8px;right:8px;display:inline-flex;align-items:center;gap:5px;border:1px solid rgba(255,255,255,.75);border-radius:999px;background:rgba(25,27,25,.78);color:#fff;padding:6px 8px;cursor:pointer;font:700 10px/1 system-ui;backdrop-filter:blur(4px)}.pnj-copy-portrait svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}.pnj-copy-portrait.copied{background:rgba(39,105,61,.92)}.pnj-copy-portrait.detail{position:static;margin:0 0 10px}.pnj-copy-portrait:focus-visible{outline:3px solid #eadfbf;outline-offset:2px}.pnj-card-body{padding:12px}.pnj-card h2{font-size:17px;margin:0 0 4px}.pnj-role{font-size:12px;color:#777269;margin-bottom:8px}.pnj-description{font-size:13px;line-height:1.45;margin:0 0 9px}.pnj-chips{display:flex;gap:5px;flex-wrap:wrap}.pnj-chip{border:1px solid #d9cfba;border-radius:999px;padding:3px 7px;font-size:10px;background:#faf5e9}.pnj-chip.faction{border-color:#bca66e;background:#fff7de}.pnj-card-body{cursor:pointer}.pnj-card-body:hover h2{text-decoration:underline;text-underline-offset:2px}.pnj-dialog-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.35);display:grid;place-items:center;padding:20px;z-index:50}.pnj-dialog{width:min(780px,100%);max-height:90vh;overflow:auto;background:#fffdf9;border-radius:14px;padding:18px}.pnj-dialog-head{display:flex;align-items:center;gap:8px;margin-bottom:12px}.pnj-dialog-head h2{margin:0 auto 0 0}.pnj-form{display:grid;grid-template-columns:1fr 1fr;gap:10px}.pnj-form .wide{grid-column:1/-1}.pnj-form label{font-size:12px;font-weight:700;display:grid;gap:5px}.pnj-dialog-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:14px}.pnj-detail-media{float:left;width:180px;max-width:38%;margin:0 14px 10px 0}.pnj-detail-image{display:block;width:100%;aspect-ratio:1;object-fit:cover;border-radius:10px;margin-bottom:7px}.pnj-detail dl{display:grid;grid-template-columns:110px 1fr;gap:7px 10px;font-size:13px}.pnj-detail dt{font-weight:700;color:#6b675f}.pnj-detail dd{margin:0}.pnj-empty{padding:40px;text-align:center;border:1px dashed #cfc7b8;border-radius:12px;color:#777}.pnj-hint{font-size:11px;color:#777;margin-top:6px}.pnj-import-textarea{width:100%;box-sizing:border-box;min-height:420px;resize:vertical;border:1px solid #cfc6b6;border-radius:9px;background:#fffdf8;padding:12px;font:12px/1.5 ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono",monospace;color:#252a25;tab-size:2}.pnj-import-help{font-size:12px;line-height:1.45;color:#6d6b65;margin:0 0 10px}.pnj-import-tools{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 0}.pnj-image-drop{grid-column:1/-1;min-height:190px;border:2px dashed #c9b98f;border-radius:12px;background:#faf7f0;display:grid;place-items:center;text-align:center;padding:14px;outline:none;cursor:pointer}.pnj-image-drop:focus{border-color:#765719;box-shadow:0 0 0 3px #eadfbf}.pnj-image-drop img{width:150px;height:150px;object-fit:cover;border-radius:9px;border:1px solid #d6cdbd}.pnj-image-drop strong{display:block;margin:7px 0 3px}.pnj-image-drop small{display:block;color:#6d6b65}.pnj-image-tools{grid-column:1/-1;display:flex;gap:8px;align-items:center;flex-wrap:wrap}.pnj-image-tools input{flex:1;min-width:220px}.pnj-file-choice input{display:none}@media(max-width:900px){.pnj-filters{grid-template-columns:1fr 1fr}.pnj-filters input{grid-column:1/-1}}@media(max-width:560px){.pnj-page{padding:14px}.pnj-filters,.pnj-form{grid-template-columns:1fr}.pnj-form .wide{grid-column:auto}.pnj-grid{grid-template-columns:1fr 1fr}.pnj-toolbar h1{width:100%;margin-bottom:4px}}@media(max-width:390px){.pnj-grid{grid-template-columns:1fr}}
+      .pnj-page{max-width:1500px;margin:0 auto;padding:24px;color:#252a25}.pnj-toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px}.pnj-toolbar h1{font-size:24px;margin:0 auto 0 0}.pnj-button{border:1px solid #c9b98f;background:#fffaf0;color:#6e5319;border-radius:8px;padding:9px 12px;font:inherit;font-weight:700;cursor:pointer}.pnj-button.primary{background:#765719;color:#fff;border-color:#765719}.pnj-button:disabled{opacity:.55;cursor:not-allowed}.pnj-message{min-height:22px;margin:4px 0 12px;color:#5d614f;font-size:13px}.pnj-filters{display:grid;grid-template-columns:minmax(220px,2fr) repeat(5,minmax(130px,1fr));gap:9px;margin-bottom:10px}.pnj-filters input,.pnj-filters select,.pnj-form input,.pnj-form select,.pnj-form textarea{width:100%;box-sizing:border-box;border:1px solid #d6cdbd;border-radius:8px;background:#fffdf8;padding:9px 10px;font:inherit;color:inherit}.pnj-scope-toggle{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:700;color:#5e5b54;padding:4px 0;margin:0 0 12px}.pnj-scope-toggle input{width:auto}.pnj-count{font-size:12px;color:#71756c;margin:0 0 8px}.pnj-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px}.pnj-card{position:relative;border:1px solid #ded7cb;background:#fffdf9;border-radius:12px;overflow:hidden;min-width:0}.pnj-card-media{position:relative}.pnj-card-image{display:block;width:100%;aspect-ratio:4/3;object-fit:cover;background:#ece8df;cursor:pointer;border:0;padding:0}.pnj-card-image.placeholder{display:grid;place-items:center;font-size:42px;color:#8c877d}.pnj-copy-portrait{position:absolute;top:8px;right:8px;display:inline-flex;align-items:center;gap:5px;border:1px solid rgba(255,255,255,.75);border-radius:999px;background:rgba(25,27,25,.78);color:#fff;padding:6px 8px;cursor:pointer;font:700 10px/1 system-ui;backdrop-filter:blur(4px)}.pnj-copy-portrait svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}.pnj-copy-portrait.copied{background:rgba(39,105,61,.92)}.pnj-copy-portrait.detail{position:static;margin:0 0 10px}.pnj-copy-portrait:focus-visible{outline:3px solid #eadfbf;outline-offset:2px}.pnj-card-body{padding:12px}.pnj-card h2{font-size:17px;margin:0 0 4px}.pnj-role{font-size:12px;color:#777269;margin-bottom:8px}.pnj-description{font-size:13px;line-height:1.45;margin:0 0 9px}.pnj-chips{display:flex;gap:5px;flex-wrap:wrap}.pnj-chip{border:1px solid #d9cfba;border-radius:999px;padding:3px 7px;font-size:10px;background:#faf5e9}.pnj-chip.faction{border-color:#bca66e;background:#fff7de}.pnj-chip.scope{border-color:#77a37b;background:#eff8ed;color:#285a2d}.pnj-chip.specific{border-color:#ba9760;background:#fff4de;color:#765719}.pnj-card-body{cursor:pointer}.pnj-card-body:hover h2{text-decoration:underline;text-underline-offset:2px}.pnj-dialog-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.35);display:grid;place-items:center;padding:20px;z-index:50}.pnj-dialog{width:min(780px,100%);max-height:90vh;overflow:auto;background:#fffdf9;border-radius:14px;padding:18px}.pnj-dialog-head{display:flex;align-items:center;gap:8px;margin-bottom:12px}.pnj-dialog-head h2{margin:0 auto 0 0}.pnj-form{display:grid;grid-template-columns:1fr 1fr;gap:10px}.pnj-form .wide{grid-column:1/-1}.pnj-form label{font-size:12px;font-weight:700;display:grid;gap:5px}.pnj-dialog-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:14px}.pnj-detail-media{float:left;width:180px;max-width:38%;margin:0 14px 10px 0}.pnj-detail-image{display:block;width:100%;aspect-ratio:1;object-fit:cover;border-radius:10px;margin-bottom:7px}.pnj-detail dl{display:grid;grid-template-columns:110px 1fr;gap:7px 10px;font-size:13px}.pnj-detail dt{font-weight:700;color:#6b675f}.pnj-detail dd{margin:0}.pnj-empty{padding:40px;text-align:center;border:1px dashed #cfc7b8;border-radius:12px;color:#777}.pnj-hint{font-size:11px;color:#777;margin-top:6px}.pnj-import-textarea{width:100%;box-sizing:border-box;min-height:420px;resize:vertical;border:1px solid #cfc6b6;border-radius:9px;background:#fffdf8;padding:12px;font:12px/1.5 ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono",monospace;color:#252a25;tab-size:2}.pnj-import-help{font-size:12px;line-height:1.45;color:#6d6b65;margin:0 0 10px}.pnj-import-tools{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 0}.pnj-image-drop{grid-column:1/-1;min-height:190px;border:2px dashed #c9b98f;border-radius:12px;background:#faf7f0;display:grid;place-items:center;text-align:center;padding:14px;outline:none;cursor:pointer}.pnj-image-drop:focus{border-color:#765719;box-shadow:0 0 0 3px #eadfbf}.pnj-image-drop img{width:150px;height:150px;object-fit:cover;border-radius:9px;border:1px solid #d6cdbd}.pnj-image-drop strong{display:block;margin:7px 0 3px}.pnj-image-drop small{display:block;color:#6d6b65}.pnj-image-tools{grid-column:1/-1;display:flex;gap:8px;align-items:center;flex-wrap:wrap}.pnj-image-tools input{flex:1;min-width:220px}.pnj-file-choice input{display:none}@media(max-width:1000px){.pnj-filters{grid-template-columns:1fr 1fr 1fr}.pnj-filters input{grid-column:1/-1}}@media(max-width:560px){.pnj-page{padding:14px}.pnj-filters,.pnj-form{grid-template-columns:1fr}.pnj-form .wide{grid-column:auto}.pnj-grid{grid-template-columns:1fr 1fr}.pnj-toolbar h1{width:100%;margin-bottom:4px}}@media(max-width:390px){.pnj-grid{grid-template-columns:1fr}}
     `}</style>
 
     <div className="pnj-toolbar">
@@ -425,7 +444,13 @@ export default function PnjPage({initialSelectedId}:{initialSelectedId?:string})
       <select value={tag} onChange={e=>setTag(e.target.value)}><option value="">Tous les tags</option>{tags.map(v=><option key={v}>{v}</option>)}</select>
       <select value={lieu} onChange={e=>setLieu(e.target.value)}><option value="">Tous les lieux</option>{lieux.map(v=><option key={v}>{v}</option>)}</select>
       <select value={importance} onChange={e=>setImportance(e.target.value)}><option value="">Toute importance</option><option>Majeure</option><option>Récurrente</option><option>Secondaire</option><option>Figurant</option></select>
+      <select value={scenarioFilter} onChange={e=>setScenarioFilter(e.target.value)}>
+        <option value="">Toutes les portées</option>
+        {campaignFilters.length>0&&<optgroup label="Campagnes">{campaignFilters.map(item=><option key={`campaign:${item.id}`} value={`campaign:${item.id}`}>{item.name}</option>)}</optgroup>}
+        {scenarioFilters.length>0&&<optgroup label="Scénarios">{scenarioFilters.map(item=><option key={`scenario:${item.id}`} value={`scenario:${item.id}`}>{item.name}</option>)}</optgroup>}
+      </select>
     </section>
+    <label className="pnj-scope-toggle"><input type="checkbox" checked={hideSpecific} onChange={e=>setHideSpecific(e.target.checked)} disabled={Boolean(scenarioFilter)}/>Masquer les PNJ spécifiques aux scénarios{scenarioFilter?" (filtre de portée actif)":""}</label>
 
     <p className="pnj-count">{filtered.length} PNJ affiché{filtered.length>1?"s":""} sur {pnjs.length} · portrait = fiche · icône ⧉ = copier</p>
 
@@ -439,7 +464,7 @@ export default function PnjPage({initialSelectedId}:{initialSelectedId?:string})
           <h2>{p.nom}</h2>
           <div className="pnj-role">{[p.role,p.importance,p.statut].filter(Boolean).join(" · ")}</div>
           <p className="pnj-description">{p.description||"Aucune description."}</p>
-          <div className="pnj-chips">{p.factions.slice(0,3).map(v=><span className="pnj-chip faction" key={v.faction_id}>{factionNames.get(v.faction_id)??v.faction_id}{v.role?` — ${v.role}`:""}</span>)}{p.tags.slice(0,4).map(v=><span className="pnj-chip" key={v}>{v}</span>)}</div>
+          <div className="pnj-chips"><span className={`pnj-chip ${p.transverse!==false?"scope":"specific"}`}>{p.transverse!==false?"Transverse":`${p.scenarioLinks?.length??0} scénario${(p.scenarioLinks?.length??0)>1?"s":""}`}</span>{p.factions.slice(0,3).map(v=><span className="pnj-chip faction" key={v.faction_id}>{factionNames.get(v.faction_id)??v.faction_id}{v.role?` — ${v.role}`:""}</span>)}{p.tags.slice(0,4).map(v=><span className="pnj-chip" key={v}>{v}</span>)}</div>
         </div>
       </article>)}
     </section>:<div className="pnj-empty">Aucun PNJ ne correspond aux filtres.</div>}
@@ -505,7 +530,8 @@ export default function PnjPage({initialSelectedId}:{initialSelectedId?:string})
           <dt>Importance</dt><dd>{selected.importance||"—"}</dd>
           <dt>Statut</dt><dd>{selected.statut||"—"}</dd>
           <dt>Notes MJ</dt><dd>{selected.notes||"—"}</dd>
-          <dt>Scénarios liés</dt><dd>{selectedScenarios.length?selectedScenarios.map(link=>`${link.titleFr||link.titleOriginal||link.nom||link.scenarioId}${link.role?` — ${link.role}`:""}`).join(" · "):"—"}</dd>
+          <dt>Portée</dt><dd>{selected.transverse!==false?"Transverse — aucun scénario spécifique.":"Spécifique à au moins un scénario."}</dd>
+          <dt>Scénarios liés</dt><dd>{selectedScenarios.length?selectedScenarios.map(link=>`${link.name||link.titleFr||link.titleOriginal||link.nom||link.scenarioId}${link.role?` — ${link.role}`:""}`).join(" · "):"—"}</dd>
         </dl>
       </article>
     </div>}

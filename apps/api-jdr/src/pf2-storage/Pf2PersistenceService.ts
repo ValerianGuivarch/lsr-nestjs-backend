@@ -145,6 +145,22 @@ export class Pf2PersistenceService implements OnModuleInit {
     return this.dataSource.query('SELECT scenario_id AS scenarioId, npc_id AS npcId, role, importance, source_page AS sourcePage, notes FROM pf2_scenario_npc WHERE npc_id = ? ORDER BY scenario_id', [npcId]) as Promise<ScenarioNpcLink[]>
   }
 
+  /**
+   * Read scenario links for a PNJ directory in one query.  The association
+   * table remains the single source of truth: callers must not persist a
+   * duplicate "transverse" flag alongside these links.
+   */
+  async listNpcScenarioLinksForNpcs(npcIds: string[]): Promise<ScenarioNpcLink[]> {
+    const ids = [...new Set(npcIds.filter(Boolean))]
+    if (!ids.length) return []
+    const placeholders = ids.map(() => '?').join(',')
+    return this.dataSource.query(
+      `SELECT scenario_id AS scenarioId, npc_id AS npcId, role, importance, source_page AS sourcePage, notes
+       FROM pf2_scenario_npc WHERE npc_id IN (${placeholders}) ORDER BY npc_id, scenario_id`,
+      ids
+    ) as Promise<ScenarioNpcLink[]>
+  }
+
   async replaceScenarioRelations(scenarioId: string, relations: ScenarioRelation[]): Promise<void> {
     await this.dataSource.transaction(async manager => {
       for (const relation of relations) {

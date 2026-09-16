@@ -31,6 +31,11 @@ export class Pf2MjController {
   @Get('pnj/:id/scenarios')
   scenariosForPnj(@Param('id') id: string): Promise<unknown[]> { return this.scenarioPackages.scenariosForNpc(id) }
 
+  @Get('pnj-directory')
+  pnjDirectory(@Query('includeExcluded') includeExcluded?: string): Promise<Record<string, unknown>> {
+    return this.scenarioPackages.pnjDirectory(includeExcluded === 'true')
+  }
+
   @Get('scenarios/:id/npcs')
   npcsForScenario(@Param('id') id: string): Promise<unknown[]> { return this.scenarioPackages.npcsForScenario(id) }
 

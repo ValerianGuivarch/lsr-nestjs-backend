@@ -20,6 +20,7 @@ describe('ScenarioPackageService', () => {
       packages.set(String(input.package.scenarioId), { ...input.package, importedAt: '', updatedAt: '' })
     }),
     listScenarioNpcLinks: jest.fn(async () => []),
+    listNpcScenarioLinksForNpcs: jest.fn(async () => []),
     listScenarioRelations: jest.fn(async () => relations),
     listRecords: jest.fn(async () => []),
     listCatalogueEntries: jest.fn(async () => []),
@@ -55,7 +56,7 @@ describe('ScenarioPackageService', () => {
   it('exposes only playable units in the scenario registry', async () => {
     const service = new ScenarioPackageService(persistence)
 
-    persistence.listCatalogueEntries.mockResolvedValueOnce([
+    persistence.listCatalogueEntries.mockResolvedValue([
       {
         id: 'campaign',
         kind: 'campaign',
@@ -112,6 +113,28 @@ describe('ScenarioPackageService', () => {
         expect.objectContaining({ id: 'campaign-map' })
       ])
     )
+  })
+
+  it('derives transverse PNJs from their explicit scenario links and exposes campaign filters', async () => {
+    const service = new ScenarioPackageService(persistence)
+    persistence.listRecords.mockResolvedValueOnce([
+      { id: 'npc-contact', nom: 'Contact de PJ' },
+      { id: 'npc-module', nom: 'PNJ du module' }
+    ])
+    persistence.listNpcScenarioLinksForNpcs.mockResolvedValueOnce([
+      { npcId: 'npc-module', scenarioId: 'campaign-adventure-1', role: 'Antagoniste', importance: 'Majeure', sourcePage: null, notes: null }
+    ])
+    persistence.listCatalogueEntries.mockResolvedValueOnce([
+      { id: 'campaign', kind: 'campaign', titleFr: 'Campagne', parts: [{ id: 'campaign-adventure-1', kind: 'volume_aventure', titleFr: 'Aventure 1' }] }
+    ])
+    const directory = await service.pnjDirectory()
+    expect(directory).toEqual(expect.objectContaining({
+      items: expect.arrayContaining([
+        expect.objectContaining({ id: 'npc-contact', transverse: true, scenarioLinks: [] }),
+        expect.objectContaining({ id: 'npc-module', transverse: false, scenarioLinks: [expect.objectContaining({ scenarioId: 'campaign-adventure-1', campaignId: 'campaign', name: 'Aventure 1' })] })
+      ]),
+      filters: expect.objectContaining({ campaigns: [{ id: 'campaign', name: 'Campagne' }] })
+    }))
   })
 
   it('stores roleplay for new PNJs and fills only an empty roleplay on existing PNJs', async () => {

@@ -414,6 +414,53 @@ export class ScenarioPackageService {
     const links = await this.persistence.listNpcScenarioLinks(npcId)
     return Promise.all(links.map(async link => ({ ...((await this.persistence.getCatalogueEntity(link.scenarioId)) ?? (await this.persistence.getRecord('scenario', link.scenarioId)) ?? { id: link.scenarioId }), ...link })))
   }
+
+  /**
+   * Directory-oriented PNJ view.  `transverse` is deliberately derived from
+   * pf2_scenario_npc: a PNJ without an explicit scenario relation is usable
+   * across the setting.  This avoids a second mutable truth that could drift
+   * after a package re-import.
+   */
+  async pnjDirectory(includeExcluded = false): Promise<Record<string, unknown>> {
+    const pnjs = await this.persistence.listRecords('pnj', { includeExcluded })
+    const [links, registry, catalogue] = await Promise.all([
+      this.persistence.listNpcScenarioLinksForNpcs(pnjs.map(item => String(item.id))),
+      this.scenarioRegistry(),
+      this.persistence.listCatalogueEntries()
+    ])
+    const linksByNpc = new Map<string, ScenarioNpcLink[]>()
+    for (const link of links) {
+      const current = linksByNpc.get(link.npcId) ?? []
+      current.push(link)
+      linksByNpc.set(link.npcId, current)
+    }
+    const scenarioById = new Map(registry.map(item => [item.id, item]))
+    const title = (value: Record<string, unknown>, fallback: string) => {
+      const candidate = [value.titleFr, value.title, value.name, value.titleOriginal, value.nom]
+        .find(item => typeof item === 'string' && item.trim())
+      return typeof candidate === 'string' ? candidate.trim() : fallback
+    }
+    const campaigns = catalogue
+      .filter(entry => entry.kind === 'campaign' && typeof entry.id === 'string')
+      .map(entry => ({ id: String(entry.id), name: title(entry, String(entry.id)) }))
+    const scenarios = registry.map(item => ({ ...item, campaignId: item.parentId }))
+
+    return {
+      items: pnjs.map(pnj => {
+        const pnjLinks = linksByNpc.get(String(pnj.id)) ?? []
+        return {
+          ...pnj,
+          transverse: pnjLinks.length === 0,
+          scenarioLinks: pnjLinks.map(link => ({
+            ...link,
+            name: scenarioById.get(link.scenarioId)?.name ?? link.scenarioId,
+            campaignId: scenarioById.get(link.scenarioId)?.parentId ?? null
+          }))
+        }
+      }),
+      filters: { campaigns, scenarios }
+    }
+  }
   async npcsForCampaign(campaignId: string): Promise<unknown[]> {
     const scenarios = await this.persistence.listCatalogueEntries()
     const scenarioIds = new Set<string>()
