@@ -72,38 +72,58 @@ async function askConditionOptions(condition) {
   const { isValued, defaultValue } = getConditionValueInfo(condition);
 
   if (!DialogV2?.wait) {
-    const raw = window.prompt(
+    let conditionValue = null;
+
+    if (isValued) {
+      const rawValue = window.prompt(`Valeur de ${condition.name}`, String(defaultValue));
+      if (rawValue === null) return null;
+      conditionValue = Math.max(1, Number.parseInt(rawValue, 10) || defaultValue);
+    }
+
+    const rawDuration = window.prompt(
       `Durée de ${condition.name} : 0 = sans durée, sinon nombre de rounds`,
-      "1"
+      isValued ? "0" : "1"
     );
-    if (raw === null) return null;
-    const rounds = Number.parseInt(raw, 10);
+    if (rawDuration === null) return null;
+
+    const rounds = Number.parseInt(rawDuration, 10);
     return {
       cancelled: false,
       duration: rounds > 0 ? { value: rounds, unit: "rounds", expiry: "turn-start" } : null,
-      conditionValue: isValued ? defaultValue : null
+      conditionValue
     };
   }
+
+  const defaultPreset = isValued ? "none" : "1r";
 
   const result = await DialogV2.wait({
     window: { title: `Appliquer ${condition.name}` },
     content: `
       <form class="pf2e-val-quick-effect-form">
+        ${isValued ? `
+          <div class="form-group pf2e-val-condition-value-row">
+            <label>Valeur</label>
+            <div class="form-fields">
+              <input type="number" name="conditionValue" value="${defaultValue}" min="1" step="1">
+            </div>
+          </div>
+        ` : ""}
+
         <div class="form-group">
-          <label>Durée</label>
+          <label>Durée${isValued ? " (optionnelle)" : ""}</label>
           <div class="form-fields">
             <select name="preset">
-              <option value="none">Sans durée — retrait manuel</option>
-              <option value="1r" selected>1 round</option>
+              <option value="none" ${defaultPreset === "none" ? "selected" : ""}>Sans durée — retrait manuel</option>
+              <option value="1r" ${defaultPreset === "1r" ? "selected" : ""}>1 round</option>
               <option value="3r">3 rounds</option>
               <option value="1m">1 minute</option>
-              <option value="custom">Personnalisée</option>
+              <option value="custom">Personnalisée…</option>
             </select>
           </div>
         </div>
 
-        <div class="form-group">
-          <label>Durée personnalisée</label>
+        <div class="form-group pf2e-val-custom-duration" hidden>
+          <label>Personnalisée</label>
           <div class="form-fields">
             <input type="number" name="customValue" value="1" min="1" step="1">
             <select name="customUnit">
@@ -114,32 +134,48 @@ async function askConditionOptions(condition) {
           </div>
         </div>
 
-        <div class="form-group">
-          <label>Expiration</label>
-          <div class="form-fields">
-            <select name="expiry">
-              <option value="turn-start" selected>Début du tour de la source</option>
-              <option value="turn-end">Fin du tour de la source</option>
-              <option value="round-end">Fin du round</option>
-            </select>
-          </div>
-        </div>
-
-        ${isValued ? `
+        <details class="pf2e-val-quick-effect-advanced">
+          <summary>Options avancées</summary>
           <div class="form-group">
-            <label>Valeur de l'état</label>
+            <label>Expiration</label>
             <div class="form-fields">
-              <input type="number" name="conditionValue" value="${defaultValue}" min="1" step="1">
+              <select name="expiry">
+                <option value="turn-start" selected>Début du tour de la source</option>
+                <option value="turn-end">Fin du tour de la source</option>
+                <option value="round-end">Fin du round</option>
+              </select>
             </div>
           </div>
-        ` : ""}
+        </details>
 
-        <p class="hint">
-          Pour un sort ou une capacité, « début du tour de la source » correspond normalement au lanceur/auteur.
-          La condition PF2e officielle est utilisée ; le Toolkit ne recrée pas sa mécanique.
+        <p class="hint pf2e-val-quick-effect-hint">
+          ${isValued
+            ? "La valeur correspond au rang de la condition (par exemple Étourdi 2). Ajoutez une durée seulement si l'effet qui l'impose en prévoit une."
+            : "La condition PF2e officielle est utilisée. Choisissez simplement sa durée."}
         </p>
       </form>
     `,
+    render: (_event, dialog) => {
+      dialog.element?.classList?.add("pf2e-val-quick-effect-dialog");
+      dialog.setPosition?.({ width: 380 });
+
+      const form = dialog.form ?? dialog.element?.querySelector("form");
+      const preset = form?.elements?.namedItem?.("preset") ?? null;
+      const customRow = form?.querySelector?.(".pf2e-val-custom-duration") ?? null;
+      const advanced = form?.querySelector?.(".pf2e-val-quick-effect-advanced") ?? null;
+
+      const refresh = () => {
+        const value = String(preset?.value ?? defaultPreset);
+        if (customRow) customRow.hidden = value !== "custom";
+        if (advanced) {
+          advanced.hidden = value === "none";
+          if (advanced.hidden) advanced.open = false;
+        }
+      };
+
+      preset?.addEventListener?.("change", refresh);
+      refresh();
+    },
     buttons: [
       {
         action: "apply",

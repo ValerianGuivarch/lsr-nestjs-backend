@@ -119,3 +119,57 @@
   border-top: 1px solid rgb(127 127 127 / 16%) !important;
   font-style: italic !important;
 }
+
+/* Compact condition dialog: only expose fields that matter for the chosen condition. */
+.pf2e-val-quick-effect-dialog {
+  width: 380px !important;
+  min-width: 340px !important;
+  max-width: min(380px, calc(100vw - 32px)) !important;
+  height: auto !important;
+}
+
+.pf2e-val-quick-effect-dialog .window-content {
+  padding: 0.65rem !important;
+}
+
+.pf2e-val-quick-effect-form {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 0.5rem !important;
+  min-width: 0 !important;
+}
+
+.pf2e-val-quick-effect-form .form-group {
+  margin: 0 !important;
+}
+
+.pf2e-val-quick-effect-form .pf2e-val-condition-value-row input[type="number"] {
+  flex: 0 0 4.5rem !important;
+}
+
+.pf2e-val-quick-effect-form .pf2e-val-custom-duration[hidden],
+.pf2e-val-quick-effect-form .pf2e-val-quick-effect-advanced[hidden] {
+  display: none !important;
+}
+
+.pf2e-val-quick-effect-form .pf2e-val-quick-effect-advanced {
+  margin: 0 !important;
+  padding-top: 0.1rem !important;
+  border-top: 1px solid rgb(127 127 127 / 18%) !important;
+}
+
+.pf2e-val-quick-effect-form .pf2e-val-quick-effect-advanced > summary {
+  cursor: pointer !important;
+  font-size: 0.75rem !important;
+  opacity: 0.78 !important;
+}
+
+.pf2e-val-quick-effect-form .pf2e-val-quick-effect-advanced[open] > summary {
+  margin-bottom: 0.4rem !important;
+}
+
+.pf2e-val-quick-effect-form .pf2e-val-quick-effect-hint {
+  margin: 0.05rem 0 0 !important;
+  font-size: 0.72rem !important;
+  line-height: 1.25 !important;
+}
