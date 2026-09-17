@@ -1122,3 +1122,12 @@ remet la numérotation à plat.
   personnalisés.
 - PF2e HUD peut trier localement la sidebar Compétences et masquer les doublons
   de « Se souvenir » lorsque son action générique native est disponible.
+
+## 0.36 — Effets rapides et contexte de cible
+
+- Les liens vers des **Conditions** et **Effects** PF2e dans les cartes de chat reçoivent un bouton 🎯 pour les appliquer aux tokens ciblés.
+- Une Condition peut être appliquée sans durée ou via un petit minuteur (1 round, 3 rounds, 1 minute ou durée personnalisée). Le Toolkit utilise la Condition PF2e officielle dans un Effect technique invisible ; il ne recode pas la mécanique de la Condition.
+- Les Effects PF2e existants sont appliqués tels quels, avec leurs Rule Elements et leur durée native.
+- L'onglet **États & conditions** sert aussi de palette de secours grâce au même bouton 🎯.
+- Un bloc **Contexte contre la cible** rend visibles quelques mécanismes que PF2e calcule sans poser de statut : prise en tenaille (via le calcul PF2e natif), condition Dépourvu explicite, marques PF2e et distance. Ce bloc est volontairement non exhaustif.
+- Si un joueur cible un acteur qu'il ne possède pas, Socketlib est utilisé pour demander au client MJ d'appliquer l'effet. Sans Socketlib/MJ connecté, l'application est refusée proprement.

@@ -25,6 +25,8 @@ import {
   initPf2eHudIntegration,
   registerPf2eHudIntegrationSettings
 } from "./pf2e-hud-integration.js";
+import { initQuickEffects } from "./quick-effects/index.js";
+import { initTargetContext } from "./target-context/index.js";
 
 Hooks.once("init", () => {
   console.log("PF2e Val Toolkit | Initialisation");
@@ -47,6 +49,8 @@ Hooks.once("ready", () => {
   initCombatMovement();
   initQuickCombatScene();
   initPatches();
+  initQuickEffects();
+  initTargetContext();
   initGeneralActionsBrowser();
   initCareerXp();
   initTokenNaming();

@@ -1,0 +1,121 @@
+/* Inline chat-card helper: deliberately tiny so native PF2e cards stay native. */
+.pf2e-val-quick-apply {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 1.45rem !important;
+  min-width: 1.45rem !important;
+  height: 1.35rem !important;
+  min-height: 1.35rem !important;
+  margin: 0 0.18rem !important;
+  padding: 0 !important;
+  border: 1px solid var(--color-border-light-tertiary, #777) !important;
+  border-radius: 3px !important;
+  background: rgb(127 127 127 / 10%) !important;
+  box-shadow: none !important;
+  vertical-align: middle !important;
+  font-size: 0.7rem !important;
+  line-height: 1 !important;
+}
+
+.pf2e-val-quick-apply:hover {
+  background: rgb(127 127 127 / 22%) !important;
+}
+
+.pf2e-val-quick-effect-form .form-fields > input[type="number"] {
+  flex: 0 0 5rem !important;
+}
+
+/* Existing Conditions tab: one extra target-apply control. */
+.pf2e-val-conditions .pf2e-val-condition-tile {
+  grid-template-columns: minmax(0, 1fr) 28px 28px !important;
+}
+
+.pf2e-val-conditions .pf2e-val-condition-apply,
+.pf2e-val-conditions .pf2e-val-condition-open {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 28px !important;
+  min-width: 28px !important;
+  height: 100% !important;
+  min-height: 29px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-left: 1px solid rgb(127 127 127 / 16%) !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  font-size: 0.76rem !important;
+}
+
+.pf2e-val-conditions .pf2e-val-condition-apply:hover,
+.pf2e-val-conditions .pf2e-val-condition-open:hover {
+  background: rgb(127 127 127 / 12%) !important;
+}
+
+/* Context inspector: descriptive only, never creates Rule Elements. */
+.pf2e-val-conditions .pf2e-val-target-context-box {
+  flex: 0 0 auto !important;
+  border: 1px solid var(--color-border-light-tertiary, #777) !important;
+  border-radius: 4px !important;
+  overflow: hidden !important;
+  background: rgb(0 0 0 / 4%) !important;
+}
+
+.pf2e-val-conditions .pf2e-val-target-context-title {
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.35rem !important;
+  min-height: 26px !important;
+  padding: 0.2rem 0.45rem !important;
+  background: rgb(0 0 0 / 9%) !important;
+  font-size: 0.74rem !important;
+  font-weight: 800 !important;
+}
+
+.pf2e-val-conditions .pf2e-val-target-context-content {
+  padding: 0.28rem 0.45rem !important;
+}
+
+.pf2e-val-conditions .pf2e-val-target-context-target {
+  margin-bottom: 0.25rem !important;
+  font-size: 0.75rem !important;
+}
+
+.pf2e-val-conditions .pf2e-val-target-context-line {
+  display: grid !important;
+  grid-template-columns: 16px minmax(8rem, auto) minmax(0, 1fr) !important;
+  gap: 0.25rem !important;
+  align-items: start !important;
+  padding: 0.08rem 0 !important;
+  font-size: 0.7rem !important;
+}
+
+.pf2e-val-conditions .pf2e-val-target-context-line > i {
+  padding-top: 0.08rem !important;
+  text-align: center !important;
+  opacity: 0.7 !important;
+}
+
+.pf2e-val-conditions .pf2e-val-target-context-label {
+  font-weight: 700 !important;
+}
+
+.pf2e-val-conditions .pf2e-val-target-context-line.is-positive .pf2e-val-target-context-value {
+  font-weight: 800 !important;
+}
+
+.pf2e-val-conditions .pf2e-val-target-context-empty,
+.pf2e-val-conditions .pf2e-val-target-context-note {
+  font-size: 0.66rem !important;
+  opacity: 0.7 !important;
+}
+
+.pf2e-val-conditions .pf2e-val-target-context-note {
+  margin-top: 0.3rem !important;
+  padding-top: 0.25rem !important;
+  border-top: 1px solid rgb(127 127 127 / 16%) !important;
+  font-style: italic !important;
+}

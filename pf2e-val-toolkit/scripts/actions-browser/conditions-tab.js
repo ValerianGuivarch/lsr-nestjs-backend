@@ -3,6 +3,8 @@ import {
   FALLBACK_CONDITION_CATEGORY,
   conditionCategoryFor
 } from "./condition-catalogue.js";
+import { applyDocumentToTargets } from "../quick-effects/index.js";
+import { bindTargetContext } from "../target-context/index.js";
 
 const TAB_ID = "pf2e-val-conditions";
 const PANEL_CLASS = "pf2e-val-conditions";
@@ -98,6 +100,18 @@ function createPanel() {
         </div>
       </div>
 
+      <div class="pf2e-val-target-context-box">
+        <div class="pf2e-val-target-context-title">
+          <i class="fa-solid fa-crosshairs"></i>
+          Contexte contre la cible
+        </div>
+        <div class="pf2e-val-target-context-content">
+          <div class="pf2e-val-target-context-empty">
+            Ciblez exactement une créature pour afficher le contexte.
+          </div>
+        </div>
+      </div>
+
       <div class="pf2e-val-conditions-toolbar">
         <label class="pf2e-val-conditions-search">
           <i class="fa-solid fa-magnifying-glass"></i>
@@ -120,6 +134,7 @@ function createPanel() {
 
       <div class="pf2e-val-conditions-legend">
         <span><i class="fa-solid fa-circle-dot"></i> actif sur le personnage</span>
+        <span><i class="fa-solid fa-crosshairs"></i> appliquer aux cibles</span>
         <span><i class="fa-solid fa-book-open"></i> ouvrir la fiche PF2e</span>
       </div>
 
@@ -348,6 +363,15 @@ function createConditionTile(actor, entry) {
 
     <button
       type="button"
+      class="pf2e-val-condition-apply"
+      title="Appliquer ${foundry.utils.escapeHTML(entry.name)} aux cibles"
+      aria-label="Appliquer ${foundry.utils.escapeHTML(entry.name)} aux cibles"
+    >
+      <i class="fa-solid fa-crosshairs"></i>
+    </button>
+
+    <button
+      type="button"
       class="pf2e-val-condition-open"
       title="Ouvrir la fiche PF2e de ${foundry.utils.escapeHTML(entry.name)}"
       aria-label="Ouvrir la fiche PF2e de ${foundry.utils.escapeHTML(entry.name)}"
@@ -400,6 +424,14 @@ function createConditionTile(actor, entry) {
       }
     }
   });
+
+  tile
+    .querySelector(".pf2e-val-condition-apply")
+    ?.addEventListener("click", async event => {
+      event.preventDefault();
+      event.stopPropagation();
+      await applyDocumentToTargets(entry.item, { sourceActor: actor });
+    });
 
   tile
     .querySelector(".pf2e-val-condition-open")
@@ -629,6 +661,9 @@ async function populatePanel(app, panel) {
     content.replaceChildren(fragment);
     renderActiveSummary(actor, panel);
     renderSearch(panel);
+
+    const context = panel.querySelector(".pf2e-val-target-context-content");
+    if (context) bindTargetContext(context, actor);
   } catch (error) {
     console.error(
       "PF2e Val Toolkit | Conditions browser",
