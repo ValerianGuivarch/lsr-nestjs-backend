@@ -4,11 +4,13 @@ import {
 } from "./action-settings.js";
 import { initActionChatHandlers } from "./action-chat.js";
 import { initCharacterSheetNavigation } from "./sheet-navigation.js";
+import { initConditionsBrowser } from "./conditions-tab.js";
 
 export function initGeneralActionsBrowser() {
-  // Le navigateur d'actions est conservé dans le module, mais n'est plus
-  // injecté visuellement sur les fiches pour le moment.
+  // Le navigateur d'actions guidées reste masqué, mais l'onglet générique
+  // États & conditions est actif et expose aussi le contexte contre la cible.
   // initGuidedActionsBrowser();
+  initConditionsBrowser();
   initCharacterSheetNavigation();
   initActionChatHandlers();
 

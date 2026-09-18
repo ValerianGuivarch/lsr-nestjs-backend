@@ -173,3 +173,49 @@
   font-size: 0.72rem !important;
   line-height: 1.25 !important;
 }
+
+/* Outcome-driven spell effects ------------------------------------------------ */
+.pf2e-val-outcome-effects {
+  margin-top: 0.55rem;
+  padding: 0.45rem 0.5rem;
+  border: 1px solid var(--color-border-light-2, #777);
+  border-radius: 5px;
+  background: color-mix(in srgb, var(--color-bg-option, #222) 8%, transparent);
+}
+
+.pf2e-val-outcome-header {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-bottom: 0.4rem;
+  font-size: 0.86rem;
+}
+
+.pf2e-val-outcome-header > span {
+  opacity: 0.7;
+  font-size: 0.78rem;
+}
+
+.pf2e-val-outcome-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+
+.pf2e-val-outcome-button {
+  width: auto;
+  min-height: 28px;
+  padding: 0.2rem 0.45rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.8rem;
+  line-height: 1.1;
+}
+
+.pf2e-val-outcome-note {
+  margin: 0.35rem 0 0;
+  opacity: 0.78;
+  font-size: 0.75rem;
+  font-style: italic;
+}

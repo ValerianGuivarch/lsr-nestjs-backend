@@ -104,10 +104,8 @@ function compactCharacterNavigation(app, html) {
   navigation.querySelector('[data-tab="actions"]')?.remove();
   root.querySelector('.tab[data-tab="actions"]')?.remove();
 
-  // This browser is retired. Remove a tab left by a previously rendered sheet
-  // as well, so a hot reload does not leave a dead Conditions entry visible.
-  navigation.querySelector('[data-tab="pf2e-val-conditions"]')?.remove();
-  root.querySelector('.tab[data-tab="pf2e-val-conditions"]')?.remove();
+  // L’onglet États & conditions reste visible : il sert aux conditions rapides
+  // et à l’inspecteur de contexte contre la cible.
 }
 
 export function initCharacterSheetNavigation() {

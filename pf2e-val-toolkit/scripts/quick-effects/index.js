@@ -259,11 +259,20 @@ function cleanEmbeddedSource(source) {
   return data;
 }
 
-function buildDirectConditionSource(condition, conditionValue = null) {
+function buildDirectConditionSource(condition, conditionValue = null, persistentDamage = null) {
   const data = cleanEmbeddedSource(condition.toObject());
 
   if (condition.system?.value?.isValued && Number.isFinite(Number(conditionValue))) {
     foundry.utils.setProperty(data, "system.value.value", Math.max(1, Number(conditionValue)));
+  }
+
+  if (persistentDamage?.formula && persistentDamage?.damageType) {
+    foundry.utils.setProperty(data, "system.persistent", {
+      formula: String(persistentDamage.formula),
+      damageType: String(persistentDamage.damageType),
+      dc: Number.isFinite(Number(persistentDamage.dc)) ? Number(persistentDamage.dc) : 15,
+      criticalHit: persistentDamage.criticalHit === true
+    });
   }
 
   return data;
@@ -325,9 +334,20 @@ function buildTimedConditionSource(condition, duration, origin, conditionValue =
   };
 }
 
-function buildEffectSource(effect, origin) {
+function buildEffectSource(effect, origin, effectRuleSelections = null) {
   const data = cleanEmbeddedSource(effect.toObject());
   const hasOrigin = origin?.actorUuid || origin?.itemUuid || origin?.tokenUuid;
+
+  if (effectRuleSelections && typeof effectRuleSelections === "object") {
+    const rules = Array.isArray(data.system?.rules) ? data.system.rules : [];
+    for (const rule of rules) {
+      if (rule?.key !== "ChoiceSet") continue;
+      const key = String(rule.rollOption ?? "");
+      const selection = effectRuleSelections[key];
+      if (selection == null) continue;
+      rule.selection = selection;
+    }
+  }
 
   if (hasOrigin) {
     const context = foundry.utils.deepClone(data.system?.context ?? {
@@ -350,14 +370,14 @@ async function resolveTargetActor(tokenUuid) {
   return tokenDocument?.actor ?? null;
 }
 
-async function createOnActor(actor, document, { duration = null, conditionValue = null, origin = {} } = {}) {
+async function createOnActor(actor, document, { duration = null, conditionValue = null, origin = {}, effectRuleSelections = null, persistentDamage = null } = {}) {
   if (!actor || !isSupportedDocument(document)) return false;
 
   const source = document.type === "condition"
     ? duration
       ? buildTimedConditionSource(document, duration, origin, conditionValue)
-      : buildDirectConditionSource(document, conditionValue)
-    : buildEffectSource(document, origin);
+      : buildDirectConditionSource(document, conditionValue, persistentDamage)
+    : buildEffectSource(document, origin, effectRuleSelections);
 
   await actor.createEmbeddedDocuments("Item", [source]);
   return true;
@@ -381,7 +401,9 @@ async function applyQuickEffectAsGM(request) {
       await createOnActor(actor, document, {
         duration: request.duration ?? null,
         conditionValue: request.conditionValue ?? null,
-        origin: request.origin ?? {}
+        origin: request.origin ?? {},
+        effectRuleSelections: request.effectRuleSelections ?? null,
+        persistentDamage: request.persistentDamage ?? null
       });
       results.push({ tokenUuid, ok: true, actorName: actor.name });
     } catch (error) {
@@ -441,7 +463,9 @@ async function applyToTargets(document, options) {
           targetTokenUuids: remote.map(target => target.document.uuid),
           duration: options.duration ?? null,
           conditionValue: options.conditionValue ?? null,
-          origin: options.origin ?? {}
+          origin: options.origin ?? {},
+          effectRuleSelections: options.effectRuleSelections ?? null,
+          persistentDamage: options.persistentDamage ?? null
         });
 
         for (const result of results ?? []) {
@@ -456,16 +480,50 @@ async function applyToTargets(document, options) {
     }
   }
 
-  if (applied > 0) {
+  if (options.notify !== false && applied > 0) {
     const names = targets.map(getTargetName).join(", ");
     ui.notifications.info(`${document.name} appliqué à ${names}.`);
   }
 
-  if (failed > 0) {
+  if (options.notify !== false && failed > 0) {
     ui.notifications.warn(`${failed} cible(s) n'ont pas pu recevoir l'effet.`);
   }
 
   return { applied, failed };
+}
+
+/**
+ * Apply an existing PF2e Condition/Effect with explicit options. This is the
+ * low-level entry point used by outcome recipes: no extra dialog is opened.
+ */
+export async function applyConfiguredDocumentToTargets(document, {
+  sourceMessage = null,
+  sourceActor = null,
+  duration = null,
+  conditionValue = null,
+  effectRuleSelections = null,
+  persistentDamage = null,
+  notify = true
+} = {}) {
+  if (!isSupportedDocument(document)) {
+    ui.notifications.warn("Ce lien n'est ni une Condition ni un Effect PF2e.");
+    return null;
+  }
+
+  const origin = sourceMessage
+    ? sourceContextFromMessage(sourceMessage)
+    : sourceActor
+      ? sourceContextFromActor(sourceActor)
+      : sourceContextFromActor(canvas.tokens?.controlled?.[0]?.actor ?? game.user?.character ?? null);
+
+  return applyToTargets(document, {
+    duration,
+    conditionValue,
+    origin,
+    effectRuleSelections,
+    persistentDamage,
+    notify
+  });
 }
 
 /**
@@ -487,13 +545,12 @@ export async function applyDocumentToTargets(document, { sourceMessage = null, s
     conditionValue = choice.conditionValue;
   }
 
-  const origin = sourceMessage
-    ? sourceContextFromMessage(sourceMessage)
-    : sourceActor
-      ? sourceContextFromActor(sourceActor)
-      : sourceContextFromActor(canvas.tokens?.controlled?.[0]?.actor ?? game.user?.character ?? null);
-
-  return applyToTargets(document, { duration, conditionValue, origin });
+  return applyConfiguredDocumentToTargets(document, {
+    sourceMessage,
+    sourceActor,
+    duration,
+    conditionValue
+  });
 }
 
 async function addQuickApplyButtons(message, root) {
@@ -544,6 +601,7 @@ export function initQuickEffects() {
   game.pf2eValToolkit ??= {};
   game.pf2eValToolkit.quickEffects = {
     applyToTargets: applyDocumentToTargets,
+    applyConfiguredToTargets: applyConfiguredDocumentToTargets,
     get socketReady() {
       return !!socket;
     }
