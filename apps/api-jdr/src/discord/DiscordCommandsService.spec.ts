@@ -8,7 +8,7 @@ describe('DiscordCommandsService', () => {
     expect(reply).toHaveBeenCalledWith({ content: 'Pong !', ephemeral: true })
   })
 
-  it('groups session participation by player and sorts the recap from least to most played', async () => {
+  it('groups session participation by player, with the per-character detail, and sorts least to most played', async () => {
     const reply = jest.fn().mockResolvedValue(undefined)
     const deferReply = jest.fn().mockResolvedValue(undefined)
     const editReply = jest.fn().mockResolvedValue(undefined)
@@ -22,10 +22,53 @@ describe('DiscordCommandsService', () => {
       readFoundryActorCache: jest.fn(),
     }
     const service = new DiscordCommandsService(persistence as never, { listActors: jest.fn().mockResolvedValue([{ uuid: 'Actor.arthur', name: 'Ayla (Arthur)' }, { uuid: 'Actor.kian', name: 'Kian le Brave (Kian)' }]) } as never)
-    await expect(service.handle({ commandName: 'recap', reply, deferReply, editReply } as never)).resolves.toBe(true)
+    await expect(service.handle({ commandName: 'recap', reply, deferReply, editReply, options: { getSubcommand: () => 'nb-seances' } } as never)).resolves.toBe(true)
     expect(deferReply).toHaveBeenCalledWith()
-    expect(editReply).toHaveBeenCalledWith({ content: '**Récapitulatif des séances**\n• Arthur — 2 séances\n• Kian — 2 séances' })
+    expect(editReply).toHaveBeenCalledWith({ content: '**Récapitulatif des séances**\n• Arthur — 2 séances (Ayla (Arthur): 2)\n• Kian — 2 séances (Kian le Brave (Kian): 2)' })
     expect(persistence.saveFoundryActorCache).toHaveBeenCalled()
+  })
+
+  it('renders a character-pair matrix for /recap link', async () => {
+    const deferReply = jest.fn().mockResolvedValue(undefined)
+    const editReply = jest.fn().mockResolvedValue(undefined)
+    const followUp = jest.fn().mockResolvedValue(undefined)
+    const persistence = {
+      listSessions: jest.fn().mockResolvedValue([
+        { participants: ['Actor.eos', 'Actor.pepin'] },
+        { participants: ['Actor.eos', 'Actor.pepin', 'Actor.yaz'] },
+        { participants: ['Actor.yaz'] },
+      ]),
+      saveFoundryActorCache: jest.fn(), readFoundryActorCache: jest.fn(),
+    }
+    const service = new DiscordCommandsService(persistence as never, {
+      listActors: jest.fn().mockResolvedValue([
+        { uuid: 'Actor.eos', name: 'Éos (David)' },
+        { uuid: 'Actor.pepin', name: 'Pépin (Eric)' },
+        { uuid: 'Actor.yaz', name: 'Yaz Lorok (Gus)' },
+      ])
+    } as never)
+    await service.handle({ commandName: 'recap', deferReply, editReply, followUp, options: { getSubcommand: () => 'link' } } as never)
+    expect(editReply).toHaveBeenCalledWith(expect.objectContaining({ content: expect.stringContaining('A = Éos (David)') }))
+    expect(editReply.mock.calls[0][0].content).toContain('A   —   2   1')
+    expect(followUp).not.toHaveBeenCalled()
+  })
+
+  it('turns missed published sessions into seven-day progression rolls', async () => {
+    const persistence = {
+      listSessions: jest.fn().mockResolvedValue([
+        { sessionNumber: 1, published: true, participants: ['Actor.eos'], inGameStartDate: '4720-03-01', inGameEndDate: '4720-03-01' },
+        { sessionNumber: 2, published: true, participants: ['Actor.pepin'], inGameStartDate: '4720-03-08', inGameEndDate: '4720-03-08' },
+        { sessionNumber: 3, published: true, participants: ['Actor.pepin'], inGameStartDate: '4720-03-15', inGameEndDate: '4720-03-15' },
+      ]),
+    }
+    const service = new DiscordCommandsService(persistence as never, {} as never)
+    const plan = await (service as unknown as { plan: (actors: Array<{ uuid: string; name: string }>) => Promise<{ progressionRolls: string[] }> }).plan([
+      { uuid: 'Actor.eos', name: 'Éos (David)' }, { uuid: 'Actor.pepin', name: 'Pépin (Eric)' }
+    ])
+    expect(plan.progressionRolls).toEqual(expect.arrayContaining([
+      expect.stringContaining('Éos (David) : **2 jets de progression** (14 jours).'),
+      expect.stringContaining('Pépin (Eric) : **0 jet de progression** (0 jour).'),
+    ]))
   })
 
   it('uses the previous real-world day before 05:00 Europe/Paris for finish-game', () => {
