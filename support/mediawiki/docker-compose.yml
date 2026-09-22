@@ -26,3 +26,4 @@ services:
       - ./LocalSettings.php:/var/www/html/LocalSettings.php
       - ./extensions/PF2Sessions:/var/www/html/extensions/PF2Sessions:ro
       - ./extensions/PF2PlayerCodex:/var/www/html/extensions/PF2PlayerCodex:ro
+      - ./extensions/PF2Journals:/var/www/html/extensions/PF2Journals:ro

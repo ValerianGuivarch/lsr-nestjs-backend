@@ -7,6 +7,7 @@ import { Pf2MjModule } from './pf2-mj/Pf2MjModule'
 import { HealthModule } from './health/HealthModule'
 import { Pf2SessionsModule } from './pf2-sessions/Pf2SessionsModule'
 import { DiscordModule } from './discord/DiscordModule'
+import { Pf2JournalsModule } from './pf2-journals/Pf2JournalsModule'
 
 @Module({
   imports: [
@@ -20,7 +21,8 @@ import { DiscordModule } from './discord/DiscordModule'
     Pf2SessionsModule,
     HealthModule,
     FoundryRelayModule,
-    DiscordModule
+    DiscordModule,
+    Pf2JournalsModule,
   ]
 })
 class ApiModule {}

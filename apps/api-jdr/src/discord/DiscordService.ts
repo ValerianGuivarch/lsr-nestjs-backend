@@ -33,6 +33,8 @@ export type DiscordFullExport = {
   skipped: Array<{ id: string; name: string; reason: string }>
 }
 
+export type DiscordJournalPublication = { status: 'sent' | 'failed'; messageId?: string; reason?: string }
+
 @Injectable()
 export class DiscordService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(DiscordService.name)
@@ -466,10 +468,34 @@ export class DiscordService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
+  async publishJournal(input: { number: number; title: string; content: string }): Promise<DiscordJournalPublication> {
+    if (!this.client) return { status: 'failed', reason: 'Discord indisponible ou désactivé.' }
+    const config = this.config()
+    if (!config) return { status: 'failed', reason: 'Discord indisponible ou désactivé.' }
+    const content = `**${input.number} - ${input.title}**\n\n${input.content}`
+    if (content.length > 2_000) return { status: 'failed', reason: 'Le journal dépasse la limite de 2 000 caractères de Discord.' }
+    try {
+      const channel = await this.journalsChannel(config)
+      const message = await channel.send({ content, allowedMentions: { parse: [] } })
+      return { status: 'sent', messageId: message.id }
+    } catch (error) {
+      const reason = error instanceof Error ? error.message : 'Erreur Discord inconnue.'
+      this.logger.error(`Publication Discord du journal ${input.number} impossible.`, error instanceof Error ? error.stack : undefined)
+      return { status: 'failed', reason }
+    }
+  }
+
   private async summaryChannel(
     config: DiscordConfig,
   ): Promise<TextChannel> {
     return this.textChannel(config.summaryChannelName, config)
+  }
+
+  private async journalsChannel(config: DiscordConfig): Promise<TextChannel> {
+    if (!config.journalsChannelId) return this.textChannel(config.journalsChannelName, config)
+    const channel = await this.requireClient().channels.fetch(config.journalsChannelId)
+    if (!channel?.isTextBased()) throw new Error(`Canal Discord Journaux invalide : ${config.journalsChannelId}`)
+    return channel as TextChannel
   }
 
   private async textChannel(
@@ -889,6 +915,16 @@ export class DiscordService implements OnModuleInit, OnModuleDestroy {
             'DISCORD_CHARACTER_CHANNEL_NAME'
           ]?.trim() ||
           'personnages',
+        journalsChannelName:
+          process.env[
+            'DISCORD_JOURNALS_CHANNEL_NAME'
+          ]?.trim() ||
+          'journaux',
+        journalsChannelId:
+          process.env[
+            'DISCORD_JOURNALS_CHANNEL_ID'
+          ]?.trim() ||
+          null,
       }
     }
 
@@ -919,4 +955,6 @@ type DiscordConfig = {
   guildId: string
   summaryChannelName: string
   characterChannelName: string
+  journalsChannelName: string
+  journalsChannelId: string | null
 }

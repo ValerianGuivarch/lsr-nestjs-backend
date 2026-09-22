@@ -52,6 +52,7 @@ type SessionContentRow = { session_id: string; scenario_id: string; component_id
 export type Pf2SessionContentLink = { scenarioId: string; componentId: string | null; sortOrder: number }
 export type Pf2Session = { id: string; sessionNumber: number; date: string; inGameStartDate: string; inGameEndDate: string; title: string; participants: string[]; longSummaryAuthor: string | null; shortSummaryAuthor: string | null; sessionXp: number; longSummaryXp: number; shortSummaryXp: number; shortSummary: string; discordMessageId: string | null; published: boolean; content?: Pf2SessionContentLink[]; createdAt: string; updatedAt: string }
 export type Pf2SessionInput = { id?: unknown; sessionNumber?: unknown; date?: unknown; inGameStartDate?: unknown; inGameEndDate?: unknown; endDate?: unknown; title?: unknown; participants?: unknown; longSummaryAuthor?: unknown; shortSummaryAuthor?: unknown; sessionXp?: unknown; longSummaryXp?: unknown; shortSummaryXp?: unknown; shortSummary?: unknown; published?: unknown; content?: unknown }
+export type JournalRevelation = { journalNumber: number; revealedAt: string; revealedBy: string | null; discordMessageId: string | null }
 
 @Injectable()
 export class Pf2PersistenceService implements OnModuleInit {
@@ -116,6 +117,33 @@ export class Pf2PersistenceService implements OnModuleInit {
       const name = typeof actor.name === 'string' ? actor.name : ''
       return uuid && name ? [{ uuid, name }] : []
     })
+  }
+
+  async listJournalRevelations(): Promise<JournalRevelation[]> {
+    return this.dataSource.query("SELECT journal_number AS journalNumber, revealed_at AS revealedAt, revealed_by AS revealedBy, discord_message_id AS discordMessageId FROM pf2_journal_revelation WHERE status = 'revealed' ORDER BY journal_number") as Promise<JournalRevelation[]>
+  }
+
+  /** Atomically reserves a journal before sending its one Discord publication. */
+  async claimJournalReveal(journalNumber: number, revealedBy: string): Promise<'claimed' | 'revealed' | 'busy'> {
+    return this.dataSource.transaction(async manager => {
+      const existing = await manager.query('SELECT status FROM pf2_journal_revelation WHERE journal_number = ?', [journalNumber]) as Array<{ status: string }>
+      if (existing[0]?.status === 'revealed') return 'revealed'
+      if (existing[0]?.status === 'publishing') return 'busy'
+      await manager.query("INSERT INTO pf2_journal_revelation (journal_number, status, revealed_by, created_at, updated_at) VALUES (?, 'publishing', ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP) ON CONFLICT(journal_number) DO UPDATE SET status = 'publishing', revealed_by = excluded.revealed_by, updated_at = CURRENT_TIMESTAMP", [journalNumber, revealedBy])
+      return 'claimed'
+    })
+  }
+
+  async completeJournalReveal(journalNumber: number, revealedBy: string, discordMessageId: string): Promise<boolean> {
+    await this.dataSource.query("UPDATE pf2_journal_revelation SET status = 'revealed', revealed_at = CURRENT_TIMESTAMP, revealed_by = ?, discord_message_id = ?, updated_at = CURRENT_TIMESTAMP WHERE journal_number = ? AND status = 'publishing'", [revealedBy, discordMessageId, journalNumber])
+    // TypeORM's SQLite driver does not expose a stable `changes` shape across
+    // its supported versions, so verify the final persisted state explicitly.
+    const rows = await this.dataSource.query("SELECT 1 FROM pf2_journal_revelation WHERE journal_number = ? AND status = 'revealed' AND revealed_by = ? AND discord_message_id = ?", [journalNumber, revealedBy, discordMessageId]) as Array<{ 1: number }>
+    return rows.length === 1
+  }
+
+  async abandonJournalReveal(journalNumber: number, revealedBy: string): Promise<void> {
+    await this.dataSource.query("DELETE FROM pf2_journal_revelation WHERE journal_number = ? AND status = 'publishing' AND revealed_by = ?", [journalNumber, revealedBy])
   }
 
   async listRecords(kind: Pf2RecordKind, options: ListRecordOptions = {}): Promise<Record<string, unknown>[]> {
@@ -774,6 +802,10 @@ export class Pf2PersistenceService implements OnModuleInit {
       await manager.query("CREATE TABLE IF NOT EXISTS pf2_session_content (session_id TEXT NOT NULL, scenario_id TEXT NOT NULL, component_id TEXT NOT NULL DEFAULT '', sort_order INTEGER NOT NULL DEFAULT 0, created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (session_id, scenario_id, component_id), FOREIGN KEY (session_id) REFERENCES pf2_session(id) ON DELETE CASCADE)")
       await manager.query('CREATE INDEX IF NOT EXISTS idx_pf2_session_content_scenario ON pf2_session_content (scenario_id, component_id, session_id)')
       await manager.query('CREATE INDEX IF NOT EXISTS idx_pf2_session_content_session ON pf2_session_content (session_id, sort_order)')
+    })
+    await this.applyMigration('021-journal-revelations', async (manager) => {
+      await manager.query("CREATE TABLE IF NOT EXISTS pf2_journal_revelation (journal_number INTEGER PRIMARY KEY, status TEXT NOT NULL CHECK (status IN ('publishing','revealed')), revealed_at TEXT, revealed_by TEXT, discord_message_id TEXT, created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP, updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)")
+      await manager.query("CREATE INDEX IF NOT EXISTS idx_pf2_journal_revelation_status ON pf2_journal_revelation (status, journal_number)")
     })
 
     await this.assertDatabaseIntegrity(this.dataSource, 'base SQLite après migrations')

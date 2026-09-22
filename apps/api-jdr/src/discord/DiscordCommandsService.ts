@@ -7,6 +7,7 @@ import { PlayerCodexService } from '../pf2-mj/PlayerCodexService'
 import { MediaWikiClientService } from '../pf2-mj/MediaWikiClientService'
 import { DiscordResumeSync, DiscordService } from './DiscordService'
 import { shortSummaryRewardForSession } from '../pf2-sessions/Pf2CareerXp'
+import { Pf2JournalsService } from '../pf2-journals/Pf2JournalsService'
 
 @Injectable()
 export class DiscordCommandsService {
@@ -26,12 +27,14 @@ export class DiscordCommandsService {
     requesterId: string
     createdAt: number
   }>()
-  constructor(private readonly persistence: Pf2PersistenceService, private readonly foundry: FoundryRelayService, private readonly playerCodex?: PlayerCodexService, private readonly mediaWiki?: MediaWikiClientService, @Inject(forwardRef(() => DiscordService)) private readonly discord?: DiscordService) {}
+  private readonly pendingJournalReveals = new Map<string, { requesterId: string; journalNumber: number }>()
+  constructor(private readonly persistence: Pf2PersistenceService, private readonly foundry: FoundryRelayService, private readonly playerCodex?: PlayerCodexService, private readonly mediaWiki?: MediaWikiClientService, @Inject(forwardRef(() => DiscordService)) private readonly discord?: DiscordService, private readonly journals?: Pf2JournalsService) {}
 
   definitions(): RESTPostAPIApplicationGuildCommandsJSONBody[] {
     return [
       new SlashCommandBuilder().setName('ping').setDescription('Vérifie que PF2-Bot répond.').toJSON(),
       new SlashCommandBuilder().setName('recap').setDescription('Affiche les séances communes pour les PJ choisis.').toJSON(),
+      new SlashCommandBuilder().setName('journaux').setDescription('Prépare la révélation d’un journal.').addIntegerOption(option => option.setName('numero').setDescription('Numéro du journal à révéler').setRequired(false).setMinValue(1)).toJSON(),
       new SlashCommandBuilder().setName('export-full').setDescription('Exporte tous les messages texte du serveur en JSON.').toJSON(),
       new SlashCommandBuilder().setName('new-game').setDescription('Prépare une nouvelle mission PF2 depuis les PJ actifs dans ce salon.').toJSON(),
       new SlashCommandBuilder().setName('finish-game').setDescription('Termine une mission et met à jour son résumé.').addIntegerOption(option => option.setName('xp').setDescription('XP gagnée par PJ').setRequired(true).setMinValue(0)).addIntegerOption(option => option.setName('numero').setDescription('Numéro du résumé à terminer')).addStringOption(option => option.setName('fin').setDescription('Date de fin en jeu : YYYY-MM-DD')).addIntegerOption(option => option.setName('jours').setDescription('Durée en jours, à partir du début en jeu').setMinValue(1)).toJSON(),
@@ -49,6 +52,7 @@ export class DiscordCommandsService {
       await this.recapCommand(interaction as ChatInputCommandInteraction)
       return true
     }
+    if (interaction.commandName === 'journaux') { await this.journalsCommand(interaction as ChatInputCommandInteraction); return true }
     if (interaction.commandName === 'export-full') {
       await this.exportFull(interaction as ChatInputCommandInteraction)
       return true
@@ -64,6 +68,24 @@ export class DiscordCommandsService {
     if (interaction.commandName === 'resume') { await this.resumeCommand(interaction as ChatInputCommandInteraction); return true }
     if (interaction.commandName === 'personnage') { await this.presentCharacter(interaction as ChatInputCommandInteraction); return true }
     return false
+  }
+
+  private async journalsCommand(interaction: ChatInputCommandInteraction): Promise<void> {
+    if (!interaction.memberPermissions?.has(PermissionFlagsBits.Administrator)) {
+      await interaction.reply({ content: 'Cette commande est réservée aux administrateurs du serveur.', ephemeral: true })
+      return
+    }
+    const requested = interaction.options.getInteger('numero')
+    try {
+      const journal = requested === null ? await this.journals!.randomJournalToReveal() : await this.journals!.resolveJournalToReveal(requested)
+      if (!journal) { await interaction.reply({ content: requested === null ? 'Il ne reste aucun journal à révéler.' : 'Ce journal est déjà révélé.', ephemeral: true }); return }
+      const id = `pf2-journal:reveal:${interaction.id}`
+      this.pendingJournalReveals.set(id, { requesterId: interaction.user.id, journalNumber: journal.number })
+      const button = new ButtonBuilder().setCustomId(id).setLabel('Valider').setStyle(ButtonStyle.Primary)
+      await interaction.reply({ content: `**${journal.number} - ${journal.title}**`, components: [new ActionRowBuilder<ButtonBuilder>().addComponents(button)], ephemeral: true })
+    } catch (error) {
+      await interaction.reply({ content: error instanceof Error ? `Journal impossible : ${error.message}` : 'Journal impossible.', ephemeral: true })
+    }
   }
 
   private async exportFull(interaction: ChatInputCommandInteraction): Promise<void> {
@@ -329,6 +351,29 @@ export class DiscordCommandsService {
   }
 
   async handleButton(interaction: ButtonInteraction): Promise<boolean> {
+    if (interaction.customId.startsWith('pf2-journal:reveal:')) {
+      const pending = this.pendingJournalReveals.get(interaction.customId)
+      if (!pending) { await interaction.reply({ content: 'Cette validation a expiré. Relance `/journaux`.', ephemeral: true }); return true }
+      if (interaction.user.id !== pending.requesterId) { await interaction.reply({ content: 'Cette validation appartient à un autre administrateur.', ephemeral: true }); return true }
+      await interaction.deferUpdate()
+      try {
+        const journal = await this.journals!.resolveJournalToReveal(pending.journalNumber)
+        if (!journal || journal.number !== pending.journalNumber) throw new Error(journal ? 'Les prérequis ont changé ; relance `/journaux`.' : 'Ce journal est déjà révélé.')
+        const claim = await this.journals!.claim(journal.number, interaction.user.id)
+        if (claim !== 'claimed') throw new Error(claim === 'revealed' ? 'Ce journal est déjà révélé.' : 'Une autre publication est déjà en cours.')
+        const publication = await this.discord!.publishJournal(journal)
+        if (publication.status !== 'sent' || !publication.messageId) {
+          await this.journals!.abandon(journal.number, interaction.user.id)
+          throw new Error(publication.reason ?? 'Discord n’a pas confirmé la publication.')
+        }
+        if (!(await this.journals!.complete(journal.number, interaction.user.id, publication.messageId))) throw new Error('Discord a reçu le journal, mais SQLite n’a pas confirmé la révélation. Réparation manuelle requise.')
+        this.pendingJournalReveals.delete(interaction.customId)
+        await interaction.editReply({ content: `Journal ${journal.number} révélé.`, components: [] })
+      } catch (error) {
+        await interaction.editReply({ content: `Révélation impossible : ${error instanceof Error ? error.message : String(error)}`, components: [] })
+      }
+      return true
+    }
     if (interaction.customId.startsWith('pf2-resume-publish:')) {
       const pending = this.pendingResumePublications.get(interaction.customId)
       if (!pending) {
