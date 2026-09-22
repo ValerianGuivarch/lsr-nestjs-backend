@@ -53,6 +53,7 @@ export type Pf2SessionContentLink = { scenarioId: string; componentId: string | 
 export type Pf2Session = { id: string; sessionNumber: number; date: string; inGameStartDate: string; inGameEndDate: string; title: string; participants: string[]; longSummaryAuthor: string | null; shortSummaryAuthor: string | null; sessionXp: number; longSummaryXp: number; shortSummaryXp: number; shortSummary: string; discordMessageId: string | null; published: boolean; content?: Pf2SessionContentLink[]; createdAt: string; updatedAt: string }
 export type Pf2SessionInput = { id?: unknown; sessionNumber?: unknown; date?: unknown; inGameStartDate?: unknown; inGameEndDate?: unknown; endDate?: unknown; title?: unknown; participants?: unknown; longSummaryAuthor?: unknown; shortSummaryAuthor?: unknown; sessionXp?: unknown; longSummaryXp?: unknown; shortSummaryXp?: unknown; shortSummary?: unknown; published?: unknown; content?: unknown }
 export type JournalRevelation = { journalNumber: number; revealedAt: string; revealedBy: string | null; discordMessageId: string | null }
+export type JournalDefinitionRecord = { number: number; title: string; content: string; dependencies: number[]; createdAt: string; updatedAt: string }
 
 @Injectable()
 export class Pf2PersistenceService implements OnModuleInit {
@@ -121,6 +122,23 @@ export class Pf2PersistenceService implements OnModuleInit {
 
   async listJournalRevelations(): Promise<JournalRevelation[]> {
     return this.dataSource.query("SELECT journal_number AS journalNumber, revealed_at AS revealedAt, revealed_by AS revealedBy, discord_message_id AS discordMessageId FROM pf2_journal_revelation WHERE status = 'revealed' ORDER BY journal_number") as Promise<JournalRevelation[]>
+  }
+
+  async listJournalDefinitions(): Promise<JournalDefinitionRecord[]> {
+    const rows = await this.dataSource.query('SELECT number, title, content, dependencies, created_at AS createdAt, updated_at AS updatedAt FROM pf2_journal ORDER BY number') as Array<{ number: number; title: string; content: string; dependencies: string; createdAt: string; updatedAt: string }>
+    return rows.map(row => ({ number: Number(row.number), title: row.title, content: row.content, dependencies: this.numberList(row.dependencies), createdAt: row.createdAt, updatedAt: row.updatedAt }))
+  }
+
+  async saveJournalDefinition(input: { number: number; title: string; content: string; dependencies: number[] }): Promise<void> {
+    await this.dataSource.query('INSERT INTO pf2_journal (number, title, content, dependencies, created_at, updated_at) VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP) ON CONFLICT(number) DO UPDATE SET title = excluded.title, content = excluded.content, dependencies = excluded.dependencies, updated_at = CURRENT_TIMESTAMP', [input.number, input.title, input.content, JSON.stringify(input.dependencies)])
+  }
+
+  async deleteJournalDefinition(number: number): Promise<void> {
+    await this.dataSource.transaction(async manager => {
+      const revealed = await manager.query("SELECT 1 FROM pf2_journal_revelation WHERE journal_number = ? AND status = 'revealed'", [number]) as Array<{ 1: number }>
+      if (revealed.length) throw new Error('Un journal déjà révélé ne peut pas être supprimé.')
+      await manager.query('DELETE FROM pf2_journal WHERE number = ?', [number])
+    })
   }
 
   /** Atomically reserves a journal before sending its one Discord publication. */
@@ -807,6 +825,9 @@ export class Pf2PersistenceService implements OnModuleInit {
       await manager.query("CREATE TABLE IF NOT EXISTS pf2_journal_revelation (journal_number INTEGER PRIMARY KEY, status TEXT NOT NULL CHECK (status IN ('publishing','revealed')), revealed_at TEXT, revealed_by TEXT, discord_message_id TEXT, created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP, updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)")
       await manager.query("CREATE INDEX IF NOT EXISTS idx_pf2_journal_revelation_status ON pf2_journal_revelation (status, journal_number)")
     })
+    await this.applyMigration('022-journal-catalogue', async (manager) => {
+      await manager.query("CREATE TABLE IF NOT EXISTS pf2_journal (number INTEGER PRIMARY KEY CHECK (number > 0), title TEXT NOT NULL, content TEXT NOT NULL DEFAULT '', dependencies TEXT NOT NULL DEFAULT '[]', created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP, updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)")
+    })
 
     await this.assertDatabaseIntegrity(this.dataSource, 'base SQLite après migrations')
   }
@@ -1235,6 +1256,7 @@ export class Pf2PersistenceService implements OnModuleInit {
   private legacyTitle(value: unknown, id: string): string { return typeof value === 'string' && value.trim() ? value.trim() : `Séance migrée ${id}` }
   private text(value: unknown, label: string, fallback: string, required = false): string { const text = value === undefined ? fallback : value; if (typeof text !== 'string' || (required && !text.trim())) throw new Error(`${label} est obligatoire.`); return text.trim() }
   private participants(value: unknown, fallback: string[]): string[] { const items = value === undefined ? fallback : value; if (!Array.isArray(items) || items.some((item) => typeof item !== 'string' || !item.trim())) throw new Error('participants doit être une liste d’identifiants de PJ.') ; return [...new Set(items.map((item) => item.trim()))] }
+  private numberList(value: string): number[] { try { const parsed = JSON.parse(value) as unknown; return Array.isArray(parsed) ? [...new Set(parsed.filter((item): item is number => typeof item === 'number' && Number.isInteger(item) && item > 0))] : [] } catch { return [] } }
   private playerId(value: unknown, fallback: string | null): string | null { const id = value === undefined ? fallback : value; if (id === null || id === '') return null; if (typeof id !== 'string' || !id.trim()) throw new Error('Identifiant de PJ invalide.'); return id.trim() }
   private experience(value: unknown, label: string, fallback: number): number { const xp = value === undefined ? fallback : value; if (typeof xp !== 'number' || !Number.isInteger(xp) || xp < 0) throw new Error(`${label} doit être un entier positif ou nul.`); return xp }
   private deployment(row: Record<string, unknown>): ScenarioDeployment {

@@ -4,9 +4,9 @@
   "author": ["PF2 project"],
   "description": "Journaux PF2 révélés par Discord.",
   "type": "other",
-  "AutoloadClasses": { "PF2JournalsHooks": "includes/PF2JournalsHooks.php", "ApiPF2Journals": "includes/ApiPF2Journals.php" },
-  "APIModules": { "pf2journals": "ApiPF2Journals" },
-  "ResourceModules": { "ext.pf2journals": { "scripts": ["resources/pf2-journals.js"], "styles": ["resources/pf2-journals.css"], "dependencies": ["mediawiki.api", "mediawiki.util"], "localBasePath": "", "remoteExtPath": "PF2Journals" } },
+  "AutoloadClasses": { "PF2JournalsHooks": "includes/PF2JournalsHooks.php", "ApiPF2Journals": "includes/ApiPF2Journals.php", "ApiPF2JournalsUpdate": "includes/ApiPF2JournalsUpdate.php" },
+  "APIModules": { "pf2journals": "ApiPF2Journals", "pf2journalsupdate": "ApiPF2JournalsUpdate" },
+  "ResourceModules": { "ext.pf2journals": { "scripts": ["resources/pf2-journals.js", "resources/pf2-journals-admin.js"], "styles": ["resources/pf2-journals.css"], "dependencies": ["mediawiki.api", "mediawiki.util"], "localBasePath": "", "remoteExtPath": "PF2Journals" } },
   "Hooks": { "BeforePageDisplay": "PF2JournalsHooks::onBeforePageDisplay", "getUserPermissionsErrors": "PF2JournalsHooks::onGetUserPermissionsErrors" },
   "config": { "PF2JournalsApiBase": { "value": "http://host.docker.internal:3333/api/pf2-mj" }, "PF2JournalsInternalKey": { "value": "" } },
   "manifest_version": 2

@@ -1,14 +1,12 @@
 import { Pf2JournalsService } from './Pf2JournalsService'
 
 describe('Pf2JournalsService', () => {
-  const persistence = () => ({ listJournalRevelations: jest.fn().mockResolvedValue([]), claimJournalReveal: jest.fn(), completeJournalReveal: jest.fn(), abandonJournalReveal: jest.fn() })
+  const persistence = () => ({ listJournalRevelations: jest.fn().mockResolvedValue([]), listJournalDefinitions: jest.fn().mockResolvedValue([]), saveJournalDefinition: jest.fn(), deleteJournalDefinition: jest.fn(), claimJournalReveal: jest.fn(), completeJournalReveal: jest.fn(), abandonJournalReveal: jest.fn() })
   const withCatalogue = (items: Array<{ number: number; title: string; content: string; dependencies: number[] }>, revealed: number[] = []) => {
     const store = persistence()
     store.listJournalRevelations.mockResolvedValue(revealed.map(journalNumber => ({ journalNumber, revealedAt: '2026-01-01', revealedBy: null, discordMessageId: null })))
-    const service = new Pf2JournalsService(store as never)
-    const catalogue = (service as unknown as { catalogue: Map<number, unknown> }).catalogue
-    for (const item of items) catalogue.set(item.number, item)
-    return service
+    store.listJournalDefinitions.mockResolvedValue(items.map(item => ({ ...item, createdAt: '', updatedAt: '' })))
+    return new Pf2JournalsService(store as never)
   }
 
   it('retourne le journal sans dépendance', async () => {
