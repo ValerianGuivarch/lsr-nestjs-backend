@@ -13,6 +13,7 @@ export class DiscordCommandsService {
   private readonly logger = new Logger(DiscordCommandsService.name)
   private readonly pendingGames = new Map<string, { actors: Array<{ uuid: string; name: string; player: string; userId: string }>; selected?: Array<{ uuid: string; name: string; player: string; userId: string }> }>()
   private readonly pendingAnnouncements = new Map<string, { content: string; userIds: string[] }>()
+  private readonly pendingRecaps = new Map<string, { requesterId: string; actors: Array<{ uuid: string; name: string }> }>()
   private readonly pendingShortSummaries = new Map<string, {
     sessionId: string
     sessionNumber: number
@@ -30,10 +31,7 @@ export class DiscordCommandsService {
   definitions(): RESTPostAPIApplicationGuildCommandsJSONBody[] {
     return [
       new SlashCommandBuilder().setName('ping').setDescription('Vérifie que PF2-Bot répond.').toJSON(),
-      new SlashCommandBuilder().setName('recap').setDescription('Récapitulatifs de participation PF2.')
-        .addSubcommand(command => command.setName('nb-seances').setDescription('Nombre de séances jouées, par joueur et par PJ.'))
-        .addSubcommand(command => command.setName('link').setDescription('Nombre de séances partagées par paire de PJ.'))
-        .toJSON(),
+      new SlashCommandBuilder().setName('recap').setDescription('Affiche les séances communes pour les PJ choisis.').toJSON(),
       new SlashCommandBuilder().setName('export-full').setDescription('Exporte tous les messages texte du serveur en JSON.').toJSON(),
       new SlashCommandBuilder().setName('new-game').setDescription('Prépare une nouvelle mission PF2 depuis les PJ actifs dans ce salon.').toJSON(),
       new SlashCommandBuilder().setName('finish-game').setDescription('Termine une mission et met à jour son résumé.').addIntegerOption(option => option.setName('xp').setDescription('XP gagnée par PJ').setRequired(true).setMinValue(0)).addIntegerOption(option => option.setName('numero').setDescription('Numéro du résumé à terminer')).addStringOption(option => option.setName('fin').setDescription('Date de fin en jeu : YYYY-MM-DD')).addIntegerOption(option => option.setName('jours').setDescription('Durée en jours, à partir du début en jeu').setMinValue(1)).toJSON(),
@@ -48,15 +46,7 @@ export class DiscordCommandsService {
       return true
     }
     if (interaction.commandName === 'recap') {
-      // Actor names may require a Relay request. Discord interactions expire
-      // after three seconds unless they are acknowledged first.
-      await interaction.deferReply()
-      const mode = (interaction as ChatInputCommandInteraction).options.getSubcommand()
-      if (mode === 'link') {
-        const messages = await this.recapLinksMessages()
-        await interaction.editReply({ content: messages[0] })
-        for (const content of messages.slice(1)) await (interaction as ChatInputCommandInteraction).followUp({ content })
-      } else await interaction.editReply({ content: await this.recapSessionsMessage() })
+      await this.recapCommand(interaction as ChatInputCommandInteraction)
       return true
     }
     if (interaction.commandName === 'export-full') {
@@ -99,6 +89,29 @@ export class DiscordCommandsService {
       this.logger.error('Export Discord complet impossible', error instanceof Error ? error.stack : undefined)
       await interaction.editReply({ content: `Export impossible : ${error instanceof Error ? error.message : String(error)}` })
     }
+  }
+
+  private async recapCommand(interaction: ChatInputCommandInteraction): Promise<void> {
+    await interaction.deferReply()
+    const names = await this.actorNames()
+    const actors = [...names.entries()]
+      .map(([uuid, name]) => ({ uuid, name }))
+      .filter((actor) => this.isPlayerActorName(actor.name))
+      .sort((left, right) => left.name.localeCompare(right.name, 'fr'))
+      .slice(0, 25)
+    if (actors.length < 2) {
+      await interaction.editReply({ content: 'Il faut au moins deux PJ nommés « Personnage (Joueur) » pour établir le tableau.' })
+      return
+    }
+    const id = `pf2-recap:${interaction.id}`
+    this.pendingRecaps.set(id, { requesterId: interaction.user.id, actors })
+    const select = new StringSelectMenuBuilder()
+      .setCustomId(id)
+      .setPlaceholder('Choisis les PJ à comparer')
+      .setMinValues(2)
+      .setMaxValues(actors.length)
+      .addOptions(actors.map((actor) => ({ label: actor.name.slice(0, 100), value: actor.uuid })))
+    await interaction.editReply({ content: 'Choisis les PJ à comparer. Le tableau indiquera le nombre de séances jouées ensemble pour chaque paire.', components: [new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(select)] })
   }
 
   async handleAutocomplete(interaction: AutocompleteInteraction): Promise<boolean> {
@@ -196,6 +209,18 @@ export class DiscordCommandsService {
   }
 
   async handleComponent(interaction: StringSelectMenuInteraction): Promise<boolean> {
+    if (interaction.customId.startsWith('pf2-recap:')) {
+      const pending = this.pendingRecaps.get(interaction.customId)
+      if (!pending) { await interaction.reply({ content: 'Cette demande de récap a expiré. Relance `/recap`.', ephemeral: true }); return true }
+      if (interaction.user.id !== pending.requesterId) { await interaction.reply({ content: 'Cette sélection appartient à un autre utilisateur.', ephemeral: true }); return true }
+      const selected = pending.actors.filter((actor) => interaction.values.includes(actor.uuid))
+      if (selected.length < 2) { await interaction.reply({ content: 'Choisis au moins deux PJ.', ephemeral: true }); return true }
+      const messages = await this.recapMatrixMessages(selected)
+      await interaction.update({ content: messages[0], components: [] })
+      for (const content of messages.slice(1)) await interaction.followUp({ content })
+      this.pendingRecaps.delete(interaction.customId)
+      return true
+    }
     if (!interaction.customId.startsWith('pf2-new-game:')) return false
     const pending = this.pendingGames.get(interaction.customId)
     if (!pending) { await interaction.reply({ content: 'Cette préparation a expiré. Relance `/new-game`.', ephemeral: true }); return true }
@@ -831,82 +856,51 @@ export class DiscordCommandsService {
   private displayDate(date: string): string { const [year, month, day] = date.split('-').map(Number); const months = ['Abadius', 'Calistril', 'Pharast', 'Gozran', 'Desnus', 'Sarenith', 'Erastus', 'Arodus', 'Rova', 'Lamashan', 'Neth', 'Kuthona']; return year >= 3000 ? `${day} ${months[month - 1]} ${year} AR` : `${day} ${months[month - 1]} ${year + 1694} AR (${day}/${String(month).padStart(2, '0')}/${year})` }
   private discordId(player: string): string | undefined { return ({ jupi: '308566148931387393', julien: '308566148931387393', valerian: '492387405760823297', valou: '492387405760823297', david: '688742453276180560', tom: '134346709487714304', sameh: '688791427253403679', arcady: '344733584441081857', eric: '399621722158137346', mana: '404629333534179338', marinella: '404629333534179338', nico: '688860103629340690', nicolas: '688860103629340690', gus: '671746679636099094', augustin: '671746679636099094', elena: '689036096767524866', guilhem: '448500183186145291', arthur: '557907871212503050' })[player.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim()] }
 
-  private async recapSessionsMessage(): Promise<string> {
-    const [sessions, names] = await Promise.all([this.persistence.listSessions(), this.actorNames()])
-    const counts = new Map<string, { sessions: number; characters: Map<string, number> }>()
+  private async recapMatrixMessages(actors: Array<{ uuid: string; name: string }>): Promise<string[]> {
+    const sessions = await this.persistence.listSessions()
+    const selected = new Set(actors.map((actor) => actor.uuid))
+    const labels = actors.map((actor) => this.characterLabel(actor.name))
+    const shared = actors.map(() => actors.map(() => 0))
     for (const session of sessions) {
-      const players = new Map<string, Set<string>>()
-      for (const uuid of new Set(session.participants)) {
-        const character = names.get(uuid) ?? uuid.replace(/^Actor\./, '')
-        const player = this.playerName(character)
-        const characters = players.get(player) ?? new Set<string>()
-        characters.add(character)
-        players.set(player, characters)
-      }
-      for (const [player, characters] of players) {
-        const current = counts.get(player) ?? { sessions: 0, characters: new Map<string, number>() }
-        current.sessions += 1
-        for (const character of characters) current.characters.set(character, (current.characters.get(character) ?? 0) + 1)
-        counts.set(player, current)
+      const participants = new Set(session.participants)
+      for (let left = 0; left < actors.length; left += 1) {
+        if (!participants.has(actors[left].uuid)) continue
+        for (let right = left + 1; right < actors.length; right += 1) {
+          if (!participants.has(actors[right].uuid)) continue
+          shared[left][right] += 1
+          shared[right][left] += 1
+        }
       }
     }
-    if (!counts.size) return '**Récapitulatif des séances**\nAucune participation renseignée.'
-    const rows = [...counts.entries()].sort(([leftName, left], [rightName, right]) => left.sessions - right.sessions || leftName.localeCompare(rightName, 'fr'))
-    const lines = rows.map(([name, count]) => {
-      const characters = [...count.characters.entries()]
-        .sort(([left], [right]) => left.localeCompare(right, 'fr'))
-        .map(([character, total]) => `${character}: ${total}`)
-      return `• ${name} — ${count.sessions} séance${count.sessions > 1 ? 's' : ''} (${characters.join(', ')})`
-    })
-    return `**Récapitulatif des séances**\n${lines.join('\n')}`.slice(0, 2_000)
+    // The guard keeps TypeScript and the intent explicit: only selected PJ
+    // influence the matrix, even if a session stores other participants.
+    if (!selected.size) return ['**Séances communes**\nAucun PJ sélectionné.']
+    const header = `| PJ | ${labels.join(' | ')} |`
+    const separator = `|---|${labels.map(() => '---').join('|')}|`
+    const rows = actors.map((actor, row) => `| ${labels[row]} | ${actors.map((_other, column) => row === column ? '—' : String(shared[row][column])).join(' | ')} |`)
+    return this.discordTableChunks('**Séances communes des PJ sélectionnés**', header, separator, rows)
   }
 
-  /** One compact matrix row per character, split into Discord-safe messages. */
-  private async recapLinksMessages(): Promise<string[]> {
-    const [sessions, names] = await Promise.all([this.persistence.listSessions(), this.actorNames()])
-    const participants = [...new Set(sessions.flatMap(session => session.participants))].sort((left, right) =>
-      (names.get(left) ?? left).localeCompare(names.get(right) ?? right, 'fr')
-    )
-    if (participants.length < 2) return ['**Liens entre PJ**\nPas assez de participations pour comparer deux PJ.']
-
-    const labels = new Map(participants.map((uuid, index) => [uuid, this.matrixLabel(index)]))
-    const shared = new Map<string, number>()
-    const key = (left: string, right: string) => left < right ? `${left}\u0000${right}` : `${right}\u0000${left}`
-    for (const session of sessions) {
-      const unique = [...new Set(session.participants)].filter(uuid => labels.has(uuid))
-      for (let left = 0; left < unique.length; left += 1) for (let right = left + 1; right < unique.length; right += 1) {
-        const pair = key(unique[left], unique[right])
-        shared.set(pair, (shared.get(pair) ?? 0) + 1)
-      }
-    }
-
-    const legend = participants.map(uuid => `${labels.get(uuid)} = ${names.get(uuid) ?? uuid.replace(/^Actor\./, '')}`)
-    const header = `    ${participants.map(uuid => labels.get(uuid)!.padStart(3)).join(' ')}`
-    const rows = participants.map(uuid => `${labels.get(uuid)!.padStart(3)} ${participants.map(other => other === uuid ? '  —' : String(shared.get(key(uuid, other)) ?? 0).padStart(3)).join(' ')}`)
-    return this.discordChunks('**Liens entre PJ**\nChaque case indique le nombre de séances jouées ensemble.\n', [
-      '**Légende**', ...legend, '', '**Matrice**', header, ...rows
-    ])
+  private characterLabel(name: string): string {
+    const label = name.replace(/\s+\([^()]+\)\s*$/, '').trim()
+    return label || name
   }
 
-  private matrixLabel(index: number): string {
-    let value = index
-    let label = ''
-    do { label = String.fromCharCode(65 + (value % 26)) + label; value = Math.floor(value / 26) - 1 } while (value >= 0)
-    return label
-  }
+  private isPlayerActorName(name: string): boolean { return /^\S(?:.*\S)?\s+\([^()]+\)$/u.test(name.trim()) }
 
-  private discordChunks(title: string, lines: string[]): string[] {
+  private discordTableChunks(title: string, header: string, separator: string, rows: string[]): string[] {
     const limit = 1_900
+    const prefix = `${title}\n${header}\n${separator}`
+    if (prefix.length > limit) return [`${title}\nLa sélection est trop large pour un tableau Discord. Choisis moins de PJ.`]
     const chunks: string[] = []
-    let current = title
-    for (const line of lines) {
-      const next = `${current}${current.endsWith('\n') ? '' : '\n'}${line}`
-      if (next.length > limit && current !== title) {
+    let current = prefix
+    for (const row of rows) {
+      if (`${current}\n${row}`.length > limit && current !== prefix) {
         chunks.push(current)
-        current = `${title.replace('**Liens entre PJ**', '**Liens entre PJ — suite**')}${line}`
-      } else current = next
+        current = `${title} — suite\n${header}\n${separator}\n${row}`
+      } else current += `\n${row}`
     }
-    if (current) chunks.push(current)
+    chunks.push(current)
     return chunks
   }
 

@@ -8,35 +8,13 @@ describe('DiscordCommandsService', () => {
     expect(reply).toHaveBeenCalledWith({ content: 'Pong !', ephemeral: true })
   })
 
-  it('groups session participation by player, with the per-character detail, and sorts least to most played', async () => {
-    const reply = jest.fn().mockResolvedValue(undefined)
+  it('offers a PJ picker for /recap and renders a named matrix only for the chosen characters', async () => {
     const deferReply = jest.fn().mockResolvedValue(undefined)
     const editReply = jest.fn().mockResolvedValue(undefined)
-    const persistence = {
-      listSessions: jest.fn().mockResolvedValue([
-        { participants: ['Actor.arthur', 'Actor.kian'] },
-        { participants: ['Actor.arthur'] },
-        { participants: ['Actor.kian', 'Actor.kian'] },
-      ]),
-      saveFoundryActorCache: jest.fn(),
-      readFoundryActorCache: jest.fn(),
-    }
-    const service = new DiscordCommandsService(persistence as never, { listActors: jest.fn().mockResolvedValue([{ uuid: 'Actor.arthur', name: 'Ayla (Arthur)' }, { uuid: 'Actor.kian', name: 'Kian le Brave (Kian)' }]) } as never)
-    await expect(service.handle({ commandName: 'recap', reply, deferReply, editReply, options: { getSubcommand: () => 'nb-seances' } } as never)).resolves.toBe(true)
-    expect(deferReply).toHaveBeenCalledWith()
-    expect(editReply).toHaveBeenCalledWith({ content: '**Récapitulatif des séances**\n• Arthur — 2 séances (Ayla (Arthur): 2)\n• Kian — 2 séances (Kian le Brave (Kian): 2)' })
-    expect(persistence.saveFoundryActorCache).toHaveBeenCalled()
-  })
-
-  it('renders a character-pair matrix for /recap link', async () => {
-    const deferReply = jest.fn().mockResolvedValue(undefined)
-    const editReply = jest.fn().mockResolvedValue(undefined)
-    const followUp = jest.fn().mockResolvedValue(undefined)
     const persistence = {
       listSessions: jest.fn().mockResolvedValue([
         { participants: ['Actor.eos', 'Actor.pepin'] },
         { participants: ['Actor.eos', 'Actor.pepin', 'Actor.yaz'] },
-        { participants: ['Actor.yaz'] },
       ]),
       saveFoundryActorCache: jest.fn(), readFoundryActorCache: jest.fn(),
     }
@@ -45,12 +23,19 @@ describe('DiscordCommandsService', () => {
         { uuid: 'Actor.eos', name: 'Éos (David)' },
         { uuid: 'Actor.pepin', name: 'Pépin (Eric)' },
         { uuid: 'Actor.yaz', name: 'Yaz Lorok (Gus)' },
+        { uuid: 'Actor.npc', name: 'Janira Gavix' },
       ])
     } as never)
-    await service.handle({ commandName: 'recap', deferReply, editReply, followUp, options: { getSubcommand: () => 'link' } } as never)
-    expect(editReply).toHaveBeenCalledWith(expect.objectContaining({ content: expect.stringContaining('A = Éos (David)') }))
-    expect(editReply.mock.calls[0][0].content).toContain('A   —   2   1')
-    expect(followUp).not.toHaveBeenCalled()
+    await expect(service.handle({ commandName: 'recap', id: 'recap-1', user: { id: 'user-1' }, deferReply, editReply } as never)).resolves.toBe(true)
+    expect(editReply.mock.calls[0][0].components[0].toJSON().components[0].options).toHaveLength(3)
+
+    const update = jest.fn().mockResolvedValue(undefined)
+    const followUp = jest.fn().mockResolvedValue(undefined)
+    await expect(service.handleComponent({ customId: 'pf2-recap:recap-1', user: { id: 'user-1' }, values: ['Actor.eos', 'Actor.pepin'], update, followUp, reply: jest.fn() } as never)).resolves.toBe(true)
+    const result = update.mock.calls[0][0].content
+    expect(result).toContain('| PJ | Éos | Pépin |')
+    expect(result).toContain('| Éos | — | 2 |')
+    expect(result).not.toContain('Yaz Lorok')
   })
 
   it('turns missed published sessions into seven-day progression rolls', async () => {

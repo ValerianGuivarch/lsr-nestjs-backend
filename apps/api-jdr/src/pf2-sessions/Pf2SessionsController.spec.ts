@@ -18,4 +18,28 @@ describe('Pf2SessionsController', () => {
     expect(persistence.createSession).toHaveBeenCalledTimes(1)
     expect(persistence.saveSessionDiscordMessageId).not.toHaveBeenCalled()
   })
+
+  it('builds the co-participation matrix from session participants and cached Actor names', async () => {
+    const persistence = {
+      listSessions: jest.fn().mockResolvedValue([
+        { participants: ['Actor.eos', 'Actor.pepin'] },
+        { participants: ['Actor.eos', 'Actor.pepin', 'Actor.yaz'] },
+        { participants: ['Actor.yaz'] },
+      ]),
+      readFoundryActorCache: jest.fn().mockResolvedValue([
+        { uuid: 'Actor.eos', name: 'Éos (David)' },
+        { uuid: 'Actor.pepin', name: 'Pépin (Eric)' },
+        { uuid: 'Actor.yaz', name: 'Yaz Lorok (Gus)' },
+      ]),
+    }
+    const controller = new Pf2SessionsController(persistence as never, {} as never)
+    await expect(controller.participationMatrix()).resolves.toEqual({
+      characters: [
+        { uuid: 'Actor.eos', name: 'Éos (David)', player: 'David', sessions: 2 },
+        { uuid: 'Actor.pepin', name: 'Pépin (Eric)', player: 'Eric', sessions: 2 },
+        { uuid: 'Actor.yaz', name: 'Yaz Lorok (Gus)', player: 'Gus', sessions: 2 },
+      ],
+      matrix: [[0, 2, 1], [2, 0, 1], [1, 1, 0]],
+    })
+  })
 })

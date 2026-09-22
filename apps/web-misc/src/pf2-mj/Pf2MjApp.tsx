@@ -63,6 +63,10 @@ type LifecycleStatus = 'untracked' | 'retained' | 'to_play' | 'in_progress' | 'p
 type SelectedEntity = PlayableUnit | Container
 type PreparationStatus = 'untreated' | 'selected' | 'ready'
 type PlayStatus = 'none' | 'to_play' | 'in_progress' | 'played'
+type ParticipationMatrix = {
+  characters: Array<{ uuid: string; name: string; player: string; sessions: number }>
+  matrix: number[][]
+}
 
 type StructuredLocationOverride = {
   mode: 'replace' | 'merge'
@@ -1430,6 +1434,20 @@ function Settings({ places, onOperation }: { places: string[]; onOperation: (ope
   const [draft, setDraft] = useState('')
   const [transferMessage, setTransferMessage] = useState('')
   const [transferBusy, setTransferBusy] = useState<DataTransferDomain | null>(null)
+  const [participation, setParticipation] = useState<ParticipationMatrix | null>(null)
+  const [participationError, setParticipationError] = useState('')
+
+  useEffect(() => {
+    let cancelled = false
+    fetch('/apil7r/pf2-mj/sessions/participation-matrix', { cache: 'no-store' })
+      .then(async (response) => {
+        if (!response.ok) throw new Error(`Erreur HTTP ${response.status}`)
+        return response.json() as Promise<ParticipationMatrix>
+      })
+      .then((value) => { if (!cancelled) setParticipation(value) })
+      .catch((error) => { if (!cancelled) setParticipationError(error instanceof Error ? error.message : 'Chargement impossible.') })
+    return () => { cancelled = true }
+  }, [])
 
   const exportData = async (domain: DataTransferDomain) => {
     setTransferBusy(domain)
@@ -1485,6 +1503,7 @@ function Settings({ places, onOperation }: { places: string[]; onOperation: (ope
     <div className="settings-card"><div className="add-place"><input value={draft} onChange={(event) => setDraft(event.target.value)} placeholder="Ajouter un lieu…" /><button onClick={() => { if (draft.trim()) { onOperation('place-add', undefined, draft.trim()); setDraft('') } }}>Ajouter</button></div><div className="place-cloud">{places.map((place) => <Badge key={place}>{place}</Badge>)}</div></div>
     <div className="settings-card migration-summary"><h3>Catalogue SQLite</h3><p>Le catalogue est chargé depuis <code>pf2.sqlite</code> puis normalisé à l’exécution en conteneurs, unités jouables, composants et documents. Les anciens JSON sont conservés uniquement comme archives de migration.</p><dl><div><dt>Conteneurs</dt><dd>{containers.length}</dd></div><div><dt>Unités jouables</dt><dd>{playableUnits.length}</dd></div><div><dt>Documents</dt><dd>{currentDocuments().length}</dd></div><div><dt>Points à revoir</dt><dd>{migrationIssues.length}</dd></div><div><dt>Inventaire ZIP</dt><dd>{resourceInventoryKnown ? 'actif' : 'en attente du scan'}</dd></div></dl></div>
     <div className="settings-card"><h3>Import / export JSON</h3><p>Chaque bouton exporte l’état actuel de <code>pf2.sqlite</code>. Tu peux modifier le JSON ou me l’envoyer, puis le réimporter. L’application montre toujours le diff en simulation avant de demander confirmation.</p><div className="data-transfer-grid">{transferDomains.map((domain) => <div className="data-transfer-domain" key={domain.id}><div><strong>{domain.label}</strong><span>{domain.note}</span></div><div className="data-transfer-actions"><button className="refresh" disabled={transferBusy !== null} onClick={() => void exportData(domain.id)}>{transferBusy === domain.id ? 'Traitement…' : 'Exporter'}</button><label className={transferBusy !== null ? 'disabled' : ''}>Importer<input type="file" disabled={transferBusy !== null} accept="application/json,.json" onChange={(event) => { const file=event.target.files?.[0]; event.target.value=''; void importData(domain.id, file) }} /></label></div></div>)}</div>{transferMessage && <p className="data-transfer-message">{transferMessage}</p>}</div>
+    <div className="settings-card participation-matrix-card"><h3>Présence commune des PJ</h3><p>Nombre de séances jouées ensemble. Les noms proviennent du cache Actors Foundry afin que ce tableau reste disponible lorsque Foundry est éteint.</p>{participationError ? <p className="data-transfer-message">{participationError}</p> : !participation ? <p className="missing">Chargement des participations…</p> : participation.characters.length < 2 ? <p className="missing">Pas encore assez de PJ participant aux séances pour comparer des paires.</p> : <div className="participation-matrix-scroll"><table className="participation-matrix"><thead><tr><th scope="col">PJ</th>{participation.characters.map((character) => <th scope="col" key={character.uuid} title={character.name}>{character.name}</th>)}</tr></thead><tbody>{participation.characters.map((character, row) => <tr key={character.uuid}><th scope="row"><strong>{character.name}</strong><small>{character.sessions} séance{character.sessions > 1 ? 's' : ''}</small></th>{participation.characters.map((other, column) => <td key={other.uuid} className={row === column ? 'self' : participation.matrix[row]?.[column] === 0 ? 'never' : ''}>{row === column ? '—' : participation.matrix[row]?.[column] ?? 0}</td>)}</tr>)}</tbody></table></div>}</div>
   </section>
 }
 

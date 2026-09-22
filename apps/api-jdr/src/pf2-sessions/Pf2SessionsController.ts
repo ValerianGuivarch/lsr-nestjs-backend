@@ -39,6 +39,48 @@ export class Pf2SessionsController {
     return this.persistence.listSessions()
   }
 
+  /**
+   * Compact, browser-friendly co-participation matrix.  It intentionally uses
+   * the persisted Foundry Actor cache so the MJ interface stays available when
+   * Foundry is offline.
+   */
+  @Get('participation-matrix')
+  async participationMatrix(): Promise<{
+    characters: Array<{ uuid: string; name: string; player: string; sessions: number }>
+    matrix: number[][]
+  }> {
+    const [sessions, cachedActors] = await Promise.all([
+      this.persistence.listSessions(),
+      this.persistence.readFoundryActorCache(),
+    ])
+    const names = new Map(cachedActors.map((actor) => [actor.uuid, actor.name]))
+    const ids = [...new Set(sessions.flatMap((session) => session.participants))]
+      .sort((left, right) => (names.get(left) ?? left).localeCompare(names.get(right) ?? right, 'fr'))
+    const indexById = new Map(ids.map((id, index) => [id, index]))
+    const matrix = ids.map(() => ids.map(() => 0))
+    const sessionCounts = ids.map(() => 0)
+    for (const session of sessions) {
+      const participants = [...new Set(session.participants)].filter((id) => indexById.has(id))
+      for (const id of participants) sessionCounts[indexById.get(id)!] += 1
+      for (let left = 0; left < participants.length; left += 1) {
+        for (let right = left + 1; right < participants.length; right += 1) {
+          const leftIndex = indexById.get(participants[left])!
+          const rightIndex = indexById.get(participants[right])!
+          matrix[leftIndex][rightIndex] += 1
+          matrix[rightIndex][leftIndex] += 1
+        }
+      }
+    }
+    return {
+      characters: ids.map((uuid, index) => {
+        const name = names.get(uuid) ?? uuid.replace(/^Actor\./, '')
+        const player = /\(([^()]+)\)\s*$/.exec(name)?.[1]?.trim() || name
+        return { uuid, name, player, sessions: sessionCounts[index] }
+      }),
+      matrix,
+    }
+  }
+
   @Get(':id')
   async get(
     @Param('id') id: string,
