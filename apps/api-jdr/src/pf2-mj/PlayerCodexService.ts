@@ -135,8 +135,8 @@ export class PlayerCodexService {
     })
   }
   async listFactions(): Promise<unknown[]> { return Promise.all((await this.mjFactions()).filter(faction => faction.published === true).map(faction => this.factionDto(faction))) }
-  async factionCandidates(): Promise<Array<{ id: string; name: string; path: string }>> {
-    const factions = await this.mjFactions()
+  async factionCandidates(publishedOnly = false): Promise<Array<{ id: string; name: string; path: string }>> {
+    const factions = (await this.mjFactions()).filter(faction => !publishedOnly || faction.published === true)
     const byId = new Map(factions.map(faction => [faction.id, faction]))
     return factions.map(faction => ({ id: faction.id, name: faction.nom, path: this.factionPath(faction, byId) })).sort((left, right) => left.path.localeCompare(right.path, 'fr'))
   }

@@ -252,7 +252,7 @@ export class DiscordCommandsService {
       .setLabel(buttonLabel)
 
     const discordPortrait = portrait ? this.discordPortraitSource(portrait) : null
-    const factions = await this.playerCodex!.factionCandidates()
+    const factions = await this.playerCodex!.factionCandidates(true)
     const components: Array<ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder>> = []
     if (factions.length) {
       const factionId = `pf2-character:faction:${presentation.id}`

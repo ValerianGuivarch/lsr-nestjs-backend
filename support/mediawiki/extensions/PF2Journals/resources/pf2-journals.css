@@ -1,6 +1,10 @@
-#pf2-journals { max-width: 920px; }
+#pf2-journals { max-width: 1120px; }
 #ca-edit, #ca-move, #ca-delete, #ca-viewsource { display: none !important; }
-.pf2-journal-row { display: flex; flex-direction: column; gap: .2rem; padding: .75rem 1rem; margin: .45rem 0; border: 1px solid #d5c8ad; border-radius: 6px; }
+.pf2-journal-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; margin-top: 1rem; }
+.pf2-journal-card { display: flex; flex-direction: column; justify-content: center; gap: .35rem; min-height: 6.5rem; padding: 1rem; border: 1px solid #d5c8ad; border-radius: 7px; }
+.pf2-journal-card a { font-weight: 700; }
+@media screen and (max-width: 850px) { .pf2-journal-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media screen and (max-width: 560px) { .pf2-journal-grid { grid-template-columns: 1fr; } }
 .pf2-journal-revealed { background: #fffdf8; }
 .pf2-journal-locked { opacity: .62; background: #f1ece0; cursor: not-allowed; }
 .pf2-journal-locked a { cursor: pointer; }.pf2-journal-locked small { color: #6d5a36; }
