@@ -2,7 +2,7 @@
 use MediaWiki\MediaWikiServices;
 class ApiPF2Journals extends ApiBase {
     public function execute() {
-        $config = MediaWikiServices::getInstance()->getMainConfig(); $base = rtrim( $config->get( 'PF2JournalsApiBase' ), '/' ); $number = $this->getRequest()->getInt( 'number', 0 ); $adminCatalogue = $this->getRequest()->getBool( 'admin', false );
+        $config = MediaWikiServices::getInstance()->getMainConfig(); $base = rtrim( $config->get( 'PF2SessionsApiBase' ), '/' ); $number = $this->getRequest()->getInt( 'number', 0 ); $adminCatalogue = $this->getRequest()->getBool( 'admin', false );
         $canAdmin = $this->getUser()->isRegistered() && $this->getUser()->isAllowed( 'delete' );
         $headers = [];
         if ( ( $number > 0 || $adminCatalogue ) && $canAdmin && (string)$config->get( 'PF2JournalsInternalKey' ) !== '' ) { $headers['X-PF2-Journals-Key'] = (string)$config->get( 'PF2JournalsInternalKey' ); }

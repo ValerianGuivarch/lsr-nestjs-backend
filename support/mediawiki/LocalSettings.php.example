@@ -148,8 +148,6 @@ wfLoadExtension( 'PF2PlayerCodex' );
 $wgPF2PlayerCodexApiBase = 'http://host.docker.internal:3333/api/pf2-mj';
 
 wfLoadExtension( 'PF2Journals' );
-$wgPF2JournalsApiBase = 'http://host.docker.internal:3333/api/pf2-mj';
-$wgPF2JournalsInternalKey = 'CHANGE_ME_TO_THE_SAME_SECRET_AS_API';
 
 # PF2 — namespace canonique des résumés longs
 define( 'NS_PF2_SESSION', 3000 );

@@ -9,7 +9,7 @@ class ApiPF2JournalsUpdate extends ApiBase {
         $config = MediaWikiServices::getInstance()->getMainConfig(); $key = (string)$config->get( 'PF2JournalsInternalKey' );
         if ( $key === '' ) { $this->dieWithError( 'PF2JournalsInternalKey n’est pas configurée.' ); }
         $number = rawurlencode( $params['number'] ); $method = $params['op'] === 'delete' ? 'DELETE' : 'PUT';
-        $base = rtrim( $config->get( 'PF2JournalsApiBase' ), '/' );
+        $base = rtrim( $config->get( 'PF2SessionsApiBase' ), '/' );
         $request = MediaWikiServices::getInstance()->getHttpRequestFactory()->create( $base . '/journals/admin/catalogue/' . $number, [ 'method' => $method, 'timeout' => 15, 'postData' => json_encode( $payload ), 'headers' => [ 'Content-Type' => 'application/json', 'X-PF2-Journals-Key' => $key ] ], __METHOD__ );
         $status = $request->execute(); $data = json_decode( $request->getContent(), true );
         if ( !$status->isOK() || !is_array( $data ) ) { $this->dieWithError( is_array( $data ) && isset( $data['message'] ) ? $data['message'] : 'Mise à jour des journaux impossible.' ); }
