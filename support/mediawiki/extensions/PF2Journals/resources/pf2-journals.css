@@ -1,5 +1,6 @@
 #pf2-journals { max-width: 1120px; }
 #ca-edit, #ca-move, #ca-delete, #ca-viewsource { display: none !important; }
+.pf2-journal-search { box-sizing: border-box; width: min(100%, 28rem); margin-top: .25rem; padding: .55rem .7rem; font: inherit; }
 .pf2-journal-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; margin-top: 1rem; }
 .pf2-journal-card { display: flex; flex-direction: column; justify-content: center; gap: .35rem; min-height: 6.5rem; padding: 1rem; border: 1px solid #d5c8ad; border-radius: 7px; }
 .pf2-journal-card a { font-weight: 700; }
