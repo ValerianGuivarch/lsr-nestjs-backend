@@ -4,8 +4,11 @@ class PF2JournalsHooks {
         $title = $out->getTitle();
         if ( $title && self::isJournalTitle( $title ) ) { $out->addModules( 'ext.pf2journals' ); }
     }
-    public static function onGetUserPermissionsErrors( $title, $user, $action, &$errors, $rigor = null ): bool {
-        if ( self::isJournalTitle( $title ) && in_array( $action, [ 'edit', 'move', 'delete' ], true ) ) { $errors[] = [ 'badaccess-group0' ]; }
+    public static function onGetUserPermissionsErrors( $title, $user, $action, &$result ): bool {
+        if ( self::isJournalTitle( $title ) && in_array( $action, [ 'edit', 'move', 'delete' ], true ) ) {
+            $result = [ 'badaccess-group0' ];
+            return false;
+        }
         return true;
     }
     private static function isJournalTitle( $title ): bool {
