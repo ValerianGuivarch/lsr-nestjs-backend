@@ -11,7 +11,21 @@ class ApiPF2Journals extends ApiBase {
         $request = MediaWikiServices::getInstance()->getHttpRequestFactory()->create( $url, [ 'method' => 'GET', 'timeout' => 10, 'headers' => $headers ], __METHOD__ ); $status = $request->execute();
         if ( !$status->isOK() ) { $this->dieWithError( 'Impossible de charger les journaux PF2.' ); }
         $data = json_decode( $request->getContent(), true ); if ( !is_array( $data ) ) { $this->dieWithError( 'Réponse Journaux PF2 invalide.' ); }
+        // ApiResult sérialise le booléen PHP true sous la forme d'une chaîne
+        // vide. Le client JavaScript le lit alors comme false et verrouille
+        // un journal pourtant révélé. Utiliser des entiers explicites.
+        if ( array_key_exists( 'number', $data ) ) {
+            $data['revealed'] = !empty( $data['revealed'] ) ? 1 : 0;
+        } else {
+            foreach ( $data as &$journal ) {
+                if ( is_array( $journal ) ) {
+                    $journal['revealed'] = !empty( $journal['revealed'] ) ? 1 : 0;
+                }
+            }
+            unset( $journal );
+        }
         $this->getResult()->addValue( null, 'pf2journals', [ 'data' => $data, 'canAdmin' => $canAdmin ? 1 : 0 ] );
     }
     public function isReadMode() { return true; }
+    public function getAllowedParams() { return [ 'number', 'admin' ]; }
 }
