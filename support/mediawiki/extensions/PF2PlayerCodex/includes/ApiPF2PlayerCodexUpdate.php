@@ -33,9 +33,6 @@ class ApiPF2PlayerCodexUpdate extends ApiBase {
 
         $op = $params['op'];
         $routes = [
-            'createFaction' => [ 'POST', '/player-codex/factions' ],
-            'updateFaction' => [ 'PATCH', '/player-codex/factions/' . rawurlencode( $params['id'] ) ],
-            'deleteFaction' => [ 'DELETE', '/player-codex/factions/' . rawurlencode( $params['id'] ) ],
             'deleteCharacter' => [ 'DELETE', '/player-codex/characters/' . rawurlencode( $params['id'] ) ],
             'addFaction' => [ 'POST', '/player-codex/characters/' . rawurlencode( $params['id'] ) . '/factions' ],
             'removeFaction' => [ 'DELETE', '/player-codex/characters/' . rawurlencode( $params['id'] ) . '/factions/' . rawurlencode( $params['target'] ) ],
@@ -44,10 +41,7 @@ class ApiPF2PlayerCodexUpdate extends ApiBase {
             $this->dieWithError( 'Opération inconnue.' );
         }
 
-        // HttpRequestFactory reliably serializes an array as a standard form
-        // POST. Use it for this small creation form; the JSON body variant was
-        // reaching Nest as an empty body in the deployed MediaWiki runtime.
-        $body = $op === 'createFaction' ? [ 'name' => $payload['name'] ?? '' ] : json_encode( $payload );
+        $body = json_encode( $payload );
         if ( $body === false ) {
             $this->dieWithError( 'Données impossibles à sérialiser.' );
         }
@@ -64,7 +58,7 @@ class ApiPF2PlayerCodexUpdate extends ApiBase {
                     'method' => $method,
                     'timeout' => 15,
                     'postData' => $body,
-                    'headers' => $op === 'createFaction' ? [] : [ 'Content-Type' => 'application/json' ],
+                    'headers' => [ 'Content-Type' => 'application/json' ],
                 ],
                 __METHOD__
             );

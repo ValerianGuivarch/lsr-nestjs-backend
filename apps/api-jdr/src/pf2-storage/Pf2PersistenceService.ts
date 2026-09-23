@@ -828,6 +828,12 @@ export class Pf2PersistenceService implements OnModuleInit {
     await this.applyMigration('022-journal-catalogue', async (manager) => {
       await manager.query("CREATE TABLE IF NOT EXISTS pf2_journal (number INTEGER PRIMARY KEY CHECK (number > 0), title TEXT NOT NULL, content TEXT NOT NULL DEFAULT '', dependencies TEXT NOT NULL DEFAULT '[]', created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP, updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)")
     })
+    await this.applyMigration('023-player-codex-canonical-factions', async (manager) => {
+      // Canonical faction records live in pf2_record(kind='faction').  Keep
+      // the retired player-only tables untouched so no existing data is lost.
+      await manager.query("CREATE TABLE IF NOT EXISTS pf2_player_character_mj_faction (npc_id TEXT NOT NULL, faction_id TEXT NOT NULL, created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (npc_id, faction_id))")
+      await manager.query('CREATE INDEX IF NOT EXISTS idx_pf2_player_character_mj_faction_faction ON pf2_player_character_mj_faction (faction_id)')
+    })
 
     await this.assertDatabaseIntegrity(this.dataSource, 'base SQLite après migrations')
   }

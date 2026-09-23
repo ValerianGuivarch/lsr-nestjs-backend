@@ -12,6 +12,7 @@ type Faction={
   lieux:string[]; regions_influence:string[]; objectifs:string[]; histoire?:string; relations:Relation[];
   tags:string[]; image:string; aliases:string[]; statut:string; notes?:string; source?:string;
   evenements:string[]; reputation_groupe:Reputation;
+  published?:boolean;
 };
 type RefItem={id:string;nom:string};
 type Draft={
@@ -66,6 +67,7 @@ const normalizeFaction=(x:any):Faction=>({
     initiale:typeof x?.reputation_groupe?.initiale==="number"?x.reputation_groupe.initiale:0,
     actuelle:typeof x?.reputation_groupe?.actuelle==="number"?x.reputation_groupe.actuelle:0,
   },
+  published:x?.published===true,
 });
 
 function isFaction(value:unknown):value is Faction{
@@ -153,7 +155,7 @@ export default function FactionsPage({initialSelectedId}:{initialSelectedId?:str
       <select value={parent} onChange={e=>setParent(e.target.value)}><option value="">Toutes les hiérarchies</option>{parents.map(v=><option key={v.id} value={v.id}>{v.nom}</option>)}</select></section>
     <p className="count">{filtered.length} faction{filtered.length>1?"s":""} sur {items.length}</p>
     {filtered.length?<section className="grid">{filtered.map(f=><article className="card" key={f.id}><div className="body">
-      <h2>{f.nom}</h2><div className="meta">{f.type} · {f.statut}{f.parent_id?` · ${name("factions",f.parent_id)}`:""}</div>
+      <h2>{f.nom}</h2><div className="meta">{f.type} · {f.statut}{f.parent_id?` · ${name("factions",f.parent_id)}`:""}{f.published?" · Publiée":" · Non publiée"}</div>
       <p className="desc">{f.description||"Aucune description."}</p><div className="chips"><span className="chip rep">Réputation {f.reputation_groupe.actuelle} · {repLabel(f.reputation_groupe.actuelle)}</span>
       {f.tags.slice(0,4).map(t=><span className="chip" key={t}>{t}</span>)}</div></div><button className="more" onClick={()=>setSelected(f)}>Voir la fiche</button></article>)}</section>:<div className="empty">Aucune faction.</div>}
     {showAdd&&<div className="back" onMouseDown={e=>{if(e.target===e.currentTarget)setShowAdd(false)}}><section className="dialog"><div className="head"><h2>Ajouter une faction</h2><button className="btn" onClick={()=>setShowAdd(false)}>Fermer</button></div>
@@ -184,7 +186,7 @@ export default function FactionsPage({initialSelectedId}:{initialSelectedId?:str
       <dt>Membres clés</dt><dd>{selected.membres_cles.map(id=>name("pnjs",id)).join(" · ")||"—"}</dd>
       <dt>Lieux</dt><dd>{selected.lieux.map(id=>name("lieux",id)).join(" · ")||"—"}</dd><dt>Régions</dt><dd>{selected.regions_influence.map(id=>name("regions",id)).join(" · ")||"—"}</dd>
       <dt>Objectifs</dt><dd>{selected.objectifs.join(" · ")||"—"}</dd><dt>Relations</dt><dd>{selected.relations.map(r=>`${name("factions",r.faction_id)} (${r.type})`).join(" · ")||"—"}</dd>
-      <dt>Tags</dt><dd>{selected.tags.join(" · ")||"—"}</dd><dt>Statut</dt><dd>{selected.statut}</dd><dt>Événements</dt><dd>{selected.evenements.map(id=>name("events",id)).join(" · ")||"—"}</dd>
+      <dt>Tags</dt><dd>{selected.tags.join(" · ")||"—"}</dd><dt>Statut</dt><dd>{selected.statut}</dd><dt>Publication</dt><dd>{selected.published?"Publiée sur Discord et Wiki":"Non publiée"}</dd><dt>Événements</dt><dd>{selected.evenements.map(id=>name("events",id)).join(" · ")||"—"}</dd>
       <dt>Source</dt><dd>{selected.source||"—"}</dd><dt>Notes</dt><dd>{selected.notes||"—"}</dd></dl></article></div>}
   </main>
 }

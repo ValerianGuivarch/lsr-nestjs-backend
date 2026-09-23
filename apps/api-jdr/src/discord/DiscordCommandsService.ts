@@ -28,6 +28,8 @@ export class DiscordCommandsService {
     createdAt: number
   }>()
   private readonly pendingJournalReveals = new Map<string, { requesterId: string; journalNumber: number }>()
+  private readonly pendingCharacterFactions = new Map<string, { requesterId: string; factionId: string | null }>()
+  private readonly pendingFactionPublications = new Map<string, { requesterId: string; factionId: string }>()
   constructor(private readonly persistence: Pf2PersistenceService, private readonly foundry: FoundryRelayService, private readonly playerCodex?: PlayerCodexService, private readonly mediaWiki?: MediaWikiClientService, @Inject(forwardRef(() => DiscordService)) private readonly discord?: DiscordService, private readonly journals?: Pf2JournalsService) {}
 
   definitions(): RESTPostAPIApplicationGuildCommandsJSONBody[] {
@@ -40,6 +42,7 @@ export class DiscordCommandsService {
       new SlashCommandBuilder().setName('finish-game').setDescription('Termine une mission et met à jour son résumé.').addIntegerOption(option => option.setName('xp').setDescription('XP gagnée par PJ').setRequired(true).setMinValue(0)).addIntegerOption(option => option.setName('numero').setDescription('Numéro du résumé à terminer')).addStringOption(option => option.setName('fin').setDescription('Date de fin en jeu : YYYY-MM-DD')).addIntegerOption(option => option.setName('jours').setDescription('Durée en jours, à partir du début en jeu').setMinValue(1)).toJSON(),
       new SlashCommandBuilder().setName('resume').setDescription('Édite le résumé court d’une séance.').addStringOption(option => option.setName('session').setDescription('Séance à résumer (la plus récente par défaut)').setAutocomplete(true)).addStringOption(option => option.setName('auteur').setDescription('Personnage auteur du résumé').setAutocomplete(true)).toJSON(),
       new SlashCommandBuilder().setName('personnage').setDescription('Présente un personnage au carnet joueur.').addStringOption(option => option.setName('personnage').setDescription('PNJ existant ou nom libre').setRequired(true).setAutocomplete(true)).addAttachmentOption(option => option.setName('portrait').setDescription('Portrait pour un personnage improvisé')).addBooleanOption(option => option.setName('afficher_nom').setDescription('Afficher le nom').setRequired(false)).toJSON(),
+      new SlashCommandBuilder().setName('faction').setDescription('Prépare la publication d’une faction MJ.').addStringOption(option => option.setName('faction').setDescription('Faction à publier').setRequired(true).setAutocomplete(true)).toJSON(),
     ]
   }
 
@@ -67,6 +70,7 @@ export class DiscordCommandsService {
     }
     if (interaction.commandName === 'resume') { await this.resumeCommand(interaction as ChatInputCommandInteraction); return true }
     if (interaction.commandName === 'personnage') { await this.presentCharacter(interaction as ChatInputCommandInteraction); return true }
+    if (interaction.commandName === 'faction') { await this.factionCommand(interaction as ChatInputCommandInteraction); return true }
     return false
   }
 
@@ -85,6 +89,29 @@ export class DiscordCommandsService {
       await interaction.reply({ content: `**${journal.number} - ${journal.title}**`, components: [new ActionRowBuilder<ButtonBuilder>().addComponents(button)], ephemeral: true })
     } catch (error) {
       await interaction.reply({ content: error instanceof Error ? `Journal impossible : ${error.message}` : 'Journal impossible.', ephemeral: true })
+    }
+  }
+
+  private async factionCommand(interaction: ChatInputCommandInteraction): Promise<void> {
+    if (!interaction.memberPermissions?.has(PermissionFlagsBits.Administrator)) {
+      await interaction.reply({ content: 'Cette commande est réservée aux administrateurs du serveur.', ephemeral: true })
+      return
+    }
+    try {
+      const faction = await this.playerCodex!.factionForPublication(interaction.options.getString('faction', true))
+      if (faction.published) { await interaction.reply({ content: `La faction « ${faction.name} » est déjà publiée.`, ephemeral: true }); return }
+      const id = `pf2-faction:publish:${interaction.id}`
+      this.pendingFactionPublications.set(id, { requesterId: interaction.user.id, factionId: faction.id })
+      const text = [
+        `**${faction.name}**`,
+        faction.description || '_Aucune description._',
+        faction.parentName ? `Sous-faction de **${faction.parentName}**.` : '',
+        '',
+        '_Prévisualisation : valide pour créer la page Wiki et publier dans Discord._',
+      ].filter(Boolean).join('\n\n')
+      await interaction.reply({ content: text, components: [new ActionRowBuilder<ButtonBuilder>().addComponents(new ButtonBuilder().setCustomId(id).setLabel('Publier la faction').setStyle(ButtonStyle.Primary))], ephemeral: true, allowedMentions: { parse: [] } })
+    } catch (error) {
+      await interaction.reply({ content: `Publication impossible : ${error instanceof Error ? error.message : String(error)}`, ephemeral: true })
     }
   }
 
@@ -173,6 +200,12 @@ export class DiscordCommandsService {
       await interaction.respond([])
       return true
     }
+    if (interaction.commandName === 'faction') {
+      const focused = interaction.options.getFocused().toString().toLocaleLowerCase()
+      const factions = await this.playerCodex!.factionCandidates()
+      await interaction.respond(factions.filter(faction => faction.path.toLocaleLowerCase().includes(focused)).slice(0, 25).map(faction => ({ name: faction.path.slice(0, 100), value: faction.id })))
+      return true
+    }
     if (interaction.commandName !== 'personnage') return false
     const focused = interaction.options.getFocused().toString()
     const candidates = await this.playerCodex!.characterCandidates(focused)
@@ -219,11 +252,20 @@ export class DiscordCommandsService {
       .setLabel(buttonLabel)
 
     const discordPortrait = portrait ? this.discordPortraitSource(portrait) : null
+    const factions = await this.playerCodex!.factionCandidates()
+    const components: Array<ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder>> = []
+    if (factions.length) {
+      const factionId = `pf2-character:faction:${presentation.id}`
+      this.pendingCharacterFactions.set(presentation.id, { requesterId: interaction.user.id, factionId: null })
+      const options = [{ label: '(Aucune faction)', value: 'none', default: true }, ...factions.slice(0, 24).map(faction => ({ label: faction.path.slice(0, 100), value: faction.id }))]
+      components.push(new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(new StringSelectMenuBuilder().setCustomId(factionId).setPlaceholder('Faction principale (facultative)').addOptions(options)))
+    }
+    components.push(new ActionRowBuilder<ButtonBuilder>().addComponents(button))
 
     await interaction.reply({
       content: showName ? presentation.name : '\u200b',
       files: discordPortrait ? [discordPortrait] : [],
-      components: [new ActionRowBuilder<ButtonBuilder>().addComponents(button)],
+      components,
       allowedMentions: { parse: [] },
     })
     const message = await interaction.fetchReply()
@@ -241,6 +283,15 @@ export class DiscordCommandsService {
       await interaction.update({ content: messages[0], components: [] })
       for (const content of messages.slice(1)) await interaction.followUp({ content })
       this.pendingRecaps.delete(interaction.customId)
+      return true
+    }
+    if (interaction.customId.startsWith('pf2-character:faction:')) {
+      const presentationId = interaction.customId.slice('pf2-character:faction:'.length)
+      const pending = this.pendingCharacterFactions.get(presentationId)
+      if (!pending) { await interaction.reply({ content: 'Cette présentation a expiré. Relance `/personnage`.', ephemeral: true }); return true }
+      if (pending.requesterId !== interaction.user.id) { await interaction.reply({ content: 'Cette sélection appartient à la personne qui a créé la présentation.', ephemeral: true }); return true }
+      pending.factionId = interaction.values[0] === 'none' ? null : interaction.values[0]
+      await interaction.reply({ content: pending.factionId ? 'Faction principale sélectionnée.' : 'Aucune faction sélectionnée.', ephemeral: true })
       return true
     }
     if (!interaction.customId.startsWith('pf2-new-game:')) return false
@@ -325,6 +376,9 @@ export class DiscordCommandsService {
         await this.mediaWiki!.createPage(title, description)
         const profile = await this.playerCodex!.ensurePresentationCharacter(presentationId, name, title) as { npcId: string; wikiPageTitle: string; created: boolean }
         if (portrait) await this.playerCodex!.updateCharacter(profile.npcId, { wikiPortraitFilename: portrait })
+        const selectedFaction = this.pendingCharacterFactions.get(presentationId)?.factionId
+        if (selectedFaction) await this.playerCodex!.addCharacterFaction(profile.npcId, selectedFaction)
+        this.pendingCharacterFactions.delete(presentationId)
         const pageUrl = this.mediaWiki!.pageUrl(profile.wikiPageTitle)
         if (profile.created) {
           const publication = await this.discord?.publishCharacterIntroduction({
@@ -399,6 +453,26 @@ export class DiscordCommandsService {
           content: `Publication impossible : ${error instanceof Error ? error.message : String(error)}`,
           components: [],
         })
+      }
+      return true
+    }
+
+    if (interaction.customId.startsWith('pf2-faction:publish:')) {
+      const pending = this.pendingFactionPublications.get(interaction.customId)
+      if (!pending) { await interaction.reply({ content: 'Cette prévisualisation a expiré. Relance `/faction`.', ephemeral: true }); return true }
+      if (interaction.user.id !== pending.requesterId) { await interaction.reply({ content: 'Cette validation appartient à un autre administrateur.', ephemeral: true }); return true }
+      await interaction.deferReply({ ephemeral: true })
+      try {
+        const faction = await this.playerCodex!.factionForPublication(pending.factionId)
+        if (faction.published) throw new Error('Cette faction est déjà publiée.')
+        if (!(await this.mediaWiki!.pageExists(faction.wikiPageTitle))) await this.mediaWiki!.createPage(faction.wikiPageTitle, faction.description)
+        const publication = await this.discord!.publishFaction({ name: faction.name, description: faction.description, parentName: faction.parentName, wikiUrl: this.mediaWiki!.pageUrl(faction.wikiPageTitle) })
+        if (publication.status !== 'sent') throw new Error(publication.reason ?? 'Discord n’a pas confirmé la publication.')
+        await this.playerCodex!.markFactionPublished(faction.id)
+        this.pendingFactionPublications.delete(interaction.customId)
+        await interaction.editReply({ content: `Faction publiée : ${this.mediaWiki!.pageUrl(faction.wikiPageTitle)}` })
+      } catch (error) {
+        await interaction.editReply({ content: `Publication impossible : ${error instanceof Error ? error.message : String(error)}` })
       }
       return true
     }

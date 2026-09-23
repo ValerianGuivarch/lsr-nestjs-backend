@@ -34,6 +34,7 @@ export type DiscordFullExport = {
 }
 
 export type DiscordJournalPublication = { status: 'sent' | 'failed'; messageId?: string; reason?: string }
+export type DiscordFactionPublication = { status: 'sent' | 'failed'; messageId?: string; reason?: string }
 
 @Injectable()
 export class DiscordService implements OnModuleInit, OnModuleDestroy {
@@ -464,6 +465,22 @@ export class DiscordService implements OnModuleInit, OnModuleDestroy {
     } catch (error) {
       const reason = error instanceof Error ? error.message : 'Erreur Discord inconnue.'
       this.logger.error(`Publication Discord du personnage « ${input.name} » impossible.`, error instanceof Error ? error.stack : undefined)
+      return { status: 'failed', reason }
+    }
+  }
+
+  async publishFaction(input: { name: string; description: string; parentName: string | null; wikiUrl: string }): Promise<DiscordFactionPublication> {
+    if (!this.client) return { status: 'failed', reason: 'Discord indisponible ou désactivé.' }
+    const config = this.config()
+    if (!config) return { status: 'failed', reason: 'Discord indisponible ou désactivé.' }
+    try {
+      const content = [`**${input.name}**`, input.description.trim(), input.parentName ? `Sous-faction de **${input.parentName}**.` : '', `Fiche wiki : ${input.wikiUrl}`].filter(Boolean).join('\n\n')
+      if (content.length > 2_000) return { status: 'failed', reason: 'La présentation de faction dépasse la limite de 2 000 caractères de Discord.' }
+      const message = await (await this.textChannel(config.factionsChannelName, config)).send({ content, allowedMentions: { parse: [] } })
+      return { status: 'sent', messageId: message.id }
+    } catch (error) {
+      const reason = error instanceof Error ? error.message : 'Erreur Discord inconnue.'
+      this.logger.error(`Publication Discord de la faction « ${input.name} » impossible.`, error instanceof Error ? error.stack : undefined)
       return { status: 'failed', reason }
     }
   }
@@ -915,6 +932,11 @@ export class DiscordService implements OnModuleInit, OnModuleDestroy {
             'DISCORD_CHARACTER_CHANNEL_NAME'
           ]?.trim() ||
           'personnages',
+        factionsChannelName:
+          process.env[
+            'DISCORD_FACTIONS_CHANNEL_NAME'
+          ]?.trim() ||
+          'factions',
         journalsChannelName:
           process.env[
             'DISCORD_JOURNALS_CHANNEL_NAME'
@@ -955,6 +977,7 @@ type DiscordConfig = {
   guildId: string
   summaryChannelName: string
   characterChannelName: string
+  factionsChannelName: string
   journalsChannelName: string
   journalsChannelId: string | null
 }

@@ -20,19 +20,22 @@ describe('PlayerCodexService', () => {
     await persistence.saveRecord('pnj', { id: 'janira', nom: 'Janira Gavix', factions: ['Secret MJ'] })
     return { persistence, codex: new PlayerCodexService(source!, persistence) }
   }
-  it('keeps player factions distinct from MJ factions and prevents duplicates', async () => {
-    const { codex } = await open()
-    const faction = await codex.createFaction({ name: ' Consortium de  l’Aspis ' }) as { id: string }
-    const duplicate = await codex.createFaction({ name: 'consortium de l’asPis' }) as { id: string }
-    expect(duplicate.id).toBe(faction.id)
+  it('uses published MJ factions as the only player-codex faction catalogue', async () => {
+    const { persistence, codex } = await open()
+    await persistence.saveRecord('faction', { id: 'faction_aspis', nom: 'Consortium de l’Aspis', description: 'Un consortium.', published: true })
     await codex.createCharacter({ npcId: 'janira', displayName: 'Janira', wikiPageTitle: 'Personnage:Janira' })
-    await codex.addCharacterFaction('janira', faction.id); await codex.addCharacterFaction('janira', faction.id)
-    await expect(codex.character('janira')).resolves.toEqual(expect.objectContaining({ factions: [{ id: faction.id, name: 'Consortium de l’Aspis', wikiPageTitle: 'Faction:Consortium de l’Aspis' }] }))
+    await codex.addCharacterFaction('janira', 'faction_aspis'); await codex.addCharacterFaction('janira', 'faction_aspis')
+    const character = await codex.character('janira') as { factions: unknown[] }
+    expect(character.factions).toEqual([expect.objectContaining({ id: 'faction_aspis', name: 'Consortium de l’Aspis', wikiPageTitle: 'Faction:Consortium de l’Aspis', published: true })])
   })
-  it('rejects cyclic player faction parents', async () => {
-    const { codex } = await open(); const a = await codex.createFaction({ name: 'A' }) as { id: string }; const b = await codex.createFaction({ name: 'B' }) as { id: string }; const c = await codex.createFaction({ name: 'C' }) as { id: string }
-    await codex.updateFaction(b.id, { parentFactionId: a.id }); await codex.updateFaction(c.id, { parentFactionId: b.id })
-    await expect(codex.updateFaction(a.id, { parentFactionId: c.id })).rejects.toThrow('cycle')
+  it('adds the parent factions automatically when a character selects a sub-faction', async () => {
+    const { persistence, codex } = await open()
+    await persistence.saveRecord('faction', { id: 'eclaireurs', nom: 'Société des Éclaireurs', description: '', published: true })
+    await persistence.saveRecord('faction', { id: 'emissaires', nom: 'Émissaires', description: '', parent_id: 'eclaireurs', published: true })
+    await codex.createCharacter({ npcId: 'janira', displayName: 'Janira', wikiPageTitle: 'Personnage:Janira' })
+    await codex.addCharacterFaction('janira', 'emissaires')
+    const character = await codex.character('janira') as { factions: unknown[] }
+    expect(character.factions).toEqual(expect.arrayContaining([expect.objectContaining({ id: 'eclaireurs' }), expect.objectContaining({ id: 'emissaires' })]))
   })
   it('uses stable candidate IDs and keeps an improvised presentation separate until a profile is requested', async () => {
     const { persistence, codex } = await open()
@@ -52,18 +55,15 @@ describe('PlayerCodexService', () => {
     await codex.updateCharacter('janira', { isPlayer: false })
     await expect(codex.listPlayers()).resolves.toEqual([])
   })
-  it('removes only player-codex links and clears faction parents safely', async () => {
+  it('removes only player-codex links and preserves the canonical MJ faction', async () => {
     const { persistence, codex } = await open()
-    const parent = await codex.createFaction({ name: 'Parent' }) as { id: string }
-    const child = await codex.createFaction({ name: 'Enfant' }) as { id: string }
-    await codex.updateFaction(child.id, { parentFactionId: parent.id })
+    await persistence.saveRecord('faction', { id: 'parent', nom: 'Parent', description: '', published: true })
     await codex.createCharacter({ npcId: 'janira', displayName: 'Janira', wikiPageTitle: 'Personnage:Janira' })
-    await codex.addCharacterFaction('janira', parent.id)
+    await codex.addCharacterFaction('janira', 'parent')
     await codex.deleteCharacter('janira')
     await expect(codex.character('janira')).rejects.toThrow('introuvable')
     await expect(persistence.getRecord('pnj', 'janira')).resolves.toMatchObject({ nom: 'Janira Gavix' })
-    await codex.deleteFaction(parent.id)
-    await expect(codex.faction(child.id)).resolves.toMatchObject({ parentFactionId: null })
+    await expect(persistence.getRecord('faction', 'parent')).resolves.toMatchObject({ nom: 'Parent' })
   })
   it('deletes an MJ-only PNJ but refuses when a Wiki character profile exists', async () => {
     const { persistence, codex } = await open()
