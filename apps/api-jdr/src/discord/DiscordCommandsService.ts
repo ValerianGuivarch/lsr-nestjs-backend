@@ -83,10 +83,12 @@ export class DiscordCommandsService {
     try {
       const journal = requested === null ? await this.journals!.randomJournalToReveal() : await this.journals!.resolveJournalToReveal(requested)
       if (!journal) { await interaction.reply({ content: requested === null ? 'Il ne reste aucun journal à révéler.' : 'Ce journal est déjà révélé.', ephemeral: true }); return }
+      const preview = `**${journal.number} - ${journal.title}**\n\n${journal.content}`
+      if (preview.length > 2_000) { await interaction.reply({ content: `Ce journal contient ${preview.length} caractères et dépasserait la limite Discord de 2 000 caractères. Il n’a pas été préparé pour publication.`, ephemeral: true }); return }
       const id = `pf2-journal:reveal:${interaction.id}`
       this.pendingJournalReveals.set(id, { requesterId: interaction.user.id, journalNumber: journal.number })
       const button = new ButtonBuilder().setCustomId(id).setLabel('Valider').setStyle(ButtonStyle.Primary)
-      await interaction.reply({ content: `**${journal.number} - ${journal.title}**`, components: [new ActionRowBuilder<ButtonBuilder>().addComponents(button)], ephemeral: true })
+      await interaction.reply({ content: preview, components: [new ActionRowBuilder<ButtonBuilder>().addComponents(button)], ephemeral: true })
     } catch (error) {
       await interaction.reply({ content: error instanceof Error ? `Journal impossible : ${error.message}` : 'Journal impossible.', ephemeral: true })
     }
@@ -414,16 +416,24 @@ export class DiscordCommandsService {
         const journal = await this.journals!.resolveJournalToReveal(pending.journalNumber)
         if (!journal || journal.number !== pending.journalNumber) throw new Error(journal ? 'Les prérequis ont changé ; relance `/journaux`.' : 'Ce journal est déjà révélé.')
         const claim = await this.journals!.claim(journal.number, interaction.user.id)
+        this.logger.log(`Journal ${journal.number} : réservation SQLite=${claim}.`)
         if (claim !== 'claimed') throw new Error(claim === 'revealed' ? 'Ce journal est déjà révélé.' : 'Une autre publication est déjà en cours.')
         const publication = await this.discord!.publishJournal(journal)
         if (publication.status !== 'sent' || !publication.messageId) {
           await this.journals!.abandon(journal.number, interaction.user.id)
           throw new Error(publication.reason ?? 'Discord n’a pas confirmé la publication.')
         }
-        if (!(await this.journals!.complete(journal.number, interaction.user.id, publication.messageId))) throw new Error('Discord a reçu le journal, mais SQLite n’a pas confirmé la révélation. Réparation manuelle requise.')
+        this.logger.log(`Journal ${journal.number} : Discord confirmé (message ${publication.messageId}), finalisation SQLite en cours.`)
+        const completed = await this.journals!.complete(journal.number, interaction.user.id, publication.messageId)
+        if (!completed) {
+          this.logger.error(`Journal ${journal.number} : Discord a confirmé le message ${publication.messageId}, mais SQLite n’a pas confirmé la révélation.`)
+          throw new Error('Discord a reçu le journal, mais SQLite n’a pas confirmé la révélation. Réparation manuelle requise.')
+        }
+        this.logger.log(`Journal ${journal.number} : révélé dans SQLite et publié sur Discord.`)
         this.pendingJournalReveals.delete(interaction.customId)
         await interaction.editReply({ content: `Journal ${journal.number} révélé.`, components: [] })
       } catch (error) {
+        this.logger.error(`Révélation du journal ${pending.journalNumber} impossible : ${error instanceof Error ? error.message : String(error)}`)
         await interaction.editReply({ content: `Révélation impossible : ${error instanceof Error ? error.message : String(error)}`, components: [] })
       }
       return true
