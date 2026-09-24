@@ -1,0 +1,103 @@
+name: lsr-app
+
+services:
+  api-jdr:
+    image: lsr-api-jdr:${APP_VERSION:-main}
+    build:
+      context: ../..
+      dockerfile: deploy/linux/Dockerfile
+      target: api-jdr
+    restart: unless-stopped
+    env_file:
+      - ${APP_ENV_FILE:-../../.env}
+    environment:
+      HOST: 0.0.0.0
+      JDR_PORT: 3333
+      SQLITE_PATH: /app/data/pf2.sqlite
+      JDR_SQLITE_DATABASE: /app/data/jdr-database.sqlite
+      PF2_LIBRARY_ROOT: /app/pf2-library
+      STORAGE_PATH: /app/storage
+      FOUNDRY_ASSETS_ROOT: /app/foundry-assets
+      FOUNDRY_REST_URL: http://host.docker.internal:3010
+      PF2_MEDIAWIKI_API_URL: http://host.docker.internal:4205/api.php
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    volumes:
+      - ${APP_STATE_DIR:-../..}/pf2.sqlite:/app/data/pf2.sqlite
+      - ${APP_STATE_DIR:-../..}/jdr-database.sqlite:/app/data/jdr-database.sqlite
+      - ${APP_STORAGE_DIR:-../../storage}:/app/storage
+      - ${PF2_LIBRARY_DIR:-../../../pf2-data}:/app/pf2-library:ro
+      - ${FOUNDRY_ASSETS_DIR:-../../../foundry/data/Data/assets/l7r}:/app/foundry-assets:ro
+    ports:
+      - "3333:3333"
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"fetch('http://127.0.0.1:3333/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))\""]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+
+  api-yeardiary:
+    image: lsr-api-yeardiary:${APP_VERSION:-main}
+    build:
+      context: ../..
+      dockerfile: deploy/linux/Dockerfile
+      target: api-yeardiary
+    restart: unless-stopped
+    env_file:
+      - ${APP_ENV_FILE:-../../.env}
+    environment:
+      HOST: 0.0.0.0
+      YEARDIARY_PORT: 8081
+      YEARDIARY_SQLITE_DATABASE: /app/data/database.sqlite
+      API_MAIN_ORIGIN: http://api-jdr:3333
+    volumes:
+      - ${APP_STATE_DIR:-../..}/database.sqlite:/app/data/database.sqlite
+    ports:
+      - "8081:8081"
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"fetch('http://127.0.0.1:8081/api/v1/diaries').then(r=>process.exit(r.status<500?0:1)).catch(()=>process.exit(1))\""]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+
+  web:
+    image: lsr-web:${APP_VERSION:-main}
+    build:
+      context: ../..
+      dockerfile: deploy/linux/Dockerfile
+      target: web-misc
+    restart: unless-stopped
+    depends_on:
+      api-jdr:
+        condition: service_healthy
+      api-yeardiary:
+        condition: service_healthy
+    ports:
+      - "3000:80"
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1/"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+
+  admin:
+    image: lsr-admin-jdr:${APP_VERSION:-main}
+    build:
+      context: ../..
+      dockerfile: deploy/linux/Dockerfile
+      target: admin-jdr
+    restart: unless-stopped
+    env_file:
+      - ${APP_ENV_FILE:-../../.env}
+    depends_on:
+      api-jdr:
+        condition: service_healthy
+    ports:
+      - "4203:80"
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "--user", "${ADMIN_USERNAME}", "--password", "${ADMIN_PASSWORD}", "http://127.0.0.1/"]
+      interval: 10s
+      timeout: 5s
+      retries: 6

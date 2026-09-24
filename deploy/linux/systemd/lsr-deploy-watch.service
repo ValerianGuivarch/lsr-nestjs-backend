@@ -1,0 +1,15 @@
+[Unit]
+Description=LSR main branch deployment watcher
+After=network-online.target docker.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=%h/services/lsr-nestjs-backend
+ExecStart=%h/services/lsr-nestjs-backend/deploy/linux/scripts/watch-main.sh
+Restart=always
+RestartSec=10
+Environment=DEPLOY_POLL_SECONDS=60
+
+[Install]
+WantedBy=default.target

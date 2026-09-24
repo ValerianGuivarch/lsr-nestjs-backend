@@ -8,7 +8,7 @@ export default () => ({
     port: parseInt(env.YEARDIARY_PORT || env.PORT || '8080', 10)
   },
   sqlite: {
-    database: 'database.sqlite',
+    database: env.YEARDIARY_SQLITE_DATABASE || 'database.sqlite',
     autoLoadEntities: true,
   },
   cors: {

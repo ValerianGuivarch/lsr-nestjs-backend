@@ -117,3 +117,6 @@ support/mediawiki/LocalSettings.php
 
 # Local SQLite backups
 pf2.sqlite*.bak
+
+# Local deployment lock
+.deploy-main.lock
