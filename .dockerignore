@@ -1,10 +1,15 @@
 node_modules
 dist
 .git
+.github
 .nx
 coverage
 *.sqlite
 *.sqlite-shm
 *.sqlite-wal
+*.zip
+*.bak
+*.backup-*
+storage
 support/xwiki/data
 support/foundry-rest/data
