@@ -2,7 +2,7 @@ name: lsr-app
 
 services:
   api-jdr:
-    image: lsr-api-jdr:${APP_VERSION:-main}
+    image: ghcr.io/valerianguivarch/lsr-api-jdr:${APP_VERSION:-main}
     build:
       context: ../..
       dockerfile: deploy/linux/Dockerfile
@@ -38,7 +38,7 @@ services:
       start_period: 20s
 
   api-yeardiary:
-    image: lsr-api-yeardiary:${APP_VERSION:-main}
+    image: ghcr.io/valerianguivarch/lsr-api-yeardiary:${APP_VERSION:-main}
     build:
       context: ../..
       dockerfile: deploy/linux/Dockerfile
@@ -63,7 +63,7 @@ services:
       start_period: 20s
 
   web:
-    image: lsr-web:${APP_VERSION:-main}
+    image: ghcr.io/valerianguivarch/lsr-web:${APP_VERSION:-main}
     build:
       context: ../..
       dockerfile: deploy/linux/Dockerfile
@@ -83,7 +83,7 @@ services:
       retries: 6
 
   admin:
-    image: lsr-admin-jdr:${APP_VERSION:-main}
+    image: ghcr.io/valerianguivarch/lsr-admin-jdr:${APP_VERSION:-main}
     build:
       context: ../..
       dockerfile: deploy/linux/Dockerfile

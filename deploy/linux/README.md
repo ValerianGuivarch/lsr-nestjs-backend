@@ -1,84 +1,87 @@
 # Déploiement Linux du mini-PC
 
-Ce dossier remplace l'ancien packaging Synology. Il reproduit les quatre processus
-actuellement lancés par `npm run start` sous forme de conteneurs :
+L'application principale tourne sous Docker Compose. Foundry, son relay et
+MediaWiki restent dans leurs stacks Docker existantes.
 
-- `api-jdr` sur le port 3333 ;
-- `api-yeardiary` sur le port 8081 ;
-- `web` sur le port 3000 ;
-- `admin` sur le port 4203, protégé par le Basic Auth existant.
+Services applicatifs :
 
-Foundry, son relay et MediaWiki restent dans leurs stacks Docker actuelles.
+- `api-jdr` : port 3333 ;
+- `api-yeardiary` : port 8081 ;
+- `web` : port 3000 ;
+- `admin` : port 4203.
 
 ## Données persistantes
 
-Les images ne contiennent aucune base de production. Par défaut, Compose monte :
+Les images ne contiennent aucune base de production. Compose monte les fichiers
+SQLite et les données directement depuis le mini-PC :
 
-- `../../pf2.sqlite` vers `/app/data/pf2.sqlite` ;
-- `../../jdr-database.sqlite` vers `/app/data/jdr-database.sqlite` ;
-- `../../database.sqlite` vers `/app/data/database.sqlite` ;
-- `../../storage` vers `/app/storage` ;
-- `../../../pf2-data` en lecture seule comme bibliothèque PF2 ;
-- `../../../foundry/data/Data/assets/l7r` en lecture seule comme repli d'assets Foundry.
+- `pf2.sqlite` ;
+- `jdr-database.sqlite` ;
+- `database.sqlite` ;
+- `storage/` en lecture/écriture ;
+- `../pf2-data` en lecture seule ;
+- les assets historiques Foundry en lecture seule.
 
-Ces chemins correspondent au mini-PC actuel depuis `deploy/linux`. Ils peuvent
-être remplacés avec `APP_STATE_DIR`, `APP_STORAGE_DIR`, `PF2_LIBRARY_DIR` et
-`FOUNDRY_ASSETS_DIR`.
+Le fichier `.env` reste local au mini-PC et n'est jamais publié dans GHCR.
 
-Les secrets continuent de venir du `.env` racine, ignoré par Git.
+## Chaîne de déploiement
 
-## Premier basculement depuis tmux
+Une pull request vers `main` exécute la CI de validation. Après merge, le
+workflow `Build and deploy` :
 
-Ne lancez pas les conteneurs applicatifs tant que l'ancien `npm run start`
-occupe 3000, 3333, 8081 et 4203.
+1. construit les quatre images sur un runner GitHub ;
+2. les publie dans GitHub Container Registry avec le SHA exact du commit ;
+3. crée un nœud Tailscale éphémère `tag:ci` ;
+4. rejoint le mini-PC via son adresse Tailscale et SSH ;
+5. avance le clone local en fast-forward sur `origin/main` ;
+6. fait `docker compose pull` puis `docker compose up -d --wait`.
 
-Après merge de cette PR et `git pull --ff-only` sur le mini-PC :
+Le mini-PC ne surveille donc plus GitHub et ne construit plus les images.
 
-1. arrêter uniquement la session tmux qui exécute l'application ;
-2. depuis la racine du dépôt, lancer
-   `./deploy/linux/scripts/deploy-main.sh --force` ;
-3. vérifier `docker compose -f deploy/linux/docker-compose.yml ps` et les URLs ;
-4. laisser les autres stacks Docker (Foundry, relay, MediaWiki) inchangées.
+## Configuration Tailscale à faire une seule fois
 
-Les conteneurs utilisent `restart: unless-stopped` et repartiront avec Docker
-après un redémarrage du mini-PC.
+Tailscale doit être installé sur le mini-PC et connecté au même tailnet que le
+runner GitHub éphémère. Le workflow suit l'intégration officielle
+`tailscale/github-action@v4` avec un client OAuth et le tag `tag:ci`.
 
-## Déploiement automatique après merge sur main
+Dans Tailscale :
 
-Le watcher fait un `git fetch origin main` toutes les 60 secondes. En présence
-d'un nouveau commit il exige un arbre Git suivi propre, avance `main` en
-fast-forward, construit les quatre images puis applique Compose avec `--wait`.
-Un échec de build n'arrête pas les conteneurs déjà en cours.
+1. créer le tag `tag:ci` et autoriser ce tag à joindre le mini-PC sur TCP/22 ;
+2. créer un client OAuth autorisé à créer des auth keys pour `tag:ci` ;
+3. relever le nom MagicDNS ou l'IP Tailscale du mini-PC.
 
-Installation en service utilisateur :
+Dans GitHub > Settings > Secrets and variables > Actions, créer :
+
+- `TS_OAUTH_CLIENT_ID`
+- `TS_OAUTH_SECRET`
+- `DEPLOY_HOST` : nom MagicDNS ou IP Tailscale du mini-PC
+- `DEPLOY_SSH_PRIVATE_KEY` : clé privée SSH dédiée au déploiement
+
+La clé publique correspondante doit être ajoutée dans
+`/home/valou/.ssh/authorized_keys` sur le mini-PC.
+
+## GHCR
+
+Les images publiées sont :
+
+- `ghcr.io/valerianguivarch/lsr-api-jdr:<sha>`
+- `ghcr.io/valerianguivarch/lsr-api-yeardiary:<sha>`
+- `ghcr.io/valerianguivarch/lsr-web:<sha>`
+- `ghcr.io/valerianguivarch/lsr-admin-jdr:<sha>`
+
+Le workflow se connecte temporairement à GHCR sur le mini-PC avec le
+`GITHUB_TOKEN` du job, effectue le pull, puis se déconnecte. Aucun token GHCR
+permanent n'est nécessaire sur la machine.
+
+## Déploiement manuel de secours
+
+Après une authentification `docker login ghcr.io`, un commit précis peut être
+redéployé avec :
 
 ```bash
-mkdir -p ~/.config/systemd/user
-ln -sf "$HOME/services/lsr-nestjs-backend/deploy/linux/systemd/lsr-deploy-watch.service" \
-  "$HOME/.config/systemd/user/lsr-deploy-watch.service"
-systemctl --user daemon-reload
-systemctl --user enable --now lsr-deploy-watch.service
+cd ~/services/lsr-nestjs-backend
+./deploy/linux/scripts/deploy-main.sh <sha-complet-de-main>
 ```
 
-Pour que le watcher fonctionne même sans session utilisateur ouverte après un
-reboot, activer une fois le lingering (nécessite sudo) :
-
-```bash
-sudo loginctl enable-linger "$USER"
-```
-
-Logs du watcher :
-
-```bash
-journalctl --user -u lsr-deploy-watch.service -f
-```
-
-## Sécurité
-
-Le dépôt est public : aucun secret n'est commité et aucun runner GitHub
-self-hosted n'est exposé au code des pull requests. Le mini-PC tire lui-même les
-changements de `main`. GitHub Actions ne fait que valider les builds.
-
-Le compte qui exécute ce watcher doit déjà avoir le droit d'utiliser Docker.
-Cela équivaut pratiquement à un accès root ; ce droit ne doit pas être donné au
-futur compte Linux dédié à Remote Desktop Commander.
+Le script refuse les branches autres que `main`, les modifications Git suivies
+localement, et un SHA qui ne correspond pas exactement au HEAD de `main`.
