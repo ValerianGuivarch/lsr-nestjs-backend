@@ -97,7 +97,7 @@ services:
     ports:
       - "4203:80"
     healthcheck:
-      test: ["CMD", "wget", "-q", "--spider", "--user", "${ADMIN_USERNAME}", "--password", "${ADMIN_PASSWORD}", "http://127.0.0.1/"]
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1/healthz"]
       interval: 10s
       timeout: 5s
       retries: 6
