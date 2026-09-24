@@ -1110,6 +1110,7 @@ function JournalView({ curation, onUpdate, onImported }: { curation: Curation; o
   const [expandedComponentKey, setExpandedComponentKey] = useState<string | null>(null)
   const [scenarioSessions, setScenarioSessions] = useState<Record<string, number[]>>({})
   const [componentSessions, setComponentSessions] = useState<Record<string, number[]>>({})
+  const [statusFilter, setStatusFilter] = useState<LifecycleStatus | null>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -1159,6 +1160,7 @@ function JournalView({ curation, onUpdate, onImported }: { curation: Curation; o
     })
   const statusRank: Record<LifecycleStatus, number> = { in_progress: 0, to_play: 1, played: 2, retained: 3, untracked: 4, later: 5, rejected: 6 }
   const works: PlayableComponentsWork[] = [...selectedCampaigns, ...selectedStandalone.map((unit) => ({ id: unit.id, title: titleOf(unit), description: unit.synopsis, units: [unit], campaign: false, status: effectiveLifecycleStatus(resolvePlayableOverride(curation, unit)) }))].sort((a, b) => statusRank[a.status] - statusRank[b.status] || a.title.localeCompare(b.title, 'fr'))
+  const visibleWorks = statusFilter ? works.filter((work) => work.status === statusFilter) : works
 
   const componentExample = { id: 'exemple-ouverture', title: 'Ouverture', description: 'Résumé factuel de cette unité narrative.', estimatedSessions: { min: 1, max: 2 }, continuity: { mode: 'free', returnToHubPossible: true, recommendedSameParty: false, notes: '' }, order: 1 }
   const scenarioPrompt = (work: PlayableComponentsWork, unit: PlayableUnit) => `Tu aides à documenter un scénario Pathfinder 2. Je joins son PDF et/ou son extrait de catalogue. Produis UNIQUEMENT le JSON valide ci-dessous.\n\nScénario : ${work.title}\nscenarioId : ${unit.id}\nDescription actuelle : ${unit.synopsis || 'non renseignée'}\n\nRègles : ne crée jamais de « Partie 1/2 » générique ; si le PDF ne permet pas une décomposition narrative fiable, retourne playableComponents: []. Chaque composant a un id en kebab-case, title, description, order, estimatedSessions facultatif et continuity.\n\n${JSON.stringify({ scenarioId: unit.id, playableComponents: [componentExample] }, null, 2)}`
@@ -1314,10 +1316,11 @@ function JournalView({ curation, onUpdate, onImported }: { curation: Curation; o
   }
 
   return <section className="playable-components-view">
-    <div className="playable-components-intro"><div><small>JOURNAL DE QUÊTE MJ</small><h2>En cours, à jouer et terminés</h2><p>Le Journal ne contient que les aventures réellement prévues, commencées ou terminées. « Retenu » reste dans « À faire pour jouer » jusqu’à décision.</p></div><button className="component-prompt" onClick={() => void copySelectionPrompt()}>Prompt composants</button></div>
-    <div className="journal-status-board">{(['in_progress', 'to_play', 'played'] as LifecycleStatus[]).map((status) => { const count = playableUnits.filter((unit) => { const override = resolvePlayableOverride(curation, unit); return !isExcluded(unit, override, curation) && effectiveLifecycleStatus(override) === status }).length; return <div key={status}><small>{lifecycleLabels[status]}</small><strong>{count}</strong></div> })}</div>
+    <div className="playable-components-intro"><div><small>JOURNAL DE QUÊTE MJ</small><h2>En cours, à jouer et terminés</h2><p>Le Journal ne contient que les aventures réellement prévues, commencées ou terminées. « Retenu » reste dans « À faire pour jouer » jusqu’à décision. Clique sur un statut pour filtrer la liste.</p></div><button className="component-prompt" onClick={() => void copySelectionPrompt()}>Prompt composants</button></div>
+    <div className="journal-status-board" aria-label="Filtrer le journal par statut">{(['in_progress', 'to_play', 'played'] as LifecycleStatus[]).map((status) => { const count = works.filter((work) => work.status === status).length; const active = statusFilter === status; return <button type="button" key={status} className={active ? 'is-active' : ''} aria-pressed={active} onClick={() => setStatusFilter((current) => current === status ? null : status)} title={active ? 'Afficher tous les statuts' : `Afficher uniquement « ${lifecycleLabels[status]} »`}><small>{lifecycleLabels[status]}</small><strong>{count}</strong></button> })}</div>
     {!works.length && <div className="empty-components"><strong>Journal vide.</strong><p>Depuis une fiche, le catalogue ou « À faire pour jouer », passe une aventure à « À jouer », « En cours » ou « Terminé ».</p></div>}
-    {works.map((work) => {
+    {works.length > 0 && !visibleWorks.length && <div className="empty-components"><strong>Aucune aventure « {statusFilter ? lifecycleLabels[statusFilter] : ''} ».</strong><p>Reclique sur le filtre actif pour réafficher tout le journal.</p></div>}
+    {visibleWorks.map((work) => {
       const progress = workProgress(work)
       const expanded = expandedWorkIds.has(work.id)
       const workSessions = [...new Set(work.units.flatMap((unit) => scenarioSessions[unit.id] ?? []))].sort((a, b) => a - b)
