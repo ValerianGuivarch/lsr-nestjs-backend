@@ -1,7 +1,7 @@
 FROM node:22-bookworm-slim AS deps
 WORKDIR /app
 RUN apt-get update && apt-get install -y --no-install-recommends python3 build-essential && rm -rf /var/lib/apt/lists/*
-COPY package*.json ./
+COPY package*.json .npmrc ./
 RUN npm ci
 
 FROM deps AS source
@@ -23,7 +23,7 @@ RUN npm run build:admin-jdr
 FROM node:22-bookworm-slim AS api-base
 WORKDIR /app
 ENV NODE_ENV=production HOST=0.0.0.0
-COPY package*.json ./
+COPY package*.json .npmrc ./
 COPY --from=deps /app/node_modules ./node_modules
 RUN npm prune --omit=dev
 
