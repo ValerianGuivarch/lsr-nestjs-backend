@@ -3,8 +3,13 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
 COMPOSE_FILE="$ROOT/deploy/linux/docker-compose.yml"
-FORCE="${1:-}"
+VERSION="${1:-}"
 cd "$ROOT"
+
+if [[ -z "$VERSION" ]]; then
+  echo "usage: $0 <git-sha-or-image-tag>" >&2
+  exit 2
+fi
 
 exec 9>"$ROOT/.deploy-main.lock"
 if ! flock -n 9; then
@@ -23,21 +28,18 @@ if ! git diff --quiet || ! git diff --cached --quiet; then
 fi
 
 git fetch --quiet origin main
-current="$(git rev-parse HEAD)"
-target="$(git rev-parse origin/main)"
-
-if [[ "$current" == "$target" && "$FORCE" != "--force" ]]; then
-  exit 0
-fi
-
-echo "[deploy] updating main: $current -> $target"
 git merge --ff-only origin/main
 
-export APP_VERSION="$(git rev-parse --short=12 HEAD)"
+if [[ "$(git rev-parse HEAD)" != "$VERSION" ]]; then
+  echo "[deploy] main HEAD does not match requested version $VERSION" >&2
+  exit 1
+fi
+
+export APP_VERSION="$VERSION"
 export APP_ENV_FILE="${APP_ENV_FILE:-$ROOT/.env}"
 
-echo "[deploy] building images for $APP_VERSION"
-docker compose -f "$COMPOSE_FILE" build
+echo "[deploy] pulling images for $APP_VERSION"
+docker compose -f "$COMPOSE_FILE" pull
 
 echo "[deploy] starting containers"
 docker compose -f "$COMPOSE_FILE" up -d --remove-orphans --wait
