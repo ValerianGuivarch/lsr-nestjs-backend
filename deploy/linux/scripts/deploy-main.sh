@@ -27,8 +27,8 @@ if ! git diff --quiet || ! git diff --cached --quiet; then
   exit 1
 fi
 
-git fetch --quiet origin main
-git merge --ff-only origin/main
+git fetch --quiet https://github.com/ValerianGuivarch/lsr-nestjs-backend.git main
+git merge --ff-only FETCH_HEAD
 
 if [[ "$(git rev-parse HEAD)" != "$VERSION" ]]; then
   echo "[deploy] main HEAD does not match requested version $VERSION" >&2
