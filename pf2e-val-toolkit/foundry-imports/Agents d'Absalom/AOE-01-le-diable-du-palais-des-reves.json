@@ -1,0 +1,746 @@
+{
+  "formatVersion": 3,
+  "library": {
+    "root": "Campagnes",
+    "category": "Agents d'Absalom",
+    "collection": "Volume 1"
+  },
+  "scenario": {
+    "id": "AOE-01",
+    "name": "Le diable du Palais des rêves",
+    "tier": "1–4",
+    "source": "Agents d'Absalom — Volume 1",
+    "summary": "Les nouvelles recrues de la garde de la Falaise patrouillent le quartier du Précipice pendant le Festival Radieux, enquêtent sur des disparitions et remontent jusqu’au Palais des rêves."
+  },
+  "journal": {
+    "title": "AOE-01 — Le diable du Palais des rêves"
+  },
+  "actors": [
+    {
+      "key": "bolar-de-landepierre",
+      "name": "Bolar De Landepierre",
+      "type": "reference",
+      "lookup": "Bolar De Landepierre",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau -1 — relevé dans le PDF p. 12"
+    },
+    {
+      "key": "skebs",
+      "name": "Skebs",
+      "type": "reference",
+      "lookup": "Skebs",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau -1 — relevé dans le PDF p. 12"
+    },
+    {
+      "key": "barils-explosifs",
+      "name": "Barils Explosifs",
+      "type": "reference",
+      "lookup": "Barils Explosifs",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "hazard",
+      "note": "Niveau -1 — relevé dans le PDF p. 14"
+    },
+    {
+      "key": "larigold-rell",
+      "name": "Larigold Rell",
+      "type": "reference",
+      "lookup": "Larigold Rell",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 2 — relevé dans le PDF p. 15"
+    },
+    {
+      "key": "gardes-squelettes",
+      "name": "Gardes Squelettes",
+      "type": "reference",
+      "lookup": "Gardes Squelettes",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau -1 — relevé dans le PDF p. 15"
+    },
+    {
+      "key": "eunice",
+      "name": "Eunice",
+      "type": "reference",
+      "lookup": "Eunice",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 0 — relevé dans le PDF p. 16"
+    },
+    {
+      "key": "ulule",
+      "name": "Ulule",
+      "type": "reference",
+      "lookup": "Ulule",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 3 — relevé dans le PDF p. 18"
+    },
+    {
+      "key": "hyenes-faibles",
+      "name": "Hyènes Faibles",
+      "type": "reference",
+      "lookup": "Hyènes Faibles",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 0 — relevé dans le PDF p. 19"
+    },
+    {
+      "key": "grosse-berta",
+      "name": "Grosse Berta",
+      "type": "reference",
+      "lookup": "Grosse Berta",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 2 — relevé dans le PDF p. 19"
+    },
+    {
+      "key": "almiraj",
+      "name": "Almiraj",
+      "type": "reference",
+      "lookup": "Almiraj",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 1 — relevé dans le PDF p. 20"
+    },
+    {
+      "key": "scarabee-flash",
+      "name": "Scarabée-Flash",
+      "type": "reference",
+      "lookup": "Scarabée-Flash",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau -1 — relevé dans le PDF p. 20"
+    },
+    {
+      "key": "ce-batard",
+      "name": "Ce Bâtard",
+      "type": "reference",
+      "lookup": "Ce Bâtard",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 3 — relevé dans le PDF p. 22"
+    },
+    {
+      "key": "fontaines-bouillantes",
+      "name": "Fontaines Bouillantes",
+      "type": "reference",
+      "lookup": "Fontaines Bouillantes",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "hazard",
+      "note": "Niveau 2 — relevé dans le PDF p. 27"
+    },
+    {
+      "key": "cheel-et-josk",
+      "name": "Cheel Et Josk",
+      "type": "reference",
+      "lookup": "Cheel Et Josk",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 1 — relevé dans le PDF p. 28"
+    },
+    {
+      "key": "deluge-de-flechettes",
+      "name": "Déluge De Fléchettes",
+      "type": "reference",
+      "lookup": "Déluge De Fléchettes",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "hazard",
+      "note": "Niveau 3 — relevé dans le PDF p. 28"
+    },
+    {
+      "key": "cherchesangs",
+      "name": "Cherchesangs",
+      "type": "reference",
+      "lookup": "Cherchesangs",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau -1 — relevé dans le PDF p. 29"
+    },
+    {
+      "key": "statue-explosive",
+      "name": "Statue Explosive",
+      "type": "reference",
+      "lookup": "Statue Explosive",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "hazard",
+      "note": "Niveau 2 — relevé dans le PDF p. 30"
+    },
+    {
+      "key": "kreski",
+      "name": "Kreski",
+      "type": "reference",
+      "lookup": "Kreski",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 1 — relevé dans le PDF p. 31"
+    },
+    {
+      "key": "margle",
+      "name": "Margle",
+      "type": "reference",
+      "lookup": "Margle",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 1 — relevé dans le PDF p. 31"
+    },
+    {
+      "key": "guerriers-kobolds-d-elite",
+      "name": "Guerriers Kobolds D’Élite",
+      "type": "reference",
+      "lookup": "Guerriers Kobolds D’Élite",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 0 — relevé dans le PDF p. 32"
+    },
+    {
+      "key": "okel-et-wex",
+      "name": "Okel Et Wex",
+      "type": "reference",
+      "lookup": "Okel Et Wex",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau -1 — relevé dans le PDF p. 32"
+    },
+    {
+      "key": "skerix",
+      "name": "Skerix",
+      "type": "reference",
+      "lookup": "Skerix",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 2 — relevé dans le PDF p. 33"
+    },
+    {
+      "key": "guerriers-kobolds",
+      "name": "Guerriers Kobolds",
+      "type": "reference",
+      "lookup": "Guerriers Kobolds",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau -1 — relevé dans le PDF p. 33"
+    },
+    {
+      "key": "cube-gelatineux",
+      "name": "Cube Gélatineux",
+      "type": "reference",
+      "lookup": "Cube Gélatineux",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 3 — relevé dans le PDF p. 36"
+    },
+    {
+      "key": "eggard-guston-et-blinny",
+      "name": "Eggard, Guston Et Blinny",
+      "type": "reference",
+      "lookup": "Eggard, Guston Et Blinny",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 1 — relevé dans le PDF p. 37"
+    },
+    {
+      "key": "kekker-et-gref",
+      "name": "Kekker Et Gref",
+      "type": "reference",
+      "lookup": "Kekker Et Gref",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 2 — relevé dans le PDF p. 38"
+    },
+    {
+      "key": "tiano-et-morviggus",
+      "name": "Tiano Et Morviggus",
+      "type": "reference",
+      "lookup": "Tiano Et Morviggus",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 2 — relevé dans le PDF p. 38"
+    },
+    {
+      "key": "vargouilles",
+      "name": "Vargouilles",
+      "type": "reference",
+      "lookup": "Vargouilles",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 2 — relevé dans le PDF p. 39"
+    },
+    {
+      "key": "mimique",
+      "name": "Mimique",
+      "type": "reference",
+      "lookup": "Mimique",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 4 — relevé dans le PDF p. 52"
+    },
+    {
+      "key": "glissiere-cachee",
+      "name": "Glissière Cachée",
+      "type": "reference",
+      "lookup": "Glissière Cachée",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "hazard",
+      "note": "Niveau 3 — relevé dans le PDF p. 52"
+    },
+    {
+      "key": "guillotine-volante",
+      "name": "Guillotine Volante",
+      "type": "reference",
+      "lookup": "Guillotine Volante",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "hazard",
+      "note": "Niveau 5 — relevé dans le PDF p. 53"
+    },
+    {
+      "key": "rune-de-convocation",
+      "name": "Rune De Convocation",
+      "type": "reference",
+      "lookup": "Rune De Convocation",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "hazard",
+      "note": "Niveau 5 — relevé dans le PDF p. 54"
+    },
+    {
+      "key": "chute-de-la-canopee",
+      "name": "Chute De La Canopée",
+      "type": "reference",
+      "lookup": "Chute De La Canopée",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "hazard",
+      "note": "Niveau 4 — relevé dans le PDF p. 56"
+    },
+    {
+      "key": "vipere-geante",
+      "name": "Vipère Géante",
+      "type": "reference",
+      "lookup": "Vipère Géante",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 2 — relevé dans le PDF p. 56"
+    },
+    {
+      "key": "kemeneles",
+      "name": "Kemeneles",
+      "type": "reference",
+      "lookup": "Kemeneles",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 2 — relevé dans le PDF p. 57"
+    },
+    {
+      "key": "lyrma-marchemarais",
+      "name": "Lyrma Marchemarais",
+      "type": "reference",
+      "lookup": "Lyrma Marchemarais",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 2 — relevé dans le PDF p. 58"
+    },
+    {
+      "key": "nobbindale",
+      "name": "Nobbindale",
+      "type": "reference",
+      "lookup": "Nobbindale",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 5 — relevé dans le PDF p. 58"
+    },
+    {
+      "key": "ralso",
+      "name": "Ralso",
+      "type": "reference",
+      "lookup": "Ralso",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 4 — relevé dans le PDF p. 59"
+    },
+    {
+      "key": "petit-bout-et-ma-jolie",
+      "name": "Petit Bout Et Ma Jolie",
+      "type": "reference",
+      "lookup": "Petit Bout Et Ma Jolie",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 2 — relevé dans le PDF p. 59"
+    },
+    {
+      "key": "chuchoteur-du-grenier",
+      "name": "Chuchoteur Du Grenier",
+      "type": "reference",
+      "lookup": "Chuchoteur Du Grenier",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 4 — relevé dans le PDF p. 60"
+    },
+    {
+      "key": "statues-animees",
+      "name": "Statues Animées",
+      "type": "reference",
+      "lookup": "Statues Animées",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 3 — relevé dans le PDF p. 61"
+    },
+    {
+      "key": "piege-a-gaz",
+      "name": "Piège À Gaz",
+      "type": "reference",
+      "lookup": "Piège À Gaz",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "hazard",
+      "note": "Niveau 5 — relevé dans le PDF p. 61"
+    },
+    {
+      "key": "glissiere-a-pistons",
+      "name": "Glissière À Pistons",
+      "type": "reference",
+      "lookup": "Glissière À Pistons",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "hazard",
+      "note": "Niveau 3 — relevé dans le PDF p. 62"
+    },
+    {
+      "key": "voyous-marines",
+      "name": "Voyous Marinés",
+      "type": "reference",
+      "lookup": "Voyous Marinés",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 1 — relevé dans le PDF p. 63"
+    },
+    {
+      "key": "chairpies",
+      "name": "Chairpies",
+      "type": "reference",
+      "lookup": "Chairpies",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 2 — relevé dans le PDF p. 64"
+    },
+    {
+      "key": "necrophages",
+      "name": "Nécrophages",
+      "type": "reference",
+      "lookup": "Nécrophages",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 3 — relevé dans le PDF p. 66"
+    },
+    {
+      "key": "hendrid-pratchett",
+      "name": "Hendrid Pratchett",
+      "type": "reference",
+      "lookup": "Hendrid Pratchett",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 5 — relevé dans le PDF p. 67"
+    },
+    {
+      "key": "binumir",
+      "name": "Binumir",
+      "type": "reference",
+      "lookup": "Binumir",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 3 — relevé dans le PDF p. 67"
+    }
+  ],
+  "encounters": [
+    {
+      "id": "CH1",
+      "name": "Chapitre 1 — Les dangereuses rues d’Absalom",
+      "location": "Absalom",
+      "notes": "Index des créatures et dangers rencontrés dans ce chapitre. Les quantités exactes restent indiquées dans le PDF lorsque plusieurs occurrences utilisent la même fiche.",
+      "groups": [
+        {
+          "tier": "Niveaux 1–4",
+          "creatures": [
+            {
+              "actor": "bolar-de-landepierre",
+              "count": "selon la rencontre",
+              "note": "Niveau -1 — PDF p. 12"
+            },
+            {
+              "actor": "skebs",
+              "count": "selon la rencontre",
+              "note": "Niveau -1 — PDF p. 12"
+            },
+            {
+              "actor": "barils-explosifs",
+              "count": "selon la rencontre",
+              "note": "Niveau -1 — PDF p. 14"
+            },
+            {
+              "actor": "larigold-rell",
+              "count": "selon la rencontre",
+              "note": "Niveau 2 — PDF p. 15"
+            },
+            {
+              "actor": "gardes-squelettes",
+              "count": "selon la rencontre",
+              "note": "Niveau -1 — PDF p. 15"
+            },
+            {
+              "actor": "eunice",
+              "count": "selon la rencontre",
+              "note": "Niveau 0 — PDF p. 16"
+            },
+            {
+              "actor": "ulule",
+              "count": "selon la rencontre",
+              "note": "Niveau 3 — PDF p. 18"
+            },
+            {
+              "actor": "hyenes-faibles",
+              "count": "selon la rencontre",
+              "note": "Niveau 0 — PDF p. 19"
+            },
+            {
+              "actor": "grosse-berta",
+              "count": "selon la rencontre",
+              "note": "Niveau 2 — PDF p. 19"
+            },
+            {
+              "actor": "almiraj",
+              "count": "selon la rencontre",
+              "note": "Niveau 1 — PDF p. 20"
+            },
+            {
+              "actor": "scarabee-flash",
+              "count": "selon la rencontre",
+              "note": "Niveau -1 — PDF p. 20"
+            },
+            {
+              "actor": "ce-batard",
+              "count": "selon la rencontre",
+              "note": "Niveau 3 — PDF p. 22"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "CH2",
+      "name": "Chapitre 2 — Personnes disparues",
+      "location": "Absalom",
+      "notes": "Index des créatures et dangers rencontrés dans ce chapitre. Les quantités exactes restent indiquées dans le PDF lorsque plusieurs occurrences utilisent la même fiche.",
+      "groups": [
+        {
+          "tier": "Niveaux 1–4",
+          "creatures": [
+            {
+              "actor": "fontaines-bouillantes",
+              "count": "selon la rencontre",
+              "note": "Niveau 2 — PDF p. 27"
+            },
+            {
+              "actor": "cheel-et-josk",
+              "count": "selon la rencontre",
+              "note": "Niveau 1 — PDF p. 28"
+            },
+            {
+              "actor": "deluge-de-flechettes",
+              "count": "selon la rencontre",
+              "note": "Niveau 3 — PDF p. 28"
+            },
+            {
+              "actor": "cherchesangs",
+              "count": "selon la rencontre",
+              "note": "Niveau -1 — PDF p. 29"
+            },
+            {
+              "actor": "statue-explosive",
+              "count": "selon la rencontre",
+              "note": "Niveau 2 — PDF p. 30"
+            },
+            {
+              "actor": "kreski",
+              "count": "selon la rencontre",
+              "note": "Niveau 1 — PDF p. 31"
+            },
+            {
+              "actor": "margle",
+              "count": "selon la rencontre",
+              "note": "Niveau 1 — PDF p. 31"
+            },
+            {
+              "actor": "guerriers-kobolds-d-elite",
+              "count": "selon la rencontre",
+              "note": "Niveau 0 — PDF p. 32"
+            },
+            {
+              "actor": "okel-et-wex",
+              "count": "selon la rencontre",
+              "note": "Niveau -1 — PDF p. 32"
+            },
+            {
+              "actor": "skerix",
+              "count": "selon la rencontre",
+              "note": "Niveau 2 — PDF p. 33"
+            },
+            {
+              "actor": "guerriers-kobolds",
+              "count": "selon la rencontre",
+              "note": "Niveau -1 — PDF p. 33"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "CH3",
+      "name": "Chapitre 3 — Dans la Ville enfouie",
+      "location": "Absalom",
+      "notes": "Index des créatures et dangers rencontrés dans ce chapitre. Les quantités exactes restent indiquées dans le PDF lorsque plusieurs occurrences utilisent la même fiche.",
+      "groups": [
+        {
+          "tier": "Niveaux 1–4",
+          "creatures": [
+            {
+              "actor": "cube-gelatineux",
+              "count": "selon la rencontre",
+              "note": "Niveau 3 — PDF p. 36"
+            },
+            {
+              "actor": "eggard-guston-et-blinny",
+              "count": "selon la rencontre",
+              "note": "Niveau 1 — PDF p. 37"
+            },
+            {
+              "actor": "kekker-et-gref",
+              "count": "selon la rencontre",
+              "note": "Niveau 2 — PDF p. 38"
+            },
+            {
+              "actor": "tiano-et-morviggus",
+              "count": "selon la rencontre",
+              "note": "Niveau 2 — PDF p. 38"
+            },
+            {
+              "actor": "vargouilles",
+              "count": "selon la rencontre",
+              "note": "Niveau 2 — PDF p. 39"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "CH4",
+      "name": "Chapitre 4 — L’hôtel des meurtres",
+      "location": "Absalom",
+      "notes": "Index des créatures et dangers rencontrés dans ce chapitre. Les quantités exactes restent indiquées dans le PDF lorsque plusieurs occurrences utilisent la même fiche.",
+      "groups": [
+        {
+          "tier": "Niveaux 1–4",
+          "creatures": [
+            {
+              "actor": "mimique",
+              "count": "selon la rencontre",
+              "note": "Niveau 4 — PDF p. 52"
+            },
+            {
+              "actor": "glissiere-cachee",
+              "count": "selon la rencontre",
+              "note": "Niveau 3 — PDF p. 52"
+            },
+            {
+              "actor": "guillotine-volante",
+              "count": "selon la rencontre",
+              "note": "Niveau 5 — PDF p. 53"
+            },
+            {
+              "actor": "rune-de-convocation",
+              "count": "selon la rencontre",
+              "note": "Niveau 5 — PDF p. 54"
+            },
+            {
+              "actor": "chute-de-la-canopee",
+              "count": "selon la rencontre",
+              "note": "Niveau 4 — PDF p. 56"
+            },
+            {
+              "actor": "vipere-geante",
+              "count": "selon la rencontre",
+              "note": "Niveau 2 — PDF p. 56"
+            },
+            {
+              "actor": "kemeneles",
+              "count": "selon la rencontre",
+              "note": "Niveau 2 — PDF p. 57"
+            },
+            {
+              "actor": "lyrma-marchemarais",
+              "count": "selon la rencontre",
+              "note": "Niveau 2 — PDF p. 58"
+            },
+            {
+              "actor": "nobbindale",
+              "count": "selon la rencontre",
+              "note": "Niveau 5 — PDF p. 58"
+            },
+            {
+              "actor": "ralso",
+              "count": "selon la rencontre",
+              "note": "Niveau 4 — PDF p. 59"
+            },
+            {
+              "actor": "petit-bout-et-ma-jolie",
+              "count": "selon la rencontre",
+              "note": "Niveau 2 — PDF p. 59"
+            },
+            {
+              "actor": "chuchoteur-du-grenier",
+              "count": "selon la rencontre",
+              "note": "Niveau 4 — PDF p. 60"
+            },
+            {
+              "actor": "statues-animees",
+              "count": "selon la rencontre",
+              "note": "Niveau 3 — PDF p. 61"
+            },
+            {
+              "actor": "piege-a-gaz",
+              "count": "selon la rencontre",
+              "note": "Niveau 5 — PDF p. 61"
+            },
+            {
+              "actor": "glissiere-a-pistons",
+              "count": "selon la rencontre",
+              "note": "Niveau 3 — PDF p. 62"
+            },
+            {
+              "actor": "voyous-marines",
+              "count": "selon la rencontre",
+              "note": "Niveau 1 — PDF p. 63"
+            },
+            {
+              "actor": "chairpies",
+              "count": "selon la rencontre",
+              "note": "Niveau 2 — PDF p. 64"
+            },
+            {
+              "actor": "necrophages",
+              "count": "selon la rencontre",
+              "note": "Niveau 3 — PDF p. 66"
+            },
+            {
+              "actor": "hendrid-pratchett",
+              "count": "selon la rencontre",
+              "note": "Niveau 5 — PDF p. 67"
+            },
+            {
+              "actor": "binumir",
+              "count": "selon la rencontre",
+              "note": "Niveau 3 — PDF p. 67"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

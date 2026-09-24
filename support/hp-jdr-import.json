@@ -1,0 +1,352 @@
+{
+  "version": 1,
+  "jdr": {
+    "slug": "hp",
+    "name": "HP",
+    "text": "Campagne dans l'univers de Harry Potter.",
+    "stats": [
+      { "slug": "physique", "name": "Physique" },
+      { "slug": "charisme", "name": "Charisme" },
+      { "slug": "sagesse", "name": "Sagesse" },
+      { "slug": "intelligence", "name": "Intelligence" },
+      { "slug": "dexterite", "name": "Dextérité" },
+      { "slug": "pouvoir", "name": "Pouvoir" }
+    ],
+    "resources": [
+      { "slug": "pv", "name": "PV", "ownerType": "CHARACTER", "defaultValue": 10 },
+      { "slug": "gallions", "name": "Gallions", "ownerType": "CHARACTER", "defaultValue": 10 },
+      { "slug": "mornilles", "name": "Mornilles", "ownerType": "CHARACTER", "defaultValue": 8 },
+      { "slug": "noises", "name": "Noises", "ownerType": "CHARACTER", "defaultValue": 12 },
+      { "slug": "points-de-maison", "name": "Points de maison", "ownerType": "GROUP", "defaultValue": 0 }
+    ],
+    "classes": [
+      {
+        "slug": "sorcier",
+        "name": "Sorcier",
+        "levels": [
+          "Première année",
+          "Deuxième année",
+          "Troisième année",
+          "Quatrième année",
+          "Cinquième année",
+          "Sixième année",
+          "Septième année",
+          "Professeur",
+          "Autre"
+        ]
+      },
+      { "slug": "animal", "name": "Animal", "levels": [] },
+      { "slug": "mj", "name": "MJ", "text": "Maître du jeu", "levels": [] }
+    ],
+    "groups": [
+      {
+        "slug": "gryffondor",
+        "name": "Gryffondor",
+        "resources": [{ "resourceSlug": "points-de-maison", "value": 15 }]
+      },
+      {
+        "slug": "serpentard",
+        "name": "Serpentard",
+        "resources": [{ "resourceSlug": "points-de-maison", "value": 12 }]
+      },
+      { "slug": "serdaigle", "name": "Serdaigle", "resources": [{ "resourceSlug": "points-de-maison", "value": 9 }] },
+      {
+        "slug": "poufsouffle",
+        "name": "Poufsouffle",
+        "resources": [{ "resourceSlug": "points-de-maison", "value": 18 }]
+      },
+      { "slug": "poudlard", "name": "Poudlard" },
+      { "slug": "groupe-des-moches", "name": "Groupe des moches" }
+    ],
+    "players": [
+      { "slug": "elena", "name": "Elena" },
+      { "slug": "nico", "name": "Nico" },
+      { "slug": "mana", "name": "Mana" },
+      { "slug": "valerian", "name": "Valérian" },
+      { "slug": "eric", "name": "Éric" }
+    ],
+    "traits": [
+      { "slug": "intelligente", "name": "Intelligente", "modifiers": [{ "statSlug": "intelligence", "value": 2 }] },
+      { "slug": "mythomane", "name": "Mythomane", "modifiers": [{ "statSlug": "charisme", "value": 1 }] },
+      { "slug": "commandante", "name": "Commandante", "modifiers": [{ "statSlug": "charisme", "value": 2 }] },
+      { "slug": "farceur", "name": "Farceur", "modifiers": [{ "statSlug": "dexterite", "value": 1 }] },
+      { "slug": "aventureux", "name": "Aventureux", "modifiers": [{ "statSlug": "physique", "value": 2 }] },
+      { "slug": "instable", "name": "Instable", "modifiers": [{ "statSlug": "pouvoir", "value": 1 }] },
+      { "slug": "colerique", "name": "Colérique", "modifiers": [{ "statSlug": "pouvoir", "value": 2 }] },
+      { "slug": "fetarde", "name": "Fêtarde", "modifiers": [{ "statSlug": "charisme", "value": 1 }] },
+      { "slug": "violente", "name": "Violente", "modifiers": [{ "statSlug": "physique", "value": 2 }] },
+      { "slug": "sale", "name": "Sale", "modifiers": [{ "statSlug": "physique", "value": 1 }] },
+      { "slug": "joyeux", "name": "Joyeux", "modifiers": [{ "statSlug": "charisme", "value": 2 }] },
+      { "slug": "impulsif", "name": "Impulsif", "modifiers": [{ "statSlug": "dexterite", "value": 1 }] },
+      { "slug": "observateur", "name": "Observateur", "modifiers": [{ "statSlug": "sagesse", "value": 2 }] },
+      { "slug": "distrait", "name": "Distrait", "modifiers": [{ "statSlug": "pouvoir", "value": 1 }] },
+      { "slug": "studieux", "name": "Studieux", "modifiers": [{ "statSlug": "intelligence", "value": 2 }] },
+      { "slug": "mysterieux", "name": "Mystérieux", "modifiers": [{ "statSlug": "charisme", "value": 1 }] },
+      { "slug": "autoritaire", "name": "Autoritaire", "modifiers": [{ "statSlug": "pouvoir", "value": 2 }] },
+      { "slug": "erudit", "name": "Érudit", "modifiers": [{ "statSlug": "intelligence", "value": 2 }] },
+      { "slug": "fidele", "name": "Fidèle", "modifiers": [{ "statSlug": "sagesse", "value": 1 }] },
+      { "slug": "vive", "name": "Vive", "modifiers": [{ "statSlug": "dexterite", "value": 2 }] },
+      { "slug": "gourmande", "name": "Gourmande", "modifiers": [{ "statSlug": "physique", "value": 1 }] }
+    ],
+    "items": [
+      {
+        "slug": "medaillon-de-perle",
+        "name": "Médaillon de perle",
+        "description": "Renforce le charisme.",
+        "modifiers": [{ "statSlug": "charisme", "value": 1 }]
+      },
+      {
+        "slug": "carnet-de-pearl",
+        "name": "Carnet de Pearl",
+        "description": "Un carnet rempli d'histoires invraisemblables.",
+        "modifiers": []
+      },
+      {
+        "slug": "bottes-de-kali",
+        "name": "Bottes bondissantes de Kali",
+        "description": "Facilitent les acrobaties.",
+        "modifiers": [{ "statSlug": "dexterite", "value": 1 }]
+      },
+      {
+        "slug": "jeu-de-cartes-de-kali",
+        "name": "Jeu de cartes de Kali",
+        "description": "Un jeu de cartes moldu marqué.",
+        "modifiers": []
+      },
+      {
+        "slug": "bracelet-de-maggie",
+        "name": "Bracelet de braise de Maggie",
+        "description": "Concentre la puissance magique.",
+        "modifiers": [{ "statSlug": "pouvoir", "value": 1 }]
+      },
+      {
+        "slug": "gourde-de-maggie",
+        "name": "Gourde de Maggie",
+        "description": "Une gourde cabossée qui ne quitte jamais Maggie.",
+        "modifiers": []
+      },
+      {
+        "slug": "gants-d-acteon",
+        "name": "Gants d'Actéon",
+        "description": "Donnent une poigne étonnante.",
+        "modifiers": [{ "statSlug": "physique", "value": 1 }]
+      },
+      {
+        "slug": "chaussette-d-acteon",
+        "name": "Chaussette porte-bonheur d'Actéon",
+        "description": "Son utilité reste à démontrer.",
+        "modifiers": []
+      },
+      {
+        "slug": "monocle-de-gedeon",
+        "name": "Monocle de Gédéon",
+        "description": "Aide à remarquer les détails.",
+        "modifiers": [{ "statSlug": "sagesse", "value": 1 }]
+      },
+      {
+        "slug": "marque-page-de-gedeon",
+        "name": "Marque-page de Gédéon",
+        "description": "Un simple marque-page de Gryffondor.",
+        "modifiers": []
+      },
+      {
+        "slug": "anneau-d-helluin",
+        "name": "Anneau d'Helluin",
+        "description": "Accroît l'autorité du maître du jeu.",
+        "modifiers": [{ "statSlug": "pouvoir", "value": 2 }]
+      },
+      {
+        "slug": "trousseau-d-helluin",
+        "name": "Trousseau d'Helluin",
+        "description": "Un lourd trousseau de clés anciennes.",
+        "modifiers": []
+      },
+      {
+        "slug": "collier-de-suzanne",
+        "name": "Collier enchanté de Suzanne",
+        "description": "Rend Suzanne particulièrement vive.",
+        "modifiers": [{ "statSlug": "dexterite", "value": 1 }]
+      },
+      {
+        "slug": "gamelle-de-suzanne",
+        "name": "Gamelle de Suzanne",
+        "description": "Une gamelle gravée à son nom.",
+        "modifiers": []
+      }
+    ],
+    "characters": [
+      {
+        "slug": "pearl",
+        "name": "Pearl",
+        "playerSlug": "valerian",
+        "classSlug": "sorcier",
+        "classLevel": "Deuxième année",
+        "isPlayable": true,
+        "stats": [
+          { "statSlug": "physique", "value": 2 },
+          { "statSlug": "charisme", "value": 2 },
+          { "statSlug": "sagesse", "value": 2 },
+          { "statSlug": "intelligence", "value": 2 },
+          { "statSlug": "dexterite", "value": 2 },
+          { "statSlug": "pouvoir", "value": 2 }
+        ],
+        "groupSlugs": ["poufsouffle", "poudlard", "groupe-des-moches"],
+        "traitSlugs": ["intelligente", "mythomane", "commandante"],
+        "items": [{ "itemSlug": "medaillon-de-perle" }, { "itemSlug": "carnet-de-pearl" }],
+        "resources": [
+          { "resourceSlug": "pv", "value": 10 },
+          { "resourceSlug": "gallions", "value": 1 },
+          { "resourceSlug": "mornilles", "value": 3 },
+          { "resourceSlug": "noises", "value": 8 }
+        ]
+      },
+      {
+        "slug": "kali",
+        "name": "Kali",
+        "playerSlug": "elena",
+        "classSlug": "sorcier",
+        "classLevel": "Deuxième année",
+        "isPlayable": true,
+        "stats": [
+          { "statSlug": "physique", "value": 2 },
+          { "statSlug": "charisme", "value": 2 },
+          { "statSlug": "sagesse", "value": 2 },
+          { "statSlug": "intelligence", "value": 2 },
+          { "statSlug": "dexterite", "value": 2 },
+          { "statSlug": "pouvoir", "value": 2 }
+        ],
+        "groupSlugs": ["poufsouffle", "poudlard", "groupe-des-moches"],
+        "traitSlugs": ["farceur", "aventureux", "instable"],
+        "items": [{ "itemSlug": "bottes-de-kali" }, { "itemSlug": "jeu-de-cartes-de-kali" }],
+        "resources": [
+          { "resourceSlug": "pv", "value": 10 },
+          { "resourceSlug": "gallions", "value": 12 },
+          { "resourceSlug": "mornilles", "value": 7 },
+          { "resourceSlug": "noises", "value": 14 }
+        ]
+      },
+      {
+        "slug": "maggie",
+        "name": "Maggie",
+        "playerSlug": "mana",
+        "classSlug": "sorcier",
+        "classLevel": "Deuxième année",
+        "isPlayable": true,
+        "stats": [
+          { "statSlug": "physique", "value": 2 },
+          { "statSlug": "charisme", "value": 2 },
+          { "statSlug": "sagesse", "value": 2 },
+          { "statSlug": "intelligence", "value": 2 },
+          { "statSlug": "dexterite", "value": 2 },
+          { "statSlug": "pouvoir", "value": 2 }
+        ],
+        "groupSlugs": ["poufsouffle", "poudlard", "groupe-des-moches"],
+        "traitSlugs": ["colerique", "fetarde", "violente"],
+        "items": [{ "itemSlug": "bracelet-de-maggie" }, { "itemSlug": "gourde-de-maggie" }],
+        "resources": [
+          { "resourceSlug": "pv", "value": 10 },
+          { "resourceSlug": "gallions", "value": 9 },
+          { "resourceSlug": "mornilles", "value": 11 },
+          { "resourceSlug": "noises", "value": 6 }
+        ]
+      },
+      {
+        "slug": "acteon",
+        "name": "Actéon",
+        "playerSlug": "nico",
+        "classSlug": "sorcier",
+        "classLevel": "Deuxième année",
+        "isPlayable": true,
+        "stats": [
+          { "statSlug": "physique", "value": 2 },
+          { "statSlug": "charisme", "value": 2 },
+          { "statSlug": "sagesse", "value": 2 },
+          { "statSlug": "intelligence", "value": 2 },
+          { "statSlug": "dexterite", "value": 2 },
+          { "statSlug": "pouvoir", "value": 2 }
+        ],
+        "groupSlugs": ["poufsouffle", "poudlard", "groupe-des-moches"],
+        "traitSlugs": ["sale", "joyeux", "impulsif"],
+        "items": [{ "itemSlug": "gants-d-acteon" }, { "itemSlug": "chaussette-d-acteon" }],
+        "resources": [
+          { "resourceSlug": "pv", "value": 10 },
+          { "resourceSlug": "gallions", "value": 14 },
+          { "resourceSlug": "mornilles", "value": 4 },
+          { "resourceSlug": "noises", "value": 17 }
+        ]
+      },
+      {
+        "slug": "gedeon",
+        "name": "Gédéon",
+        "classSlug": "sorcier",
+        "classLevel": "Deuxième année",
+        "isPlayable": true,
+        "stats": [
+          { "statSlug": "physique", "value": 2 },
+          { "statSlug": "charisme", "value": 2 },
+          { "statSlug": "sagesse", "value": 2 },
+          { "statSlug": "intelligence", "value": 2 },
+          { "statSlug": "dexterite", "value": 2 },
+          { "statSlug": "pouvoir", "value": 2 }
+        ],
+        "groupSlugs": ["gryffondor", "poudlard"],
+        "traitSlugs": ["observateur", "distrait", "studieux"],
+        "items": [{ "itemSlug": "monocle-de-gedeon" }, { "itemSlug": "marque-page-de-gedeon" }],
+        "resources": [
+          { "resourceSlug": "pv", "value": 10 },
+          { "resourceSlug": "gallions", "value": 11 },
+          { "resourceSlug": "mornilles", "value": 9 },
+          { "resourceSlug": "noises", "value": 10 }
+        ]
+      },
+      {
+        "slug": "helluin",
+        "name": "Helluin",
+        "playerSlug": "eric",
+        "classSlug": "mj",
+        "isPlayable": true,
+        "stats": [
+          { "statSlug": "physique", "value": 2 },
+          { "statSlug": "charisme", "value": 2 },
+          { "statSlug": "sagesse", "value": 2 },
+          { "statSlug": "intelligence", "value": 2 },
+          { "statSlug": "dexterite", "value": 2 },
+          { "statSlug": "pouvoir", "value": 2 }
+        ],
+        "groupSlugs": ["poudlard"],
+        "traitSlugs": ["mysterieux", "autoritaire", "erudit"],
+        "items": [{ "itemSlug": "anneau-d-helluin" }, { "itemSlug": "trousseau-d-helluin" }],
+        "resources": [
+          { "resourceSlug": "pv", "value": 20 },
+          { "resourceSlug": "gallions", "value": 30 },
+          { "resourceSlug": "mornilles", "value": 10 },
+          { "resourceSlug": "noises", "value": 20 }
+        ]
+      },
+      {
+        "slug": "suzanne",
+        "name": "Suzanne",
+        "playerSlug": "valerian",
+        "classSlug": "animal",
+        "isPlayable": true,
+        "stats": [
+          { "statSlug": "physique", "value": 2 },
+          { "statSlug": "charisme", "value": 2 },
+          { "statSlug": "sagesse", "value": 2 },
+          { "statSlug": "intelligence", "value": 2 },
+          { "statSlug": "dexterite", "value": 2 },
+          { "statSlug": "pouvoir", "value": 2 }
+        ],
+        "groupSlugs": ["poudlard"],
+        "traitSlugs": ["fidele", "vive", "gourmande"],
+        "items": [{ "itemSlug": "collier-de-suzanne" }, { "itemSlug": "gamelle-de-suzanne" }],
+        "resources": [
+          { "resourceSlug": "pv", "value": 8 },
+          { "resourceSlug": "gallions", "value": 0 },
+          { "resourceSlug": "mornilles", "value": 0 },
+          { "resourceSlug": "noises", "value": 0 }
+        ]
+      }
+    ]
+  }
+}

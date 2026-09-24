@@ -1,0 +1,376 @@
+{
+  "formatVersion": 3,
+  "library": {
+    "root": "Campagnes",
+    "category": "Société des Éclaireurs",
+    "collection": "Saison 1 - Year of the Open Road"
+  },
+  "scenario": {
+    "id": "PFS-S01-04",
+    "name": "Bandits of Immenwood",
+    "tier": "1–4",
+    "source": "Pathfinder Society Scenario #1-04",
+    "summary": "Mission d'escorte entre Otari et Absalom : les PJ doivent protéger un wagon d'artefacts récupérés d'un naufrage tandis qu'une relique liée aux tempêtes attire animaux, bandits et créatures marines."
+  },
+  "journal": {
+    "title": "S01-04 — Bandits of Immenwood"
+  },
+  "actors": [
+    {
+      "key": "frog-swarm",
+      "name": "Frog Swarm",
+      "type": "reference",
+      "lookup": "Frog Swarm",
+      "preferredPack": "pf2e.pfs-season-1-bestiary",
+      "actorType": "npc"
+    },
+    {
+      "key": "osprey",
+      "name": "Osprey",
+      "type": "reference",
+      "lookup": "Osprey",
+      "preferredPack": "pf2e.pfs-season-1-bestiary",
+      "actorType": "npc"
+    },
+    {
+      "key": "giant-osprey",
+      "name": "Giant Osprey",
+      "type": "reference",
+      "lookup": "Giant Osprey",
+      "preferredPack": "pf2e.pfs-season-1-bestiary",
+      "actorType": "npc"
+    },
+    {
+      "key": "deadfall-trap-1",
+      "name": "Deadfall Trap (Subtier 1–2)",
+      "type": "reference",
+      "lookup": "Deadfall Trap",
+      "preferredPack": "pf2e.pfs-season-1-bestiary",
+      "actorType": "hazard"
+    },
+    {
+      "key": "deadfall-trap-3",
+      "name": "Deadfall Trap (Subtier 3–4)",
+      "type": "reference",
+      "lookup": "Deadfall Trap",
+      "preferredPack": "pf2e.pfs-season-1-bestiary",
+      "actorType": "hazard"
+    },
+    {
+      "key": "squirrel-swarm",
+      "name": "Squirrel Swarm",
+      "type": "reference",
+      "lookup": "Squirrel Swarm",
+      "preferredPack": "pf2e.pfs-season-1-bestiary",
+      "actorType": "npc"
+    },
+    {
+      "key": "rabid-squirrel-swarm",
+      "name": "Rabid Squirrel Swarm",
+      "type": "reference",
+      "lookup": "Rabid Squirrel Swarm",
+      "preferredPack": "pf2e.pfs-season-1-bestiary",
+      "actorType": "npc"
+    },
+    {
+      "key": "ankle-trap",
+      "name": "Ankle Trap",
+      "type": "reference",
+      "lookup": "Ankle Trap",
+      "preferredPack": "pf2e.pfs-season-1-bestiary",
+      "actorType": "hazard"
+    },
+    {
+      "key": "halfling-druid-0",
+      "name": "Halfling Druid (Subtier 1–2)",
+      "type": "reference",
+      "lookup": "Halfling Druid",
+      "preferredPack": "pf2e.pfs-season-1-bestiary",
+      "actorType": "npc"
+    },
+    {
+      "key": "halfling-druid-2",
+      "name": "Halfling Druid (Subtier 3–4)",
+      "type": "reference",
+      "lookup": "Halfling Druid",
+      "preferredPack": "pf2e.pfs-season-1-bestiary",
+      "actorType": "npc"
+    },
+    {
+      "key": "animal-companion-wolf-12",
+      "name": "Animal Companion (Wolf) (Subtier 1–2)",
+      "type": "reference",
+      "lookup": "Animal Companion (Wolf)",
+      "preferredPack": "pf2e.pfs-season-1-bestiary",
+      "actorType": "npc"
+    },
+    {
+      "key": "animal-companion-wolf-34",
+      "name": "Animal Companion (Wolf) (Subtier 3–4)",
+      "type": "reference",
+      "lookup": "Animal Companion (Wolf)",
+      "preferredPack": "pf2e.pfs-season-1-bestiary",
+      "actorType": "npc"
+    },
+    {
+      "key": "wolf",
+      "name": "Wolf",
+      "type": "reference",
+      "lookup": "Wolf",
+      "actorType": "npc"
+    },
+    {
+      "key": "zephyr-hawk",
+      "name": "Zephyr Hawk",
+      "type": "reference",
+      "lookup": "Zephyr Hawk",
+      "actorType": "npc"
+    },
+    {
+      "key": "living-whirlwind",
+      "name": "Living Whirlwind",
+      "type": "reference",
+      "lookup": "Living Whirlwind",
+      "actorType": "npc"
+    },
+    {
+      "key": "vengeant-thorn-3",
+      "name": "Vengeant Thorn (Subtier 1–2)",
+      "type": "reference",
+      "lookup": "Vengeant Thorn",
+      "preferredPack": "pf2e.pfs-season-1-bestiary",
+      "actorType": "npc"
+    },
+    {
+      "key": "vengeant-thorn-5",
+      "name": "Vengeant Thorn (Subtier 3–4)",
+      "type": "reference",
+      "lookup": "Vengeant Thorn",
+      "preferredPack": "pf2e.pfs-season-1-bestiary",
+      "actorType": "npc"
+    },
+    {
+      "key": "reefclaw-spawn",
+      "name": "Reefclaw Spawn",
+      "type": "reference",
+      "lookup": "Reefclaw Spawn",
+      "preferredPack": "pf2e.pfs-season-1-bestiary",
+      "actorType": "npc"
+    },
+    {
+      "key": "sea-devil-scout",
+      "name": "Sea Devil Scout",
+      "type": "reference",
+      "lookup": "Sea Devil Scout",
+      "actorType": "npc"
+    }
+  ],
+  "encounters": [
+    {
+      "id": "A",
+      "name": "Frogs in the Stables",
+      "location": "Otari",
+      "sourcePage": 8,
+      "notes": "Le wagon commence avec 20 Cargo Points. Une seule nuée au sous-tier 1–2, deux au sous-tier 3–4.",
+      "groups": [
+        {
+          "tier": "Subtier 1–2",
+          "creatures": [
+            {
+              "actor": "frog-swarm",
+              "count": 1
+            }
+          ]
+        },
+        {
+          "tier": "Subtier 3–4",
+          "creatures": [
+            {
+              "actor": "frog-swarm",
+              "count": 2
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "B1",
+      "name": "Osprey Attack",
+      "location": "Immenwood",
+      "sourcePage": 10,
+      "groups": [
+        {
+          "tier": "Subtier 1–2",
+          "creatures": [
+            {
+              "actor": "osprey",
+              "count": 4
+            }
+          ]
+        },
+        {
+          "tier": "Subtier 3–4",
+          "creatures": [
+            {
+              "actor": "giant-osprey",
+              "count": 2
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "B2",
+      "name": "Deadfall",
+      "location": "Immenwood",
+      "sourcePage": 10,
+      "notes": "Le druide halfling peut être repéré et combattu ; s'il est neutralisé ici, B3 devient plus facile.",
+      "groups": [
+        {
+          "tier": "Subtier 1–2",
+          "creatures": [
+            {
+              "actor": "deadfall-trap-1",
+              "count": 1
+            },
+            {
+              "actor": "squirrel-swarm",
+              "count": 1
+            },
+            {
+              "actor": "halfling-druid-0",
+              "count": 1,
+              "note": "Observateur caché ; combat seulement si repéré."
+            }
+          ]
+        },
+        {
+          "tier": "Subtier 3–4",
+          "creatures": [
+            {
+              "actor": "deadfall-trap-3",
+              "count": 1
+            },
+            {
+              "actor": "rabid-squirrel-swarm",
+              "count": 3
+            },
+            {
+              "actor": "halfling-druid-2",
+              "count": 1,
+              "note": "Observateur caché ; combat seulement si repéré."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "B3",
+      "name": "Wolf Ambush",
+      "location": "Immenwood",
+      "sourcePage": 12,
+      "groups": [
+        {
+          "tier": "Subtier 1–2",
+          "creatures": [
+            {
+              "actor": "ankle-trap",
+              "count": 1
+            },
+            {
+              "actor": "halfling-druid-0",
+              "count": 2
+            },
+            {
+              "actor": "animal-companion-wolf-12",
+              "count": 2
+            }
+          ]
+        },
+        {
+          "tier": "Subtier 3–4",
+          "creatures": [
+            {
+              "actor": "ankle-trap",
+              "count": 1
+            },
+            {
+              "actor": "halfling-druid-2",
+              "count": 2
+            },
+            {
+              "actor": "animal-companion-wolf-34",
+              "count": 2
+            },
+            {
+              "actor": "wolf",
+              "count": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "B4",
+      "name": "Storm (Optional Encounter)",
+      "location": "Immenwood",
+      "sourcePage": 12,
+      "notes": "Rencontre optionnelle uniquement si les PJ campent. Elle peut se répéter chaque nuit tant que l'Écaille est présente.",
+      "groups": [
+        {
+          "tier": "Subtier 1–2",
+          "creatures": [
+            {
+              "actor": "zephyr-hawk",
+              "count": 1
+            }
+          ]
+        },
+        {
+          "tier": "Subtier 3–4",
+          "creatures": [
+            {
+              "actor": "living-whirlwind",
+              "count": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "C",
+      "name": "High Coast Road",
+      "location": "High Coast Road",
+      "sourcePage": 13,
+      "notes": "Affrontement final autour de l'Écaille de la Tempête Repoussée.",
+      "groups": [
+        {
+          "tier": "Subtier 1–2",
+          "creatures": [
+            {
+              "actor": "vengeant-thorn-3",
+              "count": 1
+            },
+            {
+              "actor": "reefclaw-spawn",
+              "count": 1
+            }
+          ]
+        },
+        {
+          "tier": "Subtier 3–4",
+          "creatures": [
+            {
+              "actor": "vengeant-thorn-5",
+              "count": 1
+            },
+            {
+              "actor": "sea-devil-scout",
+              "count": 1
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

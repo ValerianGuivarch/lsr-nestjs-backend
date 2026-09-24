@@ -1,0 +1,774 @@
+{
+  "formatVersion": 3,
+  "library": {
+    "root": "Campagnes",
+    "category": "Agents d'Absalom",
+    "collection": "Volume 1"
+  },
+  "scenario": {
+    "id": "AOE-02",
+    "name": "Soixante pieds sous terre",
+    "tier": "5–8",
+    "source": "Agents d'Absalom — Volume 1",
+    "summary": "Une enquête sur un cambriolage mène les agents à la Main de cuivre, puis dans les catacombes d’Absalom sur la piste du culte du Père Écorcheur."
+  },
+  "journal": {
+    "title": "AOE-02 — Soixante pieds sous terre"
+  },
+  "actors": [
+    {
+      "key": "nuees-de-guepes",
+      "name": "Nuées De Guêpes",
+      "type": "reference",
+      "lookup": "Nuées De Guêpes",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 4 — relevé dans le PDF p. 75"
+    },
+    {
+      "key": "araignees-de-l-ether-faibles",
+      "name": "Araignées De L’Éther Faibles",
+      "type": "reference",
+      "lookup": "Araignées De L’Éther Faibles",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 4 — relevé dans le PDF p. 77"
+    },
+    {
+      "key": "voyous-de-droan",
+      "name": "Voyous De Droan",
+      "type": "reference",
+      "lookup": "Voyous De Droan",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 2 — relevé dans le PDF p. 80"
+    },
+    {
+      "key": "mastiffs",
+      "name": "Mastiffs",
+      "type": "reference",
+      "lookup": "Mastiffs",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 1 — relevé dans le PDF p. 79"
+    },
+    {
+      "key": "contrebandiers-de-droan",
+      "name": "Contrebandiers De Droan",
+      "type": "reference",
+      "lookup": "Contrebandiers De Droan",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 4 — relevé dans le PDF p. 80"
+    },
+    {
+      "key": "franzic",
+      "name": "Franzic",
+      "type": "reference",
+      "lookup": "Franzic",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 5 — relevé dans le PDF p. 80"
+    },
+    {
+      "key": "contremaitresse-kepsi",
+      "name": "Contremaîtresse Kepsi",
+      "type": "reference",
+      "lookup": "Contremaîtresse Kepsi",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 3 — relevé dans le PDF p. 80"
+    },
+    {
+      "key": "percen-droan",
+      "name": "Percen Droan",
+      "type": "reference",
+      "lookup": "Percen Droan",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 7 — relevé dans le PDF p. 81"
+    },
+    {
+      "key": "bunyip",
+      "name": "Bunyip",
+      "type": "reference",
+      "lookup": "Bunyip",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 3 — relevé dans le PDF p. 81"
+    },
+    {
+      "key": "roublards-de-la-main-de-cuivre",
+      "name": "Roublards De La Main De Cuivre",
+      "type": "reference",
+      "lookup": "Roublards De La Main De Cuivre",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 4 — relevé dans le PDF p. 91"
+    },
+    {
+      "key": "roublard-de-la-main-de-cuivre",
+      "name": "Roublard De La Main De Cuivre",
+      "type": "reference",
+      "lookup": "Roublard De La Main De Cuivre",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 4 — relevé dans le PDF p. 85"
+    },
+    {
+      "key": "chose-de-peaux-recousues",
+      "name": "Chose De Peaux Recousues",
+      "type": "reference",
+      "lookup": "Chose De Peaux Recousues",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 5 — relevé dans le PDF p. 85"
+    },
+    {
+      "key": "timos-et-eurl",
+      "name": "Timos Et Eurl",
+      "type": "reference",
+      "lookup": "Timos Et Eurl",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 4 — relevé dans le PDF p. 90"
+    },
+    {
+      "key": "vase-perce-coffre",
+      "name": "Vase Perce-Coffre",
+      "type": "reference",
+      "lookup": "Vase Perce-Coffre",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 6 — relevé dans le PDF p. 91"
+    },
+    {
+      "key": "prototype-de-vase-perce-coffre",
+      "name": "Prototype De Vase Perce-Coffre",
+      "type": "reference",
+      "lookup": "Prototype De Vase Perce-Coffre",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 5 — relevé dans le PDF p. 91"
+    },
+    {
+      "key": "illusionnistes-de-la-main-de-cuivre",
+      "name": "Illusionnistes De La Main De Cuivre",
+      "type": "reference",
+      "lookup": "Illusionnistes De La Main De Cuivre",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 5 — relevé dans le PDF p. 91"
+    },
+    {
+      "key": "pieges-a-poudre-hallucinogene",
+      "name": "Pièges À Poudre Hallucinogène",
+      "type": "reference",
+      "lookup": "Pièges À Poudre Hallucinogène",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "hazard",
+      "note": "Niveau 6 — relevé dans le PDF p. 92"
+    },
+    {
+      "key": "colonne-de-lames-tournoyantes",
+      "name": "Colonne De Lames Tournoyantes",
+      "type": "reference",
+      "lookup": "Colonne De Lames Tournoyantes",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "hazard",
+      "note": "Niveau 4 — relevé dans le PDF p. 92"
+    },
+    {
+      "key": "groother-et-lopy",
+      "name": "Groother Et Lopy",
+      "type": "reference",
+      "lookup": "Groother Et Lopy",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 4 — relevé dans le PDF p. 92"
+    },
+    {
+      "key": "basilic",
+      "name": "Basilic",
+      "type": "reference",
+      "lookup": "Basilic",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 5 — relevé dans le PDF p. 93"
+    },
+    {
+      "key": "de-la-main-de-cuivre",
+      "name": "De La Main De Cuivre",
+      "type": "reference",
+      "lookup": "De La Main De Cuivre",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 5 — relevé dans le PDF p. 93"
+    },
+    {
+      "key": "fayati-alummur",
+      "name": "Fayati Alummur",
+      "type": "reference",
+      "lookup": "Fayati Alummur",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 8 — relevé dans le PDF p. 94"
+    },
+    {
+      "key": "palm",
+      "name": "Palm",
+      "type": "reference",
+      "lookup": "Palm",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 5 — relevé dans le PDF p. 94"
+    },
+    {
+      "key": "pick",
+      "name": "Pick",
+      "type": "reference",
+      "lookup": "Pick",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 5 — relevé dans le PDF p. 94"
+    },
+    {
+      "key": "sanjir",
+      "name": "Sanjir",
+      "type": "reference",
+      "lookup": "Sanjir",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 3 — relevé dans le PDF p. 94"
+    },
+    {
+      "key": "statues-de-prospectif",
+      "name": "Statues De Prospectif",
+      "type": "reference",
+      "lookup": "Statues De Prospectif",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 7 — relevé dans le PDF p. 102"
+    },
+    {
+      "key": "champions-squelettiques-d-elite",
+      "name": "Champions Squelettiques D’Élite",
+      "type": "reference",
+      "lookup": "Champions Squelettiques D’Élite",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 3 — relevé dans le PDF p. 104"
+    },
+    {
+      "key": "aimants-de-vie",
+      "name": "Aimants De Vie",
+      "type": "reference",
+      "lookup": "Aimants De Vie",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "hazard",
+      "note": "Niveau 7 — relevé dans le PDF p. 104"
+    },
+    {
+      "key": "les-mains-des-oublies",
+      "name": "Les Mains Des Oubliés",
+      "type": "reference",
+      "lookup": "Les Mains Des Oubliés",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "hazard",
+      "note": "Niveau 8 — relevé dans le PDF p. 105"
+    },
+    {
+      "key": "xitelberak",
+      "name": "Xitelberak",
+      "type": "reference",
+      "lookup": "Xitelberak",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 9 — relevé dans le PDF p. 105"
+    },
+    {
+      "key": "poudings-noirs",
+      "name": "Poudings Noirs",
+      "type": "reference",
+      "lookup": "Poudings Noirs",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 7 — relevé dans le PDF p. 106"
+    },
+    {
+      "key": "nuee-de-tiques",
+      "name": "Nuée De Tiques",
+      "type": "reference",
+      "lookup": "Nuée De Tiques",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 9 — relevé dans le PDF p. 110"
+    },
+    {
+      "key": "otyughs",
+      "name": "Otyughs",
+      "type": "reference",
+      "lookup": "Otyughs",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 4 — relevé dans le PDF p. 110"
+    },
+    {
+      "key": "lechis-fongiques-d-elite",
+      "name": "Léchis Fongiques D’Élite",
+      "type": "reference",
+      "lookup": "Léchis Fongiques D’Élite",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 3 — relevé dans le PDF p. 111"
+    },
+    {
+      "key": "nuee-d-ossautilleuses",
+      "name": "Nuée D’Ossautilleuses",
+      "type": "reference",
+      "lookup": "Nuée D’Ossautilleuses",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 6 — relevé dans le PDF p. 115"
+    },
+    {
+      "key": "zombie-ofalth",
+      "name": "Zombie Ofalth",
+      "type": "reference",
+      "lookup": "Zombie Ofalth",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 7 — relevé dans le PDF p. 115"
+    },
+    {
+      "key": "ofalth-d-elite",
+      "name": "Ofalth D’Élite",
+      "type": "reference",
+      "lookup": "Ofalth D’Élite",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 11 — relevé dans le PDF p. 116"
+    },
+    {
+      "key": "ceustodaemons-d-elite",
+      "name": "Ceustodaémons D’Élite",
+      "type": "reference",
+      "lookup": "Ceustodaémons D’Élite",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 7 — relevé dans le PDF p. 117"
+    },
+    {
+      "key": "carvey",
+      "name": "Carvey",
+      "type": "reference",
+      "lookup": "Carvey",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 8 — relevé dans le PDF p. 117"
+    },
+    {
+      "key": "choses-de-peaux-recousues",
+      "name": "Choses De Peaux Recousues",
+      "type": "reference",
+      "lookup": "Choses De Peaux Recousues",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 5 — relevé dans le PDF p. 117"
+    },
+    {
+      "key": "meurtriers-de-l-ecorcheur",
+      "name": "Meurtriers De L’Écorcheur",
+      "type": "reference",
+      "lookup": "Meurtriers De L’Écorcheur",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 6 — relevé dans le PDF p. 122"
+    },
+    {
+      "key": "compartiment-piege",
+      "name": "Compartiment Piégé",
+      "type": "reference",
+      "lookup": "Compartiment Piégé",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "hazard",
+      "note": "Niveau 6 — relevé dans le PDF p. 119"
+    },
+    {
+      "key": "piege-de-la-vierge-de-fer",
+      "name": "Piège De La Vierge De Fer",
+      "type": "reference",
+      "lookup": "Piège De La Vierge De Fer",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "hazard",
+      "note": "Niveau 8 — relevé dans le PDF p. 120"
+    },
+    {
+      "key": "inities-de-l-ecorcheur",
+      "name": "Initiés De L’Écorcheur",
+      "type": "reference",
+      "lookup": "Initiés De L’Écorcheur",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 5 — relevé dans le PDF p. 121"
+    },
+    {
+      "key": "violetta",
+      "name": "Violetta",
+      "type": "reference",
+      "lookup": "Violetta",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 9 — relevé dans le PDF p. 122"
+    },
+    {
+      "key": "automate-excavateur-faible",
+      "name": "Automate Excavateur Faible",
+      "type": "reference",
+      "lookup": "Automate Excavateur Faible",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 4 — relevé dans le PDF p. 122"
+    },
+    {
+      "key": "la-depiauteuse",
+      "name": "La Dépiauteuse",
+      "type": "reference",
+      "lookup": "La Dépiauteuse",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 10 — relevé dans le PDF p. 124"
+    },
+    {
+      "key": "excorions",
+      "name": "Excorions",
+      "type": "reference",
+      "lookup": "Excorions",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 6 — relevé dans le PDF p. 124"
+    },
+    {
+      "key": "mobana",
+      "name": "Mobana",
+      "type": "reference",
+      "lookup": "Mobana",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 9 — relevé dans le PDF p. 126"
+    },
+    {
+      "key": "choses-de-peaux-recousues-d-elite",
+      "name": "Choses De Peaux Recousues D’Élite",
+      "type": "reference",
+      "lookup": "Choses De Peaux Recousues D’Élite",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 6 — relevé dans le PDF p. 126"
+    }
+  ],
+  "encounters": [
+    {
+      "id": "CH1",
+      "name": "Chapitre 1 — Des suspects peu communs",
+      "location": "Absalom",
+      "notes": "Index des créatures et dangers rencontrés dans ce chapitre. Les quantités exactes restent indiquées dans le PDF lorsque plusieurs occurrences utilisent la même fiche.",
+      "groups": [
+        {
+          "tier": "Niveaux 5–8",
+          "creatures": [
+            {
+              "actor": "nuees-de-guepes",
+              "count": "selon la rencontre",
+              "note": "Niveau 4 — PDF p. 75"
+            },
+            {
+              "actor": "araignees-de-l-ether-faibles",
+              "count": "selon la rencontre",
+              "note": "Niveau 4 — PDF p. 77"
+            },
+            {
+              "actor": "voyous-de-droan",
+              "count": "selon la rencontre",
+              "note": "Niveau 2 — PDF p. 80"
+            },
+            {
+              "actor": "mastiffs",
+              "count": "selon la rencontre",
+              "note": "Niveau 1 — PDF p. 79"
+            },
+            {
+              "actor": "contrebandiers-de-droan",
+              "count": "selon la rencontre",
+              "note": "Niveau 4 — PDF p. 80"
+            },
+            {
+              "actor": "franzic",
+              "count": "selon la rencontre",
+              "note": "Niveau 5 — PDF p. 80"
+            },
+            {
+              "actor": "contremaitresse-kepsi",
+              "count": "selon la rencontre",
+              "note": "Niveau 3 — PDF p. 80"
+            },
+            {
+              "actor": "percen-droan",
+              "count": "selon la rencontre",
+              "note": "Niveau 7 — PDF p. 81"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "CH2",
+      "name": "Chapitre 2 — Un penny épargné",
+      "location": "Absalom",
+      "notes": "Index des créatures et dangers rencontrés dans ce chapitre. Les quantités exactes restent indiquées dans le PDF lorsque plusieurs occurrences utilisent la même fiche.",
+      "groups": [
+        {
+          "tier": "Niveaux 5–8",
+          "creatures": [
+            {
+              "actor": "bunyip",
+              "count": "selon la rencontre",
+              "note": "Niveau 3 — PDF p. 81"
+            },
+            {
+              "actor": "roublard-de-la-main-de-cuivre",
+              "count": "selon la rencontre",
+              "note": "Niveau 4 — PDF p. 85"
+            },
+            {
+              "actor": "chose-de-peaux-recousues",
+              "count": "selon la rencontre",
+              "note": "Niveau 5 — PDF p. 85"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "CH3",
+      "name": "Chapitre 3 — Pris la Main de cuivre dans le sac",
+      "location": "Absalom",
+      "notes": "Index des créatures et dangers rencontrés dans ce chapitre. Les quantités exactes restent indiquées dans le PDF lorsque plusieurs occurrences utilisent la même fiche.",
+      "groups": [
+        {
+          "tier": "Niveaux 5–8",
+          "creatures": [
+            {
+              "actor": "roublards-de-la-main-de-cuivre",
+              "count": "selon la rencontre",
+              "note": "Niveau 4 — PDF p. 91"
+            },
+            {
+              "actor": "timos-et-eurl",
+              "count": "selon la rencontre",
+              "note": "Niveau 4 — PDF p. 90"
+            },
+            {
+              "actor": "vase-perce-coffre",
+              "count": "selon la rencontre",
+              "note": "Niveau 6 — PDF p. 91"
+            },
+            {
+              "actor": "prototype-de-vase-perce-coffre",
+              "count": "selon la rencontre",
+              "note": "Niveau 5 — PDF p. 91"
+            },
+            {
+              "actor": "illusionnistes-de-la-main-de-cuivre",
+              "count": "selon la rencontre",
+              "note": "Niveau 5 — PDF p. 91"
+            },
+            {
+              "actor": "pieges-a-poudre-hallucinogene",
+              "count": "selon la rencontre",
+              "note": "Niveau 6 — PDF p. 92"
+            },
+            {
+              "actor": "colonne-de-lames-tournoyantes",
+              "count": "selon la rencontre",
+              "note": "Niveau 4 — PDF p. 92"
+            },
+            {
+              "actor": "groother-et-lopy",
+              "count": "selon la rencontre",
+              "note": "Niveau 4 — PDF p. 92"
+            },
+            {
+              "actor": "basilic",
+              "count": "selon la rencontre",
+              "note": "Niveau 5 — PDF p. 93"
+            },
+            {
+              "actor": "de-la-main-de-cuivre",
+              "count": "selon la rencontre",
+              "note": "Niveau 5 — PDF p. 93"
+            },
+            {
+              "actor": "fayati-alummur",
+              "count": "selon la rencontre",
+              "note": "Niveau 8 — PDF p. 94"
+            },
+            {
+              "actor": "palm",
+              "count": "selon la rencontre",
+              "note": "Niveau 5 — PDF p. 94"
+            },
+            {
+              "actor": "pick",
+              "count": "selon la rencontre",
+              "note": "Niveau 5 — PDF p. 94"
+            },
+            {
+              "actor": "sanjir",
+              "count": "selon la rencontre",
+              "note": "Niveau 3 — PDF p. 94"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "CH4",
+      "name": "Chapitre 4 — Descente vers la mort",
+      "location": "Absalom",
+      "notes": "Index des créatures et dangers rencontrés dans ce chapitre. Les quantités exactes restent indiquées dans le PDF lorsque plusieurs occurrences utilisent la même fiche.",
+      "groups": [
+        {
+          "tier": "Niveaux 5–8",
+          "creatures": [
+            {
+              "actor": "statues-de-prospectif",
+              "count": "selon la rencontre",
+              "note": "Niveau 7 — PDF p. 102"
+            },
+            {
+              "actor": "champions-squelettiques-d-elite",
+              "count": "selon la rencontre",
+              "note": "Niveau 3 — PDF p. 104"
+            },
+            {
+              "actor": "aimants-de-vie",
+              "count": "selon la rencontre",
+              "note": "Niveau 7 — PDF p. 104"
+            },
+            {
+              "actor": "les-mains-des-oublies",
+              "count": "selon la rencontre",
+              "note": "Niveau 8 — PDF p. 105"
+            },
+            {
+              "actor": "xitelberak",
+              "count": "selon la rencontre",
+              "note": "Niveau 9 — PDF p. 105"
+            },
+            {
+              "actor": "poudings-noirs",
+              "count": "selon la rencontre",
+              "note": "Niveau 7 — PDF p. 106"
+            },
+            {
+              "actor": "nuee-de-tiques",
+              "count": "selon la rencontre",
+              "note": "Niveau 9 — PDF p. 110"
+            },
+            {
+              "actor": "otyughs",
+              "count": "selon la rencontre",
+              "note": "Niveau 4 — PDF p. 110"
+            },
+            {
+              "actor": "lechis-fongiques-d-elite",
+              "count": "selon la rencontre",
+              "note": "Niveau 3 — PDF p. 111"
+            },
+            {
+              "actor": "nuee-d-ossautilleuses",
+              "count": "selon la rencontre",
+              "note": "Niveau 6 — PDF p. 115"
+            },
+            {
+              "actor": "zombie-ofalth",
+              "count": "selon la rencontre",
+              "note": "Niveau 7 — PDF p. 115"
+            },
+            {
+              "actor": "ofalth-d-elite",
+              "count": "selon la rencontre",
+              "note": "Niveau 11 — PDF p. 116"
+            },
+            {
+              "actor": "ceustodaemons-d-elite",
+              "count": "selon la rencontre",
+              "note": "Niveau 7 — PDF p. 117"
+            },
+            {
+              "actor": "carvey",
+              "count": "selon la rencontre",
+              "note": "Niveau 8 — PDF p. 117"
+            },
+            {
+              "actor": "choses-de-peaux-recousues",
+              "count": "selon la rencontre",
+              "note": "Niveau 5 — PDF p. 117"
+            },
+            {
+              "actor": "meurtriers-de-l-ecorcheur",
+              "count": "selon la rencontre",
+              "note": "Niveau 6 — PDF p. 122"
+            },
+            {
+              "actor": "compartiment-piege",
+              "count": "selon la rencontre",
+              "note": "Niveau 6 — PDF p. 119"
+            },
+            {
+              "actor": "piege-de-la-vierge-de-fer",
+              "count": "selon la rencontre",
+              "note": "Niveau 8 — PDF p. 120"
+            },
+            {
+              "actor": "inities-de-l-ecorcheur",
+              "count": "selon la rencontre",
+              "note": "Niveau 5 — PDF p. 121"
+            },
+            {
+              "actor": "violetta",
+              "count": "selon la rencontre",
+              "note": "Niveau 9 — PDF p. 122"
+            },
+            {
+              "actor": "automate-excavateur-faible",
+              "count": "selon la rencontre",
+              "note": "Niveau 4 — PDF p. 122"
+            },
+            {
+              "actor": "la-depiauteuse",
+              "count": "selon la rencontre",
+              "note": "Niveau 10 — PDF p. 124"
+            },
+            {
+              "actor": "excorions",
+              "count": "selon la rencontre",
+              "note": "Niveau 6 — PDF p. 124"
+            },
+            {
+              "actor": "mobana",
+              "count": "selon la rencontre",
+              "note": "Niveau 9 — PDF p. 126"
+            },
+            {
+              "actor": "choses-de-peaux-recousues-d-elite",
+              "count": "selon la rencontre",
+              "note": "Niveau 6 — PDF p. 126"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<html>
+  <body>
+    <div id="content"></div>
+    <script type="text/javascript">
+        var target = 'https://map.pathfinderwiki.com/'+window.location.hash;
+        document.getElementById('content').innerHTML=`The map has moved to <a href="${target}">${target}</a>. You will be redirected.`;
+        window.location.replace(target);
+    </script>
+  </body>
+</html>

@@ -1,0 +1,82 @@
+{
+  "generatedAt": "2026-08-16",
+  "pfsEntries": 165,
+  "withRegions": 162,
+  "withSynopsis": 100,
+  "unknownOrPartialLocations": [
+    {
+      "id": "pfs-season-1-intro",
+      "title": "The Second Confirmation",
+      "status": "unknown",
+      "note": null
+    },
+    {
+      "id": "pfs-season-2-intro",
+      "title": "United in Purpose",
+      "status": "linked_context",
+      "note": "Les ruines sont celles découvertes lors de The Second Confirmation et poursuivies par les Bounties Blackwood; la présentation officielle de l’Intro #2 ne nomme pas explicitement le site."
+    },
+    {
+      "id": "pfs-season-4-4-17",
+      "title": "Trapping the Hag’s Claw",
+      "status": "partial",
+      "note": "Finale de l’arc Aslynn; la présentation publique ne fixe pas à elle seule un lieu suffisamment précis."
+    },
+    {
+      "id": "pfs-season-8-8-05",
+      "title": "A Shark's Guide to Piracy",
+      "status": "partial",
+      "note": "L’île marécageuse est décrite publiquement sans nom propre."
+    }
+  ],
+  "bySeason": {
+    "1": {
+      "entries": 27,
+      "withRegions": 26,
+      "withSynopsis": 14,
+      "published": 27
+    },
+    "2": {
+      "entries": 26,
+      "withRegions": 25,
+      "withSynopsis": 16,
+      "published": 26
+    },
+    "3": {
+      "entries": 21,
+      "withRegions": 21,
+      "withSynopsis": 6,
+      "published": 21
+    },
+    "4": {
+      "entries": 18,
+      "withRegions": 17,
+      "withSynopsis": 11,
+      "published": 18
+    },
+    "5": {
+      "entries": 20,
+      "withRegions": 20,
+      "withSynopsis": 11,
+      "published": 20
+    },
+    "6": {
+      "entries": 22,
+      "withRegions": 22,
+      "withSynopsis": 11,
+      "published": 22
+    },
+    "7": {
+      "entries": 23,
+      "withRegions": 23,
+      "withSynopsis": 23,
+      "published": 22
+    },
+    "8": {
+      "entries": 8,
+      "withRegions": 8,
+      "withSynopsis": 8,
+      "published": 4
+    }
+  }
+}

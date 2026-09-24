@@ -1,0 +1,453 @@
+import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+import { Pf2MjService } from './Pf2MjService'
+
+describe('Pf2MjService', () => {
+  const pnj = { id: 'janira-gavix', nom: 'Janira Gavix', description: '', factions: [], tags: [], portrait: 'assets/l7r/portraits/pnj/janira-gavix.webp' }
+
+  function serviceFor(foundryOverrides: Record<string, jest.Mock> = {}, pnjValue: Record<string, unknown> = pnj, persistenceOverrides: Record<string, jest.Mock> = {}) {
+    const persistence = {
+      readReference: jest.fn().mockResolvedValue([pnjValue]),
+      savePortrait: jest.fn().mockResolvedValue({ path: 'portraits/janira-gavix.webp' }),
+      readPortrait: jest.fn().mockResolvedValue({ bytes: Buffer.from('portrait'), filename: 'janira-gavix.webp', mimeType: 'image/webp' }),
+      replaceReference: jest.fn(),
+      readCuration: jest.fn().mockResolvedValue({}),
+      saveCuration: jest.fn(),
+      readCatalogueSnapshot: jest.fn().mockResolvedValue({ schemaVersion: 2, files: [], entries: [], collections: [] }),
+      getCatalogueEntity: jest.fn().mockResolvedValue(null),
+      replacePlayableComponents: jest.fn(),
+      replaceCampaignPlayableComponents: jest.fn(),
+      listCatalogueEntries: jest.fn().mockResolvedValue([]),
+      listLibraryAssets: jest.fn().mockResolvedValue([]),
+      replaceCatalogueSnapshot: jest.fn(),
+      replaceScannedZipAssets: jest.fn(),
+      readGeographyConfig: jest.fn().mockResolvedValue({ aliases: {}, parents: {} }),
+      ...persistenceOverrides
+    }
+    const foundry = {
+      uploadPortrait: jest.fn().mockResolvedValue('assets/l7r/portraits/janira-gavix.webp'),
+      syncActorPortrait: jest.fn().mockResolvedValue(undefined),
+      getNpcSummary: jest.fn().mockResolvedValue({ uuid: 'Actor.janira', name: 'Janira Gavix', type: 'npc', level: 5, hp: 75, img: null }),
+      createNpcPlaceholder: jest.fn().mockResolvedValue({ uuid: 'Actor.janira', name: 'Janira Gavix' }),
+      ...foundryOverrides
+    }
+    return { service: new Pf2MjService(persistence as never, foundry as never), persistence, foundry }
+  }
+
+  describe('portraits Foundry', () => {
+    it('stores a portrait locally without requiring Foundry when no Actor is linked', async () => {
+      const { service, foundry } = serviceFor()
+      jest.spyOn(service, 'savePnjPortrait').mockResolvedValue('assets/l7r/portraits/pnj/janira-gavix.webp')
+      await expect(service.saveAndSyncPnjPortrait(Buffer.from('image'), 'image/webp', 'janira-gavix')).resolves.toMatchObject({ portrait: 'assets/l7r/portraits/pnj/janira-gavix.webp', local: 'success', foundry: 'not-linked' })
+      expect(foundry.uploadPortrait).not.toHaveBeenCalled()
+    })
+
+    it('keeps local storage successful when Foundry is offline', async () => {
+      const { service, foundry } = serviceFor({ syncActorPortrait: jest.fn().mockRejectedValue(new Error('Relay offline')) }, { ...pnj, foundryActorUuid: 'Actor.janira' })
+      jest.spyOn(service, 'savePnjPortrait').mockResolvedValue('assets/l7r/portraits/pnj/janira-gavix.webp')
+      jest.spyOn(service as any, 'assertFoundryPortraitExists').mockResolvedValue(undefined)
+      await expect(service.saveAndSyncPnjPortrait(Buffer.from('image'), 'image/webp', 'janira-gavix')).resolves.toMatchObject({ local: 'success', foundry: 'unavailable', foundryMessage: 'Relay offline' })
+      expect(foundry.syncActorPortrait).toHaveBeenCalledWith('Actor.janira', 'assets/l7r/portraits/pnj/janira-gavix.webp')
+    })
+
+    it('syncs the existing Actor UUID and never depends on the PNJ name', async () => {
+      const { service, foundry } = serviceFor({}, { ...pnj, nom: 'Janira renommée', foundryActorUuid: 'Actor.janira' })
+      jest.spyOn(service as any, 'assertFoundryPortraitExists').mockResolvedValue(undefined)
+      await expect(service.resyncPnjPortrait('janira-gavix')).resolves.toMatchObject({ local: 'success', foundry: 'synchronized' })
+      expect(foundry.syncActorPortrait).toHaveBeenCalledWith('Actor.janira', 'assets/l7r/portraits/pnj/janira-gavix.webp')
+    })
+
+    it('refuses creating a duplicate placeholder when an Actor is already linked', async () => {
+      const { service, foundry } = serviceFor({}, { ...pnj, foundryActorUuid: 'Actor.janira' })
+      await expect(service.createFoundryPlaceholder('janira-gavix')).rejects.toThrow('possède déjà un Actor')
+      expect(foundry.createNpcPlaceholder).not.toHaveBeenCalled()
+    })
+
+    it('dissociates only the UUID and preserves the Foundry Actor', async () => {
+      const { service, persistence, foundry } = serviceFor({}, { ...pnj, foundryActorUuid: 'Actor.janira' })
+      await expect(service.detachFoundryActor('janira-gavix')).resolves.toMatchObject({ id: 'janira-gavix', foundryActorUuid: null })
+      expect(persistence.replaceReference).toHaveBeenCalled()
+      expect(foundry).not.toHaveProperty('deleteActor')
+    })
+  })
+
+  describe('curation V3', () => {
+    it('writes new overrides only in byId and keeps legacy maps intact', async () => {
+      const legacy = { entries: { 'old-entry': { playability: 'Prêt' } }, levelsByCampaign: { 'age-of-ashes': '1–20' } }
+      const { service, persistence } = serviceFor({}, pnj, { readCuration: jest.fn().mockResolvedValue(structuredClone(legacy)) })
+
+      const result = await service.updateCuration({ id: 'age-of-ashes-volume-1', field: 'levels', value: '1–4' })
+
+      expect(result).toMatchObject({
+        schemaVersion: 4,
+        byId: { 'age-of-ashes-volume-1': { levelsOverride: '1–4' } },
+        entries: legacy.entries,
+        levelsByCampaign: legacy.levelsByCampaign
+      })
+      expect(persistence.saveCuration).toHaveBeenCalledWith(result)
+    })
+
+    it('migrates legacy progress into separate status axes', async () => {
+      const legacy = { schemaVersion: 3, byId: {
+        selected: { progress: 'Sélectionné' }, queued: { progress: 'À jouer' },
+        running: { progress: 'En cours' }, finished: { progress: 'Joué' }, excluded: { progress: 'Écarté' }
+      } }
+      const { service, persistence } = serviceFor({}, pnj, { readCuration: jest.fn().mockResolvedValue(structuredClone(legacy)) })
+      const result = await service.readCuration()
+      expect(result).toMatchObject({ schemaVersion: 4, byId: {
+        selected: { preparationStatus: 'selected', playStatus: 'none' },
+        queued: { preparationStatus: 'selected', playStatus: 'to_play' },
+        running: { preparationStatus: 'untreated', playStatus: 'in_progress' },
+        finished: { preparationStatus: 'untreated', playStatus: 'played' },
+        excluded: { excluded: true }
+      } })
+      for (const entry of Object.values(result.byId as Record<string, Record<string, unknown>>)) expect(entry.progress).toBeUndefined()
+      expect(persistence.saveCuration).toHaveBeenCalledWith(result)
+    })
+  })
+
+  describe('composants jouables', () => {
+    const component = {
+      id: 'scene-ouverture', title: 'Ouverture', description: 'La mission commence.', order: 1,
+      estimatedSessions: { min: 1, max: 2 },
+      continuity: { mode: 'soft_lock', returnToHubPossible: true, recommendedSameParty: true, notes: 'Prévoir une transition.' }
+    }
+
+    it('replaces only validated narrative components for the selected scenario', async () => {
+      const { service, persistence } = serviceFor({}, pnj, { getCatalogueEntity: jest.fn().mockResolvedValue({ id: 'scenario-1', titleFr: 'Test' }), replacePlayableComponents: jest.fn().mockResolvedValue({}) })
+      await expect(service.replacePlayableComponents('scenario-1', { playableComponents: [component] })).resolves.toEqual({ scenarioId: 'scenario-1', playableComponents: [component] })
+      expect(persistence.replacePlayableComponents).toHaveBeenCalledWith('scenario-1', [component])
+    })
+
+    it('rejects incomplete components before any SQLite update', async () => {
+      const { service, persistence } = serviceFor({}, pnj, { replacePlayableComponents: jest.fn() })
+      await expect(service.replacePlayableComponents('scenario-1', { playableComponents: [{ ...component, continuity: { ...component.continuity, mode: 'unknown' } }] })).rejects.toThrow('Mode de continuité invalide')
+      expect(persistence.replacePlayableComponents).not.toHaveBeenCalled()
+    })
+
+    it('imports the same focused format with scenarioId', async () => {
+      const { service, persistence } = serviceFor({}, pnj, { replacePlayableComponents: jest.fn().mockResolvedValue({}) })
+      await expect(service.importPlayableComponents({ scenarioId: 'scenario-1', playableComponents: [component] })).resolves.toMatchObject({ scenarioId: 'scenario-1' })
+      expect(persistence.replacePlayableComponents).toHaveBeenCalledWith('scenario-1', [component])
+    })
+
+    it('aggregates campaign components without copying them onto the campaign', async () => {
+      const { service } = serviceFor({}, pnj, { listCatalogueEntries: jest.fn().mockResolvedValue([
+        { id: 'campaign-1', kind: 'campaign', playableComponents: [] },
+        { id: 'scenario-1', kind: 'adventure', collectionId: 'campaign-1', titleFr: 'Premier scénario', playableComponents: [component] },
+        { id: 'scenario-2', kind: 'adventure', collectionId: 'campaign-1', titleFr: 'Deuxième scénario', playableComponents: [] }
+      ]) })
+      await expect(service.campaignPlayableComponents('campaign-1')).resolves.toMatchObject({ totalScenarios: 2, documentedScenarios: 1, totalComponents: 1, scenarios: expect.arrayContaining([expect.objectContaining({ scenarioId: 'scenario-1', playableComponents: [component] })]) })
+    })
+
+    it('imports a campaign once with a distinct description for every child scenario', async () => {
+      const campaign = { id: 'campaign-1', kind: 'campaign', synopsis: 'Synopsis de campagne.', parts: [{ id: 'scenario-1' }, { id: 'scenario-2' }] }
+      const { service, persistence } = serviceFor({}, pnj, { getCatalogueEntity: jest.fn().mockResolvedValue(campaign), replaceCampaignPlayableComponents: jest.fn().mockResolvedValue({}) })
+      await expect(service.importCampaignPlayableComponents({ campaignId: 'campaign-1', description: 'Une campagne mise à jour.', scenarios: [
+        { scenarioId: 'scenario-1', description: 'Le premier épisode.', playableComponents: [component] },
+        { scenarioId: 'scenario-2', description: 'Le second épisode.', playableComponents: [] }
+      ] })).resolves.toMatchObject({ campaignId: 'campaign-1', description: 'Une campagne mise à jour.', scenarios: [
+        { scenarioId: 'scenario-1', description: 'Le premier épisode.' },
+        { scenarioId: 'scenario-2', description: 'Le second épisode.' }
+      ] })
+      expect(persistence.replaceCampaignPlayableComponents).toHaveBeenCalledWith('campaign-1', [
+        expect.objectContaining({ scenarioId: 'scenario-1', description: 'Le premier épisode.' }),
+        expect.objectContaining({ scenarioId: 'scenario-2', description: 'Le second épisode.' })
+      ], 'Une campagne mise à jour.')
+    })
+
+    it('rejects a campaign import referring to a child outside that campaign', async () => {
+      const { service, persistence } = serviceFor({}, pnj, { getCatalogueEntity: jest.fn().mockResolvedValue({ id: 'campaign-1', kind: 'campaign', parts: [{ id: 'scenario-1' }] }) })
+      await expect(service.importCampaignPlayableComponents({ campaignId: 'campaign-1', scenarios: [{ scenarioId: 'other', description: 'Non.', playableComponents: [] }] })).rejects.toThrow('Sous-scénario inconnu')
+      expect(persistence.replaceCampaignPlayableComponents).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('library scan V3', () => {
+    it('projects component PDF resources onto their parent campaign without duplicating associations', async () => {
+      const assets = [
+        { id: 'agents-guide', filename: 'Guide.pdf', assetType: 'pdf', targetId: 'agents-of-edgewatch-guide', targetKind: 'item', role: 'resource', language: 'FR', variant: null, completeness: 'complete', translationOf: null, associationStatus: 'confirmed', associationScore: null, evidence: [], metadata: {}, present: true, lastSeenAt: null, sortOrder: 1 },
+        { id: 'agents-volume-1', filename: 'Volume 1.pdf', assetType: 'pdf', targetId: 'agents-of-edgewatch-volume-fr-1', targetKind: 'item', role: 'core', language: 'FR', variant: null, completeness: 'complete', translationOf: null, associationStatus: 'confirmed', associationScore: null, evidence: [], metadata: {}, present: true, lastSeenAt: null, sortOrder: 2 },
+        { id: 'agents-map', filename: 'Tome 2 (map).pdf', assetType: 'pdf', targetId: 'agents-of-edgewatch-map-volume-2', targetKind: 'item', role: 'resource', language: 'EN', variant: null, completeness: 'complete', translationOf: null, associationStatus: 'confirmed', associationScore: null, evidence: [], metadata: {}, present: true, lastSeenAt: null, sortOrder: 3 },
+        { id: 'other', filename: 'Other.pdf', assetType: 'pdf', targetId: 'other-campaign-volume-1', targetKind: 'item', role: 'core', language: 'EN', variant: null, completeness: 'complete', translationOf: null, associationStatus: 'confirmed', associationScore: null, evidence: [], metadata: {}, present: true, lastSeenAt: null, sortOrder: 4 }
+      ]
+      const catalogue = {
+        schemaVersion: 2, files: [], collections: [], entries: [{
+          id: 'agents-of-edgewatch', titleFr: 'Agents d’Absalom', titleOriginal: 'Agents of Edgewatch', parts: [
+            { id: 'agents-of-edgewatch-guide', titleFr: 'Guide des joueurs' },
+            { id: 'agents-of-edgewatch-volume-fr-1', titleFr: 'Volume français 1 sur 2' },
+            { id: 'agents-of-edgewatch-map-volume-2', titleFr: 'Cartes — Tome 2' }
+          ]
+        }]
+      }
+      const { service } = serviceFor({}, pnj, {
+        readCatalogueSnapshot: jest.fn().mockResolvedValue(catalogue),
+        listLibraryAssets: jest.fn().mockResolvedValue(assets)
+      })
+
+      await expect(service.libraryAssetsForScenario('agents-of-edgewatch')).resolves.toEqual(expect.arrayContaining([
+        expect.objectContaining({ id: 'agents-guide', resourceScope: 'component', resourceTargetLabel: 'Guide des joueurs' }),
+        expect.objectContaining({ id: 'agents-volume-1', resourceScope: 'component', resourceTargetLabel: 'Volume français 1 sur 2' }),
+        expect.objectContaining({ id: 'agents-map', resourceScope: 'component', resourceTargetLabel: 'Cartes — Tome 2' })
+      ]))
+      const result = await service.libraryAssetsForScenario('agents-of-edgewatch')
+      expect(result.map((asset) => asset.id)).not.toContain('other')
+      expect(result.map((asset) => asset.targetId)).toEqual([
+        'agents-of-edgewatch-guide',
+        'agents-of-edgewatch-volume-fr-1',
+        'agents-of-edgewatch-map-volume-2'
+      ])
+    })
+
+    it('projects one physical compilation PDF onto every playable part that explicitly references its fileId', async () => {
+      const volume = {
+        id: 'pdf-volume-1',
+        filename: 'Volume 1.pdf',
+        path: 'Campaign/Volume 1.pdf',
+        assetType: 'pdf',
+        targetId: 'campaign-volume-1',
+        targetKind: 'item',
+        role: 'core',
+        language: 'FR',
+        variant: null,
+        completeness: 'complete',
+        translationOf: null,
+        associationStatus: 'confirmed',
+        associationScore: null,
+        evidence: [],
+        metadata: {},
+        present: true,
+        lastSeenAt: null,
+        sortOrder: 1
+      }
+
+      const catalogue = {
+        schemaVersion: 2,
+        files: [{
+          id: 'pdf-volume-1',
+          path: 'Campaign/Volume 1.pdf'
+        }],
+        collections: [],
+        entries: [{
+          id: 'campaign',
+          titleFr: 'Campagne',
+          parts: [
+            {
+              id: 'campaign-volume-1',
+              kind: 'compilation_campagne',
+              titleFr: 'Volume 1',
+              documents: [{ fileId: 'pdf-volume-1' }]
+            },
+            {
+              id: 'campaign-adventure-1',
+              kind: 'volume_aventure',
+              titleFr: 'Aventure 1',
+              documents: [{ fileId: 'pdf-volume-1' }]
+            },
+            {
+              id: 'campaign-adventure-2',
+              kind: 'volume_aventure',
+              titleFr: 'Aventure 2',
+              documents: [{ fileId: 'pdf-volume-1' }]
+            }
+          ]
+        }]
+      }
+
+      const { service } = serviceFor({}, pnj, {
+        readCatalogueSnapshot:
+          jest.fn().mockResolvedValue(catalogue),
+        listLibraryAssets:
+          jest.fn().mockResolvedValue([volume])
+      })
+
+      await expect(
+        service.libraryAssetsForScenario(
+          'campaign-adventure-1'
+        )
+      ).resolves.toEqual([
+        expect.objectContaining({
+          id: 'pdf-volume-1',
+          resourceTargetId: 'campaign-adventure-1',
+          resourceScope: 'direct'
+        })
+      ])
+
+      await expect(
+        service.libraryAssetsForScenario(
+          'campaign-adventure-2'
+        )
+      ).resolves.toEqual([
+        expect.objectContaining({
+          id: 'pdf-volume-1',
+          resourceTargetId: 'campaign-adventure-2',
+          resourceScope: 'direct'
+        })
+      ])
+    })
+
+    it('also follows V3 container, playable and component ownership chains', async () => {
+      const { service } = serviceFor({}, pnj, {
+        readCatalogueSnapshot: jest.fn().mockResolvedValue({
+          schemaVersion: 3,
+          containers: [{ id: 'campaign', parentId: null, titles: { fr: 'Campagne' } }],
+          playableUnits: [{ id: 'chapter', parentId: 'campaign', titles: { fr: 'Chapitre' } }],
+          components: [{ id: 'chapter-volume', ownerId: 'chapter', titles: { fr: 'Volume 1' } }]
+        }),
+        listLibraryAssets: jest.fn().mockResolvedValue([
+          { id: 'chapter-pdf', filename: 'Chapitre.pdf', assetType: 'pdf', targetId: 'chapter', targetKind: 'playable', role: 'core', language: 'EN', variant: null, completeness: null, translationOf: null, associationStatus: 'confirmed', associationScore: null, evidence: [], metadata: {}, present: true, lastSeenAt: null, sortOrder: 1 },
+          { id: 'volume-info', filename: 'Volume (info).pdf', assetType: 'pdf', targetId: 'chapter-volume', targetKind: 'component', role: 'information', language: 'FR', variant: null, completeness: null, translationOf: null, associationStatus: 'confirmed', associationScore: null, evidence: [], metadata: {}, present: true, lastSeenAt: null, sortOrder: 2 }
+        ])
+      })
+
+      await expect(service.libraryAssetsForScenario('campaign')).resolves.toEqual(expect.arrayContaining([
+        expect.objectContaining({ id: 'chapter-pdf', resourceScope: 'component', resourceTargetLabel: 'Chapitre' }),
+        expect.objectContaining({ id: 'volume-info', resourceScope: 'component', resourceTargetLabel: 'Volume 1' })
+      ]))
+    })
+
+    it('ignores macOS AppleDouble files and reconciles renamed Unicode paths', async () => {
+      const root = await mkdtemp(join(tmpdir(), 'pf2-mj-scan-reconcile-'))
+      const library = join(root, 'library')
+      const dataRoot = join(root, 'data')
+      const previousLibrary = process.env['PF2_LIBRARY_ROOT']
+      const previousData = process.env['PF2_DATA_ROOT']
+
+      try {
+        await mkdir(join(library, 'Campagnes'), { recursive: true })
+        await mkdir(dataRoot, { recursive: true })
+        const diskName = 'Campagne - Blood Lords - Tome 2\uf0226 (en).pdf'
+        const oldPath = 'Campagnes/Campagne - Blood Lords - Tome 2:6 (en).pdf'
+        await writeFile(join(library, 'Campagnes', diskName), 'pdf')
+        await writeFile(join(library, 'Campagnes', `._${diskName}`), 'appledouble')
+        const catalogue = { schemaVersion: 2, files: [{ id: 'old', path: oldPath }], collections: [], entries: [] }
+
+        process.env['PF2_LIBRARY_ROOT'] = library
+        process.env['PF2_DATA_ROOT'] = dataRoot
+        const { service } = serviceFor({}, pnj, { readCatalogueSnapshot: jest.fn().mockResolvedValue(catalogue) })
+        const report = await service.scanLibrary() as {
+          totalOnDisk: number
+          summary: { added: number; removed: number; relocated: number; ignoredMetadata: number }
+          pdfAliases: Record<string, string>
+          newPdfs: string[]
+          removed: string[]
+        }
+
+        expect(report.totalOnDisk).toBe(1)
+        expect(report.summary).toMatchObject({ added: 0, removed: 0, relocated: 1, ignoredMetadata: 1 })
+        expect(report.newPdfs).toEqual([])
+        expect(report.removed).toEqual([])
+        expect(report.pdfAliases[oldPath]).toBe(`Campagnes/${diskName}`)
+      } finally {
+        if (previousLibrary === undefined) delete process.env['PF2_LIBRARY_ROOT']; else process.env['PF2_LIBRARY_ROOT'] = previousLibrary
+        if (previousData === undefined) delete process.env['PF2_DATA_ROOT']; else process.env['PF2_DATA_ROOT'] = previousData
+        await rm(root, { recursive: true, force: true })
+      }
+    })
+
+    it('persists a safe V3 reconciliation and makes the next scan clean', async () => {
+      const root = await mkdtemp(join(tmpdir(), 'pf2-mj-scan-apply-'))
+      const library = join(root, 'library')
+      const dataRoot = join(root, 'data')
+      const previousLibrary = process.env['PF2_LIBRARY_ROOT']
+      const previousData = process.env['PF2_DATA_ROOT']
+
+      try {
+        await mkdir(join(library, 'Campagnes'), { recursive: true })
+        await mkdir(dataRoot, { recursive: true })
+        const path = 'Campagnes/PFS - S01-01 - The Absalom Initiation (en).pdf'
+        await writeFile(join(library, path), 'pdf')
+        let catalogue: Record<string, unknown> = {
+          schemaVersion: 3,
+          containers: [],
+          components: [],
+          playableUnits: [{ id: 'pfs-season-1-1-01', playableType: 'pfsScenario', parentId: null, number: '1-01', titles: { fr: null, original: 'The Absalom Initiation', aliases: [] } }],
+          documents: [],
+          reconciliation: { pending: [], relocationsApplied: [], notes: [] }
+        }
+
+        process.env['PF2_LIBRARY_ROOT'] = library
+        process.env['PF2_DATA_ROOT'] = dataRoot
+        const { service, persistence } = serviceFor({}, pnj, {
+          readCatalogueSnapshot: jest.fn().mockImplementation(async () => structuredClone(catalogue)),
+          replaceCatalogueSnapshot: jest.fn().mockImplementation(async (next) => { catalogue = structuredClone(next) })
+        })
+        const applied = await service.scanLibrary(true) as { summary: { added: number; removed: number }; sync: { inventoried: number; review: number } }
+        expect(applied.summary).toMatchObject({ added: 0, removed: 0 })
+        expect(applied.sync).toMatchObject({ inventoried: 1, review: 0 })
+        expect(persistence.replaceCatalogueSnapshot).toHaveBeenCalled()
+        expect((catalogue.documents as Array<{ path: string; targetId: string; association: { status: string } }>)).toEqual([expect.objectContaining({ path, targetId: 'pfs-season-1-1-01', association: expect.objectContaining({ status: 'confirmed' }) })])
+      } finally {
+        if (previousLibrary === undefined) delete process.env['PF2_LIBRARY_ROOT']; else process.env['PF2_LIBRARY_ROOT'] = previousLibrary
+        if (previousData === undefined) delete process.env['PF2_DATA_ROOT']; else process.env['PF2_DATA_ROOT'] = previousData
+        await rm(root, { recursive: true, force: true })
+      }
+    })
+
+    it('detects a newly added translation and its unique original PDF', async () => {
+      const root = await mkdtemp(join(tmpdir(), 'pf2-mj-scan-translation-'))
+      const library = join(root, 'library')
+      const previousLibrary = process.env['PF2_LIBRARY_ROOT']
+      try {
+        await mkdir(join(library, 'PFS'), { recursive: true })
+        const original = 'PFS/PFS - S01-01 - The Absalom Initiation (en).pdf'
+        const translation = 'PFS/PFS - S01-01 - The Absalom Initiation (en) - trad.pdf'
+        await writeFile(join(library, original), 'pdf')
+        await writeFile(join(library, translation), 'pdf')
+        process.env['PF2_LIBRARY_ROOT'] = library
+        const catalogue = { schemaVersion: 2, files: [], collections: [], entries: [{ id: 'pfs-s01-01', kind: 'pfs-scenario', titleOriginal: 'The Absalom Initiation', aliases: [], number: '1-01', collectionId: null, parts: [] }] }
+        const { service } = serviceFor({}, pnj, { readCatalogueSnapshot: jest.fn().mockResolvedValue(catalogue) })
+        const report = await service.scanLibrary() as { summary: { translations: number; translationsCertain: number }; translations: Array<{ path: string; originalPath: string | null; association: string }> }
+        expect(report.summary).toMatchObject({ translations: 1, translationsCertain: 1 })
+        expect(report.translations).toEqual([{ path: translation, originalPath: original, association: 'certaine' }])
+      } finally {
+        if (previousLibrary === undefined) delete process.env['PF2_LIBRARY_ROOT']; else process.env['PF2_LIBRARY_ROOT'] = previousLibrary
+        await rm(root, { recursive: true, force: true })
+      }
+    })
+
+    it('detects info PDFs, resource ZIPs and campaign inheritance targets', async () => {
+      const root = await mkdtemp(join(tmpdir(), 'pf2-mj-scan-'))
+      const library = join(root, 'library')
+      const dataRoot = join(root, 'data')
+      const previousLibrary = process.env['PF2_LIBRARY_ROOT']
+      const previousData = process.env['PF2_DATA_ROOT']
+
+      try {
+        await mkdir(join(library, 'Campagnes'), { recursive: true })
+        await mkdir(join(library, 'PFS'), { recursive: true })
+        await mkdir(dataRoot, { recursive: true })
+        await writeFile(join(library, 'Campagnes', "Campagne - L'Âge des Cendres (ressources).zip"), 'zip')
+        await writeFile(join(library, 'PFS', 'PFS 1-01 (ressources).zip'), 'zip')
+        await writeFile(join(library, 'PFS', 'PFS 1-01 (info).pdf'), 'pdf')
+        const catalogue = {
+          schemaVersion: 2, files: [], collections: [], entries: [
+            { id: 'age-of-ashes', kind: 'campaign', titleFr: 'L’Âge des Cendres', titleOriginal: 'Age of Ashes', aliases: [], collectionId: null, parts: [{ id: 'age-of-ashes-volume-1', kind: 'volume_aventure', titleFr: 'La Colline du chevalier infernal', sequence: 1 }] },
+            { id: 'pfs-season-1-1-01', kind: 'pfs-scenario', titleFr: null, titleOriginal: 'The Absalom Initiation', aliases: [], number: '1-01', collectionId: 'pfs-season-1', parts: [] }
+          ]
+        }
+
+        process.env['PF2_LIBRARY_ROOT'] = library
+        process.env['PF2_DATA_ROOT'] = dataRoot
+        const { service } = serviceFor({}, pnj, { readCatalogueSnapshot: jest.fn().mockResolvedValue(catalogue) })
+        const report = await service.scanLibrary() as {
+          summary: { information: number; zips: number }
+          addedInformationPdfs: string[]
+          resourceInventory: { bundles: Array<{ targetId: string | null; scope: string; associationStatus: string }> }
+        }
+
+        expect(report.summary).toMatchObject({ information: 1, zips: 2 })
+        expect(report.addedInformationPdfs).toEqual(['PFS/PFS 1-01 (info).pdf'])
+        expect(report.resourceInventory.bundles).toEqual(expect.arrayContaining([
+          expect.objectContaining({ targetId: 'age-of-ashes', scope: 'descendants', associationStatus: 'confirmed' }),
+          expect.objectContaining({ targetId: 'pfs-season-1-1-01', scope: 'exact', associationStatus: 'confirmed' })
+        ]))
+      } finally {
+        if (previousLibrary === undefined) delete process.env['PF2_LIBRARY_ROOT']; else process.env['PF2_LIBRARY_ROOT'] = previousLibrary
+        if (previousData === undefined) delete process.env['PF2_DATA_ROOT']; else process.env['PF2_DATA_ROOT'] = previousData
+        await rm(root, { recursive: true, force: true })
+      }
+    })
+  })
+})

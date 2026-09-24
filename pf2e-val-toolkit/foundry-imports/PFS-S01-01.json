@@ -1,0 +1,379 @@
+{
+  "formatVersion": 3,
+  "library": {
+    "root": "Campagnes",
+    "category": "Société des Éclaireurs",
+    "collection": "Saison 1 - Year of the Open Road"
+  },
+  "scenario": {
+    "id": "PFS-S01-01",
+    "name": "The Absalom Initiation",
+    "tier": "1–4",
+    "source": "Pathfinder Society Scenario #1-01",
+    "summary": "Initiation à Absalom structurée autour de quatre missions confiées par les dirigeants de faction."
+  },
+  "journal": {
+    "title": "S01-01 — The Absalom Initiation"
+  },
+  "actors": [
+    {
+      "key": "flesh-dreg-reach",
+      "name": "Résidu chairforgé — Allonge",
+      "type": "reference",
+      "uuid": "Compendium.pf2e.pfs-season-1-bestiary.PXXHRzLRLB4bJ7M5"
+    },
+    {
+      "key": "flesh-dreg-breath",
+      "name": "Résidu chairforgé — Arme de souffle",
+      "type": "reference",
+      "uuid": "Compendium.pf2e.pfs-season-1-bestiary.t1QyIgwLORMhHNL4"
+    },
+    {
+      "key": "flesh-dreg-shield",
+      "name": "Résidu chairforgé — Bouclier",
+      "type": "reference",
+      "uuid": "Compendium.pf2e.pfs-season-1-bestiary.cuTgbvAxDEkT4XhZ"
+    },
+    {
+      "key": "flesh-dreg-charge",
+      "name": "Résidu chairforgé — Charge bondissante",
+      "type": "reference",
+      "uuid": "Compendium.pf2e.pfs-season-1-bestiary.WlJ8fVMV7gXNQ9eR"
+    },
+    {
+      "key": "flesh-dreg-acid",
+      "name": "Résidu chairforgé — Crachat d'acide",
+      "type": "reference",
+      "uuid": "Compendium.pf2e.pfs-season-1-bestiary.bDKozdvVEElVQywQ"
+    },
+    {
+      "key": "flesh-dreg-roots",
+      "name": "Résidu chairforgé — Racines",
+      "type": "reference",
+      "uuid": "Compendium.pf2e.pfs-season-1-bestiary.JEwMnYFfyxr5i6Dy"
+    },
+    {
+      "key": "flesh-proto-reach",
+      "name": "Prototype chairforgé — Allonge",
+      "type": "reference",
+      "uuid": "Compendium.pf2e.pfs-season-1-bestiary.R8D2GrilngQIb1eI"
+    },
+    {
+      "key": "flesh-proto-breath",
+      "name": "Prototype chairforgé — Arme de souffle",
+      "type": "reference",
+      "uuid": "Compendium.pf2e.pfs-season-1-bestiary.sN5jueRXgYI9DDGH"
+    },
+    {
+      "key": "flesh-proto-shield",
+      "name": "Prototype chairforgé — Bouclier",
+      "type": "reference",
+      "uuid": "Compendium.pf2e.pfs-season-1-bestiary.m3YBXS3ool7PmRfX"
+    },
+    {
+      "key": "flesh-proto-charge",
+      "name": "Prototype chairforgé — Charge bondissante",
+      "type": "reference",
+      "uuid": "Compendium.pf2e.pfs-season-1-bestiary.QZVLjVPLl0PNo2K3"
+    },
+    {
+      "key": "flesh-proto-acid",
+      "name": "Prototype chairforgé — Crachat d'acide",
+      "type": "reference",
+      "uuid": "Compendium.pf2e.pfs-season-1-bestiary.lzDOAywWh0mP4UeH"
+    },
+    {
+      "key": "flesh-proto-roots",
+      "name": "Prototype chairforgé — Racines",
+      "type": "reference",
+      "uuid": "Compendium.pf2e.pfs-season-1-bestiary.toAsLLjdRwu1pT0b"
+    },
+    {
+      "key": "shadow-wisp",
+      "name": "Flammerole de l'ombre",
+      "type": "reference",
+      "uuid": "Compendium.pf2e.pfs-season-1-bestiary.mjW1q98gMnEmZJKt"
+    },
+    {
+      "key": "greater-shadow-wisp",
+      "name": "Flammerole de l'ombre supérieure",
+      "type": "reference",
+      "uuid": "Compendium.pf2e.pfs-season-1-bestiary.3fctnHmcLQM3KrZj"
+    },
+    {
+      "key": "crowd-leader",
+      "name": "Meneur de foule",
+      "type": "reference",
+      "uuid": "Compendium.pf2e.pfs-season-1-bestiary.ySXw00WW2LJoDhZ6"
+    },
+    {
+      "key": "crowd-agitator",
+      "name": "Agitateur de foule",
+      "type": "reference",
+      "uuid": "Compendium.pf2e.pfs-season-1-bestiary.MOX8VzhEBVMkOpzr"
+    },
+    {
+      "key": "plague-zombie",
+      "name": "Zombie pestiféré",
+      "type": "reference",
+      "uuid": "Compendium.pf2e.pathfinder-monster-core.aWiTcxAySoYjUP6T"
+    },
+    {
+      "key": "zombie-shambler",
+      "name": "Titubeur zombie",
+      "type": "reference",
+      "uuid": "Compendium.pf2e.pathfinder-monster-core.Xo4IGzw28hivgMmM"
+    },
+    {
+      "key": "unkillable-zombie-brute",
+      "name": "Brute zombie intuable (PFS 1-01)",
+      "type": "reference",
+      "uuid": "Compendium.pf2e.pfs-season-1-bestiary.bjugOjcHcBHgWTeZ"
+    },
+    {
+      "key": "cacodaemon",
+      "name": "Cacodaémon",
+      "type": "reference",
+      "uuid": "Compendium.pf2e.pathfinder-monster-core.9Bl1ua3uLqodv47s"
+    },
+    {
+      "key": "weak-ceustodaemon",
+      "name": "Ceustodaémon affaibli (PFS 1-01)",
+      "type": "reference",
+      "uuid": "Compendium.pf2e.pfs-season-1-bestiary.UjVrEU4MTBH2eZOq"
+    },
+    {
+      "key": "goblin-pyro",
+      "name": "Pyromane gobelin",
+      "type": "reference",
+      "uuid": "Compendium.pf2e.pathfinder-monster-core.Ky5eNRvN71O0tY9l"
+    },
+    {
+      "key": "goblin-warrior",
+      "name": "Guerrier gobelin (PFS 1-01)",
+      "type": "reference",
+      "uuid": "Compendium.pf2e.pfs-season-1-bestiary.Et2jn8eZ1nQStapE"
+    },
+    {
+      "key": "goblin-commando",
+      "name": "Commando gobelin",
+      "type": "reference",
+      "uuid": "Compendium.pf2e.pathfinder-monster-core.sA2dFdRUwiapo69Z"
+    }
+  ],
+  "encounters": [
+    {
+      "id": "A2",
+      "name": "Cargo Hold",
+      "location": "Flotsam Graveyard",
+      "sourcePage": 11,
+      "notes": "Choisir aléatoirement une capacité supplémentaire. Avec plus de quatre PJ, le scénario prévoit une seconde capacité.",
+      "groups": [
+        {
+          "tier": "Subtier 1–2",
+          "choices": [
+            {
+              "label": "1 Résidu chairforgé — tirer une variante",
+              "note": "Si le groupe compte plus de quatre PJ, tirer deux capacités ; les fiches du compendium représentent chacune une variante individuelle.",
+              "options": [
+                {
+                  "actor": "flesh-dreg-reach"
+                },
+                {
+                  "actor": "flesh-dreg-breath"
+                },
+                {
+                  "actor": "flesh-dreg-shield"
+                },
+                {
+                  "actor": "flesh-dreg-charge"
+                },
+                {
+                  "actor": "flesh-dreg-acid"
+                },
+                {
+                  "actor": "flesh-dreg-roots"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "tier": "Subtier 3–4",
+          "choices": [
+            {
+              "label": "1 Prototype chairforgé — tirer une variante",
+              "note": "Si le groupe compte plus de quatre PJ, tirer deux capacités.",
+              "options": [
+                {
+                  "actor": "flesh-proto-reach"
+                },
+                {
+                  "actor": "flesh-proto-breath"
+                },
+                {
+                  "actor": "flesh-proto-shield"
+                },
+                {
+                  "actor": "flesh-proto-charge"
+                },
+                {
+                  "actor": "flesh-proto-acid"
+                },
+                {
+                  "actor": "flesh-proto-roots"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "B5",
+      "name": "Third Floor",
+      "location": "Blakros Museum",
+      "sourcePage": 16,
+      "groups": [
+        {
+          "tier": "Subtier 1–2",
+          "creatures": [
+            {
+              "actor": "shadow-wisp",
+              "count": "variable"
+            }
+          ]
+        },
+        {
+          "tier": "Subtier 3–4",
+          "creatures": [
+            {
+              "actor": "greater-shadow-wisp",
+              "count": "variable"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "C",
+      "name": "Event: Zombies!",
+      "location": "Mavedarus Manor",
+      "sourcePage": 22,
+      "groups": [
+        {
+          "tier": "Subtier 1–2",
+          "creatures": [
+            {
+              "actor": "plague-zombie",
+              "count": 1
+            },
+            {
+              "actor": "zombie-shambler",
+              "count": 2
+            }
+          ]
+        },
+        {
+          "tier": "Subtier 3–4",
+          "creatures": [
+            {
+              "actor": "plague-zombie",
+              "count": 2
+            },
+            {
+              "actor": "unkillable-zombie-brute",
+              "count": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "D",
+      "name": "Crowd Encounter",
+      "location": "Statue Street",
+      "sourcePage": 24,
+      "groups": [
+        {
+          "tier": "Subtier 1–2",
+          "creatures": [
+            {
+              "actor": "crowd-leader",
+              "count": 3
+            }
+          ]
+        },
+        {
+          "tier": "Subtier 3–4",
+          "creatures": [
+            {
+              "actor": "crowd-agitator",
+              "count": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "D-EA",
+      "name": "Rescuing the Pathfinder",
+      "location": "Statue Street",
+      "sourcePage": 25,
+      "groups": [
+        {
+          "tier": "Subtier 1–2",
+          "creatures": [
+            {
+              "actor": "cacodaemon",
+              "count": 2
+            }
+          ]
+        },
+        {
+          "tier": "Subtier 3–4",
+          "creatures": [
+            {
+              "actor": "weak-ceustodaemon",
+              "count": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "D-VS",
+      "name": "Rescuing the Whistleblower",
+      "location": "Statue Street",
+      "sourcePage": 25,
+      "groups": [
+        {
+          "tier": "Subtier 1–2",
+          "creatures": [
+            {
+              "actor": "goblin-pyro",
+              "count": 1
+            },
+            {
+              "actor": "goblin-warrior",
+              "count": 2
+            }
+          ]
+        },
+        {
+          "tier": "Subtier 3–4",
+          "creatures": [
+            {
+              "actor": "goblin-pyro",
+              "count": 1
+            },
+            {
+              "actor": "goblin-commando",
+              "count": 3
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

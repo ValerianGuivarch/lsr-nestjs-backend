@@ -1,0 +1,14 @@
+{
+  "generatedAt": "2026-09-01",
+  "reason": "Réconciliation bibliothèque 2026-09-01 : seuls les fichiers dont la cible éditoriale reste réellement ambiguë sont conservés ici.",
+  "items": [
+    {
+      "path": "Ressources/Cartes/War for the Crown - Tome 2 - Songbird, Scion, Saboteur (map).pdf",
+      "reason": "Cible éditoriale absente ou ambiguë dans le catalogue ; association manuelle recommandée."
+    },
+    {
+      "path": "Ressources/Guides joueurs/Pathfinder Adventure Path - Player's Guide (player).pdf",
+      "reason": "Cible éditoriale absente ou ambiguë dans le catalogue ; association manuelle recommandée."
+    }
+  ]
+}

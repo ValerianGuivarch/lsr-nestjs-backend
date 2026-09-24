@@ -47,6 +47,7 @@
       "dependsOn": ["build"],
       "options": {
         "buildTarget": "api-jdr:build",
+        "inspect": false,
         "runBuildTargetDependencies": false
       },
       "configurations": {

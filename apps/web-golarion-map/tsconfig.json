@@ -1,0 +1,16 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "strict": true,
+    "noImplicitAny": true,
+    "isolatedModules": true,
+    "resolveJsonModule": true,
+    "declaration": false,
+    "types": ["vite/client", "node"]
+  },
+  "include": ["src/**/*", "gen/**/*", "vite.config.ts"],
+  "exclude": ["node_modules", "dist", "**/*.spec.ts"]
+}

@@ -1,0 +1,392 @@
+{
+  "agents-of-edgewatch": {
+    "relevance": "Haute",
+    "rationale": "La structure publiée suppose une même unité de garde, mais Absalom fournit exactement ce qu’une table ouverte exploite bien : une base unique, des quartiers persistants, des témoins et suspects récurrents et de nombreuses affaires pouvant être isolées. L’intérêt narratif est également fort pour Zab et pour tout le fil Société des Éclaireurs à Absalom.",
+    "adaptation": "Remplacer l’unité de police fixe par une cellule de liaison entre la Grande Loge et les autorités d’Absalom. Transformer chaque enquête ou opération en dossier attribuable à une équipe différente ; conserver entre les séances l’état des suspects, victimes, quartiers, preuves et conséquences publiques. Les promotions ou responsabilités institutionnelles doivent appartenir à la cellule ou à des PNJ persistants plutôt qu’à un groupe fixe de PJ."
+  },
+  "age-of-ashes": {
+    "relevance": "Très haute",
+    "rationale": "La Citadelle Altaerein constitue une excellente base persistante et le Cercle d’Alseta fournit un mécanisme naturel pour envoyer des équipes différentes vers des régions distinctes. Les branches de la Triade Écarlate forment des objectifs séparables tout en alimentant un même métaplot, avec en plus de bons croisements avec les fils Mwangi, chélaxiens et draconiques.",
+    "adaptation": "Faire de la citadelle une base secondaire commune de la Société et traiter chaque portail, enquête régionale ou opération contre la Triade comme une mission. Tenir un journal partagé de l’état de chaque aiudara, des alliés locaux, des cellules de la Triade neutralisées et des révélations sur Dahak. Réserver les scènes qui exigent une continuité émotionnelle forte à un petit noyau de personnages récurrents si nécessaire."
+  },
+  "seven-dooms-for-sandpoint": {
+    "relevance": "Très haute",
+    "rationale": "Pointesable fonctionne comme base persistante tandis que le complexe souterrain fournit des expéditions naturellement découpables. Les habitants, factions, salles explorées et conséquences changent d’une séance à l’autre, ce qui rend très visible la continuité du monde partagé ; le fil thassilonien renforce en plus l’intérêt pour Tsuyi.",
+    "adaptation": "Créer des objectifs de descente précis sur le tableau de missions et imposer un compte rendu après chaque expédition. Suivre la cartographie, les salles vidées ou réoccupées, les créatures déplacées, les ressources consommées et l’état de Pointesable. Les grandes révélations doivent être archivées afin qu’une nouvelle équipe puisse reprendre l’enquête sans rejouer les scènes précédentes."
+  },
+  "blood-lords": {
+    "relevance": "Moyenne",
+    "rationale": "Les enquêtes, complots et opérations de Geb se prêtent bien à des équipes variables, et le cadre est narrativement très riche pour Yaz, Jilkra, Nex et les questions d’âme ou de création magique. En revanche, la progression centrale repose sur l’ascension politique d’un même groupe au sein de l’oligarchie, ce qui s’accorde mal avec un vivier changeant.",
+    "adaptation": "Attribuer les titres, domaines et rangs politiques à une cellule persistante, à des mandataires PNJ ou à une institution alliée plutôt qu’aux mêmes PJ. Utiliser les enquêtes, missions diplomatiques et opérations dangereuses comme dossiers indépendants, avec un registre partagé des faveurs, ennemis et équilibres politiques de Geb. Éviter que chaque personnage entrant doive artificiellement recevoir le même statut que les précédents."
+  },
+  "strength-of-thousands": {
+    "relevance": "Moyenne",
+    "rationale": "La Magaambya et Nantambu offrent une institution et des PNJ remarquablement persistants, et les missions extérieures se distribuent facilement. La campagne publiée repose toutefois sur une même promotion qui étudie, mûrit puis enseigne ensemble pendant des années, ce qui crée une forte dépendance à un groupe stable ; elle reste très intéressante pour Vaga et Elyn.",
+    "adaptation": "Transformer la scolarité en partenariat ou programme d’échange entre la Magaambya et la Société. Laisser les professeurs, étudiants et responsables de l’école porter la continuité institutionnelle, tandis que les PJ variables reçoivent les missions de terrain. Conserver un dossier commun des relations avec les communautés et réserver les grandes étapes de carrière académique à des PNJ ou à quelques personnages récurrents."
+  },
+  "wardens-of-wildwood": {
+    "relevance": "Haute",
+    "rationale": "La campagne combine diplomatie, exploration territoriale, factions durables et crises locales, quatre éléments très adaptés à un monde partagé. Les décisions prises lors du conflit forestier peuvent produire des conséquences visibles pour les groupes suivants, avec des accroches naturelles pour Pépin et Sashka.",
+    "adaptation": "Conserver un conseil de représentants permanents pour porter les décisions du Gala, de la Loge et du traité entre les séances. Distribuer les missions de médiation, reconnaissance et intervention à des équipes différentes et tenir un état partagé des alliances, territoires et griefs. Documenter séparément les causes naturelles, féeriques ou politiques afin de ne pas fusionner artificiellement tous les fils personnels des PJ."
+  },
+  "triumph-of-the-tusk": {
+    "relevance": "Haute",
+    "rationale": "Les délégations, fronts militaires, crises de communautés et missions diplomatiques de Belkzen peuvent être répartis entre plusieurs équipes, tandis que l’état du pays fournit une excellente continuité globale. Le cadre est particulièrement pertinent pour Yaz et le thème de l’identité orque, même si la montée en responsabilité des dignitaires suppose normalement davantage de continuité.",
+    "adaptation": "Faire représenter les délégations et le conseil de guerre par des PNJ persistants, puis confier les opérations concrètes à des équipes variables. Maintenir un tableau commun des alliances, pertes, territoires, communautés secourues et décisions politiques. Éviter que chaque nouveau PJ soit présenté comme ayant personnellement participé à toutes les négociations précédentes."
+  },
+  "revenge-of-the-runelords": {
+    "relevance": "Moyenne",
+    "rationale": "Le Thassilon, les seigneurs des runes et la dimension mythique sont très forts pour les fils de Tsuyi et pour une convergence tardive de campagne. La série commence toutefois à très haut niveau et repose sur une montée dramatique continue face à Xanderghul, ce qui favorise un noyau de héros récurrents plus qu’une rotation permanente.",
+    "adaptation": "Utiliser d’abord les recherches, sites secondaires, agents ennemis et opérations préparatoires comme missions ouvertes. Archiver systématiquement les connaissances runiques et les conséquences mythiques, puis réserver les chapitres de confrontation centrale à un noyau de personnages avancés. La campagne fonctionne mieux comme convergence tardive que comme front ouvert dès le début."
+  },
+  "hellbreakers": {
+    "relevance": "Très haute",
+    "rationale": "Une organisation de résistance structurée en opérations de sabotage, infiltration, extraction et soutien local correspond presque directement au fonctionnement d’une table ouverte. L’Isger peut évoluer comme front persistant pendant que différentes équipes interviennent sur des objectifs distincts, avec de bonnes connexions vers le Chéliax et les personnages concernés par ces régions.",
+    "adaptation": "Conserver la Ligue des Brise-Enfers comme faction indépendante dotée de responsables et de cellules persistantes. La Société peut fournir renseignements, spécialistes et équipes sans absorber la rébellion. Suivre globalement le contrôle territorial, le soutien populaire, les ressources, les représailles chélaxiennes et l’état des différents bastions afin que chaque opération modifie réellement la campagne."
+  },
+  "kingmaker": {
+    "relevance": "Basse",
+    "rationale": "L’exploration des Terres Volées, les factions et les crises frontalières sont excellentes pour un monde persistant, mais l’identité centrale de Kingmaker repose sur les mêmes personnages qui fondent et gouvernent leur royaume pendant des années. Une rotation importante de PJ fragilise donc la logique politique de la campagne, même si le livre reste une très grande réserve de lieux et de situations.",
+    "adaptation": "Confier la souveraineté et les postes de gouvernement à un conseil durable de PNJ ou de représentants institutionnels. Utiliser les PJ de la Société pour les reconnaissances, négociations, crises frontalières et opérations urgentes. Ne pas distribuer les fonctions de dirigeant à des personnages qui peuvent disparaître de la table dès la séance suivante."
+  },
+  "abomination-vaults": {
+    "relevance": "Haute",
+    "rationale": "Un mégadonjon proche d’une ville-base est naturellement compatible avec des expéditions successives, et Otari fournit des contacts, services et conséquences persistantes. La principale difficulté n’est pas la rotation des joueurs mais la nécessité de préserver très précisément l’état tactique et narratif de Gauntlight.",
+    "adaptation": "Traiter Gauntlight comme un front d’exploration parmi d’autres et annoncer pour chaque séance un objectif limité : reconnaissance, sauvetage, négociation ou sécurisation d’une zone. Maintenir une carte partagée et un registre des portes, pièges, factions, créatures déplacées, ressources et accords. Exiger un compte rendu permettant à l’équipe suivante de comprendre ce qui a changé."
+  },
+  "crown-of-the-kobold-king": {
+    "relevance": "Haute",
+    "rationale": "La mini-campagne se compose de crises et d’expéditions régionales autour d’un même centre, avec des habitants et sites récurrents. Elle est facile à transformer en missions successives et offre à Zab un miroir intéressant de l’identité kobolde sans imposer de lien artificiel avec tous les autres kobolds de la campagne.",
+    "adaptation": "Découper chaque chapitre en objectif régional confié à l’équipe disponible et conserver le Creux du Faucon comme point de continuité. Suivre les changements dans les sites explorés et les relations avec les communautés locales. Ne rattacher les découvertes anciennes à Tar-Baphon ou à d’autres métaplots que lorsqu’une preuve du scénario le justifie."
+  },
+  "extinction-curse": {
+    "relevance": "Basse",
+    "rationale": "Les voyages, sites et enquêtes peuvent être extraits en missions, mais la campagne repose fortement sur l’identité d’une même troupe de cirque et sur son évolution collective. Le thème est intéressant pour Vaga et pour l’histoire de l’île de la Pierre-Étoile, mais la structure demande une réécriture importante pour une table à composition variable.",
+    "adaptation": "Faire du cirque une faction alliée persistante menée par des PNJ plutôt que l’identité obligatoire des PJ. Confier aux Éclaireurs les enquêtes, protections et explorations auxquelles la troupe ne peut pas répondre seule. Conserver séparément la progression artistique du cirque et la progression des missions afin qu’une rotation de personnages ne casse pas la fiction."
+  },
+  "claws-of-the-tyrant": {
+    "relevance": "Très haute",
+    "rationale": "Le format anthologique, les trois niveaux très éloignés et les changements de point de vue sont particulièrement compatibles avec plusieurs équipes partageant un même métaplot. Tar-Baphon, les Terres des Tombes, l’histoire réécrite et les enjeux divins sont en plus directement pertinents pour Zab et Tsuyi.",
+    "adaptation": "Traiter chaque aventure comme un dossier autonome avec sa propre équipe et conserver séparément ce que ce groupe sait réellement. Après chaque partie, organiser une transmission d’archives ou un rapport à la Grande Loge pour permettre la convergence sans donner rétroactivement toutes les informations à tous les PJ. Respecter les écarts de niveau plutôt que de chercher à faire jouer les trois segments au même groupe."
+  },
+  "shadows-at-sundown": {
+    "relevance": "Haute",
+    "rationale": "L’aventure est un arc d’enquête relativement resserré, centré sur une ville et sur des lieux historiques précis, ce qui permet de la confier à une équipe spécialisée. Korvosa, la mémoire historique et les héritages thassiloniens alimentent directement les recherches de Tsuyi.",
+    "adaptation": "Présenter l’affaire comme une enquête spécialisée confiée à des agents expérimentés et conserver Korvosa comme environnement persistant pendant tout l’arc. Archiver les témoignages, phénomènes et conclusions afin qu’ils puissent ensuite nourrir les dossiers thassiloniens de la Grande Loge. Si l’enquête s’étend sur plusieurs séances, privilégier un petit noyau récurrent pour les scènes où les relations avec les témoins deviennent centrales."
+  },
+  "the-enmity-cycle": {
+    "relevance": "Haute",
+    "rationale": "L’enquête, les déplacements, les artistes, les rivalités politiques et les nombreux interlocuteurs se prêtent bien à une répartition des recherches. La campagne gagne en intérêt persistant si les relations entre cités, suspects et œuvres évoluent selon les actions des équipes ; le thème artistique offre aussi un bon angle pour Éos.",
+    "adaptation": "Séparer l’enquête en pistes et tâches clairement attribuables tout en maintenant un dossier central commun. Suivre les relations entre les cinq cités, les suspects, les artistes et l’état du projet commun. Les informations obtenues par une équipe doivent être consignées avant qu’une autre reprenne une piste, afin d’éviter la répétition des interrogatoires."
+  },
+  "troubles-in-otari": {
+    "relevance": "Très haute",
+    "rationale": "Trois aventures déjà modulaires, une ville-base stable et des PNJ récurrents en font l’un des formats les plus simples à intégrer dans une table ouverte. Otari peut servir à la fois de terrain de formation, de base locale et de relais vers d’autres fronts comme Gauntlight.",
+    "adaptation": "Inscrire chaque aventure ou sous-objectif comme mission autonome et conserver la base d’Otari ainsi que les habitants comme éléments persistants. Suivre les récompenses, relations et changements locaux entre les groupes. Maintenir clairement la mention que le fichier français local est une traduction communautaire/non officielle si c’est bien la version utilisée."
+  },
+  "a-fistful-of-flowers": {
+    "relevance": "Haute",
+    "rationale": "L’aventure est courte, autonome et possède un objectif clair de sauvetage, donc elle s’insère facilement comme mission spéciale. Ses thèmes de léschys capturés, d’exploitation et de rapport entre civilisation et forêt sont particulièrement forts pour Pépin, sans expliquer artificiellement son propre passé.",
+    "adaptation": "La jouer comme séance spéciale avec personnages adaptés ou comme récit parallèle dont les conséquences deviennent ensuite connues de la Société. Si les PJ habituels interviennent, préserver le point de vue des léschys et ne pas transformer l’histoire en simple chasse à un monstre. Les survivants et responsables peuvent devenir des contacts persistants pour de futures missions forestières."
+  },
+  "bounty-sodden-stories": {
+    "relevance": "Très haute",
+    "rationale": "Format court, escorte claire et Terres Détrempées comme région forte : excellente mission de table ouverte, avec une valeur supplémentaire pour les fils Lirgen et Œil d’Abendego.",
+    "adaptation": "Conserver Ecmund et les contacts rencontrés comme PNJ récurrents. L’expédition peut servir d’introduction légère aux Terres Détrempées avant des scénarios plus importants liés à Lirgen ou à l’Œil d’Abendego."
+  },
+  "quest-15-in-the-footsteps-of-horror": {
+    "relevance": "Très haute",
+    "rationale": "Le principe même du scénario — une nouvelle équipe envoyée gérer les conséquences incomplètes d’une ancienne mission — correspond exactement à un monde partagé. L’île de Kortos, le Plan de l’Ombre et la proximité d’Absalom renforcent encore son intérêt pour Sashka et pour la continuité de la Société.",
+    "adaptation": "Présenter le dossier comme une opération de suivi explicitement héritée d’une autre équipe et fournir aux joueurs uniquement le rapport que leurs personnages peuvent réellement consulter. Conserver les traces physiques et administratives de ce qui avait été accompli ou négligé. Le rapport final doit pouvoir devenir à son tour la source d’une mission future."
+  },
+  "quest-17-escorting-a-mirage": {
+    "relevance": "Haute",
+    "rationale": "Le scénario fonctionne comme mission autonome tout en confrontant la Société aux conséquences de son propre passé, ce qui crée une excellente persistance institutionnelle. Il est particulièrement intéressant pour Tsuyi et pour le thème des récits officiels incomplets ou biaisés.",
+    "adaptation": "Ne pas présenter Najid comme un adversaire purement fonctionnel : conserver son témoignage et les faits découverts comme éléments susceptibles de modifier les archives de la Société. Faire dépendre les contacts futurs à Merab de la manière dont l’équipe traite cette histoire. Le scénario peut rester entièrement autonome sans être rattaché de force à un plus grand complot."
+  },
+  "quest-18-student-exchange": {
+    "relevance": "Très haute",
+    "rationale": "La quête fournit une passerelle courte et institutionnelle vers Nantambu et la Magaambya sans imposer plusieurs années de scolarité aux mêmes PJ. Elle constitue donc une excellente introduction au front Mwangi pour Vaga et Elyn et un modèle naturel de coopération entre organisations.",
+    "adaptation": "Faire de l’échange un test officiel de partenariat dont les résultats déterminent les futurs contacts, accès et missions proposés par la Magaambya. Conserver les étudiants et professeurs rencontrés comme PNJ persistants. Les prochaines équipes peuvent bénéficier — ou subir — la réputation créée par les participants à cette première mission."
+  },
+  "community-escort": {
+    "relevance": "Moyenne",
+    "rationale": "La source communautaire présente L’Escorte comme une aventure d’initiation, ce qui est structurellement compatible avec une table ouverte, et elle est déjà indiquée comme jouée dans ta curation. Cependant, le texte extrait ne permet pas encore d’évaluer correctement son intrigue, ses choix ni les conséquences qu’elle pourrait laisser dans le monde.",
+    "adaptation": "Ne pas l’intégrer davantage au canon à partir du seul titre. Conserver le compte rendu réel de la partie déjà jouée comme source principale de continuité, puis effectuer une lecture visuelle du PDF si tu veux réutiliser ses PNJ, lieux ou événements. Éviter d’inventer rétroactivement des liens avec les grands fils de campagne."
+  },
+  "community-acolyte": {
+    "relevance": "Haute",
+    "rationale": "La source communautaire l’identifie comme un one-shot de niveau 1 à Otari conçu pour l’initiation, ce qui correspond très bien à des recrues ou à une équipe ponctuelle. La limite actuelle est documentaire : le PDF local n’a pas de couche texte exploitable, donc son contenu narratif exact n’est pas encore suffisamment vérifié.",
+    "adaptation": "Le garder comme candidat de mission d’initiation à Otari mais effectuer une lecture visuelle avant de l’inscrire au canon. Après cette lecture, relever au minimum commanditaire, objectif, lieux, PNJ, antagonistes et conséquences possibles. Ne pas remplir ces éléments par déduction automatique tant que le document n’a pas été vérifié."
+  },
+  "community-honor": {
+    "relevance": "Haute",
+    "rationale": "Les deux camps, les versions opposées des faits et les conséquences du choix des PJ produisent exactement le type de situation qui peut laisser une trace durable dans une table ouverte. Le thème de la représentation politique des orcs est intéressant pour Yaz, mais le traitement communautaire demande une relecture attentive pour éviter de reproduire sans recul certains présupposés du texte.",
+    "adaptation": "Clarifier avant jeu la chronologie du massacre, les responsabilités de Terrence et de Kormunder et ce que chaque camp sait réellement. Faire persister le résultat du choix dans la région : survivants, hostilité, réputation et éventuelles représailles. Réviser au besoin le ton et les motivations afin que les Orcs ne soient pas réduits à une opposition morale simpliste."
+  },
+  "community-midnight-demons": {
+    "relevance": "Haute",
+    "rationale": "Le scénario est court, de niveau 1, centré sur une crise locale avec enquête, disparitions et confrontation finale ; il est donc facile à confier à une équipe ponctuelle. Le cirque peut intéresser Vaga et les questions d’âmes peuvent toucher Éos, mais ces connexions doivent rester optionnelles.",
+    "adaptation": "Renforcer la chaîne d’indices afin que les joueurs puissent réellement remonter des disparitions au cirque puis au rituel. Décider avant le jeu si le cirque a un lien avec les contacts de Vaga ; sinon le traiter comme une troupe entièrement indépendante. Conserver Soteria et les survivants comme conséquences locales sans transformer automatiquement le diablotin en élément d’un métaplot majeur."
+  },
+  "community-handful-gold": {
+    "relevance": "Moyenne",
+    "rationale": "L’objectif est clair, le site unique et les plusieurs issues possibles conviennent bien à une séance ouverte ou à une mission de secours. En revanche, le scénario apporte peu de matière aux fils prioritaires actuels et repose surtout sur l’expédition elle-même.",
+    "adaptation": "Clarifier la motivation de Gërhard, l’origine de l’œuf et l’emplacement exact du temple avant de l’inscrire dans le monde persistant. Conserver comme conséquences le sort de Gërhard, celui de l’œuf et la réaction des boggards. L’utiliser de préférence comme mission locale autonome plutôt que de chercher à la rattacher artificiellement aux grands arcs."
+  },
+  "bastion-of-blasphemies": {
+    "relevance": "Haute",
+    "rationale": "Bastardhall fournit un site persistant très fort : chaque exploration peut révéler une nouvelle aile, un nouveau secret ou une conséquence de la malédiction. L’Ustalav et les thèmes de mémoire conviennent bien à une campagne où les découvertes sont archivées entre équipes.",
+    "adaptation": "Faire de Bastardhall un front d’exploration confié à des équipes spécialisées. Maintenir une carte, un registre des phénomènes et l’état des PNJ liés à Florin ; réserver les révélations familiales les plus intimes à un petit noyau récurrent si nécessaire."
+  },
+  "curtain-call": {
+    "relevance": "Moyenne",
+    "rationale": "La production théâtrale crée une excellente distribution de PNJ persistants et des missions annexes, mais l’idée centrale repose sur une œuvre racontant les exploits personnels d’un même groupe de héros célèbres.",
+    "adaptation": "Faire de l’opéra une production portée par des PNJ et traiter protections, enquêtes et missions de coulisses comme dossiers de la Société. Les héros dont l’histoire inspire l’œuvre doivent rester un noyau fixe ou être remplacés par des figures historiques/PNJ."
+  },
+  "fists-of-the-ruby-phoenix": {
+    "relevance": "Basse",
+    "rationale": "Le tournoi est spectaculaire et très modulaire, mais il suppose une même équipe officiellement inscrite qui progresse d’épreuve en épreuve. La rotation forte des PJ entre en conflit avec cette identité compétitive.",
+    "adaptation": "Utiliser un groupe fixe pour les combattants du tournoi et ouvrir aux autres PJ les reconnaissances, enquêtes, escortes et opérations autour de Bonmu et Goka. Conserver résultats et équipes rivales comme état partagé."
+  },
+  "gatewalkers": {
+    "relevance": "Moyenne",
+    "rationale": "L’enquête mondiale et les lieux variés sont attrayants, mais le Missing Moment et les pouvoirs associés sont des expériences personnelles communes aux mêmes héros. Cette prémisse supporte mal une rotation illimitée.",
+    "adaptation": "Créer une cellule Gatewalker limitée de personnages partageant l’événement, avec quelques agents de soutien pouvant changer. Documenter les indices et laisser les équipes externes traiter les missions périphériques sans leur attribuer artificiellement le même passé perdu."
+  },
+  "hells-destiny": {
+    "relevance": "Très haute",
+    "rationale": "Guerre, résistance, fronts multiples, opérations terrestres et infernales : la structure se découpe naturellement en missions confiées à des équipes différentes. Le Chéliax et l’Isger offrent en plus des liens forts avec plusieurs fils déjà ouverts.",
+    "adaptation": "Tenir une carte de guerre partagée, des factions et ressources persistantes, puis distribuer sabotage, diplomatie, extraction et reconnaissance aux équipes disponibles. Garder quelques responsables PNJ pour porter la continuité stratégique."
+  },
+  "invaders-from-the-dark": {
+    "relevance": "À évaluer",
+    "rationale": "L’œuvre n’a pas pu être identifiée avec certitude dans les sources officielles Paizo consultées ; toute évaluation narrative serait spéculative.",
+    "adaptation": "Ne pas l’intégrer au canon avant d’identifier exactement le produit ou le PDF. Une fois la source confirmée, relever niveaux, lieux, prémisse et dépendance à un groupe fixe avant toute notation."
+  },
+  "myth-speaker": {
+    "relevance": "Moyenne",
+    "rationale": "Iblydos, les cités et les missions mythiques sont riches en lieux persistants, mais l’ascension des héros vers un statut de héros-dieux est une progression très personnelle qui favorise un groupe stable.",
+    "adaptation": "Conserver un petit noyau mythique fixe et utiliser le reste du vivier comme diplomates, chercheurs ou alliés. Les conséquences politiques et religieuses à Iblydos doivent être suivies globalement même quand l’équipe change."
+  },
+  "outlaws-of-alkenstar": {
+    "relevance": "Moyenne",
+    "rationale": "Les braquages et opérations clandestines se découpent bien, mais la campagne repose sur une bande de hors-la-loi unie par des ennemis et une vengeance personnelle communs.",
+    "adaptation": "Soit conserver une bande fixe parallèle, soit remplacer la vengeance personnelle par une cellule clandestine soutenue par la Société. Les contacts, mandats, réputation et ressources doivent persister entre opérations."
+  },
+  "quest-for-the-frozen-flame": {
+    "relevance": "Haute",
+    "rationale": "La Défense brisée fournit une base mobile persistante et les missions d’éclaireurs, de chasse et de diplomatie s’accordent naturellement à des équipes variables.",
+    "adaptation": "Faire porter la continuité de la migration par les chefs et familles PNJ. Distribuer reconnaissances et expéditions au vivier tout en suivant précisément emplacement, ressources, alliances et pertes de la communauté."
+  },
+  "season-of-ghosts": {
+    "relevance": "Haute",
+    "rationale": "Willowshore est une excellente base persistante et les crises saisonnières permettent plusieurs types de missions. La difficulté vient surtout du calendrier serré et de l’isolement, qui exigent une chronologie commune très rigoureuse.",
+    "adaptation": "Tenir un calendrier partagé des quatre saisons et un état de chaque quartier, famille et menace. Les équipes peuvent varier mais toutes doivent recevoir les rapports précédents afin que la ville évolue de façon cohérente."
+  },
+  "shades-of-blood": {
+    "relevance": "Très haute",
+    "rationale": "L’exploration insulaire, l’ancienne prison azlantienne et le phénomène d’ombre se prêtent très bien à des expéditions séparées avec une base régionale. Azlant, vampires et magie céleste offrent aussi des pistes fortes pour plusieurs fils personnels.",
+    "adaptation": "Transformer chaque île, niveau de prison ou piste sur la colonne d’ombre en mission. Conserver un journal des découvertes azlantiennes, de l’état du phénomène céleste et des agents vampiriques rencontrés."
+  },
+  "sky-kings-tomb": {
+    "relevance": "Haute",
+    "rationale": "Highhelm fonctionne comme base durable tandis que recherches historiques et expéditions souterraines se distribuent facilement. Les thèmes d’histoire officielle et de vérités oubliées sont particulièrement intéressants pour Tsuyi.",
+    "adaptation": "Séparer archives, diplomatie naine et descentes dans les Terres Sombres en dossiers. Conserver les versions contradictoires de l’histoire et l’état des relations avec les clans dans un registre commun."
+  },
+  "spore-war": {
+    "relevance": "Très haute",
+    "rationale": "Une guerre contre Treerazer crée naturellement plusieurs fronts, alliances et missions spécialisées, avec Kyonin comme territoire persistant. Les thèmes végétaux et de corruption sont très forts pour Pépin.",
+    "adaptation": "Maintenir une carte de front, les forces alliées, les zones corrompues et les ressources. Distribuer diplomatie, sabotage, sauvetage et batailles à différentes équipes tout en réservant les confrontations finales à des PJ de niveau approprié."
+  },
+  "stolen-fate": {
+    "relevance": "Haute",
+    "rationale": "Les cartes dispersées sont presque des objectifs de mission naturels et permettent une campagne très mobile. En revanche, le jeu choisit personnellement les héros et l’accumulation des cartes porte une progression individuelle importante.",
+    "adaptation": "Faire appartenir le jeu de Harrow à une cellule persistante et enregistrer exactement quelles cartes ont été récupérées et par qui. Autoriser la rotation sur les missions mais garder un noyau pour les grandes révélations liées au destin."
+  },
+  "waking-tigers": {
+    "relevance": "Moyenne",
+    "rationale": "L’enquête et le procès offrent une structure originale, mais la relation directe entre ce qui a été découvert dans le passé et la défense des mêmes accusés au présent favorise une équipe stable.",
+    "adaptation": "Faire des enquêteurs et témoins un réseau plus large, avec un conseil juridique PNJ qui centralise les preuves. Les scènes de procès doivent s’appuyer sur un dossier commun et idéalement un petit noyau de personnages présents aux deux temporalités."
+  },
+  "vaultlines": {
+    "relevance": "Haute",
+    "rationale": "Les Terres Sombres et la poursuite d’une magie transformante permettent de nombreux sites et fronts d’exploration. Le haut niveau exige toutefois des personnages capables de suivre une menace continue jusqu’à sa conclusion.",
+    "adaptation": "Utiliser plusieurs équipes pour cartographie, diplomatie et reconnaissance, mais conserver un noyau de haut niveau pour les confrontations centrales. Documenter routes, communautés rencontrées et propagation de la magie."
+  },
+  "bounty-15-treasure-off-the-coast": {
+    "relevance": "Très haute",
+    "rationale": "Format court, objectif clair et dimension de réparation envers une ancienne esclave : excellent scénario de tableau de missions, particulièrement pertinent pour Zab et les thèmes abolitionnistes.",
+    "adaptation": "Le jouer presque tel quel comme mission ponctuelle. Conserver la bénéficiaire, l’état de l’épave et les éventuels survivants/ennemis comme petites conséquences locales sans forcer un métaplot."
+  },
+  "bounty-18-from-family-lost": {
+    "relevance": "Haute",
+    "rationale": "Une ruine, un objectif de récupération et les séquelles de la guerre démoniaque forment une mission autonome très facile à attribuer. Mendev peut ensuite devenir un front récurrent.",
+    "adaptation": "Conserver le devenir des ruines et des biens familiaux dans le journal de campagne. Utiliser la mission comme introduction courte aux conséquences de la Plaie du Monde."
+  },
+  "quest-02-unforgiving-fire": {
+    "relevance": "Haute",
+    "rationale": "Mission PFS courte avec commanditaire clair, relique volée et contexte local : très adaptée à une équipe variable et bonne ouverture vers Jalmeray.",
+    "adaptation": "Conserver Rashmivati et les contacts du monastère comme PNJ réutilisables. Archiver le choix final concernant le voleur et la relique pour affecter les futures relations locales."
+  },
+  "quest-09-wayfinder-origins": {
+    "relevance": "Très haute",
+    "rationale": "Exploration d’un site non cartographié, énigme azlantienne et documentation : c’est presque l’archétype d’une mission de la Société et un excellent scénario pour Tsuyi.",
+    "adaptation": "Utiliser l’île comme site persistant si les PJ n’en explorent pas tout. Conserver plans, mécanismes découverts et objets déplacés afin qu’une autre équipe puisse revenir plus tard."
+  },
+  "quest-19-the-elsewhere-feast": {
+    "relevance": "Très haute",
+    "rationale": "Mission courte de diplomatie féerique, idéale pour varier les équipes et développer le Premier Monde. Elle peut nourrir Sashka et Pépin sans imposer que leurs mystères viennent de ce scénario.",
+    "adaptation": "Faire des promesses et faveurs conclues au banquet de véritables éléments persistants. Noter précisément les obligations envers l’hôte et les autres convives."
+  },
+  "rose-street-revenge": {
+    "relevance": "Très haute",
+    "rationale": "Enquête urbaine divisée en plusieurs pistes, Absalom et victimes affranchies : structure très forte pour une table ouverte et pour Zab. Son statut de matériau de playtest exige toutefois une conversion mécanique.",
+    "adaptation": "Distribuer les pistes entre équipes et centraliser preuves et suspects à la Grande Loge. Convertir rencontres et statistiques vers PF2 actuel avant jeu, tout en gardant l’intrigue urbaine."
+  },
+  "the-dead-gods-hand": {
+    "relevance": "Très haute",
+    "rationale": "Absalom, Aroden, histoire religieuse et exploration souterraine forment un front majeur pour Tsuyi et les thèmes divins. Le site peut être exploré par étapes tout en laissant des conséquences durables sous la ville.",
+    "adaptation": "Cartographier précisément le Sanctum et les épreuves déjà accomplies. Utiliser des rapports de mission pour permettre la relève des équipes, en gardant un noyau pour les révélations personnelles du Test d’Aroden si besoin."
+  },
+  "prey-for-death": {
+    "relevance": "Basse",
+    "rationale": "L’aventure repose sur l’identité des PJ comme assassins de la Mante rouge et sur leur trahison interne, prémisse difficile à faire cohabiter avec une rotation de membres de la Société.",
+    "adaptation": "La jouer comme arc parallèle avec personnages dédiés, puis importer seulement ses conséquences dans le monde principal. Éviter de transformer artificiellement les Éclaireurs ordinaires en assassins de la Mante."
+  },
+  "rusthenge": {
+    "relevance": "Très haute",
+    "rationale": "Courte aventure régionale, site thassilonien persistant et communauté proche : excellente mission d’exploration, particulièrement pertinente pour Tsuyi.",
+    "adaptation": "Traiter Rusthenge comme un site de dossier avec carte partagée et conséquences locales à Iron Harbor. Les révélations thassiloniennes doivent alimenter les archives communes."
+  },
+  "malevolence": {
+    "relevance": "Haute",
+    "rationale": "Un manoir hanté est naturellement persistant et les recherches historiques peuvent être réparties, mais la montée de l’horreur et l’exposition psychologique gagnent à garder quelques personnages récurrents.",
+    "adaptation": "Partager journal d’enquête, pièces explorées et manifestations observées. Autoriser la rotation pour recherches et expéditions, mais réserver les scènes de rêve ou de corruption personnelle aux PJ qui les ont déjà vécues."
+  },
+  "the-slithering": {
+    "relevance": "Moyenne",
+    "rationale": "Kibwe, l’enquête et le Consortium Aspis fonctionnent bien avec un monde partagé, mais la malédiction centrale et certaines contraintes de groupe rendent l’intégration moins souple qu’une mission PFS classique.",
+    "adaptation": "Faire de Kibwe un front régional et découper enquête, protection et exploration. Vérifier avant conversion quelles contraintes de personnages sont indispensables à l’intrigue et ne pas les imposer rétroactivement à tout le vivier."
+  },
+  "night-of-the-gray-death": {
+    "relevance": "Haute",
+    "rationale": "Arc court de haut niveau, infiltration politique et secrets de Galt : excellent dossier pour une équipe spécialisée même s’il demande davantage de continuité pendant les scènes d’infiltration.",
+    "adaptation": "Le confier à une cellule expérimentée pour toute la durée de l’infiltration, puis verser ses découvertes aux archives communes. Conserver les changements politiques de Galt comme conséquences mondiales."
+  },
+  "fall-of-plaguestone": {
+    "relevance": "Haute",
+    "rationale": "Village-base, meurtre, suspects et menace locale : très bon arc régional que plusieurs équipes peuvent reprendre si les preuves et PNJ sont soigneusement suivis.",
+    "adaptation": "Tenir un tableau des suspects, preuves, état de la forêt et créatures mutées. Présenter chaque sortie comme une enquête ou intervention distincte au départ de Plaguestone."
+  },
+  "troubles-in-grayce": {
+    "relevance": "Très haute",
+    "rationale": "Les six aventures sont explicitement indépendantes tout en partageant Grayce : c’est presque un format de table ouverte prêt à l’emploi.",
+    "adaptation": "Conserver Grayce et ses habitants comme base commune, attribuer chaque affaire à une équipe différente et faire persister les réputations, dégâts et relations entre aventures."
+  },
+  "chronicles-of-the-pathfinder-society": {
+    "relevance": "Très haute",
+    "rationale": "Anthologie de scénarios Pathfinder Society autonomes : structure native pour équipes variables, avec plusieurs PNJ et lieux historiques de l’organisation.",
+    "adaptation": "Inscrire chaque scénario comme mission séparée et décider d’une chronologie commune. Conserver les conséquences des Blakros, Dragons des Égouts et autres factions pour qu’elles enrichissent les arcs déjà existants."
+  },
+  "a-few-flowers-more": {
+    "relevance": "Haute",
+    "rationale": "Court scénario à identité léschy forte, très pertinent pour Pépin et facile à isoler. Comme le précédent, il fonctionne mieux avec personnages spécialement adaptés.",
+    "adaptation": "Le proposer comme séance spéciale avec léschys dédiés ou comme récit parallèle. Importer ensuite les survivants, menaces et informations utiles dans la campagne principale."
+  },
+  "one-shot-sundered-waves": {
+    "relevance": "Moyenne",
+    "rationale": "Le trésor et l’île fonctionnent comme mission courte, mais les quatre personnages ont une histoire commune de pirates qui est essentielle à l’émotion du scénario.",
+    "adaptation": "Jouer idéalement avec les prétirés ou des personnages dédiés. Les conséquences du trésor peuvent ensuite entrer dans le monde partagé sans réutiliser nécessairement le groupe."
+  },
+  "one-shot-dinner-at-lionlodge": {
+    "relevance": "Haute",
+    "rationale": "Lieu unique, mystère court et distribution fermée : facile à insérer comme mission spéciale et à résoudre en une séance.",
+    "adaptation": "Remplacer si besoin les prétirés par une équipe de la Société invitée au dîner, tout en gardant les relations et secrets du lodge. Le site peut rester disponible comme contact ou lieu ultérieur."
+  },
+  "one-shot-head-shot-the-rot": {
+    "relevance": "Moyenne",
+    "rationale": "Très bon épisode d’action à Alkenstar, mais construit spécifiquement autour de quatre pistoleros prétirés et de leurs capacités.",
+    "adaptation": "Le jouer comme épisode parallèle ou convertir les rôles pour une équipe adaptée. Conserver les conséquences sur le bar, le théâtre et les contacts d’Alkenstar plutôt que forcer son style sur tous les PJ."
+  },
+  "one-shot-mark-of-the-mantis": {
+    "relevance": "Moyenne",
+    "rationale": "Absalom et l’enquête sont très pertinents, mais les héros sont explicitement des assassins de la Mante rouge. C’est donc meilleur comme point de vue parallèle que comme mission standard de la Société.",
+    "adaptation": "Jouer avec personnages dédiés puis faire parvenir le résultat à la Grande Loge sous forme de rumeur, rapport ou conséquence politique. Ne pas effacer la différence morale entre Mante rouge et Éclaireurs."
+  },
+  "free-rpg-little-trouble": {
+    "relevance": "Haute",
+    "rationale": "Aventure courte, comique et centrée sur des kobolds d’Absalom : excellent intermède pour Zab et pour montrer la ville depuis un autre point de vue.",
+    "adaptation": "La jouer comme épisode spécial avec kobolds dédiés, puis conserver le clan Hookclaw comme communauté récurrente. Les conséquences peuvent ensuite croiser les missions urbaines de Zab."
+  },
+  "free-rpg-threshold-of-knowledge": {
+    "relevance": "Très haute",
+    "rationale": "Magaambya, étudiants et mystère court : excellente porte d’entrée au Mwangi et à l’institution pour Vaga et Elyn.",
+    "adaptation": "Utiliser les étudiants comme personnages dédiés ou contacts persistants, puis transmettre leurs découvertes aux agents de la Société. Le scénario peut devenir le prélude idéal à Student Exchange ou Strength of Thousands."
+  },
+  "free-rpg-torment-and-legacy": {
+    "relevance": "Moyenne",
+    "rationale": "Très courte aventure de démonstration niveau 1, utile pour accueillir de nouveaux joueurs mais avec peu de matière persistante par elle-même.",
+    "adaptation": "La proposer comme mission d’initiation rapide et conserver Salvoy, Lazino et les choix de résolution si tu souhaites revenir dans la région. Éviter de lui ajouter artificiellement un métaplot lourd."
+  },
+  "quest-03-grehunde-s-gorget": {
+    "relevance": "Haute",
+    "rationale": "Objectif unique, expédition courte et héritage familial en font une excellente mission ponctuelle. Elle enrichit les Terres des Rois des Linnorms sans réclamer un arc long.",
+    "adaptation": "La jouer comme dossier autonome et enregistrer le sort du gorgerin et des descendants concernés. Les contacts d’Iceferry peuvent servir de relais pour d’autres opérations nordiques."
+  },
+  "quest-20-the-dacilane-academy-s-show-must-go-on": {
+    "relevance": "Très haute",
+    "rationale": "Absalom, Dacilane et des enfants de la Société déjà réutilisables : excellent épisode de vie institutionnelle, autonome mais riche en PNJ persistants.",
+    "adaptation": "Conserver les élèves, professeurs et relations avec le théâtre. Les conséquences de la manière dont les agents protègent le spectacle peuvent revenir lors d’autres scénarios Dacilane."
+  },
+  "bounty-03-shadows-and-scarecrows": {
+    "relevance": "Très haute",
+    "rationale": "Format d’une heure, objectif immédiatement compréhensible et Nidal comme cadre : excellente mission ponctuelle pour une équipe variable. Elle ouvre aussi un front Ombre/Nidal sans obliger à lancer un arc long.",
+    "adaptation": "La jouer presque telle quelle comme prime locale. Conserver le village ou les témoins rencontrés et la manière dont les PJ traitent la menace comme petites conséquences persistantes. Éviter de rattacher automatiquement l’affaire à tous les mystères liés au Plan de l’Ombre."
+  },
+  "bounty-06-the-road-from-otari": {
+    "relevance": "Très haute",
+    "rationale": "Otari et Absalom sont deux bases idéales pour une table ouverte, et la prime matérialise concrètement la route qui les relie. Le format court permet de l’utiliser pour une nouvelle équipe, une séance réduite ou un déplacement entre deux arcs.",
+    "adaptation": "La jouer comme mission logistique de la Société ou comme contrat civil. Conserver les commerçants rencontrés et l’état de la route si tu veux faire revenir ce trajet. Elle fonctionne particulièrement bien comme transition vers Troubles in Otari ou les aventures d’Absalom."
+  },
+  "bounty-08-the-tireless-path": {
+    "relevance": "Haute",
+    "rationale": "Mission d’escorte très simple à attribuer à n’importe quelle équipe et utile pour faire vivre les routes autour de Grayce. Elle apporte peu au métaplot principal mais fonctionne très bien comme séance courte ou mission de réserve.",
+    "adaptation": "Conserver les voyageurs et l’état du trajet comme conséquences locales. Si Grayce devient une base récurrente, faire revenir certains passagers ou problèmes de route dans les aventures suivantes."
+  },
+  "bounty-12-somewhere-below": {
+    "relevance": "Haute",
+    "rationale": "Le déclencheur est universel, l’objectif très clair et le donjon suffisamment court pour être utilisé presque n’importe où. C’est une excellente mission de secours quand la table a besoin d’une aventure indépendante sans forte préparation.",
+    "adaptation": "Choisir la région exacte au moment de l’insérer dans la campagne, puisque la présentation officielle ne fixe pas un pays précis. Conserver le spéléologue secouru comme contact si tu souhaites donner une conséquence durable à cette prime."
+  },
+  "bounty-13-the-blackwood-abundance": {
+    "relevance": "Très haute",
+    "rationale": "Le scénario est court mais s’inscrit dans un lieu qui revient ensuite dans la PFS, ce qui lui donne beaucoup plus de valeur qu’une prime isolée. Ruines, champignons, iruxis et terrain d’entraînement de la Société sont particulièrement adaptés à un monde partagé.",
+    "adaptation": "Faire du marais de Blackwood un petit front persistant : noter les ruines visitées, les relations avec Tskikha et les découvertes botaniques. Conserver cette mission comme prélude à Bounty 14 puis à PFS 5-02 The Blackwood Lost, sans révéler trop tôt les crises ultérieures."
+  },
+  "quest-08-shadows-of-the-black-sovereign": {
+    "relevance": "Très haute",
+    "rationale": "Diplomatie, technologie numérienne, implantation de la Société et sabotage forment une excellente mission institutionnelle. Une réussite peut modifier durablement l’accès des futures équipes à la Numérie et à ses ressources technomagiques.",
+    "adaptation": "Traiter la rencontre comme un jalon officiel de la relation entre la Société et la Numérie. Noter le résultat des négociations, les responsables du sabotage et les privilèges obtenus ou perdus afin que les prochaines missions dans la région en héritent."
+  },
+  "bounty-09-fishing-in-anthusis": {
+    "relevance": "Haute",
+    "rationale": "Le format très court et répétable convient parfaitement à une équipe variable. Anthusis donne en plus un point d’entrée concret vers le Vidrian et le Mwangi, avec un événement public dont les rivaux, organisateurs et réputation des PJ peuvent revenir plus tard.",
+    "adaptation": "Jouer le tournoi comme événement public récurrent d’Anthusis. Conserver le résultat, les relations avec les concurrents et les éventuels dégâts ou exploits comme éléments de chronique locale. Cette prime fonctionne particulièrement bien comme respiration entre deux missions plus lourdes au Mwangi."
+  },
+  "bounty-11-forged-facade": {
+    "relevance": "Haute",
+    "rationale": "Une mission sociale courte et répétable est utile pour varier fortement les séances d’une table ouverte. L’affaire peut également produire des contacts artistiques ou politiques persistants en Galt sans exiger un groupe fixe.",
+    "adaptation": "Transformer le salon en dossier confié à une petite équipe disposant d’une soirée pour enquêter. Archiver qui les PJ ont convaincu, humilié ou démasqué afin que ces relations puissent réapparaître lors d’autres missions diplomatiques en Galt."
+  },
+  "bounty-14-the-blackwood-truce": {
+    "relevance": "Très haute",
+    "rationale": "C’est exactement le type de continuité institutionnelle utile à ta table : un même site archéologique, une faction de la Société, un adversaire connu et une mission dont le résultat diplomatique peut être conservé. Elle s’enchaîne naturellement avec les autres épisodes de Blackwood.",
+    "adaptation": "Traiter Blackwood comme un front persistant de la Société. Jouer Bounty 13 puis Bounty 14 comme deux dossiers distincts, conserver l’identité et le sort de l’espion, ainsi que la réputation de la Radiant Oath et l’état du site. Ces éléments peuvent ensuite alimenter PFS 5-02 The Blackwood Lost."
+  },
+  "bounty-19-grim-tidings": {
+    "relevance": "Haute",
+    "rationale": "Enquête courte, objectif clair et communauté locale directement affectée : la structure convient très bien à une équipe variable. Le village et l’accès à Hoarwood fournissent des conséquences persistantes faciles à réutiliser dans une campagne ouverte.",
+    "adaptation": "Conserver le village comme contact régional et noter comment l’affaire modifie son accès à la forêt. Si d’autres missions passent par Irrisen, faire revenir les survivants, rumeurs ou changements provoqués par la résolution de cette prime."
+  }
+}

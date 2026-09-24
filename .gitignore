@@ -56,6 +56,7 @@ support/docker-prod/smtp4dev
 .nx/cache
 .nx/workspace-data
 /l7r-react-frontend/
+/tmp/
 
 vite.config.*.timestamp*
 .nx/polygraph
@@ -66,3 +67,53 @@ config-runner.json
 
 # Local sqlite databases
 *.sqlite
+*.sqlite-shm
+*.sqlite-wal
+support/xwiki/.env
+support/foundry-rest/.env
+/support/xwiki/data/
+/support/foundry-rest/data/
+
+# Synology metadata
+**/@eaDir/
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+
+# macOS
+.DS_Store
+._*
+
+# Generated archives
+pf2-portraits-*.zip
+
+# macOS metadata
+.DS_Store
+._*
+
+# Local backup folders
+.pf2-*-backup-*/
+
+# Generated ZIP artifacts
+pf2-portraits-*.zip
+._pf2-portraits-*.zip
+
+# Local caches / macOS metadata
+.pnpm-store/
+.DS_Store
+._*
+__MACOSX/
+
+# Local/generated files
+.pnpm-store/
+storage/
+pf2-combined-fix-backup-*/
+apps/web-misc/src/pf2-mj/_backup-*/
+*.bak-*
+
+support/mediawiki/LocalSettings.php
+
+# Local SQLite backups
+pf2.sqlite*.bak

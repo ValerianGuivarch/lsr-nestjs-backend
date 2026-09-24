@@ -1,0 +1,26 @@
+/*
+ * Shell shared by the public JdR pages.
+ * Kept scoped to JdR so its dark palette cannot leak into PF2 MJ or Résumés.
+ */
+.jdr-page {
+  box-sizing: border-box;
+  min-height: 100vh;
+  width: 100%;
+  background:
+    radial-gradient(circle at 15% 0%, rgba(88, 99, 170, 0.26), transparent 34%),
+    radial-gradient(circle at 90% 100%, rgba(91, 44, 104, 0.22), transparent 38%),
+    #10131b;
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.jdr-page *,
+.jdr-page *::before,
+.jdr-page *::after {
+  box-sizing: border-box;
+}
+
+.jdr-selection-page {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+}

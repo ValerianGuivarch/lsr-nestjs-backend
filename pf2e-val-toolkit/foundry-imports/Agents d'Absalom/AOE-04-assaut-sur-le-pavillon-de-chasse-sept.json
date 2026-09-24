@@ -1,0 +1,1013 @@
+{
+  "formatVersion": 3,
+  "library": {
+    "root": "Campagnes",
+    "category": "Agents d'Absalom",
+    "collection": "Volume 2"
+  },
+  "scenario": {
+    "id": "AOE-04",
+    "name": "Assaut sur le pavillon de chasse Sept",
+    "tier": "12–14",
+    "source": "Agents d'Absalom — Volume 2",
+    "summary": "Les agents traquent l’Infector, infiltrent la Cornue toxique, gardent un prisonnier au pavillon de chasse Sept puis explorent le Parc du Tourment."
+  },
+  "journal": {
+    "title": "AOE-04 — Assaut sur le pavillon de chasse Sept"
+  },
+  "actors": [
+    {
+      "key": "norgorberites",
+      "name": "Norgorbérites",
+      "type": "reference",
+      "lookup": "Norgorbérites",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 11 — relevé dans le PDF p. 10"
+    },
+    {
+      "key": "leukodaemons",
+      "name": "Leukodaémons",
+      "type": "reference",
+      "lookup": "Leukodaémons",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 9 — relevé dans le PDF p. 11"
+    },
+    {
+      "key": "ankou",
+      "name": "Ankou",
+      "type": "reference",
+      "lookup": "Ankou",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 14 — relevé dans le PDF p. 14"
+    },
+    {
+      "key": "chimistes-amateurs",
+      "name": "Chimistes Amateurs",
+      "type": "reference",
+      "lookup": "Chimistes Amateurs",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 5 — relevé dans le PDF p. 23"
+    },
+    {
+      "key": "acolytes-de-noirs-doigts",
+      "name": "Acolytes De Noirs Doigts",
+      "type": "reference",
+      "lookup": "Acolytes De Noirs Doigts",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 6 — relevé dans le PDF p. 19"
+    },
+    {
+      "key": "kalyn-pounch",
+      "name": "Kalyn Pounch",
+      "type": "reference",
+      "lookup": "Kalyn Pounch",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 12 — relevé dans le PDF p. 18"
+    },
+    {
+      "key": "japu-thalenger",
+      "name": "Japu Thalenger",
+      "type": "reference",
+      "lookup": "Japu Thalenger",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 10 — relevé dans le PDF p. 18"
+    },
+    {
+      "key": "zhughurr",
+      "name": "Zhughurr",
+      "type": "reference",
+      "lookup": "Zhughurr",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 3 — relevé dans le PDF p. 19"
+    },
+    {
+      "key": "kekker-et-gref",
+      "name": "Kekker Et Gref",
+      "type": "reference",
+      "lookup": "Kekker Et Gref",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 3 — relevé dans le PDF p. 20"
+    },
+    {
+      "key": "curvikko-flent",
+      "name": "Curvikko Flent",
+      "type": "reference",
+      "lookup": "Curvikko Flent",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 6 — relevé dans le PDF p. 21"
+    },
+    {
+      "key": "rahjita-dyajjus",
+      "name": "Rahjita Dyajjus",
+      "type": "reference",
+      "lookup": "Rahjita Dyajjus",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 12 — relevé dans le PDF p. 22"
+    },
+    {
+      "key": "lienni-estrough",
+      "name": "Lienni Estrough",
+      "type": "reference",
+      "lookup": "Lienni Estrough",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 5 — relevé dans le PDF p. 22"
+    },
+    {
+      "key": "ortie-guenaudenee",
+      "name": "Ortie Guenaudenée",
+      "type": "reference",
+      "lookup": "Ortie Guenaudenée",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 3 — relevé dans le PDF p. 22"
+    },
+    {
+      "key": "krasko-remplideau",
+      "name": "Krasko Remplideau",
+      "type": "reference",
+      "lookup": "Krasko Remplideau",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 6 — relevé dans le PDF p. 23"
+    },
+    {
+      "key": "velberi-jallist",
+      "name": "Velberi Jallist",
+      "type": "reference",
+      "lookup": "Velberi Jallist",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 14 — relevé dans le PDF p. 26"
+    },
+    {
+      "key": "piege-de-la-fausse-porte",
+      "name": "Piège De La Fausse Porte",
+      "type": "reference",
+      "lookup": "Piège De La Fausse Porte",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "hazard",
+      "note": "Niveau 12 — relevé dans le PDF p. 34"
+    },
+    {
+      "key": "avaleurs-de-poison",
+      "name": "Avaleurs De Poison",
+      "type": "reference",
+      "lookup": "Avaleurs De Poison",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 8 — relevé dans le PDF p. 27"
+    },
+    {
+      "key": "inohr",
+      "name": "Inohr",
+      "type": "reference",
+      "lookup": "Inohr",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 12 — relevé dans le PDF p. 28"
+    },
+    {
+      "key": "olphus-correnatre",
+      "name": "Olphus Correnâtre",
+      "type": "reference",
+      "lookup": "Olphus Correnâtre",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 11 — relevé dans le PDF p. 28"
+    },
+    {
+      "key": "avaleur-de-poison",
+      "name": "Avaleur De Poison",
+      "type": "reference",
+      "lookup": "Avaleur De Poison",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 8 — relevé dans le PDF p. 28"
+    },
+    {
+      "key": "aphaliel",
+      "name": "Aphaliel",
+      "type": "reference",
+      "lookup": "Aphaliel",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 8 — relevé dans le PDF p. 28"
+    },
+    {
+      "key": "araignees-joro-geantes",
+      "name": "Araignées Joro Géantes",
+      "type": "reference",
+      "lookup": "Araignées Joro Géantes",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 8 — relevé dans le PDF p. 29"
+    },
+    {
+      "key": "pretres-de-noirs-doigts",
+      "name": "Prêtres De Noirs Doigts",
+      "type": "reference",
+      "lookup": "Prêtres De Noirs Doigts",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 12 — relevé dans le PDF p. 30"
+    },
+    {
+      "key": "nuee-de-rats",
+      "name": "Nuée De Rats",
+      "type": "reference",
+      "lookup": "Nuée De Rats",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 1 — relevé dans le PDF p. 30"
+    },
+    {
+      "key": "statues-a-flechettes-empoisonnees",
+      "name": "Statues À Fléchettes Empoisonnées",
+      "type": "reference",
+      "lookup": "Statues À Fléchettes Empoisonnées",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "hazard",
+      "note": "Niveau 14 — relevé dans le PDF p. 34"
+    },
+    {
+      "key": "pieges-des-fausses-portes",
+      "name": "Pièges Des Fausses Portes",
+      "type": "reference",
+      "lookup": "Pièges Des Fausses Portes",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "hazard",
+      "note": "Niveau 12 — relevé dans le PDF p. 34"
+    },
+    {
+      "key": "la-dardeuse",
+      "name": "La Dardeuse",
+      "type": "reference",
+      "lookup": "La Dardeuse",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 15 — relevé dans le PDF p. 35"
+    },
+    {
+      "key": "veterans-des-astres-vigilants",
+      "name": "Vétérans Des Astres Vigilants",
+      "type": "reference",
+      "lookup": "Vétérans Des Astres Vigilants",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 6 — relevé dans le PDF p. 41"
+    },
+    {
+      "key": "piege-du-lustre-brulant",
+      "name": "Piège Du Lustre Brûlant",
+      "type": "reference",
+      "lookup": "Piège Du Lustre Brûlant",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "hazard",
+      "note": "Niveau 15 — relevé dans le PDF p. 42"
+    },
+    {
+      "key": "pretre-de-noirs-doigts",
+      "name": "Prêtre De Noirs Doigts",
+      "type": "reference",
+      "lookup": "Prêtre De Noirs Doigts",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 12 — relevé dans le PDF p. 46"
+    },
+    {
+      "key": "aspirants-alchimistes",
+      "name": "Aspirants Alchimistes",
+      "type": "reference",
+      "lookup": "Aspirants Alchimistes",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 10 — relevé dans le PDF p. 46"
+    },
+    {
+      "key": "assassins-mecaniques",
+      "name": "Assassins Mécaniques",
+      "type": "reference",
+      "lookup": "Assassins Mécaniques",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 13 — relevé dans le PDF p. 47"
+    },
+    {
+      "key": "empoisonneur-norgorberite",
+      "name": "Empoisonneur Norgorbérite",
+      "type": "reference",
+      "lookup": "Empoisonneur Norgorbérite",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 11 — relevé dans le PDF p. 47"
+    },
+    {
+      "key": "mages-venimeux",
+      "name": "Mages Venimeux",
+      "type": "reference",
+      "lookup": "Mages Venimeux",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 9 — relevé dans le PDF p. 47"
+    },
+    {
+      "key": "enfants-lumineux",
+      "name": "Enfants Lumineux",
+      "type": "reference",
+      "lookup": "Enfants Lumineux",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 12 — relevé dans le PDF p. 47"
+    },
+    {
+      "key": "acappar-forden",
+      "name": "Acappar Forden",
+      "type": "reference",
+      "lookup": "Acappar Forden",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 13 — relevé dans le PDF p. 49"
+    },
+    {
+      "key": "murmure-et-cloque",
+      "name": "Murmure Et Cloque",
+      "type": "reference",
+      "lookup": "Murmure Et Cloque",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 14 — relevé dans le PDF p. 49"
+    },
+    {
+      "key": "mort-inferieure",
+      "name": "Mort Inférieure",
+      "type": "reference",
+      "lookup": "Mort Inférieure",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 16 — relevé dans le PDF p. 50"
+    },
+    {
+      "key": "piege-de-retroaction-arcanique",
+      "name": "Piège De Rétroaction Arcanique",
+      "type": "reference",
+      "lookup": "Piège De Rétroaction Arcanique",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "hazard",
+      "note": "Niveau 13 — relevé dans le PDF p. 51"
+    },
+    {
+      "key": "chantecchymose",
+      "name": "Chantecchymose",
+      "type": "reference",
+      "lookup": "Chantecchymose",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 14 — relevé dans le PDF p. 52"
+    },
+    {
+      "key": "quelaunt",
+      "name": "Quelaunt",
+      "type": "reference",
+      "lookup": "Quelaunt",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 15 — relevé dans le PDF p. 52"
+    },
+    {
+      "key": "cornugon",
+      "name": "Cornugon",
+      "type": "reference",
+      "lookup": "Cornugon",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 16 — relevé dans le PDF p. 59"
+    },
+    {
+      "key": "miroir-aux-sombres-reflets",
+      "name": "Miroir Aux Sombres Reflets",
+      "type": "reference",
+      "lookup": "Miroir Aux Sombres Reflets",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "hazard",
+      "note": "Niveau 14 — relevé dans le PDF p. 60"
+    },
+    {
+      "key": "briselin",
+      "name": "Briselin",
+      "type": "reference",
+      "lookup": "Briselin",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 14 — relevé dans le PDF p. 60"
+    },
+    {
+      "key": "uthuls",
+      "name": "Uthuls",
+      "type": "reference",
+      "lookup": "Uthuls",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 14 — relevé dans le PDF p. 61"
+    },
+    {
+      "key": "banshie",
+      "name": "Banshie",
+      "type": "reference",
+      "lookup": "Banshie",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 17 — relevé dans le PDF p. 62"
+    },
+    {
+      "key": "l-enchevetrement-de-ronces",
+      "name": "L’Enchevêtrement De Ronces",
+      "type": "reference",
+      "lookup": "L’Enchevêtrement De Ronces",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 16 — relevé dans le PDF p. 63"
+    },
+    {
+      "key": "feux-follets-crepusculaires",
+      "name": "Feux Follets Crépusculaires",
+      "type": "reference",
+      "lookup": "Feux Follets Crépusculaires",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 13 — relevé dans le PDF p. 63"
+    },
+    {
+      "key": "piege-d-assaut-du-musee-de-cire",
+      "name": "Piège D’Assaut Du Musée De Cire",
+      "type": "reference",
+      "lookup": "Piège D’Assaut Du Musée De Cire",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "hazard",
+      "note": "Niveau 16 — relevé dans le PDF p. 64"
+    },
+    {
+      "key": "les-corneilles",
+      "name": "Les Corneilles",
+      "type": "reference",
+      "lookup": "Les Corneilles",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 14 — relevé dans le PDF p. 66"
+    },
+    {
+      "key": "le-prince-lapin",
+      "name": "Le Prince Lapin",
+      "type": "reference",
+      "lookup": "Le Prince Lapin",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 17 — relevé dans le PDF p. 66"
+    },
+    {
+      "key": "valsombre",
+      "name": "Valsombre",
+      "type": "reference",
+      "lookup": "Valsombre",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 14 — relevé dans le PDF p. 94"
+    },
+    {
+      "key": "kapral",
+      "name": "Kapral",
+      "type": "reference",
+      "lookup": "Kapral",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 14 — relevé dans le PDF p. 94"
+    },
+    {
+      "key": "miogimo",
+      "name": "Miogimo",
+      "type": "reference",
+      "lookup": "Miogimo",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 17 — relevé dans le PDF p. 94"
+    },
+    {
+      "key": "gardes-de-l-ombre",
+      "name": "Gardes De L’Ombre",
+      "type": "reference",
+      "lookup": "Gardes De L’Ombre",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 11 — relevé dans le PDF p. 78"
+    },
+    {
+      "key": "goules-damnees-par-le-zele",
+      "name": "Goules Damnées Par Le Zèle",
+      "type": "reference",
+      "lookup": "Goules Damnées Par Le Zèle",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 10 — relevé dans le PDF p. 78"
+    },
+    {
+      "key": "maitresse-assassin-du-garrot",
+      "name": "Maîtresse Assassin Du Garrot",
+      "type": "reference",
+      "lookup": "Maîtresse Assassin Du Garrot",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 16 — relevé dans le PDF p. 82"
+    },
+    {
+      "key": "champignons-carnivores",
+      "name": "Champignons Carnivores",
+      "type": "reference",
+      "lookup": "Champignons Carnivores",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 11 — relevé dans le PDF p. 83"
+    },
+    {
+      "key": "enfants-de-venin",
+      "name": "Enfants De Venin",
+      "type": "reference",
+      "lookup": "Enfants De Venin",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 13 — relevé dans le PDF p. 87"
+    },
+    {
+      "key": "le-putrefacteur",
+      "name": "Le Putréfacteur",
+      "type": "reference",
+      "lookup": "Le Putréfacteur",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 19 — relevé dans le PDF p. 86"
+    },
+    {
+      "key": "homme-de-main-des-barbiers-sanglants",
+      "name": "Homme De Main Des Barbiers Sanglants",
+      "type": "reference",
+      "lookup": "Homme De Main Des Barbiers Sanglants",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 12 — relevé dans le PDF p. 89"
+    },
+    {
+      "key": "monsieur-cisailles",
+      "name": "Monsieur Cisailles",
+      "type": "reference",
+      "lookup": "Monsieur Cisailles",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 14 — relevé dans le PDF p. 90"
+    },
+    {
+      "key": "jack-le-derange",
+      "name": "Jack Le Dérangé",
+      "type": "reference",
+      "lookup": "Jack Le Dérangé",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 17 — relevé dans le PDF p. 90"
+    },
+    {
+      "key": "guerrlier-d-elite",
+      "name": "Guerrlier D’Élite",
+      "type": "reference",
+      "lookup": "Guerrlier D’Élite",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 17 — relevé dans le PDF p. 91"
+    },
+    {
+      "key": "maitresses-assassins-du-garrot",
+      "name": "Maîtresses Assassins Du Garrot",
+      "type": "reference",
+      "lookup": "Maîtresses Assassins Du Garrot",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 16 — relevé dans le PDF p. 94"
+    },
+    {
+      "key": "hommes-de-main",
+      "name": "Hommes De Main",
+      "type": "reference",
+      "lookup": "Hommes De Main",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 12 — relevé dans le PDF p. 94"
+    },
+    {
+      "key": "commandos-de-la-gardetoile",
+      "name": "Commandos De La Gardétoile",
+      "type": "reference",
+      "lookup": "Commandos De La Gardétoile",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 11 — relevé dans le PDF p. 94"
+    },
+    {
+      "key": "liza-l-attristee",
+      "name": "Liza L’Attristée",
+      "type": "reference",
+      "lookup": "Liza L’Attristée",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 17 — relevé dans le PDF p. 95"
+    }
+  ],
+  "encounters": [
+    {
+      "id": "CH1",
+      "name": "Chapitre 1 — La Cornue toxique",
+      "location": "Absalom",
+      "notes": "Index des créatures et dangers rencontrés dans ce chapitre. Les quantités exactes restent indiquées dans le PDF lorsque plusieurs occurrences utilisent la même fiche.",
+      "groups": [
+        {
+          "tier": "Niveaux 12–14",
+          "creatures": [
+            {
+              "actor": "norgorberites",
+              "count": "selon la rencontre",
+              "note": "Niveau 11 — PDF p. 10"
+            },
+            {
+              "actor": "leukodaemons",
+              "count": "selon la rencontre",
+              "note": "Niveau 9 — PDF p. 11"
+            },
+            {
+              "actor": "ankou",
+              "count": "selon la rencontre",
+              "note": "Niveau 14 — PDF p. 14"
+            },
+            {
+              "actor": "chimistes-amateurs",
+              "count": "selon la rencontre",
+              "note": "Niveau 5 — PDF p. 23"
+            },
+            {
+              "actor": "acolytes-de-noirs-doigts",
+              "count": "selon la rencontre",
+              "note": "Niveau 6 — PDF p. 19"
+            },
+            {
+              "actor": "kalyn-pounch",
+              "count": "selon la rencontre",
+              "note": "Niveau 12 — PDF p. 18"
+            },
+            {
+              "actor": "japu-thalenger",
+              "count": "selon la rencontre",
+              "note": "Niveau 10 — PDF p. 18"
+            },
+            {
+              "actor": "zhughurr",
+              "count": "selon la rencontre",
+              "note": "Niveau 3 — PDF p. 19"
+            },
+            {
+              "actor": "kekker-et-gref",
+              "count": "selon la rencontre",
+              "note": "Niveau 3 — PDF p. 20"
+            },
+            {
+              "actor": "curvikko-flent",
+              "count": "selon la rencontre",
+              "note": "Niveau 6 — PDF p. 21"
+            },
+            {
+              "actor": "rahjita-dyajjus",
+              "count": "selon la rencontre",
+              "note": "Niveau 12 — PDF p. 22"
+            },
+            {
+              "actor": "lienni-estrough",
+              "count": "selon la rencontre",
+              "note": "Niveau 5 — PDF p. 22"
+            },
+            {
+              "actor": "ortie-guenaudenee",
+              "count": "selon la rencontre",
+              "note": "Niveau 3 — PDF p. 22"
+            },
+            {
+              "actor": "krasko-remplideau",
+              "count": "selon la rencontre",
+              "note": "Niveau 6 — PDF p. 23"
+            },
+            {
+              "actor": "velberi-jallist",
+              "count": "selon la rencontre",
+              "note": "Niveau 14 — PDF p. 26"
+            },
+            {
+              "actor": "piege-de-la-fausse-porte",
+              "count": "selon la rencontre",
+              "note": "Niveau 12 — PDF p. 34"
+            },
+            {
+              "actor": "avaleurs-de-poison",
+              "count": "selon la rencontre",
+              "note": "Niveau 8 — PDF p. 27"
+            },
+            {
+              "actor": "inohr",
+              "count": "selon la rencontre",
+              "note": "Niveau 12 — PDF p. 28"
+            },
+            {
+              "actor": "olphus-correnatre",
+              "count": "selon la rencontre",
+              "note": "Niveau 11 — PDF p. 28"
+            },
+            {
+              "actor": "avaleur-de-poison",
+              "count": "selon la rencontre",
+              "note": "Niveau 8 — PDF p. 28"
+            },
+            {
+              "actor": "aphaliel",
+              "count": "selon la rencontre",
+              "note": "Niveau 8 — PDF p. 28"
+            },
+            {
+              "actor": "araignees-joro-geantes",
+              "count": "selon la rencontre",
+              "note": "Niveau 8 — PDF p. 29"
+            },
+            {
+              "actor": "pretres-de-noirs-doigts",
+              "count": "selon la rencontre",
+              "note": "Niveau 12 — PDF p. 30"
+            },
+            {
+              "actor": "nuee-de-rats",
+              "count": "selon la rencontre",
+              "note": "Niveau 1 — PDF p. 30"
+            },
+            {
+              "actor": "statues-a-flechettes-empoisonnees",
+              "count": "selon la rencontre",
+              "note": "Niveau 14 — PDF p. 34"
+            },
+            {
+              "actor": "pieges-des-fausses-portes",
+              "count": "selon la rencontre",
+              "note": "Niveau 12 — PDF p. 34"
+            },
+            {
+              "actor": "la-dardeuse",
+              "count": "selon la rencontre",
+              "note": "Niveau 15 — PDF p. 35"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "CH2",
+      "name": "Chapitre 2 — L’héritage des Gevrin",
+      "location": "Absalom",
+      "notes": "Index des créatures et dangers rencontrés dans ce chapitre. Les quantités exactes restent indiquées dans le PDF lorsque plusieurs occurrences utilisent la même fiche.",
+      "groups": [
+        {
+          "tier": "Niveaux 12–14",
+          "creatures": [
+            {
+              "actor": "veterans-des-astres-vigilants",
+              "count": "selon la rencontre",
+              "note": "Niveau 6 — PDF p. 41"
+            },
+            {
+              "actor": "piege-du-lustre-brulant",
+              "count": "selon la rencontre",
+              "note": "Niveau 15 — PDF p. 42"
+            },
+            {
+              "actor": "pretre-de-noirs-doigts",
+              "count": "selon la rencontre",
+              "note": "Niveau 12 — PDF p. 46"
+            },
+            {
+              "actor": "aspirants-alchimistes",
+              "count": "selon la rencontre",
+              "note": "Niveau 10 — PDF p. 46"
+            },
+            {
+              "actor": "assassins-mecaniques",
+              "count": "selon la rencontre",
+              "note": "Niveau 13 — PDF p. 47"
+            },
+            {
+              "actor": "empoisonneur-norgorberite",
+              "count": "selon la rencontre",
+              "note": "Niveau 11 — PDF p. 47"
+            },
+            {
+              "actor": "mages-venimeux",
+              "count": "selon la rencontre",
+              "note": "Niveau 9 — PDF p. 47"
+            },
+            {
+              "actor": "enfants-lumineux",
+              "count": "selon la rencontre",
+              "note": "Niveau 12 — PDF p. 47"
+            },
+            {
+              "actor": "acappar-forden",
+              "count": "selon la rencontre",
+              "note": "Niveau 13 — PDF p. 49"
+            },
+            {
+              "actor": "murmure-et-cloque",
+              "count": "selon la rencontre",
+              "note": "Niveau 14 — PDF p. 49"
+            },
+            {
+              "actor": "mort-inferieure",
+              "count": "selon la rencontre",
+              "note": "Niveau 16 — PDF p. 50"
+            },
+            {
+              "actor": "piege-de-retroaction-arcanique",
+              "count": "selon la rencontre",
+              "note": "Niveau 13 — PDF p. 51"
+            },
+            {
+              "actor": "chantecchymose",
+              "count": "selon la rencontre",
+              "note": "Niveau 14 — PDF p. 52"
+            },
+            {
+              "actor": "quelaunt",
+              "count": "selon la rencontre",
+              "note": "Niveau 15 — PDF p. 52"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "CH3",
+      "name": "Chapitre 3 — Un merveilleux moment au Parc du Tourment",
+      "location": "Absalom",
+      "notes": "Index des créatures et dangers rencontrés dans ce chapitre. Les quantités exactes restent indiquées dans le PDF lorsque plusieurs occurrences utilisent la même fiche.",
+      "groups": [
+        {
+          "tier": "Niveaux 12–14",
+          "creatures": [
+            {
+              "actor": "cornugon",
+              "count": "selon la rencontre",
+              "note": "Niveau 16 — PDF p. 59"
+            },
+            {
+              "actor": "miroir-aux-sombres-reflets",
+              "count": "selon la rencontre",
+              "note": "Niveau 14 — PDF p. 60"
+            },
+            {
+              "actor": "briselin",
+              "count": "selon la rencontre",
+              "note": "Niveau 14 — PDF p. 60"
+            },
+            {
+              "actor": "uthuls",
+              "count": "selon la rencontre",
+              "note": "Niveau 14 — PDF p. 61"
+            },
+            {
+              "actor": "banshie",
+              "count": "selon la rencontre",
+              "note": "Niveau 17 — PDF p. 62"
+            },
+            {
+              "actor": "l-enchevetrement-de-ronces",
+              "count": "selon la rencontre",
+              "note": "Niveau 16 — PDF p. 63"
+            },
+            {
+              "actor": "feux-follets-crepusculaires",
+              "count": "selon la rencontre",
+              "note": "Niveau 13 — PDF p. 63"
+            },
+            {
+              "actor": "piege-d-assaut-du-musee-de-cire",
+              "count": "selon la rencontre",
+              "note": "Niveau 16 — PDF p. 64"
+            },
+            {
+              "actor": "les-corneilles",
+              "count": "selon la rencontre",
+              "note": "Niveau 14 — PDF p. 66"
+            },
+            {
+              "actor": "le-prince-lapin",
+              "count": "selon la rencontre",
+              "note": "Niveau 17 — PDF p. 66"
+            },
+            {
+              "actor": "valsombre",
+              "count": "selon la rencontre",
+              "note": "Niveau 14 — PDF p. 94"
+            },
+            {
+              "actor": "kapral",
+              "count": "selon la rencontre",
+              "note": "Niveau 14 — PDF p. 94"
+            },
+            {
+              "actor": "miogimo",
+              "count": "selon la rencontre",
+              "note": "Niveau 17 — PDF p. 94"
+            },
+            {
+              "actor": "gardes-de-l-ombre",
+              "count": "selon la rencontre",
+              "note": "Niveau 11 — PDF p. 78"
+            },
+            {
+              "actor": "goules-damnees-par-le-zele",
+              "count": "selon la rencontre",
+              "note": "Niveau 10 — PDF p. 78"
+            },
+            {
+              "actor": "maitresse-assassin-du-garrot",
+              "count": "selon la rencontre",
+              "note": "Niveau 16 — PDF p. 82"
+            },
+            {
+              "actor": "champignons-carnivores",
+              "count": "selon la rencontre",
+              "note": "Niveau 11 — PDF p. 83"
+            },
+            {
+              "actor": "enfants-de-venin",
+              "count": "selon la rencontre",
+              "note": "Niveau 13 — PDF p. 87"
+            },
+            {
+              "actor": "le-putrefacteur",
+              "count": "selon la rencontre",
+              "note": "Niveau 19 — PDF p. 86"
+            },
+            {
+              "actor": "homme-de-main-des-barbiers-sanglants",
+              "count": "selon la rencontre",
+              "note": "Niveau 12 — PDF p. 89"
+            },
+            {
+              "actor": "monsieur-cisailles",
+              "count": "selon la rencontre",
+              "note": "Niveau 14 — PDF p. 90"
+            },
+            {
+              "actor": "jack-le-derange",
+              "count": "selon la rencontre",
+              "note": "Niveau 17 — PDF p. 90"
+            },
+            {
+              "actor": "guerrlier-d-elite",
+              "count": "selon la rencontre",
+              "note": "Niveau 17 — PDF p. 91"
+            },
+            {
+              "actor": "maitresses-assassins-du-garrot",
+              "count": "selon la rencontre",
+              "note": "Niveau 16 — PDF p. 94"
+            },
+            {
+              "actor": "hommes-de-main",
+              "count": "selon la rencontre",
+              "note": "Niveau 12 — PDF p. 94"
+            },
+            {
+              "actor": "commandos-de-la-gardetoile",
+              "count": "selon la rencontre",
+              "note": "Niveau 11 — PDF p. 94"
+            },
+            {
+              "actor": "liza-l-attristee",
+              "count": "selon la rencontre",
+              "note": "Niveau 17 — PDF p. 95"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

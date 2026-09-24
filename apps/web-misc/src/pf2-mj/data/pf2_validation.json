@@ -1,0 +1,21 @@
+{
+  "valide": true,
+  "references_orphelines": [],
+  "comptages": {
+    "npc": 145,
+    "faction": 60,
+    "region": 54,
+    "lieu": 81,
+    "event": 25
+  },
+  "reputation": {
+    "factions_avec_champ": 60,
+    "valeurs_initiales_non_zero": [
+      {
+        "id": "faction_mantes_rouges",
+        "nom": "Mantes rouges",
+        "valeur": -8
+      }
+    ]
+  }
+}

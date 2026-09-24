@@ -1,0 +1,1468 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-09-01T22:18:28+0200",
+  "foundryAssetsRoot": "/home/valou/services/foundry/data/Data/assets/l7r",
+  "foundryPortraitRoot": "/home/valou/services/foundry/data/Data/assets/l7r/portraits/pnj",
+  "dryRun": false,
+  "online": true,
+  "summary": {
+    "downloaded": 24,
+    "missing": 111,
+    "copied": 10
+  },
+  "disabledProviders": [
+    "pathfinderwiki"
+  ],
+  "items": [
+    {
+      "id": "npc_abrogail_thrune_ii",
+      "name": "Abrogail Thrune II",
+      "status": "downloaded",
+      "portrait": "assets/l7r/portraits/pnj/npc-abrogail-thrune-ii.png",
+      "source_type": "legacy-url",
+      "source": "https://www.worldanvil.com/uploads/images/f790af6df551667b35bdf2728e98926f.png",
+      "score": 1.0,
+      "detail": null
+    },
+    {
+      "id": "npc_abstalar_zantus",
+      "name": "Abstalar Zantus",
+      "status": "downloaded",
+      "portrait": "assets/l7r/portraits/pnj/npc-abstalar-zantus.jpg",
+      "source_type": "lacrypte-linked-file",
+      "source": "http://wiki-path.lacrypte.fr/images/2/22/Abstalar_Zantus.jpg",
+      "score": 1.0,
+      "detail": "http://wiki-path.lacrypte.fr/index.php?title=Fichier:Abstalar_Zantus.jpg"
+    },
+    {
+      "id": "npc_adolphus",
+      "name": "Adolphus",
+      "status": "missing",
+      "portrait": null,
+      "source_type": null,
+      "source": null,
+      "score": null,
+      "detail": "Aucune correspondance certaine"
+    },
+    {
+      "id": "npc_alak_stagram",
+      "name": "Alak Stagram",
+      "status": "missing",
+      "portrait": null,
+      "source_type": null,
+      "source": null,
+      "score": null,
+      "detail": "Aucune correspondance certaine"
+    },
+    {
+      "id": "npc_alaznist",
+      "name": "Alaznist",
+      "status": "downloaded",
+      "portrait": "assets/l7r/portraits/pnj/npc-alaznist.webp",
+      "source_type": "pathfinder-fandom",
+      "source": "https://static.wikia.nocookie.net/pathfinder/images/2/20/Alaznist.png/revision/latest?cb=20201029041333",
+      "score": 1.0,
+      "detail": "https://pathfinder.fandom.com/wiki/Alaznist"
+    },
+    {
+      "id": "npc_amara_li",
+      "name": "Amara Li",
+      "status": "missing",
+      "portrait": null,
+      "source_type": null,
+      "source": null,
+      "score": null,
+      "detail": "Aucune correspondance certaine"
+    },
+    {
+      "id": "npc_ambrus_valsin",
+      "name": "Ambrus Valsin",
+      "status": "downloaded",
+      "portrait": "assets/l7r/portraits/pnj/npc-ambrus-valsin.webp",
+      "source_type": "pathfinder-fandom",
+      "source": "https://static.wikia.nocookie.net/pathfinder/images/4/45/Ambrus_Valsin.jpg/revision/latest?cb=20091001135022",
+      "score": 1.0,
+      "detail": "https://pathfinder.fandom.com/wiki/Ambrus_Valsin"
+    },
+    {
+      "id": "npc_ameiko_kaijitsu",
+      "name": "Ameiko Kaijitsu",
+      "status": "downloaded",
+      "portrait": "assets/l7r/portraits/pnj/npc-ameiko-kaijitsu.webp",
+      "source_type": "pathfinder-fandom",
+      "source": "https://static.wikia.nocookie.net/pathfinder/images/8/89/Ameiko_Kaijitsu.jpg/revision/latest?cb=20080608050902",
+      "score": 1.0,
+      "detail": "https://pathfinder.fandom.com/wiki/Ameiko_Kaijitsu"
+    },
+    {
+      "id": "npc_amenopheus",
+      "name": "Amenopheus",
+      "status": "missing",
+      "portrait": null,
+      "source_type": null,
+      "source": null,
+      "score": null,
+      "detail": "Aucune correspondance certaine"
+    },
+    {
+      "id": "npc_anastasia_nikolaevna",
+      "name": "Anastasia Nikolaevna",
+      "status": "missing",
+      "portrait": null,
+      "source_type": null,
+      "source": null,
+      "score": null,
+      "detail": "Aucune correspondance certaine"
+    },
+    {
+      "id": "npc_andira_marusek",
+      "name": "Andira Marusek",
+      "status": "missing",
+      "portrait": null,
+      "source_type": null,
+      "source": null,
+      "score": null,
+      "detail": "Aucune correspondance certaine"
+    },
+    {
+      "id": "npc_anong_arunak",
+      "name": "Anong Arunak",
+      "status": "missing",
+      "portrait": null,
+      "source_type": null,
+      "source": null,
+      "score": null,
+      "detail": "Aucune correspondance certaine"
+    },
+    {
+      "id": "npc_aram_zey",
+      "name": "Aram Zey",
+      "status": "missing",
+      "portrait": null,
+      "source_type": null,
+      "source": null,
+      "score": null,
+      "detail": "Aucune correspondance certaine"
+    },
+    {
+      "id": "npc_arazni",
+      "name": "Arazni",
+      "status": "copied",
+      "portrait": "assets/l7r/portraits/pnj/npc-arazni.webp",
+      "source_type": "foundry-file",
+      "source": "systems/pf2e/icons/deities/arazni.webp",
+      "score": 1.0,
+      "detail": null
+    },
+    {
+      "id": "npc_ardax_le_cheveu_blanc",
+      "name": "Ardax le Cheveu-Blanc",
+      "status": "missing",
+      "portrait": null,
+      "source_type": null,
+      "source": null,
+      "score": null,
+      "detail": "Aucune correspondance certaine"
+    },
+    {
+      "id": "npc_areelu_vorlesh",
+      "name": "Areelu Vorlesh",
+      "status": "downloaded",
+      "portrait": "assets/l7r/portraits/pnj/npc-areelu-vorlesh.webp",
+      "source_type": "pathfinder-fandom-file",
+      "source": "https://static.wikia.nocookie.net/pathfinder/images/0/04/Areelu_vorlesh.jpg/revision/latest?cb=20210801132059",
+      "score": 1.0,
+      "detail": "https://pathfinder.fandom.com/wiki/File:Areelu_vorlesh.jpg"
+    },
+    {
+      "id": "npc_argrinyxia",
+      "name": "Argrinyxia",
+      "status": "missing",
+      "portrait": null,
+      "source_type": null,
+      "source": null,
+      "score": null,
+      "detail": "Aucune correspondance certaine"
+    },
+    {
+      "id": "npc_aroden",
+      "name": "Aroden",
+      "status": "copied",
+      "portrait": "assets/l7r/portraits/pnj/npc-aroden.webp",
+      "source_type": "foundry-file",
+      "source": "systems/pf2e/icons/deities/aroden.webp",
+      "score": 1.0,
+      "detail": null
+    },
+    {
+      "id": "npc_artokus_kirran",
+      "name": "Artokus Kirran",
+      "status": "missing",
+      "portrait": null,
+      "source_type": null,
+      "source": null,
+      "score": null,
+      "detail": "Aucune correspondance certaine"
+    },
+    {
+      "id": "npc_asilia_de_gyr",
+      "name": "Asilia de Gyr",
+      "status": "missing",
+      "portrait": null,
+      "source_type": null,
+      "source": null,
+      "score": null,
+      "detail": "Aucune correspondance certaine"
+    },
+    {
+      "id": "npc_aslynn",
+      "name": "Aslynn",
+      "status": "missing",
+      "portrait": null,
+      "source_type": null,
+      "source": null,
+      "score": null,
+      "detail": "Aucune correspondance certaine"
+    },
+    {
+      "id": "npc_avarneus",
+      "name": "Avarneus",
+      "status": "missing",
+      "portrait": null,
+      "source_type": null,
+      "source": null,
+      "score": null,
+      "detail": "Aucune correspondance certaine"
+    },
+    {
+      "id": "npc_avid_de_la_maison_arnsen",
+      "name": "Avid de la Maison Arnsen",
+      "status": "missing",
+      "portrait": null,
+      "source_type": null,
+      "source": null,
+      "score": null,
+      "detail": "Aucune correspondance certaine"
+    },
+    {
+      "id": "npc_azaersi",
+      "name": "Azaersi",
+      "status": "missing",
+      "portrait": null,
+      "source_type": null,
+      "source": null,
+      "score": null,
+      "detail": "Aucune correspondance certaine"
+    },
+    {
+      "id": "npc_baba_yaga",
+      "name": "Baba Yaga",
+      "status": "copied",
+      "portrait": "assets/l7r/portraits/pnj/npc-baba-yaga.webp",
+      "source_type": "foundry-file-fuzzy",
+      "source": "systems/pf2e/icons/features/classes/baba-yaga-patron.webp",
+      "score": 0.995,
+      "detail": null
+    },
+    {
+      "id": "npc_baloku_ulameni",
+      "name": "Baloku Ulameni",
+      "status": "missing",
+      "portrait": null,
+      "source_type": null,
+      "source": null,
+      "score": null,
+      "detail": "Aucune correspondance certaine"
+    },
+    {
+      "id": "npc_belimarius",
+      "name": "Belimarius",
+      "status": "downloaded",
+      "portrait": "assets/l7r/portraits/pnj/npc-belimarius.webp",
+      "source_type": "pathfinder-fandom",
+      "source": "https://static.wikia.nocookie.net/pathfinder/images/2/20/Belimarius.jpg/revision/latest?cb=20210807153944",
+      "score": 1.0,
+      "detail": "https://pathfinder.fandom.com/wiki/Belimarius"
+    },
+    {
+      "id": "npc_belor_hemlock",
+      "name": "Belor Hemlock",
+      "status": "downloaded",
+      "portrait": "assets/l7r/portraits/pnj/npc-belor-hemlock.webp",
+      "source_type": "pathfinder-fandom",
+      "source": "https://static.wikia.nocookie.net/pathfinder/images/5/51/Belor_Hemlock.jpg/revision/latest?cb=20080608053721",
+      "score": 1.0,
+      "detail": "https://pathfinder.fandom.com/wiki/Belor_Hemlock"
+    },
+    {
+      "id": "npc_bjersig_torrsen",
+      "name": "Bjersig Torrsen",
+      "status": "missing",
+      "portrait": null,
+      "source_type": null,
+      "source": null,
+      "score": null,
+      "detail": "Aucune correspondance certaine"
+    },
+    {
+      "id": "npc_brodert_quink",
+      "name": "Brodert Quink",
+      "status": "downloaded",
+      "portrait": "assets/l7r/portraits/pnj/npc-brodert-quink.jpg",
+      "source_type": "lacrypte-linked-file",
+      "source": "http://wiki-path.lacrypte.fr/images/7/70/Brodert_Quink.jpg",
+      "score": 1.0,
+      "detail": "http://wiki-path.lacrypte.fr/index.php?title=Fichier:Brodert_Quink.jpg"
+    },
+    {
+      "id": "npc_calisro_benarry",
+      "name": "Calisro Benarry",
+      "status": "missing",
+      "portrait": null,
+      "source_type": null,
+      "source": null,
+      "score": null,
+      "detail": "Aucune correspondance certaine"
+    },
+    {
+      "id": "npc_camilia_drannoch",
+      "name": "Camilia Drannoch",
+      "status": "missing",
+      "portrait": null,
+      "source_type": null,
+      "source": null,
+      "score": null,
+      "detail": "Aucune correspondance certaine"
+    },
+    {
+      "id": "npc_canayven_heidmarch",
+      "name": "Canayven Heidmarch",
+      "status": "missing",
+      "portrait": null,
+      "source_type": null,
+      "source": null,
+      "score": null,
+      "detail": "Aucune correspondance certaine"
+    },
+    {
+      "id": "npc_casandalee",
+      "name": "Casandalee",
+      "status": "copied",
+      "portrait": "assets/l7r/portraits/pnj/npc-casandalee.webp",
+      "source_type": "foundry-file",
+      "source": "systems/pf2e/icons/deities/casandalee.webp",
+      "score": 1.0,
+      "detail": null
+    },
+    {
+      "id": "npc_celedo_de_la_maison_morilla",
+      "name": "Celedo de la Maison Morilla",
+      "status": "missing",
+      "portrait": null,
+      "source_type": null,
+      "source": null,
+      "score": null,
+      "detail": "Aucune correspondance certaine"
+    },
+    {
+      "id": "npc_choral_le_conquerant",
+      "name": "Choral le Conquérant",
+      "status": "missing",
+      "portrait": null,
+      "source_type": null,
+      "source": null,
+      "score": null,
+      "detail": "Aucune correspondance certaine"
+    },
+    {
+      "id": "npc_clarethe_iomedar",
+      "name": "Clarethe Iomédar",
+      "status": "missing",
+      "portrait": null,
+      "source_type": null,
+      "source": null,
+      "score": null,
+      "detail": "Aucune correspondance certaine"
+    },
+    {
+      "id": "npc_dagur_hawksight",
+      "name": "Dagur Hawksight",
+      "status": "missing",
+      "portrait": null,
+      "source_type": null,
+      "source": null,
+      "score": null,
+      "detail": "Aucune correspondance certaine"
+    },
+    {
+      "id": "npc_dahak",
+      "name": "Dahak",
+      "status": "copied",
+      "portrait": "assets/l7r/portraits/pnj/npc-dahak.webp",
+      "source_type": "foundry-file",
+      "source": "systems/pf2e/icons/deities/dahak.webp",
+      "score": 1.0,
+      "detail": null
+    },
+    {
+      "id": "npc_darchana_de_la_maison_madinani",
+      "name": "Darchana de la Maison Madinani",
+      "status": "missing",
+      "portrait": null,
+      "source_type": null,
+      "source": null,
+      "score": null,
+      "detail": "Aucune correspondance certaine"
+    },
+    {
+      "id": "npc_deena_al_parishat",
+      "name": "Deena al-Parishat",
+      "status": "missing",
+      "portrait": null,
+      "source_type": null,
+      "source": null,
+      "score": null,
+      "detail": "Aucune correspondance certaine"
+    },
+    {
+      "id": "npc_deskari",
+      "name": "Deskari",
+      "status": "downloaded",
+      "portrait": "assets/l7r/portraits/pnj/npc-deskari.webp",
+      "source_type": "pathfinder-fandom",
+      "source": "https://static.wikia.nocookie.net/pathfinder/images/7/73/Deskari_figure.jpg/revision/latest?cb=20201029043544",
+      "score": 1.0,
+      "detail": "https://pathfinder.fandom.com/wiki/Deskari"
+    },
+    {
+      "id": "npc_drandle_dreng",
+      "name": "Drandle Dreng",
+      "status": "missing",
+      "portrait": null,
+      "source_type": null,
+      "source": null,
+      "score": null,
+      "detail": "Aucune correspondance certaine"
+    },
+    {
+      "id": "npc_durvin_gest",
+      "name": "Durvin Gest",
+      "status": "missing",
+      "portrait": null,
+      "source_type": null,
+      "source": null,
+      "score": null,
+      "detail": "Aucune correspondance certaine"
+    },
+    {
+      "id": "npc_dyrianna",
+      "name": "Dyrianna",
+      "status": "missing",
+      "portrait": null,
+      "source_type": null,
+      "source": null,
+      "score": null,
+      "detail": "Aucune correspondance certaine"
+    },
+    {
+      "id": "npc_eando_kline",
+      "name": "Eando Kline",
+      "status": "downloaded",
+      "portrait": "assets/l7r/portraits/pnj/npc-eando-kline.webp",
+      "source_type": "pathfinder-fandom",
+      "source": "https://static.wikia.nocookie.net/pathfinder/images/7/7d/Eando_Kline.jpg/revision/latest?cb=20081126081412",
+      "score": 1.0,
+      "detail": "https://pathfinder.fandom.com/wiki/Eando_Kline"
+    },
+    {
+      "id": "npc_emaliza_zandivar",
+      "name": "Emaliza Zandivar",
+      "status": "missing",
+      "portrait": null,
+      "source_type": null,
+      "source": null,
+      "score": null,
+      "detail": "Aucune correspondance certaine"
+    },
+    {
+      "id": "npc_eutropia_stavian",
+      "name": "Eutropia Stavian",
+      "status": "missing",
+      "portrait": null,
+      "source_type": null,
+      "source": null,
+      "score": null,
+      "detail": "Aucune correspondance certaine"
+    },
+    {
+      "id": "npc_evni_zongnoss",
+      "name": "Evni Zongnoss",
+      "status": "missing",
+      "portrait": null,
+      "source_type": null,
+      "source": null,
+      "score": null,
+      "detail": "Aucune correspondance certaine"
+    },
+    {
+      "id": "npc_eylysia",
+      "name": "Eylysia",
+      "status": "missing",
+      "portrait": null,
+      "source_type": null,
+      "source": null,
+      "score": null,
+      "detail": "Aucune correspondance certaine"
+    },
+    {
+      "id": "npc_fola_barun",
+      "name": "Fola Barun",
+      "status": "copied",
+      "portrait": "assets/l7r/portraits/pnj/npc-fola-barun.webp",
+      "source_type": "foundry-file",
+      "source": "assets/l7r/portraits/fola-barun.webp",
+      "score": 1.0,
+      "detail": null
+    },
+    {
+      "id": "npc_geb",
+      "name": "Geb",
+      "status": "downloaded",
+      "portrait": "assets/l7r/portraits/pnj/npc-geb.webp",
+      "source_type": "pathfinder-fandom",
+      "source": "https://static.wikia.nocookie.net/pathfinder/images/b/bb/Geb_symbol.jpg/revision/latest?cb=20090306205131",
+      "score": 1.0,
+      "detail": "https://pathfinder.fandom.com/wiki/Geb"
+    },
+    {
+      "id": "npc_gorm_greathammer",
+      "name": "Gorm Granmarteau",
+      "status": "missing",
+      "portrait": null,
+      "source_type": null,
+      "source": null,
+      "score": null,
+      "detail": "Aucune correspondance certaine"
+    },
+    {
+      "id": "npc_grandmaster_torch",
+      "name": "Grandmaster Torch",
+      "status": "downloaded",
+      "portrait": "assets/l7r/portraits/pnj/npc-grandmaster-torch.webp",
+      "source_type": "pathfinder-fandom",
+      "source": "https://static.wikia.nocookie.net/pathfinder/images/0/00/Grandmaster_Torch_mini.jpg/revision/latest?cb=20100817023244",
+      "score": 1.0,
+      "detail": "https://pathfinder.fandom.com/wiki/Grandmaster_Torch"
+    },
+    {
+      "id": "npc_gregaro_voth",
+      "name": "Gregaro Voth",
+      "status": "missing",
+      "portrait": null,
+      "source_type": null,
+      "source": null,
+      "score": null,
+      "detail": "Aucune correspondance certaine"
+    },
+    {
+      "id": "npc_grospek_lavarsus",
+      "name": "Grospek Lavarsus",
+      "status": "missing",
+      "portrait": null,
+      "source_type": null,
+      "source": null,
+      "score": null,
+      "detail": "Aucune correspondance certaine"
+    },
+    {
+      "id": "npc_guaril_karela",
+      "name": "Guaril Karela",
+      "status": "missing",
+      "portrait": null,
+      "source_type": null,
+      "source": null,
+      "score": null,
+      "detail": "Aucune correspondance certaine"
+    },
+    {
+      "id": "npc_gyr_de_gixx",
+      "name": "Gyr de Gixx",
+      "status": "downloaded",
+      "portrait": "assets/l7r/portraits/pnj/npc-gyr-de-gixx.webp",
+      "source_type": "pathfinder-fandom",
+      "source": "https://static.wikia.nocookie.net/pathfinder/images/6/65/Lord_Gyr_face_card.jpg/revision/latest?cb=20091210135638",
+      "score": 1.0,
+      "detail": "https://pathfinder.fandom.com/wiki/Lord_Gyr"
+    },
+    {
+      "id": "npc_hamaria_blakros",
+      "name": "Hamaria Blakros",
+      "status": "missing",
+      "portrait": null,
+      "source_type": null,
+      "source": null,
+      "score": null,
+      "detail": "Aucune correspondance certaine"
+    },
+    {
+      "id": "npc_hannah_velerin",
+      "name": "Hannah Velerin",
+      "status": "missing",
+      "portrait": null,
+      "source_type": null,
+      "source": null,
+      "score": null,
+      "detail": "Aucune correspondance certaine"
+    },
+    {
+      "id": "npc_hao_jin",
+      "name": "Hao Jin",
+      "status": "missing",
+      "portrait": null,
+      "source_type": null,
+      "source": null,
+      "score": null,
+      "detail": "Aucune correspondance certaine"
+    },
+    {
+      "id": "npc_hashim_ibn_sayyid",
+      "name": "Hashim ibn Sayyid",
+      "status": "missing",
+      "portrait": null,
+      "source_type": null,
+      "source": null,
+      "score": null,
+      "detail": "Aucune correspondance certaine"
+    },
+    {
+      "id": "npc_hebizid_vraj",
+      "name": "Hebizid Vraj",
+      "status": "missing",
+      "portrait": null,
+      "source_type": null,
+      "source": null,
+      "score": null,
+      "detail": "Aucune correspondance certaine"
+    },
+    {
+      "id": "npc_hendrid_pratchett",
+      "name": "Hendrid Pratchett",
+      "status": "missing",
+      "portrait": null,
+      "source_type": null,
+      "source": null,
+      "score": null,
+      "detail": "Aucune correspondance certaine"
+    },
+    {
+      "id": "npc_holgarin_smine",
+      "name": "Holgarin Smine",
+      "status": "missing",
+      "portrait": null,
+      "source_type": null,
+      "source": null,
+      "score": null,
+      "detail": "Aucune correspondance certaine"
+    },
+    {
+      "id": "npc_ilsoari_gandethus",
+      "name": "Ilsoari Gandethus",
+      "status": "missing",
+      "portrait": null,
+      "source_type": null,
+      "source": null,
+      "score": null,
+      "detail": "Aucune correspondance certaine"
+    },
+    {
+      "id": "npc_inali_buvgram",
+      "name": "Inali Buvgram",
+      "status": "missing",
+      "portrait": null,
+      "source_type": null,
+      "source": null,
+      "score": null,
+      "detail": "Aucune correspondance certaine"
+    },
+    {
+      "id": "npc_inizra_arumelo",
+      "name": "Inizra Arumelo",
+      "status": "missing",
+      "portrait": null,
+      "source_type": null,
+      "source": null,
+      "score": null,
+      "detail": "Aucune correspondance certaine"
+    },
+    {
+      "id": "npc_irabeth_tirabade",
+      "name": "Irabeth Tirabade",
+      "status": "missing",
+      "portrait": null,
+      "source_type": null,
+      "source": null,
+      "score": null,
+      "detail": "Aucune correspondance certaine"
+    },
+    {
+      "id": "npc_irahai",
+      "name": "Irahai",
+      "status": "missing",
+      "portrait": null,
+      "source_type": null,
+      "source": null,
+      "score": null,
+      "detail": "Aucune correspondance certaine"
+    },
+    {
+      "id": "npc_jakalyn",
+      "name": "Jakalyn",
+      "status": "missing",
+      "portrait": null,
+      "source_type": null,
+      "source": null,
+      "score": null,
+      "detail": "Aucune correspondance certaine"
+    },
+    {
+      "id": "npc_janatimo",
+      "name": "Janatimo",
+      "status": "missing",
+      "portrait": null,
+      "source_type": null,
+      "source": null,
+      "score": null,
+      "detail": "Aucune correspondance certaine"
+    },
+    {
+      "id": "npc_janira_gavix",
+      "name": "Janira Gavix",
+      "status": "copied",
+      "portrait": "assets/l7r/portraits/pnj/npc-janira-gavix.webp",
+      "source_type": "foundry-file",
+      "source": "assets/l7r/portraits/janira-gavix.webp",
+      "score": 1.0,
+      "detail": null
+    },
+    {
+      "id": "npc_jonis_flakfatter",
+      "name": "Jonis Flakfatter",
+      "status": "missing",
+      "portrait": null,
+      "source_type": null,
+      "source": null,
+      "score": null,
+      "detail": "Aucune correspondance certaine"
+    },
+    {
+      "id": "npc_jorsal_de_lauterbury",
+      "name": "Jorsal de Lauterbury",
+      "status": "missing",
+      "portrait": null,
+      "source_type": null,
+      "source": null,
+      "score": null,
+      "detail": "Aucune correspondance certaine"
+    },
+    {
+      "id": "npc_jubrayl_vhiski",
+      "name": "Jubrayl Vhiski",
+      "status": "missing",
+      "portrait": null,
+      "source_type": null,
+      "source": null,
+      "score": null,
+      "detail": "Aucune correspondance certaine"
+    },
+    {
+      "id": "npc_kalabrynne_iomedar",
+      "name": "Kalabrynne Iomédar",
+      "status": "missing",
+      "portrait": null,
+      "source_type": null,
+      "source": null,
+      "score": null,
+      "detail": "Aucune correspondance certaine"
+    },
+    {
+      "id": "npc_karzoug",
+      "name": "Karzoug",
+      "status": "downloaded",
+      "portrait": "assets/l7r/portraits/pnj/npc-karzoug.webp",
+      "source_type": "pathfinder-fandom",
+      "source": "https://static.wikia.nocookie.net/pathfinder/images/4/4e/Karzoug.jpg/revision/latest?cb=20080602193812",
+      "score": 1.0,
+      "detail": "https://pathfinder.fandom.com/wiki/Karzoug"
+    },
+    {
+      "id": "npc_kassi_aziril",
+      "name": "Kassi Aziril",
+      "status": "missing",
+      "portrait": null,
+      "source_type": null,
+      "source": null,
+      "score": null,
+      "detail": "Aucune correspondance certaine"
+    },
+    {
+      "id": "npc_kaye_tesarani",
+      "name": "Kaye Tesarani",
+      "status": "missing",
+      "portrait": null,
+      "source_type": null,
+      "source": null,
+      "score": null,
+      "detail": "Aucune correspondance certaine"
+    },
+    {
+      "id": "npc_kendra_deverin",
+      "name": "Kendra Deverin",
+      "status": "downloaded",
+      "portrait": "assets/l7r/portraits/pnj/npc-kendra-deverin.webp",
+      "source_type": "pathfinder-fandom",
+      "source": "https://static.wikia.nocookie.net/pathfinder/images/4/48/Kendra_Deverin.jpg/revision/latest?cb=20080602032902",
+      "score": 1.0,
+      "detail": "https://pathfinder.fandom.com/wiki/Kendra_Deverin"
+    },
+    {
+      "id": "npc_kerinha_napsunar",
+      "name": "Kerinha Napsunar",
+      "status": "missing",
+      "portrait": null,
+      "source_type": null,
+      "source": null,
+      "score": null,
+      "detail": "Aucune correspondance certaine"
+    },
+    {
+      "id": "npc_kevoth_kul",
+      "name": "Kevoth-Kul",
+      "status": "missing",
+      "portrait": null,
+      "source_type": null,
+      "source": null,
+      "score": null,
+      "detail": "Aucune correspondance certaine"
+    },
+    {
+      "id": "npc_khemet_iii",
+      "name": "Khemet III",
+      "status": "missing",
+      "portrait": null,
+      "source_type": null,
+      "source": null,
+      "score": null,
+      "detail": "Aucune correspondance certaine"
+    },
+    {
+      "id": "npc_khismar_crookchar",
+      "name": "Khismar Crookchar",
+      "status": "missing",
+      "portrait": null,
+      "source_type": null,
+      "source": null,
+      "score": null,
+      "detail": "Aucune correspondance certaine"
+    },
+    {
+      "id": "npc_kreighton_shaine",
+      "name": "Kreighton Shaine",
+      "status": "missing",
+      "portrait": null,
+      "source_type": null,
+      "source": null,
+      "score": null,
+      "detail": "Aucune correspondance certaine"
+    },
+    {
+      "id": "npc_laslunn",
+      "name": "Laslunn",
+      "status": "missing",
+      "portrait": null,
+      "source_type": null,
+      "source": null,
+      "score": null,
+      "detail": "Aucune correspondance certaine"
+    },
+    {
+      "id": "npc_magdelena_fallows",
+      "name": "Magdelena Fallows",
+      "status": "missing",
+      "portrait": null,
+      "source_type": null,
+      "source": null,
+      "score": null,
+      "detail": "Aucune correspondance certaine"
+    },
+    {
+      "id": "npc_malarunk",
+      "name": "Malarunk",
+      "status": "missing",
+      "portrait": null,
+      "source_type": null,
+      "source": null,
+      "score": null,
+      "detail": "Aucune correspondance certaine"
+    },
+    {
+      "id": "npc_marcien_blakros",
+      "name": "Marcien Blakros",
+      "status": "missing",
+      "portrait": null,
+      "source_type": null,
+      "source": null,
+      "score": null,
+      "detail": "Aucune correspondance certaine"
+    },
+    {
+      "id": "npc_marcos_farabellus",
+      "name": "Marcos Farabellus",
+      "status": "missing",
+      "portrait": null,
+      "source_type": null,
+      "source": null,
+      "score": null,
+      "detail": "Aucune correspondance certaine"
+    },
+    {
+      "id": "npc_martum_fallows",
+      "name": "Martum Fallows",
+      "status": "missing",
+      "portrait": null,
+      "source_type": null,
+      "source": null,
+      "score": null,
+      "detail": "Aucune correspondance certaine"
+    },
+    {
+      "id": "npc_mengkare",
+      "name": "Mengkare",
+      "status": "missing",
+      "portrait": null,
+      "source_type": null,
+      "source": null,
+      "score": null,
+      "detail": "Aucune correspondance certaine"
+    },
+    {
+      "id": "npc_mialari_docur",
+      "name": "Mialari Docur",
+      "status": "missing",
+      "portrait": null,
+      "source_type": null,
+      "source": null,
+      "score": null,
+      "detail": "Aucune correspondance certaine"
+    },
+    {
+      "id": "npc_muesello",
+      "name": "Muesello",
+      "status": "missing",
+      "portrait": null,
+      "source_type": null,
+      "source": null,
+      "score": null,
+      "detail": "Aucune correspondance certaine"
+    },
+    {
+      "id": "npc_nankou",
+      "name": "Nankou",
+      "status": "missing",
+      "portrait": null,
+      "source_type": null,
+      "source": null,
+      "score": null,
+      "detail": "Aucune correspondance certaine"
+    },
+    {
+      "id": "npc_narsen",
+      "name": "Narsen",
+      "status": "missing",
+      "portrait": null,
+      "source_type": null,
+      "source": null,
+      "score": null,
+      "detail": "Aucune correspondance certaine"
+    },
+    {
+      "id": "npc_neferpatra_de_la_maison_ahnkamen",
+      "name": "Neferpatra de la Maison Ahnkamen",
+      "status": "missing",
+      "portrait": null,
+      "source_type": null,
+      "source": null,
+      "score": null,
+      "detail": "Aucune correspondance certaine"
+    },
+    {
+      "id": "npc_nex",
+      "name": "Nex",
+      "status": "downloaded",
+      "portrait": "assets/l7r/portraits/pnj/npc-nex.webp",
+      "source_type": "pathfinder-fandom",
+      "source": "https://static.wikia.nocookie.net/pathfinder/images/7/70/Nex_symbol.jpg/revision/latest?cb=20090306212037",
+      "score": 1.0,
+      "detail": "https://pathfinder.fandom.com/wiki/Nex"
+    },
+    {
+      "id": "npc_nigel_aldain",
+      "name": "Nigel Aldain",
+      "status": "missing",
+      "portrait": null,
+      "source_type": null,
+      "source": null,
+      "score": null,
+      "detail": "Aucune correspondance certaine"
+    },
+    {
+      "id": "npc_nketiah",
+      "name": "Nketiah",
+      "status": "missing",
+      "portrait": null,
+      "source_type": null,
+      "source": null,
+      "score": null,
+      "detail": "Aucune correspondance certaine"
+    },
+    {
+      "id": "npc_nocticula",
+      "name": "Nocticula",
+      "status": "copied",
+      "portrait": "assets/l7r/portraits/pnj/npc-nocticula.webp",
+      "source_type": "foundry-file",
+      "source": "systems/pf2e/icons/deities/nocticula.webp",
+      "score": 1.0,
+      "detail": null
+    },
+    {
+      "id": "npc_nolly_peltry",
+      "name": "Nolly Peltry",
+      "status": "missing",
+      "portrait": null,
+      "source_type": null,
+      "source": null,
+      "score": null,
+      "detail": "Aucune correspondance certaine"
+    },
+    {
+      "id": "npc_norden_balentiir",
+      "name": "Norden Balentiir",
+      "status": "missing",
+      "portrait": null,
+      "source_type": null,
+      "source": null,
+      "score": null,
+      "detail": "Aucune correspondance certaine"
+    },
+    {
+      "id": "npc_noyta_gleddirow",
+      "name": "Noyta Gleddirow",
+      "status": "missing",
+      "portrait": null,
+      "source_type": null,
+      "source": null,
+      "score": null,
+      "detail": "Aucune correspondance certaine"
+    },
+    {
+      "id": "npc_nuar_spiritskin",
+      "name": "Nuar Spiritskin",
+      "status": "downloaded",
+      "portrait": "assets/l7r/portraits/pnj/npc-nuar-spiritskin.webp",
+      "source_type": "pathfinder-fandom",
+      "source": "https://static.wikia.nocookie.net/pathfinder/images/9/96/Minotaur_prince_of_Absalom_mini.jpg/revision/latest?cb=20100822182142",
+      "score": 1.0,
+      "detail": "https://pathfinder.fandom.com/wiki/Nuar_Spiritskin"
+    },
+    {
+      "id": "npc_olansa_terimor",
+      "name": "Olansa Terimor",
+      "status": "missing",
+      "portrait": null,
+      "source_type": null,
+      "source": null,
+      "score": null,
+      "detail": "Aucune correspondance certaine"
+    },
+    {
+      "id": "npc_papillon_de_saphir",
+      "name": "Papillon de Saphir",
+      "status": "missing",
+      "portrait": null,
+      "source_type": null,
+      "source": null,
+      "score": null,
+      "detail": "Aucune correspondance certaine"
+    },
+    {
+      "id": "npc_rashmivati_melipdra",
+      "name": "Rashmivati Melipdra",
+      "status": "missing",
+      "portrait": null,
+      "source_type": null,
+      "source": null,
+      "score": null,
+      "detail": "Aucune correspondance certaine"
+    },
+    {
+      "id": "npc_razmir",
+      "name": "Razmir",
+      "status": "copied",
+      "portrait": "assets/l7r/portraits/pnj/npc-razmir.webp",
+      "source_type": "foundry-file",
+      "source": "systems/pf2e/icons/deities/razmir.webp",
+      "score": 1.0,
+      "detail": null
+    },
+    {
+      "id": "npc_reginald_vancaskerkin",
+      "name": "Reginald Vancaskerkin",
+      "status": "missing",
+      "portrait": null,
+      "source_type": null,
+      "source": null,
+      "score": null,
+      "detail": "Aucune correspondance certaine"
+    },
+    {
+      "id": "npc_reine_galfrey",
+      "name": "Reine Galfrey",
+      "status": "missing",
+      "portrait": null,
+      "source_type": null,
+      "source": null,
+      "score": null,
+      "detail": "Aucune correspondance certaine"
+    },
+    {
+      "id": "npc_renali",
+      "name": "Renali",
+      "status": "missing",
+      "portrait": null,
+      "source_type": null,
+      "source": null,
+      "score": null,
+      "detail": "Aucune correspondance certaine"
+    },
+    {
+      "id": "npc_sarnia_blakros",
+      "name": "Sarnia Blakros",
+      "status": "missing",
+      "portrait": null,
+      "source_type": null,
+      "source": null,
+      "score": null,
+      "detail": "Aucune correspondance certaine"
+    },
+    {
+      "id": "npc_sebnet_sanserkoht",
+      "name": "Sebnet Sanserkoht",
+      "status": "missing",
+      "portrait": null,
+      "source_type": null,
+      "source": null,
+      "score": null,
+      "detail": "Aucune correspondance certaine"
+    },
+    {
+      "id": "npc_selmius_foster",
+      "name": "Selmius Foster",
+      "status": "missing",
+      "portrait": null,
+      "source_type": null,
+      "source": null,
+      "score": null,
+      "detail": "Aucune correspondance certaine"
+    },
+    {
+      "id": "npc_shalelu_andosana",
+      "name": "Shalelu Andosana",
+      "status": "downloaded",
+      "portrait": "assets/l7r/portraits/pnj/npc-shalelu-andosana.webp",
+      "source_type": "pathfinder-fandom",
+      "source": "https://static.wikia.nocookie.net/pathfinder/images/9/9a/Shalelu_Andosana.jpg/revision/latest?cb=20080608052937",
+      "score": 1.0,
+      "detail": "https://pathfinder.fandom.com/wiki/Shalelu_Andosana"
+    },
+    {
+      "id": "npc_sheila_heidmarch",
+      "name": "Sheila Heidmarch",
+      "status": "downloaded",
+      "portrait": "assets/l7r/portraits/pnj/npc-sheila-heidmarch.jpg",
+      "source_type": "lacrypte-linked-file",
+      "source": "http://wiki-path.lacrypte.fr/images/9/93/Pathfinder_-_-FR-_-_PNJ_-_Sheila_HEIDMARCH.jpg",
+      "score": 0.995,
+      "detail": "http://wiki-path.lacrypte.fr/index.php?title=Fichier:Pathfinder_-_-FR-_-_PNJ_-_Sheila_HEIDMARCH.jpg"
+    },
+    {
+      "id": "npc_shevala_iorae",
+      "name": "Shevala Iorae",
+      "status": "missing",
+      "portrait": null,
+      "source_type": null,
+      "source": null,
+      "score": null,
+      "detail": "Aucune correspondance certaine"
+    },
+    {
+      "id": "npc_shimali_manux",
+      "name": "Shimali Manux",
+      "status": "missing",
+      "portrait": null,
+      "source_type": null,
+      "source": null,
+      "score": null,
+      "detail": "Aucune correspondance certaine"
+    },
+    {
+      "id": "npc_sihar",
+      "name": "Sihar",
+      "status": "missing",
+      "portrait": null,
+      "source_type": null,
+      "source": null,
+      "score": null,
+      "detail": "Aucune correspondance certaine"
+    },
+    {
+      "id": "npc_sorrina_westyr",
+      "name": "Sorrina Westyr",
+      "status": "missing",
+      "portrait": null,
+      "source_type": null,
+      "source": null,
+      "score": null,
+      "detail": "Aucune correspondance certaine"
+    },
+    {
+      "id": "npc_sorshen",
+      "name": "Sorshen",
+      "status": "downloaded",
+      "portrait": "assets/l7r/portraits/pnj/npc-sorshen.webp",
+      "source_type": "pathfinder-fandom",
+      "source": "https://static.wikia.nocookie.net/pathfinder/images/9/9e/Sorshen.jpg/revision/latest?cb=20210810035336",
+      "score": 1.0,
+      "detail": "https://pathfinder.fandom.com/wiki/Sorshen"
+    },
+    {
+      "id": "npc_taargick",
+      "name": "Taargick",
+      "status": "missing",
+      "portrait": null,
+      "source_type": null,
+      "source": null,
+      "score": null,
+      "detail": "Aucune correspondance certaine"
+    },
+    {
+      "id": "npc_tar_baphon",
+      "name": "Tar-Baphon",
+      "status": "downloaded",
+      "portrait": "assets/l7r/portraits/pnj/npc-tar-baphon.webp",
+      "source_type": "pathfinder-fandom",
+      "source": "https://static.wikia.nocookie.net/pathfinder/images/f/fb/Tar-Baphon_mini.jpg/revision/latest?cb=20100817120217",
+      "score": 1.0,
+      "detail": "https://pathfinder.fandom.com/wiki/Tar-Baphon"
+    },
+    {
+      "id": "npc_telandia_edasseril",
+      "name": "Telandia Edasseril",
+      "status": "downloaded",
+      "portrait": "assets/l7r/portraits/pnj/npc-telandia-edasseril.jpg",
+      "source_type": "lacrypte-file",
+      "source": "http://wiki-path.lacrypte.fr/images/7/71/Pathfinder_-_pnj_-_reine_telandia_edasseril%2C.jpg",
+      "score": 0.985,
+      "detail": "http://wiki-path.lacrypte.fr/index.php?title=Fichier:Pathfinder_-_pnj_-_reine_telandia_edasseril,.jpg"
+    },
+    {
+      "id": "npc_tessa_fairwind",
+      "name": "Tessa Fairwind",
+      "status": "missing",
+      "portrait": null,
+      "source_type": null,
+      "source": null,
+      "score": null,
+      "detail": "Aucune correspondance certaine"
+    },
+    {
+      "id": "npc_thira_ash_eyes",
+      "name": "Thira Ash-Eyes",
+      "status": "missing",
+      "portrait": null,
+      "source_type": null,
+      "source": null,
+      "score": null,
+      "detail": "Aucune correspondance certaine"
+    },
+    {
+      "id": "npc_titus_scarnetti",
+      "name": "Titus Scarnetti",
+      "status": "missing",
+      "portrait": null,
+      "source_type": null,
+      "source": null,
+      "score": null,
+      "detail": "Aucune correspondance certaine"
+    },
+    {
+      "id": "npc_toriah_al_myran",
+      "name": "Toriah al-Myran",
+      "status": "missing",
+      "portrait": null,
+      "source_type": null,
+      "source": null,
+      "score": null,
+      "detail": "Aucune correspondance certaine"
+    },
+    {
+      "id": "npc_toulon_vidoc",
+      "name": "Toulon Vidoc",
+      "status": "missing",
+      "portrait": null,
+      "source_type": null,
+      "source": null,
+      "score": null,
+      "detail": "Aucune correspondance certaine"
+    },
+    {
+      "id": "npc_treerazer",
+      "name": "Treerazer",
+      "status": "copied",
+      "portrait": "assets/l7r/portraits/pnj/npc-treerazer.webp",
+      "source_type": "foundry-file",
+      "source": "systems/pf2e/icons/deities/treerazer.webp",
+      "score": 1.0,
+      "detail": null
+    },
+    {
+      "id": "npc_ulthun_ii",
+      "name": "Ulthun II",
+      "status": "missing",
+      "portrait": null,
+      "source_type": null,
+      "source": null,
+      "score": null,
+      "detail": "Aucune correspondance certaine"
+    },
+    {
+      "id": "npc_uri_zandivar",
+      "name": "Uri Zandivar",
+      "status": "missing",
+      "portrait": null,
+      "source_type": null,
+      "source": null,
+      "score": null,
+      "detail": "Aucune correspondance certaine"
+    },
+    {
+      "id": "npc_veshumirix",
+      "name": "Veshumirix",
+      "status": "missing",
+      "portrait": null,
+      "source_type": null,
+      "source": null,
+      "score": null,
+      "detail": "Aucune correspondance certaine"
+    },
+    {
+      "id": "npc_vieux_mage_jatembe",
+      "name": "Vieux-Mage Jatembe",
+      "status": "missing",
+      "portrait": null,
+      "source_type": null,
+      "source": null,
+      "score": null,
+      "detail": "Aucune correspondance certaine"
+    },
+    {
+      "id": "npc_voz_lirayne",
+      "name": "Voz Lirayne",
+      "status": "missing",
+      "portrait": null,
+      "source_type": null,
+      "source": null,
+      "score": null,
+      "detail": "Aucune correspondance certaine"
+    },
+    {
+      "id": "npc_warbal_bumblebrasher",
+      "name": "Warbal Bumblebrasher",
+      "status": "missing",
+      "portrait": null,
+      "source_type": null,
+      "source": null,
+      "score": null,
+      "detail": "Aucune correspondance certaine"
+    },
+    {
+      "id": "npc_white_estrid",
+      "name": "White Estrid",
+      "status": "missing",
+      "portrait": null,
+      "source_type": null,
+      "source": null,
+      "score": null,
+      "detail": "Aucune correspondance certaine"
+    },
+    {
+      "id": "npc_wrent_dicaspiron",
+      "name": "Wrent Dicaspiron",
+      "status": "missing",
+      "portrait": null,
+      "source_type": null,
+      "source": null,
+      "score": null,
+      "detail": "Aucune correspondance certaine"
+    },
+    {
+      "id": "npc_wynsal_starborn",
+      "name": "Wynsal Starborn",
+      "status": "missing",
+      "portrait": null,
+      "source_type": null,
+      "source": null,
+      "score": null,
+      "detail": "Aucune correspondance certaine"
+    },
+    {
+      "id": "npc_xanderghul",
+      "name": "Xanderghul",
+      "status": "downloaded",
+      "portrait": "assets/l7r/portraits/pnj/npc-xanderghul.webp",
+      "source_type": "pathfinder-fandom",
+      "source": "https://static.wikia.nocookie.net/pathfinder/images/7/7d/Xanderghul.jpg/revision/latest?cb=20210812144023",
+      "score": 1.0,
+      "detail": "https://pathfinder.fandom.com/wiki/Xanderghul"
+    },
+    {
+      "id": "npc_xerbystes_ii",
+      "name": "Xerbystes II",
+      "status": "missing",
+      "portrait": null,
+      "source_type": null,
+      "source": null,
+      "score": null,
+      "detail": "Aucune correspondance certaine"
+    },
+    {
+      "id": "npc_xin",
+      "name": "Xin",
+      "status": "missing",
+      "portrait": null,
+      "source_type": null,
+      "source": null,
+      "score": null,
+      "detail": "Aucune correspondance certaine"
+    },
+    {
+      "id": "npc_zarta_dralneen",
+      "name": "Zarta Dralneen",
+      "status": "missing",
+      "portrait": null,
+      "source_type": null,
+      "source": null,
+      "score": null,
+      "detail": "Aucune correspondance certaine"
+    }
+  ]
+}

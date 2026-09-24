@@ -1,0 +1,390 @@
+[
+  {
+    "id": "aaqir-al-hakam",
+    "nom": "Aaqir al’Hakam",
+    "description": "Marchand et diplomate qadiran ayant autrefois dirigé l’Échange. Il demeure un allié influent grâce à son réseau commercial.",
+    "factions": [
+      "Société des Éclaireurs",
+      "Échange"
+    ],
+    "tags": [
+      "Commerce",
+      "Diplomatie",
+      "Ancien dirigeant"
+    ],
+    "image": "https://www.worldanvil.com/uploads/images/472aa67ea572683a1789fc72138129e6.png",
+    "aliases": [
+      "Prince marchand Aaqir al’Hakam"
+    ],
+    "lieux": [
+      "Absalom",
+      "Qadira"
+    ],
+    "role": "Intermédiaire commercial et financier",
+    "importance": "Secondaire",
+    "statut": "Actif",
+    "notes": "À employer pour les financements, les transports, les investissements et les intrigues commerciales."
+  },
+  {
+    "id": "ambrus-valsin",
+    "nom": "Ambrus Valsin",
+    "description": "Intendant de la Grande Loge et capitaine-aventurier expérimenté. Exigeant et pragmatique, il supervise la logistique et confie de nombreuses missions aux agents.",
+    "factions": [
+      "Société des Éclaireurs"
+    ],
+    "tags": [
+      "Direction",
+      "Donneur de missions",
+      "Grande Loge"
+    ],
+    "image": "https://static.wikia.nocookie.net/pathfinder/images/4/45/Ambrus_Valsin.jpg/revision/latest/scale-to-width-down/250?cb=20091001135022",
+    "aliases": [
+      "Venture-Captain Ambrus Valsin",
+      "Intendant de la Grande Loge"
+    ],
+    "lieux": [
+      "Grande Loge"
+    ],
+    "role": "Intendant de la Grande Loge et répartiteur de missions",
+    "importance": "Majeure",
+    "statut": "Actif",
+    "notes": "Point de contact institutionnel principal. Il affecte les équipes, réclame les rapports et gère les conséquences administratives."
+  },
+  {
+    "id": "calisro-benarry",
+    "nom": "Calisro Benarry",
+    "description": "Ancienne corsaire originaire des Terres détrempées, Calisro dirige les Chasseurs d’Horizons et pousse les agents au-delà des cartes connues.",
+    "factions": [
+      "Société des Éclaireurs",
+      "Chasseurs d’Horizons"
+    ],
+    "tags": [
+      "Cheffe de faction",
+      "Exploration",
+      "Navigation"
+    ],
+    "image": "https://i.pinimg.com/originals/68/ab/08/68ab08c0cf5e870efe21cb5ee24cf6b2.png",
+    "aliases": [
+      "Capitaine Calisro Benarry",
+      "Cheffe des Chasseurs d’Horizons"
+    ],
+    "lieux": [
+      "Grande Loge",
+      "Glorious Payoff",
+      "Terres détrempées"
+    ],
+    "role": "Cheffe des Chasseurs d’Horizons",
+    "importance": "Récurrente",
+    "statut": "Actif",
+    "notes": "Commanditaire idéale pour les expéditions maritimes et mondiales. Son navire peut servir de base mobile."
+  },
+  {
+    "id": "eando-kline",
+    "nom": "Eando Kline",
+    "description": "Éclaireur légendaire dont les expériences ont révélé les dangers d’une exploration irresponsable. Il dirige le Sceau Vigilant.",
+    "factions": [
+      "Société des Éclaireurs",
+      "Sceau Vigilant"
+    ],
+    "tags": [
+      "Chef de faction",
+      "Confinement",
+      "Artefacts"
+    ],
+    "image": "https://paizo.com/image/content/SecondDarkness/PZO9018-EandoKline.jpg",
+    "aliases": [
+      "Chef du Sceau Vigilant"
+    ],
+    "lieux": [
+      "Grande Loge"
+    ],
+    "role": "Chef du Sceau Vigilant",
+    "importance": "Récurrente",
+    "statut": "Actif",
+    "notes": "Demande systématiquement ce que les agents ont réveillé, qui connaît le site et si la menace est réellement contenue."
+  },
+  {
+    "id": "fola-barun",
+    "nom": "Fola Barun",
+    "description": "Diplomate déterminée à renforcer la Société sans sacrifier ceux qui la servent. Elle dirige l’Alliance des Émissaires.",
+    "factions": [
+      "Société des Éclaireurs",
+      "Alliance des Émissaires"
+    ],
+    "tags": [
+      "Cheffe de faction",
+      "Recrutement",
+      "Diplomatie"
+    ],
+    "image": "https://64.media.tumblr.com/349372e9d51c4e7bf34d87915ade3b79/tumblr_o9pi1g4Yvx1sazby5o1_500.jpg",
+    "aliases": [
+      "Cheffe de l’Alliance des Émissaires"
+    ],
+    "lieux": [
+      "Grande Loge"
+    ],
+    "role": "Cheffe de l’Alliance des Émissaires",
+    "importance": "Récurrente",
+    "statut": "Actif",
+    "notes": "Partenaire naturelle de Janira. Elle propose des missions de recrutement, de sauvetage et d’aide aux agents."
+  },
+  {
+    "id": "gloriana-morilla",
+    "nom": "Gloriana Morilla",
+    "description": "Noble et intrigante taldorienne, Gloriana est une ancienne dirigeante de faction devenue une alliée politique de confiance.",
+    "factions": [
+      "Société des Éclaireurs",
+      "Cour Souveraine"
+    ],
+    "tags": [
+      "Politique",
+      "Espionnage",
+      "Taldor"
+    ],
+    "image": "https://cdn11.bigcommerce.com/s-e0sdfpgiwh/images/stencil/500x659/products/10418/7171/PZOPFS0311E__74988.1755216441.jpg?c=1",
+    "aliases": [
+      "Dame Gloriana Morilla",
+      "Lady Gloriana Morilla"
+    ],
+    "lieux": [
+      "Oppara",
+      "Grande Loge"
+    ],
+    "role": "Alliée politique et intermédiaire au Taldor",
+    "importance": "Secondaire",
+    "statut": "Actif",
+    "notes": "Confie des missions diplomatiques ou clandestines que la Société ne souhaite pas revendiquer publiquement."
+  },
+  {
+    "id": "gorm-greathammer",
+    "nom": "Gorm Greathammer",
+    "description": "Prince nain, conteur et érudit dirigeant la Grande Archive. Il veut que les découvertes soient étudiées, conservées et correctement transmises.",
+    "factions": [
+      "Société des Éclaireurs",
+      "Grande Archive"
+    ],
+    "tags": [
+      "Chef de faction",
+      "Archéologie",
+      "Histoire"
+    ],
+    "image": "https://cdn11.bigcommerce.com/s-e0sdfpgiwh/images/stencil/1280x1280/products/10431/7184/PZOPFS0403E__04504.1755218314.jpg?c=1",
+    "aliases": [
+      "Chef de la Grande Archive",
+      "Gorm Marteaupuissant"
+    ],
+    "lieux": [
+      "Grande Loge",
+      "Kraggodan"
+    ],
+    "role": "Chef de la Grande Archive",
+    "importance": "Récurrente",
+    "statut": "Actif",
+    "notes": "Commanditaire pour l’archéologie, les recherches historiques et les conflits concernant la propriété des découvertes."
+  },
+  {
+    "id": "janira-gavix",
+    "nom": "Janira Gavix",
+    "description": "Halfeline chaleureuse et énergique responsable des initiés. Elle accueille les postulants, suit leur formation et les aide à trouver leur place dans la Société.",
+    "factions": [
+      "Société des Éclaireurs",
+      "Alliance des Émissaires"
+    ],
+    "tags": [
+      "Recrutement",
+      "Initiés",
+      "Mentor"
+    ],
+    "image": "https://cdn.paizo.com/image/content/Blog/043020_Janira.jpg",
+    "aliases": [
+      "Responsable des initiés",
+      "Head Initiate Janira Gavix"
+    ],
+    "lieux": [
+      "Grande Loge"
+    ],
+    "role": "Recruteuse et référente des postulants",
+    "importance": "Majeure",
+    "statut": "Actif",
+    "notes": "Visage principal de la phase des postulants. Elle conduit les entretiens, constitue les équipes de Confirmation et suit les jeunes agents."
+  },
+  {
+    "id": "kreighton-shaine",
+    "nom": "Kreighton Shaine",
+    "description": "Érudit elfe brillant et excentrique dirigeant l’école des Parchemins. Il enseigne l’exploration, l’observation et la documentation des découvertes.",
+    "factions": [
+      "Société des Éclaireurs",
+      "Grande Archive"
+    ],
+    "tags": [
+      "Doyen",
+      "Érudition",
+      "Exploration"
+    ],
+    "image": "https://i.pinimg.com/736x/6b/5c/0b/6b5c0b69be7fad8bbf1d2cee05709343.jpg",
+    "aliases": [
+      "Maître des Parchemins",
+      "Master of Scrolls"
+    ],
+    "lieux": [
+      "Grande Loge"
+    ],
+    "role": "Doyen des Parchemins",
+    "importance": "Récurrente",
+    "statut": "Actif",
+    "notes": "Évalue les rapports, commande des expéditions scientifiques et peut renvoyer une autre équipe sur un site mal documenté."
+  },
+  {
+    "id": "marcos-farabellus",
+    "nom": "Marcos Farabellus",
+    "description": "Vétéran charismatique dirigeant l’école des Épées. Il supervise la préparation physique, les exercices tactiques et la survie des agents sur le terrain.",
+    "factions": [
+      "Société des Éclaireurs"
+    ],
+    "tags": [
+      "Doyen",
+      "Combat",
+      "Formation"
+    ],
+    "image": "https://cdn.paizo.com/image/product/catalog/PZOP/PZOPFS0211E.jpg",
+    "aliases": [
+      "Maître des Épées",
+      "Master of Swords"
+    ],
+    "lieux": [
+      "Grande Loge"
+    ],
+    "role": "Doyen des Épées",
+    "importance": "Récurrente",
+    "statut": "Actif",
+    "notes": "Organise des exercices et évalue le comportement collectif. Il cherche surtout à garder les Éclaireurs en vie."
+  },
+  {
+    "id": "sorrina-westyr",
+    "nom": "Sorrina Westyr",
+    "description": "Oread et spécialiste des phénomènes magiques dirigeant l’école des Sorts. Elle supervise l’étude des portails, des plans, des rituels et des anomalies surnaturelles.",
+    "factions": [
+      "Société des Éclaireurs"
+    ],
+    "tags": [
+      "Doyenne",
+      "Magie",
+      "Plans"
+    ],
+    "image": "https://cdn11.bigcommerce.com/s-e0sdfpgiwh/images/stencil/1280x1280/products/10687/7439/PZOPSS0713E__29025.1755894541.jpg?c=1",
+    "aliases": [
+      "Maîtresse des Sorts",
+      "Master of Spells"
+    ],
+    "lieux": [
+      "Grande Loge"
+    ],
+    "role": "Doyenne des Sorts",
+    "importance": "Récurrente",
+    "statut": "Actif",
+    "notes": "Interlocutrice privilégiée pour le Labyrinthe de la Route Ouverte, les voyages planaires, les malédictions et les artefacts magiques."
+  },
+  {
+    "id": "tamrin-credence",
+    "nom": "Tamrin Credence",
+    "description": "Ancien esclave chelaxien devenu agent de terrain et spécialiste des opérations clandestines, des infiltrations et des extractions.",
+    "factions": [
+      "Société des Éclaireurs",
+      "Liberty’s Edge"
+    ],
+    "tags": [
+      "Infiltration",
+      "Libération",
+      "Cheliax"
+    ],
+    "image": "https://static3.paizo.com/image/content/PathfinderSociety/PZOPSS0718-TamrinCredence.jpg",
+    "aliases": [
+      "Harbormaster Tamrin Credence"
+    ],
+    "lieux": [
+      "Cheliax",
+      "Grande Loge"
+    ],
+    "role": "Spécialiste des infiltrations et des extractions",
+    "importance": "Secondaire",
+    "statut": "Actif",
+    "notes": "Peut fournir de fausses identités, préparer une évasion ou récupérer une équipe dont la mission officielle a échoué."
+  },
+  {
+    "id": "urwal",
+    "nom": "Urwal",
+    "description": "Astrologue iruxi singulier dirigeant la Roue Verdoyante. Il étudie les cycles naturels et corrige les erreurs des explorateurs sur les terres et les peuples observés.",
+    "factions": [
+      "Société des Éclaireurs",
+      "Roue Verdoyante"
+    ],
+    "tags": [
+      "Chef de faction",
+      "Nature",
+      "Astrologie"
+    ],
+    "image": "https://cdn11.bigcommerce.com/s-e0sdfpgiwh/images/stencil/1280x1280/products/10401/7154/PZOPFS0218E__33588.1755203661.jpg?c=1",
+    "aliases": [
+      "Chef de la Roue Verdoyante"
+    ],
+    "lieux": [
+      "Grande Loge",
+      "Iobaria"
+    ],
+    "role": "Chef de la Roue Verdoyante",
+    "importance": "Récurrente",
+    "statut": "Actif",
+    "notes": "Commanditaire pour les missions en milieu sauvage. Il peut contester un rapport écologiquement ou culturellement douteux."
+  },
+  {
+    "id": "valais-durant",
+    "nom": "Valais Durant",
+    "description": "Ritualiste profondément altruiste dirigeant le Serment Radieux. Elle veut employer les ressources de la Société pour protéger, soigner et réparer.",
+    "factions": [
+      "Société des Éclaireurs",
+      "Serment Radieux"
+    ],
+    "tags": [
+      "Cheffe de faction",
+      "Altruisme",
+      "Rédemption"
+    ],
+    "image": "https://i.ebayimg.com/images/g/RmwAAOSwrQFnwzE7/s-l140.webp",
+    "aliases": [
+      "Cheffe du Serment Radieux"
+    ],
+    "lieux": [
+      "Grande Loge"
+    ],
+    "role": "Cheffe du Serment Radieux",
+    "importance": "Récurrente",
+    "statut": "Actif",
+    "notes": "Propose des missions humanitaires et demande parfois aux agents de réparer les conséquences d’une expédition précédente."
+  },
+  {
+    "id": "zarta-dralneen",
+    "nom": "Zarta Dralneen",
+    "description": "Archiviste en chef de la Grande Loge, spécialiste des secrets occultes, des intrigues chelaxiennes et des connaissances dangereuses.",
+    "factions": [
+      "Société des Éclaireurs",
+      "Grande Archive"
+    ],
+    "tags": [
+      "Archiviste",
+      "Occultisme",
+      "Secrets"
+    ],
+    "image": "https://i.pinimg.com/736x/9d/2c/76/9d2c767abc11a3169deffa55aa510ae7.jpg",
+    "aliases": [
+      "Archiviste en chef",
+      "Paracontesse Zarta Dralneen"
+    ],
+    "lieux": [
+      "Grande Loge"
+    ],
+    "role": "Archiviste en chef et spécialiste des affaires occultes",
+    "importance": "Récurrente",
+    "statut": "Actif",
+    "notes": "Particulièrement utile pour Shadow Absalom, Nidal, Cheliax, les contrats infernaux et les artefacts impossibles à publier."
+  }
+]

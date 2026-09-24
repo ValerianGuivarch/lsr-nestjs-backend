@@ -1,0 +1,15 @@
+{
+  "name": "PF2PlayerCodex",
+  "version": "0.1.0",
+  "author": ["PF2 project"],
+  "description": "Carnet joueur PF2, séparé du référentiel MJ.",
+  "type": "other",
+  "AutoloadClasses": { "PF2PlayerCodexHooks": "includes/PF2PlayerCodexHooks.php", "ApiPF2PlayerCodex": "includes/ApiPF2PlayerCodex.php", "ApiPF2PlayerCodexUpdate": "includes/ApiPF2PlayerCodexUpdate.php" },
+  "APIModules": { "pf2playercodex": "ApiPF2PlayerCodex", "pf2playercodexupdate": "ApiPF2PlayerCodexUpdate" },
+  "ResourceModules": {
+    "ext.pf2playercodex": { "scripts": ["resources/pf2-player-codex.js"], "styles": ["resources/pf2-player-codex.css"], "dependencies": ["mediawiki.api", "mediawiki.util"], "localBasePath": "", "remoteExtPath": "PF2PlayerCodex" }
+  },
+  "Hooks": { "BeforePageDisplay": "PF2PlayerCodexHooks::onBeforePageDisplay" },
+  "config": { "PF2PlayerCodexApiBase": { "value": "http://host.docker.internal:3333/api/pf2-mj" } },
+  "manifest_version": 2
+}

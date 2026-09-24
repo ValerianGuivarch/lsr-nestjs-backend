@@ -47,6 +47,7 @@
       "dependsOn": ["build"],
       "options": {
         "buildTarget": "api-yeardiary:build",
+        "inspect": false,
         "runBuildTargetDependencies": false
       },
       "configurations": {

@@ -4,25 +4,12 @@ export default () => ({
   apiUrl: process.env['API_URL'],
   http: {
     host: process.env['HOST'] || '0.0.0.0',
-    port: parseInt(process.env['PORT'] || '3000')
+    port: parseInt(process.env['PORT'] || '8081')
   },
   JwtService: {
     jwtSecret: process.env['JWT_SECRET']
   },
   management: process.env['MANAGEMENT'],
-  postgres: {
-    host: process.env['DB_HOST'] || '127.0.0.1',
-    port: process.env['DB_PORT'] ? parseInt(process.env['DB_PORT']) : 5433,
-    username: process.env['DB_USER'] || 'postgres',
-    password: process.env['DB_PASSWORD'] || 'postgres',
-    database: process.env['DB_NAME'] || 'starter-database',
-    autoLoadEntities: true,
-    synchronize: false,
-    extra: {
-      max: 5,
-      min: 1
-    }
-  },
   mailjet: {
     emailFrom: process.env['EMAIL_FROM'],
     emailFromName: process.env['EMAIL_FROM_NAME'],

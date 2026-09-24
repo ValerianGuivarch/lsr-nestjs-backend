@@ -1,0 +1,39 @@
+/* XPC replaces the visible native PF2e XP bar on character sheets. */
+
+.pf2e.actor.character
+.char-level
+.pf2e-val-career-xp-compact {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 4px !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  min-height: 22px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.pf2e.actor.character
+.char-level
+.pf2e-val-career-xp-compact-line {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 0 !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  white-space: nowrap !important;
+  font-size: 0.62rem !important;
+  line-height: 1 !important;
+}
+
+.pf2e.actor.character
+.char-level
+.pf2e-val-career-xp-compact-value {
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  font-weight: 800 !important;
+  font-size: 0.86rem !important;
+}

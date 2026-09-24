@@ -1,0 +1,452 @@
+{
+  "formatVersion": 3,
+  "library": {
+    "root": "Campagnes",
+    "category": "Agents d'Absalom",
+    "collection": "Volume 2"
+  },
+  "scenario": {
+    "id": "AOE-05",
+    "name": "Dans le ventre de la Baleine noire",
+    "tier": "15–17",
+    "source": "Agents d'Absalom — Volume 2",
+    "summary": "Accusés et traqués, les agents doivent infiltrer la prison de la Baleine noire, libérer Wynsal Étoilené et remonter jusqu’au Colporteur de rumeurs."
+  },
+  "journal": {
+    "title": "AOE-05 — Dans le ventre de la Baleine noire"
+  },
+  "actors": [
+    {
+      "key": "gardes-de-la-baleine-noire",
+      "name": "Gardes De La Baleine Noire",
+      "type": "reference",
+      "lookup": "Gardes De La Baleine Noire",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 12 — relevé dans le PDF p. 106"
+    },
+    {
+      "key": "breek",
+      "name": "Breek",
+      "type": "reference",
+      "lookup": "Breek",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 1 — relevé dans le PDF p. 104"
+    },
+    {
+      "key": "seigneur-guirden",
+      "name": "Seigneur Guirden",
+      "type": "reference",
+      "lookup": "Seigneur Guirden",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 19 — relevé dans le PDF p. 105"
+    },
+    {
+      "key": "myrna-rath",
+      "name": "Myrna Rath",
+      "type": "reference",
+      "lookup": "Myrna Rath",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 16 — relevé dans le PDF p. 107"
+    },
+    {
+      "key": "graem-et-grinlowe",
+      "name": "Graem Et Grinlowe",
+      "type": "reference",
+      "lookup": "Graem Et Grinlowe",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 16 — relevé dans le PDF p. 108"
+    },
+    {
+      "key": "golm",
+      "name": "Golm",
+      "type": "reference",
+      "lookup": "Golm",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 5 — relevé dans le PDF p. 109"
+    },
+    {
+      "key": "h1-pont-superieur",
+      "name": "H1. Pont Supérieur",
+      "type": "reference",
+      "lookup": "H1. Pont Supérieur",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 12 — relevé dans le PDF p. 109"
+    },
+    {
+      "key": "des-maitres-des-marees",
+      "name": "Des Maîtres Des Marées",
+      "type": "reference",
+      "lookup": "Des Maîtres Des Marées",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 13 — relevé dans le PDF p. 112"
+    },
+    {
+      "key": "mukradis",
+      "name": "Mukradis",
+      "type": "reference",
+      "lookup": "Mukradis",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 15 — relevé dans le PDF p. 110"
+    },
+    {
+      "key": "receptacle-elementaire-d-eau",
+      "name": "Réceptacle Élémentaire D’Eau",
+      "type": "reference",
+      "lookup": "Réceptacle Élémentaire D’Eau",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 16 — relevé dans le PDF p. 111"
+    },
+    {
+      "key": "lusque-age",
+      "name": "Lusque Âgé",
+      "type": "reference",
+      "lookup": "Lusque Âgé",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 18 — relevé dans le PDF p. 112"
+    },
+    {
+      "key": "lusque-adulte",
+      "name": "Lusque Adulte",
+      "type": "reference",
+      "lookup": "Lusque Adulte",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 17 — relevé dans le PDF p. 112"
+    },
+    {
+      "key": "lusque-jeune",
+      "name": "Lusque Jeune",
+      "type": "reference",
+      "lookup": "Lusque Jeune",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 16 — relevé dans le PDF p. 112"
+    },
+    {
+      "key": "assassins-mecaniques",
+      "name": "Assassins Mécaniques",
+      "type": "reference",
+      "lookup": "Assassins Mécaniques",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 13 — relevé dans le PDF p. 118"
+    },
+    {
+      "key": "ixusoth",
+      "name": "Ixusoth",
+      "type": "reference",
+      "lookup": "Ixusoth",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 15 — relevé dans le PDF p. 118"
+    },
+    {
+      "key": "reservoirs-d-yeux",
+      "name": "Réservoirs D’Yeux",
+      "type": "reference",
+      "lookup": "Réservoirs D’Yeux",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "hazard",
+      "note": "Niveau 15 — relevé dans le PDF p. 119"
+    },
+    {
+      "key": "reginald-vancaskerkin",
+      "name": "Reginald Vancaskerkin",
+      "type": "reference",
+      "lookup": "Reginald Vancaskerkin",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 18 — relevé dans le PDF p. 128"
+    },
+    {
+      "key": "bras-mecaniques",
+      "name": "Bras Mécaniques",
+      "type": "reference",
+      "lookup": "Bras Mécaniques",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "hazard",
+      "note": "Niveau 15 — relevé dans le PDF p. 124"
+    },
+    {
+      "key": "injecteurs-mecaniques",
+      "name": "Injecteurs Mécaniques",
+      "type": "reference",
+      "lookup": "Injecteurs Mécaniques",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 13 — relevé dans le PDF p. 125"
+    },
+    {
+      "key": "le-maitre-de-l-encre",
+      "name": "Le Maître De L’Encre",
+      "type": "reference",
+      "lookup": "Le Maître De L’Encre",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 16 — relevé dans le PDF p. 125"
+    },
+    {
+      "key": "levialar",
+      "name": "Levialar",
+      "type": "reference",
+      "lookup": "Levialar",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 18 — relevé dans le PDF p. 125"
+    },
+    {
+      "key": "golems-pate-a-papier",
+      "name": "Golems Pâte À Papier",
+      "type": "reference",
+      "lookup": "Golems Pâte À Papier",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 14 — relevé dans le PDF p. 127"
+    },
+    {
+      "key": "trancheurs-mecaniques-0-a-3",
+      "name": "Trancheurs Mécaniques (0 À 3)",
+      "type": "reference",
+      "lookup": "Trancheurs Mécaniques (0 À 3)",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 14 — relevé dans le PDF p. 128"
+    },
+    {
+      "key": "lames-de-coupe",
+      "name": "Lames De Coupe",
+      "type": "reference",
+      "lookup": "Lames De Coupe",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "hazard",
+      "note": "Niveau 19 — relevé dans le PDF p. 129"
+    },
+    {
+      "key": "amalgame-mecanique",
+      "name": "Amalgame Mécanique",
+      "type": "reference",
+      "lookup": "Amalgame Mécanique",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 20 — relevé dans le PDF p. 130"
+    },
+    {
+      "key": "lanceurs-de-barriques",
+      "name": "Lanceurs De Barriques",
+      "type": "reference",
+      "lookup": "Lanceurs De Barriques",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 14 — relevé dans le PDF p. 131"
+    },
+    {
+      "key": "trancheurs-mecaniques",
+      "name": "Trancheurs Mécaniques",
+      "type": "reference",
+      "lookup": "Trancheurs Mécaniques",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 14 — relevé dans le PDF p. 131"
+    },
+    {
+      "key": "injecteurs-mecaniques-2",
+      "name": "Injecteurs Mécaniques",
+      "type": "reference",
+      "lookup": "Injecteurs Mécaniques",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 14 — relevé dans le PDF p. 131"
+    }
+  ],
+  "encounters": [
+    {
+      "id": "CH1",
+      "name": "Chapitre 1 — Indignement destitués",
+      "location": "Absalom",
+      "notes": "Index des créatures et dangers rencontrés dans ce chapitre. Les quantités exactes restent indiquées dans le PDF lorsque plusieurs occurrences utilisent la même fiche.",
+      "groups": [
+        {
+          "tier": "Niveaux 15–17",
+          "creatures": []
+        }
+      ]
+    },
+    {
+      "id": "CH2",
+      "name": "Chapitre 2 — Dans le ventre de la Baleine noire",
+      "location": "Absalom",
+      "notes": "Index des créatures et dangers rencontrés dans ce chapitre. Les quantités exactes restent indiquées dans le PDF lorsque plusieurs occurrences utilisent la même fiche.",
+      "groups": [
+        {
+          "tier": "Niveaux 15–17",
+          "creatures": [
+            {
+              "actor": "gardes-de-la-baleine-noire",
+              "count": "selon la rencontre",
+              "note": "Niveau 12 — PDF p. 106"
+            },
+            {
+              "actor": "breek",
+              "count": "selon la rencontre",
+              "note": "Niveau 1 — PDF p. 104"
+            },
+            {
+              "actor": "seigneur-guirden",
+              "count": "selon la rencontre",
+              "note": "Niveau 19 — PDF p. 105"
+            },
+            {
+              "actor": "myrna-rath",
+              "count": "selon la rencontre",
+              "note": "Niveau 16 — PDF p. 107"
+            },
+            {
+              "actor": "graem-et-grinlowe",
+              "count": "selon la rencontre",
+              "note": "Niveau 16 — PDF p. 108"
+            },
+            {
+              "actor": "golm",
+              "count": "selon la rencontre",
+              "note": "Niveau 5 — PDF p. 109"
+            },
+            {
+              "actor": "h1-pont-superieur",
+              "count": "selon la rencontre",
+              "note": "Niveau 12 — PDF p. 109"
+            },
+            {
+              "actor": "des-maitres-des-marees",
+              "count": "selon la rencontre",
+              "note": "Niveau 13 — PDF p. 112"
+            },
+            {
+              "actor": "mukradis",
+              "count": "selon la rencontre",
+              "note": "Niveau 15 — PDF p. 110"
+            },
+            {
+              "actor": "receptacle-elementaire-d-eau",
+              "count": "selon la rencontre",
+              "note": "Niveau 16 — PDF p. 111"
+            },
+            {
+              "actor": "lusque-age",
+              "count": "selon la rencontre",
+              "note": "Niveau 18 — PDF p. 112"
+            },
+            {
+              "actor": "lusque-adulte",
+              "count": "selon la rencontre",
+              "note": "Niveau 17 — PDF p. 112"
+            },
+            {
+              "actor": "lusque-jeune",
+              "count": "selon la rencontre",
+              "note": "Niveau 16 — PDF p. 112"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "CH3",
+      "name": "Chapitre 3 — Le repaire du Colporteur de rumeurs",
+      "location": "Absalom",
+      "notes": "Index des créatures et dangers rencontrés dans ce chapitre. Les quantités exactes restent indiquées dans le PDF lorsque plusieurs occurrences utilisent la même fiche.",
+      "groups": [
+        {
+          "tier": "Niveaux 15–17",
+          "creatures": [
+            {
+              "actor": "assassins-mecaniques",
+              "count": "selon la rencontre",
+              "note": "Niveau 13 — PDF p. 118"
+            },
+            {
+              "actor": "ixusoth",
+              "count": "selon la rencontre",
+              "note": "Niveau 15 — PDF p. 118"
+            },
+            {
+              "actor": "reservoirs-d-yeux",
+              "count": "selon la rencontre",
+              "note": "Niveau 15 — PDF p. 119"
+            },
+            {
+              "actor": "reginald-vancaskerkin",
+              "count": "selon la rencontre",
+              "note": "Niveau 18 — PDF p. 128"
+            },
+            {
+              "actor": "bras-mecaniques",
+              "count": "selon la rencontre",
+              "note": "Niveau 15 — PDF p. 124"
+            },
+            {
+              "actor": "injecteurs-mecaniques",
+              "count": "selon la rencontre",
+              "note": "Niveau 13 — PDF p. 125"
+            },
+            {
+              "actor": "le-maitre-de-l-encre",
+              "count": "selon la rencontre",
+              "note": "Niveau 16 — PDF p. 125"
+            },
+            {
+              "actor": "levialar",
+              "count": "selon la rencontre",
+              "note": "Niveau 18 — PDF p. 125"
+            },
+            {
+              "actor": "golems-pate-a-papier",
+              "count": "selon la rencontre",
+              "note": "Niveau 14 — PDF p. 127"
+            },
+            {
+              "actor": "trancheurs-mecaniques-0-a-3",
+              "count": "selon la rencontre",
+              "note": "Niveau 14 — PDF p. 128"
+            },
+            {
+              "actor": "lames-de-coupe",
+              "count": "selon la rencontre",
+              "note": "Niveau 19 — PDF p. 129"
+            },
+            {
+              "actor": "amalgame-mecanique",
+              "count": "selon la rencontre",
+              "note": "Niveau 20 — PDF p. 130"
+            },
+            {
+              "actor": "lanceurs-de-barriques",
+              "count": "selon la rencontre",
+              "note": "Niveau 14 — PDF p. 131"
+            },
+            {
+              "actor": "trancheurs-mecaniques",
+              "count": "selon la rencontre",
+              "note": "Niveau 14 — PDF p. 131"
+            },
+            {
+              "actor": "injecteurs-mecaniques-2",
+              "count": "selon la rencontre",
+              "note": "Niveau 14 — PDF p. 131"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

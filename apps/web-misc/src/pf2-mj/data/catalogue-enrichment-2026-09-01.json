@@ -1,0 +1,143 @@
+{
+  "generatedAt": "2026-09-01",
+  "enrichedUnitCount": 71,
+  "remainingMissingSynopsisCount": 0,
+  "entryCount": 250,
+  "fileCount": 377,
+  "canonicalIdCorrections": [
+    {
+      "from": "quest-16-boom-town-betrayal",
+      "to": "bounty-16-boom-town-betrayal",
+      "reason": "Produit officiel Pathfinder Bounty #16 ; nom du fichier local conservé."
+    }
+  ],
+  "levelCorrections": [
+    {
+      "id": "pfs-season-2-2-00",
+      "from": "7–8",
+      "to": "1–8"
+    },
+    {
+      "id": "pfs-season-2-2-01",
+      "from": "3–4",
+      "to": "1–4"
+    },
+    {
+      "id": "pfs-season-3-3-99",
+      "from": "1–4",
+      "to": "1–8"
+    }
+  ],
+  "locationCorrections": [
+    {
+      "id": "pfs-season-2-intro",
+      "to": [
+        "Blackwood Swamp",
+        "Taldor",
+        "Tskikha"
+      ]
+    },
+    {
+      "id": "pfs-season-4-4-03",
+      "to": [
+        "Halgrim",
+        "Ironbound Islands",
+        "Island of the Ancestors"
+      ]
+    },
+    {
+      "id": "pfs-season-4-4-17",
+      "to": [
+        "Thuvia"
+      ]
+    },
+    {
+      "id": "pfs-season-6-6-15",
+      "to": [
+        "Kaer Maga",
+        "Azlant"
+      ]
+    }
+  ],
+  "updatedIds": [
+    "pfs-season-1-1-02",
+    "pfs-season-1-1-03",
+    "pfs-season-1-1-05",
+    "pfs-season-1-1-07",
+    "pfs-season-1-1-10",
+    "pfs-season-1-1-13",
+    "pfs-season-1-1-16",
+    "pfs-season-1-1-17",
+    "pfs-season-1-1-19",
+    "pfs-season-1-1-22",
+    "pfs-season-1-1-23",
+    "pfs-season-1-1-24",
+    "pfs-season-1-1-25",
+    "pfs-season-2-intro",
+    "pfs-season-2-2-00",
+    "pfs-season-2-2-01",
+    "pfs-season-2-2-06",
+    "pfs-season-2-2-08",
+    "pfs-season-2-2-10",
+    "pfs-season-2-2-15",
+    "pfs-season-2-2-17",
+    "pfs-season-2-2-22",
+    "pfs-season-2-2-24",
+    "pfs-season-3-3-01",
+    "pfs-season-3-3-03",
+    "pfs-season-3-3-04",
+    "pfs-season-3-3-07",
+    "pfs-season-3-3-08",
+    "pfs-season-3-3-09",
+    "pfs-season-3-3-10",
+    "pfs-season-3-3-11",
+    "pfs-season-3-3-12",
+    "pfs-season-3-3-13",
+    "pfs-season-3-3-14",
+    "pfs-season-3-3-15",
+    "pfs-season-3-3-17",
+    "pfs-season-3-3-18",
+    "pfs-season-3-3-99",
+    "pfs-season-4-4-03",
+    "pfs-season-4-4-05",
+    "pfs-season-4-4-12",
+    "pfs-season-4-4-14",
+    "pfs-season-4-4-15",
+    "pfs-season-4-4-17",
+    "pfs-season-4-4-99",
+    "pfs-season-5-5-02",
+    "pfs-season-5-5-03",
+    "pfs-season-5-5-05",
+    "pfs-season-5-5-07",
+    "pfs-season-5-5-08",
+    "pfs-season-5-5-09",
+    "pfs-season-5-5-15",
+    "pfs-season-5-5-16",
+    "pfs-season-5-5-18",
+    "pfs-season-6-6-01",
+    "pfs-season-6-6-07",
+    "pfs-season-6-6-12",
+    "pfs-season-6-6-13",
+    "pfs-season-6-6-14",
+    "pfs-season-6-6-15",
+    "pfs-season-6-6-17",
+    "pfs-season-6-6-18",
+    "pfs-season-6-6-19",
+    "pfs-season-6-6-20",
+    "pfs-season-6-6-00",
+    "bounty-04-cat-s-cradle",
+    "quest-10-the-broken-scales",
+    "quest-11-a-parchment-tree",
+    "bounty-16-boom-town-betrayal",
+    "quest-23-lacking-respect",
+    "pfs1e-47-the-darkest-vengeance"
+  ],
+  "validation": {
+    "uniqueEntryIds": true,
+    "allPlayablesHaveSynopsis": true,
+    "physicalPdfCountPreserved": true,
+    "physicalPdfPathsPreserved": true,
+    "playerCatalogueHasNoGmDetails": true,
+    "playerCatalogueHasNoDocuments": true
+  }
+}

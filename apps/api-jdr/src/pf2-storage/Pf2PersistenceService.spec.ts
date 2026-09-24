@@ -1,0 +1,505 @@
+import { mkdtemp, mkdir, readdir, rm, writeFile } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+import { DataSource } from 'typeorm'
+import { Pf2PersistenceService } from './Pf2PersistenceService'
+
+describe('Pf2PersistenceService', () => {
+  let root: string
+  let database: string
+  let dataSource: DataSource | undefined
+  const originalDataRoot = process.env['PF2_DATA_ROOT']
+  const originalStorageRoot = process.env['STORAGE_PATH']
+
+  beforeEach(async () => {
+    root = await mkdtemp(join(tmpdir(), 'pf2-persistence-'))
+    const dataRoot = join(root, 'seed')
+    await mkdir(join(dataRoot, 'old'), { recursive: true })
+    await Promise.all([
+      ...['pf2_personnages.json', 'pf2_factions.json', 'pf2_lieux.json', 'pf2_regions.json', 'pf2_evenements.json'].map((filename) => writeFile(join(dataRoot, 'old', filename), '[]')),
+      writeFile(join(dataRoot, 'old', 'user-curation.json'), '{}'),
+      writeFile(join(dataRoot, 'old', 'geography-overrides.json'), '{"aliases":{},"parents":{}}'),
+      writeFile(join(dataRoot, 'old', 'catalogue-pf2.json'), '{"schemaVersion":2,"meta":{},"files":[],"entries":[],"collections":[],"arcs":[],"sections":[],"narrativeThreads":[]}')
+    ])
+    database = join(root, 'data', 'pf2.sqlite')
+    process.env['PF2_DATA_ROOT'] = dataRoot
+    process.env['STORAGE_PATH'] = join(root, 'storage')
+  })
+
+  afterEach(async () => {
+    if (dataSource?.isInitialized) await dataSource.destroy()
+    process.env['PF2_DATA_ROOT'] = originalDataRoot
+    process.env['STORAGE_PATH'] = originalStorageRoot
+    await rm(root, { recursive: true, force: true })
+  })
+
+  async function open(): Promise<Pf2PersistenceService> {
+    dataSource = new DataSource({ type: 'sqlite', database })
+    await dataSource.initialize()
+    const service = new Pf2PersistenceService(dataSource)
+    await service.onModuleInit()
+    return service
+  }
+
+  function currentDataSource(): DataSource {
+    if (!dataSource) throw new Error('La source SQLite est fermée.')
+    return dataSource
+  }
+
+  async function migrationBackups(): Promise<string[]> {
+    return (await readdir(join(root, 'storage', 'backups', 'database'))).filter((filename) => filename.endsWith('.sqlite')).sort()
+  }
+
+  it('preserves the latest Foundry actor cache across SQLite reopen', async () => {
+    const first = await open()
+    await first.saveFoundryActorCache([
+      { uuid: 'Actor.yaz', name: 'Yaz Lorok (Gus)' },
+      { uuid: 'Actor.pepin', name: 'Pépin (Eric)' }
+    ])
+
+    await currentDataSource().destroy()
+    dataSource = undefined
+
+    const reopened = await open()
+    await expect(reopened.readFoundryActorCache()).resolves.toEqual([
+      { uuid: 'Actor.yaz', name: 'Yaz Lorok (Gus)' },
+      { uuid: 'Actor.pepin', name: 'Pépin (Eric)' }
+    ])
+  })
+
+  it('creates, updates, migrates and preserves complete sessions', async () => {
+    const first = await open()
+    const created = await first.createSession({
+      id: 'seance-001',
+      sessionNumber: 1,
+      date: '2026-08-28',
+      title: 'Premier test',
+      participants: ['Actor.yaz', 'Actor.pepin'],
+      longSummaryAuthor: 'Actor.pepin',
+      shortSummaryAuthor: 'Actor.yaz',
+      sessionXp: 400,
+      longSummaryXp: 60,
+      shortSummaryXp: 30,
+      shortSummary: 'Résumé court'
+    })
+    expect(created).toMatchObject({ id: 'seance-001', sessionNumber: 1, date: '2026-08-28', title: 'Premier test', participants: ['Actor.yaz', 'Actor.pepin'], longSummaryAuthor: 'Actor.pepin', shortSummaryAuthor: 'Actor.yaz', sessionXp: 400, longSummaryXp: 60, shortSummaryXp: 30, shortSummary: 'Résumé court' })
+    await expect(first.getSession('seance-001')).resolves.toEqual(expect.objectContaining({ title: 'Premier test' }))
+
+    await expect(first.updateSession('seance-001', { title: 'Premier test corrigé', sessionXp: 450, shortSummary: 'Résumé court corrigé' })).resolves.toEqual(expect.objectContaining({ title: 'Premier test corrigé', sessionXp: 450, shortSummary: 'Résumé court corrigé' }))
+    await expect(first.createSession({ title: 'Sans numéro' })).rejects.toThrow('numéro de résumé est obligatoire')
+    await expect(first.createSession({ sessionNumber: 2 })).resolves.toEqual(expect.objectContaining({ sessionNumber: 2, title: '', date: '' }))
+    await expect(first.createSession({ sessionNumber: 1 })).rejects.toThrow('existe déjà')
+    expect((await first.listSessions()).map((session) => session.sessionNumber)).toEqual([1, 2])
+
+    await first.onModuleInit()
+    expect(await currentDataSource().query('SELECT id FROM pf2_schema_migration ORDER BY id')).toEqual([
+      { id: '001-initial-pf2-storage' },
+      { id: '002-pf2-sessions' },
+      { id: '003-normalize-pf2-sessions' },
+      { id: '004-session-long-summary-link' },
+      { id: '005-session-number' },
+      { id: '006-session-discord-message' },
+      { id: '007-scenario-packages-and-npcs' },
+      { id: '008-catalogue-and-library-assets' },
+      { id: '009-scenario-business-relations' },
+      { id: '010-scenario-deployment-queue' },
+      { id: '011-scenario-record-scope' },
+      { id: '012-scenario-dependencies' },
+      { id: '012-session-publication' },
+      { id: '013-scenario-deployment-operations' }
+      , { id: '014-session-mission-dates' }
+      , { id: '015-session-in-game-dates' }
+      , { id: '016-remove-session-long-summary-url' }
+      , { id: '017-player-codex' }
+      , { id: '018-player-character-is-player' }
+      , { id: '019-catalogue-playable-components' }
+      , { id: '020-session-scenario-content' }
+    ])
+
+    await currentDataSource().destroy()
+    dataSource = undefined
+
+    const reopened = await open()
+    expect(await reopened.listSessions()).toEqual(expect.arrayContaining([expect.objectContaining({ id: 'seance-001', sessionNumber: 1, date: '2026-08-28', title: 'Premier test corrigé', sessionXp: 450, shortSummary: 'Résumé court corrigé' }), expect.objectContaining({ sessionNumber: 2, title: '', date: '' })]))
+    expect(await currentDataSource().query('SELECT id FROM pf2_schema_migration ORDER BY id')).toEqual([
+      { id: '001-initial-pf2-storage' },
+      { id: '002-pf2-sessions' },
+      { id: '003-normalize-pf2-sessions' },
+      { id: '004-session-long-summary-link' },
+      { id: '005-session-number' },
+      { id: '006-session-discord-message' },
+      { id: '007-scenario-packages-and-npcs' },
+      { id: '008-catalogue-and-library-assets' },
+      { id: '009-scenario-business-relations' },
+      { id: '010-scenario-deployment-queue' },
+      { id: '011-scenario-record-scope' },
+      { id: '012-scenario-dependencies' },
+      { id: '012-session-publication' },
+      { id: '013-scenario-deployment-operations' }
+      , { id: '014-session-mission-dates' }
+      , { id: '015-session-in-game-dates' }
+      , { id: '016-remove-session-long-summary-url' }
+      , { id: '017-player-codex' }
+      , { id: '018-player-character-is-player' }
+      , { id: '019-catalogue-playable-components' }
+      , { id: '020-session-scenario-content' }
+    ])
+  })
+
+  it('links sessions to catalogue scenarios and optional playable components', async () => {
+    const service = await open()
+    await service.replaceCatalogueSnapshot({
+      schemaVersion: 2,
+      meta: {},
+      files: [],
+      collections: [],
+      arcs: [],
+      sections: [],
+      narrativeThreads: [],
+      entries: [{
+        id: 'scenario-test',
+        kind: 'adventure',
+        titleFr: 'Scénario test',
+        playableComponents: [
+          { id: 'ouverture', title: 'Ouverture', description: 'Début', order: 1, continuity: { mode: 'free', returnToHubPossible: true, recommendedSameParty: false, notes: '' } },
+          { id: 'final', title: 'Final', description: 'Fin', order: 2, continuity: { mode: 'hard_lock', returnToHubPossible: false, recommendedSameParty: true, notes: '' } }
+        ]
+      }]
+    })
+
+    const created = await service.createSession({
+      id: 'session-content',
+      sessionNumber: 1,
+      content: [
+        { scenarioId: 'scenario-test', componentId: 'ouverture' },
+        { scenarioId: 'scenario-test', componentId: 'final' }
+      ]
+    })
+    expect(created.content).toEqual([
+      { scenarioId: 'scenario-test', componentId: 'ouverture', sortOrder: 0 },
+      { scenarioId: 'scenario-test', componentId: 'final', sortOrder: 1 }
+    ])
+    expect(await currentDataSource().query('SELECT session_id, scenario_id, component_id, sort_order FROM pf2_session_content WHERE session_id = ? ORDER BY sort_order', ['session-content'])).toEqual([
+      { session_id: 'session-content', scenario_id: 'scenario-test', component_id: 'ouverture', sort_order: 0 },
+      { session_id: 'session-content', scenario_id: 'scenario-test', component_id: 'final', sort_order: 1 }
+    ])
+
+    await service.updateSession('session-content', { title: 'Conserve les liens' })
+    expect((await service.getSession('session-content'))?.content).toHaveLength(2)
+
+    await service.updateSession('session-content', { content: [{ scenarioId: 'scenario-test', componentId: null }] })
+    expect((await service.getSession('session-content'))?.content).toEqual([{ scenarioId: 'scenario-test', componentId: null, sortOrder: 0 }])
+
+    await expect(service.updateSession('session-content', { content: [{ scenarioId: 'scenario-test', componentId: 'inconnu' }] })).rejects.toThrow('Composant jouable introuvable')
+    await expect(service.updateSession('session-content', { content: [{ scenarioId: 'scenario-inconnu' }] })).rejects.toThrow('Scénario de séance introuvable')
+    expect((await service.getSession('session-content'))?.content).toEqual([{ scenarioId: 'scenario-test', componentId: null, sortOrder: 0 }])
+
+    await service.deleteSession('session-content')
+    expect(await currentDataSource().query('SELECT * FROM pf2_session_content WHERE session_id = ?', ['session-content'])).toEqual([])
+  })
+
+  it('links a session to a playable part nested inside a campaign', async () => {
+    const service = await open()
+
+    await service.replaceCatalogueSnapshot({
+      schemaVersion: 2,
+      meta: {},
+      files: [],
+      collections: [],
+      arcs: [],
+      sections: [],
+      narrativeThreads: [],
+      entries: [{
+        id: 'campaign-test',
+        kind: 'campaign',
+        titleFr: 'Campagne test',
+        playableComponents: [],
+        parts: [{
+          id: 'campaign-volume-1',
+          kind: 'volume_aventure',
+          titleOriginal: 'Volume 1',
+          playableComponents: [{
+            id: 'chapitre-1',
+            title: 'Chapitre 1',
+            description: 'Premier chapitre',
+            order: 1,
+            continuity: {
+              mode: 'free',
+              returnToHubPossible: true,
+              recommendedSameParty: false,
+              notes: '',
+            },
+          }],
+        }],
+      }],
+    })
+
+    const created = await service.createSession({
+      id: 'session-campaign-part',
+      sessionNumber: 1,
+      content: [{
+        scenarioId: 'campaign-volume-1',
+        componentId: 'chapitre-1',
+      }],
+    })
+
+    expect(created.content).toEqual([{
+      scenarioId: 'campaign-volume-1',
+      componentId: 'chapitre-1',
+      sortOrder: 0,
+    }])
+
+    await expect(
+      service.updateSession('session-campaign-part', {
+        content: [{
+          scenarioId: 'campaign-volume-1',
+          componentId: 'inconnu',
+        }],
+      }),
+    ).rejects.toThrow(
+      'Composant jouable introuvable pour campaign-volume-1',
+    )
+
+    await expect(
+      service.updateSession('session-campaign-part', {
+        content: [{
+          scenarioId: 'campaign-volume-inconnu',
+          componentId: null,
+        }],
+      }),
+    ).rejects.toThrow('Scénario de séance introuvable')
+  })
+
+  it('creates and verifies one SQLite backup before applying a pending migration', async () => {
+    const service = await open()
+    await service.saveRecord('pnj', { id: 'backup-witness', name: 'Témoin de sauvegarde' })
+    await currentDataSource().query("DELETE FROM pf2_schema_migration WHERE id = '019-catalogue-playable-components'")
+
+    expect(await migrationBackups()).toEqual([])
+    await service.onModuleInit()
+
+    const backups = await migrationBackups()
+    expect(backups).toHaveLength(1)
+    expect(backups[0]).toMatch(/^pf2-before-019-\d{8}-\d{6}-\d{3}\.sqlite$/)
+
+    const backupDataSource = new DataSource({ type: 'sqlite', database: join(root, 'storage', 'backups', 'database', backups[0]) })
+    await backupDataSource.initialize()
+    try {
+      expect(await backupDataSource.query('PRAGMA integrity_check')).toEqual([{ integrity_check: 'ok' }])
+      expect(await backupDataSource.query("SELECT id FROM pf2_schema_migration WHERE id = '019-catalogue-playable-components'")).toEqual([])
+      const witness = await backupDataSource.query("SELECT payload FROM pf2_record WHERE kind = 'pnj' AND id = 'backup-witness'") as Array<{ payload: string }>
+      expect(JSON.parse(witness[0].payload)).toEqual(expect.objectContaining({ id: 'backup-witness', name: 'Témoin de sauvegarde' }))
+    } finally {
+      await backupDataSource.destroy()
+    }
+
+    expect(await currentDataSource().query("SELECT id FROM pf2_schema_migration WHERE id = '019-catalogue-playable-components'")).toEqual([{ id: '019-catalogue-playable-components' }])
+    expect(await currentDataSource().query('PRAGMA integrity_check')).toEqual([{ integrity_check: 'ok' }])
+
+    await service.onModuleInit()
+    expect(await migrationBackups()).toEqual(backups)
+  })
+
+  it('does not apply a pending migration when its pre-migration backup cannot be created', async () => {
+    const service = await open()
+    await currentDataSource().query("DELETE FROM pf2_schema_migration WHERE id = '019-catalogue-playable-components'")
+    await rm(join(root, 'storage', 'backups'), { recursive: true, force: true })
+    await writeFile(join(root, 'storage', 'backups'), 'blocked')
+
+    await expect(service.onModuleInit()).rejects.toThrow()
+    expect(await currentDataSource().query("SELECT id FROM pf2_schema_migration WHERE id = '019-catalogue-playable-components'")).toEqual([])
+  })
+
+  it('stores the catalogue and geography in SQLite and preserves edits across reopen', async () => {
+    const first = await open()
+    await first.replaceCatalogueSnapshot({
+      schemaVersion: 2,
+      meta: { title: 'Test' },
+      sections: [{ id: 'campaigns', title: 'Campagnes', order: 1, description: '' }],
+      collections: [{ id: 'pfs-s1', sectionId: 'campaigns', parentId: null, kind: 'pfs-season', titleFr: 'Saison 1', order: 1 }],
+      entries: [{ id: 'pfs-s01-01', sectionId: 'campaigns', collectionId: 'pfs-s1', kind: 'pfs-scenario', titleFr: 'Initiation', titleOriginal: 'Initiation', aliases: [], regions: [], arcIds: [], documents: [], parts: [], openTable: { rating: 3 }, story: {}, characterHooks: [] }],
+      files: [{ id: 'pdf-1', path: 'Campagnes/test.pdf', filename: 'test.pdf', languageHint: 'en', association: { status: 'associé', itemId: 'pfs-s01-01', confidence: 'confirmé' } }],
+      arcs: [], narrativeThreads: []
+    })
+    await first.saveGeographyConfig({ aliases: { Absalom: 'Absalom' }, parents: {} })
+
+    const snapshot = await first.readCatalogueSnapshot()
+    expect((snapshot.entries as Array<Record<string, unknown>>).map((entry) => entry.id)).toEqual(['pfs-s01-01'])
+    expect((snapshot.files as Array<Record<string, unknown>>)[0]).toEqual(expect.objectContaining({ id: 'pdf-1', path: 'Campagnes/test.pdf' }))
+
+    await currentDataSource().destroy()
+    dataSource = undefined
+    const reopened = await open()
+    await expect(reopened.readGeographyConfig()).resolves.toEqual({ aliases: { Absalom: 'Absalom' }, parents: {} })
+    expect(((await reopened.readCatalogueSnapshot()).entries as Array<Record<string, unknown>>)[0]).toEqual(expect.objectContaining({ id: 'pfs-s01-01' }))
+  })
+
+  it('adds an empty playableComponents array once and replaces only that field', async () => {
+    const service = await open()
+    await service.replaceCatalogueSnapshot({
+      schemaVersion: 2, meta: {}, files: [], collections: [], arcs: [], sections: [], narrativeThreads: [], entries: [{
+        id: 'scenario-components', sectionId: 'campaigns', collectionId: null, kind: 'adventure', titleFr: 'Scénario', titleOriginal: null,
+        aliases: ['Conservé'], regions: [], arcIds: [], documents: [], parts: [], notes: 'Ne pas modifier', openTable: {}, story: {}, characterHooks: []
+      }]
+    })
+    await currentDataSource().query("DELETE FROM pf2_schema_migration WHERE id = '019-catalogue-playable-components'")
+    await currentDataSource().query("UPDATE pf2_catalogue_entity SET payload = json_remove(payload, '$.playableComponents') WHERE id = 'scenario-components'")
+    await service.onModuleInit()
+    expect(await service.getCatalogueEntity('scenario-components')).toEqual(expect.objectContaining({ aliases: ['Conservé'], notes: 'Ne pas modifier', playableComponents: [] }))
+
+    await service.replacePlayableComponents('scenario-components', [{
+      id: 'opening', title: 'Ouverture', description: 'La mission commence.', order: 1,
+      continuity: { mode: 'free', returnToHubPossible: true, recommendedSameParty: false, notes: '' }
+    }])
+    expect(await service.getCatalogueEntity('scenario-components')).toEqual(expect.objectContaining({ aliases: ['Conservé'], notes: 'Ne pas modifier', playableComponents: [expect.objectContaining({ id: 'opening' })] }))
+  })
+
+  it('keeps explicit scenario-to-PNJ relations across a reopen', async () => {
+    const first = await open()
+    await first.saveRecord('pnj', { id: 'captain-vara', nom: 'Capitaine Vara', description: '' })
+    await first.replaceScenarioNpcLinks('pfs-s01-01', [{ scenarioId: 'pfs-s01-01', npcId: 'captain-vara', role: 'alliée', importance: 'Récurrente', sourcePage: '8', notes: null }])
+    await currentDataSource().destroy()
+    dataSource = undefined
+    const reopened = await open()
+    await expect(reopened.listScenarioNpcLinks('pfs-s01-01')).resolves.toEqual([expect.objectContaining({ npcId: 'captain-vara', role: 'alliée' })])
+    await expect(reopened.listNpcScenarioLinks('captain-vara')).resolves.toEqual([expect.objectContaining({ scenarioId: 'pfs-s01-01' })])
+  })
+
+  it('hides only scenario-owned records when their scenario is excluded and restores them on reactivation', async () => {
+    const service = await open()
+    await service.replaceCatalogueSnapshot({
+      schemaVersion: 2, meta: {}, files: [], collections: [], arcs: [], sections: [], narrativeThreads: [], entries: [
+        { id: 'campaign-a', sectionId: 'campaigns', collectionId: null, kind: 'campaign', titleFr: 'Campagne A', titleOriginal: null, aliases: [], regions: [], arcIds: [], documents: [], parts: [], openTable: {}, story: {}, characterHooks: [] },
+        { id: 'scenario-a', sectionId: 'campaigns', collectionId: 'campaign-a', kind: 'adventure', titleFr: 'Scénario A', titleOriginal: null, aliases: [], regions: [], arcIds: [], documents: [], parts: [], openTable: {}, story: {}, characterHooks: [] },
+        { id: 'scenario-b', sectionId: 'campaigns', collectionId: null, kind: 'adventure', titleFr: 'Scénario B', titleOriginal: null, aliases: [], regions: [], arcIds: [], documents: [], parts: [], openTable: {}, story: {}, characterHooks: [] }
+      ]
+    })
+    await service.saveRecord('pnj', { id: 'scenario-a--captain', nom: 'Capitaine spécifique', scope: 'scenario', ownerScenarioId: 'scenario-a' })
+    await service.saveRecord('lieu', { id: 'scenario-a--lair', nom: 'Repaire spécifique', scope: 'scenario', ownerScenarioId: 'scenario-a' })
+    await service.saveRecord('pnj', { id: 'global-ally', nom: 'Allié global', scope: 'global' })
+    await service.saveRecord('pnj', { id: 'global-shared', nom: 'Partagé avec scénario B', scope: 'global' })
+    await service.saveCuration({ byId: { 'campaign-a': { excluded: true } } })
+
+    expect((await service.listRecords('pnj')).map((record) => record.id)).toEqual(['global-ally', 'global-shared'])
+    expect((await service.listRecords('lieu')).map((record) => record.id)).toEqual([])
+    expect((await service.listRecords('pnj', { includeExcluded: true })).map((record) => record.id)).toEqual(['global-ally', 'scenario-a--captain', 'global-shared'])
+
+    await service.saveCuration({ byId: { 'campaign-a': { excluded: true }, 'scenario-a': { inclusion: 'reinstated' } } })
+    expect((await service.listRecords('pnj')).map((record) => record.id)).toEqual(['global-ally', 'scenario-a--captain', 'global-shared'])
+    expect((await service.listRecords('lieu')).map((record) => record.id)).toEqual(['scenario-a--lair'])
+  })
+
+  it('replaces scenario business relations and rejects an unknown target', async () => {
+    const service = await open()
+    await service.saveRecord('lieu', { id: 'lieu-quantium', nom: 'Quantium' })
+    await service.saveRecord('region', { id: 'region-nex', nom: 'Nex' })
+    await service.replaceScenarioRelations('pfs-s01-01', [
+      { scenarioId: 'pfs-s01-01', targetKind: 'lieu', targetId: 'lieu-quantium', role: 'Lieu principal', importance: 'Majeure', sourcePage: '12', notes: null },
+      { scenarioId: 'pfs-s01-01', targetKind: 'region', targetId: 'region-nex', role: null, importance: null, sourcePage: null, notes: null }
+    ])
+    await expect(service.listScenarioRelations('pfs-s01-01')).resolves.toHaveLength(2)
+    await service.replaceScenarioRelations('pfs-s01-01', [{ scenarioId: 'pfs-s01-01', targetKind: 'lieu', targetId: 'lieu-quantium', role: null, importance: null, sourcePage: null, notes: 'Mis à jour' }])
+    await expect(service.listScenarioRelations('pfs-s01-01')).resolves.toEqual([expect.objectContaining({ targetId: 'lieu-quantium', notes: 'Mis à jour' })])
+    await expect(service.replaceScenarioRelations('pfs-s01-01', [{ scenarioId: 'pfs-s01-01', targetKind: 'faction', targetId: 'inconnue', role: null, importance: null, sourcePage: null, notes: null }])).rejects.toThrow('faction inconnu')
+  })
+
+  it('stores directed scenario dependencies and exposes reverse dependents', async () => {
+    const service = await open()
+    await service.replaceScenarioDependencies('scenario-b', [
+      { scenarioId: 'scenario-b', dependsOnScenarioId: 'scenario-a', relationType: 'required', source: 'Ordre de campagne', sourcePage: null, notes: 'B suit A' },
+      { scenarioId: 'scenario-b', dependsOnScenarioId: 'scenario-c', relationType: 'recommended', source: 'Référence narrative', sourcePage: '18', notes: null }
+    ])
+    await expect(service.listScenarioDependencies('scenario-b')).resolves.toEqual([
+      expect.objectContaining({ dependsOnScenarioId: 'scenario-a', relationType: 'required' }),
+      expect.objectContaining({ dependsOnScenarioId: 'scenario-c', relationType: 'recommended', sourcePage: '18' })
+    ])
+    await expect(service.listScenarioDependents('scenario-a')).resolves.toEqual([
+      expect.objectContaining({ scenarioId: 'scenario-b', relationType: 'required' })
+    ])
+    await expect(service.replaceScenarioDependencies('scenario-b', [
+      { scenarioId: 'scenario-b', dependsOnScenarioId: 'scenario-b', relationType: 'required', source: null, sourcePage: null, notes: null }
+    ])).rejects.toThrow('lui-même')
+  })
+
+  it('keeps omitted relation families and clears an explicitly empty family atomically', async () => {
+    const service = await open()
+    await service.saveRecord('lieu', { id: 'lieu-quantium', nom: 'Quantium' })
+    await service.replaceScenarioRelations('pfs-s01-01', [{ scenarioId: 'pfs-s01-01', targetKind: 'lieu', targetId: 'lieu-quantium', role: null, importance: null, sourcePage: null, notes: null }])
+    const packageInput = { scenarioId: 'pfs-s01-01', packageVersion: 1, status: 'integrated' as const, filename: 'test.zip', manifest: {} }
+    await service.importScenarioPackageAtomically({ records: [], npcLinks: [], relations: [], replaceRelationKinds: [], package: packageInput })
+    await expect(service.listScenarioRelations('pfs-s01-01')).resolves.toHaveLength(1)
+    await service.importScenarioPackageAtomically({ records: [], npcLinks: [], relations: [], replaceRelationKinds: ['lieu', 'region'], package: packageInput })
+    await expect(service.listScenarioRelations('pfs-s01-01')).resolves.toEqual([])
+  })
+
+  it('claims one scenario deployment atomically and records only a successful deployed version', async () => {
+    const service = await open()
+    const packageInput = { scenarioId: 'pfs-s01-09', packageVersion: 3, status: 'integrated' as const, filename: 'pfs-s01-09.zip', manifest: {} }
+    await service.importScenarioPackageAtomically({ records: [], npcLinks: [], relations: [], replaceRelationKinds: [], package: packageInput })
+    const queued = await service.enqueueScenarioDeployment('pfs-s01-09', 3)
+    expect(queued.status).toBe('pending')
+    await expect(service.getLatestScenarioDeployment('pfs-s01-09')).resolves.toEqual(expect.objectContaining({ id: queued.id, status: 'pending' }))
+    const [first, second] = await Promise.all([service.claimScenarioDeployment('world-a', 'gm-a'), service.claimScenarioDeployment('world-b', 'gm-b')])
+    const claimed = first ?? second
+    expect(claimed).toEqual(expect.objectContaining({ id: queued.id, status: 'claimed', scenarioId: 'pfs-s01-09', packageVersion: 3 }))
+    expect(first && second).toBeNull()
+    await service.finishScenarioDeployment(queued.id, claimed!.claimToken!, { deploymentId: queued.id, scenarioId: 'pfs-s01-09', packageVersion: 3, success: true, actors: {}, scenes: {}, journals: {}, errors: [] })
+    await expect(service.getScenarioPackage('pfs-s01-09')).resolves.toEqual(expect.objectContaining({ status: 'deployed', deployedVersion: 3 }))
+    const repeat = await service.enqueueScenarioDeployment('pfs-s01-09', 3)
+    expect(repeat).toEqual(expect.objectContaining({ id: queued.id, status: 'success' }))
+  })
+
+  it('queues reset operations and clears only scenario-owned application data', async () => {
+    const service = await open()
+    await service.saveRecord('pnj', { id: 'global-contact', nom: 'Contact global' })
+    await service.saveRecord('pnj', { id: 'scenario-a--local', nom: 'Local', scope: 'scenario', ownerScenarioId: 'scenario-a' })
+    await service.replaceScenarioNpcLinks('scenario-a', [
+      { scenarioId: 'scenario-a', npcId: 'global-contact', role: null, importance: null, sourcePage: null, notes: null },
+      { scenarioId: 'scenario-a', npcId: 'scenario-a--local', role: null, importance: null, sourcePage: null, notes: null }
+    ])
+    await service.saveCuration({ schemaVersion: 4, byId: { 'scenario-a': { preparationStatus: 'selected', playStatus: 'played', excluded: false } } })
+    await service.importScenarioPackageAtomically({ records: [], npcLinks: await service.listScenarioNpcLinks('scenario-a'), relations: [], replaceRelationKinds: [], package: { scenarioId: 'scenario-a', packageVersion: 2, status: 'integrated', filename: 'a.zip', manifest: {} } })
+    const reset = await service.enqueueScenarioDeployment('scenario-a', 0, { operation: 'reset', payload: { cleanupApp: true }, batchId: 'batch-reset', batchSequence: 1 })
+    expect(reset).toEqual(expect.objectContaining({ operation: 'reset', batchId: 'batch-reset', packageVersion: 0 }))
+    const claimed = await service.claimScenarioDeployment('world-a', 'gm-a')
+    expect(claimed).toEqual(expect.objectContaining({ operation: 'reset', payload: { cleanupApp: true } }))
+    await service.finishScenarioDeployment(reset.id, claimed!.claimToken!, { deploymentId: reset.id, scenarioId: 'scenario-a', packageVersion: 0, success: true, errors: [] })
+    await service.resetScenarioApplicationState('scenario-a')
+    await expect(service.getScenarioPackage('scenario-a')).resolves.toBeNull()
+    await expect(service.getRecord('pnj', 'scenario-a--local')).resolves.toBeNull()
+    await expect(service.getRecord('pnj', 'global-contact')).resolves.toEqual(expect.objectContaining({ id: 'global-contact' }))
+    await expect(service.listScenarioNpcLinks('scenario-a')).resolves.toEqual([expect.objectContaining({ npcId: 'global-contact' })])
+    await expect(service.readCuration()).resolves.toEqual(expect.objectContaining({ byId: { 'scenario-a': expect.objectContaining({ playStatus: 'played', excluded: false }) } }))
+  })
+
+  it('reclaims an expired lease and keeps the prior package state after a failure', async () => {
+    const service = await open()
+    const packageInput = { scenarioId: 'pfs-s01-10', packageVersion: 2, status: 'integrated' as const, filename: 'pfs-s01-10.zip', manifest: {} }
+    await service.importScenarioPackageAtomically({ records: [], npcLinks: [], relations: [], replaceRelationKinds: [], package: packageInput })
+    const queued = await service.enqueueScenarioDeployment('pfs-s01-10', 2)
+    const abandoned = await service.claimScenarioDeployment('world-a', 'gm-a', -1)
+    const reclaimed = await service.claimScenarioDeployment('world-b', 'gm-b')
+    expect(reclaimed).toEqual(expect.objectContaining({ id: queued.id, status: 'claimed', claimedBy: 'gm-b' }))
+    expect(reclaimed!.claimToken).not.toBe(abandoned!.claimToken)
+    await service.finishScenarioDeployment(queued.id, reclaimed!.claimToken!, { deploymentId: queued.id, scenarioId: 'pfs-s01-10', packageVersion: 2, success: false, actors: {}, scenes: {}, journals: {}, errors: ['Foundry hors ligne'] })
+    await expect(service.getScenarioPackage('pfs-s01-10')).resolves.toEqual(expect.objectContaining({ status: 'integrated', deployedVersion: null }))
+    await expect(service.getScenarioDeployment(queued.id)).resolves.toEqual(expect.objectContaining({ status: 'failed', error: 'Foundry hors ligne' }))
+  })
+
+  it('upgrades the previously generated generic session schema without losing its row', async () => {
+    dataSource = new DataSource({ type: 'sqlite', database })
+    await dataSource.initialize()
+    await dataSource.query('CREATE TABLE pf2_schema_migration (id TEXT PRIMARY KEY, applied_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)')
+    await dataSource.query('CREATE TABLE pf2_record (kind TEXT NOT NULL, id TEXT NOT NULL, name TEXT, payload TEXT NOT NULL, created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP, updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (kind, id))')
+    await dataSource.query('CREATE TABLE pf2_media (id TEXT PRIMARY KEY, category TEXT NOT NULL, path TEXT NOT NULL UNIQUE, original_name TEXT, mime_type TEXT, size_bytes INTEGER, created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP, updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)')
+    await dataSource.query('CREATE TABLE pf2_session (id TEXT PRIMARY KEY, occurred_on TEXT, metadata TEXT NOT NULL, created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP, updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)')
+    await dataSource.query("INSERT INTO pf2_schema_migration (id) VALUES ('001-initial-pf2-storage'), ('002-pf2-sessions')")
+    await dataSource.query('INSERT INTO pf2_session (id, occurred_on, metadata) VALUES (?, ?, ?)', ['seance-legacy', '2026-08-27', JSON.stringify({ title: 'Séance existante', participants: ['Actor.yaz'], sessionXp: 300, longSummary: 'https://wiki.example.test/seances/legacy' })])
+
+    const service = new Pf2PersistenceService(dataSource)
+    await service.onModuleInit()
+
+    await expect(service.getSession('seance-legacy')).resolves.toEqual(expect.objectContaining({ id: 'seance-legacy', sessionNumber: 1, date: '2026-08-27', title: 'Séance existante', participants: ['Actor.yaz'], sessionXp: 300 }))
+    expect(await currentDataSource().query("SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'pf2_session_legacy_002'")).toEqual([{ name: 'pf2_session_legacy_002' }])
+  })
+})

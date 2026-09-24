@@ -1,0 +1,397 @@
+{
+  "formatVersion": 3,
+  "library": {
+    "root": "Campagnes",
+    "category": "Agents d'Absalom",
+    "collection": "Volume 1"
+  },
+  "scenario": {
+    "id": "AOE-03",
+    "name": "Pas de compromis",
+    "tier": "9–11",
+    "source": "Agents d'Absalom — Volume 1",
+    "summary": "Les agents négocient au milieu d’une guerre de gangs, infiltrent le Nimbus chanceux et tentent d’empêcher un attentat lors des jeux de l’Irorium."
+  },
+  "journal": {
+    "title": "AOE-03 — Pas de compromis"
+  },
+  "actors": [
+    {
+      "key": "voyou-de-gang",
+      "name": "Voyou De Gang",
+      "type": "reference",
+      "lookup": "Voyou De Gang",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 7 — relevé dans le PDF p. 136"
+    },
+    {
+      "key": "solly-et-hooper",
+      "name": "Solly Et Hooper",
+      "type": "reference",
+      "lookup": "Solly Et Hooper",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 7 — relevé dans le PDF p. 138"
+    },
+    {
+      "key": "irwist-et-quickle",
+      "name": "Irwist Et Quickle",
+      "type": "reference",
+      "lookup": "Irwist Et Quickle",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 7 — relevé dans le PDF p. 138"
+    },
+    {
+      "key": "meladaemon",
+      "name": "Méladaémon",
+      "type": "reference",
+      "lookup": "Méladaémon",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 11 — relevé dans le PDF p. 140"
+    },
+    {
+      "key": "avarek",
+      "name": "Avarek",
+      "type": "reference",
+      "lookup": "Avarek",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 8 — relevé dans le PDF p. 143"
+    },
+    {
+      "key": "piola-et-le-rustre",
+      "name": "Piola Et Le Rustre",
+      "type": "reference",
+      "lookup": "Piola Et Le Rustre",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 6 — relevé dans le PDF p. 146"
+    },
+    {
+      "key": "jinae-et-wurts",
+      "name": "Jinae Et Wurts",
+      "type": "reference",
+      "lookup": "Jinae Et Wurts",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 9 — relevé dans le PDF p. 146"
+    },
+    {
+      "key": "c6-perron",
+      "name": "C6. Perron",
+      "type": "reference",
+      "lookup": "C6. Perron",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 9 — relevé dans le PDF p. 146"
+    },
+    {
+      "key": "marches-pleines-d-aiguilles",
+      "name": "Marches Pleines D’Aiguilles",
+      "type": "reference",
+      "lookup": "Marches Pleines D’Aiguilles",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "hazard",
+      "note": "Niveau 11 — relevé dans le PDF p. 147"
+    },
+    {
+      "key": "margy-et-espon",
+      "name": "Margy Et Espon",
+      "type": "reference",
+      "lookup": "Margy Et Espon",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 8 — relevé dans le PDF p. 148"
+    },
+    {
+      "key": "berleth-le-sanguinaire",
+      "name": "Berleth Le Sanguinaire",
+      "type": "reference",
+      "lookup": "Berleth Le Sanguinaire",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 11 — relevé dans le PDF p. 149"
+    },
+    {
+      "key": "videur-du-casino",
+      "name": "Videur Du Casino",
+      "type": "reference",
+      "lookup": "Videur Du Casino",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 8 — relevé dans le PDF p. 152"
+    },
+    {
+      "key": "assassins-svartalfars",
+      "name": "Assassins Svartalfars",
+      "type": "reference",
+      "lookup": "Assassins Svartalfars",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 8 — relevé dans le PDF p. 171"
+    },
+    {
+      "key": "gardes-de-la-salle-des-coffres",
+      "name": "Gardes De La Salle Des Coffres",
+      "type": "reference",
+      "lookup": "Gardes De La Salle Des Coffres",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 9 — relevé dans le PDF p. 167"
+    },
+    {
+      "key": "ekimilixus",
+      "name": "Ekimilixus",
+      "type": "reference",
+      "lookup": "Ekimilixus",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 12 — relevé dans le PDF p. 168"
+    },
+    {
+      "key": "scathka",
+      "name": "Scathka",
+      "type": "reference",
+      "lookup": "Scathka",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 12 — relevé dans le PDF p. 171"
+    },
+    {
+      "key": "piege-du-nuage-de-poison-acide",
+      "name": "Piège Du Nuage De Poison Acide",
+      "type": "reference",
+      "lookup": "Piège Du Nuage De Poison Acide",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "hazard",
+      "note": "Niveau 13 — relevé dans le PDF p. 174"
+    },
+    {
+      "key": "eberarks",
+      "name": "Eberarks",
+      "type": "reference",
+      "lookup": "Eberarks",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 10 — relevé dans le PDF p. 177"
+    },
+    {
+      "key": "squelettes-iroriens",
+      "name": "Squelettes Iroriens",
+      "type": "reference",
+      "lookup": "Squelettes Iroriens",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 11 — relevé dans le PDF p. 180"
+    },
+    {
+      "key": "tsunamis-elementaires-faibles",
+      "name": "Tsunamis Élémentaires Faibles",
+      "type": "reference",
+      "lookup": "Tsunamis Élémentaires Faibles",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 10 — relevé dans le PDF p. 182"
+    },
+    {
+      "key": "mercenaires-de-shikwashim",
+      "name": "Mercenaires De Shikwashim",
+      "type": "reference",
+      "lookup": "Mercenaires De Shikwashim",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 9 — relevé dans le PDF p. 186"
+    },
+    {
+      "key": "pieges-des-bacs-d-eau-bouillante",
+      "name": "Pièges Des Bacs D’Eau Bouillante",
+      "type": "reference",
+      "lookup": "Pièges Des Bacs D’Eau Bouillante",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "hazard",
+      "note": "Niveau 13 — relevé dans le PDF p. 184"
+    },
+    {
+      "key": "franca-laurentz",
+      "name": "Franca Laurentz",
+      "type": "reference",
+      "lookup": "Franca Laurentz",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 13 — relevé dans le PDF p. 185"
+    },
+    {
+      "key": "buckshuck-le-brave",
+      "name": "Buckshuck Le Brave",
+      "type": "reference",
+      "lookup": "Buckshuck Le Brave",
+      "preferredPack": "pf2e.agents-of-edgewatch-bestiary",
+      "actorType": "npc",
+      "note": "Niveau 7 — relevé dans le PDF p. 186"
+    }
+  ],
+  "encounters": [
+    {
+      "id": "CH1",
+      "name": "Chapitre 1 — La justice de la rue",
+      "location": "Absalom",
+      "notes": "Index des créatures et dangers rencontrés dans ce chapitre. Les quantités exactes restent indiquées dans le PDF lorsque plusieurs occurrences utilisent la même fiche.",
+      "groups": [
+        {
+          "tier": "Niveaux 9–11",
+          "creatures": [
+            {
+              "actor": "voyou-de-gang",
+              "count": "selon la rencontre",
+              "note": "Niveau 7 — PDF p. 136"
+            },
+            {
+              "actor": "solly-et-hooper",
+              "count": "selon la rencontre",
+              "note": "Niveau 7 — PDF p. 138"
+            },
+            {
+              "actor": "irwist-et-quickle",
+              "count": "selon la rencontre",
+              "note": "Niveau 7 — PDF p. 138"
+            },
+            {
+              "actor": "meladaemon",
+              "count": "selon la rencontre",
+              "note": "Niveau 11 — PDF p. 140"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "CH2",
+      "name": "Chapitre 2 — La maison gagne toujours",
+      "location": "Absalom",
+      "notes": "Index des créatures et dangers rencontrés dans ce chapitre. Les quantités exactes restent indiquées dans le PDF lorsque plusieurs occurrences utilisent la même fiche.",
+      "groups": [
+        {
+          "tier": "Niveaux 9–11",
+          "creatures": [
+            {
+              "actor": "avarek",
+              "count": "selon la rencontre",
+              "note": "Niveau 8 — PDF p. 143"
+            },
+            {
+              "actor": "piola-et-le-rustre",
+              "count": "selon la rencontre",
+              "note": "Niveau 6 — PDF p. 146"
+            },
+            {
+              "actor": "jinae-et-wurts",
+              "count": "selon la rencontre",
+              "note": "Niveau 9 — PDF p. 146"
+            },
+            {
+              "actor": "c6-perron",
+              "count": "selon la rencontre",
+              "note": "Niveau 9 — PDF p. 146"
+            },
+            {
+              "actor": "marches-pleines-d-aiguilles",
+              "count": "selon la rencontre",
+              "note": "Niveau 11 — PDF p. 147"
+            },
+            {
+              "actor": "margy-et-espon",
+              "count": "selon la rencontre",
+              "note": "Niveau 8 — PDF p. 148"
+            },
+            {
+              "actor": "berleth-le-sanguinaire",
+              "count": "selon la rencontre",
+              "note": "Niveau 11 — PDF p. 149"
+            },
+            {
+              "actor": "videur-du-casino",
+              "count": "selon la rencontre",
+              "note": "Niveau 8 — PDF p. 152"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "CH3",
+      "name": "Chapitre 3 — Jeux mortels",
+      "location": "Absalom",
+      "notes": "Index des créatures et dangers rencontrés dans ce chapitre. Les quantités exactes restent indiquées dans le PDF lorsque plusieurs occurrences utilisent la même fiche.",
+      "groups": [
+        {
+          "tier": "Niveaux 9–11",
+          "creatures": [
+            {
+              "actor": "assassins-svartalfars",
+              "count": "selon la rencontre",
+              "note": "Niveau 8 — PDF p. 171"
+            },
+            {
+              "actor": "gardes-de-la-salle-des-coffres",
+              "count": "selon la rencontre",
+              "note": "Niveau 9 — PDF p. 167"
+            },
+            {
+              "actor": "ekimilixus",
+              "count": "selon la rencontre",
+              "note": "Niveau 12 — PDF p. 168"
+            },
+            {
+              "actor": "scathka",
+              "count": "selon la rencontre",
+              "note": "Niveau 12 — PDF p. 171"
+            },
+            {
+              "actor": "piege-du-nuage-de-poison-acide",
+              "count": "selon la rencontre",
+              "note": "Niveau 13 — PDF p. 174"
+            },
+            {
+              "actor": "eberarks",
+              "count": "selon la rencontre",
+              "note": "Niveau 10 — PDF p. 177"
+            },
+            {
+              "actor": "squelettes-iroriens",
+              "count": "selon la rencontre",
+              "note": "Niveau 11 — PDF p. 180"
+            },
+            {
+              "actor": "tsunamis-elementaires-faibles",
+              "count": "selon la rencontre",
+              "note": "Niveau 10 — PDF p. 182"
+            },
+            {
+              "actor": "mercenaires-de-shikwashim",
+              "count": "selon la rencontre",
+              "note": "Niveau 9 — PDF p. 186"
+            },
+            {
+              "actor": "pieges-des-bacs-d-eau-bouillante",
+              "count": "selon la rencontre",
+              "note": "Niveau 13 — PDF p. 184"
+            },
+            {
+              "actor": "franca-laurentz",
+              "count": "selon la rencontre",
+              "note": "Niveau 13 — PDF p. 185"
+            },
+            {
+              "actor": "buckshuck-le-brave",
+              "count": "selon la rencontre",
+              "note": "Niveau 7 — PDF p. 186"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
