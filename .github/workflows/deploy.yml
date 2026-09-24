@@ -96,5 +96,7 @@ jobs:
           printf '%s' "$GHCR_TOKEN" | ssh -i ~/.ssh/id_ed25519 "valou@$DEPLOY_HOST" \
             "docker login ghcr.io -u '$GHCR_USER' --password-stdin >/dev/null && \
              cd /home/valou/services/lsr-nestjs-backend && \
+             git fetch --quiet https://github.com/ValerianGuivarch/lsr-nestjs-backend.git main && \
+             git merge --ff-only FETCH_HEAD && \
              ./deploy/linux/scripts/deploy-main.sh '${GITHUB_SHA}'; \
              rc=\$?; docker logout ghcr.io >/dev/null 2>&1 || true; exit \$rc"
