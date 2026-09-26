@@ -14,7 +14,8 @@
 	function normalized( value ) { return value.toLocaleLowerCase(); }
 	function list( payload, node ) {
 		heading( 'Journaux' );
-		var h = document.createElement( 'h2' ); h.textContent = 'Journaux'; node.appendChild( h );
+		var revealedCount = payload.data.filter( function ( item ) { return item.revealed; } ).length;
+		var h = document.createElement( 'h2' ); h.textContent = 'Journaux : ' + revealedCount + ' sur ' + payload.data.length; node.appendChild( h );
 		var search = document.createElement( 'input' ); search.type = 'search'; search.className = 'pf2-journal-search'; search.placeholder = 'Rechercher un journal'; search.setAttribute( 'aria-label', 'Rechercher un journal par titre' ); node.appendChild( search );
 		var grid = document.createElement( 'div' ); grid.className = 'pf2-journal-grid'; node.appendChild( grid );
 		function render() {
