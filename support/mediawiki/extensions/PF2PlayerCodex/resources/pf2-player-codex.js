@@ -22,9 +22,10 @@
 		}
 		return factions.slice().sort( function ( a, b ) { return path( a ).localeCompare( path( b ), 'fr' ); } );
 	}
-	function addFactionOptions( select, factions, allLabel ) {
+	function addFactionOptions( select, factions, allLabel, hierarchy ) {
+		var source = hierarchy || factions;
 		if ( allLabel ) { var all = document.createElement( 'option' ); all.value = ''; all.textContent = allLabel; select.appendChild( all ); }
-		sortedFactions( factions ).forEach( function ( faction ) { var option = document.createElement( 'option' ); option.value = faction.id; option.textContent = factionLabel( faction, factions ); select.appendChild( option ); } );
+		sortedFactions( source ).filter( function ( item ) { return factions.some( function ( faction ) { return faction.id === item.id; } ); } ).forEach( function ( faction ) { var option = document.createElement( 'option' ); option.value = faction.id; option.textContent = factionLabel( faction, source ); select.appendChild( option ); } );
 	}
 	function characterCard( character ) {
 		var card = document.createElement( 'article' ); card.className = 'pf2-player-card';
@@ -71,7 +72,7 @@
 		character.factions.forEach( function ( known ) { var item = document.createElement( 'li' ); item.appendChild( link( known.wikiPageTitle, known.name ) ); if ( data.canEdit ) { var remove = document.createElement( 'button' ); remove.textContent = 'Retirer'; remove.onclick = function () { request( 'removeFaction', character.npcId, known.id, {} ).then( function () { window.location.reload(); } ).catch( function ( error ) { mw.notify( errorMessage( error, 'Retrait impossible' ), { type: 'error' } ); } ); }; item.appendChild( remove ); } factionList.appendChild( item ); } );
 		if ( data.canEdit ) {
 			var row = document.createElement( 'div' ); row.className = 'pf2-player-faction-add';
-			var select = document.createElement( 'select' ); var available = data.factions.filter( function ( f ) { return !character.factions.some( function ( current ) { return current.id === f.id; } ); } ); addFactionOptions( select, available, null ); row.appendChild( select );
+			var select = document.createElement( 'select' ); var available = data.factions.filter( function ( f ) { return !character.factions.some( function ( current ) { return current.id === f.id; } ); } ); addFactionOptions( select, available, null, data.factions ); row.appendChild( select );
 			var add = document.createElement( 'button' ); add.textContent = 'Ajouter une faction'; add.onclick = function () { if ( select.value ) { request( 'addFaction', character.npcId, select.value, {} ).then( function () { window.location.reload(); } ).catch( function ( error ) { mw.notify( errorMessage( error, 'Ajout impossible' ), { type: 'error' } ); } ); } }; row.appendChild( add ); main.appendChild( row );
 		}
 		var wikiContent = document.createElement( 'div' ); wikiContent.className = 'pf2-player-wiki-content';
