@@ -8,8 +8,9 @@
 @media screen and (max-width: 950px) { .pf2-journal-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); } }
 @media screen and (max-width: 760px) { .pf2-journal-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 @media screen and (max-width: 520px) { .pf2-journal-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-.pf2-journal-revealed { background: #fffdf8; }
-.pf2-journal-locked { opacity: .62; background: #f1ece0; cursor: not-allowed; }
+.pf2-journal-revealed { background: #f5fbf2; border-color: #8eaf7f; box-shadow: inset 3px 0 0 #6f965f; }
+.pf2-journal-revealed a { color: #275d2d; }
+.pf2-journal-locked { opacity: .48; background: #e8e8e8; border-color: #c5c5c5; color: #6f6f6f; cursor: not-allowed; filter: grayscale(.3); }
 .pf2-journal-locked a { cursor: pointer; }
 .pf2-journal-locked small { display: none; }
 .pf2-journal-admin-notice { padding: .75rem 1rem; font-weight: 700; color: #7c2418; background: #fae2dd; border-left: 5px solid #9f3426; }
