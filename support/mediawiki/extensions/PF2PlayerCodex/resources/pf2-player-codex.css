@@ -3,27 +3,25 @@
 .pf2-player-card a { font-weight:bold; font-size:1.1rem; }
 .pf2-player-card p { margin:.2rem 0 0; }
 .pf2-player-list { display:grid; grid-template-columns:repeat(4, minmax(0, 1fr)); gap:1rem; margin-top:1rem; }
+.pf2-player-filters { display:flex; flex-wrap:wrap; gap:.5rem; align-items:center; margin:.4rem 0 .8rem; }
+.pf2-player-filters input { flex:1 1 18rem; min-width:14rem; }
+.pf2-player-filters select { min-width:10rem; }
 @media screen and (max-width:1100px) { .pf2-player-list { grid-template-columns:repeat(3, minmax(0, 1fr)); } }
 @media screen and (max-width:800px) { .pf2-player-list { grid-template-columns:repeat(2, minmax(0, 1fr)); } }
 @media screen and (max-width:520px) { .pf2-player-list { grid-template-columns:1fr; } }
 #pf2-player-codex { margin:0 0 1.25rem; padding:.75rem; border:1px solid #a78b4f; border-radius:.4rem; }
 #pf2-player-codex button, #pf2-player-codex select, #pf2-player-codex input { margin:.25rem; }
-
-.pf2-player-character-header {
-    display: flex;
-    gap: 1.25rem;
-    align-items: flex-start;
-    margin-bottom: 1.25rem;
-}
-
-.pf2-player-character-portrait {
-    width: 220px;
-    max-width: 40%;
-    max-height: 320px;
-    object-fit: contain;
-    border-radius: .4rem;
-}
-
-.pf2-player-character-header h2 {
-    margin-top: 0;
+.pf2-player-character-layout { display:grid; grid-template-columns:minmax(180px, 240px) minmax(0, 1fr); gap:1.25rem; align-items:start; }
+.pf2-player-character-side { display:flex; flex-direction:column; gap:.5rem; }
+.pf2-player-character-portrait { width:100%; max-height:420px; object-fit:contain; object-position:center top; border-radius:.4rem; }
+.pf2-player-character-main > h2 { margin-top:0; }
+.pf2-player-character-factions { margin:.2rem 0 .5rem; padding-left:1.2rem; }
+.pf2-player-character-factions li { margin:.2rem 0; }
+.pf2-player-character-factions button { margin-left:.5rem; }
+.pf2-player-faction-add { display:flex; flex-wrap:wrap; gap:.25rem; align-items:center; margin-bottom:.75rem; }
+.pf2-player-wiki-content { margin-top:.75rem; }
+.pf2-player-wiki-content > :first-child { margin-top:0; }
+@media screen and (max-width:700px) {
+  .pf2-player-character-layout { grid-template-columns:1fr; }
+  .pf2-player-character-side { max-width:260px; }
 }
