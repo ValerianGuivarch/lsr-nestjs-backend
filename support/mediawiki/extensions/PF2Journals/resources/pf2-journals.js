@@ -28,7 +28,7 @@
 	}
 	function detail( payload, node ) {
 		var item = payload.data; heading( 'Journal ' + item.number + ' — ' + item.title ); var h = document.createElement( 'h2' ); h.textContent = item.number + ' - ' + item.title; node.appendChild( h );
-		if ( !item.revealed ) { if ( !payload.canAdmin || typeof item.content !== 'string' ) { var hidden = document.createElement( 'p' ); hidden.className = 'pf2-journal-hidden'; hidden.textContent = 'Journal non révélé'; node.appendChild( hidden ); return; } var notice = document.createElement( 'p' ); notice.className = 'pf2-journal-admin-notice'; notice.textContent = 'Non disponible pour le moment'; node.appendChild( notice ); }
+		if ( !item.revealed ) { if ( !payload.canAdmin || typeof item.content !== 'string' ) { var hidden = document.createElement( 'p' ); hidden.className = 'pf2-journal-hidden'; hidden.textContent = 'Journal non révélé'; node.appendChild( hidden ); return; } var notice = document.createElement( 'p' ); notice.className = 'pf2-journal-admin-notice'; notice.textContent = 'Journal non révélé'; node.appendChild( notice ); }
 		var content = document.createElement( 'div' ); content.className = 'pf2-journal-content'; content.textContent = item.content || ''; node.appendChild( content );
 	}
 	$( function () {
