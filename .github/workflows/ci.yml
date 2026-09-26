@@ -30,3 +30,6 @@ jobs:
 
       - name: Build admin image
         run: docker build -f deploy/linux/Dockerfile --target admin-jdr -t lsr-admin-jdr:ci .
+
+      - name: Build Golarion map image
+        run: docker build -f deploy/linux/Dockerfile --target golarion-map -t lsr-golarion-map:ci .
