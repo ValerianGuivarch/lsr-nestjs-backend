@@ -31,6 +31,8 @@ jobs:
             image: lsr-web
           - target: admin-jdr
             image: lsr-admin-jdr
+          - target: golarion-map
+            image: lsr-golarion-map
     steps:
       - uses: actions/checkout@v4
 
