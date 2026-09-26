@@ -33,17 +33,6 @@
 	}
 	$( function () {
 		var current = page(); var journal = number( current ); if ( current !== 'Journaux' && journal === null ) { return; } var node = root(); if ( !node ) { return; }
-		new mw.Api().get( { action: 'pf2journals', format: 'json', number: journal || undefined } ).then( function ( response ) {
-			if ( current === 'Journaux' ) { list( response.pf2journals, node ); return; }
-			var payload = response.pf2journals;
-			if ( payload && payload.canAdmin && payload.data && !payload.data.revealed && typeof payload.data.content !== 'string' ) {
-				return new mw.Api().get( { action: 'pf2journals', format: 'json', admin: 1 } ).then( function ( adminResponse ) {
-					var adminPayload = adminResponse.pf2journals;
-					var item = adminPayload && Array.isArray( adminPayload.data ) ? adminPayload.data.find( function ( candidate ) { return candidate.number === journal; } ) : null;
-					if ( item ) { detail( { data: Object.assign( {}, item, { revealed: 0 } ), canAdmin: 1 }, node ); } else { detail( payload, node ); }
-				} );
-			}
-			detail( payload, node );
-		} ).catch( function () { node.textContent = 'Impossible de charger les journaux.'; } );
+		new mw.Api().get( { action: 'pf2journals', format: 'json', number: journal || undefined } ).then( function ( response ) { if ( current === 'Journaux' ) { list( response.pf2journals, node ); } else { detail( response.pf2journals, node ); } } ).catch( function () { node.textContent = 'Impossible de charger les journaux.'; } );
 	} );
 }() );

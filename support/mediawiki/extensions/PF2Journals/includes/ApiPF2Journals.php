@@ -8,7 +8,7 @@ class ApiPF2Journals extends ApiBase {
         if ( ( $number > 0 || $adminCatalogue ) && $canAdmin && (string)$config->get( 'PF2JournalsInternalKey' ) !== '' ) { $headers['X-PF2-Journals-Key'] = (string)$config->get( 'PF2JournalsInternalKey' ); }
         if ( $adminCatalogue && !$canAdmin ) { $this->dieWithError( 'Vous devez être administrateur pour éditer les journaux.' ); }
         $url = $adminCatalogue ? $base . '/journals/admin/catalogue' : ( $number > 0 ? $base . '/journals/' . rawurlencode( (string)$number ) : $base . '/journals' );
-        $request = MediaWikiServices::getInstance()->getHttpRequestFactory()->create( $url, [ 'method' => 'GET', 'timeout' => 10, 'headers' => $headers ], __METHOD__ ); $status = $request->execute();
+        $request = MediaWikiServices::getInstance()->getHttpRequestFactory()->create( $url, [ 'method' => 'GET', 'timeout' => 10 ], __METHOD__ ); foreach ( $headers as $name => $value ) { $request->setHeader( $name, $value ); } $status = $request->execute();
         if ( !$status->isOK() ) { $this->dieWithError( 'Impossible de charger les journaux PF2.' ); }
         $data = json_decode( $request->getContent(), true ); if ( !is_array( $data ) ) { $this->dieWithError( 'Réponse Journaux PF2 invalide.' ); }
         // ApiResult sérialise le booléen PHP true sous la forme d'une chaîne
