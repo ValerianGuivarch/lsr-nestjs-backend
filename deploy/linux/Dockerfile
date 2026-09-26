@@ -20,6 +20,9 @@ RUN npm run build:web:misc
 FROM source AS admin-jdr-build
 RUN npm run build:admin-jdr
 
+FROM source AS golarion-map-build
+RUN npm run build:golarion-map
+
 FROM node:22-bookworm-slim AS api-base
 WORKDIR /app
 ENV NODE_ENV=production HOST=0.0.0.0
@@ -54,3 +57,12 @@ RUN chmod +x /usr/local/bin/start-admin
 COPY --from=admin-jdr-build /app/dist/apps/admin-jdr /usr/share/nginx/html
 EXPOSE 80
 ENTRYPOINT ["/usr/local/bin/start-admin"]
+
+
+FROM node:22-bookworm-slim AS golarion-map
+WORKDIR /app
+ENV NODE_ENV=production GOLARION_MAP_HOST=0.0.0.0 GOLARION_MAP_PORT=4204 GOLARION_MAP_ASSETS_DIR=/app/map-assets
+COPY --from=golarion-map-build /app/dist/apps/web-golarion-map ./dist/apps/web-golarion-map
+COPY --from=source /app/apps/web-golarion-map/server.mjs ./apps/web-golarion-map/server.mjs
+EXPOSE 4204
+CMD ["node", "apps/web-golarion-map/server.mjs"]
