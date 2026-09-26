@@ -19,6 +19,8 @@ services:
       - db
     ports:
       - "4205:80"
+    environment:
+      PF2_JOURNALS_INTERNAL_KEY: ${PF2_JOURNALS_INTERNAL_KEY:-}
     extra_hosts:
       - "host.docker.internal:host-gateway"
     volumes:

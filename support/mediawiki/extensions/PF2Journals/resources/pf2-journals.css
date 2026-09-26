@@ -1,14 +1,22 @@
-#pf2-journals { max-width: 1120px; }
+#pf2-journals { max-width: 100%; }
 #ca-edit, #ca-move, #ca-delete, #ca-viewsource { display: none !important; }
-.pf2-journal-search { box-sizing: border-box; width: min(100%, 28rem); margin-top: .25rem; padding: .55rem .7rem; font: inherit; }
-.pf2-journal-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; margin-top: 1rem; }
-.pf2-journal-card { display: flex; flex-direction: column; justify-content: center; gap: .35rem; min-height: 6.5rem; padding: 1rem; border: 1px solid #d5c8ad; border-radius: 7px; }
-.pf2-journal-card a { font-weight: 700; }
-@media screen and (max-width: 850px) { .pf2-journal-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-@media screen and (max-width: 560px) { .pf2-journal-grid { grid-template-columns: 1fr; } }
+.pf2-journal-search { box-sizing: border-box; width: min(100%, 24rem); margin-top: .15rem; padding: .4rem .55rem; font: inherit; }
+.pf2-journal-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: .35rem; margin-top: .55rem; }
+.pf2-journal-card { display: flex; align-items: center; min-width: 0; min-height: 2.6rem; padding: .35rem .5rem; border: 1px solid #d5c8ad; border-radius: 5px; font-size: .82rem; line-height: 1.15; }
+.pf2-journal-card a { display: block; min-width: 0; width: 100%; font-weight: 600; line-height: 1.15; overflow-wrap: anywhere; }
+@media screen and (max-width: 1150px) { .pf2-journal-grid { grid-template-columns: repeat(6, minmax(0, 1fr)); } }
+@media screen and (max-width: 950px) { .pf2-journal-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); } }
+@media screen and (max-width: 760px) { .pf2-journal-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media screen and (max-width: 520px) { .pf2-journal-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 .pf2-journal-revealed { background: #fffdf8; }
 .pf2-journal-locked { opacity: .62; background: #f1ece0; cursor: not-allowed; }
-.pf2-journal-locked a { cursor: pointer; }.pf2-journal-locked small { color: #6d5a36; }
+.pf2-journal-locked a { cursor: pointer; }
+.pf2-journal-locked small { display: none; }
 .pf2-journal-admin-notice { padding: .75rem 1rem; font-weight: 700; color: #7c2418; background: #fae2dd; border-left: 5px solid #9f3426; }
-.pf2-journal-hidden { font-weight: 700; color: #665b47; }.pf2-journal-content { white-space: pre-wrap; line-height: 1.6; }
-.pf2-journal-editor { max-width: 920px; margin-top: 2rem; padding: 1rem; border: 2px solid #8b671f; background: #fff9e9; }.pf2-journal-editor > p { color: #594c31; }.pf2-journal-editor button { margin: .4rem .4rem .4rem 0; }.pf2-journal-editor-row { display: flex; gap: .5rem; align-items: center; padding: .45rem 0; border-top: 1px solid #d5c8ad; }.pf2-journal-editor-row strong { flex: 1; }
+.pf2-journal-hidden { font-weight: 700; color: #665b47; }
+.pf2-journal-content { white-space: pre-wrap; line-height: 1.6; }
+.pf2-journal-editor { max-width: 920px; margin-top: 2rem; padding: 1rem; border: 2px solid #8b671f; background: #fff9e9; }
+.pf2-journal-editor > p { color: #594c31; }
+.pf2-journal-editor button { margin: .4rem .4rem .4rem 0; }
+.pf2-journal-editor-row { display: flex; gap: .5rem; align-items: center; padding: .45rem 0; border-top: 1px solid #d5c8ad; }
+.pf2-journal-editor-row strong { flex: 1; }
