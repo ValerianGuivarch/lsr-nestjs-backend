@@ -101,3 +101,28 @@ services:
       interval: 10s
       timeout: 5s
       retries: 6
+
+
+  map:
+    image: ghcr.io/valerianguivarch/lsr-golarion-map:${APP_VERSION:-main}
+    build:
+      context: ../..
+      dockerfile: deploy/linux/Dockerfile
+      target: golarion-map
+    restart: unless-stopped
+    env_file:
+      - ${APP_ENV_FILE:-../../.env}
+    environment:
+      GOLARION_MAP_HOST: 0.0.0.0
+      GOLARION_MAP_PORT: 4204
+      GOLARION_MAP_ASSETS_DIR: /app/map-assets
+    volumes:
+      - ${GOLARION_MAP_ASSETS_HOST_DIR:-../../../golarion-map-build/mapping/frontend/public}:/app/map-assets:ro
+    ports:
+      - "4204:4204"
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"fetch('http://127.0.0.1:4204/mj').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))\""]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
