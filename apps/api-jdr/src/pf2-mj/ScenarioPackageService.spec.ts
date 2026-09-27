@@ -115,14 +115,16 @@ describe('ScenarioPackageService', () => {
     )
   })
 
-  it('derives transverse PNJs from their explicit scenario links and exposes campaign filters', async () => {
+  it('derives transverse PNJs from curated scope while keeping scenario links and exposes campaign filters', async () => {
     const service = new ScenarioPackageService(persistence)
     persistence.listRecords.mockResolvedValueOnce([
-      { id: 'npc-contact', nom: 'Contact de PJ' },
-      { id: 'npc-module', nom: 'PNJ du module' }
+      { id: 'npc-contact', nom: 'Contact de PJ', scope: 'global' },
+      { id: 'npc-module', nom: 'PNJ du module', scope: 'scenario', ownerScenarioId: 'campaign-adventure-1' },
+      { id: 'npc-recurring', nom: 'PNJ récurrent', scope: 'global' }
     ])
     persistence.listNpcScenarioLinksForNpcs.mockResolvedValueOnce([
-      { npcId: 'npc-module', scenarioId: 'campaign-adventure-1', role: 'Antagoniste', importance: 'Majeure', sourcePage: null, notes: null }
+      { npcId: 'npc-module', scenarioId: 'campaign-adventure-1', role: 'Antagoniste', importance: 'Majeure', sourcePage: null, notes: null },
+      { npcId: 'npc-recurring', scenarioId: 'campaign-adventure-1', role: 'Contact', importance: 'Récurrente', sourcePage: null, notes: null }
     ])
     persistence.listCatalogueEntries.mockResolvedValueOnce([
       { id: 'campaign', kind: 'campaign', titleFr: 'Campagne', parts: [{ id: 'campaign-adventure-1', kind: 'volume_aventure', titleFr: 'Aventure 1' }] }
@@ -131,31 +133,32 @@ describe('ScenarioPackageService', () => {
     expect(directory).toEqual(expect.objectContaining({
       items: expect.arrayContaining([
         expect.objectContaining({ id: 'npc-contact', transverse: true, scenarioLinks: [] }),
-        expect.objectContaining({ id: 'npc-module', transverse: false, scenarioLinks: [expect.objectContaining({ scenarioId: 'campaign-adventure-1', campaignId: 'campaign', name: 'Aventure 1' })] })
+        expect.objectContaining({ id: 'npc-module', transverse: false, scenarioLinks: [expect.objectContaining({ scenarioId: 'campaign-adventure-1', campaignId: 'campaign', name: 'Aventure 1' })] }),
+        expect.objectContaining({ id: 'npc-recurring', transverse: true, scenarioLinks: [expect.objectContaining({ scenarioId: 'campaign-adventure-1', campaignId: 'campaign', name: 'Aventure 1' })] })
       ]),
       filters: expect.objectContaining({ campaigns: [{ id: 'campaign', name: 'Campagne' }] })
     }))
   })
 
-  it('stores roleplay for new PNJs and fills only an empty roleplay on existing PNJs', async () => {
+  it('stores NPC play metadata and only fills missing curated values on existing PNJs', async () => {
     const service = new ScenarioPackageService(persistence)
-    records.set('pnj:npc-empty', { id: 'npc-empty', nom: 'Vide', roleplay: '' })
-    records.set('pnj:npc-curated', { id: 'npc-curated', nom: 'Curaté', roleplay: 'Texte MJ à conserver.' })
+    records.set('pnj:npc-empty', { id: 'npc-empty', nom: 'Vide', roleplay: '', caractere: '', ascendance: 'Inconnue', classe: 'Inconnue' })
+    records.set('pnj:npc-curated', { id: 'npc-curated', nom: 'Curaté', roleplay: 'Texte MJ à conserver.', caractere: 'Caractère curaté.', ascendance: 'Elfe', classe: 'Magus' })
 
     await service.importZip(zip({
       packageVersion: 1,
       scenario: { id: 'scenario-roleplay', name: 'Roleplay' },
       actors: [],
       npcs: [
-        { key: 'new', name: 'Nouveau', roleplay: 'Jovial mais méfiant quand on parle travail.' },
-        { key: 'empty', npcId: 'npc-empty', roleplay: 'Prudent et posé.' },
-        { key: 'curated', npcId: 'npc-curated', roleplay: 'Ne doit pas remplacer.' }
+        { key: 'new', name: 'Nouveau', roleplay: 'Jovial mais méfiant quand on parle travail.', ascendance: 'Humain', classe: 'Roublard', scope: 'global' },
+        { key: 'empty', npcId: 'npc-empty', caractere: 'Prudent et posé.', ascendance: 'Nain', classe: 'Guerrier' },
+        { key: 'curated', npcId: 'npc-curated', roleplay: 'Ne doit pas remplacer.', caractere: 'Ne doit pas remplacer.', ascendance: 'Humain', classe: 'Clerc' }
       ]
     }), 'roleplay.zip')
 
-    expect(records.get('pnj:scenario-roleplay--new')).toEqual(expect.objectContaining({ roleplay: 'Jovial mais méfiant quand on parle travail.' }))
-    expect(records.get('pnj:npc-empty')).toEqual(expect.objectContaining({ roleplay: 'Prudent et posé.' }))
-    expect(records.get('pnj:npc-curated')).toEqual(expect.objectContaining({ roleplay: 'Texte MJ à conserver.' }))
+    expect(records.get('pnj:scenario-roleplay--new')).toEqual(expect.objectContaining({ roleplay: 'Jovial mais méfiant quand on parle travail.', caractere: 'Jovial mais méfiant quand on parle travail.', ascendance: 'Humain', classe: 'Roublard', scope: 'global' }))
+    expect(records.get('pnj:npc-empty')).toEqual(expect.objectContaining({ caractere: 'Prudent et posé.', ascendance: 'Nain', classe: 'Guerrier' }))
+    expect(records.get('pnj:npc-curated')).toEqual(expect.objectContaining({ roleplay: 'Texte MJ à conserver.', caractere: 'Caractère curaté.', ascendance: 'Elfe', classe: 'Magus' }))
   })
 
   it('can preserve existing business links during a campaign response import', async () => {

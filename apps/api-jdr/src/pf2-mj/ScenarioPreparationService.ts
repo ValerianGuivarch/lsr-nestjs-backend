@@ -38,7 +38,7 @@ Champs minimaux :
 - \`scenario.id\` : ID exact de la cible ;
 - \`scenario.name\` : nom lisible ;
 - \`actors\` : tableau ;
-- \`npcs\` : tableau. Chaque PNJ narratif peut contenir \`roleplay\` (« Comment le jouer »).
+- \`npcs\` : tableau. Chaque PNJ narratif peut contenir \`ascendance\`, \`classe\`, \`caractere\`/\`roleplay\` (« Comment le jouer ») et \`scope\` (\`global\` pour une figure récurrente du monde, \`scenario\` seulement si le PNJ est propre à ce scénario).
 
 Un Actor doit préférer \`reference\` dès qu'un UUID Foundry exact et fiable correspond à l'entité, y compris lorsqu'il s'agit d'un PNJ ou statblock propre au scénario déjà fourni par un compendium installé. Utiliser \`custom.data.mode = "statblock"\` seulement si aucune référence fiable n'existe ou si le PDF montre que la fiche nécessaire diffère réellement de la source Foundry. Dans ce cas, transcrire toute la mécanique utile : niveau, CA, PV, Perception, sauvegardes, vitesse, compétences et attaques/capacités/items. Un simple niveau, ou niveau+CA+PV, est invalide en v4.
 
@@ -708,14 +708,15 @@ Lire les PDF présents dans \`docs/\` et préparer un package de scénario compa
 - Ne crée jamais un doublon parce que l’orthographe diffère légèrement.
 - Les créatures anonymes, variantes de monstres et adversaires purement mécaniques restent des \`actors\`, pas des PNJ globaux.
 - Un nouveau PNJ narratif doit avoir un \`key\` stable et un nom explicitement soutenu par le PDF.
-- Pour chaque PNJ narratif pertinent, renseigne \`roleplay\` (« Comment le jouer ») quand le texte fournit assez d'indices : tempérament, attitude, réactions, manière de parler ou de se comporter utiles à la table.
-- \`roleplay\` ne doit pas répéter la biographie. N'invente pas de tic, accent ou trait précis sans appui suffisant ; laisse le champ vide si nécessaire.
-- Si \`package-registry.json\` fournit déjà un \`roleplay\`, conserve-le : le package ne doit pas le réécrire arbitrairement.
+- Pour chaque PNJ narratif pertinent, renseigne \`ascendance\`, \`classe\` et \`caractere\`/\`roleplay\` quand les sources donnent assez d'indices. Si une ascendance ou une classe n'est pas établie, utilise \`Inconnue\` plutôt que d'inventer.
+- \`caractere\`/\`roleplay\` doit être directement utile à la table : tempérament, attitude, réactions et comportement. N'invente pas de tic, accent ou trait précis sans appui suffisant ; laisse le champ vide si nécessaire.
+- \`scope\` vaut \`global\` pour une figure du monde pouvant réapparaître (venture-captain, dirigeant, habitant permanent, contact de faction, etc.) même si elle est introduite dans ce scénario ; utilise \`scenario\` uniquement pour un PNJ intrinsèquement propre à l'intrigue de ce scénario.
+- Si \`package-registry.json\` fournit déjà \`ascendance\`, \`classe\`, \`caractere\`/\`roleplay\` ou \`scope\`, conserve ces valeurs : le package ne doit pas réécrire arbitrairement les données curatées.
 
 
 ### Contexte PJ et contacts
 
-package-registry.json fournit, pour les PNJ existants, description, role, roleplay, tags, importance et statut.
+package-registry.json fournit, pour les PNJ existants, description, role, roleplay/caractere, ascendance, classe, scope, tags, importance et statut.
 
 Convention des tags :
 - \`pj\` = fiche narrative d'un personnage joueur ;
@@ -725,7 +726,7 @@ Convention des tags :
 Ces tags sont du contexte narratif global et ne prouvent PAS qu'un PNJ apparaît dans ce scénario.
 - Ne lie jamais automatiquement un contact au scénario à cause de son tag seul.
 - Si une personne du PDF correspond clairement à une entrée existante, réutilise son \`npcId\`.
-- Conserve les tags, description, role et roleplay déjà curatés.
+- Conserve les tags, description, role, roleplay/caractere, ascendance, classe et scope déjà curatés.
 - Si les sources apportent une contradiction importante, signale-la dans \`analysis/\` au lieu d'écraser silencieusement la fiche.
 
 ### Exigences mécaniques v4
@@ -853,12 +854,12 @@ Une nouvelle entité narrative récurrente ne doit être créée qu’une seule 
 
 Les créatures anonymes et adversaires purement mécaniques restent des \`actors\` locaux au scénario.
 
-Pour chaque PNJ narratif pertinent, remplis aussi \`roleplay\` (« Comment le jouer ») lorsque les sources donnent assez d'indices. Le texte doit être directement utile au MJ : tempérament, attitude, réactions et comportement à la table, sans inventer de tics précis. Un \`roleplay\` déjà présent dans \`package-registry.json\` doit être conservé.
+Pour chaque PNJ narratif pertinent, remplis aussi \`ascendance\`, \`classe\`, \`caractere\`/\`roleplay\` et \`scope\` lorsque les sources donnent assez d'indices. Utilise \`Inconnue\` si l'ascendance ou la classe n'est pas établie. \`scope=global\` convient aux figures récurrentes du monde même lorsqu'elles sont introduites ici ; \`scope=scenario\` est réservé aux PNJ propres à cette intrigue. Les valeurs déjà présentes dans \`package-registry.json\` doivent être conservées.
 
 
 ### Contexte PJ et contacts
 
-package-registry.json fournit aussi description, role, roleplay, tags, importance et statut pour les PNJ existants.
+package-registry.json fournit aussi description, role, roleplay/caractere, ascendance, classe, scope, tags, importance et statut pour les PNJ existants.
 
 Convention :
 - \`pj\` = fiche narrative d'un personnage joueur ;

@@ -15,10 +15,15 @@ type Pnj={
   evenements?:string[];
   role?:string;
   roleplay?:string;
+  ascendance?:string;
+  classe?:string;
+  caractere?:string;
+  scope?:"global"|"scenario";
+  ownerScenarioId?:string;
   importance?:"Majeure"|"Récurrente"|"Secondaire"|"Figurant";
   statut?:"Actif"|"Disparu"|"Mort"|"Inconnu";
   notes?:string;
-  /** Dérivé de pf2_scenario_npc côté API, jamais édité séparément. */
+  /** Dérivé du champ métier scope côté API ; les liens de scénario restent séparés. */
   transverse?:boolean;
   scenarioLinks?:ScenarioLink[];
 };
@@ -38,6 +43,11 @@ type Draft={
   evenements:string;
   role:string;
   roleplay:string;
+  ascendance:string;
+  classe:string;
+  caractere:string;
+  scope:"global"|"scenario";
+  ownerScenarioId:string;
   importance:Pnj["importance"];
   statut:Pnj["statut"];
   notes:string;
@@ -45,6 +55,7 @@ type Draft={
 
 const emptyDraft:Draft={
   nom:"",description:"",factions:"",tags:"",portrait:"",aliases:"",lieux:"",regions:"",evenements:"",role:"",roleplay:"",
+  ascendance:"Inconnue",classe:"Inconnue",caractere:"",scope:"global",ownerScenarioId:"",
   importance:"Secondaire",statut:"Actif",notes:""
 };
 
@@ -61,6 +72,10 @@ const jsonTemplate=[{
   evenements:[],
   role:"",
   roleplay:"",
+  ascendance:"Inconnue",
+  classe:"Inconnue",
+  caractere:"",
+  scope:"global",
   importance:"Secondaire",
   statut:"Actif",
   notes:""
@@ -90,6 +105,11 @@ const draftFromPnj=(p:Pnj):Draft=>({
   evenements:(p.evenements??[]).join(", "),
   role:p.role??"",
   roleplay:p.roleplay??"",
+  ascendance:p.ascendance??"Inconnue",
+  classe:p.classe??"Inconnue",
+  caractere:p.caractere??p.roleplay??"",
+  scope:p.scope??"global",
+  ownerScenarioId:p.ownerScenarioId??"",
   importance:p.importance??"Secondaire",
   statut:p.statut??"Actif",
   notes:p.notes??""
@@ -201,7 +221,7 @@ export default function PnjPage({initialSelectedId}:{initialSelectedId?:string})
     const selectedScenario=scenarioFilter.startsWith("scenario:")?scenarioFilter.slice("scenario:".length):"";
     return pnjs.filter(p=>{
       const haystack=normalize([
-        p.nom,p.description,p.role,p.roleplay,p.notes,
+        p.nom,p.description,p.role,p.caractere,p.roleplay,p.ascendance,p.classe,p.notes,
         ...(p.aliases??[]),...p.factions.map(f=>`${factionNames.get(f.faction_id)??f.faction_id} ${f.role}`),...(p.tags??[]),...(p.lieux??[]).map(id=>lieuNames.get(id)??id),...(p.regions??[]).map(id=>regionNames.get(id)??id),...(p.evenements??[]).map(id=>eventNames.get(id)??id)
       ].filter(Boolean).join(" "));
       return (!q||haystack.includes(q))
@@ -298,7 +318,12 @@ export default function PnjPage({initialSelectedId}:{initialSelectedId?:string})
         regions:csv(draft.regions),
         evenements:csv(draft.evenements),
         role:draft.role.trim(),
-        roleplay:draft.roleplay.trim(),
+        roleplay:draft.caractere.trim()||draft.roleplay.trim(),
+        ascendance:draft.ascendance.trim()||"Inconnue",
+        classe:draft.classe.trim()||"Inconnue",
+        caractere:draft.caractere.trim()||draft.roleplay.trim(),
+        scope:draft.scope,
+        ownerScenarioId:draft.scope==="scenario"&&draft.ownerScenarioId?draft.ownerScenarioId:undefined,
         importance:draft.importance,
         statut:draft.statut,
         notes:draft.notes.trim()
@@ -351,6 +376,11 @@ export default function PnjPage({initialSelectedId}:{initialSelectedId?:string})
         evenements:Array.isArray(raw.evenements)?raw.evenements:[],
         role:raw.role||"",
         roleplay:raw.roleplay||"",
+        ascendance:raw.ascendance||"Inconnue",
+        classe:raw.classe||"Inconnue",
+        caractere:raw.caractere||raw.roleplay||"",
+        scope:raw.scope==="scenario"?"scenario":"global",
+        ownerScenarioId:typeof raw.ownerScenarioId==="string"?raw.ownerScenarioId:undefined,
         importance:raw.importance,
         statut:raw.statut,
         notes:raw.notes||""
@@ -463,7 +493,7 @@ export default function PnjPage({initialSelectedId}:{initialSelectedId?:string})
         </div>
         <div className="pnj-card-body" role="button" tabIndex={0} onClick={()=>setSelected(p)} onKeyDown={event=>{if(event.key==="Enter"||event.key===" "){event.preventDefault();setSelected(p)}}}>
           <h2>{p.nom}</h2>
-          <div className="pnj-role">{[p.role,p.importance,p.statut].filter(Boolean).join(" · ")}</div>
+          <div className="pnj-role">{[p.role,p.ascendance&&p.ascendance!=="Inconnue"?p.ascendance:null,p.classe&&p.classe!=="Inconnue"?p.classe:null,p.importance,p.statut].filter(Boolean).join(" · ")}</div>
           <p className="pnj-description">{p.description||"Aucune description."}</p>
           <div className="pnj-chips"><span className={`pnj-chip ${p.transverse!==false?"scope":"specific"}`}>{p.transverse!==false?"Transverse":`${p.scenarioLinks?.length??0} scénario${(p.scenarioLinks?.length??0)>1?"s":""}`}</span>{p.factions.slice(0,3).map(v=><span className="pnj-chip faction" key={v.faction_id}>{factionNames.get(v.faction_id)??v.faction_id}{v.role?` — ${v.role}`:""}</span>)}{p.tags.slice(0,4).map(v=><span className="pnj-chip" key={v}>{v}</span>)}</div>
         </div>
@@ -490,8 +520,10 @@ export default function PnjPage({initialSelectedId}:{initialSelectedId?:string})
         <div className="pnj-form">
           <label>Nom<input value={draft.nom} onChange={e=>setDraft({...draft,nom:e.target.value})}/></label>
           <label>Rôle<input value={draft.role} onChange={e=>setDraft({...draft,role:e.target.value})} placeholder="Venture-Captain, marchand…"/></label>
+          <label>Ascendance<input value={draft.ascendance} onChange={e=>setDraft({...draft,ascendance:e.target.value})} placeholder="Humain, elfe, halfelin…"/></label>
+          <label>Classe<input value={draft.classe} onChange={e=>setDraft({...draft,classe:e.target.value})} placeholder="Magicien, clerc, roublard…"/></label>
           <label className="wide">Description<textarea rows={4} value={draft.description} onChange={e=>setDraft({...draft,description:e.target.value})}/></label>
-          <label className="wide">Comment le jouer<textarea rows={4} value={draft.roleplay} onChange={e=>setDraft({...draft,roleplay:e.target.value})} placeholder="Tempérament, attitude, réactions, manière de parler ou de se comporter à la table…"/></label>
+          <label className="wide">Caractère / comment le jouer<textarea rows={4} value={draft.caractere} onChange={e=>setDraft({...draft,caractere:e.target.value})} placeholder="Tempérament, attitude, réactions, manière de parler ou de se comporter à la table…"/></label>
           <label>Factions (IDs)<input list="pnj-factions" value={draft.factions} onChange={e=>setDraft({...draft,factions:e.target.value})} placeholder="faction_societe_des_eclaireurs"/><datalist id="pnj-factions">{factionRefs.map(item=><option key={item.id} value={item.id}>{item.nom}</option>)}</datalist></label>
           <label>Tags<input value={draft.tags} onChange={e=>setDraft({...draft,tags:e.target.value})} placeholder="allié, marchand, occultisme"/></label>
           <label>Lieux (IDs)<input list="pnj-lieux" value={draft.lieux} onChange={e=>setDraft({...draft,lieux:e.target.value})}/><datalist id="pnj-lieux">{lieuRefs.map(item=><option key={item.id} value={item.id}>{item.nom}</option>)}</datalist></label>
@@ -506,6 +538,7 @@ export default function PnjPage({initialSelectedId}:{initialSelectedId?:string})
             {draft.portrait&&<button type="button" className="pnj-button" disabled={imageBusy} onClick={()=>setDraft(current=>({...current,portrait:""}))}>Retirer le portrait</button>}
           </div>
           <div className="pnj-image-tools"><input value={imageUrl} onChange={event=>setImageUrl(event.target.value)} placeholder="https://… — télécharger puis stocker dans Foundry"/><button type="button" className="pnj-button" disabled={imageBusy||!imageUrl.trim()} onClick={importImageUrl}>Importer l’image</button></div>
+          <label>Portée<select value={draft.scope} onChange={e=>setDraft({...draft,scope:e.target.value as Draft["scope"]})}><option value="global">Transverse / globale</option><option value="scenario">Spécifique au scénario</option></select></label>
           <label>Importance<select value={draft.importance} onChange={e=>setDraft({...draft,importance:e.target.value as Draft["importance"]})}><option>Majeure</option><option>Récurrente</option><option>Secondaire</option><option>Figurant</option></select></label>
           <label>Statut<select value={draft.statut} onChange={e=>setDraft({...draft,statut:e.target.value as Draft["statut"]})}><option>Actif</option><option>Disparu</option><option>Mort</option><option>Inconnu</option></select></label>
           <label className="wide">Notes MJ<textarea rows={3} value={draft.notes} onChange={e=>setDraft({...draft,notes:e.target.value})}/></label>
@@ -521,7 +554,9 @@ export default function PnjPage({initialSelectedId}:{initialSelectedId?:string})
         <p>{selected.description}</p>
         <dl>
           <dt>Rôle</dt><dd>{selected.role||"—"}</dd>
-          <dt>Comment le jouer</dt><dd>{selected.roleplay||"—"}</dd>
+          <dt>Ascendance</dt><dd>{selected.ascendance||"Inconnue"}</dd>
+          <dt>Classe</dt><dd>{selected.classe||"Inconnue"}</dd>
+          <dt>Caractère / comment le jouer</dt><dd>{selected.caractere||selected.roleplay||"Inconnu"}</dd>
           <dt>Factions</dt><dd>{selected.factions.map(value=>`${factionNames.get(value.faction_id)??value.faction_id}${value.role?` — ${value.role}`:""}${value.statut?` (${value.statut})`:""}`).join(" · ")||"—"}</dd>
           <dt>Tags</dt><dd>{selected.tags.join(" · ")||"—"}</dd>
           <dt>Lieux</dt><dd>{selected.lieux?.map(id=>lieuNames.get(id)??id).join(" · ")||"—"}</dd>
@@ -531,7 +566,7 @@ export default function PnjPage({initialSelectedId}:{initialSelectedId?:string})
           <dt>Importance</dt><dd>{selected.importance||"—"}</dd>
           <dt>Statut</dt><dd>{selected.statut||"—"}</dd>
           <dt>Notes MJ</dt><dd>{selected.notes||"—"}</dd>
-          <dt>Portée</dt><dd>{selected.transverse!==false?"Transverse — aucun scénario spécifique.":"Spécifique à au moins un scénario."}</dd>
+          <dt>Portée</dt><dd>{selected.transverse!==false?"Transverse / globale — peut apparaître dans plusieurs scénarios.":"Spécifique à son scénario d’origine."}</dd>
           <dt>Scénarios liés</dt><dd>{selectedScenarios.length?selectedScenarios.map(link=>`${link.name||link.titleFr||link.titleOriginal||link.nom||link.scenarioId}${link.role?` — ${link.role}`:""}`).join(" · "):"—"}</dd>
         </dl>
       </article>

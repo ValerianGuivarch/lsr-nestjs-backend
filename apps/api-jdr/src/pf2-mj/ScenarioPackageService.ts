@@ -7,7 +7,7 @@ import sharp from 'sharp'
 import { Pf2PersistenceService, ScenarioDependency, ScenarioDependencyType, ScenarioDeployment, ScenarioDeploymentEnqueueOptions, ScenarioNpcLink, ScenarioRelation, ScenarioRelationTargetKind } from '../pf2-storage/Pf2PersistenceService'
 import { FoundryReferenceLibraryService } from './FoundryReferenceLibraryService'
 
-type PackageNpc = { key?: unknown; npcId?: unknown; name?: unknown; aliases?: unknown; description?: unknown; portrait?: unknown; role?: unknown; roleplay?: unknown; importance?: unknown; sourcePage?: unknown; notes?: unknown }
+type PackageNpc = { key?: unknown; npcId?: unknown; name?: unknown; aliases?: unknown; description?: unknown; portrait?: unknown; role?: unknown; roleplay?: unknown; ascendance?: unknown; classe?: unknown; caractere?: unknown; scope?: unknown; importance?: unknown; sourcePage?: unknown; notes?: unknown }
 type PackageRelation = { key?: unknown; kind?: unknown; refId?: unknown; factionId?: unknown; eventId?: unknown; name?: unknown; aliases?: unknown; description?: unknown; role?: unknown; importance?: unknown; sourcePage?: unknown; notes?: unknown }
 type ScenarioManifest = { packageFormatVersion?: unknown; packageVersion?: unknown; scenario?: { id?: unknown; name?: unknown }; npcs?: unknown; places?: unknown; factions?: unknown; events?: unknown; actors?: unknown; maps?: unknown; [key: string]: unknown }
 type ScenarioImportOptions = { preserveExistingBusinessLinks?: boolean }
@@ -403,6 +403,10 @@ export class ScenarioPackageService {
       description: typeof record.description === 'string' ? record.description : '',
       role: typeof record.role === 'string' ? record.role : '',
       roleplay: typeof record.roleplay === 'string' ? record.roleplay : '',
+      ascendance: typeof record.ascendance === 'string' ? record.ascendance : 'Inconnue',
+      classe: typeof record.classe === 'string' ? record.classe : 'Inconnue',
+      caractere: typeof record.caractere === 'string' ? record.caractere : (typeof record.roleplay === 'string' ? record.roleplay : ''),
+      scope: record.scope === 'scenario' ? 'scenario' : 'global',
       tags: Array.isArray(record.tags)
         ? record.tags.filter((tag): tag is string => typeof tag === 'string' && Boolean(tag.trim()))
         : [],
@@ -425,10 +429,10 @@ export class ScenarioPackageService {
   }
 
   /**
-   * Directory-oriented PNJ view.  `transverse` is deliberately derived from
-   * pf2_scenario_npc: a PNJ without an explicit scenario relation is usable
-   * across the setting.  This avoids a second mutable truth that could drift
-   * after a package re-import.
+   * Directory-oriented PNJ view. `transverse` follows the curated business
+   * scope of the PNJ, not the mere existence of scenario links. A recurring
+   * setting character can therefore remain global while still being linked to
+   * one or more scenarios where they appear.
    */
   async pnjDirectory(includeExcluded = false): Promise<Record<string, unknown>> {
     const pnjs = await this.persistence.listRecords('pnj', { includeExcluded })
@@ -459,7 +463,7 @@ export class ScenarioPackageService {
         const pnjLinks = linksByNpc.get(String(pnj.id)) ?? []
         return {
           ...pnj,
-          transverse: pnjLinks.length === 0,
+          transverse: pnj.scope !== 'scenario',
           scenarioLinks: pnjLinks.map(link => ({
             ...link,
             name: scenarioById.get(link.scenarioId)?.name ?? link.scenarioId,
@@ -505,15 +509,30 @@ export class ScenarioPackageService {
         if (!pnj) {
           const nom = this.text(definition.name, `npcs[${key}].name`)
           const portrait = await this.materializePortrait(zip, definition.portrait, npcId)
-          pnj = { id: npcId, nom, description: typeof definition.description === 'string' ? definition.description.trim() : '', aliases: this.strings(definition.aliases), portrait: portrait ?? undefined, factions: [], tags: [], role: typeof definition.role === 'string' ? definition.role.trim() : '', roleplay: typeof definition.roleplay === 'string' ? definition.roleplay.trim() : '', importance: typeof definition.importance === 'string' ? definition.importance.trim() : 'Secondaire', statut: 'Actif', notes: typeof definition.notes === 'string' ? definition.notes.trim() : '', scope: 'scenario', ownerScenarioId: scenarioId }
+          const incomingRoleplay = typeof definition.roleplay === 'string' ? definition.roleplay.trim() : ''
+          const incomingCharacter = typeof definition.caractere === 'string' ? definition.caractere.trim() : incomingRoleplay
+          const incomingScope = definition.scope === 'global' ? 'global' : 'scenario'
+          pnj = { id: npcId, nom, description: typeof definition.description === 'string' ? definition.description.trim() : '', aliases: this.strings(definition.aliases), portrait: portrait ?? undefined, factions: [], tags: [], role: typeof definition.role === 'string' ? definition.role.trim() : '', roleplay: incomingRoleplay, ascendance: typeof definition.ascendance === 'string' && definition.ascendance.trim() ? definition.ascendance.trim() : 'Inconnue', classe: typeof definition.classe === 'string' && definition.classe.trim() ? definition.classe.trim() : 'Inconnue', caractere: incomingCharacter, importance: typeof definition.importance === 'string' ? definition.importance.trim() : 'Secondaire', statut: 'Actif', notes: typeof definition.notes === 'string' ? definition.notes.trim() : '', scope: incomingScope, ...(incomingScope === 'scenario' ? { ownerScenarioId: scenarioId } : {}) }
           records.push({ kind: 'pnj', item: pnj })
           created = true
         }
       }
       const incomingRoleplay = this.optional(definition.roleplay)
+      const incomingCharacter = this.optional(definition.caractere) ?? incomingRoleplay
+      const incomingAncestry = this.optional(definition.ascendance)
+      const incomingClass = this.optional(definition.classe)
       const currentRoleplay = typeof pnj.roleplay === 'string' && pnj.roleplay.trim() ? pnj.roleplay.trim() : null
-      if (!created && !currentRoleplay && incomingRoleplay) {
-        pnj = { ...pnj, roleplay: incomingRoleplay }
+      const currentCharacter = typeof pnj.caractere === 'string' && pnj.caractere.trim() ? pnj.caractere.trim() : null
+      const currentAncestry = typeof pnj.ascendance === 'string' && pnj.ascendance.trim() && pnj.ascendance !== 'Inconnue' ? pnj.ascendance.trim() : null
+      const currentClass = typeof pnj.classe === 'string' && pnj.classe.trim() && pnj.classe !== 'Inconnue' ? pnj.classe.trim() : null
+      if (!created && ((!currentRoleplay && incomingRoleplay) || (!currentCharacter && incomingCharacter) || (!currentAncestry && incomingAncestry) || (!currentClass && incomingClass))) {
+        pnj = {
+          ...pnj,
+          ...(!currentRoleplay && incomingRoleplay ? { roleplay: incomingRoleplay } : {}),
+          ...(!currentCharacter && incomingCharacter ? { caractere: incomingCharacter } : {}),
+          ...(!currentAncestry && incomingAncestry ? { ascendance: incomingAncestry } : {}),
+          ...(!currentClass && incomingClass ? { classe: incomingClass } : {})
+        }
         records.push({ kind: 'pnj', item: pnj })
       }
       if (seen.has(npcId)) throw new Error(`PNJ dupliqué dans le package : ${npcId}.`)
