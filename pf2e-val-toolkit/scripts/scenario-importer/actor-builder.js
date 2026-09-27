@@ -424,6 +424,22 @@ export async function createCustomNpc(definition, folder, metadata = {}) {
   };
 
   if (existing) {
+    if (fullMetadata.relocationOnly === true) {
+      await existing.update({
+        folder: folder.id,
+        flags: {
+          [MODULE_ID]: {
+            ...(existing.flags?.[MODULE_ID] ?? {}),
+            managedByScenarioImporter: true,
+            scenarioActorKey: actorKey,
+            scenarioId: fullMetadata.scenarioId ?? null,
+            packageVersion: fullMetadata.packageVersion ?? null
+          }
+        }
+      });
+      await applyScenarioImage(existing, definition);
+      return { status: "relocated", actor: existing };
+    }
     if (canRefreshManagedActor(existing, definition, fullMetadata)) {
       await refreshCustomActor(existing, definition, fullMetadata);
       return { status: "updated", actor: existing };
@@ -446,12 +462,27 @@ export async function refreshNarrativeActor(actor, definition, folder, metadata 
     name: definition.name,
     image: definition.image
   };
+  const fullMetadata = { ...metadata, folderId: folder.id };
+  if (fullMetadata.relocationOnly === true) {
+    await actor.update({
+      folder: folder.id,
+      flags: {
+        [MODULE_ID]: {
+          ...(actor.flags?.[MODULE_ID] ?? {}),
+          managedByScenarioImporter: true,
+          scenarioActorKey: definition.key ?? null,
+          scenarioId: fullMetadata.scenarioId ?? null,
+          packageVersion: fullMetadata.packageVersion ?? null
+        }
+      }
+    });
+    await applyScenarioImage(actor, definition);
+    return { status: "relocated", actor };
+  }
   if (actorDefinition.type !== "custom") {
     await applyScenarioImage(actor, definition);
     return { status: "existing", actor };
   }
-
-  const fullMetadata = { ...metadata, folderId: folder.id };
   if (!canRefreshManagedActor(actor, actorDefinition, fullMetadata)) {
     await applyScenarioImage(actor, definition);
     return { status: "existing", actor };

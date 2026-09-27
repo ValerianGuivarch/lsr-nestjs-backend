@@ -103,8 +103,8 @@ async function processReference(definition, folder, scenarioId, packageVersion) 
   };
 }
 
-async function processCustom(definition, folder, scenarioId, packageVersion) {
-  const result = await createCustomNpc(definition, folder, { scenarioId, packageVersion });
+async function processCustom(definition, folder, scenarioId, packageVersion, relocationOnly = false) {
+  const result = await createCustomNpc(definition, folder, { scenarioId, packageVersion, relocationOnly });
 
   return {
     key: definition.key,
@@ -117,17 +117,17 @@ async function processCustom(definition, folder, scenarioId, packageVersion) {
   };
 }
 
-async function processNarrative(definition, folder, scenarioId, packageVersion) {
+async function processNarrative(definition, folder, scenarioId, packageVersion, relocationOnly = false) {
   const existing = game.actors.find(actor => actor.getFlag("pf2e-val-toolkit", "npcId") === definition.npcId);
   if (existing) {
-    const refreshed = await refreshNarrativeActor(existing, definition, folder, { scenarioId, packageVersion });
+    const refreshed = await refreshNarrativeActor(existing, definition, folder, { scenarioId, packageVersion, relocationOnly });
     await linkNarrativeNpc(existing, definition.npcId, definition);
     return { key: definition.key, name: definition.name, type: "narrative", status: refreshed.status, uuid: existing.uuid, actor: existing, npcId: definition.npcId };
   }
   const actorDefinition = { ...definition.actor, key: definition.key, name: definition.name, image: definition.image };
   const result = actorDefinition.type === "reference"
     ? await processReference(actorDefinition, folder, scenarioId, packageVersion)
-    : await processCustom(actorDefinition, folder, scenarioId, packageVersion);
+    : await processCustom(actorDefinition, folder, scenarioId, packageVersion, relocationOnly);
   if (result.actor) await linkNarrativeNpc(result.actor, definition.npcId, definition);
   return { ...result, type: "narrative", npcId: definition.npcId };
 }
@@ -195,9 +195,9 @@ export async function runScenarioImport(rawData) {
           )
         );
       } else if (definition.type === "custom") {
-        results.push(await processCustom(definition, actorFolders.scenario, data.scenario.id, data.packageVersion ?? 1));
+        results.push(await processCustom(definition, actorFolders.scenario, data.scenario.id, data.packageVersion ?? 1, data.relocationOnly === true));
       } else if (definition.type === "narrative") {
-        results.push(await processNarrative(definition, actorFolders.scenario, data.scenario.id, data.packageVersion ?? 1));
+        results.push(await processNarrative(definition, actorFolders.scenario, data.scenario.id, data.packageVersion ?? 1, data.relocationOnly === true));
       } else {
         results.push({
           key: definition.key,
