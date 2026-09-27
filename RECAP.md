@@ -1,6 +1,6 @@
 # RECAP — Architecture PF2 / JDR
 
-> **État de référence : audit PF2 du 4 septembre 2026 ; infrastructure et déploiement mis à jour le 25 septembre 2026**
+> **État de référence : audit PF2 du 27 septembre 2026**
 >
 > Ce fichier décrit l’état actuel du système PF2/JDR observé dans le code, la base `pf2.sqlite`, l’inventaire de `pf2-data` et l’infrastructure de production. Avec `story.md` pour la continuité narrative, il doit servir de contexte de départ aux nouvelles discussions.
 >
@@ -28,7 +28,7 @@ Le système PF2 utile est composé de :
 - Foundry VTT ;
 - Discord ;
 - la carte de Golarion, application séparée ;
-- XWiki, service séparé actuellement hors du flux PF2 principal.
+- le wiki joueur, connecté au backend via l’API MediaWiki pour les contenus narratifs publiés ;
 
 Ne font **pas** partie du cœur PF2-MJ documenté ici :
 
@@ -65,7 +65,7 @@ flowchart LR
     TOOLKIT["PF2e Val Toolkit"]
     DISCORD["Discord"]
     MAP["Carte Golarion\nservice séparé"]
-    WIKI["XWiki\nservice séparé / non utilisé actuellement"]
+    WIKI["Wiki joueur / MediaWiki\ncontenus narratifs publiés"]
 
     U --> MJ
     U --> RES
@@ -93,7 +93,8 @@ flowchart LR
     TOOLKIT -->|résultat du déploiement| APIMJ
 
     MAP -. application séparée .- U
-    WIKI -. actuellement hors flux .- U
+    SESS --> WIKI
+    U --> WIKI
 ```
 
 ---
@@ -173,32 +174,31 @@ Base auditée : `pf2.sqlite`.
 | Table / type | Nombre |
 |---|---:|
 | `pf2_catalogue_entity` | 291 |
-| `pf2_library_asset` | 377 |
-| `pf2_record` | 590 |
-| `pf2_session` | 6 |
-| `pf2_scenario_npc` | 0 |
-| `pf2_scenario_relation` | 0 |
-| `pf2_scenario_package` | 0 |
-| `pf2_scenario_deployment` | 0 |
+| `pf2_library_asset` | 480 |
+| `pf2_record` | 782 |
+| `pf2_session` | 10 |
+| `pf2_scenario_npc` | 129 |
+| `pf2_scenario_relation` | 90 |
+| `pf2_scenario_package` | 8 |
+| `pf2_scenario_deployment` | 8 |
 | `pf2_media` | 0 |
-| migrations appliquées | 11 |
 
 Répartition actuelle de `pf2_record` :
 
 | kind | Nombre |
 |---|---:|
-| `pnj` | 145 |
-| `lieu` | 51 |
-| `region` | 55 |
-| `faction` | 60 |
-| `evenement` | 25 |
+| `pnj` | 283 |
+| `lieu` | 75 |
+| `region` | 56 |
+| `faction` | 84 |
+| `evenement` | 30 |
 | `scenario` | 250 |
 | `catalogue` | 1 |
 | `curation` | 1 |
 | `geography-config` | 1 |
 | `foundry-actor-cache` | 1 |
 
-À la date de l’audit, aucun PNJ/lieu/région/faction/événement n’est encore réellement `scope: "scenario"`.
+Le pipeline de packages alimente désormais réellement les relations et peut créer des entités `scope: "scenario"` lorsque le package en a besoin. Les identités globales existantes restent prioritaires afin d’éviter les doublons.
 
 ---
 
@@ -318,7 +318,20 @@ Le frontend distingue :
 
 Seuls les `PlayableUnit` sont proposés comme parties à jouer.
 
-### 6.2 Scanner
+### 6.2 Navigation MJ simplifiée
+
+La navigation quotidienne est volontairement réduite à quatre domaines :
+
+- **Journal MJ** : campagnes/aventures à jouer, en cours ou jouées ;
+- **Catalogue** : navigation complète, recherche avancée, chronologie et mis de côté ;
+- **Monde** : PNJ, factions, lieux, régions et événements ;
+- **Administration** : maintenance du catalogue, inventaire PDF, préparation technique et migrations.
+
+`Trouver une partie` reste disponible comme recherche avancée du Catalogue ; `Ressources PDF`, `Maintenance` et `Préparation technique` restent disponibles mais ne sont plus des entrées principales.
+
+Les `arcIds` peuvent représenter une **campagne transverse** composée de scénarios PFS appartenant à plusieurs saisons. Une saison PFS reste un conteneur du catalogue, jamais automatiquement une campagne du Journal.
+
+### 6.3 Scanner
 
 `POST /api/pf2-mj/local-scan`
 
@@ -341,7 +354,7 @@ Avec `apply=true`, il peut persister :
 - nouveaux documents ;
 - inventaire ZIP.
 
-### 6.3 Disponibilité documentaire
+### 6.4 Disponibilité documentaire
 
 La disponibilité doit être comprise selon deux axes.
 
@@ -382,7 +395,7 @@ info
 
 Le statut ZIP Foundry est indépendant de cette disponibilité documentaire.
 
-### 6.4 Problème actuel connu : un PDF utilisé par plusieurs unités
+### 6.5 Problème actuel connu : un PDF utilisé par plusieurs unités
 
 Le modèle frontend V2→V3 construit actuellement **un seul `targetId` par fichier physique**.
 
@@ -464,15 +477,9 @@ Ces Actors restent dans le package Foundry et ne doivent pas devenir automatique
 
 ### 7.4 Situation actuelle
 
-SQLite contient 145 PNJ, mais :
+SQLite contient actuellement 283 PNJ et 129 liens `pf2_scenario_npc`. Les fiches scénario peuvent donc afficher les PNJ réellement reliés au scénario. Les 90 relations `pf2_scenario_relation` couvrent en parallèle lieux/régions, factions et événements.
 
-```text
-pf2_scenario_npc = 0
-```
-
-Donc l’application ne possède actuellement aucun lien métier explicite scénario ↔ PNJ.
-
-C’est la raison principale pour laquelle les PNJ apparaissent comme un référentiel global « en vrac » et ne remontent pas proprement sur les pages de campagne/scénario.
+Le principe reste : réutiliser une identité globale quand elle existe ; ne créer une identité propre au scénario que lorsqu’aucune identité fiable n’existe.
 
 ---
 
@@ -887,15 +894,16 @@ Le succès réel du Toolkit est ce qui marque le déploiement comme terminé. L�
 
 ### 12.8 Situation actuelle
 
-Lors de l’audit :
+Au 27 septembre 2026 :
 
 ```text
-ZIP physiques dans pf2-data : 0
-pf2_scenario_package : 0
-pf2_scenario_deployment : 0
+pf2_scenario_package : 8
+pf2_scenario_deployment : 8
 ```
 
-Le pipeline est donc présent dans le code mais encore non alimenté par des packages réels.
+Les huit déploiements enregistrés ont réussi. Ils couvrent les six aventures d’Agents of Edgewatch, `pfs-season-1-1-01` et `extinction-curse-volume-1`.
+
+Le Toolkit importe réellement Actors, Scenes, Journals et assets, puis renvoie son résultat à l’application. L’interface distingue désormais ce contenu géré du contenu de scènes déjà présent dans le monde Foundry hors dossiers Toolkit ; un scénario peut donc être détecté comme préexistant, généré ou hybride.
 
 ---
 
@@ -945,13 +953,17 @@ Les relations ambiguës doivent être laissées pour revue, pas inventées.
 
 ### Phase C — sélectionner les campagnes réellement prioritaires
 
-Utiliser l’état :
+Le statut visible est désormais volontairement simple :
 
 ```text
-Sélectionné
+À jouer
+En cours
+Joué
+Plus tard
+Écarté
 ```
 
-comme file de travail.
+L’ancien état `selected` / « Retenu » reste lu en compatibilité comme `À jouer`, mais ne constitue plus une étape visible distincte. Une séance liée à un scénario est une preuve factuelle que le scénario a commencé ; l’état `Joué` reste le signal explicite de clôture.
 
 On ne cherche pas à finaliser les centaines de scénarios d’un coup.
 
@@ -1051,9 +1063,9 @@ Elle doit être considérée comme un service annexe tant qu’aucun flux explic
 
 ---
 
-## 15. XWiki
+## 15. Wiki joueur / MediaWiki
 
-XWiki est un service indépendant sous Docker.
+Le wiki joueur participe désormais au flux PF2 actif via `MediaWikiClientService`. Le backend utilise l’Action API pour publier ou référencer des contenus narratifs destinés aux joueurs ; ces textes restent dans le wiki et ne sont pas dupliqués comme source narrative dans SQLite.
 
 Commandes documentées :
 
@@ -1076,9 +1088,7 @@ URL publique documentée :
 https://wiki.l7r.fr
 ```
 
-À la date de ce récapitulatif, XWiki ne participe pas au workflow PF2 actif.
-
-Les anciennes documentations qui décrivent XWiki ou `pf2_media` comme source des portraits PNJ sont obsolètes par rapport au code actuel.
+Les anciennes documentations décrivant le wiki comme hors flux sont obsolètes. Discord reste un canal de diffusion/synchronisation des résumés courts, pas une source de vérité métier. `pf2_media` n’est pas la source canonique des portraits PNJ.
 
 ---
 
@@ -1094,19 +1104,15 @@ Le modèle actuel ne le représente pas correctement partout.
 
 Cas témoin : Agents d’Absalom.
 
-#### B. Relations PNJ
+#### B. Arcs narratifs PFS transverses
 
-```text
-pf2_scenario_npc = 0
-```
+Le catalogue sait déjà représenter des `arcIds` traversant plusieurs saisons (`blackwood`, `clockwork-mystery`, etc.). Le Journal et le Catalogue les présentent désormais comme des campagnes transverses. La saison PFS reste un conteneur éditorial et ne devient pas une campagne de jeu.
 
-Le référentiel PNJ existe mais il n’est pas encore relié aux scénarios.
+Les arcs historiques encore non modélisés, notamment la Route ouverte, doivent être renseignés après audit narratif des scénarios concernés ; ne pas inventer leurs membres à partir du seul fil narratif générique.
 
-#### C. Mises à jour de curation
+#### C. Provenance Foundry
 
-Un problème de mise à jour a été signalé dans l’interface.
-
-Il doit être reproduit et diagnostiqué avant de continuer les gros enrichissements.
+L’application détecte les dossiers de scènes préexistants hors Toolkit et les affiche séparément du package géré. La détection prouve une présence dans le monde mais pas à elle seule une provenance « officielle Paizo » ; cette provenance devra être ajoutée uniquement lorsqu’elle est vérifiable.
 
 ### Priorité moyenne
 
@@ -1137,9 +1143,7 @@ La règle cible est : l’XPC provient du recalcul depuis les séances et utilis
 
 #### F. Packages
 
-Le code existe mais aucun ZIP n’a encore été produit/intégré.
-
-Ce n’est pas une panne : le workflow n’a simplement pas encore été alimenté.
+Le pipeline de packages est maintenant utilisé en production. La dette restante porte surtout sur l’automatisation de la génération et sur la réduction des allers-retours manuels, pas sur l’existence du pipeline.
 
 ---
 
@@ -1263,14 +1267,13 @@ Ce fichier doit rester un **manuel d’état courant**, pas un journal de toutes
 
 ## 21. Ordre de travail recommandé à partir de maintenant
 
-1. **Réparer PDF ↔ plusieurs unités logiques.**
-2. **Réparer/reproduire la mise à jour de curation.**
-3. **Backfill sûr des PNJ existants ↔ scénarios.**
-4. **Faire apparaître correctement PNJ et ressources dans les pages campagne/scénario.**
-5. **Nettoyer la duplication `pf2_record scenario` seulement après vérification des fallbacks.**
-6. **Prendre les campagnes `Sélectionné` une par une.**
-7. Pour chacune : registre courant → analyse PDF → relations → package ZIP → intégration MJ → déploiement Foundry.
-8. Une fois ce workflow validé sur quelques cas réels, l’étendre progressivement au reste du catalogue.
+1. **Conserver Journal / Catalogue / Monde / Administration comme navigation principale.**
+2. **Enrichir les arcs narratifs PFS transverses**, en commençant par les ensembles réellement joués ; une saison PFS n’est pas une campagne.
+3. **Auditer la couverture Foundry préexistante** avant de générer de nouveaux assets ; réutiliser ce qui existe déjà.
+4. **Automatiser le pipeline** : catalogue/PDF → analyse → références Foundry à la demande → package validé → intégration → déploiement Toolkit → vérification.
+5. **Réparer PDF ↔ plusieurs unités logiques** pour les compilations.
+6. **Nettoyer la duplication `pf2_record scenario`** seulement après vérification des fallbacks.
+7. **Réduire progressivement les statuts hérités** : les séances deviennent la preuve du jeu commencé, les déploiements deviennent la preuve du contenu Toolkit présent.
 
 Cas de validation recommandé pour les PDF : **Agents d’Absalom**, car il combine une campagne, six aventures et deux PDF de compilation.
 
