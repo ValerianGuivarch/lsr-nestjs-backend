@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { Fragment, useEffect, useMemo, useState } from 'react'
 import { Link, NavLink, Navigate, useLocation, useNavigate } from 'react-router-dom'
 import GeographyPicker from './GeographyPicker'
 import {
@@ -1172,9 +1172,18 @@ function JournalView({ curation, onUpdate, onImported }: { curation: Curation; o
     return () => { cancelled = true }
   }, [])
   const statusRank: Record<LifecycleStatus, number> = { in_progress: 0, to_play: 1, played: 2, retained: 2, untracked: 4, later: 5, rejected: 6 }
+  const componentProgressForUnit = (unit: PlayableUnit) => {
+    const componentStatus = resolvePlayableOverride(curation, unit).playableComponentStatus ?? {}
+    const played = unit.playableComponents.filter((component) => componentStatus[component.id] === 'played' || (componentSessions[`${unit.id}:${component.id}`]?.length ?? 0) > 0).length
+    return { played, total: unit.playableComponents.length }
+  }
   const journalStatusForUnit = (unit: PlayableUnit): LifecycleStatus => {
     const override = resolvePlayableOverride(curation, unit)
-    return effectiveLifecycleStatus(override, isExcluded(unit, override, curation))
+    const fallback = effectiveLifecycleStatus(override, isExcluded(unit, override, curation))
+    const progress = componentProgressForUnit(unit)
+    if (progress.total > 0 && progress.played === progress.total) return 'played'
+    if (progress.played > 0) return 'in_progress'
+    return fallback
   }
   const statusForUnits = (units: PlayableUnit[]): LifecycleStatus => units
     .map(journalStatusForUnit)
@@ -1209,6 +1218,7 @@ function JournalView({ curation, onUpdate, onImported }: { curation: Curation; o
     })
   const works: PlayableComponentsWork[] = [...selectedCampaigns, ...selectedArcs, ...selectedStandalone.map((unit) => ({ id: unit.id, title: titleOf(unit), description: unit.synopsis, units: [unit], campaign: false, kind: 'scenario' as const, status: journalStatusForUnit(unit) }))].sort((a, b) => statusRank[a.status] - statusRank[b.status] || a.title.localeCompare(b.title, 'fr'))
   const visibleWorks = statusFilter ? works.filter((work) => work.status === statusFilter) : works
+  const displayWorks = [...visibleWorks].sort((left, right) => Number(!left.campaign) - Number(!right.campaign) || statusRank[left.status] - statusRank[right.status] || left.title.localeCompare(right.title, 'fr'))
 
   const componentExample = { id: 'exemple-ouverture', title: 'Ouverture', description: 'Résumé factuel de cette unité narrative.', estimatedSessions: { min: 1, max: 2 }, continuity: { mode: 'free', returnToHubPossible: true, recommendedSameParty: false, notes: '' }, order: 1 }
   const scenarioPrompt = (work: PlayableComponentsWork, unit: PlayableUnit) => `Tu aides à documenter un scénario Pathfinder 2. Je joins son PDF et/ou son extrait de catalogue. Produis UNIQUEMENT le JSON valide ci-dessous.\n\nScénario : ${work.title}\nscenarioId : ${unit.id}\nDescription actuelle : ${unit.synopsis || 'non renseignée'}\n\nRègles : ne crée jamais de « Partie 1/2 » générique ; si le PDF ne permet pas une décomposition narrative fiable, retourne playableComponents: []. Chaque composant a un id en kebab-case, title, description, order, estimatedSessions facultatif et continuity.\n\n${JSON.stringify({ scenarioId: unit.id, playableComponents: [componentExample] }, null, 2)}`
@@ -1268,10 +1278,8 @@ function JournalView({ curation, onUpdate, onImported }: { curation: Curation; o
   }
 
   const unitProgress = (unit: PlayableUnit) => {
-    const status = resolvePlayableOverride(curation, unit).playableComponentStatus ?? {}
-    const played = unit.playableComponents.filter((component) => status[component.id] === 'played' || (componentSessions[`${unit.id}:${component.id}`]?.length ?? 0) > 0).length
-    const total = unit.playableComponents.length
-    return { played, total, completed: total > 0 && played === total }
+    const progress = componentProgressForUnit(unit)
+    return { ...progress, completed: journalStatusForUnit(unit) === 'played' }
   }
   const workProgress = (work: PlayableComponentsWork) => {
     const units = work.units.map(unitProgress)
@@ -1367,12 +1375,14 @@ function JournalView({ curation, onUpdate, onImported }: { curation: Curation; o
     <div className="journal-status-board" aria-label="Filtrer le journal par statut">{(['in_progress', 'to_play', 'played'] as LifecycleStatus[]).map((status) => { const count = works.filter((work) => work.status === status).length; const active = statusFilter === status; return <button type="button" key={status} className={active ? 'is-active' : ''} aria-pressed={active} onClick={() => setStatusFilter((current) => current === status ? null : status)} title={active ? 'Afficher tous les statuts' : `Afficher uniquement « ${lifecycleLabels[status]} »`}><small>{lifecycleLabels[status]}</small><strong>{count}</strong></button> })}</div>
     {!works.length && <div className="empty-components"><strong>Journal vide.</strong><p>Depuis le Catalogue ou une fiche, passe une aventure à « Sélectionné », « En cours » ou « Joué ».</p></div>}
     {works.length > 0 && !visibleWorks.length && <div className="empty-components"><strong>Aucune aventure « {statusFilter ? lifecycleLabels[statusFilter] : ''} ».</strong><p>Reclique sur le filtre actif pour réafficher tout le journal.</p></div>}
-    {visibleWorks.map((work) => {
+    {displayWorks.map((work, workIndex) => {
       const progress = workProgress(work)
       const expanded = expandedWorkIds.has(work.id)
       const workSessions = [...new Set(work.units.flatMap((unit) => scenarioSessions[unit.id] ?? []))].sort((a, b) => a - b)
       const detailHref = work.kind === 'campaign' ? `/pf2-mj/campaigns/${encodeURIComponent(work.id)}` : work.kind === 'arc' ? viewPaths.library : playableHref(work.units[0])
-      return <section className={`component-work${!expanded ? ' is-collapsed' : ''}`} key={work.id}>
+      const showCampaignHeading = workIndex === 0 && work.campaign
+      const showStandaloneHeading = !work.campaign && (workIndex === 0 || displayWorks[workIndex - 1]?.campaign)
+      return <Fragment key={work.id}>{showCampaignHeading && <div className="journal-group-heading"><small>JOURNAL</small><h3>Campagnes</h3><p>Campagnes longues et, bientôt, campagnes virtuelles.</p></div>}{showStandaloneHeading && <div className="journal-group-heading journal-standalone-heading"><small>JOURNAL</small><h3>Scénarios individuels</h3><p>Scénarios actifs qui n’appartiennent pas encore à une campagne du Journal.</p></div>}<section className={`component-work${!expanded ? ' is-collapsed' : ''}`}>
         <header>
           <div><small>{work.kind === 'arc' ? 'CAMPAGNE TRANSVERSE' : work.campaign ? 'CAMPAGNE' : 'SCÉNARIO'} · {lifecycleLabels[work.status]}</small><h3><Link className="journal-detail-link" to={detailHref}>{work.title}</Link></h3>{expanded && work.description && <p>{work.description}</p>}{work.kind === 'arc' && expanded && <p><em>Arc narratif PFS : les scénarios peuvent appartenir à plusieurs saisons.</em></p>}{workSessions.length > 0 && <span className="journal-session-badge">{sessionLabel(workSessions)}</span>}</div>
           <div className="component-work-actions">
@@ -1418,7 +1428,7 @@ function JournalView({ curation, onUpdate, onImported }: { curation: Curation; o
             })}</ul> : <p className="missing">Aucun composant renseigné. {work.campaign ? 'Utilise « Prompt campagne » puis importe un seul JSON pour la campagne.' : 'Utilise « Prompt » puis importe le JSON produit.'}</p>)}
           </article>
         })}</div>}
-      </section>
+      </section></Fragment>
     })}
     {message && <p className="playable-components-message">{message}</p>}
   </section>
