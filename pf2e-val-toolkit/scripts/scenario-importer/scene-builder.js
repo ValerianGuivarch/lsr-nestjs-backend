@@ -236,7 +236,6 @@ function existingScenarioScene(
   mapKey
 ) {
   return game.scenes.find(scene =>
-    scene.folder?.id === folder.id &&
     scene.getFlag(
       MODULE_ID,
       "scenarioId"

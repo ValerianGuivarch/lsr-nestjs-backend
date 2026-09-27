@@ -389,10 +389,11 @@ async function replaceManagedItems(actor, items) {
 async function refreshCustomActor(actor, definition, metadata) {
   const built = customNpcSource(definition, {
     ...metadata,
-    folderId: actor.folder?.id ?? metadata.folderId
+    folderId: metadata.folderId ?? actor.folder?.id
   });
   const update = {
     name: definition.name,
+    folder: built.actorData.folder,
     system: built.actorData.system,
     flags: {
       [MODULE_ID]: built.actorData.flags[MODULE_ID]
@@ -471,13 +472,28 @@ export async function importCompendiumActor(sourceActor, folder, definition = {}
   const sourceUuid = sourceActor.uuid;
 
   const existing = game.actors.find(actor =>
-    actor.folder?.id === folder.id &&
-    actor.getFlag(MODULE_ID, "sourceUuid") === sourceUuid
+    actor.getFlag(MODULE_ID, "scenarioId") === definition.scenarioId &&
+    actor.getFlag(MODULE_ID, "scenarioActorKey") === (definition.key ?? null)
   );
 
   if (existing) {
+    await existing.update({
+      folder: folder.id,
+      name: definition.name || existing.name,
+      flags: {
+        [MODULE_ID]: {
+          ...(existing.flags?.[MODULE_ID] ?? {}),
+          sourceUuid,
+          managedByScenarioImporter: true,
+          scenarioActorKey: definition.key ?? null,
+          scenarioId: definition.scenarioId ?? null,
+          packageVersion: definition.packageVersion ?? null,
+          actorMode: "reference"
+        }
+      }
+    });
     await applyScenarioImage(existing, definition);
-    return { status: "existing", actor: existing };
+    return { status: "updated", actor: existing };
   }
 
   const actorData = sourceActor.toObject();

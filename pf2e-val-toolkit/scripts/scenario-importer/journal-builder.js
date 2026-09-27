@@ -206,11 +206,31 @@ export async function createOrUpdateScenarioJournal(data, importResult, folder) 
     `${data.scenario.id.replace(/^PFS-/, "")} — ${data.scenario.name}`;
 
   let journal = game.journal.find(
-    entry => entry.folder?.id === folder.id && entry.name === name
+    entry => entry.name === name
   );
 
   if (!journal) {
-    journal = await JournalEntry.create({ name, folder: folder.id });
+    journal = await JournalEntry.create({
+      name,
+      folder: folder.id,
+      flags: {
+        "pf2e-val-toolkit": {
+          scenarioId: data.scenario.id,
+          packageVersion: data.packageVersion ?? 1
+        }
+      }
+    });
+  } else {
+    await journal.update({
+      folder: folder.id,
+      flags: {
+        "pf2e-val-toolkit": {
+          ...(journal.flags?.["pf2e-val-toolkit"] ?? {}),
+          scenarioId: data.scenario.id,
+          packageVersion: data.packageVersion ?? 1
+        }
+      }
+    });
   }
 
   await replacePages(journal, [
