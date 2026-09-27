@@ -553,31 +553,52 @@ function FinderView({ active, curation, onOpen, onUpdate, resourceVersion }: { a
   </div>
 }
 
-function ContainerTree({ container, curation, onOpen, onOpenPlayable, onUpdate, depth = 0 }: { container: Container; curation: Curation; onOpen: (container: Container) => void; onOpenPlayable: (unit: PlayableUnit) => void; onUpdate: (id: string, field: string, value: unknown) => void; depth?: number }) {
+function ContainerTree({ container, curation, onOpen, onOpenPlayable, onUpdate, hiddenPlayableIds, depth = 0 }: { container: Container; curation: Curation; onOpen: (container: Container) => void; onOpenPlayable: (unit: PlayableUnit) => void; onUpdate: (id: string, field: string, value: unknown) => void; hiddenPlayableIds?: Set<string>; depth?: number }) {
   if (isContainerExcluded(container, curation)) return null
   const childContainers = containers.filter((item) => item.parentId === container.id && !isContainerExcluded(item, curation)).sort((a, b) => a.order - b.order || titleOf(a).localeCompare(titleOf(b), 'fr'))
-  const childPlayables = playableUnits.filter((unit) => unit.parentId === container.id && !isExcluded(unit, resolvePlayableOverride(curation, unit), curation))
+  const childPlayables = playableUnits.filter((unit) => unit.parentId === container.id && !hiddenPlayableIds?.has(unit.id) && !isExcluded(unit, resolvePlayableOverride(curation, unit), curation))
   const components = componentsOf(container.id)
-  const descendantCount = playablesUnder(container.id).length
+  const descendantCount = playablesUnder(container.id).filter((unit) => !hiddenPlayableIds?.has(unit.id)).length
   return <details className={`library-node library-depth-${Math.min(depth, 3)}`}>
     <summary><span className="library-icon">{container.containerType === 'campaign' ? '▣' : container.containerType === 'pfsSeason' ? '▤' : '⌁'}</span><div><small>{containerTypeLabel(container.containerType)}</small><strong>{titleOf(container)}</strong><em>{descendantCount} unité{descendantCount > 1 ? 's' : ''} jouable{descendantCount > 1 ? 's' : ''}{components.length ? ` · ${components.length} ressource${components.length > 1 ? 's' : ''}` : ''}</em></div><Link to={containerHref(container)} onClick={(event) => event.stopPropagation()}>Détails</Link></summary>
     <div className="library-children">
-      {childContainers.map((child) => <ContainerTree key={child.id} container={child} curation={curation} onOpen={onOpen} onOpenPlayable={onOpenPlayable} onUpdate={onUpdate} depth={depth + 1} />)}
+      {childContainers.map((child) => <ContainerTree key={child.id} container={child} curation={curation} onOpen={onOpen} onOpenPlayable={onOpenPlayable} onUpdate={onUpdate} hiddenPlayableIds={hiddenPlayableIds} depth={depth + 1} />)}
       {childPlayables.length > 0 && <PlayableList units={sortPlayables(childPlayables, curation)} curation={curation} onOpen={onOpenPlayable} onUpdate={onUpdate} />}
       {components.length > 0 && <div className="component-strip">{components.map((component) => <span key={component.id}><b>◇</b>{componentTypeLabel(component.componentType)} · {titleOf(component)}{component.requiredForCore && <em> requis</em>}</span>)}</div>}
     </div>
   </details>
 }
 
-function LibraryView({ curation, onOpen, onOpenPlayable, onUpdate }: { curation: Curation; onOpen: (container: Container) => void; onOpenPlayable: (unit: PlayableUnit) => void; onUpdate: (id: string, field: string, value: unknown) => void }) {
-  const visibleArcs = arcs.map((arc) => ({ ...arc, units: arc.entryIds.map((id) => playableMap.get(id)).filter((unit): unit is PlayableUnit => Boolean(unit)).filter((unit) => !isExcluded(unit, resolvePlayableOverride(curation, unit), curation)) })).filter((arc) => arc.units.length > 1)
+function LibraryView({ curation, onOpen, onOpenPlayable, onUpdate }: { curation: Curation; onOpen: (container: Container) => void; onOpenPlayable: (unit: PlayableUnit) => void; onUpdate: (id: string, field: string, value: unknown) => Promise<void> }) {
+  const visibleArcs = arcs.map((arc) => ({ ...arc, units: arc.entryIds.map((id) => playableMap.get(id)).filter((unit): unit is PlayableUnit => Boolean(unit)) })).filter((arc) => arc.units.length > 1)
+  const transverseEntryIds = new Set(visibleArcs.flatMap((arc) => arc.entryIds))
+  const arcStatus = (arc: (typeof visibleArcs)[number]): LifecycleStatus => {
+    const statuses = arc.units.map((unit) => effectiveLifecycleStatus(resolvePlayableOverride(curation, unit), isExcluded(unit, resolvePlayableOverride(curation, unit), curation)))
+    if (statuses.length && statuses.every((status) => status === 'played')) return 'played'
+    if (statuses.some((status) => status === 'in_progress' || status === 'played')) return 'in_progress'
+    if (statuses.some((status) => status === 'to_play')) return 'to_play'
+    if (statuses.some((status) => status === 'retained')) return 'retained'
+    if (statuses.length && statuses.every((status) => status === 'later')) return 'later'
+    if (statuses.length && statuses.every((status) => status === 'rejected')) return 'rejected'
+    return 'untracked'
+  }
+  const applyArcStatus = async (arc: (typeof visibleArcs)[number], status: 'retained' | 'to_play' | 'later' | 'rejected') => {
+    for (const unit of arc.units) {
+      const current = effectiveLifecycleStatus(resolvePlayableOverride(curation, unit), isExcluded(unit, resolvePlayableOverride(curation, unit), curation))
+      if ((status === 'retained' || status === 'to_play') && (current === 'in_progress' || current === 'played')) continue
+      if (status === 'retained') await onUpdate(unit.id, 'progress', 'Sélectionné')
+      else if (status === 'to_play') await onUpdate(unit.id, 'progress', 'À jouer')
+      else await onUpdate(unit.id, 'exclusionStatus', status)
+    }
+  }
   const sectionOrder: Record<string, number> = { campaigns: 0, 'pathfinder-society': 1, standalone: 2, community: 3 }
   const orderedSections = sections.filter((section) => section.id !== 'legacy').sort((left, right) => (sectionOrder[left.id] ?? 99) - (sectionOrder[right.id] ?? 99))
-  return <div className="library-view"><div className="catalogue-subnav"><Link to={viewPaths.find}>Recherche avancée</Link><Link to={viewPaths.chronology}>Chronologie</Link><Link to={viewPaths.excluded}>Mis de côté</Link></div>{visibleArcs.length > 0 && <section className="library-section"><div className="section-title"><div><small>ARCS NARRATIFS</small><h2>Campagnes transverses</h2><p>Regroupements de scénarios liés narrativement, y compris entre plusieurs saisons Pathfinder Society.</p></div><span>{visibleArcs.length}</span></div>{visibleArcs.map((arc) => <details className="library-node" key={arc.id}><summary><span className="library-icon">↝</span><div><small>Arc narratif{arc.season ? ` · saison ${arc.season}` : ''}</small><strong>{arc.titleFr}</strong><em>{arc.units.length} scénarios liés{arc.order ? ` · ordre ${arc.order}` : ''}</em></div></summary><div className="library-children"><div className="compact-playables">{arc.units.map((unit) => <Link key={unit.id} to={playableHref(unit)}><span>▶</span><strong>{titleOf(unit)}</strong><small>{levelLabel(unit.levels)} · {lifecycleLabels[effectiveLifecycleStatus(resolvePlayableOverride(curation, unit))]}</small></Link>)}</div>{arc.description && <p>{arc.description}</p>}</div></details>)}</section>}{orderedSections.map((section) => {
+  return <div className="library-view"><div className="catalogue-subnav"><Link to={viewPaths.find}>Recherche avancée</Link><Link to={viewPaths.chronology}>Chronologie</Link><Link to={viewPaths.excluded}>Mis de côté</Link></div>{visibleArcs.length > 0 && <section className="library-section"><div className="section-title"><div><small>ARCS NARRATIFS</small><h2>Campagnes transverses</h2><p>Regroupements de scénarios liés narrativement, y compris entre plusieurs saisons Pathfinder Society. Les membres sont masqués dans les saisons PFS pour éviter les doublons.</p></div><span>{visibleArcs.length}</span></div>{visibleArcs.map((arc) => { const status = arcStatus(arc); return <details className="library-node" key={arc.id}><summary><span className="library-icon">↝</span><div><small>Campagne transverse · {lifecycleLabels[status]}{arc.season ? ` · saison ${arc.season}` : ''}</small><strong>{arc.titleFr}</strong><em>{arc.units.length} scénarios liés{arc.order ? ` · ordre ${arc.order === 'strict' ? 'strict' : 'recommandé'}` : ''}</em></div></summary><div className="library-children"><div className="arc-actions"><button onClick={() => void applyArcStatus(arc, 'retained')}>Retenir</button><button className="primary" onClick={() => void applyArcStatus(arc, 'to_play')}>Ajouter au Journal</button><button onClick={() => void applyArcStatus(arc, 'later')}>Plus tard</button><button className="danger" onClick={() => void applyArcStatus(arc, 'rejected')}>Écarter</button></div>{arc.description && <p>{arc.description}</p>}<div className="compact-playables">{arc.units.map((unit) => <Link key={unit.id} to={playableHref(unit)}><span>▶</span><strong>{titleOf(unit)}</strong><small>{levelLabel(unit.levels)} · {lifecycleLabels[effectiveLifecycleStatus(resolvePlayableOverride(curation, unit), isExcluded(unit, resolvePlayableOverride(curation, unit), curation))]}</small></Link>)}</div></div></details> })}</section>}{orderedSections.map((section) => {
     const roots = containers.filter((container) => container.sectionId === section.id && !container.parentId && !isContainerExcluded(container, curation))
-    const directPlayables = playableUnits.filter((unit) => unit.sectionId === section.id && !unit.parentId && !isExcluded(unit, resolvePlayableOverride(curation, unit), curation))
-    const visibleCount = playableUnits.filter((unit) => unit.sectionId === section.id && !isExcluded(unit, resolvePlayableOverride(curation, unit), curation)).length
-    return <section className="library-section" key={section.id}><div className="section-title"><div><small>SECTION</small><h2>{section.title}</h2><p>{section.description}</p></div><span>{visibleCount}</span></div>{roots.map((container) => <ContainerTree key={container.id} container={container} curation={curation} onOpen={onOpen} onOpenPlayable={onOpenPlayable} onUpdate={onUpdate} />)}{directPlayables.length > 0 && <PlayableList units={sortPlayables(directPlayables, curation)} curation={curation} onOpen={onOpenPlayable} onUpdate={onUpdate} />}</section>
+    const hiddenIds = section.id === 'pathfinder-society' ? transverseEntryIds : undefined
+    const directPlayables = playableUnits.filter((unit) => unit.sectionId === section.id && !unit.parentId && !hiddenIds?.has(unit.id) && !isExcluded(unit, resolvePlayableOverride(curation, unit), curation))
+    const visibleCount = playableUnits.filter((unit) => unit.sectionId === section.id && !hiddenIds?.has(unit.id) && !isExcluded(unit, resolvePlayableOverride(curation, unit), curation)).length
+    return <section className="library-section" key={section.id}><div className="section-title"><div><small>SECTION</small><h2>{section.title}</h2><p>{section.description}</p></div><span>{visibleCount}</span></div>{roots.map((container) => <ContainerTree key={container.id} container={container} curation={curation} onOpen={onOpen} onOpenPlayable={onOpenPlayable} onUpdate={onUpdate} hiddenPlayableIds={hiddenIds} />)}{directPlayables.length > 0 && <PlayableList units={sortPlayables(directPlayables, curation)} curation={curation} onOpen={onOpenPlayable} onUpdate={onUpdate} />}</section>
   })}</div>
 }
 
@@ -1611,9 +1632,25 @@ export function Pf2MjApp() {
   const update = async (id: string, field: string, value: unknown) => {
     setError('')
     try {
-      const response = await fetch('/apil7r/pf2-mj/curation', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ targetType: 'entry', id, field, value }) })
-      const payload = await response.json().catch(() => null)
-      if (!response.ok) throw new Error(typeof payload?.error === 'string' ? payload.error : 'Impossible d’enregistrer la modification.')
+      const save = async (targetId: string, targetField: string, targetValue: unknown) => {
+        const response = await fetch('/apil7r/pf2-mj/curation', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ targetType: 'entry', id: targetId, field: targetField, value: targetValue }) })
+        const payload = await response.json().catch(() => null)
+        if (!response.ok) throw new Error(typeof payload?.error === 'string' ? payload.error : 'Impossible d’enregistrer la modification.')
+        return payload
+      }
+      let payload = await save(id, field, value)
+      if (field === 'playStatus' && value === 'to_play') {
+        const linkedArcs = arcs.filter((arc) => arc.entryIds.includes(id))
+        for (const siblingId of unique(linkedArcs.flatMap((arc) => arc.entryIds))) {
+          if (siblingId === id) continue
+          const sibling = playableMap.get(siblingId)
+          if (!sibling) continue
+          const siblingOverride = resolvePlayableOverride(curation, sibling)
+          const siblingStatus = effectiveLifecycleStatus(siblingOverride, isExcluded(sibling, siblingOverride, curation))
+          if (siblingStatus === 'in_progress' || siblingStatus === 'played') continue
+          payload = await save(siblingId, 'progress', 'À jouer')
+        }
+      }
       const confirmed = await fetch('/apil7r/pf2-mj/curation', { cache: 'no-store' })
       setCuration(confirmed.ok ? await confirmed.json() : payload)
     } catch (caught) {

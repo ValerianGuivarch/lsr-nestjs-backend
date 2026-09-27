@@ -1109,7 +1109,9 @@ Cas témoin : Agents d’Absalom.
 
 Le catalogue sait déjà représenter des `arcIds` traversant plusieurs saisons (`blackwood`, `clockwork-mystery`, etc.). Le Journal et le Catalogue les présentent désormais comme des campagnes transverses. La saison PFS reste un conteneur éditorial et ne devient pas une campagne de jeu.
 
-Les arcs historiques encore non modélisés, notamment la Route ouverte, doivent être renseignés après audit narratif des scénarios concernés ; ne pas inventer leurs membres à partir du seul fil narratif générique.
+La campagne transverse éditoriale `open-road` / « La Route ouverte » est désormais modélisée après vérification des sources Paizo : elle relie le métaplot du Pacte de la Route ouverte à la remise en service puis aux perturbations du Labyrinthe de la Route ouverte. Ce regroupement est propre à la table ouverte et n’est pas présenté comme un arc Paizo unique.
+
+Dans le Catalogue, un scénario Pathfinder Society appartenant à une campagne transverse n’est plus répété sous sa saison : il reste dans sa saison au niveau des données, mais l’affichage canonique passe par la campagne transverse. Les actions `Retenir`, `Ajouter au Journal`, `Plus tard` et `Écarter` se propagent à ses membres ; sélectionner directement un scénario membre propage également la sélection aux autres scénarios encore non commencés de l’arc.
 
 #### C. Provenance Foundry
 

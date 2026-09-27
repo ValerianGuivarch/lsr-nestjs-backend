@@ -521,7 +521,8 @@
         "pfs-season-3-3-02",
         "pfs-season-3-3-05"
       ],
-      "order": "strict"
+      "order": "strict",
+      "description": "Diptyque de la saison 3 consacré à la loge d’Almas en Andoran : une première enquête sur la hantise d’East Hill mène à une seconde mission autour de l’Inheritor’s Rite et des enjeux locaux de la Société."
     },
     {
       "id": "s3-cheliax",
@@ -531,7 +532,8 @@
         "pfs-season-3-3-04",
         "pfs-season-3-3-07"
       ],
-      "order": "strict"
+      "order": "strict",
+      "description": "Diptyque de la saison 3 consacré à la loge du Chéliax : la disparition inquiétante d’agents et les manœuvres infernales du premier épisode conduisent directement aux événements de The Locked Lodge."
     },
     {
       "id": "s3-qadira",
@@ -571,7 +573,8 @@
         "pfs-season-4-4-05",
         "pfs-season-4-4-10"
       ],
-      "order": "strict"
+      "order": "strict",
+      "description": "Arc en deux parties de l’Année des Merveilles sans limites. Les Éclaireurs identifient d’abord un crâne parlant comme une ancienne arcaniste de Quantium, puis l’aident à retrouver son identité, son foyer et les secrets magiques qui ont provoqué sa transformation."
     },
     {
       "id": "boundless-star-gun",
@@ -593,7 +596,30 @@
         "pfs-season-5-5-11",
         "pfs-season-5-5-18"
       ],
-      "order": "strict"
+      "order": "strict",
+      "description": "Arc officiel en quatre parties de l’Année de l’Exploration sans entraves. Les Éclaireurs servent d’intermédiaires entre la mystérieuse Waterfall et le dragon Valashinaz, récupèrent des skymétaux, explorent un laboratoire oublié puis plongent dans l’esprit de la Waterfall pour résoudre l’origine de ses liens occultes."
+    },
+    {
+      "id": "open-road",
+      "titleFr": "La Route ouverte",
+      "season": null,
+      "entryIds": [
+        "pfs-season-1-1-00",
+        "pfs-season-1-1-08",
+        "pfs-season-1-1-11",
+        "pfs-season-1-1-16",
+        "pfs-season-1-1-17",
+        "pfs-season-1-1-20",
+        "pfs-season-1-1-21",
+        "pfs-season-2-2-00",
+        "pfs-season-3-3-99",
+        "pfs-season-5-5-01",
+        "pfs-season-5-5-06",
+        "pfs-season-5-5-12",
+        "pfs-season-5-5-13"
+      ],
+      "order": "recommended",
+      "description": "Campagne transverse éditoriale qui réunit deux fils liés de la Société : la redécouverte du Pacte de la Route ouverte et de ses fondateurs, puis la remise en service du Labyrinthe de la Route ouverte et l’exploration de ses nouvelles ramifications. Ce regroupement est conçu pour la table ouverte : il combine plusieurs métaplots officiels sans prétendre constituer un arc Paizo unique."
     },
     {
       "id": "blackwood",
@@ -9877,7 +9903,9 @@
       "locationStatus": "verified",
       "locationSource": "official-summary",
       "tags": [],
-      "arcIds": [],
+      "arcIds": [
+        "open-road"
+      ],
       "synopsis": "Après la disparition de documents importants dans les archives de la Grande Loge, des Éclaireurs expérimentés sont envoyés à la Maison du Nexus, à Quantium, pour consulter des copies liées aux origines de la Société et au Pacte de la Route ouverte. D’autres groupes convoitent cependant les mêmes secrets.",
       "gmDetails": null,
       "openTable": {
@@ -10408,7 +10436,9 @@
       "locationStatus": "verified",
       "locationSource": "official-summary",
       "tags": [],
-      "arcIds": [],
+      "arcIds": [
+        "open-road"
+      ],
       "synopsis": "La Société envoie les agents dans le petit royaume fluvial d’Artume pour enquêter sur les traces d’une ancienne loge abandonnée et sur un chapitre oublié de son passé. Cette recherche les entraîne au cœur de tensions politiques croissantes, alors qu’une révolution menace d’embraser le royaume. Les choix et interventions des Éclaireurs peuvent influencer durablement l’avenir politique d’Artume.",
       "gmDetails": null,
       "openTable": {
@@ -10602,7 +10632,9 @@
       "locationStatus": "verified",
       "locationSource": "official-summary",
       "tags": [],
-      "arcIds": [],
+      "arcIds": [
+        "open-road"
+      ],
       "synopsis": "À l’ancienne tour de Diggen’s Rest, entre Andoran et Galt, les agents recherchent l’héritage volontairement oublié d’une Éclaireuse et affrontent les conséquences d’idéaux révolutionnaires devenus dangereux.",
       "gmDetails": null,
       "openTable": {
@@ -10924,7 +10956,9 @@
       "locationStatus": "verified",
       "locationSource": "official-summary",
       "tags": [],
-      "arcIds": [],
+      "arcIds": [
+        "open-road"
+      ],
       "synopsis": "La Société obtient enfin l'occasion de renouer avec Bhopan, territoire presque fermé aux étrangers depuis des siècles. Les agents doivent gagner la confiance de ses habitants féeriques lors d'un bal masqué, comprendre les intérêts cachés qui s'y affrontent et ouvrir la voie à une relation durable.",
       "gmDetails": null,
       "openTable": {
@@ -10992,7 +11026,9 @@
       "locationStatus": "verified",
       "locationSource": "official-summary",
       "tags": [],
-      "arcIds": [],
+      "arcIds": [
+        "open-road"
+      ],
       "synopsis": "Après les premiers contacts établis à Bhopan, les Éclaireurs doivent quitter l'île avec un objet susceptible de contrecarrer les ambitions du Monarque-Épines. Leur adversaire tente toutefois de les arrêter en manipulant la population et en transformant les liens créés précédemment en obstacles.",
       "gmDetails": null,
       "openTable": {
@@ -11191,7 +11227,9 @@
       "locationStatus": "verified",
       "locationSource": "official-summary",
       "tags": [],
-      "arcIds": [],
+      "arcIds": [
+        "open-road"
+      ],
       "synopsis": "Les agents traversent les Terres Détrempées puis la jungle du Mwangi sur les traces d’une expédition commune menée autrefois par plusieurs Éclaireurs légendaires, jusqu’à un site oublié près de la Defaka.",
       "gmDetails": null,
       "openTable": {
@@ -11255,7 +11293,9 @@
       "locationStatus": "verified",
       "locationSource": "official-summary",
       "tags": [],
-      "arcIds": [],
+      "arcIds": [
+        "open-road"
+      ],
       "synopsis": "Eliza Petulengro charge les agents d’emprunter le Labyrinthe de la Route ouverte entre Absalom et Woodsedge et d’enquêter sur les anomalies qui menacent ce réseau magique essentiel à la Société.",
       "gmDetails": null,
       "openTable": {
@@ -11663,7 +11703,9 @@
       "tags": [
         "Metaplot"
       ],
-      "arcIds": [],
+      "arcIds": [
+        "open-road"
+      ],
       "synopsis": "Dans l'Étendue Mwangi, une importante force de la Société franchit un portail magique dont les mystères remontent aux premiers Éclaireurs. Au-delà se trouvent des secrets féeriques anciens et le cœur du plan du Monarque-Épines, que les agents doivent mettre définitivement hors d'état de nuire.",
       "gmDetails": null,
       "openTable": {
@@ -14669,7 +14711,9 @@
       "locationStatus": "verified",
       "locationSource": "official-summary",
       "tags": [],
-      "arcIds": [],
+      "arcIds": [
+        "open-road"
+      ],
       "synopsis": "Une anomalie du Labyrinthe de la Route ouverte transporte les Éclaireurs très loin de Woodsedge et les confronte à un secret qui relie plusieurs époques. Pour retrouver leur chemin, ils doivent comprendre ce phénomène temporel et préserver des informations dont les conséquences dépassent largement leur présent.",
       "gmDetails": null,
       "openTable": {
@@ -15931,7 +15975,9 @@
       "locationStatus": "verified",
       "locationSource": "official-or-pdf",
       "tags": [],
-      "arcIds": [],
+      "arcIds": [
+        "open-road"
+      ],
       "synopsis": "Après la défaite d’Aslynn, Fola Barun demande aux agents d’accompagner une visite du Labyrinthe de la Route ouverte. En explorant ses passages avec un invité, ils provoquent l’apparition de nouvelles portes et découvrent que le réseau peut désormais mener vers des horizons inattendus.",
       "gmDetails": null,
       "openTable": {
@@ -16274,7 +16320,9 @@
       "locationStatus": "verified",
       "locationSource": "official-or-pdf",
       "tags": [],
-      "arcIds": [],
+      "arcIds": [
+        "open-road"
+      ],
       "synopsis": "Une nouvelle porte du Labyrinthe mène à Ukuja, cité fortifiée des Orcs matanji dans l’Étendue du Mwangi. Les agents y sont rapidement soupçonnés dans une affaire liée à un complot fiélon et doivent prouver leur innocence tout en identifiant le véritable responsable.",
       "gmDetails": null,
       "openTable": {
@@ -16681,7 +16729,9 @@
       "locationStatus": "verified",
       "locationSource": "official-or-pdf",
       "tags": [],
-      "arcIds": [],
+      "arcIds": [
+        "open-road"
+      ],
       "synopsis": "Le Labyrinthe de la Route ouverte commence à déposer des agents aux mauvaises destinations. Sigvard Tornkvist charge une équipe d’identifier la cause de ces erreurs et de rendre les routes de la Société à nouveau fiables.",
       "gmDetails": null,
       "openTable": {
@@ -16751,7 +16801,9 @@
       "locationStatus": "verified",
       "locationSource": "official-or-pdf",
       "tags": [],
-      "arcIds": [],
+      "arcIds": [
+        "open-road"
+      ],
       "synopsis": "Une mission apparemment simple consiste à livrer une lettre, mais le trajet conduit les agents dans un labyrinthe de haies magique où deux connaissances aux doigts particulièrement agiles compliquent rapidement la tâche.",
       "gmDetails": null,
       "openTable": {

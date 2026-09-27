@@ -546,6 +546,11 @@
 .pf2-mj-v3 .library-node>summary em{font-style:normal;font-size:8px;color:var(--muted)}
 .pf2-mj-v3 .library-node>summary button,.pf2-mj-v3 .library-node>summary a{border:1px solid var(--line);border-radius:5px;background:var(--panel);color:var(--gold);padding:6px 8px;font-size:8px;text-decoration:none}
 .pf2-mj-v3 .library-children{display:grid;gap:8px;padding:10px 12px 12px 22px;border-top:1px solid var(--line)}
+.pf2-mj-v3 .arc-actions{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.pf2-mj-v3 .arc-actions button{border:1px solid var(--line);border-radius:5px;background:var(--panel);color:var(--muted);padding:7px 10px;font-size:8px;font-weight:700;cursor:pointer}
+.pf2-mj-v3 .arc-actions button.primary{border-color:#b89956;background:#fff2cf;color:#6f5010}
+.pf2-mj-v3 .arc-actions button.danger{border-color:#d9b2aa;background:#fff2ef;color:#8b3c31}
+.pf2-mj-v3 .arc-actions button:hover{filter:brightness(.97)}
 .pf2-mj-v3 .library-depth-1,.pf2-mj-v3 .library-depth-2,.pf2-mj-v3 .library-depth-3{box-shadow:none}
 .pf2-mj-v3 .component-strip{display:flex;gap:6px;flex-wrap:wrap;padding:4px 0}
 .pf2-mj-v3 .component-strip span{border:1px dashed var(--line);border-radius:5px;padding:6px 8px;color:var(--muted);font-size:8px;background:#faf8f1}
