@@ -3,7 +3,7 @@ import { BadGatewayException, BadRequestException, Injectable, Logger, ServiceUn
 type RelayClient = { clientId?: unknown; isOnline?: unknown }
 type WorldActor = { uuid: string; name: string; type?: string }
 export type FoundryNpcSummary = { uuid: string; name: string; type: string; level: number | null; hp: number | null; img: string | null }
-type PlayerSummary = { uuid: string; name: string; level: number; xp: number; xpc: number }
+export type PlayerSummary = { uuid: string; name: string; level: number; xp: number; xpc: number; foundryLevel: number }
 type CareerState = { xpc: number; level: number; xp: number }
 const XP_PER_LEVEL = 1_000
 const CAREER_XP_THRESHOLDS: Record<number, number> = {
@@ -235,17 +235,17 @@ export class FoundryRelayService {
   private async playerFromActor(uuid: string, migrate = true, clientId?: string): Promise<PlayerSummary | null> {
     const entity = this.unwrapEntity(clientId ? await this.getActorFromWorld(clientId, uuid) : await this.getActor(uuid))
     if (entity.type !== 'character') return null
+    const legacy = this.legacyState(entity)
     const flags = this.object(this.object(entity.flags)[this.xpcFlagScope()])
     if (!this.isNonNegativeInteger(flags.xpc)) {
-      const legacy = this.legacyState(entity)
       const migrated = this.xpcFromPf2Progress(legacy.level, legacy.xp)
       if (migrate) {
         await this.writeCareer(uuid, migrated, clientId)
         return this.playerFromActor(uuid, false, clientId)
       }
-      return { uuid, name: this.playerName(entity, uuid), ...this.careerState(migrated) }
+      return { uuid, name: this.playerName(entity, uuid), ...this.careerState(migrated), foundryLevel: legacy.level }
     }
-    return { uuid, name: this.playerName(entity, uuid), ...this.careerState(flags.xpc) }
+    return { uuid, name: this.playerName(entity, uuid), ...this.careerState(flags.xpc), foundryLevel: legacy.level }
   }
 
   private legacyState(entity: Record<string, unknown>): { level: number; xp: number } {

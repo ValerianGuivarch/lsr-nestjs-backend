@@ -8,13 +8,14 @@ describe('DiscordCommandsService', () => {
     expect(reply).toHaveBeenCalledWith({ content: 'Pong !', ephemeral: true })
   })
 
-  it('offers a PJ picker for /recap and renders a named matrix only for the chosen characters', async () => {
+  it('renders /recap by player and character, without zero-session characters', async () => {
     const deferReply = jest.fn().mockResolvedValue(undefined)
     const editReply = jest.fn().mockResolvedValue(undefined)
     const persistence = {
       listSessions: jest.fn().mockResolvedValue([
-        { participants: ['Actor.eos', 'Actor.pepin'] },
-        { participants: ['Actor.eos', 'Actor.pepin', 'Actor.yaz'] },
+        { sessionNumber: 1, published: true, participants: ['Actor.eos', 'Actor.pepin'] },
+        { sessionNumber: 2, published: true, participants: ['Actor.eos', 'Actor.yaz'] },
+        { sessionNumber: 3, published: false, participants: ['Actor.nora'] },
       ]),
       saveFoundryActorCache: jest.fn(), readFoundryActorCache: jest.fn(),
     }
@@ -23,19 +24,56 @@ describe('DiscordCommandsService', () => {
         { uuid: 'Actor.eos', name: 'Éos (David)' },
         { uuid: 'Actor.pepin', name: 'Pépin (Eric)' },
         { uuid: 'Actor.yaz', name: 'Yaz Lorok (Gus)' },
-        { uuid: 'Actor.npc', name: 'Janira Gavix' },
-      ])
+        { uuid: 'Actor.nora', name: 'Nora (Tom)' },
+      ]),
+      listPlayers: jest.fn().mockResolvedValue([
+        { uuid: 'Actor.eos', name: 'Éos (David)', level: 3, foundryLevel: 2, xp: 0, xpc: 900 },
+        { uuid: 'Actor.pepin', name: 'Pépin (Eric)', level: 2, foundryLevel: 2, xp: 0, xpc: 300 },
+        { uuid: 'Actor.yaz', name: 'Yaz Lorok (Gus)', level: 2, foundryLevel: 2, xp: 0, xpc: 300 },
+        { uuid: 'Actor.nora', name: 'Nora (Tom)', level: 1, foundryLevel: 1, xp: 0, xpc: 0 },
+      ]),
     } as never)
-    await expect(service.handle({ commandName: 'recap', id: 'recap-1', user: { id: 'user-1' }, deferReply, editReply } as never)).resolves.toBe(true)
-    expect(editReply.mock.calls[0][0].components[0].toJSON().components[0].options).toHaveLength(3)
 
-    const update = jest.fn().mockResolvedValue(undefined)
-    const followUp = jest.fn().mockResolvedValue(undefined)
-    await expect(service.handleComponent({ customId: 'pf2-recap:recap-1', user: { id: 'user-1' }, values: ['Actor.eos', 'Actor.pepin'], update, followUp, reply: jest.fn() } as never)).resolves.toBe(true)
-    const result = update.mock.calls[0][0].content
-    expect(result).toContain('| PJ | Éos | Pépin |')
-    expect(result).toContain('| Éos | — | 2 |')
-    expect(result).not.toContain('Yaz Lorok')
+    await expect(service.handle({ commandName: 'recap', deferReply, editReply } as never)).resolves.toBe(true)
+    const result = editReply.mock.calls[0][0].content
+    expect(result).toContain('**David — 2 séances**')
+    expect(result).toContain('Éos — niveau 2 (1 niveau à faire !) — 2 séances')
+    expect(result).toContain('Pépin — niveau 2 — 1 séance')
+    expect(result).not.toContain('Nora')
+    expect(result).not.toContain('Séances communes')
+  })
+
+  it('rebuilds a planned-session message with historical progression rolls', async () => {
+    const deferReply = jest.fn().mockResolvedValue(undefined)
+    const editReply = jest.fn().mockResolvedValue(undefined)
+    const sessions = [
+      { sessionNumber: 1, published: true, participants: ['Actor.eos'], inGameStartDate: '4720-03-01', inGameEndDate: '4720-03-01', title: '' },
+      { sessionNumber: 2, published: true, participants: ['Actor.pepin'], inGameStartDate: '4720-03-08', inGameEndDate: '4720-03-08', title: '' },
+      { sessionNumber: 3, published: false, participants: ['Actor.eos', 'Actor.pepin'], inGameStartDate: '4720-03-15', inGameEndDate: '', title: '' },
+    ]
+    const service = new DiscordCommandsService({
+      listSessions: jest.fn().mockResolvedValue(sessions),
+      saveFoundryActorCache: jest.fn(), readFoundryActorCache: jest.fn(),
+    } as never, {
+      listActors: jest.fn().mockResolvedValue([
+        { uuid: 'Actor.eos', name: 'Éos (David)' },
+        { uuid: 'Actor.pepin', name: 'Pépin (Eric)' },
+      ]),
+      listPlayers: jest.fn().mockResolvedValue([
+        { uuid: 'Actor.eos', name: 'Éos (David)', level: 3, foundryLevel: 2, xp: 0, xpc: 900 },
+        { uuid: 'Actor.pepin', name: 'Pépin (Eric)', level: 2, foundryLevel: 2, xp: 0, xpc: 300 },
+      ]),
+    } as never)
+
+    await expect(service.handle({
+      commandName: 'recap-seance', deferReply, editReply,
+      options: { getString: jest.fn().mockReturnValue('3') },
+    } as never)).resolves.toBe(true)
+    const result = editReply.mock.calls[0][0].content
+    expect(result).toContain('Séance prévue — Résumé n°3')
+    expect(result).toContain('Éos**, niveau 2 (1 niveau à faire !) : **1 lancer à faire**')
+    expect(result).toContain('Pépin**, niveau 2 : **0 lancer à faire**')
+    expect(result).toContain('15 Pharast 4720 AR')
   })
 
   it('turns missed published sessions into seven-day progression rolls', async () => {

@@ -82,17 +82,17 @@ describe('FoundryRelayService', () => {
         await new Promise((resolve) => setTimeout(resolve, 1))
         activeGets -= 1
         const id = uuid.replace('Actor.', '')
-        return new Response(JSON.stringify({ entity: [{ uuid, name: id === 'aimee' ? 'Aimée' : id, type: id === 'npc' ? 'npc' : 'character', flags: { 'pf2e-val-toolkit': { xpc: 0 } } }] }))
+        return new Response(JSON.stringify({ entity: [{ uuid, name: id === 'aimee' ? 'Aimée' : id, type: id === 'npc' ? 'npc' : 'character', flags: { 'pf2e-val-toolkit': { xpc: 0 } }, system: { details: { level: { value: 1 }, xp: { value: 0 } } } }] }))
       }
       throw new Error(`Unexpected URL: ${url}`)
     })
 
     await expect(new FoundryRelayService().listPlayers()).resolves.toEqual([
-      { uuid: 'Actor.aimee', name: 'Aimée', xpc: 0, level: 1, xp: 0 },
-      { uuid: 'Actor.bryn', name: 'bryn', xpc: 0, level: 1, xp: 0 },
-      { uuid: 'Actor.dorian', name: 'dorian', xpc: 0, level: 1, xp: 0 },
-      { uuid: 'Actor.nora', name: 'nora', xpc: 0, level: 1, xp: 0 },
-      { uuid: 'Actor.zara', name: 'zara', xpc: 0, level: 1, xp: 0 }
+      { uuid: 'Actor.aimee', name: 'Aimée', xpc: 0, level: 1, xp: 0, foundryLevel: 1 },
+      { uuid: 'Actor.bryn', name: 'bryn', xpc: 0, level: 1, xp: 0, foundryLevel: 1 },
+      { uuid: 'Actor.dorian', name: 'dorian', xpc: 0, level: 1, xp: 0, foundryLevel: 1 },
+      { uuid: 'Actor.nora', name: 'nora', xpc: 0, level: 1, xp: 0, foundryLevel: 1 },
+      { uuid: 'Actor.zara', name: 'zara', xpc: 0, level: 1, xp: 0, foundryLevel: 1 }
     ])
     expect(fetchMock).toHaveBeenCalledWith(expect.stringContaining('includeEntityData=false'), expect.anything())
     expect(fetchMock).not.toHaveBeenCalledWith(expect.stringContaining('includeEntityData=true'), expect.anything())

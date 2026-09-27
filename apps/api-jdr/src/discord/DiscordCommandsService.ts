@@ -14,7 +14,6 @@ export class DiscordCommandsService {
   private readonly logger = new Logger(DiscordCommandsService.name)
   private readonly pendingGames = new Map<string, { actors: Array<{ uuid: string; name: string; player: string; userId: string }>; selected?: Array<{ uuid: string; name: string; player: string; userId: string }> }>()
   private readonly pendingAnnouncements = new Map<string, { content: string; userIds: string[] }>()
-  private readonly pendingRecaps = new Map<string, { requesterId: string; actors: Array<{ uuid: string; name: string }> }>()
   private readonly pendingShortSummaries = new Map<string, {
     sessionId: string
     sessionNumber: number
@@ -35,7 +34,8 @@ export class DiscordCommandsService {
   definitions(): RESTPostAPIApplicationGuildCommandsJSONBody[] {
     return [
       new SlashCommandBuilder().setName('ping').setDescription('Vérifie que PF2-Bot répond.').toJSON(),
-      new SlashCommandBuilder().setName('recap').setDescription('Affiche les séances communes pour les PJ choisis.').toJSON(),
+      new SlashCommandBuilder().setName('recap').setDescription('Affiche le nombre de séances jouées par joueur et par personnage.').toJSON(),
+      new SlashCommandBuilder().setName('recap-seance').setDescription('Réaffiche les informations prévues pour une séance.').addStringOption(option => option.setName('session').setDescription('Numéro de séance').setRequired(true).setAutocomplete(true)).toJSON(),
       new SlashCommandBuilder().setName('journaux').setDescription('Prépare la révélation d’un journal.').addIntegerOption(option => option.setName('numero').setDescription('Numéro du journal à révéler').setRequired(false).setMinValue(1)).toJSON(),
       new SlashCommandBuilder().setName('export-full').setDescription('Exporte tous les messages texte du serveur en JSON.').toJSON(),
       new SlashCommandBuilder().setName('new-game').setDescription('Prépare une nouvelle mission PF2 depuis les PJ actifs dans ce salon.').toJSON(),
@@ -53,6 +53,10 @@ export class DiscordCommandsService {
     }
     if (interaction.commandName === 'recap') {
       await this.recapCommand(interaction as ChatInputCommandInteraction)
+      return true
+    }
+    if (interaction.commandName === 'recap-seance') {
+      await this.recapSessionCommand(interaction as ChatInputCommandInteraction)
       return true
     }
     if (interaction.commandName === 'journaux') { await this.journalsCommand(interaction as ChatInputCommandInteraction); return true }
@@ -144,28 +148,92 @@ export class DiscordCommandsService {
 
   private async recapCommand(interaction: ChatInputCommandInteraction): Promise<void> {
     await interaction.deferReply()
+    const sessions = (await this.persistence.listSessions()).filter((session) => session.published)
     const names = await this.actorNames()
-    const actors = [...names.entries()]
-      .map(([uuid, name]) => ({ uuid, name }))
-      .filter((actor) => this.isPlayerActorName(actor.name))
-      .sort((left, right) => left.name.localeCompare(right.name, 'fr'))
-      .slice(0, 25)
-    if (actors.length < 2) {
-      await interaction.editReply({ content: 'Il faut au moins deux PJ nommés « Personnage (Joueur) » pour établir le tableau.' })
+    const levels = await this.playerLevels()
+    const characterSessions = new Map<string, number>()
+    const playerSessions = new Map<string, Set<number>>()
+
+    for (const session of sessions) {
+      const playersInSession = new Set<string>()
+      for (const uuid of new Set(session.participants)) {
+        const name = names.get(uuid)
+        if (!name || !this.isPlayerActorName(name)) continue
+        characterSessions.set(uuid, (characterSessions.get(uuid) ?? 0) + 1)
+        playersInSession.add(this.playerName(name))
+      }
+      for (const player of playersInSession) {
+        if (!playerSessions.has(player)) playerSessions.set(player, new Set())
+        playerSessions.get(player)!.add(session.sessionNumber)
+      }
+    }
+
+    const characters = [...characterSessions.entries()]
+      .filter(([, count]) => count > 0)
+      .flatMap(([uuid, count]) => {
+        const name = names.get(uuid)
+        return name ? [{ uuid, name, player: this.playerName(name), count }] : []
+      })
+
+    const players = [...playerSessions.entries()]
+      .filter(([, played]) => played.size > 0)
+      .sort(([left], [right]) => left.localeCompare(right, 'fr'))
+
+    if (!players.length) {
+      await interaction.editReply({ content: 'Aucune séance jouée n’est enregistrée.' })
       return
     }
-    const id = `pf2-recap:${interaction.id}`
-    this.pendingRecaps.set(id, { requesterId: interaction.user.id, actors })
-    const select = new StringSelectMenuBuilder()
-      .setCustomId(id)
-      .setPlaceholder('Choisis les PJ à comparer')
-      .setMinValues(2)
-      .setMaxValues(actors.length)
-      .addOptions(actors.map((actor) => ({ label: actor.name.slice(0, 100), value: actor.uuid })))
-    await interaction.editReply({ content: 'Choisis les PJ à comparer. Le tableau indiquera le nombre de séances jouées ensemble pour chaque paire.', components: [new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(select)] })
+
+    const lines = ['**Récap des séances jouées**']
+    for (const [player, played] of players) {
+      lines.push('', `**${player} — ${played.size} séance${played.size > 1 ? 's' : ''}**`)
+      for (const actor of characters.filter((item) => item.player === player).sort((a, b) => a.name.localeCompare(b.name, 'fr'))) {
+        lines.push(`- ${this.characterLabel(actor.name)} — ${this.levelLabel(actor.uuid, levels)} — ${actor.count} séance${actor.count > 1 ? 's' : ''}`)
+      }
+    }
+    await interaction.editReply({ content: lines.join('\n').slice(0, 2_000) })
+  }
+
+  private async recapSessionCommand(interaction: ChatInputCommandInteraction): Promise<void> {
+    await interaction.deferReply()
+    const raw = interaction.options.getString('session', true).trim()
+    const number = Number(raw)
+    if (!Number.isInteger(number) || number < 1) {
+      await interaction.editReply({ content: 'Numéro de séance invalide.' })
+      return
+    }
+    const sessions = await this.persistence.listSessions()
+    const session = sessions.find((item) => item.sessionNumber === number)
+    if (!session) {
+      await interaction.editReply({ content: `Aucune séance n°${number} n’existe.` })
+      return
+    }
+    const names = await this.actorNames()
+    const actors = session.participants.flatMap((uuid) => {
+      const name = names.get(uuid)
+      return name ? [{ uuid, name }] : []
+    })
+    const rolls = this.progressionRollCounts(actors, sessions, session.sessionNumber)
+    const content = await this.plannedSessionAnnouncement(session.sessionNumber, session.inGameStartDate, actors, rolls)
+    await interaction.editReply({ content })
   }
 
   async handleAutocomplete(interaction: AutocompleteInteraction): Promise<boolean> {
+    if (interaction.commandName === 'recap-seance') {
+      const term = interaction.options.getFocused().toString().trim().toLocaleLowerCase()
+      const sessions = await this.persistence.listSessions()
+      await interaction.respond(
+        sessions
+          .filter((session) => String(session.sessionNumber).includes(term) || session.title.toLocaleLowerCase().includes(term))
+          .sort((a, b) => b.sessionNumber - a.sessionNumber)
+          .slice(0, 25)
+          .map((session) => ({
+            name: `#${session.sessionNumber} — ${session.title || (session.inGameStartDate ? this.displayDate(session.inGameStartDate) : 'Sans titre')}`.slice(0, 100),
+            value: String(session.sessionNumber),
+          })),
+      )
+      return true
+    }
     if (interaction.commandName === 'resume') {
       const focused = interaction.options.getFocused(true)
       const term = focused.value.toString().trim().toLocaleLowerCase()
@@ -275,18 +343,6 @@ export class DiscordCommandsService {
   }
 
   async handleComponent(interaction: StringSelectMenuInteraction): Promise<boolean> {
-    if (interaction.customId.startsWith('pf2-recap:')) {
-      const pending = this.pendingRecaps.get(interaction.customId)
-      if (!pending) { await interaction.reply({ content: 'Cette demande de récap a expiré. Relance `/recap`.', ephemeral: true }); return true }
-      if (interaction.user.id !== pending.requesterId) { await interaction.reply({ content: 'Cette sélection appartient à un autre utilisateur.', ephemeral: true }); return true }
-      const selected = pending.actors.filter((actor) => interaction.values.includes(actor.uuid))
-      if (selected.length < 2) { await interaction.reply({ content: 'Choisis au moins deux PJ.', ephemeral: true }); return true }
-      const messages = await this.recapMatrixMessages(selected)
-      await interaction.update({ content: messages[0], components: [] })
-      for (const content of messages.slice(1)) await interaction.followUp({ content })
-      this.pendingRecaps.delete(interaction.customId)
-      return true
-    }
     if (interaction.customId.startsWith('pf2-character:faction:')) {
       const presentationId = interaction.customId.slice('pf2-character:faction:'.length)
       const pending = this.pendingCharacterFactions.get(presentationId)
@@ -931,18 +987,19 @@ export class DiscordCommandsService {
     return { userIds: [...userIds], authorIds: [...authorIds], threadMemberIds: [...threadMemberIds], channelMemberIds: [...channelMemberIds] }
   }
 
-  private async plan(actors: Array<{ uuid: string; name: string }>): Promise<{ current: string; earliest: string; progressionRolls: string[] }> {
+  private async plan(actors: Array<{ uuid: string; name: string }>): Promise<{ current: string; earliest: string; progressionRolls: string[]; rollCounts: Map<string, number> }> {
     const sessions = (await this.persistence.listSessions()).filter((session) => session.published)
     const current = sessions.map((session) => this.missionEnd(session)).filter(Boolean).sort().at(-1) || this.today()
+    const rollCounts = this.progressionRollCounts(actors, sessions)
     const availability = actors.map((actor) => {
       const last = sessions.filter((session) => session.participants.includes(actor.uuid)).sort((left, right) => this.missionEnd(left).localeCompare(this.missionEnd(right))).at(-1)
       const available = last ? this.addDays(this.missionEnd(last), 1) : current
-      const missed = last ? sessions.filter((session) => session.sessionNumber > last.sessionNumber).length : sessions.length
-      return { actor, available, missed }
+      return { actor, available, missed: rollCounts.get(actor.uuid) ?? 0 }
     })
     return {
       current,
       earliest: availability.map((item) => item.available).sort().at(-1) || current,
+      rollCounts,
       progressionRolls: [
         '**Jets de progression** — 1 jet correspond à 7 jours d’activité.',
         ...availability.map((item) => `${item.actor.name} : **${item.missed} jet${item.missed > 1 ? 's' : ''} de progression** (${item.missed * 7} jour${item.missed * 7 > 1 ? 's' : ''}).`)
@@ -950,23 +1007,25 @@ export class DiscordCommandsService {
     }
   }
 
-  private async finishGame(interaction: StringSelectMenuInteraction, pending: { selected?: Array<{ uuid: string; name: string; userId: string }> }, date: string, plan: { progressionRolls: string[] }): Promise<void> {
+  private async finishGame(interaction: StringSelectMenuInteraction, pending: { selected?: Array<{ uuid: string; name: string; userId: string }> }, date: string, plan: { progressionRolls: string[]; rollCounts: Map<string, number> }): Promise<void> {
     const sessions = await this.persistence.listSessions()
     const sessionNumber = Math.max(0, ...sessions.map((session) => session.sessionNumber)) + 1
-    const draft = await this.persistence.createSession({ sessionNumber, date: '', inGameStartDate: date, inGameEndDate: '', title: '', participants: (pending.selected ?? []).map((actor) => actor.uuid), published: false })
+    const selected = pending.selected ?? []
+    const draft = await this.persistence.createSession({ sessionNumber, date: '', inGameStartDate: date, inGameEndDate: '', title: '', participants: selected.map((actor) => actor.uuid), published: false })
     const content = `Brouillon créé : résumé n°${draft.sessionNumber}.\nDébut : ${this.displayDate(date)}. Fin : à renseigner.\n\n${plan.progressionRolls.join('\n')}\n\nComplète puis publie le résumé dans l’application MJ.`
     const announcementId = `pf2-new-game:announce:${draft.id}`
-    this.pendingAnnouncements.set(announcementId, { content: `**Séance prévue — Résumé n°${draft.sessionNumber}**\nAvec : ${(pending.selected ?? []).map((actor) => `<@${actor.userId}>`).join(', ')}\nDébut de la mission : ${this.displayDate(date)}`, userIds: (pending.selected ?? []).map((actor) => actor.userId) })
+    this.pendingAnnouncements.set(announcementId, { content: await this.plannedSessionAnnouncement(draft.sessionNumber, date, selected, plan.rollCounts, true), userIds: selected.map((actor) => actor.userId) })
     const publish = new ButtonBuilder().setCustomId(announcementId).setLabel('Publier l’annonce').setStyle(ButtonStyle.Primary)
     await interaction.update({ content, components: [new ActionRowBuilder<ButtonBuilder>().addComponents(publish)] })
   }
 
-  private async finishGameModal(interaction: ModalSubmitInteraction, pending: { selected?: Array<{ uuid: string; name: string; userId: string }> }, date: string, plan: { progressionRolls: string[] }): Promise<void> {
+  private async finishGameModal(interaction: ModalSubmitInteraction, pending: { selected?: Array<{ uuid: string; name: string; userId: string }> }, date: string, plan: { progressionRolls: string[]; rollCounts: Map<string, number> }): Promise<void> {
     const sessions = await this.persistence.listSessions()
     const sessionNumber = Math.max(0, ...sessions.map((session) => session.sessionNumber)) + 1
-    const draft = await this.persistence.createSession({ sessionNumber, date: '', inGameStartDate: date, inGameEndDate: '', title: '', participants: (pending.selected ?? []).map((actor) => actor.uuid), published: false })
+    const selected = pending.selected ?? []
+    const draft = await this.persistence.createSession({ sessionNumber, date: '', inGameStartDate: date, inGameEndDate: '', title: '', participants: selected.map((actor) => actor.uuid), published: false })
     const announcementId = `pf2-new-game:announce:${draft.id}`
-    this.pendingAnnouncements.set(announcementId, { content: `**Séance prévue — Résumé n°${draft.sessionNumber}**\nAvec : ${(pending.selected ?? []).map((actor) => `<@${actor.userId}>`).join(', ')}\nDébut de la mission : ${this.displayDate(date)}`, userIds: (pending.selected ?? []).map((actor) => actor.userId) })
+    this.pendingAnnouncements.set(announcementId, { content: await this.plannedSessionAnnouncement(draft.sessionNumber, date, selected, plan.rollCounts, true), userIds: selected.map((actor) => actor.userId) })
     const publish = new ButtonBuilder().setCustomId(announcementId).setLabel('Publier l’annonce').setStyle(ButtonStyle.Primary)
     await interaction.reply({ content: `Brouillon créé : résumé n°${draft.sessionNumber}.\nDébut : ${this.displayDate(date)}. Fin : à renseigner.\n\n${plan.progressionRolls.join('\n')}\n\nComplète puis publie le résumé dans l’application MJ.`, components: [new ActionRowBuilder<ButtonBuilder>().addComponents(publish)], ephemeral: true })
   }
@@ -985,31 +1044,6 @@ export class DiscordCommandsService {
   private displayDate(date: string): string { const [year, month, day] = date.split('-').map(Number); const months = ['Abadius', 'Calistril', 'Pharast', 'Gozran', 'Desnus', 'Sarenith', 'Erastus', 'Arodus', 'Rova', 'Lamashan', 'Neth', 'Kuthona']; return year >= 3000 ? `${day} ${months[month - 1]} ${year} AR` : `${day} ${months[month - 1]} ${year + 1694} AR (${day}/${String(month).padStart(2, '0')}/${year})` }
   private discordId(player: string): string | undefined { return ({ jupi: '308566148931387393', julien: '308566148931387393', valerian: '492387405760823297', valou: '492387405760823297', david: '688742453276180560', tom: '134346709487714304', sameh: '688791427253403679', arcady: '344733584441081857', eric: '399621722158137346', mana: '404629333534179338', marinella: '404629333534179338', nico: '688860103629340690', nicolas: '688860103629340690', gus: '671746679636099094', augustin: '671746679636099094', elena: '689036096767524866', guilhem: '448500183186145291', arthur: '557907871212503050' })[player.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim()] }
 
-  private async recapMatrixMessages(actors: Array<{ uuid: string; name: string }>): Promise<string[]> {
-    const sessions = await this.persistence.listSessions()
-    const selected = new Set(actors.map((actor) => actor.uuid))
-    const labels = actors.map((actor) => this.characterLabel(actor.name))
-    const shared = actors.map(() => actors.map(() => 0))
-    for (const session of sessions) {
-      const participants = new Set(session.participants)
-      for (let left = 0; left < actors.length; left += 1) {
-        if (!participants.has(actors[left].uuid)) continue
-        for (let right = left + 1; right < actors.length; right += 1) {
-          if (!participants.has(actors[right].uuid)) continue
-          shared[left][right] += 1
-          shared[right][left] += 1
-        }
-      }
-    }
-    // The guard keeps TypeScript and the intent explicit: only selected PJ
-    // influence the matrix, even if a session stores other participants.
-    if (!selected.size) return ['**Séances communes**\nAucun PJ sélectionné.']
-    const header = `| PJ | ${labels.join(' | ')} |`
-    const separator = `|---|${labels.map(() => '---').join('|')}|`
-    const rows = actors.map((actor, row) => `| ${labels[row]} | ${actors.map((_other, column) => row === column ? '—' : String(shared[row][column])).join(' | ')} |`)
-    return this.discordTableChunks('**Séances communes des PJ sélectionnés**', header, separator, rows)
-  }
-
   private characterLabel(name: string): string {
     const label = name.replace(/\s+\([^()]+\)\s*$/, '').trim()
     return label || name
@@ -1017,20 +1051,59 @@ export class DiscordCommandsService {
 
   private isPlayerActorName(name: string): boolean { return /^\S(?:.*\S)?\s+\([^()]+\)$/u.test(name.trim()) }
 
-  private discordTableChunks(title: string, header: string, separator: string, rows: string[]): string[] {
-    const limit = 1_900
-    const prefix = `${title}\n${header}\n${separator}`
-    if (prefix.length > limit) return [`${title}\nLa sélection est trop large pour un tableau Discord. Choisis moins de PJ.`]
-    const chunks: string[] = []
-    let current = prefix
-    for (const row of rows) {
-      if (`${current}\n${row}`.length > limit && current !== prefix) {
-        chunks.push(current)
-        current = `${title} — suite\n${header}\n${separator}\n${row}`
-      } else current += `\n${row}`
+  private progressionRollCounts(
+    actors: Array<{ uuid: string }>,
+    sessions: import('../pf2-storage/Pf2PersistenceService').Pf2Session[],
+    beforeSessionNumber?: number,
+  ): Map<string, number> {
+    const eligible = sessions
+      .filter((session) => session.published && (beforeSessionNumber === undefined || session.sessionNumber < beforeSessionNumber))
+      .sort((left, right) => left.sessionNumber - right.sessionNumber)
+    return new Map(actors.map((actor) => {
+      const last = eligible.filter((session) => session.participants.includes(actor.uuid)).at(-1)
+      const missed = last ? eligible.filter((session) => session.sessionNumber > last.sessionNumber).length : eligible.length
+      return [actor.uuid, missed]
+    }))
+  }
+
+  private async playerLevels(): Promise<Map<string, { foundryLevel: number; theoreticalLevel: number }>> {
+    try {
+      const players = await this.foundry.listPlayers()
+      return new Map(players.map((player) => [player.uuid, { foundryLevel: player.foundryLevel, theoreticalLevel: player.level }]))
+    } catch (error) {
+      this.logger.warn(`Niveaux Foundry indisponibles : ${error instanceof Error ? error.message : String(error)}`)
+      return new Map()
     }
-    chunks.push(current)
-    return chunks
+  }
+
+  private levelLabel(uuid: string, levels: Map<string, { foundryLevel: number; theoreticalLevel: number }>): string {
+    const value = levels.get(uuid)
+    if (!value) return 'niveau ?'
+    const delta = value.theoreticalLevel - value.foundryLevel
+    if (delta > 0) return `niveau ${value.foundryLevel} (${delta} niveau${delta > 1 ? 'x' : ''} à faire !)`
+    if (delta < 0) return `niveau ${value.foundryLevel} (niveau théorique ${value.theoreticalLevel})`
+    return `niveau ${value.foundryLevel}`
+  }
+
+  private async plannedSessionAnnouncement(
+    sessionNumber: number,
+    date: string,
+    actors: Array<{ uuid: string; name: string; userId?: string }>,
+    rolls: Map<string, number>,
+    mentionUsers = false,
+  ): Promise<string> {
+    const levels = await this.playerLevels()
+    const lines = actors.map((actor) => {
+      const count = rolls.get(actor.uuid) ?? 0
+      const mention = mentionUsers && actor.userId ? ` (<@${actor.userId}>)` : ''
+      return `- **${this.characterLabel(actor.name)}**, ${this.levelLabel(actor.uuid, levels)} : **${count} lancer${count > 1 ? 's' : ''} à faire**${mention}`
+    })
+    return [
+      `**Séance prévue — Résumé n°${sessionNumber}**`,
+      'Avec :',
+      ...lines,
+      `Début de la mission : ${date ? this.displayDate(date) : 'date non renseignée'}`,
+    ].join('\n')
   }
 
   async actorNames(): Promise<Map<string, string>> {
