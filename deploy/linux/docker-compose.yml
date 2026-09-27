@@ -13,6 +13,7 @@ services:
     environment:
       HOST: 0.0.0.0
       JDR_PORT: 3333
+      NODE_OPTIONS: --max-old-space-size=4096
       SQLITE_PATH: /app/data/pf2.sqlite
       JDR_SQLITE_DATABASE: /app/data/jdr-database.sqlite
       PF2_LIBRARY_ROOT: /app/pf2-library
