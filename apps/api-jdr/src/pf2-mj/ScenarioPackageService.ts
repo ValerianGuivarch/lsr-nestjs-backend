@@ -19,6 +19,15 @@ export class ScenarioPackageService {
   async importZip(bytes: Buffer, originalName: string, options: ScenarioImportOptions = {}): Promise<{ scenarioId: string; packageVersion: number; state: 'integrated' | 'unchanged' | 'updated'; npcs: Array<{ id: string; name: string; created: boolean }> }> {
     const inspected = this.inspectZip(bytes)
     const { zip, manifest, scenarioId, packageVersion } = inspected
+    const inferredLibrary = await this.foundryLibraryForScenario(scenarioId)
+    let storedBytes = bytes
+    if (inferredLibrary) {
+      manifest.library = inferredLibrary
+      const manifestEntry = zip.getEntries().find(item => this.cleanPath(item.entryName).toLowerCase() === 'scenario.json')
+      if (!manifestEntry) throw new Error('Le ZIP doit contenir scenario.json à sa racine.')
+      zip.updateFile(manifestEntry.entryName, Buffer.from(`${JSON.stringify(manifest, null, 2)}\n`, 'utf8'))
+      storedBytes = zip.toBuffer()
+    }
     this.validateManifestArrays(manifest)
     if (this.referenceLibrary) await this.referenceLibrary.assertActorReferences(manifest as Record<string, unknown>)
     const existing = await this.persistence.getScenarioPackage(scenarioId)
@@ -38,7 +47,7 @@ export class ScenarioPackageService {
     const state: 'integrated' | 'unchanged' | 'updated' = existing?.packageVersion === packageVersion ? 'unchanged' : existing ? 'updated' : 'integrated'
     const packageDir = resolve(this.persistence.storageRoot, 'documents', 'scenario-packages', this.safeSegment(scenarioId))
     await mkdir(packageDir, { recursive: true })
-    await writeFile(resolve(packageDir, `v${packageVersion}.zip`), bytes)
+    await writeFile(resolve(packageDir, `v${packageVersion}.zip`), storedBytes)
     await this.persistence.importScenarioPackageAtomically({
       records: [...npcs.records, ...relations.records], npcLinks, relations: relationLinks,
       replaceRelationKinds: [
@@ -669,6 +678,44 @@ export class ScenarioPackageService {
     }
 
     if (errors.length) throw new Error(`Package v4 invalide : ${errors.join(' | ')}`)
+  }
+
+  private async foundryLibraryForScenario(scenarioId: string): Promise<{ root: string; category: string; collection: string }> {
+    const persistence = this.persistence as Pf2PersistenceService & {
+      readCatalogueSnapshot?: () => Promise<Record<string, unknown>>
+      listCatalogueEntries?: () => Promise<Array<Record<string, unknown>>>
+    }
+    const rawSnapshot = typeof persistence.readCatalogueSnapshot === 'function' ? await persistence.readCatalogueSnapshot() : {}
+    const snapshot = rawSnapshot && typeof rawSnapshot === 'object' && !Array.isArray(rawSnapshot) ? rawSnapshot as Record<string, unknown> : {}
+    const arcs = Array.isArray(snapshot.arcs) ? snapshot.arcs.map((item) => item && typeof item === 'object' && !Array.isArray(item) ? item as Record<string, unknown> : {}) : []
+    const arc = arcs.find((item) => Array.isArray(item.entryIds) && item.entryIds.map(String).includes(scenarioId))
+    if (arc) {
+      const entryIds = Array.isArray(arc.entryIds) ? arc.entryIds : []
+      const title = [arc.titleFr, arc.title, arc.name, arc.id].find((value) => typeof value === 'string' && value.trim())
+      return {
+        root: 'MJ',
+        category: entryIds.length >= 4 ? 'Campagnes transverses' : 'Campagnes transverses courtes',
+        collection: typeof title === 'string' && title.trim() ? title.trim() : String(arc.id ?? 'Arc narratif')
+      }
+    }
+
+    const catalogueEntries = typeof persistence.listCatalogueEntries === 'function' ? await persistence.listCatalogueEntries() : []
+    const registry = catalogueEntries.length ? await this.scenarioRegistry() : []
+    const registryEntry = registry.find((item) => item.id === scenarioId)
+    if (registryEntry?.parentId) {
+      const parent = catalogueEntries.find((item) => item.id === registryEntry.parentId && item.kind === 'campaign')
+      if (parent) {
+        const source = parent as Record<string, unknown>
+        const title = [source.titleFr, source.title, source.name, source.titleOriginal, source.id].find((value) => typeof value === 'string' && value.trim())
+        return { root: 'MJ', category: 'Campagnes officielles', collection: typeof title === 'string' ? title.trim() : registryEntry.parentId }
+      }
+    }
+
+    const catalogueEntry = catalogueEntries.find((item) => item.id === scenarioId) as Record<string, unknown> | undefined
+    if (scenarioId.startsWith('pfs-') || catalogueEntry?.sectionId === 'pathfinder-society' || catalogueEntry?.kind === 'pfs-scenario') {
+      return { root: 'MJ', category: 'Scénarios individuels', collection: 'Pathfinder Society' }
+    }
+    return { root: 'MJ', category: 'Scénarios individuels', collection: 'Autres' }
   }
 
   private mergeNpcLinks(existing: ScenarioNpcLink[], incoming: ScenarioNpcLink[]): ScenarioNpcLink[] {
