@@ -1,4 +1,3 @@
-import { initMapLibrary, registerMapLibrarySettings } from "./map-library/index.js";
 import { initScenarioImporter } from "./scenario-importer/index.js";
 import { initReferenceIndexExporter } from "./reference-index/index.js";
 import { initCombatMovement } from "./combat-movement/index.js";
@@ -37,7 +36,6 @@ Hooks.once("init", () => {
   registerTokenNamingSettings();
   registerPf2eHudIntegrationSettings();
   registerPortraitTokenSyncSettings();
-  registerMapLibrarySettings();
 });
 
 Hooks.once("ready", () => {
@@ -58,7 +56,6 @@ Hooks.once("ready", () => {
   initTokenNaming();
   initPf2eHudIntegration();
   initPortraitTokenSync();
-  initMapLibrary();
 
   if (!game.user.isGM) return;
 
