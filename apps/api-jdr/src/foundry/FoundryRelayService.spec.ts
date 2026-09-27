@@ -101,6 +101,46 @@ describe('FoundryRelayService', () => {
     expect(maximumConcurrentGets).toBeLessThanOrEqual(4)
   })
 
+  it('lists nested Scene folders with their paths and direct scene counts', async () => {
+    jest.spyOn(global, 'fetch').mockImplementation(async (input) => {
+      const url = String(input)
+      if (url.endsWith('/clients')) return new Response(JSON.stringify({ clients: [{ clientId: 'world-1', isOnline: true }] }))
+      if (url.includes('/structure?')) {
+        return new Response(JSON.stringify({
+          data: {
+            folders: {
+              'Agents of Edgewatch': {
+                id: 'root', uuid: 'Folder.root', type: 'Scene',
+                '01 - Devil at the Dreaming Palace': {
+                  id: 'book1', uuid: 'Folder.book1', type: 'Scene',
+                  entities: [
+                    { uuid: 'Scene.one', name: 'Dreaming Palace', type: 'Scene' },
+                    { uuid: 'Scene.two', name: 'Dragonfly Pagoda', type: 'Scene' }
+                  ]
+                }
+              },
+              MJ: {
+                id: 'mj', uuid: 'Folder.mj', type: 'Scene',
+                Divers: {
+                  id: 'divers', uuid: 'Folder.divers', type: 'Scene',
+                  entities: [{ uuid: 'Scene.three', name: 'Generated', type: 'Scene' }]
+                }
+              }
+            }
+          }
+        }))
+      }
+      throw new Error(`Unexpected URL: ${url}`)
+    })
+
+    await expect(new FoundryRelayService().listSceneFolders()).resolves.toEqual([
+      { uuid: 'Folder.root', name: 'Agents of Edgewatch', path: 'Agents of Edgewatch', sceneCount: 0 },
+      { uuid: 'Folder.book1', name: '01 - Devil at the Dreaming Palace', path: 'Agents of Edgewatch / 01 - Devil at the Dreaming Palace', sceneCount: 2 },
+      { uuid: 'Folder.mj', name: 'MJ', path: 'MJ', sceneCount: 0 },
+      { uuid: 'Folder.divers', name: 'Divers', path: 'MJ / Divers', sceneCount: 1 }
+    ])
+  })
+
   it('uploads a portrait then updates only the Actor portrait and an uncustomized token', async () => {
     const requests: Array<{ url: string; body: unknown }> = []
     jest.spyOn(global, 'fetch').mockImplementation(async (input, init) => {

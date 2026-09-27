@@ -15,6 +15,11 @@ export class FoundryRelayController {
     return this.foundry.listActors()
   }
 
+  @Get('scene-folders')
+  sceneFolders(): Promise<unknown> {
+    return this.foundry.listSceneFolders()
+  }
+
   @Get('actors/:uuid')
   actor(@Param('uuid') uuid: string): Promise<unknown> {
     return this.foundry.getActor(uuid)

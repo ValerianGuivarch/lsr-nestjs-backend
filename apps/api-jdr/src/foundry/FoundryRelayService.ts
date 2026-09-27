@@ -3,6 +3,7 @@ import { BadGatewayException, BadRequestException, Injectable, Logger, ServiceUn
 type RelayClient = { clientId?: unknown; isOnline?: unknown }
 type WorldActor = { uuid: string; name: string; type?: string }
 export type FoundryNpcSummary = { uuid: string; name: string; type: string; level: number | null; hp: number | null; img: string | null }
+export type FoundrySceneFolderSummary = { uuid: string; name: string; path: string; sceneCount: number }
 export type PlayerSummary = { uuid: string; name: string; level: number; xp: number; xpc: number; foundryLevel: number }
 type CareerState = { xpc: number; level: number; xp: number }
 const XP_PER_LEVEL = 1_000
@@ -39,6 +40,12 @@ export class FoundryRelayService {
 
   async listActors(): Promise<WorldActor[]> {
     return this.listRootWorldActors(await this.onlineClientId())
+  }
+
+  async listSceneFolders(): Promise<FoundrySceneFolderSummary[]> {
+    const clientId = await this.onlineClientId()
+    const params = new URLSearchParams({ clientId, types: 'Scene,Folder', recursive: 'true', includeEntityData: 'false' })
+    return this.collectSceneFolders(await this.request(`/structure?${params}`, {}, 30_000))
   }
 
   async getActor(uuid: string): Promise<unknown> {
@@ -287,6 +294,33 @@ export class FoundryRelayService {
       if (!/^Actor\.[A-Za-z0-9]+$/.test(uuid)) return []
       return [{ uuid, name: typeof item.name === 'string' ? item.name : uuid, type: typeof item.type === 'string' ? item.type : undefined }]
     }).sort((left, right) => left.name.localeCompare(right.name, 'fr'))
+  }
+
+  private collectSceneFolders(value: unknown): FoundrySceneFolderSummary[] {
+    const root = this.object(value)
+    const data = this.object(root.data)
+    const folders = this.object(data.folders ?? root.folders)
+    const output: FoundrySceneFolderSummary[] = []
+    const visit = (node: Record<string, unknown>, parentPath: string): void => {
+      for (const [label, rawChild] of Object.entries(node)) {
+        if (!rawChild || typeof rawChild !== 'object' || Array.isArray(rawChild)) continue
+        const child = this.object(rawChild)
+        const uuid = typeof child.uuid === 'string' ? child.uuid : ''
+        const type = typeof child.type === 'string' ? child.type : ''
+        const isSceneFolder = type === 'Scene' && /^Folder\.[A-Za-z0-9]+$/.test(uuid)
+        const name = typeof child.name === 'string' && child.name.trim() ? child.name.trim() : label
+        const path = parentPath ? `${parentPath} / ${name}` : name
+        if (isSceneFolder) {
+          const entities = Array.isArray(child.entities) ? child.entities : []
+          const sceneCount = entities.filter((item) => this.object(item).type === 'Scene').length
+          output.push({ uuid, name, path, sceneCount })
+        }
+        const nested = Object.fromEntries(Object.entries(child).filter(([key]) => !['id', 'uuid', 'type', 'name', 'entities'].includes(key)))
+        visit(nested, isSceneFolder ? path : parentPath)
+      }
+    }
+    visit(folders, '')
+    return output.sort((left, right) => left.path.localeCompare(right.path, 'fr'))
   }
 
   private async mapWithConcurrency<T, Result>(items: T[], limit: number, mapper: (item: T) => Promise<Result>): Promise<Result[]> {
