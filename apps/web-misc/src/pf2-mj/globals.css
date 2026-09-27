@@ -530,6 +530,10 @@
 .pf2-mj-v3 .entry-facts>div{align-content:start}
 .pf2-mj-v3 .stats-v3>div:nth-child(5)>b,.pf2-mj-v3 .stats-v3>div:nth-child(6)>b{background:#f4ead2;color:#765719}
 .pf2-mj-v3 .library-view{display:grid;gap:26px}
+.pf2-mj-v3 .catalogue-subnav{display:flex;gap:7px;flex-wrap:wrap;align-items:center}
+.pf2-mj-v3 .catalogue-subnav a{display:inline-flex;align-items:center;border:1px solid var(--line);border-radius:999px;background:var(--panel);color:var(--gold);padding:7px 10px;font-size:8px;font-weight:700;text-decoration:none}
+.pf2-mj-v3 .catalogue-subnav a:hover{background:#f5e9c9;border-color:#c8ac6e}
+.pf2-mj-v3 .reference-subnav{margin:0 0 16px}
 .pf2-mj-v3 .library-section{display:grid;gap:8px}
 .pf2-mj-v3 .library-node{border:1px solid var(--line);border-radius:8px;background:var(--panel);overflow:hidden}
 .pf2-mj-v3 .library-node>summary{list-style:none;display:grid;grid-template-columns:34px 1fr auto;gap:11px;align-items:center;padding:13px 15px;cursor:pointer}
