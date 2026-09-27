@@ -775,6 +775,7 @@ function ScenarioPackagePanel({ scenarioId, onOpenReference, preparationStatus, 
   const [resetPreview, setResetPreview] = useState<ScenarioResetPreview | null>(null)
   const [registry, setRegistry] = useState<PackageRegistry>({ factions: [], places: [] })
   const [message, setMessage] = useState('')
+  const [aiMessage, setAiMessage] = useState('')
   const [busy, setBusy] = useState(false)
   const [referenceLibrary, setReferenceLibrary] = useState<FoundryReferenceLibraryStatus | null>(null)
   const [requiredData, setRequiredData] = useState<AiRequiredDataStatus>(null)
@@ -851,17 +852,17 @@ function ScenarioPackagePanel({ scenarioId, onOpenReference, preparationStatus, 
   // PF2_ROBUST_DOWNLOADS_V2
   const prepareLargeDownload = async (kind: 'ai-preflight' | 'ai-generation') => {
     setBusy(true)
-    setMessage(kind === 'ai-preflight' ? 'Préparation de la préanalyse…' : 'Préparation du ZIP final…')
+    setAiMessage(kind === 'ai-preflight' ? 'Préparation de la préanalyse…' : 'Préparation du ZIP final…')
     try {
       const response = await fetch(`/apil7r/pf2-mj/downloads/prepare/${kind}/${encodeURIComponent(scenarioId)}`, { method: 'POST' })
       const payload = await response.json().catch(() => null)
       if (!response.ok) throw new Error(payload?.message ?? payload?.error ?? 'Préparation du téléchargement impossible.')
       if (!payload?.token) throw new Error('Le serveur n’a pas renvoyé de token de téléchargement.')
       const sizeMb = Number(payload.size ?? 0) / 1024 / 1024
-      setMessage(`Export prêt${sizeMb ? ` · ${sizeMb.toFixed(1)} Mio` : ''}. Le téléchargement démarre…`)
+      setAiMessage(`Export prêt${sizeMb ? ` · ${sizeMb.toFixed(1)} Mio` : ''}. Le téléchargement démarre…`)
       window.location.assign(`/apil7r/pf2-mj/downloads/${encodeURIComponent(payload.token)}`)
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : 'Préparation du téléchargement impossible.')
+      setAiMessage(error instanceof Error ? error.message : 'Préparation du téléchargement impossible.')
     } finally {
       setBusy(false)
     }
@@ -869,30 +870,30 @@ function ScenarioPackagePanel({ scenarioId, onOpenReference, preparationStatus, 
 
   const importReferenceLibrary = async (file: File | undefined) => {
     if (!file) return
-    if (!file.name.toLowerCase().endsWith('.json')) { setMessage('Sélectionne le JSON PF2e Reference Library exporté depuis Foundry.'); return }
-    setBusy(true); setMessage('')
+    if (!file.name.toLowerCase().endsWith('.json')) { setAiMessage('Sélectionne le JSON PF2e Reference Library exporté depuis Foundry.'); return }
+    setBusy(true); setAiMessage('')
     try {
       const body = new FormData(); body.set('file', file)
       const response = await fetch('/apil7r/pf2-mj/foundry-reference-library/import', { method: 'POST', body })
       const payload = await response.json().catch(() => null)
       if (!response.ok) throw new Error(payload?.message ?? payload?.error ?? 'Import de la bibliothèque Foundry impossible.')
-      setMessage(`Bibliothèque Foundry importée · ${Number(payload.actorCount ?? 0)} Actors · ${Number(payload.itemCount ?? 0)} Items.`)
+      setAiMessage(`Bibliothèque Foundry importée · ${Number(payload.actorCount ?? 0)} Actors · ${Number(payload.itemCount ?? 0)} Items.`)
       await loadAiSupport()
-    } catch (error) { setMessage(error instanceof Error ? error.message : 'Import de la bibliothèque Foundry impossible.') } finally { setBusy(false) }
+    } catch (error) { setAiMessage(error instanceof Error ? error.message : 'Import de la bibliothèque Foundry impossible.') } finally { setBusy(false) }
   }
 
   const importRequiredData = async (file: File | undefined) => {
     if (!file) return
-    if (!file.name.toLowerCase().endsWith('.json')) { setMessage('Sélectionne required-data.json.'); return }
-    setBusy(true); setMessage('')
+    if (!file.name.toLowerCase().endsWith('.json')) { setAiMessage('Sélectionne required-data.json.'); return }
+    setBusy(true); setAiMessage('')
     try {
       const body = new FormData(); body.set('file', file)
       const response = await fetch(`/apil7r/pf2-mj/scenarios/${encodeURIComponent(scenarioId)}/ai-required-data`, { method: 'POST', body })
       const payload = await response.json().catch(() => null)
       if (!response.ok) throw new Error(payload?.message ?? payload?.error ?? 'Import de required-data.json impossible.')
       setRequiredData(payload)
-      setMessage(`${Number(payload.requests?.length ?? 0)} demande(s) IA importée(s) · ${Number(payload.requiredMissing ?? 0)} requise(s) introuvable(s).`)
-    } catch (error) { setMessage(error instanceof Error ? error.message : 'Import de required-data.json impossible.') } finally { setBusy(false) }
+      setAiMessage(`${Number(payload.requests?.length ?? 0)} demande(s) IA importée(s) · ${Number(payload.requiredMissing ?? 0)} requise(s) introuvable(s).`)
+    } catch (error) { setAiMessage(error instanceof Error ? error.message : 'Import de required-data.json impossible.') } finally { setBusy(false) }
   }
 
   const integrateIndexed = async () => {
@@ -1002,6 +1003,7 @@ function ScenarioPackagePanel({ scenarioId, onOpenReference, preparationStatus, 
           : <p className="missing">Passe le statut MJ à « Retenu » ou « À jouer » pour commencer la préanalyse IA.</p>}
       <div className="package-status"><small>RETOUR DE PHASE 1</small><strong>{requiredData ? `${requiredData.requests.length} demande(s) · ${requiredData.availableCount} résolue(s)` : 'Aucun required-data.json'}</strong><em>{requiredData ? `${requiredData.status}${requiredData.requiredMissing ? ` · ${requiredData.requiredMissing} requise(s) introuvable(s)` : ''}` : 'Importe ici le JSON produit par l’IA.'}</em></div>
       <label className="package-upload"><span>{busy ? 'Import en cours…' : 'Importer required-data.json'}</span><input type="file" accept=".json,application/json" disabled={busy} onChange={(event) => { void importRequiredData(event.target.files?.[0]); event.currentTarget.value = '' }} /></label>
+      {aiMessage && <p className="package-message">{aiMessage}</p>}
       {requiredData?.requests?.length ? <div className="resource-list">{requiredData.requests.map((request) => <div key={request.requestId} className={request.available ? '' : 'missing'}><small>{request.sourceType} · {request.kind}{request.required ? ' · requis' : ' · facultatif'}</small><strong>{request.subject.name || request.indexName || request.subject.uuid}</strong><em>{request.available ? 'source disponible dans le snapshot' : 'SOURCE INTROUVABLE'} · {request.reason}</em></div>)}</div> : null}
       {requiredData && requiredData.status !== 'blocked' && requiredData.requiredMissing === 0 && preparationStatus === 'selected' && <><p><strong>Phase 2 :</strong> l’application reconstruit un ZIP autonome avec les mêmes PDF/contexte et seulement les sources Foundry détaillées demandées.</p><button className="package-integrate" disabled={busy} onClick={() => void prepareLargeDownload('ai-generation')}>{busy ? 'Préparation…' : 'Exporter le ZIP de génération finale'}</button></>}
       {requiredData?.status === 'blocked' && <p className="missing">La préanalyse a déclaré cette cible bloquée. Examine les éléments unresolved avant de générer le package final.</p>}
