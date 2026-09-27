@@ -50,6 +50,26 @@ Pour un PNJ existant, un package peut remplir `roleplay` seulement si la fiche n
 
 Sans `npcId`, l'application crée `<scenario.id>--<key>` et ne fusionne jamais les PNJ sur le nom seul.
 
+## Relations métier : lieux, régions, factions et événements
+
+Les relations réutilisent de préférence les IDs stables fournis par `package-registry.json`.
+
+Un lieu existant :
+
+```json
+{ "key": "woodsedge", "kind": "lieu", "refId": "lieu_woodsedge", "role": "destination" }
+```
+
+Une région existante doit être placée dans `places[]` **avec `kind: "region"`** :
+
+```json
+{ "key": "galt", "kind": "region", "refId": "region_galt", "role": "région de destination" }
+```
+
+Sans `kind: "region"`, l'application interprète une entrée de `places[]` comme un `lieu` et cherchera donc le même ID dans le mauvais référentiel. Ne jamais omettre `kind` pour une région.
+
+Pour `factions[]`, utiliser `factionId` pour réutiliser une faction existante ; pour `events[]`, utiliser `eventId`. Sans référence existante, une nouvelle entité propre au scénario peut être créée avec `key` + `name`, mais seulement lorsqu'aucune identité globale fiable n'existe.
+
 ## Actors Foundry
 
 Trois types sont acceptés : `reference`, `custom`, `narrative`.
