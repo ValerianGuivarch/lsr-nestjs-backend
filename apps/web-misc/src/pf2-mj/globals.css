@@ -551,6 +551,10 @@
 .pf2-mj-v3 .arc-actions button.primary{border-color:#b89956;background:#fff2cf;color:#6f5010}
 .pf2-mj-v3 .arc-actions button.danger{border-color:#d9b2aa;background:#fff2ef;color:#8b3c31}
 .pf2-mj-v3 .arc-actions button:hover{filter:brightness(.97)}
+.pf2-mj-v3 .transverse-short-section{gap:6px}
+.pf2-mj-v3 .transverse-short>summary{padding-block:10px;background:#fbfaf6}
+.pf2-mj-v3 .transverse-short>summary strong{font-size:13px}
+.pf2-mj-v3 .transverse-short .library-children{padding-top:8px;padding-bottom:9px}
 .pf2-mj-v3 .library-depth-1,.pf2-mj-v3 .library-depth-2,.pf2-mj-v3 .library-depth-3{box-shadow:none}
 .pf2-mj-v3 .component-strip{display:flex;gap:6px;flex-wrap:wrap;padding:4px 0}
 .pf2-mj-v3 .component-strip span{border:1px dashed var(--line);border-radius:5px;padding:6px 8px;color:var(--muted);font-size:8px;background:#faf8f1}
