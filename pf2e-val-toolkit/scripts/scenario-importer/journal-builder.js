@@ -60,8 +60,8 @@ function buildOverviewPage(data) {
     `${data.scenario.id.replace(/^PFS-/, "")} - ${data.scenario.name}`;
 
   const journalHierarchy = [
-    data.library?.root ?? "Campagnes",
-    data.library?.category ?? "Divers",
+    data.library?.root ?? "MJ",
+    data.library?.category ?? "Scénarios individuels",
     data.library?.collection ?? "Autres",
     scenarioFolder
   ].map(esc).join(" → ");
@@ -70,7 +70,7 @@ function buildOverviewPage(data) {
     data.actorLibrary?.root ?? "MJ",
     data.actorLibrary?.category ??
       data.library?.category ??
-      "Divers",
+      "Scénarios individuels",
     data.actorLibrary?.collection ??
       data.library?.collection ??
       "Autres",
@@ -81,7 +81,7 @@ function buildOverviewPage(data) {
     data.sceneLibrary?.root ?? "MJ",
     data.sceneLibrary?.category ??
       data.library?.category ??
-      "Divers",
+      "Scénarios individuels",
     data.sceneLibrary?.collection ??
       data.library?.collection ??
       "Autres",

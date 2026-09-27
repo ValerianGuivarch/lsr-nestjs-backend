@@ -23,8 +23,8 @@ async function getOrCreateFolder(name, type, parent = null) {
 
 export async function ensureScenarioFolderTree(type, library, scenario) {
   const names = [
-    library?.root ?? "Campagnes",
-    library?.category ?? "Divers",
+    library?.root ?? "MJ",
+    library?.category ?? "Scénarios individuels",
     library?.collection ?? "Autres",
     `${scenario.id.replace(/^PFS-/, "")} - ${scenario.name}`
   ];

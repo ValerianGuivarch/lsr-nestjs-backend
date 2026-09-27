@@ -138,7 +138,7 @@ function actorLibraryFor(data) {
     category:
       data.actorLibrary?.category ??
       data.library?.category ??
-      "Divers",
+      "Scénarios individuels",
     collection:
       data.actorLibrary?.collection ??
       data.library?.collection ??
@@ -152,7 +152,7 @@ function sceneLibraryFor(data) {
     category:
       data.sceneLibrary?.category ??
       data.library?.category ??
-      "Divers",
+      "Scénarios individuels",
     collection:
       data.sceneLibrary?.collection ??
       data.library?.collection ??
