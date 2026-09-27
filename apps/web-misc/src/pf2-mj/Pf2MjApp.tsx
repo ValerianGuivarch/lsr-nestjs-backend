@@ -781,17 +781,19 @@ function CampaignOperationsPanel({ campaignId, onOpenPlayable }: { campaignId: s
       await load()
     } catch (error) { setMessage(error instanceof Error ? error.message : 'Réinitialisation impossible.') } finally { setBusy(false) }
   }
-  const attemptLabel = (child: CampaignChildPackageState) => {
-    const deployment = child.latestDeployment
-    if (!deployment) return 'aucune tentative'
-    if (deployment.operation === 'reset') return deployment.status === 'success' ? 'reset terminé' : deployment.status === 'failed' ? 'reset en échec' : 'reset en cours'
-    return `dernier essai v${deployment.packageVersion} · ${deployment.status === 'success' ? 'succès' : deployment.status === 'failed' ? 'échec' : deployment.status === 'claimed' ? 'import en cours' : 'en attente'}`
-  }
-  return <section className="detail-section campaign-operations"><h3>État & synchronisation de la campagne</h3>
-    {state ? <><div className="campaign-summary"><strong>{state.summary.synchronized}/{state.summary.total} à jour dans Foundry</strong><span>{state.summary.integrated}/{state.summary.total} packages intégrés{state.summary.failed ? ` · ${state.summary.failed} échec(s)` : ''}</span></div>
-      <div className="campaign-child-status">{state.children.map((child) => { const unit = playableMap.get(child.scenarioId); const content = <><span className={child.upToDate ? 'ok' : child.latestDeployment?.status === 'failed' ? 'failed' : ''}>{child.upToDate ? '✓' : child.latestDeployment?.status === 'failed' ? '!' : '•'}</span><strong>{child.name}</strong><small>App {child.appVersion === null ? '—' : `v${child.appVersion}`} · Foundry {child.foundryVersion === null ? '—' : `v${child.foundryVersion}`}</small><em>{attemptLabel(child)}</em></>; return unit ? <Link key={child.scenarioId} to={playableHref(unit)}>{content}</Link> : <div key={child.scenarioId}>{content}</div> })}</div>
-      <button className="package-integrate package-deploy" disabled={busy || state.summary.integrated === 0} onClick={() => void synchronize()}>{busy ? 'Traitement…' : 'Synchroniser toute la campagne avec Foundry'}</button></> : <p className="missing">État de campagne indisponible.</p>}
-    {preview && <div className="campaign-reset-box"><h4>Réinitialiser</h4><p><strong>Application :</strong> {preview.application.packages} package(s), {preview.application.deployments} historique(s) de déploiement actuellement connu(s) et jusqu’à {preview.application.scopedRecords} donnée(s) propres aux scénarios. Les liens vers des fiches globales restent conservés ; une fiche créée par la campagne mais réutilisée hors de celle-ci est protégée.</p><p><strong>Foundry connu :</strong> ≈ {preview.foundryKnown.actors} Actor(s), {preview.foundryKnown.scenes} scène(s), {preview.foundryKnown.journals} journal(aux). {preview.preserveNpcIds.length ? `${preview.preserveNpcIds.length} PNJ partagé(s) hors campagne seront protégés.` : ''}</p><div className="campaign-reset-actions"><button disabled={busy} onClick={() => void reset('app')}>Application uniquement</button><button disabled={busy} onClick={() => void reset('foundry')}>Foundry uniquement</button><button className="danger" disabled={busy} onClick={() => void reset('all')}>Tout recommencer</button></div><small>{preview.foundryKnown.note}</small></div>}
+  const childStateLabel = (child: CampaignChildPackageState) => child.upToDate
+    ? 'Prêt dans Foundry'
+    : child.latestDeployment?.status === 'failed'
+      ? 'Échec Foundry'
+      : child.latestDeployment?.status === 'pending' || child.latestDeployment?.status === 'claimed'
+        ? 'Mise à jour en cours'
+        : child.appVersion === null
+          ? 'À préparer'
+          : 'Mise à jour nécessaire'
+  return <section className="detail-section campaign-operations"><h3>Foundry</h3>
+    {state ? <><div className="campaign-summary"><strong>{state.summary.synchronized}/{state.summary.total} prêts dans Foundry</strong><span>{state.summary.integrated}/{state.summary.total} préparés{state.summary.failed ? ` · ${state.summary.failed} échec(s)` : ''}</span></div>
+      <div className="campaign-child-status">{state.children.map((child) => { const unit = playableMap.get(child.scenarioId); const label = childStateLabel(child); const content = <><span className={child.upToDate ? 'ok' : child.latestDeployment?.status === 'failed' ? 'failed' : ''}>{child.upToDate ? '✓' : child.latestDeployment?.status === 'failed' ? '!' : '•'}</span><strong>{child.name}</strong><small>{label}</small></>; return unit ? <Link key={child.scenarioId} to={playableHref(unit)}>{content}</Link> : <div key={child.scenarioId}>{content}</div> })}</div>
+      {state.summary.synchronized < state.summary.integrated && <button className="package-integrate package-deploy" disabled={busy || state.summary.integrated === 0} onClick={() => void synchronize()}>{busy ? 'Traitement…' : 'Mettre Foundry à jour'}</button>}</> : <p className="missing">État Foundry de la campagne indisponible.</p>}
     {message && <p className="package-message">{message}</p>}
   </section>
 }
@@ -1005,7 +1007,7 @@ function ScenarioPackagePanel({ scenarioId, onOpenReference, preparationStatus, 
   const foundryNeedles = unique(foundrySearchNames.map(normalizeFoundryName).filter((value) => value.length >= 6))
   const preexistingSceneFolders = foundrySceneFolders.filter((folder) => {
     const normalizedPath = normalizeFoundryName(folder.path)
-    const managedByToolkit = normalizedPath.startsWith('mj divers autres ') || normalizedPath === 'mj divers autres'
+    const managedByToolkit = normalizedPath === 'mj' || normalizedPath.startsWith('mj ')
     return !managedByToolkit && foundryNeedles.some((needle) => normalizedPath.includes(needle))
   })
   const managedFoundryPresent = Boolean(status?.deployedVersion || (deployment?.operation !== 'reset' && deployment?.status === 'success'))
@@ -1032,6 +1034,22 @@ function ScenarioPackagePanel({ scenarioId, onOpenReference, preparationStatus, 
   const factionNames = new Map(registry.factions.map((faction) => [faction.id, faction.name]))
   const placeNames = new Map(registry.places.map((place) => [place.id, place.name]))
   const actors = Array.isArray(status?.manifest?.actors) ? status.manifest.actors.filter((value): value is PackageActor => Boolean(value && typeof value === 'object' && !Array.isArray(value))) : []
+  const showLegacyTechnicalTools = false
+  const managedUpToDate = Boolean(status && status.status === 'deployed' && status.deployedVersion === status.packageVersion)
+  const foundryStateLabel = deploymentActive
+    ? 'Mise à jour Foundry en cours'
+    : deployment?.status === 'failed'
+      ? 'Échec de synchronisation Foundry'
+      : preexistingSceneFolders.length && managedFoundryPresent
+        ? 'Prêt · contenu existant + contenu MJ'
+        : managedUpToDate
+          ? 'Prêt dans Foundry'
+          : managedFoundryPresent || status
+            ? 'À mettre à jour dans Foundry'
+            : preexistingSceneFolders.length
+              ? 'Contenu préexistant détecté'
+              : 'À préparer dans Foundry'
+  const foundryActionLabel = deployment?.status === 'failed' ? 'Relancer la synchronisation' : status ? 'Mettre Foundry à jour' : null
   const bestiary = [...actors.filter((actor) => actor.type === 'reference' || actor.type === 'custom').reduce((groups, actor) => {
     const source = actor.type === 'reference' ? (actor.uuid || (typeof actor.lookup === 'string' ? actor.lookup : 'Référence PF2')) : 'Acteur mécanique du package'
     const key = `${actor.type}:${source}:${actor.name ?? actor.key ?? ''}`
@@ -1040,8 +1058,8 @@ function ScenarioPackagePanel({ scenarioId, onOpenReference, preparationStatus, 
     return groups
   }, new Map<string, { name: string; type: 'reference' | 'custom'; source: string; quantity: number }>()).values()]
   return <>
-    <section className="detail-section foundry-coverage"><h3>Présence dans Foundry</h3><div className="package-status"><small>ÉTAT DÉTECTÉ</small><strong>{foundryCoverageLabel}</strong><em>{preexistingSceneFolders.length ? `${preexistingSceneFolders.reduce((sum, folder) => sum + folder.sceneCount, 0)} scène(s) dans ${preexistingSceneFolders.length} dossier(s) hors Toolkit` : managedFoundryPresent ? `package géré${status?.deployedVersion ? ` · v${status.deployedVersion}` : ''}` : 'Aucun dossier de scène correspondant ni déploiement Toolkit réussi détecté.'}</em></div>{preexistingSceneFolders.length > 0 && <div className="resource-list">{preexistingSceneFolders.map((folder) => <div key={folder.uuid}><small>CONTENU PRÉEXISTANT</small><strong>{folder.path}</strong><em>{folder.sceneCount} scène{folder.sceneCount > 1 ? 's' : ''} directe{folder.sceneCount > 1 ? 's' : ''}</em></div>)}</div>}<p className="source-badge">« Préexistant » signifie seulement « hors dossiers gérés par le Toolkit ». La provenance officielle/manuelle n’est pas déduite sans preuve supplémentaire.</p></section>
-    {allowAiExport && <section className="detail-section scenario-ai-preparation"><h3>Préparation IA · 2 phases</h3>
+    <section className="detail-section foundry-coverage compact-foundry-status"><h3>Foundry</h3><div className="package-status"><small>ÉTAT</small><strong>{foundryStateLabel}</strong><em>{preexistingSceneFolders.length ? `${preexistingSceneFolders.reduce((sum, folder) => sum + folder.sceneCount, 0)} scène(s) préexistante(s) détectée(s)` : managedFoundryPresent ? 'Contenu MJ géré détecté.' : 'Aucun contenu géré détecté.'}</em></div>{foundryActionLabel && !managedUpToDate && !deploymentActive && <button className="package-integrate package-deploy" disabled={busy} onClick={() => void requestDeployment()}>{busy ? 'Traitement…' : foundryActionLabel}</button>}{managedUpToDate && <p className="source-badge">Aucune action nécessaire.</p>}{!status && !preexistingSceneFolders.length && <p className="source-badge">Action : préparation Foundry à faire lors du prochain passage de génération.</p>}{deploymentLabel && deployment?.status === 'failed' && <p className="missing">{deployment.error || deploymentLabel}</p>}</section>
+    {showLegacyTechnicalTools && allowAiExport && <section className="detail-section scenario-ai-preparation"><h3>Préparation IA · 2 phases</h3>
       <div className="package-status"><small>BIBLIOTHÈQUE DE RÉFÉRENCES FOUNDRY</small><strong>{referenceLibrary?.available ? `${referenceLibrary.actorCount} Actors · ${referenceLibrary.itemCount} Items` : 'Absente'}</strong><em>{referenceLibrary?.available ? `sources détaillées : ${referenceLibrary.actorSourceCount} Actors · ${referenceLibrary.itemSourceCount} Items${referenceLibrary.metadata?.systemVersion ? ` · PF2e ${referenceLibrary.metadata.systemVersion}` : ''}` : 'Exporte « PF2e Reference Library » depuis Foundry puis importe le JSON ici.'}</em></div>
       <label className="package-upload"><span>{busy ? 'Import en cours…' : referenceLibrary?.available ? 'Remplacer la bibliothèque Foundry' : 'Importer la bibliothèque Foundry'}</span><input type="file" accept=".json,application/json" disabled={busy} onChange={(event) => { void importReferenceLibrary(event.target.files?.[0]); event.currentTarget.value = '' }} /></label>
       {foundrySelected
@@ -1065,7 +1083,7 @@ function ScenarioPackagePanel({ scenarioId, onOpenReference, preparationStatus, 
         return <div key={asset.id} className={asset.present ? '' : 'missing'}><small>{assetLabel(asset)}{asset.language ? ` · ${asset.language}` : ''}{asset.resourceScope === 'component' && asset.resourceTargetLabel ? ` · ${asset.resourceTargetLabel}` : ''}</small><strong>{asset.filename}</strong><em>{asset.present ? 'disponible' : 'absent'} · {asset.associationStatus === 'confirmed' ? 'association confirmée' : asset.associationStatus}</em>{href && <a className="resource-open" href={href} target="_blank" rel="noreferrer">Ouvrir le PDF ↗</a>}</div>
       })}</div> : <p className="missing">Aucune ressource indexée pour ce scénario.</p>}
     </section>
-    {aiExportKind === 'campaign' ? <section className="detail-section scenario-package-panel"><h3>Réponse IA de campagne</h3>
+    {showLegacyTechnicalTools && (aiExportKind === 'campaign' ? <section className="detail-section scenario-package-panel"><h3>Réponse IA de campagne</h3>
       <p>L’enveloppe de campagne sera contrôlée puis ses packages enfants seront intégrés dans l’ordre. Les liens métier déjà présents sont conservés ; les dépendances proposées sont fusionnées avec les dépendances existantes.</p>
       <label className="package-upload"><span>{busy ? 'Import en cours…' : 'Importer le ZIP réponse IA de campagne'}</span><input type="file" accept=".zip,application/zip" disabled={busy} onChange={(event) => { void importPackage(event.target.files?.[0]); event.currentTarget.value = '' }} /></label>
       {message && <p className="package-message">{message}</p>}
@@ -1088,7 +1106,7 @@ function ScenarioPackagePanel({ scenarioId, onOpenReference, preparationStatus, 
         <small>{resetPreview.foundryKnown.note}</small>
       </div>}
     {message && <p className="package-message">{message}</p>}
-    </section>}
+    </section>)}
     <section className="detail-section scenario-npcs"><h3>PNJ du scénario</h3>{relations.npcs.length ? <div className="scenario-npc-grid">{relations.npcs.map((npc) => { const id = npc.id ?? npc.npcId; const portrait = pnjPortraitUrl(npc.portrait); const faction = npc.factions?.[0]; const region = npc.regions?.[0]; return <Link className="scenario-npc-card" key={id} to={referenceHref('pnj', id)}><span className={`scenario-npc-portrait${portrait ? '' : ' placeholder'}`}>{portrait ? <img src={portrait} alt="" /> : '◆'}</span><span className="scenario-npc-copy"><strong>{npc.nom || npc.name || id}</strong><em>{npc.role || 'Rôle à préciser'}{npc.importance ? ` · ${npc.importance}` : ''}</em>{faction && <small>Faction · {factionNames.get(faction.faction_id ?? '') ?? faction.faction_id}</small>}{region && <small>Région · {placeNames.get(region) ?? region}</small>}</span></Link> })}</div> : <p className="missing">Aucun PNJ narratif lié à ce scénario.</p>}</section>
     <section className="detail-section scenario-bestiary"><h3>Bestiaire / acteurs du scénario</h3>{!status ? <p className="missing">Aucun package intégré : le bestiaire sera disponible après son intégration.</p> : bestiary.length ? <div className="scenario-bestiary-list">{bestiary.map((actor) => <article key={`${actor.type}-${actor.source}-${actor.name}`}><span className={`actor-kind ${actor.type}`}>{actor.type === 'reference' ? 'Référence' : 'Personnalisé'}</span><strong>{actor.name}</strong><em>{actor.type === 'reference' ? `Compendium PF2 · ${actor.source}` : actor.source}</em>{actor.quantity > 1 && <small>×{actor.quantity}</small>}</article>)}</div> : <p className="missing">Aucun acteur de bestiaire déclaré dans ce package.{actors.some((actor) => actor.type === 'narrative') ? ' Les acteurs narratifs sont présentés dans les PNJ ci-dessus.' : ''}</p>}</section>
     <section className="detail-section scenario-dependencies"><h3>Dépendances entre scénarios</h3>
@@ -1141,7 +1159,7 @@ function ContainerDetail({ container, curation, onOpenPlayable, onUpdate, onOpen
     {container.containerType === 'campaign' && <section className="detail-section playable-components-summary"><h3>Composants jouables</h3><p>{documentedChildren.length}/{children.length} scénario{children.length > 1 ? 's' : ''} documenté{documentedChildren.length > 1 ? 's' : ''} · {componentTotal} composant{componentTotal > 1 ? 's' : ''} narratif{componentTotal > 1 ? 's' : ''}.</p>{container.playableComponents.length > 0 && <PlayableComponentsSection components={container.playableComponents} />}{documentedChildren.length > 0 && <div className="campaign-component-list">{documentedChildren.map((unit) => <article key={unit.id}><strong>{titleOf(unit)}</strong><ol>{unit.playableComponents.map((component) => <li key={component.id}>#{component.order} · {component.title}</li>)}</ol></article>)}</div>}{!componentTotal && <p className="missing">Découpage narratif non renseigné : aucune partie n’est inventée automatiquement.</p>}</section>}
     {components.length > 0 && <section className="detail-section"><h3>Composants / ressources</h3><div className="part-list">{components.map((component) => <ComponentCard component={component} key={component.id} />)}</div></section>}
     {container.containerType === 'campaign' && <CampaignOperationsPanel campaignId={container.id} onOpenPlayable={onOpenPlayable} />}
-    <ScenarioPackagePanel scenarioId={container.id} onOpenReference={onOpenReference} preparationStatus={override.preparationStatus ?? 'untreated'} foundrySelected={effectiveLifecycleStatus(override, isContainerExcluded(container, curation)) === 'to_play'} foundrySearchNames={[titleOf(container), originalTitleOf(container) ?? '', ...container.titles.aliases]} allowAiExport={container.containerType === 'campaign'} aiExportKind="campaign" />
+    {container.containerType !== 'campaign' && <ScenarioPackagePanel scenarioId={container.id} onOpenReference={onOpenReference} preparationStatus={override.preparationStatus ?? 'untreated'} foundrySelected={effectiveLifecycleStatus(override, isContainerExcluded(container, curation)) === 'to_play'} foundrySearchNames={[titleOf(container), originalTitleOf(container) ?? '', ...container.titles.aliases]} />}
   </EntityPage>
 }
 
