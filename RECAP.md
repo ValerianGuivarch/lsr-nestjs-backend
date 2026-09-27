@@ -956,14 +956,15 @@ Les relations ambiguës doivent être laissées pour revue, pas inventées.
 Le statut visible est désormais volontairement simple :
 
 ```text
-À jouer
+Retenu
+Sélectionné
 En cours
 Joué
 Plus tard
 Écarté
 ```
 
-L’ancien état `selected` / « Retenu » reste lu en compatibilité comme `À jouer`, mais ne constitue plus une étape visible distincte. Une séance liée à un scénario est une preuve factuelle que le scénario a commencé ; l’état `Joué` reste le signal explicite de clôture.
+Les deux axes restent distincts : `preparationStatus=selected` sans `playStatus` correspond à **Retenu** (candidat, hors Journal), tandis que `playStatus=to_play` correspond au statut visible **Sélectionné** (périmètre actif). Le Journal ne contient que `Sélectionné`, `En cours` et `Joué`. Le pipeline IA/Foundry de génération est réservé aux cibles explicitement `Sélectionné`.
 
 On ne cherche pas à finaliser les centaines de scénarios d’un coup.
 
