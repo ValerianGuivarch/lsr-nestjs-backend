@@ -11,6 +11,7 @@ import {
   FaChevronLeft,
   FaChevronRight,
   FaDAndD,
+  FaPaperPlane,
 } from "react-icons/fa";
 import { MdEdit, MdSave } from "react-icons/md";
 import { GiReturnArrow } from "react-icons/gi";
@@ -41,6 +42,7 @@ const Diary: React.FC = () => {
   const [newText, setNewText] = useState<string>("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [years, setYears] = useState<number[]>([]);
+  const [isSendingNotification, setIsSendingNotification] = useState(false);
 
   useEffect(() => {
     fetchEntries();
@@ -96,6 +98,19 @@ const Diary: React.FC = () => {
 
   const handleToday = () => {
     setDate(new Date());
+  };
+
+  const handleTestNotification = async () => {
+    setIsSendingNotification(true);
+    try {
+      const response = await axios.post(`${API_URL}/notifications/test`);
+      window.alert(response.data.message);
+    } catch (error) {
+      console.error("Error sending test notification", error);
+      window.alert("Échec de l’envoi de la notification.");
+    } finally {
+      setIsSendingNotification(false);
+    }
   };
 
   const handleEditClick = (year: number, text: string) => {
@@ -224,6 +239,9 @@ const Diary: React.FC = () => {
         </Button>
         <Button onClick={handleToday}>
           <FaDAndD />
+        </Button>
+        <Button onClick={handleTestNotification} disabled={isSendingNotification} title="Envoyer une notification de test">
+          <FaPaperPlane />
         </Button>
       </DateNavigation>
       <DiaryEntry>
