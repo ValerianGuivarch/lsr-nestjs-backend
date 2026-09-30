@@ -14,4 +14,9 @@ export default () => ({
   cors: {
     frontend: env.FRONTEND_URL || 'http://127.0.0.1:3000'
   },
+  notifications: {
+    ntfyUrl: env.NTFY_URL || 'https://ntfy.sh',
+    ntfyTopic: env.NTFY_TOPIC || '',
+    ntfyToken: env.NTFY_TOKEN || ''
+  },
 })

@@ -3,6 +3,7 @@ import { CreateDiaryRequest } from './requests/CreateDiaryRequest'
 import { GetDiaryRequest } from './requests/GetDiaryRequest'
 import { UpdateDiaryRequest } from './requests/UpdateDiaryRequest'
 import { Diary } from '../../../../../domain/models/diaries/Diary'
+import { DiaryNotificationService } from '../../../../../domain/services/entities/diaries/DiaryNotificationService'
 import { DiaryService } from '../../../../../domain/services/entities/diaries/DiaryService'
 import { generatePageResponseContent } from '../../utils/swagger'
 import { Body, Controller, Get, HttpCode, HttpStatus, Param, Post, Put, Query } from '@nestjs/common'
@@ -13,7 +14,10 @@ import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 @Controller('api/v1/diaries')
 @ApiTags('Diaries')
 export class DiaryController {
-  constructor(private readonly diaryService: DiaryService) {}
+  constructor(
+    private readonly diaryService: DiaryService,
+    private readonly diaryNotificationService: DiaryNotificationService
+  ) {}
 
   @ApiCreatedResponse({
     description: 'Create a new diary for account',
@@ -85,6 +89,13 @@ export class DiaryController {
   > {
     const missingEntries = await this.diaryService.findAllMissingEntries()
     return missingEntries.map(DiaryVM.from)
+  }
+
+  @ApiOkResponse({ description: 'Send a Year Diary reminder through ntfy' })
+  @HttpCode(HttpStatus.OK)
+  @Post('/notifications/test')
+  async sendTestNotification(): Promise<{ success: boolean; missingCount: number; message: string }> {
+    return await this.diaryNotificationService.sendReminder()
   }
 
   STORE_STATE_FILE = 'store.txt'

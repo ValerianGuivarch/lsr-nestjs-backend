@@ -70,6 +70,11 @@ API_URL=http://127.0.0.1:8081/api/v1
 
 # year diary
 FRONTEND_URL=http://127.0.0.1:3000
+# Notifications ntfy pour Year Diary
+NTFY_URL=https://ntfy.sh
+NTFY_TOPIC=
+# Facultatif si le topic ntfy est protégé par authentification
+NTFY_TOKEN=
 
 # PostgreSQL est historique et n'est pas nécessaire à cette branche : api-jdr
 # et api-yeardiary utilisent SQLite. Ces variables ne sont à définir que pour
