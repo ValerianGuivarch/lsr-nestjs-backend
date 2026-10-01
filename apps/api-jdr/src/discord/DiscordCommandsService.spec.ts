@@ -94,6 +94,25 @@ describe('DiscordCommandsService', () => {
     ]))
   })
 
+  it('offers the group availability and the day after the latest global mission', async () => {
+    const persistence = {
+      listSessions: jest.fn().mockResolvedValue([
+        { sessionNumber: 1, published: true, participants: ['Actor.hero'], inGameStartDate: '4720-03-20', inGameEndDate: '4720-03-31' },
+        { sessionNumber: 2, published: true, participants: ['Actor.other'], inGameStartDate: '4720-04-01', inGameEndDate: '4720-04-15' },
+      ]),
+    }
+    const service = new DiscordCommandsService(persistence as never, {} as never)
+    const plan = await (service as unknown as {
+      plan: (actors: Array<{ uuid: string; name: string }>) => Promise<{ earliest: string; current: string }>
+      addDays: (date: string, days: number) => string
+    }).plan([{ uuid: 'Actor.hero', name: 'Héros (Joueur)' }])
+
+    expect(plan.earliest).toBe('4720-04-01')
+    expect(plan.current).toBe('4720-04-16')
+    expect((service as unknown as { addDays: (date: string, days: number) => string }).addDays(plan.earliest, 5)).toBe('4720-04-06')
+    expect((service as unknown as { addDays: (date: string, days: number) => string }).addDays(plan.current, 5)).toBe('4720-04-21')
+  })
+
   it('uses the previous real-world day before 05:00 Europe/Paris for finish-game', () => {
     const service = new DiscordCommandsService({} as never, {} as never)
     const realDate = (value: string) => (service as unknown as { realDate: (date: Date) => string }).realDate(new Date(value))
@@ -149,7 +168,7 @@ describe('DiscordCommandsService', () => {
       mediaWiki as never,
       discord as never,
     )
-    const reply = jest.fn().mockResolvedValue(undefined)
+    const saveEditReply = jest.fn().mockResolvedValue(undefined)
 
     await (service as unknown as {
       saveShortSummary: (
@@ -159,7 +178,7 @@ describe('DiscordCommandsService', () => {
         values: { title: string; date: string; summary: string },
       ) => Promise<boolean>
     }).saveShortSummary(
-      { user: { id: 'user-1' }, reply },
+      { user: { id: 'user-1' }, editReply: saveEditReply },
       {
         sessionId: 'session-42',
         sessionNumber: 42,
@@ -171,7 +190,7 @@ describe('DiscordCommandsService', () => {
       { title: 'Test', date: '2026-09-15', summary: 'Résumé' },
     )
 
-    const response = reply.mock.calls[0][0]
+    const response = saveEditReply.mock.calls[0][0]
     const row = response.components[0].toJSON()
     expect(row.components.map((button: { label?: string }) => button.label)).toEqual(['Voir la fiche', 'Publier'])
     const publishButton = row.components.find((button: { label?: string }) => button.label === 'Publier') as { custom_id: string }

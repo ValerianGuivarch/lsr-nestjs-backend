@@ -12,7 +12,12 @@ import { Pf2JournalsService } from '../pf2-journals/Pf2JournalsService'
 @Injectable()
 export class DiscordCommandsService {
   private readonly logger = new Logger(DiscordCommandsService.name)
-  private readonly pendingGames = new Map<string, { actors: Array<{ uuid: string; name: string; player: string; userId: string }>; selected?: Array<{ uuid: string; name: string; player: string; userId: string }> }>()
+  private readonly pendingGames = new Map<string, {
+    actors: Array<{ uuid: string; name: string; player: string; userId: string }>
+    selected?: Array<{ uuid: string; name: string; player: string; userId: string }>
+    plan?: { current: string; earliest: string; progressionRolls: string[]; rollCounts: Map<string, number> }
+    baseDate?: string
+  }>()
   private readonly pendingAnnouncements = new Map<string, { content: string; userIds: string[] }>()
   private readonly pendingShortSummaries = new Map<string, {
     sessionId: string
@@ -84,17 +89,18 @@ export class DiscordCommandsService {
       return
     }
     const requested = interaction.options.getInteger('numero')
+    await interaction.deferReply({ ephemeral: true })
     try {
       const journal = requested === null ? await this.journals!.randomJournalToReveal() : await this.journals!.resolveJournalToReveal(requested)
-      if (!journal) { await interaction.reply({ content: requested === null ? 'Il ne reste aucun journal à révéler.' : 'Ce journal est déjà révélé.', ephemeral: true }); return }
+      if (!journal) { await interaction.editReply({ content: requested === null ? 'Il ne reste aucun journal à révéler.' : 'Ce journal est déjà révélé.' }); return }
       const preview = `**${journal.number} - ${journal.title}**\n\n${journal.content}`
-      if (preview.length > 2_000) { await interaction.reply({ content: `Ce journal contient ${preview.length} caractères et dépasserait la limite Discord de 2 000 caractères. Il n’a pas été préparé pour publication.`, ephemeral: true }); return }
+      if (preview.length > 2_000) { await interaction.editReply({ content: `Ce journal contient ${preview.length} caractères et dépasserait la limite Discord de 2 000 caractères. Il n’a pas été préparé pour publication.` }); return }
       const id = `pf2-journal:reveal:${interaction.id}`
       this.pendingJournalReveals.set(id, { requesterId: interaction.user.id, journalNumber: journal.number })
       const button = new ButtonBuilder().setCustomId(id).setLabel('Valider').setStyle(ButtonStyle.Primary)
-      await interaction.reply({ content: preview, components: [new ActionRowBuilder<ButtonBuilder>().addComponents(button)], ephemeral: true })
+      await interaction.editReply({ content: preview, components: [new ActionRowBuilder<ButtonBuilder>().addComponents(button)] })
     } catch (error) {
-      await interaction.reply({ content: error instanceof Error ? `Journal impossible : ${error.message}` : 'Journal impossible.', ephemeral: true })
+      await interaction.editReply({ content: error instanceof Error ? `Journal impossible : ${error.message}` : 'Journal impossible.' })
     }
   }
 
@@ -103,9 +109,10 @@ export class DiscordCommandsService {
       await interaction.reply({ content: 'Cette commande est réservée aux administrateurs du serveur.', ephemeral: true })
       return
     }
+    await interaction.deferReply({ ephemeral: true })
     try {
       const faction = await this.playerCodex!.factionForPublication(interaction.options.getString('faction', true))
-      if (faction.published) { await interaction.reply({ content: `La faction « ${faction.name} » est déjà publiée.`, ephemeral: true }); return }
+      if (faction.published) { await interaction.editReply({ content: `La faction « ${faction.name} » est déjà publiée.` }); return }
       const id = `pf2-faction:publish:${interaction.id}`
       this.pendingFactionPublications.set(id, { requesterId: interaction.user.id, factionId: faction.id })
       const text = [
@@ -115,9 +122,9 @@ export class DiscordCommandsService {
         '',
         '_Prévisualisation : valide pour créer la page Wiki et publier dans Discord._',
       ].filter(Boolean).join('\n\n')
-      await interaction.reply({ content: text, components: [new ActionRowBuilder<ButtonBuilder>().addComponents(new ButtonBuilder().setCustomId(id).setLabel('Publier la faction').setStyle(ButtonStyle.Primary))], ephemeral: true, allowedMentions: { parse: [] } })
+      await interaction.editReply({ content: text, components: [new ActionRowBuilder<ButtonBuilder>().addComponents(new ButtonBuilder().setCustomId(id).setLabel('Publier la faction').setStyle(ButtonStyle.Primary))], allowedMentions: { parse: [] } })
     } catch (error) {
-      await interaction.reply({ content: `Publication impossible : ${error instanceof Error ? error.message : String(error)}`, ephemeral: true })
+      await interaction.editReply({ content: `Publication impossible : ${error instanceof Error ? error.message : String(error)}` })
     }
   }
 
@@ -286,18 +293,19 @@ export class DiscordCommandsService {
   private async presentCharacter(interaction: ChatInputCommandInteraction): Promise<void> {
     const value = interaction.options.getString('personnage', true).trim(); const attachment = interaction.options.getAttachment('portrait')
     const showName = interaction.options.getBoolean('afficher_nom') ?? true
+    await interaction.deferReply({ ephemeral: true })
     let sourceNpcId: string | null = null; let name = value; let portrait: string | null = attachment?.url ?? null
     if (value.startsWith('npc:')) {
       sourceNpcId = value.slice(4)
       const candidate = await this.playerCodex!.characterCandidate(sourceNpcId)
       if (!candidate) {
-        await interaction.reply({ content: 'PNJ sélectionné invalide.', ephemeral: true })
+        await interaction.editReply({ content: 'PNJ sélectionné invalide.' })
         return
       }
       name = candidate.name
       portrait ??= candidate.portrait
     }
-    if (!sourceNpcId && !portrait) { await interaction.reply({ content: 'Un portrait est obligatoire pour un personnage improvisé.', ephemeral: true }); return }
+    if (!sourceNpcId && !portrait) { await interaction.editReply({ content: 'Un portrait est obligatoire pour un personnage improvisé.' }); return }
     const presentation = await this.playerCodex!.createPresentation({
       name,
       sourceNpcId,
@@ -332,13 +340,13 @@ export class DiscordCommandsService {
     }
     components.push(new ActionRowBuilder<ButtonBuilder>().addComponents(button))
 
-    await interaction.reply({
+    const message = await interaction.followUp({
       content: showName ? presentation.name : '\u200b',
       files: discordPortrait ? [discordPortrait] : [],
       components,
       allowedMentions: { parse: [] },
     })
-    const message = await interaction.fetchReply()
+    await interaction.deleteReply().catch(() => undefined)
     await this.playerCodex!.savePresentationMessage(presentation.id, message.id, message.attachments.first()?.url ?? portrait)
   }
 
@@ -356,32 +364,66 @@ export class DiscordCommandsService {
     const pending = this.pendingGames.get(interaction.customId)
     if (!pending) { await interaction.reply({ content: 'Cette préparation a expiré. Relance `/new-game`.', ephemeral: true }); return true }
     if (interaction.customId.endsWith(':date')) {
+      const plan = pending.plan
+      if (!plan) { await interaction.reply({ content: 'Le calcul des dates a expiré. Relance `/new-game`.', ephemeral: true }); return true }
+
+      const offsetInput = new TextInputBuilder()
+        .setCustomId('offset')
+        .setLabel('J+')
+        .setStyle(TextInputStyle.Short)
+        .setPlaceholder('0')
+        .setValue('0')
+        .setRequired(true)
+
       if (interaction.values[0] === 'custom') {
-        const plan = await this.plan(pending.selected ?? [])
-        const modal = new ModalBuilder().setCustomId(interaction.customId).setTitle('Date de la mission')
-        const input = new TextInputBuilder().setCustomId('date').setLabel(`À partir du ${plan.earliest}`).setStyle(TextInputStyle.Short).setPlaceholder('YYYY-MM-DD').setRequired(true)
-        modal.addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(input))
+        const modalId = interaction.customId.replace(/:date$/, ':custom-date')
+        const modal = new ModalBuilder().setCustomId(modalId).setTitle('Date de la mission')
+        const dateInput = new TextInputBuilder()
+          .setCustomId('date')
+          .setLabel(`À partir du ${plan.earliest}`)
+          .setStyle(TextInputStyle.Short)
+          .setPlaceholder('YYYY-MM-DD')
+          .setValue(plan.earliest)
+          .setRequired(true)
+        modal.addComponents(
+          new ActionRowBuilder<TextInputBuilder>().addComponents(dateInput),
+          new ActionRowBuilder<TextInputBuilder>().addComponents(offsetInput),
+        )
+        this.pendingGames.set(modalId, pending)
+        this.pendingGames.delete(interaction.customId)
         await interaction.showModal(modal)
         return true
       }
-      const plan = await this.plan(pending.selected ?? [])
-      const date = interaction.values[0] === 'current' ? plan.current : plan.earliest
-      await this.finishGame(interaction, pending, date, plan)
+
+      const modalId = interaction.customId.replace(/:date$/, ':offset')
+      pending.baseDate = interaction.values[0] === 'current' ? plan.current : plan.earliest
+      this.pendingGames.set(modalId, pending)
+      this.pendingGames.delete(interaction.customId)
+      const modal = new ModalBuilder().setCustomId(modalId).setTitle('Décalage de la mission')
+      modal.addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(offsetInput))
+      await interaction.showModal(modal)
       return true
     }
+
     const selected = pending.actors.filter(actor => interaction.values.includes(actor.uuid))
     if (!selected.length) { await interaction.reply({ content: 'Choisis au moins un PJ.', ephemeral: true }); return true }
-    pending.selected = selected
-    const plan = await this.plan(selected)
-    const id = interaction.customId.replace(/:players$/, ':date')
-    this.pendingGames.set(id, pending)
-    this.pendingGames.delete(interaction.customId)
-    const select = new StringSelectMenuBuilder().setCustomId(id).setPlaceholder('Choisis la date de début').addOptions([
-      { label: `Le plus tôt — ${this.displayDate(plan.earliest)}`, value: 'earliest' },
-      { label: `Date actuelle — ${this.displayDate(plan.current)}`, value: 'current' },
-      { label: 'Choisir une autre date…', value: 'custom' },
-    ])
-    await interaction.update({ content: `${selected.map(actor => actor.name).join(', ')}\n\n${plan.progressionRolls.join('\n')}\n\nChoisis la date de début.`, components: [new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(select)] })
+    await interaction.deferUpdate()
+    try {
+      pending.selected = selected
+      const plan = await this.plan(selected)
+      pending.plan = plan
+      const id = interaction.customId.replace(/:players$/, ':date')
+      this.pendingGames.set(id, pending)
+      this.pendingGames.delete(interaction.customId)
+      const select = new StringSelectMenuBuilder().setCustomId(id).setPlaceholder('Choisis la date de début').addOptions([
+        { label: `Le plus tôt — ${this.displayDate(plan.earliest)}`, value: 'earliest' },
+        { label: `Après dernière mission — ${this.displayDate(plan.current)}`, value: 'current' },
+        { label: 'Choisir une autre date…', value: 'custom' },
+      ])
+      await interaction.editReply({ content: `${selected.map(actor => actor.name).join(', ')}\n\n${plan.progressionRolls.join('\n')}\n\nChoisis la date de début.`, components: [new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(select)] })
+    } catch (error) {
+      await interaction.editReply({ content: `Préparation impossible : ${error instanceof Error ? error.message : String(error)}`, components: [] })
+    }
     return true
   }
 
@@ -413,6 +455,7 @@ export class DiscordCommandsService {
         return true
       }
 
+      await interaction.deferReply({ ephemeral: true })
       const saved = await this.saveShortSummary(
         interaction,
         pending,
@@ -428,6 +471,7 @@ export class DiscordCommandsService {
       const name = interaction.fields.getTextInputValue('name').trim()
       const description = interaction.fields.getTextInputValue('description').trim()
       const title = `Personnage:${name}`
+      await interaction.deferReply({ ephemeral: true })
       try {
         const presentation = await this.playerCodex!.presentation(presentationId)
         const portrait = presentation.portraitUrl ? await this.mediaWiki!.uploadFromUrl(presentation.portraitUrl, name) : null
@@ -447,18 +491,45 @@ export class DiscordCommandsService {
           })
           if (publication?.status === 'failed') this.logger.warn(`Fiche créée, mais publication Discord impossible : ${publication.reason}`)
         }
-        await interaction.reply({ content: profile.created ? `Fiche créée : ${pageUrl}` : `Cette fiche existe déjà : ${pageUrl}`, ephemeral: true, allowedMentions: { parse: [] } })
-      } catch (error) { await interaction.reply({ content: error instanceof Error ? `Création impossible : ${error.message}` : 'Création impossible.', ephemeral: true }) }
+        await interaction.editReply({ content: profile.created ? `Fiche créée : ${pageUrl}` : `Cette fiche existe déjà : ${pageUrl}`, allowedMentions: { parse: [] } })
+      } catch (error) { await interaction.editReply({ content: error instanceof Error ? `Création impossible : ${error.message}` : 'Création impossible.' }) }
       return true
     }
     if (!interaction.customId.startsWith('pf2-new-game:')) return false
     const pending = this.pendingGames.get(interaction.customId)
     if (!pending) { await interaction.reply({ content: 'Cette préparation a expiré. Relance `/new-game`.', ephemeral: true }); return true }
-    const date = interaction.fields.getTextInputValue('date').trim()
-    const plan = await this.plan(pending.selected ?? [])
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || date < plan.earliest) { await interaction.reply({ content: `Choisis une date YYYY-MM-DD à partir du ${this.displayDate(plan.earliest)}.`, ephemeral: true }); return true }
-    await this.finishGameModal(interaction, pending, date, plan)
-    this.pendingGames.delete(interaction.customId)
+    const plan = pending.plan
+    if (!plan) { await interaction.reply({ content: 'Le calcul des dates a expiré. Relance `/new-game`.', ephemeral: true }); return true }
+
+    const rawOffset = interaction.fields.getTextInputValue('offset').trim()
+    const offset = Number(rawOffset)
+    if (!Number.isInteger(offset) || offset < 0) {
+      await interaction.reply({ content: '`J+` doit être un nombre entier positif ou nul.', ephemeral: true })
+      return true
+    }
+
+    let baseDate = pending.baseDate ?? ''
+    if (interaction.customId.endsWith(':custom-date')) {
+      baseDate = interaction.fields.getTextInputValue('date').trim()
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(baseDate) || baseDate < plan.earliest) {
+        await interaction.reply({ content: `Choisis une date YYYY-MM-DD à partir du ${this.displayDate(plan.earliest)}.`, ephemeral: true })
+        return true
+      }
+    }
+
+    if (!baseDate) {
+      await interaction.reply({ content: 'La date de base est introuvable. Relance `/new-game`.', ephemeral: true })
+      return true
+    }
+
+    const date = this.addDays(baseDate, offset)
+    await interaction.deferReply({ ephemeral: true })
+    try {
+      await this.finishGameModal(interaction, pending, date, plan)
+      this.pendingGames.delete(interaction.customId)
+    } catch (error) {
+      await interaction.editReply({ content: `Création du brouillon impossible : ${error instanceof Error ? error.message : String(error)}`, components: [] })
+    }
     return true
   }
 
@@ -581,19 +652,20 @@ export class DiscordCommandsService {
   }
 
   private async finishGameCommand(interaction: ChatInputCommandInteraction): Promise<void> {
+    await interaction.deferReply({ ephemeral: true })
     const requestedNumber = interaction.options.getInteger('numero') ?? await this.lastBotSessionNumber(interaction)
-    if (!requestedNumber) { await interaction.reply({ content: 'Indique `numero`, ou utilise la commande dans un salon contenant une annonce récente du bot avec « Résumé n°… ». ', ephemeral: true }); return }
+    if (!requestedNumber) { await interaction.editReply({ content: 'Indique `numero`, ou utilise la commande dans un salon contenant une annonce récente du bot avec « Résumé n°… ». ' }); return }
     const endDate = interaction.options.getString('fin')?.trim() ?? ''
     const days = interaction.options.getInteger('jours')
     const xp = interaction.options.getInteger('xp', true)
-    if (Boolean(endDate) === (days !== null)) { await interaction.reply({ content: 'Indique soit `fin` (YYYY-MM-DD), soit `jours`, mais pas les deux.', ephemeral: true }); return }
-    if (endDate && !/^\d{4}-\d{2}-\d{2}$/.test(endDate)) { await interaction.reply({ content: 'La date de fin doit être au format YYYY-MM-DD.', ephemeral: true }); return }
+    if (Boolean(endDate) === (days !== null)) { await interaction.editReply({ content: 'Indique soit `fin` (YYYY-MM-DD), soit `jours`, mais pas les deux.' }); return }
+    if (endDate && !/^\d{4}-\d{2}-\d{2}$/.test(endDate)) { await interaction.editReply({ content: 'La date de fin doit être au format YYYY-MM-DD.' }); return }
     const session = (await this.persistence.listSessions()).find((item) => item.sessionNumber === requestedNumber)
-    if (!session) { await interaction.reply({ content: `Aucun résumé n°${requestedNumber} n’existe.`, ephemeral: true }); return }
-    if (days !== null && !session.inGameStartDate) { await interaction.reply({ content: `Le résumé n°${requestedNumber} n’a pas de date de début en jeu : précise plutôt \`fin\`.`, ephemeral: true }); return }
+    if (!session) { await interaction.editReply({ content: `Aucun résumé n°${requestedNumber} n’existe.` }); return }
+    if (days !== null && !session.inGameStartDate) { await interaction.editReply({ content: `Le résumé n°${requestedNumber} n’a pas de date de début en jeu : précise plutôt \`fin\`.` }); return }
     const resolvedEndDate = endDate || this.addDays(session.inGameStartDate, Math.max(0, (days ?? 1) - 1))
     const updated = await this.persistence.updateSession(session.id, { inGameEndDate: resolvedEndDate, sessionXp: xp, ...(session.date ? {} : { date: this.realDate() }) })
-    await interaction.reply({ content: `Résumé n°${requestedNumber} mis à jour : fin en jeu le ${this.displayDate(resolvedEndDate)} ; ${xp} XP par PJ.`, ephemeral: true })
+    await interaction.editReply({ content: `Résumé n°${requestedNumber} mis à jour : fin en jeu le ${this.displayDate(resolvedEndDate)} ; ${xp} XP par PJ.` })
     if (!updated) this.logger.warn(`finish-game: résumé ${requestedNumber} supprimé pendant la mise à jour.`)
   }
 
@@ -621,7 +693,7 @@ export class DiscordCommandsService {
       return
     }
 
-    const allowedAuthors = await this.summaryAuthors(interaction)
+    const allowedAuthors = await this.summaryAuthors(interaction, true)
     if (!allowedAuthors.length) {
       await interaction.reply({ content: 'Aucun PJ ne t’est associé.', ephemeral: true })
       return
@@ -657,7 +729,7 @@ export class DiscordCommandsService {
       allowedAuthors,
     }
     this.pendingShortSummaries.set(id, pending)
-    await this.showShortSummaryModal(interaction, id, pending, author)
+    await this.showShortSummaryModal(interaction, id, pending, author, session, sessions)
   }
 
   private async showShortSummaryModal(
@@ -671,17 +743,9 @@ export class DiscordCommandsService {
       allowedAuthors: Array<{ uuid: string; name: string }>
     },
     author: string,
+    current: import('../pf2-storage/Pf2PersistenceService').Pf2Session,
+    sessions: import('../pf2-storage/Pf2PersistenceService').Pf2Session[],
   ): Promise<void> {
-    const [current, sessions] = await Promise.all([
-      this.persistence.getSession(pending.sessionId),
-      this.persistence.listSessions(),
-    ])
-
-    if (!current) {
-      await interaction.reply({ content: 'Séance introuvable.', ephemeral: true })
-      return
-    }
-
     const authorEntry = pending.allowedAuthors.find(actor => actor.uuid === author)
     if (!authorEntry) {
       await interaction.reply({ content: 'Auteur invalide.', ephemeral: true })
@@ -738,7 +802,7 @@ export class DiscordCommandsService {
   }
 
   private async saveShortSummary(
-    interaction: Pick<ModalSubmitInteraction, 'reply' | 'user'>,
+    interaction: Pick<ModalSubmitInteraction, 'editReply' | 'user'>,
     pending: {
       sessionId: string
       sessionNumber: number
@@ -759,7 +823,7 @@ export class DiscordCommandsService {
       !current ||
       !pending.allowedAuthors.some(actor => actor.uuid === author)
     ) {
-      await interaction.reply({ content: 'Séance, demandeur ou auteur invalide.', ephemeral: true })
+      await interaction.editReply({ content: 'Séance, demandeur ou auteur invalide.' })
       return false
     }
 
@@ -787,7 +851,7 @@ export class DiscordCommandsService {
     })
 
     if (!updated) {
-      await interaction.reply({ content: 'Séance introuvable.', ephemeral: true })
+      await interaction.editReply({ content: 'Séance introuvable.' })
       return false
     }
 
@@ -821,13 +885,12 @@ export class DiscordCommandsService {
       }
     }
 
-    await interaction.reply({
+    await interaction.editReply({
       content:
         `Résumé court de la séance ${pending.sessionNumber} mis à jour — auteur : ${authorName}. ` +
         `Niveau du personnage au début de la séance : ${reward.levelAtStart}; bonus : ${shortSummaryXp} XP.` +
         syncNote,
       components: [this.resumeActionsRow(updated.id, updated.sessionNumber, pending.requesterId)],
-      ephemeral: true,
     })
     return true
   }
@@ -924,6 +987,7 @@ export class DiscordCommandsService {
   }
 
   private async newGame(interaction: ChatInputCommandInteraction): Promise<void> {
+    await interaction.deferReply({ ephemeral: true })
     const names = await this.actorNames()
     const actors = [...names.entries()].map(([uuid, name]) => ({ uuid, name, player: this.playerName(name) }))
     const knownActors = actors.flatMap(({ uuid, name, player }) => {
@@ -935,11 +999,11 @@ export class DiscordCommandsService {
     const known = knownActors.filter(actor => userIds.includes(actor.userId))
     this.logger.log(`new-game: auteurs=${discussion.authorIds.join(', ') || 'aucun'}; membres de fil=${discussion.threadMemberIds.join(', ') || 'aucun'}; membres du salon=${discussion.channelMemberIds.join(', ') || 'aucun'}; acteurs=${actors.map((actor) => `${actor.name} [joueur=${actor.player || 'inconnu'}, discord=${this.discordId(actor.player) ?? 'non associé'}, retenu=${userIds.includes(this.discordId(actor.player) ?? '') ? 'oui' : 'non'}]`).join('; ') || 'aucun'}; PJ retenus=${known.map((actor) => actor.name).join(', ') || 'aucun'}`)
     const choices = known.slice(0, 25).map(actor => ({ label: actor.name.slice(0, 100), value: actor.uuid }))
-    if (!choices.length) { await interaction.reply({ content: 'Aucun PJ connu n’a été détecté parmi les auteurs récents de ce salon. Les PJ doivent être nommés « Personnage (Joueur) ».', ephemeral: true }); return }
+    if (!choices.length) { await interaction.editReply({ content: 'Aucun PJ connu n’a été détecté parmi les auteurs récents de ce salon. Les PJ doivent être nommés « Personnage (Joueur) ».' }); return }
     const id = `pf2-new-game:${interaction.id}:players`
     this.pendingGames.set(id, { actors: known })
     const select = new StringSelectMenuBuilder().setCustomId(id).setPlaceholder('Choisis les PJ participants').setMinValues(1).setMaxValues(choices.length).addOptions(choices)
-    await interaction.reply({ content: `PJ détectés dans cette discussion : ${known.map(actor => actor.name).join(', ')}. Choisis les participants.`, components: [new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(select)], ephemeral: true })
+    await interaction.editReply({ content: `PJ détectés dans cette discussion : ${known.map(actor => actor.name).join(', ')}. Choisis les participants.`, components: [new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(select)] })
   }
 
   /** Discord n’expose pas les lecteurs d’un salon texte : on utilise les auteurs récents. */
@@ -989,7 +1053,8 @@ export class DiscordCommandsService {
 
   private async plan(actors: Array<{ uuid: string; name: string }>): Promise<{ current: string; earliest: string; progressionRolls: string[]; rollCounts: Map<string, number> }> {
     const sessions = (await this.persistence.listSessions()).filter((session) => session.published)
-    const current = sessions.map((session) => this.missionEnd(session)).filter(Boolean).sort().at(-1) || this.today()
+    const lastMissionEnd = sessions.map((session) => this.missionEnd(session)).filter(Boolean).sort().at(-1)
+    const current = lastMissionEnd ? this.addDays(lastMissionEnd, 1) : this.today()
     const rollCounts = this.progressionRollCounts(actors, sessions)
     const availability = actors.map((actor) => {
       const last = sessions.filter((session) => session.participants.includes(actor.uuid)).sort((left, right) => this.missionEnd(left).localeCompare(this.missionEnd(right))).at(-1)
@@ -1027,7 +1092,7 @@ export class DiscordCommandsService {
     const announcementId = `pf2-new-game:announce:${draft.id}`
     this.pendingAnnouncements.set(announcementId, { content: await this.plannedSessionAnnouncement(draft.sessionNumber, date, selected, plan.rollCounts, true), userIds: selected.map((actor) => actor.userId) })
     const publish = new ButtonBuilder().setCustomId(announcementId).setLabel('Publier l’annonce').setStyle(ButtonStyle.Primary)
-    await interaction.reply({ content: `Brouillon créé : résumé n°${draft.sessionNumber}.\nDébut : ${this.displayDate(date)}. Fin : à renseigner.\n\n${plan.progressionRolls.join('\n')}\n\nComplète puis publie le résumé dans l’application MJ.`, components: [new ActionRowBuilder<ButtonBuilder>().addComponents(publish)], ephemeral: true })
+    await interaction.editReply({ content: `Brouillon créé : résumé n°${draft.sessionNumber}.\nDébut : ${this.displayDate(date)}. Fin : à renseigner.\n\n${plan.progressionRolls.join('\n')}\n\nComplète puis publie le résumé dans l’application MJ.`, components: [new ActionRowBuilder<ButtonBuilder>().addComponents(publish)] })
   }
 
   private missionEnd(session: import('../pf2-storage/Pf2PersistenceService').Pf2Session): string { return session.inGameEndDate || session.inGameStartDate }
