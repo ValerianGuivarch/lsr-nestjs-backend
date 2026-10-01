@@ -1058,12 +1058,13 @@ export class DiscordCommandsService {
     const rollCounts = this.progressionRollCounts(actors, sessions)
     const availability = actors.map((actor) => {
       const last = sessions.filter((session) => session.participants.includes(actor.uuid)).sort((left, right) => this.missionEnd(left).localeCompare(this.missionEnd(right))).at(-1)
-      const available = last ? this.addDays(this.missionEnd(last), 1) : current
+      const available = last ? this.addDays(this.missionEnd(last), 1) : null
       return { actor, available, missed: rollCounts.get(actor.uuid) ?? 0 }
     })
+    const constrainedAvailability = availability.flatMap((item) => item.available ? [item.available] : [])
     return {
       current,
-      earliest: availability.map((item) => item.available).sort().at(-1) || current,
+      earliest: constrainedAvailability.sort().at(-1) || current,
       rollCounts,
       progressionRolls: [
         '**Jets de progression** — 1 jet correspond à 7 jours d’activité.',

@@ -113,6 +113,25 @@ describe('DiscordCommandsService', () => {
     expect((service as unknown as { addDays: (date: string, days: number) => string }).addDays(plan.current, 5)).toBe('4720-04-21')
   })
 
+  it('does not let a participant without session history delay a parallel mission', async () => {
+    const persistence = {
+      listSessions: jest.fn().mockResolvedValue([
+        { sessionNumber: 1, published: true, participants: ['Actor.hero'], inGameStartDate: '4720-03-20', inGameEndDate: '4720-03-31' },
+        { sessionNumber: 2, published: true, participants: ['Actor.other'], inGameStartDate: '4720-04-01', inGameEndDate: '4720-04-15' },
+      ]),
+    }
+    const service = new DiscordCommandsService(persistence as never, {} as never)
+    const plan = await (service as unknown as {
+      plan: (actors: Array<{ uuid: string; name: string }>) => Promise<{ earliest: string; current: string }>
+    }).plan([
+      { uuid: 'Actor.hero', name: 'Héros (Joueur)' },
+      { uuid: 'Actor.new', name: 'Nouveau (Joueur)' },
+    ])
+
+    expect(plan.earliest).toBe('4720-04-01')
+    expect(plan.current).toBe('4720-04-16')
+  })
+
   it('uses the previous real-world day before 05:00 Europe/Paris for finish-game', () => {
     const service = new DiscordCommandsService({} as never, {} as never)
     const realDate = (value: string) => (service as unknown as { realDate: (date: Date) => string }).realDate(new Date(value))
