@@ -293,7 +293,7 @@ export class DiscordCommandsService {
   private async presentCharacter(interaction: ChatInputCommandInteraction): Promise<void> {
     const value = interaction.options.getString('personnage', true).trim(); const attachment = interaction.options.getAttachment('portrait')
     const showName = interaction.options.getBoolean('afficher_nom') ?? true
-    await interaction.deferReply({ ephemeral: true })
+    await interaction.deferReply()
     let sourceNpcId: string | null = null; let name = value; let portrait: string | null = attachment?.url ?? null
     if (value.startsWith('npc:')) {
       sourceNpcId = value.slice(4)
@@ -340,13 +340,12 @@ export class DiscordCommandsService {
     }
     components.push(new ActionRowBuilder<ButtonBuilder>().addComponents(button))
 
-    const message = await interaction.followUp({
+    const message = await interaction.editReply({
       content: showName ? presentation.name : '\u200b',
       files: discordPortrait ? [discordPortrait] : [],
       components,
       allowedMentions: { parse: [] },
     })
-    await interaction.deleteReply().catch(() => undefined)
     await this.playerCodex!.savePresentationMessage(presentation.id, message.id, message.attachments.first()?.url ?? portrait)
   }
 
