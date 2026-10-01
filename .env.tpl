@@ -75,6 +75,8 @@ NTFY_URL=https://ntfy.sh
 NTFY_TOPIC=
 # Facultatif si le topic ntfy est protégé par authentification
 NTFY_TOKEN=
+DIARY_REMINDER_TIME=09:15
+DIARY_REMINDER_TIME_ZONE=Europe/Paris
 
 # PostgreSQL est historique et n'est pas nécessaire à cette branche : api-jdr
 # et api-yeardiary utilisent SQLite. Ces variables ne sont à définir que pour

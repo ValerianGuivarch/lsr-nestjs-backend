@@ -9,7 +9,7 @@ export default () => ({
   },
   sqlite: {
     database: env.YEARDIARY_SQLITE_DATABASE || 'database.sqlite',
-    autoLoadEntities: true,
+    autoLoadEntities: true
   },
   cors: {
     frontend: env.FRONTEND_URL || 'http://127.0.0.1:3000'
@@ -17,6 +17,8 @@ export default () => ({
   notifications: {
     ntfyUrl: env.NTFY_URL || 'https://ntfy.sh',
     ntfyTopic: env.NTFY_TOPIC || '',
-    ntfyToken: env.NTFY_TOKEN || ''
-  },
+    ntfyToken: env.NTFY_TOKEN || '',
+    reminderTime: env.DIARY_REMINDER_TIME || '09:15',
+    timeZone: env.DIARY_REMINDER_TIME_ZONE || 'Europe/Paris'
+  }
 })
