@@ -909,3 +909,53 @@
 .component-work-units>article.is-collapsed{padding-top:10px;padding-bottom:10px;background:#fbf8ef}
 .component-work-units>article.is-collapsed .component-progress{margin-top:4px}
 .scenario-toggle{white-space:nowrap}
+
+/* Journaux d'Absalom */
+.journaux-page{display:grid;gap:18px;justify-items:center}
+.newspaper-tabs{display:flex;gap:8px;flex-wrap:wrap;justify-self:start}
+.newspaper-tabs a{padding:9px 14px;border:1px solid #c9b98e;border-radius:999px;background:#fffaf0;color:#694f20;text-decoration:none;font-size:11px;font-weight:800}
+.newspaper-tabs a.active{background:#6b4f1f;color:#fff8e8;border-color:#6b4f1f}
+.absalom-paper{--ink:#292318;--rule:#6b5630;width:min(100%,920px);position:relative;overflow:hidden;color:var(--ink);font-family:"Palatino Linotype","Book Antiqua",Palatino,Georgia,serif;padding:42px 46px 30px;border:5px double #7d6740;box-shadow:0 12px 35px rgba(49,39,21,.24)}
+.absalom-paper:before{content:"";position:absolute;inset:0;pointer-events:none;opacity:.15;background:repeating-linear-gradient(0deg,rgba(68,48,19,.12) 0,rgba(68,48,19,.12) 1px,transparent 1px,transparent 4px)}
+.absalom-paper>*{position:relative}
+.paper-masthead{text-align:center}
+.paper-ornament{font-size:13px;letter-spacing:.5em;color:#745c32;margin-bottom:4px}
+.paper-masthead small{font-size:9px;font-weight:800;letter-spacing:.25em}
+.paper-masthead h2{margin:5px 0 2px;font:700 52px/.95 "Palatino Linotype",Georgia,serif;font-variant:small-caps;letter-spacing:.035em}
+.paper-masthead>p{margin:0 0 10px;font-style:italic;font-size:12px}
+.paper-meta{display:grid;grid-template-columns:1fr 1fr 1fr;padding:7px 3px;border-top:3px double var(--rule);border-bottom:1px solid var(--rule);font-size:9px;font-weight:700;letter-spacing:.11em;text-transform:uppercase}
+.paper-meta span:first-child{text-align:left}.paper-meta span:last-child{text-align:right}
+
+.semaine-paper{background:#efe4c6}
+.paper-grid{display:grid;grid-template-columns:minmax(0,1.78fr) minmax(220px,.78fr);gap:24px;margin-top:22px}
+.paper-lead h1{margin:0;text-align:center;font:700 43px/.96 Georgia,serif;padding-bottom:12px;border-bottom:3px double var(--rule)}
+.paper-lead h3{margin:12px 6px 15px;text-align:center;font:italic 700 16px/1.32 Georgia,serif;color:#4d402c}
+.paper-engraving{margin:15px 0 14px;padding:7px;border:3px double var(--rule);background:#ddcfaa}
+.paper-engraving img{display:block;width:100%;aspect-ratio:4/3;object-fit:cover}
+
+.paper-engraving figcaption{padding:7px 4px 2px;text-align:center;font-size:9px;font-style:italic}
+.paper-main-copy{margin:0;font-size:14px;line-height:1.56;text-align:justify;column-count:1!important}
+.dropcap{float:left;font-size:51px;line-height:.73;padding:10px 6px 2px 0;color:#6e552b;font-weight:700}
+.paper-sidebar{display:grid!important;align-content:start;gap:0!important;padding:0 0 0 18px!important;border-left:3px double var(--rule)!important}
+.paper-sidebar section{padding:13px 2px;border-bottom:1px solid rgba(80,61,31,.45)}
+.paper-sidebar section:first-child{border-top:3px double var(--rule)}
+.paper-sidebar h4{margin:0 0 6px;font:700 17px/1.05 Georgia,serif;font-variant:small-caps;color:#584322}
+.paper-sidebar p{margin:0;font-size:11.5px;line-height:1.42}
+.absalom-paper footer{display:flex;justify-content:space-between;gap:15px;margin-top:22px;padding-top:8px;border-top:3px double var(--rule);font-size:8px;font-weight:700;letter-spacing:.1em;text-transform:uppercase}
+
+.yeux-paper{--ink:#24170f;--rule:#321d11;background:#e4cc98;transform:rotate(-.08deg)}
+.yeux-paper .paper-masthead h2{font-family:Impact,"Arial Narrow Bold",Georgia,serif;font-size:56px;text-transform:uppercase;letter-spacing:.015em}
+.sensation-hero{margin-top:19px;padding-bottom:18px;border-bottom:6px double #28170d;text-align:center}
+.screamline{display:inline-block;margin-bottom:8px;padding:5px 10px;border:2px solid #28170d;font:900 11px/1 Impact,sans-serif;letter-spacing:.14em;transform:rotate(-1deg)}
+.sensation-hero h1{margin:0;font:900 50px/.87 Impact,"Arial Narrow Bold",Georgia,serif;text-transform:uppercase}
+.sensation-deck{max-width:760px;margin:12px auto 9px;font:700 17px/1.2 Georgia,serif}
+.sensation-hero>p:last-child{max-width:760px;margin:0 auto;font-size:13px;line-height:1.48;text-align:justify}
+.sensation-columns{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:18px}
+
+.sensation-card{padding:15px;border:2px solid #2b1b12;background:rgba(255,244,213,.24);box-shadow:inset 0 0 0 3px rgba(77,44,20,.08)}
+.sensation-card.crooked{transform:rotate(.6deg)}
+.sensation-card>span{display:block;margin-bottom:6px;font:900 9px/1.2 Inter,system-ui,sans-serif;letter-spacing:.12em;text-transform:uppercase}
+.sensation-card h3{margin:0 0 8px;font:900 27px/.98 Impact,"Arial Narrow Bold",Georgia,serif;text-transform:uppercase}
+.sensation-card p{margin:0;font-size:12.5px;line-height:1.44;text-align:justify}
+@media(max-width:780px){.absalom-paper{padding:28px 20px}.paper-grid,.sensation-columns{grid-template-columns:1fr}.paper-sidebar{border-left:0!important;border-top:3px double var(--rule)!important;padding:14px 0 0!important}.paper-masthead h2{font-size:38px}.paper-lead h1{font-size:34px}.sensation-hero h1{font-size:39px}}
+@media print{body *{visibility:hidden!important}.absalom-paper,.absalom-paper *{visibility:visible!important}.absalom-paper{position:absolute;left:0;top:0;width:100%!important;max-width:none!important;box-shadow:none!important;transform:none!important}.newspaper-tabs{display:none!important}}
