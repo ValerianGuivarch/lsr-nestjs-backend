@@ -228,4 +228,65 @@ describe('DiscordCommandsService', () => {
     expect(editReply).toHaveBeenCalledWith(expect.objectContaining({ content: expect.stringContaining('publiée') }))
   })
 
+
+  it('registers the planning commands and computes the strictly next Monday', () => {
+    const service = new DiscordCommandsService({} as never, {} as never)
+    const definitions = service.definitions().map(command => command.name)
+    expect(definitions).toEqual(expect.arrayContaining(['planification', 'modifier-planification']))
+    const planning = service as unknown as {
+      nextPlanningMonday: (date: Date) => string
+      planningMessage: (monday: string, selectedDays: number[]) => string
+      parsePlanningMessage: (content: string) => { monday: string; selectedDays: number[] } | null
+    }
+    expect(planning.nextPlanningMonday(new Date('2026-10-02T15:00:00.000Z'))).toBe('2026-10-05')
+    expect(planning.nextPlanningMonday(new Date('2026-10-05T15:00:00.000Z'))).toBe('2026-10-12')
+    const message = planning.planningMessage('2026-10-05', [0, 2, 6])
+    expect(message).toContain('@everyone **Nouvelle séance ! La semaine du lundi 5 octobre 2026**')
+    expect(message).toContain('🇱 Lundi 5 octobre')
+    expect(message).toContain('🇹 Tercredi 7 octobre')
+    expect(message).toContain('🇩 Dimanche 11 octobre')
+    expect(message).toContain('❌ Pas dispo')
+    expect(planning.parsePlanningMessage(message)).toEqual({ monday: '2026-10-05', selectedDays: [0, 2, 6] })
+  })
+
+  it('publishes a planning message with reactions and a thread after the day selection', async () => {
+    const service = new DiscordCommandsService({} as never, {} as never)
+    const react = jest.fn().mockResolvedValue(undefined)
+    const startThread = jest.fn().mockResolvedValue({ id: 'thread-1' })
+    const send = jest.fn().mockResolvedValue({ id: 'message-1', react, startThread })
+    const deferUpdate = jest.fn().mockResolvedValue(undefined)
+    const editReply = jest.fn().mockResolvedValue(undefined)
+
+    await service.handleComponent({
+      customId: 'pf2-planification:create:2026-10-05',
+      values: ['1', '2', '4'],
+      channel: { isSendable: () => true, send },
+      deferUpdate,
+      editReply,
+      reply: jest.fn(),
+    } as never)
+
+    expect(send).toHaveBeenCalledWith(expect.objectContaining({
+      content: expect.stringContaining('🇹 Tercredi 7 octobre'),
+      allowedMentions: { parse: ['everyone'] },
+    }))
+    expect(react.mock.calls.map(call => call[0])).toEqual(['🇲', '🇹', '🇻', '❌'])
+    expect(startThread).toHaveBeenCalledWith({ name: 'Planification — semaine du 5 octobre' })
+    expect(editReply).toHaveBeenCalledWith(expect.objectContaining({ content: expect.stringContaining('Planification publiée') }))
+  })
+
+  it('refuses /modifier-planification outside the thread attached to the planning message', async () => {
+    const service = new DiscordCommandsService({} as never, {} as never)
+    const reply = jest.fn().mockResolvedValue(undefined)
+    await service.handle({
+      commandName: 'modifier-planification',
+      channel: { isThread: () => false },
+      reply,
+    } as never)
+    expect(reply).toHaveBeenCalledWith(expect.objectContaining({
+      content: expect.stringContaining('dans le fil'),
+      ephemeral: true,
+    }))
+  })
+
 })

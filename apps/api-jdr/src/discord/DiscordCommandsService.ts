@@ -9,6 +9,20 @@ import { DiscordResumeSync, DiscordService } from './DiscordService'
 import { shortSummaryRewardForSession } from '../pf2-sessions/Pf2CareerXp'
 import { Pf2JournalsService } from '../pf2-journals/Pf2JournalsService'
 
+const PLANNING_DAYS = [
+  { offset: 0, label: 'Lundi', emoji: '🇱' },
+  { offset: 1, label: 'Mardi', emoji: '🇲' },
+  // « Tercredi » + T est volontaire : cela évite l'ambiguïté avec Mardi/M.
+  { offset: 2, label: 'Tercredi', emoji: '🇹' },
+  { offset: 3, label: 'Jeudi', emoji: '🇯' },
+  { offset: 4, label: 'Vendredi', emoji: '🇻' },
+  { offset: 5, label: 'Samedi', emoji: '🇸' },
+  { offset: 6, label: 'Dimanche', emoji: '🇩' },
+] as const
+
+const PLANNING_MONTHS = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'] as const
+const PLANNING_UNAVAILABLE_EMOJI = '❌'
+
 @Injectable()
 export class DiscordCommandsService {
   private readonly logger = new Logger(DiscordCommandsService.name)
@@ -48,6 +62,8 @@ export class DiscordCommandsService {
       new SlashCommandBuilder().setName('resume').setDescription('Édite le résumé court d’une séance.').addStringOption(option => option.setName('session').setDescription('Séance à résumer (la plus récente par défaut)').setAutocomplete(true)).addStringOption(option => option.setName('auteur').setDescription('Personnage auteur du résumé').setAutocomplete(true)).toJSON(),
       new SlashCommandBuilder().setName('personnage').setDescription('Présente un personnage au carnet joueur.').addStringOption(option => option.setName('personnage').setDescription('PNJ existant ou nom libre').setRequired(true).setAutocomplete(true)).addAttachmentOption(option => option.setName('portrait').setDescription('Portrait pour un personnage improvisé')).addBooleanOption(option => option.setName('afficher_nom').setDescription('Afficher le nom').setRequired(false)).toJSON(),
       new SlashCommandBuilder().setName('faction').setDescription('Prépare la publication d’une faction MJ.').addStringOption(option => option.setName('faction').setDescription('Faction à publier').setRequired(true).setAutocomplete(true)).toJSON(),
+      new SlashCommandBuilder().setName('planification').setDescription('Publie les disponibilités proposées pour la prochaine semaine.').toJSON(),
+      new SlashCommandBuilder().setName('modifier-planification').setDescription('Ajoute ou retire des dates dans une planification existante.').toJSON(),
     ]
   }
 
@@ -80,6 +96,8 @@ export class DiscordCommandsService {
     if (interaction.commandName === 'resume') { await this.resumeCommand(interaction as ChatInputCommandInteraction); return true }
     if (interaction.commandName === 'personnage') { await this.presentCharacter(interaction as ChatInputCommandInteraction); return true }
     if (interaction.commandName === 'faction') { await this.factionCommand(interaction as ChatInputCommandInteraction); return true }
+    if (interaction.commandName === 'planification') { await this.planningCommand(interaction as ChatInputCommandInteraction); return true }
+    if (interaction.commandName === 'modifier-planification') { await this.modifyPlanningCommand(interaction as ChatInputCommandInteraction); return true }
     return false
   }
 
@@ -126,6 +144,25 @@ export class DiscordCommandsService {
     } catch (error) {
       await interaction.editReply({ content: `Publication impossible : ${error instanceof Error ? error.message : String(error)}` })
     }
+  }
+
+  private async planningCommand(interaction: ChatInputCommandInteraction): Promise<void> {
+    const monday = this.nextPlanningMonday()
+    const select = new StringSelectMenuBuilder().setCustomId(`pf2-planification:create:${monday}`).setPlaceholder('Choisis les jours proposés').setMinValues(1).setMaxValues(PLANNING_DAYS.length).addOptions(PLANNING_DAYS.map(day => ({ label: `${day.label} ${this.planningDate(this.addDays(monday, day.offset))}`, value: String(day.offset), emoji: day.emoji })))
+    await interaction.reply({ content: `Semaine du ${this.planningDate(monday, true)} : sélectionne toutes les dates à proposer.`, components: [new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(select)], ephemeral: true })
+  }
+
+  private async modifyPlanningCommand(interaction: ChatInputCommandInteraction): Promise<void> {
+    const channel = interaction.channel
+    if (!channel?.isThread()) { await interaction.reply({ content: 'Utilise cette commande dans le fil créé depuis le message de planification.', ephemeral: true }); return }
+    let starter
+    try { starter = await channel.fetchStarterMessage() } catch { starter = null }
+    if (!starter) { await interaction.reply({ content: 'Ce fil n’est pas rattaché à un message de planification.', ephemeral: true }); return }
+    const parsed = this.parsePlanningMessage(starter.content)
+    if (!parsed) { await interaction.reply({ content: 'Le message de départ de ce fil n’est pas une planification reconnue.', ephemeral: true }); return }
+    const selected = new Set(parsed.selectedDays)
+    const select = new StringSelectMenuBuilder().setCustomId(`pf2-planification:modify:${starter.id}`).setPlaceholder('Dates proposées').setMinValues(0).setMaxValues(PLANNING_DAYS.length).addOptions(PLANNING_DAYS.map(day => ({ label: `${day.label} ${this.planningDate(this.addDays(parsed.monday, day.offset))}`, value: String(day.offset), emoji: day.emoji, default: selected.has(day.offset) })))
+    await interaction.reply({ content: 'Coche exactement les dates à conserver. Décoche une date pour la supprimer ; coche-en une nouvelle pour l’ajouter.', components: [new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(select)], ephemeral: true })
   }
 
   private async exportFull(interaction: ChatInputCommandInteraction): Promise<void> {
@@ -350,6 +387,53 @@ export class DiscordCommandsService {
   }
 
   async handleComponent(interaction: StringSelectMenuInteraction): Promise<boolean> {
+    const createPlanning = interaction.customId.match(/^pf2-planification:create:(\d{4}-\d{2}-\d{2})$/)
+    if (createPlanning) {
+      const monday = createPlanning[1]
+      const selectedDays = this.planningSelectedDays(interaction.values)
+      if (!selectedDays.length) { await interaction.reply({ content: 'Choisis au moins une date.', ephemeral: true }); return true }
+      const channel = interaction.channel
+      if (!channel?.isSendable()) { await interaction.reply({ content: 'Impossible de publier une planification dans ce salon.', ephemeral: true }); return true }
+      await interaction.deferUpdate()
+      try {
+        const message = await channel.send({ content: this.planningMessage(monday, selectedDays), allowedMentions: { parse: ['everyone'] } })
+        for (const day of PLANNING_DAYS.filter(day => selectedDays.includes(day.offset))) await message.react(day.emoji)
+        await message.react(PLANNING_UNAVAILABLE_EMOJI)
+        let threadCreated = true
+        try { await message.startThread({ name: `Planification — semaine du ${this.planningDate(monday)}` }) }
+        catch (error) { threadCreated = false; this.logger.warn(`Planification ${message.id} publiée, mais fil impossible : ${error instanceof Error ? error.message : String(error)}`) }
+        await interaction.editReply({ content: threadCreated ? 'Planification publiée, réactions ajoutées et fil créé. Utilise `/modifier-planification` dans ce fil pour changer les dates.' : 'Planification publiée et réactions ajoutées. Le fil n’a pas pu être créé automatiquement : crée un fil depuis le message pour utiliser `/modifier-planification`.', components: [] })
+      } catch (error) {
+        await interaction.editReply({ content: `Publication impossible : ${error instanceof Error ? error.message : String(error)}`, components: [] })
+      }
+      return true
+    }
+
+    const modifyPlanning = interaction.customId.match(/^pf2-planification:modify:(\d+)$/)
+    if (modifyPlanning) {
+      const channel = interaction.channel
+      if (!channel?.isThread()) { await interaction.reply({ content: 'Cette modification doit être utilisée dans le fil de la planification.', ephemeral: true }); return true }
+      let starter
+      try { starter = await channel.fetchStarterMessage() } catch { starter = null }
+      if (!starter || starter.id !== modifyPlanning[1]) { await interaction.reply({ content: 'Le message de planification associé à ce menu est introuvable.', ephemeral: true }); return true }
+      const parsed = this.parsePlanningMessage(starter.content)
+      if (!parsed) { await interaction.reply({ content: 'Le message de planification n’est plus reconnaissable.', ephemeral: true }); return true }
+      const selectedDays = this.planningSelectedDays(interaction.values)
+      const before = new Set(parsed.selectedDays); const after = new Set(selectedDays)
+      await interaction.deferUpdate()
+      try {
+        await starter.edit({ content: this.planningMessage(parsed.monday, selectedDays), allowedMentions: { parse: ['everyone'] } })
+        for (const day of PLANNING_DAYS) {
+          if (before.has(day.offset) && !after.has(day.offset)) { const reaction = starter.reactions.resolve(day.emoji); if (reaction) await reaction.remove() }
+          else if (!before.has(day.offset) && after.has(day.offset)) await starter.react(day.emoji)
+        }
+        if (!starter.reactions.resolve(PLANNING_UNAVAILABLE_EMOJI)) await starter.react(PLANNING_UNAVAILABLE_EMOJI)
+        await interaction.editReply({ content: 'Planification mise à jour.', components: [] })
+      } catch (error) {
+        await interaction.editReply({ content: `Modification impossible : ${error instanceof Error ? error.message : String(error)}`, components: [] })
+      }
+      return true
+    }
     if (interaction.customId.startsWith('pf2-character:faction:')) {
       const presentationId = interaction.customId.slice('pf2-character:faction:'.length)
       const pending = this.pendingCharacterFactions.get(presentationId)
@@ -1093,6 +1177,29 @@ export class DiscordCommandsService {
     this.pendingAnnouncements.set(announcementId, { content: await this.plannedSessionAnnouncement(draft.sessionNumber, date, selected, plan.rollCounts, true), userIds: selected.map((actor) => actor.userId) })
     const publish = new ButtonBuilder().setCustomId(announcementId).setLabel('Publier l’annonce').setStyle(ButtonStyle.Primary)
     await interaction.editReply({ content: `Brouillon créé : résumé n°${draft.sessionNumber}.\nDébut : ${this.displayDate(date)}. Fin : à renseigner.\n\n${plan.progressionRolls.join('\n')}\n\nComplète puis publie le résumé dans l’application MJ.`, components: [new ActionRowBuilder<ButtonBuilder>().addComponents(publish)] })
+  }
+
+  private planningSelectedDays(values: readonly string[]): number[] { return [...new Set(values.map(Number))].filter(value => Number.isInteger(value) && value >= 0 && value < PLANNING_DAYS.length).sort((a, b) => a - b) }
+  private planningToday(now = new Date()): string {
+    const zone = process.env['PF2_TIME_ZONE'] ?? 'Europe/Paris'
+    const parts = new Intl.DateTimeFormat('en-CA', { timeZone: zone, year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(now)
+    const value = (kind: Intl.DateTimeFormatPartTypes) => parts.find(part => part.type === kind)?.value ?? ''
+    return `${value('year')}-${value('month')}-${value('day')}`
+  }
+  private nextPlanningMonday(now = new Date()): string { const today = this.planningToday(now); const date = new Date(`${today}T12:00:00Z`); const day = date.getUTCDay(); return this.addDays(today, day === 1 ? 7 : (8 - day) % 7) }
+  private planningDate(date: string, withYear = false): string { const [year, month, day] = date.split('-').map(Number); const label = `${day} ${PLANNING_MONTHS[month - 1]}`; return withYear ? `${label} ${year}` : label }
+  private planningMessage(monday: string, selectedDays: readonly number[]): string {
+    const selected = new Set(selectedDays)
+    return [`@everyone **Nouvelle séance ! La semaine du lundi ${this.planningDate(monday, true)}**`, '', ...PLANNING_DAYS.filter(day => selected.has(day.offset)).map(day => `${day.emoji} ${day.label} ${this.planningDate(this.addDays(monday, day.offset))}`), `${PLANNING_UNAVAILABLE_EMOJI} Pas dispo`].join('\n')
+  }
+  private parsePlanningMessage(content: string): { monday: string; selectedDays: number[] } | null {
+    const match = content.match(/semaine du lundi\s+(\d{1,2})\s+([^\s*]+)\s+(\d{4})/iu)
+    if (!match) return null
+    const day = Number(match[1]); const month = PLANNING_MONTHS.findIndex(value => value.toLocaleLowerCase('fr') === match[2].toLocaleLowerCase('fr')) + 1; const year = Number(match[3])
+    if (!month || !Number.isInteger(day) || day < 1 || day > 31 || !Number.isInteger(year)) return null
+    const monday = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`; const parsed = new Date(`${monday}T12:00:00Z`)
+    if (Number.isNaN(parsed.valueOf()) || parsed.getUTCFullYear() !== year || parsed.getUTCMonth() + 1 !== month || parsed.getUTCDate() !== day || parsed.getUTCDay() !== 1) return null
+    return { monday, selectedDays: PLANNING_DAYS.filter(value => content.includes(`${value.emoji} ${value.label} `)).map(value => value.offset) }
   }
 
   private missionEnd(session: import('../pf2-storage/Pf2PersistenceService').Pf2Session): string { return session.inGameEndDate || session.inGameStartDate }
