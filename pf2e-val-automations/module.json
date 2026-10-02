@@ -1,0 +1,41 @@
+{
+  "id": "pf2e-val-automations",
+  "title": "PF2e Val Automations",
+  "description": "Compléments personnels d'automatisation PF2e, sans modifier PF2e Automations.",
+  "version": "0.1.1",
+  "authors": [
+    {
+      "name": "Val"
+    }
+  ],
+  "compatibility": {
+    "minimum": "14.360",
+    "verified": "14.365",
+    "maximum": "14.999"
+  },
+  "relationships": {
+    "systems": [
+      {
+        "id": "pf2e",
+        "type": "system",
+        "compatibility": {
+          "minimum": "8.4.1",
+          "verified": "8.4.1"
+        }
+      }
+    ],
+    "requires": [
+      {
+        "id": "pf2e-automations",
+        "type": "module",
+        "compatibility": {
+          "minimum": "1.4.8",
+          "verified": "1.4.8"
+        }
+      }
+    ]
+  },
+  "esmodules": [
+    "scripts/main.js"
+  ]
+}
