@@ -48,6 +48,7 @@ export class DiscordCommandsService {
   private readonly pendingJournalReveals = new Map<string, { requesterId: string; journalNumber: number }>()
   private readonly pendingCharacterFactions = new Map<string, { requesterId: string; factionId: string | null }>()
   private readonly pendingFactionPublications = new Map<string, { requesterId: string; factionId: string }>()
+  private readonly pendingSchedulePublications = new Map<string, { requesterId: string; content: string }>()
   constructor(private readonly persistence: Pf2PersistenceService, private readonly foundry: FoundryRelayService, private readonly playerCodex?: PlayerCodexService, private readonly mediaWiki?: MediaWikiClientService, @Inject(forwardRef(() => DiscordService)) private readonly discord?: DiscordService, private readonly journals?: Pf2JournalsService) {}
 
   definitions(): RESTPostAPIApplicationGuildCommandsJSONBody[] {
@@ -62,6 +63,7 @@ export class DiscordCommandsService {
       new SlashCommandBuilder().setName('personnage').setDescription('Présente un personnage au carnet joueur.').addStringOption(option => option.setName('personnage').setDescription('PNJ existant ou nom libre').setRequired(true).setAutocomplete(true)).addAttachmentOption(option => option.setName('portrait').setDescription('Portrait pour un personnage improvisé')).addBooleanOption(option => option.setName('afficher_nom').setDescription('Afficher le nom').setRequired(false)).toJSON(),
       new SlashCommandBuilder().setName('faction').setDescription('Prépare la publication d’une faction MJ.').addStringOption(option => option.setName('faction').setDescription('Faction à publier').setRequired(true).setAutocomplete(true)).toJSON(),
       new SlashCommandBuilder().setName('planification').setDescription('Publie les disponibilités proposées pour la prochaine semaine.').toJSON(),
+      new SlashCommandBuilder().setName('programmer-seance').setDescription('Calcule les groupes possibles à partir de la planification.').toJSON(),
       new SlashCommandBuilder().setName('modifier-planification').setDescription('Ajoute ou retire des dates dans une planification existante.').toJSON(),
     ]
   }
@@ -96,6 +98,7 @@ export class DiscordCommandsService {
     if (interaction.commandName === 'personnage') { await this.presentCharacter(interaction as ChatInputCommandInteraction); return true }
     if (interaction.commandName === 'faction') { await this.factionCommand(interaction as ChatInputCommandInteraction); return true }
     if (interaction.commandName === 'planification') { await this.planningCommand(interaction as ChatInputCommandInteraction); return true }
+    if (interaction.commandName === 'programmer-seance') { await this.programmerSeanceCommand(interaction as ChatInputCommandInteraction); return true }
     if (interaction.commandName === 'modifier-planification') { await this.modifyPlanningCommand(interaction as ChatInputCommandInteraction); return true }
     return false
   }
@@ -162,6 +165,247 @@ export class DiscordCommandsService {
     const selected = new Set(parsed.selectedDays)
     const select = new StringSelectMenuBuilder().setCustomId(`pf2-planification:modify:${starter.id}`).setPlaceholder('Dates proposées').setMinValues(0).setMaxValues(PLANNING_DAYS.length).addOptions(PLANNING_DAYS.map(day => ({ label: `${day.label} ${this.planningDate(this.addDays(parsed.monday, day.offset))}`, value: String(day.offset), emoji: day.emoji, default: selected.has(day.offset) })))
     await interaction.reply({ content: 'Coche exactement les dates à conserver. Décoche une date pour la supprimer ; coche-en une nouvelle pour l’ajouter.', components: [new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(select)], ephemeral: true })
+  }
+
+  private async programmerSeanceCommand(interaction: ChatInputCommandInteraction): Promise<void> {
+    if (!this.isAdmin(interaction)) {
+      await interaction.reply({ content: 'Cette commande est réservée aux administrateurs du serveur.', ephemeral: true })
+      return
+    }
+    const channel = interaction.channel
+    if (!channel?.isTextBased() || !('messages' in channel)) {
+      await interaction.reply({ content: 'Cette commande doit être utilisée dans un salon de discussion.', ephemeral: true })
+      return
+    }
+
+    await interaction.deferReply({ ephemeral: true })
+    const letters = ['L', 'M', 'T', 'J', 'V', 'S', 'D'] as const
+    const dayByEmoji = new Map<string, string>()
+    for (const day of PLANNING_DAYS) {
+      const key = String(day.offset)
+      const letter = letters[day.offset]
+      dayByEmoji.set(day.emoji, key)
+      dayByEmoji.set(letter, key)
+      dayByEmoji.set(`REGIONAL_INDICATOR_${letter}`, key)
+    }
+    const reactionDayKey = (name: string | null): string | null => dayByEmoji.get(name?.trim().toUpperCase() ?? '') ?? null
+
+    try {
+      let scheduleMessage = null
+      if (channel.isThread()) {
+        try {
+          const starter = await channel.fetchStarterMessage()
+          if (starter && this.parsePlanningMessage(starter.content)) scheduleMessage = starter
+        } catch {
+          // Le fil peut ne plus avoir accès à son message de départ.
+        }
+      }
+      if (!scheduleMessage) {
+        const messages = await channel.messages.fetch({ limit: 100 })
+        scheduleMessage = messages.find(message => this.parsePlanningMessage(message.content) !== null) ?? null
+      }
+      if (!scheduleMessage) {
+        await interaction.editReply({ content: 'Je n’ai trouvé aucune planification récente dans ce salon.' })
+        return
+      }
+
+      const parsed = this.parsePlanningMessage(scheduleMessage.content)
+      if (!parsed) {
+        await interaction.editReply({ content: 'Le message de planification trouvé n’est plus reconnaissable.' })
+        return
+      }
+
+      const selectedDays = new Set(parsed.selectedDays)
+      const days = PLANNING_DAYS
+        .filter(day => selectedDays.has(day.offset))
+        .map(day => [String(day.offset), `${day.label} ${this.planningDate(this.addDays(parsed.monday, day.offset))}`] as const)
+      const valerianId = this.discordId('valerian')
+      const playCounts = await this.discordSessionCounts()
+      const availability = new Map<string, Array<{ id: string; name: string; played: number }>>()
+      for (const [key] of days) availability.set(key, [])
+
+      for (const reaction of scheduleMessage.reactions.cache.values()) {
+        const key = reactionDayKey(reaction.emoji.name)
+        if (!key || !availability.has(key)) continue
+        const users = await reaction.users.fetch()
+        const available = users
+          .filter(user => !user.bot && user.id !== valerianId)
+          .map(user => ({ id: user.id, name: user.globalName?.trim() || user.username, played: playCounts.get(user.id) ?? 0 }))
+          .sort((a, b) => a.played - b.played || a.name.localeCompare(b.name, 'fr'))
+        availability.set(key, available)
+      }
+
+      const proposals = this.bestSessionGroupProposals(days, availability)
+      const lines = ['**Groupes possibles pour la prochaine semaine**']
+      if (!proposals.length) {
+        lines.push('Aucun groupe de 4 sans réutiliser un joueur ne peut être formé avec les disponibilités actuelles.')
+      } else {
+        const compact = this.compactSessionGroupProposals(proposals)
+        if (compact) {
+          for (const group of compact) {
+            lines.push('', `**${group.label}**`)
+            lines.push(...group.fixed.map(player => `- ${player.name} — ${player.played} séance${player.played > 1 ? 's' : ''} jouée${player.played > 1 ? 's' : ''}`))
+            if (group.choose > 0) {
+              const choices = group.pool.map(player => `${player.name} (${player.played})`).join(', ')
+              lines.push(`- **Choisir ${group.choose}/${group.pool.length}** : ${choices}`)
+            }
+          }
+        } else {
+          for (const [index, groups] of proposals.slice(0, 3).entries()) {
+            if (proposals.length > 1) lines.push('', `**Proposition ${index + 1} — ex æquo**`)
+            for (const group of groups) {
+              lines.push('', `**${group.label}**`, ...group.players.map(player => `- ${player.name} — ${player.played} séance${player.played > 1 ? 's' : ''} jouée${player.played > 1 ? 's' : ''}`))
+            }
+          }
+        }
+        const groupCount = proposals[0].length
+        lines.push('', `${groupCount} groupe${groupCount > 1 ? 's' : ''} de 4 possible${groupCount > 1 ? 's' : ''}, sans réutiliser de joueur.`)
+      }
+
+      const publicContent = lines.join('\n')
+      if (publicContent.length > 2_000) {
+        await interaction.editReply({ content: `Le résultat fait ${publicContent.length} caractères et dépasse la limite Discord. Réduis le nombre de jours proposés ou les égalités à départager.` })
+        return
+      }
+
+      const sourceLine = `Message analysé : ${scheduleMessage.url}`
+      const preview = `${publicContent}\n\n${sourceLine}`.length <= 2_000 ? `${publicContent}\n\n${sourceLine}` : publicContent
+      if (!proposals.length) {
+        await interaction.editReply({ content: preview, components: [], allowedMentions: { parse: [] } })
+        return
+      }
+
+      const publishId = `pf2-schedule:publish:${interaction.id}`
+      this.pendingSchedulePublications.set(publishId, { requesterId: interaction.user.id, content: publicContent })
+      const publish = new ButtonBuilder().setCustomId(publishId).setLabel('Publier').setStyle(ButtonStyle.Primary)
+      await interaction.editReply({
+        content: preview,
+        components: [new ActionRowBuilder<ButtonBuilder>().addComponents(publish)],
+        allowedMentions: { parse: [] },
+      })
+    } catch (error) {
+      this.logger.error('programmer-seance: calcul impossible', error instanceof Error ? error.stack : undefined)
+      await interaction.editReply({ content: `Calcul impossible : ${error instanceof Error ? error.message : String(error)}` })
+    }
+  }
+
+  private async discordSessionCounts(): Promise<Map<string, number>> {
+    const sessions = (await this.persistence.listSessions()).filter(session => session.published || (session.sessionXp ?? 0) > 0)
+    const actorNames = await this.actorNames()
+    const byUser = new Map<string, Set<number>>()
+    for (const session of sessions) {
+      const seen = new Set<string>()
+      for (const uuid of new Set(session.participants)) {
+        const actorName = actorNames.get(uuid)
+        if (!actorName || !this.isPlayerActorName(actorName)) continue
+        const userId = this.discordId(this.playerName(actorName))
+        if (!userId || seen.has(userId)) continue
+        seen.add(userId)
+        if (!byUser.has(userId)) byUser.set(userId, new Set())
+        byUser.get(userId)!.add(session.sessionNumber)
+      }
+    }
+    return new Map([...byUser.entries()].map(([userId, played]) => [userId, played.size]))
+  }
+
+  private compactSessionGroupProposals(
+    proposals: Array<Array<{ key: string; label: string; players: Array<{ id: string; name: string; played: number }> }>>,
+  ): Array<{ key: string; label: string; fixed: Array<{ id: string; name: string; played: number }>; pool: Array<{ id: string; name: string; played: number }>; choose: number }> | null {
+    if (proposals.length < 2) return null
+    const reference = proposals[0]
+    if (!proposals.every(proposal => proposal.length === reference.length && proposal.every((group, index) => group.key === reference[index].key))) return null
+
+    const combinationCount = (n: number, k: number): number => {
+      if (k < 0 || k > n) return 0
+      let result = 1
+      for (let i = 1; i <= Math.min(k, n - k); i++) result = (result * (n - i + 1)) / i
+      return result
+    }
+
+    const compact = reference.map((group, index) => {
+      const fixed = group.players.filter(player => proposals.every(proposal => proposal[index].players.some(candidate => candidate.id === player.id)))
+      const fixedIds = new Set(fixed.map(player => player.id))
+      const poolById = new Map<string, { id: string; name: string; played: number }>()
+      const selections = new Set<string>()
+      for (const proposal of proposals) {
+        const variable = proposal[index].players.filter(player => !fixedIds.has(player.id))
+        for (const player of variable) poolById.set(player.id, player)
+        selections.add(variable.map(player => player.id).sort().join(','))
+      }
+      const pool = [...poolById.values()].sort((a, b) => a.played - b.played || a.name.localeCompare(b.name, 'fr'))
+      const choose = 4 - fixed.length
+      return { key: group.key, label: group.label, fixed, pool, choose, selections }
+    })
+
+    for (const group of compact) if (group.selections.size !== combinationCount(group.pool.length, group.choose)) return null
+    const actual = new Set(proposals.map(proposal => proposal.map((group, index) => {
+      const fixedIds = new Set(compact[index].fixed.map(player => player.id))
+      return group.players.filter(player => !fixedIds.has(player.id)).map(player => player.id).sort().join(',')
+    }).join('|'))).size
+    const expected = compact.reduce((product, group) => product * group.selections.size, 1)
+    if (actual !== expected) return null
+
+    return compact.map(({ selections: _selections, ...group }) => group)
+  }
+
+  private bestSessionGroupProposals(
+    days: readonly (readonly [string, string])[],
+    availability: Map<string, Array<{ id: string; name: string; played: number }>>,
+  ): Array<Array<{ key: string; label: string; players: Array<{ id: string; name: string; played: number }> }>> {
+    type Player = { id: string; name: string; played: number }
+    type Group = { key: string; label: string; players: Player[] }
+    const options = days.map(([key, label]) => {
+      const players = availability.get(key) ?? []
+      const groups: Array<{ players: Player[]; score: number }> = []
+      for (let a = 0; a < players.length - 3; a++) for (let b = a + 1; b < players.length - 2; b++)
+        for (let c = b + 1; c < players.length - 1; c++) for (let d = c + 1; d < players.length; d++) {
+          const group = [players[a], players[b], players[c], players[d]]
+          groups.push({ players: group, score: group.reduce((sum, player) => sum + player.played, 0) })
+        }
+      groups.sort((left, right) => left.score - right.score)
+      return { key, label, groups }
+    })
+
+    const allUserIds = new Set([...availability.values()].flat().map(player => player.id))
+    let bestGroupCount = 0
+    let bestScore = Number.POSITIVE_INFINITY
+    let proposals: Group[][] = []
+    let proposalKeys = new Set<string>()
+
+    const saveProposal = (chosen: Group[], score: number): void => {
+      const count = chosen.length
+      if (count < bestGroupCount || (count === bestGroupCount && score > bestScore)) return
+      if (count > bestGroupCount || score < bestScore) {
+        bestGroupCount = count
+        bestScore = score
+        proposals = []
+        proposalKeys = new Set<string>()
+      }
+      if (count === 0) return
+      const key = chosen.map(group => `${group.key}:${group.players.map(player => player.id).sort().join(',')}`).join('|')
+      if (proposalKeys.has(key)) return
+      proposalKeys.add(key)
+      if (proposals.length < 100) proposals.push(chosen.map(group => ({ ...group, players: [...group.players] })))
+    }
+
+    const search = (index: number, used: Set<string>, chosen: Group[], score: number): void => {
+      const remainingPlayers = [...allUserIds].filter(userId => !used.has(userId)).length
+      const maximum = chosen.length + Math.min(options.length - index, Math.floor(remainingPlayers / 4))
+      if (maximum < bestGroupCount) return
+      if (index >= options.length) { saveProposal(chosen, score); return }
+
+      const option = options[index]
+      for (const candidate of option.groups) {
+        if (candidate.players.some(player => used.has(player.id))) continue
+        const nextUsed = new Set(used)
+        for (const player of candidate.players) nextUsed.add(player.id)
+        search(index + 1, nextUsed, [...chosen, { key: option.key, label: option.label, players: candidate.players }], score + candidate.score)
+      }
+      search(index + 1, used, chosen, score)
+    }
+
+    search(0, new Set(), [], 0)
+    return proposals
   }
 
   private async exportFull(interaction: ChatInputCommandInteraction): Promise<void> {
@@ -616,6 +860,19 @@ export class DiscordCommandsService {
   }
 
   async handleButton(interaction: ButtonInteraction): Promise<boolean> {
+    if (interaction.customId.startsWith('pf2-schedule:publish:')) {
+      const pending = this.pendingSchedulePublications.get(interaction.customId)
+      if (!pending) { await interaction.reply({ content: 'Cette validation a expiré. Relance `/programmer-seance`.', ephemeral: true }); return true }
+      if (interaction.user.id !== pending.requesterId) { await interaction.reply({ content: 'Cette validation appartient à un autre administrateur.', ephemeral: true }); return true }
+      try {
+        await interaction.update({ components: [] })
+        await interaction.followUp({ content: pending.content, ephemeral: false, allowedMentions: { parse: [] } })
+        this.pendingSchedulePublications.delete(interaction.customId)
+      } catch (error) {
+        await interaction.followUp({ content: `Publication impossible : ${error instanceof Error ? error.message : String(error)}`, ephemeral: true }).catch(() => undefined)
+      }
+      return true
+    }
     if (interaction.customId.startsWith('pf2-journal:reveal:')) {
       const pending = this.pendingJournalReveals.get(interaction.customId)
       if (!pending) { await interaction.reply({ content: 'Cette validation a expiré. Relance `/journaux`.', ephemeral: true }); return true }

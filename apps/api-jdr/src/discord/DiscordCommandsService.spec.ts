@@ -232,7 +232,8 @@ describe('DiscordCommandsService', () => {
   it('registers the planning commands and computes the strictly next Monday', () => {
     const service = new DiscordCommandsService({} as never, {} as never)
     const definitions = service.definitions().map(command => command.name)
-    expect(definitions).toEqual(expect.arrayContaining(['planification', 'modifier-planification']))
+    expect(definitions).toEqual(expect.arrayContaining(['planification', 'programmer-seance', 'modifier-planification']))
+    expect(definitions).not.toContain('resume')
     const planning = service as unknown as {
       nextPlanningMonday: (date: Date) => string
       planningMessage: (monday: string, selectedDays: number[]) => string
@@ -287,6 +288,96 @@ describe('DiscordCommandsService', () => {
       content: expect.stringContaining('dans le fil'),
       ephemeral: true,
     }))
+  })
+
+
+  it('solver maximizes groups, never reuses a player, and favors less-played players', () => {
+    const service = new DiscordCommandsService({} as never, {} as never)
+    const solver = service as unknown as {
+      bestSessionGroupProposals: (
+        days: readonly (readonly [string, string])[],
+        availability: Map<string, Array<{ id: string; name: string; played: number }>>,
+      ) => Array<Array<{ key: string; label: string; players: Array<{ id: string; name: string; played: number }> }>>
+    }
+    const p = (id: string, played: number) => ({ id, name: id, played })
+    const proposals = solver.bestSessionGroupProposals(
+      [['0', 'Lundi'], ['3', 'Jeudi']] as const,
+      new Map([
+        ['0', [p('A', 0), p('B', 0), p('C', 0), p('D', 0)]],
+        ['3', [p('D', 0), p('E', 0), p('F', 0), p('G', 0), p('H', 5)]],
+      ]),
+    )
+    expect(proposals[0]).toHaveLength(2)
+    const ids = proposals[0].flatMap(group => group.players.map(player => player.id))
+    expect(new Set(ids).size).toBe(8)
+    expect(ids).toContain('H')
+
+    const priority = solver.bestSessionGroupProposals(
+      [['0', 'Lundi']] as const,
+      new Map([['0', [p('A', 0), p('B', 1), p('C', 1), p('D', 2), p('E', 9)]]]),
+    )
+    expect(priority[0][0].players.map(player => player.id)).toEqual(['A', 'B', 'C', 'D'])
+  })
+
+  it('solver compacts perfect ties into a choose N/M pool', () => {
+    const service = new DiscordCommandsService({} as never, {} as never)
+    const solver = service as unknown as {
+      bestSessionGroupProposals: (
+        days: readonly (readonly [string, string])[],
+        availability: Map<string, Array<{ id: string; name: string; played: number }>>,
+      ) => Array<Array<{ key: string; label: string; players: Array<{ id: string; name: string; played: number }> }>>
+      compactSessionGroupProposals: (
+        proposals: Array<Array<{ key: string; label: string; players: Array<{ id: string; name: string; played: number }> }>>,
+      ) => Array<{ fixed: Array<{ id: string }>; pool: Array<{ id: string }>; choose: number }> | null
+    }
+    const p = (id: string, played: number) => ({ id, name: id, played })
+    const proposals = solver.bestSessionGroupProposals(
+      [['0', 'Lundi']] as const,
+      new Map([['0', [p('A', 0), p('B', 0), p('C', 0), p('D', 4), p('E', 4), p('F', 4)]]]),
+    )
+    const compact = solver.compactSessionGroupProposals(proposals)
+    expect(compact).not.toBeNull()
+    expect(compact?.[0].fixed.map(player => player.id)).toEqual(['A', 'B', 'C'])
+    expect(compact?.[0].pool.map(player => player.id)).toEqual(['D', 'E', 'F'])
+    expect(compact?.[0].choose).toBe(1)
+  })
+
+  it('counts draft sessions with XP as already played', async () => {
+    const persistence = {
+      listSessions: jest.fn().mockResolvedValue([
+        { sessionNumber: 1, published: true, sessionXp: 0, participants: ['Actor.hero'] },
+        { sessionNumber: 2, published: false, sessionXp: 120, participants: ['Actor.hero'] },
+        { sessionNumber: 3, published: false, sessionXp: 0, participants: ['Actor.hero'] },
+      ]),
+      saveFoundryActorCache: jest.fn().mockResolvedValue(undefined),
+      readFoundryActorCache: jest.fn().mockResolvedValue([]),
+    }
+    const foundry = {
+      listActors: jest.fn().mockResolvedValue([{ uuid: 'Actor.hero', name: 'Héros (Eric)' }]),
+    }
+    const service = new DiscordCommandsService(persistence as never, foundry as never)
+    const counts = await (service as unknown as { discordSessionCounts: () => Promise<Map<string, number>> }).discordSessionCounts()
+    expect(counts.get('399621722158137346')).toBe(2)
+  })
+
+  it('publishes a private solver preview only after validation', async () => {
+    const service = new DiscordCommandsService({} as never, {} as never)
+    const publishId = 'pf2-schedule:publish:test'
+    ;(service as unknown as { pendingSchedulePublications: Map<string, { requesterId: string; content: string }> }).pendingSchedulePublications
+      .set(publishId, { requesterId: 'user-1', content: '**Planning**' })
+    const update = jest.fn().mockResolvedValue(undefined)
+    const followUp = jest.fn().mockResolvedValue(undefined)
+
+    await service.handleButton({
+      customId: publishId,
+      user: { id: 'user-1' },
+      update,
+      followUp,
+      reply: jest.fn(),
+    } as never)
+
+    expect(update).toHaveBeenCalledWith({ components: [] })
+    expect(followUp).toHaveBeenCalledWith({ content: '**Planning**', ephemeral: false, allowedMentions: { parse: [] } })
   })
 
 })
