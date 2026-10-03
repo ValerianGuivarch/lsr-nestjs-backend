@@ -10,6 +10,7 @@ class ApiPF2PlayerCodexMe extends ApiBase {
                 'registered' => 0,
                 'wikiUsername' => '',
                 'characters' => [],
+                'canEditDescription' => 0,
             ] );
             return;
         }
@@ -39,6 +40,7 @@ class ApiPF2PlayerCodexMe extends ApiBase {
             'registered' => 1,
             'wikiUsername' => $user->getName(),
             'characters' => is_array( $payload['characters'] ?? null ) ? $payload['characters'] : [],
+            'canEditDescription' => $user->isAllowed( 'edit' ) ? 1 : 0,
         ] );
     }
 

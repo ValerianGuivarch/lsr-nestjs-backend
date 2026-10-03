@@ -21,10 +21,6 @@ class ApiPF2PlayerCodexUpdate extends ApiBase {
         // fails with a generic internal_api_error.
         error_log( '[PF2PlayerCodex] pf2playercodexupdate entered' );
         $user = $this->getUser();
-        if ( !$user->isRegistered() || !$user->isAllowed( 'delete' ) ) {
-            $this->dieWithError( 'Vous devez être administrateur pour modifier le carnet.' );
-        }
-
         $params = $this->extractRequestParams();
         $payload = json_decode( $params['payload'], true );
         if ( !is_array( $payload ) ) {
@@ -32,6 +28,20 @@ class ApiPF2PlayerCodexUpdate extends ApiBase {
         }
 
         $op = $params['op'];
+        if ( $op === 'updateCharacter' ) {
+            if ( !$user->isRegistered() || !$user->isAllowed( 'edit' ) ) {
+                $this->dieWithError( 'Vous devez pouvoir modifier le wiki pour changer la description courte.' );
+            }
+            $shortDescription = isset( $payload['shortDescription'] ) && is_string( $payload['shortDescription'] )
+                ? trim( $payload['shortDescription'] )
+                : '';
+            if ( mb_strlen( $shortDescription ) > 1000 ) {
+                $this->dieWithError( 'La description courte est trop longue.' );
+            }
+            $payload = [ 'shortDescription' => $shortDescription ];
+        } elseif ( !$user->isRegistered() || !$user->isAllowed( 'delete' ) ) {
+            $this->dieWithError( 'Vous devez être administrateur pour modifier le carnet.' );
+        }
         $routes = [
             'deleteCharacter' => [ 'DELETE', '/player-codex/characters/' . rawurlencode( $params['id'] ) ],
             'updateCharacter' => [ 'PATCH', '/player-codex/characters/' . rawurlencode( $params['id'] ) ],

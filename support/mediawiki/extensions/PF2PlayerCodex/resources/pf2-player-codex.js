@@ -9,6 +9,48 @@
 	function errorMessage( error, fallback ) { return ( error && error.error && ( error.error.info || error.error.code ) ) || ( error && error.message ) || fallback; }
 	function imageForFilename( filename ) { return filename ? mw.util.getUrl( 'Special:FilePath/' + filename ) : ''; }
 
+	function appendShortDescriptionEditor( container, entity, canEdit, emptyText ) {
+		var text = document.createElement( 'p' );
+		text.className = 'pf2-player-short-description pf2-player-short-description-detail';
+		text.textContent = entity.shortDescription || emptyText || '';
+		container.appendChild( text );
+		if ( !canEdit ) { return; }
+
+		var edit = document.createElement( 'button' );
+		edit.textContent = 'Modifier la description courte';
+		container.appendChild( edit );
+		edit.onclick = function () {
+			edit.disabled = true;
+			var textarea = document.createElement( 'textarea' );
+			textarea.className = 'pf2-player-short-description-editor';
+			textarea.value = entity.shortDescription || '';
+			textarea.rows = 4;
+			textarea.maxLength = 1000;
+			var actions = document.createElement( 'div' ); actions.className = 'pf2-player-background-actions';
+			var save = document.createElement( 'button' ); save.textContent = 'Enregistrer'; save.className = 'pf2-player-primary';
+			var cancel = document.createElement( 'button' ); cancel.textContent = 'Annuler';
+			container.insertBefore( textarea, edit );
+			container.insertBefore( actions, edit );
+			actions.appendChild( save ); actions.appendChild( cancel );
+			text.style.display = 'none'; edit.style.display = 'none';
+			cancel.onclick = function () {
+				textarea.remove(); actions.remove(); text.style.display = ''; edit.style.display = ''; edit.disabled = false;
+			};
+			save.onclick = function () {
+				save.disabled = true;
+				request( 'updateCharacter', entity.npcId, '', { shortDescription: textarea.value } ).then( function () {
+					entity.shortDescription = textarea.value.trim();
+					text.textContent = entity.shortDescription || emptyText || '';
+					cancel.onclick();
+					mw.notify( 'Description courte enregistrée.', { type: 'success' } );
+				} ).catch( function ( error ) {
+					save.disabled = false;
+					mw.notify( errorMessage( error, 'Enregistrement impossible' ), { type: 'error' } );
+				} );
+			};
+		};
+	}
+
 	function factionDepth( faction, factions ) {
 		var byId = new Map( factions.map( function ( item ) { return [ item.id, item ]; } ) );
 		var depth = 0; var parent = faction.parentFactionId; var seen = new Set();
@@ -83,23 +125,7 @@
 		layout.appendChild( portraitColumn );
 		var main = document.createElement( 'div' ); main.className = 'pf2-player-character-main';
 		main.appendChild( heading( 'Description courte' ) );
-		var shortDescription = document.createElement( 'p' ); shortDescription.className = 'pf2-player-short-description pf2-player-short-description-detail'; shortDescription.textContent = character.shortDescription || 'Aucune description courte.'; main.appendChild( shortDescription );
-		if ( data.canEdit ) {
-			var shortEdit = document.createElement( 'button' ); shortEdit.textContent = 'Modifier la description courte'; main.appendChild( shortEdit );
-			shortEdit.onclick = function () {
-				shortEdit.disabled = true;
-				var textarea = document.createElement( 'textarea' ); textarea.className = 'pf2-player-short-description-editor'; textarea.value = character.shortDescription || ''; textarea.rows = 4; textarea.maxLength = 1000;
-				var actions = document.createElement( 'div' ); actions.className = 'pf2-player-background-actions';
-				var save = document.createElement( 'button' ); save.textContent = 'Enregistrer'; save.className = 'pf2-player-primary';
-				var cancel = document.createElement( 'button' ); cancel.textContent = 'Annuler';
-				main.insertBefore( textarea, shortEdit ); main.insertBefore( actions, shortEdit ); actions.appendChild( save ); actions.appendChild( cancel ); shortDescription.style.display = 'none'; shortEdit.style.display = 'none';
-				cancel.onclick = function () { textarea.remove(); actions.remove(); shortDescription.style.display = ''; shortEdit.style.display = ''; shortEdit.disabled = false; };
-				save.onclick = function () {
-					save.disabled = true;
-					request( 'updateCharacter', character.npcId, '', { shortDescription: textarea.value } ).then( function () { character.shortDescription = textarea.value.trim(); shortDescription.textContent = character.shortDescription || 'Aucune description courte.'; cancel.onclick(); mw.notify( 'Description courte enregistrée.', { type: 'success' } ); } ).catch( function ( error ) { save.disabled = false; mw.notify( errorMessage( error, 'Enregistrement impossible' ), { type: 'error' } ); } );
-				};
-			};
-		}
+		appendShortDescriptionEditor( main, character, data.canEditDescription, 'Aucune description courte.' );
 		main.appendChild( heading( 'Factions connues' ) );
 		var factionList = document.createElement( 'ul' ); factionList.className = 'pf2-player-character-factions'; main.appendChild( factionList );
 		character.factions.forEach( function ( known ) { var item = document.createElement( 'li' ); item.appendChild( link( known.wikiPageTitle, known.name ) ); if ( data.canEdit ) { var remove = document.createElement( 'button' ); remove.textContent = 'Retirer'; remove.onclick = function () { request( 'removeFaction', character.npcId, known.id, {} ).then( function () { window.location.reload(); } ).catch( function ( error ) { mw.notify( errorMessage( error, 'Retrait impossible' ), { type: 'error' } ); } ); }; item.appendChild( remove ); } factionList.appendChild( item ); } );
@@ -149,14 +175,15 @@
 	function myCharacterUrl( npcId ) { return mw.util.getUrl( 'Special:MesPersonnages/' + npcId ); }
 	function myContactUrl( playerNpcId, contactNpcId ) { return mw.util.getUrl( 'Special:MesPersonnages/' + playerNpcId, { contact: contactNpcId } ); }
 
-	function renderMyCharacterDetail( root, character ) {
+	function renderMyCharacterDetail( root, character, canEditDescription ) {
 		root.textContent = '';
 		var header = document.createElement( 'div' ); header.className = 'pf2-my-character-header';
 		var title = document.createElement( 'h2' ); title.textContent = character.displayName; header.appendChild( title );
 		var back = link( 'Special:MesPersonnages', '← Mes personnages' ); back.className = 'pf2-my-character-back'; header.appendChild( back );
 		if ( character.published && character.wikiPageTitle ) { header.appendChild( link( character.wikiPageTitle, 'Voir la fiche publique' ) ); }
 		root.appendChild( header );
-		var shortDescription = document.createElement( 'p' ); shortDescription.className = 'pf2-player-short-description pf2-player-short-description-detail'; shortDescription.textContent = character.shortDescription || ''; root.appendChild( shortDescription );
+		root.appendChild( heading( 'Description courte' ) );
+		appendShortDescriptionEditor( root, character, canEditDescription, 'Aucune description courte.' );
 		var tabs = document.createElement( 'div' ); tabs.className = 'pf2-player-tabs'; root.appendChild( tabs );
 		var panel = document.createElement( 'div' ); panel.className = 'pf2-player-tab-panel'; root.appendChild( panel );
 
@@ -198,7 +225,7 @@
 		showTab( 'fiche' );
 	}
 
-	function renderMyContactDetail( root, character, contact ) {
+	function renderMyContactDetail( root, character, contact, canEditDescription ) {
 		root.textContent = '';
 		var header = document.createElement( 'div' ); header.className = 'pf2-my-character-header';
 		var title = document.createElement( 'h2' ); title.textContent = contact.displayName; header.appendChild( title );
@@ -210,7 +237,8 @@
 		if ( !contact.published ) { var badge = document.createElement( 'span' ); badge.className = 'pf2-player-kind private'; badge.textContent = 'Contact privé'; side.appendChild( badge ); }
 		layout.appendChild( side );
 		var main = document.createElement( 'div' ); main.className = 'pf2-player-character-main';
-		if ( contact.shortDescription ) { var description = document.createElement( 'p' ); description.className = 'pf2-player-short-description pf2-player-short-description-detail'; description.textContent = contact.shortDescription; main.appendChild( description ); }
+		main.appendChild( heading( 'Description courte' ) );
+		appendShortDescriptionEditor( main, contact, canEditDescription, 'Aucune description courte.' );
 		var wikiContent = document.createElement( 'div' ); wikiContent.className = 'pf2-player-wiki-content'; main.appendChild( wikiContent ); layout.appendChild( main ); root.appendChild( layout );
 		renderWikiPage( wikiContent, contact.wikiPageTitle );
 	}
@@ -225,12 +253,12 @@
 				if ( !contact ) { root.appendChild( heading( 'Contact inaccessible' ) ); var noContact = document.createElement( 'p' ); noContact.textContent = 'Ce contact n’est pas associé à ce personnage.'; root.appendChild( noContact ); root.appendChild( link( 'Special:MesPersonnages', 'Retour à Mes personnages' ) ); return; }
 				var contactTitleNode = document.querySelector( '.mw-page-title-main' ) || document.querySelector( '#firstHeading' ); if ( contactTitleNode ) { contactTitleNode.textContent = contact.displayName; }
 				document.title = contact.displayName + ' — ' + mw.config.get( 'wgSiteName' );
-				renderMyContactDetail( root, character, contact );
+				renderMyContactDetail( root, character, contact, data.canEditDescription );
 				return;
 			}
 			var titleNode = document.querySelector( '.mw-page-title-main' ) || document.querySelector( '#firstHeading' ); if ( titleNode ) { titleNode.textContent = character.displayName; }
 			document.title = character.displayName + ' — ' + mw.config.get( 'wgSiteName' );
-			renderMyCharacterDetail( root, character );
+			renderMyCharacterDetail( root, character, data.canEditDescription );
 			return;
 		}
 
