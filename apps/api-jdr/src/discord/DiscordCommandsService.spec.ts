@@ -328,6 +328,7 @@ describe('DiscordCommandsService', () => {
     expect(message).toContain('🇹 Tercredi 7 octobre')
     expect(message).toContain('🇩 Dimanche 11 octobre')
     expect(message).toContain('❌ Pas dispo')
+    expect(message).toContain('❓ Ne sais pas encore')
     expect(planning.parsePlanningMessage(message)).toEqual({ monday: '2026-10-05', selectedDays: [0, 2, 6] })
   })
 
@@ -352,7 +353,7 @@ describe('DiscordCommandsService', () => {
       content: expect.stringContaining('🇹 Tercredi 7 octobre'),
       allowedMentions: { parse: ['everyone'] },
     }))
-    expect(react.mock.calls.map(call => call[0])).toEqual(['🇲', '🇹', '🇻', '❌'])
+    expect(react.mock.calls.map(call => call[0])).toEqual(['🇲', '🇹', '🇻', '❌', '❓'])
     expect(startThread).toHaveBeenCalledWith({ name: 'Planification — semaine du 5 octobre' })
     expect(editReply).toHaveBeenCalledWith(expect.objectContaining({ content: expect.stringContaining('Planification publiée') }))
   })
