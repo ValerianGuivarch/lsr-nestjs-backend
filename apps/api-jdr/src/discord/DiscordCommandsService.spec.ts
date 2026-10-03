@@ -358,6 +358,25 @@ describe('DiscordCommandsService', () => {
     expect(editReply).toHaveBeenCalledWith(expect.objectContaining({ content: expect.stringContaining('Planification publiée') }))
   })
 
+  it('refreshes the planning starter so a previously added day stays selected', async () => {
+    const service = new DiscordCommandsService({} as never, {} as never)
+    const freshContent = (service as unknown as { planningMessage: (monday: string, selectedDays: number[]) => string })
+      .planningMessage('2026-10-05', [0, 4])
+    const fetchStarterMessage = jest.fn().mockResolvedValue({ id: 'starter-1', content: freshContent })
+    const reply = jest.fn().mockResolvedValue(undefined)
+
+    await service.handle({
+      commandName: 'modifier-planification',
+      channel: { isThread: () => true, fetchStarterMessage },
+      reply,
+    } as never)
+
+    expect(fetchStarterMessage).toHaveBeenCalledWith({ force: true })
+    const row = reply.mock.calls[0][0].components[0].toJSON()
+    const friday = row.components[0].options.find((option: { value: string }) => option.value === '4')
+    expect(friday.default).toBe(true)
+  })
+
   it('refuses /modifier-planification outside the thread attached to the planning message', async () => {
     const service = new DiscordCommandsService({} as never, {} as never)
     const reply = jest.fn().mockResolvedValue(undefined)
