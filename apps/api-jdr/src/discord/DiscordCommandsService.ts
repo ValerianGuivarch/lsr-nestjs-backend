@@ -24,6 +24,16 @@ const PLANNING_MONTHS = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 
 const PLANNING_UNAVAILABLE_EMOJI = '❌'
 const PLANNING_UNCERTAIN_EMOJI = '❓'
 
+const RANDOM_CHARACTER_ANCESTRIES = [
+  'Androïde', 'Azarketi', 'Distordu', 'Elfe', 'Félide', 'Fétchelin', 'Gnome', 'Gobelin', 'Halfelin', 'Hobgobelin', 'Homme-Lézard',
+  'Homme-Rat', 'Humain', 'Kholo', 'Kitsune', 'Kobold', 'Léchi', 'Nain', 'Orc', 'Strix', 'Tengu', 'Tripki',
+] as const
+
+const RANDOM_CHARACTER_CLASSES = [
+  'Alchimiste', 'Barbare', 'Barde', 'Bretteur', 'Champion', 'Druide', 'Enquêteur', 'Ensorceleur', 'Guerrier',
+  'Invocateur', 'Magicien', 'Magus', 'Moine', 'Oracle', 'Prêtre', 'Rôdeur', 'Roublard', 'Sorcier',
+] as const
+
 @Injectable()
 export class DiscordCommandsService {
   private readonly logger = new Logger(DiscordCommandsService.name)
@@ -55,6 +65,7 @@ export class DiscordCommandsService {
   definitions(): RESTPostAPIApplicationGuildCommandsJSONBody[] {
     return [
       new SlashCommandBuilder().setName('ping').setDescription('Vérifie que PF2-Bot répond.').toJSON(),
+      new SlashCommandBuilder().setName('random-perso').setDescription('Tire au hasard une ascendance, une classe et un genre.').toJSON(),
       new SlashCommandBuilder().setName('recap').setDescription('Affiche le nombre de séances jouées par joueur et par personnage.').toJSON(),
       new SlashCommandBuilder().setName('recap-seance').setDescription('Réaffiche les informations prévues pour une séance.').addStringOption(option => option.setName('session').setDescription('Numéro de séance').setRequired(true).setAutocomplete(true)).toJSON(),
       new SlashCommandBuilder().setName('journaux').setDescription('Prépare la révélation d’un journal.').addIntegerOption(option => option.setName('numero').setDescription('Numéro du journal à révéler').setRequired(false).setMinValue(1)).toJSON(),
@@ -101,6 +112,10 @@ export class DiscordCommandsService {
       await interaction.reply({ content: 'Pong !', ephemeral: true })
       return true
     }
+    if (interaction.commandName === 'random-perso') {
+      await this.randomCharacterCommand(interaction as ChatInputCommandInteraction)
+      return true
+    }
     if (interaction.commandName === 'recap') {
       await this.recapCommand(interaction as ChatInputCommandInteraction)
       return true
@@ -131,6 +146,28 @@ export class DiscordCommandsService {
     if (interaction.commandName === 'programmer-seance') { await this.programmerSeanceCommand(interaction as ChatInputCommandInteraction); return true }
     if (interaction.commandName === 'modifier-planification') { await this.modifyPlanningCommand(interaction as ChatInputCommandInteraction); return true }
     return false
+  }
+
+  private async randomCharacterCommand(interaction: ChatInputCommandInteraction): Promise<void> {
+    if (!this.isAdmin(interaction)) {
+      await interaction.reply({ content: 'Cette commande est réservée aux administrateurs du serveur.', ephemeral: true })
+      return
+    }
+
+    const ancestry = RANDOM_CHARACTER_ANCESTRIES[Math.floor(Math.random() * RANDOM_CHARACTER_ANCESTRIES.length)]
+    const characterClass = RANDOM_CHARACTER_CLASSES[Math.floor(Math.random() * RANDOM_CHARACTER_CLASSES.length)]
+    const genderRoll = Math.random()
+    const gender = genderRoll < 0.01 ? 'Non binaire' : genderRoll < 0.505 ? 'Homme' : 'Femme'
+
+    await interaction.reply({
+      content: [
+        '🎲 **Personnage aléatoire**',
+        `Ascendance : **${ancestry}**`,
+        `Classe : **${characterClass}**`,
+        `Genre : **${gender}**`,
+      ].join('\n'),
+      ephemeral: true,
+    })
   }
 
   private async journalsCommand(interaction: ChatInputCommandInteraction): Promise<void> {

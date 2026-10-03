@@ -8,6 +8,41 @@ describe('DiscordCommandsService', () => {
     expect(reply).toHaveBeenCalledWith({ content: 'Pong !', ephemeral: true })
   })
 
+  it('registers /random-perso and returns an admin-only random PF2 concept', async () => {
+    const reply = jest.fn().mockResolvedValue(undefined)
+    const random = jest.spyOn(Math, 'random')
+      .mockReturnValueOnce(0)
+      .mockReturnValueOnce(0)
+      .mockReturnValueOnce(0.009)
+    const service = new DiscordCommandsService({} as never, {} as never)
+
+    expect(service.definitions().map(command => command.name)).toContain('random-perso')
+    await expect(service.handle({
+      commandName: 'random-perso',
+      reply,
+      user: { id: 'admin' },
+      memberPermissions: { has: jest.fn().mockReturnValue(true) },
+    } as never)).resolves.toBe(true)
+
+    expect(reply).toHaveBeenCalledWith({
+      content: ['🎲 **Personnage aléatoire**', 'Ascendance : **Androïde**', 'Classe : **Alchimiste**', 'Genre : **Non binaire**'].join('\n'),
+      ephemeral: true,
+    })
+    random.mockRestore()
+  })
+
+  it('refuses /random-perso to non-admin users', async () => {
+    const reply = jest.fn().mockResolvedValue(undefined)
+    const service = new DiscordCommandsService({} as never, {} as never)
+    await expect(service.handle({
+      commandName: 'random-perso',
+      reply,
+      user: { id: 'player' },
+      memberPermissions: { has: jest.fn().mockReturnValue(false) },
+    } as never)).resolves.toBe(true)
+    expect(reply).toHaveBeenCalledWith({ content: 'Cette commande est réservée aux administrateurs du serveur.', ephemeral: true })
+  })
+
   it('renders /recap by player and character, without zero-session characters', async () => {
     const deferReply = jest.fn().mockResolvedValue(undefined)
     const editReply = jest.fn().mockResolvedValue(undefined)
