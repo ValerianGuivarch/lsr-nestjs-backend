@@ -62,6 +62,22 @@ export class DiscordCommandsService {
       new SlashCommandBuilder().setName('finish-game').setDescription('Termine une mission et met à jour son résumé.').addIntegerOption(option => option.setName('xp').setDescription('XP gagnée par PJ').setRequired(true).setMinValue(0)).addIntegerOption(option => option.setName('numero').setDescription('Numéro du résumé à terminer')).addStringOption(option => option.setName('fin').setDescription('Date de fin en jeu : YYYY-MM-DD')).addIntegerOption(option => option.setName('jours').setDescription('Durée en jours, à partir du début en jeu').setMinValue(1)).toJSON(),
       new SlashCommandBuilder().setName('personnage').setDescription('Présente un personnage au carnet joueur.').addStringOption(option => option.setName('personnage').setDescription('PNJ existant ou nom libre').setRequired(true).setAutocomplete(true)).addAttachmentOption(option => option.setName('portrait').setDescription('Portrait pour un personnage improvisé')).addBooleanOption(option => option.setName('afficher_nom').setDescription('Afficher le nom').setRequired(false)).toJSON(),
       new SlashCommandBuilder().setName('faction').setDescription('Prépare la publication d’une faction MJ.').addStringOption(option => option.setName('faction').setDescription('Faction à publier').setRequired(true).setAutocomplete(true)).toJSON(),
+      new SlashCommandBuilder().setName('wiki').setDescription('Ouvre le wiki avec ton compte déjà connecté.').toJSON(),
+      new SlashCommandBuilder()
+        .setName('wiki-admin')
+        .setDescription('Administre les associations Discord ↔ Wiki.')
+        .addSubcommand(command => command.setName('help').setDescription('Liste les commandes d’administration du Wiki.'))
+        .addSubcommand(command => command
+          .setName('associer')
+          .setDescription('Associe un membre Discord à son compte Wiki.')
+          .addUserOption(option => option.setName('utilisateur').setDescription('Membre Discord').setRequired(true))
+          .addStringOption(option => option.setName('compte').setDescription('Nom exact du compte MediaWiki').setRequired(true)))
+        .addSubcommand(command => command.setName('liste').setDescription('Liste les associations Discord ↔ Wiki.'))
+        .addSubcommand(command => command
+          .setName('supprimer')
+          .setDescription('Supprime une association Discord ↔ Wiki.')
+          .addUserOption(option => option.setName('utilisateur').setDescription('Membre Discord').setRequired(true)))
+        .toJSON(),
       new SlashCommandBuilder().setName('planification').setDescription('Publie les disponibilités proposées pour la prochaine semaine.').toJSON(),
       new SlashCommandBuilder().setName('programmer-seance').setDescription('Calcule les groupes possibles à partir de la planification.').toJSON(),
       new SlashCommandBuilder().setName('modifier-planification').setDescription('Ajoute ou retire des dates dans une planification existante.').toJSON(),
@@ -97,6 +113,8 @@ export class DiscordCommandsService {
     if (interaction.commandName === 'resume') { await this.resumeCommand(interaction as ChatInputCommandInteraction); return true }
     if (interaction.commandName === 'personnage') { await this.presentCharacter(interaction as ChatInputCommandInteraction); return true }
     if (interaction.commandName === 'faction') { await this.factionCommand(interaction as ChatInputCommandInteraction); return true }
+    if (interaction.commandName === 'wiki') { await this.wikiCommand(interaction as ChatInputCommandInteraction); return true }
+    if (interaction.commandName === 'wiki-admin') { await this.wikiAdminCommand(interaction as ChatInputCommandInteraction); return true }
     if (interaction.commandName === 'planification') { await this.planningCommand(interaction as ChatInputCommandInteraction); return true }
     if (interaction.commandName === 'programmer-seance') { await this.programmerSeanceCommand(interaction as ChatInputCommandInteraction); return true }
     if (interaction.commandName === 'modifier-planification') { await this.modifyPlanningCommand(interaction as ChatInputCommandInteraction); return true }
@@ -145,6 +163,106 @@ export class DiscordCommandsService {
       await interaction.editReply({ content: text, components: [new ActionRowBuilder<ButtonBuilder>().addComponents(new ButtonBuilder().setCustomId(id).setLabel('Publier la faction').setStyle(ButtonStyle.Primary))], allowedMentions: { parse: [] } })
     } catch (error) {
       await interaction.editReply({ content: `Publication impossible : ${error instanceof Error ? error.message : String(error)}` })
+    }
+  }
+
+  private async wikiCommand(interaction: ChatInputCommandInteraction): Promise<void> {
+    await interaction.deferReply({ ephemeral: true })
+    try {
+      if (!this.mediaWiki) throw new Error('MediaWiki est indisponible.')
+      const link = await this.persistence.wikiAccountLink(interaction.user.id)
+      if (!link) {
+        await interaction.editReply({
+          content: 'Ton compte Discord n’est pas encore associé à un compte Wiki. Demande à un administrateur d’utiliser `/wiki-admin associer`.',
+        })
+        return
+      }
+
+      const grant = await this.persistence.createWikiLoginGrant(interaction.user.id, 180)
+      const button = new ButtonBuilder()
+        .setStyle(ButtonStyle.Link)
+        .setURL(this.mediaWiki.wikiLoginUrl(grant))
+        .setLabel('Aller vers le wiki')
+
+      await interaction.editReply({
+        content: `Connexion Wiki préparée pour **${link.wikiUsername}**. Ce bouton est personnel, utilisable une seule fois et expire dans 3 minutes.`,
+        components: [new ActionRowBuilder<ButtonBuilder>().addComponents(button)],
+        allowedMentions: { parse: [] },
+      })
+    } catch (error) {
+      await interaction.editReply({
+        content: `Connexion Wiki impossible : ${error instanceof Error ? error.message : String(error)}`,
+      })
+    }
+  }
+
+  private async wikiAdminCommand(interaction: ChatInputCommandInteraction): Promise<void> {
+    if (!this.isAdmin(interaction)) {
+      await interaction.reply({ content: 'Cette commande est réservée aux administrateurs du serveur.', ephemeral: true })
+      return
+    }
+
+    const subcommand = interaction.options.getSubcommand(true)
+    if (subcommand === 'help') {
+      await interaction.reply({
+        content: [
+          '**Administration des comptes Wiki**',
+          '`/wiki-admin associer` — associe un membre Discord à un compte MediaWiki existant.',
+          '`/wiki-admin liste` — affiche les associations enregistrées.',
+          '`/wiki-admin supprimer` — supprime une association.',
+        ].join('\n'),
+        ephemeral: true,
+      })
+      return
+    }
+
+    await interaction.deferReply({ ephemeral: true })
+    try {
+      if (!this.mediaWiki) throw new Error('MediaWiki est indisponible.')
+
+      if (subcommand === 'associer') {
+        const discordUser = interaction.options.getUser('utilisateur', true)
+        const requestedWikiName = interaction.options.getString('compte', true).trim()
+        const wikiUsername = await this.mediaWiki.resolveUser(requestedWikiName)
+        if (!wikiUsername) throw new Error(`Le compte MediaWiki « ${requestedWikiName} » n’existe pas.`)
+
+        const link = await this.persistence.saveWikiAccountLink(discordUser.id, wikiUsername)
+        await interaction.editReply({
+          content: `Association enregistrée : <@${link.discordUserId}> → **${link.wikiUsername}**.`,
+          allowedMentions: { parse: [] },
+        })
+        return
+      }
+
+      if (subcommand === 'liste') {
+        const links = await this.persistence.listWikiAccountLinks()
+        if (!links.length) {
+          await interaction.editReply({ content: 'Aucune association Discord ↔ MediaWiki enregistrée.' })
+          return
+        }
+        const lines = links.slice(0, 40).map(link => `<@${link.discordUserId}> → **${link.wikiUsername}**`)
+        if (links.length > 40) lines.push(`… et ${links.length - 40} autre(s).`)
+        await interaction.editReply({ content: lines.join('\n'), allowedMentions: { parse: [] } })
+        return
+      }
+
+      if (subcommand === 'supprimer') {
+        const discordUser = interaction.options.getUser('utilisateur', true)
+        const removed = await this.persistence.deleteWikiAccountLink(discordUser.id)
+        await interaction.editReply({
+          content: removed
+            ? `Association supprimée pour <@${discordUser.id}>.`
+            : `Aucune association n’existait pour <@${discordUser.id}>.`,
+          allowedMentions: { parse: [] },
+        })
+        return
+      }
+
+      await interaction.editReply({ content: 'Sous-commande Wiki inconnue. Utilise `/wiki-admin help`.' })
+    } catch (error) {
+      await interaction.editReply({
+        content: `Administration Wiki impossible : ${error instanceof Error ? error.message : String(error)}`,
+      })
     }
   }
 

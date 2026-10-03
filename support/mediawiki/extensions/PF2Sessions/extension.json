@@ -13,7 +13,11 @@
     "ApiPF2SessionUpdate": "includes/ApiPF2SessionUpdate.php",
     "ApiPF2SessionPreview": "includes/ApiPF2SessionPreview.php",
     "ApiPF2SessionPublication": "includes/ApiPF2SessionPublication.php",
-    "ApiPF2SessionDelete": "includes/ApiPF2SessionDelete.php"
+    "ApiPF2SessionDelete": "includes/ApiPF2SessionDelete.php",
+    "SpecialPF2DiscordLogin": "includes/SpecialPF2DiscordLogin.php"
+  },
+  "SpecialPages": {
+    "PF2DiscordLogin": "SpecialPF2DiscordLogin"
   },
   "APIModules": {
     "pf2sessions": "ApiPF2Sessions",

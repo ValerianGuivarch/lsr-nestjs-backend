@@ -114,6 +114,10 @@ describe('Pf2PersistenceService', () => {
       , { id: '018-player-character-is-player' }
       , { id: '019-catalogue-playable-components' }
       , { id: '020-session-scenario-content' }
+      , { id: '021-journal-revelations' }
+      , { id: '022-journal-catalogue' }
+      , { id: '023-player-codex-canonical-factions' }
+      , { id: '024-wiki-discord-login' }
     ])
 
     await currentDataSource().destroy()
@@ -143,7 +147,31 @@ describe('Pf2PersistenceService', () => {
       , { id: '018-player-character-is-player' }
       , { id: '019-catalogue-playable-components' }
       , { id: '020-session-scenario-content' }
+      , { id: '021-journal-revelations' }
+      , { id: '022-journal-catalogue' }
+      , { id: '023-player-codex-canonical-factions' }
+      , { id: '024-wiki-discord-login' }
     ])
+  })
+
+  it('stores Discord to MediaWiki associations and consumes login grants once', async () => {
+    const service = await open()
+    await expect(service.saveWikiAccountLink('123456789012345678', 'Valou')).resolves.toMatchObject({
+      discordUserId: '123456789012345678',
+      wikiUsername: 'Valou',
+    })
+    await expect(service.wikiAccountLink('123456789012345678')).resolves.toMatchObject({ wikiUsername: 'Valou' })
+
+    const grant = await service.createWikiLoginGrant('123456789012345678', 180)
+    expect(grant).toMatch(/^[A-Za-z0-9_-]{40,}$/)
+    await expect(service.consumeWikiLoginGrant(grant)).resolves.toEqual({
+      discordUserId: '123456789012345678',
+      wikiUsername: 'Valou',
+    })
+    await expect(service.consumeWikiLoginGrant(grant)).resolves.toBeNull()
+
+    await expect(service.deleteWikiAccountLink('123456789012345678')).resolves.toBe(true)
+    await expect(service.wikiAccountLink('123456789012345678')).resolves.toBeNull()
   })
 
   it('links sessions to catalogue scenarios and optional playable components', async () => {
