@@ -277,7 +277,7 @@ export class DiscordCommandsService {
     const channel = interaction.channel
     if (!channel?.isThread()) { await interaction.reply({ content: 'Utilise cette commande dans le fil créé depuis le message de planification.', ephemeral: true }); return }
     let starter
-    try { starter = await channel.fetchStarterMessage() } catch { starter = null }
+    try { starter = await channel.fetchStarterMessage({ force: true }) } catch { starter = null }
     if (!starter) { await interaction.reply({ content: 'Ce fil n’est pas rattaché à un message de planification.', ephemeral: true }); return }
     const parsed = this.parsePlanningMessage(starter.content)
     if (!parsed) { await interaction.reply({ content: 'Le message de départ de ce fil n’est pas une planification reconnue.', ephemeral: true }); return }
@@ -313,7 +313,7 @@ export class DiscordCommandsService {
       let scheduleMessage = null
       if (channel.isThread()) {
         try {
-          const starter = await channel.fetchStarterMessage()
+          const starter = await channel.fetchStarterMessage({ force: true })
           if (starter && this.parsePlanningMessage(starter.content)) scheduleMessage = starter
         } catch {
           // Le fil peut ne plus avoir accès à son message de départ.
@@ -777,7 +777,7 @@ export class DiscordCommandsService {
       const channel = interaction.channel
       if (!channel?.isThread()) { await interaction.reply({ content: 'Cette modification doit être utilisée dans le fil de la planification.', ephemeral: true }); return true }
       let starter
-      try { starter = await channel.fetchStarterMessage() } catch { starter = null }
+      try { starter = await channel.fetchStarterMessage({ force: true }) } catch { starter = null }
       if (!starter || starter.id !== modifyPlanning[1]) { await interaction.reply({ content: 'Le message de planification associé à ce menu est introuvable.', ephemeral: true }); return true }
       const parsed = this.parsePlanningMessage(starter.content)
       if (!parsed) { await interaction.reply({ content: 'Le message de planification n’est plus reconnaissable.', ephemeral: true }); return true }
