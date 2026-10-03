@@ -12,6 +12,19 @@ export class MediaWikiClientService {
 
   enabled(): boolean { return Boolean(this.apiUrl && this.publicBase && this.username && this.password) }
   pageUrl(title: string): string { return `${this.publicBase}/index.php?title=${encodeURIComponent(title.replace(/ /g, '_'))}` }
+  wikiLoginUrl(grant: string): string {
+    if (!this.publicBase) throw new ServiceUnavailableException('URL publique MediaWiki non configurée.')
+    return `${this.pageUrl('Special:PF2DiscordLogin')}&grant=${encodeURIComponent(grant)}`
+  }
+  async resolveUser(username: string): Promise<string | null> {
+    const requested = username.trim()
+    if (!requested) return null
+    const data = await this.request({ action: 'query', list: 'users', ususers: requested }) as {
+      query?: { users?: Array<{ name?: string; missing?: boolean }> }
+    }
+    const user = data.query?.users?.[0]
+    return user && !user.missing && user.name ? user.name : null
+  }
   sessionsPageUrl(sessionNumber: number): string {
     const title = process.env['PF2_MEDIAWIKI_SESSIONS_PAGE']?.trim() || 'Résumés longs de séances'
     const number = Math.max(1, Math.trunc(Number(sessionNumber) || 1))

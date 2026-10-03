@@ -229,6 +229,87 @@ describe('DiscordCommandsService', () => {
   })
 
 
+  it('registers /wiki and /wiki-admin with the expected admin subcommands', () => {
+    const service = new DiscordCommandsService({} as never, {} as never)
+    const definitions = service.definitions()
+    const wiki = definitions.find(command => command.name === 'wiki')
+    const admin = definitions.find(command => command.name === 'wiki-admin')
+    expect(wiki).toBeDefined()
+    expect(admin).toBeDefined()
+    expect((admin?.options ?? []).map((option: { name: string }) => option.name)).toEqual([
+      'help',
+      'associer',
+      'liste',
+      'supprimer',
+    ])
+  })
+
+  it('creates a private one-use wiki login link for the caller', async () => {
+    const persistence = {
+      wikiAccountLink: jest.fn().mockResolvedValue({
+        discordUserId: '123456789012345678',
+        wikiUsername: 'Valou',
+      }),
+      createWikiLoginGrant: jest.fn().mockResolvedValue('grant-test'),
+    }
+    const mediaWiki = {
+      wikiLoginUrl: jest.fn().mockReturnValue(
+        'https://wiki.l7r.fr/index.php?title=Special%3APF2DiscordLogin&grant=grant-test',
+      ),
+    }
+    const service = new DiscordCommandsService(
+      persistence as never,
+      {} as never,
+      undefined,
+      mediaWiki as never,
+    )
+    const deferReply = jest.fn().mockResolvedValue(undefined)
+    const editReply = jest.fn().mockResolvedValue(undefined)
+
+    await service.handle({
+      commandName: 'wiki',
+      user: { id: '123456789012345678' },
+      deferReply,
+      editReply,
+    } as never)
+
+    expect(deferReply).toHaveBeenCalledWith({ ephemeral: true })
+    expect(persistence.createWikiLoginGrant).toHaveBeenCalledWith('123456789012345678', 180)
+    const response = editReply.mock.calls[0][0]
+    expect(response.content).toContain('Valou')
+    expect(response.components[0].toJSON().components[0].url).toContain('Special%3APF2DiscordLogin')
+  })
+
+  it('shows /wiki-admin help only to administrators', async () => {
+    const service = new DiscordCommandsService({} as never, {} as never)
+
+    const adminReply = jest.fn().mockResolvedValue(undefined)
+    await service.handle({
+      commandName: 'wiki-admin',
+      user: { id: 'admin' },
+      memberPermissions: { has: jest.fn().mockReturnValue(true) },
+      options: { getSubcommand: jest.fn().mockReturnValue('help') },
+      reply: adminReply,
+    } as never)
+    expect(adminReply).toHaveBeenCalledWith(expect.objectContaining({
+      content: expect.stringContaining('/wiki-admin associer'),
+      ephemeral: true,
+    }))
+
+    const playerReply = jest.fn().mockResolvedValue(undefined)
+    await service.handle({
+      commandName: 'wiki-admin',
+      user: { id: 'player' },
+      memberPermissions: { has: jest.fn().mockReturnValue(false) },
+      options: { getSubcommand: jest.fn() },
+      reply: playerReply,
+    } as never)
+    expect(playerReply).toHaveBeenCalledWith(expect.objectContaining({
+      content: expect.stringContaining('réservée aux administrateurs'),
+      ephemeral: true,
+    }))
+  })
+
   it('registers the planning commands and computes the strictly next Monday', () => {
     const service = new DiscordCommandsService({} as never, {} as never)
     const definitions = service.definitions().map(command => command.name)

@@ -2,7 +2,7 @@ import { Injectable, Logger, OnModuleInit } from '@nestjs/common'
 import { InjectDataSource } from '@nestjs/typeorm'
 import { readFile, mkdir, writeFile } from 'node:fs/promises'
 import { basename, dirname, resolve } from 'node:path'
-import { randomUUID } from 'node:crypto'
+import { createHash, randomBytes, randomUUID } from 'node:crypto'
 import { DataSource, EntityManager } from 'typeorm'
 
 export type Pf2RecordKind = 'pnj' | 'faction' | 'lieu' | 'region' | 'evenement' | 'scenario' | 'session' | 'catalogue' | 'curation' | 'foundry-actor-cache' | 'geography-config'
@@ -54,6 +54,8 @@ export type Pf2Session = { id: string; sessionNumber: number; date: string; inGa
 export type Pf2SessionInput = { id?: unknown; sessionNumber?: unknown; date?: unknown; inGameStartDate?: unknown; inGameEndDate?: unknown; endDate?: unknown; title?: unknown; participants?: unknown; longSummaryAuthor?: unknown; shortSummaryAuthor?: unknown; sessionXp?: unknown; longSummaryXp?: unknown; shortSummaryXp?: unknown; shortSummary?: unknown; published?: unknown; content?: unknown }
 export type JournalRevelation = { journalNumber: number; revealedAt: string; revealedBy: string | null; discordMessageId: string | null }
 export type JournalDefinitionRecord = { number: number; title: string; content: string; dependencies: number[]; createdAt: string; updatedAt: string }
+export type WikiAccountLink = { discordUserId: string; wikiUsername: string; createdAt: string; updatedAt: string }
+export type ConsumedWikiLoginGrant = { discordUserId: string; wikiUsername: string }
 
 @Injectable()
 export class Pf2PersistenceService implements OnModuleInit {
@@ -162,6 +164,102 @@ export class Pf2PersistenceService implements OnModuleInit {
 
   async abandonJournalReveal(journalNumber: number, revealedBy: string): Promise<void> {
     await this.dataSource.query("DELETE FROM pf2_journal_revelation WHERE journal_number = ? AND status = 'publishing' AND revealed_by = ?", [journalNumber, revealedBy])
+  }
+
+  async listWikiAccountLinks(): Promise<WikiAccountLink[]> {
+    return this.dataSource.query(
+      'SELECT discord_user_id AS discordUserId, wiki_username AS wikiUsername, created_at AS createdAt, updated_at AS updatedAt FROM pf2_wiki_account_link ORDER BY wiki_username COLLATE NOCASE',
+    ) as Promise<WikiAccountLink[]>
+  }
+
+  async wikiAccountLink(discordUserId: string): Promise<WikiAccountLink | null> {
+    const rows = await this.dataSource.query(
+      'SELECT discord_user_id AS discordUserId, wiki_username AS wikiUsername, created_at AS createdAt, updated_at AS updatedAt FROM pf2_wiki_account_link WHERE discord_user_id = ? LIMIT 1',
+      [discordUserId],
+    ) as WikiAccountLink[]
+    return rows[0] ?? null
+  }
+
+  async saveWikiAccountLink(discordUserId: string, wikiUsername: string): Promise<WikiAccountLink> {
+    const discordId = discordUserId.trim()
+    const username = wikiUsername.trim()
+    if (!/^\d{5,30}$/.test(discordId)) throw new Error('ID Discord invalide.')
+    if (!username) throw new Error('Nom de compte MediaWiki obligatoire.')
+
+    const collision = await this.dataSource.query(
+      'SELECT discord_user_id AS discordUserId FROM pf2_wiki_account_link WHERE wiki_username = ? COLLATE NOCASE AND discord_user_id <> ? LIMIT 1',
+      [username, discordId],
+    ) as Array<{ discordUserId: string }>
+    if (collision.length) throw new Error('Ce compte MediaWiki est déjà associé à un autre compte Discord.')
+
+    await this.dataSource.query(
+      'INSERT INTO pf2_wiki_account_link (discord_user_id, wiki_username, created_at, updated_at) VALUES (?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP) ON CONFLICT(discord_user_id) DO UPDATE SET wiki_username = excluded.wiki_username, updated_at = CURRENT_TIMESTAMP',
+      [discordId, username],
+    )
+    return (await this.wikiAccountLink(discordId))!
+  }
+
+  async deleteWikiAccountLink(discordUserId: string): Promise<boolean> {
+    const current = await this.wikiAccountLink(discordUserId)
+    if (!current) return false
+    await this.dataSource.transaction(async manager => {
+      await manager.query('DELETE FROM pf2_wiki_login_grant WHERE discord_user_id = ?', [discordUserId])
+      await manager.query('DELETE FROM pf2_wiki_account_link WHERE discord_user_id = ?', [discordUserId])
+    })
+    return true
+  }
+
+  async createWikiLoginGrant(discordUserId: string, ttlSeconds = 180): Promise<string> {
+    const link = await this.wikiAccountLink(discordUserId)
+    if (!link) throw new Error('Aucun compte MediaWiki n’est associé à ce compte Discord.')
+
+    const grant = randomBytes(32).toString('base64url')
+    const grantHash = createHash('sha256').update(grant).digest('hex')
+    const ttl = Math.max(30, Math.min(600, Math.trunc(ttlSeconds)))
+    const expiresAtMs = Date.now() + ttl * 1000
+
+    await this.dataSource.transaction(async manager => {
+      await manager.query(
+        'DELETE FROM pf2_wiki_login_grant WHERE consumed_at IS NOT NULL OR expires_at_ms < ?',
+        [Date.now()],
+      )
+      await manager.query(
+        'INSERT INTO pf2_wiki_login_grant (grant_hash, discord_user_id, wiki_username, expires_at_ms, created_at) VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)',
+        [grantHash, link.discordUserId, link.wikiUsername, expiresAtMs],
+      )
+    })
+    return grant
+  }
+
+  async consumeWikiLoginGrant(grant: string): Promise<ConsumedWikiLoginGrant | null> {
+    const raw = grant.trim()
+    if (!raw || raw.length > 256) return null
+    const grantHash = createHash('sha256').update(raw).digest('hex')
+
+    return this.dataSource.transaction(async manager => {
+      const rows = await manager.query(
+        `SELECT g.discord_user_id AS discordUserId, g.wiki_username AS wikiUsername, g.expires_at_ms AS expiresAtMs
+         FROM pf2_wiki_login_grant g
+         JOIN pf2_wiki_account_link a
+           ON a.discord_user_id = g.discord_user_id
+          AND a.wiki_username = g.wiki_username COLLATE NOCASE
+         WHERE g.grant_hash = ? AND g.consumed_at IS NULL
+         LIMIT 1`,
+        [grantHash],
+      ) as Array<{ discordUserId: string; wikiUsername: string; expiresAtMs: number }>
+
+      const row = rows[0]
+      if (!row || Number(row.expiresAtMs) < Date.now()) {
+        if (row) await manager.query('DELETE FROM pf2_wiki_login_grant WHERE grant_hash = ?', [grantHash])
+        return null
+      }
+
+      await manager.query(
+        'UPDATE pf2_wiki_login_grant SET consumed_at = CURRENT_TIMESTAMP WHERE grant_hash = ? AND consumed_at IS NULL',
+        [grantHash],
+      )
+      return { discordUserId: row.discordUserId, wikiUsername: row.wikiUsername }
+    })
   }
 
   async listRecords(kind: Pf2RecordKind, options: ListRecordOptions = {}): Promise<Record<string, unknown>[]> {
@@ -837,6 +935,12 @@ export class Pf2PersistenceService implements OnModuleInit {
       // the retired player-only tables untouched so no existing data is lost.
       await manager.query("CREATE TABLE IF NOT EXISTS pf2_player_character_mj_faction (npc_id TEXT NOT NULL, faction_id TEXT NOT NULL, created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (npc_id, faction_id))")
       await manager.query('CREATE INDEX IF NOT EXISTS idx_pf2_player_character_mj_faction_faction ON pf2_player_character_mj_faction (faction_id)')
+    })
+
+    await this.applyMigration('024-wiki-discord-login', async (manager) => {
+      await manager.query("CREATE TABLE IF NOT EXISTS pf2_wiki_account_link (discord_user_id TEXT PRIMARY KEY, wiki_username TEXT NOT NULL UNIQUE COLLATE NOCASE, created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP, updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)")
+      await manager.query("CREATE TABLE IF NOT EXISTS pf2_wiki_login_grant (grant_hash TEXT PRIMARY KEY, discord_user_id TEXT NOT NULL, wiki_username TEXT NOT NULL, expires_at_ms INTEGER NOT NULL, consumed_at TEXT, created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)")
+      await manager.query('CREATE INDEX IF NOT EXISTS idx_pf2_wiki_login_grant_expiry ON pf2_wiki_login_grant (expires_at_ms, consumed_at)')
     })
 
     await this.assertDatabaseIntegrity(this.dataSource, 'base SQLite après migrations')
