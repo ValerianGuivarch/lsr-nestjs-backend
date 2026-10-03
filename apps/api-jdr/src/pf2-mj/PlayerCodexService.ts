@@ -246,7 +246,15 @@ export class PlayerCodexService {
   }
 
   private async privateContactDto(npcId: string): Promise<unknown | null> {
-    const profiles = await this.db.query('SELECT * FROM pf2_player_character_profile WHERE npc_id = ? LIMIT 1', [npcId]) as ProfileRow[]
+    let profiles = await this.db.query('SELECT * FROM pf2_player_character_profile WHERE npc_id = ? LIMIT 1', [npcId]) as ProfileRow[]
+    if (!profiles[0]) {
+      try {
+        await this.ensureContactProfile(npcId)
+        profiles = await this.db.query('SELECT * FROM pf2_player_character_profile WHERE npc_id = ? LIMIT 1', [npcId]) as ProfileRow[]
+      } catch {
+        return null
+      }
+    }
     const profile = profiles[0]
     if (!profile) return null
     return {
@@ -270,7 +278,7 @@ export class PlayerCodexService {
     let wikiPortraitFilename: string | null = null
     if (this.mediaWiki?.enabled()) {
       if (!(await this.mediaWiki.pageExists(wikiPageTitle))) await this.mediaWiki.createPage(wikiPageTitle, '<!-- Fiche personnage : contenu détaillé à compléter ici. -->')
-      const portraitUrl = this.publicPortraitUrl(npc.portrait)
+      const portraitUrl = this.mediaWikiPortraitSource(npc.portrait)
       if (portraitUrl) wikiPortraitFilename = await this.mediaWiki.uploadFromUrl(portraitUrl, displayName)
     }
     await this.createCharacter({ npcId, displayName, wikiPageTitle, wikiPortraitFilename, published: false })
@@ -282,6 +290,14 @@ export class PlayerCodexService {
     if (!match) return /^https?:\/\//i.test(value.trim()) ? value.trim() : null
     const base = (process.env['PF2_PUBLIC_WEB_BASE'] ?? 'https://l7r.fr').replace(/\/$/, '')
     return `${base}/apil7r/pf2-mj/portraits/${encodeURIComponent(match[1])}`
+  }
+
+  private mediaWikiPortraitSource(value: unknown): string | null {
+    if (typeof value !== 'string') return null
+    const trimmed = value.trim()
+    const match = /^assets\/l7r\/portraits\/pnj\/([^/]+\.(?:webp|gif|png|jpe?g))$/i.exec(trimmed)
+    if (match) return `http://127.0.0.1:3333/api/pf2-mj/portraits/${encodeURIComponent(match[1])}`
+    return /^https?:\/\//i.test(trimmed) ? trimmed : null
   }
 
   async deleteMjPnj(npcId: string): Promise<void> {
