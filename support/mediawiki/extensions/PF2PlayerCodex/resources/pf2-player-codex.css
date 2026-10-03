@@ -44,3 +44,10 @@
 .pf2-player-role { color:#54595d; font-style:italic; }
 .pf2-player-contact-card strong { font-size:1.05rem; }
 .pf2-my-character-card button { margin-top:auto; }
+#pf2-my-characters-special { margin:0 0 1.25rem; padding:.75rem; border:1px solid #a78b4f; border-radius:.4rem; }
+.pf2-player-short-description { line-height:1.45; min-height:1.2em; }
+.pf2-player-short-description-detail { font-size:1.02rem; margin:.35rem 0 1rem; }
+.pf2-player-short-description-editor { width:100%; box-sizing:border-box; font:inherit; padding:.65rem; border:1px solid #a2a9b1; border-radius:.35rem; resize:vertical; }
+.pf2-my-character-open { display:inline-block; margin-top:auto; padding:.45rem .7rem; border:1px solid #a78b4f; border-radius:.35rem; text-decoration:none; width:max-content; }
+.pf2-my-character-back { margin-right:auto; }
+.pf2-my-character-card { display:flex; flex-direction:column; }

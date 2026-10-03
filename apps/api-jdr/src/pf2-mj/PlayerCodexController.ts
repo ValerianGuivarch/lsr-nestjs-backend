@@ -7,6 +7,7 @@ export class PlayerCodexController {
   @Get('character-candidates') candidates(@Query('q') q = ''): Promise<unknown> { return this.service.characterCandidates(q) }
   @Get('profile-candidates') profileCandidates(@Query('q') q = ''): Promise<unknown> { return this.service.profileCandidates(q) }
   @Get('characters') characters(): Promise<unknown> { return this.service.listCharacters() }
+  @Get('internal/characters') internalCharacters(@Headers('x-pf2-wiki-key') key = ''): Promise<unknown> { this.requireWikiInternalKey(key); return this.service.listAllCharacters() }
   @Get('players') players(): Promise<unknown> { return this.service.listPlayers() }
   @Get('contacts/:contactNpcId/players') contactPlayers(@Param('contactNpcId') contactNpcId: string): Promise<unknown> { return this.service.contactPlayers(contactNpcId) }
   @Post('contacts/:contactNpcId/players/:playerNpcId') async addContact(@Param('contactNpcId') contactNpcId: string, @Param('playerNpcId') playerNpcId: string): Promise<{ saved: true }> { await this.service.setPlayerContact(playerNpcId, contactNpcId, true); return { saved: true } }
@@ -15,8 +16,8 @@ export class PlayerCodexController {
   @Post('me/background') updateMyBackground(@Body() body: { wikiUsername?: unknown; npcId?: unknown; content?: unknown }, @Headers('x-pf2-wiki-key') key = ''): Promise<unknown> { this.requireWikiInternalKey(key); return this.service.updateMyBackground(typeof body.wikiUsername === 'string' ? body.wikiUsername : '', typeof body.npcId === 'string' ? body.npcId : '', body.content) }
   @Delete('mj-pnj/:npcId') async deleteMjPnj(@Param('npcId') id: string): Promise<{ deleted: true }> { await this.service.deleteMjPnj(id); return { deleted: true } }
   @Get('characters/:npcId') character(@Param('npcId') id: string): Promise<unknown> { return this.service.character(id) }
-  @Post('characters') createCharacter(@Body() body: { npcId: string; displayName: string; wikiPageTitle: string; wikiPortraitFilename?: string | null; isPlayer?: boolean }): Promise<unknown> { return this.service.createCharacter(body) }
-  @Patch('characters/:npcId') updateCharacter(@Param('npcId') id: string, @Body() body: { displayName?: unknown; wikiPortraitFilename?: unknown; isPlayer?: unknown }): Promise<unknown> { return this.service.updateCharacter(id, body) }
+  @Post('characters') createCharacter(@Body() body: { npcId: string; displayName: string; wikiPageTitle: string; wikiPortraitFilename?: string | null; shortDescription?: string; isPlayer?: boolean; published?: boolean }): Promise<unknown> { return this.service.createCharacter(body) }
+  @Patch('characters/:npcId') updateCharacter(@Param('npcId') id: string, @Body() body: { displayName?: unknown; wikiPortraitFilename?: unknown; shortDescription?: unknown; isPlayer?: unknown; published?: unknown }): Promise<unknown> { return this.service.updateCharacter(id, body) }
   @Delete('characters/:npcId') async deleteCharacter(@Param('npcId') id: string): Promise<{ deleted: true }> { await this.service.deleteCharacter(id); return { deleted: true } }
   @Post('characters/:npcId/factions') addFaction(@Param('npcId') id: string, @Body() body: { factionId?: string }, @Query('factionId') factionId = ''): Promise<unknown> { return this.service.addCharacterFaction(id, factionId || body.factionId || '') }
   @Delete('characters/:npcId/factions/:factionId') async removeFaction(@Param('npcId') id: string, @Param('factionId') faction: string): Promise<{ removed: true }> { await this.service.removeCharacterFaction(id, faction); return { removed: true } }

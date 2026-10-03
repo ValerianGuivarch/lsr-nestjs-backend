@@ -964,6 +964,14 @@ export class Pf2PersistenceService implements OnModuleInit {
       }
     })
 
+
+    await this.applyMigration('026-player-codex-publication-and-short-description', async (manager) => {
+      const columns = await manager.query('PRAGMA table_info(pf2_player_character_profile)') as Array<{ name: string }>
+      if (!columns.some((column) => column.name === 'short_description')) await manager.query("ALTER TABLE pf2_player_character_profile ADD COLUMN short_description TEXT NOT NULL DEFAULT ''")
+      if (!columns.some((column) => column.name === 'is_published')) await manager.query('ALTER TABLE pf2_player_character_profile ADD COLUMN is_published INTEGER NOT NULL DEFAULT 1')
+      await manager.query('CREATE INDEX IF NOT EXISTS idx_pf2_player_profile_public_name ON pf2_player_character_profile (is_published, display_name)')
+    })
+
     await this.assertDatabaseIntegrity(this.dataSource, 'base SQLite après migrations')
   }
 

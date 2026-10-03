@@ -34,6 +34,7 @@ class ApiPF2PlayerCodexUpdate extends ApiBase {
         $op = $params['op'];
         $routes = [
             'deleteCharacter' => [ 'DELETE', '/player-codex/characters/' . rawurlencode( $params['id'] ) ],
+            'updateCharacter' => [ 'PATCH', '/player-codex/characters/' . rawurlencode( $params['id'] ) ],
             'addFaction' => [ 'POST', '/player-codex/characters/' . rawurlencode( $params['id'] ) . '/factions?factionId=' . rawurlencode( $params['target'] ) ],
             'removeFaction' => [ 'DELETE', '/player-codex/characters/' . rawurlencode( $params['id'] ) . '/factions/' . rawurlencode( $params['target'] ) ],
         ];

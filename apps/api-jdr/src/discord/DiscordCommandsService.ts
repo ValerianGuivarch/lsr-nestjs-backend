@@ -777,8 +777,8 @@ export class DiscordCommandsService {
     let buttonLabel = 'Créer la fiche'
     if (sourceNpcId) {
       try {
-        await this.playerCodex!.character(sourceNpcId)
-        buttonLabel = 'Voir la fiche'
+        const profile = await this.playerCodex!.character(sourceNpcId) as { published?: boolean }
+        buttonLabel = profile.published ? 'Voir la fiche' : 'Publier la fiche'
       } catch {
         // Pas encore de profil joueur.
       }
@@ -982,24 +982,28 @@ export class DiscordCommandsService {
       await interaction.deferReply({ ephemeral: true })
       try {
         const presentation = await this.playerCodex!.presentation(presentationId)
-        const portrait = presentation.portraitUrl ? await this.mediaWiki!.uploadFromUrl(presentation.portraitUrl, name) : null
-        await this.mediaWiki!.createPage(title, description)
-        const profile = await this.playerCodex!.ensurePresentationCharacter(presentationId, name, title) as { npcId: string; wikiPageTitle: string; created: boolean }
+        let current: { wikiPortraitFilename?: string | null; published?: boolean } | null = null
+        if (presentation.sourceNpcId) {
+          try { current = await this.playerCodex!.character(presentation.sourceNpcId) as { wikiPortraitFilename?: string | null; published?: boolean } } catch { current = null }
+        }
+        const portrait = current?.wikiPortraitFilename ?? (presentation.portraitUrl ? await this.mediaWiki!.uploadFromUrl(presentation.portraitUrl, name) : null)
+        if (!(await this.mediaWiki!.pageExists(title))) await this.mediaWiki!.createPage(title, '<!-- Fiche personnage : contenu détaillé à compléter ici. -->')
+        const profile = await this.playerCodex!.ensurePresentationCharacter(presentationId, name, title, description) as { npcId: string; wikiPageTitle: string; created: boolean; newlyPublished?: boolean }
         if (portrait) await this.playerCodex!.updateCharacter(profile.npcId, { wikiPortraitFilename: portrait })
         const selectedFaction = this.pendingCharacterFactions.get(presentationId)?.factionId
         if (selectedFaction) await this.playerCodex!.addCharacterFaction(profile.npcId, selectedFaction)
         this.pendingCharacterFactions.delete(presentationId)
         const pageUrl = this.mediaWiki!.pageUrl(profile.wikiPageTitle)
-        if (profile.created) {
+        if (profile.created || profile.newlyPublished) {
           const publication = await this.discord?.publishCharacterIntroduction({
             name,
             portraitUrl: presentation.portraitUrl,
             description,
             wikiUrl: pageUrl,
           })
-          if (publication?.status === 'failed') this.logger.warn(`Fiche créée, mais publication Discord impossible : ${publication.reason}`)
+          if (publication?.status === 'failed') this.logger.warn(`Fiche publiée, mais publication Discord impossible : ${publication.reason}`)
         }
-        await interaction.editReply({ content: profile.created ? `Fiche créée : ${pageUrl}` : `Cette fiche existe déjà : ${pageUrl}`, allowedMentions: { parse: [] } })
+        await interaction.editReply({ content: profile.created ? `Fiche créée : ${pageUrl}` : profile.newlyPublished ? `Fiche publiée : ${pageUrl}` : `Cette fiche existe déjà : ${pageUrl}`, allowedMentions: { parse: [] } })
       } catch (error) { await interaction.editReply({ content: error instanceof Error ? `Création impossible : ${error.message}` : 'Création impossible.' }) }
       return true
     }
@@ -1139,12 +1143,16 @@ export class DiscordCommandsService {
       const presentationId = interaction.customId.slice('pf2-character:create:'.length)
       try {
         const presentation = await this.playerCodex!.presentation(presentationId)
+        let current: { wikiPageTitle: string; shortDescription?: string; published?: boolean } | null = null
         if (presentation.sourceNpcId) {
-          try { const profile = await this.playerCodex!.character(presentation.sourceNpcId) as { wikiPageTitle: string }; await interaction.reply({ content: `Ce personnage existe déjà dans le carnet : ${this.mediaWiki!.pageUrl(profile.wikiPageTitle)}`, ephemeral: true }); return true } catch { /* profil absent : ouvrir le modal */ }
+          try { current = await this.playerCodex!.character(presentation.sourceNpcId) as { wikiPageTitle: string; shortDescription?: string; published?: boolean } } catch { current = null }
+          if (current?.published) { await interaction.reply({ content: `Ce personnage existe déjà dans le carnet : ${this.mediaWiki!.pageUrl(current.wikiPageTitle)}`, ephemeral: true }); return true }
         }
-        const modal = new ModalBuilder().setCustomId(interaction.customId).setTitle('Créer la fiche personnage')
+        const modal = new ModalBuilder().setCustomId(interaction.customId).setTitle(current ? 'Publier la fiche personnage' : 'Créer la fiche personnage')
         modal.addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder().setCustomId('name').setLabel('Nom connu des joueurs').setStyle(TextInputStyle.Short).setValue(presentation.name).setRequired(true)))
-        modal.addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder().setCustomId('description').setLabel('Description initiale').setStyle(TextInputStyle.Paragraph).setRequired(false)))
+        const descriptionInput = new TextInputBuilder().setCustomId('description').setLabel('Description courte').setStyle(TextInputStyle.Paragraph).setMaxLength(1000).setRequired(false)
+        if (current?.shortDescription) descriptionInput.setValue(current.shortDescription.slice(0, 4000))
+        modal.addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(descriptionInput))
         await interaction.showModal(modal)
       } catch (error) { await interaction.reply({ content: error instanceof Error ? error.message : 'Présentation introuvable.', ephemeral: true }) }
       return true

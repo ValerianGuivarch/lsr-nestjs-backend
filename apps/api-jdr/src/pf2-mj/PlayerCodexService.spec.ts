@@ -48,6 +48,21 @@ describe('PlayerCodexService', () => {
     await expect(persistence.getRecord('pnj', profile.npcId)).resolves.toMatchObject({ nom: 'Orc cicatrisé' })
     await expect(codex.character(profile.npcId)).resolves.toMatchObject({ displayName: 'L’orc cicatrisé' })
   })
+  it('stores the player-facing short description separately from the wiki body', async () => {
+    const { codex } = await open()
+    await codex.createCharacter({ npcId: 'janira', displayName: 'Janira', wikiPageTitle: 'Personnage:Janira', shortDescription: 'Guide expérimentée de la Société.' })
+    await expect(codex.character('janira')).resolves.toEqual(expect.objectContaining({ shortDescription: 'Guide expérimentée de la Société.', published: true }))
+    await codex.updateCharacter('janira', { shortDescription: 'Guide de terrain.' })
+    await expect(codex.character('janira')).resolves.toEqual(expect.objectContaining({ shortDescription: 'Guide de terrain.' }))
+  })
+
+  it('keeps an unpublished profile out of the public list while retaining its wiki-facing metadata', async () => {
+    const { codex } = await open()
+    await codex.createCharacter({ npcId: 'janira', displayName: 'Janira', wikiPageTitle: 'Personnage:Janira', shortDescription: 'Contact privé.', published: false })
+    await expect(codex.listCharacters()).resolves.toEqual([])
+    await expect(codex.listAllCharacters()).resolves.toEqual([expect.objectContaining({ displayName: 'Janira', shortDescription: 'Contact privé.', published: false })])
+  })
+
   it('marks a normal player-codex character as PJ without introducing another entity type', async () => {
     const { codex } = await open()
     await codex.createCharacter({ npcId: 'janira', displayName: 'Janira', wikiPageTitle: 'Personnage:Janira', isPlayer: true })
@@ -89,7 +104,7 @@ describe('PlayerCodexService', () => {
     await expect(codex.listCharacters()).resolves.not.toEqual(expect.arrayContaining([expect.objectContaining({ npcId: 'secret-contact' })]))
     const mine = await codex.myCharacters('Valou') as { characters: Array<{ contacts: unknown[] }> }
     expect(mine.characters[0].contacts).toEqual([
-      expect.objectContaining({ npcId: 'secret-contact', displayName: 'Contact secret', published: false, role: 'Informateur' }),
+      expect.objectContaining({ npcId: 'secret-contact', displayName: 'Contact secret', published: false, shortDescription: '' }),
     ])
   })
 

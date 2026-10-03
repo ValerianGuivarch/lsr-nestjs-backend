@@ -1,6 +1,6 @@
 {
   "name": "PF2PlayerCodex",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "author": [
     "PF2 project"
   ],
@@ -11,7 +11,8 @@
     "ApiPF2PlayerCodex": "includes/ApiPF2PlayerCodex.php",
     "ApiPF2PlayerCodexUpdate": "includes/ApiPF2PlayerCodexUpdate.php",
     "ApiPF2PlayerCodexMe": "includes/ApiPF2PlayerCodexMe.php",
-    "ApiPF2PlayerCodexMeUpdate": "includes/ApiPF2PlayerCodexMeUpdate.php"
+    "ApiPF2PlayerCodexMeUpdate": "includes/ApiPF2PlayerCodexMeUpdate.php",
+    "SpecialPF2MyCharacters": "includes/SpecialPF2MyCharacters.php"
   },
   "APIModules": {
     "pf2playercodex": "ApiPF2PlayerCodex",
@@ -43,5 +44,8 @@
       "value": "http://host.docker.internal:3333/api/pf2-mj"
     }
   },
-  "manifest_version": 2
+  "manifest_version": 2,
+  "SpecialPages": {
+    "MesPersonnages": "SpecialPF2MyCharacters"
+  }
 }
