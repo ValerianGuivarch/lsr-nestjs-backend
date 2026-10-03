@@ -81,3 +81,21 @@
 .pf2-session-content-editor{border:1px solid var(--border-color-subtle,#c8ccd1);border-radius:6px;padding:.75rem 1rem}.pf2-session-content-editor>p{margin:.1rem 0 .7rem;color:#54595d;font-size:.9rem}
 .pf2-session-content-row{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr) auto;gap:.6rem;align-items:end;margin:.55rem 0}
 @media(max-width:800px){.pf2-session-content-row{grid-template-columns:1fr}}
+
+.pf2-summary-link-tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem;
+  margin-top: .55rem;
+  align-items: center;
+}
+
+.pf2-summary-link-tools select {
+  min-width: 12rem;
+  max-width: 22rem;
+}
+
+.pf2-over-limit {
+  color: #b32424;
+  font-weight: 700;
+}

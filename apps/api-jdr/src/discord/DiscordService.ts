@@ -16,6 +16,7 @@ import { DiscordCommandsService } from './DiscordCommandsService'
 import { Pf2PersistenceService, type Pf2Session, type Pf2SessionInput } from '../pf2-storage/Pf2PersistenceService'
 import { FoundryRelayService } from '../foundry/FoundryRelayService'
 import { buildSummaryRewardLedger } from '../pf2-sessions/Pf2CareerXp'
+import { shortSummaryForDiscord } from '../pf2-sessions/ShortSummaryMarkup'
 
 export type DiscordResumeSync = {
   status: 'skipped' | 'created' | 'updated' | 'failed'
@@ -730,7 +731,7 @@ export class DiscordService implements OnModuleInit, OnModuleDestroy {
           .filter(Boolean)
           .join('\n'),
 
-        resume.shortSummary,
+        shortSummaryForDiscord(resume.shortSummary),
 
         [
           '**Informations**',

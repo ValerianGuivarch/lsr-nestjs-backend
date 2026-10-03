@@ -7,12 +7,76 @@
     }
 
     var api = new mw.Api();
-    var state = { sessions: [], actors: [], scenarios: [], canContribute: false, canAdmin: false };
+    var state = { sessions: [], actors: [], scenarios: [], wikiLinks: { characters: [], factions: [] }, canContribute: false, canAdmin: false };
 
     function escapeHtml( value ) {
         var div = document.createElement( 'div' );
         div.textContent = value == null ? '' : String( value );
         return div.innerHTML;
+    }
+
+    function wikiLinkLabel( title, explicitLabel ) {
+        var label = String( explicitLabel || '' ).trim();
+        if ( label ) {
+            return label.replace( /_/g, ' ' );
+        }
+        var normalized = String( title || '' ).trim().replace( /_/g, ' ' );
+        var colon = normalized.indexOf( ':' );
+        return ( colon >= 0 ? normalized.slice( colon + 1 ) : normalized ).trim() || normalized;
+    }
+
+    function wikiSummaryHtml( value ) {
+        var text = String( value || '' );
+        var pattern = /\[\[([^\[\]|]+)(?:\|([^\[\]]+))?\]\]/g;
+        var html = '';
+        var last = 0;
+        var match;
+        while ( ( match = pattern.exec( text ) ) !== null ) {
+            html += escapeHtml( text.slice( last, match.index ) );
+            var title = String( match[ 1 ] || '' ).trim();
+            var label = wikiLinkLabel( title, match[ 2 ] );
+            if ( title && label ) {
+                html += '<a href="' + escapeHtml( mw.util.getUrl( title ) ) + '">' + escapeHtml( label ) + '</a>';
+            } else {
+                html += escapeHtml( match[ 0 ] );
+            }
+            last = pattern.lastIndex;
+        }
+        html += escapeHtml( text.slice( last ) );
+        return html.replace( /\n/g, '<br>' );
+    }
+
+    function wikiLinkOptions( values, placeholder ) {
+        var html = '<option value="">' + escapeHtml( placeholder ) + '</option>';
+        return html + ( values || [] ).map( function ( item ) {
+            return '<option value="' + escapeHtml( item.title ) + '" data-label="' + escapeHtml( item.label ) + '">' + escapeHtml( item.label ) + '</option>';
+        } ).join( '' );
+    }
+
+    function insertAtCursor( textarea, text ) {
+        var start = textarea.selectionStart == null ? textarea.value.length : textarea.selectionStart;
+        var end = textarea.selectionEnd == null ? start : textarea.selectionEnd;
+        textarea.value = textarea.value.slice( 0, start ) + text + textarea.value.slice( end );
+        var next = start + text.length;
+        textarea.setSelectionRange( next, next );
+        textarea.focus();
+        textarea.dispatchEvent( new Event( 'input', { bubbles: true } ) );
+    }
+
+    function editorPayload( form ) {
+        var data = new FormData( form );
+        return {
+            sessionNumber: Number( data.get( 'sessionNumber' ) ),
+            date: String( data.get( 'date' ) || '' ),
+            title: String( data.get( 'title' ) || '' ),
+            inGameStartDate: String( data.get( 'inGameStartDate' ) || '' ),
+            inGameEndDate: String( data.get( 'inGameEndDate' ) || '' ),
+            sessionXp: Number( data.get( 'sessionXp' ) || 0 ),
+            shortSummaryAuthor: String( data.get( 'shortSummaryAuthor' ) || '' ) || null,
+            longSummaryAuthor: String( data.get( 'longSummaryAuthor' ) || '' ) || null,
+            shortSummary: String( data.get( 'shortSummary' ) || '' ).trim(),
+            participants: Array.from( form.querySelectorAll( '[data-participant]:checked' ) ).map( function ( item ) { return item.value; } )
+        };
     }
 
     function longSummaryTitle( session ) {
@@ -268,7 +332,7 @@
               '<div><dt>Niveau début — résumé long</dt><dd>' + escapeHtml( summaryRewardText( session.longSummaryLevelAtStart, session.longSummaryXp ) ) + '</dd></div>' +
             '</dl>' +
             '<div class="pf2-session-summary"><div class="pf2-label">Résumé court</div>' +
-              ( session.shortSummary ? escapeHtml( session.shortSummary ).replace( /\n/g, '<br>' ) : '<span class="pf2-missing">Non renseigné</span>' ) +
+              ( session.shortSummary ? wikiSummaryHtml( session.shortSummary ) : '<span class="pf2-missing">Non renseigné</span>' ) +
             '</div>' +
             '<div class="pf2-session-actions">' + contributorButtons + adminButtons + '</div>' +
             '</article>';
@@ -295,7 +359,13 @@
             '</div>' +
             ( state.canAdmin ? contentEditorHtml( session ) : '' ) +
             '<fieldset class="pf2-participants"><legend>Participants</legend><div class="pf2-participant-grid">' + participantChecks + '</div></fieldset>' +
-            '<label class="pf2-summary-editor">Résumé court<textarea name="shortSummary" maxlength="1550" rows="12">' + escapeHtml( session.shortSummary || '' ) + '</textarea><small><span data-count>' + escapeHtml( ( session.shortSummary || '' ).length ) + '</span>/1550</small></label>' +
+            '<label class="pf2-summary-editor">Résumé court<textarea name="shortSummary" rows="12">' + escapeHtml( session.shortSummary || '' ) + '</textarea>' +
+              '<div class="pf2-summary-link-tools">' +
+                '<select data-insert-character>' + wikiLinkOptions( state.wikiLinks.characters, 'Insérer personnage…' ) + '</select>' +
+                '<select data-insert-faction>' + wikiLinkOptions( state.wikiLinks.factions, 'Insérer faction…' ) + '</select>' +
+                '<button class="pf2-button" type="button" data-insert-link>Insérer lien…</button>' +
+              '</div>' +
+              '<small><span data-count>' + escapeHtml( ( session.shortSummary || '' ).length ) + '</span> caractères saisis · Discord : <span data-discord-count>calcul…</span></small></label>' +
             '<div class="pf2-editor-actions"><button class="pf2-button pf2-primary" type="submit">Enregistrer</button><button class="pf2-button" type="button" data-cancel>Annuler</button></div>' +
         '</form>';
     }
@@ -345,6 +415,10 @@
         var form = article.querySelector( '[data-editor]' );
         var textarea = form.querySelector( 'textarea[name="shortSummary"]' );
         var count = form.querySelector( '[data-count]' );
+        var discordCount = form.querySelector( '[data-discord-count]' );
+        var insertCharacter = form.querySelector( '[data-insert-character]' );
+        var insertFaction = form.querySelector( '[data-insert-faction]' );
+        var insertLink = form.querySelector( '[data-insert-link]' );
         var contentRows = form.querySelector( '[data-content-rows]' );
         var addContent = form.querySelector( '[data-content-add]' );
         var shortAuthor = form.querySelector( 'select[name="shortSummaryAuthor"]' );
@@ -352,7 +426,62 @@
         var shortLevel = form.querySelector( '[data-short-summary-level]' );
         var longLevel = form.querySelector( '[data-long-summary-level]' );
 
-        textarea.addEventListener( 'input', function () { count.textContent = textarea.value.length; } );
+        var previewTimer = null;
+        var previewSerial = 0;
+        function refreshDiscordLength() {
+            window.clearTimeout( previewTimer );
+            previewTimer = window.setTimeout( function () {
+                var serial = ++previewSerial;
+                discordCount.textContent = 'calcul…';
+                api.postWithToken( 'csrf', {
+                    action: 'pf2sessionpreview',
+                    format: 'json',
+                    id: session.id,
+                    payload: JSON.stringify( editorPayload( form ) )
+                } ).then( function ( response ) {
+                    if ( serial !== previewSerial ) { return; }
+                    var result = response && response.pf2preview ? response.pf2preview : {};
+                    var length = Number( result.length || 0 );
+                    var limit = Number( result.limit || 2000 );
+                    discordCount.textContent = length + '/' + limit + ( result.fits === false || length > limit ? ' — trop long' : '' );
+                    discordCount.classList.toggle( 'pf2-over-limit', result.fits === false || length > limit );
+                } ).catch( function () {
+                    if ( serial === previewSerial ) { discordCount.textContent = 'indisponible'; }
+                } );
+            }, 250 );
+        }
+
+        textarea.addEventListener( 'input', function () {
+            count.textContent = textarea.value.length;
+            refreshDiscordLength();
+        } );
+        form.querySelectorAll( 'input, select' ).forEach( function ( input ) {
+            if ( input !== insertCharacter && input !== insertFaction ) {
+                input.addEventListener( 'change', refreshDiscordLength );
+            }
+        } );
+
+        function bindWikiSelect( select ) {
+            if ( !select ) { return; }
+            select.addEventListener( 'change', function () {
+                if ( !select.value ) { return; }
+                var option = select.options[ select.selectedIndex ];
+                var label = option && option.dataset ? option.dataset.label : '';
+                insertAtCursor( textarea, '[[' + select.value + ( label ? '|' + label : '' ) + ']]' );
+                select.value = '';
+            } );
+        }
+        bindWikiSelect( insertCharacter );
+        bindWikiSelect( insertFaction );
+        if ( insertLink ) {
+            insertLink.addEventListener( 'click', function () {
+                var title = window.prompt( 'Titre de la page wiki à lier :' );
+                if ( !title || !title.trim() ) { return; }
+                var label = window.prompt( 'Texte affiché (laisser vide pour utiliser le titre) :' ) || '';
+                insertAtCursor( textarea, '[[' + title.trim() + ( label.trim() ? '|' + label.trim() : '' ) + ']]' );
+            } );
+        }
+        refreshDiscordLength();
         shortAuthor.addEventListener( 'change', function () {
             if ( shortAuthor.value !== ( session.shortSummaryAuthor || '' ) ) {
                 shortLevel.value = shortAuthor.value ? 'Calculé à l’enregistrement' : '—';
@@ -381,19 +510,7 @@
 
         form.addEventListener( 'submit', function ( event ) {
             event.preventDefault();
-            var data = new FormData( form );
-            var payload = {
-                sessionNumber: Number( data.get( 'sessionNumber' ) ),
-                date: String( data.get( 'date' ) || '' ),
-                title: String( data.get( 'title' ) || '' ),
-                inGameStartDate: String( data.get( 'inGameStartDate' ) || '' ),
-                inGameEndDate: String( data.get( 'inGameEndDate' ) || '' ),
-                sessionXp: Number( data.get( 'sessionXp' ) || 0 ),
-                shortSummaryAuthor: String( data.get( 'shortSummaryAuthor' ) || '' ) || null,
-                longSummaryAuthor: String( data.get( 'longSummaryAuthor' ) || '' ) || null,
-                shortSummary: String( data.get( 'shortSummary' ) || '' ).trim(),
-                participants: Array.from( form.querySelectorAll( '[data-participant]:checked' ) ).map( function ( item ) { return item.value; } )
-            };
+            var payload = editorPayload( form );
             if ( state.canAdmin ) {
                 payload.content = Array.from( form.querySelectorAll( '[data-content-row]' ) ).map( function ( row ) {
                     var scenarioId = row.querySelector( '[data-content-scenario]' ).value;
@@ -477,6 +594,7 @@
             state.sessions = payload.sessions || [];
             state.actors = payload.actors || [];
             state.scenarios = payload.scenarios || [];
+            state.wikiLinks = payload.wikiLinks || { characters: [], factions: [] };
             state.canContribute = payload.canContribute === true ||
                 payload.canContribute === 1 ||
                 payload.canContribute === '1';

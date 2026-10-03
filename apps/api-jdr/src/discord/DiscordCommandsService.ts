@@ -59,7 +59,6 @@ export class DiscordCommandsService {
       new SlashCommandBuilder().setName('export-full').setDescription('Exporte tous les messages texte du serveur en JSON.').toJSON(),
       new SlashCommandBuilder().setName('new-game').setDescription('Prépare une nouvelle mission PF2 depuis les PJ actifs dans ce salon.').toJSON(),
       new SlashCommandBuilder().setName('finish-game').setDescription('Termine une mission et met à jour son résumé.').addIntegerOption(option => option.setName('xp').setDescription('XP gagnée par PJ').setRequired(true).setMinValue(0)).addIntegerOption(option => option.setName('numero').setDescription('Numéro du résumé à terminer')).addStringOption(option => option.setName('fin').setDescription('Date de fin en jeu : YYYY-MM-DD')).addIntegerOption(option => option.setName('jours').setDescription('Durée en jours, à partir du début en jeu').setMinValue(1)).toJSON(),
-      new SlashCommandBuilder().setName('resume').setDescription('Édite le résumé court d’une séance.').addStringOption(option => option.setName('session').setDescription('Séance à résumer (la plus récente par défaut)').setAutocomplete(true)).addStringOption(option => option.setName('auteur').setDescription('Personnage auteur du résumé').setAutocomplete(true)).toJSON(),
       new SlashCommandBuilder().setName('personnage').setDescription('Présente un personnage au carnet joueur.').addStringOption(option => option.setName('personnage').setDescription('PNJ existant ou nom libre').setRequired(true).setAutocomplete(true)).addAttachmentOption(option => option.setName('portrait').setDescription('Portrait pour un personnage improvisé')).addBooleanOption(option => option.setName('afficher_nom').setDescription('Afficher le nom').setRequired(false)).toJSON(),
       new SlashCommandBuilder().setName('faction').setDescription('Prépare la publication d’une faction MJ.').addStringOption(option => option.setName('faction').setDescription('Faction à publier').setRequired(true).setAutocomplete(true)).toJSON(),
       new SlashCommandBuilder().setName('planification').setDescription('Publie les disponibilités proposées pour la prochaine semaine.').toJSON(),
@@ -869,10 +868,10 @@ export class DiscordCommandsService {
       .setCustomId('shortSummary')
       .setLabel('Résumé court')
       .setStyle(TextInputStyle.Paragraph)
-      .setMaxLength(1550)
+      .setMaxLength(4000)
       .setRequired(false)
 
-    if (current.shortSummary) summaryInput.setValue(current.shortSummary.slice(0, 1550))
+    if (current.shortSummary) summaryInput.setValue(current.shortSummary.slice(0, 4000))
 
     modal.addComponents(
       new ActionRowBuilder<TextInputBuilder>().addComponents(titleInput),
@@ -925,6 +924,13 @@ export class DiscordCommandsService {
       ? await this.discord.resumeMessageLength(candidate)
       : 0
 
+    if (finalLength > 2_000) {
+      await interaction.editReply({
+        content: `Le message Discord final ferait ${finalLength}/2000 caractères. Raccourcis le résumé ou ses libellés de liens.`,
+      })
+      return false
+    }
+
     const updated = await this.persistence.updateSession(pending.sessionId, {
       title: values.title,
       date: values.date,
@@ -942,29 +948,23 @@ export class DiscordCommandsService {
     let syncNote = ''
 
     if (updated.published && this.discord) {
-      if (finalLength > 2000) {
-        syncNote =
-          ` Déjà publiée, mais le message Discord final ferait ${finalLength}/2000 caractères : ` +
-          'raccourcis le résumé avant de republier.'
-      } else {
-        let sync: DiscordResumeSync
-        try {
-          sync = await this.discord.synchronizeResumeShortSummary(updated)
-        } catch (error) {
-          sync = {
-            status: 'failed',
-            reason: error instanceof Error ? error.message : 'erreur inattendue',
-          }
+      let sync: DiscordResumeSync
+      try {
+        sync = await this.discord.synchronizeResumeShortSummary(updated)
+      } catch (error) {
+        sync = {
+          status: 'failed',
+          reason: error instanceof Error ? error.message : 'erreur inattendue',
         }
+      }
 
-        if (sync.status === 'created' || sync.status === 'updated') {
-          if (sync.messageId) {
-            await this.persistence.saveSessionDiscordMessageId(updated.id, sync.messageId)
-          }
-        } else {
-          syncNote =
-            ` Résumé enregistré, mais Discord n’a pas été synchronisé : ${sync.reason ?? 'raison inconnue'}.`
+      if (sync.status === 'created' || sync.status === 'updated') {
+        if (sync.messageId) {
+          await this.persistence.saveSessionDiscordMessageId(updated.id, sync.messageId)
         }
+      } else {
+        syncNote =
+          ` Résumé enregistré, mais Discord n’a pas été synchronisé : ${sync.reason ?? 'raison inconnue'}.`
       }
     }
 

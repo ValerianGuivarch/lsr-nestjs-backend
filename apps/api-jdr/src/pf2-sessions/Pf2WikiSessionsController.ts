@@ -23,6 +23,7 @@ import {
   DiscordService,
 } from '../discord/DiscordService'
 import { buildSummaryRewardLedger } from './Pf2CareerXp'
+import { PlayerCodexService } from '../pf2-mj/PlayerCodexService'
 
 type WikiSession = Pf2Session & {
   participantNames: string[]
@@ -45,10 +46,13 @@ type WikiScenarioOption = {
   }>
 }
 
+type WikiLinkTarget = { title: string; label: string }
+
 type WikiSessionsPayload = {
   sessions: WikiSession[]
   actors: FoundryActorCacheEntry[]
   scenarios: WikiScenarioOption[]
+  wikiLinks: { characters: WikiLinkTarget[]; factions: WikiLinkTarget[] }
 }
 
 const playerActorName = /^\S(?:.*\S)?\s+\([^()]+\)$/u
@@ -76,6 +80,7 @@ export class Pf2WikiSessionsController {
   constructor(
     private readonly persistence: Pf2PersistenceService,
     private readonly discord: DiscordService,
+    private readonly playerCodex: PlayerCodexService,
   ) {}
 
   @Get()
@@ -83,11 +88,13 @@ export class Pf2WikiSessionsController {
     @Query('includeDrafts') includeDrafts?: string,
   ): Promise<WikiSessionsPayload> {
     await this.normalizeSummaryBonuses()
-    const [sessions, cachedActors, catalogue, curation] = await Promise.all([
+    const [sessions, cachedActors, catalogue, curation, characterLinks, factionLinks] = await Promise.all([
       this.persistence.listSessions(),
       this.persistence.readFoundryActorCache(),
       this.persistence.readCatalogueSnapshot(),
       this.persistence.readCuration(),
+      this.playerCodex.listCharacters(),
+      this.playerCodex.listFactions(),
     ])
 
     const actors = cachedActors
@@ -124,6 +131,10 @@ export class Pf2WikiSessionsController {
         })),
       actors,
       scenarios: this.scenarioOptions(catalogue, curation),
+      wikiLinks: {
+        characters: this.wikiLinkTargets(characterLinks),
+        factions: this.wikiLinkTargets(factionLinks),
+      },
     }
   }
 
@@ -140,17 +151,8 @@ export class Pf2WikiSessionsController {
 
     const input = this.editableInput(body ?? {})
 
-    if (
-      typeof input.shortSummary === 'string' &&
-      input.shortSummary.trim().length > 1550
-    ) {
-      throw new HttpException(
-        'Le résumé court ne peut pas dépasser 1550 caractères.',
-        HttpStatus.BAD_REQUEST,
-      )
-    }
-
     try {
+      await this.assertDiscordLength(current, input)
       const saved = await this.persistence.updateSession(id, input)
       if (!saved) throw new NotFoundException('Séance introuvable.')
 
@@ -178,6 +180,22 @@ export class Pf2WikiSessionsController {
         HttpStatus.BAD_REQUEST,
       )
     }
+  }
+
+  @Post(':id/preview')
+  async previewDiscord(
+    @Param('id') id: string,
+    @Body() body: Record<string, unknown>,
+  ): Promise<{ length: number; limit: number; remaining: number; fits: boolean }> {
+    const current = await this.persistence.getSession(id)
+    if (!current) throw new NotFoundException('Séance introuvable.')
+    const input = this.editableInput(body ?? {})
+    const candidate = await this.discordCandidate(current, input)
+    const length = candidate.shortSummary.trim()
+      ? await this.discord.resumeMessageLength(candidate)
+      : 0
+    const limit = 2_000
+    return { length, limit, remaining: limit - length, fits: length <= limit }
   }
 
   @Post(':id/publication')
@@ -223,6 +241,42 @@ export class Pf2WikiSessionsController {
     await this.persistence.deleteSession(id)
     await this.normalizeSummaryBonuses()
     return { success: true, id }
+  }
+
+  private async discordCandidate(current: Pf2Session, input: Pf2SessionInput): Promise<Pf2Session> {
+    const candidate = this.persistence.previewSessionUpdate(current, input)
+    const sessions = await this.persistence.listSessions()
+    const withCandidate = sessions.map(session => session.id === candidate.id ? candidate : session)
+    const rewards = buildSummaryRewardLedger(withCandidate).get(candidate.id)
+    candidate.shortSummaryXp = candidate.shortSummary.trim() ? rewards?.short.xp ?? 0 : 0
+    candidate.longSummaryXp = rewards?.long.xp ?? 0
+    return candidate
+  }
+
+  private async assertDiscordLength(current: Pf2Session, input: Pf2SessionInput): Promise<void> {
+    const candidate = await this.discordCandidate(current, input)
+    if (!candidate.shortSummary.trim()) return
+    const length = await this.discord.resumeMessageLength(candidate)
+    if (length > 2_000) {
+      throw new HttpException(
+        `Le message Discord final ferait ${length}/2000 caractères. Raccourcis le résumé ou ses libellés de liens.`,
+        HttpStatus.BAD_REQUEST,
+      )
+    }
+  }
+
+  private wikiLinkTargets(values: unknown[]): WikiLinkTarget[] {
+    return values.flatMap(value => {
+      if (!value || typeof value !== 'object' || Array.isArray(value)) return []
+      const item = value as Record<string, unknown>
+      const title = typeof item.wikiPageTitle === 'string' ? item.wikiPageTitle.trim() : ''
+      const label = typeof item.displayName === 'string'
+        ? item.displayName.trim()
+        : typeof item.name === 'string'
+          ? item.name.trim()
+          : ''
+      return title && label ? [{ title, label }] : []
+    }).sort((left, right) => left.label.localeCompare(right.label, 'fr'))
   }
 
   private editableInput(body: Record<string, unknown>): Pf2SessionInput {

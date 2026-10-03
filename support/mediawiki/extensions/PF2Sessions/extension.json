@@ -1,6 +1,6 @@
 {
   "name": "PF2Sessions",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "author": [
     "PF2 project"
   ],
@@ -11,12 +11,14 @@
     "PF2SessionsHooks": "includes/PF2SessionsHooks.php",
     "ApiPF2Sessions": "includes/ApiPF2Sessions.php",
     "ApiPF2SessionUpdate": "includes/ApiPF2SessionUpdate.php",
+    "ApiPF2SessionPreview": "includes/ApiPF2SessionPreview.php",
     "ApiPF2SessionPublication": "includes/ApiPF2SessionPublication.php",
     "ApiPF2SessionDelete": "includes/ApiPF2SessionDelete.php"
   },
   "APIModules": {
     "pf2sessions": "ApiPF2Sessions",
     "pf2sessionupdate": "ApiPF2SessionUpdate",
+    "pf2sessionpreview": "ApiPF2SessionPreview",
     "pf2sessionpublication": "ApiPF2SessionPublication",
     "pf2sessiondelete": "ApiPF2SessionDelete"
   },

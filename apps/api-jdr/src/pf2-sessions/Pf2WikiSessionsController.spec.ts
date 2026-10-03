@@ -81,7 +81,10 @@ describe('Pf2WikiSessionsController', () => {
         },
       }),
     }
-    const controller = new Pf2WikiSessionsController(persistence as never, {} as never)
+    const controller = new Pf2WikiSessionsController(persistence as never, {} as never, {
+      listCharacters: jest.fn().mockResolvedValue([{ wikiPageTitle: 'Personnage:Sheila Heidmarch', displayName: 'Sheila Heidmarch' }]),
+      listFactions: jest.fn().mockResolvedValue([{ wikiPageTitle: 'Faction:Veilleurs de la Côte Perdue', name: 'Veilleurs de la Côte Perdue' }]),
+    } as never)
 
     const result = await controller.list()
     expect(result.sessions).toEqual([
@@ -93,6 +96,10 @@ describe('Pf2WikiSessionsController', () => {
         longSummaryLevelAtStart: null,
       }),
     ])
+    expect(result.wikiLinks).toEqual({
+      characters: [{ title: 'Personnage:Sheila Heidmarch', label: 'Sheila Heidmarch' }],
+      factions: [{ title: 'Faction:Veilleurs de la Côte Perdue', label: 'Veilleurs de la Côte Perdue' }],
+    })
     expect(result.scenarios).toEqual([
       {
         id: 'campagne-test-volume-1',
@@ -129,13 +136,14 @@ describe('Pf2WikiSessionsController', () => {
     const persistence = {
       getSession: jest.fn().mockImplementation(async () => ({ ...stored })),
       listSessions: jest.fn().mockImplementation(async () => [{ ...stored }]),
+      previewSessionUpdate: jest.fn().mockImplementation((current: Pf2Session, input: Record<string, unknown>) => ({ ...current, ...input })),
       updateSession: jest.fn().mockImplementation(async (_id: string, input: Record<string, unknown>) => {
         stored = { ...stored, ...input, updatedAt: 'changed' } as Pf2Session
         return { ...stored }
       }),
       saveSessionDiscordMessageId: jest.fn(),
     }
-    const controller = new Pf2WikiSessionsController(persistence as never, {} as never)
+    const controller = new Pf2WikiSessionsController(persistence as never, { resumeMessageLength: jest.fn().mockResolvedValue(500) } as never, {} as never)
 
     const result = await controller.update('resume-1', {
       title: 'Titre modifié',
@@ -172,13 +180,14 @@ describe('Pf2WikiSessionsController', () => {
     const persistence = {
       getSession: jest.fn().mockImplementation(async () => ({ ...stored })),
       listSessions: jest.fn().mockImplementation(async () => [{ ...stored }]),
+      previewSessionUpdate: jest.fn().mockImplementation((current: Pf2Session, input: Record<string, unknown>) => ({ ...current, ...input })),
       updateSession: jest.fn().mockImplementation(async (_id: string, input: Record<string, unknown>) => {
         stored = { ...stored, ...input } as Pf2Session
         return { ...stored }
       }),
       saveSessionDiscordMessageId: jest.fn(),
     }
-    const controller = new Pf2WikiSessionsController(persistence as never, {} as never)
+    const controller = new Pf2WikiSessionsController(persistence as never, { resumeMessageLength: jest.fn().mockResolvedValue(500) } as never, {} as never)
 
     await expect(
       controller.update('resume-1', {
@@ -191,6 +200,35 @@ describe('Pf2WikiSessionsController', () => {
     })
   })
 
+  it('rejects an edit only when the final Discord message exceeds the real 2000-character limit', async () => {
+    const updateSession = jest.fn()
+    const persistence = {
+      getSession: jest.fn().mockResolvedValue({ ...published }),
+      listSessions: jest.fn().mockResolvedValue([{ ...published }]),
+      previewSessionUpdate: jest.fn().mockImplementation((current: Pf2Session, input: Record<string, unknown>) => ({ ...current, ...input })),
+      updateSession,
+    }
+    const discord = { resumeMessageLength: jest.fn().mockResolvedValue(2001) }
+    const controller = new Pf2WikiSessionsController(persistence as never, discord as never, {} as never)
+
+    await expect(controller.update('resume-1', { shortSummary: 'Un résumé' })).rejects.toThrow('2001/2000')
+    expect(updateSession).not.toHaveBeenCalled()
+  })
+
+  it('previews the exact Discord message length without saving', async () => {
+    const persistence = {
+      getSession: jest.fn().mockResolvedValue({ ...published }),
+      listSessions: jest.fn().mockResolvedValue([{ ...published }]),
+      previewSessionUpdate: jest.fn().mockImplementation((current: Pf2Session, input: Record<string, unknown>) => ({ ...current, ...input })),
+    }
+    const discord = { resumeMessageLength: jest.fn().mockResolvedValue(1876) }
+    const controller = new Pf2WikiSessionsController(persistence as never, discord as never, {} as never)
+
+    await expect(controller.previewDiscord('resume-1', { shortSummary: 'Un résumé' })).resolves.toEqual({
+      length: 1876, limit: 2000, remaining: 124, fits: true,
+    })
+  })
+
   it('delegates publication to the shared Discord publication path', async () => {
     const discord = {
       setResumePublication: jest.fn().mockResolvedValue({
@@ -198,7 +236,7 @@ describe('Pf2WikiSessionsController', () => {
         discord: { status: 'updated', messageId: 'discord-1' },
       }),
     }
-    const controller = new Pf2WikiSessionsController({} as never, discord as never)
+    const controller = new Pf2WikiSessionsController({} as never, discord as never, {} as never)
 
     await expect(controller.setPublication('resume-1', { published: '1' })).resolves.toEqual(
       expect.objectContaining({ resume: expect.objectContaining({ published: true }) }),

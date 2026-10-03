@@ -585,6 +585,10 @@ export class Pf2PersistenceService implements OnModuleInit {
     return (await this.attachSessionContent([this.session(rows[0])]))[0] ?? null
   }
 
+  previewSessionUpdate(current: Pf2Session, input: Pf2SessionInput): Pf2Session {
+    return { ...current, ...this.sessionInput(input, current) }
+  }
+
   async createSession(input: Pf2SessionInput): Promise<Pf2Session> {
     const id = input.id === undefined ? randomUUID() : this.requiredSessionId(input.id)
     const session = this.sessionInput(input)
