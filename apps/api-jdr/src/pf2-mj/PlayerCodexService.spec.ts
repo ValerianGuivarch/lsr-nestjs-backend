@@ -55,6 +55,58 @@ describe('PlayerCodexService', () => {
     await codex.updateCharacter('janira', { isPlayer: false })
     await expect(codex.listPlayers()).resolves.toEqual([])
   })
+  it('infers PJ status from the canonical pj tag when publishing a character', async () => {
+    const { persistence, codex } = await open()
+    await persistence.saveRecord('pnj', { id: 'hero', nom: 'Héros', tags: ['pj'] })
+    await codex.createCharacter({ npcId: 'hero', displayName: 'Héros', wikiPageTitle: 'Personnage:Héros' })
+    await expect(codex.character('hero')).resolves.toEqual(expect.objectContaining({ isPlayer: true }))
+  })
+
+  it('associates a published PJ with a wiki-linked Discord user', async () => {
+    const { persistence, codex } = await open()
+    await persistence.saveRecord('pnj', { id: 'hero', nom: 'Héros', tags: ['pj'] })
+    await codex.createCharacter({ npcId: 'hero', displayName: 'Héros', wikiPageTitle: 'Personnage:Héros' })
+    await expect(codex.assignPlayerOwner('123456789012345678', 'hero')).rejects.toThrow('associe')
+    await persistence.saveWikiAccountLink('123456789012345678', 'Valou')
+    await expect(codex.assignPlayerOwner('123456789012345678', 'hero')).resolves.toMatchObject({
+      wikiUsername: 'Valou',
+      character: { npcId: 'hero', isPlayer: true },
+    })
+    await expect(codex.myCharacters('Valou')).resolves.toMatchObject({
+      characters: [expect.objectContaining({ npcId: 'hero', displayName: 'Héros' })],
+    })
+  })
+
+  it('keeps private contacts out of the public character catalogue while exposing them to their PJ owner', async () => {
+    const { persistence, codex } = await open()
+    await persistence.saveRecord('pnj', { id: 'hero', nom: 'Héros', tags: ['pj'] })
+    await persistence.saveRecord('pnj', { id: 'secret-contact', nom: 'Contact secret', description: 'Connu uniquement du héros.', role: 'Informateur', portrait: 'assets/l7r/portraits/pnj/secret.webp' })
+    await codex.createCharacter({ npcId: 'hero', displayName: 'Héros', wikiPageTitle: 'Personnage:Héros' })
+    await persistence.saveWikiAccountLink('123456789012345678', 'Valou')
+    await codex.assignPlayerOwner('123456789012345678', 'hero')
+    await codex.setPlayerContact('hero', 'secret-contact', true)
+
+    await expect(codex.listCharacters()).resolves.not.toEqual(expect.arrayContaining([expect.objectContaining({ npcId: 'secret-contact' })]))
+    const mine = await codex.myCharacters('Valou') as { characters: Array<{ contacts: unknown[] }> }
+    expect(mine.characters[0].contacts).toEqual([
+      expect.objectContaining({ npcId: 'secret-contact', displayName: 'Contact secret', published: false, role: 'Informateur' }),
+    ])
+  })
+
+  it('lets only the owner update a PJ background', async () => {
+    const { persistence, codex } = await open()
+    await persistence.saveRecord('pnj', { id: 'hero', nom: 'Héros', tags: ['pj'] })
+    await codex.createCharacter({ npcId: 'hero', displayName: 'Héros', wikiPageTitle: 'Personnage:Héros' })
+    await persistence.saveWikiAccountLink('123456789012345678', 'Valou')
+    await codex.assignPlayerOwner('123456789012345678', 'hero')
+
+    await expect(codex.updateMyBackground('AutreCompte', 'hero', 'Secret')).rejects.toThrow('appartient')
+    await expect(codex.updateMyBackground('Valou', 'hero', 'Mon histoire')).resolves.toEqual({ npcId: 'hero', background: 'Mon histoire' })
+    await expect(codex.myCharacters('Valou')).resolves.toMatchObject({
+      characters: [expect.objectContaining({ background: 'Mon histoire' })],
+    })
+  })
+
   it('removes only player-codex links and preserves the canonical MJ faction', async () => {
     const { persistence, codex } = await open()
     await persistence.saveRecord('faction', { id: 'parent', nom: 'Parent', description: '', published: true })

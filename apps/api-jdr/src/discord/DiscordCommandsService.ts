@@ -78,6 +78,17 @@ export class DiscordCommandsService {
           .setName('supprimer')
           .setDescription('Supprime une association Discord ↔ Wiki.')
           .addUserOption(option => option.setName('utilisateur').setDescription('Membre Discord').setRequired(true)))
+        .addSubcommand(command => command
+          .setName('associer-personnage')
+          .setDescription('Associe un PJ publié à un membre Discord et à son compte Wiki.')
+          .addUserOption(option => option.setName('utilisateur').setDescription('Membre Discord').setRequired(true))
+          .addStringOption(option => option.setName('personnage').setDescription('Personnage publié sur le Wiki').setRequired(true).setAutocomplete(true)))
+        .addSubcommand(command => command
+          .setName('dissocier-personnage')
+          .setDescription('Retire un PJ des personnages personnels d’un membre.')
+          .addUserOption(option => option.setName('utilisateur').setDescription('Membre Discord').setRequired(true))
+          .addStringOption(option => option.setName('personnage').setDescription('Personnage publié sur le Wiki').setRequired(true).setAutocomplete(true)))
+        .addSubcommand(command => command.setName('liste-personnages').setDescription('Liste les associations entre membres et PJ.'))
         .toJSON(),
       new SlashCommandBuilder().setName('planification').setDescription('Publie les disponibilités proposées pour la prochaine semaine.').toJSON(),
       new SlashCommandBuilder().setName('programmer-seance').setDescription('Calcule les groupes possibles à partir de la planification.').toJSON(),
@@ -211,6 +222,9 @@ export class DiscordCommandsService {
           '`/wiki-admin associer` — associe un membre Discord à un compte MediaWiki existant.',
           '`/wiki-admin liste` — affiche les associations enregistrées.',
           '`/wiki-admin supprimer` — supprime une association.',
+          '`/wiki-admin associer-personnage` — associe un PJ publié au membre et le marque comme PJ.',
+          '`/wiki-admin dissocier-personnage` — retire ce PJ de la page Mes personnages du membre.',
+          '`/wiki-admin liste-personnages` — affiche les associations membre ↔ PJ.',
         ].join('\n'),
         ephemeral: true,
       })
@@ -254,6 +268,41 @@ export class DiscordCommandsService {
           content: removed
             ? `Association supprimée pour <@${discordUser.id}>.`
             : `Aucune association n’existait pour <@${discordUser.id}>.`,
+          allowedMentions: { parse: [] },
+        })
+        return
+      }
+
+      if (subcommand === 'associer-personnage') {
+        const discordUser = interaction.options.getUser('utilisateur', true)
+        const npcId = interaction.options.getString('personnage', true)
+        const assigned = await this.playerCodex!.assignPlayerOwner(discordUser.id, npcId) as { wikiUsername: string; character: { displayName?: string } }
+        await interaction.editReply({
+          content: `**${assigned.character.displayName ?? npcId}** est maintenant un PJ de <@${discordUser.id}> (Wiki : **${assigned.wikiUsername}**).`,
+          allowedMentions: { parse: [] },
+        })
+        return
+      }
+
+      if (subcommand === 'dissocier-personnage') {
+        const discordUser = interaction.options.getUser('utilisateur', true)
+        const npcId = interaction.options.getString('personnage', true)
+        const character = await this.playerCodex!.character(npcId) as { displayName?: string }
+        const removed = await this.playerCodex!.removePlayerOwner(discordUser.id, npcId)
+        await interaction.editReply({
+          content: removed
+            ? `**${character.displayName ?? npcId}** a été retiré des personnages personnels de <@${discordUser.id}>.`
+            : `Ce personnage n’était pas associé à <@${discordUser.id}>.`,
+          allowedMentions: { parse: [] },
+        })
+        return
+      }
+
+      if (subcommand === 'liste-personnages') {
+        const assignments = await this.playerCodex!.listPlayerAssignments()
+        if (!assignments.length) { await interaction.editReply({ content: 'Aucune association membre ↔ PJ enregistrée.' }); return }
+        await interaction.editReply({
+          content: assignments.slice(0, 40).map(item => `<@${item.discordUserId}> → **${item.displayName}**${item.wikiUsername ? ` (Wiki : ${item.wikiUsername})` : ''}`).join('\n'),
           allowedMentions: { parse: [] },
         })
         return
@@ -673,6 +722,18 @@ export class DiscordCommandsService {
         return true
       }
 
+      await interaction.respond([])
+      return true
+    }
+    if (interaction.commandName === 'wiki-admin') {
+      let subcommand = ''
+      try { subcommand = interaction.options.getSubcommand() } catch { subcommand = '' }
+      const focused = interaction.options.getFocused(true)
+      if ((subcommand === 'associer-personnage' || subcommand === 'dissocier-personnage') && focused.name === 'personnage') {
+        const candidates = await this.playerCodex!.profileCandidates(focused.value.toString())
+        await interaction.respond(candidates.map(candidate => ({ name: `${candidate.isPlayer ? 'PJ' : 'Personnage'} — ${candidate.name}`.slice(0, 100), value: candidate.id })))
+        return true
+      }
       await interaction.respond([])
       return true
     }

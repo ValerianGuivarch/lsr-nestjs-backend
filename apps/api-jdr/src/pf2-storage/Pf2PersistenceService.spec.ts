@@ -118,6 +118,7 @@ describe('Pf2PersistenceService', () => {
       , { id: '022-journal-catalogue' }
       , { id: '023-player-codex-canonical-factions' }
       , { id: '024-wiki-discord-login' }
+      , { id: '025-player-private-space' }
     ])
 
     await currentDataSource().destroy()
@@ -151,7 +152,23 @@ describe('Pf2PersistenceService', () => {
       , { id: '022-journal-catalogue' }
       , { id: '023-player-codex-canonical-factions' }
       , { id: '024-wiki-discord-login' }
+      , { id: '025-player-private-space' }
     ])
+  })
+
+  it('backfills existing published PJ profiles from the canonical pj tag', async () => {
+    const service = await open()
+    await service.saveRecord('pnj', { id: 'hero', nom: 'Héros', tags: ['pj'] })
+    await currentDataSource().query(
+      "INSERT INTO pf2_player_character_profile (npc_id, wiki_page_title, display_name, is_player) VALUES (?, ?, ?, 0)",
+      ['hero', 'Personnage:Héros', 'Héros'],
+    )
+    await currentDataSource().query("DELETE FROM pf2_schema_migration WHERE id = '025-player-private-space'")
+    await currentDataSource().destroy()
+    dataSource = undefined
+
+    await open()
+    await expect(currentDataSource().query('SELECT is_player AS isPlayer FROM pf2_player_character_profile WHERE npc_id = ?', ['hero'])).resolves.toEqual([{ isPlayer: 1 }])
   })
 
   it('stores Discord to MediaWiki associations and consumes login grants once', async () => {

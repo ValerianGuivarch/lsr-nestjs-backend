@@ -943,6 +943,27 @@ export class Pf2PersistenceService implements OnModuleInit {
       await manager.query('CREATE INDEX IF NOT EXISTS idx_pf2_wiki_login_grant_expiry ON pf2_wiki_login_grant (expires_at_ms, consumed_at)')
     })
 
+    await this.applyMigration('025-player-private-space', async (manager) => {
+      await manager.query("CREATE TABLE IF NOT EXISTS pf2_player_character_owner (discord_user_id TEXT NOT NULL, npc_id TEXT NOT NULL, created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (discord_user_id, npc_id))")
+      await manager.query('CREATE INDEX IF NOT EXISTS idx_pf2_player_character_owner_npc ON pf2_player_character_owner (npc_id, discord_user_id)')
+      await manager.query("CREATE TABLE IF NOT EXISTS pf2_player_character_contact (player_npc_id TEXT NOT NULL, contact_npc_id TEXT NOT NULL, created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (player_npc_id, contact_npc_id))")
+      await manager.query('CREATE INDEX IF NOT EXISTS idx_pf2_player_character_contact_contact ON pf2_player_character_contact (contact_npc_id, player_npc_id)')
+      await manager.query("CREATE TABLE IF NOT EXISTS pf2_player_character_background (npc_id TEXT PRIMARY KEY, content TEXT NOT NULL DEFAULT '', updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)")
+
+      const profiles = await manager.query("SELECT p.npc_id AS npcId, r.payload AS payload FROM pf2_player_character_profile p JOIN pf2_record r ON r.kind = 'pnj' AND r.id = p.npc_id WHERE p.is_player = 0") as Array<{ npcId: string; payload: string }>
+      for (const row of profiles) {
+        try {
+          const record = JSON.parse(row.payload) as { tags?: unknown }
+          const tags = Array.isArray(record.tags) ? record.tags : []
+          if (tags.some(tag => typeof tag === 'string' && tag.trim().toLocaleLowerCase() === 'pj')) {
+            await manager.query('UPDATE pf2_player_character_profile SET is_player = 1, updated_at = CURRENT_TIMESTAMP WHERE npc_id = ?', [row.npcId])
+          }
+        } catch {
+          // Une fiche MJ mal formée ne doit pas bloquer le reste de la migration.
+        }
+      }
+    })
+
     await this.assertDatabaseIntegrity(this.dataSource, 'base SQLite après migrations')
   }
 

@@ -25,3 +25,22 @@
   .pf2-player-character-layout { grid-template-columns:1fr; }
   .pf2-player-character-side { max-width:260px; }
 }
+.pf2-player-card-title { display:flex; gap:.5rem; align-items:center; justify-content:space-between; }
+.pf2-player-kind { display:inline-flex; align-items:center; justify-content:center; width:max-content; border-radius:999px; padding:.12rem .45rem; font-size:.72rem; font-weight:700; border:1px solid #a78b4f; background:#f7f1df; color:#5d4515; }
+.pf2-player-kind.player { border-color:#5a7d5d; background:#edf6ed; color:#315735; }
+.pf2-player-kind.npc { border-color:#8f8574; background:#f3f0eb; color:#5f584e; }
+.pf2-player-kind.private { border-color:#72569a; background:#f2ecfa; color:#513974; }
+.pf2-my-character-detail { margin-top:1.5rem; padding-top:1rem; border-top:2px solid #a78b4f; scroll-margin-top:1rem; }
+.pf2-my-character-header { display:flex; align-items:baseline; flex-wrap:wrap; gap:.75rem; }
+.pf2-my-character-header h2 { margin-right:auto; }
+.pf2-player-tabs { display:flex; gap:.35rem; flex-wrap:wrap; border-bottom:1px solid #c8ccd1; margin:.8rem 0 1rem; }
+.pf2-player-tabs button { border:0; border-bottom:3px solid transparent; background:transparent; padding:.55rem .8rem; cursor:pointer; font-weight:700; }
+.pf2-player-tabs button.active { border-bottom-color:#a78b4f; color:#6b4f13; }
+.pf2-player-tab-panel { min-height:8rem; }
+.pf2-player-background-actions { display:flex; gap:.5rem; margin-bottom:.75rem; }
+.pf2-player-background-editor { width:100%; min-height:24rem; box-sizing:border-box; font:inherit; padding:.75rem; border:1px solid #a2a9b1; border-radius:.35rem; }
+.pf2-player-primary { font-weight:700; }
+.pf2-player-empty { color:#72777d; font-style:italic; }
+.pf2-player-role { color:#54595d; font-style:italic; }
+.pf2-player-contact-card strong { font-size:1.05rem; }
+.pf2-my-character-card button { margin-top:auto; }

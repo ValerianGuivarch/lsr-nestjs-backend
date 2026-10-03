@@ -241,6 +241,9 @@ describe('DiscordCommandsService', () => {
       'associer',
       'liste',
       'supprimer',
+      'associer-personnage',
+      'dissocier-personnage',
+      'liste-personnages',
     ])
   })
 

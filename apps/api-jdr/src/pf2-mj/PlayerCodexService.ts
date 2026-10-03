@@ -1,4 +1,4 @@
-import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common'
+import { BadRequestException, ConflictException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common'
 import { InjectDataSource } from '@nestjs/typeorm'
 import { randomUUID } from 'node:crypto'
 import { DataSource } from 'typeorm'
@@ -93,8 +93,9 @@ export class PlayerCodexService {
     if (!npc) throw new NotFoundException('PNJ MJ introuvable.')
     const displayName = this.required(input.displayName, 'Nom')
     const title = this.required(input.wikiPageTitle, 'Titre wiki')
+    const isPlayer = typeof input.isPlayer === 'boolean' ? input.isPlayer : this.isTaggedPlayer(npc)
     try {
-      await this.db.query('INSERT INTO pf2_player_character_profile (npc_id, wiki_page_title, display_name, wiki_portrait_filename, is_player) VALUES (?, ?, ?, ?, ?)', [input.npcId, title, displayName, input.wikiPortraitFilename ?? null, input.isPlayer ? 1 : 0])
+      await this.db.query('INSERT INTO pf2_player_character_profile (npc_id, wiki_page_title, display_name, wiki_portrait_filename, is_player) VALUES (?, ?, ?, ?, ?)', [input.npcId, title, displayName, input.wikiPortraitFilename ?? null, isPlayer ? 1 : 0])
     } catch (error) { throw new ConflictException('Une fiche joueur existe déjà pour ce PNJ ou ce titre wiki est déjà utilisé.') }
     return this.character(input.npcId)
   }
@@ -119,10 +120,144 @@ export class PlayerCodexService {
     await this.character(npcId)
     await this.db.transaction(async manager => {
       await manager.query('DELETE FROM pf2_player_character_mj_faction WHERE npc_id = ?', [npcId])
+      await manager.query('DELETE FROM pf2_player_character_owner WHERE npc_id = ?', [npcId])
+      await manager.query('DELETE FROM pf2_player_character_contact WHERE player_npc_id = ?', [npcId])
+      await manager.query('DELETE FROM pf2_player_character_background WHERE npc_id = ?', [npcId])
       await manager.query('DELETE FROM pf2_character_presentation WHERE source_npc_id = ?', [npcId])
       await manager.query('DELETE FROM pf2_player_character_profile WHERE npc_id = ?', [npcId])
     })
   }
+  async profileCandidates(prefix = ''): Promise<Array<{ id: string; name: string; isPlayer: boolean }>> {
+    const term = prefix.trim().toLocaleLowerCase()
+    const rows = await this.db.query('SELECT npc_id, display_name, is_player FROM pf2_player_character_profile ORDER BY display_name COLLATE NOCASE') as Array<{ npc_id: string; display_name: string; is_player: number }>
+    return rows
+      .filter(row => !term || row.display_name.toLocaleLowerCase().includes(term))
+      .slice(0, 25)
+      .map(row => ({ id: row.npc_id, name: row.display_name, isPlayer: row.is_player === 1 }))
+  }
+
+  async assignPlayerOwner(discordUserId: string, npcId: string): Promise<{ discordUserId: string; wikiUsername: string; character: unknown }> {
+    const link = await this.persistence.wikiAccountLink(discordUserId)
+    if (!link) throw new BadRequestException('Ce membre Discord n’est associé à aucun compte Wiki. Utilise d’abord `/wiki-admin associer`.')
+    await this.character(npcId)
+    await this.db.transaction(async manager => {
+      await manager.query('UPDATE pf2_player_character_profile SET is_player = 1, updated_at = CURRENT_TIMESTAMP WHERE npc_id = ?', [npcId])
+      await manager.query('INSERT OR IGNORE INTO pf2_player_character_owner (discord_user_id, npc_id) VALUES (?, ?)', [discordUserId, npcId])
+    })
+    return { discordUserId, wikiUsername: link.wikiUsername, character: await this.character(npcId) }
+  }
+
+  async removePlayerOwner(discordUserId: string, npcId: string): Promise<boolean> {
+    const rows = await this.db.query('SELECT 1 FROM pf2_player_character_owner WHERE discord_user_id = ? AND npc_id = ? LIMIT 1', [discordUserId, npcId]) as Array<Record<string, unknown>>
+    if (!rows.length) return false
+    await this.db.query('DELETE FROM pf2_player_character_owner WHERE discord_user_id = ? AND npc_id = ?', [discordUserId, npcId])
+    return true
+  }
+
+  async listPlayerAssignments(): Promise<Array<{ discordUserId: string; wikiUsername: string | null; npcId: string; displayName: string }>> {
+    return this.db.query(
+      `SELECT o.discord_user_id AS discordUserId, a.wiki_username AS wikiUsername, o.npc_id AS npcId, p.display_name AS displayName
+       FROM pf2_player_character_owner o
+       JOIN pf2_player_character_profile p ON p.npc_id = o.npc_id
+       LEFT JOIN pf2_wiki_account_link a ON a.discord_user_id = o.discord_user_id
+       ORDER BY COALESCE(a.wiki_username, o.discord_user_id) COLLATE NOCASE, p.display_name COLLATE NOCASE`,
+    ) as Promise<Array<{ discordUserId: string; wikiUsername: string | null; npcId: string; displayName: string }>>
+  }
+
+  async contactPlayers(contactNpcId: string): Promise<Array<{ npcId: string; displayName: string; wikiPageTitle: string; selected: boolean }>> {
+    if (!(await this.persistence.getRecord('pnj', contactNpcId))) throw new NotFoundException('PNJ contact introuvable.')
+    const rows = await this.db.query(
+      `SELECT p.npc_id AS npcId, p.display_name AS displayName, p.wiki_page_title AS wikiPageTitle,
+              CASE WHEN c.contact_npc_id IS NULL THEN 0 ELSE 1 END AS selected
+       FROM pf2_player_character_profile p
+       LEFT JOIN pf2_player_character_contact c ON c.player_npc_id = p.npc_id AND c.contact_npc_id = ?
+       WHERE p.is_player = 1
+       ORDER BY p.display_name COLLATE NOCASE`,
+      [contactNpcId],
+    ) as Array<{ npcId: string; displayName: string; wikiPageTitle: string; selected: number }>
+    return rows.map(row => ({ ...row, selected: row.selected === 1 }))
+  }
+
+  async setPlayerContact(playerNpcId: string, contactNpcId: string, enabled: boolean): Promise<void> {
+    const players = await this.db.query('SELECT 1 FROM pf2_player_character_profile WHERE npc_id = ? AND is_player = 1 LIMIT 1', [playerNpcId]) as Array<Record<string, unknown>>
+    if (!players.length) throw new BadRequestException('Le personnage choisi n’est pas marqué comme PJ.')
+    if (!(await this.persistence.getRecord('pnj', contactNpcId))) throw new NotFoundException('PNJ contact introuvable.')
+    if (playerNpcId === contactNpcId) throw new BadRequestException('Un PJ ne peut pas être son propre contact.')
+    if (enabled) await this.db.query('INSERT OR IGNORE INTO pf2_player_character_contact (player_npc_id, contact_npc_id) VALUES (?, ?)', [playerNpcId, contactNpcId])
+    else await this.db.query('DELETE FROM pf2_player_character_contact WHERE player_npc_id = ? AND contact_npc_id = ?', [playerNpcId, contactNpcId])
+  }
+
+  async myCharacters(wikiUsername: string): Promise<{ wikiUsername: string; characters: unknown[] }> {
+    const username = this.required(wikiUsername, 'Compte Wiki')
+    const accounts = await this.db.query('SELECT discord_user_id AS discordUserId FROM pf2_wiki_account_link WHERE wiki_username = ? COLLATE NOCASE LIMIT 1', [username]) as Array<{ discordUserId: string }>
+    const account = accounts[0]
+    if (!account) return { wikiUsername: username, characters: [] }
+    const rows = await this.db.query(
+      `SELECT p.* FROM pf2_player_character_owner o
+       JOIN pf2_player_character_profile p ON p.npc_id = o.npc_id
+       WHERE o.discord_user_id = ? AND p.is_player = 1
+       ORDER BY p.display_name COLLATE NOCASE`,
+      [account.discordUserId],
+    ) as ProfileRow[]
+    return { wikiUsername: username, characters: await Promise.all(rows.map(row => this.privateCharacterDto(row))) }
+  }
+
+  async updateMyBackground(wikiUsername: string, npcId: string, content: unknown): Promise<{ npcId: string; background: string }> {
+    const username = this.required(wikiUsername, 'Compte Wiki')
+    const value = typeof content === 'string' ? content : ''
+    if (value.length > 100_000) throw new BadRequestException('Le background est trop long (maximum 100 000 caractères).')
+    const owned = await this.db.query(
+      `SELECT 1 FROM pf2_player_character_owner o
+       JOIN pf2_wiki_account_link a ON a.discord_user_id = o.discord_user_id
+       WHERE o.npc_id = ? AND a.wiki_username = ? COLLATE NOCASE LIMIT 1`,
+      [npcId, username],
+    ) as Array<Record<string, unknown>>
+    if (!owned.length) throw new ForbiddenException('Ce personnage ne vous appartient pas.')
+    await this.db.query(
+      `INSERT INTO pf2_player_character_background (npc_id, content, updated_at) VALUES (?, ?, CURRENT_TIMESTAMP)
+       ON CONFLICT(npc_id) DO UPDATE SET content = excluded.content, updated_at = CURRENT_TIMESTAMP`,
+      [npcId, value],
+    )
+    return { npcId, background: value }
+  }
+
+  private async privateCharacterDto(row: ProfileRow): Promise<unknown> {
+    const character = await this.characterDto(row) as Record<string, unknown>
+    const backgrounds = await this.db.query('SELECT content FROM pf2_player_character_background WHERE npc_id = ? LIMIT 1', [row.npc_id]) as Array<{ content: string }>
+    const contacts = await this.db.query('SELECT contact_npc_id AS contactNpcId FROM pf2_player_character_contact WHERE player_npc_id = ? ORDER BY created_at, contact_npc_id', [row.npc_id]) as Array<{ contactNpcId: string }>
+    return {
+      ...character,
+      background: backgrounds[0]?.content ?? '',
+      contacts: (await Promise.all(contacts.map(contact => this.privateContactDto(contact.contactNpcId)))).filter(Boolean),
+    }
+  }
+
+  private async privateContactDto(npcId: string): Promise<unknown | null> {
+    const npc = await this.persistence.getRecord('pnj', npcId)
+    if (!npc) return null
+    const profiles = await this.db.query('SELECT wiki_page_title, display_name, wiki_portrait_filename FROM pf2_player_character_profile WHERE npc_id = ? LIMIT 1', [npcId]) as Array<{ wiki_page_title: string; display_name: string; wiki_portrait_filename: string | null }>
+    const profile = profiles[0]
+    const name = profile?.display_name ?? (typeof npc.nom === 'string' ? npc.nom : typeof npc.name === 'string' ? npc.name : npcId)
+    return {
+      npcId,
+      displayName: name,
+      description: typeof npc.description === 'string' ? npc.description : '',
+      role: typeof npc.role === 'string' ? npc.role : '',
+      portraitUrl: profile?.wiki_portrait_filename ? null : this.publicPortraitUrl(npc.portrait),
+      wikiPortraitFilename: profile?.wiki_portrait_filename ?? null,
+      wikiPageTitle: profile?.wiki_page_title ?? null,
+      published: Boolean(profile),
+    }
+  }
+
+  private publicPortraitUrl(value: unknown): string | null {
+    if (typeof value !== 'string') return null
+    const match = /^assets\/l7r\/portraits\/pnj\/([^/]+\.(?:webp|gif|png|jpe?g))$/i.exec(value.trim())
+    if (!match) return /^https?:\/\//i.test(value.trim()) ? value.trim() : null
+    const base = (process.env['PF2_PUBLIC_WEB_BASE'] ?? 'https://l7r.fr').replace(/\/$/, '')
+    return `${base}/apil7r/pf2-mj/portraits/${encodeURIComponent(match[1])}`
+  }
+
   async deleteMjPnj(npcId: string): Promise<void> {
     const pnj = await this.persistence.getRecord('pnj', npcId)
     if (!pnj) throw new NotFoundException('PNJ MJ introuvable.')
@@ -130,6 +265,9 @@ export class PlayerCodexService {
     if (profiles[0]) throw new ConflictException(`Ce personnage possède la fiche Wiki « ${profiles[0].wiki_page_title} ». Supprime-la d’abord depuis le Wiki.`)
     await this.db.transaction(async manager => {
       await manager.query('DELETE FROM pf2_scenario_npc WHERE npc_id = ?', [npcId])
+      await manager.query('DELETE FROM pf2_player_character_contact WHERE contact_npc_id = ? OR player_npc_id = ?', [npcId, npcId])
+      await manager.query('DELETE FROM pf2_player_character_owner WHERE npc_id = ?', [npcId])
+      await manager.query('DELETE FROM pf2_player_character_background WHERE npc_id = ?', [npcId])
       await manager.query('DELETE FROM pf2_character_presentation WHERE source_npc_id = ?', [npcId])
       await manager.query('DELETE FROM pf2_record WHERE kind = ? AND id = ?', ['pnj', npcId])
     })
@@ -163,6 +301,10 @@ export class PlayerCodexService {
   private playerDescription(faction: MjFaction): string { return typeof faction.description_joueurs === 'string' && faction.description_joueurs.trim() ? faction.description_joueurs.trim() : faction.description }
   private factionWikiTitle(faction: MjFaction): string { return `Faction:${faction.nom}` }
   private factionDto(faction: MjFaction): unknown { return { id: faction.id, name: faction.nom, description: this.playerDescription(faction), parentFactionId: this.parentId(faction), wikiPageTitle: this.factionWikiTitle(faction), published: faction.published === true } }
+  private isTaggedPlayer(npc: Record<string, unknown>): boolean {
+    return Array.isArray(npc.tags) && npc.tags.some(tag => typeof tag === 'string' && tag.trim().toLocaleLowerCase() === 'pj')
+  }
+
   private required(value: unknown, label: string): string {
     const result = typeof value === 'string' ? value.trim().replace(/\s+/g, ' ') : ''
     if (!result) throw new BadRequestException(`${label} obligatoire.`)
