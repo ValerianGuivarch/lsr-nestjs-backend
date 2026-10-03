@@ -22,6 +22,7 @@ const PLANNING_DAYS = [
 
 const PLANNING_MONTHS = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'] as const
 const PLANNING_UNAVAILABLE_EMOJI = '❌'
+const PLANNING_UNCERTAIN_EMOJI = '❓'
 
 @Injectable()
 export class DiscordCommandsService {
@@ -760,6 +761,7 @@ export class DiscordCommandsService {
         const message = await channel.send({ content: this.planningMessage(monday, selectedDays), allowedMentions: { parse: ['everyone'] } })
         for (const day of PLANNING_DAYS.filter(day => selectedDays.includes(day.offset))) await message.react(day.emoji)
         await message.react(PLANNING_UNAVAILABLE_EMOJI)
+        await message.react(PLANNING_UNCERTAIN_EMOJI)
         let threadCreated = true
         try { await message.startThread({ name: `Planification — semaine du ${this.planningDate(monday)}` }) }
         catch (error) { threadCreated = false; this.logger.warn(`Planification ${message.id} publiée, mais fil impossible : ${error instanceof Error ? error.message : String(error)}`) }
@@ -789,6 +791,7 @@ export class DiscordCommandsService {
           else if (!before.has(day.offset) && after.has(day.offset)) await starter.react(day.emoji)
         }
         if (!starter.reactions.resolve(PLANNING_UNAVAILABLE_EMOJI)) await starter.react(PLANNING_UNAVAILABLE_EMOJI)
+        if (!starter.reactions.resolve(PLANNING_UNCERTAIN_EMOJI)) await starter.react(PLANNING_UNCERTAIN_EMOJI)
         await interaction.editReply({ content: 'Planification mise à jour.', components: [] })
       } catch (error) {
         await interaction.editReply({ content: `Modification impossible : ${error instanceof Error ? error.message : String(error)}`, components: [] })
@@ -1565,7 +1568,7 @@ export class DiscordCommandsService {
   private planningDate(date: string, withYear = false): string { const [year, month, day] = date.split('-').map(Number); const label = `${day} ${PLANNING_MONTHS[month - 1]}`; return withYear ? `${label} ${year}` : label }
   private planningMessage(monday: string, selectedDays: readonly number[]): string {
     const selected = new Set(selectedDays)
-    return [`@everyone **Nouvelle séance ! La semaine du lundi ${this.planningDate(monday, true)}**`, '', ...PLANNING_DAYS.filter(day => selected.has(day.offset)).map(day => `${day.emoji} ${day.label} ${this.planningDate(this.addDays(monday, day.offset))}`), `${PLANNING_UNAVAILABLE_EMOJI} Pas dispo`].join('\n')
+    return [`@everyone **Nouvelle séance ! La semaine du lundi ${this.planningDate(monday, true)}**`, '', ...PLANNING_DAYS.filter(day => selected.has(day.offset)).map(day => `${day.emoji} ${day.label} ${this.planningDate(this.addDays(monday, day.offset))}`), `${PLANNING_UNAVAILABLE_EMOJI} Pas dispo`, `${PLANNING_UNCERTAIN_EMOJI} Ne sais pas encore`].join('\n')
   }
   private parsePlanningMessage(content: string): { monday: string; selectedDays: number[] } | null {
     const match = content.match(/semaine du lundi\s+(\d{1,2})\s+([^\s*]+)\s+(\d{4})/iu)
