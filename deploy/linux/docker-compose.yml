@@ -55,11 +55,10 @@ services:
       NODE_ENV: production
       RECALBOX_API_PORT: 3335
       RECALBOX_SHARE_ROOT: /recalbox/share
-      RECALBOX_SYSTEM_ROOT: /recalbox/system
+      RECALBOX_SYSTEM_ROOT: /recalbox/share/system
       RECALBOX_INBOX_ROOT: /recalbox-inbox
     volumes:
       - ${RECALBOX_SHARE_DIR:-../../../recalbox/share}:/recalbox/share
-      - ${RECALBOX_SYSTEM_DIR:-../../../recalbox/system}:/recalbox/system
       - ${RECALBOX_INBOX_DIR:-../../../roms}:/recalbox-inbox
     expose:
       - "3335"
