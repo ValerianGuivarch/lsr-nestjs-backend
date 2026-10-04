@@ -1,11 +1,37 @@
 import { DiscordCommandsService } from './DiscordCommandsService'
 
 describe('DiscordCommandsService', () => {
-  it('replies Pong ! to /ping without a Discord connection', async () => {
-    const reply = jest.fn().mockResolvedValue(undefined)
-    const service = new DiscordCommandsService({ listSessions: jest.fn(), readFoundryActorCache: jest.fn(), saveFoundryActorCache: jest.fn() } as never, { listActors: jest.fn() } as never)
-    await expect(service.handle({ commandName: 'ping', reply } as never)).resolves.toBe(true)
-    expect(reply).toHaveBeenCalledWith({ content: 'Pong !', ephemeral: true })
+  it('registers the current command surface and keeps hidden commands unpublished', () => {
+    const service = new DiscordCommandsService({} as never, {} as never)
+    const definitions = service.definitions().map(command => command.name)
+    expect(definitions).toEqual(expect.arrayContaining([
+      'help', 'help-admin', 'random-perso', 'recap-pjs', 'recap-seance',
+      'debut-seance', 'fin-seance', 'personnage', 'faction', 'wiki', 'wiki-admin',
+      'proposer-date-seance', 'modifier-date-seance', 'analyse-date-seance',
+    ]))
+    expect(definitions).not.toEqual(expect.arrayContaining([
+      'ping', 'export-full', 'resume', 'recap', 'new-game', 'finish-game',
+      'planification', 'modifier-planification', 'programmer-seance',
+    ]))
+  })
+
+  it('shows /help privately and protects /help-admin', async () => {
+    const service = new DiscordCommandsService({} as never, {} as never)
+    const helpReply = jest.fn().mockResolvedValue(undefined)
+    await service.handle({ commandName: 'help', reply: helpReply } as never)
+    expect(helpReply).toHaveBeenCalledWith(expect.objectContaining({
+      content: expect.stringContaining('/recap-pjs'),
+      ephemeral: true,
+    }))
+
+    const denied = jest.fn().mockResolvedValue(undefined)
+    await service.handle({
+      commandName: 'help-admin', reply: denied, user: { id: 'player' },
+      memberPermissions: { has: jest.fn().mockReturnValue(false) },
+    } as never)
+    expect(denied).toHaveBeenCalledWith(expect.objectContaining({
+      content: expect.stringContaining('réservée aux administrateurs'), ephemeral: true,
+    }))
   })
 
   it('registers /random-perso and returns an admin-only random PF2 concept', async () => {
@@ -43,7 +69,7 @@ describe('DiscordCommandsService', () => {
     expect(reply).toHaveBeenCalledWith({ content: 'Cette commande est réservée aux administrateurs du serveur.', ephemeral: true })
   })
 
-  it('renders /recap by player and character, without zero-session characters', async () => {
+  it('previews /recap-pjs by player and character, without zero-session characters', async () => {
     const deferReply = jest.fn().mockResolvedValue(undefined)
     const editReply = jest.fn().mockResolvedValue(undefined)
     const persistence = {
@@ -69,8 +95,12 @@ describe('DiscordCommandsService', () => {
       ]),
     } as never)
 
-    await expect(service.handle({ commandName: 'recap', deferReply, editReply } as never)).resolves.toBe(true)
-    const result = editReply.mock.calls[0][0].content
+    await expect(service.handle({ commandName: 'recap-pjs', deferReply, editReply, user: { id: 'player-1' }, id: 'interaction-1' } as never)).resolves.toBe(true)
+    expect(deferReply).toHaveBeenCalledWith({ ephemeral: true })
+    const payload = editReply.mock.calls[0][0]
+    const result = payload.content
+    expect(payload.components).toHaveLength(1)
+    expect(payload.components[0].toJSON().components[0].label).toBe('Publier')
     expect(result).toContain('**David — 2 séances**')
     expect(result).toContain('Éos — niveau 2 (1 niveau à faire !) — 2 séances')
     expect(result).toContain('Pépin — niveau 2 — 1 séance')
@@ -101,10 +131,13 @@ describe('DiscordCommandsService', () => {
     } as never)
 
     await expect(service.handle({
-      commandName: 'recap-seance', deferReply, editReply,
+      commandName: 'recap-seance', deferReply, editReply, user: { id: 'player-1' }, id: 'interaction-2',
       options: { getString: jest.fn().mockReturnValue('3') },
     } as never)).resolves.toBe(true)
-    const result = editReply.mock.calls[0][0].content
+    expect(deferReply).toHaveBeenCalledWith({ ephemeral: true })
+    const preview = editReply.mock.calls[0][0]
+    const result = preview.content
+    expect(preview.components[0].toJSON().components[0].label).toBe('Publier')
     expect(result).toContain('Séance prévue — Résumé n°3')
     expect(result).toContain('Éos**, niveau 2 (1 niveau à faire !) : **1 lancer à faire**')
     expect(result).toContain('Pépin**, niveau 2 : **0 lancer à faire**')
@@ -351,7 +384,7 @@ describe('DiscordCommandsService', () => {
   it('registers the planning commands and computes the strictly next Monday', () => {
     const service = new DiscordCommandsService({} as never, {} as never)
     const definitions = service.definitions().map(command => command.name)
-    expect(definitions).toEqual(expect.arrayContaining(['planification', 'programmer-seance', 'modifier-planification']))
+    expect(definitions).toEqual(expect.arrayContaining(['proposer-date-seance', 'analyse-date-seance', 'modifier-date-seance']))
     expect(definitions).not.toContain('resume')
     const planning = service as unknown as {
       nextPlanningMonday: (date: Date) => string
@@ -404,7 +437,8 @@ describe('DiscordCommandsService', () => {
     const reply = jest.fn().mockResolvedValue(undefined)
 
     await service.handle({
-      commandName: 'modifier-planification',
+      commandName: 'modifier-date-seance',
+      user: { id: 'admin' }, memberPermissions: { has: jest.fn().mockReturnValue(true) },
       channel: { isThread: () => true, fetchStarterMessage },
       reply,
     } as never)
@@ -415,11 +449,12 @@ describe('DiscordCommandsService', () => {
     expect(friday.default).toBe(true)
   })
 
-  it('refuses /modifier-planification outside the thread attached to the planning message', async () => {
+  it('refuses /modifier-date-seance outside the thread attached to the planning message', async () => {
     const service = new DiscordCommandsService({} as never, {} as never)
     const reply = jest.fn().mockResolvedValue(undefined)
     await service.handle({
-      commandName: 'modifier-planification',
+      commandName: 'modifier-date-seance',
+      user: { id: 'admin' }, memberPermissions: { has: jest.fn().mockReturnValue(true) },
       channel: { isThread: () => false },
       reply,
     } as never)
@@ -427,6 +462,36 @@ describe('DiscordCommandsService', () => {
       content: expect.stringContaining('dans le fil'),
       ephemeral: true,
     }))
+  })
+
+
+  it('restricts the date-planning commands to admins', async () => {
+    const service = new DiscordCommandsService({} as never, {} as never)
+    for (const commandName of ['proposer-date-seance', 'modifier-date-seance', 'analyse-date-seance']) {
+      const reply = jest.fn().mockResolvedValue(undefined)
+      await service.handle({
+        commandName, reply, user: { id: 'player' },
+        memberPermissions: { has: jest.fn().mockReturnValue(false) },
+      } as never)
+      expect(reply).toHaveBeenCalledWith(expect.objectContaining({
+        content: expect.stringContaining('réservée aux administrateurs'), ephemeral: true,
+      }))
+    }
+  })
+
+  it('publishes a recap preview only after the requester clicks Publier', async () => {
+    const service = new DiscordCommandsService({} as never, {} as never)
+    const preview = service as unknown as {
+      pendingPreviewPublications: Map<string, { requesterId: string; content: string }>
+    }
+    preview.pendingPreviewPublications.set('pf2-preview:publish:test', { requesterId: 'user-1', content: 'Aperçu public' })
+    const update = jest.fn().mockResolvedValue(undefined)
+    const followUp = jest.fn().mockResolvedValue(undefined)
+    await expect(service.handleButton({
+      customId: 'pf2-preview:publish:test', user: { id: 'user-1' }, update, followUp, reply: jest.fn(),
+    } as never)).resolves.toBe(true)
+    expect(update).toHaveBeenCalledWith({ components: [] })
+    expect(followUp).toHaveBeenCalledWith({ content: 'Aperçu public', ephemeral: false, allowedMentions: { parse: [] } })
   })
 
 

@@ -60,18 +60,19 @@ export class DiscordCommandsService {
   private readonly pendingCharacterFactions = new Map<string, { requesterId: string; factionId: string | null }>()
   private readonly pendingFactionPublications = new Map<string, { requesterId: string; factionId: string }>()
   private readonly pendingSchedulePublications = new Map<string, { requesterId: string; content: string }>()
+  private readonly pendingPreviewPublications = new Map<string, { requesterId: string; content: string }>()
   constructor(private readonly persistence: Pf2PersistenceService, private readonly foundry: FoundryRelayService, private readonly playerCodex?: PlayerCodexService, private readonly mediaWiki?: MediaWikiClientService, @Inject(forwardRef(() => DiscordService)) private readonly discord?: DiscordService, private readonly journals?: Pf2JournalsService) {}
 
   definitions(): RESTPostAPIApplicationGuildCommandsJSONBody[] {
     return [
-      new SlashCommandBuilder().setName('ping').setDescription('Vérifie que PF2-Bot répond.').toJSON(),
       new SlashCommandBuilder().setName('random-perso').setDescription('Tire au hasard une ascendance, une classe et un genre.').toJSON(),
-      new SlashCommandBuilder().setName('recap').setDescription('Affiche le nombre de séances jouées par joueur et par personnage.').toJSON(),
-      new SlashCommandBuilder().setName('recap-seance').setDescription('Réaffiche les informations prévues pour une séance.').addStringOption(option => option.setName('session').setDescription('Numéro de séance').setRequired(true).setAutocomplete(true)).toJSON(),
+      new SlashCommandBuilder().setName('help').setDescription('Affiche les commandes PF2 disponibles.').toJSON(),
+      new SlashCommandBuilder().setName('help-admin').setDescription('Affiche les commandes PF2 réservées aux administrateurs.').toJSON(),
+      new SlashCommandBuilder().setName('recap-pjs').setDescription('Prévisualise le nombre de séances jouées par joueur et par personnage.').toJSON(),
+      new SlashCommandBuilder().setName('recap-seance').setDescription('Prévisualise les informations prévues pour une séance.').addStringOption(option => option.setName('session').setDescription('Numéro de séance').setRequired(true).setAutocomplete(true)).toJSON(),
       new SlashCommandBuilder().setName('journaux').setDescription('Prépare la révélation d’un journal.').addIntegerOption(option => option.setName('numero').setDescription('Numéro du journal à révéler').setRequired(false).setMinValue(1)).toJSON(),
-      new SlashCommandBuilder().setName('export-full').setDescription('Exporte tous les messages texte du serveur en JSON.').toJSON(),
-      new SlashCommandBuilder().setName('new-game').setDescription('Prépare une nouvelle mission PF2 depuis les PJ actifs dans ce salon.').toJSON(),
-      new SlashCommandBuilder().setName('finish-game').setDescription('Termine une mission et met à jour son résumé.').addIntegerOption(option => option.setName('xp').setDescription('XP gagnée par PJ').setRequired(true).setMinValue(0)).addIntegerOption(option => option.setName('numero').setDescription('Numéro du résumé à terminer')).addStringOption(option => option.setName('fin').setDescription('Date de fin en jeu : YYYY-MM-DD')).addIntegerOption(option => option.setName('jours').setDescription('Durée en jours, à partir du début en jeu').setMinValue(1)).toJSON(),
+      new SlashCommandBuilder().setName('debut-seance').setDescription('Prépare le début d’une nouvelle séance PF2.').toJSON(),
+      new SlashCommandBuilder().setName('fin-seance').setDescription('Termine une séance et met à jour son résumé.').addIntegerOption(option => option.setName('xp').setDescription('XP gagnée par PJ').setRequired(true).setMinValue(0)).addIntegerOption(option => option.setName('numero').setDescription('Numéro du résumé à terminer')).addStringOption(option => option.setName('fin').setDescription('Date de fin en jeu : YYYY-MM-DD')).addIntegerOption(option => option.setName('jours').setDescription('Durée en jours, à partir du début en jeu').setMinValue(1)).toJSON(),
       new SlashCommandBuilder().setName('personnage').setDescription('Présente un personnage au carnet joueur.').addStringOption(option => option.setName('personnage').setDescription('PNJ existant ou nom libre').setRequired(true).setAutocomplete(true)).addAttachmentOption(option => option.setName('portrait').setDescription('Portrait pour un personnage improvisé')).addBooleanOption(option => option.setName('afficher_nom').setDescription('Afficher le nom').setRequired(false)).toJSON(),
       new SlashCommandBuilder().setName('faction').setDescription('Prépare la publication d’une faction MJ.').addStringOption(option => option.setName('faction').setDescription('Faction à publier').setRequired(true).setAutocomplete(true)).toJSON(),
       new SlashCommandBuilder().setName('wiki').setDescription('Ouvre le wiki avec ton compte déjà connecté.').toJSON(),
@@ -101,22 +102,26 @@ export class DiscordCommandsService {
           .addStringOption(option => option.setName('personnage').setDescription('Personnage publié sur le Wiki').setRequired(true).setAutocomplete(true)))
         .addSubcommand(command => command.setName('liste-personnages').setDescription('Liste les associations entre membres et PJ.'))
         .toJSON(),
-      new SlashCommandBuilder().setName('planification').setDescription('Publie les disponibilités proposées pour la prochaine semaine.').toJSON(),
-      new SlashCommandBuilder().setName('programmer-seance').setDescription('Calcule les groupes possibles à partir de la planification.').toJSON(),
-      new SlashCommandBuilder().setName('modifier-planification').setDescription('Ajoute ou retire des dates dans une planification existante.').toJSON(),
+      new SlashCommandBuilder().setName('proposer-date-seance').setDescription('Propose les dates de séance pour la prochaine semaine.').toJSON(),
+      new SlashCommandBuilder().setName('analyse-date-seance').setDescription('Analyse les disponibilités et calcule les groupes possibles.').toJSON(),
+      new SlashCommandBuilder().setName('modifier-date-seance').setDescription('Ajoute ou retire des dates dans une proposition existante.').toJSON(),
     ]
   }
 
   async handle(interaction: Pick<ChatInputCommandInteraction, 'commandName' | 'reply' | 'deferReply' | 'editReply'>): Promise<boolean> {
-    if (interaction.commandName === 'ping') {
-      await interaction.reply({ content: 'Pong !', ephemeral: true })
-      return true
-    }
     if (interaction.commandName === 'random-perso') {
       await this.randomCharacterCommand(interaction as ChatInputCommandInteraction)
       return true
     }
-    if (interaction.commandName === 'recap') {
+    if (interaction.commandName === 'help') {
+      await this.helpCommand(interaction as ChatInputCommandInteraction)
+      return true
+    }
+    if (interaction.commandName === 'help-admin') {
+      await this.helpAdminCommand(interaction as ChatInputCommandInteraction)
+      return true
+    }
+    if (interaction.commandName === 'recap-pjs') {
       await this.recapCommand(interaction as ChatInputCommandInteraction)
       return true
     }
@@ -129,11 +134,11 @@ export class DiscordCommandsService {
       await this.exportFull(interaction as ChatInputCommandInteraction)
       return true
     }
-    if (interaction.commandName === 'new-game') {
+    if (interaction.commandName === 'debut-seance') {
       await this.newGame(interaction as ChatInputCommandInteraction)
       return true
     }
-    if (interaction.commandName === 'finish-game') {
+    if (interaction.commandName === 'fin-seance') {
       await this.finishGameCommand(interaction as ChatInputCommandInteraction)
       return true
     }
@@ -142,10 +147,47 @@ export class DiscordCommandsService {
     if (interaction.commandName === 'faction') { await this.factionCommand(interaction as ChatInputCommandInteraction); return true }
     if (interaction.commandName === 'wiki') { await this.wikiCommand(interaction as ChatInputCommandInteraction); return true }
     if (interaction.commandName === 'wiki-admin') { await this.wikiAdminCommand(interaction as ChatInputCommandInteraction); return true }
-    if (interaction.commandName === 'planification') { await this.planningCommand(interaction as ChatInputCommandInteraction); return true }
-    if (interaction.commandName === 'programmer-seance') { await this.programmerSeanceCommand(interaction as ChatInputCommandInteraction); return true }
-    if (interaction.commandName === 'modifier-planification') { await this.modifyPlanningCommand(interaction as ChatInputCommandInteraction); return true }
+    if (interaction.commandName === 'proposer-date-seance') { await this.planningCommand(interaction as ChatInputCommandInteraction); return true }
+    if (interaction.commandName === 'analyse-date-seance') { await this.programmerSeanceCommand(interaction as ChatInputCommandInteraction); return true }
+    if (interaction.commandName === 'modifier-date-seance') { await this.modifyPlanningCommand(interaction as ChatInputCommandInteraction); return true }
     return false
+  }
+
+  private async helpCommand(interaction: ChatInputCommandInteraction): Promise<void> {
+    await interaction.reply({
+      content: [
+        '**Commandes PF2**',
+        '`/recap-pjs` — aperçu du récapitulatif des joueurs/PJ, puis bouton de publication.',
+        '`/recap-seance` — aperçu d’une séance existante, puis bouton de publication.',
+        '`/debut-seance` — prépare une séance : PJ, progression, date, brouillon puis validation de l’annonce.',
+        '`/fin-seance` — saisit la fin de séance et les XP.',
+        '`/personnage` — présente un personnage et permet de créer/publier sa fiche.',
+        '`/wiki` — ouvre le Wiki avec ton compte déjà connecté.',
+        '`/help` — affiche cette aide.',
+      ].join('\n'),
+      ephemeral: true,
+    })
+  }
+
+  private async helpAdminCommand(interaction: ChatInputCommandInteraction): Promise<void> {
+    if (!this.isAdmin(interaction)) {
+      await interaction.reply({ content: 'Cette commande est réservée aux administrateurs du serveur.', ephemeral: true })
+      return
+    }
+    await interaction.reply({
+      content: [
+        '**Commandes PF2 — administration**',
+        '`/random-perso` — tire une ascendance, une classe et un genre.',
+        '`/journaux` — prévisualise puis révèle un journal après validation.',
+        '`/faction` — prévisualise puis publie une faction après validation.',
+        '`/wiki-admin` — gère les associations Discord ↔ Wiki et les PJ.',
+        '`/proposer-date-seance` — choisit puis publie les dates proposées pour la prochaine semaine.',
+        '`/modifier-date-seance` — modifie les dates depuis le fil de la proposition.',
+        '`/analyse-date-seance` — analyse les réactions, propose les groupes puis permet leur publication.',
+        '`/help-admin` — affiche cette aide.',
+      ].join('\n'),
+      ephemeral: true,
+    })
   }
 
   private async randomCharacterCommand(interaction: ChatInputCommandInteraction): Promise<void> {
@@ -354,12 +396,20 @@ export class DiscordCommandsService {
   }
 
   private async planningCommand(interaction: ChatInputCommandInteraction): Promise<void> {
+    if (!this.isAdmin(interaction)) {
+      await interaction.reply({ content: 'Cette commande est réservée aux administrateurs du serveur.', ephemeral: true })
+      return
+    }
     const monday = this.nextPlanningMonday()
     const select = new StringSelectMenuBuilder().setCustomId(`pf2-planification:create:${monday}`).setPlaceholder('Choisis les jours proposés').setMinValues(1).setMaxValues(PLANNING_DAYS.length).addOptions(PLANNING_DAYS.map(day => ({ label: `${day.label} ${this.planningDate(this.addDays(monday, day.offset))}`, value: String(day.offset), emoji: day.emoji })))
     await interaction.reply({ content: `Semaine du ${this.planningDate(monday, true)} : sélectionne toutes les dates à proposer.`, components: [new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(select)], ephemeral: true })
   }
 
   private async modifyPlanningCommand(interaction: ChatInputCommandInteraction): Promise<void> {
+    if (!this.isAdmin(interaction)) {
+      await interaction.reply({ content: 'Cette commande est réservée aux administrateurs du serveur.', ephemeral: true })
+      return
+    }
     const channel = interaction.channel
     if (!channel?.isThread()) { await interaction.reply({ content: 'Utilise cette commande dans le fil créé depuis le message de planification.', ephemeral: true }); return }
     let starter
@@ -489,7 +539,7 @@ export class DiscordCommandsService {
         allowedMentions: { parse: [] },
       })
     } catch (error) {
-      this.logger.error('programmer-seance: calcul impossible', error instanceof Error ? error.stack : undefined)
+      this.logger.error('analyse-date-seance: calcul impossible', error instanceof Error ? error.stack : undefined)
       await interaction.editReply({ content: `Calcul impossible : ${error instanceof Error ? error.message : String(error)}` })
     }
   }
@@ -639,7 +689,7 @@ export class DiscordCommandsService {
   }
 
   private async recapCommand(interaction: ChatInputCommandInteraction): Promise<void> {
-    await interaction.deferReply()
+    await interaction.deferReply({ ephemeral: true })
     const sessions = (await this.persistence.listSessions()).filter((session) => session.published)
     const names = await this.actorNames()
     const levels = await this.playerLevels()
@@ -683,11 +733,11 @@ export class DiscordCommandsService {
         lines.push(`- ${this.characterLabel(actor.name)} — ${this.levelLabel(actor.uuid, levels)} — ${actor.count} séance${actor.count > 1 ? 's' : ''}`)
       }
     }
-    await interaction.editReply({ content: lines.join('\n').slice(0, 2_000) })
+    await this.previewPublicMessage(interaction, lines.join('\n'))
   }
 
   private async recapSessionCommand(interaction: ChatInputCommandInteraction): Promise<void> {
-    await interaction.deferReply()
+    await interaction.deferReply({ ephemeral: true })
     const raw = interaction.options.getString('session', true).trim()
     const number = Number(raw)
     if (!Number.isInteger(number) || number < 1) {
@@ -707,7 +757,22 @@ export class DiscordCommandsService {
     })
     const rolls = this.progressionRollCounts(actors, sessions, session.sessionNumber)
     const content = await this.plannedSessionAnnouncement(session.sessionNumber, session.inGameStartDate, actors, rolls)
-    await interaction.editReply({ content })
+    await this.previewPublicMessage(interaction, content)
+  }
+
+  private async previewPublicMessage(interaction: ChatInputCommandInteraction, content: string): Promise<void> {
+    if (content.length > 2_000) {
+      await interaction.editReply({ content: `Le message ferait ${content.length}/2000 caractères et ne peut pas être publié tel quel.` })
+      return
+    }
+    const publishId = `pf2-preview:publish:${interaction.id}`
+    this.pendingPreviewPublications.set(publishId, { requesterId: interaction.user.id, content })
+    const publish = new ButtonBuilder().setCustomId(publishId).setLabel('Publier').setStyle(ButtonStyle.Primary)
+    await interaction.editReply({
+      content,
+      components: [new ActionRowBuilder<ButtonBuilder>().addComponents(publish)],
+      allowedMentions: { parse: [] },
+    })
   }
 
   async handleAutocomplete(interaction: AutocompleteInteraction): Promise<boolean> {
@@ -863,7 +928,7 @@ export class DiscordCommandsService {
         let threadCreated = true
         try { await message.startThread({ name: `Planification — semaine du ${this.planningDate(monday)}` }) }
         catch (error) { threadCreated = false; this.logger.warn(`Planification ${message.id} publiée, mais fil impossible : ${error instanceof Error ? error.message : String(error)}`) }
-        await interaction.editReply({ content: threadCreated ? 'Planification publiée, réactions ajoutées et fil créé. Utilise `/modifier-planification` dans ce fil pour changer les dates.' : 'Planification publiée et réactions ajoutées. Le fil n’a pas pu être créé automatiquement : crée un fil depuis le message pour utiliser `/modifier-planification`.', components: [] })
+        await interaction.editReply({ content: threadCreated ? 'Planification publiée, réactions ajoutées et fil créé. Utilise `/modifier-date-seance` dans ce fil pour changer les dates.' : 'Planification publiée et réactions ajoutées. Le fil n’a pas pu être créé automatiquement : crée un fil depuis le message pour utiliser `/modifier-date-seance`.', components: [] })
       } catch (error) {
         await interaction.editReply({ content: `Publication impossible : ${error instanceof Error ? error.message : String(error)}`, components: [] })
       }
@@ -907,10 +972,10 @@ export class DiscordCommandsService {
     }
     if (!interaction.customId.startsWith('pf2-new-game:')) return false
     const pending = this.pendingGames.get(interaction.customId)
-    if (!pending) { await interaction.reply({ content: 'Cette préparation a expiré. Relance `/new-game`.', ephemeral: true }); return true }
+    if (!pending) { await interaction.reply({ content: 'Cette préparation a expiré. Relance `/debut-seance`.', ephemeral: true }); return true }
     if (interaction.customId.endsWith(':date')) {
       const plan = pending.plan
-      if (!plan) { await interaction.reply({ content: 'Le calcul des dates a expiré. Relance `/new-game`.', ephemeral: true }); return true }
+      if (!plan) { await interaction.reply({ content: 'Le calcul des dates a expiré. Relance `/debut-seance`.', ephemeral: true }); return true }
 
       const offsetInput = new TextInputBuilder()
         .setCustomId('offset')
@@ -1046,9 +1111,9 @@ export class DiscordCommandsService {
     }
     if (!interaction.customId.startsWith('pf2-new-game:')) return false
     const pending = this.pendingGames.get(interaction.customId)
-    if (!pending) { await interaction.reply({ content: 'Cette préparation a expiré. Relance `/new-game`.', ephemeral: true }); return true }
+    if (!pending) { await interaction.reply({ content: 'Cette préparation a expiré. Relance `/debut-seance`.', ephemeral: true }); return true }
     const plan = pending.plan
-    if (!plan) { await interaction.reply({ content: 'Le calcul des dates a expiré. Relance `/new-game`.', ephemeral: true }); return true }
+    if (!plan) { await interaction.reply({ content: 'Le calcul des dates a expiré. Relance `/debut-seance`.', ephemeral: true }); return true }
 
     const rawOffset = interaction.fields.getTextInputValue('offset').trim()
     const offset = Number(rawOffset)
@@ -1067,7 +1132,7 @@ export class DiscordCommandsService {
     }
 
     if (!baseDate) {
-      await interaction.reply({ content: 'La date de base est introuvable. Relance `/new-game`.', ephemeral: true })
+      await interaction.reply({ content: 'La date de base est introuvable. Relance `/debut-seance`.', ephemeral: true })
       return true
     }
 
@@ -1083,9 +1148,22 @@ export class DiscordCommandsService {
   }
 
   async handleButton(interaction: ButtonInteraction): Promise<boolean> {
+    if (interaction.customId.startsWith('pf2-preview:publish:')) {
+      const pending = this.pendingPreviewPublications.get(interaction.customId)
+      if (!pending) { await interaction.reply({ content: 'Cette prévisualisation a expiré. Relance la commande.', ephemeral: true }); return true }
+      if (interaction.user.id !== pending.requesterId) { await interaction.reply({ content: 'Cette validation appartient à un autre utilisateur.', ephemeral: true }); return true }
+      try {
+        await interaction.update({ components: [] })
+        await interaction.followUp({ content: pending.content, ephemeral: false, allowedMentions: { parse: [] } })
+        this.pendingPreviewPublications.delete(interaction.customId)
+      } catch (error) {
+        await interaction.followUp({ content: `Publication impossible : ${error instanceof Error ? error.message : String(error)}`, ephemeral: true }).catch(() => undefined)
+      }
+      return true
+    }
     if (interaction.customId.startsWith('pf2-schedule:publish:')) {
       const pending = this.pendingSchedulePublications.get(interaction.customId)
-      if (!pending) { await interaction.reply({ content: 'Cette validation a expiré. Relance `/programmer-seance`.', ephemeral: true }); return true }
+      if (!pending) { await interaction.reply({ content: 'Cette validation a expiré. Relance `/analyse-date-seance`.', ephemeral: true }); return true }
       if (interaction.user.id !== pending.requesterId) { await interaction.reply({ content: 'Cette validation appartient à un autre administrateur.', ephemeral: true }); return true }
       try {
         await interaction.update({ components: [] })
