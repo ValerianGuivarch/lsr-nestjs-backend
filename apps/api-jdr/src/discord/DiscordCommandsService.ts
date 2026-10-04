@@ -60,25 +60,28 @@ export class DiscordCommandsService {
   private readonly pendingCharacterFactions = new Map<string, { requesterId: string; factionId: string | null }>()
   private readonly pendingFactionPublications = new Map<string, { requesterId: string; factionId: string }>()
   private readonly pendingSchedulePublications = new Map<string, { requesterId: string; content: string }>()
-  private readonly pendingPreviewPublications = new Map<string, { requesterId: string; content: string }>()
+  private readonly pendingPreviewPublications = new Map<string, { requesterId: string; content: string; files?: string[] }>()
   constructor(private readonly persistence: Pf2PersistenceService, private readonly foundry: FoundryRelayService, private readonly playerCodex?: PlayerCodexService, private readonly mediaWiki?: MediaWikiClientService, @Inject(forwardRef(() => DiscordService)) private readonly discord?: DiscordService, private readonly journals?: Pf2JournalsService) {}
 
   definitions(): RESTPostAPIApplicationGuildCommandsJSONBody[] {
     return [
-      new SlashCommandBuilder().setName('random-perso').setDescription('Tire au hasard une ascendance, une classe et un genre.').toJSON(),
+      new SlashCommandBuilder().setName('random-perso').setDescription('Tire au hasard une ascendance, une classe et un genre.').setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild).toJSON(),
       new SlashCommandBuilder().setName('help').setDescription('Affiche les commandes PF2 disponibles.').toJSON(),
-      new SlashCommandBuilder().setName('help-admin').setDescription('Affiche les commandes PF2 réservées aux administrateurs.').toJSON(),
+      new SlashCommandBuilder().setName('help-admin').setDescription('Affiche les commandes PF2 réservées aux administrateurs.').setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild).toJSON(),
       new SlashCommandBuilder().setName('recap-pjs').setDescription('Prévisualise le nombre de séances jouées par joueur et par personnage.').toJSON(),
-      new SlashCommandBuilder().setName('recap-seance').setDescription('Prévisualise les informations prévues pour une séance.').addStringOption(option => option.setName('session').setDescription('Numéro de séance').setRequired(true).setAutocomplete(true)).toJSON(),
-      new SlashCommandBuilder().setName('journaux').setDescription('Prépare la révélation d’un journal.').addIntegerOption(option => option.setName('numero').setDescription('Numéro du journal à révéler').setRequired(false).setMinValue(1)).toJSON(),
-      new SlashCommandBuilder().setName('debut-seance').setDescription('Prépare le début d’une nouvelle séance PF2.').toJSON(),
-      new SlashCommandBuilder().setName('fin-seance').setDescription('Termine une séance et met à jour son résumé.').addIntegerOption(option => option.setName('xp').setDescription('XP gagnée par PJ').setRequired(true).setMinValue(0)).addIntegerOption(option => option.setName('numero').setDescription('Numéro du résumé à terminer')).addStringOption(option => option.setName('fin').setDescription('Date de fin en jeu : YYYY-MM-DD')).addIntegerOption(option => option.setName('jours').setDescription('Durée en jours, à partir du début en jeu').setMinValue(1)).toJSON(),
-      new SlashCommandBuilder().setName('personnage').setDescription('Présente un personnage au carnet joueur.').addStringOption(option => option.setName('personnage').setDescription('PNJ existant ou nom libre').setRequired(true).setAutocomplete(true)).addAttachmentOption(option => option.setName('portrait').setDescription('Portrait pour un personnage improvisé')).addBooleanOption(option => option.setName('afficher_nom').setDescription('Afficher le nom').setRequired(false)).toJSON(),
-      new SlashCommandBuilder().setName('faction').setDescription('Prépare la publication d’une faction MJ.').addStringOption(option => option.setName('faction').setDescription('Faction à publier').setRequired(true).setAutocomplete(true)).toJSON(),
+      new SlashCommandBuilder().setName('recap-seance').setDescription('Prévisualise les informations prévues pour une séance.').addStringOption(option => option.setName('session').setDescription('Numéro de séance').setRequired(true).setAutocomplete(true)).setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild).toJSON(),
+      new SlashCommandBuilder().setName('journaux').setDescription('Prépare la révélation d’un journal.').addIntegerOption(option => option.setName('numero').setDescription('Numéro du journal à révéler').setRequired(false).setMinValue(1)).setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild).toJSON(),
+      new SlashCommandBuilder().setName('debut-seance').setDescription('Prépare le début d’une nouvelle séance PF2.').setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild).toJSON(),
+      new SlashCommandBuilder().setName('fin-seance').setDescription('Termine une séance et met à jour son résumé.').addIntegerOption(option => option.setName('xp').setDescription('XP gagnée par PJ').setRequired(true).setMinValue(0)).addIntegerOption(option => option.setName('numero').setDescription('Numéro du résumé à terminer')).addStringOption(option => option.setName('fin').setDescription('Date de fin en jeu : YYYY-MM-DD')).addIntegerOption(option => option.setName('jours').setDescription('Durée en jours, à partir du début en jeu').setMinValue(1)).setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild).toJSON(),
+      new SlashCommandBuilder().setName('personnage').setDescription('Présente ou publie un personnage dans le carnet joueur.').addStringOption(option => option.setName('personnage').setDescription('PNJ existant ou nom libre').setRequired(true).setAutocomplete(true)).addAttachmentOption(option => option.setName('portrait').setDescription('Portrait pour un personnage improvisé')).addBooleanOption(option => option.setName('afficher_nom').setDescription('Afficher le nom').setRequired(false)).setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild).toJSON(),
+      new SlashCommandBuilder().setName('faction').setDescription('Prépare la publication d’une faction MJ.').addStringOption(option => option.setName('faction').setDescription('Faction à publier').setRequired(true).setAutocomplete(true)).setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild).toJSON(),
+      new SlashCommandBuilder().setName('afficher-personnage').setDescription('Affiche un personnage publié, avec option de partage.').addStringOption(option => option.setName('personnage').setDescription('Personnage publié').setRequired(true).setAutocomplete(true)).toJSON(),
+      new SlashCommandBuilder().setName('afficher-faction').setDescription('Affiche une faction publiée, avec option de partage.').addStringOption(option => option.setName('faction').setDescription('Faction publiée').setRequired(true).setAutocomplete(true)).toJSON(),
       new SlashCommandBuilder().setName('wiki').setDescription('Ouvre le wiki avec ton compte déjà connecté.').toJSON(),
       new SlashCommandBuilder()
         .setName('wiki-admin')
         .setDescription('Administre les associations Discord ↔ Wiki.')
+        .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
         .addSubcommand(command => command.setName('help').setDescription('Liste les commandes d’administration du Wiki.'))
         .addSubcommand(command => command
           .setName('associer')
@@ -102,9 +105,9 @@ export class DiscordCommandsService {
           .addStringOption(option => option.setName('personnage').setDescription('Personnage publié sur le Wiki').setRequired(true).setAutocomplete(true)))
         .addSubcommand(command => command.setName('liste-personnages').setDescription('Liste les associations entre membres et PJ.'))
         .toJSON(),
-      new SlashCommandBuilder().setName('proposer-date-seance').setDescription('Propose les dates de séance pour la prochaine semaine.').toJSON(),
-      new SlashCommandBuilder().setName('analyse-date-seance').setDescription('Analyse les disponibilités et calcule les groupes possibles.').toJSON(),
-      new SlashCommandBuilder().setName('modifier-date-seance').setDescription('Ajoute ou retire des dates dans une proposition existante.').toJSON(),
+      new SlashCommandBuilder().setName('proposer-date-seance').setDescription('Propose les dates de séance pour la prochaine semaine.').setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild).toJSON(),
+      new SlashCommandBuilder().setName('analyse-date-seance').setDescription('Analyse les disponibilités et calcule les groupes possibles.').setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild).toJSON(),
+      new SlashCommandBuilder().setName('modifier-date-seance').setDescription('Ajoute ou retire des dates dans une proposition existante.').setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild).toJSON(),
     ]
   }
 
@@ -145,6 +148,8 @@ export class DiscordCommandsService {
     if (interaction.commandName === 'resume') { await this.resumeCommand(interaction as ChatInputCommandInteraction); return true }
     if (interaction.commandName === 'personnage') { await this.presentCharacter(interaction as ChatInputCommandInteraction); return true }
     if (interaction.commandName === 'faction') { await this.factionCommand(interaction as ChatInputCommandInteraction); return true }
+    if (interaction.commandName === 'afficher-personnage') { await this.displayCharacterCommand(interaction as ChatInputCommandInteraction); return true }
+    if (interaction.commandName === 'afficher-faction') { await this.displayFactionCommand(interaction as ChatInputCommandInteraction); return true }
     if (interaction.commandName === 'wiki') { await this.wikiCommand(interaction as ChatInputCommandInteraction); return true }
     if (interaction.commandName === 'wiki-admin') { await this.wikiAdminCommand(interaction as ChatInputCommandInteraction); return true }
     if (interaction.commandName === 'proposer-date-seance') { await this.planningCommand(interaction as ChatInputCommandInteraction); return true }
@@ -158,10 +163,8 @@ export class DiscordCommandsService {
       content: [
         '**Commandes PF2**',
         '`/recap-pjs` — aperçu du récapitulatif des joueurs/PJ, puis bouton de publication.',
-        '`/recap-seance` — aperçu d’une séance existante, puis bouton de publication.',
-        '`/debut-seance` — prépare une séance : PJ, progression, date, brouillon puis validation de l’annonce.',
-        '`/fin-seance` — saisit la fin de séance et les XP.',
-        '`/personnage` — présente un personnage et permet de créer/publier sa fiche.',
+        '`/afficher-personnage` — affiche pour toi un personnage publié, puis permet de le partager.',
+        '`/afficher-faction` — affiche pour toi une faction publiée, puis permet de la partager.',
         '`/wiki` — ouvre le Wiki avec ton compte déjà connecté.',
         '`/help` — affiche cette aide.',
       ].join('\n'),
@@ -178,7 +181,11 @@ export class DiscordCommandsService {
       content: [
         '**Commandes PF2 — administration**',
         '`/random-perso` — tire une ascendance, une classe et un genre.',
+        '`/debut-seance` — prépare le début d’une séance.',
+        '`/recap-seance` — prévisualise les informations d’une séance, puis permet leur publication.',
+        '`/fin-seance` — saisit la fin de séance et les XP.',
         '`/journaux` — prévisualise puis révèle un journal après validation.',
+        '`/personnage` — présente un personnage et permet de créer/publier sa fiche.',
         '`/faction` — prévisualise puis publie une faction après validation.',
         '`/wiki-admin` — gère les associations Discord ↔ Wiki et les PJ.',
         '`/proposer-date-seance` — choisit puis publie les dates proposées pour la prochaine semaine.',
@@ -213,7 +220,7 @@ export class DiscordCommandsService {
   }
 
   private async journalsCommand(interaction: ChatInputCommandInteraction): Promise<void> {
-    if (!interaction.memberPermissions?.has(PermissionFlagsBits.Administrator)) {
+    if (!this.isAdmin(interaction)) {
       await interaction.reply({ content: 'Cette commande est réservée aux administrateurs du serveur.', ephemeral: true })
       return
     }
@@ -234,7 +241,7 @@ export class DiscordCommandsService {
   }
 
   private async factionCommand(interaction: ChatInputCommandInteraction): Promise<void> {
-    if (!interaction.memberPermissions?.has(PermissionFlagsBits.Administrator)) {
+    if (!this.isAdmin(interaction)) {
       await interaction.reply({ content: 'Cette commande est réservée aux administrateurs du serveur.', ephemeral: true })
       return
     }
@@ -737,6 +744,10 @@ export class DiscordCommandsService {
   }
 
   private async recapSessionCommand(interaction: ChatInputCommandInteraction): Promise<void> {
+    if (!this.isAdmin(interaction)) {
+      await interaction.reply({ content: 'Cette commande est réservée aux administrateurs du serveur.', ephemeral: true })
+      return
+    }
     await interaction.deferReply({ ephemeral: true })
     const raw = interaction.options.getString('session', true).trim()
     const number = Number(raw)
@@ -760,19 +771,77 @@ export class DiscordCommandsService {
     await this.previewPublicMessage(interaction, content)
   }
 
-  private async previewPublicMessage(interaction: ChatInputCommandInteraction, content: string): Promise<void> {
+  private async previewPublicMessage(
+    interaction: ChatInputCommandInteraction,
+    content: string,
+    options: { buttonLabel?: string; files?: string[] } = {},
+  ): Promise<void> {
     if (content.length > 2_000) {
       await interaction.editReply({ content: `Le message ferait ${content.length}/2000 caractères et ne peut pas être publié tel quel.` })
       return
     }
     const publishId = `pf2-preview:publish:${interaction.id}`
-    this.pendingPreviewPublications.set(publishId, { requesterId: interaction.user.id, content })
-    const publish = new ButtonBuilder().setCustomId(publishId).setLabel('Publier').setStyle(ButtonStyle.Primary)
+    const files = options.files?.filter(Boolean)
+    this.pendingPreviewPublications.set(publishId, { requesterId: interaction.user.id, content, ...(files?.length ? { files } : {}) })
+    const publish = new ButtonBuilder().setCustomId(publishId).setLabel(options.buttonLabel ?? 'Publier').setStyle(ButtonStyle.Primary)
     await interaction.editReply({
       content,
+      ...(files?.length ? { files } : {}),
       components: [new ActionRowBuilder<ButtonBuilder>().addComponents(publish)],
       allowedMentions: { parse: [] },
     })
+  }
+
+  private async displayCharacterCommand(interaction: ChatInputCommandInteraction): Promise<void> {
+    await interaction.deferReply({ ephemeral: true })
+    try {
+      const npcId = interaction.options.getString('personnage', true).trim()
+      const profile = await this.playerCodex!.character(npcId) as {
+        displayName: string
+        shortDescription?: string
+        wikiPageTitle: string
+        wikiPortraitFilename?: string | null
+        published?: boolean
+      }
+      if (!profile.published) {
+        await interaction.editReply({ content: 'Ce personnage n’est pas publié dans le carnet joueur.' })
+        return
+      }
+      const source = await this.playerCodex!.characterCandidate(npcId)
+      const portrait = source?.portrait
+        ? this.discordPortraitSource(source.portrait)
+        : profile.wikiPortraitFilename && this.mediaWiki
+          ? this.mediaWiki.fileUrl(profile.wikiPortraitFilename)
+          : null
+      const content = [
+        `**${profile.displayName}**`,
+        profile.shortDescription?.trim() || '',
+        this.mediaWiki ? `Fiche wiki : ${this.mediaWiki.pageUrl(profile.wikiPageTitle)}` : '',
+      ].filter(Boolean).join('\n\n')
+      await this.previewPublicMessage(interaction, content, { buttonLabel: 'Partager', ...(portrait ? { files: [portrait] } : {}) })
+    } catch (error) {
+      await interaction.editReply({ content: `Affichage impossible : ${error instanceof Error ? error.message : String(error)}` })
+    }
+  }
+
+  private async displayFactionCommand(interaction: ChatInputCommandInteraction): Promise<void> {
+    await interaction.deferReply({ ephemeral: true })
+    try {
+      const faction = await this.playerCodex!.factionForPublication(interaction.options.getString('faction', true))
+      if (!faction.published) {
+        await interaction.editReply({ content: 'Cette faction n’est pas publiée dans le carnet joueur.' })
+        return
+      }
+      const content = [
+        `**${faction.name}**`,
+        faction.description.trim(),
+        faction.parentName ? `Sous-faction de **${faction.parentName}**.` : '',
+        this.mediaWiki ? `Fiche wiki : ${this.mediaWiki.pageUrl(faction.wikiPageTitle)}` : '',
+      ].filter(Boolean).join('\n\n')
+      await this.previewPublicMessage(interaction, content, { buttonLabel: 'Partager' })
+    } catch (error) {
+      await interaction.editReply({ content: `Affichage impossible : ${error instanceof Error ? error.message : String(error)}` })
+    }
   }
 
   async handleAutocomplete(interaction: AutocompleteInteraction): Promise<boolean> {
@@ -839,10 +908,16 @@ export class DiscordCommandsService {
       await interaction.respond([])
       return true
     }
-    if (interaction.commandName === 'faction') {
+    if (interaction.commandName === 'faction' || interaction.commandName === 'afficher-faction') {
       const focused = interaction.options.getFocused().toString().toLocaleLowerCase()
-      const factions = await this.playerCodex!.factionCandidates()
+      const factions = await this.playerCodex!.factionCandidates(interaction.commandName === 'afficher-faction')
       await interaction.respond(factions.filter(faction => faction.path.toLocaleLowerCase().includes(focused)).slice(0, 25).map(faction => ({ name: faction.path.slice(0, 100), value: faction.id })))
+      return true
+    }
+    if (interaction.commandName === 'afficher-personnage') {
+      const focused = interaction.options.getFocused().toString()
+      const candidates = await this.playerCodex!.profileCandidates(focused)
+      await interaction.respond(candidates.map(candidate => ({ name: candidate.name.slice(0, 100), value: candidate.id })))
       return true
     }
     if (interaction.commandName !== 'personnage') return false
@@ -853,6 +928,10 @@ export class DiscordCommandsService {
   }
 
   private async presentCharacter(interaction: ChatInputCommandInteraction): Promise<void> {
+    if (!this.isAdmin(interaction)) {
+      await interaction.reply({ content: 'Cette commande est réservée aux administrateurs du serveur. Utilise `/afficher-personnage` pour consulter un personnage publié.', ephemeral: true })
+      return
+    }
     const value = interaction.options.getString('personnage', true).trim(); const attachment = interaction.options.getAttachment('portrait')
     const showName = interaction.options.getBoolean('afficher_nom') ?? true
     await interaction.deferReply()
@@ -1154,7 +1233,12 @@ export class DiscordCommandsService {
       if (interaction.user.id !== pending.requesterId) { await interaction.reply({ content: 'Cette validation appartient à un autre utilisateur.', ephemeral: true }); return true }
       try {
         await interaction.update({ components: [] })
-        await interaction.followUp({ content: pending.content, ephemeral: false, allowedMentions: { parse: [] } })
+        await interaction.followUp({
+          content: pending.content,
+          ...(pending.files?.length ? { files: pending.files } : {}),
+          ephemeral: false,
+          allowedMentions: { parse: [] },
+        })
         this.pendingPreviewPublications.delete(interaction.customId)
       } catch (error) {
         await interaction.followUp({ content: `Publication impossible : ${error instanceof Error ? error.message : String(error)}`, ephemeral: true }).catch(() => undefined)
@@ -1296,6 +1380,10 @@ export class DiscordCommandsService {
   }
 
   private async finishGameCommand(interaction: ChatInputCommandInteraction): Promise<void> {
+    if (!this.isAdmin(interaction)) {
+      await interaction.reply({ content: 'Cette commande est réservée aux administrateurs du serveur.', ephemeral: true })
+      return
+    }
     await interaction.deferReply({ ephemeral: true })
     const requestedNumber = interaction.options.getInteger('numero') ?? await this.lastBotSessionNumber(interaction)
     if (!requestedNumber) { await interaction.editReply({ content: 'Indique `numero`, ou utilise la commande dans un salon contenant une annonce récente du bot avec « Résumé n°… ». ' }); return }
@@ -1632,6 +1720,10 @@ export class DiscordCommandsService {
   }
 
   private async newGame(interaction: ChatInputCommandInteraction): Promise<void> {
+    if (!this.isAdmin(interaction)) {
+      await interaction.reply({ content: 'Cette commande est réservée aux administrateurs du serveur.', ephemeral: true })
+      return
+    }
     await interaction.deferReply({ ephemeral: true })
     const names = await this.actorNames()
     const actors = [...names.entries()].map(([uuid, name]) => ({ uuid, name, player: this.playerName(name) }))

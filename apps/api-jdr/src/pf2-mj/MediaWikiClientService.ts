@@ -12,6 +12,7 @@ export class MediaWikiClientService {
 
   enabled(): boolean { return Boolean(this.apiUrl && this.publicBase && this.username && this.password) }
   pageUrl(title: string): string { return `${this.publicBase}/index.php?title=${encodeURIComponent(title.replace(/ /g, '_'))}` }
+  fileUrl(filename: string): string { return this.pageUrl(`Special:Redirect/file/${filename}`) }
   wikiLoginUrl(grant: string): string {
     if (!this.publicBase) throw new ServiceUnavailableException('URL publique MediaWiki non configurée.')
     return `${this.pageUrl('Special:PF2DiscordLogin')}&grant=${encodeURIComponent(grant)}`
