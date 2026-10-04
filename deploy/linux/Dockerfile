@@ -51,6 +51,7 @@ EXPOSE 8081
 CMD ["node", "dist/api-yeardiary/main.js"]
 
 FROM api-base AS api-recalbox
+RUN apt-get update && apt-get install -y --no-install-recommends smbclient && rm -rf /var/lib/apt/lists/*
 COPY --from=api-recalbox-build /app/dist/apps/api-recalbox ./dist/apps/api-recalbox
 ENV RECALBOX_API_PORT=3335
 EXPOSE 3335
