@@ -11,7 +11,8 @@
     "paths": {
       "jdr": ["./libs/jdr/src/index"],
       "shared": ["./libs/shared/src/index"],
-      "yeardiary": ["./libs/yeardiary/src/index"]
+      "yeardiary": ["./libs/yeardiary/src/index"],
+      "recalbox-ui": ["./libs/recalbox-ui/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "dist"]

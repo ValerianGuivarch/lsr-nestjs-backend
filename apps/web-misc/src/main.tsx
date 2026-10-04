@@ -2,6 +2,7 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 import { BrowserRouter, Navigate, Route, Routes, useParams } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { RecalboxUi } from 'recalbox-ui'
 import './styles.css'
 import Foussier from './foussier/Foussier'
 import Home from './home/Home'
@@ -41,6 +42,7 @@ root.render(
         <Route path="/jdr" element={<JdrSelectionPage />} />
         <Route path="/jdr/:jdrSlug/characters/:characterSlug" element={<CharacterPage />} />
         <Route path="/diary" element={<Diary />} />
+        <Route path="/recalbox/*" element={<RecalboxUi apiBase="/apil7r/recalbox" />} />
 
         {/* Old bookmarked/QR-coded links to a character sheet */}
         <Route path="/:jdrSlug/:characterSlug" element={<LegacyCharacterRedirect />} />

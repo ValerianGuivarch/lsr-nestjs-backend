@@ -8,8 +8,14 @@ export default defineConfig(({ mode }) => {
   const env = { ...loadEnv(mode, '../..', ''), ...process.env }
   const jdrTarget = env.JDR_BACKEND_ORIGIN ?? `http://localhost:${env.JDR_PORT ?? 3333}`
   const diaryTarget = env.YEARDIARY_BACKEND_ORIGIN ?? `http://localhost:${env.YEARDIARY_PORT ?? 8081}`
+  const recalboxTarget = env.RECALBOX_API_ORIGIN ?? `http://localhost:${env.RECALBOX_API_PORT ?? 3335}`
   const disableHmr = env.VITE_DISABLE_HMR === 'true'
   const apiProxy = {
+    '/apil7r/recalbox': {
+      target: recalboxTarget,
+      changeOrigin: true,
+      rewrite: (path: string) => path.replace(/^\/apil7r\/recalbox/, '/api')
+    },
     '/apil7r/pf2-mj': {
       target: env.PF2_BACKEND_ORIGIN ?? jdrTarget,
       changeOrigin: true,
@@ -45,10 +51,6 @@ export default defineConfig(({ mode }) => {
       proxy: apiProxy
     },
     plugins: [react(), nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
-    // Uncomment this if you are using workers.
-    // worker: {
-    //   plugins: () => [ nxViteTsPaths() ],
-    // },
     build: {
       outDir: '../../dist/apps/web-misc',
       emptyOutDir: true,
