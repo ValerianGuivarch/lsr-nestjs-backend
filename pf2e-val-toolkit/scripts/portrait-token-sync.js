@@ -5,8 +5,8 @@ function enabled() {
   return game.settings.get(MODULE_ID, SETTING_KEY);
 }
 
-function isCharacter(actor) {
-  return actor?.type === "character";
+function isPortraitSyncActor(actor) {
+  return actor?.type === "character" || actor?.type === "loot";
 }
 
 function isPrimaryGM() {
@@ -37,7 +37,7 @@ async function syncPlacedTokens(actor, portrait) {
 }
 
 export async function syncActorPortraitToTokens(actor, { syncPlaced = true } = {}) {
-  if (!enabled() || !isCharacter(actor) || !isPrimaryGM()) return;
+  if (!enabled() || !isPortraitSyncActor(actor) || !isPrimaryGM()) return;
 
   const portrait = actor.img;
   if (!portrait) return;
@@ -54,25 +54,25 @@ export async function syncActorPortraitToTokens(actor, { syncPlaced = true } = {
   }
 }
 
-async function syncAllCharacters() {
+async function syncAllPortraitActors() {
   if (!enabled() || !isPrimaryGM()) return;
 
-  for (const actor of game.actors?.filter((entry) => isCharacter(entry)) ?? []) {
+  for (const actor of game.actors?.filter((entry) => isPortraitSyncActor(entry)) ?? []) {
     await syncActorPortraitToTokens(actor);
   }
 }
 
 export function registerPortraitTokenSyncSettings() {
   game.settings.register(MODULE_ID, SETTING_KEY, {
-    name: "Synchroniser portrait et token des PJ",
-    hint: "Utilise le portrait de chaque Actor de type Personnage comme image de son Prototype Token et de ses tokens déjà présents sur les scènes.",
+    name: "Synchroniser portrait et token des PJ et marchands",
+    hint: "Utilise le portrait des PJ et marchands (Actors de type Personnage ou Loot) comme image de leur Prototype Token et de leurs tokens déjà présents sur les scènes.",
     scope: "world",
     config: true,
     type: Boolean,
     default: true,
     requiresReload: false,
     onChange: async (value) => {
-      if (value && game.ready) await syncAllCharacters();
+      if (value && game.ready) await syncAllPortraitActors();
     }
   });
 }
@@ -80,7 +80,7 @@ export function registerPortraitTokenSyncSettings() {
 export function initPortraitTokenSync() {
   Hooks.on("updateActor", async (actor, changes, options) => {
     if (options?.pf2eValPortraitSync) return;
-    if (!enabled() || !isCharacter(actor) || !isPrimaryGM()) return;
+    if (!enabled() || !isPortraitSyncActor(actor) || !isPrimaryGM()) return;
 
     // Only react to a real portrait change. Prototype-token-only updates must not
     // recurse into another synchronization pass.
@@ -90,5 +90,5 @@ export function initPortraitTokenSync() {
   });
 
   // Bring pre-existing characters/tokens into sync once the world is ready.
-  void syncAllCharacters();
+  void syncAllPortraitActors();
 }
