@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import './pf2.css'
 import ascendancesData from './resources/pf2-ascendances.json'
 import classesData from './resources/pf2-classes.json'
@@ -138,6 +138,36 @@ function getPdfUrl(entry: Pf2Entry): string {
 }
 
 export function Pf2App() {
+  useEffect(() => {
+    const previousTitle = document.title
+    const favicon = document.querySelector<HTMLLinkElement>('link[rel~="icon"]')
+    const previousFaviconHref = favicon?.getAttribute('href') ?? null
+    const previousFaviconType = favicon?.getAttribute('type') ?? null
+    const icon = favicon ?? document.createElement('link')
+
+    document.title = 'PF2 - La Société des Eclaireurs'
+    icon.rel = 'icon'
+    icon.type = 'image/png'
+    icon.href = '/pf2-logo.png'
+
+    if (!favicon) document.head.appendChild(icon)
+
+    return () => {
+      document.title = previousTitle
+
+      if (!favicon) {
+        icon.remove()
+        return
+      }
+
+      if (previousFaviconHref === null) favicon.removeAttribute('href')
+      else favicon.setAttribute('href', previousFaviconHref)
+
+      if (previousFaviconType === null) favicon.removeAttribute('type')
+      else favicon.setAttribute('type', previousFaviconType)
+    }
+  }, [])
+
   const [activeTab, setActiveTab] = useState<TabKey>('ascendance')
   const [expandedEntryId, setExpandedEntryId] = useState<string | null>(null)
   const [filtersByTab, setFiltersByTab] = useState<TabFilterState>({
