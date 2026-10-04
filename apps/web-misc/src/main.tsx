@@ -42,7 +42,7 @@ root.render(
         <Route path="/jdr" element={<JdrSelectionPage />} />
         <Route path="/jdr/:jdrSlug/characters/:characterSlug" element={<CharacterPage />} />
         <Route path="/diary" element={<Diary />} />
-        <Route path="/recalbox/*" element={<RecalboxUi apiBase="/apil7r/recalbox" />} />
+        <Route path="/recalbox/*" element={<RecalboxUi apiBase="/recalbox/api" />} />
 
         {/* Old bookmarked/QR-coded links to a character sheet */}
         <Route path="/:jdrSlug/:characterSlug" element={<LegacyCharacterRedirect />} />

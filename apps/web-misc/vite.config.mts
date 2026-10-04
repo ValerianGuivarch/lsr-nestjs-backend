@@ -11,6 +11,11 @@ export default defineConfig(({ mode }) => {
   const recalboxTarget = env.RECALBOX_API_ORIGIN ?? `http://localhost:${env.RECALBOX_API_PORT ?? 3335}`
   const disableHmr = env.VITE_DISABLE_HMR === 'true'
   const apiProxy = {
+    '/recalbox/api': {
+      target: recalboxTarget,
+      changeOrigin: true,
+      rewrite: (path: string) => path.replace(/^\/recalbox\/api/, '/api')
+    },
     '/apil7r/recalbox': {
       target: recalboxTarget,
       changeOrigin: true,
