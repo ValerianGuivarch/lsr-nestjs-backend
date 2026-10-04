@@ -19,6 +19,7 @@ export default () => ({
     ntfyTopic: env.NTFY_TOPIC || '',
     ntfyToken: env.NTFY_TOKEN || '',
     reminderTime: env.DIARY_REMINDER_TIME || '09:15',
-    timeZone: env.DIARY_REMINDER_TIME_ZONE || 'Europe/Paris'
+    timeZone: env.DIARY_REMINDER_TIME_ZONE || 'Europe/Paris',
+    clickUrl: env.DIARY_NOTIFICATION_URL || 'https://l7r.fr/diary'
   }
 })

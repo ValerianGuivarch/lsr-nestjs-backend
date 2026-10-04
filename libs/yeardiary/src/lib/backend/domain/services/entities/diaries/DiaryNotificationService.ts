@@ -62,7 +62,7 @@ export class DiaryNotificationService implements OnModuleInit, OnModuleDestroy {
     const topic = this.configService.get<string>('notifications.ntfyTopic')
     const baseUrl = this.configService.get<string>('notifications.ntfyUrl') || 'https://ntfy.sh'
     const token = this.configService.get<string>('notifications.ntfyToken')
-    const frontendUrl = this.configService.get<string>('cors.frontend') || ''
+    const clickUrl = this.configService.get<string>('notifications.clickUrl') || 'https://l7r.fr/diary'
     const timeZone = this.configService.get<string>('notifications.timeZone') || 'Europe/Paris'
 
     if (!topic) {
@@ -83,7 +83,7 @@ export class DiaryNotificationService implements OnModuleInit, OnModuleDestroy {
       Priority: String(reminder.priority)
     }
 
-    if (frontendUrl) headers.Click = `${frontendUrl.replace(/\/$/, '')}/diary`
+    headers.Click = clickUrl
     if (token) headers.Authorization = `Bearer ${token}`
 
     try {

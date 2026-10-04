@@ -77,6 +77,7 @@ NTFY_TOPIC=
 NTFY_TOKEN=
 DIARY_REMINDER_TIME=09:15
 DIARY_REMINDER_TIME_ZONE=Europe/Paris
+DIARY_NOTIFICATION_URL=https://l7r.fr/diary
 
 # PostgreSQL est historique et n'est pas nécessaire à cette branche : api-jdr
 # et api-yeardiary utilisent SQLite. Ces variables ne sont à définir que pour
