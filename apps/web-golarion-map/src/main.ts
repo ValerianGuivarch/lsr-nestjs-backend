@@ -19,12 +19,14 @@ import { startupOptions } from "./URLOptions.js";
 import { addSpecialURLOptions } from "./tools/special-url-options";
 import { debug } from "./utils/debug";
 import { ProjectionControl } from "./tools/ProjectionControl";
+import { addPublicPlaceMarkers } from "./tools/public-place-markers";
 
 type PlayerDetailLevel = 'essential' | 'standard' | 'detailed';
 
 var root = `${location.protocol}//${location.host}`;
 export const mapAudience = window.location.pathname.split('/').filter(Boolean)[0]?.toLowerCase() === 'pj' ? 'pj' : 'mj';
 export const playerDetail: PlayerDetailLevel = window.GOLARION_MAP_CONFIG?.playerDetail ?? 'standard';
+const publicPlacesUrl = window.GOLARION_MAP_CONFIG?.placesUrl ?? '';
 
 if (window.location.pathname === '/') {
   window.history.replaceState(null, '', `/mj${window.location.search}${window.location.hash}`);
@@ -134,6 +136,7 @@ export const map = new Map({
   }
 });
 export const golarionMap = new GolarionMap(map);
+void addPublicPlaceMarkers(golarionMap, publicPlacesUrl);
 
 //diable rotation
 map.dragRotate.disable();

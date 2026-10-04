@@ -229,6 +229,28 @@ export class Pf2MjService {
     return { schemaVersion: 1, lieux, regions, aliases: this.asObject(config.aliases), parents: this.asObject(config.parents) }
   }
 
+  async publicMapPlaces(): Promise<Array<{ id: string; name: string; latitude: number; longitude: number; text: string; icon: string }>> {
+    const lieux = await this.persistence.readReference('lieux')
+    const coordinate = (value: unknown): number => typeof value === 'number' ? value : typeof value === 'string' && value.trim() ? Number(value) : Number.NaN
+    return lieux.flatMap((record) => {
+      if (record.map_visible !== true) return []
+      const latitude = coordinate(record.map_latitude)
+      const longitude = coordinate(record.map_longitude)
+      if (!Number.isFinite(latitude) || !Number.isFinite(longitude) || latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180) return []
+      const id = typeof record.id === 'string' ? record.id.trim() : ''
+      const name = typeof record.nom === 'string' ? record.nom.trim() : ''
+      if (!id || !name) return []
+      return [{
+        id,
+        name,
+        latitude,
+        longitude,
+        text: typeof record.map_text === 'string' ? record.map_text.trim() : '',
+        icon: typeof record.map_icon === 'string' && record.map_icon.trim() ? record.map_icon.trim() : 'pin'
+      }]
+    }).sort((left, right) => left.name.localeCompare(right.name, 'fr'))
+  }
+
   async exportData(domain: string, id?: string): Promise<Record<string, unknown>> {
     const generatedAt = new Date().toISOString()
     if (domain === 'catalogue') {

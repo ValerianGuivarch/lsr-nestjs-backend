@@ -129,7 +129,9 @@ export async function bootstrapApi(p: BootstrapApiOptions): Promise<void> {
       'https://photos.mariage-mickael-valerian.fr',
       'https://l7r.fr',
       'https://pf2.l7r.fr',
+      'https://map.l7r.fr',
       'http://localhost:3000',
+      'http://localhost:4204',
       'http://localhost:4200',
       'http://localhost:4202',
       'http://localhost:4203'

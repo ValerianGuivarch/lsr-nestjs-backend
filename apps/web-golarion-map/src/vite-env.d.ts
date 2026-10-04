@@ -7,6 +7,7 @@ declare global {
     interface Window {
         GOLARION_MAP_CONFIG?: {
             playerDetail: 'essential' | 'standard' | 'detailed';
+            placesUrl?: string;
         };
     }
 }

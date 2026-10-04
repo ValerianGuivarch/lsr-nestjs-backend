@@ -24,7 +24,8 @@ const requestedPlayerDetail = process.env.GOLARION_MAP_PJ_DETAIL?.trim().toLower
 const playerDetail = ['essential', 'standard', 'detailed'].includes(requestedPlayerDetail)
   ? requestedPlayerDetail
   : 'standard'
-const runtimeConfigSource = `window.GOLARION_MAP_CONFIG=${JSON.stringify({ playerDetail })};`
+const placesUrl = process.env.GOLARION_MAP_PLACES_URL?.trim() || 'https://l7r.fr/apil7r/pf2-mj/map/places'
+const runtimeConfigSource = `window.GOLARION_MAP_CONFIG=${JSON.stringify({ playerDetail, placesUrl })};`
 
 const mimeTypes = {
   '.css': 'text/css; charset=utf-8',

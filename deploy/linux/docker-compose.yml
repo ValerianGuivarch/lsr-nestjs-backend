@@ -178,6 +178,7 @@ services:
       GOLARION_MAP_HOST: 0.0.0.0
       GOLARION_MAP_PORT: 4204
       GOLARION_MAP_ASSETS_DIR: /app/map-assets
+      GOLARION_MAP_PLACES_URL: https://l7r.fr/apil7r/pf2-mj/map/places
     volumes:
       - ${GOLARION_MAP_ASSETS_HOST_DIR:-../../../golarion-map-build/mapping/frontend/public}:/app/map-assets:ro
     ports:

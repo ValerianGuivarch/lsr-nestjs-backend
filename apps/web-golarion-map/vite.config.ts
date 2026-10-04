@@ -28,7 +28,8 @@ export default defineConfig(({ command, isPreview, mode }): UserConfig => {
   const playerDetail = ['essential', 'standard', 'detailed'].includes(requestedPlayerDetail ?? '')
     ? requestedPlayerDetail
     : 'standard'
-  const runtimeConfigSource = `window.GOLARION_MAP_CONFIG=${JSON.stringify({ playerDetail })};`
+  const placesUrl = env['GOLARION_MAP_PLACES_URL']?.trim() || 'http://localhost:3333/api/pf2-mj/map/places'
+  const runtimeConfigSource = `window.GOLARION_MAP_CONFIG=${JSON.stringify({ playerDetail, placesUrl })};`
   const mapHost = env['GOLARION_MAP_HOST'] ?? '0.0.0.0'
   const mapPort = Number(env['GOLARION_MAP_PORT'] ?? 4204)
   const placeNamesFr = JSON.parse(readFileSync(existsSync(placeNamesPath) ? placeNamesPath : fallbackPlaceNamesPath, 'utf8')) as Record<string, string>

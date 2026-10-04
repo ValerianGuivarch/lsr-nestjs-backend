@@ -72,6 +72,27 @@ describe('Pf2MjService', () => {
     })
   })
 
+  describe('lieux publics de la carte', () => {
+    it('expose uniquement les lieux visibles avec des coordonnées valides et aucun champ MJ', async () => {
+      const lieux = [
+        { id: 'absalom', nom: 'Absalom', map_visible: true, map_latitude: 12.5, map_longitude: -42.25, map_text: 'La cité au centre du monde.', map_icon: 'city', notes: 'secret MJ' },
+        { id: 'secret', nom: 'Lieu secret', map_visible: false, map_latitude: 1, map_longitude: 2, notes: 'ne doit pas sortir' },
+        { id: 'broken', nom: 'Coordonnées invalides', map_visible: true, map_latitude: 999, map_longitude: 2 },
+        { id: 'missing', nom: 'Sans coordonnées', map_visible: true, map_latitude: null, map_longitude: null },
+      ]
+      const { service } = serviceFor({}, pnj, { readReference: jest.fn().mockResolvedValue(lieux) })
+
+      await expect(service.publicMapPlaces()).resolves.toEqual([{
+        id: 'absalom',
+        name: 'Absalom',
+        latitude: 12.5,
+        longitude: -42.25,
+        text: 'La cité au centre du monde.',
+        icon: 'city',
+      }])
+    })
+  })
+
   describe('curation V3', () => {
     it('writes new overrides only in byId and keeps legacy maps intact', async () => {
       const legacy = { entries: { 'old-entry': { playability: 'Prêt' } }, levelsByCampaign: { 'age-of-ashes': '1–20' } }

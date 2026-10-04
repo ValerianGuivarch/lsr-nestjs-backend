@@ -42,6 +42,11 @@ export class Pf2MjController {
   @Get('scenarios/:id/relations')
   relationsForScenario(@Param('id') id: string): Promise<Record<string, unknown[]>> { return this.scenarioPackages.relationsForScenario(id) }
 
+  @Get('map/places')
+  publicMapPlaces(): Promise<Array<{ id: string; name: string; latitude: number; longitude: number; text: string; icon: string }>> {
+    return this.service.publicMapPlaces()
+  }
+
   @Get('scenarios/:id/playable-components')
   async playableComponentsForScenario(@Param('id') id: string): Promise<unknown> {
     try { return { scenarioId: id, playableComponents: await this.service.playableComponentsForScenario(id) } }
