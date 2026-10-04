@@ -27,8 +27,12 @@ jobs:
             image: lsr-api-jdr
           - target: api-yeardiary
             image: lsr-api-yeardiary
+          - target: api-recalbox
+            image: lsr-api-recalbox
           - target: web-misc
             image: lsr-web
+          - target: web-recalbox
+            image: lsr-web-recalbox
           - target: admin-jdr
             image: lsr-admin-jdr
           - target: golarion-map

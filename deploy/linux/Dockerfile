@@ -14,8 +14,14 @@ RUN npx nx build api-jdr
 FROM source AS api-yeardiary-build
 RUN npx nx build api-yeardiary
 
+FROM source AS api-recalbox-build
+RUN npx nx build api-recalbox
+
 FROM source AS web-misc-build
 RUN npm run build:web:misc
+
+FROM source AS web-recalbox-build
+RUN npm run build:web:recalbox
 
 FROM source AS admin-jdr-build
 RUN npm run build:admin-jdr
@@ -44,9 +50,20 @@ ENV YEARDIARY_PORT=8081
 EXPOSE 8081
 CMD ["node", "dist/api-yeardiary/main.js"]
 
+FROM api-base AS api-recalbox
+COPY --from=api-recalbox-build /app/dist/apps/api-recalbox ./dist/apps/api-recalbox
+ENV RECALBOX_API_PORT=3335
+EXPOSE 3335
+CMD ["node", "dist/apps/api-recalbox/main.js"]
+
 FROM nginx:1.27-alpine AS web-misc
 COPY deploy/linux/nginx-web.conf /etc/nginx/conf.d/default.conf
 COPY --from=web-misc-build /app/dist/apps/web-misc /usr/share/nginx/html
+EXPOSE 80
+
+FROM nginx:1.27-alpine AS web-recalbox
+COPY deploy/linux/nginx-recalbox.conf /etc/nginx/conf.d/default.conf
+COPY --from=web-recalbox-build /app/dist/apps/web-recalbox /usr/share/nginx/html/recalbox
 EXPOSE 80
 
 FROM nginx:1.27-alpine AS admin-jdr

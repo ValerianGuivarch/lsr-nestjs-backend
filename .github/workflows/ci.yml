@@ -25,8 +25,14 @@ jobs:
       - name: Build YearDiary API image
         run: docker build -f deploy/linux/Dockerfile --target api-yeardiary -t lsr-api-yeardiary:ci .
 
+      - name: Build Recalbox API image
+        run: docker build -f deploy/linux/Dockerfile --target api-recalbox -t lsr-api-recalbox:ci .
+
       - name: Build public web image
         run: docker build -f deploy/linux/Dockerfile --target web-misc -t lsr-web:ci .
+
+      - name: Build Recalbox web image
+        run: docker build -f deploy/linux/Dockerfile --target web-recalbox -t lsr-web-recalbox:ci .
 
       - name: Build admin image
         run: docker build -f deploy/linux/Dockerfile --target admin-jdr -t lsr-admin-jdr:ci .

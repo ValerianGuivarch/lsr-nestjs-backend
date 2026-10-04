@@ -40,6 +40,39 @@ services:
       retries: 12
       start_period: 20s
 
+
+  api-recalbox:
+    image: ghcr.io/valerianguivarch/lsr-api-recalbox:${APP_VERSION:-main}
+    build:
+      context: ../..
+      dockerfile: deploy/linux/Dockerfile
+      target: api-recalbox
+    restart: unless-stopped
+    env_file:
+      - ${APP_ENV_FILE:-../../.env}
+    environment:
+      HOST: 0.0.0.0
+      NODE_ENV: production
+      RECALBOX_API_PORT: 3335
+      RECALBOX_SHARE_ROOT: /recalbox/share
+      RECALBOX_SYSTEM_ROOT: /recalbox/system
+      RECALBOX_INBOX_ROOT: /recalbox-inbox
+    volumes:
+      - ${RECALBOX_SHARE_DIR:-../../../recalbox/share}:/recalbox/share
+      - ${RECALBOX_SYSTEM_DIR:-../../../recalbox/system}:/recalbox/system
+      - ${RECALBOX_INBOX_DIR:-../../../roms}:/recalbox-inbox
+    expose:
+      - "3335"
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - >-
+          node -e "fetch('http://127.0.0.1:3335/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
+
   api-yeardiary:
     image: ghcr.io/valerianguivarch/lsr-api-yeardiary:${APP_VERSION:-main}
     build:
@@ -65,6 +98,25 @@ services:
       retries: 12
       start_period: 20s
 
+
+  web-recalbox:
+    image: ghcr.io/valerianguivarch/lsr-web-recalbox:${APP_VERSION:-main}
+    build:
+      context: ../..
+      dockerfile: deploy/linux/Dockerfile
+      target: web-recalbox
+    restart: unless-stopped
+    depends_on:
+      api-recalbox:
+        condition: service_healthy
+    expose:
+      - "80"
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1/healthz"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+
   web:
     image: ghcr.io/valerianguivarch/lsr-web:${APP_VERSION:-main}
     build:
@@ -76,6 +128,8 @@ services:
       api-jdr:
         condition: service_healthy
       api-yeardiary:
+        condition: service_healthy
+      web-recalbox:
         condition: service_healthy
     ports:
       - "3000:80"

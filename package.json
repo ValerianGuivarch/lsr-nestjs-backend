@@ -59,7 +59,13 @@
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "jest --config src/test/e2e/jest-e2e.json"
+    "test:e2e": "jest --config src/test/e2e/jest-e2e.json",
+    "dev:api:recalbox": "NODE_ENV=development RECALBOX_API_PORT=${RECALBOX_API_PORT:-3335} NX_SKIP_NATIVE_FILE_CACHE=true NX_TUI=false nx serve api-recalbox --outputStyle=stream",
+    "dev:web:recalbox": "vite --config apps/web-recalbox/vite.config.mts --host 0.0.0.0 --port 3004 --strictPort",
+    "dev:recalbox": "bash -c 'trap \"kill 0\" SIGINT SIGTERM EXIT; npm run dev:api:recalbox & npm run dev:web:recalbox & wait'",
+    "build:api:recalbox": "nx build api-recalbox",
+    "build:web:recalbox": "vite build --config apps/web-recalbox/vite.config.mts",
+    "preview:web:recalbox": "vite preview --config apps/web-recalbox/vite.config.mts --host 0.0.0.0 --port 3004 --strictPort"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",

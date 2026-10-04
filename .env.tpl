@@ -64,6 +64,14 @@ HOST=127.0.0.1
 ADMIN_USERNAME=admin
 ADMIN_PASSWORD=changeme
 
+# Recalbox admin (apps/web-recalbox + apps/api-recalbox)
+RECALBOX_API_PORT=3335
+RECALBOX_WEB_PASSWORD=changeme
+RECALBOX_SESSION_SECRET=replace-with-a-long-random-secret
+RECALBOX_SHARE_ROOT=/recalbox/share
+RECALBOX_SYSTEM_ROOT=/recalbox/system
+RECALBOX_INBOX_ROOT=/recalbox-inbox
+
 # web front (apps/web-l7r)
 REACT_APP_API_URL=http://127.0.0.1:8081/api/v1
 API_URL=http://127.0.0.1:8081/api/v1

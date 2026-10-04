@@ -1,0 +1,9 @@
+{
+  "name": "web-recalbox",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/web-recalbox/src",
+  "projectType": "application",
+  "tags": ["scope:recalbox", "type:app", "platform:web"],
+  "// targets": "to see all targets run: nx show project web-recalbox --web",
+  "targets": {}
+}
