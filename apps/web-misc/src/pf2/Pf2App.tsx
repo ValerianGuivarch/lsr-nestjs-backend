@@ -148,7 +148,7 @@ export function Pf2App() {
     document.title = 'PF2 - La Société des Eclaireurs'
     icon.rel = 'icon'
     icon.type = 'image/png'
-    icon.href = '/pf2-logo.png'
+    icon.href = '/pf2-logo.png?v=2'
 
     if (!favicon) document.head.appendChild(icon)
 
