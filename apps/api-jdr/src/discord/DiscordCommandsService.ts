@@ -70,7 +70,7 @@ export class DiscordCommandsService {
       new SlashCommandBuilder().setName('random-perso').setDescription('Tire au hasard une ascendance, une classe et un genre.').setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild).toJSON(),
       new SlashCommandBuilder().setName('tirage-sort-joueur').setDescription('Tire au sort des personnes parmi une sélection Discord.').setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild).toJSON(),
       new SlashCommandBuilder().setName('help').setDescription('Affiche les commandes PF2 disponibles.').toJSON(),
-      new SlashCommandBuilder().setName('choix').setDescription('Affiche les quêtes du forum et les joueurs intéressés.').toJSON(),
+      new SlashCommandBuilder().setName('choix-quete').setDescription('Affiche les quêtes du forum et les joueurs intéressés.').toJSON(),
       new SlashCommandBuilder().setName('help-admin').setDescription('Affiche les commandes PF2 réservées aux administrateurs.').setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild).toJSON(),
       new SlashCommandBuilder().setName('recap-pjs').setDescription('Prévisualise le nombre de séances jouées par joueur et par personnage.').toJSON(),
       new SlashCommandBuilder().setName('recap-seance').setDescription('Prévisualise les informations prévues pour une séance.').addStringOption(option => option.setName('session').setDescription('Numéro de séance').setRequired(true).setAutocomplete(true)).setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild).toJSON(),
@@ -128,7 +128,7 @@ export class DiscordCommandsService {
       await this.helpCommand(interaction as ChatInputCommandInteraction)
       return true
     }
-    if (interaction.commandName === 'choix') {
+    if (interaction.commandName === 'choix-quete') {
       await this.choiceCommand(interaction as ChatInputCommandInteraction)
       return true
     }
@@ -174,7 +174,7 @@ export class DiscordCommandsService {
     await interaction.reply({
       content: [
         '**Commandes PF2**',
-        '`/choix` — liste les quêtes du forum, les réservations par 👍 et signale les doubles choix.',
+        '`/choix-quete` — liste les quêtes du forum, les réservations par 👍 et signale les doubles choix.',
         '`/recap-pjs` — aperçu du récapitulatif des joueurs/PJ, puis bouton de publication.',
         '`/afficher-personnage` — affiche pour toi un personnage publié, puis permet de le partager.',
         '`/afficher-faction` — affiche pour toi une faction publiée, puis permet de la partager.',

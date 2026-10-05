@@ -5,7 +5,7 @@ describe('DiscordCommandsService', () => {
     const service = new DiscordCommandsService({} as never, {} as never)
     const definitions = service.definitions().map(command => command.name)
     expect(definitions).toEqual(expect.arrayContaining([
-      'help', 'help-admin', 'choix', 'random-perso', 'tirage-sort-joueur', 'recap-pjs', 'recap-seance',
+      'help', 'help-admin', 'choix-quete', 'random-perso', 'tirage-sort-joueur', 'recap-pjs', 'recap-seance',
       'debut-seance', 'fin-seance', 'personnage', 'faction', 'afficher-personnage', 'afficher-faction', 'wiki', 'wiki-admin',
       'proposer-date-seance', 'modifier-date-seance', 'analyse-date-seance',
     ]))
@@ -24,7 +24,7 @@ describe('DiscordCommandsService', () => {
       ephemeral: true,
     }))
     const helpContent = helpReply.mock.calls[0][0].content
-    expect(helpContent).toContain('/choix')
+    expect(helpContent).toContain('/choix-quete')
     expect(helpContent).toContain('/afficher-personnage')
     expect(helpContent).toContain('/afficher-faction')
     expect(helpContent).not.toContain('/personnage`')
@@ -67,7 +67,7 @@ describe('DiscordCommandsService', () => {
     const service = new DiscordCommandsService({} as never, {} as never)
 
     await expect(service.handle({
-      commandName: 'choix',
+      commandName: 'choix-quete',
       client: { channels: { fetch: jest.fn().mockResolvedValue(forum) } },
       deferReply,
       editReply,
@@ -465,7 +465,7 @@ describe('DiscordCommandsService', () => {
       const command = definitions.find(item => item.name === name)
       expect(command?.default_member_permissions).toBeDefined()
     }
-    for (const name of ['help', 'choix', 'recap-pjs', 'afficher-personnage', 'afficher-faction', 'wiki']) {
+    for (const name of ['help', 'choix-quete', 'recap-pjs', 'afficher-personnage', 'afficher-faction', 'wiki']) {
       const command = definitions.find(item => item.name === name)
       expect(command?.default_member_permissions ?? null).toBeNull()
     }
