@@ -1,6 +1,6 @@
 import { forwardRef, Inject, Injectable, Logger } from '@nestjs/common'
 import { resolve } from 'node:path'
-import { ActionRowBuilder, AutocompleteInteraction, ButtonBuilder, ButtonInteraction, ButtonStyle, ChatInputCommandInteraction, ModalBuilder, ModalSubmitInteraction, PermissionFlagsBits, RESTPostAPIApplicationGuildCommandsJSONBody, SlashCommandBuilder, StringSelectMenuBuilder, StringSelectMenuInteraction, TextInputBuilder, TextInputStyle } from 'discord.js'
+import { ActionRowBuilder, AutocompleteInteraction, ButtonBuilder, ButtonInteraction, ButtonStyle, ChatInputCommandInteraction, ModalBuilder, ModalSubmitInteraction, PermissionFlagsBits, RESTPostAPIApplicationGuildCommandsJSONBody, SlashCommandBuilder, StringSelectMenuBuilder, StringSelectMenuInteraction, TextInputBuilder, TextInputStyle, UserSelectMenuBuilder, UserSelectMenuInteraction } from 'discord.js'
 import { FoundryRelayService } from '../foundry/FoundryRelayService'
 import { Pf2PersistenceService } from '../pf2-storage/Pf2PersistenceService'
 import { PlayerCodexService } from '../pf2-mj/PlayerCodexService'
@@ -61,11 +61,13 @@ export class DiscordCommandsService {
   private readonly pendingFactionPublications = new Map<string, { requesterId: string; factionId: string }>()
   private readonly pendingSchedulePublications = new Map<string, { requesterId: string; content: string }>()
   private readonly pendingPreviewPublications = new Map<string, { requesterId: string; content: string; files?: string[] }>()
+  private readonly pendingPlayerDraws = new Map<string, { requesterId: string; players: Array<{ id: string; name: string }> }>()
   constructor(private readonly persistence: Pf2PersistenceService, private readonly foundry: FoundryRelayService, private readonly playerCodex?: PlayerCodexService, private readonly mediaWiki?: MediaWikiClientService, @Inject(forwardRef(() => DiscordService)) private readonly discord?: DiscordService, private readonly journals?: Pf2JournalsService) {}
 
   definitions(): RESTPostAPIApplicationGuildCommandsJSONBody[] {
     return [
       new SlashCommandBuilder().setName('random-perso').setDescription('Tire au hasard une ascendance, une classe et un genre.').setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild).toJSON(),
+      new SlashCommandBuilder().setName('tirage-sort-joueur').setDescription('Tire au sort des personnes parmi une sélection Discord.').setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild).toJSON(),
       new SlashCommandBuilder().setName('help').setDescription('Affiche les commandes PF2 disponibles.').toJSON(),
       new SlashCommandBuilder().setName('help-admin').setDescription('Affiche les commandes PF2 réservées aux administrateurs.').setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild).toJSON(),
       new SlashCommandBuilder().setName('recap-pjs').setDescription('Prévisualise le nombre de séances jouées par joueur et par personnage.').toJSON(),
@@ -114,6 +116,10 @@ export class DiscordCommandsService {
   async handle(interaction: Pick<ChatInputCommandInteraction, 'commandName' | 'reply' | 'deferReply' | 'editReply'>): Promise<boolean> {
     if (interaction.commandName === 'random-perso') {
       await this.randomCharacterCommand(interaction as ChatInputCommandInteraction)
+      return true
+    }
+    if (interaction.commandName === 'tirage-sort-joueur') {
+      await this.playerDrawCommand(interaction as ChatInputCommandInteraction)
       return true
     }
     if (interaction.commandName === 'help') {
@@ -181,6 +187,7 @@ export class DiscordCommandsService {
       content: [
         '**Commandes PF2 — administration**',
         '`/random-perso` — tire une ascendance, une classe et un genre.',
+        '`/tirage-sort-joueur` — sélectionne des personnes puis en tire un nombre au hasard, avec aperçu avant publication.',
         '`/debut-seance` — prépare le début d’une séance.',
         '`/recap-seance` — prévisualise les informations d’une séance, puis permet leur publication.',
         '`/fin-seance` — saisit la fin de séance et les XP.',
@@ -215,6 +222,28 @@ export class DiscordCommandsService {
         `Classe : **${characterClass}**`,
         `Genre : **${gender}**`,
       ].join('\n'),
+      ephemeral: true,
+    })
+  }
+
+  private async playerDrawCommand(interaction: ChatInputCommandInteraction): Promise<void> {
+    if (!this.isAdmin(interaction)) {
+      await interaction.reply({ content: 'Cette commande est réservée aux administrateurs du serveur.', ephemeral: true })
+      return
+    }
+
+    const selectId = `pf2-player-draw:players:${interaction.id}`
+    this.pendingPlayerDraws.set(selectId, { requesterId: interaction.user.id, players: [] })
+
+    const select = new UserSelectMenuBuilder()
+      .setCustomId(selectId)
+      .setPlaceholder('Sélectionne les personnes à inclure')
+      .setMinValues(1)
+      .setMaxValues(25)
+
+    await interaction.reply({
+      content: 'Sélectionne les personnes parmi lesquelles faire le tirage au sort.',
+      components: [new ActionRowBuilder<UserSelectMenuBuilder>().addComponents(select)],
       ephemeral: true,
     })
   }
@@ -772,7 +801,7 @@ export class DiscordCommandsService {
   }
 
   private async previewPublicMessage(
-    interaction: ChatInputCommandInteraction,
+    interaction: ChatInputCommandInteraction | ModalSubmitInteraction,
     content: string,
     options: { buttonLabel?: string; files?: string[] } = {},
   ): Promise<void> {
@@ -1116,7 +1145,91 @@ export class DiscordCommandsService {
     return true
   }
 
+  async handleUserSelect(interaction: UserSelectMenuInteraction): Promise<boolean> {
+    if (!interaction.customId.startsWith('pf2-player-draw:players:')) return false
+
+    const pending = this.pendingPlayerDraws.get(interaction.customId)
+    if (!pending) {
+      await interaction.reply({ content: 'Cette sélection a expiré. Relance `/tirage-sort-joueur`.', ephemeral: true })
+      return true
+    }
+    if (interaction.user.id !== pending.requesterId) {
+      await interaction.reply({ content: 'Cette sélection appartient à un autre administrateur.', ephemeral: true })
+      return true
+    }
+
+    const players = interaction.values.map((id) => {
+      const member = interaction.members.get(id) as { displayName?: string } | undefined
+      const user = interaction.users.get(id)
+      return {
+        id,
+        name: member?.displayName ?? user?.globalName ?? user?.username ?? id,
+      }
+    })
+
+    const modalId = `pf2-player-draw:count:${interaction.id}`
+    this.pendingPlayerDraws.set(modalId, { requesterId: pending.requesterId, players })
+    this.pendingPlayerDraws.delete(interaction.customId)
+
+    const modal = new ModalBuilder()
+      .setCustomId(modalId)
+      .setTitle('Tirage au sort joueur')
+
+    const count = new TextInputBuilder()
+      .setCustomId('count')
+      .setLabel(`Nombre à tirer (1-${players.length})`)
+      .setStyle(TextInputStyle.Short)
+      .setPlaceholder('1')
+      .setRequired(true)
+      .setMaxLength(String(players.length).length)
+
+    modal.addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(count))
+    await interaction.showModal(modal)
+    return true
+  }
+
   async handleModal(interaction: ModalSubmitInteraction): Promise<boolean> {
+    if (interaction.customId.startsWith('pf2-player-draw:count:')) {
+      const pending = this.pendingPlayerDraws.get(interaction.customId)
+      if (!pending) {
+        await interaction.reply({ content: 'Ce tirage a expiré. Relance `/tirage-sort-joueur`.', ephemeral: true })
+        return true
+      }
+      if (interaction.user.id !== pending.requesterId) {
+        await interaction.reply({ content: 'Ce tirage appartient à un autre administrateur.', ephemeral: true })
+        return true
+      }
+
+      const count = Number(interaction.fields.getTextInputValue('count').trim())
+      if (!Number.isInteger(count) || count < 1 || count > pending.players.length) {
+        this.pendingPlayerDraws.delete(interaction.customId)
+        await interaction.reply({
+          content: `Le nombre doit être un entier entre 1 et ${pending.players.length}.`,
+          ephemeral: true,
+        })
+        return true
+      }
+
+      const pool = [...pending.players]
+      const selected: Array<{ id: string; name: string }> = []
+      while (selected.length < count) {
+        const index = Math.floor(Math.random() * pool.length)
+        selected.push(pool.splice(index, 1)[0])
+      }
+
+      const content = [
+        '🎲 **Tirage au sort joueur**',
+        `Parmi : ${pending.players.map(player => player.name).join(', ')}`,
+        '',
+        '**Liste des tirages au sort :**',
+        ...selected.map(player => `- ${player.name}`),
+      ].join('\n')
+
+      this.pendingPlayerDraws.delete(interaction.customId)
+      await interaction.deferReply({ ephemeral: true })
+      await this.previewPublicMessage(interaction, content)
+      return true
+    }
     if (interaction.customId.startsWith('pf2-resume:')) {
       const pending = this.pendingShortSummaries.get(interaction.customId)
 

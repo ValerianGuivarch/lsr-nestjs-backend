@@ -5,7 +5,7 @@ describe('DiscordCommandsService', () => {
     const service = new DiscordCommandsService({} as never, {} as never)
     const definitions = service.definitions().map(command => command.name)
     expect(definitions).toEqual(expect.arrayContaining([
-      'help', 'help-admin', 'random-perso', 'recap-pjs', 'recap-seance',
+      'help', 'help-admin', 'random-perso', 'tirage-sort-joueur', 'recap-pjs', 'recap-seance',
       'debut-seance', 'fin-seance', 'personnage', 'faction', 'afficher-personnage', 'afficher-faction', 'wiki', 'wiki-admin',
       'proposer-date-seance', 'modifier-date-seance', 'analyse-date-seance',
     ]))
@@ -72,6 +72,91 @@ describe('DiscordCommandsService', () => {
       memberPermissions: { has: jest.fn().mockReturnValue(false) },
     } as never)).resolves.toBe(true)
     expect(reply).toHaveBeenCalledWith({ content: 'Cette commande est réservée aux administrateurs du serveur.', ephemeral: true })
+  })
+
+  it('selects Discord users, draws the requested number, and previews before publishing', async () => {
+    const service = new DiscordCommandsService({} as never, {} as never)
+    const reply = jest.fn().mockResolvedValue(undefined)
+
+    await expect(service.handle({
+      commandName: 'tirage-sort-joueur',
+      id: 'draw-command',
+      user: { id: 'admin' },
+      memberPermissions: { has: jest.fn().mockReturnValue(true) },
+      reply,
+    } as never)).resolves.toBe(true)
+
+    const commandPayload = reply.mock.calls[0][0]
+    expect(commandPayload.ephemeral).toBe(true)
+    expect(commandPayload.components).toHaveLength(1)
+    const selectJson = commandPayload.components[0].toJSON().components[0]
+    expect(selectJson.custom_id).toBe('pf2-player-draw:players:draw-command')
+    expect(selectJson.min_values).toBe(1)
+    expect(selectJson.max_values).toBe(25)
+
+    const showModal = jest.fn().mockResolvedValue(undefined)
+    await expect(service.handleUserSelect({
+      customId: 'pf2-player-draw:players:draw-command',
+      id: 'user-select',
+      user: { id: 'admin' },
+      values: ['tom', 'arcady', 'juby'],
+      members: new Map(),
+      users: new Map([
+        ['tom', { username: 'Tom', globalName: null }],
+        ['arcady', { username: 'Arcady', globalName: null }],
+        ['juby', { username: 'Juby', globalName: null }],
+      ]),
+      showModal,
+      reply: jest.fn(),
+    } as never)).resolves.toBe(true)
+
+    const modal = showModal.mock.calls[0][0].toJSON()
+    expect(modal.custom_id).toBe('pf2-player-draw:count:user-select')
+    expect(modal.components[0].components[0].label).toBe('Nombre à tirer (1-3)')
+
+    const random = jest.spyOn(Math, 'random').mockReturnValue(0)
+    const deferReply = jest.fn().mockResolvedValue(undefined)
+    const editReply = jest.fn().mockResolvedValue(undefined)
+    await expect(service.handleModal({
+      customId: 'pf2-player-draw:count:user-select',
+      id: 'draw-modal',
+      user: { id: 'admin' },
+      fields: { getTextInputValue: jest.fn().mockReturnValue('2') },
+      deferReply,
+      editReply,
+      reply: jest.fn(),
+    } as never)).resolves.toBe(true)
+    random.mockRestore()
+
+    expect(deferReply).toHaveBeenCalledWith({ ephemeral: true })
+    const preview = editReply.mock.calls[0][0]
+    expect(preview.content).toBe([
+      '🎲 **Tirage au sort joueur**',
+      'Parmi : Tom, Arcady, Juby',
+      '',
+      '**Liste des tirages au sort :**',
+      '- Tom',
+      '- Arcady',
+    ].join('\n'))
+    expect(preview.components[0].toJSON().components[0].label).toBe('Publier')
+  })
+
+  it('refuses /tirage-sort-joueur to non-admin users', async () => {
+    const reply = jest.fn().mockResolvedValue(undefined)
+    const service = new DiscordCommandsService({} as never, {} as never)
+
+    await expect(service.handle({
+      commandName: 'tirage-sort-joueur',
+      id: 'draw-command',
+      user: { id: 'player' },
+      memberPermissions: { has: jest.fn().mockReturnValue(false) },
+      reply,
+    } as never)).resolves.toBe(true)
+
+    expect(reply).toHaveBeenCalledWith({
+      content: 'Cette commande est réservée aux administrateurs du serveur.',
+      ephemeral: true,
+    })
   })
 
   it('previews /recap-pjs by player and character, without zero-session characters', async () => {
@@ -330,7 +415,7 @@ describe('DiscordCommandsService', () => {
     const service = new DiscordCommandsService({} as never, {} as never)
     const definitions = service.definitions()
     for (const name of [
-      'random-perso', 'help-admin', 'recap-seance', 'journaux', 'debut-seance', 'fin-seance',
+      'random-perso', 'tirage-sort-joueur', 'help-admin', 'recap-seance', 'journaux', 'debut-seance', 'fin-seance',
       'personnage', 'faction', 'wiki-admin', 'proposer-date-seance', 'modifier-date-seance', 'analyse-date-seance',
     ]) {
       const command = definitions.find(item => item.name === name)

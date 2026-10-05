@@ -126,6 +126,11 @@ export class DiscordService implements OnModuleInit, OnModuleDestroy {
       })
 
       client.on(Events.InteractionCreate, (interaction: Interaction) => {
+        if (!interaction.isUserSelectMenu()) return
+        void this.commands.handleUserSelect(interaction).catch((error: unknown) => this.logger.error('Discord user select failed', error instanceof Error ? error.stack : undefined))
+      })
+
+      client.on(Events.InteractionCreate, (interaction: Interaction) => {
         if (!interaction.isModalSubmit()) return
         void this.commands.handleModal(interaction).catch((error: unknown) => this.logger.error('Discord modal failed', error instanceof Error ? error.stack : undefined))
       })
