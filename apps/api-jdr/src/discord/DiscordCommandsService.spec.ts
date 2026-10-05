@@ -5,7 +5,7 @@ describe('DiscordCommandsService', () => {
     const service = new DiscordCommandsService({} as never, {} as never)
     const definitions = service.definitions().map(command => command.name)
     expect(definitions).toEqual(expect.arrayContaining([
-      'help', 'help-admin', 'random-perso', 'tirage-sort-joueur', 'recap-pjs', 'recap-seance',
+      'help', 'help-admin', 'choix', 'random-perso', 'tirage-sort-joueur', 'recap-pjs', 'recap-seance',
       'debut-seance', 'fin-seance', 'personnage', 'faction', 'afficher-personnage', 'afficher-faction', 'wiki', 'wiki-admin',
       'proposer-date-seance', 'modifier-date-seance', 'analyse-date-seance',
     ]))
@@ -24,6 +24,7 @@ describe('DiscordCommandsService', () => {
       ephemeral: true,
     }))
     const helpContent = helpReply.mock.calls[0][0].content
+    expect(helpContent).toContain('/choix')
     expect(helpContent).toContain('/afficher-personnage')
     expect(helpContent).toContain('/afficher-faction')
     expect(helpContent).not.toContain('/personnage`')
@@ -37,6 +38,49 @@ describe('DiscordCommandsService', () => {
     expect(denied).toHaveBeenCalledWith(expect.objectContaining({
       content: expect.stringContaining('réservée aux administrateurs'), ephemeral: true,
     }))
+  })
+
+  it('lists forum quest choices and warns when a user thumbs more than one quest', async () => {
+    const alice = { id: 'alice', username: 'alice', globalName: 'Alice', bot: false }
+    const bob = { id: 'bob', username: 'bob', globalName: 'Bob', bot: false }
+    const bot = { id: 'bot', username: 'bot', globalName: 'PF2-Bot', bot: true }
+    const reaction = (users: unknown[]) => ({ users: { fetch: jest.fn().mockResolvedValue(new Map((users as Array<{ id: string }>).map(user => [user.id, user]))) } })
+    const starter = (users: unknown[]) => ({ reactions: { cache: { find: jest.fn((predicate: (reaction: any) => boolean) => {
+      const thumb = { emoji: { name: '👍' }, ...reaction(users) }
+      return predicate(thumb) ? thumb : undefined
+    }) } } })
+    const quest = (id: string, name: string, createdTimestamp: number, users: unknown[]) => ({
+      id, name, createdTimestamp, fetchStarterMessage: jest.fn().mockResolvedValue(starter(users)),
+    })
+    const q1 = quest('q1', 'La crypte oubliée', 1, [alice, bob, bot])
+    const q2 = quest('q2', 'Le phare brisé', 2, [alice])
+    const q3 = quest('q3', 'Le vieux pont', 3, [])
+    const forum = {
+      threads: {
+        fetchActive: jest.fn().mockResolvedValue({ threads: new Map([['q2', q2], ['q3', q3]]) }),
+        fetchArchived: jest.fn().mockResolvedValue({ threads: Object.assign(new Map([['q1', q1]]), { last: () => q1 }), hasMore: false }),
+      },
+    }
+    const deferReply = jest.fn().mockResolvedValue(undefined)
+    const editReply = jest.fn().mockResolvedValue(undefined)
+    const followUp = jest.fn().mockResolvedValue(undefined)
+    const service = new DiscordCommandsService({} as never, {} as never)
+
+    await expect(service.handle({
+      commandName: 'choix',
+      client: { channels: { fetch: jest.fn().mockResolvedValue(forum) } },
+      deferReply,
+      editReply,
+      followUp,
+    } as never)).resolves.toBe(true)
+
+    expect(deferReply).toHaveBeenCalled()
+    const content = editReply.mock.calls[0][0].content
+    expect(content).toContain('**La crypte oubliée** : Alice, Bob')
+    expect(content).toContain('**Le phare brisé** : Alice')
+    expect(content).toContain('**Le vieux pont** : Libre')
+    expect(content).toContain('⚠️ **Alerte :** Alice a mis plus d’une réaction.')
+    expect(content).not.toContain('PF2-Bot')
   })
 
   it('registers /random-perso and returns an admin-only random PF2 concept', async () => {
@@ -421,7 +465,7 @@ describe('DiscordCommandsService', () => {
       const command = definitions.find(item => item.name === name)
       expect(command?.default_member_permissions).toBeDefined()
     }
-    for (const name of ['help', 'recap-pjs', 'afficher-personnage', 'afficher-faction', 'wiki']) {
+    for (const name of ['help', 'choix', 'recap-pjs', 'afficher-personnage', 'afficher-faction', 'wiki']) {
       const command = definitions.find(item => item.name === name)
       expect(command?.default_member_permissions ?? null).toBeNull()
     }

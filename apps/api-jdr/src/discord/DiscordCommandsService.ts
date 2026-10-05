@@ -62,6 +62,7 @@ export class DiscordCommandsService {
   private readonly pendingSchedulePublications = new Map<string, { requesterId: string; content: string }>()
   private readonly pendingPreviewPublications = new Map<string, { requesterId: string; content: string; files?: string[] }>()
   private readonly pendingPlayerDraws = new Map<string, { requesterId: string; players: Array<{ id: string; name: string }> }>()
+  private readonly choiceForumChannelId = process.env['PF2_DISCORD_QUEST_FORUM_CHANNEL_ID']?.trim() || '1536259632455094412'
   constructor(private readonly persistence: Pf2PersistenceService, private readonly foundry: FoundryRelayService, private readonly playerCodex?: PlayerCodexService, private readonly mediaWiki?: MediaWikiClientService, @Inject(forwardRef(() => DiscordService)) private readonly discord?: DiscordService, private readonly journals?: Pf2JournalsService) {}
 
   definitions(): RESTPostAPIApplicationGuildCommandsJSONBody[] {
@@ -69,6 +70,7 @@ export class DiscordCommandsService {
       new SlashCommandBuilder().setName('random-perso').setDescription('Tire au hasard une ascendance, une classe et un genre.').setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild).toJSON(),
       new SlashCommandBuilder().setName('tirage-sort-joueur').setDescription('Tire au sort des personnes parmi une sélection Discord.').setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild).toJSON(),
       new SlashCommandBuilder().setName('help').setDescription('Affiche les commandes PF2 disponibles.').toJSON(),
+      new SlashCommandBuilder().setName('choix').setDescription('Affiche les quêtes du forum et les joueurs intéressés.').toJSON(),
       new SlashCommandBuilder().setName('help-admin').setDescription('Affiche les commandes PF2 réservées aux administrateurs.').setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild).toJSON(),
       new SlashCommandBuilder().setName('recap-pjs').setDescription('Prévisualise le nombre de séances jouées par joueur et par personnage.').toJSON(),
       new SlashCommandBuilder().setName('recap-seance').setDescription('Prévisualise les informations prévues pour une séance.').addStringOption(option => option.setName('session').setDescription('Numéro de séance').setRequired(true).setAutocomplete(true)).setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild).toJSON(),
@@ -126,6 +128,10 @@ export class DiscordCommandsService {
       await this.helpCommand(interaction as ChatInputCommandInteraction)
       return true
     }
+    if (interaction.commandName === 'choix') {
+      await this.choiceCommand(interaction as ChatInputCommandInteraction)
+      return true
+    }
     if (interaction.commandName === 'help-admin') {
       await this.helpAdminCommand(interaction as ChatInputCommandInteraction)
       return true
@@ -168,6 +174,7 @@ export class DiscordCommandsService {
     await interaction.reply({
       content: [
         '**Commandes PF2**',
+        '`/choix` — liste les quêtes du forum, les réservations par 👍 et signale les doubles choix.',
         '`/recap-pjs` — aperçu du récapitulatif des joueurs/PJ, puis bouton de publication.',
         '`/afficher-personnage` — affiche pour toi un personnage publié, puis permet de le partager.',
         '`/afficher-faction` — affiche pour toi une faction publiée, puis permet de la partager.',
@@ -202,6 +209,87 @@ export class DiscordCommandsService {
       ].join('\n'),
       ephemeral: true,
     })
+  }
+
+  private async choiceCommand(interaction: ChatInputCommandInteraction): Promise<void> {
+    await interaction.deferReply()
+    try {
+      const forum = await interaction.client.channels.fetch(this.choiceForumChannelId)
+      if (!forum || !('threads' in forum) || !forum.threads) throw new Error('Le forum des quêtes est introuvable ou inaccessible.')
+
+      const discovered = new Map<string, any>()
+      const active = await forum.threads.fetchActive()
+      for (const thread of active.threads.values()) discovered.set(thread.id, thread)
+
+      let before: Date | undefined
+      do {
+        const archived = await forum.threads.fetchArchived({ type: 'public', limit: 100, ...(before ? { before } : {}) })
+        for (const thread of archived.threads.values()) discovered.set(thread.id, thread)
+        const last = archived.threads.last()
+        before = last?.archiveTimestamp ? new Date(last.archiveTimestamp) : undefined
+        if (!archived.hasMore || !before) break
+      } while (before)
+
+      const quests: Array<{ title: string; createdAt: number; users: Array<{ id: string; name: string }> }> = []
+      const choicesByUser = new Map<string, { name: string; count: number }>()
+
+      for (const thread of discovered.values()) {
+        const starter = await thread.fetchStarterMessage().catch(() => null)
+        const thumbs = starter?.reactions.cache.find((reaction: any) => reaction.emoji.name === '👍')
+        const users = thumbs
+          ? [...(await thumbs.users.fetch()).values()]
+              .filter((user: any) => !user.bot)
+              .map((user: any) => ({ id: user.id, name: user.globalName?.trim() || user.username }))
+              .sort((left, right) => left.name.localeCompare(right.name, 'fr'))
+          : []
+
+        for (const user of users) {
+          const existing = choicesByUser.get(user.id)
+          choicesByUser.set(user.id, { name: user.name, count: (existing?.count ?? 0) + 1 })
+        }
+
+        quests.push({
+          title: thread.name?.trim() || 'Quête sans titre',
+          createdAt: Number(thread.createdTimestamp ?? thread.createdAt?.getTime?.() ?? 0),
+          users,
+        })
+      }
+
+      quests.sort((left, right) => left.createdAt - right.createdAt || left.title.localeCompare(right.title, 'fr'))
+      const lines = quests.length
+        ? quests.map(quest => `**${quest.title}** : ${quest.users.length ? quest.users.map(user => user.name).join(', ') : 'Libre'}`)
+        : ['Aucune quête trouvée dans le forum.']
+
+      const alerts = [...choicesByUser.values()]
+        .filter(user => user.count > 1)
+        .sort((left, right) => left.name.localeCompare(right.name, 'fr'))
+        .map(user => `⚠️ **Alerte :** ${user.name} a mis plus d’une réaction.`)
+
+      if (alerts.length) lines.push('', ...alerts)
+      await this.replyLong(interaction, lines)
+    } catch (error) {
+      await interaction.editReply({ content: `Lecture des choix impossible : ${error instanceof Error ? error.message : String(error)}` })
+    }
+  }
+
+  private async replyLong(interaction: ChatInputCommandInteraction, lines: string[]): Promise<void> {
+    const chunks: string[] = []
+    let current = ''
+    for (const line of lines) {
+      const next = current ? `${current}\n${line}` : line
+      if (next.length <= 2_000) {
+        current = next
+        continue
+      }
+      if (current) chunks.push(current)
+      current = line.length <= 2_000 ? line : `${line.slice(0, 1_999)}…`
+    }
+    if (current || !chunks.length) chunks.push(current || 'Aucun résultat.')
+
+    await interaction.editReply({ content: chunks[0], allowedMentions: { parse: [] } })
+    for (const chunk of chunks.slice(1)) {
+      await interaction.followUp({ content: chunk, allowedMentions: { parse: [] } })
+    }
   }
 
   private async randomCharacterCommand(interaction: ChatInputCommandInteraction): Promise<void> {
