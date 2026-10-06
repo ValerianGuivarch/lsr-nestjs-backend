@@ -135,8 +135,6 @@ services:
         condition: service_healthy
       api-yeardiary:
         condition: service_healthy
-      web-recalbox:
-        condition: service_healthy
     ports:
       - '3000:80'
     healthcheck:
