@@ -46,3 +46,11 @@ docker compose -f "$COMPOSE_FILE" up -d --remove-orphans --wait
 
 echo "[deploy] healthy: $APP_VERSION"
 docker compose -f "$COMPOSE_FILE" ps
+
+THEMIS_WATCH_SCRIPT="$ROOT/deploy/linux/scripts/watch-themis.sh"
+THEMIS_WATCH_LOG="${THEMIS_WATCH_LOG:-$HOME/.cache/lsr/themis-watch.log}"
+if [[ -x "$THEMIS_WATCH_SCRIPT" ]]; then
+  mkdir -p "$(dirname "$THEMIS_WATCH_LOG")"
+  echo "[deploy] starting temporary Themis availability watcher"
+  nohup env APP_ENV_FILE="$APP_ENV_FILE" "$THEMIS_WATCH_SCRIPT" >> "$THEMIS_WATCH_LOG" 2>&1 </dev/null 9>&- &
+fi
