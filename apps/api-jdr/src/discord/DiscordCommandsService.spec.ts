@@ -540,6 +540,7 @@ describe('DiscordCommandsService', () => {
     expect(admin).toBeDefined()
     expect((admin?.options ?? []).map((option: { name: string }) => option.name)).toEqual([
       'help',
+      'connexion',
       'associer',
       'liste',
       'supprimer',
@@ -583,6 +584,42 @@ describe('DiscordCommandsService', () => {
     const response = editReply.mock.calls[0][0]
     expect(response.content).toContain('Valou')
     expect(response.components[0].toJSON().components[0].url).toContain('Special%3APF2DiscordLogin')
+  })
+
+  it('creates an admin-only one-use wiki login link for another Discord member', async () => {
+    const persistence = {
+      wikiAccountLink: jest.fn().mockResolvedValue({
+        discordUserId: '222222222222222222',
+        wikiUsername: 'TomWiki',
+      }),
+      createWikiLoginGrant: jest.fn().mockResolvedValue('grant-admin-test'),
+    }
+    const mediaWiki = {
+      wikiLoginUrl: jest.fn().mockReturnValue(
+        'https://wiki.l7r.fr/index.php?title=Special%3APF2DiscordLogin&grant=grant-admin-test',
+      ),
+    }
+    const service = new DiscordCommandsService(persistence as never, {} as never, undefined, mediaWiki as never)
+    const deferReply = jest.fn().mockResolvedValue(undefined)
+    const editReply = jest.fn().mockResolvedValue(undefined)
+
+    await service.handle({
+      commandName: 'wiki-admin',
+      user: { id: 'admin' },
+      memberPermissions: { has: jest.fn().mockReturnValue(true) },
+      options: {
+        getSubcommand: jest.fn().mockReturnValue('connexion'),
+        getUser: jest.fn().mockReturnValue({ id: '222222222222222222', username: 'Tom' }),
+      },
+      deferReply,
+      editReply,
+    } as never)
+
+    expect(deferReply).toHaveBeenCalledWith({ ephemeral: true })
+    expect(persistence.createWikiLoginGrant).toHaveBeenCalledWith('222222222222222222', 180)
+    const response = editReply.mock.calls[0][0]
+    expect(response.content).toContain('TomWiki')
+    expect(response.components[0].toJSON().components[0].url).toContain('grant-admin-test')
   })
 
   it('shows /wiki-admin help only to administrators', async () => {

@@ -88,6 +88,10 @@ export class DiscordCommandsService {
         .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
         .addSubcommand(command => command.setName('help').setDescription('Liste les commandes d’administration du Wiki.'))
         .addSubcommand(command => command
+          .setName('connexion')
+          .setDescription('Crée un lien de connexion Wiki comme un membre Discord.')
+          .addUserOption(option => option.setName('utilisateur').setDescription('Membre Discord').setRequired(true)))
+        .addSubcommand(command => command
           .setName('associer')
           .setDescription('Associe un membre Discord à son compte Wiki.')
           .addUserOption(option => option.setName('utilisateur').setDescription('Membre Discord').setRequired(true))
@@ -422,6 +426,7 @@ export class DiscordCommandsService {
       await interaction.reply({
         content: [
           '**Administration des comptes Wiki**',
+          '`/wiki-admin connexion` — crée un lien personnel pour ouvrir le Wiki comme un membre Discord.',
           '`/wiki-admin associer` — associe un membre Discord à un compte MediaWiki existant.',
           '`/wiki-admin liste` — affiche les associations enregistrées.',
           '`/wiki-admin supprimer` — supprime une association.',
@@ -437,6 +442,26 @@ export class DiscordCommandsService {
     await interaction.deferReply({ ephemeral: true })
     try {
       if (!this.mediaWiki) throw new Error('MediaWiki est indisponible.')
+
+      if (subcommand === 'connexion') {
+        const discordUser = interaction.options.getUser('utilisateur', true)
+        const link = await this.persistence.wikiAccountLink(discordUser.id)
+        if (!link) throw new Error(`Aucun compte MediaWiki n’est associé à ${discordUser.username ?? discordUser.id}.`)
+
+        const grant = await this.persistence.createWikiLoginGrant(discordUser.id, 180)
+        const url = this.mediaWiki.wikiLoginUrl(grant)
+        const button = new ButtonBuilder()
+          .setStyle(ButtonStyle.Link)
+          .setURL(url)
+          .setLabel(`Se connecter comme ${link.wikiUsername}`.slice(0, 80))
+
+        await interaction.editReply({
+          content: `Connexion préparée pour <@${discordUser.id}> → **${link.wikiUsername}**.\nLien personnel, utilisable une seule fois et valable 3 minutes.`,
+          components: [new ActionRowBuilder<ButtonBuilder>().addComponents(button)],
+          allowedMentions: { parse: [] },
+        })
+        return
+      }
 
       if (subcommand === 'associer') {
         const discordUser = interaction.options.getUser('utilisateur', true)
