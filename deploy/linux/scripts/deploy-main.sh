@@ -41,8 +41,13 @@ export APP_ENV_FILE="${APP_ENV_FILE:-$ROOT/.env}"
 echo "[deploy] pulling images for $APP_VERSION"
 docker compose -f "$COMPOSE_FILE" pull
 
-echo "[deploy] starting containers"
-docker compose -f "$COMPOSE_FILE" up -d --remove-orphans --wait
+echo "[deploy] starting core containers"
+docker compose -f "$COMPOSE_FILE" up -d --remove-orphans --wait api-jdr api-yeardiary admin map web
+
+echo "[deploy] starting optional Recalbox containers"
+if ! docker compose -f "$COMPOSE_FILE" up -d --wait api-recalbox web-recalbox; then
+  echo "[deploy] warning: Recalbox services are unavailable; core deployment remains healthy" >&2
+fi
 
 echo "[deploy] healthy: $APP_VERSION"
 docker compose -f "$COMPOSE_FILE" ps
