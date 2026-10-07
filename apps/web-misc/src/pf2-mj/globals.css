@@ -985,3 +985,8 @@
 .resource-attach-row{display:grid;grid-template-columns:minmax(200px,1fr) auto;gap:8px;margin-top:10px}.resource-target-panel .resource-section-head h3{margin:0}.resource-target-panel .resource-section-head p{font-size:13px}.resource-target-panel{margin-top:14px}.playable-component-list .resource-target-panel{margin:12px 0 0;padding:12px;background:#faf8f4;border-radius:8px}
 .resource-message{color:#765b22}.entity-page-toolbar>button{border:0;background:none;padding:0;color:inherit;text-decoration:underline;cursor:pointer}
 @media (max-width:800px){.resource-filters,.resource-editor-grid,.resource-link-form{grid-template-columns:1fr}.resources-actions,.resource-section-head,.resource-detail-head{flex-direction:column}.resource-detail-head>div:last-child{display:flex;flex-direction:row}}
+
+.resource-original-title,.resource-card-original{font:italic 12px Georgia,serif;color:#756f65}
+.resource-card-original{display:block;margin-top:2px}
+.resource-summary{display:grid;gap:12px}
+.resource-summary p{margin:0;line-height:1.65;white-space:pre-line}
