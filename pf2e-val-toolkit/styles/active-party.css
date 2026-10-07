@@ -29,10 +29,16 @@
   border-radius: 4px;
 }
 
-.pf2e-val-active-party-member img {
-  width: 34px;
-  height: 34px;
-  object-fit: cover;
+.pf2e-val-active-party .pf2e-val-active-party-member > img {
+  width: 34px !important;
+  height: 34px !important;
+  min-width: 34px !important;
+  max-width: 34px !important;
+  min-height: 34px !important;
+  max-height: 34px !important;
+  inline-size: 34px !important;
+  block-size: 34px !important;
+  object-fit: cover !important;
   border: 0;
   border-radius: 3px;
 }
