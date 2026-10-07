@@ -19,8 +19,14 @@ function sourceActor(token) {
   return game.actors.get(token?.actorId) ?? token?.actor ?? null;
 }
 
-function baseName(token) {
-  return sourceActor(token)?.name ?? token?.actor?.name ?? token?.name ?? "PNJ";
+function baseNames(token) {
+  const actor = sourceActor(token);
+  return [...new Set([
+    actor?.prototypeToken?.name,
+    actor?.name,
+    token?.actor?.prototypeToken?.name,
+    token?.actor?.name
+  ].filter((name) => typeof name === "string" && name.trim()))];
 }
 
 function escapeRegExp(value) {
@@ -46,17 +52,24 @@ function managedName(name, base) {
   return expression.test(name ?? "");
 }
 
-function usedSuffixes(tokens, base) {
-  const expression = new RegExp(`^${escapeRegExp(base)} (?:([A-Z]+)|(\\d+))$`);
+function managedBase(name, bases) {
+  return bases.find((base) => managedName(name, base)) ?? null;
+}
+
+function usedSuffixes(tokens, bases) {
   const used = new Set();
   for (const token of tokens) {
-    const match = expression.exec(token.name ?? "");
-    if (!match) continue;
-    if (match[2]) used.add(Number(match[2]) - 1);
-    else {
-      let value = 0;
-      for (const character of match[1]) value = value * 26 + character.charCodeAt(0) - 64;
-      used.add(value - 1);
+    for (const base of bases) {
+      const expression = new RegExp(`^${escapeRegExp(base)} (?:([A-Z]+)|(\\d+))$`);
+      const match = expression.exec(token.name ?? "");
+      if (!match) continue;
+      if (match[2]) used.add(Number(match[2]) - 1);
+      else {
+        let value = 0;
+        for (const character of match[1]) value = value * 26 + character.charCodeAt(0) - 64;
+        used.add(value - 1);
+      }
+      break;
     }
   }
   return used;
@@ -79,12 +92,14 @@ async function nameDuplicates(scene, actorId) {
   const tokens = scene.tokens.filter((token) => token.actorId === actorId && isNpc(sourceActor(token)));
   if (tokens.length < 2) return;
 
-  const base = baseName(tokens[0]);
-  const used = usedSuffixes(tokens, base);
+  const bases = baseNames(tokens[0]);
+  if (!bases.length) return;
+  const used = usedSuffixes(tokens, bases);
   const updates = [];
 
   for (const token of tokens) {
-    if (!managedName(token.name, base)) continue;
+    const base = managedBase(token.name, bases);
+    if (!base) continue;
     if (new RegExp(`^${escapeRegExp(base)} (?:[A-Z]+|\\d+)$`).test(token.name ?? "")) continue;
     let index = 0;
     while (used.has(index)) index += 1;
