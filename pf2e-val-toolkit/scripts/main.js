@@ -41,6 +41,13 @@ Hooks.once("init", () => {
   registerTokenNamingSettings();
   registerPf2eHudIntegrationSettings();
   registerPortraitTokenSyncSettings();
+
+  // Scene-control hooks must be registered during init, before Foundry builds
+  // the left-hand scene controls for the first time.
+  initActiveParty();
+  initCreatureIndex();
+  initEncounterBuilder();
+  initQuickNpc();
 });
 
 Hooks.once("ready", () => {
@@ -52,10 +59,6 @@ Hooks.once("ready", () => {
 
   initCombatMovement();
   initQuickCombatScene();
-  initActiveParty();
-  initCreatureIndex();
-  initEncounterBuilder();
-  initQuickNpc();
   initPatches();
   initQuickEffects();
   initOutcomeEffects();
