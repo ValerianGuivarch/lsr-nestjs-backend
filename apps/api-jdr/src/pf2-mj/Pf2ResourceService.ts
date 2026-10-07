@@ -29,6 +29,7 @@ export type Pf2ResourceFile = {
 export type Pf2Resource = {
   id: string
   title: string
+  nom_vo: string
   description: string
   summary: string
   origin: string
@@ -41,6 +42,7 @@ export type Pf2Resource = {
 
 type ResourceInput = {
   title?: unknown
+  nom_vo?: unknown
   description?: unknown
   summary?: unknown
   origin?: unknown
@@ -51,6 +53,7 @@ type ResourceInput = {
 type ResourceRow = {
   id: string
   title: string
+  nom_vo: string
   description: string
   summary: string
   origin: string
@@ -96,7 +99,7 @@ export class Pf2ResourceService {
 
     return resources.filter((resource) => {
       if (q) {
-        const haystack = this.fold([resource.title, resource.description, resource.summary, resource.origin, ...resource.tags].join(' '))
+        const haystack = this.fold([resource.title, resource.nom_vo, resource.description, resource.summary, resource.origin, ...resource.tags].join(' '))
         if (!haystack.includes(q)) return false
       }
       if (tag && !resource.tags.some((value) => this.fold(value) === tag)) return false
@@ -124,8 +127,8 @@ export class Pf2ResourceService {
     const id = randomUUID()
     await this.dataSource.transaction(async (manager) => {
       await manager.query(
-        'INSERT INTO pf2_resource (id, title, description, summary, origin, tags, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)',
-        [id, normalized.title, normalized.description, normalized.summary, normalized.origin, JSON.stringify(normalized.tags)],
+        'INSERT INTO pf2_resource (id, title, nom_vo, description, summary, origin, tags, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)',
+        [id, normalized.title, normalized.nom_vo, normalized.description, normalized.summary, normalized.origin, JSON.stringify(normalized.tags)],
       )
       await this.replaceLinks(manager, id, normalized.links)
     })
@@ -137,8 +140,8 @@ export class Pf2ResourceService {
     const normalized = this.normalizeInput(input)
     await this.dataSource.transaction(async (manager) => {
       await manager.query(
-        'UPDATE pf2_resource SET title = ?, description = ?, summary = ?, origin = ?, tags = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
-        [normalized.title, normalized.description, normalized.summary, normalized.origin, JSON.stringify(normalized.tags), id],
+        'UPDATE pf2_resource SET title = ?, nom_vo = ?, description = ?, summary = ?, origin = ?, tags = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+        [normalized.title, normalized.nom_vo, normalized.description, normalized.summary, normalized.origin, JSON.stringify(normalized.tags), id],
       )
       await this.replaceLinks(manager, id, normalized.links)
     })
@@ -189,7 +192,7 @@ export class Pf2ResourceService {
 
   async export(): Promise<Record<string, unknown>> {
     return {
-      schemaVersion: 1,
+      schemaVersion: 2,
       exportedAt: new Date().toISOString(),
       resources: await this.all(),
     }
@@ -220,6 +223,7 @@ export class Pf2ResourceService {
     return {
       id: row.id,
       title: row.title,
+      nom_vo: row.nom_vo,
       description: row.description,
       summary: row.summary,
       origin: row.origin,
@@ -246,7 +250,7 @@ export class Pf2ResourceService {
     }
   }
 
-  private normalizeInput(input: ResourceInput): { title: string; description: string; summary: string; origin: string; tags: string[]; links: Pf2ResourceLink[] } {
+  private normalizeInput(input: ResourceInput): { title: string; nom_vo: string; description: string; summary: string; origin: string; tags: string[]; links: Pf2ResourceLink[] } {
     const title = this.text(input.title)
     if (!title) throw new BadRequestException('Le titre de la ressource est obligatoire.')
     const tagsRaw = Array.isArray(input.tags) ? input.tags : typeof input.tags === 'string' ? input.tags.split(',') : []
@@ -266,6 +270,7 @@ export class Pf2ResourceService {
       .map((link, index) => ({ ...link, sortOrder: index }))
     return {
       title,
+      nom_vo: this.text(input.nom_vo),
       description: this.text(input.description),
       summary: this.text(input.summary),
       origin: this.text(input.origin),
