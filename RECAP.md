@@ -907,7 +907,8 @@ pf2_resource_link
 
 Un enregistrement `pf2_resource` contient :
 
-- un titre ;
+- un titre français ;
+- un `nom_vo` conservant le titre original ;
 - une description courte ;
 - un résumé détaillé (MJ, secrets compris) ;
 - une origine libre, par exemple `Trilemma` ;
@@ -945,7 +946,7 @@ GET    /api/pf2-mj/resources/:id/files/:fileId
 DELETE /api/pf2-mj/resources/:id/files/:fileId
 ```
 
-L'export JSON contient toutes les métadonnées, tags, rattachements et références de fichiers ; il est conçu pour pouvoir être fourni à une IA afin de rechercher rapidement les ressources adaptées à une situation de jeu.
+L'export JSON contient toutes les métadonnées, titre français, `nom_vo`, tags, rattachements et références de fichiers ; il est conçu pour pouvoir être fourni à une IA afin de rechercher rapidement les ressources adaptées à une situation de jeu.
 
 ### 12.9 Situation actuelle
 
