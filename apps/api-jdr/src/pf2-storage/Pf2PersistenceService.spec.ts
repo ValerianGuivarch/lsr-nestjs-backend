@@ -121,6 +121,7 @@ describe('Pf2PersistenceService', () => {
       , { id: '025-player-private-space' }
       , { id: '026-player-codex-publication-and-short-description' }
       , { id: '027-resource-library' }
+      , { id: '028-resource-original-title' }
     ])
 
     await currentDataSource().destroy()
@@ -157,6 +158,7 @@ describe('Pf2PersistenceService', () => {
       , { id: '025-player-private-space' }
       , { id: '026-player-codex-publication-and-short-description' }
       , { id: '027-resource-library' }
+      , { id: '028-resource-original-title' }
     ])
   })
 
