@@ -989,6 +989,14 @@ export class Pf2PersistenceService implements OnModuleInit {
       }
     })
 
+    await this.applyMigration('029-resource-favorite', async (manager) => {
+      const columns = await manager.query("PRAGMA table_info('pf2_resource')") as Array<{ name: string }>
+      if (!columns.some((column) => column.name === 'favorite')) {
+        await manager.query('ALTER TABLE pf2_resource ADD COLUMN favorite INTEGER NOT NULL DEFAULT 0')
+      }
+      await manager.query('CREATE INDEX IF NOT EXISTS idx_pf2_resource_favorite ON pf2_resource (favorite, title COLLATE NOCASE)')
+    })
+
     await this.assertDatabaseIntegrity(this.dataSource, 'base SQLite après migrations')
   }
 

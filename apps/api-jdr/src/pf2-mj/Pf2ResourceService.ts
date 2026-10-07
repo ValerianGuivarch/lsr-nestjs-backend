@@ -33,6 +33,7 @@ export type Pf2Resource = {
   description: string
   summary: string
   origin: string
+  favorite: boolean
   tags: string[]
   files: Pf2ResourceFile[]
   links: Pf2ResourceLink[]
@@ -46,6 +47,7 @@ type ResourceInput = {
   description?: unknown
   summary?: unknown
   origin?: unknown
+  favorite?: unknown
   tags?: unknown
   links?: unknown
 }
@@ -57,6 +59,7 @@ type ResourceRow = {
   description: string
   summary: string
   origin: string
+  favorite: number
   tags: string
   created_at: string
   updated_at: string
@@ -127,8 +130,8 @@ export class Pf2ResourceService {
     const id = randomUUID()
     await this.dataSource.transaction(async (manager) => {
       await manager.query(
-        'INSERT INTO pf2_resource (id, title, nom_vo, description, summary, origin, tags, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)',
-        [id, normalized.title, normalized.nom_vo, normalized.description, normalized.summary, normalized.origin, JSON.stringify(normalized.tags)],
+        'INSERT INTO pf2_resource (id, title, nom_vo, description, summary, origin, favorite, tags, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)',
+        [id, normalized.title, normalized.nom_vo, normalized.description, normalized.summary, normalized.origin, normalized.favorite ? 1 : 0, JSON.stringify(normalized.tags)],
       )
       await this.replaceLinks(manager, id, normalized.links)
     })
@@ -140,8 +143,8 @@ export class Pf2ResourceService {
     const normalized = this.normalizeInput(input)
     await this.dataSource.transaction(async (manager) => {
       await manager.query(
-        'UPDATE pf2_resource SET title = ?, nom_vo = ?, description = ?, summary = ?, origin = ?, tags = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
-        [normalized.title, normalized.nom_vo, normalized.description, normalized.summary, normalized.origin, JSON.stringify(normalized.tags), id],
+        'UPDATE pf2_resource SET title = ?, nom_vo = ?, description = ?, summary = ?, origin = ?, favorite = ?, tags = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+        [normalized.title, normalized.nom_vo, normalized.description, normalized.summary, normalized.origin, normalized.favorite ? 1 : 0, JSON.stringify(normalized.tags), id],
       )
       await this.replaceLinks(manager, id, normalized.links)
     })
@@ -227,6 +230,7 @@ export class Pf2ResourceService {
       description: row.description,
       summary: row.summary,
       origin: row.origin,
+      favorite: Boolean(row.favorite),
       tags,
       files: files.map((file) => ({
         id: file.id,
@@ -250,7 +254,7 @@ export class Pf2ResourceService {
     }
   }
 
-  private normalizeInput(input: ResourceInput): { title: string; nom_vo: string; description: string; summary: string; origin: string; tags: string[]; links: Pf2ResourceLink[] } {
+  private normalizeInput(input: ResourceInput): { title: string; nom_vo: string; description: string; summary: string; origin: string; favorite: boolean; tags: string[]; links: Pf2ResourceLink[] } {
     const title = this.text(input.title)
     if (!title) throw new BadRequestException('Le titre de la ressource est obligatoire.')
     const tagsRaw = Array.isArray(input.tags) ? input.tags : typeof input.tags === 'string' ? input.tags.split(',') : []
@@ -274,6 +278,7 @@ export class Pf2ResourceService {
       description: this.text(input.description),
       summary: this.text(input.summary),
       origin: this.text(input.origin),
+      favorite: input.favorite === true || input.favorite === 1 || input.favorite === '1' || input.favorite === 'true',
       tags,
       links: dedupedLinks,
     }
