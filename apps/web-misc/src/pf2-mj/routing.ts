@@ -1,6 +1,6 @@
 import type { Container, PlayableUnit } from './catalogue'
 
-export type View = 'journal' | 'journaux' | 'find' | 'library' | 'prepare' | 'maintenance' | 'documents' | 'chronology' | 'excluded' | 'settings' | 'pnj' | 'factions' | 'lieux' | 'regions' | 'evenements'
+export type View = 'journal' | 'journaux' | 'find' | 'library' | 'resources' | 'prepare' | 'maintenance' | 'documents' | 'chronology' | 'excluded' | 'settings' | 'pnj' | 'factions' | 'lieux' | 'regions' | 'evenements'
 export type ReferenceView = 'pnj' | 'factions' | 'lieux' | 'regions' | 'evenements'
 
 export const viewPaths: Record<View, string> = {
@@ -8,9 +8,10 @@ export const viewPaths: Record<View, string> = {
   journaux: '/pf2-mj/journaux',
   find: '/pf2-mj/find',
   library: '/pf2-mj/catalogue',
+  resources: '/pf2-mj/resources',
   prepare: '/pf2-mj/prepare',
   maintenance: '/pf2-mj/maintenance',
-  documents: '/pf2-mj/resources',
+  documents: '/pf2-mj/documents',
   chronology: '/pf2-mj/chronology',
   excluded: '/pf2-mj/excluded',
   settings: '/pf2-mj/settings',
@@ -48,6 +49,7 @@ export type Pf2Route =
   | { kind: 'reference'; view: ReferenceView; id: string }
   | { kind: 'playable'; id: string }
   | { kind: 'container'; id: string }
+  | { kind: 'resource'; id: string }
   | { kind: 'not-found' }
 
 function decodedRouteId(value?: string): string | null {
@@ -64,6 +66,7 @@ export function resolvePf2Route(pathname: string): Pf2Route {
 
   if (segment === 'scenarios' && id) return { kind: 'playable', id }
   if ((segment === 'campaigns' || segment === 'containers') && id) return { kind: 'container', id }
+  if (segment === 'resources' && id) return { kind: 'resource', id }
 
   const view = (Object.entries(viewPaths).find(([, path]) => path === `/pf2-mj/${segment}`)?.[0] ?? null) as View | null
   if (!view) return { kind: 'not-found' }
