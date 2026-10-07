@@ -3,6 +3,7 @@ import { initReferenceIndexExporter } from "./reference-index/index.js";
 import { initCombatMovement } from "./combat-movement/index.js";
 import { initQuickCombatScene } from "./quick-combat-scene/index.js";
 import { initActiveParty, registerActivePartySettings } from "./active-party.js";
+import { initCreatureIndex } from "./improvisation/creature-index.js";
 import { initPatches } from "./patches/index.js";
 import { initGeneralActionsBrowser } from "./actions-browser/index.js";
 import { applyTranslationOverrides } from "./translation-overrides.js";
@@ -50,6 +51,7 @@ Hooks.once("ready", () => {
   initCombatMovement();
   initQuickCombatScene();
   initActiveParty();
+  initCreatureIndex();
   initPatches();
   initQuickEffects();
   initOutcomeEffects();
