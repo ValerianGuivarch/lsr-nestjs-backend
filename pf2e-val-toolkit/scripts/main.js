@@ -2,6 +2,7 @@ import { initScenarioImporter } from "./scenario-importer/index.js";
 import { initReferenceIndexExporter } from "./reference-index/index.js";
 import { initCombatMovement } from "./combat-movement/index.js";
 import { initQuickCombatScene } from "./quick-combat-scene/index.js";
+import { initActiveParty, registerActivePartySettings } from "./active-party.js";
 import { initPatches } from "./patches/index.js";
 import { initGeneralActionsBrowser } from "./actions-browser/index.js";
 import { applyTranslationOverrides } from "./translation-overrides.js";
@@ -33,6 +34,7 @@ Hooks.once("init", () => {
   applyTranslationOverrides();
   registerGuidedActionSettings();
   registerCareerXpSettings();
+  registerActivePartySettings();
   registerTokenNamingSettings();
   registerPf2eHudIntegrationSettings();
   registerPortraitTokenSyncSettings();
@@ -47,6 +49,7 @@ Hooks.once("ready", () => {
 
   initCombatMovement();
   initQuickCombatScene();
+  initActiveParty();
   initPatches();
   initQuickEffects();
   initOutcomeEffects();

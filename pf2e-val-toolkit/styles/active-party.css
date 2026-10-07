@@ -1,0 +1,57 @@
+.pf2e-val-active-party-dialog {
+  width: 520px !important;
+  max-width: min(520px, calc(100vw - 32px)) !important;
+}
+
+.pf2e-val-active-party {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.pf2e-val-active-party h3,
+.pf2e-val-active-party p {
+  margin: 0;
+}
+
+.pf2e-val-active-party-list {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.pf2e-val-active-party-member {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.3rem 0.4rem;
+  border: 1px solid rgb(127 127 127 / 22%);
+  border-radius: 4px;
+}
+
+.pf2e-val-active-party-member img {
+  width: 34px;
+  height: 34px;
+  object-fit: cover;
+  border: 0;
+  border-radius: 3px;
+}
+
+.pf2e-val-active-party-member span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pf2e-val-active-party-member strong {
+  white-space: nowrap;
+  font-size: 0.78rem;
+}
+
+.pf2e-val-active-party-empty {
+  padding: 0.6rem;
+  border: 1px dashed rgb(127 127 127 / 35%);
+  border-radius: 4px;
+  text-align: center;
+  opacity: 0.75;
+}
