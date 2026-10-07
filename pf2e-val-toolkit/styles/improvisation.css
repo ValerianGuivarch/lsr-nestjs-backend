@@ -1,0 +1,24 @@
+.pf2e-val-improv-dialog { width: 620px !important; max-width: min(620px, calc(100vw - 32px)) !important; }
+.pf2e-val-improv-preview { width: 560px !important; max-width: min(560px, calc(100vw - 32px)) !important; }
+.pf2e-val-improv-form { display: flex; flex-direction: column; gap: .6rem; }
+.pf2e-val-improv-form fieldset { border: 1px solid rgb(127 127 127 / 28%); border-radius: 5px; padding: .55rem; }
+.pf2e-val-improv-form legend { padding: 0 .25rem; font-weight: 700; }
+.pf2e-val-improv-form label { display: flex; flex-direction: column; gap: .18rem; font-size: .78rem; }
+.pf2e-val-improv-form .hint { margin: .1rem 0 .4rem; }
+.pf2e-val-improv-grid { display: grid; gap: .45rem; }
+.pf2e-val-improv-grid.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.pf2e-val-improv-grid.three { grid-template-columns: repeat(3, minmax(0, 1fr)); margin-top: .45rem; }
+.pf2e-val-improv-selected { flex-direction: row !important; align-items: center; padding: .45rem; border: 1px solid rgb(127 127 127 / 25%); border-radius: 4px; }
+.pf2e-val-improv-selected input { flex: 0 0 auto; }
+.pf2e-val-improv-results { display: flex; flex-direction: column; gap: .55rem; }
+.pf2e-val-improv-results > header { display: flex; justify-content: space-between; gap: 1rem; align-items: start; }
+.pf2e-val-improv-results > header > div { display: flex; flex-direction: column; }
+.pf2e-val-improv-budget { text-align: right; }
+.pf2e-val-improv-result-list { display: grid; gap: .3rem; }
+.pf2e-val-improv-result-row { display: flex; justify-content: space-between; align-items: center; gap: .7rem; padding: .42rem .5rem; border: 1px solid rgb(127 127 127 / 25%); border-radius: 4px; }
+.pf2e-val-improv-result-row.fixed { opacity: .82; }
+.pf2e-val-improv-result-main { display: flex; flex-direction: column; min-width: 0; }
+.pf2e-val-improv-result-main strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pf2e-val-improv-result-main span { font-size: .73rem; opacity: .76; }
+.pf2e-val-improv-result-row > label { display: flex; align-items: center; gap: .3rem; font-size: .72rem; }
+@media (max-width: 560px) { .pf2e-val-improv-grid.two, .pf2e-val-improv-grid.three { grid-template-columns: 1fr; } }

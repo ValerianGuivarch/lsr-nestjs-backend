@@ -4,6 +4,7 @@ import { initCombatMovement } from "./combat-movement/index.js";
 import { initQuickCombatScene } from "./quick-combat-scene/index.js";
 import { initActiveParty, registerActivePartySettings } from "./active-party.js";
 import { initCreatureIndex } from "./improvisation/creature-index.js";
+import { initEncounterBuilder } from "./improvisation/encounter-builder.js";
 import { initPatches } from "./patches/index.js";
 import { initGeneralActionsBrowser } from "./actions-browser/index.js";
 import { applyTranslationOverrides } from "./translation-overrides.js";
@@ -52,6 +53,7 @@ Hooks.once("ready", () => {
   initQuickCombatScene();
   initActiveParty();
   initCreatureIndex();
+  initEncounterBuilder();
   initPatches();
   initQuickEffects();
   initOutcomeEffects();
