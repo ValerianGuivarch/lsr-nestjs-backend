@@ -324,10 +324,11 @@ La navigation quotidienne est volontairement réduite à quatre domaines :
 
 - **Journal MJ** : campagnes/aventures à jouer, en cours ou jouées ;
 - **Catalogue** : navigation complète, recherche avancée, chronologie et mis de côté ;
+- **Ressources** : bibliothèque indépendante de contenus réutilisables (titre, description courte, résumé détaillé, origine, tags, plusieurs PDF et rattachements optionnels aux campagnes/scénarios/composants jouables) ;
 - **Monde** : PNJ, factions, lieux, régions et événements ;
 - **Administration** : maintenance du catalogue, inventaire PDF, préparation technique et migrations.
 
-`Trouver une partie` reste disponible comme recherche avancée du Catalogue ; `Ressources PDF`, `Maintenance` et `Préparation technique` restent disponibles mais ne sont plus des entrées principales.
+`Trouver une partie` reste disponible comme recherche avancée du Catalogue ; l’ancien inventaire physique `Ressources PDF` est désormais nommé `Inventaire PDF` et reste en Administration sur `/pf2-mj/documents`. La bibliothèque métier `Ressources` possède sa propre entrée principale sur `/pf2-mj/resources` ; `Maintenance` et `Préparation technique` restent disponibles mais ne sont plus des entrées principales.
 
 Les `arcIds` peuvent représenter une **campagne transverse** composée de scénarios PFS appartenant à plusieurs saisons. Une saison PFS reste un conteneur du catalogue, jamais automatiquement une campagne du Journal.
 
@@ -892,7 +893,61 @@ pending
 
 Le succès réel du Toolkit est ce qui marque le déploiement comme terminé. L’interface ne doit pas simuler un succès.
 
-### 12.8 Situation actuelle
+### 12.8 Bibliothèque de ressources réutilisables
+
+Les contenus externes ou génériques qui servent d'inspiration sans être eux-mêmes des scénarios du catalogue vivent dans un domaine séparé.
+
+Tables SQLite :
+
+```text
+pf2_resource
+pf2_resource_file
+pf2_resource_link
+```
+
+Un enregistrement `pf2_resource` contient :
+
+- un titre ;
+- une description courte ;
+- un résumé détaillé (MJ, secrets compris) ;
+- une origine libre, par exemple `Trilemma` ;
+- des tags libres.
+
+Les fichiers lourds ne sont pas versionnés dans Git. Plusieurs PDF peuvent appartenir à la même ressource et sont stockés sous :
+
+```text
+storage/pf2-resources/<resource-id>/
+```
+
+Cela permet notamment de conserver ensemble original, traduction et variantes documentaires.
+
+Une ressource peut être rattachée sans devenir membre du catalogue à :
+
+```text
+campaign
+scenario
+component
+```
+
+Pour un composant jouable, la cible est le couple `target_id + component_id` afin que deux scénarios puissent utiliser le même identifiant local de composant sans collision.
+
+API principale :
+
+```text
+GET    /api/pf2-mj/resources
+POST   /api/pf2-mj/resources
+GET    /api/pf2-mj/resources/export
+GET    /api/pf2-mj/resources/:id
+PUT    /api/pf2-mj/resources/:id
+DELETE /api/pf2-mj/resources/:id
+POST   /api/pf2-mj/resources/:id/files
+GET    /api/pf2-mj/resources/:id/files/:fileId
+DELETE /api/pf2-mj/resources/:id/files/:fileId
+```
+
+L'export JSON contient toutes les métadonnées, tags, rattachements et références de fichiers ; il est conçu pour pouvoir être fourni à une IA afin de rechercher rapidement les ressources adaptées à une situation de jeu.
+
+### 12.9 Situation actuelle
 
 Au 27 septembre 2026 :
 
@@ -1270,7 +1325,7 @@ Ce fichier doit rester un **manuel d’état courant**, pas un journal de toutes
 
 ## 21. Ordre de travail recommandé à partir de maintenant
 
-1. **Conserver Journal / Catalogue / Monde / Administration comme navigation principale.**
+1. **Conserver Journal / Catalogue / Ressources / Monde / Administration comme navigation principale.**
 2. **Enrichir les arcs narratifs PFS transverses**, en commençant par les ensembles réellement joués ; une saison PFS n’est pas une campagne.
 3. **Auditer la couverture Foundry préexistante** avant de générer de nouveaux assets ; réutiliser ce qui existe déjà.
 4. **Automatiser le pipeline** : catalogue/PDF → analyse → références Foundry à la demande → package validé → intégration → déploiement Toolkit → vérification.
