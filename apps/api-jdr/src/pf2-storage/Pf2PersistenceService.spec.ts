@@ -120,6 +120,7 @@ describe('Pf2PersistenceService', () => {
       , { id: '024-wiki-discord-login' }
       , { id: '025-player-private-space' }
       , { id: '026-player-codex-publication-and-short-description' }
+      , { id: '027-resource-library' }
     ])
 
     await currentDataSource().destroy()
@@ -155,6 +156,7 @@ describe('Pf2PersistenceService', () => {
       , { id: '024-wiki-discord-login' }
       , { id: '025-player-private-space' }
       , { id: '026-player-codex-publication-and-short-description' }
+      , { id: '027-resource-library' }
     ])
   })
 
