@@ -8,6 +8,7 @@ export type Pf2ResourceFile = { id: string; resourceId: string; filename: string
 export type Pf2Resource = {
   id: string
   title: string
+  nom_vo: string
   description: string
   summary: string
   origin: string
@@ -25,7 +26,7 @@ const suggestedTags = [
   'Carte', 'Table aléatoire', 'Inspiration', 'One-shot',
 ]
 
-const emptyDraft = { title: '', description: '', summary: '', origin: '', tags: [] as string[], links: [] as Pf2ResourceLink[] }
+const emptyDraft = { title: '', nom_vo: '', description: '', summary: '', origin: '', tags: [] as string[], links: [] as Pf2ResourceLink[] }
 
 function resourceHref(id: string): string { return `/pf2-mj/resources/${encodeURIComponent(id)}` }
 function apiHref(path = ''): string { return `/apil7r/pf2-mj/resources${path}` }
@@ -113,7 +114,7 @@ export function ResourceTargetPanel({ targetKind, targetId, componentId = null }
 }
 
 function ResourceEditor({ resource, onSaved, onCancel }: { resource?: Pf2Resource; onSaved: (resource: Pf2Resource) => void; onCancel: () => void }) {
-  const [draft, setDraft] = useState(() => resource ? { title: resource.title, description: resource.description, summary: resource.summary, origin: resource.origin, tags: resource.tags, links: resource.links } : emptyDraft)
+  const [draft, setDraft] = useState(() => resource ? { title: resource.title, nom_vo: resource.nom_vo, description: resource.description, summary: resource.summary, origin: resource.origin, tags: resource.tags, links: resource.links } : emptyDraft)
   const [tagText, setTagText] = useState(resource?.tags.join(', ') ?? '')
   const [message, setMessage] = useState('')
   const [linkKind, setLinkKind] = useState<Pf2ResourceTargetKind>('scenario')
@@ -156,7 +157,7 @@ function ResourceEditor({ resource, onSaved, onCancel }: { resource?: Pf2Resourc
 
   return <section className="resource-editor">
     <div className="resource-editor-head"><div><small>{resource ? 'MODIFIER' : 'NOUVELLE RESSOURCE'}</small><h2>{resource?.title || 'Créer une ressource'}</h2></div><button onClick={onCancel}>×</button></div>
-    <label>Titre<input value={draft.title} onChange={(event) => setDraft((value) => ({ ...value, title: event.target.value }))} /></label>
+    <label>Titre français<input value={draft.title} onChange={(event) => setDraft((value) => ({ ...value, title: event.target.value }))} /></label>
     <label>Description courte<textarea rows={2} value={draft.description} onChange={(event) => setDraft((value) => ({ ...value, description: event.target.value }))} placeholder="Une phrase pour comprendre immédiatement ce que contient la ressource." /></label>
     <label>Résumé détaillé<textarea rows={10} value={draft.summary} onChange={(event) => setDraft((value) => ({ ...value, summary: event.target.value }))} placeholder="Résumé complet, secrets compris, pour retrouver rapidement ce qui peut être réutilisé." /></label>
     <div className="resource-editor-grid"><label>Origine<input value={draft.origin} onChange={(event) => setDraft((value) => ({ ...value, origin: event.target.value }))} placeholder="Trilemma" /></label><label>Tags<input list="resource-tag-suggestions" value={tagText} onChange={(event) => setTagText(event.target.value)} placeholder="Quête, Ruines, Exploration…" /><datalist id="resource-tag-suggestions">{suggestedTags.map((tag) => <option key={tag} value={tag} />)}</datalist></label></div>
@@ -198,9 +199,9 @@ function ResourceDetail({ resource, onChanged, onBack }: { resource: Pf2Resource
   return <section className="resource-detail">
     <div className="entity-page-toolbar"><button onClick={onBack}>← Retour aux ressources</button><span>Ressource réutilisable · indépendante du catalogue jouable</span></div>
     <article className="entity-page-card">
-      <div className="resource-detail-head"><div><small>{resource.origin || 'ORIGINE NON RENSEIGNÉE'}</small><h2>{resource.title}</h2><p>{resource.description || 'Description courte non renseignée.'}</p></div><div><button onClick={() => setEditing(true)}>Modifier</button><button className="danger" onClick={() => void removeResource()}>Supprimer</button></div></div>
+      <div className="resource-detail-head"><div><small>{resource.origin || 'ORIGINE NON RENSEIGNÉE'}</small><h2>{resource.title}</h2>{resource.nom_vo && <em className="resource-original-title">VO · {resource.nom_vo}</em>}<p>{resource.description || 'Description courte non renseignée.'}</p></div><div><button onClick={() => setEditing(true)}>Modifier</button><button className="danger" onClick={() => void removeResource()}>Supprimer</button></div></div>
       {resource.tags.length > 0 && <div className="resource-tags">{resource.tags.map((tag) => <span key={tag}>{tag}</span>)}</div>}
-      <section className="detail-section synopsis-long"><h3>Résumé détaillé</h3><p>{resource.summary || 'Résumé détaillé non renseigné.'}</p></section>
+      <section className="detail-section synopsis-long"><h3>Résumé détaillé</h3><div className="resource-summary">{(resource.summary || 'Résumé détaillé non renseigné.').split(/\n{2,}/).map((paragraph, index) => <p key={index}>{paragraph}</p>)}</div></section>
       <section className="detail-section"><div className="resource-section-head"><div><h3>PDF</h3><p>Original, traduction, cartes ou autres variantes peuvent coexister.</p></div><label className="resource-upload">Ajouter un PDF<input type="file" accept="application/pdf,.pdf" onChange={(event) => { const file = event.target.files?.[0]; event.target.value = ''; void upload(file) }} /></label></div>{resource.files.length ? <div className="resource-files">{resource.files.map((file) => <article key={file.id}><a href={file.downloadUrl} target="_blank" rel="noreferrer"><strong>{file.label || file.filename}</strong><span>{file.filename} · {bytesLabel(file.sizeBytes)}</span></a><button onClick={() => void removeFile(file.id)}>Supprimer</button></article>)}</div> : <p className="missing">Aucun PDF ajouté.</p>}</section>
       <section className="detail-section"><h3>Utilisé dans</h3>{resource.links.length ? <div className="resource-link-chips static">{resource.links.map((link) => <span key={`${link.targetKind}-${link.targetId}-${link.componentId ?? ''}`}>{targetLabel(link)}</span>)}</div> : <p className="missing">Cette ressource n’est encore rattachée à aucun contenu jouable.</p>}</section>
       {message && <p className="resource-message">{message}</p>}
@@ -232,7 +233,7 @@ export default function ResourcesPage({ initialSelectedId }: { initialSelectedId
       if (tag && !resource.tags.includes(tag)) return false
       if (origin && resource.origin !== origin) return false
       if (!folded) return true
-      const haystack = [resource.title, resource.description, resource.summary, resource.origin, ...resource.tags].join(' ').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase('fr')
+      const haystack = [resource.title, resource.nom_vo, resource.description, resource.summary, resource.origin, ...resource.tags].join(' ').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase('fr')
       return haystack.includes(folded)
     })
   }, [resources, query, tag, origin])
@@ -262,6 +263,6 @@ export default function ResourcesPage({ initialSelectedId }: { initialSelectedId
     <div className="resources-actions"><div><strong>{resources.length} ressource{resources.length > 1 ? 's' : ''}</strong><span>Bibliothèque de scénarios courts, lieux, cartes et idées réutilisables.</span></div><button onClick={() => void exportJson()}>Exporter JSON</button><button className="primary" onClick={() => setCreating(true)}>＋ Nouvelle ressource</button></div>
     <div className="resource-filters"><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Rechercher dans titres, descriptions et résumés…" /><select value={tag} onChange={(event) => setTag(event.target.value)}><option value="">Tous les tags</option>{tags.map((value) => <option key={value}>{value}</option>)}</select><select value={origin} onChange={(event) => setOrigin(event.target.value)}><option value="">Toutes les origines</option>{origins.map((value) => <option key={value}>{value}</option>)}</select></div>
     {message && <p className="resource-message">{message}</p>}
-    {filtered.length ? <div className="resource-cards">{filtered.map((resource) => <Link to={resourceHref(resource.id)} key={resource.id}><header><small>{resource.origin || 'Sans origine'}</small><strong>{resource.title}</strong></header><p>{resource.description || resource.summary || 'Sans description.'}</p><footer><span>{resource.files.length} PDF</span><div>{resource.tags.slice(0, 5).map((value) => <em key={value}>{value}</em>)}</div></footer></Link>)}</div> : <div className="resources-empty"><strong>Aucune ressource</strong><p>{resources.length ? 'Aucun résultat avec ces filtres.' : 'Crée la première ressource ; les PDF Trilemma pourront ensuite être ajoutés ici.'}</p></div>}
+    {filtered.length ? <div className="resource-cards">{filtered.map((resource) => <Link to={resourceHref(resource.id)} key={resource.id}><header><small>{resource.origin || 'Sans origine'}</small><strong>{resource.title}</strong>{resource.nom_vo && <em className="resource-card-original">{resource.nom_vo}</em>}</header><p>{resource.description || resource.summary || 'Sans description.'}</p><footer><span>{resource.files.length} PDF</span><div>{resource.tags.slice(0, 5).map((value) => <em key={value}>{value}</em>)}</div></footer></Link>)}</div> : <div className="resources-empty"><strong>Aucune ressource</strong><p>{resources.length ? 'Aucun résultat avec ces filtres.' : 'Crée la première ressource ; les PDF Trilemma pourront ensuite être ajoutés ici.'}</p></div>}
   </section>
 }
