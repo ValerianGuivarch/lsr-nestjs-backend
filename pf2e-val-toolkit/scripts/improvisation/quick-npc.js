@@ -97,7 +97,7 @@ function scoreEntry(entry, criteria) {
   return score;
 }
 
-async function candidateEntries(criteria) {
+async function candidateEntries(criteria, excludedKeys = new Set()) {
   const index = game.pf2eValToolkit?.creatureIndex;
   if (!index) throw new Error("Index des créatures indisponible.");
 
@@ -115,7 +115,7 @@ async function candidateEntries(criteria) {
   if (!pool.length) pool = await search(2);
 
   return pool
-    .filter((entry) => !entry.traits.includes("troop"))
+    .filter((entry) => !entry.traits.includes("troop") && !excludedKeys.has(entry.key))
     .map((entry) => ({ entry, score: scoreEntry(entry, criteria) }))
     .sort((a, b) =>
       b.score - a.score ||
@@ -143,15 +143,22 @@ async function npcCoreTraits() {
     .sort((a, b) => b.count - a.count || a.value.localeCompare(b.value, "fr"));
 }
 
-async function askCriteria() {
+async function askCriteria(initial = null) {
   const DialogV2 = foundry.applications?.api?.DialogV2;
   if (!DialogV2?.wait) return null;
+  const values = {
+    level: initial?.level ?? partyLevel(),
+    role: initial?.role ?? "any",
+    query: initial?.query ?? "",
+    trait: initial?.trait ?? "",
+    rarity: initial?.rarity ?? "standard"
+  };
 
   const traits = await npcCoreTraits();
   const traitOptions = [
-    '<option value="">— aucun trait imposé —</option>',
+    `<option value="" ${values.trait ? "" : "selected"}>— aucun trait imposé —</option>`,
     ...traits.map(({ value, count }) =>
-      `<option value="${escapeHtml(value)}">${escapeHtml(traitLabel(value))} (${count})</option>`
+      `<option value="${escapeHtml(value)}" ${values.trait === value ? "selected" : ""}>${escapeHtml(traitLabel(value))} (${count})</option>`
     )
   ].join("");
 
@@ -162,18 +169,18 @@ async function askCriteria() {
       <form class="pf2e-val-quick-npc-form">
         <div class="pf2e-val-improv-grid two">
           <label>Niveau
-            <input type="number" name="level" min="0" max="20" value="${partyLevel()}">
+            <input type="number" name="level" min="0" max="20" value="${values.level}">
           </label>
           <label>Profil
             <select name="role">
               ${Object.entries(ROLE_LABELS).map(([value, label]) =>
-                `<option value="${value}">${label}</option>`
+                `<option value="${value}" ${values.role === value ? "selected" : ""}>${label}</option>`
               ).join("")}
             </select>
           </label>
         </div>
         <label>Concept / recherche
-          <input type="text" name="query" placeholder="nécromancien, garde, pirate, espion…">
+          <input type="text" name="query" value="${escapeHtml(values.query)}" placeholder="nécromancien, garde, pirate, espion…">
         </label>
         <div class="pf2e-val-improv-grid two">
           <label>Trait
@@ -181,9 +188,9 @@ async function askCriteria() {
           </label>
           <label>Rareté
             <select name="rarity">
-              <option value="standard" selected>Commune + peu commune</option>
-              <option value="common">Commune uniquement</option>
-              <option value="all">Toutes</option>
+              <option value="standard" ${values.rarity === "standard" ? "selected" : ""}>Commune + peu commune</option>
+              <option value="common" ${values.rarity === "common" ? "selected" : ""}>Commune uniquement</option>
+              <option value="all" ${values.rarity === "all" ? "selected" : ""}>Toutes</option>
             </select>
           </label>
         </div>
@@ -201,8 +208,9 @@ async function askCriteria() {
         default: true,
         callback: (_event, button) => {
           const data = Object.fromEntries(new FormData(button.form).entries());
+          const parsedLevel = Number.parseInt(data.level, 10);
           return {
-            level: Math.max(0, Math.min(20, Number.parseInt(data.level, 10) || partyLevel())),
+            level: Number.isFinite(parsedLevel) ? Math.max(0, Math.min(20, parsedLevel)) : partyLevel(),
             role: ROLE_LABELS[data.role] ? data.role : "any",
             query: String(data.query ?? "").trim(),
             trait: String(data.trait ?? ""),
@@ -223,18 +231,23 @@ async function askCriteria() {
 
 function candidateRows(candidates) {
   return candidates.map(({ entry, score }, index) => `
-    <label class="pf2e-val-quick-npc-candidate">
-      <input type="radio" name="candidate" value="${index}" ${index === 0 ? "checked" : ""}>
-      <img src="${escapeHtml(entry.img)}" alt="">
-      <span>
-        <strong>${escapeHtml(entry.name)}</strong>
-        <small>Niv. ${entry.level} · ${entry.traits.slice(0, 4).map(traitLabel).join(", ")}${score ? ` · pertinence ${score}` : ""}</small>
-      </span>
-    </label>
+    <div class="pf2e-val-quick-npc-candidate-row">
+      <label class="pf2e-val-quick-npc-candidate">
+        <input type="radio" name="candidate" value="${index}" ${index === 0 ? "checked" : ""}>
+        <img src="${escapeHtml(entry.img)}" alt="" width="24" height="24" style="width:24px!important;height:24px!important;min-width:24px!important;max-width:24px!important;min-height:24px!important;max-height:24px!important;object-fit:cover!important">
+        <span>
+          <strong>${escapeHtml(entry.name)}</strong>
+          <small>Niv. ${entry.level} · ${entry.traits.slice(0, 4).map(traitLabel).join(", ")}${score ? ` · pertinence ${score}` : ""}</small>
+        </span>
+      </label>
+      <a class="content-link pf2e-val-quick-npc-open" data-link data-uuid="${escapeHtml(entry.uuid)}" title="Ouvrir la fiche du compendium">
+        <i class="fa-solid fa-book-open"></i>
+      </a>
+    </div>
   `).join("");
 }
 
-async function askCandidate(criteria, candidates) {
+async function askCandidate(criteria, candidates, customName = "") {
   const DialogV2 = foundry.applications?.api?.DialogV2;
   if (!DialogV2?.wait) return null;
 
@@ -249,7 +262,7 @@ async function askCandidate(criteria, candidates) {
         </p>
         <div class="pf2e-val-quick-npc-list">${candidateRows(candidates)}</div>
         <label>Nom du PNJ
-          <input type="text" name="customName" placeholder="Laisser vide pour garder le nom du statblock">
+          <input type="text" name="customName" value="${escapeHtml(customName)}" placeholder="Laisser vide pour garder le nom du statblock">
         </label>
       </form>
     `,
@@ -282,10 +295,22 @@ async function askCandidate(criteria, candidates) {
         }
       },
       {
+        action: "reroll",
+        label: "Autres résultats",
+        icon: "fa-solid fa-dice",
+        callback: (_event, button) => ({
+          action: "reroll",
+          name: String(new FormData(button.form).get("customName") ?? "").trim()
+        })
+      },
+      {
         action: "back",
-        label: "Rechercher à nouveau",
+        label: "Retour aux critères",
         icon: "fa-solid fa-arrow-left",
-        callback: () => ({ action: "back" })
+        callback: (_event, button) => ({
+          action: "back",
+          name: String(new FormData(button.form).get("customName") ?? "").trim()
+        })
       },
       {
         action: "cancel",
@@ -362,13 +387,20 @@ async function openQuickNpc() {
     return null;
   }
 
-  while (true) {
-    const criteria = await askCriteria();
-    if (!criteria) return null;
+  let criteria = await askCriteria();
+  if (!criteria) return null;
 
+  let excludedKeys = new Set();
+  let customName = "";
+
+  while (true) {
     let candidates;
     try {
-      candidates = await candidateEntries(criteria);
+      candidates = await candidateEntries(criteria, excludedKeys);
+      if (!candidates.length && excludedKeys.size) {
+        excludedKeys = new Set();
+        candidates = await candidateEntries(criteria, excludedKeys);
+      }
     } catch (error) {
       console.error("PF2e Val Toolkit | Quick NPC search failed", error);
       ui.notifications.error(error?.message ?? "Impossible de chercher un PNJ.");
@@ -377,12 +409,29 @@ async function openQuickNpc() {
 
     if (!candidates.length) {
       ui.notifications.warn("Aucun statblock NPC Core ne correspond à ces critères.");
+      const revised = await askCriteria(criteria);
+      if (!revised) return null;
+      criteria = revised;
+      excludedKeys = new Set();
       continue;
     }
 
-    const choice = await askCandidate(criteria, candidates);
+    const choice = await askCandidate(criteria, candidates, customName);
     if (!choice) return null;
-    if (choice.action === "back") continue;
+    customName = choice.name ?? customName;
+
+    if (choice.action === "back") {
+      const revised = await askCriteria(criteria);
+      if (!revised) return null;
+      criteria = revised;
+      excludedKeys = new Set();
+      continue;
+    }
+
+    if (choice.action === "reroll") {
+      for (const candidate of candidates) excludedKeys.add(candidate.entry.key);
+      continue;
+    }
 
     const selected = candidates[choice.index]?.entry;
     if (!selected) {

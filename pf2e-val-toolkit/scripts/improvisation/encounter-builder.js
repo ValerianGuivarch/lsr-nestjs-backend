@@ -26,6 +26,55 @@ const COMPOSITIONS = Object.freeze({
   custom: "Composition personnalisée"
 });
 
+const COMPOSITION_PRESETS = Object.freeze({
+  auto: {
+    trivial: [
+      { strong: 0, medium: 1, weak: 1 },
+      { strong: 0, medium: 0, weak: 3 }
+    ],
+    low: [
+      { strong: 0, medium: 1, weak: 2 },
+      { strong: 0, medium: 0, weak: 4 }
+    ],
+    moderate: [
+      { strong: 0, medium: 1, weak: 2 },
+      { strong: 0, medium: 2, weak: 1 },
+      { strong: 1, medium: 0, weak: 2 }
+    ],
+    severe: [
+      { strong: 0, medium: 2, weak: 2 },
+      { strong: 1, medium: 1, weak: 2 },
+      { strong: 1, medium: 0, weak: 3 }
+    ],
+    extreme: [
+      { strong: 1, medium: 1, weak: 2 },
+      { strong: 1, medium: 2, weak: 1 },
+      { strong: 0, medium: 4, weak: 0 }
+    ]
+  },
+  boss: {
+    trivial: { strong: 0, medium: 1, weak: 1 },
+    low: { strong: 0, medium: 1, weak: 2 },
+    moderate: { strong: 1, medium: 0, weak: 2 },
+    severe: { strong: 1, medium: 0, weak: 2 },
+    extreme: { strong: 1, medium: 1, weak: 2 }
+  },
+  balanced: {
+    trivial: { strong: 0, medium: 1, weak: 1 },
+    low: { strong: 0, medium: 1, weak: 2 },
+    moderate: { strong: 0, medium: 1, weak: 2 },
+    severe: { strong: 0, medium: 2, weak: 2 },
+    extreme: { strong: 1, medium: 1, weak: 2 }
+  },
+  horde: {
+    trivial: { strong: 0, medium: 0, weak: 3 },
+    low: { strong: 0, medium: 0, weak: 4 },
+    moderate: { strong: 0, medium: 0, weak: 4 },
+    severe: { strong: 0, medium: 0, weak: 6 },
+    extreme: { strong: 0, medium: 0, weak: 8 }
+  }
+});
+
 const SCOPE_LABELS = Object.freeze({
   core: "Bestiaires principaux + NPC Core",
   compendiums: "Tous les compendiums",
@@ -126,6 +175,89 @@ function customCategoryDeltas(category) {
   return [-2, -3, -4];
 }
 
+function bestTheoreticalXp(counts, targetBudget) {
+  let totals = new Set([0]);
+  for (const [category, count] of Object.entries(counts)) {
+    const xpOptions = customCategoryDeltas(category).map((delta) => XP_BY_DELTA.get(delta));
+    for (let index = 0; index < count; index += 1) {
+      const next = new Set();
+      for (const total of totals) {
+        for (const xp of xpOptions) {
+          if (xp != null && total + xp <= targetBudget) next.add(total + xp);
+        }
+      }
+      totals = next;
+      if (!totals.size) return null;
+    }
+  }
+  return totals.size ? Math.max(...totals) : 0;
+}
+
+function fitPresetToParty(base, composition, threat, partySize) {
+  const targetBudget = encounterBudget(threat, partySize);
+  const baseCount = base.strong + base.medium + base.weak;
+  const strongMax = Math.min(4, base.strong + 2);
+  const mediumMax = Math.min(10, base.medium + 4);
+  const weakMax = Math.min(16, base.weak + 8);
+  let best = null;
+
+  for (let strong = 0; strong <= strongMax; strong += 1) {
+    for (let medium = 0; medium <= mediumMax; medium += 1) {
+      for (let weak = 0; weak <= weakMax; weak += 1) {
+        const totalCount = strong + medium + weak;
+        if (!totalCount) continue;
+        if (composition === "horde" && (strong || medium)) continue;
+        if (composition === "boss") {
+          if (strong + medium < 1) continue;
+          const minReinforcements = targetBudget >= 50 ? 2 : 1;
+          if (weak < minReinforcements) continue;
+        }
+
+        const counts = { strong, medium, weak };
+        const achieved = bestTheoreticalXp(counts, targetBudget);
+        if (achieved == null) continue;
+
+        const candidate = {
+          counts,
+          shortfall: targetBudget - achieved,
+          distance:
+            Math.abs(strong - base.strong) * 5 +
+            Math.abs(medium - base.medium) * 3 +
+            Math.abs(weak - base.weak),
+          countDistance: Math.abs(totalCount - baseCount)
+        };
+
+        if (!best ||
+          candidate.shortfall < best.shortfall ||
+          (candidate.shortfall === best.shortfall && candidate.distance < best.distance) ||
+          (candidate.shortfall === best.shortfall && candidate.distance === best.distance && candidate.countDistance < best.countDistance)) {
+          best = candidate;
+        }
+      }
+    }
+  }
+
+  return best?.counts ?? { ...base };
+}
+
+function compositionPreset(composition, threat, partySize = 4) {
+  if (composition === "custom") return null;
+  const byThreat = COMPOSITION_PRESETS[composition] ?? COMPOSITION_PRESETS.auto;
+  const configured = byThreat[threat] ?? byThreat.moderate;
+  const base = Array.isArray(configured) ? randomItem(configured) : configured;
+  if (!base) return { strong: 0, medium: 1, weak: 2 };
+  return fitPresetToParty(base, composition, threat, partySize);
+}
+
+function normalizedCounts(options) {
+  const fallback = compositionPreset(options.composition, options.threat, options.partySize) ?? { strong: 1, medium: 1, weak: 2 };
+  return {
+    strong: intValue(options.strong, fallback.strong, 0, 8),
+    medium: intValue(options.medium, fallback.medium, 0, 12),
+    weak: intValue(options.weak, fallback.weak, 0, 16)
+  };
+}
+
 async function candidatePool(options) {
   const index = game.pf2eValToolkit?.creatureIndex;
   if (!index) throw new Error("Index des créatures indisponible.");
@@ -174,53 +306,52 @@ function addGenerated(result, entry, partyLevel) {
   return true;
 }
 
-function buildCustom(pool, options, result) {
-  for (const [category, count] of [
-    ["strong", options.strong],
-    ["medium", options.medium],
-    ["weak", options.weak]
-  ]) {
-    const deltas = customCategoryDeltas(category);
-    for (let index = 0; index < count; index += 1) {
-      const entry = chooseCandidate(pool, options.partyLevel, deltas);
-      if (!entry) continue;
-      addGenerated(result, entry, options.partyLevel);
-    }
+function buildCountComposition(pool, options, result, targetBudget) {
+  const counts = normalizedCounts(options);
+  const slots = [];
+  for (const category of ["strong", "medium", "weak"]) {
+    for (let index = 0; index < counts[category]; index += 1) slots.push(category);
   }
-}
 
-function fillToBudget(pool, options, result, targetBudget) {
-  let total = result.reduce((sum, item) => sum + item.xp, 0);
-  const maxCreatures = 16;
-  let guard = 0;
+  const fixedXp = result.reduce((sum, item) => sum + item.xp, 0);
+  const availableBudget = Math.max(0, targetBudget - fixedXp);
+  const availableDeltas = new Map();
 
-  if (options.composition === "boss" && total < targetBudget && result.filter((x) => !x.fixed).length === 0) {
-    const reserveForReinforcements = targetBudget >= 60 ? 20 : 0;
-    const boss = chooseCandidate(
-      pool,
-      options.partyLevel,
-      [3, 2, 1, 0, -1, -2],
-      Math.max(0, targetBudget - total - reserveForReinforcements)
+  for (const category of ["strong", "medium", "weak"]) {
+    const deltas = customCategoryDeltas(category).filter((delta) =>
+      pool.some((entry) => entry.level - options.partyLevel === delta)
     );
-    if (boss) {
-      addGenerated(result, boss, options.partyLevel);
-      total += xpForLevel(boss.level, options.partyLevel);
-    }
+    availableDeltas.set(category, deltas);
   }
 
-  while (total < targetBudget && result.length < maxCreatures && guard < 50) {
-    guard += 1;
-    const remaining = targetBudget - total;
-    const priorities = preferredDeltas(options.composition, options.threat)
-      .filter((delta) => (XP_BY_DELTA.get(delta) ?? Infinity) <= remaining);
+  let states = [{ xp: 0, selected: 0, plan: [] }];
+  for (const category of slots) {
+    const next = new Map();
+    for (const state of states) {
+      const skipped = { ...state, plan: [...state.plan, null] };
+      next.set(`${skipped.selected}:${skipped.xp}`, skipped);
 
-    if (!priorities.length) break;
+      for (const delta of availableDeltas.get(category) ?? []) {
+        const xp = XP_BY_DELTA.get(delta);
+        if (xp == null || state.xp + xp > availableBudget) continue;
+        const candidate = {
+          xp: state.xp + xp,
+          selected: state.selected + 1,
+          plan: [...state.plan, { category, delta }]
+        };
+        next.set(`${candidate.selected}:${candidate.xp}`, candidate);
+      }
+    }
+    states = [...next.values()];
+  }
 
-    const entry = chooseCandidate(pool, options.partyLevel, priorities, remaining);
-    if (!entry) break;
+  states.sort((a, b) => b.selected - a.selected || b.xp - a.xp);
+  const best = states[0] ?? { plan: [] };
 
-    addGenerated(result, entry, options.partyLevel);
-    total += xpForLevel(entry.level, options.partyLevel);
+  for (const choice of best.plan) {
+    if (!choice) continue;
+    const entry = chooseCandidate(pool, options.partyLevel, [choice.delta]);
+    if (entry) addGenerated(result, entry, options.partyLevel);
   }
 }
 
@@ -243,11 +374,7 @@ async function generateEncounter(options, selectedTokens) {
     );
   }
 
-  if (options.composition === "custom") {
-    buildCustom(pool, options, result);
-  } else {
-    fillToBudget(pool, options, result, targetBudget);
-  }
+  buildCountComposition(pool, options, result, targetBudget);
 
   return {
     options,
@@ -286,6 +413,7 @@ async function askEncounterOptions() {
 
   const DialogV2 = foundry.applications?.api?.DialogV2;
   if (!DialogV2?.wait) return null;
+  const initialPreset = compositionPreset("auto", "moderate", defaults.size);
 
   return DialogV2.wait({
     window: { title: "Improviser une rencontre" },
@@ -325,16 +453,19 @@ async function askEncounterOptions() {
           </div>
           <div class="pf2e-val-improv-grid three">
             <label>Fortes
-              <input type="number" name="strong" min="0" max="8" value="1">
+              <input type="number" name="strong" min="0" max="8" value="${initialPreset.strong}">
             </label>
             <label>Moyennes
-              <input type="number" name="medium" min="0" max="12" value="1">
+              <input type="number" name="medium" min="0" max="12" value="${initialPreset.medium}">
             </label>
             <label>Faibles
-              <input type="number" name="weak" min="0" max="16" value="2">
+              <input type="number" name="weak" min="0" max="16" value="${initialPreset.weak}">
             </label>
           </div>
-          <p class="hint">Les nombres Fortes/Moyennes/Faibles ne sont utilisés qu'avec « Composition personnalisée ».</p>
+          <p class="hint">
+            Les profils remplissent automatiquement Fortes/Moyennes/Faibles selon la difficulté.
+            Ces valeurs restent modifiables avant génération ; le budget de difficulté reste la limite finale.
+          </p>
         </fieldset>
 
         <fieldset>
@@ -372,6 +503,33 @@ async function askEncounterOptions() {
         ` : ""}
       </form>
     `,
+    render: (_event, dialog) => {
+      const form = dialog.element?.querySelector?.(".pf2e-val-improv-form");
+      if (!form) return;
+      const composition = form.elements.namedItem("composition");
+      const threat = form.elements.namedItem("threat");
+      const partySize = form.elements.namedItem("partySize");
+      const strong = form.elements.namedItem("strong");
+      const medium = form.elements.namedItem("medium");
+      const weak = form.elements.namedItem("weak");
+
+      const applyPreset = () => {
+        if (composition?.value === "custom") return;
+        const preset = compositionPreset(
+          composition?.value,
+          threat?.value,
+          intValue(partySize?.value, defaults.size, 1, 12)
+        );
+        if (!preset) return;
+        if (strong) strong.value = String(preset.strong);
+        if (medium) medium.value = String(preset.medium);
+        if (weak) weak.value = String(preset.weak);
+      };
+
+      composition?.addEventListener?.("change", applyPreset);
+      threat?.addEventListener?.("change", applyPreset);
+      partySize?.addEventListener?.("change", applyPreset);
+    },
     buttons: [
       {
         action: "generate",
@@ -703,6 +861,7 @@ export function initEncounterBuilder() {
     openEncounter,
     generateEncounter,
     encounterBudget,
+    compositionPreset,
     xpForLevel,
     addEncounterToScene
   };

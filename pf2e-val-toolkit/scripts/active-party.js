@@ -151,7 +151,7 @@ function partySummaryHtml() {
         const level = Number(actor.system?.details?.level?.value ?? 0);
         return `
           <div class="pf2e-val-active-party-member">
-            <img src="${escapeHtml(actor.img)}" alt="">
+            <img src="${escapeHtml(actor.img)}" alt="" width="28" height="28" style="width:28px!important;height:28px!important;min-width:28px!important;max-width:28px!important;min-height:28px!important;max-height:28px!important;object-fit:cover!important">
             <span>${escapeHtml(actor.name)}</span>
             <strong>Niv. ${level}</strong>
           </div>
