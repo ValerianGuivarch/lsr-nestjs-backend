@@ -972,6 +972,16 @@ export class Pf2PersistenceService implements OnModuleInit {
       await manager.query('CREATE INDEX IF NOT EXISTS idx_pf2_player_profile_public_name ON pf2_player_character_profile (is_published, display_name)')
     })
 
+    await this.applyMigration('027-resource-library', async (manager) => {
+      await manager.query("CREATE TABLE IF NOT EXISTS pf2_resource (id TEXT PRIMARY KEY, title TEXT NOT NULL, description TEXT NOT NULL DEFAULT '', summary TEXT NOT NULL DEFAULT '', origin TEXT NOT NULL DEFAULT '', tags TEXT NOT NULL DEFAULT '[]', created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP, updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)")
+      await manager.query("CREATE INDEX IF NOT EXISTS idx_pf2_resource_title ON pf2_resource (title COLLATE NOCASE)")
+      await manager.query("CREATE INDEX IF NOT EXISTS idx_pf2_resource_origin ON pf2_resource (origin COLLATE NOCASE)")
+      await manager.query("CREATE TABLE IF NOT EXISTS pf2_resource_file (id TEXT PRIMARY KEY, resource_id TEXT NOT NULL, stored_name TEXT NOT NULL, original_name TEXT NOT NULL, label TEXT NOT NULL DEFAULT '', mime_type TEXT NOT NULL DEFAULT 'application/pdf', size_bytes INTEGER NOT NULL DEFAULT 0, sort_order INTEGER NOT NULL DEFAULT 0, created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP, FOREIGN KEY (resource_id) REFERENCES pf2_resource(id) ON DELETE CASCADE)")
+      await manager.query("CREATE INDEX IF NOT EXISTS idx_pf2_resource_file_resource ON pf2_resource_file (resource_id, sort_order)")
+      await manager.query("CREATE TABLE IF NOT EXISTS pf2_resource_link (resource_id TEXT NOT NULL, target_kind TEXT NOT NULL CHECK (target_kind IN ('campaign','scenario','component')), target_id TEXT NOT NULL, component_id TEXT NOT NULL DEFAULT '', sort_order INTEGER NOT NULL DEFAULT 0, created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (resource_id, target_kind, target_id, component_id), FOREIGN KEY (resource_id) REFERENCES pf2_resource(id) ON DELETE CASCADE)")
+      await manager.query("CREATE INDEX IF NOT EXISTS idx_pf2_resource_link_target ON pf2_resource_link (target_kind, target_id, component_id, sort_order)")
+    })
+
     await this.assertDatabaseIntegrity(this.dataSource, 'base SQLite après migrations')
   }
 
