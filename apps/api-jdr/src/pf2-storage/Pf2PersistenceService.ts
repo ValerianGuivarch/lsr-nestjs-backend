@@ -982,6 +982,13 @@ export class Pf2PersistenceService implements OnModuleInit {
       await manager.query("CREATE INDEX IF NOT EXISTS idx_pf2_resource_link_target ON pf2_resource_link (target_kind, target_id, component_id, sort_order)")
     })
 
+    await this.applyMigration('028-resource-original-title', async (manager) => {
+      const columns = await manager.query("PRAGMA table_info('pf2_resource')") as Array<{ name: string }>
+      if (!columns.some((column) => column.name === 'nom_vo')) {
+        await manager.query("ALTER TABLE pf2_resource ADD COLUMN nom_vo TEXT NOT NULL DEFAULT ''")
+      }
+    })
+
     await this.assertDatabaseIntegrity(this.dataSource, 'base SQLite après migrations')
   }
 
