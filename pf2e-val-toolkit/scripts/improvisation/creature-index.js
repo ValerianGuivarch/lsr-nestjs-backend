@@ -36,6 +36,7 @@ function buildSearchText(entry) {
     entry.name,
     entry.sourceLabel,
     entry.collection,
+    entry.publicNotes,
     ...(entry.traits ?? [])
   ].join(" "));
 }
@@ -60,7 +61,8 @@ function fromIndexEntry(pack, raw) {
     sourceKind: "compendium",
     sourceGroup: sourceGroup(collection),
     collection,
-    sourceLabel: pack.metadata?.label ?? pack.title ?? collection
+    sourceLabel: pack.metadata?.label ?? pack.title ?? collection,
+    publicNotes: raw.system?.details?.publicNotes ?? ""
   };
   result.searchText = buildSearchText(result);
   return result;
@@ -85,7 +87,8 @@ function fromWorldActor(actor) {
     sourceKind: "world",
     sourceGroup: "world",
     collection: null,
-    sourceLabel: "Monde"
+    sourceLabel: "Monde",
+    publicNotes: actor.system?.details?.publicNotes ?? ""
   };
   result.searchText = buildSearchText(result);
   return result;
@@ -135,14 +138,17 @@ async function searchCreatures({
   traits = [],
   query = "",
   scope = "core",
-  rarities = []
+  rarities = [],
+  collections = []
 } = {}) {
   const normalizedQuery = normalize(query);
   const requiredTraits = new Set((traits ?? []).filter(Boolean));
   const allowedRarities = new Set((rarities ?? []).filter(Boolean));
+  const allowedCollections = new Set((collections ?? []).filter(Boolean));
 
   return (await getIndex()).filter((entry) => {
     if (!scopeMatch(entry, scope)) return false;
+    if (allowedCollections.size && !allowedCollections.has(entry.collection)) return false;
     if (entry.level < minLevel || entry.level > maxLevel) return false;
     if (requiredTraits.size && ![...requiredTraits].every((trait) => entry.traits.includes(trait))) return false;
     if (allowedRarities.size && !allowedRarities.has(entry.rarity)) return false;

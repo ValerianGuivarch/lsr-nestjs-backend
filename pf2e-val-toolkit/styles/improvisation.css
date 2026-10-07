@@ -22,3 +22,15 @@
 .pf2e-val-improv-result-main span { font-size: .73rem; opacity: .76; }
 .pf2e-val-improv-result-row > label { display: flex; align-items: center; gap: .3rem; font-size: .72rem; }
 @media (max-width: 560px) { .pf2e-val-improv-grid.two, .pf2e-val-improv-grid.three { grid-template-columns: 1fr; } }
+
+.pf2e-val-quick-npc-dialog { width: 560px !important; max-width: min(560px, calc(100vw - 32px)) !important; }
+.pf2e-val-quick-npc-results-dialog { width: 600px !important; max-width: min(600px, calc(100vw - 32px)) !important; }
+.pf2e-val-quick-npc-form, .pf2e-val-quick-npc-results { display: flex; flex-direction: column; gap: .55rem; }
+.pf2e-val-quick-npc-form > label, .pf2e-val-quick-npc-results > label { display: flex; flex-direction: column; gap: .18rem; font-size: .78rem; }
+.pf2e-val-quick-npc-list { display: grid; gap: .3rem; max-height: 420px; overflow: auto; }
+.pf2e-val-quick-npc-candidate { display: grid; grid-template-columns: auto 42px minmax(0, 1fr); align-items: center; gap: .5rem; padding: .35rem .45rem; border: 1px solid rgb(127 127 127 / 25%); border-radius: 4px; cursor: pointer; }
+.pf2e-val-quick-npc-candidate:has(input:checked) { outline: 2px solid rgb(127 127 127 / 45%); }
+.pf2e-val-quick-npc-candidate img { width: 42px; height: 42px; object-fit: cover; border: 0; border-radius: 3px; }
+.pf2e-val-quick-npc-candidate span { display: flex; flex-direction: column; min-width: 0; }
+.pf2e-val-quick-npc-candidate strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pf2e-val-quick-npc-candidate small { opacity: .75; }

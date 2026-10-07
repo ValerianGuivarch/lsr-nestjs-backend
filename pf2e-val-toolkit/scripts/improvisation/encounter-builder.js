@@ -195,11 +195,12 @@ function fillToBudget(pool, options, result, targetBudget) {
   let guard = 0;
 
   if (options.composition === "boss" && total < targetBudget && result.filter((x) => !x.fixed).length === 0) {
+    const reserveForReinforcements = targetBudget >= 60 ? 20 : 0;
     const boss = chooseCandidate(
       pool,
       options.partyLevel,
-      [3, 2, 1, 0],
-      targetBudget - total
+      [3, 2, 1, 0, -1, -2],
+      Math.max(0, targetBudget - total - reserveForReinforcements)
     );
     if (boss) {
       addGenerated(result, boss, options.partyLevel);
