@@ -1,7 +1,7 @@
 import { validateScenarioData } from "./parser.js";
 import { findActorInCompendiums } from "./compendium-resolver.js";
 import { createCustomNpc, importCompendiumActor, linkNarrativeNpc, refreshNarrativeActor } from "./actor-builder.js";
-import { ensureScenarioFolderTree } from "./folder-manager.js";
+import { ensureFolderPath, ensureScenarioFolderTree } from "./folder-manager.js";
 import { createOrUpdateScenarioJournal } from "./journal-builder.js";
 import { createOrUpdateScenarioScenes } from "./scene-builder.js";
 import { resolveScenarioAssets } from "./asset-resolver.js";
@@ -142,7 +142,9 @@ function actorLibraryFor(data) {
     collection:
       data.actorLibrary?.collection ??
       data.library?.collection ??
-      "Autres"
+      "Autres",
+    path: data.actorLibrary?.path,
+    includeScenario: data.actorLibrary?.includeScenario
   };
 }
 
@@ -185,19 +187,25 @@ export async function runScenarioImport(rawData) {
 
   for (const definition of data.actors) {
     try {
+      const actorFolder = await ensureFolderPath(
+        "Actor",
+        actorFolders.scenario,
+        definition.folderPath
+      );
+
       if (definition.type === "reference") {
         results.push(
           await processReference(
             definition,
-            actorFolders.scenario,
+            actorFolder,
             data.scenario.id,
             data.packageVersion ?? 1
           )
         );
       } else if (definition.type === "custom") {
-        results.push(await processCustom(definition, actorFolders.scenario, data.scenario.id, data.packageVersion ?? 1, data.relocationOnly === true));
+        results.push(await processCustom(definition, actorFolder, data.scenario.id, data.packageVersion ?? 1, data.relocationOnly === true));
       } else if (definition.type === "narrative") {
-        results.push(await processNarrative(definition, actorFolders.scenario, data.scenario.id, data.packageVersion ?? 1, data.relocationOnly === true));
+        results.push(await processNarrative(definition, actorFolder, data.scenario.id, data.packageVersion ?? 1, data.relocationOnly === true));
       } else {
         results.push({
           key: definition.key,
@@ -269,7 +277,7 @@ function deploymentResult(deployment, data, result, error = null) {
     success: !errors.length,
     actors: { total: result?.results?.length ?? 0, errors: actorErrors.length },
     scenes: { total: result?.scenes?.length ?? 0, errors: sceneErrors.length },
-    journals: { imported: Boolean(result?.journal), uuid: result?.journal?.journal?.uuid ?? null },
+    journals: { imported: Boolean(result?.journal), uuid: result?.journal?.uuid ?? result?.journal?.journal?.uuid ?? null },
     errors
   };
 }

@@ -298,12 +298,15 @@ export function customNpcSource(definition = {}, metadata = {}) {
     type: "npc",
     folder: metadata.folderId ?? null,
     system,
-    flags
+    flags,
+    prototypeToken: {
+      name: definition.name
+    }
   };
 
   if (image) {
     actorData.img = image;
-    actorData.prototypeToken = { texture: { src: image } };
+    actorData.prototypeToken.texture = { src: image };
   }
 
   const items = [
@@ -499,6 +502,14 @@ export async function linkNarrativeNpc(actor, npcId, definition = {}) {
   return actor;
 }
 
+export async function applyReferenceAdjustment(actor, adjustment) {
+  if (!["elite", "weak"].includes(adjustment)) return;
+  if (typeof actor?.applyAdjustment !== "function") {
+    throw new Error(`L'Actor ${actor?.name ?? "inconnu"} ne supporte pas l'ajustement PF2e ${adjustment}.`);
+  }
+  await actor.applyAdjustment(adjustment);
+}
+
 export async function importCompendiumActor(sourceActor, folder, definition = {}) {
   const sourceUuid = sourceActor.uuid;
 
@@ -511,6 +522,7 @@ export async function importCompendiumActor(sourceActor, folder, definition = {}
     await existing.update({
       folder: folder.id,
       name: definition.name || existing.name,
+      ...(definition.name ? { "prototypeToken.name": definition.name } : {}),
       flags: {
         [MODULE_ID]: {
           ...(existing.flags?.[MODULE_ID] ?? {}),
@@ -524,6 +536,7 @@ export async function importCompendiumActor(sourceActor, folder, definition = {}
       }
     });
     await applyScenarioImage(existing, definition);
+    await applyReferenceAdjustment(existing, definition.adjustment);
     return { status: "updated", actor: existing };
   }
 
@@ -532,7 +545,11 @@ export async function importCompendiumActor(sourceActor, folder, definition = {}
   delete actorData._id;
   actorData.folder = folder.id;
 
-  if (definition.name) actorData.name = definition.name;
+  if (definition.name) {
+    actorData.name = definition.name;
+    actorData.prototypeToken ??= {};
+    actorData.prototypeToken.name = definition.name;
+  }
 
   const image = text(definition.image);
   if (image) {
@@ -561,6 +578,7 @@ export async function importCompendiumActor(sourceActor, folder, definition = {}
   actorData._stats.compendiumSource ??= sourceUuid;
 
   const actor = await Actor.create(actorData);
+  await applyReferenceAdjustment(actor, definition.adjustment);
 
   return { status: "created", actor };
 }

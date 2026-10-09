@@ -31,9 +31,38 @@ assert.deepEqual(validateScenarioData({
   packageVersion: 1,
   scenario: { id: "good", name: "Good" },
   npcs: [],
-  actors: [completeActor],
+  actors: [completeActor, { key: "elite", name: "Elite", type: "reference", uuid: "Compendium.test.Actor.x", adjustment: "elite" }],
   maps: []
 }), []);
+
+const badAdjustmentErrors = validateScenarioData({
+  packageFormatVersion: 4,
+  packageVersion: 1,
+  scenario: { id: "bad-adjustment", name: "Bad adjustment" },
+  npcs: [],
+  actors: [{ key: "bad", name: "Bad", type: "reference", uuid: "Compendium.test.Actor.x", adjustment: "legendary" }],
+  maps: []
+});
+assert.ok(badAdjustmentErrors.some(error => error.includes("adjustment doit valoir elite ou weak")));
+
+assert.deepEqual(validateScenarioData({
+  packageFormatVersion: 4,
+  packageVersion: 1,
+  scenario: { id: "folders", name: "Folders" },
+  npcs: [],
+  actors: [{ ...completeActor, folderPath: ["01 — Chapitre", "Carte"] }],
+  maps: []
+}), []);
+
+const badFolderErrors = validateScenarioData({
+  packageFormatVersion: 4,
+  packageVersion: 1,
+  scenario: { id: "bad-folders", name: "Bad Folders" },
+  npcs: [],
+  actors: [{ ...completeActor, folderPath: ["01 — Chapitre", ""] }],
+  maps: []
+});
+assert.ok(badFolderErrors.some(error => error.includes("folderPath")));
 
 const badActorErrors = validateScenarioData({
   packageFormatVersion: 4,
@@ -56,6 +85,20 @@ const badMapErrors = validateScenarioData({
 });
 assert.ok(badMapErrors.some(error => error.includes("grid.columns/rows/bounds")));
 assert.ok(badMapErrors.some(error => error.includes("paddingCells")));
+
+assert.deepEqual(validateScenarioData({
+  packageFormatVersion: 4,
+  packageVersion: 1,
+  scenario: { id: "source-map", name: "Source map" },
+  npcs: [],
+  actors: [],
+  maps: [{
+    key: "source",
+    name: "Source",
+    sourceSceneUuid: "Scene.example",
+    grid: { type: "square", size: 50, distance: 5, units: "ft" }
+  }]
+}), []);
 
 const legacyErrors = validateScenarioData({
   packageVersion: 2,
@@ -85,8 +128,18 @@ assert.equal(measured.sceneHeight, 1700);
 assert.equal(measured.shiftX, 77);
 assert.equal(measured.shiftY, 69);
 
+const { normalizeFolderPath } = await moduleFrom("../scripts/scenario-importer/folder-manager.js");
+assert.deepEqual(normalizeFolderPath([" 01 — Chapitre ", "", null, "Carte"]), ["01 — Chapitre", "Carte"]);
+assert.deepEqual(normalizeFolderPath(undefined), []);
+
+const { buildCustomJournalPages } = await moduleFrom("../scripts/scenario-importer/journal-builder.js");
+assert.deepEqual(buildCustomJournalPages({ journal: { pages: [
+  { name: " Chapitre ", content: " <p>Contenu</p> " },
+  { name: "", content: "ignorée" }
+] } }), [{ name: "Chapitre", content: "<p>Contenu</p>" }]);
+
 globalThis.foundry = { utils: { deepClone: value => structuredClone(value) } };
-const { customNpcSource } = await moduleFrom("../scripts/scenario-importer/actor-builder.js");
+const { customNpcSource, applyReferenceAdjustment } = await moduleFrom("../scripts/scenario-importer/actor-builder.js");
 const built = customNpcSource(completeActor, { scenarioId: "good", packageVersion: 2, folderId: "folder" });
 assert.equal(built.actorData.system.attributes.ac.value, 22);
 assert.equal(built.actorData.system.attributes.hp.max, 70);
@@ -95,5 +148,10 @@ assert.equal(built.actorData.system.saves.fortitude.value, 13);
 assert.equal(built.items[0].type, "melee");
 assert.equal(built.items[0].system.bonus.value, 14);
 assert.equal(built.actorData.flags["pf2e-val-toolkit"].packageVersion, 2);
+
+const applied = [];
+await applyReferenceAdjustment({ name: "Test", applyAdjustment: async value => applied.push(value) }, "elite");
+await applyReferenceAdjustment({ name: "Test", applyAdjustment: async value => applied.push(value) }, undefined);
+assert.deepEqual(applied, ["elite"]);
 
 console.log("scenario-package-v4: OK");

@@ -22,12 +22,21 @@ async function getOrCreateFolder(name, type, parent = null) {
 }
 
 export async function ensureScenarioFolderTree(type, library, scenario) {
-  const names = [
-    library?.root ?? "MJ",
-    library?.category ?? "Scénarios individuels",
-    library?.collection ?? "Autres",
-    `${scenario.id.replace(/^PFS-/, "")} - ${scenario.name}`
-  ];
+  const customPath = Array.isArray(library?.path)
+    ? library.path.map(name => String(name ?? "").trim()).filter(Boolean)
+    : null;
+
+  const names = customPath?.length
+    ? [...customPath]
+    : [
+        library?.root ?? "MJ",
+        library?.category ?? "Scénarios individuels",
+        library?.collection ?? "Autres"
+      ];
+
+  if (library?.includeScenario !== false) {
+    names.push(`${scenario.id.replace(/^PFS-/, "")} - ${scenario.name}`);
+  }
 
   let parent = null;
   const folders = [];
@@ -38,9 +47,24 @@ export async function ensureScenarioFolderTree(type, library, scenario) {
   }
 
   return {
-    root: folders[0],
-    category: folders[1],
-    collection: folders[2],
-    scenario: folders[3]
+    root: folders[0] ?? null,
+    category: folders[1] ?? null,
+    collection: folders[2] ?? null,
+    scenario: folders.at(-1) ?? null
   };
+}
+
+export function normalizeFolderPath(value) {
+  if (!Array.isArray(value)) return [];
+  return value
+    .map(name => String(name ?? "").trim())
+    .filter(Boolean);
+}
+
+export async function ensureFolderPath(type, parent, path) {
+  let current = parent;
+  for (const name of normalizeFolderPath(path)) {
+    current = await getOrCreateFolder(name, type, current);
+  }
+  return current;
 }

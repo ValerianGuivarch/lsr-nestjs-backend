@@ -53,6 +53,24 @@ describe('ScenarioPackageService', () => {
     expect([...records.keys()].filter(key => key === 'lieu:pfs-s01-01--quantium')).toHaveLength(1)
   })
 
+  it('preserves explicit global scope for new package relations', async () => {
+    const service = new ScenarioPackageService(persistence)
+    await service.importZip(zip({
+      packageFormatVersion: 4,
+      packageVersion: 1,
+      scenario: { id: 'global-relations', name: 'Global relations' },
+      actors: [],
+      npcs: [],
+      places: [{ key: 'fosse', kind: 'lieu', name: 'La Fosse', scope: 'global' }],
+      factions: [{ key: 'veilleurs', name: 'Veilleurs de runes', scope: 'global' }],
+      events: []
+    }), 'global.zip')
+    expect(records.get('lieu:global-relations--fosse')).toEqual(expect.objectContaining({ nom: 'La Fosse', scope: 'global' }))
+    expect(records.get('lieu:global-relations--fosse')).not.toHaveProperty('ownerScenarioId')
+    expect(records.get('faction:global-relations--veilleurs')).toEqual(expect.objectContaining({ nom: 'Veilleurs de runes', scope: 'global' }))
+    expect(records.get('faction:global-relations--veilleurs')).not.toHaveProperty('ownerScenarioId')
+  })
+
   it('exposes only playable units in the scenario registry', async () => {
     const service = new ScenarioPackageService(persistence)
 

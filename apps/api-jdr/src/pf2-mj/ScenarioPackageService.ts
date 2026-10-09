@@ -567,8 +567,9 @@ export class ScenarioPackageService {
         record = await this.persistence.getRecord(kind, id)
         if (!record) {
           const raw = definition as Record<string, unknown>
-          const ignored = new Set(['key', 'kind', 'refId', 'factionId', 'eventId', 'role', 'importance', 'sourcePage', 'notes', 'name'])
-          record = { ...Object.fromEntries(Object.entries(raw).filter(([field]) => !ignored.has(field))), id, nom: this.text(definition.name, `${group.kind}[${key}].name`), aliases: this.strings(definition.aliases), description: this.optional(definition.description) ?? '', notes: this.optional(definition.notes) ?? '', scope: 'scenario', ownerScenarioId: scenarioId }
+          const ignored = new Set(['key', 'kind', 'refId', 'factionId', 'eventId', 'role', 'importance', 'sourcePage', 'notes', 'name', 'scope'])
+          const incomingScope = raw.scope === 'global' ? 'global' : 'scenario'
+          record = { ...Object.fromEntries(Object.entries(raw).filter(([field]) => !ignored.has(field))), id, nom: this.text(definition.name, `${group.kind}[${key}].name`), aliases: this.strings(definition.aliases), description: this.optional(definition.description) ?? '', notes: this.optional(definition.notes) ?? '', scope: incomingScope, ...(incomingScope === 'scenario' ? { ownerScenarioId: scenarioId } : {}) }
           records.push({ kind, item: record })
         }
       }
@@ -654,6 +655,10 @@ export class ScenarioPackageService {
       const definition = object(raw)
       if (!inherited.key && !nonEmpty(definition.key)) errors.push(`${prefix}.key est manquant.`)
       if (!inherited.name && !nonEmpty(definition.name)) errors.push(`${prefix}.name est manquant.`)
+      if (definition.folderPath !== undefined && (
+        !Array.isArray(definition.folderPath) ||
+        definition.folderPath.some(value => !nonEmpty(value))
+      )) errors.push(`${prefix}.folderPath doit être un tableau de chaînes non vides.`)
       if (definition.type === 'reference') {
         if (!nonEmpty(definition.uuid) && !nonEmpty(definition.lookup)) errors.push(`${prefix} doit avoir uuid ou lookup.`)
         return
@@ -678,8 +683,14 @@ export class ScenarioPackageService {
       const map = object(rawMap)
       const grid = object(map.grid)
       const type = typeof grid.type === 'string' ? grid.type.toLowerCase() : 'square'
+      const sourceSceneUuid = nonEmpty(map.sourceSceneUuid) ? String(map.sourceSceneUuid).trim() : ''
+      if (map.sourceSceneUuid !== undefined && !sourceSceneUuid) errors.push(`maps[${index}].sourceSceneUuid doit être une chaîne non vide.`)
       if (type === 'gridless') continue
       const prefix = `maps[${index}].grid`
+      if (sourceSceneUuid) {
+        if (!positive(grid.size)) errors.push(`${prefix}.size est obligatoire pour une scène source en format v4.`)
+        continue
+      }
       if (!positiveInteger(grid.columns)) errors.push(`${prefix}.columns doit être un entier positif.`)
       if (!positiveInteger(grid.rows)) errors.push(`${prefix}.rows doit être un entier positif.`)
       if (grid.paddingCells !== 1) errors.push(`${prefix}.paddingCells doit valoir 1 : une case de marge de chaque côté.`)

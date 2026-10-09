@@ -181,6 +181,29 @@ function buildMapIndexPage(data, importResult) {
   `;
 }
 
+export function buildCustomJournalPages(data) {
+  const pages = Array.isArray(data.journal?.pages)
+    ? data.journal.pages
+    : [];
+
+  return pages
+    .map((page, index) => {
+      const name = String(page?.name ?? "").trim();
+      const content = String(page?.content ?? "").trim();
+
+      if (!name || !content) {
+        console.warn(
+          "PF2e Val Toolkit | Page de Journal narrative ignorée",
+          { scenarioId: data.scenario?.id, index }
+        );
+        return null;
+      }
+
+      return { name, content };
+    })
+    .filter(Boolean);
+}
+
 async function replacePages(journal, pages) {
   const ids = journal.pages.map(page => page.id);
   if (ids.length) {
@@ -235,6 +258,7 @@ export async function createOrUpdateScenarioJournal(data, importResult, folder) 
 
   await replacePages(journal, [
     { name: "Vue d'ensemble", content: buildOverviewPage(data) },
+    ...buildCustomJournalPages(data),
     { name: "Rencontres & créatures", content: buildEncountersPage(data, importResult) },
     { name: "Cartes", content: buildMapIndexPage(data, importResult) },
     { name: "Index des créatures", content: buildCreatureIndexPage(importResult) }

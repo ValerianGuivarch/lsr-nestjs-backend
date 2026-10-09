@@ -295,6 +295,86 @@ async function ensureBackgroundLevel(
   return level;
 }
 
+async function createOrUpdateFromSourceScene(
+  map,
+  folder,
+  scenarioId,
+  existing
+) {
+  const sourceUuid = String(map.sourceSceneUuid ?? "").trim();
+  const source = await fromUuid(sourceUuid);
+
+  if (!source || source.documentName !== "Scene") {
+    throw new Error(`Scène source introuvable : ${sourceUuid}`);
+  }
+
+  const gridSize =
+    positiveNumber(map?.grid?.size) ??
+    positiveNumber(source.grid?.size) ??
+    50;
+
+  const toolkitFlags = {
+    scenarioId,
+    scenarioMapKey: map.key,
+    packageVersion: map.packageVersion ?? null,
+    gridMode: "source-scene",
+    sourceSceneUuid: source.uuid,
+    sourceGridSize: positiveNumber(source.grid?.size),
+    gridSize
+  };
+
+  if (existing) {
+    await existing.update({
+      name: sceneName(map),
+      folder: folder.id,
+      grid: {
+        ...source.grid?.toObject?.(),
+        ...(source.grid ?? {}),
+        size: gridSize,
+        distance: positiveNumber(map?.grid?.distance) ?? source.grid?.distance ?? 5,
+        units: String(map?.grid?.units ?? source.grid?.units ?? "ft")
+      },
+      flags: {
+        ...(existing.flags ?? {}),
+        [MODULE_ID]: toolkitFlags
+      }
+    });
+
+    return existing;
+  }
+
+  const sceneData = source.toObject();
+  delete sceneData._id;
+  delete sceneData.thumb;
+  sceneData.name = sceneName(map);
+  sceneData.folder = folder.id;
+  sceneData.active = false;
+  sceneData.navigation = false;
+  sceneData.grid = {
+    ...(sceneData.grid ?? {}),
+    size: gridSize,
+    distance: positiveNumber(map?.grid?.distance) ?? sceneData.grid?.distance ?? 5,
+    units: String(map?.grid?.units ?? sceneData.grid?.units ?? "ft")
+  };
+  sceneData.flags = {
+    ...(sceneData.flags ?? {}),
+    [MODULE_ID]: toolkitFlags
+  };
+
+  const sourceGridSize = positiveNumber(source.grid?.size) ?? gridSize;
+  const visualScale = sourceGridSize / gridSize;
+  if (visualScale !== 1) {
+    for (const light of sceneData.lights ?? []) {
+      if (light?.config) {
+        if (Number.isFinite(Number(light.config.bright))) light.config.bright = Number(light.config.bright) * visualScale;
+        if (Number.isFinite(Number(light.config.dim))) light.config.dim = Number(light.config.dim) * visualScale;
+      }
+    }
+  }
+
+  return Scene.create(sceneData);
+}
+
 export async function createOrUpdateScenarioScenes(
   data,
   folder
@@ -303,11 +383,50 @@ export async function createOrUpdateScenarioScenes(
 
   for (const map of data.maps ?? []) {
     try {
-      if (!map?.key || !map?.image) {
+      const sourceSceneUuid = String(map?.sourceSceneUuid ?? "").trim();
+
+      if (!map?.key || (!map?.image && !sourceSceneUuid)) {
         results.push({
           key: map?.key ?? "",
           name: sceneName(map),
           status: "invalid"
+        });
+        continue;
+      }
+
+      let scene =
+        existingScenarioScene(
+          folder,
+          data.scenario.id,
+          map.key
+        );
+
+      if (sourceSceneUuid) {
+        const status = scene ? "updated" : "created";
+        scene = await createOrUpdateFromSourceScene(
+          map,
+          folder,
+          data.scenario.id,
+          scene
+        );
+        const level = scene.firstLevel ?? scene.levels?.contents?.[0] ?? null;
+        results.push({
+          key: map.key,
+          name: scene.name,
+          status,
+          uuid: scene.uuid,
+          scene,
+          levelUuid: level?.uuid ?? null,
+          image: level?.background?.src ?? null,
+          gridMode: "source-scene",
+          gridSize: scene.grid?.size ?? map.grid?.size ?? null,
+          shiftX: scene.shiftX ?? 0,
+          shiftY: scene.shiftY ?? 0,
+          columns: null,
+          rows: null,
+          paddingCells: null,
+          sceneWidth: scene.width,
+          sceneHeight: scene.height
         });
         continue;
       }
@@ -320,13 +439,6 @@ export async function createOrUpdateScenarioScenes(
         folder,
         data.scenario.id
       );
-
-      let scene =
-        existingScenarioScene(
-          folder,
-          data.scenario.id,
-          map.key
-        );
 
       let status;
 

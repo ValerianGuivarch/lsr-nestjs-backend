@@ -70,6 +70,9 @@ function validateReference(definition, prefix, errors) {
   if (!definition?.uuid && !definition?.lookup) {
     errors.push(`${prefix} doit avoir uuid ou lookup.`);
   }
+  if (definition?.adjustment != null && !["elite", "weak"].includes(definition.adjustment)) {
+    errors.push(`${prefix}.adjustment doit valoir elite ou weak.`);
+  }
 }
 
 function validateCustom(definition, prefix, errors, strict) {
@@ -158,6 +161,12 @@ function validateActorDefinition(definition, prefix, errors, strict, inherited =
   if (definition?.image != null && typeof definition.image !== "string") {
     errors.push(`${prefix}.image doit être une chaîne.`);
   }
+
+  if (definition?.folderPath != null) {
+    if (!Array.isArray(definition.folderPath) || definition.folderPath.some(name => typeof name !== "string" || !name.trim())) {
+      errors.push(`${prefix}.folderPath doit être un tableau de chaînes non vides.`);
+    }
+  }
 }
 
 export function validateScenarioData(data) {
@@ -204,7 +213,15 @@ export function validateScenarioData(data) {
     else mapKeys.add(map.key);
 
     if (!map?.name && !map?.title) errors.push(`${prefix}.name est manquant.`);
-    if (!map?.image || typeof map.image !== "string") errors.push(`${prefix}.image doit être une chaîne non vide.`);
+    const sourceSceneUuid = typeof map?.sourceSceneUuid === "string"
+      ? map.sourceSceneUuid.trim()
+      : "";
+    if (map?.sourceSceneUuid != null && !sourceSceneUuid) {
+      errors.push(`${prefix}.sourceSceneUuid doit être une chaîne non vide.`);
+    }
+    if (!sourceSceneUuid && (!map?.image || typeof map.image !== "string")) {
+      errors.push(`${prefix}.image doit être une chaîne non vide lorsqu'aucune scène source n'est fournie.`);
+    }
     if (map?.width != null && !positiveNumber(map.width)) errors.push(`${prefix}.width doit être un nombre positif.`);
     if (map?.height != null && !positiveNumber(map.height)) errors.push(`${prefix}.height doit être un nombre positif.`);
 
@@ -214,6 +231,13 @@ export function validateScenarioData(data) {
     if (grid.distance != null && !positiveNumber(grid.distance)) errors.push(`${prefix}.grid.distance doit être un nombre positif.`);
 
     if (gridType === "gridless") continue;
+
+    if (sourceSceneUuid) {
+      if (strict && !positiveNumber(grid.size)) {
+        errors.push(`${prefix}.grid.size est obligatoire pour une scène source en format v4.`);
+      }
+      continue;
+    }
 
     if (strict) {
       if (!hasAnyMeasuredGridField(grid)) {
