@@ -49,6 +49,13 @@ if ! docker compose --env-file "$APP_ENV_FILE" -f "$COMPOSE_FILE" up -d --wait a
 fi
 
 echo "[deploy] refreshing MediaWiki stack from dedicated checkout"
+MEDIAWIKI_LOCAL_SETTINGS_SOURCE="${MEDIAWIKI_LOCAL_SETTINGS_SOURCE:-/home/valou/services/lsr-nestjs-backend/support/mediawiki/LocalSettings.php}"
+if [[ ! -f "$MEDIAWIKI_LOCAL_SETTINGS_SOURCE" ]]; then
+  echo "[deploy] MediaWiki LocalSettings source is missing: $MEDIAWIKI_LOCAL_SETTINGS_SOURCE" >&2
+  exit 1
+fi
+rm -rf "$ROOT/support/mediawiki/LocalSettings.php"
+cp -a "$MEDIAWIKI_LOCAL_SETTINGS_SOURCE" "$ROOT/support/mediawiki/LocalSettings.php"
 docker compose --env-file "$APP_ENV_FILE" -f "$ROOT/support/mediawiki/docker-compose.yml" up -d
 
 echo "[deploy] healthy: $APP_VERSION"
