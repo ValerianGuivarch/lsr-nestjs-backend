@@ -60,6 +60,7 @@ export class DiscordCommandsService {
   private readonly pendingCharacterFactions = new Map<string, { requesterId: string; factionId: string | null }>()
   private readonly pendingFactionPublications = new Map<string, { requesterId: string; factionId: string }>()
   private readonly pendingSchedulePublications = new Map<string, { requesterId: string; content: string }>()
+  private readonly pendingPlanningReminders = new Map<string, { requesterId: string; content: string; userIds: string[] }>()
   private readonly pendingPreviewPublications = new Map<string, { requesterId: string; content: string; files?: string[] }>()
   private readonly pendingPlayerDraws = new Map<string, { requesterId: string; players: Array<{ id: string; name: string }> }>()
   private readonly choiceForumChannelId = process.env['PF2_DISCORD_QUEST_FORUM_CHANNEL_ID']?.trim() || '1536259632455094412'
@@ -116,6 +117,7 @@ export class DiscordCommandsService {
       new SlashCommandBuilder().setName('proposer-date-seance').setDescription('Propose les dates de séance pour la prochaine semaine.').setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild).toJSON(),
       new SlashCommandBuilder().setName('analyse-date-seance').setDescription('Analyse les disponibilités et calcule les groupes possibles.').setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild).toJSON(),
       new SlashCommandBuilder().setName('modifier-date-seance').setDescription('Ajoute ou retire des dates dans une proposition existante.').setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild).toJSON(),
+      new SlashCommandBuilder().setName('relancer-date-seance').setDescription('Relance les joueurs qui n’ont pas répondu à la planification.').setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild).toJSON(),
     ]
   }
 
@@ -171,6 +173,7 @@ export class DiscordCommandsService {
     if (interaction.commandName === 'proposer-date-seance') { await this.planningCommand(interaction as ChatInputCommandInteraction); return true }
     if (interaction.commandName === 'analyse-date-seance') { await this.programmerSeanceCommand(interaction as ChatInputCommandInteraction); return true }
     if (interaction.commandName === 'modifier-date-seance') { await this.modifyPlanningCommand(interaction as ChatInputCommandInteraction); return true }
+    if (interaction.commandName === 'relancer-date-seance') { await this.remindPlanningCommand(interaction as ChatInputCommandInteraction); return true }
     return false
   }
 
@@ -208,6 +211,7 @@ export class DiscordCommandsService {
         '`/wiki-admin` — gère les associations Discord ↔ Wiki et les PJ.',
         '`/proposer-date-seance` — choisit puis publie les dates proposées pour la prochaine semaine.',
         '`/modifier-date-seance` — modifie les dates depuis le fil de la proposition.',
+        '`/relancer-date-seance` — depuis le fil, prépare une relance des joueurs qui n’ont pas encore répondu.',
         '`/analyse-date-seance` — analyse les réactions, propose les groupes puis permet leur publication.',
         '`/help-admin` — affiche cette aide.',
       ].join('\n'),
@@ -569,6 +573,86 @@ export class DiscordCommandsService {
     const selected = new Set(parsed.selectedDays)
     const select = new StringSelectMenuBuilder().setCustomId(`pf2-planification:modify:${starter.id}`).setPlaceholder('Dates proposées').setMinValues(0).setMaxValues(PLANNING_DAYS.length).addOptions(PLANNING_DAYS.map(day => ({ label: `${day.label} ${this.planningDate(this.addDays(parsed.monday, day.offset))}`, value: String(day.offset), emoji: day.emoji, default: selected.has(day.offset) })))
     await interaction.reply({ content: 'Coche exactement les dates à conserver. Décoche une date pour la supprimer ; coche-en une nouvelle pour l’ajouter.', components: [new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(select)], ephemeral: true })
+  }
+
+  private async remindPlanningCommand(interaction: ChatInputCommandInteraction): Promise<void> {
+    if (!this.isAdmin(interaction)) {
+      await interaction.reply({ content: 'Cette commande est réservée aux administrateurs du serveur.', ephemeral: true })
+      return
+    }
+
+    const channel = interaction.channel
+    if (!channel?.isThread()) {
+      await interaction.reply({ content: 'Utilise cette commande dans le fil créé depuis le message de planification.', ephemeral: true })
+      return
+    }
+
+    let starter
+    try { starter = await channel.fetchStarterMessage({ force: true }) } catch { starter = null }
+    if (!starter) {
+      await interaction.reply({ content: 'Ce fil n’est pas rattaché à un message de planification.', ephemeral: true })
+      return
+    }
+
+    const parsed = this.parsePlanningMessage(starter.content)
+    if (!parsed) {
+      await interaction.reply({ content: 'Le message de départ de ce fil n’est pas une planification reconnue.', ephemeral: true })
+      return
+    }
+
+    await interaction.deferReply({ ephemeral: true })
+    try {
+      const recognized = new Set<string>([
+        ...PLANNING_DAYS.filter(day => parsed.selectedDays.includes(day.offset)).map(day => day.emoji),
+        PLANNING_UNAVAILABLE_EMOJI,
+        PLANNING_UNCERTAIN_EMOJI,
+      ])
+      const responded = new Set<string>()
+
+      for (const reaction of starter.reactions.cache.values()) {
+        const emoji = reaction.emoji.name ?? ''
+        if (!recognized.has(emoji)) continue
+        const users = await reaction.users.fetch()
+        for (const user of users.values()) if (!user.bot) responded.add(user.id)
+      }
+
+      const playerById = new Map<string, string>()
+      for (const actorName of (await this.actorNames()).values()) {
+        if (!this.isPlayerActorName(actorName)) continue
+        const player = this.playerName(actorName)
+        const userId = this.discordId(player)
+        if (userId && userId !== this.discordId('valerian') && !playerById.has(userId)) playerById.set(userId, player)
+      }
+
+      const missing = [...playerById.entries()]
+        .filter(([userId]) => !responded.has(userId))
+        .map(([id, name]) => ({ id, name }))
+        .sort((left, right) => left.name.localeCompare(right.name, 'fr'))
+
+      if (!missing.length) {
+        await interaction.editReply({ content: 'Tout le monde a répondu à cette planification.', components: [] })
+        return
+      }
+
+      const userIds = missing.map(user => user.id)
+      const mentions = userIds.map(id => `<@${id}>`).join(' ')
+      const content = `🔔 ${mentions}\nMerci de répondre à la planification de séance ci-dessus.`
+      const buttonId = `pf2-planning-reminder:publish:${interaction.id}`
+      this.pendingPlanningReminders.set(buttonId, { requesterId: interaction.user.id, content, userIds })
+
+      await interaction.editReply({
+        content: [
+          `**Relance à publier — ${missing.length} personne${missing.length > 1 ? 's' : ''} sans réponse**`,
+          missing.map(user => `- <@${user.id}>`).join('\n'),
+          '',
+          'Valide pour les mentionner publiquement dans ce fil.',
+        ].join('\n'),
+        components: [new ActionRowBuilder<ButtonBuilder>().addComponents(new ButtonBuilder().setCustomId(buttonId).setLabel('Valider la relance').setStyle(ButtonStyle.Primary))],
+        allowedMentions: { parse: [] },
+      })
+    } catch (error) {
+      await interaction.editReply({ content: `Relance impossible : ${error instanceof Error ? error.message : String(error)}`, components: [] })
+    }
   }
 
   private async programmerSeanceCommand(interaction: ChatInputCommandInteraction): Promise<void> {
@@ -1468,6 +1552,19 @@ export class DiscordCommandsService {
         this.pendingPreviewPublications.delete(interaction.customId)
       } catch (error) {
         await interaction.followUp({ content: `Publication impossible : ${error instanceof Error ? error.message : String(error)}`, ephemeral: true }).catch(() => undefined)
+      }
+      return true
+    }
+    if (interaction.customId.startsWith('pf2-planning-reminder:publish:')) {
+      const pending = this.pendingPlanningReminders.get(interaction.customId)
+      if (!pending) { await interaction.reply({ content: 'Cette relance a expiré. Relance `/relancer-date-seance`.', ephemeral: true }); return true }
+      if (interaction.user.id !== pending.requesterId) { await interaction.reply({ content: 'Cette validation appartient à un autre administrateur.', ephemeral: true }); return true }
+      try {
+        await interaction.update({ components: [] })
+        await interaction.followUp({ content: pending.content, ephemeral: false, allowedMentions: { users: pending.userIds } })
+        this.pendingPlanningReminders.delete(interaction.customId)
+      } catch (error) {
+        await interaction.followUp({ content: `Relance impossible : ${error instanceof Error ? error.message : String(error)}`, ephemeral: true }).catch(() => undefined)
       }
       return true
     }

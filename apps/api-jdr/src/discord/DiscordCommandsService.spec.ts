@@ -7,7 +7,7 @@ describe('DiscordCommandsService', () => {
     expect(definitions).toEqual(expect.arrayContaining([
       'help', 'help-admin', 'choix-quete', 'random-perso', 'tirage-sort-joueur', 'recap-pjs', 'recap-seance',
       'debut-seance', 'fin-seance', 'personnage', 'faction', 'afficher-personnage', 'afficher-faction', 'wiki', 'wiki-admin',
-      'proposer-date-seance', 'modifier-date-seance', 'analyse-date-seance',
+      'proposer-date-seance', 'modifier-date-seance', 'relancer-date-seance', 'analyse-date-seance',
     ]))
     expect(definitions).not.toEqual(expect.arrayContaining([
       'ping', 'export-full', 'resume', 'recap', 'new-game', 'finish-game',
@@ -460,7 +460,7 @@ describe('DiscordCommandsService', () => {
     const definitions = service.definitions()
     for (const name of [
       'random-perso', 'tirage-sort-joueur', 'help-admin', 'recap-seance', 'journaux', 'debut-seance', 'fin-seance',
-      'personnage', 'faction', 'wiki-admin', 'proposer-date-seance', 'modifier-date-seance', 'analyse-date-seance',
+      'personnage', 'faction', 'wiki-admin', 'proposer-date-seance', 'modifier-date-seance', 'relancer-date-seance', 'analyse-date-seance',
     ]) {
       const command = definitions.find(item => item.name === name)
       expect(command?.default_member_permissions).toBeDefined()
@@ -655,7 +655,7 @@ describe('DiscordCommandsService', () => {
   it('registers the planning commands and computes the strictly next Monday', () => {
     const service = new DiscordCommandsService({} as never, {} as never)
     const definitions = service.definitions().map(command => command.name)
-    expect(definitions).toEqual(expect.arrayContaining(['proposer-date-seance', 'analyse-date-seance', 'modifier-date-seance']))
+    expect(definitions).toEqual(expect.arrayContaining(['proposer-date-seance', 'analyse-date-seance', 'modifier-date-seance', 'relancer-date-seance']))
     expect(definitions).not.toContain('resume')
     const planning = service as unknown as {
       nextPlanningMonday: (date: Date) => string
@@ -698,6 +698,74 @@ describe('DiscordCommandsService', () => {
     expect(react.mock.calls.map(call => call[0])).toEqual(['🇲', '🇹', '🇻', '❌', '❓'])
     expect(startThread).toHaveBeenCalledWith({ name: 'Planification — semaine du 5 octobre' })
     expect(editReply).toHaveBeenCalledWith(expect.objectContaining({ content: expect.stringContaining('Planification publiée') }))
+  })
+
+  it('previews and publishes a reminder mentioning only players who did not answer the planning', async () => {
+    const persistence = {
+      saveFoundryActorCache: jest.fn().mockResolvedValue(undefined),
+      readFoundryActorCache: jest.fn().mockResolvedValue([]),
+    }
+    const foundry = {
+      listActors: jest.fn().mockResolvedValue([
+        { uuid: 'Actor.eryn', name: 'Eryn (Tom)' },
+        { uuid: 'Actor.pepin', name: 'Pépin (Eric)' },
+        { uuid: 'Actor.yaz', name: 'Yaz Lorok (Gus)' },
+        { uuid: 'Actor.valou', name: 'Valou (Valou)' },
+      ]),
+    }
+    const service = new DiscordCommandsService(persistence as never, foundry as never)
+    const planningMessage = (service as unknown as { planningMessage: (monday: string, selectedDays: number[]) => string })
+      .planningMessage('2026-10-12', [0, 2])
+
+    const reaction = (emoji: string, users: Array<{ id: string; bot: boolean }>) => ({
+      emoji: { name: emoji },
+      users: { fetch: jest.fn().mockResolvedValue(new Map(users.map(user => [user.id, user]))) },
+    })
+    const starter = {
+      id: 'starter-1',
+      content: planningMessage,
+      reactions: {
+        cache: new Map([
+          ['monday', reaction('🇱', [{ id: '134346709487714304', bot: false }])],
+          ['uncertain', reaction('❓', [{ id: '399621722158137346', bot: false }])],
+          ['bot', reaction('🇹', [{ id: 'bot', bot: true }])],
+        ]),
+      },
+    }
+    const editReply = jest.fn().mockResolvedValue(undefined)
+
+    await expect(service.handle({
+      commandName: 'relancer-date-seance',
+      id: 'reminder-command',
+      user: { id: 'admin' },
+      memberPermissions: { has: jest.fn().mockReturnValue(true) },
+      channel: { isThread: () => true, fetchStarterMessage: jest.fn().mockResolvedValue(starter) },
+      deferReply: jest.fn().mockResolvedValue(undefined),
+      editReply,
+      reply: jest.fn(),
+    } as never)).resolves.toBe(true)
+
+    const preview = editReply.mock.calls[0][0]
+    expect(preview.content).toContain('<@671746679636099094>')
+    expect(preview.content).not.toContain('<@134346709487714304>')
+    expect(preview.content).not.toContain('<@399621722158137346>')
+    expect(preview.allowedMentions).toEqual({ parse: [] })
+
+    const customId = preview.components[0].toJSON().components[0].custom_id
+    const followUp = jest.fn().mockResolvedValue(undefined)
+    await expect(service.handleButton({
+      customId,
+      user: { id: 'admin' },
+      update: jest.fn().mockResolvedValue(undefined),
+      followUp,
+      reply: jest.fn(),
+    } as never)).resolves.toBe(true)
+
+    expect(followUp).toHaveBeenCalledWith(expect.objectContaining({
+      content: expect.stringContaining('<@671746679636099094>'),
+      ephemeral: false,
+      allowedMentions: { users: ['671746679636099094'] },
+    }))
   })
 
   it('refreshes the planning starter so a previously added day stays selected', async () => {
