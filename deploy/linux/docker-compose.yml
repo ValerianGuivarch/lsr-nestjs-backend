@@ -30,7 +30,7 @@ services:
       - ${PF2_LIBRARY_DIR:-../../../pf2-data}:/app/pf2-library:ro
       - ${PF2_LIBRARY_DIR:-../../../pf2-data}/_AI:/app/pf2-library/_AI
       - ${PF2_LIBRARY_DIR:-../../../pf2-data}/_Foundry:/app/pf2-library/_Foundry
-      - ${FOUNDRY_ASSETS_DIR:-../../../foundry/data/Data/assets/l7r}:/app/foundry-assets:ro
+      - ${FOUNDRY_ASSETS_DIR:-../../../foundry/data/Data/assets/l7r}:/app/foundry-assets
     ports:
       - '3333:3333'
     healthcheck:
