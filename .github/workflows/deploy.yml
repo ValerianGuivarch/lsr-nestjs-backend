@@ -100,9 +100,26 @@ jobs:
           GHCR_USER: ${{ github.actor }}
         run: |
           printf '%s' "$GHCR_TOKEN" | ssh -i ~/.ssh/id_ed25519 "valou@$DEPLOY_HOST" \
-            "docker login ghcr.io -u '$GHCR_USER' --password-stdin >/dev/null && \
-             cd /home/valou/services/lsr-nestjs-backend && \
-             git fetch --quiet https://github.com/ValerianGuivarch/lsr-nestjs-backend.git main && \
-             git merge --ff-only FETCH_HEAD && \
+            "set -e; \
+             DEPLOY_DIR=/home/valou/services/lsr-nestjs-deploy; \
+             SOURCE_DIR=/home/valou/services/lsr-nestjs-backend; \
+             if [ ! -d \"\$DEPLOY_DIR/.git\" ]; then \
+               git clone --quiet https://github.com/ValerianGuivarch/lsr-nestjs-backend.git \"\$DEPLOY_DIR\"; \
+               cp -a \"\$SOURCE_DIR/.env\" \"\$DEPLOY_DIR/.env\"; \
+               printf '\nAPP_STATE_DIR=/home/valou/services/lsr-nestjs-backend\nAPP_STORAGE_DIR=/home/valou/services/lsr-nestjs-backend/storage\n' >> \"\$DEPLOY_DIR/.env\"; \
+             fi; \
+             cd \"\$DEPLOY_DIR\"; \
+             git fetch --quiet origin main; \
+             REMOTE_HEAD=\$(git rev-parse FETCH_HEAD); \
+             if [ \"\$REMOTE_HEAD\" != '${GITHUB_SHA}' ]; then \
+               echo \"[deploy] skipping obsolete run ${GITHUB_SHA}; main is now \$REMOTE_HEAD\"; \
+               exit 0; \
+             fi; \
+             if ! git diff --quiet || ! git diff --cached --quiet; then \
+               echo '[deploy] dedicated checkout contains tracked local changes' >&2; \
+               exit 1; \
+             fi; \
+             git checkout --quiet --detach '${GITHUB_SHA}'; \
+             docker login ghcr.io -u '$GHCR_USER' --password-stdin >/dev/null; \
              ./deploy/linux/scripts/deploy-main.sh '${GITHUB_SHA}'; \
              rc=\$?; docker logout ghcr.io >/dev/null 2>&1 || true; exit \$rc"

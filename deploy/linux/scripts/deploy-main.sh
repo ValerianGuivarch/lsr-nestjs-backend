@@ -17,21 +17,20 @@ if ! flock -n 9; then
   exit 0
 fi
 
-if [[ "$(git branch --show-current)" != "main" ]]; then
-  echo "[deploy] refusing to deploy: checkout main first" >&2
-  exit 1
-fi
-
 if ! git diff --quiet || ! git diff --cached --quiet; then
   echo "[deploy] refusing to deploy with tracked local changes" >&2
   exit 1
 fi
 
 git fetch --quiet https://github.com/ValerianGuivarch/lsr-nestjs-backend.git main
-git merge --ff-only FETCH_HEAD
+REMOTE_HEAD="$(git rev-parse FETCH_HEAD)"
+if [[ "$REMOTE_HEAD" != "$VERSION" ]]; then
+  echo "[deploy] requested version $VERSION is obsolete; main is $REMOTE_HEAD"
+  exit 0
+fi
 
 if [[ "$(git rev-parse HEAD)" != "$VERSION" ]]; then
-  echo "[deploy] main HEAD does not match requested version $VERSION" >&2
+  echo "[deploy] dedicated checkout HEAD does not match requested version $VERSION" >&2
   exit 1
 fi
 
