@@ -6,7 +6,7 @@ describe('DiscordCommandsService', () => {
     const definitions = service.definitions().map(command => command.name)
     expect(definitions).toEqual(expect.arrayContaining([
       'help', 'help-admin', 'choix-quete', 'random-perso', 'tirage-sort-joueur', 'recap-pjs', 'recap-seance',
-      'debut-seance', 'fin-seance', 'personnage', 'faction', 'afficher-personnage', 'afficher-faction', 'wiki', 'wiki-admin',
+      'debut-seance', 'fin-seance', 'personnage', 'faction', 'afficher-personnage', 'afficher-faction', 'rechercher', 'wiki', 'wiki-admin',
       'proposer-date-seance', 'modifier-date-seance', 'relancer-date-seance', 'analyse-date-seance',
     ]))
     expect(definitions).not.toEqual(expect.arrayContaining([
@@ -465,7 +465,7 @@ describe('DiscordCommandsService', () => {
       const command = definitions.find(item => item.name === name)
       expect(command?.default_member_permissions).toBeDefined()
     }
-    for (const name of ['help', 'choix-quete', 'recap-pjs', 'afficher-personnage', 'afficher-faction', 'wiki']) {
+    for (const name of ['help', 'choix-quete', 'recap-pjs', 'afficher-personnage', 'afficher-faction', 'rechercher', 'wiki']) {
       const command = definitions.find(item => item.name === name)
       expect(command?.default_member_permissions ?? null).toBeNull()
     }
@@ -505,6 +505,53 @@ describe('DiscordCommandsService', () => {
     expect(response.components[0].toJSON().components[0].label).toBe('Partager')
   })
 
+  it('searches published characters and factions with one public command', async () => {
+    const playerCodex = {
+      profileCandidates: jest.fn().mockResolvedValue([{ id: 'sheila', name: 'Sheila Heidmarch', isPlayer: false }]),
+      factionCandidates: jest.fn().mockResolvedValue([{ id: 'watch', name: 'Veilleurs', path: 'Veilleurs' }]),
+      character: jest.fn().mockResolvedValue({
+        displayName: 'Sheila Heidmarch',
+        shortDescription: 'Responsable de la Loge de Magnimar.',
+        wikiPageTitle: 'Personnage:Sheila Heidmarch',
+        wikiPortraitFilename: null,
+        published: true,
+      }),
+      characterCandidate: jest.fn().mockResolvedValue({ id: 'sheila', name: 'Sheila Heidmarch', portrait: null }),
+      factionForPublication: jest.fn().mockResolvedValue({
+        id: 'watch', name: 'Veilleurs', description: 'Une faction connue.', parentName: null,
+        wikiPageTitle: 'Faction:Veilleurs', published: true,
+      }),
+    }
+    const mediaWiki = {
+      pageUrl: jest.fn((title: string) => 'https://wiki.example/' + encodeURIComponent(title)),
+      fileUrl: jest.fn(),
+    }
+    const service = new DiscordCommandsService({} as never, {} as never, playerCodex as never, mediaWiki as never)
+
+    const respond = jest.fn().mockResolvedValue(undefined)
+    await expect(service.handleAutocomplete({
+      commandName: 'rechercher',
+      options: { getFocused: jest.fn().mockReturnValue('veil') },
+      respond,
+    } as never)).resolves.toBe(true)
+    expect(respond.mock.calls[0][0]).toEqual(expect.arrayContaining([
+      expect.objectContaining({ name: 'Faction — Veilleurs', value: 'faction:watch' }),
+    ]))
+
+    const deferReply = jest.fn().mockResolvedValue(undefined)
+    const editReply = jest.fn().mockResolvedValue(undefined)
+    await expect(service.handle({
+      commandName: 'rechercher',
+      id: 'search-one',
+      user: { id: 'player' },
+      deferReply,
+      editReply,
+      options: { getString: jest.fn().mockReturnValue('personnage:sheila') },
+    } as never)).resolves.toBe(true)
+    expect(deferReply).toHaveBeenCalledWith({ ephemeral: true })
+    expect(editReply.mock.calls[0][0].content).toContain('**Sheila Heidmarch**')
+    expect(editReply.mock.calls[0][0].components[0].toJSON().components[0].label).toBe('Partager')
+  })
   it('shows only a published faction privately and offers sharing', async () => {
     const playerCodex = {
       factionForPublication: jest.fn().mockResolvedValue({

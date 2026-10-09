@@ -82,6 +82,7 @@ export class DiscordCommandsService {
       new SlashCommandBuilder().setName('faction').setDescription('Prépare la publication d’une faction MJ.').addStringOption(option => option.setName('faction').setDescription('Faction à publier').setRequired(true).setAutocomplete(true)).setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild).toJSON(),
       new SlashCommandBuilder().setName('afficher-personnage').setDescription('Affiche un personnage publié, avec option de partage.').addStringOption(option => option.setName('personnage').setDescription('Personnage publié').setRequired(true).setAutocomplete(true)).toJSON(),
       new SlashCommandBuilder().setName('afficher-faction').setDescription('Affiche une faction publiée, avec option de partage.').addStringOption(option => option.setName('faction').setDescription('Faction publiée').setRequired(true).setAutocomplete(true)).toJSON(),
+      new SlashCommandBuilder().setName('rechercher').setDescription('Recherche un personnage ou une faction publiée.').addStringOption(option => option.setName('cible').setDescription('Personnage ou faction').setRequired(true).setAutocomplete(true)).toJSON(),
       new SlashCommandBuilder().setName('wiki').setDescription('Ouvre le wiki avec ton compte déjà connecté.').toJSON(),
       new SlashCommandBuilder()
         .setName('wiki-admin')
@@ -168,6 +169,7 @@ export class DiscordCommandsService {
     if (interaction.commandName === 'faction') { await this.factionCommand(interaction as ChatInputCommandInteraction); return true }
     if (interaction.commandName === 'afficher-personnage') { await this.displayCharacterCommand(interaction as ChatInputCommandInteraction); return true }
     if (interaction.commandName === 'afficher-faction') { await this.displayFactionCommand(interaction as ChatInputCommandInteraction); return true }
+    if (interaction.commandName === 'rechercher') { await this.searchPublishedCommand(interaction as ChatInputCommandInteraction); return true }
     if (interaction.commandName === 'wiki') { await this.wikiCommand(interaction as ChatInputCommandInteraction); return true }
     if (interaction.commandName === 'wiki-admin') { await this.wikiAdminCommand(interaction as ChatInputCommandInteraction); return true }
     if (interaction.commandName === 'proposer-date-seance') { await this.planningCommand(interaction as ChatInputCommandInteraction); return true }
@@ -185,6 +187,7 @@ export class DiscordCommandsService {
         '`/recap-pjs` — aperçu du récapitulatif des joueurs/PJ, puis bouton de publication.',
         '`/afficher-personnage` — affiche pour toi un personnage publié, puis permet de le partager.',
         '`/afficher-faction` — affiche pour toi une faction publiée, puis permet de la partager.',
+        '`/rechercher` — recherche au même endroit un personnage ou une faction publiée, puis permet de le/la partager.',
         '`/wiki` — ouvre le Wiki avec ton compte déjà connecté.',
         '`/help` — affiche cette aide.',
       ].join('\n'),
@@ -1070,6 +1073,60 @@ export class DiscordCommandsService {
     }
   }
 
+  private async searchPublishedCommand(interaction: ChatInputCommandInteraction): Promise<void> {
+    await interaction.deferReply({ ephemeral: true })
+    const selection = interaction.options.getString('cible', true).trim()
+    try {
+      if (selection.startsWith('personnage:')) {
+        const npcId = selection.slice('personnage:'.length)
+        const profile = await this.playerCodex!.character(npcId) as {
+          displayName: string
+          shortDescription?: string
+          wikiPageTitle: string
+          wikiPortraitFilename?: string | null
+          published?: boolean
+        }
+        if (!profile.published) {
+          await interaction.editReply({ content: 'Ce personnage n’est pas publié dans le carnet joueur.' })
+          return
+        }
+        const source = await this.playerCodex!.characterCandidate(npcId)
+        const portrait = source?.portrait
+          ? this.discordPortraitSource(source.portrait)
+          : profile.wikiPortraitFilename && this.mediaWiki
+            ? this.mediaWiki.fileUrl(profile.wikiPortraitFilename)
+            : null
+        const content = [
+          `**${profile.displayName}**`,
+          profile.shortDescription?.trim() || '',
+          this.mediaWiki ? `Fiche wiki : ${this.mediaWiki.pageUrl(profile.wikiPageTitle)}` : '',
+        ].filter(Boolean).join('\n\n')
+        await this.previewPublicMessage(interaction, content, { buttonLabel: 'Partager', ...(portrait ? { files: [portrait] } : {}) })
+        return
+      }
+
+      if (selection.startsWith('faction:')) {
+        const faction = await this.playerCodex!.factionForPublication(selection.slice('faction:'.length))
+        if (!faction.published) {
+          await interaction.editReply({ content: 'Cette faction n’est pas publiée dans le carnet joueur.' })
+          return
+        }
+        const content = [
+          `**${faction.name}**`,
+          faction.description.trim(),
+          faction.parentName ? `Sous-faction de **${faction.parentName}**.` : '',
+          this.mediaWiki ? `Fiche wiki : ${this.mediaWiki.pageUrl(faction.wikiPageTitle)}` : '',
+        ].filter(Boolean).join('\n\n')
+        await this.previewPublicMessage(interaction, content, { buttonLabel: 'Partager' })
+        return
+      }
+
+      await interaction.editReply({ content: 'Sélection invalide. Choisis un personnage ou une faction proposé par la commande.' })
+    } catch (error) {
+      await interaction.editReply({ content: `Affichage impossible : ${error instanceof Error ? error.message : String(error)}` })
+    }
+  }
+
   async handleAutocomplete(interaction: AutocompleteInteraction): Promise<boolean> {
     if (interaction.commandName === 'recap-seance') {
       const term = interaction.options.getFocused().toString().trim().toLocaleLowerCase()
@@ -1132,6 +1189,30 @@ export class DiscordCommandsService {
         return true
       }
       await interaction.respond([])
+      return true
+    }
+    if (interaction.commandName === 'rechercher') {
+      const focused = interaction.options.getFocused().toString()
+      const term = focused.trim().toLocaleLowerCase('fr')
+      const [characters, factions] = await Promise.all([
+        this.playerCodex!.profileCandidates(focused),
+        this.playerCodex!.factionCandidates(true),
+      ])
+      const options = [
+        ...characters.map(candidate => ({
+          name: `Personnage — ${candidate.name}`.slice(0, 100),
+          value: `personnage:${candidate.id}`,
+        })),
+        ...factions
+          .filter(faction => !term || faction.path.toLocaleLowerCase('fr').includes(term))
+          .map(faction => ({
+            name: `Faction — ${faction.path}`.slice(0, 100),
+            value: `faction:${faction.id}`,
+          })),
+      ]
+        .sort((left, right) => left.name.localeCompare(right.name, 'fr'))
+        .slice(0, 25)
+      await interaction.respond(options)
       return true
     }
     if (interaction.commandName === 'faction' || interaction.commandName === 'afficher-faction') {
