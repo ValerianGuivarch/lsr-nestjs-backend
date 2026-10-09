@@ -194,8 +194,6 @@ export function makeLocationsClickable(gmap: GolarionMap) {
     popup.setLngLat(coordinates).setDOMContent(root).addTo(map)
   }
 
-  map.on('click', 'city-icons', clickOnWikilink)
-  map.on('click', 'city-labels', clickOnWikilink)
   map.on('click', 'location-icons', clickOnWikilink)
   map.on('click', 'location-labels', clickOnWikilink)
 }
