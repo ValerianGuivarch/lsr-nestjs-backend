@@ -28,8 +28,10 @@ class ApiPF2PlayerCodexUpdate extends ApiBase {
         }
 
         $op = $params['op'];
+        $canEdit = $user->isRegistered() && $user->isAllowed( 'edit' );
+        $canAdmin = $user->isRegistered() && $user->isAllowed( 'delete' );
         if ( $op === 'updateCharacter' ) {
-            if ( !$user->isRegistered() || !$user->isAllowed( 'edit' ) ) {
+            if ( !$canEdit ) {
                 $this->dieWithError( 'Vous devez pouvoir modifier le wiki pour changer la description courte.' );
             }
             $shortDescription = isset( $payload['shortDescription'] ) && is_string( $payload['shortDescription'] )
@@ -39,7 +41,17 @@ class ApiPF2PlayerCodexUpdate extends ApiBase {
                 $this->dieWithError( 'La description courte est trop longue.' );
             }
             $payload = [ 'shortDescription' => $shortDescription ];
-        } elseif ( !$user->isRegistered() || !$user->isAllowed( 'delete' ) ) {
+        } elseif ( $op === 'createFaction' || $op === 'updateFaction' ) {
+            if ( !$canEdit ) $this->dieWithError( 'Vous devez être connecté et pouvoir modifier le wiki pour gérer les factions joueur.' );
+            $payload = [
+                'name' => isset( $payload['name'] ) && is_string( $payload['name'] ) ? trim( $payload['name'] ) : '',
+                'description' => isset( $payload['description'] ) && is_string( $payload['description'] ) ? trim( $payload['description'] ) : '',
+                'parentFactionId' => isset( $payload['parentFactionId'] ) && is_string( $payload['parentFactionId'] ) ? trim( $payload['parentFactionId'] ) : '',
+            ];
+            if ( $payload['name'] === '' ) $this->dieWithError( 'Le nom de la faction est obligatoire.' );
+        } elseif ( $op === 'associateFaction' ) {
+            if ( !$canAdmin ) $this->dieWithError( 'Vous devez être administrateur pour associer une faction joueur à une faction MJ.' );
+        } elseif ( !$canAdmin ) {
             $this->dieWithError( 'Vous devez être administrateur pour modifier le carnet.' );
         }
         $routes = [
@@ -47,6 +59,9 @@ class ApiPF2PlayerCodexUpdate extends ApiBase {
             'updateCharacter' => [ 'PATCH', '/player-codex/characters/' . rawurlencode( $params['id'] ) ],
             'addFaction' => [ 'POST', '/player-codex/characters/' . rawurlencode( $params['id'] ) . '/factions?factionId=' . rawurlencode( $params['target'] ) ],
             'removeFaction' => [ 'DELETE', '/player-codex/characters/' . rawurlencode( $params['id'] ) . '/factions/' . rawurlencode( $params['target'] ) ],
+            'createFaction' => [ 'POST', '/player-codex/internal/factions' ],
+            'updateFaction' => [ 'PATCH', '/player-codex/internal/factions/' . rawurlencode( $params['id'] ) ],
+            'associateFaction' => [ 'POST', '/player-codex/internal/factions/' . rawurlencode( $params['id'] ) . '/associate/' . rawurlencode( $params['target'] ) ],
         ];
         if ( !isset( $routes[$op] ) ) {
             $this->dieWithError( 'Opération inconnue.' );
@@ -69,7 +84,10 @@ class ApiPF2PlayerCodexUpdate extends ApiBase {
                     'method' => $method,
                     'timeout' => 15,
                     'postData' => $body,
-                    'headers' => [ 'Content-Type' => 'application/json' ],
+                    'headers' => [
+                        'Content-Type' => 'application/json',
+                        'X-PF2-Wiki-Key' => getenv( 'PF2_WIKI_LOGIN_INTERNAL_KEY' ) ?: getenv( 'PF2_JOURNALS_INTERNAL_KEY' ) ?: '',
+                    ],
                 ],
                 __METHOD__
             );

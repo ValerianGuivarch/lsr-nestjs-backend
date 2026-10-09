@@ -123,6 +123,7 @@ describe('Pf2PersistenceService', () => {
       , { id: '027-resource-library' }
       , { id: '028-resource-original-title' }
       , { id: '029-resource-favorite' }
+      , { id: '030-restore-player-faction-domain' }
     ])
 
     await currentDataSource().destroy()
@@ -161,6 +162,7 @@ describe('Pf2PersistenceService', () => {
       , { id: '027-resource-library' }
       , { id: '028-resource-original-title' }
       , { id: '029-resource-favorite' }
+      , { id: '030-restore-player-faction-domain' }
     ])
   })
 

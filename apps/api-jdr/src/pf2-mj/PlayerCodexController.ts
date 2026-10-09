@@ -22,6 +22,11 @@ export class PlayerCodexController {
   @Post('characters/:npcId/factions') addFaction(@Param('npcId') id: string, @Body() body: { factionId?: string }, @Query('factionId') factionId = ''): Promise<unknown> { return this.service.addCharacterFaction(id, factionId || body.factionId || '') }
   @Delete('characters/:npcId/factions/:factionId') async removeFaction(@Param('npcId') id: string, @Param('factionId') faction: string): Promise<{ removed: true }> { await this.service.removeCharacterFaction(id, faction); return { removed: true } }
   @Get('factions') factions(): Promise<unknown> { return this.service.listFactions() }
+  @Get('internal/factions') internalFactions(@Headers('x-pf2-wiki-key') key = ''): Promise<unknown> { this.requireWikiInternalKey(key); return this.service.listAllPlayerFactions() }
+  @Get('internal/mj-factions') internalMjFactions(@Headers('x-pf2-wiki-key') key = ''): Promise<unknown> { this.requireWikiInternalKey(key); return this.service.factionCandidates(false) }
+  @Post('internal/factions') createFaction(@Body() body: { name?: unknown; description?: unknown; parentFactionId?: unknown }, @Headers('x-pf2-wiki-key') key = ''): Promise<unknown> { this.requireWikiInternalKey(key); return this.service.createPlayerFaction({ ...body, published: true }) }
+  @Patch('internal/factions/:id') updateFaction(@Param('id') id: string, @Body() body: { name?: unknown; description?: unknown; parentFactionId?: unknown }, @Headers('x-pf2-wiki-key') key = ''): Promise<unknown> { this.requireWikiInternalKey(key); return this.service.updatePlayerFaction(id, body) }
+  @Post('internal/factions/:id/associate/:mjFactionId') associateFaction(@Param('id') id: string, @Param('mjFactionId') mjFactionId: string, @Headers('x-pf2-wiki-key') key = ''): Promise<unknown> { this.requireWikiInternalKey(key); return this.service.associateFaction(id, mjFactionId) }
 
   private requireWikiInternalKey(suppliedKey: string): void {
     const expectedKey = process.env['PF2_WIKI_LOGIN_INTERNAL_KEY'] ?? process.env['PF2_JOURNALS_INTERNAL_KEY'] ?? ''

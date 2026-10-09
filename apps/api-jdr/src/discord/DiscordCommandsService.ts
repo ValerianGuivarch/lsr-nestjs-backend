@@ -59,6 +59,7 @@ export class DiscordCommandsService {
   private readonly pendingJournalReveals = new Map<string, { requesterId: string; journalNumber: number }>()
   private readonly pendingCharacterFactions = new Map<string, { requesterId: string; factionId: string | null }>()
   private readonly pendingFactionPublications = new Map<string, { requesterId: string; factionId: string }>()
+  private readonly pendingFactionAssociations = new Map<string, { requesterId: string; playerFactionId: string; mjFactionId: string }>()
   private readonly pendingSchedulePublications = new Map<string, { requesterId: string; content: string }>()
   private readonly pendingPlanningReminders = new Map<string, { requesterId: string; content: string; userIds: string[] }>()
   private readonly pendingPreviewPublications = new Map<string, { requesterId: string; content: string; files?: string[] }>()
@@ -80,6 +81,8 @@ export class DiscordCommandsService {
       new SlashCommandBuilder().setName('fin-seance').setDescription('Termine une séance et met à jour son résumé.').addIntegerOption(option => option.setName('xp').setDescription('XP gagnée par PJ').setRequired(true).setMinValue(0)).addIntegerOption(option => option.setName('numero').setDescription('Numéro du résumé à terminer')).addStringOption(option => option.setName('fin').setDescription('Date de fin en jeu : YYYY-MM-DD')).addIntegerOption(option => option.setName('jours').setDescription('Durée en jours, à partir du début en jeu').setMinValue(1)).setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild).toJSON(),
       new SlashCommandBuilder().setName('personnage').setDescription('Présente ou publie un personnage dans le carnet joueur.').addStringOption(option => option.setName('personnage').setDescription('PNJ existant ou nom libre').setRequired(true).setAutocomplete(true)).addAttachmentOption(option => option.setName('portrait').setDescription('Portrait pour un personnage improvisé')).addBooleanOption(option => option.setName('afficher_nom').setDescription('Afficher le nom').setRequired(false)).setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild).toJSON(),
       new SlashCommandBuilder().setName('faction').setDescription('Prépare la publication d’une faction MJ.').addStringOption(option => option.setName('faction').setDescription('Faction à publier').setRequired(true).setAutocomplete(true)).setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild).toJSON(),
+      new SlashCommandBuilder().setName('nouvelle-faction').setDescription('Crée une faction dans le carnet joueur.').addStringOption(option => option.setName('nom').setDescription('Nom connu des joueurs').setRequired(true)).addStringOption(option => option.setName('description').setDescription('Description connue des joueurs').setRequired(false).setMaxLength(2000)).addStringOption(option => option.setName('parente').setDescription('Faction parente côté joueurs').setRequired(false).setAutocomplete(true)).toJSON(),
+      new SlashCommandBuilder().setName('associer-faction').setDescription('Associe une faction joueur à une faction MJ.').addStringOption(option => option.setName('faction_joueur').setDescription('Faction joueur non associée').setRequired(true).setAutocomplete(true)).addStringOption(option => option.setName('faction_mj').setDescription('Faction MJ non associée').setRequired(true).setAutocomplete(true)).setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild).toJSON(),
       new SlashCommandBuilder().setName('afficher-personnage').setDescription('Affiche un personnage publié, avec option de partage.').addStringOption(option => option.setName('personnage').setDescription('Personnage publié').setRequired(true).setAutocomplete(true)).toJSON(),
       new SlashCommandBuilder().setName('afficher-faction').setDescription('Affiche une faction publiée, avec option de partage.').addStringOption(option => option.setName('faction').setDescription('Faction publiée').setRequired(true).setAutocomplete(true)).toJSON(),
       new SlashCommandBuilder().setName('rechercher').setDescription('Recherche un personnage ou une faction publiée.').addStringOption(option => option.setName('cible').setDescription('Personnage ou faction').setRequired(true).setAutocomplete(true)).toJSON(),
@@ -167,6 +170,8 @@ export class DiscordCommandsService {
     if (interaction.commandName === 'resume') { await this.resumeCommand(interaction as ChatInputCommandInteraction); return true }
     if (interaction.commandName === 'personnage') { await this.presentCharacter(interaction as ChatInputCommandInteraction); return true }
     if (interaction.commandName === 'faction') { await this.factionCommand(interaction as ChatInputCommandInteraction); return true }
+    if (interaction.commandName === 'nouvelle-faction') { await this.newPlayerFactionCommand(interaction as ChatInputCommandInteraction); return true }
+    if (interaction.commandName === 'associer-faction') { await this.associateFactionCommand(interaction as ChatInputCommandInteraction); return true }
     if (interaction.commandName === 'afficher-personnage') { await this.displayCharacterCommand(interaction as ChatInputCommandInteraction); return true }
     if (interaction.commandName === 'afficher-faction') { await this.displayFactionCommand(interaction as ChatInputCommandInteraction); return true }
     if (interaction.commandName === 'rechercher') { await this.searchPublishedCommand(interaction as ChatInputCommandInteraction); return true }
@@ -187,6 +192,7 @@ export class DiscordCommandsService {
         '`/recap-pjs` — aperçu du récapitulatif des joueurs/PJ, puis bouton de publication.',
         '`/afficher-personnage` — affiche pour toi un personnage publié, puis permet de le partager.',
         '`/afficher-faction` — affiche pour toi une faction publiée, puis permet de la partager.',
+        '`/nouvelle-faction` — crée une faction ou sous-faction dans le carnet des joueurs.',
         '`/rechercher` — recherche au même endroit un personnage ou une faction publiée, puis permet de le/la partager.',
         '`/wiki` — ouvre le Wiki avec ton compte déjà connecté.',
         '`/help` — affiche cette aide.',
@@ -210,7 +216,8 @@ export class DiscordCommandsService {
         '`/fin-seance` — saisit la fin de séance et les XP.',
         '`/journaux` — prévisualise puis révèle un journal après validation.',
         '`/personnage` — présente un personnage et permet de créer/publier sa fiche.',
-        '`/faction` — prévisualise puis publie une faction après validation.',
+        '`/faction` — prévisualise puis publie une faction MJ vers le carnet joueur.',
+        '`/associer-faction` — relie une faction du carnet joueur à sa faction MJ sans modifier son nom ni sa hiérarchie.',
         '`/wiki-admin` — gère les associations Discord ↔ Wiki et les PJ.',
         '`/proposer-date-seance` — choisit puis publie les dates proposées pour la prochaine semaine.',
         '`/modifier-date-seance` — modifie les dates depuis le fil de la proposition.',
@@ -389,6 +396,55 @@ export class DiscordCommandsService {
       await interaction.editReply({ content: text, components: [new ActionRowBuilder<ButtonBuilder>().addComponents(new ButtonBuilder().setCustomId(id).setLabel('Publier la faction').setStyle(ButtonStyle.Primary))], allowedMentions: { parse: [] } })
     } catch (error) {
       await interaction.editReply({ content: `Publication impossible : ${error instanceof Error ? error.message : String(error)}` })
+    }
+  }
+
+  private async newPlayerFactionCommand(interaction: ChatInputCommandInteraction): Promise<void> {
+    await interaction.deferReply({ ephemeral: true })
+    try {
+      if (!this.playerCodex || !this.mediaWiki || !this.discord) throw new Error('Le carnet joueur, MediaWiki ou Discord est indisponible.')
+      const name = interaction.options.getString('nom', true).trim()
+      const description = interaction.options.getString('description')?.trim() ?? ''
+      const parentFactionId = interaction.options.getString('parente')?.trim() || null
+      const faction = await this.playerCodex.createPlayerFaction({ name, description, parentFactionId, published: false }) as { id: string; name: string; description: string; parentFactionId: string | null; wikiPageTitle: string }
+      const parent = faction.parentFactionId ? await this.playerCodex.playerFaction(faction.parentFactionId) as { name: string } : null
+      const publication = await this.discord.publishFaction({
+        name: faction.name,
+        description: faction.description,
+        parentName: parent?.name ?? null,
+        wikiUrl: this.mediaWiki.pageUrl(faction.wikiPageTitle),
+      })
+      if (publication.status !== 'sent') throw new Error(publication.reason ?? 'Discord n’a pas confirmé la publication.')
+      await this.playerCodex.markPlayerFactionPublished(faction.id)
+      await interaction.editReply({ content: `Faction créée dans le carnet joueur : ${this.mediaWiki.pageUrl(faction.wikiPageTitle)}` })
+    } catch (error) {
+      await interaction.editReply({ content: `Création impossible : ${error instanceof Error ? error.message : String(error)}` })
+    }
+  }
+
+  private async associateFactionCommand(interaction: ChatInputCommandInteraction): Promise<void> {
+    if (!this.isAdmin(interaction)) {
+      await interaction.reply({ content: 'Cette commande est réservée aux administrateurs du serveur.', ephemeral: true })
+      return
+    }
+    await interaction.deferReply({ ephemeral: true })
+    try {
+      const playerFactionId = interaction.options.getString('faction_joueur', true)
+      const mjFactionId = interaction.options.getString('faction_mj', true)
+      const player = await this.playerCodex!.playerFaction(playerFactionId) as { name: string; sourceMjFactionId: string | null }
+      const mj = (await this.playerCodex!.factionCandidates(false)).find(item => item.id === mjFactionId)
+      if (!mj) throw new Error('Faction MJ introuvable.')
+      if (player.sourceMjFactionId) throw new Error('Cette faction joueur est déjà associée à une faction MJ.')
+      const id = `pf2-faction:associate:${interaction.id}`
+      this.pendingFactionAssociations.set(id, { requesterId: interaction.user.id, playerFactionId, mjFactionId })
+      const button = new ButtonBuilder().setCustomId(id).setLabel('Associer').setStyle(ButtonStyle.Primary)
+      await interaction.editReply({
+        content: `Associer la faction joueur **${player.name}** à la faction MJ **${mj.name}** ?\n\nLe nom, le texte et la hiérarchie côté joueurs ne seront pas modifiés.`,
+        components: [new ActionRowBuilder<ButtonBuilder>().addComponents(button)],
+        allowedMentions: { parse: [] },
+      })
+    } catch (error) {
+      await interaction.editReply({ content: `Association impossible : ${error instanceof Error ? error.message : String(error)}` })
     }
   }
 
@@ -1056,15 +1112,16 @@ export class DiscordCommandsService {
   private async displayFactionCommand(interaction: ChatInputCommandInteraction): Promise<void> {
     await interaction.deferReply({ ephemeral: true })
     try {
-      const faction = await this.playerCodex!.factionForPublication(interaction.options.getString('faction', true))
+      const faction = await this.playerCodex!.playerFaction(interaction.options.getString('faction', true)) as { name: string; description: string; parentFactionId: string | null; wikiPageTitle: string; published: boolean }
       if (!faction.published) {
         await interaction.editReply({ content: 'Cette faction n’est pas publiée dans le carnet joueur.' })
         return
       }
+      const parent = faction.parentFactionId ? await this.playerCodex!.playerFaction(faction.parentFactionId) as { name: string } : null
       const content = [
         `**${faction.name}**`,
         faction.description.trim(),
-        faction.parentName ? `Sous-faction de **${faction.parentName}**.` : '',
+        parent ? `Sous-faction de **${parent.name}**.` : '',
         this.mediaWiki ? `Fiche wiki : ${this.mediaWiki.pageUrl(faction.wikiPageTitle)}` : '',
       ].filter(Boolean).join('\n\n')
       await this.previewPublicMessage(interaction, content, { buttonLabel: 'Partager' })
@@ -1106,15 +1163,16 @@ export class DiscordCommandsService {
       }
 
       if (selection.startsWith('faction:')) {
-        const faction = await this.playerCodex!.factionForPublication(selection.slice('faction:'.length))
+        const faction = await this.playerCodex!.playerFaction(selection.slice('faction:'.length)) as { name: string; description: string; parentFactionId: string | null; wikiPageTitle: string; published: boolean }
         if (!faction.published) {
           await interaction.editReply({ content: 'Cette faction n’est pas publiée dans le carnet joueur.' })
           return
         }
+        const parent = faction.parentFactionId ? await this.playerCodex!.playerFaction(faction.parentFactionId) as { name: string } : null
         const content = [
           `**${faction.name}**`,
           faction.description.trim(),
-          faction.parentName ? `Sous-faction de **${faction.parentName}**.` : '',
+          parent ? `Sous-faction de **${parent.name}**.` : '',
           this.mediaWiki ? `Fiche wiki : ${this.mediaWiki.pageUrl(faction.wikiPageTitle)}` : '',
         ].filter(Boolean).join('\n\n')
         await this.previewPublicMessage(interaction, content, { buttonLabel: 'Partager' })
@@ -1196,7 +1254,7 @@ export class DiscordCommandsService {
       const term = focused.trim().toLocaleLowerCase('fr')
       const [characters, factions] = await Promise.all([
         this.playerCodex!.profileCandidates(focused),
-        this.playerCodex!.factionCandidates(true),
+        this.playerCodex!.playerFactionCandidates(true),
       ])
       const options = [
         ...characters.map(candidate => ({
@@ -1215,9 +1273,37 @@ export class DiscordCommandsService {
       await interaction.respond(options)
       return true
     }
-    if (interaction.commandName === 'faction' || interaction.commandName === 'afficher-faction') {
+    if (interaction.commandName === 'nouvelle-faction') {
       const focused = interaction.options.getFocused().toString().toLocaleLowerCase()
-      const factions = await this.playerCodex!.factionCandidates(interaction.commandName === 'afficher-faction')
+      const factions = await this.playerCodex!.playerFactionCandidates(true)
+      await interaction.respond(factions.filter(faction => faction.path.toLocaleLowerCase().includes(focused)).slice(0, 25).map(faction => ({ name: faction.path.slice(0, 100), value: faction.id })))
+      return true
+    }
+    if (interaction.commandName === 'associer-faction') {
+      const focused = interaction.options.getFocused(true)
+      const term = focused.value.toString().toLocaleLowerCase()
+      if (focused.name === 'faction_joueur') {
+        const factions = await this.playerCodex!.playerFactionCandidates(true, true)
+        await interaction.respond(factions.filter(faction => faction.path.toLocaleLowerCase().includes(term)).slice(0, 25).map(faction => ({ name: faction.path.slice(0, 100), value: faction.id })))
+        return true
+      }
+      if (focused.name === 'faction_mj') {
+        const factions = await this.playerCodex!.factionCandidates(true)
+        await interaction.respond(factions.filter(faction => faction.path.toLocaleLowerCase().includes(term)).slice(0, 25).map(faction => ({ name: faction.path.slice(0, 100), value: faction.id })))
+        return true
+      }
+      await interaction.respond([])
+      return true
+    }
+    if (interaction.commandName === 'faction') {
+      const focused = interaction.options.getFocused().toString().toLocaleLowerCase()
+      const factions = await this.playerCodex!.factionCandidates(false)
+      await interaction.respond(factions.filter(faction => faction.path.toLocaleLowerCase().includes(focused)).slice(0, 25).map(faction => ({ name: faction.path.slice(0, 100), value: faction.id })))
+      return true
+    }
+    if (interaction.commandName === 'afficher-faction') {
+      const focused = interaction.options.getFocused().toString().toLocaleLowerCase()
+      const factions = await this.playerCodex!.playerFactionCandidates(true)
       await interaction.respond(factions.filter(faction => faction.path.toLocaleLowerCase().includes(focused)).slice(0, 25).map(faction => ({ name: faction.path.slice(0, 100), value: faction.id })))
       return true
     }
@@ -1278,7 +1364,7 @@ export class DiscordCommandsService {
       .setLabel(buttonLabel)
 
     const discordPortrait = portrait ? this.discordPortraitSource(portrait) : null
-    const factions = await this.playerCodex!.factionCandidates(true)
+    const factions = await this.playerCodex!.playerFactionCandidates(true)
     const components: Array<ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder>> = []
     if (factions.length) {
       const factionId = `pf2-character:faction:${presentation.id}`
@@ -1722,20 +1808,38 @@ export class DiscordCommandsService {
       return true
     }
 
+    if (interaction.customId.startsWith('pf2-faction:associate:')) {
+      const pending = this.pendingFactionAssociations.get(interaction.customId)
+      if (!pending) { await interaction.reply({ content: 'Cette association a expiré. Relance `/associer-faction`.', ephemeral: true }); return true }
+      if (interaction.user.id !== pending.requesterId) { await interaction.reply({ content: 'Cette validation appartient à un autre administrateur.', ephemeral: true }); return true }
+      await interaction.deferReply({ ephemeral: true })
+      try {
+        const faction = await this.playerCodex!.associateFaction(pending.playerFactionId, pending.mjFactionId) as { name: string; wikiPageTitle: string }
+        this.pendingFactionAssociations.delete(interaction.customId)
+        await interaction.editReply({ content: `Association enregistrée : **${faction.name}** ↔ faction MJ.\n${this.mediaWiki!.pageUrl(faction.wikiPageTitle)}`, components: [] })
+      } catch (error) {
+        await interaction.editReply({ content: `Association impossible : ${error instanceof Error ? error.message : String(error)}`, components: [] })
+      }
+      return true
+    }
+
     if (interaction.customId.startsWith('pf2-faction:publish:')) {
       const pending = this.pendingFactionPublications.get(interaction.customId)
       if (!pending) { await interaction.reply({ content: 'Cette prévisualisation a expiré. Relance `/faction`.', ephemeral: true }); return true }
       if (interaction.user.id !== pending.requesterId) { await interaction.reply({ content: 'Cette validation appartient à un autre administrateur.', ephemeral: true }); return true }
       await interaction.deferReply({ ephemeral: true })
       try {
-        const faction = await this.playerCodex!.factionForPublication(pending.factionId)
-        if (faction.published) throw new Error('Cette faction est déjà publiée.')
+        const preview = await this.playerCodex!.factionForPublication(pending.factionId)
+        if (preview.published) throw new Error('Cette faction est déjà publiée côté joueurs.')
+        const faction = await this.playerCodex!.ensurePlayerFactionForMj(pending.factionId) as { id: string; name: string; description: string; parentFactionId: string | null; wikiPageTitle: string }
+        const parent = faction.parentFactionId ? await this.playerCodex!.playerFaction(faction.parentFactionId) as { name: string } : null
         if (!(await this.mediaWiki!.pageExists(faction.wikiPageTitle))) await this.mediaWiki!.createPage(faction.wikiPageTitle, faction.description)
-        const publication = await this.discord!.publishFaction({ name: faction.name, description: faction.description, parentName: faction.parentName, wikiUrl: this.mediaWiki!.pageUrl(faction.wikiPageTitle) })
+        const publication = await this.discord!.publishFaction({ name: faction.name, description: faction.description, parentName: parent?.name ?? null, wikiUrl: this.mediaWiki!.pageUrl(faction.wikiPageTitle) })
         if (publication.status !== 'sent') throw new Error(publication.reason ?? 'Discord n’a pas confirmé la publication.')
-        await this.playerCodex!.markFactionPublished(faction.id)
+        await this.playerCodex!.markPlayerFactionPublished(faction.id)
+        await this.playerCodex!.markMjFactionPublished(pending.factionId)
         this.pendingFactionPublications.delete(interaction.customId)
-        await interaction.editReply({ content: `Faction publiée : ${this.mediaWiki!.pageUrl(faction.wikiPageTitle)}` })
+        await interaction.editReply({ content: `Faction publiée et associée : ${this.mediaWiki!.pageUrl(faction.wikiPageTitle)}` })
       } catch (error) {
         await interaction.editReply({ content: `Publication impossible : ${error instanceof Error ? error.message : String(error)}` })
       }

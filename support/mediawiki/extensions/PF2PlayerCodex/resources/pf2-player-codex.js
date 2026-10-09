@@ -140,8 +140,67 @@
 	}
 
 	function factionsPage( data, root ) {
-		root.appendChild( heading( 'Factions' ) ); var note = document.createElement( 'p' ); note.textContent = 'Les factions sont publiées depuis l’interface MJ.'; root.appendChild( note );
-		var list = document.createElement( 'ul' ); sortedFactions( data.factions ).forEach( function ( faction ) { var item = document.createElement( 'li' ); item.appendChild( link( faction.wikiPageTitle, factionLabel( faction, data.factions ) ) ); list.appendChild( item ); } ); root.appendChild( list );
+		root.appendChild( heading( 'Factions' ) );
+		var note = document.createElement( 'p' );
+		note.textContent = 'Ces factions représentent les connaissances et la vision des joueurs. Leur nom, leur texte et leur hiérarchie peuvent différer de la réalité MJ.';
+		root.appendChild( note );
+
+		function factionEditor( faction ) {
+			var form = document.createElement( 'div' ); form.className = 'pf2-player-faction-editor';
+			var name = document.createElement( 'input' ); name.type = 'text'; name.maxLength = 100; name.placeholder = 'Nom de la faction'; name.value = faction ? faction.name : ''; form.appendChild( name );
+			var description = document.createElement( 'textarea' ); description.rows = 4; description.maxLength = 4000; description.placeholder = 'Description connue des joueurs'; description.value = faction ? ( faction.description || '' ) : ''; form.appendChild( description );
+			var parent = document.createElement( 'select' ); addFactionOptions( parent, data.factions.filter( function ( item ) { return !faction || item.id !== faction.id; } ), '(Aucune faction parente)', data.factions ); parent.value = faction && faction.parentFactionId ? faction.parentFactionId : ''; form.appendChild( parent );
+			var actions = document.createElement( 'div' ); actions.className = 'pf2-player-background-actions';
+			var save = document.createElement( 'button' ); save.className = 'pf2-player-primary'; save.textContent = faction ? 'Enregistrer' : 'Créer la faction';
+			var cancel = document.createElement( 'button' ); cancel.textContent = 'Annuler'; actions.appendChild( save ); actions.appendChild( cancel ); form.appendChild( actions );
+			cancel.onclick = function () { form.remove(); };
+			save.onclick = function () {
+				if ( !name.value.trim() ) { mw.notify( 'Le nom de la faction est obligatoire.', { type: 'error' } ); return; }
+				save.disabled = true;
+				request( faction ? 'updateFaction' : 'createFaction', faction ? faction.id : '', '', {
+					name: name.value.trim(),
+					description: description.value.trim(),
+					parentFactionId: parent.value || ''
+				} ).then( function () { window.location.reload(); } ).catch( function ( error ) {
+					save.disabled = false; mw.notify( errorMessage( error, 'Enregistrement impossible' ), { type: 'error' } );
+				} );
+			};
+			return form;
+		}
+
+		if ( data.canEditFactions ) {
+			var create = document.createElement( 'button' ); create.textContent = 'Créer une faction'; create.className = 'pf2-player-primary'; root.appendChild( create );
+			create.onclick = function () {
+				var existing = root.querySelector( '.pf2-player-faction-editor.pf2-player-faction-new' ); if ( existing ) { existing.remove(); return; }
+				var form = factionEditor( null ); form.classList.add( 'pf2-player-faction-new' ); root.insertBefore( form, list );
+			};
+		}
+
+		var list = document.createElement( 'ul' ); list.className = 'pf2-player-faction-list'; root.appendChild( list );
+		var mjById = new Map( ( data.mjFactions || [] ).map( function ( item ) { return [ item.id, item ]; } ) );
+		sortedFactions( data.factions ).forEach( function ( faction ) {
+			var item = document.createElement( 'li' ); item.className = 'pf2-player-faction-row';
+			var line = document.createElement( 'div' ); line.className = 'pf2-player-faction-line'; item.appendChild( line );
+			line.appendChild( link( faction.wikiPageTitle, factionLabel( faction, data.factions ) ) );
+			if ( faction.published === false ) { var unpublished = document.createElement( 'span' ); unpublished.className = 'pf2-player-kind private'; unpublished.textContent = 'Non publiée'; line.appendChild( unpublished ); }
+			if ( data.canEditFactions ) {
+				var edit = document.createElement( 'button' ); edit.textContent = 'Modifier'; line.appendChild( edit );
+				edit.onclick = function () { var current = item.querySelector( '.pf2-player-faction-editor' ); if ( current ) current.remove(); else item.appendChild( factionEditor( faction ) ); };
+			}
+			if ( data.canManageFactionLinks ) {
+				var admin = document.createElement( 'div' ); admin.className = 'pf2-player-faction-admin';
+				if ( faction.sourceMjFactionId ) {
+					var linked = mjById.get( faction.sourceMjFactionId ); admin.textContent = 'MJ : associée à ' + ( linked ? linked.path : faction.sourceMjFactionId );
+				} else {
+					var status = document.createElement( 'span' ); status.textContent = 'MJ : non associée'; admin.appendChild( status );
+					var select = document.createElement( 'select' ); var empty = document.createElement( 'option' ); empty.value = ''; empty.textContent = 'Associer à une faction MJ…'; select.appendChild( empty );
+					( data.mjFactions || [] ).filter( function ( mj ) { return !mj.associatedPlayerFactionId; } ).forEach( function ( mj ) { var option = document.createElement( 'option' ); option.value = mj.id; option.textContent = mj.path; select.appendChild( option ); } ); admin.appendChild( select );
+					var associate = document.createElement( 'button' ); associate.textContent = 'Associer'; associate.onclick = function () { if ( !select.value ) return; associate.disabled = true; request( 'associateFaction', faction.id, select.value, {} ).then( function () { window.location.reload(); } ).catch( function ( error ) { associate.disabled = false; mw.notify( errorMessage( error, 'Association impossible' ), { type: 'error' } ); } ); }; admin.appendChild( associate );
+				}
+				item.appendChild( admin );
+			}
+			list.appendChild( item );
+		} );
 	}
 
 	function renderParsedText( target, text ) {

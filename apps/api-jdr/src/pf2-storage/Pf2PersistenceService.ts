@@ -997,6 +997,70 @@ export class Pf2PersistenceService implements OnModuleInit {
       await manager.query('CREATE INDEX IF NOT EXISTS idx_pf2_resource_favorite ON pf2_resource (favorite, title COLLATE NOCASE)')
     })
 
+    await this.applyMigration('030-restore-player-faction-domain', async (manager) => {
+      const factionColumns = await manager.query('PRAGMA table_info(pf2_player_faction)') as Array<{ name: string }>
+      if (!factionColumns.some(column => column.name === 'description')) await manager.query("ALTER TABLE pf2_player_faction ADD COLUMN description TEXT NOT NULL DEFAULT ''")
+      if (!factionColumns.some(column => column.name === 'source_mj_faction_id')) await manager.query('ALTER TABLE pf2_player_faction ADD COLUMN source_mj_faction_id TEXT')
+      if (!factionColumns.some(column => column.name === 'published')) await manager.query('ALTER TABLE pf2_player_faction ADD COLUMN published INTEGER NOT NULL DEFAULT 0')
+      await manager.query('CREATE UNIQUE INDEX IF NOT EXISTS idx_pf2_player_faction_source_mj ON pf2_player_faction (source_mj_faction_id) WHERE source_mj_faction_id IS NOT NULL')
+      await manager.query('CREATE INDEX IF NOT EXISTS idx_pf2_player_faction_published_name ON pf2_player_faction (published, name COLLATE NOCASE)')
+
+      const publishedMj: Array<{ id: string; parentId: string | null }> = []
+      const mjRows = await manager.query("SELECT id, payload FROM pf2_record WHERE kind = 'faction'") as Array<{ id: string; payload: string }>
+      for (const row of mjRows) {
+        let faction: Record<string, unknown>
+        try { faction = this.object(JSON.parse(row.payload)) } catch { continue }
+        if (faction.published !== true) continue
+        const name = typeof faction.nom === 'string' ? faction.nom.trim() : ''
+        if (!name) continue
+        const parentId = typeof faction.parent_id === 'string' && faction.parent_id.trim() ? faction.parent_id.trim() : null
+        publishedMj.push({ id: row.id, parentId })
+        const normalized = name.normalize('NFKC').trim().replace(/\s+/g, ' ').toLocaleLowerCase()
+        const description = typeof faction.description_joueurs === 'string' && faction.description_joueurs.trim()
+          ? faction.description_joueurs.trim()
+          : typeof faction.description === 'string' ? faction.description.trim() : ''
+
+        const linked = await manager.query('SELECT id FROM pf2_player_faction WHERE source_mj_faction_id = ? LIMIT 1', [row.id]) as Array<{ id: string }>
+        if (linked[0]) {
+          await manager.query(
+            "UPDATE pf2_player_faction SET description = CASE WHEN description = '' THEN ? ELSE description END, published = 1, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+            [description, linked[0].id],
+          )
+          continue
+        }
+
+        const deterministicId = `player-mj-${row.id}`
+        const deterministic = await manager.query('SELECT id FROM pf2_player_faction WHERE id = ? LIMIT 1', [deterministicId]) as Array<{ id: string }>
+        if (deterministic[0]) {
+          await manager.query(
+            "UPDATE pf2_player_faction SET description = CASE WHEN description = '' THEN ? ELSE description END, source_mj_faction_id = ?, published = 1, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+            [description, row.id, deterministicId],
+          )
+          continue
+        }
+
+        const sameName = await manager.query('SELECT id FROM pf2_player_faction WHERE normalized_name = ? LIMIT 1', [normalized]) as Array<{ id: string }>
+        if (sameName[0]) continue
+        await manager.query(
+          'INSERT INTO pf2_player_faction (id, name, normalized_name, parent_faction_id, wiki_page_title, description, source_mj_faction_id, published) VALUES (?, ?, ?, NULL, ?, ?, ?, 1)',
+          [deterministicId, name, normalized, `Faction:${name}`, description, row.id],
+        )
+      }
+
+      for (const faction of publishedMj) {
+        if (!faction.parentId) continue
+        const childRows = await manager.query('SELECT id, parent_faction_id FROM pf2_player_faction WHERE source_mj_faction_id = ? LIMIT 1', [faction.id]) as Array<{ id: string; parent_faction_id: string | null }>
+        const parentRows = await manager.query('SELECT id FROM pf2_player_faction WHERE source_mj_faction_id = ? AND published = 1 LIMIT 1', [faction.parentId]) as Array<{ id: string }>
+        if (childRows[0] && !childRows[0].parent_faction_id && parentRows[0]) {
+          await manager.query('UPDATE pf2_player_faction SET parent_faction_id = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?', [parentRows[0].id, childRows[0].id])
+        }
+      }
+
+      await manager.query(
+        'INSERT OR IGNORE INTO pf2_player_character_faction (npc_id, player_faction_id) SELECT old.npc_id, player.id FROM pf2_player_character_mj_faction old JOIN pf2_player_faction player ON player.source_mj_faction_id = old.faction_id WHERE player.published = 1',
+      )
+    })
+
     await this.assertDatabaseIntegrity(this.dataSource, 'base SQLite après migrations')
   }
 

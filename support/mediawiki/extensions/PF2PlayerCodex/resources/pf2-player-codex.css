@@ -19,6 +19,13 @@
 .pf2-player-character-factions li { margin:.2rem 0; }
 .pf2-player-character-factions button { margin-left:.5rem; }
 .pf2-player-faction-add { display:flex; flex-wrap:wrap; gap:.25rem; align-items:center; margin-bottom:.75rem; }
+.pf2-player-faction-list { list-style:none; margin:.8rem 0 0; padding:0; display:grid; gap:.6rem; }
+.pf2-player-faction-row { border:1px solid #c8ccd1; border-radius:.35rem; padding:.55rem .7rem; }
+.pf2-player-faction-line, .pf2-player-faction-admin { display:flex; flex-wrap:wrap; gap:.45rem; align-items:center; }
+.pf2-player-faction-admin { margin-top:.35rem; padding-top:.35rem; border-top:1px dashed #c8ccd1; font-size:.9rem; color:#54595d; }
+.pf2-player-faction-editor { display:grid; gap:.45rem; margin:.55rem 0; padding:.65rem; border:1px solid #a78b4f; border-radius:.35rem; background:#fffdf7; }
+.pf2-player-faction-editor input, .pf2-player-faction-editor textarea, .pf2-player-faction-editor select { width:100%; box-sizing:border-box; margin:0 !important; }
+.pf2-player-faction-new { margin:.8rem 0; }
 .pf2-player-wiki-content { margin-top:.75rem; }
 .pf2-player-wiki-content > :first-child { margin-top:0; }
 @media screen and (max-width:700px) {

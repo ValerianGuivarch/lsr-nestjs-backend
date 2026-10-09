@@ -20,22 +20,58 @@ describe('PlayerCodexService', () => {
     await persistence.saveRecord('pnj', { id: 'janira', nom: 'Janira Gavix', factions: ['Secret MJ'] })
     return { persistence, codex: new PlayerCodexService(source!, persistence) }
   }
-  it('uses published MJ factions as the only player-codex faction catalogue', async () => {
+  it('keeps player factions independent from MJ truth while allowing an explicit association', async () => {
     const { persistence, codex } = await open()
-    await persistence.saveRecord('faction', { id: 'faction_aspis', nom: 'Consortium de l’Aspis', description: 'Un consortium.', published: true })
+    await persistence.saveRecord('faction', { id: 'faction_aspis', nom: 'Consortium de l’Aspis', description: 'Secret MJ.', published: false })
+    const player = await codex.createPlayerFaction({ name: 'Marchands suspects', description: 'Version connue des joueurs.', published: true }) as { id: string }
+    await codex.associateFaction(player.id, 'faction_aspis')
     await codex.createCharacter({ npcId: 'janira', displayName: 'Janira', wikiPageTitle: 'Personnage:Janira' })
-    await codex.addCharacterFaction('janira', 'faction_aspis'); await codex.addCharacterFaction('janira', 'faction_aspis')
+    await codex.addCharacterFaction('janira', player.id)
+    await codex.addCharacterFaction('janira', player.id)
+
     const character = await codex.character('janira') as { factions: unknown[] }
-    expect(character.factions).toEqual([expect.objectContaining({ id: 'faction_aspis', name: 'Consortium de l’Aspis', wikiPageTitle: 'Faction:Consortium de l’Aspis', published: true })])
+    expect(character.factions).toEqual([expect.objectContaining({
+      id: player.id,
+      name: 'Marchands suspects',
+      description: 'Version connue des joueurs.',
+      sourceMjFactionId: 'faction_aspis',
+      published: true,
+    })])
+
+    await codex.updatePlayerFaction(player.id, { name: 'Le Comptoir' })
+    await expect(codex.playerFaction(player.id)).resolves.toEqual(expect.objectContaining({ name: 'Le Comptoir', sourceMjFactionId: 'faction_aspis' }))
+    await expect(persistence.getRecord('faction', 'faction_aspis')).resolves.toEqual(expect.objectContaining({ nom: 'Consortium de l’Aspis' }))
   })
-  it('adds the parent factions automatically when a character selects a sub-faction', async () => {
-    const { persistence, codex } = await open()
-    await persistence.saveRecord('faction', { id: 'eclaireurs', nom: 'Société des Éclaireurs', description: '', published: true })
-    await persistence.saveRecord('faction', { id: 'emissaires', nom: 'Émissaires', description: '', parent_id: 'eclaireurs', published: true })
+
+  it('adds the parent player factions automatically when a character selects a sub-faction', async () => {
+    const { codex } = await open()
+    const parent = await codex.createPlayerFaction({ name: 'Société connue', published: true }) as { id: string }
+    const child = await codex.createPlayerFaction({ name: 'Émissaires connus', parentFactionId: parent.id, published: true }) as { id: string }
     await codex.createCharacter({ npcId: 'janira', displayName: 'Janira', wikiPageTitle: 'Personnage:Janira' })
-    await codex.addCharacterFaction('janira', 'emissaires')
+    await codex.addCharacterFaction('janira', child.id)
     const character = await codex.character('janira') as { factions: unknown[] }
-    expect(character.factions).toEqual(expect.arrayContaining([expect.objectContaining({ id: 'eclaireurs' }), expect.objectContaining({ id: 'emissaires' })]))
+    expect(character.factions).toEqual(expect.arrayContaining([
+      expect.objectContaining({ id: parent.id }),
+      expect.objectContaining({ id: child.id, parentFactionId: parent.id }),
+    ]))
+  })
+
+  it('preserves MJ hierarchy when publishing a faction into the player domain', async () => {
+    const { persistence, codex } = await open()
+    await persistence.saveRecord('faction', { id: 'eclaireurs', nom: 'Société des Éclaireurs', description: 'MJ parent.', description_joueurs: 'Parent connu.' })
+    await persistence.saveRecord('faction', { id: 'emissaires', nom: 'Alliance des Émissaires', description: 'MJ enfant.', description_joueurs: 'Enfant connu.', parent_id: 'eclaireurs' })
+
+    const parent = await codex.ensurePlayerFactionForMj('eclaireurs') as { id: string }
+    await codex.markPlayerFactionPublished(parent.id)
+    await codex.markMjFactionPublished('eclaireurs')
+    const child = await codex.ensurePlayerFactionForMj('emissaires') as { id: string; parentFactionId: string | null }
+
+    expect(child.parentFactionId).toBe(parent.id)
+    await expect(codex.playerFaction(child.id)).resolves.toEqual(expect.objectContaining({
+      description: 'Enfant connu.',
+      parentFactionId: parent.id,
+      sourceMjFactionId: 'emissaires',
+    }))
   })
   it('uses stable candidate IDs and keeps an improvised presentation separate until a profile is requested', async () => {
     const { persistence, codex } = await open()
@@ -122,15 +158,19 @@ describe('PlayerCodexService', () => {
     })
   })
 
-  it('removes only player-codex links and preserves the canonical MJ faction', async () => {
+  it('removes only character links and preserves both player and MJ factions', async () => {
     const { persistence, codex } = await open()
-    await persistence.saveRecord('faction', { id: 'parent', nom: 'Parent', description: '', published: true })
+    await persistence.saveRecord('faction', { id: 'parent', nom: 'Parent MJ', description: '' })
+    const player = await codex.createPlayerFaction({ name: 'Parent joueur', published: true }) as { id: string }
+    await codex.associateFaction(player.id, 'parent')
     await codex.createCharacter({ npcId: 'janira', displayName: 'Janira', wikiPageTitle: 'Personnage:Janira' })
-    await codex.addCharacterFaction('janira', 'parent')
+    await codex.addCharacterFaction('janira', player.id)
     await codex.deleteCharacter('janira')
+
     await expect(codex.character('janira')).rejects.toThrow('introuvable')
+    await expect(codex.playerFaction(player.id)).resolves.toEqual(expect.objectContaining({ name: 'Parent joueur' }))
     await expect(persistence.getRecord('pnj', 'janira')).resolves.toMatchObject({ nom: 'Janira Gavix' })
-    await expect(persistence.getRecord('faction', 'parent')).resolves.toMatchObject({ nom: 'Parent' })
+    await expect(persistence.getRecord('faction', 'parent')).resolves.toMatchObject({ nom: 'Parent MJ' })
   })
   it('deletes an MJ-only PNJ but refuses when a Wiki character profile exists', async () => {
     const { persistence, codex } = await open()

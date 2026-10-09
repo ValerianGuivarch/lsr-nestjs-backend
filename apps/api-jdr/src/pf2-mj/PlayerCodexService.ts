@@ -7,6 +7,7 @@ import { MediaWikiClientService } from './MediaWikiClientService'
 
 type ProfileRow = { npc_id: string; wiki_page_title: string; display_name: string; wiki_portrait_filename: string | null; short_description: string; is_player: number; is_published: number; created_at: string; updated_at: string }
 type MjFaction = Record<string, unknown> & { id: string; nom: string; description: string; description_joueurs?: string; parent_id?: string | null; published?: boolean }
+type PlayerFactionRow = { id: string; name: string; normalized_name: string; parent_faction_id: string | null; wiki_page_title: string; description: string; source_mj_faction_id: string | null; published: number; created_at?: string; updated_at?: string }
 
 @Injectable()
 export class PlayerCodexService {
@@ -121,15 +122,16 @@ export class PlayerCodexService {
   }
   async addCharacterFaction(npcId: string, factionId: string): Promise<unknown> {
     await this.character(npcId)
-    for (const faction of await this.factionAncestors(factionId)) {
-      await this.db.query('INSERT OR IGNORE INTO pf2_player_character_mj_faction (npc_id, faction_id) VALUES (?, ?)', [npcId, faction.id])
+    for (const faction of await this.playerFactionAncestors(factionId)) {
+      await this.db.query('INSERT OR IGNORE INTO pf2_player_character_faction (npc_id, player_faction_id) VALUES (?, ?)', [npcId, faction.id])
     }
     return this.character(npcId)
   }
-  async removeCharacterFaction(npcId: string, factionId: string): Promise<void> { await this.db.query('DELETE FROM pf2_player_character_mj_faction WHERE npc_id = ? AND faction_id = ?', [npcId, factionId]) }
+  async removeCharacterFaction(npcId: string, factionId: string): Promise<void> { await this.db.query('DELETE FROM pf2_player_character_faction WHERE npc_id = ? AND player_faction_id = ?', [npcId, factionId]) }
   async deleteCharacter(npcId: string): Promise<void> {
     await this.character(npcId)
     await this.db.transaction(async manager => {
+      await manager.query('DELETE FROM pf2_player_character_faction WHERE npc_id = ?', [npcId])
       await manager.query('DELETE FROM pf2_player_character_mj_faction WHERE npc_id = ?', [npcId])
       await manager.query('DELETE FROM pf2_player_character_owner WHERE npc_id = ?', [npcId])
       await manager.query('DELETE FROM pf2_player_character_contact WHERE player_npc_id = ?', [npcId])
@@ -314,35 +316,305 @@ export class PlayerCodexService {
       await manager.query('DELETE FROM pf2_record WHERE kind = ? AND id = ?', ['pnj', npcId])
     })
   }
-  async listFactions(): Promise<unknown[]> { return Promise.all((await this.mjFactions()).filter(faction => faction.published === true).map(faction => this.factionDto(faction))) }
-  async factionCandidates(publishedOnly = false): Promise<Array<{ id: string; name: string; path: string }>> {
-    const factions = (await this.mjFactions()).filter(faction => !publishedOnly || faction.published === true)
+  async listFactions(): Promise<unknown[]> {
+    const rows = await this.db.query('SELECT * FROM pf2_player_faction WHERE published = 1 ORDER BY name COLLATE NOCASE') as PlayerFactionRow[]
+    return rows.map(row => this.playerFactionDto(row))
+  }
+
+  async listAllPlayerFactions(): Promise<unknown[]> {
+    const rows = await this.db.query('SELECT * FROM pf2_player_faction ORDER BY name COLLATE NOCASE') as PlayerFactionRow[]
+    return rows.map(row => this.playerFactionDto(row))
+  }
+
+  async playerFaction(id: string): Promise<unknown> {
+    return this.playerFactionDto(await this.playerFactionRow(id))
+  }
+
+  async playerFactionCandidates(publishedOnly = true, unassociatedOnly = false): Promise<Array<{ id: string; name: string; path: string; sourceMjFactionId: string | null; published: boolean }>> {
+    const rows = await this.db.query(
+      `SELECT * FROM pf2_player_faction${publishedOnly ? ' WHERE published = 1' : ''} ORDER BY name COLLATE NOCASE`,
+    ) as PlayerFactionRow[]
+    const filtered = rows.filter(row => !unassociatedOnly || !row.source_mj_faction_id)
+    const byId = new Map(rows.map(row => [row.id, row]))
+    return filtered.map(row => ({
+      id: row.id,
+      name: row.name,
+      path: this.playerFactionPath(row, byId),
+      sourceMjFactionId: row.source_mj_faction_id,
+      published: row.published === 1,
+    })).sort((left, right) => left.path.localeCompare(right.path, 'fr'))
+  }
+
+  async createPlayerFaction(input: { name?: unknown; description?: unknown; parentFactionId?: unknown; published?: unknown }): Promise<unknown> {
+    const name = this.required(input.name, 'Nom')
+    const description = typeof input.description === 'string' ? input.description.trim() : ''
+    if (description.length > 4000) throw new BadRequestException('La description est trop longue (maximum 4 000 caractères).')
+    const parentFactionId = typeof input.parentFactionId === 'string' && input.parentFactionId.trim() ? input.parentFactionId.trim() : null
+    if (parentFactionId) {
+      const parent = await this.playerFactionRow(parentFactionId)
+      if (parent.published !== 1) throw new BadRequestException('La faction parente doit déjà être publiée.')
+    }
+    const id = `player-faction-${randomUUID()}`
+    const wikiPageTitle = `Faction:${name}`
+    const published = input.published !== false
+    try {
+      await this.db.query(
+        'INSERT INTO pf2_player_faction (id, name, normalized_name, parent_faction_id, wiki_page_title, description, source_mj_faction_id, published) VALUES (?, ?, ?, ?, ?, ?, NULL, ?)',
+        [id, name, this.normalized(name), parentFactionId, wikiPageTitle, description, published ? 1 : 0],
+      )
+    } catch {
+      throw new ConflictException('Une faction joueur porte déjà ce nom ou ce titre wiki.')
+    }
+    if (this.mediaWiki) {
+      try {
+        if (!(await this.mediaWiki.pageExists(wikiPageTitle))) await this.mediaWiki.createPage(wikiPageTitle, description || '<!-- Faction joueur : contenu détaillé à compléter ici. -->')
+      } catch {
+        // La faction reste disponible dans le carnet si le Wiki est temporairement indisponible.
+      }
+    }
+    return this.playerFaction(id)
+  }
+
+  async updatePlayerFaction(id: string, input: { name?: unknown; description?: unknown; parentFactionId?: unknown }): Promise<unknown> {
+    const current = await this.playerFactionRow(id)
+    const name = typeof input.name === 'string' ? this.required(input.name, 'Nom') : current.name
+    const description = typeof input.description === 'string' ? input.description.trim() : current.description
+    if (description.length > 4000) throw new BadRequestException('La description est trop longue (maximum 4 000 caractères).')
+    let parentFactionId = current.parent_faction_id
+    if (Object.prototype.hasOwnProperty.call(input, 'parentFactionId')) parentFactionId = typeof input.parentFactionId === 'string' && input.parentFactionId.trim() ? input.parentFactionId.trim() : null
+    if (parentFactionId === id) throw new BadRequestException('Une faction ne peut pas être sa propre parente.')
+    if (parentFactionId) {
+      const parent = await this.playerFactionRow(parentFactionId)
+      if (parent.published !== 1) throw new BadRequestException('La faction parente doit être publiée.')
+      if ((await this.playerFactionDescendantIds(id)).has(parentFactionId)) throw new BadRequestException('Cette hiérarchie créerait une boucle.')
+    }
+    try {
+      await this.db.query('UPDATE pf2_player_faction SET name = ?, normalized_name = ?, parent_faction_id = ?, description = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?', [name, this.normalized(name), parentFactionId, description, id])
+    } catch {
+      throw new ConflictException('Une autre faction joueur porte déjà ce nom.')
+    }
+    return this.playerFaction(id)
+  }
+
+  async markPlayerFactionPublished(id: string): Promise<void> {
+    await this.playerFactionRow(id)
+    await this.db.query('UPDATE pf2_player_faction SET published = 1, updated_at = CURRENT_TIMESTAMP WHERE id = ?', [id])
+  }
+
+  async factionCandidates(unassociatedOnly = false): Promise<Array<{ id: string; name: string; path: string; associatedPlayerFactionId: string | null }>> {
+    const factions = await this.mjFactions()
+    const links = await this.db.query('SELECT id, source_mj_faction_id FROM pf2_player_faction WHERE source_mj_faction_id IS NOT NULL') as Array<{ id: string; source_mj_faction_id: string }>
+    const byMj = new Map(links.map(link => [link.source_mj_faction_id, link.id]))
     const byId = new Map(factions.map(faction => [faction.id, faction]))
-    return factions.map(faction => ({ id: faction.id, name: faction.nom, path: this.factionPath(faction, byId) })).sort((left, right) => left.path.localeCompare(right.path, 'fr'))
+    return factions
+      .filter(faction => !unassociatedOnly || !byMj.has(faction.id))
+      .map(faction => ({ id: faction.id, name: faction.nom, path: this.factionPath(faction, byId), associatedPlayerFactionId: byMj.get(faction.id) ?? null }))
+      .sort((left, right) => left.path.localeCompare(right.path, 'fr'))
   }
-  async factionForPublication(id: string): Promise<{ id: string; name: string; description: string; parentName: string | null; wikiPageTitle: string; published: boolean }> {
+
+  async factionForPublication(id: string): Promise<{ id: string; name: string; description: string; parentName: string | null; wikiPageTitle: string; published: boolean; playerFactionId: string | null }> {
     const faction = await this.mjFaction(id)
+    const linked = await this.playerFactionByMjId(id)
+    if (linked) {
+      const parent = linked.parent_faction_id ? await this.playerFactionRow(linked.parent_faction_id) : null
+      return {
+        id: faction.id,
+        name: linked.name,
+        description: linked.description,
+        parentName: parent?.name ?? null,
+        wikiPageTitle: linked.wiki_page_title,
+        published: linked.published === 1,
+        playerFactionId: linked.id,
+      }
+    }
     const parentId = this.parentId(faction)
-    const parent = parentId ? await this.mjFaction(parentId) : null
-    if (parent && parent.published !== true) throw new BadRequestException(`La faction parente « ${parent.nom} » doit être publiée avant cette sous-faction.`)
-    return { id: faction.id, name: faction.nom, description: this.playerDescription(faction), parentName: parent?.nom ?? null, wikiPageTitle: this.factionWikiTitle(faction), published: faction.published === true }
+    let parentName: string | null = null
+    if (parentId) {
+      const parentMj = await this.mjFaction(parentId)
+      const parentPlayer = await this.playerFactionByMjId(parentId)
+      if (!parentPlayer || parentPlayer.published !== 1) throw new BadRequestException(`La faction parente « ${parentMj.nom} » doit être publiée avant cette sous-faction.`)
+      parentName = parentPlayer.name
+    }
+    return {
+      id: faction.id,
+      name: faction.nom,
+      description: this.playerDescription(faction),
+      parentName,
+      wikiPageTitle: `Faction:${faction.nom}`,
+      published: false,
+      playerFactionId: null,
+    }
   }
-  async markFactionPublished(id: string): Promise<void> { const faction = await this.mjFaction(id); await this.persistence.saveRecord('faction', { ...faction, published: true }) }
+
+  async ensurePlayerFactionForMj(id: string): Promise<unknown> {
+    const existing = await this.playerFactionByMjId(id)
+    if (existing) return this.playerFactionDto(existing)
+    const faction = await this.mjFaction(id)
+    const parentMjId = this.parentId(faction)
+    let parentFactionId: string | null = null
+    if (parentMjId) {
+      const parentMj = await this.mjFaction(parentMjId)
+      const parentPlayer = await this.playerFactionByMjId(parentMjId)
+      if (!parentPlayer || parentPlayer.published !== 1) throw new BadRequestException(`La faction parente « ${parentMj.nom} » doit être publiée avant cette sous-faction.`)
+      parentFactionId = parentPlayer.id
+    }
+    const normalized = this.normalized(faction.nom)
+    const sameName = await this.db.query('SELECT id FROM pf2_player_faction WHERE normalized_name = ? LIMIT 1', [normalized]) as Array<{ id: string }>
+    if (sameName[0]) throw new ConflictException(`Une faction joueur nommée « ${faction.nom} » existe déjà. Associe-la à la faction MJ au lieu de republier.`)
+    const playerId = `player-mj-${id}`
+    await this.db.query(
+      'INSERT INTO pf2_player_faction (id, name, normalized_name, parent_faction_id, wiki_page_title, description, source_mj_faction_id, published) VALUES (?, ?, ?, ?, ?, ?, ?, 0)',
+      [playerId, faction.nom, normalized, parentFactionId, `Faction:${faction.nom}`, this.playerDescription(faction), id],
+    )
+    return this.playerFaction(playerId)
+  }
+
+  async associateFaction(playerFactionId: string, mjFactionId: string): Promise<unknown> {
+    const player = await this.playerFactionRow(playerFactionId)
+    await this.mjFaction(mjFactionId)
+    if (player.source_mj_faction_id && player.source_mj_faction_id !== mjFactionId) throw new ConflictException('Cette faction joueur est déjà associée à une autre faction MJ.')
+    const other = await this.playerFactionByMjId(mjFactionId)
+    if (other && other.id !== playerFactionId) throw new ConflictException('Cette faction MJ est déjà associée à une autre faction joueur.')
+    await this.db.query('UPDATE pf2_player_faction SET source_mj_faction_id = ?, published = 1, updated_at = CURRENT_TIMESTAMP WHERE id = ?', [mjFactionId, playerFactionId])
+    await this.markMjFactionPublished(mjFactionId)
+    return this.playerFaction(playerFactionId)
+  }
+
+  async markMjFactionPublished(id: string): Promise<void> {
+    const faction = await this.mjFaction(id)
+    await this.persistence.saveRecord('faction', { ...faction, published: true })
+  }
+
+  async markFactionPublished(id: string): Promise<void> {
+    await this.markMjFactionPublished(id)
+  }
+
   private async characterDto(row: ProfileRow): Promise<unknown> {
-    const links = await this.db.query('SELECT faction_id FROM pf2_player_character_mj_faction WHERE npc_id = ?', [row.npc_id]) as Array<{ faction_id: string }>
-    const factions = (await Promise.all(links.map(async link => {
-      try { const faction = await this.mjFaction(link.faction_id); return faction.published === true ? this.factionDto(faction) : null } catch { return null }
-    }))).filter(Boolean).sort((left, right) => String((left as { name: string }).name).localeCompare(String((right as { name: string }).name), 'fr'))
-    return { npcId: row.npc_id, wikiPageTitle: row.wiki_page_title, displayName: row.display_name, wikiPortraitFilename: row.wiki_portrait_filename, shortDescription: row.short_description, isPlayer: row.is_player === 1, published: row.is_published === 1, factions }
+    const factions = await this.db.query(
+      'SELECT f.* FROM pf2_player_faction f JOIN pf2_player_character_faction r ON r.player_faction_id = f.id WHERE r.npc_id = ? AND f.published = 1 ORDER BY f.name COLLATE NOCASE',
+      [row.npc_id],
+    ) as PlayerFactionRow[]
+    return {
+      npcId: row.npc_id,
+      wikiPageTitle: row.wiki_page_title,
+      displayName: row.display_name,
+      wikiPortraitFilename: row.wiki_portrait_filename,
+      shortDescription: row.short_description,
+      isPlayer: row.is_player === 1,
+      published: row.is_published === 1,
+      factions: factions.map(faction => this.playerFactionDto(faction)),
+    }
   }
-  private async mjFactions(): Promise<MjFaction[]> { return (await this.persistence.listRecords('faction')).flatMap(record => { const id = typeof record.id === 'string' ? record.id : ''; const nom = typeof record.nom === 'string' ? record.nom.trim() : ''; return id && nom ? [{ ...record, id, nom, description: typeof record.description === 'string' ? record.description : '' } as MjFaction] : [] }) }
-  private async mjFaction(id: string): Promise<MjFaction> { const faction = await this.persistence.getRecord('faction', id); const nom = typeof faction?.nom === 'string' ? faction.nom.trim() : ''; if (!faction || !nom) throw new NotFoundException('Faction MJ introuvable.'); return { ...faction, id, nom, description: typeof faction.description === 'string' ? faction.description : '' } as MjFaction }
-  private parentId(faction: MjFaction): string | null { return typeof faction.parent_id === 'string' && faction.parent_id.trim() ? faction.parent_id.trim() : null }
-  private async factionAncestors(id: string): Promise<MjFaction[]> { const chain: MjFaction[] = []; const seen = new Set<string>(); let current = await this.mjFaction(id); while (!seen.has(current.id)) { chain.unshift(current); seen.add(current.id); const parent = this.parentId(current); if (!parent) break; current = await this.mjFaction(parent) } return chain }
-  private factionPath(faction: MjFaction, byId: Map<string, MjFaction>): string { const labels = [faction.nom]; const seen = new Set([faction.id]); let parent = this.parentId(faction); while (parent && !seen.has(parent)) { seen.add(parent); const current = byId.get(parent); if (!current) break; labels.unshift(current.nom); parent = this.parentId(current) } return labels.join(' › ') }
-  private playerDescription(faction: MjFaction): string { return typeof faction.description_joueurs === 'string' && faction.description_joueurs.trim() ? faction.description_joueurs.trim() : faction.description }
-  private factionWikiTitle(faction: MjFaction): string { return `Faction:${faction.nom}` }
-  private factionDto(faction: MjFaction): unknown { return { id: faction.id, name: faction.nom, description: this.playerDescription(faction), parentFactionId: this.parentId(faction), wikiPageTitle: this.factionWikiTitle(faction), published: faction.published === true } }
+
+  private async playerFactionRow(id: string): Promise<PlayerFactionRow> {
+    const rows = await this.db.query('SELECT * FROM pf2_player_faction WHERE id = ?', [id]) as PlayerFactionRow[]
+    if (!rows[0]) throw new NotFoundException('Faction joueur introuvable.')
+    return rows[0]
+  }
+
+  private async playerFactionByMjId(mjFactionId: string): Promise<PlayerFactionRow | null> {
+    const rows = await this.db.query('SELECT * FROM pf2_player_faction WHERE source_mj_faction_id = ? LIMIT 1', [mjFactionId]) as PlayerFactionRow[]
+    return rows[0] ?? null
+  }
+
+  private playerFactionDto(row: PlayerFactionRow): unknown {
+    return {
+      id: row.id,
+      name: row.name,
+      description: row.description,
+      parentFactionId: row.parent_faction_id,
+      wikiPageTitle: row.wiki_page_title,
+      published: row.published === 1,
+      sourceMjFactionId: row.source_mj_faction_id,
+    }
+  }
+
+  private playerFactionPath(faction: PlayerFactionRow, byId: Map<string, PlayerFactionRow>): string {
+    const labels = [faction.name]
+    const seen = new Set([faction.id])
+    let parent = faction.parent_faction_id
+    while (parent && !seen.has(parent)) {
+      seen.add(parent)
+      const current = byId.get(parent)
+      if (!current) break
+      labels.unshift(current.name)
+      parent = current.parent_faction_id
+    }
+    return labels.join(' › ')
+  }
+
+  private async playerFactionAncestors(id: string): Promise<PlayerFactionRow[]> {
+    const chain: PlayerFactionRow[] = []
+    const seen = new Set<string>()
+    let current = await this.playerFactionRow(id)
+    while (!seen.has(current.id)) {
+      if (current.published !== 1) throw new BadRequestException('Cette faction joueur n’est pas publiée.')
+      chain.unshift(current)
+      seen.add(current.id)
+      if (!current.parent_faction_id) break
+      current = await this.playerFactionRow(current.parent_faction_id)
+    }
+    return chain
+  }
+
+  private async playerFactionDescendantIds(id: string): Promise<Set<string>> {
+    const rows = await this.db.query('SELECT id, parent_faction_id FROM pf2_player_faction') as Array<{ id: string; parent_faction_id: string | null }>
+    const descendants = new Set<string>()
+    let changed = true
+    while (changed) {
+      changed = false
+      for (const row of rows) {
+        if (row.id === id || descendants.has(row.id)) continue
+        if (row.parent_faction_id === id || (row.parent_faction_id && descendants.has(row.parent_faction_id))) {
+          descendants.add(row.id)
+          changed = true
+        }
+      }
+    }
+    return descendants
+  }
+
+  private async mjFactions(): Promise<MjFaction[]> {
+    return (await this.persistence.listRecords('faction')).flatMap(record => {
+      const id = typeof record.id === 'string' ? record.id : ''
+      const nom = typeof record.nom === 'string' ? record.nom.trim() : ''
+      return id && nom ? [{ ...record, id, nom, description: typeof record.description === 'string' ? record.description : '' } as MjFaction] : []
+    })
+  }
+
+  private async mjFaction(id: string): Promise<MjFaction> {
+    const faction = await this.persistence.getRecord('faction', id)
+    const nom = typeof faction?.nom === 'string' ? faction.nom.trim() : ''
+    if (!faction || !nom) throw new NotFoundException('Faction MJ introuvable.')
+    return { ...faction, id, nom, description: typeof faction.description === 'string' ? faction.description : '' } as MjFaction
+  }
+
+  private parentId(faction: MjFaction): string | null {
+    return typeof faction.parent_id === 'string' && faction.parent_id.trim() ? faction.parent_id.trim() : null
+  }
+
+  private factionPath(faction: MjFaction, byId: Map<string, MjFaction>): string {
+    const labels = [faction.nom]
+    const seen = new Set([faction.id])
+    let parent = this.parentId(faction)
+    while (parent && !seen.has(parent)) {
+      seen.add(parent)
+      const current = byId.get(parent)
+      if (!current) break
+      labels.unshift(current.nom)
+      parent = this.parentId(current)
+    }
+    return labels.join(' › ')
+  }
+
+  private playerDescription(faction: MjFaction): string {
+    return typeof faction.description_joueurs === 'string' && faction.description_joueurs.trim() ? faction.description_joueurs.trim() : faction.description
+  }
+
+  private normalized(value: string): string {
+    return value.normalize('NFKC').trim().replace(/\s+/g, ' ').toLocaleLowerCase()
+  }
+
   private isTaggedPlayer(npc: Record<string, unknown>): boolean {
     return Array.isArray(npc.tags) && npc.tags.some(tag => typeof tag === 'string' && tag.trim().toLocaleLowerCase() === 'pj')
   }
