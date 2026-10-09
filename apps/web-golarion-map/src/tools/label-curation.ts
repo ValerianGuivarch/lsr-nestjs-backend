@@ -1,5 +1,5 @@
 import { Popup, type MapLayerMouseEvent } from 'maplibre-gl'
-import { getMapVisibility, overrideKey, resetMapVisibilityCache, type MapVisibilityOverride } from '../utils/map-visibility'
+import { getMapVisibility, overrideKey, playerCuratableLabelLayers, resetMapVisibilityCache, type MapVisibilityOverride } from '../utils/map-visibility'
 import type { SearchCategory } from '../utils/fuzzy-search'
 import type { GolarionMap } from './GolarionMap'
 
@@ -125,7 +125,7 @@ export async function makeLabelsCuratable(gmap: GolarionMap): Promise<void> {
   const overrideMap = new Map(visibility.overrides.map(item => [overrideKey(item.category, item.label), item]))
   const popup = new Popup({ maxWidth: '420px' })
 
-  gmap.map.on('click', 'symbol_labels', (event: MapLayerMouseEvent) => {
+  const open = (event: MapLayerMouseEvent) => {
     const properties = event.features?.[0]?.properties ?? {}
     const label = typeof properties.label === 'string' ? properties.label : ''
     if (!label) return
@@ -138,5 +138,10 @@ export async function makeLabelsCuratable(gmap: GolarionMap): Promise<void> {
     container.appendChild(title)
     container.appendChild(panel(category, label, autoVisible.has(category), overrideMap.get(overrideKey(category, label))))
     popup.setLngLat(event.lngLat).setDOMContent(container).addTo(gmap.map)
-  })
+  }
+
+  for (const layerId of playerCuratableLabelLayers) {
+    if (!gmap.map.getLayer(layerId)) continue
+    gmap.map.on('click', layerId, open)
+  }
 }

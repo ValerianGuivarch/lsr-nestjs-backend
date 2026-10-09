@@ -62,6 +62,15 @@ export function overrideKey(category: string, label: string): string {
   return `${category}\u0000${label}`
 }
 
+export const playerCuratableLabelLayers = [
+  'symbol_labels',
+  'symbol_line-labels',
+  'symbol_province-labels',
+  'symbol_nation-labels',
+  'symbol_subregion-labels',
+  'symbol_region-labels',
+] as const
+
 export async function applyPlayerMapVisibilityFilters(map: import('maplibre-gl').Map): Promise<void> {
   const visibility = await getMapVisibility()
   const autoVisible = new Set(visibility.autoVisibleCategories)
@@ -71,8 +80,11 @@ export async function applyPlayerMapVisibilityFilters(map: import('maplibre-gl')
       || (item.visibility === 'visible' && (!autoVisible.has(item.category) || Boolean(item.publicLabel.trim()) || Boolean(item.publicText.trim())))
     ))
     .map(item => item.label)
-  if (!hiddenLabels.length || !map.getLayer('symbol_labels')) return
-  const current = map.getFilter('symbol_labels')
+  if (!hiddenLabels.length) return
   const manualHidden = ['!', ['in', ['get', 'label'], ['literal', hiddenLabels]]]
-  map.setFilter('symbol_labels', current ? ['all', current, manualHidden] : manualHidden as never)
+  for (const layerId of playerCuratableLabelLayers) {
+    if (!map.getLayer(layerId)) continue
+    const current = map.getFilter(layerId)
+    map.setFilter(layerId, current ? ['all', current, manualHidden] : manualHidden as never)
+  }
 }
