@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Patch, Query, UseGuards } from '@nestjs/common'
+import { Body, Controller, Delete, Get, Patch, Query, UseGuards } from '@nestjs/common'
 import { AuthGuard } from '../auth/auth.guard'
 import { RecalboxService, UpdateGameMetadata } from './recalbox.service'
 
@@ -47,5 +47,11 @@ export class RecalboxController {
   @UseGuards(AuthGuard)
   updateMetadata(@Query('system') system: string, @Body() update: UpdateGameMetadata) {
     return this.recalbox.updateMetadata(system, update)
+  }
+
+  @Delete('recalbox/game')
+  @UseGuards(AuthGuard)
+  deleteGame(@Query('system') system: string, @Query('path') path: string) {
+    return this.recalbox.deleteGame(system, path)
   }
 }

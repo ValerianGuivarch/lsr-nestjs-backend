@@ -74,7 +74,11 @@ export function RecalboxUi({ apiBase = '/recalbox/api' }: RecalboxUiProps) {
   const [libraryLoading, setLibraryLoading] = useState(false)
   const [gameLoading, setGameLoading] = useState(false)
   const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
+  const [deleteState, setDeleteState] = useState<'idle' | 'deleting'>('idle')
+  const [gameFilter, setGameFilter] = useState<'all' | 'favorites'>('all')
+  const [refreshKey, setRefreshKey] = useState(0)
   const [libraryError, setLibraryError] = useState('')
+  const [libraryNotice, setLibraryNotice] = useState('')
 
   useEffect(() => {
     fetch(`${apiBase}/auth/session`, { credentials: 'include' })
@@ -123,6 +127,8 @@ export function RecalboxUi({ apiBase = '/recalbox/api' }: RecalboxUiProps) {
     setMetadata(null)
     setDraft(null)
     setSaveState('idle')
+    setDeleteState('idle')
+    setLibraryNotice('')
 
     fetch(`${apiBase}/recalbox/games?system=${encodeURIComponent(selectedSystem)}`, {
       credentials: 'include'
@@ -137,7 +143,7 @@ export function RecalboxUi({ apiBase = '/recalbox/api' }: RecalboxUiProps) {
         setLibraryError('Impossible de charger les jeux de cette console.')
       })
       .finally(() => setLibraryLoading(false))
-  }, [apiBase, selectedSystem, session])
+  }, [apiBase, refreshKey, selectedSystem, session])
 
   const visibleSystems = useMemo(() => {
     const needle = systemSearch.trim().toLocaleLowerCase('fr')
@@ -149,13 +155,21 @@ export function RecalboxUi({ apiBase = '/recalbox/api' }: RecalboxUiProps) {
 
   const visibleGames = useMemo(() => {
     const needle = gameSearch.trim().toLocaleLowerCase('fr')
-    if (!needle) return games
-    return games.filter((game) =>
-      `${game.name} ${game.genre} ${game.publisher} ${game.developer}`.toLocaleLowerCase('fr').includes(needle)
-    )
-  }, [gameSearch, games])
+    return games.filter((game) => {
+      if (gameFilter === 'favorites' && !game.favorite) return false
+      if (!needle) return true
+      return `${game.name} ${game.genre} ${game.publisher} ${game.developer}`.toLocaleLowerCase('fr').includes(needle)
+    })
+  }, [gameFilter, gameSearch, games])
 
   const currentSystem = systems.find((system) => system.name === selectedSystem)
+  const favoriteCount = games.filter((game) => game.favorite).length
+
+  function refreshLibrary() {
+    setLibraryError('')
+    setLibraryNotice('')
+    setRefreshKey((value) => value + 1)
+  }
 
   async function handleLogin(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -204,7 +218,9 @@ export function RecalboxUi({ apiBase = '/recalbox/api' }: RecalboxUiProps) {
     setMetadata(null)
     setDraft(null)
     setSaveState('idle')
+    setDeleteState('idle')
     setLibraryError('')
+    setLibraryNotice('')
 
     try {
       const response = await fetch(
@@ -237,6 +253,7 @@ export function RecalboxUi({ apiBase = '/recalbox/api' }: RecalboxUiProps) {
 
     setSaveState('saving')
     setLibraryError('')
+    setLibraryNotice('')
 
     try {
       const response = await fetch(`${apiBase}/recalbox/game?system=${encodeURIComponent(selectedSystem)}`, {
@@ -282,11 +299,56 @@ export function RecalboxUi({ apiBase = '/recalbox/api' }: RecalboxUiProps) {
           : current
       )
       setSaveState('saved')
+      setLibraryNotice('Métadonnées enregistrées dans la Recalbox.')
     } catch (saveError) {
       setSaveState('error')
       setLibraryError(
         saveError instanceof Error && saveError.message !== 'save' ? saveError.message : 'Échec de la sauvegarde.'
       )
+    }
+  }
+
+  async function deleteGame() {
+    if (!selectedGame || deleteState === 'deleting') return
+
+    const confirmed = window.confirm(
+      `Supprimer définitivement « ${selectedGame.name} » de la Recalbox ?\n\nLe fichier ROM sera supprimé et gamelist.xml sera sauvegardé avant modification.`
+    )
+    if (!confirmed) return
+
+    setDeleteState('deleting')
+    setLibraryError('')
+    setLibraryNotice('')
+
+    try {
+      const response = await fetch(
+        `${apiBase}/recalbox/game?system=${encodeURIComponent(selectedSystem)}&path=${encodeURIComponent(selectedGame.path)}`,
+        {
+          method: 'DELETE',
+          credentials: 'include'
+        }
+      )
+
+      if (!response.ok) {
+        const body = (await response.json().catch(() => null)) as { message?: string } | null
+        throw new Error(body?.message ?? 'delete')
+      }
+
+      const deletedName = selectedGame.name
+      setGames((current) => current.filter((game) => game.path !== selectedGame.path))
+      setSelectedGame(null)
+      setMetadata(null)
+      setDraft(null)
+      setSaveState('idle')
+      setLibraryNotice(`« ${deletedName} » a été supprimé de la Recalbox.`)
+    } catch (deleteError) {
+      setLibraryError(
+        deleteError instanceof Error && deleteError.message !== 'delete'
+          ? deleteError.message
+          : 'Échec de la suppression du jeu.'
+      )
+    } finally {
+      setDeleteState('idle')
     }
   }
 
@@ -334,19 +396,42 @@ export function RecalboxUi({ apiBase = '/recalbox/api' }: RecalboxUiProps) {
   return (
     <main className={styles.page}>
       <header className={styles.topbar}>
-        <div>
-          <p className={styles.eyebrow}>L7R · Administration</p>
+        <div className={styles.heroCopy}>
+          <p className={styles.eyebrow}>L7R · Bibliothèque</p>
           <h1 className={styles.title}>Recalbox</h1>
+          <p className={styles.subtitle}>Parcours, recherche et édite ta collection sans quitter le navigateur.</p>
         </div>
         <div className={styles.headerActions}>
-          <span className={styles.apiState}>{status ? 'API connectée' : 'Connexion API…'}</span>
+          <span className={styles.apiState}>{status ? 'Recalbox connectée' : 'Connexion…'}</span>
           <button className={styles.secondaryButton} type="button" onClick={handleLogout}>
             Déconnexion
           </button>
         </div>
       </header>
 
+      <section className={styles.summaryStrip}>
+        <div className={styles.summaryCard}>
+          <span>Consoles</span>
+          <strong>{systems.length}</strong>
+        </div>
+        <div className={styles.summaryCard}>
+          <span>{currentSystem?.fullName ?? 'Console'}</span>
+          <strong>{games.length}</strong>
+          <small>jeux détectés</small>
+        </div>
+        <div className={styles.summaryCard}>
+          <span>Favoris</span>
+          <strong>{favoriteCount}</strong>
+        </div>
+        <div className={styles.summaryCard}>
+          <span>Stockage</span>
+          <strong>{status?.storageConfigured ? 'OK' : '—'}</strong>
+          <small>{status?.storageConfigured ? 'partage monté' : 'indisponible'}</small>
+        </div>
+      </section>
+
       {libraryError ? <div className={styles.alert}>{libraryError}</div> : null}
+      {libraryNotice ? <div className={styles.notice}>{libraryNotice}</div> : null}
 
       <section className={styles.library}>
         <aside className={styles.systemPanel}>
@@ -382,14 +467,39 @@ export function RecalboxUi({ apiBase = '/recalbox/api' }: RecalboxUiProps) {
               <span>{currentSystem?.fullName ?? 'Jeux'}</span>
               <small>{libraryLoading ? 'Chargement…' : `${games.length} jeu${games.length > 1 ? 'x' : ''}`}</small>
             </div>
+            <button
+              className={styles.iconButton}
+              type="button"
+              onClick={refreshLibrary}
+              disabled={libraryLoading}
+              title="Actualiser la liste"
+            >
+              ↻
+            </button>
           </div>
           <input
             className={styles.searchInput}
             type="search"
-            placeholder="Rechercher un jeu"
+            placeholder="Rechercher par nom, genre, éditeur…"
             value={gameSearch}
             onChange={(event) => setGameSearch(event.target.value)}
           />
+          <div className={styles.filterBar}>
+            <button
+              type="button"
+              className={`${styles.filterButton} ${gameFilter === 'all' ? styles.filterButtonActive : ''}`}
+              onClick={() => setGameFilter('all')}
+            >
+              Tous <span>{games.length}</span>
+            </button>
+            <button
+              type="button"
+              className={`${styles.filterButton} ${gameFilter === 'favorites' ? styles.filterButtonActive : ''}`}
+              onClick={() => setGameFilter('favorites')}
+            >
+              ★ Favoris <span>{favoriteCount}</span>
+            </button>
+          </div>
           <div className={styles.gameList}>
             {!libraryLoading && visibleGames.length === 0 ? (
               <p className={styles.emptyState}>Aucun jeu à afficher.</p>
@@ -429,10 +539,16 @@ export function RecalboxUi({ apiBase = '/recalbox/api' }: RecalboxUiProps) {
             <form className={styles.editorForm} onSubmit={saveGame}>
               <div className={styles.editorHeader}>
                 <div>
-                  <p className={styles.eyebrow}>Métadonnées</p>
+                  <p className={styles.eyebrow}>Fiche du jeu</p>
                   <h2>{selectedGame.name}</h2>
+                  <div className={styles.editorMetaLine}>
+                    <span>{metadata?.regions || 'Région inconnue'}</span>
+                    <span>{draft.players} joueur{draft.players > 1 ? 's' : ''}</span>
+                    {draft.favorite ? <span>★ Favori</span> : null}
+                    {draft.hidden ? <span>Masqué</span> : null}
+                  </div>
                 </div>
-                <span className={styles.regionBadge}>{metadata?.regions || '—'}</span>
+                <span className={styles.regionBadge}>{selectedSystem.toUpperCase()}</span>
               </div>
 
               <label className={styles.field}>
@@ -502,16 +618,33 @@ export function RecalboxUi({ apiBase = '/recalbox/api' }: RecalboxUiProps) {
                 </label>
               </div>
 
-              <div className={styles.filePath}>{selectedGame.path}</div>
+              <div className={styles.fileBlock}>
+                <span>Fichier ROM</span>
+                <div className={styles.filePath}>{selectedGame.path}</div>
+              </div>
 
               <div className={styles.saveBar}>
-                <span>
-                  {saveState === 'saved' ? 'Enregistré dans gamelist.xml' : ''}
-                  {saveState === 'error' ? 'Erreur de sauvegarde' : ''}
-                </span>
-                <button className={styles.primaryButton} type="submit" disabled={saveState === 'saving'}>
-                  {saveState === 'saving' ? 'Enregistrement…' : 'Enregistrer'}
+                <button
+                  className={styles.dangerButton}
+                  type="button"
+                  onClick={deleteGame}
+                  disabled={deleteState === 'deleting' || saveState === 'saving'}
+                >
+                  {deleteState === 'deleting' ? 'Suppression…' : 'Supprimer'}
                 </button>
+                <div className={styles.saveActions}>
+                  <span>
+                    {saveState === 'saved' ? 'Enregistré' : ''}
+                    {saveState === 'error' ? 'Erreur de sauvegarde' : ''}
+                  </span>
+                  <button
+                    className={styles.primaryButton}
+                    type="submit"
+                    disabled={saveState === 'saving' || deleteState === 'deleting'}
+                  >
+                    {saveState === 'saving' ? 'Enregistrement…' : 'Enregistrer'}
+                  </button>
+                </div>
               </div>
             </form>
           )}

@@ -198,7 +198,7 @@
 .library {
   display: grid;
   grid-template-columns: 235px minmax(300px, 430px) minmax(420px, 1fr);
-  min-height: calc(100vh - 150px);
+  min-height: calc(100vh - 260px);
   overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.09);
   border-radius: 20px;
@@ -534,6 +534,187 @@
   font-size: 11px;
 }
 
+.heroCopy {
+  min-width: 0;
+}
+
+.subtitle {
+  max-width: 620px;
+  margin: 12px 0 0;
+  color: #929d96;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.summaryStrip {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.summaryCard {
+  display: grid;
+  min-height: 78px;
+  align-content: center;
+  gap: 2px;
+  padding: 14px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  background: rgba(20, 25, 23, 0.72);
+}
+
+.summaryCard span,
+.summaryCard small {
+  overflow: hidden;
+  color: #7f8a83;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.summaryCard strong {
+  color: #edf1ee;
+  font-size: 20px;
+  line-height: 1.1;
+}
+
+.notice {
+  margin-bottom: 16px;
+  padding: 12px 14px;
+  border: 1px solid rgba(215, 255, 101, 0.24);
+  border-radius: 10px;
+  background: rgba(215, 255, 101, 0.07);
+  color: #dfffa0;
+  font-size: 13px;
+}
+
+.iconButton {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  place-items: center;
+  border: 1px solid #37403b;
+  border-radius: 9px;
+  background: #151a18;
+  color: #bcc6c0;
+  font-size: 17px;
+  cursor: pointer;
+}
+
+.iconButton:hover:not(:disabled) {
+  border-color: #5b665f;
+  color: #f4f7f5;
+}
+
+.iconButton:disabled {
+  cursor: wait;
+  opacity: 0.45;
+}
+
+.filterBar {
+  display: flex;
+  gap: 6px;
+}
+
+.filterButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 9px;
+  border: 1px solid #303833;
+  border-radius: 9px;
+  background: transparent;
+  color: #8d9991;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.filterButton span {
+  color: #667169;
+  font-size: 10px;
+}
+
+.filterButtonActive {
+  border-color: rgba(215, 255, 101, 0.28);
+  background: rgba(215, 255, 101, 0.09);
+  color: #e8ffae;
+}
+
+.filterButtonActive span {
+  color: #b7cd7d;
+}
+
+.editorMetaLine {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.editorMetaLine span {
+  padding: 5px 7px;
+  border-radius: 7px;
+  background: #252c28;
+  color: #9ca8a0;
+  font-size: 10px;
+  font-weight: 750;
+}
+
+.fileBlock {
+  display: grid;
+  gap: 7px;
+}
+
+.fileBlock > span {
+  color: #87928b;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.dangerButton {
+  padding: 11px 14px;
+  border: 1px solid rgba(255, 113, 113, 0.34);
+  border-radius: 10px;
+  background: rgba(255, 80, 80, 0.07);
+  color: #ffaaaa;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 850;
+  cursor: pointer;
+}
+
+.dangerButton:hover:not(:disabled) {
+  border-color: rgba(255, 113, 113, 0.58);
+  background: rgba(255, 80, 80, 0.12);
+  color: #ffd0d0;
+}
+
+.dangerButton:disabled {
+  cursor: wait;
+  opacity: 0.5;
+}
+
+.saveActions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.saveActions > span {
+  min-width: 72px;
+  color: #91a284;
+  font-size: 11px;
+  text-align: right;
+}
+
 .loader {
   width: 34px;
   height: 34px;
@@ -567,6 +748,10 @@
 
   .apiState {
     display: none;
+  }
+
+  .summaryStrip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .library {
@@ -611,6 +796,28 @@
 
   .secondaryButton {
     padding: 10px 12px;
+  }
+
+  .summaryStrip {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .summaryCard {
+    min-height: 68px;
+    padding: 12px;
+  }
+
+  .saveBar {
+    align-items: stretch;
+    flex-direction: column-reverse;
+  }
+
+  .saveActions {
+    justify-content: space-between;
+  }
+
+  .dangerButton {
+    width: 100%;
   }
 
   .twoColumns {

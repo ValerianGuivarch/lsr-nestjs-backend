@@ -2,7 +2,7 @@ import { BadGatewayException, BadRequestException, Injectable, NotFoundException
 import { execFile } from 'node:child_process'
 import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
-import { basename, join } from 'node:path'
+import { join } from 'node:path'
 import { promisify } from 'node:util'
 
 const execFileAsync = promisify(execFile)
@@ -139,7 +139,7 @@ export class RecalboxService {
 
   async updateMetadata(system: string, update: UpdateGameMetadata): Promise<{ saved: true; backup: string }> {
     this.assertRomPath(system, update.path)
-    const romName = basename(update.path)
+    const relativeRomPath = update.path.slice(`/recalbox/share/roms/${system}/`.length)
     const remoteGamelist = `roms/${system}/gamelist.xml`
     const workspace = await mkdtemp(join(tmpdir(), 'recalbox-gamelist-'))
     const localOriginal = join(workspace, 'gamelist.xml')
@@ -149,13 +149,53 @@ export class RecalboxService {
     try {
       await this.smb(['get', remoteGamelist, localOriginal])
       const original = await readFile(localOriginal, 'utf8')
-      const updated = this.patchGame(original, romName, update)
+      const updated = this.patchGame(original, relativeRomPath, update)
       await writeFile(localUpdated, updated, 'utf8')
 
       await this.smb(['put', localOriginal, `roms/${system}/${backupName}`])
       await this.smb(['put', localUpdated, remoteGamelist])
 
       return { saved: true, backup: `roms/${system}/${backupName}` }
+    } finally {
+      await rm(workspace, { recursive: true, force: true })
+    }
+  }
+
+  async deleteGame(system: string, romPath: string): Promise<{ deleted: true; backup?: string }> {
+    this.assertRomPath(system, romPath)
+    const relativeRomPath = romPath.slice(`/recalbox/share/roms/${system}/`.length)
+    const remoteRom = `roms/${system}/${relativeRomPath}`
+    const remoteGamelist = `roms/${system}/gamelist.xml`
+    const workspace = await mkdtemp(join(tmpdir(), 'recalbox-delete-'))
+    const localOriginal = join(workspace, 'gamelist.xml')
+    const localUpdated = join(workspace, 'gamelist.updated.xml')
+    const backupName = `gamelist.web-backup-${new Date().toISOString().replace(/[:.]/g, '-')}.xml`
+
+    try {
+      let backup: string | undefined
+      let updated: string | undefined
+
+      try {
+        await this.smb(['get', remoteGamelist, localOriginal])
+        const original = await readFile(localOriginal, 'utf8')
+        const removal = this.removeGame(original, relativeRomPath)
+        if (removal.removed) {
+          updated = removal.xml
+          await writeFile(localUpdated, updated, 'utf8')
+          backup = `roms/${system}/${backupName}`
+          await this.smb(['put', localOriginal, backup])
+        }
+      } catch (error) {
+        if (!(error instanceof BadGatewayException)) throw error
+      }
+
+      await this.smbDelete(remoteRom)
+
+      if (updated !== undefined) {
+        await this.smb(['put', localUpdated, remoteGamelist])
+      }
+
+      return { deleted: true, ...(backup ? { backup } : {}) }
     } finally {
       await rm(workspace, { recursive: true, force: true })
     }
@@ -244,17 +284,32 @@ export class RecalboxService {
     }
   }
 
+  private async smbDelete(remotePath: string): Promise<void> {
+    try {
+      await execFileAsync(
+        'smbclient',
+        ['-t', '20', this.smbTarget, '-N', '-c', `del "${this.escapeSmb(remotePath)}"`],
+        {
+          timeout: 25000,
+          maxBuffer: 1024 * 1024
+        }
+      )
+    } catch {
+      throw new BadGatewayException('Impossible de supprimer le fichier sur la Recalbox.')
+    }
+  }
+
   private escapeSmb(value: string): string {
     return value.replace(/\\/g, '\\\\').replace(/"/g, '\\"')
   }
 
-  private patchGame(xml: string, romName: string, update: UpdateGameMetadata): string {
+  private patchGame(xml: string, relativeRomPath: string, update: UpdateGameMetadata): string {
     const gameExpression = /<game\b[^>]*>[\s\S]*?<\/game>/g
     let found = false
 
     const result = xml.replace(gameExpression, (block) => {
       const path = this.readTag(block, 'path')
-      if (this.decodeXml(path).replace(/^\.\//, '') !== romName) return block
+      if (this.decodeXml(path).replace(/^\.\//, '') !== relativeRomPath) return block
 
       found = true
       let next = block
@@ -271,6 +326,23 @@ export class RecalboxService {
 
     if (!found) throw new NotFoundException('Jeu introuvable dans gamelist.xml.')
     return result
+  }
+
+  private removeGame(xml: string, relativeRomPath: string): { xml: string; removed: boolean } {
+    const gameExpression = /<game\b[^>]*>[\s\S]*?<\/game>/g
+    let removed = false
+
+    const next = xml.replace(gameExpression, (block) => {
+      const path = this.readTag(block, 'path')
+      if (this.decodeXml(path).replace(/^\.\//, '') !== relativeRomPath) return block
+      removed = true
+      return ''
+    })
+
+    return {
+      xml: next.replace(/\n{3,}/g, '\n\n'),
+      removed
+    }
   }
 
   private readTag(block: string, tag: string): string {
