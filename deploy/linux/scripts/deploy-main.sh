@@ -38,13 +38,13 @@ export APP_VERSION="$VERSION"
 export APP_ENV_FILE="${APP_ENV_FILE:-$ROOT/.env}"
 
 echo "[deploy] pulling images for $APP_VERSION"
-docker compose -f "$COMPOSE_FILE" pull
+docker compose --env-file "$APP_ENV_FILE" -f "$COMPOSE_FILE" pull
 
 echo "[deploy] starting core containers"
-docker compose -f "$COMPOSE_FILE" up -d --remove-orphans --wait api-jdr api-yeardiary admin map web
+docker compose --env-file "$APP_ENV_FILE" -f "$COMPOSE_FILE" up -d --remove-orphans --wait api-jdr api-yeardiary admin map web
 
 echo "[deploy] starting optional Recalbox containers"
-if ! docker compose -f "$COMPOSE_FILE" up -d --wait api-recalbox web-recalbox; then
+if ! docker compose --env-file "$APP_ENV_FILE" -f "$COMPOSE_FILE" up -d --wait api-recalbox web-recalbox; then
   echo "[deploy] warning: Recalbox services are unavailable; core deployment remains healthy" >&2
 fi
 
@@ -52,4 +52,4 @@ echo "[deploy] refreshing MediaWiki stack from dedicated checkout"
 docker compose --env-file "$APP_ENV_FILE" -f "$ROOT/support/mediawiki/docker-compose.yml" up -d
 
 echo "[deploy] healthy: $APP_VERSION"
-docker compose -f "$COMPOSE_FILE" ps
+docker compose --env-file "$APP_ENV_FILE" -f "$COMPOSE_FILE" ps
