@@ -48,5 +48,8 @@ if ! docker compose -f "$COMPOSE_FILE" up -d --wait api-recalbox web-recalbox; t
   echo "[deploy] warning: Recalbox services are unavailable; core deployment remains healthy" >&2
 fi
 
+echo "[deploy] refreshing MediaWiki stack from dedicated checkout"
+docker compose --env-file "$APP_ENV_FILE" -f "$ROOT/support/mediawiki/docker-compose.yml" up -d
+
 echo "[deploy] healthy: $APP_VERSION"
 docker compose -f "$COMPOSE_FILE" ps
