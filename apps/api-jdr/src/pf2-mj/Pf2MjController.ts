@@ -47,11 +47,26 @@ export class Pf2MjController {
     return this.service.publicMapPlaces()
   }
 
+  @Get('map/mj-light/places')
+  mjLightMapPlaces(): Promise<unknown[]> { return this.service.mjLightMapPlaces() }
+
+  @Put('map/places/:id')
+  async updateMapPlace(@Param('id') id: string, @Body() body: unknown): Promise<unknown> {
+    try { return await this.service.updateMapPlace(id, body) }
+    catch (error) { throw new HttpException(error instanceof Error ? error.message : 'Mise à jour du lieu impossible.', HttpStatus.BAD_REQUEST) }
+  }
+
   @Get('map/source-points')
   publicMapSourcePoints(): Promise<unknown[]> { return this.service.publicMapSourcePoints() }
 
   @Get('map/search')
   publicMapSearch(): Promise<unknown[]> { return this.service.publicMapSearch() }
+
+  @Get('map/mj-light/source-points')
+  mjLightMapSourcePoints(): Promise<unknown[]> { return this.service.mjLightMapSourcePoints() }
+
+  @Get('map/mj-light/visibility')
+  mjLightMapVisibility(): Promise<unknown> { return this.service.mjLightMapVisibilitySnapshot() }
 
   @Get('map/visibility')
   mapVisibility(): Promise<unknown> { return this.service.mapVisibilitySnapshot() }

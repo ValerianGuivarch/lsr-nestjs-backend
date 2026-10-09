@@ -58,7 +58,8 @@ export class FuzzySearch {
    */
   static get: ()=>Promise<FuzzySearch> = FuzzySearch.lazyInit(async () => {
     try {
-      const playerMode = window.location.pathname.split('/').filter(Boolean)[0]?.toLowerCase() === 'pj';
+      const audience = window.location.pathname.split('/').filter(Boolean)[0]?.toLowerCase();
+      const playerMode = audience === 'pj' || audience === 'mj-light';
       const customPlacesPromise = (async () => {
         const url = window.GOLARION_MAP_CONFIG?.placesUrl ?? '';
         if (!url) return [] as Array<{ name: string; latitude: number; longitude: number }>;

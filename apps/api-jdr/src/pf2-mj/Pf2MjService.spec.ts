@@ -96,6 +96,46 @@ describe('Pf2MjService', () => {
     })
   })
 
+  describe('carte MJ light', () => {
+    it('expose les mêmes lieux locaux visibles avec une note MJ séparée', async () => {
+      const lieux = [
+        { id: 'loge', nom: 'Loge', map_visible: true, map_latitude: 30.1, map_longitude: -0.2, map_text: 'Description PJ', map_mj_text: 'Secret utile au MJ', map_icon: 'lodge' },
+        { id: 'secret', nom: 'Secret', map_visible: false, map_latitude: 30.2, map_longitude: -0.3, map_mj_text: 'Ne doit pas apparaître' },
+      ]
+      const { service } = serviceFor({}, pnj, { readReference: jest.fn().mockResolvedValue(lieux) })
+      await expect(service.mjLightMapPlaces()).resolves.toEqual([expect.objectContaining({
+        id: 'loge',
+        name: 'Loge',
+        text: 'Description PJ',
+        mjText: 'Secret utile au MJ',
+      })])
+    })
+
+    it('peut cacher un lieu local tout en enregistrant les deux descriptions', async () => {
+      const lieux = [{ id: 'loge', nom: 'Loge', map_visible: true, map_latitude: 30.1, map_longitude: -0.2, map_text: 'Ancien texte' }]
+      const readReference = jest.fn().mockResolvedValue(lieux)
+      const replaceReference = jest.fn().mockResolvedValue(undefined)
+      const { service } = serviceFor({}, pnj, { readReference, replaceReference })
+
+      await expect(service.updateMapPlace('loge', {
+        visible: false,
+        publicText: 'Texte PJ',
+        mjText: 'Détail MJ',
+      })).resolves.toEqual({
+        id: 'loge',
+        visible: false,
+        publicText: 'Texte PJ',
+        mjText: 'Détail MJ',
+      })
+      expect(replaceReference).toHaveBeenCalledWith('lieux', [expect.objectContaining({
+        id: 'loge',
+        map_visible: false,
+        map_text: 'Texte PJ',
+        map_mj_text: 'Détail MJ',
+      })])
+    })
+  })
+
   describe('visibilité de la carte joueurs', () => {
     it('publie automatiquement les villes et masque les POI détaillés', async () => {
       const { service } = serviceFor()
@@ -143,6 +183,31 @@ describe('Pf2MjService', () => {
       ]))
       expect(points).not.toEqual(expect.arrayContaining([expect.objectContaining({ label: 'Absalom' })]))
       expect(JSON.stringify(points)).not.toContain('pathfinderwiki.com')
+    })
+
+    it('garde la note MJ hors des endpoints PJ mais la fournit à MJ light', async () => {
+      const overrides = [{
+        sourceKey: 'https://pathfinderwiki.com/wiki/Spire_of_Nex',
+        category: 'locations',
+        label: 'Spire of Nex',
+        sourceFid: 142031239,
+        visibility: 'visible',
+        publicLabel: 'Tour de Nex',
+        publicText: 'Visible par les joueurs.',
+        mjText: 'Détail réservé au MJ.',
+        updatedAt: '2026-10-09',
+      }]
+      const { service } = serviceFor({}, pnj, { listMapVisibilityOverrides: jest.fn().mockResolvedValue(overrides) })
+
+      const publicPoints = await service.publicMapSourcePoints()
+      const lightPoints = await service.mjLightMapSourcePoints()
+      const publicVisibility = await service.mapVisibilitySnapshot()
+      const lightVisibility = await service.mjLightMapVisibilitySnapshot()
+
+      expect(JSON.stringify(publicPoints)).not.toContain('Détail réservé au MJ.')
+      expect(JSON.stringify(publicVisibility)).not.toContain('Détail réservé au MJ.')
+      expect(lightPoints).toEqual(expect.arrayContaining([expect.objectContaining({ label: 'Spire of Nex', mjText: 'Détail réservé au MJ.' })]))
+      expect(lightVisibility.overrides).toEqual(expect.arrayContaining([expect.objectContaining({ mjText: 'Détail réservé au MJ.' })]))
     })
 
     it('ne renvoie dans la recherche PJ que les catégories et lieux autorisés', async () => {

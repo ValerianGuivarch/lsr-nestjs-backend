@@ -11,11 +11,12 @@ Cette application Vite est servie sur le port `4204`. Elle est indépendante de 
   - les districts, bâtiments et autres labels potentiellement scénarisés sont masqués par défaut ;
   - un override MJ `visible` ou `hidden` est prioritaire sur la règle automatique ;
   - un clic PJ n’affiche que le nom public et la description locale validée, jamais le texte PathfinderWiki.
-- `/mj` : carte maître du jeu complète, avec recherche, détails PathfinderWiki au clic, mesure, menu contextuel, grille hexagonale et panneau de curation de la visibilité joueur.
+- `/mj-light` : reprend exactement la carte PJ et sa recherche filtrée. Chaque élément visible peut être ouvert pour modifier sa description PJ, ajouter une note MJ optionnelle et le cacher immédiatement aux joueurs. Le mode ne charge pas les descriptions PathfinderWiki complètes, la grille ni les outils de mesure.
+- `/mj` : carte maître du jeu complète, avec recherche, détails PathfinderWiki au clic, mesure, menu contextuel, grille hexagonale et panneau de curation de la visibilité joueur. Le panneau complet permet aussi de renseigner la note MJ.
 
-La barre d’évolution temporelle est désactivée dans les deux modes. En ouvrant la racine `/`, l’application redirige automatiquement vers le mode joueur `/pj`.
+La barre d’évolution temporelle est désactivée dans les trois modes. En ouvrant la racine `/`, l’application redirige automatiquement vers le mode joueur `/pj`.
 
-Les décisions manuelles sont stockées dans SQLite (`pf2_map_visibility_override`) avec trois états fonctionnels dans l’interface : automatique, visible, masqué. Le catalogue stable utilisé pour relier la carte importée à ces décisions est généré dans `resources/map-source-points.json`.
+Les décisions manuelles sont stockées dans SQLite (`pf2_map_visibility_override`) avec trois états fonctionnels dans l’interface : automatique, visible, masqué. Une colonne `mj_text` séparée conserve les rappels et secrets réservés au MJ sans les envoyer aux endpoints PJ. Le catalogue stable utilisé pour relier la carte importée à ces décisions est généré dans `resources/map-source-points.json`.
 
 ## Ressources externes
 

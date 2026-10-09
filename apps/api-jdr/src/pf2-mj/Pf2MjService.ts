@@ -22,7 +22,7 @@ export type ResumeActorReference = { uuid: string; name: string }
 export type PlayableComponentsImport = { scenarioId: string; playableComponents: PlayableComponent[] }
 
 type MapSourcePoint = { sourceKey: string; fid: number; kind: 'city' | 'location'; label: string; type: string; icon: string; minZoom: number; coordinates: Array<[number, number]>; sourceUrl?: string }
-type MapVisibilityOverride = { sourceKey: string; category: string; label: string; sourceFid: number | null; visibility: 'visible' | 'hidden'; publicLabel: string; publicText: string; updatedAt: string }
+type MapVisibilityOverride = { sourceKey: string; category: string; label: string; sourceFid: number | null; visibility: 'visible' | 'hidden'; publicLabel: string; publicText: string; mjText: string; updatedAt: string }
 const MAP_AUTO_VISIBLE_CATEGORIES = ['continents', 'deserts', 'forests', 'hills', 'ice', 'land', 'mountains', 'nations', 'provinces', 'regions', 'rivers', 'roads', 'subregions', 'swamps', 'waters'] as const
 
 export type CampaignPlayableComponentsImport = { campaignId: string; description?: string; scenarios: CampaignPlayableComponentsScenario[] }
@@ -270,6 +270,53 @@ export class Pf2MjService {
     }).sort((left, right) => left.name.localeCompare(right.name, 'fr'))
   }
 
+  async mjLightMapPlaces(): Promise<Array<{ id: string; name: string; latitude: number; longitude: number; text: string; mjText: string; icon: string }>> {
+    const lieux = await this.persistence.readReference('lieux')
+    const coordinate = (value: unknown): number => typeof value === 'number' ? value : typeof value === 'string' && value.trim() ? Number(value) : Number.NaN
+    return lieux.flatMap((record) => {
+      if (record.map_visible !== true) return []
+      const latitude = coordinate(record.map_latitude)
+      const longitude = coordinate(record.map_longitude)
+      if (!Number.isFinite(latitude) || !Number.isFinite(longitude) || latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180) return []
+      const id = typeof record.id === 'string' ? record.id.trim() : ''
+      const name = typeof record.nom === 'string' ? record.nom.trim() : ''
+      if (!id || !name) return []
+      return [{
+        id,
+        name,
+        latitude,
+        longitude,
+        text: typeof record.map_text === 'string' ? record.map_text.trim() : '',
+        mjText: typeof record.map_mj_text === 'string' ? record.map_mj_text.trim() : '',
+        icon: typeof record.map_icon === 'string' && record.map_icon.trim() ? record.map_icon.trim() : 'pin',
+      }]
+    }).sort((left, right) => left.name.localeCompare(right.name, 'fr'))
+  }
+
+  async updateMapPlace(id: string, body: unknown): Promise<Record<string, unknown>> {
+    const input = this.asObject(body)
+    const lieux = await this.persistence.readReference('lieux', { includeExcluded: true })
+    const index = lieux.findIndex(record => record.id === id)
+    if (index < 0) throw new Error(`Lieu introuvable : ${id}.`)
+    const current = lieux[index]
+    const next = {
+      ...current,
+      ...(typeof input.visible === 'boolean' ? { map_visible: input.visible } : {}),
+      ...(typeof input.publicText === 'string' ? { map_text: input.publicText.trim() } : {}),
+      ...(typeof input.mjText === 'string' ? { map_mj_text: input.mjText.trim() } : {}),
+    }
+    if (typeof next.map_text === 'string' && next.map_text.length > 4000) throw new Error('La description PJ est trop longue (4 000 caractères maximum).')
+    if (typeof next.map_mj_text === 'string' && next.map_mj_text.length > 6000) throw new Error('La note MJ est trop longue (6 000 caractères maximum).')
+    lieux[index] = next
+    await this.persistence.replaceReference('lieux', lieux)
+    return {
+      id,
+      visible: next.map_visible === true,
+      publicText: typeof next.map_text === 'string' ? next.map_text : '',
+      mjText: typeof next.map_mj_text === 'string' ? next.map_mj_text : '',
+    }
+  }
+
   async publicMapSourcePoints(): Promise<Array<{ fid: number; label: string; name: string; text: string; icon: string; minZoom: number; coordinates: Array<[number, number]> }>> {
     const [points, overrides] = await Promise.all([this.mapSourcePoints(), this.persistence.listMapVisibilityOverrides()])
     const byKey = new Map(overrides.map(item => [item.sourceKey, item]))
@@ -282,6 +329,28 @@ export class Pf2MjService {
         label: point.label,
         name: override?.publicLabel.trim() || point.label,
         text: override?.publicText.trim() || '',
+        icon: point.icon,
+        minZoom: point.minZoom,
+        coordinates: point.coordinates,
+      }]
+    })
+  }
+
+  async mjLightMapSourcePoints(): Promise<Array<{ sourceKey: string; fid: number; label: string; name: string; publicLabel: string; text: string; mjText: string; icon: string; minZoom: number; coordinates: Array<[number, number]> }>> {
+    const [points, overrides] = await Promise.all([this.mapSourcePoints(), this.persistence.listMapVisibilityOverrides()])
+    const byKey = new Map(overrides.map(item => [item.sourceKey, item]))
+    return points.flatMap(point => {
+      const override = byKey.get(point.sourceKey)
+      const visible = override ? override.visibility === 'visible' : point.kind === 'city'
+      if (!visible) return []
+      return [{
+        sourceKey: point.sourceKey,
+        fid: point.fid,
+        label: point.label,
+        name: override?.publicLabel.trim() || point.label,
+        publicLabel: override?.publicLabel ?? '',
+        text: override?.publicText.trim() || '',
+        mjText: override?.mjText.trim() || '',
         icon: point.icon,
         minZoom: point.minZoom,
         coordinates: point.coordinates,
@@ -322,7 +391,12 @@ export class Pf2MjService {
     })
   }
 
-  async mapVisibilitySnapshot(): Promise<{ autoVisibleCategories: readonly string[]; locationDefault: 'cities'; overrides: MapVisibilityOverride[] }> {
+  async mapVisibilitySnapshot(): Promise<{ autoVisibleCategories: readonly string[]; locationDefault: 'cities'; overrides: Array<Omit<MapVisibilityOverride, 'mjText'>> }> {
+    const overrides = (await this.persistence.listMapVisibilityOverrides()).map(({ mjText: _mjText, ...item }) => item)
+    return { autoVisibleCategories: MAP_AUTO_VISIBLE_CATEGORIES, locationDefault: 'cities', overrides }
+  }
+
+  async mjLightMapVisibilitySnapshot(): Promise<{ autoVisibleCategories: readonly string[]; locationDefault: 'cities'; overrides: MapVisibilityOverride[] }> {
     return { autoVisibleCategories: MAP_AUTO_VISIBLE_CATEGORIES, locationDefault: 'cities', overrides: await this.persistence.listMapVisibilityOverrides() }
   }
 
@@ -346,6 +420,7 @@ export class Pf2MjService {
       effectiveVisible: override ? override.visibility === 'visible' : automaticVisible,
       publicLabel: override?.publicLabel ?? '',
       publicText: override?.publicText ?? '',
+      mjText: override?.mjText ?? '',
     }
   }
 
@@ -373,12 +448,15 @@ export class Pf2MjService {
       return point ? this.mapSourceCuration(point.fid, point.label) : { sourceKey, category, label, visibility: 'automatic' }
     }
     if (visibility !== 'visible' && visibility !== 'hidden') throw new Error('visibility doit valoir automatic, visible ou hidden.')
-    const publicLabel = typeof input.publicLabel === 'string' ? input.publicLabel.trim() : ''
-    const publicText = typeof input.publicText === 'string' ? input.publicText.trim() : ''
+    const previous = (await this.persistence.listMapVisibilityOverrides()).find(item => item.sourceKey === sourceKey)
+    const publicLabel = typeof input.publicLabel === 'string' ? input.publicLabel.trim() : previous?.publicLabel ?? ''
+    const publicText = typeof input.publicText === 'string' ? input.publicText.trim() : previous?.publicText ?? ''
+    const mjText = typeof input.mjText === 'string' ? input.mjText.trim() : previous?.mjText ?? ''
     if (publicLabel.length > 200) throw new Error('Le nom public est trop long (200 caractères maximum).')
     if (publicText.length > 4000) throw new Error('La description PJ est trop longue (4 000 caractères maximum).')
-    await this.persistence.upsertMapVisibilityOverride({ sourceKey, category, label, sourceFid, visibility, publicLabel, publicText })
-    return point ? this.mapSourceCuration(point.fid, point.label) : { sourceKey, category, label, visibility, publicLabel, publicText }
+    if (mjText.length > 6000) throw new Error('La note MJ est trop longue (6 000 caractères maximum).')
+    await this.persistence.upsertMapVisibilityOverride({ sourceKey, category, label, sourceFid, visibility, publicLabel, publicText, mjText })
+    return point ? this.mapSourceCuration(point.fid, point.label) : { sourceKey, category, label, visibility, publicLabel, publicText, mjText }
   }
 
   private async mapSearchIndex(): Promise<Array<{ category: string; entries: Array<Record<string, unknown>> }>> {

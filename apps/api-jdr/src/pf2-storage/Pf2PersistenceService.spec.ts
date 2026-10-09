@@ -125,6 +125,7 @@ describe('Pf2PersistenceService', () => {
       , { id: '029-resource-favorite' }
       , { id: '030-restore-player-faction-domain' }
       , { id: '031-map-player-visibility' }
+      , { id: '032-map-mj-light-notes' }
     ])
 
     await currentDataSource().destroy()
@@ -165,6 +166,7 @@ describe('Pf2PersistenceService', () => {
       , { id: '029-resource-favorite' }
       , { id: '030-restore-player-faction-domain' }
       , { id: '031-map-player-visibility' }
+      , { id: '032-map-mj-light-notes' }
     ])
   })
 

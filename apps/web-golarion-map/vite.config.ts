@@ -29,8 +29,11 @@ export default defineConfig(({ command, isPreview, mode }): UserConfig => {
   const sourcePointsUrl = env['GOLARION_MAP_SOURCE_POINTS_URL']?.trim() || `${mapApiBase}/source-points`
   const searchUrl = env['GOLARION_MAP_SEARCH_URL']?.trim() || `${mapApiBase}/search`
   const visibilityUrl = env['GOLARION_MAP_VISIBILITY_URL']?.trim() || `${mapApiBase}/visibility`
+  const mjLightPlacesUrl = env['GOLARION_MAP_MJ_LIGHT_PLACES_URL']?.trim() || `${mapApiBase}/mj-light/places`
+  const mjLightSourcePointsUrl = env['GOLARION_MAP_MJ_LIGHT_SOURCE_POINTS_URL']?.trim() || `${mapApiBase}/mj-light/source-points`
+  const mjLightVisibilityUrl = env['GOLARION_MAP_MJ_LIGHT_VISIBILITY_URL']?.trim() || `${mapApiBase}/mj-light/visibility`
   const curationUrl = env['GOLARION_MAP_CURATION_URL']?.trim() || `${mapApiBase}/curation`
-  const runtimeConfigSource = `window.GOLARION_MAP_CONFIG=${JSON.stringify({ placesUrl, sourcePointsUrl, searchUrl, visibilityUrl, curationUrl })};`
+  const runtimeConfigSource = `window.GOLARION_MAP_CONFIG=${JSON.stringify({ placesUrl, sourcePointsUrl, searchUrl, visibilityUrl, mjLightPlacesUrl, mjLightSourcePointsUrl, mjLightVisibilityUrl, curationUrl })};`
   const mapHost = env['GOLARION_MAP_HOST'] ?? '0.0.0.0'
   const mapPort = Number(env['GOLARION_MAP_PORT'] ?? 4204)
   const placeNamesFr = JSON.parse(readFileSync(existsSync(placeNamesPath) ? placeNamesPath : fallbackPlaceNamesPath, 'utf8')) as Record<string, string>

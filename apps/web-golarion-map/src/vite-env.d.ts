@@ -10,6 +10,9 @@ declare global {
             sourcePointsUrl?: string;
             searchUrl?: string;
             visibilityUrl?: string;
+            mjLightPlacesUrl?: string;
+            mjLightSourcePointsUrl?: string;
+            mjLightVisibilityUrl?: string;
             curationUrl?: string;
         };
     }

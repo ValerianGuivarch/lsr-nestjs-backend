@@ -25,8 +25,11 @@ const mapApiBase = placesUrl.replace(/\/places\/?$/, '')
 const sourcePointsUrl = process.env.GOLARION_MAP_SOURCE_POINTS_URL?.trim() || `${mapApiBase}/source-points`
 const searchUrl = process.env.GOLARION_MAP_SEARCH_URL?.trim() || `${mapApiBase}/search`
 const visibilityUrl = process.env.GOLARION_MAP_VISIBILITY_URL?.trim() || `${mapApiBase}/visibility`
+const mjLightPlacesUrl = process.env.GOLARION_MAP_MJ_LIGHT_PLACES_URL?.trim() || `${mapApiBase}/mj-light/places`
+const mjLightSourcePointsUrl = process.env.GOLARION_MAP_MJ_LIGHT_SOURCE_POINTS_URL?.trim() || `${mapApiBase}/mj-light/source-points`
+const mjLightVisibilityUrl = process.env.GOLARION_MAP_MJ_LIGHT_VISIBILITY_URL?.trim() || `${mapApiBase}/mj-light/visibility`
 const curationUrl = process.env.GOLARION_MAP_CURATION_URL?.trim() || `${mapApiBase}/curation`
-const runtimeConfigSource = `window.GOLARION_MAP_CONFIG=${JSON.stringify({ placesUrl, sourcePointsUrl, searchUrl, visibilityUrl, curationUrl })};`
+const runtimeConfigSource = `window.GOLARION_MAP_CONFIG=${JSON.stringify({ placesUrl, sourcePointsUrl, searchUrl, visibilityUrl, mjLightPlacesUrl, mjLightSourcePointsUrl, mjLightVisibilityUrl, curationUrl })};`
 
 const mimeTypes = {
   '.css': 'text/css; charset=utf-8',

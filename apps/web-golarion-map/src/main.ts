@@ -22,13 +22,17 @@ import { ProjectionControl } from "./tools/ProjectionControl";
 import { addPublicPlaceMarkers } from "./tools/public-place-markers";
 import { addPlayerSourcePoints } from "./tools/player-source-points";
 import { addPlayerCuratedLabels } from "./tools/player-curated-labels";
-import { makeLabelsCuratable } from "./tools/label-curation";
+import { makeLabelsCuratable, makeMjLightLabelsCuratable } from "./tools/label-curation";
 import hiddenDefaults from '../resources/map-default-hidden-labels.json';
 import { applyPlayerMapVisibilityFilters } from './utils/map-visibility';
 
 var root = `${location.protocol}//${location.host}`;
-export const mapAudience = window.location.pathname.split('/').filter(Boolean)[0]?.toLowerCase() === 'pj' ? 'pj' : 'mj';
-const publicPlacesUrl = window.GOLARION_MAP_CONFIG?.placesUrl ?? '';
+const requestedAudience = window.location.pathname.split('/').filter(Boolean)[0]?.toLowerCase();
+export const mapAudience: 'pj' | 'mj-light' | 'mj' = requestedAudience === 'pj' || requestedAudience === 'mj-light' ? requestedAudience : 'mj';
+const playerLikeAudience = mapAudience !== 'mj';
+const publicPlacesUrl = mapAudience === 'mj-light'
+  ? (window.GOLARION_MAP_CONFIG?.mjLightPlacesUrl ?? window.GOLARION_MAP_CONFIG?.placesUrl ?? '')
+  : (window.GOLARION_MAP_CONFIG?.placesUrl ?? '');
 
 if (window.location.pathname === '/') {
   window.history.replaceState(null, '', `/pj${window.location.search}${window.location.hash}`);
@@ -42,7 +46,7 @@ const hiddenPlayerLabelFilter = ['!', ['in', ['get', 'label'], ['literal', hidde
 // Le zoom ne sert plus à protéger les informations. La carte PJ conserve toute
 // la géographie, mais retire les couches potentiellement scénarisées. Les villes
 // et les POI explicitement validés sont réinjectés depuis l'API de curation.
-const audienceLayers = mapAudience === 'pj'
+const audienceLayers = playerLikeAudience
   ? style.layers
       .filter(layer => !['location-icons', 'location-labels', 'borders-districts'].includes(layer.id))
       .map(layer => {
@@ -105,12 +109,13 @@ export const map = new Map({
   }
 });
 export const golarionMap = new GolarionMap(map);
-void addPublicPlaceMarkers(golarionMap, publicPlacesUrl);
-if (mapAudience === 'pj') {
-  void addPlayerSourcePoints(golarionMap);
-  void addPlayerCuratedLabels(golarionMap);
-  if (map.isStyleLoaded()) void applyPlayerMapVisibilityFilters(map);
-  else map.once('load', () => { void applyPlayerMapVisibilityFilters(map); });
+void addPublicPlaceMarkers(golarionMap, publicPlacesUrl, mapAudience);
+if (playerLikeAudience) {
+  const playerMode = mapAudience === 'mj-light' ? 'mj-light' : 'pj';
+  void addPlayerSourcePoints(golarionMap, playerMode);
+  void addPlayerCuratedLabels(golarionMap, playerMode);
+  if (map.isStyleLoaded()) void applyPlayerMapVisibilityFilters(map, mapAudience === 'mj-light');
+  else map.once('load', () => { void applyPlayerMapVisibilityFilters(map, mapAudience === 'mj-light'); });
 }
 
 //diable rotation
@@ -146,6 +151,8 @@ if (mapAudience === 'mj') {
   makeLocationsClickable(golarionMap);
   void makeLabelsCuratable(golarionMap);
   addRightClickMenu(golarionMap, measureControl);
+} else if (mapAudience === 'mj-light') {
+  void makeMjLightLabelsCuratable(golarionMap);
 }
 if(startupOptions.embedded) {
   map.addControl(new NewTab());

@@ -6,6 +6,7 @@ export type MapVisibilityOverride = {
   visibility: 'visible' | 'hidden'
   publicLabel: string
   publicText: string
+  mjText?: string
 }
 
 export type PublicSourcePoint = {
@@ -18,6 +19,12 @@ export type PublicSourcePoint = {
   coordinates: Array<[number, number]>
 }
 
+export type MjLightSourcePoint = PublicSourcePoint & {
+  sourceKey: string
+  publicLabel: string
+  mjText: string
+}
+
 export type MapVisibilitySnapshot = {
   autoVisibleCategories: string[]
   locationDefault: 'cities'
@@ -25,7 +32,9 @@ export type MapVisibilitySnapshot = {
 }
 
 let snapshotPromise: Promise<MapVisibilitySnapshot> | undefined
+let mjLightSnapshotPromise: Promise<MapVisibilitySnapshot> | undefined
 let sourcePointsPromise: Promise<PublicSourcePoint[]> | undefined
+let mjLightSourcePointsPromise: Promise<MjLightSourcePoint[]> | undefined
 
 async function json<T>(url: string, fallback: T): Promise<T> {
   if (!url) return fallback
@@ -39,13 +48,19 @@ async function json<T>(url: string, fallback: T): Promise<T> {
   }
 }
 
-export function getMapVisibility(): Promise<MapVisibilitySnapshot> {
+const fallbackVisibility: MapVisibilitySnapshot = {
+  autoVisibleCategories: ['continents', 'deserts', 'forests', 'hills', 'ice', 'land', 'mountains', 'nations', 'provinces', 'regions', 'rivers', 'roads', 'subregions', 'swamps', 'waters'],
+  locationDefault: 'cities',
+  overrides: [],
+}
+
+export function getMapVisibility(mjLight = false): Promise<MapVisibilitySnapshot> {
+  if (mjLight) {
+    const url = window.GOLARION_MAP_CONFIG?.mjLightVisibilityUrl ?? window.GOLARION_MAP_CONFIG?.visibilityUrl ?? ''
+    return mjLightSnapshotPromise ??= json<MapVisibilitySnapshot>(url, fallbackVisibility)
+  }
   const url = window.GOLARION_MAP_CONFIG?.visibilityUrl ?? ''
-  return snapshotPromise ??= json<MapVisibilitySnapshot>(url, {
-    autoVisibleCategories: ['continents', 'deserts', 'forests', 'hills', 'ice', 'land', 'mountains', 'nations', 'provinces', 'regions', 'rivers', 'roads', 'subregions', 'swamps', 'waters'],
-    locationDefault: 'cities',
-    overrides: [],
-  })
+  return snapshotPromise ??= json<MapVisibilitySnapshot>(url, fallbackVisibility)
 }
 
 export function getPublicSourcePoints(): Promise<PublicSourcePoint[]> {
@@ -53,9 +68,16 @@ export function getPublicSourcePoints(): Promise<PublicSourcePoint[]> {
   return sourcePointsPromise ??= json<PublicSourcePoint[]>(url, [])
 }
 
+export function getMjLightSourcePoints(): Promise<MjLightSourcePoint[]> {
+  const url = window.GOLARION_MAP_CONFIG?.mjLightSourcePointsUrl ?? ''
+  return mjLightSourcePointsPromise ??= json<MjLightSourcePoint[]>(url, [])
+}
+
 export function resetMapVisibilityCache(): void {
   snapshotPromise = undefined
+  mjLightSnapshotPromise = undefined
   sourcePointsPromise = undefined
+  mjLightSourcePointsPromise = undefined
 }
 
 export function overrideKey(category: string, label: string): string {
@@ -71,8 +93,8 @@ export const playerCuratableLabelLayers = [
   'symbol_region-labels',
 ] as const
 
-export async function applyPlayerMapVisibilityFilters(map: import('maplibre-gl').Map): Promise<void> {
-  const visibility = await getMapVisibility()
+export async function applyPlayerMapVisibilityFilters(map: import('maplibre-gl').Map, mjLight = false): Promise<void> {
+  const visibility = await getMapVisibility(mjLight)
   const autoVisible = new Set(visibility.autoVisibleCategories)
   const hiddenLabels = visibility.overrides
     .filter(item => item.category !== 'locations' && (

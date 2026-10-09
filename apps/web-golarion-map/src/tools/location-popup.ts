@@ -16,6 +16,7 @@ type SourceCuration = {
   effectiveVisible: boolean
   publicLabel: string
   publicText: string
+  mjText: string
 }
 
 function clickableFeature(e: MapMouseEvent & {features?: MapGeoJSONFeature[]}) {
@@ -105,6 +106,16 @@ function curationPanel(data: SourceCuration): HTMLElement {
   textWrapper.appendChild(publicText)
   panel.appendChild(textWrapper)
 
+  const mjTextWrapper = document.createElement('label')
+  mjTextWrapper.textContent = 'Détails MJ (optionnel)'
+  const mjText = document.createElement('textarea')
+  mjText.rows = 4
+  mjText.maxLength = 6000
+  mjText.placeholder = 'Informations utiles au MJ seulement.'
+  mjText.value = data.mjText
+  mjTextWrapper.appendChild(mjText)
+  panel.appendChild(mjTextWrapper)
+
   const save = document.createElement('button')
   save.type = 'button'
   save.textContent = 'Enregistrer'
@@ -126,6 +137,7 @@ function curationPanel(data: SourceCuration): HTMLElement {
           visibility: visibility.value,
           publicLabel: publicLabel.value,
           publicText: publicText.value,
+          mjText: mjText.value,
         }),
       })
       if (!response.ok) throw new Error(await response.text())
