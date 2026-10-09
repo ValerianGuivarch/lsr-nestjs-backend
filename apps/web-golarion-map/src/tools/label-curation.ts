@@ -132,7 +132,7 @@ function panel(
 }
 
 export async function makeLabelsCuratable(gmap: GolarionMap): Promise<void> {
-  const [index, visibility] = await Promise.all([categoryIndex(), getMapVisibility()])
+  const [index, visibility] = await Promise.all([categoryIndex(), getMapVisibility(true)])
   if (!gmap.map.isStyleLoaded()) {
     await new Promise<void>(resolve => gmap.map.once('load', () => resolve()))
   }
