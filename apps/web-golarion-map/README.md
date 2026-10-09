@@ -10,7 +10,7 @@ Cette application Vite est servie sur le port `4204`. Elle est indépendante de 
   - `detailed` : toutes les couches et la recherche, mais toujours sans fenêtres au clic, outils MJ ni grille ; zoom maximal `12`.
 - `/mj` : carte maître du jeu avec détails au clic, mesure, menu contextuel et grille hexagonale.
 
-La barre d’évolution temporelle est désactivée dans les deux modes. En ouvrant la racine `/`, l’application utilise automatiquement le mode MJ.
+La barre d’évolution temporelle est désactivée dans les deux modes. En ouvrant la racine `/`, l’application redirige automatiquement vers le mode joueur `/pj`.
 
 ## Ressources externes
 

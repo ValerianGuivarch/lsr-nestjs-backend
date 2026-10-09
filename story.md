@@ -93,9 +93,7 @@ En revanche, certains événements de **L'Éveil des Seigneurs des Runes**, **L'
 
 ### 4.1. Le groupe de Corvan
 
-Nom provisoire du groupe : **Les Veilleurs de la Côte Perdue**.
-
-Ce nom est un placeholder utile, mais il n'est pas verrouillé.
+Nom verrouillé du groupe : **Les Veilleurs de la Côte Perdue**.
 
 #### Corvan
 
@@ -136,32 +134,30 @@ En 4720, sa réputation est donc double : à Pointesable et parmi les vétérans
 
 Des noms homebrew ont été proposés pour les anciens membres du groupe :
 
-- **Maëlys Vannor**
-- **Orik “Sept-Doigts” Dren**
-- **Selene Avaris**
-- **Korram**
+- **Maëlys Vannor** — elfe, clerc de Desna, petite sœur d'**Audrahni** ;
+- **Orik “Sept-Doigts” Dren** — ysoki, roublard et spécialiste des pièges ;
+- **Selene Avaris** — hobgobeline, magicienne spécialisée dans l'abjuration ;
+- **Korram** — iruxi, guerrier et protecteur du groupe.
 
-Ces noms ne sont pas totalement verrouillés et peuvent être modifiés. Tous sont morts avant 4720 dans la version actuelle de la continuité.
+Ces quatre compagnons sont morts en 4719. **Corvan est le seul survivant** des Veilleurs en 4720.
 
 ---
 
-### 4.2. Le groupe héroïque plus célèbre
+### 4.2. Les Chasseurs de l'Étoile
 
-Nom provisoire : **Les Compagnons du Sihédron**.
-
-Là encore, le nom n'est pas verrouillé.
+Nom verrouillé : **Les Chasseurs de l'Étoile**.
 
 Ce groupe est plus célèbre à l'échelle mondiale que celui de Corvan parce que ses aventures sont liées à des changements historiques spectaculaires et visibles de tous.
 
-#### Membres établis / envisagés
+#### Membres
 
-**Sheila Heidmarch** est la grande figure canonique associée à ce groupe.
+- **Sheila Heidmarch** — grande figure canonique et figure centrale du groupe ;
+- **Aelyra** — elfe, magus et archéologue, sœur aînée de **Lethariel** ;
+- **Nérys** — ancien cube gélatineux devenu une personne humanoïde, puis champion de **Nocticula** ;
+- **Rovan Dheris** — forgeron nain de Janderhoff, érudit des runes et des métaux extraordinaires ;
+- **Veska Ornel** — sorcière varisienne spécialisée dans les présages, les incohérences du destin et les phénomènes temporels.
 
-Un personnage homebrew très important est aussi prévu : un ancien **cube gélatineux devenu humanoïde**, puis champion de **Nocticula**. Le nom provisoire utilisé dans les documents est **Ilyan Veyr**. Ce nom n'est pas verrouillé.
-
-Le groupe comprend aussi une **elfe**, sœur aînée de **Litariel**. Son nom n'a pas encore été verrouillé. Litariel est son jeune frère et peut avoir brièvement accompagné le groupe sans nécessairement être membre à part entière.
-
-Le groupe peut encore accueillir un ou deux membres supplémentaires, mais il n'est pas nécessaire d'empiler des héros canoniques. La préférence actuelle est que **Sheila soit la grande figure canonique centrale** et que le reste du groupe reste surtout original.
+Lethariel a pu accompagner ponctuellement certaines expéditions, mais n'est pas membre permanent des Chasseurs de l'Étoile.
 
 #### Exploits
 
@@ -808,12 +804,6 @@ Ces documents sont plus détaillés que ce fichier et peuvent être utilisés co
 
 Les éléments suivants peuvent encore changer :
 
-- nom définitif des **Veilleurs de la Côte Perdue** ;
-- nom définitif des **Compagnons du Sihédron** ;
-- nom **Ilyan Veyr** pour l'ancien cube gélatineux devenu humanoïde et champion de Nocticula ;
-- noms / détails des anciens compagnons morts de Corvan ;
-- identité et nom de la sœur aînée de Litariel ;
-- éventuels membres supplémentaires du groupe de Sheila ;
 - sort définitif de Grand Maître Torche après 4719 ;
 - statut final des journaux *L'Œil d'Absalom* et *L'Étoile de la Semaine* ;
 - choix exact des campagnes longues qui seront réellement jouées par les PJ actuels ;
@@ -826,7 +816,7 @@ Les éléments suivants peuvent encore changer :
 
 1. **Ne pas confondre les chroniques de lecture avec la continuité réelle.**
 2. **Corvan et son groupe ont réellement vaincu Karzoug** dans la continuité de fond.
-3. **Sheila et son groupe ont réellement accompli Shattered Star puis Return of the Runelords.**
+3. **Les Chasseurs de l'Étoile ont réellement accompli Shattered Star puis Return of the Runelords.**
 4. **Corvan est le seul survivant de son groupe après 4719.**
 5. **Eylysia est une fondatrice historique méfiante envers la Société, pas une simple mentor blasée.**
 6. **Le groupe d'Eylysia est réellement compétent et doit pouvoir rivaliser avec les PJ.**

@@ -113,7 +113,13 @@ const server = createServer((request, response) => {
     return
   }
 
-  const pathname = new URL(request.url ?? '/', 'http://localhost').pathname
+  const requestedUrl = new URL(request.url ?? '/', 'http://localhost')
+  const pathname = requestedUrl.pathname
+  if (pathname === '/') {
+    response.writeHead(302, { Location: `/pj${requestedUrl.search}` })
+    response.end()
+    return
+  }
   if (pathname === '/runtime-config.js') {
     response.writeHead(200, {
       'Cache-Control': 'no-store',

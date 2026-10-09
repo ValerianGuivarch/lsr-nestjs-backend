@@ -29,7 +29,7 @@ export const playerDetail: PlayerDetailLevel = window.GOLARION_MAP_CONFIG?.playe
 const publicPlacesUrl = window.GOLARION_MAP_CONFIG?.placesUrl ?? '';
 
 if (window.location.pathname === '/') {
-  window.history.replaceState(null, '', `/mj${window.location.search}${window.location.hash}`);
+  window.history.replaceState(null, '', `/pj${window.location.search}${window.location.hash}`);
 }
 document.body.dataset.mapAudience = mapAudience;
 document.body.dataset.playerDetail = mapAudience === 'pj' ? playerDetail : 'mj';

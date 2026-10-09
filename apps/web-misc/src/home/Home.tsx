@@ -44,6 +44,7 @@ const Home: React.FC = () => {
         { label: 'Accès jeu PF2', description: 'Ouvrir la table de jeu Pathfinder 2', href: 'https://pf2.l7r.fr' },
         { label: 'Wiki', description: 'Livres, pages et recherche', href: externalAppUrl('wiki', 4205) },
         { label: 'Carte — PJ', description: 'Carte de Golarion, vue joueurs', href: externalAppUrl('map', 4204, '/pj') },
+        { label: 'Carte — MJ', description: 'Carte de Golarion, vue MJ complète', href: externalAppUrl('map', 4204, '/mj'), admin: true },
         { label: 'PF2', description: 'Référentiel Pathfinder 2', href: '/pf2' },
         { label: 'PF2 Admin', description: 'Catalogue, scénarios et référentiels MJ', href: '/pf2-mj', admin: true }
       ]
