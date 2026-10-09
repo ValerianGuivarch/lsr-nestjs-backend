@@ -121,6 +121,9 @@ function panel(
 
 export async function makeLabelsCuratable(gmap: GolarionMap): Promise<void> {
   const [index, visibility] = await Promise.all([categoryIndex(), getMapVisibility()])
+  if (!gmap.map.isStyleLoaded()) {
+    await new Promise<void>(resolve => gmap.map.once('load', () => resolve()))
+  }
   const autoVisible = new Set(visibility.autoVisibleCategories)
   const overrideMap = new Map(visibility.overrides.map(item => [overrideKey(item.category, item.label), item]))
   const popup = new Popup({ maxWidth: '420px' })
