@@ -6,7 +6,9 @@ on:
 
 concurrency:
   group: production
-  cancel-in-progress: false
+  # Only the newest main commit should ever reach production. Cancelling
+  # superseded runs also avoids rebuilding seven images that can no longer deploy.
+  cancel-in-progress: true
 
 permissions:
   contents: read
