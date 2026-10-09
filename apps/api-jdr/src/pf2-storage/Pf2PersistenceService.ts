@@ -646,6 +646,33 @@ export class Pf2PersistenceService implements OnModuleInit {
     await this.upsert('geography-config', 'canonical', 'Géographie PF2', value)
   }
 
+  async listMapVisibilityOverrides(): Promise<Array<{ sourceKey: string; category: string; label: string; sourceFid: number | null; visibility: 'visible' | 'hidden'; publicLabel: string; publicText: string; updatedAt: string }>> {
+    const rows = await this.dataSource.query('SELECT source_key, category, label, source_fid, visibility, public_label, public_text, updated_at FROM pf2_map_visibility_override ORDER BY category, label COLLATE NOCASE') as Array<Record<string, unknown>>
+    return rows.map(row => ({
+      sourceKey: String(row.source_key),
+      category: String(row.category),
+      label: String(row.label),
+      sourceFid: row.source_fid === null || row.source_fid === undefined ? null : Number(row.source_fid),
+      visibility: row.visibility === 'hidden' ? 'hidden' : 'visible',
+      publicLabel: typeof row.public_label === 'string' ? row.public_label : '',
+      publicText: typeof row.public_text === 'string' ? row.public_text : '',
+      updatedAt: typeof row.updated_at === 'string' ? row.updated_at : '',
+    }))
+  }
+
+  async upsertMapVisibilityOverride(input: { sourceKey: string; category: string; label: string; sourceFid?: number | null; visibility: 'visible' | 'hidden'; publicLabel?: string; publicText?: string }): Promise<void> {
+    await this.dataSource.query(
+      `INSERT INTO pf2_map_visibility_override (source_key, category, label, source_fid, visibility, public_label, public_text)
+       VALUES (?, ?, ?, ?, ?, ?, ?)
+       ON CONFLICT(source_key) DO UPDATE SET category = excluded.category, label = excluded.label, source_fid = excluded.source_fid, visibility = excluded.visibility, public_label = excluded.public_label, public_text = excluded.public_text, updated_at = CURRENT_TIMESTAMP`,
+      [input.sourceKey, input.category, input.label, input.sourceFid ?? null, input.visibility, input.publicLabel ?? '', input.publicText ?? ''],
+    )
+  }
+
+  async deleteMapVisibilityOverride(sourceKey: string): Promise<void> {
+    await this.dataSource.query('DELETE FROM pf2_map_visibility_override WHERE source_key = ?', [sourceKey])
+  }
+
   async replaceScannedZipAssets(bundles: Array<{ id: string; filename: string; path: string; targetId: string | null; scope: string; associationStatus: string; associationScore: number | null; evidence: string[] }>, scannedAt: string): Promise<void> {
     await this.dataSource.transaction(async (manager) => {
       await manager.query("UPDATE pf2_library_asset SET present = 0, updated_at = CURRENT_TIMESTAMP WHERE asset_type = 'zip'")
@@ -1059,6 +1086,12 @@ export class Pf2PersistenceService implements OnModuleInit {
       await manager.query(
         'INSERT OR IGNORE INTO pf2_player_character_faction (npc_id, player_faction_id) SELECT old.npc_id, player.id FROM pf2_player_character_mj_faction old JOIN pf2_player_faction player ON player.source_mj_faction_id = old.faction_id WHERE player.published = 1',
       )
+    })
+
+    await this.applyMigration('031-map-player-visibility', async (manager) => {
+      await manager.query("CREATE TABLE IF NOT EXISTS pf2_map_visibility_override (source_key TEXT PRIMARY KEY, category TEXT NOT NULL, label TEXT NOT NULL, source_fid INTEGER, visibility TEXT NOT NULL CHECK (visibility IN ('visible','hidden')), public_label TEXT NOT NULL DEFAULT '', public_text TEXT NOT NULL DEFAULT '', created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP, updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)")
+      await manager.query('CREATE INDEX IF NOT EXISTS idx_pf2_map_visibility_category_label ON pf2_map_visibility_override (category, label COLLATE NOCASE)')
+      await manager.query('CREATE INDEX IF NOT EXISTS idx_pf2_map_visibility_fid ON pf2_map_visibility_override (source_fid) WHERE source_fid IS NOT NULL')
     })
 
     await this.assertDatabaseIntegrity(this.dataSource, 'base SQLite après migrations')

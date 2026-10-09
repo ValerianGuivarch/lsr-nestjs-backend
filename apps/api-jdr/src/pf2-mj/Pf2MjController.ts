@@ -47,6 +47,27 @@ export class Pf2MjController {
     return this.service.publicMapPlaces()
   }
 
+  @Get('map/source-points')
+  publicMapSourcePoints(): Promise<unknown[]> { return this.service.publicMapSourcePoints() }
+
+  @Get('map/search')
+  publicMapSearch(): Promise<unknown[]> { return this.service.publicMapSearch() }
+
+  @Get('map/visibility')
+  mapVisibility(): Promise<unknown> { return this.service.mapVisibilitySnapshot() }
+
+  @Get('map/curation/:fid')
+  async mapSourceCuration(@Param('fid') fid: string, @Query('label') label = ''): Promise<unknown> {
+    try { return await this.service.mapSourceCuration(Number(fid), label) }
+    catch (error) { throw new HttpException(error instanceof Error ? error.message : 'Point cartographique introuvable.', HttpStatus.NOT_FOUND) }
+  }
+
+  @Put('map/visibility')
+  async updateMapVisibility(@Body() body: unknown): Promise<unknown> {
+    try { return await this.service.updateMapVisibility(body) }
+    catch (error) { throw new HttpException(error instanceof Error ? error.message : 'Mise à jour de visibilité impossible.', HttpStatus.BAD_REQUEST) }
+  }
+
   @Get('scenarios/:id/playable-components')
   async playableComponentsForScenario(@Param('id') id: string): Promise<unknown> {
     try { return { scenarioId: id, playableComponents: await this.service.playableComponentsForScenario(id) } }

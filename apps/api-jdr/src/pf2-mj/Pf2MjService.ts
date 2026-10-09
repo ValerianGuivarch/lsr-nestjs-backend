@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common'
 import { lookup } from 'node:dns/promises'
-import { createReadStream } from 'node:fs'
+import { createReadStream, existsSync } from 'node:fs'
 import { mkdir, readdir, readFile, rename, stat, writeFile } from 'node:fs/promises'
 import { basename, relative, resolve, sep } from 'node:path'
 import { createHash } from 'node:crypto'
@@ -20,6 +20,11 @@ export type ReferenceKind = keyof typeof referenceFiles
 export type ResumeActorReference = { uuid: string; name: string }
 
 export type PlayableComponentsImport = { scenarioId: string; playableComponents: PlayableComponent[] }
+
+type MapSourcePoint = { sourceKey: string; fid: number; kind: 'city' | 'location'; label: string; type: string; icon: string; minZoom: number; coordinates: Array<[number, number]>; sourceUrl?: string }
+type MapVisibilityOverride = { sourceKey: string; category: string; label: string; sourceFid: number | null; visibility: 'visible' | 'hidden'; publicLabel: string; publicText: string; updatedAt: string }
+const MAP_AUTO_VISIBLE_CATEGORIES = ['continents', 'deserts', 'forests', 'hills', 'ice', 'land', 'mountains', 'nations', 'provinces', 'regions', 'rivers', 'roads', 'subregions', 'swamps', 'waters'] as const
+
 export type CampaignPlayableComponentsImport = { campaignId: string; description?: string; scenarios: CampaignPlayableComponentsScenario[] }
 
 export type ResourceBundleRecord = {
@@ -134,6 +139,20 @@ export class Pf2MjService {
   private readonly foundryAssetsRoot = resolve(process.env['FOUNDRY_ASSETS_ROOT'] ?? '../../FoundryVTT/Data/assets/l7r')
   private readonly foundryPortraitRoot = resolve(this.foundryAssetsRoot, 'portraits', 'pnj')
   private readonly foundryPortraitPrefix = 'assets/l7r/portraits/pnj'
+  private readonly mapSourceCataloguePath = process.env['GOLARION_MAP_SOURCE_CATALOGUE_PATH']
+    ? resolve(process.env['GOLARION_MAP_SOURCE_CATALOGUE_PATH'])
+    : [
+        resolve(process.cwd(), 'apps/web-golarion-map/resources/map-source-points.json'),
+        resolve(process.cwd(), '../../apps/web-golarion-map/resources/map-source-points.json'),
+      ].find(path => existsSync(path)) ?? resolve(process.cwd(), 'apps/web-golarion-map/resources/map-source-points.json')
+  private readonly mapSearchIndexPath = process.env['GOLARION_MAP_SEARCH_INDEX_PATH']
+    ? resolve(process.env['GOLARION_MAP_SEARCH_INDEX_PATH'])
+    : [
+        resolve(process.cwd(), 'apps/web-golarion-map/resources/map-search-index.json'),
+        resolve(process.cwd(), '../../apps/web-golarion-map/resources/map-search-index.json'),
+      ].find(path => existsSync(path)) ?? resolve(process.cwd(), 'apps/web-golarion-map/resources/map-search-index.json')
+  private mapSourceCatalogueCache: MapSourcePoint[] | null = null
+  private mapSearchIndexCache: Array<{ category: string; entries: Array<Record<string, unknown>> }> | null = null
   constructor(private readonly persistence: Pf2PersistenceService, private readonly foundry: FoundryRelayService) {}
 
   isReferenceKind(value: string): value is ReferenceKind {
@@ -249,6 +268,164 @@ export class Pf2MjService {
         icon: typeof record.map_icon === 'string' && record.map_icon.trim() ? record.map_icon.trim() : 'pin'
       }]
     }).sort((left, right) => left.name.localeCompare(right.name, 'fr'))
+  }
+
+  async publicMapSourcePoints(): Promise<Array<{ fid: number; label: string; name: string; text: string; icon: string; minZoom: number; coordinates: Array<[number, number]> }>> {
+    const [points, overrides] = await Promise.all([this.mapSourcePoints(), this.persistence.listMapVisibilityOverrides()])
+    const byKey = new Map(overrides.map(item => [item.sourceKey, item]))
+    return points.flatMap(point => {
+      const override = byKey.get(point.sourceKey)
+      const visible = override ? override.visibility === 'visible' : point.kind === 'city'
+      if (!visible) return []
+      return [{
+        fid: point.fid,
+        label: point.label,
+        name: override?.publicLabel.trim() || point.label,
+        text: override?.publicText.trim() || '',
+        icon: point.icon,
+        minZoom: point.minZoom,
+        coordinates: point.coordinates,
+      }]
+    })
+  }
+
+  async publicMapSearch(): Promise<Array<{ category: string; entries: Array<Record<string, unknown>> }>> {
+    const [search, points, overrides] = await Promise.all([
+      this.mapSearchIndex(),
+      this.mapSourcePoints(),
+      this.persistence.listMapVisibilityOverrides(),
+    ])
+    const bySourceKey = new Map(overrides.map(item => [item.sourceKey, item]))
+    const byCategoryLabel = new Map(overrides.map(item => [`${item.category}\u0000${item.label}`, item]))
+    const visibleLocationLabels = new Set(points.flatMap(point => {
+      const override = bySourceKey.get(point.sourceKey)
+      const visible = override ? override.visibility === 'visible' : point.kind === 'city'
+      return visible ? [point.label] : []
+    }))
+    const autoVisible = new Set<string>(MAP_AUTO_VISIBLE_CATEGORIES)
+
+    return search.flatMap(category => {
+      const entries = category.entries.flatMap(entry => {
+        const label = typeof entry.label === 'string' ? entry.label : ''
+        if (!label) return []
+        const override = byCategoryLabel.get(`${category.category}\u0000${label}`)
+        const visible = override
+          ? override.visibility === 'visible'
+          : category.category === 'locations'
+            ? visibleLocationLabels.has(label)
+            : autoVisible.has(category.category)
+        if (!visible) return []
+        const publicLabel = override?.publicLabel.trim()
+        return [{ ...entry, label: publicLabel || label }]
+      })
+      return entries.length ? [{ category: category.category, entries }] : []
+    })
+  }
+
+  async mapVisibilitySnapshot(): Promise<{ autoVisibleCategories: readonly string[]; locationDefault: 'cities'; overrides: MapVisibilityOverride[] }> {
+    return { autoVisibleCategories: MAP_AUTO_VISIBLE_CATEGORIES, locationDefault: 'cities', overrides: await this.persistence.listMapVisibilityOverrides() }
+  }
+
+  async mapSourceCuration(fid: number, sourceLabel = ''): Promise<Record<string, unknown>> {
+    const points = await this.mapSourcePoints()
+    const label = sourceLabel.trim()
+    const point = points.find(item => item.fid === fid) ?? (label ? points.find(item => item.label === label) : undefined)
+    if (!point) throw new Error(`Point cartographique introuvable pour fid=${fid}${label ? ` (${label})` : ''}.`)
+    const override = (await this.persistence.listMapVisibilityOverrides()).find(item => item.sourceKey === point.sourceKey) ?? null
+    const automaticVisible = point.kind === 'city'
+    return {
+      sourceKey: point.sourceKey,
+      fid: point.fid,
+      category: 'locations',
+      kind: point.kind,
+      label: point.label,
+      type: point.type,
+      sourceUrl: point.sourceUrl ?? null,
+      automaticVisibility: automaticVisible ? 'visible' : 'hidden',
+      visibility: override?.visibility ?? 'automatic',
+      effectiveVisible: override ? override.visibility === 'visible' : automaticVisible,
+      publicLabel: override?.publicLabel ?? '',
+      publicText: override?.publicText ?? '',
+    }
+  }
+
+  async updateMapVisibility(body: unknown): Promise<Record<string, unknown>> {
+    const input = this.asObject(body)
+    const rawFid = typeof input.fid === 'number' ? input.fid : typeof input.fid === 'string' && input.fid.trim() ? Number(input.fid) : Number.NaN
+    let sourceKey = typeof input.sourceKey === 'string' ? input.sourceKey.trim() : ''
+    let category = typeof input.category === 'string' ? input.category.trim() : ''
+    let label = typeof input.label === 'string' ? input.label.trim() : ''
+    let sourceFid: number | null = Number.isInteger(rawFid) ? rawFid : null
+    let point: MapSourcePoint | undefined
+    if (sourceFid !== null) {
+      const points = await this.mapSourcePoints()
+      point = points.find(item => item.fid === sourceFid) ?? (label ? points.find(item => item.label === label) : undefined)
+      if (!point) throw new Error(`Point cartographique introuvable pour fid=${sourceFid}${label ? ` (${label})` : ''}.`)
+      sourceKey = point.sourceKey
+      category = 'locations'
+      label = point.label
+    }
+    if (!category || !label) throw new Error('category et label sont obligatoires pour une donnée cartographique sans fid.')
+    if (!sourceKey) sourceKey = `search:${category}:${label}`
+    const visibility = input.visibility
+    if (visibility === 'automatic') {
+      await this.persistence.deleteMapVisibilityOverride(sourceKey)
+      return point ? this.mapSourceCuration(point.fid, point.label) : { sourceKey, category, label, visibility: 'automatic' }
+    }
+    if (visibility !== 'visible' && visibility !== 'hidden') throw new Error('visibility doit valoir automatic, visible ou hidden.')
+    const publicLabel = typeof input.publicLabel === 'string' ? input.publicLabel.trim() : ''
+    const publicText = typeof input.publicText === 'string' ? input.publicText.trim() : ''
+    if (publicLabel.length > 200) throw new Error('Le nom public est trop long (200 caractères maximum).')
+    if (publicText.length > 4000) throw new Error('La description PJ est trop longue (4 000 caractères maximum).')
+    await this.persistence.upsertMapVisibilityOverride({ sourceKey, category, label, sourceFid, visibility, publicLabel, publicText })
+    return point ? this.mapSourceCuration(point.fid, point.label) : { sourceKey, category, label, visibility, publicLabel, publicText }
+  }
+
+  private async mapSearchIndex(): Promise<Array<{ category: string; entries: Array<Record<string, unknown>> }>> {
+    if (this.mapSearchIndexCache) return this.mapSearchIndexCache
+    const parsed = JSON.parse(await readFile(this.mapSearchIndexPath, 'utf8')) as unknown
+    if (!Array.isArray(parsed)) throw new Error(`Index de recherche cartographique illisible : ${this.mapSearchIndexPath}`)
+    const categories = parsed.flatMap(rawCategory => {
+      const category = this.asObject(rawCategory)
+      const name = typeof category.category === 'string' ? category.category : ''
+      const entries = Array.isArray(category.entries) ? category.entries.map(entry => this.asObject(entry)) : []
+      return name ? [{ category: name, entries }] : []
+    })
+    if (!categories.length) throw new Error(`Index de recherche cartographique vide : ${this.mapSearchIndexPath}`)
+    this.mapSearchIndexCache = categories
+    return categories
+  }
+
+  private async mapSourcePoints(): Promise<MapSourcePoint[]> {
+    if (this.mapSourceCatalogueCache) return this.mapSourceCatalogueCache
+    const parsed = JSON.parse(await readFile(this.mapSourceCataloguePath, 'utf8')) as { points?: unknown }
+    const points = Array.isArray(parsed.points) ? parsed.points.flatMap(raw => {
+      const item = this.asObject(raw)
+      const coordinates = Array.isArray(item.coordinates) ? item.coordinates.flatMap(rawCoordinate => {
+        if (!Array.isArray(rawCoordinate) || rawCoordinate.length < 2) return []
+        const longitude = Number(rawCoordinate[0]); const latitude = Number(rawCoordinate[1])
+        return Number.isFinite(longitude) && Number.isFinite(latitude) ? [[longitude, latitude] as [number, number]] : []
+      }) : []
+      const sourceKey = typeof item.sourceKey === 'string' ? item.sourceKey : ''
+      const label = typeof item.label === 'string' ? item.label : ''
+      const kind = item.kind === 'city' ? 'city' : item.kind === 'location' ? 'location' : null
+      const fid = Number(item.fid)
+      if (!sourceKey || !label || !kind || !Number.isInteger(fid) || !coordinates.length) return []
+      return [{
+        sourceKey,
+        fid,
+        kind,
+        label,
+        type: typeof item.type === 'string' ? item.type : '',
+        icon: typeof item.icon === 'string' ? item.icon : kind === 'city' ? 'city-small' : 'location-other',
+        minZoom: Number.isFinite(Number(item.minZoom)) ? Number(item.minZoom) : 4,
+        coordinates,
+        ...(typeof item.sourceUrl === 'string' && item.sourceUrl ? { sourceUrl: item.sourceUrl } : {}),
+      } satisfies MapSourcePoint]
+    }) : []
+    if (!points.length) throw new Error(`Catalogue cartographique vide ou illisible : ${this.mapSourceCataloguePath}`)
+    this.mapSourceCatalogueCache = points
+    return points
   }
 
   async exportData(domain: string, id?: string): Promise<Record<string, unknown>> {

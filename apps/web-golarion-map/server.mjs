@@ -20,12 +20,13 @@ const assetsRoot = configuredAssetsRoot
   ?? defaultAssetsRoot
 const host = process.env.GOLARION_MAP_HOST ?? '0.0.0.0'
 const port = Number(process.env.GOLARION_MAP_PORT ?? 4204)
-const requestedPlayerDetail = process.env.GOLARION_MAP_PJ_DETAIL?.trim().toLowerCase()
-const playerDetail = ['essential', 'standard', 'detailed'].includes(requestedPlayerDetail)
-  ? requestedPlayerDetail
-  : 'standard'
 const placesUrl = process.env.GOLARION_MAP_PLACES_URL?.trim() || 'https://l7r.fr/apil7r/pf2-mj/map/places'
-const runtimeConfigSource = `window.GOLARION_MAP_CONFIG=${JSON.stringify({ playerDetail, placesUrl })};`
+const mapApiBase = placesUrl.replace(/\/places\/?$/, '')
+const sourcePointsUrl = process.env.GOLARION_MAP_SOURCE_POINTS_URL?.trim() || `${mapApiBase}/source-points`
+const searchUrl = process.env.GOLARION_MAP_SEARCH_URL?.trim() || `${mapApiBase}/search`
+const visibilityUrl = process.env.GOLARION_MAP_VISIBILITY_URL?.trim() || `${mapApiBase}/visibility`
+const curationUrl = process.env.GOLARION_MAP_CURATION_URL?.trim() || `${mapApiBase}/curation`
+const runtimeConfigSource = `window.GOLARION_MAP_CONFIG=${JSON.stringify({ placesUrl, sourcePointsUrl, searchUrl, visibilityUrl, curationUrl })};`
 
 const mimeTypes = {
   '.css': 'text/css; charset=utf-8',

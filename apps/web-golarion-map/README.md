@@ -4,13 +4,18 @@ Cette application Vite est servie sur le port `4204`. Elle est indépendante de 
 
 ## Modes d’affichage
 
-- `/pj` : carte joueur sans interactions de contenu. Son niveau de détail est fixé au lancement par `GOLARION_MAP_PJ_DETAIL` :
-  - `essential` : régions, nations, cours d’eau, grandes villes et capitales ; zoom maximal `7` ;
-  - `standard` (valeur par défaut) : ajoute les provinces et villes moyennes ; zoom maximal `9` ;
-  - `detailed` : toutes les couches et la recherche, mais toujours sans fenêtres au clic, outils MJ ni grille ; zoom maximal `12`.
-- `/mj` : carte maître du jeu avec détails au clic, mesure, menu contextuel et grille hexagonale.
+- `/pj` : carte joueur avec zoom complet et recherche. La visibilité ne dépend plus du niveau de zoom :
+  - la géographie générale (continents, nations, provinces, cours d’eau, forêts, montagnes, mers, routes…) est publique automatiquement ;
+  - les villes sont publiques automatiquement ;
+  - les lieux détaillés issus de PathfinderWiki sont masqués automatiquement tant qu’ils n’ont pas été validés ;
+  - les districts, bâtiments et autres labels potentiellement scénarisés sont masqués par défaut ;
+  - un override MJ `visible` ou `hidden` est prioritaire sur la règle automatique ;
+  - un clic PJ n’affiche que le nom public et la description locale validée, jamais le texte PathfinderWiki.
+- `/mj` : carte maître du jeu complète, avec recherche, détails PathfinderWiki au clic, mesure, menu contextuel, grille hexagonale et panneau de curation de la visibilité joueur.
 
 La barre d’évolution temporelle est désactivée dans les deux modes. En ouvrant la racine `/`, l’application redirige automatiquement vers le mode joueur `/pj`.
+
+Les décisions manuelles sont stockées dans SQLite (`pf2_map_visibility_override`) avec trois états fonctionnels dans l’interface : automatique, visible, masqué. Le catalogue stable utilisé pour relier la carte importée à ces décisions est généré dans `resources/map-source-points.json`.
 
 ## Ressources externes
 
@@ -62,11 +67,15 @@ npm run start:golarion-map
 
 Le chemin peut être différent sur le Mac et le NAS : il n’est pas enregistré dans le build. `GOLARION_MAP_PORT` permet aussi de changer le port, qui vaut `4204` par défaut.
 
-Le serveur lit également le `.env` situé à la racine du dépôt. Le niveau PJ peut donc être modifié sur chaque machine puis appliqué par un simple redémarrage, sans reconstruire le frontend :
+Le serveur lit également le `.env` situé à la racine du dépôt. `GOLARION_MAP_PLACES_URL` permet de changer l’API PF2 utilisée par les marqueurs et la curation ; les URL `source-points`, `visibility` et `curation` sont dérivées automatiquement de cette base.
+
+Quand les données du projet cartographique amont sont rafraîchies, régénérer le catalogue de curation sans toucher aux décisions SQLite :
 
 ```bash
-GOLARION_MAP_PJ_DETAIL=standard
+npm run refresh:golarion-map-curation
 ```
+
+Le script lit par défaut le checkout frère `../golarion-map-build/mapping`. `GOLARION_MAP_SOURCE_ROOT` ou `--mapping-root` permet d’indiquer un autre emplacement.
 
 Le serveur fourni accepte les requêtes `Range` nécessaires à PMTiles. Il sert le code depuis `dist/apps/web-golarion-map` et les données depuis le dossier externe, sous une même adresse HTTP.
 

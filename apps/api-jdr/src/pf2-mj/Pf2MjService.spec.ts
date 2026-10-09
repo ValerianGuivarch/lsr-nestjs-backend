@@ -23,6 +23,9 @@ describe('Pf2MjService', () => {
       replaceCatalogueSnapshot: jest.fn(),
       replaceScannedZipAssets: jest.fn(),
       readGeographyConfig: jest.fn().mockResolvedValue({ aliases: {}, parents: {} }),
+      listMapVisibilityOverrides: jest.fn().mockResolvedValue([]),
+      upsertMapVisibilityOverride: jest.fn().mockResolvedValue(undefined),
+      deleteMapVisibilityOverride: jest.fn().mockResolvedValue(undefined),
       ...persistenceOverrides
     }
     const foundry = {
@@ -90,6 +93,106 @@ describe('Pf2MjService', () => {
         text: 'La cité au centre du monde.',
         icon: 'city',
       }])
+    })
+  })
+
+  describe('visibilité de la carte joueurs', () => {
+    it('publie automatiquement les villes et masque les POI détaillés', async () => {
+      const { service } = serviceFor()
+      const points = await service.publicMapSourcePoints()
+      expect(points).toEqual(expect.arrayContaining([
+        expect.objectContaining({ label: 'Absalom', name: 'Absalom', fid: 1727741121 }),
+      ]))
+      expect(points).not.toEqual(expect.arrayContaining([
+        expect.objectContaining({ label: 'Spire of Nex' }),
+      ]))
+    })
+
+    it('applique les overrides visibles et masqués sans exposer le texte PathfinderWiki', async () => {
+      const overrides = [
+        {
+          sourceKey: 'https://pathfinderwiki.com/wiki/Spire_of_Nex',
+          category: 'locations',
+          label: 'Spire of Nex',
+          sourceFid: 142031239,
+          visibility: 'visible',
+          publicLabel: 'Tour de Nex',
+          publicText: 'Une immense tour visible depuis les environs.',
+          updatedAt: '2026-10-09',
+        },
+        {
+          sourceKey: 'https://pathfinderwiki.com/wiki/Absalom',
+          category: 'locations',
+          label: 'Absalom',
+          sourceFid: 1727741121,
+          visibility: 'hidden',
+          publicLabel: '',
+          publicText: '',
+          updatedAt: '2026-10-09',
+        },
+      ]
+      const { service } = serviceFor({}, pnj, { listMapVisibilityOverrides: jest.fn().mockResolvedValue(overrides) })
+      const points = await service.publicMapSourcePoints()
+      expect(points).toEqual(expect.arrayContaining([
+        expect.objectContaining({
+          label: 'Spire of Nex',
+          name: 'Tour de Nex',
+          text: 'Une immense tour visible depuis les environs.',
+          fid: 142031239,
+        }),
+      ]))
+      expect(points).not.toEqual(expect.arrayContaining([expect.objectContaining({ label: 'Absalom' })]))
+      expect(JSON.stringify(points)).not.toContain('pathfinderwiki.com')
+    })
+
+    it('ne renvoie dans la recherche PJ que les catégories et lieux autorisés', async () => {
+      const { service } = serviceFor()
+      const search = await service.publicMapSearch()
+      const locations = search.find(category => category.category === 'locations')
+      const waters = search.find(category => category.category === 'waters')
+      const districts = search.find(category => category.category === 'districts')
+
+      expect(locations?.entries).toEqual(expect.arrayContaining([
+        expect.objectContaining({ label: 'Absalom' }),
+      ]))
+      expect(locations?.entries).not.toEqual(expect.arrayContaining([
+        expect.objectContaining({ label: 'Spire of Nex' }),
+      ]))
+      expect(waters?.entries).toEqual(expect.arrayContaining([
+        expect.objectContaining({ label: 'Barkskin Lake' }),
+      ]))
+      expect(districts).toBeUndefined()
+    })
+
+    it('enregistre un choix manuel puis permet de revenir au mode automatique', async () => {
+      const overrides: any[] = []
+      const listMapVisibilityOverrides = jest.fn(async () => overrides)
+      const upsertMapVisibilityOverride = jest.fn(async (item: any) => {
+        overrides.splice(0, overrides.length, { ...item, updatedAt: 'now' })
+      })
+      const deleteMapVisibilityOverride = jest.fn(async (sourceKey: string) => {
+        const index = overrides.findIndex(item => item.sourceKey === sourceKey)
+        if (index >= 0) overrides.splice(index, 1)
+      })
+      const { service } = serviceFor({}, pnj, { listMapVisibilityOverrides, upsertMapVisibilityOverride, deleteMapVisibilityOverride })
+
+      await expect(service.updateMapVisibility({
+        fid: 142031239,
+        visibility: 'visible',
+        publicLabel: 'Tour de Nex',
+        publicText: 'Repère connu.',
+      })).resolves.toEqual(expect.objectContaining({ visibility: 'visible', effectiveVisible: true, publicLabel: 'Tour de Nex' }))
+      expect(upsertMapVisibilityOverride).toHaveBeenCalledWith(expect.objectContaining({
+        sourceKey: 'https://pathfinderwiki.com/wiki/Spire_of_Nex',
+        sourceFid: 142031239,
+        visibility: 'visible',
+      }))
+
+      await expect(service.updateMapVisibility({ fid: 142031239, visibility: 'automatic' })).resolves.toEqual(expect.objectContaining({
+        visibility: 'automatic',
+        effectiveVisible: false,
+      }))
+      expect(deleteMapVisibilityOverride).toHaveBeenCalledWith('https://pathfinderwiki.com/wiki/Spire_of_Nex')
     })
   })
 

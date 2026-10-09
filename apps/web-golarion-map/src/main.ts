@@ -20,69 +20,39 @@ import { addSpecialURLOptions } from "./tools/special-url-options";
 import { debug } from "./utils/debug";
 import { ProjectionControl } from "./tools/ProjectionControl";
 import { addPublicPlaceMarkers } from "./tools/public-place-markers";
-
-type PlayerDetailLevel = 'essential' | 'standard' | 'detailed';
+import { addPlayerSourcePoints } from "./tools/player-source-points";
+import { addPlayerCuratedLabels } from "./tools/player-curated-labels";
+import { makeLabelsCuratable } from "./tools/label-curation";
+import hiddenDefaults from '../resources/map-default-hidden-labels.json';
+import { applyPlayerMapVisibilityFilters } from './utils/map-visibility';
 
 var root = `${location.protocol}//${location.host}`;
 export const mapAudience = window.location.pathname.split('/').filter(Boolean)[0]?.toLowerCase() === 'pj' ? 'pj' : 'mj';
-export const playerDetail: PlayerDetailLevel = window.GOLARION_MAP_CONFIG?.playerDetail ?? 'standard';
 const publicPlacesUrl = window.GOLARION_MAP_CONFIG?.placesUrl ?? '';
 
 if (window.location.pathname === '/') {
   window.history.replaceState(null, '', `/pj${window.location.search}${window.location.hash}`);
 }
 document.body.dataset.mapAudience = mapAudience;
-document.body.dataset.playerDetail = mapAudience === 'pj' ? playerDetail : 'mj';
 document.title = `Carte de Golarion — mode ${mapAudience.toUpperCase()}`;
 
-const essentialPlayerLayerIds = new Set([
-  'background',
-  'fill_geometry',
-  'borders-regions',
-  'borders-subregions',
-  'borders-nations',
-  'symbol_line-labels',
-  'location-icons',
-  'location-labels',
-  'symbol_region-labels',
-  'symbol_subregion-labels',
-  'symbol_nation-labels',
-]);
-const standardPlayerLayerIds = new Set([
-  ...essentialPlayerLayerIds,
-  'borders-provinces',
-  'symbol_province-labels',
-]);
-const essentialPlayerCityIcons = [
-  'city-major',
-  'city-major-capital',
-  'city-large',
-  'city-large-capital',
-  'city-medium-capital',
-  'city-small-capital',
-];
-const standardPlayerCityIcons = [...essentialPlayerCityIcons, 'city-medium'];
-const activePlayerLayerIds = playerDetail === 'essential' ? essentialPlayerLayerIds : standardPlayerLayerIds;
-const activePlayerCityIcons = playerDetail === 'essential' ? essentialPlayerCityIcons : standardPlayerCityIcons;
-const playerCityFilter = ['in', ['get', 'icon'], ['literal', activePlayerCityIcons]] as const;
+const hiddenPlayerLabels = hiddenDefaults.labels;
+const hiddenPlayerLabelFilter = ['!', ['in', ['get', 'label'], ['literal', hiddenPlayerLabels]]] as const;
 
+// Le zoom ne sert plus à protéger les informations. La carte PJ conserve toute
+// la géographie, mais retire les couches potentiellement scénarisées. Les villes
+// et les POI explicitement validés sont réinjectés depuis l'API de curation.
 const audienceLayers = mapAudience === 'pj'
-  ? playerDetail === 'detailed'
-    ? style.layers
-    : style.layers
-      .filter(layer => activePlayerLayerIds.has(layer.id))
+  ? style.layers
+      .filter(layer => !['location-icons', 'location-labels', 'borders-districts'].includes(layer.id))
       .map(layer => {
-        if (layer.id === 'location-icons') return {...layer, filter: playerCityFilter};
-        if (layer.id === 'location-labels') {
-          const existingFilter = 'filter' in layer ? layer.filter : undefined;
-          return {...layer, filter: existingFilter ? ['all', playerCityFilter, existingFilter] : playerCityFilter};
-        }
-        return layer;
+        if (layer.id !== 'symbol_labels') return layer;
+        const existingFilter = 'filter' in layer ? layer.filter : undefined;
+        return { ...layer, filter: existingFilter ? ['all', existingFilter, hiddenPlayerLabelFilter] : hiddenPlayerLabelFilter };
       }) as typeof style.layers
   : style.layers;
-const playerMaxZoom = playerDetail === 'essential' ? 7 : playerDetail === 'standard' ? 9 : 12;
 document.body.dataset.mapLayerCount = String(audienceLayers.length);
-document.body.dataset.mapMaxZoom = mapAudience === 'pj' ? String(playerMaxZoom) : 'default';
+document.body.dataset.mapMaxZoom = 'default';
 
 const absoluteAssetUrl = (value: string) => /^[a-z][a-z\d+.-]*:\/\//i.test(value)
   ? value
@@ -128,7 +98,6 @@ export const map = new Map({
   attributionControl: false,
   pitchWithRotate: startupOptions.embedded?false:true,
   style: runtimeStyle,
-  ...(mapAudience === 'pj' ? {maxZoom: playerMaxZoom} : {}),
   pixelRatio: Math.max(window.devicePixelRatio || 1, 2),
   validateStyle: debug,
   canvasContextAttributes: {
@@ -137,6 +106,12 @@ export const map = new Map({
 });
 export const golarionMap = new GolarionMap(map);
 void addPublicPlaceMarkers(golarionMap, publicPlacesUrl);
+if (mapAudience === 'pj') {
+  void addPlayerSourcePoints(golarionMap);
+  void addPlayerCuratedLabels(golarionMap);
+  if (map.isStyleLoaded()) void applyPlayerMapVisibilityFilters(map);
+  else map.once('load', () => { void applyPlayerMapVisibilityFilters(map); });
+}
 
 //diable rotation
 map.dragRotate.disable();
@@ -151,11 +126,9 @@ addSpecialURLOptions(golarionMap);
 if(!startupOptions.embedded) {
   map.addControl(new ProjectionControl(golarionMap));
   map.addControl(new NavigationControl({showCompass: true}));
+  map.addControl(new SearchControl(golarionMap), 'top-left');
   if (mapAudience === 'mj') {
-    map.addControl(new SearchControl(golarionMap), 'top-left');
     map.addControl(new HexGridControl(), 'top-right');
-  } else if (playerDetail === 'detailed') {
-    map.addControl(new SearchControl(golarionMap), 'top-left');
   }
 }
 map.addControl(new ScaleControl({
@@ -171,6 +144,7 @@ if (mapAudience === 'mj') {
   const measureControl = new MeasureControl(golarionMap);
   map.addControl(measureControl);
   makeLocationsClickable(golarionMap);
+  void makeLabelsCuratable(golarionMap);
   addRightClickMenu(golarionMap, measureControl);
 }
 if(startupOptions.embedded) {

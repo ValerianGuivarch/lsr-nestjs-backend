@@ -58,9 +58,35 @@ export class FuzzySearch {
    */
   static get: ()=>Promise<FuzzySearch> = FuzzySearch.lazyInit(async () => {
     try {
-      let [response, placeNamesFr] = await Promise.all([
-        fetch(`./search.json?v=${BUILD_DATA_HASH}`),
-        getPlaceNamesFr()
+      const playerMode = window.location.pathname.split('/').filter(Boolean)[0]?.toLowerCase() === 'pj';
+      const customPlacesPromise = (async () => {
+        const url = window.GOLARION_MAP_CONFIG?.placesUrl ?? '';
+        if (!url) return [] as Array<{ name: string; latitude: number; longitude: number }>;
+        try {
+          const response = await fetch(url, { credentials: 'omit', cache: 'no-store' });
+          if (!response.ok) return [];
+          const raw = await response.json();
+          return (Array.isArray(raw) ? raw : []).flatMap((item): Array<{ name: string; latitude: number; longitude: number }> => {
+            if (!item || typeof item !== 'object') return [];
+            const value = item as Record<string, unknown>;
+            const name = typeof value.name === 'string' ? value.name.trim() : '';
+            const latitude = Number(value.latitude);
+            const longitude = Number(value.longitude);
+            return name && Number.isFinite(latitude) && Number.isFinite(longitude) ? [{ name, latitude, longitude }] : [];
+          });
+        } catch {
+          return [];
+        }
+      })();
+
+      const searchUrl = playerMode
+        ? (window.GOLARION_MAP_CONFIG?.searchUrl ?? '')
+        : `./search.json?v=${BUILD_DATA_HASH}`;
+      if (!searchUrl) throw new Error('Player search URL is not configured.');
+      let [response, placeNamesFr, customPlaces] = await Promise.all([
+        fetch(searchUrl, { credentials: 'omit', cache: playerMode ? 'no-store' : 'default' }),
+        getPlaceNamesFr(),
+        customPlacesPromise
       ]);
 
       if (!response.ok) {
@@ -69,15 +95,25 @@ export class FuzzySearch {
       
       let searchIndex = await response.json() as SearchCategory[];
 
-      // Flatten entries, add category information and the French translation (English fallback)
+      // In PJ mode the API has already removed every hidden entry. In MJ mode
+      // this is the original full search index.
       let flattenedEntries:SearchResult[] = searchIndex.flatMap(cat =>
-        cat.entries.flatMap(entry => entry.timed.map(timed =>({
+        cat.entries.flatMap(entry => entry.timed.map(timed => ({
           ...timed,
           label: entry.label,
           labelFr: translatePlaceName(entry.label, placeNamesFr),
           category: cat.category
         })))
       );
+
+      flattenedEntries.push(...customPlaces.map(place => ({
+        label: place.name,
+        labelFr: place.name,
+        category: 'locations',
+        bbox: [place.longitude, place.latitude] as [number, number],
+        timeYear: {},
+        timeIndex: {}
+      })));
 
       // Initialize Fuse.js for fuzzy matching (search both English and French names)
       let fuse = new Fuse<SearchResult>(flattenedEntries, {

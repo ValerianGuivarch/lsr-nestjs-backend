@@ -203,3 +203,93 @@ a {
 	margin: 0;
 	white-space: pre-wrap;
 }
+
+.pf2-player-source-popup {
+	min-width: 170px;
+	max-width: 320px;
+	padding-top: 8px;
+	color: #28231b;
+	font: 13px/1.45 system-ui, sans-serif;
+}
+
+.pf2-player-source-popup strong {
+	display: block;
+	font-size: 15px;
+	margin-bottom: 5px;
+}
+
+.pf2-player-source-popup p {
+	margin: 0;
+	white-space: pre-wrap;
+}
+
+.pf2-map-official {
+	padding-bottom: .75rem;
+}
+
+.pf2-map-curation {
+	margin-top: .8rem;
+	padding-top: .7rem;
+	border-top: 2px solid #a78b4f;
+	display: grid;
+	gap: .45rem;
+	font: 13px/1.35 system-ui, sans-serif;
+}
+
+.pf2-map-curation > strong {
+	font-size: 15px;
+}
+
+.pf2-map-curation-status {
+	padding: .35rem .5rem;
+	border-radius: 4px;
+	font-weight: 600;
+}
+
+.pf2-map-curation-status.visible {
+	background: #e4f4e7;
+	color: #195b2b;
+}
+
+.pf2-map-curation-status.hidden {
+	background: #f7e7e3;
+	color: #7a2518;
+}
+
+.pf2-map-curation label {
+	display: grid;
+	gap: .2rem;
+	font-weight: 600;
+}
+
+.pf2-map-curation input,
+.pf2-map-curation select,
+.pf2-map-curation textarea {
+	box-sizing: border-box;
+	width: 100%;
+	padding: .35rem .45rem;
+	border: 1px solid #a2a9b1;
+	border-radius: 4px;
+	font: inherit;
+	font-weight: 400;
+}
+
+.pf2-map-curation textarea {
+	resize: vertical;
+}
+
+.pf2-map-curation-save {
+	justify-self: start;
+	padding: .4rem .7rem;
+	border: 1px solid #6d5321;
+	border-radius: 4px;
+	background: #765719;
+	color: white;
+	font-weight: 700;
+	cursor: pointer;
+}
+
+.pf2-map-curation-save:disabled {
+	opacity: .6;
+	cursor: wait;
+}

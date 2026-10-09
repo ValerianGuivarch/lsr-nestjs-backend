@@ -24,12 +24,13 @@ export default defineConfig(({ command, isPreview, mode }): UserConfig => {
 
   const dataHash = Math.floor(Date.now() / 1000)
   const publicOrigin = (env['GOLARION_MAP_PUBLIC_ORIGIN'] ?? '').replace(/\/$/, '')
-  const requestedPlayerDetail = env['GOLARION_MAP_PJ_DETAIL']?.trim().toLowerCase()
-  const playerDetail = ['essential', 'standard', 'detailed'].includes(requestedPlayerDetail ?? '')
-    ? requestedPlayerDetail
-    : 'standard'
   const placesUrl = env['GOLARION_MAP_PLACES_URL']?.trim() || 'http://localhost:3333/api/pf2-mj/map/places'
-  const runtimeConfigSource = `window.GOLARION_MAP_CONFIG=${JSON.stringify({ playerDetail, placesUrl })};`
+  const mapApiBase = placesUrl.replace(/\/places\/?$/, '')
+  const sourcePointsUrl = env['GOLARION_MAP_SOURCE_POINTS_URL']?.trim() || `${mapApiBase}/source-points`
+  const searchUrl = env['GOLARION_MAP_SEARCH_URL']?.trim() || `${mapApiBase}/search`
+  const visibilityUrl = env['GOLARION_MAP_VISIBILITY_URL']?.trim() || `${mapApiBase}/visibility`
+  const curationUrl = env['GOLARION_MAP_CURATION_URL']?.trim() || `${mapApiBase}/curation`
+  const runtimeConfigSource = `window.GOLARION_MAP_CONFIG=${JSON.stringify({ placesUrl, sourcePointsUrl, searchUrl, visibilityUrl, curationUrl })};`
   const mapHost = env['GOLARION_MAP_HOST'] ?? '0.0.0.0'
   const mapPort = Number(env['GOLARION_MAP_PORT'] ?? 4204)
   const placeNamesFr = JSON.parse(readFileSync(existsSync(placeNamesPath) ? placeNamesPath : fallbackPlaceNamesPath, 'utf8')) as Record<string, string>

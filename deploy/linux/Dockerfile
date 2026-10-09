@@ -40,7 +40,9 @@ FROM api-base AS api-jdr
 COPY --from=api-jdr-build /app/dist/api-jdr ./dist/api-jdr
 COPY --from=source /app/apps/web-misc/src/pf2-mj/data ./seed
 COPY --from=source /app/pf2e-val-toolkit ./pf2e-val-toolkit
-ENV JDR_PORT=3333 PF2_DATA_ROOT=/app/seed
+COPY --from=source /app/apps/web-golarion-map/resources/map-source-points.json ./map-source-points.json
+COPY --from=source /app/apps/web-golarion-map/resources/map-search-index.json ./map-search-index.json
+ENV JDR_PORT=3333 PF2_DATA_ROOT=/app/seed GOLARION_MAP_SOURCE_CATALOGUE_PATH=/app/map-source-points.json GOLARION_MAP_SEARCH_INDEX_PATH=/app/map-search-index.json
 EXPOSE 3333
 CMD ["node", "dist/api-jdr/main.js"]
 
