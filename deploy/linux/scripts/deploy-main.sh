@@ -35,6 +35,13 @@ if [[ "$(git rev-parse HEAD)" != "$VERSION" ]]; then
 fi
 
 export APP_VERSION="$VERSION"
+RUNTIME_SOURCE_ROOT="${RUNTIME_SOURCE_ROOT:-/home/valou/services/lsr-nestjs-backend}"
+SOURCE_ENV_FILE="$RUNTIME_SOURCE_ROOT/.env"
+if [[ -f "$SOURCE_ENV_FILE" && "$(realpath "$SOURCE_ENV_FILE")" != "$(realpath -m "$ROOT/.env")" ]]; then
+  cp -a "$SOURCE_ENV_FILE" "$ROOT/.env"
+fi
+if ! grep -q '^APP_STATE_DIR=' "$ROOT/.env"; then printf '\nAPP_STATE_DIR=/home/valou/services/lsr-nestjs-backend\n' >> "$ROOT/.env"; fi
+if ! grep -q '^APP_STORAGE_DIR=' "$ROOT/.env"; then printf 'APP_STORAGE_DIR=/home/valou/services/lsr-nestjs-backend/storage\n' >> "$ROOT/.env"; fi
 export APP_ENV_FILE="${APP_ENV_FILE:-$ROOT/.env}"
 
 echo "[deploy] pulling images for $APP_VERSION"
@@ -49,7 +56,7 @@ if ! docker compose --env-file "$APP_ENV_FILE" -f "$COMPOSE_FILE" up -d --wait a
 fi
 
 echo "[deploy] refreshing MediaWiki stack from dedicated checkout"
-MEDIAWIKI_LOCAL_SETTINGS_SOURCE="${MEDIAWIKI_LOCAL_SETTINGS_SOURCE:-/home/valou/services/lsr-nestjs-backend/support/mediawiki/LocalSettings.php}"
+MEDIAWIKI_LOCAL_SETTINGS_SOURCE="${MEDIAWIKI_LOCAL_SETTINGS_SOURCE:-$RUNTIME_SOURCE_ROOT/support/mediawiki/LocalSettings.php}"
 if [[ ! -f "$MEDIAWIKI_LOCAL_SETTINGS_SOURCE" ]]; then
   echo "[deploy] MediaWiki LocalSettings source is missing: $MEDIAWIKI_LOCAL_SETTINGS_SOURCE" >&2
   exit 1
