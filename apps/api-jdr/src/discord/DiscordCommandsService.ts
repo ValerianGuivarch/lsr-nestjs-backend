@@ -120,6 +120,7 @@ export class DiscordCommandsService {
         .toJSON(),
       new SlashCommandBuilder().setName('proposer-date-seance').setDescription('Propose les dates de séance pour la prochaine semaine.').setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild).toJSON(),
       new SlashCommandBuilder().setName('analyse-date-seance').setDescription('Analyse les disponibilités et calcule les groupes possibles.').setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild).toJSON(),
+      new SlashCommandBuilder().setName('valider-date-seance').setDescription('Confirme une proposition de groupes publiée dans ce fil.').addIntegerOption(option => option.setName('numero').setDescription('Numéro de proposition à valider').setRequired(true).setMinValue(1)).setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild).toJSON(),
       new SlashCommandBuilder().setName('modifier-date-seance').setDescription('Ajoute ou retire des dates dans une proposition existante.').setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild).toJSON(),
       new SlashCommandBuilder().setName('relancer-date-seance').setDescription('Relance les joueurs qui n’ont pas répondu à la planification.').setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild).toJSON(),
     ]
@@ -179,6 +180,7 @@ export class DiscordCommandsService {
     if (interaction.commandName === 'wiki-admin') { await this.wikiAdminCommand(interaction as ChatInputCommandInteraction); return true }
     if (interaction.commandName === 'proposer-date-seance') { await this.planningCommand(interaction as ChatInputCommandInteraction); return true }
     if (interaction.commandName === 'analyse-date-seance') { await this.programmerSeanceCommand(interaction as ChatInputCommandInteraction); return true }
+    if (interaction.commandName === 'valider-date-seance') { await this.validateSessionProposalCommand(interaction as ChatInputCommandInteraction); return true }
     if (interaction.commandName === 'modifier-date-seance') { await this.modifyPlanningCommand(interaction as ChatInputCommandInteraction); return true }
     if (interaction.commandName === 'relancer-date-seance') { await this.remindPlanningCommand(interaction as ChatInputCommandInteraction); return true }
     return false
@@ -223,6 +225,7 @@ export class DiscordCommandsService {
         '`/modifier-date-seance` — modifie les dates depuis le fil de la proposition.',
         '`/relancer-date-seance` — depuis le fil, prépare une relance des joueurs qui n’ont pas encore répondu.',
         '`/analyse-date-seance` — analyse les réactions, propose les groupes puis permet leur publication.',
+        '`/valider-date-seance numero:2` — valide et annonce une proposition de groupes dans le fil de planification.',
         '`/help-admin` — affiche cette aide.',
       ].join('\n'),
       ephemeral: true,
@@ -711,6 +714,97 @@ export class DiscordCommandsService {
       })
     } catch (error) {
       await interaction.editReply({ content: `Relance impossible : ${error instanceof Error ? error.message : String(error)}`, components: [] })
+    }
+  }
+
+  private parsePublishedSessionProposals(content: string): Array<Array<{ label: string; players: string[] }>> | null {
+    if (!content.startsWith('**Groupes possibles pour la prochaine semaine**')) return null
+    const proposals: Array<Array<{ label: string; players: string[] }>> = []
+    let groups: Array<{ label: string; players: string[] }> = []
+    let currentGroup: { label: string; players: string[] } | null = null
+    for (const line of content.split('\n').slice(1)) {
+      const proposal = /^\*\*Proposition (\d+)(?: — ex æquo)?\*\*$/.exec(line)
+      if (proposal) {
+        if (groups.length) proposals.push(groups)
+        if (Number(proposal[1]) !== proposals.length + 1) return null
+        groups = []
+        currentGroup = null
+        continue
+      }
+      const date = /^\*\*((?:Lundi|Mardi|Tercredi|Mercredi|Jeudi|Vendredi|Samedi|Dimanche) \d{1,2} \p{L}+(?: \d{4})?)\*\*$/u.exec(line)
+      if (date) {
+        if (currentGroup && currentGroup.players.length !== 4) return null
+        currentGroup = { label: date[1], players: [] }
+        groups.push(currentGroup)
+        continue
+      }
+      const player = /^- (.+) — \d+ séances? jouées?$/.exec(line)
+      if (player) {
+        if (!currentGroup || currentGroup.players.length >= 4) return null
+        currentGroup.players.push(player[1])
+        continue
+      }
+      if (line.includes('**Choisir ')) return null
+    }
+    if (groups.length) proposals.push(groups)
+    if (!proposals.length || proposals.some(option =>
+      option.some(group => group.players.length !== 4)
+      || new Set(option.flatMap(group => group.players)).size !== option.length * 4
+    )) return null
+    return proposals
+  }
+
+  private async validateSessionProposalCommand(interaction: ChatInputCommandInteraction): Promise<void> {
+    if (!this.isAdmin(interaction)) {
+      await interaction.reply({ content: 'Cette commande est réservée aux administrateurs du serveur.', ephemeral: true })
+      return
+    }
+    const channel = interaction.channel
+    if (!channel?.isThread()) {
+      await interaction.reply({ content: 'Utilise cette commande dans le fil de planification où l’analyse a été publiée.', ephemeral: true })
+      return
+    }
+
+    await interaction.deferReply({ ephemeral: true })
+    try {
+      const starter = await channel.fetchStarterMessage({ force: true }).catch(() => null)
+      if (!starter || !this.parsePlanningMessage(starter.content)) {
+        await interaction.editReply({ content: 'Ce fil n’est pas rattaché à une planification reconnue.' })
+        return
+      }
+      const messages = await channel.messages.fetch({ limit: 100 })
+      const botId = interaction.client.user?.id
+      const analysis = [...messages.values()]
+        .filter(message => botId && message.author?.id === botId && message.content.startsWith('**Groupes possibles pour la prochaine semaine**'))
+        .sort((a, b) => b.createdTimestamp - a.createdTimestamp)[0]
+      if (!analysis) {
+        await interaction.editReply({ content: 'Aucune analyse publiée par le bot dans les 100 derniers messages de ce fil. Lance puis publie /analyse-date-seance.' })
+        return
+      }
+
+      const proposals = this.parsePublishedSessionProposals(analysis.content)
+      if (!proposals) {
+        await interaction.editReply({ content: 'La dernière analyse ne contient pas de groupes complets numérotés. Relance /analyse-date-seance pour obtenir des propositions explicites.' })
+        return
+      }
+      const number = interaction.options.getInteger('numero', true)
+      const selected = proposals[number - 1]
+      if (!selected) {
+        await interaction.editReply({ content: `Proposition ${number} introuvable. Choisis un numéro entre 1 et ${proposals.length}.` })
+        return
+      }
+      const content = [
+        `✅ **Séances validées — proposition ${number}**`,
+        ...selected.flatMap(group => ['', `**${group.label}**`, ...group.players.map(name => `- ${name}`)]),
+        '',
+        `Source : ${analysis.url}`,
+      ].join('\n')
+      if (content.length > 2000) throw new Error('L’annonce dépasse la limite de 2 000 caractères de Discord.')
+      await channel.send({ content, allowedMentions: { parse: [] } })
+      await interaction.editReply({ content: `Proposition ${number} validée et publiée dans ce fil.` })
+    } catch (error) {
+      this.logger.error('valider-date-seance: publication impossible', error instanceof Error ? error.stack : undefined)
+      await interaction.editReply({ content: `Validation impossible : ${error instanceof Error ? error.message : String(error)}` })
     }
   }
 

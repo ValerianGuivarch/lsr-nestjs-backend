@@ -7,7 +7,7 @@ describe('DiscordCommandsService', () => {
     expect(definitions).toEqual(expect.arrayContaining([
       'help', 'help-admin', 'choix-quete', 'random-perso', 'tirage-sort-joueur', 'recap-pjs', 'recap-seance',
       'debut-seance', 'fin-seance', 'personnage', 'faction', 'nouvelle-faction', 'associer-faction', 'afficher-personnage', 'afficher-faction', 'rechercher', 'wiki', 'wiki-admin',
-      'proposer-date-seance', 'modifier-date-seance', 'relancer-date-seance', 'analyse-date-seance',
+      'proposer-date-seance', 'modifier-date-seance', 'relancer-date-seance', 'analyse-date-seance', 'valider-date-seance',
     ]))
     expect(definitions).not.toEqual(expect.arrayContaining([
       'ping', 'export-full', 'resume', 'recap', 'new-game', 'finish-game',
@@ -460,7 +460,7 @@ describe('DiscordCommandsService', () => {
     const definitions = service.definitions()
     for (const name of [
       'random-perso', 'tirage-sort-joueur', 'help-admin', 'recap-seance', 'journaux', 'debut-seance', 'fin-seance',
-      'personnage', 'faction', 'associer-faction', 'wiki-admin', 'proposer-date-seance', 'modifier-date-seance', 'relancer-date-seance', 'analyse-date-seance',
+      'personnage', 'faction', 'associer-faction', 'wiki-admin', 'proposer-date-seance', 'modifier-date-seance', 'relancer-date-seance', 'analyse-date-seance', 'valider-date-seance',
     ]) {
       const command = definitions.find(item => item.name === name)
       expect(command?.default_member_permissions).toBeDefined()
@@ -775,7 +775,7 @@ describe('DiscordCommandsService', () => {
   it('registers the planning commands and computes the strictly next Monday', () => {
     const service = new DiscordCommandsService({} as never, {} as never)
     const definitions = service.definitions().map(command => command.name)
-    expect(definitions).toEqual(expect.arrayContaining(['proposer-date-seance', 'analyse-date-seance', 'modifier-date-seance', 'relancer-date-seance']))
+    expect(definitions).toEqual(expect.arrayContaining(['proposer-date-seance', 'analyse-date-seance', 'valider-date-seance', 'modifier-date-seance', 'relancer-date-seance']))
     expect(definitions).not.toContain('resume')
     const planning = service as unknown as {
       nextPlanningMonday: (date: Date) => string
@@ -792,6 +792,138 @@ describe('DiscordCommandsService', () => {
     expect(message).toContain('❌ Pas dispo')
     expect(message).toContain('❓ Ne sais pas encore')
     expect(planning.parsePlanningMessage(message)).toEqual({ monday: '2026-10-05', selectedDays: [0, 2, 6] })
+  })
+
+  it('validates the requested proposal from the latest published bot analysis in the planning thread', async () => {
+    const service = new DiscordCommandsService({} as never, {} as never)
+    const planning = (service as unknown as { planningMessage: (monday: string, days: number[]) => string })
+      .planningMessage('2026-10-12', [0, 3])
+    const report = [
+      '**Groupes possibles pour la prochaine semaine**',
+      '',
+      '**Proposition 1 — ex æquo**',
+      '**Lundi 12 octobre**',
+      '- playest — 3 séances jouées',
+      '- Actéon Abbot — 4 séances jouées',
+      '- Helluin — 4 séances jouées',
+      '- nyu — 5 séances jouées',
+      '**Jeudi 15 octobre**',
+      '- triki — 3 séances jouées',
+      '- Arthur — 4 séances jouées',
+      '- Mana — 4 séances jouées',
+      '- Guilhem — 5 séances jouées',
+      '**Proposition 2 — ex æquo**',
+      '**Lundi 12 octobre**',
+      '- playest — 3 séances jouées',
+      '- Arthur — 4 séances jouées',
+      '- Helluin — 4 séances jouées',
+      '- nyu — 5 séances jouées',
+      '**Jeudi 15 octobre**',
+      '- triki — 3 séances jouées',
+      '- Actéon Abbot — 4 séances jouées',
+      '- Mana — 4 séances jouées',
+      '- Guilhem — 5 séances jouées',
+      '**Proposition 3 — ex æquo**',
+      '**Lundi 12 octobre**',
+      '- playest — 3 séances jouées',
+      '- Helluin — 4 séances jouées',
+      '- Mana — 4 séances jouées',
+      '- nyu — 5 séances jouées',
+      '**Jeudi 15 octobre**',
+      '- triki — 3 séances jouées',
+      '- Actéon Abbot — 4 séances jouées',
+      '- Arthur — 4 séances jouées',
+      '- Guilhem — 5 séances jouées',
+      '2 groupes de 4 possibles, sans réutiliser de joueur.',
+    ].join('\n')
+    const send = jest.fn().mockResolvedValue({})
+    const editReply = jest.fn().mockResolvedValue(undefined)
+    const messages = new Map([
+      ['spoof', { author: { id: 'player' }, content: report, createdTimestamp: 999 }],
+      ['chosen', { author: { id: 'bot' }, content: report, createdTimestamp: 200, url: 'https://discord.com/channels/guild/thread/chosen' }],
+      ['old', { author: { id: 'bot' }, content: '**Groupes possibles pour la prochaine semaine**\nAucun groupe de 4', createdTimestamp: 100 }],
+    ])
+    const channel = {
+      isThread: () => true,
+      fetchStarterMessage: jest.fn().mockResolvedValue({ content: planning }),
+      messages: { fetch: jest.fn().mockResolvedValue(messages) },
+      send,
+    }
+    await expect(service.handle({
+      commandName: 'valider-date-seance',
+      user: { id: 'admin' },
+      memberPermissions: { has: jest.fn().mockReturnValue(true) },
+      client: { user: { id: 'bot' } },
+      options: { getInteger: jest.fn().mockReturnValue(2) },
+      channel,
+      deferReply: jest.fn().mockResolvedValue(undefined),
+      editReply,
+    } as never)).resolves.toBe(true)
+
+    const announcement = send.mock.calls[0][0]
+    expect(announcement.content).toContain('Séances validées — proposition 2')
+    expect(announcement.content).toContain('**Lundi 12 octobre**\n- playest\n- Arthur\n- Helluin\n- nyu')
+    expect(announcement.content).toContain('**Jeudi 15 octobre**\n- triki\n- Actéon Abbot\n- Mana\n- Guilhem')
+    expect(announcement.content).toContain('Source : https://discord.com/channels/guild/thread/chosen')
+    expect(announcement.allowedMentions).toEqual({ parse: [] })
+    expect(editReply).toHaveBeenCalledWith({ content: 'Proposition 2 validée et publiée dans ce fil.' })
+  })
+
+  it('does not announce an invalid proposal number or incomplete compact analysis', async () => {
+    const service = new DiscordCommandsService({} as never, {} as never)
+    const parser = service as unknown as {
+      parsePublishedSessionProposals: (content: string) => unknown
+      planningMessage: (monday: string, days: number[]) => string
+    }
+    expect(parser.parsePublishedSessionProposals([
+      '**Groupes possibles pour la prochaine semaine**',
+      '**Lundi 12 octobre**',
+      '- playest — 3 séances jouées',
+      '- **Choisir 3/5** : Arthur (4), Mana (4), Guilhem (5)',
+    ].join('\n'))).toBeNull()
+
+    const report = [
+      '**Groupes possibles pour la prochaine semaine**',
+      '**Lundi 12 octobre**',
+      '- Arcady — 3 séances jouées',
+      '- Arthur — 4 séances jouées',
+      '- Éric — 4 séances jouées',
+      '- Tom — 5 séances jouées',
+    ].join('\n')
+    const send = jest.fn()
+    const editReply = jest.fn().mockResolvedValue(undefined)
+    await service.handle({
+      commandName: 'valider-date-seance',
+      user: { id: 'admin' },
+      memberPermissions: { has: jest.fn().mockReturnValue(true) },
+      client: { user: { id: 'bot' } },
+      options: { getInteger: jest.fn().mockReturnValue(2) },
+      channel: {
+        isThread: () => true,
+        fetchStarterMessage: jest.fn().mockResolvedValue({ content: parser.planningMessage('2026-10-12', [0]) }),
+        messages: { fetch: jest.fn().mockResolvedValue(new Map([['analysis', {
+          author: { id: 'bot' }, content: report, createdTimestamp: 1, url: 'https://discord.com/source',
+        }]])) },
+        send,
+      },
+      deferReply: jest.fn().mockResolvedValue(undefined),
+      editReply,
+    } as never)
+    expect(send).not.toHaveBeenCalled()
+    expect(editReply).toHaveBeenCalledWith({ content: 'Proposition 2 introuvable. Choisis un numéro entre 1 et 1.' })
+  })
+
+  it('rejects validation outside a planning thread', async () => {
+    const service = new DiscordCommandsService({} as never, {} as never)
+    const reply = jest.fn().mockResolvedValue(undefined)
+    await service.handle({
+      commandName: 'valider-date-seance',
+      user: { id: 'admin' },
+      memberPermissions: { has: jest.fn().mockReturnValue(true) },
+      channel: { isThread: () => false },
+      reply,
+    } as never)
+    expect(reply).toHaveBeenCalledWith(expect.objectContaining({ content: expect.stringContaining('dans le fil'), ephemeral: true }))
   })
 
   it('publishes a planning message with reactions and a thread after the day selection', async () => {
@@ -926,7 +1058,7 @@ describe('DiscordCommandsService', () => {
 
   it('restricts the date-planning commands to admins', async () => {
     const service = new DiscordCommandsService({} as never, {} as never)
-    for (const commandName of ['proposer-date-seance', 'modifier-date-seance', 'analyse-date-seance']) {
+    for (const commandName of ['proposer-date-seance', 'modifier-date-seance', 'analyse-date-seance', 'valider-date-seance']) {
       const reply = jest.fn().mockResolvedValue(undefined)
       await service.handle({
         commandName, reply, user: { id: 'player' },
