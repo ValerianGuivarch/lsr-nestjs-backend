@@ -828,6 +828,8 @@ export class DiscordCommandsService {
         ...mentionedGroups.flatMap(group => ['', `**${group.label}**`, ...group.players]),
         '',
         `Source : ${analysis.url}`,
+        '',
+        'Merci de valider avec un 👍 !',
       ].join('\n')
       if (content.length > 2000) throw new Error('L’annonce dépasse la limite de 2 000 caractères de Discord.')
       const confirmationId = interaction.id
@@ -1865,7 +1867,17 @@ export class DiscordCommandsService {
       }
       try {
         await interaction.update({ content: 'Publication confirmée. Envoi des notifications…', components: [], allowedMentions: { parse: [] } })
-        await interaction.followUp({ content: pending.content, ephemeral: false, allowedMentions: { users: pending.userIds } })
+        const published = await interaction.followUp({ content: pending.content, ephemeral: false, allowedMentions: { users: pending.userIds } })
+        try {
+          await published.react('👍')
+        } catch (error) {
+          this.logger.warn(`Annonce de séance publiée, mais réaction 👍 impossible : ${error instanceof Error ? error.message : String(error)}`)
+          await interaction.followUp({
+            content: 'La séance a bien été publiée et les joueurs notifiés, mais je n’ai pas pu ajouter la réaction 👍 automatiquement.',
+            ephemeral: true,
+            allowedMentions: { parse: [] },
+          }).catch(() => undefined)
+        }
       } catch (error) {
         await interaction.followUp({ content: `Publication impossible : ${error instanceof Error ? error.message : String(error)}. Relance la commande pour réessayer.`, ephemeral: true }).catch(() => undefined)
       }

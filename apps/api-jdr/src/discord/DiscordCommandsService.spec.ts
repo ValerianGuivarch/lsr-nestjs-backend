@@ -887,7 +887,8 @@ describe('DiscordCommandsService', () => {
       'pf2-date-confirm:cancel:command-123',
     ])
     const update = jest.fn().mockResolvedValue(undefined)
-    const followUp = jest.fn().mockResolvedValue(undefined)
+    const react = jest.fn().mockResolvedValue(undefined)
+    const followUp = jest.fn().mockResolvedValue({ react })
     await expect(service.handleButton({
       customId: 'pf2-date-confirm:publish:command-123',
       user: { id: 'admin' },
@@ -901,6 +902,9 @@ describe('DiscordCommandsService', () => {
       ephemeral: false,
       allowedMentions: { users: users.map(user => user.id) },
     }))
+    expect(followUp.mock.calls[0][0].content).toMatch(/Merci de valider avec un 👍 !$/)
+    expect(react).toHaveBeenCalledTimes(1)
+    expect(react).toHaveBeenCalledWith('👍')
   })
 
   it('cancels date validation without a public message or notification', async () => {
