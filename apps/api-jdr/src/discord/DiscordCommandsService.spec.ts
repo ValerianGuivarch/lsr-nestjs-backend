@@ -843,9 +843,21 @@ describe('DiscordCommandsService', () => {
       ['chosen', { author: { id: 'bot' }, content: report, createdTimestamp: 200, url: 'https://discord.com/channels/guild/thread/chosen' }],
       ['old', { author: { id: 'bot' }, content: '**Groupes possibles pour la prochaine semaine**\nAucun groupe de 4', createdTimestamp: 100 }],
     ])
+    const users = ['playest', 'Arthur', 'Helluin', 'nyu', 'triki', 'Actéon Abbot', 'Mana', 'Guilhem']
+      .map((name, index) => ({ id: `10000000000000000${index}`, username: name, globalName: name, bot: false }))
+    const reaction = (emoji: string, names: string[]) => ({
+      emoji: { name: emoji },
+      users: { fetch: jest.fn().mockResolvedValue(new Map(users.filter(user => names.includes(user.username)).map(user => [user.id, user]))) },
+    })
     const channel = {
       isThread: () => true,
-      fetchStarterMessage: jest.fn().mockResolvedValue({ content: planning }),
+      fetchStarterMessage: jest.fn().mockResolvedValue({
+        content: planning,
+        reactions: { cache: new Map([
+          ['monday', reaction('🇱', ['playest', 'Arthur', 'Helluin', 'nyu'])],
+          ['thursday', reaction('🇯', ['triki', 'Actéon Abbot', 'Mana', 'Guilhem'])],
+        ]) },
+      }),
       messages: { fetch: jest.fn().mockResolvedValue(messages) },
       send,
     }
@@ -862,10 +874,10 @@ describe('DiscordCommandsService', () => {
 
     const announcement = send.mock.calls[0][0]
     expect(announcement.content).toContain('Séances validées — proposition 2')
-    expect(announcement.content).toContain('**Lundi 12 octobre**\n- playest\n- Arthur\n- Helluin\n- nyu')
-    expect(announcement.content).toContain('**Jeudi 15 octobre**\n- triki\n- Actéon Abbot\n- Mana\n- Guilhem')
+    expect(announcement.content).toContain('**Lundi 12 octobre**\n- <@100000000000000000>\n- <@100000000000000001>\n- <@100000000000000002>\n- <@100000000000000003>')
+    expect(announcement.content).toContain('**Jeudi 15 octobre**\n- <@100000000000000004>\n- <@100000000000000005>\n- <@100000000000000006>\n- <@100000000000000007>')
     expect(announcement.content).toContain('Source : https://discord.com/channels/guild/thread/chosen')
-    expect(announcement.allowedMentions).toEqual({ parse: [] })
+    expect(announcement.allowedMentions).toEqual({ users: users.map(user => user.id) })
     expect(editReply).toHaveBeenCalledWith({ content: 'Proposition 2 validée et publiée dans ce fil.' })
   })
 
@@ -911,6 +923,51 @@ describe('DiscordCommandsService', () => {
     } as never)
     expect(send).not.toHaveBeenCalled()
     expect(editReply).toHaveBeenCalledWith({ content: 'Proposition 2 introuvable. Choisis un numéro entre 1 et 1.' })
+  })
+
+  it('does not publish or ping when a player cannot be reliably matched to a planning reaction', async () => {
+    const service = new DiscordCommandsService({} as never, {} as never)
+    const planning = (service as unknown as { planningMessage: (monday: string, days: number[]) => string })
+      .planningMessage('2026-10-12', [0])
+    const report = [
+      '**Groupes possibles pour la prochaine semaine**',
+      '**Lundi 12 octobre**',
+      '- playest — 3 séances jouées',
+      '- Arthur — 4 séances jouées',
+      '- Helluin — 4 séances jouées',
+      '- nyu — 5 séances jouées',
+    ].join('\n')
+    const users = ['playest', 'Arthur', 'Helluin']
+      .map((username, index) => ({ id: `10000000000000000${index}`, username, globalName: username, bot: false }))
+    const send = jest.fn()
+    const editReply = jest.fn().mockResolvedValue(undefined)
+    await service.handle({
+      commandName: 'valider-date-seance',
+      user: { id: 'admin' },
+      memberPermissions: { has: jest.fn().mockReturnValue(true) },
+      client: { user: { id: 'bot' } },
+      options: { getInteger: jest.fn().mockReturnValue(1) },
+      channel: {
+        isThread: () => true,
+        fetchStarterMessage: jest.fn().mockResolvedValue({
+          content: planning,
+          reactions: { cache: new Map([['monday', {
+            emoji: { name: '🇱' },
+            users: { fetch: jest.fn().mockResolvedValue(new Map(users.map(user => [user.id, user]))) },
+          }]]) },
+        }),
+        messages: { fetch: jest.fn().mockResolvedValue(new Map([['analysis', {
+          author: { id: 'bot' }, content: report, createdTimestamp: 1, url: 'https://discord.com/source',
+        }]])) },
+        send,
+      },
+      deferReply: jest.fn().mockResolvedValue(undefined),
+      editReply,
+    } as never)
+    expect(send).not.toHaveBeenCalled()
+    expect(editReply).toHaveBeenCalledWith(expect.objectContaining({
+      content: expect.stringContaining('Impossible d’identifier de façon sûre « nyu »'),
+    }))
   })
 
   it('rejects validation outside a planning thread', async () => {

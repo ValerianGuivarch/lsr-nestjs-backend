@@ -768,7 +768,8 @@ export class DiscordCommandsService {
     await interaction.deferReply({ ephemeral: true })
     try {
       const starter = await channel.fetchStarterMessage({ force: true }).catch(() => null)
-      if (!starter || !this.parsePlanningMessage(starter.content)) {
+      const planning = starter && this.parsePlanningMessage(starter.content)
+      if (!starter || !planning) {
         await interaction.editReply({ content: 'Ce fil n’est pas rattaché à une planification reconnue.' })
         return
       }
@@ -793,14 +794,42 @@ export class DiscordCommandsService {
         await interaction.editReply({ content: `Proposition ${number} introuvable. Choisis un numéro entre 1 et ${proposals.length}.` })
         return
       }
+      // Les analyses déjà publiées contiennent des noms, pas les identifiants Discord.
+      // On retrouve les utilisateurs à partir des réactions aux jours concernés, comme /analyse-date-seance.
+      const userIds = new Set<string>()
+      const mentionedGroups: Array<{ label: string; players: string[] }> = []
+      for (const group of selected) {
+        const day = PLANNING_DAYS.find(candidate =>
+          planning.selectedDays.includes(candidate.offset)
+          && group.label === `${candidate.label} ${this.planningDate(this.addDays(planning.monday, candidate.offset))}`
+        )
+        if (!day) throw new Error(`La date « ${group.label} » ne correspond pas à la planification du fil.`)
+        const reaction = [...starter.reactions.cache.values()].find(item => item.emoji.name === day.emoji)
+        if (!reaction) throw new Error(`Réactions introuvables pour ${group.label}. Relance /analyse-date-seance.`)
+        const users = await reaction.users.fetch()
+        const players: string[] = []
+        for (const name of group.players) {
+          const matches = [...users.values()].filter(user =>
+            !user.bot && (user.globalName?.trim() || user.username) === name
+          )
+          if (matches.length !== 1) {
+            throw new Error(`Impossible d’identifier de façon sûre « ${name} » (${group.label}) parmi les réactions. Vérifie les réactions ou relance /analyse-date-seance.`)
+          }
+          const userId = matches[0].id
+          if (userIds.has(userId)) throw new Error(`Le membre ${name} figure dans plusieurs groupes. Aucune annonce publiée.`)
+          userIds.add(userId)
+          players.push(`- <@${userId}>`)
+        }
+        mentionedGroups.push({ label: group.label, players })
+      }
       const content = [
         `✅ **Séances validées — proposition ${number}**`,
-        ...selected.flatMap(group => ['', `**${group.label}**`, ...group.players.map(name => `- ${name}`)]),
+        ...mentionedGroups.flatMap(group => ['', `**${group.label}**`, ...group.players]),
         '',
         `Source : ${analysis.url}`,
       ].join('\n')
       if (content.length > 2000) throw new Error('L’annonce dépasse la limite de 2 000 caractères de Discord.')
-      await channel.send({ content, allowedMentions: { parse: [] } })
+      await channel.send({ content, allowedMentions: { users: [...userIds] } })
       await interaction.editReply({ content: `Proposition ${number} validée et publiée dans ce fil.` })
     } catch (error) {
       this.logger.error('valider-date-seance: publication impossible', error instanceof Error ? error.stack : undefined)
