@@ -61,6 +61,7 @@ export class DiscordCommandsService {
   private readonly pendingFactionPublications = new Map<string, { requesterId: string; factionId: string }>()
   private readonly pendingFactionAssociations = new Map<string, { requesterId: string; playerFactionId: string; mjFactionId: string }>()
   private readonly pendingSchedulePublications = new Map<string, { requesterId: string; content: string }>()
+  private readonly pendingSessionValidations = new Map<string, { requesterId: string; channelId: string; content: string; userIds: string[] }>()
   private readonly pendingPlanningReminders = new Map<string, { requesterId: string; content: string; userIds: string[] }>()
   private readonly pendingPreviewPublications = new Map<string, { requesterId: string; content: string; files?: string[] }>()
   private readonly pendingPlayerDraws = new Map<string, { requesterId: string; players: Array<{ id: string; name: string }> }>()
@@ -829,8 +830,26 @@ export class DiscordCommandsService {
         `Source : ${analysis.url}`,
       ].join('\n')
       if (content.length > 2000) throw new Error('L’annonce dépasse la limite de 2 000 caractères de Discord.')
-      await channel.send({ content, allowedMentions: { users: [...userIds] } })
-      await interaction.editReply({ content: `Proposition ${number} validée et publiée dans ce fil.` })
+      const confirmationId = interaction.id
+      this.pendingSessionValidations.set(confirmationId, {
+        requesterId: interaction.user.id,
+        channelId: channel.id,
+        content,
+        userIds: [...userIds],
+      })
+      const confirm = new ButtonBuilder()
+        .setCustomId(`pf2-date-confirm:publish:${confirmationId}`)
+        .setLabel('Confirmer et publier')
+        .setStyle(ButtonStyle.Success)
+      const cancel = new ButtonBuilder()
+        .setCustomId(`pf2-date-confirm:cancel:${confirmationId}`)
+        .setLabel('Annuler')
+        .setStyle(ButtonStyle.Secondary)
+      await interaction.editReply({
+        content: `**Aperçu privé — proposition ${number}**\nVérifie les groupes ci-dessous. Les joueurs ne seront notifiés qu’après confirmation.\n\n${content}`,
+        components: [new ActionRowBuilder<ButtonBuilder>().addComponents(confirm, cancel)],
+        allowedMentions: { parse: [] },
+      })
     } catch (error) {
       this.logger.error('valider-date-seance: publication impossible', error instanceof Error ? error.stack : undefined)
       await interaction.editReply({ content: `Validation impossible : ${error instanceof Error ? error.message : String(error)}` })
@@ -1827,6 +1846,31 @@ export class DiscordCommandsService {
   }
 
   async handleButton(interaction: ButtonInteraction): Promise<boolean> {
+    if (interaction.customId.startsWith('pf2-date-confirm:')) {
+      const [prefix, action, id] = interaction.customId.split(':')
+      const pending = this.pendingSessionValidations.get(id)
+      if (!pending) {
+        await interaction.reply({ content: 'Cette confirmation a expiré. Relance `/valider-date-seance`.', ephemeral: true })
+        return true
+      }
+      if (interaction.user.id !== pending.requesterId || interaction.channelId !== pending.channelId) {
+        await interaction.reply({ content: 'Cette confirmation appartient à un autre administrateur ou à un autre fil.', ephemeral: true })
+        return true
+      }
+      if (prefix !== 'pf2-date-confirm' || (action !== 'publish' && action !== 'cancel')) return false
+      this.pendingSessionValidations.delete(id)
+      if (action === 'cancel') {
+        await interaction.update({ content: 'Validation annulée. Aucun message publié et aucun joueur notifié.', components: [], allowedMentions: { parse: [] } })
+        return true
+      }
+      try {
+        await interaction.update({ content: 'Publication confirmée. Envoi des notifications…', components: [], allowedMentions: { parse: [] } })
+        await interaction.followUp({ content: pending.content, ephemeral: false, allowedMentions: { users: pending.userIds } })
+      } catch (error) {
+        await interaction.followUp({ content: `Publication impossible : ${error instanceof Error ? error.message : String(error)}. Relance la commande pour réessayer.`, ephemeral: true }).catch(() => undefined)
+      }
+      return true
+    }
     if (interaction.customId.startsWith('pf2-preview:publish:')) {
       const pending = this.pendingPreviewPublications.get(interaction.customId)
       if (!pending) { await interaction.reply({ content: 'Cette prévisualisation a expiré. Relance la commande.', ephemeral: true }); return true }

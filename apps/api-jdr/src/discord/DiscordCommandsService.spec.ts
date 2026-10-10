@@ -850,6 +850,7 @@ describe('DiscordCommandsService', () => {
       users: { fetch: jest.fn().mockResolvedValue(new Map(users.filter(user => names.includes(user.username)).map(user => [user.id, user]))) },
     })
     const channel = {
+      id: 'thread-123',
       isThread: () => true,
       fetchStarterMessage: jest.fn().mockResolvedValue({
         content: planning,
@@ -863,6 +864,7 @@ describe('DiscordCommandsService', () => {
     }
     await expect(service.handle({
       commandName: 'valider-date-seance',
+      id: 'command-123',
       user: { id: 'admin' },
       memberPermissions: { has: jest.fn().mockReturnValue(true) },
       client: { user: { id: 'bot' } },
@@ -872,13 +874,50 @@ describe('DiscordCommandsService', () => {
       editReply,
     } as never)).resolves.toBe(true)
 
-    const announcement = send.mock.calls[0][0]
-    expect(announcement.content).toContain('Séances validées — proposition 2')
-    expect(announcement.content).toContain('**Lundi 12 octobre**\n- <@100000000000000000>\n- <@100000000000000001>\n- <@100000000000000002>\n- <@100000000000000003>')
-    expect(announcement.content).toContain('**Jeudi 15 octobre**\n- <@100000000000000004>\n- <@100000000000000005>\n- <@100000000000000006>\n- <@100000000000000007>')
-    expect(announcement.content).toContain('Source : https://discord.com/channels/guild/thread/chosen')
-    expect(announcement.allowedMentions).toEqual({ users: users.map(user => user.id) })
-    expect(editReply).toHaveBeenCalledWith({ content: 'Proposition 2 validée et publiée dans ce fil.' })
+    expect(send).not.toHaveBeenCalled()
+    const preview = editReply.mock.calls[0][0]
+    expect(preview.content).toContain('Aperçu privé — proposition 2')
+    expect(preview.content).toContain('**Lundi 12 octobre**\n- <@100000000000000000>\n- <@100000000000000001>\n- <@100000000000000002>\n- <@100000000000000003>')
+    expect(preview.content).toContain('**Jeudi 15 octobre**\n- <@100000000000000004>\n- <@100000000000000005>\n- <@100000000000000006>\n- <@100000000000000007>')
+    expect(preview.content).toContain('Source : https://discord.com/channels/guild/thread/chosen')
+    expect(preview.allowedMentions).toEqual({ parse: [] })
+    const buttons = preview.components[0].toJSON().components
+    expect(buttons.map((button: { custom_id: string }) => button.custom_id)).toEqual([
+      'pf2-date-confirm:publish:command-123',
+      'pf2-date-confirm:cancel:command-123',
+    ])
+    const update = jest.fn().mockResolvedValue(undefined)
+    const followUp = jest.fn().mockResolvedValue(undefined)
+    await expect(service.handleButton({
+      customId: 'pf2-date-confirm:publish:command-123',
+      user: { id: 'admin' },
+      channelId: 'thread-123',
+      update,
+      followUp,
+    } as never)).resolves.toBe(true)
+    expect(update).toHaveBeenCalledWith(expect.objectContaining({ components: [], allowedMentions: { parse: [] } }))
+    expect(followUp).toHaveBeenCalledWith(expect.objectContaining({
+      content: expect.stringContaining('Source : https://discord.com/channels/guild/thread/chosen'),
+      ephemeral: false,
+      allowedMentions: { users: users.map(user => user.id) },
+    }))
+  })
+
+  it('cancels date validation without a public message or notification', async () => {
+    const service = new DiscordCommandsService({} as never, {} as never)
+    const pending = (service as unknown as {
+      pendingSessionValidations: Map<string, { requesterId: string; channelId: string; content: string; userIds: string[] }>
+    }).pendingSessionValidations
+    pending.set('test-cancel', { requesterId: 'admin', channelId: 'thread-1', content: '- <@123>', userIds: ['123'] })
+    const update = jest.fn().mockResolvedValue(undefined)
+    const followUp = jest.fn()
+    await service.handleButton({
+      customId: 'pf2-date-confirm:cancel:test-cancel',
+      user: { id: 'admin' }, channelId: 'thread-1', update, followUp,
+    } as never)
+    expect(update).toHaveBeenCalledWith(expect.objectContaining({ content: expect.stringContaining('Validation annulée'), components: [], allowedMentions: { parse: [] } }))
+    expect(followUp).not.toHaveBeenCalled()
+    expect(pending.has('test-cancel')).toBe(false)
   })
 
   it('does not announce an invalid proposal number or incomplete compact analysis', async () => {
