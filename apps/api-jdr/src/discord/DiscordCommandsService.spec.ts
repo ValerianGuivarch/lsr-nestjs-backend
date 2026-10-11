@@ -88,6 +88,101 @@ describe('DiscordCommandsService', () => {
     expect(content).not.toContain('PF2-Bot')
   })
 
+  it('marks quest voters ✅ or ❌ by Discord ID in a mission thread created by the bot', async () => {
+    const eric = { id: '399621722158137346', username: 'Helluin', globalName: 'Pépin', bot: false }
+    const tom = { id: '134346709487714304', username: 'nyu', globalName: 'Eryn', bot: false }
+    const arthur = { id: '557907871212503050', username: 'Arthur', globalName: 'Ruhtra', bot: false }
+    const users = [eric, tom, arthur]
+    const thumbs = { emoji: { name: '👍' }, users: { fetch: jest.fn().mockResolvedValue(new Map(users.map(user => [user.id, user]))) } }
+    const quest = {
+      id: 'quest-1', name: 'Les ruines', createdTimestamp: 1,
+      fetchStarterMessage: jest.fn().mockResolvedValue({ reactions: { cache: { find: () => thumbs } } }),
+    }
+    const forum = {
+      threads: {
+        fetchActive: jest.fn().mockResolvedValue({ threads: new Map([['quest-1', quest]]) }),
+        fetchArchived: jest.fn().mockResolvedValue({ threads: Object.assign(new Map(), { last: () => undefined }), hasMore: false }),
+      },
+    }
+    const missionStarter = {
+      author: { id: 'bot' },
+      content: [
+        '**Séance du Lundi 12 octobre 2026**',
+        'Avec **Pépin (Éric)** (<@399621722158137346>), <@344733584441081857>, <@557907871212503050>, <@448500183186145291>',
+        '',
+        'Source : https://discord.com/channels/guild/planning/confirmed',
+      ].join('\n'),
+    }
+    const fetch = jest.fn(async (id: string) => id === 'mission-parent'
+      ? { name: 'objectif-prochaine-mission' }
+      : forum)
+    const editReply = jest.fn().mockResolvedValue(undefined)
+    const service = new DiscordCommandsService({} as never, {} as never)
+    await expect(service.handle({
+      commandName: 'choix-quete',
+      channel: {
+        name: 'Séance 12/10', parentId: 'mission-parent',
+        isThread: () => true,
+        fetchStarterMessage: jest.fn().mockResolvedValue(missionStarter),
+      },
+      client: { user: { id: 'bot' }, channels: { fetch } },
+      deferReply: jest.fn().mockResolvedValue(undefined),
+      editReply,
+      followUp: jest.fn().mockResolvedValue(undefined),
+    } as never)).resolves.toBe(true)
+    const content = editReply.mock.calls[0][0].content as string
+    expect(content).toContain('✅ Joueur prévu pour cette séance · ❌ Joueur non prévu')
+    expect(content).toContain('**Les ruines** : Arthur ✅, Éric ✅, Tom ❌')
+    expect(content).not.toContain('<@')
+    expect(content).not.toContain('Helluin')
+    expect(content).not.toContain('Pépin')
+    expect(editReply.mock.calls[0][0].allowedMentions).toEqual({ parse: [] })
+  })
+
+  it('keeps /choix-quete unchanged in ordinary or non-bot mission threads', async () => {
+    const eric = { id: '399621722158137346', username: 'Helluin', globalName: 'Pépin', bot: false }
+    const quest = {
+      id: 'quest-1', name: 'Les ruines', createdTimestamp: 1,
+      fetchStarterMessage: jest.fn().mockResolvedValue({
+        reactions: { cache: { find: () => ({
+          users: { fetch: jest.fn().mockResolvedValue(new Map([[eric.id, eric]])) },
+        }) } },
+      }),
+    }
+    const forum = {
+      threads: {
+        fetchActive: jest.fn().mockResolvedValue({ threads: new Map([['quest-1', quest]]) }),
+        fetchArchived: jest.fn().mockResolvedValue({ threads: Object.assign(new Map(), { last: () => undefined }), hasMore: false }),
+      },
+    }
+    const sameFormat = [
+      '**Séance du Lundi 12 octobre 2026**',
+      'Avec <@399621722158137346>, <@344733584441081857>, <@557907871212503050>, <@448500183186145291>',
+      '',
+      'Source : https://discord.com/channels/guild/planning/confirmed',
+    ].join('\n')
+    for (const variant of [
+      { parent: 'autre-salon', authorId: 'bot', content: sameFormat },
+      { parent: 'objectif-prochaine-mission', authorId: 'member', content: sameFormat },
+      { parent: 'objectif-prochaine-mission', authorId: 'bot', content: '**Autre annonce**' },
+    ]) {
+      const editReply = jest.fn().mockResolvedValue(undefined)
+      const fetch = jest.fn(async (id: string) => id === 'mission-parent' ? { name: variant.parent } : forum)
+      const service = new DiscordCommandsService({} as never, {} as never)
+      await service.handle({
+        commandName: 'choix-quete',
+        channel: {
+          name: 'Séance 12/10', parentId: 'mission-parent', isThread: () => true,
+          fetchStarterMessage: jest.fn().mockResolvedValue({ author: { id: variant.authorId }, content: variant.content }),
+        },
+        client: { user: { id: 'bot' }, channels: { fetch } },
+        deferReply: jest.fn().mockResolvedValue(undefined),
+        editReply,
+      } as never)
+      expect(editReply.mock.calls[0][0].content).toBe('**Les ruines** : Éric')
+    }
+  })
+
   it('registers /random-perso and returns an admin-only random PF2 concept', async () => {
     const reply = jest.fn().mockResolvedValue(undefined)
     const random = jest.spyOn(Math, 'random')

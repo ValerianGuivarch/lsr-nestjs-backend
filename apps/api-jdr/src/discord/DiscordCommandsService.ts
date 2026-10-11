@@ -244,9 +244,37 @@ export class DiscordCommandsService {
     })
   }
 
+  /**
+   * Ne compare les réservations qu'avec une séance explicitement préparée par le bot.
+   * Le message d'origine dans #objectif-prochaine-mission est la source des 4 IDs :
+   * pas de déduction à partir des surnoms Discord ni du nom du fil.
+   */
+  private async missionThreadPlayerIds(interaction: ChatInputCommandInteraction): Promise<Set<string> | null> {
+    const thread = interaction.channel
+    if (!thread?.isThread() || !/^Séance \d{2}\/\d{2}$/.test(thread.name)) return null
+
+    const parentId = thread.parentId
+    if (!parentId) return null
+    const parent = await interaction.client.channels.fetch(parentId)
+    if (!parent || !('name' in parent) || parent.name !== 'objectif-prochaine-mission') return null
+
+    const starter = await thread.fetchStarterMessage({ force: true }).catch(() => null)
+    if (!starter || starter.author.id !== interaction.client.user?.id) return null
+    const lines = starter.content.split('\n')
+    if (lines.length < 4
+      || !/^\*\*Séance du (?:Lundi|Mardi|Mercredi|Jeudi|Vendredi|Samedi|Dimanche) \d{1,2} \p{L}+ \d{4}\*\*$/u.test(lines[0])
+      || !lines[1]?.startsWith('Avec ')
+      || !lines.some(line => /^Source : https:\/\/discord\.com\/channels\//.test(line))
+    ) return null
+    const mentions = [...lines[1].matchAll(/<@!?(\d+)>/g)].map(match => match[1])
+    if (mentions.length !== 4 || new Set(mentions).size !== 4) return null
+    return new Set(mentions)
+  }
+
   private async choiceCommand(interaction: ChatInputCommandInteraction): Promise<void> {
     await interaction.deferReply()
     try {
+      const missionPlayerIds = await this.missionThreadPlayerIds(interaction)
       const forum = await interaction.client.channels.fetch(this.choiceForumChannelId)
       if (!forum || !('threads' in forum) || !forum.threads) throw new Error('Le forum des quêtes est introuvable ou inaccessible.')
 
@@ -291,8 +319,15 @@ export class DiscordCommandsService {
 
       quests.sort((left, right) => left.createdAt - right.createdAt || left.title.localeCompare(right.title, 'fr'))
       const lines = quests.length
-        ? quests.map(quest => `**${quest.title}** : ${quest.users.length ? quest.users.map(user => user.name).join(', ') : 'Libre'}`)
+        ? quests.map(quest => `**${quest.title}** : ${quest.users.length
+          ? quest.users.map(user => missionPlayerIds
+            ? `${user.name} ${missionPlayerIds.has(user.id) ? '✅' : '❌'}`
+            : user.name).join(', ')
+          : 'Libre'}`)
         : ['Aucune quête trouvée dans le forum.']
+      if (missionPlayerIds) {
+        lines.unshift('✅ Joueur prévu pour cette séance · ❌ Joueur non prévu', '')
+      }
 
       const alerts = [...choicesByUser.values()]
         .filter(user => user.count > 1)
