@@ -7,7 +7,7 @@ describe('DiscordCommandsService', () => {
     expect(definitions).toEqual(expect.arrayContaining([
       'help', 'help-admin', 'choix-quete', 'random-perso', 'tirage-sort-joueur', 'recap-pjs', 'recap-seance',
       'debut-seance', 'fin-seance', 'personnage', 'faction', 'nouvelle-faction', 'associer-faction', 'afficher-personnage', 'afficher-faction', 'rechercher', 'wiki', 'wiki-admin',
-      'proposer-date-seance', 'modifier-date-seance', 'relancer-date-seance', 'analyse-date-seance', 'valider-date-seance',
+      'proposer-date-seance', 'modifier-date-seance', 'relancer-date-seance', 'analyse-date-seance', 'valider-date-seance', 'preparer-prochaine-mission',
     ]))
     expect(definitions).not.toEqual(expect.arrayContaining([
       'ping', 'export-full', 'resume', 'recap', 'new-game', 'finish-game',
@@ -460,7 +460,7 @@ describe('DiscordCommandsService', () => {
     const definitions = service.definitions()
     for (const name of [
       'random-perso', 'tirage-sort-joueur', 'help-admin', 'recap-seance', 'journaux', 'debut-seance', 'fin-seance',
-      'personnage', 'faction', 'associer-faction', 'wiki-admin', 'proposer-date-seance', 'modifier-date-seance', 'relancer-date-seance', 'analyse-date-seance', 'valider-date-seance',
+      'personnage', 'faction', 'associer-faction', 'wiki-admin', 'proposer-date-seance', 'modifier-date-seance', 'relancer-date-seance', 'analyse-date-seance', 'valider-date-seance', 'preparer-prochaine-mission',
     ]) {
       const command = definitions.find(item => item.name === name)
       expect(command?.default_member_permissions).toBeDefined()
@@ -772,10 +772,139 @@ describe('DiscordCommandsService', () => {
     }))
   })
 
+  it('prepares one mission thread per selected confirmed session, with a private preview and no early pings', async () => {
+    const service = new DiscordCommandsService({} as never, {} as never)
+    const planning = (service as unknown as { planningMessage: (monday: string, days: number[]) => string })
+      .planningMessage('2026-10-12', [0, 3])
+    const ids = Array.from({ length: 8 }, (_, i) => `10000000000000000${i}`)
+    const confirmation = [
+      '✅ **Séances validées — proposition 2**',
+      '',
+      '**Lundi 12 octobre**',
+      ...ids.slice(0, 4).map(id => `- <@${id}>`),
+      '',
+      '**Jeudi 15 octobre**',
+      ...ids.slice(4).map(id => `- <@${id}>`),
+      '',
+      'Source : https://discord.com/analysis',
+      '',
+      'Merci de valider avec un 👍 !',
+    ].join('\n')
+    const sendQuestion = jest.fn().mockResolvedValue({})
+    const startThread = jest.fn().mockResolvedValue({
+      url: 'https://discord.com/channels/g/mission-thread', send: sendQuestion,
+    })
+    const sendAnnouncement = jest.fn().mockResolvedValue({
+      url: 'https://discord.com/channels/g/parent-message', startThread,
+    })
+    const target = {
+      id: 'target-channel', name: 'objectif-prochaine-mission', type: 0,
+      messages: { fetch: jest.fn().mockResolvedValue(new Map()) },
+      send: sendAnnouncement,
+    }
+    const preview = jest.fn().mockResolvedValue(undefined)
+    const command = {
+      commandName: 'preparer-prochaine-mission',
+      id: 'prepare-1',
+      user: { id: 'admin' },
+      memberPermissions: { has: jest.fn().mockReturnValue(true) },
+      channel: {
+        id: 'planning-thread',
+        isThread: () => true,
+        fetchStarterMessage: jest.fn().mockResolvedValue({ content: planning }),
+        messages: { fetch: jest.fn().mockResolvedValue(new Map([['confirmed', {
+          author: { id: 'bot' }, content: confirmation, createdTimestamp: 100,
+          url: 'https://discord.com/channels/g/planning/confirmed',
+        }]])) },
+      },
+      client: { user: { id: 'bot' }, channels: { fetch: jest.fn().mockResolvedValue(target) } },
+      guild: { channels: { fetch: jest.fn().mockResolvedValue(new Map([['target-channel', target]])) } },
+      deferReply: jest.fn().mockResolvedValue(undefined),
+      editReply: preview,
+    }
+    await expect(service.handle(command as never)).resolves.toBe(true)
+    expect(preview.mock.calls[0][0].components[0].toJSON().components[0].custom_id)
+      .toBe('pf2-mission:select:prepare-1')
+    expect(sendAnnouncement).not.toHaveBeenCalled()
+    expect(startThread).not.toHaveBeenCalled()
+    expect(sendQuestion).not.toHaveBeenCalled()
+
+    const selectionUpdate = jest.fn().mockResolvedValue(undefined)
+    await service.handleComponent({
+      customId: 'pf2-mission:select:prepare-1',
+      values: ['0'], user: { id: 'admin' }, channelId: 'planning-thread',
+      update: selectionUpdate,
+    } as never)
+    const selectedPreview = selectionUpdate.mock.calls[0][0]
+    expect(selectedPreview.content).toContain('Séance du Lundi 12 octobre 2026')
+    expect(selectedPreview.content).toContain('/choix-quete')
+    expect(selectedPreview.content).toContain('**Fil à créer : Séance 12/10**')
+    expect(selectedPreview.allowedMentions).toEqual({ parse: [] })
+    expect(selectedPreview.components[0].toJSON().components[0].custom_id)
+      .toBe('pf2-mission:publish:prepare-1')
+    expect(sendAnnouncement).not.toHaveBeenCalled()
+
+    const buttonUpdate = jest.fn().mockResolvedValue(undefined)
+    const followUp = jest.fn().mockResolvedValue(undefined)
+    await service.handleButton({
+      customId: 'pf2-mission:publish:prepare-1',
+      user: { id: 'admin' }, channelId: 'planning-thread',
+      client: command.client, update: buttonUpdate, followUp,
+    } as never)
+    expect(sendAnnouncement).toHaveBeenCalledTimes(1)
+    const announcement = sendAnnouncement.mock.calls[0][0]
+    expect(announcement.allowedMentions).toEqual({ users: ids.slice(0, 4) })
+    expect(announcement.content).toContain('Source : https://discord.com/channels/g/planning/confirmed')
+    for (const id of ids.slice(0, 4)) expect(announcement.content).toContain(`<@${id}>`)
+    for (const id of ids.slice(4)) expect(announcement.content).not.toContain(`<@${id}>`)
+    expect(startThread).toHaveBeenCalledWith({ name: 'Séance 12/10' })
+    expect(sendQuestion).toHaveBeenCalledTimes(1)
+    expect(sendQuestion.mock.calls[0][0].content).toContain('**Que voulez-vous faire ?**')
+    expect(sendQuestion.mock.calls[0][0].content).toContain('/choix-quete')
+    expect(sendQuestion.mock.calls[0][0].allowedMentions).toEqual({ parse: [] })
+    expect(followUp).toHaveBeenCalledWith(expect.objectContaining({ content: expect.stringContaining('mission-thread'), ephemeral: true }))
+
+    const repeatReply = jest.fn().mockResolvedValue(undefined)
+    await service.handleButton({
+      customId: 'pf2-mission:publish:prepare-1', user: { id: 'admin' },
+      channelId: 'planning-thread', reply: repeatReply,
+    } as never)
+    expect(sendAnnouncement).toHaveBeenCalledTimes(1)
+    expect(repeatReply).toHaveBeenCalledWith(expect.objectContaining({ content: expect.stringContaining('expiré') }))
+  })
+
+  it('rejects non-admin mission preparation and cancellation never publishes', async () => {
+    const service = new DiscordCommandsService({} as never, {} as never)
+    const denyReply = jest.fn().mockResolvedValue(undefined)
+    await service.handle({
+      commandName: 'preparer-prochaine-mission',
+      user: { id: 'player' }, memberPermissions: { has: jest.fn().mockReturnValue(false) },
+      reply: denyReply,
+    } as never)
+    expect(denyReply).toHaveBeenCalledWith(expect.objectContaining({ ephemeral: true, content: expect.stringContaining('réservée aux administrateurs') }))
+    const drafts = (service as unknown as {
+      pendingMissionThreads: Map<string, unknown>
+    }).pendingMissionThreads
+    drafts.set('canceled', {
+      requesterId: 'admin', originChannelId: 'planning-thread', targetChannelId: 'target',
+      selectedIndex: 0,
+      groups: [{ label: 'Lundi 12 octobre', title: 'Séance 12/10', userIds: ['123'], parentContent: '<@123>', threadContent: 'Que voulez-vous faire ?', sourceUrl: 'https://discord.com/confirmed' }],
+    })
+    const update = jest.fn().mockResolvedValue(undefined)
+    const followUp = jest.fn()
+    await service.handleButton({
+      customId: 'pf2-mission:cancel:canceled',
+      user: { id: 'admin' }, channelId: 'planning-thread', update, followUp,
+    } as never)
+    expect(update).toHaveBeenCalledWith(expect.objectContaining({ content: expect.stringContaining('annulée'), components: [] }))
+    expect(followUp).not.toHaveBeenCalled()
+    expect(drafts.has('canceled')).toBe(false)
+  })
+
   it('registers the planning commands and computes the strictly next Monday', () => {
     const service = new DiscordCommandsService({} as never, {} as never)
     const definitions = service.definitions().map(command => command.name)
-    expect(definitions).toEqual(expect.arrayContaining(['proposer-date-seance', 'analyse-date-seance', 'valider-date-seance', 'modifier-date-seance', 'relancer-date-seance']))
+    expect(definitions).toEqual(expect.arrayContaining(['proposer-date-seance', 'analyse-date-seance', 'valider-date-seance', 'preparer-prochaine-mission', 'modifier-date-seance', 'relancer-date-seance']))
     expect(definitions).not.toContain('resume')
     const planning = service as unknown as {
       nextPlanningMonday: (date: Date) => string
@@ -1158,7 +1287,7 @@ describe('DiscordCommandsService', () => {
 
   it('restricts the date-planning commands to admins', async () => {
     const service = new DiscordCommandsService({} as never, {} as never)
-    for (const commandName of ['proposer-date-seance', 'modifier-date-seance', 'analyse-date-seance', 'valider-date-seance']) {
+    for (const commandName of ['proposer-date-seance', 'modifier-date-seance', 'analyse-date-seance', 'valider-date-seance', 'preparer-prochaine-mission']) {
       const reply = jest.fn().mockResolvedValue(undefined)
       await service.handle({
         commandName, reply, user: { id: 'player' },

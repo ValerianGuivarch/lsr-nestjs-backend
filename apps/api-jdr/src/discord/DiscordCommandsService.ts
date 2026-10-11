@@ -1,6 +1,6 @@
 import { forwardRef, Inject, Injectable, Logger } from '@nestjs/common'
 import { resolve } from 'node:path'
-import { ActionRowBuilder, AutocompleteInteraction, ButtonBuilder, ButtonInteraction, ButtonStyle, ChatInputCommandInteraction, ModalBuilder, ModalSubmitInteraction, PermissionFlagsBits, RESTPostAPIApplicationGuildCommandsJSONBody, SlashCommandBuilder, StringSelectMenuBuilder, StringSelectMenuInteraction, TextInputBuilder, TextInputStyle, UserSelectMenuBuilder, UserSelectMenuInteraction } from 'discord.js'
+import { ActionRowBuilder, AutocompleteInteraction, ButtonBuilder, ButtonInteraction, ButtonStyle, ChannelType, ChatInputCommandInteraction, ModalBuilder, ModalSubmitInteraction, PermissionFlagsBits, RESTPostAPIApplicationGuildCommandsJSONBody, SlashCommandBuilder, StringSelectMenuBuilder, StringSelectMenuInteraction, TextInputBuilder, TextInputStyle, UserSelectMenuBuilder, UserSelectMenuInteraction } from 'discord.js'
 import { FoundryRelayService } from '../foundry/FoundryRelayService'
 import { Pf2PersistenceService } from '../pf2-storage/Pf2PersistenceService'
 import { PlayerCodexService } from '../pf2-mj/PlayerCodexService'
@@ -62,6 +62,13 @@ export class DiscordCommandsService {
   private readonly pendingFactionAssociations = new Map<string, { requesterId: string; playerFactionId: string; mjFactionId: string }>()
   private readonly pendingSchedulePublications = new Map<string, { requesterId: string; content: string }>()
   private readonly pendingSessionValidations = new Map<string, { requesterId: string; channelId: string; content: string; userIds: string[] }>()
+  private readonly pendingMissionThreads = new Map<string, {
+    requesterId: string
+    originChannelId: string
+    targetChannelId: string
+    selectedIndex: number | null
+    groups: Array<{ label: string; title: string; userIds: string[]; parentContent: string; threadContent: string; sourceUrl: string }>
+  }>()
   private readonly pendingPlanningReminders = new Map<string, { requesterId: string; content: string; userIds: string[] }>()
   private readonly pendingPreviewPublications = new Map<string, { requesterId: string; content: string; files?: string[] }>()
   private readonly pendingPlayerDraws = new Map<string, { requesterId: string; players: Array<{ id: string; name: string }> }>()
@@ -122,6 +129,7 @@ export class DiscordCommandsService {
       new SlashCommandBuilder().setName('proposer-date-seance').setDescription('Propose les dates de séance pour la prochaine semaine.').setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild).toJSON(),
       new SlashCommandBuilder().setName('analyse-date-seance').setDescription('Analyse les disponibilités et calcule les groupes possibles.').setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild).toJSON(),
       new SlashCommandBuilder().setName('valider-date-seance').setDescription('Confirme une proposition de groupes publiée dans ce fil.').addIntegerOption(option => option.setName('numero').setDescription('Numéro de proposition à valider').setRequired(true).setMinValue(1)).setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild).toJSON(),
+      new SlashCommandBuilder().setName('preparer-prochaine-mission').setDescription('Prépare un fil de mission depuis les séances validées.').setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild).toJSON(),
       new SlashCommandBuilder().setName('modifier-date-seance').setDescription('Ajoute ou retire des dates dans une proposition existante.').setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild).toJSON(),
       new SlashCommandBuilder().setName('relancer-date-seance').setDescription('Relance les joueurs qui n’ont pas répondu à la planification.').setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild).toJSON(),
     ]
@@ -182,6 +190,7 @@ export class DiscordCommandsService {
     if (interaction.commandName === 'proposer-date-seance') { await this.planningCommand(interaction as ChatInputCommandInteraction); return true }
     if (interaction.commandName === 'analyse-date-seance') { await this.programmerSeanceCommand(interaction as ChatInputCommandInteraction); return true }
     if (interaction.commandName === 'valider-date-seance') { await this.validateSessionProposalCommand(interaction as ChatInputCommandInteraction); return true }
+    if (interaction.commandName === 'preparer-prochaine-mission') { await this.prepareNextMissionCommand(interaction as ChatInputCommandInteraction); return true }
     if (interaction.commandName === 'modifier-date-seance') { await this.modifyPlanningCommand(interaction as ChatInputCommandInteraction); return true }
     if (interaction.commandName === 'relancer-date-seance') { await this.remindPlanningCommand(interaction as ChatInputCommandInteraction); return true }
     return false
@@ -227,6 +236,7 @@ export class DiscordCommandsService {
         '`/relancer-date-seance` — depuis le fil, prépare une relance des joueurs qui n’ont pas encore répondu.',
         '`/analyse-date-seance` — analyse les réactions, propose les groupes puis permet leur publication.',
         '`/valider-date-seance numero:2` — valide et annonce une proposition de groupes dans le fil de planification.',
+        '`/preparer-prochaine-mission` — crée, après aperçu et confirmation, un fil dans #objectif-prochaine-mission pour une séance validée.',
         '`/help-admin` — affiche cette aide.',
       ].join('\n'),
       ephemeral: true,
@@ -855,6 +865,148 @@ export class DiscordCommandsService {
     } catch (error) {
       this.logger.error('valider-date-seance: publication impossible', error instanceof Error ? error.stack : undefined)
       await interaction.editReply({ content: `Validation impossible : ${error instanceof Error ? error.message : String(error)}` })
+    }
+  }
+
+  private parseConfirmedMissionGroups(content: string): Array<{ label: string; userIds: string[] }> | null {
+    if (!/^✅ \*\*Séances validées — proposition \d+\*\*/.test(content)) return null
+    const groups: Array<{ label: string; userIds: string[] }> = []
+    let current: { label: string; userIds: string[] } | null = null
+    for (const line of content.split('\n').slice(1)) {
+      const date = /^\*\*((?:Lundi|Mardi|Tercredi|Mercredi|Jeudi|Vendredi|Samedi|Dimanche) \d{1,2} \p{L}+(?: \d{4})?)\*\*$/u.exec(line)
+      if (date) {
+        current = { label: date[1], userIds: [] }
+        groups.push(current)
+        continue
+      }
+      const mention = /^- <@!?(\d+)>$/.exec(line)
+      if (mention) {
+        if (!current) return null
+        current.userIds.push(mention[1])
+      }
+    }
+    if (!groups.length || groups.some(group => group.userIds.length !== 4)
+      || new Set(groups.flatMap(group => group.userIds)).size !== groups.length * 4) return null
+    return groups
+  }
+
+  private missionPreview(commandId: string): {
+    content: string
+    components: Array<ActionRowBuilder<ButtonBuilder>>
+    allowedMentions: { parse: [] }
+  } {
+    const pending = this.pendingMissionThreads.get(commandId)!
+    const group = pending.groups[pending.selectedIndex!]
+    const confirm = new ButtonBuilder()
+      .setCustomId(`pf2-mission:publish:${commandId}`)
+      .setLabel('Confirmer et créer le fil')
+      .setStyle(ButtonStyle.Success)
+    const cancel = new ButtonBuilder()
+      .setCustomId(`pf2-mission:cancel:${commandId}`)
+      .setLabel('Annuler')
+      .setStyle(ButtonStyle.Secondary)
+    return {
+      content: [
+        '**Aperçu privé — préparation de mission**',
+        '',
+        '**Dans #objectif-prochaine-mission :**',
+        group.parentContent,
+        '',
+        `**Fil à créer : ${group.title}**`,
+        '**Message dans le fil :**',
+        group.threadContent,
+        '',
+        'Rien ne sera créé et aucun joueur ne sera notifié avant ta confirmation.',
+      ].join('\n'),
+      components: [new ActionRowBuilder<ButtonBuilder>().addComponents(confirm, cancel)],
+      allowedMentions: { parse: [] },
+    }
+  }
+
+  private async prepareNextMissionCommand(interaction: ChatInputCommandInteraction): Promise<void> {
+    if (!this.isAdmin(interaction)) {
+      await interaction.reply({ content: 'Cette commande est réservée aux administrateurs du serveur.', ephemeral: true })
+      return
+    }
+    const channel = interaction.channel
+    if (!channel?.isThread()) {
+      await interaction.reply({ content: 'Utilise cette commande dans le fil de planification contenant les séances validées.', ephemeral: true })
+      return
+    }
+
+    await interaction.deferReply({ ephemeral: true })
+    try {
+      const starter = await channel.fetchStarterMessage({ force: true }).catch(() => null)
+      const planning = starter && this.parsePlanningMessage(starter.content)
+      if (!planning) {
+        await interaction.editReply({ content: 'Ce fil ne correspond pas à une planification de séances.' })
+        return
+      }
+      const messages = await channel.messages.fetch({ limit: 100 })
+      const botId = interaction.client.user?.id
+      const confirmed = [...messages.values()]
+        .filter(message => message.author?.id === botId && this.parseConfirmedMissionGroups(message.content))
+        .sort((left, right) => right.createdTimestamp - left.createdTimestamp)[0]
+      if (!confirmed) {
+        await interaction.editReply({ content: 'Aucune confirmation de séances publiée par le bot dans ce fil. Utilise d’abord /valider-date-seance.' })
+        return
+      }
+
+      const targetChannels = await interaction.guild?.channels.fetch()
+      const target = targetChannels && [...targetChannels.values()].find(item =>
+        item?.type === ChannelType.GuildText && item.name === 'objectif-prochaine-mission'
+      )
+      if (!target) {
+        await interaction.editReply({ content: 'Le salon #objectif-prochaine-mission est introuvable ou inaccessible.' })
+        return
+      }
+
+      const parsedGroups = this.parseConfirmedMissionGroups(confirmed.content)!
+      const groups = parsedGroups.map(group => {
+        const day = PLANNING_DAYS.find(candidate =>
+          planning.selectedDays.includes(candidate.offset)
+          && group.label === `${candidate.label} ${this.planningDate(this.addDays(planning.monday, candidate.offset))}`
+        )
+        if (!day) throw new Error(`La date « ${group.label} » ne correspond pas à la planification du fil.`)
+        const isoDate = this.addDays(planning.monday, day.offset)
+        const title = `Séance ${isoDate.slice(8, 10)}/${isoDate.slice(5, 7)}`
+        const parentContent = [
+          `**Séance du ${group.label} ${isoDate.slice(0, 4)}**`,
+          `Avec ${group.userIds.map(id => `<@${id}>`).join(' ')}`,
+          '',
+          `Source : ${confirmed.url}`,
+        ].join('\n')
+        const threadContent = [
+          '**Que voulez-vous faire ?**',
+          '',
+          'Rappel : vous pouvez lister les quêtes en cours avec `/choix-quete`. Cette commande indique les quêtes disponibles et celles déjà réservées par un 👍, avec les joueurs concernés.',
+        ].join('\n')
+        return { label: group.label, title, userIds: group.userIds, parentContent, threadContent, sourceUrl: confirmed.url }
+      })
+      const selectedIndex = groups.length === 1 ? 0 : null
+      this.pendingMissionThreads.set(interaction.id, {
+        requesterId: interaction.user.id,
+        originChannelId: channel.id,
+        targetChannelId: target.id,
+        selectedIndex,
+        groups,
+      })
+      if (selectedIndex !== null) {
+        await interaction.editReply(this.missionPreview(interaction.id))
+        return
+      }
+      const select = new StringSelectMenuBuilder()
+        .setCustomId(`pf2-mission:select:${interaction.id}`)
+        .setPlaceholder('Choisis la séance à préparer')
+        .addOptions(groups.map((group, index) => ({ label: group.label, value: String(index) })))
+      await interaction.editReply({
+        content: '**Séances validées**\nChoisis la date pour laquelle créer un fil dans #objectif-prochaine-mission.',
+        components: [new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(select)],
+        allowedMentions: { parse: [] },
+      })
+    } catch (error) {
+      this.logger.error('preparer-prochaine-mission : préparation impossible', error instanceof Error ? error.stack : undefined)
+      await interaction.editReply({ content: `Préparation impossible : ${error instanceof Error ? error.message : String(error)}`, components: [] })
     }
   }
 
@@ -1528,6 +1680,26 @@ export class DiscordCommandsService {
   }
 
   async handleComponent(interaction: StringSelectMenuInteraction): Promise<boolean> {
+    if (interaction.customId.startsWith('pf2-mission:select:')) {
+      const commandId = interaction.customId.slice('pf2-mission:select:'.length)
+      const pending = this.pendingMissionThreads.get(commandId)
+      if (!pending) {
+        await interaction.reply({ content: 'Cette préparation a expiré. Relance `/preparer-prochaine-mission`.', ephemeral: true })
+        return true
+      }
+      if (interaction.user.id !== pending.requesterId || interaction.channelId !== pending.originChannelId) {
+        await interaction.reply({ content: 'Ce choix appartient à un autre administrateur ou à un autre fil.', ephemeral: true })
+        return true
+      }
+      const selected = Number(interaction.values[0])
+      if (!Number.isInteger(selected) || selected < 0 || selected >= pending.groups.length) {
+        await interaction.reply({ content: 'Séance invalide. Relance la commande.', ephemeral: true })
+        return true
+      }
+      pending.selectedIndex = selected
+      await interaction.update(this.missionPreview(commandId))
+      return true
+    }
     const createPlanning = interaction.customId.match(/^pf2-planification:create:(\d{4}-\d{2}-\d{2})$/)
     if (createPlanning) {
       const monday = createPlanning[1]
@@ -1848,6 +2020,66 @@ export class DiscordCommandsService {
   }
 
   async handleButton(interaction: ButtonInteraction): Promise<boolean> {
+    if (interaction.customId.startsWith('pf2-mission:publish:') || interaction.customId.startsWith('pf2-mission:cancel:')) {
+      const match = /^pf2-mission:(publish|cancel):(.+)$/.exec(interaction.customId)!
+      const action = match[1]
+      const commandId = match[2]
+      const pending = this.pendingMissionThreads.get(commandId)
+      if (!pending || pending.selectedIndex === null) {
+        await interaction.reply({ content: 'Cette préparation a expiré. Relance `/preparer-prochaine-mission`.', ephemeral: true })
+        return true
+      }
+      if (interaction.user.id !== pending.requesterId || interaction.channelId !== pending.originChannelId) {
+        await interaction.reply({ content: 'Cette confirmation appartient à un autre administrateur ou à un autre fil.', ephemeral: true })
+        return true
+      }
+      this.pendingMissionThreads.delete(commandId)
+      if (action === 'cancel') {
+        await interaction.update({ content: 'Création de mission annulée. Aucun message ni fil créé.', components: [], allowedMentions: { parse: [] } })
+        return true
+      }
+      await interaction.update({ content: 'Création confirmée. Préparation du fil de mission…', components: [], allowedMentions: { parse: [] } })
+      const group = pending.groups[pending.selectedIndex]
+      let parentUrl: string | null = null
+      let threadUrl: string | null = null
+      try {
+        const target = await interaction.client.channels.fetch(pending.targetChannelId)
+        if (!target || target.type !== ChannelType.GuildText) throw new Error('Le salon #objectif-prochaine-mission est inaccessible.')
+        const existing = await target.messages.fetch({ limit: 100 })
+        const botId = interaction.client.user?.id
+        if ([...existing.values()].some(message => message.author?.id === botId && message.content === group.parentContent)) {
+          await interaction.followUp({ content: `Une annonce pour ${group.label} liée à cette validation existe déjà dans #objectif-prochaine-mission. Aucun doublon créé.`, ephemeral: true })
+          return true
+        }
+        const announcement = await target.send({
+          content: group.parentContent,
+          allowedMentions: { users: group.userIds },
+        })
+        parentUrl = announcement.url
+        const thread = await announcement.startThread({ name: group.title })
+        threadUrl = thread.url
+        await thread.send({ content: group.threadContent, allowedMentions: { parse: [] } })
+        await interaction.followUp({
+          content: `Fil **${group.title}** créé dans #objectif-prochaine-mission, joueurs mentionnés et question publiée : ${thread.url}`,
+          ephemeral: true,
+          allowedMentions: { parse: [] },
+        })
+      } catch (error) {
+        const reason = error instanceof Error ? error.message : String(error)
+        this.logger.error('preparer-prochaine-mission : création impossible', error instanceof Error ? error.stack : undefined)
+        const detail = threadUrl
+          ? `Le fil a été créé (${threadUrl}) mais son message d’ouverture a échoué.`
+          : parentUrl
+            ? `L’annonce a été publiée (${parentUrl}) mais le fil n’a pas pu être créé.`
+            : 'Aucun message n’a pu être créé.'
+        await interaction.followUp({
+          content: `Préparation incomplète : ${detail} Cause : ${reason}. Ne relance pas sans vérifier le salon pour éviter un doublon.`,
+          ephemeral: true,
+          allowedMentions: { parse: [] },
+        }).catch(() => undefined)
+      }
+      return true
+    }
     if (interaction.customId.startsWith('pf2-date-confirm:')) {
       const [prefix, action, id] = interaction.customId.split(':')
       const pending = this.pendingSessionValidations.get(id)
