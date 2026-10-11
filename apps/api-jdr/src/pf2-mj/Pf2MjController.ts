@@ -1,9 +1,10 @@
-import { Body, Controller, Delete, Get, HttpException, HttpStatus, Logger, Param, Post, Put, Query, Req, Res } from '@nestjs/common'
+import { Body, Controller, Delete, Get, HttpException, HttpStatus, Logger, Optional, Param, Post, Put, Query, Req, Res } from '@nestjs/common'
 import { ApiTags } from '@nestjs/swagger'
 import { MultipartFile } from '@fastify/multipart'
 import { FastifyReply, FastifyRequest } from 'fastify'
 import { FoundryRelayService } from '../foundry/FoundryRelayService'
 import { Pf2MjService } from './Pf2MjService'
+import { PlayerIdentityDirectoryService } from './PlayerIdentityDirectoryService'
 import { ScenarioPackageService } from './ScenarioPackageService'
 import { ScenarioPreparationService } from './ScenarioPreparationService'
 import { FoundryReferenceLibraryService } from './FoundryReferenceLibraryService'
@@ -20,7 +21,10 @@ const playerActorName = /^\S(?:.*\S)?\s+\([^()]+\)$/u
 @ApiTags('PF2 MJ')
 export class Pf2MjController {
   private readonly logger = new Logger(Pf2MjController.name)
-  constructor(private readonly service: Pf2MjService, private readonly foundry: FoundryRelayService, private readonly scenarioPackages: ScenarioPackageService, private readonly scenarioPreparation: ScenarioPreparationService, private readonly scenarioCampaigns: ScenarioCampaignService, private readonly referenceLibrary: FoundryReferenceLibraryService, private readonly generatedDownloads: GeneratedDownloadService) {}
+  constructor(private readonly service: Pf2MjService, private readonly foundry: FoundryRelayService, private readonly scenarioPackages: ScenarioPackageService, private readonly scenarioPreparation: ScenarioPreparationService, private readonly scenarioCampaigns: ScenarioCampaignService, private readonly referenceLibrary: FoundryReferenceLibraryService, private readonly generatedDownloads: GeneratedDownloadService, @Optional() private readonly playerDirectory?: PlayerIdentityDirectoryService) {}
+
+  @Get('player-identities')
+  playerIdentities() { return this.playerDirectory!.snapshot() }
 
   @Get('npc-registry')
   npcRegistry(@Query('includeExcluded') includeExcluded?: string): Promise<unknown[]> { return this.scenarioPackages.registry(includeExcluded === 'true') }

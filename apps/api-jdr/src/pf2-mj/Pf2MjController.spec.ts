@@ -3,6 +3,13 @@ import { Pf2MjController } from './Pf2MjController'
 import { Pf2MjService } from './Pf2MjService'
 
 describe('Pf2MjController', () => {
+  it('exposes the joined player identity directory for the admin settings', async () => {
+    const directory = { snapshot: jest.fn().mockResolvedValue({ players: [{ playerName: 'Éric' }], wikiOnly: [], cachedActorCount: 12 }) }
+    const controller = new Pf2MjController({} as never, {} as never, {} as never, {} as never, {} as never, {} as never, {} as never, directory as never)
+    await expect(controller.playerIdentities()).resolves.toEqual(expect.objectContaining({ players: [{ playerName: 'Éric' }] }))
+    expect(directory.snapshot).toHaveBeenCalledTimes(1)
+  })
+
   it('reuses the lightweight Foundry actor list as sorted references', async () => {
     const actors = [
       { uuid: 'Actor.yaz', name: 'Yaz Lorok (Gus)', type: 'Actor' },

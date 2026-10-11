@@ -9,11 +9,12 @@ import { FoundryReferenceLibraryService } from './FoundryReferenceLibraryService
 import { GeneratedDownloadService } from './GeneratedDownloadService'
 import { ScenarioCampaignService } from './ScenarioCampaignService'
 import { PlayerCodexService } from './PlayerCodexService'
+import { PlayerIdentityDirectoryService } from './PlayerIdentityDirectoryService'
 import { PlayerCodexController } from './PlayerCodexController'
 import { MediaWikiClientService } from './MediaWikiClientService'
 import { Pf2WikiLoginController } from './Pf2WikiLoginController'
 import { Pf2ResourceService } from './Pf2ResourceService'
 import { Pf2ResourceController } from './Pf2ResourceController'
 
-@Module({ imports: [Pf2PersistenceModule, FoundryRelayModule], controllers: [Pf2MjController, PlayerCodexController, Pf2WikiLoginController, Pf2ResourceController], providers: [Pf2MjService, ScenarioPackageService, ScenarioPreparationService, ScenarioCampaignService, FoundryReferenceLibraryService, GeneratedDownloadService, PlayerCodexService, MediaWikiClientService, Pf2ResourceService], exports: [PlayerCodexService, MediaWikiClientService] })
+@Module({ imports: [Pf2PersistenceModule, FoundryRelayModule], controllers: [Pf2MjController, PlayerCodexController, Pf2WikiLoginController, Pf2ResourceController], providers: [Pf2MjService, ScenarioPackageService, ScenarioPreparationService, ScenarioCampaignService, FoundryReferenceLibraryService, GeneratedDownloadService, PlayerCodexService, PlayerIdentityDirectoryService, MediaWikiClientService, Pf2ResourceService], exports: [PlayerCodexService, MediaWikiClientService] })
 export class Pf2MjModule {}

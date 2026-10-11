@@ -4,6 +4,7 @@ import { readFile, mkdir, writeFile } from 'node:fs/promises'
 import { basename, dirname, resolve } from 'node:path'
 import { createHash, randomBytes, randomUUID } from 'node:crypto'
 import { DataSource, EntityManager } from 'typeorm'
+import { PF2_PLAYER_IDENTITIES } from '../discord/Pf2PlayerIdentity'
 
 export type Pf2RecordKind = 'pnj' | 'faction' | 'lieu' | 'region' | 'evenement' | 'scenario' | 'session' | 'catalogue' | 'curation' | 'foundry-actor-cache' | 'geography-config'
 export type Pf2RecordScope = 'global' | 'scenario'
@@ -55,6 +56,7 @@ export type Pf2SessionInput = { id?: unknown; sessionNumber?: unknown; date?: un
 export type JournalRevelation = { journalNumber: number; revealedAt: string; revealedBy: string | null; discordMessageId: string | null }
 export type JournalDefinitionRecord = { number: number; title: string; content: string; dependencies: number[]; createdAt: string; updatedAt: string }
 export type WikiAccountLink = { discordUserId: string; wikiUsername: string; createdAt: string; updatedAt: string }
+export type Pf2PlayerIdentityRow = { discordUserId: string; playerName: string }
 export type ConsumedWikiLoginGrant = { discordUserId: string; wikiUsername: string }
 
 @Injectable()
@@ -164,6 +166,20 @@ export class Pf2PersistenceService implements OnModuleInit {
 
   async abandonJournalReveal(journalNumber: number, revealedBy: string): Promise<void> {
     await this.dataSource.query("DELETE FROM pf2_journal_revelation WHERE journal_number = ? AND status = 'publishing' AND revealed_by = ?", [journalNumber, revealedBy])
+  }
+
+  async listPlayerIdentities(): Promise<Pf2PlayerIdentityRow[]> {
+    return this.dataSource.query(
+      'SELECT discord_user_id AS discordUserId, player_name AS playerName FROM pf2_player_identity ORDER BY player_name COLLATE NOCASE',
+    ) as Promise<Pf2PlayerIdentityRow[]>
+  }
+
+  async playerIdentityName(discordId: string): Promise<string | null> {
+    const rows = await this.dataSource.query(
+      'SELECT player_name AS playerName FROM pf2_player_identity WHERE discord_user_id = ? LIMIT 1',
+      [discordId],
+    ) as Array<{ playerName: string }>
+    return rows[0]?.playerName ?? null
   }
 
   async listWikiAccountLinks(): Promise<WikiAccountLink[]> {
@@ -1099,6 +1115,17 @@ export class Pf2PersistenceService implements OnModuleInit {
       const columns = await manager.query("PRAGMA table_info('pf2_map_visibility_override')") as Array<{ name?: string }>
       if (!columns.some(column => column.name === 'mj_text')) {
         await manager.query("ALTER TABLE pf2_map_visibility_override ADD COLUMN mj_text TEXT NOT NULL DEFAULT ''")
+      }
+    })
+
+    await this.applyMigration('033-player-identity-directory', async (manager) => {
+      await manager.query("CREATE TABLE IF NOT EXISTS pf2_player_identity (discord_user_id TEXT PRIMARY KEY, player_name TEXT NOT NULL, created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP, updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)")
+      await manager.query("CREATE TABLE IF NOT EXISTS pf2_foundry_wiki_pj_link (foundry_uuid TEXT PRIMARY KEY, npc_id TEXT NOT NULL UNIQUE, created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)")
+      for (const identity of PF2_PLAYER_IDENTITIES.filter(identity => identity.actor !== 'Valou')) {
+        await manager.query(
+          'INSERT OR IGNORE INTO pf2_player_identity (discord_user_id, player_name) VALUES (?, ?)',
+          [identity.id, identity.name],
+        )
       }
     })
 

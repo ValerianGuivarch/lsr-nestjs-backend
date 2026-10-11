@@ -92,6 +92,10 @@ describe('Pf2PersistenceService', () => {
     expect((await first.listSessions()).map((session) => session.sessionNumber)).toEqual([1, 2])
 
     await first.onModuleInit()
+    const identities = await first.listPlayerIdentities()
+    expect(identities).toHaveLength(12)
+    expect(identities).toContainEqual({ discordUserId: '399621722158137346', playerName: 'Éric' })
+    expect(identities.some(identity => identity.playerName === 'Valérian')).toBe(false)
     expect(await currentDataSource().query('SELECT id FROM pf2_schema_migration ORDER BY id')).toEqual([
       { id: '001-initial-pf2-storage' },
       { id: '002-pf2-sessions' },
@@ -126,6 +130,7 @@ describe('Pf2PersistenceService', () => {
       , { id: '030-restore-player-faction-domain' }
       , { id: '031-map-player-visibility' }
       , { id: '032-map-mj-light-notes' }
+      , { id: '033-player-identity-directory' }
     ])
 
     await currentDataSource().destroy()
@@ -167,6 +172,7 @@ describe('Pf2PersistenceService', () => {
       , { id: '030-restore-player-faction-domain' }
       , { id: '031-map-player-visibility' }
       , { id: '032-map-mj-light-notes' }
+      , { id: '033-player-identity-directory' }
     ])
   })
 

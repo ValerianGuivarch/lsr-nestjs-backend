@@ -6,6 +6,7 @@ import { Pf2PersistenceService } from '../pf2-storage/Pf2PersistenceService'
 import { PlayerCodexService } from '../pf2-mj/PlayerCodexService'
 import { MediaWikiClientService } from '../pf2-mj/MediaWikiClientService'
 import { DiscordResumeSync, DiscordService } from './DiscordService'
+import { pf2DiscordIdForPlayer, pf2MatchesPlayerOrDiscordAlias, pf2PlayerByDiscordId } from './Pf2PlayerIdentity'
 import { shortSummaryRewardForSession } from '../pf2-sessions/Pf2CareerXp'
 import { Pf2JournalsService } from '../pf2-journals/Pf2JournalsService'
 
@@ -264,6 +265,7 @@ export class DiscordCommandsService {
 
       const quests: Array<{ title: string; createdAt: number; users: Array<{ id: string; name: string }> }> = []
       const choicesByUser = new Map<string, { name: string; count: number }>()
+      const playerNames = new Map((await this.persistence.listPlayerIdentities?.() ?? []).map(identity => [identity.discordUserId, identity.playerName]))
 
       for (const thread of discovered.values()) {
         const starter = await thread.fetchStarterMessage().catch(() => null)
@@ -271,7 +273,7 @@ export class DiscordCommandsService {
         const users = thumbs
           ? [...(await thumbs.users.fetch()).values()]
               .filter((user: any) => !user.bot)
-              .map((user: any) => ({ id: user.id, name: user.globalName?.trim() || user.username }))
+              .map((user: any) => ({ id: user.id, name: playerNames.get(user.id) ?? pf2PlayerByDiscordId(user.id)?.name ?? `Joueur non associé (${user.id})` }))
               .sort((left, right) => left.name.localeCompare(right.name, 'fr'))
           : []
 
@@ -824,11 +826,19 @@ export class DiscordCommandsService {
         }))
         const players: string[] = []
         for (const name of group.players) {
-          // Les analyses anciennes utilisaient globalName : les deux formats restent compatibles.
+          // Les nouvelles analyses contiennent des mentions Discord ; les anciennes
+          // (noms du compte ou surnoms) restent reconnues sans deviner l'identité.
+          const id = /^<@!?(\d+)>$/.exec(name)?.[1]
           const serverMatches = candidates.filter(candidate => candidate.serverName === name)
-          const matches = serverMatches.length
-            ? serverMatches
-            : candidates.filter(candidate => candidate.user.globalName?.trim() === name || candidate.user.username === name)
+          const matches = id
+            ? candidates.filter(candidate => candidate.user.id === id)
+            : serverMatches.length
+              ? serverMatches
+              : candidates.filter(candidate =>
+                candidate.user.globalName?.trim() === name
+                || candidate.user.username === name
+                || pf2MatchesPlayerOrDiscordAlias(candidate.user.id, name)
+              )
           if (matches.length !== 1) {
             throw new Error(`Impossible d’identifier de façon sûre « ${name} » (${group.label}) parmi les réactions. Vérifie les réactions ou relance /analyse-date-seance.`)
           }
@@ -1084,16 +1094,13 @@ export class DiscordCommandsService {
         const key = reactionDayKey(reaction.emoji.name)
         if (!key || !availability.has(key)) continue
         const users = await reaction.users.fetch()
-        const available = (await Promise.all(users
+        const available = users
           .filter(user => !user.bot && user.id !== valerianId)
-          .map(async user => {
-            const member = await interaction.guild?.members?.fetch(user.id).catch(() => null)
-            return {
-              id: user.id,
-              name: member?.displayName?.trim() || user.globalName?.trim() || user.username,
-              played: playCounts.get(user.id) ?? 0,
-            }
-          })))
+          .map(user => ({
+            id: user.id,
+            name: pf2PlayerByDiscordId(user.id)?.name ?? user.globalName?.trim() ?? user.username,
+            played: playCounts.get(user.id) ?? 0,
+          }))
           .sort((a, b) => a.played - b.played || a.name.localeCompare(b.name, 'fr'))
         availability.set(key, available)
       }
@@ -1107,9 +1114,9 @@ export class DiscordCommandsService {
         if (compact) {
           for (const group of compact) {
             lines.push('', `**${group.label}**`)
-            lines.push(...group.fixed.map(player => `- ${player.name} — ${player.played} séance${player.played > 1 ? 's' : ''} jouée${player.played > 1 ? 's' : ''}`))
+            lines.push(...group.fixed.map(player => `- <@${player.id}> — ${player.played} séance${player.played > 1 ? 's' : ''} jouée${player.played > 1 ? 's' : ''}`))
             if (group.choose > 0) {
-              const choices = group.pool.map(player => `${player.name} (${player.played})`).join(', ')
+              const choices = group.pool.map(player => `<@${player.id}> (${player.played})`).join(', ')
               lines.push(`- **Choisir ${group.choose}/${group.pool.length}** : ${choices}`)
             }
           }
@@ -1117,7 +1124,7 @@ export class DiscordCommandsService {
           for (const [index, groups] of proposals.slice(0, 3).entries()) {
             if (proposals.length > 1) lines.push('', `**Proposition ${index + 1} — ex æquo**`)
             for (const group of groups) {
-              lines.push('', `**${group.label}**`, ...group.players.map(player => `- ${player.name} — ${player.played} séance${player.played > 1 ? 's' : ''} jouée${player.played > 1 ? 's' : ''}`))
+              lines.push('', `**${group.label}**`, ...group.players.map(player => `- <@${player.id}> — ${player.played} séance${player.played > 1 ? 's' : ''} jouée${player.played > 1 ? 's' : ''}`))
             }
           }
         }
@@ -1334,9 +1341,12 @@ export class DiscordCommandsService {
       return
     }
 
+    const namesByDiscordId = new Map((await this.persistence.listPlayerIdentities?.() ?? []).map(identity => [identity.discordUserId, identity.playerName]))
     const lines = ['**Récap des séances jouées**']
     for (const [player, played] of players) {
-      lines.push('', `**${player} — ${played.size} séance${played.size > 1 ? 's' : ''}**`)
+      const discordId = this.discordId(player)
+      const name = discordId ? namesByDiscordId.get(discordId) ?? pf2PlayerByDiscordId(discordId)?.name ?? player : player
+      lines.push('', `**${name} — ${played.size} séance${played.size > 1 ? 's' : ''}**${discordId ? ` (<@${discordId}>)` : ''}`)
       for (const actor of characters.filter((item) => item.player === player).sort((a, b) => a.name.localeCompare(b.name, 'fr'))) {
         lines.push(`- ${this.characterLabel(actor.name)} — ${this.levelLabel(actor.uuid, levels)} — ${actor.count} séance${actor.count > 1 ? 's' : ''}`)
       }
@@ -1368,7 +1378,8 @@ export class DiscordCommandsService {
       return name ? [{ uuid, name }] : []
     })
     const rolls = this.progressionRollCounts(actors, sessions, session.sessionNumber)
-    const content = await this.plannedSessionAnnouncement(session.sessionNumber, session.inGameStartDate, actors, rolls)
+    const actorsWithIds = actors.map(actor => ({ ...actor, userId: this.discordId(this.playerName(actor.name)) }))
+    const content = await this.plannedSessionAnnouncement(session.sessionNumber, session.inGameStartDate, actorsWithIds, rolls, true)
     await this.previewPublicMessage(interaction, content)
   }
 
@@ -1858,14 +1869,7 @@ export class DiscordCommandsService {
       return true
     }
 
-    const players = interaction.values.map((id) => {
-      const member = interaction.members.get(id) as { displayName?: string } | undefined
-      const user = interaction.users.get(id)
-      return {
-        id,
-        name: member?.displayName ?? user?.globalName ?? user?.username ?? id,
-      }
-    })
+    const players = interaction.values.map(id => ({ id, name: `<@${id}>` }))
 
     const modalId = `pf2-player-draw:count:${interaction.id}`
     this.pendingPlayerDraws.set(modalId, { requesterId: pending.requesterId, players })
@@ -2807,7 +2811,7 @@ export class DiscordCommandsService {
   private today(): string { return new Date().toISOString().slice(0, 10) }
   private addDays(date: string, days: number): string { const value = new Date(`${date}T12:00:00Z`); value.setUTCDate(value.getUTCDate() + days); return value.toISOString().slice(0, 10) }
   private displayDate(date: string): string { const [year, month, day] = date.split('-').map(Number); const months = ['Abadius', 'Calistril', 'Pharast', 'Gozran', 'Desnus', 'Sarenith', 'Erastus', 'Arodus', 'Rova', 'Lamashan', 'Neth', 'Kuthona']; return year >= 3000 ? `${day} ${months[month - 1]} ${year} AR` : `${day} ${months[month - 1]} ${year + 1694} AR (${day}/${String(month).padStart(2, '0')}/${year})` }
-  private discordId(player: string): string | undefined { return ({ jupi: '308566148931387393', julien: '308566148931387393', valerian: '492387405760823297', valou: '492387405760823297', david: '688742453276180560', tom: '134346709487714304', sameh: '688791427253403679', arcady: '344733584441081857', eric: '399621722158137346', mana: '404629333534179338', marinella: '404629333534179338', nico: '688860103629340690', nicolas: '688860103629340690', gus: '671746679636099094', augustin: '671746679636099094', elena: '689036096767524866', guilhem: '448500183186145291', arthur: '557907871212503050' })[player.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim()] }
+  private discordId(player: string): string | undefined { return pf2DiscordIdForPlayer(player) }
 
   private characterLabel(name: string): string {
     const label = name.replace(/\s+\([^()]+\)\s*$/, '').trim()

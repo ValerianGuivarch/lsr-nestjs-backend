@@ -13,6 +13,7 @@ import {
   ThreadAutoArchiveDuration,
 } from 'discord.js'
 import { DiscordCommandsService } from './DiscordCommandsService'
+import { pf2DiscordIdForPlayer } from './Pf2PlayerIdentity'
 import { Pf2PersistenceService, type Pf2Session, type Pf2SessionInput } from '../pf2-storage/Pf2PersistenceService'
 import { FoundryRelayService } from '../foundry/FoundryRelayService'
 import { buildSummaryRewardLedger } from '../pf2-sessions/Pf2CareerXp'
@@ -41,47 +42,6 @@ export type DiscordFactionPublication = { status: 'sent' | 'failed'; messageId?:
 export class DiscordService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(DiscordService.name)
   private client: Client | null = null
-
-  /**
-   * Mapping nom de joueur normalisé -> Discord user ID.
-   *
-   * La normalisation :
-   * - ignore les majuscules/minuscules
-   * - ignore les accents
-   * - trim les espaces
-   *
-   * Exemple :
-   * "ÉRIC", "éric", "Eric" => "eric"
-   */
-  private readonly discordIdsByPlayerName: Record<string, string> = {
-    julien: '308566148931387393',
-    jupi: '308566148931387393',
-
-    valerian: '492387405760823297',
-    valou: '492387405760823297',
-
-    david: '688742453276180560',
-    tom: '134346709487714304',
-    sameh: '688791427253403679',
-    arcady: '344733584441081857',
-
-    eric: '399621722158137346',
-
-    mana: '404629333534179338',
-    marinella: '404629333534179338',
-
-    nico: '688860103629340690',
-    nicolas: '688860103629340690',
-
-    gus: '671746679636099094',
-    augustin: '671746679636099094',
-
-    elena: '689036096767524866',
-
-    guilhem: '448500183186145291',
-
-    arthur: '557907871212503050',
-  }
 
   constructor(
     @Inject(forwardRef(() => DiscordCommandsService)) private readonly commands: DiscordCommandsService,
@@ -772,18 +732,7 @@ export class DiscordService implements OnModuleInit, OnModuleDestroy {
    * "  Eric "  => "eric"
    * "Valérian" => "valerian"
    */
-  private normalizePlayerName(
-    value: string,
-  ): string {
-    return value
-      .normalize('NFD')
-      .replace(
-        /[\u0300-\u036f]/g,
-        '',
-      )
-      .trim()
-      .toLowerCase()
-  }
+
 
   /**
    * Analyse le nom Foundry.
@@ -832,17 +781,9 @@ export class DiscordService implements OnModuleInit, OnModuleDestroy {
     const actorName =
       match[1].trim()
 
-    const playerName =
-      this.normalizePlayerName(
-        match[2],
-      )
-
     return {
       actorName,
-      discordId:
-        this.discordIdsByPlayerName[
-          playerName
-        ] ?? null,
+      discordId: pf2DiscordIdForPlayer(match[2]) ?? null,
     }
   }
 

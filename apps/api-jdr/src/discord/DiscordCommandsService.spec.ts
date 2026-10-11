@@ -42,8 +42,8 @@ describe('DiscordCommandsService', () => {
   })
 
   it('lists forum quest choices and warns when a user thumbs more than one quest', async () => {
-    const alice = { id: 'alice', username: 'alice', globalName: 'Alice', bot: false }
-    const bob = { id: 'bob', username: 'bob', globalName: 'Bob', bot: false }
+    const alice = { id: '399621722158137346', username: 'helluin', globalName: 'Pépin', bot: false }
+    const bob = { id: '134346709487714304', username: 'nyu', globalName: 'Eryn', bot: false }
     const bot = { id: 'bot', username: 'bot', globalName: 'PF2-Bot', bot: true }
     const reaction = (users: unknown[]) => ({ users: { fetch: jest.fn().mockResolvedValue(new Map((users as Array<{ id: string }>).map(user => [user.id, user]))) } })
     const starter = (users: unknown[]) => ({ reactions: { cache: { find: jest.fn((predicate: (reaction: any) => boolean) => {
@@ -77,10 +77,14 @@ describe('DiscordCommandsService', () => {
 
     expect(deferReply).toHaveBeenCalled()
     const content = editReply.mock.calls[0][0].content
-    expect(content).toContain('**La crypte oubliée** : Alice, Bob')
-    expect(content).toContain('**Le phare brisé** : Alice')
+    expect(content).toContain('**La crypte oubliée** : Éric, Tom')
+    expect(content).toContain('**Le phare brisé** : Éric')
     expect(content).toContain('**Le vieux pont** : Libre')
-    expect(content).toContain('⚠️ **Alerte :** Alice a mis plus d’une réaction.')
+    expect(content).toContain('⚠️ **Alerte :** Éric a mis plus d’une réaction.')
+    expect(content).not.toContain('Helluin')
+    expect(content).not.toContain('Pépin')
+    expect(content).not.toContain('Eryn')
+    expect(content).not.toContain('<@')
     expect(content).not.toContain('PF2-Bot')
   })
 
@@ -144,7 +148,7 @@ describe('DiscordCommandsService', () => {
       customId: 'pf2-player-draw:players:draw-command',
       id: 'user-select',
       user: { id: 'admin' },
-      values: ['tom', 'arcady', 'juby'],
+      values: ['134346709487714304', '344733584441081857', '308566148931387393'],
       members: new Map(),
       users: new Map([
         ['tom', { username: 'Tom', globalName: null }],
@@ -177,11 +181,11 @@ describe('DiscordCommandsService', () => {
     const preview = editReply.mock.calls[0][0]
     expect(preview.content).toBe([
       '🎲 **Tirage au sort joueur**',
-      'Parmi : Tom, Arcady, Juby',
+      'Parmi : <@134346709487714304>, <@344733584441081857>, <@308566148931387393>',
       '',
       '**Liste des tirages au sort :**',
-      '- Tom',
-      '- Arcady',
+      '- <@134346709487714304>',
+      '- <@344733584441081857>',
     ].join('\n'))
     expect(preview.components[0].toJSON().components[0].label).toBe('Publier')
   })
@@ -773,7 +777,7 @@ describe('DiscordCommandsService', () => {
     }))
   })
 
-  it('uses server nicknames rather than global account names in schedule group analysis', async () => {
+  it('uses non-pinging Discord mentions rather than account names in schedule group analysis', async () => {
     const service = new DiscordCommandsService({} as never, {} as never)
     jest.spyOn(service as never, 'discordSessionCounts' as never).mockResolvedValue(new Map() as never)
     const planning = (service as unknown as { planningMessage: (monday: string, days: number[]) => string })
@@ -811,8 +815,9 @@ describe('DiscordCommandsService', () => {
       editReply,
     } as never)
     const output = editReply.mock.calls[0][0].content as string
-    expect(output).toContain('Pseudo de serveur 0')
-    expect(output).toContain('Pseudo de serveur 3')
+    expect(output).toContain('<@100000000000000000>')
+    expect(output).toContain('<@100000000000000003>')
+    expect(editReply.mock.calls[0][0].allowedMentions).toEqual({ parse: [] })
     expect(output).not.toContain('Account 0')
     expect(output).not.toContain('account-0')
   })

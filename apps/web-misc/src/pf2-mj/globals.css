@@ -997,3 +997,28 @@
 .resource-favorite-filter{display:flex;align-items:center;gap:7px;white-space:nowrap;font-size:13px;color:#5e574d;cursor:pointer}
 .resource-favorite-filter input{width:auto}
 .resource-detail-head>div:last-child{display:flex;align-items:center;gap:8px;flex:0 0 auto}
+
+/* Répertoire des correspondances des joueurs PF2 — Administration */
+.pf2-mj-v3 .player-identity-card{max-width:100%;overflow:hidden}
+.pf2-mj-v3 .player-identity-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:14px}
+.pf2-mj-v3 .player-identity-heading h3{margin:0 0 7px}
+.pf2-mj-v3 .player-identity-heading p,.pf2-mj-v3 .player-identity-footer,.pf2-mj-v3 .player-identity-orphans p{font-size:12px;line-height:1.55;color:var(--muted)}
+.pf2-mj-v3 .player-identity-heading button{flex-shrink:0}
+.pf2-mj-v3 .player-identity-stats{font-weight:700;font-size:12px;margin:12px 0}
+.pf2-mj-v3 .player-identity-scroll{max-width:100%;overflow-x:auto;border:1px solid var(--line);border-radius:7px}
+.pf2-mj-v3 .player-identity-table{border-collapse:collapse;min-width:920px;width:100%;font-size:12px}
+.pf2-mj-v3 .player-identity-table th,.pf2-mj-v3 .player-identity-table td{border-bottom:1px solid var(--line);padding:12px 10px;text-align:left;vertical-align:top}
+.pf2-mj-v3 .player-identity-table thead th{background:#f5edda;color:#644b17;white-space:nowrap}
+.pf2-mj-v3 .player-identity-table tbody th{font-weight:750}
+.pf2-mj-v3 .player-identity-table code,.pf2-mj-v3 .player-identity-orphans code{display:block;font-size:10px;overflow-wrap:anywhere;white-space:normal}
+.pf2-mj-v3 .player-identity-characters{display:grid;gap:10px}
+.pf2-mj-v3 .player-identity-character{display:grid;gap:4px;min-width:190px}
+.pf2-mj-v3 .player-identity-character strong{font-size:12px}
+.pf2-mj-v3 .identity-missing,.pf2-mj-v3 .identity-warn{color:#a05131;font-weight:650}
+.pf2-mj-v3 .identity-ok{color:#347249;font-weight:650}
+.pf2-mj-v3 .player-identity-table td ul{padding-left:16px;margin:0;min-width:130px}
+.pf2-mj-v3 .player-identity-table td li{margin-bottom:5px}
+.pf2-mj-v3 .player-identity-orphans{margin:14px 0}
+.pf2-mj-v3 .player-identity-orphans h4{margin:0 0 4px}
+.pf2-mj-v3 .player-identity-footer{margin-top:13px}
+@media(max-width:650px){.pf2-mj-v3 .player-identity-heading{flex-direction:column}.pf2-mj-v3 .player-identity-table{min-width:880px}}
