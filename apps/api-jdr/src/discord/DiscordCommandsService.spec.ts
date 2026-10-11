@@ -1,3 +1,4 @@
+import { Collection } from 'discord.js'
 import { DiscordCommandsService } from './DiscordCommandsService'
 
 describe('DiscordCommandsService', () => {
@@ -772,6 +773,50 @@ describe('DiscordCommandsService', () => {
     }))
   })
 
+  it('uses server nicknames rather than global account names in schedule group analysis', async () => {
+    const service = new DiscordCommandsService({} as never, {} as never)
+    jest.spyOn(service as never, 'discordSessionCounts' as never).mockResolvedValue(new Map() as never)
+    const planning = (service as unknown as { planningMessage: (monday: string, days: number[]) => string })
+      .planningMessage('2026-10-12', [0])
+    const accounts = Array.from({ length: 4 }, (_, index) => ({
+      id: `10000000000000000${index}`,
+      username: `account-${index}`,
+      globalName: `Account ${index}`,
+      bot: false,
+    }))
+    const starter = {
+      content: planning,
+      url: 'https://discord.com/planning',
+      reactions: { cache: new Map([['monday', {
+        emoji: { name: '🇱' },
+        users: { fetch: jest.fn().mockResolvedValue(new Collection(accounts.map(user => [user.id, user]))) },
+      }]]) },
+    }
+    const editReply = jest.fn().mockResolvedValue(undefined)
+    await service.handle({
+      commandName: 'analyse-date-seance',
+      user: { id: 'admin' },
+      memberPermissions: { has: jest.fn().mockReturnValue(true) },
+      channel: {
+        isTextBased: () => true, isThread: () => true,
+        messages: { fetch: jest.fn() },
+        fetchStarterMessage: jest.fn().mockResolvedValue(starter),
+      },
+      guild: {
+        members: { fetch: jest.fn(async (id: string) => ({
+          displayName: `Pseudo de serveur ${accounts.findIndex(account => account.id === id)}`,
+        })) },
+      },
+      deferReply: jest.fn().mockResolvedValue(undefined),
+      editReply,
+    } as never)
+    const output = editReply.mock.calls[0][0].content as string
+    expect(output).toContain('Pseudo de serveur 0')
+    expect(output).toContain('Pseudo de serveur 3')
+    expect(output).not.toContain('Account 0')
+    expect(output).not.toContain('account-0')
+  })
+
   it('prepares one mission thread per selected confirmed session, with a private preview and no early pings', async () => {
     const service = new DiscordCommandsService({} as never, {} as never)
     const planning = (service as unknown as { planningMessage: (monday: string, days: number[]) => string })
@@ -818,7 +863,10 @@ describe('DiscordCommandsService', () => {
         }]])) },
       },
       client: { user: { id: 'bot' }, channels: { fetch: jest.fn().mockResolvedValue(target) } },
-      guild: { channels: { fetch: jest.fn().mockResolvedValue(new Map([['target-channel', target]])) } },
+      guild: {
+        channels: { fetch: jest.fn().mockResolvedValue(new Map([['target-channel', target]])) },
+        members: { fetch: jest.fn(async (id: string) => ({ displayName: id === ids[0] ? 'Pen-Pen (Arcady)' : `Pseudo du serveur ${id.slice(-1)}` })) },
+      },
       deferReply: jest.fn().mockResolvedValue(undefined),
       editReply: preview,
     }
@@ -837,6 +885,7 @@ describe('DiscordCommandsService', () => {
     } as never)
     const selectedPreview = selectionUpdate.mock.calls[0][0]
     expect(selectedPreview.content).toContain('Séance du Lundi 12 octobre 2026')
+    expect(selectedPreview.content).toContain(`**Pen-Pen (Arcady)** (<@${ids[0]}>)`)
     expect(selectedPreview.content).toContain('/choix-quete')
     expect(selectedPreview.content).toContain('**Fil à créer : Séance 12/10**')
     expect(selectedPreview.allowedMentions).toEqual({ parse: [] })
@@ -855,6 +904,7 @@ describe('DiscordCommandsService', () => {
     const announcement = sendAnnouncement.mock.calls[0][0]
     expect(announcement.allowedMentions).toEqual({ users: ids.slice(0, 4) })
     expect(announcement.content).toContain('Source : https://discord.com/channels/g/planning/confirmed')
+    expect(announcement.content).toContain(`**Pen-Pen (Arcady)** (<@${ids[0]}>)`)
     for (const id of ids.slice(0, 4)) expect(announcement.content).toContain(`<@${id}>`)
     for (const id of ids.slice(4)) expect(announcement.content).not.toContain(`<@${id}>`)
     expect(startThread).toHaveBeenCalledWith({ name: 'Séance 12/10' })
@@ -972,11 +1022,14 @@ describe('DiscordCommandsService', () => {
       ['chosen', { author: { id: 'bot' }, content: report, createdTimestamp: 200, url: 'https://discord.com/channels/guild/thread/chosen' }],
       ['old', { author: { id: 'bot' }, content: '**Groupes possibles pour la prochaine semaine**\nAucun groupe de 4', createdTimestamp: 100 }],
     ])
-    const users = ['playest', 'Arthur', 'Helluin', 'nyu', 'triki', 'Actéon Abbot', 'Mana', 'Guilhem']
-      .map((name, index) => ({ id: `10000000000000000${index}`, username: name, globalName: name, bot: false }))
+    const serverNames = ['playest', 'Arthur', 'Helluin', 'nyu', 'triki', 'Actéon Abbot', 'Mana', 'Guilhem']
+    const users = serverNames.map((_, index) => ({
+      id: `10000000000000000${index}`, username: `account-${index}`, globalName: `Compte ${index}`, bot: false,
+    }))
+    const nicknameById = new Map(users.map((user, index) => [user.id, serverNames[index]]))
     const reaction = (emoji: string, names: string[]) => ({
       emoji: { name: emoji },
-      users: { fetch: jest.fn().mockResolvedValue(new Map(users.filter(user => names.includes(user.username)).map(user => [user.id, user]))) },
+      users: { fetch: jest.fn().mockResolvedValue(new Map(users.filter(user => names.includes(nicknameById.get(user.id)!)).map(user => [user.id, user]))) },
     })
     const channel = {
       id: 'thread-123',
@@ -997,6 +1050,7 @@ describe('DiscordCommandsService', () => {
       user: { id: 'admin' },
       memberPermissions: { has: jest.fn().mockReturnValue(true) },
       client: { user: { id: 'bot' } },
+      guild: { members: { fetch: jest.fn(async (id: string) => ({ displayName: nicknameById.get(id) })) } },
       options: { getInteger: jest.fn().mockReturnValue(2) },
       channel,
       deferReply: jest.fn().mockResolvedValue(undefined),

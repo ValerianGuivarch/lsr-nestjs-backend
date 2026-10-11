@@ -818,15 +818,21 @@ export class DiscordCommandsService {
         const reaction = [...starter.reactions.cache.values()].find(item => item.emoji.name === day.emoji)
         if (!reaction) throw new Error(`Réactions introuvables pour ${group.label}. Relance /analyse-date-seance.`)
         const users = await reaction.users.fetch()
+        const candidates = await Promise.all([...users.values()].filter(user => !user.bot).map(async user => {
+          const member = await interaction.guild?.members?.fetch(user.id).catch(() => null)
+          return { user, serverName: member?.displayName?.trim() || null }
+        }))
         const players: string[] = []
         for (const name of group.players) {
-          const matches = [...users.values()].filter(user =>
-            !user.bot && (user.globalName?.trim() || user.username) === name
-          )
+          // Les analyses anciennes utilisaient globalName : les deux formats restent compatibles.
+          const serverMatches = candidates.filter(candidate => candidate.serverName === name)
+          const matches = serverMatches.length
+            ? serverMatches
+            : candidates.filter(candidate => candidate.user.globalName?.trim() === name || candidate.user.username === name)
           if (matches.length !== 1) {
             throw new Error(`Impossible d’identifier de façon sûre « ${name} » (${group.label}) parmi les réactions. Vérifie les réactions ou relance /analyse-date-seance.`)
           }
-          const userId = matches[0].id
+          const userId = matches[0].user.id
           if (userIds.has(userId)) throw new Error(`Le membre ${name} figure dans plusieurs groupes. Aucune annonce publiée.`)
           userIds.add(userId)
           players.push(`- <@${userId}>`)
@@ -962,6 +968,11 @@ export class DiscordCommandsService {
       }
 
       const parsedGroups = this.parseConfirmedMissionGroups(confirmed.content)!
+      const memberNames = new Map<string, string>()
+      await Promise.all([...new Set(parsedGroups.flatMap(group => group.userIds))].map(async id => {
+        const member = await interaction.guild?.members?.fetch(id).catch(() => null)
+        if (member?.displayName?.trim()) memberNames.set(id, member.displayName.trim())
+      }))
       const groups = parsedGroups.map(group => {
         const day = PLANNING_DAYS.find(candidate =>
           planning.selectedDays.includes(candidate.offset)
@@ -972,7 +983,9 @@ export class DiscordCommandsService {
         const title = `Séance ${isoDate.slice(8, 10)}/${isoDate.slice(5, 7)}`
         const parentContent = [
           `**Séance du ${group.label} ${isoDate.slice(0, 4)}**`,
-          `Avec ${group.userIds.map(id => `<@${id}>`).join(' ')}`,
+          `Avec ${group.userIds.map(id => memberNames.has(id)
+            ? `**${memberNames.get(id)}** (<@${id}>)`
+            : `<@${id}>`).join(', ')}`,
           '',
           `Source : ${confirmed.url}`,
         ].join('\n')
@@ -1071,9 +1084,16 @@ export class DiscordCommandsService {
         const key = reactionDayKey(reaction.emoji.name)
         if (!key || !availability.has(key)) continue
         const users = await reaction.users.fetch()
-        const available = users
+        const available = (await Promise.all(users
           .filter(user => !user.bot && user.id !== valerianId)
-          .map(user => ({ id: user.id, name: user.globalName?.trim() || user.username, played: playCounts.get(user.id) ?? 0 }))
+          .map(async user => {
+            const member = await interaction.guild?.members?.fetch(user.id).catch(() => null)
+            return {
+              id: user.id,
+              name: member?.displayName?.trim() || user.globalName?.trim() || user.username,
+              played: playCounts.get(user.id) ?? 0,
+            }
+          })))
           .sort((a, b) => a.played - b.played || a.name.localeCompare(b.name, 'fr'))
         availability.set(key, available)
       }
