@@ -29,7 +29,8 @@ const mjLightPlacesUrl = process.env.GOLARION_MAP_MJ_LIGHT_PLACES_URL?.trim() ||
 const mjLightSourcePointsUrl = process.env.GOLARION_MAP_MJ_LIGHT_SOURCE_POINTS_URL?.trim() || `${mapApiBase}/mj-light/source-points`
 const mjLightVisibilityUrl = process.env.GOLARION_MAP_MJ_LIGHT_VISIBILITY_URL?.trim() || `${mapApiBase}/mj-light/visibility`
 const curationUrl = process.env.GOLARION_MAP_CURATION_URL?.trim() || `${mapApiBase}/curation`
-const runtimeConfigSource = `window.GOLARION_MAP_CONFIG=${JSON.stringify({ placesUrl, sourcePointsUrl, searchUrl, visibilityUrl, mjLightPlacesUrl, mjLightSourcePointsUrl, mjLightVisibilityUrl, curationUrl })};`
+const absalomOverlayUrl = process.env.GOLARION_MAP_ABSALOM_OVERLAY_URL?.trim() || ''
+const runtimeConfigSource = `window.GOLARION_MAP_CONFIG=${JSON.stringify({ placesUrl, sourcePointsUrl, searchUrl, visibilityUrl, mjLightPlacesUrl, mjLightSourcePointsUrl, mjLightVisibilityUrl, curationUrl, absalomOverlayUrl })};`
 
 const mimeTypes = {
   '.css': 'text/css; charset=utf-8',

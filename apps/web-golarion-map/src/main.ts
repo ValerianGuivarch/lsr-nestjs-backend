@@ -22,6 +22,7 @@ import { ProjectionControl } from "./tools/ProjectionControl";
 import { addPublicPlaceMarkers } from "./tools/public-place-markers";
 import { addPlayerSourcePoints } from "./tools/player-source-points";
 import { addPlayerCuratedLabels } from "./tools/player-curated-labels";
+import { addAbsalomOverlay } from "./tools/absalom-overlay";
 import { makeLabelsCuratable, makeMjLightLabelsCuratable } from "./tools/label-curation";
 import hiddenDefaults from '../resources/map-default-hidden-labels.json';
 import { applyPlayerMapVisibilityFilters } from './utils/map-visibility';
@@ -109,6 +110,7 @@ export const map = new Map({
   }
 });
 export const golarionMap = new GolarionMap(map);
+addAbsalomOverlay(map, !startupOptions.embedded);
 void addPublicPlaceMarkers(golarionMap, publicPlacesUrl, mapAudience);
 if (playerLikeAudience) {
   const playerMode = mapAudience === 'mj-light' ? 'mj-light' : 'pj';

@@ -18,6 +18,14 @@ La barre d’évolution temporelle est désactivée dans les trois modes. En ouv
 
 Les décisions manuelles sont stockées dans SQLite (`pf2_map_visibility_override`) avec trois états fonctionnels dans l’interface : automatique, visible, masqué. Une colonne `mj_text` séparée conserve les rappels et secrets réservés au MJ sans les envoyer aux endpoints PJ. Le catalogue stable utilisé pour relier la carte importée à ces décisions est généré dans `resources/map-source-points.json`.
 
+## Plan illustré d’Absalom
+
+Lorsque l’on zoome sur Absalom (à partir du zoom 7,5), un plan français de la ville apparaît progressivement, géoréférencé sur la carte MapLibre. Les marqueurs PF2, les fenêtres d’information et les règles de visibilité PJ/MJ restent gérés par les couches existantes, au-dessus de l’image. Le bouton **A** en haut à droite, visible à proximité d’Absalom, permet de comparer le plan illustré et le fond vectoriel dans les trois modes.
+
+Le plan par défaut est inclus dans `assets/absalom-overlay.jpg` (carte de Master NI, issue de [Pathfinder-FR](https://www.pathfinder-fr.org/Wiki/Golarion.Absalom.ashx)). Le build Vite copie automatiquement l’image dans `dist` : aucun transfert d’asset supplémentaire n’est nécessaire. On peut la remplacer **sans modifier le code** en définissant `GOLARION_MAP_ABSALOM_OVERLAY_URL` vers une image accessible depuis le navigateur. Une URL relative sous `GolarionMapData` est recommandée, par exemple `/extra/absalom/carte-remplacement.jpg`. Ce réglage est lu au démarrage du serveur de production et par Vite en développement. Une image au cadrage différent peut nécessiter un nouvel ajustement des quatre coins définis dans `src/tools/absalom-overlay.ts`.
+
+Le calage initial est approximatif et doit être vérifié sur la ville (fort Azlant, portes, quai, île des Pilotes). L’image contient des étiquettes publiques de quartiers visibles également en mode PJ : elle ne doit pas être employée pour y insérer des secrets MJ.
+
 ## Ressources externes
 
 Par défaut, l’application attend `~/GolarionMapData`, soit `../../GolarionMapData` depuis la racine habituelle du dépôt `~/IdeaProjects/lsr-nestjs-backend`.

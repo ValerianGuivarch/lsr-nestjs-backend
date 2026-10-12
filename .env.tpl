@@ -24,6 +24,8 @@ JDR_PORT=3333
 # GOLARION_MAP_PUBLIC_ORIGIN=
 # GOLARION_MAP_HOST=0.0.0.0
 # GOLARION_MAP_PORT=4204
+# Facultatif : remplacer le plan illustré d'Absalom par une image servie publiquement.
+# GOLARION_MAP_ABSALOM_OVERLAY_URL=/extra/absalom/carte-remplacement.jpg
 # Niveau de détail fixe de la carte PJ : essential, standard ou detailed
 # GOLARION_MAP_PJ_DETAIL=standard
 # NAS public : désactive le WebSocket de hot reload Vite derrière nginx.

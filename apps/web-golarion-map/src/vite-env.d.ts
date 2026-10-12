@@ -14,6 +14,7 @@ declare global {
             mjLightSourcePointsUrl?: string;
             mjLightVisibilityUrl?: string;
             curationUrl?: string;
+            absalomOverlayUrl?: string;
         };
     }
 }

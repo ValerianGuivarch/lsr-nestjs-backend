@@ -33,7 +33,8 @@ export default defineConfig(({ command, isPreview, mode }): UserConfig => {
   const mjLightSourcePointsUrl = env['GOLARION_MAP_MJ_LIGHT_SOURCE_POINTS_URL']?.trim() || `${mapApiBase}/mj-light/source-points`
   const mjLightVisibilityUrl = env['GOLARION_MAP_MJ_LIGHT_VISIBILITY_URL']?.trim() || `${mapApiBase}/mj-light/visibility`
   const curationUrl = env['GOLARION_MAP_CURATION_URL']?.trim() || `${mapApiBase}/curation`
-  const runtimeConfigSource = `window.GOLARION_MAP_CONFIG=${JSON.stringify({ placesUrl, sourcePointsUrl, searchUrl, visibilityUrl, mjLightPlacesUrl, mjLightSourcePointsUrl, mjLightVisibilityUrl, curationUrl })};`
+  const absalomOverlayUrl = env['GOLARION_MAP_ABSALOM_OVERLAY_URL']?.trim() || ''
+  const runtimeConfigSource = `window.GOLARION_MAP_CONFIG=${JSON.stringify({ placesUrl, sourcePointsUrl, searchUrl, visibilityUrl, mjLightPlacesUrl, mjLightSourcePointsUrl, mjLightVisibilityUrl, curationUrl, absalomOverlayUrl })};`
   const mapHost = env['GOLARION_MAP_HOST'] ?? '0.0.0.0'
   const mapPort = Number(env['GOLARION_MAP_PORT'] ?? 4204)
   const placeNamesFr = JSON.parse(readFileSync(existsSync(placeNamesPath) ? placeNamesPath : fallbackPlaceNamesPath, 'utf8')) as Record<string, string>
