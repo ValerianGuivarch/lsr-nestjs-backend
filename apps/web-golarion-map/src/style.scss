@@ -136,73 +136,90 @@ a {
 	font-weight: bold;
 }
 
+/* The fixed-size button is the MapLibre Marker element. Only this box is anchored
+   to longitude/latitude; the optional label is absolutely positioned next to it. */
 .pf2-public-place-marker {
 	appearance: none;
-	border: 0;
-	background: transparent;
+	position: relative;
+	display: grid;
+	place-items: center;
+	box-sizing: border-box;
+	width: 26px;
+	height: 26px;
 	padding: 0;
-	display: flex;
-	align-items: center;
-	gap: 5px;
+	border: 0;
+	border-radius: 50%;
+	background: transparent;
 	cursor: pointer;
-	font: 600 12px/1.1 system-ui, sans-serif;
+	font: 600 11px/1.2 system-ui, sans-serif;
 	color: #1f1a12;
 	filter: drop-shadow(0 1px 2px rgba(0, 0, 0, .45));
+	overflow: visible;
 }
 
 .pf2-public-place-icon {
 	display: grid;
 	place-items: center;
-	min-width: 28px;
-	height: 28px;
-	padding: 0 5px;
 	box-sizing: border-box;
+	width: 26px;
+	height: 26px;
+	padding: 0;
 	border: 2px solid #fff8dc;
-	border-radius: 999px;
+	border-radius: 50%;
 	background: #765719;
 	color: white;
-	font-size: 15px;
+	font-size: 14px;
 	box-shadow: 0 1px 4px rgba(0, 0, 0, .38);
 }
 
 .pf2-public-place-label {
-	max-width: 180px;
-	padding: 4px 6px;
+	position: absolute;
+	left: calc(100% + 6px);
+	top: 50%;
+	transform: translateY(-50%);
+	box-sizing: border-box;
+	width: max-content;
+	max-width: 155px;
+	padding: 3px 6px;
 	border: 1px solid rgba(78, 59, 25, .45);
-	border-radius: 5px;
+	border-radius: 4px;
 	background: rgba(255, 250, 235, .94);
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;
+	font: 600 11px/1.25 system-ui, sans-serif;
+	pointer-events: none;
 }
 
 .pf2-public-place-marker.labels-hidden .pf2-public-place-label {
 	display: none;
 }
+.pf2-public-place-marker.labels-hidden:hover .pf2-public-place-label,
+.pf2-public-place-marker.labels-hidden:focus-visible .pf2-public-place-label {
+	display: block;
+}
 
-/* Repères de campagne partagés : priorité visuelle même au zoom continental. */
+/* Important locations remain distinguishable but no longer cover the basemap. */
 .pf2-public-place-marker.is-important {
-	z-index: 2;
-	font-size: 14px;
-	font-weight: 800;
-	filter: drop-shadow(0 2px 4px rgba(0, 0, 0, .7));
+	z-index: 3;
+	width: 30px;
+	height: 30px;
 }
 .pf2-public-place-marker.is-important .pf2-public-place-icon {
-	min-width: 37px;
-	height: 37px;
+	width: 30px;
+	height: 30px;
 	background: #b36d0c;
-	border: 3px solid #fff5b9;
-	font-size: 22px;
-	box-shadow: 0 0 0 2px #594016, 0 2px 8px #0008;
+	border: 2px solid #fff5b9;
+	font-size: 17px;
+	box-shadow: 0 0 0 1px #594016, 0 1px 4px #0006;
 }
 .pf2-public-place-marker.is-important .pf2-public-place-label {
-	display: block;
-	max-width: 220px;
-	padding: 6px 9px;
-	border: 2px solid #be8723;
+	max-width: 165px;
+	padding: 4px 7px;
+	border: 1px solid #be8723;
 	background: #fff4c8;
 	color: #392700;
-	font-weight: 800;
+	font-weight: 700;
 }
 .pf2-campaign-places-control {
 	max-width: min(280px, 82vw);

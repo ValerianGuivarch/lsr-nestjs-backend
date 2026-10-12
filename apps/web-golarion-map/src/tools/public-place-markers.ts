@@ -175,7 +175,8 @@ export async function addPublicPlaceMarkers(gmap: GolarionMap, placesUrl: string
           })
         : basicPopupContent(place)
       popup.setDOMContent(popupContent)
-      marker = new Marker({ element, anchor: 'bottom' })
+      // The anchor must depend on the icon only, never on the (potentially long) label.
+      marker = new Marker({ element, anchor: 'center' })
         .setLngLat([place.longitude, place.latitude])
         .setPopup(popup)
         .addTo(gmap.map)
@@ -183,8 +184,13 @@ export async function addPublicPlaceMarkers(gmap: GolarionMap, placesUrl: string
     })
 
     const updateLabelDensity = () => {
-      const showLabels = gmap.map.getZoom() >= 5.5
-      for (const { element, place } of entries) element.classList.toggle('labels-hidden', !place.important && !showLabels)
+      const zoom = gmap.map.getZoom()
+      // Country-scale view: show the shared favorite icon, not a wide label.
+      // Near the place, labels are restored without moving the geographic anchor.
+      for (const { element, place } of entries) {
+        const minLabelZoom = place.important ? 6.5 : 5.5
+        element.classList.toggle('labels-hidden', zoom < minLabelZoom)
+      }
     }
     updateLabelDensity()
     gmap.map.on('zoomend', updateLabelDensity)
