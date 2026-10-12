@@ -136,11 +136,12 @@ a {
 	font-weight: bold;
 }
 
-/* The fixed-size button is the MapLibre Marker element. Only this box is anchored
-   to longitude/latitude; the optional label is absolutely positioned next to it. */
+/* The fixed-size button is the MapLibre Marker element. It must remain
+   position:absolute, like MapLibre's .maplibregl-marker, for correct projection.
+   Its label is positioned next to it but does not affect the marker box. */
 .pf2-public-place-marker {
 	appearance: none;
-	position: relative;
+	position: absolute;
 	display: grid;
 	place-items: center;
 	box-sizing: border-box;
