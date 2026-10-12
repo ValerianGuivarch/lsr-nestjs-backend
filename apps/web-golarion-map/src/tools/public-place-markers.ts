@@ -1,5 +1,6 @@
 import { Marker, Popup } from 'maplibre-gl'
 import { GolarionMap } from './GolarionMap'
+import { createFavoriteButton, type FavoriteTarget } from './favorite-button'
 
 type PublicPlace = {
   id: string
@@ -10,6 +11,9 @@ type PublicPlace = {
   mjText?: string
   icon: string
   important: boolean
+  fid?: number
+  category?: string
+  label?: string
 }
 
 const glyphs: Record<string, string> = {
@@ -57,6 +61,12 @@ function basicPopupContent(place: PublicPlace): HTMLElement {
     text.textContent = place.text
     root.appendChild(text)
   }
+  const target: FavoriteTarget = place.id.startsWith('source:')
+    ? typeof place.fid === 'number'
+      ? { kind: 'source', fid: place.fid }
+      : { kind: 'label', category: place.category || '', label: place.label || '' }
+    : { kind: 'place', id: place.id }
+  root.appendChild(createFavoriteButton(target, place.important))
   return root
 }
 

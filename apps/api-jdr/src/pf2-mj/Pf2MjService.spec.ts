@@ -38,6 +38,62 @@ describe('Pf2MjService', () => {
     return { service: new Pf2MjService(persistence as never, foundry as never), persistence, foundry }
   }
 
+  describe('Calage Absalom et favoris partagés', () => {
+    it('enregistre les 4 coins indépendants et les restitue à tous les modes', async () => {
+      let stored: Record<string, unknown> | null = null
+      const persistence = {
+        readAbsalomOverlay: jest.fn(async () => stored),
+        saveAbsalomOverlay: jest.fn(async (next: Record<string, unknown>) => { stored = next }),
+      }
+      const { service } = serviceFor({}, pnj, persistence)
+      const original = await service.absalomOverlay()
+      expect(original.corners).toHaveLength(4)
+      expect(original.hideLabels).toBe(true)
+      const corners = [[-0.31, 30.94], [-0.18, 30.94], [-0.181, 30.77], [-0.301, 30.78]]
+      await expect(service.saveAbsalomOverlay({ corners, hideLabels: false })).resolves.toEqual({ corners, hideLabels: false })
+      expect(await service.absalomOverlay()).toEqual({ corners, hideLabels: false })
+      expect(persistence.saveAbsalomOverlay).toHaveBeenCalledTimes(1)
+    })
+
+    it('refuse une géométrie invalide sans l’enregistrer', async () => {
+      const save = jest.fn()
+      const { service } = serviceFor({}, pnj, { saveAbsalomOverlay: save })
+      await expect(service.saveAbsalomOverlay({ corners: [[2, 3]] })).rejects.toThrow()
+      await expect(service.saveAbsalomOverlay({ corners: [[2, 3], [1, 3], [1, 2], [2, 2]] })).rejects.toThrow()
+      await expect(service.saveAbsalomOverlay({ corners: [[NaN, 3], [1, 3], [1, 2], [2, 2]] })).rejects.toThrow()
+      expect(save).not.toHaveBeenCalled()
+    })
+
+    it('permet au PJ de noter un lieu publié sans créer ni renommer le lieu', async () => {
+      const favori = jest.fn().mockResolvedValue(undefined)
+      const { service } = serviceFor({}, pnj, {
+        updatePublishedPlaceFavorite: favori,
+      })
+      await expect(service.setPublicMapFavorite({ kind: 'place', id: 'ruines-azlant', important: true })).resolves.toEqual({ important: true })
+      await expect(service.setPublicMapFavorite({ kind: 'place', id: 'ruines-azlant', important: false })).resolves.toEqual({ important: false })
+      expect(favori).toHaveBeenCalledTimes(2)
+      expect(favori).toHaveBeenCalledWith('ruines-azlant', true)
+    })
+
+    it('refuse au PJ de favoriser un point source non publié et ne révèle aucun lieu secret', async () => {
+      const upsert = jest.fn()
+      const { service } = serviceFor({}, pnj, { upsertMapVisibilityOverride: upsert })
+      await expect(service.setPublicMapFavorite({ kind: 'source', fid: 142031239, important: true })).rejects.toThrow('visible')
+      await expect(service.setPublicMapFavorite({ kind: 'label', category: 'districts', label: 'Secret', important: true })).rejects.toThrow('publié')
+      await expect(service.setPublicMapFavorite({ kind: 'source', fid: 142031239, publicText: 'Révéler', important: 'true' })).rejects.toThrow()
+      expect(upsert).not.toHaveBeenCalled()
+    })
+
+    it('favorise une ville visible automatiquement sans toucher aux secrets MJ', async () => {
+      const upsert = jest.fn()
+      const { service } = serviceFor({}, pnj, { upsertMapVisibilityOverride: upsert })
+      await expect(service.setPublicMapFavorite({ kind: 'source', fid: 1727741121, important: true })).resolves.toEqual({ important: true })
+      expect(upsert).toHaveBeenCalledWith(expect.objectContaining({
+        sourceFid: 1727741121, visibility: 'visible', important: true,
+      }))
+    })
+  })
+
   describe('portraits Foundry', () => {
     it('stores a portrait locally without requiring Foundry when no Actor is linked', async () => {
       const { service, foundry } = serviceFor()

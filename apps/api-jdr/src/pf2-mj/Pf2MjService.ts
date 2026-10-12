@@ -248,6 +248,82 @@ export class Pf2MjService {
     return { schemaVersion: 1, lieux, regions, aliases: this.asObject(config.aliases), parents: this.asObject(config.parents) }
   }
 
+  // Shared, georeferenced overlay calibration: the public API only reads these corners.
+  // Edits are exposed in the MJ map UI, not the PJ map.
+  private readonly defaultAbsalomCorners: Array<[number, number]> = [
+    [-0.301, 30.935], [-0.185, 30.935], [-0.185, 30.782], [-0.301, 30.782],
+  ]
+
+  async absalomOverlay(): Promise<{ corners: Array<[number, number]>; hideLabels: boolean }> {
+    const data = await this.persistence.readAbsalomOverlay()
+    const corners = data?.corners
+    if (!Array.isArray(corners) || corners.length !== 4) {
+      return { corners: this.defaultAbsalomCorners, hideLabels: true }
+    }
+    return { corners: corners as Array<[number, number]>, hideLabels: data?.hideLabels !== false }
+  }
+
+  async saveAbsalomOverlay(input: unknown): Promise<{ corners: Array<[number, number]>; hideLabels: boolean }> {
+    const data = this.asObject(input)
+    if (!Array.isArray(data.corners) || data.corners.length !== 4) throw new Error('Quatre coins sont requis.')
+    const corners = data.corners.map((pair: unknown): [number, number] => {
+      if (!Array.isArray(pair) || pair.length !== 2 || pair.some(v => typeof v !== 'number' || !Number.isFinite(v))) {
+        throw new Error('Coordonnées invalides.')
+      }
+      const [lng, lat] = pair as number[]
+      if (lng < -180 || lng > 180 || lat < -85 || lat > 85) throw new Error('Coordonnées hors de la carte.')
+      return [lng, lat]
+    })
+    const [nw, ne, se, sw] = corners
+    if (!(nw[0] < ne[0] && sw[0] < se[0] && nw[1] > sw[1] && ne[1] > se[1])) throw new Error('Les coins doivent former un plan nord-ouest à sud-est.')
+    if (ne[0] - nw[0] > 3 || nw[1] - sw[1] > 3 || ne[0] - nw[0] < 0.0001 || nw[1] - sw[1] < 0.0001) throw new Error('Dimensions du plan invalides.')
+    const result = { corners, hideLabels: data.hideLabels !== false }
+    await this.persistence.saveAbsalomOverlay(result)
+    return result
+  }
+
+  // PJ may star/unstar only an already published item; cannot create, reveal,
+  // rename, or edit locations. Shared favorites remain in the canonical data.
+  async setPublicMapFavorite(body: unknown): Promise<{ important: boolean }> {
+    const input = this.asObject(body)
+    if (typeof input.important !== 'boolean') throw new Error('Valeur favori invalide.')
+    const important = input.important
+    if (input.kind === 'place') {
+      const id = typeof input.id === 'string' ? input.id.trim() : ''
+      if (!id || id.length > 180) throw new Error('Lieu invalide.')
+      await this.persistence.updatePublishedPlaceFavorite(id, important)
+      return { important }
+    }
+    const overrides = await this.persistence.listMapVisibilityOverrides()
+    if (input.kind === 'source') {
+      const fid = input.fid
+      if (typeof fid !== 'number' || !Number.isInteger(fid)) throw new Error('Identifiant source invalide.')
+      const points = await this.publicMapSourcePoints()
+      const found = points.find(point => point.fid === fid)
+      if (!found) throw new Error('Ce lieu n’est pas visible par les joueurs.')
+      const canonical = (await this.mapSourcePoints()).find(point => point.fid === fid)
+      if (!canonical) throw new Error('Lieu cartographique introuvable.')
+      const previous = overrides.find(item => item.sourceKey === canonical.sourceKey)
+      await this.persistence.upsertMapVisibilityOverride({
+        sourceKey: canonical.sourceKey, sourceFid: fid, category: 'locations', label: canonical.label,
+        visibility: 'visible', important,
+        publicLabel: previous?.publicLabel ?? '', publicText: previous?.publicText ?? '',
+        mjText: previous?.mjText ?? '',
+      })
+      return { important }
+    }
+    if (input.kind === 'label') {
+      const category = typeof input.category === 'string' ? input.category : ''
+      const label = typeof input.label === 'string' ? input.label : ''
+      if (!category || category.length > 50 || !label || label.length > 200) throw new Error('Libellé invalide.')
+      const previous = overrides.find(item => item.category === category && item.label === label && item.visibility === 'visible')
+      if (!previous || category === 'locations') throw new Error('Ce libellé n’est pas publié.')
+      await this.persistence.upsertMapVisibilityOverride({ ...previous, important })
+      return { important }
+    }
+    throw new Error('Type de lieu invalide.')
+  }
+
   async publicMapPlaces(): Promise<Array<{ id: string; name: string; latitude: number; longitude: number; text: string; icon: string; important: boolean }>> {
     const lieux = await this.persistence.readReference('lieux')
     const coordinate = (value: unknown): number => typeof value === 'number' ? value : typeof value === 'string' && value.trim() ? Number(value) : Number.NaN
@@ -364,14 +440,14 @@ export class Pf2MjService {
     })
   }
 
-  async publicMapImportantPlaces(): Promise<Array<{ id: string; name: string; latitude: number; longitude: number; text: string; icon: string; important: true }>> {
+  async publicMapImportantPlaces(): Promise<Array<{ id: string; name: string; latitude: number; longitude: number; text: string; icon: string; important: true; fid?: number; category?: string; label?: string }>> {
     const [points, search, overrides] = await Promise.all([
       this.mapSourcePoints(), this.mapSearchIndex(), this.persistence.listMapVisibilityOverrides(),
     ])
     const bySourceKey = new Map(points.map(point => [point.sourceKey, point]))
     const byCategoryLabel = new Map(search.flatMap(group =>
       group.entries.map(entry => [group.category + '\u0000' + String(entry.label ?? ''), entry] as const)))
-    const result: Array<{ id: string; name: string; latitude: number; longitude: number; text: string; icon: string; important: true }> = []
+    const result: Array<{ id: string; name: string; latitude: number; longitude: number; text: string; icon: string; important: true; fid?: number; category?: string; label?: string }> = []
     for (const override of overrides) {
       if (!override.important || override.visibility !== 'visible') continue
       const point = bySourceKey.get(override.sourceKey)
@@ -392,6 +468,7 @@ export class Pf2MjService {
           name: override.publicLabel.trim() || override.label,
           longitude, latitude, text: override.publicText.trim(),
           icon: point?.icon ?? 'pin', important: true,
+          ...(point ? { fid: point.fid } : { category: override.category, label: override.label }),
         })
       }
     }

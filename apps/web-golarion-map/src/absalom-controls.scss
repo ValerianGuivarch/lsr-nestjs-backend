@@ -1,0 +1,35 @@
+.pf2-absalom-map-control { max-width: min(340px, calc(100vw - 32px)); }
+.pf2-absalom-map-control .maplibregl-ctrl-group { display: flex; width: max-content; margin-left: auto; }
+.pf2-absalom-map-control .pf2-absalom-open-editor { width: 62px; padding: 0 5px; font-size: 12px; font-weight: 700; }
+.pf2-absalom-calibration {
+  box-sizing: border-box; margin-top: 7px; padding: 12px;
+  border: 1px solid #93815f; border-radius: 8px; background: #fffaec;
+  color: #31270f; font: 13px/1.4 system-ui, sans-serif; box-shadow: 0 4px 16px #0005;
+}
+.pf2-absalom-calibration[hidden] { display: none; }
+.pf2-absalom-calibration-note { margin-bottom: 10px; }
+.pf2-absalom-calibration-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; }
+.pf2-absalom-calibration button {
+  cursor: pointer; border: 1px solid #987a44; border-radius: 5px;
+  background: #fff1c5; color: #32230c; padding: 8px 6px; font: 700 13px system-ui, sans-serif;
+}
+.pf2-absalom-calibration button:hover { background: #f8da8f; }
+.pf2-absalom-calibration button:disabled { opacity: .5; cursor: wait; }
+.pf2-absalom-label-toggle { display: flex; gap: 8px; align-items: center; margin: 10px 0; }
+.pf2-absalom-label-toggle input { width: 17px; height: 17px; }
+.pf2-absalom-calibration-footer { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 5px; }
+.pf2-absalom-calibration-footer button:last-child { background: #ca9b39; }
+.pf2-absalom-calibration-status { min-height: 18px; margin: 6px 0; }
+.pf2-absalom-corner {
+  display: grid; place-items: center; width: 24px; height: 24px;
+  border-radius: 50%; border: 2px solid #fff; background: #cc521d;
+  box-shadow: 0 0 0 2px #422310, 0 2px 6px #0008;
+  font: 700 12px system-ui; color: #fff; cursor: grab;
+}
+.pf2-favorite-action { margin: 10px 0 3px; display: grid; gap: 4px; }
+.pf2-favorite-button {
+  cursor: pointer; width: 100%; border: 1px solid #a57924;
+  padding: 7px 10px; background: #fff3cd; border-radius: 5px;
+  color: #51370d; font: 700 12px system-ui;
+}
+.pf2-favorite-action [role="status"] { font: 11px system-ui; color: #6b3e0c; }

@@ -3,6 +3,7 @@ import { getPlaceNamesFr, translatePlaceName } from '../i18n/place-names'
 import { getMjLightSourcePoints, getPublicSourcePoints } from '../utils/map-visibility'
 import { createMjLightCurationPanel } from './mj-light-curation'
 import { createMapSourceCurationPanel } from './location-popup'
+import { createFavoriteButton } from './favorite-button'
 import type { GolarionMap } from './GolarionMap'
 
 const sourceId = 'pf2-player-source-points'
@@ -101,6 +102,9 @@ export async function addPlayerSourcePoints(gmap: GolarionMap, mode: 'pj' | 'mj-
       root.appendChild(paragraph)
     }
 
+    if (mode !== 'mj' && Number.isInteger(Number(properties.fid))) {
+      root.appendChild(createFavoriteButton({ kind: 'source', fid: Number(properties.fid) }, false))
+    }
     if (mode === 'mj') {
       const fid = Number(properties.fid)
       const label = String(properties.label ?? '')

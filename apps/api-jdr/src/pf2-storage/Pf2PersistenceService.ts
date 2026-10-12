@@ -662,6 +662,33 @@ export class Pf2PersistenceService implements OnModuleInit {
     await this.upsert('geography-config', 'canonical', 'Géographie PF2', value)
   }
 
+  async readAbsalomOverlay(): Promise<Record<string, unknown> | null> {
+    return this.get('geography-config', 'absalom-overlay')
+  }
+
+  async saveAbsalomOverlay(value: Record<string, unknown>): Promise<void> {
+    await this.upsert('geography-config', 'absalom-overlay', 'Calage du plan d’Absalom', value)
+  }
+
+  async updatePublishedPlaceFavorite(id: string, important: boolean): Promise<void> {
+    // A targeted update avoids replacing the whole places reference from a public request.
+    const rows = await this.dataSource.query(
+      "SELECT payload FROM pf2_record WHERE kind = 'lieu' AND id = ?", [id],
+    ) as Array<{ payload: string }>
+    if (!rows.length) throw new Error('Lieu introuvable.')
+    const place = this.object(JSON.parse(rows[0].payload))
+    if (place.map_visible !== true) throw new Error('Ce lieu n’est pas publié.')
+    const lat = Number(place.map_latitude), lng = Number(place.map_longitude)
+    if (!Number.isFinite(lat) || !Number.isFinite(lng) || lat < -90 || lat > 90 || lng < -180 || lng > 180) {
+      throw new Error('Ce lieu n’a pas de coordonnées valides.')
+    }
+    await this.dataSource.query(
+      "UPDATE pf2_record SET payload = json_set(payload, '$.map_important', json(?)), updated_at = CURRENT_TIMESTAMP WHERE kind = 'lieu' AND id = ? AND json_extract(payload, '$.map_visible') = 1",
+      [important ? 'true' : 'false', id],
+    )
+  }
+
+
   async listMapVisibilityOverrides(): Promise<Array<{ sourceKey: string; category: string; label: string; sourceFid: number | null; visibility: 'visible' | 'hidden'; publicLabel: string; publicText: string; mjText: string; important: boolean; updatedAt: string }>> {
     const rows = await this.dataSource.query('SELECT source_key, category, label, source_fid, visibility, public_label, public_text, mj_text, important, updated_at FROM pf2_map_visibility_override ORDER BY category, label COLLATE NOCASE') as Array<Record<string, unknown>>
     return rows.map(row => ({

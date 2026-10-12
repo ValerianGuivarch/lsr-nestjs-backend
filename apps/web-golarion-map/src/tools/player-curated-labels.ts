@@ -5,6 +5,7 @@ import type { SearchCategory } from '../utils/fuzzy-search'
 import type { GolarionMap } from './GolarionMap'
 import { createMjLightCurationPanel } from './mj-light-curation'
 import { createMjLabelCurationPanel } from './label-curation'
+import { createFavoriteButton } from './favorite-button'
 
 const sourceId = 'pf2-player-curated-labels'
 const layerId = 'pf2-player-curated-labels-layer'
@@ -100,6 +101,9 @@ export async function addPlayerCuratedLabels(gmap: GolarionMap, mode: 'pj' | 'mj
       root.appendChild(paragraph)
     }
 
+    if (mode !== 'mj') {
+      root.appendChild(createFavoriteButton({ kind: 'label', category, label }, false))
+    }
     if (mode === 'mj') {
       root.appendChild(createMjLabelCurationPanel(category, label, false, {
         sourceKey: `search:${category}:${label}`,

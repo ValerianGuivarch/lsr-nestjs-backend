@@ -37,6 +37,22 @@ La carte PJ, MJ-light et MJ présente ces repères avec une étoile discrète (3
 
 **Limite d'accès :** la création est réservée à l'interface MJ fonctionnellement. L'API générique historique `/api/pf2-mj/lieux` n'applique pas de contrôle de rôle : cette amélioration ne constitue pas à elle seule une autorisation serveur. Le durcissement de l'accès à l'ensemble du référentiel PF2 devra être traité séparément, sans perturber les autres appels existants.
 
+## Favoris partagés par les PJ
+
+Les joueurs peuvent désormais cliquer sur un **lieu déjà visible** sur la carte PJ, puis choisir **☆ Ajouter aux favoris** ou **★ Retirer des favoris**. Cela fonctionne pour les lieux de notre référentiel, les villes/lieux du catalogue source et les libellés explicitement publiés. L'étoile est **commune à tous** ; le navigateur recharge la carte en conservant le zoom et la position, et la liste de favoris est synchronisée avec l'API. Un joueur ne peut pas utiliser cette action pour créer un lieu ou révéler un lieu masqué : `PUT /api/pf2-mj/map/favorites` ne modifie que le drapeau `important` d'un lieu déjà public. La publication des lieux et leurs descriptions restent gérées par le MJ.
+
+**Contrôle d’accès :** cette restriction du champ modifiable et de la visibilité est vérifiée par l'API, mais les mutations favorites ne sont pas liées à une identité individuelle ; tous les visiteurs ayant accès à la carte PJ peuvent modifier les favoris communs. L'édition du calage est proposée uniquement dans la carte MJ, sur les mêmes fondations d'API historique sans contrôle de rôle serveur. Il faudra sécuriser ces endpoints si la carte MJ ou son API doit devenir strictement privée.
+
+## Calage interactif du plan d’Absalom
+
+En mode `/mj`, centre la carte sur Absalom et zoome : le bouton **Caler** est à droite du bouton **A**. Il affiche le plan à 65 % d'opacité, puis permet :
+- déplacement avec les flèches et augmentation/réduction indépendantes de la largeur et de la hauteur ;
+- déplacement précis des **quatre coins numérotés** pour corriger l'alignement ou la perspective ;
+- comparaison avec le fond cartographique et option de masquer les noms de l'ancien fond ;
+- **Enregistrer pour tous** (SQLite) ou **Annuler**, qui restaure le précédent calage.
+
+Les coordonnées absolues des quatre coins sont stockées dans l'enregistrement `geography-config/absalom-overlay` et exposées par `GET /api/pf2-mj/map/absalom-overlay`, ce qui permet aux modes PJ/MJ-light/MJ de charger toujours le **même** plan recalé, indépendamment du navigateur ou du zoom. `PUT` valide un quadrilatère raisonnable avant sauvegarde.
+
 ## Plan illustré d’Absalom
 
 Lorsque l’on zoome sur Absalom (à partir du zoom 7,5), un plan français de la ville apparaît progressivement, géoréférencé sur la carte MapLibre. Les marqueurs PF2, les fenêtres d’information et les règles de visibilité PJ/MJ restent gérés par les couches existantes, au-dessus de l’image. Le bouton **A** en haut à droite, visible à proximité d’Absalom, permet de comparer le plan illustré et le fond vectoriel dans les trois modes.

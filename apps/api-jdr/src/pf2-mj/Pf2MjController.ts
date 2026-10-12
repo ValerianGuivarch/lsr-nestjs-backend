@@ -46,6 +46,21 @@ export class Pf2MjController {
   @Get('scenarios/:id/relations')
   relationsForScenario(@Param('id') id: string): Promise<Record<string, unknown[]>> { return this.scenarioPackages.relationsForScenario(id) }
 
+  @Get('map/absalom-overlay')
+  absalomOverlay(): Promise<unknown> { return this.service.absalomOverlay() }
+
+  @Put('map/absalom-overlay')
+  async saveAbsalomOverlay(@Body() body: unknown): Promise<unknown> {
+    try { return await this.service.saveAbsalomOverlay(body) }
+    catch (error) { throw new HttpException(error instanceof Error ? error.message : 'Calage invalide.', HttpStatus.BAD_REQUEST) }
+  }
+
+  @Put('map/favorites')
+  async setMapFavorite(@Body() body: unknown): Promise<unknown> {
+    try { return await this.service.setPublicMapFavorite(body) }
+    catch (error) { throw new HttpException(error instanceof Error ? error.message : 'Favori refusé.', HttpStatus.BAD_REQUEST) }
+  }
+
   @Get('map/places')
   publicMapPlaces(): Promise<Array<{ id: string; name: string; latitude: number; longitude: number; text: string; icon: string; important: boolean }>> {
     return this.service.publicMapPlaces()
