@@ -78,7 +78,7 @@ describe('Pf2MjService', () => {
   describe('lieux publics de la carte', () => {
     it('expose uniquement les lieux visibles avec des coordonnées valides et aucun champ MJ', async () => {
       const lieux = [
-        { id: 'absalom', nom: 'Absalom', map_visible: true, map_latitude: 12.5, map_longitude: -42.25, map_text: 'La cité au centre du monde.', map_icon: 'city', notes: 'secret MJ' },
+        { id: 'absalom', nom: 'Absalom', map_important: true, map_visible: true, map_latitude: 12.5, map_longitude: -42.25, map_text: 'La cité au centre du monde.', map_icon: 'city', notes: 'secret MJ' },
         { id: 'secret', nom: 'Lieu secret', map_visible: false, map_latitude: 1, map_longitude: 2, notes: 'ne doit pas sortir' },
         { id: 'broken', nom: 'Coordonnées invalides', map_visible: true, map_latitude: 999, map_longitude: 2 },
         { id: 'missing', nom: 'Sans coordonnées', map_visible: true, map_latitude: null, map_longitude: null },
@@ -92,6 +92,7 @@ describe('Pf2MjService', () => {
         longitude: -42.25,
         text: 'La cité au centre du monde.',
         icon: 'city',
+        important: true,
       }])
     })
   })
@@ -106,6 +107,7 @@ describe('Pf2MjService', () => {
       await expect(service.mjLightMapPlaces()).resolves.toEqual([expect.objectContaining({
         id: 'loge',
         name: 'Loge',
+        important: false,
         text: 'Description PJ',
         mjText: 'Secret utile au MJ',
       })])

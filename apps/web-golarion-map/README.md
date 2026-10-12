@@ -18,6 +18,14 @@ La barre d’évolution temporelle est désactivée dans les trois modes. En ouv
 
 Les décisions manuelles sont stockées dans SQLite (`pf2_map_visibility_override`) avec trois états fonctionnels dans l’interface : automatique, visible, masqué. Une colonne `mj_text` séparée conserve les rappels et secrets réservés au MJ sans les envoyer aux endpoints PJ. Le catalogue stable utilisé pour relier la carte importée à ces décisions est généré dans `resources/map-source-points.json`.
 
+## Repères de campagne partagés
+
+Les lieux importants sont gérés dans le référentiel **PF2-MJ → Lieux** (champ persistant `map_important`). Le MJ édite une fiche existante ou crée un nouveau lieu, coche **Afficher ce lieu sur la carte publique** et **Lieu important pour tous les PJ**, puis renseigne une latitude et une longitude. Pour récupérer une position d'un lieu déjà connu, chercher son nom dans le champ **Reprendre la position d'un lieu connu sur Golarion** (par exemple `Sandpoint` pour `Pointesable`). Sur la carte en mode `/mj`, un clic droit **★ Ajouter un lieu important (MJ)** ouvre directement une fiche Lieux préremplie avec les coordonnées choisies.
+
+La carte PJ, MJ-light et MJ présente ces repères avec une étoile distinctive, un nom visible même à faible zoom et une liste **★ Lieux importants** permettant de centrer la carte. Ils sont **communs à tous les joueurs** et stockés dans le référentiel actuel, sans préférences locales par navigateur. Aucun bouton de création n'est exposé en mode PJ. Un lieu non publié (`map_visible !== true`) ou sans coordonnées valides n'est jamais transmis à la carte publique, même s'il porte le flag important. Les notes MJ ne sont pas transmises au mode PJ. La sélection de l'icône ordinaire (`map_icon`) reste indépendante de l'importance, en attendant le travail ultérieur sur les pictogrammes.
+
+**Limite d'accès :** la création est réservée à l'interface MJ fonctionnellement. L'API générique historique `/api/pf2-mj/lieux` n'applique pas de contrôle de rôle : cette amélioration ne constitue pas à elle seule une autorisation serveur. Le durcissement de l'accès à l'ensemble du référentiel PF2 devra être traité séparément, sans perturber les autres appels existants.
+
 ## Plan illustré d’Absalom
 
 Lorsque l’on zoome sur Absalom (à partir du zoom 7,5), un plan français de la ville apparaît progressivement, géoréférencé sur la carte MapLibre. Les marqueurs PF2, les fenêtres d’information et les règles de visibilité PJ/MJ restent gérés par les couches existantes, au-dessus de l’image. Le bouton **A** en haut à droite, visible à proximité d’Absalom, permet de comparer le plan illustré et le fond vectoriel dans les trois modes.

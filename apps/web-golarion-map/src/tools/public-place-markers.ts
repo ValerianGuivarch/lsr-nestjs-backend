@@ -9,6 +9,7 @@ type PublicPlace = {
   text: string
   mjText?: string
   icon: string
+  important: boolean
 }
 
 const glyphs: Record<string, string> = {
@@ -24,13 +25,13 @@ const glyphs: Record<string, string> = {
 function markerElement(place: PublicPlace): HTMLButtonElement {
   const button = document.createElement('button')
   button.type = 'button'
-  button.className = 'pf2-public-place-marker'
+  button.className = `pf2-public-place-marker${place.important ? ' is-important' : ''}`
   button.title = place.name
   button.setAttribute('aria-label', place.name)
 
   const icon = document.createElement('span')
   icon.className = 'pf2-public-place-icon'
-  icon.textContent = glyphs[place.icon] ?? glyphs.pin
+  icon.textContent = place.important ? '★' : (glyphs[place.icon] ?? glyphs.pin)
 
   const label = document.createElement('span')
   label.className = 'pf2-public-place-label'
@@ -46,6 +47,11 @@ function basicPopupContent(place: PublicPlace): HTMLElement {
   const title = document.createElement('strong')
   title.textContent = place.name
   root.appendChild(title)
+  if (place.important) {
+    const label = document.createElement('p')
+    label.textContent = '★ Lieu important de la campagne'
+    root.appendChild(label)
+  }
   if (place.text) {
     const text = document.createElement('p')
     text.textContent = place.text
@@ -173,15 +179,54 @@ export async function addPublicPlaceMarkers(gmap: GolarionMap, placesUrl: string
         .setLngLat([place.longitude, place.latitude])
         .setPopup(popup)
         .addTo(gmap.map)
-      return { marker, element }
+      return { place, marker, element }
     })
 
     const updateLabelDensity = () => {
       const showLabels = gmap.map.getZoom() >= 5.5
-      for (const { element } of entries) element.classList.toggle('labels-hidden', !showLabels)
+      for (const { element, place } of entries) element.classList.toggle('labels-hidden', !place.important && !showLabels)
     }
     updateLabelDensity()
     gmap.map.on('zoomend', updateLabelDensity)
+
+    const important = entries.filter(entry => entry.place.important)
+    if (important.length) {
+      const control = document.createElement('div')
+      control.className = 'pf2-campaign-places-control maplibregl-ctrl'
+      const toggle = document.createElement('button')
+      toggle.type = 'button'
+      toggle.className = 'pf2-campaign-places-toggle'
+      toggle.textContent = `★ Lieux importants (${important.length})`
+      toggle.setAttribute('aria-expanded', 'false')
+      const list = document.createElement('div')
+      list.className = 'pf2-campaign-places-list'
+      list.hidden = true
+      toggle.onclick = () => {
+        list.hidden = !list.hidden
+        toggle.setAttribute('aria-expanded', String(!list.hidden))
+      }
+      for (const entry of important) {
+        const button = document.createElement('button')
+        button.type = 'button'
+        button.textContent = `★ ${entry.place.name}`
+        button.onclick = () => {
+          list.hidden = true
+          toggle.setAttribute('aria-expanded', 'false')
+          gmap.map.flyTo({
+            center: [entry.place.longitude, entry.place.latitude],
+            zoom: Math.max(7, gmap.map.getZoom()),
+            duration: 900,
+          })
+          entry.marker.togglePopup()
+        }
+        list.appendChild(button)
+      }
+      control.append(toggle, list)
+      gmap.map.addControl({
+        onAdd: () => control,
+        onRemove: () => control.remove(),
+      }, 'top-left')
+    }
   } catch (error) {
     console.warn('Impossible de charger les lieux PF2 de la carte.', error)
   }

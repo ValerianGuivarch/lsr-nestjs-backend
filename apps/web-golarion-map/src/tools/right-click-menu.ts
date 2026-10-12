@@ -15,6 +15,17 @@ export function addRightClickMenu(map: GolarionMap, measureControl: MeasureContr
         }
       },
       {
+        label: "★ Ajouter un lieu important (MJ)",
+        callback: () => {
+          if (!latLong) return;
+          const coordinate = latLong.wrap();
+          const editor = new URL('https://l7r.fr/pf2-mj/places');
+          editor.searchParams.set('mapLat', coordinate.lat.toFixed(7));
+          editor.searchParams.set('mapLng', coordinate.lng.toFixed(7));
+          window.open(editor.toString(), '_blank', 'noopener,noreferrer');
+        },
+      },
+      {
         label: "Copier les coordonnées",
         callback: (e:Event) => {
           if(!latLong) return;

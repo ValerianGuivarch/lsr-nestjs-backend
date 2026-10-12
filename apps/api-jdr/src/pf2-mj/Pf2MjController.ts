@@ -47,7 +47,7 @@ export class Pf2MjController {
   relationsForScenario(@Param('id') id: string): Promise<Record<string, unknown[]>> { return this.scenarioPackages.relationsForScenario(id) }
 
   @Get('map/places')
-  publicMapPlaces(): Promise<Array<{ id: string; name: string; latitude: number; longitude: number; text: string; icon: string }>> {
+  publicMapPlaces(): Promise<Array<{ id: string; name: string; latitude: number; longitude: number; text: string; icon: string; important: boolean }>> {
     return this.service.publicMapPlaces()
   }
 

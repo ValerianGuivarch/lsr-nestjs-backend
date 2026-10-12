@@ -23,6 +23,7 @@ type Lieu = {
   map_longitude?: number | null
   map_text?: string
   map_icon?: string
+  map_important?: boolean
   [key: string]: unknown
 }
 
@@ -48,6 +49,7 @@ type Draft = {
   map_longitude: string
   map_text: string
   map_icon: string
+  map_important: boolean
 }
 
 const mapIcons = [
@@ -62,12 +64,12 @@ const mapIcons = [
 
 const emptyDraft: Draft = {
   nom: '', type: 'Site', region_id: '', parent_id: '', description: '', histoire: '', factions: '', personnages_cles: '', tags: '', image: '', aliases: '', statut: 'Actif', notes: '', source: '', evenements: '',
-  map_visible: false, map_latitude: '', map_longitude: '', map_text: '', map_icon: 'pin',
+  map_visible: false, map_latitude: '', map_longitude: '', map_text: '', map_icon: 'pin', map_important: false,
 }
 
 const jsonTemplate: Lieu = {
   id: 'lieu_exemple', nom: 'Lieu exemple', type: 'Site', region_id: null, parent_id: null, description: 'Description courte.', histoire: '', factions: [], personnages_cles: [], tags: [], image: '', aliases: [], statut: 'Actif', notes: '', source: '', evenements: [],
-  map_visible: false, map_latitude: null, map_longitude: null, map_text: '', map_icon: 'pin',
+  map_visible: false, map_latitude: null, map_longitude: null, map_text: '', map_icon: 'pin', map_important: false,
 }
 
 const csv = (v: string) => [...new Set(v.split(',').map(x => x.trim()).filter(Boolean))]
@@ -101,6 +103,7 @@ const normalizeLieu = (x: any): Lieu => ({
   map_longitude: coordinateOrNull(x?.map_longitude),
   map_text: typeof x?.map_text === 'string' ? x.map_text : '',
   map_icon: typeof x?.map_icon === 'string' && x.map_icon ? x.map_icon : 'pin',
+  map_important: x?.map_important === true,
 })
 
 const draftFromLieu = (x: Lieu): Draft => ({
@@ -124,6 +127,7 @@ const draftFromLieu = (x: Lieu): Draft => ({
   map_longitude: x.map_longitude == null ? '' : String(x.map_longitude),
   map_text: x.map_text ?? '',
   map_icon: x.map_icon ?? 'pin',
+  map_important: x.map_important === true,
 })
 
 function isLieu(v: unknown): v is Lieu {
@@ -152,10 +156,13 @@ export default function LieuxPage({ initialSelectedId }: { initialSelectedId?: s
   const [type, setType] = useState('')
   const [region, setRegion] = useState('')
   const [statut, setStatut] = useState('')
+  const [importantOnly, setImportantOnly] = useState(false)
   const [selected, setSelected] = useState<Lieu | null>(null)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [showForm, setShowForm] = useState(false)
   const [draft, setDraft] = useState<Draft>(emptyDraft)
+  const [mapSearch, setMapSearch] = useState('')
+  const [mapCandidates, setMapCandidates] = useState<Array<{ label: string; name: string; coordinates: number[][] }>>([])
   const [busy, setBusy] = useState(false)
   const [message, setMessage] = useState('')
 
@@ -182,6 +189,22 @@ export default function LieuxPage({ initialSelectedId }: { initialSelectedId?: s
 
   useEffect(() => { load().catch(e => setMessage(e instanceof Error ? e.message : String(e))) }, [])
   useEffect(() => {
+    get('/apil7r/pf2-mj/map/source-points')
+      .then(rows => setMapCandidates(rows.filter((item: any) => Array.isArray(item.coordinates) && Array.isArray(item.coordinates[0]))))
+      .catch(() => {})
+  }, [])
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const lat = params.get('mapLat'), lng = params.get('mapLng')
+    if (lat === null || lng === null) return
+    const latitude = Number(lat), longitude = Number(lng)
+    if (!Number.isFinite(latitude) || !Number.isFinite(longitude) || latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180) return
+    setEditingId(null)
+    setDraft({ ...emptyDraft, map_visible: true, map_important: true, map_latitude: String(latitude), map_longitude: String(longitude) })
+    setShowForm(true)
+    window.history.replaceState(window.history.state, '', window.location.pathname)
+  }, [])
+  useEffect(() => {
     if (!initialSelectedId) return
     const target = items.find(item => item.id === initialSelectedId)
     if (target) setSelected(target)
@@ -197,16 +220,21 @@ export default function LieuxPage({ initialSelectedId }: { initialSelectedId?: s
   const name = (k: keyof typeof maps, id?: string | null) => id ? (maps[k].get(id) ?? id) : '—'
   const types = useMemo(() => unique(items.map(x => x.type)), [items])
   const statuts = useMemo(() => unique(items.map(x => x.statut)), [items])
+  const matchingMapCandidates = useMemo(() => {
+    const q = normalize(mapSearch.trim())
+    if (q.length < 2) return []
+    return mapCandidates.filter(item => normalize(item.name + ' ' + item.label).includes(q)).slice(0, 8)
+  }, [mapCandidates, mapSearch])
   const filtered = useMemo(() => {
     const q = normalize(query.trim())
     return items.filter(x => {
       const h = normalize([x.nom, x.type, x.description, x.histoire, x.source, x.map_text, ...x.tags, ...x.aliases].filter(Boolean).join(' '))
-      return (!q || h.includes(q)) && (!type || x.type === type) && (!region || regionContains(region, x.region_id)) && (!statut || x.statut === statut)
+      return (!q || h.includes(q)) && (!type || x.type === type) && (!region || regionContains(region, x.region_id)) && (!statut || x.statut === statut) && (!importantOnly || x.map_important === true)
     }).sort((a, b) => a.nom.localeCompare(b.nom, 'fr'))
-  }, [items, query, type, region, statut])
+  }, [items, query, type, region, statut, importantOnly])
 
-  const openAdd = () => { setEditingId(null); setDraft(emptyDraft); setShowForm(true) }
-  const openEdit = (item: Lieu) => { setEditingId(item.id); setDraft(draftFromLieu(item)); setSelected(null); setShowForm(true) }
+  const openAdd = () => { setEditingId(null); setDraft(emptyDraft); setMapSearch(''); setShowForm(true) }
+  const openEdit = (item: Lieu) => { setEditingId(item.id); setDraft(draftFromLieu(item)); setMapSearch(''); setSelected(null); setShowForm(true) }
 
   const save = async () => {
     if (!draft.nom.trim()) { setMessage('Le nom est obligatoire.'); return }
@@ -214,6 +242,7 @@ export default function LieuxPage({ initialSelectedId }: { initialSelectedId?: s
     const longitude = numberOrNull(draft.map_longitude)
     if (latitude !== null && (!Number.isFinite(latitude) || latitude < -90 || latitude > 90)) { setMessage('Latitude invalide : valeur attendue entre -90 et 90.'); return }
     if (longitude !== null && (!Number.isFinite(longitude) || longitude < -180 || longitude > 180)) { setMessage('Longitude invalide : valeur attendue entre -180 et 180.'); return }
+    if (draft.map_important && (!draft.map_visible || latitude === null || longitude === null)) { setMessage('Un lieu important doit être public et posséder des coordonnées sur la carte.'); return }
     setBusy(true)
     try {
       const base = editingId ? items.find(item => item.id === editingId) : undefined
@@ -222,7 +251,7 @@ export default function LieuxPage({ initialSelectedId }: { initialSelectedId?: s
         id: base?.id ?? slugId(draft.nom),
         nom: draft.nom.trim(), type: draft.type || 'Site', region_id: draft.region_id || null, parent_id: draft.parent_id || null,
         description: draft.description.trim(), histoire: draft.histoire.trim(), factions: csv(draft.factions), personnages_cles: csv(draft.personnages_cles), tags: csv(draft.tags), image: draft.image.trim(), aliases: csv(draft.aliases), statut: draft.statut || 'Actif', notes: draft.notes.trim(), source: draft.source.trim(), evenements: csv(draft.evenements),
-        map_visible: draft.map_visible, map_latitude: latitude, map_longitude: longitude, map_text: draft.map_text.trim(), map_icon: draft.map_icon || 'pin',
+        map_visible: draft.map_visible, map_latitude: latitude, map_longitude: longitude, map_text: draft.map_text.trim(), map_icon: draft.map_icon || 'pin', map_important: draft.map_important,
       }
       const r = await fetch('/apil7r/pf2-mj/lieux', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'upsert', item }) })
       const p = await r.json().catch(() => null)
@@ -255,23 +284,23 @@ export default function LieuxPage({ initialSelectedId }: { initialSelectedId?: s
   }
 
   return <main className="lp"><style>{`
-    .lp{max-width:1500px;margin:auto;padding:24px;color:#252a25}.bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.bar h1{margin-right:auto}.btn,.file{border:1px solid #c9b98f;background:#fffaf0;color:#6e5319;border-radius:8px;padding:9px 12px;font-weight:700;cursor:pointer}.btn.primary{background:#765719;color:white}.file input{display:none}.msg{min-height:24px;font-size:13px;color:#5d614f}.filters{display:grid;grid-template-columns:2fr repeat(3,1fr);gap:9px;margin:10px 0 18px}.filters input,.filters select,.form input,.form textarea,.form select{width:100%;box-sizing:border-box;border:1px solid #d6cdbd;border-radius:8px;background:#fffdf8;padding:9px}.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px}.card{border:1px solid #ded7cb;background:#fffdf9;border-radius:12px;overflow:hidden}.body{padding:13px}.card h2{margin:0 0 5px;font-size:17px}.meta{font-size:12px;color:#777}.desc{font-size:13px;line-height:1.45}.chips{display:flex;gap:5px;flex-wrap:wrap}.chip{border:1px solid #d9cfba;border-radius:999px;padding:3px 7px;font-size:10px;background:#faf5e9}.chip.map{border-color:#8fa986;background:#eef8eb;color:#31562c}.chip.map-missing{border-color:#c9a36a;background:#fff5df;color:#765719}.card-actions{display:grid;grid-template-columns:1fr 1fr}.more{border:0;border-top:1px solid #eee7da;background:#faf7f0;padding:8px;font-weight:700;color:#66542b;cursor:pointer}.more+.more{border-left:1px solid #eee7da}.back{position:fixed;inset:0;background:#0006;display:grid;place-items:center;padding:20px;z-index:50}.dialog{width:min(850px,100%);max-height:90vh;overflow:auto;background:#fffdf9;border-radius:14px;padding:18px}.head{display:flex;gap:10px;align-items:center}.head h2{margin-right:auto}.form{display:grid;grid-template-columns:1fr 1fr;gap:10px}.form .wide{grid-column:1/-1}.form label{font-size:12px;font-weight:700;display:grid;gap:5px}.map-fields{grid-column:1/-1;border:1px solid #d9cfba;border-radius:10px;padding:12px;display:grid;grid-template-columns:1fr 1fr;gap:10px;background:#faf7f0}.map-fields h3{grid-column:1/-1;margin:0;font-size:14px}.map-fields .wide{grid-column:1/-1}.check{display:flex!important;grid-column:1/-1;grid-template-columns:none!important;align-items:center;gap:8px}.check input{width:auto}.hint{font-size:11px;color:#777;font-weight:400}.actions{display:flex;justify-content:flex-end;gap:8px;margin-top:14px}.detail dl{display:grid;grid-template-columns:140px 1fr;gap:7px 10px;font-size:13px}.detail dd{margin:0}.count{font-size:12px;color:#777}@media(max-width:650px){.filters,.form,.map-fields{grid-template-columns:1fr}.form .wide,.map-fields .wide,.map-fields h3{grid-column:auto}.card-actions{grid-template-columns:1fr}}
+    .lp{max-width:1500px;margin:auto;padding:24px;color:#252a25}.bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.bar h1{margin-right:auto}.btn,.file{border:1px solid #c9b98f;background:#fffaf0;color:#6e5319;border-radius:8px;padding:9px 12px;font-weight:700;cursor:pointer}.btn.primary{background:#765719;color:white}.file input{display:none}.msg{min-height:24px;font-size:13px;color:#5d614f}.filters{display:grid;grid-template-columns:2fr repeat(3,1fr);gap:9px;margin:10px 0 18px}.filters input,.filters select,.form input,.form textarea,.form select{width:100%;box-sizing:border-box;border:1px solid #d6cdbd;border-radius:8px;background:#fffdf8;padding:9px}.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px}.card{border:1px solid #ded7cb;background:#fffdf9;border-radius:12px;overflow:hidden}.body{padding:13px}.card h2{margin:0 0 5px;font-size:17px}.meta{font-size:12px;color:#777}.desc{font-size:13px;line-height:1.45}.chips{display:flex;gap:5px;flex-wrap:wrap}.chip{border:1px solid #d9cfba;border-radius:999px;padding:3px 7px;font-size:10px;background:#faf5e9}.chip.map{border-color:#8fa986;background:#eef8eb;color:#31562c}.chip.important{background:#fff1bc;border-color:#e1bd55;color:#684e00}.chip.map-missing{border-color:#c9a36a;background:#fff5df;color:#765719}.card-actions{display:grid;grid-template-columns:1fr 1fr}.more{border:0;border-top:1px solid #eee7da;background:#faf7f0;padding:8px;font-weight:700;color:#66542b;cursor:pointer}.more+.more{border-left:1px solid #eee7da}.back{position:fixed;inset:0;background:#0006;display:grid;place-items:center;padding:20px;z-index:50}.dialog{width:min(850px,100%);max-height:90vh;overflow:auto;background:#fffdf9;border-radius:14px;padding:18px}.head{display:flex;gap:10px;align-items:center}.head h2{margin-right:auto}.form{display:grid;grid-template-columns:1fr 1fr;gap:10px}.form .wide{grid-column:1/-1}.form label{font-size:12px;font-weight:700;display:grid;gap:5px}.map-fields{grid-column:1/-1;border:1px solid #d9cfba;border-radius:10px;padding:12px;display:grid;grid-template-columns:1fr 1fr;gap:10px;background:#faf7f0}.map-fields h3{grid-column:1/-1;margin:0;font-size:14px}.map-fields .wide{grid-column:1/-1}.check{display:flex!important;grid-column:1/-1;grid-template-columns:none!important;align-items:center;gap:8px}.check input{width:auto}.hint{font-size:11px;color:#777;font-weight:400}.actions{display:flex;justify-content:flex-end;gap:8px;margin-top:14px}.detail dl{display:grid;grid-template-columns:140px 1fr;gap:7px 10px;font-size:13px}.detail dd{margin:0}.count{font-size:12px;color:#777}@media(max-width:650px){.filters,.form,.map-fields{grid-template-columns:1fr}.form .wide,.map-fields .wide,.map-fields h3{grid-column:auto}.card-actions{grid-template-columns:1fr}}
   `}</style>
-    <div className="bar"><h1>Lieux</h1><button className="btn primary" onClick={openAdd}>+ Ajouter</button><label className="file">Importer JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button className="btn" onClick={() => downloadJson('lieu-modele.json', jsonTemplate)}>Modèle JSON</button><button className="btn" onClick={() => downloadJson('lieux-export.json', items)}>Exporter</button></div>
+    <div className="bar"><h1>Lieux</h1><button className="btn primary" onClick={openAdd}>+ Ajouter</button><button className="btn" type="button" aria-pressed={importantOnly} onClick={() => setImportantOnly(value => !value)}>{importantOnly ? '★ Tous les lieux importants' : '☆ Voir les lieux importants'}</button><label className="file">Importer JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button className="btn" onClick={() => downloadJson('lieu-modele.json', jsonTemplate)}>Modèle JSON</button><button className="btn" onClick={() => downloadJson('lieux-export.json', items)}>Exporter</button></div>
     <div className="msg">{busy ? 'Enregistrement…' : message}</div>
     <section className="filters"><input value={query} onChange={e => setQuery(e.target.value)} placeholder="Rechercher un lieu…"/><select value={type} onChange={e => setType(e.target.value)}><option value="">Tous les types</option>{types.map(v => <option key={v}>{v}</option>)}</select><select value={region} onChange={e => setRegion(e.target.value)}><option value="">Toutes les régions</option>{regions.map(v => <option key={v.id} value={v.id}>{v.nom}</option>)}</select><select value={statut} onChange={e => setStatut(e.target.value)}><option value="">Tous les statuts</option>{statuts.map(v => <option key={v}>{v}</option>)}</select></section>
     <p className="count">{filtered.length} lieu{filtered.length > 1 ? 'x' : ''} sur {items.length}</p>
     <section className="grid">{filtered.map(x => {
       const positioned = x.map_latitude != null && x.map_longitude != null
-      return <article className="card" key={x.id}><div className="body"><h2>{x.nom}</h2><div className="meta">{x.type} · {name('regions', x.region_id)} · {x.statut}</div><p className="desc">{x.description}</p><div className="chips">{x.map_visible && <span className={`chip map${positioned ? '' : ' map-missing'}`}>{positioned ? 'Carte visible' : 'Carte : coordonnées manquantes'}</span>}{x.tags.slice(0, 4).map(t => <span className="chip" key={t}>{t}</span>)}</div></div><div className="card-actions"><button className="more" onClick={() => setSelected(x)}>Voir la fiche</button><button className="more" onClick={() => openEdit(x)}>Éditer</button></div></article>
+      return <article className="card" key={x.id}><div className="body"><h2>{x.nom}</h2><div className="meta">{x.type} · {name('regions', x.region_id)} · {x.statut}</div><p className="desc">{x.description}</p><div className="chips">{x.map_visible && <span className={`chip map${positioned ? '' : ' map-missing'}`}>{positioned ? 'Carte visible' : 'Carte : coordonnées manquantes'}</span>}{x.map_important && <span className="chip important">★ Important</span>}{x.tags.slice(0, 4).map(t => <span className="chip" key={t}>{t}</span>)}</div></div><div className="card-actions"><button className="more" onClick={() => setSelected(x)}>Voir la fiche</button><button className="more" onClick={() => openEdit(x)}>Éditer</button></div></article>
     })}</section>
 
     {showForm && <div className="back" onMouseDown={e => { if (e.target === e.currentTarget) setShowForm(false) }}><section className="dialog"><div className="head"><h2>{editingId ? 'Modifier le lieu' : 'Ajouter un lieu'}</h2><button className="btn" onClick={() => setShowForm(false)}>Fermer</button></div><div className="form">
       <label>Nom<input value={draft.nom} onChange={e => setDraft({ ...draft, nom: e.target.value })}/></label><label>Type<input value={draft.type} onChange={e => setDraft({ ...draft, type: e.target.value })}/></label><label>Région<select value={draft.region_id} onChange={e => setDraft({ ...draft, region_id: e.target.value })}><option value="">Aucune</option>{regions.map(v => <option key={v.id} value={v.id}>{v.nom}</option>)}</select></label><label>Lieu parent<select value={draft.parent_id} onChange={e => setDraft({ ...draft, parent_id: e.target.value })}><option value="">Aucun</option>{items.filter(v => v.id !== editingId).map(v => <option key={v.id} value={v.id}>{v.nom}</option>)}</select></label>
       <label className="wide">Description<textarea rows={3} value={draft.description} onChange={e => setDraft({ ...draft, description: e.target.value })}/></label><label className="wide">Histoire<textarea rows={4} value={draft.histoire} onChange={e => setDraft({ ...draft, histoire: e.target.value })}/></label><label>Factions (IDs)<input value={draft.factions} onChange={e => setDraft({ ...draft, factions: e.target.value })}/></label><label>PNJ clés (IDs)<input value={draft.personnages_cles} onChange={e => setDraft({ ...draft, personnages_cles: e.target.value })}/></label><label>Tags<input value={draft.tags} onChange={e => setDraft({ ...draft, tags: e.target.value })}/></label><label>Alias<input value={draft.aliases} onChange={e => setDraft({ ...draft, aliases: e.target.value })}/></label><label>Statut<input value={draft.statut} onChange={e => setDraft({ ...draft, statut: e.target.value })}/></label><label>Événements (IDs)<input value={draft.evenements} onChange={e => setDraft({ ...draft, evenements: e.target.value })}/></label><label>Image<input value={draft.image} onChange={e => setDraft({ ...draft, image: e.target.value })}/></label><label>Source<input value={draft.source} onChange={e => setDraft({ ...draft, source: e.target.value })}/></label><label className="wide">Notes<textarea rows={3} value={draft.notes} onChange={e => setDraft({ ...draft, notes: e.target.value })}/></label>
-      <section className="map-fields"><h3>Carte de Golarion</h3><label className="check"><input type="checkbox" checked={draft.map_visible} onChange={e => setDraft({ ...draft, map_visible: e.target.checked })}/>Afficher ce lieu sur la carte publique</label><label>Latitude<input type="number" step="any" min="-90" max="90" value={draft.map_latitude} onChange={e => setDraft({ ...draft, map_latitude: e.target.value })}/><span className="hint">Ex. 12.3456</span></label><label>Longitude<input type="number" step="any" min="-180" max="180" value={draft.map_longitude} onChange={e => setDraft({ ...draft, map_longitude: e.target.value })}/><span className="hint">Ex. -45.6789</span></label><label>Icône<select value={draft.map_icon} onChange={e => setDraft({ ...draft, map_icon: e.target.value })}>{mapIcons.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label><label className="wide">Texte affiché sur la carte<textarea rows={3} value={draft.map_text} onChange={e => setDraft({ ...draft, map_text: e.target.value })} placeholder="Texte public affiché quand on clique sur le repère."/></label></section>
+      <section className="map-fields"><h3>Carte de Golarion</h3><label className="check"><input type="checkbox" checked={draft.map_visible} onChange={e => setDraft({ ...draft, map_visible: e.target.checked })}/>Afficher ce lieu sur la carte publique</label><label className="check"><input type="checkbox" checked={draft.map_important} onChange={e => setDraft({ ...draft, map_important: e.target.checked, map_visible: e.target.checked ? true : draft.map_visible })}/>★ Lieu important pour tous les PJ (repère prioritaire, visible de loin)</label><label className="wide">Reprendre la position d'un lieu connu sur Golarion<input value={mapSearch} onChange={e => setMapSearch(e.target.value)} placeholder="Ex. Sandpoint pour Pointesable" /></label>{matchingMapCandidates.length > 0 && <div className="wide" style={{ display: 'grid', gap: 5 }}>{matchingMapCandidates.map((candidate, index) => <button className="btn" type="button" key={candidate.label + index} onClick={() => { const [longitude, latitude] = candidate.coordinates[0]; setDraft(previous => ({ ...previous, map_latitude: String(latitude), map_longitude: String(longitude), map_visible: true })); setMapSearch(candidate.name) }}>📍 {candidate.name} — utiliser ses coordonnées</button>)}</div>}<label>Latitude<input type="number" step="any" min="-90" max="90" value={draft.map_latitude} onChange={e => setDraft({ ...draft, map_latitude: e.target.value })}/><span className="hint">Ex. 12.3456</span></label><label>Longitude<input type="number" step="any" min="-180" max="180" value={draft.map_longitude} onChange={e => setDraft({ ...draft, map_longitude: e.target.value })}/><span className="hint">Ex. -45.6789</span></label><label>Icône<select value={draft.map_icon} onChange={e => setDraft({ ...draft, map_icon: e.target.value })}>{mapIcons.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label><label className="wide">Texte affiché sur la carte<textarea rows={3} value={draft.map_text} onChange={e => setDraft({ ...draft, map_text: e.target.value })} placeholder="Texte public affiché quand on clique sur le repère."/></label></section>
     </div><div className="actions"><button className="btn" onClick={() => setShowForm(false)}>Annuler</button><button className="btn primary" onClick={save}>Enregistrer</button></div></section></div>}
 
-    {selected && <div className="back" onMouseDown={e => { if (e.target === e.currentTarget) setSelected(null) }}><article className="dialog detail"><div className="head"><h2>{selected.nom}</h2><button className="btn" onClick={() => openEdit(selected)}>Éditer</button><button className="btn" onClick={() => setSelected(null)}>Fermer</button></div><p>{selected.description}</p><dl><dt>Type</dt><dd>{selected.type}</dd><dt>Région</dt><dd>{name('regions', selected.region_id)}</dd><dt>Parent</dt><dd>{name('lieux', selected.parent_id)}</dd><dt>Histoire</dt><dd>{selected.histoire || '—'}</dd><dt>Factions</dt><dd>{selected.factions.map(id => name('factions', id)).join(' · ') || '—'}</dd><dt>PNJ clés</dt><dd>{selected.personnages_cles.map(id => name('pnjs', id)).join(' · ') || '—'}</dd><dt>Événements</dt><dd>{selected.evenements.map(id => name('events', id)).join(' · ') || '—'}</dd><dt>Tags</dt><dd>{selected.tags.join(' · ') || '—'}</dd><dt>Statut</dt><dd>{selected.statut}</dd><dt>Carte</dt><dd>{selected.map_visible ? 'Visible' : 'Masqué'}{selected.map_latitude != null && selected.map_longitude != null ? ` · ${selected.map_latitude}, ${selected.map_longitude}` : ' · coordonnées non définies'}</dd><dt>Texte carte</dt><dd>{selected.map_text || '—'}</dd><dt>Source</dt><dd>{selected.source || '—'}</dd><dt>Notes</dt><dd>{selected.notes || '—'}</dd></dl></article></div>}
+    {selected && <div className="back" onMouseDown={e => { if (e.target === e.currentTarget) setSelected(null) }}><article className="dialog detail"><div className="head"><h2>{selected.nom}</h2><button className="btn" onClick={() => openEdit(selected)}>Éditer</button><button className="btn" onClick={() => setSelected(null)}>Fermer</button></div><p>{selected.description}</p><dl><dt>Type</dt><dd>{selected.type}</dd><dt>Région</dt><dd>{name('regions', selected.region_id)}</dd><dt>Parent</dt><dd>{name('lieux', selected.parent_id)}</dd><dt>Histoire</dt><dd>{selected.histoire || '—'}</dd><dt>Factions</dt><dd>{selected.factions.map(id => name('factions', id)).join(' · ') || '—'}</dd><dt>PNJ clés</dt><dd>{selected.personnages_cles.map(id => name('pnjs', id)).join(' · ') || '—'}</dd><dt>Événements</dt><dd>{selected.evenements.map(id => name('events', id)).join(' · ') || '—'}</dd><dt>Tags</dt><dd>{selected.tags.join(' · ') || '—'}</dd><dt>Statut</dt><dd>{selected.statut}</dd><dt>Carte</dt><dd>{selected.map_important ? '★ Important · ' : ''}{selected.map_visible ? 'Visible' : 'Masqué'}{selected.map_latitude != null && selected.map_longitude != null ? ` · ${selected.map_latitude}, ${selected.map_longitude}` : ' · coordonnées non définies'}</dd><dt>Texte carte</dt><dd>{selected.map_text || '—'}</dd><dt>Source</dt><dd>{selected.source || '—'}</dd><dt>Notes</dt><dd>{selected.notes || '—'}</dd></dl></article></div>}
   </main>
 }

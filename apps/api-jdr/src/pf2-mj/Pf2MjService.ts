@@ -248,7 +248,7 @@ export class Pf2MjService {
     return { schemaVersion: 1, lieux, regions, aliases: this.asObject(config.aliases), parents: this.asObject(config.parents) }
   }
 
-  async publicMapPlaces(): Promise<Array<{ id: string; name: string; latitude: number; longitude: number; text: string; icon: string }>> {
+  async publicMapPlaces(): Promise<Array<{ id: string; name: string; latitude: number; longitude: number; text: string; icon: string; important: boolean }>> {
     const lieux = await this.persistence.readReference('lieux')
     const coordinate = (value: unknown): number => typeof value === 'number' ? value : typeof value === 'string' && value.trim() ? Number(value) : Number.NaN
     return lieux.flatMap((record) => {
@@ -265,12 +265,13 @@ export class Pf2MjService {
         latitude,
         longitude,
         text: typeof record.map_text === 'string' ? record.map_text.trim() : '',
-        icon: typeof record.map_icon === 'string' && record.map_icon.trim() ? record.map_icon.trim() : 'pin'
+        icon: typeof record.map_icon === 'string' && record.map_icon.trim() ? record.map_icon.trim() : 'pin',
+        important: record.map_important === true,
       }]
     }).sort((left, right) => left.name.localeCompare(right.name, 'fr'))
   }
 
-  async mjLightMapPlaces(): Promise<Array<{ id: string; name: string; latitude: number; longitude: number; text: string; mjText: string; icon: string }>> {
+  async mjLightMapPlaces(): Promise<Array<{ id: string; name: string; latitude: number; longitude: number; text: string; mjText: string; icon: string; important: boolean }>> {
     const lieux = await this.persistence.readReference('lieux')
     const coordinate = (value: unknown): number => typeof value === 'number' ? value : typeof value === 'string' && value.trim() ? Number(value) : Number.NaN
     return lieux.flatMap((record) => {
@@ -289,6 +290,7 @@ export class Pf2MjService {
         text: typeof record.map_text === 'string' ? record.map_text.trim() : '',
         mjText: typeof record.map_mj_text === 'string' ? record.map_mj_text.trim() : '',
         icon: typeof record.map_icon === 'string' && record.map_icon.trim() ? record.map_icon.trim() : 'pin',
+        important: record.map_important === true,
       }]
     }).sort((left, right) => left.name.localeCompare(right.name, 'fr'))
   }

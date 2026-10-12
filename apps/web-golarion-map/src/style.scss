@@ -180,6 +180,70 @@ a {
 	display: none;
 }
 
+/* Repères de campagne partagés : priorité visuelle même au zoom continental. */
+.pf2-public-place-marker.is-important {
+	z-index: 2;
+	font-size: 14px;
+	font-weight: 800;
+	filter: drop-shadow(0 2px 4px rgba(0, 0, 0, .7));
+}
+.pf2-public-place-marker.is-important .pf2-public-place-icon {
+	min-width: 37px;
+	height: 37px;
+	background: #b36d0c;
+	border: 3px solid #fff5b9;
+	font-size: 22px;
+	box-shadow: 0 0 0 2px #594016, 0 2px 8px #0008;
+}
+.pf2-public-place-marker.is-important .pf2-public-place-label {
+	display: block;
+	max-width: 220px;
+	padding: 6px 9px;
+	border: 2px solid #be8723;
+	background: #fff4c8;
+	color: #392700;
+	font-weight: 800;
+}
+.pf2-campaign-places-control {
+	max-width: min(280px, 82vw);
+	font: 13px system-ui, sans-serif;
+}
+.pf2-campaign-places-toggle {
+	border: 2px solid #ae7a25;
+	background: #fff5d8;
+	color: #402b0b;
+	border-radius: 7px;
+	padding: 8px 12px;
+	font-weight: 800;
+	cursor: pointer;
+	box-shadow: 0 2px 6px #0004;
+}
+.pf2-campaign-places-list {
+	margin-top: 4px;
+	max-height: 250px;
+	overflow-y: auto;
+	background: #fffdf6;
+	border: 1px solid #b99959;
+	border-radius: 6px;
+	box-shadow: 0 3px 10px #0004;
+}
+.pf2-campaign-places-list[hidden] { display: none; }
+.pf2-campaign-places-list button {
+	display: block;
+	width: 100%;
+	padding: 9px 12px;
+	border: 0;
+	border-bottom: 1px solid #ede2c6;
+	background: transparent;
+	color: #30220e;
+	text-align: left;
+	font: inherit;
+	cursor: pointer;
+}
+.pf2-campaign-places-list button:hover, .pf2-campaign-places-list button:focus-visible {
+	background: #fff1c0;
+}
+
 .pf2-public-place-marker:focus-visible .pf2-public-place-icon {
 	outline: 3px solid white;
 	outline-offset: 2px;
