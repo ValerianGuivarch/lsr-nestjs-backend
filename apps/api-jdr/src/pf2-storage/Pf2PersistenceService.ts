@@ -662,8 +662,8 @@ export class Pf2PersistenceService implements OnModuleInit {
     await this.upsert('geography-config', 'canonical', 'Géographie PF2', value)
   }
 
-  async listMapVisibilityOverrides(): Promise<Array<{ sourceKey: string; category: string; label: string; sourceFid: number | null; visibility: 'visible' | 'hidden'; publicLabel: string; publicText: string; mjText: string; updatedAt: string }>> {
-    const rows = await this.dataSource.query('SELECT source_key, category, label, source_fid, visibility, public_label, public_text, mj_text, updated_at FROM pf2_map_visibility_override ORDER BY category, label COLLATE NOCASE') as Array<Record<string, unknown>>
+  async listMapVisibilityOverrides(): Promise<Array<{ sourceKey: string; category: string; label: string; sourceFid: number | null; visibility: 'visible' | 'hidden'; publicLabel: string; publicText: string; mjText: string; important: boolean; updatedAt: string }>> {
+    const rows = await this.dataSource.query('SELECT source_key, category, label, source_fid, visibility, public_label, public_text, mj_text, important, updated_at FROM pf2_map_visibility_override ORDER BY category, label COLLATE NOCASE') as Array<Record<string, unknown>>
     return rows.map(row => ({
       sourceKey: String(row.source_key),
       category: String(row.category),
@@ -673,16 +673,17 @@ export class Pf2PersistenceService implements OnModuleInit {
       publicLabel: typeof row.public_label === 'string' ? row.public_label : '',
       publicText: typeof row.public_text === 'string' ? row.public_text : '',
       mjText: typeof row.mj_text === 'string' ? row.mj_text : '',
+      important: Number(row.important) === 1,
       updatedAt: typeof row.updated_at === 'string' ? row.updated_at : '',
     }))
   }
 
-  async upsertMapVisibilityOverride(input: { sourceKey: string; category: string; label: string; sourceFid?: number | null; visibility: 'visible' | 'hidden'; publicLabel?: string; publicText?: string; mjText?: string }): Promise<void> {
+  async upsertMapVisibilityOverride(input: { sourceKey: string; category: string; label: string; sourceFid?: number | null; visibility: 'visible' | 'hidden'; publicLabel?: string; publicText?: string; mjText?: string; important?: boolean }): Promise<void> {
     await this.dataSource.query(
-      `INSERT INTO pf2_map_visibility_override (source_key, category, label, source_fid, visibility, public_label, public_text, mj_text)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-       ON CONFLICT(source_key) DO UPDATE SET category = excluded.category, label = excluded.label, source_fid = excluded.source_fid, visibility = excluded.visibility, public_label = excluded.public_label, public_text = excluded.public_text, mj_text = excluded.mj_text, updated_at = CURRENT_TIMESTAMP`,
-      [input.sourceKey, input.category, input.label, input.sourceFid ?? null, input.visibility, input.publicLabel ?? '', input.publicText ?? '', input.mjText ?? ''],
+      `INSERT INTO pf2_map_visibility_override (source_key, category, label, source_fid, visibility, public_label, public_text, mj_text, important)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+       ON CONFLICT(source_key) DO UPDATE SET category = excluded.category, label = excluded.label, source_fid = excluded.source_fid, visibility = excluded.visibility, public_label = excluded.public_label, public_text = excluded.public_text, mj_text = excluded.mj_text, important = excluded.important, updated_at = CURRENT_TIMESTAMP`,
+      [input.sourceKey, input.category, input.label, input.sourceFid ?? null, input.visibility, input.publicLabel ?? '', input.publicText ?? '', input.mjText ?? '', input.important ? 1 : 0],
     )
   }
 
@@ -1126,6 +1127,13 @@ export class Pf2PersistenceService implements OnModuleInit {
           'INSERT OR IGNORE INTO pf2_player_identity (discord_user_id, player_name) VALUES (?, ?)',
           [identity.id, identity.name],
         )
+      }
+    })
+
+    await this.applyMigration('034-map-important-overrides', async (manager) => {
+      const columns = await manager.query("PRAGMA table_info('pf2_map_visibility_override')") as Array<{ name?: string }>
+      if (!columns.some(column => column.name === 'important')) {
+        await manager.query("ALTER TABLE pf2_map_visibility_override ADD COLUMN important INTEGER NOT NULL DEFAULT 0")
       }
     })
 

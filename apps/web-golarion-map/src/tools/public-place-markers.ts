@@ -155,10 +155,20 @@ function mjLightPopupContent(place: PublicPlace, onHidden: () => void): HTMLElem
 export async function addPublicPlaceMarkers(gmap: GolarionMap, placesUrl: string, mode: 'pj' | 'mj-light' | 'mj' = 'pj'): Promise<void> {
   if (!placesUrl) return
   try {
-    const response = await fetch(placesUrl, { credentials: 'omit', cache: 'no-store' })
-    if (!response.ok) throw new Error(`HTTP ${response.status}`)
-    const raw = await response.json()
-    const places = (Array.isArray(raw) ? raw : []).filter((value): value is PublicPlace => {
+    const curatedUrl = (window.GOLARION_MAP_CONFIG?.sourcePointsUrl ?? '').replace(/\/source-points\/?$/, '/important-places')
+    const urls = curatedUrl ? [placesUrl, curatedUrl] : [placesUrl]
+    const lists = await Promise.all(urls.map(async url => {
+      try {
+        const response = await fetch(url, { credentials: 'omit', cache: 'no-store' })
+        if (!response.ok) throw new Error(`HTTP ${response.status}`)
+        return await response.json() as unknown
+      } catch (error) {
+        console.warn('Impossible de charger les lieux de campagne :', url, error)
+        return []
+      }
+    }))
+    const raw = lists.flatMap(value => Array.isArray(value) ? value : [])
+    const places = raw.filter((value): value is PublicPlace => {
       if (!value || typeof value !== 'object') return false
       const item = value as Partial<PublicPlace>
       return typeof item.id === 'string' && typeof item.name === 'string' && Number.isFinite(item.latitude) && Number.isFinite(item.longitude)
@@ -168,7 +178,8 @@ export async function addPublicPlaceMarkers(gmap: GolarionMap, placesUrl: string
       const element = markerElement(place)
       let marker: Marker
       const popup = new Popup({ offset: 18, closeButton: true })
-      const popupContent = mode === 'mj-light'
+      // Source-catalogue favorites are not editable through the local-place API.
+      const popupContent = mode === 'mj-light' && !place.id.startsWith('source:')
         ? mjLightPopupContent(place, () => {
             popup.remove()
             marker.remove()

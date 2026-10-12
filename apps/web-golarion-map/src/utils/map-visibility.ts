@@ -7,6 +7,7 @@ export type MapVisibilityOverride = {
   publicLabel: string
   publicText: string
   mjText?: string
+  important?: boolean
 }
 
 export type PublicSourcePoint = {
@@ -16,6 +17,8 @@ export type PublicSourcePoint = {
   text: string
   icon: string
   minZoom: number
+  important?: boolean
+  curated?: boolean
   coordinates: Array<[number, number]>
 }
 
@@ -107,6 +110,6 @@ export async function applyPlayerMapVisibilityFilters(map: import('maplibre-gl')
   for (const layerId of playerCuratableLabelLayers) {
     if (!map.getLayer(layerId)) continue
     const current = map.getFilter(layerId)
-    map.setFilter(layerId, current ? ['all', current, manualHidden] : manualHidden as never)
+    map.setFilter(layerId, (current ? ['all', current, manualHidden] : manualHidden) as never)
   }
 }

@@ -18,6 +18,17 @@ La barre d’évolution temporelle est désactivée dans les trois modes. En ouv
 
 Les décisions manuelles sont stockées dans SQLite (`pf2_map_visibility_override`) avec trois états fonctionnels dans l’interface : automatique, visible, masqué. Une colonne `mj_text` séparée conserve les rappels et secrets réservés au MJ sans les envoyer aux endpoints PJ. Le catalogue stable utilisé pour relier la carte importée à ces décisions est généré dans `resources/map-source-points.json`.
 
+## Cohérence des repères MJ et PJ
+
+Les trois modes affichent maintenant les repères **publiés** sur la carte PJ :
+- les lieux du catalogue source explicitement rendus visibles par le MJ (comme `Grand Lodge → Grande Loge`) sont réinjectés aussi dans le mode MJ, qui conserve par ailleurs les points et informations d'origine ;
+- les libellés non-localisation explicitement publiés sont également réinjectés en MJ ;
+- les villes normalement déjà visibles sur la carte MJ ne sont pas doublées inutilement.
+
+En cliquant sur un lieu du catalogue en mode `/mj`, le panneau **Visibilité joueurs** permet de cocher **★ Lieu important pour tous les PJ** : la validation publie le lieu et enregistre le favori directement sur le point existant, sans création d'une nouvelle fiche de lieu. Cela vaut aussi pour les libellés cartographiques modifiables. L'étoile correspondante est rendue comme un marqueur ancré aux coordonnées officielles et rejoint la liste globale des lieux importants en modes MJ et PJ. Le repère est visible après **rechargement de la carte** ; le mode PJ ne peut pas en créer.
+
+La nouvelle donnée `important` des règles de visibilité est persistée par la migration SQLite `034-map-important-overrides`. L'endpoint `/map/important-places` ne publie que les favoris explicitement visibles : il ne retourne ni texte MJ ni référence Wiki interne.
+
 ## Repères de campagne partagés
 
 Les lieux importants sont gérés dans le référentiel **PF2-MJ → Lieux** (champ persistant `map_important`). Le MJ édite une fiche existante ou crée un nouveau lieu, coche **Afficher ce lieu sur la carte publique** et **Lieu important pour tous les PJ**, puis renseigne une latitude et une longitude. Pour récupérer une position d'un lieu déjà connu, chercher son nom dans le champ **Reprendre la position d'un lieu connu sur Golarion** (par exemple `Sandpoint` pour `Pointesable`). Sur la carte en mode `/mj`, un clic droit **★ Ajouter un lieu important (MJ)** ouvre directement une fiche Lieux préremplie avec les coordonnées choisies.

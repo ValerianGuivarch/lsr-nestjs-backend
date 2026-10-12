@@ -212,6 +212,78 @@ describe('Pf2MjService', () => {
       expect(lightVisibility.overrides).toEqual(expect.arrayContaining([expect.objectContaining({ mjText: 'Détail réservé au MJ.' })]))
     })
 
+    it('partage un favori source sans dupliquer la fiche et sans divulguer les notes MJ', async () => {
+      const overrides = [{
+        sourceKey: 'https://pathfinderwiki.com/wiki/Grand_Lodge',
+        category: 'locations',
+        label: 'Grand Lodge',
+        sourceFid: 755074687,
+        visibility: 'visible',
+        important: true,
+        publicLabel: 'Grande Loge',
+        publicText: 'Quartier général des Éclaireurs.',
+        mjText: 'Secret réservé au MJ.',
+      }]
+      const { service } = serviceFor({}, pnj, {
+        listMapVisibilityOverrides: jest.fn().mockResolvedValue(overrides),
+      })
+      const player = await service.publicMapSourcePoints()
+      const mj = await service.mjLightMapSourcePoints()
+      const favorites = await service.publicMapImportantPlaces()
+      expect(player).toEqual(expect.arrayContaining([expect.objectContaining({
+        label: 'Grand Lodge', name: 'Grande Loge', important: true, curated: true,
+      })]))
+      expect(mj).toEqual(expect.arrayContaining([expect.objectContaining({
+        label: 'Grand Lodge', important: true, curated: true,
+      })]))
+      expect(favorites).toEqual(expect.arrayContaining([expect.objectContaining({
+        name: 'Grande Loge', longitude: -0.267296, latitude: 30.87872,
+        important: true, text: 'Quartier général des Éclaireurs.',
+      })]))
+      expect(JSON.stringify(favorites)).not.toContain('Secret réservé au MJ.')
+      expect(JSON.stringify(favorites)).not.toContain('pathfinderwiki.com')
+    })
+
+    it('place un favori de quartier sur son centre géographique réel', async () => {
+      const overrides = [{
+        sourceKey: 'search:districts:Azlanti Keep', category: 'districts',
+        label: 'Azlanti Keep', sourceFid: null, visibility: 'visible',
+        important: true, publicLabel: 'Forteresse azlantie', publicText: '', mjText: 'secret',
+      }]
+      const { service } = serviceFor({}, pnj, {
+        listMapVisibilityOverrides: jest.fn().mockResolvedValue(overrides),
+      })
+      const favorites = await service.publicMapImportantPlaces()
+      expect(favorites).toEqual([expect.objectContaining({
+        name: 'Forteresse azlantie', important: true,
+        longitude: expect.any(Number), latitude: expect.any(Number),
+      })])
+      expect(favorites[0].longitude).toBeCloseTo(-0.242936925, 4)
+      expect(favorites[0].latitude).toBeCloseTo(30.919, 2)
+      expect(JSON.stringify(favorites)).not.toContain('secret')
+    })
+
+    it('étoile un lieu existant en forçant sa publication sans créer de lieu distinct', async () => {
+      const overrides: any[] = []
+      const upsertMapVisibilityOverride = jest.fn(async (item: any) => {
+        overrides.splice(0, overrides.length, { ...item })
+      })
+      const { service } = serviceFor({}, pnj, {
+        listMapVisibilityOverrides: jest.fn(async () => overrides),
+        upsertMapVisibilityOverride,
+      })
+      await expect(service.updateMapVisibility({
+        fid: 755074687, visibility: 'automatic', important: true,
+        publicLabel: 'Grande Loge',
+      })).resolves.toMatchObject({ visibility: 'visible', important: true })
+      expect(upsertMapVisibilityOverride).toHaveBeenCalledWith(expect.objectContaining({
+        sourceFid: 755074687, important: true, visibility: 'visible',
+      }))
+      expect((await service.publicMapImportantPlaces()).map(p => p.name)).toContain('Grande Loge')
+      await service.updateMapVisibility({ fid: 755074687, visibility: 'visible', important: false })
+      expect(await service.publicMapImportantPlaces()).toEqual([])
+    })
+
     it('ne renvoie dans la recherche PJ que les catégories et lieux autorisés', async () => {
       const { service } = serviceFor()
       const search = await service.publicMapSearch()

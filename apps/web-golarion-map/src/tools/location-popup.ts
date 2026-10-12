@@ -17,6 +17,7 @@ type SourceCuration = {
   publicLabel: string
   publicText: string
   mjText: string
+  important: boolean
 }
 
 function clickableFeature(e: MapMouseEvent & {features?: MapGeoJSONFeature[]}) {
@@ -55,7 +56,7 @@ async function loadCuration(fid: number, label: string): Promise<SourceCuration 
   }
 }
 
-function curationPanel(data: SourceCuration): HTMLElement {
+export function createMapSourceCurationPanel(data: SourceCuration): HTMLElement {
   const panel = document.createElement('section')
   panel.className = 'pf2-map-curation'
 
@@ -116,6 +117,19 @@ function curationPanel(data: SourceCuration): HTMLElement {
   mjTextWrapper.appendChild(mjText)
   panel.appendChild(mjTextWrapper)
 
+  const importantLabel = document.createElement('label')
+  importantLabel.className = 'pf2-map-important-checkbox'
+  const important = document.createElement('input')
+  important.type = 'checkbox'
+  important.checked = data.important
+  const importantText = document.createElement('span')
+  importantText.textContent = '★ Lieu important pour tous les PJ'
+  importantLabel.append(important, importantText)
+  panel.appendChild(importantLabel)
+  important.addEventListener('change', () => {
+    if (important.checked) visibility.value = 'visible'
+  })
+
   const save = document.createElement('button')
   save.type = 'button'
   save.textContent = 'Enregistrer'
@@ -138,11 +152,12 @@ function curationPanel(data: SourceCuration): HTMLElement {
           publicLabel: publicLabel.value,
           publicText: publicText.value,
           mjText: mjText.value,
+          important: important.checked,
         }),
       })
       if (!response.ok) throw new Error(await response.text())
       const updated = await response.json() as SourceCuration
-      const replacement = curationPanel(updated)
+      const replacement = createMapSourceCurationPanel(updated)
       panel.replaceWith(replacement)
     } catch (error) {
       save.disabled = false
@@ -201,7 +216,7 @@ export function makeLocationsClickable(gmap: GolarionMap) {
       official.innerHTML = text
       root.appendChild(official)
     }
-    if (curation) root.appendChild(curationPanel(curation))
+    if (curation) root.appendChild(createMapSourceCurationPanel(curation))
 
     popup.setLngLat(coordinates).setDOMContent(root).addTo(map)
   }

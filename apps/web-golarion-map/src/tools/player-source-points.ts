@@ -2,6 +2,7 @@ import { Popup, type GeoJSONSource, type MapLayerMouseEvent } from 'maplibre-gl'
 import { getPlaceNamesFr, translatePlaceName } from '../i18n/place-names'
 import { getMjLightSourcePoints, getPublicSourcePoints } from '../utils/map-visibility'
 import { createMjLightCurationPanel } from './mj-light-curation'
+import { createMapSourceCurationPanel } from './location-popup'
 import type { GolarionMap } from './GolarionMap'
 
 const sourceId = 'pf2-player-source-points'
@@ -13,8 +14,8 @@ async function whenStyleReady(gmap: GolarionMap): Promise<void> {
   await new Promise<void>(resolve => gmap.map.once('load', () => resolve()))
 }
 
-export async function addPlayerSourcePoints(gmap: GolarionMap, mode: 'pj' | 'mj-light' = 'pj'): Promise<void> {
-  const mjLight = mode === 'mj-light'
+export async function addPlayerSourcePoints(gmap: GolarionMap, mode: 'pj' | 'mj-light' | 'mj' = 'pj'): Promise<void> {
+  const mjLight = mode !== 'pj'
   const [points, dictionary] = await Promise.all([
     mjLight ? getMjLightSourcePoints() : getPublicSourcePoints(),
     getPlaceNamesFr(),
@@ -22,7 +23,12 @@ export async function addPlayerSourcePoints(gmap: GolarionMap, mode: 'pj' | 'mj-
   await whenStyleReady(gmap)
   if (gmap.map.getSource(sourceId)) return
 
-  let features: GeoJSON.Feature<GeoJSON.Point>[] = points.flatMap(point => {
+  // The MJ already has the original cities on the basemap. Reinject only
+  // explicitly published locations to avoid drawing each ordinary city twice.
+  // Important locations are rendered through the common star marker layer.
+  let features: GeoJSON.Feature<GeoJSON.Point>[] = points
+    .filter(point => !point.important && (mode !== 'mj' || point.curated === true))
+    .flatMap(point => {
     const displayName = point.name === point.label ? translatePlaceName(point.label, dictionary) : point.name
     return point.coordinates.map(coordinate => ({
       type: 'Feature' as const,
@@ -35,6 +41,7 @@ export async function addPlayerSourcePoints(gmap: GolarionMap, mode: 'pj' | 'mj-
         text: point.text,
         mjText: 'mjText' in point ? point.mjText : '',
         icon: point.icon,
+        sourceKey: 'sourceKey' in point ? point.sourceKey : '',
         minZoom: point.minZoom,
       },
     }))
@@ -94,7 +101,28 @@ export async function addPlayerSourcePoints(gmap: GolarionMap, mode: 'pj' | 'mj-
       root.appendChild(paragraph)
     }
 
-    if (mjLight) {
+    if (mode === 'mj') {
+      const fid = Number(properties.fid)
+      const label = String(properties.label ?? '')
+      if (Number.isInteger(fid)) {
+        root.appendChild(createMapSourceCurationPanel({
+          sourceKey: String(properties.sourceKey ?? ''),
+          fid,
+          category: 'locations',
+          kind: 'location',
+          label,
+          type: '',
+          sourceUrl: null,
+          automaticVisibility: 'hidden',
+          visibility: 'visible',
+          effectiveVisible: true,
+          publicLabel: String(properties.publicLabel ?? ''),
+          publicText: text,
+          mjText: String(properties.mjText ?? ''),
+          important: false,
+        }))
+      }
+    } else if (mjLight) {
       const fid = Number(properties.fid)
       const label = String(properties.label ?? '')
       root.appendChild(createMjLightCurationPanel({

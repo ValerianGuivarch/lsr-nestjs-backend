@@ -22,7 +22,7 @@ export type ResumeActorReference = { uuid: string; name: string }
 export type PlayableComponentsImport = { scenarioId: string; playableComponents: PlayableComponent[] }
 
 type MapSourcePoint = { sourceKey: string; fid: number; kind: 'city' | 'location'; label: string; type: string; icon: string; minZoom: number; coordinates: Array<[number, number]>; sourceUrl?: string }
-type MapVisibilityOverride = { sourceKey: string; category: string; label: string; sourceFid: number | null; visibility: 'visible' | 'hidden'; publicLabel: string; publicText: string; mjText: string; updatedAt: string }
+type MapVisibilityOverride = { sourceKey: string; category: string; label: string; sourceFid: number | null; visibility: 'visible' | 'hidden'; publicLabel: string; publicText: string; mjText: string; important: boolean; updatedAt: string }
 const MAP_AUTO_VISIBLE_CATEGORIES = ['continents', 'deserts', 'forests', 'hills', 'ice', 'land', 'mountains', 'nations', 'provinces', 'regions', 'rivers', 'roads', 'subregions', 'swamps', 'waters'] as const
 
 export type CampaignPlayableComponentsImport = { campaignId: string; description?: string; scenarios: CampaignPlayableComponentsScenario[] }
@@ -332,6 +332,8 @@ export class Pf2MjService {
         name: override?.publicLabel.trim() || point.label,
         text: override?.publicText.trim() || '',
         icon: point.icon,
+        important: override?.important === true,
+        curated: override?.visibility === 'visible',
         minZoom: point.minZoom,
         coordinates: point.coordinates,
       }]
@@ -354,10 +356,46 @@ export class Pf2MjService {
         text: override?.publicText.trim() || '',
         mjText: override?.mjText.trim() || '',
         icon: point.icon,
+        important: override?.important === true,
+        curated: override?.visibility === 'visible',
         minZoom: point.minZoom,
         coordinates: point.coordinates,
       }]
     })
+  }
+
+  async publicMapImportantPlaces(): Promise<Array<{ id: string; name: string; latitude: number; longitude: number; text: string; icon: string; important: true }>> {
+    const [points, search, overrides] = await Promise.all([
+      this.mapSourcePoints(), this.mapSearchIndex(), this.persistence.listMapVisibilityOverrides(),
+    ])
+    const bySourceKey = new Map(points.map(point => [point.sourceKey, point]))
+    const byCategoryLabel = new Map(search.flatMap(group =>
+      group.entries.map(entry => [group.category + '\u0000' + String(entry.label ?? ''), entry] as const)))
+    const result: Array<{ id: string; name: string; latitude: number; longitude: number; text: string; icon: string; important: true }> = []
+    for (const override of overrides) {
+      if (!override.important || override.visibility !== 'visible') continue
+      const point = bySourceKey.get(override.sourceKey)
+      let coordinates: [number, number][] = point?.coordinates ?? []
+      if (!point) {
+        const entry = byCategoryLabel.get(override.category + '\u0000' + override.label)
+        const timed = Array.isArray(entry?.timed) ? entry.timed[0] : null
+        const bbox = timed && Array.isArray(timed.bbox) ? timed.bbox.map(Number) : []
+        if (bbox.length === 2 && bbox.every(Number.isFinite)) coordinates = [[bbox[0], bbox[1]]]
+        else if (bbox.length === 4 && bbox.every(Number.isFinite)) {
+          coordinates = [[(bbox[0] + bbox[2]) / 2, (bbox[1] + bbox[3]) / 2]]
+        }
+      }
+      for (const [longitude, latitude] of coordinates) {
+        if (!Number.isFinite(longitude) || !Number.isFinite(latitude)) continue
+        result.push({
+          id: 'source:' + createHash('sha256').update(override.sourceKey).digest('hex').slice(0, 16),
+          name: override.publicLabel.trim() || override.label,
+          longitude, latitude, text: override.publicText.trim(),
+          icon: point?.icon ?? 'pin', important: true,
+        })
+      }
+    }
+    return result
   }
 
   async publicMapSearch(): Promise<Array<{ category: string; entries: Array<Record<string, unknown>> }>> {
@@ -423,6 +461,7 @@ export class Pf2MjService {
       publicLabel: override?.publicLabel ?? '',
       publicText: override?.publicText ?? '',
       mjText: override?.mjText ?? '',
+      important: override?.important === true,
     }
   }
 
@@ -444,7 +483,8 @@ export class Pf2MjService {
     }
     if (!category || !label) throw new Error('category et label sont obligatoires pour une donnée cartographique sans fid.')
     if (!sourceKey) sourceKey = `search:${category}:${label}`
-    const visibility = input.visibility
+    const requestedImportance = typeof input.important === 'boolean' ? input.important : undefined
+    const visibility = requestedImportance === true ? 'visible' : input.visibility
     if (visibility === 'automatic') {
       await this.persistence.deleteMapVisibilityOverride(sourceKey)
       return point ? this.mapSourceCuration(point.fid, point.label) : { sourceKey, category, label, visibility: 'automatic' }
@@ -454,11 +494,12 @@ export class Pf2MjService {
     const publicLabel = typeof input.publicLabel === 'string' ? input.publicLabel.trim() : previous?.publicLabel ?? ''
     const publicText = typeof input.publicText === 'string' ? input.publicText.trim() : previous?.publicText ?? ''
     const mjText = typeof input.mjText === 'string' ? input.mjText.trim() : previous?.mjText ?? ''
+    const important = requestedImportance ?? previous?.important ?? false
     if (publicLabel.length > 200) throw new Error('Le nom public est trop long (200 caractères maximum).')
     if (publicText.length > 4000) throw new Error('La description PJ est trop longue (4 000 caractères maximum).')
     if (mjText.length > 6000) throw new Error('La note MJ est trop longue (6 000 caractères maximum).')
-    await this.persistence.upsertMapVisibilityOverride({ sourceKey, category, label, sourceFid, visibility, publicLabel, publicText, mjText })
-    return point ? this.mapSourceCuration(point.fid, point.label) : { sourceKey, category, label, visibility, publicLabel, publicText, mjText }
+    await this.persistence.upsertMapVisibilityOverride({ sourceKey, category, label, sourceFid, visibility, publicLabel, publicText, mjText, important })
+    return point ? this.mapSourceCuration(point.fid, point.label) : { sourceKey, category, label, visibility, publicLabel, publicText, mjText, important }
   }
 
   private async mapSearchIndex(): Promise<Array<{ category: string; entries: Array<Record<string, unknown>> }>> {

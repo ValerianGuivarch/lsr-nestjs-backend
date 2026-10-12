@@ -360,6 +360,22 @@ a {
 	resize: vertical;
 }
 
+.pf2-map-curation .pf2-map-important-checkbox {
+	display: flex;
+	align-items: center;
+	gap: .55rem;
+	margin: .3rem 0;
+	cursor: pointer;
+}
+.pf2-map-curation .pf2-map-important-checkbox input {
+	width: 17px;
+	height: 17px;
+	margin: 0;
+	padding: 0;
+	accent-color: #a96e10;
+	flex-shrink: 0;
+}
+
 .pf2-map-curation-save {
 	justify-self: start;
 	padding: .4rem .7rem;

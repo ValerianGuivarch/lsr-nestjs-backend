@@ -30,11 +30,12 @@ function bestCategory(label: string, explicitType: string, index: Map<string, st
     ?? null
 }
 
-function panel(
+export function createMjLabelCurationPanel(
   category: string,
   label: string,
   automaticVisible: boolean,
   existing: MapVisibilityOverride | undefined,
+  onSaved?: (next: MapVisibilityOverride | null) => void,
 ): HTMLElement {
   const root = document.createElement('section')
   root.className = 'pf2-map-curation'
@@ -94,6 +95,19 @@ function panel(
   mjDescriptionLabel.appendChild(mjText)
   root.appendChild(mjDescriptionLabel)
 
+  const importantLabel = document.createElement('label')
+  importantLabel.className = 'pf2-map-important-checkbox'
+  const important = document.createElement('input')
+  important.type = 'checkbox'
+  important.checked = existing?.important === true
+  important.addEventListener('change', () => {
+    if (important.checked) rule.value = 'visible'
+  })
+  const importantCaption = document.createElement('span')
+  importantCaption.textContent = '★ Lieu important pour tous les PJ'
+  importantLabel.append(important, importantCaption)
+  root.appendChild(importantLabel)
+
   const save = document.createElement('button')
   save.type = 'button'
   save.className = 'pf2-map-curation-save'
@@ -115,9 +129,20 @@ function panel(
           publicLabel: publicLabel.value,
           publicText: publicText.value,
           mjText: mjText.value,
+          important: important.checked,
         }),
       })
       if (!response.ok) throw new Error(await response.text())
+      const result = await response.json() as { sourceKey?: string; visibility?: string }
+      onSaved?.(rule.value === 'automatic' ? null : {
+        sourceKey: result.sourceKey || existing?.sourceKey || `search:${category}:${label}`,
+        category, label, sourceFid: existing?.sourceFid ?? null,
+        visibility: rule.value === 'hidden' ? 'hidden' : 'visible',
+        publicLabel: publicLabel.value.trim(),
+        publicText: publicText.value.trim(),
+        mjText: mjText.value.trim(),
+        important: important.checked,
+      })
       resetMapVisibilityCache()
       status.textContent = 'Enregistré. Recharge la carte PJ pour voir le résultat.'
       status.className = 'pf2-map-curation-status visible'
@@ -151,7 +176,11 @@ export async function makeLabelsCuratable(gmap: GolarionMap): Promise<void> {
     const title = document.createElement('h3')
     title.textContent = label
     container.appendChild(title)
-    container.appendChild(panel(category, label, autoVisible.has(category), overrideMap.get(overrideKey(category, label))))
+    container.appendChild(createMjLabelCurationPanel(category, label, autoVisible.has(category), overrideMap.get(overrideKey(category, label)), next => {
+      const key = overrideKey(category, label)
+      if (next) overrideMap.set(key, next)
+      else overrideMap.delete(key)
+    }))
     popup.setLngLat(event.lngLat).setDOMContent(container).addTo(gmap.map)
   }
 

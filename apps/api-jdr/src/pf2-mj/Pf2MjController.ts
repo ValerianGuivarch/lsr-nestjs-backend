@@ -63,6 +63,9 @@ export class Pf2MjController {
   @Get('map/source-points')
   publicMapSourcePoints(): Promise<unknown[]> { return this.service.publicMapSourcePoints() }
 
+  @Get('map/important-places')
+  publicMapImportantPlaces(): Promise<unknown[]> { return this.service.publicMapImportantPlaces() }
+
   @Get('map/search')
   publicMapSearch(): Promise<unknown[]> { return this.service.publicMapSearch() }
 

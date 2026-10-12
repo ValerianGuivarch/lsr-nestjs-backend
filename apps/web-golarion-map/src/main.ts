@@ -112,10 +112,11 @@ export const map = new Map({
 export const golarionMap = new GolarionMap(map);
 addAbsalomOverlay(map, !startupOptions.embedded);
 void addPublicPlaceMarkers(golarionMap, publicPlacesUrl, mapAudience);
+// Both the GM and players see every published point. The GM keeps all of
+// the original unrestricted layers in addition to the validated PJ overlays.
+void addPlayerSourcePoints(golarionMap, mapAudience);
+void addPlayerCuratedLabels(golarionMap, mapAudience);
 if (playerLikeAudience) {
-  const playerMode = mapAudience === 'mj-light' ? 'mj-light' : 'pj';
-  void addPlayerSourcePoints(golarionMap, playerMode);
-  void addPlayerCuratedLabels(golarionMap, playerMode);
   if (map.isStyleLoaded()) void applyPlayerMapVisibilityFilters(map, mapAudience === 'mj-light');
   else map.once('load', () => { void applyPlayerMapVisibilityFilters(map, mapAudience === 'mj-light'); });
 }

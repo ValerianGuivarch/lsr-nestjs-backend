@@ -4,6 +4,7 @@ import { getMapVisibility, overrideKey } from '../utils/map-visibility'
 import type { SearchCategory } from '../utils/fuzzy-search'
 import type { GolarionMap } from './GolarionMap'
 import { createMjLightCurationPanel } from './mj-light-curation'
+import { createMjLabelCurationPanel } from './label-curation'
 
 const sourceId = 'pf2-player-curated-labels'
 const layerId = 'pf2-player-curated-labels-layer'
@@ -13,8 +14,8 @@ async function styleReady(gmap: GolarionMap): Promise<void> {
   await new Promise<void>(resolve => gmap.map.once('load', () => resolve()))
 }
 
-export async function addPlayerCuratedLabels(gmap: GolarionMap, mode: 'pj' | 'mj-light' = 'pj'): Promise<void> {
-  const mjLight = mode === 'mj-light'
+export async function addPlayerCuratedLabels(gmap: GolarionMap, mode: 'pj' | 'mj-light' | 'mj' = 'pj'): Promise<void> {
+  const mjLight = mode !== 'pj'
   const [visibility, dictionary, searchResponse] = await Promise.all([
     getMapVisibility(mjLight),
     getPlaceNamesFr(),
@@ -25,7 +26,7 @@ export async function addPlayerCuratedLabels(gmap: GolarionMap, mode: 'pj' | 'mj
   const autoVisible = new Set(visibility.autoVisibleCategories)
   const visibleOverrides = new Map(
     visibility.overrides
-      .filter(item => item.visibility === 'visible' && item.category !== 'locations' && (
+      .filter(item => item.visibility === 'visible' && !item.important && item.category !== 'locations' && (
         !autoVisible.has(item.category) || Boolean(item.publicLabel.trim()) || Boolean(item.publicText.trim()) || (mjLight && Boolean(item.mjText?.trim()))
       ))
       .map(item => [overrideKey(item.category, item.label), item])
@@ -99,7 +100,17 @@ export async function addPlayerCuratedLabels(gmap: GolarionMap, mode: 'pj' | 'mj
       root.appendChild(paragraph)
     }
 
-    if (mjLight) {
+    if (mode === 'mj') {
+      root.appendChild(createMjLabelCurationPanel(category, label, false, {
+        sourceKey: `search:${category}:${label}`,
+        category, label, sourceFid: null,
+        visibility: 'visible',
+        publicLabel: String(props.publicLabel ?? ''),
+        publicText: text,
+        mjText: String(props.mjText ?? ''),
+        important: false,
+      }))
+    } else if (mjLight) {
       root.appendChild(createMjLightCurationPanel({
         category,
         label,
