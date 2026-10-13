@@ -131,6 +131,8 @@ describe('Pf2PersistenceService', () => {
       , { id: '031-map-player-visibility' }
       , { id: '032-map-mj-light-notes' }
       , { id: '033-player-identity-directory' }
+      , { id: '034-map-important-overrides' }
+      , { id: '035-rewrite-azlant-journals' }
     ])
 
     await currentDataSource().destroy()
@@ -173,6 +175,8 @@ describe('Pf2PersistenceService', () => {
       , { id: '031-map-player-visibility' }
       , { id: '032-map-mj-light-notes' }
       , { id: '033-player-identity-directory' }
+      , { id: '034-map-important-overrides' }
+      , { id: '035-rewrite-azlant-journals' }
     ])
   })
 

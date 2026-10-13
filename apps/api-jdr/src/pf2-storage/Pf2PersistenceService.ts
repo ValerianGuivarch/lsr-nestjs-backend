@@ -1164,6 +1164,26 @@ export class Pf2PersistenceService implements OnModuleInit {
       }
     })
 
+    await this.applyMigration('035-rewrite-azlant-journals', async (manager) => {
+      const rewrites = [
+        {
+          number: 35,
+          content: "La Chute anéantit Azlant et bouleversa Golarion. Lorsque l'astre destiné à frapper le monde arriva, Acavna, déesse azlantie de la Lune et de la défense, déplaça la Lune pour l'interposer. Le choc brisa le projectile en innombrables fragments, mais Acavna mourut dans l'effort. Amaznen, dieu azlanti de la magie et compagnon d'Acavna, se sacrifia ensuite pour drainer l'essentiel de la puissance magique encore contenue dans ces fragments. Ces sacrifices empêchèrent une destruction plus totale, sans pouvoir sauver Azlant : le continent fut ravagé et englouti, et le monde entra dans une longue ère de ruines et d'obscurité."
+        },
+        {
+          number: 74,
+          content: "Azlant fut l'une des plus grandes civilisations humaines de l'histoire de Golarion. Ses cités, son administration, ses travaux monumentaux et sa maîtrise de la magie atteignirent un niveau que peu de peuples pouvaient égaler à son époque. Les Azlantes n'avaient donc pas entièrement tort lorsqu'ils se considéraient comme exceptionnels ; leur puissance était réelle. Cette réussite nourrissait toutefois une société très hiérarchisée et une conviction croissante que leur civilisation représentait une forme supérieure d'ordre et de progrès. Cette certitude pouvait justifier le mépris, la domination ou l'esclavage de peuples jugés inférieurs. Toute leur puissance ne leur permit pourtant pas d'échapper à la Chute : une civilisation capable de prodiges extraordinaires disparut presque entièrement en une seule catastrophe."
+        },
+        {
+          number: 75,
+          content: "Azlant disparut comme puissance politique, mais son héritage continua à modeler le monde. Le cas le plus spectaculaire est celui d'Aroden, survivant azlanti devenu une figure centrale de l'histoire humaine. Il retrouva la Pierre des Étoiles, réussit son épreuve et devint un dieu ; son premier grand acte divin fut de faire émerger l'île de Kortos et d'y fonder Absalom. Ainsi, même des millénaires après la destruction d'Azlant, l'une des villes les plus importantes de Golarion porte directement l'empreinte d'un Azlanti. L'héritage d'Azlant ne tient donc pas seulement à des ruines ou à des objets anciens : il survit aussi dans des institutions, des mythes, des traditions et dans l'histoire même d'Absalom."
+        },
+      ] as const
+      for (const rewrite of rewrites) {
+        await manager.query('UPDATE pf2_journal SET content = ?, updated_at = CURRENT_TIMESTAMP WHERE number = ?', [rewrite.content, rewrite.number])
+      }
+    })
+
     await this.assertDatabaseIntegrity(this.dataSource, 'base SQLite après migrations')
   }
 
