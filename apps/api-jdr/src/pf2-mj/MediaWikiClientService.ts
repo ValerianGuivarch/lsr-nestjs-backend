@@ -15,7 +15,7 @@ export class MediaWikiClientService {
   fileUrl(filename: string): string { return this.pageUrl(`Special:Redirect/file/${filename}`) }
   wikiLoginUrl(grant: string): string {
     if (!this.publicBase) throw new ServiceUnavailableException('URL publique MediaWiki non configurée.')
-    return `${this.pageUrl('Special:PF2DiscordLogin')}&grant=${encodeURIComponent(grant)}`
+    return `${this.pageUrl('Special:PF2DiscordLogin')}&grant=${encodeURIComponent(grant)}&returnto=${encodeURIComponent('Special:MesPersonnages')}`
   }
   async resolveUser(username: string): Promise<string | null> {
     const requested = username.trim()
