@@ -307,9 +307,7 @@ export class DiscordCommandsService {
         if (!user.bot) await thumbs.users.remove(user.id).catch(() => undefined)
       }
     }
-    if (starter.author?.bot || starter.channel?.permissionsFor?.(starter.client?.user)?.has?.(PermissionFlagsBits.AddReactions)) {
-      await starter.react('👍').catch(() => undefined)
-    }
+    await starter.react('👍').catch(() => undefined)
   }
 
   private async finishQuestCommand(interaction: ChatInputCommandInteraction): Promise<void> {
@@ -403,7 +401,7 @@ export class DiscordCommandsService {
 
       quests.sort((left, right) => left.createdAt - right.createdAt || left.title.localeCompare(right.title, 'fr'))
       const lines = quests.length
-        ? quests.map(quest => `${quest.url ? `**[${quest.title.replace(/([\\\][])])/g, '\\$1')}](${quest.url})**` : `**${quest.title}**`} : ${quest.users.length
+        ? quests.map(quest => `${quest.url ? `**[${quest.title}](${quest.url})**` : `**${quest.title}**`} : ${quest.users.length
           ? quest.users.map(user => missionPlayerIds
             ? `${user.name} ${missionPlayerIds.has(user.id) ? '✅' : '❌'}`
             : user.name).join(', ')
