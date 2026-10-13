@@ -75,6 +75,11 @@ class SpecialPF2DiscordLogin extends SpecialPage {
         $session->setUser( $user );
         $session->persist();
 
-        $output->redirect( $services->getTitleFactory()->newMainPage()->getFullURL() );
+        $returnTo = trim( (string)$request->getVal( 'returnto', '' ) );
+        $target = $returnTo !== '' ? $services->getTitleFactory()->newFromText( $returnTo ) : null;
+        if ( !$target ) {
+            $target = $services->getTitleFactory()->newMainPage();
+        }
+        $output->redirect( $target->getFullURL() );
     }
 }

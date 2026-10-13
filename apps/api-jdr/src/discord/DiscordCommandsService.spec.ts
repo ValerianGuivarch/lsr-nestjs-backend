@@ -6,7 +6,7 @@ describe('DiscordCommandsService', () => {
     const service = new DiscordCommandsService({} as never, {} as never)
     const definitions = service.definitions().map(command => command.name)
     expect(definitions).toEqual(expect.arrayContaining([
-      'help', 'help-admin', 'choix-quete', 'random-perso', 'tirage-sort-joueur', 'recap-pjs', 'recap-seance',
+      'help', 'help-admin', 'choix-quete', 'terminer-quete', 'relancer-quete', 'random-perso', 'tirage-sort-joueur', 'recap-pjs', 'recap-seance',
       'debut-seance', 'fin-seance', 'personnage', 'faction', 'nouvelle-faction', 'associer-faction', 'afficher-personnage', 'afficher-faction', 'rechercher', 'wiki', 'wiki-admin',
       'proposer-date-seance', 'modifier-date-seance', 'relancer-date-seance', 'analyse-date-seance', 'valider-date-seance', 'preparer-prochaine-mission',
     ]))
@@ -86,6 +86,81 @@ describe('DiscordCommandsService', () => {
     expect(content).not.toContain('Eryn')
     expect(content).not.toContain('<@')
     expect(content).not.toContain('PF2-Bot')
+  })
+
+  it('hides quests tagged Terminé and links visible quest titles to their Discord threads', async () => {
+    const openQuest = {
+      id: 'open-quest', name: 'La crypte oubliée', createdTimestamp: 1, appliedTags: [],
+      fetchStarterMessage: jest.fn().mockResolvedValue({ reactions: { cache: { find: () => undefined } } }),
+    }
+    const doneQuest = {
+      id: 'done-quest', name: 'Le tueur d’esclaves', createdTimestamp: 2, appliedTags: ['done'],
+      fetchStarterMessage: jest.fn().mockResolvedValue({ reactions: { cache: { find: () => undefined } } }),
+    }
+    const forum = {
+      availableTags: [{ id: 'done', name: 'Terminé' }],
+      threads: {
+        fetchActive: jest.fn().mockResolvedValue({ threads: new Map([['open-quest', openQuest], ['done-quest', doneQuest]]) }),
+        fetchArchived: jest.fn().mockResolvedValue({ threads: Object.assign(new Map(), { last: () => undefined }), hasMore: false }),
+      },
+    }
+    const editReply = jest.fn().mockResolvedValue(undefined)
+    const service = new DiscordCommandsService({} as never, {} as never)
+    await service.handle({
+      commandName: 'choix-quete', guildId: 'guild-1',
+      client: { channels: { fetch: jest.fn().mockResolvedValue(forum) } },
+      deferReply: jest.fn().mockResolvedValue(undefined), editReply, followUp: jest.fn().mockResolvedValue(undefined),
+    } as never)
+    const content = editReply.mock.calls[0][0].content as string
+    expect(content).toContain('**[La crypte oubliée](https://discord.com/channels/guild-1/open-quest)** : Libre')
+    expect(content).not.toContain('Le tueur d’esclaves')
+  })
+
+  it('finishes a quest with the Terminé tag, clears player thumbs and can reopen it', async () => {
+    const remove = jest.fn().mockResolvedValue(undefined)
+    const users = new Map([
+      ['player-1', { id: 'player-1', bot: false }],
+      ['bot', { id: 'bot', bot: true }],
+    ])
+    const thumbs = { emoji: { name: '👍' }, users: { fetch: jest.fn().mockResolvedValue(users), remove } }
+    const starter = { reactions: { cache: { find: () => thumbs } }, react: jest.fn().mockResolvedValue(undefined) }
+    const thread: any = {
+      id: 'quest-1', name: 'Les ruines', parentId: '1536259632455094412', appliedTags: ['todo'],
+      isThread: () => true, fetchStarterMessage: jest.fn().mockResolvedValue(starter),
+      setAppliedTags: jest.fn(async (tags: string[]) => { thread.appliedTags = tags }),
+      send: jest.fn().mockResolvedValue(undefined),
+    }
+    const forum = { availableTags: [{ id: 'done', name: 'Terminé' }] }
+    const fetch = jest.fn().mockResolvedValue(forum)
+    const reply = jest.fn().mockResolvedValue(undefined)
+    const service = new DiscordCommandsService({} as never, {} as never)
+
+    await service.handle({
+      commandName: 'terminer-quete', id: 'cmd-1', user: { id: 'admin' }, channel: thread,
+      client: { channels: { fetch } }, memberPermissions: { has: jest.fn().mockReturnValue(true) }, reply,
+    } as never)
+    const row: any = reply.mock.calls[0][0].components[0]
+    const confirmId = row.components[0].data.custom_id
+    const update = jest.fn().mockResolvedValue(undefined)
+    await service.handleButton({
+      customId: confirmId, user: { id: 'admin' }, channelId: 'quest-1', channel: thread,
+      client: { channels: { fetch } }, update, reply: jest.fn(),
+    } as never)
+
+    expect(thread.setAppliedTags).toHaveBeenCalledWith(['todo', 'done'], expect.stringContaining('/terminer-quete'))
+    expect(remove).toHaveBeenCalledWith('player-1')
+    expect(remove).not.toHaveBeenCalledWith('bot')
+    expect(thread.send).toHaveBeenCalledWith(expect.objectContaining({ content: expect.stringContaining('/relancer-quete') }))
+
+    const editReply = jest.fn().mockResolvedValue(undefined)
+    await service.handle({
+      commandName: 'relancer-quete', user: { id: 'admin' }, channel: thread,
+      client: { channels: { fetch } }, memberPermissions: { has: jest.fn().mockReturnValue(true) },
+      deferReply: jest.fn().mockResolvedValue(undefined), editReply,
+    } as never)
+    expect(thread.setAppliedTags).toHaveBeenLastCalledWith(['todo'], expect.stringContaining('/relancer-quete'))
+    expect(starter.react).toHaveBeenCalledWith('👍')
+    expect(editReply).toHaveBeenCalledWith({ content: 'Quête relancée.' })
   })
 
   it('marks quest voters ✅ or ❌ by Discord ID in a mission thread created by the bot', async () => {

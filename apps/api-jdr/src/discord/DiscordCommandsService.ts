@@ -73,6 +73,7 @@ export class DiscordCommandsService {
   private readonly pendingPlanningReminders = new Map<string, { requesterId: string; content: string; userIds: string[] }>()
   private readonly pendingPreviewPublications = new Map<string, { requesterId: string; content: string; files?: string[] }>()
   private readonly pendingPlayerDraws = new Map<string, { requesterId: string; players: Array<{ id: string; name: string }> }>()
+  private readonly pendingQuestCompletions = new Map<string, { requesterId: string; threadId: string }>()
   private readonly choiceForumChannelId = process.env['PF2_DISCORD_QUEST_FORUM_CHANNEL_ID']?.trim() || '1536259632455094412'
   constructor(private readonly persistence: Pf2PersistenceService, private readonly foundry: FoundryRelayService, private readonly playerCodex?: PlayerCodexService, private readonly mediaWiki?: MediaWikiClientService, @Inject(forwardRef(() => DiscordService)) private readonly discord?: DiscordService, private readonly journals?: Pf2JournalsService) {}
 
@@ -82,6 +83,8 @@ export class DiscordCommandsService {
       new SlashCommandBuilder().setName('tirage-sort-joueur').setDescription('Tire au sort des personnes parmi une sélection Discord.').setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild).toJSON(),
       new SlashCommandBuilder().setName('help').setDescription('Affiche les commandes PF2 disponibles.').toJSON(),
       new SlashCommandBuilder().setName('choix-quete').setDescription('Affiche les quêtes du forum et les joueurs intéressés.').toJSON(),
+      new SlashCommandBuilder().setName('terminer-quete').setDescription('Marque comme terminée la quête de ce fil.').setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild).toJSON(),
+      new SlashCommandBuilder().setName('relancer-quete').setDescription('Relance une quête terminée depuis son fil.').setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild).toJSON(),
       new SlashCommandBuilder().setName('help-admin').setDescription('Affiche les commandes PF2 réservées aux administrateurs.').setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild).toJSON(),
       new SlashCommandBuilder().setName('recap-pjs').setDescription('Prévisualise le nombre de séances jouées par joueur et par personnage.').toJSON(),
       new SlashCommandBuilder().setName('recap-seance').setDescription('Prévisualise les informations prévues pour une séance.').addStringOption(option => option.setName('session').setDescription('Numéro de séance').setRequired(true).setAutocomplete(true)).setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild).toJSON(),
@@ -151,6 +154,14 @@ export class DiscordCommandsService {
     }
     if (interaction.commandName === 'choix-quete') {
       await this.choiceCommand(interaction as ChatInputCommandInteraction)
+      return true
+    }
+    if (interaction.commandName === 'terminer-quete') {
+      await this.finishQuestCommand(interaction as ChatInputCommandInteraction)
+      return true
+    }
+    if (interaction.commandName === 'relancer-quete') {
+      await this.reopenQuestCommand(interaction as ChatInputCommandInteraction)
       return true
     }
     if (interaction.commandName === 'help-admin') {
@@ -238,6 +249,8 @@ export class DiscordCommandsService {
         '`/analyse-date-seance` — analyse les réactions, propose les groupes puis permet leur publication.',
         '`/valider-date-seance numero:2` — valide et annonce une proposition de groupes dans le fil de planification.',
         '`/preparer-prochaine-mission` — crée, après aperçu et confirmation, un fil dans #objectif-prochaine-mission pour une séance validée.',
+        '`/terminer-quete` — depuis un fil du journal des quêtes, ajoute le tag Terminé et libère les réservations 👍.',
+        '`/relancer-quete` — depuis un fil terminé, retire le tag Terminé et le remet dans `/choix-quete`.',
         '`/help-admin` — affiche cette aide.',
       ].join('\n'),
       ephemeral: true,
@@ -271,6 +284,69 @@ export class DiscordCommandsService {
     return new Set(mentions)
   }
 
+  private async questThreadContext(interaction: ChatInputCommandInteraction): Promise<{ thread: any; forum: any; completedTagId: string }> {
+    if (!this.isAdmin(interaction)) throw new Error('Cette commande est réservée aux administrateurs du serveur.')
+    const thread = interaction.channel
+    if (!thread?.isThread?.() || thread.parentId !== this.choiceForumChannelId) {
+      throw new Error('Cette commande doit être lancée depuis la discussion de la quête dans le journal des quêtes.')
+    }
+    const forum = await interaction.client.channels.fetch(this.choiceForumChannelId)
+    if (!forum || !('availableTags' in forum) || !Array.isArray(forum.availableTags)) throw new Error('Le forum des quêtes est introuvable ou inaccessible.')
+    const completedTag = forum.availableTags.find((tag: any) => String(tag.name ?? '').trim().toLocaleLowerCase('fr') === 'terminé')
+    if (!completedTag?.id) throw new Error('Le tag « Terminé » est introuvable dans le forum des quêtes.')
+    return { thread, forum, completedTagId: completedTag.id }
+  }
+
+  private async clearQuestThumbReservations(thread: any): Promise<void> {
+    const starter = await thread.fetchStarterMessage({ force: true }).catch(() => null)
+    if (!starter) return
+    const thumbs = starter.reactions.cache.find((reaction: any) => reaction.emoji.name === '👍')
+    if (thumbs) {
+      const users = await thumbs.users.fetch().catch(() => new Map())
+      for (const user of users.values() as Iterable<any>) {
+        if (!user.bot) await thumbs.users.remove(user.id).catch(() => undefined)
+      }
+    }
+    await starter.react('👍').catch(() => undefined)
+  }
+
+  private async finishQuestCommand(interaction: ChatInputCommandInteraction): Promise<void> {
+    try {
+      const { thread, completedTagId } = await this.questThreadContext(interaction)
+      if (thread.appliedTags?.includes(completedTagId)) {
+        await interaction.reply({ content: 'Cette quête est déjà marquée **Terminé**.', ephemeral: true })
+        return
+      }
+      const key = `pf2-quest-finish:${interaction.id}`
+      this.pendingQuestCompletions.set(key, { requesterId: interaction.user.id, threadId: thread.id })
+      const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
+        new ButtonBuilder().setCustomId(`${key}:yes`).setLabel('Oui, terminer').setStyle(ButtonStyle.Danger),
+        new ButtonBuilder().setCustomId(`${key}:no`).setLabel('Annuler').setStyle(ButtonStyle.Secondary),
+      )
+      await interaction.reply({ content: `Es-tu sûr de vouloir terminer **${thread.name}** ?`, components: [row], ephemeral: true })
+    } catch (error) {
+      await interaction.reply({ content: error instanceof Error ? error.message : String(error), ephemeral: true })
+    }
+  }
+
+  private async reopenQuestCommand(interaction: ChatInputCommandInteraction): Promise<void> {
+    await interaction.deferReply({ ephemeral: true })
+    try {
+      const { thread, completedTagId } = await this.questThreadContext(interaction)
+      if (!thread.appliedTags?.includes(completedTagId)) {
+        await interaction.editReply({ content: 'Cette quête n’est pas marquée **Terminé**.' })
+        return
+      }
+      await thread.setAppliedTags((thread.appliedTags ?? []).filter((tagId: string) => tagId !== completedTagId), 'Quête relancée via /relancer-quete')
+      const starter = await thread.fetchStarterMessage({ force: true }).catch(() => null)
+      if (starter) await starter.react('👍').catch(() => undefined)
+      await thread.send({ content: '🔄 **Quête relancée.** Elle réapparaît maintenant dans `/choix-quete`.', allowedMentions: { parse: [] } })
+      await interaction.editReply({ content: 'Quête relancée.' })
+    } catch (error) {
+      await interaction.editReply({ content: `Impossible de relancer la quête : ${error instanceof Error ? error.message : String(error)}` })
+    }
+  }
+
   private async choiceCommand(interaction: ChatInputCommandInteraction): Promise<void> {
     await interaction.deferReply()
     try {
@@ -291,11 +367,15 @@ export class DiscordCommandsService {
         if (!archived.hasMore || !before) break
       } while (before)
 
-      const quests: Array<{ title: string; createdAt: number; users: Array<{ id: string; name: string }> }> = []
+      const quests: Array<{ id: string; title: string; createdAt: number; url: string | null; users: Array<{ id: string; name: string }> }> = []
+      const completedTagId = Array.isArray((forum as any).availableTags)
+        ? (forum as any).availableTags.find((tag: any) => String(tag.name ?? '').trim().toLocaleLowerCase('fr') === 'terminé')?.id ?? null
+        : null
       const choicesByUser = new Map<string, { name: string; count: number }>()
       const playerNames = new Map((await this.persistence.listPlayerIdentities?.() ?? []).map(identity => [identity.discordUserId, identity.playerName]))
 
       for (const thread of discovered.values()) {
+        if (completedTagId && thread.appliedTags?.includes(completedTagId)) continue
         const starter = await thread.fetchStarterMessage().catch(() => null)
         const thumbs = starter?.reactions.cache.find((reaction: any) => reaction.emoji.name === '👍')
         const users = thumbs
@@ -311,15 +391,17 @@ export class DiscordCommandsService {
         }
 
         quests.push({
+          id: thread.id,
           title: thread.name?.trim() || 'Quête sans titre',
           createdAt: Number(thread.createdTimestamp ?? thread.createdAt?.getTime?.() ?? 0),
+          url: typeof thread.url === 'string' ? thread.url : interaction.guildId ? `https://discord.com/channels/${interaction.guildId}/${thread.id}` : null,
           users,
         })
       }
 
       quests.sort((left, right) => left.createdAt - right.createdAt || left.title.localeCompare(right.title, 'fr'))
       const lines = quests.length
-        ? quests.map(quest => `**${quest.title}** : ${quest.users.length
+        ? quests.map(quest => `${quest.url ? `**[${quest.title}](${quest.url})**` : `**${quest.title}**`} : ${quest.users.length
           ? quest.users.map(user => missionPlayerIds
             ? `${user.name} ${missionPlayerIds.has(user.id) ? '✅' : '❌'}`
             : user.name).join(', ')
@@ -2079,6 +2161,42 @@ export class DiscordCommandsService {
   }
 
   async handleButton(interaction: ButtonInteraction): Promise<boolean> {
+    if (interaction.customId.startsWith('pf2-quest-finish:')) {
+      const match = /^(pf2-quest-finish:[^:]+):(yes|no)$/.exec(interaction.customId)
+      if (!match) return false
+      const pending = this.pendingQuestCompletions.get(match[1])
+      if (!pending) {
+        await interaction.reply({ content: 'Cette confirmation a expiré. Relance `/terminer-quete`.', ephemeral: true })
+        return true
+      }
+      if (interaction.user.id !== pending.requesterId || interaction.channelId !== pending.threadId) {
+        await interaction.reply({ content: 'Cette confirmation appartient à un autre administrateur ou à une autre quête.', ephemeral: true })
+        return true
+      }
+      this.pendingQuestCompletions.delete(match[1])
+      if (match[2] === 'no') {
+        await interaction.update({ content: 'La quête reste ouverte.', components: [] })
+        return true
+      }
+      try {
+        const thread = interaction.channel as any
+        const forum = await interaction.client.channels.fetch(this.choiceForumChannelId)
+        const completedTag = forum && 'availableTags' in forum && Array.isArray((forum as any).availableTags)
+          ? (forum as any).availableTags.find((tag: any) => String(tag.name ?? '').trim().toLocaleLowerCase('fr') === 'terminé')
+          : null
+        if (!completedTag?.id) throw new Error('Le tag « Terminé » est introuvable dans le forum des quêtes.')
+        await thread.setAppliedTags([...new Set([...(thread.appliedTags ?? []), completedTag.id])], 'Quête terminée via /terminer-quete')
+        await this.clearQuestThumbReservations(thread)
+        await thread.send({
+          content: '✅ **Quête terminée. Merci d’avoir participé.**\nVous pouvez la relancer avec `/relancer-quete`.',
+          allowedMentions: { parse: [] },
+        })
+        await interaction.update({ content: 'Quête terminée.', components: [] })
+      } catch (error) {
+        await interaction.update({ content: `Impossible de terminer la quête : ${error instanceof Error ? error.message : String(error)}`, components: [] })
+      }
+      return true
+    }
     if (interaction.customId.startsWith('pf2-mission:publish:') || interaction.customId.startsWith('pf2-mission:cancel:')) {
       const match = /^pf2-mission:(publish|cancel):(.+)$/.exec(interaction.customId)!
       const action = match[1]
