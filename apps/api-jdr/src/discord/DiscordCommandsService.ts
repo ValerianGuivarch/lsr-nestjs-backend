@@ -292,7 +292,7 @@ export class DiscordCommandsService {
     }
     const forum = await interaction.client.channels.fetch(this.choiceForumChannelId)
     if (!forum || !('availableTags' in forum) || !Array.isArray(forum.availableTags)) throw new Error('Le forum des quêtes est introuvable ou inaccessible.')
-    const completedTag = forum.availableTags.find((tag: any) => String(tag.name ?? '').trim().toLocaleLowerCase('fr') === 'terminé')
+    const completedTag = forum.availableTags.find((tag: any) => String(tag.name ?? '').trim().toLocaleLowerCase('fr') === 'terminée')
     if (!completedTag?.id) throw new Error('Le tag « Terminée » est introuvable dans le forum des quêtes.')
     return { thread, forum, completedTagId: completedTag.id }
   }
@@ -369,7 +369,7 @@ export class DiscordCommandsService {
 
       const quests: Array<{ id: string; title: string; createdAt: number; url: string | null; users: Array<{ id: string; name: string }> }> = []
       const completedTagId = Array.isArray((forum as any).availableTags)
-        ? (forum as any).availableTags.find((tag: any) => String(tag.name ?? '').trim().toLocaleLowerCase('fr') === 'terminé')?.id ?? null
+        ? (forum as any).availableTags.find((tag: any) => String(tag.name ?? '').trim().toLocaleLowerCase('fr') === 'terminée')?.id ?? null
         : null
       const choicesByUser = new Map<string, { name: string; count: number }>()
       const playerNames = new Map((await this.persistence.listPlayerIdentities?.() ?? []).map(identity => [identity.discordUserId, identity.playerName]))
@@ -2182,7 +2182,7 @@ export class DiscordCommandsService {
         const thread = interaction.channel as any
         const forum = await interaction.client.channels.fetch(this.choiceForumChannelId)
         const completedTag = forum && 'availableTags' in forum && Array.isArray((forum as any).availableTags)
-          ? (forum as any).availableTags.find((tag: any) => String(tag.name ?? '').trim().toLocaleLowerCase('fr') === 'terminé')
+          ? (forum as any).availableTags.find((tag: any) => String(tag.name ?? '').trim().toLocaleLowerCase('fr') === 'terminée')
           : null
         if (!completedTag?.id) throw new Error('Le tag « Terminée » est introuvable dans le forum des quêtes.')
         await thread.setAppliedTags([...new Set([...(thread.appliedTags ?? []), completedTag.id])], 'Quête terminée via /terminer-quete')
