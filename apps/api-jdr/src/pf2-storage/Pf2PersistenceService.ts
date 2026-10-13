@@ -1184,6 +1184,26 @@ export class Pf2PersistenceService implements OnModuleInit {
       }
     })
 
+    await this.applyMigration('036-finalize-azlant-journals', async (manager) => {
+      const rewrites = [
+        {
+          number: 35,
+          content: "En **−5293 AR**, Golarion connut l’une des plus grandes catastrophes de son histoire : **la Chute**. Un immense corps céleste se précipita vers le monde. **Acavna**, déesse azlantie de la Lune et de la défense, intervint en déplaçant **l’une des deux lunes de Golarion** pour l’interposer. Elle brisa ainsi l’astre en de nombreux fragments, au prix de sa propre vie. **Amaznen**, dieu azlanti de la magie, se sacrifia ensuite pour neutraliser une grande partie de la puissance magique contenue dans ces débris.\n\nMalgré leurs sacrifices, Azlant fut dévasté et une grande partie du continent disparut sous les eaux. Le **Thassilon** fut lui aussi frappé de plein fouet. Les impacts remodelèrent des régions entières, bouleversèrent les mers et projetèrent d’immenses quantités de poussière dans l’atmosphère.\n\nLa catastrophe toucha bien au-delà des empires directement frappés. Les **elfes**, qui avaient pressenti le désastre, quittèrent en masse Golarion avant la Chute. Les **nains**, eux, vivaient encore profondément sous terre ; les bouleversements de cette époque contribuèrent à leur longue **Quête du Ciel** vers la surface. Partout ailleurs, des sociétés s’effondrèrent, des populations disparurent et le climat fut profondément perturbé.\n\nPour les historiens, la Chute marque la fin de **l’Âge des Légendes** et le début de **l’Âge des Ténèbres**. Des millénaires plus tard, les ruines d’Azlant et du Thassilon continuent encore d’influencer Golarion."
+        },
+        {
+          number: 74,
+          content: "Bien avant la plupart des royaumes actuels, **Azlant** connut une ascension fulgurante et devint l’une des plus puissantes civilisations humaines de l’histoire de Golarion. Parti de cités rivales sur un vaste continent de l’océan Arcadien, l’empire finit par unifier ses terres puis étendre son influence très loin au-delà de ses frontières.\n\nLes Azlantes atteignirent un niveau exceptionnel en magie, architecture, ingénierie et administration. Leur puissance militaire suivit la même progression. Ils ne se contentèrent pas de rivaliser avec les autres peuples : ils contribuèrent à renverser des puissances qui dominaient le monde depuis des âges.\n\nLe meilleur exemple est leur guerre contre l’antique **empire des hommes-serpents**, qui contrôlait autrefois une grande partie de Golarion. Les armées azlanties poussèrent leur offensive jusqu’au Garund et brisèrent l’essentiel de cette puissance. La héroïne **Savith** porta le coup décisif en décapitant **Ydersius**, dieu des hommes-serpents, au prix de sa propre vie. Leur civilisation ne disparut pas totalement, mais elle fut réduite à des vestiges dispersés et souterrains.\n\nCette succession de victoires transforma profondément le monde et renforça chez les Azlantes la conviction qu’ils représentaient le sommet de la civilisation humaine. Cette confiance reposait sur des réussites réelles, mais elle nourrit aussi une société très hiérarchisée, impérialiste et esclavagiste. **Azlant avait effectivement atteint une puissance exceptionnelle ; son erreur fut de finir par croire qu’une telle puissance le rendait naturellement supérieur et presque invulnérable.**"
+        },
+        {
+          number: 75,
+          content: "La Chute ne tua pas tous les Azlantes. Des survivants quittèrent les fragments de leur continent et se dispersèrent dans le monde. Avec les siècles, beaucoup de leurs descendants se mêlèrent à d’autres populations humaines et cessèrent d’exister comme peuple azlanti distinct. Certaines traditions affirment aussi que les **Azarketis** descendraient, au moins en partie, d’Azlantes transformés ou adaptés à la vie sous-marine après la catastrophe, mais leur histoire exacte reste difficile à retracer.\n\nLe continent lui-même ne disparut pas totalement. Sa plus grande partie fut engloutie, mais de nombreux sommets et fragments de terre restèrent émergés, formant un vaste ensemble d’îles couvertes de ruines. Certaines ont été recolonisées, d’autres restent sauvages ou dangereuses, et beaucoup abritent encore des vestiges de cités, de laboratoires et d’ouvrages azlantiens.\n\nParmi tous les survivants, **Aroden** devint le plus célèbre. Rescapé de la Chute, il traversa les millénaires jusqu’à devenir connu comme **le Dernier Azlanti**. Bien plus tard, il retrouva la **Pierrétoile**, survécut à son épreuve et accéda à la divinité.\n\nAinsi, Azlant ne survécut pas comme empire, mais à travers **des descendants dispersés, des peuples qui revendiquent peut-être une part de son héritage, les îles du continent brisé, ses ruines et Aroden lui-même**."
+        },
+      ] as const
+      for (const rewrite of rewrites) {
+        await manager.query('UPDATE pf2_journal SET content = ?, updated_at = CURRENT_TIMESTAMP WHERE number = ?', [rewrite.content, rewrite.number])
+      }
+    })
+
     await this.assertDatabaseIntegrity(this.dataSource, 'base SQLite après migrations')
   }
 
