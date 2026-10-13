@@ -14,6 +14,7 @@ Le système PF2 utile est composé de :
 
 - l’application web `web-misc`, notamment :
   - `/pf2-mj` : bibliothèque MJ, catalogue, PNJ, lieux, régions, factions, événements, curation, préparation des scénarios ;
+  - `/pf2-mj/lore` : lecteur de la bible narrative (`story.md` + `lore/*.md`) en lecture seule ; fichiers intégrés lors de la compilation du frontend ;
   - `/resumes` / `/résumés` : gestion des séances et résumés ;
 - l’API NestJS `api-jdr`, notamment :
   - `pf2-mj` ;
