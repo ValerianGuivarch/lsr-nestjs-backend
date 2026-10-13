@@ -249,8 +249,8 @@ export class DiscordCommandsService {
         '`/analyse-date-seance` — analyse les réactions, propose les groupes puis permet leur publication.',
         '`/valider-date-seance numero:2` — valide et annonce une proposition de groupes dans le fil de planification.',
         '`/preparer-prochaine-mission` — crée, après aperçu et confirmation, un fil dans #objectif-prochaine-mission pour une séance validée.',
-        '`/terminer-quete` — depuis un fil du journal des quêtes, ajoute le tag Terminé et libère les réservations 👍.',
-        '`/relancer-quete` — depuis un fil terminé, retire le tag Terminé et le remet dans `/choix-quete`.',
+        '`/terminer-quete` — depuis un fil du journal des quêtes, ajoute le tag Terminée et libère les réservations 👍.',
+        '`/relancer-quete` — depuis un fil terminé, retire le tag Terminée et le remet dans `/choix-quete`.',
         '`/help-admin` — affiche cette aide.',
       ].join('\n'),
       ephemeral: true,
@@ -293,7 +293,7 @@ export class DiscordCommandsService {
     const forum = await interaction.client.channels.fetch(this.choiceForumChannelId)
     if (!forum || !('availableTags' in forum) || !Array.isArray(forum.availableTags)) throw new Error('Le forum des quêtes est introuvable ou inaccessible.')
     const completedTag = forum.availableTags.find((tag: any) => String(tag.name ?? '').trim().toLocaleLowerCase('fr') === 'terminé')
-    if (!completedTag?.id) throw new Error('Le tag « Terminé » est introuvable dans le forum des quêtes.')
+    if (!completedTag?.id) throw new Error('Le tag « Terminée » est introuvable dans le forum des quêtes.')
     return { thread, forum, completedTagId: completedTag.id }
   }
 
@@ -314,7 +314,7 @@ export class DiscordCommandsService {
     try {
       const { thread, completedTagId } = await this.questThreadContext(interaction)
       if (thread.appliedTags?.includes(completedTagId)) {
-        await interaction.reply({ content: 'Cette quête est déjà marquée **Terminé**.', ephemeral: true })
+        await interaction.reply({ content: 'Cette quête est déjà marquée **Terminée**.', ephemeral: true })
         return
       }
       const key = `pf2-quest-finish:${interaction.id}`
@@ -334,7 +334,7 @@ export class DiscordCommandsService {
     try {
       const { thread, completedTagId } = await this.questThreadContext(interaction)
       if (!thread.appliedTags?.includes(completedTagId)) {
-        await interaction.editReply({ content: 'Cette quête n’est pas marquée **Terminé**.' })
+        await interaction.editReply({ content: 'Cette quête n’est pas marquée **Terminée**.' })
         return
       }
       await thread.setAppliedTags((thread.appliedTags ?? []).filter((tagId: string) => tagId !== completedTagId), 'Quête relancée via /relancer-quete')
@@ -2184,7 +2184,7 @@ export class DiscordCommandsService {
         const completedTag = forum && 'availableTags' in forum && Array.isArray((forum as any).availableTags)
           ? (forum as any).availableTags.find((tag: any) => String(tag.name ?? '').trim().toLocaleLowerCase('fr') === 'terminé')
           : null
-        if (!completedTag?.id) throw new Error('Le tag « Terminé » est introuvable dans le forum des quêtes.')
+        if (!completedTag?.id) throw new Error('Le tag « Terminée » est introuvable dans le forum des quêtes.')
         await thread.setAppliedTags([...new Set([...(thread.appliedTags ?? []), completedTag.id])], 'Quête terminée via /terminer-quete')
         await this.clearQuestThumbReservations(thread)
         await thread.send({

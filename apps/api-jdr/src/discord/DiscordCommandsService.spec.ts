@@ -88,7 +88,7 @@ describe('DiscordCommandsService', () => {
     expect(content).not.toContain('PF2-Bot')
   })
 
-  it('hides quests tagged Terminé and links visible quest titles to their Discord threads', async () => {
+  it('hides quests tagged Terminée and links visible quest titles to their Discord threads', async () => {
     const openQuest = {
       id: 'open-quest', name: 'La crypte oubliée', createdTimestamp: 1, appliedTags: [],
       fetchStarterMessage: jest.fn().mockResolvedValue({ reactions: { cache: { find: () => undefined } } }),
@@ -98,7 +98,7 @@ describe('DiscordCommandsService', () => {
       fetchStarterMessage: jest.fn().mockResolvedValue({ reactions: { cache: { find: () => undefined } } }),
     }
     const forum = {
-      availableTags: [{ id: 'done', name: 'Terminé' }],
+      availableTags: [{ id: 'done', name: 'Terminée' }],
       threads: {
         fetchActive: jest.fn().mockResolvedValue({ threads: new Map([['open-quest', openQuest], ['done-quest', doneQuest]]) }),
         fetchArchived: jest.fn().mockResolvedValue({ threads: Object.assign(new Map(), { last: () => undefined }), hasMore: false }),
@@ -116,7 +116,7 @@ describe('DiscordCommandsService', () => {
     expect(content).not.toContain('Le tueur d’esclaves')
   })
 
-  it('finishes a quest with the Terminé tag, clears player thumbs and can reopen it', async () => {
+  it('finishes a quest with the Terminée tag, clears player thumbs and can reopen it', async () => {
     const remove = jest.fn().mockResolvedValue(undefined)
     const users = new Map([
       ['player-1', { id: 'player-1', bot: false }],
@@ -130,7 +130,7 @@ describe('DiscordCommandsService', () => {
       setAppliedTags: jest.fn(async (tags: string[]) => { thread.appliedTags = tags }),
       send: jest.fn().mockResolvedValue(undefined),
     }
-    const forum = { availableTags: [{ id: 'done', name: 'Terminé' }] }
+    const forum = { availableTags: [{ id: 'done', name: 'Terminée' }] }
     const fetch = jest.fn().mockResolvedValue(forum)
     const reply = jest.fn().mockResolvedValue(undefined)
     const service = new DiscordCommandsService({} as never, {} as never)
