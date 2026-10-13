@@ -134,6 +134,7 @@ describe('Pf2PersistenceService', () => {
       , { id: '034-map-important-overrides' }
       , { id: '035-rewrite-azlant-journals' }
       , { id: '036-finalize-azlant-journals' }
+      , { id: '037-unbold-azlant-journal-74-ending' }
     ])
 
     await currentDataSource().destroy()
@@ -179,6 +180,7 @@ describe('Pf2PersistenceService', () => {
       , { id: '034-map-important-overrides' }
       , { id: '035-rewrite-azlant-journals' }
       , { id: '036-finalize-azlant-journals' }
+      , { id: '037-unbold-azlant-journal-74-ending' }
     ])
   })
 
