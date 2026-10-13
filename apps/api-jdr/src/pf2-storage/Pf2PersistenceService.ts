@@ -1204,6 +1204,16 @@ export class Pf2PersistenceService implements OnModuleInit {
       }
     })
 
+    await this.applyMigration('037-unbold-azlant-journal-74-ending', async (manager) => {
+      await manager.query(
+        'UPDATE pf2_journal SET content = REPLACE(content, ?, ?), updated_at = CURRENT_TIMESTAMP WHERE number = 74',
+        [
+          '**Azlant avait effectivement atteint une puissance exceptionnelle ; son erreur fut de finir par croire qu’une telle puissance le rendait naturellement supérieur et presque invulnérable.**',
+          'Azlant avait effectivement atteint une puissance exceptionnelle ; son erreur fut de finir par croire qu’une telle puissance le rendait naturellement supérieur et presque invulnérable.'
+        ],
+      )
+    })
+
     await this.assertDatabaseIntegrity(this.dataSource, 'base SQLite après migrations')
   }
 
