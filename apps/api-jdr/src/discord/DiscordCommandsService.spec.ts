@@ -182,7 +182,7 @@ describe('DiscordCommandsService', () => {
     expect(content).not.toContain('💀 Le tueur d’esclaves')
   })
 
-  it('finishes a quest with the Terminée tag, clears player thumbs and can reopen it', async () => {
+  it('finishes a quest with a written report, clears player thumbs and can reopen it', async () => {
     const remove = jest.fn().mockResolvedValue(undefined)
     const users = new Map([
       ['player-1', { id: 'player-1', bot: false }],
@@ -198,35 +198,53 @@ describe('DiscordCommandsService', () => {
     }
     const forum = { availableTags: [{ id: 'done', name: 'Terminée' }] }
     const fetch = jest.fn().mockResolvedValue(forum)
-    const reply = jest.fn().mockResolvedValue(undefined)
+    const showModal = jest.fn().mockResolvedValue(undefined)
     const service = new DiscordCommandsService({} as never, {} as never)
 
     await service.handle({
-      commandName: 'terminer-quete', id: 'cmd-1', user: { id: 'admin' }, channel: thread,
-      client: { channels: { fetch } }, memberPermissions: { has: jest.fn().mockReturnValue(true) }, reply,
+      commandName: 'terminer-quete', id: 'cmd-1', user: { id: 'player-1' }, channel: thread,
+      client: { channels: { fetch } }, showModal, reply: jest.fn(),
     } as never)
-    const row: any = reply.mock.calls[0][0].components[0]
-    const confirmId = row.components[0].data.custom_id
-    const update = jest.fn().mockResolvedValue(undefined)
-    await service.handleButton({
-      customId: confirmId, user: { id: 'admin' }, channelId: 'quest-1', channel: thread,
-      client: { channels: { fetch } }, update, reply: jest.fn(),
+
+    expect(showModal).toHaveBeenCalledTimes(1)
+    const modal = showModal.mock.calls[0][0]
+    expect(modal.data.title).toBe('Terminer la quête')
+    expect(modal.components[0].components[0].data.label).toBe('Compte rendu')
+    expect(modal.components[0].components[0].data.max_length).toBe(1500)
+
+    const editReply = jest.fn().mockResolvedValue(undefined)
+    await service.handleModal({
+      customId: 'pf2-quest-finish:cmd-1',
+      user: { id: 'player-1' },
+      channelId: 'quest-1',
+      channel: thread,
+      client: { channels: { fetch } },
+      fields: { getTextInputValue: jest.fn().mockReturnValue('Le tueur était le tavernier.') },
+      deferReply: jest.fn().mockResolvedValue(undefined),
+      editReply,
+      reply: jest.fn(),
     } as never)
 
     expect(thread.setAppliedTags).toHaveBeenCalledWith(['todo', 'done'], expect.stringContaining('/terminer-quete'))
     expect(remove).toHaveBeenCalledWith('player-1')
     expect(remove).not.toHaveBeenCalledWith('bot')
-    expect(thread.send).toHaveBeenCalledWith(expect.objectContaining({ content: expect.stringContaining('/relancer-quete') }))
+    expect(thread.send).toHaveBeenCalledWith(expect.objectContaining({
+      content: expect.stringContaining('**Compte rendu :**\nLe tueur était le tavernier.'),
+    }))
+    expect(thread.send).toHaveBeenCalledWith(expect.objectContaining({
+      content: expect.stringContaining('/relancer-quete'),
+    }))
+    expect(editReply).toHaveBeenCalledWith({ content: 'Quête terminée et compte rendu publié.' })
 
-    const editReply = jest.fn().mockResolvedValue(undefined)
+    const reopenReply = jest.fn().mockResolvedValue(undefined)
     await service.handle({
-      commandName: 'relancer-quete', user: { id: 'admin' }, channel: thread,
-      client: { channels: { fetch } }, memberPermissions: { has: jest.fn().mockReturnValue(true) },
-      deferReply: jest.fn().mockResolvedValue(undefined), editReply,
+      commandName: 'relancer-quete', user: { id: 'player-1' }, channel: thread,
+      client: { channels: { fetch } },
+      deferReply: jest.fn().mockResolvedValue(undefined), editReply: reopenReply,
     } as never)
     expect(thread.setAppliedTags).toHaveBeenLastCalledWith(['todo'], expect.stringContaining('/relancer-quete'))
     expect(starter.react).toHaveBeenCalledWith('👍')
-    expect(editReply).toHaveBeenCalledWith({ content: 'Quête relancée.' })
+    expect(reopenReply).toHaveBeenCalledWith({ content: 'Quête relancée.' })
   })
 
   it('sorts mission quest choices by fully present voters, no voters, then missing voters', async () => {
