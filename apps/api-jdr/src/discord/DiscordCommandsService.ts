@@ -347,6 +347,14 @@ export class DiscordCommandsService {
     }
   }
 
+  private questTitleEmoji(title: string): string | null {
+    const value = title.trimStart()
+    const custom = value.match(/^<a?:[A-Za-z0-9_]+:\d+>/)?.[0]
+    if (custom) return custom
+    const unicode = value.match(/^((?:\p{Regional_Indicator}{2})|(?:[#*0-9]\uFE0F?\u20E3)|(?:\p{Extended_Pictographic}(?:\uFE0F|\p{Emoji_Modifier})?(?:\u200D\p{Extended_Pictographic}(?:\uFE0F|\p{Emoji_Modifier})?)*))/u)?.[0]
+    return unicode ?? null
+  }
+
   private async choiceCommand(interaction: ChatInputCommandInteraction): Promise<void> {
     await interaction.deferReply()
     try {
@@ -367,7 +375,7 @@ export class DiscordCommandsService {
         if (!archived.hasMore || !before) break
       } while (before)
 
-      const quests: Array<{ id: string; title: string; createdAt: number; url: string | null; users: Array<{ id: string; name: string }> }> = []
+      const quests: Array<{ id: string; title: string; emoji: string | null; createdAt: number; url: string | null; users: Array<{ id: string; name: string }> }> = []
       const completedTagId = Array.isArray((forum as any).availableTags)
         ? (forum as any).availableTags.find((tag: any) => String(tag.name ?? '').trim().toLocaleLowerCase('fr') === 'terminée')?.id ?? null
         : null
@@ -393,6 +401,7 @@ export class DiscordCommandsService {
         quests.push({
           id: thread.id,
           title: thread.name?.trim() || 'Quête sans titre',
+          emoji: this.questTitleEmoji(thread.name?.trim() || ''),
           createdAt: Number(thread.createdTimestamp ?? thread.createdAt?.getTime?.() ?? 0),
           url: typeof thread.url === 'string' ? thread.url : interaction.guildId ? `https://discord.com/channels/${interaction.guildId}/${thread.id}` : null,
           users,
@@ -400,6 +409,15 @@ export class DiscordCommandsService {
       }
 
       quests.sort((left, right) => left.createdAt - right.createdAt || left.title.localeCompare(right.title, 'fr'))
+
+      const missingEmoji = quests.filter(quest => !quest.emoji)
+      if (missingEmoji.length) {
+        await this.replyLong(interaction, missingEmoji.map(quest =>
+          `❌ Émoticône manquante pour la quête : ${quest.url ? `[${quest.title}](${quest.url})` : quest.title}`
+        ))
+        return
+      }
+
       const lines = quests.length
         ? quests.map(quest => `${quest.url ? `**[${quest.title}](${quest.url})**` : `**${quest.title}**`} : ${quest.users.length
           ? quest.users.map(user => missionPlayerIds
@@ -417,13 +435,16 @@ export class DiscordCommandsService {
         .map(user => `⚠️ **Alerte :** ${user.name} a mis plus d’une réaction.`)
 
       if (alerts.length) lines.push('', ...alerts)
-      await this.replyLong(interaction, lines)
+      const message = await this.replyLong(interaction, lines)
+      for (const emoji of [...new Set(quests.map(quest => quest.emoji).filter((value): value is string => Boolean(value)))]) {
+        await message?.react?.(emoji).catch(() => undefined)
+      }
     } catch (error) {
       await interaction.editReply({ content: `Lecture des choix impossible : ${error instanceof Error ? error.message : String(error)}` })
     }
   }
 
-  private async replyLong(interaction: ChatInputCommandInteraction, lines: string[]): Promise<void> {
+  private async replyLong(interaction: ChatInputCommandInteraction, lines: string[]): Promise<any> {
     const chunks: string[] = []
     let current = ''
     for (const line of lines) {
@@ -437,10 +458,11 @@ export class DiscordCommandsService {
     }
     if (current || !chunks.length) chunks.push(current || 'Aucun résultat.')
 
-    await interaction.editReply({ content: chunks[0], allowedMentions: { parse: [] } })
+    const firstMessage = await interaction.editReply({ content: chunks[0], allowedMentions: { parse: [] } })
     for (const chunk of chunks.slice(1)) {
       await interaction.followUp({ content: chunk, allowedMentions: { parse: [] } })
     }
+    return firstMessage
   }
 
   private async randomCharacterCommand(interaction: ChatInputCommandInteraction): Promise<void> {
