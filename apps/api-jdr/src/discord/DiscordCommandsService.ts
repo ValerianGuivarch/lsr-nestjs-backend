@@ -413,7 +413,17 @@ export class DiscordCommandsService {
         })
       }
 
-      quests.sort((left, right) => left.createdAt - right.createdAt || left.title.localeCompare(right.title, 'fr'))
+      quests.sort((left, right) => {
+        if (missionPlayerIds) {
+          const rank = (quest: { users: Array<{ id: string }> }): number => {
+            if (!quest.users.length) return 1
+            return quest.users.every(user => missionPlayerIds.has(user.id)) ? 0 : 2
+          }
+          const rankDiff = rank(left) - rank(right)
+          if (rankDiff !== 0) return rankDiff
+        }
+        return left.createdAt - right.createdAt || left.title.localeCompare(right.title, 'fr')
+      })
 
       const missingEmoji = quests.filter(quest => !quest.emoji)
       if (missingEmoji.length) {
