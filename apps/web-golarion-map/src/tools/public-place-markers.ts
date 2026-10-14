@@ -11,6 +11,8 @@ type PublicPlace = {
   mjText?: string
   icon: string
   important: boolean
+  quest: boolean
+  questName?: string
   fid?: number
   category?: string
   label?: string
@@ -29,31 +31,31 @@ const glyphs: Record<string, string> = {
 function markerElement(place: PublicPlace): HTMLButtonElement {
   const button = document.createElement('button')
   button.type = 'button'
-  button.className = `pf2-public-place-marker${place.important ? ' is-important' : ''}`
+  button.className = `pf2-public-place-marker${place.quest ? ' is-quest' : ''}${place.important ? ' is-favorite' : ''}`
   button.title = place.name
   button.setAttribute('aria-label', place.name)
 
   const icon = document.createElement('span')
   icon.className = 'pf2-public-place-icon'
-  icon.textContent = place.important ? '★' : (glyphs[place.icon] ?? glyphs.pin)
+  icon.textContent = place.quest ? '★' : (glyphs[place.icon] ?? glyphs.pin)
 
   const label = document.createElement('span')
   label.className = 'pf2-public-place-label'
-  label.textContent = place.name
+  label.textContent = place.important && !place.quest ? `★ ${place.name}` : place.name
 
   button.append(icon, label)
   return button
 }
 
-function basicPopupContent(place: PublicPlace): HTMLElement {
+function basicPopupContent(place: PublicPlace, mode: 'pj' | 'mj-light' | 'mj'): HTMLElement {
   const root = document.createElement('div')
   root.className = 'pf2-public-place-popup'
   const title = document.createElement('strong')
   title.textContent = place.name
   root.appendChild(title)
-  if (place.important) {
+  if (place.quest) {
     const label = document.createElement('p')
-    label.textContent = '★ Lieu important de la campagne'
+    label.textContent = `★ Lieu de quête : ${place.questName || place.name}`
     root.appendChild(label)
   }
   if (place.text) {
@@ -66,12 +68,47 @@ function basicPopupContent(place: PublicPlace): HTMLElement {
       ? { kind: 'source', fid: place.fid }
       : { kind: 'label', category: place.category || '', label: place.label || '' }
     : { kind: 'place', id: place.id }
-  root.appendChild(createFavoriteButton(target, place.important))
+  if (!place.quest) {
+    root.appendChild(createFavoriteButton(target, place.important))
+  } else if (mode !== 'pj') {
+    const controls = document.createElement('div')
+    controls.className = 'pf2-quest-actions'
+    const status = document.createElement('span')
+    status.setAttribute('role', 'status')
+    const button = (label: string, action: 'convert' | 'delete') => {
+      const element = document.createElement('button')
+      element.type = 'button'
+      element.textContent = label
+      element.addEventListener('click', async () => {
+        if (action === 'delete' && !window.confirm(`Supprimer le lieu de quête « ${place.name} » ?`)) return
+        const api = (window.GOLARION_MAP_CONFIG?.placesUrl ?? '').replace(/\/places\/?$/, '/quests')
+        if (!api) { status.textContent = 'API indisponible'; return }
+        element.disabled = true
+        status.textContent = 'Enregistrement…'
+        try {
+          const response = await fetch(`${api}/${encodeURIComponent(place.id)}`, {
+            method: 'PUT', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action }),
+          })
+          if (!response.ok) throw new Error(await response.text())
+          window.location.reload()
+        } catch (error) {
+          status.textContent = error instanceof Error ? error.message : String(error)
+          element.disabled = false
+        }
+      })
+      controls.appendChild(element)
+    }
+    button('Convertir en lieu normal', 'convert')
+    button('Supprimer le lieu de quête', 'delete')
+    controls.appendChild(status)
+    root.appendChild(controls)
+  }
   return root
 }
 
 function mjLightPopupContent(place: PublicPlace, onHidden: () => void): HTMLElement {
-  const root = basicPopupContent(place)
+  const root = basicPopupContent(place, 'mj-light')
   root.classList.add('pf2-mj-light-popup')
 
   const publicLabel = document.createElement('label')
@@ -165,19 +202,9 @@ function mjLightPopupContent(place: PublicPlace, onHidden: () => void): HTMLElem
 export async function addPublicPlaceMarkers(gmap: GolarionMap, placesUrl: string, mode: 'pj' | 'mj-light' | 'mj' = 'pj'): Promise<void> {
   if (!placesUrl) return
   try {
-    const curatedUrl = (window.GOLARION_MAP_CONFIG?.sourcePointsUrl ?? '').replace(/\/source-points\/?$/, '/important-places')
-    const urls = curatedUrl ? [placesUrl, curatedUrl] : [placesUrl]
-    const lists = await Promise.all(urls.map(async url => {
-      try {
-        const response = await fetch(url, { credentials: 'omit', cache: 'no-store' })
-        if (!response.ok) throw new Error(`HTTP ${response.status}`)
-        return await response.json() as unknown
-      } catch (error) {
-        console.warn('Impossible de charger les lieux de campagne :', url, error)
-        return []
-      }
-    }))
-    const raw = lists.flatMap(value => Array.isArray(value) ? value : [])
+    const response = await fetch(placesUrl, { credentials: 'omit', cache: 'no-store' })
+    if (!response.ok) throw new Error(`HTTP ${response.status}`)
+    const raw: unknown = await response.json()
     const places = raw.filter((value): value is PublicPlace => {
       if (!value || typeof value !== 'object') return false
       const item = value as Partial<PublicPlace>
@@ -194,7 +221,7 @@ export async function addPublicPlaceMarkers(gmap: GolarionMap, placesUrl: string
             popup.remove()
             marker.remove()
           })
-        : basicPopupContent(place)
+        : basicPopupContent(place, mode)
       popup.setDOMContent(popupContent)
       // The anchor must depend on the icon only, never on the (potentially long) label.
       marker = new Marker({ element, anchor: 'center' })
@@ -206,24 +233,24 @@ export async function addPublicPlaceMarkers(gmap: GolarionMap, placesUrl: string
 
     const updateLabelDensity = () => {
       const zoom = gmap.map.getZoom()
-      // Country-scale view: show the shared favorite icon, not a wide label.
-      // Near the place, labels are restored without moving the geographic anchor.
+      // Only quest sites stay visible at world scale. Favorites use exactly
+      // the same zoom threshold as ordinary locations.
       for (const { element, place } of entries) {
-        const minLabelZoom = place.important ? 6.5 : 5.5
-        element.classList.toggle('labels-hidden', zoom < minLabelZoom)
+        element.style.display = place.quest || zoom >= 5.5 ? '' : 'none'
+        element.classList.toggle('labels-hidden', zoom < (place.quest ? 6.5 : 5.5))
       }
     }
     updateLabelDensity()
     gmap.map.on('zoomend', updateLabelDensity)
 
-    const important = entries.filter(entry => entry.place.important)
+    const important = entries.filter(entry => entry.place.quest)
     if (important.length) {
       const control = document.createElement('div')
       control.className = 'pf2-campaign-places-control maplibregl-ctrl'
       const toggle = document.createElement('button')
       toggle.type = 'button'
       toggle.className = 'pf2-campaign-places-toggle'
-      toggle.textContent = `★ Lieux importants (${important.length})`
+      toggle.textContent = `★ Lieux de quête (${important.length})`
       toggle.setAttribute('aria-expanded', 'false')
       const list = document.createElement('div')
       list.className = 'pf2-campaign-places-list'
