@@ -1,5 +1,6 @@
 import { Marker, type ImageSource, type Map as MapLibreMap } from 'maplibre-gl'
 import bundledMapUrl from '../../assets/absalom-overlay.jpg?url'
+import { ABSALOM_DISTRICT_LABELS } from '../utils/absalom-districts'
 
 // The four geographic corners always stay fixed in map coordinates when the
 // viewer pans, changes zoom, or switches between the PJ/MJ modes.
@@ -12,11 +13,6 @@ const DEFAULT: Settings = {
   corners: [[-0.301, 30.935], [-0.185, 30.935], [-0.185, 30.782], [-0.301, 30.782]],
   hideLabels: true,
 }
-const labelsToHide = [
-  'location-labels', 'symbol_labels',
-  'pf2-player-source-point-labels',
-  'pf2-player-curated-labels-layer',
-]
 const clone = (input: Corners): Corners => input.map(([lng, lat]) => [lng, lat]) as Corners
 const api = () => (window.GOLARION_MAP_CONFIG?.placesUrl ?? '').replace(/\/places\/?$/, '/absalom-overlay')
 
@@ -28,7 +24,8 @@ export function addAbsalomOverlay(map: MapLibreMap, withToggle = true, allowCali
   let editing = false
   let saved: Settings = { corners: clone(corners), hideLabels }
   let handles: Marker[] = []
-  const originalVisibility = new Map<string, string>()
+  let originalTextOpacity: unknown = undefined
+  let districtsHidden = false
   const panel = document.createElement('div')
   panel.className = 'pf2-absalom-calibration'
   panel.hidden = true
@@ -65,20 +62,26 @@ export function addAbsalomOverlay(map: MapLibreMap, withToggle = true, allowCali
     return lng > -0.65 && lng < 0.15 && lat > 30.5 && lat < 31.2 && map.getZoom() >= 7.5
   }
 
+  // Never disable entire label layers: that used to make every place name
+  // vanish when zooming into Absalom. Only the district names already printed
+  // on the illustrated map are muted, while POIs and published labels remain.
   const syncLabels = () => {
+    if (!map.getLayer('symbol_labels')) return
     const shouldHide = enabled && hideLabels && nearAbsalom()
-    for (const id of labelsToHide) {
-      if (!map.getLayer(id)) continue
-      if (shouldHide) {
-        if (!originalVisibility.has(id)) {
-          originalVisibility.set(id, String(map.getLayoutProperty(id, 'visibility') || 'visible'))
-        }
-        if (map.getLayoutProperty(id, 'visibility') !== 'none') map.setLayoutProperty(id, 'visibility', 'none')
-      } else if (originalVisibility.has(id)) {
-        map.setLayoutProperty(id, 'visibility', originalVisibility.get(id)! as 'visible' | 'none')
-        originalVisibility.delete(id)
-      }
+    if (shouldHide === districtsHidden) return
+    if (shouldHide) {
+      originalTextOpacity = map.getPaintProperty('symbol_labels', 'text-opacity')
+      map.setPaintProperty('symbol_labels', 'text-opacity', [
+        'case',
+        ['in', ['get', 'label'], ['literal', ABSALOM_DISTRICT_LABELS]],
+        0,
+        originalTextOpacity ?? 1,
+      ])
+    } else {
+      map.setPaintProperty('symbol_labels', 'text-opacity', originalTextOpacity ?? 1)
+      originalTextOpacity = undefined
     }
+    districtsHidden = shouldHide
   }
 
   // Changing any one corner preserves that geographic anchor at all zooms.
@@ -234,7 +237,8 @@ export function addAbsalomOverlay(map: MapLibreMap, withToggle = true, allowCali
   }
 
   map.on('style.load', () => {
-    originalVisibility.clear()
+    districtsHidden = false
+    originalTextOpacity = undefined
     onMapStyle()
   })
   // Curated layers are added asynchronously; also hide any late-added labels.
