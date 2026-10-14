@@ -94,6 +94,56 @@ describe('Pf2MjService', () => {
     })
   })
 
+  describe('Lieux de quête et favoris normaux', () => {
+    it('crée un site de quête indépendant, avec ses propres coordonnées et son nom de quête', async () => {
+      const saveRecord = jest.fn().mockResolvedValue(undefined)
+      const { service } = serviceFor({}, pnj, { saveRecord })
+      const result = await service.createQuestSite({
+        name: 'La demande de Pointe-Sable', questName: 'Une faveur à Pointesable',
+        latitude: 44.09723, longitude: -27.16403,
+      })
+      expect(result.id).toMatch(/^quest-/)
+      expect(saveRecord).toHaveBeenCalledWith('lieu', expect.objectContaining({
+        id: result.id, nom: 'La demande de Pointe-Sable', map_kind: 'quest',
+        map_quest_name: 'Une faveur à Pointesable', map_visible: true,
+        map_latitude: 44.09723, map_longitude: -27.16403,
+        map_important: false,
+      }))
+      await expect(service.createQuestSite({ name: 'X', questName: '', latitude: 2, longitude: 1 })).rejects.toThrow()
+      await expect(service.createQuestSite({ name: 'X', questName: 'X', latitude: 99, longitude: 1 })).rejects.toThrow()
+    })
+
+    it('convertit ou supprime uniquement une quête (sans toucher aux lieux normaux)', async () => {
+      const manageQuestPlace = jest.fn().mockResolvedValue(undefined)
+      const { service } = serviceFor({}, pnj, { manageQuestPlace })
+      await expect(service.manageQuestSite('quest-exemple', { action: 'convert' })).resolves.toEqual({
+        id: 'quest-exemple', action: 'convert',
+      })
+      await expect(service.manageQuestSite('quest-exemple', { action: 'delete' })).resolves.toEqual({
+        id: 'quest-exemple', action: 'delete',
+      })
+      expect(manageQuestPlace).toHaveBeenCalledTimes(2)
+      await expect(service.manageQuestSite('quest-exemple', { action: 'rename' })).rejects.toThrow()
+    })
+
+    it('n’expose aucune note MJ et distingue le marqueur de quête du favori', async () => {
+      const lieux = [
+        { id: 'ruines', nom: 'Ruines azlantes', map_visible: true,
+          map_kind: 'quest', map_quest_name: 'Explorer les ruines', map_important: false,
+          map_latitude: 35.147, map_longitude: 0.51982, map_mj_text: 'secret MJ' },
+        { id: 'loge', nom: 'Grande Loge', map_visible: true, map_important: true,
+          map_latitude: 30.87872, map_longitude: -0.267296 },
+      ]
+      const { service } = serviceFor({}, pnj, { readReference: jest.fn().mockResolvedValue(lieux) })
+      const places = await service.publicMapPlaces()
+      expect(places).toEqual(expect.arrayContaining([
+        expect.objectContaining({ id: 'ruines', quest: true, questName: 'Explorer les ruines', important: false }),
+        expect.objectContaining({ id: 'loge', quest: false, important: true }),
+      ]))
+      expect(JSON.stringify(places)).not.toContain('secret MJ')
+    })
+  })
+
   describe('portraits Foundry', () => {
     it('stores a portrait locally without requiring Foundry when no Actor is linked', async () => {
       const { service, foundry } = serviceFor()
@@ -149,6 +199,8 @@ describe('Pf2MjService', () => {
         text: 'La cité au centre du monde.',
         icon: 'city',
         important: true,
+        quest: false,
+        questName: '',
       }])
     })
   })
