@@ -33,6 +33,9 @@ export function addAbsalomOverlay(map: MapLibreMap, withToggle = true, allowCali
   const onMapStyle = () => {
     if (!map.getSource(SOURCE_ID)) map.addSource(SOURCE_ID, { type: 'image', url, coordinates: corners })
     if (!map.getLayer(LAYER_ID)) {
+      // Keep all vector POI icons and place names ABOVE the illustrated plan.
+      // The former topmost raster obscured nearly every original map label.
+      const firstSymbolId = map.getStyle().layers?.find(layer => layer.type === 'symbol')?.id
       map.addLayer({
         id: LAYER_ID, type: 'raster', source: SOURCE_ID, minzoom: 7.5,
         layout: { visibility: enabled ? 'visible' : 'none' },
@@ -43,10 +46,7 @@ export function addAbsalomOverlay(map: MapLibreMap, withToggle = true, allowCali
           ],
           'raster-fade-duration': 0,
         },
-      })
-      for (const layer of ['location-icons', 'location-labels']) {
-        if (map.getLayer(layer)) map.moveLayer(layer)
-      }
+      }, firstSymbolId)
     }
     updateCoordinates(false)
     syncLabels()
