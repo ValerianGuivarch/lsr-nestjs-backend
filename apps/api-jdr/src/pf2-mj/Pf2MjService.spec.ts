@@ -126,6 +126,55 @@ describe('Pf2MjService', () => {
       await expect(service.manageQuestSite('quest-exemple', { action: 'rename' })).rejects.toThrow()
     })
 
+    it('conserve les anciennes quêtes et expose plusieurs noms sans dévoiler les notes MJ', async () => {
+      const records = [
+        { id: 'ruines', nom: 'Ruines azlantes', map_visible: true, map_kind: 'quest',
+          map_quest_name: 'Découverte des ruines',
+          map_latitude: 35.147, map_longitude: 0.51982, map_mj_text: 'secret MJ' },
+        { id: 'pointesable', nom: 'Pointe-Sable', map_visible: true, map_kind: 'quest',
+          map_quest_name: 'Ancien libellé',
+          map_quest_names: ['La demande de Pointe-Sable', 'Veiller sur Pointesable'],
+          map_latitude: 44.09723, map_longitude: -27.16403 },
+      ]
+      const { service } = serviceFor({}, pnj, { readReference: jest.fn().mockResolvedValue(records) })
+      const places = await service.publicMapPlaces()
+      expect(places).toEqual(expect.arrayContaining([
+        expect.objectContaining({ id: 'ruines', questNames: ['Découverte des ruines'] }),
+        expect.objectContaining({ id: 'pointesable',
+          questNames: ['La demande de Pointe-Sable', 'Veiller sur Pointesable'] }),
+      ]))
+      expect(JSON.stringify(places)).not.toContain('secret MJ')
+    })
+
+    it('met à jour les quêtes d’un seul site avec dédoublonnage et validation', async () => {
+      const manageQuestPlace = jest.fn().mockResolvedValue(undefined)
+      const { service } = serviceFor({}, pnj, { manageQuestPlace })
+      await expect(service.manageQuestSite('ruines', {
+        action: 'set-quests', questNames: [' Explorer les ruines ', 'Explorer les ruines', 'Le parchemin perdu'],
+      })).resolves.toEqual({ id: 'ruines', action: 'set-quests' })
+      expect(manageQuestPlace).toHaveBeenCalledWith('ruines', 'set-quests', [
+        'Explorer les ruines', 'Le parchemin perdu',
+      ])
+      await expect(service.manageQuestSite('ruines', { action: 'set-quests', questNames: [] })).rejects.toThrow()
+      await expect(service.manageQuestSite('ruines', { action: 'set-quests', questNames: ['x'.repeat(181)] })).rejects.toThrow()
+      expect(manageQuestPlace).toHaveBeenCalledTimes(1)
+    })
+
+    it('accepte plusieurs quêtes dès la création d’un lieu', async () => {
+      const saveRecord = jest.fn().mockResolvedValue(undefined)
+      const { service } = serviceFor({}, pnj, { saveRecord })
+      const result = await service.createQuestSite({
+        name: 'Ancienne forteresse',
+        questNames: ['La porte oubliée', 'La pierre céleste'],
+        latitude: 30.9, longitude: -0.2,
+      })
+      expect(result.questNames).toEqual(['La porte oubliée', 'La pierre céleste'])
+      expect(saveRecord).toHaveBeenCalledWith('lieu', expect.objectContaining({
+        map_quest_name: 'La porte oubliée',
+        map_quest_names: ['La porte oubliée', 'La pierre céleste'],
+      }))
+    })
+
     it('n’expose aucune note MJ et distingue le marqueur de quête du favori', async () => {
       const lieux = [
         { id: 'ruines', nom: 'Ruines azlantes', map_visible: true,
@@ -201,6 +250,7 @@ describe('Pf2MjService', () => {
         important: true,
         quest: false,
         questName: '',
+        questNames: [],
       }])
     })
   })

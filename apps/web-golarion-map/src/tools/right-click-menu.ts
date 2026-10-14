@@ -20,15 +20,19 @@ export function addRightClickMenu(map: GolarionMap, measureControl: MeasureContr
           if (!latLong) return;
           const name = window.prompt('Nom du lieu de quête (visible sur la carte) :')?.trim();
           if (!name) return;
-          const questName = window.prompt('Nom de la quête associée :', name)?.trim();
-          if (!questName) return;
+          const input = window.prompt('Noms des quêtes associées (séparés par un point-virgule) :', name)?.trim();
+          const questNames = [...new Set((input || '').split(';').map(value => value.trim()).filter(Boolean))];
+          if (!questNames.length || questNames.length > 30 || questNames.some(value => value.length > 180)) {
+            window.alert('Indique entre 1 et 30 quêtes (180 caractères maximum chacune).');
+            return;
+          }
           const coordinate = latLong.wrap();
           const api = (window.GOLARION_MAP_CONFIG?.placesUrl ?? '').replace(/\/places\/?$/, '/quests');
           if (!api) { window.alert('API des lieux de quête indisponible.'); return; }
           try {
             const response = await fetch(api, {
               method: 'POST', headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ name, questName, latitude: coordinate.lat, longitude: coordinate.lng }),
+              body: JSON.stringify({ name, questNames, latitude: coordinate.lat, longitude: coordinate.lng }),
             });
             if (!response.ok) throw new Error(await response.text());
             window.location.reload();

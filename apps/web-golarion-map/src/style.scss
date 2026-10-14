@@ -228,6 +228,21 @@ a {
   color: #8c5900;
   font-weight: 800;
 }
+.pf2-quest-names {
+  margin: 5px 0 10px;
+  padding-left: 20px;
+  max-height: 220px;
+  overflow-y: auto;
+  font: 13px/1.5 system-ui, sans-serif;
+}
+.pf2-quest-names li { margin: 3px 0; }
+.pf2-quest-name-editor { margin: 9px 0; }
+.pf2-quest-name-editor summary { cursor: pointer; font-weight: 700; color: #624006; }
+.pf2-quest-name-editor label { display: grid; gap: 5px; margin: 8px 0; }
+.pf2-quest-name-editor textarea { width: 100%; box-sizing: border-box; min-height: 85px; font: inherit; }
+.pf2-quest-name-editor button { cursor: pointer; padding: 7px; border-radius: 4px; border: 1px solid #b38c33; background: #fff0ba; }
+.pf2-quest-name-editor [role="status"] { display: block; margin: 6px 0; font-size: 11px; color: #714b0a; }
+.pf2-campaign-places-empty { margin: 0; padding: 10px; color: #6e6044; font: 12px system-ui; }
 .pf2-quest-actions { display: grid; gap: 6px; margin-top: 10px; }
 .pf2-quest-actions button {
   padding: 7px 9px; border: 1px solid #ad8d4d; border-radius: 5px;

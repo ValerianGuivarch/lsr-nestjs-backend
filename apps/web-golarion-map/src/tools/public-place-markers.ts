@@ -13,6 +13,7 @@ type PublicPlace = {
   important: boolean
   quest: boolean
   questName?: string
+  questNames?: string[]
   fid?: number
   category?: string
   label?: string
@@ -54,9 +55,60 @@ function basicPopupContent(place: PublicPlace, mode: 'pj' | 'mj-light' | 'mj'): 
   title.textContent = place.name
   root.appendChild(title)
   if (place.quest) {
-    const label = document.createElement('p')
-    label.textContent = `★ Lieu de quête : ${place.questName || place.name}`
-    root.appendChild(label)
+    const names = Array.isArray(place.questNames) && place.questNames.length
+      ? place.questNames : [place.questName || place.name]
+    const heading = document.createElement('p')
+    heading.textContent = `★ ${names.length} quête${names.length > 1 ? 's' : ''} associée${names.length > 1 ? 's' : ''}`
+    root.appendChild(heading)
+    const list = document.createElement('ul')
+    list.className = 'pf2-quest-names'
+    for (const questName of names) {
+      const item = document.createElement('li')
+      item.textContent = questName
+      list.appendChild(item)
+    }
+    root.appendChild(list)
+    if (mode !== 'pj') {
+      const editor = document.createElement('details')
+      editor.className = 'pf2-quest-name-editor'
+      const summary = document.createElement('summary')
+      summary.textContent = 'Modifier les quêtes associées'
+      const label = document.createElement('label')
+      label.textContent = 'Une quête par ligne'
+      const textarea = document.createElement('textarea')
+      textarea.rows = Math.min(8, Math.max(3, names.length + 1))
+      textarea.value = names.join('\n')
+      label.appendChild(textarea)
+      const save = document.createElement('button')
+      save.type = 'button'
+      save.textContent = 'Enregistrer les quêtes'
+      const status = document.createElement('span')
+      status.setAttribute('role', 'status')
+      save.addEventListener('click', async () => {
+        const questNames = [...new Set(textarea.value.split(/\r?\n/).map(name => name.trim()).filter(Boolean))]
+        if (!questNames.length || questNames.length > 30 || questNames.some(name => name.length > 180)) {
+          status.textContent = 'Entre 1 et 30 quêtes, 180 caractères maximum par quête.'
+          return
+        }
+        const api = (window.GOLARION_MAP_CONFIG?.placesUrl ?? '').replace(/\/places\/?$/, '/quests')
+        if (!api) { status.textContent = 'API indisponible'; return }
+        save.disabled = true
+        status.textContent = 'Enregistrement…'
+        try {
+          const response = await fetch(`${api}/${encodeURIComponent(place.id)}`, {
+            method: 'PUT', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'set-quests', questNames }),
+          })
+          if (!response.ok) throw new Error(await response.text())
+          window.location.reload()
+        } catch (error) {
+          save.disabled = false
+          status.textContent = error instanceof Error ? error.message : String(error)
+        }
+      })
+      editor.append(summary, label, save, status)
+      root.appendChild(editor)
+    }
   }
   if (place.text) {
     const text = document.createElement('p')
@@ -244,14 +296,14 @@ export async function addPublicPlaceMarkers(gmap: GolarionMap, placesUrl: string
     updateLabelDensity()
     gmap.map.on('zoomend', updateLabelDensity)
 
-    const important = entries.filter(entry => entry.place.quest)
-    if (important.length) {
+    type JumpToPlace = { id: string; name: string; longitude: number; latitude: number; open: () => void }
+    const makeList = (title: string, mark: string, places: JumpToPlace[]) => {
       const control = document.createElement('div')
       control.className = 'pf2-campaign-places-control maplibregl-ctrl'
       const toggle = document.createElement('button')
       toggle.type = 'button'
       toggle.className = 'pf2-campaign-places-toggle'
-      toggle.textContent = `★ Lieux de quête (${important.length})`
+      toggle.textContent = `${mark} ${title} (${places.length})`
       toggle.setAttribute('aria-expanded', 'false')
       const list = document.createElement('div')
       list.className = 'pf2-campaign-places-list'
@@ -260,19 +312,25 @@ export async function addPublicPlaceMarkers(gmap: GolarionMap, placesUrl: string
         list.hidden = !list.hidden
         toggle.setAttribute('aria-expanded', String(!list.hidden))
       }
-      for (const entry of important) {
+      if (!places.length) {
+        const empty = document.createElement('p')
+        empty.className = 'pf2-campaign-places-empty'
+        empty.textContent = 'Aucun lieu pour le moment'
+        list.appendChild(empty)
+      }
+      for (const place of [...places].sort((a,b) => a.name.localeCompare(b.name, 'fr'))) {
         const button = document.createElement('button')
         button.type = 'button'
-        button.textContent = `★ ${entry.place.name}`
+        button.textContent = `${mark} ${place.name}`
         button.onclick = () => {
           list.hidden = true
           toggle.setAttribute('aria-expanded', 'false')
           gmap.map.flyTo({
-            center: [entry.place.longitude, entry.place.latitude],
+            center: [place.longitude, place.latitude],
             zoom: Math.max(7, gmap.map.getZoom()),
             duration: 900,
           })
-          entry.marker.togglePopup()
+          place.open()
         }
         list.appendChild(button)
       }
@@ -282,6 +340,68 @@ export async function addPublicPlaceMarkers(gmap: GolarionMap, placesUrl: string
         onRemove: () => control.remove(),
       }, 'top-left')
     }
+
+    const questPlaces = entries.filter(entry => entry.place.quest).map(entry => ({
+      id: entry.place.id, name: entry.place.name,
+      longitude: entry.place.longitude, latitude: entry.place.latitude,
+      open: () => entry.marker.togglePopup(),
+    }))
+    makeList('Lieux de quête', '★', questPlaces)
+
+    const favoritePlaces: JumpToPlace[] = entries
+      .filter(entry => entry.place.important && !entry.place.quest)
+      .map(entry => ({
+        id: entry.place.id, name: entry.place.name,
+        longitude: entry.place.longitude, latitude: entry.place.latitude,
+        open: () => entry.marker.togglePopup(),
+      }))
+
+    // Source catalogue favorites (e.g. Grand Lodge) have ordinary map labels,
+    // not custom persistent stars. Include them in the shared favorites menu.
+    const favoritesUrl = placesUrl.replace(/\/places\/?$/, '/important-places')
+    if (favoritesUrl !== placesUrl) {
+      try {
+        const response = await fetch(favoritesUrl, { credentials: 'omit', cache: 'no-store' })
+        if (!response.ok) throw new Error(`HTTP ${response.status}`)
+        const rawFavorites: unknown = await response.json()
+        if (Array.isArray(rawFavorites)) {
+          for (const value of rawFavorites) {
+            if (!value || typeof value !== 'object') continue
+            const item = value as Partial<PublicPlace>
+            if (typeof item.id !== 'string' || typeof item.name !== 'string'
+              || !Number.isFinite(item.longitude) || !Number.isFinite(item.latitude)) continue
+            if (favoritePlaces.some(place => place.id === item.id)) continue
+            favoritePlaces.push({
+              id: item.id, name: item.name, longitude: item.longitude!, latitude: item.latitude!,
+              open: () => {
+                const popup = document.createElement('div')
+                popup.className = 'pf2-public-place-popup'
+                const title = document.createElement('strong')
+                title.textContent = item.name!
+                popup.appendChild(title)
+                if (item.text) {
+                  const description = document.createElement('p')
+                  description.textContent = item.text
+                  popup.appendChild(description)
+                }
+                const target: FavoriteTarget | null = typeof item.fid === 'number'
+                  ? { kind: 'source', fid: item.fid }
+                  : typeof item.category === 'string' && typeof item.label === 'string'
+                  ? { kind: 'label', category: item.category, label: item.label } : null
+                if (target) popup.appendChild(createFavoriteButton(target, true))
+                new Popup({ closeButton: true, offset: 12 })
+                  .setLngLat([item.longitude!, item.latitude!])
+                  .setDOMContent(popup).addTo(gmap.map)
+              },
+            })
+          }
+        }
+      } catch (error) {
+        console.warn('Impossible de charger les favoris du catalogue :', error)
+      }
+    }
+    makeList('Favoris', '☆', favoritePlaces)
+
   } catch (error) {
     console.warn('Impossible de charger les lieux PF2 de la carte.', error)
   }

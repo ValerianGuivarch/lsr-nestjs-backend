@@ -691,11 +691,14 @@ export class Pf2PersistenceService implements OnModuleInit {
   }
 
 
-  async manageQuestPlace(id: string, action: 'convert' | 'delete'): Promise<void> {
+  async manageQuestPlace(id: string, action: 'convert' | 'delete' | 'set-quests', questNames?: string[]): Promise<void> {
     const place = await this.getRecord('lieu', id)
     if (!place || place.map_kind !== 'quest') throw new Error('Lieu de quête introuvable.')
-    if (action === 'convert') {
-      await this.saveRecord('lieu', { ...place, map_kind: 'normal', map_quest_name: '', map_important: false })
+    if (action === 'set-quests') {
+      if (!questNames?.length) throw new Error('Au moins une quête est obligatoire.')
+      await this.saveRecord('lieu', { ...place, map_quest_name: questNames[0], map_quest_names: questNames })
+    } else if (action === 'convert') {
+      await this.saveRecord('lieu', { ...place, map_kind: 'normal', map_quest_name: '', map_quest_names: [], map_important: false })
     } else {
       await this.dataSource.query(
         "DELETE FROM pf2_record WHERE kind = 'lieu' AND id = ? AND json_extract(payload, '$.map_kind') = 'quest'", [id],

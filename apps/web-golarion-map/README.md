@@ -29,6 +29,17 @@ En cliquant sur un lieu du catalogue en mode `/mj`, le panneau **Visibilité jou
 
 La nouvelle donnée `important` des règles de visibilité est persistée par la migration SQLite `034-map-important-overrides`. L'endpoint `/map/important-places` ne publie que les favoris explicitement visibles : il ne retourne ni texte MJ ni référence Wiki interne.
 
+## Menus partagés « Favoris » et « Lieux de quête »
+
+Deux menus sont affichés en haut à gauche des modes PJ, MJ-light et MJ :
+
+- **★ Lieux de quête** : un repère géographique par lieu, quel que soit le nombre de quêtes qui s'y déroulent. En ouvrant le repère, les joueurs voient une liste de toutes les quêtes associées. Le MJ et le MJ-light peuvent modifier cette liste directement dans la fenêtre du lieu (une quête par ligne, jusqu'à 30), sans créer de nouveau marqueur. Les actions « Convertir en lieu normal » et « Supprimer le lieu » continuent à porter sur le lieu entier, et non sur une seule quête.
+- **☆ Favoris** : une liste distincte de tous les lieux ordinaires favoris. Elle réunit les lieux du référentiel PF2 et ceux du catalogue de Golarion, dont la Grande Loge. Sélectionner une entrée recentre la carte et ouvre ses informations ; le nom du lieu conserve ses règles normales de visibilité selon le zoom, sans grosse étoile permanente.
+
+Les fiches existantes avec un seul `map_quest_name` restent compatibles. Le nouveau champ `map_quest_names` est une liste de chaînes, avec `map_quest_name` conservé comme premier élément pour la compatibilité. Aucune migration de données destructive n'est nécessaire. Les quêtes sont des **noms affichés**, pas des références automatiques au wiki des quêtes.
+
+Dans **PF2-MJ → Lieux**, sélectionner le type « Lieu de quête » et saisir plusieurs quêtes, une par ligne. Côté carte, cliquer sur le lieu en MJ/MJ-light et choisir « Modifier les quêtes associées ». Les PJ voient la liste sans droit de modification dans l'interface.
+
 ## Favoris et lieux de quête : deux systèmes indépendants
 
 ### ☆ Favori partagé
