@@ -28,7 +28,7 @@ export async function addPlayerSourcePoints(gmap: GolarionMap, mode: 'pj' | 'mj-
   // explicitly published locations to avoid drawing each ordinary city twice.
   // Important locations are rendered through the common star marker layer.
   let features: GeoJSON.Feature<GeoJSON.Point>[] = points
-    .filter(point => !point.important && (mode !== 'mj' || point.curated === true))
+    .filter(point => mode !== 'mj' || point.curated === true)
     .flatMap(point => {
     const displayName = point.name === point.label ? translatePlaceName(point.label, dictionary) : point.name
     return point.coordinates.map(coordinate => ({
@@ -43,6 +43,7 @@ export async function addPlayerSourcePoints(gmap: GolarionMap, mode: 'pj' | 'mj-
         mjText: 'mjText' in point ? point.mjText : '',
         icon: point.icon,
         sourceKey: 'sourceKey' in point ? point.sourceKey : '',
+        favorite: point.important === true,
         minZoom: point.minZoom,
       },
     }))
@@ -71,14 +72,14 @@ export async function addPlayerSourcePoints(gmap: GolarionMap, mode: 'pj' | 'mj-
     source: sourceId,
     filter: ['>=', ['zoom'], ['+', ['get', 'minZoom'], 5]],
     layout: {
-      'text-field': ['get', 'name'],
+      'text-field': ['case', ['get', 'favorite'], ['concat', '★ ', ['get', 'name']], ['get', 'name']],
       'text-font': ['NotoSans-Medium'],
       'text-size': 14,
       'text-variable-anchor': ['left', 'right'],
       'text-radial-offset': 0.5,
     },
     paint: {
-      'text-color': 'rgb(255,255,255)',
+      'text-color': ['case', ['get', 'favorite'], 'rgb(255,209,94)', 'rgb(255,255,255)'],
       'text-halo-color': 'rgb(10,10,10)',
       'text-halo-width': 0.8,
     },
@@ -103,7 +104,7 @@ export async function addPlayerSourcePoints(gmap: GolarionMap, mode: 'pj' | 'mj-
     }
 
     if (mode !== 'mj' && Number.isInteger(Number(properties.fid))) {
-      root.appendChild(createFavoriteButton({ kind: 'source', fid: Number(properties.fid) }, false))
+      root.appendChild(createFavoriteButton({ kind: 'source', fid: Number(properties.fid) }, properties.favorite === true))
     }
     if (mode === 'mj') {
       const fid = Number(properties.fid)
@@ -123,7 +124,7 @@ export async function addPlayerSourcePoints(gmap: GolarionMap, mode: 'pj' | 'mj-
           publicLabel: String(properties.publicLabel ?? ''),
           publicText: text,
           mjText: String(properties.mjText ?? ''),
-          important: false,
+          important: properties.favorite === true,
         }))
       }
     } else if (mjLight) {

@@ -1,0 +1,21 @@
+name: Temporary quest-map checks
+on:
+  push:
+    branches:
+      - feature/map-quest-markers-20261014
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npx tsc --noEmit --project apps/web-golarion-map/tsconfig.json
+      - run: npm run build:golarion-map
+      - run: npm run build:web:misc
+      - run: npx nx build api-jdr
+      - run: npx nx test api-jdr --runInBand --testPathPattern=Pf2MjService.spec.ts --testNamePattern='Lieux de quête et favoris normaux|lieux publics de la carte|Calage Absalom et favoris partagés'

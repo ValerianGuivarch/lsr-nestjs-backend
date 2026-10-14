@@ -15,14 +15,26 @@ export function addRightClickMenu(map: GolarionMap, measureControl: MeasureContr
         }
       },
       {
-        label: "★ Ajouter un lieu important (MJ)",
-        callback: () => {
+        label: "★ Créer un lieu de quête (MJ)",
+        callback: async () => {
           if (!latLong) return;
+          const name = window.prompt('Nom du lieu de quête (visible sur la carte) :')?.trim();
+          if (!name) return;
+          const questName = window.prompt('Nom de la quête associée :', name)?.trim();
+          if (!questName) return;
           const coordinate = latLong.wrap();
-          const editor = new URL('https://l7r.fr/pf2-mj/places');
-          editor.searchParams.set('mapLat', coordinate.lat.toFixed(7));
-          editor.searchParams.set('mapLng', coordinate.lng.toFixed(7));
-          window.open(editor.toString(), '_blank', 'noopener,noreferrer');
+          const api = (window.GOLARION_MAP_CONFIG?.placesUrl ?? '').replace(/\/places\/?$/, '/quests');
+          if (!api) { window.alert('API des lieux de quête indisponible.'); return; }
+          try {
+            const response = await fetch(api, {
+              method: 'POST', headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ name, questName, latitude: coordinate.lat, longitude: coordinate.lng }),
+            });
+            if (!response.ok) throw new Error(await response.text());
+            window.location.reload();
+          } catch (error) {
+            window.alert(error instanceof Error ? error.message : String(error));
+          }
         },
       },
       {

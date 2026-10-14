@@ -61,6 +61,18 @@ export class Pf2MjController {
     catch (error) { throw new HttpException(error instanceof Error ? error.message : 'Favori refusé.', HttpStatus.BAD_REQUEST) }
   }
 
+  @Post('map/quests')
+  async createQuestSite(@Body() body: unknown): Promise<unknown> {
+    try { return await this.service.createQuestSite(body) }
+    catch (error) { throw new HttpException(error instanceof Error ? error.message : 'Création du lieu de quête impossible.', HttpStatus.BAD_REQUEST) }
+  }
+
+  @Put('map/quests/:id')
+  async manageQuestSite(@Param('id') id: string, @Body() body: unknown): Promise<unknown> {
+    try { return await this.service.manageQuestSite(id, body) }
+    catch (error) { throw new HttpException(error instanceof Error ? error.message : 'Modification du lieu de quête impossible.', HttpStatus.BAD_REQUEST) }
+  }
+
   @Get('map/places')
   publicMapPlaces(): Promise<Array<{ id: string; name: string; latitude: number; longitude: number; text: string; icon: string; important: boolean }>> {
     return this.service.publicMapPlaces()

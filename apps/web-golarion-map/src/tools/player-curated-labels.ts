@@ -27,7 +27,8 @@ export async function addPlayerCuratedLabels(gmap: GolarionMap, mode: 'pj' | 'mj
   const autoVisible = new Set(visibility.autoVisibleCategories)
   const visibleOverrides = new Map(
     visibility.overrides
-      .filter(item => item.visibility === 'visible' && !item.important && item.category !== 'locations' && (
+      .filter(item => item.visibility === 'visible' && item.category !== 'locations' && (
+        item.important ||
         !autoVisible.has(item.category) || Boolean(item.publicLabel.trim()) || Boolean(item.publicText.trim()) || (mjLight && Boolean(item.mjText?.trim()))
       ))
       .map(item => [overrideKey(item.category, item.label), item])
@@ -55,6 +56,7 @@ export async function addPlayerCuratedLabels(gmap: GolarionMap, mode: 'pj' | 'mj
           publicLabel: override.publicLabel,
           text: override.publicText,
           mjText: override.mjText ?? '',
+          favorite: override.important === true,
         },
       })
     }
@@ -70,14 +72,14 @@ export async function addPlayerCuratedLabels(gmap: GolarionMap, mode: 'pj' | 'mj
     type: 'symbol',
     source: sourceId,
     layout: {
-      'text-field': ['get', 'name'],
+      'text-field': ['case', ['get', 'favorite'], ['concat', '★ ', ['get', 'name']], ['get', 'name']],
       'text-font': ['NotoSans-Medium'],
       'text-size': 14,
       'text-variable-anchor': ['center', 'top', 'bottom'],
       'text-overlap': 'always',
     },
     paint: {
-      'text-color': 'rgb(255,255,255)',
+      'text-color': ['case', ['get', 'favorite'], 'rgb(255,209,94)', 'rgb(255,255,255)'],
       'text-halo-color': 'rgb(10,10,10)',
       'text-halo-width': 1,
     },
@@ -102,7 +104,7 @@ export async function addPlayerCuratedLabels(gmap: GolarionMap, mode: 'pj' | 'mj
     }
 
     if (mode !== 'mj') {
-      root.appendChild(createFavoriteButton({ kind: 'label', category, label }, false))
+      root.appendChild(createFavoriteButton({ kind: 'label', category, label }, props.favorite === true))
     }
     if (mode === 'mj') {
       root.appendChild(createMjLabelCurationPanel(category, label, false, {
@@ -112,7 +114,7 @@ export async function addPlayerCuratedLabels(gmap: GolarionMap, mode: 'pj' | 'mj
         publicLabel: String(props.publicLabel ?? ''),
         publicText: text,
         mjText: String(props.mjText ?? ''),
-        important: false,
+        important: props.favorite === true,
       }))
     } else if (mjLight) {
       root.appendChild(createMjLightCurationPanel({

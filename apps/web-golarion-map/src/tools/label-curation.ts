@@ -104,7 +104,7 @@ export function createMjLabelCurationPanel(
     if (important.checked) rule.value = 'visible'
   })
   const importantCaption = document.createElement('span')
-  importantCaption.textContent = '★ Lieu important pour tous les PJ'
+  importantCaption.textContent = '☆ Favori partagé (texte doré, zoom habituel)'
   importantLabel.append(important, importantCaption)
   root.appendChild(importantLabel)
 

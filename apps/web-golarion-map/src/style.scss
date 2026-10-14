@@ -201,12 +201,12 @@ a {
 }
 
 /* Important locations remain distinguishable but no longer cover the basemap. */
-.pf2-public-place-marker.is-important {
+.pf2-public-place-marker.is-quest {
 	z-index: 3;
 	width: 30px;
 	height: 30px;
 }
-.pf2-public-place-marker.is-important .pf2-public-place-icon {
+.pf2-public-place-marker.is-quest .pf2-public-place-icon {
 	width: 30px;
 	height: 30px;
 	background: #b36d0c;
@@ -214,7 +214,7 @@ a {
 	font-size: 17px;
 	box-shadow: 0 0 0 1px #594016, 0 1px 4px #0006;
 }
-.pf2-public-place-marker.is-important .pf2-public-place-label {
+.pf2-public-place-marker.is-quest .pf2-public-place-label {
 	max-width: 165px;
 	padding: 4px 7px;
 	border: 1px solid #be8723;
@@ -222,6 +222,19 @@ a {
 	color: #392700;
 	font-weight: 700;
 }
+.pf2-public-place-marker.is-favorite .pf2-public-place-label {
+  background: #fff4c8;
+  border-color: #d4ae4e;
+  color: #8c5900;
+  font-weight: 800;
+}
+.pf2-quest-actions { display: grid; gap: 6px; margin-top: 10px; }
+.pf2-quest-actions button {
+  padding: 7px 9px; border: 1px solid #ad8d4d; border-radius: 5px;
+  background: #fff1c3; color: #3d300d; font: 600 12px system-ui; cursor: pointer;
+}
+.pf2-quest-actions button:disabled { opacity: .5; }
+.pf2-quest-actions [role="status"] { font-size: 11px; color: #8c3b19; }
 .pf2-campaign-places-control {
 	max-width: min(280px, 82vw);
 	font: 13px system-ui, sans-serif;

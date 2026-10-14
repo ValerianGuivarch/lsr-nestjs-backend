@@ -3,7 +3,7 @@ import { lookup } from 'node:dns/promises'
 import { createReadStream, existsSync } from 'node:fs'
 import { mkdir, readdir, readFile, rename, stat, writeFile } from 'node:fs/promises'
 import { basename, relative, resolve, sep } from 'node:path'
-import { createHash } from 'node:crypto'
+import { createHash, randomUUID } from 'node:crypto'
 import sharp from 'sharp'
 import { LibraryAsset, Pf2PersistenceService, type CampaignPlayableComponentsScenario, type PlayableComponent, type PlayableComponentContinuityMode } from '../pf2-storage/Pf2PersistenceService'
 import { FoundryNpcSummary, FoundryRelayService } from '../foundry/FoundryRelayService'
@@ -324,7 +324,36 @@ export class Pf2MjService {
     throw new Error('Type de lieu invalide.')
   }
 
-  async publicMapPlaces(): Promise<Array<{ id: string; name: string; latitude: number; longitude: number; text: string; icon: string; important: boolean }>> {
+  async createQuestSite(body: unknown): Promise<{ id: string; name: string; questName: string }> {
+    const input = this.asObject(body)
+    const name = typeof input.name === 'string' ? input.name.trim() : ''
+    const questName = typeof input.questName === 'string' ? input.questName.trim() : ''
+    if (!name || name.length > 140 || !questName || questName.length > 180) throw new Error('Nom de lieu et nom de quête obligatoires.')
+    const latitude = input.latitude, longitude = input.longitude
+    if (typeof latitude !== 'number' || !Number.isFinite(latitude) || latitude < -90 || latitude > 90
+      || typeof longitude !== 'number' || !Number.isFinite(longitude) || longitude < -180 || longitude > 180) {
+      throw new Error('Coordonnées invalides.')
+    }
+    const id = 'quest-' + randomUUID()
+    await this.persistence.saveRecord('lieu', {
+      id, nom: name, type: 'Lieu de quête', statut: 'Actif',
+      map_kind: 'quest', map_quest_name: questName,
+      map_visible: true, map_important: false,
+      map_latitude: latitude, map_longitude: longitude,
+      map_icon: 'pin', map_text: '',
+    })
+    return { id, name, questName }
+  }
+
+  async manageQuestSite(id: string, body: unknown): Promise<{ id: string; action: string }> {
+    if (!id || id.length > 180) throw new Error('Identifiant invalide.')
+    const input = this.asObject(body)
+    if (input.action !== 'convert' && input.action !== 'delete') throw new Error('Action inconnue.')
+    await this.persistence.manageQuestPlace(id, input.action)
+    return { id, action: input.action }
+  }
+
+  async publicMapPlaces(): Promise<Array<{ id: string; name: string; latitude: number; longitude: number; text: string; icon: string; important: boolean; quest: boolean; questName: string }>> {
     const lieux = await this.persistence.readReference('lieux')
     const coordinate = (value: unknown): number => typeof value === 'number' ? value : typeof value === 'string' && value.trim() ? Number(value) : Number.NaN
     return lieux.flatMap((record) => {
@@ -342,12 +371,14 @@ export class Pf2MjService {
         longitude,
         text: typeof record.map_text === 'string' ? record.map_text.trim() : '',
         icon: typeof record.map_icon === 'string' && record.map_icon.trim() ? record.map_icon.trim() : 'pin',
-        important: record.map_important === true,
+        important: record.map_important === true && record.map_kind !== 'quest',
+        quest: record.map_kind === 'quest',
+        questName: record.map_kind === 'quest' && typeof record.map_quest_name === 'string' ? record.map_quest_name.trim() : '',
       }]
     }).sort((left, right) => left.name.localeCompare(right.name, 'fr'))
   }
 
-  async mjLightMapPlaces(): Promise<Array<{ id: string; name: string; latitude: number; longitude: number; text: string; mjText: string; icon: string; important: boolean }>> {
+  async mjLightMapPlaces(): Promise<Array<{ id: string; name: string; latitude: number; longitude: number; text: string; mjText: string; icon: string; important: boolean; quest: boolean; questName: string }>> {
     const lieux = await this.persistence.readReference('lieux')
     const coordinate = (value: unknown): number => typeof value === 'number' ? value : typeof value === 'string' && value.trim() ? Number(value) : Number.NaN
     return lieux.flatMap((record) => {
@@ -366,7 +397,9 @@ export class Pf2MjService {
         text: typeof record.map_text === 'string' ? record.map_text.trim() : '',
         mjText: typeof record.map_mj_text === 'string' ? record.map_mj_text.trim() : '',
         icon: typeof record.map_icon === 'string' && record.map_icon.trim() ? record.map_icon.trim() : 'pin',
-        important: record.map_important === true,
+        important: record.map_important === true && record.map_kind !== 'quest',
+        quest: record.map_kind === 'quest',
+        questName: record.map_kind === 'quest' && typeof record.map_quest_name === 'string' ? record.map_quest_name.trim() : '',
       }]
     }).sort((left, right) => left.name.localeCompare(right.name, 'fr'))
   }
