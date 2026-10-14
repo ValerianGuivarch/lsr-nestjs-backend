@@ -2091,7 +2091,7 @@ export class DiscordCommandsService {
         await thread.setAppliedTags([...new Set([...(thread.appliedTags ?? []), completedTag.id])], 'Quête terminée via /terminer-quete')
         await this.clearQuestThumbReservations(thread)
         await thread.send({
-          content: `✅ **Quête terminée. Merci d’avoir participé.**\n\n**Compte rendu :**\n${report}\n\nVous pouvez la relancer avec `/relancer-quete`.`,
+          content: `✅ **Quête terminée. Merci d’avoir participé.**\n\n**Compte rendu :**\n${report}\n\nVous pouvez la relancer avec \`/relancer-quete\`.`,
           allowedMentions: { parse: [] },
         })
         this.pendingQuestCompletions.delete(interaction.customId)
