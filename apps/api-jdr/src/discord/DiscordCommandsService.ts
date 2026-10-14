@@ -1530,15 +1530,19 @@ export class DiscordCommandsService {
       await interaction.editReply({ content: `Aucune séance n°${number} n’existe.` })
       return
     }
-    const names = await this.actorNames()
-    const actors = session.participants.flatMap((uuid) => {
-      const name = names.get(uuid)
-      return name ? [{ uuid, name }] : []
-    })
-    const rolls = this.progressionRollCounts(actors, sessions, session.sessionNumber)
-    const actorsWithIds = actors.map(actor => ({ ...actor, userId: this.discordId(this.playerName(actor.name)) }))
-    const content = await this.plannedSessionAnnouncement(session.sessionNumber, session.inGameStartDate, actorsWithIds, rolls, true)
-    await this.previewPublicMessage(interaction, content)
+    try {
+      const names = await this.actorNames()
+      const actors = session.participants.flatMap((uuid) => {
+        const name = names.get(uuid)
+        return name ? [{ uuid, name }] : []
+      })
+      const rolls = this.progressionRollCounts(actors, sessions, session.sessionNumber)
+      const actorsWithIds = actors.map(actor => ({ ...actor, userId: this.discordId(this.playerName(actor.name)) }))
+      const content = await this.plannedSessionAnnouncement(session.sessionNumber, session.inGameStartDate, actorsWithIds, rolls, true)
+      await this.previewPublicMessage(interaction, content)
+    } catch (error) {
+      await interaction.editReply({ content: `Récap de séance impossible : ${error instanceof Error ? error.message : String(error)}` })
+    }
   }
 
   private async previewPublicMessage(
@@ -2951,10 +2955,11 @@ export class DiscordCommandsService {
     const sessions = await this.persistence.listSessions()
     const sessionNumber = Math.max(0, ...sessions.map((session) => session.sessionNumber)) + 1
     const selected = pending.selected ?? []
+    const announcement = await this.plannedSessionAnnouncement(sessionNumber, date, selected, plan.rollCounts, true)
     const draft = await this.persistence.createSession({ sessionNumber, date: '', inGameStartDate: date, inGameEndDate: '', title: '', participants: selected.map((actor) => actor.uuid), published: false })
     const content = `Brouillon créé : résumé n°${draft.sessionNumber}.\nDébut : ${this.displayDate(date)}. Fin : à renseigner.\n\n${plan.progressionRolls.join('\n')}\n\nComplète puis publie le résumé dans l’application MJ.`
     const announcementId = `pf2-new-game:announce:${draft.id}`
-    this.pendingAnnouncements.set(announcementId, { content: await this.plannedSessionAnnouncement(draft.sessionNumber, date, selected, plan.rollCounts, true), userIds: selected.map((actor) => actor.userId) })
+    this.pendingAnnouncements.set(announcementId, { content: announcement, userIds: selected.map((actor) => actor.userId) })
     const publish = new ButtonBuilder().setCustomId(announcementId).setLabel('Publier l’annonce').setStyle(ButtonStyle.Primary)
     await interaction.update({ content, components: [new ActionRowBuilder<ButtonBuilder>().addComponents(publish)] })
   }
@@ -2963,9 +2968,10 @@ export class DiscordCommandsService {
     const sessions = await this.persistence.listSessions()
     const sessionNumber = Math.max(0, ...sessions.map((session) => session.sessionNumber)) + 1
     const selected = pending.selected ?? []
+    const announcement = await this.plannedSessionAnnouncement(sessionNumber, date, selected, plan.rollCounts, true)
     const draft = await this.persistence.createSession({ sessionNumber, date: '', inGameStartDate: date, inGameEndDate: '', title: '', participants: selected.map((actor) => actor.uuid), published: false })
     const announcementId = `pf2-new-game:announce:${draft.id}`
-    this.pendingAnnouncements.set(announcementId, { content: await this.plannedSessionAnnouncement(draft.sessionNumber, date, selected, plan.rollCounts, true), userIds: selected.map((actor) => actor.userId) })
+    this.pendingAnnouncements.set(announcementId, { content: announcement, userIds: selected.map((actor) => actor.userId) })
     const publish = new ButtonBuilder().setCustomId(announcementId).setLabel('Publier l’annonce').setStyle(ButtonStyle.Primary)
     await interaction.editReply({ content: `Brouillon créé : résumé n°${draft.sessionNumber}.\nDébut : ${this.displayDate(date)}. Fin : à renseigner.\n\n${plan.progressionRolls.join('\n')}\n\nComplète puis publie le résumé dans l’application MJ.`, components: [new ActionRowBuilder<ButtonBuilder>().addComponents(publish)] })
   }
@@ -3050,6 +3056,19 @@ export class DiscordCommandsService {
     return levels
   }
 
+  private async requiredSessionPlayerLevels(uuids: string[]): Promise<Map<string, { foundryLevel: number; theoreticalLevel: number }>> {
+    let players: Awaited<ReturnType<FoundryRelayService['listPlayers']>>
+    try {
+      players = await this.foundry.listPlayers()
+    } catch (error) {
+      throw new Error(`Foundry est indispensable pour afficher les niveaux et les niveaux à faire : ${error instanceof Error ? error.message : String(error)}`)
+    }
+    const levels = new Map(players.map(player => [player.uuid, { foundryLevel: player.foundryLevel, theoreticalLevel: player.level }]))
+    const missing = [...new Set(uuids)].filter(uuid => !levels.has(uuid))
+    if (missing.length) throw new Error(`Foundry ne renvoie pas la progression de ${missing.length} personnage${missing.length > 1 ? 's' : ''} de la séance.`)
+    return levels
+  }
+
   private levelLabel(uuid: string, levels: Map<string, { foundryLevel: number; theoreticalLevel: number }>): string {
     const value = levels.get(uuid)
     if (!value) return 'niveau ?'
@@ -3066,7 +3085,7 @@ export class DiscordCommandsService {
     rolls: Map<string, number>,
     mentionUsers = false,
   ): Promise<string> {
-    const levels = await this.playerLevels(actors.map(actor => actor.uuid))
+    const levels = await this.requiredSessionPlayerLevels(actors.map(actor => actor.uuid))
     const lines = actors.map((actor) => {
       const count = rolls.get(actor.uuid) ?? 0
       const mention = mentionUsers && actor.userId ? ` (<@${actor.userId}>)` : ''
