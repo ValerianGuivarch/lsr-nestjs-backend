@@ -1460,9 +1460,9 @@ export class DiscordCommandsService {
     await interaction.deferReply({ ephemeral: true })
     const sessions = (await this.persistence.listSessions()).filter((session) => session.published)
     const names = await this.actorNames()
-    const levels = await this.playerLevels()
     const characterSessions = new Map<string, number>()
     const playerSessions = new Map<string, Set<number>>()
+    const playerLastSessionDate = new Map<string, string>()
 
     for (const session of sessions) {
       const playersInSession = new Set<string>()
@@ -1475,6 +1475,9 @@ export class DiscordCommandsService {
       for (const player of playersInSession) {
         if (!playerSessions.has(player)) playerSessions.set(player, new Set())
         playerSessions.get(player)!.add(session.sessionNumber)
+        if (session.date && (!playerLastSessionDate.get(player) || session.date > playerLastSessionDate.get(player)!)) {
+          playerLastSessionDate.set(player, session.date)
+        }
       }
     }
 
@@ -1484,6 +1487,7 @@ export class DiscordCommandsService {
         const name = names.get(uuid)
         return name ? [{ uuid, name, player: this.playerName(name), count }] : []
       })
+    const levels = await this.playerLevels(characters.map(character => character.uuid))
 
     const players = [...playerSessions.entries()]
       .filter(([, played]) => played.size > 0)
@@ -1499,7 +1503,8 @@ export class DiscordCommandsService {
     for (const [player, played] of players) {
       const discordId = this.discordId(player)
       const name = discordId ? namesByDiscordId.get(discordId) ?? pf2PlayerByDiscordId(discordId)?.name ?? player : player
-      lines.push('', `**${name} — ${played.size} séance${played.size > 1 ? 's' : ''}**${discordId ? ` (<@${discordId}>)` : ''}`)
+      const lastSessionDate = playerLastSessionDate.get(player)
+      lines.push('', `**${name} — ${played.size} séance${played.size > 1 ? 's' : ''}**${discordId ? ` (<@${discordId}>)` : ''}${lastSessionDate ? ` — dernière séance : ${this.displayRealDate(lastSessionDate)}` : ''}`)
       for (const actor of characters.filter((item) => item.player === player).sort((a, b) => a.name.localeCompare(b.name, 'fr'))) {
         lines.push(`- ${this.characterLabel(actor.name)} — ${this.levelLabel(actor.uuid, levels)} — ${actor.count} séance${actor.count > 1 ? 's' : ''}`)
       }
@@ -3000,6 +3005,7 @@ export class DiscordCommandsService {
   private today(): string { return new Date().toISOString().slice(0, 10) }
   private addDays(date: string, days: number): string { const value = new Date(`${date}T12:00:00Z`); value.setUTCDate(value.getUTCDate() + days); return value.toISOString().slice(0, 10) }
   private displayDate(date: string): string { const [year, month, day] = date.split('-').map(Number); const months = ['Abadius', 'Calistril', 'Pharast', 'Gozran', 'Desnus', 'Sarenith', 'Erastus', 'Arodus', 'Rova', 'Lamashan', 'Neth', 'Kuthona']; return year >= 3000 ? `${day} ${months[month - 1]} ${year} AR` : `${day} ${months[month - 1]} ${year + 1694} AR (${day}/${String(month).padStart(2, '0')}/${year})` }
+  private displayRealDate(date: string): string { const [year, month, day] = date.split('-'); return day && month && year ? `${day}/${month}/${year}` : date }
   private discordId(player: string): string | undefined { return pf2DiscordIdForPlayer(player) }
 
   private characterLabel(name: string): string {
@@ -3024,14 +3030,24 @@ export class DiscordCommandsService {
     }))
   }
 
-  private async playerLevels(): Promise<Map<string, { foundryLevel: number; theoreticalLevel: number }>> {
+  private async playerLevels(uuids: string[] = []): Promise<Map<string, { foundryLevel: number; theoreticalLevel: number }>> {
+    const levels = new Map<string, { foundryLevel: number; theoreticalLevel: number }>()
     try {
       const players = await this.foundry.listPlayers()
-      return new Map(players.map((player) => [player.uuid, { foundryLevel: player.foundryLevel, theoreticalLevel: player.level }]))
+      for (const player of players) levels.set(player.uuid, { foundryLevel: player.foundryLevel, theoreticalLevel: player.level })
     } catch (error) {
-      this.logger.warn(`Niveaux Foundry indisponibles : ${error instanceof Error ? error.message : String(error)}`)
-      return new Map()
+      this.logger.warn(`Progression Foundry indisponible, repli sur le niveau brut des Actors : ${error instanceof Error ? error.message : String(error)}`)
     }
+
+    for (const uuid of [...new Set(uuids)].filter(uuid => !levels.has(uuid))) {
+      try {
+        const actor = await this.foundry.getNpcSummary(uuid)
+        if (actor.level !== null) levels.set(uuid, { foundryLevel: actor.level, theoreticalLevel: actor.level })
+      } catch (error) {
+        this.logger.warn(`Niveau Foundry indisponible pour ${uuid} : ${error instanceof Error ? error.message : String(error)}`)
+      }
+    }
+    return levels
   }
 
   private levelLabel(uuid: string, levels: Map<string, { foundryLevel: number; theoreticalLevel: number }>): string {
@@ -3050,7 +3066,7 @@ export class DiscordCommandsService {
     rolls: Map<string, number>,
     mentionUsers = false,
   ): Promise<string> {
-    const levels = await this.playerLevels()
+    const levels = await this.playerLevels(actors.map(actor => actor.uuid))
     const lines = actors.map((actor) => {
       const count = rolls.get(actor.uuid) ?? 0
       const mention = mentionUsers && actor.userId ? ` (<@${actor.userId}>)` : ''
