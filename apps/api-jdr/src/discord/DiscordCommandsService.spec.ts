@@ -117,6 +117,43 @@ describe('DiscordCommandsService', () => {
     expect(content).not.toContain('Libre')
   })
 
+  it('refreshes quest reactions so a fresh Guilhem thumbs-up is not missed', async () => {
+    const guilhem = { id: '448500183186145291', username: 'Guilhem', globalName: 'Guilhem', bot: false }
+    const thumbs = {
+      emoji: { name: '👍' },
+      users: { fetch: jest.fn().mockResolvedValue(new Map([[guilhem.id, guilhem]])) },
+    }
+    const freshReactions = new Map([['thumbs', thumbs]]) as any
+    freshReactions.find = (predicate: (reaction: any) => boolean) => [...freshReactions.values()].find(predicate)
+    const quest = {
+      id: 'brechemur',
+      name: '👑 L’appel de Brèche-Mur',
+      createdTimestamp: 1,
+      appliedTags: [],
+      fetchStarterMessage: jest.fn().mockResolvedValue({
+        reactions: {
+          cache: { find: jest.fn().mockReturnValue(undefined) },
+          fetch: jest.fn().mockResolvedValue(freshReactions),
+        },
+      }),
+    }
+    const forum = {
+      availableTags: [{ id: 'done', name: 'Terminée' }],
+      threads: {
+        fetchActive: jest.fn().mockResolvedValue({ threads: new Map([['brechemur', quest]]) }),
+        fetchArchived: jest.fn().mockResolvedValue({ threads: Object.assign(new Map(), { last: () => undefined }), hasMore: false }),
+      },
+    }
+    const editReply = jest.fn().mockResolvedValue({ react: jest.fn().mockResolvedValue(undefined) })
+    const service = new DiscordCommandsService({} as never, {} as never)
+    await service.handle({
+      commandName: 'choix-quete', guildId: 'guild-1',
+      client: { channels: { fetch: jest.fn().mockResolvedValue(forum) } },
+      deferReply: jest.fn().mockResolvedValue(undefined), editReply, followUp: jest.fn().mockResolvedValue(undefined),
+    } as never)
+    expect(editReply.mock.calls[0][0].content).toContain('Guilhem')
+  })
+
   it('hides quests tagged Terminée and links visible quest titles to their Discord threads', async () => {
     const openQuest = {
       id: 'open-quest', name: '🗝️ La crypte oubliée', createdTimestamp: 1, appliedTags: [],
