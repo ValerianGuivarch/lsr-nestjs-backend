@@ -386,7 +386,9 @@ export class DiscordCommandsService {
         if (completedTagId && thread.appliedTags?.includes(completedTagId)) continue
         const starter = await thread.fetchStarterMessage({ force: true }).catch(() => null)
         const reactions = starter
-          ? await starter.reactions.fetch().catch(() => starter.reactions.cache)
+          ? (typeof starter.reactions.fetch === 'function'
+            ? await starter.reactions.fetch().catch(() => starter.reactions.cache)
+            : starter.reactions.cache)
           : null
         const thumbs = reactions?.find((reaction: any) => reaction.emoji.name === '👍')
         const users = thumbs
