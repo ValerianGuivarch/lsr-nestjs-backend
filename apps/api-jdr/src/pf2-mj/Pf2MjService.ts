@@ -337,7 +337,15 @@ export class Pf2MjService {
     const input = this.asObject(body)
     const name = typeof input.name === 'string' ? input.name.trim() : ''
     const questNames = this.questNames(input.questNames, input.questName)
-    if (!name || name.length > 140 || !questNames.length) throw new Error('Nom de lieu et au moins une quête obligatoires.')
+    const questIds = Array.isArray(input.questIds) && input.questIds.every(v => typeof v === 'string')
+      ? input.questIds as string[] : []
+    if (!name || name.length > 140 || (!questNames.length && !questIds.length)) {
+      throw new Error('Nom de lieu et au moins une quête obligatoires.')
+    }
+    if (questIds.length > 30 || new Set(questIds).size !== questIds.length) {
+      throw new Error('30 associations Discord maximum, sans doublon.')
+    }
+    await this.assertSelectedDiscordQuests(questIds)
     const latitude = input.latitude, longitude = input.longitude
     if (typeof latitude !== 'number' || !Number.isFinite(latitude) || latitude < -90 || latitude > 90
       || typeof longitude !== 'number' || !Number.isFinite(longitude) || longitude < -180 || longitude > 180) {
@@ -346,12 +354,13 @@ export class Pf2MjService {
     const id = 'quest-' + randomUUID()
     await this.persistence.saveRecord('lieu', {
       id, nom: name, type: 'Lieu de quête', statut: 'Actif',
-      map_kind: 'quest', map_quest_name: questNames[0], map_quest_names: questNames,
+      map_kind: 'quest', map_quest_name: questNames[0] ?? '', map_quest_names: questNames,
       map_visible: true, map_important: false,
       map_latitude: latitude, map_longitude: longitude,
       map_icon: 'pin', map_text: '',
     })
-    return { id, name, questName: questNames[0], questNames }
+    if (questIds.length) await this.persistence.setMapQuestLinks(id, questIds)
+    return { id, name, questName: questNames[0] ?? '', questNames }
   }
 
   async manageQuestSite(id: string, body: unknown): Promise<{ id: string; action: string }> {
@@ -364,8 +373,88 @@ export class Pf2MjService {
     return { id, action: input.action }
   }
 
-  async publicMapPlaces(): Promise<Array<{ id: string; name: string; latitude: number; longitude: number; text: string; icon: string; important: boolean; quest: boolean; questName: string; questNames: string[] }>> {
-    const lieux = await this.persistence.readReference('lieux')
+  async discordQuestCatalogue() {
+    return this.persistence.listDiscordQuests()
+  }
+
+  async setQuestSiteLinks(id: string, body: unknown): Promise<{ id: string; questIds: string[] }> {
+    const input = this.asObject(body)
+    if (!Array.isArray(input.questIds) || input.questIds.some(value => typeof value !== 'string')) {
+      throw new Error('Sélectionne des quêtes du forum Discord.')
+    }
+    const questIds = input.questIds as string[]
+    await this.persistence.setMapQuestLinks(id, questIds)
+    return { id, questIds }
+  }
+
+  async createCommunityPlace(body: unknown): Promise<{ id: string }> {
+    const input = this.communityPlaceFields(body)
+    await this.assertSelectedDiscordQuests(input.questIds)
+    const id = 'community-' + randomUUID()
+    await this.persistence.saveRecord('lieu', {
+      id, nom: input.name, type: input.kind === 'quest' ? 'Lieu de quête' : 'Lieu personnalisé',
+      statut: 'Actif', map_origin: 'pj', map_kind: input.kind, map_visible: true,
+      map_important: false, map_latitude: input.latitude, map_longitude: input.longitude,
+      map_text: input.description, map_mj_text: '', map_icon: 'pin',
+      map_quest_name: '', map_quest_names: [],
+    })
+    if (input.kind === 'quest') await this.persistence.setMapQuestLinks(id, input.questIds)
+    return { id }
+  }
+
+  async updateCommunityPlace(id: string, body: unknown): Promise<{ id: string }> {
+    const input = this.communityPlaceFields(body)
+    await this.assertSelectedDiscordQuests(input.questIds)
+    await this.persistence.updateCommunityMapPlace(id, {
+      nom: input.name, type: input.kind === 'quest' ? 'Lieu de quête' : 'Lieu personnalisé',
+      map_kind: input.kind, map_latitude: input.latitude,
+      map_longitude: input.longitude, map_text: input.description,
+    })
+    if (input.kind === 'quest') await this.persistence.setMapQuestLinks(id, input.questIds)
+    else await this.persistence.clearMapQuestLinks(id)
+    return { id }
+  }
+
+  async deleteCommunityPlace(id: string): Promise<{ id: string }> {
+    await this.persistence.updateCommunityMapPlace(id, null)
+    return { id }
+  }
+
+  private async assertSelectedDiscordQuests(ids: string[]): Promise<void> {
+    if (!ids.length) return
+    const quests = await this.persistence.listDiscordQuests()
+    const known = new Set(quests.map(quest => quest.id))
+    if (ids.some(id => !known.has(id))) throw new Error('Une quête Discord sélectionnée n’existe plus.')
+  }
+
+  private communityPlaceFields(body: unknown): {
+    name: string; kind: 'quest' | 'custom'; description: string;
+    latitude: number; longitude: number; questIds: string[];
+  } {
+    const input = this.asObject(body)
+    const name = typeof input.name === 'string' ? input.name.trim() : ''
+    const description = typeof input.description === 'string' ? input.description.trim() : ''
+    if (!name || name.length > 140 || description.length > 4000) throw new Error('Nom/description invalide.')
+    if (input.kind !== 'quest' && input.kind !== 'custom') throw new Error('Type de lieu invalide.')
+    const latitude = input.latitude, longitude = input.longitude
+    if (typeof latitude !== 'number' || !Number.isFinite(latitude) || latitude < -90 || latitude > 90
+      || typeof longitude !== 'number' || !Number.isFinite(longitude) || longitude < -180 || longitude > 180) {
+      throw new Error('Coordonnées invalides.')
+    }
+    const questIds = input.questIds
+    if (!Array.isArray(questIds) || questIds.some(id => typeof id !== 'string') || questIds.length > 30
+      || new Set(questIds).size !== questIds.length) throw new Error('Sélection de quêtes invalide.')
+    if (input.kind === 'quest' && !questIds.length) throw new Error('Sélectionne au moins une quête Discord.')
+    return { name, kind: input.kind, description, latitude, longitude, questIds }
+  }
+
+  async publicMapPlaces(): Promise<Array<{ id: string; name: string; latitude: number; longitude: number; text: string; icon: string; important: boolean; quest: boolean; questName: string; questNames: string[]; questLinks: Array<{ id: string; title: string; completed: boolean; url: string }>; questUnresolved: string[]; questCompleted: boolean; origin: string; custom: boolean }>> {
+    const [lieux, associations] = await Promise.all([
+      this.persistence.readReference('lieux'),
+      this.persistence.listMapQuestLinks?.() ?? Promise.resolve([]),
+    ])
+    const linksByPlace = new Map<string, typeof associations>()
+    for (const link of associations) linksByPlace.set(link.placeId, [...(linksByPlace.get(link.placeId) ?? []), link])
     const coordinate = (value: unknown): number => typeof value === 'number' ? value : typeof value === 'string' && value.trim() ? Number(value) : Number.NaN
     return lieux.flatMap((record) => {
       if (record.map_visible !== true) return []
@@ -375,6 +464,11 @@ export class Pf2MjService {
       const id = typeof record.id === 'string' ? record.id.trim() : ''
       const name = typeof record.nom === 'string' ? record.nom.trim() : ''
       if (!id || !name) return []
+      const linked = linksByPlace.get(id) ?? []
+      const manualNames = record.map_kind === 'quest' ? this.questNames(record.map_quest_names, record.map_quest_name) : []
+      const matchedLegacy = new Set(linked.map(link => link.legacyName).filter(Boolean))
+      const unresolved = manualNames.filter(label => !matchedLegacy.has(label))
+      const questLinks = linked.map(link => ({ id: link.questId, title: link.title, completed: link.completed, url: link.url }))
       return [{
         id,
         name,
@@ -385,13 +479,24 @@ export class Pf2MjService {
         important: record.map_important === true && record.map_kind !== 'quest',
         quest: record.map_kind === 'quest',
         questName: record.map_kind === 'quest' && typeof record.map_quest_name === 'string' ? record.map_quest_name.trim() : '',
-        questNames: record.map_kind === 'quest' ? this.questNames(record.map_quest_names, record.map_quest_name) : [],
+        questNames: manualNames,
+        questLinks,
+        questUnresolved: unresolved,
+        questCompleted: record.map_kind === 'quest' && questLinks.length > 0
+          && unresolved.length === 0 && questLinks.every(link => link.completed),
+        origin: record.map_origin === 'pj' ? 'pj' : 'mj',
+        custom: record.map_kind === 'custom',
       }]
     }).sort((left, right) => left.name.localeCompare(right.name, 'fr'))
   }
 
   async mjLightMapPlaces(): Promise<Array<{ id: string; name: string; latitude: number; longitude: number; text: string; mjText: string; icon: string; important: boolean; quest: boolean; questName: string; questNames: string[] }>> {
-    const lieux = await this.persistence.readReference('lieux')
+    const [lieux, associations] = await Promise.all([
+      this.persistence.readReference('lieux'),
+      this.persistence.listMapQuestLinks?.() ?? Promise.resolve([]),
+    ])
+    const linksByPlace = new Map<string, typeof associations>()
+    for (const link of associations) linksByPlace.set(link.placeId, [...(linksByPlace.get(link.placeId) ?? []), link])
     const coordinate = (value: unknown): number => typeof value === 'number' ? value : typeof value === 'string' && value.trim() ? Number(value) : Number.NaN
     return lieux.flatMap((record) => {
       if (record.map_visible !== true) return []
@@ -401,6 +506,11 @@ export class Pf2MjService {
       const id = typeof record.id === 'string' ? record.id.trim() : ''
       const name = typeof record.nom === 'string' ? record.nom.trim() : ''
       if (!id || !name) return []
+      const linked = linksByPlace.get(id) ?? []
+      const manualNames = record.map_kind === 'quest' ? this.questNames(record.map_quest_names, record.map_quest_name) : []
+      const matchedLegacy = new Set(linked.map(link => link.legacyName).filter(Boolean))
+      const unresolved = manualNames.filter(label => !matchedLegacy.has(label))
+      const questLinks = linked.map(link => ({ id: link.questId, title: link.title, completed: link.completed, url: link.url }))
       return [{
         id,
         name,
@@ -412,7 +522,13 @@ export class Pf2MjService {
         important: record.map_important === true && record.map_kind !== 'quest',
         quest: record.map_kind === 'quest',
         questName: record.map_kind === 'quest' && typeof record.map_quest_name === 'string' ? record.map_quest_name.trim() : '',
-        questNames: record.map_kind === 'quest' ? this.questNames(record.map_quest_names, record.map_quest_name) : [],
+        questNames: manualNames,
+        questLinks,
+        questUnresolved: unresolved,
+        questCompleted: record.map_kind === 'quest' && questLinks.length > 0
+          && unresolved.length === 0 && questLinks.every(link => link.completed),
+        origin: record.map_origin === 'pj' ? 'pj' : 'mj',
+        custom: record.map_kind === 'custom',
       }]
     }).sort((left, right) => left.name.localeCompare(right.name, 'fr'))
   }

@@ -14,7 +14,7 @@ import {
 } from 'discord.js'
 import { DiscordCommandsService } from './DiscordCommandsService'
 import { pf2DiscordIdForPlayer } from './Pf2PlayerIdentity'
-import { Pf2PersistenceService, type Pf2Session, type Pf2SessionInput } from '../pf2-storage/Pf2PersistenceService'
+import { Pf2PersistenceService, type DiscordQuestSnapshot, type Pf2Session, type Pf2SessionInput } from '../pf2-storage/Pf2PersistenceService'
 import { FoundryRelayService } from '../foundry/FoundryRelayService'
 import { buildSummaryRewardLedger } from '../pf2-sessions/Pf2CareerXp'
 import { shortSummaryForDiscord } from '../pf2-sessions/ShortSummaryMarkup'
@@ -42,6 +42,9 @@ export type DiscordFactionPublication = { status: 'sent' | 'failed'; messageId?:
 export class DiscordService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(DiscordService.name)
   private client: Client | null = null
+  private questSyncTimer: ReturnType<typeof setInterval> | null = null
+  private questSyncRunning = false
+  private readonly questForumId = process.env['PF2_DISCORD_QUEST_FORUM_CHANNEL_ID']?.trim() || '1536259632455094412'
 
   constructor(
     @Inject(forwardRef(() => DiscordCommandsService)) private readonly commands: DiscordCommandsService,
@@ -119,6 +122,15 @@ export class DiscordService implements OnModuleInit, OnModuleDestroy {
         )
 
       this.client = client
+      // One initial read, then a lightweight five-minute reconciliation.
+      // The timer runs independently from commands like /choix-quete.
+      void this.refreshQuestCatalogue().catch(error =>
+        this.logger.warn('Initial quest sync failed: ' + (error instanceof Error ? error.message : String(error))))
+      this.questSyncTimer = setInterval(() => {
+        void this.refreshQuestCatalogue().catch(error =>
+          this.logger.warn('Quest sync failed (cache preserved): ' + (error instanceof Error ? error.message : String(error))))
+      }, 5 * 60 * 1000)
+      this.questSyncTimer.unref?.()
 
       this.logger.log(
         'Discord slash commands registered for the configured guild.',
@@ -135,8 +147,52 @@ export class DiscordService implements OnModuleInit, OnModuleDestroy {
   }
 
   async onModuleDestroy(): Promise<void> {
+    if (this.questSyncTimer) clearInterval(this.questSyncTimer)
+    this.questSyncTimer = null
     this.client?.destroy()
     this.client = null
+  }
+
+  async refreshQuestCatalogue(): Promise<void> {
+    if (this.questSyncRunning) return
+    const client = this.client
+    if (!client?.isReady()) return
+    this.questSyncRunning = true
+    try {
+      const forum = await client.channels.fetch(this.questForumId)
+      if (!forum || forum.type !== ChannelType.GuildForum) throw new Error('Forum Discord des quêtes inaccessible.')
+      const completedTagId = forum.availableTags.find(tag =>
+        tag.name.trim().toLocaleLowerCase('fr') === 'terminée')?.id
+      if (!completedTagId) throw new Error('Tag Discord « Terminée » absent : synchronisation annulée.')
+      const discovered = new Map<string, any>()
+      const active = await forum.threads.fetchActive()
+      for (const thread of active.threads.values()) {
+        if (thread.parentId === forum.id) discovered.set(thread.id, thread)
+      }
+      let before: Date | undefined
+      do {
+        const archived = await forum.threads.fetchArchived({
+          type: 'public', limit: 100, ...(before ? { before } : {}),
+        })
+        for (const thread of archived.threads.values()) discovered.set(thread.id, thread)
+        const last = archived.threads.last()
+        before = archived.hasMore && last?.archiveTimestamp ? new Date(last.archiveTimestamp) : undefined
+        if (!before) break
+      } while (before)
+
+      const snapshots: DiscordQuestSnapshot[] = [...discovered.values()].map(thread => ({
+        id: thread.id,
+        title: String(thread.name ?? '').trim() || 'Quête sans titre',
+        completed: (thread.appliedTags ?? []).includes(completedTagId),
+        archived: Boolean(thread.archived),
+        url: `https://discord.com/channels/${forum.guildId}/${thread.id}`,
+        createdAt: new Date(Number(thread.createdTimestamp ?? Date.now())).toISOString(),
+      }))
+      await this.persistence.saveDiscordQuestSnapshots(snapshots)
+      this.logger.log(`Quêtes Discord synchronisées : ${snapshots.length} fils (${snapshots.filter(q => q.completed).length} terminés).`)
+    } finally {
+      this.questSyncRunning = false
+    }
   }
 
   /** Source unique de vérité pour publier / remettre en brouillon une séance. */

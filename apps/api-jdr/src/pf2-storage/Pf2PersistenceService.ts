@@ -57,6 +57,14 @@ export type JournalRevelation = { journalNumber: number; revealedAt: string; rev
 export type JournalDefinitionRecord = { number: number; title: string; content: string; dependencies: number[]; createdAt: string; updatedAt: string }
 export type WikiAccountLink = { discordUserId: string; wikiUsername: string; createdAt: string; updatedAt: string }
 export type Pf2PlayerIdentityRow = { discordUserId: string; playerName: string }
+export type DiscordQuestSnapshot = {
+  id: string; title: string; completed: boolean; archived: boolean;
+  url: string; createdAt: string;
+}
+export type MapQuestLink = {
+  placeId: string; questId: string; legacyName: string | null;
+  title: string; completed: boolean; archived: boolean; url: string;
+}
 export type ConsumedWikiLoginGrant = { discordUserId: string; wikiUsername: string }
 
 @Injectable()
@@ -276,6 +284,98 @@ export class Pf2PersistenceService implements OnModuleInit {
         [grantHash],
       )
       return { discordUserId: row.discordUserId, wikiUsername: row.wikiUsername }
+    })
+  }
+
+  async saveDiscordQuestSnapshots(quests: DiscordQuestSnapshot[]): Promise<void> {
+    // Incomplete/failed fetches must NEVER mark missing threads as completed or
+    // delete old rows. Idempotent upsert touches only returned threads.
+    await this.dataSource.transaction(async manager => {
+      for (const quest of quests) {
+        if (!/^\d{15,22}$/.test(quest.id) || !quest.title.trim() || quest.title.length > 300) {
+          throw new Error('Quête Discord invalide.')
+        }
+        await manager.query(
+          `INSERT INTO pf2_discord_quest (thread_id, title, completed, archived, url, discord_created_at, synced_at)
+           VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+           ON CONFLICT(thread_id) DO UPDATE SET title=excluded.title, completed=excluded.completed,
+           archived=excluded.archived, url=excluded.url, synced_at=CURRENT_TIMESTAMP`,
+          [quest.id, quest.title, quest.completed ? 1 : 0, quest.archived ? 1 : 0, quest.url, quest.createdAt],
+        )
+      }
+    })
+  }
+
+  async listDiscordQuests(): Promise<Array<DiscordQuestSnapshot & { syncedAt: string }>> {
+    const rows = await this.dataSource.query(
+      'SELECT thread_id AS id, title, completed, archived, url, discord_created_at AS createdAt, synced_at AS syncedAt FROM pf2_discord_quest ORDER BY completed, title',
+    ) as Array<{ id: string; title: string; completed: number; archived: number; url: string; createdAt: string; syncedAt: string }>
+    return rows.map(row => ({ ...row, completed: row.completed === 1, archived: row.archived === 1 }))
+  }
+
+  async listMapQuestLinks(): Promise<MapQuestLink[]> {
+    const rows = await this.dataSource.query(
+      `SELECT l.place_id AS placeId, l.thread_id AS questId, l.legacy_name AS legacyName,
+        q.title, q.completed, q.archived, q.url FROM pf2_map_place_quest l
+        INNER JOIN pf2_discord_quest q ON q.thread_id = l.thread_id
+        ORDER BY l.place_id, q.title`,
+    ) as Array<Omit<MapQuestLink, 'completed'|'archived'> & {completed: number; archived: number}>
+    return rows.map(row => ({ ...row, completed: row.completed === 1, archived: row.archived === 1 }))
+  }
+
+  async setMapQuestLinks(placeId: string, ids: string[]): Promise<void> {
+    if (ids.length > 30 || new Set(ids).size !== ids.length || ids.some(id => !/^\d{15,22}$/.test(id))) {
+      throw new Error('Liste de quêtes Discord invalide.')
+    }
+    await this.dataSource.transaction(async manager => {
+      const found = await manager.query(
+        "SELECT payload FROM pf2_record WHERE kind='lieu' AND id=?", [placeId],
+      ) as Array<{payload: string}>
+      if (!found.length || JSON.parse(found[0].payload).map_kind !== 'quest') {
+        throw new Error('Lieu de quête introuvable.')
+      }
+      if (ids.length) {
+        const exists = await manager.query(
+          `SELECT thread_id FROM pf2_discord_quest WHERE thread_id IN (${ids.map(() => '?').join(',')})`, ids,
+        ) as Array<{ thread_id: string }>
+        if (exists.length !== ids.length) throw new Error('Quête Discord introuvable dans le catalogue synchronisé.')
+      }
+      // An explicit save from the new selector replaces obsolete manual names.
+      // The one-time reconciliation writes legacy_name directly into SQLite,
+      // preserving unresolved historical labels until the user reviews them.
+      await manager.query('DELETE FROM pf2_map_place_quest WHERE place_id=?', [placeId])
+      for (const id of ids) await manager.query(
+        'INSERT INTO pf2_map_place_quest (place_id, thread_id, legacy_name) VALUES (?, ?, NULL)',
+        [placeId, id],
+      )
+      const record = JSON.parse(found[0].payload) as Record<string, unknown>
+      await manager.query(
+        "UPDATE pf2_record SET payload=?, updated_at=CURRENT_TIMESTAMP WHERE kind='lieu' AND id=?",
+        [JSON.stringify({ ...record, map_quest_names: [], map_quest_name: '' }), placeId],
+      )
+    })
+  }
+
+  async clearMapQuestLinks(placeId: string): Promise<void> {
+    await this.dataSource.query('DELETE FROM pf2_map_place_quest WHERE place_id=?', [placeId])
+  }
+
+  async updateCommunityMapPlace(id: string, patch: Record<string, unknown> | null): Promise<void> {
+    await this.dataSource.transaction(async manager => {
+      const rows = await manager.query(
+        "SELECT payload FROM pf2_record WHERE kind='lieu' AND id=?", [id],
+      ) as Array<{payload: string}>
+      if (!rows.length) throw new Error('Lieu introuvable.')
+      const record = JSON.parse(rows[0].payload) as Record<string, unknown>
+      if (record.map_origin !== 'pj') throw new Error('Seuls les lieux ajoutés par les PJ sont modifiables depuis la carte PJ.')
+      if (patch === null) {
+        await manager.query('DELETE FROM pf2_map_place_quest WHERE place_id=?', [id])
+        await manager.query("DELETE FROM pf2_record WHERE kind='lieu' AND id=?", [id])
+      } else {
+        const next = { ...record, ...patch }
+        await manager.query("UPDATE pf2_record SET name=?,payload=?,updated_at=CURRENT_TIMESTAMP WHERE kind='lieu' AND id=?",
+          [next.nom, JSON.stringify(next), id])
+      }
     })
   }
 
@@ -697,9 +797,12 @@ export class Pf2PersistenceService implements OnModuleInit {
     if (action === 'set-quests') {
       if (!questNames?.length) throw new Error('Au moins une quête est obligatoire.')
       await this.saveRecord('lieu', { ...place, map_quest_name: questNames[0], map_quest_names: questNames })
+      await this.clearMapQuestLinks(id)
     } else if (action === 'convert') {
       await this.saveRecord('lieu', { ...place, map_kind: 'normal', map_quest_name: '', map_quest_names: [], map_important: false })
+      await this.clearMapQuestLinks(id)
     } else {
+      await this.clearMapQuestLinks(id)
       await this.dataSource.query(
         "DELETE FROM pf2_record WHERE kind = 'lieu' AND id = ? AND json_extract(payload, '$.map_kind') = 'quest'", [id],
       )
@@ -1273,6 +1376,19 @@ export class Pf2PersistenceService implements OnModuleInit {
           'Azlant avait effectivement atteint une puissance exceptionnelle ; son erreur fut de finir par croire qu’une telle puissance le rendait naturellement supérieur et presque invulnérable.'
         ],
       )
+    })
+
+    await this.applyMigration('039-discord-quest-catalogue-and-map-links', async manager => {
+      await manager.query(`CREATE TABLE IF NOT EXISTS pf2_discord_quest (
+        thread_id TEXT PRIMARY KEY, title TEXT NOT NULL, completed INTEGER NOT NULL DEFAULT 0,
+        archived INTEGER NOT NULL DEFAULT 0, url TEXT NOT NULL, discord_created_at TEXT NOT NULL,
+        synced_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)`)
+      await manager.query(`CREATE TABLE IF NOT EXISTS pf2_map_place_quest (
+        place_id TEXT NOT NULL, thread_id TEXT NOT NULL, legacy_name TEXT,
+        created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        PRIMARY KEY(place_id,thread_id),
+        FOREIGN KEY(thread_id) REFERENCES pf2_discord_quest(thread_id))`)
+      await manager.query('CREATE INDEX IF NOT EXISTS idx_map_place_quest_thread ON pf2_map_place_quest(thread_id)')
     })
 
     await this.assertDatabaseIntegrity(this.dataSource, 'base SQLite après migrations')

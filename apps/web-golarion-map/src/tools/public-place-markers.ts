@@ -1,6 +1,7 @@
 import { Marker, Popup } from 'maplibre-gl'
 import { GolarionMap } from './GolarionMap'
 import { createFavoriteButton, type FavoriteTarget } from './favorite-button'
+import { showPlaceDialog, showQuestLinksDialog } from './quest-place-dialog'
 
 type PublicPlace = {
   id: string
@@ -14,6 +15,11 @@ type PublicPlace = {
   quest: boolean
   questName?: string
   questNames?: string[]
+  questLinks?: Array<{ id: string; title: string; completed: boolean; url: string }>
+  questUnresolved?: string[]
+  questCompleted?: boolean
+  origin?: string
+  custom?: boolean
   fid?: number
   category?: string
   label?: string
@@ -32,13 +38,13 @@ const glyphs: Record<string, string> = {
 function markerElement(place: PublicPlace): HTMLButtonElement {
   const button = document.createElement('button')
   button.type = 'button'
-  button.className = `pf2-public-place-marker${place.quest ? ' is-quest' : ''}${place.important ? ' is-favorite' : ''}`
+  button.className = `pf2-public-place-marker${place.quest ? ' is-quest' : ''}${place.custom ? ' is-custom' : ''}${place.important ? ' is-favorite' : ''}`
   button.title = place.name
   button.setAttribute('aria-label', place.name)
 
   const icon = document.createElement('span')
   icon.className = 'pf2-public-place-icon'
-  icon.textContent = place.quest ? '★' : (glyphs[place.icon] ?? glyphs.pin)
+  icon.textContent = place.quest ? '★' : place.custom ? '⌑' : (glyphs[place.icon] ?? glyphs.pin)
 
   const label = document.createElement('span')
   label.className = 'pf2-public-place-label'
@@ -55,59 +61,42 @@ function basicPopupContent(place: PublicPlace, mode: 'pj' | 'mj-light' | 'mj'): 
   title.textContent = place.name
   root.appendChild(title)
   if (place.quest) {
+    const linked = place.questLinks ?? []
+    const unresolved = place.questUnresolved ?? []
     const names = Array.isArray(place.questNames) && place.questNames.length
-      ? place.questNames : [place.questName || place.name]
+      ? place.questNames : place.questName ? [place.questName] : []
     const heading = document.createElement('p')
-    heading.textContent = `★ ${names.length} quête${names.length > 1 ? 's' : ''} associée${names.length > 1 ? 's' : ''}`
+    heading.textContent = `★ ${linked.length + unresolved.length} quête${linked.length + unresolved.length > 1 ? 's' : ''} associée${linked.length + unresolved.length > 1 ? 's' : ''}`
     root.appendChild(heading)
     const list = document.createElement('ul')
     list.className = 'pf2-quest-names'
-    for (const questName of names) {
+    for (const quest of linked) {
       const item = document.createElement('li')
-      item.textContent = questName
+      const link = document.createElement('a')
+      link.textContent = quest.title
+      link.href = quest.url
+      link.target = '_blank'
+      link.rel = 'noopener noreferrer'
+      item.append(link, document.createTextNode(quest.completed ? ' — Terminée' : ' — En cours'))
+      if (quest.completed) item.classList.add('is-completed')
+      list.appendChild(item)
+    }
+    for (const name of unresolved.length ? unresolved : linked.length ? [] : names) {
+      const item = document.createElement('li')
+      item.textContent = name + ' — Association Discord à vérifier'
+      item.classList.add('is-unresolved')
       list.appendChild(item)
     }
     root.appendChild(list)
     if (mode !== 'pj') {
-      const editor = document.createElement('details')
-      editor.className = 'pf2-quest-name-editor'
-      const summary = document.createElement('summary')
-      summary.textContent = 'Modifier les quêtes associées'
-      const label = document.createElement('label')
-      label.textContent = 'Une quête par ligne'
-      const textarea = document.createElement('textarea')
-      textarea.rows = Math.min(8, Math.max(3, names.length + 1))
-      textarea.value = names.join('\n')
-      label.appendChild(textarea)
-      const save = document.createElement('button')
-      save.type = 'button'
-      save.textContent = 'Enregistrer les quêtes'
-      const status = document.createElement('span')
-      status.setAttribute('role', 'status')
-      save.addEventListener('click', async () => {
-        const questNames = [...new Set(textarea.value.split(/\r?\n/).map(name => name.trim()).filter(Boolean))]
-        if (!questNames.length || questNames.length > 30 || questNames.some(name => name.length > 180)) {
-          status.textContent = 'Entre 1 et 30 quêtes, 180 caractères maximum par quête.'
-          return
-        }
-        const api = (window.GOLARION_MAP_CONFIG?.placesUrl ?? '').replace(/\/places\/?$/, '/quests')
-        if (!api) { status.textContent = 'API indisponible'; return }
-        save.disabled = true
-        status.textContent = 'Enregistrement…'
-        try {
-          const response = await fetch(`${api}/${encodeURIComponent(place.id)}`, {
-            method: 'PUT', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action: 'set-quests', questNames }),
-          })
-          if (!response.ok) throw new Error(await response.text())
-          window.location.reload()
-        } catch (error) {
-          save.disabled = false
-          status.textContent = error instanceof Error ? error.message : String(error)
-        }
+      const edit = document.createElement('button')
+      edit.type = 'button'
+      edit.className = 'pf2-place-edit-quests'
+      edit.textContent = 'Associer / modifier les quêtes Discord'
+      edit.onclick = () => void showQuestLinksDialog({
+        id: place.id, name: place.name, questLinks: linked, questUnresolved: unresolved,
       })
-      editor.append(summary, label, save, status)
-      root.appendChild(editor)
+      root.appendChild(edit)
     }
   }
   if (place.text) {
@@ -122,6 +111,12 @@ function basicPopupContent(place: PublicPlace, mode: 'pj' | 'mj-light' | 'mj'): 
     : { kind: 'place', id: place.id }
   if (!place.quest) {
     root.appendChild(createFavoriteButton(target, place.important))
+    if (place.custom) {
+      const type = document.createElement('p')
+      type.className = 'pf2-place-origin'
+      type.textContent = place.origin === 'pj' ? '⌑ Lieu personnalisé ajouté par les PJ' : '⌑ Lieu personnalisé MJ'
+      root.appendChild(type)
+    }
   } else if (mode !== 'pj') {
     const controls = document.createElement('div')
     controls.className = 'pf2-quest-actions'
@@ -155,6 +150,20 @@ function basicPopupContent(place: PublicPlace, mode: 'pj' | 'mj-light' | 'mj'): 
     button('Supprimer le lieu de quête', 'delete')
     controls.appendChild(status)
     root.appendChild(controls)
+  }
+  if (place.origin === 'pj') {
+    const edit = document.createElement('button')
+    edit.type = 'button'
+    edit.className = 'pf2-place-edit-community'
+    edit.textContent = 'Modifier ou supprimer ce lieu ajouté par les PJ'
+    edit.onclick = () => void showPlaceDialog({
+      latitude: place.latitude, longitude: place.longitude,
+    }, mode, {
+      id: place.id, name: place.name, latitude: place.latitude, longitude: place.longitude,
+      text: place.text, origin: 'pj', quest: place.quest, custom: Boolean(place.custom),
+      questLinks: place.questLinks ?? [],
+    })
+    root.appendChild(edit)
   }
   return root
 }
@@ -284,19 +293,20 @@ export async function addPublicPlaceMarkers(gmap: GolarionMap, placesUrl: string
       return { place, marker, element }
     })
 
+    let showCompleted = false
     const updateLabelDensity = () => {
       const zoom = gmap.map.getZoom()
       // Only quest sites stay visible at world scale. Favorites use exactly
       // the same zoom threshold as ordinary locations.
       for (const { element, place } of entries) {
-        element.style.display = place.quest || zoom >= 5.5 ? '' : 'none'
+        element.style.display = place.quest ? (place.questCompleted && !showCompleted ? 'none' : '') : zoom >= 5.5 ? '' : 'none'
         element.classList.toggle('labels-hidden', zoom < (place.quest ? 6.5 : 5.5))
       }
     }
     updateLabelDensity()
     gmap.map.on('zoomend', updateLabelDensity)
 
-    type JumpToPlace = { id: string; name: string; longitude: number; latitude: number; open: () => void }
+    type JumpToPlace = { id: string; name: string; longitude: number; latitude: number; completed?: boolean; open: () => void }
     const makeList = (title: string, mark: string, places: JumpToPlace[]) => {
       const control = document.createElement('div')
       control.className = 'pf2-campaign-places-control maplibregl-ctrl'
@@ -312,13 +322,16 @@ export async function addPublicPlaceMarkers(gmap: GolarionMap, placesUrl: string
         list.hidden = !list.hidden
         toggle.setAttribute('aria-expanded', String(!list.hidden))
       }
-      if (!places.length) {
-        const empty = document.createElement('p')
-        empty.className = 'pf2-campaign-places-empty'
-        empty.textContent = 'Aucun lieu pour le moment'
-        list.appendChild(empty)
-      }
-      for (const place of [...places].sort((a,b) => a.name.localeCompare(b.name, 'fr'))) {
+      const refresh = (items: JumpToPlace[]) => {
+        list.replaceChildren()
+        toggle.textContent = `${mark} ${title} (${items.length})`
+        if (!items.length) {
+          const empty = document.createElement('p')
+          empty.className = 'pf2-campaign-places-empty'
+          empty.textContent = 'Aucun lieu pour le moment'
+          list.appendChild(empty)
+        }
+        for (const place of [...items].sort((a,b) => a.name.localeCompare(b.name, 'fr'))) {
         const button = document.createElement('button')
         button.type = 'button'
         button.textContent = `${mark} ${place.name}`
@@ -332,21 +345,42 @@ export async function addPublicPlaceMarkers(gmap: GolarionMap, placesUrl: string
           })
           place.open()
         }
-        list.appendChild(button)
+          list.appendChild(button)
+        }
       }
+      refresh(places)
       control.append(toggle, list)
       gmap.map.addControl({
         onAdd: () => control,
         onRemove: () => control.remove(),
       }, 'top-left')
+      return refresh
     }
 
     const questPlaces = entries.filter(entry => entry.place.quest).map(entry => ({
       id: entry.place.id, name: entry.place.name,
       longitude: entry.place.longitude, latitude: entry.place.latitude,
+      completed: Boolean(entry.place.questCompleted),
       open: () => entry.marker.togglePopup(),
     }))
-    makeList('Lieux de quête', '★', questPlaces)
+    const visibleQuestPlaces = () => questPlaces.filter(place => showCompleted || !place.completed)
+    const refreshQuestList = makeList('Lieux de quête', '★', visibleQuestPlaces())
+
+    const completeControl = document.createElement('label')
+    completeControl.className = 'pf2-campaign-completed-control maplibregl-ctrl'
+    const completedInput = document.createElement('input')
+    completedInput.type = 'checkbox'
+    completedInput.checked = false
+    completeControl.append(completedInput, document.createTextNode(' Afficher les quêtes terminées'))
+    completedInput.addEventListener('change', () => {
+      showCompleted = completedInput.checked
+      updateLabelDensity()
+      refreshQuestList(visibleQuestPlaces())
+    })
+    gmap.map.addControl({
+      onAdd: () => completeControl,
+      onRemove: () => completeControl.remove(),
+    }, 'top-left')
 
     const favoritePlaces: JumpToPlace[] = entries
       .filter(entry => entry.place.important && !entry.place.quest)
