@@ -324,11 +324,20 @@ export class Pf2MjService {
     throw new Error('Type de lieu invalide.')
   }
 
-  async createQuestSite(body: unknown): Promise<{ id: string; name: string; questName: string }> {
+  private questNames(input: unknown, fallback?: unknown): string[] {
+    const raw: unknown[] = Array.isArray(input) ? input
+      : typeof fallback === 'string' && fallback.trim() ? [fallback] : []
+    if (raw.length > 30 || raw.some(item => typeof item !== 'string' || item.trim().length > 180)) {
+      throw new Error('Liste de quêtes invalide (30 quêtes maximum, 180 caractères par nom).')
+    }
+    return [...new Set(raw.map(item => String(item).trim()).filter(Boolean))]
+  }
+
+  async createQuestSite(body: unknown): Promise<{ id: string; name: string; questName: string; questNames: string[] }> {
     const input = this.asObject(body)
     const name = typeof input.name === 'string' ? input.name.trim() : ''
-    const questName = typeof input.questName === 'string' ? input.questName.trim() : ''
-    if (!name || name.length > 140 || !questName || questName.length > 180) throw new Error('Nom de lieu et nom de quête obligatoires.')
+    const questNames = this.questNames(input.questNames, input.questName)
+    if (!name || name.length > 140 || !questNames.length) throw new Error('Nom de lieu et au moins une quête obligatoires.')
     const latitude = input.latitude, longitude = input.longitude
     if (typeof latitude !== 'number' || !Number.isFinite(latitude) || latitude < -90 || latitude > 90
       || typeof longitude !== 'number' || !Number.isFinite(longitude) || longitude < -180 || longitude > 180) {
@@ -337,23 +346,25 @@ export class Pf2MjService {
     const id = 'quest-' + randomUUID()
     await this.persistence.saveRecord('lieu', {
       id, nom: name, type: 'Lieu de quête', statut: 'Actif',
-      map_kind: 'quest', map_quest_name: questName,
+      map_kind: 'quest', map_quest_name: questNames[0], map_quest_names: questNames,
       map_visible: true, map_important: false,
       map_latitude: latitude, map_longitude: longitude,
       map_icon: 'pin', map_text: '',
     })
-    return { id, name, questName }
+    return { id, name, questName: questNames[0], questNames }
   }
 
   async manageQuestSite(id: string, body: unknown): Promise<{ id: string; action: string }> {
     if (!id || id.length > 180) throw new Error('Identifiant invalide.')
     const input = this.asObject(body)
-    if (input.action !== 'convert' && input.action !== 'delete') throw new Error('Action inconnue.')
-    await this.persistence.manageQuestPlace(id, input.action)
+    if (input.action !== 'convert' && input.action !== 'delete' && input.action !== 'set-quests') throw new Error('Action inconnue.')
+    const questNames = input.action === 'set-quests' ? this.questNames(input.questNames) : undefined
+    if (input.action === 'set-quests' && !questNames?.length) throw new Error('Un lieu de quête doit avoir au moins une quête.')
+    await this.persistence.manageQuestPlace(id, input.action, questNames)
     return { id, action: input.action }
   }
 
-  async publicMapPlaces(): Promise<Array<{ id: string; name: string; latitude: number; longitude: number; text: string; icon: string; important: boolean; quest: boolean; questName: string }>> {
+  async publicMapPlaces(): Promise<Array<{ id: string; name: string; latitude: number; longitude: number; text: string; icon: string; important: boolean; quest: boolean; questName: string; questNames: string[] }>> {
     const lieux = await this.persistence.readReference('lieux')
     const coordinate = (value: unknown): number => typeof value === 'number' ? value : typeof value === 'string' && value.trim() ? Number(value) : Number.NaN
     return lieux.flatMap((record) => {
@@ -374,11 +385,12 @@ export class Pf2MjService {
         important: record.map_important === true && record.map_kind !== 'quest',
         quest: record.map_kind === 'quest',
         questName: record.map_kind === 'quest' && typeof record.map_quest_name === 'string' ? record.map_quest_name.trim() : '',
+        questNames: record.map_kind === 'quest' ? this.questNames(record.map_quest_names, record.map_quest_name) : [],
       }]
     }).sort((left, right) => left.name.localeCompare(right.name, 'fr'))
   }
 
-  async mjLightMapPlaces(): Promise<Array<{ id: string; name: string; latitude: number; longitude: number; text: string; mjText: string; icon: string; important: boolean; quest: boolean; questName: string }>> {
+  async mjLightMapPlaces(): Promise<Array<{ id: string; name: string; latitude: number; longitude: number; text: string; mjText: string; icon: string; important: boolean; quest: boolean; questName: string; questNames: string[] }>> {
     const lieux = await this.persistence.readReference('lieux')
     const coordinate = (value: unknown): number => typeof value === 'number' ? value : typeof value === 'string' && value.trim() ? Number(value) : Number.NaN
     return lieux.flatMap((record) => {
@@ -400,6 +412,7 @@ export class Pf2MjService {
         important: record.map_important === true && record.map_kind !== 'quest',
         quest: record.map_kind === 'quest',
         questName: record.map_kind === 'quest' && typeof record.map_quest_name === 'string' ? record.map_quest_name.trim() : '',
+        questNames: record.map_kind === 'quest' ? this.questNames(record.map_quest_names, record.map_quest_name) : [],
       }]
     }).sort((left, right) => left.name.localeCompare(right.name, 'fr'))
   }
