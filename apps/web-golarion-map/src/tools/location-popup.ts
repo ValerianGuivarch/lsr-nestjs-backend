@@ -123,7 +123,7 @@ export function createMapSourceCurationPanel(data: SourceCuration): HTMLElement 
   important.type = 'checkbox'
   important.checked = data.important
   const importantText = document.createElement('span')
-  importantText.textContent = '★ Lieu important pour tous les PJ'
+  importantText.textContent = '☆ Favori partagé (texte doré, zoom habituel)'
   importantLabel.append(important, importantText)
   panel.appendChild(importantLabel)
   important.addEventListener('change', () => {
