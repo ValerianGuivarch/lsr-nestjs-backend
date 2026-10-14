@@ -24,7 +24,7 @@ export function addAbsalomOverlay(map: MapLibreMap, withToggle = true, allowCali
   let editing = false
   let saved: Settings = { corners: clone(corners), hideLabels }
   let handles: Marker[] = []
-  let originalTextOpacity: unknown = undefined
+  let originalTextOpacity: import('maplibre-gl').DataDrivenPropertyValueSpecification<number> | undefined
   let districtsHidden = false
   const panel = document.createElement('div')
   panel.className = 'pf2-absalom-calibration'
@@ -70,7 +70,7 @@ export function addAbsalomOverlay(map: MapLibreMap, withToggle = true, allowCali
     const shouldHide = enabled && hideLabels && nearAbsalom()
     if (shouldHide === districtsHidden) return
     if (shouldHide) {
-      originalTextOpacity = map.getPaintProperty('symbol_labels', 'text-opacity')
+      originalTextOpacity = map.getPaintProperty('symbol_labels', 'text-opacity') as import('maplibre-gl').DataDrivenPropertyValueSpecification<number> | undefined
       map.setPaintProperty('symbol_labels', 'text-opacity', [
         'case',
         ['in', ['get', 'label'], ['literal', ABSALOM_DISTRICT_LABELS]],
