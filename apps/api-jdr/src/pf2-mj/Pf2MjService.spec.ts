@@ -411,6 +411,28 @@ describe('Pf2MjService', () => {
       expect(districts).toBeUndefined()
     })
 
+    it('masque seulement les quartiers d’Absalom dans la recherche PJ, sans masquer les autres villes', async () => {
+      const overrides = ['Ascendant Court', 'Old Korvosa'].map(label => ({
+        sourceKey: `search:districts:${label}`,
+        category: 'districts', label, sourceFid: null,
+        visibility: 'visible', publicLabel: '', publicText: '', mjText: '', important: false,
+      }))
+      const { service } = serviceFor({}, pnj, {
+        listMapVisibilityOverrides: jest.fn().mockResolvedValue(overrides),
+      })
+      const search = await service.publicMapSearch()
+      const districts = search.find(group => group.category === 'districts')
+      expect(districts?.entries).toEqual(expect.arrayContaining([
+        expect.objectContaining({ label: 'Old Korvosa' }),
+      ]))
+      expect(districts?.entries).not.toEqual(expect.arrayContaining([
+        expect.objectContaining({ label: 'Ascendant Court' }),
+      ]))
+      expect(search.find(group => group.category === 'locations')?.entries).toEqual(expect.arrayContaining([
+        expect.objectContaining({ label: 'Absalom' }),
+      ]))
+    })
+
     it('enregistre un choix manuel puis permet de revenir au mode automatique', async () => {
       const overrides: any[] = []
       const listMapVisibilityOverrides = jest.fn(async () => overrides)
