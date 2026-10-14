@@ -1,4 +1,4 @@
-import { Collection } from 'discord.js'
+import { ChannelType, Collection } from 'discord.js'
 import { DiscordCommandsService } from './DiscordCommandsService'
 import { DiscordService } from './DiscordService'
 import type { Pf2Session } from '../pf2-storage/Pf2PersistenceService'
@@ -122,4 +122,70 @@ describe('DiscordService summary synchronization', () => {
     expect(stored.published).toBe(false)
   })
 
+})
+
+
+describe('Discord forum quest catalogue synchronization', () => {
+  const forumId = '1536259632455094412'
+  const guildId = '1535837285461004328'
+  const completedTagId = 'tag-terminated'
+  const threads = new Collection<string, any>([
+    ['1555323732329766982', {
+      id: '1555323732329766982', parentId: forumId,
+      name: 'Le Cartel du Sel', appliedTags: [],
+      archived: false, createdTimestamp: Date.now(),
+    }],
+    ['1553122329624715294', {
+      id: '1553122329624715294', parentId: forumId,
+      name: 'Le tueur de la rue Rose', appliedTags: [completedTagId],
+      archived: true, createdTimestamp: Date.now(),
+    }],
+  ])
+
+  const setup = (availableTags = [{ id: completedTagId, name: 'Terminée' }]) => {
+    const persist = { saveDiscordQuestSnapshots: jest.fn().mockResolvedValue(undefined) }
+    const forum = {
+      id: forumId, type: ChannelType.GuildForum, guildId,
+      availableTags,
+      threads: {
+        fetchActive: jest.fn().mockResolvedValue({ threads: new Collection([['1555323732329766982', threads.first()!]]) }),
+        fetchArchived: jest.fn().mockResolvedValue({
+          threads: new Collection([['1553122329624715294', threads.last()!]]), hasMore: false,
+        }),
+      },
+    }
+    const service = new DiscordService({} as never, {} as never, persist as never)
+    ;(service as unknown as {client: unknown}).client = {
+      isReady: () => true,
+      channels: { fetch: jest.fn().mockResolvedValue(forum) },
+    }
+    return { service, persist, forum }
+  }
+
+  it('reads active and archived threads independently from /choix-quete', async () => {
+    const { service, persist } = setup()
+    await service.refreshQuestCatalogue()
+    expect(persist.saveDiscordQuestSnapshots).toHaveBeenCalledWith(expect.arrayContaining([
+      expect.objectContaining({ id: '1555323732329766982', completed: false }),
+      expect.objectContaining({ id: '1553122329624715294', completed: true }),
+    ]))
+  })
+
+  it('preserves the stored catalogue if the completed tag is not available', async () => {
+    const { service, persist } = setup([])
+    await expect(service.refreshQuestCatalogue()).rejects.toThrow('Terminée')
+    expect(persist.saveDiscordQuestSnapshots).not.toHaveBeenCalled()
+  })
+
+  it('reflects the relaunch when the completed tag is removed', async () => {
+    const { service, persist, forum } = setup()
+    await service.refreshQuestCatalogue()
+    const updated = { ...threads.last(), appliedTags: [] }
+    forum.threads.fetchArchived.mockResolvedValueOnce({
+      threads: new Collection([[updated.id, updated]]), hasMore: false,
+    })
+    await service.refreshQuestCatalogue()
+    const second = persist.saveDiscordQuestSnapshots.mock.calls[1][0] as Array<{id:string;completed:boolean}>
+    expect(second.find(q => q.id === updated.id)?.completed).toBe(false)
+  })
 })

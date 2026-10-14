@@ -3,6 +3,7 @@ import 'maplibre-gl/dist/maplibre-gl.css';
 import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url';
 import './style.scss';
 import './absalom-controls.scss';
+import './quest-place-dialog.scss';
 
 import style from 'virtual:style';
 import MeasureControl from './tools/measure.js';
@@ -21,6 +22,7 @@ import { addSpecialURLOptions } from "./tools/special-url-options";
 import { debug } from "./utils/debug";
 import { ProjectionControl } from "./tools/ProjectionControl";
 import { addPublicPlaceMarkers } from "./tools/public-place-markers";
+import { addPlaceCreationControl } from './tools/quest-place-dialog';
 import { addPlayerSourcePoints } from "./tools/player-source-points";
 import { addPlayerCuratedLabels } from "./tools/player-curated-labels";
 import { addAbsalomOverlay } from "./tools/absalom-overlay";
@@ -113,6 +115,7 @@ export const map = new Map({
 export const golarionMap = new GolarionMap(map);
 addAbsalomOverlay(map, !startupOptions.embedded, mapAudience === 'mj');
 void addPublicPlaceMarkers(golarionMap, publicPlacesUrl, mapAudience);
+if (!startupOptions.embedded) addPlaceCreationControl(golarionMap, mapAudience);
 // Both the GM and players see every published point. The GM keeps all of
 // the original unrestricted layers in addition to the validated PJ overlays.
 void addPlayerSourcePoints(golarionMap, mapAudience);

@@ -3,6 +3,7 @@ import MeasureControl from "./measure";
 import PureContextMenu from "pure-context-menu";
 import { Options } from "../URLOptions";
 import { GolarionMap } from "./GolarionMap";
+import { showPlaceDialog } from './quest-place-dialog';
 
 export function addRightClickMenu(map: GolarionMap, measureControl: MeasureControl) {
 
@@ -15,30 +16,11 @@ export function addRightClickMenu(map: GolarionMap, measureControl: MeasureContr
         }
       },
       {
-        label: "★ Créer un lieu de quête (MJ)",
-        callback: async () => {
+        label: "★ Créer un lieu de quête ou personnalisé (MJ)",
+        callback: () => {
           if (!latLong) return;
-          const name = window.prompt('Nom du lieu de quête (visible sur la carte) :')?.trim();
-          if (!name) return;
-          const input = window.prompt('Noms des quêtes associées (séparés par un point-virgule) :', name)?.trim();
-          const questNames = [...new Set((input || '').split(';').map(value => value.trim()).filter(Boolean))];
-          if (!questNames.length || questNames.length > 30 || questNames.some(value => value.length > 180)) {
-            window.alert('Indique entre 1 et 30 quêtes (180 caractères maximum chacune).');
-            return;
-          }
-          const coordinate = latLong.wrap();
-          const api = (window.GOLARION_MAP_CONFIG?.placesUrl ?? '').replace(/\/places\/?$/, '/quests');
-          if (!api) { window.alert('API des lieux de quête indisponible.'); return; }
-          try {
-            const response = await fetch(api, {
-              method: 'POST', headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ name, questNames, latitude: coordinate.lat, longitude: coordinate.lng }),
-            });
-            if (!response.ok) throw new Error(await response.text());
-            window.location.reload();
-          } catch (error) {
-            window.alert(error instanceof Error ? error.message : String(error));
-          }
+          const point = latLong.wrap();
+          void showPlaceDialog({ latitude: point.lat, longitude: point.lng }, 'mj');
         },
       },
       {

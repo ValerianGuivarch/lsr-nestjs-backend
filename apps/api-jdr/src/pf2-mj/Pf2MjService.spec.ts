@@ -193,6 +193,90 @@ describe('Pf2MjService', () => {
     })
   })
 
+  describe('Discord quest synchronization and community map places', () => {
+    const syncedQuests = [
+      { id: '1555323732329766982', title: 'Le Cartel du Sel', completed: false, archived: false,
+        url: 'https://discord.com/channels/guild/1555323732329766982', createdAt: '', syncedAt: '' },
+      { id: '1553122329624715294', title: "Le tueur d'esclaves", completed: true, archived: false,
+        url: 'https://discord.com/channels/guild/1553122329624715294', createdAt: '', syncedAt: '' },
+    ]
+
+    it('keeps linked quest status by Discord thread ID and protects unresolved legacy labels', async () => {
+      const lieux = [
+        { id: 'old', nom: 'Ancien lieu', map_visible: true, map_kind: 'quest',
+          map_quest_names: ["Le tueur d'esclaves"], map_latitude: 31, map_longitude: -0.1 },
+        { id: 'linked', nom: 'Lieu clôturé', map_visible: true, map_kind: 'quest',
+          map_quest_names: [], map_latitude: 31, map_longitude: -0.2 },
+      ]
+      const links = [
+        { placeId: 'old', questId: syncedQuests[1].id, title: syncedQuests[1].title,
+          legacyName: null, completed: true, archived: false, url: syncedQuests[1].url },
+        { placeId: 'linked', questId: syncedQuests[1].id, title: syncedQuests[1].title,
+          legacyName: null, completed: true, archived: false, url: syncedQuests[1].url },
+      ]
+      const { service } = serviceFor({}, pnj, {
+        readReference: jest.fn().mockResolvedValue(lieux),
+        listMapQuestLinks: jest.fn().mockResolvedValue(links),
+      })
+      const places = await service.publicMapPlaces()
+      expect(places.find(x => x.id === 'old')).toMatchObject({
+        questCompleted: false, questUnresolved: ["Le tueur d'esclaves"],
+      })
+      expect(places.find(x => x.id === 'linked')).toMatchObject({
+        questCompleted: true, questUnresolved: [], questLinks: [expect.objectContaining({
+          id: syncedQuests[1].id, completed: true,
+        })],
+      })
+    })
+
+    it('exposes the synchronized catalog without altering Discord', async () => {
+      const { service } = serviceFor({}, pnj, { listDiscordQuests: jest.fn().mockResolvedValue(syncedQuests) })
+      await expect(service.discordQuestCatalogue()).resolves.toEqual(syncedQuests)
+    })
+
+    it('lets PJs create and manage a community quest place linked to a known thread', async () => {
+      const saveRecord = jest.fn().mockResolvedValue(undefined)
+      const setMapQuestLinks = jest.fn().mockResolvedValue(undefined)
+      const updateCommunityMapPlace = jest.fn().mockResolvedValue(undefined)
+      const { service } = serviceFor({}, pnj, {
+        saveRecord, setMapQuestLinks, updateCommunityMapPlace,
+        listDiscordQuests: jest.fn().mockResolvedValue(syncedQuests),
+      })
+      const created = await service.createCommunityPlace({
+        name: 'Les quais', description: 'Rendez-vous', kind: 'quest', latitude: 30.85,
+        longitude: -0.2, questIds: [syncedQuests[0].id],
+      })
+      expect(saveRecord).toHaveBeenCalledWith('lieu', expect.objectContaining({
+        id: created.id, map_origin: 'pj', map_kind: 'quest', map_visible: true,
+      }))
+      expect(setMapQuestLinks).toHaveBeenCalledWith(created.id, [syncedQuests[0].id])
+      await service.updateCommunityPlace(created.id, {
+        name: 'Les quais nord', description: 'Nouvelle note', kind: 'quest',
+        latitude: 30.85, longitude: -0.2, questIds: [syncedQuests[1].id],
+      })
+      expect(updateCommunityMapPlace).toHaveBeenCalledWith(created.id,
+        expect.objectContaining({ nom: 'Les quais nord', map_kind: 'quest' }))
+      await service.deleteCommunityPlace(created.id)
+      expect(updateCommunityMapPlace).toHaveBeenCalledWith(created.id, null)
+    })
+
+    it('refuses unknown Discord quest IDs and invalid coordinates', async () => {
+      const saveRecord = jest.fn()
+      const { service } = serviceFor({}, pnj, {
+        saveRecord, listDiscordQuests: jest.fn().mockResolvedValue(syncedQuests),
+      })
+      await expect(service.createCommunityPlace({
+        name: 'Secret', kind: 'quest', latitude: 30, longitude: 1,
+        description: '', questIds: ['1551111111111111111'],
+      })).rejects.toThrow('existe plus')
+      await expect(service.createCommunityPlace({
+        name: 'Échec', kind: 'custom', latitude: 200, longitude: 0,
+        description: '', questIds: [],
+      })).rejects.toThrow('Coordonnées')
+      expect(saveRecord).not.toHaveBeenCalled()
+    })
+  })
+
   describe('portraits Foundry', () => {
     it('stores a portrait locally without requiring Foundry when no Actor is linked', async () => {
       const { service, foundry } = serviceFor()
@@ -240,7 +324,7 @@ describe('Pf2MjService', () => {
       ]
       const { service } = serviceFor({}, pnj, { readReference: jest.fn().mockResolvedValue(lieux) })
 
-      await expect(service.publicMapPlaces()).resolves.toEqual([{
+      await expect(service.publicMapPlaces()).resolves.toEqual([expect.objectContaining({
         id: 'absalom',
         name: 'Absalom',
         latitude: 12.5,
@@ -251,7 +335,9 @@ describe('Pf2MjService', () => {
         quest: false,
         questName: '',
         questNames: [],
-      }])
+        origin: 'mj',
+        questLinks: [],
+      })])
     })
   })
 

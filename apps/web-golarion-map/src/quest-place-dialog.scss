@@ -1,0 +1,57 @@
+.pf2-place-dialog {
+  border: 1px solid #968467;
+  border-radius: 12px;
+  padding: 0;
+  width: min(460px, calc(100vw - 32px));
+  max-height: min(85vh, 740px);
+  color: #322719;
+  background: #fffaf0;
+  box-shadow: 0 12px 42px #0008;
+}
+.pf2-place-dialog::backdrop { background: #171a1bd1; }
+.pf2-place-dialog-body { display: grid; gap: 12px; padding: 17px; font: 13px/1.4 system-ui, sans-serif; }
+.pf2-place-dialog h2 { font: 700 18px/1.3 system-ui, sans-serif; margin: 0; }
+.pf2-place-subtitle { margin: 0; font-size: 11px; color: #74644a; }
+.pf2-place-field { display: grid; gap: 5px; font-weight: 650; }
+.pf2-place-dialog input:not([type=checkbox]), .pf2-place-dialog textarea, .pf2-place-dialog select {
+  width: 100%; box-sizing: border-box; padding: 9px; border-radius: 6px;
+  border: 1px solid #af9a75; color: #352916; background: white;
+  font: 13px system-ui, sans-serif;
+}
+.pf2-place-dialog button {
+  border: 1px solid #b39a70; border-radius: 6px; padding: 9px 11px;
+  cursor: pointer; background: #fff0d3; color: #352916; font: 650 12px system-ui, sans-serif;
+}
+.pf2-place-dialog button:disabled { opacity: 0.55; cursor: default; }
+.pf2-place-dialog .pf2-place-dialog-primary { background: #dfb463; border-color: #987640; }
+.pf2-place-quest-section { padding: 10px; min-width: 0; border: 1px solid #baa57d; border-radius: 7px; }
+.pf2-place-quest-section[hidden] { display: none; }
+.pf2-place-quest-section legend { padding: 0 5px; font-weight: 700; }
+.pf2-place-quest-choices { max-height: 210px; overflow: auto; margin-top: 8px; display: grid; gap: 3px; }
+.pf2-place-quest-option { display: flex; gap: 8px; align-items: start; padding: 7px; border-radius: 5px; cursor: pointer; }
+.pf2-place-quest-option:hover { background: #f4e8ce; }
+.pf2-place-quest-option input { margin-top: 2px; accent-color: #956215; }
+.pf2-place-dialog-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
+.pf2-place-dialog-status { min-height: 18px; color: #6c4612; margin: 0; font-size: 12px; }
+.pf2-place-dialog-delete { justify-self: start; color: #9a2d16 !important; }
+.pf2-place-delete-confirm { padding: 10px; border: 1px solid #b95040; border-radius: 7px; display: flex; flex-wrap: wrap; gap: 8px; }
+.pf2-place-delete-confirm p { width: 100%; margin: 0; }
+.pf2-place-create-control button { width: 65px; font-size: 12px; font-weight: 750; }
+.pf2-place-create-control button.is-armed { background: #ffe29e; }
+.pf2-public-place-marker.is-custom .pf2-public-place-icon {
+  width: 23px; height: 23px; border-color: #dce7f5;
+  background: #315575; font-size: 18px;
+}
+.pf2-place-origin { font-style: italic; color: #617285; }
+.pf2-place-edit-quests, .pf2-place-edit-community {
+  padding: 7px 9px; border-radius: 6px; margin: 8px 0;
+  border: 1px solid #ae8950; background: #fff2d3; font: 650 12px system-ui; cursor: pointer;
+}
+.pf2-quest-names .is-completed { color: #807b72; }
+.pf2-quest-names .is-unresolved, .pf2-place-unresolved { color: #985d18; font-style: italic; }
+.pf2-campaign-completed-control {
+  padding: 8px 10px; display: flex; align-items: center; gap: 4px;
+  border-radius: 5px; border: 1px solid #bb9c64; background: #fff8e6;
+  font: 12px/1.3 system-ui; color: #3b2b16;
+}
+.pf2-campaign-completed-control input { accent-color: #a67519; }

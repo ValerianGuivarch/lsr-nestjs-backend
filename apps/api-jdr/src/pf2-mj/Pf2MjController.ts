@@ -73,6 +73,33 @@ export class Pf2MjController {
     catch (error) { throw new HttpException(error instanceof Error ? error.message : 'Modification du lieu de quête impossible.', HttpStatus.BAD_REQUEST) }
   }
 
+  @Get('map/discord-quests')
+  discordQuestCatalogue(): Promise<unknown[]> { return this.service.discordQuestCatalogue() }
+
+  @Put('map/quests/:id/links')
+  async setQuestSiteLinks(@Param('id') id: string, @Body() body: unknown): Promise<unknown> {
+    try { return await this.service.setQuestSiteLinks(id, body) }
+    catch (error) { throw new HttpException(error instanceof Error ? error.message : 'Association impossible.', HttpStatus.BAD_REQUEST) }
+  }
+
+  @Post('map/community-places')
+  async createCommunityPlace(@Body() body: unknown): Promise<unknown> {
+    try { return await this.service.createCommunityPlace(body) }
+    catch (error) { throw new HttpException(error instanceof Error ? error.message : 'Création impossible.', HttpStatus.BAD_REQUEST) }
+  }
+
+  @Put('map/community-places/:id')
+  async updateCommunityPlace(@Param('id') id: string, @Body() body: unknown): Promise<unknown> {
+    try { return await this.service.updateCommunityPlace(id, body) }
+    catch (error) { throw new HttpException(error instanceof Error ? error.message : 'Modification impossible.', HttpStatus.BAD_REQUEST) }
+  }
+
+  @Delete('map/community-places/:id')
+  async deleteCommunityPlace(@Param('id') id: string): Promise<unknown> {
+    try { return await this.service.deleteCommunityPlace(id) }
+    catch (error) { throw new HttpException(error instanceof Error ? error.message : 'Suppression impossible.', HttpStatus.BAD_REQUEST) }
+  }
+
   @Get('map/places')
   publicMapPlaces(): Promise<Array<{ id: string; name: string; latitude: number; longitude: number; text: string; icon: string; important: boolean }>> {
     return this.service.publicMapPlaces()
