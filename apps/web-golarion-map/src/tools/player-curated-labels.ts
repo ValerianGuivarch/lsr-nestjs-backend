@@ -6,6 +6,7 @@ import type { GolarionMap } from './GolarionMap'
 import { createMjLightCurationPanel } from './mj-light-curation'
 import { createMjLabelCurationPanel } from './label-curation'
 import { createFavoriteButton } from './favorite-button'
+import { isAbsalomDistrict } from '../utils/absalom-districts'
 
 const sourceId = 'pf2-player-curated-labels'
 const layerId = 'pf2-player-curated-labels-layer'
@@ -27,7 +28,10 @@ export async function addPlayerCuratedLabels(gmap: GolarionMap, mode: 'pj' | 'mj
   const autoVisible = new Set(visibility.autoVisibleCategories)
   const visibleOverrides = new Map(
     visibility.overrides
-      .filter(item => item.visibility === 'visible' && item.category !== 'locations' && (
+      .filter(item => item.visibility === 'visible'
+        && item.category !== 'locations'
+        && (mode === 'mj' || !isAbsalomDistrict(item.category, item.label))
+        && (
         item.important ||
         !autoVisible.has(item.category) || Boolean(item.publicLabel.trim()) || Boolean(item.publicText.trim()) || (mjLight && Boolean(item.mjText?.trim()))
       ))

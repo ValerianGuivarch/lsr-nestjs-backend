@@ -527,6 +527,18 @@ export class Pf2MjService {
       const entries = category.entries.flatMap(entry => {
         const label = typeof entry.label === 'string' ? entry.label : ''
         if (!label) return []
+        // The illustrated Absalom map already labels its districts.
+        // Exclude only district records geographically located in that city
+        // from the player search; keep districts of every other settlement.
+        if (category.category === 'districts') {
+          const timed = Array.isArray(entry.timed) ? this.asObject(entry.timed[0]) : {}
+          const box = Array.isArray(timed.bbox) ? timed.bbox.map(Number) : []
+          if ((box.length === 2 || box.length === 4) && box.every(Number.isFinite)) {
+            const longitude = box.length === 4 ? (box[0] + box[2]) / 2 : box[0]
+            const latitude = box.length === 4 ? (box[1] + box[3]) / 2 : box[1]
+            if (longitude > -0.32 && longitude < -0.16 && latitude > 30.78 && latitude < 30.95) return []
+          }
+        }
         const override = byCategoryLabel.get(`${category.category}\u0000${label}`)
         const visible = override
           ? override.visibility === 'visible'

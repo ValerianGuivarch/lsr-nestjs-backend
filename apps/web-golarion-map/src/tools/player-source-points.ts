@@ -70,7 +70,11 @@ export async function addPlayerSourcePoints(gmap: GolarionMap, mode: 'pj' | 'mj-
     id: labelLayerId,
     type: 'symbol',
     source: sourceId,
-    filter: ['>=', ['zoom'], ['+', ['get', 'minZoom'], 5]],
+    // Keep the original world-scale city label threshold. Smaller POIs get
+    // readable names sooner when zooming into a city, rather than bare icons.
+    filter: ['>=', ['zoom'], ['+', ['get', 'minZoom'],
+      ['case', ['<=', ['get', 'minZoom'], 3], 5, 3],
+    ]],
     layout: {
       'text-field': ['case', ['get', 'favorite'], ['concat', '★ ', ['get', 'name']], ['get', 'name']],
       'text-font': ['NotoSans-Medium'],

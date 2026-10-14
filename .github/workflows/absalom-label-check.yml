@@ -1,0 +1,21 @@
+name: Absalom label regression checks
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [fix/absalom-pj-label-visibility-20261014]
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npx tsc --noEmit --project apps/web-golarion-map/tsconfig.json
+      - run: npm run build:golarion-map
+      - run: npx nx build api-jdr
+      - run: npx nx test api-jdr --runInBand --testPathPattern=Pf2MjService.spec.ts --testNamePattern='masque seulement les quartiers|ne renvoie dans la recherche PJ'
