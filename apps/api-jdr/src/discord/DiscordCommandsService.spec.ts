@@ -503,9 +503,9 @@ describe('DiscordCommandsService', () => {
     const editReply = jest.fn().mockResolvedValue(undefined)
     const persistence = {
       listSessions: jest.fn().mockResolvedValue([
-        { sessionNumber: 1, published: true, participants: ['Actor.eos', 'Actor.pepin'] },
-        { sessionNumber: 2, published: true, participants: ['Actor.eos', 'Actor.yaz'] },
-        { sessionNumber: 3, published: false, participants: ['Actor.nora'] },
+        { sessionNumber: 1, date: '2026-09-01', published: true, participants: ['Actor.eos', 'Actor.pepin'] },
+        { sessionNumber: 2, date: '2026-09-08', published: true, participants: ['Actor.eos', 'Actor.yaz'] },
+        { sessionNumber: 3, date: '2026-09-15', published: false, participants: ['Actor.nora'] },
       ]),
       saveFoundryActorCache: jest.fn(), readFoundryActorCache: jest.fn(),
     }
@@ -531,10 +531,34 @@ describe('DiscordCommandsService', () => {
     expect(payload.components).toHaveLength(1)
     expect(payload.components[0].toJSON().components[0].label).toBe('Publier')
     expect(result).toContain('**David — 2 séances**')
+    expect(result).toContain('dernière séance : 08/09/2026')
     expect(result).toContain('Éos — niveau 2 (1 niveau à faire !) — 2 séances')
     expect(result).toContain('Pépin — niveau 2 — 1 séance')
     expect(result).not.toContain('Nora')
     expect(result).not.toContain('Séances communes')
+  })
+
+  it('falls back to the raw Foundry actor level when progression lookup fails', async () => {
+    const deferReply = jest.fn().mockResolvedValue(undefined)
+    const editReply = jest.fn().mockResolvedValue(undefined)
+    const service = new DiscordCommandsService({
+      listSessions: jest.fn().mockResolvedValue([
+        { sessionNumber: 1, date: '2026-10-01', published: true, participants: ['Actor.pepin'] },
+      ]),
+      listPlayerIdentities: jest.fn().mockResolvedValue([]),
+      saveFoundryActorCache: jest.fn(),
+      readFoundryActorCache: jest.fn(),
+    } as never, {
+      listActors: jest.fn().mockResolvedValue([{ uuid: 'Actor.pepin', name: 'Pépin (Eric)' }]),
+      listPlayers: jest.fn().mockRejectedValue(new Error('XPC indisponible')),
+      getNpcSummary: jest.fn().mockResolvedValue({ uuid: 'Actor.pepin', name: 'Pépin (Eric)', type: 'character', level: 4, hp: 50, img: null }),
+    } as never)
+
+    await service.handle({ commandName: 'recap-pjs', deferReply, editReply, user: { id: 'player-1' }, id: 'interaction-level-fallback' } as never)
+    const result = editReply.mock.calls[0][0].content as string
+    expect(result).toContain('Pépin — niveau 4 — 1 séance')
+    expect(result).not.toContain('niveau ?')
+    expect(result).toContain('dernière séance : 01/10/2026')
   })
 
   it('rebuilds a planned-session message with historical progression rolls', async () => {
