@@ -213,7 +213,7 @@ export class DiscordCommandsService {
       content: [
         '**Commandes PF2**',
         '`/choix-quete` — liste les quêtes du forum, les réservations par 👍 et signale les doubles choix.',
-        '`/terminer-quete` — depuis un fil du journal des quêtes, marque la quête Terminée et libère les réservations 👍.',
+        '`/terminer-quete` — depuis un fil du journal des quêtes, demande un compte rendu, marque la quête Terminée et libère les réservations 👍.',
         '`/relancer-quete` — depuis un fil terminé, retire le tag Terminée et remet la quête dans `/choix-quete`.',
         '`/recap-pjs` — aperçu du récapitulatif des joueurs/PJ, puis bouton de publication.',
         '`/afficher-personnage` — affiche pour toi un personnage publié, puis permet de le partager.',
@@ -316,13 +316,21 @@ export class DiscordCommandsService {
         await interaction.reply({ content: 'Cette quête est déjà marquée **Terminée**.', ephemeral: true })
         return
       }
-      const key = `pf2-quest-finish:${interaction.id}`
-      this.pendingQuestCompletions.set(key, { requesterId: interaction.user.id, threadId: thread.id })
-      const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
-        new ButtonBuilder().setCustomId(`${key}:yes`).setLabel('Oui, terminer').setStyle(ButtonStyle.Danger),
-        new ButtonBuilder().setCustomId(`${key}:no`).setLabel('Annuler').setStyle(ButtonStyle.Secondary),
-      )
-      await interaction.reply({ content: `Es-tu sûr de vouloir terminer **${thread.name}** ?`, components: [row], ephemeral: true })
+
+      const modalId = `pf2-quest-finish:${interaction.id}`
+      this.pendingQuestCompletions.set(modalId, { requesterId: interaction.user.id, threadId: thread.id })
+      const report = new TextInputBuilder()
+        .setCustomId('report')
+        .setLabel('Compte rendu')
+        .setStyle(TextInputStyle.Paragraph)
+        .setPlaceholder('Ex. : Le tueur était X, il a été arrêté, et…')
+        .setRequired(true)
+        .setMaxLength(1_500)
+      const modal = new ModalBuilder()
+        .setCustomId(modalId)
+        .setTitle('Terminer la quête')
+        .addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(report))
+      await interaction.showModal(modal)
     } catch (error) {
       await interaction.reply({ content: error instanceof Error ? error.message : String(error), ephemeral: true })
     }
@@ -2055,6 +2063,44 @@ export class DiscordCommandsService {
   }
 
   async handleModal(interaction: ModalSubmitInteraction): Promise<boolean> {
+    if (interaction.customId.startsWith('pf2-quest-finish:')) {
+      const pending = this.pendingQuestCompletions.get(interaction.customId)
+      if (!pending) {
+        await interaction.reply({ content: 'Cette validation a expiré. Relance `/terminer-quete`.', ephemeral: true })
+        return true
+      }
+      if (interaction.user.id !== pending.requesterId || interaction.channelId !== pending.threadId) {
+        await interaction.reply({ content: 'Cette validation appartient à un autre utilisateur ou à une autre quête.', ephemeral: true })
+        return true
+      }
+
+      const report = interaction.fields.getTextInputValue('report').trim()
+      if (!report) {
+        await interaction.reply({ content: 'Le compte rendu ne peut pas être vide.', ephemeral: true })
+        return true
+      }
+
+      await interaction.deferReply({ ephemeral: true })
+      try {
+        const thread = interaction.channel as any
+        const forum = await interaction.client.channels.fetch(this.choiceForumChannelId)
+        const completedTag = forum && 'availableTags' in forum && Array.isArray((forum as any).availableTags)
+          ? (forum as any).availableTags.find((tag: any) => String(tag.name ?? '').trim().toLocaleLowerCase('fr') === 'terminée')
+          : null
+        if (!completedTag?.id) throw new Error('Le tag « Terminée » est introuvable dans le forum des quêtes.')
+        await thread.setAppliedTags([...new Set([...(thread.appliedTags ?? []), completedTag.id])], 'Quête terminée via /terminer-quete')
+        await this.clearQuestThumbReservations(thread)
+        await thread.send({
+          content: `✅ **Quête terminée. Merci d’avoir participé.**\n\n**Compte rendu :**\n${report}\n\nVous pouvez la relancer avec `/relancer-quete`.`,
+          allowedMentions: { parse: [] },
+        })
+        this.pendingQuestCompletions.delete(interaction.customId)
+        await interaction.editReply({ content: 'Quête terminée et compte rendu publié.' })
+      } catch (error) {
+        await interaction.editReply({ content: `Impossible de terminer la quête : ${error instanceof Error ? error.message : String(error)}` })
+      }
+      return true
+    }
     if (interaction.customId.startsWith('pf2-player-draw:count:')) {
       const pending = this.pendingPlayerDraws.get(interaction.customId)
       if (!pending) {
@@ -2206,42 +2252,6 @@ export class DiscordCommandsService {
   }
 
   async handleButton(interaction: ButtonInteraction): Promise<boolean> {
-    if (interaction.customId.startsWith('pf2-quest-finish:')) {
-      const match = /^(pf2-quest-finish:[^:]+):(yes|no)$/.exec(interaction.customId)
-      if (!match) return false
-      const pending = this.pendingQuestCompletions.get(match[1])
-      if (!pending) {
-        await interaction.reply({ content: 'Cette confirmation a expiré. Relance `/terminer-quete`.', ephemeral: true })
-        return true
-      }
-      if (interaction.user.id !== pending.requesterId || interaction.channelId !== pending.threadId) {
-        await interaction.reply({ content: 'Cette confirmation appartient à un autre administrateur ou à une autre quête.', ephemeral: true })
-        return true
-      }
-      this.pendingQuestCompletions.delete(match[1])
-      if (match[2] === 'no') {
-        await interaction.update({ content: 'La quête reste ouverte.', components: [] })
-        return true
-      }
-      try {
-        const thread = interaction.channel as any
-        const forum = await interaction.client.channels.fetch(this.choiceForumChannelId)
-        const completedTag = forum && 'availableTags' in forum && Array.isArray((forum as any).availableTags)
-          ? (forum as any).availableTags.find((tag: any) => String(tag.name ?? '').trim().toLocaleLowerCase('fr') === 'terminée')
-          : null
-        if (!completedTag?.id) throw new Error('Le tag « Terminée » est introuvable dans le forum des quêtes.')
-        await thread.setAppliedTags([...new Set([...(thread.appliedTags ?? []), completedTag.id])], 'Quête terminée via /terminer-quete')
-        await this.clearQuestThumbReservations(thread)
-        await thread.send({
-          content: '✅ **Quête terminée. Merci d’avoir participé.**\nVous pouvez la relancer avec `/relancer-quete`.',
-          allowedMentions: { parse: [] },
-        })
-        await interaction.update({ content: 'Quête terminée.', components: [] })
-      } catch (error) {
-        await interaction.update({ content: `Impossible de terminer la quête : ${error instanceof Error ? error.message : String(error)}`, components: [] })
-      }
-      return true
-    }
     if (interaction.customId.startsWith('pf2-mission:publish:') || interaction.customId.startsWith('pf2-mission:cancel:')) {
       const match = /^pf2-mission:(publish|cancel):(.+)$/.exec(interaction.customId)!
       const action = match[1]
