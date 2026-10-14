@@ -561,6 +561,32 @@ describe('DiscordCommandsService', () => {
     expect(result).toContain('dernière séance : 01/10/2026')
   })
 
+  it('refuses /recap-seance when Foundry progression is unavailable', async () => {
+    const editReply = jest.fn().mockResolvedValue(undefined)
+    const service = new DiscordCommandsService({
+      listSessions: jest.fn().mockResolvedValue([
+        { sessionNumber: 4, published: false, participants: ['Actor.pepin'], inGameStartDate: '4720-03-22', title: '' },
+      ]),
+      readFoundryActorCache: jest.fn().mockResolvedValue([{ uuid: 'Actor.pepin', name: 'Pépin (Eric)' }]),
+      saveFoundryActorCache: jest.fn(),
+    } as never, {
+      listActors: jest.fn().mockRejectedValue(new Error('relay offline')),
+      listPlayers: jest.fn().mockRejectedValue(new Error('relay offline')),
+    } as never)
+
+    await service.handle({
+      commandName: 'recap-seance',
+      user: { id: 'admin' },
+      memberPermissions: { has: jest.fn().mockReturnValue(true) },
+      options: { getString: jest.fn().mockReturnValue('4') },
+      deferReply: jest.fn().mockResolvedValue(undefined),
+      editReply,
+    } as never)
+
+    expect(editReply.mock.calls.at(-1)?.[0].content).toContain('Foundry est indispensable')
+    expect(editReply.mock.calls.at(-1)?.[0].content).not.toContain('niveau ?')
+  })
+
   it('rebuilds a planned-session message with historical progression rolls', async () => {
     const deferReply = jest.fn().mockResolvedValue(undefined)
     const editReply = jest.fn().mockResolvedValue(undefined)
