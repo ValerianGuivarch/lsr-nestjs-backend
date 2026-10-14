@@ -205,7 +205,8 @@ export async function addPublicPlaceMarkers(gmap: GolarionMap, placesUrl: string
     const response = await fetch(placesUrl, { credentials: 'omit', cache: 'no-store' })
     if (!response.ok) throw new Error(`HTTP ${response.status}`)
     const raw: unknown = await response.json()
-    const places = raw.filter((value): value is PublicPlace => {
+    const candidates: unknown[] = Array.isArray(raw) ? raw : []
+    const places: PublicPlace[] = candidates.filter((value): value is PublicPlace => {
       if (!value || typeof value !== 'object') return false
       const item = value as Partial<PublicPlace>
       return typeof item.id === 'string' && typeof item.name === 'string' && Number.isFinite(item.latitude) && Number.isFinite(item.longitude)
