@@ -285,7 +285,6 @@ export class DiscordCommandsService {
   }
 
   private async questThreadContext(interaction: ChatInputCommandInteraction): Promise<{ thread: any; forum: any; completedTagId: string }> {
-    if (!this.isAdmin(interaction)) throw new Error('Cette commande est réservée aux administrateurs du serveur.')
     const thread = interaction.channel
     if (!thread?.isThread?.() || thread.parentId !== this.choiceForumChannelId) {
       throw new Error('Cette commande doit être lancée depuis la discussion de la quête dans le journal des quêtes.')
