@@ -73,6 +73,7 @@ export class Pf2PersistenceService implements OnModuleInit {
     await this.migrate()
     await this.ensureStorageDirectories()
     await this.seedCurrentData()
+    await this.seedQuestMapExamples()
   }
 
   async health(): Promise<{ sqlite: true; database: string }> {
@@ -678,6 +679,7 @@ export class Pf2PersistenceService implements OnModuleInit {
     if (!rows.length) throw new Error('Lieu introuvable.')
     const place = this.object(JSON.parse(rows[0].payload))
     if (place.map_visible !== true) throw new Error('Ce lieu n’est pas publié.')
+    if (place.map_kind === 'quest') throw new Error('Un lieu de quête ne peut pas être converti en favori.')
     const lat = Number(place.map_latitude), lng = Number(place.map_longitude)
     if (!Number.isFinite(lat) || !Number.isFinite(lng) || lat < -90 || lat > 90 || lng < -180 || lng > 180) {
       throw new Error('Ce lieu n’a pas de coordonnées valides.')
@@ -688,6 +690,62 @@ export class Pf2PersistenceService implements OnModuleInit {
     )
   }
 
+
+  async manageQuestPlace(id: string, action: 'convert' | 'delete'): Promise<void> {
+    const place = await this.getRecord('lieu', id)
+    if (!place || place.map_kind !== 'quest') throw new Error('Lieu de quête introuvable.')
+    if (action === 'convert') {
+      await this.saveRecord('lieu', { ...place, map_kind: 'normal', map_quest_name: '', map_important: false })
+    } else {
+      await this.dataSource.query(
+        "DELETE FROM pf2_record WHERE kind = 'lieu' AND id = ? AND json_extract(payload, '$.map_kind') = 'quest'", [id],
+      )
+    }
+  }
+
+  // Runs after the initial record seeds, not during table migrations: on a new
+  // database the default places must be imported before the example quest is added.
+  private async seedQuestMapExamples(): Promise<void> {
+    await this.applyMigration('038-map-quest-sites-and-examples', async manager => {
+      const records = await manager.query(
+        "SELECT id, payload FROM pf2_record WHERE kind = 'lieu'",
+      ) as Array<{ id: string; payload: string }>
+      for (const row of records) {
+        const place = this.object(JSON.parse(row.payload))
+        const label = String(place.nom ?? '').toLocaleLowerCase('fr')
+        if (place.map_visible !== true || place.map_kind === 'quest' || place.map_important !== true) continue
+        if (!label.includes('ruines') || !label.includes('azlant')) continue
+        await manager.query(
+          "UPDATE pf2_record SET payload = ?, updated_at = CURRENT_TIMESTAMP WHERE kind = 'lieu' AND id = ?",
+          [JSON.stringify({ ...place, map_kind: 'quest', map_quest_name: String(place.nom ?? ''), map_important: false }), row.id],
+        )
+      }
+
+      // An existing published Grand Lodge remains an ordinary place. Only its
+      // small, zoom-dependent label gains the shared favorite highlight.
+      await manager.query(
+        "UPDATE pf2_map_visibility_override SET important = 1, updated_at = CURRENT_TIMESTAMP WHERE label = 'Grand Lodge' AND visibility = 'visible'",
+      )
+
+      const id = 'quest-demande-pointesable'
+      const exists = await manager.query(
+        "SELECT 1 FROM pf2_record WHERE kind = 'lieu' AND id = ?", [id],
+      ) as unknown[]
+      if (!exists.length) {
+        const item = {
+          id, nom: 'La demande de Pointe-Sable', type: 'Lieu de quête', statut: 'Actif',
+          map_kind: 'quest', map_quest_name: 'La demande de Pointe-Sable',
+          map_visible: true, map_important: false,
+          map_latitude: 44.09723, map_longitude: -27.16403,
+          map_icon: 'pin', map_text: '',
+        }
+        await manager.query(
+          "INSERT INTO pf2_record (kind, id, name, payload) VALUES ('lieu', ?, ?, ?)",
+          [id, item.nom, JSON.stringify(item)],
+        )
+      }
+    })
+  }
 
   async listMapVisibilityOverrides(): Promise<Array<{ sourceKey: string; category: string; label: string; sourceFid: number | null; visibility: 'visible' | 'hidden'; publicLabel: string; publicText: string; mjText: string; important: boolean; updatedAt: string }>> {
     const rows = await this.dataSource.query('SELECT source_key, category, label, source_fid, visibility, public_label, public_text, mj_text, important, updated_at FROM pf2_map_visibility_override ORDER BY category, label COLLATE NOCASE') as Array<Record<string, unknown>>
