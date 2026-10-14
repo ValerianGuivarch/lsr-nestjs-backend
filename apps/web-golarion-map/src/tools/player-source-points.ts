@@ -70,7 +70,9 @@ export async function addPlayerSourcePoints(gmap: GolarionMap, mode: 'pj' | 'mj-
     id: labelLayerId,
     type: 'symbol',
     source: sourceId,
-    filter: ['>=', ['zoom'], ['+', ['get', 'minZoom'], 5]],
+    // Icons become visible at minZoom; their names should follow a few levels
+    // later, rather than disappearing until minZoom + 5.
+    filter: ['>=', ['zoom'], ['+', ['get', 'minZoom'], 3]],
     layout: {
       'text-field': ['case', ['get', 'favorite'], ['concat', '★ ', ['get', 'name']], ['get', 'name']],
       'text-font': ['NotoSans-Medium'],
