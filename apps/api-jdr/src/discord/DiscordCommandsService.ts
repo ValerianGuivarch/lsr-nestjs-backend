@@ -213,6 +213,8 @@ export class DiscordCommandsService {
       content: [
         '**Commandes PF2**',
         '`/choix-quete` — liste les quêtes du forum, les réservations par 👍 et signale les doubles choix.',
+        '`/terminer-quete` — depuis un fil du journal des quêtes, marque la quête Terminée et libère les réservations 👍.',
+        '`/relancer-quete` — depuis un fil terminé, retire le tag Terminée et remet la quête dans `/choix-quete`.',
         '`/recap-pjs` — aperçu du récapitulatif des joueurs/PJ, puis bouton de publication.',
         '`/afficher-personnage` — affiche pour toi un personnage publié, puis permet de le partager.',
         '`/afficher-faction` — affiche pour toi une faction publiée, puis permet de la partager.',
@@ -249,8 +251,6 @@ export class DiscordCommandsService {
         '`/analyse-date-seance` — analyse les réactions, propose les groupes puis permet leur publication.',
         '`/valider-date-seance numero:2` — valide et annonce une proposition de groupes dans le fil de planification.',
         '`/preparer-prochaine-mission` — crée, après aperçu et confirmation, un fil dans #objectif-prochaine-mission pour une séance validée.',
-        '`/terminer-quete` — depuis un fil du journal des quêtes, ajoute le tag Terminée et libère les réservations 👍.',
-        '`/relancer-quete` — depuis un fil terminé, retire le tag Terminée et le remet dans `/choix-quete`.',
         '`/help-admin` — affiche cette aide.',
       ].join('\n'),
       ephemeral: true,
