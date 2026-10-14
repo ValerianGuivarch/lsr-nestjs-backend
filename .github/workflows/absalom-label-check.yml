@@ -1,5 +1,7 @@
 name: Absalom label regression checks
 on:
+  pull_request:
+    branches: [main]
   push:
     branches: [fix/absalom-pj-label-visibility-20261014]
 jobs:
