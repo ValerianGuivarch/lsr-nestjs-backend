@@ -75,7 +75,10 @@ export function addAbsalomOverlay(map: MapLibreMap, withToggle = true, allowCali
         'case',
         ['in', ['get', 'label'], ['literal', ABSALOM_DISTRICT_LABELS]],
         0,
-        originalTextOpacity ?? 1,
+        // Legacy MapLibre stop objects cannot be nested inside a style
+        // expression. Use a numeric fallback while masking districts,
+        // then restore the exact original paint property below.
+        typeof originalTextOpacity === 'number' ? originalTextOpacity : 1,
       ])
     } else {
       map.setPaintProperty('symbol_labels', 'text-opacity', originalTextOpacity ?? 1)
