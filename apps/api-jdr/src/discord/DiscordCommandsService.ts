@@ -213,7 +213,7 @@ export class DiscordCommandsService {
       content: [
         '**Commandes PF2**',
         '`/choix-quete` — liste les quêtes du forum, les réservations par 👍 et signale les doubles choix.',
-        '`/terminer-quete` — depuis un fil du journal des quêtes, marque la quête Terminée et libère les réservations 👍.',
+        '`/terminer-quete` — depuis un fil du journal des quêtes, demande un compte rendu, marque la quête Terminée et libère les réservations 👍.',
         '`/relancer-quete` — depuis un fil terminé, retire le tag Terminée et remet la quête dans `/choix-quete`.',
         '`/recap-pjs` — aperçu du récapitulatif des joueurs/PJ, puis bouton de publication.',
         '`/afficher-personnage` — affiche pour toi un personnage publié, puis permet de le partager.',
@@ -316,13 +316,21 @@ export class DiscordCommandsService {
         await interaction.reply({ content: 'Cette quête est déjà marquée **Terminée**.', ephemeral: true })
         return
       }
-      const key = `pf2-quest-finish:${interaction.id}`
-      this.pendingQuestCompletions.set(key, { requesterId: interaction.user.id, threadId: thread.id })
-      const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
-        new ButtonBuilder().setCustomId(`${key}:yes`).setLabel('Oui, terminer').setStyle(ButtonStyle.Danger),
-        new ButtonBuilder().setCustomId(`${key}:no`).setLabel('Annuler').setStyle(ButtonStyle.Secondary),
-      )
-      await interaction.reply({ content: `Es-tu sûr de vouloir terminer **${thread.name}** ?`, components: [row], ephemeral: true })
+
+      const modalId = `pf2-quest-finish:${interaction.id}`
+      this.pendingQuestCompletions.set(modalId, { requesterId: interaction.user.id, threadId: thread.id })
+      const report = new TextInputBuilder()
+        .setCustomId('report')
+        .setLabel('Compte rendu')
+        .setStyle(TextInputStyle.Paragraph)
+        .setPlaceholder('Ex. : Le tueur était X, il a été arrêté, et…')
+        .setRequired(true)
+        .setMaxLength(1_500)
+      const modal = new ModalBuilder()
+        .setCustomId(modalId)
+        .setTitle('Terminer la quête')
+        .addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(report))
+      await interaction.showModal(modal)
     } catch (error) {
       await interaction.reply({ content: error instanceof Error ? error.message : String(error), ephemeral: true })
     }
@@ -2055,193 +2063,6 @@ export class DiscordCommandsService {
   }
 
   async handleModal(interaction: ModalSubmitInteraction): Promise<boolean> {
-    if (interaction.customId.startsWith('pf2-player-draw:count:')) {
-      const pending = this.pendingPlayerDraws.get(interaction.customId)
-      if (!pending) {
-        await interaction.reply({ content: 'Ce tirage a expiré. Relance `/tirage-sort-joueur`.', ephemeral: true })
-        return true
-      }
-      if (interaction.user.id !== pending.requesterId) {
-        await interaction.reply({ content: 'Ce tirage appartient à un autre administrateur.', ephemeral: true })
-        return true
-      }
-
-      const count = Number(interaction.fields.getTextInputValue('count').trim())
-      if (!Number.isInteger(count) || count < 1 || count > pending.players.length) {
-        this.pendingPlayerDraws.delete(interaction.customId)
-        await interaction.reply({
-          content: `Le nombre doit être un entier entre 1 et ${pending.players.length}.`,
-          ephemeral: true,
-        })
-        return true
-      }
-
-      const pool = [...pending.players]
-      const selected: Array<{ id: string; name: string }> = []
-      while (selected.length < count) {
-        const index = Math.floor(Math.random() * pool.length)
-        selected.push(pool.splice(index, 1)[0])
-      }
-
-      const content = [
-        '🎲 **Tirage au sort joueur**',
-        `Parmi : ${pending.players.map(player => player.name).join(', ')}`,
-        '',
-        '**Liste des tirages au sort :**',
-        ...selected.map(player => `- ${player.name}`),
-      ].join('\n')
-
-      this.pendingPlayerDraws.delete(interaction.customId)
-      await interaction.deferReply({ ephemeral: true })
-      await this.previewPublicMessage(interaction, content)
-      return true
-    }
-    if (interaction.customId.startsWith('pf2-resume:')) {
-      const pending = this.pendingShortSummaries.get(interaction.customId)
-
-      if (!pending) {
-        await interaction.reply({ content: 'Cette édition a expiré. Relance `/resume`.', ephemeral: true })
-        return true
-      }
-
-      if (interaction.user.id !== pending.requesterId) {
-        await interaction.reply({ content: 'Cette édition appartient à un autre utilisateur.', ephemeral: true })
-        return true
-      }
-
-      if (!pending.allowedAuthors.some(actor => actor.uuid === pending.selectedAuthor)) {
-        await interaction.reply({ content: 'Auteur invalide. Relance `/resume`.', ephemeral: true })
-        return true
-      }
-
-      const title = interaction.fields.getTextInputValue('title').trim()
-      const date = interaction.fields.getTextInputValue('date').trim()
-      const summary = interaction.fields.getTextInputValue('shortSummary').trim()
-
-      if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
-        await interaction.reply({ content: 'La date jouée doit être au format YYYY-MM-DD.', ephemeral: true })
-        return true
-      }
-
-      await interaction.deferReply({ ephemeral: true })
-      const saved = await this.saveShortSummary(
-        interaction,
-        pending,
-        pending.selectedAuthor,
-        { title, date, summary },
-      )
-
-      if (saved) this.pendingShortSummaries.delete(interaction.customId)
-      return true
-    }
-    if (interaction.customId.startsWith('pf2-character:create:')) {
-      const presentationId = interaction.customId.slice('pf2-character:create:'.length)
-      const name = interaction.fields.getTextInputValue('name').trim()
-      const description = interaction.fields.getTextInputValue('description').trim()
-      const title = `Personnage:${name}`
-      await interaction.deferReply({ ephemeral: true })
-      try {
-        const presentation = await this.playerCodex!.presentation(presentationId)
-        let current: { wikiPortraitFilename?: string | null; published?: boolean } | null = null
-        if (presentation.sourceNpcId) {
-          try { current = await this.playerCodex!.character(presentation.sourceNpcId) as { wikiPortraitFilename?: string | null; published?: boolean } } catch { current = null }
-        }
-        const portrait = current?.wikiPortraitFilename ?? (presentation.portraitUrl ? await this.mediaWiki!.uploadFromUrl(presentation.portraitUrl, name) : null)
-        if (!(await this.mediaWiki!.pageExists(title))) await this.mediaWiki!.createPage(title, '<!-- Fiche personnage : contenu détaillé à compléter ici. -->')
-        const profile = await this.playerCodex!.ensurePresentationCharacter(presentationId, name, title, description) as { npcId: string; wikiPageTitle: string; created: boolean; newlyPublished?: boolean }
-        if (portrait) await this.playerCodex!.updateCharacter(profile.npcId, { wikiPortraitFilename: portrait })
-        const selectedFaction = this.pendingCharacterFactions.get(presentationId)?.factionId
-        if (selectedFaction) await this.playerCodex!.addCharacterFaction(profile.npcId, selectedFaction)
-        this.pendingCharacterFactions.delete(presentationId)
-        const pageUrl = this.mediaWiki!.pageUrl(profile.wikiPageTitle)
-        if (profile.created || profile.newlyPublished) {
-          const publication = await this.discord?.publishCharacterIntroduction({
-            name,
-            portraitUrl: presentation.portraitUrl,
-            description,
-            wikiUrl: pageUrl,
-          })
-          if (publication?.status === 'failed') this.logger.warn(`Fiche publiée, mais publication Discord impossible : ${publication.reason}`)
-        }
-        await interaction.editReply({ content: profile.created ? `Fiche créée : ${pageUrl}` : profile.newlyPublished ? `Fiche publiée : ${pageUrl}` : `Cette fiche existe déjà : ${pageUrl}`, allowedMentions: { parse: [] } })
-      } catch (error) { await interaction.editReply({ content: error instanceof Error ? `Création impossible : ${error.message}` : 'Création impossible.' }) }
-      return true
-    }
-    if (!interaction.customId.startsWith('pf2-new-game:')) return false
-    const pending = this.pendingGames.get(interaction.customId)
-    if (!pending) { await interaction.reply({ content: 'Cette préparation a expiré. Relance `/debut-seance`.', ephemeral: true }); return true }
-    const plan = pending.plan
-    if (!plan) { await interaction.reply({ content: 'Le calcul des dates a expiré. Relance `/debut-seance`.', ephemeral: true }); return true }
-
-    const rawOffset = interaction.fields.getTextInputValue('offset').trim()
-    const offset = Number(rawOffset)
-    if (!Number.isInteger(offset) || offset < 0) {
-      await interaction.reply({ content: '`J+` doit être un nombre entier positif ou nul.', ephemeral: true })
-      return true
-    }
-
-    let baseDate = pending.baseDate ?? ''
-    if (interaction.customId.endsWith(':custom-date')) {
-      baseDate = interaction.fields.getTextInputValue('date').trim()
-      if (!/^\d{4}-\d{2}-\d{2}$/.test(baseDate) || baseDate < plan.earliest) {
-        await interaction.reply({ content: `Choisis une date YYYY-MM-DD à partir du ${this.displayDate(plan.earliest)}.`, ephemeral: true })
-        return true
-      }
-    }
-
-    if (!baseDate) {
-      await interaction.reply({ content: 'La date de base est introuvable. Relance `/debut-seance`.', ephemeral: true })
-      return true
-    }
-
-    const date = this.addDays(baseDate, offset)
-    await interaction.deferReply({ ephemeral: true })
-    try {
-      await this.finishGameModal(interaction, pending, date, plan)
-      this.pendingGames.delete(interaction.customId)
-    } catch (error) {
-      await interaction.editReply({ content: `Création du brouillon impossible : ${error instanceof Error ? error.message : String(error)}`, components: [] })
-    }
-    return true
-  }
-
-  async handleButton(interaction: ButtonInteraction): Promise<boolean> {
-    if (interaction.customId.startsWith('pf2-quest-finish:')) {
-      const match = /^(pf2-quest-finish:[^:]+):(yes|no)$/.exec(interaction.customId)
-      if (!match) return false
-      const pending = this.pendingQuestCompletions.get(match[1])
-      if (!pending) {
-        await interaction.reply({ content: 'Cette confirmation a expiré. Relance `/terminer-quete`.', ephemeral: true })
-        return true
-      }
-      if (interaction.user.id !== pending.requesterId || interaction.channelId !== pending.threadId) {
-        await interaction.reply({ content: 'Cette confirmation appartient à un autre administrateur ou à une autre quête.', ephemeral: true })
-        return true
-      }
-      this.pendingQuestCompletions.delete(match[1])
-      if (match[2] === 'no') {
-        await interaction.update({ content: 'La quête reste ouverte.', components: [] })
-        return true
-      }
-      try {
-        const thread = interaction.channel as any
-        const forum = await interaction.client.channels.fetch(this.choiceForumChannelId)
-        const completedTag = forum && 'availableTags' in forum && Array.isArray((forum as any).availableTags)
-          ? (forum as any).availableTags.find((tag: any) => String(tag.name ?? '').trim().toLocaleLowerCase('fr') === 'terminée')
-          : null
-        if (!completedTag?.id) throw new Error('Le tag « Terminée » est introuvable dans le forum des quêtes.')
-        await thread.setAppliedTags([...new Set([...(thread.appliedTags ?? []), completedTag.id])], 'Quête terminée via /terminer-quete')
-        await this.clearQuestThumbReservations(thread)
-        await thread.send({
-          content: '✅ **Quête terminée. Merci d’avoir participé.**\nVous pouvez la relancer avec `/relancer-quete`.',
-          allowedMentions: { parse: [] },
-        })
-        await interaction.update({ content: 'Quête terminée.', components: [] })
-      } catch (error) {
-        await interaction.update({ content: `Impossible de terminer la quête : ${error instanceof Error ? error.message : String(error)}`, components: [] })
-      }
-      return true
-    }
     if (interaction.customId.startsWith('pf2-mission:publish:') || interaction.customId.startsWith('pf2-mission:cancel:')) {
       const match = /^pf2-mission:(publish|cancel):(.+)$/.exec(interaction.customId)!
       const action = match[1]
