@@ -1,5 +1,7 @@
 # Labyrinthe de la Route Ouverte et portails
 
+[← Index de la bible](../story.md)
+
 > **Source :** ancien `story.md`. Document MJ, réorganisé sans suppression de faits établis.
 
 ---

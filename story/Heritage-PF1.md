@@ -1,5 +1,7 @@
 # Héritage PF1 — Héros des campagnes passées dans le monde PF2
 
+[← Index de la bible](../story.md)
+
 > **Périmètre :** décisions de continuité de la campagne, réservées au MJ. Ici, « validé » signifie que le lien entre un personnage et une aventure PF1 a été décidé pour cette table ; cela ne signifie pas que Paizo a publié ce passé pour le personnage.
 
 ## Principe retenu
@@ -33,12 +35,12 @@ Sa fonction de maître des Épées est issue du cadre Pathfinder. Le fait qu'il 
 
 ## Continuités historiques déjà établies
 
-Ces décisions s'ajoutent, sans les remplacer, aux deux groupes documentés dans [Héros historiques](03-heros-historiques.md) :
+Ces décisions s'ajoutent, sans les remplacer, aux deux groupes documentés dans [Héros historiques](Heros-historiques.md) :
 
 - **Les Veilleurs de la Côte Perdue**, groupe de Corvan : vainqueurs de Karzoug dans *L'Éveil des Seigneurs des Runes*. Corvan est seul survivant en 4720.
 - **Les Chasseurs de l'Étoile**, groupe de Sheila Heidmarch : acteurs de *Shattered Star* et de *Return of the Runelords*.
 
-Leurs chronologies sont reprises dans [Chronologie et Thassilon](04-chronologie-thassilon.md).
+Leurs chronologies sont reprises dans [Chronologie et Thassilon](Chronologie-thassilon.md).
 
 ## À compléter au fil des décisions
 

@@ -1,5 +1,7 @@
 # Mentors, Société des Éclaireurs et figures récurrentes
 
+[← Index de la bible](../story.md)
+
 > **Source :** ancien `story.md`. Document MJ, réorganisé sans suppression de faits établis.
 
 ---

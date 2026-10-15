@@ -1,5 +1,7 @@
 # Fronts de la campagne en cours
 
+[← Index de la bible](../story.md)
+
 > **Source :** ancien `story.md`. Document MJ, réorganisé sans suppression de faits établis.
 
 > **Attention :** les états de progression ci-dessous sont ceux du précédent récapitulatif. Ils restent à actualiser au fil des séances (notamment l'enquête de la rue Rose) ; aucune conclusion de scénario n'est présumée.

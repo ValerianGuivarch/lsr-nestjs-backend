@@ -1,53 +1,50 @@
-# STORY.md — Bible de continuité PF2
+# STORY.md — Index de la bible de continuité PF2
 
-> **Point d'entrée narratif de la campagne.** Les détails ne sont plus accumulés ici : ils sont répartis dans les fichiers `lore/`. Pour l'état de l'infrastructure, voir [RECAP.md](RECAP.md).
+> **Point d'entrée unique pour le lore de campagne.** Les informations détaillées sont rangées dans le dossier [`story/`](story/). Ce fichier explique où chercher et comment maintenir la continuité ; il ne doit plus redevenir un grand document monolithique. Pour l'état technique de l'infrastructure, voir [RECAP.md](RECAP.md).
 
-## Repères fondamentaux
+## Comment utiliser cette bible
 
-- **Début de campagne :** 4720 AR, cellule ouverte d'environ douze PJ au sein de la **Société des Éclaireurs**, basée à **Absalom**.
-- **Principe de jeu :** équipes variables, intrigues simultanées, monde continu où les décisions des PJ font avancer plusieurs fronts.
-- **Mentor principal :** **Corvan**, héros de Pointesable et seul survivant des Veilleurs de la Côte Perdue.
-- **Équipe rivale :** quatre recrues très compétentes, choisies par **Eylysia**.
-- **Passé vivant :** les anciennes campagnes PF1 servent d'histoire réelle du monde, lorsque cette intégration a été explicitement décidée.
-- **Attention :** une chronique rédigée « comme si la campagne avait été jouée » est une **simulation de lecture**, pas une aventure automatiquement accomplie par les PJ actuels.
+Chaque décision narrative doit être rangée dans **le fichier thématique qui lui correspond**. Lorsqu'un sujet touche plusieurs domaines, on conserve l'information principale à un seul endroit et on ajoute des liens depuis les fichiers connexes plutôt que de recopier le même texte partout.
 
-## Sommaire de la bible
+Quatre statuts doivent rester distincts :
 
-- [Cadre de la campagne et règles de continuité](lore/01-cadre-et-continuite.md)
-- [Fronts de la campagne en cours](lore/02-fronts-de-campagne.md)
-- [Héros historiques et leurs héritages](lore/03-heros-historiques.md)
-- [Chronologie et histoire thassilonienne](lore/04-chronologie-thassilon.md)
-- [Mentors, Société des Éclaireurs et figures récurrentes](lore/05-mentors-et-societe.md)
-- [L'équipe rivale d'Eylysia](lore/06-equipe-rivale.md)
-- [Personnages joueurs et intrigues personnelles](lore/07-personnages-joueurs.md)
-- [Labyrinthe de la Route Ouverte et portails](lore/08-labyrinthe-et-portails.md)
-- [Pointesable et les Sept Fléaux](lore/09-pointesable.md)
-- [Absalom, presse et Agents de la Falaise](lore/10-absalom-et-agents.md)
-- [Campagnes envisagées et chroniques de lecture](lore/11-campagnes-et-lectures.md)
-- [Héritage PF1 : décisions de continuité](lore/12-heritage-pf1.md)
+1. **Canon Pathfinder** — élément provenant des publications officielles.
+2. **Adaptation validée** — élément explicitement vrai dans notre version de Golarion, même s'il diffère du canon.
+3. **Provisoire / à définir** — piste de travail discutée mais pas encore verrouillée.
+4. **Chronique de lecture** — exploration narrative d'une aventure, qui ne signifie pas que les PJ l'ont réellement vécue.
 
-## Éléments importants à respecter
+**Règle générale :** ne jamais combler un blanc par une invention silencieuse. Si une information canonique exacte n'a pas été vérifiée ou si une décision de campagne n'a pas été prise, le document doit le dire.
 
-**Quatre statuts distincts :**
+## Où chercher
 
-1. **Canon Pathfinder :** ce qui appartient aux publications officielles.
-2. **Adaptation validée :** ce qui est explicitement vrai dans notre version de Golarion, même si cela diffère du canon.
-3. **Provisoire / à définir :** idée proposée mais pas encore verrouillée.
-4. **Chronique de lecture :** exploration narrative d'une aventure non nécessairement jouée.
+| Sujet | Fichier de référence |
+| --- | --- |
+| Principes de la campagne, continuité, statuts des informations | [Cadre et continuité](story/Cadre-et-continuite.md) |
+| Intrigues commencées, pistes et campagnes actuellement ouvertes | [Fronts de campagne](story/Fronts-de-campagne.md) |
+| Corvan, Veilleurs de la Côte Perdue, Chasseurs de l'Étoile | [Héros historiques](story/Heros-historiques.md) |
+| Repères historiques thassiloniens et Nouvelle Thassilon | [Chronologie thassilonienne](story/Chronologie-thassilon.md) |
+| Société des Éclaireurs, mentors, Décemvirat, Torche, Eylysia | [Société des Éclaireurs](story/Societe-des-Eclaireurs.md) |
+| Groupe rival d'Eylysia | [Équipe rivale](story/Equipe-rivale.md) |
+| Les douze PJ et leurs intrigues personnelles | [Personnages joueurs](story/Personnages-joueurs.md) |
+| Labyrinthe de la Route Ouverte, portails et Anneau d'Alséta | [Labyrinthe et portails](story/Labyrinthe-et-portails.md) |
+| Pointesable, Nualia et les Sept Fléaux | [Pointesable](story/Pointesable.md) |
+| **Absalom : ville, presse, Agents de la Falaise, pègre et guildes de voleurs** | [Absalom](story/Absalom.md) |
+| Campagnes envisagées et chroniques servant à leur évaluation | [Campagnes et lectures](story/Campagnes-et-lectures.md) |
+| Héros issus d'anciennes campagnes PF1 intégrés au monde PF2 | [Héritage PF1](story/Heritage-PF1.md) |
 
-### Héritage des anciennes campagnes PF1
+## Liens transverses utiles
 
-Les nouveaux liens validés figurent dans [Héritage PF1](lore/12-heritage-pf1.md). Parmi eux :
-
-- **Calisro Benarry** a participé à *Skull & Shackles* et a choisi de laisser le pouvoir à **Tessa Fairwind**.
-- **Marcos Farabellus** faisait partie des héros ayant stoppé *L'Invasion du Croc de Fer*.
-- Les aventures de **Corvan**, des **Veilleurs de la Côte Perdue** et des **Chasseurs de l'Étoile** restent consignées dans les [Héros historiques](lore/03-heros-historiques.md).
-
-**Aucun détail des anciens groupes ou des PJ ne doit être fabriqué pour combler un blanc :** les informations manquantes seront ajoutées à mesure des décisions du MJ.
+- **Absalom** est le fichier de référence pour tout ce qui concerne la ville elle-même. Les organisations criminelles et guildes de voleurs y sont centralisées ; les personnages qui les fréquentent restent décrits dans leurs fichiers propres.
+- **Société des Éclaireurs** contient les institutions, mentors et figures récurrentes de la Société. Lorsqu'un personnage ou un réseau d'Absalom sert aussi de contact à la Société, les deux fichiers doivent se renvoyer l'un à l'autre.
+- **Personnages joueurs** contient les arcs personnels. Les détails géographiques, historiques ou institutionnels associés doivent rester dans les fichiers thématiques correspondants.
+- **Héritage PF1** ne remplace pas les biographies des héros historiques : il enregistre spécifiquement les décisions qui font d'anciennes campagnes PF1 une partie de l'histoire réelle du monde actuel.
+- **Fronts de campagne** décrit l'état actuel des pistes ; il ne doit pas absorber tout le lore permanent des lieux et factions concernés.
 
 ## Maintenance
 
-- Une décision définitive doit être répercutée dans le fichier thématique concerné, et dans `lore/12-heritage-pf1.md` si elle fait le lien PF1 → PF2.
-- Mettre à jour l'état réel des fronts après les séances dans `lore/02-fronts-de-campagne.md`.
-- Ne pas confondre **lore MJ** et contenu déjà publié aux joueurs.
-- La réorganisation du 10 octobre 2026 a réparti **les 30 sections de l'ancien story.md sans abandonner leurs informations**. Les titres des sections ont seulement perdu leur ancienne numérotation globale.
+- Ajouter une décision définitive dans le fichier thématique concerné.
+- Si la décision relie une aventure PF1 au monde PF2 actuel, mettre également à jour [Héritage PF1](story/Heritage-PF1.md).
+- Après les séances, actualiser l'état réel des intrigues dans [Fronts de campagne](story/Fronts-de-campagne.md).
+- Ne pas confondre **lore MJ** et informations déjà publiées aux joueurs.
+- Quand un nouveau grand lieu ou sujet devient assez dense, créer un nouveau fichier dans `story/`, puis l'ajouter à cet index avec des liens depuis les documents connexes.
+- La première réorganisation du 10 octobre 2026 avait réparti les 30 sections de l'ancien `story.md` en fichiers thématiques. La présente structure conserve ce contenu mais place désormais tous ces fichiers sous `story/` avec des noms explicites et un index stable.

@@ -1,5 +1,7 @@
 # Chronologie et histoire thassilonienne
 
+[← Index de la bible](../story.md)
+
 > **Source :** ancien `story.md`. Document MJ, réorganisé sans suppression de faits établis.
 
 ---
