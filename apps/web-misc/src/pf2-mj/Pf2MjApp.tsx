@@ -1741,7 +1741,7 @@ export function Pf2MjApp() {
     resources: ['Ressources', 'Aventures courtes, lieux, cartes et idées réutilisables, indépendants du catalogue jouable.'],
     journal: ['Journal MJ', 'Ton journal de quête : ce que tu as prévu, commencé ou terminé.'],
     journaux: ['Journaux d’Absalom', 'Deux unes médiévales : la gazette officielle et le journal à sensation.'],
-    lore: ['Lore', 'Bible de campagne : histoire, personnages, groupes et décisions validées, à lire depuis les fichiers Markdown du dépôt.'],
+    lore: ['Histoire', 'Bible de campagne : story.md sert d’index et les chapitres Markdown associés sont consultables directement ici.'],
     prepare: ['Préparation technique', 'Contrôles documentaires et Foundry pour les scénarios suivis.'],
     maintenance: ['Maintenance du catalogue', 'Qualité des données, descriptions et associations à revoir sans polluer la préparation de partie.'],
     documents: ['Inventaire PDF', 'Inventaire physique séparé des œuvres, des ressources réutilisables et de leur jouabilité.'],
@@ -1754,7 +1754,7 @@ export function Pf2MjApp() {
   const nav: Array<[View, string, string, number | string]> = [
     ['journal', '☑', 'Journal MJ', journalCampaignCount + active.filter((unit) => journalLifecycleStatuses.has(effectiveLifecycleStatus(resolvePlayableOverride(curation, unit)))).length],
     ['journaux', '▤', 'Journaux d’Absalom', ''],
-    ['lore', '✧', 'Lore', ''],
+    ['lore', '✧', 'Histoire', ''],
     ['library', '▦', 'Catalogue', active.length],
     ['resources', '◇', 'Ressources', ''],
     ['pnj', '♙', 'Monde', ''],
@@ -1779,7 +1779,7 @@ export function Pf2MjApp() {
 
   return <main className="pf2-mj pf2-mj-v3">
     <header><Link className="brand brand-button" to={viewPaths.journal}><b>✦</b><span><strong>PATHFINDER 2</strong><small>GESTION MJ</small></span></Link><div className="header-right"><span><i />{active.length} scénarios actifs · {documentCount} PDF · {missingTranslations} traduction{missingTranslations > 1 ? 's' : ''} à voir</span><em>MJ</em></div></header>
-    <div className="layout"><aside><nav>{nav.map(([id, icon, label, count]) => <NavLink key={id} to={viewPaths[id]} className={() => routedView === id || (id === 'pnj' && isReferenceView) ? 'active' : ''}><span>{icon}</span>{label}<b>{count}</b></NavLink>)}</nav><section><p>REPÈRES MJ</p><span className="aside-rule">☑ Journal = sélectionné, en cours, joué</span><span className="aside-rule">▦ Catalogue = recherche + chronologie + mis de côté</span><span className="aside-rule">◇ Ressources = idées et PDF réutilisables</span><span className="aside-rule">♙ Monde = PNJ, factions, lieux, régions, événements</span><span className="aside-rule">⚙ Administration = maintenance technique</span></section><div className="scan-note"><b>V3</b><strong>SQLite comme source</strong><p>Le catalogue est chargé depuis SQLite puis normalisé sans perte pour l’interface V3.</p></div></aside>
+    <div className="layout"><aside><nav>{nav.map(([id, icon, label, count]) => <NavLink key={id} to={viewPaths[id]} className={() => routedView === id || (id === 'pnj' && isReferenceView) ? 'active' : ''}><span>{icon}</span>{label}<b>{count}</b></NavLink>)}</nav><section><p>REPÈRES MJ</p><span className="aside-rule">☑ Journal = sélectionné, en cours, joué</span><span className="aside-rule">▦ Catalogue = recherche + chronologie + mis de côté</span><span className="aside-rule">◇ Ressources = idées et PDF réutilisables</span><span className="aside-rule">✧ Histoire = bible Markdown de la campagne</span><span className="aside-rule">♙ Monde = PNJ, factions, lieux, régions, événements</span><span className="aside-rule">⚙ Administration = maintenance technique</span></section><div className="scan-note"><b>V3</b><strong>SQLite comme source</strong><p>Le catalogue est chargé depuis SQLite puis normalisé sans perte pour l’interface V3.</p></div></aside>
       <section className="content">
         {route.kind === 'not-found' ? routeMissing('Page') : null}
         {route.kind === 'playable' ? (selectedPlayable ? <PlayableDetail unit={selectedPlayable} curation={curation} onUpdate={update} placeOptions={placeOptions} onOpenReference={openReference} /> : routeMissing('Scénario', route.id)) : null}

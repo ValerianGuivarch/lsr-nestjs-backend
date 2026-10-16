@@ -48,3 +48,4 @@
 .pf2-lore-pagination>*:last-child{text-align:right}
 @media(max-width:1050px){.pf2-lore-browser{grid-template-columns:minmax(180px,225px) minmax(0,1fr);gap:12px}.pf2-lore-reading{padding:24px}.pf2-lore-markdown{font-size:14px}}
 @media(max-width:760px){.pf2-lore-browser{display:block}.pf2-lore-navigation{position:static;max-height:none;margin-bottom:14px}.pf2-lore-chapters{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr))}.pf2-lore-source{display:none}.pf2-lore-reading{padding:22px 16px}.pf2-lore-markdown h2{font-size:21px}.pf2-lore-markdown{font-size:14px}.pf2-lore-pagination>*{max-width:48%}}
+.pf2-lore-unavailable-link{color:var(--lore-muted);border-bottom:1px dotted var(--lore-line);cursor:help}

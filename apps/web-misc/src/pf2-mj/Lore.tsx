@@ -1,4 +1,4 @@
-import { isValidElement, useEffect, useMemo, useState, type ReactNode } from 'react'
+import { isValidElement, type ReactNode, useEffect, useMemo, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
@@ -6,26 +6,61 @@ import { viewPaths } from './routing'
 import './lore.css'
 
 /**
- * Les sources sont les vrais fichiers Markdown du dépôt.
- * Vite les intègre à la compilation : aucune copie ni API GitHub nécessaire.
+ * Visualiseur en lecture seule de la bible de campagne.
+ * Les vrais fichiers Markdown du dépôt sont intégrés au build par Vite :
+ * - story.md = point d'entrée et architecture ;
+ * - story/*.md = chapitres détaillés.
+ *
+ * Il n'y a volontairement ni copie des textes, ni dépendance à GitHub au runtime.
  */
 const markdownFiles = {
   ...import.meta.glob('../../../../story.md', { query: '?raw', import: 'default', eager: true }),
-  ...import.meta.glob('../../../../lore/*.md', { query: '?raw', import: 'default', eager: true }),
+  ...import.meta.glob('../../../../story/*.md', { query: '?raw', import: 'default', eager: true }),
 } as Record<string, string>
 
 type LoreDocument = { id: string; path: string; title: string; content: string }
 
-const documents: LoreDocument[] = Object.entries(markdownFiles)
-  .map(([key, content]) => {
-    const path = key.replace(/^.*?(?=lore\/|story\.md$)/, '')
-    const title = content.match(/^#\s+(.+)$/m)?.[1]?.replace(/^STORY\.md\s*[—–-]\s*/, '') ?? path
-    return { id: path, path, title, content }
-  })
-  .sort((a, b) => a.path === 'story.md' ? -1 : b.path === 'story.md' ? 1 : a.path.localeCompare(b.path, 'fr'))
+function repositoryPath(key: string) {
+  const normalized = key.replace(/\\/g, '/')
+  if (normalized.endsWith('/story.md')) return 'story.md'
+  const marker = '/story/'
+  const index = normalized.lastIndexOf(marker)
+  return index >= 0 ? `story/${normalized.slice(index + marker.length)}` : normalized
+}
 
-const documentPaths = new Set(documents.map((doc) => doc.path))
-const indexDocument = documents.find((doc) => doc.id === 'story.md') ?? documents[0]
+function documentTitle(path: string, content: string) {
+  const markdownTitle = content.match(/^#\s+(.+)$/m)?.[1]
+  if (!markdownTitle) return path
+  return markdownTitle.replace(/^STORY\.md\s*[—–-]\s*/i, '')
+}
+
+const discoveredDocuments: LoreDocument[] = Object.entries(markdownFiles).map(([key, content]) => {
+  const path = repositoryPath(key)
+  return { id: path, path, title: documentTitle(path, content), content }
+})
+
+const discoveredByPath = new Map(discoveredDocuments.map((document) => [document.path, document]))
+const discoveredIndex = discoveredByPath.get('story.md')
+
+/**
+ * L'ordre de la navigation suit d'abord l'ordre déclaré dans story.md.
+ * Un nouveau fichier story/*.md oublié dans le sommaire reste quand même visible à la fin.
+ */
+const indexedChapterPaths = discoveredIndex
+  ? [...discoveredIndex.content.matchAll(/\]\((story\/[^)#?]+\.md)(?:#[^)]*)?\)/g)].map((match) => match[1])
+  : []
+const uniqueIndexedChapterPaths = [...new Set(indexedChapterPaths)]
+const indexedPathSet = new Set(uniqueIndexedChapterPaths)
+const documents: LoreDocument[] = [
+  ...(discoveredIndex ? [discoveredIndex] : []),
+  ...uniqueIndexedChapterPaths.map((path) => discoveredByPath.get(path)).filter((document): document is LoreDocument => Boolean(document)),
+  ...discoveredDocuments
+    .filter((document) => document.path !== 'story.md' && !indexedPathSet.has(document.path))
+    .sort((left, right) => left.title.localeCompare(right.title, 'fr')),
+]
+
+const documentPaths = new Set(documents.map((document) => document.path))
+const indexDocument = documents.find((document) => document.id === 'story.md') ?? documents[0]
 
 function normalize(value: string) {
   return value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase('fr')
@@ -46,26 +81,18 @@ function hrefFor(path: string) {
   return `${viewPaths.lore}?page=${encodeURIComponent(path)}`
 }
 
-function markdownLink(currentPath: string, href: string): string | null {
+/**
+ * Transforme un lien Markdown relatif en lien interne du visualiseur.
+ * Exemple : depuis story/Absalom.md, Societe-des-Eclaireurs.md reste dans /pf2-mj/lore.
+ */
+function internalMarkdownLink(currentPath: string, href: string): string | null {
   if (!href || /^(?:[a-z][a-z\d+.-]*:|\/\/)/i.test(href)) return null
   try {
-    const url = new URL(href, `https://lore.local/${currentPath}`)
-    if (url.origin !== 'https://lore.local') return null
+    const url = new URL(href, `https://story.local/${currentPath}`)
+    if (url.origin !== 'https://story.local') return null
     const path = decodeURIComponent(url.pathname.slice(1))
-    return documentPaths.has(path) ? `${hrefFor(path)}${url.hash}` : null
-  } catch {
-    return null
-  }
-}
-
-/** Liens vers d'autres Markdown du dépôt, hors sommaire de la bible (ex. RECAP.md). */
-function githubMarkdownLink(currentPath: string, href: string): string | null {
-  if (!href || /^(?:[a-z][a-z\d+.-]*:|\/\/)/i.test(href)) return null
-  try {
-    const url = new URL(href, `https://lore.local/${currentPath}`)
-    const path = decodeURIComponent(url.pathname.slice(1))
-    if (url.origin !== 'https://lore.local' || !/^[\w.-]+(?:\/[\w.-]+)*\.md$/.test(path) || path.includes('..')) return null
-    return `https://github.com/ValerianGuivarch/lsr-nestjs-backend/blob/main/${path}${url.hash}`
+    if (!documentPaths.has(path)) return null
+    return `${hrefFor(path)}${url.hash}`
   } catch {
     return null
   }
@@ -75,19 +102,18 @@ export default function LorePage() {
   const location = useLocation()
   const [query, setQuery] = useState('')
   const requested = new URLSearchParams(location.search).get('page') ?? 'story.md'
-  const current = documents.find((doc) => doc.id === requested) ?? indexDocument
-  const currentIndex = documents.findIndex((doc) => doc.id === current?.id)
+  const current = documents.find((document) => document.id === requested) ?? indexDocument
+  const currentIndex = documents.findIndex((document) => document.id === current?.id)
   const previous = documents[currentIndex - 1]
   const next = documents[currentIndex + 1]
   const filtered = useMemo(() => {
     const q = normalize(query.trim())
-    return q ? documents.filter((doc) => normalize(doc.title + ' ' + doc.content).includes(q)) : documents
+    return q ? documents.filter((document) => normalize(`${document.title} ${document.content}`).includes(q)) : documents
   }, [query])
 
   useEffect(() => {
-    // En changeant de chapitre, le lecteur commence en haut du nouveau texte.
     if (location.hash) {
-      document.getElementById(decodeURIComponent(location.hash.slice(1)))?.scrollIntoView()
+      window.requestAnimationFrame(() => document.getElementById(decodeURIComponent(location.hash.slice(1)))?.scrollIntoView())
     } else {
       document.querySelector('.pf2-mj .content')?.scrollIntoView({ block: 'start' })
     }
@@ -99,10 +125,10 @@ export default function LorePage() {
     <div className="pf2-lore-browser">
       <div className="pf2-lore-navigation">
         <div className="pf2-lore-navigation-header">
-          <strong>Bibliothèque de campagne</strong>
+          <strong>Histoire de campagne</strong>
           <span>{documents.length} documents · lecture seule</span>
         </div>
-        <label htmlFor="pf2-lore-search" className="pf2-lore-search-label">Chercher dans le lore</label>
+        <label htmlFor="pf2-lore-search" className="pf2-lore-search-label">Chercher dans l’histoire</label>
         <input
           id="pf2-lore-search"
           type="search"
@@ -110,26 +136,26 @@ export default function LorePage() {
           value={query}
           onChange={(event) => setQuery(event.target.value)}
         />
-        <nav aria-label="Chapitres du lore" className="pf2-lore-chapters">
-          {filtered.map((doc) => <Link
-            key={doc.id}
-            to={hrefFor(doc.id)}
-            className={current.id === doc.id ? 'selected' : ''}
-            aria-current={current.id === doc.id ? 'page' : undefined}
+        <nav aria-label="Chapitres de l’histoire" className="pf2-lore-chapters">
+          {filtered.map((document) => <Link
+            key={document.id}
+            to={hrefFor(document.id)}
+            className={current.id === document.id ? 'selected' : ''}
+            aria-current={current.id === document.id ? 'page' : undefined}
           >
-            <span>{doc.path === 'story.md' ? '⌂' : doc.path.split('/').pop()?.slice(0, 2)}</span>
-            <strong>{doc.path === 'story.md' ? 'Sommaire général' : doc.title}</strong>
+            <span>{document.path === 'story.md' ? '⌂' : '§'}</span>
+            <strong>{document.path === 'story.md' ? 'Sommaire général' : document.title}</strong>
           </Link>)}
           {filtered.length === 0 && <p className="pf2-lore-no-results">Aucun chapitre ne correspond à cette recherche.</p>}
         </nav>
-        <p className="pf2-lore-source">Sources : <code>story.md</code> et <code>lore/*.md</code> du dépôt GitHub. Les changements sont visibles après une nouvelle compilation de l’application.</p>
+        <p className="pf2-lore-source">Source affichée directement : <code>story.md</code> et <code>story/*.md</code>. Les liens entre chapitres restent dans ce visualiseur.</p>
       </div>
 
       <div className="pf2-lore-reading">
         {requested !== current.id && <p className="pf2-lore-warning">Chapitre introuvable : affichage du sommaire général.</p>}
         <div className="pf2-lore-reading-toolbar">
-          <span>DOC MJ · {currentIndex === 0 ? 'INDEX' : `CHAPITRE ${currentIndex}`}</span>
-          <a href={`https://github.com/ValerianGuivarch/lsr-nestjs-backend/blob/main/${current.path}`} target="_blank" rel="noopener noreferrer">Voir le Markdown sur GitHub ↗</a>
+          <span>{current.path === 'story.md' ? 'INDEX DE LA BIBLE' : current.path}</span>
+          <span>LECTURE SEULE</span>
         </div>
         <article className="pf2-lore-markdown">
           <ReactMarkdown
@@ -141,13 +167,13 @@ export default function LorePage() {
               h4: ({ children }) => <h4 id={headingId(asText(children))}>{children}</h4>,
               a: ({ href, children }) => {
                 if (!href) return <span>{children}</span>
-                const inLore = markdownLink(current.path, href)
-                if (inLore) return <Link to={inLore}>{children}</Link>
+                const inHistory = internalMarkdownLink(current.path, href)
+                if (inHistory) return <Link to={inHistory}>{children}</Link>
                 if (href.startsWith('#')) return <a href={href}>{children}</a>
                 if (/^https?:\/\//i.test(href)) return <a href={href} target="_blank" rel="noopener noreferrer">{children}</a>
-                const inGithub = githubMarkdownLink(current.path, href)
-                if (inGithub) return <a href={inGithub} target="_blank" rel="noopener noreferrer">{children}</a>
-                return <span>{children}</span>
+                // Les autres fichiers du dépôt (RECAP.md, etc.) ne font pas partie de la bible affichée.
+                // On garde leur libellé sans envoyer le lecteur vers GitHub.
+                return <span className="pf2-lore-unavailable-link" title="Document hors de la bible Histoire">{children}</span>
               },
               img: ({ src, alt }) => {
                 if (!src || !/^https?:\/\//i.test(src)) return null
