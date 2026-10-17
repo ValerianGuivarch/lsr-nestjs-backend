@@ -1539,7 +1539,7 @@ export class DiscordCommandsService {
       return
     }
     try {
-      const names = await this.actorNames()
+      const names = await this.cachedActorNames()
       const actors = session.participants.flatMap((uuid) => {
         const name = names.get(uuid)
         return name ? [{ uuid, name }] : []
@@ -2876,7 +2876,7 @@ export class DiscordCommandsService {
       return
     }
     await interaction.deferReply({ ephemeral: true })
-    const names = await this.actorNames()
+    const names = await this.cachedActorNames()
     const actors = [...names.entries()].map(([uuid, name]) => ({ uuid, name, player: this.playerName(name) }))
     const knownActors = actors.flatMap(({ uuid, name, player }) => {
       const userId = this.discordId(player)
@@ -3066,18 +3066,6 @@ export class DiscordCommandsService {
     return levels
   }
 
-  private async requiredSessionPlayerLevels(uuids: string[]): Promise<Map<string, { foundryLevel: number; theoreticalLevel: number }>> {
-    let players: Awaited<ReturnType<FoundryRelayService['listPlayers']>>
-    try {
-      players = await this.foundry.listPlayers()
-    } catch (error) {
-      throw new Error(`Foundry est indispensable pour afficher les niveaux et les niveaux à faire : ${error instanceof Error ? error.message : String(error)}`)
-    }
-    const levels = new Map(players.map(player => [player.uuid, { foundryLevel: player.foundryLevel, theoreticalLevel: player.level }]))
-    const missing = [...new Set(uuids)].filter(uuid => !levels.has(uuid))
-    if (missing.length) throw new Error(`Foundry ne renvoie pas la progression de ${missing.length} personnage${missing.length > 1 ? 's' : ''} de la séance.`)
-    return levels
-  }
 
   private levelLabel(uuid: string, levels: Map<string, { foundryLevel: number; theoreticalLevel: number }>): string {
     const value = levels.get(uuid)
@@ -3095,11 +3083,10 @@ export class DiscordCommandsService {
     rolls: Map<string, number>,
     mentionUsers = false,
   ): Promise<string> {
-    const levels = await this.requiredSessionPlayerLevels(actors.map(actor => actor.uuid))
     const lines = actors.map((actor) => {
       const count = rolls.get(actor.uuid) ?? 0
       const mention = mentionUsers && actor.userId ? ` (<@${actor.userId}>)` : ''
-      return `- **${this.characterLabel(actor.name)}**, ${this.levelLabel(actor.uuid, levels)} : **${count} lancer${count > 1 ? 's' : ''} à faire**${mention}`
+      return `- **${this.characterLabel(actor.name)}** : **${count} lancer${count > 1 ? 's' : ''} à faire**${mention}`
     })
     return [
       `**Séance prévue — Résumé n°${sessionNumber}**`,
@@ -3107,6 +3094,11 @@ export class DiscordCommandsService {
       ...lines,
       `Début de la mission : ${date ? this.displayDate(date) : 'date non renseignée'}`,
     ].join('\n')
+  }
+
+  private async cachedActorNames(): Promise<Map<string, string>> {
+    const cached = await this.persistence.readFoundryActorCache()
+    return new Map(cached.map((actor) => [actor.uuid, actor.name]))
   }
 
   async actorNames(): Promise<Map<string, string>> {

@@ -579,21 +579,21 @@ describe('DiscordCommandsService', () => {
     expect(result).toContain('dernière séance : 01/10/2026')
   })
 
-  it('refuses /recap-seance when Foundry progression is unavailable', async () => {
+  it('builds /recap-seance from local data when Foundry is offline, without levels', async () => {
     const editReply = jest.fn().mockResolvedValue(undefined)
+    const listActors = jest.fn().mockRejectedValue(new Error('relay offline'))
+    const listPlayers = jest.fn().mockRejectedValue(new Error('relay offline'))
     const service = new DiscordCommandsService({
       listSessions: jest.fn().mockResolvedValue([
         { sessionNumber: 4, published: false, participants: ['Actor.pepin'], inGameStartDate: '4720-03-22', title: '' },
       ]),
       readFoundryActorCache: jest.fn().mockResolvedValue([{ uuid: 'Actor.pepin', name: 'Pépin (Eric)' }]),
       saveFoundryActorCache: jest.fn(),
-    } as never, {
-      listActors: jest.fn().mockRejectedValue(new Error('relay offline')),
-      listPlayers: jest.fn().mockRejectedValue(new Error('relay offline')),
-    } as never)
+    } as never, { listActors, listPlayers } as never)
 
     await service.handle({
       commandName: 'recap-seance',
+      id: 'recap-session-offline',
       user: { id: 'admin' },
       memberPermissions: { has: jest.fn().mockReturnValue(true) },
       options: { getString: jest.fn().mockReturnValue('4') },
@@ -601,8 +601,12 @@ describe('DiscordCommandsService', () => {
       editReply,
     } as never)
 
-    expect(editReply.mock.calls.at(-1)?.[0].content).toContain('Foundry est indispensable')
-    expect(editReply.mock.calls.at(-1)?.[0].content).not.toContain('niveau ?')
+    const content = editReply.mock.calls.at(-1)?.[0].content as string
+    expect(content).toContain('Séance prévue — Résumé n°4')
+    expect(content).toContain('**Pépin** : **0 lancer à faire**')
+    expect(content).not.toContain('niveau')
+    expect(listActors).not.toHaveBeenCalled()
+    expect(listPlayers).not.toHaveBeenCalled()
   })
 
   it('rebuilds a planned-session message with historical progression rolls', async () => {
@@ -615,7 +619,11 @@ describe('DiscordCommandsService', () => {
     ]
     const service = new DiscordCommandsService({
       listSessions: jest.fn().mockResolvedValue(sessions),
-      saveFoundryActorCache: jest.fn(), readFoundryActorCache: jest.fn(),
+      saveFoundryActorCache: jest.fn(),
+      readFoundryActorCache: jest.fn().mockResolvedValue([
+        { uuid: 'Actor.eos', name: 'Éos (David)' },
+        { uuid: 'Actor.pepin', name: 'Pépin (Eric)' },
+      ]),
     } as never, {
       listActors: jest.fn().mockResolvedValue([
         { uuid: 'Actor.eos', name: 'Éos (David)' },
@@ -637,9 +645,74 @@ describe('DiscordCommandsService', () => {
     const result = preview.content
     expect(preview.components[0].toJSON().components[0].label).toBe('Publier')
     expect(result).toContain('Séance prévue — Résumé n°3')
-    expect(result).toContain('Éos**, niveau 2 (1 niveau à faire !) : **1 lancer à faire**')
-    expect(result).toContain('Pépin**, niveau 2 : **0 lancer à faire**')
+    expect(result).toContain('Éos** : **1 lancer à faire**')
+    expect(result).toContain('Pépin** : **0 lancer à faire**')
+    expect(result).not.toContain('niveau')
     expect(result).toContain('15 Pharast 4720 AR')
+  })
+
+  it('/debut-seance can create its draft with Foundry offline and never adds levels to the announcement', async () => {
+    const listActors = jest.fn().mockRejectedValue(new Error('relay offline'))
+    const listPlayers = jest.fn().mockRejectedValue(new Error('relay offline'))
+    const createSession = jest.fn().mockResolvedValue({ id: 'session-12', sessionNumber: 12 })
+    const service = new DiscordCommandsService({
+      listSessions: jest.fn().mockResolvedValue([]),
+      createSession,
+    } as never, { listActors, listPlayers } as never)
+    const editReply = jest.fn().mockResolvedValue(undefined)
+
+    await expect((service as unknown as {
+      finishGameModal: (
+        interaction: unknown,
+        pending: { selected: Array<{ uuid: string; name: string; userId: string }> },
+        date: string,
+        plan: { progressionRolls: string[]; rollCounts: Map<string, number> },
+      ) => Promise<void>
+    }).finishGameModal(
+      { editReply } as never,
+      { selected: [{ uuid: 'Actor.pepin', name: 'Pépin (Eric)', userId: '399621722158137346' }] },
+      '4720-04-08',
+      { progressionRolls: ['**Jets de progression** — 1 jet correspond à 7 jours d’activité.'], rollCounts: new Map([['Actor.pepin', 1]]) },
+    )).resolves.toBeUndefined()
+
+    expect(createSession).toHaveBeenCalledWith(expect.objectContaining({ participants: ['Actor.pepin'], published: false }))
+    expect(editReply).toHaveBeenCalledWith(expect.objectContaining({ content: expect.stringContaining('Brouillon créé : résumé n°12') }))
+    expect(listActors).not.toHaveBeenCalled()
+    expect(listPlayers).not.toHaveBeenCalled()
+    const pending = (service as unknown as { pendingAnnouncements: Map<string, { content: string }> }).pendingAnnouncements
+    const announcement = [...pending.values()][0]?.content ?? ''
+    expect(announcement).toContain('**Pépin** : **1 lancer à faire**')
+    expect(announcement).not.toContain('niveau')
+  })
+
+  it('/fin-seance never queries Foundry', async () => {
+    const listActors = jest.fn().mockRejectedValue(new Error('relay offline'))
+    const listPlayers = jest.fn().mockRejectedValue(new Error('relay offline'))
+    const updateSession = jest.fn().mockResolvedValue({ id: 'session-12' })
+    const editReply = jest.fn().mockResolvedValue(undefined)
+    const service = new DiscordCommandsService({
+      listSessions: jest.fn().mockResolvedValue([
+        { id: 'session-12', sessionNumber: 12, inGameStartDate: '4720-04-08', date: '', participants: ['Actor.pepin'] },
+      ]),
+      updateSession,
+    } as never, { listActors, listPlayers } as never)
+
+    await service.handle({
+      commandName: 'fin-seance',
+      user: { id: 'admin' },
+      memberPermissions: { has: jest.fn().mockReturnValue(true) },
+      options: {
+        getInteger: jest.fn((name: string) => name === 'numero' ? 12 : name === 'xp' ? 100 : name === 'jours' ? 1 : null),
+        getString: jest.fn().mockReturnValue(null),
+      },
+      deferReply: jest.fn().mockResolvedValue(undefined),
+      editReply,
+    } as never)
+
+    expect(editReply).toHaveBeenCalledWith(expect.objectContaining({ content: expect.stringContaining('Résumé n°12 mis à jour') }))
+    expect(updateSession).toHaveBeenCalled()
+    expect(listActors).not.toHaveBeenCalled()
+    expect(listPlayers).not.toHaveBeenCalled()
   })
 
   it('turns missed published sessions into seven-day progression rolls', async () => {
