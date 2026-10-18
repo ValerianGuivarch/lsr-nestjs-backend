@@ -14,7 +14,11 @@ Nom verrouillé du groupe : **Les Veilleurs de la Côte Perdue**.
 
 #### Corvan
 
-Corvan est un ancien grand aventurier, désormais mentor / vétéran au sein de la Société des Éclaireurs. Il possède un lien extrêmement fort avec **Pointesable**.
+Corvan est un **elfe sorcier (Witch)**, ancien grand aventurier, désormais mentor / vétéran au sein de la Société des Éclaireurs. Il possède un lien extrêmement fort avec **Pointesable**.
+
+Sa magie présente une particularité importante : son **familier n'est pas un animal, mais le poignard qu'il porte**. Le poignard sert de point d'ancrage et de conduit à son lien de sorcier avec **Echo of Lost Divinity**. Cette particularité est avant tout narrative : elle ne lui accorde pas de mécanique supplémentaire par rapport au fonctionnement normal de son familier.
+
+**Hypothèse encore provisoire sur ses origines :** Corvan aurait environ **250 ans en 4720 AR** et aurait, dans sa jeunesse, été **prêtre d'Aroden** avant la mort du dieu en **4606 AR**. Cette chronologie est cohérente pour un elfe : il aurait eu environ 136 ans lors de la mort d'Aroden. Le passage de cet ancien sacerdoce à son lien actuel avec Echo of Lost Divinity, ainsi que le rôle exact du poignard dans cette transition, restent à préciser et ne doivent pas encore être traités comme entièrement verrouillés.
 
 Son groupe est le groupe historique qui a accompli **L'Éveil des Seigneurs des Runes**. Il ne s'agit donc pas d'un simple vétéran ayant croisé Karzoug : **Corvan et ses compagnons sont les héros qui ont réellement vaincu Karzoug**.
 
