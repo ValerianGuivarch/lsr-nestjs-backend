@@ -29,31 +29,32 @@ En cliquant sur un lieu du catalogue en mode `/mj`, le panneau **Visibilité jou
 
 La nouvelle donnée `important` des règles de visibilité est persistée par la migration SQLite `034-map-important-overrides`. L'endpoint `/map/important-places` ne publie que les favoris explicitement visibles : il ne retourne ni texte MJ ni référence Wiki interne.
 
-## Menus partagés « Favoris » et « Lieux de quête »
+## Lieux de quête, favoris et contributions des joueurs
 
-Deux menus sont affichés en haut à gauche des modes PJ, MJ-light et MJ :
+**Guide détaillé et décisions validées :** [Synchronisation des quêtes Discord avec la carte](../../docs/pf2/discord-quest-map-sync.md). Les données effectives des lieux, de leurs titres et de leurs associations sont dans `pf2.sqlite`, et non dans ce README.
 
-- **★ Lieux de quête** : un repère géographique par lieu, quel que soit le nombre de quêtes qui s'y déroulent. En ouvrant le repère, les joueurs voient une liste de toutes les quêtes associées. Le MJ et le MJ-light peuvent modifier cette liste directement dans la fenêtre du lieu (une quête par ligne, jusqu'à 30), sans créer de nouveau marqueur. Les actions « Convertir en lieu normal » et « Supprimer le lieu » continuent à porter sur le lieu entier, et non sur une seule quête.
-- **☆ Favoris** : une liste distincte de tous les lieux ordinaires favoris. Elle réunit les lieux du référentiel PF2 et ceux du catalogue de Golarion, dont la Grande Loge. Sélectionner une entrée recentre la carte et ouvre ses informations ; le nom du lieu conserve ses règles normales de visibilité selon le zoom, sans grosse étoile permanente.
+### ★ Lieux de quête
 
-Les fiches existantes avec un seul `map_quest_name` restent compatibles. Le nouveau champ `map_quest_names` est une liste de chaînes, avec `map_quest_name` conservé comme premier élément pour la compatibilité. Aucune migration de données destructive n'est nécessaire. Les quêtes sont des **noms affichés**, pas des références automatiques au wiki des quêtes.
+- Un **lieu** garde un seul repère géographique, y compris quand **plusieurs quêtes** s'y déroulent. Une quête peut aussi être associée à plusieurs lieux.
+- Les fils du forum Discord `journal-de-quetes` sont la source des titres et du statut « Terminée ». Le bot NestJS synchronise leurs IDs/titres/tags à l'initialisation et toutes les **cinq minutes** dans `pf2_discord_quest`. `pf2_map_place_quest` contient les associations stables par ID de fil.
+- Le clic sur un repère ouvre la liste des quêtes associées, avec état et lien vers Discord. Renommer un fil sur Discord met à jour son titre à la prochaine synchronisation réussie, **après actualisation de la page** : il n'est pas nécessaire de recréer le repère.
+- Si toutes les quêtes liées sont terminées, le repère et sa ligne dans la liste sont **masqués par défaut**, sans suppression de données. Cocher **Afficher les quêtes terminées** les réaffiche. Les associations inconnues ou historiques non résolues restent visibles pour vérification.
+- Les modes PJ, MJ-light et MJ disposent du menu **Lieux de quête**. Les modifications des associations utilisent un sélecteur de fils Discord, et non une saisie libre du titre de la quête.
 
-Dans **PF2-MJ → Lieux**, sélectionner le type « Lieu de quête » et saisir plusieurs quêtes, une par ligne. Côté carte, cliquer sur le lieu en MJ/MJ-light et choisir « Modifier les quêtes associées ». Les PJ voient la liste sans droit de modification dans l'interface.
+### ☆ Favoris distincts des quêtes
 
-## Favoris et lieux de quête : deux systèmes indépendants
+Le menu **Favoris**, partagé entre les trois modes, rassemble les lieux ordinaires favoris du référentiel et du catalogue géographique. Les favoris conservent leur **seuil de zoom normal** et ne sont pas transformés en grosses étoiles de quête persistantes. Le favori de référence **Grande Loge** et le lieu de quête **Grande Loge** peuvent coexister comme repères distincts ; éviter de fusionner leurs identités sur la seule base du nom.
 
-### ☆ Favori partagé
-Un PJ, un MJ ou un MJ-light peut mettre en favori **un lieu déjà publié**, sans en modifier la localisation, le nom, ou les informations cachées. Son texte devient **doré et gras**, précédé d'une petite étoile, mais respecte exactement son niveau de zoom habituel : aucun grand marqueur universel n'est créé. Le champ `map_important` reste la source des favoris ordinaires. Le bouton de la fenêtre d'un lieu permet également de retirer le favori.
+### + Lieu : contribution PJ et MJ
 
-### ★ Lieu de quête
-Le **MJ** crée un lieu de quête à une position libre avec un clic droit sur la carte `/mj`, option **Créer un lieu de quête**. Il indique le nom du lieu puis le nom de la quête. Cela crée un enregistrement de type `lieu` avec `map_kind: "quest"` et `map_quest_name`, à la latitude/longitude géographique choisie. Il reste marqué par une étoile de 30 px à n'importe quel zoom, dans la liste **Lieux de quête**, sans transformer une ville existante en doublon. Dans **PF2-MJ → Lieux**, le MJ peut également choisir ce type et renseigner la quête.
+- Un PJ peut créer un lieu de quête en sélectionnant sa position sur la carte et en choisissant une ou plusieurs quêtes Discord, ou créer un **lieu personnalisé** libre, sans quête obligatoire, à l'icône plus discrète.
+- Le formulaire intégré recueille titre libre, description et associations ; il **remplace les pop-up natifs du navigateur**. La création d'une nouvelle quête elle-même reste sur Discord (création d'un fil, sans commande `/créer quête`).
+- **Décision de partage :** aucune validation MJ. Une fiche créée par un PJ (`map_origin='pj'`) est immédiatement partagée. Les PJ peuvent modifier et supprimer les fiches d'origine PJ, mais ne doivent pas réécrire les lieux MJ ou de référence via les routes communautaires.
+- La logique d'interface `/pj`, `/mj-light`, `/mj` ne remplace **pas** une authentification côté serveur. Les endpoints communautaires historiques ne vérifient pas l'identité de l'auteur : le contrôle d'accès demeure un travail ouvert, même si le partage est volontairement libre entre PJ.
 
-Quand une quête est terminée, le MJ ou le MJ-light clique sur son étoile, puis choisit **Convertir en lieu normal** (enlève le statut de quête et garde le lieu sur la carte aux zooms habituels) ou **Supprimer le lieu de quête** (supprime uniquement cette fiche après confirmation). Ces opérations refusent un lieu normal. En mode PJ, les commandes de création, conversion et suppression ne sont pas proposées.
+### Compatibilité et migrations
 
-### Jeu de données de validation
-L'initialisation idempotente `038-map-quest-sites-and-examples`, exécutée **après** les données initiales, prend uniquement les ruines azlantes déjà publiées et marquées importantes, les convertit en **lieu de quête sans changer leurs coordonnées**, met **Grand Lodge / Grande Loge** en favori ordinaire si le lieu est déjà publié, puis ajoute **La demande de Pointe-Sable** comme lieu de quête au point officiel de Sandpoint (`-27.16403, 44.09723`) avec l'identifiant `quest-demande-pointesable`. La migration ne crée pas de deuxième ville de Pointesable et ne modifie aucun lieu non concerné.
-
-**Limitation de sécurité existante :** les accès `/mj` et `/mj-light` distinguent les contrôles dans l'interface, mais les routes PF2-MJ historiques n'ont pas de véritable authentification par rôle. Les utilisateurs ordinaires de la carte ne disposent pas de ces boutons ; cela ne constitue pas une barrière serveur contre des appels API forgés. Une authentification de ces routes sera nécessaire pour garantir une séparation MJ/PJ stricte.
+La migration `038-map-quest-sites-and-examples` créait les premiers lieux de quête et favoris de démonstration ; ses exemples historiques ne doivent **pas** être interprétés comme l'état présent de la base. La migration `039-discord-quest-catalogue-and-map-links` introduit le catalogue Discord et ses liaisons. Les anciens champs `map_quest_name` / `map_quest_names` restent lisibles pour compatibilité ; les associations actives sont les IDs des fils Discord. Les corrections ultérieures de noms de points, de position ou de visibilité faites sur le mini-PC **ne nécessitent pas de modification du code**.
 
 ## Calage interactif du plan d’Absalom
 
