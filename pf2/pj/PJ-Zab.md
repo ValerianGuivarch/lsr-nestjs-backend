@@ -38,3 +38,15 @@ Aucune décision supplémentaire documentée ici. Les informations du joueur et 
 - **Gloriana Morilla** : membre influente de la Maison Morilla et figure de la Société ; Zab l'a croisée lorsque son ancien propriétaire travaillait pour sa famille.
 - **Hadrik Voss** : ancien propriétaire de Zab, marchand d'Absalom lié commercialement aux Morilla.
 - **Wynsal Étoilené** : pas une relation personnelle, mais une figure majeure pour Zab car sa proclamation pendant le siège d'Absalom a indirectement permis son affranchissement.
+
+---
+
+## Apports du récit original fourni
+
+Zab est un **kobold né et élevé à Absalom**. Longtemps privé de liberté, il appartenait à un marchand qui fournissait notamment la **Maison Morilla**. Utilisé pour porter marchandises et messages et pour se glisser dans des endroits difficiles d'accès, il découvre de l'intérieur la manière dont la puissance des grandes maisons dépend de réseaux de serviteurs, de gardes et d'intermédiaires.
+
+**Intrigue personnelle :** son affranchissement pendant le siège d'Absalom, dans le sillage d'une proclamation de **Wynsal Étoilené**, ne doit pas faire oublier son ancien propriétaire **Hadrik Voss** ni les rapports ambigus entre noblesse, Société des Éclaireurs et communautés kobold des égouts.
+
+**Réseau relationnel :** **Engashez** est un contact accessible parmi les **Dragons des Égouts** ; **Yiddlepode** est leur dirigeante, moins aisée à rencontrer. **Gloriana Morilla** est une personne qu'il a croisée dans sa vie de servitude, pas nécessairement une protectrice personnelle.
+
+**Secret et dilemme MJ :** Zab connaît les usages des puissants parce qu'il les a servis. Cette expérience peut lui donner des pistes ou des occasions de conflit, sans lui attribuer d'office une connaissance de tous les secrets des Morilla. Ne pas transformer tous ces liens en complot unique.
