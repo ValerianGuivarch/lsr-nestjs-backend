@@ -17,6 +17,7 @@ Répertoire des ressources narratives transverses. Les fichiers thématiques res
 - [Pointesable](../univers/Pointesable.md)
 - [Chronologie thassilonienne](Chronologie-thassilon.md)
 - [Labyrinthe, portails et Anneau d'Alséta](Labyrinthe-et-portails.md)
+- [Elfes des cavernes et refuge azlanti](Elfes-des-cavernes-et-refuge-azlanti.md)
 - [Cadre et continuité](../univers/Cadre-et-continuite.md)
 
 ## Système de référence
