@@ -37,3 +37,13 @@ Aucune décision supplémentaire documentée ici. Les informations du joueur et 
 - Fratrie : **Cilia**, grande sœur orc devenue Éclaireuse dans les Terres Détrempées ; les jumeaux gnomes **Inas** et **Mira** ; **Nielas**, le plus jeune.
 - Une grand-mère astrologue (nom à définir) a prédit à Eryn une existence parfaitement tranquille.
 - **Cilia** est la relation familiale la plus directement reliée à la Société des Éclaireurs.
+
+---
+
+## Apports du récit original fourni
+
+Le récit `Personnages/Eryn.docx` présente **Eryn comme une gnome originaire d'Andoran**, élevée dans une communauté des hauteurs profondément attachée à l'astronomie et à l'astrologie. Ses ancêtres venaient de **Lirgen** : la mort d'Aroden, le dérèglement des prophéties et l'apparition de **l'Œil d'Abendego** ont dispersé cette tradition savante. Il en résulte une tension entre l'héritage de la lecture du ciel et l'impossibilité de prévoir l'avenir avec certitude.
+
+**Arc MJ documenté par la continuité :** **Black Butterfly** et **Camus**, emprisonné près de Golarion par Desna après avoir été pris pour une menace, relèvent de la cosmologie de campagne. Ne pas réduire ces éléments à une simple prophétie personnelle déjà comprise par Eryn : ses connaissances effectives doivent être séparées des secrets du MJ. L'ancienne fiche utilise aussi « Elyn » ; le récit fourni se présente comme **Eryn**.
+
+**Pistes et limites :** la prédiction de la grand-mère d'une vie tranquille et les liens familiaux nommés par le dépôt sont des informations de continuité à raccorder précisément au texte ; aucune issue de l'arc Camus n'est présumée.
