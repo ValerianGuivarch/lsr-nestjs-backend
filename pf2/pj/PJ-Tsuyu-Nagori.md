@@ -45,3 +45,15 @@ Aucune décision supplémentaire documentée ici. Les informations du joueur et 
 - **Onyx** : familier axolotl de Tsuyu, apparu après qu'une toile d'araignée se fut dessinée dans la glace d'un lac.
 - Famille encore à nommer : grand-mère ayant rencontré le Maître Tisseur enfant, tante dirigeant l'exploitation de bois, mère artisane/enchanteresse, père chargé du commerce, frère travaillant avec la mère.
 - **Le Maître Tisseur** : fondateur mystérieux de l'ordre, revenu visiter les Tisseurs à chaque génération avant de manquer inexplicablement sa dernière visite ; véritable nom inconnu.
+
+---
+
+## Apports du récit original fourni
+
+Dans `Personnages/Tsuyu-Nagori.docx`, **Tsuyu-Nagori**, qui utilise le nom **Tsuyi** avec les étrangers, est une **kitsune de 42 ans** originaire de la **Forêt des Esprits**, à Tian Xia. Elle se décrit avec une fourrure grise aux reflets violets, des yeux violets, **une seule queue** et une apparence humaine de jeune femme aux cheveux longs. Espiègle sans chercher à blesser, elle a une méfiance marquée envers les personnes puissantes qui abusent de leur autorité.
+
+**Intrigue personnelle :** sa relation aux **Tisseurs de Mémoire** et à leur enquête sur l'origine des dieux fournit une raison de venir à Absalom, ville de l'Épreuve de la Pierre-Étoile. **Renji Soryu** enquête parallèlement sur Razmir au Razmiran. Le **Maître Tisseur** et son absence lors de la dernière visite attendue restent des mystères.
+
+**Deux niveaux de secrets :** les hypothèses théologiques de l'ordre ne deviennent pas automatiquement des faits cosmiques. Le lien caché à un **alghollthu / veiled master**, mentionné par la continuité MJ, doit demeurer distinct de ce que Tsuyi sait et de ce que son ordre prétend savoir.
+
+**Nom du familier :** le texte narratif parle d'**Onyx**, mais l'export Foundry d'octobre 2026 nomme l'acteur **Oxi**. Maintenir la divergence en attente de décision, sans renommer la mécanique.
