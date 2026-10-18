@@ -17,7 +17,9 @@ const markdownFiles = {
   ...import.meta.glob('../../../../UNIVERS.md', { query: '?raw', import: 'default', eager: true }),
   ...import.meta.glob('../../../../PJ.md', { query: '?raw', import: 'default', eager: true }),
   ...import.meta.glob('../../../../CAMPAGNES.md', { query: '?raw', import: 'default', eager: true }),
-  ...import.meta.glob('../../../../pf2/**/*.md', { query: '?raw', import: 'default', eager: true }),
+  ...import.meta.glob('../../../../pf2/univers/**/*.md', { query: '?raw', import: 'default', eager: true }),
+  ...import.meta.glob('../../../../pf2/pj/**/*.md', { query: '?raw', import: 'default', eager: true }),
+  ...import.meta.glob('../../../../pf2/campagnes/**/*.md', { query: '?raw', import: 'default', eager: true }),
 } as Record<string, string>
 
 type LoreDocument = { id: string; path: string; title: string; content: string }
@@ -46,7 +48,7 @@ const discoveredIndex = discoveredByPath.get('UNIVERS.md')
 
 /**
  * L'ordre de la navigation suit d'abord l'ordre déclaré dans UNIVERS.md.
- * Un nouveau fichier story/*.md oublié dans le sommaire reste quand même visible à la fin.
+ * Un nouveau fichier narratif oublié dans le sommaire reste quand même visible à la fin.
  */
 const indexedChapterPaths = discoveredIndex
   ? [...discoveredIndex.content.matchAll(/\]\((pf2\/[^)#?]+\.md)(?:#[^)]*)?\)/g)].map((match) => match[1])
@@ -150,7 +152,7 @@ export default function LorePage() {
           </Link>)}
           {filtered.length === 0 && <p className="pf2-lore-no-results">Aucun chapitre ne correspond à cette recherche.</p>}
         </nav>
-        <p className="pf2-lore-source">Source affichée directement : <code>UNIVERS.md</code> et <code>pf2/**/*.md</code>. Les liens entre chapitres restent dans ce visualiseur.</p>
+        <p className="pf2-lore-source">Source affichée directement : <code>UNIVERS.md</code> et <code>pf2/{univers,pj,campagnes}/**/*.md</code>. Les liens entre chapitres restent dans ce visualiseur.</p>
       </div>
 
       <div className="pf2-lore-reading">
