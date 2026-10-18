@@ -12,6 +12,7 @@ type Character = {
   wikiUrl: string | null
   discordChannelId: string | null
   discordUrl: string | null
+  chatgptUrl: string | null
   association: 'confirmed' | 'suggested' | 'missing'
   ownerStatus: 'confirmed' | 'missing' | 'other'
 }
@@ -74,6 +75,9 @@ export default function PlayerCharactersPage({ selectedNpcId }: { selectedNpcId?
           {character.wikiUrl
             ? <a href={character.wikiUrl} target="_blank" rel="noreferrer">Ouvrir la fiche Wiki ↗</a>
             : <span>Fiche Wiki indisponible</span>}
+          {character.chatgptUrl
+            ? <a href={character.chatgptUrl} target="_blank" rel="noreferrer">Ouvrir la discussion ChatGPT ↗</a>
+            : <span>Discussion ChatGPT non renseignée</span>}
           {character.discordUrl
             ? <a href={character.discordUrl} target="_blank" rel="noreferrer">Ouvrir la discussion Discord ↗</a>
             : <span>Discussion Discord non associée</span>}
@@ -96,7 +100,8 @@ export default function PlayerCharactersPage({ selectedNpcId }: { selectedNpcId?
         <strong>{character.wikiPageTitle?.replace(/^Personnage:/, '') ?? character.name}</strong>
         <span>{player.playerName}</span>
         <small>{character.association === 'confirmed' ? 'Lien Foundry ↔ Wiki confirmé' : 'Lien à vérifier'}
-          {' · '}{character.discordUrl ? 'Discord associé' : 'Discord à compléter'}</small>
+          {' · '}{character.discordUrl ? 'Discord associé' : 'Discord à compléter'}
+          {' · '}{character.chatgptUrl ? 'ChatGPT associé' : 'ChatGPT facultatif'}</small>
       </Link>)}
     </div>
     {directory.players.filter(player => !player.characters.length).map(player =>

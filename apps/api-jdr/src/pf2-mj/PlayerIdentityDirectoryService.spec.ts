@@ -13,6 +13,7 @@ describe('PlayerIdentityDirectoryService', () => {
           { discordUserId: '134346709487714304', npcId: 'wiki-eryn' },
           { discordUserId: '448500183186145291', npcId: 'wiki-tsuyu' },
         ]
+        if (sql.includes('pf2_player_chatgpt_link')) return []
         if (sql.includes('pf2_player_discord_channel')) return [{ npcId: 'wiki-pepin', channelId: '123456789012345678' }]
         if (sql.includes('pf2_foundry_wiki_pj_link')) return [
           { foundryUuid: 'Actor.pepin', npcId: 'wiki-pepin' },
@@ -53,6 +54,7 @@ describe('PlayerIdentityDirectoryService', () => {
         association: 'confirmed', ownerStatus: 'missing',
       }))
       expect(eric.characters[0].wikiUrl).toContain('Personnage%3AP%C3%A9pin')
+      expect(eric.characters[0].chatgptUrl).toBeNull()
       expect(eric.characters[0].discordUrl).toBe('https://discord.com/channels/987654321098765432/123456789012345678')
       const tom = result.players.find(row => row.playerName === 'Tom')!
       expect(tom.characters[0]).toEqual(expect.objectContaining({

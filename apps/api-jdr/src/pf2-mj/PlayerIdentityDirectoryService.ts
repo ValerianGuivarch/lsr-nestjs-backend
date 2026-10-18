@@ -9,6 +9,7 @@ type WikiProfile = { npcId: string; displayName: string; wikiPageTitle: string }
 type SavedLink = { foundryUuid: string; npcId: string }
 type Owner = { discordUserId: string; npcId: string }
 type CharacterChannel = { npcId: string; channelId: string }
+type ChatGptLink = { npcId: string; chatgptUrl: string }
 export type DirectoryCharacter = {
   name: string
   foundryUuid: string
@@ -17,6 +18,7 @@ export type DirectoryCharacter = {
   wikiUrl: string | null
   discordChannelId: string | null
   discordUrl: string | null
+  chatgptUrl: string | null
   association: 'confirmed' | 'suggested' | 'missing'
   ownerStatus: 'confirmed' | 'missing' | 'other'
 }
@@ -51,7 +53,7 @@ export class PlayerIdentityDirectoryService {
   }
 
   async snapshot(): Promise<DirectorySnapshot> {
-    const [identities, wikiLinks, actors, profiles, owners, links, channels] = await Promise.all([
+    const [identities, wikiLinks, actors, profiles, owners, links, channels, chatgptLinks] = await Promise.all([
       this.persistence.listPlayerIdentities(),
       this.persistence.listWikiAccountLinks(),
       this.persistence.readFoundryActorCache(),
@@ -59,6 +61,7 @@ export class PlayerIdentityDirectoryService {
       this.db.query('SELECT discord_user_id AS discordUserId, npc_id AS npcId FROM pf2_player_character_owner') as Promise<Owner[]>,
       this.db.query('SELECT foundry_uuid AS foundryUuid, npc_id AS npcId FROM pf2_foundry_wiki_pj_link') as Promise<SavedLink[]>,
       this.db.query('SELECT npc_id AS npcId, channel_id AS channelId FROM pf2_player_discord_channel') as Promise<CharacterChannel[]>,
+      this.db.query('SELECT npc_id AS npcId, chatgpt_url AS chatgptUrl FROM pf2_player_chatgpt_link') as Promise<ChatGptLink[]>,
     ])
     const rows = new Map<string, DirectoryPlayer>()
     for (const identity of identities) rows.set(identity.discordUserId, {
@@ -104,6 +107,7 @@ export class PlayerIdentityDirectoryService {
         wikiNpcId: profile?.npcId ?? null,
         wikiPageTitle: profile?.wikiPageTitle ?? null,
         wikiUrl: profile ? this.wikiUrl(profile.wikiPageTitle) : null,
+        chatgptUrl: profile ? chatgptLinks.find(link => link.npcId === profile.npcId)?.chatgptUrl ?? null : null,
         discordChannelId: channelId,
         discordUrl: channelId && guildId ? `https://discord.com/channels/${guildId}/${channelId}` : null,
         association,
