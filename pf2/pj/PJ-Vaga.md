@@ -8,7 +8,9 @@
 
 Tripkee lié au **Circus of Wayward Wonders** et donc à *Sentence d'Extinction*. Sa sœur **Sali** est esclave à **Mzali**, sous l'autorité de **Walkena**.
 
-Le retour de Vaga vers son ancien cirque est le meilleur crochet actuel pour lancer Extinction Curse.
+Vaga a quitté la **Ménagerie Céleste** dirigée par Dusklight avec ou aux côtés des artistes à l'origine du **Cirque des Merveilles Vagabondes**, mais il **n'est pas resté durablement** dans cette nouvelle troupe. Son parcours comprend le **Mwangi** ; les dates et modalités exactes de l'évasion restent à harmoniser avec le scénario publié.
+
+Le retour de Vaga vers son ancien cirque est le meilleur crochet actuel pour lancer Extinction Curse. **Adaptation validée :** la Ménagerie Céleste se trouve actuellement à **Absalom pour le Festival Radieux** ; le recroisement de Vaga avec Dusklight est une **piste**, non un événement joué. Voir [la fiche de campagne](../campagnes/Campagne-Sentence-d-Extinction.md).
 
 ## Fiche et évolution PF2
 
