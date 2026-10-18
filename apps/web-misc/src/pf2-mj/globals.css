@@ -1022,3 +1022,20 @@
 .pf2-mj-v3 .player-identity-orphans h4{margin:0 0 4px}
 .pf2-mj-v3 .player-identity-footer{margin-top:13px}
 @media(max-width:650px){.pf2-mj-v3 .player-identity-heading{flex-direction:column}.pf2-mj-v3 .player-identity-table{min-width:880px}}
+
+/* PJ directory: links to existing identities; no private Discord message content. */
+.player-hub { display: grid; gap: 1rem; }
+.player-hub-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: .8rem; }
+.player-hub-tile, .player-hub-panel { border: 1px solid var(--border, #c3b9a2); border-radius: 12px; padding: 1rem; }
+.player-hub-tile { display: grid; gap: .45rem; text-decoration: none; color: inherit; }
+.player-hub-tile:hover { border-color: currentColor; }
+.player-hub-tile strong { font-size: 1.08rem; }
+.player-hub-tile small { opacity: .75; }
+.player-hub-panel { display: grid; gap: 1.1rem; max-width: 850px; }
+.player-hub-panel h2 { margin: 0; }
+.player-hub-facts { display: grid; grid-template-columns: repeat(auto-fit,minmax(225px,1fr)); gap: .8rem; margin: 0; }
+.player-hub-facts div { display: grid; gap: .2rem; }
+.player-hub-facts dt { opacity: .7; font-size: .85rem; }
+.player-hub-facts dd { margin: 0; overflow-wrap: anywhere; }
+.player-hub-links { display: flex; flex-wrap: wrap; gap: 1rem; }
+.player-hub-links a { text-decoration: underline; }

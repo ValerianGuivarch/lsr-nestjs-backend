@@ -13,6 +13,7 @@ describe('PlayerIdentityDirectoryService', () => {
           { discordUserId: '134346709487714304', npcId: 'wiki-eryn' },
           { discordUserId: '448500183186145291', npcId: 'wiki-tsuyu' },
         ]
+        if (sql.includes('pf2_player_discord_channel')) return [{ npcId: 'wiki-pepin', channelId: '123456789012345678' }]
         if (sql.includes('pf2_foundry_wiki_pj_link')) return [
           { foundryUuid: 'Actor.pepin', npcId: 'wiki-pepin' },
         ]
@@ -35,6 +36,8 @@ describe('PlayerIdentityDirectoryService', () => {
       ]),
     }
     const wiki = { pageUrl: (title: string) => `https://wiki.example/index.php?title=${encodeURIComponent(title)}` }
+    const previousGuild = process.env['DISCORD_GUILD_ID']
+    process.env['DISCORD_GUILD_ID'] = '987654321098765432'
     const previous = process.env['PF2_MEDIAWIKI_PUBLIC_BASE_URL']
     process.env['PF2_MEDIAWIKI_PUBLIC_BASE_URL'] = 'https://wiki.example'
     try {
@@ -50,6 +53,7 @@ describe('PlayerIdentityDirectoryService', () => {
         association: 'confirmed', ownerStatus: 'missing',
       }))
       expect(eric.characters[0].wikiUrl).toContain('Personnage%3AP%C3%A9pin')
+      expect(eric.characters[0].discordUrl).toBe('https://discord.com/channels/987654321098765432/123456789012345678')
       const tom = result.players.find(row => row.playerName === 'Tom')!
       expect(tom.characters[0]).toEqual(expect.objectContaining({
         association: 'suggested', ownerStatus: 'confirmed',
@@ -60,6 +64,8 @@ describe('PlayerIdentityDirectoryService', () => {
       }))
       expect(result.wikiOnly.map(item => item.npcId)).toEqual(['wiki-tsuyu'])
     } finally {
+      if (previousGuild === undefined) delete process.env['DISCORD_GUILD_ID']
+      else process.env['DISCORD_GUILD_ID'] = previousGuild
       if (previous === undefined) delete process.env['PF2_MEDIAWIKI_PUBLIC_BASE_URL']
       else process.env['PF2_MEDIAWIKI_PUBLIC_BASE_URL'] = previous
     }

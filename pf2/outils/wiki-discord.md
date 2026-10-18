@@ -78,6 +78,14 @@ URL publique documentée :
 https://wiki.l7r.fr
 ```
 
+### Répertoire des personnages joueurs dans l'application MJ
+
+La section **Personnages joueurs** (`/pf2-mj/players`) regroupe les fiches PJ associées à des Actors Foundry. La fiche individuelle `/pf2-mj/players/:npcId` affiche le joueur, son compte Wiki, les identifiants Discord et Foundry, la fiche Wiki et le salon Discord privé associé, avec un lien d'ouverture soumis aux permissions Discord.
+
+La source métier reste SQLite : `pf2_player_identity`, `pf2_wiki_account_link`, `pf2_player_character_owner`, `pf2_player_character_profile`, `pf2_foundry_wiki_pj_link` et `pf2_player_discord_channel`. L'association d'un salon concerne un **PJ**, pas une personne : un joueur peut posséder plusieurs PJ et donc plusieurs salons.
+
+Les salons ont été retrouvés via l'API Discord du bot dans la catégorie « PJs ». **Le bot ne dispose actuellement pas des droits de lecture des messages de ces salons (HTTP 403)** ; la page fournit des raccourcis, pas une consultation ni une analyse de leur historique. Côté Foundry, l'UUID de l'Actor est conservé comme référence fiable ; aucun lien navigateur direct vers un Actor n'est garanti par le système actuel.
+
 ### 15.1 Journaux non révélés
 
 Le comportement attendu et implémenté est volontairement asymétrique :
