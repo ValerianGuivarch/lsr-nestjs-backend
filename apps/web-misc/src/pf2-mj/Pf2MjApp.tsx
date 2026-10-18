@@ -58,6 +58,7 @@ import JournauxPage from './Journaux'
 import LorePage from './Lore'
 import ResourcesPage, { ResourceTargetPanel } from './Resources'
 import PlayerIdentityTable from './PlayerIdentityTable'
+import PlayerCharactersPage from './PlayerCharactersPage'
 import { expandedPlaceLabels, geographyTreeOptions, loadGeographyFromApi, matchesPlaceFilter, placeDisplay } from './geography'
 import { containerHref, playableHref, referenceHref, resolvePf2Route, viewPaths, type ReferenceView, type View } from './routing'
 
@@ -1748,12 +1749,14 @@ export function Pf2MjApp() {
     chronology: ['Chronologie', 'Unités jouables replacées dans le calendrier de Golarion.'],
     excluded: ['Mis de côté', '« Plus tard » et « Écarté » ont le même effet : ils sortent entièrement du catalogue actif, mais restent faciles à récupérer ici.'],
     settings: ['Administration', 'Référentiel, maintenance, documents et outils de migration.'],
+    players: ['Personnages joueurs', 'Fiches, propriétaires et accès Foundry, Wiki et Discord.'],
     pnj: ['PNJ', ''], factions: ['Factions', ''], lieux: ['Lieux', ''], regions: ['Régions', ''], evenements: ['Événements', ''],
   }
 
   const nav: Array<[View, string, string, number | string]> = [
     ['journal', '☑', 'Journal MJ', journalCampaignCount + active.filter((unit) => journalLifecycleStatuses.has(effectiveLifecycleStatus(resolvePlayableOverride(curation, unit)))).length],
     ['journaux', '▤', 'Journaux d’Absalom', ''],
+    ['players', '♟', 'Personnages joueurs', ''],
     ['lore', '✧', 'Histoire', ''],
     ['library', '▦', 'Catalogue', active.length],
     ['resources', '◇', 'Ressources', ''],
@@ -1766,6 +1769,7 @@ export function Pf2MjApp() {
   const routedView: View = route.kind === 'view' ? route.view
     : route.kind === 'reference' ? route.view
       : route.kind === 'playable' || route.kind === 'container' ? 'library'
+        : route.kind === 'player' ? 'players'
         : route.kind === 'resource' ? 'resources'
           : 'find'
   const isReferenceView = ['pnj', 'factions', 'lieux', 'regions', 'evenements'].includes(routedView)
@@ -1785,8 +1789,9 @@ export function Pf2MjApp() {
         {route.kind === 'playable' ? (selectedPlayable ? <PlayableDetail unit={selectedPlayable} curation={curation} onUpdate={update} placeOptions={placeOptions} onOpenReference={openReference} /> : routeMissing('Scénario', route.id)) : null}
         {route.kind === 'container' ? (selectedContainer ? <ContainerDetail container={selectedContainer} curation={curation} onOpenPlayable={openPlayable} onUpdate={update} onOpenReference={openReference} /> : routeMissing('Campagne / collection', route.id)) : null}
         {route.kind === 'resource' ? <ResourcesPage initialSelectedId={route.id} /> : null}
+        {route.kind === 'player' ? <PlayerCharactersPage selectedNpcId={route.id} /> : null}
         {(route.kind === 'view' || route.kind === 'reference') && <>
-          {!isReferenceView && <><div className="page-title"><div><small>TABLE OUVERTE · GOLARION PERSISTANT</small><h1>{headings[routedView][0]}</h1><p>{headings[routedView][1]}</p></div>{!['journaux', 'resources', 'lore'].includes(routedView) && <button className="refresh" onClick={refresh}>{scanStatus === 'scanning' ? '↻ Détection…' : scanStatus === 'done' ? '✓ Rapport prêt' : scanStatus === 'error' ? '! Réessayer' : '↻ Scanner PDF & ZIP'}</button>}</div>{error && <div className="notice"><strong>Attention</strong><p>{error}</p></div>}{scan && <ScanPanel report={scan} onClose={() => setScan(null)} onApply={applyScan} />}{!['excluded', 'settings', 'documents', 'resources', 'journal', 'journaux', 'lore', 'prepare', 'maintenance'].includes(routedView) && <Stats active={active} />}{routedView === 'find' && <FinderView active={active} curation={curation} onOpen={openPlayable} onUpdate={update} resourceVersion={resourceRevision} />}{routedView === 'library' && <LibraryView curation={curation} onOpen={openContainer} onOpenPlayable={openPlayable} onUpdate={update} />}{routedView === 'resources' && <ResourcesPage />}{routedView === 'journal' && <JournalView curation={curation} onUpdate={update} onImported={reloadCatalogue} />}{routedView === 'journaux' && <JournauxPage />}{routedView === 'lore' && <LorePage />}{routedView === 'prepare' && <PreparationView active={active} curation={curation} onOpen={openPlayable} onUpdate={update} resourceVersion={resourceRevision} />}{routedView === 'maintenance' && <MaintenanceView active={active} curation={curation} onOpen={openPlayable} onUpdate={update} resourceVersion={resourceRevision} />}{routedView === 'documents' && <DocumentsView resourceVersion={resourceRevision} />}{routedView === 'chronology' && <ChronologyView units={active} onOpen={openPlayable} />}{routedView === 'excluded' && <ExcludedView curation={curation} onOpenContainer={openContainer} onOpenPlayable={openPlayable} onUpdate={update} />}{routedView === 'settings' && <Settings places={placeOptions} onOperation={placeOperation} />}</>}
+          {!isReferenceView && <><div className="page-title"><div><small>TABLE OUVERTE · GOLARION PERSISTANT</small><h1>{headings[routedView][0]}</h1><p>{headings[routedView][1]}</p></div>{!['journaux', 'resources', 'lore', 'players'].includes(routedView) && <button className="refresh" onClick={refresh}>{scanStatus === 'scanning' ? '↻ Détection…' : scanStatus === 'done' ? '✓ Rapport prêt' : scanStatus === 'error' ? '! Réessayer' : '↻ Scanner PDF & ZIP'}</button>}</div>{error && <div className="notice"><strong>Attention</strong><p>{error}</p></div>}{scan && <ScanPanel report={scan} onClose={() => setScan(null)} onApply={applyScan} />}{!['excluded', 'settings', 'documents', 'resources', 'players', 'journal', 'journaux', 'lore', 'prepare', 'maintenance'].includes(routedView) && <Stats active={active} />}{routedView === 'find' && <FinderView active={active} curation={curation} onOpen={openPlayable} onUpdate={update} resourceVersion={resourceRevision} />}{routedView === 'library' && <LibraryView curation={curation} onOpen={openContainer} onOpenPlayable={openPlayable} onUpdate={update} />}{routedView === 'resources' && <ResourcesPage />}{routedView === 'players' && <PlayerCharactersPage />}{routedView === 'journal' && <JournalView curation={curation} onUpdate={update} onImported={reloadCatalogue} />}{routedView === 'journaux' && <JournauxPage />}{routedView === 'lore' && <LorePage />}{routedView === 'prepare' && <PreparationView active={active} curation={curation} onOpen={openPlayable} onUpdate={update} resourceVersion={resourceRevision} />}{routedView === 'maintenance' && <MaintenanceView active={active} curation={curation} onOpen={openPlayable} onUpdate={update} resourceVersion={resourceRevision} />}{routedView === 'documents' && <DocumentsView resourceVersion={resourceRevision} />}{routedView === 'chronology' && <ChronologyView units={active} onOpen={openPlayable} />}{routedView === 'excluded' && <ExcludedView curation={curation} onOpenContainer={openContainer} onOpenPlayable={openPlayable} onUpdate={update} />}{routedView === 'settings' && <Settings places={placeOptions} onOperation={placeOperation} />}</>}
           {isReferenceView && <nav className="catalogue-subnav reference-subnav"><Link to={viewPaths.pnj}>PNJ</Link><Link to={viewPaths.factions}>Factions</Link><Link to={viewPaths.lieux}>Lieux</Link><Link to={viewPaths.regions}>Régions</Link><Link to={viewPaths.evenements}>Événements</Link></nav>}
           {routedView === 'pnj' && <PnjPage initialSelectedId={route.kind === 'reference' && route.view === 'pnj' ? route.id : undefined} />}
           {routedView === 'factions' && <FactionsPage initialSelectedId={route.kind === 'reference' && route.view === 'factions' ? route.id : undefined} />}

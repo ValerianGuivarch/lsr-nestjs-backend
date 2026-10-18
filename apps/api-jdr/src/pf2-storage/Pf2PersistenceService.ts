@@ -1391,6 +1391,28 @@ export class Pf2PersistenceService implements OnModuleInit {
       await manager.query('CREATE INDEX IF NOT EXISTS idx_map_place_quest_thread ON pf2_map_place_quest(thread_id)')
     })
 
+    // Links are scoped to the PJ, not to the Discord account: one player may play multiple PJs.
+    // Channel IDs were verified through Discord's guild-channel API; message reads were denied (403).
+    await this.applyMigration('040-player-personal-discord-channels', async manager => {
+      await manager.query("CREATE TABLE IF NOT EXISTS pf2_player_discord_channel (npc_id TEXT PRIMARY KEY, channel_id TEXT NOT NULL UNIQUE, created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)")
+      await manager.query('INSERT OR IGNORE INTO pf2_player_discord_channel (npc_id, channel_id) VALUES (?, ?)', ['npc_pj_pen_pen', '1535693434671865957'])
+      await manager.query('INSERT OR IGNORE INTO pf2_player_discord_channel (npc_id, channel_id) VALUES (?, ?)', ['npc_pj_eos', '1535693500132360374'])
+      await manager.query('INSERT OR IGNORE INTO pf2_player_discord_channel (npc_id, channel_id) VALUES (?, ?)', ['npc_pj_eryn', '1535693562555932762'])
+      await manager.query('INSERT OR IGNORE INTO pf2_player_discord_channel (npc_id, channel_id) VALUES (?, ?)', ['npc_pj_pepin', '1535693665773686945'])
+      await manager.query('INSERT OR IGNORE INTO pf2_player_discord_channel (npc_id, channel_id) VALUES (?, ?)', ['npc_pj_sashka', '1535693783541358682'])
+      await manager.query('INSERT OR IGNORE INTO pf2_player_discord_channel (npc_id, channel_id) VALUES (?, ?)', ['npc_pj_tsuyu_nagori', '1535693890349301770'])
+      await manager.query('INSERT OR IGNORE INTO pf2_player_discord_channel (npc_id, channel_id) VALUES (?, ?)', ['npc_pj_jilkra_adoric_larantis', '1535693952412426270'])
+      await manager.query('INSERT OR IGNORE INTO pf2_player_discord_channel (npc_id, channel_id) VALUES (?, ?)', ['npc_pj_vaga', '1535694033446506586'])
+      await manager.query('INSERT OR IGNORE INTO pf2_player_discord_channel (npc_id, channel_id) VALUES (?, ?)', ['npc_pj_yaz_lorok', '1535694174614192209'])
+      await manager.query('INSERT OR IGNORE INTO pf2_player_discord_channel (npc_id, channel_id) VALUES (?, ?)', ['npc_pj_neyla_ketta', '1536656126454661140'])
+      await manager.query('INSERT OR IGNORE INTO pf2_player_discord_channel (npc_id, channel_id) VALUES (?, ?)', ['npc_pj_zab', '1536656200765014097'])
+      await manager.query('INSERT OR IGNORE INTO pf2_player_discord_channel (npc_id, channel_id) VALUES (?, ?)', ['npc_pj_ruhtra_sang_du_soleil', '1545437090752241784'])
+    })
+
+    await this.applyMigration('041-player-chatgpt-links', async manager => {
+      await manager.query("CREATE TABLE IF NOT EXISTS pf2_player_chatgpt_link (npc_id TEXT PRIMARY KEY, chatgpt_url TEXT NOT NULL, updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)")
+    })
+
     await this.assertDatabaseIntegrity(this.dataSource, 'base SQLite après migrations')
   }
 
