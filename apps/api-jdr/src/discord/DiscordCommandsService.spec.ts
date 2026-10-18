@@ -1671,7 +1671,7 @@ describe('DiscordCommandsService', () => {
     expect(editReply).toHaveBeenCalledWith(expect.objectContaining({ content: expect.stringContaining('Planification publiée') }))
   })
 
-  it('previews and publishes a reminder mentioning only players who did not answer the planning', async () => {
+  it('previews and publishes a reminder separating missing players from players still uncertain', async () => {
     const persistence = {
       saveFoundryActorCache: jest.fn().mockResolvedValue(undefined),
       readFoundryActorCache: jest.fn().mockResolvedValue([]),
@@ -1717,9 +1717,11 @@ describe('DiscordCommandsService', () => {
     } as never)).resolves.toBe(true)
 
     const preview = editReply.mock.calls[0][0]
+    expect(preview.content).toContain('**Sans réponse (1)**')
     expect(preview.content).toContain('<@671746679636099094>')
+    expect(preview.content).toContain('**En attente — « Ne sais pas encore » (1)**')
+    expect(preview.content).toContain('<@399621722158137346>')
     expect(preview.content).not.toContain('<@134346709487714304>')
-    expect(preview.content).not.toContain('<@399621722158137346>')
     expect(preview.allowedMentions).toEqual({ parse: [] })
 
     const customId = preview.components[0].toJSON().components[0].custom_id
@@ -1733,10 +1735,11 @@ describe('DiscordCommandsService', () => {
     } as never)).resolves.toBe(true)
 
     expect(followUp).toHaveBeenCalledWith(expect.objectContaining({
-      content: expect.stringContaining('<@671746679636099094>'),
+      content: expect.stringContaining('**Sans réponse :** <@671746679636099094>'),
       ephemeral: false,
-      allowedMentions: { users: ['671746679636099094'] },
+      allowedMentions: { users: ['671746679636099094', '399621722158137346'] },
     }))
+    expect(followUp.mock.calls[0][0].content).toContain('❓ **En attente — « Ne sais pas encore » :** <@399621722158137346>')
   })
 
   it('refreshes the planning starter so a previously added day stays selected', async () => {

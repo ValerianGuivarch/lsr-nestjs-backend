@@ -135,7 +135,7 @@ export class DiscordCommandsService {
       new SlashCommandBuilder().setName('valider-date-seance').setDescription('Confirme une proposition de groupes publiée dans ce fil.').addIntegerOption(option => option.setName('numero').setDescription('Numéro de proposition à valider').setRequired(true).setMinValue(1)).setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild).toJSON(),
       new SlashCommandBuilder().setName('preparer-prochaine-mission').setDescription('Prépare un fil de mission depuis les séances validées.').setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild).toJSON(),
       new SlashCommandBuilder().setName('modifier-date-seance').setDescription('Ajoute ou retire des dates dans une proposition existante.').setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild).toJSON(),
-      new SlashCommandBuilder().setName('relancer-date-seance').setDescription('Relance les joueurs qui n’ont pas répondu à la planification.').setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild).toJSON(),
+      new SlashCommandBuilder().setName('relancer-date-seance').setDescription('Relance les joueurs sans réponse ou encore indécis sur la planification.').setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild).toJSON(),
     ]
   }
 
@@ -247,7 +247,7 @@ export class DiscordCommandsService {
         '`/wiki-admin` — gère les associations Discord ↔ Wiki et les PJ.',
         '`/proposer-date-seance` — choisit puis publie les dates proposées pour la prochaine semaine.',
         '`/modifier-date-seance` — modifie les dates depuis le fil de la proposition.',
-        '`/relancer-date-seance` — depuis le fil, prépare une relance des joueurs qui n’ont pas encore répondu.',
+        '`/relancer-date-seance` — depuis le fil, relance séparément les joueurs sans réponse et ceux encore sur ❓.',
         '`/analyse-date-seance` — analyse les réactions, propose les groupes puis permet leur publication.',
         '`/valider-date-seance numero:2` — valide et annonce une proposition de groupes dans le fil de planification.',
         '`/preparer-prochaine-mission` — crée, après aperçu et confirmation, un fil dans #objectif-prochaine-mission pour une séance validée.',
@@ -838,18 +838,22 @@ export class DiscordCommandsService {
 
     await interaction.deferReply({ ephemeral: true })
     try {
-      const recognized = new Set<string>([
+      const definiteResponseEmojis = new Set<string>([
         ...PLANNING_DAYS.filter(day => parsed.selectedDays.includes(day.offset)).map(day => day.emoji),
         PLANNING_UNAVAILABLE_EMOJI,
-        PLANNING_UNCERTAIN_EMOJI,
       ])
-      const responded = new Set<string>()
+      const definiteResponders = new Set<string>()
+      const uncertainResponders = new Set<string>()
 
       for (const reaction of starter.reactions.cache.values()) {
         const emoji = reaction.emoji.name ?? ''
-        if (!recognized.has(emoji)) continue
+        if (!definiteResponseEmojis.has(emoji) && emoji !== PLANNING_UNCERTAIN_EMOJI) continue
         const users = await reaction.users.fetch()
-        for (const user of users.values()) if (!user.bot) responded.add(user.id)
+        for (const user of users.values()) {
+          if (user.bot) continue
+          if (emoji === PLANNING_UNCERTAIN_EMOJI) uncertainResponders.add(user.id)
+          else definiteResponders.add(user.id)
+        }
       }
 
       const playerById = new Map<string, string>()
@@ -861,28 +865,38 @@ export class DiscordCommandsService {
       }
 
       const missing = [...playerById.entries()]
-        .filter(([userId]) => !responded.has(userId))
+        .filter(([userId]) => !definiteResponders.has(userId) && !uncertainResponders.has(userId))
+        .map(([id, name]) => ({ id, name }))
+        .sort((left, right) => left.name.localeCompare(right.name, 'fr'))
+      const waiting = [...playerById.entries()]
+        .filter(([userId]) => !definiteResponders.has(userId) && uncertainResponders.has(userId))
         .map(([id, name]) => ({ id, name }))
         .sort((left, right) => left.name.localeCompare(right.name, 'fr'))
 
-      if (!missing.length) {
-        await interaction.editReply({ content: 'Tout le monde a répondu à cette planification.', components: [] })
+      if (!missing.length && !waiting.length) {
+        await interaction.editReply({ content: 'Tout le monde a donné une réponse définitive à cette planification.', components: [] })
         return
       }
 
-      const userIds = missing.map(user => user.id)
-      const mentions = userIds.map(id => `<@${id}>`).join(' ')
-      const content = `🔔 ${mentions}\nMerci de répondre à la planification de séance ci-dessus.`
+      const targets = [...missing, ...waiting]
+      const userIds = targets.map(user => user.id)
+      const publicLines = ['🔔 **Relance de planification**']
+      if (missing.length) publicLines.push(`**Sans réponse :** ${missing.map(user => `<@${user.id}>`).join(' ')}`)
+      if (waiting.length) publicLines.push(`❓ **En attente — « Ne sais pas encore » :** ${waiting.map(user => `<@${user.id}>`).join(' ')}`)
+      publicLines.push('Merci de répondre ou de mettre à jour votre réaction sur la planification de séance ci-dessus.')
+      const content = publicLines.join('\n')
       const buttonId = `pf2-planning-reminder:publish:${interaction.id}`
       this.pendingPlanningReminders.set(buttonId, { requesterId: interaction.user.id, content, userIds })
 
+      const previewLines = [
+        `**Relance à publier — ${targets.length} personne${targets.length > 1 ? 's' : ''} à relancer**`,
+      ]
+      if (missing.length) previewLines.push('', `**Sans réponse (${missing.length})**`, ...missing.map(user => `- <@${user.id}>`))
+      if (waiting.length) previewLines.push('', `**En attente — « Ne sais pas encore » (${waiting.length})**`, ...waiting.map(user => `- <@${user.id}>`))
+      previewLines.push('', 'Valide pour les mentionner publiquement dans ce fil.')
+
       await interaction.editReply({
-        content: [
-          `**Relance à publier — ${missing.length} personne${missing.length > 1 ? 's' : ''} sans réponse**`,
-          missing.map(user => `- <@${user.id}>`).join('\n'),
-          '',
-          'Valide pour les mentionner publiquement dans ce fil.',
-        ].join('\n'),
+        content: previewLines.join('\n'),
         components: [new ActionRowBuilder<ButtonBuilder>().addComponents(new ButtonBuilder().setCustomId(buttonId).setLabel('Valider la relance').setStyle(ButtonStyle.Primary))],
         allowedMentions: { parse: [] },
       })
