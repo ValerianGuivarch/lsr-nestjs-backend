@@ -6,6 +6,7 @@
 - [Données et persistance](pf2/outils/donnees.md)
 - [Foundry et portraits](pf2/outils/foundry.md)
 - [Wiki, résumés et Discord](pf2/outils/wiki-discord.md)
+- [Carte de Golarion — quêtes Discord, favoris et contributions PJ](docs/pf2/discord-quest-map-sync.md)
 - [Journaux d'Absalom — guide de génération visuelle](pf2/outils/journaux.md)
 - [Déploiement et exploitation](pf2/outils/deploiement.md)
 - [Points ouverts et vérifications](pf2/outils/travaux-ouverts.md)
