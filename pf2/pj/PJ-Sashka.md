@@ -46,3 +46,15 @@ Aucune décision supplémentaire documentée ici. Les informations du joueur et 
 - **Prisme** est son compagnon surnaturel, capable de prendre plusieurs formes animales.
 - Un **chef d'hommes en armures sombres** a confronté ses parents après l'apparition de ses pouvoirs ; identité volontairement inconnue.
 - **Lethariel**, jeune barde elfe rencontré pendant le voyage vers Absalom, connaît **Janira Gavix** et semble avoir appuyé la candidature de Sashka auprès des Éclaireurs sans avoir dit appartenir lui-même à la Société.
+
+---
+
+## Apports du récit original fourni
+
+Sashka a grandi dans une petite communauté **sharedar** de l'arrière-pays du **Nidal**, près des plaines d'Attéran. Sa famille vénère **Milani** discrètement et aide depuis des générations des personnes à échapper au régime de **Zon-Kuthon**. Enfant relativement protégée, Sashka ne comprend pas entièrement les précautions de ses parents ni le réseau clandestin qu'ils soutiennent.
+
+**Intrigues familiales :** **Daren et Elira Valeska** sont directement impliqués dans ces filières d'évasion. **Odran Valeska** transmet les légendes familiales de la **Chasse Sauvage**, tandis que l'aventure attribuée à l'ancêtre **Mikhal le Hardi** autour d'une monture volée relève de la tradition familiale tant qu'elle n'est pas corroborée.
+
+**Secret MJ / mystères :** le chef des hommes en armures sombres, le vieux **cor**, la Chasse Sauvage et l'origine de **Prisme**, compagnon polymorphe, constituent des pistes distinctes à démêler. Ne pas révéler arbitrairement une identité ou une intention à ce chef.
+
+**Continuité mécanique préservée :** la décision du 18 octobre 2026 sur un futur familier **sans dévouement d'archétype** reste une orientation à appliquer/valider dans Foundry ; **Prisme n'est pas automatiquement ce familier**. Les considérations d'ombre, de Chasse Sauvage et de familier ne prouvent pas qu'un événement de campagne a déjà eu lieu.
