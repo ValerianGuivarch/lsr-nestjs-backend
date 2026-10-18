@@ -117,6 +117,7 @@ Ces forces ne sont pas de simples gardes de quartier et restent distinctes de la
 Même si la campagne peut être encore à jouer dans la continuité réelle, les grands éléments étudiés sont :
 
 - Festival Radieux de 4720 ;
+- **Croisement de campagne validé :** la **Ménagerie Céleste de Mistress Dusklight** est présente à Absalom à l'occasion du Festival Radieux ; son éventuel relais à Escadar et la rencontre avec Vaga restent des éléments de préparation. Détails dans [Sentence d'Extinction](../campagnes/Campagne-Sentence-d-Extinction.md) ;
 - création / développement de la **garde de la Falaise** ;
 - Hendrid Pratchett et le Palais des rêves ;
 - la Main de cuivre ;
