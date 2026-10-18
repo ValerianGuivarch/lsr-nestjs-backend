@@ -25,3 +25,9 @@ Kitsune, historienne / alchimiste. Liée à un culte qui cherche la **vérité d
 - **Onyx** : familier axolotl de Tsuyu, apparu après qu'une toile d'araignée se fut dessinée dans la glace d'un lac.
 - Famille encore à nommer : grand-mère ayant rencontré le Maître Tisseur enfant, tante dirigeant l'exploitation de bois, mère artisane/enchanteresse, père chargé du commerce, frère travaillant avec la mère.
 - **Le Maître Tisseur** : fondateur mystérieux de l'ordre, revenu visiter les Tisseurs à chaque génération avant de manquer inexplicablement sa dernière visite ; véritable nom inconnu.
+
+## Référence mécanique du familier (export octobre 2026)
+
+- Tsuyi est une **sorcière** de niveau 3, avec le patron **Tisseur de fils** (*Spinner of Threads*) ; son familier est un élément central de sa magie, contrairement au familier optionnel d'une ensorceleuse.
+- L'acteur Foundry du familier est nommé **Oxi**, de forme **axolotl**, relié à Tsuyi. L'ancienne note narrative ci-dessus le nomme **Onyx** : **nom à clarifier**, sans renommer automatiquement ni la fiche narrative ni Foundry.
+- L'export d'Oxi comporte quatre pouvoirs : **Dextérité manuelle**, **Livreur d'objet**, **Transfert de sort**, **Familier curatif**. Ils décrivent un état mécanique daté, non un choix définitivement figé, puisque les pouvoirs peuvent évoluer.
