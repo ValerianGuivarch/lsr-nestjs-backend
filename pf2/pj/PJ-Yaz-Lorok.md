@@ -14,6 +14,32 @@
 - **Discussion ChatGPT :** à renseigner, facultatif
 - **Référence Foundry (UUID) :** à renseigner, facultative ; Foundry reste source de vérité mécanique
 
+## Background — récit du personnage (visible par le joueur)
+
+Yaz Lorok
+
+C’est toujours bizarre de retranscrire à l’écrit une histoire qui nous est propre… J’ai toujours trouvé que l'écrit perdait toute la saveur de la représentation. On a beau y ajouter les plus belles descriptions, le récit en ressort souvent plus fade qu’à la sortie de la réalité.
+
+D’aussi loin que je me souvienne, j’ai toujours été fasciné par les arts sous toutes leurs formes: chant, dessin, architecture… mais surtout, la danse! Je crois que cet amour a commencé lors d’une fête des taxes, les 15 Gozran 4706, quand j’avais 5 ans. Ma mère avait alors organisé une fête formidable, comme il est coutûme à Druma, ou les démonstrations de la richesse font de vous quelqu’un d’important: débauche de victuailles, fontaines magiques, spectacles dans un coin, petit concert dans un autre… Avec mon frère ,  alors que Ragar Lorok, notre père
+
+En grandissant, l’intérêt pour la magie de mon frère s’accentuait, et je m’y intéressais surtout pour passer davantage de temps avec lui, vu que lui-même semblait indifférent à ma passion pour le combat. Et finalement, nos parents nous proposèrent à notre 17 ans de partir étudier la magie aux Académies de Quantium, au Nex ! Mon frère accepta immédiatement. Moi… J’ai accepté pour le suivre, même si cela actait mon avenir dans le domaine de la magie. C’est donc pour lui, et à contre-coeur que je m’y suis rendu…
+
+Mais je me suis totalement trompé : ce fut la révélation de ma vie ! La conséquence directe du conflit sur plusieurs siècles entre les Archimages Nex et Geb, qui ont dirigé les deux royaumes du même nom, a été la création d’une zone entre les deux territoires très instables au niveau de la magie. Et bien que Nex ait disparu et que Geb soit mort (ce qui ne l’empêche pas de diriger son pays de non-morts), les effets sont toujours très présents, ce qui a incité l’Académie du Quantium a favorisé aussi des formations mélangeant magie et combat, afin de ne pas dépendre seulement de la magie. Ainsi ai-je commencé ma formation de Magus, tandis que mon frère se focalisait sur la magie plus classique.
+
+Une année passa, et les rumeurs du retour de Tar-Baphon arrivèrent jusqu’à nous, mais Druma ne semblait pas menacé. Pour autant, ma passion pour les arts guerriers s’éveillaient, surtout en apprenant que les Orcs de Belkzen, dirigés par Ardax Blanchetête, ont refusé de respecter les allégeances anciennes et se sont opposés à lui, détruisant les nombreux préjugés contre ceux de notre ascendance ! Mais ma formation était incomplète, et j’acceptai les conseils de mon frère de rester à l’Académie, quand bien même je percevais davantage une envie de fuir le conflit que de la prudence. Le Royaume de Nex lui-même était déjà en effervescence depuis des années, après que les Forges de Chaires se soient lancés et que Geb redevenait une menace, mais nous n’étions pas assez attaché à ce territoire pour nous sentir concernés.
+
+Puis, nous avons… Aïe, la douleur dans ma tête… Pourquoi je ne peux pas me souvenir ? Il y a ce livre, toujours avec moi, les pages blanches s’affichant à moi comme un affront. Je crois que c’est moi qui l’avait trouvé. Où ? Comment ? Impossible à dire… Les images qui me viennent brûlent mon crâne si je tente de me souvenir, mais je ne vois que moi et mon frère au-dessus du livre, des textes s’envolant du livre et tournoyant autour de nous dans une lueur bleutée, le sourire sur le visage de mon frère, et… Argh, je n’y arrive pas. Qu’avions-nous fait ? Pourquoi ?
+
+Je sais juste ce que Maître Uxir m’en a dit. Mon mentor homme-lézard, celui qui enseignait l’art des Magus, était à mes côtés quand je me suis réveillé. Six mois de sommeil qu’aucun soin magique n’avait pu stopper. J’avais été trouvé au petit matin, la chambre sans dessus-dessous, et ce livre vierge à mes côtés. Et aucune trace de mon frère.
+
+Je fus renvoyé. Mais difficile de dire ce qui fut le plus dur à vivre entre ça, la déception dans le regard de Maître Uxir, et la disparition de mon frère. Le simple fait d’avoir réalisé un rituel en dehors du cadre strict qui nous été imposé en tant que première année suffisait à nous renvoyer. Dès lors, que mon frère soit en vie ou pas n'importe pas à l’Académie. Je sais que Maître Uxir a réellement tenté de le retrouver, mais en vain. Moi-même, j’ai passé l’année suivante à le rechercher. Les échos des évènements dans le monde arrivaient jusqu’à moi, notamment la défaite de Tar-Baphon durant laquelle de nombreux Éclaireurs furent tués sans que la Liche ne soit définitivement tuée pour autant, mais cela ne comptait pas, je cherchais en vain mon frère, sans trouver de piste réelle.
+
+Puis finalement, j’ai repris mon trajet vers Druma. Il était temps de raconter à mes parents ce qu’il s’était passé. L’Académie n’était pas du genre à se mêler des affaires personnelles, il était bien probable qu’ils n’aient jamais contacté mes parents, qui ne doivent même pas être au courant de la disparition de mon frère. Mais que leur dire ?
+
+Et mon voyage m’a fait passer par Absalom pour une escale d’une nuit. Là, dans une auberge, j’ai aperçu un groupe d’aventuriers, des Eclaireurs. J’en avait déjà aperçu, mais ils racontaient comment ils avaient exploré je-ne-sais-plus-quel donjon et découvert des mystères anciens. J’ai vu ça comme une révélation, réveillant mon sang bouillant de combat : il y avait de nombreuses menaces, et je serais plus utile au monde en participant à ces luttes, et en explorant au côté de ces aventuriers. Et qui sait, pourrais-je découvrir auprès d’eux des informations sur mon frère disparu ?
+
+J’ai donc laissé partir le navire qui devait m’emmener au Drumal, fuyant encore le moment de faire face à ma famille, et je me suis dirigé vers la Loge des Eclaireurs.
+
 ## Histoire et concept — version de référence MJ
 
 > **Arbitrage du 18 octobre 2026 :** le **deuxième onglet** du document `Personnages/Yaz Lorok.docx` prime sur le premier. Il est interrompu au milieu d'une phrase ; la suite du **premier onglet** est utilisée **uniquement pour compléter la portion manquante**, en signalant tout raccord ou point contradictoire. Ce raccord ne rend pas canoniques les détails du premier onglet qui contredisent le deuxième.
