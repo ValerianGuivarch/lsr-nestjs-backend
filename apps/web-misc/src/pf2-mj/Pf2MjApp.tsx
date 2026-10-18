@@ -1741,7 +1741,7 @@ export function Pf2MjApp() {
     resources: ['Ressources', 'Aventures courtes, lieux, cartes et idées réutilisables, indépendants du catalogue jouable.'],
     journal: ['Journal MJ', 'Ton journal de quête : ce que tu as prévu, commencé ou terminé.'],
     journaux: ['Journaux d’Absalom', 'Deux unes médiévales : la gazette officielle et le journal à sensation.'],
-    lore: ['Histoire', 'Bible de campagne : story.md sert d’index et les chapitres Markdown associés sont consultables directement ici.'],
+    lore: ['Histoire', 'Bible PF2 : UNIVERS.md sert d’index narratif et les chapitres PJ, campagnes et univers sont consultables ici.'],
     prepare: ['Préparation technique', 'Contrôles documentaires et Foundry pour les scénarios suivis.'],
     maintenance: ['Maintenance du catalogue', 'Qualité des données, descriptions et associations à revoir sans polluer la préparation de partie.'],
     documents: ['Inventaire PDF', 'Inventaire physique séparé des œuvres, des ressources réutilisables et de leur jouabilité.'],
