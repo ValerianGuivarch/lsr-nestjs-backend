@@ -165,3 +165,13 @@ La règle cible est : l’XPC provient du recalcul depuis les séances et utilis
 Le pipeline de packages est maintenant utilisé en production. La dette restante porte surtout sur l’automatisation de la génération et sur la réduction des allers-retours manuels, pas sur l’existence du pipeline.
 
 ---
+
+## Background des personnages joueurs (octobre 2026)
+
+Les douze fiches sous `pf2/pj/PJ-*.md` possèdent une section `## Background — récit du personnage (visible par le joueur)`. **Elle seule peut être servie au Wiki** : les autres rubriques contiennent de la continuité et potentiellement des secrets MJ.
+
+Le service `PlayerCodexService` lit cette section pour chaque PJ possédé par l'utilisateur Wiki authentifié. Si le fichier est absent du système sur lequel tourne l'API, il conserve l'ancien comportement de lecture en base SQLite (`pf2_player_character_background`). La réponse expose `backgroundSource: markdown | database`. Lorsque Markdown est disponible, l'interface Wiki affiche fidèlement les retours à la ligne et désactive l'éditeur local pour éviter deux versions concurrentes. Le stockage SQLite historique n'est pas effacé.
+
+**Déploiement requis :** déployer la nouvelle API et les ressources MediaWiki, et rendre le dossier `pf2/pj` du dépôt accessible à l'API, soit par ses chemins de travail habituels, soit par la variable `PF2_PJ_BACKGROUND_ROOT` qui pointe **directement** vers le répertoire contenant les `PJ-*.md`. Sans cet accès, le Wiki continue de montrer le contenu en base, pas les nouveaux textes GitHub. Aucun secret MJ ne doit être copié dans cette section publique.
+
+**Vérification :** connecté au Wiki comme propriétaire d'un PJ, ouvrir *Mes personnages* → personnage → *Background*, vérifier le libellé « Texte du personnage synchronisé depuis le dépôt GitHub » et comparer les premières et dernières lignes avec le Markdown GitHub. Vérifier qu'un autre utilisateur ne peut pas voir ce background privé.
