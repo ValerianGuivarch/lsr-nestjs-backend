@@ -1,8 +1,6 @@
 # Travaux ouverts PF2 — suivi des points à vérifier
 
-[← Outils](../../OUTILS.md) · [Archive intégrale](archive/RECAP-2026-09-27.md)
-
-> Registre de travail mêlant propositions et constats : **ne pas considérer tous les items comme des bugs encore ouverts**. Revalider contre le code et les données live avant toute implémentation.
+[← Outils](../../OUTILS.md)
 
 ## 13. Procédure idéale d’enrichissement des données
 

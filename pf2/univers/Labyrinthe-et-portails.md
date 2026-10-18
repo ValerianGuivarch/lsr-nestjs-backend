@@ -2,8 +2,6 @@
 
 [← Index de la bible](../../UNIVERS.md)
 
-> **Source :** ancien `story.md`. Document MJ, réorganisé sans suppression de faits établis.
-
 > **Terminologie de la campagne — décision MJ :** au début de la campagne, le réseau est appelé **« Labyrinthe de Narven »**. Il ne prend le nom **« Labyrinthe de la Route ouverte »** qu'après son rattachement à la **Loge de la Route ouverte**, fondée à la suite de *PFS 2-00 The King in Thorns*. **Distinction avec le canon :** le nom *Maze of the Open Road* s'applique déjà à l'ancien labyrinthe dans les publications officielles. Ne pas confondre ce réseau de Narven, le **Pacte de la Route ouverte** des fondateurs et la future **Loge de Gregaro Voth**.
 
 ---

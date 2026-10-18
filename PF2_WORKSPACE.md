@@ -29,31 +29,26 @@ Les fiches narratives détaillées résident sous `pf2/pj/`, `pf2/campagnes/`, `
 ## Sources de vérité et niveaux de certitude
 
 - **Éditorial et continuité :** fichiers `pf2/` concernés, avec statut explicite des informations.
-- **Données métier :** `pf2.sqlite` pour catalogues, PNJ, lieux, séances, relations, etc.
-- **Fiches et objets mécaniques :** Foundry ; les choix futurs peuvent être décrits en Markdown sans prétendre qu'ils sont déjà appliqués.
-- **Quêtes du forum Discord :** fils, titres et état Discord ; consulter [l'intégration](docs/pf2/discord-quest-map-sync.md).
-- **Documents PDF/ZIP :** `PF2_LIBRARY_ROOT` / `pf2-data`.
+- **Données métier :** `pf2.sqlite` (catalogue, PNJ, lieux, séances, relations).
+- **Mécanique :** Foundry. Les choix futurs en Markdown ne sont pas nécessairement appliqués.
+- **Quêtes Discord :** fils, titres et état Discord, selon [l’intégration](docs/pf2/discord-quest-map-sync.md).
+- **PDF/ZIP :** `PF2_LIBRARY_ROOT` / `pf2-data`.
 - **Application :** code et configuration courants, voir [OUTILS.md](OUTILS.md).
 
-Distinguer explicitement **canon publié**, **adaptation/décision validée**, **événement réellement joué**, **information connue des PJ**, **proposition**, **à vérifier** et **chronique de lecture**. Les secrets MJ ne sont pas automatiquement des informations connues des joueurs. Ne jamais arbitrer silencieusement une contradiction.
+Distinguer canon publié, décision validée, événement joué, information connue des PJ, proposition, point à vérifier et chronique de lecture. Préserver les secrets MJ.
 
 ## Méthode de modification
 
-1. Lire ce sommaire et l'index du domaine, puis **seulement** les fiches liées au sujet.
-2. Vérifier l'état réel lorsque le sujet dépend du code, de Foundry, de SQLite ou d'un service externe ; les audits datés ne remplacent pas une vérification.
-3. Avant d'écrire, relire **la dernière version GitHub** des fichiers concernés. Fusionner les nouveautés, ne pas écraser les modifications d'une autre discussion.
-4. Lorsque l'utilisateur a autorisé explicitement la capitalisation, réaliser la mise à jour documentaire dès qu'une décision importante est actée ; sinon demander son accord. Suivre le workflow GitHub demandé (branche/PR pour les réorganisations importantes).
-5. Mettre à jour index et liens lorsqu'une fiche est créée ou renommée. Ne jamais déplacer ou supprimer des informations sans conservation vérifiée.
-6. Conclure le travail par un bref état : décisions, fichiers Markdown actualisés, points encore ouverts. Pour les modifications applicatives : vérifications réellement exécutées, pas supposées.
+1. Lire l’index et les fiches liées au sujet.
+2. Vérifier le fonctionnement réel du code et des systèmes, plutôt qu’un audit daté.
+3. Relire les versions actuelles GitHub, fusionner les nouveautés et éviter d’écraser un autre travail.
+4. Écrire après accord explicite, via branche et PR pour les réorganisations importantes.
+5. Préserver les faits utiles avant suppression et maintenir les liens internes.
+6. Récapituler les modifications et vérifications effectivement exécutées.
 
-## Instructions de démarrage d'une nouvelle discussion
+## Documentation vivante
 
-> Consulte `PF2_WORKSPACE.md` du dépôt GitHub `ValerianGuivarch/lsr-nestjs-backend`, puis l'index et les fiches correspondant au sujet de cette discussion. Applique la règle d'or : les faits, décisions et évolutions durables doivent être capitalisés au fur et à mesure, dans les bons Markdown, sans se reposer sur l'historique ChatGPT. Différencie faits validés, propositions, événements joués et données runtime ; ne modifie rien en cas de conflit non tranché. Pour une campagne ou un scénario suivi, utilise ou crée une fiche dédiée ; pour un PJ, utilise sa fiche. Réexplore les fichiers actuels avant chaque écriture.
+Les index PF2 et les fiches sous `pf2/` forment la base de connaissances durable.
+Ne pas recréer de fichiers « déplacé vers… », de copies historiques ni de répertoires d’archives Markdown : les anciennes versions se retrouvent dans les commits Git. Les rapports d’audit datés ne deviennent pas des sources de vérité concurrentes.
 
-### Audit / clôture d'une ancienne discussion
-
-> Résume en quelques lignes le sujet, le dossier recommandé, la pertinence de conserver ou renouveler la conversation, et **les seules informations durables non déjà présentes dans GitHub**. Consulte le dépôt en lecture seule pour cet audit. Propose les modifications de Markdown avant de les effectuer.
-
-## Historique et compatibilité
-
-Les documents historiques sont conservés sous [l'index des archives](pf2/outils/archive/INDEX.md) et [l'ancienne bible](pf2/archive/story/README.md). Les chemins `story/` et certains anciens fichiers à la racine sont des redirections, **pas** des fiches à enrichir.
+Pour capitaliser une discussion : enrichir la fiche existante, conserver les décisions utiles et liens actifs, supprimer les doublons sans garder des pointeurs de compatibilité vides. Si un ancien texte et une fiche récente divergent, privilégier la décision documentée la plus récente et signaler les contradictions non résolues.

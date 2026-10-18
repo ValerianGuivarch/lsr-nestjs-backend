@@ -123,6 +123,5 @@ pf2.sqlite*.bak
 
 # Local ad-hoc backups / generated Foundry artifacts
 pf2.sqlite.backup-*
-story.md.backup-*
 pf2e-val-toolkit-[0-9]*.zip
 pf2e-val-toolkit.backup-*/
