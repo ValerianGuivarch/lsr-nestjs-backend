@@ -1,23 +1,37 @@
 # Ruhtra Sang-du-Soleil
 
-[← Index des PJ](Personnages-joueurs.md) · [Bible PF2](../../UNIVERS.md)
+[← Index des PJ](../../PJ.md) · [Continuité de l'univers](../../UNIVERS.md)
 
-> Migration fidèle du récapitulatif initial des PJ. Les détails mécaniques et choix d'évolution restent à compléter après confrontation à Foundry et aux fiches Google Docs.
+> Fiche de continuité MJ, à compléter ultérieurement avec les documents des joueurs. Ne pas présumer que les choix envisagés sont déjà appliqués dans Foundry.
 
-## Identité et intrigue personnelle
+## Identité et références
+
+- **Personnage :** Ruhtra Sang-du-Soleil
+- **Joueur :** à renseigner
+- **Lien wiki :** à renseigner, facultatif
+- **Lien Google Docs :** à renseigner, facultatif
+- **Lien Discord :** à renseigner, facultatif
+- **Discussion ChatGPT :** à renseigner, facultatif
+- **Référence Foundry (UUID) :** à renseigner, facultative ; Foundry reste source de vérité mécanique
+
+## Histoire et concept
 
 Ulfen, barbare, lié à la région de **Jol**, à la **Nouvelle Thassilon** et particulièrement à **Belimarius**.
 
-## Fiche et évolution PF2
+## Relations et intrigues personnelles
+
+Les relations déjà citées mais pas encore structurées figurent provisoirement dans **À trier**. Ne pas interpréter une piste comme un événement joué.
+
+## Classe, choix PF2 et évolutions
 
 - **Source de vérité mécanique :** fiche Foundry / fiche joueur, à vérifier.
 - **Choix de progression :** non encore documentés ici.
 
-## Questions ouvertes
+## Décisions ouvertes
 
-- Compléter sans inventer les décisions non présentes dans les sources.
+Aucune décision supplémentaire documentée ici. Les informations du joueur et les choix PF2 pourront être ajoutés lors du prochain audit.
 
-## Notes de travail à consolider
+## À trier
 
 - Originaire des environs de **Jol**, élevé dans la culture ulfe de la gloire au combat et des sagas héroïques.
 - A suivi la campagne d'**Opir Huit-Doigts** contre le Nouveau Thassilon en 4719 ; l'armée a été écrasée et Ruhtra a été laissé pour mort.

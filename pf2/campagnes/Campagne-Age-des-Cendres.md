@@ -1,6 +1,10 @@
-# Campagne HD100
+# L'Âge des Cendres — adaptation en table ouverte
 
 [← Index des campagnes](Campagnes.md)
+
+[← Index des campagnes](../../CAMPAGNES.md)
+
+> Ancien nom documentaire : « Campagne HD100 », issu d'une transcription vocale. Le contenu a été conservé et réattribué à L'Âge des Cendres.
 
 ## Statut
 

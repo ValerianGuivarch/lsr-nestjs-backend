@@ -1,23 +1,37 @@
 # Yaz Lorok
 
-[← Index des PJ](Personnages-joueurs.md) · [Bible PF2](../../UNIVERS.md)
+[← Index des PJ](../../PJ.md) · [Continuité de l'univers](../../UNIVERS.md)
 
-> Migration fidèle du récapitulatif initial des PJ. Les détails mécaniques et choix d'évolution restent à compléter après confrontation à Foundry et aux fiches Google Docs.
+> Fiche de continuité MJ, à compléter ultérieurement avec les documents des joueurs. Ne pas présumer que les choix envisagés sont déjà appliqués dans Foundry.
 
-## Identité et intrigue personnelle
+## Identité et références
+
+- **Personnage :** Yaz Lorok
+- **Joueur :** à renseigner
+- **Lien wiki :** à renseigner, facultatif
+- **Lien Google Docs :** à renseigner, facultatif
+- **Lien Discord :** à renseigner, facultatif
+- **Discussion ChatGPT :** à renseigner, facultatif
+- **Référence Foundry (UUID) :** à renseigner, facultative ; Foundry reste source de vérité mécanique
+
+## Histoire et concept
 
 Orc. Son frère a disparu à **Nex** après une affaire de rituel / demi-plan. Son arc peut ouvrir sur les expériences magiques nexiennes et les réalités parallèles.
 
-## Fiche et évolution PF2
+## Relations et intrigues personnelles
+
+Les relations déjà citées mais pas encore structurées figurent provisoirement dans **À trier**. Ne pas interpréter une piste comme un événement joué.
+
+## Classe, choix PF2 et évolutions
 
 - **Source de vérité mécanique :** fiche Foundry / fiche joueur, à vérifier.
 - **Choix de progression :** non encore documentés ici.
 
-## Questions ouvertes
+## Décisions ouvertes
 
-- Compléter sans inventer les décisions non présentes dans les sources.
+Aucune décision supplémentaire documentée ici. Les informations du joueur et les choix PF2 pourront être ajoutés lors du prochain audit.
 
-## Notes de travail à consolider
+## À trier
 
 - **Narek Lorok** : frère cadet de Yaz, magicien très talentueux, disparu après un rituel lié à un livre aux pages blanches.
 - **Maître Uxir** : mentor homme-lézard à l'Académie de Quantium, spécialiste des Magus ; a essayé de comprendre l'incident et de retrouver Narek.
