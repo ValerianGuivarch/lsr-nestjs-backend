@@ -21,6 +21,14 @@ Lors de la création ou mise à jour d’une séance :
 5. un thread de commentaires est créé avec un nouveau message ;
 6. l’identifiant Discord est enregistré dans la séance.
 
+### 11.3 Journal de quêtes Discord ↔ carte de Golarion
+
+Le forum Discord `journal-de-quetes` est **source de vérité pour les fils, titres et statuts de quêtes**, tandis que `pf2.sqlite` conserve leur catalogue synchronisé et les associations cartographiques par **ID de fil**. `DiscordService` récupère les fils actifs et archivés au démarrage, puis toutes les **cinq minutes**. Le tag « Terminée » est déterminant ; un archivage seul ne signifie pas qu'une quête est finie. Les commandes `/terminer-quete` et `/relancer-quete` continuent de modifier Discord, sans créer une source concurrente.
+
+Un renommage de fil ne casse pas son association à un lieu : il se reflète après la prochaine synchronisation réussie et le rechargement de la carte. La création d'une quête reste la **création libre d'une discussion dans le forum** ; aucune commande `/créer quête` n'est souhaitée. La carte gère les lieux, non le cycle de vie des quêtes.
+
+Pour les tables SQLite, la migration des anciens points, les lieux partagés PJ/MJ, les favoris et la visibilité conditionnelle des quêtes terminées, voir le [document technique dédié](../../docs/pf2/discord-quest-map-sync.md). Les données métier réelles restent dans SQLite, et non dans ce fichier.
+
 ### 11.2 Récapitulatifs et séances
 
 Le code courant n'utilise plus l'ancien `/recap` pair-à-pair.
@@ -94,7 +102,7 @@ Le comportement attendu et implémenté est volontairement asymétrique :
 - un administrateur ouvrant directement un journal non révélé voit l'avertissement **« Journal non révélé »** puis le texte complet ;
 - MediaWiki transmet pour cet accès une clé interne au backend ; cette clé reste une configuration serveur et ne doit jamais être exposée au navigateur ou documentée en clair.
 
-Les anciennes documentations décrivant le wiki comme hors flux sont obsolètes. Discord reste un canal de diffusion/synchronisation des résumés courts, pas une source de vérité métier. `pf2_media` n’est pas la source canonique des portraits PNJ.
+Les anciennes documentations décrivant le wiki comme hors flux sont obsolètes. Discord diffuse les résumés courts et constitue **la source de vérité des quêtes de son forum** ; il ne remplace pas SQLite pour les autres données métier PF2. `pf2_media` n’est pas la source canonique des portraits PNJ.
 
 ---
 
