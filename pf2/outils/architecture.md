@@ -197,6 +197,17 @@ La navigation quotidienne est volontairement réduite à quatre domaines :
 
 Les `arcIds` peuvent représenter une **campagne transverse** composée de scénarios PFS appartenant à plusieurs saisons. Une saison PFS reste un conteneur du catalogue, jamais automatiquement une campagne du Journal.
 
+#### Campagnes transverses dans le Catalogue et le Journal
+
+Le comportement courant distingue uniquement l'importance d'affichage, sans créer deux modèles métier concurrents :
+
+- **campagne transverse longue** : 4 scénarios ou plus ;
+- **campagne transverse courte** : 2 ou 3 scénarios.
+
+Un scénario PFS membre d'une campagne transverse reste rattaché à sa saison dans les données, mais il est masqué de cette saison dans le Catalogue afin d'éviter un affichage en double. Les actions de curation portées par une campagne transverse se propagent à ses membres ; sélectionner directement un membre sélectionne également les autres membres encore non commencés, sans écraser un scénario déjà `En cours` ou `Joué`.
+
+Le Journal MJ privilégie les campagnes et regroupe ensuite les aventures réellement autonomes sous **Scénarios individuels**. Il ne contient que le périmètre actif : `Sélectionné`, `En cours` et `Joué`.
+
 ### 6.3 Scanner
 
 `POST /api/pf2-mj/local-scan`
@@ -283,6 +294,38 @@ Mais le fichier Volume 1 reste attaché à une cible documentaire unique, alors 
 **Conséquence :** une aventure peut apparaître sans PDF alors que son contenu se trouve bien dans la compilation.
 
 Ce point est une anomalie structurelle prioritaire à corriger.
+
+### 6.6 Workflow opérationnel scénario → Foundry
+
+Le workflow quotidien n'est plus l'ancien aller-retour manuel « préanalyse IA → export Foundry → retour IA ». Ce code de compatibilité existe encore, mais l'interface technique correspondante est volontairement masquée.
+
+Pour un scénario réellement prioritaire, le chemin cible est :
+
+```text
+catalogue / SQLite courant
++ PDF déjà associés dans pf2-data
++ package-registry courant
++ références Foundry à la demande
+→ analyse
+→ package v4 validé
+→ intégration API
+→ demande de déploiement
+→ Toolkit Foundry
+→ Actors / Scenes / Journal / assets
+→ résultat de déploiement vérifié
+```
+
+Principes :
+
+1. retrouver l'unité canonique et ses documents depuis le catalogue avant de demander des fichiers au MJ ;
+2. vérifier les entités métier et leurs IDs contre l'état **live** de SQLite / `package-registry`, pas contre un ancien snapshot ;
+3. chercher d'abord les Actors mécaniques dans les références/compendiums Foundry et ne créer un `custom` que si nécessaire ;
+4. conserver le ZIP v4 comme artefact compilé reproductible entre l'application et Foundry ;
+5. intégrer le ZIP par l'API et utiliser la file de déploiement ; ne pas écrire directement dans LevelDB ;
+6. considérer le succès renvoyé par le Toolkit comme preuve du déploiement ;
+7. vérifier le résultat réel avant de déclarer la préparation terminée.
+
+La fiche scénario quotidienne expose volontairement surtout **l'état Foundry et l'action utile suivante**. Les anciens contrôles de génération détaillés restent dans le code pour compatibilité, mais ne doivent plus structurer le workflow normal.
 
 ---
 
