@@ -13,9 +13,11 @@ Ce document est un aiguillage : une **campagne réellement jouée** n'est pas la
 
 ## Fiches de campagne
 
+- [Agents d'Absalom](Campagne-Agents-d-Absalom.md) — campagne non terminée ; état des événements réellement joués à confirmer.
+
 - [Campagne du Cartel du Sel](Campagne-Cartel-du-Sel.md) — campagne maison construite progressivement ; sa première partie, issue de *La Vengeance de la rue Rose*, est terminée et l'enquête porte désormais sur le Cartel lui-même.
 - [Sentence d'Extinction / Extinction Curse](Campagne-Sentence-d-Extinction.md) — adaptation en préparation : Vaga, Ménagerie Céleste à Absalom pour le Festival Radieux, relais possible à Escadar et dilemme des orbes.
-- [Campagne HD100](Campagne%20HD100.md) — adaptation à venir de *L'Âge des Cendres* pour une table ouverte ; les décisions de préparation seront capitalisées progressivement dans cette fiche.
+- [L'Âge des Cendres — table ouverte](Campagne-Age-des-Cendres.md) — adaptation en préparation, anciennement « HD100 ».
 - [Les Sept Fléaux de Pointesable](Campagne-Sept-Fleaux-de-Pointesable.md) — campagne commencée ; ouverture adaptée aux niveaux 1–2, Catacombes du Feu Infernal en suspens après la mort de Zoduk et rôle du groupe rival à arbitrer.
 - [La Force des milliers](Campagne-La-Force-des-milliers.md) — campagne publiée retenue pour plus tard, à adapter avec les PJ comme alliés de la Société des Éclaireurs plutôt que comme élèves de la Magaambya ; ouverture prévue via le Labyrinthe de la Route Ouverte.
 

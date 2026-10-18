@@ -1,12 +1,12 @@
-# donnees — documentation PF2
+# Données PF2 — catalogue, SQLite et packages
 
 [← Outils](../../OUTILS.md) · [Archive intégrale](archive/RECAP-2026-09-27.md)
 
 > Contenu repris de l'audit du 27 septembre 2026 : **historique à confronter au code et à l'état de production** avant de considérer une observation ou une anomalie comme actuelle.
 
-## 4. État SQLite observé lors de l’audit
+## 4. Snapshot SQLite — audit du 27 septembre 2026 (non temps réel)
 
-Base auditée : `pf2.sqlite`.
+**Ce tableau est une photographie au 27 septembre, pas l'effectif actuel**. Pour obtenir les chiffres du jour, interroger SQLite. La logique de création/lecture des liens et packages est visible dans `Pf2PersistenceService.ts` et `ScenarioPackageService.ts`.
 
 | Table / type | Nombre |
 |---|---:|
@@ -131,7 +131,7 @@ pour scénario ↔ :
 - faction ;
 - événement.
 
-À la date de l’audit, ces deux tables sont vides.
+**Inexact pour l'audit affiché plus haut :** des associations existaient déjà (129 liens scénario–PNJ et 90 autres relations au 27 septembre). Le code courant sait enregistrer et lire ces deux types de liens. Leur nombre aujourd'hui dépend de SQLite.
 
 ### 5.5 Packages et déploiement Foundry
 
@@ -140,7 +140,7 @@ pf2_scenario_package
 pf2_scenario_deployment
 ```
 
-Le code est en place, mais les tables sont actuellement vides car aucun ZIP n’a encore été intégré.
+**Déclaration périmée :** des packages et déploiements figuraient déjà dans l'audit du 27 septembre (8 lignes pour chaque table). Le code courant conserve le pipeline ZIP/intégration/déploiement ; vérifier les états réels dans SQLite avant de conclure.
 
 ---
 

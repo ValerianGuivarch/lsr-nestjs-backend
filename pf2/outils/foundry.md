@@ -1,10 +1,12 @@
-# foundry — documentation PF2
+# Foundry PF2 — Toolkit, Relay, scènes et personnages
 
 [← Outils](../../OUTILS.md) · [Archive intégrale](archive/RECAP-2026-09-27.md)
 
 > Contenu repris de l'audit du 27 septembre 2026 : **historique à confronter au code et à l'état de production** avant de considérer une observation ou une anomalie comme actuelle.
 
-## 8. Portraits PNJ
+## 8. Portraits PNJ — code vérifié le 18 octobre 2026
+
+`Pf2MjService.ts` résout `FOUNDRY_ASSETS_ROOT`, écrit les fichiers sous `portraits/pnj/` et en conserve le chemin logique `assets/l7r/portraits/pnj/`. Les valeurs réellement présentes dans la bibliothèque Foundry n'ont pas été vérifiées pendant cet audit.
 
 Le comportement courant du code est le suivant.
 
