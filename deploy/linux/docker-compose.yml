@@ -17,6 +17,7 @@ services:
       SQLITE_PATH: /app/data/pf2.sqlite
       JDR_SQLITE_DATABASE: /app/data/jdr-database.sqlite
       PF2_LIBRARY_ROOT: /app/pf2-library
+      PF2_PJ_BACKGROUND_ROOT: /app/pf2-backgrounds
       STORAGE_PATH: /app/storage
       FOUNDRY_ASSETS_ROOT: /app/foundry-assets
       FOUNDRY_REST_URL: http://host.docker.internal:3010
@@ -28,6 +29,7 @@ services:
       - ${APP_STATE_DIR:-../..}/jdr-database.sqlite:/app/data/jdr-database.sqlite
       - ${APP_STORAGE_DIR:-../../storage}:/app/storage
       - ${PF2_LIBRARY_DIR:-../../../pf2-data}:/app/pf2-library:ro
+      - ../../pf2/pj:/app/pf2-backgrounds:ro
       - ${PF2_LIBRARY_DIR:-../../../pf2-data}/_AI:/app/pf2-library/_AI
       - ${PF2_LIBRARY_DIR:-../../../pf2-data}/_Foundry:/app/pf2-library/_Foundry
       - ${FOUNDRY_ASSETS_DIR:-../../../foundry/data/Data/assets/l7r}:/app/foundry-assets
