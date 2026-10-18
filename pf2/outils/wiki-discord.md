@@ -1,4 +1,4 @@
-# wiki discord — documentation PF2
+# Wiki et Discord PF2 — intégrations
 
 [← Outils](../../OUTILS.md) · [Archive intégrale](archive/RECAP-2026-09-27.md)
 
@@ -10,16 +10,15 @@ Le module Discord appartient à `api-jdr`.
 
 Il est optionnel : si les variables Discord sont absentes ou si Discord est indisponible, l’API continue de fonctionner.
 
-### 11.1 Résumés courts
+### 11.1 Résumés courts — publication explicite (code vérifié le 18 octobre 2026)
 
-Lors de la création ou mise à jour d’une séance :
+L'enregistrement d'une séance dans SQLite **ne publie pas** automatiquement sur Discord. La publication/remise en brouillon est contrôlée par `DiscordService.setResumePublication(id, published)`.
 
-1. la séance est enregistrée en SQLite ;
-2. l’API tente de synchroniser le résumé court vers Discord ;
-3. si le message existe déjà, il est édité ;
-4. sinon il est créé ;
-5. un thread de commentaires est créé avec un nouveau message ;
-6. l’identifiant Discord est enregistré dans la séance.
+- **Brouillon :** aucun envoi Discord ; la séance est conservée dans SQLite.
+- **Publication :** l'API synchronise le résumé court, crée ou actualise le message, puis conserve l'ID Discord.
+- **Échec Discord lorsqu'un résumé court doit être publié :** la publication est annulée et la valeur antérieure de `published` est rétablie.
+
+Distinguer les séances enregistrées des séances publiées lors de toute analyse de la progression.
 
 ### 11.2 Récapitulatifs et séances
 
@@ -108,7 +107,9 @@ Les anciennes documentations décrivant le wiki comme hors flux sont obsolètes.
 
 ---
 
-## 16. Dettes et anomalies connues
+## 16. Anciennes dettes et anomalies — historique, à revalider
+
+> **Attention :** cette section provient du récapitulatif historique et comporte des points depuis modifiés. Utiliser [Travaux ouverts](travaux-ouverts.md) pour le suivi actif ; ne pas traiter les listes ci-dessous comme des tickets confirmés.
 
 ### Priorité haute
 
@@ -116,7 +117,7 @@ Les anciennes documentations décrivant le wiki comme hors flux sont obsolètes.
 
 Un fichier de compilation doit pouvoir satisfaire plusieurs unités jouables.
 
-Le modèle actuel ne le représente pas correctement partout.
+Le modèle historique ne le représentait pas correctement partout. Une projection existe désormais dans le code ; voir [l'architecture](architecture.md#65-pdf-de-compilation-et-plusieurs-unités-jouables--état-à-tester) et tester le cas réel avant de rouvrir cette dette.
 
 Cas témoin : Agents d’Absalom.
 
