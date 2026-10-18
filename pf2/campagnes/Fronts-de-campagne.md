@@ -2,8 +2,6 @@
 
 [← Index de la bible](../../UNIVERS.md)
 
-> **Source :** ancien `story.md`. Document MJ, réorganisé sans suppression de faits établis.
-
 > **Attention :** les états de progression ci-dessous doivent être actualisés au fil des séances. Les éléments présentés comme pistes ou fronts ouverts restent susceptibles d'être retravaillés tant qu'ils n'ont pas été établis en jeu.
 
 ---

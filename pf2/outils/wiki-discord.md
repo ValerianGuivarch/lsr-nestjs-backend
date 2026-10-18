@@ -1,8 +1,6 @@
 # wiki discord — documentation PF2
 
-[← Outils](../../OUTILS.md) · [Archive intégrale](archive/RECAP-2026-09-27.md)
-
-> Contenu repris de l'audit du 27 septembre 2026 : **historique à confronter au code et à l'état de production** avant de considérer une observation ou une anomalie comme actuelle.
+[← Outils](../../OUTILS.md)
 
 ## 11. Discord
 

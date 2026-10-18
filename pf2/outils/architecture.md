@@ -1,8 +1,6 @@
 # architecture — documentation PF2
 
-[← Outils](../../OUTILS.md) · [Archive intégrale](archive/RECAP-2026-09-27.md)
-
-> Contenu repris de l'audit du 27 septembre 2026 : **historique à confronter au code et à l'état de production** avant de considérer une observation ou une anomalie comme actuelle.
+[← Outils](../../OUTILS.md)
 
 ## 1. Périmètre
 
@@ -10,7 +8,7 @@ Le système PF2 utile est composé de :
 
 - l’application web `web-misc`, notamment :
   - `/pf2-mj` : bibliothèque MJ, catalogue, PNJ, lieux, régions, factions, événements, curation, préparation des scénarios ;
-  - `/pf2-mj/lore` : lecteur de la bible narrative (`story.md` + `lore/*.md`) en lecture seule ; fichiers intégrés lors de la compilation du frontend ;
+  - `/pf2-mj/lore` : lecteur de la bible narrative (`UNIVERS.md`, `PJ.md`, `CAMPAGNES.md` et `pf2/{univers,pj,campagnes}/**/*.md`) en lecture seule ; fichiers intégrés lors de la compilation du frontend ;
   - `/resumes` / `/résumés` : gestion des séances et résumés ;
 - l’API NestJS `api-jdr`, notamment :
   - `pf2-mj` ;

@@ -2,8 +2,6 @@
 
 [← Index de la bible](../../UNIVERS.md)
 
-> **Source :** ancien `story.md`. Document MJ, réorganisé sans suppression de faits établis.
-
 ---
 
 ## Sentence d'Extinction — points de lore retenus

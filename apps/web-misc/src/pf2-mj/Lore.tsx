@@ -87,7 +87,7 @@ function hrefFor(path: string) {
 
 /**
  * Transforme un lien Markdown relatif en lien interne du visualiseur.
- * Exemple : depuis story/Absalom.md, Societe-des-Eclaireurs.md reste dans /pf2-mj/lore.
+ * Exemple : depuis pf2/univers/Absalom.md, Societe-des-Eclaireurs.md reste dans /pf2-mj/lore.
  */
 function internalMarkdownLink(currentPath: string, href: string): string | null {
   if (!href || /^(?:[a-z][a-z\d+.-]*:|\/\/)/i.test(href)) return null
@@ -175,7 +175,7 @@ export default function LorePage() {
                 if (inHistory) return <Link to={inHistory}>{children}</Link>
                 if (href.startsWith('#')) return <a href={href}>{children}</a>
                 if (/^https?:\/\//i.test(href)) return <a href={href} target="_blank" rel="noopener noreferrer">{children}</a>
-                // Les autres fichiers du dépôt (RECAP.md, etc.) ne font pas partie de la bible affichée.
+                // Les autres fichiers du dépôt ne font pas partie de la bible affichée.
                 // On garde leur libellé sans envoyer le lecteur vers GitHub.
                 return <span className="pf2-lore-unavailable-link" title="Document hors de la bible Histoire">{children}</span>
               },

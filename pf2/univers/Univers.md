@@ -23,6 +23,6 @@ Répertoire des ressources narratives transverses. Les fichiers thématiques res
 
 ## Système de référence
 
-Le référentiel métier des PNJ, factions, lieux, régions et événements est **SQLite**, documenté dans [RECAP.md](../RECAP.md). Les Markdown sont des synthèses éditoriales de continuité, **pas** un second référentiel à synchroniser aveuglément.
+Le référentiel métier des PNJ, factions, lieux, régions et événements est **SQLite**, documenté dans [Données et persistance](../outils/donnees.md). Les Markdown sont des synthèses éditoriales de continuité, **pas** un second référentiel à synchroniser aveuglément.
 
-Pour créer une nouvelle fiche d'univers riche, choisir un nom thématique sous `story/`, l'ajouter ici et dans l'[index général](../../UNIVERS.md). Conserver les identifiants métiers lorsqu'ils sont connus.
+Pour créer une nouvelle fiche d'univers riche, choisir un nom thématique sous `pf2/univers/`, l'ajouter ici et dans l'[index général](../../UNIVERS.md). Conserver les identifiants métiers lorsqu'ils sont connus.

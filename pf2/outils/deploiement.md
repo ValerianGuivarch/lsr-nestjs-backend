@@ -1,8 +1,6 @@
 # deploiement — documentation PF2
 
-[← Outils](../../OUTILS.md) · [Archive intégrale](archive/RECAP-2026-09-27.md)
-
-> Contenu repris de l'audit du 27 septembre 2026 : **historique à confronter au code et à l'état de production** avant de considérer une observation ou une anomalie comme actuelle.
+[← Outils](../../OUTILS.md)
 
 ## 19. Variables importantes
 
@@ -267,7 +265,7 @@ MediaWiki API       : host.docker.internal:4205/api.php
 
 Quand une nouvelle discussion doit modifier ou déployer l’application :
 
-1. lire d’abord `RECAP.md` pour l’état technique et `story.md` si la demande touche la continuité narrative ;
+1. lire d’abord `PF2_WORKSPACE.md` et l’index spécialisé (`OUTILS.md` pour la technique, `UNIVERS.md`, `PJ.md` ou `CAMPAGNES.md` pour la continuité) ;
 2. considérer `main` comme la référence de production ;
 3. pour un changement normal, créer une branche et une PR vers `main` ;
 4. laisser GitHub Actions construire et publier les images ; ne pas faire de build de production sur le mini-PC ;

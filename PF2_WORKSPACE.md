@@ -33,6 +33,9 @@ Point d'entrée commun aux discussions ChatGPT, à la continuité narrative et �
 7. Signaler les conflits entre documentation et état réel. Les rapports datés ne constituent pas une description garantie du présent.
 8. Après un travail important, proposer la capitalisation des informations durables et des décisions non encore documentées.
 
-## Compatibilité
+## Documentation vivante
 
-Les anciens `story.md`, `story/*.md` et `RECAP.md` sont conservés transitoirement ou remplacés par des pointeurs ; l'intégralité du RECAP précédent est archivée dans [pf2/outils/archive/RECAP-2026-09-27.md](pf2/outils/archive/RECAP-2026-09-27.md).
+Les index PF2 et les fiches sous `pf2/` forment la base de connaissances durable.
+Ne pas recréer de fichiers « déplacé vers… », de copies historiques ni de répertoires d’archives Markdown : les anciennes versions se retrouvent dans les commits Git. Les rapports d’audit datés ne deviennent pas des sources de vérité concurrentes.
+
+Pour capitaliser une discussion : enrichir la fiche existante, conserver les décisions utiles et liens actifs, supprimer les doublons sans garder des pointeurs de compatibilité vides. Si un ancien texte et une fiche récente divergent, privilégier la décision documentée la plus récente et signaler les contradictions non résolues.
