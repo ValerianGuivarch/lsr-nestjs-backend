@@ -338,3 +338,59 @@ Le signal est donc celui d'un **import partiel** : les images ont été extraite
 
 L'ancienne fonctionnalité du **PF2e Val Toolkit** qui transformait un token/PNJ en accès à une bibliothèque de cartes (`map-library`) a été volontairement abandonnée et supprimée du module. Elle ne doit pas être réintroduite lors d'un futur nettoyage du Toolkit.
 
+---
+
+## 14. Déploiement de scénarios et arborescence MJ
+
+Le package ZIP reste l'artefact compilé entre l'application MJ et Foundry. Le Toolkit applique le package au monde Foundry ; il ne remplace ni SQLite comme source métier, ni le catalogue comme source de classement.
+
+### 14.1 Arborescence calculée depuis le catalogue
+
+Quand un package n'impose pas explicitement un chemin, le backend déduit désormais sa bibliothèque Foundry depuis les données métier courantes :
+
+```text
+MJ
+├── Campagnes officielles
+│   └── <campagne>
+│       └── <scénario>
+├── Campagnes transverses
+│   └── <arc de 4 scénarios ou plus>
+│       └── <scénario>
+├── Campagnes transverses courtes
+│   └── <arc de 2 ou 3 scénarios>
+│       └── <scénario>
+└── Scénarios individuels
+    ├── Pathfinder Society
+    │   └── <scénario>
+    └── Autres
+        └── <scénario>
+```
+
+La même logique doit s'appliquer aux Actors, Scenes et Journals gérés par le Toolkit. Les cartes/scènes officielles déjà fournies par d'autres modules et situées hors de l'arborescence `MJ` ne doivent pas être déplacées uniquement pour uniformiser l'affichage.
+
+Le Toolkit sait relocaliser des documents qu'il gère lorsqu'un scénario change de catégorie, afin d'éviter qu'une réorganisation du catalogue crée une seconde copie dans un nouveau dossier.
+
+### 14.2 Déploiement piloté et vérification
+
+Le chemin normal est :
+
+1. package v4 validé et intégré par l'API ;
+2. demande de déploiement créée ;
+3. un GM connecté laisse le Toolkit réclamer la demande ;
+4. le Toolkit télécharge le ZIP ;
+5. Actors, Scenes, Journal et assets sont créés ou mis à jour ;
+6. le Journal du scénario est ouvert automatiquement après import réussi ;
+7. le Toolkit renvoie le résultat à l'API ;
+8. seule une réponse `success` confirme que le package est effectivement déployé.
+
+L'interface MJ expose principalement l'état utile (`à préparer`, `à mettre à jour`, `prêt`, `échec`) et l'action suivante. Les anciens contrôles détaillés du workflow IA en deux phases sont conservés dans le code pour compatibilité mais volontairement masqués dans l'usage courant.
+
+### 14.3 Contenu préexistant et contenu MJ
+
+Un scénario peut combiner :
+
+- des scènes ou cartes préexistantes fournies par un module officiel ou une installation antérieure ;
+- des Actors, Scenes ou Journals créés par le pipeline MJ.
+
+L'absence d'une Scene générée par le Toolkit ne prouve donc pas qu'un scénario est absent de Foundry. Les diagnostics doivent distinguer **contenu préexistant** et **contenu géré par le Toolkit**, puis agréger l'état au niveau de la campagne quand celle-ci est composée de plusieurs packages enfants.
+
