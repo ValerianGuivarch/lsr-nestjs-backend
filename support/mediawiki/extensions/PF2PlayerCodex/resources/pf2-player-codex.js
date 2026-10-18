@@ -255,42 +255,33 @@
 				if ( character.wikiPortraitFilename ) { var image = document.createElement( 'img' ); image.className = 'pf2-player-character-portrait'; image.src = imageForFilename( character.wikiPortraitFilename ); image.alt = character.displayName; side.appendChild( image ); }
 				layout.appendChild( side );
 				var content = document.createElement( 'div' ); content.className = 'pf2-player-wiki-content'; layout.appendChild( content ); panel.appendChild( layout ); renderWikiPage( content, character.wikiPageTitle );
-			} else if ( name === 'background' ) {
-				var actions = document.createElement( 'div' ); actions.className = 'pf2-player-background-actions'; panel.appendChild( actions );
-				var view = document.createElement( 'div' ); view.className = 'pf2-player-background-view'; panel.appendChild( view );
-				var markdownManaged = character.backgroundSource === 'markdown';
-				var edit = document.createElement( 'button' ); edit.textContent = 'Modifier le background';
-				if ( markdownManaged ) {
-					var note = document.createElement( 'p' );
-					note.textContent = 'Texte du personnage synchronisé depuis le dépôt GitHub (section Background).';
-					actions.appendChild( note );
-					view.style.whiteSpace = 'pre-wrap';
-					view.textContent = character.background || '';
-				} else {
-					actions.appendChild( edit );
-					renderParsedText( view, character.background || '' );
-				}
-				edit.onclick = function () {
-					actions.textContent = ''; view.textContent = '';
-					var textarea = document.createElement( 'textarea' ); textarea.className = 'pf2-player-background-editor'; textarea.value = character.background || ''; textarea.rows = 18; view.appendChild( textarea );
-					var save = document.createElement( 'button' ); save.textContent = 'Enregistrer'; save.className = 'pf2-player-primary';
-					var cancel = document.createElement( 'button' ); cancel.textContent = 'Annuler';
-					actions.appendChild( save ); actions.appendChild( cancel );
-					cancel.onclick = function () { showTab( 'background' ); };
-					save.onclick = function () {
-						save.disabled = true;
-						api().postWithToken( 'csrf', { action: 'pf2playercodexmeupdate', npcId: character.npcId, content: textarea.value, format: 'json' } ).then( function () {
-							character.background = textarea.value; mw.notify( 'Background enregistré.', { type: 'success' } ); showTab( 'background' );
-						} ).catch( function ( error ) { save.disabled = false; mw.notify( errorMessage( error, 'Enregistrement impossible' ), { type: 'error' } ); } );
-					};
-				};
+			} else if ( name === 'background' || name === 'notes' ) {
+                var field = name;
+                var actions = document.createElement( 'div' ); actions.className = 'pf2-player-background-actions'; panel.appendChild( actions );
+                var view = document.createElement( 'div' ); view.className = 'pf2-player-background-view'; panel.appendChild( view );
+                var edit = document.createElement( 'button' ); edit.textContent = field === 'notes' ? 'Modifier les notes' : 'Modifier le background'; actions.appendChild( edit );
+                renderParsedText( view, character[field] || '' );
+                edit.onclick = function () {
+                    actions.textContent = ''; view.textContent = '';
+                    var textarea = document.createElement( 'textarea' ); textarea.className = 'pf2-player-background-editor'; textarea.value = character[field] || ''; textarea.rows = 18; view.appendChild( textarea );
+                    var save = document.createElement( 'button' ); save.textContent = 'Enregistrer'; save.className = 'pf2-player-primary';
+                    var cancel = document.createElement( 'button' ); cancel.textContent = 'Annuler';
+                    actions.appendChild( save ); actions.appendChild( cancel );
+                    cancel.onclick = function () { showTab( field ); };
+                    save.onclick = function () {
+                        save.disabled = true;
+                        api().postWithToken( 'csrf', { action: 'pf2playercodexmeupdate', npcId: character.npcId, field: field, content: textarea.value, format: 'json' } ).then( function () {
+                            character[field] = textarea.value; mw.notify( 'Texte enregistré.', { type: 'success' } ); showTab( field );
+                        } ).catch( function ( error ) { save.disabled = false; mw.notify( errorMessage( error, 'Enregistrement impossible' ), { type: 'error' } ); } );
+                    };
+                };
 			} else if ( name === 'contacts' ) {
 				if ( !character.contacts || !character.contacts.length ) { var noContact = document.createElement( 'p' ); noContact.className = 'pf2-player-empty'; noContact.textContent = 'Aucun contact privé pour ce personnage.'; panel.appendChild( noContact ); return; }
 				var contacts = document.createElement( 'div' ); contacts.className = 'pf2-player-list'; character.contacts.forEach( function ( contact ) { contacts.appendChild( contactCard( contact, character.npcId ) ); } ); panel.appendChild( contacts );
 			}
 		}
 
-		[ [ 'fiche', 'Fiche' ], [ 'background', 'Background' ], [ 'contacts', 'Contacts' ] ].forEach( function ( item ) { var button = document.createElement( 'button' ); button.dataset.tab = item[ 0 ]; button.textContent = item[ 1 ]; button.onclick = function () { showTab( item[ 0 ] ); }; tabs.appendChild( button ); } );
+		[ [ 'fiche', 'Fiche' ], [ 'background', 'Background' ], [ 'notes', 'Notes' ], [ 'contacts', 'Contacts' ] ].forEach( function ( item ) { var button = document.createElement( 'button' ); button.dataset.tab = item[ 0 ]; button.textContent = item[ 1 ]; button.onclick = function () { showTab( item[ 0 ] ); }; tabs.appendChild( button ); } );
 		showTab( 'fiche' );
 	}
 

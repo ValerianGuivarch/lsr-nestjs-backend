@@ -1185,6 +1185,7 @@ export class Pf2PersistenceService implements OnModuleInit {
       await manager.query("CREATE TABLE IF NOT EXISTS pf2_player_character_contact (player_npc_id TEXT NOT NULL, contact_npc_id TEXT NOT NULL, created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (player_npc_id, contact_npc_id))")
       await manager.query('CREATE INDEX IF NOT EXISTS idx_pf2_player_character_contact_contact ON pf2_player_character_contact (contact_npc_id, player_npc_id)')
       await manager.query("CREATE TABLE IF NOT EXISTS pf2_player_character_background (npc_id TEXT PRIMARY KEY, content TEXT NOT NULL DEFAULT '', updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)")
+      await manager.query("CREATE TABLE IF NOT EXISTS pf2_player_character_notes (npc_id TEXT PRIMARY KEY, content TEXT NOT NULL DEFAULT '', updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)")
 
       const profiles = await manager.query("SELECT p.npc_id AS npcId, r.payload AS payload FROM pf2_player_character_profile p JOIN pf2_record r ON r.kind = 'pnj' AND r.id = p.npc_id WHERE p.is_player = 0") as Array<{ npcId: string; payload: string }>
       for (const row of profiles) {

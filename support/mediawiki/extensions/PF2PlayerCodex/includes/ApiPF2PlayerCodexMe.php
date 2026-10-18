@@ -23,7 +23,7 @@ class ApiPF2PlayerCodexMe extends ApiBase {
             $this->dieWithError( 'L’espace personnel PF2 n’est pas configuré.' );
         }
 
-        $url = $base . '/player-codex/me?wikiUsername=' . rawurlencode( $user->getName() );
+        $url = $base . '/player-codex/me?wikiUsername=' . rawurlencode( $user->getName() ) . '&wikiIsAdmin=' . ( $user->isAllowed( 'delete' ) ? '1' : '0' );
         $request = $services->getHttpRequestFactory()->create(
             $url,
             [ 'method' => 'GET', 'timeout' => 10 ],

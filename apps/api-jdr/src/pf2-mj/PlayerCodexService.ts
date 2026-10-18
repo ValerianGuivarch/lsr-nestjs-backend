@@ -1,48 +1,9 @@
 import { BadRequestException, ConflictException, ForbiddenException, Injectable, NotFoundException, Optional } from '@nestjs/common'
 import { InjectDataSource } from '@nestjs/typeorm'
 import { randomUUID } from 'node:crypto'
-import { readFile } from 'node:fs/promises'
-import { resolve } from 'node:path'
 import { DataSource } from 'typeorm'
 import { Pf2PersistenceService } from '../pf2-storage/Pf2PersistenceService'
 import { MediaWikiClientService } from './MediaWikiClientService'
-
-// Le background public des PJ est la seule section exportable des fiches narratives.
-// On n'expose jamais le reste de la fiche (intrigues MJ, hypothèses, secrets).
-const PLAYER_BACKGROUND_FILES: Record<string, string> = {
-  'zab': 'PJ-Zab.md', 'jilkra': 'PJ-Jilkra-Adoric-Larantis.md',
-  'vaga': 'PJ-Vaga.md', 'éos': 'PJ-Eos.md', 'eos': 'PJ-Eos.md',
-  'ruhtra': 'PJ-Ruhtra-Sang-du-Soleil.md', 'sashka': 'PJ-Sashka.md',
-  'yaz': 'PJ-Yaz-Lorok.md', 'yaz lorok': 'PJ-Yaz-Lorok.md',
-  'neyla': 'PJ-Neyla.md', 'pépin': 'PJ-Pepin.md', 'pepin': 'PJ-Pepin.md',
-  'tsuyi': 'PJ-Tsuyu-Nagori.md', 'tsuyu-nagori': 'PJ-Tsuyu-Nagori.md',
-  'pen-pen': 'PJ-Pen-Pen.md', 'penpen': 'PJ-Pen-Pen.md',
-  'eryn': 'PJ-Eryn-Elyn.md', 'elyn': 'PJ-Eryn-Elyn.md',
-}
-const PLAYER_BACKGROUND_START = '## Background — récit du personnage (visible par le joueur)'
-async function readPlayerMarkdownBackground(name: string): Promise<string | null> {
-  if (process.env.NODE_ENV === 'test') return null
-  const match = Object.entries(PLAYER_BACKGROUND_FILES).find(([key]) => name.toLocaleLowerCase('fr').startsWith(key))
-  if (!match) return null
-  const filename = match[1]
-  // Déployer les Markdown avec l'API, ou renseigner PF2_PJ_BACKGROUND_ROOT.
-  const roots = [
-    process.env.PF2_PJ_BACKGROUND_ROOT,
-    resolve(process.cwd(), 'pf2/pj'),
-    resolve(process.cwd(), '../../pf2/pj'),
-  ].filter((value): value is string => Boolean(value))
-  for (const root of roots) {
-    try {
-      const markdown = await readFile(resolve(root, filename), 'utf8')
-      const start = markdown.indexOf(PLAYER_BACKGROUND_START)
-      if (start < 0) continue
-      const after = markdown.slice(start + PLAYER_BACKGROUND_START.length).trimStart()
-      const next = after.search(/^## /m)
-      return (next < 0 ? after : after.slice(0, next)).trim()
-    } catch { /* pas de source Markdown montée dans cet environnement */ }
-  }
-  return null
-}
 
 type ProfileRow = { npc_id: string; wiki_page_title: string; display_name: string; wiki_portrait_filename: string | null; short_description: string; is_player: number; is_published: number; created_at: string; updated_at: string }
 type MjFaction = Record<string, unknown> & { id: string; nom: string; description: string; description_joueurs?: string; parent_id?: string | null; published?: boolean }
@@ -175,6 +136,7 @@ export class PlayerCodexService {
       await manager.query('DELETE FROM pf2_player_character_owner WHERE npc_id = ?', [npcId])
       await manager.query('DELETE FROM pf2_player_character_contact WHERE player_npc_id = ?', [npcId])
       await manager.query('DELETE FROM pf2_player_character_background WHERE npc_id = ?', [npcId])
+      await manager.query('DELETE FROM pf2_player_character_notes WHERE npc_id = ?', [npcId])
       await manager.query('DELETE FROM pf2_character_presentation WHERE source_npc_id = ?', [npcId])
       await manager.query('DELETE FROM pf2_player_character_profile WHERE npc_id = ?', [npcId])
     })
@@ -241,49 +203,64 @@ export class PlayerCodexService {
     } else await this.db.query('DELETE FROM pf2_player_character_contact WHERE player_npc_id = ? AND contact_npc_id = ?', [playerNpcId, contactNpcId])
   }
 
-  async myCharacters(wikiUsername: string): Promise<{ wikiUsername: string; characters: unknown[] }> {
+  async myCharacters(wikiUsername: string, isWikiAdmin = false): Promise<{ wikiUsername: string; characters: unknown[] }> {
     const username = this.required(wikiUsername, 'Compte Wiki')
-    const accounts = await this.db.query('SELECT discord_user_id AS discordUserId FROM pf2_wiki_account_link WHERE wiki_username = ? COLLATE NOCASE LIMIT 1', [username]) as Array<{ discordUserId: string }>
-    const account = accounts[0]
-    if (!account) return { wikiUsername: username, characters: [] }
-    const rows = await this.db.query(
-      `SELECT p.* FROM pf2_player_character_owner o
-       JOIN pf2_player_character_profile p ON p.npc_id = o.npc_id
-       WHERE o.discord_user_id = ? AND p.is_player = 1
-       ORDER BY p.display_name COLLATE NOCASE`,
-      [account.discordUserId],
-    ) as ProfileRow[]
+    let rows: ProfileRow[]
+    if (isWikiAdmin) {
+      rows = await this.db.query('SELECT * FROM pf2_player_character_profile WHERE is_player = 1 ORDER BY display_name COLLATE NOCASE') as ProfileRow[]
+    } else {
+      const accounts = await this.db.query('SELECT discord_user_id AS discordUserId FROM pf2_wiki_account_link WHERE wiki_username = ? COLLATE NOCASE LIMIT 1', [username]) as Array<{ discordUserId: string }>
+      if (!accounts[0]) return { wikiUsername: username, characters: [] }
+      rows = await this.db.query(
+        `SELECT p.* FROM pf2_player_character_owner o
+         JOIN pf2_player_character_profile p ON p.npc_id = o.npc_id
+         WHERE o.discord_user_id = ? AND p.is_player = 1
+         ORDER BY p.display_name COLLATE NOCASE`,
+        [accounts[0].discordUserId],
+      ) as ProfileRow[]
+    }
     return { wikiUsername: username, characters: await Promise.all(rows.map(row => this.privateCharacterDto(row))) }
   }
 
-  async updateMyBackground(wikiUsername: string, npcId: string, content: unknown): Promise<{ npcId: string; background: string }> {
+  async updateMyText(wikiUsername: string, npcId: string, content: unknown, field: 'background' | 'notes', isWikiAdmin = false): Promise<{ npcId: string; content: string }> {
     const username = this.required(wikiUsername, 'Compte Wiki')
     const value = typeof content === 'string' ? content : ''
-    if (value.length > 100_000) throw new BadRequestException('Le background est trop long (maximum 100 000 caractères).')
-    const owned = await this.db.query(
-      `SELECT 1 FROM pf2_player_character_owner o
-       JOIN pf2_wiki_account_link a ON a.discord_user_id = o.discord_user_id
-       WHERE o.npc_id = ? AND a.wiki_username = ? COLLATE NOCASE LIMIT 1`,
-      [npcId, username],
-    ) as Array<Record<string, unknown>>
-    if (!owned.length) throw new ForbiddenException('Ce personnage ne vous appartient pas.')
+    if (value.length > 100_000) throw new BadRequestException('Texte trop long (maximum 100 000 caractères).')
+    if (!isWikiAdmin) {
+      const owned = await this.db.query(
+        `SELECT 1 FROM pf2_player_character_owner o
+         JOIN pf2_wiki_account_link a ON a.discord_user_id = o.discord_user_id
+         WHERE o.npc_id = ? AND a.wiki_username = ? COLLATE NOCASE LIMIT 1`,
+        [npcId, username],
+      ) as Array<Record<string, unknown>>
+      if (!owned.length) throw new ForbiddenException('Ce personnage ne vous appartient pas.')
+    } else {
+      const existing = await this.db.query('SELECT 1 FROM pf2_player_character_profile WHERE npc_id = ? AND is_player = 1 LIMIT 1', [npcId]) as Array<Record<string, unknown>>
+      if (!existing.length) throw new NotFoundException('Personnage joueur introuvable.')
+    }
+    const table = field === 'notes' ? 'pf2_player_character_notes' : 'pf2_player_character_background'
     await this.db.query(
-      `INSERT INTO pf2_player_character_background (npc_id, content, updated_at) VALUES (?, ?, CURRENT_TIMESTAMP)
+      `INSERT INTO ${table} (npc_id, content, updated_at) VALUES (?, ?, CURRENT_TIMESTAMP)
        ON CONFLICT(npc_id) DO UPDATE SET content = excluded.content, updated_at = CURRENT_TIMESTAMP`,
       [npcId, value],
     )
-    return { npcId, background: value }
+    return { npcId, content: value }
+  }
+
+  async updateMyBackground(wikiUsername: string, npcId: string, content: unknown, isWikiAdmin = false): Promise<{ npcId: string; background: string }> {
+    const updated = await this.updateMyText(wikiUsername, npcId, content, 'background', isWikiAdmin)
+    return { npcId, background: updated.content }
   }
 
   private async privateCharacterDto(row: ProfileRow): Promise<unknown> {
     const character = await this.characterDto(row) as Record<string, unknown>
     const backgrounds = await this.db.query('SELECT content FROM pf2_player_character_background WHERE npc_id = ? LIMIT 1', [row.npc_id]) as Array<{ content: string }>
+    const notes = await this.db.query('SELECT content FROM pf2_player_character_notes WHERE npc_id = ? LIMIT 1', [row.npc_id]) as Array<{ content: string }>
     const contacts = await this.db.query('SELECT contact_npc_id AS contactNpcId FROM pf2_player_character_contact WHERE player_npc_id = ? ORDER BY created_at, contact_npc_id', [row.npc_id]) as Array<{ contactNpcId: string }>
-    const markdownBackground = await readPlayerMarkdownBackground(row.display_name)
     return {
       ...character,
-      background: markdownBackground ?? backgrounds[0]?.content ?? '',
-      backgroundSource: markdownBackground !== null ? 'markdown' : 'database',
+      background: backgrounds[0]?.content ?? '',
+      notes: notes[0]?.content ?? '',
       contacts: (await Promise.all(contacts.map(contact => this.privateContactDto(contact.contactNpcId)))).filter(Boolean),
     }
   }
@@ -353,6 +330,7 @@ export class PlayerCodexService {
       await manager.query('DELETE FROM pf2_player_character_contact WHERE contact_npc_id = ? OR player_npc_id = ?', [npcId, npcId])
       await manager.query('DELETE FROM pf2_player_character_owner WHERE npc_id = ?', [npcId])
       await manager.query('DELETE FROM pf2_player_character_background WHERE npc_id = ?', [npcId])
+      await manager.query('DELETE FROM pf2_player_character_notes WHERE npc_id = ?', [npcId])
       await manager.query('DELETE FROM pf2_character_presentation WHERE source_npc_id = ?', [npcId])
       await manager.query('DELETE FROM pf2_record WHERE kind = ? AND id = ?', ['pnj', npcId])
     })
