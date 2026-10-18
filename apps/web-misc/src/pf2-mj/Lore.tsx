@@ -8,24 +8,26 @@ import './lore.css'
 /**
  * Visualiseur en lecture seule de la bible de campagne.
  * Les vrais fichiers Markdown du dépôt sont intégrés au build par Vite :
- * - story.md = point d'entrée et architecture ;
- * - story/*.md = chapitres détaillés.
+ * - UNIVERS.md = point d'entrée de la bibliothèque narrative ;
+ * - pf2/{univers, pj, campagnes}/**/*.md = chapitres détaillés.
  *
  * Il n'y a volontairement ni copie des textes, ni dépendance à GitHub au runtime.
  */
 const markdownFiles = {
-  ...import.meta.glob('../../../../story.md', { query: '?raw', import: 'default', eager: true }),
-  ...import.meta.glob('../../../../story/*.md', { query: '?raw', import: 'default', eager: true }),
+  ...import.meta.glob('../../../../UNIVERS.md', { query: '?raw', import: 'default', eager: true }),
+  ...import.meta.glob('../../../../PJ.md', { query: '?raw', import: 'default', eager: true }),
+  ...import.meta.glob('../../../../CAMPAGNES.md', { query: '?raw', import: 'default', eager: true }),
+  ...import.meta.glob('../../../../pf2/**/*.md', { query: '?raw', import: 'default', eager: true }),
 } as Record<string, string>
 
 type LoreDocument = { id: string; path: string; title: string; content: string }
 
 function repositoryPath(key: string) {
   const normalized = key.replace(/\\/g, '/')
-  if (normalized.endsWith('/story.md')) return 'story.md'
-  const marker = '/story/'
+  const marker = '/pf2/'
   const index = normalized.lastIndexOf(marker)
-  return index >= 0 ? `story/${normalized.slice(index + marker.length)}` : normalized
+  if (index >= 0) return `pf2/${normalized.slice(index + marker.length)}`
+  return normalized.split('/').pop() ?? normalized
 }
 
 function documentTitle(path: string, content: string) {
@@ -40,14 +42,14 @@ const discoveredDocuments: LoreDocument[] = Object.entries(markdownFiles).map(([
 })
 
 const discoveredByPath = new Map(discoveredDocuments.map((document) => [document.path, document]))
-const discoveredIndex = discoveredByPath.get('story.md')
+const discoveredIndex = discoveredByPath.get('UNIVERS.md')
 
 /**
- * L'ordre de la navigation suit d'abord l'ordre déclaré dans story.md.
+ * L'ordre de la navigation suit d'abord l'ordre déclaré dans UNIVERS.md.
  * Un nouveau fichier story/*.md oublié dans le sommaire reste quand même visible à la fin.
  */
 const indexedChapterPaths = discoveredIndex
-  ? [...discoveredIndex.content.matchAll(/\]\((story\/[^)#?]+\.md)(?:#[^)]*)?\)/g)].map((match) => match[1])
+  ? [...discoveredIndex.content.matchAll(/\]\((pf2\/[^)#?]+\.md)(?:#[^)]*)?\)/g)].map((match) => match[1])
   : []
 const uniqueIndexedChapterPaths = [...new Set(indexedChapterPaths)]
 const indexedPathSet = new Set(uniqueIndexedChapterPaths)
@@ -55,12 +57,12 @@ const documents: LoreDocument[] = [
   ...(discoveredIndex ? [discoveredIndex] : []),
   ...uniqueIndexedChapterPaths.map((path) => discoveredByPath.get(path)).filter((document): document is LoreDocument => Boolean(document)),
   ...discoveredDocuments
-    .filter((document) => document.path !== 'story.md' && !indexedPathSet.has(document.path))
+    .filter((document) => document.path !== 'UNIVERS.md' && !indexedPathSet.has(document.path))
     .sort((left, right) => left.title.localeCompare(right.title, 'fr')),
 ]
 
 const documentPaths = new Set(documents.map((document) => document.path))
-const indexDocument = documents.find((document) => document.id === 'story.md') ?? documents[0]
+const indexDocument = documents.find((document) => document.id === 'UNIVERS.md') ?? documents[0]
 
 function normalize(value: string) {
   return value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase('fr')
@@ -101,7 +103,7 @@ function internalMarkdownLink(currentPath: string, href: string): string | null 
 export default function LorePage() {
   const location = useLocation()
   const [query, setQuery] = useState('')
-  const requested = new URLSearchParams(location.search).get('page') ?? 'story.md'
+  const requested = new URLSearchParams(location.search).get('page') ?? 'UNIVERS.md'
   const current = documents.find((document) => document.id === requested) ?? indexDocument
   const currentIndex = documents.findIndex((document) => document.id === current?.id)
   const previous = documents[currentIndex - 1]
@@ -143,18 +145,18 @@ export default function LorePage() {
             className={current.id === document.id ? 'selected' : ''}
             aria-current={current.id === document.id ? 'page' : undefined}
           >
-            <span>{document.path === 'story.md' ? '⌂' : '§'}</span>
-            <strong>{document.path === 'story.md' ? 'Sommaire général' : document.title}</strong>
+            <span>{document.path === 'UNIVERS.md' ? '⌂' : '§'}</span>
+            <strong>{document.path === 'UNIVERS.md' ? 'Sommaire général' : document.title}</strong>
           </Link>)}
           {filtered.length === 0 && <p className="pf2-lore-no-results">Aucun chapitre ne correspond à cette recherche.</p>}
         </nav>
-        <p className="pf2-lore-source">Source affichée directement : <code>story.md</code> et <code>story/*.md</code>. Les liens entre chapitres restent dans ce visualiseur.</p>
+        <p className="pf2-lore-source">Source affichée directement : <code>UNIVERS.md</code> et <code>pf2/**/*.md</code>. Les liens entre chapitres restent dans ce visualiseur.</p>
       </div>
 
       <div className="pf2-lore-reading">
         {requested !== current.id && <p className="pf2-lore-warning">Chapitre introuvable : affichage du sommaire général.</p>}
         <div className="pf2-lore-reading-toolbar">
-          <span>{current.path === 'story.md' ? 'INDEX DE LA BIBLE' : current.path}</span>
+          <span>{current.path === 'UNIVERS.md' ? 'INDEX DE LA BIBLE' : current.path}</span>
           <span>LECTURE SEULE</span>
         </div>
         <article className="pf2-lore-markdown">
@@ -183,7 +185,7 @@ export default function LorePage() {
           >{current.content}</ReactMarkdown>
         </article>
         <nav aria-label="Changer de chapitre" className="pf2-lore-pagination">
-          {previous ? <Link to={hrefFor(previous.id)}>← {previous.path === 'story.md' ? 'Sommaire' : previous.title}</Link> : <span />}
+          {previous ? <Link to={hrefFor(previous.id)}>← {previous.path === 'UNIVERS.md' ? 'Sommaire' : previous.title}</Link> : <span />}
           {next ? <Link to={hrefFor(next.id)}>{next.title} →</Link> : <span />}
         </nav>
       </div>
