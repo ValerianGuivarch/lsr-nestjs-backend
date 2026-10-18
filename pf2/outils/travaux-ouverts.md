@@ -1,4 +1,4 @@
-# travaux ouverts — documentation PF2
+# Travaux ouverts PF2 — suivi des points à vérifier
 
 [← Outils](../../OUTILS.md)
 
@@ -196,7 +196,7 @@ apps/web-golarion-map/
 2. **Enrichir les arcs narratifs PFS transverses**, en commençant par les ensembles réellement joués ; une saison PFS n’est pas une campagne.
 3. **Auditer la couverture Foundry préexistante** avant de générer de nouveaux assets ; réutiliser ce qui existe déjà.
 4. **Durcir le pipeline désormais automatisé** : catalogue/PDF → analyse → références Foundry à la demande → package validé → intégration → déploiement Toolkit → vérification ; traiter les anomalies révélées campagne par campagne plutôt que réintroduire l'ancien aller-retour manuel.
-5. **Réparer PDF ↔ plusieurs unités logiques** pour les compilations.
+5. **Tester fonctionnellement la projection d'un PDF sur plusieurs unités** (notamment Agents d'Absalom) avant de conclure à une dette restante : le code possède désormais la projection `libraryAssetsForScenario()`.
 6. **Nettoyer la duplication `pf2_record scenario`** seulement après vérification des fallbacks.
 7. **Réduire progressivement les statuts hérités** : les séances deviennent la preuve du jeu commencé, les déploiements deviennent la preuve du contenu Toolkit présent.
 

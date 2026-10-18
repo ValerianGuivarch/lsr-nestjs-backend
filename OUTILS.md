@@ -1,4 +1,4 @@
-# Outils PF2 — index technique
+# Outils PF2 — navigation technique
 
 [← Espace PF2](PF2_WORKSPACE.md)
 
@@ -11,4 +11,6 @@
 - [Déploiement et exploitation](pf2/outils/deploiement.md)
 - [Points ouverts et vérifications](pf2/outils/travaux-ouverts.md)
 
-Le code courant et l'état runtime prévalent sur les audits historiques. Ne pas confondre documentation de conception et valeurs observées à une date passée.
+**Conventions :** le code/configuration présents prévalent sur les audits historiques. Décrire le *fonctionnement actuel vérifié* séparément des constats datés, dettes confirmées et pistes non validées. Après une implémentation, actualiser la documentation du domaine et fermer/requalifier la dette associée.
+
+Voir [PF2_WORKSPACE.md](PF2_WORKSPACE.md) pour la règle de capitalisation continue.

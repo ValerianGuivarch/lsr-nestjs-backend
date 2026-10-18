@@ -1,4 +1,4 @@
-# deploiement — documentation PF2
+# Déploiement PF2 — production, CI et mini-PC
 
 [← Outils](../../OUTILS.md)
 

@@ -1,4 +1,4 @@
-# architecture — documentation PF2
+# Architecture PF2 — composants et sources de vérité
 
 [← Outils](../../OUTILS.md)
 
@@ -270,28 +270,11 @@ info
 
 Le statut ZIP Foundry est indépendant de cette disponibilité documentaire.
 
-### 6.5 Problème actuel connu : un PDF utilisé par plusieurs unités
+### 6.5 PDF de compilation et plusieurs unités jouables — état à tester
 
-Le modèle frontend V2→V3 construit actuellement **un seul `targetId` par fichier physique**.
+L'audit historique décrivait une insuffisance de liaison entre un PDF physique et plusieurs aventures d'un même volume (*Agents d'Absalom*). **Il ne faut plus présenter cette dette comme non corrigée par défaut.** Le code actuel de `Pf2MjService.libraryAssetsForScenario()` (consulté le 18 octobre 2026) utilise `scenarioResourceTargets()` et `scenarioDocumentLinks()` pour projeter les fichiers de volumes/composants sur la fiche d'une campagne ou d'un scénario, **sans dupliquer les liens SQLite**.
 
-C’est insuffisant pour une compilation qui contient plusieurs aventures.
-
-Exemple : Agents d’Absalom.
-
-Physiquement, les fichiers existent :
-
-- Volume 1 ;
-- Volume 2 ;
-- guide joueur ;
-- deux cartes.
-
-Le catalogue logique contient six aventures.
-
-Mais le fichier Volume 1 reste attaché à une cible documentaire unique, alors qu’il doit pouvoir satisfaire plusieurs aventures.
-
-**Conséquence :** une aventure peut apparaître sans PDF alors que son contenu se trouve bien dans la compilation.
-
-Ce point est une anomalie structurelle prioritaire à corriger.
+Cela démontre l'existence d'une projection, mais **pas** que toutes les compilations et tous les affichages fonctionnent parfaitement. Vérification fonctionnelle recommandée : six aventures d'Agents d'Absalom, volumes PDF partagés, inventaire effectif et états de disponibilité. Classer le résultat dans [travaux ouverts](travaux-ouverts.md) seulement après cette vérification.
 
 ### 6.6 Workflow opérationnel scénario → Foundry
 
@@ -329,7 +312,7 @@ La fiche scénario quotidienne expose volontairement surtout **l'état Foundry e
 
 ---
 
-## 17. Règles à ne pas réintroduire
+## Conventions techniques à préserver (ancien §17)
 
 ### XPC
 
