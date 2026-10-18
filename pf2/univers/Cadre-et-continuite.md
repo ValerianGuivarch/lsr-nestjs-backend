@@ -75,7 +75,7 @@ Les éléments suivants peuvent encore changer :
 4. **Corvan est le seul survivant de son groupe après 4719.**
 5. **Elysye est une fondatrice historique méfiante envers la Société, pas une simple mentor blasée.**
 6. **Le groupe d'Elysye est réellement compétent et doit pouvoir rivaliser avec les PJ.**
-7. **Caelan est un druide**, pas un magus et pas un “droïde”.
+7. **Caelan est un mage de niveau 2**, dont la spécialisation reste à préciser.
 8. **Sivri est investigatrice**, **Tareth est guerrier niveau 3**, **Lyssara est magicienne niveau 2 orientée enchantement / illusion**.
 9. **Eliza Petulengro est toujours membre du Décemvirat**, mais publiquement démasquée.
 10. **Le Labyrinthe de la Route Ouverte est scellé / restauré progressivement, pas détruit.**
