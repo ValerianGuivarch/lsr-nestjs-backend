@@ -258,8 +258,18 @@
 			} else if ( name === 'background' ) {
 				var actions = document.createElement( 'div' ); actions.className = 'pf2-player-background-actions'; panel.appendChild( actions );
 				var view = document.createElement( 'div' ); view.className = 'pf2-player-background-view'; panel.appendChild( view );
-				var edit = document.createElement( 'button' ); edit.textContent = 'Modifier le background'; actions.appendChild( edit );
-				renderParsedText( view, character.background || '' );
+				var markdownManaged = character.backgroundSource === 'markdown';
+				var edit = document.createElement( 'button' ); edit.textContent = 'Modifier le background';
+				if ( markdownManaged ) {
+					var note = document.createElement( 'p' );
+					note.textContent = 'Texte du personnage synchronisé depuis le dépôt GitHub (section Background).';
+					actions.appendChild( note );
+					view.style.whiteSpace = 'pre-wrap';
+					view.textContent = character.background || '';
+				} else {
+					actions.appendChild( edit );
+					renderParsedText( view, character.background || '' );
+				}
 				edit.onclick = function () {
 					actions.textContent = ''; view.textContent = '';
 					var textarea = document.createElement( 'textarea' ); textarea.className = 'pf2-player-background-editor'; textarea.value = character.background || ''; textarea.rows = 18; view.appendChild( textarea );
