@@ -18,6 +18,14 @@ L'**Initiation d'Absalom** a été jouée, y compris les éléments liés à **B
 
 La première partie a été jouée. Les ruines et les suites restent disponibles comme front ultérieur.
 
+### Refuge azlanti / elfes des cavernes — scénario terminé, transition en cours
+
+L'exploration du refuge et son conflit immédiat sont terminés. Les PJ ont épargné la prêtresse et la cheffe guerrière et ont commencé à révéler progressivement la vérité au peuple sur l'existence du monde extérieur.
+
+La suite n'est plus un front de combat mais un **front de transition** : négocier avec les autorités du refuge la manière d'ouvrir la société, de corriger ses croyances sans effondrement brutal et de préparer les habitants aux dangers du monde extérieur.
+
+→ Voir [Elfes des cavernes et refuge azlanti](../univers/Elfes-des-cavernes-et-refuge-azlanti.md).
+
 ### Rose Street Killer — résolue
 
 L'enquête du **tueur de la rue Rose** est terminée.
