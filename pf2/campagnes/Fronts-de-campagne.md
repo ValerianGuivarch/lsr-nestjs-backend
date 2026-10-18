@@ -4,7 +4,7 @@
 
 > **Source :** ancien `story.md`. Document MJ, réorganisé sans suppression de faits établis.
 
-> **Attention :** les états de progression ci-dessous sont ceux du précédent récapitulatif. Ils restent à actualiser au fil des séances (notamment l'enquête de la rue Rose) ; aucune conclusion de scénario n'est présumée.
+> **Attention :** les états de progression ci-dessous doivent être actualisés au fil des séances. Les éléments présentés comme pistes ou fronts ouverts restent susceptibles d'être retravaillés tant qu'ils n'ont pas été établis en jeu.
 
 ---
 
@@ -18,13 +18,29 @@ L'**Initiation d'Absalom** a été jouée, y compris les éléments liés à **B
 
 La première partie a été jouée. Les ruines et les suites restent disponibles comme front ultérieur.
 
-### Rose Street Killer
+### Rose Street Killer — résolue
 
-L'enquête a commencé mais n'est pas terminée. Des parties ultérieures restent à jouer.
+L'enquête du **tueur de la rue Rose** est terminée.
 
-### Trafic de golems de chair
+Les PJ ont poursuivi la piste de **Wennel Ardonay**, prêtre de Milani et abolitionniste. Ils sont notamment passés par un autre prêtre de Milani, ancien esclave et ami de Wennel, puis ont remonté les relations autour de la dernière victime, **Justerian**. Ils ont retrouvé celui-ci mort chez lui et ont poursuivi l'enquête à partir des indices laissés sur place.
 
-Il existe comme **indice / piste**, pas comme quête déjà formellement lancée. Ne pas le présenter comme un scénario actif verrouillé tant que les PJ n'ont pas décidé de suivre cette piste.
+Ils ont finalement découvert que Wennel avait été assassiné pendant ses propres recherches puis était revenu sous forme de mort-vivant, avec des souvenirs et intentions déformés. Les PJ l'ont affronté et détruit.
+
+Le carnet / dossier d'enquête retrouvé après sa mort ouvre directement le front du **Cartel du Sel**.
+
+### Cartel du Sel / trafic d'esclaves et de golems de chair
+
+Le **Cartel du Sel** est désormais un front ouvert, dont les détails pourront encore être retravaillés.
+
+Les éléments établis sont :
+
+- l'esclavage étant officiellement aboli à Absalom, le Cartel exploite sa rareté comme un commerce clandestin de luxe plutôt que comme un marché de masse ouvert ;
+- il maintient néanmoins des réseaux, contacts et infrastructures afin d'être bien placé si l'esclavage redevenait un jour légal ou toléré ;
+- il kidnappe notamment des sans-abri, des personnes isolées ou considérées comme peu importantes, afin d'alimenter ce trafic ;
+- ce réseau coexiste avec un commerce de **golems de chair provenant notamment de Geb** ;
+- une **famille importante d'Absalom** se trouve derrière le dispositif, mais son identité n'est pas encore connue des PJ.
+
+Ne pas figer davantage l'identité des responsables, les intermédiaires ou l'organisation interne avant leur validation en jeu.
 
 ### Centaures / magie des tempêtes
 
