@@ -21,14 +21,6 @@ Lors de la création ou mise à jour d’une séance :
 5. un thread de commentaires est créé avec un nouveau message ;
 6. l’identifiant Discord est enregistré dans la séance.
 
-### 11.3 Journal de quêtes Discord ↔ carte de Golarion
-
-Le forum Discord `journal-de-quetes` est **source de vérité pour les fils, titres et statuts de quêtes**, tandis que `pf2.sqlite` conserve leur catalogue synchronisé et les associations cartographiques par **ID de fil**. `DiscordService` récupère les fils actifs et archivés au démarrage, puis toutes les **cinq minutes**. Le tag « Terminée » est déterminant ; un archivage seul ne signifie pas qu'une quête est finie. Les commandes `/terminer-quete` et `/relancer-quete` continuent de modifier Discord, sans créer une source concurrente.
-
-Un renommage de fil ne casse pas son association à un lieu : il se reflète après la prochaine synchronisation réussie et le rechargement de la carte. La création d'une quête reste la **création libre d'une discussion dans le forum** ; aucune commande `/créer quête` n'est souhaitée. La carte gère les lieux, non le cycle de vie des quêtes.
-
-Pour les tables SQLite, la migration des anciens points, les lieux partagés PJ/MJ, les favoris et la visibilité conditionnelle des quêtes terminées, voir le [document technique dédié](../../docs/pf2/discord-quest-map-sync.md). Les données métier réelles restent dans SQLite, et non dans ce fichier.
-
 ### 11.2 Récapitulatifs et séances
 
 Le code courant n'utilise plus l'ancien `/recap` pair-à-pair.
@@ -55,6 +47,14 @@ Commandes principales :
 `/debut-seance` utilise le même calcul de lancers de progression dans l'annonce finale. Le code courant affiche bien la liste des personnages et les lancers, mais **n'affiche pas encore leur niveau dans cette annonce** ; c'est le reliquat connu de la demande initiale.
 
 Quand Foundry est indisponible, le bot peut se replier sur le cache des noms d'Actors pour certaines opérations. Les comparaisons de niveau nécessitent toutefois les données de progression Foundry disponibles via le Relay.
+
+### 11.3 Journal de quêtes Discord ↔ carte de Golarion
+
+Le forum Discord `journal-de-quetes` est **source de vérité pour les fils, titres et statuts de quêtes**, tandis que `pf2.sqlite` conserve leur catalogue synchronisé et les associations cartographiques par **ID de fil**. `DiscordService` récupère les fils actifs et archivés au démarrage, puis toutes les **cinq minutes**. Le tag « Terminée » est déterminant ; un archivage seul ne signifie pas qu'une quête est finie. Les commandes `/terminer-quete` et `/relancer-quete` continuent de modifier Discord, sans créer une source concurrente.
+
+Un renommage de fil ne casse pas son association à un lieu : il se reflète après la prochaine synchronisation réussie et le rechargement de la carte. La création d'une quête reste la **création libre d'une discussion dans le forum** ; aucune commande `/créer quête` n'est souhaitée. La carte gère les lieux, non le cycle de vie des quêtes.
+
+Pour les tables SQLite, la migration des anciens points, les lieux partagés PJ/MJ, les favoris et la visibilité conditionnelle des quêtes terminées, voir le [document technique dédié](../../docs/pf2/discord-quest-map-sync.md). Les données métier réelles restent dans SQLite, et non dans ce fichier.
 
 
 ---
