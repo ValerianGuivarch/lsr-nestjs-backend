@@ -16,3 +16,10 @@ Gnome astrologue / oracle lié aux étoiles. Son arc touche **Black Butterfly**,
 ## Questions ouvertes
 
 - Compléter sans inventer les décisions non présentes dans les sources.
+
+## Notes de travail à consolider
+
+- Grande famille mêlant gnomes et orcs, avec trois parents surnommés **Papa**, **Baba** et **Dada** ; noms civils encore à définir.
+- Fratrie : **Cilia**, grande sœur orc devenue Éclaireuse dans les Terres Détrempées ; les jumeaux gnomes **Inas** et **Mira** ; **Nielas**, le plus jeune.
+- Une grand-mère astrologue (nom à définir) a prédit à Eryn une existence parfaitement tranquille.
+- **Cilia** est la relation familiale la plus directement reliée à la Société des Éclaireurs.
