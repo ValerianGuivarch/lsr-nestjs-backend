@@ -6,7 +6,9 @@
 
 ---
 
-## Nualia et le lancement possible des Sept Fléaux
+## Nualia et le lancement des Sept Fléaux
+
+La campagne est désormais **commencée**. Les éléments ci-dessous décrivent le socle narratif de son ouverture ; l'état joué, les adaptations de difficulté et les décisions de préparation sont suivis dans [la fiche de campagne](../campagnes/Campagne-Sept-Fleaux-de-Pointesable.md).
 
 Dans *Les Sept Fléaux de Pointesable*, l'ouverture est particulièrement compatible avec la continuité actuelle :
 
