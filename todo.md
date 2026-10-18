@@ -13,6 +13,27 @@
 - [ ] Poursuivre l'audit des **Scenes Foundry importées** et corriger par le pipeline les imports partiels (cas témoin documenté : Sentence d'Extinction volume 1, images présentes sur disque mais non reliées à plusieurs Scenes).
 
 
+### Projet futur — améliorer la gestion Discord
+
+**Objectif :** réduire la surcharge de notifications et rendre les commandes/salons plus lisibles, avec des règles cohérentes plutôt qu'une accumulation de cas particuliers.
+
+**Audit à mener :**
+
+- [ ] Inventorier **toutes les commandes Discord PF2** à partir du code courant et décider, pour chacune, si elle doit être réservée au MJ/admin ou accessible aux joueurs.
+- [ ] Pour chaque commande qui publie quelque chose, décider si elle doit publier immédiatement ou passer par une **prévisualisation / validation** avant envoi public.
+- [ ] Pour chaque commande, préciser sa politique de **mentions et notifications** : `@everyone`, rôle ciblé, joueurs concernés seulement, ou aucune mention.
+- [ ] Auditer les salons, forums et fils pour les classer en trois usages : **action requise / notification forte**, **information à lire sans urgence**, **archive / information passive**.
+- [ ] Identifier les salons où seuls le MJ ou le bot doivent écrire, ceux où les joueurs peuvent répondre, et ceux qui pourraient être supprimés, fusionnés ou simplifiés.
+- [ ] Vérifier si des **rôles de notification optionnels** (par exemple planning, quêtes, lore) seraient utiles, sans remplacer les rares notifications réellement obligatoires.
+- [ ] Définir une règle commune pour les annonces de séance : nouvelle proposition, relance, validation, préparation de mission et changement de dernière minute ne doivent pas tous notifier de la même manière.
+- [ ] Définir une règle commune pour les contenus non urgents : choix de quête, compte rendu de quête, journaux, résumés, lore et publications de référence devraient être silencieux par défaut sauf besoin explicite.
+- [ ] Vérifier l'usage de `allowedMentions` et privilégier les **mentions ciblées** aux joueurs réellement concernés plutôt que `@everyone`.
+- [ ] Rédiger à la fin une **consigne simple pour les joueurs** sur les réglages Discord recommandés (par exemple serveur en « mentions uniquement », puis exceptions volontaires), uniquement si l'organisation côté bot ne suffit pas.
+- [ ] Documenter la matrice finale **commande → destination → droits → validation → notification** et **salon/forum → rôle → niveau de notification** avant de modifier massivement le comportement du bot.
+
+**Principe directeur :** un ping doit signifier qu'une action ou une attention rapide est réellement attendue. Les autres messages doivent rester consultables sans provoquer de notification inutile.
+
+
 ### Projet futur — élargir et présélectionner la bibliothèque de ressources MJ
 
 **Point de départ déjà en place — ne pas refaire :**
