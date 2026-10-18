@@ -52,8 +52,14 @@ La **Ménagerie Céleste est actuellement à Absalom pour le Festival Radieux** 
 
 Cette campagne n'est pas pensée comme un démarrage immédiat, car **Citadelle Altaerein / l'Anneau d'Alséta** ouvre rapidement sur un réseau de portails qui peut devenir un tunnel de plusieurs séances et modifier fortement la mobilité de la campagne.
 
-### Les Sept Fléaux de Pointesable
+### Les Sept Fléaux de Pointesable — active
 
-Le déclencheur envisagé est lié à **Corvan**, à **Abstalar Zantus**, à **Audrahni** et au passé de **Nualia**. La logique retenue : Abstalar veut contacter l'esprit de Nualia ; Audrahni connaît le rituel ; le corps est nécessaire ; la tombe est vide ; un tunnel s'ouvre sous le cimetière. Corvan peut faire appel aux PJ ou les envoyer accompagner Audrahni / aider Pointesable.
+L'ouverture est désormais **jouée**. Les PJ ont exploré les tunnels sous le cimetière jusqu'à la zone de Zoduk et des Catacombes du Feu Infernal. Après avoir hésité à ouvrir la barricade, de peur de libérer la créature de feu située au-delà, ils ont provoqué assez de bruit pour déclencher une nouvelle attaque : **Zoduk a été tué par le feu**. Les PJ considèrent désormais cette partie des ruines comme probablement trop dangereuse pour leur niveau et envisagent de demander l'intervention d'Éclaireurs plus expérimentés.
+
+Ils connaissent Volpépite surtout par **Pic-Chardon** et ne savent pas encore qu'il a gagné la **Fosse**. Le rituel de Nualia et l'enquête qui suivra peuvent introduire cette piste sans exiger une exploration immédiate des Catacombes.
+
+Le [groupe rival d'Elysye](../univers/Equipe-rivale.md), déjà intervenu et ayant annoncé avoir tué un démon, peut être utilisé dans ce front. Son rôle exact reste à arbitrer : reconnaissance partielle, élimination d'un premier démon, ou variante avec deux démons dont le second resterait à affronter par les PJ.
+
+→ Voir [Les Sept Fléaux de Pointesable](Campagne-Sept-Fleaux-de-Pointesable.md) pour les événements établis, les décisions d'adaptation et les pistes encore ouvertes.
 
 ---
