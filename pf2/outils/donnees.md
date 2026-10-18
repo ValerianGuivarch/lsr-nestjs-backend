@@ -389,7 +389,8 @@ Un enregistrement `pf2_resource` contient :
 - une description courte ;
 - un résumé détaillé (MJ, secrets compris) ;
 - une origine libre, par exemple `Trilemma` ;
-- des tags libres.
+- des tags libres ;
+- un booléen `favorite`, persisté en SQLite.
 
 Les fichiers lourds ne sont pas versionnés dans Git. Plusieurs PDF peuvent appartenir à la même ressource et sont stockés sous :
 
@@ -409,6 +410,29 @@ component
 
 Pour un composant jouable, la cible est le couple `target_id + component_id` afin que deux scénarios puissent utiliser le même identifiant local de composant sans collision.
 
+L'interface permet actuellement :
+
+- la recherche dans le titre français, le `nom_vo`, la description, le résumé, l'origine et les tags ;
+- le filtrage par tag et par origine ;
+- l'ajout/retrait d'un favori par étoile ;
+- un filtre **Favoris uniquement** ;
+- l'affichage des résumés détaillés en paragraphes ;
+- l'export JSON de la bibliothèque.
+
+### État Trilemma constaté au 18 octobre 2026
+
+SQLite contient **53 ressources Trilemma**, numérotées de façon continue de `TRI-001` à `TRI-053`.
+
+Constat runtime :
+
+- 53 ressources d'origine `Trilemma` ;
+- aucun numéro manquant entre `TRI-001` et `TRI-053` ;
+- 53 `nom_vo` distincts, donc aucun doublon restant dans cette série ;
+- les variantes de fichiers peuvent être regroupées sous une même ressource ;
+- les favoris sont des données utilisateur persistées, indépendantes de l'origine.
+
+Ce comptage est un **état observé**, pas une seconde source de vérité : SQLite reste la référence si de nouvelles ressources sont ajoutées après cette date.
+
 API principale :
 
 ```text
@@ -423,7 +447,7 @@ GET    /api/pf2-mj/resources/:id/files/:fileId
 DELETE /api/pf2-mj/resources/:id/files/:fileId
 ```
 
-L'export JSON contient toutes les métadonnées, titre français, `nom_vo`, tags, rattachements et références de fichiers ; il est conçu pour pouvoir être fourni à une IA afin de rechercher rapidement les ressources adaptées à une situation de jeu.
+L'export JSON contient toutes les métadonnées, titre français, `nom_vo`, tags, favori, rattachements et références de fichiers ; il est conçu pour pouvoir être fourni à une IA afin de rechercher rapidement les ressources adaptées à une situation de jeu.
 
 ### 12.9 Situation actuelle
 
