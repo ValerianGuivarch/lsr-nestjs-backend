@@ -12,7 +12,7 @@ Les identifiants Discord, et non les noms, portent les liens. Une quête peut ap
 
 ## Migration et décisions de curation (historique du 14 octobre 2026)
 
-**Statut validé et appliqué sur le mini-PC**, avec sauvegarde SQLite préalable et contrôle d'intégrité. La première importation a créé 12 quêtes Discord (10 non terminées, 2 terminées) et 8 associations certaines. Une seconde intervention en données a porté le total à **10 associations** ; les sept points de quête cartographiques avaient alors tous leurs liens Discord résolus. Les chiffres et noms ci-dessous sont **un instantané daté**, jamais un inventaire à substituer à \`pf2.sqlite\`.
+**Statut validé et appliqué sur le mini-PC**, avec sauvegarde SQLite préalable et contrôle d'intégrité. La première importation a créé 12 quêtes Discord (10 non terminées, 2 terminées) et 8 associations certaines. Une seconde intervention en données a porté le total à **10 associations** ; les sept points de quête cartographiques avaient alors tous leurs liens Discord résolus. Les chiffres et noms ci-dessous sont **un instantané daté**, jamais un inventaire à substituer à `pf2.sqlite`.
 
 Conventions éditoriales actées lors de cette migration :
 
@@ -28,7 +28,7 @@ Conventions éditoriales actées lors de cette migration :
 
 L'utilisateur a demandé de **ne jamais renommer les fils Discord** pour satisfaire la carte : leurs titres sont lus tels quels et peuvent changer ultérieurement. Les correspondances historiques ont été établies par les IDs des fils. Après cette migration, deux quêtes Discord n'avaient toujours aucun point associé (état du **14 octobre 2026**) : « La contrebande de golems de chair » (ouverte) et « Le tueur d'esclaves » (terminée). Leur localisation n'a **pas** été décidée dans la discussion et ne doit pas être inventée ; vérifier d'abord SQLite et Discord lors de la reprise.
 
-Les champs hérités \`map_quest_name\` / \`map_quest_names\` subsistent pour compatibilité et audit ; une association effective se fonde sur \`pf2_map_place_quest.thread_id\`, jamais sur une égalité de texte. Toute correction de curation propre à la carte se fait dans SQLite, avec sauvegarde et vérification de l'API ; elle n'exige pas de PR de code.
+Les champs hérités `map_quest_name` / `map_quest_names` subsistent pour compatibilité et audit ; une association effective se fonde sur `pf2_map_place_quest.thread_id`, jamais sur une égalité de texte. Toute correction de curation propre à la carte se fait dans SQLite, avec sauvegarde et vérification de l'API ; elle n'exige pas de PR de code.
 
 ## Affichage
 Les repères de quête liés sont visibles tant qu'au moins une quête est ouverte ou qu'une ancienne association reste non résolue. Si toutes les quêtes identifiées sont terminées, le lieu n'apparaît pas par défaut, **sans suppression** ; la case « Afficher les quêtes terminées » restaure ces repères et les entrées de liste. Un lieu sans association certaine reste visible.
@@ -37,9 +37,9 @@ Le clic sur un lieu affiche les titres synchronisés, les statuts (en cours ou t
 
 ### Synchronisation et mise à jour des titres
 
-La création d'une quête consiste **uniquement à ouvrir un fil** dans le forum Discord, sans commande dédiée du bot. Le même service NestJS déjà connecté à Discord interroge les fils actifs et archivés au démarrage puis toutes les **cinq minutes** ; les commandes \`/terminer-quete\` et \`/relancer-quete\` modifient le tag Discord, qui reste la source de vérité du statut. Un fil archivé n'est pas automatiquement terminé. Le synchroniseur effectue des upserts et préserve le dernier catalogue connu en cas d'échec de lecture.
+La création d'une quête consiste **uniquement à ouvrir un fil** dans le forum Discord, sans commande dédiée du bot. Le même service NestJS déjà connecté à Discord interroge les fils actifs et archivés au démarrage puis toutes les **cinq minutes** ; les commandes `/terminer-quete` et `/relancer-quete` modifient le tag Discord, qui reste la source de vérité du statut. Un fil archivé n'est pas automatiquement terminé. Le synchroniseur effectue des upserts et préserve le dernier catalogue connu en cas d'échec de lecture.
 
-Un renommage de fil conserve le même \`thread_id\` : il est répercuté dans SQLite à la prochaine synchronisation réussie et apparaît sur la carte **après rechargement de la page** (pas encore de rafraîchissement temps réel du navigateur). Les associations demeurent stables. Un lieu avec plusieurs quêtes conserve un seul repère, et une même quête peut être liée à plusieurs lieux.
+Un renommage de fil conserve le même `thread_id` : il est répercuté dans SQLite à la prochaine synchronisation réussie et apparaît sur la carte **après rechargement de la page** (pas encore de rafraîchissement temps réel du navigateur). Les associations demeurent stables. Un lieu avec plusieurs quêtes conserve un seul repère, et une même quête peut être liée à plusieurs lieux.
 
 ### Lieux de quête et favoris
 
@@ -54,7 +54,7 @@ Voir **Décision de partage et limite de sécurité** ci-dessous pour la limite 
 
 ### Décision de partage et limite de sécurité
 
-**Décision validée :** aucun circuit d'approbation MJ pour un lieu PJ. Tout PJ peut créer un lieu de quête ou un **lieu personnalisé** (petit symbole distinct, sans quête obligatoire) et le rendre immédiatement visible à tous. Les fiches \`map_origin='pj'\` peuvent être modifiées ou supprimées par les PJ ; les points MJ et les lieux du fond cartographique ne doivent pas être réécrits par ces actions. Le formulaire intégré (« + Lieu », position sur la carte, titre libre, description, sélection multiple des quêtes du catalogue synchronisé) remplace les anciens \`window.prompt\`. Un lieu n'a pas besoin d'être une quête pour être intéressant.
+**Décision validée :** aucun circuit d'approbation MJ pour un lieu PJ. Tout PJ peut créer un lieu de quête ou un **lieu personnalisé** (petit symbole distinct, sans quête obligatoire) et le rendre immédiatement visible à tous. Les fiches `map_origin='pj'` peuvent être modifiées ou supprimées par les PJ ; les points MJ et les lieux du fond cartographique ne doivent pas être réécrits par ces actions. Le formulaire intégré (« + Lieu », position sur la carte, titre libre, description, sélection multiple des quêtes du catalogue synchronisé) remplace les anciens `window.prompt`. Un lieu n'a pas besoin d'être une quête pour être intéressant.
 
 **Attention :** dans l'implémentation auditée, aucune authentification d'auteur PJ côté API ne vérifie qui appelle les routes communautaires ; l'API distingue l'**origine de la fiche**, non le propriétaire réel de la requête. Le libre partage entre PJ est une décision fonctionnelle, pas une autorisation pour les visiteurs anonymes. Pour sécuriser les mutations, identifier les utilisateurs, traiter les droits côté serveur et vérifier séparément les routes MJ historiques. La politique validée n'exige pas que chaque PJ ne puisse modifier que ses propres fiches : les fiches d'origine PJ sont communautaires.
 
