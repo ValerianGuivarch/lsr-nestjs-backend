@@ -67,12 +67,12 @@ On ne cherche pas à finaliser les centaines de scénarios d’un coup.
 
 ### Phase D — traitement profond d’une campagne / aventure
 
-Pour une unité prioritaire :
+Pour une unité prioritaire, le workflow cible est désormais direct :
 
-1. partir de son PDF officiel / traduction / info réellement disponible ;
-2. récupérer le registre métier courant ;
-3. analyser le contenu ;
-4. identifier :
+1. retrouver l'unité canonique dans le catalogue et ses PDF déjà associés dans `pf2-data` ;
+2. récupérer le catalogue / SQLite et le `package-registry` **courants** ;
+3. auditer ce qui existe déjà dans Foundry avant de recréer Actors ou Scenes ;
+4. analyser les sources et identifier :
    - PNJ existants à réutiliser ;
    - nouveaux PNJ réellement nécessaires ;
    - lieux/régions existants ;
@@ -82,21 +82,24 @@ Pour une unité prioritaire :
    - Actors mécaniques ;
    - rencontres ;
    - cartes ;
-   - journaux ;
-5. ne promouvoir en entités métier que les éléments narratifs réellement utiles et persistants ;
-6. produire le manifeste ;
-7. produire le ZIP ;
-8. intégrer le ZIP dans l’application MJ ;
-9. vérifier les relations créées ;
-10. déployer vers Foundry ;
-11. vérifier le résultat ;
-12. passer à l’unité suivante.
+   - Journal MJ ;
+5. résoudre les créatures via les compendiums/références Foundry lorsque c'est fiable ; créer un Actor `custom` seulement lorsque nécessaire ;
+6. ne promouvoir en entités métier que les éléments narratifs réellement utiles et persistants ;
+7. construire un package v4 complet et reproductible ;
+8. valider toutes les références contre l'état live de SQLite / `package-registry` ;
+9. intégrer le ZIP via l'API ;
+10. créer la demande de déploiement ;
+11. laisser le Toolkit importer Actors, Scenes, Journal et assets puis renvoyer son résultat ;
+12. vérifier le succès réel dans l'application et, si Foundry est connecté, dans le monde lui-même ;
+13. seulement alors passer à l'unité suivante.
 
-### Phase E — registre à fournir avant création d’un ZIP
+L'ancien workflow quotidien « préanalyse IA → export manuel Foundry → retour IA → package final » n'est plus le chemin recommandé. Son code peut rester disponible pour compatibilité ou diagnostic, mais il est volontairement masqué dans l'interface courante.
+
+### Phase E — registre à consulter avant création d’un ZIP
 
 Il n’est pas souhaitable de recopier manuellement la liste des PNJ/lieux/factions à chaque fois.
 
-L’API expose déjà :
+L’API expose :
 
 ```text
 GET /api/pf2-mj/package-registry
@@ -109,18 +112,22 @@ Ce registre contient les IDs stables disponibles pour :
 - factions ;
 - événements.
 
-La bonne procédure est donc :
+La procédure normale est donc :
 
 ```text
-PDF de l’unité
+PDF déjà associé au catalogue
 +
-package-registry courant
+package-registry live
 +
 catalogue / SQLite courant
-→ génération du package
++
+références Foundry à la demande
+→ génération et validation du package
 ```
 
-Dans une collaboration hors connexion directe à l’API, fournir le dernier `pf2.sqlite` ou un export récent suffit pour reconstituer le registre.
+Le registre doit être consulté au moment de produire le package : un ancien snapshot peut contenir un ID devenu invalide ou manquer une identité créée depuis.
+
+Dans une collaboration sans accès direct au serveur/API, fournir le dernier `pf2.sqlite` ou un export récent reste un mode de secours acceptable.
 
 ### Pourquoi cet ordre
 
@@ -190,7 +197,7 @@ apps/web-golarion-map/
 1. **Conserver Journal / Catalogue / Ressources / Monde / Administration comme navigation principale.**
 2. **Enrichir les arcs narratifs PFS transverses**, en commençant par les ensembles réellement joués ; une saison PFS n’est pas une campagne.
 3. **Auditer la couverture Foundry préexistante** avant de générer de nouveaux assets ; réutiliser ce qui existe déjà.
-4. **Automatiser le pipeline** : catalogue/PDF → analyse → références Foundry à la demande → package validé → intégration → déploiement Toolkit → vérification.
+4. **Durcir le pipeline désormais automatisé** : catalogue/PDF → analyse → références Foundry à la demande → package validé → intégration → déploiement Toolkit → vérification ; traiter les anomalies révélées campagne par campagne plutôt que réintroduire l'ancien aller-retour manuel.
 5. **Réparer PDF ↔ plusieurs unités logiques** pour les compilations.
 6. **Nettoyer la duplication `pf2_record scenario`** seulement après vérification des fallbacks.
 7. **Réduire progressivement les statuts hérités** : les séances deviennent la preuve du jeu commencé, les déploiements deviennent la preuve du contenu Toolkit présent.
