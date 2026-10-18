@@ -9,7 +9,7 @@ import './lore.css'
  * Visualiseur en lecture seule de la bible de campagne.
  * Les vrais fichiers Markdown du dépôt sont intégrés au build par Vite :
  * - UNIVERS.md = point d'entrée de la bibliothèque narrative ;
- * - pf2/{univers, pj, campagnes}/**/*.md = chapitres détaillés.
+ * - les fichiers Markdown des répertoires pf2/univers, pf2/pj et pf2/campagnes = chapitres détaillés.
  *
  * Il n'y a volontairement ni copie des textes, ni dépendance à GitHub au runtime.
  */
