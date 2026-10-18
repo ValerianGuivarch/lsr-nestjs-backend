@@ -178,7 +178,34 @@ ou :
 }
 ```
 
+Le champ `scope` est une **décision métier indépendante des liens de scénario**. Un Venture-Captain, dirigeant, habitant permanent, contact de faction ou autre figure récurrente peut être `global` tout en étant relié à un ou plusieurs scénarios via `pf2_scenario_npc`.
+
+Inversement, `scope: "scenario"` doit être réservé aux personnages intrinsèquement propres à l'intrigue de leur scénario d'origine. L'interface dérive désormais la notion « transverse / spécifique » depuis `scope`, et non depuis le nombre de liens de scénario.
+
 Un PNJ existant et réutilisable ne doit pas être recréé comme PNJ spécifique à chaque scénario.
+
+### 7.2.1 Métadonnées de jeu
+
+Les fiches PNJ peuvent porter les champs éditoriaux suivants :
+
+```json
+{
+  "ascendance": "Humain",
+  "classe": "Magicien (divination)",
+  "caractere": "Description courte directement utilisable pour l'interprétation.",
+  "roleplay": "Champ de compatibilité historique"
+}
+```
+
+Règles :
+
+- `ascendance` et `classe` utilisent `Inconnue` lorsque la source n'est pas suffisamment solide ;
+- `caractere` décrit en une ou deux phrases comment interpréter le PNJ à la table ; une inférence incertaine peut être marquée `(pas sûr)` ;
+- `roleplay` reste accepté pour compatibilité, mais `caractere` est le champ éditorial privilégié ;
+- un package peut fournir `ascendance`, `classe`, `caractere` / `roleplay` et `scope` ;
+- l'import ne doit pas remplacer arbitrairement une valeur déjà curatée par une information moins fiable.
+
+Le script `scripts/enrich_pnj_metadata.py` existe pour les migrations/audits de ces métadonnées. Il ne constitue pas une seconde source de vérité : après application, SQLite reste la vérité métier. Les fusions de doublons doivent rester explicites ; la règle **ne jamais fusionner sur le nom seul** demeure valable.
 
 ### 7.3 PNJ vs bestiaire / Actors mécaniques
 
@@ -263,6 +290,8 @@ places[]
 factions[]
 events[]
 ```
+
+Pour un PNJ narratif, le manifeste peut également fournir les métadonnées éditoriales `ascendance`, `classe`, `caractere` / `roleplay` et `scope`. Ces champs servent à enrichir une identité métier, pas à transformer un Actor mécanique anonyme en PNJ.
 
 ### 12.4 Réutilisation d’un PNJ existant
 
