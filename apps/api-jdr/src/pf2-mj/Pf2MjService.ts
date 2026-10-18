@@ -957,7 +957,8 @@ export class Pf2MjService {
         'placesOverride',
         'relevance',
         'locations',
-        'playableComponentStatus'
+        'playableComponentStatus',
+        'chatgptUrl'
       ])
       if (!id || !allowed.has(field)) throw new Error('Entrée ou champ de curation invalide.')
 
@@ -1012,8 +1013,14 @@ export class Pf2MjService {
         if (field === 'preparationStatus' && value !== null && value !== '' && !['untreated','selected','ready'].includes(String(value))) throw new Error('Statut de préparation invalide.')
         if (field === 'playStatus' && value !== null && value !== '' && !['none','to_play','in_progress','played'].includes(String(value))) throw new Error('Statut de jeu invalide.')
         if (field === 'playableComponentStatus' && (value === null || typeof value !== 'object' || Array.isArray(value) || Object.values(value as Record<string, unknown>).some((status) => status !== 'played'))) throw new Error('Statut des composants jouables invalide.')
-        if (value === null || value === '' || (Array.isArray(value) && value.length === 0)) delete entry[field]
-        else entry[field] = value
+        if (field === 'chatgptUrl' && value !== null && value !== '') {
+          if (typeof value !== 'string') throw new Error('Lien ChatGPT invalide.')
+          const trimmed = value.trim()
+          if (!/^https:\/\/(?:chatgpt\.com|chat\.openai\.com)\//i.test(trimmed)) throw new Error('Le lien doit pointer vers ChatGPT.')
+        }
+        const normalizedValue = field === 'chatgptUrl' && typeof value === 'string' ? value.trim() : value
+        if (normalizedValue === null || normalizedValue === '' || (Array.isArray(normalizedValue) && normalizedValue.length === 0)) delete entry[field]
+        else entry[field] = normalizedValue
       }
 
       if (Object.keys(entry).length) byId[id] = entry

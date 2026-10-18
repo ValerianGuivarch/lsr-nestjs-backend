@@ -617,6 +617,16 @@ describe('Pf2MjService', () => {
       expect(persistence.saveCuration).toHaveBeenCalledWith(result)
     })
 
+    it('stores a campaign ChatGPT link in curation and rejects unrelated URLs', async () => {
+      const { service, persistence } = serviceFor({}, pnj, { readCuration: jest.fn().mockResolvedValue({ schemaVersion: 4, byId: {} }) })
+
+      const result = await service.updateCuration({ id: 'strength-of-thousands', field: 'chatgptUrl', value: '  https://chatgpt.com/c/example  ' })
+      expect(result).toMatchObject({ byId: { 'strength-of-thousands': { chatgptUrl: 'https://chatgpt.com/c/example' } } })
+      expect(persistence.saveCuration).toHaveBeenCalledWith(result)
+
+      await expect(service.updateCuration({ id: 'strength-of-thousands', field: 'chatgptUrl', value: 'https://example.com/thread' })).rejects.toThrow('Le lien doit pointer vers ChatGPT')
+    })
+
     it('migrates legacy progress into separate status axes', async () => {
       const legacy = { schemaVersion: 3, byId: {
         selected: { progress: 'Sélectionné' }, queued: { progress: 'À jouer' },

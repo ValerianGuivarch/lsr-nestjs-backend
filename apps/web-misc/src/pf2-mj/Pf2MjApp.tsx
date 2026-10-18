@@ -94,6 +94,7 @@ type EntryOverride = {
   relevance?: string
   locations?: StructuredLocationOverride
   playableComponentStatus?: Record<string, 'played'>
+  chatgptUrl?: string
 }
 
 type Curation = {
@@ -1150,6 +1151,23 @@ function PlayableDetail({ unit, curation, onUpdate, placeOptions, onOpenReferenc
   </EntityPage>
 }
 
+function CampaignChatGptLink({ campaignId, value, onUpdate }: { campaignId: string; value?: string; onUpdate: (id: string, field: string, value: unknown) => void }) {
+  const [draft, setDraft] = useState(value ?? '')
+  useEffect(() => setDraft(value ?? ''), [value])
+
+  const save = () => onUpdate(campaignId, 'chatgptUrl', draft.trim() || null)
+
+  return <section className="detail-section campaign-chatgpt-link">
+    <h3>Discussion ChatGPT</h3>
+    <p>Discussion de travail associée à cette campagne. Le lien est propre à la campagne et n’est pas hérité par ses scénarios.</p>
+    <div className="campaign-chatgpt-actions">
+      <input aria-label="Lien ChatGPT de la campagne" type="url" placeholder="https://chatgpt.com/c/…" value={draft} onChange={(event) => setDraft(event.target.value)} />
+      <button type="button" onClick={save}>Enregistrer le lien</button>
+      {value && <a href={value} target="_blank" rel="noreferrer">Ouvrir la discussion ChatGPT ↗</a>}
+    </div>
+  </section>
+}
+
 function ContainerDetail({ container, curation, onOpenPlayable, onUpdate, onOpenReference }: { container: Container; curation: Curation; onOpenPlayable: (unit: PlayableUnit) => void; onUpdate: (id: string, field: string, value: unknown) => void; onOpenReference: (view: ReferenceView, id: string) => void }) {
   const children = playablesUnder(container.id)
   const components = componentsOf(container.id)
@@ -1164,6 +1182,7 @@ function ContainerDetail({ container, curation, onOpenPlayable, onUpdate, onOpen
     <section className="detail-section"><h3>Unités jouables</h3>{children.length ? <div className="compact-playables">{children.map((unit) => { const status = availabilityOf(unit); return <Link key={unit.id} to={playableHref(unit)}><span>▶</span><strong>{titleOf(unit)}</strong><small>{levelLabel(unit.levels)} · {documentStatusLabel(unit)}</small></Link> })}</div> : <p className="missing">Aucune unité jouable explicite : cette campagne doit être découpée avant d’être fiable dans « Trouver une partie ».</p>}</section>
     {container.containerType === 'campaign' && <section className="detail-section playable-components-summary"><h3>Composants jouables</h3><p>{documentedChildren.length}/{children.length} scénario{children.length > 1 ? 's' : ''} documenté{documentedChildren.length > 1 ? 's' : ''} · {componentTotal} composant{componentTotal > 1 ? 's' : ''} narratif{componentTotal > 1 ? 's' : ''}.</p>{container.playableComponents.length > 0 && <PlayableComponentsSection components={container.playableComponents} ownerId={container.id} />}{documentedChildren.length > 0 && <div className="campaign-component-list">{documentedChildren.map((unit) => <article key={unit.id}><strong>{titleOf(unit)}</strong><ol>{unit.playableComponents.map((component) => <li key={component.id}>#{component.order} · {component.title}</li>)}</ol></article>)}</div>}{!componentTotal && <p className="missing">Découpage narratif non renseigné : aucune partie n’est inventée automatiquement.</p>}</section>}
     {components.length > 0 && <section className="detail-section"><h3>Composants / ressources</h3><div className="part-list">{components.map((component) => <ComponentCard component={component} key={component.id} />)}</div></section>}
+    {container.containerType === 'campaign' && <CampaignChatGptLink campaignId={container.id} value={override.chatgptUrl} onUpdate={onUpdate} />}
     {container.containerType === 'campaign' && <ResourceTargetPanel targetKind="campaign" targetId={container.id} />}
     {container.containerType === 'campaign' && <CampaignOperationsPanel campaignId={container.id} onOpenPlayable={onOpenPlayable} />}
     {container.containerType !== 'campaign' && <ScenarioPackagePanel scenarioId={container.id} onOpenReference={onOpenReference} preparationStatus={override.preparationStatus ?? 'untreated'} foundrySelected={effectiveLifecycleStatus(override, isContainerExcluded(container, curation)) === 'to_play'} foundrySearchNames={[titleOf(container), originalTitleOf(container) ?? '', ...container.titles.aliases]} />}
