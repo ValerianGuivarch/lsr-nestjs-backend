@@ -15,4 +15,4 @@
 
 **Conventions :** le code/configuration présents prévalent sur les audits historiques. Décrire le *fonctionnement actuel vérifié* séparément des constats datés, dettes confirmées et pistes non validées. Après une implémentation, actualiser la documentation du domaine et fermer/requalifier la dette associée.
 
-Archives : [RECAP du 27 septembre](pf2/outils/archive/RECAP-2026-09-27.md) ; [audit du 9 septembre](RECAP-PF2-2026-09-09.md). Voir [PF2_WORKSPACE.md](PF2_WORKSPACE.md) pour la règle de capitalisation continue.
+Archives : [Index des documents historiques](pf2/outils/archive/INDEX.md) ; [RECAP du 27 septembre](pf2/outils/archive/RECAP-2026-09-27.md) ; [audit du 9 septembre](RECAP-PF2-2026-09-09.md). Voir [PF2_WORKSPACE.md](PF2_WORKSPACE.md) pour la règle de capitalisation continue.

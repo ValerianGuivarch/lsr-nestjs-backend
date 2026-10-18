@@ -53,3 +53,7 @@ Distinguer explicitement **canon publié**, **adaptation/décision validée**, *
 ### Audit / clôture d'une ancienne discussion
 
 > Résume en quelques lignes le sujet, le dossier recommandé, la pertinence de conserver ou renouveler la conversation, et **les seules informations durables non déjà présentes dans GitHub**. Consulte le dépôt en lecture seule pour cet audit. Propose les modifications de Markdown avant de les effectuer.
+
+## Historique et compatibilité
+
+Les documents historiques sont conservés sous [l'index des archives](pf2/outils/archive/INDEX.md) et [l'ancienne bible](pf2/archive/story/README.md). Les chemins `story/` et certains anciens fichiers à la racine sont des redirections, **pas** des fiches à enrichir.
