@@ -19,7 +19,7 @@ La campagne tourne autour du **Circus of Wayward Wonders**, de la mort de Myron,
 - la campagne doit maintenir cette tension morale sans blanchir Sarvel ;
 - le final implique le **Verdant Beacon**, l'interface d'Aroden permettant d'agir à distance sur les orbes.
 
-Pour la campagne actuelle, **Vaga** est le meilleur pont personnel vers cette intrigue.
+Pour la campagne actuelle, **Vaga** est le meilleur pont personnel vers cette intrigue. Les **adaptations retenues** (dont la présence de la Ménagerie Céleste à Absalom pour le Festival Radieux) et les **questions ouvertes** sont centralisées dans [la fiche de campagne Sentence d'Extinction](Campagne-Sentence-d-Extinction.md).
 
 ---
 

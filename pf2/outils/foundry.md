@@ -1,10 +1,12 @@
-# foundry — documentation PF2
+# Foundry PF2 — Toolkit, Relay, scènes et personnages
 
 [← Outils](../../OUTILS.md) · [Archive intégrale](archive/RECAP-2026-09-27.md)
 
 > Contenu repris de l'audit du 27 septembre 2026 : **historique à confronter au code et à l'état de production** avant de considérer une observation ou une anomalie comme actuelle.
 
-## 8. Portraits PNJ
+## 8. Portraits PNJ — code vérifié le 18 octobre 2026
+
+`Pf2MjService.ts` résout `FOUNDRY_ASSETS_ROOT`, écrit les fichiers sous `portraits/pnj/` et en conserve le chemin logique `assets/l7r/portraits/pnj/`. Les valeurs réellement présentes dans la bibliothèque Foundry n'ont pas été vérifiées pendant cet audit.
 
 Le comportement courant du code est le suivant.
 
@@ -393,4 +395,137 @@ Un scénario peut combiner :
 - des Actors, Scenes ou Journals créés par le pipeline MJ.
 
 L'absence d'une Scene générée par le Toolkit ne prouve donc pas qu'un scénario est absent de Foundry. Les diagnostics doivent distinguer **contenu préexistant** et **contenu géré par le Toolkit**, puis agréger l'état au niveau de la campagne quand celle-ci est composée de plusieurs packages enfants.
+
+---
+
+## 15. Improvisation de séance : groupe actif, rencontres et PNJ rapides
+
+> État vérifié dans le code du **PF2e Val Toolkit 0.42.0** le 18 octobre 2026. Le code courant reste la source de vérité si cette section devient ancienne.
+
+Ces outils sont accessibles au MJ depuis les contrôles **Token** de Foundry. Ils servent à préparer rapidement une scène de jeu sans transformer l'improvisation de séance en donnée métier durable : les fiches mécaniques restent dans Foundry et les compendiums PF2e, tandis que SQLite reste réservé au catalogue, aux PNJ métier et aux relations éditoriales.
+
+### 15.1 Groupe actif
+
+Le Toolkit conserve un groupe de PJ de séance dans le setting monde caché :
+
+```text
+pf2e-val-toolkit.activeParty.actorIds
+```
+
+Seuls les Actors de type `character` sont acceptés. Le groupe persiste entre les scènes et les rechargements.
+
+Le gestionnaire **Groupe actif** permet de :
+
+- définir le groupe à partir des tokens de PJ sélectionnés ;
+- sélectionner sur la scène les tokens correspondant au groupe ;
+- placer au centre de la scène les membres absents à partir de leur prototype Token ;
+- vider le groupe.
+
+Les outils d'improvisation utilisent ce groupe comme contexte par défaut. Pour une rencontre, le nombre de PJ et le niveau moyen arrondi viennent du groupe actif ; à défaut, les PJ actuellement sélectionnés sont utilisés, puis un fallback de **4 PJ niveau 1**. Pour le PNJ rapide, le niveau moyen du groupe actif est proposé ; sans groupe actif, le niveau par défaut est 1.
+
+API runtime utile pour diagnostic ou macro :
+
+```js
+game.pf2eValToolkit.activeParty
+```
+
+### 15.2 Index partagé de créatures
+
+Les deux outils d'improvisation s'appuient sur `game.pf2eValToolkit.creatureIndex`.
+
+L'index lit les Actors `npc` des compendiums installés ainsi que les NPC du monde. Le scope `core` regroupe explicitement :
+
+- Monster Core et Monster Core 2 ;
+- NPC Core ;
+- Bestiary 1, 2 et 3 ;
+- NPC Gallery.
+
+L'index conserve notamment niveau, traits, rareté, taille, source et notes publiques. Il permet de filtrer par niveau, traits, texte, rareté, collection et périmètre de sources. Son cache est invalidé lors des créations, modifications ou suppressions d'Actors et lors des mises à jour de compendiums.
+
+### 15.3 Générateur de rencontres
+
+Le bouton **Improviser une rencontre** calcule d'abord le budget PF2e selon la difficulté et la taille du groupe.
+
+Pour 4 PJ :
+
+| Difficulté | Budget | Ajustement par PJ en plus ou en moins |
+| --- | ---: | ---: |
+| Triviale | 40 XP | 10 XP |
+| Faible | 60 XP | 20 XP |
+| Modérée | 80 XP | 20 XP |
+| Sévère | 120 XP | 30 XP |
+| Extrême | 160 XP | 40 XP |
+
+La valeur d'une créature dépend de son écart de niveau avec le groupe : de **10 XP à niveau -4** jusqu'à **160 XP à niveau +4**.
+
+Les trois catégories de composition signifient :
+
+| Catégorie | Niveaux recherchés par rapport au groupe |
+| --- | --- |
+| Forte | +2 puis +1 |
+| Moyenne | 0 puis -1 |
+| Faible | -2, -3 puis -4 |
+
+Les profils **Automatique**, **Boss + renforts**, **Groupe équilibré** et **Horde de faibles** préremplissent les nombres Forte / Moyenne / Faible en fonction de la difficulté et du nombre de PJ. Ces nombres restent modifiables avant génération. **Composition personnalisée** ne remplace pas les valeurs saisies.
+
+Le profil **Automatique** possède plusieurs structures possibles selon la difficulté afin d'éviter de converger systématiquement vers deux ennemis. **Boss + renforts** cherche une structure avec au moins un adversaire fort ou moyen et, lorsque le budget le permet, au moins deux faibles. **Horde** ne propose que des faibles.
+
+Les nombres sont des **objectifs de composition**, pas une promesse absolue. Le moteur choisit les niveaux exacts disponibles dans chaque catégorie, maximise d'abord le nombre de slots demandés puis les XP utilisés, et **ne dépasse pas le budget**. Un slot peut donc être omis si les filtres, le bestiaire disponible ou le budget rendent la composition impossible.
+
+Filtres disponibles :
+
+- thème / texte ;
+- trait PF2e ;
+- sources : bestiaires principaux, tous les compendiums, ou compendiums + NPC du monde ;
+- rareté ;
+- inclusion optionnelle des NPC déjà sélectionnés sur la scène dans le budget.
+
+La prévisualisation permet de remplacer une seule créature, de relancer toute la composition ou d'ajouter la rencontre à la scène. Les Actors issus de compendiums sont matérialisés dans un dossier Actor **Improvisation** et réutilisés lorsqu'une copie portant la même source de compendium existe déjà.
+
+### 15.4 Création rapide de PNJ
+
+Le bouton **Créer un PNJ rapide** est volontairement un outil de **reskin mécanique**, pas un générateur de nouvelle fiche de règles.
+
+Il cherche uniquement dans :
+
+```text
+pf2e.pathfinder-npc-core
+```
+
+Critères disponibles :
+
+- niveau ;
+- profil : tous, combattant, lanceur de sorts, soutien/soins, discret/crim., autorité/social ;
+- concept / recherche libre ;
+- trait ;
+- rareté.
+
+La recherche essaie d'abord le niveau exact, puis élargit à ±1 et enfin ±2 si nécessaire. Les Troops sont écartées. Les résultats sont classés selon le concept, le profil, la proximité de niveau et la rareté ; jusqu'à 12 candidats sont affichés.
+
+Le workflow conserve les critères tant que la fenêtre n'est pas abandonnée :
+
+- **Autres résultats** exclut d'abord les candidats déjà affichés pour proposer une autre série ; lorsque les alternatives sont épuisées, la recherche repart sur l'ensemble du pool ;
+- **Retour aux critères** rouvre le formulaire avec les valeurs précédentes ;
+- le nom personnalisé saisi est également conservé pendant ces allers-retours ;
+- l'icône livre d'un résultat ouvre sa fiche de compendium.
+
+Après choix, le Toolkit clone l'Actor avec `game.actors.fromCompendium()`. Attaques, actions, sorts et données mécaniques restent donc ceux du statblock PF2e d'origine. Le MJ peut créer seulement l'Actor ou le créer puis poser immédiatement son Token au centre de la scène.
+
+Ces Actors sont rangés dans **Improvisation** sous le dossier Actor `MJ` lorsqu'il existe. Cette création **ne crée pas un PNJ métier dans SQLite** et ne doit pas être interprétée comme une nouvelle identité narrative canonique.
+
+### 15.5 Principe de conception
+
+La séparation à conserver est :
+
+```text
+texte / intention du MJ
+        ↓
+critères structurés
+        ↓
+index de créatures + budgets PF2e
+        ↓
+Actor officiel ou clone Foundry
+```
+
+Les outils d'improvisation peuvent évoluer en ergonomie, mais le moteur mécanique doit rester déterministe et fondé sur les données PF2e/Foundry. Une éventuelle couche de langage naturel ou d'IA doit seulement traduire une intention en critères structurés et laisser au MJ la possibilité de vérifier ces critères avant génération.
 

@@ -6,6 +6,7 @@ Répertoire des ressources narratives transverses. Les fichiers thématiques res
 
 ## Personnes, groupes et institutions
 
+- [Consortium Aspis](Consortium-Aspis.md)
 - [Société des Éclaireurs, mentors, Décemvirat et factions](../univers/Societe-des-Eclaireurs.md)
 - [Équipe rivale d'Elysye](Equipe-rivale.md)
 - [Héros historiques](Heros-historiques.md)
@@ -17,10 +18,11 @@ Répertoire des ressources narratives transverses. Les fichiers thématiques res
 - [Pointesable](../univers/Pointesable.md)
 - [Chronologie thassilonienne](Chronologie-thassilon.md)
 - [Labyrinthe, portails et Anneau d'Alséta](Labyrinthe-et-portails.md)
+- [Elfes des cavernes et refuge azlanti](Elfes-des-cavernes-et-refuge-azlanti.md)
 - [Cadre et continuité](../univers/Cadre-et-continuite.md)
 
 ## Système de référence
 
-Le référentiel métier des PNJ, factions, lieux, régions et événements est **SQLite**, documenté dans [RECAP.md](../RECAP.md). Les Markdown sont des synthèses éditoriales de continuité, **pas** un second référentiel à synchroniser aveuglément.
+Le référentiel métier des PNJ, factions, lieux, régions et événements est **SQLite**, documenté dans [OUTILS.md](../../OUTILS.md). Les Markdown sont des synthèses éditoriales de continuité, **pas** un second référentiel à synchroniser aveuglément.
 
-Pour créer une nouvelle fiche d'univers riche, choisir un nom thématique sous `story/`, l'ajouter ici et dans l'[index général](../../UNIVERS.md). Conserver les identifiants métiers lorsqu'ils sont connus.
+Pour créer une nouvelle fiche d'univers riche, choisir un nom thématique sous `pf2/univers/`, l'ajouter ici et dans l'[index général](../../UNIVERS.md). Conserver les identifiants métiers lorsqu'ils sont connus.

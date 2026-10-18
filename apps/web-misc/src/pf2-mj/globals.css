@@ -1039,3 +1039,7 @@
 .player-hub-facts dd { margin: 0; overflow-wrap: anywhere; }
 .player-hub-links { display: flex; flex-wrap: wrap; gap: 1rem; }
 .player-hub-links a { text-decoration: underline; }
+
+.campaign-chatgpt-actions{display:flex;gap:.6rem;align-items:center;flex-wrap:wrap}
+.campaign-chatgpt-actions input{min-width:min(34rem,100%);flex:1}
+.campaign-chatgpt-actions a{display:inline-flex;align-items:center;text-decoration:none}

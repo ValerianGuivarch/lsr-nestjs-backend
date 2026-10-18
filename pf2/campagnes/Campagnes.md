@@ -6,13 +6,21 @@ Ce document est un aiguillage : une **campagne réellement jouée** n'est pas la
 
 ## Références existantes
 
-- [Fronts réellement commencés ou envisagés](../campagnes/Fronts-de-campagne.md) — initiation d'Absalom, Pluie en Jour d'Été, Rose Street Killer, pistes et lancements possibles.
+- [Fronts réellement commencés ou envisagés](../campagnes/Fronts-de-campagne.md) — initiation d'Absalom, Pluie en Jour d'Été, Cartel du Sel, pistes et lancements possibles.
 - [Campagnes et chroniques de lecture](../campagnes/Campagnes-et-lectures.md) — Sentence d'Extinction, L'Âge des Cendres, Sept Fléaux de Pointesable ; les chroniques ne prouvent pas que les événements ont été joués.
 - [Absalom et Agents de la Falaise](../univers/Absalom.md) — contexte narratif et éléments retenus, distincts du journal de progression.
 - [Index des PJ](../pj/Personnages-joueurs.md) — arcs personnels susceptibles de déclencher des campagnes.
 
 ## Fiches de campagne
 
-Créer **une fiche `story/Campagne-<Nom>.md` par campagne suivie en détail** au fur et à mesure de l'audit des discussions, et la référencer ici. Chaque fiche distinguera : concept, statut confirmé, séances/événements réellement joués, décisions validées, PNJ et lieux liés, pistes ouvertes, propositions non retenues et liens vers les sources.
+- [Agents d'Absalom](Campagne-Agents-d-Absalom.md) — campagne non terminée ; état des événements réellement joués à confirmer.
+
+- [Campagne du Cartel du Sel](Campagne-Cartel-du-Sel.md) — campagne maison construite progressivement ; sa première partie, issue de *La Vengeance de la rue Rose*, est terminée et l'enquête porte désormais sur le Cartel lui-même.
+- [Sentence d'Extinction / Extinction Curse](Campagne-Sentence-d-Extinction.md) — adaptation en préparation : Vaga, Ménagerie Céleste à Absalom pour le Festival Radieux, relais possible à Escadar et dilemme des orbes.
+- [L'Âge des Cendres — table ouverte](Campagne-Age-des-Cendres.md) — adaptation en préparation, anciennement « HD100 ».
+- [Les Sept Fléaux de Pointesable](Campagne-Sept-Fleaux-de-Pointesable.md) — campagne commencée ; ouverture adaptée aux niveaux 1–2, Catacombes du Feu Infernal en suspens après la mort de Zoduk et rôle du groupe rival à arbitrer.
+- [La Force des milliers](Campagne-La-Force-des-milliers.md) — campagne publiée retenue pour plus tard, à adapter avec les PJ comme alliés de la Société des Éclaireurs plutôt que comme élèves de la Magaambya ; ouverture prévue via le Labyrinthe de la Route Ouverte.
+
+Créer **une fiche `pf2/campagnes/Campagne-<Nom>.md` par campagne suivie en détail** au fur et à mesure de l'audit des discussions, et la référencer ici. Chaque fiche distinguera : concept, statut confirmé, séances/événements réellement joués, décisions validées, PNJ et lieux liés, pistes ouvertes, propositions non retenues et liens vers les sources.
 
 **Attention :** les données runtime du Journal MJ et des séances ne doivent pas être remplacées ni contredites silencieusement par des Markdown.

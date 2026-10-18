@@ -18,29 +18,21 @@ L'**Initiation d'Absalom** a été jouée, y compris les éléments liés à **B
 
 La première partie a été jouée. Les ruines et les suites restent disponibles comme front ultérieur.
 
-### Rose Street Killer — résolue
+### Refuge azlanti / elfes des cavernes — scénario terminé, transition en cours
 
-L'enquête du **tueur de la rue Rose** est terminée.
+L'exploration du refuge et son conflit immédiat sont terminés. Les PJ ont épargné la prêtresse et la cheffe guerrière et ont commencé à révéler progressivement la vérité au peuple sur l'existence du monde extérieur.
 
-Les PJ ont poursuivi la piste de **Wennel Ardonay**, prêtre de Milani et abolitionniste. Ils sont notamment passés par un autre prêtre de Milani, ancien esclave et ami de Wennel, puis ont remonté les relations autour de la dernière victime, **Justerian**. Ils ont retrouvé celui-ci mort chez lui et ont poursuivi l'enquête à partir des indices laissés sur place.
+La suite n'est plus un front de combat mais un **front de transition** : négocier avec les autorités du refuge la manière d'ouvrir la société, de corriger ses croyances sans effondrement brutal et de préparer les habitants aux dangers du monde extérieur.
 
-Ils ont finalement découvert que Wennel avait été assassiné pendant ses propres recherches puis était revenu sous forme de mort-vivant, avec des souvenirs et intentions déformés. Les PJ l'ont affronté et détruit.
+→ Voir [Elfes des cavernes et refuge azlanti](../univers/Elfes-des-cavernes-et-refuge-azlanti.md).
 
-Le carnet / dossier d'enquête retrouvé après sa mort ouvre directement le front du **Cartel du Sel**.
+### Campagne du Cartel du Sel — active
 
-### Cartel du Sel / trafic d'esclaves et de golems de chair
+La première partie, **Le tueur de la rue Rose / La Vengeance de la rue Rose**, est terminée : les PJ ont résolu l'affaire de Wennel Ardonay et récupéré son dossier d'enquête.
 
-Le **Cartel du Sel** est désormais un front ouvert, dont les détails pourront encore être retravaillés.
+Ce dossier a ouvert le front du **Cartel du Sel**. Depuis, les PJ ont également obtenu des informations indiquant que l'activité du réseau est **majoritairement liée au quartier des Flaques**. Leur objectif actuel est d'enquêter sur le Cartel lui-même et d'en comprendre le fonctionnement avant d'identifier ses responsables.
 
-Les éléments établis sont :
-
-- l'esclavage étant officiellement aboli à Absalom, le Cartel exploite sa rareté comme un commerce clandestin de luxe plutôt que comme un marché de masse ouvert ;
-- il maintient néanmoins des réseaux, contacts et infrastructures afin d'être bien placé si l'esclavage redevenait un jour légal ou toléré ;
-- il kidnappe notamment des sans-abri, des personnes isolées ou considérées comme peu importantes, afin d'alimenter ce trafic ;
-- ce réseau coexiste avec un commerce de **golems de chair provenant notamment de Geb** ;
-- une **famille importante d'Absalom** se trouve derrière le dispositif, mais son identité n'est pas encore connue des PJ.
-
-Ne pas figer davantage l'identité des responsables, les intermédiaires ou l'organisation interne avant leur validation en jeu.
+→ Voir [Campagne du Cartel du Sel](Campagne-Cartel-du-Sel.md) pour les événements établis, les informations connues des PJ et les pistes encore ouvertes.
 
 ### Centaures / magie des tempêtes
 
@@ -54,12 +46,20 @@ Un ancien chef kobold rencontré ou mentionné travaillait pour **Merlokrep**. C
 
 Le meilleur déclencheur personnel actuel est **Vaga**. Un message de son ancien cirque peut ramener le groupe vers le **Circus of Wayward Wonders**, puis reprendre l'ouverture originale autour de **Myron “Thunder” Stendhal**. Le fait que Vaga revienne vers son ancien cirque peut devenir le point qui attire d'autres acteurs vers lui et, par ricochet, vers le groupe.
 
+La **Ménagerie Céleste est actuellement à Absalom pour le Festival Radieux** (décision de préparation validée). Les implications pour Escadar et le déclencheur précis restent à organiser : voir [Sentence d'Extinction](Campagne-Sentence-d-Extinction.md).
+
 ### L'Âge des Cendres
 
 Cette campagne n'est pas pensée comme un démarrage immédiat, car **Citadelle Altaerein / l'Anneau d'Alséta** ouvre rapidement sur un réseau de portails qui peut devenir un tunnel de plusieurs séances et modifier fortement la mobilité de la campagne.
 
-### Les Sept Fléaux de Pointesable
+### Les Sept Fléaux de Pointesable — active
 
-Le déclencheur envisagé est lié à **Corvan**, à **Abstalar Zantus**, à **Audrahni** et au passé de **Nualia**. La logique retenue : Abstalar veut contacter l'esprit de Nualia ; Audrahni connaît le rituel ; le corps est nécessaire ; la tombe est vide ; un tunnel s'ouvre sous le cimetière. Corvan peut faire appel aux PJ ou les envoyer accompagner Audrahni / aider Pointesable.
+L'ouverture est désormais **jouée**. Les PJ ont exploré les tunnels sous le cimetière jusqu'à la zone de Zoduk et des Catacombes du Feu Infernal. Après avoir hésité à ouvrir la barricade, de peur de libérer la créature de feu située au-delà, ils ont provoqué assez de bruit pour déclencher une nouvelle attaque : **Zoduk a été tué par le feu**. Les PJ considèrent désormais cette partie des ruines comme probablement trop dangereuse pour leur niveau et envisagent de demander l'intervention d'Éclaireurs plus expérimentés.
+
+Ils connaissent Volpépite surtout par **Pic-Chardon** et ne savent pas encore qu'il a gagné la **Fosse**. Le rituel de Nualia et l'enquête qui suivra peuvent introduire cette piste sans exiger une exploration immédiate des Catacombes.
+
+Le [groupe rival d'Elysye](../univers/Equipe-rivale.md), déjà intervenu et ayant annoncé avoir tué un démon, peut être utilisé dans ce front. Son rôle exact reste à arbitrer : reconnaissance partielle, élimination d'un premier démon, ou variante avec deux démons dont le second resterait à affronter par les PJ.
+
+→ Voir [Les Sept Fléaux de Pointesable](Campagne-Sept-Fleaux-de-Pointesable.md) pour les événements établis, les décisions d'adaptation et les pistes encore ouvertes.
 
 ---

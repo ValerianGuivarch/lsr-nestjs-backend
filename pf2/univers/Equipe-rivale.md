@@ -171,3 +171,14 @@ Elysye, de son côté, refuse de les idéaliser. Une bonne réplique qui défini
 La rivalité devient intéressante si les PJ montrent progressivement que l'adaptabilité, la confiance mutuelle, l'improvisation ou l'empathie valent parfois plus qu'un dossier parfait.
 
 ---
+
+
+## Intervention établie et lien avec Pointesable
+
+Dans la continuité actuelle, l'équipe rivale est déjà intervenue en jeu et a annoncé avoir **tué un démon**. Ce fait est établi et doit rester disponible comme précédent lorsque sa compétence ou sa réputation est mise en balance avec celle des PJ.
+
+Pour **Les Sept Fléaux de Pointesable**, l'utilisation exacte de ce précédent reste à décider. Une piste consiste à envoyer l'équipe dans les Catacombes du Feu Infernal lorsque les PJ demandent des renforts. Il faut toutefois éviter de supprimer hors champ tout le principal challenge du lieu.
+
+Une variante à étudier est la présence de **deux démons de feu** : l'équipe rivale tuerait le premier, tandis que le second resterait en vie et deviendrait hostile après la mort de l'autre. Le rapport du premier affrontement pourrait alors fournir aux PJ des informations tactiques utiles pour préparer leur propre combat.
+
+→ Voir [Les Sept Fléaux de Pointesable](../campagnes/Campagne-Sept-Fleaux-de-Pointesable.md).

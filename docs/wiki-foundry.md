@@ -1,60 +1,30 @@
-# Wiki XWiki, relay Foundry et portraits PNJ
+# Wiki PF2, Foundry REST Relay et portraits
 
-Ces services sont indépendants du démarrage habituel de l'application : `npm run start` ne lance que les API JdR/Diary, le site misc et l'administration JdR.
+[← Index des outils](../OUTILS.md) · [Wiki et Discord](../pf2/outils/wiki-discord.md) · [Foundry](../pf2/outils/foundry.md)
 
-| Service | Port local par défaut | URL publique | Démarrage |
-| --- | ---: | --- | --- |
-| XWiki | 4205 | `https://wiki.l7r.fr` | `npm run wiki` |
-| Foundry REST relay | 3010 | — (usage interne Foundry) | `npm run foundry:relay` |
-| Carte de Golarion | 4204 | `https://map.l7r.fr` | `npm run map` |
+> Référence actualisée contre le code GitHub le 18 octobre 2026. **Aucun contrôle live du mini-PC** : les services réellement démarrés et ports exposés doivent être vérifiés sur le serveur.
 
-## Wiki XWiki
+## Wiki joueur
 
-XWiki tourne dans Docker, indépendamment des applications Node. Les fichiers sont dans `support/xwiki/` et sa configuration locale non versionnée est `support/xwiki/.env`.
+Le backend utilise des clients et endpoints **MediaWiki** (`apps/api-jdr/src/pf2-mj/MediaWikiClientService.ts`, `support/mediawiki/`), notamment pour les publications narratives et le répertoire PJ. Des fichiers `support/xwiki/` et anciennes procédures XWiki existent toujours : ils ne prouvent pas que XWiki soit le wiki actif. Ne pas interchanger XWiki et MediaWiki sans audit de déploiement.
 
-```bash
-npm run wiki
-npm run wiki:up
-npm run wiki:down
-npm run wiki:logs
-```
+URL configurée historiquement : `https://wiki.l7r.fr` ; configuration et disponibilité réelles à vérifier.
 
-## Foundry REST relay
+## Foundry REST Relay
 
-Le relay REST Foundry VTT est dans `support/foundry-rest/`, avec sa propre configuration locale non versionnée (`support/foundry-rest/.env`).
+Service indépendant sous `support/foundry-rest/`, utilisé par le backend PF2 pour interagir avec Foundry. Les paramètres de connexion sont en configuration serveur (ne jamais exposer les clés). Voir [l'architecture](../pf2/outils/architecture.md) et [le déploiement](../pf2/outils/deploiement.md).
 
-```bash
-npm run foundry:relay
-npm run foundry:relay:up
-npm run foundry:relay:down
-npm run foundry:relay:logs
-npm run foundry:relay:build
-```
+## Portraits PNJ
 
-## Portraits PNJ PF2 MJ
-
-PF2 MJ est la source structurée des PNJ. Le fichier source est conservé par
-l'application dans `STORAGE_PATH/portraits/`, indexé dans SQLite (`pf2_media`).
-Lorsqu'un PNJ est lié à un Actor, l'API le téléverse via le Relay vers Foundry.
-Le chemin Foundry produit est stable :
+Le code de `Pf2MjService.ts` consulté utilise :
 
 ```text
-assets/l7r/portraits/<id-pnj>.webp
+FOUNDRY_ASSETS_ROOT/portraits/pnj/<id-pnj>.webp
+assets/l7r/portraits/pnj/<id-pnj>.webp
 ```
 
-Le champ `portrait` du PNJ conserve le chemin local `portraits/<id-pnj>.webp` et
-`foundryActorUuid` garde l'association stable avec l'Actor. L'outil MJ affiche
-le fichier via `GET /api/pf2-mj/portraits/<fichier>` et propose l'envoi de
-fichier, le glisser-déposer, le collage d'image, l'import par URL et le
-remplacement. `FOUNDRY_ASSETS_ROOT` reste une compatibilité de lecture pour les
-portraits historiques, mais n'est plus requis pour les nouveaux.
+Le backend sert les fichiers par `GET /api/pf2-mj/portraits/:filename`. Une liaison à l'Actor Foundry peut permettre la synchronisation via le Relay. **Ne pas présenter `STORAGE_PATH/portraits` ni `pf2_media` comme le chemin actif par défaut sans décision et implémentation explicites.**
 
-Les anciens champs `image` restent affichables comme repli afin de ne pas casser les données existantes. Les nouveaux portraits n'utilisent ni identifiant de médiathèque ni API de média générique.
+## Vérification opérationnelle
 
-## Vérifications
-
-```bash
-curl -I http://127.0.0.1:4205
-curl -I http://127.0.0.1:3333/api/pf2-mj/curation
-curl -I http://127.0.0.1:3333/api/v1/pf2-mj/curation
-```
+Contrôler sur le mini-PC : wiki réellement exécuté, stacks Docker, URL publique, service Relay, dossiers Foundry accessibles et permissions d'écriture. La documentation ne doit pas remplacer ce contrôle.

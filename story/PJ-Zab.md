@@ -1,18 +1,5 @@
-# Zab
+# Archive — PJ-Zab.md
 
-[← Index des PJ](Personnages-joueurs.md) · [Bible PF2](../story.md)
+Ce fichier historique n'est plus maintenu. Lire la [fiche active](../pf2/pj/PJ-Zab.md).
 
-> Migration fidèle du récapitulatif initial des PJ. Les détails mécaniques et choix d'évolution restent à compléter après confrontation à Foundry et aux fiches Google Docs.
-
-## Identité et intrigue personnelle
-
-Kobold, ancien esclave, lié à Absalom, aux **Morilla** et aux **Sewer Dragons**.
-
-## Fiche et évolution PF2
-
-- **Source de vérité mécanique :** fiche Foundry / fiche joueur, à vérifier.
-- **Choix de progression :** non encore documentés ici.
-
-## Questions ouvertes
-
-- Compléter sans inventer les décisions non présentes dans les sources.
+La version antérieure complète est conservée dans [l'archive documentaire](../pf2/archive/story/PJ-Zab.md).

@@ -1,18 +1,5 @@
-# Yaz Lorok
+# Archive — PJ-Yaz-Lorok.md
 
-[← Index des PJ](Personnages-joueurs.md) · [Bible PF2](../story.md)
+Ce fichier historique n'est plus maintenu. Lire la [fiche active](../pf2/pj/PJ-Yaz-Lorok.md).
 
-> Migration fidèle du récapitulatif initial des PJ. Les détails mécaniques et choix d'évolution restent à compléter après confrontation à Foundry et aux fiches Google Docs.
-
-## Identité et intrigue personnelle
-
-Orc. Son frère a disparu à **Nex** après une affaire de rituel / demi-plan. Son arc peut ouvrir sur les expériences magiques nexiennes et les réalités parallèles.
-
-## Fiche et évolution PF2
-
-- **Source de vérité mécanique :** fiche Foundry / fiche joueur, à vérifier.
-- **Choix de progression :** non encore documentés ici.
-
-## Questions ouvertes
-
-- Compléter sans inventer les décisions non présentes dans les sources.
+La version antérieure complète est conservée dans [l'archive documentaire](../pf2/archive/story/PJ-Yaz-Lorok.md).

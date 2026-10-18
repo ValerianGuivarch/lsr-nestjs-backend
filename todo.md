@@ -13,6 +13,156 @@
 - [ ] Poursuivre l'audit des **Scenes Foundry importées** et corriger par le pipeline les imports partiels (cas témoin documenté : Sentence d'Extinction volume 1, images présentes sur disque mais non reliées à plusieurs Scenes).
 
 
+### Projet prioritaire — refondre le workflow Discord de planification des séances
+
+**But :** pouvoir repartir de cette section dans une nouvelle discussion et reconstruire proprement tout le workflow de planification, depuis la proposition des disponibilités jusqu'à la création des discussions de mission dans `#objectif-prochaine-mission`, sans dépendre du texte des anciens messages Discord comme pseudo-base de données.
+
+#### État actuel vérifié dans le code — ne pas refaire
+
+Les commandes suivantes existent déjà dans `DiscordCommandsService` :
+
+- `/proposer-date-seance` : propose les jours de la semaine suivante, publie le message de planification, ajoute les réactions de jours + ❌ + ❓ et crée le fil de planification ;
+- `/modifier-date-seance` : permet de modifier les jours proposés depuis le fil ;
+- `/relancer-date-seance` : distingue déjà correctement **les joueurs sans aucune réponse** et **les joueurs encore sur ❓ « Ne sais pas encore »**, prépare un aperçu privé puis mentionne les deux catégories séparément après validation ;
+- `/analyse-date-seance` : lit les réactions, forme des groupes de 4, cherche à maximiser le nombre de groupes sans réutiliser un joueur et favorise à égalité les personnes ayant joué le moins de séances ;
+- `/valider-date-seance` : relit la dernière analyse publiée et valide une proposition complète numérotée ;
+- `/valider-date-seance-manuel` : solution de secours déjà opérationnelle ; permet de choisir une date de la planification ou une date libre, puis exactement 4 membres Discord, avec aperçu privé avant publication ;
+- `/preparer-prochaine-mission` : part d'une séance déjà validée et crée, après confirmation, l'annonce puis le fil `Séance JJ/MM` dans `#objectif-prochaine-mission`.
+
+Le solveur actuel sait représenter certaines égalités sous une forme compacte telle que **« Choisir 2/3 »**. Le défaut connu est que `/valider-date-seance` ne sait relire que des groupes complets numérotés et **rejette explicitement** les lignes `Choisir N/M`. Une analyse valide peut donc produire un affichage que l'étape suivante ne sait pas valider.
+
+La validation manuelle contourne ce défaut, mais elle **ne crée pas encore directement le fil de mission** : il faut encore lancer `/preparer-prochaine-mission`. Elle doit devenir le chemin de secours complet, pas seulement la moitié d'un workflow.
+
+#### Cible fonctionnelle
+
+Le workflow cible doit être un assistant cohérent et, autant que possible, continu :
+
+1. **Proposer les dates** avec `/proposer-date-seance`, puis laisser les joueurs répondre avec les réactions existantes.
+2. **Relancer** avec `/relancer-date-seance` en conservant la distinction actuelle :
+   - sans réponse ;
+   - ❓ « Ne sais pas encore » ;
+   - réponse définitive = au moins un jour ou ❌.
+3. **Analyser** avec `/analyse-date-seance` en construisant un **snapshot structuré** des disponibilités et des IDs Discord. Le message Discord affiché ne doit plus être la source de vérité du calcul.
+4. Présenter les **créneaux réellement jouables** et permettre au MJ d'en sélectionner **un ou plusieurs** dans le même workflow.
+5. Pour l'ensemble des créneaux sélectionnés, calculer des groupes de 4 **globalement cohérents** :
+   - par défaut, un joueur ne peut apparaître que dans **une seule séance du lot** ;
+   - un joueur ne peut être placé que sur une date à laquelle il a réellement indiqué être disponible ;
+   - le solveur conserve la priorité actuelle : solutions permettant le plus de séances, puis avantage aux joueurs ayant le moins joué ;
+   - si le MJ sélectionne explicitement plusieurs dates, soit toutes peuvent être constituées de façon cohérente, soit le bot doit expliquer que la combinaison est impossible et proposer/revenir à une sélection valide ; ne jamais supprimer silencieusement une date.
+6. Lorsqu'il reste plusieurs solutions strictement équivalentes, effectuer **automatiquement le tirage au sort au niveau des solutions complètes**, pas joueur par joueur et pas date par date. Exemple : si deux groupes du lundi et du jeudi se concurrencent sur les mêmes personnes, choisir au hasard une **affectation globale valide**. Cela évite qu'un premier tirage rende le second groupe impossible.
+7. Afficher un **récapitulatif privé final** avant toute publication :
+   - chaque date retenue ;
+   - les 4 joueurs affectés ;
+   - les éventuels choix/tirages effectués et leur pool de départ ;
+   - les avertissements éventuels ;
+   - aucun ping à ce stade.
+8. Au clic **Valider**, relire les réactions ou leur version fraîche et vérifier qu'aucune disponibilité déterminante n'a changé depuis le snapshot. Si elles ont changé, bloquer la publication et demander un recalcul plutôt que publier un planning obsolète.
+9. Après confirmation finale, faire **dans le même workflow** :
+   - publier la ou les séances validées dans le fil de planification avec mentions ciblées ;
+   - ajouter le 👍 de validation si ce comportement est conservé ;
+   - créer pour **chaque date** l'annonce correspondante dans `#objectif-prochaine-mission` ;
+   - créer automatiquement le fil `Séance JJ/MM` ;
+   - publier dans le fil le message « Que voulez-vous faire ? » et le rappel de `/choix-quete`.
+10. Le MJ ne doit plus avoir à enchaîner manuellement `/valider-date-seance` puis `/preparer-prochaine-mission` dans le cas normal.
+
+#### Validation manuelle à conserver
+
+`/valider-date-seance-manuel` doit rester comme **voie de secours explicite** lorsque l'analyse automatique n'est pas souhaitée ou qu'une décision a été prise hors du solveur.
+
+Travail restant :
+
+- [ ] Réutiliser le même pipeline final que le workflow automatique : **date + 4 joueurs → aperçu privé → confirmation → publication de la séance → création immédiate de l'annonce et du fil dans `#objectif-prochaine-mission`**.
+- [ ] Conserver le choix d'une date issue de la planification et l'option **Autre date**.
+- [ ] Assumer que le mode manuel peut volontairement outrepasser les réactions de disponibilité, mais afficher clairement un avertissement si les 4 joueurs choisis ne correspondent pas aux réactions du jour lorsque cette comparaison est possible.
+- [ ] Garder `/preparer-prochaine-mission` comme commande de **récupération/compatibilité** pendant la migration, puis décider si elle reste utile ou peut être retirée.
+
+#### Refactor technique attendu
+
+- [ ] Introduire des structures métier explicites pour ce workflow, par exemple `PlanningSnapshot`, `PlanningAvailability`, `CandidateSession`, `SessionBatchProposal` et `ValidatedSession`. Les noms exacts peuvent changer, mais les **IDs Discord, dates ISO et disponibilités** doivent vivre dans des objets structurés.
+- [ ] Séparer le **calcul** du **rendu Discord**. Les fonctions de solveur doivent recevoir des données structurées et retourner des données structurées ; les messages Markdown Discord ne sont qu'une vue.
+- [ ] Ne plus dépendre de `parsePublishedSessionProposals()` pour piloter le nouveau workflow. Le parseur peut rester temporairement pour la compatibilité avec les messages déjà publiés.
+- [ ] Remplacer le cas compact `Choisir N/M` comme état intermédiaire textuel par une représentation structurée des différentes solutions ex æquo. Le rendu peut rester compact pour le MJ, mais les solutions complètes doivent rester accessibles au code.
+- [ ] Factoriser une seule opération de fin, réutilisable par la validation automatique et manuelle, qui :
+  1. produit le message « séances validées » ;
+  2. publie avec les mentions autorisées ;
+  3. crée les annonces et fils de mission ;
+  4. gère les doublons et les erreurs partielles.
+- [ ] Rendre le tirage testable : isoler la sélection aléatoire ou injecter la fonction de hasard afin d'écrire des tests déterministes.
+- [ ] Vérifier les limites Discord des menus et composants si le nombre de dates ou de solutions augmente ; ne pas concevoir un workflow qui suppose plus d'options qu'un composant Discord ne peut en afficher.
+- [ ] Décider si les états d'interaction doivent rester dans les `Map` mémoire actuelles ou être reconstructibles/persistés. Un redémarrage du bot entre l'analyse et la confirmation ne doit idéalement pas produire un état ambigu ; au minimum, le message d'erreur doit demander proprement de relancer l'analyse.
+
+#### Cas métier à couvrir explicitement
+
+- [ ] **Moins de 4 disponibles sur une date** : date non jouable, raison visible.
+- [ ] **Exactement 4 disponibles** : groupe déterministe, aucun tirage.
+- [ ] **Plus de 4 disponibles avec une meilleure combinaison selon l'historique** : appliquer la priorité « moins de séances jouées » avant le hasard.
+- [ ] **Égalité parfaite**, par exemple 2 places pour 3 joueurs équivalents : tirage automatique, détail du tirage dans le récapitulatif privé.
+- [ ] **Plusieurs dates avec joueurs communs** : calcul global sans réutilisation d'un joueur.
+- [ ] **Sélection de dates incompatible** : ne jamais produire deux groupes qui réutilisent implicitement le même joueur ; expliquer l'impossibilité ou demander une autre sélection.
+- [ ] **Joueur disponible plusieurs jours** : il peut servir à n'importe lequel de ces jours, mais une seule fois dans le lot tant que la règle actuelle reste en vigueur.
+- [ ] **Évolution future : joueur acceptant plusieurs séances dans la semaine** : ne pas l'implémenter par défaut maintenant, mais éviter de figer le solveur de façon à rendre cette option impossible. Une future préférence explicite pourra autoriser une capacité > 1 par joueur.
+- [ ] **❓ uniquement** : joueur non disponible pour le solveur et présent dans la catégorie « en attente » de la relance.
+- [ ] **❓ + un jour** : aujourd'hui la relance considère la réponse de jour comme définitive ; conserver ce comportement ou le rendre explicite, mais ne pas le classer « en attente ».
+- [ ] **❌ + un jour** : réponse contradictoire à signaler ; ne pas deviner silencieusement l'intention lors de la validation finale.
+- [ ] **Réaction modifiée après l'analyse** : snapshot périmé, recalcul obligatoire avant publication.
+- [ ] **Dates modifiées avec `/modifier-date-seance` après l'analyse** : même traitement, l'analyse doit être considérée comme périmée.
+- [ ] **Date manuelle hors planification** : autorisée uniquement via le mode manuel, avec date ISO validée.
+- [ ] **Erreur pendant la création d'un fil après publication de l'annonce** : signaler précisément ce qui a déjà été créé et rendre la reprise idempotente pour éviter les doublons.
+- [ ] **Double clic / relance de commande** : détecter les annonces et fils déjà créés pour une validation donnée.
+- [ ] **Plusieurs séances validées en une fois** : créer toutes les annonces/fils prévus, avec un bilan final indiquant succès ou échec par date.
+
+#### Notifications et sécurité
+
+- [ ] Conserver les prévisualisations et sélections intermédiaires en **éphémère**, sans mention active.
+- [ ] Ne notifier les joueurs qu'au **dernier clic de confirmation**.
+- [ ] Utiliser `allowedMentions.users` avec uniquement les IDs des joueurs réellement affectés ; éviter `@everyone` pour la validation et la création de mission.
+- [ ] Garder l'ensemble des commandes de préparation/validation réservé aux admins/MJ.
+- [ ] La relance reste une action séparée : son aperçu est silencieux, puis seuls les joueurs « sans réponse » ou « en attente » sont mentionnés après confirmation.
+
+#### Tests d'acceptation minimum
+
+- [ ] Une date avec 4 joueurs : analyse → sélection → récapitulatif → validation → annonce + fil de mission créés sans commande supplémentaire.
+- [ ] Une date avec « choisir 2 parmi 3 » : le workflow ne bloque plus sur `Choisir N/M`, effectue un tirage valide et peut aller jusqu'à la création du fil.
+- [ ] Deux dates avec des candidats qui se chevauchent : le tirage/solveur produit deux groupes disjoints ou annonce que la sélection conjointe est impossible.
+- [ ] Plusieurs solutions ex æquo : seules des **solutions complètes valides** participent au tirage.
+- [ ] Un joueur moins prioritaire selon le nombre de séances jouées n'entre dans le tirage que si les solutions sont réellement à égalité après application du score.
+- [ ] Une disponibilité change entre aperçu et validation : aucune publication n'est faite et le MJ est invité à recalculer.
+- [ ] `/relancer-date-seance` continue de séparer correctement « sans réponse » et ❓.
+- [ ] `/valider-date-seance-manuel` va jusqu'à la création du fil de mission sans nécessiter `/preparer-prochaine-mission`.
+- [ ] Aucun ping avant confirmation ; après confirmation, seules les personnes des séances finales sont mentionnées.
+- [ ] Un second clic ou une reprise après erreur ne crée pas deux annonces/fils identiques.
+- [ ] Les anciens messages « proposition N » déjà publiés restent utilisables tant que la compatibilité legacy est conservée.
+
+#### Fichiers à examiner dans la prochaine discussion
+
+- `apps/api-jdr/src/discord/DiscordCommandsService.ts` — implémentation actuelle des commandes, solveur, états d'interaction et création des fils ;
+- `apps/api-jdr/src/discord/DiscordCommandsService.spec.ts` — tests existants à étendre avant le refactor ;
+- éventuellement les helpers d'identité Discord/PJ utilisés par ce service si le refactor extrait le workflow hors de la classe principale.
+
+**Résultat attendu :** un seul chemin normal **planification → analyse → sélection d'un ou plusieurs créneaux → résolution automatique des égalités → aperçu → validation → discussions de mission**, plus un chemin manuel de secours qui aboutit au même résultat final.
+
+
+### Projet futur — améliorer la gestion Discord
+
+**Objectif :** réduire la surcharge de notifications et rendre les commandes/salons plus lisibles, avec des règles cohérentes plutôt qu'une accumulation de cas particuliers.
+
+**Audit à mener :**
+
+- [ ] Inventorier **toutes les commandes Discord PF2** à partir du code courant et décider, pour chacune, si elle doit être réservée au MJ/admin ou accessible aux joueurs.
+- [ ] Pour chaque commande qui publie quelque chose, décider si elle doit publier immédiatement ou passer par une **prévisualisation / validation** avant envoi public.
+- [ ] Pour chaque commande, préciser sa politique de **mentions et notifications** : `@everyone`, rôle ciblé, joueurs concernés seulement, ou aucune mention.
+- [ ] Auditer les salons, forums et fils pour les classer en trois usages : **action requise / notification forte**, **information à lire sans urgence**, **archive / information passive**.
+- [ ] Identifier les salons où seuls le MJ ou le bot doivent écrire, ceux où les joueurs peuvent répondre, et ceux qui pourraient être supprimés, fusionnés ou simplifiés.
+- [ ] Vérifier si des **rôles de notification optionnels** (par exemple planning, quêtes, lore) seraient utiles, sans remplacer les rares notifications réellement obligatoires.
+- [ ] Définir une règle commune pour les annonces de séance : nouvelle proposition, relance, validation, préparation de mission et changement de dernière minute ne doivent pas tous notifier de la même manière.
+- [ ] Définir une règle commune pour les contenus non urgents : choix de quête, compte rendu de quête, journaux, résumés, lore et publications de référence devraient être silencieux par défaut sauf besoin explicite.
+- [ ] Vérifier l'usage de `allowedMentions` et privilégier les **mentions ciblées** aux joueurs réellement concernés plutôt que `@everyone`.
+- [ ] Rédiger à la fin une **consigne simple pour les joueurs** sur les réglages Discord recommandés (par exemple serveur en « mentions uniquement », puis exceptions volontaires), uniquement si l'organisation côté bot ne suffit pas.
+- [ ] Documenter la matrice finale **commande → destination → droits → validation → notification** et **salon/forum → rôle → niveau de notification** avant de modifier massivement le comportement du bot.
+
+**Principe directeur :** un ping doit signifier qu'une action ou une attention rapide est réellement attendue. Les autres messages doivent rester consultables sans provoquer de notification inutile.
+
+
 ### Projet futur — élargir et présélectionner la bibliothèque de ressources MJ
 
 **Point de départ déjà en place — ne pas refaire :**

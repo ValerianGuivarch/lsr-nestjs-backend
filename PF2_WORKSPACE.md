@@ -1,38 +1,59 @@
-# Espace de travail PF2 — connaissances durables
+# PF2 — Espace de travail et conventions
 
-Point d'entrée commun aux discussions ChatGPT, à la continuité narrative et à la documentation technique.
+**Point d'entrée obligatoire** des nouvelles discussions ChatGPT PF2. Les conversations sont temporaires : **les décisions et connaissances utiles doivent survivre dans les artefacts Markdown**, sans doubler les données des systèmes opérationnels.
 
-## Orientation
+## Sommaire
 
-| Dossier ChatGPT | Index de référence |
-| --- | --- |
-| PF2 PJ | [PJ.md](PJ.md) |
-| PF2 Campagnes | [CAMPAGNES.md](CAMPAGNES.md) |
-| PF2 Univers | [UNIVERS.md](UNIVERS.md) |
-| PF2 Outils | [OUTILS.md](OUTILS.md) |
-| PF2 Aide | [AIDE.md](AIDE.md) |
-| PF2 Divers | Identifier d'abord le domaine principal et le bon index |
-| PF2 Old | Discussions archivées après capitalisation |
+| Dossier ChatGPT | Index principal | Sujets |
+| --- | --- | --- |
+| PF2 - PJs | [PJ.md](PJ.md) | Biographies, relations, évolution et décisions des personnages joueurs |
+| PF2 - campagnes | [CAMPAGNES.md](CAMPAGNES.md) | Campagnes, scénarios, préparation et événements joués |
+| PF2 - univers | [UNIVERS.md](UNIVERS.md) | Lieux, PNJ, factions, institutions et continuité transversale |
+| PF2 - outils / apps | [OUTILS.md](OUTILS.md) | Application, wiki, Foundry, Discord, carte, automatisations |
+| PF2 - aides | [AIDE.md](AIDE.md) | Règles maison, méthodes de MJ et aides réutilisables |
+| PF2 - divers | Ce fichier, puis index pertinent | Conversation hybride, à reclasser lorsque possible |
+| PF2 - old | Archives de conversations | Après vérification que les informations durables sont conservées |
 
-## Sources de vérité
+Les fiches narratives détaillées résident sous `pf2/pj/`, `pf2/campagnes/`, `pf2/univers/`. Les descriptions techniques sont sous `pf2/outils/`. Les ressources plus spécifiques au code peuvent rester proches de celui-ci.
 
-- **Continuité narrative et choix validés :** `pf2/pj/`, `pf2/campagnes/`, `pf2/univers/`.
-- **Données métier (catalogue, PNJ, lieux, factions, séances, associations) :** `pf2.sqlite` ; les Markdown ne constituent pas un doublon de cette base.
-- **Personnages et objets mécaniques réellement présents :** Foundry.
-- **Fichiers documentaires physiques :** `PF2_LIBRARY_ROOT` / `pf2-data`.
-- **Architecture et comportement technique :** code et configuration courants, synthétisés par [OUTILS.md](OUTILS.md).
+## Règle d'or — capitalisation continue
 
-## Écriture et continuité
+**Une discussion ChatGPT ne doit jamais être la seule détentrice d'une décision durable.** Pendant tout travail, lorsqu'une histoire, un choix de PJ, une adaptation, une règle maison, une conception ou une implémentation évolue et est validée, **mettre à jour l'artefact Markdown de référence au fil de l'eau** (ou proposer immédiatement la modification si l'autorisation d'écrire n'est pas encore donnée). Ne pas attendre l'archivage de la conversation.
 
-1. Lire cet index puis les documents liés au sujet. Ne pas supposer qu'une ancienne discussion est une source de vérité.
-2. Distinguer canon Pathfinder, adaptation validée, hypothèse / proposition et chronique de lecture ; ne jamais inventer une décision.
-3. Écrire une information détaillée une seule fois, puis créer des liens depuis les autres index ou fiches.
-4. Les fiches PJ couvrent l'histoire et les choix envisagés ou validés ; la mécanique effective reste dans Foundry.
-5. Les fiches de campagne distinguent préparation, événements réellement joués et chroniques exploratoires. Ne pas déclarer terminée une campagne faute d'échanges récents.
-6. Avant toute modification GitHub : demander l'accord du MJ, puis relire les dernières versions des fichiers concernés ; fusionner sans écraser les contributions concurrentes.
-7. Signaler les conflits entre documentation et état réel. Les rapports datés ne constituent pas une description garantie du présent.
-8. Après un travail important, proposer la capitalisation des informations durables et des décisions non encore documentées.
+- **Campagne ou scénario suivi :** une fiche Markdown propre est obligatoire. Créer la fiche si nécessaire, puis l'inscrire dans [CAMPAGNES.md](CAMPAGNES.md). Si une discussion suit plusieurs scénarios, les séparer lorsque chacun nécessite une continuité autonome.
+- **PJ :** utiliser une fiche `pf2/pj/PJ-*.md` et l'indexer dans [PJ.md](PJ.md). Compléter seulement les faits sourcés ou validés.
+- **Univers, outils, aides :** privilégier le document thématique existant ; créer une fiche seulement si le contenu le justifie.
+- **Implémentation technique :** tenir la documentation de fonctionnement et les travaux ouverts synchronisés avec le code réellement livré ; dater les constats ponctuels.
+- **Modification de données runtime :** ne pas recopier SQLite/Foundry/Discord dans les Markdown. Documenter les *règles, choix et conséquences durables*, pas leurs tableaux de données.
 
-## Compatibilité
+## Sources de vérité et niveaux de certitude
 
-Les anciens `story.md`, `story/*.md` et `RECAP.md` sont conservés transitoirement ou remplacés par des pointeurs ; l'intégralité du RECAP précédent est archivée dans [pf2/outils/archive/RECAP-2026-09-27.md](pf2/outils/archive/RECAP-2026-09-27.md).
+- **Éditorial et continuité :** fichiers `pf2/` concernés, avec statut explicite des informations.
+- **Données métier :** `pf2.sqlite` pour catalogues, PNJ, lieux, séances, relations, etc.
+- **Fiches et objets mécaniques :** Foundry ; les choix futurs peuvent être décrits en Markdown sans prétendre qu'ils sont déjà appliqués.
+- **Quêtes du forum Discord :** fils, titres et état Discord ; consulter [l'intégration](docs/pf2/discord-quest-map-sync.md).
+- **Documents PDF/ZIP :** `PF2_LIBRARY_ROOT` / `pf2-data`.
+- **Application :** code et configuration courants, voir [OUTILS.md](OUTILS.md).
+
+Distinguer explicitement **canon publié**, **adaptation/décision validée**, **événement réellement joué**, **information connue des PJ**, **proposition**, **à vérifier** et **chronique de lecture**. Les secrets MJ ne sont pas automatiquement des informations connues des joueurs. Ne jamais arbitrer silencieusement une contradiction.
+
+## Méthode de modification
+
+1. Lire ce sommaire et l'index du domaine, puis **seulement** les fiches liées au sujet.
+2. Vérifier l'état réel lorsque le sujet dépend du code, de Foundry, de SQLite ou d'un service externe ; les audits datés ne remplacent pas une vérification.
+3. Avant d'écrire, relire **la dernière version GitHub** des fichiers concernés. Fusionner les nouveautés, ne pas écraser les modifications d'une autre discussion.
+4. Lorsque l'utilisateur a autorisé explicitement la capitalisation, réaliser la mise à jour documentaire dès qu'une décision importante est actée ; sinon demander son accord. Suivre le workflow GitHub demandé (branche/PR pour les réorganisations importantes).
+5. Mettre à jour index et liens lorsqu'une fiche est créée ou renommée. Ne jamais déplacer ou supprimer des informations sans conservation vérifiée.
+6. Conclure le travail par un bref état : décisions, fichiers Markdown actualisés, points encore ouverts. Pour les modifications applicatives : vérifications réellement exécutées, pas supposées.
+
+## Instructions de démarrage d'une nouvelle discussion
+
+> Consulte `PF2_WORKSPACE.md` du dépôt GitHub `ValerianGuivarch/lsr-nestjs-backend`, puis l'index et les fiches correspondant au sujet de cette discussion. Applique la règle d'or : les faits, décisions et évolutions durables doivent être capitalisés au fur et à mesure, dans les bons Markdown, sans se reposer sur l'historique ChatGPT. Différencie faits validés, propositions, événements joués et données runtime ; ne modifie rien en cas de conflit non tranché. Pour une campagne ou un scénario suivi, utilise ou crée une fiche dédiée ; pour un PJ, utilise sa fiche. Réexplore les fichiers actuels avant chaque écriture.
+
+### Audit / clôture d'une ancienne discussion
+
+> Résume en quelques lignes le sujet, le dossier recommandé, la pertinence de conserver ou renouveler la conversation, et **les seules informations durables non déjà présentes dans GitHub**. Consulte le dépôt en lecture seule pour cet audit. Propose les modifications de Markdown avant de les effectuer.
+
+## Historique et compatibilité
+
+Les documents historiques sont conservés sous [l'index des archives](pf2/outils/archive/INDEX.md) et [l'ancienne bible](pf2/archive/story/README.md). Les chemins `story/` et certains anciens fichiers à la racine sont des redirections, **pas** des fiches à enrichir.

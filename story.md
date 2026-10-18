@@ -1,5 +1,5 @@
-# Ancien index de continuité
+# Ancien index `story.md`
 
-La documentation PF2 utilise désormais [PF2_WORKSPACE.md](PF2_WORKSPACE.md), [UNIVERS.md](UNIVERS.md), [PJ.md](PJ.md) et [CAMPAGNES.md](CAMPAGNES.md).
+Les références maintenues sont désormais [PF2_WORKSPACE.md](PF2_WORKSPACE.md), [PJ.md](PJ.md), [CAMPAGNES.md](CAMPAGNES.md), [UNIVERS.md](UNIVERS.md) et [OUTILS.md](OUTILS.md).
 
-Les chapitres anciens de `story/` restent conservés temporairement ; leurs versions réorganisées sont dans `pf2/`. Ce fichier constitue un lien de compatibilité pour les anciens signets.
+Les anciens documents `story/*.md` sont des **pointeurs de compatibilité**, et leurs textes d'origine sont conservés dans [pf2/archive/story/](pf2/archive/story/README.md). Ne pas éditer les pointeurs.
