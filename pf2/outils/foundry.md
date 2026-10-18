@@ -253,3 +253,51 @@ Lors du chargement du Toolkit :
 Ainsi, modifier une séance modifie l’historique source ; le recalcul Toolkit remet ensuite Foundry en cohérence.
 
 ---
+
+## 11. Synchronisation portrait → token
+
+Le code courant du Toolkit (v0.42.0 au contrôle du 18 octobre 2026) contient `scripts/portrait-token-sync.js` et l'initialise depuis `scripts/main.js`.
+
+Le réglage monde `pf2e-val-toolkit.syncCharacterPortraitToToken` est activé par défaut. Pour les Actors de type `character` **et `loot`** :
+
+- `Actor.img` est la source ;
+- `Actor.prototypeToken.texture.src` est remis en cohérence ;
+- les Tokens déjà posés sur toutes les Scenes sont également mis à jour ;
+- une modification réelle de `Actor.img` déclenche la synchronisation ;
+- une passe complète est aussi effectuée au chargement du monde ;
+- seul le premier GM actif exécute la synchronisation, afin d'éviter les doubles mises à jour ;
+- la synchronisation ne modifie pas taille, position, vision, nom ou autres propriétés du Token.
+
+Ce comportement est donc plus large que la demande initiale « PJ uniquement » : les marchands `loot` sont volontairement inclus dans le code actuel.
+
+---
+
+## 12. Modules PF2e — répartition des responsabilités
+
+Contrôle runtime du monde **Les Eclaireurs** le 18 octobre 2026 : Foundry 14.365 / PF2e 8.4.1. Les modules ci-dessous sont installés et actifs dans la configuration observée.
+
+| Module | Version observée | Rôle retenu |
+| --- | --- | --- |
+| PF2e Automations | 1.4.8 | Automatismes ciblés de règles, actions, dons, sorts et effets. |
+| PF2e Workbench | 7.7.5 | Boîte à outils de déroulement de combat et d'automatismes généraux. |
+| PF2e Toolbelt | 3.56.2 | Petites fonctions transverses et améliorations d'ergonomie PF2e. |
+| PF2e HUD | 2.55.2 | Interface rapide pour le token/personnage ; notamment sidebars d'actions et de compétences. |
+| PF2e Leveler | 3.7.9 | Création, planification et application des montées de niveau. |
+| PF2e Dorako UI | 4.1.10 | Refonte visuelle de l'interface ; conservée par choix esthétique. |
+| PF2e Unified Spellbook | 2.5.4 | Vue unifiée des sorts ; reste optionnel malgré son activation actuelle. |
+| PF2e Val Toolkit | 0.42.0 | Fonctionnalités maison et intégrations propres à la table. |
+
+### Convention pour limiter les chevauchements
+
+- **Automations** : privilégier les conséquences précises d'une capacité ou d'une règle.
+- **Workbench** : privilégier les automatismes de déroulement du combat ; ne pas activer aveuglément toutes ses options.
+- **Toolbelt** : privilégier les utilitaires de confort et les workflows transverses.
+- **HUD** : rester la couche d'accès rapide, pas une nouvelle source de règles.
+- Le module autonome **PF2e Target Damage** n'est pas nécessaire dans cette configuration : la fonction correspondante est considérée comme relevant de Toolbelt.
+- Les fonctionnalités maison ne doivent être ajoutées au **Val Toolkit** que lorsqu'elles ne sont pas déjà correctement couvertes par PF2e ou un module conservé.
+
+### Point de nettoyage encore ouvert
+
+`Token Action HUD Core` 2.1.1 est installé et actif, mais aucun adaptateur PF2e correspondant n'est installé dans le répertoire de modules observé. Le Core est une bibliothèque générique et dépend de Socketlib. Comme PF2e HUD est déjà la solution de HUD retenue, **Token Action HUD Core est un candidat à désactivation/suppression après vérification qu'aucun autre module local ne le requiert**.
+
+Les packs de cartes et modules de contenu restent à traiter au cas par cas : leur activation n'est pas une décision architecturale durable et ne doit pas être figée ici.
