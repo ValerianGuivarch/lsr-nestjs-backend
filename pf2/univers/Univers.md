@@ -6,6 +6,7 @@ Répertoire des ressources narratives transverses. Les fichiers thématiques res
 
 ## Personnes, groupes et institutions
 
+- [Consortium Aspis](Consortium-Aspis.md)
 - [Société des Éclaireurs, mentors, Décemvirat et factions](../univers/Societe-des-Eclaireurs.md)
 - [Équipe rivale d'Elysye](Equipe-rivale.md)
 - [Héros historiques](Heros-historiques.md)
