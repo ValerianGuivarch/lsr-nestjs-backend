@@ -37,3 +37,15 @@ Aucune décision supplémentaire documentée ici. Les informations du joueur et 
 - **Renard** : vieux renard parlant qui lui a appris à apprécier art, beauté, musique et choses éphémères avant de disparaître sans explication.
 - **L'homme aux yeux verts** : mystérieux individu présent lors d'expériences sur Éos, semblant capable d'observer ou manipuler directement son âme ; identité inconnue.
 - **Veyra Dhal** : prêtresse naine de Shelyn et restauratrice au **musée Blakros** ; contact à Absalom pour œuvres, objets anciens et vestiges du passé.
+
+---
+
+## Apports du récit original fourni
+
+**Éos** se souvient d'abord avoir porté le nom **Argo-B612**. Automate de l'Empire de **Jistka**, il garde des images fragmentaires d'ateliers, de ses semblables, de la désagrégation de l'empire et de sa propre mise en stase. Ces souvenirs sont **incomplets et potentiellement mal ordonnés** : sa mémoire ne fournit pas une chronique parfaitement fiable de la chute de Jistka.
+
+Sa relation avec un **vieux renard parlant** lui a ouvert la beauté des arts, de la musique et de l'éphémère. Le renard disparaît ensuite, laissant des questions sans réponse. Dans la continuité actuelle, Éos est associé à **Shelyn** et à des mystères anciens relatifs à **Dou-Bral / Zon-Kuthon**.
+
+**Secrets MJ :** l'identité de l'**homme aux yeux verts**, présent lors d'expériences sur Éos et possiblement capable d'interagir avec son âme, n'est pas connue. Ses objectifs et son rapport à l'histoire de Shelyn ne doivent pas être inventés. **Veyra Dhal**, prêtresse de Shelyn au musée Blakros, est un point d'ancrage à Absalom pour une enquête sur les objets et vestiges anciens.
+
+**Question dramatique :** comment définir son identité propre lorsqu'on survit de plusieurs millénaires à son monde d'origine, avec une mémoire trouée et de nouvelles valeurs découvertes après le réveil ?
