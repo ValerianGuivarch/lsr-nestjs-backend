@@ -63,6 +63,12 @@ export class DiscordCommandsService {
   private readonly pendingFactionAssociations = new Map<string, { requesterId: string; playerFactionId: string; mjFactionId: string }>()
   private readonly pendingSchedulePublications = new Map<string, { requesterId: string; content: string }>()
   private readonly pendingSessionValidations = new Map<string, { requesterId: string; channelId: string; content: string; userIds: string[] }>()
+  private readonly pendingManualSessionValidations = new Map<string, {
+    requesterId: string
+    channelId: string
+    planningMonday: string
+    selectedDate?: { iso: string; label: string }
+  }>()
   private readonly pendingMissionThreads = new Map<string, {
     requesterId: string
     originChannelId: string
@@ -133,6 +139,7 @@ export class DiscordCommandsService {
       new SlashCommandBuilder().setName('proposer-date-seance').setDescription('Propose les dates de séance pour la prochaine semaine.').setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild).toJSON(),
       new SlashCommandBuilder().setName('analyse-date-seance').setDescription('Analyse les disponibilités et calcule les groupes possibles.').setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild).toJSON(),
       new SlashCommandBuilder().setName('valider-date-seance').setDescription('Confirme une proposition de groupes publiée dans ce fil.').addIntegerOption(option => option.setName('numero').setDescription('Numéro de proposition à valider').setRequired(true).setMinValue(1)).setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild).toJSON(),
+      new SlashCommandBuilder().setName('valider-date-seance-manuel').setDescription('Valide manuellement une date et 4 joueurs, sans passer par l’analyse.').setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild).toJSON(),
       new SlashCommandBuilder().setName('preparer-prochaine-mission').setDescription('Prépare un fil de mission depuis les séances validées.').setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild).toJSON(),
       new SlashCommandBuilder().setName('modifier-date-seance').setDescription('Ajoute ou retire des dates dans une proposition existante.').setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild).toJSON(),
       new SlashCommandBuilder().setName('relancer-date-seance').setDescription('Relance les joueurs sans réponse ou encore indécis sur la planification.').setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild).toJSON(),
@@ -202,6 +209,7 @@ export class DiscordCommandsService {
     if (interaction.commandName === 'proposer-date-seance') { await this.planningCommand(interaction as ChatInputCommandInteraction); return true }
     if (interaction.commandName === 'analyse-date-seance') { await this.programmerSeanceCommand(interaction as ChatInputCommandInteraction); return true }
     if (interaction.commandName === 'valider-date-seance') { await this.validateSessionProposalCommand(interaction as ChatInputCommandInteraction); return true }
+    if (interaction.commandName === 'valider-date-seance-manuel') { await this.manualSessionValidationCommand(interaction as ChatInputCommandInteraction); return true }
     if (interaction.commandName === 'preparer-prochaine-mission') { await this.prepareNextMissionCommand(interaction as ChatInputCommandInteraction); return true }
     if (interaction.commandName === 'modifier-date-seance') { await this.modifyPlanningCommand(interaction as ChatInputCommandInteraction); return true }
     if (interaction.commandName === 'relancer-date-seance') { await this.remindPlanningCommand(interaction as ChatInputCommandInteraction); return true }
@@ -250,6 +258,7 @@ export class DiscordCommandsService {
         '`/relancer-date-seance` — depuis le fil, relance séparément les joueurs sans réponse et ceux encore sur ❓.',
         '`/analyse-date-seance` — analyse les réactions, propose les groupes puis permet leur publication.',
         '`/valider-date-seance numero:2` — valide et annonce une proposition de groupes dans le fil de planification.',
+        '`/valider-date-seance-manuel` — secours manuel : choisit une date et exactement 4 joueurs sans dépendre de l’analyse.',
         '`/preparer-prochaine-mission` — crée, après aperçu et confirmation, un fil dans #objectif-prochaine-mission pour une séance validée.',
         '`/help-admin` — affiche cette aide.',
       ].join('\n'),
@@ -905,6 +914,82 @@ export class DiscordCommandsService {
     }
   }
 
+  private fullPlanningDateLabel(isoDate: string): string | null {
+    const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(isoDate)
+    if (!match) return null
+    const year = Number(match[1]); const month = Number(match[2]); const day = Number(match[3])
+    const date = new Date(Date.UTC(year, month - 1, day, 12))
+    if (date.getUTCFullYear() !== year || date.getUTCMonth() !== month - 1 || date.getUTCDate() !== day) return null
+    const offset = (date.getUTCDay() + 6) % 7
+    return `${PLANNING_DAYS[offset].label} ${day} ${PLANNING_MONTHS[month - 1]} ${year}`
+  }
+
+  private isoDateFromFullPlanningLabel(label: string): string | null {
+    const match = /^(Lundi|Mardi|Tercredi|Mercredi|Jeudi|Vendredi|Samedi|Dimanche) (\d{1,2}) (\p{L}+) (\d{4})$/u.exec(label)
+    if (!match) return null
+    const month = PLANNING_MONTHS.findIndex(candidate => candidate === match[3].toLocaleLowerCase('fr')) + 1
+    if (!month) return null
+    const iso = `${match[4]}-${String(month).padStart(2, '0')}-${String(Number(match[2])).padStart(2, '0')}`
+    const expected = this.fullPlanningDateLabel(iso)
+    if (!expected) return null
+    const normalized = label.replace(/^Mercredi /, 'Tercredi ')
+    return expected === normalized ? iso : null
+  }
+
+  private manualSessionPlayerSelection(commandId: string): { content: string; components: Array<ActionRowBuilder<UserSelectMenuBuilder>> } {
+    const pending = this.pendingManualSessionValidations.get(commandId)!
+    const select = new UserSelectMenuBuilder()
+      .setCustomId(`pf2-manual-session:players:${commandId}`)
+      .setPlaceholder('Choisis exactement 4 joueurs')
+      .setMinValues(4)
+      .setMaxValues(4)
+    return {
+      content: `**Validation manuelle — ${pending.selectedDate?.label ?? 'date inconnue'}**\nChoisis exactement 4 membres Discord.`,
+      components: [new ActionRowBuilder<UserSelectMenuBuilder>().addComponents(select)],
+    }
+  }
+
+  private async manualSessionValidationCommand(interaction: ChatInputCommandInteraction): Promise<void> {
+    if (!this.isAdmin(interaction)) {
+      await interaction.reply({ content: 'Cette commande est réservée aux administrateurs du serveur.', ephemeral: true })
+      return
+    }
+    const channel = interaction.channel
+    if (!channel?.isThread()) {
+      await interaction.reply({ content: 'Utilise cette commande dans le fil de planification concerné.', ephemeral: true })
+      return
+    }
+    const starter = await channel.fetchStarterMessage({ force: true }).catch(() => null)
+    const planning = starter && this.parsePlanningMessage(starter.content)
+    if (!planning) {
+      await interaction.reply({ content: 'Ce fil n’est pas rattaché à une planification reconnue.', ephemeral: true })
+      return
+    }
+
+    const commandId = interaction.id
+    this.pendingManualSessionValidations.set(commandId, {
+      requesterId: interaction.user.id,
+      channelId: channel.id,
+      planningMonday: planning.monday,
+    })
+    const options: Array<{ label: string; value: string; emoji: string }> = PLANNING_DAYS
+      .filter(day => planning.selectedDays.includes(day.offset))
+      .map(day => {
+        const iso = this.addDays(planning.monday, day.offset)
+        return { label: `${day.label} ${this.planningDate(iso)}`, value: iso, emoji: day.emoji }
+      })
+    options.push({ label: 'Autre date…', value: 'custom', emoji: '📅' })
+    const select = new StringSelectMenuBuilder()
+      .setCustomId(`pf2-manual-session:date:${commandId}`)
+      .setPlaceholder('Choisis la date de la séance')
+      .addOptions(options)
+    await interaction.reply({
+      content: '**Validation manuelle de séance**\nChoisis d’abord la date. Les dates de la planification sont proposées, mais tu peux en saisir une autre.',
+      components: [new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(select)],
+      ephemeral: true,
+    })
+  }
+
   private parsePublishedSessionProposals(content: string): Array<Array<{ label: string; players: string[] }>> | null {
     if (!content.startsWith('**Groupes possibles pour la prochaine semaine**')) return null
     const proposals: Array<Array<{ label: string; players: string[] }>> = []
@@ -1060,7 +1145,7 @@ export class DiscordCommandsService {
   }
 
   private parseConfirmedMissionGroups(content: string): Array<{ label: string; userIds: string[] }> | null {
-    if (!/^✅ \*\*Séances validées — proposition \d+\*\*/.test(content)) return null
+    if (!/^✅ \*\*Séances validées — (?:proposition \d+|validation manuelle)\*\*/.test(content)) return null
     const groups: Array<{ label: string; userIds: string[] }> = []
     let current: { label: string; userIds: string[] } | null = null
     for (const line of content.split('\n').slice(1)) {
@@ -1163,8 +1248,8 @@ export class DiscordCommandsService {
           planning.selectedDays.includes(candidate.offset)
           && group.label === `${candidate.label} ${this.planningDate(this.addDays(planning.monday, candidate.offset))}`
         )
-        if (!day) throw new Error(`La date « ${group.label} » ne correspond pas à la planification du fil.`)
-        const isoDate = this.addDays(planning.monday, day.offset)
+        const isoDate = day ? this.addDays(planning.monday, day.offset) : this.isoDateFromFullPlanningLabel(group.label)
+        if (!isoDate) throw new Error(`La date « ${group.label} » ne correspond pas à la planification du fil et n’est pas une date manuelle valide.`)
         const title = `Séance ${isoDate.slice(8, 10)}/${isoDate.slice(5, 7)}`
         const parentContent = [
           `**Séance du ${group.label} ${isoDate.slice(0, 4)}**`,
@@ -1895,6 +1980,26 @@ export class DiscordCommandsService {
   }
 
   async handleComponent(interaction: StringSelectMenuInteraction): Promise<boolean> {
+    if (interaction.customId.startsWith('pf2-manual-session:date:')) {
+      const commandId = interaction.customId.slice('pf2-manual-session:date:'.length)
+      const pending = this.pendingManualSessionValidations.get(commandId)
+      if (!pending) { await interaction.reply({ content: 'Cette validation manuelle a expiré. Relance `/valider-date-seance-manuel`.', ephemeral: true }); return true }
+      if (interaction.user.id !== pending.requesterId || interaction.channelId !== pending.channelId) { await interaction.reply({ content: 'Cette validation appartient à un autre administrateur ou à un autre fil.', ephemeral: true }); return true }
+      const value = interaction.values[0]
+      if (value === 'custom') {
+        const modal = new ModalBuilder().setCustomId(`pf2-manual-session:custom-date:${commandId}`).setTitle('Date manuelle de séance')
+        const dateInput = new TextInputBuilder().setCustomId('date').setLabel('Date (YYYY-MM-DD)').setStyle(TextInputStyle.Short).setPlaceholder('2026-10-19').setRequired(true)
+        modal.addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(dateInput))
+        await interaction.showModal(modal)
+        return true
+      }
+      const label = PLANNING_DAYS.map(day => ({ day, iso: this.addDays(pending.planningMonday, day.offset) }))
+        .find(item => item.iso === value)?.day
+      if (!label) { await interaction.reply({ content: 'Date invalide. Relance la commande.', ephemeral: true }); return true }
+      pending.selectedDate = { iso: value, label: `${label.label} ${this.planningDate(value)}` }
+      await interaction.update(this.manualSessionPlayerSelection(commandId))
+      return true
+    }
     if (interaction.customId.startsWith('pf2-mission:select:')) {
       const commandId = interaction.customId.slice('pf2-mission:select:'.length)
       const pending = this.pendingMissionThreads.get(commandId)
@@ -2041,6 +2146,34 @@ export class DiscordCommandsService {
   }
 
   async handleUserSelect(interaction: UserSelectMenuInteraction): Promise<boolean> {
+    if (interaction.customId.startsWith('pf2-manual-session:players:')) {
+      const commandId = interaction.customId.slice('pf2-manual-session:players:'.length)
+      const pending = this.pendingManualSessionValidations.get(commandId)
+      if (!pending || !pending.selectedDate) { await interaction.reply({ content: 'Cette validation manuelle a expiré. Relance `/valider-date-seance-manuel`.', ephemeral: true }); return true }
+      if (interaction.user.id !== pending.requesterId || interaction.channelId !== pending.channelId) { await interaction.reply({ content: 'Cette validation appartient à un autre administrateur ou à un autre fil.', ephemeral: true }); return true }
+      const userIds = [...new Set(interaction.values)]
+      if (userIds.length !== 4) { await interaction.reply({ content: 'Choisis exactement 4 joueurs.', ephemeral: true }); return true }
+      const content = [
+        '✅ **Séances validées — validation manuelle**',
+        '',
+        `**${pending.selectedDate.label}**`,
+        ...userIds.map(id => `- <@${id}>`),
+        '',
+        'Source : validation manuelle',
+        '',
+        'Merci de valider avec un 👍 !',
+      ].join('\n')
+      this.pendingSessionValidations.set(commandId, { requesterId: pending.requesterId, channelId: pending.channelId, content, userIds })
+      this.pendingManualSessionValidations.delete(commandId)
+      const confirm = new ButtonBuilder().setCustomId(`pf2-date-confirm:publish:${commandId}`).setLabel('Confirmer et publier').setStyle(ButtonStyle.Success)
+      const cancel = new ButtonBuilder().setCustomId(`pf2-date-confirm:cancel:${commandId}`).setLabel('Annuler').setStyle(ButtonStyle.Secondary)
+      await interaction.update({
+        content: `**Aperçu privé — validation manuelle**\nVérifie la date et les 4 joueurs. Les joueurs ne seront notifiés qu’après confirmation.\n\n${content}`,
+        components: [new ActionRowBuilder<ButtonBuilder>().addComponents(confirm, cancel)],
+        allowedMentions: { parse: [] },
+      })
+      return true
+    }
     if (!interaction.customId.startsWith('pf2-player-draw:players:')) return false
 
     const pending = this.pendingPlayerDraws.get(interaction.customId)
@@ -2077,6 +2210,18 @@ export class DiscordCommandsService {
   }
 
   async handleModal(interaction: ModalSubmitInteraction): Promise<boolean> {
+    if (interaction.customId.startsWith('pf2-manual-session:custom-date:')) {
+      const commandId = interaction.customId.slice('pf2-manual-session:custom-date:'.length)
+      const pending = this.pendingManualSessionValidations.get(commandId)
+      if (!pending) { await interaction.reply({ content: 'Cette validation manuelle a expiré. Relance `/valider-date-seance-manuel`.', ephemeral: true }); return true }
+      if (interaction.user.id !== pending.requesterId || interaction.channelId !== pending.channelId) { await interaction.reply({ content: 'Cette validation appartient à un autre administrateur ou à un autre fil.', ephemeral: true }); return true }
+      const iso = interaction.fields.getTextInputValue('date').trim()
+      const label = this.fullPlanningDateLabel(iso)
+      if (!label) { await interaction.reply({ content: 'Date invalide. Utilise le format YYYY-MM-DD.', ephemeral: true }); return true }
+      pending.selectedDate = { iso, label }
+      await interaction.reply({ ...this.manualSessionPlayerSelection(commandId), ephemeral: true })
+      return true
+    }
     if (interaction.customId.startsWith('pf2-quest-finish:')) {
       const pending = this.pendingQuestCompletions.get(interaction.customId)
       if (!pending) {

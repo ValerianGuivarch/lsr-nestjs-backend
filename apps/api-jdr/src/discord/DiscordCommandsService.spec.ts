@@ -1409,6 +1409,71 @@ describe('DiscordCommandsService', () => {
     expect(planning.parsePlanningMessage(message)).toEqual({ monday: '2026-10-05', selectedDays: [0, 2, 6] })
   })
 
+  it('validates one session manually from a planning date and four Discord users', async () => {
+    const service = new DiscordCommandsService({} as never, {} as never)
+    const planningMessage = (service as unknown as { planningMessage: (monday: string, selectedDays: number[]) => string })
+      .planningMessage('2026-10-19', [0, 2])
+    const reply = jest.fn().mockResolvedValue(undefined)
+    const channel = { id: 'planning-thread', isThread: () => true, fetchStarterMessage: jest.fn().mockResolvedValue({ content: planningMessage }) }
+
+    await expect(service.handle({
+      commandName: 'valider-date-seance-manuel', id: 'manual-command', user: { id: 'admin' },
+      memberPermissions: { has: jest.fn().mockReturnValue(true) }, channel, reply,
+    } as never)).resolves.toBe(true)
+
+    const initial = reply.mock.calls[0][0]
+    expect(initial.ephemeral).toBe(true)
+    expect(initial.content).toContain('Validation manuelle de séance')
+    const dateMenu = initial.components[0].toJSON().components[0]
+    expect(dateMenu.custom_id).toBe('pf2-manual-session:date:manual-command')
+    expect(dateMenu.options.map((option: { value: string }) => option.value)).toEqual(['2026-10-19', '2026-10-21', 'custom'])
+
+    const dateUpdate = jest.fn().mockResolvedValue(undefined)
+    await expect(service.handleComponent({
+      customId: 'pf2-manual-session:date:manual-command', values: ['2026-10-19'],
+      user: { id: 'admin' }, channelId: 'planning-thread', update: dateUpdate, reply: jest.fn(),
+    } as never)).resolves.toBe(true)
+    const playerMenu = dateUpdate.mock.calls[0][0].components[0].toJSON().components[0]
+    expect(playerMenu.min_values).toBe(4)
+    expect(playerMenu.max_values).toBe(4)
+
+    const previewUpdate = jest.fn().mockResolvedValue(undefined)
+    const userIds = ['100000000000000001', '100000000000000002', '100000000000000003', '100000000000000004']
+    await expect(service.handleUserSelect({
+      customId: 'pf2-manual-session:players:manual-command', values: userIds,
+      user: { id: 'admin' }, channelId: 'planning-thread', update: previewUpdate, reply: jest.fn(),
+    } as never)).resolves.toBe(true)
+    const preview = previewUpdate.mock.calls[0][0]
+    expect(preview.content).toContain('**Aperçu privé — validation manuelle**')
+    expect(preview.content).toContain('**Lundi 19 octobre**')
+    for (const id of userIds) expect(preview.content).toContain(`<@${id}>`)
+
+    const react = jest.fn().mockResolvedValue(undefined)
+    const followUp = jest.fn().mockResolvedValue({ react })
+    await expect(service.handleButton({
+      customId: 'pf2-date-confirm:publish:manual-command', user: { id: 'admin' }, channelId: 'planning-thread',
+      update: jest.fn().mockResolvedValue(undefined), followUp, reply: jest.fn(),
+    } as never)).resolves.toBe(true)
+    const published = followUp.mock.calls[0][0]
+    expect(published.content).toContain('✅ **Séances validées — validation manuelle**')
+    expect(published.allowedMentions).toEqual({ users: userIds })
+    expect(react).toHaveBeenCalledWith('👍')
+
+    const parser = service as unknown as { parseConfirmedMissionGroups: (content: string) => Array<{ label: string; userIds: string[] }> | null }
+    expect(parser.parseConfirmedMissionGroups(published.content)).toEqual([{ label: 'Lundi 19 octobre', userIds }])
+  })
+
+  it('accepts a valid custom date label for a manual session', () => {
+    const service = new DiscordCommandsService({} as never, {} as never)
+    const helper = service as unknown as {
+      fullPlanningDateLabel: (iso: string) => string | null
+      isoDateFromFullPlanningLabel: (label: string) => string | null
+    }
+    expect(helper.fullPlanningDateLabel('2026-10-21')).toBe('Tercredi 21 octobre 2026')
+    expect(helper.isoDateFromFullPlanningLabel('Tercredi 21 octobre 2026')).toBe('2026-10-21')
+    expect(helper.isoDateFromFullPlanningLabel('Jeudi 21 octobre 2026')).toBeNull()
+  })
+
   it('validates the requested proposal from the latest published bot analysis in the planning thread', async () => {
     const service = new DiscordCommandsService({} as never, {} as never)
     const planning = (service as unknown as { planningMessage: (monday: string, days: number[]) => string })
