@@ -73,8 +73,8 @@ Les éléments suivants peuvent encore changer :
 2. **Corvan et son groupe ont réellement vaincu Karzoug** dans la continuité de fond.
 3. **Les Chasseurs de l'Étoile ont réellement accompli Shattered Star puis Return of the Runelords.**
 4. **Corvan est le seul survivant de son groupe après 4719.**
-5. **Eylysia est une fondatrice historique méfiante envers la Société, pas une simple mentor blasée.**
-6. **Le groupe d'Eylysia est réellement compétent et doit pouvoir rivaliser avec les PJ.**
+5. **Elysye est une fondatrice historique méfiante envers la Société, pas une simple mentor blasée.**
+6. **Le groupe d'Elysye est réellement compétent et doit pouvoir rivaliser avec les PJ.**
 7. **Caelan est un druide**, pas un magus et pas un “droïde”.
 8. **Sivri est investigatrice**, **Tareth est guerrier niveau 3**, **Lyssara est magicienne niveau 2 orientée enchantement / illusion**.
 9. **Eliza Petulengro est toujours membre du Décemvirat**, mais publiquement démasquée.
@@ -94,7 +94,7 @@ Les éléments suivants peuvent encore changer :
 La campagne ne doit pas présenter la Société des Éclaireurs comme purement bonne ou purement corrompue. Plusieurs personnages historiques incarnent des rapports différents à l'institution :
 
 - **Corvan** croit encore suffisamment en elle pour vouloir la réparer de l'intérieur.
-- **Eylysia** pense qu'aucune institution ne mérite d'obéissance aveugle.
+- **Elysye** pense qu'aucune institution ne mérite d'obéissance aveugle.
 - **Grand Maître Torche** a poussé cette critique jusqu'à la guerre clandestine et la trahison ouverte.
 - **Eliza Petulengro** représente une tentative de réforme institutionnelle et de responsabilité publique.
 

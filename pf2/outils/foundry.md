@@ -301,3 +301,40 @@ Contrôle runtime du monde **Les Eclaireurs** le 18 octobre 2026 : Foundry 14.36
 `Token Action HUD Core` 2.1.1 est installé et actif, mais aucun adaptateur PF2e correspondant n'est installé dans le répertoire de modules observé. Le Core est une bibliothèque générique et dépend de Socketlib. Comme PF2e HUD est déjà la solution de HUD retenue, **Token Action HUD Core est un candidat à désactivation/suppression après vérification qu'aucun autre module local ne le requiert**.
 
 Les packs de cartes et modules de contenu restent à traiter au cas par cas : leur activation n'est pas une décision architecturale durable et ne doit pas être figée ici.
+
+---
+
+## 13. Audit des scènes et des imports
+
+> **Observation datée du 18 octobre 2026 :** à revalider avant toute correction, car Foundry et les packages peuvent avoir évolué depuis.
+
+### 13.1 Accès et méthode
+
+L'audit peut être mené sans écrire dans le monde :
+
+- utiliser en priorité le **Foundry REST Relay** pour lire les documents Foundry (Scenes, Actors, Folders, Tiles, Walls, Tokens, Lights, Notes, etc.) ;
+- utiliser l'accès direct au volume Foundry sous `/data` pour vérifier l'existence réelle des assets ;
+- **ne pas modifier directement les bases LevelDB pendant que Foundry tourne**.
+
+Le diagnostic utile compare toujours trois niveaux :
+
+1. ce que le scénario/package indique devoir exister ;
+2. les fichiers réellement présents sur disque ;
+3. les documents Foundry réellement créés et les assets qu'ils référencent.
+
+Un `background = null` n'est pas une panne à lui seul : une scène peut volontairement utiliser des Tiles. Il faut donc examiner l'ensemble background / tiles / murs / tokens / vignette avant de conclure.
+
+### 13.2 Cas témoin : Sentence d'Extinction, volume 1
+
+Lors du contrôle, le monde contenait environ **212 Scenes**. Pour `extinction-curse-volume-1`, les **13 fichiers de carte** attendus existaient bien sur disque dans le dossier du scénario, et **13 documents Scene** portaient les flags du scénario.
+
+**Circus Camp** et **Big Top** étaient au moins partiellement exploitables (vignette et tokens présents).
+
+En revanche, les onze autres scènes observées — **Abberton**, les trois niveaux d'**Erran Tower**, **Goldenlaws Church**, **Hawfton Mill**, **Hermitage of Blessed Lightning**, les deux niveaux de **Lindell Barn**, **Odlin's Orchard** et **The Mad Mug** — possédaient leur document Scene, leurs dimensions et leur `scenarioMapKey`, mais pas de background ni de Tiles ; elles étaient également vides de murs et de tokens dans l'état observé.
+
+Le signal est donc celui d'un **import partiel** : les images ont été extraites, les Scenes créées, mais les images n'ont pas été reliées aux documents Foundry. Ce cas doit servir de témoin pour l'audit global avant de corriger l'importeur ou les scènes.
+
+### 13.3 Fonction Map Library abandonnée
+
+L'ancienne fonctionnalité du **PF2e Val Toolkit** qui transformait un token/PNJ en accès à une bibliothèque de cartes (`map-library`) a été volontairement abandonnée et supprimée du module. Elle ne doit pas être réintroduite lors d'un futur nettoyage du Toolkit.
+

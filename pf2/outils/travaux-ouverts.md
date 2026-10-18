@@ -199,3 +199,20 @@ Cas de validation recommandé pour les PDF : **Agents d’Absalom**, car il comb
 
 
 ---
+
+---
+
+## Audit Foundry à poursuivre
+
+Voir le diagnostic détaillé dans [Foundry et portraits](foundry.md#13-audit-des-scènes-et-des-imports).
+
+Ordre retenu pour la prochaine reprise :
+
+1. terminer l'inventaire **en lecture seule** des Scenes et de leur hiérarchie de dossiers ;
+2. comparer, pour chaque import, manifeste/flags, assets sur disque et documents Foundry ;
+3. classer les anomalies certaines : scène vide, image présente mais non reliée, asset manquant, mauvais chemin, import partiel, doublon ou incohérence de grille ;
+4. utiliser **Sentence d'Extinction volume 1** comme cas témoin, plusieurs Scenes ayant été créées sans image attachée malgré la présence des fichiers ;
+5. seulement après validation de l'audit, sauvegarder puis corriger par l'API / le pipeline de package plutôt que par écriture directe dans LevelDB.
+
+L'objectif est d'abord de distinguer les défauts de données ponctuels d'un défaut systémique de l'importeur.
+

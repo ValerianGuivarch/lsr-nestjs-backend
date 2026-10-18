@@ -12,17 +12,19 @@ Corvan sert de **mentor majeur** aux PJ actuels. Il représente l'ancien aventur
 
 Sa philosophie n'est pas celle d'un recruteur qui cherche uniquement des prodiges. Il peut accepter des profils très hétérogènes, parfois étranges, à condition de voir leur potentiel et leur capacité à grandir ensemble.
 
-Ce positionnement crée un contraste direct avec **Eylysia**, qui choisit au contraire un petit groupe de postulants déjà extraordinairement compétents.
+Ce positionnement crée un contraste direct avec **Elysye**, qui choisit au contraire un petit groupe de postulants déjà extraordinairement compétents.
 
 ---
 
 ---
 
-## Eylysia
+## Elysye
+
+> **Graphie de continuité retenue :** la campagne emploie volontairement **Elysye** afin de la distinguer visuellement d’**Eliza Petulengro**. Ne pas normaliser automatiquement ce nom vers une autre graphie canonique.
 
 ### Identité et passé
 
-**Eylysia** est une gnome et l'une des figures fondatrices de la Société des Éclaireurs. Elle appartient à l'histoire très ancienne de l'organisation et fut liée au tout premier Décemvirat.
+**Elysye** est une gnome et l'une des figures fondatrices de la Société des Éclaireurs. Elle appartient à l'histoire très ancienne de l'organisation et fut liée au tout premier Décemvirat.
 
 Au fil des siècles, elle développe une méfiance profonde envers la manière dont la Société conserve, dissimule ou publie des connaissances dangereuses. Elle découvre également des formes de corruption au sommet de l'institution.
 
@@ -44,7 +46,7 @@ Elle peut considérer qu'une organisation n'a jamais droit à la loyauté automa
 
 ### Apparence physique
 
-Eylysia est une **gnome** aux cheveux **turquoise / bleu-vert pâle**, aujourd'hui facilement imaginables comme délavés presque vers le gris-bleu. Les représentations utilisées jusqu'ici la montrent fine, avec un visage anguleux, des sourcils très marqués et une apparence d'ancienne exploratrice.
+Elysye est une **gnome** aux cheveux **turquoise / bleu-vert pâle**, aujourd'hui facilement imaginables comme délavés presque vers le gris-bleu. Les représentations utilisées jusqu'ici la montrent fine, avec un visage anguleux, des sourcils très marqués et une apparence d'ancienne exploratrice.
 
 Dans notre adaptation visuelle, elle peut porter des vêtements d'exploration anciens, issus de plusieurs époques, souvent réparés plutôt que remplacés. Cela contraste volontairement avec l'apparence très soignée de ses recrues.
 
@@ -52,18 +54,18 @@ Dans notre adaptation visuelle, elle peut porter des vêtements d'exploration an
 
 ---
 
-## Eylysia et Grand Maître Torche
+## Elysye et Grand Maître Torche
 
-Eylysia et **Grand Maître Torche** ne sont pas simplement “alliés” au sens confortable du terme. Leur point commun est une **méfiance très profonde envers le Décemvirat** et l'idée que la Société peut devenir dangereuse quand elle protège davantage son secret que sa mission.
+Elysye et **Grand Maître Torche** ne sont pas simplement “alliés” au sens confortable du terme. Leur point commun est une **méfiance très profonde envers le Décemvirat** et l'idée que la Société peut devenir dangereuse quand elle protège davantage son secret que sa mission.
 
-Eylysia découvre des problèmes au sommet de la Société et, lorsqu'elle estime ne pas pouvoir faire confiance à l'institution, elle préfère transmettre certaines informations à Torche. Elle ne le considère pas comme un maître ni comme quelqu'un de moralement irréprochable ; elle le considère comme quelqu'un capable d'agir quand l'institution refuse de regarder ses propres fautes.
+Elysye découvre des problèmes au sommet de la Société et, lorsqu'elle estime ne pas pouvoir faire confiance à l'institution, elle préfère transmettre certaines informations à Torche. Elle ne le considère pas comme un maître ni comme quelqu'un de moralement irréprochable ; elle le considère comme quelqu'un capable d'agir quand l'institution refuse de regarder ses propres fautes.
 
 La logique résumée est :
 
-- **Eylysia** apporte la mémoire historique, les secrets, les preuves et une conscience aiguë de la corruption possible.
+- **Elysye** apporte la mémoire historique, les secrets, les preuves et une conscience aiguë de la corruption possible.
 - **Torche** sait transformer l'information en action clandestine, réseau, pression politique ou opération de terrain.
 
-Eylysia n'est pas une dupe de Torche. Elle accepte qu'il soit dangereux et manipulateur tout en considérant que certaines de ses critiques du Décemvirat sont justes.
+Elysye n'est pas une dupe de Torche. Elle accepte qu'il soit dangereux et manipulateur tout en considérant que certaines de ses critiques du Décemvirat sont justes.
 
 ---
 
@@ -98,11 +100,11 @@ Dans la continuité de campagne, cette crise est aussi le moment où :
 
 Cette répartition est une adaptation narrative, à ne pas confondre avec une affirmation que les sources canoniques distribuent exactement les rôles ainsi.
 
-### Vahlo Huovar, Eylysia et 4719
+### Vahlo Huovar, Elysye et 4719
 
-Torche et Eylysia sont liés à la découverte de **Vahlo Huovar**, infiltré au cœur de la Société et révélé comme menace majeure / chevalier sépulcre lié à la Voie des Murmures.
+Torche et Elysye sont liés à la découverte de **Vahlo Huovar**, infiltré au cœur de la Société et révélé comme menace majeure / chevalier sépulcre lié à la Voie des Murmures.
 
-Lors des événements de **Passing the Torch**, les secrets du Décemvirat, le rôle d'Eylysia et les accusations contre Torche convergent. La crise contribue aux grandes réformes de la Société autour de 4719-4720.
+Lors des événements de **Passing the Torch**, les secrets du Décemvirat, le rôle d'Elysye et les accusations contre Torche convergent. La crise contribue aux grandes réformes de la Société autour de 4719-4720.
 
 ### Héritage
 
@@ -158,7 +160,7 @@ Style : profils hétérogènes, potentiel, croissance, loyauté critique mais r�
 
 ### Équipe rivale
 
-Mentor : **Eylysia**.
+Mentor : **Elysye**.
 
 Style : élite sélectionnée, très forte dès le départ, méfiance institutionnelle, résultats avant cérémonial.
 

@@ -77,6 +77,41 @@ Une règle de continuité est déjà fixée : connaître plusieurs milieux n'en 
 
 ---
 
+## Forces de sécurité d'Absalom — structure retenue
+
+> **Adaptation de campagne.** Le détail des factions effectivement présentes reste une donnée métier de `pf2.sqlite`. Cette section conserve seulement la structure éditoriale à utiliser dans le lore et le wiki. Le regroupement **Agents d'Absalom** est une simplification pratique et ne doit pas être présenté comme le nom canonique d'une police municipale unique.
+
+### Gardes de district
+
+Pour la campagne, la police quotidienne d'Absalom est représentée comme un ensemble de gardes locales regroupées sous **Agents d'Absalom** :
+
+- **Garde de la Falaise** — Quartier du Précipice ;
+- **Manteaux gris** — Cour des Ascendants ;
+- **Garde de Paille** — Quartier de la Monnaie ;
+- **Garde du Port** — Docks ;
+- **Garde éclairée** — Quartier Sage ;
+- **Garde de la Poterne** — Porte Est ;
+- **Garde des Percées** — Porte Ouest ;
+- **Soleils sans sommeil** — Quartier Étranger ;
+- **Guet du District** — Quartier du Lierre ;
+- **Garde des Lotus** — Quartier du Pétale ;
+- **Guilde des Récupérateurs** — Les Flaques, avec un fonctionnement plus informel que les autres gardes.
+
+La **Section de la Falaise** créée comme sous-faction intermédiaire est abandonnée et ne doit plus être utilisée : lorsque les Éclaireurs coopèrent avec ce quartier, ils travaillent directement avec la **Garde de la Falaise**.
+
+### Forces générales et spécialisées
+
+Ces forces ne sont pas de simples gardes de quartier et restent distinctes de la hiérarchie précédente :
+
+- **Les Guetteurs** — unité d'élite compétente à l'échelle de la ville pour les affaires sensibles et les menaces dépassant un district ;
+- **Première Garde** — force militaire tournée surtout vers la défense d'Absalom contre les attaques extérieures ;
+- **Chevaucheurs de Vagues** — défense maritime et patrouilles montées sur hippocampes ;
+- **Varlokkur** — unité spécialisée dans les menaces magiques et surnaturelles.
+
+---
+
+---
+
 ## Agents d'Absalom — points de lore retenus
 
 Même si la campagne peut être encore à jouer dans la continuité réelle, les grands éléments étudiés sont :

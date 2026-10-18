@@ -1,4 +1,4 @@
-# L'équipe rivale d'Eylysia
+# L'équipe rivale d'Elysye
 
 [← Index de la bible](../../UNIVERS.md)
 
@@ -6,15 +6,15 @@
 
 ---
 
-## Eylysia comme mentor et création du groupe rival
+## Elysye comme mentor et création du groupe rival
 
 ### Principe
 
-Dans notre adaptation 4720, Eylysia n'est pas revenue avec enthousiasme pour servir comme mentor. La Société lui impose ou lui demande fortement de participer à la reconstruction institutionnelle.
+Dans notre adaptation 4720, Elysye n'est pas revenue avec enthousiasme pour servir comme mentor. La Société lui impose ou lui demande fortement de participer à la reconstruction institutionnelle.
 
 Elle accepte de former une équipe à une condition : **elle choisit elle-même ses postulants**.
 
-Contrairement à Corvan, qui regarde surtout le potentiel, Eylysia sélectionne des recrues qu'elle considère déjà comme **anormalement compétentes**, notamment parce qu'elle n'a aucune envie de passer des mois à leur apprendre les bases.
+Contrairement à Corvan, qui regarde surtout le potentiel, Elysye sélectionne des recrues qu'elle considère déjà comme **anormalement compétentes**, notamment parce qu'elle n'a aucune envie de passer des mois à leur apprendre les bases.
 
 Le résultat est un **groupe rival des PJ**, volontairement agaçant mais réellement très fort. Ils ne sont pas “des prétentieux qui ne valent rien” : leur compétence doit rendre la rivalité crédible.
 
@@ -33,7 +33,7 @@ Les portraits seront ajoutés plus tard manuellement.
 
 ---
 
-## Groupe rival d'Eylysia
+## Groupe rival d'Elysye
 
 ### 11.1. Caelan Voss
 
@@ -65,7 +65,7 @@ Exemple :
 
 > « Je n'aurais pas choisi cette méthode, mais je dois reconnaître qu'elle a fonctionné. »
 
-Eylysia l'a choisi pour son intelligence et sa rigueur, mais aussi parce qu'elle veut voir s'il comprend un jour qu'**avoir raison n'est pas la même chose qu'être un bon Éclaireur**.
+Elysye l'a choisi pour son intelligence et sa rigueur, mais aussi parce qu'elle veut voir s'il comprend un jour qu'**avoir raison n'est pas la même chose qu'être un bon Éclaireur**.
 
 ---
 
@@ -77,7 +77,7 @@ Eylysia l'a choisi pour son intelligence et sa rigueur, mais aussi parce qu'elle
 
 Petite gobeline extrêmement méthodique, spécialisée dans l'observation, l'infiltration, les pièges, les indices et les raisonnements improbables.
 
-Elle contourne volontiers les règles sans techniquement les enfreindre. Eylysia adore ce trait.
+Elle contourne volontiers les règles sans techniquement les enfreindre. Elysye adore ce trait.
 
 #### Apparence physique
 
@@ -107,7 +107,7 @@ C'est probablement la rivale la plus susceptible de devenir sincèrement amie av
 
 Tareth est le pilier martial de l'équipe et le membre volontairement plus fort au début.
 
-Lors d'une épreuve de recrutement, il a abandonné l'objectif principal pour aller secourir deux candidats qu'il croyait réellement en danger, alors qu'il savait que cela pouvait lui coûter sa place. C'est cela qui a convaincu Eylysia de le sélectionner.
+Lors d'une épreuve de recrutement, il a abandonné l'objectif principal pour aller secourir deux candidats qu'il croyait réellement en danger, alors qu'il savait que cela pouvait lui coûter sa place. C'est cela qui a convaincu Elysye de le sélectionner.
 
 Le problème est qu'en apprenant pourquoi il avait été choisi, Tareth s'est convaincu qu'il possède une sorte de **qualité héroïque naturelle**.
 
@@ -123,7 +123,7 @@ Courageux, protecteur, sincèrement bon, mais **terriblement satisfait de sa pro
 
 Dès qu'une personne est réellement en danger, son arrogance disparaît et son instinct protecteur prend le dessus.
 
-Eylysia peut se moquer régulièrement de son besoin de jouer au héros officiel du groupe.
+Elysye peut se moquer régulièrement de son besoin de jouer au héros officiel du groupe.
 
 ---
 
@@ -155,7 +155,7 @@ Charismatique, élégante, souriante, elle parle souvent comme si elle connaissa
 
 Contrairement à Caelan, elle **sait parfaitement qu'elle est agaçante et s'en amuse**.
 
-Eylysia lui impose une limite stricte : ne pas utiliser sa magie mentale sur ses alliés sans leur accord. Pour Eylysia, la manière dont quelqu'un utilise les enchantements révèle très vite son véritable caractère.
+Elysye lui impose une limite stricte : ne pas utiliser sa magie mentale sur ses alliés sans leur accord. Pour Elysye, la manière dont quelqu'un utilise les enchantements révèle très vite son véritable caractère.
 
 ---
 
@@ -172,7 +172,7 @@ Le groupe doit donner immédiatement l'impression d'une **promotion d'élite** :
 
 Ils doivent être agaçants, mais **pas ridicules**. Au début, ils peuvent objectivement sembler plus impressionnants que les PJ.
 
-Eylysia, de son côté, refuse de les idéaliser. Une bonne réplique qui définit son rapport au groupe :
+Elysye, de son côté, refuse de les idéaliser. Une bonne réplique qui définit son rapport au groupe :
 
 > « Non. Ce ne sont pas mes prodiges. Ce sont les quatre candidats les moins susceptibles de mourir dans les six premiers mois. Ne leur répétez pas, ils sont déjà suffisamment pénibles. »
 

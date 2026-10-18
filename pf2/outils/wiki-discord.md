@@ -21,19 +21,33 @@ Lors de la création ou mise à jour d’une séance :
 5. un thread de commentaires est créé avec un nouveau message ;
 6. l’identifiant Discord est enregistré dans la séance.
 
-### 11.2 Commandes
+### 11.2 Récapitulatifs et séances
 
-Le bot contient notamment :
+Le code courant n'utilise plus l'ancien `/recap` pair-à-pair.
+
+Commandes principales :
 
 ```text
-/ping
-/rec
-/recap
+/recap-pjs
+/recap-seance
+/debut-seance
+/fin-seance
 ```
 
-`/rec` et `/recap` comptent les participations aux séances.
+`/recap-pjs` construit un récapitulatif à partir des séances publiées :
 
-Quand Foundry est indisponible, un cache des noms d’Actors peut être utilisé.
+- les joueurs n'ayant joué aucune séance sont exclus ;
+- pour chaque joueur, le bot affiche le nombre total de séances jouées ;
+- seuls ses personnages ayant effectivement joué sont listés ;
+- chaque personnage affiche son niveau Foundry et son nombre de séances ;
+- lorsque le niveau théorique dérivé de la progression est supérieur au niveau réellement appliqué dans Foundry, le décalage est signalé sous la forme « niveau à faire ».
+
+`/recap-seance` est une commande d'administration : elle sélectionne une séance existante et reconstruit l'annonce prévue avec les participants, la date de début de mission et le nombre de lancers de progression qui étaient dus avant cette séance.
+
+`/debut-seance` utilise le même calcul de lancers de progression dans l'annonce finale. Le code courant affiche bien la liste des personnages et les lancers, mais **n'affiche pas encore leur niveau dans cette annonce** ; c'est le reliquat connu de la demande initiale.
+
+Quand Foundry est indisponible, le bot peut se replier sur le cache des noms d'Actors pour certaines opérations. Les comparaisons de niveau nécessitent toutefois les données de progression Foundry disponibles via le Relay.
+
 
 ---
 
@@ -63,6 +77,14 @@ URL publique documentée :
 ```text
 https://wiki.l7r.fr
 ```
+
+### 15.1 Journaux non révélés
+
+Le comportement attendu et implémenté est volontairement asymétrique :
+
+- un joueur normal peut voir qu'un journal existe, mais ne reçoit pas le texte tant qu'il n'est pas révélé ;
+- un administrateur ouvrant directement un journal non révélé voit l'avertissement **« Journal non révélé »** puis le texte complet ;
+- MediaWiki transmet pour cet accès une clé interne au backend ; cette clé reste une configuration serveur et ne doit jamais être exposée au navigateur ou documentée en clair.
 
 Les anciennes documentations décrivant le wiki comme hors flux sont obsolètes. Discord reste un canal de diffusion/synchronisation des résumés courts, pas une source de vérité métier. `pf2_media` n’est pas la source canonique des portraits PNJ.
 

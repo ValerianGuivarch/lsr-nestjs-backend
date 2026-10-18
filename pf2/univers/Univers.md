@@ -7,7 +7,7 @@ Répertoire des ressources narratives transverses. Les fichiers thématiques res
 ## Personnes, groupes et institutions
 
 - [Société des Éclaireurs, mentors, Décemvirat et factions](../univers/Societe-des-Eclaireurs.md)
-- [Équipe rivale d'Eylysia](Equipe-rivale.md)
+- [Équipe rivale d'Elysye](Equipe-rivale.md)
 - [Héros historiques](Heros-historiques.md)
 - [Héritage des campagnes PF1](Heritage-PF1.md)
 
