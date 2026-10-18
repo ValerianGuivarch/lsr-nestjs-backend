@@ -95,7 +95,7 @@ Pour la campagne, la police quotidienne d'Absalom est représentée comme un ens
 - **Soleils sans sommeil** — Quartier Étranger ;
 - **Guet du District** — Quartier du Lierre ;
 - **Garde des Lotus** — Quartier du Pétale ;
-- **Guilde des Récupérateurs** — Les Flaques, avec un fonctionnement plus informel que les autres gardes.
+- **Fangeux** — Les Flaques ; guet local commandé par **Haigen Topkick**, également nomarque du quartier et maître de la guilde des récupérateurs. La guilde des récupérateurs reste distincte du guet, même si Haigen contrôle les deux.
 
 La **Section de la Falaise** créée comme sous-faction intermédiaire est abandonnée et ne doit plus être utilisée : lorsque les Éclaireurs coopèrent avec ce quartier, ils travaillent directement avec la **Garde de la Falaise**.
 
@@ -133,3 +133,12 @@ Même si la campagne peut être encore à jouer dans la continuité réelle, les
 Le document *Chronique des Agents de la Falaise* sert de récapitulatif narratif, mais n'est pas automatiquement historique dans la continuité réelle depuis la clarification de l'objectif des chroniques.
 
 ---
+
+
+## Flaques — juridiction et Cartel du Sel
+
+Les PJ restent des **Éclaireurs** coopérant avec la **Garde de la Falaise** : leur statut ne leur donne pas automatiquement une compétence policière dans tous les quartiers. Dans les **Flaques**, le guet local est celui des **Fangeux**. Sans mandat couvrant ce quartier, arrestations, perquisitions ou saisies peuvent donc provoquer un conflit de juridiction avec Haigen Topkick.
+
+> **Canon / information MJ :** le **Cartel du Sel** est dirigé par **dame Seichya de la maison Tevineg** et utilise la **Saumure**, prison privée des Flaques, comme façade et point de transit. **Haigen et Seichya sont deux pouvoirs distincts** : ils ont un accord précaire de non-ingérence, mais leurs organisations ne se confondent pas.
+
+Ne pas transformer automatiquement ces informations MJ en connaissances des PJ : le front actif et ce qu'ils ont effectivement découvert restent suivis dans [Fronts de campagne](../campagnes/Fronts-de-campagne.md).
