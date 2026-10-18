@@ -52,3 +52,7 @@ Les index PF2 et les fiches sous `pf2/` forment la base de connaissances durable
 Ne pas recréer de fichiers « déplacé vers… », de copies historiques ni de répertoires d’archives Markdown : les anciennes versions se retrouvent dans les commits Git. Les rapports d’audit datés ne deviennent pas des sources de vérité concurrentes.
 
 Pour capitaliser une discussion : enrichir la fiche existante, conserver les décisions utiles et liens actifs, supprimer les doublons sans garder des pointeurs de compatibilité vides. Si un ancien texte et une fiche récente divergent, privilégier la décision documentée la plus récente et signaler les contradictions non résolues.
+
+## Source complémentaire : discussions privées Discord des PJ
+
+Le script local `scripts/pf2-discord-pj-read.py` permet au MJ de consulter en lecture seule les salons des PJ associés dans SQLite. Voir [Wiki / Discord](pf2/outils/wiki-discord.md). Les échanges peuvent enrichir la liste des contacts, mais ne remplacent ni la continuité validée, ni le Background éditable dans SQLite/wiki, ni Foundry pour la mécanique. Ne jamais promouvoir une proposition de salon en fait canonique sans validation MJ.

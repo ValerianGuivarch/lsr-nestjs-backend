@@ -20,3 +20,7 @@ Les **douze PJ** disposent chacun d'une fiche de continuité. Les biographies et
 | Zab | [Zab](pf2/pj/PJ-Zab.md) |
 
 Conserver des champs facultatifs pour le **joueur**, les **liens wiki/Google Docs/Discord/ChatGPT** et les **choix envisagés**. Les éléments à ranger plus tard vont dans la section `À trier`, sans leur attribuer une certitude qu'ils n'ont pas. [Ancienne synthèse de groupe](pf2/pj/Personnages-joueurs.md) (cosmologie et arc Camus).
+
+## Contacts et salons Discord des personnages
+
+Pour compléter et vérifier les contacts des douze PJ, consulter les conversations de leurs salons Discord via le lecteur local en lecture seule décrit dans [Wiki / Discord](pf2/outils/wiki-discord.md). Recouper les messages avec le Background et les Notes du Wiki/SQLite, ainsi que la continuité MJ des fichiers `pf2/pj/`. Toute nouvelle information à enregistrer requiert validation du MJ.

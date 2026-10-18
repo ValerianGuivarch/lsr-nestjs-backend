@@ -89,7 +89,7 @@ La section **Personnages joueurs** (`/pf2-mj/players`) regroupe les fiches PJ as
 
 La source métier reste SQLite : `pf2_player_identity`, `pf2_wiki_account_link`, `pf2_player_character_owner`, `pf2_player_character_profile`, `pf2_foundry_wiki_pj_link` et `pf2_player_discord_channel`. Chaque PJ peut aussi référencer une discussion ChatGPT via `pf2_player_chatgpt_link` (URL facultative, aucune conversation récupérée automatiquement). L'association d'un salon concerne un **PJ**, pas une personne : un joueur peut posséder plusieurs PJ et donc plusieurs salons.
 
-Les salons ont été retrouvés via l'API Discord du bot dans la catégorie « PJs ». **Le bot ne dispose actuellement pas des droits de lecture des messages de ces salons (HTTP 403)** ; la page fournit des raccourcis, pas une consultation ni une analyse de leur historique. Côté Foundry, l'UUID de l'Actor est conservé comme référence fiable ; aucun lien navigateur direct vers un Actor n'est garanti par le système actuel.
+Les salons de PJ sont enregistrés dans SQLite. Un lecteur local, limité aux salons autorisés, permet désormais de consulter leurs messages via le bot déjà configuré. Le wiki fournit toujours les liens vers les salons. Côté Foundry, l'UUID de l'Actor est conservé comme référence fiable ; aucun lien navigateur direct vers un Actor n'est garanti par le système actuel.
 
 ### 15.1 Journaux non révélés
 
@@ -171,3 +171,20 @@ La source éditable est désormais **SQLite** : `pf2_player_character_background
 L'onglet **Background** et le nouvel onglet **Notes**, situé avant Contacts, sont éditables par le propriétaire connecté. Les comptes wiki ayant le droit administrateur MediaWiki `delete` accèdent à la liste complète des PJ dans Mes personnages et peuvent éditer les deux champs. Le serveur Wiki transmet cette habilitation via son API interne authentifiée ; un joueur non administrateur ne peut accéder qu'aux personnages qui lui sont associés.
 
 Les données restent stockées en base, et les fiches Markdown ne sont plus une source de synchronisation des Backgrounds. En cas de mise à jour de background, modifier la fiche Wiki, pas les Markdown. Une sauvegarde SQLite a été réalisée avant import.
+
+
+## Lecture locale en lecture seule des salons Discord PJ (octobre 2026)
+
+Le mini-PC dispose du script versionné `scripts/pf2-discord-pj-read.py` ; utilisation depuis la racine du dépôt :
+
+```bash
+python3 scripts/pf2-discord-pj-read.py Eryn --limit 100
+```
+
+Il résout le **salon autorisé** du PJ via `pf2_player_discord_channel` et `pf2_player_character_profile`, puis lit les messages par l'API Discord, dans le conteneur `lsr-app-api-jdr-1` et avec son token de bot existant. SQLite est ouvert en lecture seule, aucun token n'est enregistré dans le script, aucun nouveau port n'est exposé et aucune écriture Discord n'est exécutée.
+
+L'option `--limit` accepte 1 à 500 messages (100 par défaut). Le JSON inclut les identifiants des messages, leurs auteurs, leurs dates, leur contenu et l'éventuel identifiant du message parent. La lecture dépend des droits effectifs du bot et ne garantit pas que tout l'historique du salon a été récupéré.
+
+**Sécurité :** exécuter uniquement sur un mini-PC autorisé, avec accès aux volumes SQLite et au conteneur Docker. Aucune authentification locale supplémentaire n'a été ajoutée ; les droits Docker dépassent ceux du script. Sur le mini-PC, conserver/restaurer le mode de fichier `700` si nécessaire (Git ne conserve que le bit exécutable).
+
+**Pour les fiches PJ :** consulter les discussions afin d'identifier contacts, proches et informations nouvelles, puis les recouper avec les Backgrounds et Notes éditables du wiki/SQLite et les fiches de continuité MJ `pf2/pj/`. Un message Discord n'établit pas à lui seul un fait canonique. Aucun contenu privé n'est commité ; toute modification durable exige l'accord préalable du MJ selon `PF2_WORKSPACE.md`.
