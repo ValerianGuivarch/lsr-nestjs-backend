@@ -1,4 +1,4 @@
-# Eryn / Elyn
+# Eryn
 
 [← Index des PJ](../../PJ.md) · [Continuité de l'univers](../../UNIVERS.md)
 
@@ -6,7 +6,7 @@
 
 ## Identité et références
 
-- **Personnage :** Eryn / Elyn
+- **Personnage :** Eryn
 - **Joueur :** à renseigner
 - **Lien wiki :** à renseigner, facultatif
 - **Lien Google Docs :** à renseigner, facultatif

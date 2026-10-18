@@ -164,12 +164,10 @@ Le pipeline de packages est maintenant utilisé en production. La dette restante
 
 ---
 
-## Background des personnages joueurs (octobre 2026)
+## Background et Notes des personnages joueurs (octobre 2026)
 
-Les douze fiches sous `pf2/pj/PJ-*.md` possèdent une section `## Background — récit du personnage (visible par le joueur)`. **Elle seule peut être servie au Wiki** : les autres rubriques contiennent de la continuité et potentiellement des secrets MJ.
+La source éditable est désormais **SQLite** : `pf2_player_character_background` et `pf2_player_character_notes`, toutes deux indexées par `npc_id`. Les douze récits initiaux ont été importés dans la première table ; les notes commencent vides. Les fiches `pf2/pj/PJ-*.md` conservent la continuité MJ et un lien vers `Special:MesPersonnages/npc_pj_...`, sans recopier le récit visible.
 
-Le service `PlayerCodexService` lit cette section pour chaque PJ possédé par l'utilisateur Wiki authentifié. Si le fichier est absent du système sur lequel tourne l'API, il conserve l'ancien comportement de lecture en base SQLite (`pf2_player_character_background`). La réponse expose `backgroundSource: markdown | database`. Lorsque Markdown est disponible, l'interface Wiki affiche fidèlement les retours à la ligne et désactive l'éditeur local pour éviter deux versions concurrentes. Le stockage SQLite historique n'est pas effacé.
+L'onglet **Background** et le nouvel onglet **Notes**, situé avant Contacts, sont éditables par le propriétaire connecté. Les comptes wiki ayant le droit administrateur MediaWiki `delete` accèdent à la liste complète des PJ dans Mes personnages et peuvent éditer les deux champs. Le serveur Wiki transmet cette habilitation via son API interne authentifiée ; un joueur non administrateur ne peut accéder qu'aux personnages qui lui sont associés.
 
-**Déploiement requis :** déployer la nouvelle API et les ressources MediaWiki, et rendre le dossier `pf2/pj` du dépôt accessible à l'API, soit par ses chemins de travail habituels, soit par la variable `PF2_PJ_BACKGROUND_ROOT` qui pointe **directement** vers le répertoire contenant les `PJ-*.md`. Sans cet accès, le Wiki continue de montrer le contenu en base, pas les nouveaux textes GitHub. Aucun secret MJ ne doit être copié dans cette section publique.
-
-**Vérification :** connecté au Wiki comme propriétaire d'un PJ, ouvrir *Mes personnages* → personnage → *Background*, vérifier le libellé « Texte du personnage synchronisé depuis le dépôt GitHub » et comparer les premières et dernières lignes avec le Markdown GitHub. Vérifier qu'un autre utilisateur ne peut pas voir ce background privé.
+Les données restent stockées en base, et les fiches Markdown ne sont plus une source de synchronisation des Backgrounds. En cas de mise à jour de background, modifier la fiche Wiki, pas les Markdown. Une sauvegarde SQLite a été réalisée avant import.
