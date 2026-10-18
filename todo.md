@@ -6,6 +6,7 @@
 
 ## Pathfinder 2
 
+- [ ] Supprimer la page web **`/pf2-mj/journaux`**, son entrée de navigation et le routage associé : les journaux d'Absalom seront désormais produits comme **images** à partir du guide `pf2/outils/journaux.md`, puis publiés sur Discord / le wiki selon le besoin.
 - [ ] Poursuivre l'audit des scénarios Pathfinder Society pour créer uniquement les **campagnes transverses réellement utiles** qui manquent encore au catalogue ; éviter les regroupements artificiels de deux scénarios simplement parce qu'ils partagent un métaplot lointain.
 - [ ] Normaliser les **anciens imports Foundry** dans l'arborescence dérivée du catalogue (`MJ/Campagnes officielles`, `Campagnes transverses`, `Campagnes transverses courtes`, `Scénarios individuels`) et supprimer les anciens dossiers `MJ/Divers/Autres` uniquement une fois qu'ils sont vides et les documents relocalisés.
 - [ ] Enrichir progressivement les packages avec les **portraits/tokens présents dans les PDF** et gérer les identités d'affichage secrètes sans révéler prématurément le vrai nom d'un antagoniste ou d'un imposteur.
