@@ -279,10 +279,11 @@ export class PlayerCodexService {
     const character = await this.characterDto(row) as Record<string, unknown>
     const backgrounds = await this.db.query('SELECT content FROM pf2_player_character_background WHERE npc_id = ? LIMIT 1', [row.npc_id]) as Array<{ content: string }>
     const contacts = await this.db.query('SELECT contact_npc_id AS contactNpcId FROM pf2_player_character_contact WHERE player_npc_id = ? ORDER BY created_at, contact_npc_id', [row.npc_id]) as Array<{ contactNpcId: string }>
+    const markdownBackground = await readPlayerMarkdownBackground(row.display_name)
     return {
       ...character,
-      background: await readPlayerMarkdownBackground(row.display_name) ?? backgrounds[0]?.content ?? '',
-      backgroundSource: (await readPlayerMarkdownBackground(row.display_name)) !== null ? 'markdown' : 'database',
+      background: markdownBackground ?? backgrounds[0]?.content ?? '',
+      backgroundSource: markdownBackground !== null ? 'markdown' : 'database',
       contacts: (await Promise.all(contacts.map(contact => this.privateContactDto(contact.contactNpcId)))).filter(Boolean),
     }
   }
