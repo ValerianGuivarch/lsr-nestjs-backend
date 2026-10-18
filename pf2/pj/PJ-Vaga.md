@@ -42,3 +42,15 @@ Aucune décision supplémentaire documentée ici. Les informations du joueur et 
 - **Sirka Venn** : Éclaireur ayant enquêté sur la Ménagerie Céleste et aidé Vaga et d'autres artistes à s'enfuir ; lien direct avec la Société.
 - **Maîtresse Dusklight** dirige la Ménagerie Céleste, charismatique en public mais abusive envers artistes et animaux.
 - Le **Cirque des Merveilles Vagabondes** réunit notamment **Myron “Thunder” Stendhal**, **le Professeur**, **Elizia Pumperknickle** (avec Mister Tickles) et **Mordaine la Magicienne**.
+
+---
+
+## Apports du récit original fourni
+
+Né dans un village **tripkee** isolé de l'Étendue du **Mwangi**, Vaga grandit entre traditions communautaires, forêt, escrime, acrobatie et goût du spectacle. **Mère N'Kali**, chamane influente, prétend lire et nouer les fils du futur ; la véracité littérale de ce pouvoir n'est pas démontrée par cette seule croyance. Le village subit le prélèvement périodique de tributs exigés au nom de **Mzali**. La captivité de sa sœur **Sali** est la blessure centrale de son histoire.
+
+**Intrigues personnelles :** chercher Sali et comprendre le rôle des autorités de **Walkena** ; confronter son passé de spectacle et de contrainte dans la **Ménagerie Céleste** dirigée par **Dusklight** ; décider de la place qu'il souhaite donner au cirque, à la liberté et à la Société des Éclaireurs.
+
+**Continuité de campagne :** Vaga a pu contribuer à la fuite d'artistes aidés par **Sirka Venn**, mais il **n'est pas resté durablement** au Cirque des Merveilles Vagabondes. Le retour éventuel de la Ménagerie à Absalom pendant le Festival Radieux est une **préparation validée**, et le recroisement avec Dusklight **n'est pas un événement joué**.
+
+**Secrets et questions ouvertes :** le sort actuel de Sali, l'étendue du don supposé de N'Kali et les conséquences de la fuite demeurent à préciser sans les confondre avec le scénario publié d'*Extinction Curse*.
