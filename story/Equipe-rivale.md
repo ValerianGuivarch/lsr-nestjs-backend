@@ -37,25 +37,17 @@ Les portraits seront ajoutés plus tard manuellement.
 
 ### 11.1. Caelan Voss
 
-**Classe finale : Druide, niveau 2.**
-
-Une confusion de dictée avait fait apparaître “droïde”, mais la version correcte et verrouillée est bien **druide**.
+**Classe actuelle : Mage, niveau 2 — spécialisation à préciser.**
 
 #### Concept
 
-Caelan a l'apparence d'un jeune mage académique impeccable : bien habillé, posture droite, matériel soigneusement entretenu, très civilisé. Le contraste recherché est précisément qu'il **ne ressemble pas au cliché du druide couvert de feuilles, de peaux et de branchages**.
-
-Pour lui, être lié à la nature n'implique absolument aucune obligation esthétique. Il peut trouver le cliché du druide sauvage presque vulgaire.
-
-Une phrase qui résume bien le personnage :
-
-> « La maîtrise des forces naturelles n'impose aucune obligation vestimentaire. »
+Caelan a l'apparence d'un jeune mage académique impeccable : bien habillé, posture droite, matériel arcanique soigneusement entretenu, très civilisé. Son identité magique précise reste à définir.
 
 #### Apparence physique
 
 Humain d'une vingtaine d'années, **grand et mince**, silhouette droite presque raide. **Cheveux noirs coupés court et toujours impeccablement coiffés**, yeux gris clair, visage fin et sévère aux traits réguliers.
 
-Sa tenue est élégante et sobre. Aucun besoin d'arme visible. Quelques éléments naturels peuvent exister — une ou deux plantes, un motif végétal discret, une composante druidique raffinée — mais rien qui permette de comprendre au premier coup d'œil qu'il est druide.
+Sa tenue est élégante et sobre, avec des accessoires arcaniques discrets et parfaitement entretenus. Aucun besoin d'arme visible.
 
 #### Personnalité
 
