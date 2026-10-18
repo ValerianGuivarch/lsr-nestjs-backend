@@ -1,31 +1,38 @@
-# PF2 — point d'entrée des discussions et artefacts
+# Espace de travail PF2 — connaissances durables
 
-Ce document oriente les discussions ChatGPT et les interventions de documentation PF2. **Ne pas confondre fichiers narratifs, documents techniques et données runtime.**
+Point d'entrée commun aux discussions ChatGPT, à la continuité narrative et à la documentation technique.
 
-## Routage
+## Orientation
 
-| Catégorie ChatGPT | Point d'entrée | Documents associés |
-| --- | --- | --- |
-| PF2 Campagnes | [Campagnes](story/Campagnes.md) | [Fronts](story/Fronts-de-campagne.md), [Lectures](story/Campagnes-et-lectures.md) |
-| PF2 PJ | [Index des PJ](story/Personnages-joueurs.md) | [Bible](story.md), fiches `story/PJ-*.md` |
-| PF2 Univers | [Univers](story/Univers.md) | [Bible](story.md), PNJ/lieux/factions en SQLite |
-| PF2 Outils | [Architecture actuelle](RECAP.md) | [Précédent état daté](RECAP-PF2-2026-09-09.md), [Wiki et Foundry](docs/wiki-foundry.md) |
-| PF2 Aide | [Bible](story.md), [Architecture](RECAP.md) | selon le sujet, aucune obligation d'artefact |
-| PF2 Divers | ce fichier | déterminer ensuite la destination permanente |
-| PF2 Old | aucune source principale | archiver seulement après capitalisation |
+| Dossier ChatGPT | Index de référence |
+| --- | --- |
+| PF2 PJ | [PJ.md](PJ.md) |
+| PF2 Campagnes | [CAMPAGNES.md](CAMPAGNES.md) |
+| PF2 Univers | [UNIVERS.md](UNIVERS.md) |
+| PF2 Outils | [OUTILS.md](OUTILS.md) |
+| PF2 Aide | [AIDE.md](AIDE.md) |
+| PF2 Divers | Identifier d'abord le domaine principal et le bon index |
+| PF2 Old | Discussions archivées après capitalisation |
 
-## Politique documentaire
+## Sources de vérité
 
-1. Commencer par identifier la source de vérité : lore dans `story.md` / `story/*.md`, architecture dans `RECAP.md`, données métier dans `pf2.sqlite`, objets mécaniques dans Foundry, documents physiques dans `PF2_LIBRARY_ROOT`. Un Markdown ne remplace pas l'état réel de ces systèmes.
-2. Conserver canon Pathfinder, adaptation validée, proposition provisoire et chronique de lecture comme quatre statuts distincts.
-3. Éviter les duplications : une information détaillée dans un seul fichier, des liens dans les index. Une information concernant un PJ et une campagne peut être reliée dans les deux sens.
-4. Avant toute proposition : consulter le contenu le plus récent sur GitHub, signaler les divergences documentaires ; ne pas écraser une décision plus récente.
-5. Avant **toute écriture**, relire la version courante des fichiers touchés et comparer les différences. En cas d'éditions concurrentes, reconstituer le patch depuis la dernière version, sans écrasement ni suppression.
-6. Exiger l'accord du MJ avant l'écriture. Préférer une modification minimale et traçable ; ne pas convertir une hypothèse en fait acquis.
-7. À la fin d'une discussion : lister les décisions, découvertes, informations non encore capitalisées et tâches ouvertes ; proposer les fichiers concernés.
-8. La migration des douze PJ a extrait les résumés du dossier `story/Personnages-joueurs.md` vers des fiches `story/PJ-*.md`. Les informations détaillées provenant des fiches Google Docs/Foundry restent à intégrer après vérification.
-9. Les chapitres narratifs doivent rester directement sous `story/` tant que le lecteur `apps/web-misc/src/pf2-mj/Lore.tsx` ne prend pas en charge les sous-dossiers.
+- **Continuité narrative et choix validés :** `pf2/pj/`, `pf2/campagnes/`, `pf2/univers/`.
+- **Données métier (catalogue, PNJ, lieux, factions, séances, associations) :** `pf2.sqlite` ; les Markdown ne constituent pas un doublon de cette base.
+- **Personnages et objets mécaniques réellement présents :** Foundry.
+- **Fichiers documentaires physiques :** `PF2_LIBRARY_ROOT` / `pf2-data`.
+- **Architecture et comportement technique :** code et configuration courants, synthétisés par [OUTILS.md](OUTILS.md).
 
-## Démarrage d'une nouvelle discussion
+## Écriture et continuité
 
-Lire cet index puis uniquement les fichiers pertinents pour la tâche. Préférer les fichiers au contexte des anciennes conversations. Pour les données en évolution, vérifier les sources runtime plutôt que supposer les Markdown à jour.
+1. Lire cet index puis les documents liés au sujet. Ne pas supposer qu'une ancienne discussion est une source de vérité.
+2. Distinguer canon Pathfinder, adaptation validée, hypothèse / proposition et chronique de lecture ; ne jamais inventer une décision.
+3. Écrire une information détaillée une seule fois, puis créer des liens depuis les autres index ou fiches.
+4. Les fiches PJ couvrent l'histoire et les choix envisagés ou validés ; la mécanique effective reste dans Foundry.
+5. Les fiches de campagne distinguent préparation, événements réellement joués et chroniques exploratoires. Ne pas déclarer terminée une campagne faute d'échanges récents.
+6. Avant toute modification GitHub : demander l'accord du MJ, puis relire les dernières versions des fichiers concernés ; fusionner sans écraser les contributions concurrentes.
+7. Signaler les conflits entre documentation et état réel. Les rapports datés ne constituent pas une description garantie du présent.
+8. Après un travail important, proposer la capitalisation des informations durables et des décisions non encore documentées.
+
+## Compatibilité
+
+Les anciens `story.md`, `story/*.md` et `RECAP.md` sont conservés transitoirement ou remplacés par des pointeurs ; l'intégralité du RECAP précédent est archivée dans [pf2/outils/archive/RECAP-2026-09-27.md](pf2/outils/archive/RECAP-2026-09-27.md).
