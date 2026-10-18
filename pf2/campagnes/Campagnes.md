@@ -15,6 +15,7 @@ Ce document est un aiguillage : une **campagne réellement jouée** n'est pas la
 
 - [Campagne du Cartel du Sel](Campagne-Cartel-du-Sel.md) — campagne maison construite progressivement ; sa première partie, issue de *La Vengeance de la rue Rose*, est terminée et l'enquête porte désormais sur le Cartel lui-même.
 - [Sentence d'Extinction / Extinction Curse](Campagne-Sentence-d-Extinction.md) — adaptation en préparation : Vaga, Ménagerie Céleste à Absalom pour le Festival Radieux, relais possible à Escadar et dilemme des orbes.
+- [Campagne HD100](Campagne%20HD100.md) — adaptation à venir de *L'Âge des Cendres* pour une table ouverte ; les décisions de préparation seront capitalisées progressivement dans cette fiche.
 
 Créer **une fiche `pf2/campagnes/Campagne-<Nom>.md` par campagne suivie en détail** au fur et à mesure de l'audit des discussions, et la référencer ici. Chaque fiche distinguera : concept, statut confirmé, séances/événements réellement joués, décisions validées, PNJ et lieux liés, pistes ouvertes, propositions non retenues et liens vers les sources.
 
