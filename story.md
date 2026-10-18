@@ -1,6 +1,6 @@
 # STORY.md — Index de la bible de continuité PF2
 
-> **Point d'entrée unique pour le lore de campagne.** Les informations détaillées sont rangées dans le dossier [`story/`](story/). Ce fichier explique où chercher et comment maintenir la continuité ; il ne doit plus redevenir un grand document monolithique. Pour l'état technique de l'infrastructure, voir [RECAP.md](RECAP.md).
+> **Point d'entrée unique pour le lore de campagne.** Les informations détaillées sont rangées dans le dossier [`story/`](story/). Ce fichier explique où chercher et comment maintenir la continuité ; il ne doit plus redevenir un grand document monolithique. Pour l'état technique de l'infrastructure, voir [RECAP.md](RECAP.md). Pour le routage des discussions ChatGPT et des artefacts, voir [PF2_WORKSPACE.md](PF2_WORKSPACE.md).
 
 ## Comment utiliser cette bible
 
@@ -19,13 +19,15 @@ Quatre statuts doivent rester distincts :
 
 | Sujet | Fichier de référence |
 | --- | --- |
+| Index des campagnes et leurs fiches | [Campagnes](story/Campagnes.md) |
+| Index des PNJ, factions, lieux et lore transverse | [Univers](story/Univers.md) |
 | Principes de la campagne, continuité, statuts des informations | [Cadre et continuité](story/Cadre-et-continuite.md) |
 | Intrigues commencées, pistes et campagnes actuellement ouvertes | [Fronts de campagne](story/Fronts-de-campagne.md) |
 | Corvan, Veilleurs de la Côte Perdue, Chasseurs de l'Étoile | [Héros historiques](story/Heros-historiques.md) |
 | Repères historiques thassiloniens et Nouvelle Thassilon | [Chronologie thassilonienne](story/Chronologie-thassilon.md) |
 | Société des Éclaireurs, mentors, Décemvirat, Torche, Eylysia | [Société des Éclaireurs](story/Societe-des-Eclaireurs.md) |
 | Groupe rival d'Eylysia | [Équipe rivale](story/Equipe-rivale.md) |
-| Les douze PJ et leurs intrigues personnelles | [Personnages joueurs](story/Personnages-joueurs.md) |
+| Les douze PJ et leurs fiches individuelles | [Personnages joueurs](story/Personnages-joueurs.md) |
 | Labyrinthe de la Route Ouverte, portails et Anneau d'Alséta | [Labyrinthe et portails](story/Labyrinthe-et-portails.md) |
 | Pointesable, Nualia et les Sept Fléaux | [Pointesable](story/Pointesable.md) |
 | **Absalom : ville, presse, Agents de la Falaise, pègre et guildes de voleurs** | [Absalom](story/Absalom.md) |
