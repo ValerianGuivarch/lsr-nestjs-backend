@@ -284,3 +284,14 @@ Le contrôle **MassEdit Preset** observé dans la barre de scène appartient au 
 
 Avant d'ajouter une fonctionnalité Toolkit qui pourrait recouvrir sélection, édition en masse ou presets de tokens, vérifier d'abord ce que Mass Edit couvre déjà et décider explicitement s'il doit être conservé dans ce rôle.
 
+---
+
+## Carte de Golarion — sécurité et suivi des quêtes Discord
+
+**Fonctionnalités et arbitrages déjà validés :** forum Discord `journal-de-quetes` comme source des titres/statuts ; synchronisation vers SQLite toutes les cinq minutes ; associations lieu ↔ quête par ID de fil ; un marqueur pour plusieurs quêtes ; lieu de quête masqué par défaut seulement quand toutes les quêtes associées sont terminées, avec une option de réaffichage ; lieux PJ créés, modifiés et supprimés **sans validation MJ**. Les lieux personnalisés PJ sont distincts des favoris et des lieux de quête. Voir le [référentiel technique](../../docs/pf2/discord-quest-map-sync.md) ; ne pas dupliquer ici les données SQLite.
+
+**Travaux et vérifications non clos :**
+
+1. **Contrôle d'accès réel aux endpoints carte.** Les routes communautaires autorisent des mutations sur les fiches `map_origin='pj'`, mais ne disposent pas d'authentification permettant d'identifier l'appelant ; les routes MJ historiques ont une limite comparable. La confiance envers les PJ ne signifie pas que des visiteurs anonymes doivent pouvoir écrire. Vérifier et décider le mécanisme d'identité/autorisation côté API tout en préservant le partage immédiat entre PJ, sans modération MJ.
+2. **Couverture géographique des quêtes.** Lors du point daté du 14 octobre 2026, deux fils Discord ne possédaient aucun lieu : « La contrebande de golems de chair » et « Le tueur d'esclaves » (terminé). Leurs positions n'ont pas été validées dans la discussion. Réexaminer les données en production avant de créer des repères : ne pas présumer que cette liste est encore actuelle et ne pas affecter une quête sur la seule proximité des noms.
+3. **Vérification fonctionnelle PJ/MJ.** Après toute évolution de la carte, vérifier l'affichage des listes Favoris/Lieux de quête, le masquage et la réouverture des quêtes terminées, les titres renommés sur Discord (requièrent synchronisation puis rechargement de page), ainsi que la superposition des noms de lieux avec le plan illustré d'Absalom. La curation des districts imprimés sur le plan doit être faite en SQLite ; ne pas masquer les textes de tous les POI au zoom.
