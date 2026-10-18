@@ -166,7 +166,7 @@ Style : élite sélectionnée, très forte dès le départ, méfiance institutio
 
 Composition :
 
-- **Caelan Voss** — Humain, Druide 2.
+- **Caelan Voss** — Humain, Mage 2, spécialisation à préciser.
 - **Sivri “Siv” Nymm** — Gobeline, Investigatrice 2.
 - **Tareth Olan** — Nephilim, Guerrier 3.
 - **Lyssara Vel** — Demi-elfe, Magicienne 2, magie mentale / illusions.
