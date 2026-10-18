@@ -247,3 +247,40 @@ Ordre retenu pour la prochaine reprise :
 
 L'objectif est d'abord de distinguer les défauts de données ponctuels d'un défaut systémique de l'importeur.
 
+---
+
+## Improvisation Foundry — points ouverts
+
+Les outils décrits dans [Foundry et portraits](foundry.md#15-improvisation-de-séance--groupe-actif-rencontres-et-pnj-rapides) sont opérationnels dans le code courant. Les points suivants restent distincts du fonctionnement validé.
+
+### Vérifications d'interface à faire en situation réelle
+
+Après le correctif 0.42.0, vérifier dans le navigateur Foundry utilisé en partie que :
+
+- les portraits du **Groupe actif** restent bien de petites vignettes et ne sont plus agrandis par un style de Foundry ou d'un module ; si le problème persiste, supprimer simplement les portraits de cette fenêtre plutôt que complexifier davantage le CSS ;
+- la liste de **PNJ rapide** reste défilable avec des vignettes compactes ;
+- l'icône livre de chaque candidat ouvre correctement la fiche du document dans NPC Core.
+
+Ces vérifications concernent uniquement l'ergonomie. Elles ne remettent pas en cause le moteur de recherche, la composition des rencontres ou les statblocks utilisés.
+
+### Piste future : saisie en langage naturel
+
+Une couche de langage naturel ou d'IA peut être étudiée plus tard pour transformer une demande du type « un chef gobelin avec quelques gardes, rencontre sévère » en paramètres structurés.
+
+Cette couche ne doit pas devenir une source de règles ni générer directement des statistiques. Le modèle cible reste :
+
+```text
+intention libre
+→ critères visibles et modifiables
+→ générateur déterministe existant
+→ résultat à valider par le MJ
+```
+
+Aucune implémentation IA de ce workflow n'est considérée comme validée à ce jour.
+
+### Mass Edit / MassEdit Preset
+
+Le contrôle **MassEdit Preset** observé dans la barre de scène appartient au module Mass Edit / Multi Token Edit. Son rôle précis dans le workflow de cette table n'a pas encore été audité.
+
+Avant d'ajouter une fonctionnalité Toolkit qui pourrait recouvrir sélection, édition en masse ou presets de tokens, vérifier d'abord ce que Mass Edit couvre déjà et décider explicitement s'il doit être conservé dans ce rôle.
+
