@@ -110,13 +110,13 @@ Tout push sur `main` déclenche :
 
 ```text
 GitHub Actions
-→ build des 4 images Docker
-→ publication dans GitHub Container Registry (GHCR) avec le SHA exact
+→ build et publication des images Docker avec le SHA exact
 → runner GitHub éphémère dans Tailscale (tag:ci)
 → SSH privé vers le mini-PC
-→ fast-forward du clone de production
+→ mise à jour du checkout de déploiement
 → docker compose pull
-→ docker compose up -d --remove-orphans --wait
+→ démarrage des services cœur avec attente des healthchecks
+→ tentative séparée de démarrage des services Recalbox, non bloquante pour le cœur
 ```
 
 Images :
@@ -187,12 +187,14 @@ deploy/linux/scripts/deploy-main.sh <sha-complet>
 
 Le script :
 
-1. exige la branche `main` ;
-2. refuse des modifications Git suivies localement ;
-3. fetch `main` par HTTPS puis fait un fast-forward ;
-4. vérifie que le HEAD correspond exactement au SHA demandé ;
+1. refuse des modifications Git suivies localement ;
+2. vérifie que la version demandée correspond toujours au `main` distant ;
+3. vérifie que le checkout de déploiement correspond exactement au SHA demandé ;
+4. prépare l'environnement runtime local ;
 5. pull les images GHCR de ce SHA ;
-6. lance Compose avec `--wait`.
+6. démarre avec `--wait` les services cœur `api-jdr`, `api-yeardiary`, `admin`, `map` et `web` ;
+7. tente ensuite de démarrer `api-recalbox` et `web-recalbox` séparément : une indisponibilité Recalbox produit un avertissement mais ne doit pas faire échouer le cœur de l'application ;
+8. rafraîchit ensuite la stack MediaWiki depuis le checkout de déploiement.
 
 **Ne jamais utiliser `git clean`, `git reset --hard` ou une suppression globale sur ce clone sans audit préalable.** Le mini-PC contient des fichiers locaux, sauvegardes et données non suivis qui doivent être préservés.
 
@@ -227,6 +229,8 @@ api-yeardiary http://127.0.0.1:8081/api/v1/diaries
 ```
 
 Le healthcheck YearDiary considère actuellement tout statut inférieur à 500 comme vivant ; un endpoint `/health` dédié serait plus propre à terme.
+
+**Recalbox est un sous-système optionnel.** Le web principal ne dépend pas de `web-recalbox` pour démarrer. Une panne du partage CIFS Recalbox ou de `api-recalbox` ne doit donc pas rendre `l7r.fr` indisponible ; seules les fonctions Recalbox sont alors dégradées.
 
 ### 22.7 Données persistantes
 
