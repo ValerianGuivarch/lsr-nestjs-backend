@@ -46,6 +46,8 @@ Un ancien chef kobold rencontré ou mentionné travaillait pour **Merlokrep**. C
 
 Le meilleur déclencheur personnel actuel est **Vaga**. Un message de son ancien cirque peut ramener le groupe vers le **Circus of Wayward Wonders**, puis reprendre l'ouverture originale autour de **Myron “Thunder” Stendhal**. Le fait que Vaga revienne vers son ancien cirque peut devenir le point qui attire d'autres acteurs vers lui et, par ricochet, vers le groupe.
 
+La **Ménagerie Céleste est actuellement à Absalom pour le Festival Radieux** (décision de préparation validée). Les implications pour Escadar et le déclencheur précis restent à organiser : voir [Sentence d'Extinction](Campagne-Sentence-d-Extinction.md).
+
 ### L'Âge des Cendres
 
 Cette campagne n'est pas pensée comme un démarrage immédiat, car **Citadelle Altaerein / l'Anneau d'Alséta** ouvre rapidement sur un réseau de portails qui peut devenir un tunnel de plusieurs séances et modifier fortement la mobilité de la campagne.
