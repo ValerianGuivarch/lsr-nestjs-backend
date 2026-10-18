@@ -209,6 +209,30 @@ Cas de validation recommandé pour les PDF : **Agents d’Absalom**, car il comb
 
 ---
 
+## Piste future — gestion MJ des scénarios et navigation relationnelle
+
+Cette piste décrit un **objectif fonctionnel**, pas une spécification du code actuel.
+
+Avant toute implémentation, commencer par un audit en lecture seule de l'état réel du projet au moment de la reprise :
+
+- routes et écrans `/pf2-mj` effectivement utilisés ;
+- schéma et contenu SQLite pertinents ;
+- flux Wiki / séances ;
+- relations scénario ↔ entités ;
+- pipeline de préparation / package / Foundry ;
+- fonctionnalités déjà livrées, masquées, remplacées ou devenues inutiles.
+
+À partir de cet état des lieux, réévaluer les besoins suivants sans présumer de leur absence ni de la solution technique :
+
+1. **Séparer clairement les usages MJ** : catalogue de ce qui existe, Journal de ce qui est réellement joué ou planifié, actions utiles avant de jouer, et opérations techniques de préparation/implantation.
+2. **Donner à une campagne ou un scénario une vue de pilotage lisible** : progression, séances, composants jouables, ressources et entités liées, sans mélanger systématiquement la plomberie technique au suivi de jeu.
+3. **Améliorer la navigation relationnelle du monde** : passer facilement d'un scénario à ses PNJ, factions, lieux, événements et inversement ; étudier seulement si nécessaire une notion de **groupe de PNJ** distincte d'une faction et d'une simple relation au scénario.
+4. **Évaluer une vue technique dédiée** pour les opérations de génération, import, package et synchronisation Foundry si ces opérations restent suffisamment complexes pour justifier de les sortir de la fiche de jeu.
+5. **Exploiter les liens entre séances, scénarios et composants** pour automatiser le Journal lorsque cela apporte encore une vraie valeur : progression, dernière séance, prochain composant, participants ou actions de début/fin de partie.
+
+Règle de reprise : **ne pas réutiliser comme plan d'implémentation les anciennes étapes d'une discussion ou d'un audit**. Repartir de l'état courant, conserver ce qui fonctionne et ne proposer que les écarts réellement constatés.
+
+
 ## Audit Foundry à poursuivre
 
 Voir le diagnostic détaillé dans [Foundry et portraits](foundry.md#13-audit-des-scènes-et-des-imports).
