@@ -183,11 +183,21 @@ export default function PnjPage({initialSelectedId}:{initialSelectedId?:string})
     if(!directory.ok)throw new Error("Impossible de charger le répertoire des PNJ.");
     const directoryPayload=await directory.json() as {items?:Pnj[];filters?:{campaigns?:ScenarioFilter[];scenarios?:ScenarioFilter[]}};
     const [factions,lieux,regions,events]=await Promise.all([get("/apil7r/pf2-mj/factions"),get("/apil7r/pf2-mj/lieux"),get("/apil7r/pf2-mj/regions"),get("/apil7r/pf2-mj/evenements")]);
-    setPnjs(Array.isArray(directoryPayload.items)?directoryPayload.items:[]);
+    // Some records legitimately have null optional arrays; normalize before rendering.
+    const safeItems=(Array.isArray(directoryPayload.items)?directoryPayload.items:[]).map(item=>({
+      ...item,
+      factions:Array.isArray(item.factions)?item.factions:[],
+      tags:Array.isArray(item.tags)?item.tags:[],
+      aliases:Array.isArray(item.aliases)?item.aliases:[],
+      lieux:Array.isArray(item.lieux)?item.lieux:[],
+      regions:Array.isArray(item.regions)?item.regions:[],
+      evenements:Array.isArray(item.evenements)?item.evenements:[],
+    }));
+    setPnjs(safeItems);
     setCampaignFilters(Array.isArray(directoryPayload.filters?.campaigns)?directoryPayload.filters.campaigns:[]);
     setScenarioFilters(Array.isArray(directoryPayload.filters?.scenarios)?directoryPayload.filters.scenarios:[]);
     setFactionRefs(factions);setLieuRefs(lieux);setRegionRefs(regions);setEventRefs(events);
-    return Array.isArray(directoryPayload.items)?directoryPayload.items:[];
+    return safeItems;
   };
 
   useEffect(()=>{load().catch(error=>setMessage(error instanceof Error?error.message:String(error)))},[]);
