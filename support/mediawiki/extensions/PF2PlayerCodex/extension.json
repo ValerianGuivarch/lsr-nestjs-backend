@@ -12,13 +12,15 @@
     "ApiPF2PlayerCodexUpdate": "includes/ApiPF2PlayerCodexUpdate.php",
     "ApiPF2PlayerCodexMe": "includes/ApiPF2PlayerCodexMe.php",
     "ApiPF2PlayerCodexMeUpdate": "includes/ApiPF2PlayerCodexMeUpdate.php",
-    "SpecialPF2MyCharacters": "includes/SpecialPF2MyCharacters.php"
+    "SpecialPF2MyCharacters": "includes/SpecialPF2MyCharacters.php",
+    "ApiPF2PlayerCodexMj": "includes/ApiPF2PlayerCodexMj.php"
   },
   "APIModules": {
     "pf2playercodex": "ApiPF2PlayerCodex",
     "pf2playercodexupdate": "ApiPF2PlayerCodexUpdate",
     "pf2playercodexme": "ApiPF2PlayerCodexMe",
-    "pf2playercodexmeupdate": "ApiPF2PlayerCodexMeUpdate"
+    "pf2playercodexmeupdate": "ApiPF2PlayerCodexMeUpdate",
+    "pf2playercodexmj": "ApiPF2PlayerCodexMj"
   },
   "ResourceModules": {
     "ext.pf2playercodex": {

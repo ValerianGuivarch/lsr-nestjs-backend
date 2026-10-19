@@ -221,20 +221,27 @@
 		} );
 	}
 
-	function contactCard( contact, playerNpcId ) {
+	function contactCard( contact, playerNpcId, isMjAdmin ) {
 		var card = document.createElement( 'article' ); card.className = 'pf2-player-card pf2-player-contact-card';
 		if ( contact.wikiPortraitFilename ) { var image = document.createElement( 'img' ); image.src = imageForFilename( contact.wikiPortraitFilename ); image.alt = ''; card.appendChild( image ); }
 		var title = document.createElement( 'strong' ); title.textContent = contact.displayName; card.appendChild( title );
 		if ( !contact.published ) { var badge = document.createElement( 'span' ); badge.className = 'pf2-player-kind private'; badge.textContent = 'Contact privé'; card.appendChild( badge ); }
 		var description = document.createElement( 'p' ); description.className = 'pf2-player-short-description'; description.textContent = contact.shortDescription || ''; card.appendChild( description );
 		if ( contact.wikiPageTitle ) { var open = document.createElement( 'a' ); open.textContent = 'Ouvrir'; open.href = myContactUrl( playerNpcId, contact.npcId ); open.className = 'pf2-my-character-open'; card.appendChild( open ); }
+        if ( isMjAdmin ) {
+            var mjLink = document.createElement( 'a' );
+            mjLink.textContent = 'MJ';
+            mjLink.className = 'pf2-my-character-open pf2-mj-link';
+            mjLink.href = 'https://l7r.fr/pf2-mj/npcs/' + encodeURIComponent( contact.npcId );
+            card.appendChild( mjLink );
+        }
 		return card;
 	}
 
 	function myCharacterUrl( npcId ) { return mw.util.getUrl( 'Special:MesPersonnages/' + npcId ); }
 	function myContactUrl( playerNpcId, contactNpcId ) { return mw.util.getUrl( 'Special:MesPersonnages/' + playerNpcId, { contact: contactNpcId } ); }
 
-	function renderMyCharacterDetail( root, character, canEditDescription ) {
+	function renderMyCharacterDetail( root, character, canEditDescription, isMjAdmin ) {
 		root.textContent = '';
 		var header = document.createElement( 'div' ); header.className = 'pf2-my-character-header';
 		var title = document.createElement( 'h2' ); title.textContent = character.displayName; header.appendChild( title );
@@ -300,13 +307,23 @@
                         } ).catch( function ( error ) { save.disabled = false; mw.notify( errorMessage( error, 'Enregistrement impossible' ), { type: 'error' } ); } );
                     };
                 };
-			} else if ( name === 'contacts' ) {
+			} else if ( name === 'mj' && isMjAdmin ) {
+                var privateView = document.createElement( 'pre' );
+                privateView.className = 'pf2-player-mj-markdown';
+                privateView.textContent = 'Chargement du dossier MJ…';
+                panel.appendChild( privateView );
+                api().get( { action: 'pf2playercodexmj', npcId: character.npcId, format: 'json' } ).then( function ( response ) {
+                    privateView.textContent = response.pf2playercodexmj.markdown || 'Aucune information MJ.';
+                } ).catch( function () {
+                    privateView.textContent = 'Accès MJ refusé ou document indisponible.';
+                } );
+            } else if ( name === 'contacts' ) {
 				if ( !character.contacts || !character.contacts.length ) { var noContact = document.createElement( 'p' ); noContact.className = 'pf2-player-empty'; noContact.textContent = 'Aucun contact privé pour ce personnage.'; panel.appendChild( noContact ); return; }
-				var contacts = document.createElement( 'div' ); contacts.className = 'pf2-player-list'; character.contacts.forEach( function ( contact ) { contacts.appendChild( contactCard( contact, character.npcId ) ); } ); panel.appendChild( contacts );
+				var contacts = document.createElement( 'div' ); contacts.className = 'pf2-player-list'; character.contacts.forEach( function ( contact ) { contacts.appendChild( contactCard( contact, character.npcId, isMjAdmin ) ); } ); panel.appendChild( contacts );
 			}
 		}
 
-		[ [ 'fiche', 'Fiche' ], [ 'background', 'Background' ], [ 'notes', 'Notes' ], [ 'contacts', 'Contacts' ] ].forEach( function ( item ) { var button = document.createElement( 'button' ); button.dataset.tab = item[ 0 ]; button.textContent = item[ 1 ]; button.onclick = function () { showTab( item[ 0 ] ); }; tabs.appendChild( button ); } );
+		( isMjAdmin ? [ [ 'fiche', 'Fiche' ], [ 'background', 'Background' ], [ 'notes', 'Notes' ], [ 'contacts', 'Contacts' ], [ 'mj', 'MJ' ] ] : [ [ 'fiche', 'Fiche' ], [ 'background', 'Background' ], [ 'notes', 'Notes' ], [ 'contacts', 'Contacts' ] ] ).forEach( function ( item ) { var button = document.createElement( 'button' ); button.dataset.tab = item[ 0 ]; button.textContent = item[ 1 ]; button.onclick = function () { showTab( item[ 0 ] ); }; tabs.appendChild( button ); } );
 		showTab( 'fiche' );
 	}
 
@@ -343,7 +360,7 @@
 			}
 			var titleNode = document.querySelector( '.mw-page-title-main' ) || document.querySelector( '#firstHeading' ); if ( titleNode ) { titleNode.textContent = character.displayName; }
 			document.title = character.displayName + ' — ' + mw.config.get( 'wgSiteName' );
-			renderMyCharacterDetail( root, character, data.canEditDescription );
+			renderMyCharacterDetail( root, character, data.canEditDescription, data.isMjAdmin === 1 );
 			return;
 		}
 

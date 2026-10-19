@@ -11,6 +11,7 @@ class ApiPF2PlayerCodexMe extends ApiBase {
                 'wikiUsername' => '',
                 'characters' => [],
                 'canEditDescription' => 0,
+                'isMjAdmin' => 0,
             ] );
             return;
         }
@@ -41,6 +42,7 @@ class ApiPF2PlayerCodexMe extends ApiBase {
             'wikiUsername' => $user->getName(),
             'characters' => is_array( $payload['characters'] ?? null ) ? $payload['characters'] : [],
             'canEditDescription' => $user->isAllowed( 'edit' ) ? 1 : 0,
+            'isMjAdmin' => $user->isAllowed( 'delete' ) ? 1 : 0,
         ] );
     }
 

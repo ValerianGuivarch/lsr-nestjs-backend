@@ -1,6 +1,8 @@
 import { BadRequestException, ConflictException, ForbiddenException, Injectable, NotFoundException, Optional } from '@nestjs/common'
 import { InjectDataSource } from '@nestjs/typeorm'
 import { randomUUID } from 'node:crypto'
+import { readFile } from 'node:fs/promises'
+import { resolve } from 'node:path'
 import { DataSource } from 'typeorm'
 import { Pf2PersistenceService } from '../pf2-storage/Pf2PersistenceService'
 import { MediaWikiClientService } from './MediaWikiClientService'
@@ -245,6 +247,25 @@ export class PlayerCodexService {
       [npcId, value],
     )
     return { npcId, content: value }
+  }
+
+  async mjCharacterMarkdown(npcId: string): Promise<{ npcId: string; markdown: string }> {
+    const files: Record<string, string> = {
+      npc_pj_eryn: 'PJ-Eryn-Elyn.md', npc_pj_jilkra_adoric_larantis: 'PJ-Jilkra-Adoric-Larantis.md',
+      npc_pj_neyla_ketta: 'PJ-Neyla.md', npc_pj_pen_pen: 'PJ-Pen-Pen.md',
+      npc_pj_pepin: 'PJ-Pepin.md', npc_pj_ruhtra_sang_du_soleil: 'PJ-Ruhtra-Sang-du-Soleil.md',
+      npc_pj_sashka: 'PJ-Sashka.md', npc_pj_tsuyu_nagori: 'PJ-Tsuyu-Nagori.md',
+      npc_pj_vaga: 'PJ-Vaga.md', npc_pj_yaz_lorok: 'PJ-Yaz-Lorok.md',
+      npc_pj_zab: 'PJ-Zab.md', npc_pj_eos: 'PJ-Eos.md',
+    }
+    const filename = files[npcId]
+    if (!filename) throw new NotFoundException('Fiche MJ introuvable.')
+    const root = process.env.PF2_PJ_BACKGROUND_ROOT || resolve(process.cwd(), 'pf2/pj')
+    try {
+      return { npcId, markdown: await readFile(resolve(root, filename), 'utf8') }
+    } catch {
+      throw new NotFoundException('Fichier Markdown MJ inaccessible.')
+    }
   }
 
   async updateMySheet(wikiUsername: string, npcId: string, field: string, value: unknown, isWikiAdmin = false): Promise<{ npcId: string; field: string; value: string }> {

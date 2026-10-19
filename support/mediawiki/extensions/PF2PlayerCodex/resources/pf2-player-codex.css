@@ -66,3 +66,6 @@
 .pf2-player-sheet-field span { flex:1; white-space:pre-wrap; overflow-wrap:anywhere; }
 .pf2-player-sheet-field button { cursor:pointer; }
 .pf2-player-sheet-input { flex:1; min-width:10rem; max-width:100%; }
+
+.pf2-player-mj-markdown { white-space:pre-wrap; overflow-wrap:anywhere; font-family:inherit; font-size:0.95rem; line-height:1.65; max-width:100%; }
+.pf2-mj-link { margin-left:.55rem; }
