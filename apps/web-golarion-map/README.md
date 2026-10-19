@@ -56,6 +56,18 @@ Le menu **Favoris**, partagé entre les trois modes, rassemble les lieux ordinai
 
 La migration `038-map-quest-sites-and-examples` créait les premiers lieux de quête et favoris de démonstration ; ses exemples historiques ne doivent **pas** être interprétés comme l'état présent de la base. La migration `039-discord-quest-catalogue-and-map-links` introduit le catalogue Discord et ses liaisons. Les anciens champs `map_quest_name` / `map_quest_names` restent lisibles pour compatibilité ; les associations actives sont les IDs des fils Discord. Les corrections ultérieures de noms de points, de position ou de visibilité faites sur le mini-PC **ne nécessitent pas de modification du code**.
 
+## Plan illustré et calage de Pointe-Sable
+
+Le plan historique fourni par le MJ provient du fichier [Pointesable.jpg sur Nos Aventures en Golarion](https://nos-aventures-en-golarion.fandom.com/fr/wiki/Fichier:Pointesable.jpg). Le serveur d'images Wikia refuse parfois les téléchargements directs (403) : une copie de cette **même image** est incluse dans le build en WebP (`assets/pointesable-overlay.webp`), afin d'éviter de dépendre du site externe à l'affichage. Il s'agit d'un plan illustré, et non d'un fond géographique précis.
+
+- Dans les modes **PJ / MJ-light / MJ**, zoomer sur Pointe-Sable (Sandpoint) : le plan apparaît progressivement à partir du zoom **8,5**, devant le fond de carte et **derrière les icônes/noms de lieux**. Le bouton **P** permet de le masquer et de le réafficher.
+- Dans le mode **MJ**, cliquer sur **Caler**, à côté du bouton **P** : le plan passe à 65 % d'opacité ; les quatre coins numérotés sont déplaçables. Les flèches permettent d'ajuster sa position ; les boutons L ± / H ± modifient indépendamment la largeur et la hauteur. Les actions **Défaut**, **Annuler**, et **Enregistrer pour tous** ont le même rôle qu'à Absalom.
+- Le premier placement autour de `[-27.164, 44.097]` est **approximatif**, à ajuster visuellement par le MJ. Le calage se conserve dans `pf2.sqlite`, entrée `geography-config/pointesable-overlay`, exposée par `GET /api/pf2-mj/map/pointesable-overlay` et `PUT` sur la même route. Aucun calage d'Absalom n'est modifié.
+- Le seul nom de la ville sur la couche vectorielle peut être masqué pendant l'affichage du plan ; les autres POI, leurs icônes et leurs noms restent visibles.
+- On peut remplacer l'image par une autre, sans modifier le code, via `GOLARION_MAP_POINTESABLE_OVERLAY_URL`, à condition qu'elle soit accessible au navigateur ; un nouveau cadrage peut être nécessaire. Le calage sauvegardé prend effet pour tous **après actualisation** de la carte.
+
+Le réglage est volontairement indépendant de celui d'Absalom. Les routes de sauvegarde suivent actuellement le même modèle MJ côté interface que le calage d'Absalom ; **elles ne doivent pas être considérées comme protégées par un contrôle d'accès serveur renforcé** tant que l'authentification des outils MJ n'a pas été traitée.
+
 ## Calage interactif du plan d’Absalom
 
 En mode `/mj`, centre la carte sur Absalom et zoome : le bouton **Caler** est à droite du bouton **A**. Il affiche le plan à 65 % d'opacité, puis permet :

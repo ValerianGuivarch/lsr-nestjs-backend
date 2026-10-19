@@ -55,6 +55,30 @@ describe('Pf2MjService', () => {
       expect(persistence.saveAbsalomOverlay).toHaveBeenCalledTimes(1)
     })
 
+    it('calibre Pointe-Sable sans modifier le calage d’Absalom', async () => {
+      const readPointesableOverlay = jest.fn().mockResolvedValue(null)
+      const savePointesableOverlay = jest.fn().mockResolvedValue(undefined)
+      const saveAbsalomOverlay = jest.fn()
+      const { service } = serviceFor({}, pnj, { readPointesableOverlay, savePointesableOverlay, saveAbsalomOverlay })
+      const original = await service.pointesableOverlay()
+      expect(original.corners).toHaveLength(4)
+      expect(original.corners[0]).toEqual([-27.1835, 44.115])
+      const corners = [[-27.185, 44.115], [-27.144, 44.115], [-27.144, 44.079], [-27.185, 44.079]]
+      await expect(service.savePointesableOverlay({ corners, hideLabels: false })).resolves.toEqual({ corners, hideLabels: false })
+      expect(savePointesableOverlay).toHaveBeenCalledWith({ corners, hideLabels: false })
+      expect(saveAbsalomOverlay).not.toHaveBeenCalled()
+    })
+
+    it('refuse les coins invalides et les plans éloignés de Pointe-Sable', async () => {
+      const save = jest.fn()
+      const { service } = serviceFor({}, pnj, { savePointesableOverlay: save })
+      await expect(service.savePointesableOverlay({ corners: [[1, 2]] })).rejects.toThrow()
+      await expect(service.savePointesableOverlay({
+        corners: [[-25, 44.12], [-24.96, 44.12], [-24.96, 44.08], [-25, 44.08]],
+      })).rejects.toThrow()
+      expect(save).not.toHaveBeenCalled()
+    })
+
     it('refuse une géométrie invalide sans l’enregistrer', async () => {
       const save = jest.fn()
       const { service } = serviceFor({}, pnj, { saveAbsalomOverlay: save })

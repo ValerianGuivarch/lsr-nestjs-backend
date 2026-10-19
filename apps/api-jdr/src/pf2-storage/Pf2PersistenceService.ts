@@ -771,6 +771,14 @@ export class Pf2PersistenceService implements OnModuleInit {
     await this.upsert('geography-config', 'absalom-overlay', 'Calage du plan d’Absalom', value)
   }
 
+  async readPointesableOverlay(): Promise<Record<string, unknown> | null> {
+    return this.get('geography-config', 'pointesable-overlay')
+  }
+
+  async savePointesableOverlay(value: Record<string, unknown>): Promise<void> {
+    await this.upsert('geography-config', 'pointesable-overlay', 'Calage du plan de Pointe-Sable', value)
+  }
+
   async updatePublishedPlaceFavorite(id: string, important: boolean): Promise<void> {
     // A targeted update avoids replacing the whole places reference from a public request.
     const rows = await this.dataSource.query(
