@@ -322,8 +322,11 @@ export class PlayerCodexService {
     }
     const profile = profiles[0]
     if (!profile) return null
+    const npc = await this.persistence.getRecord('pnj', npcId)
+    const portraitUrl = npc ? this.publicPortraitUrl(npc.portrait) : null
     return {
       npcId,
+      portraitUrl,
       displayName: profile.display_name,
       shortDescription: profile.short_description,
       wikiPortraitFilename: profile.wiki_portrait_filename,

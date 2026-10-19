@@ -223,7 +223,9 @@
 
 	function contactCard( contact, playerNpcId, isMjAdmin ) {
 		var card = document.createElement( 'article' ); card.className = 'pf2-player-card pf2-player-contact-card';
-		if ( contact.wikiPortraitFilename ) { var image = document.createElement( 'img' ); image.src = imageForFilename( contact.wikiPortraitFilename ); image.alt = ''; card.appendChild( image ); }
+		var portraitSource = contact.wikiPortraitFilename ? imageForFilename( contact.wikiPortraitFilename ) : ( contact.portraitUrl || '' );
+        if ( portraitSource ) { var image = document.createElement( 'img' ); image.src = portraitSource; image.alt = 'Portrait de ' + contact.displayName; image.className = 'pf2-player-contact-portrait'; image.loading = 'lazy'; card.appendChild( image ); }
+        else { var placeholder = document.createElement( 'div' ); placeholder.className = 'pf2-player-contact-portrait pf2-player-contact-portrait-placeholder'; placeholder.setAttribute( 'aria-hidden', 'true' ); placeholder.textContent = '♙'; card.appendChild( placeholder ); }
 		var title = document.createElement( 'strong' ); title.textContent = contact.displayName; card.appendChild( title );
 		if ( !contact.published ) { var badge = document.createElement( 'span' ); badge.className = 'pf2-player-kind private'; badge.textContent = 'Contact privé'; card.appendChild( badge ); }
 		var description = document.createElement( 'p' ); description.className = 'pf2-player-short-description'; description.textContent = contact.shortDescription || ''; card.appendChild( description );
