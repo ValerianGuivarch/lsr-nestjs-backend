@@ -5,7 +5,7 @@ import { DataSource } from 'typeorm'
 import { Pf2PersistenceService } from '../pf2-storage/Pf2PersistenceService'
 import { MediaWikiClientService } from './MediaWikiClientService'
 
-type ProfileRow = { npc_id: string; wiki_page_title: string; display_name: string; wiki_portrait_filename: string | null; short_description: string; is_player: number; is_published: number; created_at: string; updated_at: string }
+type ProfileRow = { npc_id: string; wiki_page_title: string; display_name: string; wiki_portrait_filename: string | null; short_description: string; ancestry: string; character_class: string; objective: string; is_player: number; is_published: number; created_at: string; updated_at: string }
 type MjFaction = Record<string, unknown> & { id: string; nom: string; description: string; description_joueurs?: string; parent_id?: string | null; published?: boolean }
 type PlayerFactionRow = { id: string; name: string; normalized_name: string; parent_faction_id: string | null; wiki_page_title: string; description: string; source_mj_faction_id: string | null; published: number; created_at?: string; updated_at?: string }
 
@@ -245,6 +245,30 @@ export class PlayerCodexService {
       [npcId, value],
     )
     return { npcId, content: value }
+  }
+
+  async updateMySheet(wikiUsername: string, npcId: string, field: string, value: unknown, isWikiAdmin = false): Promise<{ npcId: string; field: string; value: string }> {
+    const username = this.required(wikiUsername, 'Compte Wiki')
+    const columns: Record<string, string> = { name: 'display_name', ancestry: 'ancestry', characterClass: 'character_class', objective: 'objective' }
+    const column = columns[field]
+    if (!column) throw new BadRequestException('Champ de fiche inconnu.')
+    if (typeof value !== 'string' || value.trim().length > (field === 'objective' ? 1000 : 150)) throw new BadRequestException('Valeur de fiche invalide.')
+    if (!isWikiAdmin) {
+      const rows = await this.db.query(
+        `SELECT 1 FROM pf2_player_character_owner o
+         JOIN pf2_wiki_account_link a ON a.discord_user_id = o.discord_user_id
+         WHERE o.npc_id = ? AND a.wiki_username = ? COLLATE NOCASE LIMIT 1`,
+        [npcId, username],
+      ) as Array<Record<string, unknown>>
+      if (!rows.length) throw new ForbiddenException('Ce personnage ne vous appartient pas.')
+    } else {
+      const rows = await this.db.query('SELECT 1 FROM pf2_player_character_profile WHERE npc_id = ? AND is_player = 1', [npcId]) as Array<Record<string, unknown>>
+      if (!rows.length) throw new NotFoundException('PJ introuvable.')
+    }
+    const trimmed = value.trim()
+    if (field === 'name' && !trimmed) throw new BadRequestException('Le nom ne peut pas être vide.')
+    await this.db.query(`UPDATE pf2_player_character_profile SET ${column} = ?, updated_at = CURRENT_TIMESTAMP WHERE npc_id = ?`, [trimmed, npcId])
+    return { npcId, field, value: trimmed }
   }
 
   async updateMyBackground(wikiUsername: string, npcId: string, content: unknown, isWikiAdmin = false): Promise<{ npcId: string; background: string }> {
@@ -517,6 +541,9 @@ export class PlayerCodexService {
       npcId: row.npc_id,
       wikiPageTitle: row.wiki_page_title,
       displayName: row.display_name,
+      ancestry: row.ancestry ?? '',
+      characterClass: row.character_class ?? '',
+      objective: row.objective ?? '',
       wikiPortraitFilename: row.wiki_portrait_filename,
       shortDescription: row.short_description,
       isPlayer: row.is_player === 1,

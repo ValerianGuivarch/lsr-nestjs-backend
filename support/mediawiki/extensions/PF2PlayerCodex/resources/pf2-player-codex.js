@@ -254,7 +254,32 @@
 				var side = document.createElement( 'aside' ); side.className = 'pf2-player-character-side';
 				if ( character.wikiPortraitFilename ) { var image = document.createElement( 'img' ); image.className = 'pf2-player-character-portrait'; image.src = imageForFilename( character.wikiPortraitFilename ); image.alt = character.displayName; side.appendChild( image ); }
 				layout.appendChild( side );
-				var content = document.createElement( 'div' ); content.className = 'pf2-player-wiki-content'; layout.appendChild( content ); panel.appendChild( layout ); renderWikiPage( content, character.wikiPageTitle );
+				var content = document.createElement( 'div' ); content.className = 'pf2-player-sheet-fields'; layout.appendChild( content ); panel.appendChild( layout );
+				[ [ 'name', 'Nom', 'displayName' ], [ 'ancestry', 'Ascendance', 'ancestry' ], [ 'characterClass', 'Classe', 'characterClass' ], [ 'objective', 'Objectif', 'objective' ] ].forEach( function ( entry ) {
+					var field = entry[ 0 ], labelText = entry[ 1 ], property = entry[ 2 ];
+					var wrapper = document.createElement( 'div' ); wrapper.className = 'pf2-player-sheet-field';
+					var label = document.createElement( 'strong' ); label.textContent = labelText;
+					var value = document.createElement( 'span' ); value.textContent = character[ property ] || 'À renseigner';
+					var pencil = document.createElement( 'button' ); pencil.type = 'button'; pencil.textContent = '✎'; pencil.title = 'Modifier ' + labelText.toLowerCase(); pencil.setAttribute( 'aria-label', pencil.title );
+					wrapper.appendChild( label ); wrapper.appendChild( value ); wrapper.appendChild( pencil ); content.appendChild( wrapper );
+					pencil.onclick = function () {
+						var editor = field === 'objective' ? document.createElement( 'textarea' ) : document.createElement( 'input' );
+						editor.value = character[ property ] || ''; editor.className = 'pf2-player-sheet-input';
+						editor.maxLength = field === 'objective' ? 1000 : 150;
+						var save = document.createElement( 'button' ); save.textContent = 'Enregistrer';
+						var cancel = document.createElement( 'button' ); cancel.textContent = 'Annuler';
+						wrapper.replaceChild( editor, value ); pencil.hidden = true; wrapper.appendChild( save ); wrapper.appendChild( cancel ); editor.focus();
+						cancel.onclick = function () { showTab( 'fiche' ); };
+						save.onclick = function () {
+							save.disabled = true;
+							api().postWithToken( 'csrf', { action: 'pf2playercodexmeupdate', npcId: character.npcId, field: field, content: editor.value, format: 'json' } ).then( function () {
+								character[ property ] = editor.value.trim();
+								if ( field === 'name' ) { character.displayName = editor.value.trim(); title.textContent = character.displayName; }
+								mw.notify( 'Fiche enregistrée.', { type: 'success' } ); showTab( 'fiche' );
+							} ).catch( function ( error ) { save.disabled = false; mw.notify( errorMessage( error, 'Enregistrement impossible' ), { type: 'error' } ); } );
+						};
+					};
+				} );
 			} else if ( name === 'background' || name === 'notes' ) {
                 var field = name;
                 var actions = document.createElement( 'div' ); actions.className = 'pf2-player-background-actions'; panel.appendChild( actions );

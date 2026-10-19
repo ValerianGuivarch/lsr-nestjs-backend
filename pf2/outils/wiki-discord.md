@@ -188,3 +188,9 @@ L'option `--limit` accepte 1 à 500 messages (100 par défaut). Le JSON inclut l
 **Sécurité :** exécuter uniquement sur un mini-PC autorisé, avec accès aux volumes SQLite et au conteneur Docker. Aucune authentification locale supplémentaire n'a été ajoutée ; les droits Docker dépassent ceux du script. Sur le mini-PC, conserver/restaurer le mode de fichier `700` si nécessaire (Git ne conserve que le bit exécutable).
 
 **Pour les fiches PJ :** consulter les discussions afin d'identifier contacts, proches et informations nouvelles, puis les recouper avec les Backgrounds et Notes éditables du wiki/SQLite et les fiches de continuité MJ `pf2/pj/`. Un message Discord n'établit pas à lui seul un fait canonique. Aucun contenu privé n'est commité ; toute modification durable exige l'accord préalable du MJ selon `PF2_WORKSPACE.md`.
+
+## Fiche PJ éditable du wiki (octobre 2026)
+
+L'onglet **Fiche** de `Spécial:MesPersonnages/npc_pj_...` présente désormais des champs courts et indépendants : **Nom**, **Ascendance**, **Classe**, **Objectif**. Chaque valeur, y compris initialement vide, est modifiable au moyen de l'icône crayon. Ces champs sont persistés dans `pf2_player_character_profile` (`display_name`, `ancestry`, `character_class`, `objective`) via l'API privée du wiki ; le propriétaire du PJ ou un administrateur wiki peut les mettre à jour. La description courte reste au-dessus des onglets, et Background, Notes et Contacts ne changent pas.
+
+Les contacts sont des fiches métier MJ dans SQLite : identifier d'abord un PNJ existant, sinon présenter au MJ une proposition de création. Après accord explicite, créer/compléter la fiche PNJ MJ, puis associer le contact au PJ avec la relation `pf2_player_character_contact` et vérifier sa visibilité sur le wiki. Le lecteur Discord `scripts/pf2-discord-pj-read.py` sert à préparer ces propositions et non à créer automatiquement des contacts. Les secrets MJ restent hors des champs publics.

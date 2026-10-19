@@ -58,3 +58,11 @@
 .pf2-my-character-open { display:inline-block; margin-top:auto; padding:.45rem .7rem; border:1px solid #a78b4f; border-radius:.35rem; text-decoration:none; width:max-content; }
 .pf2-my-character-back { margin-right:auto; }
 .pf2-my-character-card { display:flex; flex-direction:column; }
+
+/* Fiche PJ : propriétés éditables indépendantes. */
+.pf2-player-sheet-fields { display:flex; flex-direction:column; gap:1rem; flex:1; min-width:0; }
+.pf2-player-sheet-field { display:flex; align-items:center; flex-wrap:wrap; gap:.55rem; padding:.7rem .8rem; border-bottom:1px solid rgba(110,89,57,.22); }
+.pf2-player-sheet-field strong { min-width:7rem; }
+.pf2-player-sheet-field span { flex:1; white-space:pre-wrap; overflow-wrap:anywhere; }
+.pf2-player-sheet-field button { cursor:pointer; }
+.pf2-player-sheet-input { flex:1; min-width:10rem; max-width:100%; }

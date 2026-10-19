@@ -22,10 +22,12 @@ class ApiPF2PlayerCodexMeUpdate extends ApiBase {
             'wikiUsername' => $user->getName(),
             'npcId' => $params['npcId'],
             'content' => $params['content'],
+            'field' => $params['field'],
+            'value' => $params['content'],
             'wikiIsAdmin' => $user->isAllowed( 'delete' ),
         ] );
         $request = $services->getHttpRequestFactory()->create(
-            $base . '/player-codex/me/' . ( $params['field'] === 'notes' ? 'notes' : 'background' ),
+            $base . '/player-codex/me/' . ( $params['field'] === 'notes' ? 'notes' : ( $params['field'] === 'name' || $params['field'] === 'ancestry' || $params['field'] === 'characterClass' || $params['field'] === 'objective' ? 'sheet' : 'background' ) ),
             [
                 'method' => 'POST',
                 'timeout' => 15,

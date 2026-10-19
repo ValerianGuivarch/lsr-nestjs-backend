@@ -1410,6 +1410,14 @@ export class Pf2PersistenceService implements OnModuleInit {
       await manager.query('INSERT OR IGNORE INTO pf2_player_discord_channel (npc_id, channel_id) VALUES (?, ?)', ['npc_pj_ruhtra_sang_du_soleil', '1545437090752241784'])
     })
 
+    await this.applyMigration('042-pj-editable-sheet', async (manager) => {
+      const columns = await manager.query('PRAGMA table_info(pf2_player_character_profile)') as Array<{ name: string }>
+      for (const field of ['ancestry', 'character_class', 'objective']) {
+        if (!columns.some(column => column.name === field)) {
+          await manager.query(`ALTER TABLE pf2_player_character_profile ADD COLUMN ${field} TEXT NOT NULL DEFAULT ''`)
+        }
+      }
+    })
     await this.applyMigration('041-player-chatgpt-links', async manager => {
       await manager.query("CREATE TABLE IF NOT EXISTS pf2_player_chatgpt_link (npc_id TEXT PRIMARY KEY, chatgpt_url TEXT NOT NULL, updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)")
     })
