@@ -10,9 +10,10 @@ La campagne est **commencée** dans une adaptation destinée à une table dont l
 
 ## Adaptation validée du début
 
-- Le début sous le cimetière, jusqu'à la section des gobelins-goules / A1–A4, est adapté pour un groupe mêlant principalement des personnages de niveaux 1 et 2.
+- Le début sous le cimetière, jusqu'à la section des gobelins-goules / A1–A4, a été adapté pour des PJ de bas niveau.
 - Glorkus et Zoduk ont été adaptés mécaniquement pour cette ouverture.
-- La menace de feu des Catacombes du Feu Infernal a volontairement été présentée comme nettement supérieure au groupe. Son statblock exact pour une éventuelle confrontation future est désormais **à réévaluer** ; ne pas considérer comme validée une version affaiblie précise tant qu'une décision explicite n'a pas été prise.
+- Pour la prochaine exploration des **Catacombes du Feu Infernal**, la référence de préparation est désormais **3 PJ de niveau 3**.
+- Cette exploration doit tenir en **environ 2 h de jeu**, afin de conserver ensuite du temps pour l'enquête autour de Nualia.
 - Les profondeurs de la campagne et la Fosse ne doivent pas être abaissées automatiquement au niveau du groupe : les adaptations ultérieures restent à décider au cas par cas.
 
 ## Événements réellement joués
@@ -23,37 +24,47 @@ La campagne est **commencée** dans une adaptation destinée à une table dont l
 - Leur perception actuelle est donc que les ruines thassiloniennes sont probablement trop dangereuses pour eux. Ils envisagent plutôt de faire intervenir des Éclaireurs plus expérimentés que de poursuivre immédiatement l'exploration.
 - À ce stade, ils connaissent surtout **Volpépite** par son lien avec **Pic-Chardon**. Ils ne savent pas encore qu'il est parti vers la **Fosse** et celle-ci n'a pas encore été introduite clairement auprès d'eux.
 
-## Vérité MJ sur les Catacombes
+## Catacombes du Feu Infernal — direction de préparation validée
 
-- Dans la version publiée, **Azéréza** est une brimorak installée dans le sanctuaire d'Abraxas depuis la Chute du Thassilon. Elle n'a pas été enfermée par les gobelins-goules.
-- La barricade est récente : elle a été dressée par les gobelins-goules après qu'Azéréza en a incendié plusieurs.
-- Les **Catacombes du Feu Infernal** sont un complexe thassilonien distinct de la **Fosse**. Il n'existe pas de tunnel direct entre les deux.
-- Le **Focaliseur de feu infernal** peut plus tard devenir un raccourci magique entre Pointesable et des cercles de téléportation découverts dans la Fosse. Il n'est pas indispensable pour lancer l'intrigue de la Fosse.
-- Si les PJ ne poursuivent pas immédiatement les Catacombes, la campagne peut continuer par le rituel de **Nualia**, les enquêtes sur Volpépite et l'introduction progressive de la Fosse.
+Le donjon doit servir de **première vraie leçon de terrain sur le Thassilon**, sans exposé magistral.
 
-## Groupe rival d'Elysye
+- Le complexe est mis en scène comme une **base militaire de Bakrakhan**, liée à **Alaznist**, Seigneur des Runes de la **Colère** et à l'ancienne école d'**Évocation**.
+- Le thème dominant est la **suprématie par la puissance magique** : destruction, discipline par la peur, riposte disproportionnée et démonstration de force.
+- Le conflit structurant est **Alaznist / Bakrakhan / Colère / Évocation** contre **Karzoug / Shalast / Avarice / Transmutation**.
+- Les PJ ne parlant pas thassilonien, le lore doit surtout passer par les **Sihédrons, symboles répétés, fresques, cartes, architecture militaire et traces de la catastrophe**. Les textes récupérés deviennent des objets à faire traduire plus tard.
+- Le nom **Shalast** désigne le royaume thassilonien de Karzoug ; **Xin-Shalast** en était la capitale. Dans la région de Pointesable, Karzoug disposait surtout de positions avancées.
+- La carte de Jhasker doit rendre visibles les positions ennemies : l'ancienne sentinelle de Karzoug à l'emplacement de **Pic-Chardon** et la présence importante du Shalast à la **Fosse**, autour de **Liralarue**.
+- Le **Chenal de l'Enfer** était une arme stratégique d'Alaznist capable de frapper à plusieurs kilomètres, notamment contre les forces et avant-postes du Shalast. Pendant la Chute, Jhasker a cru à une attaque de Karzoug et a ordonné de préparer le focaliseur pour une contre-attaque.
+- La progression doit montrer : installation organisée → doctrine de la Colère → guerre contre Karzoug → panique de la Chute → soldats courant vers le focaliseur → catastrophe finale.
+- Le puzzle des **Trois Marches** doit conserver les portes et leurs nacelles, mais sa solution définitive reste à finaliser. Elle doit être plus intelligible et plus liée à la doctrine Colère contre Avarice que le simple classement arbitraire des grenats.
 
-La campagne peut s'appuyer sur [l'équipe rivale d'Elysye](../univers/Equipe-rivale.md), déjà établie dans la continuité.
+## B10 — Incinérés
 
-**Fait établi :** le groupe rival est déjà intervenu dans la continuité et a annoncé avoir **tué un démon**. Ce précédent renforce sa crédibilité lorsqu'il prétend pouvoir gérer une menace que les PJ jugent trop forte.
+Adaptation validée pour le climax :
 
-### À étudier
+- Les Incinérés **ne s'éveillent pas tous simultanément**.
+- Au début, **le premier est pleinement actif**.
+- Le **deuxième commence seulement à remuer / se reformer** dans les cendres.
+- Les PJ peuvent comprendre qu'il va s'éveiller et **le frapper avant son activation complète**.
+- S'ils réagissent vite, ils peuvent donc raccourcir fortement le combat, voire éliminer un Incinéré avant qu'il ne devienne une menace complète.
+- Le troisième corps peut rester inerte ou servir surtout de trace narrative de la catastrophe ; le nombre exact de créatures actives doit rester compatible avec 3 PJ niveau 3.
+- L'objectif de cette mécanique est de récompenser **l'observation, l'initiative et l'agression préventive**, plutôt que d'imposer un combat frontal contre plusieurs créatures de même niveau.
 
-- Envoyer le groupe rival dans les Catacombes peut matérialiser la conséquence du choix des PJ de demander des renforts, mais il faut éviter que les PNJ suppriment simplement le principal challenge du lieu.
-- Variante possible : il n'y aurait pas un mais **deux démons de feu**. Le groupe rival tuerait le premier ; le second resterait présent et deviendrait furieux de la mort de l'autre.
-- Dans cette variante, les PJ ne partiraient pas à l'aveugle : le rapport du premier combat leur fournirait des informations tactiques permettant de préparer la seconde confrontation.
-- Une autre possibilité reste que le groupe rival ne fasse qu'une reconnaissance / sécurisation partielle, laissant la menace principale aux PJ.
+## Vérité MJ et continuité
 
-## Conception possible de la confrontation avec le démon
-
-Non validé à ce stade : conserver une créature trop dangereuse à affronter frontalement, mais dont une partie importante de la puissance repose sur un nombre limité de grosses attaques de feu. L'intérêt du combat serait alors d'observer son comportement, provoquer volontairement ces attaques à distance ou à couvert, puis l'affronter une fois ses ressources majeures consommées.
-
-Le nombre exact de Boules de feu, le niveau, les PV et les autres capacités restent **à trancher avant modification mécanique dans Foundry**.
+- Dans la version publiée, **Azéréza** est une brimorak installée dans le sanctuaire d'Abraxas depuis la Chute du Thassilon. La barricade est récente et a été dressée par les gobelins-goules après qu'elle en a incendié plusieurs.
+- Le démon n'est plus le sujet principal de la préparation actuelle ; éviter de construire le donjon autour d'une nouvelle variante de confrontation avec lui tant qu'une décision contraire n'est pas prise.
+- Les **Catacombes du Feu Infernal** sont distinctes de la **Fosse**. Il n'existe pas de tunnel direct entre les deux.
+- Le **Focaliseur de feu infernal** peut plus tard devenir un raccourci magique entre Pointesable et des cercles de téléportation découverts dans la Fosse.
+- Dans la continuité de la table, **Nualia a été tuée par Corvan et son groupe** pendant les événements de L'Éveil des Seigneurs des Runes.
+- Volpépite était le chef gobelin de Pic-Chardon à l'époque de Nualia. Il a ensuite été réanimé et a fini par quitter Pic-Chardon pour la Fosse.
+- **Wolgur Wrabs** est la goule / blême diplomatique vivant sous le cimetière ; il peut servir plus tard de source secondaire d'informations sur les gobelins-goules et Volpépite.
+- Le groupe rival d'Elysye est déjà intervenu dans la continuité et a annoncé avoir **tué un démon**.
 
 ## Prochaines décisions à capitaliser
 
+- solution définitive et mécanique exacte des Trois Marches ;
+- statblocks / dangers finaux adaptés aux 3 PJ niveau 3 ;
 - résultat du rituel de Nualia et informations réellement obtenues par les PJ ;
-- manière dont la Fosse est introduite ;
-- rôle exact du groupe rival dans les Catacombes ;
-- identité, nombre et mécanique finale du ou des démons ;
+- manière exacte dont la Fosse est introduite ;
 - décision des PJ de revenir ou non explorer les Catacombes du Feu Infernal.
