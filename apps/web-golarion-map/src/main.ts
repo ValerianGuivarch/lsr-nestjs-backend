@@ -26,6 +26,7 @@ import { addPlaceCreationControl } from './tools/quest-place-dialog';
 import { addPlayerSourcePoints } from "./tools/player-source-points";
 import { addPlayerCuratedLabels } from "./tools/player-curated-labels";
 import { addAbsalomOverlay } from "./tools/absalom-overlay";
+import { addPointesableOverlay } from "./tools/pointesable-overlay";
 import { makeLabelsCuratable, makeMjLightLabelsCuratable } from "./tools/label-curation";
 import hiddenDefaults from '../resources/map-default-hidden-labels.json';
 import { applyPlayerMapVisibilityFilters } from './utils/map-visibility';
@@ -114,6 +115,7 @@ export const map = new Map({
 });
 export const golarionMap = new GolarionMap(map);
 addAbsalomOverlay(map, !startupOptions.embedded, mapAudience === 'mj');
+addPointesableOverlay(map, !startupOptions.embedded, mapAudience === 'mj');
 void addPublicPlaceMarkers(golarionMap, publicPlacesUrl, mapAudience);
 if (!startupOptions.embedded) addPlaceCreationControl(golarionMap, mapAudience);
 // Both the GM and players see every published point. The GM keeps all of

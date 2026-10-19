@@ -34,7 +34,8 @@ export default defineConfig(({ command, isPreview, mode }): UserConfig => {
   const mjLightVisibilityUrl = env['GOLARION_MAP_MJ_LIGHT_VISIBILITY_URL']?.trim() || `${mapApiBase}/mj-light/visibility`
   const curationUrl = env['GOLARION_MAP_CURATION_URL']?.trim() || `${mapApiBase}/curation`
   const absalomOverlayUrl = env['GOLARION_MAP_ABSALOM_OVERLAY_URL']?.trim() || ''
-  const runtimeConfigSource = `window.GOLARION_MAP_CONFIG=${JSON.stringify({ placesUrl, sourcePointsUrl, searchUrl, visibilityUrl, mjLightPlacesUrl, mjLightSourcePointsUrl, mjLightVisibilityUrl, curationUrl, absalomOverlayUrl })};`
+  const pointesableOverlayUrl = env['GOLARION_MAP_POINTESABLE_OVERLAY_URL']?.trim() || ''
+  const runtimeConfigSource = `window.GOLARION_MAP_CONFIG=${JSON.stringify({ placesUrl, sourcePointsUrl, searchUrl, visibilityUrl, mjLightPlacesUrl, mjLightSourcePointsUrl, mjLightVisibilityUrl, curationUrl, absalomOverlayUrl, pointesableOverlayUrl })};`
   const mapHost = env['GOLARION_MAP_HOST'] ?? '0.0.0.0'
   const mapPort = Number(env['GOLARION_MAP_PORT'] ?? 4204)
   const placeNamesFr = JSON.parse(readFileSync(existsSync(placeNamesPath) ? placeNamesPath : fallbackPlaceNamesPath, 'utf8')) as Record<string, string>

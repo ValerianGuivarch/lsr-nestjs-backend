@@ -282,6 +282,48 @@ export class Pf2MjService {
     return result
   }
 
+  // Separate from Absalom: each town has its own persisted four-corner calibration.
+  private readonly defaultPointesableCorners: Array<[number, number]> = [
+    [-27.1835, 44.115], [-27.1445, 44.115], [-27.1445, 44.079], [-27.1835, 44.079],
+  ]
+
+  async pointesableOverlay(): Promise<{ corners: Array<[number, number]>; hideLabels: boolean }> {
+    const data = await this.persistence.readPointesableOverlay()
+    const corners = data?.corners
+    if (!Array.isArray(corners) || corners.length !== 4) {
+      return { corners: this.defaultPointesableCorners, hideLabels: true }
+    }
+    return { corners: corners as Array<[number, number]>, hideLabels: data?.hideLabels !== false }
+  }
+
+  async savePointesableOverlay(input: unknown): Promise<{ corners: Array<[number, number]>; hideLabels: boolean }> {
+    const data = this.asObject(input)
+    if (!Array.isArray(data.corners) || data.corners.length !== 4) throw new Error('Quatre coins sont requis.')
+    const corners = data.corners.map((pair: unknown): [number, number] => {
+      if (!Array.isArray(pair) || pair.length !== 2 || pair.some(v => typeof v !== 'number' || !Number.isFinite(v))) {
+        throw new Error('Coordonnées invalides.')
+      }
+      const [lng, lat] = pair as number[]
+      if (lng < -180 || lng > 180 || lat < -85 || lat > 85) throw new Error('Coordonnées hors de la carte.')
+      return [lng, lat]
+    })
+    const [nw, ne, se, sw] = corners
+    if (!(nw[0] < ne[0] && sw[0] < se[0] && nw[1] > sw[1] && ne[1] > se[1])) {
+      throw new Error('Les coins doivent former un plan nord-ouest à sud-est.')
+    }
+    if (ne[0] - nw[0] > 0.5 || nw[1] - sw[1] > 0.5 || ne[0] - nw[0] < 0.0001 || nw[1] - sw[1] < 0.0001) {
+      throw new Error('Dimensions du plan de Pointe-Sable invalides.')
+    }
+    const centerLng = corners.reduce((n, pair) => n + pair[0], 0) / 4
+    const centerLat = corners.reduce((n, pair) => n + pair[1], 0) / 4
+    if (Math.abs(centerLng + 27.164) > 0.7 || Math.abs(centerLat - 44.097) > 0.5) {
+      throw new Error('Le calage doit rester à proximité de Pointe-Sable.')
+    }
+    const result = { corners, hideLabels: data.hideLabels !== false }
+    await this.persistence.savePointesableOverlay(result)
+    return result
+  }
+
   // PJ may star/unstar only an already published item; cannot create, reveal,
   // rename, or edit locations. Shared favorites remain in the canonical data.
   async setPublicMapFavorite(body: unknown): Promise<{ important: boolean }> {

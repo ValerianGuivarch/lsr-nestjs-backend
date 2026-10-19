@@ -55,6 +55,15 @@ export class Pf2MjController {
     catch (error) { throw new HttpException(error instanceof Error ? error.message : 'Calage invalide.', HttpStatus.BAD_REQUEST) }
   }
 
+  @Get('map/pointesable-overlay')
+  pointesableOverlay(): Promise<unknown> { return this.service.pointesableOverlay() }
+
+  @Put('map/pointesable-overlay')
+  async savePointesableOverlay(@Body() body: unknown): Promise<unknown> {
+    try { return await this.service.savePointesableOverlay(body) }
+    catch (error) { throw new HttpException(error instanceof Error ? error.message : 'Calage de Pointe-Sable invalide.', HttpStatus.BAD_REQUEST) }
+  }
+
   @Put('map/favorites')
   async setMapFavorite(@Body() body: unknown): Promise<unknown> {
     try { return await this.service.setPublicMapFavorite(body) }
