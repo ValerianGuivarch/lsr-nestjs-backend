@@ -22,6 +22,10 @@ Le texte intégral du Background et les Notes sont stockés dans SQLite et édit
 
 Personnage particulièrement étrange : **personne fictive devenue réelle à la suite d'un rituel**. Son existence elle-même est un mystère métaphysique.
 
+## Larantis — dossier transversal MJ (piste en cours de discussion)
+
+Un [dossier Larantis](../univers/Larantis.md) est prévu pour la piste commune à Jilkra et au frère de Yaz. **Statut : orientation narrative proposée par le MJ le 19 octobre 2026, non encore validée comme canon.** La piste envisage que Jilkra soit issu d'un monde entier initialement fictif, devenu réel en raison de l'action du frère de Yaz. Elle ne fixe ni la nature du rituel ni la chronologie du phénomène. Ne rien révéler automatiquement au joueur et conserver le Background public inchangé.
+
 ## Relations et intrigues personnelles
 
 Les relations déjà citées mais pas encore structurées figurent provisoirement dans **À trier**. Ne pas interpréter une piste comme un événement joué.
