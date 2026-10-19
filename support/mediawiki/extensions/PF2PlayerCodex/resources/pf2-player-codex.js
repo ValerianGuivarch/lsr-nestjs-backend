@@ -227,12 +227,14 @@
 		var title = document.createElement( 'strong' ); title.textContent = contact.displayName; card.appendChild( title );
 		if ( !contact.published ) { var badge = document.createElement( 'span' ); badge.className = 'pf2-player-kind private'; badge.textContent = 'Contact privé'; card.appendChild( badge ); }
 		var description = document.createElement( 'p' ); description.className = 'pf2-player-short-description'; description.textContent = contact.shortDescription || ''; card.appendChild( description );
-		if ( contact.wikiPageTitle ) { var open = document.createElement( 'a' ); open.textContent = 'Ouvrir'; open.href = myContactUrl( playerNpcId, contact.npcId ); open.className = 'pf2-my-character-open'; card.appendChild( open ); }
+		if ( contact.wikiPageTitle ) { var open = document.createElement( 'a' ); open.textContent = 'Ouvrir'; open.href = myContactUrl( playerNpcId, contact.npcId ); open.className = 'pf2-my-character-open'; open.target = '_blank'; open.rel = 'noopener noreferrer'; card.appendChild( open ); }
         if ( isMjAdmin ) {
             var mjLink = document.createElement( 'a' );
             mjLink.textContent = 'MJ';
             mjLink.className = 'pf2-my-character-open pf2-mj-link';
             mjLink.href = 'https://l7r.fr/pf2-mj/npcs/' + encodeURIComponent( contact.npcId );
+            mjLink.target = '_blank';
+            mjLink.rel = 'noopener noreferrer';
             card.appendChild( mjLink );
         }
 		return card;
@@ -373,7 +375,7 @@
 			if ( character.wikiPortraitFilename ) { var image = document.createElement( 'img' ); image.src = imageForFilename( character.wikiPortraitFilename ); image.alt = ''; card.appendChild( image ); }
 			var title = document.createElement( 'strong' ); title.textContent = character.displayName; card.appendChild( title );
 			var description = document.createElement( 'p' ); description.className = 'pf2-player-short-description'; description.textContent = character.shortDescription || ''; card.appendChild( description );
-			var open = document.createElement( 'a' ); open.textContent = 'Ouvrir'; open.href = myCharacterUrl( character.npcId ); open.className = 'pf2-my-character-open'; card.appendChild( open );
+			var open = document.createElement( 'a' ); open.textContent = 'Ouvrir'; open.href = myCharacterUrl( character.npcId ); open.className = 'pf2-my-character-open'; open.target = '_blank'; open.rel = 'noopener noreferrer'; card.appendChild( open );
 			list.appendChild( card );
 		} );
 	}
