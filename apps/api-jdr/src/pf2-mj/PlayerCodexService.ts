@@ -113,6 +113,7 @@ export class PlayerCodexService {
   }
   async updateCharacter(npcId: string, input: { displayName?: unknown; wikiPortraitFilename?: unknown; shortDescription?: unknown; isPlayer?: unknown; published?: unknown }): Promise<unknown> {
     await this.character(npcId)
+    if (!input || typeof input !== 'object') throw new BadRequestException('Corps de requête manquant.')
     const name = typeof input.displayName === 'string' ? this.required(input.displayName, 'Nom') : null
     const portrait = typeof input.wikiPortraitFilename === 'string' ? input.wikiPortraitFilename.trim() || null : undefined
     if (name !== null) await this.db.query('UPDATE pf2_player_character_profile SET display_name = ?, updated_at = CURRENT_TIMESTAMP WHERE npc_id = ?', [name, npcId])
@@ -266,6 +267,33 @@ export class PlayerCodexService {
     } catch {
       throw new NotFoundException('Fichier Markdown MJ inaccessible.')
     }
+  }
+
+  async updateMyShortDescription(wikiUsername: string, npcId: string, content: unknown, isWikiAdmin = false): Promise<{ npcId: string; shortDescription: string }> {
+    const username = this.required(wikiUsername, 'Compte Wiki')
+    if (typeof content !== 'string' || content.length > 1000) throw new BadRequestException('Description courte invalide.')
+    if (!isWikiAdmin) {
+      const owned = await this.db.query(
+        `SELECT 1 FROM pf2_player_character_owner o JOIN pf2_wiki_account_link a ON a.discord_user_id = o.discord_user_id
+          WHERE o.npc_id = ? AND a.wiki_username = ? COLLATE NOCASE LIMIT 1`,
+        [npcId, username],
+      ) as Array<Record<string, unknown>>
+      if (!owned.length) {
+        const relation = await this.db.query(
+          `SELECT 1 FROM pf2_player_character_contact c
+             JOIN pf2_player_character_owner o ON o.npc_id = c.player_npc_id
+             JOIN pf2_wiki_account_link a ON a.discord_user_id = o.discord_user_id
+             WHERE c.contact_npc_id = ? AND a.wiki_username = ? COLLATE NOCASE LIMIT 1`,
+          [npcId, username],
+        ) as Array<Record<string, unknown>>
+        if (!relation.length) throw new ForbiddenException('Ce personnage ne vous est pas accessible.')
+      }
+    }
+    const profile = await this.db.query('SELECT 1 FROM pf2_player_character_profile WHERE npc_id = ? LIMIT 1', [npcId]) as Array<Record<string, unknown>>
+    if (!profile.length) throw new NotFoundException('Fiche introuvable.')
+    const shortDescription = this.shortDescription(content)
+    await this.db.query('UPDATE pf2_player_character_profile SET short_description = ?, updated_at = CURRENT_TIMESTAMP WHERE npc_id = ?', [shortDescription, npcId])
+    return { npcId, shortDescription }
   }
 
   async updateMySheet(wikiUsername: string, npcId: string, field: string, value: unknown, isWikiAdmin = false): Promise<{ npcId: string; field: string; value: string }> {

@@ -38,7 +38,7 @@
 			};
 			save.onclick = function () {
 				save.disabled = true;
-				request( 'updateCharacter', entity.npcId, '', { shortDescription: textarea.value } ).then( function () {
+				api().postWithToken( 'csrf', { action: 'pf2playercodexmeupdate', npcId: entity.npcId, field: 'shortDescription', content: textarea.value, format: 'json' } ).then( function () {
 					entity.shortDescription = textarea.value.trim();
 					text.textContent = entity.shortDescription || emptyText || '';
 					cancel.onclick();

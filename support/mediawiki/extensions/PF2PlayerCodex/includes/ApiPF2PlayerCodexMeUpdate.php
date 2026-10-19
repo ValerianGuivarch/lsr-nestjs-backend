@@ -27,7 +27,7 @@ class ApiPF2PlayerCodexMeUpdate extends ApiBase {
             'wikiIsAdmin' => $user->isAllowed( 'delete' ),
         ] );
         $request = $services->getHttpRequestFactory()->create(
-            $base . '/player-codex/me/' . ( $params['field'] === 'notes' ? 'notes' : ( $params['field'] === 'name' || $params['field'] === 'ancestry' || $params['field'] === 'characterClass' || $params['field'] === 'objective' ? 'sheet' : 'background' ) ),
+            $base . '/player-codex/me/' . ( $params['field'] === 'shortDescription' ? 'short-description' : ( $params['field'] === 'notes' ? 'notes' : ( $params['field'] === 'name' || $params['field'] === 'ancestry' || $params['field'] === 'characterClass' || $params['field'] === 'objective' ? 'sheet' : 'background' ) ) ),
             [
                 'method' => 'POST',
                 'timeout' => 15,
