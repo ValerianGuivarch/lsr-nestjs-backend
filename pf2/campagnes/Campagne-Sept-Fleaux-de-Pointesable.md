@@ -13,7 +13,8 @@ La campagne est **commencée** dans une adaptation destinée à une table dont l
 - Le début sous le cimetière, jusqu'à la section des gobelins-goules / A1–A4, a été adapté pour des PJ de bas niveau.
 - Glorkus et Zoduk ont été adaptés mécaniquement pour cette ouverture.
 - Pour la prochaine exploration des **Catacombes du Feu Infernal**, la référence de préparation est désormais **3 PJ de niveau 3**.
-- Cette exploration doit tenir en **environ 2 h de jeu**, afin de conserver ensuite du temps pour l'enquête autour de Nualia.
+- La **séance actuelle est consacrée aux Catacombes** : ne plus chercher à les comprimer artificiellement en deux heures. Le donjon peut occuper l'essentiel de la séance afin de laisser respirer l'exploration, les énigmes et le lore thassilonien.
+- Le **rituel de Nualia est reporté à une séance ultérieure**. Le groupe pourra d'abord enquêter sur Nualia et préparer ce contact ; le rituel ne doit pas être précipité en fin de séance.
 - Les profondeurs de la campagne et la Fosse ne doivent pas être abaissées automatiquement au niveau du groupe : les adaptations ultérieures restent à décider au cas par cas.
 
 ## Événements réellement joués
