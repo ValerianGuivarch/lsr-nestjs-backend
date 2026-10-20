@@ -3280,22 +3280,32 @@ export class DiscordCommandsService {
   }
 
   private async playerLevels(uuids: string[] = []): Promise<Map<string, { foundryLevel: number; theoreticalLevel: number }>> {
-    const levels = new Map<string, { foundryLevel: number; theoreticalLevel: number }>()
+    const levels = await this.persistence.readFoundryPlayerLevels()
+    const refreshed: Array<{ uuid: string; foundryLevel: number; theoreticalLevel: number }> = []
     try {
       const players = await this.foundry.listPlayers()
-      for (const player of players) levels.set(player.uuid, { foundryLevel: player.foundryLevel, theoreticalLevel: player.level })
+      for (const player of players) {
+        const value = { foundryLevel: player.foundryLevel, theoreticalLevel: player.level }
+        levels.set(player.uuid, value)
+        refreshed.push({ uuid: player.uuid, ...value })
+      }
     } catch (error) {
-      this.logger.warn(`Progression Foundry indisponible, repli sur le niveau brut des Actors : ${error instanceof Error ? error.message : String(error)}`)
+      this.logger.warn(`Progression Foundry indisponible, utilisation des niveaux en cache : ${error instanceof Error ? error.message : String(error)}`)
     }
 
-    for (const uuid of [...new Set(uuids)].filter(uuid => !levels.has(uuid))) {
+    for (const uuid of [...new Set(uuids)].filter(uuid => !refreshed.some(player => player.uuid === uuid))) {
       try {
         const actor = await this.foundry.getNpcSummary(uuid)
-        if (actor.level !== null) levels.set(uuid, { foundryLevel: actor.level, theoreticalLevel: actor.level })
+        if (actor.level !== null) {
+          const value = { foundryLevel: actor.level, theoreticalLevel: levels.get(uuid)?.theoreticalLevel ?? actor.level }
+          levels.set(uuid, value)
+          refreshed.push({ uuid, ...value })
+        }
       } catch (error) {
         this.logger.warn(`Niveau Foundry indisponible pour ${uuid} : ${error instanceof Error ? error.message : String(error)}`)
       }
     }
+    if (refreshed.length) await this.persistence.saveFoundryPlayerLevels(refreshed)
     return levels
   }
 

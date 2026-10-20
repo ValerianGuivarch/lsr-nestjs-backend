@@ -6,7 +6,7 @@ import { createHash, randomBytes, randomUUID } from 'node:crypto'
 import { DataSource, EntityManager } from 'typeorm'
 import { PF2_PLAYER_IDENTITIES } from '../discord/Pf2PlayerIdentity'
 
-export type Pf2RecordKind = 'pnj' | 'faction' | 'lieu' | 'region' | 'evenement' | 'scenario' | 'session' | 'catalogue' | 'curation' | 'foundry-actor-cache' | 'geography-config'
+export type Pf2RecordKind = 'pnj' | 'faction' | 'lieu' | 'region' | 'evenement' | 'scenario' | 'session' | 'catalogue' | 'curation' | 'foundry-actor-cache' | 'foundry-player-level-cache' | 'geography-config'
 export type Pf2RecordScope = 'global' | 'scenario'
 export type ListRecordOptions = { includeExcluded?: boolean }
 export type FoundryActorCacheEntry = { uuid: string; name: string }
@@ -118,6 +118,27 @@ export class Pf2PersistenceService implements OnModuleInit {
       actors,
       cachedAt: new Date().toISOString()
     })
+  }
+
+  async saveFoundryPlayerLevels(levels: Array<{ uuid: string; foundryLevel: number; theoreticalLevel: number }>): Promise<void> {
+    const previous = await this.readFoundryPlayerLevels()
+    for (const entry of levels) previous.set(entry.uuid, { foundryLevel: entry.foundryLevel, theoreticalLevel: entry.theoreticalLevel })
+    await this.upsert('foundry-player-level-cache', 'latest', 'Derniers niveaux des PJ Foundry', {
+      levels: [...previous].map(([uuid, value]) => ({ uuid, ...value })),
+      cachedAt: new Date().toISOString()
+    })
+  }
+
+  async readFoundryPlayerLevels(): Promise<Map<string, { foundryLevel: number; theoreticalLevel: number }>> {
+    const cached = await this.get('foundry-player-level-cache', 'latest')
+    const result = new Map<string, { foundryLevel: number; theoreticalLevel: number }>()
+    if (!Array.isArray(cached?.levels)) return result
+    for (const item of cached.levels) {
+      if (!this.isObject(item)) continue
+      if (typeof item.uuid !== 'string' || !Number.isInteger(item.foundryLevel) || !Number.isInteger(item.theoreticalLevel)) continue
+      result.set(item.uuid, { foundryLevel: item.foundryLevel as number, theoreticalLevel: item.theoreticalLevel as number })
+    }
+    return result
   }
 
   async readFoundryActorCache(): Promise<FoundryActorCacheEntry[]> {
