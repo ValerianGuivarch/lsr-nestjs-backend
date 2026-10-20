@@ -527,3 +527,7 @@ Actor officiel ou clone Foundry
 
 Les outils d'improvisation peuvent évoluer en ergonomie, mais le moteur mécanique doit rester déterministe et fondé sur les données PF2e/Foundry. Une éventuelle couche de langage naturel ou d'IA doit seulement traduire une intention en critères structurés et laisser au MJ la possibilité de vérifier ces critères avant génération.
 
+
+## Gagner de l'argent — versement depuis le chat (proposition, octobre 2026)
+
+Dans le module `pf2e-val-toolkit`, le rendu du résultat natif PF2e `earn-income` reçoit un bouton **Ajouter l'argent**. Le montant provient uniquement de la ligne « revenu gagné » du résultat (total pour tous les jours) ; aucune récompense n'est déduite du seul résultat du d20. Le joueur propriétaire du personnage ou le MJ doit confirmer le crédit. Le Toolkit appelle `actor.inventory.addCoins`, puis conserve un drapeau sur le message de chat pour empêcher un second crédit. Les montants illisibles ne donnent pas de bouton actif. Le développement est sur branche séparée et doit être vérifié dans Foundry avant diffusion.
