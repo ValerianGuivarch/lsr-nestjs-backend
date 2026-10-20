@@ -1,0 +1,22 @@
+(function () {
+ const root=document.getElementById('pf2-reputations'); if(!root)return;
+ const api=new mw.Api(); let groups=[],canEdit=false,busy=false;
+ const el=(tag,text,cls)=>{const n=document.createElement(tag);if(text!==undefined&&text!==null)n.textContent=text;if(cls)n.className=cls;return n};
+ const button=(label,fn,cls)=>{const b=el('button',label,cls||'pf2-rep-button');b.type='button';b.addEventListener('click',fn);return b};
+ const reputationLabel=(v)=>v>=30?'Révéré':v>=15?'Admiré':v>=5?'Apprécié':v<=-30?'Pourchassé':v<=-15?'Détesté':v<=-5?'Méprisé':'Neutre';
+ async function refresh(){root.textContent='Chargement des réputations…';try{const data=await api.get({action:'pf2reputations',format:'json'});groups=data.pf2reputations.groups||[];canEdit=!!data.pf2reputations.canEdit;render()}catch(e){root.textContent='Impossible de charger les réputations.';mw.notify(String(e),{type:'error'})}}
+ async function action(payload){if(busy)return;busy=true;try{await api.postWithToken('csrf',{action:'pf2reputationsupdate',format:'json',...payload});await refresh()}catch(e){mw.notify('Modification impossible : '+e,{type:'error'})}finally{busy=false}}
+ function editScore(r){const raw=prompt('Nouvelle réputation pour '+r.name+' (−50 à +50)',String(r.score));if(raw===null)return;const score=Number(raw.trim());if(!Number.isInteger(score)||score < -50||score>50){mw.notify('Entrez un entier entre −50 et +50.',{type:'error'});return}const reason=prompt('Motif (facultatif)','');if(reason===null)return;action({operation:'score',id:r.id,score,reason})}
+ function shift(r,delta){const score=Math.max(-50,Math.min(50,r.score+delta));if(score===r.score)return;action({operation:'score',id:r.id,score,reason:'Ajustement rapide '+(delta>0?'+':'')+delta})}
+ function move(r){const options=groups.map(g=>g.id+' : '+g.name).join('\n');const raw=prompt('Déplacer '+r.name+' vers quel groupe ?\n'+options,String(r.group_id));if(raw===null)return;const id=Number(raw);if(!groups.some(g=>g.id===id)){mw.notify('Groupe invalide',{type:'error'});return}action({operation:'move',id:r.id,groupid:id})}
+ function addGroup(){const name=prompt('Nom du nouveau groupe');if(name&&name.trim())action({operation:'group',name:name.trim()})}
+ function addEntry(g){const name=prompt('Nom de la nouvelle réputation dans « '+g.name+' »');if(name&&name.trim())action({operation:'create',groupid:g.id,name:name.trim()})}
+ function render(){root.replaceChildren();root.className='pf2-reputation-board';
+  const head=el('div',null,'pf2-reputation-heading');head.append(el('h2','Réputations des aventuriers'));head.append(el('p','Les alliances et rivalités évoluent au fil des aventures. Les valeurs vont de −50 à +50.'));if(canEdit)head.append(button('+ Créer un groupe',addGroup,'pf2-rep-button pf2-rep-primary'));root.append(head);
+  for(const g of groups){const section=el('section',null,'pf2-rep-group');const title=el('div',null,'pf2-rep-group-title');title.append(el('h3',g.name));title.append(el('span',g.entries.length+' factions','pf2-rep-count'));if(canEdit)title.append(button('+ Réputation',()=>addEntry(g)));section.append(title);
+   const list=el('div',null,'pf2-rep-list');for(const r of g.entries){const card=el('article',null,'pf2-rep-card');const row=el('div',null,'pf2-rep-line');row.append(el('strong',r.name));const val=el('span',(r.score>0?'+':'')+r.score,'pf2-rep-score '+(r.score>=5?'positive':r.score<=-5?'negative':'neutral'));row.append(val);card.append(row);
+   const meter=el('div',null,'pf2-rep-track');const center=el('span',null,'pf2-rep-center');meter.append(center);const fill=el('span',null,'pf2-rep-fill '+(r.score<0?'negative':'positive'));fill.style.left=(r.score<0?50+r.score:50)+'%';fill.style.width=Math.abs(r.score)+'%';meter.append(fill);const marker=el('span',null,'pf2-rep-marker');marker.style.left=(50+r.score)+'%';meter.append(marker);card.append(meter);
+   const foot=el('div',null,'pf2-rep-footer');foot.append(el('small',reputationLabel(r)));if(canEdit){const tools=el('div',null,'pf2-rep-actions');tools.append(button('−5',()=>shift(r,-5)),button('−1',()=>shift(r,-1)),button('+1',()=>shift(r,1)),button('+5',()=>shift(r,5)),button('Éditer',()=>editScore(r)),button('Déplacer',()=>move(r)));foot.append(tools)}card.append(foot);list.append(card)}section.append(list);root.append(section)}
+ }
+ refresh();
+})();

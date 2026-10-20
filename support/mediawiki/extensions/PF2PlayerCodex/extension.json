@@ -17,7 +17,10 @@
     "SpecialPF2Requests": "includes/SpecialPF2Requests.php",
     "PF2RequestsBridge": "includes/PF2RequestsBridge.php",
     "ApiPF2Requests": "includes/ApiPF2Requests.php",
-    "ApiPF2RequestsUpdate": "includes/ApiPF2RequestsUpdate.php"
+    "ApiPF2RequestsUpdate": "includes/ApiPF2RequestsUpdate.php",
+    "PF2ReputationBridge": "includes/PF2ReputationBridge.php",
+    "ApiPF2Reputations": "includes/ApiPF2Reputations.php",
+    "ApiPF2ReputationsUpdate": "includes/ApiPF2ReputationsUpdate.php"
   },
   "APIModules": {
     "pf2playercodex": "ApiPF2PlayerCodex",
@@ -26,7 +29,9 @@
     "pf2playercodexmeupdate": "ApiPF2PlayerCodexMeUpdate",
     "pf2playercodexmj": "ApiPF2PlayerCodexMj",
     "pf2requests": "ApiPF2Requests",
-    "pf2requestsupdate": "ApiPF2RequestsUpdate"
+    "pf2requestsupdate": "ApiPF2RequestsUpdate",
+    "pf2reputations": "ApiPF2Reputations",
+    "pf2reputationsupdate": "ApiPF2ReputationsUpdate"
   },
   "ResourceModules": {
     "ext.pf2playercodex": {
@@ -52,6 +57,18 @@
       ],
       "dependencies": [
         "mediawiki.api"
+      ]
+    },
+    "ext.pf2reputations": {
+      "scripts": [
+        "resources/pf2-reputations.js"
+      ],
+      "styles": [
+        "resources/pf2-reputations.css"
+      ],
+      "dependencies": [
+        "mediawiki.api",
+        "mediawiki.util"
       ]
     }
   },
