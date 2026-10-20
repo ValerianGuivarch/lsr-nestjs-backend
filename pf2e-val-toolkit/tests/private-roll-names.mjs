@@ -1,0 +1,10 @@
+import assert from 'node:assert/strict';
+import { privateRollCharacterName } from '../scripts/private-roll-names.js';
+const actors = new Map([['pj1',{name:'Arcady'}]]);
+const users = new Map([['gus',{character:{name:'Arcady'}}]]);
+const roll = {isRoll:true,rollMode:'blindroll',speaker:{actor:'pj1'},author:{id:'gus'}};
+assert.equal(privateRollCharacterName(roll,actors,users),'Arcady');
+assert.equal(privateRollCharacterName({...roll,speaker:{}},actors,users),'Arcady');
+assert.equal(privateRollCharacterName({...roll,rollMode:'publicroll'},actors,users),null);
+assert.equal(privateRollCharacterName({...roll,isRoll:false},actors,users),null);
+console.log('Private roll names OK');
