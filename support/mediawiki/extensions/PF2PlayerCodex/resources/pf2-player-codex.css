@@ -70,5 +70,7 @@
 .pf2-player-mj-markdown { white-space:pre-wrap; overflow-wrap:anywhere; font-family:inherit; font-size:0.95rem; line-height:1.65; max-width:100%; }
 .pf2-mj-link { margin-left:.55rem; }
 
-.pf2-player-contact-portrait { display:block; width:100%; height:160px; object-fit:contain; object-position:center; background:#f4efe6; border-radius:8px; margin-bottom:12px; }
+/* Les contacts ont un cadre vertical sans recadrage, y compris pour les images larges. */
+.pf2-player-contact-card img.pf2-player-contact-portrait { display:block; width:100%; height:auto; aspect-ratio:3 / 4; object-fit:contain; object-position:center; background:#f4efe6; border-radius:8px; margin-bottom:12px; }
+.pf2-player-contact-portrait-placeholder { width:100%; aspect-ratio:3 / 4; background:#f4efe6; border-radius:8px; margin-bottom:12px; }
 .pf2-player-contact-portrait-placeholder { display:flex; align-items:center; justify-content:center; font-size:4rem; color:#9c927f; }
