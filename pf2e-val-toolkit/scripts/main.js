@@ -30,6 +30,7 @@ import {
 } from "./pf2e-hud-integration.js";
 import { initQuickEffects } from "./quick-effects/index.js";
 import { initTargetContext } from "./target-context/index.js";
+import { initEarnIncomeCoins } from "./earn-income/index.js";
 import { initOutcomeEffects } from "./outcome-effects/index.js";
 
 Hooks.once("init", () => {
@@ -62,6 +63,7 @@ Hooks.once("ready", () => {
   initPatches();
   initQuickEffects();
   initOutcomeEffects();
+  initEarnIncomeCoins();
   initTargetContext();
   initGeneralActionsBrowser();
   initCareerXp();
