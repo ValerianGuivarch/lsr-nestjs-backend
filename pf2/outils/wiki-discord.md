@@ -202,3 +202,18 @@ Dans **Mes personnages**, le wiki affiche un cinquième onglet **MJ** sur la fic
 Dans les **Contacts**, un second lien **MJ** apparaît à côté d'**Ouvrir** pour ces mêmes administrateurs et ouvre directement `https://l7r.fr/pf2-mj/npcs/{npcId}`, la fiche métier du PNJ dans l'interface MJ. Ce bouton ne doit jamais être présent pour un utilisateur non administrateur.
 
 **Sécurité :** ne jamais ajouter le Markdown MJ aux objets `myCharacters` ni aux requêtes API publiques ; ne pas se fier au masquage JavaScript seul. Vérifier à chaque mise à jour que `action=pf2playercodexmj` renvoie un refus à un utilisateur non administrateur et que les données MJ ne figurent pas dans `action=pf2playercodexme`.
+
+## Requêtes Discord et Kanban Wiki (implémentation en branche, octobre 2026)
+
+Le salon Discord **bot-et-app** (`1554492543654436875`, serveur `1531345672639610920`) accueille les nouvelles demandes. Les anciens messages ne sont pas importés.
+
+- `/requete` ouvre un formulaire sujet/description, avec image facultative en option de commande, puis une prévisualisation privée Publier/Annuler.
+- `/requete-pour demandeur:@membre` est réservé aux membres dotés de ManageGuild, pour créer au nom d'un autre demandeur ; l'identité du saisissant et celle du demandeur sont distinctes en SQLite.
+- Dans le fil d'une requête, les commandes administrateur `/requete-demande`, `/requete-encours` et `/requete-termine` peuvent faire toutes les transitions, y compris la réouverture.
+- Chaque demande publiée reçoit un message Discord, un fil et une épingle. Les transitions éditent le message, ajoutent une notification dans le fil et épinglent/désépinglent selon l'état.
+- La table SQLite `pf2_request` conserve sujet, description, auteur, saisissant, état, IDs Discord et dates.
+- Le wiki expose `Special:RequetesPF2` (administrateurs MediaWiki ayant le droit `delete` uniquement). Le tableau Kanban utilise les modules `pf2requests` et `pf2requestsupdate` protégés par les droits wiki et un jeton CSRF, puis l'API backend interne protégée par `PF2_WIKI_LOGIN_INTERNAL_KEY`.
+- Les changements de statut depuis le wiki passent par le bot afin de modifier Discord.
+- Si Discord est indisponible, le changement renvoie une erreur au lieu de simuler une réussite.
+
+Cette première implémentation exige encore une validation de bout en bout après déploiement (droits d'épinglage du bot, enregistrement des commandes et appels MediaWiki). La compilation TypeScript a été vérifiée ; l'analyse syntaxique PHP doit être exécutée dans un environnement doté de PHP.

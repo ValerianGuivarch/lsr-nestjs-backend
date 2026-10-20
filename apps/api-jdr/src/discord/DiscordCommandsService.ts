@@ -6,6 +6,7 @@ import { Pf2PersistenceService } from '../pf2-storage/Pf2PersistenceService'
 import { PlayerCodexService } from '../pf2-mj/PlayerCodexService'
 import { MediaWikiClientService } from '../pf2-mj/MediaWikiClientService'
 import { DiscordResumeSync, DiscordService } from './DiscordService'
+import { Pf2RequestService, RequestStatus } from './Pf2RequestService'
 import { pf2DiscordIdForPlayer, pf2MatchesPlayerOrDiscordAlias, pf2PlayerByDiscordId } from './Pf2PlayerIdentity'
 import { shortSummaryRewardForSession } from '../pf2-sessions/Pf2CareerXp'
 import { Pf2JournalsService } from '../pf2-journals/Pf2JournalsService'
@@ -38,6 +39,7 @@ const RANDOM_CHARACTER_CLASSES = [
 @Injectable()
 export class DiscordCommandsService {
   private readonly logger = new Logger(DiscordCommandsService.name)
+  private readonly pendingRequests = new Map<string,{ owner:string;title:string;description:string;requesterId:string;requesterName:string;imageUrl?:string }>()
   private readonly pendingGames = new Map<string, {
     actors: Array<{ uuid: string; name: string; player: string; userId: string }>
     selected?: Array<{ uuid: string; name: string; player: string; userId: string }>
@@ -81,10 +83,19 @@ export class DiscordCommandsService {
   private readonly pendingPlayerDraws = new Map<string, { requesterId: string; players: Array<{ id: string; name: string }> }>()
   private readonly pendingQuestCompletions = new Map<string, { requesterId: string; threadId: string }>()
   private readonly choiceForumChannelId = process.env['PF2_DISCORD_QUEST_FORUM_CHANNEL_ID']?.trim() || '1536259632455094412'
-  constructor(private readonly persistence: Pf2PersistenceService, private readonly foundry: FoundryRelayService, private readonly playerCodex?: PlayerCodexService, private readonly mediaWiki?: MediaWikiClientService, @Inject(forwardRef(() => DiscordService)) private readonly discord?: DiscordService, private readonly journals?: Pf2JournalsService) {}
+  constructor(private readonly persistence: Pf2PersistenceService, private readonly foundry: FoundryRelayService, private readonly playerCodex?: PlayerCodexService, private readonly mediaWiki?: MediaWikiClientService, @Inject(forwardRef(() => DiscordService)) private readonly discord?: DiscordService, private readonly journals?: Pf2JournalsService, private readonly requests?: Pf2RequestService) {}
 
   definitions(): RESTPostAPIApplicationGuildCommandsJSONBody[] {
     return [
+      new SlashCommandBuilder().setName('requete').setDescription('Déposer une requête PF2.')
+        .addAttachmentOption(o=>o.setName('image').setDescription('Capture facultative')).toJSON(),
+      new SlashCommandBuilder().setName('requete-pour').setDescription('Créer une requête pour un membre Discord.')
+        .addUserOption(o=>o.setName('demandeur').setDescription('Auteur réel de la demande').setRequired(true))
+        .addAttachmentOption(o=>o.setName('image').setDescription('Capture facultative'))
+        .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild).toJSON(),
+      ...(['requete-demande','requete-encours','requete-termine'] as const).map(name=>
+        new SlashCommandBuilder().setName(name).setDescription('Modifier le statut de la requête dans ce fil.')
+          .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild).toJSON()),
       new SlashCommandBuilder().setName('random-perso').setDescription('Tire au hasard une ascendance, une classe et un genre.').setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild).toJSON(),
       new SlashCommandBuilder().setName('tirage-sort-joueur').setDescription('Tire au sort des personnes parmi une sélection Discord.').setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild).toJSON(),
       new SlashCommandBuilder().setName('help').setDescription('Affiche les commandes PF2 disponibles.').toJSON(),
@@ -147,6 +158,10 @@ export class DiscordCommandsService {
   }
 
   async handle(interaction: Pick<ChatInputCommandInteraction, 'commandName' | 'reply' | 'deferReply' | 'editReply'>): Promise<boolean> {
+    if (interaction.commandName === 'requete' || interaction.commandName === 'requete-pour' || interaction.commandName.startsWith('requete-')) {
+      await this.requestCommand(interaction as ChatInputCommandInteraction)
+      return true
+    }
     if (interaction.commandName === 'random-perso') {
       await this.randomCharacterCommand(interaction as ChatInputCommandInteraction)
       return true
@@ -2209,7 +2224,52 @@ export class DiscordCommandsService {
     return true
   }
 
+  private async requestCommand(interaction: ChatInputCommandInteraction): Promise<void> {
+    if(!this.requests){await interaction.reply({content:'Module indisponible.',ephemeral:true});return}
+    const action=interaction.commandName
+    if(action.startsWith('requete-') && action!=='requete-pour') {
+      if(!this.isAdmin(interaction)){await interaction.reply({content:'Commande réservée aux administrateurs.',ephemeral:true});return}
+      const item=await this.requests.byThread(interaction.channelId)
+      if(!item){await interaction.reply({content:'Cette commande doit être exécutée dans le fil d’une requête.',ephemeral:true});return}
+      const status:RequestStatus=action==='requete-encours'?'in_progress':action==='requete-termine'?'done':'requested'
+      await interaction.deferReply({ephemeral:true})
+      await this.requests.change(interaction.client,item.id,status)
+      await interaction.editReply('État mis à jour.')
+      return
+    }
+    if(interaction.channelId!=='1554492543654436875'){await interaction.reply({content:'Utilise cette commande dans #bot-et-app.',ephemeral:true});return}
+    const user=action==='requete-pour'?interaction.options.getUser('demandeur'):null
+    if(action==='requete-pour' && !this.isAdmin(interaction)){await interaction.reply({content:'Commande réservée aux administrateurs.',ephemeral:true});return}
+    if(user && !this.isAdmin(interaction)){await interaction.reply({content:'Seul un administrateur peut choisir le demandeur.',ephemeral:true});return}
+    const requester=user||interaction.user
+    const member=user?await interaction.guild?.members.fetch(user.id).catch(()=>null):interaction.member
+    const name=(member && 'displayName' in member ? member.displayName:null)||requester.globalName||requester.username
+    const attachment=interaction.options.getAttachment('image')
+    if(attachment && !attachment.contentType?.startsWith('image/')){await interaction.reply({content:'La pièce jointe doit être une image.',ephemeral:true});return}
+    this.pendingRequests.set(interaction.id,{owner:interaction.user.id,title:'',description:'',requesterId:requester.id,requesterName:name,imageUrl:attachment?.url})
+    const modal=new ModalBuilder().setCustomId('pf2-request:form:'+interaction.id).setTitle('Nouvelle requête PF2')
+      .addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder().setCustomId('subject').setLabel('Sujet').setStyle(TextInputStyle.Short).setRequired(true).setMaxLength(150)),
+        new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder().setCustomId('details').setLabel('Description').setStyle(TextInputStyle.Paragraph).setRequired(true).setMaxLength(1600)))
+    await interaction.showModal(modal)
+  }
+
   async handleModal(interaction: ModalSubmitInteraction): Promise<boolean> {
+    if(interaction.customId.startsWith('pf2-request:form:')) {
+      const isAdmin=this.isAdmin(interaction as unknown as ChatInputCommandInteraction)
+      const userId=interaction.customId.slice('pf2-request:form:'.length)
+      const draft=this.pendingRequests.get(userId)
+      if(!draft || interaction.user.id!==draft.owner) {await interaction.reply({content:'Formulaire expiré.',ephemeral:true});return true}
+      draft.title=interaction.fields.getTextInputValue('subject').trim()
+      draft.description=interaction.fields.getTextInputValue('details').trim()
+      if(!draft.title || !draft.description){await interaction.reply({content:'Sujet et description obligatoires.',ephemeral:true});return true}
+      if(!isAdmin && draft.requesterId!==interaction.user.id) draft.requesterId=interaction.user.id
+      await interaction.reply({content:`**Prévisualisation**\nDemande de <@${draft.requesterId}>\n**${draft.title}**\n${draft.description}`,ephemeral:true,allowedMentions:{parse:[]},
+        components:[new ActionRowBuilder<ButtonBuilder>().addComponents(
+          new ButtonBuilder().setCustomId('pf2-request:publish:'+userId).setLabel('Publier').setStyle(ButtonStyle.Success),
+          new ButtonBuilder().setCustomId('pf2-request:cancel:'+userId).setLabel('Annuler').setStyle(ButtonStyle.Secondary))]})
+      return true
+    }
+
     if (interaction.customId.startsWith('pf2-manual-session:custom-date:')) {
       const commandId = interaction.customId.slice('pf2-manual-session:custom-date:'.length)
       const pending = this.pendingManualSessionValidations.get(commandId)
@@ -2411,6 +2471,20 @@ export class DiscordCommandsService {
   }
 
   async handleButton(interaction: ButtonInteraction): Promise<boolean> {
+    if(interaction.customId.startsWith('pf2-request:')) {
+      const parts=interaction.customId.split(':')
+      const draft=this.pendingRequests.get(parts[2])
+      if(!draft || draft.owner!==interaction.user.id){await interaction.reply({content:'Confirmation expirée.',ephemeral:true});return true}
+      this.pendingRequests.delete(parts[2])
+      if(parts[1]==='cancel'){await interaction.update({content:'Publication annulée.',components:[]});return true}
+      await interaction.deferUpdate()
+      try {
+        const created=await this.requests!.create(interaction.client,{...draft,createdBy:draft.owner})
+        await interaction.editReply({content:`Requête #${created.id} publiée : https://discord.com/channels/${interaction.guildId}/${created.thread_id}`,components:[]})
+      } catch(e){await interaction.editReply({content:'Échec de publication : '+(e instanceof Error?e.message:'erreur'),components:[]})}
+      return true
+    }
+
     if (interaction.customId.startsWith('pf2-mission:publish:') || interaction.customId.startsWith('pf2-mission:cancel:')) {
       const match = /^pf2-mission:(publish|cancel):(.+)$/.exec(interaction.customId)!
       const action = match[1]

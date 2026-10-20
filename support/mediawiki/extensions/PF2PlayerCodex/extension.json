@@ -13,14 +13,20 @@
     "ApiPF2PlayerCodexMe": "includes/ApiPF2PlayerCodexMe.php",
     "ApiPF2PlayerCodexMeUpdate": "includes/ApiPF2PlayerCodexMeUpdate.php",
     "SpecialPF2MyCharacters": "includes/SpecialPF2MyCharacters.php",
-    "ApiPF2PlayerCodexMj": "includes/ApiPF2PlayerCodexMj.php"
+    "ApiPF2PlayerCodexMj": "includes/ApiPF2PlayerCodexMj.php",
+    "SpecialPF2Requests": "includes/SpecialPF2Requests.php",
+    "PF2RequestsBridge": "includes/PF2RequestsBridge.php",
+    "ApiPF2Requests": "includes/ApiPF2Requests.php",
+    "ApiPF2RequestsUpdate": "includes/ApiPF2RequestsUpdate.php"
   },
   "APIModules": {
     "pf2playercodex": "ApiPF2PlayerCodex",
     "pf2playercodexupdate": "ApiPF2PlayerCodexUpdate",
     "pf2playercodexme": "ApiPF2PlayerCodexMe",
     "pf2playercodexmeupdate": "ApiPF2PlayerCodexMeUpdate",
-    "pf2playercodexmj": "ApiPF2PlayerCodexMj"
+    "pf2playercodexmj": "ApiPF2PlayerCodexMj",
+    "pf2requests": "ApiPF2Requests",
+    "pf2requestsupdate": "ApiPF2RequestsUpdate"
   },
   "ResourceModules": {
     "ext.pf2playercodex": {
@@ -36,6 +42,17 @@
       ],
       "localBasePath": "",
       "remoteExtPath": "PF2PlayerCodex"
+    },
+    "ext.pf2requests": {
+      "scripts": [
+        "resources/pf2-requests.js"
+      ],
+      "styles": [
+        "resources/pf2-requests.css"
+      ],
+      "dependencies": [
+        "mediawiki.api"
+      ]
     }
   },
   "Hooks": {
@@ -48,6 +65,7 @@
   },
   "manifest_version": 2,
   "SpecialPages": {
-    "MesPersonnages": "SpecialPF2MyCharacters"
+    "MesPersonnages": "SpecialPF2MyCharacters",
+    "RequetesPF2": "SpecialPF2Requests"
   }
 }
