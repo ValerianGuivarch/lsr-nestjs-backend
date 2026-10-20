@@ -20,11 +20,13 @@ Le texte intégral du Background et les Notes sont stockés dans SQLite et édit
 
 ## Histoire et concept
 
-Personnage particulièrement étrange : **personne fictive devenue réelle à la suite d'un rituel**. Son existence elle-même est un mystère métaphysique.
+**Secret MJ confirmé le 20 octobre 2026 :** Jilkra est issu d'un monde entier créé à partir d'un roman de fantasy peu populaire, par le frère de Yaz Lorok au cours d'une prouesse magique destinée à l'élever au rang de patron. Ce fait est inconnu de Jilkra et ne doit pas être publié sur son wiki. Les détails sont centralisés dans [Larantis](../univers/Larantis.md).
 
 ## Larantis — dossier transversal MJ (piste en cours de discussion)
 
-Un [dossier Larantis](../univers/Larantis.md) est prévu pour la piste commune à Jilkra et au frère de Yaz. **Statut : orientation narrative proposée par le MJ le 19 octobre 2026, non encore validée comme canon.** La piste envisage que Jilkra soit issu d'un monde entier initialement fictif, devenu réel en raison de l'action du frère de Yaz. Elle ne fixe ni la nature du rituel ni la chronologie du phénomène. Ne rien révéler automatiquement au joueur et conserver le Background public inchangé.
+Voir le [dossier transversal Larantis](../univers/Larantis.md) pour la vérité MJ validée, ses limites et son lien avec Yaz. **Le Background public de Jilkra reste inchangé** : il ne connaît ni le roman, ni son autrice, ni l'intervention du frère de Yaz. Son monde et ses souvenirs sont vécus comme authentiques. Le mécanisme détaillé du rituel reste ouvert.
+
+**Indices et fausses pistes :** le cassoulet à la graisse d'hydre ne goûte pas comme Jilkra l'imagine, car sa description romanesque ne reposait sur aucune dégustation de l'autrice ou du créateur du monde. Les noms, l'esthétique et les motifs de catastrophe de Larantis évoquent Thassilon, mais **parce que l'autrice du roman s'en était inspirée** : ce n'est pas une preuve de filiation historique.
 
 ## Relations et intrigues personnelles
 
@@ -41,9 +43,9 @@ Aucune décision supplémentaire documentée ici. Les informations du joueur et 
 
 ## À trier
 
-> **Contradiction à arbitrer ultérieurement :** les éléments ci-dessous décrivent Jilkra comme princesse de Larantis mise en stase avant la destruction de son royaume, ce qui ne correspond pas à l'origine « personne fictive devenue réelle » documentée plus haut. Ne pas résoudre sans audit PJ dédié.
+> **Correction de continuité :** Jilkra est **un prince masculin**. Les anciennes formulations au féminin sont erronées. Sa mise en stase relève de son vécu public ; son origine romanesque est un secret MJ et n'annule pas ses souvenirs.
 
-- **Ogon Rega Larantis** : père de Jilkra et ancien roi de Larantis, qui l'aurait préparée à lui succéder puis fait placer en stase.
+- **Ogon Rega Larantis** : père de Jilkra et ancien roi de Larantis, qui l'aurait préparé à lui succéder puis fait placer en stase. **Ogon n'accorde pas la magie** : ancienne piste abandonnée, à ne pas reprendre.
 - **Volgar Aeron Larantis** : frère cadet et divinateur très talentueux, auteur de la prophétie annonçant la destruction de Larantis et le réveil futur de Jilkra.
 - **Pellia Velloran** : très riche noble humaine du Taldor dont la famille possède l'ancienne villa où Jilkra aurait été retrouvée ; frivole, extravagante et fascinée par les histoires extraordinaires.
 - **Dorvin Velloran** : cousin de Pellia installé à Absalom, responsable des acquisitions à la **Flèche des Érudits** (nom français de travail pour *Scholar's Spire*) ; travaille régulièrement avec la Société et pense que Jilkra est une imposture profitant de Pellia.
@@ -54,6 +56,6 @@ Aucune décision supplémentaire documentée ici. Les informations du joueur et 
 
 Dans `Personnages/Jilkra Adoric Larantis.docx`, Jilkra se présente explicitement comme **« premier fils d'Ogon Rega Larantis »** et **prince héritier** du royaume halfelin de Larantis. La description évoque les ports et cités de marbre, la prospérité maritime, les temples d'**Arshea**, et les valeurs de liberté, de beauté et d'expression personnelle. **Il ne faut plus appeler Jilkra « princesse »** : cette qualification de l'ancienne fiche est contredite par la voix du personnage.
 
-**Secret et tension MJ :** la disparition de Larantis des archives, la mémoire personnelle du personnage, la stase supposée et l'origine surnaturelle ou rituelle restent des sujets à investiguer. L'assertion de l'ancien index « personnage fictif devenu réel » est une **version de continuité potentiellement contradictoire**, pas une certitude à imposer à Jilkra. Les versions pourraient être compatibles au terme d'une révélation, mais **aucun raccord de ce type n'est validé**.
+**Secret et tension MJ :** la disparition de Larantis des archives, la mémoire personnelle du personnage, la stase supposée et l'origine surnaturelle ou rituelle restent des sujets à investiguer. Le mystère de l'origine fictive est désormais **établi pour le MJ** : un roman aimé par le frère de Yaz a servi à créer un monde et de la vie dans un demi-plan. La contradiction apparente entre le passé vécu et l'origine littéraire est voulue. Le fonctionnement exact de cette création, la prophétie et l'histoire subjective de Jilkra restent à approfondir. **Aucun de ces secrets ne doit être ajouté au Background du wiki.**
 
 **À vérifier :** rôle exact du frère Volgar, circonstances de la prophétie et chronologie des événements d'après le texte complet ; ne pas confondre témoignage du personnage et histoire objectivement démontrée.
