@@ -24,7 +24,20 @@ Femme-féline / “catwoman” liée au **Chéliax**, aux mouvements révolution
 
 ## Relations et intrigues personnelles
 
-Les relations déjà citées mais pas encore structurées figurent provisoirement dans **À trier**. Ne pas interpréter une piste comme un événement joué.
+### La lettre de Ravi à Avarneus — orientation MJ validée (20 octobre 2026)
+
+- **Objectif connu de Neyla :** retrouver Avarneus et lui remettre personnellement la lettre laissée par Ravi Sahan, sans l'ouvrir. Ce fil demeure sa quête personnelle immédiate, à côté de sa recherche de vérité et de sa fidélité aux enseignements de Ravi.
+- **Vérité privée MJ établie :** durant la révolution du Vidrian, les renseignements transmis par Neyla ont joué un rôle sensiblement plus important que ce qu'elle imagine. Elle a contribué de façon déterminante à certaines réussites révolutionnaires, sans mesurer leur portée.
+- **Révélation prévue :** au moment où Neyla remettra la lettre, la rencontre avec Avarneus doit permettre de lui apprendre l'importance réelle de son aide. Les opérations concernées, leur chronologie exacte et la façon dont Avarneus les connaît restent à préparer.
+- **Quête à créer :** préparer une quête personnelle autour de la recherche d'Avarneus et de la remise de la lettre. Cette quête n'est **pas encore jouée** et ne doit pas être présentée comme accomplie. Ne pas inventer pour l'instant le contenu de la lettre.
+- **Ouverture à long terme :** une fois cette contribution reconnue, Neyla pourra être sollicitée pour d'autres missions liées aux révolutionnaires, à ses informations ou à ses anciennes relations. Aucun nouveau scénario ni adversaire n'est encore fixé.
+- **Limites de continuité :** ne pas déduire qu'il existe un vaste complot, que Ravi a été assassiné, ou que les Ketta seraient responsables de sa mort. Ne pas révéler dans le Background ou l'objectif public que Neyla a joué un rôle plus important qu'elle ne le croit.
+
+### Contacts et journaux d'Absalom
+
+- **Karla Jix :** journaliste de *L'Étoile de la Semaine*, à Absalom.
+- **Borrik Durn :** journaliste de *L'Œil d'Absalom*, à Absalom.
+- **Point ouvert :** selon `pf2/univers/Absalom.md`, le statut éditorial final de ces journaux n'est pas verrouillé ; une éventuelle évolution de *L'Étoile de la Semaine* vers *Vue sur Absalom* reste une proposition non validée. Conserver les affiliations actuellement établies dans les fiches des contacts en attendant un arbitrage.
 
 ## Classe, choix PF2 et évolutions
 
@@ -33,7 +46,10 @@ Les relations déjà citées mais pas encore structurées figurent provisoiremen
 
 ## Décisions ouvertes
 
-Aucune décision supplémentaire documentée ici. Les informations du joueur et les choix PF2 pourront être ajoutés lors du prochain audit.
+- Créer et préparer la quête de remise de la lettre à Avarneus (révélation de l'importance des renseignements de Neyla).
+- Définir seulement lors de cette préparation les opérations révolutionnaires concernées et la forme exacte de la révélation ; ne pas présumer du contenu de la lettre.
+- Clarifier à terme les journaux d'Absalom sans changer arbitrairement les affiliations de Karla et Borrik.
+- Foundry demeure la source de vérité des choix mécaniques et de l'évolution effective.
 
 ## À trier
 
