@@ -9,6 +9,7 @@
 	function errorMessage( error, fallback ) { return ( error && error.error && ( error.error.info || error.error.code ) ) || ( error && error.message ) || fallback; }
 	function imageForFilename( filename ) { return filename ? mw.util.getUrl( 'Special:FilePath/' + filename ) : ''; }
 
+	function renderMjMarkdown(source, root) { mw.pf2MjRender(source, root); }
 	function appendShortDescriptionEditor( container, entity, canEdit, emptyText ) {
 		var text = document.createElement( 'p' );
 		text.className = 'pf2-player-short-description pf2-player-short-description-detail';
@@ -312,12 +313,12 @@
                     };
                 };
 			} else if ( name === 'mj' && isMjAdmin ) {
-                var privateView = document.createElement( 'pre' );
+                var privateView = document.createElement( 'div' );
                 privateView.className = 'pf2-player-mj-markdown';
                 privateView.textContent = 'Chargement du dossier MJ…';
                 panel.appendChild( privateView );
                 api().get( { action: 'pf2playercodexmj', npcId: character.npcId, format: 'json' } ).then( function ( response ) {
-                    privateView.textContent = response.pf2playercodexmj.markdown || 'Aucune information MJ.';
+                    renderMjMarkdown( response.pf2playercodexmj.markdown || 'Aucune information MJ.', privateView );
                 } ).catch( function () {
                     privateView.textContent = 'Accès MJ refusé ou document indisponible.';
                 } );

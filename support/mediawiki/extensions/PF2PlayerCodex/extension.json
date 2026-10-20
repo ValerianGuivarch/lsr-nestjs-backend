@@ -36,10 +36,12 @@
   "ResourceModules": {
     "ext.pf2playercodex": {
       "scripts": [
+        "resources/pf2-mj-renderer.js",
         "resources/pf2-player-codex.js"
       ],
       "styles": [
-        "resources/pf2-player-codex.css"
+        "resources/pf2-player-codex.css",
+        "resources/pf2-mj-style.css"
       ],
       "dependencies": [
         "mediawiki.api",

@@ -1,0 +1,14 @@
+.pf2-player-mj-markdown { white-space:normal; line-height:1.65; overflow-wrap:anywhere; }
+.pf2-player-mj-markdown h2 { font-size:1.6rem; border-bottom:1px solid #a99f91; padding-bottom:.3em; }
+.pf2-player-mj-markdown h3 { font-size:1.3rem; }
+.pf2-player-mj-markdown h4 { font-size:1.1rem; }
+.pf2-player-mj-markdown h2,.pf2-player-mj-markdown h3,.pf2-player-mj-markdown h4 { font-weight:700; margin:1.3em 0 .5em; line-height:1.3; }
+.pf2-player-mj-markdown p { margin:.65em 0; }
+.pf2-player-mj-markdown ul,.pf2-player-mj-markdown ol { padding-left:1.6em; margin:.65em 0; }
+.pf2-player-mj-markdown li { margin:.35em 0; }
+.pf2-player-mj-markdown blockquote { border-left:4px solid #a99f91; background:rgba(140,120,100,.08); margin:1em 0; padding:.45em 1em; }
+.pf2-player-mj-markdown pre { white-space:pre-wrap; overflow-x:auto; background:rgba(140,120,100,.1); padding:1em; border-radius:6px; }
+.pf2-player-mj-markdown code { font-family:monospace; overflow-wrap:anywhere; }
+.pf2-player-mj-markdown table { display:block; max-width:100%; overflow-x:auto; border-collapse:collapse; margin:1em 0; }
+.pf2-player-mj-markdown th,.pf2-player-mj-markdown td { border:1px solid #a99f91; padding:.5em .75em; vertical-align:top; text-align:left; }
+.pf2-player-mj-markdown th { background:rgba(140,120,100,.1); }
