@@ -1432,6 +1432,10 @@ export class Pf2PersistenceService implements OnModuleInit {
         await manager.query('ALTER TABLE pf2_player_character_contact ADD COLUMN portrait_known INTEGER NOT NULL DEFAULT 1')
       }
     })
+    await this.applyMigration('044-pj-personality', async manager => {
+      const columns = await manager.query('PRAGMA table_info(pf2_player_character_profile)') as Array<{ name: string }>
+      if (!columns.some(column => column.name === 'personality')) await manager.query("ALTER TABLE pf2_player_character_profile ADD COLUMN personality TEXT NOT NULL DEFAULT ''")
+    })
     await this.applyMigration('041-player-chatgpt-links', async manager => {
       await manager.query("CREATE TABLE IF NOT EXISTS pf2_player_chatgpt_link (npc_id TEXT PRIMARY KEY, chatgpt_url TEXT NOT NULL, updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)")
     })

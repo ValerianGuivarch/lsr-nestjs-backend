@@ -7,7 +7,7 @@ import { DataSource } from 'typeorm'
 import { Pf2PersistenceService } from '../pf2-storage/Pf2PersistenceService'
 import { MediaWikiClientService } from './MediaWikiClientService'
 
-type ProfileRow = { npc_id: string; wiki_page_title: string; display_name: string; wiki_portrait_filename: string | null; short_description: string; ancestry: string; character_class: string; objective: string; is_player: number; is_published: number; created_at: string; updated_at: string }
+type ProfileRow = { npc_id: string; wiki_page_title: string; display_name: string; wiki_portrait_filename: string | null; short_description: string; ancestry: string; character_class: string; objective: string; personality: string; is_player: number; is_published: number; created_at: string; updated_at: string }
 type MjFaction = Record<string, unknown> & { id: string; nom: string; description: string; description_joueurs?: string; parent_id?: string | null; published?: boolean }
 type PlayerFactionRow = { id: string; name: string; normalized_name: string; parent_faction_id: string | null; wiki_page_title: string; description: string; source_mj_faction_id: string | null; published: number; created_at?: string; updated_at?: string }
 
@@ -311,10 +311,10 @@ export class PlayerCodexService {
 
   async updateMySheet(wikiUsername: string, npcId: string, field: string, value: unknown, isWikiAdmin = false): Promise<{ npcId: string; field: string; value: string }> {
     const username = this.required(wikiUsername, 'Compte Wiki')
-    const columns: Record<string, string> = { name: 'display_name', ancestry: 'ancestry', characterClass: 'character_class', objective: 'objective' }
+    const columns: Record<string, string> = { name: 'display_name', ancestry: 'ancestry', characterClass: 'character_class', objective: 'objective', personality: 'personality' }
     const column = columns[field]
     if (!column) throw new BadRequestException('Champ de fiche inconnu.')
-    if (typeof value !== 'string' || value.trim().length > (field === 'objective' ? 1000 : 150)) throw new BadRequestException('Valeur de fiche invalide.')
+    if (typeof value !== 'string' || value.trim().length > ((field === 'objective' || field === 'personality') ? 1000 : 150)) throw new BadRequestException('Valeur de fiche invalide.')
     if (!isWikiAdmin) {
       const rows = await this.db.query(
         `SELECT 1 FROM pf2_player_character_owner o
@@ -610,6 +610,7 @@ export class PlayerCodexService {
       ancestry: row.ancestry ?? '',
       characterClass: row.character_class ?? '',
       objective: row.objective ?? '',
+      personality: row.personality ?? '',
       wikiPortraitFilename: row.wiki_portrait_filename,
       shortDescription: row.short_description,
       isPlayer: row.is_player === 1,

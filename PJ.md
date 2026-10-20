@@ -28,3 +28,7 @@ Pour compléter et vérifier les contacts des douze PJ, consulter les conversati
 ## Visibilité des personnages et des portraits
 
 La documentation technique de référence est [Visibilité des personnages PF2](pf2/outils/personnages-visibilite.md). Le statut `is_published` concerne le **carnet général**, et non l'existence d'une fiche MJ. Un contact privé n'apparaît que dans les Contacts des PJ qui le connaissent ; une fiche privée ne devient pas publique lorsqu'on l'associe. Le champ `portrait_known` de chaque relation permet au MJ de cacher **l'image** à un PJ tout en lui laissant connaître le nom et la description autorisée. Les secrets MJ restent exclusivement dans les données MJ.
+
+## Champ Caractère des douze PJ
+
+L'onglet **Fiche** du wiki contient un champ **Caractère** éditable (2 à 3 phrases, sans secret MJ) dans `pf2_player_character_profile.personality`. Les propositions initiales sont établies à partir du Background SQLite et des notes de continuité MJ, sans révéler d'éléments réservés au MJ. La validation et les retouches finales appartiennent au MJ.

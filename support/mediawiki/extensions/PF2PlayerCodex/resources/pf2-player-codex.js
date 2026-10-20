@@ -266,7 +266,7 @@
 				if ( character.wikiPortraitFilename ) { var image = document.createElement( 'img' ); image.className = 'pf2-player-character-portrait'; image.src = imageForFilename( character.wikiPortraitFilename ); image.alt = character.displayName; side.appendChild( image ); }
 				layout.appendChild( side );
 				var content = document.createElement( 'div' ); content.className = 'pf2-player-sheet-fields'; layout.appendChild( content ); panel.appendChild( layout );
-				[ [ 'name', 'Nom', 'displayName' ], [ 'ancestry', 'Ascendance', 'ancestry' ], [ 'characterClass', 'Classe', 'characterClass' ], [ 'objective', 'Objectif', 'objective' ] ].forEach( function ( entry ) {
+				[ [ 'name', 'Nom', 'displayName' ], [ 'ancestry', 'Ascendance', 'ancestry' ], [ 'characterClass', 'Classe', 'characterClass' ], [ 'objective', 'Objectif', 'objective' ], [ 'personality', 'Caractère', 'personality' ] ].forEach( function ( entry ) {
 					var field = entry[ 0 ], labelText = entry[ 1 ], property = entry[ 2 ];
 					var wrapper = document.createElement( 'div' ); wrapper.className = 'pf2-player-sheet-field';
 					var label = document.createElement( 'strong' ); label.textContent = labelText;
@@ -274,9 +274,9 @@
 					var pencil = document.createElement( 'button' ); pencil.type = 'button'; pencil.textContent = '✎'; pencil.title = 'Modifier ' + labelText.toLowerCase(); pencil.setAttribute( 'aria-label', pencil.title );
 					wrapper.appendChild( label ); wrapper.appendChild( value ); wrapper.appendChild( pencil ); content.appendChild( wrapper );
 					pencil.onclick = function () {
-						var editor = field === 'objective' ? document.createElement( 'textarea' ) : document.createElement( 'input' );
+						var editor = ( field === 'objective' || field === 'personality' ) ? document.createElement( 'textarea' ) : document.createElement( 'input' );
 						editor.value = character[ property ] || ''; editor.className = 'pf2-player-sheet-input';
-						editor.maxLength = field === 'objective' ? 1000 : 150;
+						editor.maxLength = ( field === 'objective' || field === 'personality' ) ? 1000 : 150;
 						var save = document.createElement( 'button' ); save.textContent = 'Enregistrer';
 						var cancel = document.createElement( 'button' ); cancel.textContent = 'Annuler';
 						wrapper.replaceChild( editor, value ); pencil.hidden = true; wrapper.appendChild( save ); wrapper.appendChild( cancel ); editor.focus();
