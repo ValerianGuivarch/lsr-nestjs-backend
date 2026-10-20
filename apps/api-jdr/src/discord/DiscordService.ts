@@ -52,6 +52,8 @@ export class DiscordService implements OnModuleInit, OnModuleDestroy {
     private readonly persistence: Pf2PersistenceService,
   ) {}
 
+  requestClient(): Client | null { return this.client }
+
   async onModuleInit(): Promise<void> {
     const config = this.config()
     if (!config) return
