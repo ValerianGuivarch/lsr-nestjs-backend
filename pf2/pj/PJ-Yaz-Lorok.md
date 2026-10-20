@@ -55,11 +55,35 @@ Yaz consacre ensuite une longue période à cette recherche, sans résultat, ava
 
 **Intrigue personnelle jouable :** retrouver le frère disparu, comprendre le livre et le rituel, retrouver des témoins des événements de Quantium, et décider à quel moment annoncer à la famille l'incident et l'échec des recherches. Ces objectifs viennent du raccord avec l'onglet 1.
 
-**Secret du personnage / mystère non résolu :** ce que le livre contenait avant de devenir blanc ; l'origine de la lumière et des inscriptions ; le sort réel du frère ; la raison des douleurs et pertes de mémoire de Yaz. **Aucune explication définitive n'est établie.** La présence d'un demi-plan ou de réalités parallèles dans l'ancienne fiche GitHub est une **piste MJ**, pas une révélation acquise.
+**Secret du personnage / mystère non résolu :** ce que le livre contenait avant de devenir blanc ; l'origine de la lumière et des inscriptions ; le sort réel du frère ; la raison des douleurs et pertes de mémoire de Yaz. **La motivation du frère et l'origine romanesque du demi-plan ont désormais une explication MJ documentée dans la section suivante** ; les circonstances du rituel, la disparition du frère et les souvenirs de Yaz restent mystérieux pour le personnage. Le rapprochement du livre aux pages blanches avec le roman de Larantis n'est pas encore techniquement expliqué.
 
 **Tension dramatique :** son désir d'expression artistique et de liberté, la tradition familiale marchande, le poids d'une disparition peut-être liée à ses propres actes, et son choix de l'aventure plutôt que d'un retour immédiat au foyer.
 
 **Amorces possibles, non jouées :** une représentation dansée ou un spectacle qui réveille un souvenir ; une archive de Quantium sur les rituels interdits ; une trace des anciens travaux d'Uxir ; une rumeur au sujet du frère ; une lettre familiale arrivée à la Loge. Ce sont des propositions MJ, pas des faits de la chronologie.
+
+## Secret MJ confirmé le 20 octobre 2026 — projet du frère de Yaz
+
+> **STRICTEMENT MJ.** Nouvelle décision de campagne ; ne pas insérer dans le Background ni les Notes publics de Yaz. Les circonstances précises du rituel et le devenir du frère demeurent à écrire. Détails transversaux dans [Larantis](../univers/Larantis.md).
+
+Le frère de Yaz, **anciennement nommé Narek Lorok dans le dossier, prénom encore à confirmer dans la source prioritaire**, est un magicien d'une puissance exceptionnelle. Il s'est livré à une recherche approfondie sur les **différentes sources de magie** : magie interne à l'individu ou maîtrisée par apprentissage, magie reçue d'un patron par les sorciers (*witches*), magie accordée par les dieux aux prêtres. Il voulait comprendre pourquoi certains êtres peuvent **transmettre** de la magie à autrui et d'autres non.
+
+**Motivation décisive :** Yaz peinait à accéder à la magie ; son frère voulait lui offrir **sa propre magie**, sans dépendre d'un dieu ou d'un autre patron. Il voulait devenir **personnellement le patron de Yaz**. C'est cette motivation fraternelle qui pousse sa recherche, et non une simple soif abstraite de puissance.
+
+**Découverte théorique MJ :** le statut de patron ne découle pas mécaniquement d'une puissance magique importante. Il serait acquis par un **accomplissement exceptionnel**, capable d'élever le statut métaphysique d'un être. La campagne rapproche ainsi la nature d'un patron de celle d'une divinité, **à une autre échelle**. La Pierre étoile et certaines ascensions divines illustrent ce principe d'élévation par les accomplissements. Il s'agit de **cosmologie narrative propre à la campagne**, et non d'une règle mécanique officielle à appliquer automatiquement à PF2. Les exemples de **Nex** et d'**Arazni** évoqués par le MJ servent de points de réflexion ; leur historique canonique précis doit être vérifié avant d'être utilisé comme preuve.
+
+**Le miracle tenté et sa conséquence établie :** le frère aimait profondément un roman de fantasy peu connu, intitulé oralement **« Le Royaume de l'Arrantis »** (orthographe à confirmer). Il l'a utilisé comme base d'un projet de prouesse magique gigantesque : **créer son propre demi-plan et y créer de la vie**, matérialisant un monde jusque-là fictif. Ce monde est celui dont provient **Jilkra Adoric Larantis**. Le monde entier, et non seulement Jilkra, est devenu réel. L'ambition était que ce miracle lui permette de s'élever au **statut de patron**, afin de transmettre lui-même de la magie à Yaz.
+
+**À ne pas fixer maintenant :** origine des pouvoirs du frère, existence éventuelle de son propre patron, comment il a découvert la théorie de l'accomplissement, déroulement et prix du rituel, lien technique exact avec le livre aux pages blanches, obtention finale ou non du statut de patron, sort du frère, et mémoire ou responsabilité exacte de Yaz. Le roman dont découle Larantis est un secret MJ ; **Yaz ne doit pas être présumé conscient de cette vérité**.
+
+**Premiers indices possibles pour l'enquête de Yaz :** recherches archivées de son frère sur les sorciers et les patrons, notes sur la différence entre pouvoir personnel et pouvoir transmissible, références à des accomplissements extraordinaires. Ces éléments pourraient faire **croire que son frère cherchait un patron pour lui-même**, alors que l'enjeu réel était de **devenir le patron de Yaz**. Les indices sont des perspectives de découverte, **pas encore des scènes jouées**.
+
+### Articulation avec Jilkra
+
+Le roman à l'origine de Larantis était inspiré de **Thassilon** : noms, esthétique et motifs de cataclysme rappellent cet ancien univers parce que l'**autrice** s'en est inspirée, sans lien historique direct entre Larantis et la chute de Thassilon. Un plat fictif, le **cassoulet à la graisse d'hydre**, possède une saveur réelle différente du goût imaginé par Jilkra ; ni l'autrice ni le frère de Yaz ne l'avaient goûté. Ce sont des pistes et anomalies potentielles, inconnues des personnages à ce stade.
+
+### Protection des sources
+
+L'arbitrage du **18 octobre 2026** sur la priorité du deuxième onglet de Yaz **reste intégralement applicable**. Le nouveau secret MJ n'a pas pour effet de réécrire les souvenirs publics de Yaz ni de confirmer les détails de l'ancien premier onglet. La capacité d'acquérir la magie est à comprendre ici comme une difficulté vécue **au moment du projet du frère**, et non comme une modification de la classe Foundry actuelle de Yaz.
 
 ## Classe, choix PF2 et évolutions
 
