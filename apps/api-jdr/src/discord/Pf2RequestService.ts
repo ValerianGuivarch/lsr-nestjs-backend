@@ -42,10 +42,10 @@ export class Pf2RequestService implements OnModuleInit {
     try {
       const msg=await channel.send({content:this.format(item),allowedMentions:{parse:[]}})
       const thread=await msg.startThread({name:`#${id} — ${data.title}`.slice(0,100),autoArchiveDuration:ThreadAutoArchiveDuration.OneWeek})
-      await msg.pin()
       await this.db.query('UPDATE pf2_request SET message_id=?,thread_id=? WHERE id=?',[msg.id,thread.id,id])
+      try { await msg.pin() } catch { /* Missing Manage Messages permission must not discard the ticket. */ }
       return (await this.byId(id))!
-    } catch(e) { await this.db.query('DELETE FROM pf2_request WHERE id=?',[id]);throw e }
+    } catch(e) { /* Keep the ticket for reconciliation; Discord may have posted the message. */ throw e }
   }
   async change(client: Client,id:number,status:RequestStatus): Promise<Pf2Request> {
     if(!(status in STATES)) throw new Error('État inconnu')

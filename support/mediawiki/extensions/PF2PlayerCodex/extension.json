@@ -57,7 +57,9 @@
       ],
       "dependencies": [
         "mediawiki.api"
-      ]
+      ],
+      "localBasePath": "",
+      "remoteExtPath": "PF2PlayerCodex"
     },
     "ext.pf2reputations": {
       "scripts": [
