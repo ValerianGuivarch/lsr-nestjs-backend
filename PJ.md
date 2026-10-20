@@ -2,6 +2,8 @@
 
 [← Espace PF2](PF2_WORKSPACE.md)
 
+Les fiches MJ suivent un [modèle commun de continuité](pf2/pj/STRUCTURE_FICHES_MJ.md) distinguant faits connus, secrets validés, quêtes prévues, pistes théoriques et questions ouvertes.
+
 Les **douze PJ** disposent chacun d'une fiche de continuité. Les biographies et choix d'évolution seront étoffés lorsque les documents et descriptions des joueurs seront disponibles : ne pas remplir les blancs artificiellement. L'état mécanique effectif est celui de Foundry.
 
 | Personnage | Fiche |

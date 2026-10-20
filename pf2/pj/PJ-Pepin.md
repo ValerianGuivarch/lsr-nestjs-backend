@@ -4,19 +4,16 @@
 
 > **Fiche de continuité MJ — contient des secrets.** Le Background joueur et les Notes restent dans SQLite ; ne jamais transférer les révélations ci-dessous vers le wiki public sans validation spécifique.
 
-## Identité et références
+> **Document de continuité MJ — peut contenir des révélations.** Les rubriques « pistes » et « questions » ne sont pas des faits canoniques. Le Background et les Notes restent dans SQLite/wiki.
 
-- **Personnage :** Pépin
-- **Concept :** leshy roublard, curieux du monde, marqué par la mort de sa sœur et par une volonté de se rendre utile.
-- **Origine :** forêt de Kyonin.
-- **Créateur et père :** Maelorn, druide elfe.
-- **Religion :** foi de Korada transmise par Maelorn. Sœur Amarei est une prêtresse de Sarenrae ; elle a principalement accompagné Pépin et encouragé son entrée dans la Société des Éclaireurs.
-- **Classe :** roublard ; spécialisation exacte et niveau à confirmer dans Foundry.
-- **Wiki :** [fiche personnelle de Pépin](https://wiki.l7r.fr/index.php/Sp%C3%A9cial:MesPersonnages/npc_pj_pepin).
-- **Joueur, liens Google Docs/Discord/ChatGPT, UUID Foundry :** à renseigner lorsque les références exactes auront été vérifiées.
+## Résumé MJ
 
-## Éléments connus de Pépin
+Leshy marqué par la mort de sa sœur Églantine et sa culpabilité. Secrets MJ validés : corruption non ciblée liée à Treerazer et intervention d’Artokus et de son familier Tukalo. Les mécanismes exacts et suites jouables restent ouverts.
 
+
+## Faits établis et déjà connus du personnage
+
+### Éléments connus de Pépin
 Pépin et sa sœur Églantine ont été créés par Maelorn à partir du même bouturage. Une nuit, au réveil d'un cauchemar, Pépin s'est découvert en train d'étrangler Églantine avec ses propres vignes. Elle est morte, et Maelorn a chassé Pépin. Pépin ignore pourquoi il a agi ainsi.
 
 Après une période d'errance, un homme aux cheveux entièrement blancs lui a sauvé la vie dans la forêt. Pépin a entendu une autre voix, impatiente de repartir, sans identifier son propriétaire. Il s'est ensuite réveillé dans une auberge des Royaumes Fluviaux. Sœur Amarei l'a soigné et lui a donné l'occasion de s'engager auprès de la Société des Éclaireurs. Pépin a récupéré discrètement un objet volé aux Éclaireurs, sans blesser les voleurs ; Amarei a recommandé sa candidature.
@@ -25,28 +22,9 @@ Pépin souhaite découvrir le monde et devenir quelqu'un qu'Églantine aurait pe
 
 **Source de vérité du récit public :** SQLite, table `pf2_player_character_background`. Ce résumé MJ ne doit pas en devenir une copie concurrente.
 
-## Secrets MJ validés — ne pas révéler au joueur
+## Relations et contacts
 
-### La mort d'Églantine et la corruption de Kyonin
-
-**Treerazer (littéralement « Ravageur des arbres » ; seigneur démon de la corruption de la nature)** est présent dans les territoires forestiers de Kyonin et propage sa corruption. Dans la continuité de campagne, celle-ci atteint notamment les druides de la forêt et a influencé les événements ayant mené Pépin à étrangler Églantine pendant son sommeil.
-
-**La mort d'Églantine est une conséquence de cette corruption**, et non une attaque délibérément dirigée contre elle ou contre Pépin. Treerazer ne les ciblait pas personnellement. Pépin n'en sait rien et se croit responsable de ce qu'il a fait.
-
-Le mécanisme précis par lequel la corruption a provoqué son geste, son éventuelle persistance et ce que Maelorn en a perçu restent à préciser. **Ne pas déduire sans autre validation que Maelorn a consciemment provoqué la mort, ou qu'il connaît la vérité.**
-
-### Identité de l'homme aux cheveux blancs
-
-L'inconnu qui a sauvé Pépin est **Artokus Kirran**, le célèbre alchimiste de **Thuvie**, inventeur de l'**élixir d'orchidée solaire**. La prospérité de la Thuvie dépend fortement de la vente de cet élixir de longévité, dont les flacons sont commercialisés aux enchères.
-
-**Adaptation validée pour la campagne :** Artokus s'est rendu en Kyonin pour des démarches auprès de la **reine des elfes**, dans le cadre de ses efforts pour améliorer la situation et l'autonomie économique de la Thuvie. C'est lors de ce déplacement qu'il a découvert et secouru Pépin.
-
-La voix qui pressait de repartir appartenait en réalité à **Tukalo**, le familier parlant d'Artokus, et non à un deuxième voyageur humanoïde. **Pépin ignore l'identité d'Artokus et la nature de cette seconde voix.** Le Background public conserve donc son témoignage subjectif sans révélation rétrospective.
-
-L'objet exact de la négociation avec la reine et la manière dont Artokus s'est retrouvé auprès de Pépin restent à développer seulement si une intrigue le nécessite.
-
-## Personnages et relations
-
+### Personnages et relations
 | Personnage | Lien / information MJ |
 | --- | --- |
 | **Maelorn** | Druide elfique de Kyonin ; père créateur de Pépin et d'Églantine. A chassé Pépin après le drame. Lui a transmis la foi de Korada. Sa connaissance de la corruption reste à préciser. |
@@ -59,8 +37,38 @@ L'objet exact de la négociation avec la reine et la manière dont Artokus s'est
 
 Les mentions « vice-amiral du navire » et « ancienne guide à Cassomir » figurent dans le Background, mais leurs identités et liens précis restent à éclaircir. Les associations de contacts opérationnelles sont conservées en SQLite, non dans ce tableau.
 
-## Personnalité, morale et progression — travail avec le joueur
+## Secrets MJ validés
 
+### Secrets MJ validés — ne pas révéler au joueur
+#### La mort d'Églantine et la corruption de Kyonin
+
+**Treerazer (littéralement « Ravageur des arbres » ; seigneur démon de la corruption de la nature)** est présent dans les territoires forestiers de Kyonin et propage sa corruption. Dans la continuité de campagne, celle-ci atteint notamment les druides de la forêt et a influencé les événements ayant mené Pépin à étrangler Églantine pendant son sommeil.
+
+**La mort d'Églantine est une conséquence de cette corruption**, et non une attaque délibérément dirigée contre elle ou contre Pépin. Treerazer ne les ciblait pas personnellement. Pépin n'en sait rien et se croit responsable de ce qu'il a fait.
+
+Le mécanisme précis par lequel la corruption a provoqué son geste, son éventuelle persistance et ce que Maelorn en a perçu restent à préciser. **Ne pas déduire sans autre validation que Maelorn a consciemment provoqué la mort, ou qu'il connaît la vérité.**
+
+#### Identité de l'homme aux cheveux blancs
+
+L'inconnu qui a sauvé Pépin est **Artokus Kirran**, le célèbre alchimiste de **Thuvie**, inventeur de l'**élixir d'orchidée solaire**. La prospérité de la Thuvie dépend fortement de la vente de cet élixir de longévité, dont les flacons sont commercialisés aux enchères.
+
+**Adaptation validée pour la campagne :** Artokus s'est rendu en Kyonin pour des démarches auprès de la **reine des elfes**, dans le cadre de ses efforts pour améliorer la situation et l'autonomie économique de la Thuvie. C'est lors de ce déplacement qu'il a découvert et secouru Pépin.
+
+La voix qui pressait de repartir appartenait en réalité à **Tukalo**, le familier parlant d'Artokus, et non à un deuxième voyageur humanoïde. **Pépin ignore l'identité d'Artokus et la nature de cette seconde voix.** Le Background public conserve donc son témoignage subjectif sans révélation rétrospective.
+
+L'objet exact de la négociation avec la reine et la manière dont Artokus s'est retrouvé auprès de Pépin restent à développer seulement si une intrigue le nécessite.
+
+## Quêtes et développements prévus
+
+_Aucun élément documenté à ce stade._
+
+## Pistes possibles — non validées
+
+_Aucun élément documenté à ce stade._
+
+## Questions ouvertes et arbitrages
+
+### Personnalité, morale et progression — travail avec le joueur
 **Constats documentés :** Pépin est sociable et curieux, aime les relations et les accès discrets, et peut voler sans chercher à nuire. Son intérêt pour des groupes de voleurs ne signifie ni adhésion à leurs crimes ni volonté de devenir un assassin. Il tente de faire le bien tout en vivant avec la culpabilité liée à Églantine.
 
 **Cadrage encore ouvert :** préciser avec le joueur la place respective de sa foi, de sa recherche de rédemption, de sa sociabilité et de son attrait pour le vol et les réseaux clandestins. Vérifier si Pépin est surtout un éclaireur/infiltrateur, un médiateur des milieux interlopes, un voleur opportuniste aux limites morales personnelles, ou une combinaison de ces aspects.
@@ -73,8 +81,19 @@ Les mentions « vice-amiral du navire » et « ancienne guide à Cassomir » fig
 
 **À ne pas verrouiller maintenant :** un nouveau but secret pour Pépin, une culpabilité volontaire, une appartenance criminelle, ou une évolution mécanique. L'objectif public actuel suffit tant que cette discussion avec le joueur n'a pas eu lieu.
 
-## Sources et statut de continuité
+## Sources, références et limites
 
+### Identité et références
+- **Personnage :** Pépin
+- **Concept :** leshy roublard, curieux du monde, marqué par la mort de sa sœur et par une volonté de se rendre utile.
+- **Origine :** forêt de Kyonin.
+- **Créateur et père :** Maelorn, druide elfe.
+- **Religion :** foi de Korada transmise par Maelorn. Sœur Amarei est une prêtresse de Sarenrae ; elle a principalement accompagné Pépin et encouragé son entrée dans la Société des Éclaireurs.
+- **Classe :** roublard ; spécialisation exacte et niveau à confirmer dans Foundry.
+- **Wiki :** [fiche personnelle de Pépin](https://wiki.l7r.fr/index.php/Sp%C3%A9cial:MesPersonnages/npc_pj_pepin).
+- **Joueur, liens Google Docs/Discord/ChatGPT, UUID Foundry :** à renseigner lorsque les références exactes auront été vérifiées.
+
+### Sources et statut de continuité
 - **Background public et Notes :** SQLite / wiki personnel de Pépin ; ne pas les modifier depuis cette fiche.
 - **Décisions MJ de la discussion :** corruption non ciblée par Treerazer ; identité d'Artokus ; voix de Tukalo ; contexte diplomatique en Kyonin.
 - **Lore Pathfinder :** Artokus Kirran, Tukalo, Thuvie et élixir d'orchidée solaire sont des éléments publiés ; le voyage auprès de la reine de Kyonin et le lien direct avec Pépin sont des **adaptations de campagne**.
