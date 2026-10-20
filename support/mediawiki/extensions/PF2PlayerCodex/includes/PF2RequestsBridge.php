@@ -1,11 +1,11 @@
 <?php
 use MediaWiki\MediaWikiServices;
 class PF2RequestsBridge {
- public static function requireAdmin($api) {
-  if (!$api->getUser()->isRegistered() || !$api->getUser()->isAllowed('delete')) $api->dieWithError('Accès administrateur requis.');
+ public static function requireEditor($api) {
+  if (!$api->getUser()->isRegistered()) $api->dieWithError('Connectez-vous pour modifier les requêtes.');
  }
  public static function call($api,$method,$path,$body=null) {
-  self::requireAdmin($api);
+  if ($method !== 'GET') self::requireEditor($api);
   $services=MediaWikiServices::getInstance();
   $base=rtrim((string)$services->getMainConfig()->get('PF2PlayerCodexApiBase'),'/');
   $key=getenv('PF2_WIKI_LOGIN_INTERNAL_KEY') ?: getenv('PF2_JOURNALS_INTERNAL_KEY') ?: '';
