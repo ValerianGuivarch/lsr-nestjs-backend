@@ -24,3 +24,7 @@ Conserver des champs facultatifs pour le **joueur**, les **liens wiki/Google Doc
 ## Contacts et salons Discord des personnages
 
 Pour compléter et vérifier les contacts des douze PJ, consulter les conversations de leurs salons Discord via le lecteur local en lecture seule décrit dans [Wiki / Discord](pf2/outils/wiki-discord.md). Recouper les messages avec le Background et les Notes du Wiki/SQLite, ainsi que la continuité MJ des fichiers `pf2/pj/`. Toute nouvelle information à enregistrer requiert validation du MJ.
+
+## Visibilité des personnages et des portraits
+
+La documentation technique de référence est [Visibilité des personnages PF2](pf2/outils/personnages-visibilite.md). Le statut `is_published` concerne le **carnet général**, et non l'existence d'une fiche MJ. Un contact privé n'apparaît que dans les Contacts des PJ qui le connaissent ; une fiche privée ne devient pas publique lorsqu'on l'associe. Le champ `portrait_known` de chaque relation permet au MJ de cacher **l'image** à un PJ tout en lui laissant connaître le nom et la description autorisée. Les secrets MJ restent exclusivement dans les données MJ.

@@ -30,7 +30,7 @@ type Pnj={
 type ScenarioLink={scenarioId:string;role?:string|null;importance?:string|null;titleFr?:string;titleOriginal?:string;nom?:string;name?:string;campaignId?:string|null};
 type ScenarioFilter={id:string;name:string;parentId?:string|null;campaignId?:string|null;kind?:string|null;order?:number|null};
 type WikiCharacterProfile={wikiPageTitle:string};
-type ContactPlayer={npcId:string;displayName:string;wikiPageTitle:string;selected:boolean};
+type ContactPlayer={npcId:string;displayName:string;wikiPageTitle:string;selected:boolean;portraitKnown:boolean};
 
 type Draft={
   nom:string;
@@ -240,6 +240,20 @@ export default function PnjPage({initialSelectedId}:{initialSelectedId?:string})
       setContactPlayers(current=>current.map(item=>item.npcId===player.npcId?{...item,selected:!item.selected}:item));
       setMessage(player.selected?`${selected.nom} n’est plus un contact privé de ${player.displayName}.`:`${selected.nom} est maintenant un contact privé de ${player.displayName}.`);
     }catch(error){setMessage(error instanceof Error?error.message:String(error))}finally{setContactBusy(null)}
+  };
+
+  const togglePortraitKnown=async(player:ContactPlayer)=>{
+    if(!selected||contactBusy||!player.selected)return;
+    setContactBusy(player.npcId);setMessage('');
+    try{
+      const response=await fetch(`/apil7r/pf2-mj/player-codex/contacts/${encodeURIComponent(selected.id)}/players/${encodeURIComponent(player.npcId)}/portrait-known`,{
+        method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({portraitKnown:!player.portraitKnown})
+      });
+      if(!response.ok)throw new Error('Impossible de modifier la visibilité du portrait.');
+      setContactPlayers(items=>items.map(item=>item.npcId===player.npcId?{...item,portraitKnown:!item.portraitKnown}:item));
+      setMessage('Visibilité du portrait enregistrée pour '+player.displayName+'.');
+    }catch(error){setMessage(error instanceof Error?error.message:String(error))}
+    finally{setContactBusy(null)}
   };
 
   const factionNames=useMemo(()=>new Map(factionRefs.map(item=>[item.id,item.nom])),[factionRefs]);
@@ -600,7 +614,7 @@ export default function PnjPage({initialSelectedId}:{initialSelectedId?:string})
           <dt>Alias</dt><dd>{selected.aliases?.join(" · ")||"—"}</dd>
           <dt>Importance</dt><dd>{selected.importance||"—"}</dd>
           <dt>Statut</dt><dd>{selected.statut||"—"}</dd>
-          <dt>Contacts privés</dt><dd>{contactPlayers.length?<div className="pnj-contact-players">{contactPlayers.map(player=><label key={player.npcId} className="pnj-contact-player"><input type="checkbox" checked={player.selected} disabled={contactBusy!==null||player.npcId===selected.id} onChange={()=>void toggleContactPlayer(player)}/><span>{player.displayName}</span></label>)}</div>:"Aucun PJ publié n’est marqué comme PJ pour le moment."}<small style={{display:"block",marginTop:6}}>Un contact coché apparaît dans « Mes personnages » uniquement pour le propriétaire de ce PJ, même si ce PNJ n’est pas publié sur le Wiki.</small></dd>
+          <dt>Contacts privés</dt><dd>{contactPlayers.length?<div className="pnj-contact-players">{contactPlayers.map(player=><span key={player.npcId} style={{display:"inline-flex",gap:5,flexWrap:"wrap"}}><label className="pnj-contact-player"><input type="checkbox" checked={player.selected} disabled={contactBusy!==null||player.npcId===selected.id} onChange={()=>void toggleContactPlayer(player)}/><span>{player.displayName}</span></label><label className="pnj-contact-player" title={player.selected?'Ce PJ connaît-il le portrait ?':'Associer d’abord ce contact'}><input type="checkbox" checked={player.portraitKnown} disabled={!player.selected||contactBusy!==null} onChange={()=>void togglePortraitKnown(player)}/><span>Portrait visible</span></label></span>)}</div>:"Aucun PJ publié n’est marqué comme PJ pour le moment."}<small style={{display:"block",marginTop:6}}>Un contact coché apparaît dans « Mes personnages » uniquement pour le propriétaire de ce PJ, même si ce PNJ n’est pas publié sur le Wiki.</small></dd>
           <dt>Notes MJ</dt><dd>{selected.notes||"—"}</dd>
           <dt>Portée</dt><dd>{selected.transverse!==false?"Transverse / globale — peut apparaître dans plusieurs scénarios.":"Spécifique à son scénario d’origine."}</dd>
           <dt>Scénarios liés</dt><dd>{selectedScenarios.length?selectedScenarios.map(link=>`${link.name||link.titleFr||link.titleOriginal||link.nom||link.scenarioId}${link.role?` — ${link.role}`:""}`).join(" · "):"—"}</dd>

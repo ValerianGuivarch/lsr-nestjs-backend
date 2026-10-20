@@ -185,14 +185,15 @@ export class PlayerCodexService {
     if (!(await this.persistence.getRecord('pnj', contactNpcId))) throw new NotFoundException('PNJ contact introuvable.')
     const rows = await this.db.query(
       `SELECT p.npc_id AS npcId, p.display_name AS displayName, p.wiki_page_title AS wikiPageTitle,
-              CASE WHEN c.contact_npc_id IS NULL THEN 0 ELSE 1 END AS selected
+              CASE WHEN c.contact_npc_id IS NULL THEN 0 ELSE 1 END AS selected,
+              COALESCE(c.portrait_known, 1) AS portraitKnown
        FROM pf2_player_character_profile p
        LEFT JOIN pf2_player_character_contact c ON c.player_npc_id = p.npc_id AND c.contact_npc_id = ?
        WHERE p.is_player = 1
        ORDER BY p.display_name COLLATE NOCASE`,
       [contactNpcId],
-    ) as Array<{ npcId: string; displayName: string; wikiPageTitle: string; selected: number }>
-    return rows.map(row => ({ ...row, selected: row.selected === 1 }))
+    ) as Array<{ npcId: string; displayName: string; wikiPageTitle: string; selected: number; portraitKnown: number }>
+    return rows.map(row => ({ ...row, selected: row.selected === 1, portraitKnown: row.portraitKnown === 1 }))
   }
 
   async setPlayerContact(playerNpcId: string, contactNpcId: string, enabled: boolean): Promise<void> {
@@ -204,6 +205,18 @@ export class PlayerCodexService {
       await this.ensureContactProfile(contactNpcId)
       await this.db.query('INSERT OR IGNORE INTO pf2_player_character_contact (player_npc_id, contact_npc_id) VALUES (?, ?)', [playerNpcId, contactNpcId])
     } else await this.db.query('DELETE FROM pf2_player_character_contact WHERE player_npc_id = ? AND contact_npc_id = ?', [playerNpcId, contactNpcId])
+  }
+
+  async setContactPortraitKnown(playerNpcId: string, contactNpcId: string, known: boolean): Promise<{ portraitKnown: boolean }> {
+    const result = await this.db.query(
+      'UPDATE pf2_player_character_contact SET portrait_known = ? WHERE player_npc_id = ? AND contact_npc_id = ?',
+      [known ? 1 : 0, playerNpcId, contactNpcId],
+    )
+    if (!result?.changes) {
+      const row = await this.db.query('SELECT 1 FROM pf2_player_character_contact WHERE player_npc_id = ? AND contact_npc_id = ?', [playerNpcId, contactNpcId]) as Array<Record<string, unknown>>
+      if (!row.length) throw new NotFoundException('Associe d’abord ce PNJ comme contact du PJ.')
+    }
+    return { portraitKnown: known }
   }
 
   async myCharacters(wikiUsername: string, isWikiAdmin = false): Promise<{ wikiUsername: string; characters: unknown[] }> {
