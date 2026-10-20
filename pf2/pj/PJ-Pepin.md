@@ -20,7 +20,7 @@ Le texte intégral du Background et les Notes sont stockés dans SQLite et édit
 
 ## Histoire et concept
 
-Leshy originaire ou lié à **Kyonin**. Son père a subi ou subit l'influence de **Treerazer**.
+Leshy créé dans la forêt de **Kyonin** par **Maelorn**, druide **elfique**. Maelorn lui a transmis la foi de **Korada**. Pépin a été accompagné par Sœur Amarei, prêtresse de **Sarenrae**, qui l'a notamment encouragé à rejoindre la Société des Éclaireurs. L'ancien lien évoqué avec **Treerazer** reste une piste MJ non résolue, sans implication démontrée dans la mort d'Églantine.
 
 ## Relations et intrigues personnelles
 
@@ -39,9 +39,9 @@ Aucune décision supplémentaire documentée ici. Les informations du joueur et 
 
 > **À vérifier lors de l'audit PJ :** le lien actuel avec Treerazer n'a pas été réconcilié avec les éléments de cette discussion.
 
-- **Papa** : kholo druide installé dans la forêt de Kyonin ; Pépin ne connaît pas son vrai nom. Fantasque, adorable et curieux, il a créé et élevé Pépin et Églantine. Il leur a transmis une relation respectueuse à la nature et la foi de **Korada**. Après la mort d'Églantine, son chagrin l'a conduit à chasser Pépin.
+- **Maelorn** : druide **elfique** de Kyonin, créateur et père de Pépin et Églantine. Il leur a transmis le respect de la nature et la foi de **Korada**. Après la mort d'Églantine, il a chassé Pépin.
 - **Églantine** : sœur de Pépin issue du même bouturage ; très timide et casanière, contrairement à Pépin qui rêvait de découvrir le monde. Pépin l'a tuée accidentellement pendant son sommeil.
-- **Sœur Amarei** : prêtresse d'**Iomedae**, ancienne combattante du **Dernier Rempart**, aujourd'hui liée à la Société des Éclaireurs. Joyeuse et désinvolte hors crise, mais extrêmement sérieuse dès qu'une responsabilité réelle apparaît ; elle a soigné Pépin et appuyé sa candidature.
+- **Sœur Amarei** : prêtresse de **Sarenrae**, elle a soigné Pépin, lui a parlé de rédemption et surtout encouragé son entrée dans la **Société des Éclaireurs**. Elle n'est pas à l'origine de sa foi en Korada.
 - **L'homme aux cheveux blancs** : mystérieux jeune homme ayant trouvé Pépin mourant dans la forêt et insisté pour le sauver ; il voyageait avec une autre personne que Pépin a entendue sans réellement la voir.
 
 ---
@@ -50,6 +50,6 @@ Aucune décision supplémentaire documentée ici. Les informations du joueur et 
 
 Dans `Personnages/Pépin.docx`, Pépin affirme avoir été **créé dans la forêt de Kyonin par Maelorn, druide elfique**, à partir du même bouturage que sa sœur **Églantine**. Le souvenir traumatique est précis : une nuit, réveillé d'un cauchemar, il se découvre penché sur Églantine, ses propres vignes serrées autour du cou de celle-ci. Il relâche son étreinte, mais elle ne respire plus ; Maelorn le découvre ainsi. Il **ne sait pas pourquoi** il l'a étranglée dans son sommeil.
 
-**Contradiction explicite :** l'ancienne fiche décrit « Papa » comme un **druide kholo sans nom connu**, alors que le récit du PJ nomme **Maelorn** et dit **elfique**. La version fournie par le joueur est retenue pour ces faits ; le portrait précédent demeure une archive à confirmer avant toute éventuelle réintégration.
+**Arbitrage validé :** Maelorn est bien un **druide elfique identifié par son nom**, et non un kholo anonyme. Pépin tient sa foi en **Korada** de Maelorn, non de Sœur Amarei (prêtresse de Sarenrae).
 
 **Secret MJ non résolu :** les causes exactes du comportement nocturne de Pépin, notamment une influence externe, ne sont pas établies. Le lien à **Treerazer** est une piste ancienne, **pas la cause démontrée de la mort d'Églantine**. Conserver cette incertitude plutôt que lui substituer une explication.
