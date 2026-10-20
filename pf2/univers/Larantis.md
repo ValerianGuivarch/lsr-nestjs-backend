@@ -1,50 +1,65 @@
-# Larantis — dossier transversal MJ
+# Larantis — monde issu d'un roman devenu réel
 
 [← Univers](../../UNIVERS.md) · [Jilkra](../pj/PJ-Jilkra-Adoric-Larantis.md) · [Yaz](../pj/PJ-Yaz-Lorok.md)
 
-> **Statut : orientation de brainstorming proposée par le MJ le 19 octobre 2026 ; NON ENCORE VALIDÉE COMME CANON.** Dossier strictement MJ. Ne pas transférer vers le wiki public.
+> **SECRET MJ — continuité validée en discussion le 20 octobre 2026.** Ne rien publier sur le wiki des joueurs. Le mécanisme détaillé du rituel, ses conséquences cosmologiques et le destin du frère de Yaz restent ouverts.
 
-## Orientation proposée
+## Vérité MJ — origine du monde de Jilkra
 
-- Jilkra est un personnage initialement fictif devenu réel.
-- C'est **la totalité de son monde d'origine**, pas simplement Jilkra, qui est devenue réelle.
-- Le **frère de Yaz Lorok** est à l'origine de cette matérialisation.
-- La nature exacte de cette action, son mécanisme, ses conséquences et sa chronologie restent à définir.
+**Larantis, et plus largement le monde d'origine de Jilkra, provient d'une fiction devenue réelle.** Le monde ne s'est pas résumé à la seule matérialisation de Jilkra : un environnement entier et de la vie ont été créés par l'intervention du **frère de Yaz Lorok**.
 
-Ces points représentent une **préférence narrative exprimée pendant la discussion** et non une décision canonique définitivement enregistrée.
+Le point de départ est un roman de fantasy peu populaire, **« Le Royaume de l'Arrantis »** (titre donné oralement par le MJ ; orthographe exacte à confirmer, sans le confondre silencieusement avec le nom du royaume **Larantis**). Le frère de Yaz adorait ce livre. Il en a tiré la matière et le cadre d'un miracle magique : **créer son propre demi-plan et y créer la vie**, faisant exister un monde jusque-là imaginaire. La réussite effective du phénomène explique l'existence de Jilkra ; les étapes et les modalités concrètes de la création restent à établir.
 
-## Larantis selon Jilkra — témoignage public
+### Pourquoi son créateur voulait accomplir ce miracle
 
-Le Background actuel du wiki décrit Jilkra comme le premier fils du roi Ogon Rega Larantis et prince héritier d'un royaume halfelin prospère : cités de marbre, commerce maritime, académie de guerriers-mages et culte d'Arshea. Son frère cadet Volgar Aeron Larantis aurait prophétisé une catastrophe et convaincu les mages de transformer Jilkra en statue. Jilkra se réveille dans un bassin à carpes au Taldor et ne retrouve aucune trace de Larantis dans les archives. Ce récit est un témoignage du personnage, pas une preuve de l'histoire objective du monde.
+Le frère de Yaz est un magicien exceptionnellement puissant. Il étudiait différentes **sources et transmissions de magie** : pratique fondée sur les capacités personnelles ou l'étude, pouvoir reçu d'un patron (sorcier au sens de *witch* dans PF2), pouvoir divin reçu d'une divinité, etc. Ce classement représente **sa recherche et l'interprétation propre à la campagne**, sans prétendre redéfinir définitivement les catégories mécaniques de Pathfinder.
 
-## Lien possible avec Yaz
+Il cherchait surtout à aider **Yaz à accéder à la magie**. Plutôt que de lui faire obtenir ce don d'une divinité ou d'un patron étranger, il voulait **devenir lui-même le patron de Yaz**, et lui transmettre son pouvoir. Cette motivation fraternelle est le moteur du projet.
 
-La [fiche de Yaz](../pj/PJ-Yaz-Lorok.md) évoque, en partie par raccord documentaire avec une version ancienne de son histoire, un livre aux pages blanches, un rituel avec son frère, une lumière bleue, le coma de Yaz et la disparition de son frère. L'ancienne continuité appelle ce dernier **Narek Lorok**, mais son prénom reste à confirmer dans la source prioritaire.
+Sa découverte théorique : **une puissance magique brute ne suffit pas à faire d'un être un patron**. L'accès au statut de patron passe par une forme d'**accomplissement extraordinaire** qui élève le statut de l'individu. Le parallèle avec certaines voies d'accession à la divinité est fondamental pour la cosmologie maison : **patron et dieu sont comparables par nature d'élévation, mais à des échelles différentes**. Cette hypothèse de fonctionnement est **une règle narrative propre à la campagne**, à distinguer du canon Pathfinder.
 
-**Hypothèses non validées :** le livre aurait contenu la fiction de Larantis ; le rituel aurait matérialisé un monde, déplacé un monde ou réécrit la réalité ; le frère de Yaz aurait été transporté dans ce monde. Aucune de ces précisions n'est encore décidée.
+Le frère de Yaz connaissait des exemples de puissants mages ayant acquis une capacité de patronage, notamment **Nex** dans son raisonnement ; il choisit donc une prouesse gigantesque, la création d'un demi-plan et d'une vie nouvelle, afin d'obtenir l'élévation requise. Il voulait pouvoir être le patron de son frère, pas simplement devenir plus puissant.
 
-## Mystères à résoudre
+**Non fixé :** comment il a appris cette règle, l'origine exacte de sa propre magie, l'éventualité qu'il dispose lui-même d'un patron, les procédures précises du rituel, ce qu'il devient ensuite, et s'il obtient réellement le statut de patron ou arrive à accorder de la magie à Yaz.
 
-1. Le monde fictif se limitait-il à Larantis ou contenait-il d'autres pays et civilisations ?
-2. Qui a inventé ou raconté initialement ce monde ? Sous quelle forme existait sa fiction ?
-3. Le monde a-t-il acquis un passé réel, ou son histoire s'est-elle déroulée avant sa matérialisation ?
-4. Quand le phénomène s'est-il produit par rapport à la stase et au réveil de Jilkra ?
-5. Pourquoi les archives actuelles de Golarion ne mentionnent-elles pas Larantis ?
-6. Quel était le but du frère de Yaz, et que lui est-il arrivé ?
-7. La prophétie de Volgar était-elle authentique, mensongère ou autrement liée au phénomène ?
-8. Quels indices les deux PJ pourraient-ils découvrir indépendamment sans recevoir prématurément la révélation ?
+### Exemple de la divinité et des accomplissements
 
-## Précautions de continuité
+La **Pierre étoile** et les voies exceptionnelles d'ascension divine sont des analogies narratives utiles. Le MJ a également évoqué **Arazni** pour discuter des transformations de statut ; son parcours exact ne doit pas être simplifié ou transformé en une chronologie canonique non vérifiée. L'enjeu est le principe maison : **l'accomplissement peut changer la nature et le statut d'un être**, sans imposer une équivalence technique parfaite entre patrons et dieux.
 
-- Ne pas nier par défaut la réalité subjective des souvenirs et des liens affectifs de Jilkra.
-- Distinguer **public confirmé**, **privé MJ établi**, **mystère non résolu** et **proposition**.
-- Ne pas fusionner artificiellement cette intrigue avec les autres fils de la campagne.
-- Garder le Background et les Notes des joueurs dans SQLite/wiki ; ne pas les recopier dans ce Markdown.
-- Ne pas modifier la fiche de Yaz depuis la discussion Jilkra : la mise en lien réciproque sera traitée dans la discussion Yaz.
+Ce thème peut être pertinent pour **Tsuyu**, mais **aucune modification de son dossier** et aucun lien narratif supplémentaire ne sont décidés ici.
+
+## Conséquences pour la vérité vécue par Jilkra
+
+Jilkra connaît une histoire de prince halfelin, de cités maritimes, de son père Ogon, de son frère Volgar, d'une prophétie et d'une pétrification. Ses expériences et souvenirs restent **réels pour lui** ; le fait que son monde procède d'une fiction ne permet pas d'en nier arbitrairement toute la substance. Il **ignore** l'existence de l'autrice, du livre, du frère de Yaz et de leur lien avec son monde.
+
+Le roman d'origine n'était ni un traité historique fiable ni une description fondée sur l'expérience directe de tous les détails. Des décalages apparaissent entre la représentation romanesque et une réalité matérielle : 
+
+- **Cassoulet à la graisse d'hydre :** Jilkra possède le goût attendu de ce plat traditionnel, mais **son goût réel est différent**. Ni l'autrice ni le frère de Yaz ne l'ont jamais goûté ; la description était imaginaire et ne peut pas garantir la saveur d'un plat devenu réel. Ce décalage est un indice potentiel, pas une révélation connue d'avance du PJ.
+- **Noms, esthétique et ambiance :** le roman emprunte largement à **Thassilon** (appelé « Tasilon » oralement). L'autrice s'est inspirée de cet univers ancien de Golarion, perçu comme une sorte de fantasy médiévale. Les sonorités, les motifs culturels et certains thèmes rappellent donc Thassilon **par influence littéraire**, et non parce que Larantis serait une survivance historique thassilonienne.
+- **Cataclysme et prophétie :** la vision d'une catastrophe ou d'un chaos à venir peut faire écho à **la chute de Thassilon** parce que l'autrice s'est inspirée d'événements réels. Cette ressemblance est une **fausse piste historique voulue**, pas la preuve d'un lien direct avec la chute de Thassilon. La sincérité de Volgar et la mécanique de la prophétie restent à déterminer.
+
+## Ogon : piste abandonnée
+
+**Décision du 20 octobre 2026 : supprimer totalement l'ancienne idée selon laquelle Ogon accorderait les dons de magie aux fidèles, à Jilkra ou à Volgar.** C'était une piste envisagée puis rejetée ; **ne pas la réintroduire** dans les récits ni dans les descriptions publiques ou privées. Ogon demeure **roi de Larantis et père de Jilkra et Volgar**. Son âge extraordinaire ou inconnu ne doit pas être déduit automatiquement de cette ancienne piste.
+
+## Relations entre dossiers et cloisonnement
+
+- [Jilkra — continuité MJ](../pj/PJ-Jilkra-Adoric-Larantis.md) : connaissance réelle du personnage, fausses pistes thassiloniennes et indices de saveur ; aucune révélation publique automatique.
+- [Yaz — continuité MJ](../pj/PJ-Yaz-Lorok.md) : motivations du frère, enquête sur les patrons, rituel et énigmes encore ouvertes. Son ancienne fiche cite **Narek Lorok**, nom à reconfirmer dans la version documentaire prioritaire.
+- Backgrounds et Notes wiki/SQLite : **inchangés** ; ils reflètent ce que les joueurs sont autorisés à savoir.
+
+## Questions encore ouvertes
+
+1. Orthographe définitive et identité éditoriale du roman « Le Royaume de l'Arrantis ».
+2. Auteur/autrice précise, époque et contexte de publication du livre ; raison de son faible succès.
+3. Relation spatiale et temporelle du demi-plan avec Golarion ; moment de création, durée vécue et passage de Jilkra.
+4. Règles exactes du passage du statut de mage à celui de patron ; acquisition effective ou échec de ce statut.
+5. Responsabilité, sort et éventuelle présence du frère de Yaz dans le demi-plan.
+6. Vérité de la prophétie de Volgar, du cataclysme et de la stase.
+7. Quand et comment dévoiler les indices sans transformer Thassilon en origine historique de Larantis.
 
 ## Sources
 
-- [Jilkra — fiche MJ](../pj/PJ-Jilkra-Adoric-Larantis.md) et Background public wiki/SQLite.
-- [Yaz — fiche MJ](../pj/PJ-Yaz-Lorok.md), dont le raccord avec l'onglet 1 demeure à vérifier.
-- Salons Discord des PJ, avec statut des déclarations à confirmer.
-- Préférence de brainstorming du MJ exprimée le 19 octobre 2026, **en attente de validation canonique**.
+- Décisions narratives explicites du MJ du **20 octobre 2026** dans la discussion Jilkra.
+- [Fiche MJ Jilkra](../pj/PJ-Jilkra-Adoric-Larantis.md), [fiche MJ Yaz](../pj/PJ-Yaz-Lorok.md).
+- Background public de Jilkra conservé dans SQLite/wiki et messages historiques de son salon Discord.
