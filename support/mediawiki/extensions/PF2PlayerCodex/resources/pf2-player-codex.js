@@ -223,7 +223,7 @@
 
 	function contactCard( contact, playerNpcId, isMjAdmin ) {
 		var card = document.createElement( 'article' ); card.className = 'pf2-player-card pf2-player-contact-card';
-		var portraitSource = contact.wikiPortraitFilename ? imageForFilename( contact.wikiPortraitFilename ) : ( contact.portraitUrl || '' );
+		var portraitSource = contact.portraitKnown === false ? '' : ( contact.wikiPortraitFilename ? imageForFilename( contact.wikiPortraitFilename ) : ( contact.portraitUrl || '' ) );
         if ( portraitSource ) { var image = document.createElement( 'img' ); image.src = portraitSource; image.alt = 'Portrait de ' + contact.displayName; image.className = 'pf2-player-contact-portrait'; image.loading = 'lazy'; card.appendChild( image ); }
         else { var placeholder = document.createElement( 'div' ); placeholder.className = 'pf2-player-contact-portrait pf2-player-contact-portrait-placeholder'; placeholder.setAttribute( 'aria-hidden', 'true' ); placeholder.textContent = '♙'; card.appendChild( placeholder ); }
 		var title = document.createElement( 'strong' ); title.textContent = contact.displayName; card.appendChild( title );

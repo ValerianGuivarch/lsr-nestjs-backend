@@ -329,16 +329,16 @@ export class PlayerCodexService {
     const character = await this.characterDto(row) as Record<string, unknown>
     const backgrounds = await this.db.query('SELECT content FROM pf2_player_character_background WHERE npc_id = ? LIMIT 1', [row.npc_id]) as Array<{ content: string }>
     const notes = await this.db.query('SELECT content FROM pf2_player_character_notes WHERE npc_id = ? LIMIT 1', [row.npc_id]) as Array<{ content: string }>
-    const contacts = await this.db.query('SELECT contact_npc_id AS contactNpcId FROM pf2_player_character_contact WHERE player_npc_id = ? ORDER BY created_at, contact_npc_id', [row.npc_id]) as Array<{ contactNpcId: string }>
+    const contacts = await this.db.query('SELECT contact_npc_id AS contactNpcId, portrait_known AS portraitKnown FROM pf2_player_character_contact WHERE player_npc_id = ? ORDER BY created_at, contact_npc_id', [row.npc_id]) as Array<{ contactNpcId: string; portraitKnown: number }>
     return {
       ...character,
       background: backgrounds[0]?.content ?? '',
       notes: notes[0]?.content ?? '',
-      contacts: (await Promise.all(contacts.map(contact => this.privateContactDto(contact.contactNpcId)))).filter(Boolean),
+      contacts: (await Promise.all(contacts.map(contact => this.privateContactDto(contact.contactNpcId, contact.portraitKnown !== 0)))).filter(Boolean),
     }
   }
 
-  private async privateContactDto(npcId: string): Promise<unknown | null> {
+  private async privateContactDto(npcId: string, portraitKnown = true): Promise<unknown | null> {
     let profiles = await this.db.query('SELECT * FROM pf2_player_character_profile WHERE npc_id = ? LIMIT 1', [npcId]) as ProfileRow[]
     if (!profiles[0]) {
       try {
@@ -354,10 +354,11 @@ export class PlayerCodexService {
     const portraitUrl = npc ? this.publicPortraitUrl(npc.portrait) : null
     return {
       npcId,
-      portraitUrl,
+      portraitUrl: profile.is_published === 1 || portraitKnown ? portraitUrl : null,
+      portraitKnown: profile.is_published === 1 || portraitKnown,
       displayName: profile.display_name,
       shortDescription: profile.short_description,
-      wikiPortraitFilename: profile.wiki_portrait_filename,
+      wikiPortraitFilename: profile.is_published === 1 || portraitKnown ? profile.wiki_portrait_filename : null,
       wikiPageTitle: profile.wiki_page_title,
       published: profile.is_published === 1,
     }
