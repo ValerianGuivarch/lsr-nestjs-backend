@@ -4,10 +4,6 @@ class SpecialPF2Requests extends SpecialPage {
  public function execute($subPage) {
   $this->setHeaders();
   $this->getOutput()->setPageTitle('Requêtes PF2');
-  if (!$this->getUser()->isRegistered() || !$this->getUser()->isAllowed('delete')) {
-   $this->getOutput()->addWikiTextAsInterface('Accès réservé aux administrateurs du wiki.');
-   return;
-  }
   $this->getOutput()->addModules('ext.pf2requests');
   $this->getOutput()->addHTML('<div id="pf2-requests-board"></div>');
  }

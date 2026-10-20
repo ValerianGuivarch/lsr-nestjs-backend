@@ -212,8 +212,10 @@ Le salon Discord **bot-et-app** (`1554492543654436875`, serveur `153134567263961
 - Dans le fil d'une requête, les commandes administrateur `/requete-demande`, `/requete-encours` et `/requete-termine` peuvent faire toutes les transitions, y compris la réouverture.
 - Chaque demande publiée reçoit un message Discord, un fil et une épingle. Les transitions éditent le message, ajoutent une notification dans le fil et épinglent/désépinglent selon l'état.
 - La table SQLite `pf2_request` conserve sujet, description, auteur, saisissant, état, IDs Discord et dates.
-- Le wiki expose `Special:RequetesPF2` (administrateurs MediaWiki ayant le droit `delete` uniquement). Le tableau Kanban utilise les modules `pf2requests` et `pf2requestsupdate` protégés par les droits wiki et un jeton CSRF, puis l'API backend interne protégée par `PF2_WIKI_LOGIN_INTERNAL_KEY`.
+- Le wiki expose la page standard Requêtes ainsi que `Special:RequetesPF2`. Le tableau Kanban utilise les modules `pf2requests` et `pf2requestsupdate` ; lecture publique, changement des statuts pour les comptes Wiki connectés avec jeton CSRF, puis API backend interne protégée par `PF2_WIKI_LOGIN_INTERNAL_KEY`.
 - Les changements de statut depuis le wiki passent par le bot afin de modifier Discord.
 - Si Discord est indisponible, le changement renvoie une erreur au lieu de simuler une réussite.
 
 Cette première implémentation exige encore une validation de bout en bout après déploiement (droits d'épinglage du bot, enregistrement des commandes et appels MediaWiki). La compilation TypeScript a été vérifiée ; l'analyse syntaxique PHP doit être exécutée dans un environnement doté de PHP.
+
+La page MediaWiki standard Requêtes embarque le Kanban avec un conteneur HTML identifié pf2-requests-board et charge le module depuis BeforePageDisplay. Consultation publique, changement des statuts possible par tout compte Wiki connecté (jeton CSRF) ; le backend interne reste protégé par clé serveur. La page spéciale Spécial:RequetesPF2 reste disponible comme accès direct.
