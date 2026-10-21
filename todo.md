@@ -13,6 +13,24 @@
 - [ ] Poursuivre l'audit des **Scenes Foundry importées** et corriger par le pipeline les imports partiels (cas témoin documenté : Sentence d'Extinction volume 1, images présentes sur disque mais non reliées à plusieurs Scenes).
 
 
+### Projet futur — vocal et webcams intégrés à Foundry (LiveKit)
+
+**Objectif :** proposer aux joueurs une interface unique Foundry pour la carte, le vocal et les petites webcams, sans obligation d'utiliser le vocal Discord. Capacité cible : 4 à 6 joueurs habituels, jusqu'à 10 exceptionnellement. Discord reste la solution de secours.
+
+**Contexte vérifié (21/10/2026) :** Foundry V14.365 sous Docker sur mini-PC i5-8500T / 8 Go RAM ; environ 4,2 Go disponibles à l'audit ; liaison Ethernet 1 Gbit/s ; test Internet ponctuel ≈ 267 Mbit/s descendants, 122 Mbit/s montants, latence ≈ 12,4 ms sans perte de paquets. Ces mesures ne garantissent pas les performances sous charge. Vérification HTTPS à poursuivre (certificat non validé depuis le mini-PC lors du test).
+
+**Plan d'exécution (aucune installation effectuée) :**
+
+- [ ] Vérifier sur l'installation réelle la compatibilité du module LiveKit AVClient avec la version précise de Foundry/PF2e, ainsi que les possibilités d'interface et l'état du HTTPS/certificat.
+- [ ] Préparer un serveur LiveKit **Docker isolé sur le mini-PC** (hypothèse de départ, à confirmer après les vérifications), avec configuration, secrets, sauvegarde et retour arrière ; ne pas perturber les services LSR/Foundry existants.
+- [ ] Mettre en place l'accès réseau sécurisé : sous-domaine dédié envisagé (`livekit.l7r.fr`), WSS/TLS, UDP et éventuellement TURN/TCP ; vérifier NAT et besoins d'ouverture de ports.
+- [ ] Installer et paramétrer le client LiveKit dans Foundry, conserver Discord comme solution de secours, vérifier autorisations navigateur micro/webcam.
+- [ ] Tester à 2–3 utilisateurs puis 4–6 et si possible 10 : qualité vocale, latence/jitter, coupures, consommation CPU/RAM, débit montant, fiabilité derrière NAT.
+- [ ] Valider une interface compacte avec webcams réductibles/masquables, portraits fixes en absence de caméra et mise en évidence de la personne qui parle ; préférer les fonctions/modules existants avant du développement sur mesure.
+- [ ] Documenter exploitation, démarrage, arrêt, restauration et procédure de secours ; décider de l'activation durable après essai.
+
+**Répartition :** ChatGPT peut auditer, préparer Docker/réseau/configuration, surveiller et documenter via les accès autorisés ; le MJ intervient pour les réglages Freebox/DNS si non accessibles, l'autorisation micro/webcam, les tests joueurs et la validation du rendu. Aucune modification de production sans validation explicite.
+
 ### Projet prioritaire — refondre le workflow Discord de planification des séances
 
 **But :** pouvoir repartir de cette section dans une nouvelle discussion et reconstruire proprement tout le workflow de planification, depuis la proposition des disponibilités jusqu'à la création des discussions de mission dans `#objectif-prochaine-mission`, sans dépendre du texte des anciens messages Discord comme pseudo-base de données.
