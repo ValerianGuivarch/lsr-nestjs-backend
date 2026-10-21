@@ -8,11 +8,11 @@ describe('DiscordCommandsService', () => {
     expect(definitions).toEqual(expect.arrayContaining([
       'help', 'help-admin', 'choix-quete', 'terminer-quete', 'relancer-quete', 'random-perso', 'tirage-sort-joueur', 'recap-pjs', 'recap-seance',
       'debut-seance', 'fin-seance', 'personnage', 'faction', 'nouvelle-faction', 'associer-faction', 'afficher-personnage', 'afficher-faction', 'rechercher', 'wiki', 'wiki-admin',
-      'proposer-date-seance', 'modifier-date-seance', 'relancer-date-seance', 'analyse-date-seance', 'valider-date-seance', 'preparer-prochaine-mission',
+      'proposer-date-seance', 'modifier-date-seance', 'relancer-date-seance', 'analyse-date-seance', 'valider-date-seance', 'modifier-groupe-seance',
     ]))
     expect(definitions).not.toEqual(expect.arrayContaining([
       'ping', 'export-full', 'resume', 'recap', 'new-game', 'finish-game',
-      'planification', 'modifier-planification', 'programmer-seance',
+      'planification', 'modifier-planification', 'programmer-seance', 'preparer-prochaine-mission',
     ]))
   })
 
