@@ -2490,19 +2490,6 @@ export class DiscordCommandsService {
       }
       return true
     }
-    if (interaction.customId.startsWith('pf2-schedule:publish:')) {
-      const pending = this.pendingSchedulePublications.get(interaction.customId)
-      if (!pending) { await interaction.reply({ content: 'Cette validation a expiré. Relance `/analyse-date-seance`.', ephemeral: true }); return true }
-      if (interaction.user.id !== pending.requesterId) { await interaction.reply({ content: 'Cette validation appartient à un autre administrateur.', ephemeral: true }); return true }
-      try {
-        await interaction.update({ components: [] })
-        await interaction.followUp({ content: pending.content, ephemeral: false, allowedMentions: { parse: [] } })
-        this.pendingSchedulePublications.delete(interaction.customId)
-      } catch (error) {
-        await interaction.followUp({ content: `Publication impossible : ${error instanceof Error ? error.message : String(error)}`, ephemeral: true }).catch(() => undefined)
-      }
-      return true
-    }
     if (interaction.customId.startsWith('pf2-journal:reveal:')) {
       const pending = this.pendingJournalReveals.get(interaction.customId)
       if (!pending) { await interaction.reply({ content: 'Cette validation a expiré. Relance `/journaux`.', ephemeral: true }); return true }
