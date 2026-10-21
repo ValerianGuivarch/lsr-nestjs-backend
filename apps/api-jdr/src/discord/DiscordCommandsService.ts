@@ -1858,6 +1858,42 @@ export class DiscordCommandsService {
       await interaction.update(this.manualSessionPlayerSelection(commandId))
       return true
     }
+    if (interaction.customId.startsWith('pf2-schedule:dates:')) {
+      const key = interaction.customId.slice('pf2-schedule:dates:'.length)
+      const pending = this.pendingSchedulePublications.get(key)
+      if (!pending || interaction.user.id !== pending.requesterId || interaction.channelId !== pending.channelId) {
+        await interaction.reply({ content: 'Sélection expirée ou non autorisée. Relance /analyse-date-seance.', ephemeral: true })
+        return true
+      }
+      const selected = pending.dates.filter(day => interaction.values.includes(day.key))
+      const solutions = this.bestSessionGroupProposals(selected.map(day => [day.key, day.label] as const), pending.availability)
+        .filter(groups => groups.length === selected.length)
+      if (!solutions.length) {
+        await interaction.update({ content: 'Ces dates ne peuvent pas toutes être constituées avec des joueurs distincts. Relance /analyse-date-seance et choisis une autre combinaison.', components: [], allowedMentions: { parse: [] } })
+        this.pendingSchedulePublications.delete(key)
+        return true
+      }
+      const choice = solutions[Math.floor(Math.random() * solutions.length)]
+      const userIds = choice.flatMap(group => group.players.map(player => player.id))
+      const content = ['✅ **Séances validées — proposition 1**',
+        ...choice.flatMap(group => ['', `**${group.label}**`, ...group.players.map(player => `- <@${player.id}>`)]),
+        '', 'La confirmation des joueurs sera demandée dans #objectif-prochaine-mission.'].join('\n')
+      this.pendingSessionValidations.set(key, {
+        requesterId: pending.requesterId, channelId: pending.channelId, content, userIds,
+        planningMessageId: pending.planningMessageId, planningContent: pending.planningContent,
+        reactions: pending.reactions, planningDates: pending.dates.map(day => day.key),
+      })
+      this.pendingSchedulePublications.delete(key)
+      const confirm = new ButtonBuilder().setCustomId(`pf2-date-confirm:publish:${key}`).setLabel('Créer les séances').setStyle(ButtonStyle.Success)
+      const cancel = new ButtonBuilder().setCustomId(`pf2-date-confirm:cancel:${key}`).setLabel('Annuler').setStyle(ButtonStyle.Secondary)
+      await interaction.update({
+        content: ['**Aperçu privé — aucun ping avant confirmation**',
+          `Sélection aléatoire parmi ${solutions.length} solutions globales ex æquo.`, content].join('\n\n'),
+        components: [new ActionRowBuilder<ButtonBuilder>().addComponents(confirm, cancel)],
+        allowedMentions: { parse: [] },
+      })
+      return true
+    }
     const createPlanning = interaction.customId.match(/^pf2-planification:create:(\d{4}-\d{2}-\d{2})$/)
     if (createPlanning) {
       const monday = createPlanning[1]
@@ -2324,6 +2360,29 @@ export class DiscordCommandsService {
       if (action === 'cancel') {
         await interaction.update({ content: 'Validation annulée. Aucun message publié et aucun joueur notifié.', components: [], allowedMentions: { parse: [] } })
         return true
+      }
+      if (pending.planningMessageId && pending.planningContent && pending.reactions && pending.planningDates) {
+        const channel = interaction.channel
+        if (!channel || !('messages' in channel)) {
+          await interaction.update({ content: 'Impossible de vérifier la planification ; relance /analyse-date-seance.', components: [] })
+          return true
+        }
+        const starter = await channel.messages.fetch(pending.planningMessageId).catch(() => null)
+        if (!starter || starter.content !== pending.planningContent) {
+          await interaction.update({ content: 'Les dates ont changé. Relance /analyse-date-seance.', components: [] })
+          return true
+        }
+        const refreshed: string[] = []
+        for (const day of PLANNING_DAYS) {
+          if (!pending.planningDates.includes(String(day.offset))) continue
+          const reaction = starter.reactions.cache.find(item => item.emoji.name === day.emoji)
+          const users = reaction ? await reaction.users.fetch() : null
+          refreshed.push(`${day.offset}:${users ? [...users.values()].filter(user => !user.bot && user.id !== this.discordId('valerian')).map(user => user.id).sort().join(',') : ''}`)
+        }
+        if (refreshed.sort().join('|') !== pending.reactions) {
+          await interaction.update({ content: 'Les disponibilités ont changé depuis l’analyse. Relance /analyse-date-seance.', components: [] })
+          return true
+        }
       }
       await interaction.update({ content: 'Validation reçue. Création des annonces de mission…', components: [], allowedMentions: { parse: [] } })
       try {
