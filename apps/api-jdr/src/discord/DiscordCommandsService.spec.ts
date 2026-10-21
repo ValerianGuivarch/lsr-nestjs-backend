@@ -1752,4 +1752,56 @@ describe('DiscordCommandsService', () => {
     expect((service as any).pendingSessionValidations.has('analysis-2')).toBe(false)
   })
 
+  it('updates attendance status silently when players react', async () => {
+    const service = new DiscordCommandsService({} as never, {} as never)
+    const players = ['100000000000000001', '100000000000000002', '100000000000000003', '100000000000000004']
+    const content = [
+      '**Séance du Lundi 19 octobre 2026**',
+      `**Groupe proposé :** ${players.map(id => `<@${id}>`).join(', ')}`,
+      '**Merci de confirmer votre présence :** ✅ présent · ❌ indisponible.',
+      '**Choisissez également votre prochaine mission**',
+      '[PF2-SESSION:2026-10-19]',
+    ].join('\n')
+    const users = (ids: string[]) => ({
+      users: { fetch: jest.fn().mockResolvedValue(new Map(ids.map(id => [id, { id, bot: false }]))) },
+    })
+    const edit = jest.fn().mockResolvedValue(undefined)
+    const message = {
+      id: 'announcement-1', content,
+      channel: { type: 0, name: 'objectif-prochaine-mission' },
+      author: { id: 'bot' }, client: { user: { id: 'bot' } },
+      reactions: { cache: new Map([
+        ['yes', { emoji: { name: '✅' }, ...users(players.slice(0, 3)) }],
+        ['no', { emoji: { name: '❌' }, ...users([players[3]]) }],
+      ]) },
+      edit,
+    }
+    const reaction = { emoji: { name: '✅' }, message: {
+      id: message.id, fetch: jest.fn().mockResolvedValue(message),
+    } }
+    await service.handleSessionConfirmationReaction(reaction as never)
+    expect(edit).toHaveBeenCalledWith(expect.objectContaining({
+      content: expect.stringContaining('3/4 ✅ · 1 ❌ · 0 ⏳ — ⚠️ Groupe à compléter'),
+      allowedMentions: { parse: [] },
+    }))
+  })
+
+  it('does not edit unrelated reactions or non-session messages', async () => {
+    const service = new DiscordCommandsService({} as never, {} as never)
+    const fetch = jest.fn()
+    await service.handleSessionConfirmationReaction({ emoji: { name: '👍' }, message: { id: 'x', fetch } } as never)
+    expect(fetch).not.toHaveBeenCalled()
+    const edit = jest.fn()
+    await service.handleSessionConfirmationReaction({
+      emoji: { name: '✅' }, message: { id: 'y',
+        fetch: jest.fn().mockResolvedValue({
+          content: 'Un message ordinaire',
+          channel: { type: 0, name: 'objectif-prochaine-mission' },
+          author: { id: 'bot' }, client: { user: { id: 'bot' } }, edit,
+        }),
+      },
+    } as never)
+    expect(edit).not.toHaveBeenCalled()
+  })
+
 })
