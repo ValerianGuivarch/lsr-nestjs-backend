@@ -63,8 +63,13 @@ export class DiscordCommandsService {
   private readonly pendingCharacterFactions = new Map<string, { requesterId: string; factionId: string | null }>()
   private readonly pendingFactionPublications = new Map<string, { requesterId: string; factionId: string }>()
   private readonly pendingFactionAssociations = new Map<string, { requesterId: string; playerFactionId: string; mjFactionId: string }>()
-  private readonly pendingSchedulePublications = new Map<string, { requesterId: string; content: string }>()
-  private readonly pendingSessionValidations = new Map<string, { requesterId: string; channelId: string; content: string; userIds: string[] }>()
+  private readonly pendingSchedulePublications = new Map<string, {
+    requesterId: string; channelId: string; planningMessageId: string; planningContent: string
+    dates: Array<{ key: string; label: string }>
+    availability: Map<string, Array<{ id: string; name: string; played: number }>>
+    reactions: string
+  }>()
+  private readonly pendingSessionValidations = new Map<string, { requesterId: string; channelId: string; content: string; userIds: string[]; planningMessageId?: string; planningContent?: string; reactions?: string; planningDates?: string[] }>()
   private readonly pendingManualSessionValidations = new Map<string, {
     requesterId: string
     channelId: string
@@ -1244,51 +1249,26 @@ export class DiscordCommandsService {
       }
 
       const proposals = this.bestSessionGroupProposals(days, availability)
-      const lines = ['**Groupes possibles pour la prochaine semaine**']
       if (!proposals.length) {
-        lines.push('Aucun groupe de 4 sans réutiliser un joueur ne peut être formé avec les disponibilités actuelles.')
-      } else {
-        const compact = this.compactSessionGroupProposals(proposals)
-        if (compact) {
-          for (const group of compact) {
-            lines.push('', `**${group.label}**`)
-            lines.push(...group.fixed.map(player => `- <@${player.id}> — ${player.played} séance${player.played > 1 ? 's' : ''} jouée${player.played > 1 ? 's' : ''}`))
-            if (group.choose > 0) {
-              const choices = group.pool.map(player => `<@${player.id}> (${player.played})`).join(', ')
-              lines.push(`- **Choisir ${group.choose}/${group.pool.length}** : ${choices}`)
-            }
-          }
-        } else {
-          for (const [index, groups] of proposals.slice(0, 3).entries()) {
-            if (proposals.length > 1) lines.push('', `**Proposition ${index + 1} — ex æquo**`)
-            for (const group of groups) {
-              lines.push('', `**${group.label}**`, ...group.players.map(player => `- <@${player.id}> — ${player.played} séance${player.played > 1 ? 's' : ''} jouée${player.played > 1 ? 's' : ''}`))
-            }
-          }
-        }
-        const groupCount = proposals[0].length
-        lines.push('', `${groupCount} groupe${groupCount > 1 ? 's' : ''} de 4 possible${groupCount > 1 ? 's' : ''}, sans réutiliser de joueur.`)
-      }
-
-      const publicContent = lines.join('\n')
-      if (publicContent.length > 2_000) {
-        await interaction.editReply({ content: `Le résultat fait ${publicContent.length} caractères et dépasse la limite Discord. Réduis le nombre de jours proposés ou les égalités à départager.` })
+        await interaction.editReply({ content: 'Aucun groupe de 4 compatible avec les disponibilités.', components: [] })
         return
       }
-
-      const sourceLine = `Message analysé : ${scheduleMessage.url}`
-      const preview = `${publicContent}\n\n${sourceLine}`.length <= 2_000 ? `${publicContent}\n\n${sourceLine}` : publicContent
-      if (!proposals.length) {
-        await interaction.editReply({ content: preview, components: [], allowedMentions: { parse: [] } })
-        return
-      }
-
-      const publishId = `pf2-schedule:publish:${interaction.id}`
-      this.pendingSchedulePublications.set(publishId, { requesterId: interaction.user.id, content: publicContent })
-      const publish = new ButtonBuilder().setCustomId(publishId).setLabel('Publier').setStyle(ButtonStyle.Primary)
+      const reactions = [...availability.entries()].map(([key, players]) => `${key}:${players.map(player => player.id).sort().join(',')}`).sort().join('|')
+      this.pendingSchedulePublications.set(interaction.id, {
+        requesterId: interaction.user.id, channelId: interaction.channelId,
+        planningMessageId: scheduleMessage.id, planningContent: scheduleMessage.content,
+        dates: days.map(([key, label]) => ({ key, label })), availability, reactions,
+      })
+      const options = days.filter(([key]) => (availability.get(key)?.length ?? 0) >= 4)
+      const menu = new StringSelectMenuBuilder().setCustomId(`pf2-schedule:dates:${interaction.id}`)
+        .setPlaceholder('Sélectionner une ou plusieurs séances').setMinValues(1).setMaxValues(options.length)
+        .addOptions(options.map(([key, label]) => ({ label: `${label} — ${availability.get(key)?.length ?? 0} disponibles`, value: key })))
       await interaction.editReply({
-        content: preview,
-        components: [new ActionRowBuilder<ButtonBuilder>().addComponents(publish)],
+        content: ['**Créneaux jouables — choix MJ privé**',
+          ...days.map(([key, label]) => `- ${label} : ${availability.get(key)?.length ?? 0} disponibles`),
+          '', `${proposals[0].length} séance(s) maximum sans partager de joueur.`,
+          'Sélectionne les dates. Aucun message public ne sera publié avant la confirmation finale.'].join('\n'),
+        components: [new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(menu)],
         allowedMentions: { parse: [] },
       })
     } catch (error) {
