@@ -1770,7 +1770,7 @@ describe('DiscordCommandsService', () => {
       id: 'announcement-1', content,
       channel: { type: 0, name: 'objectif-prochaine-mission' },
       author: { id: 'bot' }, client: { user: { id: 'bot' } },
-      reactions: { cache: new Map([
+      reactions: { cache: new Collection([
         ['yes', { emoji: { name: '✅' }, ...users(players.slice(0, 3)) }],
         ['no', { emoji: { name: '❌' }, ...users([players[3]]) }],
       ]) },
