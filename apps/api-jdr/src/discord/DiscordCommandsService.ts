@@ -1299,7 +1299,19 @@ export class DiscordCommandsService {
         await interaction.editReply({ content: 'Aucun groupe de 4 compatible avec les disponibilités.', components: [] })
         return
       }
-      const reactions = [...availability.entries()].map(([key, players]) => `${key}:${players.map(player => player.id).sort().join(',')}`).sort().join('|')
+      const unavailableReaction = [...scheduleMessage.reactions.cache.values()].find(item => item.emoji.name === PLANNING_UNAVAILABLE_EMOJI)
+      const unavailableUsers = unavailableReaction ? await unavailableReaction.users.fetch() : null
+      const unavailableIds = new Set(unavailableUsers ? [...unavailableUsers.values()].filter(user => !user.bot).map(user => user.id) : [])
+      const contradictions = [...new Set([...availability.values()].flat().map(player => player.id).filter(id => unavailableIds.has(id)))]
+      if (contradictions.length) {
+        await interaction.editReply({
+          content: `Disponibilités contradictoires : ${contradictions.map(id => `<@${id}>`).join(', ')} ont répondu à la fois ❌ et un jour disponible. Demande-leur de corriger leurs réactions avant de relancer l'analyse.`,
+          components: [], allowedMentions: { parse: [] },
+        })
+        return
+      }
+      const reactions = [...availability.entries()].map(([key, players]) => `${key}:${players.map(player => player.id).sort().join(',')}`)
+        .concat(`x:${[...unavailableIds].sort().join(',')}`).sort().join('|')
       this.pendingSchedulePublications.set(interaction.id, {
         requesterId: interaction.user.id, channelId: interaction.channelId,
         planningMessageId: scheduleMessage.id, planningContent: scheduleMessage.content,
@@ -1405,6 +1417,7 @@ export class DiscordCommandsService {
     let bestScore = Number.POSITIVE_INFINITY
     let proposals: Group[][] = []
     let proposalKeys = new Set<string>()
+    let equalProposalCount = 0
 
     const saveProposal = (chosen: Group[], score: number): void => {
       const count = chosen.length
@@ -1414,12 +1427,21 @@ export class DiscordCommandsService {
         bestScore = score
         proposals = []
         proposalKeys = new Set<string>()
+        equalProposalCount = 0
       }
       if (count === 0) return
       const key = chosen.map(group => `${group.key}:${group.players.map(player => player.id).sort().join(',')}`).join('|')
       if (proposalKeys.has(key)) return
       proposalKeys.add(key)
-      if (proposals.length < 100) proposals.push(chosen.map(group => ({ ...group, players: [...group.players] })))
+      equalProposalCount++
+      const snapshot = chosen.map(group => ({ ...group, players: [...group.players] }))
+      if (proposals.length < 100) proposals.push(snapshot)
+      else {
+        // Reservoir sampling: even if ties exceed 100, every complete solution
+        // has an equal probability of being selected from the retained sample.
+        const replacement = Math.floor(Math.random() * equalProposalCount)
+        if (replacement < 100) proposals[replacement] = snapshot
+      }
     }
 
     const search = (index: number, used: Set<string>, chosen: Group[], score: number): void => {
@@ -1915,8 +1937,14 @@ export class DiscordCommandsService {
       const solutions = this.bestSessionGroupProposals(selected.map(day => [day.key, day.label] as const), pending.availability)
         .filter(groups => groups.length === selected.length)
       if (!solutions.length) {
-        await interaction.update({ content: 'Ces dates ne peuvent pas toutes être constituées avec des joueurs distincts. Relance /analyse-date-seance et choisis une autre combinaison.', components: [], allowedMentions: { parse: [] } })
-        this.pendingSchedulePublications.delete(key)
+        const options = pending.dates.filter(day => (pending.availability.get(day.key)?.length ?? 0) >= 4)
+        const menu = new StringSelectMenuBuilder().setCustomId(`pf2-schedule:dates:${key}`)
+          .setPlaceholder('Essaie une autre combinaison de dates').setMinValues(1).setMaxValues(options.length)
+          .addOptions(options.map(day => ({ label: day.label, value: day.key })))
+        await interaction.update({
+          content: 'Ces dates ne peuvent pas toutes être constituées avec des joueurs distincts. Choisis une autre combinaison.',
+          components: [new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(menu)], allowedMentions: { parse: [] },
+        })
         return true
       }
       const choice = solutions[Math.floor(Math.random() * solutions.length)]
@@ -2427,6 +2455,9 @@ export class DiscordCommandsService {
           const users = reaction ? await reaction.users.fetch() : null
           refreshed.push(`${day.offset}:${users ? [...users.values()].filter(user => !user.bot && user.id !== this.discordId('valerian')).map(user => user.id).sort().join(',') : ''}`)
         }
+        const unavailable = starter.reactions.cache.find(item => item.emoji.name === PLANNING_UNAVAILABLE_EMOJI)
+        const unavailableUsers = unavailable ? await unavailable.users.fetch() : null
+        refreshed.push(`x:${unavailableUsers ? [...unavailableUsers.values()].filter(user => !user.bot).map(user => user.id).sort().join(',') : ''}`)
         if (refreshed.sort().join('|') !== pending.reactions) {
           await interaction.update({ content: 'Les disponibilités ont changé depuis l’analyse. Relance /analyse-date-seance.', components: [] })
           return true
