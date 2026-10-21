@@ -1,6 +1,6 @@
 import { forwardRef, Inject, Injectable, Logger } from '@nestjs/common'
 import { resolve } from 'node:path'
-import { ActionRowBuilder, AutocompleteInteraction, ButtonBuilder, ButtonInteraction, ButtonStyle, ChannelType, ChatInputCommandInteraction, ModalBuilder, ModalSubmitInteraction, PermissionFlagsBits, RESTPostAPIApplicationGuildCommandsJSONBody, SlashCommandBuilder, StringSelectMenuBuilder, StringSelectMenuInteraction, TextInputBuilder, TextInputStyle, UserSelectMenuBuilder, UserSelectMenuInteraction } from 'discord.js'
+import { ActionRowBuilder, AutocompleteInteraction, ButtonBuilder, ButtonInteraction, ButtonStyle, ChannelType, ChatInputCommandInteraction, ModalBuilder, ModalSubmitInteraction, Message, MessageReaction, PermissionFlagsBits, RESTPostAPIApplicationGuildCommandsJSONBody, SlashCommandBuilder, StringSelectMenuBuilder, StringSelectMenuInteraction, TextInputBuilder, TextInputStyle, UserSelectMenuBuilder, UserSelectMenuInteraction } from 'discord.js'
 import { FoundryRelayService } from '../foundry/FoundryRelayService'
 import { Pf2PersistenceService } from '../pf2-storage/Pf2PersistenceService'
 import { PlayerCodexService } from '../pf2-mj/PlayerCodexService'
@@ -76,6 +76,7 @@ export class DiscordCommandsService {
     planningMonday: string
     selectedDate?: { iso: string; label: string }
   }>()
+  private readonly sessionConfirmationQueues = new Map<string, Promise<void>>()
   private readonly pendingPlanningReminders = new Map<string, { requesterId: string; content: string; userIds: string[] }>()
   private readonly pendingPreviewPublications = new Map<string, { requesterId: string; content: string; files?: string[] }>()
   private readonly pendingPlayerDraws = new Map<string, { requesterId: string; players: Array<{ id: string; name: string }> }>()
@@ -1181,6 +1182,52 @@ export class DiscordCommandsService {
     return groups
   }
 
+  /** Keep the parent announcement as the single, silent source for attendance status. */
+  private async updateSessionConfirmationMessage(message: Message): Promise<void> {
+    if (message.channel.type !== ChannelType.GuildText || message.channel.name !== 'objectif-prochaine-mission') return
+    if (message.author?.id !== message.client.user?.id || !message.content.includes('[PF2-SESSION:')) return
+    const line = message.content.split('\n').find(value => value.startsWith('**Groupe proposé :** '))
+    if (!line) return
+    const ids = [...line.matchAll(/<@!?(\d+)>/g)].map(match => match[1])
+    if (!ids.length) return
+    const usersFor = async (emoji: string): Promise<Set<string>> => {
+      const found = message.reactions.cache.find(reaction => reaction.emoji.name === emoji)
+      if (!found) return new Set()
+      const users = await found.users.fetch()
+      return new Set([...users.values()].filter(user => !user.bot).map(user => user.id))
+    }
+    const yes = await usersFor('✅')
+    const no = await usersFor('❌')
+    const confirmed = ids.filter(id => yes.has(id) && !no.has(id)).length
+    const declined = ids.filter(id => no.has(id) && !yes.has(id)).length
+    const conflicts = ids.filter(id => no.has(id) && yes.has(id)).length
+    const waiting = ids.length - confirmed - declined - conflicts
+    const state = conflicts ? '⚠️ Réactions contradictoires'
+      : declined ? '⚠️ Groupe à compléter'
+      : confirmed === ids.length ? '✅ Groupe confirmé'
+      : '⏳ Confirmations en attente'
+    const status = `**Statut du groupe :** ${confirmed}/${ids.length} ✅ · ${declined} ❌ · ${waiting} ⏳${conflicts ? ` · ${conflicts} ⚠️` : ''} — ${state}`
+    const withoutOldStatus = message.content.replace(/^\*\*Statut du groupe :\*\*[^\n]*\n?/m, '')
+    const next = withoutOldStatus.replace('**Choisissez également votre prochaine mission**', `${status}\n**Choisissez également votre prochaine mission**`)
+    if (next !== message.content) await message.edit({ content: next, allowedMentions: { parse: [] } })
+  }
+
+  async handleSessionConfirmationReaction(reaction: MessageReaction): Promise<void> {
+    if (reaction.emoji.name !== '✅' && reaction.emoji.name !== '❌') return
+    const messageId = reaction.message.id
+    const previous = this.sessionConfirmationQueues.get(messageId) ?? Promise.resolve()
+    const task = previous.catch(() => undefined).then(async () => {
+      const message = await reaction.message.fetch().catch(() => null)
+      if (message) await this.updateSessionConfirmationMessage(message)
+    })
+    this.sessionConfirmationQueues.set(messageId, task)
+    try {
+      await task
+    } finally {
+      if (this.sessionConfirmationQueues.get(messageId) === task) this.sessionConfirmationQueues.delete(messageId)
+    }
+  }
+
   private async modifySessionGroupCommand(interaction: ChatInputCommandInteraction): Promise<void> {
     if (!this.isAdmin(interaction)) {
       await interaction.reply({ content: 'Commande réservée au MJ.', ephemeral: true })
@@ -1213,6 +1260,8 @@ export class DiscordCommandsService {
       if (!updated.length) throw new Error('Le groupe ne peut pas être vide.')
       const replaced = starter.content.replace(line, `**Groupe proposé :** ${updated.map(id => `<@${id}>`).join(', ')}`)
       await starter.edit({ content: replaced, allowedMentions: { parse: [] } })
+      await this.updateSessionConfirmationMessage(await starter.fetch()).catch(error =>
+        this.logger.warn('Group confirmation status refresh failed: ' + (error instanceof Error ? error.message : String(error))))
       if (add) {
         await channel.send({ content: `<@${add.id}> a été ajouté au groupe. Merci de confirmer ta présence sur l’annonce de séance et de participer au choix de mission.`, allowedMentions: { users: [add.id] } })
       }
@@ -2520,6 +2569,8 @@ export class DiscordCommandsService {
                 allowedMentions: { parse: [] },
               })
             }
+            await this.updateSessionConfirmationMessage(announcement).catch(error =>
+              this.logger.warn('Initial session confirmation status failed: ' + (error instanceof Error ? error.message : String(error))))
             published.push(`${group.label} : ${thread.url}`)
           } catch (error) {
             failures.push(`${group.label} : ${error instanceof Error ? error.message : String(error)}`)
