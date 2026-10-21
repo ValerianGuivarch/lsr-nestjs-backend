@@ -2353,7 +2353,7 @@ export class DiscordCommandsService {
         const target = channelList && [...channelList.values()].find(item =>
           item?.type === ChannelType.GuildText && item.name === 'objectif-prochaine-mission'
         )
-        if (!target) throw new Error('Salon #objectif-prochaine-mission introuvable.')
+        if (!target || target.type !== ChannelType.GuildText) throw new Error('Salon #objectif-prochaine-mission introuvable.')
         const published: string[] = []
         const failures: string[] = []
         for (const group of groups) {
