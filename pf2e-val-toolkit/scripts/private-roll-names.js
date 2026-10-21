@@ -27,6 +27,58 @@ export function privateRollCharacterName(message, actors, users) {
   return source ? characterDisplayName(source) : null;
 }
 
+export function privateRollPortraitSource(message, actors, scenes) {
+  if (!isPrivateRoll(message)) return null;
+  const speaker = message.speaker ?? {};
+  if (!speaker.actor) return null;
+  const token = scenes?.get?.(speaker.scene)?.tokens?.get?.(speaker.token);
+  // Do not bypass the token-hidden setting or show secret token portraits.
+  if (token?.hidden && !game.user?.isGM) return null;
+  if (game.modules?.get?.("pf2e-dorako-ui")?.active
+    && game.settings?.get?.("pf2e-dorako-ui", "avatar.hide-when-token-hidden")
+    && message.getFlag?.("pf2e-dorako-ui", "wasTokenHidden")
+    && !game.user?.isGM) return null;
+
+  const actor = actors?.get?.(speaker.actor);
+  // Only use an actual character portrait, never derive an image from the
+  // hidden roll data, the action name, or a GM-only NPC.
+  if (actor?.type !== "character") return null;
+  const image = actor.img || actor.prototypeToken?.texture?.src;
+  return typeof image === "string" && image.trim() ? image : null;
+}
+
+function ensurePrivateRollPortrait(root, message, name) {
+  const source = privateRollPortraitSource(message, game.actors, game.scenes);
+  if (!source) return;
+  const header = root.querySelector?.(".message-header");
+  if (!header) return;
+
+  // Dorako UI normally supplies the portrait. If it is already present,
+  // preserve it rather than adding a duplicate.
+  const existing = header.querySelector(".portrait img, .message-avatar img, .pf2e-val-private-roll-portrait img");
+  if (existing?.getAttribute("src")) {
+    header.classList.remove("no-image");
+    header.classList.add("with-image");
+    return;
+  }
+
+  let container = header.querySelector(".portrait.dorako");
+  if (!container) {
+    container = document.createElement("div");
+    container.className = "pf2e-val-private-roll-portrait";
+    header.prepend(container);
+  }
+  container.classList.add("pf2e-val-private-roll-portrait");
+  const image = document.createElement("img");
+  image.src = source;
+  image.alt = name;
+  image.loading = "lazy";
+  image.decoding = "async";
+  container.append(image);
+  header.classList.remove("no-image");
+  header.classList.add("with-image");
+}
+
 export function privateRollActionLabel(message) {
   if (!isPrivateRoll(message) || typeof message.flavor !== "string") return null;
   // PF2e's roll flavor contains other information, including potentially
@@ -59,6 +111,8 @@ function renderPrivateRollInfo(message, html) {
     sender.textContent = name;
     sender.title = `Personnage : ${name}`;
   }
+
+  ensurePrivateRollPortrait(root, message, name);
 
   const content = root.querySelector?.(".message-content");
   if (!content) return;

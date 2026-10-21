@@ -1,0 +1,26 @@
+.chat-message .message-header .pf2e-val-private-roll-portrait {
+  display: block;
+  grid-area: img;
+  flex: 0 0 2.5rem;
+  width: 2.5rem;
+  height: 2.5rem;
+  overflow: hidden;
+  border-radius: 0.35rem;
+  align-self: center;
+}
+
+.chat-message .message-header .pf2e-val-private-roll-portrait img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  object-fit: cover;
+  object-position: center;
+}
+
+.chat-message:not([data-chat-message-theme]) .message-header:has(.pf2e-val-private-roll-portrait) {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}

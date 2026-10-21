@@ -33,7 +33,8 @@
     "styles/quick-effects.css",
     "styles/career-xp.css",
     "styles/active-party.css",
-    "styles/improvisation.css"
+    "styles/improvisation.css",
+    "styles/private-roll-names.css"
   ],
   "languages": [
     {
