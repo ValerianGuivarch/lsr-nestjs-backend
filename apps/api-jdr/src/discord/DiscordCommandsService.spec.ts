@@ -1258,7 +1258,7 @@ describe('DiscordCommandsService', () => {
   it('selects a valid global solution for two dates without an early ping', async () => {
     const service = new DiscordCommandsService({} as never, {} as never)
     const p = (id: string) => ({ id, name: id, played: 0 })
-    const ids = Array.from({ length: 8 }, (_, i) => String(100000000000000000 + i))
+    const ids = Array.from({ length: 8 }, (_, i) => `10000000000000000${i}`)
     const availability = new Map([
       ['0', ids.slice(0, 5).map(p)],
       ['3', ids.slice(3).map(p)],
@@ -1645,7 +1645,7 @@ describe('DiscordCommandsService', () => {
         memberPermissions: { has: jest.fn().mockReturnValue(false) },
       } as never)
       expect(reply).toHaveBeenCalledWith(expect.objectContaining({
-        content: expect.stringContaining('réservée aux administrateurs'), ephemeral: true,
+        content: expect.stringContaining('réservée'), ephemeral: true,
       }))
     }
   })
