@@ -33,6 +33,12 @@
 
 ### Projet prioritaire — refondre le workflow Discord de planification des séances
 
+**Avancement du 21/10/2026 (poussé directement sur main) :** la commande `/preparer-prochaine-mission` a été supprimée du bot. Les validations automatiques existantes (`/valider-date-seance`) et manuelles (`/valider-date-seance-manuel`) créent désormais directement l'annonce unique dans `#objectif-prochaine-mission` et son fil, avec une demande de confirmation de présence (✅/❌) et le rappel de `/choix-quete`. Aucune annonce de groupe intermédiaire n'est publiée dans le fil de planification. La création réessaie sans republier une annonce identique lorsqu'elle figure parmi les 100 dernières publications du salon.
+
+**Encore à développer :** intégrer directement la sélection MJ à `/analyse-date-seance` sans publication intermédiaire, corriger `Choisir N/M` et les ex æquo par tirage de solutions complètes, sélectionner plusieurs dates, gérer les confirmations et remplacements manuels, vérifier les réactions au dernier clic, et couvrir ces scénarios par des tests. Les listes ci-dessous décrivent la cible complète, pas un état déjà livré.
+
+
+
 **But :** pouvoir repartir de cette section dans une nouvelle discussion et reconstruire proprement tout le workflow de planification, depuis la proposition des disponibilités jusqu'à la création des discussions de mission dans `#objectif-prochaine-mission`, sans dépendre du texte des anciens messages Discord comme pseudo-base de données.
 
 #### État actuel vérifié dans le code — ne pas refaire
