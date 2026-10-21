@@ -146,6 +146,10 @@ export class DiscordCommandsService {
         .addSubcommand(command => command.setName('liste-personnages').setDescription('Liste les associations entre membres et PJ.'))
         .toJSON(),
       new SlashCommandBuilder().setName('proposer-date-seance').setDescription('Propose les dates de séance pour la prochaine semaine.').setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild).toJSON(),
+      new SlashCommandBuilder().setName('modifier-groupe-seance').setDescription('Ajoute ou retire un joueur du fil de séance.')
+        .addUserOption(option => option.setName('ajouter').setDescription('Joueur à ajouter'))
+        .addUserOption(option => option.setName('retirer').setDescription('Joueur à retirer'))
+        .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild).toJSON(),
       new SlashCommandBuilder().setName('analyse-date-seance').setDescription('Analyse les disponibilités et calcule les groupes possibles.').setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild).toJSON(),
       new SlashCommandBuilder().setName('valider-date-seance').setDescription('Confirme une proposition de groupes publiée dans ce fil.').addIntegerOption(option => option.setName('numero').setDescription('Numéro de proposition à valider').setRequired(true).setMinValue(1)).setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild).toJSON(),
       new SlashCommandBuilder().setName('valider-date-seance-manuel').setDescription('Valide manuellement une date et 4 joueurs, sans passer par l’analyse.').setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild).toJSON(),
@@ -219,6 +223,7 @@ export class DiscordCommandsService {
     if (interaction.commandName === 'wiki') { await this.wikiCommand(interaction as ChatInputCommandInteraction); return true }
     if (interaction.commandName === 'wiki-admin') { await this.wikiAdminCommand(interaction as ChatInputCommandInteraction); return true }
     if (interaction.commandName === 'proposer-date-seance') { await this.planningCommand(interaction as ChatInputCommandInteraction); return true }
+    if (interaction.commandName === 'modifier-groupe-seance') { await this.modifySessionGroupCommand(interaction as ChatInputCommandInteraction); return true }
     if (interaction.commandName === 'analyse-date-seance') { await this.programmerSeanceCommand(interaction as ChatInputCommandInteraction); return true }
     if (interaction.commandName === 'valider-date-seance') { await this.validateSessionProposalCommand(interaction as ChatInputCommandInteraction); return true }
     if (interaction.commandName === 'valider-date-seance-manuel') { await this.manualSessionValidationCommand(interaction as ChatInputCommandInteraction); return true }
@@ -1174,6 +1179,47 @@ export class DiscordCommandsService {
     if (!groups.length || groups.some(group => group.userIds.length !== 4)
       || new Set(groups.flatMap(group => group.userIds)).size !== groups.length * 4) return null
     return groups
+  }
+
+  private async modifySessionGroupCommand(interaction: ChatInputCommandInteraction): Promise<void> {
+    if (!this.isAdmin(interaction)) {
+      await interaction.reply({ content: 'Commande réservée au MJ.', ephemeral: true })
+      return
+    }
+    const channel = interaction.channel
+    if (!channel?.isThread() || channel.parent?.name !== 'objectif-prochaine-mission') {
+      await interaction.reply({ content: 'À utiliser dans un fil de #objectif-prochaine-mission.', ephemeral: true })
+      return
+    }
+    const add = interaction.options.getUser('ajouter')
+    const remove = interaction.options.getUser('retirer')
+    if ((!add && !remove) || (add && remove && add.id === remove.id)) {
+      await interaction.reply({ content: 'Indique un ajout ou un retrait valide.', ephemeral: true })
+      return
+    }
+    await interaction.deferReply({ ephemeral: true })
+    try {
+      const starter = await channel.fetchStarterMessage({ force: true })
+      if (!starter || starter.author.id !== interaction.client.user?.id || !starter.content.includes('[PF2-SESSION:')) {
+        throw new Error('Ce fil ne correspond pas à une annonce de séance du bot.')
+      }
+      const line = starter.content.split('\n').find(item => item.startsWith('**Groupe proposé :** '))
+      if (!line) throw new Error('Groupe introuvable.')
+      const ids = [...line.matchAll(/<@!?(\d+)>/g)].map(match => match[1])
+      if (remove && !ids.includes(remove.id)) throw new Error('Le joueur à retirer ne fait pas partie du groupe.')
+      if (add && ids.includes(add.id)) throw new Error('Ce joueur est déjà dans le groupe.')
+      const updated = ids.filter(id => id !== remove?.id)
+      if (add) updated.push(add.id)
+      if (!updated.length) throw new Error('Le groupe ne peut pas être vide.')
+      const replaced = starter.content.replace(line, `**Groupe proposé :** ${updated.map(id => `<@${id}>`).join(', ')}`)
+      await starter.edit({ content: replaced, allowedMentions: { parse: [] } })
+      if (add) {
+        await channel.send({ content: `<@${add.id}> a été ajouté au groupe. Merci de confirmer ta présence sur l’annonce de séance et de participer au choix de mission.`, allowedMentions: { users: [add.id] } })
+      }
+      await interaction.editReply({ content: 'Groupe mis à jour dans l’annonce existante, sans renotifier les autres joueurs.' })
+    } catch (error) {
+      await interaction.editReply({ content: `Modification impossible : ${error instanceof Error ? error.message : String(error)}` })
+    }
   }
 
   private async programmerSeanceCommand(interaction: ChatInputCommandInteraction): Promise<void> {
