@@ -107,12 +107,14 @@ export class DiscordService implements OnModuleInit, OnModuleDestroy {
         void this.commands.handleButton(interaction).catch((error: unknown) => this.logger.error('Discord button failed', error instanceof Error ? error.stack : undefined))
       })
 
-      for (const event of [Events.MessageReactionAdd, Events.MessageReactionRemove] as const) {
-        client.on(event, reaction => {
-          void this.commands.handleSessionConfirmationReaction(reaction).catch(error =>
-            this.logger.warn('Session confirmation sync failed: ' + (error instanceof Error ? error.message : String(error))))
-        })
-      }
+      client.on(Events.MessageReactionAdd, reaction => {
+        void this.commands.handleSessionConfirmationReaction(reaction).catch(error =>
+          this.logger.warn('Session confirmation sync failed: ' + (error instanceof Error ? error.message : String(error))))
+      })
+      client.on(Events.MessageReactionRemove, reaction => {
+        void this.commands.handleSessionConfirmationReaction(reaction).catch(error =>
+          this.logger.warn('Session confirmation sync failed: ' + (error instanceof Error ? error.message : String(error))))
+      })
 
       client.once(Events.ClientReady, (readyClient) =>
         this.logger.log(`Discord connected as ${readyClient.user.tag}`),
