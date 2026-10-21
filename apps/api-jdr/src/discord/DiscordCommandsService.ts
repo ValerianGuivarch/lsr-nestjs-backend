@@ -1132,7 +1132,7 @@ export class DiscordCommandsService {
       })
       const confirm = new ButtonBuilder()
         .setCustomId(`pf2-date-confirm:publish:${confirmationId}`)
-        .setLabel('Créer les séances dans #objectif-prochaine-mission')
+        .setLabel('Créer la séance')
         .setStyle(ButtonStyle.Success)
       const cancel = new ButtonBuilder()
         .setCustomId(`pf2-date-confirm:cancel:${confirmationId}`)
@@ -2357,7 +2357,18 @@ export class DiscordCommandsService {
         const published: string[] = []
         const failures: string[] = []
         for (const group of groups) {
-          const date = this.isoDateFromFullPlanningLabel(group.label)
+          let date = this.isoDateFromFullPlanningLabel(group.label)
+          if (!date && interaction.channel?.isThread()) {
+            const starter = await interaction.channel.fetchStarterMessage({ force: true }).catch(() => null)
+            const planning = starter && this.parsePlanningMessage(starter.content)
+            if (planning) {
+              const matching = PLANNING_DAYS.find(day =>
+                planning.selectedDays.includes(day.offset)
+                && group.label === `${day.label} ${this.planningDate(this.addDays(planning.monday, day.offset))}`
+              )
+              if (matching) date = this.addDays(planning.monday, matching.offset)
+            }
+          }
           if (!date) {
             failures.push(`${group.label} : date non reconnue`)
             continue
@@ -2373,7 +2384,7 @@ export class DiscordCommandsService {
             'La commande `/choix-quete` permet de consulter les quêtes disponibles.',
             '',
             key,
-          ].join('\\n')
+          ].join('\n')
           try {
             const recent = await target.messages.fetch({ limit: 100 })
             let announcement = [...recent.values()].find(message => message.author?.id === interaction.client.user?.id && message.content.includes(key))
@@ -2387,7 +2398,7 @@ export class DiscordCommandsService {
             const messages = await thread.messages.fetch({ limit: 20 })
             if (![...messages.values()].some(message => message.author?.id === interaction.client.user?.id && message.content.startsWith('**Que voulez-vous faire ?**'))) {
               await thread.send({
-                content: '**Que voulez-vous faire ?**\\nDiscutez de la prochaine mission ici. Utilisez `/choix-quete` pour voir les quêtes disponibles et leurs réservations.',
+                content: '**Que voulez-vous faire ?**\nDiscutez de la prochaine mission ici. Utilisez `/choix-quete` pour voir les quêtes disponibles et leurs réservations.',
                 allowedMentions: { parse: [] },
               })
             }
@@ -2398,9 +2409,9 @@ export class DiscordCommandsService {
         }
         await interaction.followUp({
           content: [
-            published.length ? `**Séances créées :**\\n${published.join('\\n')}` : 'Aucune séance créée.',
-            failures.length ? `**À vérifier :**\\n${failures.join('\\n')}` : '',
-          ].filter(Boolean).join('\\n\\n'),
+            published.length ? `**Séances créées :**\n${published.join('\n')}` : 'Aucune séance créée.',
+            failures.length ? `**À vérifier :**\n${failures.join('\n')}` : '',
+          ].filter(Boolean).join('\n\n'),
           ephemeral: true,
           allowedMentions: { parse: [] },
         })
