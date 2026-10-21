@@ -1,6 +1,7 @@
 import { huntPreyPatch } from "./hunt-prey.js";
 import { merchantTokenPatch } from "./merchant-token.js";
 import { nativeMerchantPatch } from "./native-merchant.js";
+import { levelerFrenchRanksPatch } from "./leveler-french-ranks.js";
 
 /**
  * Central patch registry.
@@ -11,7 +12,8 @@ import { nativeMerchantPatch } from "./native-merchant.js";
 export const PATCH_REGISTRY = [
   huntPreyPatch,
   merchantTokenPatch,
-  nativeMerchantPatch
+  nativeMerchantPatch,
+  levelerFrenchRanksPatch
 ];
 
 export function initPatches() {

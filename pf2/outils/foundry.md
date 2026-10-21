@@ -531,3 +531,11 @@ Les outils d'improvisation peuvent évoluer en ergonomie, mais le moteur mécani
 ## Gagner de l'argent — versement depuis le chat (proposition, octobre 2026)
 
 Dans le module `pf2e-val-toolkit`, le rendu du résultat natif PF2e `earn-income` reçoit un bouton **Ajouter l'argent**. Le montant provient uniquement de la ligne « revenu gagné » du résultat (total pour tous les jours) ; aucune récompense n'est déduite du seul résultat du d20. Le joueur propriétaire du personnage ou le MJ doit confirmer le crédit. Le Toolkit appelle `actor.inventory.addCoins`, puis conserve un drapeau sur le message de chat pour empêcher un second crédit. Les montants illisibles ne donnent pas de bouton actif. Le développement est sur branche séparée et doit être vérifié dans Foundry avant diffusion.
+
+### 15.6 Compatibilité PF2e Leveler — prérequis français
+
+**Cas confirmé avec Eryn (Assurance)** : dans PF2e Leveler 3.7.9, `Qualifié dans au moins une compétence` est interprété comme un nom de don au lieu d'une condition de compétence, car le parseur ne reconnaît que les connecteurs `in` et `en`. Le moteur de règles rejette ainsi Assurance à tort alors qu'une compétence est qualifiée.
+
+Le Toolkit installe au démarrage, **uniquement si PF2e Leveler 3.7.9 est actif**, un patch de compatibilité de sa fenêtre `FeatPicker`. Il réévalue les prérequis commençant par un rang de maîtrise suivi de `dans` en présentant provisoirement `en` au vérificateur **d'origine**. Les objets Foundry et les compendiums ne sont jamais modifiés. Toutes les autres conditions sont encore vérifiées ; les restrictions d'archétype et les blocages d'accès restent applicables. Le patch est ignoré si Leveler est absent ou sur une autre version, afin d'éviter un conflit avec une future correction officielle.
+
+Source : `pf2e-val-toolkit/scripts/patches/leveler-french-ranks.js`. Test reproduisant le bug et vérifiant le correctif : `node pf2e-val-toolkit/tests/leveler-french-ranks.mjs`. **Test interactif de validation** à refaire dans Foundry avec la fiche d'Eryn et le don Assurance après mise à jour du Toolkit. Ne pas éditer les fichiers du module tiers installé directement.
