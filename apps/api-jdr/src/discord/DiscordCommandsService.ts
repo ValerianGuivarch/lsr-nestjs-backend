@@ -1,6 +1,6 @@
 import { forwardRef, Inject, Injectable, Logger } from '@nestjs/common'
 import { resolve } from 'node:path'
-import { ActionRowBuilder, AutocompleteInteraction, ButtonBuilder, ButtonInteraction, ButtonStyle, ChannelType, ChatInputCommandInteraction, ModalBuilder, ModalSubmitInteraction, Message, MessageReaction, PermissionFlagsBits, RESTPostAPIApplicationGuildCommandsJSONBody, SlashCommandBuilder, StringSelectMenuBuilder, StringSelectMenuInteraction, TextInputBuilder, TextInputStyle, UserSelectMenuBuilder, UserSelectMenuInteraction } from 'discord.js'
+import { ActionRowBuilder, AutocompleteInteraction, ButtonBuilder, ButtonInteraction, ButtonStyle, ChannelType, ChatInputCommandInteraction, ModalBuilder, ModalSubmitInteraction, Message, MessageReaction, PartialMessageReaction, PermissionFlagsBits, RESTPostAPIApplicationGuildCommandsJSONBody, SlashCommandBuilder, StringSelectMenuBuilder, StringSelectMenuInteraction, TextInputBuilder, TextInputStyle, UserSelectMenuBuilder, UserSelectMenuInteraction } from 'discord.js'
 import { FoundryRelayService } from '../foundry/FoundryRelayService'
 import { Pf2PersistenceService } from '../pf2-storage/Pf2PersistenceService'
 import { PlayerCodexService } from '../pf2-mj/PlayerCodexService'
@@ -1212,7 +1212,7 @@ export class DiscordCommandsService {
     if (next !== message.content) await message.edit({ content: next, allowedMentions: { parse: [] } })
   }
 
-  async handleSessionConfirmationReaction(reaction: MessageReaction): Promise<void> {
+  async handleSessionConfirmationReaction(reaction: MessageReaction | PartialMessageReaction): Promise<void> {
     if (reaction.emoji.name !== '✅' && reaction.emoji.name !== '❌') return
     const messageId = reaction.message.id
     const previous = this.sessionConfirmationQueues.get(messageId) ?? Promise.resolve()
