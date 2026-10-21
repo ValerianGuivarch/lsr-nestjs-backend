@@ -2413,8 +2413,10 @@ export class DiscordCommandsService {
           await interaction.update({ content: 'Impossible de vérifier la planification ; relance /analyse-date-seance.', components: [] })
           return true
         }
-        const starter = await channel.messages.fetch(pending.planningMessageId).catch(() => null)
-        if (!starter || starter.content !== pending.planningContent) {
+        const starter = channel.isThread()
+          ? await channel.fetchStarterMessage({ force: true }).catch(() => null)
+          : await channel.messages.fetch(pending.planningMessageId).catch(() => null)
+        if (!starter || starter.id !== pending.planningMessageId || starter.content !== pending.planningContent) {
           await interaction.update({ content: 'Les dates ont changé. Relance /analyse-date-seance.', components: [] })
           return true
         }
@@ -2459,7 +2461,7 @@ export class DiscordCommandsService {
             continue
           }
           const title = `Séance ${date.slice(8, 10)}/${date.slice(5, 7)}`
-          const key = `[PF2-SESSION:${date}:${[...group.userIds].sort().join('-')}]`
+          const key = `[PF2-SESSION:${date}]`
           const content = [
             `**Séance du ${group.label}**`,
             `**Groupe proposé :** ${group.userIds.map(userId => `<@${userId}>`).join(', ')}`,
