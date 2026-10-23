@@ -1822,4 +1822,103 @@ describe('DiscordCommandsService', () => {
     expect(edit).not.toHaveBeenCalled()
   })
 
+  it('does not perform a random draw until explicitly requested by the MJ', async () => {
+    const service = new DiscordCommandsService({} as never, {} as never)
+    const p = (id: string) => ({ id, name: id, played: 0 })
+    const players = ['100000000000000001', '100000000000000002', '100000000000000003', '100000000000000004', '100000000000000005'].map(p)
+    ;(service as any).pendingSchedulePublications.set('random-1', {
+      requesterId: 'admin', channelId: 'thread', planningMessageId: 'planning',
+      planningContent: 'Planning', dates: [{ key: '0', label: 'Lundi 26 octobre' }],
+      availability: new Map([['0', players]]), reactions: '0:',
+    })
+    const random = jest.spyOn(Math, 'random').mockReturnValue(0.95)
+    try {
+      const deferUpdate = jest.fn().mockResolvedValue(undefined)
+      const editReply = jest.fn().mockResolvedValue(undefined)
+      await service.handleComponent({
+        customId: 'pf2-schedule:dates:random-1', user: { id: 'admin' },
+        channelId: 'thread', values: ['0'], deferUpdate, editReply,
+      } as never)
+      expect(random).not.toHaveBeenCalled()
+      expect(editReply.mock.calls[0][0].content).toContain('aucun tirage n’est effectué automatiquement')
+      expect((service as any).pendingSessionValidations.has('random-1')).toBe(false)
+      await service.handleComponent({
+        customId: 'pf2-schedule:solution:random-1', user: { id: 'admin' },
+        channelId: 'thread', values: ['random'], deferUpdate, editReply,
+      } as never)
+      expect(random).toHaveBeenCalledTimes(1)
+      const result = (service as any).pendingSessionValidations.get('random-1')
+      expect(result.userIds).toHaveLength(4)
+      expect(new Set(result.userIds).size).toBe(4)
+      expect(editReply.mock.calls[1][0].content).toContain('Tirage demandé par le MJ')
+    } finally {
+      random.mockRestore()
+    }
+  })
+
+  it('acknowledges the publish click before reading fresh Discord reactions', async () => {
+    const service = new DiscordCommandsService({} as never, {} as never)
+    const calls: string[] = []
+    ;(service as any).pendingSessionValidations.set('stale-ack', {
+      requesterId: 'admin', channelId: 'thread', userIds: ['100000000000000001'],
+      content: '✅ **Séances validées — proposition 1**',
+      planningMessageId: 'starter', planningContent: 'Old planning',
+      planningDates: ['0'], reactions: '0:100000000000000001',
+    })
+    const deferUpdate = jest.fn(async () => { calls.push('ack') })
+    const fetchStarterMessage = jest.fn(async () => {
+      calls.push('fetch')
+      return { id: 'starter', content: 'Changed planning' }
+    })
+    const editReply = jest.fn().mockResolvedValue(undefined)
+    await service.handleButton({
+      customId: 'pf2-date-confirm:publish:stale-ack', user: { id: 'admin' },
+      channelId: 'thread', deferUpdate, editReply,
+      channel: { isThread: () => true, messages: {}, fetchStarterMessage },
+    } as never)
+    expect(calls).toEqual(['ack', 'fetch'])
+    expect(editReply.mock.calls[0][0].content).toContain('dates ont changé')
+    expect((service as any).pendingSessionValidations.has('stale-ack')).toBe(true)
+  })
+
+  it('keeps retryable state when publishing fails and reuses an existing announcement', async () => {
+    const service = new DiscordCommandsService({} as never, {} as never)
+    const ids = ['100000000000000001', '100000000000000002', '100000000000000003', '100000000000000004']
+    ;(service as any).pendingSessionValidations.set('retry-1', {
+      requesterId: 'admin', channelId: 'thread', userIds: ids,
+      content: ['✅ **Séances validées — validation manuelle**', '',
+        '**Lundi 26 octobre 2026**', ...ids.map(id => `- <@${id}>`)].join('\n'),
+    })
+    const messages = { fetch: jest.fn().mockResolvedValue(new Map()) }
+    const thread = { url: 'https://discord.com/thread',
+      messages: { fetch: jest.fn().mockResolvedValue(new Map()) },
+      send: jest.fn().mockResolvedValue(undefined) }
+    const startThread = jest.fn().mockRejectedValueOnce(new Error('temporary'))
+      .mockResolvedValueOnce(thread)
+    const announcement: any = {
+      author: { id: 'bot' }, content: '[PF2-SESSION:2026-10-26]',
+      thread: null, startThread, react: jest.fn().mockResolvedValue(undefined),
+    }
+    const send = jest.fn().mockResolvedValue(announcement)
+    const target = { type: 0, name: 'objectif-prochaine-mission',
+      messages: { fetch: jest.fn().mockResolvedValueOnce(new Map())
+        .mockResolvedValue(new Map([['message', announcement]])) }, send }
+    const editReply = jest.fn().mockResolvedValue(undefined)
+    const interaction = {
+      customId: 'pf2-date-confirm:publish:retry-1',
+      user: { id: 'admin' }, channelId: 'thread',
+      guild: { channels: { fetch: jest.fn().mockResolvedValue(new Map([['target', target]])) } },
+      client: { user: { id: 'bot' } },
+      deferUpdate: jest.fn().mockResolvedValue(undefined), editReply,
+    }
+    await service.handleButton(interaction as never)
+    expect(send).toHaveBeenCalledTimes(1)
+    expect((service as any).pendingSessionValidations.has('retry-1')).toBe(true)
+    expect(editReply.mock.calls.at(-1)[0].components).toHaveLength(1)
+    await service.handleButton(interaction as never)
+    expect(send).toHaveBeenCalledTimes(1)
+    expect(startThread).toHaveBeenCalledTimes(2)
+    expect((service as any).pendingSessionValidations.has('retry-1')).toBe(false)
+  })
+
 })
