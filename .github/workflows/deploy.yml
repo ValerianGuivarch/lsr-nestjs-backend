@@ -58,6 +58,7 @@ jobs:
           file: deploy/linux/Dockerfile
           target: ${{ matrix.target }}
           push: true
+          pull: true
           tags: |
             ghcr.io/valerianguivarch/${{ matrix.image }}:${{ github.sha }}
             ghcr.io/valerianguivarch/${{ matrix.image }}:main
