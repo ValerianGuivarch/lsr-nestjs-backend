@@ -79,6 +79,7 @@ export class DiscordCommandsService {
     planningMonday: string
     selectedDate?: { iso: string; label: string }
   }>()
+  private readonly publishingSessionIds = new Set<string>()
   private readonly sessionConfirmationQueues = new Map<string, Promise<void>>()
   private readonly pendingPlanningReminders = new Map<string, { requesterId: string; content: string; userIds: string[] }>()
   private readonly pendingPreviewPublications = new Map<string, { requesterId: string; content: string; files?: string[] }>()
@@ -2609,30 +2610,61 @@ export class DiscordCommandsService {
       const [prefix, action, id] = interaction.customId.split(':')
       const pending = this.pendingSessionValidations.get(id)
       if (!pending) {
-        await interaction.reply({ content: 'Cette confirmation a expiré. Relance `/valider-date-seance`.', ephemeral: true })
+        await interaction.reply({ content: 'Cette confirmation a expiré. Relance `/analyse-date-seance` (ou `/valider-date-seance-manuel`).', ephemeral: true })
         return true
       }
       if (interaction.user.id !== pending.requesterId || interaction.channelId !== pending.channelId) {
         await interaction.reply({ content: 'Cette confirmation appartient à un autre administrateur ou à un autre fil.', ephemeral: true })
         return true
       }
-      if (prefix !== 'pf2-date-confirm' || (action !== 'publish' && action !== 'cancel')) return false
-      this.pendingSessionValidations.delete(id)
+      if (prefix !== 'pf2-date-confirm' || !['publish', 'cancel', 'back'].includes(action)) return false
       if (action === 'cancel') {
+        this.pendingSessionValidations.delete(id)
+        this.pendingSchedulePublications.delete(id)
         await interaction.update({ content: 'Validation annulée. Aucun message publié et aucun joueur notifié.', components: [], allowedMentions: { parse: [] } })
         return true
       }
+      if (action === 'back') {
+        const schedule = this.pendingSchedulePublications.get(id)
+        this.pendingSessionValidations.delete(id)
+        if (!schedule) {
+          await interaction.update({ content: 'Ce choix ne peut plus être modifié. Relance /analyse-date-seance.', components: [] })
+          return true
+        }
+        await interaction.update(schedule.solutions && schedule.solutions.length > 1
+          ? this.scheduleSolutionChoiceView(id)
+          : { content: '**Modifier les dates**', components: [this.scheduleDateChoiceRow(id)], allowedMentions: { parse: [] } })
+        return true
+      }
+      if (this.publishingSessionIds.has(id)) {
+        await interaction.reply({ content: 'Publication déjà en cours. Ne clique pas une seconde fois.', ephemeral: true })
+        return true
+      }
+      this.publishingSessionIds.add(id)
+      // Discord requires the component to be acknowledged within 3 seconds.
+      // Reading live reactions and creating threads must happen AFTER this.
+      try {
+        await interaction.deferUpdate()
+      } catch (error) {
+        this.publishingSessionIds.delete(id)
+        throw error
+      }
+      const retry = new ActionRowBuilder<ButtonBuilder>().addComponents(
+        new ButtonBuilder().setCustomId(`pf2-date-confirm:publish:${id}`).setLabel('Réessayer la publication').setStyle(ButtonStyle.Success),
+        new ButtonBuilder().setCustomId(`pf2-date-confirm:cancel:${id}`).setLabel('Annuler').setStyle(ButtonStyle.Secondary),
+      )
+      try {
       if (pending.planningMessageId && pending.planningContent && pending.reactions && pending.planningDates) {
         const channel = interaction.channel
         if (!channel || !('messages' in channel)) {
-          await interaction.update({ content: 'Impossible de vérifier la planification ; relance /analyse-date-seance.', components: [] })
+          await interaction.editReply({ content: 'Impossible de vérifier la planification ; relance /analyse-date-seance.', components: [] })
           return true
         }
         const starter = channel.isThread()
           ? await channel.fetchStarterMessage({ force: true }).catch(() => null)
           : await channel.messages.fetch(pending.planningMessageId).catch(() => null)
         if (!starter || starter.id !== pending.planningMessageId || starter.content !== pending.planningContent) {
-          await interaction.update({ content: 'Les dates ont changé. Relance /analyse-date-seance.', components: [] })
+          await interaction.editReply({ content: 'Les dates ont changé. Relance /analyse-date-seance.', components: [] })
           return true
         }
         const refreshed: string[] = []
@@ -2646,11 +2678,11 @@ export class DiscordCommandsService {
         const unavailableUsers = unavailable ? await unavailable.users.fetch() : null
         refreshed.push(`x:${unavailableUsers ? [...unavailableUsers.values()].filter(user => !user.bot).map(user => user.id).sort().join(',') : ''}`)
         if (refreshed.sort().join('|') !== pending.reactions) {
-          await interaction.update({ content: 'Les disponibilités ont changé depuis l’analyse. Relance /analyse-date-seance.', components: [] })
+          await interaction.editReply({ content: 'Les disponibilités ont changé depuis l’analyse. Relance /analyse-date-seance.', components: [] })
           return true
         }
       }
-      await interaction.update({ content: 'Validation reçue. Création des annonces de mission…', components: [], allowedMentions: { parse: [] } })
+      await interaction.editReply({ content: 'Disponibilités vérifiées. Création des annonces de mission…', components: [], allowedMentions: { parse: [] } })
       try {
         const groups = this.parseConfirmedMissionGroups(pending.content)
         if (!groups) throw new Error('Les groupes de la validation sont invalides.')
@@ -2714,16 +2746,34 @@ export class DiscordCommandsService {
             failures.push(`${group.label} : ${error instanceof Error ? error.message : String(error)}`)
           }
         }
-        await interaction.followUp({
-          content: [
-            published.length ? `**Séances créées :**\n${published.join('\n')}` : 'Aucune séance créée.',
-            failures.length ? `**À vérifier :**\n${failures.join('\n')}` : '',
-          ].filter(Boolean).join('\n\n'),
-          ephemeral: true,
-          allowedMentions: { parse: [] },
-        })
+        const report = [
+          published.length ? `**Séances créées :**\n${published.join('\n')}` : 'Aucune séance créée.',
+          failures.length ? `**À vérifier :**\n${failures.join('\n')}` : '',
+        ].filter(Boolean).join('\n\n')
+        if (failures.length) {
+          await interaction.editReply({
+            content: `**Publication partielle : une reprise est possible sans renotifier les séances déjà créées.**\n\n${report}`,
+            components: [retry], allowedMentions: { parse: [] },
+          })
+        } else {
+          this.pendingSessionValidations.delete(id)
+          this.pendingSchedulePublications.delete(id)
+          await interaction.editReply({ content: report, components: [], allowedMentions: { parse: [] } })
+        }
       } catch (error) {
-        await interaction.followUp({ content: `Publication impossible : ${error instanceof Error ? error.message : String(error)}`, ephemeral: true, allowedMentions: { parse: [] } }).catch(() => undefined)
+        await interaction.editReply({
+          content: `Publication impossible : ${error instanceof Error ? error.message : String(error)}. Tu peux réessayer sans recréer les annonces déjà publiées.`,
+          components: [retry], allowedMentions: { parse: [] },
+        }).catch(() => undefined)
+      }
+      } catch (error) {
+        this.logger.error('Validation de séance : vérification impossible', error instanceof Error ? error.stack : undefined)
+        await interaction.editReply({
+          content: `Vérification impossible : ${error instanceof Error ? error.message : String(error)}. Réessaie ou relance l’analyse.`,
+          components: [retry], allowedMentions: { parse: [] },
+        }).catch(() => undefined)
+      } finally {
+        this.publishingSessionIds.delete(id)
       }
       return true
     }
