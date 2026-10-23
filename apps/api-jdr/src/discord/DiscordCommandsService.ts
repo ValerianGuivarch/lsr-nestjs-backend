@@ -1274,6 +1274,86 @@ export class DiscordCommandsService {
     }
   }
 
+  private scheduleDateChoiceRow(commandId: string): ActionRowBuilder<StringSelectMenuBuilder> {
+    const pending = this.pendingSchedulePublications.get(commandId)!
+    const days = pending.dates.filter(day => (pending.availability.get(day.key)?.length ?? 0) >= 4)
+    const menu = new StringSelectMenuBuilder().setCustomId(`pf2-schedule:dates:${commandId}`)
+      .setPlaceholder('Sélectionner les dates').setMinValues(1).setMaxValues(days.length)
+      .addOptions(days.map(day => ({
+        label: `${day.label} — ${pending.availability.get(day.key)?.length ?? 0} disponibles`,
+        value: day.key, default: pending.selectedKeys?.includes(day.key) ?? false,
+      })))
+    return new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(menu)
+  }
+
+  private scheduleSolutionChoiceView(commandId: string): {
+    content: string
+    components: Array<ActionRowBuilder<StringSelectMenuBuilder>>
+    allowedMentions: { parse: [] }
+  } {
+    const pending = this.pendingSchedulePublications.get(commandId)!
+    const solutions = pending.solutions ?? []
+    const page = pending.solutionPage ?? 0
+    const begin = page * 3
+    const visible = solutions.slice(begin, begin + 3)
+    const lines = [
+      '**Propositions de groupes — décision MJ privée**',
+      `${solutions.length} solution(s) complète(s) optimale(s) conservée(s). Les joueurs moins souvent présents sont prioritaires.`,
+      'Tu peux choisir une proposition ou demander un tirage au sort ; aucun tirage n’est effectué automatiquement.',
+    ]
+    for (const [offset, solution] of visible.entries()) {
+      lines.push('', `**Proposition ${begin + offset + 1}**`)
+      for (const group of solution) {
+        lines.push(`**${group.label}** : ${group.players.map(player => `<@${player.id}> (${player.played})`).join(', ')}`)
+      }
+    }
+    const choices = visible.map((_, offset) => ({
+      label: `Choisir la proposition ${begin + offset + 1}`, value: `solution:${begin + offset}`,
+    }))
+    choices.push({ label: '🎲 Tirer au sort entre les solutions optimales', value: 'random' })
+    if (solutions.length > 3) choices.push({ label: 'Voir les autres propositions', value: 'next' })
+    choices.push({ label: 'Modifier les dates', value: 'dates' })
+    return {
+      content: lines.join('\n').slice(0, 2000),
+      components: [new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(
+        new StringSelectMenuBuilder().setCustomId(`pf2-schedule:solution:${commandId}`)
+          .setPlaceholder('Choisir le groupe ou tirer au sort').addOptions(choices),
+      )],
+      allowedMentions: { parse: [] },
+    }
+  }
+
+  private async showScheduleFinalPreview(
+    interaction: StringSelectMenuInteraction,
+    commandId: string,
+    chosen: Array<{ key: string; label: string; players: Array<{ id: string; name: string; played: number }> }>,
+    selectionLabel: string,
+  ): Promise<void> {
+    const pending = this.pendingSchedulePublications.get(commandId)!
+    const userIds = chosen.flatMap(group => group.players.map(player => player.id))
+    const content = [
+      '✅ **Séances validées — proposition 1**',
+      ...chosen.flatMap(group => ['', `**${group.label}**`, ...group.players.map(player => `- <@${player.id}>`)]),
+      '', 'La confirmation des joueurs sera demandée dans #objectif-prochaine-mission.',
+    ].join('\n')
+    this.pendingSessionValidations.set(commandId, {
+      requesterId: pending.requesterId, channelId: pending.channelId, content, userIds,
+      planningMessageId: pending.planningMessageId, planningContent: pending.planningContent,
+      reactions: pending.reactions, planningDates: pending.dates.map(day => day.key),
+    })
+    const confirm = new ButtonBuilder().setCustomId(`pf2-date-confirm:publish:${commandId}`)
+      .setLabel('Créer les séances').setStyle(ButtonStyle.Success)
+    const back = new ButtonBuilder().setCustomId(`pf2-date-confirm:back:${commandId}`)
+      .setLabel('Modifier le choix').setStyle(ButtonStyle.Secondary)
+    const cancel = new ButtonBuilder().setCustomId(`pf2-date-confirm:cancel:${commandId}`)
+      .setLabel('Annuler').setStyle(ButtonStyle.Secondary)
+    await interaction.editReply({
+      content: ['**Aperçu privé — aucun ping avant confirmation**', selectionLabel, content].join('\n\n'),
+      components: [new ActionRowBuilder<ButtonBuilder>().addComponents(confirm, back, cancel)],
+      allowedMentions: { parse: [] },
+    })
+  }
+
   private async programmerSeanceCommand(interaction: ChatInputCommandInteraction): Promise<void> {
     if (!this.isAdmin(interaction)) {
       await interaction.reply({ content: 'Cette commande est réservée aux administrateurs du serveur.', ephemeral: true })
@@ -2014,39 +2094,65 @@ export class DiscordCommandsService {
         await interaction.reply({ content: 'Sélection expirée ou non autorisée. Relance /analyse-date-seance.', ephemeral: true })
         return true
       }
-      const selected = pending.dates.filter(day => interaction.values.includes(day.key))
-      const solutions = this.bestSessionGroupProposals(selected.map(day => [day.key, day.label] as const), pending.availability)
-        .filter(groups => groups.length === selected.length)
-      if (!solutions.length) {
-        const options = pending.dates.filter(day => (pending.availability.get(day.key)?.length ?? 0) >= 4)
-        const menu = new StringSelectMenuBuilder().setCustomId(`pf2-schedule:dates:${key}`)
-          .setPlaceholder('Essaie une autre combinaison de dates').setMinValues(1).setMaxValues(options.length)
-          .addOptions(options.map(day => ({ label: day.label, value: day.key })))
-        await interaction.update({
-          content: 'Ces dates ne peuvent pas toutes être constituées avec des joueurs distincts. Choisis une autre combinaison.',
-          components: [new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(menu)], allowedMentions: { parse: [] },
+      await interaction.deferUpdate()
+      try {
+        const selected = pending.dates.filter(day => interaction.values.includes(day.key))
+        const solutions = this.bestSessionGroupProposals(selected.map(day => [day.key, day.label] as const), pending.availability)
+          .filter(groups => groups.length === selected.length)
+        if (!solutions.length) {
+          await interaction.editReply({
+            content: 'Ces dates ne peuvent pas toutes être constituées avec des joueurs distincts. Choisis une autre combinaison.',
+            components: [this.scheduleDateChoiceRow(key)], allowedMentions: { parse: [] },
+          })
+          return true
+        }
+        pending.selectedKeys = selected.map(day => day.key)
+        pending.solutions = solutions
+        pending.solutionPage = 0
+        if (solutions.length === 1) {
+          await this.showScheduleFinalPreview(interaction, key, solutions[0],
+            'Une seule solution optimale pour les dates choisies : aucun tirage nécessaire.')
+        } else {
+          await interaction.editReply(this.scheduleSolutionChoiceView(key))
+        }
+      } catch (error) {
+        this.logger.error('Sélection des dates impossible', error instanceof Error ? error.stack : undefined)
+        await interaction.editReply({ content: `Choix impossible : ${error instanceof Error ? error.message : String(error)}. Relance /analyse-date-seance.`, components: [] })
+      }
+      return true
+    }
+    if (interaction.customId.startsWith('pf2-schedule:solution:')) {
+      const key = interaction.customId.slice('pf2-schedule:solution:'.length)
+      const pending = this.pendingSchedulePublications.get(key)
+      if (!pending?.solutions?.length || interaction.user.id !== pending.requesterId || interaction.channelId !== pending.channelId) {
+        await interaction.reply({ content: 'Choix expiré. Relance /analyse-date-seance.', ephemeral: true })
+        return true
+      }
+      await interaction.deferUpdate()
+      const choice = interaction.values[0]
+      if (choice === 'dates') {
+        await interaction.editReply({
+          content: '**Modifier les dates** — les joueurs et leurs priorités restent mémorisés dans cette analyse.',
+          components: [this.scheduleDateChoiceRow(key)], allowedMentions: { parse: [] },
         })
         return true
       }
-      const choice = solutions[Math.floor(Math.random() * solutions.length)]
-      const userIds = choice.flatMap(group => group.players.map(player => player.id))
-      const content = ['✅ **Séances validées — proposition 1**',
-        ...choice.flatMap(group => ['', `**${group.label}**`, ...group.players.map(player => `- <@${player.id}>`)]),
-        '', 'La confirmation des joueurs sera demandée dans #objectif-prochaine-mission.'].join('\n')
-      this.pendingSessionValidations.set(key, {
-        requesterId: pending.requesterId, channelId: pending.channelId, content, userIds,
-        planningMessageId: pending.planningMessageId, planningContent: pending.planningContent,
-        reactions: pending.reactions, planningDates: pending.dates.map(day => day.key),
-      })
-      this.pendingSchedulePublications.delete(key)
-      const confirm = new ButtonBuilder().setCustomId(`pf2-date-confirm:publish:${key}`).setLabel('Créer les séances').setStyle(ButtonStyle.Success)
-      const cancel = new ButtonBuilder().setCustomId(`pf2-date-confirm:cancel:${key}`).setLabel('Annuler').setStyle(ButtonStyle.Secondary)
-      await interaction.update({
-        content: ['**Aperçu privé — aucun ping avant confirmation**',
-          `Sélection aléatoire parmi ${solutions.length} solutions globales ex æquo.`, content].join('\n\n'),
-        components: [new ActionRowBuilder<ButtonBuilder>().addComponents(confirm, cancel)],
-        allowedMentions: { parse: [] },
-      })
+      if (choice === 'next') {
+        pending.solutionPage = ((pending.solutionPage ?? 0) + 1) % Math.ceil(pending.solutions.length / 3)
+        await interaction.editReply(this.scheduleSolutionChoiceView(key))
+        return true
+      }
+      const random = choice === 'random'
+      const index = random ? Math.floor(Math.random() * pending.solutions.length)
+        : /^solution:(\d+)$/.exec(choice)?.[1]
+      const selectedIndex = typeof index === 'number' ? index : index === undefined ? -1 : Number(index)
+      if (!Number.isInteger(selectedIndex) || selectedIndex < 0 || selectedIndex >= pending.solutions.length) {
+        await interaction.editReply({ content: 'Proposition invalide. Recommence la sélection.', ...this.scheduleSolutionChoiceView(key) })
+        return true
+      }
+      await this.showScheduleFinalPreview(interaction, key, pending.solutions[selectedIndex],
+        random ? `Tirage demandé par le MJ : proposition ${selectedIndex + 1} parmi ${pending.solutions.length} solutions optimales.`
+          : `Proposition ${selectedIndex + 1} choisie manuellement par le MJ, sans tirage.`)
       return true
     }
     const createPlanning = interaction.customId.match(/^pf2-planification:create:(\d{4}-\d{2}-\d{2})$/)
