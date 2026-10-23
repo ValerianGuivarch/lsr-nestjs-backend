@@ -1429,7 +1429,14 @@ export class DiscordCommandsService {
 
       const proposals = this.bestSessionGroupProposals(days, availability)
       if (!proposals.length) {
-        await interaction.editReply({ content: 'Aucun groupe de 4 compatible avec les disponibilités.', components: [] })
+        const names = days.flatMap(([key, label]) => [
+          `**${label}** : ${availability.get(key)?.length ?? 0} disponible(s)`,
+          ...(availability.get(key) ?? []).map(player => `- <@${player.id}> : ${player.played} séance(s) jouée(s)`),
+        ])
+        await interaction.editReply({
+          content: ['**Analyse des disponibilités**', 'Aucun groupe de 4 compatible avec les réponses actuelles.', ...names].join('\n').slice(0, 2000),
+          components: [], allowedMentions: { parse: [] },
+        })
         return
       }
       const unavailableReaction = [...scheduleMessage.reactions.cache.values()].find(item => item.emoji.name === PLANNING_UNAVAILABLE_EMOJI)
@@ -1473,24 +1480,50 @@ export class DiscordCommandsService {
           if (group.choose) result.push(`- **${group.choose} place(s) parmi ${group.pool.length} candidats ex æquo** : ${group.pool.map(player => `<@${player.id}> (${player.played})`).join(', ')}`)
         }
       } else {
-        for (const group of proposals[0]) {
-          result.push('', `**${group.label}**`, ...group.players.map(player => `- <@${player.id}> (${player.played} séance(s))`))
+        for (const [index, solution] of proposals.slice(0, 3).entries()) {
+          if (proposals.length > 1) result.push('', `**Proposition ${index + 1} — ex æquo**`)
+          for (const group of solution) {
+            result.push('', `**${group.label}**`, ...group.players.map(player => `- <@${player.id}> (${player.played} séance(s))`))
+          }
         }
       }
+      const playable = days.filter(([key]) => (availability.get(key)?.length ?? 0) >= 4)
+      const conflicts: string[] = []
+      for (let a = 0; a < playable.length; a++) for (let b = a + 1; b < playable.length; b++) {
+        const [keyA, labelA] = playable[a]
+        const [keyB, labelB] = playable[b]
+        const distinct = new Set([...(availability.get(keyA) ?? []), ...(availability.get(keyB) ?? [])].map(player => player.id))
+        if (distinct.size < 8) {
+          const first = new Set((availability.get(keyA) ?? []).map(player => player.id))
+          const common = (availability.get(keyB) ?? []).filter(player => first.has(player.id))
+          conflicts.push(`${labelA} / ${labelB} : ${common.map(player => `<@${player.id}>`).join(', ')} disponible(s) les deux jours`)
+        }
+      }
+      if (conflicts.length) result.push('', '**Chevauchements de disponibilités :**', ...conflicts.map(value => `- ${value}`))
       result.push('', `${proposals[0].length} séance(s) maximum ; ${proposals.length > 1 ? `${proposals.length} solutions optimales conservées (égalité après priorité)` : 'une répartition optimale'}.`)
       result.push('Sélectionne les dates à organiser ; tu pourras choisir une proposition ou demander un tirage si plusieurs solutions sont équivalentes.')
       const maxText = 2000
       const showDetail = [...detail, '', ...result].join('\n').length <= maxText
-      const content = showDetail ? [...detail, '', ...result].join('\n') : [
-        ...detail.slice(0, 1), '',
-        'L’analyse nominative complète dépasse la limite Discord. Affichage des meilleures propositions ci-dessous.',
-        ...result,
-      ].join('\n')
+      const content = showDetail ? [...detail, '', ...result].join('\n')
+        : ['**Analyse globale — groupes optimaux**', ...result].join('\n')
       await interaction.editReply({
-        content: content.length <= maxText ? content : content.slice(0, 1900) + '\n… (détails trop longs pour Discord)',
+        content: content.length <= maxText ? content : content.slice(0, 1900) + '\n… (voir les détails complémentaires ci-dessous)',
         components: [new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(menu)],
         allowedMentions: { parse: [] },
       })
+      if (!showDetail) {
+        const detailLines = [...detail, '', ...result]
+        let chunk = ''
+        for (const line of detailLines) {
+          if (chunk.length + line.length + 1 > 1900) {
+            if (chunk) await interaction.followUp({ content: chunk, ephemeral: true, allowedMentions: { parse: [] } })
+            chunk = ''
+          }
+          if (line.length > 1900) continue
+          chunk += (chunk ? '\n' : '') + line
+        }
+        if (chunk) await interaction.followUp({ content: chunk, ephemeral: true, allowedMentions: { parse: [] } })
+      }
     } catch (error) {
       this.logger.error('analyse-date-seance: calcul impossible', error instanceof Error ? error.stack : undefined)
       await interaction.editReply({ content: `Calcul impossible : ${error instanceof Error ? error.message : String(error)}` })
