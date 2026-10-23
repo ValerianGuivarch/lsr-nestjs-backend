@@ -68,6 +68,9 @@ export class DiscordCommandsService {
     dates: Array<{ key: string; label: string }>
     availability: Map<string, Array<{ id: string; name: string; played: number }>>
     reactions: string
+    selectedKeys?: string[]
+    solutions?: Array<Array<{ key: string; label: string; players: Array<{ id: string; name: string; played: number }> }>>
+    solutionPage?: number
   }>()
   private readonly pendingSessionValidations = new Map<string, { requesterId: string; channelId: string; content: string; userIds: string[]; planningMessageId?: string; planningContent?: string; reactions?: string; planningDates?: string[] }>()
   private readonly pendingManualSessionValidations = new Map<string, {
@@ -1370,11 +1373,40 @@ export class DiscordCommandsService {
       const menu = new StringSelectMenuBuilder().setCustomId(`pf2-schedule:dates:${interaction.id}`)
         .setPlaceholder('Sélectionner une ou plusieurs séances').setMinValues(1).setMaxValues(options.length)
         .addOptions(options.map(([key, label]) => ({ label: `${label} — ${availability.get(key)?.length ?? 0} disponibles`, value: key })))
+
+      // Conserver l'analyse nominative de l'ancien workflow, avec les scores
+      // de priorité et les éventuels groupes ex æquo. Aucun ping dans cet aperçu.
+      const detail: string[] = ['**Analyse des disponibilités — groupes et priorités**']
+      for (const [key, label] of days) {
+        const players = availability.get(key) ?? []
+        detail.push('', `**${label} — ${players.length} disponible(s)**`)
+        detail.push(...players.map(player => `- <@${player.id}> : ${player.played} séance(s) jouée(s)`))
+        if (players.length < 4) detail.push('_Pas assez de joueurs pour constituer un groupe de 4._')
+      }
+      const compact = this.compactSessionGroupProposals(proposals)
+      const result: string[] = ['**Meilleure répartition globale**']
+      if (compact) {
+        for (const group of compact) {
+          result.push('', `**${group.label}**`)
+          result.push(...group.fixed.map(player => `- <@${player.id}> (${player.played} séance(s))`))
+          if (group.choose) result.push(`- **${group.choose} place(s) parmi ${group.pool.length} candidats ex æquo** : ${group.pool.map(player => `<@${player.id}> (${player.played})`).join(', ')}`)
+        }
+      } else {
+        for (const group of proposals[0]) {
+          result.push('', `**${group.label}**`, ...group.players.map(player => `- <@${player.id}> (${player.played} séance(s))`))
+        }
+      }
+      result.push('', `${proposals[0].length} séance(s) maximum ; ${proposals.length > 1 ? `${proposals.length} solutions optimales conservées (égalité après priorité)` : 'une répartition optimale'}.`)
+      result.push('Sélectionne les dates à organiser ; tu pourras choisir une proposition ou demander un tirage si plusieurs solutions sont équivalentes.')
+      const maxText = 2000
+      const showDetail = [...detail, '', ...result].join('\n').length <= maxText
+      const content = showDetail ? [...detail, '', ...result].join('\n') : [
+        ...detail.slice(0, 1), '',
+        'L’analyse nominative complète dépasse la limite Discord. Affichage des meilleures propositions ci-dessous.',
+        ...result,
+      ].join('\n')
       await interaction.editReply({
-        content: ['**Créneaux jouables — choix MJ privé**',
-          ...days.map(([key, label]) => `- ${label} : ${availability.get(key)?.length ?? 0} disponibles`),
-          '', `${proposals[0].length} séance(s) maximum sans partager de joueur.`,
-          'Sélectionne les dates. Aucun message public ne sera publié avant la confirmation finale.'].join('\n'),
+        content: content.length <= maxText ? content : content.slice(0, 1900) + '\n… (détails trop longs pour Discord)',
         components: [new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(menu)],
         allowedMentions: { parse: [] },
       })
