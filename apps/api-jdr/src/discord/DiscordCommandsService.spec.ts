@@ -1248,14 +1248,16 @@ describe('DiscordCommandsService', () => {
       editReply,
     } as never)
     const output = editReply.mock.calls[0][0].content as string
-    expect(output).toContain('Créneaux jouables')
+    expect(output).toContain('Analyse des disponibilités — groupes et priorités')
+    expect(output).toContain('<@100000000000000000> : 0 séance(s)')
+    expect(output).toContain('Meilleure répartition globale')
     expect(editReply.mock.calls[0][0].components[0].toJSON().components[0].custom_id).toContain('pf2-schedule:dates:')
     expect(editReply.mock.calls[0][0].allowedMentions).toEqual({ parse: [] })
     expect(output).not.toContain('Account 0')
     expect(output).not.toContain('account-0')
   })
 
-  it('selects a valid global solution for two dates without an early ping', async () => {
+  it('keeps global optimal tie choices visible until the MJ explicitly chooses one', async () => {
     const service = new DiscordCommandsService({} as never, {} as never)
     const p = (id: string) => ({ id, name: id, played: 0 })
     const ids = Array.from({ length: 8 }, (_, i) => `10000000000000000${i}`)
@@ -1266,21 +1268,33 @@ describe('DiscordCommandsService', () => {
     ;(service as any).pendingSchedulePublications.set('analysis-1', {
       requesterId: 'admin', channelId: 'thread', planningMessageId: 'starter',
       planningContent: 'Planning', dates: [{ key: '0', label: 'Lundi 19 octobre' }, { key: '3', label: 'Jeudi 22 octobre' }],
-      availability, reactions: '',
+      availability, reactions: '0:',
     })
-    const update = jest.fn().mockResolvedValue(undefined)
+    const deferUpdate = jest.fn().mockResolvedValue(undefined)
+    const editReply = jest.fn().mockResolvedValue(undefined)
     await expect(service.handleComponent({
       customId: 'pf2-schedule:dates:analysis-1', user: { id: 'admin' },
-      channelId: 'thread', values: ['0', '3'], update,
+      channelId: 'thread', values: ['0', '3'], deferUpdate, editReply,
     } as never)).resolves.toBe(true)
+    expect(deferUpdate).toHaveBeenCalledTimes(1)
+    expect((service as any).pendingSessionValidations.has('analysis-1')).toBe(false)
+    const payload = editReply.mock.calls[0][0]
+    expect(payload.content).toContain('Proposition 1')
+    expect(payload.content).toContain('Proposition 2')
+    expect(payload.content).toContain('aucun tirage n’est effectué automatiquement')
+    expect(payload.allowedMentions).toEqual({ parse: [] })
+
+    await service.handleComponent({
+      customId: 'pf2-schedule:solution:analysis-1', user: { id: 'admin' },
+      channelId: 'thread', values: ['solution:0'], deferUpdate, editReply,
+    } as never)
     const validation = (service as any).pendingSessionValidations.get('analysis-1')
     expect(validation).toBeDefined()
     expect(validation.userIds).toHaveLength(8)
     expect(new Set(validation.userIds).size).toBe(8)
-    expect(update.mock.calls[0][0].allowedMentions).toEqual({ parse: [] })
-    expect(update.mock.calls[0][0].components[0].toJSON().components[0].custom_id).toBe('pf2-date-confirm:publish:analysis-1')
+    expect(editReply.mock.calls[1][0].content).toContain('choisie manuellement')
+    expect(editReply.mock.calls[1][0].allowedMentions).toEqual({ parse: [] })
   })
-
   it('rejects non-admin group modifications and leaves the message unchanged', async () => {
     const service = new DiscordCommandsService({} as never, {} as never)
     const reply = jest.fn().mockResolvedValue(undefined)
@@ -1334,19 +1348,21 @@ describe('DiscordCommandsService', () => {
       messages: { fetch: jest.fn().mockResolvedValue(new Map()) },
       send: jest.fn().mockResolvedValue(announcement),
     }
-    const followUp = jest.fn().mockResolvedValue(undefined)
+    const deferUpdate = jest.fn().mockResolvedValue(undefined)
+    const editReply = jest.fn().mockResolvedValue(undefined)
     await expect(service.handleButton({
       customId: 'pf2-date-confirm:publish:manual-1', user: { id: 'admin' },
       channelId: 'planning-thread',
       guild: { channels: { fetch: jest.fn().mockResolvedValue(new Map([['target', target]])) } },
       client: { user: { id: 'bot' } },
-      update: jest.fn().mockResolvedValue(undefined), followUp,
+      deferUpdate, editReply,
     } as never)).resolves.toBe(true)
     expect(target.send).toHaveBeenCalledTimes(1)
     expect(target.send.mock.calls[0][0].allowedMentions).toEqual({ parse: [], users: ids })
     expect(target.send.mock.calls[0][0].content).toContain('Merci de confirmer votre présence')
     expect(thread.send).toHaveBeenCalledTimes(1)
-    expect(followUp.mock.calls[0][0].ephemeral).toBe(true)
+    expect(deferUpdate).toHaveBeenCalledTimes(1)
+    expect(editReply.mock.calls.at(-1)[0].content).toContain('Séances créées')
   })
 
   it('accepts a valid custom date label for a manual session', () => {
@@ -1368,7 +1384,8 @@ describe('DiscordCommandsService', () => {
       planningMessageId: 'starter', planningContent: 'Old planning',
       planningDates: ['0'], reactions: '0:player',
     })
-    const update = jest.fn().mockResolvedValue(undefined)
+    const deferUpdate = jest.fn().mockResolvedValue(undefined)
+    const editReply = jest.fn().mockResolvedValue(undefined)
     const targetSend = jest.fn()
     await service.handleButton({
       customId: 'pf2-date-confirm:publish:old', user: { id: 'admin' },
@@ -1378,9 +1395,10 @@ describe('DiscordCommandsService', () => {
       guild: { channels: { fetch: jest.fn().mockResolvedValue(new Map([
         ['target', { type: 0, name: 'objectif-prochaine-mission', send: targetSend }],
       ])) } },
-      update, reply: jest.fn(),
+      deferUpdate, editReply, reply: jest.fn(),
     } as never)
-    expect(update).toHaveBeenCalledWith(expect.objectContaining({ content: expect.stringContaining('dates ont changé') }))
+    expect(deferUpdate).toHaveBeenCalledTimes(1)
+    expect(editReply).toHaveBeenCalledWith(expect.objectContaining({ content: expect.stringContaining('dates ont changé') }))
     expect(targetSend).not.toHaveBeenCalled()
   })
 
@@ -1743,12 +1761,12 @@ describe('DiscordCommandsService', () => {
       planningContent: 'Planning', dates: [{ key: '0', label: 'Lundi' }, { key: '3', label: 'Jeudi' }],
       availability: new Map([['0', players], ['3', players]]), reactions: '',
     })
-    const update = jest.fn().mockResolvedValue(undefined)
+    const editReply = jest.fn().mockResolvedValue(undefined)
     await service.handleComponent({
       customId: 'pf2-schedule:dates:analysis-2', user: { id: 'admin' },
-      channelId: 'thread', values: ['0', '3'], update,
+      channelId: 'thread', values: ['0', '3'], deferUpdate: jest.fn().mockResolvedValue(undefined), editReply,
     } as never)
-    expect(update.mock.calls[0][0].content).toContain('ne peuvent pas toutes')
+    expect(editReply.mock.calls[0][0].content).toContain('ne peuvent pas toutes')
     expect((service as any).pendingSessionValidations.has('analysis-2')).toBe(false)
   })
 
