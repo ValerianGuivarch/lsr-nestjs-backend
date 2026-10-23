@@ -31,17 +31,17 @@
 
 **Répartition :** ChatGPT peut auditer, préparer Docker/réseau/configuration, surveiller et documenter via les accès autorisés ; le MJ intervient pour les réglages Freebox/DNS si non accessibles, l'autorisation micro/webcam, les tests joueurs et la validation du rendu. Aucune modification de production sans validation explicite.
 
-### Planification Discord des séances — implémentée (21/10/2026)
+### Planification Discord des séances — refonte et correctif des régressions (23/10/2026)
 
 **Objectif :** une proposition de disponibilités, un calcul privé côté MJ et **une seule annonce par séance** dans `#objectif-prochaine-mission`. Aucune annonce intermédiaire de groupe dans le fil de planification, donc aucun second ping de validation.
 
 **Parcours opérationnel :**
 
 1. `/proposer-date-seance` publie les dates et réactions ; `/modifier-date-seance` ajuste la planification ; `/relancer-date-seance` distingue les joueurs sans réponse et les ❓.
-2. `/analyse-date-seance` lit les réactions et l'historique des séances, calcule les dates jouables et montre au MJ un **menu privé de sélection d'une ou plusieurs dates**, sans ping.
-3. Le solveur constitue des groupes de 4 : il maximise le nombre de séances, ne réutilise pas de joueur dans un même lot, respecte les réactions des jours, privilégie ceux qui ont le moins joué, puis tire une **solution complète** parmi les ex æquo. Lorsque les solutions dépassent 100, un échantillonnage par réservoir évite de favoriser systématiquement les premières combinaisons trouvées.
+2. `/analyse-date-seance` lit les réactions et l'historique des séances, affiche les **joueurs nommément, leurs nombres de séances jouées, les groupes optimisés et les éventuelles égalités**, puis propose au MJ un menu privé de sélection d'une ou plusieurs dates, sans ping. Les analyses dépassant la limite Discord sont complétées par des messages privés supplémentaires.
+3. Le solveur constitue des groupes de 4 : il maximise le nombre de séances, ne réutilise pas de joueur dans un même lot, respecte les réactions des jours et privilégie ceux qui ont le moins joué. **Le tirage n'est jamais automatique** : s'il reste plusieurs solutions globalement optimales, le MJ peut choisir une proposition nominative ou demander explicitement un tirage au sort entre solutions complètes. Une pagination permet de consulter d'autres propositions. Au-delà de 100 solutions, le solveur conserve un échantillon par réservoir.
 4. Si la combinaison des dates est impossible, le MJ peut refaire sa sélection dans le menu, sans publication.
-5. Le MJ examine l'**aperçu privé** des dates et groupes, puis valide. Le bot relit le message initial, les disponibilités et les réponses ❌. En cas de modification, il bloque la publication et demande de relancer l'analyse.
+5. Le MJ examine l'**aperçu privé** des dates et groupes, peut modifier son choix, puis valide. Le bot **accuse réception du clic immédiatement**, avant de relire le message initial, les disponibilités et les réponses ❌. En cas de modification, il bloque la publication et demande de relancer l'analyse ; en cas d'erreur de publication, il conserve l'état pour proposer **Réessayer** sans republier les annonces déjà présentes.
 6. La confirmation MJ crée directement chaque annonce dans `#objectif-prochaine-mission`, avec mentions limitées aux joueurs retenus, puis un fil `Séance JJ/MM`. Le même message demande ✅/❌ pour confirmer la présence et renvoie à `/choix-quete` pour choisir la mission. Le fil sert à la discussion.
 7. Les réactions ✅/❌ sur l'annonce actualisent **sans ping** son statut : confirmations reçues, désistements, attente, groupe complet ou réponses contradictoires.
 8. `/modifier-groupe-seance`, réservé au MJ dans le fil, ajoute ou retire un joueur en modifiant **la même annonce** ; seul le nouveau joueur est mentionné. Les changements manuels ne sont pas limités à quatre participants.
@@ -54,7 +54,7 @@
 - La publication utilise un marqueur `[PF2-SESSION:YYYY-MM-DD]` pour éviter de dupliquer une annonce récente et reprendre un fil partiellement créé.
 - Les menus intermédiaires restent en mémoire du bot : après redémarrage, il faut relancer l'analyse. Un ancien bouton ne déclenche pas de publication hasardeuse.
 
-**Vérifications :** compilation TypeScript, build Nx `api-jdr`, tests Jest `DiscordCommandsService.spec.ts` (59 réussis au dernier contrôle local). Les essais de bout en bout sur le véritable serveur Discord et la confirmation du déploiement automatique restent à vérifier.
+**Vérifications :** compilation TypeScript, build Nx `api-jdr`, tests Jest `DiscordCommandsService.spec.ts` (62 réussis au dernier contrôle local après les correctifs du 23 octobre 2026). Les essais de bout en bout sur le véritable serveur Discord et la confirmation du déploiement automatique restent à vérifier.
 
 **Points de vigilance ultérieurs (non bloquants) :**
 
