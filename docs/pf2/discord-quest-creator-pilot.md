@@ -62,6 +62,24 @@ Une fiche dont le texte est déjà correct n'est pas éditée.
 
 **Résultat vérifié (28 octobre 2026) :** 15 quêtes bot, 122 entrées de messages historiques représentées dans **118 publications**, dont 5 compléments regroupant 9 très courts messages de répétition de titres. Quatre pièces jointes/images conservées et réimportées. Les vérifications portent sur les statuts, les tags, les liens, les composants Discord, l'absence de mentions et l'option `SUPPRESS_NOTIFICATIONS` (pas de notification push ou bureau, mais une activité peut toujours apparaître dans Discord).
 
+### Présentation des historiques après migration
+
+**Convention appliquée à toutes les 15 quêtes historiques le 28 octobre 2026 :**
+la fiche initiale commence directement par sa description, **sans préfixe d'auteur/date**.
+Dans les réponses importées encore présentes, le pseudo historique en tête de message
+a été remplacé par la **mention Discord de l'auteur d'origine**, en conservant la date,
+l'heure et le texte. Ces mentions sont envoyées avec `allowed_mentions.parse=[]` :
+elles sont visibles mais **ne déclenchent pas de ping**. Les liens de lieux, images,
+tags et boutons ne sont pas modifiés par cette transformation.
+
+**Les suppressions de messages effectuées ensuite par le MJ sont intentionnelles.**
+Il ne faut **jamais reconstituer, recopier ou republier** un message disparu depuis
+l'export historique. L'ancienne action `repair` du script a été retirée pour cela.
+Le mode `verify` contrôle désormais seulement la structure des fils encore présents,
+sans exiger un nombre de messages ou une correspondance avec tous les textes archivés.
+Les chiffres « 122 entrées / 118 publications » correspondent à la migration **initiale**,
+pas au nombre actuel après les suppressions.
+
 Les données SQLite conservent le mapping `ancien ID → nouvel ID` dans `pf2_quest_migration_20261028`. Cette table de suivi est créée par le script de migration ponctuel `scripts/pf2/migrate-discord-quests-20261028.py`. Les journaux et le rapport d'anciennes réactions sont dans le répertoire privé de sauvegarde ; ne **pas** les versionner dans GitHub.
 
 Pour un retour global, exécuter sur le mini-PC après sauvegarde :
