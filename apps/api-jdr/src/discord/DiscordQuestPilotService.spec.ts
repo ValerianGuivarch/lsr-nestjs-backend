@@ -20,27 +20,33 @@ describe('DiscordQuestPilotService', () => {
     return { service: new DiscordQuestPilotService(stored as never), stored }
   }
 
-  it('installs an idempotent pinned launcher only at admin command time', async () => {
+  it('opens an emoji selection menu from the already installed launcher', async () => {
     const { service, stored } = setup()
-    const pin = jest.fn().mockResolvedValue(undefined)
-    const create = jest.fn().mockResolvedValue({ id: QUEST, pin })
-    const forum = { type: ChannelType.GuildForum, guildId: GUILD, threads: { create } }
-    const editReply = jest.fn().mockResolvedValue(undefined)
-    const command = {
-      commandName: 'installer-creation-quete', guildId: GUILD,
-      client: { channels: { fetch: jest.fn().mockResolvedValue(forum) } },
-      deferReply: jest.fn().mockResolvedValue(undefined), editReply,
-    }
-    await service.handleCommand(command as never)
-    expect(create).toHaveBeenCalledWith(expect.objectContaining({ name: '📌 Créer une quête' }))
-    const options = create.mock.calls[0][0]
-    expect(options.message.components[0].components[0].data.custom_id).toBe('pf2-quest-ui:create')
-    expect(stored.saveQuestUi).toHaveBeenCalledWith(QUEST, 'launcher', '')
-    expect(pin).toHaveBeenCalled()
     stored.questLauncherId.mockResolvedValueOnce(QUEST)
-    await service.handleCommand(command as never)
-    expect(create).toHaveBeenCalledTimes(1)
-    expect(editReply).toHaveBeenCalledWith(expect.objectContaining({content:expect.stringContaining('existe déjà')}))
+    const reply = jest.fn().mockResolvedValue(undefined)
+    await service.handleButton({
+      customId: 'pf2-quest-ui:create', channelId: QUEST, message: { id: QUEST }, reply,
+    } as never)
+    const response = reply.mock.calls[0][0]
+    expect(response.content).toContain('Choisis l’icône')
+    expect(response.ephemeral).toBe(true)
+    const menu = response.components[0].components[0].toJSON()
+    expect(menu.options.some((opt: any) => opt.value === 'demon' && opt.emoji.name === '😈')).toBe(true)
+    expect(menu.options.some((opt: any) => opt.value === 'custom')).toBe(true)
+    expect(menu.options.length).toBeLessThanOrEqual(25)
+  })
+
+  it('opens a title/description modal after emoji selection', async () => {
+    const { service } = setup()
+    const forum = { type: ChannelType.GuildForum, guildId: GUILD }
+    const showModal = jest.fn().mockResolvedValue(undefined)
+    await service.handleSelect({
+      customId: 'pf2-quest-ui:icon:new', values: ['demon'], guildId: GUILD,
+      client: { channels: { fetch: jest.fn().mockResolvedValue(forum) } }, showModal,
+    } as never)
+    const modal = showModal.mock.calls[0][0].toJSON()
+    expect(modal.custom_id).toBe('pf2-quest-ui:new:demon')
+    expect(modal.components.map((component: any) => component.components[0].custom_id)).toEqual(['title', 'description'])
   })
 
   it('creates a forum quest with the bot as starter, persistent actions, and a synced catalogue entry', async () => {
@@ -56,9 +62,9 @@ describe('DiscordQuestPilotService', () => {
     forum.threads = {create}
     const editReply = jest.fn().mockResolvedValue(undefined)
     await service.handleModal({
-      customId: 'pf2-quest-ui:new',
+      customId: 'pf2-quest-ui:new:demon',
       fields: { getTextInputValue: (field: string) => ({
-        icon: '😈', title: 'Invoquer le démon', description: 'Destruction du monde depuis la Grande Loge.',
+        title: 'Invoquer le démon', description: 'Destruction du monde depuis la Grande Loge.',
       } as Record<string,string>)[field] },
       client, guildId: GUILD,
       deferReply: jest.fn().mockResolvedValue(undefined), editReply,
@@ -99,4 +105,39 @@ describe('DiscordQuestPilotService', () => {
     expect(starter.edit).toHaveBeenCalledTimes(1)
     expect(editReply).toHaveBeenCalledWith(expect.objectContaining({content: expect.stringContaining('ajouté')}))
   })
+  it('explains both location choices and shows a map link without page 1/1', async () => {
+    const { service } = setup()
+    const thread = {
+      id: QUEST, parentId: FORUM, isThread: () => true, appliedTags: [], name: '😈 Test',
+    }
+    const forum = { type: ChannelType.GuildForum, guildId: GUILD, availableTags: [] }
+    const reply = jest.fn().mockResolvedValue(undefined)
+    await service.handleButton({
+      customId: 'pf2-quest-ui:places:'+QUEST+':add:0', channelId: QUEST, channel: thread,
+      client: { channels: { fetch: jest.fn().mockResolvedValue(forum) } }, reply,
+    } as never)
+    const payload = reply.mock.calls[0][0]
+    expect(payload.content).toContain('Lieu existant')
+    expect(payload.content).toContain('Nouveau lieu')
+    expect(payload.content).toContain('＋ Lieu')
+    expect(payload.content).not.toContain('page 1/1')
+    expect(payload.components.some((row: any) => row.toJSON().components.some((c: any) =>
+      c.style === 5 && c.url === 'https://map.l7r.fr/pj'))).toBe(true)
+  })
+
+  it('rejects a text string instead of a custom emoji', async () => {
+    const { service } = setup()
+    const reply = jest.fn().mockResolvedValue(undefined)
+    await service.handleModal({
+      customId: 'pf2-quest-ui:new:custom',
+      fields: { getTextInputValue: (field: string) => ({
+        customIcon: 'coucou', title: 'Quête', description: 'Test',
+      } as Record<string, string>)[field] },
+      reply,
+    } as never)
+    expect(reply).toHaveBeenCalledWith(expect.objectContaining({
+      content: expect.stringContaining('un seul emoji'), ephemeral: true,
+    }))
+  })
+
 })

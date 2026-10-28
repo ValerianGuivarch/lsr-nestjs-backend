@@ -14,14 +14,13 @@ Pas de tag `essai` et aucun feature flag général.
 
 ## Après validation de la PR et déploiement
 
-1. **MJ/admin :** lancer une seule fois `/installer-creation-quete` sur le serveur Discord. Le bot crée le sujet `📌 Créer une quête` dans `journal-de-quetes` et essaie de l'épingler en tête du forum. Si l'épinglage échoue, épingler manuellement le sujet (permission *Gérer les fils* nécessaire). La commande est idempotente et réaffiche le lien si le sujet existe.
-2. **Joueur :** ouvrir le sujet épinglé et cliquer sur **Créer une quête**. Alternativement, utiliser `/nouvelle-quete` sur le serveur.
-3. Pour le test, choisir l'emoji **😈**, le titre **Invoquer le démon de la destruction du monde**, et une description fantaisiste sur le rituel à la Grande Loge.
-4. Le bot crée la discussion. Ouvrir son premier message : les boutons **Associer un lieu**, **Retirer un lieu**, **Modifier**, **Terminer** et **Voir sur la carte** s'y trouvent.
-5. Cliquer **Associer un lieu**, puis choisir **Grande Loge**. Les lieux existants peuvent être associés un par un ou par sélection multiple. La fiche se met à jour; l'API cartographique contient le nouveau lien.
-6. Cliquer **Modifier** depuis un **autre compte PJ** : les mêmes droits s'appliquent à tous les joueurs, sans restriction à l'auteur.
-7. Cliquer **Terminer** : le formulaire existant demande toujours un **compte rendu obligatoire**, le bot applique `Terminée` et libère les réservations 👍. Vérifier que le bouton est devenu **Relancer**; celui-ci retire le tag et réouvre la quête.
-8. Vérifier `/choix-quete` : les anciennes quêtes et la quête pilote sont présentes (si elles ne sont pas terminées), mais **pas** le sujet d'accueil.
+1. Le sujet épinglé **📌 Créer une quête** existe déjà dans le forum journal-de-quetes. La commande d'installation a été retirée.
+2. Cliquer **Créer une quête** ou utiliser /nouvelle-quete. Choisir une icône dans le menu visuel ; **Autre emoji…** permet de saisir un emoji Unicode personnalisé.
+3. Saisir le titre et la description dans le formulaire suivant, sans champ emoji prérempli.
+4. Pour le test : 😈 Invoquer le démon de la destruction du monde, description fantaisiste du rituel à la Grande Loge.
+5. Dans la quête, cliquer **Associer un lieu**. Le menu explique deux parcours : sélectionner un lieu existant ou ouvrir la carte PJ avec le bouton **Créer un lieu sur la carte**. Sur la carte, bouton **＋ Lieu**, clic sur la position, type **★ Lieu de quête**, sélection de la quête puis enregistrement.
+6. Les boutons **Modifier**, **Terminer**, **Relancer**, et **Voir sur la carte** restent utilisables. **Modifier** permet aussi de modifier l'icône via le même menu, pour tous les PJ.
+7. Vérifier /choix-quete : les discussions historiques continuent de fonctionner, le sujet d'accueil n'est jamais compté.
 
 Les commandes `/terminer-quete` et `/relancer-quete` restent disponibles et utilisent les mêmes opérations que les boutons, y compris le compte rendu et la mise à jour du premier message.
 
@@ -37,6 +36,6 @@ Les commandes `/terminer-quete` et `/relancer-quete` restent disponibles et util
 - La migration SQL **045** ajoute `pf2_discord_quest.obsolete` et `pf2_quest_ui`. Le mécanisme existant effectue une sauvegarde SQLite avant migration en production.
 - Les boutons de création et d'édition n'utilisent pas d'état temporaire : leurs identifiants et les descriptions du bot sont en SQLite, donc survivent à un redémarrage.
 - Si la création de discussion fonctionne mais qu'une opération SQLite ou Discord échoue ensuite, le bot peut laisser une discussion partiellement créée. Vérifier et corriger ce cas avant un déploiement étendu.
-- La création du sujet d'accueil est une **action manuelle** après déploiement, déclenchée via la commande admin. Aucune discussion n'est publiée lors de la compilation, de la CI ou de la migration SQL.
+- Le sujet d'accueil est **déjà installé**. La commande d'installation n'est plus publiée ; le bouton existant continue de fonctionner.
 - Les boutons ne doivent pas mentionner massivement les joueurs : `allowedMentions.parse=[]`.
 - **Ne pas utiliser** `obsolète` sur les anciennes discussions avant la migration prévue.

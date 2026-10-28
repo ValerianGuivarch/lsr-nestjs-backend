@@ -104,7 +104,6 @@ export class DiscordCommandsService {
       new SlashCommandBuilder().setName('tirage-sort-joueur').setDescription('Tire au sort des personnes parmi une sélection Discord.').setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild).toJSON(),
       new SlashCommandBuilder().setName('help').setDescription('Affiche les commandes PF2 disponibles.').toJSON(),
       new SlashCommandBuilder().setName('nouvelle-quete').setDescription('Créer une quête dans le journal avec une fiche interactive.').toJSON(),
-      new SlashCommandBuilder().setName('installer-creation-quete').setDescription('Installer le sujet de création de quêtes dans le forum.').setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild).toJSON(),
       new SlashCommandBuilder().setName('choix-quete').setDescription('Affiche les quêtes du forum et les joueurs intéressés.').toJSON(),
       new SlashCommandBuilder().setName('terminer-quete').setDescription('Marque comme terminée la quête de ce fil.').toJSON(),
       new SlashCommandBuilder().setName('relancer-quete').setDescription('Relance une quête terminée depuis son fil.').toJSON(),
@@ -167,12 +166,8 @@ export class DiscordCommandsService {
   }
 
   async handle(interaction: Pick<ChatInputCommandInteraction, 'commandName' | 'reply' | 'deferReply' | 'editReply'>): Promise<boolean> {
-    if (interaction.commandName === 'nouvelle-quete' || interaction.commandName === 'installer-creation-quete') {
+    if (interaction.commandName === 'nouvelle-quete') {
       const command = interaction as ChatInputCommandInteraction
-      if (interaction.commandName === 'installer-creation-quete' && !this.isAdmin(command)) {
-        await command.reply({ content: 'Installation réservée au MJ.', ephemeral: true })
-        return true
-      }
       if (!this.questPilot) throw new Error('Créateur de quêtes indisponible.')
       await this.questPilot.handleCommand(command)
       return true
@@ -279,7 +274,6 @@ export class DiscordCommandsService {
     await interaction.reply({
       content: [
         '**Commandes PF2 — administration**',
-        '`/installer-creation-quete` — installe le sujet épinglé « Créer une quête » dans le forum.',
         '`/random-perso` — tire une ascendance, une classe et un genre.',
         '`/tirage-sort-joueur` — sélectionne des personnes puis en tire un nombre au hasard, avec aperçu avant publication.',
         '`/debut-seance` — prépare le début d’une séance.',

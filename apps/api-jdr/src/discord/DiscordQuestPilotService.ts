@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common'
+import { Injectable } from '@nestjs/common'
 import {
   ActionRowBuilder, ButtonBuilder, ButtonInteraction, ButtonStyle, ChannelType,
   ChatInputCommandInteraction, ForumChannel, ModalBuilder, ModalSubmitInteraction,
@@ -12,13 +12,43 @@ const FORUM_ID = process.env['PF2_DISCORD_QUEST_FORUM_CHANNEL_ID']?.trim() || '1
 const MAP_URL = 'https://map.l7r.fr/pj'
 const NO_PINGS = { parse: [] as Array<'everyone' | 'users' | 'roles'> }
 
-type Place = { id: string; name: string }
+// Discord provides an emoji option on string select menus, not a native
+// emoji picker inside text modals. 23 common choices + optional custom entry
+// fit in one menu, even with the extra 'keep current' option while editing.
+const QUEST_ICONS = [
+  { key: 'scroll', emoji: '📜', label: 'Document / recherche' },
+  { key: 'demon', emoji: '😈', label: 'Démon / malédiction' },
+  { key: 'swords', emoji: '⚔️', label: 'Combat / bataille' },
+  { key: 'shield', emoji: '🛡️', label: 'Défense / protection' },
+  { key: 'magic', emoji: '🔮', label: 'Magie / rituel' },
+  { key: 'skull', emoji: '💀', label: 'Mort / danger' },
+  { key: 'crown', emoji: '👑', label: 'Roi / noblesse' },
+  { key: 'nature', emoji: '🌿', label: 'Nature / druides' },
+  { key: 'mountain', emoji: '⛰️', label: 'Montagne / exploration' },
+  { key: 'sea', emoji: '🌊', label: 'Océan / voyage' },
+  { key: 'beach', emoji: '🏖️', label: 'Plage / littoral' },
+  { key: 'treasure', emoji: '💰', label: 'Trésor / récompense' },
+  { key: 'secret', emoji: '🗝️', label: 'Secret / énigme' },
+  { key: 'investigate', emoji: '🕵️', label: 'Enquête / mystère' },
+  { key: 'smith', emoji: '⚒️', label: 'Artisanat / machine' },
+  { key: 'fort', emoji: '🏰', label: 'Ville / forteresse' },
+  { key: 'trade', emoji: '🧂', label: 'Commerce / contrebande' },
+  { key: 'sad', emoji: '😭', label: 'Tragédie / secours' },
+  { key: 'knife', emoji: '🔪', label: 'Assassinat / menace' },
+  { key: 'spirit', emoji: '👻', label: 'Fantôme / esprit' },
+  { key: 'potion', emoji: '🧪', label: 'Alchimie / expérience' },
+  { key: 'announcement', emoji: '📣', label: 'Appel / annonce' },
+  { key: 'monster', emoji: '🍖', label: 'Monstres / chair' },
+] as const
+
+type QuestIconChoice = typeof QUEST_ICONS[number]['key'] | 'custom' | 'keep'
+const chosenIcon = (key: string): string | undefined => QUEST_ICONS.find(icon => icon.key === key)?.emoji
+const isSingleEmoji = (value: string): boolean =>
+  /^(?:\p{Regional_Indicator}{2}|\p{Extended_Pictographic}(?:️|\p{Emoji_Modifier})?(?:‍\p{Extended_Pictographic}(?:️|\p{Emoji_Modifier})?)*)$/u.test(value)
+
 
 @Injectable()
 export class DiscordQuestPilotService {
-  private readonly logger = new Logger(DiscordQuestPilotService.name)
-  private installing = false
-
   constructor(private readonly persistence: Pf2PersistenceService) {}
 
   private async forum(client: ChatInputCommandInteraction['client']): Promise<ForumChannel> {
@@ -43,56 +73,53 @@ export class DiscordQuestPilotService {
   }
 
   async handleCommand(interaction: ChatInputCommandInteraction): Promise<void> {
-    if (interaction.commandName === 'nouvelle-quete') {
-      if (!interaction.guildId || interaction.guildId !== (await this.forum(interaction.client)).guildId) throw new Error('Commande utilisable uniquement sur le serveur configuré.')
-      await interaction.showModal(this.questForm('new'))
+    if (interaction.commandName !== 'nouvelle-quete') return
+    const forum = await this.forum(interaction.client)
+    if (!interaction.guildId || interaction.guildId !== forum.guildId) {
+      await interaction.reply({ content: 'Commande utilisable uniquement sur le serveur configuré.', ephemeral: true })
       return
     }
-    if (interaction.commandName !== 'installer-creation-quete') return
-    await interaction.deferReply({ ephemeral: true })
-    if (this.installing) { await interaction.editReply('Installation en cours.'); return }
-    this.installing = true
-    try {
-      const forum = await this.forum(interaction.client)
-      if (forum.guildId !== interaction.guildId) throw new Error('Installation réservée au serveur configuré.')
-      const existingId = await this.persistence.questLauncherId()
-      if (existingId) {
-        await interaction.editReply({ content: `Le sujet de création existe déjà : https://discord.com/channels/${forum.guildId}/${existingId}` })
-        return
-      }
-      const created = await forum.threads.create({
-        name: '📌 Créer une quête',
-        autoArchiveDuration: ThreadAutoArchiveDuration.OneDay,
-        message: {
-          content: '## 📜 Journal de quêtes\n\nCliquez sur **Créer une quête** pour ouvrir un formulaire. La quête sera publiée dans ce forum avec une fiche interactive.\n\nLes discussions historiques restent accessibles pendant la transition.',
-          components: [new ActionRowBuilder<ButtonBuilder>().addComponents(
-            new ButtonBuilder().setCustomId(`${PREFIX}:create`).setLabel('Créer une quête').setEmoji('✨').setStyle(ButtonStyle.Success),
-          )],
-          allowedMentions: NO_PINGS,
-        },
-      })
-      await this.persistence.saveQuestUi(created.id, 'launcher', '')
-      let pinned = true
-      try { await created.pin('Sujet d’accueil du journal de quêtes') }
-      catch (error) { pinned = false; this.logger.warn('Épinglage du sujet impossible : ' + String(error)) }
-      await interaction.editReply({
-        content: `Sujet créé : https://discord.com/channels/${forum.guildId}/${created.id}\n${pinned ? 'Sujet épinglé dans le forum.' : 'Épinglage automatique impossible : épingle-le manuellement dans le forum.'}`,
-      })
-    } catch (error) {
-      await interaction.editReply({ content: 'Installation impossible : ' + this.error(error) })
-    } finally { this.installing = false }
+    await interaction.reply({ ...this.iconPicker('new'), ephemeral: true })
   }
 
-  private questForm(kind: 'new' | 'edit', title = '', description = '', emoji = ''): ModalBuilder {
-    const modal = new ModalBuilder().setCustomId(kind === 'new' ? `${PREFIX}:new` : `${PREFIX}:edit`).setTitle(kind === 'new' ? 'Créer une quête' : 'Modifier la quête')
-    const icon = new TextInputBuilder().setCustomId('icon').setLabel('Icône (emoji)').setStyle(TextInputStyle.Short).setRequired(false).setMaxLength(36).setPlaceholder('😈')
-    const name = new TextInputBuilder().setCustomId('title').setLabel('Titre de la quête').setStyle(TextInputStyle.Short).setRequired(true).setMaxLength(88)
-    const details = new TextInputBuilder().setCustomId('description').setLabel('Description de la quête').setStyle(TextInputStyle.Paragraph).setRequired(true).setMaxLength(1400)
-    if (emoji) icon.setValue(emoji)
+  private iconPicker(kind: 'new' | 'edit') {
+    const options: Array<{label: string; value: QuestIconChoice; emoji?: string; description?: string}> = QUEST_ICONS.map(icon => ({
+      label: icon.label, value: icon.key, emoji: icon.emoji,
+    }))
+    options.push({ label: 'Autre emoji…', value: 'custom', description: 'Saisir un emoji qui ne figure pas dans la liste' })
+    if (kind === 'edit') options.unshift({ label: 'Conserver l’icône actuelle', value: 'keep', description: 'Garder l’emoji déjà utilisé par cette quête' })
+    const menu = new StringSelectMenuBuilder()
+      .setCustomId(`${PREFIX}:icon:${kind}`)
+      .setPlaceholder('Choisis une icône de quête (emojis visibles)')
+      .setMinValues(1).setMaxValues(1).addOptions(options)
+    return {
+      content: kind === 'new'
+        ? '**Choisis l’icône de ta nouvelle quête.**\nTu pourras ensuite saisir le titre et la description.'
+        : '**Choisis l’icône de la quête.**\nSélectionne une icône ou conserve celle qui existe déjà.',
+      components: [new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(menu)],
+      allowedMentions: NO_PINGS,
+    }
+  }
+
+  private questForm(kind: 'new' | 'edit', iconKey: QuestIconChoice, title = '', description = ''): ModalBuilder {
+    const modal = new ModalBuilder()
+      .setCustomId(`${PREFIX}:${kind}:${iconKey}`)
+      .setTitle(kind === 'new' ? 'Créer une quête' : 'Modifier la quête')
+    const name = new TextInputBuilder()
+      .setCustomId('title').setLabel('Titre de la quête')
+      .setStyle(TextInputStyle.Short).setRequired(true).setMaxLength(88)
+    const details = new TextInputBuilder()
+      .setCustomId('description').setLabel('Description de la quête')
+      .setStyle(TextInputStyle.Paragraph).setRequired(true).setMaxLength(1400)
     if (title) name.setValue(title)
     if (description) details.setValue(description)
+    if (iconKey === 'custom') {
+      const custom = new TextInputBuilder()
+        .setCustomId('customIcon').setLabel('Ton emoji (un seul)')
+        .setStyle(TextInputStyle.Short).setRequired(true).setMaxLength(36).setPlaceholder('🐉')
+      modal.addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(custom))
+    }
     return modal.addComponents(
-      new ActionRowBuilder<TextInputBuilder>().addComponents(icon),
       new ActionRowBuilder<TextInputBuilder>().addComponents(name),
       new ActionRowBuilder<TextInputBuilder>().addComponents(details),
     )
@@ -149,7 +176,7 @@ export class DiscordQuestPilotService {
       if (!launcher || interaction.channelId !== launcher || interaction.message.id !== launcher) {
         await interaction.reply({ content: 'Ce bouton de création n’est plus actif.', ephemeral: true }); return true
       }
-      await interaction.showModal(this.questForm('new'))
+      await interaction.reply({ ...this.iconPicker('new'), ephemeral: true })
       return true
     }
     const match = /^pf2-quest-ui:(edit|places):(\d{15,22})(?::(add|remove):(\d+))?$/.exec(id)
@@ -159,9 +186,7 @@ export class DiscordQuestPilotService {
       const thread = await this.thread(interaction, threadId)
       if (action !== 'places' && interaction.message.id !== thread.id) throw new Error('Utilise les boutons de la fiche initiale.')
       if (action === 'edit') {
-        const saved = await this.persistence.questUi(threadId)
-        const parts = thread.name.match(/^(\S+)\s+(.+)$/u)
-        await interaction.showModal(this.questForm('edit', parts?.[2] ?? thread.name, saved?.description ?? '', parts?.[1] ?? ''))
+        await interaction.reply({ ...this.iconPicker('edit'), ephemeral: true })
         return true
       }
       await interaction.reply({ ...await this.placePicker(threadId, mode === 'remove' ? 'remove' : 'add', Number(pageText || 0)), ephemeral: true })
@@ -183,7 +208,21 @@ export class DiscordQuestPilotService {
     const totalPages = Math.max(1, Math.ceil(available.length / 25))
     const index = Math.max(0, Math.min(totalPages - 1, Number.isSafeInteger(page) ? page : 0))
     const slice = available.slice(index * 25, index * 25 + 25)
-    if (!slice.length) return { content: mode === 'add' ? 'Tous les lieux existants sont déjà associés.' : 'Aucun lieu associé pour le moment.', components: [] }
+    const locationExplanation = [
+      '**📍 Ajouter des lieux à cette quête**',
+      '',
+      '**1. Lieu existant :** choisis-le dans la liste ci-dessous. Tu peux en sélectionner plusieurs.',
+      '**2. Nouveau lieu :** clique sur **Créer un lieu sur la carte**, puis sur **＋ Lieu** en haut à droite de la carte. Clique sur l’emplacement désiré, choisis **★ Lieu de quête**, associe cette quête et enregistre.',
+      '',
+      'Tu peux laisser la quête sans lieu et y revenir plus tard via **Associer un lieu**.',
+    ].join('\n')
+    const newPlaceLink = new ActionRowBuilder<ButtonBuilder>().addComponents(
+      new ButtonBuilder().setLabel('Créer un lieu sur la carte').setEmoji('🗺️').setStyle(ButtonStyle.Link).setURL(MAP_URL),
+    )
+    if (!slice.length) {
+      return { content: mode === 'add' ? locationExplanation + '\n\nTous les lieux existants sont déjà associés.' : 'Aucun lieu associé pour le moment.',
+        components: mode === 'add' ? [newPlaceLink] : [] }
+    }
     const select = new StringSelectMenuBuilder()
       .setCustomId(`${PREFIX}:select:${threadId}:${mode}`)
       .setPlaceholder(mode === 'add' ? 'Sélectionne un ou plusieurs lieux' : 'Choisis les lieux à retirer')
@@ -199,10 +238,38 @@ export class DiscordQuestPilotService {
       )
       components.push(row)
     }
-    return { content: `${mode === 'add' ? 'Ajouter' : 'Retirer'} des lieux de la quête — page ${index+1}/${totalPages}`, components }
+    if (mode === 'add') components.push(newPlaceLink)
+    const pageLabel = totalPages > 1 ? ` — page ${index + 1}/${totalPages}` : ''
+    return {
+      content: mode === 'add' ? locationExplanation + pageLabel : `**Retirer des lieux de la quête**${pageLabel}\nChoisis les lieux à détacher. Les lieux eux-mêmes ne seront pas supprimés de la carte.`,
+      components,
+    }
   }
 
   async handleSelect(interaction: StringSelectMenuInteraction): Promise<boolean> {
+    const iconMatch = /^pf2-quest-ui:icon:(new|edit)$/.exec(interaction.customId)
+    if (iconMatch) {
+      const mode = iconMatch[1] as 'new' | 'edit'
+      const choice = interaction.values[0]
+      if (choice !== 'custom' && !(mode === 'edit' && choice === 'keep') && !chosenIcon(choice)) {
+        await interaction.reply({ content: 'Icône inconnue : utilise le menu de sélection.', ephemeral: true })
+        return true
+      }
+      if (mode === 'new') {
+        const forum = await this.forum(interaction.client)
+        if (interaction.guildId !== forum.guildId) {
+          await interaction.reply({ content: 'Impossible de créer une quête ici.', ephemeral: true })
+          return true
+        }
+        await interaction.showModal(this.questForm('new', choice as QuestIconChoice))
+      } else {
+        const thread = await this.thread(interaction, interaction.channelId)
+        const saved = await this.persistence.questUi(thread.id)
+        const parts = thread.name.match(/^(\S+)\s+(.+)$/u)
+        await interaction.showModal(this.questForm('edit', choice as QuestIconChoice, parts?.[2] ?? thread.name, saved?.description ?? ''))
+      }
+      return true
+    }
     const match = /^pf2-quest-ui:select:(\d{15,22}):(add|remove)$/.exec(interaction.customId)
     if (!match) return false
     await interaction.deferReply({ ephemeral: true })
@@ -217,8 +284,14 @@ export class DiscordQuestPilotService {
   }
 
   async handleModal(interaction: ModalSubmitInteraction): Promise<boolean> {
-    if (interaction.customId !== `${PREFIX}:new` && interaction.customId !== `${PREFIX}:edit`) return false
-    const edit = interaction.customId.endsWith(':edit')
+    const modalMatch = /^pf2-quest-ui:(new|edit):([a-z]+)$/.exec(interaction.customId)
+    if (!modalMatch) return false
+    const edit = modalMatch[1] === 'edit'
+    const iconKey = modalMatch[2]
+    if (!chosenIcon(iconKey) && iconKey !== 'custom' && !(edit && iconKey === 'keep')) {
+      await interaction.reply({ content: 'Icône invalide. Relance le formulaire.', ephemeral: true })
+      return true
+    }
     if (edit) {
       if (!interaction.channel?.isThread() || interaction.channel.parentId !== FORUM_ID) {
         await interaction.reply({ content: 'Cette édition doit avoir lieu dans une quête créée par le bot.', ephemeral: true })
@@ -227,7 +300,15 @@ export class DiscordQuestPilotService {
       const ui = await this.persistence.questUi(interaction.channelId)
       if (!ui || ui.kind !== 'quest') { await interaction.reply({ content: 'Quête inconnue.', ephemeral: true }); return true }
     }
-    const icon = interaction.fields.getTextInputValue('icon').trim() || '📜'
+    const icon = iconKey === 'custom'
+      ? interaction.fields.getTextInputValue('customIcon').trim()
+      : iconKey === 'keep'
+        ? interaction.channel?.isThread() ? interaction.channel.name.match(/^(\S+)\s+(.+)$/u)?.[1] ?? '📜' : '📜'
+        : chosenIcon(iconKey) ?? ''
+    if (!icon || (iconKey === 'custom' && !isSingleEmoji(icon))) {
+      await interaction.reply({ content: 'Choisis un seul emoji valide pour la quête.', ephemeral: true })
+      return true
+    }
     const title = interaction.fields.getTextInputValue('title').replace(/\s+/g, ' ').trim()
     const description = interaction.fields.getTextInputValue('description').trim()
     const name = `${icon} ${title}`
