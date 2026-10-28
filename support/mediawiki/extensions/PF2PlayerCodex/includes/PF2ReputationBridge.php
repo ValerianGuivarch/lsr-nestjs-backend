@@ -10,6 +10,7 @@ class PF2ReputationBridge {
   if(!$base || !$key)$api->dieWithError('API PF2 indisponible.');
   $request=$services->getHttpRequestFactory()->create($base.'/reputations/internal'.$path,['method'=>$method,'timeout'=>12,'postData'=>$body===null?null:json_encode($body)],__METHOD__);
   $request->setHeader('X-PF2-Wiki-Key',$key);
+  $request->setHeader('X-PF2-Wiki-Admin', self::isAdmin($api->getUser()) ? '1' : '0');
   if($body!==null)$request->setHeader('Content-Type','application/json');
   $status=$request->execute();$result=json_decode($request->getContent(),true);
   if(!$status->isOK() || !is_array($result))$api->dieWithError('API des réputations indisponible.');
