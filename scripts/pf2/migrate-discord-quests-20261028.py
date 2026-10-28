@@ -18,8 +18,9 @@ from pathlib import Path
 from zoneinfo import ZoneInfo
 
 MODE = sys.argv[1] if len(sys.argv)>1 else 'plan'
-if MODE not in ('plan','apply','rollback','delete-test','refresh','verify'):
-    raise SystemExit('Invalid mode')
+# Import completed. Only verification and explicit rollback remain supported.
+if MODE not in ('verify','rollback'):
+    raise SystemExit('Migration historique clôturée : seuls verify et rollback restent disponibles. Aucune réimportation autorisée.')
 ROOT = Path('/home/valou/pf2-migrations/quest-bot-migration-20261028')
 FORUM = '1536259632455094412'
 BOT = '1542575311311339590'

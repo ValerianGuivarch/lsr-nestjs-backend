@@ -222,6 +222,86 @@ a {
 	color: #392700;
 	font-weight: 700;
 }
+
+/* Hybrid quest layer: one marker per site, badge for multiple Discord quests. */
+.pf2-public-place-count {
+  position: absolute;
+  top: -9px;
+  right: -11px;
+  min-width: 19px;
+  height: 19px;
+  padding: 1px 4px;
+  border: 2px solid #fff8dc;
+  border-radius: 11px;
+  background: #733810;
+  color: #fff;
+  font: 800 11px/15px system-ui, sans-serif;
+  box-sizing: content-box;
+  pointer-events: none;
+  box-shadow: 0 1px 3px #0007;
+}
+.pf2-public-place-count[hidden] { display: none; }
+
+/* Nearby distinct quest sites become a compact, accessible marker when zoomed out. */
+.pf2-quest-cluster-marker {
+  position: absolute;
+  width: 44px;
+  height: 44px;
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  padding: 1px 3px;
+  border: 3px solid #fff3b7;
+  border-radius: 50%;
+  background: #8a440e;
+  color: #fff7d4;
+  box-shadow: 0 0 0 2px #5c2d0b, 0 3px 7px #0007;
+  cursor: pointer;
+  font: 800 15px/17px system-ui, sans-serif;
+}
+.pf2-quest-cluster-marker:hover,
+.pf2-quest-cluster-marker:focus-visible {
+  outline: 3px solid #ffe59a;
+  outline-offset: 2px;
+}
+.pf2-quest-cluster-star { font-size: 14px; line-height: 15px; }
+.pf2-quest-cluster-number { font-size: 14px; line-height: 17px; }
+.pf2-quest-cluster-popup { min-width: 245px; max-width: min(380px, 86vw); }
+.pf2-quest-cluster-zoom {
+  width: 100%;
+  margin: 5px 0 10px;
+  padding: 7px 9px;
+  border: 1px solid #ae7a25;
+  border-radius: 5px;
+  background: #fff0bb;
+  color: #422807;
+  font: 700 12px system-ui, sans-serif;
+  cursor: pointer;
+}
+.pf2-quest-cluster-locations {
+  max-height: 300px;
+  overflow-y: auto;
+}
+.pf2-quest-cluster-locations section {
+  padding: 7px 0;
+  border-top: 1px solid #e2ce9f;
+}
+.pf2-quest-cluster-place {
+  border: 0;
+  background: none;
+  color: #56320a;
+  text-align: left;
+  font: 800 13px/1.4 system-ui, sans-serif;
+  cursor: pointer;
+  padding: 3px 0;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.pf2-quest-cluster-locations .pf2-quest-names {
+  margin: 3px 0 3px;
+  max-height: none;
+}
+
 .pf2-public-place-marker.is-favorite .pf2-public-place-label {
   background: #fff4c8;
   border-color: #d4ae4e;

@@ -2,6 +2,7 @@ import { Marker, Popup } from 'maplibre-gl'
 import { GolarionMap } from './GolarionMap'
 import { createFavoriteButton, type FavoriteTarget } from './favorite-button'
 import { showPlaceDialog, showQuestLinksDialog } from './quest-place-dialog'
+import { groupQuestPlaces, questKeys, QUEST_CLUSTER_MAX_ZOOM } from './hybrid-quest-grouping'
 
 type PublicPlace = {
   id: string
@@ -51,17 +52,27 @@ function markerElement(place: PublicPlace): HTMLButtonElement {
   label.textContent = place.important && !place.quest ? `★ ${place.name}` : place.name
 
   button.append(icon, label)
+  if (place.quest) {
+    const count = document.createElement('span')
+    count.className = 'pf2-public-place-count'
+    count.setAttribute('aria-label', 'Nombre de quêtes associées')
+    const total = questKeys(place, true).length
+    count.textContent = String(total)
+    count.hidden = total < 2
+    button.appendChild(count)
+    if (total > 1) button.setAttribute('aria-label', place.name + ' : ' + total + ' quêtes')
+  }
   return button
 }
 
-function basicPopupContent(place: PublicPlace, mode: 'pj' | 'mj-light' | 'mj'): HTMLElement {
+function basicPopupContent(place: PublicPlace, mode: 'pj' | 'mj-light' | 'mj', includeCompleted = false): HTMLElement {
   const root = document.createElement('div')
   root.className = 'pf2-public-place-popup'
   const title = document.createElement('strong')
   title.textContent = place.name
   root.appendChild(title)
   if (place.quest) {
-    const linked = place.questLinks ?? []
+    const linked = (place.questLinks ?? []).filter(quest => includeCompleted || !quest.completed)
     const unresolved = place.questUnresolved ?? []
     const names = Array.isArray(place.questNames) && place.questNames.length
       ? place.questNames : place.questName ? [place.questName] : []
@@ -81,7 +92,7 @@ function basicPopupContent(place: PublicPlace, mode: 'pj' | 'mj-light' | 'mj'): 
       if (quest.completed) item.classList.add('is-completed')
       list.appendChild(item)
     }
-    for (const name of unresolved.length ? unresolved : linked.length ? [] : names) {
+    for (const name of unresolved.length ? unresolved : place.questLinks?.length ? [] : names) {
       const item = document.createElement('li')
       item.textContent = name + ' — Association Discord à vérifier'
       item.classList.add('is-unresolved')
@@ -165,6 +176,71 @@ function basicPopupContent(place: PublicPlace, mode: 'pj' | 'mj-light' | 'mj'): 
     })
     root.appendChild(edit)
   }
+  return root
+}
+
+/** Popup grouping different nearby sites, with their Discord quests listed per site. */
+function clusterPopupContent(
+  group: { places: PublicPlace[]; questCount: number },
+  includeCompleted: boolean,
+  zoomTo: (place?: PublicPlace) => void,
+): HTMLElement {
+  const root = document.createElement('div')
+  root.className = 'pf2-public-place-popup pf2-quest-cluster-popup'
+  const title = document.createElement('strong')
+  const quests = group.questCount
+  const locations = group.places.length
+  title.textContent = '★ ' + quests + ' quête' + (quests > 1 ? 's' : '') +
+    ' sur ' + locations + ' lieux'
+  root.appendChild(title)
+  const zoomButton = document.createElement('button')
+  zoomButton.type = 'button'
+  zoomButton.className = 'pf2-quest-cluster-zoom'
+  zoomButton.textContent = 'Zoomer pour distinguer les lieux'
+  zoomButton.addEventListener('click', () => zoomTo())
+  root.appendChild(zoomButton)
+  const list = document.createElement('div')
+  list.className = 'pf2-quest-cluster-locations'
+  for (const place of [...group.places].sort((a, b) => a.name.localeCompare(b.name, 'fr'))) {
+    const section = document.createElement('section')
+    const header = document.createElement('button')
+    header.type = 'button'
+    header.className = 'pf2-quest-cluster-place'
+    header.textContent = '📍 ' + place.name
+    header.title = 'Zoomer sur ' + place.name
+    header.addEventListener('click', () => zoomTo(place))
+    section.appendChild(header)
+    const names = document.createElement('ul')
+    names.className = 'pf2-quest-names'
+    const linked = (place.questLinks ?? []).filter(quest => includeCompleted || !quest.completed)
+    for (const quest of linked) {
+      const line = document.createElement('li')
+      const anchor = document.createElement('a')
+      anchor.href = quest.url
+      anchor.target = '_blank'
+      anchor.rel = 'noopener noreferrer'
+      anchor.textContent = quest.title
+      line.appendChild(anchor)
+      if (quest.completed) {
+        line.classList.add('is-completed')
+        line.appendChild(document.createTextNode(' — Terminée'))
+      }
+      names.appendChild(line)
+    }
+    const fallback = place.questUnresolved?.length
+      ? place.questUnresolved
+      : place.questLinks?.length ? [] : place.questNames?.length
+        ? place.questNames : place.questName ? [place.questName] : []
+    for (const name of fallback) {
+      const line = document.createElement('li')
+      line.className = 'is-unresolved'
+      line.textContent = name + ' — Association Discord à vérifier'
+      names.appendChild(line)
+    }
+    if (names.childElementCount) section.appendChild(names)
+    list.appendChild(section)
+  }
+  root.appendChild(list)
   return root
 }
 
@@ -273,6 +349,7 @@ export async function addPublicPlaceMarkers(gmap: GolarionMap, placesUrl: string
       return typeof item.id === 'string' && typeof item.name === 'string' && Number.isFinite(item.latitude) && Number.isFinite(item.longitude)
     })
 
+    let showCompleted = false
     const entries = places.map((place) => {
       const element = markerElement(place)
       let marker: Marker
@@ -283,7 +360,7 @@ export async function addPublicPlaceMarkers(gmap: GolarionMap, placesUrl: string
             popup.remove()
             marker.remove()
           })
-        : basicPopupContent(place, mode)
+        : basicPopupContent(place, mode, showCompleted)
       popup.setDOMContent(popupContent)
       // The anchor must depend on the icon only, never on the (potentially long) label.
       marker = new Marker({ element, anchor: 'center' })
@@ -293,18 +370,95 @@ export async function addPublicPlaceMarkers(gmap: GolarionMap, placesUrl: string
       return { place, marker, element }
     })
 
-    let showCompleted = false
+    const questEntries = entries.filter(entry => entry.place.quest)
+    let groupedIds = new Set<string>()
+    let clusterMarkers: Marker[] = []
+    let clusterSignature = ''
+
     const updateLabelDensity = () => {
       const zoom = gmap.map.getZoom()
-      // Only quest sites stay visible at world scale. Favorites use exactly
-      // the same zoom threshold as ordinary locations.
       for (const { element, place } of entries) {
-        element.style.display = place.quest ? (place.questCompleted && !showCompleted ? 'none' : '') : zoom >= 5.5 ? '' : 'none'
+        const hidden = place.quest && ((place.questCompleted && !showCompleted) || groupedIds.has(place.id))
+        element.style.display = hidden ? 'none' : place.quest || zoom >= 5.5 ? '' : 'none'
         element.classList.toggle('labels-hidden', zoom < (place.quest ? 6.5 : 5.5))
+        if (place.quest) {
+          const count = questKeys(place, showCompleted).length
+          const badge = element.querySelector<HTMLElement>('.pf2-public-place-count')
+          if (badge) { badge.textContent = String(count); badge.hidden = count < 2 }
+          element.setAttribute('aria-label', place.name + (count > 0
+            ? ' : ' + count + ' quête' + (count > 1 ? 's' : '') : ''))
+        }
       }
     }
-    updateLabelDensity()
-    gmap.map.on('zoomend', updateLabelDensity)
+    const updateQuestClusters = () => {
+      const zoom = gmap.map.getZoom()
+      const groups = groupQuestPlaces(
+        questEntries.map(entry => entry.place),
+        place => gmap.map.project([place.longitude, place.latitude]),
+        zoom, showCompleted,
+      )
+      const combined = groups.filter(group => group.places.length > 1)
+      groupedIds = new Set(combined.flatMap(group => group.places.map(place => place.id)))
+      // Some distinct map places can have identical (or near-identical) coordinates.
+      // Even after clusters break apart, give these markers a small radial offset.
+      const overlaps = zoom >= QUEST_CLUSTER_MAX_ZOOM
+        ? groupQuestPlaces(
+            questEntries.map(entry => entry.place),
+            place => gmap.map.project([place.longitude, place.latitude]),
+            0, showCompleted, 25,
+          ).filter(group => group.places.length > 1)
+        : []
+      const offsets = new Map<string, [number, number]>()
+      for (const group of overlaps) {
+        group.places.forEach((place, index) => {
+          const angle = (2 * Math.PI * index) / group.places.length - Math.PI / 2
+          offsets.set(place.id, [Math.round(Math.cos(angle) * 30), Math.round(Math.sin(angle) * 30)])
+        })
+      }
+      for (const entry of questEntries) entry.marker.setOffset(offsets.get(entry.place.id) ?? [0, 0])
+      const signature = combined.map(group => group.places.map(place => place.id).sort().join(':'))
+        .sort().join('|') + '/' + showCompleted
+      updateLabelDensity()
+      if (signature === clusterSignature) return
+      clusterSignature = signature
+      for (const marker of clusterMarkers) marker.remove()
+      clusterMarkers = []
+      for (const group of combined) {
+        const clusterButton = document.createElement('button')
+        clusterButton.type = 'button'
+        clusterButton.className = 'pf2-quest-cluster-marker'
+        clusterButton.title = group.questCount + ' quêtes sur ' + group.places.length +
+          ' lieux : cliquer pour les voir'
+        clusterButton.setAttribute('aria-label', clusterButton.title)
+        const star = document.createElement('span')
+        star.className = 'pf2-quest-cluster-star'
+        star.textContent = '★'
+        const number = document.createElement('span')
+        number.className = 'pf2-quest-cluster-number'
+        number.textContent = String(group.questCount)
+        clusterButton.append(star, number)
+        const center = gmap.map.unproject([group.x, group.y])
+        const zoomTo = (place?: PublicPlace) => {
+          const target: [number, number] = place
+            ? [place.longitude, place.latitude]
+            : [center.lng, center.lat]
+          gmap.map.flyTo({
+            center: target,
+            zoom: Math.max(QUEST_CLUSTER_MAX_ZOOM + 0.5, zoom + 2),
+            duration: 850,
+          })
+        }
+        const popup = new Popup({ offset: 22, closeButton: true })
+          .setDOMContent(clusterPopupContent(group, showCompleted, zoomTo))
+        const marker = new Marker({ element: clusterButton, anchor: 'center' })
+          .setLngLat(center).setPopup(popup).addTo(gmap.map)
+        clusterMarkers.push(marker)
+      }
+    }
+    updateQuestClusters()
+    gmap.map.on('moveend', updateQuestClusters)
+    gmap.map.on('zoomend', updateQuestClusters)
+    gmap.map.on('resize', updateQuestClusters)
 
     type JumpToPlace = { id: string; name: string; longitude: number; latitude: number; completed?: boolean; open: () => void }
     const makeList = (title: string, mark: string, places: JumpToPlace[]) => {
@@ -338,12 +492,12 @@ export async function addPublicPlaceMarkers(gmap: GolarionMap, placesUrl: string
         button.onclick = () => {
           list.hidden = true
           toggle.setAttribute('aria-expanded', 'false')
+          gmap.map.once('moveend', () => place.open())
           gmap.map.flyTo({
             center: [place.longitude, place.latitude],
-            zoom: Math.max(7, gmap.map.getZoom()),
+            zoom: Math.max(title === 'Lieux de quête' ? QUEST_CLUSTER_MAX_ZOOM + 0.5 : 7, gmap.map.getZoom()),
             duration: 900,
           })
-          place.open()
         }
           list.appendChild(button)
         }
@@ -358,7 +512,9 @@ export async function addPublicPlaceMarkers(gmap: GolarionMap, placesUrl: string
     }
 
     const questPlaces = entries.filter(entry => entry.place.quest).map(entry => ({
-      id: entry.place.id, name: entry.place.name,
+      id: entry.place.id,
+      name: entry.place.name + (questKeys(entry.place, false).length > 1
+        ? ' (' + questKeys(entry.place, false).length + ' quêtes)' : ''),
       longitude: entry.place.longitude, latitude: entry.place.latitude,
       completed: Boolean(entry.place.questCompleted),
       open: () => entry.marker.togglePopup(),
@@ -374,7 +530,14 @@ export async function addPublicPlaceMarkers(gmap: GolarionMap, placesUrl: string
     completeControl.append(completedInput, document.createTextNode(' Afficher les quêtes terminées'))
     completedInput.addEventListener('change', () => {
       showCompleted = completedInput.checked
-      updateLabelDensity()
+      for (const entry of questEntries) {
+        // Keep mixed-status site popups aligned with the completed-quest filter.
+        // MJ-light has editable fields; do not replace that popup while editing.
+        if (mode !== 'mj-light') {
+          entry.marker.getPopup()?.setDOMContent(basicPopupContent(entry.place, mode, showCompleted))
+        }
+      }
+      updateQuestClusters()
       refreshQuestList(visibleQuestPlaces())
     })
     gmap.map.addControl({

@@ -41,6 +41,15 @@ La nouvelle donnée `important` des règles de visibilité est persistée par la
 - Si toutes les quêtes liées sont terminées, le repère et sa ligne dans la liste sont **masqués par défaut**, sans suppression de données. Cocher **Afficher les quêtes terminées** les réaffiche. Les associations inconnues ou historiques non résolues restent visibles pour vérification.
 - Les modes PJ, MJ-light et MJ disposent du menu **Lieux de quête**. Les modifications des associations utilisent un sélecteur de fils Discord, et non une saisie libre du titre de la quête.
 
+### Carte hybride : regroupement selon le zoom
+
+- **À faible et moyen zoom (inférieur à 9)**, les lieux de quête proches à l'écran (moins de 64 pixels de distance) sont regroupés sous une étoile portant le **nombre de quêtes distinctes**, pas le nombre de lieux. Une même quête liée à deux lieux du groupe n'est comptée qu'une seule fois.
+- Le clic sur un regroupement ouvre une **liste par lieu**, avec pour chaque lieu les quêtes Discord et leurs liens. Le bouton **Zoomer pour distinguer les lieux** sépare les marqueurs. Le clic sur un nom de lieu permet de zoomer directement dessus.
+- **À partir du zoom 9**, un marqueur est affiché par lieu. Un lieu avec plusieurs quêtes conserve un seul marqueur, enrichi d'un badge indiquant le nombre de quêtes. Deux lieux distincts ayant presque exactement les mêmes coordonnées sont légèrement décalés à l'écran pour rester accessibles ; leurs coordonnées en base ne changent pas.
+- Le filtre **Afficher les quêtes terminées** s'applique également aux groupes et aux compteurs. Pour une localisation mixte, les quêtes terminées restent masquées dans le panneau tant que la case n'est pas cochée.
+- Les listes **Lieux de quête** et **Favoris** restent séparées ; le clic sur une entrée de quête ouvre un zoom suffisamment élevé pour éviter qu'un regroupement masque son repère.
+- Le regroupement est **uniquement visuel**, côté navigateur ; aucune quête, association ou coordonnée n'est créée, déplacée ou supprimée dans SQLite.
+
 ### ☆ Favoris distincts des quêtes
 
 Le menu **Favoris**, partagé entre les trois modes, rassemble les lieux ordinaires favoris du référentiel et du catalogue géographique. Les favoris conservent leur **seuil de zoom normal** et ne sont pas transformés en grosses étoiles de quête persistantes. Le favori de référence **Grande Loge** et le lieu de quête **Grande Loge** peuvent coexister comme repères distincts ; éviter de fusionner leurs identités sur la seule base du nom.

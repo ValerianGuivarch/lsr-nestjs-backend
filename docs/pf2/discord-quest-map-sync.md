@@ -47,6 +47,14 @@ Les menus **★ Lieux de quête** et **☆ Favoris** sont distincts, partagés e
 
 Les favoris de lieux ordinaires sont indépendants du cycle de vie des quêtes. Ils doivent conserver leur logique de zoom et ne pas devenir des étoiles de quête permanentes. La carte illustrée d'Absalom contient déjà les noms des quartiers : les surimpressions de quartiers destinées aux PJ doivent donc être masquées par les **données de visibilité**, sans masquer les noms des autres lieux ni les icônes au zoom. Un défaut de superposition raster/labels relève, lui, du moteur d'affichage et non de la curation SQLite.
 
+## Carte hybride — visualisation par lieux et quêtes
+
+La couche cartographique regroupe **les lieux de quête voisins** lorsque le zoom est inférieur à **9**, à partir de leurs positions projetées en pixels (rayon 64 px). Le compteur indique le **nombre de quêtes Discord distinctes** du groupe. Le clic affiche les quêtes **regroupées par lieu**, leurs statuts et leurs liens Discord, plus une commande pour zoomer et séparer les repères.
+
+À partir du zoom 9, un **lieu = un marqueur**, quel que soit son nombre de quêtes. Un badge indique les lieux multi-quêtes ; plusieurs lieux à coordonnées quasi identiques sont décalés visuellement pour rester cliquables. Le filtre « Afficher les quêtes terminées » recalcule aussi les compteurs, les regroupements et les listes. Les favoris et les lieux ordinaires ne sont **pas** intégrés aux regroupements de quêtes. Les opérations de clustering ne modifient ni SQLite, ni les fils Discord.
+
+Voir le README de la carte pour le parcours et les seuils.
+
 ## Participation des PJ
 Le bouton « + Lieu » permet aux PJ, MJ-light et MJ de cliquer sur la carte pour choisir des coordonnées géographiques, saisir nom/description puis choisir un ou plusieurs fils Discord ou un **lieu personnalisé** sans quête. Les lieux communautaires sont marqués `map_origin='pj'` et se différencient visuellement des lieux MJ/de référence. Les joueurs peuvent modifier et supprimer toute fiche d'origine PJ, sans validation MJ. L'API refuse modification/suppression communautaire d'une fiche MJ.
 

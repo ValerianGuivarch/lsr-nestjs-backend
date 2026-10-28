@@ -74,7 +74,7 @@ tags et boutons ne sont pas modifiés par cette transformation.
 
 **Les suppressions de messages effectuées ensuite par le MJ sont intentionnelles.**
 Il ne faut **jamais reconstituer, recopier ou republier** un message disparu depuis
-l'export historique. L'ancienne action `repair` du script a été retirée pour cela.
+l'export historique. L'ancienne action `repair` du script a été retirée pour cela. Les modes d'import et de rafraîchissement sont également désactivés. Seuls les modes verify et rollback restent disponibles.
 Le mode `verify` contrôle désormais seulement la structure des fils encore présents,
 sans exiger un nombre de messages ou une correspondance avec tous les textes archivés.
 Les chiffres « 122 entrées / 118 publications » correspondent à la migration **initiale**,
