@@ -46,6 +46,7 @@ export class DiscordService implements OnModuleInit, OnModuleDestroy {
   private client: Client | null = null
   private questSyncTimer: ReturnType<typeof setInterval> | null = null
   private questSyncRunning = false
+  private stopQuestLinkEvents: (() => void) | null = null
   private readonly questForumId = process.env['PF2_DISCORD_QUEST_FORUM_CHANNEL_ID']?.trim() || '1536259632455094412'
 
   constructor(
@@ -137,6 +138,11 @@ export class DiscordService implements OnModuleInit, OnModuleDestroy {
         )
 
       this.client = client
+      if (this.questPilot) {
+        // Map endpoints save to SQLite; notify the bot after the transaction
+        // so a place added/renamed/deleted on the map appears on Discord at once.
+        this.stopQuestLinkEvents = this.persistence.onQuestMapLinksChanged(ids => this.refreshQuestCards(ids))
+      }
       // One initial read, then a lightweight five-minute reconciliation.
       // The timer runs independently from commands like /choix-quete.
       void this.refreshQuestCatalogue().catch(error =>
@@ -162,10 +168,34 @@ export class DiscordService implements OnModuleInit, OnModuleDestroy {
   }
 
   async onModuleDestroy(): Promise<void> {
+    this.stopQuestLinkEvents?.()
+    this.stopQuestLinkEvents = null
     if (this.questSyncTimer) clearInterval(this.questSyncTimer)
     this.questSyncTimer = null
     this.client?.destroy()
     this.client = null
+  }
+
+  private async refreshQuestCards(ids: string[]): Promise<void> {
+    const client = this.client
+    if (!client?.isReady() || !this.questPilot) return
+    for (const threadId of ids) {
+      try {
+        const ui = await this.persistence.questUi(threadId)
+        if (ui?.kind !== 'quest') continue
+        const channel = await client.channels.fetch(threadId)
+        if (!channel?.isThread() || channel.parentId !== this.questForumId) continue
+        const forum = await client.channels.fetch(this.questForumId)
+        if (forum?.type === ChannelType.GuildForum) {
+          const obsoleteTag = forum.availableTags.find(tag => tag.name.trim().toLocaleLowerCase('fr') === 'obsolète')
+          if (obsoleteTag && channel.appliedTags.includes(obsoleteTag.id)) continue
+        }
+        await this.questPilot.refreshThreadPanel(channel)
+      } catch (error) {
+        this.logger.warn('Actualisation de la fiche de quête ' + threadId + ' impossible : '
+          + (error instanceof Error ? error.message : String(error)))
+      }
+    }
   }
 
   async refreshQuestCatalogue(): Promise<void> {
@@ -207,17 +237,13 @@ export class DiscordService implements OnModuleInit, OnModuleDestroy {
         url: `https://discord.com/channels/${forum.guildId}/${thread.id}`,
         createdAt: new Date(Number(thread.createdTimestamp ?? Date.now())).toISOString(),
       }))
-      const earlier = this.questPilot && this.persistence.listDiscordQuests
-        ? new Map((await this.persistence.listDiscordQuests()).map(q => [q.id, q]))
-        : new Map<string, DiscordQuestSnapshot>()
       await this.persistence.saveDiscordQuestSnapshots(snapshots)
-      // When somebody renames a thread or changes its tags directly in Discord,
-      // keep the bot's first-message card consistent without rewriting every card
-      // on each five-minute poll.
+      // Reconcile every managed quest: titles/tags and SQLite links can change
+      // independently. refreshThreadPanel only edits if the content differs,
+      // so this repairs any missed map-to-Discord notification after a restart.
       if (this.questPilot) {
         for (const snapshot of snapshots) {
-          const previous = earlier.get(snapshot.id)
-          if (snapshot.obsolete || (previous && previous.title === snapshot.title && previous.completed === snapshot.completed)) continue
+          if (snapshot.obsolete) continue
           const ui = await this.persistence.questUi(snapshot.id)
           if (ui?.kind !== 'quest') continue
           const thread = discovered.get(snapshot.id)

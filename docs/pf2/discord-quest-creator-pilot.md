@@ -39,3 +39,16 @@ Les commandes `/terminer-quete` et `/relancer-quete` restent disponibles et util
 - Le sujet d'accueil est **déjà installé**. La commande d'installation n'est plus publiée ; le bouton existant continue de fonctionner.
 - Les boutons ne doivent pas mentionner massivement les joueurs : `allowedMentions.parse=[]`.
 - **Ne pas utiliser** `obsolète` sur les anciennes discussions avant la migration prévue.
+
+## Synchronisation des lieux après création depuis la carte
+
+Le lien quête–lieu est dans `pf2_map_place_quest`. Un lieu créé sur la carte
+avec une quête sélectionnée est **immédiatement associé**, même s'il n'apparaît
+plus dans le sélecteur Discord « Ajouter un lieu » (qui masque les associations
+déjà faites). Le sélecteur affiche donc séparément les lieux déjà associés.
+
+Les écritures cartographiques notifient le bot après validation de la transaction
+SQLite, afin de mettre à jour le premier message de la discussion Discord.
+Une vérification de toutes les fiches bot à chaque synchronisation du forum
+(5 min) corrige également les changements perdus lors d'une interruption du bot.
+Une fiche dont le texte est déjà correct n'est pas éditée.

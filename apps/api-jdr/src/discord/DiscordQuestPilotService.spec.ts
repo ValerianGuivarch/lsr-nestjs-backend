@@ -117,12 +117,36 @@ describe('DiscordQuestPilotService', () => {
       client: { channels: { fetch: jest.fn().mockResolvedValue(forum) } }, reply,
     } as never)
     const payload = reply.mock.calls[0][0]
+    expect(payload.content).toContain('Déjà associés à cette quête :** Grande Loge')
+    expect(payload.content).toContain('ne figurent pas dans le menu')
     expect(payload.content).toContain('Lieu existant')
     expect(payload.content).toContain('Nouveau lieu')
     expect(payload.content).toContain('＋ Lieu')
     expect(payload.content).not.toContain('page 1/1')
     expect(payload.components.some((row: any) => row.toJSON().components.some((c: any) =>
       c.style === 5 && c.url === 'https://map.l7r.fr/pj'))).toBe(true)
+  })
+
+  it('displays a community location linked from the map and avoids redundant Discord edits', async () => {
+    const { service, stored } = setup()
+    stored.questUiPlaces.mockResolvedValue([
+      { id: 'community-port', name: 'Port de la fin du monde' },
+    ])
+    stored.questUiLinkedPlaceIds.mockResolvedValue(['community-port'])
+    const starter = { content: 'Ancienne fiche', edit: jest.fn().mockResolvedValue(undefined), author: { id: 'bot' } }
+    const forum = { type: ChannelType.GuildForum, availableTags: [] }
+    const client = { user: { id: 'bot' }, channels: { fetch: jest.fn().mockResolvedValue(forum) } }
+    const thread = {
+      id: QUEST, name: '📜 Détruire le monde', appliedTags: [], client,
+      fetchStarterMessage: jest.fn().mockResolvedValue(starter),
+    }
+    await service.refreshThreadPanel(thread as never)
+    expect(starter.edit).toHaveBeenCalledWith(expect.objectContaining({
+      content: expect.stringContaining('• Port de la fin du monde'),
+    }))
+    starter.content = starter.edit.mock.calls[0][0].content
+    await service.refreshThreadPanel(thread as never)
+    expect(starter.edit).toHaveBeenCalledTimes(1)
   })
 
   it('rejects a text string instead of a custom emoji', async () => {

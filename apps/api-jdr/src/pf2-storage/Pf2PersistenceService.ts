@@ -74,6 +74,22 @@ export class Pf2PersistenceService implements OnModuleInit {
   private readonly seedRoot = resolve(process.env['PF2_DATA_ROOT'] ?? 'apps/web-misc/src/pf2-mj/data')
   private migrationBackupHandled = false
   private migrationBackupRequired = false
+  /** Post-commit notifications. Discord rendering must never block or undo a successful map edit. */
+  private readonly questLinkListeners = new Set<(threadIds: string[]) => Promise<void>>()
+
+  onQuestMapLinksChanged(listener: (threadIds: string[]) => Promise<void>): () => void {
+    this.questLinkListeners.add(listener)
+    return () => this.questLinkListeners.delete(listener)
+  }
+
+  private notifyQuestMapLinksChanged(ids: string[]): void {
+    const threadIds = [...new Set(ids.filter(id => /^\d{15,22}$/.test(id)))]
+    if (!threadIds.length) return
+    for (const listener of this.questLinkListeners) {
+      void Promise.resolve().then(() => listener(threadIds)).catch(error =>
+        this.logger.warn('Actualisation des fiches Discord impossible : ' + (error instanceof Error ? error.message : String(error))))
+    }
+  }
 
   constructor(@InjectDataSource('pf2-sqlite') private readonly dataSource: DataSource) {}
 
@@ -407,6 +423,9 @@ export class Pf2PersistenceService implements OnModuleInit {
   }
 
   async setMapQuestLinks(placeId: string, ids: string[]): Promise<void> {
+    const priorIds = (await this.dataSource.query(
+      'SELECT thread_id AS threadId FROM pf2_map_place_quest WHERE place_id=?', [placeId],
+    ) as Array<{threadId: string}>).map(link => link.threadId)
     if (ids.length > 30 || new Set(ids).size !== ids.length || ids.some(id => !/^\d{15,22}$/.test(id))) {
       throw new Error('Liste de quêtes Discord invalide.')
     }
@@ -437,13 +456,21 @@ export class Pf2PersistenceService implements OnModuleInit {
         [JSON.stringify({ ...record, map_quest_names: [], map_quest_name: '' }), placeId],
       )
     })
+    this.notifyQuestMapLinksChanged([...priorIds, ...ids])
   }
 
   async clearMapQuestLinks(placeId: string): Promise<void> {
+    const priorIds = (await this.dataSource.query(
+      'SELECT thread_id AS threadId FROM pf2_map_place_quest WHERE place_id=?', [placeId],
+    ) as Array<{threadId: string}>).map(link => link.threadId)
     await this.dataSource.query('DELETE FROM pf2_map_place_quest WHERE place_id=?', [placeId])
+    this.notifyQuestMapLinksChanged(priorIds)
   }
 
   async updateCommunityMapPlace(id: string, patch: Record<string, unknown> | null): Promise<void> {
+    const priorIds = (await this.dataSource.query(
+      'SELECT thread_id AS threadId FROM pf2_map_place_quest WHERE place_id=?', [id],
+    ) as Array<{threadId: string}>).map(link => link.threadId)
     await this.dataSource.transaction(async manager => {
       const rows = await manager.query(
         "SELECT payload FROM pf2_record WHERE kind='lieu' AND id=?", [id],
@@ -460,6 +487,7 @@ export class Pf2PersistenceService implements OnModuleInit {
           [next.nom, JSON.stringify(next), id])
       }
     })
+    this.notifyQuestMapLinksChanged(priorIds)
   }
 
   async listRecords(kind: Pf2RecordKind, options: ListRecordOptions = {}): Promise<Record<string, unknown>[]> {

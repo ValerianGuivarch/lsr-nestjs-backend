@@ -193,7 +193,7 @@ describe('Discord forum quest catalogue synchronization', () => {
     expect(saved.find(t => t.id === threads.last()!.id)?.obsolete).toBe(false)
   })
 
-  it('refreshes a managed quest card when its Discord title changes', async () => {
+  it('reconciles all managed quest cards, including after independent map changes', async () => {
     const { service, persist } = setup()
     const panel = { refreshThreadPanel: jest.fn().mockResolvedValue(undefined) }
     ;(service as any).questPilot = panel
@@ -203,9 +203,23 @@ describe('Discord forum quest catalogue synchronization', () => {
     ])
     ;(service as any).persistence.questUi = jest.fn().mockResolvedValue({ kind:'quest' })
     await service.refreshQuestCatalogue()
-    expect(panel.refreshThreadPanel).toHaveBeenCalledTimes(1)
+    expect(panel.refreshThreadPanel).toHaveBeenCalledTimes(2)
     expect(panel.refreshThreadPanel.mock.calls[0][0].id).toBe('1555323732329766982')
     expect(persist.saveDiscordQuestSnapshots).toHaveBeenCalled()
+  })
+
+  it('refreshes bot-owned quest cards immediately when notified of map changes', async () => {
+    const { service } = setup()
+    const panel = { refreshThreadPanel: jest.fn().mockResolvedValue(undefined) }
+    ;(service as any).questPilot = panel
+    const thread = { id: '1555323732329766982', parentId: forumId, isThread: () => true, appliedTags: [] }
+    const forum = { id: forumId, type: ChannelType.GuildForum, availableTags: [] }
+    ;(service as any).client.channels.fetch.mockImplementation(async (id: string) =>
+      id === forumId ? forum : id === thread.id ? thread : null)
+    ;(service as any).client.isReady = () => true
+    ;(service as any).persistence.questUi = jest.fn().mockResolvedValue({ kind: 'quest' })
+    await (service as any).refreshQuestCards([thread.id])
+    expect(panel.refreshThreadPanel).toHaveBeenCalledWith(thread)
   })
 
   it('preserves the stored catalogue if the completed tag is not available', async () => {

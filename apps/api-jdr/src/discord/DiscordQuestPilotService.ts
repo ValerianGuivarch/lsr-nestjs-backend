@@ -166,7 +166,11 @@ export class DiscordQuestPilotService {
     if (!ui || ui.kind !== 'quest') return
     const starter = await thread.fetchStarterMessage({ force: true })
     if (!starter || starter.author.id !== thread.client.user?.id) throw new Error('Premier message du bot introuvable.')
-    await starter.edit(await this.card(thread, ui.description))
+    const next = await this.card(thread, ui.description)
+    // Poll-based reconciliation is a safety net for missed notifications.
+    // Don't send an edit to Discord if the current card is already accurate.
+    if (starter.content === next.content) return
+    await starter.edit(next)
   }
 
   async handleButton(interaction: ButtonInteraction): Promise<boolean> {
@@ -208,8 +212,15 @@ export class DiscordQuestPilotService {
     const totalPages = Math.max(1, Math.ceil(available.length / 25))
     const index = Math.max(0, Math.min(totalPages - 1, Number.isSafeInteger(page) ? page : 0))
     const slice = available.slice(index * 25, index * 25 + 25)
+    const linkedNames = all.filter(p => set.has(p.id)).map(p => p.name)
+    const linkedText = linkedNames.length
+      ? '**Déjà associés à cette quête :** ' + linkedNames.join(', ')
+      : '**Déjà associés à cette quête :** aucun'
     const locationExplanation = [
       '**📍 Ajouter des lieux à cette quête**',
+      '',
+      linkedText,
+      'Les lieux déjà associés ne figurent pas dans le menu ci-dessous. Ils sont visibles dans la fiche de quête et via « Retirer un lieu ».',
       '',
       '**1. Lieu existant :** choisis-le dans la liste ci-dessous. Tu peux en sélectionner plusieurs.',
       '**2. Nouveau lieu :** clique sur **Créer un lieu sur la carte**, puis sur **＋ Lieu** en haut à droite de la carte. Clique sur l’emplacement désiré, choisis **★ Lieu de quête**, associe cette quête et enregistre.',
