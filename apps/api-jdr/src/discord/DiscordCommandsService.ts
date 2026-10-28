@@ -3056,6 +3056,7 @@ export class DiscordCommandsService {
     if (days !== null && !session.inGameStartDate) { await interaction.editReply({ content: `Le résumé n°${requestedNumber} n’a pas de date de début en jeu : précise plutôt \`fin\`.` }); return }
     const resolvedEndDate = endDate || this.addDays(session.inGameStartDate, Math.max(0, (days ?? 1) - 1))
     const updated = await this.persistence.updateSession(session.id, { inGameEndDate: resolvedEndDate, sessionXp: xp, ...(session.date ? {} : { date: this.realDate() }) })
+    if (updated) await this.playerCodex?.setFoundrySessionActive(false)
     await interaction.editReply({ content: `Résumé n°${requestedNumber} mis à jour : fin en jeu le ${this.displayDate(resolvedEndDate)} ; ${xp} XP par PJ.` })
     if (!updated) this.logger.warn(`finish-game: résumé ${requestedNumber} supprimé pendant la mise à jour.`)
   }
@@ -3476,6 +3477,7 @@ export class DiscordCommandsService {
     const announcement = await this.plannedSessionAnnouncement(sessionNumber, date, selected, plan.rollCounts, true)
     const draft = await this.persistence.createSession({ sessionNumber, date: '', inGameStartDate: date, inGameEndDate: '', title: '', participants: selected.map((actor) => actor.uuid), published: false })
     const content = `Brouillon créé : résumé n°${draft.sessionNumber}.\nDébut : ${this.displayDate(date)}. Fin : à renseigner.\n\n${plan.progressionRolls.join('\n')}\n\nComplète puis publie le résumé dans l’application MJ.`
+    await this.playerCodex?.setFoundrySessionActive(true)
     const announcementId = `pf2-new-game:announce:${draft.id}`
     this.pendingAnnouncements.set(announcementId, { content: announcement, userIds: selected.map((actor) => actor.userId) })
     const publish = new ButtonBuilder().setCustomId(announcementId).setLabel('Publier l’annonce').setStyle(ButtonStyle.Primary)
@@ -3488,6 +3490,7 @@ export class DiscordCommandsService {
     const selected = pending.selected ?? []
     const announcement = await this.plannedSessionAnnouncement(sessionNumber, date, selected, plan.rollCounts, true)
     const draft = await this.persistence.createSession({ sessionNumber, date: '', inGameStartDate: date, inGameEndDate: '', title: '', participants: selected.map((actor) => actor.uuid), published: false })
+    await this.playerCodex?.setFoundrySessionActive(true)
     const announcementId = `pf2-new-game:announce:${draft.id}`
     this.pendingAnnouncements.set(announcementId, { content: announcement, userIds: selected.map((actor) => actor.userId) })
     const publish = new ButtonBuilder().setCustomId(announcementId).setLabel('Publier l’annonce').setStyle(ButtonStyle.Primary)

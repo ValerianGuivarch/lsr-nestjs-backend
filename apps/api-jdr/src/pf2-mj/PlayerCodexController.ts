@@ -9,6 +9,13 @@ export class PlayerCodexController {
     if (!expected || key !== expected) throw new UnauthorizedException('Synchronisation Foundry non autorisée.')
     return this.service.foundryPresentations()
   }
+  @Get('foundry-sync-state') foundrySyncState(@Headers('x-pf2-foundry-sync-key') key = ''): Promise<unknown> {
+    const expected = process.env['PF2_FOUNDRY_CHAT_SYNC_KEY'] ?? ''
+    if (!expected || key !== expected) throw new UnauthorizedException('Synchronisation Foundry non autorisée.')
+    return this.service.foundrySyncState()
+  }
+  @Get('foundry-factions') foundryFactions(): Promise<unknown> { return this.service.playerFactionCandidates(true) }
+  @Post('foundry-presentations/:id/publish') publishFoundry(@Param('id') id: string, @Body() body: { token?: string; name?: string; description?: string; factionId?: string | null }): Promise<unknown> { return this.service.publishFoundryPresentation(id, body?.token ?? '', body?.name ?? '', body?.description ?? '', body?.factionId ?? null) }
   @Get('character-candidates') candidates(@Query('q') q = ''): Promise<unknown> { return this.service.characterCandidates(q) }
   @Get('profile-candidates') profileCandidates(@Query('q') q = ''): Promise<unknown> { return this.service.profileCandidates(q) }
   @Get('characters') characters(): Promise<unknown> { return this.service.listCharacters() }

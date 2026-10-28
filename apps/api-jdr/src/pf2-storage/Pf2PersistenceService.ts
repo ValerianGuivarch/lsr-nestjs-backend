@@ -1617,6 +1617,15 @@ export class Pf2PersistenceService implements OnModuleInit {
       }
     })
 
+    await this.applyMigration('048-foundry-chat-state-and-creation', async manager => {
+      await manager.query('CREATE TABLE IF NOT EXISTS pf2_foundry_chat_state (id INTEGER PRIMARY KEY CHECK(id=1), active INTEGER NOT NULL DEFAULT 0)')
+      await manager.query('INSERT OR IGNORE INTO pf2_foundry_chat_state (id, active) VALUES (1, 0)')
+      const columns = await manager.query('PRAGMA table_info(pf2_character_presentation)') as Array<{ name: string }>
+      if (!columns.some(column => column.name === 'foundry_create_token')) await manager.query('ALTER TABLE pf2_character_presentation ADD COLUMN foundry_create_token TEXT')
+      const records = await manager.query('SELECT id FROM pf2_character_presentation WHERE foundry_create_token IS NULL') as Array<{ id: string }>
+      for (const record of records) await manager.query('UPDATE pf2_character_presentation SET foundry_create_token=? WHERE id=?', [randomUUID(), record.id])
+    })
+
     await this.assertDatabaseIntegrity(this.dataSource, 'base SQLite après migrations')
   }
 

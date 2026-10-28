@@ -46,23 +46,80 @@ export class PlayerCodexService {
     if (sourceNpcId && !(await this.persistence.getRecord('pnj', sourceNpcId))) throw new NotFoundException('PNJ MJ introuvable.')
     if (!sourceNpcId && !input.portraitUrl) throw new BadRequestException('Un portrait est obligatoire pour un personnage improvisé.')
     const id = randomUUID(); const name = this.required(input.name, 'Nom')
-    await this.db.query('INSERT INTO pf2_character_presentation (id, discord_message_id, discord_channel_id, discord_guild_id, source_npc_id, presented_name, show_name, presented_image_url) VALUES (?, ?, ?, ?, ?, ?, ?, ?)', [id, input.messageId ?? null, input.channelId, input.guildId ?? null, sourceNpcId, name, input.showName === false ? 0 : 1, input.portraitUrl ?? null])
+    await this.db.query('INSERT INTO pf2_character_presentation (id, discord_message_id, discord_channel_id, discord_guild_id, source_npc_id, presented_name, show_name, presented_image_url, foundry_create_token) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)', [id, input.messageId ?? null, input.channelId, input.guildId ?? null, sourceNpcId, name, input.showName === false ? 0 : 1, input.portraitUrl ?? null, randomUUID()])
     return { id, name, showName: input.showName !== false, portraitUrl: input.portraitUrl ?? null }
   }
   /** Public Discord presentations awaiting/mirroring Foundry chat. No private MJ fields are returned. */
-  async foundryPresentations(): Promise<Array<{ id: string; name: string; showName: boolean; portraitUrl: string | null; discordUrl: string | null; wikiUrl: string | null }>> {
+  async foundryPresentations(): Promise<{ active: boolean; presentations: unknown[] }> {
     const rows = await this.db.query(`SELECT p.id, p.presented_name, p.show_name, p.presented_image_url,
-      p.discord_channel_id, p.discord_guild_id, p.discord_message_id, c.wiki_page_title
+      p.discord_channel_id, p.discord_guild_id, p.discord_message_id, p.foundry_create_token, p.created_at, c.wiki_page_title
       FROM pf2_character_presentation p
       LEFT JOIN pf2_player_character_profile c ON c.npc_id = p.source_npc_id AND c.is_published = 1
       WHERE p.discord_message_id IS NOT NULL AND p.discord_guild_id IS NOT NULL AND p.created_at >= datetime('now', '-7 days')
-      ORDER BY p.created_at DESC LIMIT 100`) as Array<{ id: string; presented_name: string; show_name: number; presented_image_url: string | null; discord_channel_id: string; discord_guild_id: string | null; discord_message_id: string; wiki_page_title: string | null }>
-    return rows.map(row => ({
-      id: row.id, name: row.show_name ? row.presented_name : '', showName: Boolean(row.show_name),
+      ORDER BY p.created_at DESC LIMIT 100`) as Array<{ id: string; presented_name: string; show_name: number; presented_image_url: string | null; discord_channel_id: string; discord_guild_id: string | null; discord_message_id: string; foundry_create_token: string | null; created_at: string; wiki_page_title: string | null }>
+    const activeRows = await this.db.query("SELECT active FROM pf2_foundry_chat_state WHERE id = 1") as Array<{ active: number }>
+    return { active: Boolean(activeRows[0]?.active), presentations: rows.map(row => ({
+      token: row.foundry_create_token, createdAt: row.created_at, id: row.id, name: row.show_name ? row.presented_name : '', showName: Boolean(row.show_name),
       portraitUrl: row.presented_image_url,
       discordUrl: `https://discord.com/channels/${encodeURIComponent(row.discord_guild_id ?? "@me")}/${encodeURIComponent(row.discord_channel_id)}/${encodeURIComponent(row.discord_message_id)}`,
       wikiUrl: row.wiki_page_title && this.mediaWiki ? this.mediaWiki.pageUrl(row.wiki_page_title) : null,
-    }))
+    })) }
+  }
+
+  async foundrySyncState(): Promise<{ active: boolean }> {
+    const rows = await this.db.query('SELECT active FROM pf2_foundry_chat_state WHERE id=1') as Array<{ active: number }>
+    return { active: Boolean(rows[0]?.active) }
+  }
+
+  async setFoundrySessionActive(active: boolean): Promise<void> {
+    await this.db.query("INSERT INTO pf2_foundry_chat_state (id, active) VALUES (1, ?) ON CONFLICT(id) DO UPDATE SET active=excluded.active", [active ? 1 : 0])
+  }
+
+  async publishFoundryPresentation(id: string, token: string, name: string, description: string, factionId: string | null): Promise<{ wikiUrl: string }> {
+    const rows = await this.db.query("SELECT foundry_create_token FROM pf2_character_presentation WHERE id=?", [id]) as Array<{ foundry_create_token: string | null }>
+    if (!rows[0]?.foundry_create_token || rows[0].foundry_create_token !== token) throw new ForbiddenException("Présentation non autorisée.")
+    if (!this.mediaWiki) throw new BadRequestException("Wiki indisponible.")
+    const titleName = this.required(name, "Nom")
+    if (titleName.length > 160) throw new BadRequestException("Nom trop long.")
+    if (description.length > 1000) throw new BadRequestException("Description trop longue.")
+    if (factionId) {
+      const factions = await this.playerFactionCandidates(true)
+      if (!factions.some(faction => faction.id === factionId)) throw new BadRequestException("Faction invalide.")
+    }
+    const title = `Personnage:${titleName}`
+    const presentation = await this.presentation(id)
+    let current: { wikiPortraitFilename?: string | null; published?: boolean } | null = null
+    if (presentation.sourceNpcId) {
+      try { current = await this.character(presentation.sourceNpcId) as typeof current } catch { current = null }
+    }
+    if (current?.published) {
+      const profile = await this.character(presentation.sourceNpcId!) as { wikiPageTitle: string }
+      return { wikiUrl: this.mediaWiki.pageUrl(profile.wikiPageTitle) }
+    }
+    const portrait = current?.wikiPortraitFilename ?? (presentation.portraitUrl ? await this.mediaWiki.uploadFromUrl(presentation.portraitUrl, titleName) : null)
+    if (!(await this.mediaWiki.pageExists(title))) await this.mediaWiki.createPage(title, "<!-- Fiche personnage : contenu détaillé à compléter ici. -->")
+    const profile = await this.ensurePresentationCharacter(id, titleName, title, description) as { npcId: string; wikiPageTitle: string }
+    if (portrait) await this.updateCharacter(profile.npcId, { wikiPortraitFilename: portrait })
+    if (factionId) await this.addCharacterFaction(profile.npcId, factionId)
+    const wikiUrl = this.mediaWiki.pageUrl(profile.wikiPageTitle)
+    await this.updateDiscordPresentationButton(presentation, wikiUrl)
+    return { wikiUrl }
+  }
+
+  private async updateDiscordPresentationButton(presentation: { channelId: string; messageId: string | null }, wikiUrl: string): Promise<void> {
+    const botToken = process.env['DISCORD_BOT_TOKEN']
+    if (!botToken || !presentation.messageId) return
+    try {
+      const response = await fetch(`https://discord.com/api/v10/channels/${encodeURIComponent(presentation.channelId)}/messages/${encodeURIComponent(presentation.messageId)}`, {
+        method: 'PATCH',
+        headers: { Authorization: `Bot ${botToken}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ components: [{ type: 1, components: [{ type: 2, style: 5, label: 'Voir la fiche', url: wikiUrl }] }] }),
+        signal: AbortSignal.timeout(10000),
+      })
+      if (!response.ok) console.warn(`Synchronisation bouton Discord impossible : HTTP ${response.status}`)
+    } catch (error) {
+      console.warn('Synchronisation bouton Discord impossible.', error instanceof Error ? error.message : String(error))
+    }
   }
 
   async presentation(id: string): Promise<{ id: string; sourceNpcId: string | null; name: string; portraitUrl: string | null; channelId: string; messageId: string | null }> {
