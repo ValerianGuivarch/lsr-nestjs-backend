@@ -50,6 +50,27 @@ La nouvelle donnée `important` des règles de visibilité est persistée par la
 - Les listes **Lieux de quête** et **Favoris** restent séparées ; le clic sur une entrée de quête ouvre un zoom suffisamment élevé pour éviter qu'un regroupement masque son repère.
 - Le regroupement est **uniquement visuel**, côté navigateur ; aucune quête, association ou coordonnée n'est créée, déplacée ou supprimée dans SQLite.
 
+### Depuis une quête Discord : centrer directement la carte
+
+Le bouton **Voir sur la carte** des fiches créées par le bot ouvre le mode
+PJ avec l'ID du fil Discord : `/pj?quest=1565017298668888206`.
+La carte retrouve les lieux liés dans les données publiques par **ID Discord**,
+sans se fier aux noms ou aux coordonnées approximatives :
+
+- **Un lieu** : zoom rapproché sur son repère et ouverture de ses informations.
+- **Plusieurs lieux** : cadrage des différents points sur la même vue.
+- **Quête terminée** : ses repères peuvent être montrés automatiquement,
+  même si le filtre des quêtes terminées est désactivé au départ.
+- **Aucun lieu publié** : message explicite au lieu d'un centrage inventé.
+
+Les marqueurs utilisent les **emojis Unicode présents dans les titres Discord** :
+un seul emoji pour une quête unique ; jusqu'à trois emojis visibles pour un
+lieu avec plusieurs quêtes, sans dupliquer le repère. Le badge affiche le nombre
+total de quêtes actives au lieu. Si l'emoji manque ou si la correspondance est
+incertaine, le repère conserve l'étoile. Au dézoom, les regroupements de plusieurs
+quêtes restent des étoiles avec compteur ; un groupe représentant une même
+quête sur plusieurs lieux peut afficher son emoji.
+
 ### ☆ Favoris distincts des quêtes
 
 Le menu **Favoris**, partagé entre les trois modes, rassemble les lieux ordinaires favoris du référentiel et du catalogue géographique. Les favoris conservent leur **seuil de zoom normal** et ne sont pas transformés en grosses étoiles de quête persistantes. Le favori de référence **Grande Loge** et le lieu de quête **Grande Loge** peuvent coexister comme repères distincts ; éviter de fusionner leurs identités sur la seule base du nom.

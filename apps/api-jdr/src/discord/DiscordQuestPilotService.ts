@@ -153,7 +153,7 @@ export class DiscordQuestPilotService {
         finishOrReopen,
       ),
       new ActionRowBuilder<ButtonBuilder>().addComponents(
-        new ButtonBuilder().setLabel('Voir sur la carte').setStyle(ButtonStyle.Link).setURL(MAP_URL),
+        new ButtonBuilder().setLabel('Voir sur la carte').setStyle(ButtonStyle.Link).setURL(MAP_URL + '?quest=' + threadId),
       ),
     ]
   }
@@ -197,7 +197,10 @@ export class DiscordQuestPilotService {
     const next = await this.card(thread, ui.description, ui.iconPending)
     // Poll-based reconciliation is a safety net for missed notifications.
     // Don't send an edit to Discord if the current card is already accurate.
-    if (starter.content === next.content) return
+    const mapUrl = MAP_URL + '?quest=' + thread.id
+    const mapButtonCurrent = starter.components?.some(row =>
+      'components' in row && row.components.some(button => 'url' in button && button.url === mapUrl))
+    if (starter.content === next.content && mapButtonCurrent) return
     await starter.edit(next)
   }
 

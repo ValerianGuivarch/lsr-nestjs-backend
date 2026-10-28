@@ -55,6 +55,21 @@ La couche cartographique regroupe **les lieux de quête voisins** lorsque le zoo
 
 Voir le README de la carte pour le parcours et les seuils.
 
+### Lien direct Discord → carte et emojis
+
+Les fiches bot présentent un bouton **Voir sur la carte**, désormais relié
+au fil exact : `https://map.l7r.fr/pj?quest=<thread_id>`. Le navigateur
+résout cet ID dans les associations publiques et rapproche la carte de l'unique
+lieu, ou cadre tous les lieux si la quête en a plusieurs. Les quêtes terminées
+sont montrées quand elles sont ciblées ; l'absence d'association affiche un
+message, sans créer de nouveau lieu. Les anciennes fiches de Discord sont
+actualisées par le synchroniseur du bot même quand leur description ne change pas.
+
+Les emojis des titres de quêtes Discord remplacent l'étoile des marqueurs de
+lieu lorsque l'association est certaine. Un lieu partagé montre jusqu'à trois
+emojis et un compteur de quêtes ; un regroupement comprenant plusieurs quêtes
+différentes conserve l'étoile et son nombre. Aucun changement du schéma SQLite.
+
 ## Participation des PJ
 Le bouton « + Lieu » permet aux PJ, MJ-light et MJ de cliquer sur la carte pour choisir des coordonnées géographiques, saisir nom/description puis choisir un ou plusieurs fils Discord ou un **lieu personnalisé** sans quête. Les lieux communautaires sont marqués `map_origin='pj'` et se différencient visuellement des lieux MJ/de référence. Les joueurs peuvent modifier et supprimer toute fiche d'origine PJ, sans validation MJ. L'API refuse modification/suppression communautaire d'une fiche MJ.
 

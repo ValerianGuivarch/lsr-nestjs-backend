@@ -223,6 +223,37 @@ a {
 	font-weight: 700;
 }
 
+/* Discord's first title emoji identifies a site with exactly one quest. */
+.pf2-public-place-marker.is-quest .pf2-public-place-icon.is-emoji {
+  font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", system-ui, sans-serif;
+  font-size: 20px;
+  line-height: 1;
+}
+.pf2-public-place-marker.is-quest.has-multi-emojis { width: max-content; min-width: 42px; }
+.pf2-public-place-marker.is-quest.has-multi-emojis .pf2-public-place-icon {
+  width: auto;
+  min-width: 42px;
+  padding: 0 5px;
+  border-radius: 18px;
+  font-size: 15px;
+  white-space: nowrap;
+}
+.pf2-quest-cluster-star.is-emoji {
+  font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", system-ui, sans-serif;
+  font-size: 18px;
+  line-height: 18px;
+}
+.pf2-quest-focus-notice {
+  max-width: min(300px, 75vw);
+  padding: 8px 11px;
+  border: 1px solid #ba8530;
+  border-radius: 6px;
+  background: rgba(255, 248, 221, .96);
+  box-shadow: 0 1px 5px #0003;
+  color: #49300e;
+  font: 700 12px/1.4 system-ui, sans-serif;
+}
+
 /* Hybrid quest layer: one marker per site, badge for multiple Discord quests. */
 .pf2-public-place-count {
   position: absolute;

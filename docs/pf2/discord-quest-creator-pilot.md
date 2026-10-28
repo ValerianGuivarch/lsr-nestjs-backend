@@ -34,7 +34,7 @@ Les commandes `/terminer-quete` et `/relancer-quete` restent disponibles et util
 - **Terminé le 28 octobre 2026 :** migration des 15 discussions historiques et copie des messages.
 - Désactivation du bouton natif « Nouvelle publication » pour les joueurs.
 - Création de nouveaux lieux officiels depuis Discord : pour le pilote, seul le MJ crée les lieux, les joueurs choisissent parmi les lieux actuellement publiés sur la carte.
-- Carte hybride, emojis comme marqueurs, regroupement géographique et séparation au zoom. Le bouton **Voir sur la carte** ouvre pour le moment la carte PJ, sans zoom automatique sur le lieu.
+- **Développé le 28 octobre 2026 :** carte hybride (regroupement et séparation au zoom), emojis sur les lieux de quête, et bouton **Voir sur la carte** qui centre ou cadre les lieux liés au fil Discord. Un message apparaît si aucun lieu public n'est lié.
 
 ## Vérifications et sécurité
 

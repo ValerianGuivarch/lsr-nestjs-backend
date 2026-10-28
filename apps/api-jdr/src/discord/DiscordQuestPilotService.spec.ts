@@ -72,6 +72,8 @@ describe('DiscordQuestPilotService', () => {
       expect.objectContaining({id:QUEST, title:'Invoquer le démon', completed:false, obsolete:false}),
     ])
     const edited = starter.edit.mock.calls[0][0]
+    const mapButton = edited.components[1].components[0].toJSON()
+    expect(mapButton.url).toBe('https://map.l7r.fr/pj?quest=' + QUEST)
     expect(edited.content).toContain('Grande Loge')
     expect(edited.content).not.toContain('## Invoquer le démon')
     expect(edited.components[0].components.map((c: any) => c.data.custom_id)).toEqual([
@@ -143,8 +145,40 @@ describe('DiscordQuestPilotService', () => {
       content: expect.stringContaining('• Port de la fin du monde'),
     }))
     starter.content = starter.edit.mock.calls[0][0].content
+    ;(starter as any).components = starter.edit.mock.calls[0][0].components.map((row: any) => ({
+      components: row.components.map((button: any) => ({ url: button.data.url })),
+    }))
     await service.refreshThreadPanel(thread as never)
     expect(starter.edit).toHaveBeenCalledTimes(1)
+  })
+
+  it('repairs the old generic map URL even if the quest card text did not change', async () => {
+    const { service, stored } = setup()
+    stored.questUi.mockResolvedValue({
+      threadId: QUEST, kind: 'quest', description: 'Description de test', iconPending: false,
+    })
+    const starter: any = {
+      content: '', author: { id: 'bot' }, edit: jest.fn().mockResolvedValue(undefined),
+      components: [],
+    }
+    const forum = { type: ChannelType.GuildForum, availableTags: [] }
+    const client = { user: { id: 'bot' }, channels: { fetch: jest.fn().mockResolvedValue(forum) } }
+    const thread = {
+      id: QUEST, name: '😈 Détruire le monde', appliedTags: [], client,
+      fetchStarterMessage: jest.fn().mockResolvedValue(starter),
+    }
+    await service.refreshThreadPanel(thread as never)
+    const correct = starter.edit.mock.calls[0][0]
+    starter.content = correct.content
+    starter.components = [{ components: [{ url: 'https://map.l7r.fr/pj' }] }]
+    await service.refreshThreadPanel(thread as never)
+    expect(starter.edit).toHaveBeenCalledTimes(2)
+    expect(starter.edit.mock.calls[1][0].components[1].components[0].toJSON().url)
+      .toBe('https://map.l7r.fr/pj?quest=' + QUEST)
+    // Once the button is corrected, the five-minute polling is a no-op.
+    starter.components = [{ components: [{ url: 'https://map.l7r.fr/pj?quest=' + QUEST }] }]
+    await service.refreshThreadPanel(thread as never)
+    expect(starter.edit).toHaveBeenCalledTimes(2)
   })
 
   it('rejects a manual icon in the title', async () => {

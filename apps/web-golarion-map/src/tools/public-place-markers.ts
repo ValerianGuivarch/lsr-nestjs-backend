@@ -3,6 +3,9 @@ import { GolarionMap } from './GolarionMap'
 import { createFavoriteButton, type FavoriteTarget } from './favorite-button'
 import { showPlaceDialog, showQuestLinksDialog } from './quest-place-dialog'
 import { groupQuestPlaces, questKeys, QUEST_CLUSTER_MAX_ZOOM } from './hybrid-quest-grouping'
+import {
+  questIdFromSearch, placesForDiscordQuest, questFocusCamera, questPlaceEmojis, questClusterEmoji,
+} from './quest-map-navigation'
 
 type PublicPlace = {
   id: string
@@ -45,7 +48,10 @@ function markerElement(place: PublicPlace): HTMLButtonElement {
 
   const icon = document.createElement('span')
   icon.className = 'pf2-public-place-icon'
-  icon.textContent = place.quest ? '★' : place.custom ? '⌑' : (glyphs[place.icon] ?? glyphs.pin)
+  const questEmojis = place.quest ? questPlaceEmojis(place, false) : []
+  icon.textContent = place.quest ? questEmojis.join('') || '★' : place.custom ? '⌑' : (glyphs[place.icon] ?? glyphs.pin)
+  icon.classList.toggle('is-emoji', questEmojis.length > 0)
+  button.classList.toggle('has-multi-emojis', questEmojis.length > 1)
 
   const label = document.createElement('span')
   label.className = 'pf2-public-place-label'
@@ -383,6 +389,13 @@ export async function addPublicPlaceMarkers(gmap: GolarionMap, placesUrl: string
         element.classList.toggle('labels-hidden', zoom < (place.quest ? 6.5 : 5.5))
         if (place.quest) {
           const count = questKeys(place, showCompleted).length
+          const emojis = questPlaceEmojis(place, showCompleted)
+          const icon = element.querySelector<HTMLElement>('.pf2-public-place-icon')
+          if (icon) {
+            icon.textContent = emojis.join('') || '★'
+            icon.classList.toggle('is-emoji', emojis.length > 0)
+          }
+          element.classList.toggle('has-multi-emojis', emojis.length > 1)
           const badge = element.querySelector<HTMLElement>('.pf2-public-place-count')
           if (badge) { badge.textContent = String(count); badge.hidden = count < 2 }
           element.setAttribute('aria-label', place.name + (count > 0
@@ -432,7 +445,9 @@ export async function addPublicPlaceMarkers(gmap: GolarionMap, placesUrl: string
         clusterButton.setAttribute('aria-label', clusterButton.title)
         const star = document.createElement('span')
         star.className = 'pf2-quest-cluster-star'
-        star.textContent = '★'
+        const clusterEmoji = questClusterEmoji(group.places, showCompleted)
+        star.textContent = clusterEmoji ?? '★'
+        star.classList.toggle('is-emoji', Boolean(clusterEmoji))
         const number = document.createElement('span')
         number.className = 'pf2-quest-cluster-number'
         number.textContent = String(group.questCount)
@@ -544,6 +559,62 @@ export async function addPublicPlaceMarkers(gmap: GolarionMap, placesUrl: string
       onAdd: () => completeControl,
       onRemove: () => completeControl.remove(),
     }, 'top-left')
+
+    // The Discord card links here with ?quest=<thread snowflake>.
+    // Resolve against the same public map payload (not a separate stale cache).
+    const requestedQuestId = questIdFromSearch(window.location.search)
+    if (requestedQuestId) {
+      const focused = placesForDiscordQuest(questEntries.map(entry => entry.place), requestedQuestId)
+      const questTitle = focused.flatMap(place => place.questLinks ?? [])
+        .find(link => link.id === requestedQuestId)?.title ?? 'Quête Discord'
+      const notice = document.createElement('div')
+      notice.className = 'pf2-quest-focus-notice maplibregl-ctrl'
+      notice.setAttribute('role', 'status')
+      notice.textContent = focused.length
+        ? questTitle + ' — ' + focused.length + ' lieu' + (focused.length > 1 ? 'x' : '') + ' sur la carte'
+        : 'Cette quête ne possède aucun lieu visible sur la carte.'
+      gmap.map.addControl({
+        onAdd: () => notice,
+        onRemove: () => notice.remove(),
+      }, 'top-left')
+
+      if (focused.length) {
+        // A completed quest would otherwise be hidden by the default filter.
+        if (focused.some(place => place.questCompleted)) {
+          completedInput.checked = true
+          showCompleted = true
+          for (const entry of questEntries) {
+            if (mode !== 'mj-light') {
+              entry.marker.getPopup()?.setDOMContent(basicPopupContent(entry.place, mode, true))
+            }
+          }
+          updateQuestClusters()
+          refreshQuestList(visibleQuestPlaces())
+        }
+        const camera = questFocusCamera(focused)
+        const focusOnQuest = () => {
+          if (camera?.kind === 'single') {
+            const target = entries.find(entry => entry.place.id === focused[0].id)
+            gmap.map.once('moveend', () => {
+              if (target && !target.marker.getPopup()?.isOpen()) target.marker.togglePopup()
+            })
+            gmap.map.flyTo({
+              center: camera.center,
+              zoom: Math.max(QUEST_CLUSTER_MAX_ZOOM + 1, gmap.map.getZoom()),
+              duration: 900,
+            })
+          } else if (camera?.kind === 'multiple') {
+            gmap.map.fitBounds(camera.bounds, {
+              padding: { top: 105, bottom: 80, left: 75, right: 75 },
+              maxZoom: QUEST_CLUSTER_MAX_ZOOM + 1,
+              duration: 1000,
+            })
+          }
+        }
+        if (gmap.map.isStyleLoaded()) focusOnQuest()
+        else gmap.map.once('load', focusOnQuest)
+      }
+    }
 
     const favoritePlaces: JumpToPlace[] = entries
       .filter(entry => entry.place.important && !entry.place.quest)
