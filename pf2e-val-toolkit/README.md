@@ -1167,3 +1167,11 @@ et une étoile pour gérer des favoris persistants, propres au familier, stocké
 dans son flag `pf2e-val-toolkit.familiarFavorites`. Un filtre « favoris
 uniquement » est également disponible. Si une fiche contient trop de capacités,
 le compteur explicite l'excès et la validation reste bloquée jusqu'à correction.
+
+## v0.43.2 — Descriptions familiers sans débordement
+
+Descriptions converties avec `TextEditor.enrichHTML` pour résoudre les UUID
+Foundry et rendre les liens cliquables. Largeur du dialogue fixe et contrainte
+à l'écran, avec retour à la ligne dans les détails. La case « Afficher les
+informations » (désactivée initialement) ouvre ou referme toutes les descriptions ;
+les boutons individuels restent disponibles.
