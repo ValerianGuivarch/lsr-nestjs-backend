@@ -34,6 +34,9 @@ import { initPrivateRollCharacterNames } from "./private-roll-names.js";
 import { initEarnIncomeCoins } from "./earn-income/index.js";
 import { initOutcomeEffects } from "./outcome-effects/index.js";
 
+import { initFamiliarSelector } from "./familiar-selector.js";
+import { migrateSashkaFamiliarFeat } from "./familiar-sashka-migration.js";
+
 Hooks.once("init", () => {
   console.log("PF2e Val Toolkit | Initialisation");
   applyTranslationOverrides();
@@ -59,6 +62,7 @@ Hooks.once("ready", () => {
   // here so native character-sheet pages (including Maîtrises) also use Larcin.
   applyTranslationOverrides();
 
+  initFamiliarSelector();
   initCombatMovement();
   initQuickCombatScene();
   initPatches();
@@ -75,6 +79,7 @@ Hooks.once("ready", () => {
 
   if (!game.user.isGM) return;
 
+  void migrateSashkaFamiliarFeat();
   initScenarioImporter();
   initReferenceIndexExporter();
 

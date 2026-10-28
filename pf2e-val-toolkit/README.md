@@ -1131,3 +1131,28 @@ remet la numérotation à plat.
 - L'onglet **États & conditions** sert aussi de palette de secours grâce au même bouton 🎯.
 - Un bloc **Contexte contre la cible** rend visibles quelques mécanismes que PF2e calcule sans poser de statut : prise en tenaille (via le calcul PF2e natif), condition Dépourvu explicite, marques PF2e et distance. Ce bloc est volontairement non exhaustif.
 - Si un joueur cible un acteur qu'il ne possède pas, Socketlib est utilisé pour demander au client MJ d'appliquer l'effet. Sans Socketlib/MJ connecté, l'application est refusée proprement.
+
+
+## v0.43.0 — Capacités quotidiennes des familiers
+
+Dans la fiche d'un familier PF2e, le bouton **Capacités** ouvre un sélecteur
+construit à partir du compendium officiel `pf2e.familiar-abilities`. Le module
+utilise le **maître lié** (`system.master.id`) et le compteur PF2e calculé
+`master.system.attributes.familiarAbilities.value`, réserve la capacité imposée
+par le patron *Tisseur de fils* (Tsuyi) et affiche les choix libres.
+
+Les règles techniques actuellement vérifiées : dépendance *Livreur d'objet* →
+*Dextérité manuelle*, *Élémentaire* → *Résistance*, réserve de focalisation,
+capacités alchimiques et seuils de rang pour Batterie de sorts et Incantation.
+L'écran signale explicitement que **le contrôle n'est pas exhaustif** : certains
+prérequis textuels ou d'accès restent à arbitrer par le MJ. Il ne déduit
+**aucune capacité obligatoire de l'apparence** du familier. Les capacités
+personnalisées déjà présentes hors compendium sont conservées.
+
+**Correction ponctuelle Sashka** : à la prochaine ouverture du monde par un MJ
+avec le toolkit actif, la migration vérifie son acteur par identifiant et nom,
+puis remplace son don « Dévouement : Maître familier » (emplacement de classe
+de niveau 2) par le don de classe « Familier » de l'ensorceleur, sans écraser
+d'autres données. Si la source officielle est introuvable, elle s'arrête et
+affiche une erreur ; elle ne supprime jamais le don initial sans création
+réussie du nouveau. Cette migration est idempotente.
