@@ -506,10 +506,12 @@ export class Pf2MjService {
       const id = typeof record.id === 'string' ? record.id.trim() : ''
       const name = typeof record.nom === 'string' ? record.nom.trim() : ''
       if (!id || !name) return []
-      const linked = linksByPlace.get(id) ?? []
+      const allLinked = linksByPlace.get(id) ?? []
+      const linked = allLinked.filter(link => !link.obsolete)
       const manualNames = record.map_kind === 'quest' ? this.questNames(record.map_quest_names, record.map_quest_name) : []
-      const matchedLegacy = new Set(linked.map(link => link.legacyName).filter(Boolean))
+      const matchedLegacy = new Set(allLinked.map(link => link.legacyName).filter(Boolean))
       const unresolved = manualNames.filter(label => !matchedLegacy.has(label))
+      if (record.map_kind === 'quest' && allLinked.length && !linked.length && !unresolved.length) return []
       const questLinks = linked.map(link => ({ id: link.questId, title: link.title, completed: link.completed, url: link.url }))
       return [{
         id,
@@ -548,10 +550,12 @@ export class Pf2MjService {
       const id = typeof record.id === 'string' ? record.id.trim() : ''
       const name = typeof record.nom === 'string' ? record.nom.trim() : ''
       if (!id || !name) return []
-      const linked = linksByPlace.get(id) ?? []
+      const allLinked = linksByPlace.get(id) ?? []
+      const linked = allLinked.filter(link => !link.obsolete)
       const manualNames = record.map_kind === 'quest' ? this.questNames(record.map_quest_names, record.map_quest_name) : []
-      const matchedLegacy = new Set(linked.map(link => link.legacyName).filter(Boolean))
+      const matchedLegacy = new Set(allLinked.map(link => link.legacyName).filter(Boolean))
       const unresolved = manualNames.filter(label => !matchedLegacy.has(label))
+      if (record.map_kind === 'quest' && allLinked.length && !linked.length && !unresolved.length) return []
       const questLinks = linked.map(link => ({ id: link.questId, title: link.title, completed: link.completed, url: link.url }))
       return [{
         id,
