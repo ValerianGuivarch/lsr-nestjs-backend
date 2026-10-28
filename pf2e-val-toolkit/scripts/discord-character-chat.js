@@ -125,12 +125,38 @@ export function registerDiscordCharacterChatSettings() {
 }
 
 export function initDiscordCharacterChat() {
+  // Foundry v14 may render chat messages inside web-component shadow roots.
+  // A document-level listener sees the retargeted host, not the original button.
+  const wireButtons = html => {
+    const root = html?.querySelectorAll ? html : html?.[0];
+    if (!root?.querySelectorAll) return;
+    for (const button of root.querySelectorAll("[data-pf2-character-create]")) {
+      if (button.dataset.pf2CharacterWired) continue;
+      button.dataset.pf2CharacterWired = "true";
+      button.addEventListener("click", event => {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        button.disabled = true;
+        void showCharacterForm(button).catch(error => {
+          console.error("PF2e Val Toolkit | Formulaire personnage", error);
+          ui.notifications.error(`Formulaire personnage impossible : ${error.message ?? error}`);
+        }).finally(() => { button.disabled = false; });
+      });
+    }
+  };
+  Hooks.on("renderChatMessageHTML", (_message, html) => wireButtons(html));
+  // Compatibility with Foundry's older chat rendering and any DOM outside shadow roots.
+  Hooks.on("renderChatMessage", (_message, html) => wireButtons(html));
   document.addEventListener("click", event => {
-    const button = event.target.closest?.("[data-pf2-character-create]");
-    if (!button) return;
+    const button = event.composedPath?.().find(node => node?.matches?.("[data-pf2-character-create]"));
+    if (!button || button.dataset.pf2CharacterWired) return;
     event.preventDefault();
-    void showCharacterForm(button);
-  });
+    event.stopImmediatePropagation();
+    void showCharacterForm(button).catch(error => {
+      console.error("PF2e Val Toolkit | Formulaire personnage", error);
+      ui.notifications.error(`Formulaire personnage impossible : ${error.message ?? error}`);
+    });
+  }, true);
   if (!game.user.isGM) return;
   const poll = async () => {
     if (running || !firstActiveGM()) return;
