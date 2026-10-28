@@ -152,7 +152,7 @@ export default function LorePage() {
           </Link>)}
           {filtered.length === 0 && <p className="pf2-lore-no-results">Aucun chapitre ne correspond à cette recherche.</p>}
         </nav>
-        <p className="pf2-lore-source">Source affichée directement : <code>UNIVERS.md</code> et <code>pf2/{univers,pj,campagnes}/**/*.md</code>. Les liens entre chapitres restent dans ce visualiseur.</p>
+        <p className="pf2-lore-source">Source affichée directement : <code>UNIVERS.md</code> et <code>{'pf2/{univers,pj,campagnes}/**/*.md'}</code>. Les liens entre chapitres restent dans ce visualiseur.</p>
       </div>
 
       <div className="pf2-lore-reading">
