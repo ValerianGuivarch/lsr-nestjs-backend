@@ -1,16 +1,16 @@
-# Pilote : quêtes créées par le bot Discord
+# Quêtes Discord créées et gérées par le bot
 
-## Portée
+## État appliqué au 28 octobre 2026
 
-Ce pilote **ne migre, ne supprime et n'archive aucune discussion existante**.
-On conserve la création normale dans Discord pendant les essais.
-Pas de tag `essai` et aucun feature flag général.
+- Le forum journal-de-quetes contient désormais des **quêtes bot** avec une fiche interactive en premier message. Le sujet épinglé « Créer une quête » est conservé.
+- Les **15 discussions historiques** ont été recréées : chaque message a été préservé avec **pseudo Discord, date et heure**, sans mention active. Les **4 images** ont été réimportées.
+- Les 15 anciens fils sont marqués `obsolète`, **archivés et verrouillés**, sans suppression. La migration a transféré les liens cartographiques vers les nouveaux identifiants Discord.
+- Les anciennes réactions ne sont **pas attribuées artificiellement** à leurs auteurs. Le bot a posé 👍 sur les nouvelles quêtes ouvertes ; chaque joueur doit y réagir de nouveau.
+- La quête test « Détruire le monde » et le lieu PJ « Port de la fin du monde » ont été **supprimés** sur demande ; « Trouver la fosse » est conservée.
+- La synchronisation régulière de Discord continue de lire les états des fils. La fiche bot conserve son attribution historique et son lien d'archive dans la description enregistrée en SQLite.
+- Aucun tag `essai` ni feature flag global. La création directe de discussions par les joueurs reste autorisée temporairement, en attendant une décision distincte.
 
-- Les anciennes discussions continuent à fonctionner comme aujourd'hui.
-- Les quêtes créées par le bot ont un premier message structuré et des boutons persistants.
-- Le bot utilise le tag exact **`obsolète`** pour exclure une discussion de `/choix-quete`, du catalogue de quêtes actives et des associations cartographiques actives. Ce tag **n'est appliqué automatiquement à aucune discussion**. Les données et les fils restent conservés pour une future migration.
-- Le tag `Terminée` continue de déterminer la fin d'une quête; ne pas confondre avec `obsolète`.
-- L'accueil `📌 Créer une quête` n'est **jamais comptabilisé comme une quête**, même quand il est visible dans le forum.
+**Sauvegarde hors dépôt Git sur le mini-PC :** `/home/valou/pf2-migrations/quest-bot-migration-20261028/`. Contient l'export des messages, quatre images, la sauvegarde SQLite, les états de migration, les journaux et les anciennes réactions.
 
 ## Choix définitif d'icône par réaction Discord
 
@@ -31,7 +31,7 @@ Les commandes `/terminer-quete` et `/relancer-quete` restent disponibles et util
 
 ## Ce qui est reporté
 
-- Migration, recréation des 15 anciennes discussions et copie des historiques.
+- **Terminé le 28 octobre 2026 :** migration des 15 discussions historiques et copie des messages.
 - Désactivation du bouton natif « Nouvelle publication » pour les joueurs.
 - Création de nouveaux lieux officiels depuis Discord : pour le pilote, seul le MJ crée les lieux, les joueurs choisissent parmi les lieux actuellement publiés sur la carte.
 - Carte hybride, emojis comme marqueurs, regroupement géographique et séparation au zoom. Le bouton **Voir sur la carte** ouvre pour le moment la carte PJ, sans zoom automatique sur le lieu.
@@ -43,7 +43,7 @@ Les commandes `/terminer-quete` et `/relancer-quete` restent disponibles et util
 - Si la création de discussion fonctionne mais qu'une opération SQLite ou Discord échoue ensuite, le bot peut laisser une discussion partiellement créée. Vérifier et corriger ce cas avant un déploiement étendu.
 - Le sujet d'accueil est **déjà installé**. La commande d'installation n'est plus publiée ; le bouton existant continue de fonctionner.
 - Les boutons ne doivent pas mentionner massivement les joueurs : `allowedMentions.parse=[]`.
-- **Ne pas utiliser** `obsolète` sur les anciennes discussions avant la migration prévue.
+- Les fils historiques sont maintenant marqués `obsolète` ; toute annulation doit suivre le plan de retour arrière ci-dessous, pas simplement retirer le tag.
 
 ## Synchronisation des lieux après création depuis la carte
 
@@ -57,3 +57,17 @@ SQLite, afin de mettre à jour le premier message de la discussion Discord.
 Une vérification de toutes les fiches bot à chaque synchronisation du forum
 (5 min) corrige également les changements perdus lors d'une interruption du bot.
 Une fiche dont le texte est déjà correct n'est pas éditée.
+
+## Migration historique et retour arrière
+
+**Résultat vérifié (28 octobre 2026) :** 15 quêtes bot, 122 entrées de messages historiques représentées dans **118 publications**, dont 5 compléments regroupant 9 très courts messages de répétition de titres. Quatre pièces jointes/images conservées et réimportées. Les vérifications portent sur les statuts, les tags, les liens, les composants Discord, l'absence de mentions et l'option `SUPPRESS_NOTIFICATIONS` (pas de notification push ou bureau, mais une activité peut toujours apparaître dans Discord).
+
+Les données SQLite conservent le mapping `ancien ID → nouvel ID` dans `pf2_quest_migration_20261028`. Cette table de suivi est créée par le script de migration ponctuel `scripts/pf2/migrate-discord-quests-20261028.py`. Les journaux et le rapport d'anciennes réactions sont dans le répertoire privé de sauvegarde ; ne **pas** les versionner dans GitHub.
+
+Pour un retour global, exécuter sur le mini-PC après sauvegarde :
+
+`python3 scripts/pf2/migrate-discord-quests-20261028.py rollback`
+
+Cela archive les nouvelles discussions et les marque `obsolète`, remet les associations cartographiques sur les fils historiques et désarchive/déverrouille ceux-ci en rétablissant leurs tags d'origine. **Retirer le tag seul ne suffit pas** pour remettre les associations de carte et écarter les doublons. Le retour arrière de la migration ne ressuscite **pas** la quête test volontairement supprimée.
+
+La migration historique ne constitue pas encore la **carte hybride** (regroupement des points par lieu et éclatement au zoom) ; ce chantier reste distinct.

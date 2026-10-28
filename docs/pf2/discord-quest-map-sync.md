@@ -1,10 +1,10 @@
 # Synchronisation des quêtes Discord avec la carte PF2
 
 ## Source de vérité
-Le forum Discord `journal-de-quetes` (`PF2_DISCORD_QUEST_FORUM_CHANNEL_ID`) est l'unique source pour les noms, les fils et le tag **Terminée**. Le service `DiscordService` lit les fils actifs et archivés au démarrage, puis toutes les cinq minutes. Il enregistre les métadonnées dans `pf2_discord_quest` et conserve les données précédentes si la lecture de Discord échoue. Il ne publie pas de commande `/créer quête` et ne modifie pas les discussions Discord.
+Le forum Discord `journal-de-quetes` (`PF2_DISCORD_QUEST_FORUM_CHANNEL_ID`) est l'unique source pour les noms, les fils et le tag **Terminée**. Le service `DiscordService` lit les fils actifs et archivés au démarrage, puis toutes les cinq minutes. Il enregistre les métadonnées dans `pf2_discord_quest` et conserve les données précédentes si la lecture de Discord échoue. Le bot crée désormais les quêtes depuis le sujet d'accueil du forum ou `/nouvelle-quete` : le premier message est une fiche interactive éditable. Les anciens fils sont exclus lorsqu'ils portent le tag `obsolète` ; les statuts en cours/terminée restent fondés sur les tags Discord.
 
 ### SQLite
-- `pf2_discord_quest(thread_id PK, title, completed, archived, url, discord_created_at, synced_at)`
+- `pf2_discord_quest(thread_id PK, title, completed, archived, obsolete, url, discord_created_at, synced_at)`
 - `pf2_map_place_quest(place_id, thread_id, legacy_name)`, clef composite `(place_id,thread_id)`.
 - La migration du code `039-discord-quest-catalogue-and-map-links` crée les deux tables si elles n'existent pas déjà. Elle est idempotente et utilise le système existant de sauvegardes SQLite avant migration.
 
@@ -33,11 +33,11 @@ Les champs hérités `map_quest_name` / `map_quest_names` subsistent pour compat
 ## Affichage
 Les repères de quête liés sont visibles tant qu'au moins une quête est ouverte ou qu'une ancienne association reste non résolue. Si toutes les quêtes identifiées sont terminées, le lieu n'apparaît pas par défaut, **sans suppression** ; la case « Afficher les quêtes terminées » restaure ces repères et les entrées de liste. Un lieu sans association certaine reste visible.
 
-Le clic sur un lieu affiche les titres synchronisés, les statuts (en cours ou terminée) et les liens vers les fils Discord. L'utilisateur peut sélectionner plusieurs fils depuis un formulaire intégré. La création de nouvelles quêtes **se fait uniquement sur Discord**, par création de discussion.
+Le clic sur un lieu affiche les titres synchronisés, les statuts (en cours ou terminée) et les liens vers les fils Discord. L'utilisateur peut sélectionner plusieurs fils depuis un formulaire intégré. La création de nouvelles quêtes se fait dans Discord via le bouton « Créer une quête » du bot ou la commande /nouvelle-quete, qui publient une fiche de quête et ses boutons.
 
 ### Synchronisation et mise à jour des titres
 
-La création d'une quête consiste **uniquement à ouvrir un fil** dans le forum Discord, sans commande dédiée du bot. Le même service NestJS déjà connecté à Discord interroge les fils actifs et archivés au démarrage puis toutes les **cinq minutes** ; les commandes `/terminer-quete` et `/relancer-quete` modifient le tag Discord, qui reste la source de vérité du statut. Un fil archivé n'est pas automatiquement terminé. Le synchroniseur effectue des upserts et préserve le dernier catalogue connu en cas d'échec de lecture.
+La création standard d'une quête passe par le bot Discord et son premier message interactif. La création manuelle native d'un fil reste temporairement possible, mais n'est plus le parcours conseillé. Le même service NestJS déjà connecté à Discord interroge les fils actifs et archivés au démarrage puis toutes les **cinq minutes** ; les commandes `/terminer-quete` et `/relancer-quete` modifient le tag Discord, qui reste la source de vérité du statut. Un fil archivé n'est pas automatiquement terminé. Le synchroniseur effectue des upserts et préserve le dernier catalogue connu en cas d'échec de lecture.
 
 Un renommage de fil conserve le même `thread_id` : il est répercuté dans SQLite à la prochaine synchronisation réussie et apparaît sur la carte **après rechargement de la page** (pas encore de rafraîchissement temps réel du navigateur). Les associations demeurent stables. Un lieu avec plusieurs quêtes conserve un seul repère, et une même quête peut être liée à plusieurs lieux.
 
@@ -73,3 +73,9 @@ Voir **Décision de partage et limite de sécurité** ci-dessous pour la limite 
 - Sauvegarde et `PRAGMA quick_check` de la base SQLite réelle
 
 Ne jamais déduire un lien ambigu à partir de la seule proximité des noms. Ne jamais mettre une quête « terminée » du seul fait que son fil est archivé.
+
+## Migration du journal historique — 28 octobre 2026
+
+Les 15 fils historiques ont été recopiés dans des fils bot, puis archivés, verrouillés et marqués obsolète. Les 122 entrées d’origine sont conservées dans 118 publications, dont 5 regroupements pour les titres répétés, avec 4 images. Toutes les associations SQLite ont été transférées par identifiant Discord. La quête test et son lieu d’essai ont été supprimés ; « Trouver la fosse » reste intacte.
+
+Se reporter à [Gestion des quêtes Discord par le bot](discord-quest-creator-pilot.md) pour le retour arrière et aux sauvegardes privées du mini-PC pour l’export et les anciennes réactions. Ne pas utiliser l’instantané du 14 octobre comme état de production actuel.
