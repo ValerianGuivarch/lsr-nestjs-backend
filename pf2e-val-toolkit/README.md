@@ -1156,3 +1156,14 @@ de niveau 2) par le don de classe « Familier » de l'ensorceleur, sans écraser
 d'autres données. Si la source officielle est introuvable, elle s'arrête et
 affiche une erreur ; elle ne supprime jamais le don initial sans création
 réussie du nouveau. Cette migration est idempotente.
+
+## v0.43.1 — Filtrage, détails et favoris familiers
+
+Le sélecteur masque par défaut les capacités dont les restrictions reconnues
+ne sont pas satisfaites (les capacités actuellement sélectionnées restent visibles
+pour permettre de corriger une configuration invalide). Une case permet de
+afficher toutes les capacités. Chaque entrée propose une description dépliable
+et une étoile pour gérer des favoris persistants, propres au familier, stockés
+dans son flag `pf2e-val-toolkit.familiarFavorites`. Un filtre « favoris
+uniquement » est également disponible. Si une fiche contient trop de capacités,
+le compteur explicite l'excès et la validation reste bloquée jusqu'à correction.
