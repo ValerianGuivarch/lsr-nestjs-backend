@@ -6,7 +6,7 @@ describe('DiscordCommandsService', () => {
     const service = new DiscordCommandsService({} as never, {} as never)
     const definitions = service.definitions().map(command => command.name)
     expect(definitions).toEqual(expect.arrayContaining([
-      'help', 'help-admin', 'choix-quete', 'terminer-quete', 'relancer-quete', 'random-perso', 'tirage-sort-joueur', 'recap-pjs', 'recap-seance',
+      'help', 'help-admin', 'nouvelle-quete', 'installer-creation-quete', 'choix-quete', 'terminer-quete', 'relancer-quete', 'random-perso', 'tirage-sort-joueur', 'recap-pjs', 'recap-seance',
       'debut-seance', 'fin-seance', 'personnage', 'faction', 'nouvelle-faction', 'associer-faction', 'afficher-personnage', 'afficher-faction', 'rechercher', 'wiki', 'wiki-admin',
       'proposer-date-seance', 'modifier-date-seance', 'relancer-date-seance', 'analyse-date-seance', 'valider-date-seance', 'modifier-groupe-seance',
     ]))

@@ -1,4 +1,4 @@
-import { BadGatewayException, forwardRef, Inject, Injectable, Logger, NotFoundException, OnModuleDestroy, OnModuleInit } from '@nestjs/common'
+import { BadGatewayException, forwardRef, Inject, Injectable, Logger, NotFoundException, OnModuleDestroy, OnModuleInit, Optional } from '@nestjs/common'
 import {
   Client,
   ChannelType,
@@ -14,6 +14,7 @@ import {
   ThreadAutoArchiveDuration,
 } from 'discord.js'
 import { DiscordCommandsService } from './DiscordCommandsService'
+import { DiscordQuestPilotService } from './DiscordQuestPilotService'
 import { pf2DiscordIdForPlayer } from './Pf2PlayerIdentity'
 import { Pf2PersistenceService, type DiscordQuestSnapshot, type Pf2Session, type Pf2SessionInput } from '../pf2-storage/Pf2PersistenceService'
 import { FoundryRelayService } from '../foundry/FoundryRelayService'
@@ -51,6 +52,7 @@ export class DiscordService implements OnModuleInit, OnModuleDestroy {
     @Inject(forwardRef(() => DiscordCommandsService)) private readonly commands: DiscordCommandsService,
     private readonly foundry: FoundryRelayService,
     private readonly persistence: Pf2PersistenceService,
+    @Optional() private readonly questPilot?: DiscordQuestPilotService,
   ) {}
 
   requestClient(): Client | null { return this.client }
@@ -177,6 +179,9 @@ export class DiscordService implements OnModuleInit, OnModuleDestroy {
       const completedTagId = forum.availableTags.find(tag =>
         tag.name.trim().toLocaleLowerCase('fr') === 'terminée')?.id
       if (!completedTagId) throw new Error('Tag Discord « Terminée » absent : synchronisation annulée.')
+      const obsoleteTagId = forum.availableTags.find(tag =>
+        tag.name.trim().toLocaleLowerCase('fr') === 'obsolète')?.id
+      const launcherId = await this.persistence.questLauncherId?.()
       const discovered = new Map<string, any>()
       const active = await forum.threads.fetchActive()
       for (const thread of active.threads.values()) {
@@ -193,15 +198,33 @@ export class DiscordService implements OnModuleInit, OnModuleDestroy {
         if (!before) break
       } while (before)
 
-      const snapshots: DiscordQuestSnapshot[] = [...discovered.values()].map(thread => ({
+      const snapshots: DiscordQuestSnapshot[] = [...discovered.values()].filter(thread => thread.id !== launcherId).map(thread => ({
         id: thread.id,
         title: String(thread.name ?? '').trim() || 'Quête sans titre',
         completed: (thread.appliedTags ?? []).includes(completedTagId),
+        obsolete: Boolean(obsoleteTagId && (thread.appliedTags ?? []).includes(obsoleteTagId)),
         archived: Boolean(thread.archived),
         url: `https://discord.com/channels/${forum.guildId}/${thread.id}`,
         createdAt: new Date(Number(thread.createdTimestamp ?? Date.now())).toISOString(),
       }))
+      const earlier = this.questPilot && this.persistence.listDiscordQuests
+        ? new Map((await this.persistence.listDiscordQuests()).map(q => [q.id, q]))
+        : new Map<string, DiscordQuestSnapshot>()
       await this.persistence.saveDiscordQuestSnapshots(snapshots)
+      // When somebody renames a thread or changes its tags directly in Discord,
+      // keep the bot's first-message card consistent without rewriting every card
+      // on each five-minute poll.
+      if (this.questPilot) {
+        for (const snapshot of snapshots) {
+          const previous = earlier.get(snapshot.id)
+          if (snapshot.obsolete || (previous && previous.title === snapshot.title && previous.completed === snapshot.completed)) continue
+          const ui = await this.persistence.questUi(snapshot.id)
+          if (ui?.kind !== 'quest') continue
+          const thread = discovered.get(snapshot.id)
+          if (thread) await this.questPilot.refreshThreadPanel(thread).catch(error =>
+            this.logger.warn('Quest card refresh failed: ' + (error instanceof Error ? error.message : String(error))))
+        }
+      }
       this.logger.log(`Quêtes Discord synchronisées : ${snapshots.length} fils (${snapshots.filter(q => q.completed).length} terminés).`)
     } finally {
       this.questSyncRunning = false

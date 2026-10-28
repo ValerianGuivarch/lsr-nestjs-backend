@@ -171,6 +171,43 @@ describe('Discord forum quest catalogue synchronization', () => {
     ]))
   })
 
+  it('marks obsolete-tagged quests without deleting them from Discord and skips the launcher', async () => {
+    const obsoleteId = 'tag-obsolete'
+    const { service, persist, forum } = setup([
+      { id: completedTagId, name: 'Terminée' },
+      { id: obsoleteId, name: 'obsolète' },
+    ])
+    const previous = { ...threads.first()!, appliedTags: [obsoleteId] }
+    const launcherId = '1559999999999999999'
+    forum.threads.fetchActive.mockResolvedValueOnce({
+      threads: new Collection([
+        [previous.id, previous],
+        [launcherId, { id: launcherId, parentId: forumId, name: '📌 Créer une quête', appliedTags: [], createdTimestamp: Date.now() }],
+      ]),
+    })
+    ;(service as any).persistence.questLauncherId = jest.fn().mockResolvedValue(launcherId)
+    await service.refreshQuestCatalogue()
+    const saved = persist.saveDiscordQuestSnapshots.mock.calls[0][0] as Array<{id:string;obsolete?:boolean}>
+    expect(saved.find(t => t.id === previous.id)?.obsolete).toBe(true)
+    expect(saved.find(t => t.id === launcherId)).toBeUndefined()
+    expect(saved.find(t => t.id === threads.last()!.id)?.obsolete).toBe(false)
+  })
+
+  it('refreshes a managed quest card when its Discord title changes', async () => {
+    const { service, persist } = setup()
+    const panel = { refreshThreadPanel: jest.fn().mockResolvedValue(undefined) }
+    ;(service as any).questPilot = panel
+    ;(service as any).persistence.listDiscordQuests = jest.fn().mockResolvedValue([
+      {id:'1555323732329766982', title:'Ancien titre', completed:false},
+      {id:'1553122329624715294', title:'Le tueur de la rue Rose', completed:true},
+    ])
+    ;(service as any).persistence.questUi = jest.fn().mockResolvedValue({ kind:'quest' })
+    await service.refreshQuestCatalogue()
+    expect(panel.refreshThreadPanel).toHaveBeenCalledTimes(1)
+    expect(panel.refreshThreadPanel.mock.calls[0][0].id).toBe('1555323732329766982')
+    expect(persist.saveDiscordQuestSnapshots).toHaveBeenCalled()
+  })
+
   it('preserves the stored catalogue if the completed tag is not available', async () => {
     const { service, persist } = setup([])
     await expect(service.refreshQuestCatalogue()).rejects.toThrow('Terminée')

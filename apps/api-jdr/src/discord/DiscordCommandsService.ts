@@ -6,6 +6,7 @@ import { Pf2PersistenceService } from '../pf2-storage/Pf2PersistenceService'
 import { PlayerCodexService } from '../pf2-mj/PlayerCodexService'
 import { MediaWikiClientService } from '../pf2-mj/MediaWikiClientService'
 import { DiscordResumeSync, DiscordService } from './DiscordService'
+import { DiscordQuestPilotService } from './DiscordQuestPilotService'
 import { Pf2RequestService, RequestStatus } from './Pf2RequestService'
 import { pf2DiscordIdForPlayer, pf2MatchesPlayerOrDiscordAlias, pf2PlayerByDiscordId } from './Pf2PlayerIdentity'
 import { shortSummaryRewardForSession } from '../pf2-sessions/Pf2CareerXp'
@@ -86,7 +87,7 @@ export class DiscordCommandsService {
   private readonly pendingPlayerDraws = new Map<string, { requesterId: string; players: Array<{ id: string; name: string }> }>()
   private readonly pendingQuestCompletions = new Map<string, { requesterId: string; threadId: string }>()
   private readonly choiceForumChannelId = process.env['PF2_DISCORD_QUEST_FORUM_CHANNEL_ID']?.trim() || '1536259632455094412'
-  constructor(private readonly persistence: Pf2PersistenceService, private readonly foundry: FoundryRelayService, private readonly playerCodex?: PlayerCodexService, private readonly mediaWiki?: MediaWikiClientService, @Inject(forwardRef(() => DiscordService)) private readonly discord?: DiscordService, private readonly journals?: Pf2JournalsService, private readonly requests?: Pf2RequestService) {}
+  constructor(private readonly persistence: Pf2PersistenceService, private readonly foundry: FoundryRelayService, private readonly playerCodex?: PlayerCodexService, private readonly mediaWiki?: MediaWikiClientService, @Inject(forwardRef(() => DiscordService)) private readonly discord?: DiscordService, private readonly journals?: Pf2JournalsService, private readonly requests?: Pf2RequestService, private readonly questPilot?: DiscordQuestPilotService) {}
 
   definitions(): RESTPostAPIApplicationGuildCommandsJSONBody[] {
     return [
@@ -102,6 +103,8 @@ export class DiscordCommandsService {
       new SlashCommandBuilder().setName('random-perso').setDescription('Tire au hasard une ascendance, une classe et un genre.').setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild).toJSON(),
       new SlashCommandBuilder().setName('tirage-sort-joueur').setDescription('Tire au sort des personnes parmi une sélection Discord.').setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild).toJSON(),
       new SlashCommandBuilder().setName('help').setDescription('Affiche les commandes PF2 disponibles.').toJSON(),
+      new SlashCommandBuilder().setName('nouvelle-quete').setDescription('Créer une quête dans le journal avec une fiche interactive.').toJSON(),
+      new SlashCommandBuilder().setName('installer-creation-quete').setDescription('Installer le sujet de création de quêtes dans le forum.').setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild).toJSON(),
       new SlashCommandBuilder().setName('choix-quete').setDescription('Affiche les quêtes du forum et les joueurs intéressés.').toJSON(),
       new SlashCommandBuilder().setName('terminer-quete').setDescription('Marque comme terminée la quête de ce fil.').toJSON(),
       new SlashCommandBuilder().setName('relancer-quete').setDescription('Relance une quête terminée depuis son fil.').toJSON(),
@@ -164,6 +167,17 @@ export class DiscordCommandsService {
   }
 
   async handle(interaction: Pick<ChatInputCommandInteraction, 'commandName' | 'reply' | 'deferReply' | 'editReply'>): Promise<boolean> {
+    if (interaction.commandName === 'nouvelle-quete' || interaction.commandName === 'installer-creation-quete') {
+      const command = interaction as ChatInputCommandInteraction
+      if (interaction.commandName === 'installer-creation-quete' && !this.isAdmin(command)) {
+        await command.reply({ content: 'Installation réservée au MJ.', ephemeral: true })
+        return true
+      }
+      if (!this.questPilot) throw new Error('Créateur de quêtes indisponible.')
+      await this.questPilot.handleCommand(command)
+      return true
+    }
+
     if (interaction.commandName === 'requete' || interaction.commandName === 'requete-pour' || interaction.commandName.startsWith('requete-')) {
       await this.requestCommand(interaction as ChatInputCommandInteraction)
       return true
@@ -241,6 +255,7 @@ export class DiscordCommandsService {
     await interaction.reply({
       content: [
         '**Commandes PF2**',
+        '`/nouvelle-quete` — crée une quête avec une fiche interactive dans le journal.',
         '`/choix-quete` — liste les quêtes du forum, les réservations par 👍 et signale les doubles choix.',
         '`/terminer-quete` — depuis un fil du journal des quêtes, demande un compte rendu, marque la quête Terminée et libère les réservations 👍.',
         '`/relancer-quete` — depuis un fil terminé, retire le tag Terminée et remet la quête dans `/choix-quete`.',
@@ -264,6 +279,7 @@ export class DiscordCommandsService {
     await interaction.reply({
       content: [
         '**Commandes PF2 — administration**',
+        '`/installer-creation-quete` — installe le sujet épinglé « Créer une quête » dans le forum.',
         '`/random-perso` — tire une ascendance, une classe et un genre.',
         '`/tirage-sort-joueur` — sélectionne des personnes puis en tire un nombre au hasard, avec aperçu avant publication.',
         '`/debut-seance` — prépare le début d’une séance.',
@@ -313,13 +329,17 @@ export class DiscordCommandsService {
     return new Set(mentions)
   }
 
-  private async questThreadContext(interaction: ChatInputCommandInteraction): Promise<{ thread: any; forum: any; completedTagId: string }> {
+  private async questThreadContext(interaction: ChatInputCommandInteraction | ButtonInteraction): Promise<{ thread: any; forum: any; completedTagId: string }> {
     const thread = interaction.channel
     if (!thread?.isThread?.() || thread.parentId !== this.choiceForumChannelId) {
       throw new Error('Cette commande doit être lancée depuis la discussion de la quête dans le journal des quêtes.')
     }
     const forum = await interaction.client.channels.fetch(this.choiceForumChannelId)
     if (!forum || !('availableTags' in forum) || !Array.isArray(forum.availableTags)) throw new Error('Le forum des quêtes est introuvable ou inaccessible.')
+    const obsoleteTag = forum.availableTags.find((tag: any) => String(tag.name ?? '').trim().toLocaleLowerCase('fr') === 'obsolète')
+    if (obsoleteTag?.id && thread.appliedTags?.includes(obsoleteTag.id)) {
+      throw new Error('Cette discussion est obsolète : elle ne peut plus être modifiée comme une quête active.')
+    }
     const completedTag = forum.availableTags.find((tag: any) => String(tag.name ?? '').trim().toLocaleLowerCase('fr') === 'terminée')
     if (!completedTag?.id) throw new Error('Le tag « Terminée » est introuvable dans le forum des quêtes.')
     return { thread, forum, completedTagId: completedTag.id }
@@ -338,7 +358,7 @@ export class DiscordCommandsService {
     await starter.react('👍').catch(() => undefined)
   }
 
-  private async finishQuestCommand(interaction: ChatInputCommandInteraction): Promise<void> {
+  private async finishQuestCommand(interaction: ChatInputCommandInteraction | ButtonInteraction): Promise<void> {
     try {
       const { thread, completedTagId } = await this.questThreadContext(interaction)
       if (thread.appliedTags?.includes(completedTagId)) {
@@ -365,7 +385,7 @@ export class DiscordCommandsService {
     }
   }
 
-  private async reopenQuestCommand(interaction: ChatInputCommandInteraction): Promise<void> {
+  private async reopenQuestCommand(interaction: ChatInputCommandInteraction | ButtonInteraction): Promise<void> {
     await interaction.deferReply({ ephemeral: true })
     try {
       const { thread, completedTagId } = await this.questThreadContext(interaction)
@@ -377,6 +397,7 @@ export class DiscordCommandsService {
       const starter = await thread.fetchStarterMessage({ force: true }).catch(() => null)
       if (starter) await starter.react('👍').catch(() => undefined)
       await thread.send({ content: '🔄 **Quête relancée.** Elle réapparaît maintenant dans `/choix-quete`.', allowedMentions: { parse: [] } })
+      await this.questPilot?.refreshThreadPanel(thread).catch(error => this.logger.warn(String(error)))
       await interaction.editReply({ content: 'Quête relancée.' })
     } catch (error) {
       await interaction.editReply({ content: `Impossible de relancer la quête : ${error instanceof Error ? error.message : String(error)}` })
@@ -415,10 +436,15 @@ export class DiscordCommandsService {
       const completedTagId = Array.isArray((forum as any).availableTags)
         ? (forum as any).availableTags.find((tag: any) => String(tag.name ?? '').trim().toLocaleLowerCase('fr') === 'terminée')?.id ?? null
         : null
+      const obsoleteTagId = Array.isArray((forum as any).availableTags)
+        ? (forum as any).availableTags.find((tag: any) => String(tag.name ?? '').trim().toLocaleLowerCase('fr') === 'obsolète')?.id ?? null
+        : null
+      const launcherId = await this.persistence.questLauncherId?.()
       const choicesByUser = new Map<string, { name: string; count: number }>()
       const playerNames = new Map((await this.persistence.listPlayerIdentities?.() ?? []).map(identity => [identity.discordUserId, identity.playerName]))
 
       for (const thread of discovered.values()) {
+        if (thread.id === launcherId || (obsoleteTagId && thread.appliedTags?.includes(obsoleteTagId))) continue
         if (completedTagId && thread.appliedTags?.includes(completedTagId)) continue
         const starter = await thread.fetchStarterMessage({ force: true }).catch(() => null)
         const reactions = starter
@@ -2101,6 +2127,8 @@ export class DiscordCommandsService {
   }
 
   async handleComponent(interaction: StringSelectMenuInteraction): Promise<boolean> {
+    if (interaction.customId.startsWith('pf2-quest-ui:')) return this.questPilot!.handleSelect(interaction)
+
     if (interaction.customId.startsWith('pf2-manual-session:date:')) {
       const commandId = interaction.customId.slice('pf2-manual-session:date:'.length)
       const pending = this.pendingManualSessionValidations.get(commandId)
@@ -2408,6 +2436,8 @@ export class DiscordCommandsService {
   }
 
   async handleModal(interaction: ModalSubmitInteraction): Promise<boolean> {
+    if (interaction.customId.startsWith('pf2-quest-ui:')) return this.questPilot!.handleModal(interaction)
+
     if(interaction.customId.startsWith('pf2-request:form:')) {
       const isAdmin=this.isAdmin(interaction as unknown as ChatInputCommandInteraction)
       const userId=interaction.customId.slice('pf2-request:form:'.length)
@@ -2468,6 +2498,7 @@ export class DiscordCommandsService {
           allowedMentions: { parse: [] },
         })
         this.pendingQuestCompletions.delete(interaction.customId)
+        await this.questPilot?.refreshThreadPanel(thread).catch(error => this.logger.warn(String(error)))
         await interaction.editReply({ content: 'Quête terminée et compte rendu publié.' })
       } catch (error) {
         await interaction.editReply({ content: `Impossible de terminer la quête : ${error instanceof Error ? error.message : String(error)}` })
@@ -2625,6 +2656,16 @@ export class DiscordCommandsService {
   }
 
   async handleButton(interaction: ButtonInteraction): Promise<boolean> {
+    if (interaction.customId.startsWith('pf2-quest-ui:finish:')) {
+      await this.finishQuestCommand(interaction)
+      return true
+    }
+    if (interaction.customId.startsWith('pf2-quest-ui:reopen:')) {
+      await this.reopenQuestCommand(interaction)
+      return true
+    }
+    if (interaction.customId.startsWith('pf2-quest-ui:')) return this.questPilot!.handleButton(interaction)
+
     if(interaction.customId.startsWith('pf2-request:')) {
       const parts=interaction.customId.split(':')
       const draft=this.pendingRequests.get(parts[2])

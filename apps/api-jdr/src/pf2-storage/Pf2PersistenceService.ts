@@ -58,12 +58,12 @@ export type JournalDefinitionRecord = { number: number; title: string; content: 
 export type WikiAccountLink = { discordUserId: string; wikiUsername: string; createdAt: string; updatedAt: string }
 export type Pf2PlayerIdentityRow = { discordUserId: string; playerName: string }
 export type DiscordQuestSnapshot = {
-  id: string; title: string; completed: boolean; archived: boolean;
+  id: string; title: string; completed: boolean; archived: boolean; obsolete?: boolean;
   url: string; createdAt: string;
 }
 export type MapQuestLink = {
   placeId: string; questId: string; legacyName: string | null;
-  title: string; completed: boolean; archived: boolean; url: string;
+  title: string; completed: boolean; archived: boolean; obsolete?: boolean; url: string;
 }
 export type ConsumedWikiLoginGrant = { discordUserId: string; wikiUsername: string }
 
@@ -317,11 +317,11 @@ export class Pf2PersistenceService implements OnModuleInit {
           throw new Error('Quête Discord invalide.')
         }
         await manager.query(
-          `INSERT INTO pf2_discord_quest (thread_id, title, completed, archived, url, discord_created_at, synced_at)
-           VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+          `INSERT INTO pf2_discord_quest (thread_id, title, completed, archived, obsolete, url, discord_created_at, synced_at)
+           VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
            ON CONFLICT(thread_id) DO UPDATE SET title=excluded.title, completed=excluded.completed,
-           archived=excluded.archived, url=excluded.url, synced_at=CURRENT_TIMESTAMP`,
-          [quest.id, quest.title, quest.completed ? 1 : 0, quest.archived ? 1 : 0, quest.url, quest.createdAt],
+           archived=excluded.archived, obsolete=excluded.obsolete, url=excluded.url, synced_at=CURRENT_TIMESTAMP`,
+          [quest.id, quest.title, quest.completed ? 1 : 0, quest.archived ? 1 : 0, quest.obsolete ? 1 : 0, quest.url, quest.createdAt],
         )
       }
     })
@@ -329,7 +329,7 @@ export class Pf2PersistenceService implements OnModuleInit {
 
   async listDiscordQuests(): Promise<Array<DiscordQuestSnapshot & { syncedAt: string }>> {
     const rows = await this.dataSource.query(
-      'SELECT thread_id AS id, title, completed, archived, url, discord_created_at AS createdAt, synced_at AS syncedAt FROM pf2_discord_quest ORDER BY completed, title',
+      'SELECT thread_id AS id, title, completed, archived, url, discord_created_at AS createdAt, synced_at AS syncedAt FROM pf2_discord_quest WHERE obsolete = 0 ORDER BY completed, title',
     ) as Array<{ id: string; title: string; completed: number; archived: number; url: string; createdAt: string; syncedAt: string }>
     return rows.map(row => ({ ...row, completed: row.completed === 1, archived: row.archived === 1 }))
   }
@@ -337,11 +337,73 @@ export class Pf2PersistenceService implements OnModuleInit {
   async listMapQuestLinks(): Promise<MapQuestLink[]> {
     const rows = await this.dataSource.query(
       `SELECT l.place_id AS placeId, l.thread_id AS questId, l.legacy_name AS legacyName,
-        q.title, q.completed, q.archived, q.url FROM pf2_map_place_quest l
+        q.title, q.completed, q.archived, q.obsolete, q.url FROM pf2_map_place_quest l
         INNER JOIN pf2_discord_quest q ON q.thread_id = l.thread_id
         ORDER BY l.place_id, q.title`,
-    ) as Array<Omit<MapQuestLink, 'completed'|'archived'> & {completed: number; archived: number}>
-    return rows.map(row => ({ ...row, completed: row.completed === 1, archived: row.archived === 1 }))
+    ) as Array<Omit<MapQuestLink, 'completed'|'archived'|'obsolete'> & {completed: number; archived: number; obsolete: number}>
+    return rows.map(row => ({ ...row, completed: row.completed === 1, archived: row.archived === 1, obsolete: row.obsolete === 1 }))
+  }
+
+  /** The launcher is a forum post, not a quest. Quest cards remain bot-owned across restarts. */
+  async questUi(threadId: string): Promise<{ threadId: string; kind: 'launcher' | 'quest'; description: string } | null> {
+    const rows = await this.dataSource.query(
+      'SELECT thread_id AS threadId, kind, description FROM pf2_quest_ui WHERE thread_id=?', [threadId],
+    ) as Array<{ threadId: string; kind: 'launcher' | 'quest'; description: string }>
+    return rows[0] ?? null
+  }
+
+  async questLauncherId(): Promise<string | null> {
+    const rows = await this.dataSource.query(
+      "SELECT thread_id AS threadId FROM pf2_quest_ui WHERE kind='launcher' ORDER BY created_at LIMIT 1",
+    ) as Array<{ threadId: string }>
+    return rows[0]?.threadId ?? null
+  }
+
+  async saveQuestUi(threadId: string, kind: 'launcher' | 'quest', description: string): Promise<void> {
+    await this.dataSource.query(
+      `INSERT INTO pf2_quest_ui (thread_id, kind, description) VALUES (?, ?, ?)
+       ON CONFLICT(thread_id) DO UPDATE SET description=excluded.description`,
+      [threadId, kind, description],
+    )
+  }
+
+  async updateQuestUiDescription(threadId: string, description: string): Promise<void> {
+    const result = await this.dataSource.query(
+      "UPDATE pf2_quest_ui SET description=? WHERE thread_id=? AND kind='quest'", [description, threadId],
+    )
+    if (!result || !(await this.questUi(threadId))) throw new Error('Fiche de quête inconnue.')
+  }
+
+  async questUiPlaces(threadId: string): Promise<Array<{ id: string; name: string }>> {
+    const records = await this.listRecords('lieu')
+    return records.flatMap(record => {
+      if (record.map_visible !== true || typeof record.id !== 'string' || typeof record.nom !== 'string') return []
+      return [{ id: record.id, name: record.nom }]
+    }).sort((a, b) => a.name.localeCompare(b.name, 'fr'))
+  }
+
+  async questUiLinkedPlaceIds(threadId: string): Promise<string[]> {
+    const rows = await this.dataSource.query('SELECT place_id AS placeId FROM pf2_map_place_quest WHERE thread_id=?', [threadId]) as Array<{ placeId: string }>
+    return rows.map(row => row.placeId)
+  }
+
+  async changeQuestUiPlaces(threadId: string, ids: string[], action: 'add' | 'remove'): Promise<void> {
+    if (!/^\d{15,22}$/.test(threadId) || ids.length > 25 || new Set(ids).size !== ids.length) throw new Error('Sélection invalide.')
+    const available = new Set((await this.questUiPlaces(threadId)).map(place => place.id))
+    if (ids.some(id => !available.has(id))) throw new Error('Lieu cartographique inconnu.')
+    if (!(await this.questUi(threadId))) throw new Error('Cette quête n’est pas gérée par le bot.')
+    await this.dataSource.transaction(async manager => {
+      if (action === 'add') {
+        for (const id of ids) await manager.query(
+          'INSERT OR IGNORE INTO pf2_map_place_quest (place_id, thread_id, legacy_name) VALUES (?, ?, NULL)',
+          [id, threadId],
+        )
+      } else {
+        for (const id of ids) await manager.query(
+          'DELETE FROM pf2_map_place_quest WHERE place_id=? AND thread_id=?', [id, threadId],
+        )
+      }
+    })
   }
 
   async setMapQuestLinks(placeId: string, ids: string[]): Promise<void> {
@@ -1459,6 +1521,18 @@ export class Pf2PersistenceService implements OnModuleInit {
     })
     await this.applyMigration('041-player-chatgpt-links', async manager => {
       await manager.query("CREATE TABLE IF NOT EXISTS pf2_player_chatgpt_link (npc_id TEXT PRIMARY KEY, chatgpt_url TEXT NOT NULL, updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)")
+    })
+
+    await this.applyMigration('045-discord-quest-pilot-ui-and-obsolete', async manager => {
+      const columns = await manager.query('PRAGMA table_info(pf2_discord_quest)') as Array<{ name: string }>
+      if (!columns.some(c => c.name === 'obsolete')) {
+        await manager.query('ALTER TABLE pf2_discord_quest ADD COLUMN obsolete INTEGER NOT NULL DEFAULT 0')
+      }
+      await manager.query(`CREATE TABLE IF NOT EXISTS pf2_quest_ui (
+        thread_id TEXT PRIMARY KEY, kind TEXT NOT NULL CHECK(kind IN ('launcher','quest')),
+        description TEXT NOT NULL DEFAULT '', created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+      )`)
+      await manager.query('CREATE INDEX IF NOT EXISTS idx_pf2_quest_ui_kind ON pf2_quest_ui (kind)')
     })
 
     await this.assertDatabaseIntegrity(this.dataSource, 'base SQLite après migrations')
