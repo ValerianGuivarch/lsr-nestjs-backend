@@ -1,7 +1,7 @@
 /** PF2e familiar abilities: daily picker driven by the master's derived statistics. */
 const PACK = 'pf2e.familiar-abilities';
 const NAMESPACE = 'pf2e-val-toolkit';
-const LOCKED_WITCH = { 'spinner-of-threads': 'Familier de la chance équilibrée' };
+const LOCKED_WITCH = { 'spinner-of-threads': 'familiar-of-balanced-luck' };
 const requires = {
   'item-delivery': ['manual-dexterity'],
   'elemental': ['resistance'],
@@ -53,19 +53,32 @@ export async function openFamiliarSelector(familiar) {
   const pack = game.packs.get(PACK);
   if (!pack) return ui.notifications.error(`Compendium introuvable : ${PACK}`);
   const docs = (await pack.getDocuments()).filter(isFamiliarAbility).sort((a,b)=>a.name.localeCompare(b.name,'fr'));
-  const current = familiar.items.filter(isFamiliarAbility);
   const fixed = witchLocked(master);
+  const fixedDocuments = fixed.map(slug => docs.find(doc => abilityId(doc) === slug)).filter(Boolean);
+  if (fixedDocuments.length !== fixed.length) {
+    return ui.notifications.error('Capacité de patron introuvable dans le compendium : aucune modification.');
+  }
+  // Patron abilities are real embedded familiar abilities, not merely display labels.
+  // On opening the selector, reconcile an older familiar whose mandatory ability
+  // was previously counted but never created on the actor.
+  if (fixedDocuments.length && familiar.isOwner) {
+    const missing = fixedDocuments.filter(doc => !familiar.items.some(item => abilityId(item) === abilityId(doc)));
+    if (missing.length) await familiar.createEmbeddedDocuments('Item', missing.map(doc => doc.toObject()));
+  }
+  const current = familiar.items.filter(isFamiliarAbility);
+  const fixedSet = new Set(fixed);
+  const freeCurrent = current.filter(item => !fixedSet.has(abilityId(item)));
   const maximum = Number(master.system?.attributes?.familiarAbilities?.value ?? 2);
   const free = Math.max(0, maximum - fixed.length);
-  const selected = new Set(current.map(abilityId));
+  const selected = new Set(freeCurrent.map(abilityId));
   const rank = highestRank(master);
-  const unknown = current.filter(i=>!docs.some(d=>abilityId(d)===abilityId(i)));
+  const unknown = freeCurrent.filter(i=>!docs.some(d=>abilityId(d)===abilityId(i)));
   for (const item of unknown) selected.add(abilityId(item));
   const favorites = new Set(familiar.getFlag(NAMESPACE, 'familiarFavorites') || []);
   const descriptions = await Promise.all(docs.map(renderDescription));
   const descriptionById = new Map(docs.map((doc, index) => [abilityId(doc), descriptions[index]]));
   const details = `<p><b>${escapeHTML(familiar.name)}</b> — ${escapeHTML(master.name)} · ${maximum} capacités, dont ${fixed.length} imposée(s). <b>${free} choix libres</b>.</p>
-  ${fixed.map(name=>`<p>🔒 ${escapeHTML(name)} (capacité du patron, appliquée par la fiche du maître)</p>`).join('')}
+  ${fixedDocuments.map(doc=>`<p>🔒 ${escapeHTML(doc.name)} (capacité obligatoire du patron, présente sur la fiche du familier)</p>`).join('')}
   <p class="hint">L'apparence du familier n'impose aucune capacité dans ce sélecteur. Les restrictions textuelles non codées restent soumises au MJ.</p>
   <div style="display:flex;gap:1em;align-items:center;flex-wrap:wrap;margin:8px 0">
     <label><input type="checkbox" class="val-familiar-filter" checked /> Masquer les capacités indisponibles</label>
@@ -73,7 +86,7 @@ export async function openFamiliarSelector(familiar) {
     <label><input type="checkbox" class="val-familiar-show-info" /> Afficher les informations</label>
   </div>
   <div class="val-familiar-counter" aria-live="polite"></div>
-  <div class="val-familiar-list" style="max-height:48vh;overflow-x:hidden;overflow-y:auto;display:block;min-width:0;max-width:100%">${docs.map(doc=>{
+  <div class="val-familiar-list" style="max-height:48vh;overflow-x:hidden;overflow-y:auto;display:block;min-width:0;max-width:100%">${docs.filter(doc => !fixedSet.has(abilityId(doc))).map(doc=>{
     const id=abilityId(doc); const checked=selected.has(id);
     const fav=favorites.has(id);
     return `<div class="val-familiar-row" data-row="${escapeHTML(id)}" style="min-width:0;max-width:100%;padding:5px 3px;border-bottom:1px solid var(--color-border-light-tertiary)">
@@ -101,8 +114,8 @@ export async function openFamiliarSelector(familiar) {
           if(failed.length){ui.notifications.error(`${d.name} : ${failed.join(', ')}`);return false;}
         }
         if(!familiar.isOwner){ui.notifications.error('Modification du familier non autorisée.');return false;}
-        const removable=current.filter(i=>!all.has(abilityId(i)));
-        const add=docs.filter(d=>chosen.has(abilityId(d))&&!current.some(i=>abilityId(i)===abilityId(d)));
+        const removable=freeCurrent.filter(i=>!all.has(abilityId(i)));
+        const add=docs.filter(d=>!fixedSet.has(abilityId(d))&&chosen.has(abilityId(d))&&!current.some(i=>abilityId(i)===abilityId(d)));
         if(add.length) await familiar.createEmbeddedDocuments('Item',add.map(i=>i.toObject()));
         if(removable.length) await familiar.deleteEmbeddedDocuments('Item',removable.map(i=>i.id));
         ui.notifications.info(`Capacités de ${familiar.name} enregistrées.`);

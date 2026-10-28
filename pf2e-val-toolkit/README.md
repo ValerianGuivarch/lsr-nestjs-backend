@@ -1175,3 +1175,13 @@ Foundry et rendre les liens cliquables. Largeur du dialogue fixe et contrainte
 à l'écran, avec retour à la ligne dans les détails. La case « Afficher les
 informations » (désactivée initialement) ouvre ou referme toutes les descriptions ;
 les boutons individuels restent disponibles.
+
+## v0.43.3 — Capacités imposées réellement inscrites sur le familier
+
+Pour le patron *Tisseur de fils*, la capacité `familiar-of-balanced-luck` est
+retrouvée dans le compendium officiel et automatiquement ajoutée à l'acteur
+familier lors de l'ouverture du sélecteur par son propriétaire, si absente.
+Elle est exclue des choix quotidiens et du quota libre, ne peut pas être retirée
+à l'enregistrement et n'est jamais dupliquée. Le nombre de choix libres reste
+égal au maximum PF2e moins les capacités imposées. Les familiers sans capacité
+imposée restent inchangés.
