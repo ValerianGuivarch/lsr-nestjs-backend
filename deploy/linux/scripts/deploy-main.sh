@@ -37,8 +37,14 @@ fi
 export APP_VERSION="$VERSION"
 RUNTIME_SOURCE_ROOT="${RUNTIME_SOURCE_ROOT:-/home/valou/services/lsr-nestjs-backend}"
 SOURCE_ENV_FILE="$RUNTIME_SOURCE_ROOT/.env"
-if [[ -f "$SOURCE_ENV_FILE" && "$(realpath "$SOURCE_ENV_FILE")" != "$(realpath -m "$ROOT/.env")" ]]; then
+# The deployment .env owns runtime secrets. Never overwrite it on subsequent deployments.
+if [[ ! -f "$ROOT/.env" ]]; then
+  if [[ ! -f "$SOURCE_ENV_FILE" ]]; then
+    echo "[deploy] missing runtime environment: $ROOT/.env" >&2
+    exit 1
+  fi
   cp -a "$SOURCE_ENV_FILE" "$ROOT/.env"
+  chmod 600 "$ROOT/.env"
 fi
 if ! grep -q '^APP_STATE_DIR=' "$ROOT/.env"; then printf '\nAPP_STATE_DIR=/home/valou/services/lsr-nestjs-backend\n' >> "$ROOT/.env"; fi
 if ! grep -q '^APP_STORAGE_DIR=' "$ROOT/.env"; then printf 'APP_STORAGE_DIR=/home/valou/services/lsr-nestjs-backend/storage\n' >> "$ROOT/.env"; fi
