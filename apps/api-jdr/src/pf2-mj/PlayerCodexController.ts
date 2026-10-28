@@ -4,6 +4,11 @@ import { PlayerCodexService } from './PlayerCodexService'
 @Controller(['api/pf2-mj/player-codex', 'api/v1/pf2-mj/player-codex'])
 export class PlayerCodexController {
   constructor(private readonly service: PlayerCodexService) {}
+  @Get('foundry-presentations') foundryPresentations(@Headers('x-pf2-foundry-sync-key') key = ''): Promise<unknown> {
+    const expected = process.env['PF2_FOUNDRY_CHAT_SYNC_KEY'] ?? ''
+    if (!expected || key !== expected) throw new UnauthorizedException('Synchronisation Foundry non autorisée.')
+    return this.service.foundryPresentations()
+  }
   @Get('character-candidates') candidates(@Query('q') q = ''): Promise<unknown> { return this.service.characterCandidates(q) }
   @Get('profile-candidates') profileCandidates(@Query('q') q = ''): Promise<unknown> { return this.service.profileCandidates(q) }
   @Get('characters') characters(): Promise<unknown> { return this.service.listCharacters() }

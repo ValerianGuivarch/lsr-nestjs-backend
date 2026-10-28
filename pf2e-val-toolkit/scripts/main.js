@@ -1,3 +1,4 @@
+import { initDiscordCharacterChat, registerDiscordCharacterChatSettings } from "./discord-character-chat.js";
 import { initScenarioImporter } from "./scenario-importer/index.js";
 import { initReferenceIndexExporter } from "./reference-index/index.js";
 import { initCombatMovement } from "./combat-movement/index.js";
@@ -46,6 +47,7 @@ Hooks.once("init", () => {
   registerTokenNamingSettings();
   registerPf2eHudIntegrationSettings();
   registerPortraitTokenSyncSettings();
+  registerDiscordCharacterChatSettings();
 
   // Scene-control hooks must be registered during init, before Foundry builds
   // the left-hand scene controls for the first time.
@@ -80,6 +82,7 @@ Hooks.once("ready", () => {
   if (!game.user.isGM) return;
 
   void migrateSashkaFamiliarFeat();
+  initDiscordCharacterChat();
   initScenarioImporter();
   initReferenceIndexExporter();
 

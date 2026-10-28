@@ -2083,6 +2083,7 @@ export class DiscordCommandsService {
       portraitUrl: portrait,
       showName,
       channelId: interaction.channelId,
+      guildId: interaction.guildId,
     })
 
     let buttonLabel = 'Créer la fiche'
@@ -2606,6 +2607,19 @@ export class DiscordCommandsService {
             wikiUrl: pageUrl,
           })
           if (publication?.status === 'failed') this.logger.warn(`Fiche publiée, mais publication Discord impossible : ${publication.reason}`)
+        }
+        // Remplacer le bouton de présentation Discord par le lien wiki, sans supprimer le portrait.
+        if (presentation.messageId && (profile.created || profile.newlyPublished)) {
+          try {
+            const channel = await interaction.client.channels.fetch(presentation.channelId)
+            if (channel && 'messages' in channel) {
+              const original = await channel.messages.fetch(presentation.messageId)
+              const viewButton = new ButtonBuilder().setStyle(ButtonStyle.Link).setLabel('Voir la fiche').setURL(pageUrl)
+              await original.edit({ components: [new ActionRowBuilder<ButtonBuilder>().addComponents(viewButton)] })
+            }
+          } catch (error) {
+            this.logger.warn(`Bouton Discord non mis à jour : ${error instanceof Error ? error.message : String(error)}`)
+          }
         }
         await interaction.editReply({ content: profile.created ? `Fiche créée : ${pageUrl}` : profile.newlyPublished ? `Fiche publiée : ${pageUrl}` : `Cette fiche existe déjà : ${pageUrl}`, allowedMentions: { parse: [] } })
       } catch (error) { await interaction.editReply({ content: error instanceof Error ? `Création impossible : ${error.message}` : 'Création impossible.' }) }
