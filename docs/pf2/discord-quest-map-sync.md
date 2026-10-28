@@ -58,7 +58,7 @@ Voir le README de la carte pour le parcours et les seuils.
 ### Lien direct Discord → carte et emojis
 
 Les fiches bot présentent un bouton **Voir sur la carte**, désormais relié
-au fil exact : `https://map.l7r.fr/pj?quest=<thread_id>`. Le navigateur
+au fil exact : `https://map.l7r.fr/pj?quest=<thread_id>`. Il s'agit d'un **lien de consultation et de centrage**, et non d'un formulaire de création prérempli. Le bouton Discord **Créer un lieu sur la carte** ouvre séparément `/pj` ; le joueur doit encore faire **+ Lieu**, placer le point, sélectionner **★ Lieu de quête** et associer le fil. Le navigateur
 résout cet ID dans les associations publiques et rapproche la carte de l'unique
 lieu, ou cadre tous les lieux si la quête en a plusieurs. Les quêtes terminées
 sont montrées quand elles sont ciblées ; l'absence d'association affiche un

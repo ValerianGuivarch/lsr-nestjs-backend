@@ -53,7 +53,7 @@ La nouvelle donnée `important` des règles de visibilité est persistée par la
 ### Depuis une quête Discord : centrer directement la carte
 
 Le bouton **Voir sur la carte** des fiches créées par le bot ouvre le mode
-PJ avec l'ID du fil Discord : `/pj?quest=1565017298668888206`.
+PJ avec l'ID du fil Discord : `/pj?quest=<thread_id>`.
 La carte retrouve les lieux liés dans les données publiques par **ID Discord**,
 sans se fier aux noms ou aux coordonnées approximatives :
 
@@ -78,7 +78,8 @@ Le menu **Favoris**, partagé entre les trois modes, rassemble les lieux ordinai
 ### + Lieu : contribution PJ et MJ
 
 - Un PJ peut créer un lieu de quête en sélectionnant sa position sur la carte et en choisissant une ou plusieurs quêtes Discord, ou créer un **lieu personnalisé** libre, sans quête obligatoire, à l'icône plus discrète.
-- Le formulaire intégré recueille titre libre, description et associations ; il **remplace les pop-up natifs du navigateur**. La création d'une nouvelle quête elle-même reste sur Discord (création d'un fil, sans commande `/créer quête`).
+- Le formulaire intégré recueille titre libre, description et associations ; il **remplace les pop-up natifs du navigateur**. Pour créer la quête, utiliser de préférence le bouton **Créer une quête** du sujet épinglé Discord ou `/nouvelle-quete` (fiche bot), puis associer un lieu. La création manuelle native d'un fil est encore possible, mais ne crée pas la fiche interactive du bot. Voir le [guide des quêtes bot](../../docs/pf2/discord-quest-creator-pilot.md).
+- Le bouton Discord **Créer un lieu sur la carte** ouvre `/pj` sans préselection : cliquer sur **+ Lieu**, choisir les coordonnées, **★ Lieu de quête**, le fil Discord et enregistrer. Les liens sont ensuite reflétés dans la fiche Discord par notification du backend ou, en rattrapage, par la synchronisation périodique.
 - **Décision de partage :** aucune validation MJ. Une fiche créée par un PJ (`map_origin='pj'`) est immédiatement partagée. Les PJ peuvent modifier et supprimer les fiches d'origine PJ, mais ne doivent pas réécrire les lieux MJ ou de référence via les routes communautaires.
 - La logique d'interface `/pj`, `/mj-light`, `/mj` ne remplace **pas** une authentification côté serveur. Les endpoints communautaires historiques ne vérifient pas l'identité de l'auteur : le contrôle d'accès demeure un travail ouvert, même si le partage est volontairement libre entre PJ.
 

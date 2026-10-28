@@ -49,12 +49,22 @@ Quand Foundry est indisponible, le bot peut se replier sur le cache des noms d'A
 
 Le forum Discord `journal-de-quetes` est **source de vérité pour les fils, titres et statuts de quêtes**, tandis que `pf2.sqlite` conserve leur catalogue synchronisé et les associations cartographiques par **ID de fil**. `DiscordService` récupère les fils actifs et archivés au démarrage, puis toutes les **cinq minutes**. Le tag « Terminée » est déterminant ; un archivage seul ne signifie pas qu'une quête est finie. Les commandes `/terminer-quete` et `/relancer-quete` continuent de modifier Discord, sans créer une source concurrente.
 
-Un renommage de fil ne casse pas son association à un lieu : il se reflète après la prochaine synchronisation réussie et le rechargement de la carte. La création d'une quête reste la **création libre d'une discussion dans le forum** ; aucune commande `/créer quête` n'est souhaitée. La carte gère les lieux, non le cycle de vie des quêtes.
+Un renommage de fil ne casse pas son association à un lieu : il se reflète après la prochaine synchronisation réussie et le rechargement de la carte. Depuis le **28 octobre 2026**, le parcours normal passe par le sujet épinglé **Créer une quête** ou `/nouvelle-quete` : le bot crée une fiche interactive (titre, description, lieux, Terminer/Relancer/Modifier, lien vers la carte). La première réaction Unicode autre que 👍 sur le message initial fige l'emoji de titre, modifiable ensuite via `/changer-icone-quete` ; 👍 reste destiné à signaler l'intérêt. La création manuelle native d'un fil reste provisoirement possible, mais ne remplace pas la fiche du bot.
+
+La migration du 28 octobre a recréé **15 fils historiques** avec conservation des contenus, images et métadonnées, et réaffecté les liens cartographiques aux nouveaux IDs. Les anciens fils ont été marqués `obsolète`, archivés et verrouillés. Les messages supprimés ensuite par le MJ doivent rester supprimés : ne pas relancer un import ou une réparation depuis l'export historique. Les sauvegardes et le retour arrière sont expliqués dans [Gestion des quêtes Discord par le bot](../../docs/pf2/discord-quest-creator-pilot.md).
+
+Sur la carte, les marqueurs sont regroupés en dessous du zoom 9 et individualisés à partir de 9 ; le compteur représente les quêtes distinctes et les emojis proviennent des titres Discord. Le bouton **Voir sur la carte** utilise `/pj?quest=<thread_id>`, cible le ou les lieux publiés associés et signale une absence de localisation. Un lien ajouté depuis la carte est répercuté dans la fiche Discord après transaction (ou à la réconciliation périodique). Les quêtes ne sont pas les fils de mission dédiés à la planification des séances.
 
 Pour les tables SQLite, la migration des anciens points, les lieux partagés PJ/MJ, les favoris et la visibilité conditionnelle des quêtes terminées, voir le [document technique dédié](../../docs/pf2/discord-quest-map-sync.md). Les données métier réelles restent dans SQLite, et non dans ce fichier.
 
 
 ---
+
+---
+
+### 11.4 Réputations et publication aux joueurs (28 octobre 2026)
+
+Le tableau des réputations MediaWiki sépare désormais la **visibilité d'un groupe** et celle de **chaque faction/réputation**. La liste publique ne retourne que les groupes visibles avec leurs entrées visibles ; les comptes disposant du droit administratif MediaWiki `delete` voient aussi les éléments masqués et disposent des commandes **Visible / Masqué**. Les données et scores restent en SQLite (`pf2_reputation_group`, `pf2_reputation`) ; une nouvelle création de groupe ou de réputation est **masquée par défaut**. Les enregistrements existants restent visibles à la migration (ajout de `visible` avec défaut 1). La route backend interne est protégée par la clé Wiki ; ne jamais se contenter de cacher une ligne avec JavaScript côté PJ.
 
 ---
 
@@ -234,8 +244,6 @@ Les dossiers de continuité MJ restent la source documentaire privée ; ne pas l
 
 Le Toolkit réplique les présentations Discord récentes (sept jours) dans le chat Foundry, sous le compte du premier MJ actif. Nom visible ou masqué et portrait correspondent à la présentation Discord, sans texte introductif supplémentaire. Chaque message porte un identifiant de présentation en flag `pf2e-val-toolkit.discordCharacterPresentation`, utilisé pour les mises à jour et pour éviter les doublons. Un Foundry déconnecté récupère les présentations conservées dans cette fenêtre lors de sa reconnexion.
 
-Le bouton **Créer la fiche** ouvre le message Discord original pour utiliser son formulaire existant, accessible aux joueurs comme au MJ, plutôt que d'exposer une API d'écriture wiki sans authentification. Une fois la fiche publiée, le bouton du chat Foundry devient **Voir la fiche** (lien wiki) à la prochaine synchronisation ; le message Discord originel est également actualisé. Il ne s'agit donc pas d'un formulaire natif Foundry.
-
 **Configuration obligatoire :** définir `PF2_FOUNDRY_CHAT_SYNC_KEY` côté API, puis saisir la même valeur dans les réglages du monde Foundry → PF2e Val Toolkit → *Clé de synchronisation Discord → chat Foundry*. Sans clé configurée, aucune requête de synchronisation n'est envoyée. La route `GET /api/pf2-mj/player-codex/foundry-presentations` nécessite l'en-tête `x-pf2-foundry-sync-key` ; ne pas exposer cette clé aux joueurs. Les présentations Discord plus anciennes, antérieures à l'enregistrement de l'identifiant de serveur, ne sont pas importées automatiquement.
 
 ### Rafraîchissement adaptatif et création native Foundry (28 octobre 2026)
@@ -244,4 +252,4 @@ La synchronisation distingue deux états persistés en SQLite (`pf2_foundry_chat
 
 Le Toolkit conserve dans les réglages cachés du monde la liste des identifiants de présentations **déjà envoyées**, indépendamment de la présence de leurs messages dans le chat. Un message supprimé manuellement n'est donc pas recréé. Lors de la toute première activation de ce mécanisme, les présentations historiques ne sont pas republiées, même si leur message chat avait été supprimé ; les nouvelles présentations restent synchronisées si Foundry est momentanément déconnecté. Le flag du message continue de permettre l'actualisation des messages non supprimés (notamment « Voir la fiche »).
 
-Le bouton **Créer la fiche** est désormais natif au chat Foundry pour tous les joueurs : il ouvre un dialogue avec nom connu des joueurs, description courte et faction principale facultative, chargée depuis la même liste de factions publiées que Discord. La publication utilise le service canonique de création de fiches du backend et un jeton de capacité propre à chaque présentation ; elle ne transmet jamais la clé privée de synchronisation au navigateur des joueurs. Le backend met également à jour le bouton du message Discord initial en « Voir la fiche » lors d'une création depuis Foundry. Le Toolkit est passé en version `0.43.5`.
+Le bouton **Créer la fiche** est désormais natif au chat Foundry pour tous les joueurs : il ouvre un dialogue avec nom connu des joueurs, description courte et faction principale facultative, chargée depuis la même liste de factions publiées que Discord. La publication utilise le service canonique de création de fiches du backend et un jeton de capacité propre à chaque présentation ; elle ne transmet jamais la clé privée de synchronisation au navigateur des joueurs. Après publication, le bouton Foundry devient **Voir la fiche** (lien wiki) à la prochaine synchronisation ; le backend actualise également le bouton du message Discord initial. Le Toolkit est passé en version `0.43.5`. Le clic dans le chat Foundry utilise la délégation d'événement adaptée au Shadow DOM (correctif du 28 octobre).

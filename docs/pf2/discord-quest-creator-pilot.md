@@ -33,7 +33,7 @@ Les commandes `/terminer-quete` et `/relancer-quete` restent disponibles et util
 
 - **Terminé le 28 octobre 2026 :** migration des 15 discussions historiques et copie des messages.
 - Désactivation du bouton natif « Nouvelle publication » pour les joueurs.
-- Création de nouveaux lieux officiels depuis Discord : pour le pilote, seul le MJ crée les lieux, les joueurs choisissent parmi les lieux actuellement publiés sur la carte.
+- Création directe de **lieux officiels MJ** depuis Discord : non développée. En revanche, les PJ peuvent déjà créer immédiatement leurs **lieux communautaires** sur la carte via **+ Lieu**, sans validation du MJ, et y associer la quête. Ne pas confondre ces deux types de lieux.
 - **Développé le 28 octobre 2026 :** carte hybride (regroupement et séparation au zoom), emojis sur les lieux de quête, et bouton **Voir sur la carte** qui centre ou cadre les lieux liés au fil Discord. Un message apparaît si aucun lieu public n'est lié.
 
 ## Vérifications et sécurité
@@ -41,9 +41,20 @@ Les commandes `/terminer-quete` et `/relancer-quete` restent disponibles et util
 - Les migrations SQLite **045** et **046** enregistrent les quêtes du bot et le choix définitif de leur emoji. Le mécanisme existant sauvegarde la base avant migration.
 - Les boutons, les descriptions et le verrou de l'emoji sont conservés dans SQLite et survivent aux redémarrages.
 - Si la création de discussion fonctionne mais qu'une opération SQLite ou Discord échoue ensuite, le bot peut laisser une discussion partiellement créée. Vérifier et corriger ce cas avant un déploiement étendu.
+- Les tests de code couvrent notamment le service de quêtes (`DiscordQuestPilotService.spec.ts`), le verrou d'icône (`Pf2QuestIconReaction.spec.ts`), les changements de liens (`Pf2QuestMapChange.spec.ts`), le regroupement et les liens directs cartographiques (`hybrid-quest-grouping.spec.ts`, `quest-map-navigation.spec.ts`). Ces tests ne remplacent pas un contrôle manuel Discord + carte + SQLite en production.
 - Le sujet d'accueil est **déjà installé**. La commande d'installation n'est plus publiée ; le bouton existant continue de fonctionner.
 - Les boutons ne doivent pas mentionner massivement les joueurs : `allowedMentions.parse=[]`.
 - Les fils historiques sont maintenant marqués `obsolète` ; toute annulation doit suivre le plan de retour arrière ci-dessous, pas simplement retirer le tag.
+
+## Parcours actuel Discord → carte (28 octobre 2026)
+
+Le parcours conseillé est **📌 Créer une quête** (sujet épinglé) ou `/nouvelle-quete` → formulaire titre/description → réaction Unicode sur le premier message pour fixer l'icône → **Associer un lieu**. Les joueurs utilisent 👍 pour signaler leur intérêt. Les boutons **Modifier**, **Terminer**, **Relancer** et **Retirer un lieu** restent associés à la fiche du bot. Pour remplacer volontairement une icône déjà fixée, utiliser `/changer-icone-quete` dans le fil bot.
+
+**Associer un lieu** propose les lieux publiés non encore liés (25 par page), affiche les liens existants et permet d'en retirer sans supprimer le lieu lui-même. **Créer un lieu sur la carte** ouvre `/pj` : il faut ensuite cliquer sur **+ Lieu**, positionner le point, choisir **★ Lieu de quête**, sélectionner la quête et enregistrer ; le bouton Discord ne préremplit pas automatiquement la sélection. On peut aussi laisser la quête sans lieu et la compléter plus tard.
+
+**Voir sur la carte** ouvre `https://map.l7r.fr/pj?quest=<thread_id>` ; la carte recherche les lieux publiés associés à cet ID, zoome sur l'unique lieu ou cadre plusieurs lieux. Une quête terminée ciblée réactive l'affichage des quêtes terminées si nécessaire. Sans lieu visible, une information apparaît sans inventer de localisation. Les marqueurs reprennent les emojis de titre ; plusieurs quêtes d'un même lieu peuvent afficher jusqu'à trois emojis et un compteur. Les clusters de quêtes différentes conservent leur étoile et leur compteur. La page doit être actualisée pour lire un changement de catalogue synchronisé.
+
+La création native d'une discussion dans le forum reste techniquement autorisée pour le moment mais n'est **plus le parcours recommandé** : elle ne bénéficie pas d'une fiche de quête gérée par le bot. Ne pas confondre ce forum avec les fils de mission servant à planifier les séances.
 
 ## Synchronisation des lieux après création depuis la carte
 
@@ -88,4 +99,4 @@ Pour un retour global, exécuter sur le mini-PC après sauvegarde :
 
 Cela archive les nouvelles discussions et les marque `obsolète`, remet les associations cartographiques sur les fils historiques et désarchive/déverrouille ceux-ci en rétablissant leurs tags d'origine. **Retirer le tag seul ne suffit pas** pour remettre les associations de carte et écarter les doublons. Le retour arrière de la migration ne ressuscite **pas** la quête test volontairement supprimée.
 
-La migration historique ne constitue pas encore la **carte hybride** (regroupement des points par lieu et éclatement au zoom) ; ce chantier reste distinct.
+La **carte hybride a été livrée le 28 octobre 2026**, après cette migration : regroupement visuel des lieux au zoom inférieur à 9 (rayon de 64 px), séparation à partir du zoom 9, nombre de quêtes distinctes, emojis dans les repères et accès direct par **Voir sur la carte**. La migration des fils et l'affichage hybride sont des opérations différentes : le regroupement n'altère ni les liens SQLite ni les fils Discord. Voir [Synchronisation des quêtes avec la carte](discord-quest-map-sync.md) et le [README de l'application](../../apps/web-golarion-map/README.md).
