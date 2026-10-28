@@ -1185,3 +1185,9 @@ Elle est exclue des choix quotidiens et du quota libre, ne peut pas être retir�
 à l'enregistrement et n'est jamais dupliquée. Le nombre de choix libres reste
 égal au maximum PF2e moins les capacités imposées. Les familiers sans capacité
 imposée restent inchangés.
+
+## v0.43.4 — Accès au sélecteur dans la fiche familière
+
+Le bouton « Préparer » est placé dans l'en-tête de la section **Capacités**,
+à côté du bouton PF2e natif « Naviguer », au lieu de la barre de fenêtre.
+Il est injecté lors du rendu de la fiche et ne modifie pas les templates PF2e.

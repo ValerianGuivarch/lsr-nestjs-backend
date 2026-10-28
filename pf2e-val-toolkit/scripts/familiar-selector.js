@@ -188,12 +188,20 @@ export function initFamiliarSelector(){
     const actor=app.actor || app.document;
     if(actor?.type!=='familiar')return;
     const root=element instanceof HTMLElement?element:element?.[0];
-    const header=root?.querySelector('.window-header');
-    if(!header||header.querySelector('.val-familiar-open'))return;
-    const btn=document.createElement('button');
-    btn.type='button';btn.className='val-familiar-open';btn.title='Choisir les capacités quotidiennes';
-    btn.innerHTML='<i class="fa-solid fa-paw"></i> Capacités';
-    btn.addEventListener('click',()=>openFamiliarSelector(actor));header.append(btn);
+    // Inject beside the native "Naviguer" control within the familiar's
+    // Capacités section, not in the window title bar.
+    const browse=root?.querySelector('[data-action="browse-abilities"][data-action-category="familiar"]');
+    const controls=browse?.closest('.controls');
+    if(!controls || controls.querySelector('.val-familiar-open'))return;
+    // Clean up the obsolete title-bar button if a previous render injected it.
+    root.querySelector('.window-header .val-familiar-open')?.remove();
+    const btn=document.createElement('a');
+    btn.className='val-familiar-open';
+    btn.title='Choisir les capacités quotidiennes';
+    btn.setAttribute('role','button');
+    btn.innerHTML='<i class="fa-solid fa-paw" inert></i> Préparer';
+    btn.addEventListener('click',event=>{event.preventDefault();void openFamiliarSelector(actor);});
+    controls.insertBefore(btn,browse);
   };
   Hooks.on('renderActorSheetV2',add);
   Hooks.on('renderActorSheet',add);
