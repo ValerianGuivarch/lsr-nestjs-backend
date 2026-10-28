@@ -17,6 +17,7 @@ describe('DiscordQuestPilotService', () => {
       changeQuestUiPlaces: jest.fn().mockResolvedValue(undefined),
       updateQuestUiDescription: jest.fn().mockResolvedValue(undefined),
       claimQuestIcon: jest.fn().mockResolvedValue(true),
+      replaceQuestIcon: jest.fn().mockResolvedValue(undefined),
     }
     return { service: new DiscordQuestPilotService(stored as never), stored }
   }
@@ -235,6 +236,83 @@ describe('DiscordQuestPilotService', () => {
     const unicode = { ...react, emoji: { name: '🐸', id: null } }
     expect(await service.handleQuestIconReaction(unicode as never, { bot: true } as never)).toBe(false)
     expect(stored.questUi).not.toHaveBeenCalled()
+  })
+
+  it('replaces the icon of an already finalized quest without changing its description or linked places', async () => {
+    const { service, stored } = setup()
+    let savedIcon = '📜'
+    stored.questUi.mockImplementation(async () => ({
+      threadId: QUEST, kind: 'quest', description: 'Une porte mystérieuse',
+      icon: savedIcon, iconPending: false,
+    }))
+    stored.replaceQuestIcon.mockImplementation(async (_id: string, emoji: string) => { savedIcon = emoji })
+    const starter = { content: 'Ancienne fiche', edit: jest.fn().mockResolvedValue(undefined), author: { id: 'bot' } }
+    const forum = { type: ChannelType.GuildForum, availableTags: [], guildId: GUILD }
+    const client = { user: { id: 'bot' }, channels: { fetch: jest.fn().mockResolvedValue(forum) } }
+    const thread = {
+      id: QUEST, parentId: FORUM, appliedTags: [], name: '📜 Détruire le monde', client,
+      isThread: () => true, archived: false, createdTimestamp: Date.now(),
+      setName: jest.fn().mockImplementation(async (name: string) => { thread.name = name }),
+      fetchStarterMessage: jest.fn().mockResolvedValue(starter),
+    }
+    const makeCommand = (icone: string) => ({
+      commandName: 'changer-icone-quete', channel: thread, channelId: QUEST, guildId: GUILD, client,
+      options: { getString: jest.fn().mockReturnValue(icone) },
+      deferReply: jest.fn().mockResolvedValue(undefined),
+      reply: jest.fn().mockResolvedValue(undefined),
+      editReply: jest.fn().mockResolvedValue(undefined),
+    })
+    const first = makeCommand('🐸')
+    await service.changeQuestIconCommand(first as never)
+    expect(stored.replaceQuestIcon).toHaveBeenCalledWith(QUEST, '🐸')
+    expect(thread.name).toBe('🐸 Détruire le monde')
+    expect(starter.edit.mock.calls[0][0].content).toContain('Une porte mystérieuse')
+    expect(starter.edit.mock.calls[0][0].content).toContain('Grande Loge')
+    expect(first.editReply).toHaveBeenCalledWith(expect.stringContaining('🐸'))
+    expect(stored.saveDiscordQuestSnapshots).toHaveBeenCalledWith([
+      expect.objectContaining({ id: QUEST, title: '🐸 Détruire le monde' }),
+    ])
+    const second = makeCommand('👻')
+    await service.changeQuestIconCommand(second as never)
+    expect(thread.name).toBe('👻 Détruire le monde')
+    expect(stored.replaceQuestIcon).toHaveBeenLastCalledWith(QUEST, '👻')
+  })
+
+  it.each(['grenouille', '🐸👻', '<:frog:123456789012345678>'])(
+    'refuses invalid icon %s and leaves the database unchanged',
+    async badIcon => {
+      const { service, stored } = setup()
+      const reply = jest.fn().mockResolvedValue(undefined)
+      await service.changeQuestIconCommand({
+        options: { getString: () => badIcon }, reply,
+      } as never)
+      expect(reply).toHaveBeenCalledWith(expect.objectContaining({
+        content: expect.stringContaining('un seul emoji Unicode'), ephemeral: true,
+      }))
+      expect(stored.replaceQuestIcon).not.toHaveBeenCalled()
+    },
+  )
+
+  it('rejects an obsolete quest and a discussion not created by the bot', async () => {
+    const { service, stored } = setup()
+    const forum = { type: ChannelType.GuildForum, availableTags: [{ id: 'obsolete', name: 'obsolète' }], guildId: GUILD }
+    const client = { user: { id: 'bot' }, channels: { fetch: jest.fn().mockResolvedValue(forum) } }
+    const channel = {
+      id: QUEST, parentId: FORUM, appliedTags: ['obsolete'], client, isThread: () => true,
+    }
+    const editReply = jest.fn().mockResolvedValue(undefined)
+    const command = {
+      channel, channelId: QUEST, guildId: GUILD, client, options: { getString: () => '🐸' },
+      deferReply: jest.fn().mockResolvedValue(undefined), editReply,
+    }
+    await service.changeQuestIconCommand(command as never)
+    expect(editReply).toHaveBeenCalledWith(expect.stringContaining('obsolète'))
+    expect(stored.replaceQuestIcon).not.toHaveBeenCalled()
+    channel.appliedTags = []
+    stored.questUi.mockResolvedValue(null)
+    await service.changeQuestIconCommand(command as never)
+    expect(editReply).toHaveBeenCalledWith(expect.stringContaining('créée par le bot'))
+    expect(stored.replaceQuestIcon).not.toHaveBeenCalled()
   })
 
 })

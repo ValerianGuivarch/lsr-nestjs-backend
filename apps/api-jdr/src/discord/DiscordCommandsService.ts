@@ -104,6 +104,10 @@ export class DiscordCommandsService {
       new SlashCommandBuilder().setName('tirage-sort-joueur').setDescription('Tire au sort des personnes parmi une sélection Discord.').setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild).toJSON(),
       new SlashCommandBuilder().setName('help').setDescription('Affiche les commandes PF2 disponibles.').toJSON(),
       new SlashCommandBuilder().setName('nouvelle-quete').setDescription('Créer une quête dans le journal avec une fiche interactive.').toJSON(),
+      new SlashCommandBuilder().setName('changer-icone-quete')
+        .setDescription('Change l’emoji du titre de cette quête.')
+        .addStringOption(o => o.setName('icone').setDescription('Un seul emoji (ex. 🐸)').setRequired(true).setMaxLength(32))
+        .toJSON(),
       new SlashCommandBuilder().setName('choix-quete').setDescription('Affiche les quêtes du forum et les joueurs intéressés.').toJSON(),
       new SlashCommandBuilder().setName('terminer-quete').setDescription('Marque comme terminée la quête de ce fil.').toJSON(),
       new SlashCommandBuilder().setName('relancer-quete').setDescription('Relance une quête terminée depuis son fil.').toJSON(),
@@ -201,6 +205,10 @@ export class DiscordCommandsService {
       await this.reopenQuestCommand(interaction as ChatInputCommandInteraction)
       return true
     }
+    if (interaction.commandName === 'changer-icone-quete') {
+      await this.questPilot!.changeQuestIconCommand(interaction as ChatInputCommandInteraction)
+      return true
+    }
     if (interaction.commandName === 'help-admin') {
       await this.helpAdminCommand(interaction as ChatInputCommandInteraction)
       return true
@@ -251,6 +259,7 @@ export class DiscordCommandsService {
       content: [
         '**Commandes PF2**',
         '`/nouvelle-quete` — crée une quête avec une fiche interactive dans le journal.',
+        '`/changer-icone-quete icone:🐸` — remplace l’emoji du titre depuis une quête créée par le bot.',
         '`/choix-quete` — liste les quêtes du forum, les réservations par 👍 et signale les doubles choix.',
         '`/terminer-quete` — depuis un fil du journal des quêtes, demande un compte rendu, marque la quête Terminée et libère les réservations 👍.',
         '`/relancer-quete` — depuis un fil terminé, retire le tag Terminée et remet la quête dans `/choix-quete`.',

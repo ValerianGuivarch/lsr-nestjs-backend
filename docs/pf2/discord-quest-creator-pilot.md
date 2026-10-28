@@ -19,9 +19,11 @@ Pas de tag `essai` et aucun feature flag général.
 3. Le bot crée une discussion provisoire sans icône, publie la fiche **sans répéter le titre** et ajoute une réaction **👍** pour que les joueurs signalent leur intérêt.
 4. Un avertissement apparaît dans la fiche : **« Quête non finalisée : ajoutez une réaction (autre que 👍) à ce message pour choisir définitivement l'icône de la quête. »**
 5. La première réaction avec un **emoji Unicode standard** (par exemple 🐸, 👻, 😈) déposée sur le **premier message du bot** fixe définitivement l'icône dans le titre du fil. L'avertissement disparaît automatiquement. Les réactions suivantes, les réactions sur des réponses et celles du bot ne changent rien. Les 👍 restent réservés aux inscriptions.
-6. **Modifier** ouvre directement le formulaire titre + description. L'icône retenue n'y est plus modifiable. Les quêtes antérieures à cette modification conservent leur icône précédente et ne repassent pas en état non finalisé.
+6. **Modifier** ouvre directement le formulaire titre + description, sans choix d'icône. **Exception volontaire :** `/changer-icone-quete icone:🐸`, lancée dans une quête créée par le bot, permet à n'importe quel PJ de changer l'icône après sa finalisation. La commande valide un emoji Unicode unique et met à jour le titre Discord, SQLite et le catalogue cartographique. La confirmation est privée. Les anciennes quêtes conservent leur icône précédente tant que la commande n'est pas utilisée.
 7. Pour les lieux, utiliser **Associer un lieu** ou **Créer un lieu sur la carte** ; le bot synchronise ensuite la fiche.
 8. **Terminer** et **Relancer** conservent leurs fonctionnalités, dont le compte rendu obligatoire.
+
+La commande `/changer-icone-quete` est utilisable dans les quêtes créées par le bot, pas dans le sujet d'accueil, une discussion historique ni une quête portant le tag `obsolète`. Tous les PJ ont les mêmes droits.
 
 Les réactions de type **emoji personnalisé du serveur** ne peuvent pas être représentées par un véritable emoji dans un titre de discussion : seules les réactions Unicode standards servent ici au choix de l'icône.
 

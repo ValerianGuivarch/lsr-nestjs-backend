@@ -384,6 +384,19 @@ export class Pf2PersistenceService implements OnModuleInit {
     return rows[0]?.claimToken === token
   }
 
+  /** Manual override from /changer-icone-quete: unlocked for any PJ in bot-owned quest threads. */
+  async replaceQuestIcon(threadId: string, emoji: string): Promise<void> {
+    if (!/^\d{15,22}$/.test(threadId) || !emoji || emoji.length > 32) {
+      throw new Error('Identifiant ou icône de quête invalide.')
+    }
+    const ui = await this.questUi(threadId)
+    if (ui?.kind !== 'quest') throw new Error('Cette quête n’est pas gérée par le bot.')
+    await this.dataSource.query(
+      "UPDATE pf2_quest_ui SET icon=?, icon_pending=0 WHERE thread_id=? AND kind='quest'",
+      [emoji, threadId],
+    )
+  }
+
   async questLauncherId(): Promise<string | null> {
     const rows = await this.dataSource.query(
       "SELECT thread_id AS threadId FROM pf2_quest_ui WHERE kind='launcher' ORDER BY created_at LIMIT 1",

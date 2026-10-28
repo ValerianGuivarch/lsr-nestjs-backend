@@ -37,4 +37,16 @@ describe('Quest reaction icon stored in SQLite', () => {
     expect(await persistence.claimQuestIcon(QUEST, '👻')).toBe(false)
     expect((await persistence.questUi(QUEST))?.icon).toBe(record?.icon)
   })
+  it('overrides a finalized icon and disables a still-pending reaction choice', async () => {
+    await persistence.replaceQuestIcon(QUEST, '🐸')
+    expect(await persistence.questUi(QUEST)).toMatchObject({icon: '🐸', iconPending: false})
+    expect(await persistence.claimQuestIcon(QUEST, '🐲')).toBe(false)
+    await persistence.replaceQuestIcon(QUEST, '👻')
+    expect(await persistence.questUi(QUEST)).toMatchObject({icon: '👻', iconPending: false})
+    await persistence.replaceQuestIcon(OLD, '🌿')
+    expect(await persistence.questUi(OLD)).toMatchObject({icon: '🌿', iconPending: false})
+    await expect(persistence.replaceQuestIcon('1565017298668888299', '🐸'))
+      .rejects.toThrow('pas gérée par le bot')
+  })
+
 })

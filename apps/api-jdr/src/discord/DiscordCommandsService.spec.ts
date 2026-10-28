@@ -6,7 +6,7 @@ describe('DiscordCommandsService', () => {
     const service = new DiscordCommandsService({} as never, {} as never)
     const definitions = service.definitions().map(command => command.name)
     expect(definitions).toEqual(expect.arrayContaining([
-      'help', 'help-admin', 'nouvelle-quete', 'choix-quete', 'terminer-quete', 'relancer-quete', 'random-perso', 'tirage-sort-joueur', 'recap-pjs', 'recap-seance',
+      'help', 'help-admin', 'nouvelle-quete', 'changer-icone-quete', 'choix-quete', 'terminer-quete', 'relancer-quete', 'random-perso', 'tirage-sort-joueur', 'recap-pjs', 'recap-seance',
       'debut-seance', 'fin-seance', 'personnage', 'faction', 'nouvelle-faction', 'associer-faction', 'afficher-personnage', 'afficher-faction', 'rechercher', 'wiki', 'wiki-admin',
       'proposer-date-seance', 'modifier-date-seance', 'relancer-date-seance', 'analyse-date-seance', 'valider-date-seance', 'modifier-groupe-seance',
     ]))
@@ -14,6 +14,18 @@ describe('DiscordCommandsService', () => {
       'ping', 'export-full', 'resume', 'recap', 'new-game', 'finish-game',
       'planification', 'modifier-planification', 'programmer-seance', 'modifier-groupe-seance',
     ]))
+  })
+
+  it('registers an emoji argument and routes the icon-changing slash command to the quest service', async () => {
+    const pilot = { changeQuestIconCommand: jest.fn().mockResolvedValue(undefined) }
+    const service = new DiscordCommandsService({} as never, {} as never, undefined, undefined, undefined, undefined, undefined, pilot as never)
+    const definition = service.definitions().find(command => command.name === 'changer-icone-quete') as any
+    expect(definition.options).toEqual(expect.arrayContaining([
+      expect.objectContaining({ name: 'icone', required: true }),
+    ]))
+    const interaction = { commandName: 'changer-icone-quete' }
+    expect(await service.handle(interaction as never)).toBe(true)
+    expect(pilot.changeQuestIconCommand).toHaveBeenCalledWith(interaction)
   })
 
   it('shows /help privately and protects /help-admin', async () => {

@@ -32,7 +32,7 @@ export class DiscordQuestPilotService {
     return channel
   }
 
-  private async thread(interaction: ButtonInteraction | ModalSubmitInteraction | StringSelectMenuInteraction, id: string): Promise<ThreadChannel> {
+  private async thread(interaction: ButtonInteraction | ModalSubmitInteraction | StringSelectMenuInteraction | ChatInputCommandInteraction, id: string): Promise<ThreadChannel> {
     const channel = interaction.channel
     if (!channel?.isThread() || channel.id !== id || channel.parentId !== FORUM_ID) {
       throw new Error('Cette action doit être effectuée dans la discussion de la quête.')
@@ -102,6 +102,43 @@ export class DiscordQuestPilotService {
       createdAt: new Date(channel.createdTimestamp ?? Date.now()).toISOString(),
     }])
     return true
+  }
+
+  /** Explicit override of the emoji chosen through a reaction, for all PJ equally. */
+  async changeQuestIconCommand(interaction: ChatInputCommandInteraction): Promise<void> {
+    const icon = interaction.options.getString('icone', true).trim()
+    const oneEmoji = /^(?:\p{Regional_Indicator}{2}|[#*0-9]\uFE0F?\u20E3|\p{Extended_Pictographic}(?:\uFE0F|\p{Emoji_Modifier})?(?:\u200D\p{Extended_Pictographic}(?:\uFE0F|\p{Emoji_Modifier})?)*)$/u.test(icon)
+    if (!oneEmoji || !isUnicodeEmoji(icon)) {
+      await interaction.reply({
+        content: 'Indique un seul emoji Unicode (ex. 🐸). Les emojis personnalisés du serveur ne sont pas compatibles avec les titres Discord.',
+        ephemeral: true,
+      })
+      return
+    }
+    await interaction.deferReply({ ephemeral: true })
+    try {
+      const thread = await this.thread(interaction, interaction.channelId)
+      const forum = await this.forum(interaction.client)
+      if (forum.guildId !== interaction.guildId) throw new Error('Cette commande doit être lancée sur le serveur configuré.')
+      const starter = await thread.fetchStarterMessage({ force: true })
+      if (!starter || starter.author.id !== interaction.client.user?.id) {
+        throw new Error('Cette quête n’a pas de fiche initiale créée par le bot.')
+      }
+
+      // SQLite is authoritative, so the regular Discord catalogue reconciliation
+      // can repair a temporary failure to rename the thread.
+      await this.persistence.replaceQuestIcon(thread.id, icon)
+      await this.refreshThreadPanel(thread)
+      await this.persistence.saveDiscordQuestSnapshots([{
+        id: thread.id, title: thread.name,
+        completed: await this.completed(thread), archived: Boolean(thread.archived), obsolete: false,
+        url: 'https://discord.com/channels/' + forum.guildId + '/' + thread.id,
+        createdAt: new Date(thread.createdTimestamp ?? Date.now()).toISOString(),
+      }])
+      await interaction.editReply('Icône de la quête remplacée par ' + icon + '.')
+    } catch (error) {
+      await interaction.editReply('Modification de l’icône impossible : ' + this.error(error))
+    }
   }
 
   private actions(threadId: string, completed: boolean) {
