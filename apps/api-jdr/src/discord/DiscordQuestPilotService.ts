@@ -3,7 +3,7 @@ import {
   ActionRowBuilder, ButtonBuilder, ButtonInteraction, ButtonStyle, ChannelType,
   ChatInputCommandInteraction, ForumChannel, ModalBuilder, ModalSubmitInteraction,
   StringSelectMenuBuilder, StringSelectMenuInteraction, TextInputBuilder, TextInputStyle,
-  ThreadChannel, ThreadAutoArchiveDuration,
+  ThreadChannel, ThreadAutoArchiveDuration, MessageReaction, PartialMessageReaction, User, PartialUser,
 } from 'discord.js'
 import { Pf2PersistenceService } from '../pf2-storage/Pf2PersistenceService'
 
@@ -12,40 +12,15 @@ const FORUM_ID = process.env['PF2_DISCORD_QUEST_FORUM_CHANNEL_ID']?.trim() || '1
 const MAP_URL = 'https://map.l7r.fr/pj'
 const NO_PINGS = { parse: [] as Array<'everyone' | 'users' | 'roles'> }
 
-// Discord provides an emoji option on string select menus, not a native
-// emoji picker inside text modals. 23 common choices + optional custom entry
-// fit in one menu, even with the extra 'keep current' option while editing.
-const QUEST_ICONS = [
-  { key: 'scroll', emoji: '📜', label: 'Document / recherche' },
-  { key: 'demon', emoji: '😈', label: 'Démon / malédiction' },
-  { key: 'swords', emoji: '⚔️', label: 'Combat / bataille' },
-  { key: 'shield', emoji: '🛡️', label: 'Défense / protection' },
-  { key: 'magic', emoji: '🔮', label: 'Magie / rituel' },
-  { key: 'skull', emoji: '💀', label: 'Mort / danger' },
-  { key: 'crown', emoji: '👑', label: 'Roi / noblesse' },
-  { key: 'nature', emoji: '🌿', label: 'Nature / druides' },
-  { key: 'mountain', emoji: '⛰️', label: 'Montagne / exploration' },
-  { key: 'sea', emoji: '🌊', label: 'Océan / voyage' },
-  { key: 'beach', emoji: '🏖️', label: 'Plage / littoral' },
-  { key: 'treasure', emoji: '💰', label: 'Trésor / récompense' },
-  { key: 'secret', emoji: '🗝️', label: 'Secret / énigme' },
-  { key: 'investigate', emoji: '🕵️', label: 'Enquête / mystère' },
-  { key: 'smith', emoji: '⚒️', label: 'Artisanat / machine' },
-  { key: 'fort', emoji: '🏰', label: 'Ville / forteresse' },
-  { key: 'trade', emoji: '🧂', label: 'Commerce / contrebande' },
-  { key: 'sad', emoji: '😭', label: 'Tragédie / secours' },
-  { key: 'knife', emoji: '🔪', label: 'Assassinat / menace' },
-  { key: 'spirit', emoji: '👻', label: 'Fantôme / esprit' },
-  { key: 'potion', emoji: '🧪', label: 'Alchimie / expérience' },
-  { key: 'announcement', emoji: '📣', label: 'Appel / annonce' },
-  { key: 'monster', emoji: '🍖', label: 'Monstres / chair' },
-] as const
-
-type QuestIconChoice = typeof QUEST_ICONS[number]['key'] | 'custom' | 'keep'
-const chosenIcon = (key: string): string | undefined => QUEST_ICONS.find(icon => icon.key === key)?.emoji
-const isSingleEmoji = (value: string): boolean =>
-  /^(?:\p{Regional_Indicator}{2}|\p{Extended_Pictographic}(?:️|\p{Emoji_Modifier})?(?:‍\p{Extended_Pictographic}(?:️|\p{Emoji_Modifier})?)*)$/u.test(value)
-
+// Unicode reactions work as icons in Discord thread titles. Server-specific
+// animated/custom emoji reactions cannot be rendered in a thread title.
+const isUnicodeEmoji = (value: string): boolean =>
+  value.length <= 20 && !/\s/u.test(value) &&
+  /[\p{Extended_Pictographic}\p{Regional_Indicator}\u20e3]/u.test(value)
+const leadingEmoji = (value: string): { icon: string; title: string } | null => {
+  const match = /^(\S+)\s+(.+)$/u.exec(value)
+  return match && isUnicodeEmoji(match[1]) ? { icon: match[1], title: match[2] } : null
+}
 
 @Injectable()
 export class DiscordQuestPilotService {
@@ -79,50 +54,54 @@ export class DiscordQuestPilotService {
       await interaction.reply({ content: 'Commande utilisable uniquement sur le serveur configuré.', ephemeral: true })
       return
     }
-    await interaction.reply({ ...this.iconPicker('new'), ephemeral: true })
+    await interaction.showModal(this.questForm('new'))
   }
 
-  private iconPicker(kind: 'new' | 'edit') {
-    const options: Array<{label: string; value: QuestIconChoice; emoji?: string; description?: string}> = QUEST_ICONS.map(icon => ({
-      label: icon.label, value: icon.key, emoji: icon.emoji,
-    }))
-    options.push({ label: 'Autre emoji…', value: 'custom', description: 'Saisir un emoji qui ne figure pas dans la liste' })
-    if (kind === 'edit') options.unshift({ label: 'Conserver l’icône actuelle', value: 'keep', description: 'Garder l’emoji déjà utilisé par cette quête' })
-    const menu = new StringSelectMenuBuilder()
-      .setCustomId(`${PREFIX}:icon:${kind}`)
-      .setPlaceholder('Choisis une icône de quête (emojis visibles)')
-      .setMinValues(1).setMaxValues(1).addOptions(options)
-    return {
-      content: kind === 'new'
-        ? '**Choisis l’icône de ta nouvelle quête.**\nTu pourras ensuite saisir le titre et la description.'
-        : '**Choisis l’icône de la quête.**\nSélectionne une icône ou conserve celle qui existe déjà.',
-      components: [new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(menu)],
-      allowedMentions: NO_PINGS,
-    }
-  }
-
-  private questForm(kind: 'new' | 'edit', iconKey: QuestIconChoice, title = '', description = ''): ModalBuilder {
+  private questForm(kind: 'new' | 'edit', title = '', description = ''): ModalBuilder {
     const modal = new ModalBuilder()
-      .setCustomId(`${PREFIX}:${kind}:${iconKey}`)
+      .setCustomId(PREFIX + ':' + kind)
       .setTitle(kind === 'new' ? 'Créer une quête' : 'Modifier la quête')
     const name = new TextInputBuilder()
       .setCustomId('title').setLabel('Titre de la quête')
-      .setStyle(TextInputStyle.Short).setRequired(true).setMaxLength(88)
+      .setStyle(TextInputStyle.Short).setRequired(true).setMaxLength(78)
     const details = new TextInputBuilder()
       .setCustomId('description').setLabel('Description de la quête')
       .setStyle(TextInputStyle.Paragraph).setRequired(true).setMaxLength(1400)
-    if (title) name.setValue(title)
+    if (title) name.setValue(title.slice(0, 78))
     if (description) details.setValue(description)
-    if (iconKey === 'custom') {
-      const custom = new TextInputBuilder()
-        .setCustomId('customIcon').setLabel('Ton emoji (un seul)')
-        .setStyle(TextInputStyle.Short).setRequired(true).setMaxLength(36).setPlaceholder('🐉')
-      modal.addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(custom))
-    }
     return modal.addComponents(
       new ActionRowBuilder<TextInputBuilder>().addComponents(name),
       new ActionRowBuilder<TextInputBuilder>().addComponents(details),
     )
+  }
+
+  /** First non-👍 emoji reaction permanently selects the icon for a new bot-owned quest. */
+  async handleQuestIconReaction(reaction: MessageReaction | PartialMessageReaction, user: User | PartialUser): Promise<boolean> {
+    if (user.bot || reaction.emoji.id || !reaction.emoji.name ||
+      /^👍[\u{1F3FB}-\u{1F3FF}]?$/u.test(reaction.emoji.name) || !isUnicodeEmoji(reaction.emoji.name)) return false
+    const message = reaction.message
+    if (message.id !== message.channelId) return false // Only the forum starter message
+    const channel = message.channel
+    if (!channel?.isThread() || channel.parentId !== FORUM_ID) return false
+    const ui = await this.persistence.questUi(channel.id)
+    if (ui?.kind !== 'quest' || !ui.iconPending) return false
+    const forum = await this.forum(channel.client)
+    const obsoleteTag = forum.availableTags.find(tag => tag.name.trim().toLocaleLowerCase('fr') === 'obsolète')
+    if (obsoleteTag && channel.appliedTags.includes(obsoleteTag.id)) return false
+    const starter = await channel.fetchStarterMessage({ force: true })
+    if (!starter || starter.author.id !== channel.client.user?.id) return false
+    const icon = reaction.emoji.name
+    if (!await this.persistence.claimQuestIcon(channel.id, icon)) return false
+    // The state is committed first. If Discord is temporarily unavailable,
+    // the five-minute catalogue reconciliation will retry applying the icon.
+    await this.refreshThreadPanel(channel)
+    await this.persistence.saveDiscordQuestSnapshots([{
+      id: channel.id, title: channel.name,
+      completed: await this.completed(channel), archived: Boolean(channel.archived), obsolete: false,
+      url: 'https://discord.com/channels/' + forum.guildId + '/' + channel.id,
+      createdAt: new Date(channel.createdTimestamp ?? Date.now()).toISOString(),
+    }])
+    return true
   }
 
   private actions(threadId: string, completed: boolean) {
@@ -148,7 +127,7 @@ export class DiscordQuestPilotService {
     return Boolean(tag && thread.appliedTags.includes(tag.id))
   }
 
-  private async card(thread: ThreadChannel, description: string): Promise<{ content: string; components: ReturnType<DiscordQuestPilotService['actions']>; allowedMentions: typeof NO_PINGS }> {
+  private async card(thread: ThreadChannel, description: string, iconPending = false): Promise<{ content: string; components: ReturnType<DiscordQuestPilotService['actions']>; allowedMentions: typeof NO_PINGS }> {
     const [locations, associated, done] = await Promise.all([
       this.persistence.questUiPlaces(thread.id),
       this.persistence.questUiLinkedPlaceIds(thread.id),
@@ -157,16 +136,28 @@ export class DiscordQuestPilotService {
     const byId = new Map(locations.map(p => [p.id, p.name]))
     const places = associated.map(id => byId.get(id)).filter((v): v is string => Boolean(v))
     const shown = places.length ? places.map(x => '• ' + x).join('\n') : '_Aucun lieu : utilise « Associer un lieu »._'
-    const content = `## ${thread.name}\n\n${description}\n\n**📍 Lieux de la quête**\n${shown}\n\n**Statut :** ${done ? '✅ Terminée' : '🟢 En cours'}\n\n_${done ? 'La quête est terminée : le bouton « Relancer » permet de la rouvrir.' : 'Réagissez 👍 à ce premier message pour indiquer votre intérêt.'} Les boutons restent utilisables après un redémarrage du bot._`
+    const instruction = iconPending
+      ? '**⚠️ Quête non finalisée : ajoutez une réaction (autre que 👍) à ce message pour choisir définitivement l’icône de la quête.**\n\n'
+      : ''
+    // Discord already shows the title (and its icon) above the starter message.
+    const content = instruction + description + '\n\n**📍 Lieux de la quête**\n' + shown +
+      '\n\n**Statut :** ' + (done ? '✅ Terminée' : '🟢 En cours') +
+      '\n\n_' + (done ? 'La quête est terminée : le bouton « Relancer » permet de la rouvrir.' :
+        'Réagissez 👍 à ce premier message pour indiquer votre intérêt.') +
+      ' Les boutons restent utilisables après un redémarrage du bot._'
     return { content: content.slice(0, 1995), components: this.actions(thread.id, done), allowedMentions: NO_PINGS }
   }
 
   async refreshThreadPanel(thread: ThreadChannel): Promise<void> {
     const ui = await this.persistence.questUi(thread.id)
     if (!ui || ui.kind !== 'quest') return
+    if (!ui.iconPending && ui.icon && !thread.name.startsWith(ui.icon + ' ')) {
+      const original = leadingEmoji(thread.name)?.title ?? thread.name
+      await thread.setName(ui.icon + ' ' + original, 'Icône figée après la première réaction')
+    }
     const starter = await thread.fetchStarterMessage({ force: true })
     if (!starter || starter.author.id !== thread.client.user?.id) throw new Error('Premier message du bot introuvable.')
-    const next = await this.card(thread, ui.description)
+    const next = await this.card(thread, ui.description, ui.iconPending)
     // Poll-based reconciliation is a safety net for missed notifications.
     // Don't send an edit to Discord if the current card is already accurate.
     if (starter.content === next.content) return
@@ -180,7 +171,7 @@ export class DiscordQuestPilotService {
       if (!launcher || interaction.channelId !== launcher || interaction.message.id !== launcher) {
         await interaction.reply({ content: 'Ce bouton de création n’est plus actif.', ephemeral: true }); return true
       }
-      await interaction.reply({ ...this.iconPicker('new'), ephemeral: true })
+      await interaction.showModal(this.questForm('new'))
       return true
     }
     const match = /^pf2-quest-ui:(edit|places):(\d{15,22})(?::(add|remove):(\d+))?$/.exec(id)
@@ -190,7 +181,9 @@ export class DiscordQuestPilotService {
       const thread = await this.thread(interaction, threadId)
       if (action !== 'places' && interaction.message.id !== thread.id) throw new Error('Utilise les boutons de la fiche initiale.')
       if (action === 'edit') {
-        await interaction.reply({ ...this.iconPicker('edit'), ephemeral: true })
+        const saved = await this.persistence.questUi(threadId)
+        await interaction.showModal(this.questForm('edit',
+          leadingEmoji(thread.name)?.title ?? thread.name, saved?.description ?? ''))
         return true
       }
       await interaction.reply({ ...await this.placePicker(threadId, mode === 'remove' ? 'remove' : 'add', Number(pageText || 0)), ephemeral: true })
@@ -258,29 +251,6 @@ export class DiscordQuestPilotService {
   }
 
   async handleSelect(interaction: StringSelectMenuInteraction): Promise<boolean> {
-    const iconMatch = /^pf2-quest-ui:icon:(new|edit)$/.exec(interaction.customId)
-    if (iconMatch) {
-      const mode = iconMatch[1] as 'new' | 'edit'
-      const choice = interaction.values[0]
-      if (choice !== 'custom' && !(mode === 'edit' && choice === 'keep') && !chosenIcon(choice)) {
-        await interaction.reply({ content: 'Icône inconnue : utilise le menu de sélection.', ephemeral: true })
-        return true
-      }
-      if (mode === 'new') {
-        const forum = await this.forum(interaction.client)
-        if (interaction.guildId !== forum.guildId) {
-          await interaction.reply({ content: 'Impossible de créer une quête ici.', ephemeral: true })
-          return true
-        }
-        await interaction.showModal(this.questForm('new', choice as QuestIconChoice))
-      } else {
-        const thread = await this.thread(interaction, interaction.channelId)
-        const saved = await this.persistence.questUi(thread.id)
-        const parts = thread.name.match(/^(\S+)\s+(.+)$/u)
-        await interaction.showModal(this.questForm('edit', choice as QuestIconChoice, parts?.[2] ?? thread.name, saved?.description ?? ''))
-      }
-      return true
-    }
     const match = /^pf2-quest-ui:select:(\d{15,22}):(add|remove)$/.exec(interaction.customId)
     if (!match) return false
     await interaction.deferReply({ ephemeral: true })
@@ -295,14 +265,8 @@ export class DiscordQuestPilotService {
   }
 
   async handleModal(interaction: ModalSubmitInteraction): Promise<boolean> {
-    const modalMatch = /^pf2-quest-ui:(new|edit):([a-z]+)$/.exec(interaction.customId)
-    if (!modalMatch) return false
-    const edit = modalMatch[1] === 'edit'
-    const iconKey = modalMatch[2]
-    if (!chosenIcon(iconKey) && iconKey !== 'custom' && !(edit && iconKey === 'keep')) {
-      await interaction.reply({ content: 'Icône invalide. Relance le formulaire.', ephemeral: true })
-      return true
-    }
+    if (interaction.customId !== PREFIX + ':new' && interaction.customId !== PREFIX + ':edit') return false
+    const edit = interaction.customId === PREFIX + ':edit'
     if (edit) {
       if (!interaction.channel?.isThread() || interaction.channel.parentId !== FORUM_ID) {
         await interaction.reply({ content: 'Cette édition doit avoir lieu dans une quête créée par le bot.', ephemeral: true })
@@ -311,26 +275,23 @@ export class DiscordQuestPilotService {
       const ui = await this.persistence.questUi(interaction.channelId)
       if (!ui || ui.kind !== 'quest') { await interaction.reply({ content: 'Quête inconnue.', ephemeral: true }); return true }
     }
-    const icon = iconKey === 'custom'
-      ? interaction.fields.getTextInputValue('customIcon').trim()
-      : iconKey === 'keep'
-        ? interaction.channel?.isThread() ? interaction.channel.name.match(/^(\S+)\s+(.+)$/u)?.[1] ?? '📜' : '📜'
-        : chosenIcon(iconKey) ?? ''
-    if (!icon || (iconKey === 'custom' && !isSingleEmoji(icon))) {
-      await interaction.reply({ content: 'Choisis un seul emoji valide pour la quête.', ephemeral: true })
-      return true
-    }
     const title = interaction.fields.getTextInputValue('title').replace(/\s+/g, ' ').trim()
     const description = interaction.fields.getTextInputValue('description').trim()
-    const name = `${icon} ${title}`
-    if (!title || !description || name.length > 100 || name.includes('@everyone') || name.includes('@here')) {
-      await interaction.reply({ content: 'Titre/emoji invalide (100 caractères maximum au total) ou description vide.', ephemeral: true })
+    if (!title || !description || title.length > 78 || title.includes('@everyone') ||
+      title.includes('@here') || leadingEmoji(title)) {
+      await interaction.reply({
+        content: 'Titre invalide (78 caractères maximum). Ne saisis pas d’emoji dans le titre : utilise une réaction sur la quête.',
+        ephemeral: true,
+      })
       return true
     }
     await interaction.deferReply({ ephemeral: true })
     try {
       if (edit) {
         const thread = await this.thread(interaction, interaction.channelId)
+        const ui = await this.persistence.questUi(thread.id)
+        const lockedIcon = ui?.icon || leadingEmoji(thread.name)?.icon || ''
+        const name = (lockedIcon ? lockedIcon + ' ' : '') + title
         await thread.setName(name, 'Modification de quête via sa fiche')
         await this.persistence.updateQuestUiDescription(thread.id, description)
         await this.persistence.saveDiscordQuestSnapshots([{
@@ -342,14 +303,16 @@ export class DiscordQuestPilotService {
         await interaction.editReply('Fiche de quête modifiée. Le titre du forum a également été mis à jour.')
       } else {
         const forum = await this.forum(interaction.client)
+        const name = title
         const thread = await forum.threads.create({
           name, autoArchiveDuration: ThreadAutoArchiveDuration.OneDay,
           message: {
-            content: `## ${name}\n\n${description}\n\n**📍 Lieux**\n_Aucun lieu associé pour le moment._\n\n**Statut :** 🟢 En cours\n\n_Réagissez 👍 à ce message si la quête vous intéresse._`,
+            content: '**⚠️ Quête non finalisée : ajoutez une réaction (autre que 👍) à ce message pour choisir définitivement l’icône de la quête.**\n\n' +
+              description + '\n\n**📍 Lieux de la quête**\n_Aucun lieu associé._\n\n**Statut :** 🟢 En cours',
             allowedMentions: NO_PINGS,
           },
         })
-        await this.persistence.saveQuestUi(thread.id, 'quest', description)
+        await this.persistence.saveQuestUi(thread.id, 'quest', description, true)
         await this.persistence.saveDiscordQuestSnapshots([{
           id: thread.id, title: name, completed: false, archived: false, obsolete: false,
           url: `https://discord.com/channels/${forum.guildId}/${thread.id}`,
@@ -359,7 +322,8 @@ export class DiscordQuestPilotService {
         const starter = await thread.fetchStarterMessage({ force: true })
         if (starter) await starter.react('👍').catch(() => undefined)
         await interaction.editReply({
-          content: `Quête créée : https://discord.com/channels/${forum.guildId}/${thread.id}\nOuvre la discussion pour associer la Grande Loge (ou plusieurs lieux) à la quête.`,
+          content: 'Quête créée : https://discord.com/channels/' + forum.guildId + '/' + thread.id +
+            '\nRéagis au premier message avec l’emoji de ton choix pour fixer définitivement l’icône de la quête. Tu peux aussi associer des lieux.',
         })
       }
     } catch (error) { await interaction.editReply('Création/modification impossible : ' + this.error(error)) }

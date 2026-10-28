@@ -361,11 +361,27 @@ export class Pf2PersistenceService implements OnModuleInit {
   }
 
   /** The launcher is a forum post, not a quest. Quest cards remain bot-owned across restarts. */
-  async questUi(threadId: string): Promise<{ threadId: string; kind: 'launcher' | 'quest'; description: string } | null> {
+  async questUi(threadId: string): Promise<{ threadId: string; kind: 'launcher' | 'quest'; description: string; icon: string; iconPending: boolean } | null> {
     const rows = await this.dataSource.query(
-      'SELECT thread_id AS threadId, kind, description FROM pf2_quest_ui WHERE thread_id=?', [threadId],
-    ) as Array<{ threadId: string; kind: 'launcher' | 'quest'; description: string }>
-    return rows[0] ?? null
+      'SELECT thread_id AS threadId, kind, description, icon, icon_pending AS iconPending FROM pf2_quest_ui WHERE thread_id=?', [threadId],
+    ) as Array<{ threadId: string; kind: 'launcher' | 'quest'; description: string; icon: string; iconPending: number }>
+    return rows[0] ? { ...rows[0], iconPending: rows[0].iconPending === 1 } : null
+  }
+
+  /** Atomically accept only the first non-👍 Unicode reaction on a new quest. */
+  async claimQuestIcon(threadId: string, emoji: string): Promise<boolean> {
+    if (!/^\d{15,22}$/.test(threadId) || !emoji || emoji.length > 20) return false
+    const token = randomUUID()
+    // One atomic conditional UPDATE; no transaction on the shared sqlite3 connection.
+    // The token distinguishes two simultaneous reactions even when emojis are equal.
+    await this.dataSource.query(
+      "UPDATE pf2_quest_ui SET icon=?, icon_pending=0, icon_claim_token=? WHERE thread_id=? AND kind='quest' AND icon_pending=1",
+      [emoji, token, threadId],
+    )
+    const rows = await this.dataSource.query(
+      "SELECT icon_claim_token AS claimToken FROM pf2_quest_ui WHERE thread_id=?", [threadId],
+    ) as Array<{ claimToken: string }>
+    return rows[0]?.claimToken === token
   }
 
   async questLauncherId(): Promise<string | null> {
@@ -375,11 +391,11 @@ export class Pf2PersistenceService implements OnModuleInit {
     return rows[0]?.threadId ?? null
   }
 
-  async saveQuestUi(threadId: string, kind: 'launcher' | 'quest', description: string): Promise<void> {
+  async saveQuestUi(threadId: string, kind: 'launcher' | 'quest', description: string, iconPending = false): Promise<void> {
     await this.dataSource.query(
-      `INSERT INTO pf2_quest_ui (thread_id, kind, description) VALUES (?, ?, ?)
+      `INSERT INTO pf2_quest_ui (thread_id, kind, description, icon_pending) VALUES (?, ?, ?, ?)
        ON CONFLICT(thread_id) DO UPDATE SET description=excluded.description`,
-      [threadId, kind, description],
+      [threadId, kind, description, iconPending ? 1 : 0],
     )
   }
 
@@ -1561,6 +1577,20 @@ export class Pf2PersistenceService implements OnModuleInit {
         description TEXT NOT NULL DEFAULT '', created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
       )`)
       await manager.query('CREATE INDEX IF NOT EXISTS idx_pf2_quest_ui_kind ON pf2_quest_ui (kind)')
+    })
+
+    // Existing bot-owned quests keep their emoji. Only new quests are pending.
+    await this.applyMigration('046-discord-quest-reaction-icon', async manager => {
+      const columns = await manager.query('PRAGMA table_info(pf2_quest_ui)') as Array<{ name: string }>
+      if (!columns.some(col => col.name === 'icon')) {
+        await manager.query("ALTER TABLE pf2_quest_ui ADD COLUMN icon TEXT NOT NULL DEFAULT ''")
+      }
+      if (!columns.some(col => col.name === 'icon_pending')) {
+        await manager.query('ALTER TABLE pf2_quest_ui ADD COLUMN icon_pending INTEGER NOT NULL DEFAULT 0')
+      }
+      if (!columns.some(col => col.name === 'icon_claim_token')) {
+        await manager.query("ALTER TABLE pf2_quest_ui ADD COLUMN icon_claim_token TEXT NOT NULL DEFAULT ''")
+      }
     })
 
     await this.assertDatabaseIntegrity(this.dataSource, 'base SQLite après migrations')

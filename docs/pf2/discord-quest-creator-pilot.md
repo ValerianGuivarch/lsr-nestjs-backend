@@ -12,15 +12,18 @@ Pas de tag `essai` et aucun feature flag général.
 - Le tag `Terminée` continue de déterminer la fin d'une quête; ne pas confondre avec `obsolète`.
 - L'accueil `📌 Créer une quête` n'est **jamais comptabilisé comme une quête**, même quand il est visible dans le forum.
 
-## Après validation de la PR et déploiement
+## Choix définitif d'icône par réaction Discord
 
-1. Le sujet épinglé **📌 Créer une quête** existe déjà dans le forum journal-de-quetes. La commande d'installation a été retirée.
-2. Cliquer **Créer une quête** ou utiliser /nouvelle-quete. Choisir une icône dans le menu visuel ; **Autre emoji…** permet de saisir un emoji Unicode personnalisé.
-3. Saisir le titre et la description dans le formulaire suivant, sans champ emoji prérempli.
-4. Pour le test : 😈 Invoquer le démon de la destruction du monde, description fantaisiste du rituel à la Grande Loge.
-5. Dans la quête, cliquer **Associer un lieu**. Le menu explique deux parcours : sélectionner un lieu existant ou ouvrir la carte PJ avec le bouton **Créer un lieu sur la carte**. Sur la carte, bouton **＋ Lieu**, clic sur la position, type **★ Lieu de quête**, sélection de la quête puis enregistrement.
-6. Les boutons **Modifier**, **Terminer**, **Relancer**, et **Voir sur la carte** restent utilisables. **Modifier** permet aussi de modifier l'icône via le même menu, pour tous les PJ.
-7. Vérifier /choix-quete : les discussions historiques continuent de fonctionner, le sujet d'accueil n'est jamais compté.
+1. Le sujet épinglé **📌 Créer une quête** existe déjà dans le forum des quêtes.
+2. Cliquer sur **Créer une quête** ou utiliser la commande de nouvelle quête. Le formulaire ouvre directement **titre** et **description**, sans choix d'emoji.
+3. Le bot crée une discussion provisoire sans icône, publie la fiche **sans répéter le titre** et ajoute une réaction **👍** pour que les joueurs signalent leur intérêt.
+4. Un avertissement apparaît dans la fiche : **« Quête non finalisée : ajoutez une réaction (autre que 👍) à ce message pour choisir définitivement l'icône de la quête. »**
+5. La première réaction avec un **emoji Unicode standard** (par exemple 🐸, 👻, 😈) déposée sur le **premier message du bot** fixe définitivement l'icône dans le titre du fil. L'avertissement disparaît automatiquement. Les réactions suivantes, les réactions sur des réponses et celles du bot ne changent rien. Les 👍 restent réservés aux inscriptions.
+6. **Modifier** ouvre directement le formulaire titre + description. L'icône retenue n'y est plus modifiable. Les quêtes antérieures à cette modification conservent leur icône précédente et ne repassent pas en état non finalisé.
+7. Pour les lieux, utiliser **Associer un lieu** ou **Créer un lieu sur la carte** ; le bot synchronise ensuite la fiche.
+8. **Terminer** et **Relancer** conservent leurs fonctionnalités, dont le compte rendu obligatoire.
+
+Les réactions de type **emoji personnalisé du serveur** ne peuvent pas être représentées par un véritable emoji dans un titre de discussion : seules les réactions Unicode standards servent ici au choix de l'icône.
 
 Les commandes `/terminer-quete` et `/relancer-quete` restent disponibles et utilisent les mêmes opérations que les boutons, y compris le compte rendu et la mise à jour du premier message.
 
@@ -33,8 +36,8 @@ Les commandes `/terminer-quete` et `/relancer-quete` restent disponibles et util
 
 ## Vérifications et sécurité
 
-- La migration SQL **045** ajoute `pf2_discord_quest.obsolete` et `pf2_quest_ui`. Le mécanisme existant effectue une sauvegarde SQLite avant migration en production.
-- Les boutons de création et d'édition n'utilisent pas d'état temporaire : leurs identifiants et les descriptions du bot sont en SQLite, donc survivent à un redémarrage.
+- Les migrations SQLite **045** et **046** enregistrent les quêtes du bot et le choix définitif de leur emoji. Le mécanisme existant sauvegarde la base avant migration.
+- Les boutons, les descriptions et le verrou de l'emoji sont conservés dans SQLite et survivent aux redémarrages.
 - Si la création de discussion fonctionne mais qu'une opération SQLite ou Discord échoue ensuite, le bot peut laisser une discussion partiellement créée. Vérifier et corriger ce cas avant un déploiement étendu.
 - Le sujet d'accueil est **déjà installé**. La commande d'installation n'est plus publiée ; le bouton existant continue de fonctionner.
 - Les boutons ne doivent pas mentionner massivement les joueurs : `allowedMentions.parse=[]`.

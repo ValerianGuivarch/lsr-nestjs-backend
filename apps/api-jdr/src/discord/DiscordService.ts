@@ -110,9 +110,13 @@ export class DiscordService implements OnModuleInit, OnModuleDestroy {
         void this.commands.handleButton(interaction).catch((error: unknown) => this.logger.error('Discord button failed', error instanceof Error ? error.stack : undefined))
       })
 
-      client.on(Events.MessageReactionAdd, reaction => {
+      client.on(Events.MessageReactionAdd, (reaction, user) => {
         void this.commands.handleSessionConfirmationReaction(reaction).catch(error =>
           this.logger.warn('Session confirmation sync failed: ' + (error instanceof Error ? error.message : String(error))))
+        if (this.questPilot) {
+          void this.questPilot.handleQuestIconReaction(reaction, user).catch(error =>
+            this.logger.warn('Quest icon reaction failed: ' + (error instanceof Error ? error.message : String(error))))
+        }
       })
       client.on(Events.MessageReactionRemove, reaction => {
         void this.commands.handleSessionConfirmationReaction(reaction).catch(error =>

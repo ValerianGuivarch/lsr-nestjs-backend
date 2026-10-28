@@ -16,37 +16,33 @@ describe('DiscordQuestPilotService', () => {
       questUiLinkedPlaceIds: jest.fn().mockResolvedValue(['grand-lodge']),
       changeQuestUiPlaces: jest.fn().mockResolvedValue(undefined),
       updateQuestUiDescription: jest.fn().mockResolvedValue(undefined),
+      claimQuestIcon: jest.fn().mockResolvedValue(true),
     }
     return { service: new DiscordQuestPilotService(stored as never), stored }
   }
 
-  it('opens an emoji selection menu from the already installed launcher', async () => {
+  it('opens the Discord quest form directly from the existing launcher', async () => {
     const { service, stored } = setup()
     stored.questLauncherId.mockResolvedValueOnce(QUEST)
-    const reply = jest.fn().mockResolvedValue(undefined)
-    await service.handleButton({
-      customId: 'pf2-quest-ui:create', channelId: QUEST, message: { id: QUEST }, reply,
-    } as never)
-    const response = reply.mock.calls[0][0]
-    expect(response.content).toContain('Choisis l’icône')
-    expect(response.ephemeral).toBe(true)
-    const menu = response.components[0].components[0].toJSON()
-    expect(menu.options.some((opt: any) => opt.value === 'demon' && opt.emoji.name === '😈')).toBe(true)
-    expect(menu.options.some((opt: any) => opt.value === 'custom')).toBe(true)
-    expect(menu.options.length).toBeLessThanOrEqual(25)
-  })
-
-  it('opens a title/description modal after emoji selection', async () => {
-    const { service } = setup()
-    const forum = { type: ChannelType.GuildForum, guildId: GUILD }
     const showModal = jest.fn().mockResolvedValue(undefined)
-    await service.handleSelect({
-      customId: 'pf2-quest-ui:icon:new', values: ['demon'], guildId: GUILD,
-      client: { channels: { fetch: jest.fn().mockResolvedValue(forum) } }, showModal,
+    await service.handleButton({
+      customId: 'pf2-quest-ui:create', channelId: QUEST,
+      message: { id: QUEST }, showModal,
     } as never)
     const modal = showModal.mock.calls[0][0].toJSON()
-    expect(modal.custom_id).toBe('pf2-quest-ui:new:demon')
-    expect(modal.components.map((component: any) => component.components[0].custom_id)).toEqual(['title', 'description'])
+    expect(modal.custom_id).toBe('pf2-quest-ui:new')
+    expect(modal.components.map((row: any) => row.components[0].custom_id)).toEqual(['title', 'description'])
+  })
+
+  it('opens the form directly from /nouvelle-quete', async () => {
+    const { service } = setup()
+    const showModal = jest.fn().mockResolvedValue(undefined)
+    await service.handleCommand({
+      commandName: 'nouvelle-quete', guildId: GUILD,
+      client: { channels: { fetch: jest.fn().mockResolvedValue({ type: ChannelType.GuildForum, guildId: GUILD }) } },
+      showModal,
+    } as never)
+    expect(showModal.mock.calls[0][0].toJSON().custom_id).toBe('pf2-quest-ui:new')
   })
 
   it('creates a forum quest with the bot as starter, persistent actions, and a synced catalogue entry', async () => {
@@ -62,20 +58,21 @@ describe('DiscordQuestPilotService', () => {
     forum.threads = {create}
     const editReply = jest.fn().mockResolvedValue(undefined)
     await service.handleModal({
-      customId: 'pf2-quest-ui:new:demon',
+      customId: 'pf2-quest-ui:new',
       fields: { getTextInputValue: (field: string) => ({
         title: 'Invoquer le démon', description: 'Destruction du monde depuis la Grande Loge.',
       } as Record<string,string>)[field] },
       client, guildId: GUILD,
       deferReply: jest.fn().mockResolvedValue(undefined), editReply,
     } as never)
-    expect(create).toHaveBeenCalledWith(expect.objectContaining({name:'😈 Invoquer le démon'}))
-    expect(stored.saveQuestUi).toHaveBeenCalledWith(QUEST, 'quest', 'Destruction du monde depuis la Grande Loge.')
+    expect(create).toHaveBeenCalledWith(expect.objectContaining({name:'Invoquer le démon'}))
+    expect(stored.saveQuestUi).toHaveBeenCalledWith(QUEST, 'quest', 'Destruction du monde depuis la Grande Loge.', true)
     expect(stored.saveDiscordQuestSnapshots).toHaveBeenCalledWith([
-      expect.objectContaining({id:QUEST, title:'😈 Invoquer le démon', completed:false, obsolete:false}),
+      expect.objectContaining({id:QUEST, title:'Invoquer le démon', completed:false, obsolete:false}),
     ])
     const edited = starter.edit.mock.calls[0][0]
     expect(edited.content).toContain('Grande Loge')
+    expect(edited.content).not.toContain('## Invoquer le démon')
     expect(edited.components[0].components.map((c: any) => c.data.custom_id)).toEqual([
       'pf2-quest-ui:places:'+QUEST+':add:0',
       'pf2-quest-ui:places:'+QUEST+':remove:0',
@@ -149,19 +146,95 @@ describe('DiscordQuestPilotService', () => {
     expect(starter.edit).toHaveBeenCalledTimes(1)
   })
 
-  it('rejects a text string instead of a custom emoji', async () => {
+  it('rejects a manual icon in the title', async () => {
     const { service } = setup()
     const reply = jest.fn().mockResolvedValue(undefined)
     await service.handleModal({
-      customId: 'pf2-quest-ui:new:custom',
+      customId: 'pf2-quest-ui:new',
       fields: { getTextInputValue: (field: string) => ({
-        customIcon: 'coucou', title: 'Quête', description: 'Test',
+        title: '🐸 Quête', description: 'Test',
       } as Record<string, string>)[field] },
       reply,
     } as never)
     expect(reply).toHaveBeenCalledWith(expect.objectContaining({
-      content: expect.stringContaining('un seul emoji'), ephemeral: true,
+      content: expect.stringContaining('Ne saisis pas d’emoji'), ephemeral: true,
     }))
+  })
+
+  it('accepts a frog on the first non-thumb reaction and locks the icon', async () => {
+    const { service, stored } = setup()
+    stored.questUi.mockResolvedValueOnce({
+      threadId: QUEST, kind: 'quest', description: 'Description de test', icon: '', iconPending: true,
+    }).mockResolvedValue({
+      threadId: QUEST, kind: 'quest', description: 'Description de test', icon: '🐸', iconPending: false,
+    })
+    const starter = { content: 'Ancien contenu', author: { id: 'bot' }, edit: jest.fn().mockResolvedValue(undefined) }
+    const forum = { type: ChannelType.GuildForum, availableTags: [], guildId: GUILD }
+    const client = { user: { id: 'bot' }, channels: { fetch: jest.fn().mockResolvedValue(forum) } }
+    const channel = {
+      id: QUEST, parentId: FORUM, appliedTags: [], name: 'Détruire le monde',
+      client, isThread: () => true, archived: false, createdTimestamp: Date.now(),
+      setName: jest.fn().mockImplementation(async (name: string) => { channel.name = name }),
+      fetchStarterMessage: jest.fn().mockResolvedValue(starter),
+    }
+    const react = (emoji: string) => ({
+      emoji: { name: emoji, id: null },
+      message: { id: QUEST, channelId: QUEST, channel },
+    })
+    expect(await service.handleQuestIconReaction(react('👍') as never, { bot: false } as never)).toBe(false)
+    expect(stored.claimQuestIcon).not.toHaveBeenCalled()
+    expect(await service.handleQuestIconReaction(react('🐸') as never, { bot: false } as never)).toBe(true)
+    expect(stored.claimQuestIcon).toHaveBeenCalledWith(QUEST, '🐸')
+    expect(channel.setName).toHaveBeenCalledWith('🐸 Détruire le monde', expect.any(String))
+    const card = starter.edit.mock.calls[0][0].content as string
+    expect(card).toContain('Description de test')
+    expect(card).not.toContain('## 🐸 Détruire le monde')
+    expect(card).not.toContain('Quête non finalisée')
+    expect(stored.saveDiscordQuestSnapshots).toHaveBeenCalledWith([
+      expect.objectContaining({ id: QUEST, title: '🐸 Détruire le monde' }),
+    ])
+    expect(await service.handleQuestIconReaction(react('🐲') as never, { bot: false } as never)).toBe(false)
+    expect(stored.claimQuestIcon).toHaveBeenCalledTimes(1)
+  })
+
+  it('edits title and description while preserving a finalized emoji', async () => {
+    const { service, stored } = setup()
+    stored.questUi.mockResolvedValue({
+      threadId: QUEST, kind: 'quest', description: 'Ancien descriptif', icon: '🐸', iconPending: false,
+    })
+    const starter = { content: '', author: { id: 'bot' }, edit: jest.fn().mockResolvedValue(undefined) }
+    const forum = { type: ChannelType.GuildForum, availableTags: [], guildId: GUILD }
+    const client = { user: { id: 'bot' }, channels: { fetch: jest.fn().mockResolvedValue(forum) } }
+    const channel = {
+      id: QUEST, parentId: FORUM, appliedTags: [], name: '🐸 Détruire le monde',
+      client, isThread: () => true, archived: false, createdTimestamp: Date.now(),
+      setName: jest.fn().mockImplementation(async (name: string) => { channel.name = name }),
+      fetchStarterMessage: jest.fn().mockResolvedValue(starter),
+    }
+    const showModal = jest.fn().mockResolvedValue(undefined)
+    await service.handleButton({
+      customId: 'pf2-quest-ui:edit:' + QUEST, channel, channelId: QUEST,
+      message: { id: QUEST }, showModal, client,
+    } as never)
+    const modal = showModal.mock.calls[0][0].toJSON()
+    expect(modal.components.map((row: any) => row.components[0].custom_id)).toEqual(['title','description'])
+    const editReply = jest.fn().mockResolvedValue(undefined)
+    await service.handleModal({
+      customId: 'pf2-quest-ui:edit', channel, channelId: QUEST, client, guildId: GUILD,
+      fields: { getTextInputValue: (field: string) => ({ title: 'Sauver le monde', description: 'Nouvelle histoire' } as Record<string,string>)[field] },
+      deferReply: jest.fn().mockResolvedValue(undefined), editReply,
+    } as never)
+    expect(channel.setName).toHaveBeenCalledWith('🐸 Sauver le monde', expect.any(String))
+    expect(stored.updateQuestUiDescription).toHaveBeenCalledWith(QUEST, 'Nouvelle histoire')
+  })
+
+  it('does not let a bot or custom server emoji finalize a quest', async () => {
+    const { service, stored } = setup()
+    const react = { emoji: { name: 'frog', id: '12345' }, message: { id: QUEST, channelId: QUEST } }
+    expect(await service.handleQuestIconReaction(react as never, { bot: false } as never)).toBe(false)
+    const unicode = { ...react, emoji: { name: '🐸', id: null } }
+    expect(await service.handleQuestIconReaction(unicode as never, { bot: true } as never)).toBe(false)
+    expect(stored.questUi).not.toHaveBeenCalled()
   })
 
 })
