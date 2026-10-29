@@ -257,6 +257,23 @@ function installPrivateCapture(client) {
   const lk = client?._liveKitClient;
   if (!lk || lk._pf2ValPrivateCapture) return;
   const localId = () => game.userId;
+  // LiveKit AVClient 0.6.8 embeds livekit-client 2.19.x, which defaults to
+  // singlePeerConnection=true (/rtc/v1). Our LiveKit server 1.9.4 only
+  // exposes the legacy /rtc route; v1 validation produces a 404 and the
+  // automatic fallback may fail to negotiate media. Force the supported
+  // dual-peer-connection signalling mode before the Room connects.
+  const originalInitializeRoom = lk.initializeRoom;
+  if (typeof originalInitializeRoom === 'function') {
+    lk.initializeRoom = function (...args) {
+      const result = originalInitializeRoom.apply(this, args);
+      if (this.liveKitRoom?.options) {
+        this.liveKitRoom.options.singlePeerConnection = false;
+      } else {
+        console.warn('PF2e Val Toolkit | Impossible de régler le protocole RTC LiveKit : objet Room indisponible.');
+      }
+      return result;
+    };
+  }
   for (const [kind, allowed] of [
     ['Audio', () => game.webrtc?.canUserShareAudio(localId())],
     ['Video', () => game.webrtc?.canUserShareVideo(localId())]

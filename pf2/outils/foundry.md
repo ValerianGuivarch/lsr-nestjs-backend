@@ -556,7 +556,11 @@ Fichiers : \`pf2e-val-toolkit/scripts/private-roll-names.js\`, \`styles/private-
 
 ---
 
-## Pilotage A/V LiveKit par le MJ (toolkit 0.44.2)
+## Pilotage A/V LiveKit par le MJ (toolkit 0.44.3)
+
+Sur LiveKit serveur v1.9.4, le toolkit force le protocole RTC legacy
+(`/rtc`) : le client 2.19.x essayait `/rtc/v1` (404). Aucun réglage du
+serveur ni fichier du module LiveKit tiers n’est modifié.
 
 Le panneau `Communications MJ` est injecté par `pf2e-val-toolkit` dans la
 catégorie dédiée **Outils MJ**, avec Groupe actif, PNJ rapide et Improvisation, à l'aide des modes A/V natifs de Foundry 14 : arrêt complet,

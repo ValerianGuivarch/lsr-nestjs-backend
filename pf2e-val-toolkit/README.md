@@ -1241,3 +1241,16 @@ micro `changeAudioSource` sans patcher les fichiers du module LiveKit tiers.
   `AVMaster.connect()`, et non à la seule écriture de la configuration.
 - Tests : `node pf2e-val-toolkit/tests/livekit-mj-controls.mjs` et
   `node pf2e-val-toolkit/tests/mj-scene-controls.mjs`.
+
+## v0.44.3 — Compatibilité LiveKit v1.9.4 / RTC legacy
+
+Le serveur LiveKit installé utilise `livekit/livekit-server:v1.9.4` et ne
+propose pas `/rtc/v1` (`/rtc/v1/validate` renvoie 404), contrairement au
+client `livekit-client` 2.19.x embarqué par `avclient-livekit` 0.6.8.
+Le toolkit positionne maintenant `liveKitRoom.options.singlePeerConnection = false`
+**lors de la création de chaque Room**, avant `connect()`. Cela utilise
+directement le signalement `wss://livekit.l7r.fr/rtc` et évite les échecs
+potentiels du repli automatique v1→v0, sans modifier le module tiers ni
+redémarrer le serveur. Après une mise à jour du serveur vers une version
+compatible `/rtc/v1`, réexaminer cette contrainte pour profiter du mode
+connexion unique. Test de non-régression dans `tests/livekit-mj-controls.mjs`.

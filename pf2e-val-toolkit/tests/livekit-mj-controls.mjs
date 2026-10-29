@@ -99,6 +99,9 @@ privateSession.settings.world.mode=3;
 privateSession.canUserShareAudio=()=>!privateSession.settings.client.users.gm.muted;
 privateSession.canUserShareVideo=()=>!privateSession.settings.client.users.gm.hidden;
 const lk=privateSession.client._liveKitClient;
+lk.initializeRoom = function() {
+  this.liveKitRoom={options:{singlePeerConnection:true}};
+};
 const captures=[];
 lk.initializeAudioTrack=async function() {captures.push('micro');this.audioTrack={stop(){},mute:async()=>{}};};
 lk.initializeVideoTrack=async function() {captures.push('camera');this.videoTrack={stop(){},mute:async()=>{}};};
@@ -108,6 +111,9 @@ privateSession.client.toggleAudio=()=>{};
 privateSession.client.toggleBroadcast=()=>{};
 privateSession.client.toggleVideo=()=>{};
 await privateSession.connect();
+lk.initializeRoom();
+assert.equal(lk.liveKitRoom.options.singlePeerConnection,false,
+  'Older LiveKit servers use /rtc rather than the unsupported /rtc/v1 path');
 lk.audioTrack=null;
 lk.videoTrack=null;
 await lk.initializeAudioTrack();
