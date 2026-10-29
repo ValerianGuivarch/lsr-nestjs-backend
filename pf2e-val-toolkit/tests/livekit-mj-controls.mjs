@@ -49,7 +49,7 @@ globalThis.game={
 };
 globalThis.document={body:{classList:{toggle(){}}},querySelectorAll(){return [];}};
 globalThis.window={setTimeout(callback){ /* tooltip initialization is browser-only */ return 0;}};
-globalThis.ui={notifications:{info(){},error(){},warn(){}},controls:{render(){}},webrtc:{render(){}}};
+globalThis.ui={notifications:{info(){},error(){},warn(){}},controls:{render(){}},webrtc:{render(opts){calls.push(['renderDock',opts?.force===true]);},async close(){calls.push(['closeDock']);}}};
 globalThis.console=console;
 game.webrtc=new AVMaster();
 
@@ -62,6 +62,7 @@ assert.equal(game.pf2eValToolkit.avControl.getMode(),0);
 
 await game.pf2eValToolkit.avControl.setMode(1);
 assert.equal(game.webrtc.connected,true,'Audio mode connects the client');
+assert.ok(calls.some(([name,forced])=>name==='renderDock' && forced===true),'Foundry 14: first A/V dock render must be forced');
 assert.equal(settingsData['core.rtcClientSettings'].users.gm.muted,true,'Microphone stays muted');
 assert.equal(settingsData['core.rtcClientSettings'].users.gm.hidden,true,'Camera stays hidden');
 assert.ok(calls.some(([kind,mode]) => kind==='connect' && mode===1),'AVMaster saw the new world mode');
@@ -77,6 +78,7 @@ assert.equal(settingsData['core.rtcClientSettings'].users.gm.hidden,true);
 
 await game.pf2eValToolkit.avControl.setMode(0);
 assert.equal(game.webrtc.connected,false,'Global stop disconnects');
+assert.ok(calls.some(([name])=>name==='closeDock'),'Global stop closes the existing A/V dock');
 assert.equal(game.webrtc.client._liveKitClient.audioTrack,null,'Audio device released');
 assert.equal(game.webrtc.client._liveKitClient.videoTrack,null,'Video device released');
 assert.equal(settingsData['core.rtcClientSettings'].users.gm.muted,true,'Audio remains off after stop');

@@ -556,7 +556,7 @@ Fichiers : \`pf2e-val-toolkit/scripts/private-roll-names.js\`, \`styles/private-
 
 ---
 
-## Pilotage A/V LiveKit par le MJ (toolkit 0.44.3)
+## Pilotage A/V LiveKit par le MJ (toolkit 0.44.4)
 
 Sur LiveKit serveur v1.9.4, le toolkit force le protocole RTC legacy
 (`/rtc`) : le client 2.19.x essayait `/rtc/v1` (404). Aucun réglage du
@@ -574,6 +574,10 @@ d’un changement de mode actif).
 
 Un clic sur un mode déjà sélectionné relance la connexion en cas d’échec ;
 le retour de succès dépend de la connexion effective du client LiveKit.
+
+Le premier affichage du panneau A/V est forcé à la connexion, car Foundry 14
+ne dessine pas une fenêtre `ApplicationV2` au premier `render()` sans `force`.
+À l’arrêt du MJ, le dock est explicitement fermé.
 
 La description technique, les limites et les tests sont dans
 [`pf2e-val-toolkit/README.md`](../../pf2e-val-toolkit/README.md).

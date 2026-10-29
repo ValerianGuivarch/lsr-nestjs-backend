@@ -1254,3 +1254,16 @@ potentiels du repli automatique v1→v0, sans modifier le module tiers ni
 redémarrer le serveur. Après une mise à jour du serveur vers une version
 compatible `/rtc/v1`, réexaminer cette contrainte pour profiter du mode
 connexion unique. Test de non-régression dans `tests/livekit-mj-controls.mjs`.
+
+## v0.44.4 — Premier affichage du dock A/V après démarrage manuel
+
+Dans Foundry 14, `CameraViews` est une `ApplicationV2` et ne dessine pas sa
+première fenêtre avec `render()` sans `{force:true}`. Lorsque le monde
+démarrait en mode **Arrêt complet**, LiveKit pouvait ensuite établir une
+connexion valide mais l'interface des caméras/micros restait invisible.
+
+À la connexion réussie, le toolkit attend maintenant `ui.webrtc.render({force:true})`.
+À l'arrêt global, il ferme explicitement le dock existant. Une erreur de
+rendu est remontée au MJ au lieu d'annoncer faussement la réussite totale.
+Test de régression : `tests/livekit-mj-controls.mjs` couvre le rendu initial
+forcé et la fermeture du panneau à l'arrêt.

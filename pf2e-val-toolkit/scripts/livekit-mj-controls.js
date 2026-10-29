@@ -124,7 +124,9 @@ async function applyMode(mode) {
     await prepareLocalPrivacy(MODES.OFF, MODES.OFF);
     await av.disconnect();
     stopLocalMedia();
-    ui.webrtc?.render?.();
+    // The A/V dock is an ApplicationV2. When world mode becomes OFF its
+    // _canRender() is false; close the previously displayed dock explicitly.
+    await ui.webrtc?.close?.();
     return;
   }
   // On transitions between active modes the camera is always hidden; existing
@@ -148,7 +150,18 @@ async function applyMode(mode) {
     appliedMode = null;
     throw new Error('Le mode a été enregistré, mais la connexion LiveKit a échoué. Vérifiez les paramètres A/V et réessayez.');
   }
-  console.info(`PF2e Val Toolkit | LiveKit connecté en mode ${LABELS[mode]}`);
+  // Foundry 14's ApplicationV2 refuses its FIRST render unless force=true.
+  // The dock was never rendered if the world started in A/V OFF mode. Core
+  // AVMaster#initialize() merely calls ui.webrtc.render() without force.
+  // Consequently LiveKit connects successfully but no player/mic/camera UI
+  // appears. Explicitly force the initial dock render after connecting.
+  try {
+    await ui.webrtc?.render?.({force:true});
+  } catch (error) {
+    console.error('PF2e Val Toolkit | LiveKit connected but A/V dock rendering failed:', error);
+    throw new Error('LiveKit est connecté mais le panneau A/V Foundry ne peut pas s’afficher. Consultez la console.');
+  }
+  console.info(`PF2e Val Toolkit | LiveKit connecté, panneau A/V affiché en mode ${LABELS[mode]}`);
 }
 
 function syncMode(force = false) {
