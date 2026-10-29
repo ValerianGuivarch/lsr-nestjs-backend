@@ -3,6 +3,33 @@ import { Pf2MjController } from './Pf2MjController'
 import { Pf2MjService } from './Pf2MjService'
 
 describe('Pf2MjController', () => {
+  it('reads a portrait multipart ID after consuming a file, avoiding the shared pnj.webp fallback', async () => {
+    const savePnjPortrait = jest.fn().mockImplementation(async (_image: Uint8Array, _mime: string, id: string) => `assets/l7r/portraits/pnj/${id}.webp`)
+    const controller = new Pf2MjController({ savePnjPortrait } as unknown as Pf2MjService, {} as never, {} as never, {} as never, {} as never, {} as never, {} as never)
+    for (const blockId of ['prep-one-guard', 'prep-one-helba']) {
+      const fields: Record<string, unknown> = {}
+      const file = {
+        fields, mimetype: 'image/png',
+        toBuffer: async () => {
+          // Multipart fields after the file aren't populated until its stream is consumed.
+          fields['pnjId'] = { type: 'field', value: blockId }
+          return Buffer.from('fake-image')
+        },
+      }
+      const request = { file: async () => file }
+      await expect(controller.uploadPnjPortrait(request as never)).resolves.toEqual({ portrait: `assets/l7r/portraits/pnj/${blockId}.webp` })
+    }
+    expect(savePnjPortrait.mock.calls.map(call => call[2])).toEqual(['prep-one-guard', 'prep-one-helba'])
+  })
+
+  it('refuses missing portrait multipart IDs instead of overwriting the shared filename', async () => {
+    const savePnjPortrait = jest.fn()
+    const controller = new Pf2MjController({ savePnjPortrait } as unknown as Pf2MjService, {} as never, {} as never, {} as never, {} as never, {} as never, {} as never)
+    const request = { file: async () => ({ fields: {}, mimetype: 'image/png', toBuffer: async () => Buffer.from('fake-image') }) }
+    await expect(controller.uploadPnjPortrait(request as never)).rejects.toThrow(/Identifiant de portrait manquant/)
+    expect(savePnjPortrait).not.toHaveBeenCalled()
+  })
+
   it('exposes the joined player identity directory for the admin settings', async () => {
     const directory = { snapshot: jest.fn().mockResolvedValue({ players: [{ playerName: 'Éric' }], wikiOnly: [], cachedActorCount: 12 }) }
     const controller = new Pf2MjController({} as never, {} as never, {} as never, {} as never, {} as never, {} as never, {} as never, directory as never)

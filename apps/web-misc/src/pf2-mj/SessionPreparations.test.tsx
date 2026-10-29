@@ -69,12 +69,29 @@ describe('Portrait temporaire de préparation', () => {
     const form = uploads[0].body as FormData
     expect(form.get('file')).toBe(file)
     expect(form.get('pnjId')).toBe('prep-preparation-one-temp-npc')
+    expect([...form.keys()]).toEqual(['pnjId', 'file'])
     await act(async () => saveButton().click())
     expect(saved[0].body.stages[0].blocks[0].portraitUrl).toBe('assets/l7r/portraits/pnj/prep-temporary.webp')
     await act(async () => root.unmount())
     root = createRoot(container)
     await mount()
     expect(container.querySelector('img[alt="Portrait"]')?.getAttribute('src')).toContain('prep-temporary.webp')
+  })
+
+  it('uses distinct upload identifiers for two temporary characters', async () => {
+    stored.body.stages[0].blocks.push({ id: 'rinna', kind: 'personnage', title: '', name: 'Rinna', portraitUrl: '', text: '', done: false, showName: true, secret: false })
+    await mount()
+    const portraits = [...container.querySelectorAll<HTMLElement>('.session-prep-portrait.can-upload')]
+    expect(portraits).toHaveLength(2)
+    const file = new File(['test-image'], 'rinna.png', { type: 'image/png' })
+    const input = [...container.querySelectorAll<HTMLInputElement>('input[type=file]')][1]
+    await act(async () => {
+      Object.defineProperty(input, 'files', { configurable: true, value: [file] })
+      input.dispatchEvent(new Event('change', { bubbles: true }))
+    })
+    expect(uploads).toHaveLength(1)
+    expect([...(uploads[0].body as FormData).keys()]).toEqual(['pnjId', 'file'])
+    expect((uploads[0].body as FormData).get('pnjId')).toBe('prep-preparation-one-rinna')
   })
 
   it('saves an image URL beside its field, including after a page remount', async () => {

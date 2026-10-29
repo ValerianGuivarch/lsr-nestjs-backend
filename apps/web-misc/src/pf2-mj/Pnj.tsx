@@ -312,7 +312,7 @@ export default function PnjPage({initialSelectedId}:{initialSelectedId?:string})
     if(file.size>10*1024*1024){setMessage("Image trop volumineuse (maximum 10 Mo).");return}
     setImageBusy(true);setMessage("");
     try{
-      const form=new FormData();form.set("file",file);form.set("pnjId",editingId??(slug(draft.nom)||"pnj"));
+      const form=new FormData();form.set("pnjId",editingId??(slug(draft.nom)||"pnj"));form.set("file",file);
       const endpoint=editingId?`/apil7r/pf2-mj/pnj/${encodeURIComponent(editingId)}/portrait`:"/apil7r/pf2-mj/pnj/portrait";
       const response=await fetch(endpoint,{method:"POST",body:form});const payload=await response.json().catch(()=>null);
       if(!response.ok||typeof payload?.portrait!=="string")throw new Error(payload?.message||payload?.error||"Impossible d’envoyer l’image.");

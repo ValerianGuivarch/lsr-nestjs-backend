@@ -122,9 +122,10 @@ export default function SessionPreparations({ campaigns, scenarios }: { campaign
     setPortraitFeedback(previous => ({ ...previous, [blockId]: 'Envoi du portrait…' }))
     try {
       const form = new FormData()
-      form.set('file', file)
-      // Stable, prep-specific identifier: upload does not create or modify a PNJ.
+      // Multipart fields are parsed in order. Send the unique block ID before
+      // the file so even older API versions never fall back to "pnj.webp".
       form.set('pnjId', `prep-${draft?.id ?? 'nouvelle'}-${blockId}`)
+      form.set('file', file)
       const response = await fetch('/apil7r/pf2-mj/pnj/portrait', { method: 'POST', body: form })
       const result = await response.json().catch(() => null)
       if (!response.ok || typeof result?.portrait !== 'string' || !/^assets\/l7r\/portraits\/pnj\/[^/]+\.(?:webp|gif)$/.test(result.portrait)) {
@@ -249,6 +250,7 @@ export default function SessionPreparations({ campaigns, scenarios }: { campaign
                         onChange={event => { const file = event.target.files?.[0]; event.target.value = ''; void uploadPortrait(stage.id, block.id, file) }}/>
                     </label>
                     <small>PNG, JPEG, WebP ou GIF (10 Mo). Clique sur le portrait puis Ctrl+V pour coller, ou glisse une image dessus.</small>
+                    {block.portraitUrl === 'assets/l7r/portraits/pnj/pnj.webp' && <small role="alert" className="session-prep-portrait-feedback">Ancien portrait partagé : il a pu être écrasé par un autre personnage. Réimporte une image propre à ce personnage.</small>}
                     {portraitFeedback[block.id] && <small role="status" className="session-prep-portrait-feedback">{portraitFeedback[block.id]}</small>}
                     <label>Ou URL du portrait (HTTPS ou asset Foundry)<input value={block.portraitUrl ?? ''} disabled={busy || uploadingPortrait !== null} onChange={e => {
                       updateBlock(stage.id, block.id, { portraitUrl: e.target.value })

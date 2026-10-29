@@ -501,9 +501,14 @@ export class Pf2MjController {
     try {
       const file = await (request as FastifyRequest & { file: () => Promise<MultipartFile | undefined> }).file()
       if (!file) throw new Error('Fichier image manquant.')
+      // Fastify multipart exposes following fields only once the file stream has
+      // been consumed. Reading pnjId before toBuffer() silently made uploads
+      // share the fallback filename "pnj.webp", overwriting unrelated portraits.
+      const bytes = await file.toBuffer()
       const pnjField = file.fields.pnjId
-      const pnjId = !Array.isArray(pnjField) && pnjField?.type === 'field' && typeof pnjField.value === 'string' ? pnjField.value.trim() : 'pnj'
-      return { portrait: await this.service.savePnjPortrait(await file.toBuffer(), file.mimetype, pnjId) }
+      const pnjId = !Array.isArray(pnjField) && pnjField?.type === 'field' && typeof pnjField.value === 'string' ? pnjField.value.trim() : ''
+      if (!pnjId) throw new Error('Identifiant de portrait manquant : envoi annulé pour éviter d’écraser un autre portrait.')
+      return { portrait: await this.service.savePnjPortrait(bytes, file.mimetype, pnjId) }
     } catch (error) {
       throw new HttpException(error instanceof Error ? error.message : 'Impossible d’envoyer l’image.', HttpStatus.BAD_REQUEST)
     }
