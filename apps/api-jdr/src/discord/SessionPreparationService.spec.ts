@@ -83,6 +83,33 @@ describe('SessionPreparationService', () => {
     expect(await persistence.listRecords('pnj')).toEqual([])
   })
 
+  it('shares an uploaded temporary portrait from Foundry assets, then exposes its Discord CDN image to Foundry', async () => {
+    const assetsRoot = join(root, 'assets', 'l7r')
+    const fileName = 'prep-temporary-portrait.webp'
+    const fileOnDisk = join(assetsRoot, 'portraits', 'pnj', fileName)
+    await mkdir(join(assetsRoot, 'portraits', 'pnj'), { recursive: true })
+    await writeFile(fileOnDisk, 'test image bytes')
+    const previousRoot = process.env['FOUNDRY_ASSETS_ROOT']
+    process.env['FOUNDRY_ASSETS_ROOT'] = assetsRoot
+    try {
+      const session = await persistence.createSession({ sessionNumber: 3, inGameStartDate: '4720-01-04' })
+      await persistence.rememberSessionDiscordChannel(session.id, 'session-channel', 'campaign-guild')
+      const prep = await service.create({ title: 'Portrait', sessionId: session.id, body: {
+        summary: '', stages: [{ id: 'stage', title: 'Figurant', blocks: [{ id: 'guard', kind: 'personnage', name: 'Garde', portraitUrl: `assets/l7r/portraits/pnj/${fileName}` }] }],
+      } }) as { id: string }
+      const send = jest.fn(async (_payload: { files?: string[] }) => ({ id: 'message-portrait', url: 'https://discord.com/channels/guild/channel/message-portrait', attachments: { first: () => ({ url: 'https://cdn.discordapp.com/portrait.webp' }) } }))
+      ;(service as unknown as { discord: unknown }).discord = { requestClient: () => ({ isReady: () => true, channels: { fetch: async () => ({ send }) } }) }
+      await expect(service.share(prep.id, 'guard')).resolves.toEqual(expect.objectContaining({ discord: 'sent', foundry: 'queued' }))
+      expect(send).toHaveBeenCalledWith(expect.objectContaining({ files: [fileOnDisk] }))
+      const presentations = await new PlayerCodexService(source, persistence).foundryPresentations()
+      expect(presentations.presentations).toEqual(expect.arrayContaining([expect.objectContaining({ portraitUrl: 'https://cdn.discordapp.com/portrait.webp' })]))
+      expect(await persistence.listRecords('pnj')).toEqual([])
+    } finally {
+      if (previousRoot === undefined) delete process.env['FOUNDRY_ASSETS_ROOT']
+      else process.env['FOUNDRY_ASSETS_ROOT'] = previousRoot
+    }
+  })
+
   it('refuses an invalid or duplicated stage and rejects share without an active session channel', async () => {
     await expect(service.create({ title: 'X', body: { stages: [{ id: '1', title: 'A', blocks: [] }, { id: '1', title: 'B', blocks: [] }] } })).rejects.toThrow()
     const prep = await service.create({ title: 'Sans canal', body: { summary: '', stages: [{ id: 's', title: 'A', blocks: [{ id: 'b', kind: 'personnage', name: 'Figurant' }] }] } }) as { id: string }

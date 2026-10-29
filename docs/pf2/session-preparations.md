@@ -20,6 +20,11 @@ Le mode **Édition** est ouvert par défaut ; l'autre mode, **Vue**, conserve or
 
 Les figurants temporaires sont stockés *uniquement dans la préparation*. Leur partage ne crée ni fiche PNJ MJ, ni Actor Foundry, ni fiche wiki. La création ultérieure d'une fiche wiki reste une action explicite depuis la carte Discord/Foundry.
 
+**Portraits temporaires (29 octobre 2026).** En mode Édition, un personnage sans fiche MJ peut recevoir un portrait via **Choisir/Remplacer le portrait**, glisser-déposer ou collage d'une image sur la vignette. Formats PNG, JPEG, WebP et GIF, jusqu'à **10 Mo** ; l'alternative URL HTTPS/asset Foundry reste proposée. L'upload réutilise l'API existante `POST /api/pf2-mj/pnj/portrait` et la validation/conversion des images : l'identifiant de fichier `prep-<preparationId>-<blockId>` est propre à la préparation, **sans création de PNJ**, et le fichier est placé sous `assets/l7r/portraits/pnj/`. L'aperçu de la préparation lit les fichiers via `GET /api/pf2-mj/portraits/:filename`, en édition comme en vue. Après upload, cliquer sur **Enregistrer** pour sauvegarder la référence du fichier dans la préparation ; un upload non suivi d'une sauvegarde peut laisser une image orpheline.
+
+Lors du partage, le backend lit l'asset local pour le joindre à la présentation Discord. L'URL de la pièce jointe Discord est ensuite enregistrée par `savePresentationMessage` et le Toolkit Foundry utilise cette même image. Aucune fiche PNJ/Actor n'est créée à cette occasion.
+
+
 ## Salon Discord de la séance
 
 Après la création effective d'un brouillon par `/debut-seance`, le backend enregistre **l'ID de la séance, l'ID du salon/fil et l'ID du serveur Discord** dans `pf2_session_discord_context`. La simple invocation ou l'annulation du formulaire ne mémorisent aucun salon. `/fin-seance` date la fin du contexte mais conserve l'association historique. Une séance terminée n'est plus une destination de partage.
