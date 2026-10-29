@@ -18,6 +18,7 @@ Une **campagne ou un scénario suivi** doit avoir une fiche spécifique ; y dist
 - [Fronts actifs et pistes](pf2/campagnes/Fronts-de-campagne.md) — **aiguillage**, pas remplacement des fiches.
 - [Lectures exploratoires et notes sur les aventures publiées](pf2/campagnes/Campagnes-et-lectures.md) — ne prouvent pas qu'une aventure a été jouée.
 - [Notes de lore d'Absalom](pf2/univers/Absalom.md) — contexte réutilisable, distinct de la progression d'Agents d'Absalom.
-- [Bibliothèque de scénarios et séances en SQLite](OUTILS.md) — source de vérité des données runtime.
+- [Bibliothèque de scénarios et séances en SQLite](OUTILS.md)
+- [Préparation manuelle des séances dans le Journal MJ](docs/pf2/session-preparations.md) — les préparations opérationnelles sont dans SQLite, sans recopier les événements joués dans cet index. — source de vérité des données runtime.
 
 Pour tout nouveau scénario récurrent, créer `pf2/campagnes/Scenario-<Nom>.md` et l'indexer ici ; ne pas créer automatiquement une fiche pour chaque référence au catalogue.

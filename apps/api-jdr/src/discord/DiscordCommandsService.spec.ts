@@ -672,6 +672,7 @@ describe('DiscordCommandsService', () => {
     const service = new DiscordCommandsService({
       listSessions: jest.fn().mockResolvedValue([]),
       createSession,
+      rememberSessionDiscordChannel: jest.fn().mockResolvedValue(undefined),
     } as never, { listActors, listPlayers } as never)
     const editReply = jest.fn().mockResolvedValue(undefined)
 
@@ -683,7 +684,7 @@ describe('DiscordCommandsService', () => {
         plan: { progressionRolls: string[]; rollCounts: Map<string, number> },
       ) => Promise<void>
     }).finishGameModal(
-      { editReply } as never,
+      { editReply, channelId: 'test-channel', guildId: 'test-guild' } as never,
       { selected: [{ uuid: 'Actor.pepin', name: 'Pépin (Eric)', userId: '399621722158137346' }] },
       '4720-04-08',
       { progressionRolls: ['**Jets de progression** — 1 jet correspond à 7 jours d’activité.'], rollCounts: new Map([['Actor.pepin', 1]]) },
@@ -709,6 +710,8 @@ describe('DiscordCommandsService', () => {
         { id: 'session-12', sessionNumber: 12, inGameStartDate: '4720-04-08', date: '', participants: ['Actor.pepin'] },
       ]),
       updateSession,
+      closeSessionDiscordChannel: jest.fn().mockResolvedValue(undefined),
+      hasActiveSessionDiscordChannel: jest.fn().mockResolvedValue(false),
     } as never, { listActors, listPlayers } as never)
 
     await service.handle({

@@ -1,6 +1,6 @@
 import type { Container, PlayableUnit } from './catalogue'
 
-export type View = 'journal' | 'journaux' | 'find' | 'library' | 'resources' | 'prepare' | 'maintenance' | 'documents' | 'chronology' | 'excluded' | 'settings' | 'players' | 'pnj' | 'factions' | 'lieux' | 'regions' | 'evenements' | 'lore'
+export type View = 'journal' | 'journaux' | 'find' | 'library' | 'resources' | 'sessionPrep' | 'prepare' | 'maintenance' | 'documents' | 'chronology' | 'excluded' | 'settings' | 'players' | 'pnj' | 'factions' | 'lieux' | 'regions' | 'evenements' | 'lore'
 export type ReferenceView = 'pnj' | 'factions' | 'lieux' | 'regions' | 'evenements'
 
 export const viewPaths: Record<View, string> = {
@@ -10,6 +10,7 @@ export const viewPaths: Record<View, string> = {
   find: '/pf2-mj/find',
   library: '/pf2-mj/catalogue',
   resources: '/pf2-mj/resources',
+  sessionPrep: '/pf2-mj/session-preparations',
   prepare: '/pf2-mj/prepare',
   maintenance: '/pf2-mj/maintenance',
   documents: '/pf2-mj/documents',

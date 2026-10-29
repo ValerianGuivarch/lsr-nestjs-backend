@@ -3,6 +3,7 @@
 [← Espace PF2](PF2_WORKSPACE.md)
 
 - [Architecture et sources de vérité](pf2/outils/architecture.md)
+- [Préparation de séance — guide MJ et partage Discord/Foundry](docs/pf2/session-preparations.md)
 - [Données et persistance](pf2/outils/donnees.md)
 - [Foundry et portraits](pf2/outils/foundry.md)
 - [Wiki, résumés et Discord](pf2/outils/wiki-discord.md)

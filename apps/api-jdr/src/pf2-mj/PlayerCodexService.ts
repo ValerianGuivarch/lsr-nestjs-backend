@@ -15,6 +15,8 @@ type PlayerFactionRow = { id: string; name: string; normalized_name: string; par
 export class PlayerCodexService {
   constructor(@InjectDataSource('pf2-sqlite') private readonly db: DataSource, private readonly persistence: Pf2PersistenceService, @Optional() private readonly mediaWiki?: MediaWikiClientService) {}
 
+  wikiPageUrl(title: string): string { return this.mediaWiki?.pageUrl(title) ?? "" }
+
   async characterCandidates(prefix: string): Promise<Array<{ id: string; name: string; portrait: string | null }>> {
     const term = prefix.trim().toLocaleLowerCase()
     const records = await this.persistence.listRecords('pnj')

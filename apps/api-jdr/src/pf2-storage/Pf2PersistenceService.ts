@@ -1098,6 +1098,22 @@ export class Pf2PersistenceService implements OnModuleInit {
     return this.getSession(current.id)
   }
 
+  async rememberSessionDiscordChannel(sessionId: string, channelId: string, guildId: string): Promise<void> {
+    if (!channelId || !guildId) throw new Error('Salon Discord de séance absent.')
+    await this.dataSource.query(`INSERT INTO pf2_session_discord_context(session_id, channel_id, guild_id)
+      VALUES (?, ?, ?) ON CONFLICT(session_id) DO UPDATE SET channel_id=excluded.channel_id,
+      guild_id=excluded.guild_id, started_at=CURRENT_TIMESTAMP, ended_at=NULL`, [sessionId, channelId, guildId])
+  }
+
+  async hasActiveSessionDiscordChannel(): Promise<boolean> {
+    const rows = await this.dataSource.query('SELECT 1 FROM pf2_session_discord_context WHERE ended_at IS NULL LIMIT 1') as unknown[]
+    return rows.length > 0
+  }
+
+  async closeSessionDiscordChannel(sessionId: string): Promise<void> {
+    await this.dataSource.query('UPDATE pf2_session_discord_context SET ended_at=CURRENT_TIMESTAMP WHERE session_id=? AND ended_at IS NULL', [sessionId])
+  }
+
   async deleteSession(id: string): Promise<void> {
     const sessionId = this.requiredSessionId(id)
     await this.dataSource.transaction(async (manager) => {
@@ -1624,6 +1640,22 @@ export class Pf2PersistenceService implements OnModuleInit {
       if (!columns.some(column => column.name === 'foundry_create_token')) await manager.query('ALTER TABLE pf2_character_presentation ADD COLUMN foundry_create_token TEXT')
       const records = await manager.query('SELECT id FROM pf2_character_presentation WHERE foundry_create_token IS NULL') as Array<{ id: string }>
       for (const record of records) await manager.query('UPDATE pf2_character_presentation SET foundry_create_token=? WHERE id=?', [randomUUID(), record.id])
+    })
+
+    await this.applyMigration('049-session-preparations-and-discord-channel', async manager => {
+      await manager.query(`CREATE TABLE IF NOT EXISTS pf2_session_discord_context (
+        session_id TEXT PRIMARY KEY, channel_id TEXT NOT NULL, guild_id TEXT NOT NULL,
+        started_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP, ended_at TEXT
+      )`)
+      await manager.query(`CREATE TABLE IF NOT EXISTS pf2_session_preparation (
+        id TEXT PRIMARY KEY, title TEXT NOT NULL, campaign_id TEXT, scenario_id TEXT,
+        session_id TEXT, body_json TEXT NOT NULL DEFAULT '{"stages":[]}',
+        revision INTEGER NOT NULL DEFAULT 1,
+        created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+      )`)
+      await manager.query('CREATE INDEX IF NOT EXISTS idx_pf2_preparation_session ON pf2_session_preparation(session_id)')
+      await manager.query('CREATE INDEX IF NOT EXISTS idx_pf2_preparation_campaign ON pf2_session_preparation(campaign_id)')
     })
 
     await this.assertDatabaseIntegrity(this.dataSource, 'base SQLite après migrations')

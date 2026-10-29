@@ -2130,6 +2130,12 @@ export class DiscordCommandsService {
     await this.playerCodex!.savePresentationMessage(presentation.id, message.id, message.attachments.first()?.url ?? portrait)
   }
 
+  registerPreparedCharacterFaction(presentationId: string): void {
+    // A preparation share is initiated from the MJ web UI, not a Discord user.
+    // The first person selecting a faction claims the selection, as with /personnage.
+    this.pendingCharacterFactions.set(presentationId, { requesterId: '', factionId: null })
+  }
+
   async handleComponent(interaction: StringSelectMenuInteraction): Promise<boolean> {
     if (interaction.customId.startsWith('pf2-quest-ui:')) return this.questPilot!.handleSelect(interaction)
 
@@ -2274,7 +2280,8 @@ export class DiscordCommandsService {
       const presentationId = interaction.customId.slice('pf2-character:faction:'.length)
       const pending = this.pendingCharacterFactions.get(presentationId)
       if (!pending) { await interaction.reply({ content: 'Cette présentation a expiré. Relance `/personnage`.', ephemeral: true }); return true }
-      if (pending.requesterId !== interaction.user.id) { await interaction.reply({ content: 'Cette sélection appartient à la personne qui a créé la présentation.', ephemeral: true }); return true }
+      if (pending.requesterId && pending.requesterId !== interaction.user.id) { await interaction.reply({ content: 'Cette sélection appartient à la personne qui a créé la présentation.', ephemeral: true }); return true }
+      if (!pending.requesterId) pending.requesterId = interaction.user.id
       pending.factionId = interaction.values[0] === 'none' ? null : interaction.values[0]
       await interaction.reply({ content: pending.factionId ? 'Faction principale sélectionnée.' : 'Aucune faction sélectionnée.', ephemeral: true })
       return true
@@ -3056,7 +3063,10 @@ export class DiscordCommandsService {
     if (days !== null && !session.inGameStartDate) { await interaction.editReply({ content: `Le résumé n°${requestedNumber} n’a pas de date de début en jeu : précise plutôt \`fin\`.` }); return }
     const resolvedEndDate = endDate || this.addDays(session.inGameStartDate, Math.max(0, (days ?? 1) - 1))
     const updated = await this.persistence.updateSession(session.id, { inGameEndDate: resolvedEndDate, sessionXp: xp, ...(session.date ? {} : { date: this.realDate() }) })
-    if (updated) await this.playerCodex?.setFoundrySessionActive(false)
+    if (updated) {
+      await this.persistence.closeSessionDiscordChannel(updated.id)
+      await this.playerCodex?.setFoundrySessionActive(await this.persistence.hasActiveSessionDiscordChannel())
+    }
     await interaction.editReply({ content: `Résumé n°${requestedNumber} mis à jour : fin en jeu le ${this.displayDate(resolvedEndDate)} ; ${xp} XP par PJ.` })
     if (!updated) this.logger.warn(`finish-game: résumé ${requestedNumber} supprimé pendant la mise à jour.`)
   }
@@ -3477,6 +3487,7 @@ export class DiscordCommandsService {
     const announcement = await this.plannedSessionAnnouncement(sessionNumber, date, selected, plan.rollCounts, true)
     const draft = await this.persistence.createSession({ sessionNumber, date: '', inGameStartDate: date, inGameEndDate: '', title: '', participants: selected.map((actor) => actor.uuid), published: false })
     const content = `Brouillon créé : résumé n°${draft.sessionNumber}.\nDébut : ${this.displayDate(date)}. Fin : à renseigner.\n\n${plan.progressionRolls.join('\n')}\n\nComplète puis publie le résumé dans l’application MJ.`
+    await this.persistence.rememberSessionDiscordChannel(draft.id, interaction.channelId, interaction.guildId ?? '')
     await this.playerCodex?.setFoundrySessionActive(true)
     const announcementId = `pf2-new-game:announce:${draft.id}`
     this.pendingAnnouncements.set(announcementId, { content: announcement, userIds: selected.map((actor) => actor.userId) })
@@ -3490,6 +3501,7 @@ export class DiscordCommandsService {
     const selected = pending.selected ?? []
     const announcement = await this.plannedSessionAnnouncement(sessionNumber, date, selected, plan.rollCounts, true)
     const draft = await this.persistence.createSession({ sessionNumber, date: '', inGameStartDate: date, inGameEndDate: '', title: '', participants: selected.map((actor) => actor.uuid), published: false })
+    await this.persistence.rememberSessionDiscordChannel(draft.id, interaction.channelId, interaction.guildId ?? '')
     await this.playerCodex?.setFoundrySessionActive(true)
     const announcementId = `pf2-new-game:announce:${draft.id}`
     this.pendingAnnouncements.set(announcementId, { content: announcement, userIds: selected.map((actor) => actor.userId) })
