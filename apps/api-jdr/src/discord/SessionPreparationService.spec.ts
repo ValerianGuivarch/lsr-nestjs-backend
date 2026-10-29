@@ -44,6 +44,16 @@ describe('SessionPreparationService', () => {
     expect(await service.list()).toHaveLength(0)
   })
 
+  it('keeps multiple upcoming preparations independent, even in the same campaign', async () => {
+    const first = await service.create({ title: 'Séance A', campaignId: 'age-of-ashes', body: { summary: 'A', stages: [] } }) as { id: string; revision: number; body: { summary: string } }
+    const second = await service.create({ title: 'Séance B', campaignId: 'age-of-ashes', body: { summary: 'B', stages: [] } }) as { id: string; revision: number; body: { summary: string } }
+    expect(first.id).not.toBe(second.id)
+    expect(await service.list()).toHaveLength(2)
+    await service.update(first.id, { ...first, title: 'Séance A révisée', campaignId: 'age-of-ashes', body: { stages: [], summary: 'Nouvelle A' } })
+    expect((await service.get(second.id)).body).toEqual(expect.objectContaining({ summary: 'B' }))
+    expect((await service.get(first.id)).body).toEqual(expect.objectContaining({ summary: 'Nouvelle A' }))
+  })
+
   it('memorizes the command channel with the created session and closes it at session end', async () => {
     const session = await persistence.createSession({ sessionNumber: 1, inGameStartDate: '4720-01-01' })
     await persistence.rememberSessionDiscordChannel(session.id, 'channel-xyz', 'guild-123')

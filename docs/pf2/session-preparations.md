@@ -45,13 +45,21 @@ Migration `049-session-preparations-and-discord-channel` :
 
 Le schéma JSON des étapes et blocs est validé côté API (longueurs, types, unicité des identifiants, nombres maximum de blocs/étapes). L'API est sous `/api/pf2-mj/session-preparations` avec `GET` liste/détail/sessions, `POST` création/partage, `PATCH` modification, `DELETE` suppression.
 
-**Protection obligatoire :** toutes ces routes requièrent `x-pf2-preparation-key` correspondant à `PF2_SESSION_PREP_KEY` dans l'environnement de `api-jdr` ; sans configuration elles refusent l'accès. La clé est saisie sur la page puis conservée seulement dans `sessionStorage` du navigateur pour cet onglet ; **ne pas la mettre dans le dépôt ou les paramètres publics du Toolkit**. Le bouton **Verrouiller** efface cette donnée de session. Cette protection est ajoutée parce que les préparations contiennent des secrets MJ et le partage déclenche une publication Discord. Les API préexistantes ne sont pas modifiées.
+**Accès :** cette V1 fonctionne sans clé supplémentaire à saisir : elle suit le même modèle d'accès que l'application MJ actuelle. **Limite de sécurité :** l'application et ses API n'ont actuellement pas d'authentification MJ centralisée. Les routes de préparation contiennent des secrets narratifs et le partage déclenche une publication Discord : prévoir une authentification centralisée pour l'ensemble du portail plutôt qu'une seconde clé propre à cette page. Ne pas confondre absence d'usage par les joueurs et restriction technique d'accès.
 
 ## Exploitation et vérifications
 
-- Configurer `PF2_SESSION_PREP_KEY` dans le `.env` **persistant** du déploiement ; le script `deploy-main.sh` n'écrase plus ce fichier à chaque mise à jour. Redéployer `api-jdr` pour la prise en compte.
-- Ouvrir la page avec la clé puis créer et enregistrer une préparation ; choisir une séance dont le canal est affiché ; partager un personnage lié ou temporaire.
+- L’interface de préparation ne demande plus de clé distincte. Une authentification MJ commune au portail et à ses API reste nécessaire pour protéger durablement les contenus confidentiels.
+- Ouvrir la page puis créer et enregistrer une préparation ; choisir une séance dont le canal est affiché ; partager un personnage lié ou temporaire.
 - Vérifier que le message apparaît dans le **salon exact** où `/debut-seance` a créé le brouillon, puis côté Foundry ; contrôler le cas nom masqué et l'absence de doublon après effacement du chat.
 - Vérifier également qu'une séance terminée ne permet plus de partager et qu'une création de fiche depuis Discord/Foundry reste fonctionnelle.
 
 Les tests unitaires SQLite couvrent CRUD, révisions, salon mémorisé/clos, création d'une présentation Discord simulée et absence de PNJ permanent pour un figurant. **Un test de bout en bout dans le navigateur et sur Discord/Foundry est encore nécessaire après déploiement.**
+
+## Exemple saisi directement dans la base (29 octobre 2026)
+
+Une préparation « **L’Âge des Cendres — Séance 1 · Brèchemur / Altaerein** » a été créée dans la base du mini-PC depuis le PDF MJ fourni, avec **9 étapes et 65 blocs** (personnages, notes, lore, secrets, rencontres, loot et checklist). Elle pointe vers la campagne catalogue `age-of-ashes`, et n’est **pas** associée artificiellement à une séance Discord passée : son `session_id` est nul jusqu’à `/debut-seance` et le choix de séance dans l’éditeur. Warbal, Alak et Voz sont liés aux PNJ MJ existants ; Calmont, Greta et Helba sont laissés temporaires en l’absence de fiche correspondante dans le référentiel consulté. Certains portraits temporaires sont encore à fournir par le MJ.
+
+ID de la préparation exemplaire : `15eb2bb6-7e62-482b-9f96-57b080fddd79`. Le script d’import reproductible et **idempotent** est `scripts/pf2/import-age-of-ashes-session1.py`. Il vérifie si le titre/la campagne existent déjà avant de créer l’exemple, sans écraser les modifications faites ensuite dans l’interface. Le script historique cible le backend déployé avec clé de préparation ; après retrait de la saisie de clé en V1, cette clé n’est plus exigée par la version courante de l’API.
+
+**Plusieurs préparations simultanées :** aucun index unique sur campagne/scénario/séance ; chaque préparation possède un UUID distinct. La page affiche la liste des préparations enregistrées et permet de sélectionner celle à modifier, ou de l’ouvrir directement avec `?preparationId=<UUID>`. Les révisions optimistes empêchent qu’une ancienne sauvegarde écrase la nouvelle.

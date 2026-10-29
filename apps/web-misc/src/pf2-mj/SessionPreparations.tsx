@@ -28,7 +28,7 @@ function blankBlock(kind: BlockKind): Block {
   return { id: crypto.randomUUID(), kind, title: kind === 'personnage' ? '' : blockLabels[kind], text: '', done: false, name: '', portraitUrl: '', showName: true, quantity: '', reference: '', secret: kind === 'lore' }
 }
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(`${URL}${path}`, { cache: 'no-store', ...init, headers: { ...(init?.headers ?? {}), 'x-pf2-preparation-key': sessionStorage.getItem('pf2-session-prep-key') ?? '' } })
+  const response = await fetch(`${URL}${path}`, { cache: 'no-store', ...init, headers: init?.headers })
   const data = await response.json().catch(() => null)
   if (!response.ok) throw new Error(Array.isArray(data?.message) ? data.message.join(', ') : data?.message || `Erreur HTTP ${response.status}`)
   return data as T
@@ -55,8 +55,6 @@ export default function SessionPreparations({ campaigns, scenarios }: { campaign
   const [dirty, setDirty] = useState(false)
   const [busy, setBusy] = useState(false)
   const [notice, setNotice] = useState('')
-  const [accessKey, setAccessKey] = useState(() => sessionStorage.getItem('pf2-session-prep-key') ?? '')
-  const [keyInput, setKeyInput] = useState('')
   const [newTitle, setNewTitle] = useState('')
   const [addKind, setAddKind] = useState<Record<string, BlockKind>>({})
   const params = new URLSearchParams(location.search)
@@ -67,15 +65,16 @@ export default function SessionPreparations({ campaigns, scenarios }: { campaign
     return list
   }
   useEffect(() => {
-    if (!accessKey) return
-    void refresh().then(list => { if (list.length) setDraft(current => current ?? list[0]) }).catch(error => {
+    void refresh().then(list => { if (list.length) {
+      const selected = list.find(item => item.id === new URLSearchParams(location.search).get('preparationId')) ?? list[0]
+      setDraft(current => current ?? selected)
+    } }).catch(error => {
       setNotice(error.message)
-      if (/Clé MJ|HTTP 401|invalide/.test(error.message)) { sessionStorage.removeItem('pf2-session-prep-key'); setAccessKey('') }
     })
     fetch('/apil7r/pf2-mj/pnj-directory').then(r => r.ok ? r.json() : null)
       .then(data => setNpcs(Array.isArray(data?.items) ? data.items : []))
       .catch(() => undefined)
-  }, [accessKey])
+  }, [location.search])
 
   function set(patch: Partial<Preparation>) {
     setDraft(current => current ? { ...current, ...patch } : current)
@@ -143,20 +142,15 @@ export default function SessionPreparations({ campaigns, scenarios }: { campaign
   const unambiguousActive = sessions.filter(s => s.channelId && !s.ended)
   const canShare = Boolean(currentSession?.channelId && !currentSession.ended) || (!draft?.sessionId && unambiguousActive.length === 1)
 
-  if (!accessKey) return <div className="session-prep"><header className="session-prep-header"><h2>Préparation séance</h2><p>Ces données contiennent des secrets MJ. L'accès nécessite la clé de préparation configurée sur le mini-PC.</p></header><form className="session-prep-access" onSubmit={event => {
-    event.preventDefault(); if (!keyInput.trim()) return
-    sessionStorage.setItem('pf2-session-prep-key', keyInput.trim()); setAccessKey(keyInput.trim()); setKeyInput(''); setNotice('')
-  }}><label>Clé privée de préparation MJ<input type="password" autoComplete="off" value={keyInput} onChange={event => setKeyInput(event.target.value)} required /></label><button type="submit" className="primary">Accéder aux préparations</button>{notice && <p role="alert">{notice}</p>}</form></div>
-
   return <div className="session-prep">
-    <header className="session-prep-header"><div><small>JOURNAL MJ · AIDE EN PARTIE</small><h2>Préparation séance</h2><p>Crée ton conducteur à la main. Les fiches liées restent dans le référentiel MJ ; les figurants peuvent rester temporaires.</p><button type="button" onClick={() => { sessionStorage.removeItem('pf2-session-prep-key'); setAccessKey(''); setDraft(null); setItems([]) }}>Verrouiller</button></div></header>
+    <header className="session-prep-header"><div><small>JOURNAL MJ · AIDE EN PARTIE</small><h2>Préparation séance</h2><p>Crée ton conducteur à la main. Les fiches liées restent dans le référentiel MJ ; les figurants peuvent rester temporaires.</p></div></header>
     <div className="session-prep-layout">
       <aside className="session-prep-list">
         <h3>Mes préparations</h3>
         <label htmlFor="new-prep-title">Nouvelle préparation</label>
         <input id="new-prep-title" value={newTitle} placeholder="Titre de la séance" onChange={event => setNewTitle(event.target.value)} />
         <button disabled={busy} type="button" onClick={() => void create()}>+ Créer</button>
-        {items.map(item => <button key={item.id} type="button" className={draft?.id === item.id ? 'selected' : ''} onClick={() => select(item)}><strong>{item.title}</strong><small>{item.body.stages.length} étape(s) · v{item.revision}</small></button>)}
+        {items.map(item => <button key={item.id} type="button" className={draft?.id === item.id ? 'selected' : ''} onClick={() => select(item)}><strong>{item.title}</strong><small>{item.body.stages.length} étape(s) · {item.campaignId ? (campaigns.find(c => c.id === item.campaignId)?.title ?? item.campaignId) : item.scenarioId ? (scenarios.find(s => s.id === item.scenarioId)?.title ?? item.scenarioId) : 'Sans campagne'} · v{item.revision}</small></button>)}
       </aside>
       <section className="session-prep-editor">
         {notice && <p role="status" className="session-prep-notice">{notice}</p>}

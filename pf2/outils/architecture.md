@@ -104,7 +104,7 @@ flowchart LR
 
 La page `/pf2-mj/session-preparations` complète le **Journal MJ** et ne doit pas être confondue avec `/pf2-mj/prepare` (préparation technique). L'édition manuelle et la consultation s'appuient sur la table `pf2_session_preparation` ; les deux modes utilisent les mêmes données. Les blocs de personnages peuvent pointer vers un ID PNJ SQLite ou être temporaires (nom + portrait seulement). Le fichier [`docs/pf2/session-preparations.md`](../../docs/pf2/session-preparations.md) décrit le comportement, les routes et les droits.
 
-`/debut-seance` mémorise le salon/fil Discord lors de la création effective du brouillon (`pf2_session_discord_context`), `/fin-seance` le clôt. Le bouton Partager réutilise la présentation Discord `/personnage` et la synchronisation Foundry, sans créer d'objet permanent pour un figurant. La nouvelle API requiert une clé MJ distincte (`PF2_SESSION_PREP_KEY`) et conserve les secrets MJ côté serveur.
+`/debut-seance` mémorise le salon/fil Discord lors de la création effective du brouillon (`pf2_session_discord_context`), `/fin-seance` le clôt. Le bouton Partager réutilise la présentation Discord `/personnage` et la synchronisation Foundry, sans créer d'objet permanent pour un figurant. La nouvelle API utilise pour le moment le modèle d’accès existant du portail MJ, sans authentification dédiée ; **la protection des secrets MJ et des actions de publication nécessite encore une authentification centralisée**, à traiter avant ouverture à des utilisateurs non fiables.
 
 ### 3.1 Données métier PF2
 

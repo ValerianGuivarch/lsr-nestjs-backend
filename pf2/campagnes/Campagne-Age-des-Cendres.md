@@ -33,3 +33,8 @@ Aucun événement n'est considéré comme joué tant que cela n'est pas confirm�
 - Modalités précises de retour à la base entre les missions.
 - Éléments de la campagne originale conservés, déplacés, condensés ou supprimés.
 - Chronologie et conséquences des événements une fois la campagne effectivement commencée.
+
+
+## Préparation de séance saisie dans l'application (29 octobre 2026)
+
+La fiche MJ PDF de la séance 1 (Brèchemur et Citadelle Altaerein) a servi à créer une **préparation manuelle éditable** dans SQLite, avec neuf étapes et 65 blocs. Elle est accessible depuis le [Journal MJ → Préparation séance](/pf2-mj/session-preparations?preparationId=15eb2bb6-7e62-482b-9f96-57b080fddd79) et n’est pas marquée jouée. La préparation reste distincte de la vérité historique de la campagne, du document PDF source et des résumés de parties effectivement tenues. Consulter [le guide de l'outil](../../docs/pf2/session-preparations.md) pour le fonctionnement.
