@@ -66,6 +66,16 @@ export default function SessionPreparations({ campaigns, scenarios }: { campaign
   const [addKind, setAddKind] = useState<Record<string, BlockKind>>({})
   const params = new URLSearchParams(location.search)
 
+  useEffect(() => {
+    if (!dirty) return
+    const warnBeforeUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault()
+      event.returnValue = ''
+    }
+    window.addEventListener('beforeunload', warnBeforeUnload)
+    return () => window.removeEventListener('beforeunload', warnBeforeUnload)
+  }, [dirty])
+
   const refresh = async () => {
     const [list, sessionList] = await Promise.all([request<Preparation[]>(''), request<Session[]>('/sessions')])
     setItems(list); setSessions(sessionList)
@@ -123,7 +133,7 @@ export default function SessionPreparations({ campaigns, scenarios }: { campaign
       updateBlock(stageId, blockId, { portraitUrl: result.portrait })
       // Force the image element to refresh when a file replaces the same asset path.
       setPortraitRefresh(previous => ({ ...previous, [blockId]: (previous[blockId] ?? 0) + 1 }))
-      setPortraitFeedback(previous => ({ ...previous, [blockId]: 'Portrait enregistré dans Foundry. Enregistre la préparation pour conserver le lien.' }))
+      setPortraitFeedback(previous => ({ ...previous, [blockId]: 'Image envoyée. Clique sur « Enregistrer le portrait » pour conserver le lien après actualisation.' }))
     } catch (error) {
       setPortraitFeedback(previous => ({ ...previous, [blockId]: error instanceof Error ? error.message : String(error) }))
     } finally {
@@ -220,12 +230,17 @@ export default function SessionPreparations({ campaigns, scenarios }: { campaign
                 <div className="session-prep-block-head"><span className="session-prep-kind">{blockLabels[block.kind]}</span>{mode === 'edit' ? <div className="session-prep-block-tools"><button type="button" onClick={() => updateStage(stage.id, { blocks: move(stage.blocks, blockIndex, -1) })}>↑</button><button type="button" onClick={() => updateStage(stage.id, { blocks: move(stage.blocks, blockIndex, 1) })}>↓</button><button type="button" className="danger" onClick={() => updateStage(stage.id, { blocks: stage.blocks.filter(b => b.id !== block.id) })}>Supprimer</button></div> : <button type="button" onClick={() => void toggleDone(stage.id, block.id)}>{block.done ? '✓ Terminé' : 'Marquer fait'}</button>}</div>
                 {block.kind === 'personnage' && <div className="session-prep-character">
                   <div className={`session-prep-portrait${mode === 'edit' && !block.npcId ? ' can-upload' : ''}`}
+                    role={mode === 'edit' && !block.npcId ? 'button' : undefined}
+                    onClick={event => { if (mode === 'edit' && !block.npcId) event.currentTarget.focus() }}
+                    onKeyDown={event => { if (mode === 'edit' && !block.npcId && (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); event.currentTarget.focus() } }}
+                    title={mode === 'edit' && !block.npcId ? 'Cliquer pour sélectionner le portrait, puis Ctrl+V pour coller une image' : undefined}
                     onDragOver={event => { if (mode === 'edit' && !block.npcId) event.preventDefault() }}
                     onDrop={event => { if (mode !== 'edit' || block.npcId) return; event.preventDefault(); void uploadPortrait(stage.id, block.id, [...event.dataTransfer.files].find(file => file.type.startsWith('image/'))) }}
                     onPaste={event => { if (mode !== 'edit' || block.npcId) return; const file = [...event.clipboardData.items].find(item => item.type.startsWith('image/'))?.getAsFile(); if (!file) return; event.preventDefault(); void uploadPortrait(stage.id, block.id, file) }}
                     tabIndex={mode === 'edit' && !block.npcId ? 0 : undefined}
-                    aria-label={mode === 'edit' && !block.npcId ? 'Portrait : glisser-déposer ou coller une image' : 'Portrait du personnage'}>
+                    aria-label={mode === 'edit' && !block.npcId ? 'Cliquer pour sélectionner le portrait, puis coller une image avec Contrôle V' : 'Portrait du personnage'}>
                     {portrait ? <img src={portrait.startsWith('/apil7r/pf2-mj/portraits/') ? `${portrait}?v=${portraitRefresh[block.id] ?? 0}` : portrait} alt="Portrait"/> : <span className="session-prep-avatar">♙</span>}
+                    {mode === 'edit' && !block.npcId && <span className="session-prep-portrait-hint">Cliquer puis Ctrl+V</span>}
                   </div>
                   <div className="session-prep-character-fields">
                     {mode === 'edit' ? <><label>Source du personnage<select value={block.npcId ?? ''} onChange={e => updateBlock(stage.id, block.id, { npcId: e.target.value || undefined })}><option value="">Personnage temporaire</option>{npcs.map(n => <option key={n.id} value={n.id}>{n.nom}</option>)}</select></label>{!block.npcId && <><label>Nom<input value={block.name ?? ''} onChange={e => updateBlock(stage.id, block.id, { name: e.target.value })}/></label><label className="session-prep-portrait-upload">
@@ -233,9 +248,17 @@ export default function SessionPreparations({ campaigns, scenarios }: { campaign
                       <input type="file" accept="image/png,image/jpeg,image/webp,image/gif" disabled={busy || uploadingPortrait !== null}
                         onChange={event => { const file = event.target.files?.[0]; event.target.value = ''; void uploadPortrait(stage.id, block.id, file) }}/>
                     </label>
-                    <small>Image PNG, JPEG, WebP ou GIF (10 Mo maximum). Glisser-déposer ou coller aussi possible sur le portrait.</small>
+                    <small>PNG, JPEG, WebP ou GIF (10 Mo). Clique sur le portrait puis Ctrl+V pour coller, ou glisse une image dessus.</small>
                     {portraitFeedback[block.id] && <small role="status" className="session-prep-portrait-feedback">{portraitFeedback[block.id]}</small>}
-                    <label>Ou URL du portrait (HTTPS ou asset Foundry)<input value={block.portraitUrl ?? ''} disabled={uploadingPortrait === block.id} onChange={e => updateBlock(stage.id, block.id, { portraitUrl: e.target.value })}/></label></>}<label className="session-prep-checkbox"><input type="checkbox" checked={block.showName !== false} onChange={e => updateBlock(stage.id, block.id, { showName: e.target.checked })}/> Afficher le nom aux joueurs</label></> : <><strong>{npc?.nom ?? block.name ?? 'Personnage temporaire'}</strong><small>{block.npcId ? 'Fiche MJ' : 'Temporaire · sans fiche MJ'}</small></>}
+                    <label>Ou URL du portrait (HTTPS ou asset Foundry)<input value={block.portraitUrl ?? ''} disabled={busy || uploadingPortrait !== null} onChange={e => {
+                      updateBlock(stage.id, block.id, { portraitUrl: e.target.value })
+                      setPortraitFeedback(previous => ({ ...previous, [block.id]: 'Portrait modifié : enregistre pour le conserver après actualisation.' }))
+                    }}/></label>
+                    <button type="button" className="session-prep-portrait-save primary"
+                      disabled={busy || uploadingPortrait !== null || !dirty}
+                      onClick={() => { void save().then(() => setPortraitFeedback(previous => ({ ...previous, [block.id]: 'Portrait enregistré dans la préparation.' }))).catch(error => setPortraitFeedback(previous => ({ ...previous, [block.id]: `Enregistrement impossible : ${error instanceof Error ? error.message : String(error)}` }))) }}>
+                      {busy ? 'Enregistrement…' : 'Enregistrer le portrait'}
+                    </button></>}<label className="session-prep-checkbox"><input type="checkbox" checked={block.showName !== false} onChange={e => updateBlock(stage.id, block.id, { showName: e.target.checked })}/> Afficher le nom aux joueurs</label></> : <><strong>{npc?.nom ?? block.name ?? 'Personnage temporaire'}</strong><small>{block.npcId ? 'Fiche MJ' : 'Temporaire · sans fiche MJ'}</small></>}
                     <div className="session-prep-actions">{block.npcId && <Link to={`/pf2-mj/npcs/${encodeURIComponent(block.npcId)}`}>Ouvrir la fiche MJ</Link>}<button disabled={busy || uploadingPortrait !== null || !canShare} type="button" className="primary" onClick={() => void share(block)}>Partager · Discord + Foundry</button></div>
                   </div>
                 </div>}
