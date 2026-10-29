@@ -556,6 +556,16 @@ Fichiers : \`pf2e-val-toolkit/scripts/private-roll-names.js\`, \`styles/private-
 
 ---
 
+## Import ponctuel Corvan (Witch niveau 20)
+
+Le premier jet de la fiche Corvan est préconfiguré pour Actors → MJ → Divers, avec son familier-poignard séparé, associé comme familier à son maître. Les portraits sont des PNG dans assets/l7r/portraits/pnj/ : corvan-keris.png (converti du portrait existant) et corvan-poignard-familier.png.
+
+Le relais REST Foundry n'ayant aucun client connecté au moment de la préparation, aucune écriture LevelDB directe n'a été faite. L'import est exécuté par le client Foundry GM à son prochain chargement, via pf2e-val-toolkit/scripts/corvan-import.js et le manifeste pf2e-val-toolkit/assets/corvan/manifest.json. Il est idempotent et marque l'Actor lorsque les documents nécessaires sont effectivement créés. Le dossier et les noms existants sont vérifiés avant tout ajout. Une erreur est affichée si une étape échoue. Les sorts/rangs, dons et capacités sont documentés dans le manifeste et le test tests/corvan-import.mjs.
+
+Attention : jusqu'à la prochaine connexion/recharge du MJ, l'acteur n'est pas encore garanti comme présent dans le monde. Après chargement, contrôler le total des objets de classe, les listes de sorts, le familier et la cohérence de la feuille réelle dans Foundry. Le build est une première proposition du MJ, pas une source canonique supplémentaire.
+
+---
+
 ## Pilotage A/V LiveKit par le MJ (toolkit 0.44.6)
 
 Sur LiveKit serveur v1.9.4, le toolkit force le protocole RTC legacy

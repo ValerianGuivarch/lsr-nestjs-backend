@@ -1309,3 +1309,21 @@ Le popup s'appuie sur `AVSettings#set('client', 'users.<id>.muted/hidden',
 false)` et les mécanismes natifs du module LiveKit ; aucune piste ne se crée
 avant l'accord explicite. Les modes vocaux du joueur (dont push-to-talk)
 restent inchangés. Tests : `tests/livekit-join-consent.mjs`.
+
+## v0.44.7 — Première création de Corvan (Witch 20)
+
+Import unique via l'API Document Foundry au prochain chargement d'un MJ, en
+l'absence de client actif sur le relais REST au moment de la préparation.
+Dossier : Actors → MJ → Divers. Portraits PNG : assets/l7r/portraits/pnj/.
+Construction : elfe, Witch (Spinner of Threads / Echo of Lost Divinity),
+background Acolyte (choix provisoire), niveau 20, 10 dons de classe, 5 dons
+d'ascendance, 5 dons généraux, 10 dons de compétence, 33 sorts préparés, 5
+tours supplémentaires connus, 3 hexes, armes et tenue magique.
+Le familier est un second Actor familiar lié par system.master.id, avec
+sept capacités dont vol, parole, indépendance et incantation. Il ne gagne
+pas d'attaque gratuite : Spiritual Armament et Ceremonial Knife simulent
+le poignard offensif. La création est reprise sans doublons si interrompue ;
+elle est réservée à un MJ et vérifiée par tests/corvan-import.mjs.
+
+Vérification requise : test interactif de la fiche, des choix de capacités,
+des préparations et des attaques après import effectif dans Foundry.

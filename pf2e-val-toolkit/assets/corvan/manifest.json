@@ -1,0 +1,440 @@
+{
+  "version": 1,
+  "name": "Corvan",
+  "folderId": "LiT7hp7FngNL2Blx",
+  "portrait": "assets/l7r/portraits/pnj/corvan-keris.png",
+  "familiarPortrait": "assets/l7r/portraits/pnj/corvan-poignard-familier.png",
+  "ancestry": "PgKmsA2aKdbLU6O0",
+  "background": "CAjQrHZZbALE7Qjy",
+  "class": "bYDXk9HUMKOuym9h",
+  "patron": "ghIsqhEsJTvjJiNl",
+  "classFeatLevels": {
+    "2": {
+      "name": "Enhanced Familiar",
+      "id": "N7dTFxpjXGn4ddq8"
+    },
+    "4": {
+      "name": "Cackle",
+      "id": "0BR61rW4JFOfO7T7"
+    },
+    "6": {
+      "name": "Ceremonial Knife",
+      "id": "78pkCdFaY8hI07Lj"
+    },
+    "8": {
+      "name": "Spirit Familiar (Witch)",
+      "id": "FCivW0HZhm7PoxrC"
+    },
+    "10": {
+      "name": "Witch's Communion",
+      "id": "4IeAAmx2vZEHmRLX"
+    },
+    "12": {
+      "name": "Incredible Familiar",
+      "id": "Joy1e6pdqx6fN9mH"
+    },
+    "14": {
+      "name": "Patron's Presence",
+      "id": "aM36jhU3VTeUzPpr"
+    },
+    "16": {
+      "name": "Effortless Concentration",
+      "id": "rgs6OZJYCgi5At8J"
+    },
+    "18": {
+      "name": "Split Hex",
+      "id": "KpF7RenGBXIMMGPX"
+    },
+    "20": {
+      "name": "Hex Master",
+      "id": "5H3Sk1yhalQQzUys"
+    }
+  },
+  "familiarAbilities": [
+    {
+      "name": "Flier",
+      "id": "ZHSzNt3NxkXbj1mI"
+    },
+    {
+      "name": "Speech",
+      "id": "zyMRLQnFCQVpltiR"
+    },
+    {
+      "name": "Independent",
+      "id": "2fiQzoEKu6YUnrU9"
+    },
+    {
+      "name": "Manual Dexterity",
+      "id": "cT5octWchU4gjrhP"
+    },
+    {
+      "name": "Spellcasting",
+      "id": "asOhEdyF8CWFbR96"
+    },
+    {
+      "name": "Familiar Focus",
+      "id": "jdlefpPcSCIe27vO"
+    },
+    {
+      "name": "Touch Telepathy",
+      "id": "XCqYnlVbLGqEGPeX"
+    }
+  ],
+  "spellRanks": {
+    "0": [
+      {
+        "name": "Telekinetic Projectile",
+        "id": "60sgbuMWN0268dB7"
+      },
+      {
+        "name": "Shield",
+        "id": "TVKNbcgTee19PXZR"
+      },
+      {
+        "name": "Detect Magic",
+        "id": "gpzpAAAJ1Lza2JVl"
+      },
+      {
+        "name": "Guidance",
+        "id": "izcxFQFwf3woCnFs"
+      },
+      {
+        "name": "Message",
+        "id": "vLzFcIaSXs7YTIqJ"
+      }
+    ],
+    "1": [
+      {
+        "name": "Sure Strike",
+        "id": "Gb7SeieEvd0pL2Eh"
+      },
+      {
+        "name": "Fear",
+        "id": "4koZzrnMXhhosn0D"
+      },
+      {
+        "name": "Force Barrage",
+        "id": "gKKqvLohtrSJj3BM"
+      }
+    ],
+    "2": [
+      {
+        "name": "Spiritual Armament",
+        "id": "WPu3UE3kTXSLqO40"
+      },
+      {
+        "name": "Blur",
+        "id": "3JG1t3T4mWn6vTke"
+      },
+      {
+        "name": "Telekinetic Maneuver",
+        "id": "mrDi3v933gsmnw25"
+      }
+    ],
+    "3": [
+      {
+        "name": "Slow",
+        "id": "WsUwpfmhKrKwoIe3"
+      },
+      {
+        "name": "Heroism",
+        "id": "KqvqNAfGIE5a9wSv"
+      },
+      {
+        "name": "Haste",
+        "id": "o6YCGx4lycsYpww4"
+      }
+    ],
+    "4": [
+      {
+        "name": "Confusion",
+        "id": "LiGbewa9pO0yjbsY"
+      },
+      {
+        "name": "Phantasmal Killer",
+        "id": "tlcrVRqW1MSKJ5IC"
+      },
+      {
+        "name": "Invisibility",
+        "id": "XXqE1eY3w3z6xJCB"
+      }
+    ],
+    "5": [
+      {
+        "name": "Synesthesia",
+        "id": "OAt2ZEns1gIOCgrn"
+      },
+      {
+        "name": "Black Tentacles",
+        "id": "2w4OpAGihn1JSHFD"
+      },
+      {
+        "name": "Shadow Blast",
+        "id": "IqJ9URobmJ9L9UBG"
+      }
+    ],
+    "6": [
+      {
+        "name": "Spirit Blast",
+        "id": "PHVHBbdHeQRfjLmE"
+      },
+      {
+        "name": "Dominate",
+        "id": "OsOhx3TGIZ7AhD0P"
+      },
+      {
+        "name": "Vampiric Exsanguination",
+        "id": "fd31tAHSSGXyOxW6"
+      }
+    ],
+    "7": [
+      {
+        "name": "True Target",
+        "id": "AlbpWWN87yGegoAF"
+      },
+      {
+        "name": "Visions of Danger",
+        "id": "jBGAYmR0BkkbpJvG"
+      },
+      {
+        "name": "Shadow Raid",
+        "id": "VTb0yI6P1bLkzuRr"
+      }
+    ],
+    "8": [
+      {
+        "name": "Spirit Song",
+        "id": "Ht35SDf9PDStJfoC"
+      },
+      {
+        "name": "Quandary",
+        "id": "Oj1PJBMQD9vuwCv7"
+      },
+      {
+        "name": "Disappearance",
+        "id": "wfleiawxsfhpRRwf"
+      }
+    ],
+    "9": [
+      {
+        "name": "Foresight",
+        "id": "qsNeG9KZpODSACMq"
+      },
+      {
+        "name": "Weird",
+        "id": "qDjeG6dxT4aEEC6J"
+      },
+      {
+        "name": "Overwhelming Presence",
+        "id": "fkDeKktdmbeplYRY"
+      }
+    ],
+    "10": [
+      {
+        "name": "Fated Confrontation",
+        "id": "Di9gL6KIZ9eFgbs1"
+      }
+    ]
+  },
+  "classFeatures": [
+    {
+      "name": "Weapon Expertise",
+      "id": "9XLUh9iMepZesdmc",
+      "level": 11
+    },
+    {
+      "name": "Master Spellcaster",
+      "id": "l1InYvhnQSz6Ucxc",
+      "level": 15
+    },
+    {
+      "name": "Legendary Spellcaster",
+      "id": "Hfaa7TuLn3nE8lr3",
+      "level": 19
+    },
+    {
+      "name": "Perception Expertise",
+      "id": "JCqACxgrm5ixX0Jy",
+      "level": 11
+    },
+    {
+      "name": "Will of the Pupil",
+      "id": "FuVO8ksHI1B5ozVI",
+      "level": 17
+    },
+    {
+      "name": "Defensive Robes",
+      "id": "gU7epgcPSm0TD1UK",
+      "level": 13
+    },
+    {
+      "name": "Weapon Specialization",
+      "id": "9EqIasqfI8YIM3Pt",
+      "level": 13
+    },
+    {
+      "name": "Reflex Expertise",
+      "id": "TUOeATt52P43r5W0",
+      "level": 9
+    },
+    {
+      "name": "Witch Spellcasting",
+      "id": "zT6QiTMxxj8JYoN9",
+      "level": 1
+    },
+    {
+      "name": "Familiar (Witch)",
+      "id": "yksPhweBZYVCsE1A",
+      "level": 1
+    },
+    {
+      "name": "Hexes",
+      "id": "9uLh5z2uPo6LDFRY",
+      "level": 1
+    },
+    {
+      "name": "Patron",
+      "id": "KPtF29AaeX2sJW0K",
+      "level": 1
+    },
+    {
+      "name": "Magical Fortitude",
+      "id": "70jqXP2eS4tRZ0Ok",
+      "level": 5
+    },
+    {
+      "name": "Expert Spellcaster",
+      "id": "cD3nSupdCvONuHiE",
+      "level": 7
+    },
+    {
+      "name": "Patron's Gift",
+      "id": "cDnFXfl3i5Z2l7JP",
+      "level": 19
+    }
+  ],
+  "otherFeats": {
+    "ancestry": {
+      "1": {
+        "name": "Ancestral Longevity",
+        "id": "WoLh16gyDp8y9WOZ"
+      },
+      "5": {
+        "name": "Ageless Patience",
+        "id": "k8nWKHLYvAKMuwLd"
+      },
+      "9": {
+        "name": "Elf Step",
+        "id": "aIm2qi4JZerthZmF"
+      },
+      "13": {
+        "name": "Expert Longevity",
+        "id": "vfuHVSuExvtyajkW"
+      },
+      "17": {
+        "name": "Universal Longevity",
+        "id": "EiiCCJqWnN5RYMV4"
+      }
+    },
+    "general": {
+      "3": {
+        "name": "Toughness",
+        "id": "AmP0qu7c5dlBSath"
+      },
+      "7": {
+        "name": "Incredible Initiative",
+        "id": "2kwXTUjYYhoAGySr"
+      },
+      "11": {
+        "name": "Fleet",
+        "id": "Ux73dmoF8KnavyUD"
+      },
+      "15": {
+        "name": "Diehard",
+        "id": "I0BhPWqYf1bbzEYg"
+      },
+      "19": {
+        "name": "Fast Recovery",
+        "id": "N8Xz5fuW6o7GW124"
+      }
+    },
+    "skill": {
+      "2": {
+        "name": "Quick Identification",
+        "id": "IlOQuCQIhjJpig3S"
+      },
+      "4": {
+        "name": "Magical Shorthand",
+        "id": "v7Bt6hjmzYnLFLeG"
+      },
+      "6": {
+        "name": "Recognize Spell",
+        "id": "MjQyTcV8Jiv1Jtln"
+      },
+      "8": {
+        "name": "Quick Recognition",
+        "id": "2rSyTfPgAmNAo01r"
+      },
+      "10": {
+        "name": "Disturbing Knowledge",
+        "id": "hkSuxXOc9qBleJbd"
+      },
+      "12": {
+        "name": "Consult the Spirits",
+        "id": "fvYwsHM9O1twQa5N"
+      },
+      "14": {
+        "name": "Trick Magic Item",
+        "id": "uR62fVC9FyQAMCO1"
+      },
+      "16": {
+        "name": "Oddity Identification",
+        "id": "hDGosy2ZTwnyctEP"
+      },
+      "18": {
+        "name": "Ward Medic",
+        "id": "8c61nOIr5AM3KxZi"
+      },
+      "20": {
+        "name": "Continual Recovery",
+        "id": "c85a69mB1urW2Se2"
+      }
+    }
+  },
+  "focusSpells": [
+    {
+      "name": "Nudge Fate",
+      "id": "G0T1xv1FoZ23Jxvt"
+    },
+    {
+      "name": "Cackle",
+      "id": "YVK3JUkPVzHIeGXQ"
+    },
+    {
+      "name": "Phase Familiar",
+      "id": "rMOI8JFJ0nT2mrCF"
+    }
+  ],
+  "extraCantrips": [
+    {
+      "name": "Daze",
+      "id": "4gBIw4IDrSfFHik4"
+    },
+    {
+      "name": "Figment",
+      "id": "0zU8CPejjQFnhZFI"
+    },
+    {
+      "name": "Telekinetic Hand",
+      "id": "pwzdSlJgYqN7bs2w"
+    },
+    {
+      "name": "Void Warp",
+      "id": "mAMEt4FFbdqoRnkN"
+    },
+    {
+      "name": "Read Aura",
+      "id": "OhD2Z6rIGGD5ocZA"
+    }
+  ]
+}
