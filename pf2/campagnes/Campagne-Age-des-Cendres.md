@@ -37,4 +37,15 @@ Aucun événement n'est considéré comme joué tant que cela n'est pas confirm�
 
 ## Préparation de séance saisie dans l'application (29 octobre 2026)
 
-La fiche MJ PDF de la séance 1 (Brèchemur et Citadelle Altaerein) a servi à créer une **préparation manuelle éditable** dans SQLite, avec neuf étapes et 65 blocs. Elle est accessible depuis le [Journal MJ → Préparation séance](/pf2-mj/session-preparations?preparationId=15eb2bb6-7e62-482b-9f96-57b080fddd79) et n’est pas marquée jouée. La préparation reste distincte de la vérité historique de la campagne, du document PDF source et des résumés de parties effectivement tenues. Consulter [le guide de l'outil](../../docs/pf2/session-preparations.md) pour le fonctionnement.
+La fiche MJ PDF de la séance 1 (Brèchemur et Citadelle Altaerein) a servi à créer une **préparation manuelle éditable** dans SQLite, initialement avec neuf étapes et 65 blocs, puis réorganisée après les modifications du MJ en **six moments et douze blocs**. Elle est accessible depuis le [Journal MJ → Préparation séance](/pf2-mj/session-preparations?preparationId=15eb2bb6-7e62-482b-9f96-57b080fddd79) et n’est pas marquée jouée. La préparation reste distincte de la vérité historique de la campagne, du document PDF source et des résumés de parties effectivement tenues. Consulter [le guide de l'outil](../../docs/pf2/session-preparations.md) pour le fonctionnement.
+
+### Conduite de la séance 1 : version resserrée (29 octobre 2026)
+
+Le MJ a repris l'exemple initial pour éviter les micro-blocs répétés. Le conducteur opérationnel dans SQLite est désormais organisé en six moments : **appel aux héros à Brèchemont** (Greta, Rinna et sa mission du manoir de Blanc-Manteau reportée à une autre séance, Warbal), **incendie et poursuite**, **référence des salles de la citadelle**, **Alak/A10**, **grauladon/A12**, **Helba et Calmont/A22**.
+
+- Chaque personnage important apparaît **une seule fois** dans le déroulé ; les requêtes ou combats qu'il amène figurent dans sa propre description plutôt que dans plusieurs blocs.
+- Une seule fiche de référence regroupe, **par salle A1 à A22 pertinente**, l'ambiance, les créatures, les enjeux et le butin. L'exploration reste facultative et n'oblige pas à visiter tout le donjon. Pas de liste de dizaines de loots ou de checklists de conclusion.
+- Le lore est réparti en quatre aides substantielles : **histoire de Brèchemont**, **Chevaliers de l'Enfer, leurs ordres et leur hiérarchie**, **histoire d'Altaerein**, **Isger/Cheliax/Ravounel**. Les révélations sensibles (Vidoc, Griffes de Cendre, Anneau d'Alséta) demeurent des notes MJ.
+- Utiliser les traductions validées **Brèchemont** et **Impétueux-Bafouilleurs** dans cette préparation, sans retransformer ces noms lors d'un import futur. La fiche Warbal du référentiel PNJ, qui possède encore son patronyme d'origine, n'a pas été modifiée.
+
+La préparation est **toujours à venir** : les scènes n'ont pas été marquées jouées. La base reste la source de vérité sur son contenu ; la version antérieure a été sauvegardée dans le stockage opérationnel avant cette réorganisation.
