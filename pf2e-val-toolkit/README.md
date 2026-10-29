@@ -1219,3 +1219,12 @@ Il est injecté lors du rendu de la fiche et ne modifie pas les templates PF2e.
   externes ni une révocation cryptographique des jetons.
 - Tests locaux sans serveur : `node pf2e-val-toolkit/tests/livekit-mj-controls.mjs`.
   L'essai end-to-end multi-clients dans un navigateur Foundry reste nécessaire.
+
+## v0.44.1 — Capture audio/vidéo différée
+
+Le démarrage d'une session LiveKit ne demande plus immédiatement l'accès
+aux périphériques lorsque les réglages locaux sont « micro coupé / caméra
+masquée ». L'acquisition est différée jusqu'au premier choix volontaire du
+joueur (boutons Foundry ou push-to-talk lorsque le micro a été autorisé).
+Une activation de caméra réutilise `changeVideoSource` et une activation du
+micro `changeAudioSource` sans patcher les fichiers du module LiveKit tiers.

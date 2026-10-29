@@ -88,3 +88,35 @@ game.user.isGM=false;
 await assert.rejects(game.pf2eValToolkit.avControl.setMode(3),/MJ/);
 await assert.rejects(game.pf2eValToolkit.avControl.setPanelsHidden(false),/MJ/);
 console.log('OK: 3 modes, privacy, media stop, panel setting and GM access');
+
+// Regression: a newly started AV session must not acquire either device until
+// a player intentionally unmutes or reveals their camera.
+settingsData['core.rtcWorldSettings'].mode=3;
+settingsData['core.rtcClientSettings'].users.gm={muted:true,hidden:true};
+const privateSession=new AVMaster();
+game.webrtc=privateSession;
+privateSession.settings.world.mode=3;
+privateSession.canUserShareAudio=()=>!privateSession.settings.client.users.gm.muted;
+privateSession.canUserShareVideo=()=>!privateSession.settings.client.users.gm.hidden;
+const lk=privateSession.client._liveKitClient;
+const captures=[];
+lk.initializeAudioTrack=async function() {captures.push('micro');this.audioTrack={stop(){},mute:async()=>{}};};
+lk.initializeVideoTrack=async function() {captures.push('camera');this.videoTrack={stop(){},mute:async()=>{}};};
+lk.changeAudioSource=async function(){await this.initializeAudioTrack();};
+lk.changeVideoSource=async function(){await this.initializeVideoTrack();};
+privateSession.client.toggleAudio=()=>{};
+privateSession.client.toggleBroadcast=()=>{};
+privateSession.client.toggleVideo=()=>{};
+await privateSession.connect();
+lk.audioTrack=null;
+lk.videoTrack=null;
+await lk.initializeAudioTrack();
+await lk.initializeVideoTrack();
+assert.deepEqual(captures,[],'No automatic camera or microphone acquisition');
+privateSession.settings.client.users.gm.muted=false;
+await privateSession.client.toggleAudio(true);
+assert.deepEqual(captures,['micro'],'Voluntary mic activation acquires the mic');
+privateSession.settings.client.users.gm.hidden=false;
+await privateSession.client.toggleVideo(true);
+assert.deepEqual(captures,['micro','camera'],'Voluntary camera activation acquires the camera');
+console.log('OK: microphone/camera deferred until deliberate activation');

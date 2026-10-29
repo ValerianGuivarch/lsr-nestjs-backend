@@ -556,7 +556,7 @@ Fichiers : \`pf2e-val-toolkit/scripts/private-roll-names.js\`, \`styles/private-
 
 ---
 
-## Pilotage A/V LiveKit par le MJ (toolkit 0.44.0)
+## Pilotage A/V LiveKit par le MJ (toolkit 0.44.1)
 
 Le panneau `Communications MJ` est injecté par `pf2e-val-toolkit` dans les
 outils de tokens, à l'aide des modes A/V natifs de Foundry 14 : arrêt complet,
@@ -564,6 +564,9 @@ audio seul, audio + vidéo. Le MJ décide manuellement, indépendamment des
 commandes début/fin de séance. Les joueurs gardent le contrôle de leurs
 périphériques ; l'arrêt global coupe les flux des clients Foundry équipés du
 toolkit. Les infobulles audio/vidéo sont déplacées au-dessus des commandes.
+Le micro et la caméra ne sont acquis par le navigateur qu’après activation
+volontaire du joueur (sauf une activation déjà consentie et conservée lors
+d’un changement de mode actif).
 
 La description technique, les limites et le test sont dans
 [`pf2e-val-toolkit/README.md`](../../pf2e-val-toolkit/README.md).

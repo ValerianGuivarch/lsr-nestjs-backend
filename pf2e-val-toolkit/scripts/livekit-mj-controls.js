@@ -228,6 +228,73 @@ function addGMControl() {
   });
 }
 
+/** LiveKit creates local tracks during initialize(), even when muted/hidden.
+ * Defer access to physical devices until the player explicitly enables them.
+ * Patch the current LiveKit instance, not the third-party module's files.
+ */
+function installPrivateCapture(client) {
+  const lk = client?._liveKitClient;
+  if (!lk || lk._pf2ValPrivateCapture) return;
+  const localId = () => game.userId;
+  for (const [kind, allowed] of [
+    ['Audio', () => game.webrtc?.canUserShareAudio(localId())],
+    ['Video', () => game.webrtc?.canUserShareVideo(localId())]
+  ]) {
+    const method = `initialize${kind}Track`;
+    const original = lk[method];
+    if (typeof original !== 'function') continue;
+    lk[method] = function (...args) {
+      if (!allowed() || worldMode() === MODES.OFF) {
+        this[`${kind.toLowerCase()}Track`] = null;
+        return Promise.resolve();
+      }
+      return original.apply(this, args);
+    };
+  }
+
+  const acquireAudio = async () => {
+    await lk.changeAudioSource();
+    if (!game.webrtc?.canUserShareAudio(localId()) || worldMode() === MODES.OFF) {
+      await lk.audioTrack?.mute?.();
+    }
+  };
+  const originalAudio = client.toggleAudio;
+  if (typeof originalAudio === 'function') {
+    client.toggleAudio = function (enabled) {
+      if (enabled && !lk.audioTrack && !lk.useExternalAV && game.webrtc?.canUserShareAudio(localId())) {
+        return acquireAudio().then(() => originalAudio.call(this, enabled))
+          .catch(error => console.error('PF2e Val Toolkit | Ouverture du micro:', error));
+      }
+      return originalAudio.call(this, enabled);
+    };
+  }
+  const originalBroadcast = client.toggleBroadcast;
+  if (typeof originalBroadcast === 'function') {
+    client.toggleBroadcast = function (enabled) {
+      if (enabled && !lk.audioTrack && !lk.useExternalAV && game.webrtc?.canUserShareAudio(localId())) {
+        return acquireAudio().then(() => originalBroadcast.call(this, enabled))
+          .catch(error => console.error('PF2e Val Toolkit | Diffusion micro:', error));
+      }
+      return originalBroadcast.call(this, enabled);
+    };
+  }
+  const originalVideo = client.toggleVideo;
+  if (typeof originalVideo === 'function') {
+    client.toggleVideo = function (enabled) {
+      if (enabled && !lk.videoTrack && !lk.useExternalAV && game.webrtc?.canUserShareVideo(localId())) {
+        return lk.changeVideoSource().then(() => {
+          if (!game.webrtc?.canUserShareVideo(localId()) || worldMode() !== MODES.VIDEO) {
+            return lk.videoTrack?.mute?.();
+          }
+          return originalVideo.call(this, enabled);
+        }).catch(error => console.error('PF2e Val Toolkit | Ouverture de la caméra:', error));
+      }
+      return originalVideo.call(this, enabled);
+    };
+  }
+  lk._pf2ValPrivateCapture = true;
+}
+
 /** Called on init: before Foundry's initializeRTC constructs AVMaster. */
 function protectFirstConnection() {
   const proto = foundry.av?.AVMaster?.prototype;
@@ -236,6 +303,7 @@ function protectFirstConnection() {
   proto.connect = async function (...args) {
     if (!isLiveKitClient(this.client)) return nativeConnect.apply(this, args);
     if (!isInitialized()) return false;
+    installPrivateCapture(this.client);
     if (!this._pf2ValFirstConnect) {
       this._pf2ValFirstConnect = true;
       try { await prepareLocalPrivacy(MODES.OFF, worldMode()); }
