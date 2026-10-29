@@ -114,7 +114,7 @@ async function applyMode(mode) {
   av.settings.world = game.settings.get('core', 'rtcWorldSettings');
   // This guard protects first-run clients before the GM finishes installing
   // the global OFF default; the GM migration itself is allowed to disconnect.
-  if (mode !== MODES.OFF && !isInitialized()) return;
+  if (mode !== MODES.OFF && !isInitialized()) throw new Error('Contrôle global A/V non initialisé. Rechargez Foundry avec un MJ connecté.');
   const previous = appliedMode ?? MODES.OFF;
   // Native rtcWorldSettings onChange is debounced; AVMaster must see the new
   // mode now, otherwise connect() may decide it is still disabled.
@@ -133,21 +133,30 @@ async function applyMode(mode) {
   await av.disconnect();
   stopLocalMedia();
   if (worldMode() !== mode) return; // A newer GM transition took precedence.
-  const connected = await av.connect();
+  let connected;
+  try { connected = await av.connect(); }
+  catch (error) {
+    appliedMode = null; // Allow retry of the same selected mode.
+    throw error;
+  }
   if (worldMode() === MODES.OFF && connected) {
     await av.disconnect();
     stopLocalMedia();
     return;
   }
-  if (!connected) console.warn('PF2e Val Toolkit | Connexion LiveKit non établie en mode', mode);
+  if (!connected) {
+    appliedMode = null;
+    throw new Error('Le mode a été enregistré, mais la connexion LiveKit a échoué. Vérifiez les paramètres A/V et réessayez.');
+  }
+  console.info(`PF2e Val Toolkit | LiveKit connecté en mode ${LABELS[mode]}`);
 }
 
-function syncMode() {
+function syncMode(force = false) {
   const nextMode = worldMode();
   // Queue transitions to prevent racing asynchronous disconnect/connect calls.
   syncQueue = syncQueue.catch(error => console.error('PF2e Val Toolkit | A/V précédente transition:', error))
     .then(async () => {
-      if (appliedMode === worldMode()) return;
+      if (!force && appliedMode === worldMode()) return;
       await applyMode(worldMode());
       if (game.ready) {
         const description = LABELS[worldMode()] ?? 'Arrêté';
@@ -156,7 +165,9 @@ function syncMode() {
       }
     }).catch(error => {
       console.error('PF2e Val Toolkit | Transition A/V:', error);
-      ui.notifications?.error?.('Impossible de changer le mode audio/vidéo. Consultez la console.');
+      ui.notifications?.error?.(error.message || 'Impossible de changer le mode audio/vidéo. Consultez la console.');
+      // Keep the queue reusable but report failure to a GM who clicked a mode.
+      if (force) throw error;
     });
   return syncQueue;
 }
@@ -169,11 +180,16 @@ async function setMode(mode) {
     return false;
   }
   const world = foundry.utils.deepClone(game.settings.get('core', 'rtcWorldSettings'));
-  if (world.mode === mode) return true;
-  world.mode = mode;
-  await game.settings.set('core', 'rtcWorldSettings', world);
-  // The native AV settings change hook is debounced; sync immediately on GM.
-  await syncMode();
+  const changed = Number(world.mode) !== mode;
+  if (changed) {
+    world.mode = mode;
+    await game.settings.set('core', 'rtcWorldSettings', world);
+  }
+  // Even the already selected mode must reconnect after a failed/disconnected
+  // attempt. Native Foundry does not reconnect when only world.mode changes.
+  await syncMode(true);
+  if (mode === MODES.OFF) ui.notifications.info('Communications A/V arrêtées pour la partie.');
+  else ui.notifications.info(`LiveKit connecté : ${LABELS[mode]}. Chaque joueur active ses périphériques.`);
   return true;
 }
 
@@ -208,8 +224,13 @@ async function openPanel() {
     ],
     close: () => null
   });
-  if (action === 'panels') await setPanelsHidden(!hidden);
-  else if (VALID_MODES.has(action)) await setMode(action);
+  try {
+    if (action === 'panels') await setPanelsHidden(!hidden);
+    else if (VALID_MODES.has(action)) await setMode(action);
+  } catch (error) {
+    console.error('PF2e Val Toolkit | Commande A/V MJ:', error);
+    // The transition already reports its error. Do not present false success.
+  }
 }
 
 function addGMControl() {

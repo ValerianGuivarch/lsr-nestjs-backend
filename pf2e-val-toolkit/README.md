@@ -1228,3 +1228,16 @@ masquée ». L'acquisition est différée jusqu'au premier choix volontaire du
 joueur (boutons Foundry ou push-to-talk lorsque le micro a été autorisé).
 Une activation de caméra réutilise `changeVideoSource` et une activation du
 micro `changeAudioSource` sans patcher les fichiers du module LiveKit tiers.
+
+## v0.44.2 — Réactivation A/V et barre d'outils MJ dédiée
+
+- Les commandes **Communications MJ**, **Groupe actif**, **Créer un PNJ rapide**
+  et **Improviser une rencontre** résident dans une nouvelle catégorie **Outils MJ**
+  des commandes de scène, distincte des tokens (MJ uniquement). Les callbacks
+  d'origine sont conservés, les boutons ne sont pas dupliqués.
+- Lorsqu'une tentative LiveKit échoue, le client affiche une erreur explicite
+  et permet de **réessayer en cliquant sur le même mode**, sans imposer un détour
+  par « Arrêter tout ». La réussite locale est annoncée après confirmation de
+  `AVMaster.connect()`, et non à la seule écriture de la configuration.
+- Tests : `node pf2e-val-toolkit/tests/livekit-mj-controls.mjs` et
+  `node pf2e-val-toolkit/tests/mj-scene-controls.mjs`.

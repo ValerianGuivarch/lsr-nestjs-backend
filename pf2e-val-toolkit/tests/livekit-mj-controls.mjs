@@ -120,3 +120,24 @@ privateSession.settings.client.users.gm.hidden=false;
 await privateSession.client.toggleVideo(true);
 assert.deepEqual(captures,['micro','camera'],'Voluntary camera activation acquires the camera');
 console.log('OK: microphone/camera deferred until deliberate activation');
+
+// Retry when the selected world mode is already correct but the local LiveKit
+// handshake previously failed. This used to silently do nothing.
+class FlakyAVMaster extends AVMaster {
+  failNext = true;
+  async connect() {
+    if (this.failNext) { this.failNext = false; calls.push(['connectionFailed']); return false; }
+    return super.connect();
+  }
+}
+game.user.isGM=true;
+settingsData['core.rtcWorldSettings'].mode=0;
+game.webrtc=new FlakyAVMaster();
+const logError = console.error;
+console.error = () => {}; // Avoid printing large data: import URLs in expected error stacks.
+try { await assert.rejects(game.pf2eValToolkit.avControl.setMode(1),/connexion LiveKit a échoué/); }
+finally { console.error = logError; }
+assert.equal(settingsData['core.rtcWorldSettings'].mode,1,'World mode persists even when local connection fails');
+await game.pf2eValToolkit.avControl.setMode(1);
+assert.equal(game.webrtc.connected,true,'Clicking the same mode retries a failed connection');
+console.log('OK: failed LiveKit handshake surfaces error and same-mode click reconnects');

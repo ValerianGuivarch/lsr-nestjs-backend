@@ -36,6 +36,7 @@ import { initEarnIncomeCoins } from "./earn-income/index.js";
 import { initOutcomeEffects } from "./outcome-effects/index.js";
 
 import { initFamiliarSelector } from "./familiar-selector.js";
+import { initMJSceneControls } from "./mj-scene-controls.js";
 import { registerAVControlSettings, initAVControl } from "./livekit-mj-controls.js";
 import { migrateSashkaFamiliarFeat } from "./familiar-sashka-migration.js";
 
@@ -57,6 +58,8 @@ Hooks.once("init", () => {
   initCreatureIndex();
   initEncounterBuilder();
   initQuickNpc();
+  // Register last: collect the four toolkit buttons into a separate MJ category.
+  initMJSceneControls();
 });
 
 Hooks.once("ready", () => {
