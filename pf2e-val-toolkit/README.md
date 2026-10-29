@@ -1267,3 +1267,20 @@ connexion valide mais l'interface des caméras/micros restait invisible.
 rendu est remontée au MJ au lieu d'annoncer faussement la réussite totale.
 Test de régression : `tests/livekit-mj-controls.mjs` couvre le rendu initial
 forcé et la fermeture du panneau à l'arrêt.
+
+## v0.44.5 — Réactivation des périphériques après arrêt / reprise
+
+Foundry 14 ajoute implicitement `muted`/`hidden` dans `AVSettings.getUser()`
+lorsque `client.isAudioEnabled()` / `isVideoEnabled()` ne trouve pas de piste.
+Or le toolkit diffère précisément la création de ces pistes : le clic du joueur
+ne pouvait pas passer le test `canUserShareAudio/Video()` et l'acquisition
+restait bloquée. Le toolkit utilise désormais l'intention explicite
+`rtcClientSettings.users[localUserId].muted/hidden` pour le seul utilisateur
+local, tout en conservant les permissions Foundry et la validation des sources.
+La capture reste différée et aucune caméra/micro ne s'ouvre automatiquement.
+Le drapeau de diffusion audio de LiveKit est aussi réinitialisé à l'arrêt,
+ce qui évite un court-circuit au prochain démarrage.
+
+Test de non-régression : émulation de `AVSettings#getUser()` v14 puis cycle
+**arrêt → relance → activation individuelle** dans
+`tests/livekit-mj-controls.mjs`.

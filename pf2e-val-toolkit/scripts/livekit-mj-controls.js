@@ -89,6 +89,9 @@ function stopLocalMedia() {
     catch (error) { console.warn('PF2e Val Toolkit | A/V track stop:', prop, error); }
     lk[prop] = null;
   }
+  // The LiveKit client's toggleAudio() short-circuits if this remains true
+  // after a stopped room, so reset the broadcast state on every disconnect.
+  lk.audioBroadcastEnabled = false;
 }
 
 /** Persist a muted+hidden starting position; preserve voluntarily active audio
@@ -270,6 +273,34 @@ function installPrivateCapture(client) {
   const lk = client?._liveKitClient;
   if (!lk || lk._pf2ValPrivateCapture) return;
   const localId = () => game.userId;
+  // Foundry 14's AVSettings#getUser() does:
+  //   settings.muted ||= !game.webrtc.client.isAudioEnabled()
+  //   settings.hidden ||= !game.webrtc.client.isVideoEnabled()
+  // LiveKit reports both as false until the physical tracks exist. With lazy
+  // capture, this creates a deadlock: clicking Unmute sets muted=false, but
+  // getUser() immediately forces it back to true, so canUserShareAudio()
+  // blocks the very track creation needed to unmute. Keep the original
+  // settings calculation (including permissions) but use the EXPLICIT local
+  // user's intent for muted/hidden, rather than implicit track availability.
+  // Other users' states and the original LiveKit media methods are untouched.
+  const avSettings = game.webrtc?.settings;
+  if (typeof avSettings?.getUser === 'function' && !avSettings._pf2ValLazyUserSettings) {
+    const nativeGetUser = avSettings.getUser;
+    avSettings.getUser = function (userId) {
+      const result = nativeGetUser.call(this, userId);
+      if (result && userId === game.userId && !lk.useExternalAV) {
+        const requested = this.client?.users?.[userId];
+        if (typeof requested?.muted === 'boolean') {
+          result.muted = requested.muted || this.client?.audioSrc === 'disabled';
+        }
+        if (typeof requested?.hidden === 'boolean') {
+          result.hidden = requested.hidden || this.client?.videoSrc === 'disabled';
+        }
+      }
+      return result;
+    };
+    avSettings._pf2ValLazyUserSettings = true;
+  }
   // LiveKit AVClient 0.6.8 embeds livekit-client 2.19.x, which defaults to
   // singlePeerConnection=true (/rtc/v1). Our LiveKit server 1.9.4 only
   // exposes the legacy /rtc route; v1 validation produces a 404 and the
@@ -303,10 +334,18 @@ function installPrivateCapture(client) {
     };
   }
 
+  const captureFailed = (kind, error) => {
+    console.error(`PF2e Val Toolkit | Impossible d'activer ${kind}:`, error);
+    ui.notifications?.error?.(`Impossible d'activer ${kind}. Vérifiez les périphériques et les autorisations du navigateur.`);
+    // Do not leave the Foundry icon saying "enabled" after a failed capture.
+    const property = kind === 'le micro' ? 'muted' : 'hidden';
+    game.webrtc?.settings?.set?.('client', `users.${localId()}.${property}`, true);
+  };
   const acquireAudio = async () => {
     await lk.changeAudioSource();
+    if (!lk.audioTrack) throw new Error('Aucune piste micro créée par LiveKit.');
     if (!game.webrtc?.canUserShareAudio(localId()) || worldMode() === MODES.OFF) {
-      await lk.audioTrack?.mute?.();
+      await lk.audioTrack.mute();
     }
   };
   const originalAudio = client.toggleAudio;
@@ -314,7 +353,7 @@ function installPrivateCapture(client) {
     client.toggleAudio = function (enabled) {
       if (enabled && !lk.audioTrack && !lk.useExternalAV && game.webrtc?.canUserShareAudio(localId())) {
         return acquireAudio().then(() => originalAudio.call(this, enabled))
-          .catch(error => console.error('PF2e Val Toolkit | Ouverture du micro:', error));
+          .catch(error => captureFailed('le micro', error));
       }
       return originalAudio.call(this, enabled);
     };
@@ -324,7 +363,7 @@ function installPrivateCapture(client) {
     client.toggleBroadcast = function (enabled) {
       if (enabled && !lk.audioTrack && !lk.useExternalAV && game.webrtc?.canUserShareAudio(localId())) {
         return acquireAudio().then(() => originalBroadcast.call(this, enabled))
-          .catch(error => console.error('PF2e Val Toolkit | Diffusion micro:', error));
+          .catch(error => captureFailed('le micro', error));
       }
       return originalBroadcast.call(this, enabled);
     };
@@ -334,11 +373,12 @@ function installPrivateCapture(client) {
     client.toggleVideo = function (enabled) {
       if (enabled && !lk.videoTrack && !lk.useExternalAV && game.webrtc?.canUserShareVideo(localId())) {
         return lk.changeVideoSource().then(() => {
+          if (!lk.videoTrack) throw new Error('Aucune piste caméra créée par LiveKit.');
           if (!game.webrtc?.canUserShareVideo(localId()) || worldMode() !== MODES.VIDEO) {
             return lk.videoTrack?.mute?.();
           }
           return originalVideo.call(this, enabled);
-        }).catch(error => console.error('PF2e Val Toolkit | Ouverture de la caméra:', error));
+        }).catch(error => captureFailed('la caméra', error));
       }
       return originalVideo.call(this, enabled);
     };

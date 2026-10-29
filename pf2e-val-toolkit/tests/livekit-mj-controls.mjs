@@ -98,8 +98,19 @@ settingsData['core.rtcClientSettings'].users.gm={muted:true,hidden:true};
 const privateSession=new AVMaster();
 game.webrtc=privateSession;
 privateSession.settings.world.mode=3;
-privateSession.canUserShareAudio=()=>!privateSession.settings.client.users.gm.muted;
-privateSession.canUserShareVideo=()=>!privateSession.settings.client.users.gm.hidden;
+// Emulate Foundry 14 AVSettings: a missing device track implicitly forces
+// muted/hidden to true, EVEN WHEN the user's local preference says false.
+// This is the exact circular dependency the production patch must resolve.
+privateSession.client.isAudioEnabled = function () {return !!this._liveKitClient.audioTrack;};
+privateSession.client.isVideoEnabled = function () {return !!this._liveKitClient.videoTrack;};
+privateSession.settings.getUser = function(id) {
+  const local=this.client.users[id];
+  return {muted:local.muted || !privateSession.client.isAudioEnabled(),
+    hidden:local.hidden || !privateSession.client.isVideoEnabled(),
+    canBroadcastAudio:true,canBroadcastVideo:true,blocked:false};
+};
+privateSession.canUserShareAudio=()=>!privateSession.settings.getUser('gm').muted;
+privateSession.canUserShareVideo=()=>!privateSession.settings.getUser('gm').hidden;
 const lk=privateSession.client._liveKitClient;
 lk.initializeRoom = function() {
   this.liveKitRoom={options:{singlePeerConnection:true}};
@@ -122,12 +133,71 @@ await lk.initializeAudioTrack();
 await lk.initializeVideoTrack();
 assert.deepEqual(captures,[],'No automatic camera or microphone acquisition');
 privateSession.settings.client.users.gm.muted=false;
+assert.equal(privateSession.client.isAudioEnabled(),false,'No audio track before voluntary activation');
+assert.equal(privateSession.settings.getUser('gm').muted,false,
+  'Foundry must not force an explicitly unmuted microphone back to muted when capture is lazy');
 await privateSession.client.toggleAudio(true);
 assert.deepEqual(captures,['micro'],'Voluntary mic activation acquires the mic');
 privateSession.settings.client.users.gm.hidden=false;
+assert.equal(privateSession.client.isVideoEnabled(),false,'No video track before voluntary activation');
+assert.equal(privateSession.settings.getUser('gm').hidden,false,
+  'Foundry must not force an explicitly enabled camera back to hidden when capture is lazy');
 await privateSession.client.toggleVideo(true);
 assert.deepEqual(captures,['micro','camera'],'Voluntary camera activation acquires the camera');
-console.log('OK: microphone/camera deferred until deliberate activation');
+// A stop/restart cycle must keep the override working and reset broadcast
+// state so toggleAudio() never silently short-circuits after reconnection.
+lk.audioBroadcastEnabled = true;
+game.user.isGM = true;
+settingsData['core.rtcWorldSettings'].mode=3;
+await game.pf2eValToolkit.avControl.setMode(0);
+assert.equal(lk.audioBroadcastEnabled,false,'Stopped room resets LiveKit broadcast state');
+await game.pf2eValToolkit.avControl.setMode(3);
+privateSession.settings.client.users.gm.muted=false;
+privateSession.settings.client.users.gm.hidden=false;
+assert.equal(privateSession.settings.getUser('gm').muted,false,'Mic can be re-enabled after stop/restart');
+assert.equal(privateSession.settings.getUser('gm').hidden,false,'Camera can be re-enabled after stop/restart');
+// Disconnect and restart destroy the old physical tracks. Make sure the
+// user's next click creates NEW LiveKit tracks, rather than merely changing
+// the Foundry button icon.
+lk.audioTrack = null;
+lk.videoTrack = null;
+await privateSession.client.toggleAudio(true);
+await privateSession.client.toggleVideo(true);
+assert.deepEqual(captures,['micro','camera','micro','camera'],
+  'Second activation after stop/restart acquires both devices again');
+console.log('OK: microphone/camera deferred until deliberate activation, including after stop/restart');
+
+// Capture failures must not leave the Foundry UI showing an active device.
+const captureWarnings=[];
+const oldErrorNotifier=ui.notifications.error;
+ui.notifications.error=message=>captureWarnings.push(message);
+privateSession.settings.set=(_scope,path,value)=>{
+  const [,id,property]=path.split('.');
+  privateSession.settings.client.users[id][property]=value;
+};
+const originalAudioSource=lk.changeAudioSource;
+const originalVideoSource=lk.changeVideoSource;
+lk.changeAudioSource=async()=>{}; // Simulate browser permission denied.
+lk.changeVideoSource=async()=>{};
+lk.audioTrack=null;
+lk.videoTrack=null;
+privateSession.settings.client.users.gm.muted=false;
+privateSession.settings.client.users.gm.hidden=false;
+const originalConsoleError=console.error;
+console.error=()=>{};
+try {
+  await privateSession.client.toggleAudio(true);
+  await privateSession.client.toggleVideo(true);
+} finally {
+  console.error=originalConsoleError;
+  ui.notifications.error=oldErrorNotifier;
+  lk.changeAudioSource=originalAudioSource;
+  lk.changeVideoSource=originalVideoSource;
+}
+assert.equal(privateSession.settings.client.users.gm.muted,true,'Failed microphone access reverts Foundry mute toggle');
+assert.equal(privateSession.settings.client.users.gm.hidden,true,'Failed camera access reverts Foundry hide toggle');
+assert.equal(captureWarnings.length,2,'Device capture failure is visible to the player');
+console.log('OK: failed permissions produce visible errors and restore disabled controls');
 
 // Retry when the selected world mode is already correct but the local LiveKit
 // handshake previously failed. This used to silently do nothing.
