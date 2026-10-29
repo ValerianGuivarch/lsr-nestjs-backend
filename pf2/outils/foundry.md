@@ -553,3 +553,17 @@ Reproduction validée en lecture seule sur deux messages privés du 21 octobre 2
 Le personnage Pen-Pen (Arcady) possède bien \`assets/Pen-Pen_01.png\` dans Foundry. Ses deux messages de jet aveugle contiennent déjà \`speaker.actor\` et des données d'avatar Dorako, mais certains rendus du chat n'affichent aucune image. Le Toolkit ajoute une **image de secours** à l'en-tête uniquement lorsque le portrait est absent, à partir de \`Actor.img\` (ou de la texture du prototype de token) des Actors de type \`character\`. Un portrait Dorako existant est conservé sans duplication ; l'état \`no-image\` est ajusté et une règle CSS explicite garantit une taille et un cadrage. Les tokens cachés ne font pas apparaître d'avatar supplémentaire pour les non-MJ. Aucune donnée du jet n'est révélée.
 
 Fichiers : \`pf2e-val-toolkit/scripts/private-roll-names.js\`, \`styles/private-roll-names.css\` et tests \`tests/private-roll-names.mjs\`. Tester l'affichage réel après mise à jour/rechargement de Foundry.
+
+---
+
+## Pilotage A/V LiveKit par le MJ (toolkit 0.44.0)
+
+Le panneau `Communications MJ` est injecté par `pf2e-val-toolkit` dans les
+outils de tokens, à l'aide des modes A/V natifs de Foundry 14 : arrêt complet,
+audio seul, audio + vidéo. Le MJ décide manuellement, indépendamment des
+commandes début/fin de séance. Les joueurs gardent le contrôle de leurs
+périphériques ; l'arrêt global coupe les flux des clients Foundry équipés du
+toolkit. Les infobulles audio/vidéo sont déplacées au-dessus des commandes.
+
+La description technique, les limites et le test sont dans
+[`pf2e-val-toolkit/README.md`](../../pf2e-val-toolkit/README.md).

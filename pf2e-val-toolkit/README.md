@@ -1191,3 +1191,31 @@ imposée restent inchangés.
 Le bouton « Préparer » est placé dans l'en-tête de la section **Capacités**,
 à côté du bouton PF2e natif « Naviguer », au lieu de la barre de fenêtre.
 Il est injecté lors du rendu de la fiche et ne modifie pas les templates PF2e.
+
+## v0.44.0 — Pilotage LiveKit A/V par le MJ
+
+- Sous Foundry 14 + LiveKit AVClient 0.6.8, un bouton **Communications MJ**
+  (icône A/V, outils de tokens) ouvre les trois modes : **Arrêt complet**,
+  **Audio uniquement** et **Audio + vidéo**.
+- Source de vérité unique : `core.rtcWorldSettings.mode` (0, 1, 3) ;
+  synchronisation native Foundry pour tous les clients et les arrivants tardifs.
+  Le contrôle est accessible seulement aux GM, indépendant de début/fin de séance.
+- Première installation : les communications passent à **Arrêt complet**
+  (flag mondial `pf2e-val-toolkit.avControlInitialized`). Cet arrêt
+  initial interrompt une communication éventuellement en cours ; prévoir le
+  premier rechargement en dehors d'une conversation. Les nouveaux chargements
+  démarrent avec les micros coupés et les caméras masquées pour chaque joueur.
+- Le mode audio seul empêche la publication vidéo ; l'arrêt complet
+  déconnecte LiveKit et libère localement les pistes audio/vidéo. À la
+  réactivation, les périphériques restent privés jusqu'à une action du joueur.
+  Entre deux modes actifs, un micro volontairement activé reste actif.
+- Option indépendante **Masquer les panneaux vidéo** : masque l'image,
+  conserve les contrôles audio et le flux éventuel. L'état du monde est
+  `pf2e-val-toolkit.avHideVideoPanels`.
+- Infobulles des commandes de caméra : au-dessus, avec un délai de 700 ms,
+  sans interception des clics.
+- La synchronisation agit sur les **clients Foundry chargés avec le toolkit** ;
+  elle ne constitue pas une règle de sécurité imposée aux clients LiveKit
+  externes ni une révocation cryptographique des jetons.
+- Tests locaux sans serveur : `node pf2e-val-toolkit/tests/livekit-mj-controls.mjs`.
+  L'essai end-to-end multi-clients dans un navigateur Foundry reste nécessaire.

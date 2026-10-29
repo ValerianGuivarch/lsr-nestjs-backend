@@ -36,6 +36,7 @@ import { initEarnIncomeCoins } from "./earn-income/index.js";
 import { initOutcomeEffects } from "./outcome-effects/index.js";
 
 import { initFamiliarSelector } from "./familiar-selector.js";
+import { registerAVControlSettings, initAVControl } from "./livekit-mj-controls.js";
 import { migrateSashkaFamiliarFeat } from "./familiar-sashka-migration.js";
 
 Hooks.once("init", () => {
@@ -48,6 +49,7 @@ Hooks.once("init", () => {
   registerPf2eHudIntegrationSettings();
   registerPortraitTokenSyncSettings();
   registerDiscordCharacterChatSettings();
+  registerAVControlSettings();
 
   // Scene-control hooks must be registered during init, before Foundry builds
   // the left-hand scene controls for the first time.
@@ -65,6 +67,7 @@ Hooks.once("ready", () => {
   applyTranslationOverrides();
 
   initFamiliarSelector();
+  initAVControl();
   initCombatMovement();
   initQuickCombatScene();
   initPatches();
