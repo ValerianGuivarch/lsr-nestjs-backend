@@ -1284,3 +1284,28 @@ ce qui évite un court-circuit au prochain démarrage.
 Test de non-régression : émulation de `AVSettings#getUser()` v14 puis cycle
 **arrêt → relance → activation individuelle** dans
 `tests/livekit-mj-controls.mjs`.
+
+## v0.44.6 — Proposition d’activation des périphériques à l’arrivée
+
+Quand le joueur ouvre Foundry et rejoint une session LiveKit autorisée par le
+MJ, une fenêtre propose une activation **volontaire** des périphériques
+initialement coupés :
+
+- Mode MJ « Audio uniquement » : **Activer le micro** ou **Refuser**.
+- Mode MJ « Audio + vidéo » : **Activer le micro**, **Activer micro et caméra**
+  ou **Refuser**. Si la permission audio n'existe pas, une option caméra
+  seule est présentée à la place, lorsqu'elle est autorisée.
+- En mode « Arrêt complet », sans connexion LiveKit établie ou si le joueur
+  a déjà un périphérique actif : aucune fenêtre.
+
+Le refus, la fermeture de la fenêtre et la touche Échap ne changent aucun
+réglage : le joueur peut activer ensuite le micro ou la caméra dans Foundry.
+La proposition est présentée **une seule fois par chargement de page** (y
+compris si l'autorisation MJ arrive après l'ouverture de la page), jamais
+à chaque rendu ou bascule de mode. Un changement d'autorisation par le MJ
+pendant l'affichage de la fenêtre est revérifié avant toute activation.
+
+Le popup s'appuie sur `AVSettings#set('client', 'users.<id>.muted/hidden',
+false)` et les mécanismes natifs du module LiveKit ; aucune piste ne se crée
+avant l'accord explicite. Les modes vocaux du joueur (dont push-to-talk)
+restent inchangés. Tests : `tests/livekit-join-consent.mjs`.

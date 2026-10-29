@@ -16,6 +16,8 @@ let syncQueue = Promise.resolve();
 let livekitPresent = false;
 let tooltipTimeout = null;
 let tooltipElement = null;
+let consentPromptShown = false;
+let consentDialog = null;
 
 function isLiveKitClient(client = game.webrtc?.client) {
   return !!client?._liveKitClient;
@@ -124,6 +126,7 @@ async function applyMode(mode) {
   if (av.settings?.world) av.settings.world.mode = mode;
   appliedMode = mode;
   if (mode === MODES.OFF) {
+    if (consentDialog) void consentDialog.close();
     await prepareLocalPrivacy(MODES.OFF, MODES.OFF);
     await av.disconnect();
     stopLocalMedia();
@@ -165,6 +168,77 @@ async function applyMode(mode) {
     throw new Error('LiveKit est connecté mais le panneau A/V Foundry ne peut pas s’afficher. Consultez la console.');
   }
   console.info(`PF2e Val Toolkit | LiveKit connecté, panneau A/V affiché en mode ${LABELS[mode]}`);
+  void offerLocalAVActivation();
+}
+
+/** Show a one-time (per page load) opt-in after LiveKit is available.
+ * Neither this prompt nor its rendering changes any media preferences.
+ * Decline, closing and Escape leave both devices as they were.
+ */
+export async function offerLocalAVActivation() {
+  if (consentPromptShown || !game.ready || !isInitialized() || !isLiveKitClient()) return false;
+  const mode = worldMode();
+  if (mode === MODES.OFF) return false;
+  // Do not ask before the LiveKit handshake finishes. In particular, a room
+  // that is still connecting must not request access to devices.
+  const lk = game.webrtc.client._liveKitClient;
+  if (lk.liveKitRoom?.state !== 'connected') return false;
+  const av = game.webrtc;
+  const local = av.settings?.getUser?.(game.userId);
+  // Already opted into at least one source manually? Avoid re-prompting.
+  if (!local || !local.muted || !local.hidden) return false;
+  const microphone = !!av.canUserBroadcastAudio?.(game.userId);
+  const camera = mode === MODES.VIDEO && !!av.canUserBroadcastVideo?.(game.userId);
+  if (!microphone && !camera) return false;
+  consentPromptShown = true; // Reserve before the first await, preventing duplicates.
+
+  const buttons = [];
+  if (microphone) buttons.push({
+    action: 'audio', label: 'Activer le micro', icon: 'fa-solid fa-microphone'
+  });
+  if (microphone && camera) buttons.push({
+    action: 'both', label: 'Activer micro et caméra', icon: 'fa-solid fa-video'
+  });
+  if (!microphone && camera) buttons.push({
+    action: 'camera', label: 'Activer la caméra', icon: 'fa-solid fa-video'
+  });
+  buttons.push({
+    action: 'decline', label: 'Refuser', icon: 'fa-solid fa-xmark', default: true
+  });
+
+  try {
+    const choice = await foundry.applications.api.DialogV2.wait({
+      window: { title: mode === MODES.AUDIO ? 'Activer le micro ?' : 'Activer le micro et la caméra ?' },
+      content: `<p>${mode === MODES.AUDIO ? 'Les communications vocales sont disponibles.' : 'Les communications audio et vidéo sont disponibles.'}</p>
+        <p>Souhaites-tu activer tes périphériques ? Tu peux aussi refuser et les activer plus tard avec les boutons Foundry.</p>`,
+      buttons,
+      close: () => 'decline',
+      render: (_event, dialog) => {
+        consentDialog = dialog;
+        if (worldMode() === MODES.OFF) void dialog.close();
+      }
+    });
+    if (choice === 'decline' || choice === null) return true;
+    // The GM can change mode while the dialog is open: never activate a
+    // peripheral no longer authorized in the world.
+    const current = worldMode();
+    if (current === MODES.OFF || !isLiveKitClient()) return true;
+    const enableAudio = (choice === 'audio' || choice === 'both')
+      && !!av.canUserBroadcastAudio?.(game.userId);
+    const enableVideo = (choice === 'both' || choice === 'camera')
+      && current === MODES.VIDEO && !!av.canUserBroadcastVideo?.(game.userId);
+    if (!enableAudio && !enableVideo) return true;
+    if (enableAudio) av.settings.set('client', `users.${game.userId}.muted`, false);
+    if (enableVideo) av.settings.set('client', `users.${game.userId}.hidden`, false);
+    await ui.webrtc?.render?.({parts: ['controls', game.userId]});
+    return true;
+  } catch (error) {
+    console.error('PF2e Val Toolkit | Proposition activation A/V:', error);
+    ui.notifications?.error?.('Impossible d’activer les périphériques depuis la fenêtre de bienvenue.');
+    return false;
+  } finally {
+    consentDialog = null;
+  }
 }
 
 function syncMode(force = false) {
@@ -407,6 +481,7 @@ function protectFirstConnection() {
       stopLocalMedia();
       return false;
     }
+    if (result && game.ready) void offerLocalAVActivation();
     return result;
   };
   proto._pf2ValAVGuard = true;
@@ -434,6 +509,8 @@ export function initAVControl() {
   window.setTimeout(decorateCameraTooltips, 0);
   game.pf2eValToolkit ??= {};
   game.pf2eValToolkit.avControl = { getMode: worldMode, setMode, setPanelsHidden, openPanel };
+  // Ready can run after Foundry's initial LiveKit handshake finished.
+  void offerLocalAVActivation();
 
   if (game.user.isGM && !isInitialized()) {
     // One-time installation: start OFF without requiring any GM action.

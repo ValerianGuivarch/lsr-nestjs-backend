@@ -556,7 +556,7 @@ Fichiers : \`pf2e-val-toolkit/scripts/private-roll-names.js\`, \`styles/private-
 
 ---
 
-## Pilotage A/V LiveKit par le MJ (toolkit 0.44.5)
+## Pilotage A/V LiveKit par le MJ (toolkit 0.44.6)
 
 Sur LiveKit serveur v1.9.4, le toolkit force le protocole RTC legacy
 (`/rtc`) : le client 2.19.x essayait `/rtc/v1` (404). Aucun réglage du
@@ -582,6 +582,12 @@ LiveKit (différée pour confidentialité).
 Le premier affichage du panneau A/V est forcé à la connexion, car Foundry 14
 ne dessine pas une fenêtre `ApplicationV2` au premier `render()` sans `force`.
 À l’arrêt du MJ, le dock est explicitement fermé.
+
+À l'arrivée sur une session LiveKit active, une fenêtre demande au joueur
+s'il souhaite **Activer le micro**, **Activer micro et caméra** (seulement si
+la vidéo est autorisée par le MJ), ou **Refuser**. L'offre est affichée une fois
+par chargement de page, et ne change rien tant que le joueur n'a pas accepté.
+Les modes vocaux personnels, dont push-to-talk, restent inchangés.
 
 La description technique, les limites et les tests sont dans
 [`pf2e-val-toolkit/README.md`](../../pf2e-val-toolkit/README.md).
