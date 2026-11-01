@@ -1354,7 +1354,7 @@ export class DiscordCommandsService {
   }
 
   private async showScheduleFinalPreview(
-    interaction: StringSelectMenuInteraction | ButtonInteraction,
+    interaction: StringSelectMenuInteraction,
     commandId: string,
     chosen: Array<{ key: string; label: string; players: Array<{ id: string; name: string; played: number }> }>,
     selectionLabel: string,
@@ -1532,36 +1532,15 @@ export class DiscordCommandsService {
       result.push('', `${proposals[0].length} séance(s) maximum ; ${proposals.length > 1 ? `${proposals.length} solutions optimales conservées (égalité après priorité)` : 'une répartition optimale'}.`)
       result.push('Sélectionne les dates à organiser ; tu pourras choisir une proposition ou demander un tirage si plusieurs solutions sont équivalentes.')
       const maxText = 2000
-      const fullAnalysis = [...detail, '', ...result].join('\n')
-      const showDetail = fullAnalysis.length <= maxText
-      const bestButton = new ButtonBuilder()
-        .setCustomId(`pf2-schedule:best:${interaction.id}`)
-        .setLabel(proposals.length > 1 ? 'Choisir parmi les meilleurs groupes' : 'Retenir les groupes proposés')
-        .setStyle(ButtonStyle.Success)
-      const controls = [
-        new ActionRowBuilder<ButtonBuilder>().addComponents(bestButton),
-        new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(menu),
-      ]
-      const guidance = 'Pour continuer, utilise le bouton **Retenir les groupes proposés** (ou **Choisir parmi les meilleurs groupes** en cas d’égalité). Pour changer les jours, utilise le menu des dates. La commande /valider-date-seance est réservée aux anciennes analyses publiées.'
-      if (showDetail) {
-        await interaction.editReply({
-          content: `${fullAnalysis}\n\n${guidance}`.slice(0, 2000),
-          components: controls,
-          allowedMentions: { parse: [] },
-        })
-      } else {
-        // Les suivis éphémères apparaissent APRES la réponse initiale. Le menu doit
-        // donc être joint au TOUT DERNIER suivi, pas à la première réponse cachée plus haut.
-        await interaction.editReply({
-          content: [
-            '**Analyse globale — résultats détaillés ci-dessous**',
-            `${proposals[0].length} séance(s) maximum, sans joueur dans deux groupes.`,
-            'Les disponibilités, les noms et les priorités suivent dans les messages privés.',
-            '**Les commandes de choix se trouvent à la fin de l’analyse.**',
-          ].join('\n'),
-          components: [],
-          allowedMentions: { parse: [] },
-        })
+      const showDetail = [...detail, '', ...result].join('\n').length <= maxText
+      const content = showDetail ? [...detail, '', ...result].join('\n')
+        : ['**Analyse globale — groupes optimaux**', ...result].join('\n')
+      await interaction.editReply({
+        content: content.length <= maxText ? content : content.slice(0, 1900) + '\n… (voir les détails complémentaires ci-dessous)',
+        components: [new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(menu)],
+        allowedMentions: { parse: [] },
+      })
+      if (!showDetail) {
         const detailLines = [...detail, '', ...result]
         let chunk = ''
         for (const line of detailLines) {
@@ -1573,12 +1552,6 @@ export class DiscordCommandsService {
           chunk += (chunk ? '\n' : '') + line
         }
         if (chunk) await interaction.followUp({ content: chunk, ephemeral: true, allowedMentions: { parse: [] } })
-        await interaction.followUp({
-          content: `**Choisir les séances — action MJ**\n${guidance}`,
-          components: controls,
-          ephemeral: true,
-          allowedMentions: { parse: [] },
-        })
       }
     } catch (error) {
       this.logger.error('analyse-date-seance: calcul impossible', error instanceof Error ? error.stack : undefined)
@@ -2728,41 +2701,6 @@ export class DiscordCommandsService {
         const created=await this.requests!.create(interaction.client,{...draft,createdBy:draft.owner})
         await interaction.editReply({content:`Requête #${created.id} publiée : https://discord.com/channels/${interaction.guildId}/${created.thread_id}`,components:[]})
       } catch(e){await interaction.editReply({content:'Échec de publication : '+(e instanceof Error?e.message:'erreur'),components:[]})}
-      return true
-    }
-
-    if (interaction.customId.startsWith('pf2-schedule:best:')) {
-      const key = interaction.customId.slice('pf2-schedule:best:'.length)
-      const pending = this.pendingSchedulePublications.get(key)
-      if (!pending || interaction.user.id !== pending.requesterId || interaction.channelId !== pending.channelId) {
-        await interaction.reply({ content: 'Analyse expirée ou non autorisée. Relance /analyse-date-seance.', ephemeral: true })
-        return true
-      }
-      await interaction.deferUpdate()
-      try {
-        const solutions = this.bestSessionGroupProposals(
-          pending.dates.map(day => [day.key, day.label] as const), pending.availability,
-        )
-        if (!solutions.length) {
-          await interaction.editReply({ content: 'Aucun groupe complet n’est disponible. Relance /analyse-date-seance.', components: [] })
-          return true
-        }
-        pending.selectedKeys = solutions[0].map(group => group.key)
-        pending.solutions = solutions
-        pending.solutionPage = 0
-        if (solutions.length === 1) {
-          await this.showScheduleFinalPreview(interaction, key, solutions[0],
-            'Répartition optimale proposée par le bot, sans tirage au sort.')
-        } else {
-          await interaction.editReply(this.scheduleSolutionChoiceView(key))
-        }
-      } catch (error) {
-        this.logger.error('Choix des groupes proposés impossible', error instanceof Error ? error.stack : undefined)
-        await interaction.editReply({
-          content: `Sélection impossible : ${error instanceof Error ? error.message : String(error)}. Relance /analyse-date-seance.`,
-          components: [], allowedMentions: { parse: [] },
-        })
-      }
       return true
     }
 
