@@ -179,8 +179,8 @@ export class DiscordQuestPilotService {
     // Discord already shows the title (and its icon) above the starter message.
     const content = instruction + description + '\n\n**📍 Lieux de la quête**\n' + shown +
       '\n\n**Statut :** ' + (done ? '✅ Terminée' : '🟢 En cours') +
-      '\n\n_' + (done ? 'La quête est terminée : le bouton « Relancer » permet de la rouvrir.' :
-        'Réagissez 👍 si cette quête vous intéresse, ou 🔒 si elle est prioritaire pour vous et que vous tenez absolument à la faire. Les deux réactions sont possibles.') +
+      '\n\n_' + (done ? 'La quête est terminée : le bouton « Relancer » permet de la rouvrir. ' : '') +
+      'Réagissez 👍 si cette quête vous intéresse, ou 🔒 si elle est prioritaire pour vous et que vous tenez absolument à la faire. Les deux réactions sont possibles.' +
       ' Les boutons restent utilisables après un redémarrage du bot._'
     return { content: content.slice(0, 1995), components: this.actions(thread.id, done), allowedMentions: NO_PINGS }
   }
