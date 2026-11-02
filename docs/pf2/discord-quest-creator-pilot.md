@@ -8,7 +8,7 @@
 - Les anciennes réactions ne sont **pas attribuées artificiellement** à leurs auteurs. Le bot prépare 👍 (intérêt) et 🔒 (réservation prioritaire) sur les nouvelles quêtes ; chaque joueur doit y réagir lui-même.
 - La quête test « Détruire le monde » et le lieu PJ « Port de la fin du monde » ont été **supprimés** sur demande ; « Trouver la fosse » est conservée.
 - La synchronisation régulière de Discord continue de lire les états des fils. La fiche bot conserve son attribution historique et son lien d'archive dans la description enregistrée en SQLite.
-- Aucun tag `essai` ni feature flag global. La création directe de discussions par les joueurs reste autorisée temporairement, en attendant une décision distincte.
+- **Le forum n'utilise plus aucun tag** depuis le 2 novembre 2026. Les quêtes considérées comme finies sont archivées ET verrouillées ; l'archivage automatique non verrouillé ne suffit pas. La création directe de discussions reste autorisée temporairement.
 
 **Sauvegarde hors dépôt Git sur le mini-PC :** `/home/valou/pf2-migrations/quest-bot-migration-20261028/`. Contient l'export des messages, quatre images, la sauvegarde SQLite, les états de migration, les journaux et les anciennes réactions.
 
@@ -23,7 +23,7 @@
 7. Pour les lieux, utiliser **Associer un lieu** ou **Créer un lieu sur la carte** ; le bot synchronise ensuite la fiche.
 8. **Terminer** et **Relancer** conservent leurs fonctionnalités, dont le compte rendu obligatoire.
 
-La commande `/changer-icone-quete` est utilisable dans les quêtes créées par le bot, pas dans le sujet d'accueil, une discussion historique ni une quête portant le tag `obsolète`. Tous les PJ ont les mêmes droits.
+La commande `/changer-icone-quete` est utilisable dans les quêtes créées par le bot encore ouvertes, pas dans le sujet d'accueil, une discussion historique ni une quête fermée et verrouillée. Tous les PJ ont les mêmes droits.
 
 Les réactions de type **emoji personnalisé du serveur** ne peuvent pas être représentées par un véritable emoji dans un titre de discussion : seules les réactions Unicode standards servent ici au choix de l'icône.
 
@@ -38,7 +38,14 @@ Les commandes `/terminer-quete` et `/relancer-quete` restent disponibles et util
 - Les quatre groupes affichés, dans cet ordre, sont : **(1)** 🔒 d’au moins un participant présent et aucun 🔒 d’un absent ; **(2)** 👍 d’au moins un présent ; **(3)** les autres quêtes ; **(4)** 🔒 d’au moins un absent, même si un présent a mis 👍 ou 🔒. À l’intérieur de chaque groupe : ordre **croissant du nombre total de 👍**, puis date de création et titre pour départager les égalités.
 - Chaque ligne affiche **le titre** (avec lien) suivi de `(réservé par ..., intéresse ...)`. Noms de joueurs issus des identités PF2, **sans mention Discord active**. Le bot ignore ses propres réactions.
 - `/choix-quete` présente une **prévisualisation privée**, avec boutons **Publier les choix** et **Annuler**. Seule une validation du lanceur, dans le même fil et dans les quinze minutes, publie les résultats. La publication est sans mentions et ne doit pas être retentée sans vérifier le fil après un échec partiel.
-- Les quêtes avec tag `Terminée` ou `obsolète` sont exclues de ce classement. La source de vérité reste le forum Discord ; les réactions ne sont ni reproduites artificiellement ni stockées en double dans SQLite.
+- Les quêtes **fermées (archivées ET verrouillées)** sont exclues du classement. Les fils simplement auto-archivés restent éligibles. Aucun tag n'est utilisé. La source de vérité reste Discord ; les réactions ne sont ni reproduites artificiellement ni stockées en double dans SQLite.
+
+
+### Fermeture des quêtes sans tags (2 novembre 2026)
+
+Le forum Discord `journal-de-quetes` ne comporte plus aucun tag disponible, ni tag sur ses fils. Les deux quêtes anciennement marquées `Terminée` (« La contrebande de golems de chair », « L'appel de Brèchemont ») et les deux anciennement `obsolète` (« Le tueur d'esclaves », « Les ruines Azlantes de Pluie d'un jour d'été ») ont été **archivées et verrouillées**. Les autres restent ouvertes, même si Discord les auto-archive ultérieurement par inactivité.
+
+La commande `/terminer-quete` publie d'abord le compte rendu, retire les pouces des joueurs comme avant, puis verrouille et archive le fil. `/relancer-quete` le déverrouille et le désarchive. Le bot fonde ses fiches et le catalogue de la carte sur **`archived && locked`**, et `/choix-quete` exclut uniquement ces fils fermés. Aucun tag ne revient lors d'une synchronisation.
 
 ## Ce qui est reporté
 
