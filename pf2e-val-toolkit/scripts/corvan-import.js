@@ -117,7 +117,7 @@ async function makeItems(actor,m){
     const d=await getDoc('equipment','rQWaJhI5Bko5x14Z');
     d.name='Poignard de Corvan (familier et lame cérémonielle)';
     d.img=m.familiarPortrait;
-    d.system.runes={potency:3,striking:3,property:['dancing','ghostTouch']};
+    d.system.runes={potency:3,striking:3,property:['animated','ghostTouch']};
     d.system.equipped={carryType:'worn'};
     d.system.description.value+='<p>Ce poignard et le familier représentent le même objet. Les frappes volantes se résolvent par les sorts de Corvan et non comme une attaque gratuite du familier.</p>';
     return d;
@@ -167,6 +167,13 @@ export async function repairCorvanProgression(actor,familiar=null){
   if(Object.keys(changes).length)await actor.update(changes);
   if(Number(actor.system.details?.level?.value)!==20)
     throw Error('La correction de Corvan au niveau 20 n’a pas persisté.');
+  // The remaster renamed the Dancing rune to Animated. Repair the imported
+  // blade too; the familiar itself still cannot perform Strikes.
+  const blade=actor.items.find(i=>i.getFlag(MOD,'seedKey')==='dagger');
+  const properties=blade?.system.runes?.property;
+  if(Array.isArray(properties) && properties.includes('dancing')){
+    await blade.update({'system.runes.property':properties.map(x=>x==='dancing'?'animated':x)});
+  }
   const hpMax=Number(actor.system.attributes?.hp?.max);
   if(hpMax>0&&Number.isFinite(hpMax) && Number(actor.system.attributes.hp.value)!==hpMax)
     await actor.update({'system.attributes.hp.value':hpMax});
