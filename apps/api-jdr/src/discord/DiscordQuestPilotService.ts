@@ -41,9 +41,7 @@ export class DiscordQuestPilotService {
     if (!record || record.kind !== 'quest') {
       throw new Error('Ce panneau ne correspond pas à une quête créée par le bot.')
     }
-    const forum = await this.forum(interaction.client)
-    const obsoleteId = forum.availableTags.find(tag => tag.name.trim().toLocaleLowerCase('fr') === 'obsolète')?.id
-    if (obsoleteId && channel.appliedTags.includes(obsoleteId)) throw new Error('Cette quête est obsolète.')
+    if (channel.archived && channel.locked) throw new Error('Cette quête est fermée : relance-la pour la modifier.')
     return channel
   }
 
@@ -85,9 +83,8 @@ export class DiscordQuestPilotService {
     if (!channel?.isThread() || channel.parentId !== FORUM_ID) return false
     const ui = await this.persistence.questUi(channel.id)
     if (ui?.kind !== 'quest' || !ui.iconPending) return false
+    if (channel.archived && channel.locked) return false
     const forum = await this.forum(channel.client)
-    const obsoleteTag = forum.availableTags.find(tag => tag.name.trim().toLocaleLowerCase('fr') === 'obsolète')
-    if (obsoleteTag && channel.appliedTags.includes(obsoleteTag.id)) return false
     const starter = await channel.fetchStarterMessage({ force: true })
     if (!starter || starter.author.id !== channel.client.user?.id) return false
     const icon = reaction.emoji.name
@@ -159,9 +156,8 @@ export class DiscordQuestPilotService {
   }
 
   private async completed(thread: ThreadChannel): Promise<boolean> {
-    const forum = await this.forum(thread.client)
-    const tag = forum.availableTags.find(t => t.name.trim().toLocaleLowerCase('fr') === 'terminée')
-    return Boolean(tag && thread.appliedTags.includes(tag.id))
+    // Automatic Discord archival alone must not complete an inactive quest.
+    return Boolean(thread.archived && thread.locked)
   }
 
   private async card(thread: ThreadChannel, description: string, iconPending = false): Promise<{ content: string; components: ReturnType<DiscordQuestPilotService['actions']>; allowedMentions: typeof NO_PINGS }> {
