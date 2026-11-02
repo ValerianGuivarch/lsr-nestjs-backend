@@ -66,6 +66,8 @@ describe('DiscordCommandsService', () => {
       ]
       return {
         id, name, createdTimestamp: 1, appliedTags: tags,
+        archived: tags.includes('done') || tags.includes('obsolete'),
+        locked: tags.includes('done') || tags.includes('obsolete'),
         fetchStarterMessage: jest.fn().mockResolvedValue({ reactions: { cache: { find: (predicate: any) => reactions.find(predicate) } } }),
       }
     }
@@ -194,9 +196,11 @@ describe('DiscordCommandsService', () => {
     const thumbs = { emoji: { name: '👍' }, users: { fetch: jest.fn().mockResolvedValue(users), remove } }
     const starter = { reactions: { cache: { find: () => thumbs } }, react: jest.fn().mockResolvedValue(undefined) }
     const thread: any = {
-      id: 'quest-1', name: '🏛️ Les ruines', parentId: '1536259632455094412', appliedTags: ['todo'],
+      id: 'quest-1', name: '🏛️ Les ruines', parentId: '1536259632455094412', appliedTags: [],
+      archived: false, locked: false,
       isThread: () => true, fetchStarterMessage: jest.fn().mockResolvedValue(starter),
-      setAppliedTags: jest.fn(async (tags: string[]) => { thread.appliedTags = tags }),
+      setLocked: jest.fn(async (locked: boolean) => { thread.locked = locked }),
+      setArchived: jest.fn(async (archived: boolean) => { thread.archived = archived }),
       send: jest.fn().mockResolvedValue(undefined),
     }
     const forum = { availableTags: [{ id: 'done', name: 'Terminée' }] }
@@ -228,7 +232,8 @@ describe('DiscordCommandsService', () => {
       reply: jest.fn(),
     } as never)
 
-    expect(thread.setAppliedTags).toHaveBeenCalledWith(['todo', 'done'], expect.stringContaining('/terminer-quete'))
+    expect(thread.setLocked).toHaveBeenCalledWith(true, expect.stringContaining('/terminer-quete'))
+    expect(thread.setArchived).toHaveBeenCalledWith(true, expect.stringContaining('/terminer-quete'))
     expect(remove).toHaveBeenCalledWith('player-1')
     expect(remove).not.toHaveBeenCalledWith('bot')
     expect(thread.send).toHaveBeenCalledWith(expect.objectContaining({
@@ -237,7 +242,7 @@ describe('DiscordCommandsService', () => {
     expect(thread.send).toHaveBeenCalledWith(expect.objectContaining({
       content: expect.stringContaining('/relancer-quete'),
     }))
-    expect(editReply).toHaveBeenCalledWith({ content: 'Quête terminée et compte rendu publié.' })
+    expect(editReply).toHaveBeenCalledWith({ content: 'Quête terminée : discussion fermée, sans tag.' })
 
     const reopenReply = jest.fn().mockResolvedValue(undefined)
     await service.handle({
@@ -245,7 +250,8 @@ describe('DiscordCommandsService', () => {
       client: { channels: { fetch } },
       deferReply: jest.fn().mockResolvedValue(undefined), editReply: reopenReply,
     } as never)
-    expect(thread.setAppliedTags).toHaveBeenLastCalledWith(['todo'], expect.stringContaining('/relancer-quete'))
+    expect(thread.setLocked).toHaveBeenLastCalledWith(false, expect.stringContaining('/relancer-quete'))
+    expect(thread.setArchived).toHaveBeenLastCalledWith(false, expect.stringContaining('/relancer-quete'))
     expect(starter.react).toHaveBeenCalledWith('👍')
     expect(reopenReply).toHaveBeenCalledWith({ content: 'Quête relancée.' })
   })
