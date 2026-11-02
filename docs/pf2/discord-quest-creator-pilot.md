@@ -52,6 +52,16 @@ Les commandes `/terminer-quete` et `/relancer-quete` restent disponibles et util
 - Les **nouveaux récapitulatifs ne reçoivent aucune réaction de vote** : les pouces et cadenas restent sur les **fiches des quêtes**. Le bot laisse intégralement intacts les anciens messages et leurs réactions. Si un récapitulatif suivi a été supprimé manuellement, le bot ne le recrée jamais silencieusement.
 - La réconciliation ne doit jamais éditer des messages non publiés par le bot ni identifier un récapitulatif sur la seule base d'un titre de fil ambigu.
 
+### Affichage compact, cadenas uniques et notifications (2 novembre 2026)
+
+- Les noms des quêtes dans /choix-quete utilisent une **mention native du fil Discord**, sous la forme de lien compact, au lieu d'une URL Markdown longue et visible sur mobile.
+- Chaque quête affiche uniquement les préférences présentes : (réservé par Éric, intéresse Sameh) si les deux existent, (réservé par Éric) ou (intéresse Sameh) si un seul existe, et **aucune parenthèse** s'il n'y a aucun vote. Le tri reste inchangé : 🔒 d'un présent sans cadenas d'absent, puis 👍 présents (nombre croissant de pouces), les autres (nombre croissant), puis 🔒 d'un absent.
+- Les 👍 sont **illimités**. L'alerte en fin de récapitulatif signale uniquement les joueurs ayant réservé **plusieurs quêtes avec 🔒**.
+- Lorsqu'un joueur ajoute un 🔒 sur une deuxième quête non terminée, le bot envoie un avertissement **dans son salon PJ privé**, avec une mention Discord ciblée, et lui demande de ne conserver qu'un cadenas. L'identification du salon repose sur la jointure SQLite entre pf2_player_character_owner et pf2_player_discord_channel, sans inférer le salon depuis un pseudonyme. S'il n'a pas de salon associé (ex. Valou), aucune notification n'est envoyée.
+- Lorsqu'une quête est terminée avec /terminer-quete ou le bouton associé, le bot lit **avant fermeture** les joueurs ayant placé 🔒 et envoie à chacun disposant d'un salon privé une notification ciblée avec le titre de la quête terminée. Les erreurs de notification sont journalisées et ne bloquent pas la fermeture.
+- **Une actualisation automatique édite uniquement les messages du récapitulatif déjà enregistrés** : elle ne publie aucun nouveau message, même si la liste grandit. Si le contenu dépasse les parties existantes, le bot indique qu'une nouvelle confirmation /choix-quete est nécessaire pour ajouter la suite. La première publication et tout ajout de parties exigent une confirmation explicite.
+- Démonstration effectuée sur les **deux messages déjà présents** dans « Séance 03/11 » : ils ont été édités sans nouvelle publication. Les réactions du bot sous l'ancien récapitulatif ont été retirées ; une réaction de joueur 💍 reste, car le bot ne dispose pas de la permission Discord permettant de la supprimer.
+
 ### Fermeture des quêtes sans tags (2 novembre 2026)
 
 Le forum Discord `journal-de-quetes` ne comporte plus aucun tag disponible, ni tag sur ses fils. Les deux quêtes anciennement marquées `Terminée` (« La contrebande de golems de chair », « L'appel de Brèchemont ») et les deux anciennement `obsolète` (« Le tueur d'esclaves », « Les ruines Azlantes de Pluie d'un jour d'été ») ont été **archivées et verrouillées**. Les autres restent ouvertes, même si Discord les auto-archive ultérieurement par inactivité.

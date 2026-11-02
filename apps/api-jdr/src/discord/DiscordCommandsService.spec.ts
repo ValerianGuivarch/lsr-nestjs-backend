@@ -152,14 +152,19 @@ describe('DiscordCommandsService', () => {
     expect(preview.components).toHaveLength(1)
     const allText = [preview.content, ...t.followUp.mock.calls.map(args => args[0].content)].join('\n')
     const index = (text: string) => allText.indexOf(text)
-    expect(index('👑 Réservée aux présents')).toBeLessThan(index('👻 Un pouce'))
-    expect(index('👻 Un pouce')).toBeLessThan(index('🧂 Plusieurs pouces'))
-    expect(index('🧂 Plusieurs pouces')).toBeLessThan(index('📜 Sans intérêt'))
-    expect(index('📜 Sans intérêt')).toBeLessThan(index('🗝️ Réservée par absent'))
-    expect(allText).toContain('réservé par Guilhem, intéresse personne')
-    expect(allText).toContain('réservé par Nico, intéresse Éric')
-    expect(allText).not.toContain('🧟 Terminée')
-    expect(allText).not.toContain('🕳️ Obsolète')
+    expect(index('<#reserved>')).toBeLessThan(index('<#one>'))
+    expect(index('<#one>')).toBeLessThan(index('<#many>'))
+    expect(index('<#many>')).toBeLessThan(index('<#other>'))
+    expect(index('<#other>')).toBeLessThan(index('<#absent>'))
+    expect(allText).toContain('<#reserved> (réservé par Guilhem)')
+    expect(allText).toContain('- <#other>')
+    expect(allText).not.toContain('<#other> (')
+    expect(allText).not.toContain('réservé par personne')
+    expect(allText).not.toContain('intéresse personne')
+    expect(allText).not.toContain('https://discord.com/channels/')
+    expect(allText).toContain('<#absent> (réservé par Nico, intéresse Éric)')
+    expect(allText).not.toContain('<#done>')
+    expect(allText).not.toContain('<#obsolete>')
     expect(allText).not.toContain('<@')
     expect(t.channel.send).not.toHaveBeenCalled()
   })
@@ -178,7 +183,7 @@ describe('DiscordCommandsService', () => {
     }
     await t.service.handleButton(buttons as never)
     expect(send).toHaveBeenCalledTimes(1)
-    expect(send.mock.calls[0][0].content).toContain('👑 Le Roi Kobold')
+    expect(send.mock.calls[0][0].content).toContain('<#one>')
     expect(send.mock.calls[0][0].content).toContain('réservé par Guilhem, intéresse Éric')
     expect(send.mock.calls[0][0].allowedMentions).toEqual({ parse: [] })
     await t.service.handleButton(buttons as never)
@@ -244,7 +249,7 @@ describe('DiscordCommandsService', () => {
     expect(t.channel.send).toHaveBeenCalledTimes(1)
     expect(t.persistence.saveQuestRecapPart).toHaveBeenCalledTimes(1)
     const published = [...t.posted.values()].find(m => m.id !== legacy.id)
-    expect(published.content).toContain('réservé par personne, intéresse personne')
+    expect(published.content).toContain('- <#quest-a>')
 
     // The source of truth is the *current* Discord reactions, not a stored list.
     t.questMap.set(questId, t.quest(questId, '👑 Le Roi Kobold', [t.eric.id], [t.guilhem.id]))
@@ -260,6 +265,80 @@ describe('DiscordCommandsService', () => {
     await t.service.reconcileQuestRecaps(client)
     expect(published.edit).toHaveBeenCalledTimes(1)
     expect(t.channel.send).toHaveBeenCalledTimes(1)
+  })
+
+  it('warns a player in their linked private channel after a second lock, without warning for thumbs', async () => {
+    const t = questChoiceTest()
+    const locked = (id: string) => {
+      const reaction = { emoji: { name: '🔒' }, users: { fetch: jest.fn().mockResolvedValue(
+        new Map([[t.eric.id, { id: t.eric.id, bot: false }]])) } }
+      return {
+        id, archived: false, locked: false, parentId: '1536259632455094412',
+        fetchStarterMessage: jest.fn().mockResolvedValue({
+          reactions: { fetch: jest.fn().mockResolvedValue({ find: (fn: any) => fn(reaction) ? reaction : undefined }) },
+        }),
+      }
+    }
+    const first = locked('quest-one'), second = locked('quest-two')
+    const forum = {
+      threads: {
+        fetchActive: jest.fn().mockResolvedValue({ threads: new Map([[first.id, first], [second.id, second]]) }),
+        fetchArchived: jest.fn().mockResolvedValue({ threads: Object.assign(new Map(), { last: () => undefined }), hasMore: false }),
+      },
+    }
+    const send = jest.fn().mockResolvedValue({ id: 'sent-notice' })
+    const privateChannel = { send }
+    const fetch = jest.fn(async (id: string) => id === second.id ? { ...second, isThread: () => true }
+      : id === '1536259632455094412' ? forum
+      : id === 'private-chan' ? privateChannel : null)
+    const client: any = { channels: { fetch } }
+    const service = new DiscordCommandsService({
+      playerPrivateDiscordChannel: jest.fn(async (id: string) => id === t.eric.id ? 'private-chan' : null),
+    } as never, {} as never)
+    const reaction: any = { emoji: { name: '🔒' }, message: { id: second.id, channelId: second.id, client } }
+
+    await service.handleQuestLockAdd(reaction, { id: t.eric.id, bot: false })
+    expect(send).toHaveBeenCalledTimes(1)
+    expect(send.mock.calls[0][0].content).toContain('<@' + t.eric.id + '>')
+    expect(send.mock.calls[0][0].content).toContain('maximum')
+    expect(send.mock.calls[0][0].allowedMentions).toEqual({ parse: [], users: [t.eric.id] })
+    await service.handleQuestLockAdd(reaction, { id: t.eric.id, bot: false })
+    expect(send).toHaveBeenCalledTimes(1) // gateway duplicate is deduplicated
+    reaction.emoji.name = '👍'
+    await service.handleQuestLockAdd(reaction, { id: t.eric.id, bot: false })
+    expect(send).toHaveBeenCalledTimes(1)
+    reaction.emoji.name = '🔒'
+    await service.handleQuestLockAdd(reaction, { id: 'valou', bot: false })
+    expect(send).toHaveBeenCalledTimes(1) // valou has no private channel
+  })
+
+  it('notifies lock holders on quest completion, skipping players without a private channel', async () => {
+    const send = jest.fn().mockResolvedValue({ id: 'private-alert' })
+    const service = new DiscordCommandsService({
+      playerPrivateDiscordChannel: jest.fn(async (id: string) => id === 'player-1' ? 'linked-private' : null),
+    } as never, {} as never)
+    const client = { channels: { fetch: jest.fn(async (id: string) => id === 'linked-private' ? { send } : null) } }
+    const sent = await (service as any).notifyQuestLockHoldersCompleted(
+      client, { name: '👑 Le Roi Kobold' }, [{ id: 'player-1' }, { id: 'valou' }],
+    )
+    expect(sent).toBe(1)
+    expect(send).toHaveBeenCalledTimes(1)
+    expect(send.mock.calls[0][0].content).toContain('👑 Le Roi Kobold')
+    expect(send.mock.calls[0][0].content).toContain('terminée')
+    expect(send.mock.calls[0][0].allowedMentions).toEqual({ parse: [], users: ['player-1'] })
+  })
+
+  it('flags duplicated locks but never duplicated thumbs in a choice recap', async () => {
+    const t = questChoiceTest()
+    t.questMap.set('a', t.quest('a', 'Quête A', [t.eric.id], [t.guilhem.id]))
+    t.questMap.set('b', t.quest('b', 'Quête B', [t.eric.id], [t.guilhem.id]))
+    await t.run()
+    const text = [t.editReply.mock.calls[0][0].content,
+      ...t.followUp.mock.calls.map(call => call[0].content)].join('\\n')
+    expect(text).toContain('Plusieurs cadenas')
+    expect(text).toContain('Guilhem (2 🔒)')
+    expect(text).not.toContain('Éric (2')
+    expect(text).toContain('<#a> (réservé par Guilhem, intéresse Éric)')
   })
 
   it('coalesces 👍/🔒 additions and removals, ignoring bot reactions and other messages', async () => {

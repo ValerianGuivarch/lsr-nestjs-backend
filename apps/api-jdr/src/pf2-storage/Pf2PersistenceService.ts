@@ -225,6 +225,15 @@ export class Pf2PersistenceService implements OnModuleInit {
     ) as Promise<Pf2PlayerIdentityRow[]>
   }
 
+  /** Only a PJ with an explicitly associated private Discord channel receives alerts. */
+  async playerPrivateDiscordChannel(discordUserId: string): Promise<string | null> {
+    const rows = await this.dataSource.query(
+      'SELECT c.channel_id AS channelId FROM pf2_player_character_owner o INNER JOIN pf2_player_discord_channel c ON c.npc_id=o.npc_id WHERE o.discord_user_id=? ORDER BY c.channel_id LIMIT 1',
+      [discordUserId],
+    ) as Array<{ channelId: string }>
+    return rows[0]?.channelId ?? null
+  }
+
   async playerIdentityName(discordId: string): Promise<string | null> {
     const rows = await this.dataSource.query(
       'SELECT player_name AS playerName FROM pf2_player_identity WHERE discord_user_id = ? LIMIT 1',

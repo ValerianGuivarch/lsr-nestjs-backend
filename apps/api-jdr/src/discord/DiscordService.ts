@@ -116,6 +116,8 @@ export class DiscordService implements OnModuleInit, OnModuleDestroy {
           this.logger.warn('Session confirmation sync failed: ' + (error instanceof Error ? error.message : String(error))))
         void this.commands.handleQuestRecapReaction(reaction, user).catch(error =>
           this.logger.warn('Quest recap reaction update failed: ' + String(error)))
+        void this.commands.handleQuestLockAdd(reaction, user).catch(error =>
+          this.logger.warn('Quest lock reservation check failed: ' + String(error)))
         if (this.questPilot) {
           void this.questPilot.handleQuestIconReaction(reaction, user).catch(error =>
             this.logger.warn('Quest icon reaction failed: ' + (error instanceof Error ? error.message : String(error))))

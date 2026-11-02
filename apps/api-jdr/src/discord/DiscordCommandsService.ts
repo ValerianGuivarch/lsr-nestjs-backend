@@ -86,6 +86,7 @@ export class DiscordCommandsService {
   private readonly pendingPreviewPublications = new Map<string, { requesterId: string; content: string; files?: string[] }>()
   private readonly pendingPlayerDraws = new Map<string, { requesterId: string; players: Array<{ id: string; name: string }> }>()
   private readonly pendingQuestCompletions = new Map<string, { requesterId: string; threadId: string }>()
+  private readonly recentQuestLockWarnings = new Map<string, number>()
   private readonly pendingQuestChoices = new Map<string, { requesterId: string; channelId: string; createdAt: number; sessionDate: string }>()
   private readonly questRecapLocks = new Map<string, Promise<void>>()
   private questRecapDebounce: ReturnType<typeof setTimeout> | null = null
@@ -458,12 +459,12 @@ export class DiscordCommandsService {
       } while (before)
 
       type QuestVoter = { id: string; name: string }
-      type QuestChoice = { id: string; title: string; createdAt: number; url: string | null; reserved: QuestVoter[]; interested: QuestVoter[] }
+      type QuestChoice = { id: string; title: string; createdAt: number; reserved: QuestVoter[]; interested: QuestVoter[] }
       const quests: QuestChoice[] = []
       const launcherId = await this.persistence.questLauncherId?.()
       const playerNames = new Map((await this.persistence.listPlayerIdentities?.() ?? []).map(identity => [identity.discordUserId, identity.playerName]))
       const nameOf = (id: string): string => playerNames.get(id) ?? pf2PlayerByDiscordId(id)?.name ?? 'Joueur inconnu'
-      const interestsByUser = new Map<string, { name: string; count: number }>()
+      const reservationsByUser = new Map<string, { name: string; count: number }>()
 
       for (const thread of discovered.values()) {
         if (thread.id === launcherId || (thread.archived && thread.locked)) continue
@@ -481,15 +482,13 @@ export class DiscordCommandsService {
             .sort((a, b) => a.name.localeCompare(b.name, 'fr'))
         }
         const [reserved, interested] = await Promise.all([voters('🔒'), voters('👍')])
-        for (const user of interested) {
-          const previous = interestsByUser.get(user.id)
-          interestsByUser.set(user.id, { name: user.name, count: (previous?.count ?? 0) + 1 })
+        for (const user of reserved) {
+          const previous = reservationsByUser.get(user.id)
+          reservationsByUser.set(user.id, { name: user.name, count: (previous?.count ?? 0) + 1 })
         }
         quests.push({
           id: thread.id, title: thread.name?.trim() || 'Quête sans titre',
           createdAt: Number(thread.createdTimestamp ?? thread.createdAt?.getTime?.() ?? 0),
-          url: typeof thread.url === 'string' ? thread.url : guildId
-            ? 'https://discord.com/channels/' + guildId + '/' + thread.id : null,
           reserved, interested,
         })
       }
@@ -521,18 +520,21 @@ export class DiscordCommandsService {
           lines.push(groups[tier])
           lastCategory = tier
         }
-        const formatPlayers = (players: QuestVoter[]) => players.length
-          ? players.map(p => p.name).join(', ') : 'personne'
-        const title = quest.url ? '**[' + quest.title + '](' + quest.url + ')**' : '**' + quest.title + '**'
-        lines.push('- ' + title + ' (réservé par ' + formatPlayers(quest.reserved)
-          + ', intéresse ' + formatPlayers(quest.interested) + ')')
+        // Native Discord thread mention renders as a compact clickable quest name:
+        // no raw [title](long URL) text on mobile and no user pings.
+        const details = [
+          quest.reserved.length ? 'réservé par ' + quest.reserved.map(p => p.name).join(', ') : '',
+          quest.interested.length ? 'intéresse ' + quest.interested.map(p => p.name).join(', ') : '',
+        ].filter(Boolean)
+        lines.push('- <#' + quest.id + '>' + (details.length ? ' (' + details.join(', ') + ')' : ''))
       }
       if (!quests.length) lines.push('Aucune quête disponible dans le forum.')
 
-      const duplicates = [...interestsByUser.values()].filter(user => user.count > 1)
+      const duplicates = [...reservationsByUser.values()].filter(user => user.count > 1)
         .sort((a, b) => a.name.localeCompare(b.name, 'fr'))
-      if (duplicates.length) lines.push('', ...duplicates.map(user =>
-        '⚠️ ' + user.name + ' a indiqué son intérêt pour ' + user.count + ' quêtes.'))
+      if (duplicates.length) lines.push('',
+        '⚠️ **Plusieurs cadenas (maximum un par joueur) :** ' +
+        duplicates.map(user => user.name + ' (' + user.count + ' 🔒)').join(', '))
 
       return lines
   }
@@ -547,7 +549,7 @@ export class DiscordCommandsService {
     }
   }
 
-  private async updatePublishedQuestRecap(client: any, thread: any, date: string, lines: string[]): Promise<void> {
+  private async updatePublishedQuestRecap(client: any, thread: any, date: string, lines: string[], allowNewParts = false): Promise<void> {
     if (date <= this.parisToday()) return
     const parts = await this.persistence.questRecapParts(thread.id)
     const chunks = this.questChoiceChunks(lines).map((chunk, index, all) =>
@@ -572,21 +574,29 @@ export class DiscordCommandsService {
         return // Never silently recreate a removed recap.
       }
       existingCount++
-      const content = chunks[part.partIndex] ?? '_Cette partie du récapitulatif a été regroupée dans les messages précédents._'
+      let content = chunks[part.partIndex] ?? '_Cette partie du récapitulatif a été regroupée dans les messages précédents._'
+      if (!allowNewParts && chunks.length > parts.length && part.partIndex === parts.length - 1) {
+        // A background reaction must never silently publish a new continuation message.
+        // The GM can explicitly confirm /choix-quete to expand the recap.
+        content += '\n\n⚠️ Liste devenue trop longue : relance /choix-quete et valide pour afficher la suite.'
+      }
       if (message.content !== content) await message.edit({ content, allowedMentions: { parse: [] } })
-      // Old recap messages had emoji reactions for voting; voting now happens only on quests.
-      if (message.reactions?.cache?.size) {
-        await message.reactions.removeAll().catch((error: unknown) =>
-          this.logger.warn('Impossible de retirer les anciennes réactions du récapitulatif : ' + String(error)))
+      // The bot can always remove its own legacy vote reactions; removing other
+      // people's reactions requires ManageMessages, so leave those untouched.
+      for (const reaction of message.reactions?.cache?.values?.() ?? []) {
+        if (reaction.me) await reaction.remove().catch((error: unknown) =>
+          this.logger.warn('Ancienne réaction du bot impossible à retirer : ' + String(error)))
       }
     }
-    for (let partIndex = existingCount; partIndex < chunks.length; partIndex++) {
-      if (date <= this.parisToday()) return
-      // Extra continuation chunks are allowed only for an already confirmed publication.
-      const message = await thread.send({ content: chunks[partIndex], allowedMentions: { parse: [] } })
-      await this.persistence.saveQuestRecapPart({
-        threadId: thread.id, guildId: thread.guildId, sessionDate: date, partIndex, messageId: message.id,
-      })
+    // Only an explicit click on Publier/Actualiser can authorize extra parts.
+    if (allowNewParts && chunks.length > parts.length) {
+      for (let partIndex = parts.length; partIndex < chunks.length; partIndex++) {
+        if (date <= this.parisToday()) return
+        const message = await thread.send({ content: chunks[partIndex], allowedMentions: { parse: [] } })
+        await this.persistence.saveQuestRecapPart({
+          threadId: thread.id, guildId: thread.guildId, sessionDate: date, partIndex, messageId: message.id,
+        })
+      }
     }
   }
 
@@ -627,6 +637,88 @@ export class DiscordCommandsService {
           this.logger.warn('Relance de réconciliation des choix impossible : ' + String(error)))
       }
     }
+  }
+
+  /** Read locks from Discord, not from a duplicate local vote registry. */
+  private async questLockHolders(thread: any): Promise<Array<{ id: string; bot: boolean }>> {
+    const starter = await thread.fetchStarterMessage({ force: true })
+    if (!starter) return []
+    const reactions = typeof starter.reactions.fetch === 'function'
+      ? await starter.reactions.fetch() : starter.reactions.cache
+    const reaction = reactions.find((entry: any) => entry.emoji.name === '🔒')
+    if (!reaction) return []
+    const users = await reaction.users.fetch()
+    return [...users.values()].filter((user: any) => !user.bot)
+      .map((user: any) => ({ id: user.id, bot: false }))
+  }
+
+  private async sendPrivateQuestNotice(client: any, userId: string, content: string): Promise<boolean> {
+    const channelId = await this.persistence.playerPrivateDiscordChannel(userId)
+    if (!channelId) return false // Example: Valou has no linked PJ channel.
+    const channel = await client.channels.fetch(channelId).catch(() => null)
+    if (!channel || !('send' in channel) || typeof channel.send !== 'function') {
+      this.logger.warn('Salon privé introuvable pour le joueur ' + userId)
+      return false
+    }
+    await channel.send({ content, allowedMentions: { parse: [], users: [userId] } })
+    return true
+  }
+
+  /** New 🔒 only. A 👍 never blocks a player from being interested in multiple quests. */
+  async handleQuestLockAdd(reaction: MessageReaction | PartialMessageReaction, user: { id: string; bot?: boolean }): Promise<void> {
+    if (reaction.emoji.name !== '🔒' || user.bot || !user.id) return
+    if (reaction.message.id !== reaction.message.channelId) return
+    const client = reaction.message.client
+    const channel = await client.channels.fetch(reaction.message.channelId).catch(() => null)
+    if (!channel?.isThread?.() || channel.parentId !== this.choiceForumChannelId
+      || (channel.archived && channel.locked)) return
+    const key = user.id + ':' + channel.id
+    // Duplicate gateway events/reconnections must not spam the private room.
+    if (Date.now() - (this.recentQuestLockWarnings.get(key) ?? 0) < 60_000) return
+    const forum = await client.channels.fetch(this.choiceForumChannelId)
+    if (!forum || !('threads' in forum)) return
+    const found = new Map<string, any>()
+    const active = await forum.threads.fetchActive()
+    for (const thread of active.threads.values()) found.set(thread.id, thread)
+    let before: Date | undefined
+    do {
+      const archived = await forum.threads.fetchArchived({ type: 'public', limit: 100, ...(before ? { before } : {}) })
+      for (const thread of archived.threads.values()) found.set(thread.id, thread)
+      const last = archived.threads.last()
+      before = archived.hasMore && last?.archiveTimestamp ? new Date(last.archiveTimestamp) : undefined
+      if (!before) break
+    } while (before)
+    const lockedQuests: string[] = []
+    for (const thread of found.values()) {
+      if (thread.archived && thread.locked) continue
+      const users = await this.questLockHolders(thread).catch(() => null)
+      if (!users) return // If votes cannot be read, avoid a false accusation.
+      if (users.some(holder => holder.id === user.id)) lockedQuests.push(thread.id)
+    }
+    if (lockedQuests.length < 2 || !lockedQuests.includes(channel.id)) return
+    this.recentQuestLockWarnings.set(key, Date.now())
+    if (this.recentQuestLockWarnings.size > 300) this.recentQuestLockWarnings.clear()
+    try {
+      await this.sendPrivateQuestNotice(client, user.id,
+        '⚠️ Attention <@' + user.id + '> : tu as réservé ' + lockedQuests.length +
+        ' quêtes avec 🔒, alors que le maximum est **une seule**. Retire le cadenas des quêtes que tu ne réserves pas.')
+    } catch (error) {
+      this.recentQuestLockWarnings.delete(key)
+      this.logger.warn('Alerte double réservation impossible pour ' + user.id + ' : ' + String(error))
+    }
+  }
+
+  private async notifyQuestLockHoldersCompleted(client: any, thread: any, holders: Array<{ id: string }>): Promise<number> {
+    let sent = 0
+    for (const holder of holders) {
+      try {
+        if (await this.sendPrivateQuestNotice(client, holder.id,
+          '🔔 <@' + holder.id + '>, la quête **' + thread.name + '** que tu avais verrouillée avec 🔒 est terminée.')) sent++
+      } catch (error) {
+        this.logger.warn('Alerte de fin de quête impossible pour ' + holder.id + ' : ' + String(error))
+      }
+    }
+    return sent
   }
 
   /** Listen to both add and remove. Debouncing coalesces multiple player changes. */
@@ -2651,9 +2743,14 @@ export class DiscordCommandsService {
           content: `✅ **Quête terminée. Merci d’avoir participé.**\n\n**Compte rendu :**\n${report}\n\nVous pouvez la relancer avec \`/relancer-quete\`.`,
           allowedMentions: { parse: [] },
         })
+        const lockedHolders = await this.questLockHolders(thread).catch(error => {
+          this.logger.warn('Lecture des cadenas avant fermeture impossible : ' + String(error))
+          return [] as Array<{ id: string; bot: boolean }>
+        })
         await this.clearQuestThumbReservations(thread)
         await thread.setLocked(true, 'Quête terminée via /terminer-quete')
         await thread.setArchived(true, 'Quête fermée via /terminer-quete')
+        await this.notifyQuestLockHoldersCompleted(interaction.client, thread, lockedHolders)
         this.pendingQuestCompletions.delete(interaction.customId)
         await this.questPilot?.refreshThreadPanel(thread).catch(error => this.logger.warn(String(error)))
         await interaction.editReply({ content: 'Quête terminée : discussion fermée, sans tag.' })
@@ -2859,7 +2956,7 @@ export class DiscordCommandsService {
         }
         await this.withQuestRecapLock(interaction.channelId, async () => {
           const lines = await this.buildQuestChoiceLines(interaction.client, interaction.guildId ?? '', session.userIds)
-          await this.updatePublishedQuestRecap(interaction.client, thread, session.sessionDate, lines)
+          await this.updatePublishedQuestRecap(interaction.client, thread, session.sessionDate, lines, true)
         })
         await interaction.editReply({ content: '✅ Récapitulatif publié ou actualisé. Les réactions 👍 et 🔒 sur les quêtes le mettront à jour automatiquement jusqu’à la veille de séance.', components: [], allowedMentions: { parse: [] } })
       } catch (error) {
