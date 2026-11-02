@@ -264,7 +264,7 @@ export class DiscordCommandsService {
         '`/changer-icone-quete icone:🐸` — remplace l’emoji du titre depuis une quête créée par le bot.',
         '`/choix-quete` — prévisualise et fait confirmer les quêtes : 🔒 prioritaire, 👍 intéressé.',
         '`/terminer-quete` — depuis un fil du journal des quêtes, demande un compte rendu, marque la quête Terminée et libère les réservations 👍.',
-        '`/relancer-quete` — depuis un fil terminé, retire le tag Terminée et remet la quête dans `/choix-quete`.',
+        '`/relancer-quete` — rouvre une quête fermée (archivée et verrouillée) et la remet dans `/choix-quete`.',
         '`/recap-pjs` — aperçu du récapitulatif des joueurs/PJ, puis bouton de publication.',
         '`/afficher-personnage` — affiche pour toi un personnage publié, puis permet de le partager.',
         '`/afficher-faction` — affiche pour toi une faction publiée, puis permet de la partager.',
@@ -334,20 +334,12 @@ export class DiscordCommandsService {
     return new Set(mentions)
   }
 
-  private async questThreadContext(interaction: ChatInputCommandInteraction | ButtonInteraction): Promise<{ thread: any; forum: any; completedTagId: string }> {
+  private async questThreadContext(interaction: ChatInputCommandInteraction | ButtonInteraction): Promise<{ thread: any }> {
     const thread = interaction.channel
     if (!thread?.isThread?.() || thread.parentId !== this.choiceForumChannelId) {
-      throw new Error('Cette commande doit être lancée depuis la discussion de la quête dans le journal des quêtes.')
+      throw new Error('Cette commande doit être lancée depuis une quête du journal des quêtes.')
     }
-    const forum = await interaction.client.channels.fetch(this.choiceForumChannelId)
-    if (!forum || !('availableTags' in forum) || !Array.isArray(forum.availableTags)) throw new Error('Le forum des quêtes est introuvable ou inaccessible.')
-    const obsoleteTag = forum.availableTags.find((tag: any) => String(tag.name ?? '').trim().toLocaleLowerCase('fr') === 'obsolète')
-    if (obsoleteTag?.id && thread.appliedTags?.includes(obsoleteTag.id)) {
-      throw new Error('Cette discussion est obsolète : elle ne peut plus être modifiée comme une quête active.')
-    }
-    const completedTag = forum.availableTags.find((tag: any) => String(tag.name ?? '').trim().toLocaleLowerCase('fr') === 'terminée')
-    if (!completedTag?.id) throw new Error('Le tag « Terminée » est introuvable dans le forum des quêtes.')
-    return { thread, forum, completedTagId: completedTag.id }
+    return { thread }
   }
 
   private async clearQuestThumbReservations(thread: any): Promise<void> {
@@ -365,9 +357,9 @@ export class DiscordCommandsService {
 
   private async finishQuestCommand(interaction: ChatInputCommandInteraction | ButtonInteraction): Promise<void> {
     try {
-      const { thread, completedTagId } = await this.questThreadContext(interaction)
-      if (thread.appliedTags?.includes(completedTagId)) {
-        await interaction.reply({ content: 'Cette quête est déjà marquée **Terminée**.', ephemeral: true })
+      const { thread } = await this.questThreadContext(interaction)
+      if (thread.archived && thread.locked) {
+        await interaction.reply({ content: 'Cette quête est déjà fermée.', ephemeral: true })
         return
       }
 
@@ -393,12 +385,13 @@ export class DiscordCommandsService {
   private async reopenQuestCommand(interaction: ChatInputCommandInteraction | ButtonInteraction): Promise<void> {
     await interaction.deferReply({ ephemeral: true })
     try {
-      const { thread, completedTagId } = await this.questThreadContext(interaction)
-      if (!thread.appliedTags?.includes(completedTagId)) {
-        await interaction.editReply({ content: 'Cette quête n’est pas marquée **Terminée**.' })
+      const { thread } = await this.questThreadContext(interaction)
+      if (!thread.archived || !thread.locked) {
+        await interaction.editReply({ content: 'Cette quête n’est pas fermée.' })
         return
       }
-      await thread.setAppliedTags((thread.appliedTags ?? []).filter((tagId: string) => tagId !== completedTagId), 'Quête relancée via /relancer-quete')
+      await thread.setLocked(false, 'Quête relancée via /relancer-quete')
+      await thread.setArchived(false, 'Quête relancée via /relancer-quete')
       const starter = await thread.fetchStarterMessage({ force: true }).catch(() => null)
       if (starter) await starter.react('👍').catch(() => undefined)
       await thread.send({ content: '🔄 **Quête relancée.** Elle réapparaît maintenant dans `/choix-quete`.', allowedMentions: { parse: [] } })
@@ -455,20 +448,13 @@ export class DiscordCommandsService {
       type QuestVoter = { id: string; name: string }
       type QuestChoice = { id: string; title: string; createdAt: number; url: string | null; reserved: QuestVoter[]; interested: QuestVoter[] }
       const quests: QuestChoice[] = []
-      const completedTagId = Array.isArray((forum as any).availableTags)
-        ? (forum as any).availableTags.find((tag: any) => String(tag.name ?? '').trim().toLocaleLowerCase('fr') === 'terminée')?.id ?? null
-        : null
-      const obsoleteTagId = Array.isArray((forum as any).availableTags)
-        ? (forum as any).availableTags.find((tag: any) => String(tag.name ?? '').trim().toLocaleLowerCase('fr') === 'obsolète')?.id ?? null
-        : null
       const launcherId = await this.persistence.questLauncherId?.()
       const playerNames = new Map((await this.persistence.listPlayerIdentities?.() ?? []).map(identity => [identity.discordUserId, identity.playerName]))
       const nameOf = (id: string): string => playerNames.get(id) ?? pf2PlayerByDiscordId(id)?.name ?? 'Joueur inconnu'
       const interestsByUser = new Map<string, { name: string; count: number }>()
 
       for (const thread of discovered.values()) {
-        if (thread.id === launcherId || (obsoleteTagId && thread.appliedTags?.includes(obsoleteTagId))) continue
-        if (completedTagId && thread.appliedTags?.includes(completedTagId)) continue
+        if (thread.id === launcherId || (thread.archived && thread.locked)) continue
         const starter = await thread.fetchStarterMessage({ force: true }).catch(() => null)
         if (!starter) continue
         const reactions = typeof starter.reactions.fetch === 'function'
@@ -2525,20 +2511,18 @@ export class DiscordCommandsService {
       await interaction.deferReply({ ephemeral: true })
       try {
         const thread = interaction.channel as any
-        const forum = await interaction.client.channels.fetch(this.choiceForumChannelId)
-        const completedTag = forum && 'availableTags' in forum && Array.isArray((forum as any).availableTags)
-          ? (forum as any).availableTags.find((tag: any) => String(tag.name ?? '').trim().toLocaleLowerCase('fr') === 'terminée')
-          : null
-        if (!completedTag?.id) throw new Error('Le tag « Terminée » est introuvable dans le forum des quêtes.')
-        await thread.setAppliedTags([...new Set([...(thread.appliedTags ?? []), completedTag.id])], 'Quête terminée via /terminer-quete')
-        await this.clearQuestThumbReservations(thread)
+        if (thread.archived && thread.locked) throw new Error('Cette quête est déjà fermée.')
+        // Publish the report before locking: players cannot post to a closed thread.
         await thread.send({
           content: `✅ **Quête terminée. Merci d’avoir participé.**\n\n**Compte rendu :**\n${report}\n\nVous pouvez la relancer avec \`/relancer-quete\`.`,
           allowedMentions: { parse: [] },
         })
+        await this.clearQuestThumbReservations(thread)
+        await thread.setLocked(true, 'Quête terminée via /terminer-quete')
+        await thread.setArchived(true, 'Quête fermée via /terminer-quete')
         this.pendingQuestCompletions.delete(interaction.customId)
         await this.questPilot?.refreshThreadPanel(thread).catch(error => this.logger.warn(String(error)))
-        await interaction.editReply({ content: 'Quête terminée et compte rendu publié.' })
+        await interaction.editReply({ content: 'Quête terminée : discussion fermée, sans tag.' })
       } catch (error) {
         await interaction.editReply({ content: `Impossible de terminer la quête : ${error instanceof Error ? error.message : String(error)}` })
       }
