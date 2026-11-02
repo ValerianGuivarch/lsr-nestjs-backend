@@ -2709,7 +2709,7 @@ export class DiscordCommandsService {
 
   async handleButton(interaction: ButtonInteraction): Promise<boolean> {
     if (interaction.customId.startsWith('pf2-quest-choice:')) {
-      const [, , action, id] = interaction.customId.split(':')
+      const [, action, id] = interaction.customId.split(':')
       const pending = this.pendingQuestChoices.get(id)
       if (!pending || Date.now() - pending.createdAt > 15 * 60_000) {
         this.pendingQuestChoices.delete(id)
