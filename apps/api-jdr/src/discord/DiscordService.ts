@@ -189,11 +189,6 @@ export class DiscordService implements OnModuleInit, OnModuleDestroy {
         if (ui?.kind !== 'quest') continue
         const channel = await client.channels.fetch(threadId)
         if (!channel?.isThread() || channel.parentId !== this.questForumId) continue
-        const forum = await client.channels.fetch(this.questForumId)
-        if (forum?.type === ChannelType.GuildForum) {
-          const obsoleteTag = forum.availableTags.find(tag => tag.name.trim().toLocaleLowerCase('fr') === 'obsolète')
-          if (obsoleteTag && channel.appliedTags.includes(obsoleteTag.id)) continue
-        }
         await this.questPilot.refreshThreadPanel(channel)
       } catch (error) {
         this.logger.warn('Actualisation de la fiche de quête ' + threadId + ' impossible : '
@@ -210,11 +205,6 @@ export class DiscordService implements OnModuleInit, OnModuleDestroy {
     try {
       const forum = await client.channels.fetch(this.questForumId)
       if (!forum || forum.type !== ChannelType.GuildForum) throw new Error('Forum Discord des quêtes inaccessible.')
-      const completedTagId = forum.availableTags.find(tag =>
-        tag.name.trim().toLocaleLowerCase('fr') === 'terminée')?.id
-      if (!completedTagId) throw new Error('Tag Discord « Terminée » absent : synchronisation annulée.')
-      const obsoleteTagId = forum.availableTags.find(tag =>
-        tag.name.trim().toLocaleLowerCase('fr') === 'obsolète')?.id
       const launcherId = await this.persistence.questLauncherId?.()
       const discovered = new Map<string, any>()
       const active = await forum.threads.fetchActive()
@@ -235,14 +225,15 @@ export class DiscordService implements OnModuleInit, OnModuleDestroy {
       const snapshots: DiscordQuestSnapshot[] = [...discovered.values()].filter(thread => thread.id !== launcherId).map(thread => ({
         id: thread.id,
         title: String(thread.name ?? '').trim() || 'Quête sans titre',
-        completed: (thread.appliedTags ?? []).includes(completedTagId),
-        obsolete: Boolean(obsoleteTagId && (thread.appliedTags ?? []).includes(obsoleteTagId)),
+        // Discord auto-archives inactive threads. Only explicitly locked AND archived quests count as completed.
+        completed: Boolean(thread.archived && thread.locked),
+        obsolete: false,
         archived: Boolean(thread.archived),
         url: `https://discord.com/channels/${forum.guildId}/${thread.id}`,
         createdAt: new Date(Number(thread.createdTimestamp ?? Date.now())).toISOString(),
       }))
       await this.persistence.saveDiscordQuestSnapshots(snapshots)
-      // Reconcile every managed quest: titles/tags and SQLite links can change
+      // Reconcile every managed quest: titles/closure state and SQLite links can change
       // independently. refreshThreadPanel only edits if the content differs,
       // so this repairs any missed map-to-Discord notification after a restart.
       if (this.questPilot) {
