@@ -1,7 +1,7 @@
 # Synchronisation des quêtes Discord avec la carte PF2
 
 ## Source de vérité
-Le forum Discord `journal-de-quetes` (`PF2_DISCORD_QUEST_FORUM_CHANNEL_ID`) est l'unique source pour les noms, les fils et le tag **Terminée**. Le service `DiscordService` lit les fils actifs et archivés au démarrage, puis toutes les cinq minutes. Il enregistre les métadonnées dans `pf2_discord_quest` et conserve les données précédentes si la lecture de Discord échoue. Le bot crée désormais les quêtes depuis le sujet d'accueil du forum ou `/nouvelle-quete` : le premier message est une fiche interactive éditable. Les anciens fils sont exclus lorsqu'ils portent le tag `obsolète` ; les statuts en cours/terminée restent fondés sur les tags Discord.
+Le forum Discord `journal-de-quetes` (`PF2_DISCORD_QUEST_FORUM_CHANNEL_ID`) est l’unique source pour les noms, les fils et leur état. Depuis le **2 novembre 2026**, il ne possède plus aucun tag : une quête terminée est **archivée ET verrouillée** dans Discord. Un archivage seul, qui peut arriver automatiquement, ne signifie pas qu’elle est terminée. `DiscordService` lit les fils actifs et archivés au démarrage, puis toutes les cinq minutes ; il enregistre leur état dans `pf2_discord_quest` en préservant le catalogue précédent si Discord est indisponible. Le bot crée les quêtes depuis le sujet d’accueil ou `/nouvelle-quete`, avec une fiche interactive comme premier message.
 
 ### SQLite
 - `pf2_discord_quest(thread_id PK, title, completed, archived, obsolete, url, discord_created_at, synced_at)`
@@ -9,6 +9,8 @@ Le forum Discord `journal-de-quetes` (`PF2_DISCORD_QUEST_FORUM_CHANNEL_ID`) est 
 - La migration du code `039-discord-quest-catalogue-and-map-links` crée les deux tables si elles n'existent pas déjà. Elle est idempotente et utilise le système existant de sauvegardes SQLite avant migration.
 
 Les identifiants Discord, et non les noms, portent les liens. Une quête peut apparaître dans plusieurs lieux et un lieu peut contenir plusieurs quêtes. Une quête terminée reste conservée, tout comme ses associations.
+
+**Fermeture appliquée le 2 novembre 2026 :** les quêtes « La contrebande de golems de chair », « L’appel de Brèchemont », « Le tueur d’esclaves » et « Les ruines Azlantes de Pluie d’un jour d’été » ont été archivées et verrouillées, sans suppression. Les cinq tags du forum ont été retirés. La sauvegarde de leurs états antérieurs se trouve sur le mini-PC dans `pf2-discord-audit/forum-before-no-tags-2026-11-02.json`.
 
 ## Migration et décisions de curation (historique du 14 octobre 2026)
 
@@ -37,7 +39,7 @@ Le clic sur un lieu affiche les titres synchronisés, les statuts (en cours ou t
 
 ### Synchronisation et mise à jour des titres
 
-La création standard d'une quête passe par le bot Discord et son premier message interactif. La création manuelle native d'un fil reste temporairement possible, mais n'est plus le parcours conseillé. Le même service NestJS déjà connecté à Discord interroge les fils actifs et archivés au démarrage puis toutes les **cinq minutes** ; les commandes `/terminer-quete` et `/relancer-quete` modifient le tag Discord, qui reste la source de vérité du statut. Un fil archivé n'est pas automatiquement terminé. Le synchroniseur effectue des upserts et préserve le dernier catalogue connu en cas d'échec de lecture.
+La création standard d'une quête passe par le bot Discord et son premier message interactif. La création manuelle native d'un fil reste temporairement possible, mais n'est plus le parcours conseillé. Le service NestJS interroge les fils actifs et archivés au démarrage puis toutes les **cinq minutes**. `/terminer-quete` publie le compte rendu, **verrouille et archive** le fil ; `/relancer-quete` le **déverrouille et le désarchive**. Le synchroniseur déduit `completed` de ces deux indicateurs réunis, sans tag, effectue des upserts et préserve le dernier catalogue en cas d'échec de lecture.
 
 Un renommage de fil conserve le même `thread_id` : il est répercuté dans SQLite à la prochaine synchronisation réussie et apparaît sur la carte **après rechargement de la page** (pas encore de rafraîchissement temps réel du navigateur). Les associations demeurent stables. Un lieu avec plusieurs quêtes conserve un seul repère, et une même quête peut être liée à plusieurs lieux.
 
