@@ -148,8 +148,9 @@ describe('DiscordCommandsService', () => {
     await t.run()
     const preview = t.editReply.mock.calls[0][0]
     expect(t.deferReply).toHaveBeenCalledWith({ ephemeral: true })
-    expect(preview.content).toContain('Prévisualisation privée')
+    expect(preview.content).toContain('**Choix de quête**')
     expect(preview.components).toHaveLength(1)
+    expect(t.followUp).not.toHaveBeenCalled() // Fits in a single private message.
     const allText = [preview.content, ...t.followUp.mock.calls.map(args => args[0].content)].join('\n')
     const index = (text: string) => allText.indexOf(text)
     expect(index('<#reserved>')).toBeLessThan(index('<#one>'))
@@ -162,11 +163,51 @@ describe('DiscordCommandsService', () => {
     expect(allText).not.toContain('réservé par personne')
     expect(allText).not.toContain('intéresse personne')
     expect(allText).not.toContain('https://discord.com/channels/')
+    expect(allText).not.toContain('Prioritaires pour le groupe')
+    expect(allText).not.toContain('Autres quêtes')
+    expect(allText).not.toContain('Réservées par un joueur absent')
+    expect(allText).not.toContain('Choix de quête — suite')
     expect(allText).toContain('<#absent> (réservé par Nico, intéresse Éric)')
     expect(allText).not.toContain('<#done>')
     expect(allText).not.toContain('<#obsolete>')
     expect(allText).not.toContain('<@')
     expect(t.channel.send).not.toHaveBeenCalled()
+  })
+
+  it('splits only when necessary, with buttons exclusively on the last preview message and no suite titles', async () => {
+    const t = questChoiceTest()
+    for (let i = 0; i < 72; i++) {
+      const id = '1000000000000000000' + String(i).padStart(3, '0')
+      t.questMap.set(id, t.quest(id, 'Quête ' + i, [t.eric.id], []))
+    }
+    await t.run()
+
+    const firstPreview = t.editReply.mock.calls[0][0]
+    const furtherPreviews = t.followUp.mock.calls.map(call => call[0])
+    expect(t.deferReply).toHaveBeenCalledWith({ ephemeral: true })
+    expect(furtherPreviews).toHaveLength(1)
+    expect(firstPreview.components).toEqual([])
+    expect(furtherPreviews[0].components).toHaveLength(1)
+    expect(furtherPreviews[0].ephemeral).toBe(true)
+    expect(firstPreview.content).toContain('**Choix de quête**')
+    for (const part of [firstPreview, ...furtherPreviews]) {
+      expect(part.content.length).toBeLessThanOrEqual(2_000)
+      expect(part.content).not.toContain('suite')
+      expect(part.content).not.toContain('Prioritaires pour le groupe')
+    }
+    expect(t.channel.send).not.toHaveBeenCalled()
+    expect(t.persistence.saveQuestRecapPart).not.toHaveBeenCalled()
+
+    await t.service.handleButton({
+      customId: 'pf2-quest-choice:publish:cmd-quest', user: { id: 'mj' },
+      channelId: 'mission-thread', channel: t.channel, client: t.client, guildId: 'guild',
+      deferUpdate: jest.fn().mockResolvedValue(undefined),
+      editReply: jest.fn().mockResolvedValue(undefined), reply: jest.fn(),
+    } as never)
+    expect(t.channel.send).toHaveBeenCalledTimes(2)
+    expect(t.persistence.saveQuestRecapPart).toHaveBeenCalledTimes(2)
+    const publishedParts = t.channel.send.mock.calls.map(call => call[0].content)
+    expect(publishedParts).toEqual([firstPreview.content, furtherPreviews[0].content])
   })
 
   it('requires validation before publishing, without mentions or duplicate publication', async () => {

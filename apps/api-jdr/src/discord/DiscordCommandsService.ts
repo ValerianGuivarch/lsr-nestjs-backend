@@ -428,11 +428,13 @@ export class DiscordCommandsService {
   }
 
   private questChoiceChunks(lines: string[]): string[] {
+    // Stay below Discord's 2,000-character limit; split only if necessary.
+    const maxLength = 1_950
     const chunks: string[] = []
     let chunk = ''
     for (const line of lines) {
-      const safe = line.length > 1800 ? line.slice(0, 1799) + '…' : line
-      if (chunk && chunk.length + safe.length + 1 > 1800) {
+      const safe = line.length > maxLength ? line.slice(0, maxLength - 1) + '…' : line
+      if (chunk && chunk.length + safe.length + 1 > maxLength) {
         chunks.push(chunk)
         chunk = ''
       }
@@ -505,23 +507,9 @@ export class DiscordCommandsService {
         || a.createdAt - b.createdAt
         || a.title.localeCompare(b.title, 'fr'))
 
-      const groups = [
-        '🔒 **Prioritaires pour le groupe**',
-        '👍 **Intérêt d’au moins un joueur présent**',
-        '📋 **Autres quêtes**',
-        '⏸️ **Réservées par un joueur absent**',
-      ]
-      const lines: string[] = ['**Choix de quête — propositions pour la séance**', '']
-      let lastCategory = -1
+      // The sorting tiers stay implicit: a single compact list.
+      const lines: string[] = ['**Choix de quête**']
       for (const quest of quests) {
-        const tier = category(quest)
-        if (tier !== lastCategory) {
-          if (lastCategory !== -1) lines.push('')
-          lines.push(groups[tier])
-          lastCategory = tier
-        }
-        // Native Discord thread mention renders as a compact clickable quest name:
-        // no raw [title](long URL) text on mobile and no user pings.
         const details = [
           quest.reserved.length ? 'réservé par ' + quest.reserved.map(p => p.name).join(', ') : '',
           quest.interested.length ? 'intéresse ' + quest.interested.map(p => p.name).join(', ') : '',
@@ -552,8 +540,7 @@ export class DiscordCommandsService {
   private async updatePublishedQuestRecap(client: any, thread: any, date: string, lines: string[], allowNewParts = false): Promise<void> {
     if (date <= this.parisToday()) return
     const parts = await this.persistence.questRecapParts(thread.id)
-    const chunks = this.questChoiceChunks(lines).map((chunk, index, all) =>
-      index ? '**Choix de quête — suite ' + (index + 1) + '/' + all.length + '**\n' + chunk : chunk)
+    const chunks = this.questChoiceChunks(lines)
     if (!parts.length) {
       // Only the explicit confirmation path may create the first recap.
       for (const [partIndex, content] of chunks.entries()) {
@@ -753,12 +740,21 @@ export class DiscordCommandsService {
         new ButtonBuilder().setCustomId('pf2-quest-choice:publish:' + interaction.id).setLabel(existing.length ? 'Actualiser les choix' : 'Publier les choix').setStyle(ButtonStyle.Success),
         new ButtonBuilder().setCustomId('pf2-quest-choice:cancel:' + interaction.id).setLabel('Annuler').setStyle(ButtonStyle.Secondary),
       )
-      const note = existing.length
-        ? 'Un récapitulatif existe déjà : la validation mettra à jour ses messages, sans nouveau vote sous le récapitulatif.'
-        : 'Après publication, les votes sur les fiches de quêtes actualiseront automatiquement ces messages.'
-      const preview = this.questChoiceChunks(['**Prévisualisation privée — aucune publication sans validation**', note, '', ...lines])
-      await interaction.editReply({ content: preview[0], components: [row], allowedMentions: { parse: [] } })
-      for (const chunk of preview.slice(1)) await interaction.followUp({ content: chunk, ephemeral: true, allowedMentions: { parse: [] } })
+      // Only the very last private preview part carries the action buttons.
+      // If everything fits, there is just one preview message.
+      const preview = this.questChoiceChunks(lines)
+      if (preview.length === 1) {
+        await interaction.editReply({ content: preview[0], components: [row], allowedMentions: { parse: [] } })
+      } else {
+        await interaction.editReply({ content: preview[0], components: [], allowedMentions: { parse: [] } })
+        for (let index = 1; index < preview.length; index++) {
+          await interaction.followUp({
+            content: preview[index], ephemeral: true,
+            components: index === preview.length - 1 ? [row] : [],
+            allowedMentions: { parse: [] },
+          })
+        }
+      }
     } catch (error) {
       await interaction.editReply({ content: 'Lecture des choix impossible : ' + (error instanceof Error ? error.message : String(error)), components: [] })
     }

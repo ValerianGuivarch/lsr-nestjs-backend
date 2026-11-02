@@ -35,9 +35,9 @@ Les commandes `/terminer-quete` et `/relancer-quete` restent disponibles et util
 - Sur chaque fiche de quête, **👍** indique « intéressé » et **🔒** indique « je tiens absolument à faire cette mission ». Un joueur peut réagir avec les deux emojis. Le cadenas ne fixe jamais l’icône de la quête.
 - Les **18 quêtes bot présentes le 2 novembre** ont été mises à jour directement sur Discord ; le sujet épinglé « Créer une quête » reste intact. Les fiches sont régénérées depuis le modèle du bot : le déploiement de ce code est nécessaire à la persistance des nouvelles consignes.
 - La commande `/choix-quete` doit être lancée depuis un fil de mission « Séance JJ/MM » du salon `objectif-prochaine-mission` dont le message initial identifie quatre participants. Elle lit les réactions des premiers messages des quêtes non terminées et non obsolètes.
-- Les quatre groupes affichés, dans cet ordre, sont : **(1)** 🔒 d’au moins un participant présent et aucun 🔒 d’un absent ; **(2)** 👍 d’au moins un présent ; **(3)** les autres quêtes ; **(4)** 🔒 d’au moins un absent, même si un présent a mis 👍 ou 🔒. À l’intérieur de chaque groupe : ordre **croissant du nombre total de 👍**, puis date de création et titre pour départager les égalités.
+- Le tri comporte quatre **niveaux implicites**, sans sous-titres : **(1)** 🔒 d'un présent sans 🔒 d'un absent ; **(2)** 👍 d'un présent ; **(3)** autres quêtes ; **(4)** 🔒 d'un absent, même si des présents sont intéressés. À l'intérieur de chaque niveau : nombre croissant de 👍, puis date et titre. Le rendu est une **liste unique**.
 - Chaque ligne affiche **le titre** (avec lien) suivi de `(réservé par ..., intéresse ...)`. Noms de joueurs issus des identités PF2, **sans mention Discord active**. Le bot ignore ses propres réactions.
-- `/choix-quete` présente une **prévisualisation privée**, avec boutons **Publier les choix** (ou **Actualiser les choix** si un récapitulatif existe) et **Annuler**. Seule une validation du lanceur, dans le même fil et dans les quinze minutes, autorise la première publication. La publication est sans mentions. Ne pas retenter une publication partielle sans vérifier le fil.
+- /choix-quete présente une **prévisualisation privée identique à la version publiée**. Si tout tient dans la limite Discord, **un seul message** est affiché et publié. Sinon les parties sont réparties sans intitulé « suite », et les boutons **Publier ou Actualiser** et **Annuler** se trouvent uniquement sur le **dernier message privé**. Une seule validation publie la totalité des parties ; aucun message n'est publié avant celle-ci.
 - Les quêtes **fermées (archivées ET verrouillées)** sont exclues du classement. Les fils simplement auto-archivés restent éligibles. Aucun tag n'est utilisé. La source de vérité reste Discord ; les réactions ne sont ni reproduites artificiellement ni stockées en double dans SQLite.
 
 
@@ -48,7 +48,7 @@ Les commandes `/terminer-quete` et `/relancer-quete` restent disponibles et util
 - La séance est authentifiée à partir du message initial créé par le bot dans `#objectif-prochaine-mission`, de ses quatre participants et du marqueur `[PF2-SESSION:YYYY-MM-DD]`. L’ancien format avec année complète et lien `Source :` est aussi reconnu pour compatibilité.
 - **Arrêt strict à minuit heure de Paris le jour de séance** : seules les dates ISO strictement postérieures à la date française du jour sont mises à jour. Ce contrôle s’applique aussi à une validation manuelle tardive. Aucun salon passé ou du jour n’est modifié automatiquement.
 - Au démarrage puis toutes les cinq minutes, le bot actualise **uniquement les récapitulatifs enregistrés dans SQLite après confirmation d'une nouvelle publication**. Les anciens récapitulatifs (dont celui du **3 novembre 2026**) ne sont **ni repris, ni édités, ni supprimés automatiquement**. Le MJ les supprimera lui-même et relancera /choix-quete. Une séance sans récapitulatif enregistré ne reçoit aucun nouveau message sans validation explicite.
-- Les éditions sont sérialisées par séance et les réactions regroupées avec une temporisation de deux secondes. Si un récapitulatif nécessite plusieurs messages, leurs IDs sont conservés ; le bot met à jour les parties et peut ajouter une continuation après une première validation.
+- Les éditions sont sérialisées par séance et les réactions regroupées avec deux secondes de temporisation. Les messages publiés sont conservés en SQLite et les actualisations automatiques les **éditent sans republier**. Seule une nouvelle confirmation peut autoriser un message supplémentaire.
 - Les **nouveaux récapitulatifs ne reçoivent aucune réaction de vote** : les pouces et cadenas restent sur les **fiches des quêtes**. Le bot laisse intégralement intacts les anciens messages et leurs réactions. Si un récapitulatif suivi a été supprimé manuellement, le bot ne le recrée jamais silencieusement.
 - La réconciliation ne doit jamais éditer des messages non publiés par le bot ni identifier un récapitulatif sur la seule base d'un titre de fil ambigu.
 
@@ -61,6 +61,14 @@ Les commandes `/terminer-quete` et `/relancer-quete` restent disponibles et util
 - Lorsqu'une quête est terminée avec /terminer-quete ou le bouton associé, le bot lit **avant fermeture** les joueurs ayant placé 🔒 et envoie à chacun disposant d'un salon privé une notification ciblée avec le titre de la quête terminée. Les erreurs de notification sont journalisées et ne bloquent pas la fermeture.
 - **Une actualisation automatique édite uniquement les messages du récapitulatif déjà enregistrés** : elle ne publie aucun nouveau message, même si la liste grandit. Si le contenu dépasse les parties existantes, le bot indique qu'une nouvelle confirmation /choix-quete est nécessaire pour ajouter la suite. La première publication et tout ajout de parties exigent une confirmation explicite.
 - Démonstration effectuée sur les **deux messages déjà présents** dans « Séance 03/11 » : ils ont été édités sans nouvelle publication. Les réactions du bot sous l'ancien récapitulatif ont été retirées ; une réaction de joueur 💍 reste, car le bot ne dispose pas de la permission Discord permettant de la supprimer.
+
+### Affichage minimaliste de /choix-quete
+
+- **Une seule liste** triée, sans sous-titres de catégories ni séparateurs. Les priorités du classement restent identiques.
+- Chaque ligne se limite au **lien Discord natif de la quête** (emoji et nom) et, si nécessaire, aux noms de réservation et d'intérêt entre parenthèses. S'il n'existe aucun vote, aucune parenthèse.
+- Les 👍 multiples sont autorisés. Seuls plusieurs 🔒 pour un joueur déclenchent une alerte.
+- Une découpe ne survient que si la limite de Discord est dépassée. **Pas d'intitulé « suite »**, ni de titre répété ; en prévisualisation, les boutons sont **sur la dernière partie uniquement**. Le nombre de messages publiés ne dépend donc pas d'un nombre fixe de quêtes.
+- Les anciens récapitulatifs restent sous le contrôle du MJ, sans modification automatique durant cette mise à jour.
 
 ### Fermeture des quêtes sans tags (2 novembre 2026)
 
