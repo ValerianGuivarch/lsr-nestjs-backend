@@ -184,9 +184,9 @@ describe('DiscordCommandsService', () => {
     expect(index('<#one>')).toBeLessThan(index('<#many>'))
     expect(index('<#many>')).toBeLessThan(index('<#other>'))
     expect(index('<#other>')).toBeLessThan(index('<#absent>'))
-    expect(allText).toContain('**👑 Réservée aux présents** (🔗 <#reserved>) (réservé par Guilhem)')
-    expect(allText).toContain('- **📜 Sans intérêt** (🔗 <#other>)')
-    expect(allText).not.toContain('<#other>) (')
+    expect(allText).toContain('<#reserved> (réservé par Guilhem)')
+    expect(allText).toContain('- <#other>')
+    expect(allText).not.toContain('<#other> (')
     expect(allText).not.toContain('réservé par personne')
     expect(allText).not.toContain('intéresse personne')
     expect(allText).not.toContain('https://discord.com/channels/')
@@ -201,7 +201,7 @@ describe('DiscordCommandsService', () => {
     expect(allText.indexOf('📋 **Autres**')).toBeLessThan(allText.indexOf('🚫 **Réservées par les absents**'))
     expect(allText).not.toContain('\\n\\n')
     expect(allText).not.toContain('Choix de quête — suite')
-    expect(allText).toContain('**🗝️ Réservée par absent** (🔗 <#absent>) (réservé par Nico, intéresse Éric)')
+    expect(allText).toContain('<#absent> (réservé par Nico, intéresse Éric)')
     expect(allText).not.toContain('<#done>')
     expect(allText).not.toContain('<#obsolete>')
     expect(allText).not.toContain('<@')
@@ -246,15 +246,15 @@ describe('DiscordCommandsService', () => {
     expect(publishedParts).toEqual([firstPreview.content, ...furtherPreviews.map(part => part.content)])
   })
 
-  it('shows the full quest title even when Discord truncates native thread mentions', async () => {
+  it('uses only the native Discord quest link, so renaming a quest never duplicates its title', async () => {
     const t = questChoiceTest()
     const title = '⚒️ La disparition de la machine du quartier des Précipices'
     t.questMap.set('long-title', t.quest('long-title', title, [t.eric.id], []))
     await t.run()
     const preview = t.editReply.mock.calls[0][0]
-    expect(preview.content).toContain('**' + title + '**')
-    expect(preview.content).toContain('(🔗 <#long-title>)')
-    expect(preview.content).toContain('intéresse Éric')
+    expect(preview.content).toContain('- <#long-title> (intéresse Éric)')
+    expect(preview.content).not.toContain(title)
+    expect(preview.content).not.toContain('🔗')
     expect(preview.content).not.toContain('https://discord.com/channels/')
     expect(t.channel.send).not.toHaveBeenCalled()
   })
@@ -264,7 +264,7 @@ describe('DiscordCommandsService', () => {
     t.questMap.set('one', t.quest('one', '👑 Le Roi Kobold', [], [t.guilhem.id]))
     await t.run()
     const preview = t.editReply.mock.calls[0][0]
-    expect(preview.content).toBe('**Choix de quête**\n👍 **Intérêt des présents**\n- **👑 Le Roi Kobold** (🔗 <#one>) (réservé par Guilhem)')
+    expect(preview.content).toBe('**Choix de quête**\n👍 **Intérêt des présents**\n- <#one> (réservé par Guilhem)')
     expect(preview.components).toHaveLength(1)
     expect(t.followUp).not.toHaveBeenCalled()
     expect(t.channel.send).not.toHaveBeenCalled()
@@ -350,7 +350,7 @@ describe('DiscordCommandsService', () => {
     expect(t.channel.send).toHaveBeenCalledTimes(1)
     expect(t.persistence.saveQuestRecapPart).toHaveBeenCalledTimes(1)
     const published = [...t.posted.values()].find(m => m.id !== legacy.id)
-    expect(published.content).toContain('- **👑 Le Roi Kobold** (🔗 <#quest-a>)')
+    expect(published.content).toContain('- <#quest-a>')
 
     // The source of truth is the *current* Discord reactions, not a stored list.
     t.questMap.set(questId, t.quest(questId, '👑 Le Roi Kobold', [t.eric.id], [t.guilhem.id]))
@@ -439,7 +439,7 @@ describe('DiscordCommandsService', () => {
     expect(text).toContain('Plusieurs cadenas')
     expect(text).toContain('Guilhem (2 🔒)')
     expect(text).not.toContain('Éric (2')
-    expect(text).toContain('**Quête A** (🔗 <#a>) (réservé par Guilhem, intéresse Éric)')
+    expect(text).toContain('<#a> (réservé par Guilhem, intéresse Éric)')
   })
 
   it('coalesces 👍/🔒 additions and removals, ignoring bot reactions and other messages', async () => {

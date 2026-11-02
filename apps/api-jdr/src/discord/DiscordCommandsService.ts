@@ -550,7 +550,7 @@ export class DiscordCommandsService {
           quest.reserved.length ? 'réservé par ' + quest.reserved.map(p => p.name).join(', ') : '',
           quest.interested.length ? 'intéresse ' + quest.interested.map(p => p.name).join(', ') : '',
         ].filter(Boolean)
-        lines.push('- **' + quest.title + '** (🔗 <#' + quest.id + '>)' + (details.length ? ' (' + details.join(', ') + ')' : ''))
+        lines.push('- <#' + quest.id + '>' + (details.length ? ' (' + details.join(', ') + ')' : ''))
       }
       if (!quests.length) lines.push('Aucune quête disponible dans le forum.')
 
