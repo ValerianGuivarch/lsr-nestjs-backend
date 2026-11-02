@@ -537,25 +537,6 @@ export class DiscordCommandsService {
       return lines
   }
 
-  /** Migrate only bot-authored recaps in an authenticated future session thread. */
-  private async importExistingQuestRecaps(client: any, thread: any, sessionDate: string): Promise<void> {
-    if ((await this.persistence.questRecapParts(thread.id)).length) return
-    const messages = await thread.messages.fetch({ limit: 100 })
-    const existing = [...messages.values()].filter((message: any) =>
-      message.author?.id === client.user?.id
-      && (
-        message.content?.startsWith('**Choix de quête — propositions pour la séance**')
-        || message.content?.startsWith('**Choix de quête — suite ')
-        || /^\*\*\[[^\n]+\]\(https:\/\/discord\.com\/channels\//.test(message.content ?? '')
-      ),
-    ).sort((a: any, b: any) => Number(a.createdTimestamp) - Number(b.createdTimestamp))
-    for (const [index, message] of existing.entries()) {
-      await this.persistence.saveQuestRecapPart({
-        threadId: thread.id, guildId: thread.guildId, sessionDate, partIndex: index, messageId: message.id,
-      })
-    }
-  }
-
   /** Serialize edits for a session so simultaneous reactions cannot reintroduce stale results. */
   private async withQuestRecapLock(threadId: string, task: () => Promise<void>): Promise<void> {
     const previous = this.questRecapLocks.get(threadId) ?? Promise.resolve()
@@ -609,7 +590,7 @@ export class DiscordCommandsService {
     }
   }
 
-  /** Reattach legacy recaps, and refresh all published future sessions; never publish unconfirmed sessions. */
+  /** Only recaps explicitly published since this feature was enabled are tracked. */
   async reconcileQuestRecaps(client: any): Promise<void> {
     if (this.questRecapReconcile) {
       this.questRecapNeedsRerun = true
@@ -617,36 +598,22 @@ export class DiscordCommandsService {
     }
     const task = async () => {
       const today = this.parisToday()
-      const guildId = process.env['DISCORD_GUILD_ID']?.trim()
-      if (!guildId || !client?.isReady?.()) return
-      const guild = await client.guilds.fetch(guildId)
-      const channels = await guild.channels.fetch()
-      const parent = [...channels.values()].find((channel: any) =>
-        channel?.type === ChannelType.GuildText && channel.name === 'objectif-prochaine-mission')
-      if (!parent || !('threads' in parent)) return
-      const discovered = new Map<string, any>()
-      const active = await (parent as any).threads.fetchActive()
-      for (const thread of active.threads.values()) discovered.set(thread.id, thread)
-      let before: Date | undefined
-      do {
-        const archived = await (parent as any).threads.fetchArchived({ type: 'public', limit: 100, ...(before ? { before } : {}) })
-        for (const thread of archived.threads.values()) discovered.set(thread.id, thread)
-        const last = archived.threads.last?.()
-        before = archived.hasMore && last?.archiveTimestamp ? new Date(last.archiveTimestamp) : undefined
-        if (!before) break
-      } while (before)
-      for (const thread of discovered.values()) {
+      if (!client?.isReady?.()) return
+      const sessions = await this.persistence.upcomingQuestRecapSessions(today)
+      for (const record of sessions) {
         try {
-          const session = await this.missionThreadDetails(client, thread)
-          if (!session || session.sessionDate <= today) continue
-          await this.withQuestRecapLock(thread.id, async () => {
-            await this.importExistingQuestRecaps(client, thread, session.sessionDate)
-            if (!(await this.persistence.questRecapParts(thread.id)).length) return
-            const lines = await this.buildQuestChoiceLines(client, thread.guildId, session.userIds)
-            await this.updatePublishedQuestRecap(client, thread, session.sessionDate, lines)
+          // Do not try to discover or adopt legacy messages: only stored message IDs are editable.
+          const thread = await client.channels.fetch(record.threadId).catch(() => null)
+          if (!thread?.isThread?.() || thread.guildId !== record.guildId) continue
+          await this.withQuestRecapLock(record.threadId, async () => {
+            const details = await this.missionThreadDetails(client, thread)
+            if (!details || details.sessionDate !== record.sessionDate
+              || details.sessionDate <= this.parisToday()) return
+            const lines = await this.buildQuestChoiceLines(client, record.guildId, details.userIds)
+            await this.updatePublishedQuestRecap(client, thread, details.sessionDate, lines)
           })
         } catch (error) {
-          this.logger.warn('Mise à jour des choix de séance ' + thread.id + ' impossible : ' + String(error))
+          this.logger.warn('Mise à jour des choix de séance ' + record.threadId + ' impossible : ' + String(error))
         }
       }
     }
@@ -685,7 +652,6 @@ export class DiscordCommandsService {
       if (!details) throw new Error('Lance /choix-quete depuis un fil de séance préparé par le bot.')
       if (details.sessionDate <= this.parisToday()) throw new Error('Cette séance a déjà commencé ou est prévue aujourd’hui : son récapitulatif est figé.')
       const lines = await this.buildQuestChoiceLines(interaction.client, interaction.guildId ?? '', details.userIds)
-      await this.importExistingQuestRecaps(interaction.client, interaction.channel, details.sessionDate)
       const existing = await this.persistence.questRecapParts(interaction.channelId)
       this.pendingQuestChoices.set(interaction.id, {
         requesterId: interaction.user.id, channelId: interaction.channelId,
@@ -2892,7 +2858,6 @@ export class DiscordCommandsService {
           throw new Error('Séance passée, aujourd’hui ou participants modifiés : aucune publication.')
         }
         await this.withQuestRecapLock(interaction.channelId, async () => {
-          await this.importExistingQuestRecaps(interaction.client, thread, session.sessionDate)
           const lines = await this.buildQuestChoiceLines(interaction.client, interaction.guildId ?? '', session.userIds)
           await this.updatePublishedQuestRecap(interaction.client, thread, session.sessionDate, lines)
         })

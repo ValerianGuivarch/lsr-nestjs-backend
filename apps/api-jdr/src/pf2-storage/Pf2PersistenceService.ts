@@ -1689,6 +1689,13 @@ export class Pf2PersistenceService implements OnModuleInit {
       await manager.query('CREATE INDEX IF NOT EXISTS idx_pf2_quest_recap_date ON pf2_discord_quest_recap(session_date)')
     })
 
+    // The first 050 release imported old /choix-quete messages automatically.
+    // The MJ has explicitly chosen to delete those himself and start fresh.
+    // Reset *only the recap tracking*, never Discord messages or quest votes.
+    await this.applyMigration('051-discord-quest-recap-fresh-start', async manager => {
+      await manager.query('DELETE FROM pf2_discord_quest_recap')
+    })
+
     await this.assertDatabaseIntegrity(this.dataSource, 'base SQLite après migrations')
   }
 

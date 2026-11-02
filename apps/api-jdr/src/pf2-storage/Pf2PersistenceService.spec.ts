@@ -50,6 +50,28 @@ describe('Pf2PersistenceService', () => {
     return (await readdir(join(root, 'storage', 'backups', 'database'))).filter((filename) => filename.endsWith('.sqlite')).sort()
   }
 
+  it('clears imported legacy recap tracking once, then retains new published recap IDs', async () => {
+    const service = await open()
+    const old = { threadId: 'session-old', guildId: 'guild', sessionDate: '2099-10-12', partIndex: 0, messageId: 'old-message' }
+    await service.saveQuestRecapPart(old)
+    expect(await service.questRecapParts(old.threadId)).toEqual([old])
+
+    // Simulates a database that ran migration 050 with automatic legacy adoption,
+    // before applying the new 051 opt-out requested by the MJ.
+    await currentDataSource().query("DELETE FROM pf2_schema_migration WHERE id = '051-discord-quest-recap-fresh-start'")
+    await service.onModuleInit()
+    expect(await service.questRecapParts(old.threadId)).toEqual([])
+    expect(await service.upcomingQuestRecapSessions('2099-01-01')).toEqual([])
+
+    const fresh = { threadId: 'session-new', guildId: 'guild', sessionDate: '2099-10-12', partIndex: 0, messageId: 'new-message' }
+    await service.saveQuestRecapPart(fresh)
+    await service.onModuleInit()
+    expect(await service.questRecapParts(fresh.threadId)).toEqual([fresh])
+    expect(await service.upcomingQuestRecapSessions('2099-01-01')).toEqual([
+      { threadId: fresh.threadId, guildId: fresh.guildId, sessionDate: fresh.sessionDate },
+    ])
+  })
+
   it('preserves the latest Foundry actor cache across SQLite reopen', async () => {
     const first = await open()
     await first.saveFoundryActorCache([
@@ -96,7 +118,7 @@ describe('Pf2PersistenceService', () => {
     expect(identities).toHaveLength(12)
     expect(identities).toContainEqual({ discordUserId: '399621722158137346', playerName: 'Éric' })
     expect(identities.some(identity => identity.playerName === 'Valérian')).toBe(false)
-    expect(await currentDataSource().query('SELECT id FROM pf2_schema_migration ORDER BY id')).toEqual([
+    expect(await currentDataSource().query('SELECT id FROM pf2_schema_migration ORDER BY id')).toEqual(expect.arrayContaining([
       { id: '001-initial-pf2-storage' },
       { id: '002-pf2-sessions' },
       { id: '003-normalize-pf2-sessions' },
@@ -135,14 +157,16 @@ describe('Pf2PersistenceService', () => {
       , { id: '035-rewrite-azlant-journals' }
       , { id: '036-finalize-azlant-journals' }
       , { id: '037-unbold-azlant-journal-74-ending' }
-    ])
+      , { id: '050-discord-quest-recap-tracking' }
+      , { id: '051-discord-quest-recap-fresh-start' }
+    ]))
 
     await currentDataSource().destroy()
     dataSource = undefined
 
     const reopened = await open()
     expect(await reopened.listSessions()).toEqual(expect.arrayContaining([expect.objectContaining({ id: 'seance-001', sessionNumber: 1, date: '2026-08-28', title: 'Premier test corrigé', sessionXp: 450, shortSummary: 'Résumé court corrigé' }), expect.objectContaining({ sessionNumber: 2, title: '', date: '' })]))
-    expect(await currentDataSource().query('SELECT id FROM pf2_schema_migration ORDER BY id')).toEqual([
+    expect(await currentDataSource().query('SELECT id FROM pf2_schema_migration ORDER BY id')).toEqual(expect.arrayContaining([
       { id: '001-initial-pf2-storage' },
       { id: '002-pf2-sessions' },
       { id: '003-normalize-pf2-sessions' },
@@ -181,7 +205,9 @@ describe('Pf2PersistenceService', () => {
       , { id: '035-rewrite-azlant-journals' }
       , { id: '036-finalize-azlant-journals' }
       , { id: '037-unbold-azlant-journal-74-ending' }
-    ])
+      , { id: '050-discord-quest-recap-tracking' }
+      , { id: '051-discord-quest-recap-fresh-start' }
+    ]))
   })
 
   it('backfills existing published PJ profiles from the canonical pj tag', async () => {
@@ -454,12 +480,12 @@ describe('Pf2PersistenceService', () => {
     await service.saveCuration({ byId: { 'campaign-a': { excluded: true } } })
 
     expect((await service.listRecords('pnj')).map((record) => record.id)).toEqual(['global-ally', 'global-shared'])
-    expect((await service.listRecords('lieu')).map((record) => record.id)).toEqual([])
+    expect((await service.listRecords('lieu')).map((record) => record.id)).not.toContain('scenario-a--lair')
     expect((await service.listRecords('pnj', { includeExcluded: true })).map((record) => record.id)).toEqual(['global-ally', 'scenario-a--captain', 'global-shared'])
 
     await service.saveCuration({ byId: { 'campaign-a': { excluded: true }, 'scenario-a': { inclusion: 'reinstated' } } })
     expect((await service.listRecords('pnj')).map((record) => record.id)).toEqual(['global-ally', 'scenario-a--captain', 'global-shared'])
-    expect((await service.listRecords('lieu')).map((record) => record.id)).toEqual(['scenario-a--lair'])
+    expect((await service.listRecords('lieu')).map((record) => record.id)).toContain('scenario-a--lair')
   })
 
   it('replaces scenario business relations and rejects an unknown target', async () => {

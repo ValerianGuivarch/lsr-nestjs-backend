@@ -99,6 +99,7 @@ describe('DiscordCommandsService', () => {
     const recapParts: any[] = []
     const persistence = {
       questRecapParts: jest.fn(async (_threadId: string) => recapParts.slice()),
+      upcomingQuestRecapSessions: jest.fn(async (_date: string) => [] as Array<{threadId:string;guildId:string;sessionDate:string}>),
       saveQuestRecapPart: jest.fn(async (part: any) => {
         recapParts[part.partIndex] = part
       }),
@@ -206,56 +207,59 @@ describe('DiscordCommandsService', () => {
     expect(t.channel.send).not.toHaveBeenCalled()
   })
 
-  it('migrates an old recap and updates it from fresh quest reactions, without a new post', async () => {
+  it('ignores old recaps and tracks only a newly confirmed publication, updated until midnight', async () => {
     const t = questChoiceTest()
     const questId = 'quest-a'
     t.questMap.set(questId, t.quest(questId, '👑 Le Roi Kobold', [], []))
     const legacy = {
       id: 'legacy-recap', author: { id: 'bot' }, createdTimestamp: 1,
       content: '**[👑 Le Roi Kobold](https://discord.com/channels/guild/quest-a)** : Libre',
-      reactions: { cache: new Map([['old', { emoji: { name: '👑' } }]]), removeAll: jest.fn().mockResolvedValue(undefined) },
-      edit: jest.fn(async (content: { content: string }) => { legacy.content = content.content }),
+      edit: jest.fn(), reactions: { cache: new Map(), removeAll: jest.fn() },
     }
     t.posted.set(legacy.id, legacy)
-    const parent = {
-      name: 'objectif-prochaine-mission', type: ChannelType.GuildText,
-      threads: {
-        fetchActive: jest.fn().mockResolvedValue({ threads: new Map([[t.channel.id, t.channel]]) }),
-        fetchArchived: jest.fn().mockResolvedValue({ threads: new Map() }),
-      },
-    }
-    const client: any = t.client
+    const client = t.client as any
     client.isReady = () => true
-    client.guilds = { fetch: jest.fn().mockResolvedValue({
-      channels: { fetch: jest.fn().mockResolvedValue(new Map([['mission-parent', parent]])) },
-    }) }
-    const previousGuild = process.env.DISCORD_GUILD_ID
-    process.env.DISCORD_GUILD_ID = 'guild'
-    try {
-      await t.service.reconcileQuestRecaps(client)
-      expect(t.channel.send).not.toHaveBeenCalled()
-      expect(t.persistence.saveQuestRecapPart).toHaveBeenCalledWith(
-        expect.objectContaining({ messageId: legacy.id, sessionDate: '2099-10-12' }))
-      expect(legacy.content).toContain('👑 Le Roi Kobold')
-      expect(legacy.content).toContain('réservé par personne, intéresse personne')
-      expect(legacy.reactions.removeAll).toHaveBeenCalledTimes(1)
+    const fetch = client.channels.fetch as jest.Mock
+    fetch.mockImplementation(async (id: string) => id === 'mission-thread' ? t.channel
+      : id === 'mission-parent' ? { name: 'objectif-prochaine-mission' } : t.forum)
+    t.persistence.upcomingQuestRecapSessions = jest.fn(async (_date: string) => {
+      const parts = await t.persistence.questRecapParts('mission-thread')
+      return parts.length ? [{ threadId: t.channel.id, guildId: 'guild', sessionDate: '2099-10-12' }] : []
+    })
 
-      // Recompute from Discord, not a cached list: one new 👍 and one new 🔒.
-      t.questMap.set(questId, t.quest(questId, '👑 Le Roi Kobold', [t.eric.id], [t.guilhem.id]))
-      await t.service.reconcileQuestRecaps(client)
-      expect(legacy.content).toContain('réservé par Guilhem, intéresse Éric')
-      expect(t.channel.send).not.toHaveBeenCalled()
-      expect(legacy.edit).toHaveBeenCalledTimes(2)
+    // The old recap is left intact: nothing is auto-adopted or edited without a new publication.
+    await t.service.reconcileQuestRecaps(client)
+    expect(legacy.edit).not.toHaveBeenCalled()
+    expect(t.persistence.saveQuestRecapPart).not.toHaveBeenCalled()
+    expect(t.channel.send).not.toHaveBeenCalled()
 
-      // Simulate the day beginning at Paris midnight: no further edits.
-      ;(t.service as any).parisToday = () => '2099-10-12'
-      t.questMap.set(questId, t.quest(questId, '👑 Le Roi Kobold', [], []))
-      await t.service.reconcileQuestRecaps(client)
-      expect(legacy.edit).toHaveBeenCalledTimes(2)
-    } finally {
-      if (previousGuild === undefined) delete process.env.DISCORD_GUILD_ID
-      else process.env.DISCORD_GUILD_ID = previousGuild
-    }
+    await t.run()
+    expect(t.channel.send).not.toHaveBeenCalled()
+    await t.service.handleButton({
+      customId: 'pf2-quest-choice:publish:cmd-quest', user: { id: 'mj' },
+      channelId: 'mission-thread', channel: t.channel, client, guildId: 'guild',
+      deferUpdate: jest.fn().mockResolvedValue(undefined),
+      editReply: jest.fn().mockResolvedValue(undefined), reply: jest.fn(),
+    } as never)
+    expect(t.channel.send).toHaveBeenCalledTimes(1)
+    expect(t.persistence.saveQuestRecapPart).toHaveBeenCalledTimes(1)
+    const published = [...t.posted.values()].find(m => m.id !== legacy.id)
+    expect(published.content).toContain('réservé par personne, intéresse personne')
+
+    // The source of truth is the *current* Discord reactions, not a stored list.
+    t.questMap.set(questId, t.quest(questId, '👑 Le Roi Kobold', [t.eric.id], [t.guilhem.id]))
+    await t.service.reconcileQuestRecaps(client)
+    expect(published.content).toContain('réservé par Guilhem, intéresse Éric')
+    expect(published.edit).toHaveBeenCalledTimes(1)
+    expect(legacy.edit).not.toHaveBeenCalled()
+    expect(t.channel.send).toHaveBeenCalledTimes(1)
+
+    // The very first instant of the session's Paris calendar day freezes the recap.
+    ;(t.service as any).parisToday = () => '2099-10-12'
+    t.questMap.set(questId, t.quest(questId, '👑 Le Roi Kobold', [], []))
+    await t.service.reconcileQuestRecaps(client)
+    expect(published.edit).toHaveBeenCalledTimes(1)
+    expect(t.channel.send).toHaveBeenCalledTimes(1)
   })
 
   it('coalesces 👍/🔒 additions and removals, ignoring bot reactions and other messages', async () => {
