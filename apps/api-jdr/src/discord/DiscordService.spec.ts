@@ -133,16 +133,16 @@ describe('Discord forum quest catalogue synchronization', () => {
     ['1555323732329766982', {
       id: '1555323732329766982', parentId: forumId,
       name: 'Le Cartel du Sel', appliedTags: [],
-      archived: false, createdTimestamp: Date.now(),
+      archived: false, locked: false, createdTimestamp: Date.now(),
     }],
     ['1553122329624715294', {
       id: '1553122329624715294', parentId: forumId,
-      name: 'Le tueur de la rue Rose', appliedTags: [completedTagId],
-      archived: true, createdTimestamp: Date.now(),
+      name: 'Le tueur de la rue Rose', appliedTags: [],
+      archived: true, locked: true, createdTimestamp: Date.now(),
     }],
   ])
 
-  const setup = (availableTags = [{ id: completedTagId, name: 'Terminée' }]) => {
+  const setup = (availableTags: Array<{id:string;name:string}> = []) => {
     const persist = { saveDiscordQuestSnapshots: jest.fn().mockResolvedValue(undefined) }
     const forum = {
       id: forumId, type: ChannelType.GuildForum, guildId,
@@ -171,26 +171,30 @@ describe('Discord forum quest catalogue synchronization', () => {
     ]))
   })
 
-  it('marks obsolete-tagged quests without deleting them from Discord and skips the launcher', async () => {
-    const obsoleteId = 'tag-obsolete'
-    const { service, persist, forum } = setup([
-      { id: completedTagId, name: 'Terminée' },
-      { id: obsoleteId, name: 'obsolète' },
-    ])
-    const previous = { ...threads.first()!, appliedTags: [obsoleteId] }
+  it('treats a locked and archived quest as completed without any forum tags, and skips launcher', async () => {
+    const { service, persist, forum } = setup([])
     const launcherId = '1559999999999999999'
     forum.threads.fetchActive.mockResolvedValueOnce({
       threads: new Collection([
-        [previous.id, previous],
-        [launcherId, { id: launcherId, parentId: forumId, name: '📌 Créer une quête', appliedTags: [], createdTimestamp: Date.now() }],
+        ['1555323732329766982', threads.first()!],
+        [launcherId, { id: launcherId, parentId: forumId, name: '📌 Créer une quête', archived: false, locked: false, createdTimestamp: Date.now() }],
       ]),
     })
     ;(service as any).persistence.questLauncherId = jest.fn().mockResolvedValue(launcherId)
     await service.refreshQuestCatalogue()
-    const saved = persist.saveDiscordQuestSnapshots.mock.calls[0][0] as Array<{id:string;obsolete?:boolean}>
-    expect(saved.find(t => t.id === previous.id)?.obsolete).toBe(true)
+    const saved = persist.saveDiscordQuestSnapshots.mock.calls[0][0] as Array<{id:string;completed:boolean;obsolete:boolean}>
     expect(saved.find(t => t.id === launcherId)).toBeUndefined()
-    expect(saved.find(t => t.id === threads.last()!.id)?.obsolete).toBe(false)
+    expect(saved.find(t => t.id === threads.last()!.id)?.completed).toBe(true)
+    expect(saved.every(t => t.obsolete === false)).toBe(true)
+  })
+
+  it('does not consider an automatically archived but unlocked quest completed', async () => {
+    const { service, persist, forum } = setup()
+    const archivedUnlocked = { ...threads.last()!, locked: false, archived: true }
+    forum.threads.fetchArchived.mockResolvedValueOnce({ threads: new Collection([[archivedUnlocked.id, archivedUnlocked]]), hasMore: false })
+    await service.refreshQuestCatalogue()
+    const saved = persist.saveDiscordQuestSnapshots.mock.calls[0][0] as Array<{id:string;completed:boolean}>
+    expect(saved.find(t => t.id === archivedUnlocked.id)?.completed).toBe(false)
   })
 
   it('reconciles all managed quest cards, including after independent map changes', async () => {
@@ -222,16 +226,10 @@ describe('Discord forum quest catalogue synchronization', () => {
     expect(panel.refreshThreadPanel).toHaveBeenCalledWith(thread)
   })
 
-  it('preserves the stored catalogue if the completed tag is not available', async () => {
-    const { service, persist } = setup([])
-    await expect(service.refreshQuestCatalogue()).rejects.toThrow('Terminée')
-    expect(persist.saveDiscordQuestSnapshots).not.toHaveBeenCalled()
-  })
-
-  it('reflects the relaunch when the completed tag is removed', async () => {
-    const { service, persist, forum } = setup()
-    await service.refreshQuestCatalogue()
-    const updated = { ...threads.last(), appliedTags: [] }
+  it('works without configured tags and reflects reopening a closed quest', async () => {
+    const { service, persist, forum } = setup([])
+    await expect(service.refreshQuestCatalogue()).resolves.toBeUndefined()
+    const updated = { ...threads.last()!, locked: false, archived: false }
     forum.threads.fetchArchived.mockResolvedValueOnce({
       threads: new Collection([[updated.id, updated]]), hasMore: false,
     })
@@ -239,4 +237,5 @@ describe('Discord forum quest catalogue synchronization', () => {
     const second = persist.saveDiscordQuestSnapshots.mock.calls[1][0] as Array<{id:string;completed:boolean}>
     expect(second.find(q => q.id === updated.id)?.completed).toBe(false)
   })
+
 })
