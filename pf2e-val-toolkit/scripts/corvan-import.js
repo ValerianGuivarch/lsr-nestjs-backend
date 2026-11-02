@@ -56,7 +56,7 @@ async function makeItems(actor,m){
   await item(actor,'class',async()=>{
     const d=await getDoc('class',m.class);
     // Manually add the class features below; no interactive patron ChoiceSet.
-    d.system.items={};return d;
+    d.system.items={};d.system.keyAbility.selected='int';return d;
   });
   for(const f of m.classFeatures){
     await item(actor,'feature-'+f.id,async()=>{
@@ -149,6 +149,36 @@ function findFolder(m){
   if(f?.type==='Actor'&&f.name==='Divers'&&f.folder?.name==='MJ')return f;
   return game.folders.find(f=>f.type==='Actor'&&f.name==='Divers'&&f.folder?.name==='MJ');
 }
+
+/** Restore original Corvan's level-20 progression without modifying any PJ. */
+export async function repairCorvanProgression(actor,familiar=null){
+  if (!game.user?.isGM || actor?.type!=='character' || actor.name!=='Corvan' ||
+      actor.getFlag(MOD,'corvanSeed')!==true) return false;
+  const witch=actor.items.find(i=>i.type==='class' && i.getFlag(MOD,'seedKey')==='class');
+  if(!witch) throw Error('Corvan : sa classe Witch est introuvable.');
+  if(witch.system.keyAbility?.selected!=='int')await witch.update({'system.keyAbility.selected':'int'});
+  // 356000 is the established level-20 threshold in Career XP. The
+  // historical XPC importer now excludes GM-only scripted Corvan.
+  const changes={};
+  if(Number(actor.getFlag(MOD,'xpc'))!==356000)changes['flags.'+MOD+'.xpc']=356000;
+  if(Number(actor.system.details?.level?.value)!==20)changes['system.details.level.value']=20;
+  if(actor.system.details?.keyability?.value!=='int')changes['system.details.keyability.value']='int';
+  if(Number(actor.system.details?.xp?.value)!==1000)changes['system.details.xp.value']=1000;
+  if(Object.keys(changes).length)await actor.update(changes);
+  if(Number(actor.system.details?.level?.value)!==20)
+    throw Error('La correction de Corvan au niveau 20 n’a pas persisté.');
+  const hpMax=Number(actor.system.attributes?.hp?.max);
+  if(hpMax>0&&Number.isFinite(hpMax) && Number(actor.system.attributes.hp.value)!==hpMax)
+    await actor.update({'system.attributes.hp.value':hpMax});
+  if(familiar){
+    const familiarMax=Number(familiar.system.attributes?.hp?.max);
+    if(familiarMax>0&&Number.isFinite(familiarMax) &&
+        Number(familiar.system.attributes.hp.value)!==familiarMax)
+      await familiar.update({'system.attributes.hp.value':familiarMax});
+  }
+  if(Object.keys(changes).length)console.info('PF2e Val Toolkit | Corvan restauré niveau 20',actor.uuid);
+  return true;
+}
 export async function createCorvan(){
   if(!game.user?.isGM||game.system?.id!=='pf2e')return;
   if(game.users?.activeGM?.id&&game.users.activeGM.id!==game.user.id)return;
@@ -162,12 +192,16 @@ export async function createCorvan(){
     console.warn('Corvan préexistant non créé par le toolkit : import annulé.');
     return;
   }
-  if(actor?.getFlag(MOD,'corvanComplete'))return;
+  if(actor?.getFlag(MOD,'corvanComplete')){
+    const familiar=game.actors.find(a=>a.type==='familiar'&&a.getFlag(MOD,'corvanMaster')===actor.id);
+    await repairCorvanProgression(actor,familiar);
+    return;
+  }
   if(!actor){
     actor=await Actor.create({name:'Corvan',type:'character',folder:folder.id,
       img:m.portrait,ownership:{default:0},
-      flags:{[MOD]:{corvanSeed:true,corvanComplete:false}},
-      system:{details:{level:{value:20},biography:BIO},
+      flags:{[MOD]:{corvanSeed:true,corvanComplete:false,xpc:356000}},
+      system:{details:{level:{value:20},keyability:{value:'int'},xp:{value:1000},biography:BIO},
         build:{attributes:{boosts:{1:['int','dex','con','wis'],5:['int','dex','con','wis'],
           10:['int','dex','con','wis'],15:['int','dex','con','wis'],20:['int','dex','con','wis']}}},
         skills:{occultism:{rank:4},arcana:{rank:3},religion:{rank:3},medicine:{rank:2},
@@ -180,8 +214,7 @@ export async function createCorvan(){
   await actor.update({'system.details.level.value':20});
   await makeItems(actor,m);
   const familiar=await makeFamiliar(actor,m,folder);
-  const hp=actor.system.attributes?.hp?.max;
-  if(Number.isFinite(hp)&&hp>0)await actor.update({'system.attributes.hp.value':hp});
+  await repairCorvanProgression(actor,familiar);
   const spellCount=actor.items.filter(i=>i.type==='spell').length;
   if(spellCount<41||actor.items.filter(i=>i.getFlag(MOD,'seedKey')?.startsWith('class-')).length<10
     ||familiar.items.size<m.familiarAbilities.length)throw Error('Import Corvan incomplet : dons ou sorts manquants.');
