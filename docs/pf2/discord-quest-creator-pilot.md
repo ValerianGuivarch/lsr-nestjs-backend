@@ -37,9 +37,20 @@ Les commandes `/terminer-quete` et `/relancer-quete` restent disponibles et util
 - La commande `/choix-quete` doit être lancée depuis un fil de mission « Séance JJ/MM » du salon `objectif-prochaine-mission` dont le message initial identifie quatre participants. Elle lit les réactions des premiers messages des quêtes non terminées et non obsolètes.
 - Les quatre groupes affichés, dans cet ordre, sont : **(1)** 🔒 d’au moins un participant présent et aucun 🔒 d’un absent ; **(2)** 👍 d’au moins un présent ; **(3)** les autres quêtes ; **(4)** 🔒 d’au moins un absent, même si un présent a mis 👍 ou 🔒. À l’intérieur de chaque groupe : ordre **croissant du nombre total de 👍**, puis date de création et titre pour départager les égalités.
 - Chaque ligne affiche **le titre** (avec lien) suivi de `(réservé par ..., intéresse ...)`. Noms de joueurs issus des identités PF2, **sans mention Discord active**. Le bot ignore ses propres réactions.
-- `/choix-quete` présente une **prévisualisation privée**, avec boutons **Publier les choix** et **Annuler**. Seule une validation du lanceur, dans le même fil et dans les quinze minutes, publie les résultats. La publication est sans mentions et ne doit pas être retentée sans vérifier le fil après un échec partiel.
+- `/choix-quete` présente une **prévisualisation privée**, avec boutons **Publier les choix** (ou **Actualiser les choix** si un récapitulatif existe) et **Annuler**. Seule une validation du lanceur, dans le même fil et dans les quinze minutes, autorise la première publication. La publication est sans mentions. Ne pas retenter une publication partielle sans vérifier le fil.
 - Les quêtes **fermées (archivées ET verrouillées)** sont exclues du classement. Les fils simplement auto-archivés restent éligibles. Aucun tag n'est utilisé. La source de vérité reste Discord ; les réactions ne sont ni reproduites artificiellement ni stockées en double dans SQLite.
 
+
+### Récapitulatifs dynamiques de choix de quêtes (2 novembre 2026)
+
+- Une fois publiée et validée, la liste est **dynamique** : tout ajout/retrait de **👍** ou **🔒** sur le **message initial** d’une quête déclenche un nouveau classement, sans nouveau vote sous le récapitulatif. Les réactions du bot, les autres emojis et les réactions sur les réponses sont ignorés.
+- Le lien `fil de séance → date ISO → IDs des messages récapitulatifs` est conservé dans SQLite, dans `pf2_discord_quest_recap` (migration `050-discord-quest-recap-tracking`). **Aucune duplication des votes** : Discord reste la source de vérité.
+- La séance est authentifiée à partir du message initial créé par le bot dans `#objectif-prochaine-mission`, de ses quatre participants et du marqueur `[PF2-SESSION:YYYY-MM-DD]`. L’ancien format avec année complète et lien `Source :` est aussi reconnu pour compatibilité.
+- **Arrêt strict à minuit heure de Paris le jour de séance** : seules les dates ISO strictement postérieures à la date française du jour sont mises à jour. Ce contrôle s’applique aussi à une validation manuelle tardive. Aucun salon passé ou du jour n’est modifié automatiquement.
+- Au démarrage, puis toutes les cinq minutes, le bot recherche les récapitulatifs **déjà publiés** des séances à venir et répare les mises à jour manquées. Il peut rattacher les messages de l’ancien `/choix-quete` (dont celui du **3 novembre 2026**) à la nouvelle table. Une séance sans récapitulatif (dont celle du **5 novembre** initialement) ne reçoit **aucun nouveau message tant que l’utilisateur n’a pas validé** sa première publication.
+- Les éditions sont sérialisées par séance et les réactions regroupées avec une temporisation de deux secondes. Si un récapitulatif nécessite plusieurs messages, leurs IDs sont conservés ; le bot met à jour les parties et peut ajouter une continuation après une première validation.
+- Les anciennes réactions présentes **sous les récapitulatifs** sont retirées si le bot a les droits ; les votes 👍/🔒 doivent rester sur les **fiches des quêtes**. En cas de suppression manuelle d’un message récapitulatif, le bot ne le recrée pas silencieusement.
+- La réconciliation ne doit jamais éditer des messages non publiés par le bot ni identifier un récapitulatif sur la seule base d'un titre de fil ambigu.
 
 ### Fermeture des quêtes sans tags (2 novembre 2026)
 

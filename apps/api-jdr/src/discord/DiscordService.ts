@@ -45,6 +45,7 @@ export class DiscordService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(DiscordService.name)
   private client: Client | null = null
   private questSyncTimer: ReturnType<typeof setInterval> | null = null
+  private questRecapTimer: ReturnType<typeof setInterval> | null = null
   private questSyncRunning = false
   private stopQuestLinkEvents: (() => void) | null = null
   private readonly questForumId = process.env['PF2_DISCORD_QUEST_FORUM_CHANNEL_ID']?.trim() || '1536259632455094412'
@@ -113,14 +114,18 @@ export class DiscordService implements OnModuleInit, OnModuleDestroy {
       client.on(Events.MessageReactionAdd, (reaction, user) => {
         void this.commands.handleSessionConfirmationReaction(reaction).catch(error =>
           this.logger.warn('Session confirmation sync failed: ' + (error instanceof Error ? error.message : String(error))))
+        void this.commands.handleQuestRecapReaction(reaction, user).catch(error =>
+          this.logger.warn('Quest recap reaction update failed: ' + String(error)))
         if (this.questPilot) {
           void this.questPilot.handleQuestIconReaction(reaction, user).catch(error =>
             this.logger.warn('Quest icon reaction failed: ' + (error instanceof Error ? error.message : String(error))))
         }
       })
-      client.on(Events.MessageReactionRemove, reaction => {
+      client.on(Events.MessageReactionRemove, (reaction, user) => {
         void this.commands.handleSessionConfirmationReaction(reaction).catch(error =>
           this.logger.warn('Session confirmation sync failed: ' + (error instanceof Error ? error.message : String(error))))
+        void this.commands.handleQuestRecapReaction(reaction, user).catch(error =>
+          this.logger.warn('Quest recap reaction removal failed: ' + String(error)))
       })
 
       client.once(Events.ClientReady, (readyClient) =>
@@ -156,6 +161,15 @@ export class DiscordService implements OnModuleInit, OnModuleDestroy {
           this.logger.warn('Quest sync failed (cache preserved): ' + (error instanceof Error ? error.message : String(error))))
       }, 5 * 60 * 1000)
       this.questSyncTimer.unref?.()
+      // Detect previously published recaps (including the old /choix-quete format)
+      // and repair missed reaction events after a restart, without publishing new lists.
+      void this.commands.reconcileQuestRecaps(client).catch(error =>
+        this.logger.warn('Initial quest recap sync failed: ' + String(error)))
+      this.questRecapTimer = setInterval(() => {
+        void this.commands.reconcileQuestRecaps(client).catch(error =>
+          this.logger.warn('Quest recap sync failed: ' + String(error)))
+      }, 5 * 60 * 1000)
+      this.questRecapTimer.unref?.()
 
       this.logger.log(
         'Discord slash commands registered for the configured guild.',
@@ -176,6 +190,8 @@ export class DiscordService implements OnModuleInit, OnModuleDestroy {
     this.stopQuestLinkEvents = null
     if (this.questSyncTimer) clearInterval(this.questSyncTimer)
     this.questSyncTimer = null
+    if (this.questRecapTimer) clearInterval(this.questRecapTimer)
+    this.questRecapTimer = null
     this.client?.destroy()
     this.client = null
   }

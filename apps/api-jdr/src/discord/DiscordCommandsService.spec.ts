@@ -1,4 +1,4 @@
-import { Collection } from 'discord.js'
+import { ChannelType, Collection } from 'discord.js'
 import { DiscordCommandsService } from './DiscordCommandsService'
 
 describe('DiscordCommandsService', () => {
@@ -82,7 +82,7 @@ describe('DiscordCommandsService', () => {
     const missionStarter = {
       author: { id: 'bot' },
       content: [
-        '**Séance du Lundi 12 octobre 2026**',
+        '**Séance du Lundi 12 octobre 2099**',
         'Avec <@eric-123>, <@guilhem-123>, <@arthur-123>, <@mana-123>',
         '',
         'Source : https://discord.com/channels/guild/planning/confirmed',
@@ -96,15 +96,34 @@ describe('DiscordCommandsService', () => {
     guilhem.id = '448500183186145291'
     outsider.id = '688860103629340690'
     const nameMap = new Map([[eric.id, 'Éric'], [guilhem.id, 'Guilhem'], [outsider.id, 'Nico']])
-    const persistence = { listPlayerIdentities: jest.fn().mockResolvedValue([...nameMap.entries()].map(([discordUserId, playerName]) => ({ discordUserId, playerName }))) }
+    const recapParts: any[] = []
+    const persistence = {
+      questRecapParts: jest.fn(async (_threadId: string) => recapParts.slice()),
+      saveQuestRecapPart: jest.fn(async (part: any) => {
+        recapParts[part.partIndex] = part
+      }),
+      listPlayerIdentities: jest.fn().mockResolvedValue([...nameMap.entries()].map(([discordUserId, playerName]) => ({ discordUserId, playerName }))) }
     const fetch = jest.fn(async (id: string) => id === 'mission-parent'
       ? { name: 'objectif-prochaine-mission' }
       : forum)
     const client = { user: { id: 'bot' }, channels: { fetch } }
+    const posted = new Map<string, any>()
+    const send = jest.fn(async (options: {content: string; allowedMentions?: unknown}) => {
+      const id = 'posted-' + (posted.size + 1)
+      const message = {
+        id, author: { id: 'bot' }, content: options.content, createdTimestamp: posted.size + 1,
+        reactions: { cache: new Map(), removeAll: jest.fn() },
+        edit: jest.fn(async (update: {content: string}) => { message.content = update.content }),
+      }
+      posted.set(id, message)
+      return message
+    })
     const channel = {
+      id: 'mission-thread', guildId: 'guild',
       name: 'Séance 12/10', parentId: 'mission-parent', isThread: () => true,
       fetchStarterMessage: jest.fn().mockResolvedValue(missionStarter),
-      send: jest.fn().mockResolvedValue(undefined),
+      messages: { fetch: jest.fn(async (argument: any) => typeof argument === 'string' ? posted.get(argument) : posted) },
+      send,
     }
     const editReply = jest.fn().mockResolvedValue(undefined)
     const followUp = jest.fn().mockResolvedValue(undefined)
@@ -113,7 +132,7 @@ describe('DiscordCommandsService', () => {
     const run = () => service.handle({ commandName: 'choix-quete', id: 'cmd-quest', guildId: 'guild',
       user: { id: 'mj' }, channelId: 'mission-thread', channel, client,
       deferReply, editReply, followUp } as never)
-    return { eric, guilhem, outsider, bot, quest, questMap, forum, channel, editReply, followUp, deferReply, service, run }
+    return { eric, guilhem, outsider, bot, quest, questMap, forum, channel, posted, persistence, client, editReply, followUp, deferReply, service, run }
   }
 
   it('shows a private confirmation preview and ranks locks, present thumbs, others, then absent locks', async () => {
@@ -153,7 +172,7 @@ describe('DiscordCommandsService', () => {
     const editReply = jest.fn().mockResolvedValue(undefined)
     const buttons = {
       customId: 'pf2-quest-choice:publish:cmd-quest', user: { id: 'mj' },
-      channelId: 'mission-thread', channel: t.channel,
+      channelId: 'mission-thread', channel: t.channel, client: t.client, guildId: 'guild',
       deferUpdate: jest.fn().mockResolvedValue(undefined), editReply, reply: jest.fn(),
     }
     await t.service.handleButton(buttons as never)
@@ -185,6 +204,88 @@ describe('DiscordCommandsService', () => {
     await t.run()
     expect(t.editReply.mock.calls[0][0].content).toContain('Lance /choix-quete depuis un fil')
     expect(t.channel.send).not.toHaveBeenCalled()
+  })
+
+  it('migrates an old recap and updates it from fresh quest reactions, without a new post', async () => {
+    const t = questChoiceTest()
+    const questId = 'quest-a'
+    t.questMap.set(questId, t.quest(questId, '👑 Le Roi Kobold', [], []))
+    const legacy = {
+      id: 'legacy-recap', author: { id: 'bot' }, createdTimestamp: 1,
+      content: '**[👑 Le Roi Kobold](https://discord.com/channels/guild/quest-a)** : Libre',
+      reactions: { cache: new Map([['old', { emoji: { name: '👑' } }]]), removeAll: jest.fn().mockResolvedValue(undefined) },
+      edit: jest.fn(async (content: { content: string }) => { legacy.content = content.content }),
+    }
+    t.posted.set(legacy.id, legacy)
+    const parent = {
+      name: 'objectif-prochaine-mission', type: ChannelType.GuildText,
+      threads: {
+        fetchActive: jest.fn().mockResolvedValue({ threads: new Map([[t.channel.id, t.channel]]) }),
+        fetchArchived: jest.fn().mockResolvedValue({ threads: new Map() }),
+      },
+    }
+    const client: any = t.client
+    client.isReady = () => true
+    client.guilds = { fetch: jest.fn().mockResolvedValue({
+      channels: { fetch: jest.fn().mockResolvedValue(new Map([['mission-parent', parent]])) },
+    }) }
+    const previousGuild = process.env.DISCORD_GUILD_ID
+    process.env.DISCORD_GUILD_ID = 'guild'
+    try {
+      await t.service.reconcileQuestRecaps(client)
+      expect(t.channel.send).not.toHaveBeenCalled()
+      expect(t.persistence.saveQuestRecapPart).toHaveBeenCalledWith(
+        expect.objectContaining({ messageId: legacy.id, sessionDate: '2099-10-12' }))
+      expect(legacy.content).toContain('👑 Le Roi Kobold')
+      expect(legacy.content).toContain('réservé par personne, intéresse personne')
+      expect(legacy.reactions.removeAll).toHaveBeenCalledTimes(1)
+
+      // Recompute from Discord, not a cached list: one new 👍 and one new 🔒.
+      t.questMap.set(questId, t.quest(questId, '👑 Le Roi Kobold', [t.eric.id], [t.guilhem.id]))
+      await t.service.reconcileQuestRecaps(client)
+      expect(legacy.content).toContain('réservé par Guilhem, intéresse Éric')
+      expect(t.channel.send).not.toHaveBeenCalled()
+      expect(legacy.edit).toHaveBeenCalledTimes(2)
+
+      // Simulate the day beginning at Paris midnight: no further edits.
+      ;(t.service as any).parisToday = () => '2099-10-12'
+      t.questMap.set(questId, t.quest(questId, '👑 Le Roi Kobold', [], []))
+      await t.service.reconcileQuestRecaps(client)
+      expect(legacy.edit).toHaveBeenCalledTimes(2)
+    } finally {
+      if (previousGuild === undefined) delete process.env.DISCORD_GUILD_ID
+      else process.env.DISCORD_GUILD_ID = previousGuild
+    }
+  })
+
+  it('coalesces 👍/🔒 additions and removals, ignoring bot reactions and other messages', async () => {
+    const t = questChoiceTest()
+    const service = t.service
+    const reconcile = jest.spyOn(service, 'reconcileQuestRecaps').mockResolvedValue(undefined)
+    const channel = { isThread: () => true, parentId: '1536259632455094412' }
+    const fetch = t.client.channels.fetch as jest.Mock
+    fetch.mockImplementation(async (id: string) => id === 'quest-thread' ? channel : null)
+    const reaction: any = { emoji: { name: '👍' }, message: { id: 'quest-thread', channelId: 'quest-thread', client: t.client } }
+    jest.useFakeTimers()
+    try {
+      await service.handleQuestRecapReaction(reaction, { bot: false })
+      reaction.emoji.name = '🔒'
+      await service.handleQuestRecapReaction(reaction, { bot: false })
+      await service.handleQuestRecapReaction(reaction, { bot: true })
+      jest.advanceTimersByTime(2000)
+      await Promise.resolve()
+      expect(reconcile).toHaveBeenCalledTimes(1)
+      reconcile.mockClear()
+      await service.handleQuestRecapReaction(reaction, { bot: false }) // removal uses same handler
+      jest.advanceTimersByTime(2000)
+      await Promise.resolve()
+      expect(reconcile).toHaveBeenCalledTimes(1)
+      reconcile.mockClear()
+      reaction.message.id = 'reply-not-starter'
+      await service.handleQuestRecapReaction(reaction, { bot: false })
+      jest.advanceTimersByTime(2000)
+      expect(reconcile).not.toHaveBeenCalled()
+    } finally { jest.useRealTimers() }
   })
 
   it('finishes a quest with a written report, clears player thumbs and can reopen it', async () => {

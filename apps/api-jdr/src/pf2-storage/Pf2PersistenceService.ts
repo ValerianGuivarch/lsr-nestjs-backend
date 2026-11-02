@@ -57,6 +57,11 @@ export type JournalRevelation = { journalNumber: number; revealedAt: string; rev
 export type JournalDefinitionRecord = { number: number; title: string; content: string; dependencies: number[]; createdAt: string; updatedAt: string }
 export type WikiAccountLink = { discordUserId: string; wikiUsername: string; createdAt: string; updatedAt: string }
 export type Pf2PlayerIdentityRow = { discordUserId: string; playerName: string }
+export type DiscordQuestRecapPart = {
+  threadId: string; guildId: string; sessionDate: string; partIndex: number; messageId: string;
+}
+export type DiscordQuestRecapSession = { threadId: string; guildId: string; sessionDate: string }
+
 export type DiscordQuestSnapshot = {
   id: string; title: string; completed: boolean; archived: boolean; obsolete?: boolean;
   url: string; createdAt: string;
@@ -361,6 +366,27 @@ export class Pf2PersistenceService implements OnModuleInit {
   }
 
   /** The launcher is a forum post, not a quest. Quest cards remain bot-owned across restarts. */
+  async questRecapParts(threadId: string): Promise<DiscordQuestRecapPart[]> {
+    return this.dataSource.query(
+      'SELECT thread_id AS threadId, guild_id AS guildId, session_date AS sessionDate, part_index AS partIndex, message_id AS messageId FROM pf2_discord_quest_recap WHERE thread_id=? ORDER BY part_index',
+      [threadId],
+    )
+  }
+
+  async upcomingQuestRecapSessions(todayParis: string): Promise<DiscordQuestRecapSession[]> {
+    return this.dataSource.query(
+      'SELECT DISTINCT thread_id AS threadId, guild_id AS guildId, session_date AS sessionDate FROM pf2_discord_quest_recap WHERE session_date > ? ORDER BY session_date, thread_id',
+      [todayParis],
+    )
+  }
+
+  async saveQuestRecapPart(record: DiscordQuestRecapPart): Promise<void> {
+    await this.dataSource.query(
+      'INSERT INTO pf2_discord_quest_recap (thread_id, guild_id, session_date, part_index, message_id) VALUES (?, ?, ?, ?, ?) ON CONFLICT(thread_id, part_index) DO UPDATE SET guild_id=excluded.guild_id, session_date=excluded.session_date, message_id=excluded.message_id',
+      [record.threadId, record.guildId, record.sessionDate, record.partIndex, record.messageId],
+    )
+  }
+
   async questUi(threadId: string): Promise<{ threadId: string; kind: 'launcher' | 'quest'; description: string; icon: string; iconPending: boolean } | null> {
     const rows = await this.dataSource.query(
       'SELECT thread_id AS threadId, kind, description, icon, icon_pending AS iconPending FROM pf2_quest_ui WHERE thread_id=?', [threadId],
@@ -1656,6 +1682,11 @@ export class Pf2PersistenceService implements OnModuleInit {
       )`)
       await manager.query('CREATE INDEX IF NOT EXISTS idx_pf2_preparation_session ON pf2_session_preparation(session_id)')
       await manager.query('CREATE INDEX IF NOT EXISTS idx_pf2_preparation_campaign ON pf2_session_preparation(campaign_id)')
+    })
+
+    await this.applyMigration('050-discord-quest-recap-tracking', async manager => {
+      await manager.query('CREATE TABLE IF NOT EXISTS pf2_discord_quest_recap (thread_id TEXT NOT NULL, guild_id TEXT NOT NULL, session_date TEXT NOT NULL, part_index INTEGER NOT NULL CHECK(part_index >= 0), message_id TEXT NOT NULL UNIQUE, created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY(thread_id, part_index))')
+      await manager.query('CREATE INDEX IF NOT EXISTS idx_pf2_quest_recap_date ON pf2_discord_quest_recap(session_date)')
     })
 
     await this.assertDatabaseIntegrity(this.dataSource, 'base SQLite après migrations')

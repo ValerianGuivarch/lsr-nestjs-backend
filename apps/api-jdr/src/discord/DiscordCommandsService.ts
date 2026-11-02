@@ -86,7 +86,11 @@ export class DiscordCommandsService {
   private readonly pendingPreviewPublications = new Map<string, { requesterId: string; content: string; files?: string[] }>()
   private readonly pendingPlayerDraws = new Map<string, { requesterId: string; players: Array<{ id: string; name: string }> }>()
   private readonly pendingQuestCompletions = new Map<string, { requesterId: string; threadId: string }>()
-  private readonly pendingQuestChoices = new Map<string, { requesterId: string; channelId: string; createdAt: number; lines: string[] }>()
+  private readonly pendingQuestChoices = new Map<string, { requesterId: string; channelId: string; createdAt: number; sessionDate: string }>()
+  private readonly questRecapLocks = new Map<string, Promise<void>>()
+  private questRecapDebounce: ReturnType<typeof setTimeout> | null = null
+  private questRecapReconcile: Promise<void> | null = null
+  private questRecapNeedsRerun = false
   private readonly publishingQuestChoices = new Set<string>()
   private readonly choiceForumChannelId = process.env['PF2_DISCORD_QUEST_FORUM_CHANNEL_ID']?.trim() || '1536259632455094412'
   constructor(private readonly persistence: Pf2PersistenceService, private readonly foundry: FoundryRelayService, private readonly playerCodex?: PlayerCodexService, private readonly mediaWiki?: MediaWikiClientService, @Inject(forwardRef(() => DiscordService)) private readonly discord?: DiscordService, private readonly journals?: Pf2JournalsService, private readonly requests?: Pf2RequestService, private readonly questPilot?: DiscordQuestPilotService) {}
@@ -312,26 +316,38 @@ export class DiscordCommandsService {
    * Le message d'origine dans #objectif-prochaine-mission est la source des 4 IDs :
    * pas de déduction à partir des surnoms Discord ni du nom du fil.
    */
-  private async missionThreadPlayerIds(interaction: ChatInputCommandInteraction): Promise<Set<string> | null> {
-    const thread = interaction.channel
-    if (!thread?.isThread() || !/^Séance \d{2}\/\d{2}$/.test(thread.name)) return null
-
-    const parentId = thread.parentId
-    if (!parentId) return null
-    const parent = await interaction.client.channels.fetch(parentId)
-    if (!parent || !('name' in parent) || parent.name !== 'objectif-prochaine-mission') return null
-
+  /** The parent announcement owns the immutable date and attendance of a planned session. */
+  private async missionThreadDetails(client: any, thread: any): Promise<{ userIds: Set<string>; sessionDate: string } | null> {
+    if (!thread?.isThread?.() || !/^Séance \d{2}\/\d{2}$/.test(thread.name) || !thread.parentId) return null
+    const parent = await client.channels.fetch(thread.parentId)
+    if (!parent || parent.name !== 'objectif-prochaine-mission') return null
     const starter = await thread.fetchStarterMessage({ force: true }).catch(() => null)
-    if (!starter || starter.author.id !== interaction.client.user?.id) return null
+    if (!starter || starter.author?.id !== client.user?.id) return null
     const lines = starter.content.split('\n')
-    if (lines.length < 4
-      || !/^\*\*Séance du (?:Lundi|Mardi|Mercredi|Jeudi|Vendredi|Samedi|Dimanche) \d{1,2} \p{L}+ \d{4}\*\*$/u.test(lines[0])
-      || !lines[1]?.startsWith('Avec ')
-      || !lines.some(line => /^Source : https:\/\/discord\.com\/channels\//.test(line))
-    ) return null
-    const mentions = [...lines[1].matchAll(/<@!?(\d+)>/g)].map(match => match[1])
-    if (mentions.length !== 4 || new Set(mentions).size !== 4) return null
-    return new Set(mentions)
+    const group = lines.find((line: string) => line.startsWith('**Groupe proposé :** ') || line.startsWith('Avec '))
+    if (!group) return null
+    const ids = [...group.matchAll(/<@!?(\d+)>/g)].map((m: RegExpMatchArray) => m[1])
+    if (ids.length !== 4 || new Set(ids).size !== 4) return null
+    let date = /^\[PF2-SESSION:(\d{4}-\d{2}-\d{2})\]$/m.exec(starter.content)?.[1] ?? ''
+    // Old bot announcements used a full-year first line plus a Source URL.
+    if (!date && lines.some((line: string) => line.startsWith('Source : https://discord.com/channels/'))) {
+      const match = /^\*\*Séance du (?:Lundi|Mardi|Mercredi|Jeudi|Vendredi|Samedi|Dimanche) (\d{1,2}) (\p{L}+) (\d{4})\*\*$/u.exec(lines[0])
+      if (match) {
+        const month = PLANNING_MONTHS.indexOf(match[2].toLocaleLowerCase('fr') as typeof PLANNING_MONTHS[number]) + 1
+        if (month > 0) date = match[3] + '-' + String(month).padStart(2, '0') + '-' + match[1].padStart(2, '0')
+      }
+    }
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || new Date(date + 'T00:00:00Z').toISOString().slice(0, 10) !== date) return null
+    if (thread.name !== 'Séance ' + date.slice(8, 10) + '/' + date.slice(5, 7)) return null
+    return { userIds: new Set(ids), sessionDate: date }
+  }
+
+  private parisToday(): string {
+    const parts = new Intl.DateTimeFormat('en-GB', {
+      timeZone: 'Europe/Paris', year: 'numeric', month: '2-digit', day: '2-digit',
+    }).formatToParts(new Date())
+    const part = (name: string) => parts.find(value => value.type === name)?.value ?? ''
+    return part('year') + '-' + part('month') + '-' + part('day')
   }
 
   private async questThreadContext(interaction: ChatInputCommandInteraction | ButtonInteraction): Promise<{ thread: any }> {
@@ -425,12 +441,8 @@ export class DiscordCommandsService {
     return chunks
   }
 
-  private async choiceCommand(interaction: ChatInputCommandInteraction): Promise<void> {
-    await interaction.deferReply({ ephemeral: true })
-    try {
-      const missionPlayerIds = await this.missionThreadPlayerIds(interaction)
-      if (!missionPlayerIds) throw new Error('Lance /choix-quete depuis un fil « Séance JJ/MM » de #objectif-prochaine-mission avec ses quatre participants.')
-      const forum = await interaction.client.channels.fetch(this.choiceForumChannelId)
+  private async buildQuestChoiceLines(client: any, guildId: string, missionPlayerIds: Set<string>): Promise<string[]> {
+      const forum = await client.channels.fetch(this.choiceForumChannelId)
       if (!forum || !('threads' in forum) || !forum.threads) throw new Error('Le forum des quêtes est inaccessible.')
 
       const discovered = new Map<string, any>()
@@ -476,8 +488,8 @@ export class DiscordCommandsService {
         quests.push({
           id: thread.id, title: thread.name?.trim() || 'Quête sans titre',
           createdAt: Number(thread.createdTimestamp ?? thread.createdAt?.getTime?.() ?? 0),
-          url: typeof thread.url === 'string' ? thread.url : interaction.guildId
-            ? 'https://discord.com/channels/' + interaction.guildId + '/' + thread.id : null,
+          url: typeof thread.url === 'string' ? thread.url : guildId
+            ? 'https://discord.com/channels/' + guildId + '/' + thread.id : null,
           reserved, interested,
         })
       }
@@ -500,8 +512,7 @@ export class DiscordCommandsService {
         '📋 **Autres quêtes**',
         '⏸️ **Réservées par un joueur absent**',
       ]
-      const lines: string[] = ['**Choix de quête — propositions pour la séance**',
-        '_Prévisualisation privée : rien ne sera publié sans confirmation._', '']
+      const lines: string[] = ['**Choix de quête — propositions pour la séance**', '']
       let lastCategory = -1
       for (const quest of quests) {
         const tier = category(quest)
@@ -523,16 +534,173 @@ export class DiscordCommandsService {
       if (duplicates.length) lines.push('', ...duplicates.map(user =>
         '⚠️ ' + user.name + ' a indiqué son intérêt pour ' + user.count + ' quêtes.'))
 
-      const id = interaction.id
-      this.pendingQuestChoices.set(id, { requesterId: interaction.user.id,
-        channelId: interaction.channelId, createdAt: Date.now(), lines: lines.slice(3) })
+      return lines
+  }
+
+  /** Migrate only bot-authored recaps in an authenticated future session thread. */
+  private async importExistingQuestRecaps(client: any, thread: any, sessionDate: string): Promise<void> {
+    if ((await this.persistence.questRecapParts(thread.id)).length) return
+    const messages = await thread.messages.fetch({ limit: 100 })
+    const existing = [...messages.values()].filter((message: any) =>
+      message.author?.id === client.user?.id
+      && (
+        message.content?.startsWith('**Choix de quête — propositions pour la séance**')
+        || message.content?.startsWith('**Choix de quête — suite ')
+        || /^\*\*\[[^\n]+\]\(https:\/\/discord\.com\/channels\//.test(message.content ?? '')
+      ),
+    ).sort((a: any, b: any) => Number(a.createdTimestamp) - Number(b.createdTimestamp))
+    for (const [index, message] of existing.entries()) {
+      await this.persistence.saveQuestRecapPart({
+        threadId: thread.id, guildId: thread.guildId, sessionDate, partIndex: index, messageId: message.id,
+      })
+    }
+  }
+
+  /** Serialize edits for a session so simultaneous reactions cannot reintroduce stale results. */
+  private async withQuestRecapLock(threadId: string, task: () => Promise<void>): Promise<void> {
+    const previous = this.questRecapLocks.get(threadId) ?? Promise.resolve()
+    const running = previous.catch(() => undefined).then(task)
+    this.questRecapLocks.set(threadId, running)
+    try { await running } finally {
+      if (this.questRecapLocks.get(threadId) === running) this.questRecapLocks.delete(threadId)
+    }
+  }
+
+  private async updatePublishedQuestRecap(client: any, thread: any, date: string, lines: string[]): Promise<void> {
+    if (date <= this.parisToday()) return
+    const parts = await this.persistence.questRecapParts(thread.id)
+    const chunks = this.questChoiceChunks(lines).map((chunk, index, all) =>
+      index ? '**Choix de quête — suite ' + (index + 1) + '/' + all.length + '**\n' + chunk : chunk)
+    if (!parts.length) {
+      // Only the explicit confirmation path may create the first recap.
+      for (const [partIndex, content] of chunks.entries()) {
+        if (date <= this.parisToday()) return
+        const message = await thread.send({ content, allowedMentions: { parse: [] } })
+        await this.persistence.saveQuestRecapPart({
+          threadId: thread.id, guildId: thread.guildId, sessionDate: date, partIndex, messageId: message.id,
+        })
+      }
+      return
+    }
+    let existingCount = 0
+    for (const part of parts) {
+      if (date <= this.parisToday()) return
+      const message = await thread.messages.fetch(part.messageId).catch(() => null)
+      if (!message || message.author?.id !== client.user?.id) {
+        this.logger.warn('Récapitulatif Discord introuvable ou non modifiable : ' + part.messageId)
+        return // Never silently recreate a removed recap.
+      }
+      existingCount++
+      const content = chunks[part.partIndex] ?? '_Cette partie du récapitulatif a été regroupée dans les messages précédents._'
+      if (message.content !== content) await message.edit({ content, allowedMentions: { parse: [] } })
+      // Old recap messages had emoji reactions for voting; voting now happens only on quests.
+      if (message.reactions?.cache?.size) {
+        await message.reactions.removeAll().catch((error: unknown) =>
+          this.logger.warn('Impossible de retirer les anciennes réactions du récapitulatif : ' + String(error)))
+      }
+    }
+    for (let partIndex = existingCount; partIndex < chunks.length; partIndex++) {
+      if (date <= this.parisToday()) return
+      // Extra continuation chunks are allowed only for an already confirmed publication.
+      const message = await thread.send({ content: chunks[partIndex], allowedMentions: { parse: [] } })
+      await this.persistence.saveQuestRecapPart({
+        threadId: thread.id, guildId: thread.guildId, sessionDate: date, partIndex, messageId: message.id,
+      })
+    }
+  }
+
+  /** Reattach legacy recaps, and refresh all published future sessions; never publish unconfirmed sessions. */
+  async reconcileQuestRecaps(client: any): Promise<void> {
+    if (this.questRecapReconcile) {
+      this.questRecapNeedsRerun = true
+      return this.questRecapReconcile
+    }
+    const task = async () => {
+      const today = this.parisToday()
+      const guildId = process.env['DISCORD_GUILD_ID']?.trim()
+      if (!guildId || !client?.isReady?.()) return
+      const guild = await client.guilds.fetch(guildId)
+      const channels = await guild.channels.fetch()
+      const parent = [...channels.values()].find((channel: any) =>
+        channel?.type === ChannelType.GuildText && channel.name === 'objectif-prochaine-mission')
+      if (!parent || !('threads' in parent)) return
+      const discovered = new Map<string, any>()
+      const active = await (parent as any).threads.fetchActive()
+      for (const thread of active.threads.values()) discovered.set(thread.id, thread)
+      let before: Date | undefined
+      do {
+        const archived = await (parent as any).threads.fetchArchived({ type: 'public', limit: 100, ...(before ? { before } : {}) })
+        for (const thread of archived.threads.values()) discovered.set(thread.id, thread)
+        const last = archived.threads.last?.()
+        before = archived.hasMore && last?.archiveTimestamp ? new Date(last.archiveTimestamp) : undefined
+        if (!before) break
+      } while (before)
+      for (const thread of discovered.values()) {
+        try {
+          const session = await this.missionThreadDetails(client, thread)
+          if (!session || session.sessionDate <= today) continue
+          await this.withQuestRecapLock(thread.id, async () => {
+            await this.importExistingQuestRecaps(client, thread, session.sessionDate)
+            if (!(await this.persistence.questRecapParts(thread.id)).length) return
+            const lines = await this.buildQuestChoiceLines(client, thread.guildId, session.userIds)
+            await this.updatePublishedQuestRecap(client, thread, session.sessionDate, lines)
+          })
+        } catch (error) {
+          this.logger.warn('Mise à jour des choix de séance ' + thread.id + ' impossible : ' + String(error))
+        }
+      }
+    }
+    const running = task()
+    this.questRecapReconcile = running
+    try { await running } finally {
+      if (this.questRecapReconcile === running) this.questRecapReconcile = null
+      if (this.questRecapNeedsRerun) {
+        this.questRecapNeedsRerun = false
+        void this.reconcileQuestRecaps(client).catch(error =>
+          this.logger.warn('Relance de réconciliation des choix impossible : ' + String(error)))
+      }
+    }
+  }
+
+  /** Listen to both add and remove. Debouncing coalesces multiple player changes. */
+  async handleQuestRecapReaction(reaction: MessageReaction | PartialMessageReaction, user: { bot?: boolean } | null): Promise<void> {
+    if (user?.bot || (reaction.emoji.name !== '👍' && reaction.emoji.name !== '🔒')) return
+    if (reaction.message.id !== reaction.message.channelId) return
+    const client = reaction.message.client
+    const channel = await client.channels.fetch(reaction.message.channelId).catch(() => null)
+    if (!channel?.isThread?.() || channel.parentId !== this.choiceForumChannelId) return
+    if (this.questRecapDebounce) clearTimeout(this.questRecapDebounce)
+    this.questRecapDebounce = setTimeout(() => {
+      this.questRecapDebounce = null
+      void this.reconcileQuestRecaps(client).catch(error =>
+        this.logger.warn('Synchronisation des choix de quêtes impossible : ' + String(error)))
+    }, 2000)
+    this.questRecapDebounce.unref?.()
+  }
+
+  private async choiceCommand(interaction: ChatInputCommandInteraction): Promise<void> {
+    await interaction.deferReply({ ephemeral: true })
+    try {
+      const details = await this.missionThreadDetails(interaction.client, interaction.channel)
+      if (!details) throw new Error('Lance /choix-quete depuis un fil de séance préparé par le bot.')
+      if (details.sessionDate <= this.parisToday()) throw new Error('Cette séance a déjà commencé ou est prévue aujourd’hui : son récapitulatif est figé.')
+      const lines = await this.buildQuestChoiceLines(interaction.client, interaction.guildId ?? '', details.userIds)
+      await this.importExistingQuestRecaps(interaction.client, interaction.channel, details.sessionDate)
+      const existing = await this.persistence.questRecapParts(interaction.channelId)
+      this.pendingQuestChoices.set(interaction.id, {
+        requesterId: interaction.user.id, channelId: interaction.channelId,
+        createdAt: Date.now(), sessionDate: details.sessionDate,
+      })
       const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
-        new ButtonBuilder().setCustomId('pf2-quest-choice:publish:' + id).setLabel('Publier les choix').setStyle(ButtonStyle.Success),
-        new ButtonBuilder().setCustomId('pf2-quest-choice:cancel:' + id).setLabel('Annuler').setStyle(ButtonStyle.Secondary),
+        new ButtonBuilder().setCustomId('pf2-quest-choice:publish:' + interaction.id).setLabel(existing.length ? 'Actualiser les choix' : 'Publier les choix').setStyle(ButtonStyle.Success),
+        new ButtonBuilder().setCustomId('pf2-quest-choice:cancel:' + interaction.id).setLabel('Annuler').setStyle(ButtonStyle.Secondary),
       )
-      const chunks = this.questChoiceChunks(lines)
-      await interaction.editReply({ content: chunks[0], components: [row], allowedMentions: { parse: [] } })
-      for (const chunk of chunks.slice(1)) await interaction.followUp({ content: chunk, ephemeral: true, allowedMentions: { parse: [] } })
+      const note = existing.length
+        ? 'Un récapitulatif existe déjà : la validation mettra à jour ses messages, sans nouveau vote sous le récapitulatif.'
+        : 'Après publication, les votes sur les fiches de quêtes actualiseront automatiquement ces messages.'
+      const preview = this.questChoiceChunks(['**Prévisualisation privée — aucune publication sans validation**', note, '', ...lines])
+      await interaction.editReply({ content: preview[0], components: [row], allowedMentions: { parse: [] } })
+      for (const chunk of preview.slice(1)) await interaction.followUp({ content: chunk, ephemeral: true, allowedMentions: { parse: [] } })
     } catch (error) {
       await interaction.editReply({ content: 'Lecture des choix impossible : ' + (error instanceof Error ? error.message : String(error)), components: [] })
     }
@@ -2716,17 +2884,19 @@ export class DiscordCommandsService {
       }
       this.publishingQuestChoices.add(id)
       await interaction.deferUpdate()
-      this.pendingQuestChoices.delete(id) // Never resend a partial publication after failure.
+      this.pendingQuestChoices.delete(id)
       try {
-        const channel = interaction.channel
-        if (!channel || !('send' in channel) || typeof channel.send !== 'function') {
-          throw new Error('Le salon de publication est introuvable.')
+        const thread = interaction.channel
+        const session = await this.missionThreadDetails(interaction.client, thread)
+        if (!session || session.sessionDate !== pending.sessionDate || session.sessionDate <= this.parisToday()) {
+          throw new Error('Séance passée, aujourd’hui ou participants modifiés : aucune publication.')
         }
-        const chunks = this.questChoiceChunks(['**Choix de quête — propositions pour la séance**', ...pending.lines])
-        for (const content of chunks) {
-          await (channel as any).send({ content, allowedMentions: { parse: [] } })
-        }
-        await interaction.editReply({ content: '✅ Liste des quêtes publiée dans ce fil.', components: [], allowedMentions: { parse: [] } })
+        await this.withQuestRecapLock(interaction.channelId, async () => {
+          await this.importExistingQuestRecaps(interaction.client, thread, session.sessionDate)
+          const lines = await this.buildQuestChoiceLines(interaction.client, interaction.guildId ?? '', session.userIds)
+          await this.updatePublishedQuestRecap(interaction.client, thread, session.sessionDate, lines)
+        })
+        await interaction.editReply({ content: '✅ Récapitulatif publié ou actualisé. Les réactions 👍 et 🔒 sur les quêtes le mettront à jour automatiquement jusqu’à la veille de séance.', components: [], allowedMentions: { parse: [] } })
       } catch (error) {
         await interaction.editReply({ content: 'Publication incomplète ou impossible : ' +
           (error instanceof Error ? error.message : String(error)) +
