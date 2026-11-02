@@ -444,6 +444,22 @@ export class DiscordCommandsService {
     return chunks
   }
 
+  /** Fetch independent Discord quest threads in a small bounded pool.
+   *  Limits parallel REST work without relying on stale caches. */
+  private async readQuestsConcurrently<T, R>(
+    entries: readonly T[], read: (entry: T) => Promise<R>, limit = 4,
+  ): Promise<R[]> {
+    const results = new Array<R>(entries.length)
+    let next = 0
+    await Promise.all(Array.from({ length: Math.min(limit, entries.length) }, async () => {
+      while (next < entries.length) {
+        const index = next++
+        results[index] = await read(entries[index])
+      }
+    }))
+    return results
+  }
+
   private async buildQuestChoiceLines(client: any, guildId: string, missionPlayerIds: Set<string>): Promise<string[]> {
       const forum = await client.channels.fetch(this.choiceForumChannelId)
       if (!forum || !('threads' in forum) || !forum.threads) throw new Error('Le forum des quêtes est inaccessible.')
@@ -468,10 +484,13 @@ export class DiscordCommandsService {
       const nameOf = (id: string): string => playerNames.get(id) ?? pf2PlayerByDiscordId(id)?.name ?? 'Joueur inconnu'
       const reservationsByUser = new Map<string, { name: string; count: number }>()
 
-      for (const thread of discovered.values()) {
-        if (thread.id === launcherId || (thread.archived && thread.locked)) continue
+      // One Discord thread is independent of the others. Limit reads to four
+      // simultaneous quests, rather than waiting for each quest sequentially.
+      const candidates = [...discovered.values()].filter(thread =>
+        thread.id !== launcherId && !(thread.archived && thread.locked))
+      const fetched = await this.readQuestsConcurrently(candidates, async thread => {
         const starter = await thread.fetchStarterMessage({ force: true }).catch(() => null)
-        if (!starter) continue
+        if (!starter) return null
         const reactions = typeof starter.reactions.fetch === 'function'
           ? await starter.reactions.fetch().catch(() => starter.reactions.cache)
           : starter.reactions.cache
@@ -484,15 +503,20 @@ export class DiscordCommandsService {
             .sort((a, b) => a.name.localeCompare(b.name, 'fr'))
         }
         const [reserved, interested] = await Promise.all([voters('🔒'), voters('👍')])
-        for (const user of reserved) {
-          const previous = reservationsByUser.get(user.id)
-          reservationsByUser.set(user.id, { name: user.name, count: (previous?.count ?? 0) + 1 })
-        }
-        quests.push({
+        return {
           id: thread.id, title: thread.name?.trim() || 'Quête sans titre',
           createdAt: Number(thread.createdTimestamp ?? thread.createdAt?.getTime?.() ?? 0),
           reserved, interested,
-        })
+        } as QuestChoice
+      })
+
+      for (const quest of fetched) {
+        if (!quest) continue
+        for (const user of quest.reserved) {
+          const previous = reservationsByUser.get(user.id)
+          reservationsByUser.set(user.id, { name: user.name, count: (previous?.count ?? 0) + 1 })
+        }
+        quests.push(quest)
       }
 
       // A reservation from an absent player is a veto for this session, even when others are interested.
@@ -526,7 +550,7 @@ export class DiscordCommandsService {
           quest.reserved.length ? 'réservé par ' + quest.reserved.map(p => p.name).join(', ') : '',
           quest.interested.length ? 'intéresse ' + quest.interested.map(p => p.name).join(', ') : '',
         ].filter(Boolean)
-        lines.push('- <#' + quest.id + '>' + (details.length ? ' (' + details.join(', ') + ')' : ''))
+        lines.push('- **' + quest.title + '** (🔗 <#' + quest.id + '>)' + (details.length ? ' (' + details.join(', ') + ')' : ''))
       }
       if (!quests.length) lines.push('Aucune quête disponible dans le forum.')
 
@@ -687,13 +711,14 @@ export class DiscordCommandsService {
       before = archived.hasMore && last?.archiveTimestamp ? new Date(last.archiveTimestamp) : undefined
       if (!before) break
     } while (before)
-    const lockedQuests: string[] = []
-    for (const thread of found.values()) {
-      if (thread.archived && thread.locked) continue
+    const candidates = [...found.values()].filter(thread => !(thread.archived && thread.locked))
+    const reservations = await this.readQuestsConcurrently(candidates, async thread => {
       const users = await this.questLockHolders(thread).catch(() => null)
-      if (!users) return // If votes cannot be read, avoid a false accusation.
-      if (users.some(holder => holder.id === user.id)) lockedQuests.push(thread.id)
-    }
+      if (!users) return null
+      return { id: thread.id, hasLock: users.some(holder => holder.id === user.id) }
+    })
+    if (reservations.some(result => !result)) return // Incomplete Discord reads: never falsely warn.
+    const lockedQuests = reservations.filter(result => result?.hasLock).map(result => result!.id)
     if (lockedQuests.length < 2 || !lockedQuests.includes(channel.id)) return
     this.recentQuestLockWarnings.set(key, Date.now())
     if (this.recentQuestLockWarnings.size > 300) this.recentQuestLockWarnings.clear()

@@ -136,6 +136,33 @@ describe('DiscordCommandsService', () => {
     return { eric, guilhem, outsider, bot, quest, questMap, forum, channel, posted, persistence, client, editReply, followUp, deferReply, service, run }
   }
 
+  it('limits parallel Discord quest reads to four workers without changing their order', async () => {
+    const service = new DiscordCommandsService({} as never, {} as never)
+    const releases: Array<() => void> = []
+    let inFlight = 0
+    let maxInFlight = 0
+    const entries = Array.from({ length: 13 }, (_, i) => i)
+    const job = (service as any).readQuestsConcurrently(entries, async (index: number) => {
+      inFlight++
+      maxInFlight = Math.max(maxInFlight, inFlight)
+      await new Promise<void>(resolve => { releases.push(resolve) })
+      inFlight--
+      return index * 2
+    })
+    await Promise.resolve()
+    expect(releases).toHaveLength(4)
+    expect(maxInFlight).toBe(4)
+    for (let i = 0; i < entries.length; i++) {
+      expect(releases[i]).toBeDefined()
+      releases[i]()
+      await Promise.resolve()
+      await Promise.resolve()
+    }
+    expect(await job).toEqual(entries.map(i => i * 2))
+    expect(maxInFlight).toBe(4)
+    expect(inFlight).toBe(0)
+  })
+
   it('shows a private confirmation preview and ranks locks, present thumbs, others, then absent locks', async () => {
     const t = questChoiceTest()
     t.questMap.set('other', t.quest('other', '📜 Sans intérêt', [], []))
@@ -157,9 +184,9 @@ describe('DiscordCommandsService', () => {
     expect(index('<#one>')).toBeLessThan(index('<#many>'))
     expect(index('<#many>')).toBeLessThan(index('<#other>'))
     expect(index('<#other>')).toBeLessThan(index('<#absent>'))
-    expect(allText).toContain('<#reserved> (réservé par Guilhem)')
-    expect(allText).toContain('- <#other>')
-    expect(allText).not.toContain('<#other> (')
+    expect(allText).toContain('**👑 Réservée aux présents** (🔗 <#reserved>) (réservé par Guilhem)')
+    expect(allText).toContain('- **📜 Sans intérêt** (🔗 <#other>)')
+    expect(allText).not.toContain('<#other>) (')
     expect(allText).not.toContain('réservé par personne')
     expect(allText).not.toContain('intéresse personne')
     expect(allText).not.toContain('https://discord.com/channels/')
@@ -174,7 +201,7 @@ describe('DiscordCommandsService', () => {
     expect(allText.indexOf('📋 **Autres**')).toBeLessThan(allText.indexOf('🚫 **Réservées par les absents**'))
     expect(allText).not.toContain('\\n\\n')
     expect(allText).not.toContain('Choix de quête — suite')
-    expect(allText).toContain('<#absent> (réservé par Nico, intéresse Éric)')
+    expect(allText).toContain('**🗝️ Réservée par absent** (🔗 <#absent>) (réservé par Nico, intéresse Éric)')
     expect(allText).not.toContain('<#done>')
     expect(allText).not.toContain('<#obsolete>')
     expect(allText).not.toContain('<@')
@@ -192,9 +219,10 @@ describe('DiscordCommandsService', () => {
     const firstPreview = t.editReply.mock.calls[0][0]
     const furtherPreviews = t.followUp.mock.calls.map(call => call[0])
     expect(t.deferReply).toHaveBeenCalledWith({ ephemeral: true })
-    expect(furtherPreviews).toHaveLength(1)
+    expect(furtherPreviews.length).toBeGreaterThanOrEqual(1)
     expect(firstPreview.components).toEqual([])
-    expect(furtherPreviews[0].components).toHaveLength(1)
+    expect(furtherPreviews.at(-1).components).toHaveLength(1)
+    for (const intermediate of furtherPreviews.slice(0, -1)) expect(intermediate.components).toEqual([])
     expect(furtherPreviews[0].ephemeral).toBe(true)
     expect(firstPreview.content).toContain('**Choix de quête**')
     for (const part of [firstPreview, ...furtherPreviews]) {
@@ -212,10 +240,23 @@ describe('DiscordCommandsService', () => {
       deferUpdate: jest.fn().mockResolvedValue(undefined),
       editReply: jest.fn().mockResolvedValue(undefined), reply: jest.fn(),
     } as never)
-    expect(t.channel.send).toHaveBeenCalledTimes(2)
-    expect(t.persistence.saveQuestRecapPart).toHaveBeenCalledTimes(2)
+    expect(t.channel.send).toHaveBeenCalledTimes(furtherPreviews.length + 1)
+    expect(t.persistence.saveQuestRecapPart).toHaveBeenCalledTimes(furtherPreviews.length + 1)
     const publishedParts = t.channel.send.mock.calls.map(call => call[0].content)
-    expect(publishedParts).toEqual([firstPreview.content, furtherPreviews[0].content])
+    expect(publishedParts).toEqual([firstPreview.content, ...furtherPreviews.map(part => part.content)])
+  })
+
+  it('shows the full quest title even when Discord truncates native thread mentions', async () => {
+    const t = questChoiceTest()
+    const title = '⚒️ La disparition de la machine du quartier des Précipices'
+    t.questMap.set('long-title', t.quest('long-title', title, [t.eric.id], []))
+    await t.run()
+    const preview = t.editReply.mock.calls[0][0]
+    expect(preview.content).toContain('**' + title + '**')
+    expect(preview.content).toContain('(🔗 <#long-title>)')
+    expect(preview.content).toContain('intéresse Éric')
+    expect(preview.content).not.toContain('https://discord.com/channels/')
+    expect(t.channel.send).not.toHaveBeenCalled()
   })
 
   it('shows only nonempty category headings in a single short recap', async () => {
@@ -223,7 +264,7 @@ describe('DiscordCommandsService', () => {
     t.questMap.set('one', t.quest('one', '👑 Le Roi Kobold', [], [t.guilhem.id]))
     await t.run()
     const preview = t.editReply.mock.calls[0][0]
-    expect(preview.content).toBe('**Choix de quête**\n👍 **Intérêt des présents**\n- <#one> (réservé par Guilhem)')
+    expect(preview.content).toBe('**Choix de quête**\n👍 **Intérêt des présents**\n- **👑 Le Roi Kobold** (🔗 <#one>) (réservé par Guilhem)')
     expect(preview.components).toHaveLength(1)
     expect(t.followUp).not.toHaveBeenCalled()
     expect(t.channel.send).not.toHaveBeenCalled()
@@ -309,7 +350,7 @@ describe('DiscordCommandsService', () => {
     expect(t.channel.send).toHaveBeenCalledTimes(1)
     expect(t.persistence.saveQuestRecapPart).toHaveBeenCalledTimes(1)
     const published = [...t.posted.values()].find(m => m.id !== legacy.id)
-    expect(published.content).toContain('- <#quest-a>')
+    expect(published.content).toContain('- **👑 Le Roi Kobold** (🔗 <#quest-a>)')
 
     // The source of truth is the *current* Discord reactions, not a stored list.
     t.questMap.set(questId, t.quest(questId, '👑 Le Roi Kobold', [t.eric.id], [t.guilhem.id]))
@@ -398,7 +439,7 @@ describe('DiscordCommandsService', () => {
     expect(text).toContain('Plusieurs cadenas')
     expect(text).toContain('Guilhem (2 🔒)')
     expect(text).not.toContain('Éric (2')
-    expect(text).toContain('<#a> (réservé par Guilhem, intéresse Éric)')
+    expect(text).toContain('**Quête A** (🔗 <#a>) (réservé par Guilhem, intéresse Éric)')
   })
 
   it('coalesces 👍/🔒 additions and removals, ignoring bot reactions and other messages', async () => {

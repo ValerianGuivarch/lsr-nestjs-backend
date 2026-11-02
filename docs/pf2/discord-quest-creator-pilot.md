@@ -36,7 +36,7 @@ Les commandes `/terminer-quete` et `/relancer-quete` restent disponibles et util
 - Les **18 quêtes bot présentes le 2 novembre** ont été mises à jour directement sur Discord ; le sujet épinglé « Créer une quête » reste intact. Les fiches sont régénérées depuis le modèle du bot : le déploiement de ce code est nécessaire à la persistance des nouvelles consignes.
 - La commande `/choix-quete` doit être lancée depuis un fil de mission « Séance JJ/MM » du salon `objectif-prochaine-mission` dont le message initial identifie quatre participants. Elle lit les réactions des premiers messages des quêtes non terminées et non obsolètes.
 - **Trois catégories visibles** : **👍 Intérêt des présents** (les 🔒 d'un présent sans 🔒 d'un absent apparaissent en premier, avant les simples 👍), **📋 Autres** et **🚫 Réservées par les absents**. Elles ne sont affichées que si des quêtes y figurent, sans ligne vide entre les groupes. Le tri interne reste inchangé : quatre niveaux de priorité (cadenas présent, intérêts des présents, autres, cadenas absent), puis nombre croissant de 👍, date et titre pour départager.
-- Chaque ligne affiche **le titre** (avec lien) suivi de `(réservé par ..., intéresse ...)`. Noms de joueurs issus des identités PF2, **sans mention Discord active**. Le bot ignore ses propres réactions.
+- Chaque ligne affiche le **titre intégral en gras** suivi d'un lien Discord natif séparé (🔗) : Discord tronque parfois ses mentions. Les préférences entre parenthèses ne sont présentes que si un vote existe. Noms issus des identités PF2, sans ping.
 - /choix-quete présente une **prévisualisation privée identique à la version publiée**. Si tout tient dans la limite Discord, **un seul message** est affiché et publié. Sinon les parties sont réparties sans intitulé « suite », et les boutons **Publier ou Actualiser** et **Annuler** se trouvent uniquement sur le **dernier message privé**. Une seule validation publie la totalité des parties ; aucun message n'est publié avant celle-ci.
 - Les quêtes **fermées (archivées ET verrouillées)** sont exclues du classement. Les fils simplement auto-archivés restent éligibles. Aucun tag n'est utilisé. La source de vérité reste Discord ; les réactions ne sont ni reproduites artificiellement ni stockées en double dans SQLite.
 
@@ -47,14 +47,14 @@ Les commandes `/terminer-quete` et `/relancer-quete` restent disponibles et util
 - Le lien `fil de séance → date ISO → IDs des messages récapitulatifs` est conservé dans SQLite, dans `pf2_discord_quest_recap` (migration `050-discord-quest-recap-tracking`). **Aucune duplication des votes** : Discord reste la source de vérité.
 - La séance est authentifiée à partir du message initial créé par le bot dans `#objectif-prochaine-mission`, de ses quatre participants et du marqueur `[PF2-SESSION:YYYY-MM-DD]`. L’ancien format avec année complète et lien `Source :` est aussi reconnu pour compatibilité.
 - **Arrêt strict à minuit heure de Paris le jour de séance** : seules les dates ISO strictement postérieures à la date française du jour sont mises à jour. Ce contrôle s’applique aussi à une validation manuelle tardive. Aucun salon passé ou du jour n’est modifié automatiquement.
-- Au démarrage puis toutes les cinq minutes, le bot actualise **uniquement les récapitulatifs enregistrés dans SQLite après confirmation d'une nouvelle publication**. Les anciens récapitulatifs (dont celui du **3 novembre 2026**) ne sont **ni repris, ni édités, ni supprimés automatiquement**. Le MJ les supprimera lui-même et relancera /choix-quete. Une séance sans récapitulatif enregistré ne reçoit aucun nouveau message sans validation explicite.
+- Au démarrage puis toutes les cinq minutes, le bot actualise **uniquement les récapitulatifs suivis en SQLite**. Les anciens messages non enregistrés ne sont pas repris. Le **nouveau récapitulatif du 3 novembre 2026** est désormais suivi (vérifié le 2 novembre) et peut être édité automatiquement jusqu'à minuit heure de Paris précédant la séance.
 - Les éditions sont sérialisées par séance et les réactions regroupées avec deux secondes de temporisation. Les messages publiés sont conservés en SQLite et les actualisations automatiques les **éditent sans republier**. Seule une nouvelle confirmation peut autoriser un message supplémentaire.
 - Les **nouveaux récapitulatifs ne reçoivent aucune réaction de vote** : les pouces et cadenas restent sur les **fiches des quêtes**. Le bot laisse intégralement intacts les anciens messages et leurs réactions. Si un récapitulatif suivi a été supprimé manuellement, le bot ne le recrée jamais silencieusement.
 - La réconciliation ne doit jamais éditer des messages non publiés par le bot ni identifier un récapitulatif sur la seule base d'un titre de fil ambigu.
 
 ### Affichage compact, cadenas uniques et notifications (2 novembre 2026)
 
-- Les noms des quêtes dans /choix-quete utilisent une **mention native du fil Discord**, sous la forme de lien compact, au lieu d'une URL Markdown longue et visible sur mobile.
+- Les noms des quêtes dans /choix-quete sont **affichés en entier et en gras**, avec une mention Discord native séparée (🔗) pour garder le lien cliquable même si Discord tronque sa propre mention.
 - Chaque quête affiche uniquement les préférences présentes : (réservé par Éric, intéresse Sameh) si les deux existent, (réservé par Éric) ou (intéresse Sameh) si un seul existe, et **aucune parenthèse** s'il n'y a aucun vote. Le tri reste inchangé : 🔒 d'un présent sans cadenas d'absent, puis 👍 présents (nombre croissant de pouces), les autres (nombre croissant), puis 🔒 d'un absent.
 - Les 👍 sont **illimités**. L'alerte en fin de récapitulatif signale uniquement les joueurs ayant réservé **plusieurs quêtes avec 🔒**.
 - Lorsqu'un joueur ajoute un 🔒 sur une deuxième quête non terminée, le bot envoie un avertissement **dans son salon PJ privé**, avec une mention Discord ciblée, et lui demande de ne conserver qu'un cadenas. L'identification du salon repose sur la jointure SQLite entre pf2_player_character_owner et pf2_player_discord_channel, sans inférer le salon depuis un pseudonyme. S'il n'a pas de salon associé (ex. Valou), aucune notification n'est envoyée.
@@ -65,10 +65,17 @@ Les commandes `/terminer-quete` et `/relancer-quete` restent disponibles et util
 ### Affichage minimaliste de /choix-quete
 
 - **Une seule liste** triée, avec **trois sous-titres courts** et sans espaces vides superflus. Les catégories sans quête n'apparaissent pas. Les réservations des joueurs présents sont en tête de **👍 Intérêt des présents**, avant les quêtes seulement appréciées.
-- Chaque ligne se limite au **lien Discord natif de la quête** (emoji et nom) et, si nécessaire, aux noms de réservation et d'intérêt entre parenthèses. S'il n'existe aucun vote, aucune parenthèse.
+- Chaque ligne affiche le **titre complet en gras**, suivi du lien Discord séparé et, si nécessaire, des réservations et intérêts entre parenthèses. Sans vote, aucune parenthèse de préférences.
 - Les 👍 multiples sont autorisés. Seuls plusieurs 🔒 pour un joueur déclenchent une alerte.
 - Une découpe ne survient que si la limite de Discord est dépassée. **Pas d'intitulé « suite »**, ni de titre répété ; en prévisualisation, les boutons sont **sur la dernière partie uniquement**. Le nombre de messages publiés ne dépend donc pas d'un nombre fixe de quêtes.
 - Les anciens récapitulatifs restent sous le contrôle du MJ, sans modification automatique durant cette mise à jour.
+
+### Première optimisation des lectures de quêtes (2 novembre 2026)
+
+- Les lectures Discord des quêtes sont désormais effectuées par **quatre travailleurs parallèles au maximum** (messages initiaux, 👍 et 🔒 et leurs auteurs) plutôt que séquentiellement. Le tri reste inchangé.
+- Le contrôle des 🔒 multiples réutilise cette limite à quatre quêtes en parallèle.
+- **Aucun cache de votes** : les réactions Discord restent relues intégralement à chaque commande et actualisation.
+- Le récapitulatif du **03/11**, déjà enregistré en SQLite, sera actualisé automatiquement après déploiement uniquement avant minuit en heure de Paris le jour de la séance.
 
 ### Fermeture des quêtes sans tags (2 novembre 2026)
 
