@@ -4,8 +4,8 @@
 
 - Le forum journal-de-quetes contient désormais des **quêtes bot** avec une fiche interactive en premier message. Le sujet épinglé « Créer une quête » est conservé.
 - Les **15 discussions historiques** ont été recréées : chaque message a été préservé avec **pseudo Discord, date et heure**, sans mention active. Les **4 images** ont été réimportées.
-- Les 15 anciens fils sont marqués `obsolète`, **archivés et verrouillés**, sans suppression. La migration a transféré les liens cartographiques vers les nouveaux identifiants Discord.
-- Les anciennes réactions ne sont **pas attribuées artificiellement** à leurs auteurs. Le bot a posé 👍 sur les nouvelles quêtes ouvertes ; chaque joueur doit y réagir de nouveau.
+- Les 15 anciens fils ont été archivés puis **supprimés le 2 novembre 2026** sur décision du MJ, après sauvegarde locale des 122 messages et des 21 réactions. Les nouveaux fils bot et leurs liens cartographiques restent la source active.
+- Les anciennes réactions ne sont **pas attribuées artificiellement** à leurs auteurs. Le bot prépare 👍 (intérêt) et 🔒 (réservation prioritaire) sur les nouvelles quêtes ; chaque joueur doit y réagir lui-même.
 - La quête test « Détruire le monde » et le lieu PJ « Port de la fin du monde » ont été **supprimés** sur demande ; « Trouver la fosse » est conservée.
 - La synchronisation régulière de Discord continue de lire les états des fils. La fiche bot conserve son attribution historique et son lien d'archive dans la description enregistrée en SQLite.
 - Aucun tag `essai` ni feature flag global. La création directe de discussions par les joueurs reste autorisée temporairement, en attendant une décision distincte.
@@ -16,9 +16,9 @@
 
 1. Le sujet épinglé **📌 Créer une quête** existe déjà dans le forum des quêtes.
 2. Cliquer sur **Créer une quête** ou utiliser la commande de nouvelle quête. Le formulaire ouvre directement **titre** et **description**, sans choix d'emoji.
-3. Le bot crée une discussion provisoire sans icône, publie la fiche **sans répéter le titre** et ajoute une réaction **👍** pour que les joueurs signalent leur intérêt.
-4. Un avertissement apparaît dans la fiche : **« Quête non finalisée : ajoutez une réaction (autre que 👍) à ce message pour choisir définitivement l'icône de la quête. »**
-5. La première réaction avec un **emoji Unicode standard** (par exemple 🐸, 👻, 😈) déposée sur le **premier message du bot** fixe définitivement l'icône dans le titre du fil. L'avertissement disparaît automatiquement. Les réactions suivantes, les réactions sur des réponses et celles du bot ne changent rien. Les 👍 restent réservés aux inscriptions.
+3. Le bot crée une discussion provisoire sans icône, publie la fiche **sans répéter le titre** et ajoute **👍** pour signaler l’intérêt et **🔒** pour indiquer une mission à faire absolument.
+4. Un avertissement apparaît dans la fiche : **« Quête non finalisée : ajoutez une réaction (autre que 👍 ou 🔒) à ce message pour choisir définitivement l'icône de la quête. »**
+5. La première réaction avec un **emoji Unicode standard autre que 👍 ou 🔒** (par exemple 🐸, 👻, 😈) déposée sur le **premier message du bot** fixe définitivement l'icône dans le titre du fil. L'avertissement disparaît automatiquement. Les réactions suivantes, les réactions sur des réponses et celles du bot ne changent rien. 👍 et 🔒 restent réservés aux préférences des joueurs.
 6. **Modifier** ouvre directement le formulaire titre + description, sans choix d'icône. **Exception volontaire :** `/changer-icone-quete icone:🐸`, lancée dans une quête créée par le bot, permet à n'importe quel PJ de changer l'icône après sa finalisation. La commande valide un emoji Unicode unique et met à jour le titre Discord, SQLite et le catalogue cartographique. La confirmation est privée. Les anciennes quêtes conservent leur icône précédente tant que la commande n'est pas utilisée.
 7. Pour les lieux, utiliser **Associer un lieu** ou **Créer un lieu sur la carte** ; le bot synchronise ensuite la fiche.
 8. **Terminer** et **Relancer** conservent leurs fonctionnalités, dont le compte rendu obligatoire.
@@ -28,6 +28,17 @@ La commande `/changer-icone-quete` est utilisable dans les quêtes créées par 
 Les réactions de type **emoji personnalisé du serveur** ne peuvent pas être représentées par un véritable emoji dans un titre de discussion : seules les réactions Unicode standards servent ici au choix de l'icône.
 
 Les commandes `/terminer-quete` et `/relancer-quete` restent disponibles et utilisent les mêmes opérations que les boutons, y compris le compte rendu et la mise à jour du premier message.
+
+
+## Réactions de priorité et /choix-quete (2 novembre 2026)
+
+- Sur chaque fiche de quête, **👍** indique « intéressé » et **🔒** indique « je tiens absolument à faire cette mission ». Un joueur peut réagir avec les deux emojis. Le cadenas ne fixe jamais l’icône de la quête.
+- Les **18 quêtes bot présentes le 2 novembre** ont été mises à jour directement sur Discord ; le sujet épinglé « Créer une quête » reste intact. Les fiches sont régénérées depuis le modèle du bot : le déploiement de ce code est nécessaire à la persistance des nouvelles consignes.
+- La commande `/choix-quete` doit être lancée depuis un fil de mission « Séance JJ/MM » du salon `objectif-prochaine-mission` dont le message initial identifie quatre participants. Elle lit les réactions des premiers messages des quêtes non terminées et non obsolètes.
+- Les quatre groupes affichés, dans cet ordre, sont : **(1)** 🔒 d’au moins un participant présent et aucun 🔒 d’un absent ; **(2)** 👍 d’au moins un présent ; **(3)** les autres quêtes ; **(4)** 🔒 d’au moins un absent, même si un présent a mis 👍 ou 🔒. À l’intérieur de chaque groupe : ordre **croissant du nombre total de 👍**, puis date de création et titre pour départager les égalités.
+- Chaque ligne affiche **le titre** (avec lien) suivi de `(réservé par ..., intéresse ...)`. Noms de joueurs issus des identités PF2, **sans mention Discord active**. Le bot ignore ses propres réactions.
+- `/choix-quete` présente une **prévisualisation privée**, avec boutons **Publier les choix** et **Annuler**. Seule une validation du lanceur, dans le même fil et dans les quinze minutes, publie les résultats. La publication est sans mentions et ne doit pas être retentée sans vérifier le fil après un échec partiel.
+- Les quêtes avec tag `Terminée` ou `obsolète` sont exclues de ce classement. La source de vérité reste le forum Discord ; les réactions ne sont ni reproduites artificiellement ni stockées en double dans SQLite.
 
 ## Ce qui est reporté
 
@@ -44,11 +55,11 @@ Les commandes `/terminer-quete` et `/relancer-quete` restent disponibles et util
 - Les tests de code couvrent notamment le service de quêtes (`DiscordQuestPilotService.spec.ts`), le verrou d'icône (`Pf2QuestIconReaction.spec.ts`), les changements de liens (`Pf2QuestMapChange.spec.ts`), le regroupement et les liens directs cartographiques (`hybrid-quest-grouping.spec.ts`, `quest-map-navigation.spec.ts`). Ces tests ne remplacent pas un contrôle manuel Discord + carte + SQLite en production.
 - Le sujet d'accueil est **déjà installé**. La commande d'installation n'est plus publiée ; le bouton existant continue de fonctionner.
 - Les boutons ne doivent pas mentionner massivement les joueurs : `allowedMentions.parse=[]`.
-- Les fils historiques sont maintenant marqués `obsolète` ; toute annulation doit suivre le plan de retour arrière ci-dessous, pas simplement retirer le tag.
+- Les fils historiques ont été définitivement supprimés le 2 novembre 2026 après sauvegarde locale ; l’ancien retour arrière qui supposait ces fils encore présents n’est plus opérationnel.
 
 ## Parcours actuel Discord → carte (28 octobre 2026)
 
-Le parcours conseillé est **📌 Créer une quête** (sujet épinglé) ou `/nouvelle-quete` → formulaire titre/description → réaction Unicode sur le premier message pour fixer l'icône → **Associer un lieu**. Les joueurs utilisent 👍 pour signaler leur intérêt. Les boutons **Modifier**, **Terminer**, **Relancer** et **Retirer un lieu** restent associés à la fiche du bot. Pour remplacer volontairement une icône déjà fixée, utiliser `/changer-icone-quete` dans le fil bot.
+Le parcours conseillé est **📌 Créer une quête** (sujet épinglé) ou `/nouvelle-quete` → formulaire titre/description → réaction Unicode (autre que 👍 et 🔒) sur le premier message pour fixer l'icône → **Associer un lieu**. Les joueurs utilisent 👍 pour signaler leur intérêt et 🔒 pour signaler une réservation prioritaire. Les boutons **Modifier**, **Terminer**, **Relancer** et **Retirer un lieu** restent associés à la fiche du bot. Pour remplacer volontairement une icône déjà fixée, utiliser `/changer-icone-quete` dans le fil bot.
 
 **Associer un lieu** propose les lieux publiés non encore liés (25 par page), affiche les liens existants et permet d'en retirer sans supprimer le lieu lui-même. **Créer un lieu sur la carte** ouvre `/pj` : il faut ensuite cliquer sur **+ Lieu**, positionner le point, choisir **★ Lieu de quête**, sélectionner la quête et enregistrer ; le bouton Discord ne préremplit pas automatiquement la sélection. On peut aussi laisser la quête sans lieu et la compléter plus tard.
 
@@ -71,7 +82,7 @@ Une fiche dont le texte est déjà correct n'est pas éditée.
 
 ## Migration historique et retour arrière
 
-**Résultat vérifié (28 octobre 2026) :** 15 quêtes bot, 122 entrées de messages historiques représentées dans **118 publications**, dont 5 compléments regroupant 9 très courts messages de répétition de titres. Quatre pièces jointes/images conservées et réimportées. Les vérifications portent sur les statuts, les tags, les liens, les composants Discord, l'absence de mentions et l'option `SUPPRESS_NOTIFICATIONS` (pas de notification push ou bureau, mais une activité peut toujours apparaître dans Discord).
+**Résultat de migration (28 octobre 2026) :** 15 quêtes bot, 122 entrées de messages historiques représentées dans **118 publications**, dont 5 compléments regroupant 9 très courts messages de répétition de titres. Quatre pièces jointes/images conservées et réimportées. Les vérifications portent sur les statuts, les tags, les liens, les composants Discord, l'absence de mentions et l'option `SUPPRESS_NOTIFICATIONS` (pas de notification push ou bureau, mais une activité peut toujours apparaître dans Discord).
 
 ### Présentation des historiques après migration
 
