@@ -78,7 +78,7 @@ export class DiscordQuestPilotService {
   /** First eligible emoji reaction (other than 👍 or 🔒) permanently selects the icon for a new bot-owned quest. */
   async handleQuestIconReaction(reaction: MessageReaction | PartialMessageReaction, user: User | PartialUser): Promise<boolean> {
     if (user.bot || reaction.emoji.id || !reaction.emoji.name ||
-      /(reaction.emoji.name === '🔒' || /^👍[\u{1F3FB}-\u{1F3FF}]?$/u.test(reaction.emoji.name)) || !isUnicodeEmoji(reaction.emoji.name)) return false
+      reaction.emoji.name === '🔒' || /^👍[\u{1F3FB}-\u{1F3FF}]?$/u.test(reaction.emoji.name) || !isUnicodeEmoji(reaction.emoji.name)) return false
     const message = reaction.message
     if (message.id !== message.channelId) return false // Only the forum starter message
     const channel = message.channel
