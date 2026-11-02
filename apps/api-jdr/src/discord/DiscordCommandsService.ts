@@ -86,6 +86,8 @@ export class DiscordCommandsService {
   private readonly pendingPreviewPublications = new Map<string, { requesterId: string; content: string; files?: string[] }>()
   private readonly pendingPlayerDraws = new Map<string, { requesterId: string; players: Array<{ id: string; name: string }> }>()
   private readonly pendingQuestCompletions = new Map<string, { requesterId: string; threadId: string }>()
+  private readonly pendingQuestChoices = new Map<string, { requesterId: string; channelId: string; createdAt: number; lines: string[] }>()
+  private readonly publishingQuestChoices = new Set<string>()
   private readonly choiceForumChannelId = process.env['PF2_DISCORD_QUEST_FORUM_CHANNEL_ID']?.trim() || '1536259632455094412'
   constructor(private readonly persistence: Pf2PersistenceService, private readonly foundry: FoundryRelayService, private readonly playerCodex?: PlayerCodexService, private readonly mediaWiki?: MediaWikiClientService, @Inject(forwardRef(() => DiscordService)) private readonly discord?: DiscordService, private readonly journals?: Pf2JournalsService, private readonly requests?: Pf2RequestService, private readonly questPilot?: DiscordQuestPilotService) {}
 
@@ -108,7 +110,7 @@ export class DiscordCommandsService {
         .setDescription('Change l’emoji du titre de cette quête.')
         .addStringOption(o => o.setName('icone').setDescription('Un seul emoji (ex. 🐸)').setRequired(true).setMaxLength(32))
         .toJSON(),
-      new SlashCommandBuilder().setName('choix-quete').setDescription('Affiche les quêtes du forum et les joueurs intéressés.').toJSON(),
+      new SlashCommandBuilder().setName('choix-quete').setDescription('Prévisualise les quêtes classées par réservations et intérêts, puis propose de publier.').toJSON(),
       new SlashCommandBuilder().setName('terminer-quete').setDescription('Marque comme terminée la quête de ce fil.').toJSON(),
       new SlashCommandBuilder().setName('relancer-quete').setDescription('Relance une quête terminée depuis son fil.').toJSON(),
       new SlashCommandBuilder().setName('help-admin').setDescription('Affiche les commandes PF2 réservées aux administrateurs.').setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild).toJSON(),
@@ -260,7 +262,7 @@ export class DiscordCommandsService {
         '**Commandes PF2**',
         '`/nouvelle-quete` — crée une quête avec une fiche interactive dans le journal.',
         '`/changer-icone-quete icone:🐸` — remplace l’emoji du titre depuis une quête créée par le bot.',
-        '`/choix-quete` — liste les quêtes du forum, les réservations par 👍 et signale les doubles choix.',
+        '`/choix-quete` — prévisualise et fait confirmer les quêtes : 🔒 prioritaire, 👍 intéressé.',
         '`/terminer-quete` — depuis un fil du journal des quêtes, demande un compte rendu, marque la quête Terminée et libère les réservations 👍.',
         '`/relancer-quete` — depuis un fil terminé, retire le tag Terminée et remet la quête dans `/choix-quete`.',
         '`/recap-pjs` — aperçu du récapitulatif des joueurs/PJ, puis bouton de publication.',
@@ -415,17 +417,32 @@ export class DiscordCommandsService {
     return unicode ?? null
   }
 
+  private questChoiceChunks(lines: string[]): string[] {
+    const chunks: string[] = []
+    let chunk = ''
+    for (const line of lines) {
+      const safe = line.length > 1800 ? line.slice(0, 1799) + '…' : line
+      if (chunk && chunk.length + safe.length + 1 > 1800) {
+        chunks.push(chunk)
+        chunk = ''
+      }
+      chunk = chunk ? chunk + '\n' + safe : safe
+    }
+    if (chunk || !chunks.length) chunks.push(chunk || 'Aucune quête disponible.')
+    return chunks
+  }
+
   private async choiceCommand(interaction: ChatInputCommandInteraction): Promise<void> {
-    await interaction.deferReply()
+    await interaction.deferReply({ ephemeral: true })
     try {
       const missionPlayerIds = await this.missionThreadPlayerIds(interaction)
+      if (!missionPlayerIds) throw new Error('Lance /choix-quete depuis un fil « Séance JJ/MM » de #objectif-prochaine-mission avec ses quatre participants.')
       const forum = await interaction.client.channels.fetch(this.choiceForumChannelId)
-      if (!forum || !('threads' in forum) || !forum.threads) throw new Error('Le forum des quêtes est introuvable ou inaccessible.')
+      if (!forum || !('threads' in forum) || !forum.threads) throw new Error('Le forum des quêtes est inaccessible.')
 
       const discovered = new Map<string, any>()
       const active = await forum.threads.fetchActive()
       for (const thread of active.threads.values()) discovered.set(thread.id, thread)
-
       let before: Date | undefined
       do {
         const archived = await forum.threads.fetchArchived({ type: 'public', limit: 100, ...(before ? { before } : {}) })
@@ -435,7 +452,9 @@ export class DiscordCommandsService {
         if (!archived.hasMore || !before) break
       } while (before)
 
-      const quests: Array<{ id: string; title: string; emoji: string | null; createdAt: number; url: string | null; users: Array<{ id: string; name: string }> }> = []
+      type QuestVoter = { id: string; name: string }
+      type QuestChoice = { id: string; title: string; createdAt: number; url: string | null; reserved: QuestVoter[]; interested: QuestVoter[] }
+      const quests: QuestChoice[] = []
       const completedTagId = Array.isArray((forum as any).availableTags)
         ? (forum as any).availableTags.find((tag: any) => String(tag.name ?? '').trim().toLocaleLowerCase('fr') === 'terminée')?.id ?? null
         : null
@@ -443,84 +462,93 @@ export class DiscordCommandsService {
         ? (forum as any).availableTags.find((tag: any) => String(tag.name ?? '').trim().toLocaleLowerCase('fr') === 'obsolète')?.id ?? null
         : null
       const launcherId = await this.persistence.questLauncherId?.()
-      const choicesByUser = new Map<string, { name: string; count: number }>()
       const playerNames = new Map((await this.persistence.listPlayerIdentities?.() ?? []).map(identity => [identity.discordUserId, identity.playerName]))
+      const nameOf = (id: string): string => playerNames.get(id) ?? pf2PlayerByDiscordId(id)?.name ?? 'Joueur inconnu'
+      const interestsByUser = new Map<string, { name: string; count: number }>()
 
       for (const thread of discovered.values()) {
         if (thread.id === launcherId || (obsoleteTagId && thread.appliedTags?.includes(obsoleteTagId))) continue
         if (completedTagId && thread.appliedTags?.includes(completedTagId)) continue
         const starter = await thread.fetchStarterMessage({ force: true }).catch(() => null)
-        const reactions = starter
-          ? (typeof starter.reactions.fetch === 'function'
-            ? await starter.reactions.fetch().catch(() => starter.reactions.cache)
-            : starter.reactions.cache)
-          : null
-        const thumbs = reactions?.find((reaction: any) => reaction.emoji.name === '👍')
-        const users = thumbs
-          ? [...(await thumbs.users.fetch()).values()]
-              .filter((user: any) => !user.bot)
-              .map((user: any) => ({ id: user.id, name: playerNames.get(user.id) ?? pf2PlayerByDiscordId(user.id)?.name ?? `Joueur non associé (${user.id})` }))
-              .sort((left, right) => left.name.localeCompare(right.name, 'fr'))
-          : []
-
-        for (const user of users) {
-          const existing = choicesByUser.get(user.id)
-          choicesByUser.set(user.id, { name: user.name, count: (existing?.count ?? 0) + 1 })
+        if (!starter) continue
+        const reactions = typeof starter.reactions.fetch === 'function'
+          ? await starter.reactions.fetch().catch(() => starter.reactions.cache)
+          : starter.reactions.cache
+        const voters = async (emoji: string): Promise<QuestVoter[]> => {
+          const reaction = reactions?.find((value: any) => value.emoji.name === emoji)
+          if (!reaction) return []
+          const users = await reaction.users.fetch()
+          return [...users.values()].filter((user: any) => !user.bot)
+            .map((user: any) => ({ id: user.id, name: nameOf(user.id) }))
+            .sort((a, b) => a.name.localeCompare(b.name, 'fr'))
         }
-
+        const [reserved, interested] = await Promise.all([voters('🔒'), voters('👍')])
+        for (const user of interested) {
+          const previous = interestsByUser.get(user.id)
+          interestsByUser.set(user.id, { name: user.name, count: (previous?.count ?? 0) + 1 })
+        }
         quests.push({
-          id: thread.id,
-          title: thread.name?.trim() || 'Quête sans titre',
-          emoji: this.questTitleEmoji(thread.name?.trim() || ''),
+          id: thread.id, title: thread.name?.trim() || 'Quête sans titre',
           createdAt: Number(thread.createdTimestamp ?? thread.createdAt?.getTime?.() ?? 0),
-          url: typeof thread.url === 'string' ? thread.url : interaction.guildId ? `https://discord.com/channels/${interaction.guildId}/${thread.id}` : null,
-          users,
+          url: typeof thread.url === 'string' ? thread.url : interaction.guildId
+            ? 'https://discord.com/channels/' + interaction.guildId + '/' + thread.id : null,
+          reserved, interested,
         })
       }
 
-      quests.sort((left, right) => {
-        if (missionPlayerIds) {
-          const rank = (quest: { users: Array<{ id: string }> }): number => {
-            if (!quest.users.length) return 1
-            return quest.users.every(user => missionPlayerIds.has(user.id)) ? 0 : 2
-          }
-          const rankDiff = rank(left) - rank(right)
-          if (rankDiff !== 0) return rankDiff
+      // A reservation from an absent player is a veto for this session, even when others are interested.
+      const category = (quest: QuestChoice): number => {
+        if (quest.reserved.some(player => !missionPlayerIds.has(player.id))) return 3
+        if (quest.reserved.some(player => missionPlayerIds.has(player.id))) return 0
+        if (quest.interested.some(player => missionPlayerIds.has(player.id))) return 1
+        return 2
+      }
+      quests.sort((a, b) => category(a) - category(b)
+        || a.interested.length - b.interested.length
+        || a.createdAt - b.createdAt
+        || a.title.localeCompare(b.title, 'fr'))
+
+      const groups = [
+        '🔒 **Prioritaires pour le groupe**',
+        '👍 **Intérêt d’au moins un joueur présent**',
+        '📋 **Autres quêtes**',
+        '⏸️ **Réservées par un joueur absent**',
+      ]
+      const lines: string[] = ['**Choix de quête — propositions pour la séance**',
+        '_Prévisualisation privée : rien ne sera publié sans confirmation._', '']
+      let lastCategory = -1
+      for (const quest of quests) {
+        const tier = category(quest)
+        if (tier !== lastCategory) {
+          if (lastCategory !== -1) lines.push('')
+          lines.push(groups[tier])
+          lastCategory = tier
         }
-        return left.createdAt - right.createdAt || left.title.localeCompare(right.title, 'fr')
-      })
-
-      const missingEmoji = quests.filter(quest => !quest.emoji)
-      if (missingEmoji.length) {
-        await this.replyLong(interaction, missingEmoji.map(quest =>
-          `❌ Émoticône manquante pour la quête : ${quest.url ? `[${quest.title}](${quest.url})` : quest.title}`
-        ))
-        return
+        const formatPlayers = (players: QuestVoter[]) => players.length
+          ? players.map(p => p.name).join(', ') : 'personne'
+        const title = quest.url ? '**[' + quest.title + '](' + quest.url + ')**' : '**' + quest.title + '**'
+        lines.push('- ' + title + ' (réservé par ' + formatPlayers(quest.reserved)
+          + ', intéresse ' + formatPlayers(quest.interested) + ')')
       }
+      if (!quests.length) lines.push('Aucune quête disponible dans le forum.')
 
-      const lines = quests.length
-        ? quests.map(quest => `${quest.url ? `**[${quest.title}](${quest.url})**` : `**${quest.title}**`} : ${quest.users.length
-          ? quest.users.map(user => missionPlayerIds
-            ? `${user.name} ${missionPlayerIds.has(user.id) ? '✅' : '❌'}`
-            : user.name).join(', ')
-          : 'Libre'}`)
-        : ['Aucune quête trouvée dans le forum.']
-      if (missionPlayerIds) {
-        lines.unshift('✅ Joueur prévu pour cette séance · ❌ Joueur non prévu', '')
-      }
+      const duplicates = [...interestsByUser.values()].filter(user => user.count > 1)
+        .sort((a, b) => a.name.localeCompare(b.name, 'fr'))
+      if (duplicates.length) lines.push('', ...duplicates.map(user =>
+        '⚠️ ' + user.name + ' a indiqué son intérêt pour ' + user.count + ' quêtes.'))
 
-      const alerts = [...choicesByUser.values()]
-        .filter(user => user.count > 1)
-        .sort((left, right) => left.name.localeCompare(right.name, 'fr'))
-        .map(user => `⚠️ **Alerte :** ${user.name} a mis plus d’une réaction.`)
-
-      if (alerts.length) lines.push('', ...alerts)
-      const message = await this.replyLong(interaction, lines)
-      for (const emoji of [...new Set(quests.map(quest => quest.emoji).filter((value): value is string => Boolean(value)))]) {
-        await message?.react?.(emoji).catch(() => undefined)
-      }
+      const id = interaction.id
+      this.pendingQuestChoices.set(id, { requesterId: interaction.user.id,
+        channelId: interaction.channelId, createdAt: Date.now(), lines: lines.slice(3) })
+      const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
+        new ButtonBuilder().setCustomId('pf2-quest-choice:publish:' + id).setLabel('Publier les choix').setStyle(ButtonStyle.Success),
+        new ButtonBuilder().setCustomId('pf2-quest-choice:cancel:' + id).setLabel('Annuler').setStyle(ButtonStyle.Secondary),
+      )
+      const chunks = this.questChoiceChunks(lines)
+      await interaction.editReply({ content: chunks[0], components: [row], allowedMentions: { parse: [] } })
+      for (const chunk of chunks.slice(1)) await interaction.followUp({ content: chunk, ephemeral: true, allowedMentions: { parse: [] } })
     } catch (error) {
-      await interaction.editReply({ content: `Lecture des choix impossible : ${error instanceof Error ? error.message : String(error)}` })
+      await interaction.editReply({ content: 'Lecture des choix impossible : ' + (error instanceof Error ? error.message : String(error)), components: [] })
     }
   }
 
@@ -2680,6 +2708,51 @@ export class DiscordCommandsService {
   }
 
   async handleButton(interaction: ButtonInteraction): Promise<boolean> {
+    if (interaction.customId.startsWith('pf2-quest-choice:')) {
+      const [, , action, id] = interaction.customId.split(':')
+      const pending = this.pendingQuestChoices.get(id)
+      if (!pending || Date.now() - pending.createdAt > 15 * 60_000) {
+        this.pendingQuestChoices.delete(id)
+        await interaction.reply({ content: 'Prévisualisation expirée. Relance /choix-quete.', ephemeral: true })
+        return true
+      }
+      if (interaction.user.id !== pending.requesterId || interaction.channelId !== pending.channelId) {
+        await interaction.reply({ content: 'Cette validation appartient à une autre personne ou à un autre fil.', ephemeral: true })
+        return true
+      }
+      if (action === 'cancel') {
+        this.pendingQuestChoices.delete(id)
+        await interaction.update({ content: 'Publication annulée.', components: [], allowedMentions: { parse: [] } })
+        return true
+      }
+      if (action !== 'publish') return false
+      if (this.publishingQuestChoices.has(id)) {
+        await interaction.reply({ content: 'Publication déjà en cours.', ephemeral: true })
+        return true
+      }
+      this.publishingQuestChoices.add(id)
+      await interaction.deferUpdate()
+      this.pendingQuestChoices.delete(id) // Never resend a partial publication after failure.
+      try {
+        const channel = interaction.channel
+        if (!channel || !('send' in channel) || typeof channel.send !== 'function') {
+          throw new Error('Le salon de publication est introuvable.')
+        }
+        const chunks = this.questChoiceChunks(['**Choix de quête — propositions pour la séance**', ...pending.lines])
+        for (const content of chunks) {
+          await (channel as any).send({ content, allowedMentions: { parse: [] } })
+        }
+        await interaction.editReply({ content: '✅ Liste des quêtes publiée dans ce fil.', components: [], allowedMentions: { parse: [] } })
+      } catch (error) {
+        await interaction.editReply({ content: 'Publication incomplète ou impossible : ' +
+          (error instanceof Error ? error.message : String(error)) +
+          '. Vérifie le fil avant de relancer /choix-quete.', components: [] })
+      } finally {
+        this.publishingQuestChoices.delete(id)
+      }
+      return true
+    }
+
     if (interaction.customId.startsWith('pf2-quest-ui:finish:')) {
       await this.finishQuestCommand(interaction)
       return true
