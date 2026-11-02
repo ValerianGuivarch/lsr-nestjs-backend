@@ -75,10 +75,10 @@ export class DiscordQuestPilotService {
     )
   }
 
-  /** First non-👍 emoji reaction permanently selects the icon for a new bot-owned quest. */
+  /** First eligible emoji reaction (other than 👍 or 🔒) permanently selects the icon for a new bot-owned quest. */
   async handleQuestIconReaction(reaction: MessageReaction | PartialMessageReaction, user: User | PartialUser): Promise<boolean> {
     if (user.bot || reaction.emoji.id || !reaction.emoji.name ||
-      /^👍[\u{1F3FB}-\u{1F3FF}]?$/u.test(reaction.emoji.name) || !isUnicodeEmoji(reaction.emoji.name)) return false
+      /(reaction.emoji.name === '🔒' || /^👍[\u{1F3FB}-\u{1F3FF}]?$/u.test(reaction.emoji.name)) || !isUnicodeEmoji(reaction.emoji.name)) return false
     const message = reaction.message
     if (message.id !== message.channelId) return false // Only the forum starter message
     const channel = message.channel
@@ -174,13 +174,13 @@ export class DiscordQuestPilotService {
     const places = associated.map(id => byId.get(id)).filter((v): v is string => Boolean(v))
     const shown = places.length ? places.map(x => '• ' + x).join('\n') : '_Aucun lieu : utilise « Associer un lieu »._'
     const instruction = iconPending
-      ? '**⚠️ Quête non finalisée : ajoutez une réaction (autre que 👍) à ce message pour choisir définitivement l’icône de la quête.**\n\n'
+      ? '**⚠️ Quête non finalisée : ajoutez une réaction (autre que 👍 ou 🔒) à ce message pour choisir définitivement l’icône de la quête.**\n\n'
       : ''
     // Discord already shows the title (and its icon) above the starter message.
     const content = instruction + description + '\n\n**📍 Lieux de la quête**\n' + shown +
       '\n\n**Statut :** ' + (done ? '✅ Terminée' : '🟢 En cours') +
       '\n\n_' + (done ? 'La quête est terminée : le bouton « Relancer » permet de la rouvrir.' :
-        'Réagissez 👍 à ce premier message pour indiquer votre intérêt.') +
+        'Réagissez 👍 si cette quête vous intéresse, ou 🔒 si elle est prioritaire pour vous et que vous tenez absolument à la faire. Les deux réactions sont possibles.') +
       ' Les boutons restent utilisables après un redémarrage du bot._'
     return { content: content.slice(0, 1995), components: this.actions(thread.id, done), allowedMentions: NO_PINGS }
   }
@@ -347,7 +347,7 @@ export class DiscordQuestPilotService {
         const thread = await forum.threads.create({
           name, autoArchiveDuration: ThreadAutoArchiveDuration.OneDay,
           message: {
-            content: '**⚠️ Quête non finalisée : ajoutez une réaction (autre que 👍) à ce message pour choisir définitivement l’icône de la quête.**\n\n' +
+            content: '**⚠️ Quête non finalisée : ajoutez une réaction (autre que 👍 ou 🔒) à ce message pour choisir définitivement l’icône de la quête.**\n\n' +
               description + '\n\n**📍 Lieux de la quête**\n_Aucun lieu associé._\n\n**Statut :** 🟢 En cours',
             allowedMentions: NO_PINGS,
           },
@@ -360,7 +360,10 @@ export class DiscordQuestPilotService {
         }])
         await this.refreshThreadPanel(thread)
         const starter = await thread.fetchStarterMessage({ force: true })
-        if (starter) await starter.react('👍').catch(() => undefined)
+        if (starter) {
+          await starter.react('👍').catch(() => undefined)
+          await starter.react('🔒').catch(() => undefined)
+        }
         await interaction.editReply({
           content: 'Quête créée : https://discord.com/channels/' + forum.guildId + '/' + thread.id +
             '\nRéagis au premier message avec l’emoji de ton choix pour fixer définitivement l’icône de la quête. Tu peux aussi associer des lieux.',
