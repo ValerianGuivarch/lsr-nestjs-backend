@@ -327,12 +327,12 @@ describe('DiscordQuestPilotService', () => {
     },
   )
 
-  it('rejects an obsolete quest and a discussion not created by the bot', async () => {
+  it('rejects a closed quest and a discussion not created by the bot', async () => {
     const { service, stored } = setup()
-    const forum = { type: ChannelType.GuildForum, availableTags: [{ id: 'obsolete', name: 'obsolète' }], guildId: GUILD }
+    const forum = { type: ChannelType.GuildForum, availableTags: [], guildId: GUILD }
     const client = { user: { id: 'bot' }, channels: { fetch: jest.fn().mockResolvedValue(forum) } }
     const channel = {
-      id: QUEST, parentId: FORUM, appliedTags: ['obsolete'], client, isThread: () => true,
+      id: QUEST, parentId: FORUM, appliedTags: [], archived: true, locked: true, client, isThread: () => true,
     }
     const editReply = jest.fn().mockResolvedValue(undefined)
     const command = {
@@ -340,9 +340,10 @@ describe('DiscordQuestPilotService', () => {
       deferReply: jest.fn().mockResolvedValue(undefined), editReply,
     }
     await service.changeQuestIconCommand(command as never)
-    expect(editReply).toHaveBeenCalledWith(expect.stringContaining('obsolète'))
+    expect(editReply).toHaveBeenCalledWith(expect.stringContaining('fermée'))
     expect(stored.replaceQuestIcon).not.toHaveBeenCalled()
-    channel.appliedTags = []
+    channel.archived = false
+    channel.locked = false
     stored.questUi.mockResolvedValue(null)
     await service.changeQuestIconCommand(command as never)
     expect(editReply).toHaveBeenCalledWith(expect.stringContaining('créée par le bot'))
