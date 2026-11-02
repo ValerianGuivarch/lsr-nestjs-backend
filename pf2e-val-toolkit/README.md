@@ -1327,3 +1327,18 @@ elle est réservée à un MJ et vérifiée par tests/corvan-import.mjs.
 
 Vérification requise : test interactif de la fiche, des choix de capacités,
 des préparations et des attaques après import effectif dans Foundry.
+
+## v0.44.8 — Correction du niveau 20 de Corvan
+
+Audit réel (2 novembre 2026) : Corvan avait XPC=0, niveau 1 et 14 PV ;
+son familier avait 5 PV, bien que les 41 sorts soient présents. La
+synchronisation automatique des XP des PJ avait écrasé son niveau initial.
+Les Actors marqués `corvanSeed` (Corvan uniquement) ne sont plus traités
+comme des PJ dans le système XPC ; leur progression n'est pas recalculée
+depuis les résumés de séance.
+
+Au chargement du MJ, l'import déjà terminé est désormais réparé sans doublons :
+niveau 20, XPC 356000, caractéristique de classe Intelligence, XP PF2 1000,
+et PV recalculés pour Corvan et le familier. La rune de poignard `dancing`
+est migrée vers `animated` (nom remaster). Vérifier le calcul réel dans Foundry
+après installation de la version 0.44.8.
