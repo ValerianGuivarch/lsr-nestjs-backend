@@ -507,18 +507,17 @@ export class DiscordCommandsService {
         || a.createdAt - b.createdAt
         || a.title.localeCompare(b.title, 'fr'))
 
-      // Preserve the four prioritization tiers, but display them as concise
-      // labels immediately above the relevant quests. No extra blank lines.
+      // Keep the four sorting priorities, but show only three headings:
+      // present-player locks stay ahead of present-player thumbs in one group.
       const groupLabels = [
-        '🔒 **Prioritaires**',
         '👍 **Intérêt des présents**',
         '📋 **Autres**',
-        '⏸️ **Réservées par les absents**',
+        '🚫 **Réservées par les absents**',
       ]
       const lines: string[] = ['**Choix de quête**']
       let currentGroup = -1
       for (const quest of quests) {
-        const group = category(quest)
+        const group = Math.max(0, category(quest) - 1)
         if (group !== currentGroup) {
           lines.push(groupLabels[group])
           currentGroup = group
