@@ -163,9 +163,14 @@ describe('DiscordCommandsService', () => {
     expect(allText).not.toContain('réservé par personne')
     expect(allText).not.toContain('intéresse personne')
     expect(allText).not.toContain('https://discord.com/channels/')
-    expect(allText).not.toContain('Prioritaires pour le groupe')
-    expect(allText).not.toContain('Autres quêtes')
-    expect(allText).not.toContain('Réservées par un joueur absent')
+    expect(allText).toContain('🔒 **Prioritaires**')
+    expect(allText).toContain('👍 **Intérêt des présents**')
+    expect(allText).toContain('📋 **Autres**')
+    expect(allText).toContain('⏸️ **Réservées par les absents**')
+    expect(allText.indexOf('🔒 **Prioritaires**')).toBeLessThan(allText.indexOf('👍 **Intérêt des présents**'))
+    expect(allText.indexOf('👍 **Intérêt des présents**')).toBeLessThan(allText.indexOf('📋 **Autres**'))
+    expect(allText.indexOf('📋 **Autres**')).toBeLessThan(allText.indexOf('⏸️ **Réservées par les absents**'))
+    expect(allText).not.toContain('\\n\\n')
     expect(allText).not.toContain('Choix de quête — suite')
     expect(allText).toContain('<#absent> (réservé par Nico, intéresse Éric)')
     expect(allText).not.toContain('<#done>')
@@ -194,6 +199,7 @@ describe('DiscordCommandsService', () => {
       expect(part.content.length).toBeLessThanOrEqual(2_000)
       expect(part.content).not.toContain('suite')
       expect(part.content).not.toContain('Prioritaires pour le groupe')
+      expect(part.content).not.toContain('Choix de quête — suite')
     }
     expect(t.channel.send).not.toHaveBeenCalled()
     expect(t.persistence.saveQuestRecapPart).not.toHaveBeenCalled()
@@ -208,6 +214,17 @@ describe('DiscordCommandsService', () => {
     expect(t.persistence.saveQuestRecapPart).toHaveBeenCalledTimes(2)
     const publishedParts = t.channel.send.mock.calls.map(call => call[0].content)
     expect(publishedParts).toEqual([firstPreview.content, furtherPreviews[0].content])
+  })
+
+  it('shows only nonempty category headings in a single short recap', async () => {
+    const t = questChoiceTest()
+    t.questMap.set('one', t.quest('one', '👑 Le Roi Kobold', [], [t.guilhem.id]))
+    await t.run()
+    const preview = t.editReply.mock.calls[0][0]
+    expect(preview.content).toBe('**Choix de quête**\n🔒 **Prioritaires**\n- <#one> (réservé par Guilhem)')
+    expect(preview.components).toHaveLength(1)
+    expect(t.followUp).not.toHaveBeenCalled()
+    expect(t.channel.send).not.toHaveBeenCalled()
   })
 
   it('requires validation before publishing, without mentions or duplicate publication', async () => {

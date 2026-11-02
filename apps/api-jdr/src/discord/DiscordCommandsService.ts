@@ -507,9 +507,22 @@ export class DiscordCommandsService {
         || a.createdAt - b.createdAt
         || a.title.localeCompare(b.title, 'fr'))
 
-      // The sorting tiers stay implicit: a single compact list.
+      // Preserve the four prioritization tiers, but display them as concise
+      // labels immediately above the relevant quests. No extra blank lines.
+      const groupLabels = [
+        '🔒 **Prioritaires**',
+        '👍 **Intérêt des présents**',
+        '📋 **Autres**',
+        '⏸️ **Réservées par les absents**',
+      ]
       const lines: string[] = ['**Choix de quête**']
+      let currentGroup = -1
       for (const quest of quests) {
+        const group = category(quest)
+        if (group !== currentGroup) {
+          lines.push(groupLabels[group])
+          currentGroup = group
+        }
         const details = [
           quest.reserved.length ? 'réservé par ' + quest.reserved.map(p => p.name).join(', ') : '',
           quest.interested.length ? 'intéresse ' + quest.interested.map(p => p.name).join(', ') : '',
