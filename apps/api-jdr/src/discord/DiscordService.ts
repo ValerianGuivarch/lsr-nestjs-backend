@@ -116,8 +116,6 @@ export class DiscordService implements OnModuleInit, OnModuleDestroy {
           this.logger.warn('Session confirmation sync failed: ' + (error instanceof Error ? error.message : String(error))))
         void this.commands.handleQuestRecapReaction(reaction, user).catch(error =>
           this.logger.warn('Quest recap reaction update failed: ' + String(error)))
-        void this.commands.handleQuestLockAdd(reaction, user).catch(error =>
-          this.logger.warn('Quest lock reservation check failed: ' + String(error)))
         if (this.questPilot) {
           void this.questPilot.handleQuestIconReaction(reaction, user).catch(error =>
             this.logger.warn('Quest icon reaction failed: ' + (error instanceof Error ? error.message : String(error))))
@@ -126,9 +124,13 @@ export class DiscordService implements OnModuleInit, OnModuleDestroy {
       client.on(Events.MessageReactionRemove, (reaction, user) => {
         void this.commands.handleSessionConfirmationReaction(reaction).catch(error =>
           this.logger.warn('Session confirmation sync failed: ' + (error instanceof Error ? error.message : String(error))))
-        void this.commands.handleQuestRecapReaction(reaction, user).catch(error =>
+        void this.commands.handleQuestRecapReaction(reaction, user, false).catch(error =>
           this.logger.warn('Quest recap reaction removal failed: ' + String(error)))
       })
+
+      client.on(Events.ThreadCreate, thread => this.commands.handleQuestThreadChange(client, thread))
+      client.on(Events.ThreadUpdate, (_before, after) => this.commands.handleQuestThreadChange(client, after))
+      client.on(Events.ThreadDelete, thread => this.commands.handleQuestThreadChange(client, thread))
 
       client.once(Events.ClientReady, (readyClient) =>
         this.logger.log(`Discord connected as ${readyClient.user.tag}`),
@@ -165,10 +167,10 @@ export class DiscordService implements OnModuleInit, OnModuleDestroy {
       this.questSyncTimer.unref?.()
       // Detect previously published recaps (including the old /choix-quete format)
       // and repair missed reaction events after a restart, without publishing new lists.
-      void this.commands.reconcileQuestRecaps(client).catch(error =>
+      void this.commands.reconcileQuestRecaps(client, true).catch(error =>
         this.logger.warn('Initial quest recap sync failed: ' + String(error)))
       this.questRecapTimer = setInterval(() => {
-        void this.commands.reconcileQuestRecaps(client).catch(error =>
+        void this.commands.reconcileQuestRecaps(client, true).catch(error =>
           this.logger.warn('Quest recap sync failed: ' + String(error)))
       }, 5 * 60 * 1000)
       this.questRecapTimer.unref?.()

@@ -70,6 +70,10 @@ describe('Pf2PersistenceService', () => {
     expect(await service.upcomingQuestRecapSessions('2099-01-01')).toEqual([
       { threadId: fresh.threadId, guildId: fresh.guildId, sessionDate: fresh.sessionDate },
     ])
+    expect(await service.upcomingQuestRecapSessions('2099-10-12')).toEqual([
+      { threadId: fresh.threadId, guildId: fresh.guildId, sessionDate: fresh.sessionDate },
+    ])
+    expect(await service.upcomingQuestRecapSessions('2099-10-13')).toEqual([])
   })
 
   it('preserves the latest Foundry actor cache across SQLite reopen', async () => {

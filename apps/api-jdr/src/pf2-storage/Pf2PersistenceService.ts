@@ -384,7 +384,7 @@ export class Pf2PersistenceService implements OnModuleInit {
 
   async upcomingQuestRecapSessions(todayParis: string): Promise<DiscordQuestRecapSession[]> {
     return this.dataSource.query(
-      'SELECT DISTINCT thread_id AS threadId, guild_id AS guildId, session_date AS sessionDate FROM pf2_discord_quest_recap WHERE session_date > ? ORDER BY session_date, thread_id',
+      'SELECT DISTINCT thread_id AS threadId, guild_id AS guildId, session_date AS sessionDate FROM pf2_discord_quest_recap WHERE session_date >= ? ORDER BY session_date, thread_id',
       [todayParis],
     )
   }

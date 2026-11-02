@@ -163,6 +163,98 @@ describe('DiscordCommandsService', () => {
     expect(inFlight).toBe(0)
   })
 
+  it('uses cached votes for a new 👍 and its removal without refetching Discord', async () => {
+    const t = questChoiceTest()
+    const quest = t.quest('cache-quest', '👻 Quête en cache', [], [])
+    t.questMap.set('cache-quest', quest)
+    await t.run() // /choix-quete forces authoritative Discord read.
+    const originalReads = quest.fetchStarterMessage.mock.calls.length
+    const fetch = t.client.channels.fetch as jest.Mock
+    fetch.mockImplementation(async (id: string) =>
+      id === 'cache-quest' ? { isThread: () => true, parentId: '1536259632455094412', id } :
+      id === 'mission-parent' ? { name: 'objectif-prochaine-mission' } : t.forum)
+    const reaction: any = {
+      emoji: { name: '👍' },
+      message: { id: 'cache-quest', channelId: 'cache-quest', client: t.client },
+    }
+    jest.useFakeTimers()
+    try {
+      await t.service.handleQuestRecapReaction(reaction, t.eric, true)
+      const add = await (t.service as any).buildQuestChoiceLines(t.client, 'guild', new Set([t.eric.id]))
+      expect(add.join('\n')).toContain('<#cache-quest> (intéresse Éric)')
+      await t.service.handleQuestRecapReaction(reaction, t.eric, false)
+      const remove = await (t.service as any).buildQuestChoiceLines(t.client, 'guild', new Set([t.eric.id]))
+      expect(remove.join('\n')).toContain('- <#cache-quest>')
+      expect(remove.join('\n')).not.toContain('intéresse Éric')
+      expect(quest.fetchStarterMessage).toHaveBeenCalledTimes(originalReads)
+    } finally {
+      jest.clearAllTimers()
+      jest.useRealTimers()
+    }
+  })
+
+  it('replays votes received during a full Discord snapshot instead of losing them', async () => {
+    const t = questChoiceTest()
+    let release: (() => void) | undefined
+    const original = t.quest('racing-quest', '🔮 Quête lente', [], [])
+    const starter = await original.fetchStarterMessage()
+    original.fetchStarterMessage = jest.fn(async () => new Promise<any>(resolve => {
+      release = () => resolve(starter)
+    }))
+    t.questMap.set('racing-quest', original)
+    const snapshot = (t.service as any).questVotes(t.client, true)
+    for (let i = 0; i < 15 && !release; i++) await Promise.resolve()
+    expect(release).toBeDefined()
+    ;(t.service as any).recordQuestVoteEvent('racing-quest', t.eric.id, '👍', true)
+    release!()
+    const cache = await snapshot
+    expect(cache.get('racing-quest').interested.has(t.eric.id)).toBe(true)
+    expect(original.fetchStarterMessage).toHaveBeenCalledTimes(1)
+  })
+
+  it('keeps gateway add/remove order even if channel fetches finish out of order', async () => {
+    const t = questChoiceTest()
+    t.questMap.set('ordering-quest', t.quest('ordering-quest', 'Chronologie', [], []))
+    await t.run()
+    const fetch = t.client.channels.fetch as jest.Mock
+    const channel = { id: 'ordering-quest', parentId: '1536259632455094412', isThread: () => true }
+    const resolves: Array<(value: unknown) => void> = []
+    fetch.mockImplementation((id: string) => id === 'ordering-quest'
+      ? new Promise(resolve => { resolves.push(resolve) })
+      : Promise.resolve(t.forum))
+    const reaction: any = { emoji: { name: '👍' }, message: {
+      id: 'ordering-quest', channelId: 'ordering-quest', client: t.client,
+    } }
+    jest.useFakeTimers()
+    try {
+      const add = t.service.handleQuestRecapReaction(reaction, t.eric, true)
+      const remove = t.service.handleQuestRecapReaction(reaction, t.eric, false)
+      expect(resolves).toHaveLength(2)
+      resolves[1](channel)
+      await remove
+      resolves[0](channel)
+      await add
+      const lines = await (t.service as any).buildQuestChoiceLines(t.client, 'guild', new Set([t.eric.id]))
+      expect(lines.join('\n')).not.toContain('intéresse Éric')
+      expect(lines.join('\n')).toContain('- <#ordering-quest>')
+    } finally {
+      jest.clearAllTimers()
+      jest.useRealTimers()
+    }
+  })
+
+  it('allows /choix-quete on the session day but refuses the following day', async () => {
+    const t = questChoiceTest()
+    ;(t.service as any).parisToday = () => '2099-10-12'
+    await t.run()
+    expect(t.editReply.mock.calls[0][0].components).toHaveLength(1)
+    expect(t.channel.send).not.toHaveBeenCalled()
+
+    ;(t.service as any).parisToday = () => '2099-10-13'
+    await t.run()
+    expect(t.editReply.mock.calls[1][0].content).toContain('Cette séance est passée')
+  })
+
   it('shows a private confirmation preview and ranks locks, present thumbs, others, then absent locks', async () => {
     const t = questChoiceTest()
     t.questMap.set('other', t.quest('other', '📜 Sans intérêt', [], []))
@@ -354,17 +446,23 @@ describe('DiscordCommandsService', () => {
 
     // The source of truth is the *current* Discord reactions, not a stored list.
     t.questMap.set(questId, t.quest(questId, '👑 Le Roi Kobold', [t.eric.id], [t.guilhem.id]))
-    await t.service.reconcileQuestRecaps(client)
+    await t.service.reconcileQuestRecaps(client, true) // Five-minute authoritative refresh.
     expect(published.content).toContain('réservé par Guilhem, intéresse Éric')
     expect(published.edit).toHaveBeenCalledTimes(1)
     expect(legacy.edit).not.toHaveBeenCalled()
     expect(t.channel.send).toHaveBeenCalledTimes(1)
 
-    // The very first instant of the session's Paris calendar day freezes the recap.
+    // The session date itself remains editable until midnight in Paris.
     ;(t.service as any).parisToday = () => '2099-10-12'
     t.questMap.set(questId, t.quest(questId, '👑 Le Roi Kobold', [], []))
-    await t.service.reconcileQuestRecaps(client)
-    expect(published.edit).toHaveBeenCalledTimes(1)
+    await t.service.reconcileQuestRecaps(client, true)
+    expect(published.edit).toHaveBeenCalledTimes(2)
+
+    // Freeze only from the following calendar day.
+    ;(t.service as any).parisToday = () => '2099-10-13'
+    t.questMap.set(questId, t.quest(questId, '👑 Le Roi Kobold', [t.eric.id], []))
+    await t.service.reconcileQuestRecaps(client, true)
+    expect(published.edit).toHaveBeenCalledTimes(2)
     expect(t.channel.send).toHaveBeenCalledTimes(1)
   })
 

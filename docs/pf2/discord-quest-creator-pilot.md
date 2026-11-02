@@ -43,10 +43,10 @@ Les commandes `/terminer-quete` et `/relancer-quete` restent disponibles et util
 
 ### Récapitulatifs dynamiques de choix de quêtes (2 novembre 2026)
 
-- Une fois publiée et validée, la liste est **dynamique** : tout ajout/retrait de **👍** ou **🔒** sur le **message initial** d’une quête déclenche un nouveau classement, sans nouveau vote sous le récapitulatif. Les réactions du bot, les autres emojis et les réactions sur les réponses sont ignorés.
+- Une fois publiée et validée, la liste est **dynamique** : les ajouts et retraits de 👍/🔒 modifient uniquement le **cache mémoire de la quête concernée**, puis recalculent les listes suivies. Une temporisation de deux secondes regroupe les changements proches. Les réactions du bot, les autres emojis et les réactions sous des réponses sont ignorés.
 - Le lien `fil de séance → date ISO → IDs des messages récapitulatifs` est conservé dans SQLite, dans `pf2_discord_quest_recap` (migration `050-discord-quest-recap-tracking`). **Aucune duplication des votes** : Discord reste la source de vérité.
 - La séance est authentifiée à partir du message initial créé par le bot dans `#objectif-prochaine-mission`, de ses quatre participants et du marqueur `[PF2-SESSION:YYYY-MM-DD]`. L’ancien format avec année complète et lien `Source :` est aussi reconnu pour compatibilité.
-- **Arrêt strict à minuit heure de Paris le jour de séance** : seules les dates ISO strictement postérieures à la date française du jour sont mises à jour. Ce contrôle s’applique aussi à une validation manuelle tardive. Aucun salon passé ou du jour n’est modifié automatiquement.
+- **Arrêt à minuit en heure de Paris à la fin du jour de séance** : la date de la séance est incluse, et toute actualisation est interdite à partir du lendemain 00 h 00. Exemple : séance du 03/11 actualisable le 03/11 inclus, figée dès le 04/11. La même règle vaut pour les réactions, la prévisualisation et la confirmation manuelle.
 - Au démarrage puis toutes les cinq minutes, le bot actualise **uniquement les récapitulatifs suivis en SQLite**. Les anciens messages non enregistrés ne sont pas repris. Le **nouveau récapitulatif du 3 novembre 2026** est désormais suivi (vérifié le 2 novembre) et peut être édité automatiquement jusqu'à minuit heure de Paris précédant la séance.
 - Les éditions sont sérialisées par séance et les réactions regroupées avec deux secondes de temporisation. Les messages publiés sont conservés en SQLite et les actualisations automatiques les **éditent sans republier**. Seule une nouvelle confirmation peut autoriser un message supplémentaire.
 - Les **nouveaux récapitulatifs ne reçoivent aucune réaction de vote** : les pouces et cadenas restent sur les **fiches des quêtes**. Le bot laisse intégralement intacts les anciens messages et leurs réactions. Si un récapitulatif suivi a été supprimé manuellement, le bot ne le recrée jamais silencieusement.
@@ -74,8 +74,17 @@ Les commandes `/terminer-quete` et `/relancer-quete` restent disponibles et util
 
 - Les lectures Discord des quêtes sont désormais effectuées par **quatre travailleurs parallèles au maximum** (messages initiaux, 👍 et 🔒 et leurs auteurs) plutôt que séquentiellement. Le tri reste inchangé.
 - Le contrôle des 🔒 multiples réutilise cette limite à quatre quêtes en parallèle.
-- **Aucun cache de votes** : les réactions Discord restent relues intégralement à chaque commande et actualisation.
-- Le récapitulatif du **03/11**, déjà enregistré en SQLite, sera actualisé automatiquement après déploiement uniquement avant minuit en heure de Paris le jour de la séance.
+- **Cache mémoire des votes activé** : les réactions Discord sont stockées par quête (identifiants des votants et métadonnées), sans table SQLite supplémentaire. Une lecture Discord complète à quatre quêtes parallèles reste forcée à chaque nouvelle commande /choix-quete, lors de sa validation et toutes les cinq minutes pour corriger les événements manqués.
+- Le récapitulatif du **03/11** reste suivi dans SQLite et peut être actualisé jusqu'au **03/11 23 h 59 min 59 s, heure de Paris**, sans publication de nouveau message automatique.
+
+### Cache événementiel des votes et réconciliation
+
+- La source de vérité reste Discord. Les votes 👍/🔒 sont conservés **en mémoire du processus** par fil de quête, avec les IDs des joueurs. Au démarrage, le bot charge toutes les quêtes depuis Discord avec **4 lectures simultanées maximum**.
+- Les événements d'ajout/retrait de réactions appliquent directement le changement au cache puis recalculent les récapitulatifs existants (délai de regroupement : deux secondes). Les alertes de doubles 🔒 utilisent ce même cache, sans rescanner le forum.
+- Le job existant de synchronisation des récapitulatifs est réutilisé **toutes les 5 minutes** : il recharge entièrement les réactions Discord, corrige le cache et édite uniquement les récapitulatifs déjà suivis. La commande /choix-quete et la validation manuelle forcent également cette relecture.
+- Les créations, changements, fermetures ou réouvertures de fils de quête invalident le cache et déclenchent une réconciliation. Les réactions arrivées **pendant** une relecture sont rejouées sur la nouvelle copie pour ne pas perdre les votes récents ; une modification de métadonnées invalide la lecture en cours.
+- La présence des joueurs à une séance reste fournie par le fil de séance : les **classements ne sont pas mis en cache**, ils sont recalculés depuis les mêmes votes selon les participants de chaque séance.
+- Aucune création de récapitulatif n'est déclenchée par la synchronisation : les nouveaux messages nécessitent toujours la validation explicite du MJ. Les récapitulatifs sont modifiables **jusqu'à la fin du jour J inclus**, heure de Paris.
 
 ### Fermeture des quêtes sans tags (2 novembre 2026)
 
