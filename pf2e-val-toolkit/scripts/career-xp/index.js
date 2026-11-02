@@ -40,7 +40,10 @@ function escape(value) {
 }
 
 function isCharacter(actor) {
-  return actor?.type === "character";
+  // GM-only scripted characters (Corvan) are not participating PCs. Exclude
+  // them from session-XPC synchronization to avoid resetting level 20 to 1.
+  return actor?.type === "character" &&
+    actor?.getFlag?.(MODULE_ID, "corvanSeed") !== true;
 }
 
 function normalizeExistingXpc(value) {
