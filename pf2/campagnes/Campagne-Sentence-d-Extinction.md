@@ -25,7 +25,7 @@ Vaga a fui le cadre abusif de Dusklight avec ou aux côtés des artistes qui dev
 
 - Les PJ ont déjà aidé le **Cirque des Merveilles Vagabondes** à Abberton, puis sont repartis à **Absalom**.
 - **Nemmia Bramblecloak** (halfeline druidesse liée aux attaques contre le cirque) a été **tuée** au cours de cette première intervention. Environ **deux mois** se sont écoulés depuis.
-- Les PJ détiennent à **Absalom une prisonnière qui est la sœur de Nemmia**. Son **nom exact et son identifiant PNJ restent à vérifier** : aucune fiche correspondante n'a été retrouvée dans les enregistrements PNJ consultés de `pf2.sqlite` lors de la préparation du 3 novembre. Ne pas présumer qu'elle se nomme « Nelia » ou « Zorides ».
+- Les PJ détiennent à **Absalom Temin, la sœur de Nemmia**, prisonnière. **Nom confirmé par le MJ.** Son identifiant PNJ dans `pf2.sqlite` reste à vérifier avant de la lier à une fiche existante.
 - **Adaptation validée :** cette sœur est liée à la mouvance dissidente autour d'un **centaure de la foudre / des tempêtes**. Cette mouvance est restée fidèle à ses convictions d'origine, quoique radicale, **sans suivre la corruption démoniaque** des membres de l'Ermitage de l'Éclair Béni. Le lien exact entre les deux groupes, le nom du centaure et leurs dénominations canoniques ou maison restent à documenter.
 - Les PJ connaissent déjà **de nom l'ermitage**, mentionné brièvement avant la mort de Nemmia, mais n'ont pas encore résolu les troubles locaux ni libéré Harlock. La sœur peut fournir des informations supplémentaires si elle accepte de parler ; **son interrogatoire et le voyage qui suit ne sont pas encore joués**.
 
@@ -33,11 +33,11 @@ Vaga a fui le cadre abusif de Dusklight avec ou aux côtés des artistes qui dev
 
 [Ouvrir la préparation structurée dans l'application MJ](https://l7r.fr/pf2-mj/session-preparations?preparationId=31332abc-ef1d-4172-805d-dfc336ff7164) — préparation SQLite `31332abc-ef1d-4172-805d-dfc336ff7164`, **six étapes et seize blocs**, liée à la campagne catalogue `extinction-curse`. Elle n'est pas encore associée à un salon ou une séance Discord ; les créatures et scènes sont à vérifier dans Foundry.
 
-- **Vers 19 h :** à Absalom, lettre du **Professeur** demandant de l'aide à **Vaga** ; interrogation ou accompagnement facultatifs de la sœur de Nemmia.
+- **Vers 19 h :** à Absalom, lettre du **Professeur** demandant de l'aide à **Vaga** ; interrogation ou accompagnement facultatifs de Temin.
 - **Vers 19 h 30 :** arrivée à **Abberton**, rencontre avec le Professeur et le maire **Jae Abber**. Installer **deux quêtes distinctes** : soutenir le cirque contre les manœuvres de la Ménagerie Céleste ; résoudre les agressions/disparitions et enquêter sur l'ermitage. La seconde est actuellement la plus urgente.
 - **Jusqu'à 21 h environ :** petites enquêtes facultatives (sangliers au verger d'Oldlin, moulin Hawfton et grange Lindell, Mad Mug, profanations du temple Goldenlaws). Deux mois après Nemmia, **adapter les disparitions et la chronologie** : ne pas supposer que les captifs originels attendent encore attachés dans la grange. Les pistes doivent être raccourcissables ou contournables.
 - **Dès 21 h :** route vers l'ermitage, découverte de la corruption, sauvetage du maire et de **Harlock Hamdeel** si le rythme le permet. Harlock est la transition vers **la tour d'Erran** et le mystère des orbes.
-- **Passage garanti vers l'ermitage :** la sœur de Nemmia peut renseigner les PJ ; les témoins et traces du moulin ou du temple aussi ; indépendamment, **Jae Abber connaît Harlock et la localisation de l'ermitage**. Ne pas verrouiller l'accès derrière une enquête particulière.
+- **Passage garanti vers l'ermitage :** Temin peut renseigner les PJ ; les témoins et traces du moulin ou du temple aussi ; indépendamment, **Jae Abber connaît Harlock et la localisation de l'ermitage**. Ne pas verrouiller l'accès derrière une enquête particulière.
 - **Conflit des cirques :** dans le tome publié, **Daring Danika, Viktor Volkano et Jellico Bounce-Bounce** provoquent les artistes du Cirque des Merveilles Vagabondes, avec défi public et possible embuscade ultérieure. **Adaptation préparée, non jouée :** n'évoquer pour le moment que des rumeurs, intimidations et répercussions économiques, sans forcer leur apparition ; ce front restera ouvert plus tard.
 
 La préparation détaillée et ses cases « jouée » relèvent de **SQLite**, pas de cette fiche. Rien dans cette section ne constitue une séance jouée au-delà des faits confirmés ci-dessus.
