@@ -37,7 +37,6 @@ import { initOutcomeEffects } from "./outcome-effects/index.js";
 
 import { initFamiliarSelector } from "./familiar-selector.js";
 import { initMJSceneControls } from "./mj-scene-controls.js";
-import { scheduleCorvanImport } from "./corvan-import.js";
 import { registerAVControlSettings, initAVControl } from "./livekit-mj-controls.js";
 import { migrateSashkaFamiliarFeat } from "./familiar-sashka-migration.js";
 
@@ -71,7 +70,6 @@ Hooks.once("ready", () => {
   applyTranslationOverrides();
 
   initFamiliarSelector();
-  scheduleCorvanImport(); // Seed Corvan when an authorized GM enters the world.
   initAVControl();
   initCombatMovement();
   initQuickCombatScene();

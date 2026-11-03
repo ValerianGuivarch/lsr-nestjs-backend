@@ -71,6 +71,11 @@ assert.equal(
   1000
 );
 
+const gmOnly = {type:"character",hasPlayerOwner:false,getFlag:()=>356000};
+const playerOwned = {type:"character",hasPlayerOwner:true,getFlag:()=>356000};
+assert.equal(xpc.getXpc(gmOnly),null,"GM-owned character must not receive session XPC");
+assert.equal(xpc.getXpc(playerOwned),356000,"player-owned character keeps session XPC");
+
 const yaz = {
   uuid: "Actor.q2oRahiBEqoT9aUk"
 };

@@ -40,10 +40,9 @@ function escape(value) {
 }
 
 function isCharacter(actor) {
-  // GM-only scripted characters (Corvan) are not participating PCs. Exclude
-  // them from session-XPC synchronization to avoid resetting level 20 to 1.
-  return actor?.type === "character" &&
-    actor?.getFlag?.(MODULE_ID, "corvanSeed") !== true;
+  // Session XP concerns player-owned characters, not GM-owned world NPCs
+  // stored using the PF2e character type. Foundry exposes hasPlayerOwner.
+  return actor?.type === "character" && actor?.hasPlayerOwner !== false;
 }
 
 function normalizeExistingXpc(value) {

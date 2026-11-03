@@ -556,23 +556,18 @@ Fichiers : \`pf2e-val-toolkit/scripts/private-roll-names.js\`, \`styles/private-
 
 ---
 
-## Correctif du niveau de Corvan (toolkit 0.44.8)
+## Gestion ponctuelle des personnages dans Foundry
 
-Audit de la base du monde (2 novembre 2026, copie en lecture seule) : l'Actor Corvan était effectivement au niveau **1**, avec **14 PV** et un drapeau XPC à **0** ; son familier avait **5 PV**. Les 41 sorts, les 10 dons de classe et l'Actor familier lié existaient correctement. La cause est une régression entre la création de Corvan (niveau 20) et la synchronisation XPC des participants : ce personnage narratif n'est pas un PJ.
+Le monde Foundry est la source de vérité des Actors, familiers, Items et
+préparations de sorts. Les modifications ponctuelles passent par l'interface
+ou les endpoints documentaires autorisés du REST Relay. Elles ne sont jamais
+réalisées par un importeur de personnage spécifique au Toolkit ou un hook
+de création automatique. En cas de refus d'accès, rechercher la cause et
+demander l'accord de l'utilisateur avant un contournement.
 
-Le correctif exclut spécifiquement les Actors marqués `pf2e-val-toolkit.corvanSeed` des traitements de progression XPC des PJ, puis restaure pour Corvan le niveau 20, XPC 356000, la caractéristique d'incantation Intelligence et les PV calculés du maître et du familier. La rune `dancing` d'origine est normalisée en rune remaster `animated`. Une fiche déjà importée est réparée au prochain chargement du MJ (l'import ponctuel peut être relancé sans doublons). Ne pas toucher aux bases LevelDB du monde en cours d'exécution.
-
-**État de validation :** correction source disponible sur `main`, à déployer et à vérifier en session MJ. Tant que la version chargée de Foundry n'est pas 0.44.8, le niveau observé peut rester à 1. Contrôler aussi les statistiques calculées après réparation.
-
----
-
-## Import ponctuel Corvan (Witch niveau 20)
-
-Le premier jet de la fiche Corvan est préconfiguré pour Actors → MJ → Divers, avec son familier-poignard séparé, associé comme familier à son maître. Les portraits sont des PNG dans assets/l7r/portraits/pnj/ : corvan-keris.png (converti du portrait existant) et corvan-poignard-familier.png.
-
-Le relais REST Foundry n'ayant aucun client connecté au moment de la préparation, aucune écriture LevelDB directe n'a été faite. L'import est exécuté par le client Foundry GM à son prochain chargement, via pf2e-val-toolkit/scripts/corvan-import.js et le manifeste pf2e-val-toolkit/assets/corvan/manifest.json. Il est idempotent et marque l'Actor lorsque les documents nécessaires sont effectivement créés. Le dossier et les noms existants sont vérifiés avant tout ajout. Une erreur est affichée si une étape échoue. Les sorts/rangs, dons et capacités sont documentés dans le manifeste et le test tests/corvan-import.mjs.
-
-Attention : jusqu'à la prochaine connexion/recharge du MJ, l'acteur n'est pas encore garanti comme présent dans le monde. Après chargement, contrôler le total des objets de classe, les listes de sorts, le familier et la cohérence de la feuille réelle dans Foundry. Le build est une première proposition du MJ, pas une source canonique supplémentaire.
+La synchronisation XPC du Toolkit concerne les personnages possédés par les
+joueurs : une fiche de type character appartenant seulement au MJ reste
+hors des calculs XPC des séances des PJ.
 
 ---
 

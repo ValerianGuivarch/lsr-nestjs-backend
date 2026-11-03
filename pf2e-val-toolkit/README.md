@@ -1310,35 +1310,13 @@ false)` et les mécanismes natifs du module LiveKit ; aucune piste ne se crée
 avant l'accord explicite. Les modes vocaux du joueur (dont push-to-talk)
 restent inchangés. Tests : `tests/livekit-join-consent.mjs`.
 
-## v0.44.7 — Première création de Corvan (Witch 20)
+## v0.44.9 — Responsabilités du Toolkit et XPC
 
-Import unique via l'API Document Foundry au prochain chargement d'un MJ, en
-l'absence de client actif sur le relais REST au moment de la préparation.
-Dossier : Actors → MJ → Divers. Portraits PNG : assets/l7r/portraits/pnj/.
-Construction : elfe, Witch (Spinner of Threads / Echo of Lost Divinity),
-background Acolyte (choix provisoire), niveau 20, 10 dons de classe, 5 dons
-d'ascendance, 5 dons généraux, 10 dons de compétence, 33 sorts préparés, 5
-tours supplémentaires connus, 3 hexes, armes et tenue magique.
-Le familier est un second Actor familiar lié par system.master.id, avec
-sept capacités dont vol, parole, indépendance et incantation. Il ne gagne
-pas d'attaque gratuite : Spiritual Armament et Ceremonial Knife simulent
-le poignard offensif. La création est reprise sans doublons si interrompue ;
-elle est réservée à un MJ et vérifiée par tests/corvan-import.mjs.
+Le Toolkit ne crée ni ne répare de personnage nommé au chargement du monde.
+Les données et ajustements ponctuels des personnages, familiers et sorts
+relèvent des documents Foundry et de son interface/API habituelle.
 
-Vérification requise : test interactif de la fiche, des choix de capacités,
-des préparations et des attaques après import effectif dans Foundry.
-
-## v0.44.8 — Correction du niveau 20 de Corvan
-
-Audit réel (2 novembre 2026) : Corvan avait XPC=0, niveau 1 et 14 PV ;
-son familier avait 5 PV, bien que les 41 sorts soient présents. La
-synchronisation automatique des XP des PJ avait écrasé son niveau initial.
-Les Actors marqués `corvanSeed` (Corvan uniquement) ne sont plus traités
-comme des PJ dans le système XPC ; leur progression n'est pas recalculée
-depuis les résumés de séance.
-
-Au chargement du MJ, l'import déjà terminé est désormais réparé sans doublons :
-niveau 20, XPC 356000, caractéristique de classe Intelligence, XP PF2 1000,
-et PV recalculés pour Corvan et le familier. La rune de poignard `dancing`
-est migrée vers `animated` (nom remaster). Vérifier le calcul réel dans Foundry
-après installation de la version 0.44.8.
+Le système XPC ne synchronise que les Actors de type character possédés
+par un joueur (propriété native hasPlayerOwner). Les fiches de personnages
+uniquement gérées par le MJ ne sont plus réécrites depuis les résumés des PJ.
+Test : tests/xpc-progression.mjs.

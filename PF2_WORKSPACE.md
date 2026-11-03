@@ -2,6 +2,16 @@
 
 **Point d'entrée obligatoire** des nouvelles discussions ChatGPT PF2. Les conversations sont temporaires : **les décisions et connaissances utiles doivent survivre dans les artefacts Markdown**, sans doubler les données des systèmes opérationnels.
 
+## Priorité aux accès et processus nominaux
+
+**Règle impérative pour l'assistant :** utiliser les interfaces, outils et processus officiels prévus pour chaque tâche (Git et GitHub pour le code ; mini-PC pour l'exploitation ; API documentaire ou interface Foundry pour les Actors, Items et Scenes ; outils métiers pour leurs données). Les données de campagne restent dans le système qui en est la source de vérité.
+
+Lorsqu'une opération habituelle échoue (monde Foundry fermé, relais sans droits, compte indisponible, problème Git, SSH ou déploiement), **diagnostiquer le blocage et demander explicitement à l'utilisateur avant de passer à une autre méthode**. Rétablir en priorité l'accès nominal. Une solution alternative peut être proposée, mais elle ne doit jamais être exécutée sur la seule base de la demande initiale.
+
+En particulier, ne jamais placer un script de création ou de réparation ponctuelle d'un personnage, d'une scène ou d'un scénario dans un module applicatif ou un hook de démarrage pour contourner un accès Foundry bloqué ; ne jamais écrire directement dans la base de données Foundry active ; ne pas changer les permissions, les clés ou l'architecture pour forcer un accès. Le code réutilisable n'est pas un réceptacle de données spécifiques au monde. Un contournement exige une approbation distincte.
+
+Quand plusieurs endpoints normaux et autorisés existent (par exemple lecture et modification d'un document dans le REST Relay), les privilégier sans rechercher de nouvelles permissions. Avant tout changement de code, examiner et protéger les modifications locales non commitées ; distinguer sources Git et déploiement. Rendre compte de ce qui est réellement fait et de ce qui reste bloqué.
+
 ## Sommaire
 
 | Dossier ChatGPT | Index principal | Sujets |
