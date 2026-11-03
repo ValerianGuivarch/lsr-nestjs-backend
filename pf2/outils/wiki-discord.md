@@ -260,3 +260,10 @@ Le bouton **Créer la fiche** est désormais natif au chat Foundry pour tous les
 ### Préparation de séance : canal mémorisé et partage de personnages (octobre 2026)
 
 À la création effective du brouillon `/debut-seance`, le canal Discord courant est mémorisé **par séance** (ID salon/fil + serveur) dans SQLite ; il est clôturé mais conservé historiquement après `/fin-seance`. Depuis la page MJ **Préparation séance**, le bouton Partager un personnage publie comme `/personnage` dans ce même canal et déclenche la réplication Foundry existante. Cela s'applique aussi aux personnages temporaires définis uniquement par un nom et un portrait, sans fiche PNJ permanente. Un seul contexte actif peut être utilisé automatiquement ; en cas de plusieurs, le MJ doit associer explicitement la préparation à la séance. Voir [guide de préparation](../../docs/pf2/session-preparations.md).
+
+
+## Aide XP (outil MJ dans le wiki, novembre 2026)
+
+Depuis les cartes de séances du wiki, un bouton **Outil MJ · XP** réservé au droit `pf2sessions-admin` ouvre `Special:PF2SessionXp?session=<id>`. Cette page affiche les PJ inscrits à la séance, leur niveau **au début de la séance** recalculé depuis les XPC historiques, les paliers suivants et une recommandation de récompense de groupe pour une progression moyenne sur **2,5 séances**. Un grand champ de texte interprète immédiatement `30XP`, `200 XP`, `2 000xp` et calcule leur somme, le montant équivalent par PJ et l'écart avec la cible. Aucun message Discord, aucune écriture de points et aucun formulaire de validation. Le brouillon est privé au navigateur et à la séance.
+
+La page spéciale et la route `action=pf2sessionxp` contrôlent toutes les deux les droits administrateur ; le backend `GET /wiki/sessions/:id/xp-aid` requiert la clé interne Wiki pour interdire l'accès direct public aux calculs. Détails, exemples et tests : [guide Aide XP](../../docs/pf2/wiki-session-xp-aid.md).

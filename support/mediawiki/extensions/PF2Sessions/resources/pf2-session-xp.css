@@ -1,0 +1,27 @@
+#pf2-xp-aid{display:grid;gap:1.25rem;max-width:1150px;color:var(--color-base,#202122)}
+.pf2-xp-header{display:grid;justify-items:start;gap:.45rem}
+.pf2-xp-header h2{font-size:1.6rem!important;margin:.25rem 0!important;border:0!important}
+.pf2-xp-header p{margin:0;line-height:1.45}
+.pf2-xp-kicker{font-size:.88rem;color:var(--color-subtle,#54595d);font-weight:600}
+.pf2-xp-facts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:.6rem}
+.pf2-xp-facts>div{padding:.8rem 1rem;border:1px solid var(--border-color-subtle,#c8ccd1);border-radius:8px;background:var(--background-color-neutral-subtle,#f8f9fa);display:grid;gap:.2rem}
+.pf2-xp-facts span{color:var(--color-subtle,#54595d);font-size:.84rem}
+.pf2-xp-facts strong{font-size:1.3rem;overflow-wrap:anywhere}
+.pf2-xp-participants{max-width:100%;overflow-x:auto}
+.pf2-xp-participants table{width:100%;margin:0}
+.pf2-xp-participants th,.pf2-xp-participants td{text-align:left;padding:.45rem .6rem}
+.pf2-xp-formula{padding:.65rem .8rem;border-left:3px solid #b6a06f;background:var(--background-color-neutral-subtle,#f8f9fa);margin:0;line-height:1.45}
+.pf2-xp-warning{padding:.75rem;background:#fff4d6;border:1px solid #e0c36b;border-radius:6px;color:#55430a}
+.pf2-xp-editor{border:1px solid var(--border-color-subtle,#c8ccd1);border-radius:9px;padding:1rem 1.2rem;display:grid;gap:.7rem}
+.pf2-xp-editor h3{margin:.1rem 0!important}
+.pf2-xp-editor p{margin:0;line-height:1.5}
+.pf2-xp-editor label{font-weight:600}
+#pf2-xp-notes{width:100%;min-height:16rem;resize:both;box-sizing:border-box;border:1px solid var(--border-color-base,#a2a9b1);border-radius:6px;background:var(--background-color-base,#fff);color:var(--color-base,#202122);padding:.75rem;font:inherit;line-height:1.55;max-width:100%}
+.pf2-xp-live{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.6rem;background:var(--background-color-neutral-subtle,#f8f9fa);border:1px solid var(--border-color-subtle,#c8ccd1);border-radius:8px;padding:1rem}
+.pf2-xp-live>div{display:grid;gap:.2rem;min-width:0}
+.pf2-xp-live>div span{font-size:.8rem;color:var(--color-subtle,#54595d)}
+.pf2-xp-live>div strong{font-size:1.35rem;overflow-wrap:anywhere}
+.pf2-xp-live p,.pf2-xp-live progress{grid-column:1/-1}
+.pf2-xp-live progress{width:100%;height:.8rem}
+.pf2-xp-disclaimer{color:var(--color-subtle,#54595d)}
+@media(max-width:780px){.pf2-xp-facts{grid-template-columns:repeat(2,minmax(0,1fr))}.pf2-xp-live{grid-template-columns:1fr}}

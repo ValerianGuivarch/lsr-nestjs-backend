@@ -1,6 +1,6 @@
 {
   "name": "PF2Sessions",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "author": [
     "PF2 project"
   ],
@@ -14,17 +14,21 @@
     "ApiPF2SessionPreview": "includes/ApiPF2SessionPreview.php",
     "ApiPF2SessionPublication": "includes/ApiPF2SessionPublication.php",
     "ApiPF2SessionDelete": "includes/ApiPF2SessionDelete.php",
-    "SpecialPF2DiscordLogin": "includes/SpecialPF2DiscordLogin.php"
+    "SpecialPF2DiscordLogin": "includes/SpecialPF2DiscordLogin.php",
+    "ApiPF2SessionXp": "includes/ApiPF2SessionXp.php",
+    "SpecialPF2SessionXp": "includes/SpecialPF2SessionXp.php"
   },
   "SpecialPages": {
-    "PF2DiscordLogin": "SpecialPF2DiscordLogin"
+    "PF2DiscordLogin": "SpecialPF2DiscordLogin",
+    "PF2SessionXp": "SpecialPF2SessionXp"
   },
   "APIModules": {
     "pf2sessions": "ApiPF2Sessions",
     "pf2sessionupdate": "ApiPF2SessionUpdate",
     "pf2sessionpreview": "ApiPF2SessionPreview",
     "pf2sessionpublication": "ApiPF2SessionPublication",
-    "pf2sessiondelete": "ApiPF2SessionDelete"
+    "pf2sessiondelete": "ApiPF2SessionDelete",
+    "pf2sessionxp": "ApiPF2SessionXp"
   },
   "ResourceModules": {
     "ext.pf2sessions": {
@@ -33,6 +37,21 @@
       ],
       "styles": [
         "resources/pf2-sessions.css"
+      ],
+      "dependencies": [
+        "mediawiki.api",
+        "mediawiki.util"
+      ],
+      "localBasePath": "",
+      "remoteExtPath": "PF2Sessions"
+    },
+    "ext.pf2sessions.xp": {
+      "scripts": [
+        "resources/pf2-session-xp-calc.js",
+        "resources/pf2-session-xp.js"
+      ],
+      "styles": [
+        "resources/pf2-session-xp.css"
       ],
       "dependencies": [
         "mediawiki.api",

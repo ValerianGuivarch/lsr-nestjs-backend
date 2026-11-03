@@ -312,7 +312,10 @@
               ( isPublished ? 'Remettre en brouillon' : 'Publier' ) + '</button>'
             : '';
         var adminButtons = state.canAdmin
-            ? '<button class="pf2-button pf2-danger" data-delete>Supprimer</button>'
+            ? '<a class="pf2-button pf2-primary" href="' +
+                escapeHtml( mw.util.getUrl( 'Special:PF2SessionXp', { session: session.id } ) ) +
+                '" title="Aide XP privée pour la séance ' + escapeHtml( session.sessionNumber ) + '">Outil MJ · XP</a>' +
+              '<button class="pf2-button pf2-danger" data-delete>Supprimer</button>'
             : '';
 
         return '<article id="pf2-session-' + escapeHtml( session.sessionNumber ) + '" class="pf2-session" data-session-id="' + escapeHtml( session.id ) + '">' +

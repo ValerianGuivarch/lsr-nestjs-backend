@@ -4,7 +4,9 @@
 
 Espace réservé aux aides réutilisables : règles maison validées, procédures MJ, générateurs et guides. Ne pas archiver ici les simples questions résolues, ni recopier les règles officielles inutilement.
 
-Les règles mécaniques utilisées en jeu doivent être confirmées avec les sources PF2 et Foundry. Les guides techniques d'intégration relèvent des [Outils](OUTILS.md).
+Les règles mécaniques utilisées en jeu doivent être confirmées avec les sources PF2 et Foundry.
+
+**Aide MJ aux récompenses XP :** le wiki comporte un [outil XP par séance](docs/pf2/wiki-session-xp-aid.md), réservé aux administrateurs. Il prend la courbe XPC historique et les niveaux des PJ au début de la séance, puis indique un budget de groupe correspondant à une montée de niveau en environ 2,5 séances. La saisie des événements dans le champ libre n’attribue aucun XP automatiquement. Les guides techniques d'intégration relèvent des [Outils](OUTILS.md).
 
 ## Ressources MJ externes
 

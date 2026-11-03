@@ -23,6 +23,28 @@ const published: Pf2Session = {
 }
 
 describe('Pf2WikiSessionsController', () => {
+  it('protects the admin XP-aid endpoint with the server wiki key', async () => {
+    const previous = process.env['PF2_WIKI_LOGIN_INTERNAL_KEY']
+    process.env['PF2_WIKI_LOGIN_INTERNAL_KEY'] = 'private-server-test-key'
+    const persistence = {
+      listSessions: jest.fn().mockResolvedValue([published]),
+      readFoundryActorCache: jest.fn().mockResolvedValue([{ uuid: 'Actor.hero', name: 'Héros (Joueur)' }]),
+    }
+    const controller = new Pf2WikiSessionsController(persistence as never, {} as never, {} as never)
+    try {
+      await expect(controller.xpAid('resume-1', '')).rejects.toThrow('Accès MJ réservé')
+      await expect(controller.xpAid('resume-1', 'bad-key')).rejects.toThrow('Accès MJ réservé')
+      expect(persistence.listSessions).not.toHaveBeenCalled()
+      await expect(controller.xpAid('resume-1', 'private-server-test-key')).resolves.toEqual(
+        expect.objectContaining({ participantCount: 1, targetGroupXp: 120, targetXpPerPlayer: 120 }),
+      )
+      await expect(controller.xpAid('does-not-exist', 'private-server-test-key')).rejects.toThrow('Séance introuvable')
+    } finally {
+      if (previous === undefined) delete process.env['PF2_WIKI_LOGIN_INTERNAL_KEY']
+      else process.env['PF2_WIKI_LOGIN_INTERNAL_KEY'] = previous
+    }
+  })
+
   it('exposes only Journal MJ scenarios and flattens campaign episodes with their playable components', async () => {
     const draft = { ...published, id: 'draft', sessionNumber: 2, published: false }
     const persistence = {

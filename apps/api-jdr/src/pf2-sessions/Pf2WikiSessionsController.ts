@@ -3,6 +3,8 @@ import {
   Controller,
   Delete,
   Get,
+  Headers,
+  UnauthorizedException,
   HttpException,
   HttpStatus,
   NotFoundException,
@@ -23,6 +25,7 @@ import {
   DiscordService,
 } from '../discord/DiscordService'
 import { buildSummaryRewardLedger } from './Pf2CareerXp'
+import { sessionXpAid, type SessionXpAid } from './Pf2SessionXpAid'
 import { PlayerCodexService } from '../pf2-mj/PlayerCodexService'
 
 type WikiSession = Pf2Session & {
@@ -136,6 +139,24 @@ export class Pf2WikiSessionsController {
         factions: this.wikiLinkTargets(factionLinks),
       },
     }
+  }
+
+  @Get(':id/xp-aid')
+  async xpAid(
+    @Param('id') id: string,
+    @Headers('x-pf2-wiki-key') key = '',
+  ): Promise<SessionXpAid> {
+    // Used only by the MediaWiki admin-only API proxy. The generic session
+    // listing is public; progression calculations and this tool are NOT.
+    const expected = process.env['PF2_WIKI_LOGIN_INTERNAL_KEY'] || process.env['PF2_JOURNALS_INTERNAL_KEY']
+    if (!expected || key !== expected) throw new UnauthorizedException('Accès MJ réservé.')
+    const [sessions, actors] = await Promise.all([
+      this.persistence.listSessions(),
+      this.persistence.readFoundryActorCache(),
+    ])
+    const session = sessions.find(entry => entry.id === id)
+    if (!session) throw new NotFoundException('Séance introuvable.')
+    return sessionXpAid(session, sessions, actors)
   }
 
   @Patch(':id')
