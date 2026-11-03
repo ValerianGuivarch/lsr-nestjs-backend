@@ -31,7 +31,7 @@ Vaga a fui le cadre abusif de Dusklight avec ou aux côtés des artistes qui dev
 
 ## Prochaine séance — Séance 2 : Abberton (chapitre 2 seulement)
 
-[Ouvrir la préparation structurée dans l'application MJ](https://l7r.fr/pf2-mj/session-preparations?preparationId=31332abc-ef1d-4172-805d-dfc336ff7164) — préparation SQLite `31332abc-ef1d-4172-805d-dfc336ff7164`, **7 étapes et 21 blocs** (révision 7 du 3 novembre 2026), campagne catalogue `extinction-curse`, **non jouée**.
+[Ouvrir la préparation structurée dans l'application MJ](https://l7r.fr/pf2-mj/session-preparations?preparationId=31332abc-ef1d-4172-805d-dfc336ff7164) — préparation SQLite `31332abc-ef1d-4172-805d-dfc336ff7164`, **7 étapes et 21 blocs** (révision 8 du 3 novembre 2026), campagne catalogue `extinction-curse`, **non jouée**.
 
 **Découpage MJ modifié :** ne plus regrouper les chapitres 2 et 3. Cette séance se déroule essentiellement à **Abberton**. La suivante est dédiée à l'**Ermitage de l'Éclair Béni**, après une nouvelle demande d'aide. Les PJ doivent pouvoir **rentrer à Absalom après avoir aidé le village, en estimant avoir le temps de revenir**.
 
@@ -47,13 +47,25 @@ Vaga a fui le cadre abusif de Dusklight avec ou aux côtés des artistes qui dev
 
 La préparation SQLite demeure la source de vérité pour les blocs, horaires et cases « jouée ». Les points ci-dessus sont **préparés, non joués**.
 
-## Diagnostic Foundry du 3 novembre 2026 — lecture seule
+## Foundry — import du module de cartes et Goldenlaws (3 novembre 2026)
 
-Le relais Foundry répond, mais aucun client GM n'est actuellement signalé en ligne. Un audit en lecture seule d'une **copie** des bases scènes/Actors du mini-PC a trouvé :
-- les **13 images WebP** du volume 1, réelles et non vides, dans `worlds/test-pf2/pf2e-val-toolkit/scenarios/extinction-curse-volume-1/maps/` ; les plans **Goldenlaws Church**, **Hawfton Mill** et **Odlin's Orchard** ont été visualisés et semblent exploitables ;
-- les scènes Foundry existent. Plusieurs fonds de **Level Foundry V14** pointent vers un chemin erroné `.../assets/maps/...` alors que les fichiers sont dans `.../maps/...` ; **Goldenlaws Church**, **Hawfton Mill** et **Mad Mug** sont concernés ; les scènes examinées sont également vides de murs et tokens. Le `background` nul à la racine n'est pas à lui seul un diagnostic en V14 : examiner les Levels ;
-- les Actors mécaniques déjà importés comprennent notamment **Abrikandilu**, **Quasit**, **Vermlek**, **Sanglier**, **Jeune sanglier**, **Danika**, **Viktor**, **Jellico** et **Forain mécanique** ; éviter de les recréer inutilement.
-- aucune scène ni aucun Actor n'a encore été modifié dans Foundry au cours de cet audit. **Avant implantation :** reconnecter un GM au monde, confirmer l'état via le REST Relay, corriger les fonds au bon chemin avec API/Toolkit, puis ajouter murs/tokens et des coffres `loot` à tokens masqués au MJ. Vérifier les objets exacts depuis les compendiums officiels, ne pas écrire directement dans LevelDB pendant que Foundry tourne.
+**Déploiement effectivement réalisé dans le monde `Les Eclaireurs` (Foundry 14.365) via le REST Relay, compte GM connecté.** Le module installé `ec-maps-remake-by-lios` fournit 73 scènes de haute qualité avec murs/portes et parfois éclairages. L'arborescence des **Scènes** a été créée à la racine sous **Sentinelles d’Extinction** (libellé explicitement demandé par le MJ), avec **6 livres, puis 21 dossiers de chapitre** ; toutes les **73 scènes** ont été importées ou réutilisées et renommées en français. Les trois scènes d'abord importées par le MJ ont été réutilisées et déplacées dans les bons dossiers. Deux dossiers temporaires vides ont été supprimés.
+
+**Livre 01 / Chapitre 02 — cartes disponibles :** `Scene.EiexgadIhHav70nY` (Abberton), `Scene.HhVMBGmiFye2QLtl` (Goldenlaws), `Scene.9uqmhCcIvLNKtTab` (verger d'Oldlin), `Scene.8mFPek6Em0QHFYP3` (moulin Hawfton), `Scene.oHweYtKZoXfcqCvb` (Mad Mug), `Scene.9LAHtZ14BwPj5A2I` (grange Lindell RDC), `Scene.NF0Al7tdqlWrX0LA` (grange Lindell étage).
+
+**Goldenlaws prête comme première scène pilote :** carte du module présente dans un Level V14, **70 murs et 7 portes**. **12 tokens cachés aux joueurs** ont été placés : abrikandilu + quasit (D2), Nellyn Drend blessé et prisonnier (D3), deux vermleks-Lindell dans le cimetière D5, quasit + 2 pugwampis dans la crypte facultative D6, et quatre coffres MJ. Les Actors mécaniques existants (du volume 1 / des compendiums) sont réutilisés sans duplication. **Nellyn** a une fiche de PNJ narrative *sans statistiques officielles de combat* : `Actor.4YmG3gV89qlsPrXT`.
+
+**Quatre Actors `loot` de Goldenlaws, ownership MJ uniquement et tokens cachés :**
+- D2 `Actor.B7M38pmhUTjQyIq1` : balance en or (20 po) et pendentif de l'ange en pleurs ; appartiennent à l'église, Nellyn peut les donner.
+- D3 `Actor.KcmagQa7nFYrW6SX` : figurine du chien d'onyx + broche de défense ; **récompense PROMISE et non acquise**, à remettre uniquement si les deux livres sacrés d'Abadar sont récupérés.
+- D4 `Actor.4ZyXn9nAMcCMAh2O` : trois eaux bénites.
+- D6 `Actor.WB1nQuo6Zdzpb7BA` : bague en or (10 po) et bracelet de fougue, crypte facultative.
+
+Les cinq nouveaux Actors sont rangés dans **Sentinelles d’Extinction — PNJ et butins** (dossier Actors). Les emplacements des tokens ont été préparés à partir de la carte du module et des zones D2–D6 ; **contrôle visuel et essai de déplacement/vision dans l'interface Foundry restent recommandés** avant la séance. L'absence d'éclairage propre à Goldenlaws est conforme au compendium.
+
+**À ne pas confondre :** les **anciens documents de scènes vides** générés par le Toolkit pour le volume 1 existent encore dans le dossier précédent, avec leurs anciens chemins de fond erronés. Ils ont été **laissés intacts**, pour éviter les pertes de références. Les autres cartes du chapitre 2 sont désormais disponibles mais leurs rencontres et coffres ne sont pas encore installés. La future séance de l'ermitage reste distincte.
+
+**Sauvegarde avant modifications :** `/home/valou/services/foundry/backups/extinction-module-import-20261103/` (copies des données Scenes/Folders). Script de réimport idempotent : `/home/valou/services/foundry/import-ec-remake-20261103.py`. Toutes les écritures dans Foundry ont été réalisées via le REST Relay, **sans écriture directe dans les bases LevelDB du monde actif**.
 
 ## Repères du scénario publié — informations MJ
 
