@@ -602,6 +602,8 @@ export class DiscordCommandsService {
         '🚫 **Réservées par les absents**',
       ]
       const lines: string[] = ['**Choix de quête**']
+      const displayVoter = (player: QuestVoter): string =>
+        missionPlayerIds.has(player.id) ? '**' + player.name + '**' : player.name
       let currentGroup = -1
       for (const quest of quests) {
         const group = Math.max(0, category(quest) - 1)
@@ -610,8 +612,8 @@ export class DiscordCommandsService {
           currentGroup = group
         }
         const details = [
-          quest.reserved.length ? 'réservé par ' + quest.reserved.map(p => p.name).join(', ') : '',
-          quest.interested.length ? 'intéresse ' + quest.interested.map(p => p.name).join(', ') : '',
+          quest.reserved.length ? 'réservé par ' + quest.reserved.map(displayVoter).join(', ') : '',
+          quest.interested.length ? 'intéresse ' + quest.interested.map(displayVoter).join(', ') : '',
         ].filter(Boolean)
         lines.push('- <#' + quest.id + '>' + (details.length ? ' (' + details.join(', ') + ')' : ''))
       }
