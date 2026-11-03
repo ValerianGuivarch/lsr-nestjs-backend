@@ -25,7 +25,7 @@ Vaga a fui le cadre abusif de Dusklight avec ou aux côtés des artistes qui dev
 
 - Les PJ ont déjà aidé le **Cirque des Merveilles Vagabondes** à Abberton, puis sont repartis à **Absalom**.
 - **Nemmia Bramblecloak** (halfeline druidesse liée aux attaques contre le cirque) a été **tuée** au cours de cette première intervention. Environ **deux mois** se sont écoulés depuis.
-- Les PJ détiennent à **Absalom Temin, la sœur de Nemmia**, prisonnière. **Nom confirmé par le MJ.** Son identifiant PNJ dans `pf2.sqlite` reste à vérifier avant de la lier à une fiche existante.
+- Les PJ détiennent à **Absalom Temin, la sœur de Nemmia**, prisonnière. **Nom confirmé par le MJ.** Sa fiche PNJ est identifiée dans `pf2.sqlite` sous `temin-bramblecloak` et liée à la préparation de séance.
 - **Adaptation validée :** cette sœur est liée à la mouvance dissidente autour d'un **centaure de la foudre / des tempêtes**. Cette mouvance est restée fidèle à ses convictions d'origine, quoique radicale, **sans suivre la corruption démoniaque** des membres de l'Ermitage de l'Éclair Béni. Le lien exact entre les deux groupes, le nom du centaure et leurs dénominations canoniques ou maison restent à documenter.
 - Les PJ connaissent déjà **de nom l'ermitage**, mentionné brièvement avant la mort de Nemmia, mais n'ont pas encore résolu les troubles locaux ni libéré Harlock. La sœur peut fournir des informations supplémentaires si elle accepte de parler ; **son interrogatoire et le voyage qui suit ne sont pas encore joués**.
 
