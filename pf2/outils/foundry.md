@@ -606,3 +606,20 @@ Les modes vocaux personnels, dont push-to-talk, restent inchangés.
 
 La description technique, les limites et les tests sont dans
 [`pf2e-val-toolkit/README.md`](../../pf2e-val-toolkit/README.md).
+
+
+## Audit des cartes Racooze et des doublons — 3 novembre 2026
+
+Instantané en lecture seule du monde `test-pf2` sur le mini-PC, pendant la réorganisation des scènes : **520 scènes**. Une comparaison des groupes de scènes portant le même nom, dans le même dossier, avec les drapeaux `racooze-map-library.mapSlug`, empreintes des imports et nombres d'éléments, donne **72 groupes de doublons et 75 scènes surnuméraires** : **56 pour Age of Ashes**, **19 pour Agents of Edgewatch**. Deux cartes possèdent des tokens uniquement sur un des exemplaires et demandent de préserver la version enrichie : `Tipsy Tengu` et `Knight's Marvelous Menagerie`. Les originaux et les nouveaux imports ont souvent exactement les mêmes caractéristiques de carte et empreintes de sources.
+
+La copie de travail de l'audit et le plan de conservation restent sur le mini-PC : `/tmp/racooze-dedupe-20261103/` (`global.json`, `duplicates-detail.json`, `dedupe-plan.json`), avec **snapshot LevelDB avant modification**. Il ne s'agit pas de fichiers à commiter. Le premier doublon `Scene.Vxk2bTaMc2S94U8W` (Tipsy Tengu, sans tokens) a été supprimé avec succès via le REST Relay `DELETE /delete`, en conservant `Scene.S8CI8g7so0k1sOCs` (avec tokens). L'ancienne carte `Scene.03K90p7HX87wIJwW` (Ruined Temple) a été renommée « Temple en ruine » par `PUT /update`, puis vérifiée par `GET /get`. **Les 74 autres suppressions et la traduction générale ne sont pas terminées : la tentative d'opération groupée a été bloquée par les contrôles d'exécution. Ne pas prétendre que l'ensemble a été nettoyé.**
+
+**Répertoire MJ / Campagnes officielles : ne pas supprimer en bloc.** Plusieurs scènes MJ ne disposent pas de remplacement dans la bibliothèque téléchargée :
+- Les scènes personnalisées d'Extinction Curse / Sentence d'extinction ne sont pas remplacées par un lot de scènes Racooze correspondant.
+- Les scènes Agents d'Absalom du livre 4 ne sont pas couvertes par les cartes Racooze actuellement importées (principalement livres 1 à 3).
+- Une scène personnalisée des Sept Fléaux de Pointesable, « Catacombes du Feu Infernal », contient 287 murs, une lumière et 13 tokens ; sa structure doit être conservée tant que son équivalent n'a pas été établi.
+- Les dossiers MJ contiennent aussi des préparations et des cartes par étage ou niveau qui ne correspondent pas nécessairement aux vues Racooze uniques.
+
+Pour terminer : privilégier l'API Document Foundry avec session MJ active, conserver les versions ayant des tokens ou des modifications manuelles, vérifier l'existence des équivalents avant suppression, traduire les **noms des scènes** en français sans toucher aux drapeaux `mapSlug`, puis refaire un audit différentiel après nettoyage. Aucun passage direct en écriture de LevelDB n'est autorisé.
+
+---
