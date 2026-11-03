@@ -1716,21 +1716,51 @@ export class Pf2MjService {
 
     const pending = Array.isArray(catalogue.reconciliation?.pending) ? [...catalogue.reconciliation!.pending as unknown[]] : []
     let review = 0
-    for (const path of added) {
+    // Index originals first when both an original and its translation are new.
+    // This permits the translation to inherit the just-created original's target.
+    for (const path of [...added].sort((left, right) =>
+      Number(this.isTranslationPdf(left)) - Number(this.isTranslationPdf(right))
+    )) {
       const filename = path.split('/').at(-1) ?? path
-      const match = this.matchTarget(path, targets, false)
+      const normalized = this.normalizedPath(path)
+      const collection = documents ?? files!
+      if (collection.some((item) => typeof item.path === 'string' && this.normalizedPath(item.path) === normalized)) continue
+
+      const fingerprint = await this.libraryFileFingerprint(path)
+      const translation = this.isTranslationPdf(path)
+      // An independently matched translation can be associated to the parent
+      // campaign instead of the volume. The explicit original/translation
+      // pairing is stronger evidence than the filename's title score.
+      // Schema V2 stores an association.itemId; V3 stores targetId.
+      const originalCandidates = translation ? collection.filter((item) =>
+        typeof item.path === 'string' &&
+        !this.isTranslationPdf(String(item.path)) &&
+        this.translationIdentity(String(item.path)) === this.translationIdentity(path)
+      ) : []
+      const original = originalCandidates.length === 1 ? originalCandidates[0] : null
+      const originalId = original && typeof original.id === 'string' ? original.id : null
+      const originalAssociation = this.asObject(original?.association)
+      const originalTargetId = original && typeof original.targetId === 'string'
+        ? original.targetId
+        : typeof originalAssociation.itemId === 'string' ? originalAssociation.itemId : null
+      const originalTarget = originalTargetId ? targets.find((candidate) => candidate.id === originalTargetId) : undefined
+      const rawMatch = this.matchTarget(path, targets, false)
+      const originalConfirmed = originalTarget && (
+        originalAssociation.confidence === 'confirmée' ||
+        originalAssociation.status === 'confirmed'
+      )
+      const match = originalTarget ? {
+        ...rawMatch,
+        targetId: originalTarget.id,
+        campaignId: originalTarget.isCampaign ? originalTarget.id : this.firstCampaignAncestor(originalTarget, targets),
+        status: originalConfirmed ? 'confirmed' as const : rawMatch.status === 'unassociated' ? 'review' as const : rawMatch.status,
+        evidence: [...new Set([...rawMatch.evidence, 'traduction liée au PDF original'])]
+      } : rawMatch
       const info = this.isInformationPdf(path)
       const category = this.documentCategory(path)
       const target = match.targetId ? targets.find((item) => item.id === match.targetId) : undefined
       const status: 'confirmed' | 'review' | 'unassociated' = category === 'rules' || category === 'setting' ? 'confirmed' : match.status === 'confirmed' ? 'confirmed' : match.targetId ? 'review' : 'unassociated'
       if (status !== 'confirmed') review++
-      const normalized = this.normalizedPath(path)
-      const collection = documents ?? files!
-      if (collection.some((item) => typeof item.path === 'string' && this.normalizedPath(item.path) === normalized)) continue
-      const fingerprint = await this.libraryFileFingerprint(path)
-      const translation = this.isTranslationPdf(path)
-      const originalCandidates = translation ? (files ?? []).filter((item) => typeof item.path === 'string' && !this.isTranslationPdf(String(item.path)) && this.translationIdentity(String(item.path)) === this.translationIdentity(path)) : []
-      const originalId = originalCandidates.length === 1 && typeof originalCandidates[0].id === 'string' ? originalCandidates[0].id : null
 
       if (documents) {
         documents.push({

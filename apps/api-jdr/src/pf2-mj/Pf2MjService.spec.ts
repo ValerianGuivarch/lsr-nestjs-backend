@@ -948,6 +948,99 @@ describe('Pf2MjService', () => {
       }
     })
 
+    it('associates a translated Extinction Curse PDF to its volume, not the parent campaign', async () => {
+      const root = await mkdtemp(join(tmpdir(), 'pf2-mj-translation-volume-'))
+      const library = join(root, 'library')
+      const previousLibrary = process.env['PF2_LIBRARY_ROOT']
+      try {
+        const directory = 'Campagnes/Campagnes longues/Extinction Curse/Episodes/01 - The Show Must Go On/Documents'
+        const original = `${directory}/Campagne - Extinction Curse - Tome 1\uf0226 - The Show Must Go On (en).pdf`
+        const translation = `${directory}/Campagne - Extinction Curse - Tome 1_6 - The Show Must Go On (en) - trad.pdf`
+        await mkdir(join(library, directory), { recursive: true })
+        await writeFile(join(library, original), 'original pdf placeholder')
+        await writeFile(join(library, translation), 'translation pdf placeholder')
+        let catalogue: Record<string, unknown> = {
+          schemaVersion: 2,
+          files: [{
+            id: 'original-volume-1', path: original,
+            association: { status: 'associé', campaignId: 'extinction-curse', itemId: 'extinction-curse-volume-1', confidence: 'confirmée' }
+          }],
+          collections: [],
+          entries: [{
+            id: 'extinction-curse', kind: 'campaign', titleOriginal: 'Extinction Curse',
+            parts: [{ id: 'extinction-curse-volume-1', kind: 'volume_aventure', titleOriginal: 'The Show Must Go On', number: 1 }]
+          }]
+        }
+        process.env['PF2_LIBRARY_ROOT'] = library
+        const { service } = serviceFor({}, pnj, {
+          readCatalogueSnapshot: jest.fn().mockImplementation(async () => structuredClone(catalogue)),
+          replaceCatalogueSnapshot: jest.fn().mockImplementation(async (next: Record<string, unknown>) => { catalogue = structuredClone(next) })
+        })
+        const result = await service.scanLibrary(true) as { sync: { inventoried: number } }
+        expect(result.sync.inventoried).toBe(1)
+        const added = (catalogue.files as Array<Record<string, unknown>>).find(file => file.path === translation)
+        expect(added).toEqual(expect.objectContaining({
+          translationVariant: true,
+          translationOf: 'original-volume-1',
+          association: expect.objectContaining({
+            itemId: 'extinction-curse-volume-1',
+            campaignId: 'extinction-curse',
+            confidence: 'confirmé'
+          })
+        }))
+        // Re-running a scan must not duplicate or reassign the translation.
+        const second = await service.scanLibrary(true) as { sync: { inventoried: number } }
+        expect(second.sync.inventoried).toBe(0)
+        expect((catalogue.files as Array<Record<string, unknown>>).filter(file => file.path === translation)).toHaveLength(1)
+      } finally {
+        if (previousLibrary === undefined) delete process.env['PF2_LIBRARY_ROOT']
+        else process.env['PF2_LIBRARY_ROOT'] = previousLibrary
+        await rm(root, { recursive: true, force: true })
+      }
+    })
+
+    it('inherits the original target for a V3 translation even when both PDFs are discovered together', async () => {
+      const root = await mkdtemp(join(tmpdir(), 'pf2-mj-v3-translation-'))
+      const library = join(root, 'library')
+      const previousLibrary = process.env['PF2_LIBRARY_ROOT']
+      try {
+        const directory = 'Campagnes/Extinction Curse'
+        const original = `${directory}/The Show Must Go On (en).pdf`
+        const translation = `${directory}/The Show Must Go On (en) - trad.pdf`
+        await mkdir(join(library, directory), { recursive: true })
+        await writeFile(join(library, original), 'original')
+        await writeFile(join(library, translation), 'translation')
+        let catalogue: Record<string, unknown> = {
+          schemaVersion: 3,
+          containers: [{ id: 'extinction-curse', containerType: 'campaign', titles: { fr: 'Sentence d’Extinction', original: 'Extinction Curse' } }],
+          playableUnits: [{ id: 'extinction-curse-volume-1', parentId: 'extinction-curse', titles: { fr: 'Le spectacle doit continuer', original: 'The Show Must Go On' } }],
+          components: [],
+          documents: [],
+          reconciliation: { pending: [], relocationsApplied: [] }
+        }
+        process.env['PF2_LIBRARY_ROOT'] = library
+        const { service } = serviceFor({}, pnj, {
+          readCatalogueSnapshot: jest.fn().mockImplementation(async () => structuredClone(catalogue)),
+          replaceCatalogueSnapshot: jest.fn().mockImplementation(async (next: Record<string, unknown>) => { catalogue = structuredClone(next) })
+        })
+        const scan = await service.scanLibrary(true) as { sync: { inventoried: number } }
+        expect(scan.sync.inventoried).toBe(2)
+        const docs = catalogue.documents as Array<Record<string, unknown>>
+        const source = docs.find(item => item.path === original)
+        const translated = docs.find(item => item.path === translation)
+        expect(source?.targetId).toBe('extinction-curse-volume-1')
+        expect(translated).toEqual(expect.objectContaining({
+          targetId: 'extinction-curse-volume-1',
+          translationOf: source?.id,
+          variant: 'translationUnofficial'
+        }))
+      } finally {
+        if (previousLibrary === undefined) delete process.env['PF2_LIBRARY_ROOT']
+        else process.env['PF2_LIBRARY_ROOT'] = previousLibrary
+        await rm(root, { recursive: true, force: true })
+      }
+    })
+
     it('detects a newly added translation and its unique original PDF', async () => {
       const root = await mkdtemp(join(tmpdir(), 'pf2-mj-scan-translation-'))
       const library = join(root, 'library')

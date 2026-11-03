@@ -224,6 +224,7 @@ Le scanner :
 4. compare les chemins au catalogue ;
 5. détecte déplacements et nouveaux documents ;
 6. détecte certaines traductions ;
+   Lorsqu'une traduction correspond de façon unique à un PDF original déjà référencé, elle hérite de **la même cible documentaire** (tome/scénario/composant), au lieu d'être rattachée séparément à la campagne. Pour les scans qui découvrent les deux fichiers ensemble, les originaux sont traités avant les traductions. Cette association est utilisée aussi bien par les formats historiques du catalogue (v2) que par le format v3.
 7. détecte les PDF d’information ;
 8. construit l’inventaire des ZIP.
 
@@ -234,6 +235,8 @@ Avec `apply=true`, il peut persister :
 - réconciliations PDF ;
 - nouveaux documents ;
 - inventaire ZIP.
+
+**Correction ciblée du 3 novembre 2026 — Sentence d'Extinction, tome 1.** Le fichier de traduction `Campagne - Extinction Curse - Tome 1_6 - The Show Must Go On (en) - trad.pdf` était présent dans `pf2-data` et servi en HTTP 200, mais son enregistrement `pf2_library_asset` visait par erreur `extinction-curse` au lieu de `extinction-curse-volume-1`. L'association a été corrigée directement en SQLite (champs `target_id` et `metadata.association.itemId`) après sauvegarde du seul enregistrement dans le répertoire persistant de déploiement. Les routes `/api/pf2-mj/scenarios/extinction-curse-volume-1/resources` et `/api/pf2-mj/scenarios/extinction-curse/resources` ont été vérifiées : les deux PDF apparaissent. Le correctif du scanner évite de réintroduire ce type d'erreur à l'avenir ; le bug général de chargement du catalogue, distinct, n'a pas été traité dans cette intervention.
 
 ### 6.4 Disponibilité documentaire
 
