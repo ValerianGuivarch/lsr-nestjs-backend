@@ -31,7 +31,7 @@ Vaga a fui le cadre abusif de Dusklight avec ou aux côtés des artistes qui dev
 
 ## Prochaine séance — Séance 2 : Abberton (chapitre 2 seulement)
 
-[Ouvrir la préparation structurée dans l'application MJ](https://l7r.fr/pf2-mj/session-preparations?preparationId=31332abc-ef1d-4172-805d-dfc336ff7164) — préparation SQLite `31332abc-ef1d-4172-805d-dfc336ff7164`, **7 étapes et 21 blocs** (révision 6 du 3 novembre 2026), campagne catalogue `extinction-curse`, **non jouée**.
+[Ouvrir la préparation structurée dans l'application MJ](https://l7r.fr/pf2-mj/session-preparations?preparationId=31332abc-ef1d-4172-805d-dfc336ff7164) — préparation SQLite `31332abc-ef1d-4172-805d-dfc336ff7164`, **7 étapes et 21 blocs** (révision 7 du 3 novembre 2026), campagne catalogue `extinction-curse`, **non jouée**.
 
 **Découpage MJ modifié :** ne plus regrouper les chapitres 2 et 3. Cette séance se déroule essentiellement à **Abberton**. La suivante est dédiée à l'**Ermitage de l'Éclair Béni**, après une nouvelle demande d'aide. Les PJ doivent pouvoir **rentrer à Absalom après avoir aidé le village, en estimant avoir le temps de revenir**.
 
