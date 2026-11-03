@@ -103,6 +103,8 @@ export class DiscordCommandsService {
   private readonly latestQuestVoteEvents = new Map<string, number>()
   private questMetadataGeneration = 0
   private questVoteEvents: QuestVoteEvent[] = []
+  private questVoteDbQueue: Promise<void> = Promise.resolve()
+  private questRecapStartedAt = 0
   private readonly publishingQuestChoices = new Set<string>()
   private readonly choiceForumChannelId = process.env['PF2_DISCORD_QUEST_FORUM_CHANNEL_ID']?.trim() || '1536259632455094412'
   constructor(private readonly persistence: Pf2PersistenceService, private readonly foundry: FoundryRelayService, private readonly playerCodex?: PlayerCodexService, private readonly mediaWiki?: MediaWikiClientService, @Inject(forwardRef(() => DiscordService)) private readonly discord?: DiscordService, private readonly journals?: Pf2JournalsService, private readonly requests?: Pf2RequestService, private readonly questPilot?: DiscordQuestPilotService) {}
@@ -472,6 +474,17 @@ export class DiscordCommandsService {
     return results
   }
 
+  /** Serialize SQLite vote edits with authoritative reconciliations, preventing
+   * delayed REST snapshots from overwriting more recent gateway events. */
+  private async withQuestVoteDbLock<T>(task: () => Promise<T>): Promise<T> {
+    const previous = this.questVoteDbQueue
+    let release!: () => void
+    this.questVoteDbQueue = new Promise<void>(resolve => { release = resolve })
+    await previous.catch(() => undefined)
+    try { return await task() }
+    finally { release() }
+  }
+
   /** Discord remains authoritative; the in-memory cache is rebuilt periodically. */
   private async questVotes(client: any, force = false): Promise<Map<string, QuestVoteEntry>> {
     if (this.questVoteRefresh) return this.questVoteRefresh
@@ -522,14 +535,30 @@ export class DiscordCommandsService {
       }
       const valid = fetched.filter((quest): quest is QuestVoteEntry => quest !== null)
       const next = new Map(valid.map(quest => [quest.id, quest]))
-      // Replay events received during the slow REST read to avoid lost votes.
-      for (const event of [...this.questVoteEvents].sort((a, b) => a.sequence - b.sequence)) {
-        if (event.sequence > baseline) this.applyQuestVoteEvent(next, event)
-      }
-      this.questVoteCache = next
-      this.questVoteEvents = []
-      this.logger.debug('Cache de votes : ' + next.size + ' quêtes synchronisées en '
-        + (Date.now() - started) + ' ms.')
+      await this.withQuestVoteDbLock(async () => {
+        if (this.questMetadataGeneration !== metadataGeneration) {
+          throw new Error('Catalogue des quêtes modifié pendant la synchronisation.')
+        }
+        for (const event of [...this.questVoteEvents].sort((a, b) => a.sequence - b.sequence)) {
+          if (event.sequence > baseline) this.applyQuestVoteEvent(next, event)
+        }
+        const rows: Array<{ threadId: string; userId: string; emoji: '👍' | '🔒' }> = []
+        for (const quest of next.values()) {
+          for (const userId of quest.reserved) rows.push({ threadId: quest.id, userId, emoji: '🔒' })
+          for (const userId of quest.interested) rows.push({ threadId: quest.id, userId, emoji: '👍' })
+        }
+        const diff = await this.persistence.reconcileDiscordQuestVotes(rows)
+        // Newer gateway edits that arrived during the transaction will write
+        // to SQLite after this lock; apply them to the in-memory view as well.
+        for (const event of [...this.questVoteEvents].sort((a, b) => a.sequence - b.sequence)) {
+          if (event.sequence > baseline) this.applyQuestVoteEvent(next, event)
+        }
+        this.questVoteCache = next
+        this.questVoteEvents = []
+        this.logger.log('Votes Discord vérifiés : ' + next.size + ' quêtes, '
+          + rows.length + ' votes, +' + diff.added + '/-' + diff.removed
+          + ' corrections SQLite, ' + (Date.now() - started) + ' ms.')
+      })
       return next
     }
     const running = load()
@@ -549,15 +578,16 @@ export class DiscordCommandsService {
 
   private recordQuestVoteEvent(
     threadId: string, userId: string, emoji: '👍' | '🔒', added: boolean, sequence = ++this.questVoteSequence,
-  ): void {
+  ): boolean {
     const key = threadId + ':' + emoji + ':' + userId
-    if ((this.latestQuestVoteEvents.get(key) ?? 0) > sequence) return
+    if ((this.latestQuestVoteEvents.get(key) ?? 0) > sequence) return false
     this.latestQuestVoteEvents.set(key, sequence)
     const event: QuestVoteEvent = { sequence, threadId, userId, emoji, added }
     if (this.questVoteRefresh) this.questVoteEvents.push(event)
     if (this.questVoteCache && !this.applyQuestVoteEvent(this.questVoteCache, event)) {
       this.questVoteCache = null
     }
+    return true
   }
 
   invalidateQuestVoteCache(): void {
@@ -567,14 +597,26 @@ export class DiscordCommandsService {
 
   private async buildQuestChoiceLines(client: any, guildId: string, missionPlayerIds: Set<string>, forceRefresh = false): Promise<string[]> {
       const cached = await this.questVotes(client, forceRefresh)
+      // SQLite is the read model for each published recap and manual preview.
+      const persistedVotes = await this.persistence.listDiscordQuestVotes()
+      const reservedByQuest = new Map<string, string[]>()
+      const interestedByQuest = new Map<string, string[]>()
+      for (const vote of persistedVotes) {
+        const group = vote.emoji === '🔒' ? reservedByQuest : interestedByQuest
+        const ids = group.get(vote.threadId) ?? []
+        ids.push(vote.userId)
+        group.set(vote.threadId, ids)
+      }
       const playerNames = new Map((await this.persistence.listPlayerIdentities?.() ?? []).map(identity => [identity.discordUserId, identity.playerName]))
       const nameOf = (id: string): string => playerNames.get(id) ?? pf2PlayerByDiscordId(id)?.name ?? 'Joueur inconnu'
       type QuestVoter = { id: string; name: string }
       type QuestChoice = { id: string; title: string; createdAt: number; reserved: QuestVoter[]; interested: QuestVoter[] }
       const quests: QuestChoice[] = [...cached.values()].map(quest => ({
         id: quest.id, title: quest.title, createdAt: quest.createdAt,
-        reserved: [...quest.reserved].map(id => ({ id, name: nameOf(id) })).sort((a, b) => a.name.localeCompare(b.name, 'fr')),
-        interested: [...quest.interested].map(id => ({ id, name: nameOf(id) })).sort((a, b) => a.name.localeCompare(b.name, 'fr')),
+        reserved: (reservedByQuest.get(quest.id) ?? []).map(id => ({ id, name: nameOf(id) }))
+          .sort((a, b) => a.name.localeCompare(b.name, 'fr')),
+        interested: (interestedByQuest.get(quest.id) ?? []).map(id => ({ id, name: nameOf(id) }))
+          .sort((a, b) => a.name.localeCompare(b.name, 'fr')),
       }))
       const reservationsByUser = new Map<string, { name: string; count: number }>()
       for (const quest of quests) for (const user of quest.reserved) {
@@ -643,7 +685,11 @@ export class DiscordCommandsService {
     const parts = await this.persistence.questRecapParts(thread.id)
     const chunks = this.questChoiceChunks(lines)
     if (!parts.length) {
-      // Only the explicit confirmation path may create the first recap.
+      // An automatic job must never recreate or publish a deleted recap.
+      if (!allowNewParts) {
+        this.logger.warn('Récapitulatif non publié : ' + thread.id + ' (aucun message enregistré).')
+        return
+      }
       for (const [partIndex, content] of chunks.entries()) {
         if (date < this.parisToday()) return
         const message = await thread.send({ content, allowedMentions: { parse: [] } })
@@ -668,7 +714,14 @@ export class DiscordCommandsService {
         // The GM can explicitly confirm /choix-quete to expand the recap.
         content += '\n\n⚠️ Liste devenue trop longue : relance /choix-quete et valide pour afficher la suite.'
       }
-      if (message.content !== content) await message.edit({ content, allowedMentions: { parse: [] } })
+      if (message.content !== content) {
+        await message.edit({ content, allowedMentions: { parse: [] } })
+        this.logger.log('Récapitulatif actualisé : séance ' + date
+          + ', fil ' + thread.id + ', message ' + part.messageId + ', partie ' + part.partIndex)
+      } else {
+        this.logger.debug('Récapitulatif déjà à jour : séance ' + date
+          + ', fil ' + thread.id + ', partie ' + part.partIndex)
+      }
       // The bot can always remove its own legacy vote reactions; removing other
       // people's reactions requires ManageMessages, so leave those untouched.
       for (const reaction of message.reactions?.cache?.values?.() ?? []) {
@@ -693,34 +746,59 @@ export class DiscordCommandsService {
     if (this.questRecapReconcile) {
       this.questRecapNeedsRerun = true
       this.questRecapNeedsFresh ||= fresh
+      const runningMs = Date.now() - this.questRecapStartedAt
+      if (runningMs > 15_000) this.logger.warn('Synchronisation des récapitulatifs encore en cours depuis '
+        + runningMs + ' ms ; une relance est prévue à sa fin.')
       return this.questRecapReconcile
     }
+    const started = Date.now()
+    this.questRecapStartedAt = started
     const task = async () => {
       const today = this.parisToday()
-      if (!client?.isReady?.()) return
-      // Keep the vote cache warm even when no session recap is currently published.
+      if (!client?.isReady?.()) {
+        this.logger.warn('Synchronisation des récapitulatifs ignorée : client Discord indisponible.')
+        return
+      }
       if (fresh || !this.questVoteCache) await this.questVotes(client, true)
       const sessions = await this.persistence.upcomingQuestRecapSessions(today)
-      for (const record of sessions) {
+      this.logger.log('Synchronisation des choix : ' + sessions.length + ' séance(s) à vérifier, '
+        + 'date Paris ' + today + ', source ' + (fresh ? 'Discord + SQLite' : 'SQLite') + '.')
+      // Two independent workers: a slow Discord request for one session
+      // should not stop the other session from being repaired.
+      await this.readQuestsConcurrently(sessions, async record => {
+        const sessionStarted = Date.now()
         try {
-          // Do not try to discover or adopt legacy messages: only stored message IDs are editable.
           const thread = await client.channels.fetch(record.threadId).catch(() => null)
-          if (!thread?.isThread?.() || thread.guildId !== record.guildId) continue
+          if (!thread?.isThread?.() || thread.guildId !== record.guildId) {
+            this.logger.warn('Choix non synchronisés pour ' + record.sessionDate
+              + ' : fil inaccessible ' + record.threadId)
+            return
+          }
           await this.withQuestRecapLock(record.threadId, async () => {
             const details = await this.missionThreadDetails(client, thread)
             if (!details || details.sessionDate !== record.sessionDate
-              || details.sessionDate < this.parisToday()) return
+              || details.sessionDate < this.parisToday()) {
+              this.logger.warn('Choix non synchronisés pour ' + record.sessionDate
+                + ' : données de séance absentes, incohérentes ou date dépassée, fil ' + record.threadId)
+              return
+            }
             const lines = await this.buildQuestChoiceLines(client, record.guildId, details.userIds)
             await this.updatePublishedQuestRecap(client, thread, details.sessionDate, lines)
+            this.logger.log('Séance ' + record.sessionDate + ' contrôlée : ' + record.threadId
+              + ', ' + (Date.now() - sessionStarted) + ' ms.')
           })
         } catch (error) {
-          this.logger.warn('Mise à jour des choix de séance ' + record.threadId + ' impossible : ' + String(error))
+          this.logger.warn('Mise à jour des choix de séance ' + record.threadId + ' ('
+            + record.sessionDate + ') impossible : ' + String(error))
         }
-      }
+      }, 2)
+      this.logger.log('Fin synchronisation des choix : ' + sessions.length
+        + ' séance(s), ' + (Date.now() - started) + ' ms.')
     }
     const running = task()
     this.questRecapReconcile = running
-    try { await running } finally {
+    try { await running }
+    finally {
       if (this.questRecapReconcile === running) this.questRecapReconcile = null
       if (this.questRecapNeedsRerun) {
         this.questRecapNeedsRerun = false
@@ -770,9 +848,9 @@ export class DiscordCommandsService {
     if (Date.now() - (this.recentQuestLockWarnings.get(key) ?? 0) < 60_000) return
     // A lock addition is already recorded by handleQuestRecapReaction; read
     // cached votes rather than scanning every quest again to warn the player.
-    const cache = await this.questVotes(client)
-    const lockedQuests = [...cache.values()].filter(quest => quest.reserved.has(user.id))
-      .map(quest => quest.id)
+    const votes = await this.persistence.listDiscordQuestVotes()
+    const lockedQuests = [...new Set(votes.filter(vote =>
+      vote.emoji === '🔒' && vote.userId === user.id).map(vote => vote.threadId))]
     if (lockedQuests.length < 2 || !lockedQuests.includes(channel.id)) return
     this.recentQuestLockWarnings.set(key, Date.now())
     if (this.recentQuestLockWarnings.size > 300) this.recentQuestLockWarnings.clear()
@@ -826,7 +904,19 @@ export class DiscordCommandsService {
     const client = reaction.message.client
     const channel = await client.channels.fetch(reaction.message.channelId).catch(() => null)
     if (!channel?.isThread?.() || channel.parentId !== this.choiceForumChannelId) return
-    if (user?.id) this.recordQuestVoteEvent(channel.id, user.id, reaction.emoji.name as '👍' | '🔒', added, eventSequence)
+    if (user?.id) {
+      const emoji = reaction.emoji.name as '👍' | '🔒'
+      if (this.recordQuestVoteEvent(channel.id, user.id, emoji, added, eventSequence)) {
+        await this.withQuestVoteDbLock(async () => {
+          // An event may be superseded while waiting for the SQLite lock.
+          const key = channel.id + ':' + emoji + ':' + user.id
+          if (this.latestQuestVoteEvents.get(key) !== eventSequence) return
+          const changed = await this.persistence.setDiscordQuestVote(channel.id, user.id, emoji, added)
+          this.logger.debug('Vote ' + (added ? 'ajouté' : 'retiré') + ' en SQLite : '
+            + channel.id + ', ' + user.id + ', ' + emoji + (changed ? '' : ' (déjà à jour)'))
+        })
+      }
+    }
     if (added && reaction.emoji.name === '🔒' && user?.id) {
       void this.handleQuestLockAdd(reaction, user as { id: string; bot?: boolean }).catch(error =>
         this.logger.warn('Alerte cadenas impossible : ' + String(error)))

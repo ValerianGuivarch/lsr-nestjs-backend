@@ -374,6 +374,64 @@ export class Pf2PersistenceService implements OnModuleInit {
     return rows.map(row => ({ ...row, completed: row.completed === 1, archived: row.archived === 1, obsolete: row.obsolete === 1 }))
   }
 
+  /** Persisted projection of Discord 👍/🔒 users, keyed by quest, user and emoji.
+   * Discord remains authoritative; this table is repaired by full reconciliation. */
+  async listDiscordQuestVotes(): Promise<Array<{ threadId: string; userId: string; emoji: '👍' | '🔒' }>> {
+    return this.dataSource.query(
+      'SELECT thread_id AS threadId, user_id AS userId, emoji FROM pf2_discord_quest_vote ORDER BY thread_id, emoji, user_id',
+    )
+  }
+
+  async setDiscordQuestVote(threadId: string, userId: string, emoji: '👍' | '🔒', added: boolean): Promise<boolean> {
+    if (!threadId || !userId || (emoji !== '👍' && emoji !== '🔒')) throw new Error('Vote Discord invalide.')
+    const exists = await this.dataSource.query(
+      'SELECT 1 FROM pf2_discord_quest_vote WHERE thread_id=? AND user_id=? AND emoji=?',
+      [threadId, userId, emoji],
+    ) as Array<unknown>
+    if (added) {
+      if (exists.length) return false
+      await this.dataSource.query(
+        'INSERT OR IGNORE INTO pf2_discord_quest_vote (thread_id,user_id,emoji) VALUES (?,?,?)',
+        [threadId, userId, emoji],
+      )
+    } else {
+      if (!exists.length) return false
+      await this.dataSource.query(
+        'DELETE FROM pf2_discord_quest_vote WHERE thread_id=? AND user_id=? AND emoji=?',
+        [threadId, userId, emoji],
+      )
+    }
+    return true
+  }
+
+  /** Reconcile only differences, atomically. A failed Discord read must never
+   * call this function, preserving the last successful projection. */
+  async reconcileDiscordQuestVotes(
+    entries: Array<{ threadId: string; userId: string; emoji: '👍' | '🔒' }>,
+  ): Promise<{ added: number; removed: number; unchanged: number }> {
+    return this.dataSource.transaction(async manager => {
+      const current = await manager.query('SELECT thread_id AS threadId, user_id AS userId, emoji FROM pf2_discord_quest_vote') as typeof entries
+      const key = (entry: typeof entries[number]) => JSON.stringify([entry.threadId, entry.userId, entry.emoji])
+      const old = new Map(current.map(entry => [key(entry), entry]))
+      const next = new Map(entries.map(entry => [key(entry), entry]))
+      let added = 0
+      let removed = 0
+      for (const [id, entry] of old) {
+        if (next.has(id)) continue
+        await manager.query('DELETE FROM pf2_discord_quest_vote WHERE thread_id=? AND user_id=? AND emoji=?',
+          [entry.threadId, entry.userId, entry.emoji])
+        removed++
+      }
+      for (const [id, entry] of next) {
+        if (old.has(id)) continue
+        await manager.query('INSERT INTO pf2_discord_quest_vote (thread_id,user_id,emoji) VALUES (?,?,?)',
+          [entry.threadId, entry.userId, entry.emoji])
+        added++
+      }
+      return { added, removed, unchanged: next.size - added }
+    })
+  }
+
   /** The launcher is a forum post, not a quest. Quest cards remain bot-owned across restarts. */
   async questRecapParts(threadId: string): Promise<DiscordQuestRecapPart[]> {
     return this.dataSource.query(
@@ -1703,6 +1761,17 @@ export class Pf2PersistenceService implements OnModuleInit {
     // Reset *only the recap tracking*, never Discord messages or quest votes.
     await this.applyMigration('051-discord-quest-recap-fresh-start', async manager => {
       await manager.query('DELETE FROM pf2_discord_quest_recap')
+    })
+
+    await this.applyMigration('052-discord-quest-persisted-votes', async manager => {
+      await manager.query(`CREATE TABLE IF NOT EXISTS pf2_discord_quest_vote (
+        thread_id TEXT NOT NULL,
+        user_id TEXT NOT NULL,
+        emoji TEXT NOT NULL CHECK(emoji IN ('👍','🔒')),
+        updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        PRIMARY KEY(thread_id,user_id,emoji)
+      )`)
+      await manager.query('CREATE INDEX IF NOT EXISTS idx_pf2_quest_vote_user ON pf2_discord_quest_vote(user_id,emoji)')
     })
 
     await this.assertDatabaseIntegrity(this.dataSource, 'base SQLite après migrations')

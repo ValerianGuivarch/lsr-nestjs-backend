@@ -76,6 +76,40 @@ describe('Pf2PersistenceService', () => {
     expect(await service.upcomingQuestRecapSessions('2099-10-13')).toEqual([])
   })
 
+  it('persists quest 👍/🔒 in SQLite, reconciles missing gateway events and survives database reopen', async () => {
+    let store = await open()
+    expect(await currentDataSource().query(
+      "SELECT id FROM pf2_schema_migration WHERE id='052-discord-quest-persisted-votes'",
+    )).toHaveLength(1)
+    expect(await store.listDiscordQuestVotes()).toEqual([])
+    expect(await store.setDiscordQuestVote('quest-a', 'julien', '🔒', true)).toBe(true)
+    expect(await store.setDiscordQuestVote('quest-a', 'julien', '🔒', true)).toBe(false)
+    expect(await store.setDiscordQuestVote('quest-a', 'eric', '👍', true)).toBe(true)
+    expect(await store.listDiscordQuestVotes()).toEqual(expect.arrayContaining([
+      { threadId: 'quest-a', userId: 'julien', emoji: '🔒' },
+      { threadId: 'quest-a', userId: 'eric', emoji: '👍' },
+    ]))
+    await currentDataSource().destroy()
+    dataSource = undefined
+    store = await open()
+    expect(await store.listDiscordQuestVotes()).toHaveLength(2)
+    expect(await store.reconcileDiscordQuestVotes([
+      { threadId: 'quest-a', userId: 'eric', emoji: '👍' },
+      { threadId: 'quest-b', userId: 'julien', emoji: '👍' },
+    ])).toEqual({ added: 1, removed: 1, unchanged: 1 })
+    expect(await store.listDiscordQuestVotes()).toEqual([
+      { threadId: 'quest-a', userId: 'eric', emoji: '👍' },
+      { threadId: 'quest-b', userId: 'julien', emoji: '👍' },
+    ])
+    expect(await store.reconcileDiscordQuestVotes([
+      { threadId: 'quest-a', userId: 'eric', emoji: '👍' },
+      { threadId: 'quest-b', userId: 'julien', emoji: '👍' },
+    ])).toEqual({ added: 0, removed: 0, unchanged: 2 })
+    expect(await store.setDiscordQuestVote('quest-b', 'julien', '👍', false)).toBe(true)
+    expect(await store.setDiscordQuestVote('quest-b', 'julien', '👍', false)).toBe(false)
+    expect(await store.listDiscordQuestVotes()).toHaveLength(1)
+  })
+
   it('preserves the latest Foundry actor cache across SQLite reopen', async () => {
     const first = await open()
     await first.saveFoundryActorCache([

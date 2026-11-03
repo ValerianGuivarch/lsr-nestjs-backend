@@ -97,7 +97,26 @@ describe('DiscordCommandsService', () => {
     outsider.id = '688860103629340690'
     const nameMap = new Map([[eric.id, 'Éric'], [guilhem.id, 'Guilhem'], [outsider.id, 'Nico']])
     const recapParts: any[] = []
+    const votesInSqlite = new Map<string, { threadId: string; userId: string; emoji: '👍' | '🔒' }>()
+    const voteKey = (vote: {threadId: string; userId: string; emoji: '👍' | '🔒'}) =>
+      [vote.threadId, vote.userId, vote.emoji].join(':')
     const persistence = {
+      listDiscordQuestVotes: jest.fn(async () => [...votesInSqlite.values()]),
+      setDiscordQuestVote: jest.fn(async (threadId: string, userId: string, emoji: '👍' | '🔒', added: boolean) => {
+        const vote = { threadId, userId, emoji }, key = voteKey(vote)
+        const existed = votesInSqlite.has(key)
+        if (added) votesInSqlite.set(key, vote)
+        else votesInSqlite.delete(key)
+        return existed !== added
+      }),
+      reconcileDiscordQuestVotes: jest.fn(async (entries: Array<{threadId: string;userId: string;emoji: '👍' | '🔒'}>) => {
+        const incoming = new Map(entries.map(vote => [voteKey(vote), vote]))
+        const added = [...incoming.keys()].filter(key => !votesInSqlite.has(key)).length
+        const removed = [...votesInSqlite.keys()].filter(key => !incoming.has(key)).length
+        votesInSqlite.clear()
+        for (const [key, vote] of incoming) votesInSqlite.set(key, vote)
+        return { added, removed, unchanged: incoming.size - added }
+      }),
       questRecapParts: jest.fn(async (_threadId: string) => recapParts.slice()),
       upcomingQuestRecapSessions: jest.fn(async (_date: string) => [] as Array<{threadId:string;guildId:string;sessionDate:string}>),
       saveQuestRecapPart: jest.fn(async (part: any) => {
@@ -133,7 +152,7 @@ describe('DiscordCommandsService', () => {
     const run = () => service.handle({ commandName: 'choix-quete', id: 'cmd-quest', guildId: 'guild',
       user: { id: 'mj' }, channelId: 'mission-thread', channel, client,
       deferReply, editReply, followUp } as never)
-    return { eric, guilhem, outsider, bot, quest, questMap, forum, channel, posted, persistence, client, editReply, followUp, deferReply, service, run }
+    return { eric, guilhem, outsider, bot, quest, questMap, forum, channel, posted, persistence, votesInSqlite, client, editReply, followUp, deferReply, service, run }
   }
 
   it('limits parallel Discord quest reads to four workers without changing their order', async () => {
@@ -182,10 +201,16 @@ describe('DiscordCommandsService', () => {
       await t.service.handleQuestRecapReaction(reaction, t.eric, true)
       const add = await (t.service as any).buildQuestChoiceLines(t.client, 'guild', new Set([t.eric.id]))
       expect(add.join('\n')).toContain('<#cache-quest> (intéresse **Éric**)')
+      expect(await t.persistence.listDiscordQuestVotes()).toContainEqual({
+        threadId: 'cache-quest', userId: t.eric.id, emoji: '👍',
+      })
       await t.service.handleQuestRecapReaction(reaction, t.eric, false)
       const remove = await (t.service as any).buildQuestChoiceLines(t.client, 'guild', new Set([t.eric.id]))
       expect(remove.join('\n')).toContain('- <#cache-quest>')
       expect(remove.join('\n')).not.toContain('intéresse Éric')
+      expect(await t.persistence.listDiscordQuestVotes()).not.toContainEqual({
+        threadId: 'cache-quest', userId: t.eric.id, emoji: '👍',
+      })
       expect(quest.fetchStarterMessage).toHaveBeenCalledTimes(originalReads)
     } finally {
       jest.clearAllTimers()
@@ -467,6 +492,38 @@ describe('DiscordCommandsService', () => {
     expect(t.channel.send).toHaveBeenCalledTimes(1)
   })
 
+  it('updates the second published session even when the first session is waiting on Discord', async () => {
+    const t = questChoiceTest()
+    const sessions = [
+      { threadId: 'session-03', guildId: 'guild', sessionDate: '2099-11-03' },
+      { threadId: 'session-05', guildId: 'guild', sessionDate: '2099-11-05' },
+    ]
+    t.persistence.upcomingQuestRecapSessions = jest.fn(async (_date: string) => sessions)
+    ;(t.service as any).questVoteCache = new Map()
+    const first = { id: 'session-03', guildId: 'guild', isThread: () => true }
+    const second = { id: 'session-05', guildId: 'guild', isThread: () => true }
+    const fetch = t.client.channels.fetch as jest.Mock
+    fetch.mockImplementation(async (id: string) => id === first.id ? first : id === second.id ? second : null)
+    let release!: () => void
+    const slow = new Promise<void>(resolve => { release = resolve })
+    jest.spyOn(t.service as any, 'missionThreadDetails').mockImplementation(async (_client: any, thread: any) => {
+      if (thread.id === first.id) await slow
+      return { sessionDate: thread.id === first.id ? '2099-11-03' : '2099-11-05',
+        userIds: new Set() }
+    })
+    jest.spyOn(t.service as any, 'buildQuestChoiceLines').mockResolvedValue(['**Choix de quête**'])
+    const edit = jest.spyOn(t.service as any, 'updatePublishedQuestRecap').mockResolvedValue(undefined)
+    const client = { ...t.client, isReady: () => true }
+    const running = t.service.reconcileQuestRecaps(client)
+    for (let n = 0; n < 20 && edit.mock.calls.length < 1; n++) await Promise.resolve()
+    expect(edit).toHaveBeenCalledWith(client, second, '2099-11-05', ['**Choix de quête**'])
+    expect(edit).not.toHaveBeenCalledWith(client, first, '2099-11-03', ['**Choix de quête**'])
+    release()
+    await running
+    expect(edit).toHaveBeenCalledTimes(2)
+    expect(t.channel.send).not.toHaveBeenCalled()
+  })
+
   it('warns a player in their linked private channel after a second lock, without warning for thumbs', async () => {
     const t = questChoiceTest()
     const locked = (id: string) => {
@@ -494,6 +551,10 @@ describe('DiscordCommandsService', () => {
     const client: any = { channels: { fetch } }
     const service = new DiscordCommandsService({
       playerPrivateDiscordChannel: jest.fn(async (id: string) => id === t.eric.id ? 'private-chan' : null),
+      listDiscordQuestVotes: jest.fn(async () => [
+        { threadId: first.id, userId: t.eric.id, emoji: '🔒' },
+        { threadId: second.id, userId: t.eric.id, emoji: '🔒' },
+      ]),
     } as never, {} as never)
     const reaction: any = { emoji: { name: '🔒' }, message: { id: second.id, channelId: second.id, client } }
 

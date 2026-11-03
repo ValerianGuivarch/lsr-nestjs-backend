@@ -13,15 +13,16 @@ describe('Discord quest recap persistence', () => {
   })
   afterEach(async () => { await database.destroy() })
 
-  it('tracks message IDs, multiple chunks, updates and strictly future sessions', async () => {
+  it('tracks message IDs, multiple chunks, updates and sessions through the end of their calendar day', async () => {
     await store.saveQuestRecapPart({ threadId: 'session-1', guildId: 'guild', sessionDate: '2026-11-03', partIndex: 0, messageId: 'm1' })
     await store.saveQuestRecapPart({ threadId: 'session-1', guildId: 'guild', sessionDate: '2026-11-03', partIndex: 1, messageId: 'm2' })
     await store.saveQuestRecapPart({ threadId: 'session-2', guildId: 'guild', sessionDate: '2026-11-05', partIndex: 0, messageId: 'm3' })
     expect((await store.questRecapParts('session-1')).map(row => row.messageId)).toEqual(['m1', 'm2'])
     await store.saveQuestRecapPart({ threadId: 'session-1', guildId: 'guild', sessionDate: '2026-11-03', partIndex: 0, messageId: 'm1b' })
     expect((await store.questRecapParts('session-1')).map(row => row.messageId)).toEqual(['m1b', 'm2'])
-    expect((await store.upcomingQuestRecapSessions('2026-11-03')).map(row => row.threadId)).toEqual(['session-2'])
+    expect((await store.upcomingQuestRecapSessions('2026-11-03')).map(row => row.threadId)).toEqual(['session-1', 'session-2'])
     expect((await store.upcomingQuestRecapSessions('2026-11-04')).map(row => row.threadId)).toEqual(['session-2'])
-    expect(await store.upcomingQuestRecapSessions('2026-11-05')).toEqual([])
+    expect((await store.upcomingQuestRecapSessions('2026-11-05')).map(row => row.threadId)).toEqual(['session-2'])
+    expect(await store.upcomingQuestRecapSessions('2026-11-06')).toEqual([])
   })
 })
