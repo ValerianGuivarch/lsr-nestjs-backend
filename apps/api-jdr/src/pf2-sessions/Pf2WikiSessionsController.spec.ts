@@ -36,7 +36,12 @@ describe('Pf2WikiSessionsController', () => {
       await expect(controller.xpAid('resume-1', 'bad-key')).rejects.toThrow('Accès MJ réservé')
       expect(persistence.listSessions).not.toHaveBeenCalled()
       await expect(controller.xpAid('resume-1', 'private-server-test-key')).resolves.toEqual(
-        expect.objectContaining({ participantCount: 1, targetGroupXp: 120, targetXpPerPlayer: 120 }),
+        expect.objectContaining({
+          participantCount: 1, targetGroupXp: 120, targetXpPerPlayer: 120,
+          treasure: expect.objectContaining({
+            currencyBudgetGp: 4, totalBudgetGp: 17.5,
+          }),
+        }),
       )
       await expect(controller.xpAid('does-not-exist', 'private-server-test-key')).rejects.toThrow('Séance introuvable')
     } finally {

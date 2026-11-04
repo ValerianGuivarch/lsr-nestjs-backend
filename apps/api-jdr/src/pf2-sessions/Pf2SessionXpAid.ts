@@ -4,6 +4,7 @@ import {
   levelForCareerXp,
   thresholdForCareerLevel,
 } from './Pf2CareerXp'
+import { sessionTreasureAid, type SessionTreasureAid } from './Pf2SessionTreasureAid'
 
 export const SESSIONS_PER_LEVEL_TARGET = 2.5
 
@@ -29,6 +30,7 @@ export type SessionXpAid = {
   sessionsPerLevelTarget: number
   targetGroupXp: number | null
   targetXpPerPlayer: number | null
+  treasure: SessionTreasureAid
 }
 
 /**
@@ -77,5 +79,6 @@ export function sessionXpAid(
     sessionsPerLevelTarget: SESSIONS_PER_LEVEL_TARGET,
     targetGroupXp,
     targetXpPerPlayer: targetGroupXp === null ? null : targetGroupXp / participantCount,
+    treasure: sessionTreasureAid(participants),
   }
 }

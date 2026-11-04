@@ -25,3 +25,12 @@
 .pf2-xp-live progress{width:100%;height:.8rem}
 .pf2-xp-disclaimer{color:var(--color-subtle,#54595d)}
 @media(max-width:780px){.pf2-xp-facts{grid-template-columns:repeat(2,minmax(0,1fr))}.pf2-xp-live{grid-template-columns:1fr}}
+
+/* Distinct cash/physical-item budget, computed from the same notes field. */
+.pf2-xp-treasure-targets{grid-template-columns:repeat(4,minmax(0,1fr))}
+.pf2-xp-treasure-live{grid-template-columns:repeat(3,minmax(0,1fr))}
+.pf2-xp-treasure-live label{grid-column:1/-1;font-size:.82rem;font-weight:600;margin-bottom:-.35rem}
+.pf2-xp-treasure-live progress{accent-color:#91783a}
+.pf2-xp-treasure-live strong{font-variant-numeric:tabular-nums}
+@media(max-width:780px){.pf2-xp-treasure-targets{grid-template-columns:repeat(2,minmax(0,1fr))}.pf2-xp-treasure-live{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:480px){.pf2-xp-treasure-live{grid-template-columns:1fr}}

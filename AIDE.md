@@ -6,7 +6,7 @@ Espace réservé aux aides réutilisables : règles maison validées, procédure
 
 Les règles mécaniques utilisées en jeu doivent être confirmées avec les sources PF2 et Foundry.
 
-**Aide MJ aux récompenses XP :** le wiki comporte un [outil XP par séance](docs/pf2/wiki-session-xp-aid.md), réservé aux administrateurs. Il prend la courbe XPC historique et les niveaux des PJ au début de la séance, puis indique un budget de groupe correspondant à une montée de niveau en environ 2,5 séances. La saisie des événements dans le champ libre n’attribue aucun XP automatiquement. Les guides techniques d'intégration relèvent des [Outils](OUTILS.md).
+**Aide MJ aux récompenses XP et aux trésors :** le wiki comporte un [outil XP par séance](docs/pf2/wiki-session-xp-aid.md), réservé aux administrateurs. Il prend la courbe XPC historique et les niveaux des PJ au début de la séance, puis indique un budget de groupe correspondant à une montée de niveau en environ 2,5 séances. La même page compare les récompenses monétaires et la valeur des objets au budget de trésors du *GM Core*. La saisie des événements dans le champ libre n’attribue aucun XP ni trésor automatiquement. Les guides techniques d'intégration relèvent des [Outils](OUTILS.md).
 
 ## Ressources MJ externes
 

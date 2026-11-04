@@ -33,6 +33,10 @@ describe('sessionXpAid', () => {
     expect(result.totalLevelBands).toBe(4800)
     expect(result.targetGroupXp).toBe(1920)
     expect(result.targetXpPerPlayer).toBe(480)
+    expect(result.treasure).toEqual(expect.objectContaining({
+      currencyBudgetGp: 38, totalBudgetGp: 160, equipmentBudgetGp: 122,
+      currencyPerPlayerGp: 9.5, totalPerPlayerGp: 40,
+    }))
   })
 
   it('averages mixed levels 1, 2, 2, 3 and excludes XP for the current session', () => {

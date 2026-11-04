@@ -314,7 +314,7 @@
         var adminButtons = state.canAdmin
             ? '<a class="pf2-button pf2-primary" href="' +
                 escapeHtml( mw.util.getUrl( 'Special:PF2SessionXp', { session: session.id } ) ) +
-                '" title="Aide XP privée pour la séance ' + escapeHtml( session.sessionNumber ) + '">Outil MJ · XP</a>' +
+                '" title="Aide XP privée pour la séance ' + escapeHtml( session.sessionNumber ) + '">Outil MJ · XP et or</a>' +
               '<button class="pf2-button pf2-danger" data-delete>Supprimer</button>'
             : '';
 

@@ -11,7 +11,7 @@ class SpecialPF2SessionXp extends SpecialPage {
     public function execute( $subPage ) {
         $this->setHeaders();
         $output = $this->getOutput();
-        $output->setPageTitle( 'Aide XP — Outil MJ' );
+        $output->setPageTitle( 'Aide XP et trésors — Outil MJ' );
 
         $user = $this->getUser();
         if ( !$user->isRegistered() || !$user->isAllowed( 'pf2sessions-admin' ) ) {
