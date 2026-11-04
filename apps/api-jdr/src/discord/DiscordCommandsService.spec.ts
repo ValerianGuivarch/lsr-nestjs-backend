@@ -122,18 +122,26 @@ describe('DiscordCommandsService', () => {
       saveQuestRecapPart: jest.fn(async (part: any) => {
         recapParts[part.partIndex] = part
       }),
+      replaceQuestRecapParts: jest.fn(async (threadId: string, expected: string[], next: any[]) => {
+        const existing = recapParts.filter(Boolean).map(part => part.messageId)
+        if (existing.join(',') !== expected.join(',')) throw new Error('IDs modifiés')
+        if (next.some(part => part.threadId !== threadId)) throw new Error('Mauvais fil')
+        recapParts.splice(0, recapParts.length, ...next)
+      }),
       listPlayerIdentities: jest.fn().mockResolvedValue([...nameMap.entries()].map(([discordUserId, playerName]) => ({ discordUserId, playerName }))) }
     const fetch = jest.fn(async (id: string) => id === 'mission-parent'
       ? { name: 'objectif-prochaine-mission' }
       : forum)
     const client = { user: { id: 'bot' }, channels: { fetch } }
     const posted = new Map<string, any>()
+    let postedSequence = 0
     const send = jest.fn(async (options: {content: string; allowedMentions?: unknown}) => {
-      const id = 'posted-' + (posted.size + 1)
+      const id = 'posted-' + (++postedSequence)
       const message = {
-        id, author: { id: 'bot' }, content: options.content, createdTimestamp: posted.size + 1,
+        id, author: { id: 'bot' }, content: options.content, createdTimestamp: postedSequence,
         reactions: { cache: new Map(), removeAll: jest.fn() },
         edit: jest.fn(async (update: {content: string}) => { message.content = update.content }),
+        delete: jest.fn(async () => { posted.delete(id) }),
       }
       posted.set(id, message)
       return message
@@ -408,6 +416,198 @@ describe('DiscordCommandsService', () => {
     await t.service.handleButton(buttons as never)
     expect(send).toHaveBeenCalledTimes(1)
     expect(buttons.reply).toHaveBeenCalledWith(expect.objectContaining({ ephemeral: true }))
+  })
+
+  it('offers Actualiser and Republier for an existing public recap, without duplicate updates', async () => {
+    const t = questChoiceTest()
+    t.questMap.set('one', t.quest('one', '👑 Le Roi Kobold', [t.eric.id], []))
+    await t.run()
+    const firstPublish = {
+      customId: 'pf2-quest-choice:publish:cmd-quest', user: { id: 'mj' },
+      channelId: 'mission-thread', channel: t.channel, client: t.client, guildId: 'guild',
+      deferUpdate: jest.fn().mockResolvedValue(undefined),
+      editReply: jest.fn().mockResolvedValue(undefined), reply: jest.fn(),
+    }
+    await t.service.handleButton(firstPublish as never)
+    expect(t.channel.send).toHaveBeenCalledTimes(1)
+    const publicUrl = 'https://discord.com/channels/guild/mission-thread/posted-1'
+    expect(firstPublish.editReply).toHaveBeenCalledWith(expect.objectContaining({
+      content: expect.stringContaining(publicUrl),
+      components: [expect.anything()],
+    }))
+
+    // A later preview remains private; publishing again must reuse the same
+    // public message rather than creating a duplicate.
+    await t.run()
+    const preview = t.editReply.mock.calls.at(-1)![0]
+    const row = preview.components[0]
+    const labels = row.components.map((button: any) => button.data.label)
+    expect(labels).toEqual(['Actualiser les choix', 'Republier les choix', 'Annuler', 'Voir les choix publiés'])
+    expect(t.channel.send).toHaveBeenCalledTimes(1)
+    const refresh = {
+      ...firstPublish, customId: 'pf2-quest-choice:refresh:cmd-quest',
+      editReply: jest.fn().mockResolvedValue(undefined),
+    }
+    await t.service.handleButton(refresh as never)
+    expect(t.channel.send).toHaveBeenCalledTimes(1)
+    expect(refresh.editReply).toHaveBeenCalledWith(expect.objectContaining({
+      content: expect.stringContaining('actualisés sans être déplacés'),
+      components: [expect.anything()],
+    }))
+    expect(refresh.editReply.mock.calls[0][0].components[0].components[0].data.url).toBe(publicUrl)
+  })
+
+  it('reports a missing published message instead of silently claiming publication', async () => {
+    const t = questChoiceTest()
+    t.questMap.set('one', t.quest('one', 'Quête A', [], []))
+    await t.run()
+    const button = {
+      customId: 'pf2-quest-choice:publish:cmd-quest', user: { id: 'mj' },
+      channelId: 'mission-thread', channel: t.channel, client: t.client, guildId: 'guild',
+      deferUpdate: jest.fn().mockResolvedValue(undefined),
+      editReply: jest.fn().mockResolvedValue(undefined), reply: jest.fn(),
+    }
+    await t.service.handleButton(button as never)
+    t.posted.delete('posted-1')
+
+    await t.run()
+    const preview = t.editReply.mock.calls.at(-1)![0]
+    expect(preview.components[0].components.map((b: any) => b.data.label)).toEqual([
+      'Actualiser les choix', 'Republier les choix', 'Annuler',
+    ])
+    const refresh = { ...button, customId: 'pf2-quest-choice:refresh:cmd-quest',
+      editReply: jest.fn().mockResolvedValue(undefined) }
+    await t.service.handleButton(refresh as never)
+    expect(t.channel.send).toHaveBeenCalledTimes(1)
+    expect(refresh.editReply).toHaveBeenCalledWith(expect.objectContaining({
+      content: expect.stringContaining('message public enregistré est introuvable'),
+      components: [],
+    }))
+  })
+
+  it('reposts at the bottom, replaces tracked IDs and deletes the old bot recap', async () => {
+    const t = questChoiceTest()
+    t.questMap.set('one', t.quest('one', 'Quête A', [t.eric.id], []))
+    await t.run()
+    const button = {
+      customId: 'pf2-quest-choice:publish:cmd-quest', user: { id: 'mj' },
+      channelId: 'mission-thread', channel: t.channel, client: t.client, guildId: 'guild',
+      deferUpdate: jest.fn().mockResolvedValue(undefined),
+      editReply: jest.fn().mockResolvedValue(undefined), reply: jest.fn(),
+    }
+    await t.service.handleButton(button as never)
+    const former = t.posted.get('posted-1')
+    expect(former).toBeDefined()
+    await t.run()
+    const preview = t.editReply.mock.calls.at(-1)![0]
+    expect(preview.components[0].components.map((b: any) => b.data.label)).toEqual([
+      'Actualiser les choix', 'Republier les choix', 'Annuler', 'Voir les choix publiés',
+    ])
+    const republish = { ...button, customId: 'pf2-quest-choice:repost:cmd-quest',
+      editReply: jest.fn().mockResolvedValue(undefined) }
+    await t.service.handleButton(republish as never)
+    expect(t.channel.send).toHaveBeenCalledTimes(2)
+    expect(former.delete).toHaveBeenCalledTimes(1)
+    expect(t.posted.has('posted-1')).toBe(false)
+    expect(t.posted.has('posted-2')).toBe(true)
+    expect(t.persistence.replaceQuestRecapParts).toHaveBeenCalledTimes(1)
+    expect(t.persistence.replaceQuestRecapParts.mock.calls[0][1]).toEqual(['posted-1'])
+    expect((await t.persistence.questRecapParts('mission-thread')).map(p => p.messageId))
+      .toEqual(['posted-2'])
+    expect(republish.editReply).toHaveBeenCalledWith(expect.objectContaining({
+      content: expect.stringContaining('republiés en bas du fil'),
+    }))
+    expect(republish.editReply.mock.calls[0][0].components[0].components[0].data.url)
+      .toBe('https://discord.com/channels/guild/mission-thread/posted-2')
+    // Next update edits only the new public recap.
+    await t.run()
+    expect(t.editReply.mock.calls.at(-1)![0].components[0].components.at(-1).data.url)
+      .toBe('https://discord.com/channels/guild/mission-thread/posted-2')
+  })
+
+  it('reposts every chunk and removes every old chunk when the recap is split', async () => {
+    const t = questChoiceTest()
+    for (let i = 0; i < 72; i++) {
+      const id = '1000000000000000000' + String(i).padStart(3, '0')
+      t.questMap.set(id, t.quest(id, 'Quête ' + i, [t.eric.id], []))
+    }
+    const button = {
+      customId: 'pf2-quest-choice:publish:cmd-quest', user: { id: 'mj' },
+      channelId: 'mission-thread', channel: t.channel, client: t.client, guildId: 'guild',
+      deferUpdate: jest.fn().mockResolvedValue(undefined),
+      editReply: jest.fn().mockResolvedValue(undefined), reply: jest.fn(),
+    }
+    await t.run()
+    await t.service.handleButton(button as never)
+    const oldIds = (await t.persistence.questRecapParts('mission-thread')).map(p => p.messageId)
+    expect(oldIds.length).toBeGreaterThan(1)
+    const oldMessages = oldIds.map(id => t.posted.get(id))
+    await t.run()
+    await t.service.handleButton({
+      ...button, customId: 'pf2-quest-choice:repost:cmd-quest',
+      editReply: jest.fn().mockResolvedValue(undefined),
+    } as never)
+    const updatedIds = (await t.persistence.questRecapParts('mission-thread')).map(p => p.messageId)
+    expect(updatedIds).toHaveLength(oldIds.length)
+    for (const id of oldIds) expect(updatedIds).not.toContain(id)
+    for (const old of oldMessages) {
+      expect(old.delete).toHaveBeenCalledTimes(1)
+      expect(t.posted.has(old.id)).toBe(false)
+    }
+    expect(t.posted.size).toBe(updatedIds.length)
+  })
+
+  it('preserves the original public recap when reposting fails before the tracking swap', async () => {
+    const t = questChoiceTest()
+    t.questMap.set('one', t.quest('one', 'Quête A', [], []))
+    await t.run()
+    const button = {
+      customId: 'pf2-quest-choice:publish:cmd-quest', user: { id: 'mj' },
+      channelId: 'mission-thread', channel: t.channel, client: t.client, guildId: 'guild',
+      deferUpdate: jest.fn().mockResolvedValue(undefined),
+      editReply: jest.fn().mockResolvedValue(undefined), reply: jest.fn(),
+    }
+    await t.service.handleButton(button as never)
+    const former = t.posted.get('posted-1')
+    await t.run()
+    t.persistence.replaceQuestRecapParts.mockRejectedValueOnce(new Error('SQLite inaccessible'))
+    const republish = { ...button, customId: 'pf2-quest-choice:repost:cmd-quest',
+      editReply: jest.fn().mockResolvedValue(undefined) }
+    await t.service.handleButton(republish as never)
+    expect(former.delete).not.toHaveBeenCalled()
+    expect(t.posted.has('posted-1')).toBe(true)
+    expect(t.posted.has('posted-2')).toBe(false) // Newly sent message was cleaned up.
+    expect((await t.persistence.questRecapParts('mission-thread')).map(p => p.messageId))
+      .toEqual(['posted-1'])
+    expect(republish.editReply).toHaveBeenCalledWith(expect.objectContaining({
+      content: expect.stringContaining('SQLite inaccessible'),
+      components: [],
+    }))
+  })
+
+  it('warns explicitly when an obsolete recap could not be deleted after reposting', async () => {
+    const t = questChoiceTest()
+    t.questMap.set('one', t.quest('one', 'Quête A', [], []))
+    await t.run()
+    const button = {
+      customId: 'pf2-quest-choice:publish:cmd-quest', user: { id: 'mj' },
+      channelId: 'mission-thread', channel: t.channel, client: t.client, guildId: 'guild',
+      deferUpdate: jest.fn().mockResolvedValue(undefined),
+      editReply: jest.fn().mockResolvedValue(undefined), reply: jest.fn(),
+    }
+    await t.service.handleButton(button as never)
+    const former = t.posted.get('posted-1')
+    former.delete.mockRejectedValueOnce(new Error('Discord interdit suppression'))
+    await t.run()
+    const republish = { ...button, customId: 'pf2-quest-choice:repost:cmd-quest',
+      editReply: jest.fn().mockResolvedValue(undefined) }
+    await t.service.handleButton(republish as never)
+    expect((await t.persistence.questRecapParts('mission-thread')).map(p => p.messageId))
+      .toEqual(['posted-2'])
+    expect(t.posted.has('posted-1')).toBe(true)
+    expect(republish.editReply).toHaveBeenCalledWith(expect.objectContaining({
+      content: expect.stringContaining('ancien(s) message(s) n’ont pas pu être supprimés'),
+    }))
   })
 
   it('allows cancellation without any publication', async () => {

@@ -52,6 +52,16 @@ Les commandes `/terminer-quete` et `/relancer-quete` restent disponibles et util
 - Les **nouveaux récapitulatifs ne reçoivent aucune réaction de vote** : les pouces et cadenas restent sur les **fiches des quêtes**. Le bot laisse intégralement intacts les anciens messages et leurs réactions. Si un récapitulatif suivi a été supprimé manuellement, le bot ne le recrée jamais silencieusement.
 - La réconciliation ne doit jamais éditer des messages non publiés par le bot ni identifier un récapitulatif sur la seule base d'un titre de fil ambigu.
 
+### Prévisualisation privée : publier, actualiser ou republier (4 novembre 2026)
+
+- La commande /choix-quete produit toujours une **prévisualisation privée**. Si aucun récapitulatif n'est enregistré pour la séance, le dernier volet propose **Publier les choix** et **Annuler**. Seule la validation du MJ crée le message public.
+- Si un récapitulatif existe déjà en SQLite, le dernier volet propose **Actualiser les choix**, **Republier les choix**, **Annuler** et, lorsque le message est accessible, **Voir les choix publiés**.
+- **Actualiser** force une nouvelle lecture des votes Discord et remet à jour les **messages publics existants**, sans les déplacer et sans en créer de doublon. Cela sert notamment à réparer un décalage ou à ajouter des parties si le récapitulatif a grandi.
+- **Republier** force aussi la lecture des votes, mais crée un nouveau récapitulatif **à la fin du fil de séance** puis supprime les anciens messages du bot. Pour éviter de perdre les choix si une publication échoue, le bot envoie d'abord tous les nouveaux messages, remplace **atomiquement dans SQLite** les identifiants des parties suivies, puis supprime les anciens messages. Un échec avant le basculement laisse l'ancien récapitulatif suivi et nettoie les nouveaux messages déjà envoyés.
+- Si Discord refuse de supprimer un ancien message après le basculement, **la confirmation privée affiche l'erreur**, le nombre de messages restants et leurs identifiants ; les nouveaux messages restent alors ceux suivis en SQLite. Aucun ancien message d'un autre auteur n'est supprimé.
+- Chaque validation fournit **un lien vers le récapitulatif public** et un bouton pour y accéder, même lorsqu'aucun contenu n'a changé. Aucune publication, republication ou création de nouvelle partie ne se fait automatiquement sur une réaction ou lors de la synchronisation toutes les cinq minutes.
+- Les boutons restent uniquement sur le dernier volet privé d'une liste découpée ; les classements et les trois catégories restent inchangés.
+
 ### Affichage compact, cadenas uniques et notifications (2 novembre 2026)
 
 - Les noms des quêtes dans /choix-quete sont affichés via **une seule mention native Discord**, sans doublon en gras ni lien séparé. Le titre affiché suit automatiquement les renommages de quêtes effectués sur Discord.
@@ -59,7 +69,7 @@ Les commandes `/terminer-quete` et `/relancer-quete` restent disponibles et util
 - Les 👍 sont **illimités**. L'alerte en fin de récapitulatif signale uniquement les joueurs ayant réservé **plusieurs quêtes avec 🔒**.
 - Lorsqu'un joueur ajoute un 🔒 sur une deuxième quête non terminée, le bot envoie un avertissement **dans son salon PJ privé**, avec une mention Discord ciblée, et lui demande de ne conserver qu'un cadenas. L'identification du salon repose sur la jointure SQLite entre pf2_player_character_owner et pf2_player_discord_channel, sans inférer le salon depuis un pseudonyme. S'il n'a pas de salon associé (ex. Valou), aucune notification n'est envoyée.
 - Lorsqu'une quête est terminée avec /terminer-quete ou le bouton associé, le bot lit **avant fermeture** les joueurs ayant placé 🔒 et envoie à chacun disposant d'un salon privé une notification ciblée avec le titre de la quête terminée. Les erreurs de notification sont journalisées et ne bloquent pas la fermeture.
-- **Une actualisation automatique édite uniquement les messages du récapitulatif déjà enregistrés** : elle ne publie aucun nouveau message, même si la liste grandit. Si le contenu dépasse les parties existantes, le bot indique qu'une nouvelle confirmation /choix-quete est nécessaire pour ajouter la suite. La première publication et tout ajout de parties exigent une confirmation explicite.
+- **Une actualisation automatique édite uniquement les messages du récapitulatif déjà enregistrés** : elle ne publie aucun nouveau message, même si la liste grandit. Si le contenu dépasse les parties existantes, le bot indique qu'une confirmation /choix-quete est nécessaire pour ajouter la suite. Seul **Actualiser** peut ajouter des parties au récapitulatif existant, ou **Republier** peut le déplacer intégralement en bas du fil après validation explicite.
 - Démonstration effectuée sur les **deux messages déjà présents** dans « Séance 03/11 » : ils ont été édités sans nouvelle publication. Les réactions du bot sous l'ancien récapitulatif ont été retirées ; une réaction de joueur 💍 reste, car le bot ne dispose pas de la permission Discord permettant de la supprimer.
 
 ### Affichage minimaliste de /choix-quete

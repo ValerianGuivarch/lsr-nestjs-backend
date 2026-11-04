@@ -2,7 +2,7 @@ import { forwardRef, Inject, Injectable, Logger } from '@nestjs/common'
 import { resolve } from 'node:path'
 import { ActionRowBuilder, AutocompleteInteraction, ButtonBuilder, ButtonInteraction, ButtonStyle, ChannelType, ChatInputCommandInteraction, ModalBuilder, ModalSubmitInteraction, Message, MessageReaction, PartialMessageReaction, PermissionFlagsBits, RESTPostAPIApplicationGuildCommandsJSONBody, SlashCommandBuilder, StringSelectMenuBuilder, StringSelectMenuInteraction, TextInputBuilder, TextInputStyle, UserSelectMenuBuilder, UserSelectMenuInteraction } from 'discord.js'
 import { FoundryRelayService } from '../foundry/FoundryRelayService'
-import { Pf2PersistenceService } from '../pf2-storage/Pf2PersistenceService'
+import { DiscordQuestRecapPart, Pf2PersistenceService } from '../pf2-storage/Pf2PersistenceService'
 import { PlayerCodexService } from '../pf2-mj/PlayerCodexService'
 import { MediaWikiClientService } from '../pf2-mj/MediaWikiClientService'
 import { DiscordResumeSync, DiscordService } from './DiscordService'
@@ -705,6 +705,10 @@ export class DiscordCommandsService {
       const message = await thread.messages.fetch(part.messageId).catch(() => null)
       if (!message || message.author?.id !== client.user?.id) {
         this.logger.warn('Récapitulatif Discord introuvable ou non modifiable : ' + part.messageId)
+        if (allowNewParts) {
+          throw new Error('Le message public enregistré est introuvable ou non modifiable ('
+            + part.messageId + '). Aucune nouvelle publication créée pour éviter les doublons.')
+        }
         return // Never silently recreate a removed recap.
       }
       existingCount++
@@ -739,6 +743,69 @@ export class DiscordCommandsService {
         })
       }
     }
+  }
+
+  /** Explicit MJ action: move the recap to the bottom of the session thread.
+   * Send first, switch tracked IDs atomically, then delete the old bot messages.
+   * A failure before the switch leaves the old published recap untouched. */
+  private async republishQuestRecap(
+    client: any, thread: any, date: string, lines: string[],
+  ): Promise<{ newParts: number; undeletedOldIds: string[] }> {
+    if (date < this.parisToday()) throw new Error('La séance est passée : republication interdite.')
+    const oldParts = await this.persistence.questRecapParts(thread.id)
+    if (!oldParts.length) throw new Error('Aucun ancien récapitulatif à remplacer. Utilise Publier les choix.')
+    const oldMessages: any[] = []
+    for (const part of oldParts) {
+      let old: any
+      try { old = await thread.messages.fetch(part.messageId) }
+      catch (error) {
+        // A manually deleted message is already gone; do not treat network
+        // errors or missing permissions as proof it can be safely replaced.
+        if ((error as { code?: number })?.code !== 10008) throw error
+      }
+      if (old && old.author?.id !== client.user?.id) {
+        throw new Error('Le message ' + part.messageId + ' ne vient pas du bot : remplacement refusé.')
+      }
+      if (old) oldMessages.push(old)
+    }
+    const freshMessages: any[] = []
+    try {
+      const chunks = this.questChoiceChunks(lines)
+      for (const content of chunks) {
+        if (date < this.parisToday()) throw new Error('La séance est passée pendant la republication.')
+        freshMessages.push(await thread.send({ content, allowedMentions: { parse: [] } }))
+      }
+      if (date < this.parisToday()) throw new Error('La séance est passée pendant la republication.')
+      const replacements: DiscordQuestRecapPart[] = freshMessages.map((message, partIndex) => ({
+        threadId: thread.id, guildId: thread.guildId, sessionDate: date,
+        partIndex, messageId: message.id,
+      }))
+      // No automatic reconciliation can edit this thread while the explicit
+      // button holds withQuestRecapLock.
+      await this.persistence.replaceQuestRecapParts(thread.id, oldParts.map(part => part.messageId), replacements)
+    } catch (error) {
+      // The old tracked messages still exist if the send/transaction failed.
+      for (const message of freshMessages) {
+        try { await message.delete() }
+        catch (cleanupError) {
+          this.logger.error('Nettoyage de la republication échouée impossible : '
+            + message.id + ', ' + String(cleanupError))
+        }
+      }
+      throw error
+    }
+    const undeletedOldIds: string[] = []
+    for (const old of oldMessages) {
+      try { await old.delete() }
+      catch (error) {
+        undeletedOldIds.push(old.id)
+        this.logger.warn('Ancien récapitulatif non supprimé : ' + old.id + ', ' + String(error))
+      }
+    }
+    this.logger.log('Choix republiés dans ' + thread.id + ' : ' + freshMessages.length
+      + ' nouvelles parties, ' + oldMessages.length + ' anciens messages à retirer, '
+      + undeletedOldIds.length + ' échec(s) de suppression.')
+    return { newParts: freshMessages.length, undeletedOldIds }
   }
 
   /** Only recaps explicitly published since this feature was enabled are tracked. */
@@ -944,10 +1011,33 @@ export class DiscordCommandsService {
         requesterId: interaction.user.id, channelId: interaction.channelId,
         createdAt: Date.now(), sessionDate: details.sessionDate,
       })
-      const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
-        new ButtonBuilder().setCustomId('pf2-quest-choice:publish:' + interaction.id).setLabel(existing.length ? 'Actualiser les choix' : 'Publier les choix').setStyle(ButtonStyle.Success),
-        new ButtonBuilder().setCustomId('pf2-quest-choice:cancel:' + interaction.id).setLabel('Annuler').setStyle(ButtonStyle.Secondary),
-      )
+      const row = new ActionRowBuilder<ButtonBuilder>()
+      if (existing.length) {
+        row.addComponents(
+          new ButtonBuilder().setCustomId('pf2-quest-choice:refresh:' + interaction.id)
+            .setLabel('Actualiser les choix').setStyle(ButtonStyle.Success),
+          new ButtonBuilder().setCustomId('pf2-quest-choice:repost:' + interaction.id)
+            .setLabel('Republier les choix').setStyle(ButtonStyle.Primary),
+        )
+      } else {
+        row.addComponents(
+          new ButtonBuilder().setCustomId('pf2-quest-choice:publish:' + interaction.id)
+            .setLabel('Publier les choix').setStyle(ButtonStyle.Success),
+        )
+      }
+      row.addComponents(new ButtonBuilder().setCustomId('pf2-quest-choice:cancel:' + interaction.id)
+        .setLabel('Annuler').setStyle(ButtonStyle.Secondary))
+      // Tracked recaps are already public. Give a direct way to find them so
+      // editing an unchanged message never looks like an invisible publication.
+      if (existing.length) {
+        const first = await interaction.channel?.messages?.fetch(existing[0].messageId).catch(() => null)
+        if (first?.author?.id === interaction.client.user?.id) {
+          const publicUrl = 'https://discord.com/channels/' + interaction.guildId + '/'
+            + interaction.channelId + '/' + first.id
+          row.addComponents(new ButtonBuilder().setStyle(ButtonStyle.Link)
+            .setLabel('Voir les choix publiés').setURL(publicUrl))
+        }
+      }
       // Only the very last private preview part carries the action buttons.
       // If everything fits, there is just one preview message.
       const preview = this.questChoiceChunks(lines)
@@ -3145,7 +3235,7 @@ export class DiscordCommandsService {
         await interaction.update({ content: 'Publication annulée.', components: [], allowedMentions: { parse: [] } })
         return true
       }
-      if (action !== 'publish') return false
+      if (action !== 'publish' && action !== 'refresh' && action !== 'repost') return false
       if (this.publishingQuestChoices.has(id)) {
         await interaction.reply({ content: 'Publication déjà en cours.', ephemeral: true })
         return true
@@ -3159,11 +3249,48 @@ export class DiscordCommandsService {
         if (!session || session.sessionDate !== pending.sessionDate || session.sessionDate < this.parisToday()) {
           throw new Error('Séance passée ou participants modifiés : aucune publication.')
         }
+        const publication: { kind: 'published' | 'updated' | 'republished'; undeletedOldIds: string[] } = {
+          kind: 'published', undeletedOldIds: [],
+        }
         await this.withQuestRecapLock(interaction.channelId, async () => {
+          const existing = await this.persistence.questRecapParts(interaction.channelId)
           const lines = await this.buildQuestChoiceLines(interaction.client, interaction.guildId ?? '', session.userIds, true)
-          await this.updatePublishedQuestRecap(interaction.client, thread, session.sessionDate, lines, true)
+          if (action === 'repost') {
+            if (!existing.length) throw new Error('Aucun message public à republier. Relance /choix-quete.')
+            const result = await this.republishQuestRecap(interaction.client, thread, session.sessionDate, lines)
+            publication.undeletedOldIds = result.undeletedOldIds
+            publication.kind = 'republished'
+          } else {
+            if (action === 'refresh' && !existing.length) {
+              throw new Error('Le message public a disparu. Relance /choix-quete pour publier.')
+            }
+            await this.updatePublishedQuestRecap(interaction.client, thread, session.sessionDate, lines, true)
+            publication.kind = existing.length ? 'updated' : 'published'
+          }
         })
-        await interaction.editReply({ content: '✅ Récapitulatif publié ou actualisé. Les réactions 👍 et 🔒 sur les quêtes le mettront à jour automatiquement jusqu’à la fin du jour de séance.', components: [], allowedMentions: { parse: [] } })
+        const published = await this.persistence.questRecapParts(interaction.channelId)
+        if (!published.length) throw new Error('Aucun message public enregistré après validation.')
+        const publicUrl = 'https://discord.com/channels/' + interaction.guildId + '/'
+          + interaction.channelId + '/' + published[0].messageId
+        const publicLink = new ActionRowBuilder<ButtonBuilder>().addComponents(
+          new ButtonBuilder().setStyle(ButtonStyle.Link).setLabel('Voir le message public').setURL(publicUrl),
+        )
+        const resultMessage = publication.kind === 'republished'
+          ? '✅ Les choix ont été republiés en bas du fil.'
+          : publication.kind === 'updated'
+            ? '✅ Les choix publics existants ont été actualisés sans être déplacés.'
+            : '✅ Les choix ont été publiés dans ce fil et sont visibles par tous.'
+        await interaction.editReply({
+          content: resultMessage
+            + (publication.undeletedOldIds.length
+              ? '\n⚠️ Attention : ' + publication.undeletedOldIds.length
+                + ' ancien(s) message(s) n’ont pas pu être supprimés : '
+                + publication.undeletedOldIds.join(', ') + '.'
+              : '')
+            + '\n[Ouvrir le récapitulatif public](' + publicUrl + ')'
+            + '\nLes réactions 👍 et 🔒 continueront à le mettre à jour jusqu’à la fin du jour de séance.',
+          components: [publicLink], allowedMentions: { parse: [] },
+        })
       } catch (error) {
         await interaction.editReply({ content: 'Publication incomplète ou impossible : ' +
           (error instanceof Error ? error.message : String(error)) +

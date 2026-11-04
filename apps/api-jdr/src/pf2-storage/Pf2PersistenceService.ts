@@ -454,6 +454,33 @@ export class Pf2PersistenceService implements OnModuleInit {
     )
   }
 
+  /** Replace all tracked parts as a unit after fresh Discord messages were
+   * sent successfully. The expected IDs guard against stale concurrent writes. */
+  async replaceQuestRecapParts(
+    threadId: string, expectedMessageIds: string[], replacement: DiscordQuestRecapPart[],
+  ): Promise<void> {
+    if (!replacement.length || replacement.some((part, index) =>
+      part.threadId !== threadId || part.partIndex !== index || !part.messageId)) {
+      throw new Error('Parties de récapitulatif de remplacement invalides.')
+    }
+    await this.dataSource.transaction(async manager => {
+      const current = await manager.query(
+        'SELECT message_id AS messageId FROM pf2_discord_quest_recap WHERE thread_id=? ORDER BY part_index',
+        [threadId],
+      ) as Array<{ messageId: string }>
+      if (current.map(part => part.messageId).join('\n') !== expectedMessageIds.join('\n')) {
+        throw new Error('Le récapitulatif public a changé entre la prévisualisation et la republication.')
+      }
+      await manager.query('DELETE FROM pf2_discord_quest_recap WHERE thread_id=?', [threadId])
+      for (const part of replacement) {
+        await manager.query(
+          'INSERT INTO pf2_discord_quest_recap (thread_id,guild_id,session_date,part_index,message_id) VALUES (?,?,?,?,?)',
+          [part.threadId, part.guildId, part.sessionDate, part.partIndex, part.messageId],
+        )
+      }
+    })
+  }
+
   async questUi(threadId: string): Promise<{ threadId: string; kind: 'launcher' | 'quest'; description: string; icon: string; iconPending: boolean } | null> {
     const rows = await this.dataSource.query(
       'SELECT thread_id AS threadId, kind, description, icon, icon_pending AS iconPending FROM pf2_quest_ui WHERE thread_id=?', [threadId],
