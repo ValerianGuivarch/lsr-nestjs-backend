@@ -1193,36 +1193,28 @@ describe('DiscordCommandsService', () => {
     expect(announcement).not.toContain('niveau')
   })
 
-  it('/fin-seance never queries Foundry', async () => {
-    const listActors = jest.fn().mockRejectedValue(new Error('relay offline'))
-    const listPlayers = jest.fn().mockRejectedValue(new Error('relay offline'))
-    const updateSession = jest.fn().mockResolvedValue({ id: 'session-12' })
-    const editReply = jest.fn().mockResolvedValue(undefined)
-    const service = new DiscordCommandsService({
-      listSessions: jest.fn().mockResolvedValue([
-        { id: 'session-12', sessionNumber: 12, inGameStartDate: '4720-04-08', date: '', participants: ['Actor.pepin'] },
-      ]),
-      updateSession,
-      closeSessionDiscordChannel: jest.fn().mockResolvedValue(undefined),
-      hasActiveSessionDiscordChannel: jest.fn().mockResolvedValue(false),
-    } as never, { listActors, listPlayers } as never)
-
+  it('/fin-seance opens an editable modal without applying XP or consulting Foundry', async () => {
+    const foundry = { listActors: jest.fn(), listPlayers: jest.fn(), awardSessionCoins: jest.fn() }
+    const persistence = {
+      activeSessionForDiscordChannel: jest.fn().mockResolvedValue({ id: 'session-12', sessionNumber: 12 }),
+      listSessions: jest.fn().mockResolvedValue([{ id: 'session-12', sessionNumber: 12 }]),
+      updateSession: jest.fn(), closeSessionDiscordChannel: jest.fn(),
+    }
+    const showModal = jest.fn().mockResolvedValue(undefined)
+    const service = new DiscordCommandsService(persistence as never, foundry as never)
     await service.handle({
-      commandName: 'fin-seance',
-      user: { id: 'admin' },
+      commandName: 'fin-seance', id: 'cmd-12', user: { id: 'admin' },
       memberPermissions: { has: jest.fn().mockReturnValue(true) },
-      options: {
-        getInteger: jest.fn((name: string) => name === 'numero' ? 12 : name === 'xp' ? 100 : name === 'jours' ? 1 : null),
-        getString: jest.fn().mockReturnValue(null),
-      },
-      deferReply: jest.fn().mockResolvedValue(undefined),
-      editReply,
+      channelId: 'session-channel', guildId: 'guild', channel: { name: 'discussion' }, showModal,
     } as never)
-
-    expect(editReply).toHaveBeenCalledWith(expect.objectContaining({ content: expect.stringContaining('Résumé n°12 mis à jour') }))
-    expect(updateSession).toHaveBeenCalled()
-    expect(listActors).not.toHaveBeenCalled()
-    expect(listPlayers).not.toHaveBeenCalled()
+    const modal = showModal.mock.calls[0][0].toJSON()
+    expect(modal.custom_id).toBe('pf2-finish:modal:general:cmd-12')
+    expect(modal.components).toHaveLength(5)
+    expect(modal.components[0].components[0].value).toBe('12')
+    expect(persistence.updateSession).not.toHaveBeenCalled()
+    expect(foundry.listActors).not.toHaveBeenCalled()
+    expect(foundry.listPlayers).not.toHaveBeenCalled()
+    expect(foundry.awardSessionCoins).not.toHaveBeenCalled()
   })
 
   it('turns missed published sessions into seven-day progression rolls', async () => {

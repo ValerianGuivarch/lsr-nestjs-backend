@@ -164,6 +164,49 @@ export class FoundryRelayService {
     return { uuid: player.uuid, before: player.xpc, added, after: state.xpc, level: state.level, xp: state.xp }
   }
 
+  /**
+   * Credit PF2e coinage through actor.inventory.addCoins, NOT by rewriting
+   * system.currency (which is computed from coinage Item documents).
+   * execute-js is an explicitly gated Foundry REST permission: fail closed if
+   * the world has it disabled, and never use arbitrary text from Discord.
+   * Per-Actor flags make retrying a partially failed session idempotent.
+   */
+  private sessionCoinData(uuids: string[], coins: { gp: number; sp: number; cp: number }, sessionId: string) {
+    if (!/^[a-f0-9-]{36}$/i.test(sessionId)) throw new BadRequestException('Séance invalide pour le versement.')
+    for (const value of Object.values(coins)) {
+      if (!Number.isSafeInteger(value) || value < 0 || value > 1_000_000) throw new BadRequestException('Montant de pièces invalide.')
+    }
+    const actors = [...new Set(uuids)].map(uuid => this.actorUuid(uuid).slice(6))
+    if (!actors.length) throw new BadRequestException('Aucun PJ pour le versement.')
+    return { actorIds: actors, coins, sessionId }
+  }
+
+  private async executeSessionCoinScript(script: string): Promise<Record<string, unknown>> {
+    const clientId = await this.onlineClientId()
+    const result = this.object(await this.request(`/execute-js?${new URLSearchParams({ clientId })}`, {
+      method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ script }),
+    }, 30_000))
+    if (result.success !== true) throw new BadGatewayException('Le versement de pièces Foundry a échoué ou execute-js est désactivé.')
+    return this.object(result.result)
+  }
+
+  async checkSessionCoins(uuids: string[], coins: { gp: number; sp: number; cp: number }, sessionId: string): Promise<void> {
+    if (!Object.values(coins).some(Boolean)) return
+    const payload = JSON.stringify(this.sessionCoinData(uuids, coins, sessionId))
+    const script = `const entry=${payload};for(const id of entry.actorIds){const actor=game.actors.get(id);if(!actor||actor.type!=='character'||typeof actor.inventory?.addCoins!=='function')throw new Error('PJ Foundry introuvable ou pièces indisponibles : '+id);}return {ready:true};`
+    const data = await this.executeSessionCoinScript(script)
+    if (data.ready !== true) throw new BadGatewayException('Pré-vérification Foundry de l’or impossible.')
+  }
+
+  async awardSessionCoins(uuids: string[], coins: { gp: number; sp: number; cp: number }, sessionId: string): Promise<Array<{ actorId: string; already: boolean }>> {
+    if (!Object.values(coins).some(Boolean)) return []
+    const payload = JSON.stringify(this.sessionCoinData(uuids, coins, sessionId))
+    const script = `const entry=${payload};const results=[];for(const id of entry.actorIds){const actor=game.actors.get(id);if(!actor||actor.type!=='character'||typeof actor.inventory?.addCoins!=='function')throw new Error('PJ Foundry introuvable : '+id);const key='sessionCoinAwards';const applied=actor.getFlag('pf2e-val-toolkit',key)||{};if(applied[entry.sessionId]){results.push({actorId:id,already:true});continue;}await actor.setFlag('pf2e-val-toolkit',key,{...applied,[entry.sessionId]:entry.coins});try{await actor.inventory.addCoins(entry.coins);}catch(error){await actor.setFlag('pf2e-val-toolkit',key,applied);throw error;}results.push({actorId:id,already:false});}return {results};`
+    const data = await this.executeSessionCoinScript(script)
+    if (!Array.isArray(data.results) || data.results.length !== new Set(uuids).size) throw new BadGatewayException('Résultat du versement Foundry incomplet : vérifier avant de relancer.')
+    return data.results as Array<{ actorId: string; already: boolean }>
+  }
+
   private async writeCareer(uuid: string, xpc: number, clientId?: string): Promise<{ uuid: string; xpc: number; level: number; xp: number }> {
     const state = this.careerState(xpc)
     await this.updateActor(uuid, { [this.xpcPath()]: state.xpc }, clientId)

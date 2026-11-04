@@ -11,6 +11,8 @@ import { Pf2RequestService, RequestStatus } from './Pf2RequestService'
 import { pf2DiscordIdForPlayer, pf2MatchesPlayerOrDiscordAlias, pf2PlayerByDiscordId } from './Pf2PlayerIdentity'
 import { shortSummaryRewardForSession } from '../pf2-sessions/Pf2CareerXp'
 import { Pf2JournalsService } from '../pf2-journals/Pf2JournalsService'
+import { Pf2ReputationService } from '../pf2-reputation/Pf2ReputationService'
+import { FINISH_TTL_MS, finishCurrencyText, finishInt, finishReport, finishReportParts, finishReputationDefaults, parseFinishReputationGroup, sortedFinishReputations, type SessionFinishDraft, type SessionFinishGroup } from './SessionFinishFlow'
 
 const PLANNING_DAYS = [
   { offset: 0, label: 'Lundi', emoji: '🇱' },
@@ -91,6 +93,7 @@ export class DiscordCommandsService {
   private readonly pendingQuestCompletions = new Map<string, { requesterId: string; threadId: string }>()
   private readonly recentQuestLockWarnings = new Map<string, number>()
   private readonly pendingQuestChoices = new Map<string, { requesterId: string; channelId: string; createdAt: number; sessionDate: string }>()
+  private readonly pendingSessionFinishes = new Map<string, SessionFinishDraft>()
   private readonly questRecapLocks = new Map<string, Promise<void>>()
   private questRecapDebounce: ReturnType<typeof setTimeout> | null = null
   private questRecapReconcile: Promise<void> | null = null
@@ -107,7 +110,7 @@ export class DiscordCommandsService {
   private questRecapStartedAt = 0
   private readonly publishingQuestChoices = new Set<string>()
   private readonly choiceForumChannelId = process.env['PF2_DISCORD_QUEST_FORUM_CHANNEL_ID']?.trim() || '1536259632455094412'
-  constructor(private readonly persistence: Pf2PersistenceService, private readonly foundry: FoundryRelayService, private readonly playerCodex?: PlayerCodexService, private readonly mediaWiki?: MediaWikiClientService, @Inject(forwardRef(() => DiscordService)) private readonly discord?: DiscordService, private readonly journals?: Pf2JournalsService, private readonly requests?: Pf2RequestService, private readonly questPilot?: DiscordQuestPilotService) {}
+  constructor(private readonly persistence: Pf2PersistenceService, private readonly foundry: FoundryRelayService, private readonly playerCodex?: PlayerCodexService, private readonly mediaWiki?: MediaWikiClientService, @Inject(forwardRef(() => DiscordService)) private readonly discord?: DiscordService, private readonly journals?: Pf2JournalsService, private readonly requests?: Pf2RequestService, private readonly questPilot?: DiscordQuestPilotService, private readonly reputations?: Pf2ReputationService) {}
 
   definitions(): RESTPostAPIApplicationGuildCommandsJSONBody[] {
     return [
@@ -136,7 +139,7 @@ export class DiscordCommandsService {
       new SlashCommandBuilder().setName('recap-seance').setDescription('Prévisualise les informations prévues pour une séance.').addStringOption(option => option.setName('session').setDescription('Numéro de séance').setRequired(true).setAutocomplete(true)).setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild).toJSON(),
       new SlashCommandBuilder().setName('journaux').setDescription('Prépare la révélation d’un journal.').addIntegerOption(option => option.setName('numero').setDescription('Numéro du journal à révéler').setRequired(false).setMinValue(1)).setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild).toJSON(),
       new SlashCommandBuilder().setName('debut-seance').setDescription('Prépare le début d’une nouvelle séance PF2.').setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild).toJSON(),
-      new SlashCommandBuilder().setName('fin-seance').setDescription('Termine une séance et met à jour son résumé.').addIntegerOption(option => option.setName('xp').setDescription('XP gagnée par PJ').setRequired(true).setMinValue(0)).addIntegerOption(option => option.setName('numero').setDescription('Numéro du résumé à terminer')).addStringOption(option => option.setName('fin').setDescription('Date de fin en jeu : YYYY-MM-DD')).addIntegerOption(option => option.setName('jours').setDescription('Durée en jours, à partir du début en jeu').setMinValue(1)).setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild).toJSON(),
+      new SlashCommandBuilder().setName('fin-seance').setDescription('Prépare la fin de séance : XP, butin, pièces et réputations.').setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild).toJSON(),
       new SlashCommandBuilder().setName('personnage').setDescription('Présente ou publie un personnage dans le carnet joueur.').addStringOption(option => option.setName('personnage').setDescription('PNJ existant ou nom libre').setRequired(true).setAutocomplete(true)).addAttachmentOption(option => option.setName('portrait').setDescription('Portrait pour un personnage improvisé')).addBooleanOption(option => option.setName('afficher_nom').setDescription('Afficher le nom').setRequired(false)).setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild).toJSON(),
       new SlashCommandBuilder().setName('faction').setDescription('Prépare la publication d’une faction MJ.').addStringOption(option => option.setName('faction').setDescription('Faction à publier').setRequired(true).setAutocomplete(true)).setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild).toJSON(),
       new SlashCommandBuilder().setName('nouvelle-faction').setDescription('Crée une faction dans le carnet joueur.').addStringOption(option => option.setName('nom').setDescription('Nom connu des joueurs').setRequired(true)).addStringOption(option => option.setName('description').setDescription('Description connue des joueurs').setRequired(false).setMaxLength(2000)).addStringOption(option => option.setName('parente').setDescription('Faction parente côté joueurs').setRequired(false).setAutocomplete(true)).toJSON(),
@@ -307,7 +310,7 @@ export class DiscordCommandsService {
         '`/tirage-sort-joueur` — sélectionne des personnes puis en tire un nombre au hasard, avec aperçu avant publication.',
         '`/debut-seance` — prépare le début d’une séance.',
         '`/recap-seance` — prévisualise les informations d’une séance, puis permet leur publication.',
-        '`/fin-seance` — saisit la fin de séance et les XP.',
+        '`/fin-seance` — formulaire guidé : XP, durée, pièces, butin et réputation (simulation dans #mj).',
         '`/journaux` — prévisualise puis révèle un journal après validation.',
         '`/personnage` — présente un personnage et permet de créer/publier sa fiche.',
         '`/faction` — prévisualise puis publie une faction MJ vers le carnet joueur.',
@@ -2981,6 +2984,7 @@ export class DiscordCommandsService {
   }
 
   async handleModal(interaction: ModalSubmitInteraction): Promise<boolean> {
+    if (interaction.customId.startsWith('pf2-finish:modal:')) return this.handleSessionFinishModal(interaction)
     if (interaction.customId.startsWith('pf2-quest-ui:')) return this.questPilot!.handleModal(interaction)
 
     if(interaction.customId.startsWith('pf2-request:form:')) {
@@ -3218,6 +3222,7 @@ export class DiscordCommandsService {
   }
 
   async handleButton(interaction: ButtonInteraction): Promise<boolean> {
+    if (interaction.customId.startsWith('pf2-finish:button:')) return this.handleSessionFinishButton(interaction)
     if (interaction.customId.startsWith('pf2-quest-choice:')) {
       const [, action, id] = interaction.customId.split(':')
       const pending = this.pendingQuestChoices.get(id)
@@ -3666,30 +3671,259 @@ export class DiscordCommandsService {
     return value
   }
 
+  private sessionFinishModal(draft: SessionFinishDraft, step: 'general' | 'loot' | 'reputation'): ModalBuilder {
+    const modal = new ModalBuilder().setCustomId(`pf2-finish:modal:${step}:${draft.token}`)
+    const input = (id: string, label: string, value: string, paragraph = false, maxLength = 4000) => {
+      const field = new TextInputBuilder().setCustomId(id).setLabel(label.slice(0,45))
+        .setStyle(paragraph ? TextInputStyle.Paragraph : TextInputStyle.Short)
+        .setRequired(false).setMaxLength(maxLength)
+      if (value) field.setValue(value.slice(0,maxLength))
+      return new ActionRowBuilder<TextInputBuilder>().addComponents(field)
+    }
+    if (step === 'general') {
+      modal.setTitle('Fin de séance · 1/3 · Expérience')
+      modal.addComponents(
+        input('number', 'Numéro de séance', String(draft.number), false, 6),
+        input('days', 'Nombre de jours écoulés (0 = même jour)', String(draft.days), false, 4),
+        input('total', 'XP total attribué au groupe', String(draft.xpTotal), false, 10),
+        input('per-pj', 'XP gagnés par PJ', String(draft.xpPerPlayer), false, 10),
+        input('activities', 'Actions réalisées (une par ligne)', draft.activities, true),
+      )
+    } else if (step === 'loot') {
+      modal.setTitle('Fin de séance · 2/3 · Trésors')
+      modal.addComponents(
+        input('gold', 'Pièces d’or PAR PJ', String(draft.coins.gp), false, 10),
+        input('silver', 'Pièces d’argent PAR PJ', String(draft.coins.sp), false, 10),
+        input('copper', 'Pièces de cuivre PAR PJ', String(draft.coins.cp), false, 10),
+        input('loot', 'Objets obtenus (une ligne par objet)', draft.loot, true),
+      )
+    } else {
+      modal.setTitle('Fin de séance · 3/3 · Réputations')
+      const currentPage = draft.reputationPage ?? 0
+      for (const group of draft.groups.slice(currentPage * 5, (currentPage + 1) * 5)) {
+        const changes = new Map(draft.changes.map(change => [change.id, change.delta]))
+        const current = group.entries.map(entry => `${entry.name}: ${changes.get(entry.id) ?? 0}`).join('\n')
+        modal.addComponents(input('group-' + group.id, `${group.name} (${group.entries.length})`, current || finishReputationDefaults(group), true))
+      }
+    }
+    return modal
+  }
+
+  private sessionFinishButton(draft: SessionFinishDraft, action: string, label: string, style: ButtonStyle): ButtonBuilder {
+    return new ButtonBuilder().setCustomId(`pf2-finish:button:${action}:${draft.token}`).setLabel(label).setStyle(style)
+  }
+
+  private sessionFinishView(draft: SessionFinishDraft, step: 'loot' | 'reputation'): { content: string; components: Array<ActionRowBuilder<ButtonBuilder>>; ephemeral: true; allowedMentions: { parse: [] } } {
+    const content = step === 'loot'
+      ? `Séance n°${draft.number} : ${draft.days} jour(s), XP groupe ${draft.xpTotal}, ${draft.xpPerPlayer} XP par PJ.\n**Étape 1/3 enregistrée.** Continue avec les pièces et le butin.`
+      : `Pièces par PJ : ${finishCurrencyText(draft.coins) || 'aucune'}.\n**Étape 2/3 enregistrée.** Continue avec les ${draft.groups.reduce((n,g)=>n+g.entries.length,0)} réputations des ${draft.groups.length} catégories (page ${(draft.reputationPage ?? 0)+1}/${Math.ceil(draft.groups.length/5)}). Seuls les écarts différents de zéro seront retenus.`
+    return { content, ephemeral: true, allowedMentions: { parse: [] }, components: [new ActionRowBuilder<ButtonBuilder>().addComponents(
+      this.sessionFinishButton(draft, step, step === 'loot' ? 'Continuer : pièces et butin' : 'Continuer : réputations', ButtonStyle.Primary),
+      this.sessionFinishButton(draft, 'cancel', 'Annuler', ButtonStyle.Secondary),
+    )] }
+  }
+
   private async finishGameCommand(interaction: ChatInputCommandInteraction): Promise<void> {
     if (!this.isAdmin(interaction)) {
       await interaction.reply({ content: 'Cette commande est réservée aux administrateurs du serveur.', ephemeral: true })
       return
     }
-    await interaction.deferReply({ ephemeral: true })
-    const requestedNumber = interaction.options.getInteger('numero') ?? await this.lastBotSessionNumber(interaction)
-    if (!requestedNumber) { await interaction.editReply({ content: 'Indique `numero`, ou utilise la commande dans un salon contenant une annonce récente du bot avec « Résumé n°… ». ' }); return }
-    const endDate = interaction.options.getString('fin')?.trim() ?? ''
-    const days = interaction.options.getInteger('jours')
-    const xp = interaction.options.getInteger('xp', true)
-    if (Boolean(endDate) === (days !== null)) { await interaction.editReply({ content: 'Indique soit `fin` (YYYY-MM-DD), soit `jours`, mais pas les deux.' }); return }
-    if (endDate && !/^\d{4}-\d{2}-\d{2}$/.test(endDate)) { await interaction.editReply({ content: 'La date de fin doit être au format YYYY-MM-DD.' }); return }
-    const session = (await this.persistence.listSessions()).find((item) => item.sessionNumber === requestedNumber)
-    if (!session) { await interaction.editReply({ content: `Aucun résumé n°${requestedNumber} n’existe.` }); return }
-    if (days !== null && !session.inGameStartDate) { await interaction.editReply({ content: `Le résumé n°${requestedNumber} n’a pas de date de début en jeu : précise plutôt \`fin\`.` }); return }
-    const resolvedEndDate = endDate || this.addDays(session.inGameStartDate, Math.max(0, (days ?? 1) - 1))
-    const updated = await this.persistence.updateSession(session.id, { inGameEndDate: resolvedEndDate, sessionXp: xp, ...(session.date ? {} : { date: this.realDate() }) })
-    if (updated) {
-      await this.persistence.closeSessionDiscordChannel(updated.id)
-      await this.playerCodex?.setFoundrySessionActive(await this.persistence.hasActiveSessionDiscordChannel())
+    const mock = interaction.channel?.name === 'mj'
+    // A session started with /debut-seance is bound to its Discord channel.
+    // For an old session, the number remains editable in the modal.
+    const active = mock ? null : await this.persistence.activeSessionForDiscordChannel(interaction.channelId)
+    const sessions = mock ? [] : await this.persistence.listSessions()
+    const number = mock ? 7 : active?.sessionNumber ?? Math.max(1, ...sessions.map(session => session.sessionNumber))
+    const token = interaction.id
+    const draft: SessionFinishDraft = {
+      token, requesterId: interaction.user.id, channelId: interaction.channelId, guildId: interaction.guildId ?? '',
+      mock, sessionId: active?.id ?? null, number, createdAt: Date.now(),
+      days: 0, xpPerPlayer: 0, xpTotal: 0, activities: '', coins: { gp: 0, sp: 0, cp: 0 }, loot: '',
+      groups: [], changes: [], reputationPage: 0, step: 'general',
     }
-    await interaction.editReply({ content: `Résumé n°${requestedNumber} mis à jour : fin en jeu le ${this.displayDate(resolvedEndDate)} ; ${xp} XP par PJ.` })
-    if (!updated) this.logger.warn(`finish-game: résumé ${requestedNumber} supprimé pendant la mise à jour.`)
+    this.pendingSessionFinishes.set(token, draft)
+    await interaction.showModal(this.sessionFinishModal(draft, 'general'))
+  }
+
+  private sessionFinishPending(interaction: ModalSubmitInteraction | ButtonInteraction, token: string): SessionFinishDraft | null {
+    const draft = this.pendingSessionFinishes.get(token)
+    if (!draft || draft.requesterId !== interaction.user.id || draft.channelId !== interaction.channelId ||
+        Date.now() - draft.createdAt > FINISH_TTL_MS) return null
+    return draft
+  }
+
+  private async handleSessionFinishModal(interaction: ModalSubmitInteraction): Promise<boolean> {
+    const match = /^pf2-finish:modal:(general|loot|reputation):(.+)$/.exec(interaction.customId)
+    if (!match) return false
+    const step = match[1] as 'general' | 'loot' | 'reputation'
+    const draft = this.sessionFinishPending(interaction, match[2])
+    if (!draft || draft.step !== step || !this.isAdmin(interaction as never)) {
+      await interaction.reply({ content: 'Formulaire expiré, non autorisé ou déjà validé. Relance `/fin-seance`.', ephemeral: true }); return true
+    }
+    try {
+      if (step === 'general') {
+        draft.number = finishInt(interaction.fields.getTextInputValue('number'), 'Numéro de séance', 999999)
+        if (!draft.number) throw new Error('Le numéro de séance doit être supérieur à zéro.')
+        draft.days = finishInt(interaction.fields.getTextInputValue('days'), 'Jours écoulés', 3650)
+        draft.xpTotal = finishInt(interaction.fields.getTextInputValue('total'), 'XP du groupe', 10_000_000)
+        draft.xpPerPlayer = finishInt(interaction.fields.getTextInputValue('per-pj'), 'XP par PJ', 10_000_000)
+        draft.activities = interaction.fields.getTextInputValue('activities').trim()
+        draft.step = 'loot'
+        await interaction.reply(this.sessionFinishView(draft, 'loot'))
+      } else if (step === 'loot') {
+        draft.coins.gp = finishInt(interaction.fields.getTextInputValue('gold'), 'Pièces d’or')
+        draft.coins.sp = finishInt(interaction.fields.getTextInputValue('silver'), 'Pièces d’argent')
+        draft.coins.cp = finishInt(interaction.fields.getTextInputValue('copper'), 'Pièces de cuivre')
+        draft.loot = interaction.fields.getTextInputValue('loot').trim()
+        if (!this.reputations) throw new Error('Service de réputation indisponible.')
+        const groups = await this.reputations.list(true) as SessionFinishGroup[]
+        draft.groups = groups.map(group => ({
+          id: Number(group.id), name: group.name,
+          entries: group.entries.map(entry => ({ id: Number(entry.id), name: entry.name, score: Number(entry.score) })),
+        }))
+        draft.reputationPage = 0
+        draft.step = draft.groups.length ? 'reputation' : 'review'
+        if (draft.groups.length) await interaction.reply(this.sessionFinishView(draft, 'reputation'))
+        else await this.sessionFinishPreview(interaction, draft)
+      } else {
+        const page = draft.reputationPage ?? 0
+        const pageGroups = draft.groups.slice(page * 5, (page + 1) * 5)
+        const pageIds = new Set(pageGroups.flatMap(group => group.entries.map(entry => entry.id)))
+        draft.changes = [
+          ...draft.changes.filter(change => !pageIds.has(change.id)),
+          ...pageGroups.flatMap(group => parseFinishReputationGroup(group, interaction.fields.getTextInputValue('group-'+group.id))),
+        ]
+        if ((page + 1) * 5 < draft.groups.length) {
+          draft.reputationPage = page + 1
+          await interaction.reply(this.sessionFinishView(draft, 'reputation'))
+        } else {
+          draft.step = 'review'
+          await this.sessionFinishPreview(interaction, draft)
+        }
+      }
+    } catch (error) {
+      await interaction.reply({ content: `Champ invalide : ${error instanceof Error ? error.message : String(error)}`, ephemeral: true,
+        components: [new ActionRowBuilder<ButtonBuilder>().addComponents(this.sessionFinishButton(draft, step, 'Corriger cette étape', ButtonStyle.Primary))] })
+    }
+    return true
+  }
+
+  private async sessionFinishPreview(interaction: ModalSubmitInteraction, draft: SessionFinishDraft): Promise<void> {
+    const content = finishReport(draft)
+    const parts = finishReportParts(content)
+    await interaction.deferReply({ ephemeral: true })
+    await interaction.editReply({ content: `**Aperçu privé — à confirmer**\n\n${parts[0]}`.slice(0, 2000), allowedMentions: { parse: [] } })
+    for (const part of parts.slice(1)) await interaction.followUp({ content: part, ephemeral: true, allowedMentions: { parse: [] } })
+    await interaction.followUp({ content: draft.mock
+      ? '🧪 **Mode simulation dans #mj : publier ici sans modifier SQLite, Foundry ni les réputations ?**'
+      : 'Confirmer la fin de séance réelle ? Cela enregistre les XP, crédite les pièces sur les PJ et applique les variations de réputation.',
+      ephemeral: true, allowedMentions: { parse: [] }, components: [new ActionRowBuilder<ButtonBuilder>().addComponents(
+        this.sessionFinishButton(draft, 'confirm', draft.mock ? 'Publier la simulation' : 'Terminer la séance', ButtonStyle.Success),
+        this.sessionFinishButton(draft, 'general', 'Modifier', ButtonStyle.Secondary),
+        this.sessionFinishButton(draft, 'cancel', 'Annuler', ButtonStyle.Danger),
+      )] })
+  }
+
+  private async handleSessionFinishButton(interaction: ButtonInteraction): Promise<boolean> {
+    const match = /^pf2-finish:button:(general|loot|reputation|confirm|cancel):(.+)$/.exec(interaction.customId)
+    if (!match) return false
+    const action = match[1]
+    const draft = this.sessionFinishPending(interaction, match[2])
+    if (!draft || !this.isAdmin(interaction as never)) {
+      await interaction.reply({ content: 'Ce formulaire est expiré ou appartient à un autre MJ.', ephemeral: true }); return true
+    }
+    if (action === 'cancel') {
+      this.pendingSessionFinishes.delete(draft.token)
+      await interaction.update({ content: 'Fin de séance annulée. Aucune récompense appliquée.', components: [] }); return true
+    }
+    if (action === 'confirm') {
+      if (draft.step !== 'review') { await interaction.reply({ content: 'Validation déjà en cours ou non prête.', ephemeral: true }); return true }
+      draft.step = 'committing'
+      await interaction.deferReply({ ephemeral: true })
+      try {
+        await this.applySessionFinish(interaction, draft)
+        draft.step = 'completed'
+        this.pendingSessionFinishes.delete(draft.token)
+        await interaction.editReply({ content: draft.mock ? '🧪 Simulation publiée dans #mj. Aucune donnée enregistrée.' : `✅ Séance n°${draft.number} terminée. XP, pièces et réputations appliqués ; récapitulatif publié.` })
+      } catch (error) {
+        // Idempotency: session XP overwrites, reputation reasons and coin flags
+        // prevent double application when a partial operation needs retrying.
+        draft.step = 'review'
+        await interaction.editReply({ content: `⚠️ Fin de séance incomplète : ${error instanceof Error ? error.message : String(error)}. Vérifie le fil et les inventaires avant de relancer.`,
+          components: [new ActionRowBuilder<ButtonBuilder>().addComponents(this.sessionFinishButton(draft, 'confirm', 'Réessayer (sans doubler)', ButtonStyle.Primary))] })
+      }
+      return true
+    }
+    if (draft.step === 'committing' || draft.step === 'completed') {
+      await interaction.reply({ content: 'Cette séance est en cours de validation ou déjà terminée.', ephemeral: true });return true
+    }
+    const step = action as 'general' | 'loot' | 'reputation'
+    if (step === 'reputation' && draft.step === 'review') draft.reputationPage = 0
+    if (step === 'reputation' && !draft.groups.length) { await interaction.reply({ content: 'Aucune réputation chargée.', ephemeral: true }); return true }
+    draft.step = step
+    await interaction.showModal(this.sessionFinishModal(draft, step))
+    return true
+  }
+
+  private async applySessionFinish(interaction: ButtonInteraction, draft: SessionFinishDraft): Promise<void> {
+    if (!interaction.channel?.isTextBased() || !('send' in interaction.channel)) throw new Error('Salon Discord non publiable.')
+    // Validate all Discord message lengths before performing any real write.
+    const report = finishReport(draft)
+    const reportParts = finishReportParts(report)
+    // In #mj the ONLY side effect is the visible simulated report. This branch
+    // is intentionally before any database or Foundry interaction.
+    if (draft.mock) {
+      if (interaction.channel.name !== 'mj') throw new Error('Simulation hors du canal mj interdite.')
+      for (const content of reportParts) await interaction.channel.send({ content, allowedMentions: { parse: [] } })
+      return
+    }
+    if (interaction.channel.name === 'mj') throw new Error('Une séance réelle ne peut pas être validée dans #mj.')
+    const session = await this.persistence.activeSessionForDiscordChannel(draft.channelId)
+    if (!session || session.sessionNumber !== draft.number || (draft.sessionId && session.id !== draft.sessionId)) {
+      throw new Error('Aucune séance active correspondant au numéro dans ce fil Discord. Corrige le numéro ou relance /debut-seance.')
+    }
+    if (!session.inGameStartDate) throw new Error('La séance n’a pas de date de début en jeu.')
+    if (!session.participants.length) throw new Error('Aucun PJ participant à cette séance.')
+    if (!this.reputations) throw new Error('Service de réputation indisponible.')
+    const pieces = draft.coins
+    await this.foundry.checkSessionCoins(session.participants, pieces, session.id)
+    // A retry after a publication error must not reapply an already persisted
+    // reputation delta (a faction might now be exactly at the +50 cap).
+    const previousReport = await this.persistence.sessionFinishReport(session.id)
+    if (previousReport && previousReport.content !== report) {
+      throw new Error('Un autre bilan de fin de séance est déjà enregistré. Ne pas cumuler deux versements.')
+    }
+    // Validate reputation bounds before applying any reward on the first pass.
+    const current = previousReport ? [] : await this.reputations.list(true) as SessionFinishGroup[]
+    const indexed = new Map(current.flatMap(group => group.entries.map(entry => [Number(entry.id), Number(entry.score)] as const)))
+    for (const change of previousReport ? [] : draft.changes) {
+      const score = indexed.get(change.id)
+      if (score === undefined || score + change.delta > 50 || score + change.delta < -50) {
+        throw new Error(`Réputation « ${change.name} » hors limites ou supprimée.`)
+      }
+    }
+    await this.foundry.awardSessionCoins(session.participants, pieces, session.id)
+    await this.reputations.applySessionDeltas(draft.changes.map(change => ({ id: change.id, delta: change.delta })), session.id)
+    const endDate = this.addDays(session.inGameStartDate, draft.days)
+    const updated = await this.persistence.updateSession(session.id, {
+      inGameEndDate: endDate,
+      sessionXp: draft.xpPerPlayer,
+      ...(session.date ? {} : { date: this.realDate() }),
+    })
+    if (!updated) throw new Error('Séance introuvable lors de la clôture.')
+    await this.persistence.saveSessionFinishReport(session.id, draft.xpTotal, report)
+    // Keep the context active until the report has reached Discord, allowing
+    // an idempotent retry of a failed send. Do not let Foundry status sync
+    // mask a successfully posted and committed session.
+    for (const content of reportParts) {
+      await interaction.channel.send({ content, allowedMentions: { parse: [] } })
+    }
+    await this.persistence.closeSessionDiscordChannel(session.id)
+    try {
+      await this.playerCodex?.setFoundrySessionActive(await this.persistence.hasActiveSessionDiscordChannel())
+    } catch (error) {
+      this.logger.warn(`Fin de séance enregistrée, état Foundry à resynchroniser : ${error instanceof Error ? error.message : String(error)}`)
+    }
   }
 
   private async resumeCommand(interaction: ChatInputCommandInteraction): Promise<void> {

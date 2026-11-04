@@ -62,6 +62,29 @@ export class Pf2ReputationService implements OnModuleInit {
       await m.query('INSERT INTO pf2_reputation_history(reputation_id,previous_score,new_score,delta,reason) VALUES (?,?,?,?,?)',[i,previous,v,v-previous,note])
     });return this.list(true)
   }
+  /** Add a DELTA once per session, not an absolute score. Supports retries safely. */
+  async applySessionDeltas(changes: Array<{ id: number; delta: number }>, sessionId: string) {
+    if (!/^[a-f0-9-]{36}$/i.test(sessionId)) throw new BadRequestException('ID de séance invalide.')
+    const reason = `fin-seance:${sessionId}`
+    if (changes.length !== new Set(changes.map(change => change.id)).size) throw new BadRequestException('Réputation répétée.')
+    await this.db.transaction(async manager => {
+      for (const change of changes) {
+        const id = this.integer(change.id, 1, 2147483647)
+        const delta = this.integer(change.delta, -50, 50)
+        if (!delta) continue
+        const prior = await manager.query('SELECT score FROM pf2_reputation WHERE id=?', [id]) as Array<{ score: number }>
+        if (!prior.length) throw new NotFoundException('Réputation inconnue')
+        const already = await manager.query('SELECT 1 FROM pf2_reputation_history WHERE reputation_id=? AND reason=? LIMIT 1', [id, reason])
+        if (already.length) continue
+        const current = Number(prior[0].score)
+        const next = current + delta
+        if (next < -50 || next > 50) throw new BadRequestException('Score de réputation hors limites après modification.')
+        await manager.query('UPDATE pf2_reputation SET score=? WHERE id=?', [next, id])
+        await manager.query('INSERT INTO pf2_reputation_history(reputation_id,previous_score,new_score,delta,reason) VALUES (?,?,?,?,?)', [id,current,next,delta,reason])
+      }
+    })
+  }
+
   async setVisibility(type:'group'|'reputation',id:unknown,visible:unknown) {
     const i=this.integer(id,1,2147483647)
     if(typeof visible!=='boolean')throw new BadRequestException('Visibilité invalide')

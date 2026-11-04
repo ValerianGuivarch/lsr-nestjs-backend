@@ -18,6 +18,44 @@ describe('FoundryRelayService', () => {
     process.env['FOUNDRY_XPC_FLAG_SCOPE'] = originalScope
   })
 
+  it('credits PF2e inventory coinage per participant via guarded script with session idempotency', async () => {
+    const scripts: string[] = []
+    jest.spyOn(global,'fetch').mockImplementation(async (input, init) => {
+      const url=String(input)
+      if (url.endsWith('/clients')) return new Response(JSON.stringify({ clients: [{ clientId:'world-1', isOnline:true }] }))
+      if (url.includes('/execute-js?')) {
+        const payload=JSON.parse(String(init?.body)) as { script: string }
+        scripts.push(payload.script)
+        return new Response(JSON.stringify({ success:true, result: payload.script.includes('return {ready:true}')
+          ? { ready:true }
+          : { results: [{actorId:'hero',already:false},{actorId:'other',already:false}] } }))
+      }
+      throw new Error('Unexpected url: '+url)
+    })
+    const service=new FoundryRelayService()
+    const sessionId='5efb95f7-5ef8-438c-a984-9a4bdff0c273'
+    const actors=['Actor.hero','Actor.other']
+    await expect(service.checkSessionCoins(actors, { gp:7,sp:3,cp:2 },sessionId)).resolves.toBeUndefined()
+    await expect(service.awardSessionCoins(actors,{gp:7,sp:3,cp:2},sessionId)).resolves.toEqual([
+      {actorId:'hero',already:false},{actorId:'other',already:false},
+    ])
+    expect(scripts).toHaveLength(2)
+    expect(scripts[0]).toContain('actor.inventory?.addCoins')
+    expect(scripts[1]).toContain('actor.inventory.addCoins(entry.coins)')
+    expect(scripts[1]).toContain('sessionCoinAwards')
+    expect(scripts[1]).toContain(sessionId)
+    expect(scripts[1]).toContain('"gp":7,"sp":3,"cp":2')
+  })
+
+  it('does not contact Foundry for zero coins and rejects negative amounts locally', async () => {
+    const fetch=jest.spyOn(global,'fetch')
+    const service=new FoundryRelayService()
+    await expect(service.awardSessionCoins(['Actor.hero'], { gp:0,sp:0,cp:0 },'5efb95f7-5ef8-438c-a984-9a4bdff0c273')).resolves.toEqual([])
+    expect(fetch).not.toHaveBeenCalled()
+    await expect(service.awardSessionCoins(['Actor.hero'],{gp:-1,sp:0,cp:0},'5efb95f7-5ef8-438c-a984-9a4bdff0c273')).rejects.toThrow()
+    expect(fetch).not.toHaveBeenCalled()
+  })
+
   it('uses the Toolkit XPC flag as the source of truth and derives PF2e progress', async () => {
     let xpc = 2_430
     const fetchMock = jest.spyOn(global, 'fetch').mockImplementation(async (input, init) => {

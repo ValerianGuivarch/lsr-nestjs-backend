@@ -758,16 +758,17 @@ export class DiscordService implements OnModuleInit, OnModuleDestroy {
       resume.participants
         .map(label)
         .join(', ')
+    const finishReport = typeof this.persistence.sessionFinishReport === 'function'
+      ? await this.persistence.sessionFinishReport(resume.id)
+      : null
+    const xpTotal = finishReport?.xpTotal ?? resume.sessionXp * resume.participants.length
 
     const facts = [
       participants &&
         `PJ : ${participants}`,
 
-      resume.sessionXp > 0 &&
-        `XP total : ${
-          resume.sessionXp *
-          resume.participants.length
-        }, soit ${resume.sessionXp} par PJ`,
+      (resume.sessionXp > 0 || xpTotal > 0) &&
+        `XP total : ${xpTotal}, soit ${resume.sessionXp} par PJ`,
 
       resume.shortSummaryAuthor &&
         `Auteur du résumé : ${label(

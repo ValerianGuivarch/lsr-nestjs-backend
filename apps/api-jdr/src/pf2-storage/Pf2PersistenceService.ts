@@ -1218,11 +1218,33 @@ export class Pf2PersistenceService implements OnModuleInit {
     return this.getSession(current.id)
   }
 
+  async sessionFinishReport(sessionId: string): Promise<{ xpTotal: number; content: string } | null> {
+    const rows = await this.dataSource.query('SELECT xp_total, content FROM pf2_session_finish_report WHERE session_id=? LIMIT 1', [sessionId]) as Array<{ xp_total: number; content: string }>
+    return rows.length ? { xpTotal: Number(rows[0].xp_total), content: rows[0].content } : null
+  }
+
+  async saveSessionFinishReport(sessionId: string, xpTotal: number, content: string): Promise<void> {
+    if (!/^[a-f0-9-]{36}$/i.test(sessionId)) throw new Error('ID de séance invalide.')
+    if (!Number.isSafeInteger(xpTotal) || xpTotal < 0 || xpTotal > 10_000_000) throw new Error('XP total invalide.')
+    await this.dataSource.query(`INSERT INTO pf2_session_finish_report (session_id,xp_total,content)
+      VALUES (?,?,?) ON CONFLICT(session_id) DO UPDATE SET xp_total=excluded.xp_total,
+      content=excluded.content,updated_at=CURRENT_TIMESTAMP`, [sessionId,xpTotal,content])
+  }
+
   async rememberSessionDiscordChannel(sessionId: string, channelId: string, guildId: string): Promise<void> {
     if (!channelId || !guildId) throw new Error('Salon Discord de séance absent.')
     await this.dataSource.query(`INSERT INTO pf2_session_discord_context(session_id, channel_id, guild_id)
       VALUES (?, ?, ?) ON CONFLICT(session_id) DO UPDATE SET channel_id=excluded.channel_id,
       guild_id=excluded.guild_id, started_at=CURRENT_TIMESTAMP, ended_at=NULL`, [sessionId, channelId, guildId])
+  }
+
+  async activeSessionForDiscordChannel(channelId: string): Promise<Pf2Session | null> {
+    if (!channelId) return null
+    const rows = await this.dataSource.query(`SELECT session_id FROM pf2_session_discord_context
+      WHERE channel_id=? AND ended_at IS NULL ORDER BY started_at DESC LIMIT 2`, [channelId]) as Array<{ session_id: string }>
+    // Never guess which session to close if more than one was started in this channel.
+    if (rows.length !== 1) return null
+    return this.getSession(rows[0].session_id)
   }
 
   async hasActiveSessionDiscordChannel(): Promise<boolean> {
@@ -1799,6 +1821,16 @@ export class Pf2PersistenceService implements OnModuleInit {
         PRIMARY KEY(thread_id,user_id,emoji)
       )`)
       await manager.query('CREATE INDEX IF NOT EXISTS idx_pf2_quest_vote_user ON pf2_discord_quest_vote(user_id,emoji)')
+    })
+
+    await this.applyMigration('053-discord-session-finish-report', async manager => {
+      await manager.query(`CREATE TABLE IF NOT EXISTS pf2_session_finish_report (
+        session_id TEXT PRIMARY KEY REFERENCES pf2_session(id) ON DELETE CASCADE,
+        xp_total INTEGER NOT NULL CHECK(xp_total>=0),
+        content TEXT NOT NULL DEFAULT '',
+        created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+      )`)
     })
 
     await this.assertDatabaseIntegrity(this.dataSource, 'base SQLite après migrations')

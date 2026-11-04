@@ -7,6 +7,7 @@
 - [Données et persistance](pf2/outils/donnees.md)
 - [Foundry et portraits](pf2/outils/foundry.md)
 - [Wiki, résumés et Discord](pf2/outils/wiki-discord.md)
+- [Fin de séance Discord : XP, pièces, butin et réputations](docs/pf2/discord-session-end.md)
 - [Aide XP admin par séance sur le wiki](docs/pf2/wiki-session-xp-aid.md)
 - [Carte de Golarion — quêtes Discord, favoris et contributions PJ](docs/pf2/discord-quest-map-sync.md)
 - [Création, gestion et migration des quêtes par le bot Discord](docs/pf2/discord-quest-creator-pilot.md)

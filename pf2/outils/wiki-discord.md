@@ -269,3 +269,8 @@ Depuis les cartes de séances du wiki, un bouton **Outil MJ · XP et or** réser
 La page spéciale et la route `action=pf2sessionxp` contrôlent toutes les deux les droits administrateur ; le backend `GET /wiki/sessions/:id/xp-aid` requiert la clé interne Wiki pour interdire l'accès direct public aux calculs. Détails, exemples et tests : [guide Aide XP](../../docs/pf2/wiki-session-xp-aid.md).
 
 La même page contient maintenant les budgets d'**or et de trésors** du *GM Core* (table de trésors par niveau, sur 2,5 séances), calculés à partir des niveaux de chaque participant : argent dépensable et valeur totale, objets compris. Le même champ accepte `12po`, `5 pa` ou `Objet : potion (4po)` ; les objets sont valorisés séparément sans gonfler les pièces disponibles. Cette adaptation par niveaux mixtes et taille de groupe est explicitement une règle maison, sans attribution automatique. [Détails et calculs](../../docs/pf2/wiki-session-xp-aid.md).
+
+
+## Fin de séance enrichie (novembre 2026)
+
+La commande admin Discord `/fin-seance` ouvre maintenant **trois formulaires successifs** (XP/durée, pièces/loot, réputation) puis un **aperçu privé à confirmer**, au lieu de demander des arguments slash. Le numéro de la séance est pré-rempli et éditable ; les XP totaux et XP/PJ sont saisis indépendamment. Les montants `po`, `pa`, `pc` sont crédités **par PJ** dans Foundry PF2e, les variations de réputation globales sont ajoutées aux scores du wiki et la liste des actions et objets est publiée en puces sans modification automatique des objets. En canal nommé exactement `mj`, la commande publie une **simulation n°7 sans aucun changement de données**. [Fonctionnement détaillé, restrictions et tests](../../docs/pf2/discord-session-end.md).

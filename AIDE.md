@@ -38,3 +38,5 @@ source externe
 Une ressource promue dans PF2-MJ reçoit alors au minimum un titre français, le `nom_vo`, une description courte, un résumé MJ détaillé et lisible, l'origine, des tags et ses fichiers utiles. Plusieurs variantes d'un même contenu doivent rester rattachées à **une seule ressource** lorsque c'est pertinent.
 
 L'état technique courant de la bibliothèque est documenté dans [pf2/outils/donnees.md](pf2/outils/donnees.md). Le projet futur d'élargissement et de présélection est détaillé dans [todo.md](todo.md).
+
+La commande Discord admin [`/fin-seance`](docs/pf2/discord-session-end.md) permet maintenant de publier la liste de récompenses avec XP du groupe et par PJ, pièces et loot, puis d'ajouter l'argent aux inventaires Foundry et d'appliquer les écarts de réputation après confirmation ; dans `#mj`, elle est purement simulée.
