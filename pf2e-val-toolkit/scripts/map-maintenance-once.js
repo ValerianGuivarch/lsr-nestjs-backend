@@ -17,10 +17,10 @@ export function registerOneTimeMapCleanup(){
 }
 const sleep=(ms)=>new Promise(resolve=>setTimeout(resolve,ms));
 const count=(x,key)=>x[key]?.size??x[key]?.length??0;
-function sourceKey(scene){
+function sourceKey(scene,translate){
   return [
     scene.folder?.id||"",
-    scene.name.toLowerCase().trim().replace(/\s+/g," "),
+    translate(scene.name).toLowerCase().trim().replace(/\s+/g," "),
     scene.getFlag("racooze-map-library","mapSlug")||"",
     scene.getFlag("racooze-map-library","sceneFile")||"",
     scene.getFlag("racooze-map-library","resolvedVariant")||""
@@ -74,11 +74,14 @@ async function perform(){
   const state=game.settings.get(MODULE,SETTING);
   if(state?.finished || state?.running)return;
   // The world may have changed since the last audit; always recompute.
+  const response=await fetch(translationsUrl,{cache:"no-store"});
+  if(!response.ok)throw Error("Fichier des traductions absent : "+response.status);
+  const labels=translationFactory(await response.json());
   const all=[...game.scenes];
   const groups=new Map();
   for(const scene of all){
     if(!scene.getFlag("racooze-map-library","mapSlug"))continue;
-    const key=sourceKey(scene);const group=groups.get(key)||[];
+    const key=sourceKey(scene,labels.scene);const group=groups.get(key)||[];
     group.push(scene);groups.set(key,group);
   }
   const removals=[],skipped=[];
@@ -102,9 +105,6 @@ async function perform(){
       removals.push({scene,winner});
     }
   }
-  const response=await fetch(translationsUrl,{cache:"no-store"});
-  if(!response.ok)throw Error("Fichier des traductions absent : "+response.status);
-  const labels=translationFactory(await response.json());
   const doomedIds=new Set(removals.map(x=>x.scene.id));
   const renames=all.filter(s=>!doomedIds.has(s.id)).map(scene=>({
     scene,name:labels.scene(scene.name)
