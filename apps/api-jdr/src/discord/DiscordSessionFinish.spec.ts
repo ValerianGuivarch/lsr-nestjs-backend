@@ -62,23 +62,21 @@ function wizard(mock: boolean) {
 async function complete(w: ReturnType<typeof wizard>) {
   await w.service.handle(w.start as never)
   const initial = w.start.showModal.mock.calls[0][0].toJSON()
+  expect(w.start.showModal).toHaveBeenCalledTimes(1)
+  expect(initial.custom_id).toBe('pf2-finish:modal:form:cmd')
   expect(initial.components).toHaveLength(5)
+  expect(initial.components.map((item: any)=>item.components[0].custom_id)).toEqual(['number','days','xp','treasure','reputation'])
   expect(initial.components[0].components[0].value).toBe('7')
-  await w.service.handleModal(w.modal('general', {
-    number:'7',days:'2',total:'1240','per-pj':'310',activities:'Gnome sauvé 30XP\nChef 1200 XP',
-  }) as never)
-  await w.service.handleButton(w.button('loot') as never)
-  await w.service.handleModal(w.modal('loot', {
-    gold:'7',silver:'3',copper:'2',loot:'Potion de soins\nAnneau magique',
-  }) as never)
-  const repButton = w.button('reputation')
-  await w.service.handleButton(repButton as never)
-  const repModal = repButton.showModal.mock.calls[0][0].toJSON()
-  expect(repModal.components).toHaveLength(2)
-  expect(repModal.components[0].components[0].value).toContain('Garde de la ville: 0')
-  const preview = w.modal('reputation', {
-    'group-1':'Garde de la ville: +3\nCitadins: -2',
-    'group-2':'Habitants d’Absalom: +1',
+  expect(initial.components[2].components[0].value).toContain('XP par PJ: 0')
+  expect(initial.components[3].components[0].value).toContain('Or (po): 0')
+  expect(initial.components[4].components[0].value).toContain('# Absalom')
+  expect(initial.components[4].components[0].value).toContain('Garde de la ville: 0')
+
+  const preview = w.modal('form', {
+    number:'7',days:'2',
+    xp:'Total XP: 1240\nXP par PJ: 310\n\nActions:\nGnome sauvé 30XP\nChef 1200 XP',
+    treasure:'Or (po): 7\nArgent (pa): 3\nCuivre (pc): 2\n\nObjets:\nPotion de soins\nAnneau magique',
+    reputation:'# Pointesable\nGarde de la ville: +3\nCitadins: -2\n\n# Absalom\nHabitants d’Absalom: +1',
   })
   await w.service.handleModal(preview as never)
   const text = [...preview.editReply.mock.calls,...preview.followUp.mock.calls].map(([arg])=>arg.content).join('\n')
@@ -119,7 +117,7 @@ describe('/fin-seance admin wizard', () => {
     expect(w.foundry.checkSessionCoins).toHaveBeenCalledWith(w.session.participants,{gp:7,sp:3,cp:2},w.session.id)
     expect(w.foundry.awardSessionCoins).toHaveBeenCalledWith(w.session.participants,{gp:7,sp:3,cp:2},w.session.id)
     expect(w.reputations.applySessionDeltas).toHaveBeenCalledWith([
-      {id:11,delta:3},{id:12,delta:-2},{id:21,delta:1},
+      {id:11,delta:3},{id:21,delta:1},{id:12,delta:-2},
     ],w.session.id)
     expect(w.persistence.updateSession).toHaveBeenCalledWith(w.session.id,
       expect.objectContaining({inGameEndDate:'4720-01-03',sessionXp:310}))
@@ -128,6 +126,38 @@ describe('/fin-seance admin wizard', () => {
     expect(w.send).toHaveBeenCalledTimes(1)
     expect(w.send.mock.calls[0][0].content).not.toContain('SIMULATION MJ')
     expect(w.send.mock.calls[0][0].allowedMentions).toEqual({parse:[]})
+  })
+
+  it('reopens the same full form with every previously entered value', async () => {
+    const w = wizard(true)
+    await complete(w)
+    const edit = w.button('form')
+    await w.service.handleButton(edit as never)
+    const modal = edit.showModal.mock.calls[0][0].toJSON()
+    expect(modal.components).toHaveLength(5)
+    expect(modal.components[2].components[0].value).toContain('XP par PJ: 310')
+    expect(modal.components[3].components[0].value).toContain('Argent (pa): 3')
+    expect(modal.components[4].components[0].value).toContain('Garde de la ville: +3')
+    expect(w.foundry.awardSessionCoins).not.toHaveBeenCalled()
+  })
+
+  it('preserves text on a validation error and offers to correct that ONE form', async () => {
+    const w = wizard(true)
+    await w.service.handle(w.start as never)
+    const bad = w.modal('form', {
+      number:'7',days:'2',xp:'XP invalide, à corriger',
+      treasure:'Or (po): 10\nArgent (pa): 0\nCuivre (pc): 0\n\nObjets:',
+      reputation:'# Pointesable\nCitadins: +3',
+    })
+    await w.service.handleModal(bad as never)
+    expect(bad.reply.mock.calls[0][0].content).toContain('Champ invalide')
+    expect(bad.reply.mock.calls[0][0].components[0].components[0].data.custom_id).toBe('pf2-finish:button:form:cmd')
+    const edit = w.button('form')
+    await w.service.handleButton(edit as never)
+    const modal = edit.showModal.mock.calls[0][0].toJSON()
+    expect(modal.components[2].components[0].value).toBe('XP invalide, à corriger')
+    expect(modal.components[3].components[0].value).toContain('Or (po): 10')
+    expect(w.send).not.toHaveBeenCalled()
   })
 
   it('does not apply any reward if the channel session no longer matches', async () => {

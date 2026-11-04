@@ -12,7 +12,7 @@ import { pf2DiscordIdForPlayer, pf2MatchesPlayerOrDiscordAlias, pf2PlayerByDisco
 import { shortSummaryRewardForSession } from '../pf2-sessions/Pf2CareerXp'
 import { Pf2JournalsService } from '../pf2-journals/Pf2JournalsService'
 import { Pf2ReputationService } from '../pf2-reputation/Pf2ReputationService'
-import { FINISH_TTL_MS, finishCurrencyText, finishInt, finishReport, finishReportParts, finishReputationDefaults, parseFinishReputationGroup, sortedFinishReputations, type SessionFinishDraft, type SessionFinishGroup } from './SessionFinishFlow'
+import { FINISH_TTL_MS, finishInt, finishXpForm, finishTreasureForm, finishReputationForm, parseFinishXpForm, parseFinishTreasureForm, parseFinishReputationForm, finishReport, finishReportParts, type SessionFinishDraft, type SessionFinishGroup } from './SessionFinishFlow'
 
 const PLANNING_DAYS = [
   { offset: 0, label: 'Lundi', emoji: '🇱' },
@@ -3671,56 +3671,36 @@ export class DiscordCommandsService {
     return value
   }
 
-  private sessionFinishModal(draft: SessionFinishDraft, step: 'general' | 'loot' | 'reputation'): ModalBuilder {
-    const modal = new ModalBuilder().setCustomId(`pf2-finish:modal:${step}:${draft.token}`)
+  /** Discord supports at most five modal components: two simple values and
+   * three grouped editable text areas. Everything is submitted together. */
+  private sessionFinishModal(draft: SessionFinishDraft): ModalBuilder {
+    const modal = new ModalBuilder().setCustomId(`pf2-finish:modal:form:${draft.token}`)
+      .setTitle('Fin de séance · XP, butin, réputations')
     const input = (id: string, label: string, value: string, paragraph = false, maxLength = 4000) => {
+      if (value.length > maxLength) throw new Error(`Le champ « ${label} » dépasse les ${maxLength} caractères permis par Discord.`)
       const field = new TextInputBuilder().setCustomId(id).setLabel(label.slice(0,45))
         .setStyle(paragraph ? TextInputStyle.Paragraph : TextInputStyle.Short)
-        .setRequired(false).setMaxLength(maxLength)
-      if (value) field.setValue(value.slice(0,maxLength))
+        .setRequired(true).setMaxLength(maxLength).setValue(value)
       return new ActionRowBuilder<TextInputBuilder>().addComponents(field)
     }
-    if (step === 'general') {
-      modal.setTitle('Fin de séance · 1/3 · Expérience')
-      modal.addComponents(
-        input('number', 'Numéro de séance', String(draft.number), false, 6),
-        input('days', 'Nombre de jours écoulés (0 = même jour)', String(draft.days), false, 4),
-        input('total', 'XP total attribué au groupe', String(draft.xpTotal), false, 10),
-        input('per-pj', 'XP gagnés par PJ', String(draft.xpPerPlayer), false, 10),
-        input('activities', 'Actions réalisées (une par ligne)', draft.activities, true),
-      )
-    } else if (step === 'loot') {
-      modal.setTitle('Fin de séance · 2/3 · Trésors')
-      modal.addComponents(
-        input('gold', 'Pièces d’or PAR PJ', String(draft.coins.gp), false, 10),
-        input('silver', 'Pièces d’argent PAR PJ', String(draft.coins.sp), false, 10),
-        input('copper', 'Pièces de cuivre PAR PJ', String(draft.coins.cp), false, 10),
-        input('loot', 'Objets obtenus (une ligne par objet)', draft.loot, true),
-      )
-    } else {
-      modal.setTitle('Fin de séance · 3/3 · Réputations')
-      const currentPage = draft.reputationPage ?? 0
-      for (const group of draft.groups.slice(currentPage * 5, (currentPage + 1) * 5)) {
-        const changes = new Map(draft.changes.map(change => [change.id, change.delta]))
-        const current = group.entries.map(entry => `${entry.name}: ${changes.get(entry.id) ?? 0}`).join('\n')
-        modal.addComponents(input('group-' + group.id, `${group.name} (${group.entries.length})`, current || finishReputationDefaults(group), true))
-      }
+    const values = draft.formValues ?? {
+      number: String(draft.number), days: String(draft.days),
+      xp: finishXpForm(draft),
+      treasure: finishTreasureForm(draft),
+      reputation: finishReputationForm(draft.groups, draft.changes),
     }
+    modal.addComponents(
+      input('number', 'Numéro de séance', values.number, false, 6),
+      input('days', 'Jours écoulés (0 = même jour)', values.days, false, 4),
+      input('xp', 'XP total / par PJ puis actions', values.xp, true),
+      input('treasure', 'PO / PA / PC par PJ puis objets', values.treasure, true),
+      input('reputation', 'Réputations : modifier les 0', values.reputation, true),
+    )
     return modal
   }
 
   private sessionFinishButton(draft: SessionFinishDraft, action: string, label: string, style: ButtonStyle): ButtonBuilder {
     return new ButtonBuilder().setCustomId(`pf2-finish:button:${action}:${draft.token}`).setLabel(label).setStyle(style)
-  }
-
-  private sessionFinishView(draft: SessionFinishDraft, step: 'loot' | 'reputation'): { content: string; components: Array<ActionRowBuilder<ButtonBuilder>>; ephemeral: true; allowedMentions: { parse: [] } } {
-    const content = step === 'loot'
-      ? `Séance n°${draft.number} : ${draft.days} jour(s), XP groupe ${draft.xpTotal}, ${draft.xpPerPlayer} XP par PJ.\n**Étape 1/3 enregistrée.** Continue avec les pièces et le butin.`
-      : `Pièces par PJ : ${finishCurrencyText(draft.coins) || 'aucune'}.\n**Étape 2/3 enregistrée.** Continue avec les ${draft.groups.reduce((n,g)=>n+g.entries.length,0)} réputations des ${draft.groups.length} catégories (page ${(draft.reputationPage ?? 0)+1}/${Math.ceil(draft.groups.length/5)}). Seuls les écarts différents de zéro seront retenus.`
-    return { content, ephemeral: true, allowedMentions: { parse: [] }, components: [new ActionRowBuilder<ButtonBuilder>().addComponents(
-      this.sessionFinishButton(draft, step, step === 'loot' ? 'Continuer : pièces et butin' : 'Continuer : réputations', ButtonStyle.Primary),
-      this.sessionFinishButton(draft, 'cancel', 'Annuler', ButtonStyle.Secondary),
-    )] }
   }
 
   private async finishGameCommand(interaction: ChatInputCommandInteraction): Promise<void> {
@@ -3739,10 +3719,24 @@ export class DiscordCommandsService {
       token, requesterId: interaction.user.id, channelId: interaction.channelId, guildId: interaction.guildId ?? '',
       mock, sessionId: active?.id ?? null, number, createdAt: Date.now(),
       days: 0, xpPerPlayer: 0, xpTotal: 0, activities: '', coins: { gp: 0, sp: 0, cp: 0 }, loot: '',
-      groups: [], changes: [], reputationPage: 0, step: 'general',
+      groups: [], changes: [], step: 'form',
     }
-    this.pendingSessionFinishes.set(token, draft)
-    await interaction.showModal(this.sessionFinishModal(draft, 'general'))
+    if (!this.reputations) {
+      await interaction.reply({ content: 'Service de réputation indisponible.', ephemeral: true })
+      return
+    }
+    try {
+      const groups = await this.reputations.list(true) as SessionFinishGroup[]
+      draft.groups = groups.map(group => ({
+        id: Number(group.id), name: group.name,
+        entries: group.entries.map(entry => ({ id: Number(entry.id), name: entry.name, score: Number(entry.score) })),
+      }))
+      const modal = this.sessionFinishModal(draft)
+      this.pendingSessionFinishes.set(token, draft)
+      await interaction.showModal(modal)
+    } catch (error) {
+      await interaction.reply({ content: `Formulaire impossible : ${error instanceof Error ? error.message : String(error)}`, ephemeral: true })
+    }
   }
 
   private sessionFinishPending(interaction: ModalSubmitInteraction | ButtonInteraction, token: string): SessionFinishDraft | null {
@@ -3753,57 +3747,36 @@ export class DiscordCommandsService {
   }
 
   private async handleSessionFinishModal(interaction: ModalSubmitInteraction): Promise<boolean> {
-    const match = /^pf2-finish:modal:(general|loot|reputation):(.+)$/.exec(interaction.customId)
+    const match = /^pf2-finish:modal:form:(.+)$/.exec(interaction.customId)
     if (!match) return false
-    const step = match[1] as 'general' | 'loot' | 'reputation'
-    const draft = this.sessionFinishPending(interaction, match[2])
-    if (!draft || draft.step !== step || !this.isAdmin(interaction as never)) {
-      await interaction.reply({ content: 'Formulaire expiré, non autorisé ou déjà validé. Relance `/fin-seance`.', ephemeral: true }); return true
+    const draft = this.sessionFinishPending(interaction, match[1])
+    if (!draft || draft.step !== 'form' || !this.isAdmin(interaction as never)) {
+      await interaction.reply({ content: 'Formulaire expiré, non autorisé ou déjà validé. Relance `/fin-seance`.', ephemeral: true })
+      return true
+    }
+    // Preserve what the MJ typed (including on validation errors) so the
+    // Corriger button reopens a single, fully filled form without losing work.
+    draft.formValues = {
+      number: interaction.fields.getTextInputValue('number'),
+      days: interaction.fields.getTextInputValue('days'),
+      xp: interaction.fields.getTextInputValue('xp'),
+      treasure: interaction.fields.getTextInputValue('treasure'),
+      reputation: interaction.fields.getTextInputValue('reputation'),
     }
     try {
-      if (step === 'general') {
-        draft.number = finishInt(interaction.fields.getTextInputValue('number'), 'Numéro de séance', 999999)
-        if (!draft.number) throw new Error('Le numéro de séance doit être supérieur à zéro.')
-        draft.days = finishInt(interaction.fields.getTextInputValue('days'), 'Jours écoulés', 3650)
-        draft.xpTotal = finishInt(interaction.fields.getTextInputValue('total'), 'XP du groupe', 10_000_000)
-        draft.xpPerPlayer = finishInt(interaction.fields.getTextInputValue('per-pj'), 'XP par PJ', 10_000_000)
-        draft.activities = interaction.fields.getTextInputValue('activities').trim()
-        draft.step = 'loot'
-        await interaction.reply(this.sessionFinishView(draft, 'loot'))
-      } else if (step === 'loot') {
-        draft.coins.gp = finishInt(interaction.fields.getTextInputValue('gold'), 'Pièces d’or')
-        draft.coins.sp = finishInt(interaction.fields.getTextInputValue('silver'), 'Pièces d’argent')
-        draft.coins.cp = finishInt(interaction.fields.getTextInputValue('copper'), 'Pièces de cuivre')
-        draft.loot = interaction.fields.getTextInputValue('loot').trim()
-        if (!this.reputations) throw new Error('Service de réputation indisponible.')
-        const groups = await this.reputations.list(true) as SessionFinishGroup[]
-        draft.groups = groups.map(group => ({
-          id: Number(group.id), name: group.name,
-          entries: group.entries.map(entry => ({ id: Number(entry.id), name: entry.name, score: Number(entry.score) })),
-        }))
-        draft.reputationPage = 0
-        draft.step = draft.groups.length ? 'reputation' : 'review'
-        if (draft.groups.length) await interaction.reply(this.sessionFinishView(draft, 'reputation'))
-        else await this.sessionFinishPreview(interaction, draft)
-      } else {
-        const page = draft.reputationPage ?? 0
-        const pageGroups = draft.groups.slice(page * 5, (page + 1) * 5)
-        const pageIds = new Set(pageGroups.flatMap(group => group.entries.map(entry => entry.id)))
-        draft.changes = [
-          ...draft.changes.filter(change => !pageIds.has(change.id)),
-          ...pageGroups.flatMap(group => parseFinishReputationGroup(group, interaction.fields.getTextInputValue('group-'+group.id))),
-        ]
-        if ((page + 1) * 5 < draft.groups.length) {
-          draft.reputationPage = page + 1
-          await interaction.reply(this.sessionFinishView(draft, 'reputation'))
-        } else {
-          draft.step = 'review'
-          await this.sessionFinishPreview(interaction, draft)
-        }
-      }
+      const number = finishInt(draft.formValues.number, 'Numéro de séance', 999999)
+      if (!number) throw new Error('Le numéro de séance doit être supérieur à zéro.')
+      const days = finishInt(draft.formValues.days, 'Jours écoulés', 3650)
+      const xp = parseFinishXpForm(draft.formValues.xp)
+      const treasure = parseFinishTreasureForm(draft.formValues.treasure)
+      const changes = parseFinishReputationForm(draft.groups, draft.formValues.reputation)
+      Object.assign(draft, { number, days, ...xp, ...treasure, changes })
+      draft.step = 'review'
+      await this.sessionFinishPreview(interaction, draft)
     } catch (error) {
+      draft.step = 'form'
       await interaction.reply({ content: `Champ invalide : ${error instanceof Error ? error.message : String(error)}`, ephemeral: true,
-        components: [new ActionRowBuilder<ButtonBuilder>().addComponents(this.sessionFinishButton(draft, step, 'Corriger cette étape', ButtonStyle.Primary))] })
+        components: [new ActionRowBuilder<ButtonBuilder>().addComponents(this.sessionFinishButton(draft, 'form', 'Corriger le formulaire', ButtonStyle.Primary))] })
     }
     return true
   }
@@ -3819,13 +3792,13 @@ export class DiscordCommandsService {
       : 'Confirmer la fin de séance réelle ? Cela enregistre les XP, crédite les pièces sur les PJ et applique les variations de réputation.',
       ephemeral: true, allowedMentions: { parse: [] }, components: [new ActionRowBuilder<ButtonBuilder>().addComponents(
         this.sessionFinishButton(draft, 'confirm', draft.mock ? 'Publier la simulation' : 'Terminer la séance', ButtonStyle.Success),
-        this.sessionFinishButton(draft, 'general', 'Modifier', ButtonStyle.Secondary),
+        this.sessionFinishButton(draft, 'form', 'Modifier le formulaire', ButtonStyle.Secondary),
         this.sessionFinishButton(draft, 'cancel', 'Annuler', ButtonStyle.Danger),
       )] })
   }
 
   private async handleSessionFinishButton(interaction: ButtonInteraction): Promise<boolean> {
-    const match = /^pf2-finish:button:(general|loot|reputation|confirm|cancel):(.+)$/.exec(interaction.customId)
+    const match = /^pf2-finish:button:(form|confirm|cancel):(.+)$/.exec(interaction.customId)
     if (!match) return false
     const action = match[1]
     const draft = this.sessionFinishPending(interaction, match[2])
@@ -3857,11 +3830,9 @@ export class DiscordCommandsService {
     if (draft.step === 'committing' || draft.step === 'completed') {
       await interaction.reply({ content: 'Cette séance est en cours de validation ou déjà terminée.', ephemeral: true });return true
     }
-    const step = action as 'general' | 'loot' | 'reputation'
-    if (step === 'reputation' && draft.step === 'review') draft.reputationPage = 0
-    if (step === 'reputation' && !draft.groups.length) { await interaction.reply({ content: 'Aucune réputation chargée.', ephemeral: true }); return true }
-    draft.step = step
-    await interaction.showModal(this.sessionFinishModal(draft, step))
+    if (action !== 'form') return false
+    draft.step = 'form'
+    await interaction.showModal(this.sessionFinishModal(draft))
     return true
   }
 

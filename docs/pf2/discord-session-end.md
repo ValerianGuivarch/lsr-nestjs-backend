@@ -2,17 +2,36 @@
 
 [← Index des outils](../../OUTILS.md) · [Wiki et Discord](../../pf2/outils/wiki-discord.md) · [Aide XP et trésors](wiki-session-xp-aid.md)
 
-## Déroulement
+## Déroulement : UN SEUL formulaire, puis l'aperçu
 
-`/fin-seance` est une commande **réservée à l'administration Discord** et **n'a plus de paramètres slash**. Elle ouvre immédiatement un formulaire Discord, prérempli avec le numéro de la séance active associée au canal par `/debut-seance`, sinon le numéro de la dernière séance connue. Le numéro est modifiable.
+`/fin-seance` est une commande **réservée à l'administration Discord**, sans paramètres slash. Elle ouvre immédiatement **une seule fenêtre**, avec toutes les valeurs préremplies (séance active dans le salon, ou dernière séance connue ; dans `mj`, séance fictive n°7).
 
-Les formulaires Discord classiques ont au maximum **cinq champs**. L'assistant se présente donc en trois étapes, séparées par des boutons privés :
+Discord impose au maximum **cinq composants par formulaire**, donc les montants numériques sont regroupés dans des zones de texte multiligne. **Il n'y a plus trois étapes.** Les cinq champs de l'unique formulaire sont :
 
-1. **Séance et XP** : numéro de séance, **nombre de jours écoulés** depuis la date de début en jeu (**0 = même jour**), **XP total du groupe**, **XP attribués par PJ**, liste libre des actions/récompenses en gros champ multilignes. Les deux nombres d'XP sont **indépendants**, sans recalcul imposé (le nombre de participants peut varier).
-2. **Pièces et butin** : **po, pa, pc par personnage** (trois nombres distincts, zéro par défaut), puis **objets/loot** dans un grand champ texte. Les objets ne sont pas envoyés à Foundry : seul l'argent numérique l'est.
-3. **Réputation** : toutes les catégories et leurs factions du registre `Pf2ReputationService.list(true)`, incluant les entrées encore cachées sur le wiki ; au lancement, il y avait **35 réputations dans cinq catégories**. Chaque catégorie apparaît dans un grand champ multilignes contenant `Nom de faction: 0` pour chaque entrée. Saisir `+3`, `-2`, etc. sur les lignes voulues et laisser les autres à zéro. **Les variations sont des DELTAS** sur les scores existants, pas leur remplacement. Seules les lignes non nulles apparaissent dans le récapitulatif, dans l'ordre décroissant (les plus fortes positives, puis les négatives). Les catégories supplémentaires sont réparties sur des pages de cinq maximum.
+1. **Numéro de séance**, modifiable.
+2. **Nombre de jours écoulés** depuis le début en jeu (0 = même jour).
+3. **XP et actions**, champ multiligne prérempli par :
+   ```text
+   Total XP: 0
+   XP par PJ: 0
 
-Après les trois formulaires : **aperçu privé** puis boutons **Terminer la séance / Modifier / Annuler**. Aucun changement ni message public avant la confirmation. Si le récapitulatif dépasse 2 000 caractères, il est découpé à des limites de lignes, sans supprimer silencieusement les événements.
+   Actions:
+   ```
+   Le MJ remplace les deux zéros par les montants décidés **indépendamment**, puis colle ses actions/XP sur les lignes après `Actions:`. Aucun total n'est recalculé ou déduit de la description.
+4. **Pièces et objets**, champ multiligne prérempli par :
+   ```text
+   Or (po): 0
+   Argent (pa): 0
+   Cuivre (pc): 0
+
+   Objets:
+   ```
+   Les trois nombres sont les pièces **par PJ**. Le texte après `Objets:` n'est utilisé que pour le récapitulatif, sans création d'objets dans Foundry.
+5. **Toutes les réputations**, une seule grande zone préremplie avec **toutes les catégories** (titres `# Absalom`, `# Pointesable`…) et toutes les lignes `Nom de faction: 0`. Modifier les seules valeurs utiles en `+3`, `-2`, etc. Les scores sont des **variations** sur la valeur existante, et les autres restent inchangés. Les noms de catégories restent affichés pour éviter les ambiguïtés entre factions homonymes.
+
+**Après validation de cette unique fenêtre :** un **aperçu privé complet**, puis **Terminer la séance / Modifier le formulaire / Annuler**. Aucun changement ni message public avant confirmation. Le bouton **Modifier le formulaire** ouvre à nouveau **la même fenêtre** en conservant toutes les saisies, y compris après une erreur de validation. Si la publication dépasse 2 000 caractères, elle est répartie sur plusieurs messages sans perte de lignes.
+
+**Important :** les étiquettes `Total XP:`, `XP par PJ:`, `Actions:`, `Or (po):`, `Argent (pa):`, `Cuivre (pc):`, `Objets:` et les titres de catégories `# ...` doivent rester : elles permettent de distinguer les nombres des notes libres. Les valeurs après les deux-points sont modifiables. La limite technique d'un champ multiligne est **4 000 caractères** ; si la liste des réputations dépasse cette capacité, la commande le signale plutôt que de supprimer des données en silence.
 
 ## Texte publié
 
@@ -56,7 +75,7 @@ L'ordre des mises à jour Foundry / SQLite / Discord ne constitue **pas une tran
 
 ## Simulation sans séance : canal #mj
 
-Si `/fin-seance` est lancé **dans un canal nommé exactement `mj`**, la commande démarre directement avec une **séance fictive n°7**, sans exiger `/debut-seance` ni chercher une séance réelle. Le même assistant et les mêmes champs de réputation sont utilisés. À la confirmation, le récapitulatif est **publié uniquement dans #mj**, avec une ligne finale explicite :
+Si `/fin-seance` est lancé **dans un canal nommé exactement `mj`**, la commande démarre directement avec une **séance fictive n°7**, sans exiger `/debut-seance` ni chercher une séance réelle. Le même formulaire unique et les mêmes champs de réputation sont utilisés. À la confirmation, le récapitulatif est **publié uniquement dans #mj**, avec une ligne finale explicite :
 
 > 🧪 SIMULATION MJ — aucune modification des séances, des inventaires ou des réputations.
 
@@ -65,7 +84,7 @@ Ce mode **ne lance aucune écriture** dans SQLite, n'appelle pas Foundry et n'ap
 ## Fichiers et tests
 
 - `apps/api-jdr/src/discord/SessionFinishFlow.ts` : validations, parsing, tri, rendu du récapitulatif et découpage pour Discord.
-- `apps/api-jdr/src/discord/DiscordCommandsService.ts` : formulaires/étapes/aperçu/admin/détection de #mj/application.
+- `apps/api-jdr/src/discord/DiscordCommandsService.ts` : formulaire unique/aperçu/admin/détection de #mj/application.
 - `apps/api-jdr/src/foundry/FoundryRelayService.ts` : pièces PF2e/Foundry et prévention des doublons.
 - `apps/api-jdr/src/pf2-reputation/Pf2ReputationService.ts` : deltas cumulés transactionnels et historisés.
 - `apps/api-jdr/src/pf2-storage/Pf2PersistenceService.ts` : source de la séance active et récapitulatif durable.

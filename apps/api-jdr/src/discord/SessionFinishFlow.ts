@@ -8,7 +8,8 @@ export type SessionFinishDraft = {
   days: number; xpPerPlayer: number; xpTotal: number; activities: string
   coins: SessionFinishCoins; loot: string
   groups: SessionFinishGroup[]; changes: SessionFinishChange[]; reputationPage?: number
-  step: 'general' | 'loot' | 'reputation' | 'review' | 'committing' | 'completed'
+  step: 'form' | 'review' | 'committing' | 'completed'
+  formValues?: { number: string; days: string; xp: string; treasure: string; reputation: string }
 }
 
 export const FINISH_TTL_MS = 30 * 60 * 1000
@@ -45,6 +46,90 @@ export function parseFinishReputationGroup(group: SessionFinishGroup, text: stri
   }
   // A missing line is allowed: it represents no reputation change.
   return changed
+}
+
+/** A single Discord modal has five inputs, so numeric XP shares one text area
+ * with actions and numeric coinage shares one with item notes. The markers
+ * are prefixed and editable; no XP values are inferred from free-form text. */
+export function finishXpForm(draft: Pick<SessionFinishDraft, 'xpTotal' | 'xpPerPlayer' | 'activities'>): string {
+  return `Total XP: ${draft.xpTotal}\nXP par PJ: ${draft.xpPerPlayer}\n\nActions:\n${draft.activities}`.trimEnd()
+}
+
+export function parseFinishXpForm(text: string): Pick<SessionFinishDraft, 'xpTotal' | 'xpPerPlayer' | 'activities'> {
+  const lines = text.split(/\r?\n/)
+  const total = /^Total XP\s*:\s*(.+)\s*$/i.exec(lines[0]?.trim() ?? '')
+  const perPlayer = /^XP par PJ\s*:\s*(.+)\s*$/i.exec(lines[1]?.trim() ?? '')
+  const separator = lines.findIndex((line, index) => index >= 2 && /^Actions\s*:\s*$/i.test(line.trim()))
+  if (!total || !perPlayer || separator < 0 || lines.slice(2, separator).some(line => line.trim())) {
+    throw new Error('XP : garde « Total XP: 0 », « XP par PJ: 0 » puis « Actions: » ; ajoute tes lignes après Actions.')
+  }
+  return {
+    xpTotal: finishInt(total[1].trim(), 'XP total du groupe', 10_000_000),
+    xpPerPlayer: finishInt(perPlayer[1].trim(), 'XP par PJ', 10_000_000),
+    activities: lines.slice(separator+1).join('\n').trim(),
+  }
+}
+
+export function finishTreasureForm(draft: Pick<SessionFinishDraft, 'coins' | 'loot'>): string {
+  return `Or (po): ${draft.coins.gp}\nArgent (pa): ${draft.coins.sp}\nCuivre (pc): ${draft.coins.cp}\n\nObjets:\n${draft.loot}`.trimEnd()
+}
+
+export function parseFinishTreasureForm(text: string): Pick<SessionFinishDraft, 'coins' | 'loot'> {
+  const lines = text.split(/\r?\n/)
+  const gold = /^Or \(po\)\s*:\s*(.+)\s*$/i.exec(lines[0]?.trim() ?? '')
+  const silver = /^Argent \(pa\)\s*:\s*(.+)\s*$/i.exec(lines[1]?.trim() ?? '')
+  const copper = /^Cuivre \(pc\)\s*:\s*(.+)\s*$/i.exec(lines[2]?.trim() ?? '')
+  const separator = lines.findIndex((line,index) => index >= 3 && /^Objets\s*:\s*$/i.test(line.trim()))
+  if (!gold || !silver || !copper || separator < 0 || lines.slice(3,separator).some(line=>line.trim())) {
+    throw new Error('Butin : garde « Or (po): 0 », « Argent (pa): 0 », « Cuivre (pc): 0 », puis « Objets: ».')
+  }
+  return {
+    coins: {
+      gp: finishInt(gold[1].trim(), 'Pièces d’or'),
+      sp: finishInt(silver[1].trim(), 'Pièces d’argent'),
+      cp: finishInt(copper[1].trim(), 'Pièces de cuivre'),
+    },
+    loot: lines.slice(separator+1).join('\n').trim(),
+  }
+}
+
+/** Groups and original names remain visible and editable in one text area.
+ * Index by group, not just faction name: duplicate faction names are safe. */
+export function finishReputationForm(groups: SessionFinishGroup[], changes: SessionFinishChange[]): string {
+  const delta = new Map(changes.map(change => [change.id, change.delta]))
+  return groups.map(group => [
+    `# ${group.name}`,
+    ...group.entries.map(entry => `${entry.name}: ${delta.get(entry.id) ?? 0}`),
+  ].join('\n')).join('\n\n')
+}
+
+export function parseFinishReputationForm(groups: SessionFinishGroup[], text: string): SessionFinishChange[] {
+  const byName = new Map(groups.map(group => [group.name.normalize('NFC').toLowerCase(), group]))
+  const seen = new Set<number>()
+  const changes: SessionFinishChange[] = []
+  let group: SessionFinishGroup | null = null
+  let entries: string[] = []
+  const flush = () => {
+    if (!group) return
+    changes.push(...parseFinishReputationGroup(group, entries.join('\n')))
+    entries = []
+  }
+  for (const raw of text.split(/\r?\n/)) {
+    const line = raw.trim()
+    if (!line) continue
+    if (line.startsWith('#')) {
+      flush()
+      const name = line.slice(1).trim()
+      group = byName.get(name.normalize('NFC').toLowerCase()) ?? null
+      if (!group || seen.has(group.id)) throw new Error('Groupe de réputation absent, inconnu ou répété : '+name)
+      seen.add(group.id)
+    } else {
+      if (!group) throw new Error('Réputation sans catégorie : conserve les lignes « # Catégorie ».')
+      entries.push(line)
+    }
+  }
+  flush()
+  return sortedFinishReputations(changes)
 }
 
 export function sortedFinishReputations(changes: SessionFinishChange[]): SessionFinishChange[] {

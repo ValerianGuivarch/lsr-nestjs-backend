@@ -1,6 +1,8 @@
 import {
   finishCurrencyText, finishInt, finishLines, finishReport, finishReportParts,
   finishReputationDefaults, parseFinishReputationGroup, sortedFinishReputations,
+  finishXpForm, parseFinishXpForm, finishTreasureForm, parseFinishTreasureForm,
+  finishReputationForm, parseFinishReputationForm,
   type SessionFinishDraft, type SessionFinishGroup,
 } from './SessionFinishFlow'
 
@@ -47,6 +49,51 @@ describe('SessionFinishFlow', () => {
     expect(() => parseFinishReputationGroup(group, 'Citadins: 999')).toThrow()
     expect(() => parseFinishReputationGroup(group, 'Citadins: 1\nCitadins: 2')).toThrow(/plusieurs/)
     expect(sortedFinishReputations(draft.changes).map(change => change.delta)).toEqual([3, 1, -2])
+  })
+
+  it('accepts ALL fields in one modal without recomputing either XP value', () => {
+    const xp = finishXpForm(draft)
+    expect(xp).toContain('Total XP: 1240')
+    expect(xp).toContain('XP par PJ: 310')
+    expect(xp).toContain('Gnome libéré')
+    expect(parseFinishXpForm(xp)).toEqual({
+      xpTotal:1240,xpPerPlayer:310,activities:draft.activities,
+    })
+    expect(parseFinishXpForm('Total XP: 1600\nXP par PJ: 200\nActions:\n- Bonus roleplay')).toEqual({
+      xpTotal:1600,xpPerPlayer:200,activities:'- Bonus roleplay',
+    })
+    expect(() => parseFinishXpForm('Total XP: 1240\nActions:\nGnome libéré')).toThrow(/XP par PJ/)
+    expect(() => parseFinishXpForm('Total XP: -20\nXP par PJ: 100\nActions:')).toThrow()
+  })
+
+  it('reads coins and object notes independently from the one treasure textarea', () => {
+    const text=finishTreasureForm(draft)
+    expect(text).toContain('Or (po): 7')
+    expect(text).toContain('Argent (pa): 3')
+    expect(text).toContain('Cuivre (pc): 2')
+    expect(parseFinishTreasureForm(text)).toEqual({coins:draft.coins,loot:draft.loot})
+    expect(() => parseFinishTreasureForm('Or (po): 7\nArgent (pa): 3\nObjets:')).toThrow(/Cuivre/)
+    expect(() => parseFinishTreasureForm('Or (po): 7\nArgent (pa): -1\nCuivre (pc): 0\nObjets:')).toThrow()
+  })
+
+  it('lists EVERY reputation group in ONE field and protects against missing/unknown/duplicate categories', () => {
+    const other: SessionFinishGroup={ id:2,name:'Absalom',entries:[{id:4,name:'Citadins',score:0}] }
+    const defaults=finishReputationForm([group,other],[])
+    expect(defaults).toContain('# Pointesable')
+    expect(defaults).toContain('# Absalom')
+    expect(defaults).toContain('Citadins: 0')
+    expect(parseFinishReputationForm([group,other],defaults)).toEqual([])
+    // Two different groups can contain the same faction name.
+    const modified=defaults.replace('Citadins: 0','Citadins: -2')
+      .replace('# Absalom\nCitadins: 0','# Absalom\nCitadins: +3')
+    expect(parseFinishReputationForm([group,other],modified).map(x=>[x.id,x.delta])).toEqual([[4,3],[1,-2]])
+    expect(() => parseFinishReputationForm([group], '# Unknown\nCitadins: +2')).toThrow(/inconnu/)
+    expect(() => parseFinishReputationForm([group], '# Pointesable\nCitadins: 0\n# Pointesable')).toThrow(/répété/)
+    expect(() => parseFinishReputationForm([group], 'Citadins: 3')).toThrow(/catégorie/)
+    const large = Array.from({length:6},(_,index)=>({id:index+1,name:'Catégorie '+index,
+      entries:Array.from({length:8},(_,i)=>({id:index*8+i+1,name:'Faction '+index+'-'+i,score:0}))}))
+    expect(finishReputationForm(large,[]).length).toBeLessThan(4000)
+    expect(parseFinishReputationForm(large,finishReputationForm(large,[]))).toEqual([])
   })
 
   it('creates the exact formatted summary, bullet lists, cash and simulation only in mj', () => {

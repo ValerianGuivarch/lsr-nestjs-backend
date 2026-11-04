@@ -1201,16 +1201,18 @@ describe('DiscordCommandsService', () => {
       updateSession: jest.fn(), closeSessionDiscordChannel: jest.fn(),
     }
     const showModal = jest.fn().mockResolvedValue(undefined)
-    const service = new DiscordCommandsService(persistence as never, foundry as never)
+    const reputations = { list: jest.fn().mockResolvedValue([{ id: 1, name: 'Absalom', entries: [{ id: 11, name: 'Habitants', score: 0 }] }]) }
+    const service = new DiscordCommandsService(persistence as never, foundry as never, undefined, undefined, undefined, undefined, undefined, undefined, reputations as never)
     await service.handle({
       commandName: 'fin-seance', id: 'cmd-12', user: { id: 'admin' },
       memberPermissions: { has: jest.fn().mockReturnValue(true) },
       channelId: 'session-channel', guildId: 'guild', channel: { name: 'discussion' }, showModal,
     } as never)
     const modal = showModal.mock.calls[0][0].toJSON()
-    expect(modal.custom_id).toBe('pf2-finish:modal:general:cmd-12')
+    expect(modal.custom_id).toBe('pf2-finish:modal:form:cmd-12')
     expect(modal.components).toHaveLength(5)
     expect(modal.components[0].components[0].value).toBe('12')
+    expect(modal.components[4].components[0].value).toContain('Habitants: 0')
     expect(persistence.updateSession).not.toHaveBeenCalled()
     expect(foundry.listActors).not.toHaveBeenCalled()
     expect(foundry.listPlayers).not.toHaveBeenCalled()
