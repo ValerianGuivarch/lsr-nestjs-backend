@@ -32,9 +32,13 @@ Ce dossier a ouvert le front du **Cartel du Sel**. Depuis, les PJ ont également
 
 → Voir [Campagne du Cartel du Sel](Campagne-Cartel-du-Sel.md) pour les événements établis, les informations connues des PJ et les pistes encore ouvertes.
 
-### Centaures / magie des tempêtes
+### Centaures / magie des tempêtes — trois mouvances distinctes
 
-Il s'agit également d'un **indice**, destiné à mener progressivement vers **Sentence d'Extinction**.
+La piste des centaures renvoie à **Vengeant Thorn**, chef de bandits et druide exilé de *Bandits of Immenwood*, qui convoite l'**Écaille de la Tempête rejetée**, relique historique des **Attiseurs de tempête**. **Il n'est pas membre attesté de leur culte** : il veut surtout devenir roi, et l'adaptation MJ lui donne des prétentions messianiques à incarner la foudre. **Temin**, sœur de Nemmia, est sa bras droit dans notre version : elle a quitté l'**Ermitage de l'Éclair Béni** pour suivre ce chef qu'elle idéalise.
+
+L'ermitage d'**Harlock Hamdeel**, initialement pacifique, a été radicalisé puis en partie corrompu par des démons ; **il n'est pas davantage affilié aux Attiseurs**. Les **Attiseurs de tempête** sont un mouvement distinct (ancienne secte de Gozreh cherchant à créer des ouragans cataclysmiques, et héritiers modernes). Les PJ peuvent confondre ces courants en raison des symboles et de leur culte de la nature, mais la continuité MJ doit les garder séparés.
+
+→ Voir [Sentence d'Extinction : trois mouvances naturalistes](Campagne-Sentence-d-Extinction.md#trois-mouvances-naturalistes-distinctes--vérification-du-4-novembre-2026).
 
 ### Crown of the Kobold King
 
