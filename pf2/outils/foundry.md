@@ -440,6 +440,18 @@ L'index lit les Actors `npc` des compendiums installés ainsi que les NPC du mon
 
 L'index conserve notamment niveau, traits, rareté, taille, source et notes publiques. Il permet de filtrer par niveau, traits, texte, rareté, collection et périmètre de sources. Son cache est invalidé lors des créations, modifications ou suppressions d'Actors et lors des mises à jour de compendiums.
 
+### 15.2.1 Pilote d'illustrations Monster Core (4 novembre 2026)
+
+Pour éviter de modifier les compendiums système, un pilote **privé et en lecture seule de Foundry** a été réalisé à partir des PDF anglais *Monster Core 1* et *Monster Core 2*. Le dossier de travail se trouve sur le mini-PC dans `pf2-data/_AI/monster-core-pilote/`, **hors du dépôt GitHub** (illustrations issues de PDF sous droits).
+
+- 10 créatures par ouvrage, soit 20 portraits PNG et 20 tokens WebP transparents 512 × 512.
+- `index.html` et `reviews/monster-core-{1,2}-contact.jpg` : galerie et planches de vérification visuelle.
+- `mapping.csv` et `manifest.json` : correspondances explicites avec les identifiants et UUID des Actors des deux compendiums remasterisés.
+- `extract-pilot.py`, `metadata/`, `requirements.txt` et `verify-pilot.py` : extraction reproductible et contrôle des hashes, dimensions et identifiants.
+- Une association douteuse (*Animated Furnace*, illustration de couverts) a été retirée du pilote lors de la vérification et remplacée par *Calikang*.
+- **Statut : pilote extrait et contrôlé techniquement ; validation du MJ et intégration Foundry non encore faites.** Aucune fiche Actor, aucun compendium, aucune scène et aucun module n'ont été modifiés.
+- Ne pas considérer les images publiées dans les PDF comme couvrant les 938 entrées des deux compendiums. Pour l'industrialisation, traiter séparément les pages multi-créatures, les illustrations sans équivalent et les associations ambiguës.
+
 ### 15.3 Générateur de rencontres
 
 Le bouton **Improviser une rencontre** calcule d'abord le budget PF2e selon la difficulté et la taille du groupe.
