@@ -39,6 +39,7 @@ import { initFamiliarSelector } from "./familiar-selector.js";
 import { initMJSceneControls } from "./mj-scene-controls.js";
 import { registerAVControlSettings, initAVControl } from "./livekit-mj-controls.js";
 import { migrateSashkaFamiliarFeat } from "./familiar-sashka-migration.js";
+import { registerOneTimeMapCleanup, startOneTimeMapCleanup } from "./map-maintenance-once.js";
 
 Hooks.once("init", () => {
   console.log("PF2e Val Toolkit | Initialisation");
@@ -51,6 +52,7 @@ Hooks.once("init", () => {
   registerPortraitTokenSyncSettings();
   registerDiscordCharacterChatSettings();
   registerAVControlSettings();
+  registerOneTimeMapCleanup();
 
   // Scene-control hooks must be registered during init, before Foundry builds
   // the left-hand scene controls for the first time.
@@ -91,6 +93,7 @@ Hooks.once("ready", () => {
   initDiscordCharacterChat();
   initScenarioImporter();
   initReferenceIndexExporter();
+  startOneTimeMapCleanup(); // temporary maintenance scoped to test-pf2
 
   ui.notifications.info("PF2e Val Toolkit chargé.");
 });
