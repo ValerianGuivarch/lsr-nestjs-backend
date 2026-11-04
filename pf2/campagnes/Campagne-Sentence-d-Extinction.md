@@ -26,8 +26,42 @@ Vaga a fui le cadre abusif de Dusklight avec ou aux côtés des artistes qui dev
 - Les PJ ont déjà aidé le **Cirque des Merveilles Vagabondes** à Abberton, puis sont repartis à **Absalom**.
 - **Nemmia Bramblecloak** (halfeline druidesse liée aux attaques contre le cirque) a été **tuée** au cours de cette première intervention. Environ **deux mois** se sont écoulés depuis.
 - Les PJ détiennent à **Absalom Temin, la sœur de Nemmia**, prisonnière. **Nom confirmé par le MJ.** Sa fiche PNJ est identifiée dans `pf2.sqlite` sous `temin-bramblecloak` et liée à la préparation de séance.
-- **Adaptation validée :** Temin est **une druidesse halfeline de niveau 2**, **bras droit de Vengeant Thorn**, le centaure druide renégat du scénario *Pathfinder Society #1-04 — Bandits of Immenwood*. Le scénario original présente des druides halfelins au service de Vengeant Thorn, mais **ne nomme pas Temin** : son identité, sa parenté avec Nemmia et son rang de bras droit sont des décisions du MJ. Cette mouvance est radicale mais **n'a pas suivi la corruption démoniaque** des membres de l'Ermitage de l'Éclair Béni. **Foundry :** `Actor.V1hSTKKSs6ea6FgJ` (profil officiel de *Halfling Druid (3–4)*, créature 2, compendium PFS saison 1, rangé dans `MJ / Divers`).
+- **Adaptation validée :** Temin est **une druidesse halfeline de niveau 2**, **bras droit de Vengeant Thorn**, le centaure druide renégat du scénario *Pathfinder Society #1-04 — Bandits of Immenwood*. Le scénario original présente des druides halfelins à son service, sans nommer Temin : son identité, sa parenté avec Nemmia et son rang de bras droit sont des décisions du MJ. **Temin a quitté l'Ermitage de l'Éclair Béni et sa sœur Nemmia pour suivre Thorn**, qu'elle idéalise comme le véritable défenseur de la nature. Sa mouvance est **distincte des Attiseurs de tempête et de l'ermitage**, violente mais dépourvue de leur programme d'extermination systématique. Elle **n'a pas suivi la corruption démoniaque** des membres de l'Ermitage de l'Éclair Béni. **Foundry :** `Actor.V1hSTKKSs6ea6FgJ` (profil officiel de *Halfling Druid (3–4)*, créature 2, compendium PFS saison 1, rangé dans `MJ / Divers`).
 - Les PJ connaissent déjà **de nom l'ermitage**, mentionné brièvement avant la mort de Nemmia, mais n'ont pas encore résolu les troubles locaux ni libéré Harlock. La sœur peut fournir des informations supplémentaires si elle accepte de parler ; **son interrogatoire et le voyage qui suit ne sont pas encore joués**.
+
+## Trois mouvances naturalistes distinctes — vérification du 4 novembre 2026
+
+### Attiseurs de tempête (Storm Kindlers) : des idéologues de la catastrophe
+
+**Canon :** les Attiseurs originels forment une secte dissidente de Gozreh, fascinée par l'Œil d'Abendego. Ils cherchent à provoquer d'autres tempêtes mondiales pour **purger la civilisation**. Le culte initial s'est éteint, mais l'aventure *PFS #9-22 — Grotto of the Deluged God* mentionne une mouvance moderne reprenant son **nom et son héritage**, en opposition au Culte de l'Œil. C'est cette continuité moderne qui peut justifier une faction « active » dans PF2-MJ.
+
+**Relique :** l'**Écaille de la Tempête rejetée** (*Scale of the Spurned Tempest*) est une écaille de dragon des saumures imprégnée par les pratiques du culte historique. Retrouvée dans un sanctuaire de Gozreh de la côte du Mwangi puis transportée par les Éclaireurs, elle déclenche des phénomènes météorologiques. **Vouloir l'écaille n'implique pas d'appartenir à ce culte.**
+
+**Enregistrement existant :** `faction_culte_des_attiseurs_de_tempetes` dans PF2-MJ (source citée : *Grotto of the Deluged God*). Sa présentation actuelle aux joueurs parle surtout d'étude, de maîtrise et d'incarnation de la tempête. Le **projet exterminateur de la secte ancienne** est un renseignement MJ à conserver séparément du descriptif public ; ne pas lui attribuer automatiquement tous les druides radicaux.
+
+### Vengeant Thorn : prétendant mystique indépendant, chef du troisième groupe
+
+**Canon du scénario *PFS #1-04 — Bandits of Immenwood* :** Thorn est un **centaure druide exilé**, devenu chef de brigands en Immenwood. Il veut prendre l'Écaille pour **regagner son statut chez les centaures et devenir roi**. Son sang réagit à la magie de l'écaille, et il porte un **petit médaillon de jade non magique** gravé de motifs semblables ; l'origine de son affinité reste inexpliquée. Il commande des **druides halfelins**, utilise des animaux et organise des embuscades mortelles. **Aucune appartenance aux Attiseurs de tempête n'est établie dans le scénario.**
+
+**Adaptation MJ retenue :** Thorn prétend être **l'incarnation vivante de l'orage**, éventuellement le fils choisi de Gozreh. Son cercle est un culte personnel et une bande de partisans fascinés par sa puissance. Il revendique la supériorité de la nature et de lui-même sur la civilisation ; il peut piller, menacer et tuer pour soumettre ceux qui le défient. Mais **il n'a pas la stratégie politique de destruction des villes des Attiseurs historiques**, ni le projet collectif de l'ermitage corrompu. Il est **mégalomane et théocratique**, plutôt que politisé. Ses violences ne doivent pas être minimisées. Son seul lien direct connu avec les Attiseurs est **leur ancienne relique**, qu'il convoite ; le médaillon reste mystérieux. **Le centaure n'est pas un Attiseur.**
+
+**Temin (adaptation MJ) :** druidesse halfeline niveau 2, sœur de Nemmia et **bras droit de Thorn** ; le livre fournit des druides halfelins mais ne les nomme pas. Temin a quitté l'ermitage et Nemmia pour rejoindre Thorn, qu'elle voit comme un véritable protecteur de la nature. Elle idéalise ses prétentions messianiques, sans adhérer à la corruption démoniaque. **Elle peut sous-estimer sa brutalité** : ce choix maintient un conflit moral réel.
+
+### Ermitage de l'Éclair Béni : protecteurs de Gozreh divisés, puis corrompus
+
+**Canon d'*Extinction Curse* :** Harlock Hamdeel dirigeait à l'origine une communauté de Gozreh **paisible et savante**, nullement fondée pour terroriser Abberton. La dégradation environnementale d'Erran a poussé Nemmia à accuser les habitants et à prôner leur élimination ; une partie de l'ermitage a ensuite été corrompue par des **démons**. Harlock n'a pas voulu cette évolution. **L'ermitage n'est pas une cellule des Attiseurs de tempête, ni une branche du centaure.**
+
+**Adaptation MJ :** Nemmia est restée sur la voie de la persécution des habitants. **Temin a rompu avec sa sœur et suivi Thorn**, croyant trouver une défense « pure » de la nature. Son changement d'allégeance ne rend pas Thorn inoffensif.
+
+| Groupe | Motivation essentielle | Rapport à la civilisation | Relation avec Thorn |
+| --- | --- | --- | --- |
+| **Attiseurs de tempête** | Étudier/créer les ouragans, jadis pour nettoyer le monde | Doctrine originelle explicitement exterminatrice | **Aucune adhésion prouvée** ; écaille issue de leur culte |
+| **Cercle de Vengeant Thorn** | Faire reconnaître Thorn comme roi, prophète et incarnation de la tempête | Domination mystique, violence opportuniste | **Dirigé par Thorn** |
+| **Ermitage de l'Éclair Béni** | Protection savante à l'origine ; Nemmia et faction corrompue : campagne contre les habitants | Harlock protecteur, extrémistes hostiles aux villes | **Indépendant** ; Temin l'a quitté |
+
+**Statut narratif :** la distinction des groupes et la trajectoire de Temin sont **décisions de préparation MJ**, sauf si déjà confirmées en jeu. Les personnages joueurs peuvent les confondre ; la confusion n'en fait pas une réalité. Le sort de Thorn, de l'écaille et du médaillon dans une éventuelle partie déjà jouée de *Bandits of Immenwood* doit être vérifié avant de lui donner des conséquences irréversibles.
+
+**Sources :** [PFS #1-04 — *Bandits of Immenwood*, pp. 3–5, 10–15](https://www.rpg.korliane.org/Pathfinder%202e/Pathfinder%20Society/Season%201/1-04%20Bandits%20Of%20Immenwood.pdf) ; *PFS #9-22 — Grotto of the Deluged God* ; faction PF2-MJ `faction_culte_des_attiseurs_de_tempetes`.
 
 ## Prochaine séance — Séance 2 : Abberton (chapitre 2 seulement)
 
