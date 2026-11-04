@@ -1320,3 +1320,9 @@ Le système XPC ne synchronise que les Actors de type character possédés
 par un joueur (propriété native hasPlayerOwner). Les fiches de personnages
 uniquement gérées par le MJ ne sont plus réécrites depuis les résumés des PJ.
 Test : tests/xpc-progression.mjs.
+
+## v0.44.10 — Nettoyage ponctuel des cartes, autorisé par le MJ
+
+Traitement temporaire `scripts/map-maintenance-once.js`, déclenché lors de l'arrivée du MJ actif dans le monde `test-pf2`, **une seule fois** via la préférence de monde `mapCleanupOneTime20261104`. Il recalcule les groupes de doublons Racooze par dossier, slug, scène source, variante, fingerprint, taille et grille ; conserve l'exemplaire avec le plus de contenu MJ, puis supprime les copies strictes. La suppression utilise les APIs Foundry et télécharge une sauvegarde JSON ; aucune écriture directe de LevelDB. Il traduit aussi les scènes et dossiers via `scripts/map-maintenance-translations.json` sans modifier les chemins d'images ni les IDs Racooze. Un rapport est téléchargé et conservé dans la préférence de monde. L'opération est désactivée après réussite et le code temporaire devra être retiré du Toolkit après contrôle.
+
+Tests : `tests/map-maintenance-once.mjs` ; syntaxe JS vérifiée. Au 4 novembre 2026, le relais ne voit pas de client Foundry actif : **installation déployée, opération dans le monde pas encore exécutée**. L'absence de session MJ implique une connexion/recharge pour que le traitement démarre.
