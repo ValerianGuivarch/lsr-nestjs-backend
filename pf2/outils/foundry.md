@@ -440,17 +440,18 @@ L'index lit les Actors `npc` des compendiums installés ainsi que les NPC du mon
 
 L'index conserve notamment niveau, traits, rareté, taille, source et notes publiques. Il permet de filtrer par niveau, traits, texte, rareté, collection et périmètre de sources. Son cache est invalidé lors des créations, modifications ou suppressions d'Actors et lors des mises à jour de compendiums.
 
-### 15.2.1 Pilote d'illustrations Monster Core (4 novembre 2026)
+### 15.2.1 Illustrations privées Monster Core (4–5 novembre 2026)
 
-Pour éviter de modifier les compendiums système, un pilote **privé et en lecture seule de Foundry** a été réalisé à partir des PDF anglais *Monster Core 1* et *Monster Core 2*. Le dossier de travail se trouve sur le mini-PC dans `pf2-data/_AI/monster-core-pilote/`, **hors du dépôt GitHub** (illustrations issues de PDF sous droits).
+**Contrainte : ne publier aucune image issue des PDF sur GitHub.** Les PDF de *Monster Core 1* et *Monster Core 2* en anglais restent dans `/home/valou/services/`. Les illustrations sont uniquement stockées sur le mini-PC dans `pf2-data/_AI/` et dans le module local `Data/modules/monster-core-private-art/`.
 
-- 10 créatures par ouvrage, soit 20 portraits PNG et 20 tokens WebP transparents 512 × 512.
-- `index.html` et `reviews/monster-core-{1,2}-contact.jpg` : galerie et planches de vérification visuelle.
-- `mapping.csv` et `manifest.json` : correspondances explicites avec les identifiants et UUID des Actors des deux compendiums remasterisés.
-- `extract-pilot.py`, `metadata/`, `requirements.txt` et `verify-pilot.py` : extraction reproductible et contrôle des hashes, dimensions et identifiants.
-- Une association douteuse (*Animated Furnace*, illustration de couverts) a été retirée du pilote lors de la vérification et remplacée par *Calikang*.
-- **Statut : pilote extrait et contrôlé techniquement ; validation du MJ et intégration Foundry non encore faites.** Aucune fiche Actor, aucun compendium, aucune scène et aucun module n'ont été modifiés.
-- Ne pas considérer les images publiées dans les PDF comme couvrant les 938 entrées des deux compendiums. Pour l'industrialisation, traiter séparément les pages multi-créatures, les illustrations sans équivalent et les associations ambiguës.
+- Les compendiums remaster PF2e possèdent **492 + 446 = 938 Actors**, sans illustrations spécifiques. Ils ne sont pas modifiés.
+- Pilote initial : 20 images validées, 20 copies d'Actors et 20 tokens réellement installés et vérifiés par API dans la scène `TestToken`, dans le dossier d'Actors `TestToken - Monster Core`. Le MJ a validé ce pilote.
+- Inventaire complet des **756 pages des deux PDF** : 274 images candidates dans Monster Core 1 et 324 dans Monster Core 2, soit **598 images extraites en PNG** avec **598 tokens WebP**. Le dossier privé `pf2-data/_AI/monster-core-complet/` comprend `index-pdf.py`, `extract-all.py`, `inventory.json`, `inventory.csv` et 25 planches JPEG de revue.
+- Répartition : 20 illustrations du pilote déjà validées, 293 associations simples encore à vérifier visuellement, 134 cas avec plusieurs candidats et 151 images sans association directe. Ces images ne couvrent pas nécessairement 938 fiches uniques ; certaines variantes partagent l'art ou n'en ont pas.
+- Un **second lot de 20 illustrations** a été contrôlé visuellement et ajouté au module privé (total actuel : **40 correspondances** et 80 fichiers portrait/token). Les scripts de reprise normale sont `pf2-data/_AI/monster-core-complet/place-approved-testtoken.py` et `verify-approved-testtoken.py`. Leur exécution nécessite un client Foundry connecté et autorisé via le relais REST.
+- **État au dernier contrôle : le deuxième lot n'était pas encore placé dans TestToken**, car le client Foundry du relais s'est déconnecté. Ne pas écrire directement dans LevelDB ni lancer un hook d'import automatique pour contourner l'accès. Relancer explicitement via le REST Relay après reconnexion MJ.
+- Le module `monster-core-private-art` est installé localement, mais son activation dans le monde n'a pas été vérifiée ; les copies d'Actors sur la scène utilisent déjà les liens d'images privées.
+- Le code du dépôt `pf2e-val-toolkit` a des modifications locales indépendantes en cours : ne pas les écraser ni les mélanger avec ce chantier.
 
 ### 15.3 Générateur de rencontres
 
