@@ -2,36 +2,24 @@
 
 [← Index des outils](../../OUTILS.md) · [Wiki et Discord](../../pf2/outils/wiki-discord.md) · [Aide XP et trésors](wiki-session-xp-aid.md)
 
-## Déroulement : UN SEUL formulaire, puis l'aperçu
+## Déroulement : une page privée avec champs indépendants
 
-`/fin-seance` est une commande **réservée à l'administration Discord**, sans paramètres slash. Elle ouvre immédiatement **une seule fenêtre**, avec toutes les valeurs préremplies (séance active dans le salon, ou dernière séance connue ; dans `mj`, séance fictive n°7).
+**Motif :** un formulaire natif Discord est limité à cinq composants. Le précédent formulaire avec deux blocs de texte « XP / Actions » et « Pièces / Objets » demandait d'éditer les étiquettes dans le texte. Pour offrir réellement **10 champs indépendants** et **les 36 réputations en cases numériques**, `/fin-seance` envoie maintenant au MJ un **lien éphémère privé** vers le formulaire web, au lieu d'ouvrir une modale Discord. C'est une **unique page** sans étapes intermédiaires.
 
-Discord impose au maximum **cinq composants par formulaire**, donc les montants numériques sont regroupés dans des zones de texte multiligne. **Il n'y a plus trois étapes.** Les cinq champs de l'unique formulaire sont :
+La commande reste **réservée aux administrateurs Discord**, sans paramètres. Elle récupère la séance active associée au canal de `/debut-seance` et préremplit le numéro, sinon prend la dernière séance connue ; en canal exactement nommé `mj`, elle utilise la séance fictive 7.
 
-1. **Numéro de séance**, modifiable.
-2. **Nombre de jours écoulés** depuis le début en jeu (0 = même jour).
-3. **XP et actions**, champ multiligne prérempli par :
-   ```text
-   Total XP: 0
-   XP par PJ: 0
+**Champs de la page :**
 
-   Actions:
-   ```
-   Le MJ remplace les deux zéros par les montants décidés **indépendamment**, puis colle ses actions/XP sur les lignes après `Actions:`. Aucun total n'est recalculé ou déduit de la description.
-4. **Pièces et objets**, champ multiligne prérempli par :
-   ```text
-   Or (po): 0
-   Argent (pa): 0
-   Cuivre (pc): 0
+- **Numéro de séance** (éditable), **nombre de jours écoulés** (0 = même jour).
+- **XP total du groupe**, **XP par PJ** (deux valeurs indépendantes), et **Actions réalisées** (grand champ texte libre ; une ligne par action, sans écrire d'intitulé `Actions :`).
+- **Or (po)**, **argent (pa)**, **cuivre (pc)** (trois champs numériques indépendants, par PJ) et **Objets obtenus** (grand champ texte libre ; une ligne par objet ; aucune création automatique dans Foundry).
+- **Toutes les réputations**, triées par catégorie, avec **un champ numérique par faction**, initialisé à **0**. Un nom n'est plus éditable, ce qui évite d'altérer accidentellement l'intitulé. On peut saisir des deltas positifs et négatifs entre -50 et +50, dans la limite du score final autorisé. Le formulaire utilise `Pf2ReputationService.list(true)`, source de vérité SQLite du wiki, **sans filtrage ou pagination** : il inclut notamment le groupe **Abberton** (Cirque des Merveilles Vagabondes, Cirque de Lady Dusklight, Villageois d'Abberton, Ermitage de la Foudre Bénie). Il y avait **6 catégories et 36 factions** lors de la vérification du 4 novembre 2026.
 
-   Objets:
-   ```
-   Les trois nombres sont les pièces **par PJ**. Le texte après `Objets:` n'est utilisé que pour le récapitulatif, sans création d'objets dans Foundry.
-5. **Toutes les réputations**, une seule grande zone préremplie avec **toutes les catégories** (titres `# Absalom`, `# Pointesable`…) et toutes les lignes `Nom de faction: 0`. Modifier les seules valeurs utiles en `+3`, `-2`, etc. Les scores sont des **variations** sur la valeur existante, et les autres restent inchangés. Les noms de catégories restent affichés pour éviter les ambiguïtés entre factions homonymes.
+**Validation en deux clics sur la même page :** bouton **Voir l'aperçu** → prévisualisation complète privée, puis **Confirmer et publier** ou **Modifier**. Le bouton Modifier restaure les champs déjà saisis sans remise à zéro. Aucun message Discord ni changement sur Foundry / SQLite n'est effectué avant la confirmation. En cas d'échec, un message indique de vérifier les données avant de retenter.
 
-**Après validation de cette unique fenêtre :** un **aperçu privé complet**, puis **Terminer la séance / Modifier le formulaire / Annuler**. Aucun changement ni message public avant confirmation. Le bouton **Modifier le formulaire** ouvre à nouveau **la même fenêtre** en conservant toutes les saisies, y compris après une erreur de validation. Si la publication dépasse 2 000 caractères, elle est répartie sur plusieurs messages sans perte de lignes.
+**Sécurité :** le lien ne peut être créé que depuis la commande admin de Discord et contient un token cryptographiquement aléatoire **de 256 bits**, valable **30 minutes**, supprimé après une confirmation réussie. Il n'est ni public ni réutilisable. Le backend envoie des en-têtes `no-store`, `no-referrer`, `X-Frame-Options: DENY` et une CSP avec nonce ; les textes provenant de la base sont affichés comme texte (pas en HTML). **Ne partage pas l'URL privée** ; la possession du lien donne accès à l'aperçu et à la confirmation pendant sa période de validité. Les vérifications de cohérence de séance et la protection contre les doubles récompenses restent effectuées côté serveur.
 
-**Important :** les étiquettes `Total XP:`, `XP par PJ:`, `Actions:`, `Or (po):`, `Argent (pa):`, `Cuivre (pc):`, `Objets:` et les titres de catégories `# ...` doivent rester : elles permettent de distinguer les nombres des notes libres. Les valeurs après les deux-points sont modifiables. La limite technique d'un champ multiligne est **4 000 caractères** ; si la liste des réputations dépasse cette capacité, la commande le signale plutôt que de supprimer des données en silence.
+**URL de la page :** `https://l7r.fr/apil7r/pf2-mj/discord/fin-seance/<token>` (base configurable par `PF2_FIN_SEANCE_PUBLIC_URL`). L'état, l'aperçu et la confirmation transitent exclusivement par les routes internes `GET :token/state`, `POST :token/preview` et `POST :token/confirm` du même backend. Pas de création de compte supplémentaire ni de clé visible dans le JavaScript.
 
 ## Texte publié
 
@@ -75,7 +63,7 @@ L'ordre des mises à jour Foundry / SQLite / Discord ne constitue **pas une tran
 
 ## Simulation sans séance : canal #mj
 
-Si `/fin-seance` est lancé **dans un canal nommé exactement `mj`**, la commande démarre directement avec une **séance fictive n°7**, sans exiger `/debut-seance` ni chercher une séance réelle. Le même formulaire unique et les mêmes champs de réputation sont utilisés. À la confirmation, le récapitulatif est **publié uniquement dans #mj**, avec une ligne finale explicite :
+Si `/fin-seance` est lancé **dans un canal nommé exactement `mj`**, la commande démarre directement avec une **séance fictive n°7**, sans exiger `/debut-seance` ni chercher une séance réelle. La même page web avec tous les champs séparés et les mêmes réputations est utilisée. À la confirmation, le récapitulatif est **publié uniquement dans #mj**, avec une ligne finale explicite :
 
 > 🧪 SIMULATION MJ — aucune modification des séances, des inventaires ou des réputations.
 
@@ -84,7 +72,9 @@ Ce mode **ne lance aucune écriture** dans SQLite, n'appelle pas Foundry et n'ap
 ## Fichiers et tests
 
 - `apps/api-jdr/src/discord/SessionFinishFlow.ts` : validations, parsing, tri, rendu du récapitulatif et découpage pour Discord.
-- `apps/api-jdr/src/discord/DiscordCommandsService.ts` : formulaire unique/aperçu/admin/détection de #mj/application.
+- `apps/api-jdr/src/discord/DiscordSessionFinishWeb.ts` : validation serveur de tous les champs, dont la liste exhaustive de réputations.
+- `apps/api-jdr/src/discord/DiscordSessionFinishPage.ts` et `DiscordSessionFinishController.ts` : page privée et routes HTTP protégées par token temporaire.
+- `apps/api-jdr/src/discord/DiscordCommandsService.ts` : émission du lien privé, token éphémère, aperçu et confirmation, détection de `#mj`, écritures après validation.
 - `apps/api-jdr/src/foundry/FoundryRelayService.ts` : pièces PF2e/Foundry et prévention des doublons.
 - `apps/api-jdr/src/pf2-reputation/Pf2ReputationService.ts` : deltas cumulés transactionnels et historisés.
 - `apps/api-jdr/src/pf2-storage/Pf2PersistenceService.ts` : source de la séance active et récapitulatif durable.

@@ -1,4 +1,5 @@
 import { forwardRef, Inject, Injectable, Logger } from '@nestjs/common'
+import { randomBytes } from 'node:crypto'
 import { resolve } from 'node:path'
 import { ActionRowBuilder, AutocompleteInteraction, ButtonBuilder, ButtonInteraction, ButtonStyle, ChannelType, ChatInputCommandInteraction, ModalBuilder, ModalSubmitInteraction, Message, MessageReaction, PartialMessageReaction, PermissionFlagsBits, RESTPostAPIApplicationGuildCommandsJSONBody, SlashCommandBuilder, StringSelectMenuBuilder, StringSelectMenuInteraction, TextInputBuilder, TextInputStyle, UserSelectMenuBuilder, UserSelectMenuInteraction } from 'discord.js'
 import { FoundryRelayService } from '../foundry/FoundryRelayService'
@@ -12,6 +13,7 @@ import { pf2DiscordIdForPlayer, pf2MatchesPlayerOrDiscordAlias, pf2PlayerByDisco
 import { shortSummaryRewardForSession } from '../pf2-sessions/Pf2CareerXp'
 import { Pf2JournalsService } from '../pf2-journals/Pf2JournalsService'
 import { Pf2ReputationService } from '../pf2-reputation/Pf2ReputationService'
+import { parseSessionFinishWebInput } from './DiscordSessionFinishWeb'
 import { FINISH_TTL_MS, finishInt, finishXpForm, finishTreasureForm, finishReputationForm, parseFinishXpForm, parseFinishTreasureForm, parseFinishReputationForm, finishReport, finishReportParts, type SessionFinishDraft, type SessionFinishGroup } from './SessionFinishFlow'
 
 const PLANNING_DAYS = [
@@ -3703,39 +3705,96 @@ export class DiscordCommandsService {
     return new ButtonBuilder().setCustomId(`pf2-finish:button:${action}:${draft.token}`).setLabel(label).setStyle(style)
   }
 
+  private sessionFinishWebDraft(token: string): SessionFinishDraft {
+    if (!/^[A-Za-z0-9_-]{40,50}$/.test(token)) throw new Error('Lien de fin de séance invalide.')
+    const draft = this.pendingSessionFinishes.get(token)
+    if (!draft || Date.now() - draft.createdAt > FINISH_TTL_MS || draft.step === 'completed') {
+      this.pendingSessionFinishes.delete(token)
+      throw new Error('Lien expiré ou déjà utilisé. Relance /fin-seance dans Discord.')
+    }
+    return draft
+  }
+
+  /** GET state for a one-time Discord-admin-initiated bearer link. Do not
+   * expose this state via unprotected session/wiki endpoints. */
+  sessionFinishWebState(token: string): Record<string, unknown> {
+    const draft = this.sessionFinishWebDraft(token)
+    return {
+      number:draft.number, days:draft.days, xpTotal:draft.xpTotal, xpPerPlayer:draft.xpPerPlayer,
+      gp:draft.coins.gp, sp:draft.coins.sp, cp:draft.coins.cp,
+      actions:draft.activities,loot:draft.loot,
+      groups:draft.groups, changes:draft.changes, mock:draft.mock,step:draft.step,
+      ...(draft.step === 'review' ? { parts: finishReportParts(finishReport(draft)) } : {}),
+    }
+  }
+
+  sessionFinishWebPreview(token: string, payload: unknown): { parts: string[]; mock: boolean } {
+    const draft = this.sessionFinishWebDraft(token)
+    if (draft.step !== 'form' && draft.step !== 'review') throw new Error('Clôture déjà en cours.')
+    const validated = parseSessionFinishWebInput(payload,draft)
+    Object.assign(draft,validated)
+    const parts = finishReportParts(finishReport(draft))
+    draft.step = 'review'
+    return { parts,mock:draft.mock }
+  }
+
+  async sessionFinishWebConfirm(token: string): Promise<{message:string}> {
+    const draft = this.sessionFinishWebDraft(token)
+    if (draft.step !== 'review') throw new Error('Prévisualise le récapitulatif avant de confirmer.')
+    draft.step = 'committing'
+    try {
+      const channel = await this.discord?.requestClient()?.channels.fetch(draft.channelId)
+      if (!channel || !channel.isTextBased() || !('send' in channel)) throw new Error('Salon Discord indisponible : aucune récompense appliquée.')
+      await this.applySessionFinish({ channel: channel as ButtonInteraction['channel'] },draft)
+      draft.step = 'completed'
+      this.pendingSessionFinishes.delete(token)
+      return {message:draft.mock
+        ? 'Simulation publiée dans #mj. Aucun XP, aucune réputation et aucune pièce modifiés.'
+        : 'Fin de séance publiée dans Discord. Récompenses et réputations appliquées.'}
+    } catch(error) {
+      // Existing source idempotency protects Foundry coinage and reputation
+      // deltas if something failed after a partial real-world update.
+      draft.step = 'review'
+      throw error
+    }
+  }
+
   private async finishGameCommand(interaction: ChatInputCommandInteraction): Promise<void> {
     if (!this.isAdmin(interaction)) {
-      await interaction.reply({ content: 'Cette commande est réservée aux administrateurs du serveur.', ephemeral: true })
+      await interaction.reply({ content:'Cette commande est réservée aux administrateurs du serveur.',ephemeral:true })
       return
     }
     const mock = interaction.channel?.name === 'mj'
-    // A session started with /debut-seance is bound to its Discord channel.
-    // For an old session, the number remains editable in the modal.
     const active = mock ? null : await this.persistence.activeSessionForDiscordChannel(interaction.channelId)
     const sessions = mock ? [] : await this.persistence.listSessions()
-    const number = mock ? 7 : active?.sessionNumber ?? Math.max(1, ...sessions.map(session => session.sessionNumber))
-    const token = interaction.id
-    const draft: SessionFinishDraft = {
-      token, requesterId: interaction.user.id, channelId: interaction.channelId, guildId: interaction.guildId ?? '',
-      mock, sessionId: active?.id ?? null, number, createdAt: Date.now(),
-      days: 0, xpPerPlayer: 0, xpTotal: 0, activities: '', coins: { gp: 0, sp: 0, cp: 0 }, loot: '',
-      groups: [], changes: [], step: 'form',
-    }
+    const number = mock ? 7 : active?.sessionNumber ?? Math.max(1,...sessions.map(session=>session.sessionNumber))
     if (!this.reputations) {
-      await interaction.reply({ content: 'Service de réputation indisponible.', ephemeral: true })
+      await interaction.reply({ content:'Service de réputation indisponible.',ephemeral:true })
       return
     }
     try {
       const groups = await this.reputations.list(true) as SessionFinishGroup[]
-      draft.groups = groups.map(group => ({
-        id: Number(group.id), name: group.name,
-        entries: group.entries.map(entry => ({ id: Number(entry.id), name: entry.name, score: Number(entry.score) })),
-      }))
-      const modal = this.sessionFinishModal(draft)
-      this.pendingSessionFinishes.set(token, draft)
-      await interaction.showModal(modal)
-    } catch (error) {
-      await interaction.reply({ content: `Formulaire impossible : ${error instanceof Error ? error.message : String(error)}`, ephemeral: true })
+      // All groups, including Abberton. Never slice or truncate the list.
+      for (const [key,value] of this.pendingSessionFinishes) if (Date.now()-value.createdAt > FINISH_TTL_MS) this.pendingSessionFinishes.delete(key)
+      const token = randomBytes(32).toString('base64url')
+      const draft: SessionFinishDraft = {
+        token,requesterId:interaction.user.id,channelId:interaction.channelId,guildId:interaction.guildId??'',
+        mock,sessionId:active?.id??null,number,createdAt:Date.now(),
+        days:0,xpTotal:0,xpPerPlayer:0,activities:'',coins:{gp:0,sp:0,cp:0},loot:'',
+        groups:groups.map(group=>({id:Number(group.id),name:group.name,
+          entries:group.entries.map(entry=>({id:Number(entry.id),name:entry.name,score:Number(entry.score)}))})),
+        changes:[],step:'form',
+      }
+      const base=(process.env['PF2_FIN_SEANCE_PUBLIC_URL']?.trim() || 'https://l7r.fr/apil7r/pf2-mj/discord/fin-seance').replace(/\/$/,'')
+      const url=base+'/'+token
+      this.pendingSessionFinishes.set(token,draft)
+      await interaction.reply({content:mock
+        ? '🧪 **Simulation MJ — séance fictive n°7.** Remplis tous les champs sur une seule page ; l’aperçu et la confirmation ne modifieront aucune donnée.'
+        : '**Fin de séance — formulaire complet privé.** Numéro, jours, XP, actions, pièces, objets et toutes les réputations sur une seule page, puis aperçu et validation.',
+        ephemeral:true,components:[new ActionRowBuilder<ButtonBuilder>().addComponents(
+          new ButtonBuilder().setStyle(ButtonStyle.Link).setURL(url).setLabel('Ouvrir le formulaire complet'))]})
+    } catch(error) {
+      await interaction.reply({content:'Formulaire indisponible : '+(error instanceof Error?error.message:String(error)),ephemeral:true})
     }
   }
 
@@ -3814,7 +3873,7 @@ export class DiscordCommandsService {
       draft.step = 'committing'
       await interaction.deferReply({ ephemeral: true })
       try {
-        await this.applySessionFinish(interaction, draft)
+        await this.applySessionFinish({channel:interaction.channel}, draft)
         draft.step = 'completed'
         this.pendingSessionFinishes.delete(draft.token)
         await interaction.editReply({ content: draft.mock ? '🧪 Simulation publiée dans #mj. Aucune donnée enregistrée.' : `✅ Séance n°${draft.number} terminée. XP, pièces et réputations appliqués ; récapitulatif publié.` })
@@ -3836,7 +3895,7 @@ export class DiscordCommandsService {
     return true
   }
 
-  private async applySessionFinish(interaction: ButtonInteraction, draft: SessionFinishDraft): Promise<void> {
+  private async applySessionFinish(interaction: Pick<ButtonInteraction,'channel'>, draft: SessionFinishDraft): Promise<void> {
     if (!interaction.channel?.isTextBased() || !('send' in interaction.channel)) throw new Error('Salon Discord non publiable.')
     // Validate all Discord message lengths before performing any real write.
     const report = finishReport(draft)

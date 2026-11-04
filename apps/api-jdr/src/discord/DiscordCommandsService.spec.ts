@@ -1193,26 +1193,27 @@ describe('DiscordCommandsService', () => {
     expect(announcement).not.toContain('niveau')
   })
 
-  it('/fin-seance opens an editable modal without applying XP or consulting Foundry', async () => {
+  it('/fin-seance offers a private web form link without applying XP or consulting Foundry', async () => {
     const foundry = { listActors: jest.fn(), listPlayers: jest.fn(), awardSessionCoins: jest.fn() }
     const persistence = {
       activeSessionForDiscordChannel: jest.fn().mockResolvedValue({ id: 'session-12', sessionNumber: 12 }),
       listSessions: jest.fn().mockResolvedValue([{ id: 'session-12', sessionNumber: 12 }]),
       updateSession: jest.fn(), closeSessionDiscordChannel: jest.fn(),
     }
-    const showModal = jest.fn().mockResolvedValue(undefined)
+    const reply = jest.fn().mockResolvedValue(undefined)
     const reputations = { list: jest.fn().mockResolvedValue([{ id: 1, name: 'Absalom', entries: [{ id: 11, name: 'Habitants', score: 0 }] }]) }
     const service = new DiscordCommandsService(persistence as never, foundry as never, undefined, undefined, undefined, undefined, undefined, undefined, reputations as never)
     await service.handle({
       commandName: 'fin-seance', id: 'cmd-12', user: { id: 'admin' },
       memberPermissions: { has: jest.fn().mockReturnValue(true) },
-      channelId: 'session-channel', guildId: 'guild', channel: { name: 'discussion' }, showModal,
+      channelId: 'session-channel', guildId: 'guild', channel: { name: 'discussion' }, reply,
     } as never)
-    const modal = showModal.mock.calls[0][0].toJSON()
-    expect(modal.custom_id).toBe('pf2-finish:modal:form:cmd-12')
-    expect(modal.components).toHaveLength(5)
-    expect(modal.components[0].components[0].value).toBe('12')
-    expect(modal.components[4].components[0].value).toContain('Habitants: 0')
+    expect(reply).toHaveBeenCalledTimes(1)
+    const result = reply.mock.calls[0][0]
+    expect(result.ephemeral).toBe(true)
+    const button = result.components[0].components[0].toJSON()
+    expect(button.style).toBe(5)
+    expect(button.url).toContain('/apil7r/pf2-mj/discord/fin-seance/')
     expect(persistence.updateSession).not.toHaveBeenCalled()
     expect(foundry.listActors).not.toHaveBeenCalled()
     expect(foundry.listPlayers).not.toHaveBeenCalled()
