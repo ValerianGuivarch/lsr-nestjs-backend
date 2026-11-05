@@ -128,6 +128,15 @@ export class FoundryRelayService {
     return players.filter((player): player is PlayerSummary => player !== null).sort((left, right) => left.name.localeCompare(right.name, 'fr'))
   }
 
+  /** Read-only snapshot for Discord recaps: never migrate or update Actors. */
+  async listPlayerLevelsReadOnly(): Promise<PlayerSummary[]> {
+    const clientId = await this.onlineClientId()
+    const actors = await this.listRootWorldActors(clientId)
+    const players = await this.mapWithConcurrency(actors, 4, (actor) => this.playerFromActor(actor.uuid, false, clientId))
+    return players.filter((player): player is PlayerSummary => player !== null)
+      .sort((left, right) => left.name.localeCompare(right.name, 'fr'))
+  }
+
   async getPlayerXp(uuid: string): Promise<{ uuid: string; xp: number; level: number }> {
     const player = await this.requirePlayer(uuid)
     return { uuid: player.uuid, xp: player.xp, level: player.level }
