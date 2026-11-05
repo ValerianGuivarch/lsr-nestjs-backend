@@ -38,7 +38,7 @@ export class PlayerCodexService {
       const uuid = player.uuid
       const foundryLevel = player.foundryLevel
       const xpc = player.xpc
-      if (typeof uuid !== 'string' || !/^Actor\\.[A-Za-z0-9]+$/.test(uuid)
+      if (typeof uuid !== 'string' || !/^Actor\.[A-Za-z0-9]+$/.test(uuid)
         || seen.has(uuid) || !Number.isInteger(foundryLevel) || (foundryLevel as number) < 1
         || (foundryLevel as number) > 20 || !Number.isSafeInteger(xpc) || (xpc as number) < 0) {
         throw new BadRequestException('UUID, niveau réel ou XPC invalide ou en doublon.')
