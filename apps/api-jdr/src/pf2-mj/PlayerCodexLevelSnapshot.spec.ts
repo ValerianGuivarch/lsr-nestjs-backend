@@ -32,6 +32,16 @@ describe('Foundry player level snapshot push', () => {
     ])
   })
 
+  it('caps the theoretical level at PF2e level 20 even if XPC keeps growing', async () => {
+    const { service, persistence } = setup()
+    await expect(service.storeFoundryPlayerLevelSnapshot([
+      { uuid: 'Actor.veteran', foundryLevel: 20, xpc: 456000 },
+    ])).resolves.toEqual({ cached: 1 })
+    expect(persistence.saveFoundryPlayerLevels).toHaveBeenCalledWith([
+      { uuid: 'Actor.veteran', foundryLevel: 20, theoreticalLevel: 20 },
+    ])
+  })
+
   it('rejects unauthenticated requests before touching the cache', async () => {
     process.env['PF2_FOUNDRY_CHAT_SYNC_KEY'] = 'secret-test'
     const { controller, persistence } = setup()
