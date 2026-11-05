@@ -322,13 +322,17 @@
                 } ).catch( function () {
                     privateView.textContent = 'Accès MJ refusé ou document indisponible.';
                 } );
+            } else if ( name === 'relations' ) {
+                if ( window.pf2RenderRelations ) {
+                    window.pf2RenderRelations( panel, character, isMjAdmin );
+                } else { panel.textContent = 'Le carnet de relations est indisponible.'; }
             } else if ( name === 'contacts' ) {
 				if ( !character.contacts || !character.contacts.length ) { var noContact = document.createElement( 'p' ); noContact.className = 'pf2-player-empty'; noContact.textContent = 'Aucun contact privé pour ce personnage.'; panel.appendChild( noContact ); return; }
 				var contacts = document.createElement( 'div' ); contacts.className = 'pf2-player-list'; character.contacts.forEach( function ( contact ) { contacts.appendChild( contactCard( contact, character.npcId, isMjAdmin ) ); } ); panel.appendChild( contacts );
 			}
 		}
 
-		( isMjAdmin ? [ [ 'fiche', 'Fiche' ], [ 'background', 'Background' ], [ 'notes', 'Notes' ], [ 'contacts', 'Contacts' ], [ 'mj', 'MJ' ] ] : [ [ 'fiche', 'Fiche' ], [ 'background', 'Background' ], [ 'notes', 'Notes' ], [ 'contacts', 'Contacts' ] ] ).forEach( function ( item ) { var button = document.createElement( 'button' ); button.dataset.tab = item[ 0 ]; button.textContent = item[ 1 ]; button.onclick = function () { showTab( item[ 0 ] ); }; tabs.appendChild( button ); } );
+		( isMjAdmin ? [ [ 'fiche', 'Fiche' ], [ 'background', 'Background' ], [ 'notes', 'Notes' ], [ 'relations', 'Relations' ], [ 'contacts', 'Contacts' ], [ 'mj', 'MJ' ] ] : [ [ 'fiche', 'Fiche' ], [ 'background', 'Background' ], [ 'notes', 'Notes' ], [ 'relations', 'Relations' ], [ 'contacts', 'Contacts' ] ] ).forEach( function ( item ) { var button = document.createElement( 'button' ); button.dataset.tab = item[ 0 ]; button.textContent = item[ 1 ]; button.onclick = function () { showTab( item[ 0 ] ); }; tabs.appendChild( button ); } );
 		showTab( 'fiche' );
 	}
 

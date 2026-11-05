@@ -74,3 +74,15 @@
 .pf2-player-contact-card img.pf2-player-contact-portrait { display:block; width:100%; height:auto; aspect-ratio:3 / 4; object-fit:contain; object-position:center; background:#f4efe6; border-radius:8px; margin-bottom:12px; }
 .pf2-player-contact-portrait-placeholder { width:100%; aspect-ratio:3 / 4; background:#f4efe6; border-radius:8px; margin-bottom:12px; }
 .pf2-player-contact-portrait-placeholder { display:flex; align-items:center; justify-content:center; font-size:4rem; color:#9c927f; }
+
+/* Carnet de relations — volontairement plus léger que les fiches PNJ. */
+.pf2-relations-heading h3{margin:.25rem 0}.pf2-relations-note{color:#54595d;font-size:.9rem}
+.pf2-relations-list{display:flex;flex-direction:column;gap:.55rem}
+.pf2-relation-row{display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;background:#fff;border:1px solid #c8ccd1;border-radius:6px;padding:.8rem 1rem}
+.pf2-relation-details{flex:1;min-width:0}.pf2-relation-details p{margin:.3rem 0;color:#54595d}
+.pf2-relation-score{display:flex;flex-direction:column;align-items:flex-end;gap:.2rem;min-width:100px}
+.pf2-relation-score strong{font-size:1.2rem;font-variant-numeric:tabular-nums}.pf2-relation-score small{color:#54595d}
+.pf2-relation-actions{display:flex;gap:.4rem}.pf2-relations-editor{border:1px solid #a2a9b1;border-radius:6px;padding:1rem;background:#f8f9fa}
+.pf2-relations-field{display:flex;flex-direction:column;margin-bottom:.6rem;font-weight:600;gap:.25rem}
+.pf2-relations-field input,.pf2-relations-field textarea,.pf2-relations-field select{box-sizing:border-box;width:100%;padding:.4rem;font:inherit;font-weight:normal}
+@media(max-width:600px){.pf2-relation-row{flex-direction:column}.pf2-relation-score{align-items:flex-start}.pf2-relation-actions{flex-wrap:wrap}}
