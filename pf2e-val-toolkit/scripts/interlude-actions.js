@@ -114,11 +114,14 @@ async function openInterlude(actor, kind) {
     ui.notifications.error('Échec du test : '+error.message);
   }
 }
-export function decorateInterludeExtras() {
+export function decorateInterludeExtras(actorOverride = null, root = document) {
   if (!game.modules.get('pf2e-hud')?.active) return;
-  const extras = document.querySelector('#pf2e-hud-sidebar [data-sidebar="extras"]');
+  // In Foundry V14's render hook, root is the pending ApplicationV2 element.
+  // Using it directly avoids racing the HUD's asynchronous DOM replacement.
+  const extras = root.matches?.('[data-sidebar="extras"]')
+    ? root : root.querySelector?.('#pf2e-hud-sidebar [data-sidebar="extras"], [data-sidebar="extras"]');
   if (!extras) return;
-  const actor = currentActor();
+  const actor = actorOverride || currentActor();
   const existing = extras.querySelector('.pf2e-val-interlude-shortcuts');
   if (existing?.dataset.actorUuid === actor?.uuid) return;
   existing?.remove();
@@ -135,9 +138,7 @@ export function decorateInterludeExtras() {
     btn.textContent=label;
     btn.title=DESCRIPTIONS[kind];
     btn.addEventListener('click',()=>{
-      if (currentActor()?.uuid !== actor.uuid) {
-        ui.notifications.warn('Sélectionnez le personnage concerné pour cette activité.');return;
-      }
+      if (!btn.isConnected || !extras.contains(btn)) return;
       void openInterlude(actor,kind);
     });
     box.append(btn);

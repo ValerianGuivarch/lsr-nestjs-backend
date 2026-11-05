@@ -9,6 +9,7 @@ const SETTINGS = Object.freeze({
 });
 
 let scheduled = false;
+let lastExtrasActor = null;
 
 function hudActive() {
   return Boolean(game.modules.get(HUD_MODULE_ID)?.active);
@@ -123,7 +124,7 @@ function refreshHudSidebars() {
       if (enabled(SETTINGS.localizedSort)) sortLocalizedSkills(sidebar);
       if (enabled(SETTINGS.groupRecallKnowledge)) groupRecallKnowledge(sidebar);
     }
-    decorateInterludeExtras();
+    decorateInterludeExtras(lastExtrasActor);
   } catch (error) {
     console.warn("PF2e Val Toolkit | Intégration PF2e HUD ignorée :", error);
   }
@@ -167,8 +168,14 @@ export function initPf2eHudIntegration() {
     document.head.append(link);
   }
 
-  // ApplicationV2 emits this Foundry hook after it replaces its sidebar HTML.
-  Hooks.on("renderApplication", () => scheduleRefresh());
+  // PF2e HUD's sidebar is an ApplicationV2. The old renderApplication hook
+  // only covers ApplicationV1 and never fires for this HUD in Foundry V14.
+  Hooks.on("renderApplicationV2", (application, element) => {
+    if (application?.id !== "pf2e-hud-sidebar") return;
+    lastExtrasActor = application.name === "extras" ? application.actor : null;
+    if (lastExtrasActor) decorateInterludeExtras(lastExtrasActor, element);
+    scheduleRefresh();
+  });
   scheduleRefresh();
 }
 
