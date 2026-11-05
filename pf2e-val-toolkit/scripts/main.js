@@ -33,6 +33,7 @@ import { initQuickEffects } from "./quick-effects/index.js";
 import { initTargetContext } from "./target-context/index.js";
 import { initPrivateRollCharacterNames } from "./private-roll-names.js";
 import { initEarnIncomeCoins } from "./earn-income/index.js";
+import { initPlayerLevelSync } from "./player-level-sync.js";
 import { initOutcomeEffects } from "./outcome-effects/index.js";
 
 import { initFamiliarSelector } from "./familiar-selector.js";
@@ -82,12 +83,16 @@ Hooks.once("ready", () => {
   initPrivateRollCharacterNames();
   initTargetContext();
   initGeneralActionsBrowser();
-  initCareerXp();
+  const startupXpReconciliation = initCareerXp();
   initTokenNaming();
   initPf2eHudIntegration();
   initPortraitTokenSync();
 
   if (!game.user.isGM) return;
+
+  // Mémoriser les deux niveaux dans l'API après recalcul de l'XPC,
+  // sans nécessiter une session Foundry active au moment de /recap-pjs.
+  initPlayerLevelSync(startupXpReconciliation);
 
   void migrateSashkaFamiliarFeat();
   initDiscordCharacterChat();
