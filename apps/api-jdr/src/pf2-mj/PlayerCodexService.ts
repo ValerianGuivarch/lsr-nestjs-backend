@@ -5,6 +5,7 @@ import { readFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
 import { DataSource } from 'typeorm'
 import { Pf2PersistenceService } from '../pf2-storage/Pf2PersistenceService'
+import { levelForCareerXp } from '../pf2-sessions/Pf2CareerXp'
 import { MediaWikiClientService } from './MediaWikiClientService'
 
 type ProfileRow = { npc_id: string; wiki_page_title: string; display_name: string; wiki_portrait_filename: string | null; short_description: string; ancestry: string; character_class: string; objective: string; personality: string; is_player: number; is_published: number; created_at: string; updated_at: string }
@@ -16,6 +17,42 @@ export class PlayerCodexService {
   constructor(@InjectDataSource('pf2-sqlite') private readonly db: DataSource, private readonly persistence: Pf2PersistenceService, @Optional() private readonly mediaWiki?: MediaWikiClientService) {}
 
   wikiPageUrl(title: string): string { return this.mediaWiki?.pageUrl(title) ?? "" }
+
+  /**
+   * Snapshot written by the first active Foundry GM after the Toolkit
+   * reconciles XP from published sessions. No Actor mutation happens here.
+   * The API derives theoretical levels itself from XPC; it never trusts a
+   * client-supplied theoreticalLevel.
+   */
+  async storeFoundryPlayerLevelSnapshot(raw: unknown): Promise<{ cached: number }> {
+    if (!Array.isArray(raw) || raw.length === 0 || raw.length > 200) {
+      throw new BadRequestException('La synchronisation doit contenir entre 1 et 200 PJ.')
+    }
+    const seen = new Set<string>()
+    const entries: Array<{ uuid: string; foundryLevel: number; theoreticalLevel: number }> = []
+    for (const rawPlayer of raw) {
+      if (!rawPlayer || typeof rawPlayer !== 'object' || Array.isArray(rawPlayer)) {
+        throw new BadRequestException('Entrée PJ invalide.')
+      }
+      const player = rawPlayer as Record<string, unknown>
+      const uuid = player.uuid
+      const foundryLevel = player.foundryLevel
+      const xpc = player.xpc
+      if (typeof uuid !== 'string' || !/^Actor\\.[A-Za-z0-9]+$/.test(uuid)
+        || seen.has(uuid) || !Number.isInteger(foundryLevel) || (foundryLevel as number) < 1
+        || (foundryLevel as number) > 20 || !Number.isSafeInteger(xpc) || (xpc as number) < 0) {
+        throw new BadRequestException('UUID, niveau réel ou XPC invalide ou en doublon.')
+      }
+      seen.add(uuid)
+      entries.push({
+        uuid,
+        foundryLevel: foundryLevel as number,
+        theoreticalLevel: levelForCareerXp(xpc as number),
+      })
+    }
+    await this.persistence.saveFoundryPlayerLevels(entries)
+    return { cached: entries.length }
+  }
 
   async characterCandidates(prefix: string): Promise<Array<{ id: string; name: string; portrait: string | null }>> {
     const term = prefix.trim().toLocaleLowerCase()
