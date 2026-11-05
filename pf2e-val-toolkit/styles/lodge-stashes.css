@@ -1,0 +1,37 @@
+/* Small, native-looking inline actions; no new table column required. */
+.actor.sheet .inventory-list li .item-controls > .pf2e-val-stash-action {
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 20px;
+  padding: 0;
+  margin: 0;
+  width: 20px;
+  height: 22px;
+  line-height: 1;
+  font-size: 13px;
+  color: var(--color-text-primary, inherit);
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  cursor: pointer;
+}
+.actor.sheet .inventory-list li .item-controls > .pf2e-val-stash-action:hover,
+.actor.sheet .inventory-list li .item-controls > .pf2e-val-stash-action:focus-visible {
+  color: var(--color-text-hyperlink, #315b91);
+  text-shadow: 0 0 3px currentColor;
+  outline-offset: 1px;
+}
+.actor.sheet .inventory-list li .item-controls > .pf2e-val-stash-action:disabled {
+  opacity: .4;
+  cursor: wait;
+}
+
+
+/* PF2e normally allocates ~5.6rem to Edit/Delete. Make room for the
+   extra two icons instead of clipping native controls at narrow widths. */
+.actor.sheet section.window-content .inventory ul.items .item-controls.pf2e-val-stash-controls[data-stash-count="2"] {
+  flex: 0 0 8.5rem;
+}
+.actor.sheet section.window-content .inventory ul.items .item-controls.pf2e-val-stash-controls[data-stash-count="1"] {
+  flex: 0 0 6.8rem;
+}

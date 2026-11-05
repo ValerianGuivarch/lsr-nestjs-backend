@@ -656,3 +656,13 @@ La copie de travail de l'audit et le plan de conservation restent sur le mini-PC
 Pour terminer : privilégier l'API Document Foundry avec session MJ active, conserver les versions ayant des tokens ou des modifications manuelles, vérifier l'existence des équivalents avant suppression, traduire les **noms des scènes** en français sans toucher aux drapeaux `mapSlug`, puis refaire un audit différentiel après nettoyage. Aucun passage direct en écriture de LevelDB n'est autorisé.
 
 ---
+
+## Coffres à la Loge des Éclaireurs — toolkit 0.44.13 (PR du 5 novembre 2026)
+
+- Les 12 Actors loot personnels de la scène La Loge des Eclaireurs étaient en majorité accessibles à tous (ownership.default = 3), alors que leurs propriétaires individuels étaient correctement renseignés. Leurs propriétés générales ont été remises à 0 via le REST Relay, **sans modifier les droits nominatifs ni la visibilité des tokens**. Ces droits doivent rester privés lors de toute recréation de coffre.
+- Le **Coffre du groupe** est un Actor loot à accès général Observateur (2) : ce niveau suffit à PF2e pour demander au MJ un transfert d'objet, sans donner à tous les droits complets de propriétaire.
+- Le Toolkit propose deux actions depuis les lignes d'inventaire des PJ (coffre personnel / collectif) et une action de récupération sur les coffres. Ces actions ne sont disponibles que sur la scène de la Loge et passent par transferItemToActor() de PF2e ; la pile entière est transférée d'un clic, une unité par Maj + clic.
+- L'association normale est déduite de « Personnage (Joueur) » ↔ « Coffre de Personnage ». Les exceptions sont configurables par le MJ via le réglage de monde JSON lodgePersonalChestLinks ; les identifiants de la scène et du coffre du groupe sont également configurables.
+- La permission native Foundry reste **par utilisateur**. Le Toolkit vérifie en outre game.user.character pour ses boutons, sans prétendre verrouiller toutes les voies d'accès natives selon le personnage actif.
+- Code : pf2e-val-toolkit/scripts/lodge-stashes.js, style styles/lodge-stashes.css, tests tests/lodge-stashes.mjs. Détails de configuration dans pf2e-val-toolkit/README.md.
+- **Livraison :** branche/PR isolée, sans chargement de cette version dans Foundry avant fusion ; essais de transfert réels à effectuer sur la scène après fusion et rechargement.
