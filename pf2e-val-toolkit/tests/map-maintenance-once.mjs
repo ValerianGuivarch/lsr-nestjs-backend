@@ -1,9 +1,8 @@
 import assert from "node:assert/strict";
 import fs from "node:fs/promises";
-const root="/home/valou/services/lsr-nestjs-backend/pf2e-val-toolkit/scripts/";
-const source=await fs.readFile(root+"map-maintenance-once.js","utf8");
+const source=await fs.readFile(new URL("../scripts/map-maintenance-once.js", import.meta.url),"utf8");
 const module=await import("data:text/javascript;base64,"+Buffer.from(source).toString("base64"));
-const dict=JSON.parse(await fs.readFile(root+"map-maintenance-translations.json","utf8"));
+const dict=JSON.parse(await fs.readFile(new URL("../scripts/map-maintenance-translations.json", import.meta.url),"utf8"));
 let worldSettings=null, saved=[], deletes=[], updates=[];
 globalThis.saveDataToFile=(data,mime,name)=>{saved.push({data,mime,name});};
 const folder={id:"f1",type:"Scene",name:"Age of Ashes",async update(x){updates.push(["folder",x]);this.name=x.name}};
