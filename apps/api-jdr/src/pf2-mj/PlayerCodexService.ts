@@ -47,7 +47,7 @@ export class PlayerCodexService {
       entries.push({
         uuid,
         foundryLevel: foundryLevel as number,
-        theoreticalLevel: levelForCareerXp(xpc as number),
+        theoreticalLevel: Math.min(20, levelForCareerXp(xpc as number)),
       })
     }
     await this.persistence.saveFoundryPlayerLevels(entries)
