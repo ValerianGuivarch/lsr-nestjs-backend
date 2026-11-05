@@ -23,6 +23,28 @@ describe('DiscordCommandsService', () => {
     ]))
   })
 
+  it('registers /requete-a-valider and routes the command to the review state', async () => {
+    const requests = {
+      byThread: jest.fn().mockResolvedValue({ id: 4 }),
+      change: jest.fn().mockResolvedValue({ id: 4, status: 'review' }),
+    }
+    const service = new DiscordCommandsService(
+      {} as never, {} as never, undefined, undefined, undefined, undefined, requests as never,
+    )
+    expect(service.definitions().map(definition => definition.name)).toContain('requete-a-valider')
+    const deferReply = jest.fn().mockResolvedValue(undefined)
+    const editReply = jest.fn().mockResolvedValue(undefined)
+    await expect(service.handle({
+      commandName: 'requete-a-valider', channelId: 'thread-4', user: { id: 'admin' },
+      client: { user: { id: 'bot' } },
+      memberPermissions: { has: jest.fn().mockReturnValue(true) },
+      deferReply, editReply,
+    } as never)).resolves.toBe(true)
+    expect(requests.byThread).toHaveBeenCalledWith('thread-4')
+    expect(requests.change).toHaveBeenCalledWith(expect.anything(), 4, 'review')
+    expect(editReply).toHaveBeenCalledWith('État mis à jour.')
+  })
+
   it('registers an emoji argument and routes the icon-changing slash command to the quest service', async () => {
     const pilot = { changeQuestIconCommand: jest.fn().mockResolvedValue(undefined) }
     const service = new DiscordCommandsService({} as never, {} as never, undefined, undefined, undefined, undefined, undefined, pilot as never)

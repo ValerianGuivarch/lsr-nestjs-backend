@@ -219,20 +219,20 @@ Dans les **Contacts**, un second lien **MJ** apparaît à côté d'**Ouvrir** po
 
 **Sécurité :** ne jamais ajouter le Markdown MJ aux objets `myCharacters` ni aux requêtes API publiques ; ne pas se fier au masquage JavaScript seul. Vérifier à chaque mise à jour que `action=pf2playercodexmj` renvoie un refus à un utilisateur non administrateur et que les données MJ ne figurent pas dans `action=pf2playercodexme`.
 
-## Requêtes Discord et Kanban Wiki (implémentation en branche, octobre 2026)
+## Requêtes Discord et Kanban Wiki (novembre 2026)
 
 Le salon Discord **bot-et-app** (`1554492543654436875`, serveur `1531345672639610920`) accueille les nouvelles demandes. Les anciens messages ne sont pas importés.
 
 - `/requete` ouvre un formulaire sujet/description, avec image facultative en option de commande, puis une prévisualisation privée Publier/Annuler.
 - `/requete-pour demandeur:@membre` est réservé aux membres dotés de ManageGuild, pour créer au nom d'un autre demandeur ; l'identité du saisissant et celle du demandeur sont distinctes en SQLite.
-- Dans le fil d'une requête, les commandes administrateur `/requete-demande`, `/requete-encours` et `/requete-termine` peuvent faire toutes les transitions, y compris la réouverture.
-- Chaque demande publiée reçoit un message Discord, un fil et une épingle. Les transitions éditent le message, ajoutent une notification dans le fil et épinglent/désépinglent selon l'état.
+- Quatre états sont disponibles, dans cet ordre : **Demandé** (`requested`), **En cours** (`in_progress`), **À valider** (`review`), **Terminé** (`done`). Depuis le fil d'une requête, les commandes administrateur `/requete-demande`, `/requete-encours`, `/requete-a-valider` et `/requete-termine` permettent toute transition, y compris une réouverture.
+- Chaque demande publiée reçoit un message Discord, un fil et tente d'être épinglée. Une transition modifie le statut en SQLite en premier, puis **tente** de mettre à jour le message Discord, l'épingle et le fil. Un message d'état est envoyé dans le fil lors d'un changement effectif, pas lors d'un simple nouvel essai identique. Aucune mention Discord n'est autorisée dans ces messages.
+- **Correctif du 5 novembre 2026 :** le bot peut ne pas disposer de la permission Discord `Manage Messages`, ce qui fait échouer `message.unpin()` avec `DiscordAPIError[50013]`. Cet échec est désormais journalisé mais ne doit **jamais annuler** la mise à jour SQLite ni faire échouer l'action du Kanban. Les erreurs de synchronisation Discord ne modifient pas le statut enregistré dans le wiki ; un nouvel enregistrement du même statut retente la synchronisation du message original.
 - La table SQLite `pf2_request` conserve sujet, description, auteur, saisissant, état, IDs Discord et dates.
-- Le wiki expose la page standard Requêtes ainsi que `Special:RequetesPF2`. Le tableau Kanban utilise les modules `pf2requests` et `pf2requestsupdate` ; lecture publique, changement des statuts pour les comptes Wiki connectés avec jeton CSRF, puis API backend interne protégée par `PF2_WIKI_LOGIN_INTERNAL_KEY`.
-- Les changements de statut depuis le wiki passent par le bot afin de modifier Discord.
-- Si Discord est indisponible, le changement renvoie une erreur au lieu de simuler une réussite.
+- Le wiki expose la page standard Requêtes ainsi que `Special:RequetesPF2`. Le tableau Kanban comporte quatre colonnes via `pf2requests` et `pf2requestsupdate` ; lecture publique, changement des statuts pour les comptes Wiki connectés avec jeton CSRF, puis API backend interne protégée par `PF2_WIKI_LOGIN_INTERNAL_KEY`. L'interface réactive les boutons après chaque changement.
+- Le Kanban garde SQLite comme source de vérité même si Discord est temporairement hors ligne. Un avertissement est enregistré côté API lorsque la projection Discord est impossible.
 
-Cette première implémentation exige encore une validation de bout en bout après déploiement (droits d'épinglage du bot, enregistrement des commandes et appels MediaWiki). La compilation TypeScript a été vérifiée ; l'analyse syntaxique PHP doit être exécutée dans un environnement doté de PHP.
+**Contrôles :** tests Jest `Pf2RequestService.spec.ts` et `DiscordCommandsService.spec.ts`, test JavaScript du Kanban `pf2-requests.test.cjs`, lint PHP de l'API MediaWiki, build `api-jdr` ; vérifier ensuite les six transitions réelles et la synchronisation Discord.
 
 La page MediaWiki standard Requêtes embarque le Kanban avec un conteneur HTML identifié pf2-requests-board et charge le module depuis BeforePageDisplay. Consultation publique, changement des statuts possible par tout compte Wiki connecté (jeton CSRF) ; le backend interne reste protégé par clé serveur. La page spéciale Spécial:RequetesPF2 reste disponible comme accès direct.
 

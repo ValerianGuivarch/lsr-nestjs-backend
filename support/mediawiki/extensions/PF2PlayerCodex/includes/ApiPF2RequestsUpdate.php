@@ -2,7 +2,7 @@
 class ApiPF2RequestsUpdate extends ApiBase {
  public function execute() {
   $p=$this->extractRequestParams();
-  if (!in_array($p['status'],['requested','in_progress','done'],true) || $p['id']<1) $this->dieWithError('Requête ou état invalide.');
+  if (!in_array($p['status'],['requested','in_progress','review','done'],true) || $p['id']<1) $this->dieWithError('Requête ou état invalide.');
   $row=PF2RequestsBridge::call($this,'POST','/'.(int)$p['id'].'/status',['status'=>$p['status']]);
   $this->getResult()->addValue(null,'pf2requestsupdate',$row);
  }

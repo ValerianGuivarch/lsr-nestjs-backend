@@ -1,7 +1,7 @@
 (function(){
  const root=document.getElementById('pf2-requests-board'); if(!root)return;
  const api=new mw.Api();let busy=false; const canEdit=!!mw.config.get('wgUserName');
- const states=[['requested','Demandé'],['in_progress','En cours'],['done','Terminé']];
+ const states=[['requested','Demandé'],['in_progress','En cours'],['review','À valider'],['done','Terminé']];
  function el(tag,text,cl){const n=document.createElement(tag);if(text!==null)n.textContent=text;if(cl)n.className=cl;return n}
  async function render(){
   root.textContent='Chargement des requêtes…';
@@ -20,7 +20,7 @@
      if(canEdit) for(const [next,nextLabel] of states.filter(([key])=>key!==status)){
       const b=el('button','→ '+nextLabel);b.type='button';b.disabled=busy;
       b.addEventListener('click',async()=>{if(busy)return;busy=true;
-       try{await api.postWithToken('csrf',{action:'pf2requestsupdate',id:r.id,status:next,format:'json'});await render()}
+       try{await api.postWithToken('csrf',{action:'pf2requestsupdate',id:r.id,status:next,format:'json'});busy=false;await render()}
        catch(e){mw.notify('Échec de synchronisation Discord : '+e,{type:'error'})}
        finally{busy=false}
       });

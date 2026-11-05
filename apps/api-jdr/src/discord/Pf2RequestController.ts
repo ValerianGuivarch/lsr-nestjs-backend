@@ -14,9 +14,12 @@ export class Pf2RequestController {
   @Post(':id/status')
   async change(@Headers('x-pf2-wiki-key') key='',@Param('id') id='',@Body() body:{status?:RequestStatus}) {
     this.guard(key)
-    if(!['requested','in_progress','done'].includes(body.status||''))throw new BadRequestException('Statut invalide')
-    const client=this.discord.requestClient()
-    if(!client)throw new BadRequestException('Bot Discord indisponible')
-    return this.requests.change(client,Number(id),body.status!)
+    if (!['requested', 'in_progress', 'review', 'done'].includes(body.status || '')) {
+      throw new BadRequestException('Statut invalide')
+    }
+    const requestId = Number(id)
+    if (!Number.isSafeInteger(requestId) || requestId < 1) throw new BadRequestException('Requête invalide')
+    // The wiki remains writable while the bot is offline.
+    return this.requests.change(this.discord.requestClient(), requestId, body.status!)
   }
 }

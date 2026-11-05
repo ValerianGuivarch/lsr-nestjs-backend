@@ -122,7 +122,7 @@ export class DiscordCommandsService {
         .addUserOption(o=>o.setName('demandeur').setDescription('Auteur réel de la demande').setRequired(true))
         .addAttachmentOption(o=>o.setName('image').setDescription('Capture facultative'))
         .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild).toJSON(),
-      ...(['requete-demande','requete-encours','requete-termine'] as const).map(name=>
+      ...(['requete-demande','requete-encours','requete-a-valider','requete-termine'] as const).map(name=>
         new SlashCommandBuilder().setName(name).setDescription('Modifier le statut de la requête dans ce fil.')
           .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild).toJSON()),
       new SlashCommandBuilder().setName('random-perso').setDescription('Tire au hasard une ascendance, une classe et un genre.').setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild).toJSON(),
@@ -3068,7 +3068,7 @@ export class DiscordCommandsService {
       if(!this.isAdmin(interaction)){await interaction.reply({content:'Commande réservée aux administrateurs.',ephemeral:true});return}
       const item=await this.requests.byThread(interaction.channelId)
       if(!item){await interaction.reply({content:'Cette commande doit être exécutée dans le fil d’une requête.',ephemeral:true});return}
-      const status:RequestStatus=action==='requete-encours'?'in_progress':action==='requete-termine'?'done':'requested'
+      const status: RequestStatus = action === 'requete-encours' ? 'in_progress' : action === 'requete-a-valider' ? 'review' : action === 'requete-termine' ? 'done' : 'requested'
       await interaction.deferReply({ephemeral:true})
       await this.requests.change(interaction.client,item.id,status)
       await interaction.editReply('État mis à jour.')
