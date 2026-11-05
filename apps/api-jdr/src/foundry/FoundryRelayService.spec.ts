@@ -92,6 +92,30 @@ describe('FoundryRelayService', () => {
     expect(fetchMock).toHaveBeenCalledWith(expect.stringContaining('/update?clientId=world-1&uuid=Actor.hero'), expect.objectContaining({ body: JSON.stringify({ data: { 'flags.pf2e-val-toolkit.xpc': 1_674 } }) }))
   })
 
+  it('reads levels without writing or migrating any Foundry Actor', async () => {
+    const fetched: string[] = []
+    jest.spyOn(global, 'fetch').mockImplementation(async (input) => {
+      const url = String(input)
+      fetched.push(url)
+      if (url.endsWith('/clients')) return new Response(JSON.stringify({ clients: [{ clientId: 'world-1', isOnline: true }] }))
+      if (url.includes('/structure?')) return new Response(JSON.stringify({
+        data: { entities: { actors: [{ uuid: 'Actor.hero', name: 'Héros' }] } },
+      }))
+      if (url.includes('/get?')) return new Response(JSON.stringify({ entity: [{
+        uuid: 'Actor.hero', name: 'Héros', type: 'character',
+        system: { details: { level: { value: 4 }, xp: { value: 200 } } },
+      }] }))
+      throw new Error(`Unexpected write/request: ${url}`)
+    })
+    const players = await new FoundryRelayService().listPlayerLevelsReadOnly()
+    expect(players).toHaveLength(1)
+    expect(players[0]).toEqual(expect.objectContaining({
+      uuid: 'Actor.hero', name: 'Héros', foundryLevel: 4, level: 4,
+    }))
+    expect(fetched.some(url => url.includes('/update?'))).toBe(false)
+    expect(fetched.some(url => url.includes('/get?'))).toBe(true)
+  })
+
   it('reads only root world Actors and limits detail requests while selecting PF2e characters', async () => {
     const rootActors = ['zara', 'bryn', 'nora', 'aimee', 'npc', 'dorian']
     const requestedActors: string[] = []
