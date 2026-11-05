@@ -2253,12 +2253,61 @@ export class DiscordCommandsService {
   }
 
   /**
+   * A planned session already has an authoritative group in its original
+   * Discord announcement. Reading thread membership alone misses invitees
+   * who never joined or wrote a message (and may include spectators).
+   *
+   * Confirm the official channel, bot author and matching session date
+   * before using this group. Do not require exactly four participants:
+   * /modifier-groupe-seance can change the original proposed group.
+   */
+  private async recapPlannedSessionUserIds(interaction: ChatInputCommandInteraction): Promise<Set<string> | null> {
+    const thread = interaction.channel
+    const client = interaction.client
+    if (!thread?.isThread() || !/^Séance \d{2}\/\d{2}$/.test(thread.name)
+      || !thread.parentId || !client?.user?.id) return null
+
+    try {
+      const parent = await client.channels.fetch(thread.parentId)
+      if (!parent || !('name' in parent) || parent.name !== 'objectif-prochaine-mission') return null
+      const starter = await thread.fetchStarterMessage({ force: true })
+      if (!starter || starter.author?.id !== client.user.id) return null
+
+      const lines = starter.content.split('\n')
+      const group = lines.find(line => line.startsWith('**Groupe proposé :** ') || line.startsWith('Avec '))
+      if (!group) return null
+      const ids = [...group.matchAll(/<@!?(\d+)>/g)].map(match => match[1])
+      if (!ids.length || new Set(ids).size !== ids.length) return null
+
+      let date = /^\[PF2-SESSION:(\d{4}-\d{2}-\d{2})\]$/m.exec(starter.content)?.[1] ?? ''
+      // Announcements before the marker used a dated first line and a source URL.
+      if (!date && lines.some(line => line.startsWith('Source : https://discord.com/channels/'))) {
+        const match = /^\*\*Séance du (?:Lundi|Mardi|Mercredi|Jeudi|Vendredi|Samedi|Dimanche) (\d{1,2}) (\p{L}+) (\d{4})\*\*$/u.exec(lines[0])
+        if (match) {
+          const month = PLANNING_MONTHS.indexOf(match[2].toLocaleLowerCase('fr') as typeof PLANNING_MONTHS[number]) + 1
+          if (month) date = match[3] + '-' + String(month).padStart(2, '0') + '-' + match[1].padStart(2, '0')
+        }
+      }
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || !Number.isFinite(Date.parse(date + 'T00:00:00Z'))) return null
+      if (thread.name !== 'Séance ' + date.slice(8, 10) + '/' + date.slice(5, 7)) return null
+      return new Set(ids)
+    } catch (error) {
+      this.logger.warn(`recap-pjs: impossible de lire les inscrits de la séance : ${error instanceof Error ? error.message : String(error)}`)
+      return null
+    }
+  }
+
+  /**
    * The recap concerns only this Discord conversation, never every user
    * allowed to view the parent channel. A thread includes its joined members
    * and recent authors; a plain text channel only exposes recent authors.
    * If Discord prevents either lookup, fail closed to the command author.
    */
   private async recapDiscussionUserIds(interaction: ChatInputCommandInteraction): Promise<Set<string>> {
+    // Official session roster takes priority over thread subscribers/authors.
+    const plannedGroup = await this.recapPlannedSessionUserIds(interaction)
+    if (plannedGroup) return plannedGroup
+
     const ids = new Set<string>([interaction.user.id])
     const channel = interaction.channel
     if (!channel) return ids

@@ -33,7 +33,8 @@ Commandes principales :
 
 `/recap-pjs` construit un récapitulatif à partir des séances publiées, **limité aux joueurs identifiés dans la discussion Discord où la commande est lancée** :
 
-- dans un fil, le bot utilise les membres du fil et les auteurs des 100 derniers messages ; dans un salon texte classique, Discord ne permet pas d'obtenir tous les lecteurs et le bot utilise les auteurs des 100 derniers messages ; l'auteur de la commande est toujours inclus ;
+- **dans un fil de séance créé par le bot** (ex. `#objectif-prochaine-mission → Séance 05/11`), la liste de référence est le **groupe proposé dans le message initial de l'annonce** : un joueur prévu mais non abonné au fil ou silencieux est inclus, et un simple spectateur ayant commenté est exclu. Le bot vérifie le salon parent, l'auteur et la date du message ; le groupe peut compter plus de quatre personnes après modification manuelle ;
+- dans les autres fils, le bot utilise les membres du fil et les auteurs des 100 derniers messages ; dans un salon texte classique, Discord ne fournit pas la liste des lecteurs et le bot utilise les auteurs des 100 derniers messages ; l'auteur de la commande est inclus uniquement dans ces cas génériques ;
 - avoir seulement la permission de lire le salon ne suffit pas à apparaître ; si la récupération des membres ou messages échoue, le bot n'ajoute pas tous les joueurs par défaut ;
 - les noms sont affichés **sans mentions Discord**, tant dans l'aperçu privé que dans le message public après validation (aucune notification par tag) ;
 - les joueurs n'ayant joué aucune séance sont exclus ;

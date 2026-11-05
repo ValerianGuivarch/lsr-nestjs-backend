@@ -1143,6 +1143,106 @@ describe('DiscordCommandsService', () => {
     expect(getNpcSummary).not.toHaveBeenCalled()
   })
 
+  it('uses the bot announcement roster for Séance 05/11 even if Sameh never joined or wrote in the thread', async () => {
+    const editReply = jest.fn().mockResolvedValue(undefined)
+    const ids = {
+      julien: '308566148931387393', sameh: '688791427253403679',
+      eric: '399621722158137346', marinella: '404629333534179338',
+      tom: '134346709487714304',
+    }
+    const members = { fetch: jest.fn().mockResolvedValue(new Map([
+      [ids.julien, { id: ids.julien }],
+      [ids.eric, { id: ids.eric }],
+      [ids.marinella, { id: ids.marinella }],
+    ])) }
+    const messages = { fetch: jest.fn().mockResolvedValue(new Map([
+      ['m1', { author: { id: ids.tom, bot: false } }],
+      ['m2', { author: { id: ids.eric, bot: false } }],
+    ])) }
+    const starter = {
+      author: { id: 'bot-1' },
+      content: [
+        '**Séance du Jeudi 5 novembre**',
+        `**Groupe proposé :** <@${ids.julien}>, <@${ids.sameh}>, <@${ids.eric}>, <@${ids.marinella}>`,
+        '[PF2-SESSION:2026-11-05]',
+      ].join('\n'),
+    }
+    const fetchStarterMessage = jest.fn().mockResolvedValue(starter)
+    const channel = {
+      isThread: () => true, isTextBased: () => true,
+      name: 'Séance 05/11', parentId: 'parent-1',
+      members, messages, fetchStarterMessage,
+    }
+    const client = {
+      user: { id: 'bot-1' },
+      channels: { fetch: jest.fn().mockResolvedValue({ name: 'objectif-prochaine-mission' }) },
+    }
+    const service = new DiscordCommandsService({
+      listSessions: jest.fn().mockResolvedValue([
+        { sessionNumber: 1, date: '2026-10-17', published: true,
+          participants: ['Actor.jilkra', 'Actor.neyla', 'Actor.pepin', 'Actor.sashka', 'Actor.eryn'] },
+      ]),
+      listPlayerIdentities: jest.fn().mockResolvedValue([]),
+      readFoundryActorCache: jest.fn().mockResolvedValue([
+        { uuid: 'Actor.jilkra', name: 'Jilkra (Julien)' },
+        { uuid: 'Actor.neyla', name: 'Neyla (Sameh)' },
+        { uuid: 'Actor.pepin', name: 'Pépin (Eric)' },
+        { uuid: 'Actor.sashka', name: 'Sashka (Marinella)' },
+        { uuid: 'Actor.eryn', name: 'Eryn (Tom)' },
+      ]),
+      readFoundryPlayerLevels: jest.fn().mockResolvedValue(new Map([
+        ['Actor.jilkra', { foundryLevel: 3, theoreticalLevel: 3 }],
+        ['Actor.neyla', { foundryLevel: 4, theoreticalLevel: 4 }],
+        ['Actor.pepin', { foundryLevel: 2, theoreticalLevel: 2 }],
+        ['Actor.sashka', { foundryLevel: 3, theoreticalLevel: 3 }],
+        ['Actor.eryn', { foundryLevel: 4, theoreticalLevel: 4 }],
+      ])),
+    } as never, {
+      listActors: jest.fn().mockRejectedValue(new Error('No Foundry world online')),
+      listPlayers: jest.fn().mockRejectedValue(new Error('No Foundry world online')),
+    } as never)
+
+    await service.handle({
+      commandName: 'recap-pjs', client, channel,
+      user: { id: '492387405760823297' }, // The GM is not in the proposed group
+      id: 'november-session-recap',
+      deferReply: jest.fn().mockResolvedValue(undefined),
+      editReply,
+    } as never)
+    const payload = editReply.mock.calls[0][0]
+    const content = payload.content as string
+    expect(content).toContain('Jilkra — niveau réel 3')
+    expect(content).toContain('Neyla — niveau réel 4')
+    expect(content).toContain('Pépin — niveau réel 2')
+    expect(content).toContain('Sashka — niveau réel 3')
+    expect(content).not.toContain('Eryn')
+    expect(content).not.toContain('Tom')
+    expect(content).not.toMatch(/<@!?\d+>/)
+    expect(payload.components).toHaveLength(1)
+    expect(client.channels.fetch).toHaveBeenCalledWith('parent-1')
+    expect(fetchStarterMessage).toHaveBeenCalledWith({ force: true })
+    expect(members.fetch).not.toHaveBeenCalled()
+    expect(messages.fetch).not.toHaveBeenCalled()
+  })
+
+  it('supports a manually extended group of five on an official session thread', async () => {
+    const service = new DiscordCommandsService({} as never, {} as never)
+    const ids = ['308566148931387393', '688791427253403679', '399621722158137346', '404629333534179338', '134346709487714304']
+    const channel = {
+      isThread: () => true, name: 'Séance 05/11', parentId: 'parent-1',
+      fetchStarterMessage: jest.fn().mockResolvedValue({
+        author: { id: 'bot-1' },
+        content: `**Groupe proposé :** ${ids.map(id => `<@${id}>`).join(', ')}\n[PF2-SESSION:2026-11-05]`,
+      }),
+    }
+    const result = await (service as unknown as { recapPlannedSessionUserIds: (interaction: unknown) => Promise<Set<string> | null> })
+      .recapPlannedSessionUserIds({
+        channel,
+        client: { user: { id: 'bot-1' }, channels: { fetch: jest.fn().mockResolvedValue({ name: 'objectif-prochaine-mission' }) } },
+      })
+    expect(result).toEqual(new Set(ids))
+  })
+
   it('filters a text-channel recap to recent authors and the requester, not all viewers', async () => {
     const editReply = jest.fn().mockResolvedValue(undefined)
     const channel = {
