@@ -252,6 +252,26 @@ Lors du chargement du Toolkit :
 
 Ainsi, modifier une séance modifie l’historique source ; le recalcul Toolkit remet ensuite Foundry en cohérence.
 
+### 10.8 Cache des niveaux PJ pour Discord (5 novembre 2026)
+
+La commande Discord `/recap-pjs` doit afficher le **niveau réel** (fiche Foundry) et le **niveau théorique** (courbe XPC) même lorsque personne n'a ouvert Foundry au moment de la commande.
+
+Le Toolkit `scripts/player-level-sync.js`, lancé depuis `scripts/main.js` uniquement par le **premier GM actif**, attend que `syncCareerXpFromResumes()` ait terminé son recalcul et les éventuelles mises à jour d'Actors. Il envoie ensuite un instantané des personnages de type `character` possédés par des joueurs :
+
+```text
+POST <API PF2 MJ>/player-codex/foundry-level-snapshot
+x-pf2-foundry-sync-key: <clé déjà configurée dans discordCharacterChatKey>
+{ "players": [{ "uuid": "Actor.…", "foundryLevel": 4, "xpc": 6500 }] }
+```
+
+- L'API contrôle la clé `PF2_FOUNDRY_CHAT_SYNC_KEY`, la forme des UUID, les valeurs et les doublons. Elle calcule elle-même `theoreticalLevel` par `levelForCareerXp(xpc)`, puis fusionne les niveaux dans `pf2.sqlite` via `saveFoundryPlayerLevels`. Aucun niveau théorique fourni par le navigateur n'est accepté comme source de vérité.
+- Un changement d'Actor PJ déclenche un nouvel envoi après regroupement des événements. Un instantané identique n'est pas renvoyé ; les erreurs réseau font l'objet de quelques nouvelles tentatives.
+- Les envois n'écrivent **aucune** donnée dans les Actors Foundry. La synchronisation des XPC et de l'XP native reste la responsabilité de la procédure existante du Toolkit.
+- L'API conserve aussi sa capture périodique en lecture seule comme filet de sécurité. Si Foundry et le cache sont tous deux absents, `/recap-pjs` indique `?` au lieu d'inventer une valeur.
+- **Limite métier :** le Toolkit aligne actuellement automatiquement le niveau de la fiche PF2e sur la courbe XPC. Une absence de choix de dons, compétences ou autres éléments d'une montée de niveau ne peut pas être diagnostiquée par la seule comparaison des deux nombres. Cette fonctionnalité requiert un contrôle distinct de la fiche.
+
+**Installation :** le monde Foundry doit avoir le réglage restreint `pf2e-val-toolkit.discordCharacterChatKey` configuré avec la même clé que `PF2_FOUNDRY_CHAT_SYNC_KEY` côté API. Aucune nouvelle clé ni ouverture d'endpoint public non authentifié n'est nécessaire.
+
 ---
 
 ## 11. Synchronisation portrait → token
