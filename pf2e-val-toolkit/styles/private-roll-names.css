@@ -24,3 +24,26 @@
   gap: 0.5rem;
   flex-wrap: wrap;
 }
+
+/*
+ * Images posted as chat message content may have a fixed width/height in the
+ * generated HTML. Foundry clips overflowing message contents; when one
+ * dimension stays fixed, a landscape image can be cut off on the right.
+ *
+ * Limit this to standalone illustrations. Do not resize dice, item icons,
+ * embedded PF2e cards or the private-roll portrait in the message header.
+ */
+.chat-message .message-content > img,
+.chat-message .message-content > a > img,
+.chat-message .message-content > p > img,
+.chat-message .message-content > p > a > img,
+.chat-message .message-content > figure img {
+  display: block;
+  box-sizing: border-box;
+  width: auto !important;
+  height: auto !important;
+  max-width: 100% !important;
+  max-height: 75vh;
+  object-fit: contain !important;
+  margin-inline: auto;
+}
