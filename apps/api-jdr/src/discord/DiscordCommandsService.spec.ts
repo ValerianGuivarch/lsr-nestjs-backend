@@ -1056,8 +1056,8 @@ describe('DiscordCommandsService', () => {
     expect(payload.components[0].toJSON().components[0].label).toBe('Publier')
     expect(result).toContain('**David — 2 séances**')
     expect(result).toContain('dernière séance : 08/09/2026')
-    expect(result).toContain('Éos — niveau 2 (1 niveau à faire !) — 2 séances')
-    expect(result).toContain('Pépin — niveau 2 — 1 séance')
+    expect(result).toContain('Éos — niveau réel 2 · théorique 3 — ⚠️ 1 niveau à faire ! — 2 séances')
+    expect(result).toContain('Pépin — niveau réel 2 · théorique 2 — 1 séance')
     expect(result).not.toContain('Nora')
     expect(result).not.toContain('Séances communes')
   })
@@ -1081,9 +1081,53 @@ describe('DiscordCommandsService', () => {
 
     await service.handle({ commandName: 'recap-pjs', deferReply, editReply, user: { id: 'player-1' }, id: 'interaction-level-fallback' } as never)
     const result = editReply.mock.calls[0][0].content as string
-    expect(result).toContain('Pépin — niveau 4 — 1 séance')
-    expect(result).not.toContain('niveau ?')
+    expect(result).toContain('Pépin — niveau réel 4 · théorique ? — 1 séance')
+    expect(result).toContain('⚠️ Certains niveaux ne sont pas disponibles')
+    expect(result).not.toContain('niveau réel ?')
     expect(result).toContain('dernière séance : 01/10/2026')
+  })
+
+  it('shows saved real and theoretical levels with Foundry offline, including level-ups due', async () => {
+    const deferReply = jest.fn().mockResolvedValue(undefined)
+    const editReply = jest.fn().mockResolvedValue(undefined)
+    const cached = new Map([
+      ['Actor.pepin', { foundryLevel: 4, theoreticalLevel: 5 }],
+      ['Actor.eryn', { foundryLevel: 6, theoreticalLevel: 6 }],
+    ])
+    const getNpcSummary = jest.fn()
+    const service = new DiscordCommandsService({
+      listSessions: jest.fn().mockResolvedValue([
+        { sessionNumber: 1, date: '2026-10-17', published: true, participants: ['Actor.pepin', 'Actor.eryn'] },
+      ]),
+      listPlayerIdentities: jest.fn().mockResolvedValue([]),
+      readFoundryActorCache: jest.fn().mockResolvedValue([
+        { uuid: 'Actor.pepin', name: 'Pépin (Eric)' },
+        { uuid: 'Actor.eryn', name: 'Eryn (Tom)' },
+      ]),
+      readFoundryPlayerLevels: jest.fn().mockResolvedValue(cached),
+      saveFoundryActorCache: jest.fn(), saveFoundryPlayerLevels: jest.fn(),
+    } as never, {
+      listActors: jest.fn().mockRejectedValue(new Error('No Foundry world online')),
+      listPlayers: jest.fn().mockRejectedValue(new Error('No Foundry world online')),
+      getNpcSummary,
+    } as never)
+
+    await service.handle({ commandName: 'recap-pjs', deferReply, editReply, user: { id: 'player-1' }, id: 'cached-levels' } as never)
+    const result = editReply.mock.calls[0][0].content as string
+    expect(result).toContain('Pépin — niveau réel 4 · théorique 5 — ⚠️ 1 niveau à faire !')
+    expect(result).toContain('Eryn — niveau réel 6 · théorique 6')
+    expect(result).not.toContain('niveau réel ?')
+    expect(getNpcSummary).not.toHaveBeenCalled()
+  })
+
+  it('never invents theoretical levels when no Foundry world or cached level is available', async () => {
+    const service = new DiscordCommandsService({} as never, {} as never)
+    const levels = new Map()
+    expect((service as any).levelLabel('Actor.unknown', levels)).toBe('niveau réel ? · théorique ?')
+    levels.set('Actor.test', { foundryLevel: 7, theoreticalLevel: null })
+    expect((service as any).levelLabel('Actor.test', levels)).toBe('niveau réel 7 · théorique ?')
+    levels.set('Actor.over', { foundryLevel: 8, theoreticalLevel: 6 })
+    expect((service as any).levelLabel('Actor.over', levels)).toContain('niveau réel supérieur au théorique')
   })
 
   it('builds /recap-seance from local data when Foundry is offline, without levels', async () => {
