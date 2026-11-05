@@ -10,6 +10,12 @@ export class Pf2ReputationService implements OnModuleInit {
     await this.db.query(`CREATE TABLE IF NOT EXISTS pf2_reputation_group (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL UNIQUE COLLATE NOCASE, sort_order INTEGER NOT NULL DEFAULT 0)`)
     await this.db.query(`CREATE TABLE IF NOT EXISTS pf2_reputation (id INTEGER PRIMARY KEY AUTOINCREMENT, group_id INTEGER NOT NULL REFERENCES pf2_reputation_group(id), name TEXT NOT NULL UNIQUE COLLATE NOCASE, score INTEGER NOT NULL DEFAULT 0 CHECK(score BETWEEN -50 AND 50), sort_order INTEGER NOT NULL DEFAULT 0)`)
     await this.db.query(`CREATE TABLE IF NOT EXISTS pf2_reputation_history (id INTEGER PRIMARY KEY AUTOINCREMENT, reputation_id INTEGER NOT NULL, previous_score INTEGER NOT NULL, new_score INTEGER NOT NULL, delta INTEGER NOT NULL, reason TEXT NOT NULL DEFAULT '', changed_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)`)
+    await this.db.query(`CREATE TABLE IF NOT EXISTS pf2_reputation_character_modifier (
+      reputation_id INTEGER NOT NULL REFERENCES pf2_reputation(id),
+      player_npc_id TEXT NOT NULL REFERENCES pf2_player_character_profile(npc_id),
+      modifier INTEGER NOT NULL CHECK(modifier BETWEEN -50 AND 50),
+      PRIMARY KEY (reputation_id,player_npc_id)
+    )`)
     // Existing records remain visible; newly created groups and factions are hidden until revealed.
     for (const table of ['pf2_reputation_group','pf2_reputation']) {
       const columns = await this.db.query(`PRAGMA table_info(${table})`)
@@ -31,6 +37,39 @@ export class Pf2ReputationService implements OnModuleInit {
     const items = await this.db.query(`SELECT id,group_id,name,score,sort_order,visible FROM pf2_reputation ${admin?'':'WHERE visible=1'} ORDER BY sort_order,id`)
     return groups.map((g: any)=>({...g,entries:items.filter((r:any)=>r.group_id===g.id)}))
   }
+  async listForWiki(wikiUsername: string, admin: boolean) {
+    const groups = await this.list(admin) as any[]
+    const characters: Array<{npcId:string;displayName:string}> = admin
+      ? await this.db.query('SELECT npc_id AS npcId, display_name AS displayName FROM pf2_player_character_profile WHERE is_player=1 ORDER BY display_name COLLATE NOCASE')
+      : await this.db.query(`SELECT p.npc_id AS npcId, p.display_name AS displayName
+          FROM pf2_player_character_profile p
+          JOIN pf2_player_character_owner o ON o.npc_id=p.npc_id
+          JOIN pf2_wiki_account_link a ON a.discord_user_id=o.discord_user_id
+          WHERE p.is_player=1 AND a.wiki_username=? COLLATE NOCASE ORDER BY p.display_name COLLATE NOCASE`,[wikiUsername])
+    if (characters.length) {
+      const modifiers = await this.db.query('SELECT reputation_id AS reputationId,player_npc_id AS npcId,modifier FROM pf2_reputation_character_modifier')
+      const ids = new Set(characters.map(c => c.npcId))
+      for (const group of groups) for (const entry of group.entries) {
+        entry.modifiers = Object.fromEntries(modifiers
+          .filter((m: any) => ids.has(m.npcId) && m.reputationId===entry.id)
+          .map((m: any) => [m.npcId,m.modifier]))
+      }
+    }
+    return {groups,characters}
+  }
+  async setModifier(id: unknown, playerNpcId: unknown, modifier: unknown) {
+    const i=this.integer(id,1,2147483647)
+    const value=this.integer(modifier,-50,50)
+    if(typeof playerNpcId!=='string'||!playerNpcId)throw new BadRequestException('PJ invalide')
+    if(!(await this.db.query('SELECT 1 FROM pf2_player_character_profile WHERE npc_id=? AND is_player=1',[playerNpcId])).length)
+      throw new NotFoundException('PJ introuvable')
+    if(!(await this.db.query('SELECT 1 FROM pf2_reputation WHERE id=?',[i])).length)throw new NotFoundException('Réputation introuvable')
+    if(value===0) await this.db.query('DELETE FROM pf2_reputation_character_modifier WHERE reputation_id=? AND player_npc_id=?',[i,playerNpcId])
+    else await this.db.query(`INSERT INTO pf2_reputation_character_modifier (reputation_id,player_npc_id,modifier)
+      VALUES (?,?,?) ON CONFLICT(reputation_id,player_npc_id) DO UPDATE SET modifier=excluded.modifier`,[i,playerNpcId,value])
+    return {saved:true}
+  }
+
   private name(value:unknown) {if(typeof value!=='string'||!value.trim()||value.trim().length>120) throw new BadRequestException('Nom invalide (1–120 caractères)');return value.trim()}
   private integer(value:unknown,min:number,max:number) {if(typeof value!=='number'||!Number.isInteger(value)||value<min||value>max)throw new BadRequestException('Valeur entière hors limites');return value}
   async createGroup(name:unknown) {
@@ -50,17 +89,12 @@ export class Pf2ReputationService implements OnModuleInit {
     if(!(await this.db.query('SELECT id FROM pf2_reputation_group WHERE id=?',[g])).length)throw new NotFoundException('Groupe inconnu')
     await this.db.query('UPDATE pf2_reputation SET group_id=?,sort_order=(SELECT COALESCE(MAX(sort_order),-1)+1 FROM pf2_reputation WHERE group_id=?) WHERE id=?',[g,g,i]);return this.list(true)
   }
-  async change(id:unknown,score:unknown,reason:unknown) {
+  async change(id:unknown,score:unknown,_reason:unknown) {
     const i=this.integer(id,1,2147483647),v=this.integer(score,-50,50)
-    const note=typeof reason==='string'?reason.trim():''
-    if(note.length>500)throw new BadRequestException('Motif trop long')
-    await this.db.transaction(async m=>{
-      const rows=await m.query('SELECT score FROM pf2_reputation WHERE id=?',[i]);if(!rows.length)throw new NotFoundException('Réputation inconnue')
-      const previous=Number(rows[0].score)
-      if(previous===v)return
-      await m.query('UPDATE pf2_reputation SET score=? WHERE id=?',[v,i])
-      await m.query('INSERT INTO pf2_reputation_history(reputation_id,previous_score,new_score,delta,reason) VALUES (?,?,?,?,?)',[i,previous,v,v-previous,note])
-    });return this.list(true)
+    const rows=await this.db.query('SELECT score FROM pf2_reputation WHERE id=?',[i])
+    if(!rows.length)throw new NotFoundException('Réputation inconnue')
+    if(Number(rows[0].score)!==v)await this.db.query('UPDATE pf2_reputation SET score=? WHERE id=?',[v,i])
+    return this.list(true)
   }
   /** Add a DELTA once per session, not an absolute score. Supports retries safely. */
   async applySessionDeltas(changes: Array<{ id: number; delta: number }>, sessionId: string) {
