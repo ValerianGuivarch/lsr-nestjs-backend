@@ -13,18 +13,20 @@ const BUTTON_CLASS = "pf2e-val-share-portrait";
 export function shareablePortraitUrl(value) {
   if (typeof value !== "string") return null;
   const src = value.trim();
-  if (!src || /[\u0000-\u001f\u007f<>"'`]/.test(src)) return null;
-  if (/^(?:https?:)?\/\//i.test(src)) {
+  if (!src || /[\u0000-\u001f\u007f<>"]/u.test(src) || src.includes("\\\\")) return null;
+  if (/^https?:\/\//i.test(src)) {
     try {
-      const url = new URL(src, "https://foundry.invalid/");
+      const url = new URL(src);
       return ["http:", "https:"].includes(url.protocol) ? src : null;
     } catch {
       return null;
     }
   }
-  if (/^(?:\/|\.\/|\.\.\/)?[\w%()[\]@+,;=\-.!/]+(?:\?[\w%&=.+-]+)?$/u.test(src)
-    && !src.startsWith("//") && !src.includes("..")) return src;
-  return null;
+  // Keep spaces, apostrophes and accents found in real Foundry file paths.
+  // Reject external protocols and traversal, not normal asset filenames.
+  if (/^[a-z][a-z\d+.-]*:/i.test(src) || src.startsWith("//")
+    || src.startsWith("..") || src.includes("/../")) return null;
+  return src;
 }
 
 export function makePortraitChatContent(src) {
@@ -63,7 +65,9 @@ export function injectPortraitShareButton(application, html) {
   let added = 0;
   for (const container of root.querySelectorAll(".image-container")) {
     const portrait = container.querySelector("img.profile-img, img.actor-image, img");
-    if (!portrait || container.querySelector(`.${BUTTON_CLASS}`)) continue;
+    // Share only the Actor portrait hosts used by PF2e sheets.
+    if (!portrait || !container.querySelector('[data-action="show-image"]')
+      || container.querySelector(`.${BUTTON_CLASS}`)) continue;
     // Keep buttons of Foundry, Tokener and Quick Upload as they are.
     const button = root.ownerDocument.createElement("button");
     button.type = "button";
