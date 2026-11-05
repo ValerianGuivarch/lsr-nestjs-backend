@@ -55,3 +55,7 @@ la possibilité de modifier directement les deux niveaux de réputation.
 - Les mutations passent toujours par pf2reputationsupdate (CSRF + vérification des droits) vers l'API interne ; aucune donnée existante n'est automatiquement modifiée par le correctif.
 
 Fichiers : support/mediawiki/extensions/PF2PlayerCodex/includes/PF2ReputationBridge.php, resources/pf2-reputations.js et resources/pf2-reputations.css. Contrôles : resources/pf2-reputations.test.cjs, tests/ReputationBridgePermissionsTest.php et lint PHP.
+
+### Correctif d'affichage des raccourcis (Foundry V14)
+
+PF2e HUD utilise `ApplicationV2` et déclenche `renderApplicationV2`, **pas** l'ancien événement `renderApplication`. Lors du rendu de la barre latérale `extras`, le Toolkit injecte les trois raccourcis dans l'élément HTML en cours de rendu avec l'Actor réel de PF2e HUD, même si aucun token n'est sélectionné. Les raccourcis sont réservés aux personnages possédant le don Hobnobber et ne modifient jamais les relations/réputations automatiquement. Test de régression : `node pf2e-val-toolkit/tests/interlude-hud-v14.mjs`.
