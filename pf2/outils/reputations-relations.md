@@ -41,3 +41,17 @@ Les activités respectent le temps de trajet et la disponibilité du PJ. On n'ef
 Tester en compte MJ et en compte joueur : sélecteur et scores, visibilité des factions, CRUD des Relations, liens vers les fiches PNJ et trois raccourcis HUD avec le monde Foundry connecté. En particulier, tester la compatibilité des modales et du jet `actor.getStatistic(...).roll` avec le PF2e installé.
 
 Le code du module est réutilisable pour d'autres PJ ; aucun identifiant d'acteur particulier n'y est figé.
+
+## Correctif de l'édition MJ des réputations (5 novembre 2026)
+
+La nouvelle sélection de vue « Groupe / personnage » ne doit jamais retirer au MJ
+la possibilité de modifier directement les deux niveaux de réputation.
+
+- En affichage **Groupe**, le MJ dispose de « Modifier le groupe » sur chaque faction.
+- En affichage **PJ**, il dispose, sur la même faction, de **« Modifier le groupe » et « Modifier [nom du PJ] »** ; les quatre raccourcis ±1/±5 continuent d'agir sur la vue sélectionnée.
+- Pour **Modifier [PJ]**, le MJ saisit le **score final souhaité** pour le personnage, entre –50 et +50. L'interface en déduit l'écart (score final − score collectif), qui est le seul nombre envoyé à l'API et stocké dans la table de modificateurs personnels. Cela préserve le modèle collectif + individuel et ne touche pas aux autres PJ.
+- Si le score final nécessite un écart hors de –50 à +50, l'interface explique la limite réelle de la faction au lieu d'enregistrer une valeur incorrecte. Les valeurs sont validées et les annulations ne changent rien.
+- Le droit d'écriture du wiki est **pf2sessions-admin** (attribué aux sysop), avec conservation du droit historique delete comme compatibilité. La lecture reste possible selon les règles actuelles ; les joueurs n'obtiennent pas de boutons d'administration.
+- Les mutations passent toujours par pf2reputationsupdate (CSRF + vérification des droits) vers l'API interne ; aucune donnée existante n'est automatiquement modifiée par le correctif.
+
+Fichiers : support/mediawiki/extensions/PF2PlayerCodex/includes/PF2ReputationBridge.php, resources/pf2-reputations.js et resources/pf2-reputations.css. Contrôles : resources/pf2-reputations.test.cjs, tests/ReputationBridgePermissionsTest.php et lint PHP.

@@ -26,21 +26,42 @@
   catch(e){mw.notify('Modification impossible : '+e,{type:'error'})}
   finally{busy=false}
  }
- function editScore(r){
-  if(selected==='group'){
-   const raw=prompt('Nouvelle réputation collective pour '+r.name+' (−50 à +50)',String(r.score));
-   if(raw===null)return;
-   const score=Number(raw.trim());
-   if(!Number.isInteger(score)||score< -50||score>50){mw.notify('Entier de −50 à +50 attendu.',{type:'error'});return}
-   action({operation:'score',id:r.id,score});
-  }else{
-   const current=Number(r.modifiers?.[selected])||0;
-   const raw=prompt('Écart personnel de '+currentCharacter().displayName+' pour '+r.name+' (−50 à +50)',String(current));
-   if(raw===null)return;
-   const modifier=Number(raw.trim());
-   if(!Number.isInteger(modifier)||modifier< -50||modifier>50){mw.notify('Entier de −50 à +50 attendu.',{type:'error'});return}
-   action({operation:'modifier',id:r.id,character:selected,modifier});
+ function parseScore(raw){
+  if(raw===null)return null;
+  const trimmed=raw.trim();
+  const value=Number(trimmed);
+  if(trimmed===''||!Number.isInteger(value)||value< -50||value>50){
+   mw.notify('Entier de −50 à +50 attendu.',{type:'error'});
+   return null;
   }
+  return value;
+ }
+ function editGroupScore(r){
+  const raw=prompt('Réputation du groupe pour '+r.name+' (−50 à +50)',String(r.score));
+  const score=parseScore(raw);
+  if(score!==null && score!==r.score)void action({operation:'score',id:r.id,score});
+ }
+ function editPersonalScore(r){
+  const character=currentCharacter();
+  if(!character)return;
+  const value=scoreOf(r);
+  const raw=prompt('Réputation de '+character.displayName+' pour '+r.name+
+   ' (−50 à +50)\nGroupe : '+signed(r.score)+' · Réputation actuelle : '+signed(value),
+   String(value));
+  const target=parseScore(raw);
+  if(target===null)return;
+  // The API stores the deviation from the group score, never a second
+  // absolute score. Use the requested displayed score to derive that delta.
+  const modifier=target-r.score;
+  if(modifier< -50||modifier>50){
+   mw.notify('Cette valeur dépasse la limite des écarts personnels (−50 à +50).'+
+    ' Pour ce groupe, la réputation personnelle doit rester entre '+
+    signed(Math.max(-50,r.score-50))+' et '+signed(Math.min(50,r.score+50))+'.',
+    {type:'error'});
+   return;
+  }
+  if(modifier!==(Number(r.modifiers?.[selected])||0))
+   void action({operation:'modifier',id:r.id,character:selected,modifier});
  }
  function shift(r,delta){
   if(selected==='group'){
@@ -111,7 +132,9 @@
     const foot=el('div',null,'pf2-rep-footer');
     foot.append(el('small',label(score)+(selected==='group'?'':' · Groupe '+signed(r.score)+' · Écart '+signed(Number(r.modifiers?.[selected])||0))));
     if(canEdit){const tools=el('div',null,'pf2-rep-actions');
-     tools.append(button('−5',()=>shift(r,-5)),button('−1',()=>shift(r,-1)),button('+1',()=>shift(r,1)),button('+5',()=>shift(r,5)),button('Éditer',()=>editScore(r)));
+     tools.append(button('−5',()=>shift(r,-5)),button('−1',()=>shift(r,-1)),button('+1',()=>shift(r,1)),button('+5',()=>shift(r,5)));
+     tools.append(button('Modifier le groupe',()=>editGroupScore(r),'pf2-rep-button pf2-rep-edit'));
+     if(selected!=='group')tools.append(button('Modifier '+currentCharacter().displayName,()=>editPersonalScore(r),'pf2-rep-button pf2-rep-edit pf2-rep-edit-personal'));
      if(selected==='group')tools.append(button('Déplacer',()=>move(r)));
      foot.append(tools)}
     card.append(foot);list.append(card);

@@ -19,3 +19,8 @@
 .pf2-rep-personal-marker{position:absolute;top:-10px;transform:translateX(-50%);color:#ba7c12;text-shadow:0 1px #fff,1px 0 #fff,-1px 0 #fff;font-size:21px;line-height:22px;z-index:5}
 .pf2-rep-group-marker{width:10px;height:10px;border-radius:50%;top:-1px;background:#265f96;border:2px solid #fff}
 .pf2-rep-legend{font-size:.8rem}
+
+/* Edit targets are explicit, even when viewing a character's reputation. */
+.pf2-rep-actions .pf2-rep-edit{font-weight:600;border-color:#72777d}
+.pf2-rep-actions .pf2-rep-edit-personal{color:#1d4e7b;background:#eff6fc;border-color:#a2c4e2}
+.pf2-rep-actions .pf2-rep-edit-personal:hover{background:#dcecfb}

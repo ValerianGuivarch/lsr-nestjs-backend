@@ -1,7 +1,12 @@
 <?php
 use MediaWiki\MediaWikiServices;
 class PF2ReputationBridge {
- public static function isAdmin($user): bool {return $user->isRegistered() && $user->isAllowed('delete');}
+ public static function isAdmin($user): bool {
+  // The PF2 MJ role has its own dedicated Wiki permission. Avoid tying the
+  // reputation editor to the unrelated ability to delete Wiki pages.
+  return $user->isRegistered()
+   && ($user->isAllowed('pf2sessions-admin') || $user->isAllowed('delete'));
+ }
  public static function call($api,$method,$path,$body=null) {
   if($method!=='GET' && !self::isAdmin($api->getUser()))$api->dieWithError('Accès administrateur requis.');
   $services=MediaWikiServices::getInstance();
