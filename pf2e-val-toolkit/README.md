@@ -1326,3 +1326,17 @@ Test : tests/xpc-progression.mjs.
 Traitement temporaire `scripts/map-maintenance-once.js`, déclenché lors de l'arrivée du MJ actif dans le monde `test-pf2`, **une seule fois** via la préférence de monde `mapCleanupOneTime20261104`. Il recalcule les groupes de doublons Racooze par dossier, slug, scène source, variante, fingerprint, taille et grille ; conserve l'exemplaire avec le plus de contenu MJ, puis supprime les copies strictes. La suppression utilise les APIs Foundry et télécharge une sauvegarde JSON ; aucune écriture directe de LevelDB. Il traduit aussi les scènes et dossiers via `scripts/map-maintenance-translations.json` sans modifier les chemins d'images ni les IDs Racooze. Un rapport est téléchargé et conservé dans la préférence de monde. L'opération est désactivée après réussite et le code temporaire devra être retiré du Toolkit après contrôle.
 
 Tests : `tests/map-maintenance-once.mjs` ; syntaxe JS vérifiée. Au 4 novembre 2026, le relais ne voit pas de client Foundry actif : **installation déployée, opération dans le monde pas encore exécutée**. L'absence de session MJ implique une connexion/recharge pour que le traitement démarre.
+
+
+## v0.44.12 — Partager le portrait d'un personnage dans le chat
+
+Le MJ dispose d'un quatrième bouton **Partager le portrait dans le chat** (icône de partage), **en bas à gauche de l'image** sur les fiches d'Actor PF2e. Le bouton apparaît au survol, en face du bouton natif « Voir l'image ». Les contrôles Tokener et Quick Upload restent inchangés.
+
+- Un clic publie l'illustration de `Actor.img` dans le **chat public Foundry** pour les joueurs ; aucun autre renseignement de la fiche, nom de monstre ou identifiant d'Actor n'est inséré dans le message.
+- Les images horizontales comme verticales sont dimensionnées sans recadrage (`max-width: 100%`, `object-fit: contain`).
+- Le bouton est **réservé au MJ**, sans permission pour les joueurs ; il ne modifie ni l'Actor, ni le portrait, ni le token.
+- Si le portrait n'est pas partageable, une notification locale avertit le MJ au lieu de publier un message cassé.
+- Code : `scripts/portrait-chat-share.js` et `styles/portrait-chat-share.css`. Tests : `tests/portrait-chat-share.mjs`.
+
+**Attention :** le nom ou l'identité du monstre ne sont pas ajoutés au texte du chat, mais le **chemin du fichier image peut lui-même contenir un nom révélateur**. Prévoir un nom de fichier neutre pour une créature dont l'identité doit rester cachée.
+
