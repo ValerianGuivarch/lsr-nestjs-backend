@@ -20,7 +20,9 @@
     "ApiPF2RequestsUpdate": "includes/ApiPF2RequestsUpdate.php",
     "PF2ReputationBridge": "includes/PF2ReputationBridge.php",
     "ApiPF2Reputations": "includes/ApiPF2Reputations.php",
-    "ApiPF2ReputationsUpdate": "includes/ApiPF2ReputationsUpdate.php"
+    "ApiPF2ReputationsUpdate": "includes/ApiPF2ReputationsUpdate.php",
+    "ApiPF2Relations": "includes/ApiPF2Relations.php",
+    "ApiPF2RelationsUpdate": "includes/ApiPF2RelationsUpdate.php"
   },
   "APIModules": {
     "pf2playercodex": "ApiPF2PlayerCodex",
@@ -31,13 +33,16 @@
     "pf2requests": "ApiPF2Requests",
     "pf2requestsupdate": "ApiPF2RequestsUpdate",
     "pf2reputations": "ApiPF2Reputations",
-    "pf2reputationsupdate": "ApiPF2ReputationsUpdate"
+    "pf2reputationsupdate": "ApiPF2ReputationsUpdate",
+    "pf2relations": "ApiPF2Relations",
+    "pf2relationsupdate": "ApiPF2RelationsUpdate"
   },
   "ResourceModules": {
     "ext.pf2playercodex": {
       "scripts": [
         "resources/pf2-mj-renderer.js",
-        "resources/pf2-player-codex.js"
+        "resources/pf2-player-codex.js",
+        "resources/pf2-relations.js"
       ],
       "styles": [
         "resources/pf2-player-codex.css",

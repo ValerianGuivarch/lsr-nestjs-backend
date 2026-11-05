@@ -8,7 +8,8 @@ class PF2ReputationBridge {
   $base=rtrim((string)$services->getMainConfig()->get('PF2PlayerCodexApiBase'),'/');
   $key=getenv('PF2_WIKI_LOGIN_INTERNAL_KEY') ?: getenv('PF2_JOURNALS_INTERNAL_KEY') ?: '';
   if(!$base || !$key)$api->dieWithError('API PF2 indisponible.');
-  $request=$services->getHttpRequestFactory()->create($base.'/reputations/internal'.$path,['method'=>$method,'timeout'=>12,'postData'=>$body===null?null:json_encode($body)],__METHOD__);
+  $query=$method==='GET' ? '?wikiUsername='.rawurlencode($api->getUser()->isRegistered()?$api->getUser()->getName():'') : '';
+  $request=$services->getHttpRequestFactory()->create($base.'/reputations/internal'.$path.$query,['method'=>$method,'timeout'=>12,'postData'=>$body===null?null:json_encode($body)],__METHOD__);
   $request->setHeader('X-PF2-Wiki-Key',$key);
   $request->setHeader('X-PF2-Wiki-Admin', self::isAdmin($api->getUser()) ? '1' : '0');
   if($body!==null)$request->setHeader('Content-Type','application/json');

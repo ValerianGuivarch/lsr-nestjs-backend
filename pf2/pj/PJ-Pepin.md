@@ -71,6 +71,8 @@ _Aucun élément documenté à ce stade._
 ### Personnalité, morale et progression — travail avec le joueur
 **Constats documentés :** Pépin est sociable et curieux, aime les relations et les accès discrets, et peut voler sans chercher à nuire. Son intérêt pour des groupes de voleurs ne signifie ni adhésion à leurs crimes ni volonté de devenir un assassin. Il tente de faire le bien tout en vivant avec la culpabilité liée à Églantine.
 
+**Orientation choisie pour l'évolution (retour du joueur, novembre 2026) :** éclaireur aventurier tourné vers l'exploration de lieux naturels et de donjons, la détection et l'identification de menaces, et une contribution utile aux combats contre les créatures. Le réseau de relations doit surtout se construire au fil des voyages, auprès des communautés et gens ordinaires de divers pays, plutôt que par les salons mondains d'Absalom. Le léger lien à la nature du léchi (animaux, plantes, magie éventuelle) reste secondaire. Le personnage cherche à connaître les gens et à respecter leurs traditions tout en leur présentant de nouvelles possibilités. Les règles de relations et d'intermèdes correspondantes sont documentées dans [Réputations et Relations](../outils/reputations-relations.md).
+
 **Cadrage encore ouvert :** préciser avec le joueur la place respective de sa foi, de sa recherche de rédemption, de sa sociabilité et de son attrait pour le vol et les réseaux clandestins. Vérifier si Pépin est surtout un éclaireur/infiltrateur, un médiateur des milieux interlopes, un voleur opportuniste aux limites morales personnelles, ou une combinaison de ces aspects.
 
 **Points à aborder lors d'un échange joueur/MJ :**

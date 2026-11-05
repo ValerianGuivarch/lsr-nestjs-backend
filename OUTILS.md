@@ -5,6 +5,7 @@
 - [Architecture et sources de vérité](pf2/outils/architecture.md)
 - [Préparation de séance — guide MJ et partage Discord/Foundry](docs/pf2/session-preparations.md)
 - [Données et persistance](pf2/outils/donnees.md)
+- [Réputations personnelles, Relations et intermèdes PF2](pf2/outils/reputations-relations.md)
 - [Foundry et portraits](pf2/outils/foundry.md)
 - [Wiki, résumés et Discord](pf2/outils/wiki-discord.md)
 - [Fin de séance Discord : XP, pièces, butin et réputations](docs/pf2/discord-session-end.md)

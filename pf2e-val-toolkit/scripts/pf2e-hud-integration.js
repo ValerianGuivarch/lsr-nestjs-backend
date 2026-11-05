@@ -1,3 +1,4 @@
+import { decorateInterludeExtras } from "./interlude-actions.js";
 const MODULE_ID = "pf2e-val-toolkit";
 const HUD_MODULE_ID = "pf2e-hud";
 const RECALL_KNOWLEDGE_UUID = "Compendium.pf2e.actionspf2e.Item.1OagaWtBpVXExToo";
@@ -122,6 +123,7 @@ function refreshHudSidebars() {
       if (enabled(SETTINGS.localizedSort)) sortLocalizedSkills(sidebar);
       if (enabled(SETTINGS.groupRecallKnowledge)) groupRecallKnowledge(sidebar);
     }
+    decorateInterludeExtras();
   } catch (error) {
     console.warn("PF2e Val Toolkit | Intégration PF2e HUD ignorée :", error);
   }
@@ -156,6 +158,14 @@ export function registerPf2eHudIntegrationSettings() {
 
 export function initPf2eHudIntegration() {
   if (!hudActive()) return;
+  // Dynamically load the interlude styling so unrelated manifest edits stay untouched.
+  if (!document.getElementById('pf2e-val-interlude-css')) {
+    const link = document.createElement('link');
+    link.id = 'pf2e-val-interlude-css';
+    link.rel = 'stylesheet';
+    link.href = '/modules/pf2e-val-toolkit/styles/interlude-actions.css';
+    document.head.append(link);
+  }
 
   // ApplicationV2 emits this Foundry hook after it replaces its sidebar HTML.
   Hooks.on("renderApplication", () => scheduleRefresh());
