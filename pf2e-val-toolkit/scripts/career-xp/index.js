@@ -790,12 +790,10 @@ export function initCareerXp() {
 
   exposeApi();
 
-  void syncCareerXpFromResumes().catch(
-    error => {
-      console.error(
-        `${MODULE_ID} | Échec synchro XPC depuis les résumés`,
-        error
-      );
-    }
-  );
+  // Return the initial reconciliation promise so the GM-only level snapshot
+  // can be pushed AFTER XPC and native PF2e XP synchronization finishes.
+  return syncCareerXpFromResumes().catch(error => {
+    console.error(`${MODULE_ID} | Échec synchro XPC depuis les résumés`, error);
+    return { status: "error", updated: 0 };
+  });
 }
