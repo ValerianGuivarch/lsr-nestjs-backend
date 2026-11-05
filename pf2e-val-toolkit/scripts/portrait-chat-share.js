@@ -13,7 +13,7 @@ const BUTTON_CLASS = "pf2e-val-share-portrait";
 export function shareablePortraitUrl(value) {
   if (typeof value !== "string") return null;
   const src = value.trim();
-  if (!src || /[\u0000-\u001f\u007f<>"]/u.test(src) || src.includes("\\\\")) return null;
+  if (!src || /[\u0000-\u001f\u007f<>"]/u.test(src) || src.includes("\\")) return null;
   if (/^https?:\/\//i.test(src)) {
     try {
       const url = new URL(src);
