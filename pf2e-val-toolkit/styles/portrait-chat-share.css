@@ -1,0 +1,61 @@
+/* Fourth image control: bottom-left, opposite Foundry's native "view art". */
+.actor.sheet .image-container > .pf2e-val-share-portrait {
+  position: absolute;
+  bottom: 4px;
+  left: 4px;
+  right: auto;
+  top: auto;
+  z-index: 22;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  min-height: 28px;
+  padding: 0;
+  margin: 0;
+  color: var(--color-text-light-highlight, #f5f2e8);
+  background: rgba(15, 18, 22, 0.78);
+  border: 1px solid rgba(245, 242, 232, 0.7);
+  border-radius: 999px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
+  cursor: pointer;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 120ms ease;
+}
+
+.actor.sheet .image-container:hover > .pf2e-val-share-portrait,
+.actor.sheet .image-container:focus-within > .pf2e-val-share-portrait {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.actor.sheet .image-container > .pf2e-val-share-portrait:hover,
+.actor.sheet .image-container > .pf2e-val-share-portrait:focus-visible {
+  background: rgba(31, 77, 101, 0.95);
+  border-color: rgba(143, 185, 214, 0.95);
+  opacity: 1;
+}
+
+.actor.sheet .image-container > .pf2e-val-share-portrait:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+.actor.sheet .image-container > .pf2e-val-share-portrait i {
+  margin: 0;
+  line-height: 1;
+}
+
+/* Never crop landscape or portrait art in the shared chat message. */
+.chat-message .message-content .pf2e-val-shared-portrait img {
+  display: block;
+  box-sizing: border-box;
+  width: auto !important;
+  height: auto !important;
+  max-width: 100% !important;
+  max-height: 70vh;
+  object-fit: contain !important;
+  margin-inline: auto;
+}
