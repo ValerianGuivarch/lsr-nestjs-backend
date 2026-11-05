@@ -1340,3 +1340,40 @@ Le MJ dispose d'un quatrième bouton **Partager le portrait dans le chat** (icô
 
 **Attention :** le nom ou l'identité du monstre ne sont pas ajoutés au texte du chat, mais le **chemin du fichier image peut lui-même contenir un nom révélateur**. Prévoir un nom de fichier neutre pour une créature dont l'identité doit rester cachée.
 
+
+## v0.44.13 — Coffres personnels et coffre du groupe à la Loge des Éclaireurs (PR)
+
+Sur **La Loge des Eclaireurs**, le Toolkit ajoute au bout de chaque ligne d'objet physique de l'inventaire d'un PJ :
+
+- **Coffre personnel** (icône petite boîte) : envoie la pile vers le coffre lié à ce PJ.
+- **Coffre du groupe** (icône de boîtes empilées) : envoie la pile au coffre commun.
+- Sur une fiche de coffre personnel ou collectif, **Récupérer** (icône main) renvoie l'objet dans l'inventaire du PJ actif.
+
+**Un clic transfère la pile entière ; Maj + clic transfère une seule unité.** La fiche conserve les boutons natifs Porter, Éditer et Supprimer. Les transferts utilisent la fonction native de PF2e, transferItemToActor(), avec fusion des piles et relais MJ natif lorsque le coffre est accessible en tant qu'observateur. Les objets à quantité nulle et les contenants remplis sont refusés. Le Toolkit ne réimplémente pas les transferts et ne modifie aucun Actor au démarrage.
+
+Les boutons n'apparaissent que si **la scène actuellement affichée** est la Loge (identifiant dans lodgeSceneId). Un joueur doit utiliser le **PJ actuellement assigné à son compte Foundry** (game.user.character) ; pas de déduction d'un autre personnage qu'il possède. Un joueur ne peut envoyer un objet qu'au coffre personnel de ce personnage ou au coffre commun, et récupérer des objets que depuis son coffre ou le coffre commun. Un MJ peut administrer les PJ et leurs coffres.
+
+### Association sans nouvelle intervention technique
+
+L'association automatique fonctionne avec la convention de noms déjà utilisée :
+
+- PJ : « Jilkra (Jupi) » → Actor loot « Coffre de Jilkra ».
+- PJ : « Ruhtra (Arthur) » → Actor loot « Coffre de Ruhtra ».
+
+Les accents et la casse sont normalisés. En cas de zéro ou plusieurs correspondances, l'action n'est pas proposée. **Aucun identifiant de PJ ou de propriétaire n'est figé dans le code.**
+
+Pour des noms différents, un MJ peut aller dans **Paramètres du module → PF2e Val Toolkit → Coffres : associations manuelles (JSON)** et saisir par exemple :
+
+    {"4N3WqzZHJ5KTTINr":"UdzbGJTIsO5Xf4RY"}
+
+Les identifiants sont ceux de l'Actor du PJ et de son coffre. Pour un nouveau PJ, créer un Actor loot « Coffre de [nom du PJ] », attribuer le propriétaire individuel et placer un token dans la Loge : la prochaine ouverture de sa fiche suffit, sans modifier le Toolkit.
+
+Autres paramètres de monde modifiables par le MJ : lodgeSceneId (scène) et lodgeGroupChestId (coffre collectif). Les valeurs initiales pointent vers les identifiants Foundry actuels du monde test-pf2.
+
+### Permissions / limites
+
+Les **12 coffres personnels** de La Loge des Eclaireurs ont été corrigés dans Foundry le 5 novembre 2026 par l'API Document : propriété générale à 0, en conservant le propriétaire (niveau 3) et le MJ. La propriété n'est donc plus accordée à tous les joueurs. Le coffre commun est un Actor loot visible avec accès général Observateur (niveau 2), permettant les transferts natifs supervisés par un MJ connecté.
+
+Foundry applique les permissions documentaires **par compte utilisateur**, pas par personnage assigné. Le Toolkit bloque ses boutons lorsque le personnage actif ne correspond pas, mais cette restriction d'interface ne remplace pas un verrou serveur : un utilisateur encore propriétaire d'un coffre peut interagir par les outils natifs. Une interdiction stricte selon le personnage actif, y compris hors de l'interface Toolkit, demanderait un contrôle moteur/serveur distinct. L'implémentation actuelle privilégie les permissions natives sans patch invasif.
+
+Tests automatisés : node pf2e-val-toolkit/tests/lodge-stashes.mjs. Après fusion de la PR, recharge Foundry, ouvre la Loge, teste un transfert avec un compte joueur et un MJ en ligne, puis contrôle le retrait et l'accès à un coffre d'un autre joueur.

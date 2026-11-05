@@ -33,6 +33,7 @@ import { initQuickEffects } from "./quick-effects/index.js";
 import { initTargetContext } from "./target-context/index.js";
 import { initPrivateRollCharacterNames } from "./private-roll-names.js";
 import { initPortraitChatShare } from "./portrait-chat-share.js";
+import { registerLodgeStashSettings, initLodgeStashes } from "./lodge-stashes.js";
 import { initEarnIncomeCoins } from "./earn-income/index.js";
 import { initPlayerLevelSync } from "./player-level-sync.js";
 import { initOutcomeEffects } from "./outcome-effects/index.js";
@@ -55,6 +56,7 @@ Hooks.once("init", () => {
   registerDiscordCharacterChatSettings();
   registerAVControlSettings();
   registerOneTimeMapCleanup();
+  registerLodgeStashSettings();
 
   // Scene-control hooks must be registered during init, before Foundry builds
   // the left-hand scene controls for the first time.
@@ -83,6 +85,7 @@ Hooks.once("ready", () => {
   initEarnIncomeCoins();
   initPrivateRollCharacterNames();
   initPortraitChatShare();
+  initLodgeStashes();
   initTargetContext();
   initGeneralActionsBrowser();
   const startupXpReconciliation = initCareerXp();
