@@ -15,7 +15,11 @@
    const data=await api.get({action:'pf2reputations',format:'json'});
    groups=(data.pf2reputations?.groups||[]).map(g=>({...g,entries:(g.entries||[]).map(r=>({...r,score:Number(r.score)}))}));
    characters=data.pf2reputations?.characters||[];
-   canEdit=Boolean(data.pf2reputations?.canEdit);
+   // MediaWiki Action API formats true boolean flags as an empty string.
+   // Boolean('') is false and wrongly hid every MJ control. Accept
+   // both this legacy flag and explicit 1/0 from our PHP endpoint.
+   const adminFlag=data.pf2reputations?.canEdit;
+   canEdit=adminFlag===true||adminFlag===''||adminFlag===1||adminFlag==='1';
    if(selected!=='group'&&!characters.some(c=>c.npcId===selected))selected='group';
    render();
   }catch(e){root.textContent='Impossible de charger les réputations.';mw.notify(String(e),{type:'error'})}

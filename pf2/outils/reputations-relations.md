@@ -59,3 +59,15 @@ Fichiers : support/mediawiki/extensions/PF2PlayerCodex/includes/PF2ReputationBri
 ### Correctif d'affichage des raccourcis (Foundry V14)
 
 PF2e HUD utilise `ApplicationV2` et déclenche `renderApplicationV2`, **pas** l'ancien événement `renderApplication`. Lors du rendu de la barre latérale `extras`, le Toolkit injecte les trois raccourcis dans l'élément HTML en cours de rendu avec l'Actor réel de PF2e HUD, même si aucun token n'est sélectionné. Les raccourcis sont réservés aux personnages possédant le don Hobnobber et ne modifient jamais les relations/réputations automatiquement. Test de régression : `node pf2e-val-toolkit/tests/interlude-hud-v14.mjs`.
+
+## Correctif de sérialisation des droits (5 novembre 2026)
+
+Le contrôle PHP des droits pouvait fonctionner, mais son champ canEdit était
+envoyé comme booléen à l'Action API de MediaWiki. Cette API représente une
+valeur vraie par une chaîne vide, que le JavaScript interprétait à tort comme
+false. Les boutons d'édition MJ étaient donc masqués.
+
+Désormais l'API envoie explicitement canEdit: 1 ou canEdit: 0 et le JavaScript
+reconnaît aussi les anciens indicateurs MediaWiki canEdit: chaîne vide.
+Les tests reproduisent les deux variantes ainsi que les valeurs non-admin.
+Les réputations enregistrées et les permissions des utilisateurs ne changent pas.

@@ -75,6 +75,26 @@ function harness(canEdit) {
 }
 
 async function test() {
+  // MediaWiki's API represents a true boolean as an empty string.
+  // Boolean('') wrongly hid every MJ button.
+  for (const flag of ['', true, 1, '1']) {
+    const adminFlag = harness(flag);
+    await adminFlag.flush();
+    assert.ok(adminFlag.buttons().some(b => b.textContent === 'Modifier le groupe'),
+      'Expected MJ buttons for API flag ' + JSON.stringify(flag));
+    adminFlag.select('npc-jilkra');
+    assert.ok(adminFlag.buttons().some(b => b.textContent === 'Modifier Jilkra (Jupi)'),
+      'Expected personal MJ button for API flag ' + JSON.stringify(flag));
+  }
+  for (const flag of [undefined, false, null, 0, '0']) {
+    const anonymous = harness(flag);
+    await anonymous.flush();
+    assert.equal(anonymous.buttons().length, 0,
+      'Non-admin should not get controls for API flag ' + JSON.stringify(flag));
+    anonymous.select('npc-jilkra');
+    assert.equal(anonymous.buttons().length, 0);
+  }
+
   const admin = harness(true);
   await admin.flush();
   assert.ok(admin.buttons().some(b => b.textContent === 'Modifier le groupe'));
