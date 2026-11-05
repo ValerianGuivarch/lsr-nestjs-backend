@@ -1,4 +1,5 @@
 import { BadGatewayException, BadRequestException, Injectable, Logger, ServiceUnavailableException } from '@nestjs/common'
+import { CharacterPresentationCard, foundryChatPresentationId, renderCharacterPresentationCard } from './FoundryCharacterChat'
 
 type RelayClient = { clientId?: unknown; isOnline?: unknown }
 type WorldActor = { uuid: string; name: string; type?: string }
@@ -37,6 +38,34 @@ export class FoundryRelayService {
   }
 
   listClients(): Promise<unknown> { return this.request('/clients') }
+
+  /**
+   * Deliver the public Discord presentation even when no MJ browser is open.
+   * Check both native toolkit flags and durable HTML markers before posting.
+   * No numeric chatType: Foundry V14 rejects type 0 with a null result.
+   */
+  async ensureCharacterChat(card: CharacterPresentationCard): Promise<string> {
+    if (!/^[a-f0-9-]{36}$/i.test(card.id)) throw new BadRequestException('Présentation invalide.')
+    const clientId = await this.onlineClientId()
+    const chat = this.object(await this.request('/chat?' + new URLSearchParams({ clientId, limit: '500' }), {}, 20_000))
+    const data = this.object(chat.data)
+    const messages = Array.isArray(data.messages) ? data.messages : []
+    const existing = messages.find(item => foundryChatPresentationId(item) === card.id)
+    if (existing) {
+      const id = this.object(existing).id
+      if (typeof id === 'string' && id) return id
+      throw new BadGatewayException('Présentation Foundry existante sans identifiant.')
+    }
+    const response = this.object(await this.request('/chat?' + new URLSearchParams({ clientId }), {
+      method: 'POST', headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ content: renderCharacterPresentationCard(card), alias: 'Gamemaster' }),
+    }, 20_000))
+    const id = this.object(response.data).id
+    if (response.success !== true || typeof id !== 'string' || !id) {
+      throw new BadGatewayException('Le relais Foundry n’a pas confirmé la présentation.')
+    }
+    return id
+  }
 
   async listActors(): Promise<WorldActor[]> {
     return this.listRootWorldActors(await this.onlineClientId())

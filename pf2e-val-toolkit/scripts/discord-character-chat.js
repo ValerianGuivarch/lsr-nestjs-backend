@@ -20,7 +20,7 @@ function renderPresentation(item) {
   const image = String(item.portraitUrl ?? "");
   const safeImage = /^(https:\/\/|assets\/l7r\/)/i.test(image) ? image : "";
   const wiki = item.wikiUrl && /^https:\/\//.test(item.wikiUrl) ? item.wikiUrl : null;
-  return `<div class="pf2e-val-character-presentation">
+  return `<div class="pf2e-val-character-presentation" data-pf2-character-presentation-id="${escape(item.id)}">
     ${item.showName ? `<p><strong>${escape(item.name)}</strong></p>` : ""}
     ${safeImage ? `<img src="${escape(safeImage)}" alt="Portrait du personnage" style="max-width:100%;height:auto;display:block" />` : ""}
     ${wiki ? `<p><a class="button" href="${escape(wiki)}" target="_blank" rel="noopener noreferrer">Voir la fiche</a></p>`
@@ -73,6 +73,14 @@ async function showCharacterForm(button) {
   } catch (error) { ui.notifications.error(`Création impossible : ${error.message}`); }
 }
 
+/** Read either native toolkit flags or the marker from server-delivered cards.
+ * This prevents duplicates if the GM opens Foundry after a server delivery. */
+export function characterPresentationId(message) {
+  const flagId = message?.getFlag?.(MODULE_ID, FLAG)?.id;
+  if (flagId) return String(flagId);
+  return String(message?.content ?? "").match(/data-pf2-character-presentation-id="([a-f0-9-]{36})"/i)?.[1] ?? null;
+}
+
 async function synchronizePresentations() {
   if (!firstActiveGM()) return;
   const key = game.settings.get(MODULE_ID, "discordCharacterChatKey");
@@ -93,13 +101,13 @@ async function synchronizePresentations() {
   const cutoff = startedAt || Date.now();
   const processed = new Set(game.settings.get(MODULE_ID, PROCESSED));
   for (const message of game.messages?.contents ?? []) {
-    const id = message.getFlag(MODULE_ID, FLAG)?.id;
+    const id = characterPresentationId(message);
     if (id) processed.add(id);
   }
   for (const item of [...presentations].reverse()) {
     if (!item?.id) continue;
     const content = renderPresentation(item);
-    const existing = game.messages?.contents.find(message => message.getFlag(MODULE_ID, FLAG)?.id === item.id);
+    const existing = game.messages?.contents.find(message => characterPresentationId(message) === item.id);
     if (existing) {
       if (existing.content !== content) await existing.update({ content });
     } else if (!processed.has(item.id) && Date.parse(String(item.createdAt).replace(" ", "T") + "Z") > cutoff) {

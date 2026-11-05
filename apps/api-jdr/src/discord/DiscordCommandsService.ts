@@ -2771,7 +2771,13 @@ export class DiscordCommandsService {
       components,
       allowedMentions: { parse: [] },
     })
-    await this.playerCodex!.savePresentationMessage(presentation.id, message.id, message.attachments.first()?.url ?? portrait)
+    const delivered = await this.playerCodex!.savePresentationMessage(presentation.id, message.id, message.attachments.first()?.url ?? portrait)
+    if (!delivered) {
+      await interaction.followUp({
+        content: 'Présentation Discord enregistrée. Foundry ne répond pas encore : l’envoi est en attente et sera réessayé automatiquement lorsque le monde sera accessible.',
+        ephemeral: true, allowedMentions: { parse: [] },
+      })
+    }
   }
 
   registerPreparedCharacterFaction(presentationId: string): void {

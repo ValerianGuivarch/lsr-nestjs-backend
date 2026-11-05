@@ -1,10 +1,12 @@
-import { BadRequestException, ConflictException, ForbiddenException, Injectable, NotFoundException, Optional } from '@nestjs/common'
+import { BadRequestException, ConflictException, ForbiddenException, Injectable, Logger, NotFoundException, OnModuleDestroy, OnModuleInit, Optional } from '@nestjs/common'
 import { InjectDataSource } from '@nestjs/typeorm'
 import { randomUUID } from 'node:crypto'
 import { readFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
 import { DataSource } from 'typeorm'
 import { Pf2PersistenceService } from '../pf2-storage/Pf2PersistenceService'
+import { FoundryRelayService } from '../foundry/FoundryRelayService'
+import { CharacterPresentationCard } from '../foundry/FoundryCharacterChat'
 import { levelForCareerXp } from '../pf2-sessions/Pf2CareerXp'
 import { MediaWikiClientService } from './MediaWikiClientService'
 
@@ -13,8 +15,40 @@ type MjFaction = Record<string, unknown> & { id: string; nom: string; descriptio
 type PlayerFactionRow = { id: string; name: string; normalized_name: string; parent_faction_id: string | null; wiki_page_title: string; description: string; source_mj_faction_id: string | null; published: number; created_at?: string; updated_at?: string }
 
 @Injectable()
-export class PlayerCodexService {
-  constructor(@InjectDataSource('pf2-sqlite') private readonly db: DataSource, private readonly persistence: Pf2PersistenceService, @Optional() private readonly mediaWiki?: MediaWikiClientService) {}
+export class PlayerCodexService implements OnModuleInit, OnModuleDestroy {
+  private readonly logger = new Logger(PlayerCodexService.name)
+  private readonly chatDeliveries = new Map<string, Promise<boolean>>()
+  private retryTimer: ReturnType<typeof setInterval> | null = null
+  private lastDeliveryWarningAt = 0
+
+  constructor(
+    @InjectDataSource('pf2-sqlite') private readonly db: DataSource,
+    private readonly persistence: Pf2PersistenceService,
+    @Optional() private readonly mediaWiki?: MediaWikiClientService,
+    @Optional() private readonly foundry?: FoundryRelayService,
+  ) {}
+
+  onModuleInit(): void {
+    // Recover from a world being closed during /personnage, even when no MJ
+    // browser is connected. The queue survives service restarts in SQLite.
+    this.retryTimer = setInterval(() => {
+      void this.retryPendingFoundryPresentations()
+    }, 30_000)
+    this.retryTimer.unref?.()
+  }
+  onModuleDestroy(): void {
+    if (this.retryTimer) clearInterval(this.retryTimer)
+  }
+
+  async retryPendingFoundryPresentations(): Promise<void> {
+    if (!this.foundry) return
+    const rows = await this.db.query(
+      'SELECT id FROM pf2_character_presentation WHERE foundry_chat_queued=1 AND foundry_chat_message_id IS NULL AND discord_message_id IS NOT NULL ORDER BY created_at ASC LIMIT 15'
+    ) as Array<{ id: string }>
+    for (const row of rows) {
+      if (!(await this.deliverFoundryPresentation(row.id))) break
+    }
+  }
 
   wikiPageUrl(title: string): string { return this.mediaWiki?.pageUrl(title) ?? "" }
 
@@ -166,9 +200,43 @@ export class PlayerCodexService {
     if (!rows[0]) throw new NotFoundException('Présentation Discord introuvable.')
     return { id: rows[0].id, sourceNpcId: rows[0].source_npc_id, name: rows[0].presented_name, portraitUrl: rows[0].presented_image_url, channelId: rows[0].discord_channel_id, messageId: rows[0].discord_message_id }
   }
-  async savePresentationMessage(id: string, messageId: string, portraitUrl: string | null): Promise<void> {
+  async savePresentationMessage(id: string, messageId: string, portraitUrl: string | null): Promise<boolean> {
     await this.presentation(id)
-    await this.db.query('UPDATE pf2_character_presentation SET discord_message_id=?, presented_image_url=?, updated_at=CURRENT_TIMESTAMP WHERE id=?', [messageId, portraitUrl, id])
+    await this.db.query('UPDATE pf2_character_presentation SET discord_message_id=?, presented_image_url=?, foundry_chat_queued=1, updated_at=CURRENT_TIMESTAMP WHERE id=?', [messageId, portraitUrl, id])
+    return this.deliverFoundryPresentation(id)
+  }
+
+  /**
+   * Immediate best-effort publication through the REST relay. The original
+   * Discord message remains valid if the Foundry world is unreachable.
+   * The toolkit also checks the same marker on reconnection.
+   */
+  async deliverFoundryPresentation(id: string): Promise<boolean> {
+    if (!this.foundry) return false
+    const inFlight = this.chatDeliveries.get(id)
+    if (inFlight) return inFlight
+    const delivery = (async () => {
+      try {
+        const data = await this.foundryPresentations()
+        const card = data.presentations.find((entry: any) => entry.id === id) as CharacterPresentationCard | undefined
+        if (!card) throw new Error('Présentation Foundry introuvable.')
+        const rows = await this.db.query('SELECT foundry_chat_queued, foundry_chat_message_id FROM pf2_character_presentation WHERE id=?', [id]) as Array<{ foundry_chat_queued: number; foundry_chat_message_id: string | null }>
+        if (!rows[0]?.foundry_chat_queued) return false
+        if (rows[0].foundry_chat_message_id) return true
+        const messageId = await this.foundry!.ensureCharacterChat(card)
+        await this.db.query('UPDATE pf2_character_presentation SET foundry_chat_message_id=? WHERE id=?', [messageId, id])
+        return true
+      } catch (error) {
+        if (Date.now() - this.lastDeliveryWarningAt > 60_000) {
+          this.lastDeliveryWarningAt = Date.now()
+          this.logger.warn('Publication Foundry du personnage en attente : ' +
+            (error instanceof Error ? error.message : String(error)))
+        }
+        return false
+      }
+    })()
+    this.chatDeliveries.set(id, delivery)
+    try { return await delivery } finally { this.chatDeliveries.delete(id) }
   }
   async ensurePresentationCharacter(presentationId: string, displayName: string, wikiPageTitle: string, shortDescription = ''): Promise<unknown> {
     const presentation = await this.presentation(presentationId)

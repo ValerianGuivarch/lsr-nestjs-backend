@@ -84,6 +84,34 @@ describe('PlayerCodexService', () => {
     await expect(persistence.getRecord('pnj', profile.npcId)).resolves.toMatchObject({ nom: 'Orc cicatrisé' })
     await expect(codex.character(profile.npcId)).resolves.toMatchObject({ displayName: 'L’orc cicatrisé' })
   })
+  it('retries a queued character chat publication, survives failed attempts, and records the Foundry message id', async () => {
+    const { persistence } = await open()
+    const relay = {
+      ensureCharacterChat: jest.fn()
+        .mockRejectedValueOnce(new Error('Foundry offline'))
+        .mockResolvedValue('foundry-chat-123'),
+    }
+    const codex = new PlayerCodexService(source!, persistence, undefined, relay as never)
+    const presentation = await codex.createPresentation({
+      name: 'Un éclaireur', portraitUrl: 'https://cdn.discord.test/scout.webp',
+      channelId: 'discord-channel', guildId: 'discord-guild',
+    })
+    const before = await source!.query('SELECT foundry_chat_queued FROM pf2_character_presentation WHERE id=?', [presentation.id])
+    expect(before[0].foundry_chat_queued).toBe(0)
+    await expect(codex.savePresentationMessage(presentation.id, 'discord-message', 'https://cdn.discord.test/scout.webp'))
+      .resolves.toBe(false)
+    const failed = await source!.query('SELECT foundry_chat_queued,foundry_chat_message_id FROM pf2_character_presentation WHERE id=?', [presentation.id])
+    expect(failed[0]).toMatchObject({ foundry_chat_queued: 1, foundry_chat_message_id: null })
+    await codex.retryPendingFoundryPresentations()
+    const recovered = await source!.query('SELECT foundry_chat_message_id FROM pf2_character_presentation WHERE id=?', [presentation.id])
+    expect(recovered[0].foundry_chat_message_id).toBe('foundry-chat-123')
+    expect(relay.ensureCharacterChat).toHaveBeenCalledTimes(2)
+    await codex.retryPendingFoundryPresentations()
+    expect(relay.ensureCharacterChat).toHaveBeenCalledTimes(2)
+    await expect(codex.deliverFoundryPresentation(presentation.id)).resolves.toBe(true)
+    expect(relay.ensureCharacterChat).toHaveBeenCalledTimes(2)
+  })
+
   it('stores the player-facing short description separately from the wiki body', async () => {
     const { codex } = await open()
     await codex.createCharacter({ npcId: 'janira', displayName: 'Janira', wikiPageTitle: 'Personnage:Janira', shortDescription: 'Guide expérimentée de la Société.' })

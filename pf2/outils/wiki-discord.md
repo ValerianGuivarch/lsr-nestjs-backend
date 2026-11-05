@@ -278,3 +278,31 @@ La même page contient maintenant les budgets d'**or et de trésors** du *GM Cor
 ## Fin de séance enrichie (novembre 2026)
 
 La commande admin Discord `/fin-seance` envoie maintenant **un lien privé vers un formulaire web unique**, avec champs distincts pour numéro, jours, XP total, XP/PJ, actions, or/argent/cuivre, objets et **toutes les réputations (dont Abberton)**. Un **aperçu privé à confirmer** suit la saisie sur la même page, au lieu de demander des arguments slash. Le numéro de la séance est pré-rempli et éditable ; les XP totaux et XP/PJ sont saisis indépendamment. Les montants `po`, `pa`, `pc` sont crédités **par PJ** dans Foundry PF2e, les variations de réputation globales sont ajoutées aux scores du wiki et la liste des actions et objets est publiée en puces sans modification automatique des objets. En canal nommé exactement `mj`, la commande publie une **simulation n°7 sans aucun changement de données**. [Fonctionnement détaillé, restrictions et tests](../../docs/pf2/discord-session-end.md).
+
+## Correctif du miroir personnage Discord vers le chat Foundry (5 novembre 2026)
+
+Les présentations de personnages publiées par Discord étaient jusque-là
+répliquées dans Foundry par un polling exécuté dans le navigateur du MJ.
+La connexion HTTPS publique du domaine l7r.fr présente une chaîne de
+certificat intermédiaire manquante. La synchronisation client ne pouvait
+donc plus garantir la publication dans le chat. Les présentations du
+5 novembre pour Jilkra, Pépin, Neyla et Sashka ont été remises dans le
+chat via le relais REST autorisé.
+
+Le backend publie maintenant chaque présentation directement via le
+relais REST de Foundry dès que le message Discord est enregistré, sans
+navigateur MJ ouvert. Une publication échouée reste dans une file
+SQLite durable et est réessayée toutes les 30 secondes. Seules les
+nouvelles présentations sont mises en attente par cette migration,
+sans republier les anciens messages au démarrage du service.
+
+L'ID de présentation est inclus comme marqueur dans le contenu Foundry.
+Le toolkit v0.44.15 et le backend reconnaissent à la fois ce marqueur
+et les flags des anciens messages ; ils évitent ainsi les doublons.
+Le relais omet le type de chat numérique 0, refusé par Foundry V14.
+
+Le certificat HTTPS du domaine l7r.fr reste à réparer sur le reverse
+proxy : il faut servir la chaîne complète Sectigo, comme sur
+wiki.l7r.fr. La publication des personnages ne dépend désormais plus
+de cette connexion HTTPS navigateur, mais d'autres appels API du toolkit
+peuvent toujours en souffrir.

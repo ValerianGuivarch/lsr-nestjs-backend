@@ -1833,6 +1833,19 @@ export class Pf2PersistenceService implements OnModuleInit {
       )`)
     })
 
+    // Default 0 intentionally leaves all historical presentations untouched.
+    // Only presentations processed after this migration enter the outbox.
+    await this.applyMigration('054-foundry-character-chat-outbox', async manager => {
+      const columns = await manager.query('PRAGMA table_info(pf2_character_presentation)') as Array<{ name: string }>
+      if (!columns.some(column => column.name === 'foundry_chat_queued')) {
+        await manager.query('ALTER TABLE pf2_character_presentation ADD COLUMN foundry_chat_queued INTEGER NOT NULL DEFAULT 0')
+      }
+      if (!columns.some(column => column.name === 'foundry_chat_message_id')) {
+        await manager.query('ALTER TABLE pf2_character_presentation ADD COLUMN foundry_chat_message_id TEXT')
+      }
+      await manager.query('CREATE INDEX IF NOT EXISTS idx_pf2_character_foundry_delivery ON pf2_character_presentation(foundry_chat_queued, foundry_chat_message_id)')
+    })
+
     await this.assertDatabaseIntegrity(this.dataSource, 'base SQLite après migrations')
   }
 

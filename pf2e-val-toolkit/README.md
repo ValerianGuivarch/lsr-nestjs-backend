@@ -1381,3 +1381,14 @@ Tests automatisés : node pf2e-val-toolkit/tests/lodge-stashes.mjs. Après fusio
 ## Placement du groupe actif sur une scène (v0.44.14)
 
 Dans **Groupe actif**, le bouton **Placer les absents sur la scène** permet désormais au MJ de cliquer sur le point où placer le groupe. Les PJ encore absents sont regroupés autour du point choisi (grille respectée et position limitée à la zone de scène). **Échap** ou **clic droit** annule sans rien créer. Les PJ déjà présents ne sont pas dupliqués.
+
+## v0.44.15 — Présentations Discord sans doublons
+
+Le backend envoie désormais les présentations de la commande personnage
+directement dans le chat Foundry via le relais, indépendamment d'un navigateur
+MJ. Le toolkit reconnaît l'identifiant de chaque présentation aussi bien
+dans son ancien flag de ChatMessage que dans le marqueur HTML ajouté par
+la publication serveur. Une présentation existante est actualisée, pas
+republiée. En cas d'absence de Foundry, une file serveur SQLite durable
+réessaie la livraison. Test de détection client :
+node pf2e-val-toolkit/tests/discord-character-chat.mjs.
