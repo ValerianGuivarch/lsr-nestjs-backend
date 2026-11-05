@@ -46,6 +46,8 @@ export class DiscordService implements OnModuleInit, OnModuleDestroy {
   private client: Client | null = null
   private questSyncTimer: ReturnType<typeof setInterval> | null = null
   private questRecapTimer: ReturnType<typeof setInterval> | null = null
+  private playerLevelCacheTimer: ReturnType<typeof setInterval> | null = null
+  private playerLevelCacheRunning = false
   private questSyncRunning = false
   private stopQuestLinkEvents: (() => void) | null = null
   private readonly questForumId = process.env['PF2_DISCORD_QUEST_FORUM_CHANNEL_ID']?.trim() || '1536259632455094412'
@@ -175,6 +177,15 @@ export class DiscordService implements OnModuleInit, OnModuleDestroy {
       }, 5 * 60 * 1000)
       this.questRecapTimer.unref?.()
 
+      // La commande /recap-pjs est consultée même lorsque le monde Foundry
+      // est fermé. Capturer régulièrement les niveaux dès que le monde est
+      // ouvert, sans qu'aucune commande Discord soit nécessaire.
+      void this.refreshPlayerLevelCache()
+      this.playerLevelCacheTimer = setInterval(() => {
+        void this.refreshPlayerLevelCache()
+      }, 5 * 60 * 1000)
+      this.playerLevelCacheTimer.unref?.()
+
       this.logger.log(
         'Discord slash commands registered for the configured guild.',
       )
@@ -196,8 +207,30 @@ export class DiscordService implements OnModuleInit, OnModuleDestroy {
     this.questSyncTimer = null
     if (this.questRecapTimer) clearInterval(this.questRecapTimer)
     this.questRecapTimer = null
+    if (this.playerLevelCacheTimer) clearInterval(this.playerLevelCacheTimer)
+    this.playerLevelCacheTimer = null
     this.client?.destroy()
     this.client = null
+  }
+
+  private async refreshPlayerLevelCache(): Promise<void> {
+    if (this.playerLevelCacheRunning) return
+    this.playerLevelCacheRunning = true
+    try {
+      const players = await this.foundry.listPlayers()
+      if (!players.length) return
+      await this.persistence.saveFoundryPlayerLevels(players.map(player => ({
+        uuid: player.uuid,
+        foundryLevel: player.foundryLevel,
+        theoreticalLevel: player.level,
+      })))
+    } catch (error) {
+      // Le monde Foundry est régulièrement fermé entre les séances. Ne pas
+      // polluer les logs avec des avertissements : le dernier cache reste valide.
+      this.logger.debug(`Cache niveaux PJ non actualisé : ${error instanceof Error ? error.message : String(error)}`)
+    } finally {
+      this.playerLevelCacheRunning = false
+    }
   }
 
   private async refreshQuestCards(ids: string[]): Promise<void> {
