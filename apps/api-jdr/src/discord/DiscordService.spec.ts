@@ -38,6 +38,23 @@ describe('DiscordService summary synchronization', () => {
     return service
   }
 
+  it('saves Foundry level snapshots without changing Actors or posting to Discord', async () => {
+    const readOnly = jest.fn().mockResolvedValue([
+      { uuid: 'Actor.neyla', name: 'Neyla', foundryLevel: 4, level: 5, xp: 0, xpc: 5000 },
+      { uuid: 'Actor.eryn', name: 'Eryn', foundryLevel: 6, level: 6, xp: 0, xpc: 14000 },
+    ])
+    const persistence = { saveFoundryPlayerLevels: jest.fn().mockResolvedValue(undefined) }
+    const foundry = { listPlayerLevelsReadOnly: readOnly, listPlayers: jest.fn() }
+    const service = new DiscordService({} as never, foundry as never, persistence as never)
+    await (service as unknown as { refreshPlayerLevelCache: () => Promise<void> }).refreshPlayerLevelCache()
+    expect(readOnly).toHaveBeenCalledTimes(1)
+    expect(foundry.listPlayers).not.toHaveBeenCalled()
+    expect(persistence.saveFoundryPlayerLevels).toHaveBeenCalledWith([
+      { uuid: 'Actor.neyla', foundryLevel: 4, theoreticalLevel: 5 },
+      { uuid: 'Actor.eryn', foundryLevel: 6, theoreticalLevel: 6 },
+    ])
+  })
+
   it('creates one message and one thread for a new short summary', async () => {
     const thread = { send: jest.fn().mockResolvedValue(undefined) }
     const created = { id: 'message-1', startThread: jest.fn().mockResolvedValue(thread) }
