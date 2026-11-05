@@ -217,7 +217,7 @@ export class DiscordService implements OnModuleInit, OnModuleDestroy {
     if (this.playerLevelCacheRunning) return
     this.playerLevelCacheRunning = true
     try {
-      const players = await this.foundry.listPlayers()
+      const players = await this.foundry.listPlayerLevelsReadOnly()
       if (!players.length) return
       await this.persistence.saveFoundryPlayerLevels(players.map(player => ({
         uuid: player.uuid,
