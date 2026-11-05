@@ -32,6 +32,7 @@ import {
 import { initQuickEffects } from "./quick-effects/index.js";
 import { initTargetContext } from "./target-context/index.js";
 import { initPrivateRollCharacterNames } from "./private-roll-names.js";
+import { initPortraitChatShare } from "./portrait-chat-share.js";
 import { initEarnIncomeCoins } from "./earn-income/index.js";
 import { initPlayerLevelSync } from "./player-level-sync.js";
 import { initOutcomeEffects } from "./outcome-effects/index.js";
@@ -81,6 +82,7 @@ Hooks.once("ready", () => {
   initOutcomeEffects();
   initEarnIncomeCoins();
   initPrivateRollCharacterNames();
+  initPortraitChatShare();
   initTargetContext();
   initGeneralActionsBrowser();
   const startupXpReconciliation = initCareerXp();
