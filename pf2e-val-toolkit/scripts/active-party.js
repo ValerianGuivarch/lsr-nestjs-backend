@@ -98,45 +98,106 @@ function placementData(actor, x, y) {
   return prototype;
 }
 
-async function placeMissingTokens() {
-  if (!game.user?.isGM || !canvas.scene) return [];
+let placementInProgress = false;
 
+function choosePlacementPoint(scene) {
+  return new Promise((resolve) => {
+    const stage = canvas.stage;
+    if (!stage?.on || !stage?.off) {
+      ui.notifications.warn("Impossible de sélectionner un point sur la scène.");
+      resolve(null);
+      return;
+    }
+    let finished = false;
+    let hookId;
+    const finish = (point) => {
+      if (finished) return;
+      finished = true;
+      stage.off("pointerdown", onClick);
+      stage.off("rightdown", onCancel);
+      window.removeEventListener("keydown", onKeyDown, true);
+      if (hookId !== undefined) Hooks.off("canvasTearDown", hookId);
+      resolve(point);
+    };
+    const onCancel = () => finish(null);
+    const onKeyDown = (event) => {
+      if (event.key !== "Escape") return;
+      event.preventDefault();
+      finish(null);
+    };
+    const onClick = (event) => {
+      if (canvas.scene?.id !== scene.id || event.button !== 0) return;
+      const point = event.getLocalPosition?.(stage) ?? stage.toLocal(event.global);
+      const rect = canvas.dimensions?.sceneRect;
+      if (!point || !Number.isFinite(point.x) || !Number.isFinite(point.y)) return;
+      if (rect && (point.x < rect.x || point.y < rect.y ||
+        point.x >= rect.x + rect.width || point.y >= rect.y + rect.height)) {
+        ui.notifications.warn("Cliquez à l'intérieur de la scène.");
+        return;
+      }
+      finish({ x: point.x, y: point.y });
+    };
+    stage.on("pointerdown", onClick);
+    stage.on("rightdown", onCancel);
+    window.addEventListener("keydown", onKeyDown, true);
+    hookId = Hooks.on("canvasTearDown", onCancel);
+    ui.notifications.info("Cliquez sur la scène pour placer les PJ (Échap ou clic droit pour annuler).");
+  });
+}
+
+function partyPlacementData(scene, actors, point) {
+  const size = scene.grid?.size || 100;
+  const columns = Math.ceil(Math.sqrt(actors.length));
+  const rows = Math.ceil(actors.length / columns);
+  const rect = canvas.dimensions?.sceneRect ?? {
+    x: 0, y: 0, width: scene.width, height: scene.height
+  };
+  const maxX = Math.max(rect.x, rect.x + rect.width - columns * size);
+  const maxY = Math.max(rect.y, rect.y + rect.height - rows * size);
+  const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
+  let x = clamp(point.x - columns * size / 2, rect.x, maxX);
+  let y = clamp(point.y - rows * size / 2, rect.y, maxY);
+  if (scene.grid?.type !== 0) {
+    x = rect.x + Math.round((x - rect.x) / size) * size;
+    y = rect.y + Math.round((y - rect.y) / size) * size;
+  }
+  x = clamp(x, rect.x, maxX);
+  y = clamp(y, rect.y, maxY);
+  return actors.map((actor, index) =>
+    placementData(actor, Math.round(x + (index % columns) * size),
+      Math.round(y + Math.floor(index / columns) * size))
+  );
+}
+
+async function placeMissingTokens() {
+  if (!game.user?.isGM || !canvas.scene || placementInProgress) return [];
+  const scene = canvas.scene;
   const actors = getActors();
   if (!actors.length) {
     ui.notifications.warn("Aucun groupe actif n'est défini.");
     return [];
   }
-
-  const present = new Set(canvas.scene.tokens.map((token) => token.actorId));
+  const present = new Set(scene.tokens.map((token) => token.actorId));
   const missing = actors.filter((actor) => !present.has(actor.id));
   if (!missing.length) {
     ui.notifications.info("Tous les membres du groupe actif sont déjà sur la scène.");
     return [];
   }
-
-  const gridSize = canvas.scene.grid?.size ?? 100;
-  const center = canvas.dimensions?.sceneRect?.center ?? {
-    x: (canvas.scene.width ?? gridSize * 10) / 2,
-    y: (canvas.scene.height ?? gridSize * 10) / 2
-  };
-  const columns = Math.ceil(Math.sqrt(missing.length));
-  const startX = center.x - ((columns - 1) * gridSize) / 2;
-  const rows = Math.ceil(missing.length / columns);
-  const startY = center.y - ((rows - 1) * gridSize) / 2;
-
-  const data = missing.map((actor, index) => {
-    const column = index % columns;
-    const row = Math.floor(index / columns);
-    return placementData(
-      actor,
-      Math.round(startX + column * gridSize),
-      Math.round(startY + row * gridSize)
+  placementInProgress = true;
+  try {
+    const point = await choosePlacementPoint(scene);
+    if (!point || canvas.scene?.id !== scene.id) return [];
+    const current = new Set(scene.tokens.map((token) => token.actorId));
+    const remaining = missing.filter((actor) => !current.has(actor.id));
+    if (!remaining.length) return [];
+    const created = await scene.createEmbeddedDocuments(
+      "Token", partyPlacementData(scene, remaining, point)
     );
-  });
-
-  const created = await canvas.scene.createEmbeddedDocuments("Token", data);
-  ui.notifications.info(`${created.length} membre(s) du groupe actif placé(s).`);
-  return created;
+    ui.notifications.info(created.length + " membre(s) du groupe actif placé(s).");
+    return created;
+  } finally {
+    placementInProgress = false;
+  }
 }
 
 function partySummaryHtml() {
@@ -207,7 +268,7 @@ async function openManager() {
       },
       {
         action: "place",
-        label: "Placer les absents",
+        label: "Placer les absents sur la scène",
         icon: "fa-solid fa-location-dot",
         callback: () => "place"
       },

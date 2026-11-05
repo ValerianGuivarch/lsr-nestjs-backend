@@ -1377,3 +1377,7 @@ Les **12 coffres personnels** de La Loge des Eclaireurs ont été corrigés dans
 Foundry applique les permissions documentaires **par compte utilisateur**, pas par personnage assigné. Le Toolkit bloque ses boutons lorsque le personnage actif ne correspond pas, mais cette restriction d'interface ne remplace pas un verrou serveur : un utilisateur encore propriétaire d'un coffre peut interagir par les outils natifs. Une interdiction stricte selon le personnage actif, y compris hors de l'interface Toolkit, demanderait un contrôle moteur/serveur distinct. L'implémentation actuelle privilégie les permissions natives sans patch invasif.
 
 Tests automatisés : node pf2e-val-toolkit/tests/lodge-stashes.mjs. Après fusion de la PR, recharge Foundry, ouvre la Loge, teste un transfert avec un compte joueur et un MJ en ligne, puis contrôle le retrait et l'accès à un coffre d'un autre joueur.
+
+## Placement du groupe actif sur une scène (v0.44.14)
+
+Dans **Groupe actif**, le bouton **Placer les absents sur la scène** permet désormais au MJ de cliquer sur le point où placer le groupe. Les PJ encore absents sont regroupés autour du point choisi (grille respectée et position limitée à la zone de scène). **Échap** ou **clic droit** annule sans rien créer. Les PJ déjà présents ne sont pas dupliqués.
