@@ -2284,6 +2284,8 @@ export class DiscordCommandsService {
         return name ? [{ uuid, name, player: this.playerName(name), count }] : []
       })
     const levels = await this.playerLevels(characters.map(character => character.uuid))
+    const missingLevels = characters.filter(actor => !levels.has(actor.uuid)).length
+    const missingTheoretical = characters.filter(actor => levels.has(actor.uuid) && levels.get(actor.uuid)?.theoreticalLevel === null).length
 
     const players = [...playerSessions.entries()]
       .filter(([, played]) => played.size > 0)
@@ -2296,6 +2298,11 @@ export class DiscordCommandsService {
 
     const namesByDiscordId = new Map((await this.persistence.listPlayerIdentities?.() ?? []).map(identity => [identity.discordUserId, identity.playerName]))
     const lines = ['**Récap des séances jouées**']
+    if (missingLevels || missingTheoretical) {
+      lines.push(
+        '_⚠️ Certains niveaux ne sont pas disponibles : il faut ouvrir le monde Foundry au moins une fois pour synchroniser les niveaux réels et théoriques. Les niveaux déjà enregistrés restent consultables hors ligne._',
+      )
+    }
     for (const [player, played] of players) {
       const discordId = this.discordId(player)
       const name = discordId ? namesByDiscordId.get(discordId) ?? pf2PlayerByDiscordId(discordId)?.name ?? player : player
@@ -4454,9 +4461,13 @@ export class DiscordCommandsService {
     }))
   }
 
-  private async playerLevels(uuids: string[] = []): Promise<Map<string, { foundryLevel: number; theoreticalLevel: number }>> {
-    const levels = await this.persistence.readFoundryPlayerLevels()
+  private async playerLevels(uuids: string[] = []): Promise<Map<string, { foundryLevel: number; theoreticalLevel: number | null }>> {
+    // La dernière synchronisation est conservée en SQLite : /recap-pjs doit
+    // fonctionner même quand aucun joueur n'a ouvert le monde Foundry.
+    const levels: Map<string, { foundryLevel: number; theoreticalLevel: number | null }> =
+      await this.persistence.readFoundryPlayerLevels()
     const refreshed: Array<{ uuid: string; foundryLevel: number; theoreticalLevel: number }> = []
+    let foundryOffline = false
     try {
       const players = await this.foundry.listPlayers()
       for (const player of players) {
@@ -4465,33 +4476,44 @@ export class DiscordCommandsService {
         refreshed.push({ uuid: player.uuid, ...value })
       }
     } catch (error) {
-      this.logger.warn(`Progression Foundry indisponible, utilisation des niveaux en cache : ${error instanceof Error ? error.message : String(error)}`)
+      const reason = error instanceof Error ? error.message : String(error)
+      foundryOffline = /No Foundry world online|Relay is offline|FOUNDRY_REST_API_KEY is not configured/i.test(reason)
+      this.logger.warn(`Progression Foundry indisponible, utilisation des niveaux en cache : ${reason}`)
     }
 
-    for (const uuid of [...new Set(uuids)].filter(uuid => !refreshed.some(player => player.uuid === uuid))) {
-      try {
-        const actor = await this.foundry.getNpcSummary(uuid)
-        if (actor.level !== null) {
-          const value = { foundryLevel: actor.level, theoreticalLevel: levels.get(uuid)?.theoreticalLevel ?? actor.level }
-          levels.set(uuid, value)
-          refreshed.push({ uuid, ...value })
+    // Si le relais répond mais que la progression XPC n'est pas disponible,
+    // récupérer au moins le niveau réel de l'Actor. Ne jamais prétendre que
+    // son niveau théorique est identique sans avoir lu sa progression XPC.
+    if (!foundryOffline) {
+      for (const uuid of [...new Set(uuids)].filter(uuid => !refreshed.some(player => player.uuid === uuid))) {
+        try {
+          const actor = await this.foundry.getNpcSummary(uuid)
+          if (actor.level !== null) {
+            const value = {
+              foundryLevel: actor.level,
+              theoreticalLevel: levels.get(uuid)?.theoreticalLevel ?? null,
+            }
+            levels.set(uuid, value)
+            if (value.theoreticalLevel !== null) refreshed.push({ uuid, ...value })
+          }
+        } catch (error) {
+          this.logger.warn(`Niveau Foundry indisponible pour ${uuid} : ${error instanceof Error ? error.message : String(error)}`)
         }
-      } catch (error) {
-        this.logger.warn(`Niveau Foundry indisponible pour ${uuid} : ${error instanceof Error ? error.message : String(error)}`)
       }
     }
     if (refreshed.length) await this.persistence.saveFoundryPlayerLevels(refreshed)
     return levels
   }
 
-
-  private levelLabel(uuid: string, levels: Map<string, { foundryLevel: number; theoreticalLevel: number }>): string {
+  private levelLabel(uuid: string, levels: Map<string, { foundryLevel: number; theoreticalLevel: number | null }>): string {
     const value = levels.get(uuid)
-    if (!value) return 'niveau ?'
+    if (!value) return 'niveau réel ? · théorique ?'
+    if (value.theoreticalLevel === null) return `niveau réel ${value.foundryLevel} · théorique ?`
     const delta = value.theoreticalLevel - value.foundryLevel
-    if (delta > 0) return `niveau ${value.foundryLevel} (${delta} niveau${delta > 1 ? 'x' : ''} à faire !)`
-    if (delta < 0) return `niveau ${value.foundryLevel} (niveau théorique ${value.theoreticalLevel})`
-    return `niveau ${value.foundryLevel}`
+    const label = `niveau réel ${value.foundryLevel} · théorique ${value.theoreticalLevel}`
+    if (delta > 0) return `${label} — ⚠️ ${delta} niveau${delta > 1 ? 'x' : ''} à faire !`
+    if (delta < 0) return `${label} — ⚠️ niveau réel supérieur au théorique`
+    return label
   }
 
   private async plannedSessionAnnouncement(
