@@ -46,38 +46,46 @@ async function openInterlude(actor, kind) {
     '<option value="' + foundry.utils.escapeHTML(c.name) + '">' +
     foundry.utils.escapeHTML(c.group+' — '+c.name) + '</option>'
   ).join('');
+  const selectedTargetName = foundry.utils.escapeHTML(kind==='maintain' ? (game.user.targets?.first()?.actor?.name || '') : '');
   const communityField = isCommunity && communities.length
     ? '<label>Communauté <select name="target">' + communityOptions + '</select></label>'
-    : '<label>Personne ou milieu visé <input name="target" maxlength="130" required placeholder="Ex. marins d’Absalom"></label>';
+    : '<label>Personne ou milieu visé <input name="target" maxlength="130" required value="' + selectedTargetName + '" placeholder="Ex. marins d’Absalom"></label>';
+  const targetActor = game.user.targets?.first()?.actor;
   const suggestedDc = kind==='maintain'
-    ? Number(game.user.targets?.first()?.actor?.getStatistic?.('will')?.dc?.value)||15
+    ? Number(targetActor?.getStatistic?.('will')?.dc?.value)||15
     : 15;
   const options = skills.map(id => {
     const statistic = actor.getStatistic(id);
     return '<option value="' + foundry.utils.escapeHTML(id) + '">' + foundry.utils.escapeHTML(statistic.label) + '</option>';
   }).join('');
   const form = [
-    '<form class="pf2e-val-interlude-form">',
+    '<div class="pf2e-val-interlude-form">',
     '<p>' + foundry.utils.escapeHTML(DESCRIPTIONS[kind]) + '</p>',
     communityField,
     isCommunity ? '<label>Compétence utilisée <select name="skill">' + options + '</select></label>' : '',
     '<label>DD décidé par le MJ <input name="dc" type="number" min="5" max="60" value="' + suggestedDc + '" required></label>',
     '<p class="hint">DD Créer un contact suggérés : 15 courant, 20 spécialisé, 25 difficile, 30 très fermé. Entretenir : DD de Volonté de la personne.</p>',
-    '</form>'
+    '</div>'
   ].join('');
   let choices;
   try {
-    choices = await Dialog.prompt({
-      title: LABELS[kind] + ' — ' + actor.name,
+    // Foundry V14: DialogV2 wraps content in its own form. Use the button's
+    // native form elements rather than nesting a legacy Dialog V1 form.
+    choices = await foundry.applications.api.DialogV2.wait({
+      window: {title: LABELS[kind] + ' — ' + actor.name},
       content: form,
-      label: 'Lancer le test',
-      callback: html => {
-        const element = html?.[0] || html;
-        const target = element.querySelector('[name="target"]')?.value?.trim() || '';
-        const dc = Number(element.querySelector('input[name="dc"]')?.value);
-        const rollSkill = isCommunity ? element.querySelector('select[name="skill"]')?.value : skill;
-        return {target,dc,skill:rollSkill};
-      }
+      rejectClose: false,
+      buttons: [{
+        action: 'roll', label: 'Lancer le test', default: true,
+        callback: (_event, button) => {
+          const elements = button.form.elements;
+          return {
+            target: elements.namedItem('target')?.value?.trim() || '',
+            dc: Number(elements.namedItem('dc')?.value),
+            skill: isCommunity ? elements.namedItem('skill')?.value : skill
+          };
+        }
+      }]
     });
   } catch(error) {
     console.warn('PF2e Val Toolkit | Intermède annulé :', error);
@@ -95,9 +103,12 @@ async function openInterlude(actor, kind) {
     await ChatMessage.create({
       speaker: ChatMessage.getSpeaker({actor}),
       content: '<p><strong>Intermède — ' + LABELS[kind] + '</strong></p><p>Cible : ' + note
-        + ' · DD ' + choices.dc + '</p><p>' + source + '</p><small>Récompense non automatique : validation et saisie par le MJ dans le wiki.</small>'
+        + '</p><p>' + source + '</p><small>Récompense non automatique : validation et saisie par le MJ dans le wiki.</small>'
     });
-    await statistic.roll({dc:{value:choices.dc,label:LABELS[kind]}});
+    await statistic.roll({
+      dc:{value:choices.dc,label:LABELS[kind]},
+      ...(kind==='create' ? {rollMode:'blindroll'} : {})
+    });
   } catch(error) {
     console.error('PF2e Val Toolkit | Intermède :',error);
     ui.notifications.error('Échec du test : '+error.message);
@@ -106,10 +117,14 @@ async function openInterlude(actor, kind) {
 export function decorateInterludeExtras() {
   if (!game.modules.get('pf2e-hud')?.active) return;
   const extras = document.querySelector('#pf2e-hud-sidebar [data-sidebar="extras"]');
-  if (!extras || extras.querySelector('.pf2e-val-interlude-shortcuts')) return;
+  if (!extras) return;
   const actor = currentActor();
+  const existing = extras.querySelector('.pf2e-val-interlude-shortcuts');
+  if (existing?.dataset.actorUuid === actor?.uuid) return;
+  existing?.remove();
   if (!isHobnobber(actor) || (!actor.isOwner && !game.user.isGM)) return;
   const box = document.createElement('div');
+  box.dataset.actorUuid = actor.uuid;
   box.className='pf2e-val-interlude-shortcuts';
   const title = document.createElement('strong');
   title.textContent='Intermèdes — Relations et réputations';
@@ -119,7 +134,12 @@ export function decorateInterludeExtras() {
     btn.type='button';btn.className='pf2e-val-interlude-button';
     btn.textContent=label;
     btn.title=DESCRIPTIONS[kind];
-    btn.addEventListener('click',()=>void openInterlude(actor,kind));
+    btn.addEventListener('click',()=>{
+      if (currentActor()?.uuid !== actor.uuid) {
+        ui.notifications.warn('Sélectionnez le personnage concerné pour cette activité.');return;
+      }
+      void openInterlude(actor,kind);
+    });
     box.append(btn);
   }
   extras.append(box);
