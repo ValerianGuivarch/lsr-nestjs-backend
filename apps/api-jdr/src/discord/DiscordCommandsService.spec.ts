@@ -2,6 +2,13 @@ import { ChannelType, Collection } from 'discord.js'
 import { DiscordCommandsService } from './DiscordCommandsService'
 
 describe('DiscordCommandsService', () => {
+  const recapThread = (members: string[], authors: string[] = []) => ({
+    isThread: () => true, isTextBased: () => true,
+    members: { fetch: jest.fn().mockResolvedValue(new Map(members.map(id => [id, { id }]))) },
+    messages: { fetch: jest.fn().mockResolvedValue(new Map(authors.map((id, i) =>
+      [String(i), { author: { id, bot: false } }]))) },
+  })
+
   it('registers the current command surface and keeps hidden commands unpublished', () => {
     const service = new DiscordCommandsService({} as never, {} as never)
     const definitions = service.definitions().map(command => command.name)
@@ -1048,7 +1055,8 @@ describe('DiscordCommandsService', () => {
       ]),
     } as never)
 
-    await expect(service.handle({ commandName: 'recap-pjs', deferReply, editReply, user: { id: 'player-1' }, id: 'interaction-1' } as never)).resolves.toBe(true)
+    const channel = recapThread(['688742453276180560', '399621722158137346'])
+    await expect(service.handle({ commandName: 'recap-pjs', channel, deferReply, editReply, user: { id: '688742453276180560' }, id: 'interaction-1' } as never)).resolves.toBe(true)
     expect(deferReply).toHaveBeenCalledWith({ ephemeral: true })
     const payload = editReply.mock.calls[0][0]
     const result = payload.content
@@ -1059,7 +1067,22 @@ describe('DiscordCommandsService', () => {
     expect(result).toContain('Éos — niveau réel 2 · théorique 3 — ⚠️ 1 niveau à faire ! — 2 séances')
     expect(result).toContain('Pépin — niveau réel 2 · théorique 2 — 1 séance')
     expect(result).not.toContain('Nora')
+    expect(result).not.toContain('Yaz Lorok')
+    expect(result).not.toContain('Augustin')
+    expect(result).not.toMatch(/<@!?\d+>/)
+    expect(channel.members.fetch).toHaveBeenCalledTimes(1)
+    expect(channel.messages.fetch).toHaveBeenCalledWith({ limit: 100 })
     expect(result).not.toContain('Séances communes')
+
+    const update = jest.fn().mockResolvedValue(undefined)
+    const followUp = jest.fn().mockResolvedValue(undefined)
+    await service.handleButton({
+      customId: 'pf2-preview:publish:interaction-1',
+      user: { id: '688742453276180560' }, update, followUp,
+    } as never)
+    expect(followUp).toHaveBeenCalledWith(expect.objectContaining({
+      content: result, ephemeral: false, allowedMentions: { parse: [] },
+    }))
   })
 
   it('falls back to the raw Foundry actor level when progression lookup fails', async () => {
@@ -1079,7 +1102,7 @@ describe('DiscordCommandsService', () => {
       getNpcSummary: jest.fn().mockResolvedValue({ uuid: 'Actor.pepin', name: 'Pépin (Eric)', type: 'character', level: 4, hp: 50, img: null }),
     } as never)
 
-    await service.handle({ commandName: 'recap-pjs', deferReply, editReply, user: { id: 'player-1' }, id: 'interaction-level-fallback' } as never)
+    await service.handle({ commandName: 'recap-pjs', channel: recapThread(['399621722158137346']), deferReply, editReply, user: { id: '399621722158137346' }, id: 'interaction-level-fallback' } as never)
     const result = editReply.mock.calls[0][0].content as string
     expect(result).toContain('Pépin — niveau réel 4 · théorique ? — 1 séance')
     expect(result).toContain('⚠️ Certains niveaux ne sont pas disponibles')
@@ -1112,12 +1135,113 @@ describe('DiscordCommandsService', () => {
       getNpcSummary,
     } as never)
 
-    await service.handle({ commandName: 'recap-pjs', deferReply, editReply, user: { id: 'player-1' }, id: 'cached-levels' } as never)
+    await service.handle({ commandName: 'recap-pjs', channel: recapThread(['399621722158137346', '134346709487714304']), deferReply, editReply, user: { id: '399621722158137346' }, id: 'cached-levels' } as never)
     const result = editReply.mock.calls[0][0].content as string
     expect(result).toContain('Pépin — niveau réel 4 · théorique 5 — ⚠️ 1 niveau à faire !')
     expect(result).toContain('Eryn — niveau réel 6 · théorique 6')
     expect(result).not.toContain('niveau réel ?')
     expect(getNpcSummary).not.toHaveBeenCalled()
+  })
+
+  it('filters a text-channel recap to recent authors and the requester, not all viewers', async () => {
+    const editReply = jest.fn().mockResolvedValue(undefined)
+    const channel = {
+      isThread: () => false, isTextBased: () => true,
+      permissionsFor: jest.fn().mockReturnValue({ has: () => true }),
+      messages: { fetch: jest.fn().mockResolvedValue(new Map([
+        ['message-1', { author: { id: '399621722158137346', bot: false } }],
+        ['message-2', { author: { id: '000000000000000001', bot: true } }],
+      ])) },
+    }
+    const service = new DiscordCommandsService({
+      listSessions: jest.fn().mockResolvedValue([{
+        sessionNumber: 1, published: true,
+        participants: ['Actor.eos', 'Actor.pepin', 'Actor.eryn'],
+      }]),
+      listPlayerIdentities: jest.fn().mockResolvedValue([]),
+      readFoundryActorCache: jest.fn().mockResolvedValue([
+        { uuid: 'Actor.eos', name: 'Éos (David)' },
+        { uuid: 'Actor.pepin', name: 'Pépin (Eric)' },
+        { uuid: 'Actor.eryn', name: 'Eryn (Tom)' },
+      ]),
+      readFoundryPlayerLevels: jest.fn().mockResolvedValue(new Map([
+        ['Actor.eos', { foundryLevel: 4, theoreticalLevel: 4 }],
+        ['Actor.pepin', { foundryLevel: 4, theoreticalLevel: 4 }],
+        ['Actor.eryn', { foundryLevel: 4, theoreticalLevel: 4 }],
+      ])),
+    } as never, {
+      listActors: jest.fn().mockRejectedValue(new Error('No Foundry world online')),
+      listPlayers: jest.fn().mockRejectedValue(new Error('No Foundry world online')),
+    } as never)
+    await service.handle({
+      commandName: 'recap-pjs', user: { id: '688742453276180560' },
+      id: 'scoped-text-channel', channel,
+      deferReply: jest.fn().mockResolvedValue(undefined), editReply,
+    } as never)
+    const content = editReply.mock.calls[0][0].content as string
+    expect(content).toContain('Éos — niveau réel 4')
+    expect(content).toContain('Pépin — niveau réel 4')
+    expect(content).not.toContain('Eryn')
+    expect(content).not.toContain('Tom')
+    expect(content).not.toMatch(/<@!?\d+>/)
+    expect(channel.permissionsFor).not.toHaveBeenCalled()
+  })
+
+  it('keeps /recap-pjs limited to the requester when discussion members are unreadable', async () => {
+    const editReply = jest.fn().mockResolvedValue(undefined)
+    const service = new DiscordCommandsService({
+      listSessions: jest.fn().mockResolvedValue([{
+        sessionNumber: 1, published: true, participants: ['Actor.eos', 'Actor.pepin'],
+      }]),
+      listPlayerIdentities: jest.fn().mockResolvedValue([]),
+      readFoundryActorCache: jest.fn().mockResolvedValue([
+        { uuid: 'Actor.eos', name: 'Éos (David)' },
+        { uuid: 'Actor.pepin', name: 'Pépin (Eric)' },
+      ]),
+      readFoundryPlayerLevels: jest.fn().mockResolvedValue(new Map()),
+    } as never, {
+      listActors: jest.fn().mockRejectedValue(new Error('No Foundry world online')),
+      listPlayers: jest.fn().mockRejectedValue(new Error('No Foundry world online')),
+    } as never)
+    const channel = {
+      isThread: () => true, isTextBased: () => true,
+      members: { fetch: jest.fn().mockRejectedValue(new Error('missing permission')) },
+      messages: { fetch: jest.fn().mockRejectedValue(new Error('missing permission')) },
+    }
+    await service.handle({
+      commandName: 'recap-pjs', user: { id: '688742453276180560' },
+      id: 'scoped-fallback', channel,
+      deferReply: jest.fn().mockResolvedValue(undefined), editReply,
+    } as never)
+    const content = editReply.mock.calls[0][0].content as string
+    expect(content).toContain('Éos')
+    expect(content).not.toContain('Pépin')
+    expect(content).not.toMatch(/<@!?\d+>/)
+  })
+
+  it('returns no publish button when no player with played sessions belongs to the discussion', async () => {
+    const editReply = jest.fn().mockResolvedValue(undefined)
+    const service = new DiscordCommandsService({
+      listSessions: jest.fn().mockResolvedValue([{
+        sessionNumber: 1, published: true, participants: ['Actor.pepin'],
+      }]),
+      listPlayerIdentities: jest.fn().mockResolvedValue([]),
+      readFoundryActorCache: jest.fn().mockResolvedValue([
+        { uuid: 'Actor.pepin', name: 'Pépin (Eric)' },
+      ]),
+      readFoundryPlayerLevels: jest.fn().mockResolvedValue(new Map()),
+    } as never, {
+      listActors: jest.fn().mockRejectedValue(new Error('No Foundry world online')),
+      listPlayers: jest.fn().mockRejectedValue(new Error('No Foundry world online')),
+    } as never)
+    await service.handle({
+      commandName: 'recap-pjs', user: { id: '688742453276180560' },
+      id: 'no-matching-players', channel: recapThread([]),
+      deferReply: jest.fn().mockResolvedValue(undefined), editReply,
+    } as never)
+    const response = editReply.mock.calls[0][0]
+    expect(response.content).toContain('Aucun joueur de cette discussion')
+    expect(response.components).toBeUndefined()
   })
 
   it('never invents theoretical levels when no Foundry world or cached level is available', async () => {

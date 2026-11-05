@@ -31,12 +31,15 @@ Commandes principales :
 /fin-seance
 ```
 
-`/recap-pjs` construit un récapitulatif à partir des séances publiées :
+`/recap-pjs` construit un récapitulatif à partir des séances publiées, **limité aux joueurs identifiés dans la discussion Discord où la commande est lancée** :
 
+- dans un fil, le bot utilise les membres du fil et les auteurs des 100 derniers messages ; dans un salon texte classique, Discord ne permet pas d'obtenir tous les lecteurs et le bot utilise les auteurs des 100 derniers messages ; l'auteur de la commande est toujours inclus ;
+- avoir seulement la permission de lire le salon ne suffit pas à apparaître ; si la récupération des membres ou messages échoue, le bot n'ajoute pas tous les joueurs par défaut ;
+- les noms sont affichés **sans mentions Discord**, tant dans l'aperçu privé que dans le message public après validation (aucune notification par tag) ;
 - les joueurs n'ayant joué aucune séance sont exclus ;
 - pour chaque joueur, le bot affiche le nombre total de séances jouées ;
 - seuls ses personnages ayant effectivement joué sont listés ;
-- chaque personnage affiche son niveau Foundry et son nombre de séances ;
+- chaque personnage affiche son niveau réel Foundry, son niveau théorique XPC (ou `?` si indisponible) et son nombre de séances ;
 - lorsque le niveau théorique dérivé de la progression est supérieur au niveau réellement appliqué dans Foundry, le décalage est signalé sous la forme « niveau à faire ».
 
 `/recap-seance` est une commande d'administration : elle sélectionne une séance existante et reconstruit l'annonce prévue avec les participants, la date de début de mission et le nombre de lancers de progression qui étaient dus avant cette séance.

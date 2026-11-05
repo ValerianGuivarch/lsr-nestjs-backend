@@ -137,7 +137,7 @@ export class DiscordCommandsService {
       new SlashCommandBuilder().setName('terminer-quete').setDescription('Marque comme terminée la quête de ce fil.').toJSON(),
       new SlashCommandBuilder().setName('relancer-quete').setDescription('Relance une quête terminée depuis son fil.').toJSON(),
       new SlashCommandBuilder().setName('help-admin').setDescription('Affiche les commandes PF2 réservées aux administrateurs.').setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild).toJSON(),
-      new SlashCommandBuilder().setName('recap-pjs').setDescription('Prévisualise le nombre de séances jouées par joueur et par personnage.').toJSON(),
+      new SlashCommandBuilder().setName('recap-pjs').setDescription('Récapitule les joueurs de cette discussion sans les mentionner.').toJSON(),
       new SlashCommandBuilder().setName('recap-seance').setDescription('Prévisualise les informations prévues pour une séance.').addStringOption(option => option.setName('session').setDescription('Numéro de séance').setRequired(true).setAutocomplete(true)).setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild).toJSON(),
       new SlashCommandBuilder().setName('journaux').setDescription('Prépare la révélation d’un journal.').addIntegerOption(option => option.setName('numero').setDescription('Numéro du journal à révéler').setRequired(false).setMinValue(1)).setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild).toJSON(),
       new SlashCommandBuilder().setName('debut-seance').setDescription('Prépare le début d’une nouvelle séance PF2.').setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild).toJSON(),
@@ -288,7 +288,7 @@ export class DiscordCommandsService {
         '`/choix-quete` — prévisualise et fait confirmer les quêtes : 🔒 prioritaire, 👍 intéressé.',
         '`/terminer-quete` — depuis un fil du journal des quêtes, demande un compte rendu, marque la quête Terminée et libère les réservations 👍.',
         '`/relancer-quete` — rouvre une quête fermée (archivée et verrouillée) et la remet dans `/choix-quete`.',
-        '`/recap-pjs` — aperçu du récapitulatif des joueurs/PJ, puis bouton de publication.',
+        '`/recap-pjs` — aperçu des PJ de cette discussion, sans mentions, puis bouton de publication.',
         '`/afficher-personnage` — affiche pour toi un personnage publié, puis permet de le partager.',
         '`/afficher-faction` — affiche pour toi une faction publiée, puis permet de la partager.',
         '`/nouvelle-faction` — crée une faction ou sous-faction dans le carnet des joueurs.',
@@ -2252,8 +2252,53 @@ export class DiscordCommandsService {
     }
   }
 
+  /**
+   * The recap concerns only this Discord conversation, never every user
+   * allowed to view the parent channel. A thread includes its joined members
+   * and recent authors; a plain text channel only exposes recent authors.
+   * If Discord prevents either lookup, fail closed to the command author.
+   */
+  private async recapDiscussionUserIds(interaction: ChatInputCommandInteraction): Promise<Set<string>> {
+    const ids = new Set<string>([interaction.user.id])
+    const channel = interaction.channel
+    if (!channel) return ids
+
+    if (channel.isThread()) {
+      try {
+        const members = await channel.members.fetch()
+        for (const member of members.values()) ids.add(member.id)
+      } catch (error) {
+        this.logger.warn(`recap-pjs: membres du fil indisponibles : ${error instanceof Error ? error.message : String(error)}`)
+      }
+    }
+
+    if (channel.isTextBased() && 'messages' in channel) {
+      try {
+        const messages = await channel.messages.fetch({ limit: 100 })
+        for (const message of messages.values()) {
+          if (!message.author.bot) ids.add(message.author.id)
+        }
+      } catch (error) {
+        this.logger.warn(`recap-pjs: auteurs de la discussion indisponibles : ${error instanceof Error ? error.message : String(error)}`)
+      }
+    }
+
+    return ids
+  }
+
   private async recapCommand(interaction: ChatInputCommandInteraction): Promise<void> {
     await interaction.deferReply({ ephemeral: true })
+    const discussionUserIds = await this.recapDiscussionUserIds(interaction)
+    const identities = await this.persistence.listPlayerIdentities?.() ?? []
+    const normalizePlayerName = (name: string): string => name.normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim().toLowerCase()
+    const discordIdByPlayerName = new Map(identities.map(identity => [normalizePlayerName(identity.playerName), identity.discordUserId]))
+    const discordIdFor = (player: string): string | undefined =>
+      this.discordId(player) ?? discordIdByPlayerName.get(normalizePlayerName(player))
+    const belongsToDiscussion = (player: string): boolean => {
+      const id = discordIdFor(player)
+      return id !== undefined && discussionUserIds.has(id)
+    }
+
     const sessions = (await this.persistence.listSessions()).filter((session) => session.published)
     const names = await this.actorNames()
     const characterSessions = new Map<string, number>()
@@ -2281,33 +2326,37 @@ export class DiscordCommandsService {
       .filter(([, count]) => count > 0)
       .flatMap(([uuid, count]) => {
         const name = names.get(uuid)
-        return name ? [{ uuid, name, player: this.playerName(name), count }] : []
+        if (!name || !belongsToDiscussion(this.playerName(name))) return []
+        return [{ uuid, name, player: this.playerName(name), count }]
       })
     const levels = await this.playerLevels(characters.map(character => character.uuid))
     const missingLevels = characters.filter(actor => !levels.has(actor.uuid)).length
     const missingTheoretical = characters.filter(actor => levels.has(actor.uuid) && levels.get(actor.uuid)?.theoreticalLevel === null).length
 
     const players = [...playerSessions.entries()]
-      .filter(([, played]) => played.size > 0)
+      .filter(([player, played]) => played.size > 0 && belongsToDiscussion(player))
       .sort(([left], [right]) => left.localeCompare(right, 'fr'))
 
     if (!players.length) {
-      await interaction.editReply({ content: 'Aucune séance jouée n’est enregistrée.' })
+      await interaction.editReply({
+        content: 'Aucun joueur de cette discussion n’a de séance jouée enregistrée.',
+        allowedMentions: { parse: [] },
+      })
       return
     }
 
-    const namesByDiscordId = new Map((await this.persistence.listPlayerIdentities?.() ?? []).map(identity => [identity.discordUserId, identity.playerName]))
-    const lines = ['**Récap des séances jouées**']
+    const namesByDiscordId = new Map(identities.map(identity => [identity.discordUserId, identity.playerName]))
+    const lines = ['**Récap des séances jouées — joueurs de cette discussion**']
     if (missingLevels || missingTheoretical) {
       lines.push(
         '_⚠️ Certains niveaux ne sont pas disponibles : il faut ouvrir le monde Foundry au moins une fois pour synchroniser les niveaux réels et théoriques. Les niveaux déjà enregistrés restent consultables hors ligne._',
       )
     }
     for (const [player, played] of players) {
-      const discordId = this.discordId(player)
+      const discordId = discordIdFor(player)
       const name = discordId ? namesByDiscordId.get(discordId) ?? pf2PlayerByDiscordId(discordId)?.name ?? player : player
       const lastSessionDate = playerLastSessionDate.get(player)
-      lines.push('', `**${name} — ${played.size} séance${played.size > 1 ? 's' : ''}**${discordId ? ` (<@${discordId}>)` : ''}${lastSessionDate ? ` — dernière séance : ${this.displayRealDate(lastSessionDate)}` : ''}`)
+      lines.push('', `**${name} — ${played.size} séance${played.size > 1 ? 's' : ''}**${lastSessionDate ? ` — dernière séance : ${this.displayRealDate(lastSessionDate)}` : ''}`)
       for (const actor of characters.filter((item) => item.player === player).sort((a, b) => a.name.localeCompare(b.name, 'fr'))) {
         lines.push(`- ${this.characterLabel(actor.name)} — ${this.levelLabel(actor.uuid, levels)} — ${actor.count} séance${actor.count > 1 ? 's' : ''}`)
       }
