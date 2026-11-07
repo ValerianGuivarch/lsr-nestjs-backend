@@ -666,3 +666,17 @@ Pour terminer : privilégier l'API Document Foundry avec session MJ active, cons
 - La permission native Foundry reste **par utilisateur**. Le Toolkit vérifie en outre game.user.character pour ses boutons, sans prétendre verrouiller toutes les voies d'accès natives selon le personnage actif.
 - Code : pf2e-val-toolkit/scripts/lodge-stashes.js, style styles/lodge-stashes.css, tests tests/lodge-stashes.mjs. Détails de configuration dans pf2e-val-toolkit/README.md.
 - **Livraison :** branche/PR isolée, sans chargement de cette version dans Foundry avant fusion ; essais de transfert réels à effectuer sur la scène après fusion et rechargement.
+
+---
+
+## Réglage de grille — Sept Fléaux de Pointesable (7 novembre 2026)
+
+Dans le monde **test-pf2**, dossier de scènes français « Les Sept Fléaux de Pointesable », le MJ a demandé un quadrillage deux fois plus dense. Contrôle du **7 novembre 2026** par l'API documentaire Foundry :
+
+- **13 scènes inspectées** : les scènes 01 (Catacombes) et 02 (Corniches C1–C7) étaient déjà à une taille de grille de 50 px.
+- **11 scènes corrigées** : 03, 04, 05, 05b et 06 à 12 sont passées de 100 à 50 px par case, en conservant la distance de 5 pieds, les dimensions du canvas et les fonds de carte.
+- Les **339 tokens** et **4 012 murs** des 13 scènes ont été relus ; leurs documents et coordonnées sont inchangés, hormis la propriété dérivée *Token._regions* recalculée par Foundry pour quatre tokens de la scène 03 en raison de leur nouvelle emprise.
+- Sauvegardes JSON privées *avant modification* des 13 scènes : /home/valou/services/pf2-data/_AI/scene-grid-fosse-backup-20261107/. Aucune donnée du monde ou illustration privée n'est publiée sur GitHub.
+- Modification et vérification via les endpoints documentaires Foundry REST Relay, sans écriture LevelDB et sans redémarrage Foundry.
+
+**Limite :** ce réglage corrige la densité de grille, pas l'éventuel **décalage d'une case** entre le fond et les placeables déjà signalé sur N1. L'alignement visuel en client MJ reste à valider séparément. Il ne s'agit pas de la duplication/agrandissement ×2 de N1 évoquée lors du chantier précédent (qui n'avait pas été effectuée).
