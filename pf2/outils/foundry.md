@@ -679,4 +679,16 @@ Dans le monde **test-pf2**, dossier de scènes français « Les Sept Fléaux de 
 - Sauvegardes JSON privées *avant modification* des 13 scènes : /home/valou/services/pf2-data/_AI/scene-grid-fosse-backup-20261107/. Aucune donnée du monde ou illustration privée n'est publiée sur GitHub.
 - Modification et vérification via les endpoints documentaires Foundry REST Relay, sans écriture LevelDB et sans redémarrage Foundry.
 
-**Limite :** ce réglage corrige la densité de grille, pas l'éventuel **décalage d'une case** entre le fond et les placeables déjà signalé sur N1. L'alignement visuel en client MJ reste à valider séparément. Il ne s'agit pas de la duplication/agrandissement ×2 de N1 évoquée lors du chantier précédent (qui n'avait pas été effectuée).
+**Limite :** cette première opération réglait seulement la densité de grille. Le décalage des éléments de N1 a été traité **ensuite**, comme décrit ci-dessous. La validation visuelle en client MJ reste à faire. La duplication/agrandissement ×2 de N1 demandée auparavant n'avait pas été effectuée.
+
+### Fosse N1 — translation verticale des placeables (7 novembre 2026)
+
+Sur la scène 03 — **Fosse N1, Repaire des Crocs-Sifflets**, la capture fournie par le MJ montre le contrôle d'une porte une case **sous** le pont représenté sur la carte. Pour aligner les éléments avec l'image, correction via les endpoints documentaires Foundry en déplaçant les éléments de **−50 px en Y** (une case de grille), tout en laissant le Level de fond et la grille inchangés.
+
+- **643/643 murs et portes** et **16/16 notes de salle** : translation exacte, vérifiée par identifiant et coordonnées.
+- **57/61 tokens** : translation exacte. Le token de Volpépite avait été déplacé indépendamment pendant l'opération ; sa nouvelle position a été conservée avant application du décalage vertical.
+- **Quatre exceptions** : les tokens de **Saucisse** et **Seigneur Longs-Doigts** n'ont pas été déplacés, car leurs références d'Actor invalides provoquent des erreurs de validation Foundry. Un **Commando gobelin** est resté 10 px au-dessous de la position cible et **Minargul** 11 px au-dessous, leurs mouvements étant arrêtés par les collisions Foundry. Ne pas contourner ces erreurs en modifiant LevelDB, les ActorIds ou les permissions.
+- Tous les identifiants d'éléments sont conservés. L'image du Level, la grille et les dimensions de la scène sont inchangées.
+- Snapshot JSON privé avant opération, script de reprise et snapshot après intervention : /home/valou/services/pf2-data/_AI/fosse-n1-translation-backup-20261107/.
+
+**À reprendre :** vérifier visuellement l'alignement porte/pont et régler les quatre exceptions avec la méthode Foundry appropriée, après validation du MJ. Ne pas considérer la translation de tous les tokens comme terminée.
