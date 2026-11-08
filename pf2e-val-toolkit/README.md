@@ -1392,3 +1392,37 @@ la publication serveur. Une présentation existante est actualisée, pas
 republiée. En cas d'absence de Foundry, une file serveur SQLite durable
 réessaie la livraison. Test de détection client :
 node pf2e-val-toolkit/tests/discord-character-chat.mjs.
+
+### v0.44.16 — PF2e HUD V14 : correction des menus des joueurs (8 novembre 2026)
+
+L'intégration précédente ajoutait directement trois boutons d'intermède
+dans le contenu interne de la sidebar Extras de PF2e HUD 2.55.2.
+Sur certains écrans, ces boutons débordaient sur le HUD et la hotbar,
+notamment avec Pépin. Le tri et le masquage manuel d'actions dans la
+sidebar Compétences déplaçaient aussi les éléments natifs de PF2e HUD et
+risquaient d'interférer avec les menus des personnages.
+
+**Correctif de compatibilité :** plus aucune injection de boutons ni
+réorganisation des éléments HTML de PF2e HUD. Les anciens boutons injectés
+sont masqués par CSS et supprimés lors du rendu des sidebars. Les anciens
+réglages de tri/regroupement sont masqués. Aucun personnage, macro native,
+historique de jet ni réputation n'est modifié par ce correctif.
+
+Les formulaires d'intermède restent accessibles par les **macros natives**
+de Foundry, que le joueur peut placer dans Extras par le glisser-déposer
+prévu par PF2e HUD. Le Toolkit expose sur son API
+game.modules.get("pf2e-val-toolkit").api.openInterludeActivity(actor, kind).
+
+Exemple de code d'une macro Script pour **Créer un contact** :
+
+    const personnage = typeof actor !== "undefined" ? actor :
+      (canvas.tokens.controlled[0]?.actor || game.user.character);
+    await game.modules.get("pf2e-val-toolkit").api.openInterludeActivity(personnage, "create");
+
+Remplacer le dernier argument par "maintain" pour **Entretenir une
+relation**, ou "community" pour **Rendre service à une communauté**.
+Les deux premiers nécessitent le don Animal social (Hobnobber).
+La propriété du personnage reste obligatoire. Les jets ne modifient
+jamais automatiquement les réputations du wiki.
+
+Tests : interlude-hud-v14.mjs et interlude-actions.mjs.

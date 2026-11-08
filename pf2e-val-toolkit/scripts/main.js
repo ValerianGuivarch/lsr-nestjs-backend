@@ -29,6 +29,7 @@ import {
   initPf2eHudIntegration,
   registerPf2eHudIntegrationSettings
 } from "./pf2e-hud-integration.js";
+import { openInterludeActivity } from "./interlude-actions.js";
 import { initQuickEffects } from "./quick-effects/index.js";
 import { initTargetContext } from "./target-context/index.js";
 import { initPrivateRollCharacterNames } from "./private-roll-names.js";
@@ -90,6 +91,10 @@ Hooks.once("ready", () => {
   initGeneralActionsBrowser();
   const startupXpReconciliation = initCareerXp();
   initTokenNaming();
+  // Supported integration: a world macro may call this function. We no
+  // longer append action buttons inside PF2e HUD's own ApplicationV2 DOM.
+  const toolkit = game.modules.get("pf2e-val-toolkit");
+  if (toolkit) toolkit.api = { ...(toolkit.api ?? {}), openInterludeActivity };
   initPf2eHudIntegration();
   initPortraitTokenSync();
 

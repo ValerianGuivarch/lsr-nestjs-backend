@@ -1,42 +1,44 @@
 import assert from 'node:assert/strict';
 import { JSDOM } from 'jsdom';
-import { initPf2eHudIntegration } from '../scripts/pf2e-hud-integration.js';
+import { initPf2eHudIntegration, registerPf2eHudIntegrationSettings } from '../scripts/pf2e-hud-integration.js';
 
-const dom = new JSDOM('<!DOCTYPE html><html><head></head><body><section id="pf2e-hud-sidebar"></section></body></html>');
+const dom = new JSDOM('<!doctype html><html><head></head><body><section id="pf2e-hud-sidebar"></section></body></html>');
 globalThis.document = dom.window.document;
 globalThis.window = dom.window;
 const hooks = new Map();
-const frames = [];
-globalThis.requestAnimationFrame = callback => frames.push(callback);
-globalThis.Hooks = {on:(name,fn) => hooks.set(name,fn)};
-const pepin = {
-  name: 'Pépin (Eric)', type:'character', uuid:'Actor.nfP4ECNY8uzXvtLD', isOwner:true,
-  items:[{name:'Animal social (Hobnobber)',system:{slug:'hobnobber'}}]
+const settings = new Map();
+globalThis.Hooks = {on:(name, handler) => hooks.set(name, handler)};
+globalThis.game = {
+  modules: {get:id=>id==='pf2e-hud'?{active:true}:null},
+  settings: {register:(_id,name,data)=>settings.set(name,data)}
 };
-const stranger = {name:'Autre personnage',type:'character',uuid:'Actor.stranger',isOwner:true,items:[]};
-globalThis.game={user:{isGM:false,character:null},modules:{get:id=>id==='pf2e-hud'?{active:true}:null}};
-globalThis.canvas={tokens:{controlled:[]}};
+registerPf2eHudIntegrationSettings();
+assert.equal(settings.get('pf2eHud.localizedActionSort')?.config, false);
+assert.equal(settings.get('pf2eHud.groupRecallKnowledge')?.config, false);
+
 initPf2eHudIntegration();
-assert.equal(hooks.has('renderApplicationV2'),true,'Must listen to V14 rendering');
-assert.equal(hooks.has('renderApplication'),false,'Legacy-only rendering hook should not be used');
-while(frames.length)frames.shift()();
-const parent = document.querySelector('#pf2e-hud-sidebar');
+assert.ok(hooks.has('renderApplicationV2'));
 const pending = document.createElement('div');
-pending.className='inner';pending.dataset.sidebar='extras';
-// It must be able to decorate the pending HTML even before it reaches the DOM.
-hooks.get('renderApplicationV2')({id:'pf2e-hud-sidebar',name:'extras',actor:pepin},pending);
-assert.equal(pending.querySelectorAll('.pf2e-val-interlude-button').length,3);
-assert.match(pending.textContent,/Créer un contact/);
-assert.match(pending.textContent,/Entretenir une relation/);
-assert.match(pending.textContent,/Rendre service à une communauté/);
-assert.equal(pending.querySelector('.pf2e-val-interlude-shortcuts').dataset.actorUuid,pepin.uuid);
-parent.replaceChildren(pending);
-while(frames.length)frames.shift()();
-assert.equal(parent.querySelectorAll('.pf2e-val-interlude-button').length,3,'Raf refresh must not remove buttons');
-const pendingOther=document.createElement('div');pendingOther.className='inner';pendingOther.dataset.sidebar='extras';
-hooks.get('renderApplicationV2')({id:'pf2e-hud-sidebar',name:'extras',actor:stranger},pendingOther);
-assert.equal(pendingOther.querySelectorAll('.pf2e-val-interlude-button').length,0,'No Hobnobber -> no shortcuts');
-parent.replaceChildren(pendingOther);
-while(frames.length)frames.shift()();
-assert.equal(parent.querySelectorAll('.pf2e-val-interlude-button').length,0,'No leftover shortcuts after actor switch');
-console.log('OK — PF2e HUD V14 render hook shows 3 activities for Pépin, hides them for other actors');
+pending.id = 'pf2e-hud-sidebar';
+pending.dataset.sidebar = 'extras';
+pending.innerHTML = '<header data-filter-value="athletics">Athlétisme</header><button data-action="roll-statistic-action" id="native-action">Frapper</button><div class="pf2e-val-interlude-shortcuts"><button>Créer un contact</button></div><button data-action="use-macro" id="native-macro">Macro de joueur</button>';
+const native = pending.querySelector('#native-action');
+const macro = pending.querySelector('#native-macro');
+const header = pending.querySelector('header');
+let clicks = 0;
+macro.addEventListener('click', () => clicks++);
+const original = [header, native, macro];
+hooks.get('renderApplicationV2')({id:'pf2e-hud-sidebar', name:'extras', actor:{name:'Pépin'}}, pending);
+assert.equal(pending.querySelector('.pf2e-val-interlude-shortcuts'), null, 'Legacy overlapping buttons removed');
+assert.deepEqual([...pending.children], original, 'Native HUD nodes must not be reparented');
+macro.click();
+assert.equal(clicks, 1, 'Native macro event listeners remain active');
+const skills = document.createElement('div');
+skills.dataset.sidebar = 'skills';
+skills.innerHTML = '<header data-filter-value="perception">Perception</header><div class="statistic-wrapper">Se souvenir</div><header data-filter-value="acrobatics">Acrobaties</header><div class="statistic-wrapper">Un saut</div>';
+const skillNodes = [...skills.children];
+hooks.get('renderApplicationV2')({id:'pf2e-hud-sidebar',name:'skills'},skills);
+assert.deepEqual([...skills.children], skillNodes, 'No HTML reordering');
+assert.ok(skillNodes.every(node => node.style.display !== 'none'), 'No hiding of native actions');
+assert.equal(skills.querySelectorAll('.pf2e-val-interlude-button').length, 0);
+console.log('OK — V14 overlay removed, native character menus, macros and skills DOM untouched');

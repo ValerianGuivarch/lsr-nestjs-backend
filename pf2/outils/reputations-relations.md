@@ -71,3 +71,17 @@ Désormais l'API envoie explicitement canEdit: 1 ou canEdit: 0 et le JavaScript
 reconnaît aussi les anciens indicateurs MediaWiki canEdit: chaîne vide.
 Les tests reproduisent les deux variantes ainsi que les valeurs non-admin.
 Les réputations enregistrées et les permissions des utilisateurs ne changent pas.
+
+## Compatibilité des menus PF2e HUD (8 novembre 2026)
+
+Les trois boutons des activités d'intermède ne sont plus injectés dans
+la structure de la sidebar Extras de PF2e HUD : ils débordaient sur les
+barres d'action et pouvaient bloquer les menus natifs. Le Toolkit ne
+déplace ni ne masque plus les propres actions de PF2e HUD.
+
+Les activités restent accessibles via des macros natives déposées
+dans Extras, avec l'API du Toolkit openInterludeActivity(actor, kind).
+Consulter la section 0.44.16 du README du toolkit pour les exemples.
+Le don Animal social reste nécessaire aux deux activités de contact ;
+l'activité de service communautaire n'exige pas ce don.
+Aucune donnée de réputation n'est modifiée automatiquement.

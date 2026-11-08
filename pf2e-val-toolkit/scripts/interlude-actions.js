@@ -145,4 +145,12 @@ export function decorateInterludeExtras(actorOverride = null, root = document) {
   }
   extras.append(box);
 }
-export function openInterludeActivity(actor,kind){return openInterlude(actor,kind)}
+// Public API for optional macros dropped into PF2e HUD's supported Extras
+// macros section (instead of inserting HTML into the HUD-managed sidebar).
+export function openInterludeActivity(actor, kind) {
+  if (kind !== 'community' && !isHobnobber(actor)) {
+    ui.notifications.warn('Le don Animal social est nécessaire pour cette activité.');
+    return Promise.resolve();
+  }
+  return openInterlude(actor, kind);
+}
