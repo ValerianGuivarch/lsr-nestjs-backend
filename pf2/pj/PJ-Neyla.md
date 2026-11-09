@@ -71,8 +71,9 @@ _Aucun élément documenté à ce stade._
 - **Lien Google Docs :** à renseigner, facultatif
 - **Lien Discord :** à renseigner, facultatif
 - **Discussion ChatGPT :** à renseigner, facultatif
-- **Référence Foundry (UUID) :** à renseigner, facultative ; Foundry reste source de vérité mécanique
+- **Référence Foundry active (UUID) :** `Actor.thiO3arUlcWV1bMO` (nouvelle Neyla barbare ; ancienne fiche moine archivée). Foundry reste source de vérité mécanique.
 
 ### Classe, choix PF2 et évolutions
-- **Source de vérité mécanique :** fiche Foundry / fiche joueur, à vérifier.
-- **Choix de progression :** non encore documentés ici.
+- **Réorientation validée (9 novembre 2026) :** Neyla est désormais **barbare**, instinct animal (**félin**), niveau 3. La nouvelle fiche Foundry remplace l'ancienne fiche moine, conservée comme archive. La transition narrative en captivité reste distincte de la modification mécanique et ne doit pas être considérée comme déjà jouée sans confirmation.
+- **Source de vérité mécanique :** nouvelle fiche Foundry de Neyla ; ne plus utiliser l'ancienne fiche moine pour les niveaux, XP et choix de progression.
+- **Choix de progression :** vérifier directement dans Foundry les dons et caractéristiques effectivement sélectionnés.
