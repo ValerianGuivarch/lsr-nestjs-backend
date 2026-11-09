@@ -27,6 +27,9 @@ const PLANNING_DAYS = [
   { offset: 6, label: 'Dimanche', emoji: '🇩' },
 ] as const
 
+type SchedulePlayer = { id: string; name: string; played: number }
+type ScheduleGroup = { key: string; label: string; players: SchedulePlayer[] }
+
 type QuestVoteEntry = { id: string; title: string; createdAt: number; reserved: Set<string>; interested: Set<string> }
 type QuestVoteEvent = { sequence: number; threadId: string; userId: string; emoji: '👍' | '🔒'; added: boolean }
 
@@ -77,8 +80,10 @@ export class DiscordCommandsService {
     availability: Map<string, Array<{ id: string; name: string; played: number }>>
     reactions: string
     selectedKeys?: string[]
-    solutions?: Array<Array<{ key: string; label: string; players: Array<{ id: string; name: string; played: number }> }>>
+    solutions?: ScheduleGroup[][]
     solutionPage?: number
+    chosenGroups?: ScheduleGroup[]
+    selectionLabel?: string
   }>()
   private readonly pendingSessionValidations = new Map<string, { requesterId: string; channelId: string; content: string; userIds: string[]; planningMessageId?: string; planningContent?: string; reactions?: string; planningDates?: string[] }>()
   private readonly pendingManualSessionValidations = new Map<string, {
@@ -1892,13 +1897,72 @@ export class DiscordCommandsService {
     }
   }
 
+  private scheduleGroupToEditView(commandId: string): {
+    content: string
+    components: Array<ActionRowBuilder<StringSelectMenuBuilder> | ActionRowBuilder<ButtonBuilder>>
+    allowedMentions: { parse: [] }
+  } {
+    const groups = this.pendingSchedulePublications.get(commandId)?.chosenGroups ?? []
+    const menu = new StringSelectMenuBuilder()
+      .setCustomId('pf2-schedule:edit-group:' + commandId)
+      .setPlaceholder('Choisir la séance à modifier')
+      .addOptions(groups.map(group => ({
+        label: group.label.slice(0, 100), value: group.key,
+      })))
+    const back = new ButtonBuilder().setCustomId('pf2-date-confirm:preview:' + commandId)
+      .setLabel('Retour à la validation').setStyle(ButtonStyle.Secondary)
+    const cancel = new ButtonBuilder().setCustomId('pf2-date-confirm:cancel:' + commandId)
+      .setLabel('Annuler').setStyle(ButtonStyle.Secondary)
+    return {
+      content: '**Modifier les joueurs**\nChoisis la séance à modifier. Les autres groupes restent inchangés.',
+      components: [
+        new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(menu),
+        new ActionRowBuilder<ButtonBuilder>().addComponents(back, cancel),
+      ],
+      allowedMentions: { parse: [] },
+    }
+  }
+
+  private schedulePlayersToEditView(commandId: string, dayKey: string): {
+    content: string
+    components: Array<ActionRowBuilder<UserSelectMenuBuilder> | ActionRowBuilder<ButtonBuilder>>
+    allowedMentions: { parse: [] }
+  } {
+    const group = this.pendingSchedulePublications.get(commandId)?.chosenGroups?.find(item => item.key === dayKey)
+    if (!group || group.players.length !== 4) throw new Error('Groupe de séance introuvable.')
+    const select = new UserSelectMenuBuilder()
+      .setCustomId('pf2-schedule:players:' + commandId + ':' + dayKey)
+      .setPlaceholder('Choisir exactement 4 joueurs')
+      .setMinValues(4).setMaxValues(4)
+      .setDefaultUsers(...group.players.map(player => player.id))
+    const back = new ButtonBuilder().setCustomId('pf2-date-confirm:preview:' + commandId)
+      .setLabel('Retour à la validation').setStyle(ButtonStyle.Secondary)
+    const cancel = new ButtonBuilder().setCustomId('pf2-date-confirm:cancel:' + commandId)
+      .setLabel('Annuler').setStyle(ButtonStyle.Secondary)
+    return {
+      content: [
+        '**Modifier les joueurs — ' + group.label + '**',
+        'Les quatre joueurs proposés sont présélectionnés. Remplace ceux que tu souhaites, puis valide la sélection.',
+        'Le MJ peut aussi choisir un joueur qui n’a pas réagi : vérifie sa disponibilité avant de publier.',
+        'Aucune notification ne sera envoyée avant « Créer les séances ».',
+      ].join('\n\n'),
+      components: [
+        new ActionRowBuilder<UserSelectMenuBuilder>().addComponents(select),
+        new ActionRowBuilder<ButtonBuilder>().addComponents(back, cancel),
+      ],
+      allowedMentions: { parse: [] },
+    }
+  }
+
   private async showScheduleFinalPreview(
-    interaction: StringSelectMenuInteraction,
+    interaction: StringSelectMenuInteraction | ButtonInteraction | UserSelectMenuInteraction,
     commandId: string,
-    chosen: Array<{ key: string; label: string; players: Array<{ id: string; name: string; played: number }> }>,
+    chosen: ScheduleGroup[],
     selectionLabel: string,
   ): Promise<void> {
     const pending = this.pendingSchedulePublications.get(commandId)!
+    pending.chosenGroups = chosen.map(group => ({ ...group, players: [...group.players] }))
+    pending.selectionLabel = selectionLabel
     const userIds = chosen.flatMap(group => group.players.map(player => player.id))
     const content = [
       '✅ **Séances validées — proposition 1**',
@@ -1912,13 +1976,15 @@ export class DiscordCommandsService {
     })
     const confirm = new ButtonBuilder().setCustomId(`pf2-date-confirm:publish:${commandId}`)
       .setLabel('Créer les séances').setStyle(ButtonStyle.Success)
-    const back = new ButtonBuilder().setCustomId(`pf2-date-confirm:back:${commandId}`)
+    const editPlayers = new ButtonBuilder().setCustomId('pf2-date-confirm:players:' + commandId)
+      .setLabel('Modifier les joueurs').setStyle(ButtonStyle.Primary)
+    const back = new ButtonBuilder().setCustomId('pf2-date-confirm:back:' + commandId)
       .setLabel('Modifier le choix').setStyle(ButtonStyle.Secondary)
     const cancel = new ButtonBuilder().setCustomId(`pf2-date-confirm:cancel:${commandId}`)
       .setLabel('Annuler').setStyle(ButtonStyle.Secondary)
     await interaction.editReply({
       content: ['**Aperçu privé — aucun ping avant confirmation**', selectionLabel, content].join('\n\n'),
-      components: [new ActionRowBuilder<ButtonBuilder>().addComponents(confirm, back, cancel)],
+      components: [new ActionRowBuilder<ButtonBuilder>().addComponents(confirm, editPlayers, back, cancel)],
       allowedMentions: { parse: [] },
     })
   }
@@ -2809,6 +2875,22 @@ export class DiscordCommandsService {
       await interaction.update(this.manualSessionPlayerSelection(commandId))
       return true
     }
+    if (interaction.customId.startsWith('pf2-schedule:edit-group:')) {
+      const key = interaction.customId.slice('pf2-schedule:edit-group:'.length)
+      const pending = this.pendingSchedulePublications.get(key)
+      if (!pending?.chosenGroups || !this.pendingSessionValidations.has(key)
+        || interaction.user.id !== pending.requesterId || interaction.channelId !== pending.channelId) {
+        await interaction.reply({ content: 'Sélection expirée ou non autorisée. Relance /analyse-date-seance.', ephemeral: true })
+        return true
+      }
+      const dayKey = interaction.values[0]
+      if (!pending.chosenGroups.some(group => group.key === dayKey)) {
+        await interaction.reply({ content: 'Séance introuvable dans la sélection.', ephemeral: true })
+        return true
+      }
+      await interaction.update(this.schedulePlayersToEditView(key, dayKey))
+      return true
+    }
     if (interaction.customId.startsWith('pf2-schedule:dates:')) {
       const key = interaction.customId.slice('pf2-schedule:dates:'.length)
       const pending = this.pendingSchedulePublications.get(key)
@@ -3004,6 +3086,50 @@ export class DiscordCommandsService {
   }
 
   async handleUserSelect(interaction: UserSelectMenuInteraction): Promise<boolean> {
+    const edit = /^pf2-schedule:players:([^:]+):([^:]+)$/.exec(interaction.customId)
+    if (edit) {
+      const [, commandId, dayKey] = edit
+      const pending = this.pendingSchedulePublications.get(commandId)
+      const groups = pending?.chosenGroups
+      const group = groups?.find(item => item.key === dayKey)
+      if (!pending || !groups || !group || !this.pendingSessionValidations.has(commandId)
+        || interaction.user.id !== pending.requesterId || interaction.channelId !== pending.channelId) {
+        await interaction.reply({ content: 'Sélection expirée ou non autorisée. Relance /analyse-date-seance.', ephemeral: true })
+        return true
+      }
+      const selectedIds = [...new Set(interaction.values)]
+      if (selectedIds.length !== 4 || interaction.values.length !== 4) {
+        await interaction.reply({ content: 'Choisis exactement 4 joueurs distincts.', ephemeral: true })
+        return true
+      }
+      const otherSessionIds = new Set(groups.filter(item => item.key !== dayKey).flatMap(item => item.players.map(player => player.id)))
+      const duplicates = selectedIds.filter(id => otherSessionIds.has(id))
+      if (duplicates.length) {
+        await interaction.reply({
+          content: 'Ces joueurs sont déjà retenus sur une autre séance de cette planification : '
+            + duplicates.map(id => '<@' + id + '>').join(', ') + '. Modifie d’abord l’autre groupe.',
+          ephemeral: true, allowedMentions: { parse: [] },
+        })
+        return true
+      }
+      const known = new Map(
+        [...pending.availability.values(), ...groups.map(item => item.players)]
+          .flat().map(player => [player.id, player] as const),
+      )
+      const players: SchedulePlayer[] = selectedIds.map(id => known.get(id) ?? {
+        id,
+        name: pf2PlayerByDiscordId(id)?.name
+          ?? interaction.users.get(id)?.globalName
+          ?? interaction.users.get(id)?.username
+          ?? id,
+        played: 0,
+      })
+      const updated = groups.map(item => item.key === dayKey ? { ...item, players } : item)
+      await interaction.deferUpdate()
+      await this.showScheduleFinalPreview(interaction, commandId, updated,
+        'Groupe ajusté manuellement par le MJ. Vérifie les joueurs avant publication.')
+      return true
+    }
     if (interaction.customId.startsWith('pf2-manual-session:players:')) {
       const commandId = interaction.customId.slice('pf2-manual-session:players:'.length)
       const pending = this.pendingManualSessionValidations.get(commandId)
@@ -3454,16 +3580,42 @@ export class DiscordCommandsService {
         await interaction.reply({ content: 'Cette confirmation appartient à un autre administrateur ou à un autre fil.', ephemeral: true })
         return true
       }
-      if (prefix !== 'pf2-date-confirm' || !['publish', 'cancel', 'back'].includes(action)) return false
+      if (prefix !== 'pf2-date-confirm' || !['publish', 'cancel', 'back', 'players', 'preview'].includes(action)) return false
       if (action === 'cancel') {
         this.pendingSessionValidations.delete(id)
         this.pendingSchedulePublications.delete(id)
         await interaction.update({ content: 'Validation annulée. Aucun message publié et aucun joueur notifié.', components: [], allowedMentions: { parse: [] } })
         return true
       }
+      if (action === 'players') {
+        const schedule = this.pendingSchedulePublications.get(id)
+        if (!schedule?.chosenGroups?.length) {
+          await interaction.reply({ content: 'Choix des joueurs expiré. Relance /analyse-date-seance.', ephemeral: true })
+          return true
+        }
+        await interaction.update(schedule.chosenGroups.length === 1
+          ? this.schedulePlayersToEditView(id, schedule.chosenGroups[0].key)
+          : this.scheduleGroupToEditView(id))
+        return true
+      }
+      if (action === 'preview') {
+        const schedule = this.pendingSchedulePublications.get(id)
+        if (!schedule?.chosenGroups?.length) {
+          await interaction.reply({ content: 'Aucun groupe à confirmer. Relance /analyse-date-seance.', ephemeral: true })
+          return true
+        }
+        await interaction.deferUpdate()
+        await this.showScheduleFinalPreview(interaction, id, schedule.chosenGroups,
+          schedule.selectionLabel ?? 'Groupe retenu par le MJ.')
+        return true
+      }
       if (action === 'back') {
         const schedule = this.pendingSchedulePublications.get(id)
         this.pendingSessionValidations.delete(id)
+        if (schedule) {
+          delete schedule.chosenGroups
+          delete schedule.selectionLabel
+        }
         if (!schedule) {
           await interaction.update({ content: 'Ce choix ne peut plus être modifié. Relance /analyse-date-seance.', components: [] })
           return true

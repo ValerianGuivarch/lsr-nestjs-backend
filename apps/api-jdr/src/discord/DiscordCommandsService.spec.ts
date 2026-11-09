@@ -2714,4 +2714,130 @@ describe('DiscordCommandsService', () => {
     expect((service as any).pendingSessionValidations.has('retry-1')).toBe(false)
   })
 
+
+  it('preselects the suggested four players and lets the MJ replace them before publication', async () => {
+    const service = new DiscordCommandsService({} as never, {} as never)
+    const ids = Array.from({ length: 5 }, (_, index) => '1000000000000000' + (index + 1))
+    const players = ids.map(id => ({ id, name: id, played: 0 }))
+    const group = { key: '3', label: 'Jeudi 12 novembre 2026', players: players.slice(0, 4) }
+    ;(service as any).pendingSchedulePublications.set('edit-single', {
+      requesterId: 'admin', channelId: 'thread', planningMessageId: 'planning',
+      planningContent: 'Planning', dates: [{ key: '3', label: group.label }],
+      availability: new Map([['3', players]]), reactions: '3:',
+    })
+    const editReply = jest.fn().mockResolvedValue(undefined)
+    await (service as any).showScheduleFinalPreview({ editReply }, 'edit-single', [group], 'Proposition automatique')
+    const preview = editReply.mock.calls[0][0]
+    expect(preview.components[0].toJSON().components.map((button: { custom_id: string }) => button.custom_id))
+      .toContain('pf2-date-confirm:players:edit-single')
+    const update = jest.fn().mockResolvedValue(undefined)
+    await service.handleButton({
+      customId: 'pf2-date-confirm:players:edit-single',
+      user: { id: 'admin' }, channelId: 'thread', update,
+    } as never)
+    const form = update.mock.calls[0][0]
+    const menu = form.components[0].toJSON().components[0]
+    expect(menu.custom_id).toBe('pf2-schedule:players:edit-single:3')
+    expect(menu.min_values).toBe(4)
+    expect(menu.max_values).toBe(4)
+    expect(menu.default_values.map((value: { id: string }) => value.id)).toEqual(ids.slice(0, 4))
+    expect(form.allowedMentions).toEqual({ parse: [] })
+    expect(form.content).toContain('présélectionnés')
+
+    const selected = [ids[0], ids[1], ids[2], ids[4]]
+    const deferUpdate = jest.fn().mockResolvedValue(undefined)
+    await service.handleUserSelect({
+      customId: 'pf2-schedule:players:edit-single:3', user: { id: 'admin' }, channelId: 'thread',
+      values: selected, users: new Collection(), deferUpdate, editReply,
+    } as never)
+    expect(deferUpdate).toHaveBeenCalledTimes(1)
+    const validation = (service as any).pendingSessionValidations.get('edit-single')
+    expect(validation.userIds).toEqual(selected)
+    expect(validation.content).toContain('<@' + ids[4] + '>')
+    expect(validation.content).not.toContain('<@' + ids[3] + '>')
+    expect((service as any).parseConfirmedMissionGroups(validation.content)[0].userIds).toEqual(selected)
+    expect(editReply.mock.calls.at(-1)[0].allowedMentions).toEqual({ parse: [] })
+  })
+
+  it('edits a specific session without duplicates across dates and keeps the other players', async () => {
+    const service = new DiscordCommandsService({} as never, {} as never)
+    const ids = Array.from({ length: 9 }, (_, index) => '1000000000000000' + (index + 1))
+    const players = ids.map(id => ({ id, name: id, played: 0 }))
+    const first = { key: '0', label: 'Lundi 9 novembre 2026', players: players.slice(0, 4) }
+    const second = { key: '3', label: 'Jeudi 12 novembre 2026', players: players.slice(4, 8) }
+    ;(service as any).pendingSchedulePublications.set('edit-multi', {
+      requesterId: 'admin', channelId: 'thread', planningMessageId: 'planning',
+      planningContent: 'Planning', dates: [{ key: '0', label: first.label }, { key: '3', label: second.label }],
+      availability: new Map([['0', players], ['3', players]]), reactions: '0:|3:',
+    })
+    const editReply = jest.fn().mockResolvedValue(undefined)
+    await (service as any).showScheduleFinalPreview({ editReply }, 'edit-multi', [first, second], 'Deux dates choisies')
+    const update = jest.fn().mockResolvedValue(undefined)
+    await service.handleButton({
+      customId: 'pf2-date-confirm:players:edit-multi',
+      user: { id: 'admin' }, channelId: 'thread', update,
+    } as never)
+    expect(update.mock.calls[0][0].components[0].toJSON().components[0].custom_id)
+      .toBe('pf2-schedule:edit-group:edit-multi')
+    await service.handleComponent({
+      customId: 'pf2-schedule:edit-group:edit-multi', user: { id: 'admin' },
+      channelId: 'thread', values: ['3'], update,
+    } as never)
+    const menu = update.mock.calls[1][0].components[0].toJSON().components[0]
+    expect(menu.default_values.map((value: { id: string }) => value.id)).toEqual(ids.slice(4, 8))
+
+    const reply = jest.fn().mockResolvedValue(undefined)
+    const deferUpdate = jest.fn().mockResolvedValue(undefined)
+    const shared = {
+      customId: 'pf2-schedule:players:edit-multi:3',
+      user: { id: 'admin' }, channelId: 'thread',
+      users: new Collection(), reply, deferUpdate, editReply,
+    }
+    await service.handleUserSelect({ ...shared, values: [ids[0], ids[4], ids[5], ids[6]] } as never)
+    expect(reply).toHaveBeenCalledWith(expect.objectContaining({
+      content: expect.stringContaining('déjà retenus sur une autre séance'), ephemeral: true,
+      allowedMentions: { parse: [] },
+    }))
+    expect(deferUpdate).not.toHaveBeenCalled()
+    expect((service as any).pendingSessionValidations.get('edit-multi').userIds).toEqual(ids.slice(0, 8))
+
+    await service.handleUserSelect({ ...shared, values: [ids[4], ids[5], ids[6], ids[8]] } as never)
+    const validation = (service as any).pendingSessionValidations.get('edit-multi')
+    expect(validation.userIds).toEqual([...ids.slice(0, 4), ...ids.slice(4, 7), ids[8]])
+    const groups = (service as any).parseConfirmedMissionGroups(validation.content)
+    expect(groups).toHaveLength(2)
+    expect(groups[0].userIds).toEqual(ids.slice(0, 4))
+    expect(groups[1].userIds).toEqual([ids[4], ids[5], ids[6], ids[8]])
+    expect(deferUpdate).toHaveBeenCalledTimes(1)
+
+    const back = jest.fn().mockResolvedValue(undefined)
+    await service.handleButton({
+      customId: 'pf2-date-confirm:preview:edit-multi',
+      user: { id: 'admin' }, channelId: 'thread', deferUpdate, editReply: back,
+    } as never)
+    expect(back.mock.calls[0][0].content).toContain('<@' + ids[8] + '>')
+    expect(back.mock.calls[0][0].components[0].toJSON().components.some((button: { label: string }) => button.label === 'Créer les séances')).toBe(true)
+  })
+
+  it('prevents another user from editing the private schedule', async () => {
+    const service = new DiscordCommandsService({} as never, {} as never)
+    const ids = Array.from({ length: 4 }, (_, index) => '1000000000000000' + (index + 1))
+    const group = { key: '3', label: 'Jeudi 12 novembre 2026', players: ids.map(id => ({ id, name: id, played: 0 })) }
+    ;(service as any).pendingSchedulePublications.set('edit-security', {
+      requesterId: 'admin', channelId: 'thread', dates: [{ key: '3', label: group.label }],
+      availability: new Map([['3', group.players]]),
+    })
+    await (service as any).showScheduleFinalPreview({ editReply: jest.fn() }, 'edit-security', [group], 'Proposition')
+    const reply = jest.fn().mockResolvedValue(undefined)
+    await service.handleButton({
+      customId: 'pf2-date-confirm:players:edit-security', user: { id: 'other' }, channelId: 'thread', reply,
+    } as never)
+    await service.handleUserSelect({
+      customId: 'pf2-schedule:players:edit-security:3', user: { id: 'other' },
+      channelId: 'thread', values: ids, reply,
+    } as never)
+    expect(reply).toHaveBeenCalledTimes(2)
+    expect((service as any).pendingSessionValidations.get('edit-security').userIds).toEqual(ids)
+  })
+
 })
