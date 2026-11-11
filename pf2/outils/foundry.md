@@ -732,3 +732,11 @@ Priorités : validation visuelle des deux cartes PFS ; éventuellement murs et �
 - Les rapports détaillés et le package Deidril 7.87 (SHA-256 **a7bf73b332c726c5abea64d3224222f9bdc3a8f8c6717c22491010b9f714387e**) restent sur le mini-PC, dans l'audit privé. Aucune illustration de PDF n'est mise dans GitHub.
 
 **Avant d'importer :** actualiser le catalogue de modules Foundry si nécessaire, puis activer **Deidril 7.87** pour le monde et fournir le PDF du pilote ; ne pas accepter une mise à jour automatique vers 7.90 sans vérifier la version du système PF2e. Contrôler les scènes, journaux et Actors générés avant de tenter un second import.
+
+### PFS S01-00 — Cartes réorientées et repères MJ (11 novembre 2026)
+
+- Les deux scènes PFS S01-00 ont conservé leurs UUID, mais leurs images privées ont été tournées pour retrouver l'orientation du PDF. Images actuelles : orrery-archive-portrait-aligned.webp et awash-in-slurry-portrait-aligned.webp, dans worlds/test-pf2/images/scenes/pfs-s01-00/. Copies d'origine et snapshots avant modification conservés.
+- Grilles vérifiées à 85 et 66 px pour 5 pieds ; calage visuel local de certains secteurs de la scène B encore à confirmer.
+- Création de **14 repères MJ cliquables** renvoyant à deux journaux privés (16 pages) ; troisième journal privé de trois documents joueurs issus des pages 16–17 du PDF, à partager au bon moment. Aucun accès joueur par défaut.
+- **Non terminé :** aucun mur, lumière dynamique ou token préparé sur ces deux scènes. Il reste à les préparer et à valider visuellement en client MJ.
+- Détails : [fiche du scénario](../campagnes/Scenario-Origines-Route-Ouverte.md). Pas d'images/PDF propriétaires dans GitHub.

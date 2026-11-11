@@ -9,6 +9,7 @@ Une **campagne ou un scénario suivi** doit avoir une fiche spécifique ; y dist
 | Agents d'Absalom | À confirmer — cadre documenté, progression réelle non vérifiée | [Agents d'Absalom](pf2/campagnes/Campagne-Agents-d-Absalom.md) |
 | Cartel du Sel | Active, première enquête terminée | [Cartel du Sel](pf2/campagnes/Campagne-Cartel-du-Sel.md) |
 | Les Sept Fléaux de Pointesable | Commencée | [Sept Fléaux](pf2/campagnes/Campagne-Sept-Fleaux-de-Pointesable.md) |
+| PFS S01-00 — Origines de la Route Ouverte | Préparation prioritaire, non jouée | [Scénario PFS S01-00](pf2/campagnes/Scenario-Origines-Route-Ouverte.md) |
 | Sentence d'Extinction | Adaptation en préparation | [Sentence d'Extinction](pf2/campagnes/Campagne-Sentence-d-Extinction.md) |
 | L'Âge des Cendres (anciennement HD100) | Préparation d'une adaptation pour table ouverte | [Âge des Cendres](pf2/campagnes/Campagne-Age-des-Cendres.md) |
 | La Force des milliers | Prévue plus tard | [Force des milliers](pf2/campagnes/Campagne-La-Force-des-milliers.md) |
