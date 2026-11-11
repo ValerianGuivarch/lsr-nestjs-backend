@@ -692,3 +692,32 @@ Sur la scène 03 — **Fosse N1, Repaire des Crocs-Sifflets**, la capture fourni
 - Snapshot JSON privé avant opération, script de reprise et snapshot après intervention : /home/valou/services/pf2-data/_AI/fosse-n1-translation-backup-20261107/.
 
 **À reprendre :** vérifier visuellement l'alignement porte/pont et régler les quatre exceptions avec la méthode Foundry appropriée, après validation du MJ. Ne pas considérer la translation de tous les tokens comme terminée.
+
+---
+
+## Bibliothèque des cartes et pilote Pathfinder Society — 11 novembre 2026
+
+Audit en lecture seule puis corrections ciblées dans le monde Foundry **test-pf2** via REST Relay avec un client MJ connecté, sous **Foundry V14.365 / PF2e 8.4.1**.
+
+- L'ancien inventaire du 3 novembre recensait **520 scènes** et proposait **75 suppressions** parmi 72 groupes de doublons. La nouvelle lecture **live** du 11 novembre compte **407 scènes avant** le pilote ; les 75 scènes anciennes à supprimer ont toutes disparu, tandis que les versions désignées à conserver sont présentes. Aucun autre doublon de nom dans un même dossier n'est relevé. **Aucune suppression supplémentaire effectuée.**
+- Le contrôle des ressources après reprise porte sur **409 scènes et 2 276 références**, dont 1 892 fichiers locaux présents, 320 références externes ou icônes natives non évaluées dans Data, et **64 références locales absentes** : 59 miniatures d'un monde Phandelver externe, 4 sons et 1 tuile. **Aucune image de fond de scène manquante** parmi les chemins locaux contrôlés.
+- Sur 65 chemins d'images auparavant proposés à la correction, **51 concernaient des scènes désormais supprimées**. Les **14 images de fond encore concernées** ont été réparées dans leur scène d'origine via le REST Relay, en changeant uniquement le chemin de fond du niveau de assets/maps vers le fichier existant maps ; relecture de chaque scène après modification, et conservation des murs, tokens et autres paramètres.
+- **Ne pas désinstaller** les modules tant que les scènes utilisent leurs chemins : ec-maps-remake-by-lios (73 fonds, 73 miniatures, 1 tuile), mad-phandelver (58 fonds, 330 tuiles, 324 sons) et monster-core-private-art (145 références de tokens dans les scènes). Les collections libres présentes sans références dans cet inventaire ne sont pas automatiquement à supprimer : vérifier les compendiums et les éventuels futurs imports.
+- **Kingmaker** : 43 scènes déjà importées. Comparer les nouvelles collections plutôt que créer un second ensemble par défaut.
+
+### Pilote PFS S01-00 — Origin of the Open Road
+
+Le PDF anglais officiel conservé dans la bibliothèque privée contient deux cartes distinctes ; elles ont été extraites puis adaptées au quadrillage dans des fichiers WebP **privés**, sous Data/worlds/test-pf2/images/scenes/pfs-s01-00/.
+
+Le dossier de scènes **« PFS S01-00 — Origin of the Open Road (cartes préparées) »** est créé dans Foundry (navigation des joueurs désactivée) :
+
+- Scene.eYxhjbWrCqWtLtO7 — **A, Archives de l'orrerie**, à Quantium ; page 6 du PDF, grille carrée **85 px / 5 pieds**, image **2573 × 2061**.
+- Scene.Dtg1CvduJ1cIxccD — **B, Égouts de Quantium**, page 12, grille carrée **66 px / 5 pieds**, image **2590 × 1796**.
+
+Les paramètres et les chemins d'images ont été vérifiés par API. **Le calage du quadrillage reste à confirmer visuellement dans le client**, et les deux scènes n'ont encore **ni murs, ni éclairages, ni tokens**. Il s'agit de cartes préparées manuellement, **pas encore d'un import complet par PDF to Foundry**. L'importateur PDF to Foundry n'a pas été installé sous V14 par cette opération.
+
+### Données privées et suite
+
+Les rapports détaillés, sauvegardes de scènes avant correction, inventaire des images, fichiers convertis et scripts ponctuels sont conservés uniquement sur le mini-PC dans /home/valou/services/pf2-data/_AI/cartes-audit-20261111/. Les PDF et illustrations propriétaires ne sont pas publiés sur GitHub.
+
+Priorités : validation visuelle des deux cartes PFS ; éventuellement murs et éclairages pour celles qui seront jouées ; contrôle des miniatures Phandelver uniquement si utile ; test de Deidril sous V14 sur un scénario effectivement pris en charge (21 PDF anglais complets identifiés parmi 27 références étudiées), et test de l'importateur historique PDF to Foundry dans un environnement V13 séparé si besoin. Ne pas importer toutes les cartes en bloc ni désinstaller les modules sources sans vérification des dépendances.
