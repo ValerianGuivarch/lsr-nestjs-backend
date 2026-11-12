@@ -146,8 +146,8 @@ L'idée est de montrer la confiance accordée aux nouveaux Éclaireurs et de leu
 | 19 h–19 h 30 | Entretien à Absalom, briefing oral, départ elliptique | **Ambrus Valsin** : ferme, efficace, consciencieux, soucieux des résultats et de l'institution |
 | 19 h 30–20 h 30 | École de Yaz : première piste sur son frère, sans révélation décisive | **Maître Uxir** : observateur, patient, méticuleux, ancien professeur de magus, conserve des notes |
 | 20 h 30–21 h 15 | Accueil à la Maison du Nexus, archives de l'orrerie, référence au Pacte et vol | **Sebnet Sanserkoht** : sociable, élégante, diplomate, curieuse et attachée aux archives |
-| 21 h 15–21 h 45 | Enquête condensée dans Quantium ; piste de Wishful Cures | **Igrigi Lokar** : ancien archiviste sérieux devenu fonctionnaire |
-| 21 h 45–23 h | Égouts B1 à B5 ; confrontation finale si le temps le permet | **Bijan et Zaynap Ohrlavi** : alchimistes voleurs à court de ressources, créateurs de l'extrudeuse |
+| 21 h 15–21 h 45 | Enquête condensée dans Quantium ; piste de Wishful Cures | **Igrigi Lokar** : **ascendance non spécifiée dans le scénario** ; **Humain (choix MJ provisoire pour le portrait)**. Ancien archiviste sérieux devenu fonctionnaire |
+| 21 h 45–23 h | Égouts B1 à B5 ; confrontation finale si le temps le permet | **Bijan et Zaynap Ohrlavi** : **Humains (confirmé par leur bloc statistique de scénario)**, alchimistes voleurs à court de ressources, créateurs de l'extrudeuse |
 
 La quête personnelle de Yaz prime sur le début du scénario officiel pour cette séance : **révélation par Uxir du contraste entre l'excellence de Narek à la Magaambya et ses résultats irréguliers à Quantium**, puis piste future au Mwangi. **Narek Lorok est son nom confirmé** ; la vérité MJ sur les patrons et Larantis ne doit pas être révélée. Voir [Yaz](../pj/PJ-Yaz-Lorok.md). L'Académie de Quantium, parmi plusieurs écoles de la cité, est l'un des **trois pôles majeurs de magie retenus dans notre lore** avec l'Arcanamirium d'Absalom et la Magaambya de Nantambu ; son **nom propre précis reste à choisir**.
 
