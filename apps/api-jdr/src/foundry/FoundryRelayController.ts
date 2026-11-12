@@ -1,9 +1,54 @@
-import { Body, Controller, Get, Param, Post, Put } from '@nestjs/common'
+import { Body, Controller, ForbiddenException, Get, Headers, Param, Post, Put } from '@nestjs/common'
 import { FoundryRelayService } from './FoundryRelayService'
 
 @Controller('foundry')
 export class FoundryRelayController {
   constructor(private readonly foundry: FoundryRelayService) {}
+
+  /**
+   * Privileged GM-only document operations, guarded independently of public
+   * Foundry character APIs. Never send the Relay API key to the caller.
+   */
+  private requireGmKey(supplied: string): void {
+    const expected = process.env['PF2_JOURNALS_INTERNAL_KEY']
+    if (!expected || supplied !== expected) throw new ForbiddenException('Accès interne aux scènes Foundry refusé.')
+  }
+
+  @Get('gm/scenes/:uuid')
+  gmScene(@Param('uuid') uuid: string, @Headers('x-pf2-journals-key') key = ''): Promise<unknown> {
+    this.requireGmKey(key)
+    return this.foundry.readGmScene(uuid)
+  }
+
+  @Get('gm/scenes/:uuid/canvas/:type')
+  gmCanvas(@Param('uuid') uuid: string, @Param('type') type: string, @Headers('x-pf2-journals-key') key = ''): Promise<unknown> {
+    this.requireGmKey(key)
+    return this.foundry.listGmCanvas(uuid, type)
+  }
+
+  @Post('gm/scenes/:uuid/canvas/:type')
+  gmCreateCanvas(@Param('uuid') uuid: string, @Param('type') type: string, @Body() data: unknown, @Headers('x-pf2-journals-key') key = ''): Promise<unknown> {
+    this.requireGmKey(key)
+    return this.foundry.createGmCanvas(uuid, type, data)
+  }
+
+  @Put('gm/scenes/:uuid/canvas/:type/:documentId')
+  gmUpdateCanvas(@Param('uuid') uuid: string, @Param('type') type: string, @Param('documentId') documentId: string, @Body() data: unknown, @Headers('x-pf2-journals-key') key = ''): Promise<unknown> {
+    this.requireGmKey(key)
+    return this.foundry.updateGmCanvas(uuid, type, documentId, data)
+  }
+
+  @Post('gm/documents/:type')
+  gmCreateDocument(@Param('type') type: string, @Body() data: unknown, @Headers('x-pf2-journals-key') key = ''): Promise<unknown> {
+    this.requireGmKey(key)
+    return this.foundry.createGmWorldDocument(type, data)
+  }
+
+  @Put('gm/documents/:uuid')
+  gmUpdateDocument(@Param('uuid') uuid: string, @Body() data: unknown, @Headers('x-pf2-journals-key') key = ''): Promise<unknown> {
+    this.requireGmKey(key)
+    return this.foundry.updateGmWorldDocument(uuid, data)
+  }
 
   @Get('clients')
   clients(): Promise<unknown> {
