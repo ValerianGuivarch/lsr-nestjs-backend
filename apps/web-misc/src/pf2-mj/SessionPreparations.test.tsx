@@ -119,7 +119,9 @@ describe('Portrait temporaire de préparation', () => {
     root = createRoot(container)
     await mount()
     expect(container.querySelector('img[alt="Portrait"]')?.getAttribute('src')).toBe('https://example.org/portrait.png')
-  })  it('shows ancestry and promotes a temporary character into the MJ database without sharing it', async () => {
+  })
+
+  it('shows ancestry and promotes a temporary character into the MJ database without sharing it', async () => {
     vi.stubGlobal('confirm', vi.fn(() => true))
     await mount()
     expect(container.textContent).toContain('Ascendance (pour le portrait)')
