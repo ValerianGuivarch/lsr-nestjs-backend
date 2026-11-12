@@ -11,7 +11,7 @@ import { DiscordCommandsService } from './DiscordCommandsService'
 type Kind = 'personnage' | 'lore' | 'loot' | 'rencontre' | 'texte' | 'checklist'
 export type PrepBlock = {
   id: string; kind: Kind; title: string; text: string; done: boolean;
-  npcId?: string; name?: string; portraitUrl?: string; showName?: boolean;
+  npcId?: string; name?: string; ascendance?: string; portraitUrl?: string; showName?: boolean;
   quantity?: string; reference?: string; secret?: boolean;
 }
 export type PrepStage = { id: string; title: string; time: string; notes: string; done: boolean; blocks: PrepBlock[] }
@@ -57,11 +57,12 @@ export class SessionPreparationService {
         if (!['personnage', 'lore', 'loot', 'rencontre', 'texte', 'checklist'].includes(kind)) throw new BadRequestException('Type de bloc inconnu.')
         const npcId = this.optionalId(b.npcId, 'Référence personnage')
         const name = this.trim(b.name, 'Nom du personnage', 160)
+        const ascendance = this.trim(b.ascendance, 'Ascendance du personnage', 120)
         if (kind === 'personnage' && !npcId && !name) throw new BadRequestException('Un personnage temporaire doit avoir un nom.')
         return {
           id: blockId, kind, title: this.trim(b.title, 'Titre du bloc', 220),
           text: this.trim(b.text, 'Contenu', 12000), done: b.done === true,
-          ...(npcId ? { npcId } : {}), ...(name ? { name } : {}),
+          ...(npcId ? { npcId } : {}), ...(name ? { name } : {}), ...(ascendance ? { ascendance } : {}),
           portraitUrl: this.trim(b.portraitUrl, 'Portrait', 1200), showName: b.showName !== false,
           quantity: this.trim(b.quantity, 'Quantité', 100), reference: this.trim(b.reference, 'Référence', 500), secret: b.secret === true,
         }
@@ -124,6 +125,56 @@ export class SessionPreparationService {
     })
     return this.get(id)
   }
+  /**
+   * Promote a temporary character to the global MJ PNJ directory.
+   * Both writes occur in the SAME SQLite transaction: never leave an orphan
+   * PNJ if linking it to this preparation fails. This does not publish to
+   * Discord, Foundry or the player wiki.
+   */
+  async promoteCharacter(preparationId: string, blockId: string, input: Record<string, unknown>): Promise<Record<string, unknown>> {
+    const expectedRevision = Number(input?.revision)
+    if (!Number.isInteger(expectedRevision)) throw new BadRequestException('Révision de préparation manquante.')
+    const outcome = await this.db.transaction(async manager => {
+      const rows = await manager.query('SELECT * FROM pf2_session_preparation WHERE id=?', [preparationId]) as PrepRow[]
+      if (!rows.length) throw new NotFoundException('Préparation introuvable.')
+      const row = rows[0]
+      const body = this.body(JSON.parse(row.body_json) as unknown)
+      const block = body.stages.flatMap(stage => stage.blocks).find(item => item.id === blockId && item.kind === 'personnage')
+      if (!block) throw new NotFoundException('Personnage absent de la préparation.')
+      // Retrying the request after a successful conversion must never
+      // create a duplicate, even when the caller still has the old revision.
+      if (block.npcId) return { npcId: block.npcId, created: false }
+      if (row.revision !== expectedRevision) throw new ConflictException('La préparation a changé. Recharge avant de convertir ce personnage.')
+      const name = this.trim(block.name, 'Nom du personnage', 160, true)
+      const portrait = block.portraitUrl?.trim() ?? ''
+      // The permanent PNJ directory only accepts local Foundry image paths.
+      if (portrait && !/^assets\\/l7r\\/portraits\\/pnj\\/[^/]+\\.(?:webp|gif|png|jpe?g)$/i.test(portrait)) {
+        throw new BadRequestException('Pour conserver le portrait, importe d’abord l’image avec « Choisir un portrait » (une URL externe ne suffit pas).')
+      }
+      const slug = name.normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').toLowerCase()
+        .replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '').slice(0, 72) || 'personnage'
+      const npcId = `npc_${slug}_${randomUUID().slice(0, 8)}`
+      const record = {
+        id: npcId, nom: name, description: '', factions: [], tags: [], aliases: [],
+        lieux: [], regions: [], evenements: [], ...(portrait ? { portrait } : {}),
+        ascendance: block.ascendance?.trim() || 'Inconnue', classe: 'Inconnue',
+        role: '', roleplay: '', caractere: '', scope: 'global',
+        importance: 'Secondaire', statut: 'Actif',
+        // Keep scene/role notes as PRIVATE MJ notes, never as a public description.
+        notes: block.text || '',
+      }
+      await manager.query('INSERT INTO pf2_record(kind,id,name,payload) VALUES (?,?,?,?)', ['pnj', npcId, name, JSON.stringify(record)])
+      block.npcId = npcId
+      const updated = await manager.query(
+        'UPDATE pf2_session_preparation SET body_json=?,revision=revision+1,updated_at=CURRENT_TIMESTAMP WHERE id=? AND revision=?',
+        [JSON.stringify(body), preparationId, expectedRevision]
+      ) as { changes?: number }
+      if (updated.changes !== 1) throw new ConflictException('La préparation a été modifiée pendant la conversion.')
+      return { npcId, created: true }
+    })
+    return { ...outcome, preparation: await this.get(preparationId) }
+  }
+
   async remove(id: string): Promise<{ deleted: true }> {
     await this.get(id)
     await this.db.query('DELETE FROM pf2_session_preparation WHERE id=?', [id])
