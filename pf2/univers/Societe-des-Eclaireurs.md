@@ -142,7 +142,7 @@ Le terme exact de faction / sous-structure archivistique peut être affiné si n
 
 **Caractère pour la table (interprétation MJ) :** professionnel, méticuleux, exigeant sans mépris, prompt à corriger un rapport flou. Voix posée et sèche, humour discret, regard direct ; il tient à la fiabilité de la Société et sait distinguer un jeune Éclaireur volontaire d'un irresponsable. Il ne délivre pas de grands discours : il nomme les objectifs, pose des questions précises, puis confie une vraie responsabilité. Ce portrait d'interprétation complète la description métier ; ce ne sont pas des événements joués.
 
-**Briefing prévu à Quantium :** présenter les aspirants à une autre loge, renforcer les liens avec Sebnet à la Maison du Nexus et récupérer quatre ensembles d'archives perdus à Absalom (Gest/Mwangi ; Foster/épices ; Adolphus/fondation ; Napsunar/récits). Il **ne connaît pas encore l'existence du Pacte** comme objet de cette recherche. La lettre réécrite est enregistrée dans la préparation de séance `fa2d18bd-32b1-48cf-904e-9873691a55eb`.
+**Briefing prévu à Quantium :** présenter les aspirants à une autre loge, renforcer les liens avec Sebnet à la Maison du Nexus et récupérer quatre ensembles d'archives perdus à Absalom (Gest/Mwangi ; Foster/épices ; Adolphus/fondation ; Napsunar/récits). Il **ne connaît pas encore l'existence du Pacte** comme objet de cette recherche. Le **briefing oral direct**, avec les quatre dossiers recherchés et la signification du saphir codé, est enregistré dans la préparation de séance `fa2d18bd-32b1-48cf-904e-9873691a55eb` ; aucune nouvelle lettre joueur n'est nécessaire.
 
 ---
 
