@@ -10,7 +10,7 @@ Le Journal MJ expose un lien **Préparer une séance** sur les œuvres suivies. 
 
 Chaque préparation comprend titre, objectif général et étapes ordonnées. Une étape possède titre, horaire indicatif, notes, état `jouée` et blocs ordonnés de types :
 
-- **Personnage** (lien vers PNJ MJ existant, ou figurant temporaire avec nom et URL de portrait) ;
+- **Personnage** (lien vers PNJ MJ existant, ou figurant temporaire avec **nom, ascendance et portrait**) ;
 - **Lore**, avec indicateur secret MJ ;
 - **Loot**, quantité et état ;
 - **Rencontre**, avec référence Foundry textuelle ;
@@ -18,7 +18,13 @@ Chaque préparation comprend titre, objectif général et étapes ordonnées. Un
 
 Le mode **Édition** est ouvert par défaut ; l'autre mode, **Vue**, conserve ordre et contenu sans champ de saisie. La vue permet les actions ponctuelles **Marquer jouée/Terminé** et **Partager personnage**. Les changements sont enregistrés explicitement en édition ; le partage enregistre d'abord les modifications en attente. Une révision numérique refuse l'écrasement silencieux d'une sauvegarde concurrente.
 
-Les figurants temporaires sont stockés *uniquement dans la préparation*. Leur partage ne crée ni fiche PNJ MJ, ni Actor Foundry, ni fiche wiki. La création ultérieure d'une fiche wiki reste une action explicite depuis la carte Discord/Foundry.
+Les figurants temporaires sont stockés *uniquement dans la préparation* **tant qu'on ne déclenche pas explicitement leur conversion**. Leur partage seul ne crée ni fiche PNJ MJ, ni Actor Foundry, ni fiche wiki. La création d'une fiche wiki reste une action explicite distincte depuis la carte Discord/Foundry.
+
+**Ascendance et portrait (12 novembre 2026).** Tout personnage temporaire de préparation possède un champ libre **Ascendance (pour le portrait)**, affiché en édition et en lecture. Le renseigner même si le portrait n'existe pas encore : « Humain », « Gnome », « Elfe », etc. Lorsque le scénario ne précise pas l'ascendance, inscrire **« Inconnue »**, ou une proposition explicitement signalée **« Humain (choix MJ) »** ; le nom du PNJ seul n'est jamais une preuve. Le champ persiste avec le reste du bloc et est repris si le personnage devient permanent.
+
+**Bouton « Enregistrer comme PNJ permanent » (12 novembre 2026).** Disponible **uniquement sur les personnages temporaires**, à côté de **« Partager · Discord + Foundry »**. Le bouton affiche une confirmation claire : il **crée une fiche PNJ globale privée dans le référentiel MJ** et **lie le bloc à son nouvel `npcId`**, sans publication sur Discord, Foundry ou wiki. Le nom, l'ascendance, le portrait asset Foundry et les notes de scène sont conservés (ces notes sont versées au champ **`notes` MJ**, et **pas dans la description publique**). Les champs non connus prennent les valeurs neutres existantes (« Inconnue » pour la classe, etc.). Après conversion, le sélecteur indique la fiche liée et le bouton devient un lien **« Ouvrir la fiche MJ »**. Le PNJ est global afin de pouvoir être réutilisé dans plusieurs scénarios, indépendamment du fait que les joueurs l'aient rencontré.
+
+**Sécurité et intégrité :** la promotion est effectuée dans **une seule transaction SQLite** (insertion de `pf2_record` et mise à jour de `pf2_session_preparation`) avec révision optimiste ; rejouer la même requête sur un bloc déjà converti n'ajoute pas de deuxième PNJ. Un portrait n'est transférable en fiche permanente que s'il est déjà un asset local `assets/l7r/portraits/pnj/...` ; une URL HTTPS externe doit être importée d'abord avec **« Choisir un portrait »**, pour éviter qu'une fiche permanente perde son image. Le partage Discord/Foundry reste volontaire et indépendant.
 
 **Portraits temporaires (29 octobre 2026).** En mode Édition, un personnage sans fiche MJ peut recevoir un portrait via **Choisir/Remplacer le portrait**, glisser-déposer ou collage d'une image sur la vignette. Formats PNG, JPEG, WebP et GIF, jusqu'à **10 Mo** ; l'alternative URL HTTPS/asset Foundry reste proposée. L'upload réutilise l'API existante `POST /api/pf2-mj/pnj/portrait` et la validation/conversion des images : l'identifiant de fichier `prep-<preparationId>-<blockId>` est propre à la préparation, **sans création de PNJ**, et le fichier est placé sous `assets/l7r/portraits/pnj/`. L'aperçu de la préparation lit les fichiers via `GET /api/pf2-mj/portraits/:filename`, en édition comme en vue. Après upload, cliquer sur **Enregistrer le portrait** (ou sur Enregistrer en haut) pour sauvegarder la référence du fichier dans la préparation ; un upload non suivi d'une sauvegarde peut laisser une image orpheline.
 
@@ -54,7 +60,7 @@ Migration `049-session-preparations-and-discord-channel` :
 - `pf2_session_preparation` : `id`, `title`, `campaign_id`, `scenario_id`, `session_id`, `body_json`, `revision`, dates ;
 - `pf2_session_discord_context` : `session_id`, `channel_id`, `guild_id`, `started_at`, `ended_at`.
 
-Le schéma JSON des étapes et blocs est validé côté API (longueurs, types, unicité des identifiants, nombres maximum de blocs/étapes). L'API est sous `/api/pf2-mj/session-preparations` avec `GET` liste/détail/sessions, `POST` création/partage, `PATCH` modification, `DELETE` suppression.
+Le schéma JSON des étapes et blocs est validé côté API (longueurs, types, unicité des identifiants, nombres maximum de blocs/étapes). L'API est sous `/api/pf2-mj/session-preparations` avec `GET` liste/détail/sessions, `POST` création/partage/**promotion `:id/promote/:blockId`**, `PATCH` modification, `DELETE` suppression.
 
 **Accès :** cette V1 fonctionne sans clé supplémentaire à saisir : elle suit le même modèle d'accès que l'application MJ actuelle. **Limite de sécurité :** l'application et ses API n'ont actuellement pas d'authentification MJ centralisée. Les routes de préparation contiennent des secrets narratifs et le partage déclenche une publication Discord : prévoir une authentification centralisée pour l'ensemble du portail plutôt qu'une seconde clé propre à cette page. Ne pas confondre absence d'usage par les joueurs et restriction technique d'accès.
 
@@ -65,7 +71,7 @@ Le schéma JSON des étapes et blocs est validé côté API (longueurs, types, u
 - Vérifier que le message apparaît dans le **salon exact** où `/debut-seance` a créé le brouillon, puis côté Foundry ; contrôler le cas nom masqué et l'absence de doublon après effacement du chat.
 - Vérifier également qu'une séance terminée ne permet plus de partager et qu'une création de fiche depuis Discord/Foundry reste fonctionnelle.
 
-Les tests unitaires SQLite couvrent CRUD, révisions, salon mémorisé/clos, création d'une présentation Discord simulée et absence de PNJ permanent pour un figurant. **Un test de bout en bout dans le navigateur et sur Discord/Foundry est encore nécessaire après déploiement.**
+Les tests unitaires SQLite couvrent CRUD, révisions, salon mémorisé/clos, création d'une présentation Discord simulée, absence de PNJ permanent pour un simple partage et promotion explicite avec contrôle du portrait, de l'ascendance, de l'idempotence et des conflits de révision. **Un test de bout en bout dans le navigateur et sur Discord/Foundry est encore nécessaire après déploiement.**
 
 ## Exemple saisi directement dans la base (29 octobre 2026)
 
