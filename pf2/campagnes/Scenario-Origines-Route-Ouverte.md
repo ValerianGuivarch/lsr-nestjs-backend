@@ -6,6 +6,12 @@
 
 Préparer le scénario *Origin of the Open Road* à **Quantium, Nex**, dans la [campagne transverse La Route ouverte](Campagne-Route-Ouverte.md). Les PJ ne recherchent **pas** le Pacte dès le départ : leur mission initiale est documentaire et diplomatique. En priorité, fiabiliser **la scène des égouts** ; garder l'orrerie de la loge comme décor narratif sans nouveau travail cartographique à ce stade. Aucun import en masse d'autres scénarios Society n'est prévu.
 
+### Convention de traduction des noms propres pour cette séance
+
+Employer partout dans le conducteur et les dialogues : **Les Remèdes de l'Espoir** (officine / apothicairerie abandonnée près des quais de Quantium), **Maison du Nexus** (loge), **Archives de l'Orrerie** (salle des archives et du planétarium), **extrudeuse protoplasmique** (machine des jumeaux), **pudding noir** (créature de B2) et **Vivre sur les rives de la Mer consciente** (titre du traité acheté par Bijan, aide de jeu n° 2). Conserver tels quels les **noms propres des PNJ** (Durvin Gest, Selmius Foster, Gregaro Voth, Kerinha Napsunar, Sebnet Sanserkoht, Igrigi Lokar, Bijan et Zaynap Ohrlavi) ainsi que **Quantium, Nex, Oenopion, Mwangi et Rahadoum**.
+
+Pour **retrouver les repères dans le PDF original uniquement** : « Les Remèdes de l'Espoir » est *Wishful Cures* ; « Vivre sur les rives de la Mer consciente » est *Living on the Shore of the Sentient Sea*. **Ne pas alterner entre les noms français et anglais pendant la partie.**
+
 ## Mission directe et dossier de lecture — préparation actualisée le 12 novembre 2026
 
 **Cette partie est un aide-mémoire MJ et non une lettre destinée aux joueurs.** Le scénario original contient une lettre de **Kreighton Shaine** et trois aides de jeu image déjà préparées dans Foundry. **Dans notre adaptation**, **Ambrus Valsin** remet la mission **oralement** ; conserver l'aide de jeu originale en réserve, sans demander aux joueurs de déchiffrer un document de briefing.
@@ -63,19 +69,46 @@ Les « extraits » ci-dessous sont des **résumés / paraphrases de jeu rédigé
 **5. Retour vers Sebnet.** Elle fait faire des copies des documents retrouvés et s'étonne du Pacte : **elle n'en connaissait pas l'existence**. Elle explique que la loge vend **parfois** un ouvrage à l'unité pour financer son fonctionnement, mais **jamais sans autorisation une catégorie complète de ses fonds** ; elle n'a pas approuvé cette disparition. Si on lui montre l'acte de vente, elle reconnaît **Igrigi Lokar, son ancien assistant**, compétent et intègre, parti travailler dans l'administration de Quantium. **Elle ne connaît pas Bijan** ; ses soupçons convergent vers l'acheteur, pas vers son ancien assistant. Si les PJ ont été diplomates, elle peut fournir des lettres d'introduction qui facilitent l'enquête.
 
 **6. Enquête urbaine : des pistes parallèles menant au même repaire** (jouer en **20–30 minutes réelles**, éviter le temps de recherche 1d4 heures du scénario si cela gêne le rythme) :
-- **Reçu → Igrigi : Société DD 18**, ou démarche administrative bien décrite sans jet. Igrigi a vendu **un seul traité** à Bijan, obsédé par les vases, incapable de payer les autres. Il se souvient de la sœur **Zaynap**, qu'il n'a **pas personnellement rencontrée**. Il connaît leur ancienne officine **Wishful Cures**, près des quais. Il sait que le folio du Pacte était rangé à proximité du rayon des vases : un vol précipité a pu l'emporter par erreur. Si les permis d'Adolphus manquent, il en récupère une **copie municipale**.
-- **Artisans / vendeurs d'alchimie : Artisanat ou Diplomatie DD 18**. Des jumeaux achètent du matériel et travaillent depuis **Wishful Cures** ; une bonne réussite peut révéler l'achat de **buses destinées à pulvériser de l'acide**, indice utile pour le danger B1.
+- **Reçu → Igrigi : Société DD 18**, ou démarche administrative bien décrite sans jet. Igrigi a vendu **un seul traité** à Bijan, obsédé par les vases, incapable de payer les autres. Il se souvient de la sœur **Zaynap**, qu'il n'a **pas personnellement rencontrée**. Il connaît leur ancienne officine **Les Remèdes de l'Espoir**, près des quais. Il sait que le folio du Pacte était rangé à proximité du rayon des vases : un vol précipité a pu l'emporter par erreur. Si les permis d'Adolphus manquent, il en récupère une **copie municipale**.
+- **Artisans / vendeurs d'alchimie : Artisanat ou Diplomatie DD 18**. Des jumeaux achètent du matériel et travaillent depuis **Les Remèdes de l'Espoir** ; une bonne réussite peut révéler l'achat de **buses destinées à pulvériser de l'acide**, indice utile pour le danger B1.
 - **Spécialistes des vases : Occultisme DD 16**. Les connaissances les plus recherchées viennent d'**Oenopion**, où les Ohrlavi ont été discrédités ; on reconnaît leur méthode et leur obsession.
-- **Rumeurs d'antiquaires / de la Société : Diplomatie, Société ou Savoir des Éclaireurs DD 18**. Des alchimistes essaient de vendre un folio historique sur le mystérieux Pacte, sans trouver de preneur car le texte semble trop obscur ; on remonte aux Ohrlavi. En réussite forte, on relie directement la rumeur à **Wishful Cures**.
+- **Rumeurs d'antiquaires / de la Société : Diplomatie, Société ou Savoir des Éclaireurs DD 18**. Des alchimistes essaient de vendre un folio historique sur le mystérieux Pacte, sans trouver de preneur car le texte semble trop obscur ; on remonte aux Ohrlavi. En réussite forte, on relie directement la rumeur à **Les Remèdes de l'Espoir**.
 - **Runes des statues : Arcanes DD 18** (**DD 16** avec relevé précis) : méthode empruntée aux ateliers de constructs d'Oenopion. Cette piste est une possibilité supplémentaire, pas un passage obligé.
 
-**7. Arrivée à Wishful Cures.** Ancienne officine fermée à la suite du décès de son propriétaire ; vitres cassées, graffiti et bâtiment officiellement désert. Derrière le comptoir, une **trappe régulièrement utilisée** mène à la cave B1 et, de là, aux égouts. Les PJ comprennent enfin pourquoi des livres d'alchimie leur ont été volés ; **ils ne savent pas encore** que l'extrudeuse fonctionne ni quelles sont les conditions du Pacte. Voir le tableau B1–B5 plus bas.
+**7. Arrivée à Les Remèdes de l'Espoir.** Ancienne officine fermée à la suite du décès de son propriétaire ; vitres cassées, graffiti et bâtiment officiellement désert. Derrière le comptoir, une **trappe régulièrement utilisée** mène à la cave B1 et, de là, aux égouts. Les PJ comprennent enfin pourquoi des livres d'alchimie leur ont été volés ; **ils ne savent pas encore** que l'extrudeuse fonctionne ni quelles sont les conditions du Pacte. Voir le tableau B1–B5 plus bas.
 
 ### Correction de difficulté : 4 PJ de niveau 3
 
 **Grille de lecture rapide :** **DD 16 = facile**, **DD 18 = standard niveau 3**, **DD 20 = difficile**. Les DD ci-dessus sont des **adaptations MJ** ; les DD officiels du PDF (20/22 et autres) **ne s'appliquent pas par défaut** à cette table. Un jet raté ralentit ou complique la scène, mais ne supprime pas le document-clé, l'identité de l'acheteur ou l'accès aux égouts. Pour les dangers tactiques et Actors, appliquer **l'autre section d'adaptation des combats**, et non les fiches du PDF de niveau 5.
 
 ---
+
+### Document découvert en B5 — Le Pacte de la Route ouverte (texte intégral à lire aux joueurs)
+
+**Statut de source : texte original rédigé pour cette campagne, fidèle au contenu du scénario, et non transcription d'un document imprimé.** Le PDF anglais (p. 2 pour les faits historiques, p. 14 pour la découverte en B5) et la traduction française **décrivent** le folio, mais **n'en donnent pas le texte intégral en aide de jeu**. Le passage suivant est donc le **texte exact que les PJ peuvent lire à notre table**. Il n'ajoute aucune identité cachée, solution de l'énigme ni emplacement précis du trésor.
+
+> **LE PACTE DE LA ROUTE OUVERTE**
+>
+> Nous, **Durvin Gest, Selmius Foster, Gregaro Voth et Kerinha Napsunar**, Éclaireurs et compagnons de route, consignons ici l'accord pris au terme de notre expédition dans l'**Étendue du Mwangi**.
+>
+> Chacun de nous avait découvert une part d'un secret. Réunies, nos pistes nous ont conduits à un trésor dont l'existence dépassait nos espérances. Ensemble, nous avons franchi les obstacles, surmonté les pièges et repoussé les gardiens qui défendaient son accès.
+>
+> Mais devant la dernière porte, notre savoir et nos efforts se sont révélés impuissants. D'innombrables clefs y étaient offertes à nos mains, et aucune ne voulait tourner. Le gardien de ce lieu nous révéla enfin sa cruelle condition : **une clef ouvrirait la porte, mais seulement lorsque les trois autres détenteurs de clefs auraient péri**.
+>
+> Ainsi, ce trésor ne pouvait être conquis par nous quatre. Le gardien espérait que la convoitise nous pousserait à nous entretuer. Nous avons refusé cette victoire-là.
+>
+> En conséquence, **chacun de nous emporte une clef**. Nous jurons de **ne jamais hâter la mort de nos compagnons**, ni par la violence, ni par la trahison, pour obtenir ce qui nous attend derrière la porte. **Celui ou celle d'entre nous qui survivra aux trois autres** pourra, s'il le souhaite, revenir et réclamer ce trésor.
+>
+> Que notre serment rappelle à ceux qui retrouveront ces lignes qu'aucune découverte ne vaut le sang d'un compagnon.
+>
+> **Explorer. Rendre compte. Coopérer.**
+>
+> *Durvin Gest — Selmius Foster — Gregaro Voth — Kerinha Napsunar*
+
+**Mise en scène B5 (après le combat, sans test bloquant) :** sur la passerelle **sud-est**, les caisses renferment le folio ancien, les récits complets de **Kerinha** et les traités sur les vases. Décrire un petit ensemble de feuilles usées, séparé de la paperasse alchimique. **Lire/remettre le texte ci-dessus intégralement** quand les PJ examinent le folio, et non une formule vague du type « ils trouvent un pacte ». Aucun jet d'Occultisme ou de Société n'est requis pour **lire** cet objet de quête ; des compétences peuvent seulement éclairer son ancienneté ou la notoriété des quatre auteurs. **Sebnet demande à le faire copier** au retour, puis les PJ peuvent emporter l'original pour la Société.
+
+**Secret MJ tiré du PDF, À NE PAS LIRE AVEC LE PACTE :** Gregaro Voth s'est plus tard cru le dernier survivant des quatre, mais sa clef n'a pas ouvert la porte ; **Durvin Gest avait disparu sans que sa mort soit établie**. Voth a tu ses recherches et le Pacte a sombré dans l'oubli. **C'est le véritable crochet de campagne** : où se trouvait cette porte au Mwangi, qu'abrite-t-elle, et pourquoi n'a-t-elle pas cédé ? Ne pas résoudre ces questions pendant cette séance ni rattacher arbitrairement ce passage au portail de Quantium ou au Labyrinthe de Narven.
+
 
 ## Adaptation de combat — quatre PJ de niveau 3 (12 novembre 2026)
 
@@ -146,7 +179,7 @@ L'idée est de montrer la confiance accordée aux nouveaux Éclaireurs et de leu
 | 19 h–19 h 30 | Entretien à Absalom, briefing oral, départ elliptique | **Ambrus Valsin** : ferme, efficace, consciencieux, soucieux des résultats et de l'institution |
 | 19 h 30–20 h 30 | École de Yaz : première piste sur son frère, sans révélation décisive | **Maître Uxir** : observateur, patient, méticuleux, ancien professeur de magus, conserve des notes |
 | 20 h 30–21 h 15 | Accueil à la Maison du Nexus, archives de l'orrerie, référence au Pacte et vol | **Sebnet Sanserkoht** : sociable, élégante, diplomate, curieuse et attachée aux archives |
-| 21 h 15–21 h 45 | Enquête condensée dans Quantium ; piste de Wishful Cures | **Igrigi Lokar** : **ascendance non spécifiée dans le scénario** ; **Humain (choix MJ provisoire pour le portrait)**. Ancien archiviste sérieux devenu fonctionnaire |
+| 21 h 15–21 h 45 | Enquête condensée dans Quantium ; piste de Les Remèdes de l'Espoir | **Igrigi Lokar** : **ascendance non spécifiée dans le scénario** ; **Humain (choix MJ provisoire pour le portrait)**. Ancien archiviste sérieux devenu fonctionnaire |
 | 21 h 45–23 h | Égouts B1 à B5 ; confrontation finale si le temps le permet | **Bijan et Zaynap Ohrlavi** : **Humains (confirmé par leur bloc statistique de scénario)**, alchimistes voleurs à court de ressources, créateurs de l'extrudeuse |
 
 La quête personnelle de Yaz prime sur le début du scénario officiel pour cette séance : **révélation par Uxir du contraste entre l'excellence de Narek à la Magaambya et ses résultats irréguliers à Quantium**, puis piste future au Mwangi. **Narek Lorok est son nom confirmé** ; la vérité MJ sur les patrons et Larantis ne doit pas être révélée. Voir [Yaz](../pj/PJ-Yaz-Lorok.md). L'Académie de Quantium, parmi plusieurs écoles de la cité, est l'un des **trois pôles majeurs de magie retenus dans notre lore** avec l'Arcanamirium d'Absalom et la Magaambya de Nantambu ; son **nom propre précis reste à choisir**.
@@ -157,8 +190,8 @@ La quête personnelle de Yaz prime sur le début du scénario officiel pour cett
 
 | Zone | Journal MJ à placer/vérifier | Tokens / danger à préparer | Loot **MJ seulement** |
 | --- | --- | --- | --- |
-| **B1 — Cave encombrée** | Trappe depuis **Wishful Cures** ; débris ; réduction sud ; fontaine acide et plaques de pression, piège supprimable si la séance est courte | **Fontaine acide** : danger fixe, contrôle des cases T et des buses N avant placement | **Anneau magique** caché dans la reliure d'une encyclopédie de baies médicinales |
-| **B2 — Canal et pudding** | Boues vertes, planche, bidons acides ; passage est vers B4 ; gelée hostile dissimulée dans le bassin | **Pudding noir** / Black Pudding, idéalement référence officielle de bestiaire ; token **caché jusqu'à la découverte** | Aucun coffre imposé |
+| **B1 — Cave encombrée** | Trappe depuis **Les Remèdes de l'Espoir** ; débris ; réduction sud ; fontaine acide et plaques de pression, piège supprimable si la séance est courte | **Fontaine acide** : danger fixe, contrôle des cases T et des buses N avant placement | **Anneau magique** caché dans la reliure d'une encyclopédie de baies médicinales |
+| **B2 — Canal et pudding** | Boues vertes, planche, bidons acides ; passage est vers B4 ; gelée hostile dissimulée dans le bassin | **Pudding noir** / pudding noir, idéalement référence officielle de bestiaire ; token **caché jusqu'à la découverte** | Aucun coffre imposé |
 | **B3 — Chambre-laboratoire** | Deux lits, tables, notes de golems/vases et faux essais ; traité acheté, note manuscrite (aide de jeu 3) ; torches éternelles | Dispositif d'extraction/poison décrit dans le journal ; ne pas inventer de statblock | **Dague magique** fixée dans la machine et autres objets précis selon le PDF |
 | **B4 — Passages sinueux** | Boue bleue ralentie, cinq gouffres profonds, deux colonnes porteuses de moisissure jaune | **Moisissure jaune** et gouffres en dangers/repères MJ ; pas de token de monstre artificiel | Rien d'obligatoire |
 | **B5 — Extrudeuse** | Passerelle, machine, instructions de désamorçage et documents volés ; mécanique exacte pages 14, 21–22 du PDF original | **Bijan**, **Zaynap**, **Kanker** (poupée de glaise animée), **vases** produites seulement après activation ; privilégier références de bestiaire adaptées puis créer un acteur spécifique uniquement si nécessaire | **Ouvrages volés et folio du Pacte**, sur la passerelle sud-est (objet de quête, pas trésor monétaire inventé) |
@@ -178,16 +211,16 @@ Les informations suivantes proviennent du **PDF original `Origin of the Open Roa
 | Zone | Références exactes | Point de contrôle Foundry |
 | --- | --- | --- |
 | **B1** | **Acid Spray Fountain**, danger **niveau 6** ; **`ring of the ram`** (*anneau du bélier*, niveau 6), DD **22 Perception** pour le trouver | Danger lié aux plaques de pression `T` et buses `N` de la carte ; anneau dans un coffre MJ caché sous l'encyclopédie, jamais visible automatiquement |
-| **B2** | **Black Pudding**, créature **niveau 7** | Référence officielle de bestiaire, cachée dans le bassin ; surveiller la capacité de division lors des attaques tranchantes/perforantes et les ajustements pour 5/6 PJ |
+| **B2** | **pudding noir**, créature **niveau 7** | Référence officielle de bestiaire, cachée dans le bassin ; surveiller la capacité de division lors des attaques tranchantes/perforantes et les ajustements pour 5/6 PJ |
 | **B3** | **2 `lesser tanglefoot bags`**, **1 `lesser elixir of life`**, **1 `dagger of venom`** (*dague de venin*, niveau 5), et **2 `everburning torches`** | Butin au bon endroit, avec la dague prise dans le dispositif : **DD 18 Vol ou Occultisme** pour la dégager sans compromettre son venin (échec : venin inutilisable 24 h ; échec critique : exposition au venin). Ne pas oublier les torches |
 | **B4** | **Yellow Mold**, moisissure jaune sur **deux** colonnes centrales ; **cinq** gouffres profonds | Repères MJ / danger environnemental ; vérifier sur la carte la position des cinq fosses, éviter de remplacer par cinq monstres |
-| **B5** | **Bijan et Zaynap Ohrlavi**, **niveau 5** chacun, statistiques **spécifiques au scénario** ; **Kanker**, **`soulbound doll`** niveau **2**, référence *Bestiary* ; **Protoplasmic Extruder**, danger complexe niveau **5** | Les deux jumeaux sont des **Actors nommés** et ne doivent pas être remplacés mécaniquement par des alchimistes génériques ; Kanker peut se fonder sur la poupée liée à une âme du bestiaire ; machine à créer comme danger si aucune référence adéquate |
+| **B5** | **Bijan et Zaynap Ohrlavi**, **niveau 5** chacun, statistiques **spécifiques au scénario** ; **Kanker**, **`soulbound doll`** niveau **2**, référence *Bestiary* ; **extrudeuse protoplasmique**, danger complexe niveau **5** | Les deux jumeaux sont des **Actors nommés** et ne doivent pas être remplacés mécaniquement par des alchimistes génériques ; Kanker peut se fonder sur la poupée liée à une âme du bestiaire ; machine à créer comme danger si aucune référence adéquate |
 
 **Extrudeuse B5, mécanisme important (PDF original p. 21–22)** : à son activation par un jumeau, elle engendre d'abord **un `gelatinous cube` (cube gélatineux, niveau 3)**, puis des **`sewer oozes` (vases d'égout, niveau 1)** ; elle produit **au maximum quatre vases** avant de s'arrêter. À **5 PJ**, elle génère des cubes gélatineux à chaque activation ; à **6 PJ**, elle génère d'abord **une `ochre jelly` (gelée ocre, niveau 5)**, puis des cubes. **Ne pas placer quatre vases actives d'avance sur la carte : préparer les références pour leur apparition selon les rounds et le nombre de PJ.** Une recherche dépassant 30 heures peut doubler les PV des vases produites (voir PDF). L'extrudeuse se neutralise notamment par **deux succès en Occultisme DD 22 (expert) ou Vol DD 24 (expert), un succès critique comptant double**, suivant les règles détaillées originales.
 
 **B5, récompense documentaire** : livres et folio volés dans les caisses de la **passerelle sud-est**. Des documents supplémentaires volés à d'autres mages valent **4 Treasure Bundles** à la restitution (convention PFS, à ne pas convertir arbitrairement en trésor de campagne). Au retour à la Maison du Nexus, **Sebnet remet un `bag of holding type II`** (*sac sans fond de type II*) selon le scénario : **récompense de conclusion, pas coffre supplémentaire caché dans les égouts**.
 
-**Images à contrôler lors de la reprise** : Ambrus, Uxir et Sebnet possèdent tous trois une image de portrait privée existante côté référentiel. Cela ne dit rien de la disponibilité ni de l'apparence des **Actors du monde/compendiums** suivants : `Black Pudding`, `Soulbound Doll`, `Gelatinous Cube`, `Sewer Ooze`, `Ochre Jelly`, les deux jumeaux et la machine. Il faudra examiner `Actor.img`, `prototypeToken.texture.src` et le résultat visuel sur la scène après les placements.
+**Images à contrôler lors de la reprise** : Ambrus, Uxir et Sebnet possèdent tous trois une image de portrait privée existante côté référentiel. Cela ne dit rien de la disponibilité ni de l'apparence des **Actors du monde/compendiums** suivants : `pudding noir`, `poupée liée à une âme`, `Gelatinous Cube`, `Sewer Ooze`, `Ochre Jelly`, les deux jumeaux et la machine. Il faudra examiner `Actor.img`, `prototypeToken.texture.src` et le résultat visuel sur la scène après les placements.
 
 ### Scène des archives — mise en attente
 
