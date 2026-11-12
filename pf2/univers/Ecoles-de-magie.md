@@ -12,12 +12,13 @@
 
 ## Établissement particulier de Yaz
 
-**Point fixé par le MJ :** parmi les nombreux lieux de formation de Quantium, **Yaz Lorok et son frère ont étudié dans la même école précise**. Cette école est celle à laquelle « l'Académie de Quantium » renvoie dans le tableau ; il ne faut pas la confondre avec toutes les académies de la ville. Son **nom propre exact** n'a pas été établi dans les documents disponibles.
+**Point fixé par le MJ :** après une **première année commune à la Magaambya de Nantambu (Mwangi)**, **Yaz Lorok et son frère Narek** ont effectué leur **deuxième année dans la même école précise de Quantium**. Cette école est celle à laquelle « l'Académie de Quantium » renvoie dans le tableau ; il ne faut pas la confondre avec toutes les académies de la ville. Son **nom propre exact** n'a pas été établi dans les documents disponibles.
 
-- Yaz y suit une formation de **magus** et rencontre son **mentor homme-lézard, maître Uxir** (PNJ métier `npc_maitre_uxir`).
-- Son frère suit une voie de recherche arcanique plus classique et plus avancée.
+- **Première année, Magaambya :** Yaz supporte mal l'encadrement pédagogique attentif et le dit à sa famille ; Narek s'y montre au contraire exceptionnellement studieux, très doué en maîtrise de la magie et déjà doté d'une puissance notable. Leur **deuxième année se fait à Quantium**.
+- **Yaz** y tente une voie de formation de **magus**, mêlant magie et combat ; **il ne réussit pas à devenir magus** dans cette école. Il rencontre son mentor homme-lézard, **maître Uxir** (PNJ métier `npc_maitre_uxir`).
+- **Narek** semble à Quantium moins appliqué, avec des résultats très inégaux : il consacre beaucoup de temps à aider Yaz à passer pour mage et à chercher comment lui permettre d'acquérir véritablement la magie. Quantium lui laisse une autonomie que la Magaambya ne lui offrait pas.
 - L'école expulse Yaz après un rituel jugé interdit aux étudiants, selon le **raccord documentaire** de son historique ; il est retrouvé inconscient et reste endormi six mois. Le sort du frère et les détails du rituel demeurent à établir dans notre partie, avec les secrets MJ conservés dans [la fiche de Yaz](../pj/PJ-Yaz-Lorok.md) et [Larantis](Larantis.md).
-- La séance préparée `PFS 1-00` à Quantium donne l'occasion d'une **première rencontre en jeu avec Uxir** et d'une courte enquête. Ne pas transformer une possibilité d'indice en découverte déjà jouée.
+- **Uxir a voyagé après le drame à la Magaambya sans en parler à Yaz** : il a recueilli des témoignages sur la maîtrise exceptionnelle et l'assiduité de Narek en première année. Le contraste avec Quantium est **la révélation prévue** pour la séance `PFS 1-00`, et un futur voyage au Mwangi est une piste de quête. Uxir ne connaît pas la véritable origine de cette puissance. Rien de tout cela n'est encore joué.
 
 ## Conseils d'interprétation et de mise en scène
 
