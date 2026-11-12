@@ -6,6 +6,77 @@
 
 Préparer le scénario *Origin of the Open Road* à **Quantium, Nex**, dans la [campagne transverse La Route ouverte](Campagne-Route-Ouverte.md). Les PJ ne recherchent **pas** le Pacte dès le départ : leur mission initiale est documentaire et diplomatique. En priorité, fiabiliser **la scène des égouts** ; garder l'orrerie de la loge comme décor narratif sans nouveau travail cartographique à ce stade. Aucun import en masse d'autres scénarios Society n'est prévu.
 
+## Mission directe et dossier de lecture — préparation actualisée le 12 novembre 2026
+
+**Cette partie est un aide-mémoire MJ et non une lettre destinée aux joueurs.** Le scénario original contient une lettre de **Kreighton Shaine** et trois aides de jeu image déjà préparées dans Foundry. **Dans notre adaptation**, **Ambrus Valsin** remet la mission **oralement** ; conserver l'aide de jeu originale en réserve, sans demander aux joueurs de déchiffrer un document de briefing.
+
+### Ce qu'Ambrus demande exactement
+
+> « Vous partez pour **Quantium**, capitale du Nex, rejoindre notre ancienne loge de la **Maison du Nexus**. Présentez-vous à sa responsable, **Sebnet Sanserkoht**, que vous pouvez appeler *vash-vatom*, et remettez-lui ce **saphir**. Puis faites rechercher et copier **quatre ensembles d'archives** de nos premiers Éclaireurs. Une partie des archives d'Absalom a été perdue ; nous avons besoin de versions conservées là-bas. C'est aussi une occasion pour nos aspirants de découvrir nos collègues hors d'Absalom et de renforcer les liens entre les deux loges. Si vous découvrez des irrégularités ou un vol, aidez Sebnet à comprendre ce qui s'est passé. »
+
+**Saphir :** dans le scénario publié, c'est un **support codé** contenant les renseignements conservés par la Grande Loge sur la **fondation de la Maison du Nexus**. Sebnet attend ces renseignements et accepte la pierre avec gratitude. **Le PDF ne précise pas comment les données sont encodées ni si le saphir a un effet magique particulier** : ne lui inventer ni pouvoir ni fonction de clef de portail. **Il n'est pas à décrypter par les PJ**, mais à remettre. L'intérêt est diplomatique et archivistique.
+
+### Quatre documents à présenter aux joueurs lorsqu'ils les trouvent
+
+Les « extraits » ci-dessous sont des **résumés / paraphrases de jeu rédigées pour la table**, et **non des citations littérales** de documents reproduits dans le scénario. Ne pas faire passer pour établis des chiffres, noms de navires, destinations précises ou clauses inconnus du PDF.
+
+**1. Durvin Gest — comptes rendus des expéditions au Mwangi** *(récits d'exploration, de recherches de trésors et de vestiges anciens)*. **Trouvé dans l'orrerie**.
+> « Plusieurs entrées décrivent les campagnes de Gest dans l'Étendue du Mwangi. Au milieu des relevés d'expédition et des recherches de sites anciens, une référence intrigue : Gest, Selmius Foster, Gregaro Voth et Kerinha Napsunar auraient entrepris une expédition ensemble. Un renvoi parle du “Pacte de la Route ouverte”, mais le folio qui devrait l'expliquer n'est plus à sa place. »
+**Sens MJ :** première découverte du **nom** et des **quatre participants** ; surtout **ne pas encore expliquer** la porte, les quatre clefs et le serment : ce contenu se trouve dans le folio de B5.
+
+**2. Selmius Foster — manifeste de la première route commerciale des épices vudrani** *(registre de marchandises et d'échanges, non carnet d'aventure)*. **Trouvé dans l'orrerie, après des recherches complémentaires**.
+> « Ce document répertorie la première opération commerciale de Foster qui relia Absalom aux épices du Vudra. Les renseignements sont surtout des éléments de négoce : cargaison, provenance et rôle de Foster dans l'ouverture d'une nouvelle filière. »
+**Sens MJ :** montre que les premiers Éclaireurs n'étaient pas que des explorateurs de ruines ; ils bâtissaient aussi des réseaux et des relations commerciales. **Pas de contenu secret de Pacte dans ce registre.** Détails de cargaison non spécifiés dans le scénario.
+
+**3. Adolphus — permis municipaux de la fondation de la Maison du Nexus** *(actes administratifs prouvant l'établissement de la loge)*. **Trouvé dans l'orrerie, ou copie obtenue auprès des bureaux municipaux via Igrigi si nécessaire**.
+> « Il ne s'agit pas d'un récit héroïque, mais de pièces administratives concernant l'implantation de la Maison du Nexus à Quantium. Elles relient la fondation de la loge à Adolphus, ancien assistant de Selmius Foster. »
+**Contexte que Sebnet peut ajouter :** Adolphus a fondé la loge avec **la princesse Ganjay**. Leur histoire à Bhopan, dont le financement de la loge, est connue de la Société ; **ne pas prétendre que tous ces épisodes figurent mot pour mot dans les permis**.
+
+**4. Kerinha Napsunar — chroniques des premières aventures** *(rapports d'expéditions, d'interventions et de missions discrètes)*. **Dans l'orrerie, seul un vieux catalogue est retrouvé ; les vrais récits sont volés et récupérables en B5**.
+> *Dans l'orrerie :* « Vous retrouvez le nom de Kerinha dans les registres, avec les références de ses récits, mais les volumes correspondants manquent. »
+> *Dans les caisses de B5 :* « Les récits décrivent une Éclaireuse prête à prendre des risques politiques, notamment pour soustraire des artefacts religieux au Rahadoum. »
+**Sens MJ :** Kerinha a été plus engagée dans des affaires sensibles que d'autres fondateurs ; son absence dans les archives est d'abord un indice de vol, non la preuve qu'elle n'a rien écrit.
+
+**Folio du Pacte (cinquième texte, **non** demandé par Ambrus)** : retrouvé **uniquement en B5**, volé par erreur avec les ouvrages sur les vases. Il révèle l'expédition commune au Mwangi, la porte ne s'ouvrant qu'une fois les autres détenteurs des clefs morts, et le **refus de trahir** ses compagnons. L'exploration ultérieure du lieu est une **autre mission** ; ce folio n'ouvre **aucun portail de Quantium**.
+
+### Flux de la Maison du Nexus — reprendre tel quel à la table
+
+**1. Accueil par Sebnet (pas de test bloquant).** La gnome est expressive, chaleureuse, parée de bijoux. Elle se présente et demande que chacun lui rappelle son nom et sa mission ; elle accepte le saphir. **Diplomatie DD 18** pour faire bonne impression (**DD 16** si le groupe prend soin de l'appeler « vash-vatom »), mais **elle aide les PJ même en cas d'échec**. Elle peut expliquer qui sont Gest (explorateur Mwangi), Foster (commerce), Voth (expéditions), Adolphus (fondateur) et Kerinha (activités politiques sensibles). Elle mène le groupe aux **Archives de l'Orrerie**, anciennes salles avec grand planétarium mécanique, statues de savants, étagères et tables enchantées.
+
+**2. Recherche sous forme d'une seule séquence de jeu.** Donner aux quatre joueurs de quoi contribuer. L'original fait travailler les PJ par compétences différentes, une heure **dans la fiction** par tentative ; à notre table, jouer un **montage de 20–30 minutes réelles**. **DD 18** pour les approches usuelles (Arcanes, Société, Occultisme, Nature, Survie, Acrobaties, Athlétisme, Vol, Savoir de la Société des Éclaireurs pertinent) ; **DD 16** avec méthode ou compétence particulièrement adaptée ; **DD 20** seulement si la méthode est franchement détournée, et jamais sur l'unique chemin menant au voleur. Les scores **20/22 du PDF initial étaient calibrés pour le niveau 5**. Les joueurs peuvent coopérer/aider et décrire comment ils fouillent ; la découverte centrale ne doit pas être bloquée derrière une série de jets ratés.
+
+**3. Donner les indices dans un ordre causal clair** (progression **originale** en succès cumulés ci-dessous ; une réussite critique peut compter double, mais pour quatre PJ niveau 3 on peut simplement délivrer les jalons au rythme de la scène) :
+
+| Jalon original | Ce que tu annonces en jeu | Conséquence |
+| --- | --- | --- |
+| **2 succès** | Sources de **Durvin Gest** retrouvées ; **mention du Pacte** entre Gest, Foster, Voth et Napsunar ; **folio de référence absent** | **Premier mystère**. Ni Ambrus ni les PJ ne savaient le Pacte existant. |
+| **3 succès** | Ancien **catalogue** référant aux écrits de **Kerinha**, mais volumes introuvables | Deuxième dossier manquant. |
+| **4 succès** | Une section entière de textes sur la **fabrication de vases du Nex / Oenopion** est vide. Plusieurs objets manquants étaient rangés ensemble | **Vol groupé probable**. Dans l'original, les statues sabotées s'animent ici. |
+| **5 succès** | Un **acte de vente ancien**, pour un seul ouvrage sur les vases, nomme **Bijan Ohrlavi**, avec un **billet signé Igrigi Lokar** (aide de jeu n° 2) | **Piste concrète : ancien vendeur / acheteur nommé**. Le livre était légalement acheté ; **le reste a été volé ensuite**. |
+| **6 succès** | **Manifeste de Selmius Foster** retrouvé | Deuxième ensemble d'archives officiellement recherché, sans lien nécessaire avec le vol. |
+| **7 succès** | **Permis d'Adolphus** retrouvés | Troisième ensemble dans l'orrerie. Si non trouvés, Igrigi peut fournir une copie municipale. |
+
+**Important pour éviter le blocage** : même si les jets sont mauvais, l'étude des emplacements manifestement vidés et la consultation de l'inventaire doivent finir par permettre de retrouver **le reçu de Bijan** ; le coût d'un échec peut être une heure de recherche fictionnelle en plus, un service demandé à Sebnet, ou une fausse piste vite corrigée. Les PJ doivent pouvoir choisir **comment** approfondir, pas deviner la compétence exacte prévue par le PDF.
+
+**4. Statues saboteuses : événement facultatif, à adapter.** Quatre **statues animées de niveau 3** seraient une rencontre **extrême (160 XP) pour quatre PJ niveau 3**, **à ne jamais lancer telles quelles**. Si l'on conserve la défense des archives, proposer par exemple **trois statues niveau 1** (60 XP, **faible**) avec fiches mécaniques réellement adaptées ; les runes d'animation ont été ajoutées récemment pour empêcher qu'on identifie les ouvrages volés. En cas de séance chargée, elles peuvent être seulement observées immobiles avec leurs runes découvertes, sans imposer un combat supplémentaire. Les statues et leurs runes renvoient vers des méthodes de fabrication de golems liées à Oenopion.
+
+**5. Retour vers Sebnet.** Elle fait faire des copies des documents retrouvés et s'étonne du Pacte : **elle n'en connaissait pas l'existence**. Elle explique que la loge vend **parfois** un ouvrage à l'unité pour financer son fonctionnement, mais **jamais sans autorisation une catégorie complète de ses fonds** ; elle n'a pas approuvé cette disparition. Si on lui montre l'acte de vente, elle reconnaît **Igrigi Lokar, son ancien assistant**, compétent et intègre, parti travailler dans l'administration de Quantium. **Elle ne connaît pas Bijan** ; ses soupçons convergent vers l'acheteur, pas vers son ancien assistant. Si les PJ ont été diplomates, elle peut fournir des lettres d'introduction qui facilitent l'enquête.
+
+**6. Enquête urbaine : des pistes parallèles menant au même repaire** (jouer en **20–30 minutes réelles**, éviter le temps de recherche 1d4 heures du scénario si cela gêne le rythme) :
+- **Reçu → Igrigi : Société DD 18**, ou démarche administrative bien décrite sans jet. Igrigi a vendu **un seul traité** à Bijan, obsédé par les vases, incapable de payer les autres. Il se souvient de la sœur **Zaynap**, qu'il n'a **pas personnellement rencontrée**. Il connaît leur ancienne officine **Wishful Cures**, près des quais. Il sait que le folio du Pacte était rangé à proximité du rayon des vases : un vol précipité a pu l'emporter par erreur. Si les permis d'Adolphus manquent, il en récupère une **copie municipale**.
+- **Artisans / vendeurs d'alchimie : Artisanat ou Diplomatie DD 18**. Des jumeaux achètent du matériel et travaillent depuis **Wishful Cures** ; une bonne réussite peut révéler l'achat de **buses destinées à pulvériser de l'acide**, indice utile pour le danger B1.
+- **Spécialistes des vases : Occultisme DD 16**. Les connaissances les plus recherchées viennent d'**Oenopion**, où les Ohrlavi ont été discrédités ; on reconnaît leur méthode et leur obsession.
+- **Rumeurs d'antiquaires / de la Société : Diplomatie, Société ou Savoir des Éclaireurs DD 18**. Des alchimistes essaient de vendre un folio historique sur le mystérieux Pacte, sans trouver de preneur car le texte semble trop obscur ; on remonte aux Ohrlavi. En réussite forte, on relie directement la rumeur à **Wishful Cures**.
+- **Runes des statues : Arcanes DD 18** (**DD 16** avec relevé précis) : méthode empruntée aux ateliers de constructs d'Oenopion. Cette piste est une possibilité supplémentaire, pas un passage obligé.
+
+**7. Arrivée à Wishful Cures.** Ancienne officine fermée à la suite du décès de son propriétaire ; vitres cassées, graffiti et bâtiment officiellement désert. Derrière le comptoir, une **trappe régulièrement utilisée** mène à la cave B1 et, de là, aux égouts. Les PJ comprennent enfin pourquoi des livres d'alchimie leur ont été volés ; **ils ne savent pas encore** que l'extrudeuse fonctionne ni quelles sont les conditions du Pacte. Voir le tableau B1–B5 plus bas.
+
+### Correction de difficulté : 4 PJ de niveau 3
+
+**Grille de lecture rapide :** **DD 16 = facile**, **DD 18 = standard niveau 3**, **DD 20 = difficile**. Les DD ci-dessus sont des **adaptations MJ** ; les DD officiels du PDF (20/22 et autres) **ne s'appliquent pas par défaut** à cette table. Un jet raté ralentit ou complique la scène, mais ne supprime pas le document-clé, l'identité de l'acheteur ou l'accès aux égouts. Pour les dangers tactiques et Actors, appliquer **l'autre section d'adaptation des combats**, et non les fiches du PDF de niveau 5.
+
+---
+
 ## Adaptation de combat — quatre PJ de niveau 3 (12 novembre 2026)
 
 > **Décision MJ confirmée : 4 PJ de niveau 3.** Toutes les statistiques niveau 5–7 mentionnées ailleurs dans cette fiche sont celles **du scénario original pour des prétirés niveau 5**, **PAS** celles à mettre sur la scène. **Aucun acteur Foundry n'est attesté modifié à ce jour** : tentative de connexion au relais bloquée par les contrôles d'exécution le 12 novembre. Ne pas déclarer le monde prêt. Cette section sert de **cahier des charges mécanique à mettre en œuvre après accès normal**.
@@ -66,7 +137,7 @@ Dossier des journaux : « PFS S01-00 — Origines de la Route Ouverte (notes MJ)
 1. renouer des liens avec **la Maison du Nexus** et sa vash-vatom **Sebnet Sanserkoht** (`npc_sebnet_sanserkoht`) ; remettre un **saphir codé** renseignant la fondation de sa loge ;
 2. compléter **quatre archives bien définies** perdues à Absalom : **Durvin Gest** (expéditions dans l'Étendue du Mwangi), **Selmius Foster** (manifeste d'épices vudrani), **Adolphus** (permis de fondation de la Maison du Nexus), **Kerinha Napsunar** (récits de ses aventures).
 
-L'idée est de montrer la confiance accordée aux nouveaux Éclaireurs et de leur faire découvrir les loges hors d'Absalom. **La découverte du Pacte est une surprise issue des archives**, pas une cinquième tâche connue d'emblée. La **lettre de mission réécrite et signée Ambrus** est enregistrée dans le bloc « Nouvelle lettre de mission » de la préparation. **Elle n'a pas remplacé l'image privée préexistante dans le Journal Foundry**, faute d'accès au relais.
+L'idée est de montrer la confiance accordée aux nouveaux Éclaireurs et de leur faire découvrir les loges hors d'Absalom. **La découverte du Pacte est une surprise issue des archives**, pas une cinquième tâche connue d'emblée. La **demande de mission est donnée directement par Ambrus** et rappelée dans un bloc de briefing de la préparation SQLite ; **aucune lettre spéciale aux joueurs n'est requise**. L'aide de jeu originale de Kreighton Shaine existe indépendamment dans Foundry et n'a pas été remplacée.
 
 ### Ordre de jeu et participants
 
@@ -78,7 +149,7 @@ L'idée est de montrer la confiance accordée aux nouveaux Éclaireurs et de leu
 | 21 h 15–21 h 45 | Enquête condensée dans Quantium ; piste de Wishful Cures | **Igrigi Lokar** : ancien archiviste sérieux devenu fonctionnaire |
 | 21 h 45–23 h | Égouts B1 à B5 ; confrontation finale si le temps le permet | **Bijan et Zaynap Ohrlavi** : alchimistes voleurs à court de ressources, créateurs de l'extrudeuse |
 
-La quête personnelle de Yaz prime sur le début du scénario officiel pour cette séance. **La vérité MJ** sur le frère, les patrons et Larantis ne doit pas être révélée. Voir [Yaz](../pj/PJ-Yaz-Lorok.md). L'Académie de Quantium, parmi plusieurs écoles de la cité, est l'un des **trois pôles majeurs de magie retenus dans notre lore** avec l'Arcanamirium d'Absalom et la Magaambya de Nantambu ; son **nom propre précis reste à choisir**.
+La quête personnelle de Yaz prime sur le début du scénario officiel pour cette séance : **révélation par Uxir du contraste entre l'excellence de Narek à la Magaambya et ses résultats irréguliers à Quantium**, puis piste future au Mwangi. **Narek Lorok est son nom confirmé** ; la vérité MJ sur les patrons et Larantis ne doit pas être révélée. Voir [Yaz](../pj/PJ-Yaz-Lorok.md). L'Académie de Quantium, parmi plusieurs écoles de la cité, est l'un des **trois pôles majeurs de magie retenus dans notre lore** avec l'Arcanamirium d'Absalom et la Magaambya de Nantambu ; son **nom propre précis reste à choisir**.
 
 ### Scène prioritaire : Égouts de Quantium — B1 à B5
 
