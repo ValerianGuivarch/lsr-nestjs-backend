@@ -234,6 +234,24 @@ Les informations suivantes proviennent du **PDF original `Origin of the Open Roa
 - Le briefing Ambrus reste **oral** ; ne pas remplacer inutilement la lettre originale de Kreighton Shaine. Contrôler l'affichage effectif des aides de jeu 2 et 3 et ne transmettre aux PJ que les indices effectivement découverts.
 - Réglages des rencontres en fonction des PJ et du temps restant ; pas de suppression automatique de la fontaine acide.
 
+## État réel Foundry — reprise du 12 novembre 2026 (monde `test-pf2`)
+
+**Effectué et vérifié par lecture du Relay après écriture**, en passant par les routes MJ internes du backend (`/foundry/gm/...`), sans toucher directement aux bases LevelDB :
+
+- Scène B **Égouts de Quantium** `Scene.Dtg1CvduJ1cIxccD` : **9 jetons** tous `hidden=true`, `displayName=50` (nom toujours affiché si jeton révélé) et **5 notes MJ existantes conservées** ; aucun nouveau mur ni éclairage placé.
+- B1 : `Fontaine acide` (`Actor.RcyC3z4K8vpxz5xG`), danger réadapté niveau 2, et coffre caché `Actor.aFhokgGywqDV5Fri` avec l'anneau du bélier.
+- B2 : `Pudding noir` (`Actor.Bv4iHFV4c0oT2tsy`), niveau 3, jeton 2 × 2 et illustration du module de cartes existant.
+- B5 : `Bijan Ohrlavi` (`Actor.JKgmlYP6hLpFOVvH`, niveau 2), `Zaynap Ohrlavi` (`Actor.Pgx4x5nNchmWHJl2`, niveau 2), `Kanker` (`Actor.LhRRr7xSdLwoSmC4`, niveau 0, jeton public « Poupée de glaise »), et `Extrudeuse protoplasmique` (`Actor.swgLQSWZKt5JciVe`, danger complexe niveau 0). Les deux jumeaux possèdent des consommables et actions d'alchimistes issus d'une fiche officielle réadaptée en humains ; Zaynap dispose également de deux grenades gluantes inférieures.
+- `Vase des égouts` (`Actor.6uVg4SF3QHK3gg5u`, niveau −1) : **Actor de réserve**, pas de jeton préplacé ; création manuelle pendant le combat, au maximum 2 vases.
+- B3 : coffre caché `Actor.HHSlG0InsA691oyh` (2 grenades gluantes inférieures à la place des sacs à glu devenus obsolètes dans la version de référence, 1 élixir de vie inférieur, 1 dague empoisonnée niveau 5 comme équivalent Foundry de la dague de venin, 2 torches éternelles en adaptation d'une torche).
+- B5 : caisse de documents cachée `Actor.axhzkvwaBQPbqOGG` contenant trois objets de quête (folio du Pacte, récits de Kerinha et traités volés). Le texte à lire est dans la préparation et ne doit pas être présenté avant la découverte.
+- **Confidentialité vérifiée** : droits `ownership.default=0` pour les **10 Actors créés** (7 rencontres, 3 loot) ; Foundry donnait initialement `default=1` aux Actors de type loot à leur création, corrigé explicitement par `PUT /update` puis relecture. Tous les jetons placés sont cachés.
+- Scène A **Archives de l'orrerie** `Scene.eYxhjbWrCqWtLtO7` : 9 repères existants conservés ; aucun jeton ajouté.
+
+**Ce qui reste à faire avant de déclarer les rencontres 100 % jouables :** contrôle visuel des positions/grilles en interface MJ, création/calage des murs et de l'éclairage, remplacement des icônes génériques des deux jumeaux et de Kanker par leurs portraits définitifs, essais réels des attaques de bombes/grenade gluante, des sorts bas niveau de Kanker et des actions des dangers. L'extrudeuse **ne génère pas automatiquement** les vases ; ses notes de routine décrivent un placement manuel. La fontaine de référence comportait des capacités de piège complexe niveau 6 ; l'Actor a été adapté en danger simple niveau 2, mais **ses actions héritées doivent encore être testées et nettoyées** avant usage. Ne pas lancer le combat sans ce contrôle. Aucun autre monstre n'a été ajouté à la scène des Archives.
+
+---
+
 ## Sources et confidentialité
 
 Le PDF anglais du scénario reste dans la bibliothèque privée Pathfinder Society du mini-PC. Rapports, sauvegardes et fichiers extraits : /home/valou/services/pf2-data/_AI/cartes-audit-20261111/pfs-01-00-pilot/.
