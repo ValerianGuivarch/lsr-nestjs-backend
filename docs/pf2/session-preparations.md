@@ -80,3 +80,26 @@ La fiche d'exemple a d'abord été importée avec 9 étapes et 65 micro-blocs, p
 L'état runtime de référence est dans SQLite ; le script ponctuel `storage/backups/pf2-session-preparations/compact-age-cendres-session1.py` documente la transformation appliquée et ne peut être rejoué sur une révision ultérieure. L'ancienne version est sauvegardée sous `storage/backups/pf2-session-preparations/age-cendres-session1-before-compact-rev-9.json` sur le mini-PC. Les noms corrigés dans cette préparation sont **Brèchemont** et **Impétueux-Bafouilleurs**.
 
 **Plusieurs préparations simultanées :** aucun index unique sur campagne/scénario/séance ; chaque préparation possède un UUID distinct. La page affiche la liste des préparations enregistrées et permet de sélectionner celle à modifier, ou de l’ouvrir directement avec `?preparationId=<UUID>`. Les révisions optimistes empêchent qu’une ancienne sauvegarde écrase la nouvelle.
+
+## Convention MJ — préparation compacte et rôle des cartes (12 novembre 2026)
+
+**Décision de fonctionnement pour les préparations futures**, à appliquer quand le MJ demande « prépare la séance », en gardant la liberté d'en dévier pour une séance particulière.
+
+### Conducteur de 19 h à 23 h
+
+- Le **créneau par défaut est 19 h–23 h** (4 heures), sauf instruction différente. Proposer des horaires indicatifs réalistes, à ajuster selon le roleplay et les combats ; distinguer les voyages en ellipse du temps réel à table. Prévoir une sortie naturelle ou un cliffhanger à 23 h.
+- Préférer **4 à 6 grandes étapes utiles**, plutôt que des dizaines de mini-étapes : briefing, enquête, RP, voyage, donjon, final/conclusion. Un donjon exploré pendant deux heures constitue **une seule étape**, accompagnée d'un guide des salles ; ne scinder que si une salle porte un événement majeur, une décision ou un final autonome.
+- Préférer **une douzaine de blocs riches et lisibles** à des dizaines de blocs descriptifs répétés. Des blocs `texte` et `lore` décrivent les enjeux, les indices, la progression, les dangers et le cadre ; les listes purement détaillées de salles vont plutôt sur les journaux de la scène Foundry.
+- **Chaque personnage n'apparaît qu'une seule fois en bloc `personnage`** dans la préparation : regrouper toutes ses apparitions, sa mission, son caractère, son information utile et ses suites dans ce bloc. Le MJ peut le retrouver dans la première séquence significative, et le conducteur peut lui faire référence ailleurs sans recréer son bloc.
+- **Réutiliser le `npcId`** de la fiche du référentiel métier `pf2_record(kind='pnj')` lorsqu'elle existe ; sinon utiliser **un personnage temporaire** (`name`, éventuellement portrait privé fourni) sans fabriquer une fiche métier pour un figurant. Ne jamais créer un PNJ en double sur simple proximité de nom.
+- La **personnalité jouable** (2–3 traits, ton, motivation, limites) doit figurer dans le bloc personnage ; si un PNJ récurrent a un champ `caractere` en base, le conserver ou l'améliorer via l'interface/API métier, sans promouvoir des hypothèses en faits canoniques.
+- Un bloc `loot` séparé est réservé à **un trésor ou objet vraiment structurant pour la séance** ; pour le butin ordinaire, préférer les notes MJ de la carte et les coffres/Actors `loot` masqués aux joueurs. Les quantités et objets ne s'inventent pas : vérifier les références du scénario.
+- **Statuts** : distinguer proposition, préparation non jouée et événement réellement joué ; séparer secrets MJ et informations connues des PJ. Ne pas associer artificiellement la préparation à une séance Discord déjà close ; la sélectionner lors du véritable `/debut-seance`.
+
+### Cartes et notes Foundry complémentaires
+
+Pour les lieux réellement explorés, créer des **repères de journal MJ par pièce ou zone** (description, dangers, DD, rencontres, loot) et poser **les tokens d'Actors et coffres MJ** aux bons endroits, sur le modèle de la Fosse des Sept Fléaux de Pointesable. Le **conducteur de séance ne duplique pas ces journaux salle par salle** : une vue d'ensemble et, éventuellement, un bloc final suffisent.
+
+Une carte n'est pas obligatoire pour une simple visite de loge ou une consultation d'archives : le théâtre de l'esprit ou une illustration fixe vaut parfois mieux qu'une carte à explorer artificiellement. Le choix de la cartographie doit servir le jeu, pas devenir un travail systématique.
+
+**Exemple actuel** : préparation PFS `1-00`, identifiant `fa2d18bd-32b1-48cf-904e-9873691a55eb` (5 étapes, 12 blocs ; 19 h–23 h ; quête de Yaz avant la mission principale). Cette entrée vit **dans SQLite**, pas dans le Markdown ; sa présence ici sert uniquement d'exemple de méthode.
