@@ -38,13 +38,13 @@ La table `pf2_catalogue_entity` reste la source des rattachements et de la curat
 
 **Préparation enregistrée dans le Journal MJ le 12 novembre 2026 :** `fa2d18bd-32b1-48cf-904e-9873691a55eb`, liée à la campagne `open-road` et au scénario `pfs-season-1-1-00`. **Non jouée.** Plage habituelle 19 h–23 h.
 
-1. **19 h–19 h 30 — Grande Loge d'Absalom** : première rencontre avec **Ambrus Valsin** (PNJ métier `npc_ambrus_valsin`). Il donne les objectifs, le saphir codé et une lettre claire. Le voyage vers Quantium suit en ellipse.
+1. **19 h–19 h 30 — Grande Loge d'Absalom** : première rencontre avec **Ambrus Valsin** (PNJ métier `npc_ambrus_valsin`). Il donne **directement à l'oral** les quatre objectifs documentaires et remet le saphir codé destiné à Sebnet ; **aucune seconde lettre de briefing n'est nécessaire**. Le voyage vers Quantium suit en ellipse.
 2. **19 h 30–20 h 30 — Ancienne académie de Yaz** : enquête personnelle prioritaire de **Yaz Lorok** auprès de **maître Uxir** (`npc_maitre_uxir`). Les circonstances du rituel et du frère disparu restent ouvertes aux décisions de jeu ; la vérité MJ sur le demi-plan de Larantis demeure secrète. [Fiche de Yaz](../pj/PJ-Yaz-Lorok.md).
 3. **20 h 30–21 h 15 — Maison du Nexus** : rencontre de **Sebnet Sanserkoht** (`npc_sebnet_sanserkoht`), diplomatie, archives et apparition de la référence au Pacte ; l'orrerie est traitée narrativement pour l'instant.
 4. **21 h 15–21 h 45 — Enquête dans Quantium** : indices liés au vol des ouvrages, ancien archiviste **Igrigi Lokar**, piste des alchimistes et de **Wishful Cures**.
 5. **21 h 45–23 h — Égouts** : exploration B1–B5, affrontement et récupération éventuelle du folio. Le final peut basculer sur la séance suivante sans forcer le rythme.
 
-**Fourchette des quatre archives explicitement demandées :** récits de Durvin Gest au Mwangi ; manifeste d'épices de Selmius Foster ; permis d'Adolphus sur la fondation de la Maison du Nexus ; récits de Kerinha Napsunar. **Le Pacte n'est pas un cinquième objectif connu au briefing.** La lettre remise par Ambrus est une adaptation MJ, distincte de la lettre de Kreighton Shaine dans le PDF.
+**Fourchette des quatre archives explicitement demandées :** récits de Durvin Gest au Mwangi ; manifeste d'épices de Selmius Foster ; permis d'Adolphus sur la fondation de la Maison du Nexus ; récits de Kerinha Napsunar. **Le Pacte n'est pas un cinquième objectif connu au briefing.** Le **briefing oral d'Ambrus** est l'adaptation MJ ; la lettre de Kreighton Shaine dans le PDF reste une aide de jeu originale distincte, non indispensable à notre préparation. La description et les courts textes de lecture des quatre documents sont dans [la fiche du scénario](Scenario-Origines-Route-Ouverte.md).
 
 ### Continuité des trois académies — choix de campagne
 
@@ -53,7 +53,7 @@ Trois pôles majeurs de formation magique **dans notre lore**, sans prétendre �
 - **Magaambya, Nantambu (Mwangi)** : magie tournée vers le monde vivant, responsabilité communautaire, transmission et équilibre, notamment dans *La Force des milliers*.
 - **Académie de Quantium, Nex** : nom de travail pour **l'établissement particulier fréquenté par Yaz et son frère parmi les nombreux établissements de Quantium** ; recherche expérimentale, alchimie, magie appliquée et pratiques novatrices (formation de magus). Sa dénomination propre exacte reste à fixer plutôt que d'inventer un titre officiel.
 
-**Maître Uxir**, homme-lézard et ancien professeur de magus, a déjà une fiche PNJ métier et un portrait privé. Son témoignage sur Yaz endormi six mois et le frère disparu est un **raccord documentaire** ; ne pas le transformer en vérité supplémentaire ni dévoiler le projet secret du frère aux joueurs par anticipation.
+**Maître Uxir**, homme-lézard et ancien professeur de magus, a déjà une fiche PNJ métier et un portrait privé. **Décision MJ du 12 novembre : Yaz et Narek Lorok ont étudié une première année à la Magaambya de Nantambu (Mwangi), puis une deuxième année à Quantium.** Yaz n'a pas réussi à devenir magus. Uxir a secrètement enquêté au Mwangi après le drame ; il révélera à Yaz l'extrême maîtrise et l'assiduité de Narek à la Magaambya, opposées à ses résultats inégaux à Quantium. La provenance de son pouvoir demeure mystérieuse. Ce récit et le témoignage sur les six mois de sommeil restent un cadre **non encore joué** ; ne pas dévoiler le projet secret de patron ou le demi-plan de Larantis.
 
 ## Préparation Foundry ciblée
 
