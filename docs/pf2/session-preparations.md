@@ -81,6 +81,12 @@ L'état runtime de référence est dans SQLite ; le script ponctuel `storage/bac
 
 **Plusieurs préparations simultanées :** aucun index unique sur campagne/scénario/séance ; chaque préparation possède un UUID distinct. La page affiche la liste des préparations enregistrées et permet de sélectionner celle à modifier, ou de l’ouvrir directement avec `?preparationId=<UUID>`. Les révisions optimistes empêchent qu’une ancienne sauvegarde écrase la nouvelle.
 
+## Complément aux préparations : aide tactique MJ (12 novembre 2026)
+
+Pour chaque rencontre à jouer, en particulier si elle comporte des pouvoirs, des objets alchimiques, des réactions ou des **sorts**, inscrire dans le bloc de rencontre ou dans la **note de la pièce Foundry** une **courte tactique en 2–4 lignes** : première action marquante, capacité à combiner, emploi du terrain et attitude à la défaite. Garder les **données complètes et cliquables** dans l'Actor (spells/Items/attacks et leurs DD, rangs, quantités et consommations), sans les réduire à un commentaire narratif. La section privée **« Comment le jouer (MJ) »** doit aussi exister sur la fiche Actor pour pouvoir agir sans connaître immédiatement tout le système PF2e.
+
+**Adapter les rencontres au groupe réellement prévu** : nombre et niveau de PJ, budget d'XP, éventuels dangers complexes et créatures produites ou invoquées. Lorsque la connexion Foundry est bloquée, documenter le plan mais ne jamais présenter les statblocks comme créés ou testés. Voir [Foundry](../../pf2/outils/foundry.md).
+
 ## Convention MJ — préparation compacte et rôle des cartes (12 novembre 2026)
 
 **Décision de fonctionnement pour les préparations futures**, à appliquer quand le MJ demande « prépare la séance », en gardant la liberté d'en dévier pour une séance particulière.
