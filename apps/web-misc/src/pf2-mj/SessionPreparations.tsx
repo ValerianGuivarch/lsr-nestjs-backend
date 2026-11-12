@@ -7,7 +7,7 @@ import './SessionPreparations.css'
 type BlockKind = 'personnage' | 'lore' | 'loot' | 'rencontre' | 'texte' | 'checklist'
 type Block = {
   id: string; kind: BlockKind; title: string; text: string; done: boolean; npcId?: string;
-  name?: string; portraitUrl?: string; showName?: boolean; quantity?: string;
+  name?: string; ascendance?: string; portraitUrl?: string; showName?: boolean; quantity?: string;
   reference?: string; secret?: boolean;
 }
 type Stage = { id: string; title: string; time: string; notes: string; done: boolean; blocks: Block[] }
@@ -17,7 +17,7 @@ type Preparation = {
   updatedAt: string;
 }
 type Session = { id: string; number: number; title: string; channelId: string | null; channelName: string | null; ended: boolean }
-type Npc = { id: string; nom: string; portrait?: string }
+type Npc = { id: string; nom: string; ascendance?: string; portrait?: string }
 type Option = { id: string; title: string }
 const URL = '/apil7r/pf2-mj/session-preparations'
 const blockLabels: Record<BlockKind, string> = { personnage: 'Personnage', lore: 'Lore', loot: 'Loot', rencontre: 'Rencontre', texte: 'Texte libre', checklist: 'Checklist' }
@@ -25,7 +25,7 @@ const blockKinds = Object.keys(blockLabels) as BlockKind[]
 
 function blankStage(): Stage { return { id: crypto.randomUUID(), title: 'Nouvelle étape', time: '', notes: '', done: false, blocks: [] } }
 function blankBlock(kind: BlockKind): Block {
-  return { id: crypto.randomUUID(), kind, title: kind === 'personnage' ? '' : blockLabels[kind], text: '', done: false, name: '', portraitUrl: '', showName: true, quantity: '', reference: '', secret: kind === 'lore' }
+  return { id: crypto.randomUUID(), kind, title: kind === 'personnage' ? '' : blockLabels[kind], text: '', done: false, name: '', ascendance: '', portraitUrl: '', showName: true, quantity: '', reference: '', secret: kind === 'lore' }
 }
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(`${URL}${path}`, { cache: 'no-store', ...init, headers: init?.headers })
@@ -185,6 +185,34 @@ export default function SessionPreparations({ campaigns, scenarios }: { campaign
     } catch (error) { setNotice(`Partage non confirmé : ${(error as Error).message}`) }
     finally { setBusy(false) }
   }
+  async function promote(block: Block) {
+    if (!draft || block.npcId || block.kind !== 'personnage') return
+    const name = block.name?.trim()
+    if (!name) { setNotice('Indique le nom du personnage avant de le convertir.'); return }
+    if (!window.confirm(`Créer une fiche PNJ permanente pour « ${name} » et lier ce personnage à la préparation ? Cela ne publie rien sur Discord ou Foundry.`)) return
+    setBusy(true); setNotice('')
+    let prep = draft
+    try {
+      // Save pending fields (including ancestry, portrait and GM notes) before
+      // requesting the atomic promotion using the latest revision.
+      if (dirty) { prep = await save(draft); setBusy(true) }
+      const result = await request<{ npcId: string; created: boolean; preparation: Preparation }>(
+        `/${encodeURIComponent(prep.id)}/promote/${encodeURIComponent(block.id)}`,
+        bodyInit({ revision: prep.revision })
+      )
+      setDraft(result.preparation); setDirty(false)
+      const directoryResponse = await fetch('/apil7r/pf2-mj/pnj-directory', { cache: 'no-store' })
+      if (directoryResponse.ok) {
+        const directory = await directoryResponse.json()
+        if (Array.isArray(directory?.items)) setNpcs(directory.items)
+      }
+      await refresh()
+      setNotice(result.created ? `« ${name} » est maintenant un PNJ permanent dans ta base MJ. Aucune publication aux joueurs.` : `« ${name} » était déjà lié à un PNJ permanent.`)
+    } catch (error) {
+      if (prep !== draft) { setDraft(prep); setDirty(false); await refresh().catch(() => undefined) }
+      setNotice(`Conversion impossible : ${error instanceof Error ? error.message : String(error)}`)
+    } finally { setBusy(false) }
+  }
   async function toggleDone(stageId: string, blockId?: string) {
     if (!draft) return
     const next = { ...draft, body: { ...draft.body, stages: draft.body.stages.map(stage => stage.id !== stageId ? stage : blockId
@@ -226,7 +254,7 @@ export default function SessionPreparations({ campaigns, scenarios }: { campaign
             {mode === 'edit' ? <textarea className="session-prep-stage-notes" rows={2} placeholder="Déroulé, objectifs, points d’attention..." value={stage.notes} onChange={e => updateStage(stage.id, { notes: e.target.value })}/> : stage.notes && <p className="session-prep-stage-notes">{stage.notes}</p>}
             <div className="session-prep-blocks">{stage.blocks.map((block, blockIndex) => {
               const npc = npcs.find(n => n.id === block.npcId)
-              const portrait = portraitUrl(block.npcId ? npc?.portrait : block.portraitUrl)
+              const portrait = portraitUrl(block.npcId ? (npc?.portrait || block.portraitUrl) : block.portraitUrl)
               return <div key={block.id} className={`session-prep-block ${block.done ? 'is-done' : ''}`}>
                 <div className="session-prep-block-head"><span className="session-prep-kind">{blockLabels[block.kind]}</span>{mode === 'edit' ? <div className="session-prep-block-tools"><button type="button" onClick={() => updateStage(stage.id, { blocks: move(stage.blocks, blockIndex, -1) })}>↑</button><button type="button" onClick={() => updateStage(stage.id, { blocks: move(stage.blocks, blockIndex, 1) })}>↓</button><button type="button" className="danger" onClick={() => updateStage(stage.id, { blocks: stage.blocks.filter(b => b.id !== block.id) })}>Supprimer</button></div> : <button type="button" onClick={() => void toggleDone(stage.id, block.id)}>{block.done ? '✓ Terminé' : 'Marquer fait'}</button>}</div>
                 {block.kind === 'personnage' && <div className="session-prep-character">
@@ -244,7 +272,7 @@ export default function SessionPreparations({ campaigns, scenarios }: { campaign
                     {mode === 'edit' && !block.npcId && <span className="session-prep-portrait-hint">Cliquer puis Ctrl+V</span>}
                   </div>
                   <div className="session-prep-character-fields">
-                    {mode === 'edit' ? <><label>Source du personnage<select value={block.npcId ?? ''} onChange={e => updateBlock(stage.id, block.id, { npcId: e.target.value || undefined })}><option value="">Personnage temporaire</option>{npcs.map(n => <option key={n.id} value={n.id}>{n.nom}</option>)}</select></label>{!block.npcId && <><label>Nom<input value={block.name ?? ''} onChange={e => updateBlock(stage.id, block.id, { name: e.target.value })}/></label><label className="session-prep-portrait-upload">
+                    {mode === 'edit' ? <><label>Source du personnage<select value={block.npcId ?? ''} onChange={e => updateBlock(stage.id, block.id, { npcId: e.target.value || undefined })}><option value="">Personnage temporaire</option>{npcs.map(n => <option key={n.id} value={n.id}>{n.nom}</option>)}</select></label>{!block.npcId && <><label>Nom<input value={block.name ?? ''} onChange={e => updateBlock(stage.id, block.id, { name: e.target.value })}/></label><label>Ascendance (pour le portrait)<input placeholder="Humain, elfe, gnome… ou inconnue" value={block.ascendance ?? ''} onChange={e => updateBlock(stage.id, block.id, { ascendance: e.target.value })}/></label><label className="session-prep-portrait-upload">
                       <span>{uploadingPortrait === block.id ? 'Envoi en cours…' : portrait ? 'Remplacer le portrait' : 'Choisir un portrait'}</span>
                       <input type="file" accept="image/png,image/jpeg,image/webp,image/gif" disabled={busy || uploadingPortrait !== null}
                         onChange={event => { const file = event.target.files?.[0]; event.target.value = ''; void uploadPortrait(stage.id, block.id, file) }}/>
@@ -260,8 +288,8 @@ export default function SessionPreparations({ campaigns, scenarios }: { campaign
                       disabled={busy || uploadingPortrait !== null || !dirty}
                       onClick={() => { void save().then(() => setPortraitFeedback(previous => ({ ...previous, [block.id]: 'Portrait enregistré dans la préparation.' }))).catch(error => setPortraitFeedback(previous => ({ ...previous, [block.id]: `Enregistrement impossible : ${error instanceof Error ? error.message : String(error)}` }))) }}>
                       {busy ? 'Enregistrement…' : 'Enregistrer le portrait'}
-                    </button></>}<label className="session-prep-checkbox"><input type="checkbox" checked={block.showName !== false} onChange={e => updateBlock(stage.id, block.id, { showName: e.target.checked })}/> Afficher le nom aux joueurs</label></> : <><strong>{npc?.nom ?? block.name ?? 'Personnage temporaire'}</strong><small>{block.npcId ? 'Fiche MJ' : 'Temporaire · sans fiche MJ'}</small></>}
-                    <div className="session-prep-actions">{block.npcId && <Link to={`/pf2-mj/npcs/${encodeURIComponent(block.npcId)}`}>Ouvrir la fiche MJ</Link>}<button disabled={busy || uploadingPortrait !== null || !canShare} type="button" className="primary" onClick={() => void share(block)}>Partager · Discord + Foundry</button></div>
+                    </button></>}<label className="session-prep-checkbox"><input type="checkbox" checked={block.showName !== false} onChange={e => updateBlock(stage.id, block.id, { showName: e.target.checked })}/> Afficher le nom aux joueurs</label></> : <><strong>{npc?.nom ?? block.name ?? 'Personnage temporaire'}</strong><small>{block.npcId ? 'Fiche MJ' : 'Temporaire · sans fiche MJ'} · Ascendance : {npc?.ascendance || block.ascendance || 'non précisée'}</small></>}
+                    <div className="session-prep-actions">{block.npcId && <Link to={`/pf2-mj/npcs/${encodeURIComponent(block.npcId)}`}>Ouvrir la fiche MJ</Link>}{!block.npcId && <button type="button" disabled={busy || uploadingPortrait !== null || !block.name?.trim()} onClick={() => void promote(block)}>Enregistrer comme PNJ permanent</button>}<button disabled={busy || uploadingPortrait !== null || !canShare} type="button" className="primary" onClick={() => void share(block)}>Partager · Discord + Foundry</button></div>
                   </div>
                 </div>}
                 {mode === 'edit' ? <div className="session-prep-block-fields">{block.kind !== 'personnage' && <label>Titre<input value={block.title} onChange={e => updateBlock(stage.id, block.id, { title: e.target.value })}/></label>}{block.kind === 'loot' && <label>Quantité<input value={block.quantity ?? ''} onChange={e => updateBlock(stage.id, block.id, { quantity: e.target.value })}/></label>}{block.kind === 'rencontre' && <label>Référence Foundry / scène<input value={block.reference ?? ''} onChange={e => updateBlock(stage.id, block.id, { reference: e.target.value })}/></label>}<label className="session-prep-full">{block.kind === 'personnage' ? 'Notes / rôle dans cette scène' : 'Contenu'}<textarea rows={3} value={block.text} onChange={e => updateBlock(stage.id, block.id, { text: e.target.value })}/></label>{block.kind === 'lore' && <label className="session-prep-checkbox"><input type="checkbox" checked={block.secret === true} onChange={e => updateBlock(stage.id, block.id, { secret: e.target.checked })}/> Secret MJ</label>}</div> : <><h4>{block.kind !== 'personnage' ? block.title : ''}{block.kind === 'loot' && block.quantity ? ` · ${block.quantity}` : ''}</h4>{block.kind === 'lore' && block.secret && <small className="session-prep-secret">🔒 Secret MJ</small>}{block.text && <p className="session-prep-block-text">{block.text}</p>}{block.reference && <small>{block.reference}</small>}</>}
