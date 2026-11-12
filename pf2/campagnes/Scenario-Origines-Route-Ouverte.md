@@ -6,6 +6,39 @@
 
 Préparer le scénario *Origin of the Open Road* à **Quantium, Nex**, dans la [campagne transverse La Route ouverte](Campagne-Route-Ouverte.md). Les PJ ne recherchent **pas** le Pacte dès le départ : leur mission initiale est documentaire et diplomatique. En priorité, fiabiliser **la scène des égouts** ; garder l'orrerie de la loge comme décor narratif sans nouveau travail cartographique à ce stade. Aucun import en masse d'autres scénarios Society n'est prévu.
 
+## Adaptation de combat — quatre PJ de niveau 3 (12 novembre 2026)
+
+> **Décision MJ confirmée : 4 PJ de niveau 3.** Toutes les statistiques niveau 5–7 mentionnées ailleurs dans cette fiche sont celles **du scénario original pour des prétirés niveau 5**, **PAS** celles à mettre sur la scène. **Aucun acteur Foundry n'est attesté modifié à ce jour** : tentative de connexion au relais bloquée par les contrôles d'exécution le 12 novembre. Ne pas déclarer le monde prêt. Cette section sert de **cahier des charges mécanique à mettre en œuvre après accès normal**.
+
+### Budget et objectifs
+
+Pour quatre PJ de niveau 3 : **faible 60 XP**, **modérée 80 XP**, **sévère 120 XP**, **extrême 160 XP**. Un ennemi de niveau 2 vaut 30 XP, de niveau 3 vaut 40 XP, de niveau 0 vaut 15 XP et de niveau −1 vaut 10 XP. Un **danger complexe** compte comme une créature de même niveau ; un **danger simple** compte moins (niveau 2 face à niveau 3 : 6 XP). Recalculer les rencontres avec le **système PF2e actuel**, sans se contenter d'appliquer une étiquette « niveau 3 » à un statblock supérieur.
+
+| Pièce | Contenu mécanique **à créer/vérifier** | Difficulté ciblée |
+| --- | --- | --- |
+| **B1** | Fontaine acide **danger simple niveau 2** : déclencheurs dissimulés, jets de sauvegarde/DD, dégâts d'acide, actions de désamorçage adaptés au niveau 3. Conserver les emplacements du PDF. | Piège léger, **6 XP** si géré comme danger simple. |
+| **B2** | **Pudding noir adapté niveau 3** (Actor dérivé/clone conforme aux tables de création de créatures) : attaque, AC, PV, DD, dégâts, mobilité et immunités recalculés. Garder sa silhouette et sa tactique d'embuscade dans la vase. **Division** : mécanisme contrôlé à définir et tester (par exemple une seule division avec PV partagés) pour ne pas faire exploser l'économie d'actions. | **40 XP** avant modification éventuelle. |
+| **B3** | Dague et mécanisme de retrait, **pas un ennemi supplémentaire**. Garder les objets de butin documentés, sans augmenter artificiellement la puissance du piège. | Exploration et récompense. |
+| **B4** | Moisissure jaune et gouffres adaptés à l'environnement niveau 3 ; ne pas ajouter de créature superflue. | Danger d'exploration, à quantifier si activé comme hazard PF2e. |
+| **B5** | **Bijan** et **Zaynap** : **2 Actors uniques niveau 2** (30 XP chacun) avec statblock complet et objets alchimiques réellement utilisables ; **Kanker** : poupée liée à une âme **niveau 0** (15 XP) avec capacités réellement configurées ; **extrudeuse complexe niveau 0** (15 XP) ; **maximum 2 vases niveau −1** (10 XP chacune) créées durant le combat, pas d'entrée pré-placée comme adversaire actif. | **90 XP avant les vases ; jusqu'à 110 XP** si les deux sont présentes. Rencontre de fin exigeante, **sous le seuil sévère à 120 XP**, à surveiller selon l'état du groupe. |
+
+**Si la fatigue du groupe le justifie :** commencer avec une seule vase possible, ou rendre la machine désactivable dès la première intervention réussie ; ne pas augmenter les niveaux pour « compenser » un combat jugé facile. La scène conserve ses spécificités narratives, mais **les règles originales de production (cube niveau 3 puis vases niveau 1, 4 créatures max, variantes 5/6 PJ)** sont **désactivées au profit du réglage pour quatre PJ niveau 3**. La procédure et les DD définitifs restent à tester dans Foundry.
+
+### Actors complets, pas de fiches purement narratives
+
+- **Bijan, alchimiste bombardier offensif** (niveau 2) : fournir de vraies **bombes alchimiques intégrées à l'inventaire avec attaques, dégâts, éclaboussures et quantités utilisables** (par exemple une fiole d'acide et une foudre en bouteille de grade adapté). Garder un outil de mêlée de secours, défenses et compétences cohérentes avec le niveau. **Tactique courte sur Actor + journal B5** : se décaler pour lancer une bombe qui provoque un état utile (p. ex. pris au dépourvu par foudre en bouteille) ; viser un regroupement pour profiter des éclaboussures ; changer d'angle au lieu de répéter trois frappes ; garder ses distances. Il défend surtout son invention.
+- **Zaynap, alchimiste de contrôle** (niveau 2) : équipement actif de bombes et **outils de gêne/entrave** (objets alchimiques avec effets, portée et quantités réels), et éventuellement un élixir de survie approprié, sans inventer de sort. **Tactique** : freiner le PJ qui peut atteindre l'extrudeuse, protéger le couloir, apporter un soutien à Bijan ; elle tente de négocier ou de fuir si le combat tourne mal. **Les alchimistes ne sont pas des lanceurs de sorts par défaut** : leurs objets et capacités alchimiques doivent fonctionner mécaniquement.
+- **Kanker, poupée liée à une âme** (niveau 0) : garder le caractère de poupée animée et la capacité de harcèlement, mais remplacer la fiche de niveau 2 originale par un Actor équilibré. Si un sort est conservé (par exemple une version bas rang de graisse ou un tour de magie de diversion), **ajouter véritablement le sort dans un répertoire de lancement, avec rang, nombre d'utilisations, DD et action corrects**, plutôt qu'un texte de description ; sinon rester sur les capacités propres de la poupée. **Tactique** : gêner un chemin, protéger un jumeau, occuper un PJ, pas charger seule contre quatre adversaires.
+- **Extrudeuse** : danger complexe autonome niveau 0 avec **activation, initiative/routine, désamorçage, PV et limite de production configurés**. **Tactique MJ** : avertir par le bruit et les conduites vibrantes ; la première vase apparaît après activation, la seconde plus tard si la machine fonctionne encore ; proposer une solution de désamorçage visible via les indices.
+- **Vases** : une ou deux versions **niveau −1** avec vraies attaques, PV, immunités/résistances appropriées et nom de token descriptif (`Vase A`, `Vase B`). Vérifier les effets qui persistent et les droits joueurs. Ne pas donner aux petites vases des dégâts ou des attaques du cube original niveau 3.
+- **Pudding B2** : **Tactique** : rester dissimulé dans le bassin jusqu'à l'approche des PJ, saisir une cible proche de la boue et tirer profit du terrain ; faire sentir les dangers d'acide et de division sans punition mortelle automatique.
+
+### Aide de jeu ultra-courte sur chaque Actor et dans le journal
+
+Inclure dans chaque **Actor un résumé MJ « Comment le jouer » de 3 à 6 lignes**, de préférence dans sa biographie/notes GM, **sans révélation aux joueurs**. Exemple pour **Bijan** : « Tour 1 : bouge à couvert et lance une foudre en bouteille pour rendre la cible plus vulnérable. Tour 2 : vise un regroupement avec une fiole d'acide. Ne cherche pas à combattre au contact. Protège l'extrudeuse ; il peut se rendre si Zaynap tombe. » **L'équivalent très synthétique** doit aussi figurer dans le journal B5, sans dupliquer tout le statblock.
+
+**Test obligatoire avant de déclarer les Actors utilisables :** ouvrir chacun dans Foundry et **déclencher réellement** une bombe, un objet, un sort éventuel, une capacité spéciale et une action de danger ; vérifier rang, quantités, sauvegardes, dégâts, suivi des utilisations, portrait, nom de token toujours visible et propriété. **Une fiche avec des capacités seulement écrites dans le texte n'est pas une préparation terminée.**
+
 ## État Foundry du 11 novembre 2026
 
 Monde **test-pf2**, dossier de scènes « PFS S01-00 — Origin of the Open Road (cartes préparées) ».
