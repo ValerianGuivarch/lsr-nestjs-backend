@@ -110,6 +110,49 @@ describe('SessionPreparationService', () => {
     }
   })
 
+  it('promotes a temporary character into one global MJ PNJ, preserves its ancestry, notes and portrait, and links the preparation atomically', async () => {
+    const prep = await service.create({ title: 'PNJ à suivre', body: { summary: '', stages: [{ id: 'st', title: 'Enquête', blocks: [
+      { id: 'igrigi', kind: 'personnage', name: 'Igrigi Lokar', ascendance: 'Humain (choix MJ)', portraitUrl: 'assets/l7r/portraits/pnj/igrigi.webp', text: 'Ancien archiviste de la loge. Secret MJ : a vendu un traité à Bijan.' },
+    ] }] } }) as { id: string; revision: number; body: { stages: Array<{ blocks: Array<{ ascendance?: string }> }> } }
+    expect(prep.body.stages[0].blocks[0].ascendance).toBe('Humain (choix MJ)')
+    expect(await persistence.listRecords('pnj')).toHaveLength(0)
+
+    const promoted = await service.promoteCharacter(prep.id, 'igrigi', { revision: prep.revision }) as {
+      npcId: string; created: boolean; preparation: { revision: number; body: { stages: Array<{ blocks: Array<{ npcId?: string; name?: string }> }> } }
+    }
+    expect(promoted.created).toBe(true)
+    expect(promoted.preparation.revision).toBe(prep.revision + 1)
+    expect(promoted.preparation.body.stages[0].blocks[0].npcId).toBe(promoted.npcId)
+    const records = await persistence.listRecords('pnj')
+    expect(records).toHaveLength(1)
+    expect(records[0]).toEqual(expect.objectContaining({
+      id: promoted.npcId, nom: 'Igrigi Lokar', ascendance: 'Humain (choix MJ)',
+      portrait: 'assets/l7r/portraits/pnj/igrigi.webp', scope: 'global',
+      notes: 'Ancien archiviste de la loge. Secret MJ : a vendu un traité à Bijan.',
+      description: '',
+    }))
+
+    const retried = await service.promoteCharacter(prep.id, 'igrigi', { revision: prep.revision }) as { npcId: string; created: boolean }
+    expect(retried).toEqual(expect.objectContaining({ npcId: promoted.npcId, created: false }))
+    expect(await persistence.listRecords('pnj')).toHaveLength(1)
+  })
+
+  it('refuses stale promotion and external portraits without leaving orphan PNJs', async () => {
+    const prep = await service.create({ title: 'Bloc', body: { summary: '', stages: [{ id: 's', title: 'Scène', blocks: [
+      { id: 'temp', kind: 'personnage', name: 'Un inconnu', portraitUrl: 'https://example.com/test.webp', ascendance: 'Elfe' },
+    ] }] } }) as { id: string; revision: number }
+    await expect(service.promoteCharacter(prep.id, 'temp', { revision: prep.revision })).rejects.toThrow(/portrait/i)
+    expect(await persistence.listRecords('pnj')).toHaveLength(0)
+    const changed = await service.get(prep.id) as { revision: number; title: string; body: { summary: string; stages: Array<{ blocks: Array<{ portraitUrl: string }> }> } }
+    changed.body.stages[0].blocks[0].portraitUrl = ''
+    await service.update(prep.id, changed as unknown as Record<string, unknown>)
+    await expect(service.promoteCharacter(prep.id, 'temp', { revision: prep.revision })).rejects.toThrow(/recharge/i)
+    expect(await persistence.listRecords('pnj')).toHaveLength(0)
+    const valid = await service.promoteCharacter(prep.id, 'temp', { revision: changed.revision + 1 }) as { created: boolean }
+    expect(valid.created).toBe(true)
+    expect(await persistence.listRecords('pnj')).toHaveLength(1)
+  })
+
   it('refuses an invalid or duplicated stage and rejects share without an active session channel', async () => {
     await expect(service.create({ title: 'X', body: { stages: [{ id: '1', title: 'A', blocks: [] }, { id: '1', title: 'B', blocks: [] }] } })).rejects.toThrow()
     const prep = await service.create({ title: 'Sans canal', body: { summary: '', stages: [{ id: 's', title: 'A', blocks: [{ id: 'b', kind: 'personnage', name: 'Figurant' }] }] } }) as { id: string }
