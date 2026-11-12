@@ -165,11 +165,12 @@ export class SessionPreparationService {
       }
       await manager.query('INSERT INTO pf2_record(kind,id,name,payload) VALUES (?,?,?,?)', ['pnj', npcId, name, JSON.stringify(record)])
       block.npcId = npcId
-      const updated = await manager.query(
+      await manager.query(
         'UPDATE pf2_session_preparation SET body_json=?,revision=revision+1,updated_at=CURRENT_TIMESTAMP WHERE id=? AND revision=?',
         [JSON.stringify(body), preparationId, expectedRevision]
-      ) as { changes?: number }
-      if (updated.changes !== 1) throw new ConflictException('La préparation a été modifiée pendant la conversion.')
+      )
+      const updated = await manager.query('SELECT revision FROM pf2_session_preparation WHERE id=?', [preparationId]) as Array<{ revision: number }>
+      if (updated[0]?.revision !== expectedRevision + 1) throw new ConflictException('La préparation a été modifiée pendant la conversion.')
       return { npcId, created: true }
     })
     return { ...outcome, preparation: await this.get(preparationId) }
