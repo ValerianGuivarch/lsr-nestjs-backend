@@ -741,6 +741,10 @@ Priorités : validation visuelle des deux cartes PFS ; éventuellement murs et �
 - **Non terminé :** aucun mur, lumière dynamique ou token préparé sur ces deux scènes. Il reste à les préparer et à valider visuellement en client MJ.
 - Détails : [fiche du scénario](../campagnes/Scenario-Origines-Route-Ouverte.md). Pas d'images/PDF propriétaires dans GitHub.
 
+## Convention MJ — ascendance des PNJ temporaires (12 novembre 2026)
+
+Tout **personnage temporaire de préparation sans portrait** doit avoir une **ascendance affichée**, pour que le MJ puisse choisir une image cohérente. Préciser les ascendants dont la source est sûre et indiquer clairement **« Inconnue »** ou une hypothèse de travail **« Humain (choix MJ) »** lorsqu'elle ne l'est pas. **Ne jamais déduire une ascendance certaine du seul nom.** Le bouton séparé **« Enregistrer comme PNJ permanent »** crée une fiche privée dans la base MJ, réutilisable même sans rencontre par les PJ ; il n'envoie rien automatiquement sur Discord, Foundry ou wiki. Voir [préparations de séances](../../docs/pf2/session-preparations.md).
+
 ## Convention MJ — combats adaptés et « comment le jouer » (12 novembre 2026)
 
 **À appliquer à tous les futurs Actors PNJ/monstres préparés, en plus de la règle de nommage des tokens.** Le MJ découvre encore certaines règles : une fiche techniquement correcte **sans mode d'emploi tactique** n'est pas suffisante.
