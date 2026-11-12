@@ -148,10 +148,10 @@ export class SessionPreparationService {
       const name = this.trim(block.name, 'Nom du personnage', 160, true)
       const portrait = block.portraitUrl?.trim() ?? ''
       // The permanent PNJ directory only accepts local Foundry image paths.
-      if (portrait && !/^assets\\/l7r\\/portraits\\/pnj\\/[^/]+\\.(?:webp|gif|png|jpe?g)$/i.test(portrait)) {
+      if (portrait && !/^assets\/l7r\/portraits\/pnj\/[^/]+\.(?:webp|gif|png|jpe?g)$/i.test(portrait)) {
         throw new BadRequestException('Pour conserver le portrait, importe d’abord l’image avec « Choisir un portrait » (une URL externe ne suffit pas).')
       }
-      const slug = name.normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').toLowerCase()
+      const slug = name.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
         .replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '').slice(0, 72) || 'personnage'
       const npcId = `npc_${slug}_${randomUUID().slice(0, 8)}`
       const record = {
