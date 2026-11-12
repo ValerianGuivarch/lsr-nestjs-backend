@@ -108,6 +108,27 @@ Cette divergence doit être traitée comme une dette technique. Le comportement 
 
 ---
 
+### 9.4 Accès contrôlé aux scènes et documents MJ (12 novembre 2026)
+
+Les opérations de scènes auparavant lancées directement contre le relais passent désormais par **le service Nest existant** `FoundryRelayService` : la clé `FOUNDRY_REST_API_KEY` reste dans le processus serveur, sans lecture/transmission via une commande ChatGPT.
+
+**Routes internes du backend JDR** (préfixe `/foundry`) :
+
+| Opération | Route |
+|---|---|
+| Lire une scène | `GET /foundry/gm/scenes/:uuid` |
+| Lire les éléments d'un calque | `GET /foundry/gm/scenes/:uuid/canvas/:type` |
+| Créer un jeton ou une note | `POST /foundry/gm/scenes/:uuid/canvas/:type` |
+| Mettre à jour un élément de calque | `PUT /foundry/gm/scenes/:uuid/canvas/:type/:documentId` |
+| Créer un Actor ou JournalEntry | `POST /foundry/gm/documents/:type` |
+| Mettre à jour un Actor ou JournalEntry | `PUT /foundry/gm/documents/:uuid` |
+
+**Toutes ces routes sont protégées** par l'en-tête interne `x-pf2-journals-key` (correspondant à `PF2_JOURNALS_INTERNAL_KEY` déjà configuré côté serveur). Sans cet en-tête valide, le backend refuse l'opération avant de contacter Foundry ; ce n'est **pas une API publique ou une interface à partager aux joueurs**. Les opérations ciblent uniquement un client connecté au monde `test-pf2`, valident les UUID et limitent les types documentaires. Elles ne proposent ni exécution libre de JavaScript Foundry, ni suppression de documents.
+
+**Ordre pour reprendre PFS S01-00 :** vérifier le déploiement de cette version, accéder au service avec un client interne autorisé, lire `Scene.eYxhjbWrCqWtLtO7` (orrerie) et `Scene.Dtg1CvduJ1cIxccD` (égouts) puis leurs calques `tokens`, `notes`, `walls`, `lights`. Ne modifier qu'après audit de l'existant, et relire le résultat de chaque écriture. Les tests automatisés protègent la règle d'autorisation mais ne prouvent pas qu'un déploiement ou un placement effectif a eu lieu.
+
+---
+
 ## 10. Séances, résumés et XPC
 
 ### 10.1 Séances
