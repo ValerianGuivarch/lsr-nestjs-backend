@@ -39,6 +39,12 @@ Une catastrophe survient autour d'un **livre aux pages devenues blanches** et d'
 
 Yaz consacre ensuite une longue période à cette recherche, sans résultat, avant de prendre le chemin de Druma pour annoncer la nouvelle à ses parents. Son passage par **Absalom** est décisif : dans une auberge, il écoute des Éclaireurs raconter leurs découvertes et leurs aventures. Il laisse repartir le navire qui devait le ramener chez lui et se présente à la **Société des Éclaireurs**, espérant à la fois agir sur le monde et trouver de nouvelles pistes sur la disparition de son frère. L'ancienne version suggère aussi qu'il redoute d'affronter sa famille et de lui dire la vérité.
 
+#### Quantium — académie et retour prévu (préparation du 12 novembre 2026)
+
+**Décision MJ de cadre, non encore jouée :** dans notre continuité, l'établissement précis fréquenté par Yaz **et son frère** est l'une des grandes références en magie à Golarion, avec l'**Arcanamirium** d'Absalom et la **Magaambya** de Nantambu. Il est provisoirement désigné **« Académie de Quantium »** ; son **nom propre exact est encore à décider**. Ce n'est pas l'unique académie de Quantium. Voir [Écoles de magie](../univers/Ecoles-de-magie.md) pour leurs trois philosophies.
+
+La préparation de [PFS 1-00 — Origines de la Route ouverte](../campagnes/Scenario-Origines-Route-Ouverte.md) prévoit une première rencontre en jeu avec **maître Uxir** avant le volet d'archives de la Maison du Nexus. Le personnage existe déjà dans SQLite (`npc_maitre_uxir`) avec un portrait : **ne pas créer un doublon temporaire**. Lors de ce rendez-vous, des archives disciplinaires, d'anciennes notes ou des témoins peuvent apporter un **premier indice** sur le frère disparu ; **ne pas révéler d'emblée** son projet réel de devenir patron de Yaz ni les secrets de Larantis. Les faits du rituel et les choix des PJ seront enregistrés après la partie, pas anticipés dans cette fiche.
+
 #### Relations
 
 - **Ragar Lorok** : père de Yaz, **nom de référence attesté par l'onglet 2**. Le dossier historique l'appelait *Damas Lorok* ; ce nom est écarté de la fiche canonique tant qu'aucune nouvelle confirmation ne le justifie.
