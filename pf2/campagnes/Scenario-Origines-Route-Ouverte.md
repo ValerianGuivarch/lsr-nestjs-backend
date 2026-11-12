@@ -67,6 +67,24 @@ La quête personnelle de Yaz prime sur le début du scénario officiel pour cett
 - Vérifier et compléter **murs, portes, éclairages**, repères de pièges et visibilité (égouts essentiellement sombres). Confirmer visuellement l'alignement des zones au quadrillage avant de placer les tokens.
 - **Aucun objet ni acteur n'a été posé le 12 novembre** : le relais répondait mais signalait `test-pf2` comme **hors ligne**, les lectures de scène échouaient. Refaire une lecture **live** de la scène et des Actors dès que le client MJ est connecté ; ne pas écrire dans LevelDB ni utiliser un script de contournement.
 
+### Inventaire exact et bestiaire — vérification dans le PDF anglais
+
+Les informations suivantes proviennent du **PDF original `Origin of the Open Road`** et précisent la cible à importer quand Foundry sera disponible. **Elles ne constituent pas encore des Actors ou Items créés dans Foundry.**
+
+| Zone | Références exactes | Point de contrôle Foundry |
+| --- | --- | --- |
+| **B1** | **Acid Spray Fountain**, danger **niveau 6** ; **`ring of the ram`** (*anneau du bélier*, niveau 6), DD **22 Perception** pour le trouver | Danger lié aux plaques de pression `T` et buses `N` de la carte ; anneau dans un coffre MJ caché sous l'encyclopédie, jamais visible automatiquement |
+| **B2** | **Black Pudding**, créature **niveau 7** | Référence officielle de bestiaire, cachée dans le bassin ; surveiller la capacité de division lors des attaques tranchantes/perforantes et les ajustements pour 5/6 PJ |
+| **B3** | **2 `lesser tanglefoot bags`**, **1 `lesser elixir of life`**, **1 `dagger of venom`** (*dague de venin*, niveau 5), et **2 `everburning torches`** | Butin au bon endroit, avec la dague prise dans le dispositif : **DD 18 Vol ou Occultisme** pour la dégager sans compromettre son venin (échec : venin inutilisable 24 h ; échec critique : exposition au venin). Ne pas oublier les torches |
+| **B4** | **Yellow Mold**, moisissure jaune sur **deux** colonnes centrales ; **cinq** gouffres profonds | Repères MJ / danger environnemental ; vérifier sur la carte la position des cinq fosses, éviter de remplacer par cinq monstres |
+| **B5** | **Bijan et Zaynap Ohrlavi**, **niveau 5** chacun, statistiques **spécifiques au scénario** ; **Kanker**, **`soulbound doll`** niveau **2**, référence *Bestiary* ; **Protoplasmic Extruder**, danger complexe niveau **5** | Les deux jumeaux sont des **Actors nommés** et ne doivent pas être remplacés mécaniquement par des alchimistes génériques ; Kanker peut se fonder sur la poupée liée à une âme du bestiaire ; machine à créer comme danger si aucune référence adéquate |
+
+**Extrudeuse B5, mécanisme important (PDF original p. 21–22)** : à son activation par un jumeau, elle engendre d'abord **un `gelatinous cube` (cube gélatineux, niveau 3)**, puis des **`sewer oozes` (vases d'égout, niveau 1)** ; elle produit **au maximum quatre vases** avant de s'arrêter. À **5 PJ**, elle génère des cubes gélatineux à chaque activation ; à **6 PJ**, elle génère d'abord **une `ochre jelly` (gelée ocre, niveau 5)**, puis des cubes. **Ne pas placer quatre vases actives d'avance sur la carte : préparer les références pour leur apparition selon les rounds et le nombre de PJ.** Une recherche dépassant 30 heures peut doubler les PV des vases produites (voir PDF). L'extrudeuse se neutralise notamment par **deux succès en Occultisme DD 22 (expert) ou Vol DD 24 (expert), un succès critique comptant double**, suivant les règles détaillées originales.
+
+**B5, récompense documentaire** : livres et folio volés dans les caisses de la **passerelle sud-est**. Des documents supplémentaires volés à d'autres mages valent **4 Treasure Bundles** à la restitution (convention PFS, à ne pas convertir arbitrairement en trésor de campagne). Au retour à la Maison du Nexus, **Sebnet remet un `bag of holding type II`** (*sac sans fond de type II*) selon le scénario : **récompense de conclusion, pas coffre supplémentaire caché dans les égouts**.
+
+**Images à contrôler lors de la reprise** : Ambrus, Uxir et Sebnet possèdent tous trois une image de portrait privée existante côté référentiel. Cela ne dit rien de la disponibilité ni de l'apparence des **Actors du monde/compendiums** suivants : `Black Pudding`, `Soulbound Doll`, `Gelatinous Cube`, `Sewer Ooze`, `Ochre Jelly`, les deux jumeaux et la machine. Il faudra examiner `Actor.img`, `prototypeToken.texture.src` et le résultat visuel sur la scène après les placements.
+
 ### Scène des archives — mise en attente
 
 `Scene.eYxhjbWrCqWtLtO7` (orrerie) demeure une carte de référence, **sans réaménagement prioritaire**. L'accueil et la recherche se jouent surtout en RP ; l'éventuelle attaque des statues animées appartient toujours au scénario et sera arbitrée sans imposer une exploration tactique complète de ce lieu. Ne pas fusionner ses neuf repères existants sans examen.
