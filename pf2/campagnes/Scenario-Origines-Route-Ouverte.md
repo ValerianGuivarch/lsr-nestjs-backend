@@ -143,7 +143,7 @@ L'idée est de montrer la confiance accordée aux nouveaux Éclaireurs et de leu
 
 | Horaire indicatif | Séquence | Personnages à interpréter une fois dans la préparation |
 | --- | --- | --- |
-| 19 h–19 h 30 | Entretien à Absalom, lettre, départ elliptique | **Ambrus Valsin** : ferme, efficace, consciencieux, soucieux des résultats et de l'institution |
+| 19 h–19 h 30 | Entretien à Absalom, briefing oral, départ elliptique | **Ambrus Valsin** : ferme, efficace, consciencieux, soucieux des résultats et de l'institution |
 | 19 h 30–20 h 30 | École de Yaz : première piste sur son frère, sans révélation décisive | **Maître Uxir** : observateur, patient, méticuleux, ancien professeur de magus, conserve des notes |
 | 20 h 30–21 h 15 | Accueil à la Maison du Nexus, archives de l'orrerie, référence au Pacte et vol | **Sebnet Sanserkoht** : sociable, élégante, diplomate, curieuse et attachée aux archives |
 | 21 h 15–21 h 45 | Enquête condensée dans Quantium ; piste de Wishful Cures | **Igrigi Lokar** : ancien archiviste sérieux devenu fonctionnaire |
@@ -198,7 +198,7 @@ Les informations suivantes proviennent du **PDF original `Origin of the Open Roa
 - Position réelle B1–B5 des notes, des tokens et des coffres ; absence de doublons ; murs, éclairage, déclencheurs et profondeur des eaux.
 - Bestiaire employé pour le pudding, la poupée et les vases ; **portraits réellement associés aux Actors** et aux tokens, pas seulement aux fichiers image.
 - Noms visibles pour tous sans spoiler, **tokens ennemis éventuellement cachés**, coffres loot invisibles aux joueurs et sans droits globaux.
-- Lettre réécrite remplaçant l'ancien document seulement **après validation MJ** ; affichage effectif des aides de jeu 2 et 3.
+- Le briefing Ambrus reste **oral** ; ne pas remplacer inutilement la lettre originale de Kreighton Shaine. Contrôler l'affichage effectif des aides de jeu 2 et 3 et ne transmettre aux PJ que les indices effectivement découverts.
 - Réglages des rencontres en fonction des PJ et du temps restant ; pas de suppression automatique de la fontaine acide.
 
 ## Sources et confidentialité
