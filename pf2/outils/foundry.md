@@ -740,3 +740,31 @@ Priorités : validation visuelle des deux cartes PFS ; éventuellement murs et �
 - Création de **14 repères MJ cliquables** renvoyant à deux journaux privés (16 pages) ; troisième journal privé de trois documents joueurs issus des pages 16–17 du PDF, à partager au bon moment. Aucun accès joueur par défaut.
 - **Non terminé :** aucun mur, lumière dynamique ou token préparé sur ces deux scènes. Il reste à les préparer et à valider visuellement en client MJ.
 - Détails : [fiche du scénario](../campagnes/Scenario-Origines-Route-Ouverte.md). Pas d'images/PDF propriétaires dans GitHub.
+
+## Convention MJ — explorer une carte par journaux, Actors et coffres (12 novembre 2026)
+
+À **généraliser** depuis la méthode déjà employée dans les scènes des **Sept Fléaux de Pointesable** : une carte de donjon sert à la véritable exploration, et **le conducteur de séance reste compact**. Ne pas générer une carte tactique complète lorsqu'une loge, un bureau ou une salle d'archives fonctionne mieux en RP.
+
+### Composition d'une scène explorée
+
+1. **Une note de journal par salle ou zone pertinente**, positionnée sur la carte, visible **MJ uniquement**. La page décrit ce que les PJ perçoivent, les éléments interactifs, les dangers/aptitudes/DD, les créatures et le butin ; elle distingue la description à lire des secrets de l'arbitre. Réutiliser les journaux existants, corriger et déplacer leurs repères plutôt que fabriquer des doublons.
+2. **Les Actors/jetons mécaniques sont placés là où ils seront rencontrés** ; réutiliser d'abord un Actor déjà présent ou une entrée de bestiaire/compendium (Monster Core, NPC Core, Bestiary, etc.), afin de récupérer sa statistique et si possible son portrait. N'inventer un Actor spécifique que si les références ne conviennent pas ; les dangers (mécaniques, moisissures, gouffres) peuvent rester des **journaux ou dangers Foundry**, sans faux monstre.
+3. **Coffres / Actors `loot` invisibles pour les joueurs**, uniquement aux emplacements où un butin exploitable existe réellement. Propriétés par défaut **privées au MJ**, token caché et visibilité contrôlée. Renseigner l'inventaire exact d'après la source, pas un butin improvisé pour remplir la carte. Les objets de quête restent identifiés séparément du trésor commercial.
+4. **Murs, passages, portes, lumière et navigation** : vérifier les dimensions et l'alignement des cases avant de poser les tokens ; ne pas dévoiler les salles inexplorées via des icônes, étiquettes ou lumières. Les notes MJ et Actors dissimulés ne doivent pas devenir lisibles aux joueurs à cause de droits trop ouverts.
+
+### Convention obligatoire de nommage des tokens
+
+**Nom du token toujours affiché à tous** (Foundry `displayName` : mode **Always / Toujours visible**, y compris sur les clones créés depuis un compendium), sans divulguer les secrets de scénario.
+
+- **Créature clairement identifiable** : dénomination **spécifique de son espèce/type visuel** lorsque plausible — `Pudding noir`, `Gobelin A`, `Gobelin B`, `Vase A`, `Vase B`. Numéroter/lettre A, B, C pour distinguer les exemplaires.
+- **Monstre dont l'identité réelle est secrète ou trompeuse** : utiliser une apparence/description visible **informative** mais non spoilante, par ex. `Démon` (si démon manifeste), `Poupée de glaise` (pour un automate dont le nom n'a pas été révélé), `Garde masqué` ; ne pas afficher le nom individuel caché ou un type surnaturel invisible aux PJ.
+- **PNJ réellement nommé et identifié dans la scène** : nom propre (`Bijan Ohrlavi`, `Zaynap Ohrlavi`). Si les PJ ne connaissent pas encore son nom, employer un libellé descriptif jusqu'à la présentation, puis mettre à jour le token.
+- **Éviter deux extrêmes** : les noms trop flous (par ex. `Animal bestial`, `Créature de feu` lorsque l'espèce est reconnaissable), et les noms encyclopédiques ou secrets d'une entité qui n'a pas été identifiée.
+
+**Distinguer le nom affiché des autres visibilités :** un nom en mode Always ne rend pas un token caché visible, ne le dévoile pas sur une scène inexplorée et ne donne aucune permission de consulter la fiche. Vérifier nom, `displayName`, `hidden`, `ownership`, image `Actor.img` et texture du token **dans Foundry après création** ; la simple présence d'un fichier portrait sur disque ne prouve pas qu'il est utilisé.
+
+### Méthode technique et blocages
+
+Travailler sur le **monde effectivement ouvert**, via **Foundry REST Relay connecté à un client GM** ou l'interface Foundry ; lire d'abord Scene/Actors/Notes/carte et faire une sauvegarde ciblée autorisée avant un remplacement massif. Modifier les documents par les endpoints normaux `/canvas/{documentType}`, `/create`, `/update`, `/scene` (selon l'opération), puis **relire le résultat**. Ne jamais modifier directement LevelDB, ni injecter des scénarios dans le module ou un hook de démarrage pour contourner une panne du Relay.
+
+**Cas concret 12 novembre 2026** : scènes du scénario PFS 1-00 déjà référencées dans [la fiche de scénario](../campagnes/Scenario-Origines-Route-Ouverte.md). Le service Relay répondait, mais l'unique client `test-pf2` était indiqué hors ligne ; **aucun token, Actor, coffre ni repère n'a été modifié dans ce contrôle**. Reprendre les placements par le processus nominal une fois le client GM connecté.
