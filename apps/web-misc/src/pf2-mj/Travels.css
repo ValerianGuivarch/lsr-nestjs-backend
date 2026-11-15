@@ -1,0 +1,19 @@
+.mj-travel{max-width:1200px;margin:auto;color:#303630}.mj-travel header{margin:18px 0}
+.mj-travel header small{font-size:11px;font-weight:700;letter-spacing:.08em;color:#826522}
+.mj-travel h1{font-size:30px;margin:5px 0}.mj-travel p{font-size:13px;line-height:1.5;color:#60675e}
+.travel-form,.travel-result,.travel-notice{background:#fffdf8;border:1px solid #ded3bd;border-radius:9px;padding:16px;margin:14px 0}
+.travel-pickers{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:14px}
+.travel-city,.travel-fields label{display:grid;gap:6px;min-width:0;font-size:12px;font-weight:600;color:#555d54}
+.travel-city small{color:#777;font-weight:400}.travel-fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin:18px 0}
+.travel-city input,.travel-city select,.travel-fields input,.travel-fields select,.travel-swap{width:100%;box-sizing:border-box;min-width:0;border:1px solid #d6cdbd;border-radius:6px;background:#fffdf8;color:#303630;font:inherit;font-size:14px;padding:9px 10px}
+.travel-swap{width:auto;cursor:pointer;font-size:20px}.travel-extras{display:flex;gap:16px;flex-wrap:wrap;margin:14px 0;font-size:13px}
+.travel-extras label{display:flex;gap:6px;align-items:center}
+.travel-primary{display:inline-block;background:#765719;color:white!important;text-decoration:none;border:0;padding:10px 14px;border-radius:6px;font-weight:700;cursor:pointer;font-size:13px}
+.travel-primary:disabled{opacity:.55;cursor:not-allowed}.travel-result h2{margin-top:0;font-size:21px}
+.travel-metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:10px}
+.travel-metrics>div{border:1px solid #e1d7c4;background:#faf5e8;border-radius:7px;padding:12px;display:grid;gap:5px}
+.travel-metrics small,.travel-metrics span{color:#626a63;font-size:12px}.travel-metrics strong{color:#765719;font-size:22px}
+.travel-table{overflow:auto;margin:10px 0}.travel-table table{width:100%;border-collapse:collapse;text-align:left;font-size:13px}
+.travel-table th,.travel-table td{padding:9px;border-bottom:1px solid #e5dece}
+.travel-notice{line-height:1.6;font-size:12px;background:#fffaf0}.travel-result h3{margin:20px 0 0;font-size:15px}
+@media(max-width:650px){.travel-pickers{grid-template-columns:1fr}.travel-swap{justify-self:center}.travel-fields{grid-template-columns:1fr 1fr}.travel-metrics{grid-template-columns:1fr 1fr}}

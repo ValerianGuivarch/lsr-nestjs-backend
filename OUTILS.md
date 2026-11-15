@@ -10,6 +10,7 @@
 - [Wiki, résumés et Discord](pf2/outils/wiki-discord.md)
 - [Fin de séance Discord : XP, pièces, butin et réputations](docs/pf2/discord-session-end.md)
 - [Aide XP admin par séance sur le wiki](docs/pf2/wiki-session-xp-aid.md)
+- [Prix du quotidien et calcul des voyages](pf2/outils/prix-voyages.md)
 - [Carte de Golarion — quêtes Discord, favoris et contributions PJ](docs/pf2/discord-quest-map-sync.md)
 - [Création, gestion et migration des quêtes par le bot Discord](docs/pf2/discord-quest-creator-pilot.md)
 - [Journaux d'Absalom — guide de génération visuelle](pf2/outils/journaux.md)

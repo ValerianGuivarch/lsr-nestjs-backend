@@ -143,6 +143,7 @@ if(!startupOptions.embedded) {
   map.addControl(new SearchControl(golarionMap), 'top-left');
   if (mapAudience === 'mj') {
     map.addControl(new HexGridControl(), 'top-right');
+    void import('./tools/travel-control').then(({ TravelControl }) => map.addControl(new TravelControl(), 'top-right')).catch(error => console.warn('Outil de voyage indisponible', error));
   }
 }
 map.addControl(new ScaleControl({
