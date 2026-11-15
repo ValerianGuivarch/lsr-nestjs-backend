@@ -1,0 +1,9 @@
+.travel-map-control{position:relative}.travel-map-control>button{font-size:23px}
+.travel-map-panel{position:absolute;right:0;top:100%;z-index:10;width:min(310px,calc(100vw - 35px));max-height:75vh;overflow:auto;padding:12px;background:#fffdf5;border:1px solid #d8c8a6;border-radius:7px;box-shadow:0 3px 10px #0003;color:#262821;font:13px/1.4 system-ui,sans-serif}
+.travel-map-panel[hidden]{display:none}.travel-map-panel h3{margin:0 0 10px;font-size:16px}
+.travel-map-panel label{display:grid;gap:4px;margin:8px 0;font-weight:600}
+.travel-map-panel input,.travel-map-panel select{width:100%;min-width:0;box-sizing:border-box;border:1px solid #c7bca4;border-radius:4px;padding:6px;background:white;color:#262821}
+.travel-map-panel .travel-map-actions{display:flex;gap:6px;margin-top:12px}
+.travel-map-panel .travel-map-actions button{width:auto;height:auto;padding:7px 10px;border-radius:4px;font:600 12px/1.4 system-ui;background:#eee7d6;color:#5a451c;cursor:pointer}
+.travel-map-panel .travel-map-actions .travel-map-calc{background:#765719;color:white}
+.travel-map-panel p{margin:10px 0 0;font-size:12px;line-height:1.4}

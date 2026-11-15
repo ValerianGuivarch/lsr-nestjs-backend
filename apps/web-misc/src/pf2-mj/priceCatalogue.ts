@@ -1,5 +1,7 @@
 // Tarifs en pièces de cuivre (1 po = 100 pc). Les estimations ne sont pas du canon.
 // Références : tables de prix du Player Core / livre de règles PF2, valeurs seules.
+import { travelTariffs, defaultMilesPerDay, journeyExtras } from '../../../web-golarion-map/src/tools/travel-rates'
+
 export type PriceOrigin = 'official' | 'estimate'
 export type PriceEntry = {
   name: string; category: string; min: number; max: number; unit: string;
@@ -43,7 +45,7 @@ export const priceEntries: PriceEntry[] = [
   ]),
   ...group('Repas & provisions', services, [
     ['Repas pauvre', 1, 'repas', 'soupe bouillie taverne mauvais'],
-    ['Repas copieux ordinaire', 3, 'repas', 'restaurant déjeuner diner plat chaud auberge'],
+    ['Repas copieux ordinaire', journeyExtras.mealsPerDay / 3, 'repas', 'restaurant déjeuner diner plat chaud auberge'],
     ['Repas gastronomique', 100, 'repas', 'restaurant luxe banquet fin'],
   ]),
   ...group('Repas & provisions', gear, [
@@ -75,7 +77,7 @@ export const priceEntries: PriceEntry[] = [
   ]),
   ...group('Hébergement', services, [
     ['Place au sol dans une auberge', 3, 'nuit / personne', 'dortoir paille pauvre'],
-    ['Lit individuel', 10, 'nuit / personne', 'auberge hôtel chambre dortoir'],
+    ['Lit individuel', journeyExtras.bedPerDay, 'nuit / personne', 'auberge hôtel chambre dortoir'],
     ['Chambre privée double', 80, 'nuit / chambre (2 personnes)', 'auberge hôtel'],
     ['Suite luxueuse', 1000, 'nuit / suite (6 personnes)', 'hôtel luxe chambre'],
     ['Écurie', 2, 'jour / monture', 'cheval étable pension'],
@@ -109,17 +111,17 @@ export const priceEntries: PriceEntry[] = [
     ['Maison en ville', [50000, 200000], 'achat', 'immobilier propriété'],
   ]),
   ...group('Transport & voyage', services, [
-    ['Caravane (passager)', 3, '5 miles (~8 km) / personne', 'transport convoi charrette'],
-    ['Calèche (passager)', 20, '5 miles (~8 km) / personne', 'carrosse diligence'],
-    ['Bac ou bateau fluvial (passager)', 4, '5 miles (~8 km) / personne', 'rivière ferry péniche passage'],
-    ['Navire à voiles (passager)', 6, '5 miles (~8 km) / personne', 'bateau mer traversée voyage maritime'],
+    ['Caravane (passager)', travelTariffs.caravan, '5 miles (~8 km) / personne', 'transport convoi charrette'],
+    ['Calèche (passager)', travelTariffs.carriage, '5 miles (~8 km) / personne', 'carrosse diligence'],
+    ['Bac ou bateau fluvial (passager)', travelTariffs.riverboat, '5 miles (~8 km) / personne', 'rivière ferry péniche passage'],
+    ['Navire à voiles (passager)', travelTariffs.ship, '5 miles (~8 km) / personne', 'bateau mer traversée voyage maritime'],
     ['Péage', 1, 'passage (minimum)', 'pont taxe route'],
   ]),
   ...group('Transport & voyage', undefined, [
-    ['Caravane — journée type', 12, 'jour / personne', 'transport route convoi', 'Tarif officiel × 4 : hypothèse 20 miles (32 km) par jour.'],
-    ['Calèche — journée type', 80, 'jour / personne', 'carrosse diligence', 'Tarif officiel × 4 : hypothèse 20 miles par jour.'],
-    ['Bateau fluvial — journée type', 16, 'jour / personne', 'rivière péniche bac', 'Tarif officiel × 4 : hypothèse 20 miles par jour.'],
-    ['Navire à voiles — journée type', 72, 'jour / personne', 'bateau mer traversée voyage maritime', 'Tarif officiel × 12 : hypothèse 60 miles (~97 km) par jour.'],
+    ['Caravane — journée type', travelTariffs.caravan * defaultMilesPerDay.caravan / 5, 'jour / personne', 'transport route convoi', 'Tarif officiel × 4 : hypothèse 20 miles (32 km) par jour.'],
+    ['Calèche — journée type', travelTariffs.carriage * defaultMilesPerDay.carriage / 5, 'jour / personne', 'carrosse diligence', 'Tarif officiel × 4 : hypothèse 20 miles par jour.'],
+    ['Bateau fluvial — journée type', travelTariffs.riverboat * 4, 'jour / personne', 'rivière péniche bac', 'Tarif officiel × 4 : hypothèse 20 miles par jour.'],
+    ['Navire à voiles — journée type', travelTariffs.ship * defaultMilesPerDay.ship / 5, 'jour / personne', 'bateau mer traversée voyage maritime', 'Tarif officiel × 12 : hypothèse 60 miles (~97 km) par jour.'],
     ['Cabine privée en mer', [50, 200], 'supplément / jour / cabine', 'bateau navire chambre'],
     ['Barque avec batelier en ville', [2, 10], 'traversée / personne'],
     ['Fiacre en ville', [2, 10], 'course', 'taxi voiture'],
@@ -134,7 +136,7 @@ export const priceEntries: PriceEntry[] = [
   ]),
   ...group('Montures & animaux', animals, [
     ['Cheval de selle', 800, 'achat', 'monture équitation'],
-    ['Cheval de selle — location', 10, 'jour', 'monture louer cheval'],
+    ['Cheval de selle — location', travelTariffs.horsePerDay, 'jour', 'monture louer cheval'],
     ['Cheval de guerre', 3000, 'achat'],
     ['Cheval de guerre — location', 100, 'jour'],
     ['Poney', 700, 'achat'],

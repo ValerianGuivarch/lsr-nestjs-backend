@@ -1,6 +1,6 @@
 import type { Container, PlayableUnit } from './catalogue'
 
-export type View = 'journal' | 'journaux' | 'find' | 'library' | 'resources' | 'sessionPrep' | 'prepare' | 'maintenance' | 'documents' | 'chronology' | 'excluded' | 'settings' | 'players' | 'pnj' | 'factions' | 'lieux' | 'regions' | 'evenements' | 'lore' | 'prix'
+export type View = 'journal' | 'journaux' | 'find' | 'library' | 'resources' | 'sessionPrep' | 'prepare' | 'maintenance' | 'documents' | 'chronology' | 'excluded' | 'settings' | 'players' | 'pnj' | 'factions' | 'lieux' | 'regions' | 'evenements' | 'lore' | 'prix' | 'voyages'
 export type ReferenceView = 'pnj' | 'factions' | 'lieux' | 'regions' | 'evenements'
 
 export const viewPaths: Record<View, string> = {
@@ -24,6 +24,7 @@ export const viewPaths: Record<View, string> = {
   regions: '/pf2-mj/regions',
   evenements: '/pf2-mj/events',
   prix: '/pf2-mj/prices',
+  voyages: '/pf2-mj/travels',
 }
 
 const referencePaths: Record<ReferenceView, string> = {
