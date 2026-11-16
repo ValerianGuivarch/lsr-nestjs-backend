@@ -1547,6 +1547,34 @@ describe('DiscordCommandsService', () => {
     expect((service as unknown as { addDays: (date: string, days: number) => string }).addDays(plan.current, 5)).toBe('4720-04-21')
   })
 
+  it('counts closed unpublished missions for dates and progression, but ignores unfinished drafts', async () => {
+    const sessions = [
+      { sessionNumber: 18, published: true, participants: ['Actor.hero'], inGameStartDate: '4720-06-15', inGameEndDate: '4720-06-18', sessionXp: 700 },
+      { sessionNumber: 19, published: false, participants: ['Actor.other'], inGameStartDate: '4720-06-19', inGameEndDate: '4720-07-30', sessionXp: 0 },
+      { sessionNumber: 20, published: false, participants: ['Actor.hero'], inGameStartDate: '4720-08-10', inGameEndDate: '', sessionXp: 0 },
+    ]
+    const persistence = { listSessions: jest.fn().mockResolvedValue(sessions) }
+    const service = new DiscordCommandsService(persistence as never, {} as never) as unknown as {
+      plan: (actors: Array<{ uuid: string; name: string }>) => Promise<{ earliest: string; current: string; rollCounts: Map<string, number> }>
+      progressionRollCounts: (actors: Array<{ uuid: string }>, sessions: unknown[], beforeSessionNumber: number) => Map<string, number>
+    }
+    const hero = { uuid: 'Actor.hero', name: 'Héros (Joueur)' }
+    const other = { uuid: 'Actor.other', name: 'Autre (Joueur)' }
+
+    const parallel = await service.plan([hero])
+    expect(parallel.earliest).toBe('4720-06-19')
+    expect(parallel.current).toBe('4720-07-31')
+    expect(parallel.rollCounts.get(hero.uuid)).toBe(1)
+
+    const returning = await service.plan([hero, other])
+    expect(returning.earliest).toBe('4720-07-31')
+    expect(returning.rollCounts.get(other.uuid)).toBe(0)
+
+    // /recap-seance uses the same calculation directly, with the target session excluded.
+    expect(service.progressionRollCounts([hero], sessions, 20).get(hero.uuid)).toBe(1)
+    expect(service.progressionRollCounts([hero], sessions, 19).get(hero.uuid)).toBe(0)
+  })
+
   it('does not let a participant without session history delay a parallel mission', async () => {
     const persistence = {
       listSessions: jest.fn().mockResolvedValue([

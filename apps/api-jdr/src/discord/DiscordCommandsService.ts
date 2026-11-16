@@ -4607,7 +4607,7 @@ export class DiscordCommandsService {
   }
 
   private async plan(actors: Array<{ uuid: string; name: string }>): Promise<{ current: string; earliest: string; progressionRolls: string[]; rollCounts: Map<string, number> }> {
-    const sessions = (await this.persistence.listSessions()).filter((session) => session.published)
+    const sessions = (await this.persistence.listSessions()).filter((session) => this.isCompletedSession(session))
     const lastMissionEnd = sessions.map((session) => this.missionEnd(session)).filter(Boolean).sort().at(-1)
     const current = lastMissionEnd ? this.addDays(lastMissionEnd, 1) : this.today()
     const rollCounts = this.progressionRollCounts(actors, sessions)
@@ -4680,6 +4680,11 @@ export class DiscordCommandsService {
     return { monday, selectedDays: PLANNING_DAYS.filter(value => content.includes(`${value.emoji} ${value.label} `)).map(value => value.offset) }
   }
 
+  /** Fin de séance et publication du résumé sont deux événements indépendants. */
+  private isCompletedSession(session: import('../pf2-storage/Pf2PersistenceService').Pf2Session): boolean {
+    return session.published || Boolean(session.inGameEndDate)
+  }
+
   private missionEnd(session: import('../pf2-storage/Pf2PersistenceService').Pf2Session): string { return session.inGameEndDate || session.inGameStartDate }
   private realDate(now = new Date()): string {
     const zone = process.env['PF2_TIME_ZONE'] ?? 'Europe/Paris'
@@ -4708,7 +4713,7 @@ export class DiscordCommandsService {
     beforeSessionNumber?: number,
   ): Map<string, number> {
     const eligible = sessions
-      .filter((session) => session.published && (beforeSessionNumber === undefined || session.sessionNumber < beforeSessionNumber))
+      .filter((session) => this.isCompletedSession(session) && (beforeSessionNumber === undefined || session.sessionNumber < beforeSessionNumber))
       .sort((left, right) => left.sessionNumber - right.sessionNumber)
     return new Map(actors.map((actor) => {
       const last = eligible.filter((session) => session.participants.includes(actor.uuid)).at(-1)

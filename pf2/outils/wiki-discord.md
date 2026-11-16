@@ -49,6 +49,8 @@ Commandes principales :
 
 `/debut-seance` utilise le même calcul de lancers de progression dans l'annonce finale. Le code courant affiche bien la liste des personnages et les lancers, mais **n'affiche pas encore leur niveau dans cette annonce** ; c'est le reliquat connu de la demande initiale.
 
+**Dates et jets de progression (16 novembre 2026).** Une séance est prise en compte dès que sa date de fin en jeu est renseignée, même si son résumé n'est pas encore publié (y compris une séance achevée sans XP). Les résumés publiés historiques restent pris en compte ; un brouillon non publié sans date de fin ne compte pas. « Le plus tôt » correspond au lendemain de la dernière mission des PJ sélectionnés (missions parallèles possibles), tandis que « Après dernière mission » correspond au lendemain de la dernière fin en jeu de tous les groupes. `/debut-seance` et `/recap-seance` partagent le même critère pour les jets de progression ; le récapitulatif exclut la séance cible et les suivantes. La republication d'un résumé n'est pas nécessaire pour débloquer ces calculs.
+
 Quand Foundry est indisponible, le bot peut se replier sur le cache des noms d'Actors pour certaines opérations. Les comparaisons de niveau nécessitent toutefois les données de progression Foundry disponibles via le Relay.
 
 ### 11.3 Journal de quêtes Discord ↔ carte de Golarion
