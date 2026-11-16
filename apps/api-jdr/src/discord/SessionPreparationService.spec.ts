@@ -44,6 +44,30 @@ describe('SessionPreparationService', () => {
     expect(await service.list()).toHaveLength(0)
   })
 
+  it('reuses a campaign illustration across preparations, resolves the updated image, and never publishes GM notes or a character action', async () => {
+    const asset = await service.saveAsset(null, {kind:'illustration',campaignId:'malevolence',campaignTitle:'Malveillance',title:'Crypte',portraitUrl:'https://example.org/before.png'})
+    const session = await persistence.createSession({ sessionNumber: 8, inGameStartDate: '4720-01-08' })
+    await persistence.rememberSessionDiscordChannel(session.id, 'session-thread', 'campaign-guild')
+    const body = {summary:'',stages:[{id:'s',title:'Extérieur',blocks:[{id:'i',kind:'illustration',assetId:asset.id,text:'Secret MJ'}]}]}
+    const first = await service.create({title:'Avant',sessionId:session.id,body}) as {id:string}
+    const second = await service.create({title:'Après',sessionId:session.id,body}) as {id:string}
+    const updated = await service.saveAsset(asset.id,{...asset,title:'Crypte cosmique',portraitUrl:'https://example.org/after.png'})
+    expect(updated.revision).toBe(2)
+    await expect(service.saveAsset(asset.id,asset)).rejects.toThrow('modifiée ailleurs')
+    const send = jest.fn(async (_payload: unknown) => ({id:'image-message',url:'https://discord.com/channels/g/c/m',attachments:{first:()=>({url:'https://cdn.discordapp.com/after.png'})}}))
+    ;(service as unknown as { discord: unknown }).discord = {requestClient:()=>({isReady:()=>true,channels:{fetch:async()=>({send})}})}
+    await service.share(first.id,'i')
+    expect(send).toHaveBeenCalledWith(expect.objectContaining({content:'Crypte cosmique',files:['https://example.org/after.png'],components:[]}))
+    expect(JSON.stringify(send.mock.calls)).not.toContain('Secret MJ')
+    const codex = new PlayerCodexService(source,persistence)
+    const all = await codex.foundryPresentations()
+    expect(all.presentations).toEqual([expect.objectContaining({kind:'illustration',name:'Crypte cosmique',token:null})])
+    expect((await codex.foundryPresentations(false)).presentations).toEqual([])
+    expect((await service.get(second.id)).body).toMatchObject({stages:[{blocks:[{assetId:asset.id}]}]})
+    expect(await persistence.listRecords('pnj')).toEqual([])
+    await expect(codex.presentation((all.presentations[0] as {id:string}).id)).rejects.toThrow('introuvable')
+  })
+
   it('keeps multiple upcoming preparations independent, even in the same campaign', async () => {
     const first = await service.create({ title: 'Séance A', campaignId: 'age-of-ashes', body: { summary: 'A', stages: [] } }) as { id: string; revision: number; body: { summary: string } }
     const second = await service.create({ title: 'Séance B', campaignId: 'age-of-ashes', body: { summary: 'B', stages: [] } }) as { id: string; revision: number; body: { summary: string } }

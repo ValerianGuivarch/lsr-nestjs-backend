@@ -100,8 +100,23 @@ describe('Portrait temporaire de préparation', () => {
     expect(container.querySelector('.session-prep-list')).toBeNull()
     await act(async()=>[...container.querySelectorAll('button')].find(b=>b.textContent==='Enregistrer')!.click())
     const put=fetchMock.mock.calls.find(c=>c[1]?.method==='PUT')!
-    expect(JSON.parse(put[1]!.body as string)).toMatchObject({moduleKey:'m',body:{stages:[{title:'Nouvelle étape'}]}})
-    expect(fetchMock.mock.calls.some(c=>String(c[0]).startsWith(API))).toBe(false)
+    expect(JSON.parse(put[1]!.body as string)).toMatchObject({moduleKey:'m',body:{stages:[{title:'Avant de jouer',blocks:[{kind:'texte',title:'Récapitulatif'}]}]}})
+    expect(fetchMock.mock.calls.some(c=>String(c[0]).startsWith(API) && !String(c[0]).endsWith('/assets'))).toBe(false)
+  })
+
+  it('displays reusable illustrations with the campaign label and allows sharing without character controls', async () => {
+    stored.body.stages[0].blocks.push({ id:'crypte', kind:'illustration', title:'Ancien titre', name:'', ascendance:'', portraitUrl:'', text:'Secret MJ', done:false, showName:true, secret:true, assetId:'illustration-crypte' } as ReturnType<typeof sample>['body']['stages'][number]['blocks'][number])
+    const previous=globalThis.fetch
+    vi.stubGlobal('fetch',vi.fn(async(resource:RequestInfo|URL,init?:RequestInit)=>{
+      if(String(resource)===API+'/assets')return new Response(JSON.stringify([{id:'illustration-crypte',kind:'illustration',campaignId:'malevolence',campaignTitle:'Malveillance',title:'Crypte cosmique',portraitUrl:'https://example.org/crypte.webp',ascendance:'',revision:1}]),{status:200})
+      return previous(resource,init)
+    }))
+    await mount()
+    const illustration = [...container.querySelectorAll('.session-prep-block')].find(el=>el.textContent?.includes('Illustration enregistrée'))!
+    expect(illustration.textContent).toContain('Malveillance — Crypte cosmique')
+    expect(illustration.querySelector('img')?.getAttribute('src')).toBe('https://example.org/crypte.webp')
+    expect(illustration.textContent).toContain('Publier l’illustration')
+    expect(illustration.textContent).not.toContain('Enregistrer comme PNJ permanent')
   })
 
   it('focuses on click, pastes an image, saves its path and loads it after remounting', async () => {

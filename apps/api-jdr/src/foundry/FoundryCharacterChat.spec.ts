@@ -23,6 +23,15 @@ describe('Server-side Discord character chat delivery', () => {
       .not.toContain('L’orc')
   })
 
+  it('renders an illustration with the title and image only', () => {
+    const content = renderCharacterPresentationCard({ ...card, kind: 'illustration', token: null })
+    expect(content).toContain('L’orc &lt;sans nom&gt;')
+    expect(content).toContain('alt="Illustration"')
+    expect(content).not.toContain('Créer la fiche')
+    expect(content).not.toContain('data-pf2-character-create')
+    expect(foundryChatPresentationId({ content })).toBe(id)
+  })
+
   it('recognizes both historical toolkit flags and server markers', () => {
     expect(foundryChatPresentationId({
       flags: { 'pf2e-val-toolkit': { discordCharacterPresentation: { id } } },

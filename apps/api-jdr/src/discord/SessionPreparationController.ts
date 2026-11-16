@@ -6,6 +6,9 @@ export class SessionPreparationController {
   constructor(private readonly service: SessionPreparationService) {}
   @Get() list(): Promise<unknown[]> { return this.service.list() }
   @Get('sessions') sessions(): Promise<unknown[]> { return this.service.sessions() }
+  @Get('assets') assets(): Promise<unknown[]> { return this.service.listAssets() }
+  @Post('assets') createAsset(@Body() body: Record<string, unknown>): Promise<unknown> { return this.service.saveAsset(null, body) }
+  @Patch('assets/:id') updateAsset(@Param('id') id: string, @Body() body: Record<string, unknown>): Promise<unknown> { return this.service.saveAsset(id, body) }
   @Get(':id') get(@Param('id') id: string): Promise<unknown> { return this.service.get(id) }
   @Post() create(@Body() body: Record<string, unknown>): Promise<unknown> { return this.service.create(body) }
   @Patch(':id') update(@Param('id') id: string, @Body() body: Record<string, unknown>): Promise<unknown> { return this.service.update(id, body) }

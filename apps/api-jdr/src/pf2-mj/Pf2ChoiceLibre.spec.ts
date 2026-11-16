@@ -24,11 +24,12 @@ describe('Choix libre catalogue', () => {
     const service=new Pf2ChoiceLibreService({query} as never, {} as never)
     jest.spyOn(service,'catalogue').mockResolvedValue(choiceCatalogue([{id:'a'}],[]))
     const moduleKey=choiceModuleKey('a')
-    const body={summary:'Préparation',stages:[{id:'s',title:'Étape',blocks:[{id:'b',kind:'lore',text:'Secret'}]}]}
+    const body={summary:'Préparation',stages:[{id:'s',title:'Étape',blocks:[{id:'recap',kind:'texte',title:'Récapitulatif',text:'Contexte et déroulé'},{id:'b',kind:'lore',text:'Secret'}]}]}
     await expect(service.saveTemplate({moduleKey,body})).resolves.toEqual({ok:true})
+    await expect(service.saveTemplate({moduleKey,body:{stages:[{id:'s',title:'Étape',blocks:[]}]}})).rejects.toThrow('Récapitulatif')
     expect(query).toHaveBeenCalledTimes(1)
     expect(query.mock.calls[0][0]).toContain('pf2_choice_template')
-    expect(JSON.parse(query.mock.calls[0][1][1]).stages[0].blocks[0]).toMatchObject({kind:'lore',text:'Secret',done:false})
+    expect(JSON.parse(query.mock.calls[0][1][1]).stages[0].blocks[1]).toMatchObject({kind:'lore',text:'Secret',done:false})
     await expect(service.saveTemplate({moduleKey,body:{stages:[{id:'s',title:'Étape',blocks:[{id:'s',kind:'lore'}]}]}})).rejects.toThrow('dupliqué')
   })
   it('accepts partial preparation without marking a module ready', async () => {

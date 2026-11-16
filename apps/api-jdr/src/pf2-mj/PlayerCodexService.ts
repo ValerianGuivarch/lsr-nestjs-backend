@@ -114,25 +114,28 @@ export class PlayerCodexService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
-  async createPresentation(input: { name: string; sourceNpcId?: string | null; portraitUrl?: string | null; showName?: boolean; channelId: string; guildId?: string | null; messageId?: string | null }): Promise<{ id: string; name: string; showName: boolean; portraitUrl: string | null }> {
+  async createPresentation(input: { kind?: 'character' | 'illustration'; name: string; sourceNpcId?: string | null; portraitUrl?: string | null; showName?: boolean; channelId: string; guildId?: string | null; messageId?: string | null }): Promise<{ id: string; name: string; showName: boolean; portraitUrl: string | null }> {
+    const kind = input.kind ?? 'character'
+    if (kind === 'illustration' && input.sourceNpcId) throw new BadRequestException('Une illustration ne peut pas être liée à un PNJ.')
     const sourceNpcId = input.sourceNpcId ?? null
     if (sourceNpcId && !(await this.persistence.getRecord('pnj', sourceNpcId))) throw new NotFoundException('PNJ MJ introuvable.')
     if (!sourceNpcId && !input.portraitUrl) throw new BadRequestException('Un portrait est obligatoire pour un personnage improvisé.')
     const id = randomUUID(); const name = this.required(input.name, 'Nom')
-    await this.db.query('INSERT INTO pf2_character_presentation (id, discord_message_id, discord_channel_id, discord_guild_id, source_npc_id, presented_name, show_name, presented_image_url, foundry_create_token) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)', [id, input.messageId ?? null, input.channelId, input.guildId ?? null, sourceNpcId, name, input.showName === false ? 0 : 1, input.portraitUrl ?? null, randomUUID()])
+    await this.db.query('INSERT INTO pf2_character_presentation (id, discord_message_id, discord_channel_id, discord_guild_id, source_npc_id, presented_name, show_name, presented_image_url, foundry_create_token, presentation_kind) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', [id, input.messageId ?? null, input.channelId, input.guildId ?? null, sourceNpcId, name, input.showName === false ? 0 : 1, input.portraitUrl ?? null, kind === 'illustration' ? null : randomUUID(), kind])
     return { id, name, showName: input.showName !== false, portraitUrl: input.portraitUrl ?? null }
   }
   /** Public Discord presentations awaiting/mirroring Foundry chat. No private MJ fields are returned. */
-  async foundryPresentations(): Promise<{ active: boolean; presentations: unknown[] }> {
+  async foundryPresentations(includeIllustrations = true): Promise<{ active: boolean; presentations: unknown[] }> {
     const rows = await this.db.query(`SELECT p.id, p.presented_name, p.show_name, p.presented_image_url,
-      p.discord_channel_id, p.discord_guild_id, p.discord_message_id, p.foundry_create_token, p.created_at, c.wiki_page_title
+      p.discord_channel_id, p.discord_guild_id, p.discord_message_id, p.foundry_create_token, p.created_at, p.presentation_kind, c.wiki_page_title
       FROM pf2_character_presentation p
       LEFT JOIN pf2_player_character_profile c ON c.npc_id = p.source_npc_id AND c.is_published = 1
       WHERE p.discord_message_id IS NOT NULL AND p.discord_guild_id IS NOT NULL AND p.created_at >= datetime('now', '-7 days')
-      ORDER BY p.created_at DESC LIMIT 100`) as Array<{ id: string; presented_name: string; show_name: number; presented_image_url: string | null; discord_channel_id: string; discord_guild_id: string | null; discord_message_id: string; foundry_create_token: string | null; created_at: string; wiki_page_title: string | null }>
+      AND (?=1 OR p.presentation_kind='character')
+      ORDER BY p.created_at DESC LIMIT 100`, [includeIllustrations ? 1 : 0]) as Array<{ id: string; presented_name: string; show_name: number; presented_image_url: string | null; discord_channel_id: string; discord_guild_id: string | null; discord_message_id: string; foundry_create_token: string | null; created_at: string; presentation_kind: string; wiki_page_title: string | null }>
     const activeRows = await this.db.query("SELECT active FROM pf2_foundry_chat_state WHERE id = 1") as Array<{ active: number }>
     return { active: Boolean(activeRows[0]?.active), presentations: rows.map(row => ({
-      token: row.foundry_create_token, createdAt: row.created_at, id: row.id, name: row.show_name ? row.presented_name : '', showName: Boolean(row.show_name),
+      kind: row.presentation_kind, token: row.foundry_create_token, createdAt: row.created_at, id: row.id, name: row.show_name ? row.presented_name : '', showName: Boolean(row.show_name),
       portraitUrl: row.presented_image_url,
       discordUrl: `https://discord.com/channels/${encodeURIComponent(row.discord_guild_id ?? "@me")}/${encodeURIComponent(row.discord_channel_id)}/${encodeURIComponent(row.discord_message_id)}`,
       wikiUrl: row.wiki_page_title && this.mediaWiki ? this.mediaWiki.pageUrl(row.wiki_page_title) : null,
@@ -195,13 +198,13 @@ export class PlayerCodexService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
-  async presentation(id: string): Promise<{ id: string; sourceNpcId: string | null; name: string; portraitUrl: string | null; channelId: string; messageId: string | null }> {
-    const rows = await this.db.query('SELECT id, source_npc_id, presented_name, presented_image_url, discord_channel_id, discord_message_id FROM pf2_character_presentation WHERE id=?', [id]) as Array<{ id: string; source_npc_id: string | null; presented_name: string; presented_image_url: string | null; discord_channel_id: string; discord_message_id: string | null }>
+  async presentation(id: string, allowIllustration = false): Promise<{ id: string; sourceNpcId: string | null; name: string; portraitUrl: string | null; channelId: string; messageId: string | null }> {
+    const rows = await this.db.query('SELECT id, source_npc_id, presented_name, presented_image_url, discord_channel_id, discord_message_id FROM pf2_character_presentation WHERE id=? AND (?=1 OR presentation_kind=\'character\')', [id, allowIllustration ? 1 : 0]) as Array<{ id: string; source_npc_id: string | null; presented_name: string; presented_image_url: string | null; discord_channel_id: string; discord_message_id: string | null }>
     if (!rows[0]) throw new NotFoundException('Présentation Discord introuvable.')
     return { id: rows[0].id, sourceNpcId: rows[0].source_npc_id, name: rows[0].presented_name, portraitUrl: rows[0].presented_image_url, channelId: rows[0].discord_channel_id, messageId: rows[0].discord_message_id }
   }
   async savePresentationMessage(id: string, messageId: string, portraitUrl: string | null): Promise<boolean> {
-    await this.presentation(id)
+    await this.presentation(id, true)
     await this.db.query('UPDATE pf2_character_presentation SET discord_message_id=?, presented_image_url=?, foundry_chat_queued=1, updated_at=CURRENT_TIMESTAMP WHERE id=?', [messageId, portraitUrl, id])
     return this.deliverFoundryPresentation(id)
   }

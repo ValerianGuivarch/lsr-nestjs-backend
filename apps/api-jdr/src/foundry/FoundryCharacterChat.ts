@@ -1,5 +1,6 @@
 export type CharacterPresentationCard = {
   id: string
+  kind?: 'character' | 'illustration'
   name: string
   showName: boolean
   portraitUrl: string | null
@@ -15,6 +16,7 @@ function escapeHtml(value: unknown): string {
 export function renderCharacterPresentationCard(card: CharacterPresentationCard): string {
   const portrait = String(card.portraitUrl ?? '')
   const image = /^(https:\/\/|assets\/l7r\/)/i.test(portrait) ? portrait : ''
+  if (card.kind === 'illustration') return '<div class="pf2e-val-character-presentation" data-pf2-character-presentation-id="' + escapeHtml(card.id) + '"><p><strong>' + escapeHtml(card.name) + '</strong></p>' + (image ? '<img src="' + escapeHtml(image) + '" alt="Illustration" style="max-width:100%;height:auto;display:block" />' : '') + '</div>'
   const wiki = card.wikiUrl && /^https:\/\//i.test(card.wikiUrl) ? card.wikiUrl : null
   const action = wiki
     ? '<p><a class="button" href="' + escapeHtml(wiki) + '" target="_blank" rel="noopener noreferrer">Voir la fiche</a></p>'

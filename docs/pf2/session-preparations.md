@@ -2,6 +2,18 @@
 
 [← Outils PF2](../../OUTILS.md) · [Journal et campagnes](../../CAMPAGNES.md)
 
+## Règles obligatoires pour rédiger un modèle ou une préparation
+
+Lire ce guide dès qu'une demande porte sur la planification, un modèle de préparation, un module jouable ou une préparation de séance. Les modèles servent de base aux préparations importées : mêmes conventions rédactionnelles, mais les notes et cases de progression de la séance restent indépendantes.
+
+- **Chaque modèle commence par un bloc Texte libre intitulé exactement « Récapitulatif »**, non vide, placé en premier dans la première étape. Il doit être autonome pour un MJ qui a oublié la campagne : contexte et faits acquis en amont, personnages et enjeux à connaître, pourquoi ce module arrive maintenant, objectifs et déroulé attendu, point de fin et transition vers la suite. Distinguer ce qui est déjà connu des joueurs de ce qui est réservé au MJ. Le récapitulatif ne remplace pas le conducteur opérationnel.
+- Un module représente **une période de jeu**, pas une zone géographique. Décrire une zone au moment où elle est effectivement jouable. Exemple Malveillance : à l'extérieur, évoquer la crypte visible, son accès fermé, ses indices et la raison de ne pas l'ouvrir encore ; au module où les personnages obtiennent la clef ou la combinaison et peuvent y revenir, rappeler l'accès et détailler le contenu réellement jouable. Ne pas déballer toutes les révélations au premier passage. Les journaux Foundry des pièces restent autosuffisants.
+- Organiser les étapes dans l'ordre de jeu : commencer au point d'entrée réel (rencontre avec donneur de mission, arrivée sur place, etc.). Regrouper les petits éléments de description, faits, tests, lore, indices, rencontres et trésors directement dans le bloc de la zone ou scène concernée. Créer un bloc autonome seulement quand il est utile en jeu (zone conséquente, PNJ ou illustration partageable, rencontre complexe, secret transversal réellement important). Limiter la fragmentation : texte descriptif à lire, éléments factuels et informations MJ, conséquences et accès suivants réunis lorsque possible.
+- Le modèle doit suffire à mener la séance : noms adaptés et cohérents, indices et conditions d'accès précises (DD si connus, échec/réussite, conséquences, solutions), contenu narratif des rencontres, butin au bon endroit. Mettre les secrets et spoilers dans les notes MJ et jamais dans les contenus publiés. Conserver l'accord de table si nécessaire. N'indiquer une checklist comme terminée qu'après vérification effective de l'élément traité.
+- Réutiliser en priorité les PNJ existants du référentiel. Un figurant ponctuel reste un personnage temporaire ; un figurant récurrent peut rester **personnage temporaire enregistré** et être lié à plusieurs modèles sans polluer le référentiel permanent. Ne le promouvoir en PNJ global que si c'est réellement utile.
+- Utiliser un bloc **Illustration** pour un lieu, une carte d'ambiance, un objet ou une image sans fiche : titre clair, image et éventuelles notes MJ privées. Une illustration peut être locale au bloc ou enregistrée comme ressource de campagne. Les listes présentent « Campagne — Titre ». Les liens utilisent une identité stable : une modification enregistrée de l'image ou du titre se répercute dans les modèles et préparations déjà liés ; les notes MJ et cases de progression restent locales. Les modèles importés conservent ces liens. Une publication depuis une préparation associée à la séance en cours envoie seulement le titre et l'image sur Discord et dans le chat Foundry, sans bouton de fiche ni faction ; les messages historiques restent des instantanés.
+- Quand un modèle est repris, vérifier son récapitulatif et sa cohérence avec les modules précédents/suivants. Ne pas modifier les séances déjà jouées ni déployer du contenu de campagne via une migration applicative.
+
 ## But et périmètre V1
 
 La page **Préparation séance** (`/pf2-mj/session-preparations`) est un conducteur MJ **entièrement manuel**. Elle ne lit ni ne génère de préparation par IA ; l'import PDF/IA est expressément hors périmètre de cette version. Elle reste distincte de **Préparation technique** (`/pf2-mj/prepare`), consacrée aux ressources PDF/Foundry.
@@ -14,11 +26,12 @@ Chaque préparation comprend titre, objectif général et étapes ordonnées. Un
 - **Lore**, avec indicateur secret MJ ;
 - **Loot**, quantité et état ;
 - **Rencontre**, avec référence Foundry textuelle ;
-- **Texte libre** et **Checklist**.
+- **Texte libre** et **Checklist** ;
+- **Illustration** (titre, image et notes MJ facultatives, avec publication sans fiche).
 
-Le mode **Édition** est ouvert par défaut ; l'autre mode, **Vue**, conserve ordre et contenu sans champ de saisie. La vue permet les actions ponctuelles **Marquer jouée/Terminé** et **Partager personnage**. Les changements sont enregistrés explicitement en édition ; le partage enregistre d'abord les modifications en attente. Une révision numérique refuse l'écrasement silencieux d'une sauvegarde concurrente.
+Le mode **Édition** est ouvert par défaut ; l'autre mode, **Vue**, conserve ordre et contenu sans champ de saisie. La vue permet les actions ponctuelles **Marquer jouée/Terminé** et **Partager personnage** et **Publier l’illustration**. Les changements sont enregistrés explicitement en édition ; le partage enregistre d'abord les modifications en attente. Une révision numérique refuse l'écrasement silencieux d'une sauvegarde concurrente.
 
-Les figurants temporaires sont stockés *uniquement dans la préparation* **tant qu'on ne déclenche pas explicitement leur conversion**. Leur partage seul ne crée ni fiche PNJ MJ, ni Actor Foundry, ni fiche wiki. La création d'une fiche wiki reste une action explicite distincte depuis la carte Discord/Foundry.
+Les figurants temporaires restent dans les préparations **ou dans la bibliothèque de ressources de campagne** tant qu'on ne déclenche pas explicitement leur conversion en PNJ permanent. Leur partage seul ne crée ni fiche PNJ MJ, ni Actor Foundry, ni fiche wiki. La création d'une fiche wiki reste une action explicite distincte depuis la carte Discord/Foundry.
 
 **Ascendance et portrait (12 novembre 2026).** Tout personnage temporaire de préparation possède un champ libre **Ascendance (pour le portrait)**, affiché en édition et en lecture. Le renseigner même si le portrait n'existe pas encore : « Humain », « Gnome », « Elfe », etc. Lorsque le scénario ne précise pas l'ascendance, inscrire **« Inconnue »**, ou une proposition explicitement signalée **« Humain (choix MJ) »** ; le nom du PNJ seul n'est jamais une preuve. Le champ persiste avec le reste du bloc et est repris si le personnage devient permanent.
 

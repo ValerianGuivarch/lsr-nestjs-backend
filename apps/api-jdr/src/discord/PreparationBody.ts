@@ -1,9 +1,9 @@
 import { BadRequestException } from '@nestjs/common'
 
-type Kind = 'personnage' | 'lore' | 'loot' | 'rencontre' | 'texte' | 'checklist'
+type Kind = 'personnage' | 'lore' | 'loot' | 'rencontre' | 'texte' | 'checklist' | 'illustration'
 export type PrepBlock = {
   id: string; kind: Kind; title: string; text: string; done: boolean;
-  npcId?: string; name?: string; ascendance?: string; portraitUrl?: string; showName?: boolean;
+  npcId?: string; assetId?: string; name?: string; ascendance?: string; portraitUrl?: string; showName?: boolean;
   quantity?: string; reference?: string; secret?: boolean;
 }
 export type PrepStage = { id: string; title: string; time: string; notes: string; done: boolean; blocks: PrepBlock[] }
@@ -34,15 +34,18 @@ export function normalizePreparationBody(value: unknown): PrepBody {
         if (unique.has(blockId)) throw new BadRequestException('Identifiant de bloc dupliqué.')
         unique.add(blockId)
         const kind = b.kind as Kind
-        if (!['personnage', 'lore', 'loot', 'rencontre', 'texte', 'checklist'].includes(kind)) throw new BadRequestException('Type de bloc inconnu.')
+        if (!['personnage', 'lore', 'loot', 'rencontre', 'texte', 'checklist', 'illustration'].includes(kind)) throw new BadRequestException('Type de bloc inconnu.')
         const npcId = optionalId(b.npcId, 'Référence personnage')
+        const assetId = optionalId(b.assetId, 'Ressource partagée')
+        if (assetId && (npcId || !['personnage', 'illustration'].includes(kind))) throw new BadRequestException('Ressource partagée incompatible.')
+        if (kind === 'illustration' && !assetId && !trim(b.title, 'Titre de l’illustration', 220)) throw new BadRequestException('Titre de l’illustration obligatoire.')
         const name = trim(b.name, 'Nom du personnage', 160)
         const ascendance = trim(b.ascendance, 'Ascendance du personnage', 120)
-        if (kind === 'personnage' && !npcId && !name) throw new BadRequestException('Un personnage temporaire doit avoir un nom.')
+        if (kind === 'personnage' && !npcId && !assetId && !name) throw new BadRequestException('Un personnage temporaire doit avoir un nom.')
         return {
           id: blockId, kind, title: trim(b.title, 'Titre du bloc', 220),
           text: trim(b.text, 'Contenu', 12000), done: b.done === true,
-          ...(npcId ? { npcId } : {}), ...(name ? { name } : {}), ...(ascendance ? { ascendance } : {}),
+          ...(npcId ? { npcId } : {}), ...(assetId ? { assetId } : {}), ...(name ? { name } : {}), ...(ascendance ? { ascendance } : {}),
           portraitUrl: trim(b.portraitUrl, 'Portrait', 1200), showName: b.showName !== false,
           quantity: trim(b.quantity, 'Quantité', 100), reference: trim(b.reference, 'Référence', 500), secret: b.secret === true,
         }
@@ -51,3 +54,11 @@ export function normalizePreparationBody(value: unknown): PrepBody {
     })
     return { stages, summary: trim(input.summary, 'Résumé', 15000) }
   }
+
+/** A module is a playable period, with context available before the first scene. */
+export function requireModuleRecap(body: PrepBody): void {
+  const recap = body.stages[0]?.blocks[0]
+  if (recap?.kind !== 'texte' || recap.title !== 'Récapitulatif' || !recap.text.trim()) {
+    throw new BadRequestException('Le premier bloc du modèle doit être un texte « Récapitulatif » renseigné.')
+  }
+}

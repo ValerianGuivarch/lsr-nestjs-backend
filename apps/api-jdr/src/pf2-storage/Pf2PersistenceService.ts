@@ -1975,6 +1975,18 @@ export class Pf2PersistenceService implements OnModuleInit {
       for (const link of links) await manager.query('INSERT OR IGNORE INTO pf2_choice_quest (thread_id,kind,campaign_id,module_key,note) SELECT ?,?,?,?,? WHERE EXISTS (SELECT 1 FROM pf2_discord_quest WHERE thread_id=?)', [...link, link[0]])
     })
 
+    await this.applyMigration('056-preparation-assets', async manager => {
+      await manager.query(`CREATE TABLE IF NOT EXISTS pf2_preparation_asset (
+        id TEXT PRIMARY KEY, kind TEXT NOT NULL CHECK(kind IN ('personnage','illustration')),
+        campaign_id TEXT NOT NULL, campaign_title TEXT NOT NULL, title TEXT NOT NULL,
+        portrait_url TEXT NOT NULL DEFAULT '', ascendance TEXT NOT NULL DEFAULT '',
+        revision INTEGER NOT NULL DEFAULT 1, updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+      )`)
+      const columns = await manager.query('PRAGMA table_info(pf2_character_presentation)') as Array<{name:string}>
+      if (!columns.some(column => column.name === 'presentation_kind')) {
+        await manager.query("ALTER TABLE pf2_character_presentation ADD COLUMN presentation_kind TEXT NOT NULL DEFAULT 'character'")
+      }
+    })
     await this.assertDatabaseIntegrity(this.dataSource, 'base SQLite après migrations')
   }
 
