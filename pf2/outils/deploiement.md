@@ -267,9 +267,9 @@ Quand une nouvelle discussion doit modifier ou déployer l’application :
 
 1. lire d’abord `PF2_WORKSPACE.md` et l’index spécialisé (`OUTILS.md` pour la technique, `UNIVERS.md`, `PJ.md` ou `CAMPAGNES.md` pour la continuité) ;
 2. considérer `main` comme la référence de production ;
-3. pour un changement normal, créer une branche et une PR vers `main` ;
+3. pour une correction ou évolution limitée, travailler directement sur `main` après vérifications ; réserver une branche et une PR aux grosses fonctionnalités ;
 4. laisser GitHub Actions construire et publier les images ; ne pas faire de build de production sur le mini-PC ;
-5. après merge, vérifier le workflow `Build and deploy`, puis l’état de `lsr-app` si nécessaire ;
+5. après push sur main ou merge, vérifier le workflow `Build and deploy`, puis l’état de `lsr-app` si nécessaire ;
 6. ne jamais exposer les secrets GitHub/Tailscale/SSH ni le contenu du `.env` ;
 7. préserver les SQLite, `storage/`, `pf2-data` et les fichiers locaux non suivis ;
 8. ne pas relancer l’ancienne application npm/tmux ;

@@ -12,6 +12,12 @@ En particulier, ne jamais placer un script de création ou de réparation ponctu
 
 Quand plusieurs endpoints normaux et autorisés existent (par exemple lecture et modification d'un document dans le REST Relay), les privilégier sans rechercher de nouvelles permissions. Avant tout changement de code, examiner et protéger les modifications locales non commitées ; distinguer sources Git et déploiement. Rendre compte de ce qui est réellement fait et de ce qui reste bloqué.
 
+## Développement : règles permanentes
+
+- Petits changements : commit directement sur `main` après tests ; réserver les PR aux fonctionnalités importantes.
+- En cas de blocage, le signaler clairement et demander une décision avant toute solution alternative.
+- Portail MJ/admin : modèle de confiance entre amis, aucun ajout de clé, de code d'accès ou de contrôle supplémentaire. Les joueurs savent ne pas consulter l'administration. Les secrets et accès techniques des services restent inchangés.
+
 ## Sommaire
 
 | Dossier ChatGPT | Index principal | Sujets |

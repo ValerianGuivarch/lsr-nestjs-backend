@@ -21,3 +21,9 @@
 - The `nx-generate` skill handles generator discovery internally - don't call nx_docs just to look up generator syntax
 
 <!-- nx configuration end-->
+
+## Règles de développement PF2
+
+- Lire `PF2_WORKSPACE.md` et les règles de déploiement avant toute intervention. Petites corrections : commit sur main après tests ; PR réservées aux grosses fonctionnalités.
+- Si la méthode nominale est bloquée, diagnostiquer et signaler le blocage. Ne pas chercher ni appliquer un contournement sans accord explicite.
+- Le portail MJ/admin repose sur la confiance entre amis : ne pas introduire de clé MJ, d'authentification ni de restriction d'accès supplémentaire. Conserver les secrets et contrôles techniques existants des services (Foundry, Wiki, Discord, SSH, etc.).

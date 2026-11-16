@@ -15,10 +15,9 @@ type Quest = { id:string; title:string; url:string; syncedAt:string; kind:Kind; 
 type Snapshot = { quests:Quest[]; campaigns:Option[]; modules:Module[] }
 
 const endpoint = '/apil7r/pf2-mj/choice-libre'
-function readKey() { try { return sessionStorage.getItem('pf2-choice-mj-key') || '' } catch { return '' } }
-async function request<T>(key:string, path='', data?:unknown):Promise<T> {
-  const response = await fetch(endpoint + path, { cache:'no-store', headers:{ 'x-pf2-choice-mj-key':key, ...(data === undefined ? {} : {'Content-Type':'application/json'}) }, ...(data === undefined ? {} : {method:'PUT',body:JSON.stringify(data)}) })
-  if (!response.ok) throw new Error(response.status === 403 ? 'Accès MJ requis : clé absente ou incorrecte.' : 'Erreur HTTP '+response.status)
+async function request<T>(path='', data?:unknown):Promise<T> {
+  const response = await fetch(endpoint + path, { cache:'no-store', headers:{ ...(data === undefined ? {} : {'Content-Type':'application/json'}) }, ...(data === undefined ? {} : {method:'PUT',body:JSON.stringify(data)}) })
+  if (!response.ok) throw new Error('Erreur HTTP '+response.status)
   return response.json()
 }
 function readiness(q:Quest,m?:Module) {
@@ -62,8 +61,6 @@ function QuestCard({quest,data,showVotes,save,saveModule}:{quest:Quest;data:Snap
   </article>
 }
 function ChoiceLibre() {
-  const [key,setKey]=useState(readKey)
-  const [input,setInput]=useState('')
   const [data,setData]=useState<Snapshot|null>(null)
   const [error,setError]=useState('')
   const [showVotes,setShowVotes]=useState(false)
@@ -72,11 +69,11 @@ function ChoiceLibre() {
   const [mode,setMode]=useState<'quests'|'modules'>('quests')
   const [campaignFilter,setCampaignFilter]=useState('')
   const [openedModule,setOpenedModule]=useState('')
-  async function load(k=key) {setLoading(true);setError('');try{setData(await request<Snapshot>(k))}catch(e){setData(null);setError(String(e))}finally{setLoading(false)}}
-  useEffect(()=>{if(key)void load(key)},[key])
-  const saveQuest=async(q:Quest)=>{await request(key,'/quests/'+encodeURIComponent(q.id),{kind:q.kind,campaignId:q.campaignId,moduleKey:q.moduleKey,note:q.note});setData(d=>d?({...d,quests:d.quests.map(old=>old.id===q.id?q:old)}):d)}
-  const saveModule=async(m:Module)=>{await request(key,'/modules',{moduleKey:m.key,checklist:m.checklist,progress:m.progress});setData(d=>d?({...d,modules:d.modules.map(old=>old.key===m.key?{...m,ready:Object.values(m.checklist).every(v=>v!=='todo')}:old)}):d)}
-  if (!data) return <section className="choice-panel"><h2>Journal de quêtes · Choix libre</h2><p>Accès réservé au MJ. Les associations, blocages et notes ne sont pas publiés sur Discord.</p>{error&&<p role="alert">{error}</p>}<form onSubmit={e=>{e.preventDefault();try{sessionStorage.setItem('pf2-choice-mj-key',input)}catch{};if(input===key)void load(input);else setKey(input);setInput('')}}><label>Clé MJ <input type="password" value={input} onChange={e=>setInput(e.target.value)} autoComplete="off" required/></label><button disabled={loading}>Ouvrir</button></form></section>
+  async function load() {setLoading(true);setError('');try{setData(await request<Snapshot>())}catch(e){setData(null);setError(String(e))}finally{setLoading(false)}}
+  useEffect(()=>{void load()},[])
+  const saveQuest=async(q:Quest)=>{await request('/quests/'+encodeURIComponent(q.id),{kind:q.kind,campaignId:q.campaignId,moduleKey:q.moduleKey,note:q.note});setData(d=>d?({...d,quests:d.quests.map(old=>old.id===q.id?q:old)}):d)}
+  const saveModule=async(m:Module)=>{await request('/modules',{moduleKey:m.key,checklist:m.checklist,progress:m.progress});setData(d=>d?({...d,modules:d.modules.map(old=>old.key===m.key?{...m,ready:Object.values(m.checklist).every(v=>v!=='todo')}:old)}):d)}
+  if (!data) return <section className="choice-panel"><h2>Journal de quêtes · Choix libre</h2>{error&&<p role="alert">{error}</p>}<button disabled={loading} onClick={()=>void load()}>{loading?'Chargement…':'Réessayer'}</button></section>
   const ready=data.quests.filter(q=>readiness(q,data.modules.find(m=>m.key===q.moduleKey))==='Prêt à jouer').length
   const visible=data.quests.filter(q=>filter==='all'||(filter==='ready'?readiness(q,data.modules.find(m=>m.key===q.moduleKey))==='Prêt à jouer':q.kind===filter))
   const synced=data.quests.map(q=>q.syncedAt).sort().at(-1)
@@ -87,7 +84,7 @@ function ChoiceLibre() {
     <p>◆ Campagnes rattachées aux missions ouvertes. Prépare un module même si aucune quête ne le propose encore.</p>
     <p>{campaignModules.filter(m=>m.progress!=='done'&&m.ready).length} module(s) prêt(s) non terminé(s) · {campaignModules.filter(m=>m.progress==='done').length} joué(s)</p>
     <div className="choice-list">{campaignModules.map(m=><article key={m.key} className="choice-quest"><div className="choice-head"><div><strong>{m.title}</strong>{m.group&&<div className="choice-meta">{m.group}</div>}</div><span className={'choice-status '+(m.ready?'choice-ok':'')}>{m.progress==='done'?'Joué':m.ready?'Prêt à jouer':'À préparer'}</span></div><div className="choice-actions"><button onClick={()=>setOpenedModule(openedModule===m.key?'':m.key)}>{openedModule===m.key?'Fermer checklist':'Checklist du module'}</button></div>{openedModule===m.key&&<ModuleEditor key={m.key+JSON.stringify(m.checklist)+m.progress} module={m} save={saveModule}/>}</article>)}</div></section>
-  return <section className="choice-panel"><h2>Journal de quêtes · Choix libre</h2><p>{data.quests.length} quêtes ouvertes · {ready} prêtes à jouer · dernière synchronisation : {synced||'inconnue'}</p><p>Les votes sont ceux des comptes Discord ; les PJ affichés sont leurs personnages connus, pas une attribution certaine du vote à un PJ.</p><div className="choice-toolbar"><button onClick={()=>setMode('modules')}>Préparer les modules</button><label>Filtrer <select value={filter} onChange={e=>setFilter(e.target.value)}><option value="all">Toutes</option><option value="ready">Prêtes à jouer</option>{Object.entries(kinds).map(([id,label])=><option key={id} value={id}>{label}</option>)}</select></label><label><input type="checkbox" checked={showVotes} onChange={e=>setShowVotes(e.target.checked)}/> Intéressés / verrouillés</label><button disabled={loading} onClick={()=>void load()}>Actualiser</button><button disabled={loading} onClick={()=>{try{sessionStorage.removeItem('pf2-choice-mj-key')}catch{};setKey('');setData(null)}}>Verrouiller</button></div>{error&&<p role="alert">{error}</p>}<div className="choice-list">{visible.map(q=><QuestCard key={q.id} quest={q} data={data} showVotes={showVotes} save={saveQuest} saveModule={saveModule}/>)}</div>{!visible.length&&<p>Aucune quête pour ce filtre.</p>}</section>
+  return <section className="choice-panel"><h2>Journal de quêtes · Choix libre</h2><p>{data.quests.length} quêtes ouvertes · {ready} prêtes à jouer · dernière synchronisation : {synced||'inconnue'}</p><p>Les votes sont ceux des comptes Discord ; les PJ affichés sont leurs personnages connus, pas une attribution certaine du vote à un PJ.</p><div className="choice-toolbar"><button onClick={()=>setMode('modules')}>Préparer les modules</button><label>Filtrer <select value={filter} onChange={e=>setFilter(e.target.value)}><option value="all">Toutes</option><option value="ready">Prêtes à jouer</option>{Object.entries(kinds).map(([id,label])=><option key={id} value={id}>{label}</option>)}</select></label><label><input type="checkbox" checked={showVotes} onChange={e=>setShowVotes(e.target.checked)}/> Intéressés / verrouillés</label><button disabled={loading} onClick={()=>void load()}>Actualiser</button></div>{error&&<p role="alert">{error}</p>}<div className="choice-list">{visible.map(q=><QuestCard key={q.id} quest={q} data={data} showVotes={showVotes} save={saveQuest} saveModule={saveModule}/>)}</div>{!visible.length&&<p>Aucune quête pour ce filtre.</p>}</section>
 }
 export default function ChoiceLibreWorkspace(props:{campaigns:Option[];scenarios:Option[]}) {
   const location=useLocation()

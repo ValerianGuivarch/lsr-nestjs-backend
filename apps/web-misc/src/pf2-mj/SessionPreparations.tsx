@@ -58,9 +58,7 @@ function ModuleTemplatePicker({draft,dirty,onImport}:{draft:Preparation;dirty:bo
   const [busy,setBusy]=useState(false)
   const [onlyTemplates,setOnlyTemplates]=useState(true)
   async function call(data?:unknown):Promise<ModuleTemplate[]> {
-    const key=sessionStorage.getItem('pf2-choice-mj-key')||''
-    if(!key)throw new Error('Ouvre d’abord le journal Choix libre avec ta clé MJ.')
-    const response=await fetch('/apil7r/pf2-mj/choice-libre/templates',{cache:'no-store',headers:{'x-pf2-choice-mj-key':key,...(data?{'Content-Type':'application/json'}:{})},...(data?{method:'PUT',body:JSON.stringify(data)}:{})})
+    const response=await fetch('/apil7r/pf2-mj/choice-libre/templates',{cache:'no-store',headers:{...(data?{'Content-Type':'application/json'}:{})},...(data?{method:'PUT',body:JSON.stringify(data)}:{})})
     if(!response.ok)throw new Error('Accès au modèle impossible (HTTP '+response.status+').')
     return response.json()
   }

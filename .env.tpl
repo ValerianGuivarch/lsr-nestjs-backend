@@ -56,8 +56,6 @@ DISCORD_JOURNALS_CHANNEL_ID=
 # Clé interne uniquement partagée entre l'API Nest et le conteneur MediaWiki.
 # Obligatoire pour qu'un admin wiki puisse prévisualiser un journal non révélé.
 PF2_JOURNALS_INTERNAL_KEY=
-# Private MJ-only Choice Libre dashboard: set a long random key on the server.
-PF2_CHOICE_MJ_KEY=
 # Synchronisation des résumés courts.
 DISCORD_SUMMARIES_CHANNEL_NAME=résumés-courts
 # Actors Foundry hors PJ à masquer dans les résumés (familier, Actor de groupe, etc.).

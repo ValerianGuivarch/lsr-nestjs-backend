@@ -188,7 +188,7 @@ Branche `feat/pf2-choix-libre`, worktree `/home/valou/services/lsr-choix-libre`.
 - Modèles : copier une préparation enregistrée en modèle d'un module, puis importer ses étapes et blocs dans une séance (nouveaux identifiants, cases remises à zéro, source inchangée). Une préparation/import ne valide pas automatiquement Foundry.
 - Trilemma : les 53 ressources gardent leurs UUID et fichiers ; elles sont proposées comme sources d'adaptation dans le sélecteur, regroupées par origine. Blanchebois pointe vers TRI-040. L'onglet Catalogue pointe vers les ressources et les éléments mis de côté.
 - Renommage du Journal MJ en Campagnes et scénarios. Retrait de la navigation et redirection de l'ancienne page Journaux d'Absalom, distincte des journaux narratifs publiés par Discord.
-- Protection : endpoint dédié refusant tout accès sans `PF2_CHOICE_MJ_KEY` configurée ; saisie de la clé MJ en session navigateur. Avant ouverture en production, configurer cette clé côté serveur et vérifier le périmètre d'accès de l'outil historique de séances, qui ne bénéficie pas encore de cette protection.
+- Accès : même modèle de confiance que les autres écrans MJ. Aucun code, clé ni contrôle d'accès supplémentaire ; les joueurs savent ne pas consulter ces pages. Les notes ne sont pas publiées sur Discord.
 
 Essai sur copie réelle du 16/11 : intégrité SQLite OK, 17 quêtes ouvertes (launcher exclu), 41 réactions, 10 modules associés sans référence cassée, 461 modules proposés (y compris adaptations), 0 présumé prêt. Les autres quêtes restent classées selon le contexte et demandent un choix ou un contenu. La migration incrémentale applique une sauvegarde automatique avant modification de la base.
 
@@ -205,5 +205,5 @@ Essai sur copie réelle du 16/11 : intégrité SQLite OK, 17 quêtes ouvertes (l
 - Catalogue commun, liste plate de campagnes et arcs PFS, scénarios indépendants et adaptations. Les chapitres restent des repères dans les fiches ; recherche aussi sur leurs titres. Filtres Intégrés, À décider, Plus tard, Écartés et archives Bounties. Vue arborescente historique encore accessible pour le détail et la gestion des arcs.
 - Les adaptations sont sélectionnables avec la même curation et apparaissent dans Campagnes et scénarios lorsqu'elles sont intégrées. Leurs fichiers et UUID restent les mêmes.
 - Dans Préparation des séances > Choix libre, la vue Préparer les modules permet de travailler à l'avance par campagne, même sans quête Discord rattachée.
-- Une clé aléatoire dédiée a été configurée côté serveur dans le fichier privé de déploiement (mode 600). L'API renvoie Cache-Control: private, no-store. Aucun secret dans Git.
-- Déploiement uniquement par le flux normal branche → PR → CI → merge. Sauvegarde SQLite en ligne avant migration et vérification après démarrage.
+- La clé MJ initialement ajoutée est retirée sur décision explicite du MJ. L'API conserve Cache-Control: private, no-store. Aucun secret dans Git.
+- Petits changements directement sur main ; grosses fonctionnalités par branche → PR → CI → merge. Dans les deux cas, laisser la CI déployer. Sauvegarde SQLite en ligne avant migration et vérification après démarrage.

@@ -6,11 +6,10 @@ import {describe,it,expect,vi} from 'vitest'
 import ChoiceLibreWorkspace from './ChoiceLibre'
 vi.mock('./SessionPreparations',()=>({default:()=> <div>Éditeur historique</div>}))
 describe('Choix libre MJ',()=>{
-  it('affiche les quêtes, protège les votes et enregistre une checklist',async()=>{
+  it('affiche les quêtes sans clé et masque les votes par défaut et enregistre une checklist',async()=>{
     ;(globalThis as {IS_REACT_ACT_ENVIRONMENT?:boolean}).IS_REACT_ACT_ENVIRONMENT=true
     const element=document.createElement('div'); document.body.append(element);const root=createRoot(element)
     const calls:RequestInit[]=[]
-    sessionStorage.setItem('pf2-choice-mj-key','test-only')
     const check={source:'done',template:'done',entities:'done',foundry:'todo',review:'done'}
     vi.stubGlobal('fetch',vi.fn(async (_url:RequestInfo|URL,init?:RequestInit)=>{
       calls.push(init||{})
@@ -25,7 +24,7 @@ describe('Choix libre MJ',()=>{
       expect(element.textContent).toContain('Explorer la fosse')
       expect(element.textContent).toContain('À préparer')
       expect(element.textContent).not.toContain('Test PJ')
-      expect((calls[0].headers as Record<string,string>)['x-pf2-choice-mj-key']).toBe('test-only')
+      expect((calls[0].headers as Record<string,string>)['x-pf2-choice-mj-key']).toBeUndefined()
       await act(async()=>element.querySelector<HTMLInputElement>('.choice-toolbar input[type=checkbox]')!.click())
       expect(element.textContent).toContain('Test PJ')
       await act(async()=>[...element.querySelectorAll('button')].find(b=>b.textContent==='Checklist du module')!.click())
