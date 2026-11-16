@@ -14,8 +14,8 @@ La page **Réputation** du wiki affiche Groupe en premier dans son sélecteur, p
 
 - Table `pf2_reputation_character_modifier` : `reputation_id`, `player_npc_id`, `modifier`. Absence de ligne = 0 ; pas de duplication du score collectif.
 - Table `pf2_player_character_relation` : `id`, `player_npc_id`, `name`, `description`, `score` et `linked_npc_id` facultatif.
-- L'onglet **Relations** dans `Spécial:MesPersonnages` est distinct de l'onglet Contacts. Pas de portrait. Une Relation peut être liée à une fiche PNJ existante, si cette fiche est consultable par le PJ ; sinon aucun lien de fiche n'est proposé.
-- L'onglet Relations et son API sont réservés à Pépin, accessible à son propriétaire et au MJ. Seul le MJ peut créer, éditer et supprimer les Relations ou modifier les scores.
+- L'onglet **Contacts** (anciennement Relations) dans `Spécial:MesPersonnages` est distinct de l'onglet **Relations** (anciennement Contacts, liens narratifs). Pas de portrait. Un contact peut être liée à une fiche PNJ existante, si cette fiche est consultable par le PJ ; sinon aucun lien de fiche n'est proposé.
+- L'onglet Contacts et son API sont réservés à Pépin, accessible à son propriétaire et au MJ. Seul le MJ peut créer, éditer et supprimer les contacts ou modifier les scores.
 
 - Horoscope : onglet réservé à Eryn, modifiable par son propriétaire et le MJ, API interne `/api/pf2-mj/horoscopes/internal/:npcId`. La table `pf2_player_character_horoscope` conserve une date de naissance et le total d'Occultisme par personnage connu (PJ, PNJ publié ou contact privé visible). Le signe est dérivé du calendrier ; les portraits privés masqués restent masqués. Voir [la règle d'intermède d'Eryn](../pj/PJ-Eryn-Elyn.md).
 - Les scores sont compris entre –50 et +50 ; aucun nouveau suivi chiffré additionnel par rapport à la Relation elle-même.
@@ -24,8 +24,8 @@ La page **Réputation** du wiki affiche Groupe en premier dans son sélecteur, p
 
 Le don **Animal social / Hobnobber**, déjà possédé par Pépin, débloque dans le toolkit les activités A et B. C'est une adaptation maison d'intermède ; les actions PF2 ordinaires restent applicables à tous selon les règles.
 
-1. **Créer un contact** : Diplomatie — Recueillir des informations. Le PJ choisit un milieu ou groupe. DD indicatif 15 (courant), 20 (spécialisé), 25 (difficile), 30 (très fermé). Réussite : création de Relation à **+1**. Réussite critique (DD+10 après règles de degrés) : création à **+1** et droit d'effectuer immédiatement l'activité B. Échec : rien ; échec critique : pas de contact, fausse piste possible. Le MJ détermine le DD.
-2. **Entretenir une relation** : Diplomatie — Faire bonne impression, contre le **DD de Volonté** du personnage concerné. Adaptation persistante proposée : échec critique –1, échec 0, réussite +1, réussite critique +2. Le MJ valide l'évolution ; la règle officielle change d'abord l'attitude, pas une valeur de relation.
+1. **Créer un contact** : Diplomatie — Recueillir des informations. Le PJ choisit un milieu ou groupe. DD indicatif 15 (courant), 20 (spécialisé), 25 (difficile), 30 (très fermé). Réussite : création de contact à **+1**. Réussite critique (DD+10 après règles de degrés) : création à **+1** et droit d'effectuer immédiatement l'activité B. Échec : rien ; échec critique : pas de contact, fausse piste possible. Le MJ détermine le DD.
+2. **Entretenir un contact** : Diplomatie — Faire bonne impression, contre le **DD de Volonté** du personnage concerné. Adaptation persistante proposée : échec critique –1, échec 0, réussite +1, réussite critique +2. Le MJ valide l'évolution ; la règle officielle change d'abord l'attitude, pas une valeur de relation.
 3. **Rendre service à une communauté** : le PJ choisit une faction du référentiel de réputations, un service réalisable et une compétence adaptée à ce service. Le MJ détermine le DD. Les points de réputation sont attribués en fonction du service réellement rendu (par exemple +1 mineur, +2 modéré, +5 ou plus majeur), **sur son écart individuel**, pas automatiquement au groupe.
 
 Les activités respectent le temps de trajet et la disponibilité du PJ. On n'effectue pas nécessairement un jet par jour. **Les jets Foundry produisent une proposition de résultat, jamais une modification automatique du wiki** : le MJ applique les variations manuellement dans un premier temps.

@@ -1419,8 +1419,8 @@ Exemple de code d'une macro Script pour **Créer un contact** :
       (canvas.tokens.controlled[0]?.actor || game.user.character);
     await game.modules.get("pf2e-val-toolkit").api.openInterludeActivity(personnage, "create");
 
-Remplacer le dernier argument par "maintain" pour **Entretenir une
-relation**, ou "community" pour **Rendre service à une communauté**.
+Remplacer le dernier argument par "maintain" pour **Entretenir un
+contact**, ou "community" pour **Rendre service à une communauté**.
 Les deux premiers nécessitent le don Animal social (Hobnobber).
 La propriété du personnage reste obligatoire. Les jets ne modifient
 jamais automatiquement les réputations du wiki.
@@ -1438,3 +1438,9 @@ Pour Eryn, créer une macro Script native « Étudier un thème astral »
 réservée à son propriétaire et au MJ, puis l’ajouter à Extras par le
 mécanisme natif du HUD. La macro vérifie le personnage concerné ; le
 Toolkit reste générique. Ne pas injecter de bouton dans le DOM du HUD.
+
+### v0.44.19 — Contacts de Pépin
+
+Le raccourci `maintain` affiche désormais « Entretenir un contact ».
+Les macros natives déjà créées conservent leur fonctionnement ; leur nom
+affiché dans Extras doit également être renommé dans Foundry.

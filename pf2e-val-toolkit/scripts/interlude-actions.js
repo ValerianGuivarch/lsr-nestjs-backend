@@ -1,11 +1,11 @@
 // Generic PF2e Val Toolkit downtime shortcuts. No campaign-specific actor IDs or world data.
 const LABELS = {
   create: 'Créer un contact',
-  maintain: 'Entretenir une relation',
+  maintain: 'Entretenir un contact',
   community: 'Rendre service à une communauté'
 };
 const DESCRIPTIONS = {
-  create: 'Recueillir des informations (Diplomatie). Réussite : +1 et création d’une relation ; critique : +1 et possibilité de tenter Entretenir une relation.',
+  create: 'Recueillir des informations (Diplomatie). Réussite : +1 et création d’un contact ; critique : +1 et possibilité de tenter Entretenir un contact.',
   maintain: 'Faire bonne impression (Diplomatie), contre le DD de Volonté. Proposition maison : critique +2, réussite +1, échec 0, échec critique −1.',
   community: 'Service à une communauté. Le MJ décide du DD et de la compétence. Proposition de réputation personnelle selon le service réellement rendu.'
 };
@@ -130,7 +130,7 @@ export function decorateInterludeExtras(actorOverride = null, root = document) {
   box.dataset.actorUuid = actor.uuid;
   box.className='pf2e-val-interlude-shortcuts';
   const title = document.createElement('strong');
-  title.textContent='Intermèdes — Relations et réputations';
+  title.textContent='Intermèdes — Contacts et réputations';
   box.append(title);
   for (const [kind,label] of Object.entries(LABELS)) {
     const btn=document.createElement('button');

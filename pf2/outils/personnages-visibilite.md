@@ -5,7 +5,7 @@
 ## Trois niveaux de visibilité
 
 - **Public** : `pf2_player_character_profile.is_published = 1`. Présent dans le carnet général PJ/PNJ et dans le canal Discord `#personnages`. Un personnage public peut aussi être un contact d'un ou plusieurs PJ. Son portrait public reste visible.
-- **Contact personnel** : association explicite dans `pf2_player_character_contact`. Le PNJ peut garder `is_published = 0`, donc absent de la liste générale. Il est visible dans l'onglet Contacts du ou des PJ associés. La fiche wiki de contact existe indépendamment du statut de publication.
+- **Contact personnel** : association explicite dans `pf2_player_character_contact`. Le PNJ peut garder `is_published = 0`, donc absent de la liste générale. Il est visible dans l'onglet Relations du ou des PJ associés. La fiche wiki de contact existe indépendamment du statut de publication.
 - **Strictement MJ** : fiche métier `pf2_record(kind='pnj')` sans publication ni association. Invisible du carnet général et des Contacts ; reste dans l'administration MJ.
 
 L'existence d'un portrait, d'une page wiki, de tags `contact-pj`, ou le `scope=global` n'implique **jamais** la publication. L'accès à une URL de page wiki connue peut rendre son contenu public : ne jamais placer de secrets MJ dans une page wiki destinée aux contacts.
@@ -22,7 +22,7 @@ Un PNJ publié conserve son portrait public, même si `portrait_known=0` pour un
 2. Dans **Contacts privés**, chaque PJ a une case d'association et, à côté, la case **Portrait visible**.
 3. Associer d'abord le PNJ au PJ si nécessaire ; la case « Portrait visible » devient alors modifiable. Elle est cochée par défaut.
 4. Décocher pour masquer l'image **à ce PJ uniquement** ; la sauvegarde est immédiate.
-5. Tester l'onglet Contacts de la page wiki du PJ.
+5. Tester l'onglet Relations de la page wiki du PJ.
 
 Exemples d'arbitrages **non appliqués automatiquement** : Neyla ne reconnaît pas l'apparence d'Avarneus ; Pen-Pen ne connaît pas l'apparence actuelle de Tikaak. Le MJ peut décocher les deux associations correspondantes.
 

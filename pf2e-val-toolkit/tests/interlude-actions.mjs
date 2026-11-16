@@ -5,6 +5,7 @@ const module = await import('data:text/javascript;charset=utf-8,' + encodeURICom
 const rolls=[];
 const messages=[];
 const dialogResults=[];
+const dialogTitles=[];
 const stats={
  diplomacy:{label:'Diplomatie',roll:async options=>rolls.push(['diplomacy',options])},
  nature:{label:'Nature',roll:async options=>rolls.push(['nature',options])},
@@ -16,7 +17,7 @@ globalThis.game={user:{isGM:false,character:actor,targets:{first:()=>null}},modu
 globalThis.canvas={tokens:{controlled:[]}};
 const warnings=[];
 globalThis.ui={notifications:{warn:message=>warnings.push(message),error:message=>{throw Error(message)}}};
-globalThis.foundry={utils:{escapeHTML:s=>String(s).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('"','&quot;')},applications:{api:{DialogV2:{wait:async config=>{assert.ok(!config.content.includes('<form'), 'DialogV2 must not contain nested form');return dialogResults.shift()}}}}};
+globalThis.foundry={utils:{escapeHTML:s=>String(s).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('"','&quot;')},applications:{api:{DialogV2:{wait:async config=>{assert.ok(!config.content.includes('<form'), 'DialogV2 must not contain nested form');dialogTitles.push(config.window.title);return dialogResults.shift()}}}}};
 globalThis.ChatMessage={getSpeaker:()=>({actor:'pepin'}),create:async m=>messages.push(m)};
 globalThis.fetch=async()=>({ok:true,json:async()=>[{id:1,name:'Aberton',group:'Localités'}]});
 dialogResults.push({target:'Marins',dc:15,skill:'diplomacy'});
@@ -27,6 +28,8 @@ assert.equal(rolls[0][1].dc.value,15);
 assert.ok(!messages[0].content.includes('DD 15'), 'A secret DC is not announced publicly');
 dialogResults.push({target:'Neria',dc:23,skill:'diplomacy'});
 await module.openInterludeActivity(actor,'maintain');
+assert.equal(dialogTitles[1],'Entretenir un contact — Pépin');
+assert.ok(messages[1].content.includes('Entretenir un contact'));
 assert.equal(rolls[1][0],'diplomacy');
 assert.equal(rolls[1][1].dc.value,23);
 assert.equal(rolls[1][1].rollMode,undefined);

@@ -228,7 +228,7 @@
         if ( portraitSource ) { var image = document.createElement( 'img' ); image.src = portraitSource; image.alt = 'Portrait de ' + contact.displayName; image.className = 'pf2-player-contact-portrait'; image.loading = 'lazy'; card.appendChild( image ); }
         else { var placeholder = document.createElement( 'div' ); placeholder.className = 'pf2-player-contact-portrait pf2-player-contact-portrait-placeholder'; placeholder.setAttribute( 'aria-hidden', 'true' ); placeholder.textContent = '♙'; card.appendChild( placeholder ); }
 		var title = document.createElement( 'strong' ); title.textContent = contact.displayName; card.appendChild( title );
-		if ( !contact.published ) { var badge = document.createElement( 'span' ); badge.className = 'pf2-player-kind private'; badge.textContent = 'Contact privé'; card.appendChild( badge ); }
+		if ( !contact.published ) { var badge = document.createElement( 'span' ); badge.className = 'pf2-player-kind private'; badge.textContent = 'Relation privée'; card.appendChild( badge ); }
 		var description = document.createElement( 'p' ); description.className = 'pf2-player-short-description'; description.textContent = contact.shortDescription || ''; card.appendChild( description );
 		if ( contact.wikiPageTitle ) { var open = document.createElement( 'a' ); open.textContent = 'Ouvrir'; open.href = myContactUrl( playerNpcId, contact.npcId ); open.className = 'pf2-my-character-open'; open.target = '_blank'; open.rel = 'noopener noreferrer'; card.appendChild( open ); }
         if ( isMjAdmin ) {
@@ -327,17 +327,17 @@
             } else if ( name === 'relations' && character.npcId === 'npc_pj_pepin' ) {
                 if ( window.pf2RenderRelations ) {
                     window.pf2RenderRelations( panel, character, isMjAdmin );
-                } else { panel.textContent = 'Le carnet de relations est indisponible.'; }
+                } else { panel.textContent = 'Le carnet de contacts est indisponible.'; }
             } else if ( name === 'contacts' ) {
-				if ( !character.contacts || !character.contacts.length ) { var noContact = document.createElement( 'p' ); noContact.className = 'pf2-player-empty'; noContact.textContent = 'Aucun contact privé pour ce personnage.'; panel.appendChild( noContact ); return; }
+				if ( !character.contacts || !character.contacts.length ) { var noContact = document.createElement( 'p' ); noContact.className = 'pf2-player-empty'; noContact.textContent = 'Aucune relation privée pour ce personnage.'; panel.appendChild( noContact ); return; }
 				var contacts = document.createElement( 'div' ); contacts.className = 'pf2-player-list'; character.contacts.forEach( function ( contact ) { contacts.appendChild( contactCard( contact, character.npcId, isMjAdmin ) ); } ); panel.appendChild( contacts );
 			}
 		}
 
 		var items = [ [ 'fiche', 'Fiche' ], [ 'background', 'Background' ], [ 'notes', 'Notes' ] ];
-		if ( character.npcId === 'npc_pj_pepin' ) items.push( [ 'relations', 'Relations' ] );
+		if ( character.npcId === 'npc_pj_pepin' ) items.push( [ 'relations', 'Contacts' ] );
 		if ( character.npcId === 'npc_pj_eryn' ) items.push( [ 'horoscope', 'Horoscope' ] );
-		items.push( [ 'contacts', 'Contacts' ] );
+		items.push( [ 'contacts', 'Relations' ] );
 		if ( isMjAdmin ) items.push( [ 'mj', 'MJ' ] );
 		items.forEach( function ( item ) { var button = document.createElement( 'button' ); button.dataset.tab = item[ 0 ]; button.textContent = item[ 1 ]; button.onclick = function () { showTab( item[ 0 ] ); }; tabs.appendChild( button ); } );
 		showTab( 'fiche' );
@@ -352,7 +352,7 @@
 		var layout = document.createElement( 'div' ); layout.className = 'pf2-player-character-layout';
 		var side = document.createElement( 'aside' ); side.className = 'pf2-player-character-side';
 		if ( contact.wikiPortraitFilename ) { var image = document.createElement( 'img' ); image.className = 'pf2-player-character-portrait'; image.src = imageForFilename( contact.wikiPortraitFilename ); image.alt = contact.displayName; side.appendChild( image ); }
-		if ( !contact.published ) { var badge = document.createElement( 'span' ); badge.className = 'pf2-player-kind private'; badge.textContent = 'Contact privé'; side.appendChild( badge ); }
+		if ( !contact.published ) { var badge = document.createElement( 'span' ); badge.className = 'pf2-player-kind private'; badge.textContent = 'Relation privée'; side.appendChild( badge ); }
 		layout.appendChild( side );
 		var main = document.createElement( 'div' ); main.className = 'pf2-player-character-main';
 		main.appendChild( heading( 'Description courte' ) );
@@ -368,7 +368,7 @@
 			if ( !character ) { root.appendChild( heading( 'Personnage inaccessible' ) ); var denied = document.createElement( 'p' ); denied.textContent = 'Ce personnage ne vous est pas associé.'; root.appendChild( denied ); root.appendChild( link( 'Special:MesPersonnages', 'Retour à Mes personnages' ) ); return; }
 			if ( selectedContactId ) {
 				var contact = ( character.contacts || [] ).filter( function ( item ) { return item.npcId === selectedContactId; } )[0];
-				if ( !contact ) { root.appendChild( heading( 'Contact inaccessible' ) ); var noContact = document.createElement( 'p' ); noContact.textContent = 'Ce contact n’est pas associé à ce personnage.'; root.appendChild( noContact ); root.appendChild( link( 'Special:MesPersonnages', 'Retour à Mes personnages' ) ); return; }
+				if ( !contact ) { root.appendChild( heading( 'Relation inaccessible' ) ); var noContact = document.createElement( 'p' ); noContact.textContent = 'Cette relation n’est pas associée à ce personnage.'; root.appendChild( noContact ); root.appendChild( link( 'Special:MesPersonnages', 'Retour à Mes personnages' ) ); return; }
 				var contactTitleNode = document.querySelector( '.mw-page-title-main' ) || document.querySelector( '#firstHeading' ); if ( contactTitleNode ) { contactTitleNode.textContent = contact.displayName; }
 				document.title = contact.displayName + ' — ' + mw.config.get( 'wgSiteName' );
 				renderMyContactDetail( root, character, contact, data.canEditDescription );
@@ -381,7 +381,7 @@
 		}
 
 		root.appendChild( heading( 'Mes personnages' ) );
-		var intro = document.createElement( 'p' ); intro.textContent = 'Cet espace est personnel : il rassemble vos PJ, leur background et leurs contacts privés.'; root.appendChild( intro );
+		var intro = document.createElement( 'p' ); intro.textContent = 'Cet espace est personnel : il rassemble vos PJ, leur background et leurs relations privées.'; root.appendChild( intro );
 		if ( !data.characters.length ) { var empty = document.createElement( 'p' ); empty.className = 'pf2-player-empty'; empty.textContent = 'Aucun personnage ne vous est encore associé. Un administrateur peut le faire avec /wiki-admin associer-personnage.'; root.appendChild( empty ); return; }
 		var list = document.createElement( 'div' ); list.className = 'pf2-player-list pf2-my-character-list'; root.appendChild( list );
 		data.characters.forEach( function ( character ) {

@@ -11,13 +11,13 @@
  };
  window.pf2RenderRelations = function(panel,character,isMjAdmin) {
   const api=new mw.Api();
-  const title=node('h3','Carnet de relations');
+  const title=node('h3','Carnet de contacts');
   const note=node('p','Personnes rencontrées en voyage. Leur valeur utilise les mêmes paliers que les réputations.','pf2-relations-note');
   const heading=node('div',null,'pf2-relations-heading');
   heading.append(title,note); panel.append(heading);
-  const body=node('div','Chargement des relations…','pf2-relations-list');panel.append(body);
+  const body=node('div','Chargement des contacts…','pf2-relations-list');panel.append(body);
   let entries=[];
-  const error=function(e){mw.notify('Relations : '+(e?.error?.info||e?.message||e),{type:'error'});};
+  const error=function(e){mw.notify('Contacts : '+(e?.error?.info||e?.message||e),{type:'error'});};
   function editor(entry) {
    const form=node('form',null,'pf2-relations-editor');
    function field(labelText,input) {
@@ -56,7 +56,7 @@
    body.prepend(form);name.focus();
   }
   async function remove(entry) {
-   if(!confirm('Supprimer la relation avec '+entry.name+' ?'))return;
+   if(!confirm('Supprimer le contact '+entry.name+' ?'))return;
    try {
     await api.postWithToken('csrf',{action:'pf2relationsupdate',format:'json',
       npcId:character.npcId,operation:'delete',id:entry.id});
@@ -66,10 +66,10 @@
   function render(){
    body.replaceChildren();
    if(isMjAdmin){
-    const create=node('button','+ Ajouter une relation','pf2-player-primary');
+    const create=node('button','+ Ajouter un contact','pf2-player-primary');
     create.onclick=()=>editor(null);body.append(create);
    }
-   if(!entries.length){body.append(node('p','Aucune relation enregistrée pour le moment.','pf2-player-empty'));return;}
+   if(!entries.length){body.append(node('p','Aucun contact enregistré pour le moment.','pf2-player-empty'));return;}
    entries.forEach(function(entry){
     const row=node('article',null,'pf2-relation-row');
     const details=node('div',null,'pf2-relation-details');
@@ -97,7 +97,7 @@
     const result=await api.get({action:'pf2relations',format:'json',npcId:character.npcId});
     entries=result.pf2relations?.relations||[];
     render();
-   }catch(e){body.textContent='Impossible de charger les relations.';error(e);}
+   }catch(e){body.textContent='Impossible de charger les contacts.';error(e);}
   }
   void reload();
  };
