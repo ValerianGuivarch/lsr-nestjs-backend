@@ -880,7 +880,7 @@ export function isStandaloneCampaign(unit: PlayableUnit): boolean {
   if (unit.id !== unit.legacyEntryId) return false
   const entry = rawEntryMap.get(unit.id)
   // Classify by the table's expected play length, not the publisher's document format.
-  const minimumSessions = (unit.playableComponents ?? []).reduce((total, component) => total + (component.estimatedSessions?.min ?? 1), 0)
+  const minimumSessions = (unit.playableComponents ?? []).reduce((total, component) => total + (component.estimatedSessions?.min ?? 0), 0)
   return Boolean(entry?.parts.some(part => part.kind === 'compilation_campagne')) || minimumSessions > 2
 }
 export function playableTypeLabel(type: PlayableType): string { return playableLabels[type] }

@@ -14,6 +14,7 @@ describe('Journal MJ',()=>{
     const unit={id:'test-long-adventure',legacyEntryId:'test-long-adventure',playableComponents:[{estimatedSessions:{min:3,max:4}}]} as PlayableUnit
     expect(isStandaloneCampaign(unit)).toBe(true)
     expect(isStandaloneCampaign({...unit,playableComponents:[{estimatedSessions:{min:1,max:2}}] as PlayableUnit['playableComponents']})).toBe(false)
+    expect(isStandaloneCampaign({...unit,playableComponents:[{},{},{}] as PlayableUnit['playableComponents']})).toBe(false)
   })
   it('regroupe un livre de mini-campagne en conservant le scénario existant',()=>{
     const id='test-single-book'
