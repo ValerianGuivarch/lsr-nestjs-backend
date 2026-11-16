@@ -496,21 +496,33 @@ Les deux PDF anglais sont dans `/home/valou/services/`. La source de vérité du
 - Audit du 16 novembre : le fichier installé contient toujours exactement les deux collections remaster et leurs 909 correspondances. La scène Malveillance utilise effectivement des tokens de ce module pour la Mimique et la Mandragore élite.
 - Les scripts privés réutilisables sont dans `pf2-data/_AI/monster-core-complet/` : `index-pdf.py`, `extract-all.py`, `refine-headings.py`, `extract-bleed-images.py`, `build-full-mapping.py`, `install-private-art-map.py`, `generate-private-report.py`, ainsi que les scripts de contrôle visuel et les planches de revue. Une galerie privée `index.html` permet de consulter le résultat.
 
-#### Bestiary 1, 2, 3 — extension restant à réaliser
+#### Bestiary 1, 2, 3 — extension du 16 novembre 2026
 
-Les trois PDF français sont déjà disponibles sous `/home/valou/services/pf2-data/Références/Règles/` : `Règles - Bestiaire 1.pdf` (362 pages), `Règles - Bestiaire 2.pdf` (322), `Règles - Bestiaire 3.pdf` (322). Aucune de ces trois collections legacy n'est présente dans le mappage privé actuel. Cela ne signifie pas que chaque fiche legacy est dépourvue d'une image provenant d'une autre source.
+Les trois PDF français sont sous `/home/valou/services/pf2-data/Références/Règles/` : `Règles - Bestiaire 1.pdf` (362 pages), `Règles - Bestiaire 2.pdf` (322), `Règles - Bestiaire 3.pdf` (322). Les compendiums legacy présents dans cette version de PF2e comptent 491 Actors (les fiches remplacées par le remaster sont dans les packs Monster Core).
 
-Pour poursuivre : adapter l'extraction et l'indexation aux titres français, faire la correspondance avec les noms/IDs des packs legacy, y compris les variantes et correspondances remaster fiables, vérifier les cas ambigus, générer les portraits et tokens puis étendre le mappage sans écraser les 909 associations existantes. Produire un rapport de couverture et une liste des créatures sans art fiable. Vérifier l'accès aux fichiers et le chargement de l'art dans Foundry.
+Traitement privé : `pf2-data/_AI/bestiary-legacy/`. Catalogue des IDs et des noms anglais/français issu des packs et du dictionnaire de traduction PF2-FR ; indexation des titres et statblocks des PDF, normalisation des accents et des alias, extraction du raster et de son masque de transparence, planches de revue des cas ambigus, génération de tokens WebP 512 × 512 sans cadre. Les scripts et rapports privés sont `index-pdf.py`, `match.py`, `review.py`, `approve-visual.py`, `install.py`, `catalog.json`, `installed.json`, `coverage-summary.json`, `unmatched.json`. Les PDF et illustrations ne doivent jamais être publiés.
 
-Les Actors et tokens déjà importés dans les scènes doivent être audités séparément : identifier l'origine par `_stats.compendiumSource`, puis combler uniquement les images génériques, sans écraser les portraits personnalisés ni les données de jeu. Contrôler les trois niveaux : portrait de l'Actor (`img`), texture de son prototype Token et texture des tokens déjà placés (y compris tokens non liés et éventuelles surcharges de portrait). Effectuer les modifications via le REST Relay avec un client MJ connecté ; sauvegarder les documents concernés et relire le résultat. Ne pas contourner un relais indisponible.
+| Collection | Fiches associées | Total |
+| --- | ---: | ---: |
+| Bestiary 1 | 127 | 166 |
+| Bestiary 2 | 136 | 160 |
+| Bestiary 3 | 135 | 165 |
+| Total legacy | 398 | 491 |
+
+330 nouvelles illustrations PNG et leurs tokens WebP ont été installés dans le module privé existant, sous `images/bestiary1..3/` et `tokens/bestiary1..3/`. Une correspondance supplémentaire (Quatoid) réutilise l'art remaster de la même créature. Les 909 associations Monster Core restent strictement identiques à la sauvegarde `map-before-legacy.json`. Les 1 307 associations des cinq collections et tous les fichiers correspondants ont été contrôlés sur disque. Les 93 fiches legacy restantes n'ont pas d'art identifié de manière suffisamment sûre ; ne pas leur attribuer arbitrairement une image. Certaines variantes de créature partagent une illustration.
+
+Le client Foundry déjà ouvert peut conserver en mémoire le mappage antérieur : recharger la page (F5) pour charger les nouvelles associations natives. Le contrôle REST du 16 novembre avant rechargement montre effectivement l'ancienne image pour le compendium de Brume vampirique, tandis que les documents du monde et les tokens mis à jour utilisent les nouveaux chemins ; les trois chemins de tokens de recette répondent HTTP 200. Ne pas interrompre le relais en cours de synchronisation pour forcer un redémarrage.
+
+Les Actors et tokens déjà importés dans les scènes sont traités séparément via `bestiary-legacy/sync-scenes.py` (argument UUID de scène ou `all`) : identifier l'origine par `_stats.compendiumSource` puis compléter les images génériques du portrait (`img`), du prototype Token et des tokens déjà placés, y compris les éventuelles surcharges génériques. Préserver les images personnalisées et les données de jeu. Sauvegardes des documents concernés sous `scene-backups/`, modifications via REST Relay avec un client MJ connecté et relecture après écriture. Le passage global des scènes est lancé, mais son état doit être confirmé dans `world-sync-progress.json` avant d'annoncer sa fin. Le script est idempotent pour les images déjà remplacées. Ne pas contourner un relais indisponible.
 
 #### Scène de recette : Malveillance / 02 — Rez-de-chaussée
 
-Audit en lecture seule du 16 novembre 2026, `Scene.Uq84XNQFWwwGtThn` : 14 tokens, dont 11 créatures/PNJ et 3 dangers. Deux créatures ont déjà un token Monster Core ; neuf tokens de créatures utilisent encore l'icône générique.
+Audit du 16 novembre 2026, `Scene.Uq84XNQFWwwGtThn` : 14 tokens, dont 11 créatures/PNJ et 3 dangers.
 
-- Bestiary 2 : deux Brumes vampiriques, deux Étrangleurs, une Matriarche étrangleuse (variante), deux Nécrophidieux. Les portraits d'Actors et textures de prototypes correspondants sont également génériques.
-- Bestiaire propre à Malveillance : Nosoi hanté (Ezramalkun) et Nils Kelveken. Ils nécessitent une correspondance d'art pertinente ou une illustration du scénario, et ne sont pas automatiquement couverts par les cinq bestiaires généraux.
-- Le cas de référence est la Brume vampirique (source `Compendium.pf2e.pathfinder-bestiary-2.Actor.NQ6qRvpD9DIwVxt3`, Bestiaire 2 p. 42). Après extension, vérifier le portrait de la fiche et de l'Actor de scène ainsi que les deux tokens B10, puis les autres créatures concernées. Les dangers ne font pas partie de ce chantier.
+- Deux créatures (Mimique et Mandragore élite) avaient déjà un token Monster Core.
+- Bestiary 2 : **4 Actors et 7 tokens corrigés et relus via le REST Relay** (deux Brumes vampiriques, deux Étrangleurs, une Matriarche étrangleuse, deux Nécrophidieux). Les trois illustrations ont été contrôlées visuellement sur la planche privée `malevolence-review.jpg`.
+- Brume vampirique : source `Compendium.pf2e.pathfinder-bestiary-2.Actor.NQ6qRvpD9DIwVxt3`, Bestiaire 2 p. 42 (page PDF 44), portrait `images/bestiary2/b2-p044-x1582.png`, token `tokens/bestiary2/b2-p044-x1582.webp`. Les deux tokens B10 utilisent bien ce chemin après contrôle.
+- Bestiaire propre à Malveillance : Nosoi hanté (Ezramalkun) et Nils Kelveken restent à illustrer à partir d'une source pertinente. Les dangers ne font pas partie de ce chantier.
 
 ### 15.3 Générateur de rencontres
 
