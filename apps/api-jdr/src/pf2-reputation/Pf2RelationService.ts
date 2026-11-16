@@ -20,6 +20,7 @@ export class Pf2RelationService implements OnModuleInit {
   }
 
   private async authorize(playerId: string, wikiUsername: string, admin: boolean) {
+    if (playerId !== 'npc_pj_pepin') throw new ForbiddenException('Carnet réservé à Pépin.')
     const rows = await this.db.query('SELECT 1 FROM pf2_player_character_profile WHERE npc_id=? AND is_player=1 LIMIT 1', [playerId])
     if (!rows.length) throw new NotFoundException('PJ introuvable.')
     if (admin) return

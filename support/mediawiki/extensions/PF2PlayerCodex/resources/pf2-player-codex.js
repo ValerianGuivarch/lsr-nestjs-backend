@@ -322,7 +322,9 @@
                 } ).catch( function () {
                     privateView.textContent = 'Accès MJ refusé ou document indisponible.';
                 } );
-            } else if ( name === 'relations' ) {
+            } else if ( name === 'horoscope' && character.npcId === 'npc_pj_eryn' ) {
+                window.pf2RenderHoroscopes( panel, character );
+            } else if ( name === 'relations' && character.npcId === 'npc_pj_pepin' ) {
                 if ( window.pf2RenderRelations ) {
                     window.pf2RenderRelations( panel, character, isMjAdmin );
                 } else { panel.textContent = 'Le carnet de relations est indisponible.'; }
@@ -332,7 +334,12 @@
 			}
 		}
 
-		( isMjAdmin ? [ [ 'fiche', 'Fiche' ], [ 'background', 'Background' ], [ 'notes', 'Notes' ], [ 'relations', 'Relations' ], [ 'contacts', 'Contacts' ], [ 'mj', 'MJ' ] ] : [ [ 'fiche', 'Fiche' ], [ 'background', 'Background' ], [ 'notes', 'Notes' ], [ 'relations', 'Relations' ], [ 'contacts', 'Contacts' ] ] ).forEach( function ( item ) { var button = document.createElement( 'button' ); button.dataset.tab = item[ 0 ]; button.textContent = item[ 1 ]; button.onclick = function () { showTab( item[ 0 ] ); }; tabs.appendChild( button ); } );
+		var items = [ [ 'fiche', 'Fiche' ], [ 'background', 'Background' ], [ 'notes', 'Notes' ] ];
+		if ( character.npcId === 'npc_pj_pepin' ) items.push( [ 'relations', 'Relations' ] );
+		if ( character.npcId === 'npc_pj_eryn' ) items.push( [ 'horoscope', 'Horoscope' ] );
+		items.push( [ 'contacts', 'Contacts' ] );
+		if ( isMjAdmin ) items.push( [ 'mj', 'MJ' ] );
+		items.forEach( function ( item ) { var button = document.createElement( 'button' ); button.dataset.tab = item[ 0 ]; button.textContent = item[ 1 ]; button.onclick = function () { showTab( item[ 0 ] ); }; tabs.appendChild( button ); } );
 		showTab( 'fiche' );
 	}
 

@@ -22,7 +22,9 @@
     "ApiPF2Reputations": "includes/ApiPF2Reputations.php",
     "ApiPF2ReputationsUpdate": "includes/ApiPF2ReputationsUpdate.php",
     "ApiPF2Relations": "includes/ApiPF2Relations.php",
-    "ApiPF2RelationsUpdate": "includes/ApiPF2RelationsUpdate.php"
+    "ApiPF2RelationsUpdate": "includes/ApiPF2RelationsUpdate.php",
+    "ApiPF2Horoscopes": "includes/ApiPF2Horoscopes.php",
+    "ApiPF2HoroscopesUpdate": "includes/ApiPF2HoroscopesUpdate.php"
   },
   "APIModules": {
     "pf2playercodex": "ApiPF2PlayerCodex",
@@ -35,14 +37,17 @@
     "pf2reputations": "ApiPF2Reputations",
     "pf2reputationsupdate": "ApiPF2ReputationsUpdate",
     "pf2relations": "ApiPF2Relations",
-    "pf2relationsupdate": "ApiPF2RelationsUpdate"
+    "pf2relationsupdate": "ApiPF2RelationsUpdate",
+    "pf2horoscopes": "ApiPF2Horoscopes",
+    "pf2horoscopesupdate": "ApiPF2HoroscopesUpdate"
   },
   "ResourceModules": {
     "ext.pf2playercodex": {
       "scripts": [
         "resources/pf2-mj-renderer.js",
         "resources/pf2-player-codex.js",
-        "resources/pf2-relations.js"
+        "resources/pf2-relations.js",
+        "resources/pf2-horoscopes.js"
       ],
       "styles": [
         "resources/pf2-player-codex.css",
