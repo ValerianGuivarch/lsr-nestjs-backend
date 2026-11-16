@@ -12,7 +12,7 @@ export class Pf2RelationController {
   list(@Param('npcId') npcId: string, @Query('wikiUsername') username = '',
     @Headers('x-pf2-wiki-admin') admin = '', @Headers('x-pf2-wiki-key') key = '') {
     this.guard(key)
-    return this.service.list(npcId, username, admin === '1')
+    return this.service.catalog(npcId, username, admin === '1')
   }
   @Post(':npcId')
   update(@Param('npcId') npcId: string, @Body() body: Record<string, unknown>,

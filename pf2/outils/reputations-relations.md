@@ -16,6 +16,7 @@ La page **Réputation** du wiki affiche Groupe en premier dans son sélecteur, p
 - Table `pf2_player_character_relation` : `id`, `player_npc_id`, `name`, `description`, `score` et `linked_npc_id` facultatif.
 - L'onglet **Contacts** (anciennement Relations) dans `Spécial:MesPersonnages` est distinct de l'onglet **Relations** (anciennement Contacts, liens narratifs). Pas de portrait. Un contact peut être liée à une fiche PNJ existante, si cette fiche est consultable par le PJ ; sinon aucun lien de fiche n'est proposé.
 - L'onglet Contacts et son API sont réservés à Pépin, accessible à son propriétaire et au MJ. Seul le MJ peut créer, éditer et supprimer les contacts ou modifier les scores.
+- Le sélecteur « Fiche PNJ associée » propose les PNJ publiés et les PNJ présents dans les Relations de Pépin, sans doublons ni PJ. Même côté MJ, les PNJ privés d'autres personnages ne sont pas proposés ; le backend vérifie la même visibilité avant toute association.
 
 - Horoscope : onglet réservé à Eryn, modifiable par son propriétaire et le MJ, API interne `/api/pf2-mj/horoscopes/internal/:npcId`. La table `pf2_player_character_horoscope` conserve une date de naissance et le total d'Occultisme par personnage connu (PJ, PNJ publié ou contact privé visible). Le signe est dérivé du calendrier ; les portraits privés masqués restent masqués. Voir [la règle d'intermède d'Eryn](../pj/PJ-Eryn-Elyn.md).
 - Les scores sont compris entre –50 et +50 ; aucun nouveau suivi chiffré additionnel par rapport à la Relation elle-même.

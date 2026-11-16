@@ -7,7 +7,10 @@ class ApiPF2Relations extends ApiBase {
   $npcId=trim($p['npcId']);
   if($npcId==='')$this->dieWithError('Personnage manquant.');
   $data=$this->proxy($npcId,'GET');
-  $this->getResult()->addValue(null,'pf2relations',['relations'=>$data]);
+  $this->getResult()->addValue(null,'pf2relations',[
+   'relations'=>$data['relations'] ?? $data,
+   'candidates'=>$data['candidates'] ?? []
+  ]);
  }
  public function proxy(string $npcId,string $method,array $body=[]){
   $services=MediaWiki\MediaWikiServices::getInstance();

@@ -57,6 +57,17 @@ export class Pf2RelationService implements OnModuleInit {
     }))
   }
 
+  async catalog(playerId: string, wikiUsername: string, admin: boolean) {
+    const relations = await this.list(playerId, wikiUsername, admin)
+    const candidates = await this.db.query(`SELECT p.npc_id AS npcId, p.display_name AS displayName
+      FROM pf2_player_character_profile p
+      WHERE p.is_player=0 AND (p.is_published=1 OR EXISTS (
+        SELECT 1 FROM pf2_player_character_contact c
+        WHERE c.player_npc_id=? AND c.contact_npc_id=p.npc_id
+      )) ORDER BY p.display_name COLLATE NOCASE, p.npc_id`, [playerId])
+    return { relations, candidates }
+  }
+
   async change(playerId: string, body: Record<string, unknown>, wikiUsername: string, admin: boolean) {
     if (!admin) throw new ForbiddenException('MJ uniquement.')
     await this.authorize(playerId, wikiUsername, true)
@@ -76,7 +87,9 @@ export class Pf2RelationService implements OnModuleInit {
     if (!Number.isInteger(score) || score < -50 || score > 50) throw new BadRequestException('Score hors limites.')
     const linkedNpcId = body.linkedNpcId == null || body.linkedNpcId === '' ? null : this.validateText(body.linkedNpcId,'PNJ',150,true)
     if (linkedNpcId) {
-      const link = await this.db.query('SELECT 1 FROM pf2_player_character_profile WHERE npc_id=? AND is_player=0 LIMIT 1',[linkedNpcId])
+      const link = await this.db.query(`SELECT 1 FROM pf2_player_character_profile p WHERE p.npc_id=? AND p.is_player=0
+        AND (p.is_published=1 OR EXISTS (SELECT 1 FROM pf2_player_character_contact c
+          WHERE c.player_npc_id=? AND c.contact_npc_id=p.npc_id)) LIMIT 1`,[linkedNpcId,playerId])
       if (!link.length) throw new BadRequestException('PNJ lié introuvable dans le carnet.')
     }
     if (operation === 'create') {

@@ -16,7 +16,7 @@
   const heading=node('div',null,'pf2-relations-heading');
   heading.append(title,note); panel.append(heading);
   const body=node('div','Chargement des contacts…','pf2-relations-list');panel.append(body);
-  let entries=[];
+  let entries=[],candidates=[];
   const error=function(e){mw.notify('Contacts : '+(e?.error?.info||e?.message||e),{type:'error'});};
   function editor(entry) {
    const form=node('form',null,'pf2-relations-editor');
@@ -31,10 +31,14 @@
    const score=field('Valeur de relation (−50 à +50)',node('input'));score.type='number';score.min=-50;score.max=50;score.step=1;score.required=true;score.value=entry?.score??0;
    const npc=field('Fiche PNJ associée (facultatif)',node('select'));
    npc.append(node('option','Aucune fiche'));npc.firstChild.value='';
-   (character.contacts||[]).forEach(function(c){
+   candidates.forEach(function(c){
     const opt=node('option',c.displayName);opt.value=c.npcId;npc.append(opt);
    });
    npc.value=entry?.linkedNpcId||'';
+   if(entry?.linkedNpcId && !npc.value){
+    const unavailable=node('option','Fiche devenue inaccessible (dissocier ou remplacer)');
+    unavailable.value=entry.linkedNpcId;npc.append(unavailable);npc.value=entry.linkedNpcId;
+   }
    const buttons=node('div',null,'pf2-player-background-actions');
    const save=node('button','Enregistrer','pf2-player-primary');save.type='submit';
    const cancel=node('button','Annuler');cancel.type='button';cancel.onclick=()=>form.remove();
@@ -96,6 +100,7 @@
    try{
     const result=await api.get({action:'pf2relations',format:'json',npcId:character.npcId});
     entries=result.pf2relations?.relations||[];
+    candidates=result.pf2relations?.candidates||[];
     render();
    }catch(e){body.textContent='Impossible de charger les contacts.';error(e);}
   }
