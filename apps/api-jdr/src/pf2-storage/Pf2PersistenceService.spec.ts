@@ -76,6 +76,20 @@ describe('Pf2PersistenceService', () => {
     expect(await service.upcomingQuestRecapSessions('2099-10-13')).toEqual([])
   })
 
+  it('migrates Choix libre without modifying the Discord quest journal and preserves local links', async () => {
+    const store = await open()
+    const db = currentDataSource()
+    await db.query("INSERT INTO pf2_discord_quest (thread_id,title,completed,archived,obsolete,url,discord_created_at,synced_at) VALUES ('1565035121000583311','La fosse',0,0,0,'https://discord.com/test',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)")
+    await db.query("DELETE FROM pf2_schema_migration WHERE id='055-choice-libre'")
+    await store.onModuleInit()
+    const rows = await db.query('SELECT kind,campaign_id,module_key FROM pf2_choice_quest')
+    expect(rows).toEqual([{kind:'mission',campaign_id:'seven-dooms-for-sandpoint',module_key:'["seven-dooms-for-sandpoint-adventure","crocs-sifflets-et-volpepite"]'}])
+    await db.query("UPDATE pf2_choice_quest SET kind='blocked' WHERE thread_id='1565035121000583311'")
+    await store.onModuleInit()
+    expect((await db.query('SELECT kind FROM pf2_choice_quest'))[0].kind).toBe('blocked')
+    expect((await store.listDiscordQuests())[0].title).toBe('La fosse')
+  })
+
   it('persists quest 👍/🔒 in SQLite, reconciles missing gateway events and survives database reopen', async () => {
     let store = await open()
     expect(await currentDataSource().query(

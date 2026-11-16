@@ -2,6 +2,10 @@
 
 [← Outils](../../OUTILS.md)
 
+## Projet ouvert : Choix libre
+
+[Projet Choix libre — refonte du parcours MJ et préparation permanente](Projet-Choix-libre.md) (16 novembre 2026) : relier le journal Discord aux modules jouables, simplifier campagnes/scénarios, préparer des modèles réutilisables et suivre leurs manques (conducteur, Foundry, etc.). Cadrage ouvert, non implémenté.
+
 ## 13. Procédure idéale d’enrichissement des données
 
 ### Principe général

@@ -1846,6 +1846,135 @@ export class Pf2PersistenceService implements OnModuleInit {
       await manager.query('CREATE INDEX IF NOT EXISTS idx_pf2_character_foundry_delivery ON pf2_character_presentation(foundry_chat_queued, foundry_chat_message_id)')
     })
 
+    await this.applyMigration('055-choice-libre', async manager => {
+      await manager.query("CREATE TABLE IF NOT EXISTS pf2_choice_quest (thread_id TEXT PRIMARY KEY, kind TEXT NOT NULL CHECK(kind IN ('unassigned','mission','blocked','personal','rp')), campaign_id TEXT NOT NULL DEFAULT '', module_key TEXT NOT NULL DEFAULT '', note TEXT NOT NULL DEFAULT '', updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)")
+      await manager.query("CREATE TABLE IF NOT EXISTS pf2_choice_module (module_key TEXT PRIMARY KEY, checklist TEXT NOT NULL DEFAULT '{}', progress TEXT NOT NULL DEFAULT 'todo' CHECK(progress IN ('todo','started','done')), updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)")
+      await manager.query("CREATE TABLE IF NOT EXISTS pf2_choice_template (module_key TEXT PRIMARY KEY, body_json TEXT NOT NULL, updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)")
+      // Initial MJ mappings, without claiming any unverified module is ready.
+      const links = [
+        [
+          "1566788767245930547",
+          "mission",
+          "resource:88e84168-4d85-41fa-975d-101fbab3004c",
+          "[\"resource:88e84168-4d85-41fa-975d-101fbab3004c\",\"\"]",
+          "Source Trilemma TRI-040 : adaptation à préparer."
+        ],
+        [
+          "1570562168863326229",
+          "mission",
+          "open-road",
+          "[\"pfs-season-1-1-08\",\"\"]",
+          "Scénario suivant du Pacte."
+        ],
+        [
+          "1565035121000583311",
+          "mission",
+          "seven-dooms-for-sandpoint",
+          "[\"seven-dooms-for-sandpoint-adventure\",\"crocs-sifflets-et-volpepite\"]",
+          "Foundry : base existante, ajustements à vérifier."
+        ],
+        [
+          "1566789404641599571",
+          "mission",
+          "age-of-ashes",
+          "[\"age-of-ashes-volume-1\",\"griffes-de-braise-sous-altaerein\"]",
+          "Préparer la carte Foundry."
+        ],
+        [
+          "1565048449102258286",
+          "unassigned",
+          "",
+          "",
+          "Retrouver le scénario de l’astrologue ; source non confirmée."
+        ],
+        [
+          "1566892471617716301",
+          "mission",
+          "agents-of-edgewatch",
+          "[\"agents-of-edgewatch-adventure-1\",\"palais-des-reves\"]",
+          "Foundry, PNJ et adaptation à préparer."
+        ],
+        [
+          "1565048431544766576",
+          "unassigned",
+          "",
+          "",
+          "Campagne maison : prochain module à créer."
+        ],
+        [
+          "1565048047833190521",
+          "mission",
+          "extinction-curse",
+          "[\"extinction-curse-volume-1\",\"ermitage-de-la-foudre-benie\"]",
+          "Préparer la fiche et Foundry."
+        ],
+        [
+          "1566893402883096592",
+          "mission",
+          "extinction-curse",
+          "",
+          "Choisir le prochain objectif du cirque."
+        ],
+        [
+          "1565048387739451562",
+          "mission",
+          "seven-dooms-for-sandpoint",
+          "[\"seven-dooms-for-sandpoint-adventure\",\"enquetes-et-preparatifs-a-pointesable\"]",
+          "Finaliser les enquêtes secondaires."
+        ],
+        [
+          "1565048269015490581",
+          "blocked",
+          "agents-of-edgewatch",
+          "[\"agents-of-edgewatch-adventure-5\",\"gagner-la-confiance-de-miogimo\"]",
+          "Débloqué bien plus tard dans la campagne."
+        ],
+        [
+          "1565048251747409920",
+          "blocked",
+          "agents-of-edgewatch",
+          "",
+          "Pas de module autonome ; avancer dans la campagne."
+        ],
+        [
+          "1565048468408504410",
+          "mission",
+          "seven-dooms-for-sandpoint",
+          "[\"seven-dooms-for-sandpoint-adventure\",\"rituel-pour-nualia\"]",
+          "Préparer Foundry et la séance."
+        ],
+        [
+          "1565047873161142333",
+          "mission",
+          "crown-of-the-kobold-king",
+          "[\"crown-of-the-kobold-king\",\"appels-de-nid-du-faucon\"]",
+          "Vérifier cartes, Foundry et préparation."
+        ],
+        [
+          "1565048289961705632",
+          "rp",
+          "",
+          "",
+          "Piste narrative, pas de module autonome."
+        ],
+        [
+          "1565048492492062720",
+          "personal",
+          "",
+          "",
+          "Quête personnelle de Yaz."
+        ],
+        [
+          "1570560596833861633",
+          "personal",
+          "",
+          "",
+          "Quête personnelle."
+        ]
+      ]
+      for (const link of links) await manager.query('INSERT OR IGNORE INTO pf2_choice_quest (thread_id,kind,campaign_id,module_key,note) SELECT ?,?,?,?,? WHERE EXISTS (SELECT 1 FROM pf2_discord_quest WHERE thread_id=?)', [...link, link[0]])
+    })
+
     await this.assertDatabaseIntegrity(this.dataSource, 'base SQLite après migrations')
   }
 

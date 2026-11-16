@@ -64,7 +64,7 @@ function decodedRouteId(value?: string): string | null {
 export function resolvePf2Route(pathname: string): Pf2Route {
   const relative = pathname.replace(/^\/pf2-mj\/?/, '').replace(/\/+$/, '')
   if (!relative) return { kind: 'redirect', to: viewPaths.journal }
-  if (relative === 'playable-components') return { kind: 'redirect', to: viewPaths.journal }
+  if (relative === 'playable-components' || relative === 'journaux') return { kind: 'redirect', to: viewPaths.journal }
   const [segment, rawId] = relative.split('/')
   const id = decodedRouteId(rawId)
 
