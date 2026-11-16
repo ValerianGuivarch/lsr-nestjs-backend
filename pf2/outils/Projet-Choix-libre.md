@@ -194,8 +194,16 @@ Essai sur copie réelle du 16/11 : intégrité SQLite OK, 17 quêtes ouvertes (l
 
 ### Reste à faire
 
-- Unifier physiquement le catalogue et les ressources, simplifier la curation et les statuts, conserver les historiques et les documents partagés ; les anciennes structures restent en place pendant la transition, sans perte de données.
+- Conserver les sources et identifiants historiques : la phase 2 unifie la présentation et la curation, sans recopier les PDF ni modifier physiquement les tables. Une fusion physique future n'est nécessaire que si elle apporte un avantage concret.
 - Intégrer les campagnes maison, créer leurs modules et traiter la source inconnue des terres détrempées.
 - Relier l'avancement réel et les historiques aux modules sans inférer qu'un module entamé est entièrement joué. Définir éventuellement des suites ordonnées par arc et des prérequis.
 - Compléter les checklists et préparer les vrais modèles/Foundry des missions ouvertes ; ce chantier est majoritairement du travail de MJ.
 - Refactoriser la page Histoire séparément (hors de cette phase).
+
+## 12. Phase 2 — simplification et mise en service
+
+- Catalogue commun, liste plate de campagnes et arcs PFS, scénarios indépendants et adaptations. Les chapitres restent des repères dans les fiches ; recherche aussi sur leurs titres. Filtres Intégrés, À décider, Plus tard, Écartés et archives Bounties. Vue arborescente historique encore accessible pour le détail et la gestion des arcs.
+- Les adaptations sont sélectionnables avec la même curation et apparaissent dans Campagnes et scénarios lorsqu'elles sont intégrées. Leurs fichiers et UUID restent les mêmes.
+- Dans Préparation des séances > Choix libre, la vue Préparer les modules permet de travailler à l'avance par campagne, même sans quête Discord rattachée.
+- Une clé aléatoire dédiée a été configurée côté serveur dans le fichier privé de déploiement (mode 600). L'API renvoie Cache-Control: private, no-store. Aucun secret dans Git.
+- Déploiement uniquement par le flux normal branche → PR → CI → merge. Sauvegarde SQLite en ligne avant migration et vérification après démarrage.

@@ -58,7 +58,7 @@ import PricesPage from './Prices'
 const TravelsPage = lazy(() => import('./Travels'))
 import EvenementsPage from './Evenements'
 import LorePage from './Lore'
-import ResourcesPage, { ResourceTargetPanel } from './Resources'
+import ResourcesPage, { ResourceTargetPanel, type Pf2Resource } from './Resources'
 import PlayerIdentityTable from './PlayerIdentityTable'
 import PlayerCharactersPage from './PlayerCharactersPage'
 import { expandedPlaceLabels, geographyTreeOptions, loadGeographyFromApi, matchesPlaceFilter, placeDisplay } from './geography'
@@ -185,7 +185,7 @@ const maintenanceTabs: Array<[MaintenanceTab, string]> = [
   ['info', 'Info seules'], ['description', 'Descriptions'], ['uncertain', 'À vérifier'], ['metadata', 'Métadonnées'],
 ]
 const lifecycleOptions: Array<[LifecycleStatus, string]> = [
-  ['untracked', '—'], ['retained', 'Retenu'], ['to_play', 'Sélectionné'], ['in_progress', 'En cours'], ['played', 'Joué'], ['later', 'Plus tard'], ['rejected', 'Écarté'],
+  ['untracked', 'À décider'], ['retained', 'À décider (retenu)'], ['to_play', 'Intégré · à jouer'], ['in_progress', 'En cours'], ['played', 'Joué'], ['later', 'Plus tard'], ['rejected', 'Écarté'],
 ]
 const lifecycleLabels = Object.fromEntries(lifecycleOptions) as Record<LifecycleStatus, string>
 const journalLifecycleStatuses = new Set<LifecycleStatus>(['to_play', 'in_progress', 'played'])
@@ -577,7 +577,7 @@ function ContainerTree({ container, curation, onOpen, onOpenPlayable, onUpdate, 
   </details>
 }
 
-function LibraryView({ curation, onOpen, onOpenPlayable, onUpdate }: { curation: Curation; onOpen: (container: Container) => void; onOpenPlayable: (unit: PlayableUnit) => void; onUpdate: (id: string, field: string, value: unknown) => Promise<void> }) {
+function LibraryTreeView({ curation, onOpen, onOpenPlayable, onUpdate }: { curation: Curation; onOpen: (container: Container) => void; onOpenPlayable: (unit: PlayableUnit) => void; onUpdate: (id: string, field: string, value: unknown) => Promise<void> }) {
   const visibleArcs = arcs.map((arc) => ({ ...arc, units: arc.entryIds.map((id) => playableMap.get(id)).filter((unit): unit is PlayableUnit => Boolean(unit)) })).filter((arc) => arc.units.length > 1)
   const transverseEntryIds = new Set(visibleArcs.flatMap((arc) => arc.entryIds))
   const arcStatus = (arc: (typeof visibleArcs)[number]): LifecycleStatus => {
@@ -614,6 +614,77 @@ function LibraryView({ curation, onOpen, onOpenPlayable, onUpdate }: { curation:
     const visibleCount = playableUnits.filter((unit) => unit.sectionId === section.id && !hiddenIds?.has(unit.id) && !isExcluded(unit, resolvePlayableOverride(curation, unit), curation)).length
     return <section className="library-section" key={section.id}><div className="section-title"><div><small>SECTION</small><h2>{section.title}</h2><p>{section.description}</p></div><span>{visibleCount}</span></div>{roots.map((container) => <ContainerTree key={container.id} container={container} curation={curation} onOpen={onOpen} onOpenPlayable={onOpenPlayable} onUpdate={onUpdate} hiddenPlayableIds={hiddenIds} />)}{directPlayables.length > 0 && <PlayableList units={sortPlayables(directPlayables, curation)} curation={curation} onOpen={onOpenPlayable} onUpdate={onUpdate} />}</section>
   })}</div>
+}
+
+function useCatalogueAdaptations() {
+  const [resources,setResources] = useState<Pf2Resource[]>([])
+  const [error,setError] = useState('')
+  useEffect(() => {
+    let cancelled = false
+    fetch('/apil7r/pf2-mj/resources', {cache:'no-store'}).then(r => {
+      if (!r.ok) throw new Error('Ressources indisponibles.')
+      return r.json() as Promise<Pf2Resource[]>
+    }).then(items => { if (!cancelled) setResources(items) }).catch(e => { if (!cancelled) setError(String(e)) })
+    return () => { cancelled = true }
+  },[])
+  return { resources,error }
+}
+function adaptationId(resource: Pf2Resource) { return 'resource:'+resource.id }
+function adaptationOverride(curation:Curation,resource:Pf2Resource):ResolvedOverride {
+  const id=adaptationId(resource)
+  return {...genericOverride(curation,id),sourceId:id,inheritedFromParent:false}
+}
+type CatalogueScope = 'all' | 'integrated' | 'undecided' | 'later' | 'rejected' | 'bounties'
+type FlatCatalogueRow = { id:string; title:string; type:string; search:string; href:string; status:LifecycleStatus; control:React.ReactNode; archive?:boolean; detail?:string }
+function catalogueScope(status:LifecycleStatus):CatalogueScope {
+  return journalLifecycleStatuses.has(status) ? 'integrated' : status==='later' ? 'later' : status==='rejected' ? 'rejected' : 'undecided'
+}
+function LibraryView(props:{ curation:Curation; onOpen:(container:Container)=>void; onOpenPlayable:(unit:PlayableUnit)=>void; onUpdate:(id:string,field:string,value:unknown)=>Promise<void> }) {
+  const {curation,onUpdate}=props
+  const {resources,error}=useCatalogueAdaptations()
+  const [query,setQuery]=useState('')
+  const [scope,setScope]=useState<CatalogueScope>('all')
+  const [tree,setTree]=useState(false)
+  const [category,setCategory]=useState('')
+  const roots=containers.filter(c=>c.containerType==='campaign')
+  const members=new Set(roots.flatMap(c=>playablesUnder(c.id).map(u=>u.id)))
+  const linked=new Set(arcs.flatMap(arc=>arc.entryIds))
+  const rows:FlatCatalogueRow[]=[]
+  for(const c of roots) {
+    const override=resolveContainerOverride(curation,c), excluded=isContainerExcluded(c,curation), children=playablesUnder(c.id)
+    rows.push({id:c.id,title:titleOf(c),type:'Campagne',search:children.map(titleOf).join(' '),href:containerHref(c),detail:children.length+' scénario(s)',status:effectiveLifecycleStatus(override,excluded),control:<LifecycleSelect id={c.id} override={override} excluded={excluded} onUpdate={onUpdate}/>})
+  }
+  for(const arc of arcs) {
+    const units=arc.entryIds.map(id=>playableMap.get(id)).filter((unit):unit is PlayableUnit=>Boolean(unit))
+    if(units.length<2) continue
+    const statuses=units.map(u=>effectiveLifecycleStatus(resolvePlayableOverride(curation,u),isExcluded(u,resolvePlayableOverride(curation,u),curation)))
+    const status:LifecycleStatus=statuses.every(s=>s==='played')?'played':statuses.some(s=>s==='played'||s==='in_progress')?'in_progress':statuses.includes('to_play')?'to_play':statuses.every(s=>s==='later')?'later':statuses.every(s=>s==='rejected')?'rejected':'untracked'
+    rows.push({id:'arc-'+arc.id,title:arc.titleFr,type:'Campagne PFS',search:units.map(titleOf).join(' '),href:viewPaths.library+'?tree=1',detail:units.length+' scénario(s)',status,control:<button onClick={()=>setTree(true)}>Voir / gérer</button>})
+  }
+  for(const unit of playableUnits) {
+    if(members.has(unit.id)||linked.has(unit.id))continue
+    const override=resolvePlayableOverride(curation,unit),excluded=isExcluded(unit,override,curation)
+    const archive=unit.playableType==='bounty'
+    rows.push({id:unit.id,title:titleOf(unit),type:archive?'Bounty':'Scénario indépendant',search:unit.number||'',href:playableHref(unit),status:effectiveLifecycleStatus(override,excluded),archive,control:archive?<span>Archive</span>:<LifecycleSelect id={unit.id} override={override} excluded={excluded} onUpdate={onUpdate}/>})
+  }
+  for(const r of resources) {
+    const id=adaptationId(r),override=adaptationOverride(curation,r),excluded=Boolean(override.excluded)
+    rows.push({id,title:r.title,type:'Adaptation',search:[r.origin,r.nom_vo,...r.tags].join(' '),href:viewPaths.resources+'/'+encodeURIComponent(r.id),detail:[r.origin,r.files.length+' PDF'].filter(Boolean).join(' · '),status:effectiveLifecycleStatus(override,excluded),control:<LifecycleSelect id={id} override={override} excluded={excluded} onUpdate={onUpdate}/>})
+  }
+  const folded=(s:string)=>s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase()
+  const scopes:Array<[CatalogueScope,string]>=[['all','Tout le catalogue'],['integrated','Intégrés'],['undecided','À décider'],['later','Plus tard'],['rejected','Écartés'],['bounties','Archives Bounties']]
+  const matches=(row:FlatCatalogueRow,s:CatalogueScope)=>s==='bounties'?Boolean(row.archive):!row.archive&&(s==='all'||catalogueScope(row.status)===s)
+  const visible=rows.filter(row=>matches(row,scope)&&(!category||row.type===category)&&folded(row.title+' '+row.search).includes(folded(query.trim()))).sort((a,b)=>a.type.localeCompare(b.type,'fr')||a.title.localeCompare(b.title,'fr'))
+  if(tree) return <><div className="catalogue-subnav"><button onClick={()=>setTree(false)}>← Catalogue simplifié</button></div><LibraryTreeView {...props}/></>
+  return <section className="library-view">
+    <div className="catalogue-subnav"><button onClick={()=>setTree(true)}>Vue détaillée historique</button><Link to={viewPaths.find}>Recherche avancée</Link><Link to={viewPaths.documents}>PDF</Link><Link to={viewPaths.resources}>Gérer les ressources</Link></div>
+    <p>Le catalogue conserve toutes les sources. Les éléments intégrés apparaissent dans Campagnes et scénarios ; les Bounties sont archivés sans supprimer leurs documents.</p>
+    <div className="catalogue-subnav">{scopes.map(([id,title])=><button key={id} className={scope===id?'primary':''} aria-pressed={scope===id} onClick={()=>{setScope(id);setCategory('')}}>{title} · {rows.filter(r=>matches(r,id)).length}</button>)}</div>
+    <div className="catalogue-subnav"><input aria-label="Chercher dans le catalogue" placeholder="Titre, scénario de campagne, origine…" value={query} onChange={e=>setQuery(e.target.value)}/><select aria-label="Type de source" value={category} onChange={e=>setCategory(e.target.value)}><option value="">Tous les types</option>{['Campagne','Campagne PFS','Scénario indépendant','Adaptation','Bounty'].map(type=><option key={type}>{type}</option>)}</select></div>
+    {error&&<p role="alert">{error}</p>}
+    <div className="excluded-scenarios">{visible.map(r=><article key={r.id}><div><small>{r.type} · {r.archive?'Archive':lifecycleLabels[r.status]}</small><strong>{r.title}</strong>{r.detail&&<span>{r.detail}</span>}</div>{r.control}<Link to={r.href} onClick={r.type==='Campagne PFS'?e=>{e.preventDefault();setTree(true)}:undefined}>Détails →</Link></article>)}</div>
+    {!visible.length&&<p className="empty-state">Aucun élément pour ces filtres.</p>}
+  </section>
 }
 
 function preparationMatch(unit: PlayableUnit, tab: PreparationTab, curation: Curation): boolean {
@@ -1209,6 +1280,8 @@ function JournalView({ curation, onUpdate, onImported }: { curation: Curation; o
   const [scenarioSessions, setScenarioSessions] = useState<Record<string, number[]>>({})
   const [componentSessions, setComponentSessions] = useState<Record<string, number[]>>({})
   const [statusFilter, setStatusFilter] = useState<LifecycleStatus | null>(null)
+  const {resources:adaptations}=useCatalogueAdaptations()
+  const integratedAdaptations=adaptations.flatMap(r=>{const override=adaptationOverride(curation,r);const status=effectiveLifecycleStatus(override,Boolean(override.excluded));return journalLifecycleStatuses.has(status)?[{resource:r,status,override}]:[]})
 
   useEffect(() => {
     let cancelled = false
@@ -1287,7 +1360,7 @@ function JournalView({ curation, onUpdate, onImported }: { curation: Curation; o
   const selectedStandalone = playableUnits
     .filter((unit) => {
       const override = resolvePlayableOverride(curation, unit)
-      return !coveredUnitIds.has(unit.id) && journalLifecycleStatuses.has(journalStatusForUnit(unit)) && !isExcluded(unit, override, curation)
+      return unit.playableType!=='bounty' && !coveredUnitIds.has(unit.id) && journalLifecycleStatuses.has(journalStatusForUnit(unit)) && !isExcluded(unit, override, curation)
     })
   const works: PlayableComponentsWork[] = [...selectedCampaigns, ...selectedArcs, ...selectedStandalone.map((unit) => ({ id: unit.id, title: titleOf(unit), description: unit.synopsis, units: [unit], campaign: false, kind: 'scenario' as const, status: journalStatusForUnit(unit) }))].sort((a, b) => statusRank[a.status] - statusRank[b.status] || a.title.localeCompare(b.title, 'fr'))
   const visibleWorks = statusFilter ? works.filter((work) => work.status === statusFilter) : works
@@ -1445,9 +1518,10 @@ function JournalView({ curation, onUpdate, onImported }: { curation: Curation; o
 
   return <section className="playable-components-view">
     <div className="playable-components-intro"><div><small>CAMPAGNES ET SCÉNARIOS</small><h2>Sélectionnés, en cours et joués</h2><p>Le Journal ne montre que le périmètre de jeu actif. Les aventures simplement retenues restent dans le Catalogue ; seules les aventures explicitement sélectionnées, commencées ou jouées apparaissent ici.</p></div><button className="component-prompt" onClick={() => void copySelectionPrompt()}>Prompt composants</button></div>
-    <div className="journal-status-board" aria-label="Filtrer le journal par statut">{(['in_progress', 'to_play', 'played'] as LifecycleStatus[]).map((status) => { const count = works.filter((work) => work.status === status).length; const active = statusFilter === status; return <button type="button" key={status} className={active ? 'is-active' : ''} aria-pressed={active} onClick={() => setStatusFilter((current) => current === status ? null : status)} title={active ? 'Afficher tous les statuts' : `Afficher uniquement « ${lifecycleLabels[status]} »`}><small>{lifecycleLabels[status]}</small><strong>{count}</strong></button> })}</div>
-    {!works.length && <div className="empty-components"><strong>Journal vide.</strong><p>Depuis le Catalogue ou une fiche, passe une aventure à « Sélectionné », « En cours » ou « Joué ».</p></div>}
-    {works.length > 0 && !visibleWorks.length && <div className="empty-components"><strong>Aucune aventure « {statusFilter ? lifecycleLabels[statusFilter] : ''} ».</strong><p>Reclique sur le filtre actif pour réafficher tout le journal.</p></div>}
+    <div className="journal-status-board" aria-label="Filtrer le journal par statut">{(['in_progress', 'to_play', 'played'] as LifecycleStatus[]).map((status) => { const count = works.filter((work) => work.status === status).length + integratedAdaptations.filter(a=>a.status===status).length; const active = statusFilter === status; return <button type="button" key={status} className={active ? 'is-active' : ''} aria-pressed={active} onClick={() => setStatusFilter((current) => current === status ? null : status)} title={active ? 'Afficher tous les statuts' : `Afficher uniquement « ${lifecycleLabels[status]} »`}><small>{lifecycleLabels[status]}</small><strong>{count}</strong></button> })}</div>
+    {!works.length && !integratedAdaptations.length && <div className="empty-components"><strong>Journal vide.</strong><p>Depuis le Catalogue, passe une aventure à « Intégré · à jouer », « En cours » ou « Joué ».</p></div>}
+    {(works.length > 0 || integratedAdaptations.length > 0) && !visibleWorks.length && !integratedAdaptations.some(a=>!statusFilter||a.status===statusFilter) && <div className="empty-components"><strong>Aucune aventure « {statusFilter ? lifecycleLabels[statusFilter] : ''} ».</strong><p>Reclique sur le filtre actif pour réafficher tout le journal.</p></div>}
+    {integratedAdaptations.some(a=>!statusFilter||a.status===statusFilter)&&<section className="detail-section"><h3>Adaptations intégrées</h3><div className="excluded-scenarios">{integratedAdaptations.filter(a=>!statusFilter||a.status===statusFilter).map(({resource,status,override})=><article key={resource.id}><div><small>{resource.origin||'Adaptation'} · {lifecycleLabels[status]}</small><strong>{resource.title}</strong><Link to={viewPaths.resources+'/'+encodeURIComponent(resource.id)}>Ouvrir la source</Link></div><LifecycleSelect id={adaptationId(resource)} override={override} excluded={false} onUpdate={onUpdate}/><Link to={viewPaths.sessionPrep+'?scenarioId='+encodeURIComponent(adaptationId(resource))}>Préparer →</Link></article>)}</div></section>}
     {displayWorks.map((work, workIndex) => {
       const progress = workProgress(work)
       const expanded = expandedWorkIds.has(work.id)

@@ -1,4 +1,4 @@
-import { Body, Controller, ForbiddenException, Get, Headers, Injectable, Param, Put, BadRequestException } from '@nestjs/common'
+import { Body, Controller, ForbiddenException, Get, Header, Headers, Injectable, Param, Put, BadRequestException } from '@nestjs/common'
 import { InjectDataSource } from '@nestjs/typeorm'
 import { timingSafeEqual } from 'node:crypto'
 import { DataSource } from 'typeorm'
@@ -154,9 +154,14 @@ export class Pf2ChoiceLibreController {
     const expected = process.env.PF2_CHOICE_MJ_KEY || ''
     if (!expected || typeof key !== 'string' || !key || Buffer.byteLength(key) !== Buffer.byteLength(expected) || !timingSafeEqual(Buffer.from(key),Buffer.from(expected))) throw new ForbiddenException('Accès MJ Choix libre requis.')
   }
+  @Header('Cache-Control', 'private, no-store')
   @Get() list(@Headers('x-pf2-choice-mj-key') key = '') { this.guard(key); return this.choice.snapshot() }
+  @Header('Cache-Control', 'private, no-store')
   @Put('quests/:id') saveQuest(@Headers('x-pf2-choice-mj-key') key = '', @Param('id') id: string, @Body() data: unknown) { this.guard(key); return this.choice.saveQuest(id,data) }
+  @Header('Cache-Control', 'private, no-store')
   @Get('templates') templates(@Headers('x-pf2-choice-mj-key') key = '') { this.guard(key); return this.choice.templates() }
+  @Header('Cache-Control', 'private, no-store')
   @Put('templates') saveTemplate(@Headers('x-pf2-choice-mj-key') key = '', @Body() data: unknown) { this.guard(key); return this.choice.saveTemplate(data) }
+  @Header('Cache-Control', 'private, no-store')
   @Put('modules') saveModule(@Headers('x-pf2-choice-mj-key') key = '', @Body() data: unknown) { this.guard(key); return this.choice.saveModule(data) }
 }
