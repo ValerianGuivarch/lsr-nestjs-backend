@@ -481,18 +481,36 @@ L'index lit les Actors `npc` des compendiums installés ainsi que les NPC du mon
 
 L'index conserve notamment niveau, traits, rareté, taille, source et notes publiques. Il permet de filtrer par niveau, traits, texte, rareté, collection et périmètre de sources. Son cache est invalidé lors des créations, modifications ou suppressions d'Actors et lors des mises à jour de compendiums.
 
-### 15.2.1 Illustrations privées Monster Core (4–5 novembre 2026)
+### 15.2.1 Illustrations privées des bestiaires PF2e
 
-**Contrainte : ne publier aucune image issue des PDF sur GitHub.** Les PDF de *Monster Core 1* et *Monster Core 2* en anglais restent dans `/home/valou/services/`. Les illustrations sont uniquement stockées sur le mini-PC dans `pf2-data/_AI/` et dans le module local `Data/modules/monster-core-private-art/`.
+**Contrainte : ne publier aucune image issue des PDF commerciaux sur GitHub.** Les PDF, les images, les tokens, les inventaires détaillés et les mappages d'art restent sur le mini-PC. Ne jamais modifier directement les bases de compendium LevelDB.
 
-- Les compendiums remaster PF2e possèdent **492 + 446 = 938 Actors**, sans illustrations spécifiques. Ils ne sont pas modifiés.
-- Pilote initial : 20 images validées, 20 copies d'Actors et 20 tokens réellement installés et vérifiés par API dans la scène `TestToken`, dans le dossier d'Actors `TestToken - Monster Core`. Le MJ a validé ce pilote.
-- Inventaire complet des **756 pages des deux PDF** : 274 images candidates dans Monster Core 1 et 324 dans Monster Core 2, soit **598 images extraites en PNG** avec **598 tokens WebP**. Le dossier privé `pf2-data/_AI/monster-core-complet/` comprend `index-pdf.py`, `extract-all.py`, `inventory.json`, `inventory.csv` et 25 planches JPEG de revue.
-- Répartition : 20 illustrations du pilote déjà validées, 293 associations simples encore à vérifier visuellement, 134 cas avec plusieurs candidats et 151 images sans association directe. Ces images ne couvrent pas nécessairement 938 fiches uniques ; certaines variantes partagent l'art ou n'en ont pas.
-- Un **second lot de 20 illustrations** a été contrôlé visuellement et ajouté au module privé (total actuel : **40 correspondances** et 80 fichiers portrait/token). Les scripts de reprise normale sont `pf2-data/_AI/monster-core-complet/place-approved-testtoken.py` et `verify-approved-testtoken.py`. Leur exécution nécessite un client Foundry connecté et autorisé via le relais REST.
-- **État au dernier contrôle : le deuxième lot n'était pas encore placé dans TestToken**, car le client Foundry du relais s'est déconnecté. Ne pas écrire directement dans LevelDB ni lancer un hook d'import automatique pour contourner l'accès. Relancer explicitement via le REST Relay après reconnexion MJ.
-- Le module `monster-core-private-art` est installé localement, mais son activation dans le monde n'a pas été vérifiée ; les copies d'Actors sur la scène utilisent déjà les liens d'images privées.
-- Le code du dépôt `pf2e-val-toolkit` a des modifications locales indépendantes en cours : ne pas les écraser ni les mélanger avec ce chantier.
+#### Monster Core 1 et 2 — traitement du 4–5 novembre 2026
+
+Les deux PDF anglais sont dans `/home/valou/services/`. La source de vérité du traitement complet est le rapport privé `pf2-data/_AI/monster-core-complet/README.md`, avec `coverage-summary.json`, `coverage-report.csv`, `unmapped-actors.csv` et `all-art-mapping.json`.
+
+- Pilote validé par le MJ : 40 tokens de démonstration placés dans la scène `TestToken` selon le rapport final (20 initialement vérifiés par API). Ne pas recréer inutilement ces tests.
+- Extraction de 672 illustrations PNG (338 + 334) et de 672 tokens WebP transparents de 512 × 512, sans cadre ni recadrage destructeur ; une illustration peut servir à plusieurs variantes.
+- Mappage natif installé : **909 / 938 Actors (96,9 %)**, dont 471 / 492 Monster Core 1 et 438 / 446 Monster Core 2. Les 29 fiches restantes n'avaient pas d'association suffisamment fiable dans ces deux PDF.
+- Le module privé `monster-core-private-art` contient `map-pf2e.json` dans `/home/valou/services/foundry/data/Data/modules/monster-core-private-art/`. Il associe les IDs des fiches de compendium aux images et aux tokens, sans modifier les packs PF2e. Activé dans `test-pf2` le 5 novembre 2026 selon le rapport local, avec redémarrage du service et chargement des nouveaux modules après rechargement des clients.
+- Audit du 16 novembre : le fichier installé contient toujours exactement les deux collections remaster et leurs 909 correspondances. La scène Malveillance utilise effectivement des tokens de ce module pour la Mimique et la Mandragore élite.
+- Les scripts privés réutilisables sont dans `pf2-data/_AI/monster-core-complet/` : `index-pdf.py`, `extract-all.py`, `refine-headings.py`, `extract-bleed-images.py`, `build-full-mapping.py`, `install-private-art-map.py`, `generate-private-report.py`, ainsi que les scripts de contrôle visuel et les planches de revue. Une galerie privée `index.html` permet de consulter le résultat.
+
+#### Bestiary 1, 2, 3 — extension restant à réaliser
+
+Les trois PDF français sont déjà disponibles sous `/home/valou/services/pf2-data/Références/Règles/` : `Règles - Bestiaire 1.pdf` (362 pages), `Règles - Bestiaire 2.pdf` (322), `Règles - Bestiaire 3.pdf` (322). Aucune de ces trois collections legacy n'est présente dans le mappage privé actuel. Cela ne signifie pas que chaque fiche legacy est dépourvue d'une image provenant d'une autre source.
+
+Pour poursuivre : adapter l'extraction et l'indexation aux titres français, faire la correspondance avec les noms/IDs des packs legacy, y compris les variantes et correspondances remaster fiables, vérifier les cas ambigus, générer les portraits et tokens puis étendre le mappage sans écraser les 909 associations existantes. Produire un rapport de couverture et une liste des créatures sans art fiable. Vérifier l'accès aux fichiers et le chargement de l'art dans Foundry.
+
+Les Actors et tokens déjà importés dans les scènes doivent être audités séparément : identifier l'origine par `_stats.compendiumSource`, puis combler uniquement les images génériques, sans écraser les portraits personnalisés ni les données de jeu. Contrôler les trois niveaux : portrait de l'Actor (`img`), texture de son prototype Token et texture des tokens déjà placés (y compris tokens non liés et éventuelles surcharges de portrait). Effectuer les modifications via le REST Relay avec un client MJ connecté ; sauvegarder les documents concernés et relire le résultat. Ne pas contourner un relais indisponible.
+
+#### Scène de recette : Malveillance / 02 — Rez-de-chaussée
+
+Audit en lecture seule du 16 novembre 2026, `Scene.Uq84XNQFWwwGtThn` : 14 tokens, dont 11 créatures/PNJ et 3 dangers. Deux créatures ont déjà un token Monster Core ; neuf tokens de créatures utilisent encore l'icône générique.
+
+- Bestiary 2 : deux Brumes vampiriques, deux Étrangleurs, une Matriarche étrangleuse (variante), deux Nécrophidieux. Les portraits d'Actors et textures de prototypes correspondants sont également génériques.
+- Bestiaire propre à Malveillance : Nosoi hanté (Ezramalkun) et Nils Kelveken. Ils nécessitent une correspondance d'art pertinente ou une illustration du scénario, et ne sont pas automatiquement couverts par les cinq bestiaires généraux.
+- Le cas de référence est la Brume vampirique (source `Compendium.pf2e.pathfinder-bestiary-2.Actor.NQ6qRvpD9DIwVxt3`, Bestiaire 2 p. 42). Après extension, vérifier le portrait de la fiche et de l'Actor de scène ainsi que les deux tokens B10, puis les autres créatures concernées. Les dangers ne font pas partie de ce chantier.
 
 ### 15.3 Générateur de rencontres
 
