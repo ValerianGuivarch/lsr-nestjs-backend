@@ -7,7 +7,7 @@ import { Pf2PersistenceService } from '../pf2-storage/Pf2PersistenceService'
 const kinds = ['unassigned', 'mission', 'blocked', 'personal', 'rp'] as const
 const checks = ['source', 'template', 'entities', 'foundry', 'review'] as const
 type Check = typeof checks[number]
-type CheckState = 'todo' | 'done' | 'na'
+type CheckState = 'todo' | 'partial' | 'done' | 'na'
 type Checklist = Record<Check, CheckState>
 const emptyChecklist = (): Checklist => ({ source: 'todo', template: 'todo', entities: 'todo', foundry: 'todo', review: 'todo' })
 const obj = (v: unknown): Record<string, any> => v && typeof v === 'object' && !Array.isArray(v) ? v as Record<string, any> : {}
@@ -155,7 +155,7 @@ export class Pf2ChoiceLibreService {
     const progress = str(value.progress)
     if (!['todo','started','done'].includes(progress)) throw new BadRequestException('Progression invalide.')
     const checklist = obj(value.checklist)
-    if (!checks.every(k => ['todo','done','na'].includes(checklist[k]))) throw new BadRequestException('Checklist invalide.')
+    if (!checks.every(k => ['todo','partial','done','na'].includes(checklist[k]))) throw new BadRequestException('Checklist invalide.')
     const sanitized = Object.fromEntries(checks.map(k => [k,checklist[k]]))
     await this.db.query('INSERT INTO pf2_choice_module (module_key,checklist,progress) VALUES (?,?,?) ON CONFLICT(module_key) DO UPDATE SET checklist=excluded.checklist,progress=excluded.progress,updated_at=CURRENT_TIMESTAMP',[moduleKey,JSON.stringify(sanitized),progress])
     return { ok: true }

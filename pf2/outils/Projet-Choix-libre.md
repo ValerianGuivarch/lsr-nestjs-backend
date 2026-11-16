@@ -2,7 +2,7 @@
 
 [← Travaux ouverts](travaux-ouverts.md) · [Outils PF2](../../OUTILS.md) · [Campagnes](../../CAMPAGNES.md)
 
-**État : projet ouvert, cadrage du 16 novembre 2026 — non implémenté.** Les choix exprimés par le MJ ci-dessous sont des besoins validés ; les détails de modèle et d'interface sont des propositions à arbitrer. Aucun changement runtime n'est réalisé par ce document.
+**État : projet ouvert, socle déployé le 16 novembre 2026.** Catalogue exhaustif, périmètre intégré, liens des quêtes Discord, checklists de module, modèles persistants et import dans une séance sont opérationnels. Le pilote Malveillance sert à éprouver le parcours ; les propositions non encore réalisées restent des chantiers.
 
 ## 1. Objectif
 
@@ -39,7 +39,7 @@ Dissocier le **contenu narratif** du **support documentaire**. Conserver un enre
 | Agents d'Absalom | 33 modules existants, 6 groupes narratifs. Le module `palais-des-reves` correspond à L'hôtel des meurtres (tome narratif 1). | **Deux** PDF français de compilation : le premier est déjà lié aux parties 1, 2, 3 ; le second aux parties 4, 5, 6. Chaque fichier reste unique. |
 | Les Sept Fléaux de Pointesable | 14 modules existants, groupes possibles « Ville », « Fosse » ; affiner la segmentation des niveaux si utile (ex. module actuel `crocs-sifflets-et-volpepite`, ne pas créer un doublon aveuglément). | Un PDF de campagne et guide secondaire ; aucun faux niveau « Livre de campagne ». |
 | La Route ouverte | Liste des scénarios PFS comme modules (1-00, 1-08, 1-11…), éventuellement subdivisés. Ordre recommandé et prérequis. | PDF par scénario ; le 1-08 possède un original anglais et une traduction partielle FR. |
-| Nuit au manoir de Blanchebois | Un scénario indépendant, un module. | Référence TRI-040 d'origine ; adaptation PF2 créée côté contenu jouable. |
+| Nuit au manoir de Blanchebois | La quête est désormais liée au premier de huit modules de Malveillance. | TRI-040 / Hainsley Hall reste au catalogue, non intégré ; Malveillance le remplace. |
 | Cartel du Sel | Campagne maison ; module suivant à écrire. | Aucun PDF obligatoire. |
 
 Les IDs et références historiques sont à préserver via une migration de correspondance des anciens couples scénario/composant → module stable. Une partie éditoriale peut correspondre à plusieurs modules ; un scénario autonome sans composants peut devenir un module unique, et les entrées sans objectif opérationnel (guides/compilations) ne sont pas promues. Éviter le re-traitement des PDF et le déplacement des fichiers. Tester d'abord les quatre modèles réels ci-dessus (tomes distincts, compilation partagée, livre unique, PFS variantes).
@@ -61,7 +61,7 @@ Exemple : je crée le conducteur, ajoute Corvan ou un PNJ d'ouverture, puis impo
 | Entrée | Rôle |
 | --- | --- |
 | **Préparation de séance** (accueil MJ) | Choix libre, modèles de modules, conducteur, et accès à l'historique des séances. |
-| **Campagnes et scénarios** | Remplace le Journal MJ actuel : uniquement les contenus explicitement intégrés à notre table. Vue d'avancement des campagnes et des modules, y compris ceux déjà joués. |
+| **Campagnes et scénarios** | Remplace le Journal MJ actuel : uniquement les contenus explicitement intégrés à notre table. Vue d'avancement des campagnes et modules ; en cours et à venir par défaut, filtre En cours uniquement et interrupteur Afficher les terminés. Les mini-campagnes en un seul livre (Couronne du roi kobold) sont classées dans Campagnes sans changer leurs identifiants. |
 | **Catalogue** | Bibliothèque complète de contenu, y compris ce qui n'a pas été retenu, mis de côté, écarté, ou provient de ressources externes. Recherche, filtres de curation, intégration/retrait. |
 | **Personnages joueurs** | Conserver l'écran existant (fiches, propriétaires, accès et liens). |
 | **Histoire** | Conserver la visualisation actuelle des Markdown ; refonte éditoriale/ergonomique distincte, ultérieure. |
@@ -98,7 +98,7 @@ Séparer trois axes indépendants, sans les transformer en cascade de statuts vi
 - **Progression du module** : à jouer / entamé / terminé ; état factuel des salles, étapes et conséquences conservé.
 - **Préparation** : calculée à partir de la checklist ci-dessous, indépendante de la progression et de l'existence d'un PDF.
 
-Checklist proposée (chaque ligne : à faire / fait / non applicable ; justification pour non applicable) :
+Checklist (chaque ligne : à faire / partiellement prêt / fait / non applicable). Un élément partiellement prêt n'est jamais compté comme validé :
 
 - [ ] Source identifiée, lue, objectifs et déroulé adaptés à la continuité.
 - [ ] Conducteur modèle prêt (scènes, lore, décisions, issues, butin, références).
@@ -134,7 +134,7 @@ Ce tableau est un cadrage initial du chantier, pas un registre runtime des votes
 
 | Quête publique | Cible / nature MJ | État et travail restant |
 | --- | --- | --- |
-| Nuit au manoir de Blanchebois | Adaptation de **TRI-040 — La Hantise de Hainsley Hall** (The Haunting of Hainsley Hall, Trilemma, UUID 88e84168-4d85-41fa-975d-101fbab3004c) ; demande de Rinna à Brèchemont. Ce n'est pas Malevolence. | Ressource identifiée par sa concordance avec le défi d'une nuit au manoir ; confirmer le rattachement, adapter à PF2 et créer le modèle, préparer Foundry. |
+| Nuit au manoir de Blanchebois | **Malveillance** remplace désormais l'adaptation de TRI-040 — La Hantise de Hainsley Hall ; titre public et demande de Rinna inchangés. | 8 modèles, fiches et scènes importées ; finalisation Foundry, objets, portraits, validation MJ. |
 | Pacte de la Route Ouverte | Campagne transverse `open-road` ; 1-00 joué le 12/11 ; prochaine mission 1-08 Révolution sur les rives, sous réserve des choix de continuité et des dépendances. | PDF EN et FR disponibles ; étudier, adapter l'impact politique, conducteur, personnages/rencontres et Foundry à préparer. |
 | Explorer la Fosse | Les Sept Fléaux de Pointesable, niveau 1 et suites. | Le plus proche de prêt : grande base Foundry existante confirmée par le MJ ; vérifier salles persistantes, conséquences de l'évasion de Pépin/Neyla, petites corrections et conducteur flexible. Niveau 1 prévu pour PJ niv. 5, avertissement d'équilibrage sans supposer leur trajet. |
 | Souterrain sous la citadelle des infernos | Âge des Cendres, suite d'Altaerein, Griffes Cendrées / Anneau d'Alséta. | Bonne base documentaire et ouverture jouée ; cartes/scènes et rencontres Foundry, conducteur de la suite à préparer. |
@@ -186,7 +186,7 @@ Branche `feat/pf2-choix-libre`, worktree `/home/valou/services/lsr-choix-libre`.
 - Journal dans Préparation des séances : la synchro existante du bot (environ 5 minutes) reste la source de vérité ; toute nouvelle quête apparaît automatiquement à rattacher. Les réactions et l'annuaire des joueurs alimentent l'affichage optionnel. Une réaction appartient à un compte Discord, pas nécessairement à un PJ précis.
 - Les quêtes bloquées et personnelles restent visibles. Les prochains modules sont choisis explicitement pour éviter une progression automatique erronée sur une campagne à embranchements.
 - Modèles : copier une préparation enregistrée en modèle d'un module, puis importer ses étapes et blocs dans une séance (nouveaux identifiants, cases remises à zéro, source inchangée). Une préparation/import ne valide pas automatiquement Foundry.
-- Trilemma : les 53 ressources gardent leurs UUID et fichiers ; elles sont proposées comme sources d'adaptation dans le sélecteur, regroupées par origine. Blanchebois pointe vers TRI-040. L'onglet Catalogue pointe vers les ressources et les éléments mis de côté.
+- Trilemma : les 53 ressources gardent leurs UUID et fichiers ; elles sont proposées comme sources d'adaptation dans le sélecteur, regroupées par origine. Blanchebois pointait initialement vers TRI-040 ; le MJ a choisi Malveillance à la place. L'onglet Catalogue pointe vers les ressources et les éléments mis de côté.
 - Renommage du Journal MJ en Campagnes et scénarios. Retrait de la navigation et redirection de l'ancienne page Journaux d'Absalom, distincte des journaux narratifs publiés par Discord.
 - Accès : même modèle de confiance que les autres écrans MJ. Aucun code, clé ni contrôle d'accès supplémentaire ; les joueurs savent ne pas consulter ces pages. Les notes ne sont pas publiées sur Discord.
 
@@ -212,4 +212,4 @@ Essai sur copie réelle du 16/11 : intégrité SQLite OK, 17 quêtes ouvertes (l
 - Une campagne sélectionnée affiche le nombre de modèles enregistrés et permet de filtrer avec/sans contenu.
 - Ouvrir un module pour créer ou modifier son modèle directement, avec le même éditeur que les séances. Aucun enregistrement de séance artificiel ni publication depuis un modèle.
 - Le contenu du modèle, les PNJ/objets/rencontres et l'état Foundry sont distincts ; ne jamais marquer Foundry prêt avant contrôle réel du monde.
-- Pilote : Malveillance (`malevolence`), module autonome à exploration ouverte. Découpage par secteurs, avec recherches transversales et retours possibles ; pas de quête Discord associée arbitrairement.
+- Pilote : Malveillance (`malevolence`), module autonome à exploration ouverte. Découpage par secteurs, avec recherches transversales et retours possibles ; la quête du manoir de Blanchebois est associée sur décision explicite du MJ.

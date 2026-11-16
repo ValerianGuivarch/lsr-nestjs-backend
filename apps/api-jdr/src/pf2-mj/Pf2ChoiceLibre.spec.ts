@@ -31,6 +31,16 @@ describe('Choix libre catalogue', () => {
     expect(JSON.parse(query.mock.calls[0][1][1]).stages[0].blocks[0]).toMatchObject({kind:'lore',text:'Secret',done:false})
     await expect(service.saveTemplate({moduleKey,body:{stages:[{id:'s',title:'Étape',blocks:[{id:'s',kind:'lore'}]}]}})).rejects.toThrow('dupliqué')
   })
+  it('accepts partial preparation without marking a module ready', async () => {
+    const key=choiceModuleKey('a')
+    const checklist={source:'done',template:'done',entities:'partial',foundry:'partial',review:'todo'}
+    const query=jest.fn(async (sql:string)=>sql.includes('FROM pf2_choice_module')?[{moduleKey:key,checklist:JSON.stringify(checklist),progress:'todo'}]:[])
+    const persistence={listDiscordQuests:async()=>[],listDiscordQuestVotes:async()=>[],listPlayerIdentities:async()=>[],questLauncherId:async()=>null}
+    const service=new Pf2ChoiceLibreService({query} as never,persistence as never)
+    jest.spyOn(service,'catalogue').mockResolvedValue(choiceCatalogue([{id:'a'}],[]))
+    await expect(service.saveModule({moduleKey:key,checklist,progress:'todo'})).resolves.toEqual({ok:true})
+    expect((await service.snapshot()).modules[0]).toMatchObject({ready:false,checklist})
+  })
   it('uses the MJ trust model without a separate access key', () => {
     const controller=new Pf2ChoiceLibreController({snapshot:()=>({ok:true})} as unknown as Pf2ChoiceLibreService)
     expect(controller.list()).toEqual({ok:true})

@@ -872,6 +872,13 @@ export function documentPresence(document: CatalogueDocument): 'present' | 'miss
   return runtimePdfPaths.has(path) ? 'present' : 'missing'
 }
 
+export function isJournalStatusVisible(status: string, currentOnly: boolean, showCompleted: boolean): boolean {
+  return status === 'played' ? showCompleted : status === 'in_progress' || (!currentOnly && status === 'to_play')
+}
+/** A single-book mini-campaign has one stable playable ID and a campaign compilation. */
+export function isStandaloneCampaign(unit: PlayableUnit): boolean {
+  return unit.id === unit.legacyEntryId && Boolean(rawEntryMap.get(unit.id)?.parts.some(part => part.kind === 'compilation_campagne'))
+}
 export function playableTypeLabel(type: PlayableType): string { return playableLabels[type] }
 export function containerTypeLabel(type: ContainerType): string { return containerLabels[type] }
 export function componentTypeLabel(type: ComponentType): string { return componentLabels[type] }

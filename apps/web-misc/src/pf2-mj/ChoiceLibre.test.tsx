@@ -10,7 +10,7 @@ describe('Choix libre MJ',()=>{
     ;(globalThis as {IS_REACT_ACT_ENVIRONMENT?:boolean}).IS_REACT_ACT_ENVIRONMENT=true
     const element=document.createElement('div'); document.body.append(element);const root=createRoot(element)
     const calls:RequestInit[]=[]
-    const check={source:'done',template:'done',entities:'done',foundry:'todo',review:'done'}
+    const check={source:'done',template:'done',entities:'done',foundry:'partial',review:'done'}
     vi.stubGlobal('fetch',vi.fn(async (_url:RequestInfo|URL,init?:RequestInit)=>{
       calls.push(init||{})
       if(init?.method==='PUT')return new Response('{"ok":true}',{status:200})
@@ -23,6 +23,8 @@ describe('Choix libre MJ',()=>{
       await act(async()=>root.render(<MemoryRouter><ChoiceLibreWorkspace campaigns={[]} scenarios={[]}/></MemoryRouter>))
       expect(element.textContent).toContain('Explorer la fosse')
       expect(element.textContent).toContain('À préparer')
+      expect(element.textContent).toContain('1 en préparation')
+      expect(element.textContent).toContain('4/5 vérifiés')
       expect(element.textContent).not.toContain('Test PJ')
       expect((calls[0].headers as Record<string,string>)['x-pf2-choice-mj-key']).toBeUndefined()
       await act(async()=>element.querySelector<HTMLInputElement>('.choice-toolbar input[type=checkbox]')!.click())

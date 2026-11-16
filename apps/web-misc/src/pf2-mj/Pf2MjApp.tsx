@@ -27,6 +27,8 @@ import {
   migrationIssues,
   parseLevelRange,
   playableMap,
+  isStandaloneCampaign,
+  isJournalStatusVisible,
   playableTypeLabel,
   playableUnits,
   playablesUnder,
@@ -185,7 +187,7 @@ const maintenanceTabs: Array<[MaintenanceTab, string]> = [
   ['info', 'Info seules'], ['description', 'Descriptions'], ['uncertain', 'À vérifier'], ['metadata', 'Métadonnées'],
 ]
 const lifecycleOptions: Array<[LifecycleStatus, string]> = [
-  ['untracked', 'À décider'], ['retained', 'À décider (retenu)'], ['to_play', 'Intégré · à jouer'], ['in_progress', 'En cours'], ['played', 'Joué'], ['later', 'Plus tard'], ['rejected', 'Écarté'],
+  ['untracked', 'À décider'], ['retained', 'À décider (retenu)'], ['to_play', 'Intégré · à venir'], ['in_progress', 'En cours'], ['played', 'Terminé'], ['later', 'Plus tard / éventuellement'], ['rejected', 'Écarté'],
 ]
 const lifecycleLabels = Object.fromEntries(lifecycleOptions) as Record<LifecycleStatus, string>
 const journalLifecycleStatuses = new Set<LifecycleStatus>(['to_play', 'in_progress', 'played'])
@@ -665,7 +667,7 @@ function LibraryView(props:{ curation:Curation; onOpen:(container:Container)=>vo
     if(members.has(unit.id)||linked.has(unit.id))continue
     const override=resolvePlayableOverride(curation,unit),excluded=isExcluded(unit,override,curation)
     const archive=unit.playableType==='bounty'
-    rows.push({id:unit.id,title:titleOf(unit),type:archive?'Bounty':'Scénario indépendant',search:unit.number||'',href:playableHref(unit),status:effectiveLifecycleStatus(override,excluded),archive,control:archive?<span>Archive</span>:<LifecycleSelect id={unit.id} override={override} excluded={excluded} onUpdate={onUpdate}/>})
+    rows.push({id:unit.id,title:titleOf(unit),type:archive?'Bounty':isStandaloneCampaign(unit)?'Campagne':'Scénario indépendant',search:unit.number||'',href:playableHref(unit),status:effectiveLifecycleStatus(override,excluded),archive,control:archive?<span>Archive</span>:<LifecycleSelect id={unit.id} override={override} excluded={excluded} onUpdate={onUpdate}/>})
   }
   for(const r of resources) {
     const id=adaptationId(r),override=adaptationOverride(curation,r),excluded=Boolean(override.excluded)
@@ -1279,7 +1281,9 @@ function JournalView({ curation, onUpdate, onImported }: { curation: Curation; o
   const [expandedComponentKey, setExpandedComponentKey] = useState<string | null>(null)
   const [scenarioSessions, setScenarioSessions] = useState<Record<string, number[]>>({})
   const [componentSessions, setComponentSessions] = useState<Record<string, number[]>>({})
-  const [statusFilter, setStatusFilter] = useState<LifecycleStatus | null>(null)
+  const [currentOnly, setCurrentOnly] = useState(false)
+  const [showCompleted, setShowCompleted] = useState(false)
+  const isVisibleStatus = (status: LifecycleStatus) => isJournalStatusVisible(status,currentOnly,showCompleted)
   const {resources:adaptations}=useCatalogueAdaptations()
   const integratedAdaptations=adaptations.flatMap(r=>{const override=adaptationOverride(curation,r);const status=effectiveLifecycleStatus(override,Boolean(override.excluded));return journalLifecycleStatuses.has(status)?[{resource:r,status,override}]:[]})
 
@@ -1326,22 +1330,28 @@ function JournalView({ curation, onUpdate, onImported }: { curation: Curation; o
   const journalStatusForUnit = (unit: PlayableUnit): LifecycleStatus => {
     const override = resolvePlayableOverride(curation, unit)
     const fallback = effectiveLifecycleStatus(override, isExcluded(unit, override, curation))
+    // An explicit completion or exclusion takes precedence over incomplete historical component tracking.
+    if (fallback === 'played' || fallback === 'later' || fallback === 'rejected') return fallback
     const progress = componentProgressForUnit(unit)
     if (progress.total > 0 && progress.played === progress.total) return 'played'
     if (progress.played > 0) return 'in_progress'
     return fallback
   }
-  const statusForUnits = (units: PlayableUnit[]): LifecycleStatus => units
-    .map(journalStatusForUnit)
-    .filter((status) => journalLifecycleStatuses.has(status))
-    .sort((left, right) => statusRank[left] - statusRank[right])[0] ?? 'untracked'
+  const statusForUnits = (units: PlayableUnit[]): LifecycleStatus => {
+    const statuses = units.map(journalStatusForUnit)
+    if (statuses.length && statuses.every(s=>s==='played')) return 'played'
+    if (statuses.some(s=>s==='played'||s==='in_progress')) return 'in_progress'
+    return statuses.includes('to_play') ? 'to_play' : 'untracked'
+  }
 
   const selectedCampaigns = containers
     .flatMap((container): PlayableComponentsWork[] => {
       if (container.containerType !== 'campaign' || isContainerExcluded(container, curation)) return []
       const units = playablesUnder(container.id).filter((unit) => !isExcluded(unit, resolvePlayableOverride(curation, unit), curation))
-      const status = effectiveLifecycleStatus(resolveContainerOverride(curation, container))
-      if (!journalLifecycleStatuses.has(status)) return []
+      const selectedStatus = effectiveLifecycleStatus(resolveContainerOverride(curation, container))
+      if (!journalLifecycleStatuses.has(selectedStatus)) return []
+      const derived = statusForUnits(units)
+      const status = selectedStatus === 'played' || derived === 'played' ? 'played' : selectedStatus === 'in_progress' || derived === 'in_progress' ? 'in_progress' : selectedStatus
       return [{ id: container.id, title: titleOf(container), description: container.synopsis, units, campaign: true, kind: 'campaign', status }]
     })
 
@@ -1362,8 +1372,10 @@ function JournalView({ curation, onUpdate, onImported }: { curation: Curation; o
       const override = resolvePlayableOverride(curation, unit)
       return unit.playableType!=='bounty' && !coveredUnitIds.has(unit.id) && journalLifecycleStatuses.has(journalStatusForUnit(unit)) && !isExcluded(unit, override, curation)
     })
-  const works: PlayableComponentsWork[] = [...selectedCampaigns, ...selectedArcs, ...selectedStandalone.map((unit) => ({ id: unit.id, title: titleOf(unit), description: unit.synopsis, units: [unit], campaign: false, kind: 'scenario' as const, status: journalStatusForUnit(unit) }))].sort((a, b) => statusRank[a.status] - statusRank[b.status] || a.title.localeCompare(b.title, 'fr'))
-  const visibleWorks = statusFilter ? works.filter((work) => work.status === statusFilter) : works
+  const works: PlayableComponentsWork[] = [...selectedCampaigns, ...selectedArcs, ...selectedStandalone.map((unit) => ({ id: unit.id, title: titleOf(unit), description: unit.synopsis, units: [unit], campaign: isStandaloneCampaign(unit), kind: 'scenario' as const, status: journalStatusForUnit(unit) }))].sort((a, b) => statusRank[a.status] - statusRank[b.status] || a.title.localeCompare(b.title, 'fr'))
+  const visibleWorks = works.filter(work => isVisibleStatus(work.status))
+  const visibleAdaptations = integratedAdaptations.filter(a => isVisibleStatus(a.status))
+  const completedCount = works.filter(w => w.status === 'played').length + integratedAdaptations.filter(a => a.status === 'played').length
   const displayWorks = [...visibleWorks].sort((left, right) => Number(!left.campaign) - Number(!right.campaign) || statusRank[left.status] - statusRank[right.status] || left.title.localeCompare(right.title, 'fr'))
 
   const componentExample = { id: 'exemple-ouverture', title: 'Ouverture', description: 'Résumé factuel de cette unité narrative.', estimatedSessions: { min: 1, max: 2 }, continuity: { mode: 'free', returnToHubPossible: true, recommendedSameParty: false, notes: '' }, order: 1 }
@@ -1463,14 +1475,14 @@ function JournalView({ curation, onUpdate, onImported }: { curation: Curation; o
   const copyPrompt = async (work: PlayableComponentsWork, unit?: PlayableUnit) => {
     try {
       const scenarioUnit = unit ?? work.units[0]
-      if (!work.campaign && !scenarioUnit) throw new Error('Scénario introuvable.')
-      await copyText(work.campaign ? campaignPrompt(work) : scenarioPrompt(work, scenarioUnit!))
+      if (work.kind === 'scenario' && !scenarioUnit) throw new Error('Scénario introuvable.')
+      await copyText(work.kind === 'campaign' ? campaignPrompt(work) : scenarioPrompt(work, scenarioUnit!))
       setMessage(`Prompt copié pour « ${work.title} ».`)
     } catch { setMessage('Copie impossible : autorise le presse-papier dans le navigateur.') }
   }
 
   const copySelectionPrompt = async () => {
-    const targets = works.map((work) => `- ${work.campaign ? 'Campagne' : 'Scénario'} : ${work.title} (${work.id})`).join('\n') || '- Aucune œuvre suivie.'
+    const targets = works.map((work) => `- ${work.kind === 'scenario' && work.campaign ? 'Mini-campagne (format scénario autonome)' : work.campaign ? 'Campagne' : 'Scénario'} : ${work.title} (${work.id})`).join('\n') || '- Aucune œuvre suivie.'
     const text = `Tu aides à documenter des œuvres Pathfinder 2. Je joins les PDF associés et/ou un export du catalogue. Selon le type :\n- scénario autonome : retourne { scenarioId, playableComponents };\n- campagne : retourne { campaignId, scenarios: [{ scenarioId, description, playableComponents }] }.\nNe crée jamais de découpage générique et ne répète jamais la description de campagne dans ses sous-scénarios. En cas de doute, utilise playableComponents: [].\n\nŒuvres suivies dans le Journal MJ :\n${targets}`
     try { await copyText(text); setMessage('Prompt général copié dans le presse-papier.') }
     catch { setMessage('Copie impossible : autorise le presse-papier dans le navigateur.') }
@@ -1517,11 +1529,11 @@ function JournalView({ curation, onUpdate, onImported }: { curation: Curation; o
   }
 
   return <section className="playable-components-view">
-    <div className="playable-components-intro"><div><small>CAMPAGNES ET SCÉNARIOS</small><h2>Sélectionnés, en cours et joués</h2><p>Le Journal ne montre que le périmètre de jeu actif. Les aventures simplement retenues restent dans le Catalogue ; seules les aventures explicitement sélectionnées, commencées ou jouées apparaissent ici.</p></div><button className="component-prompt" onClick={() => void copySelectionPrompt()}>Prompt composants</button></div>
-    <div className="journal-status-board" aria-label="Filtrer le journal par statut">{(['in_progress', 'to_play', 'played'] as LifecycleStatus[]).map((status) => { const count = works.filter((work) => work.status === status).length + integratedAdaptations.filter(a=>a.status===status).length; const active = statusFilter === status; return <button type="button" key={status} className={active ? 'is-active' : ''} aria-pressed={active} onClick={() => setStatusFilter((current) => current === status ? null : status)} title={active ? 'Afficher tous les statuts' : `Afficher uniquement « ${lifecycleLabels[status]} »`}><small>{lifecycleLabels[status]}</small><strong>{count}</strong></button> })}</div>
-    {!works.length && !integratedAdaptations.length && <div className="empty-components"><strong>Journal vide.</strong><p>Depuis le Catalogue, passe une aventure à « Intégré · à jouer », « En cours » ou « Joué ».</p></div>}
-    {(works.length > 0 || integratedAdaptations.length > 0) && !visibleWorks.length && !integratedAdaptations.some(a=>!statusFilter||a.status===statusFilter) && <div className="empty-components"><strong>Aucune aventure « {statusFilter ? lifecycleLabels[statusFilter] : ''} ».</strong><p>Reclique sur le filtre actif pour réafficher tout le journal.</p></div>}
-    {integratedAdaptations.some(a=>!statusFilter||a.status===statusFilter)&&<section className="detail-section"><h3>Adaptations intégrées</h3><div className="excluded-scenarios">{integratedAdaptations.filter(a=>!statusFilter||a.status===statusFilter).map(({resource,status,override})=><article key={resource.id}><div><small>{resource.origin||'Adaptation'} · {lifecycleLabels[status]}</small><strong>{resource.title}</strong><Link to={viewPaths.resources+'/'+encodeURIComponent(resource.id)}>Ouvrir la source</Link></div><LifecycleSelect id={adaptationId(resource)} override={override} excluded={false} onUpdate={onUpdate}/><Link to={viewPaths.sessionPrep+'?scenarioId='+encodeURIComponent(adaptationId(resource))}>Préparer →</Link></article>)}</div></section>}
+    <div className="playable-components-intro"><div><small>CAMPAGNES ET SCÉNARIOS</small><h2>Campagnes et scénarios intégrés</h2><p>Les aventures en cours et à venir apparaissent ensemble. Les terminées sont masquées par défaut ; les œuvres indécises, lointaines ou écartées restent dans le Catalogue.</p></div><button className="component-prompt" onClick={() => void copySelectionPrompt()}>Prompt composants</button></div>
+    <div className="journal-status-board" aria-label="Filtrer le journal"><button type="button" className={!currentOnly?'is-active':''} aria-pressed={!currentOnly} onClick={()=>setCurrentOnly(false)}><small>En cours et à venir</small><strong>{works.filter(w=>w.status!=='played').length+integratedAdaptations.filter(a=>a.status!=='played').length}</strong></button><button type="button" className={currentOnly?'is-active':''} aria-pressed={currentOnly} onClick={()=>setCurrentOnly(true)}><small>En cours uniquement</small><strong>{works.filter(w=>w.status==='in_progress').length+integratedAdaptations.filter(a=>a.status==='in_progress').length}</strong></button><button type="button" className={showCompleted?'is-active':''} aria-pressed={showCompleted} onClick={()=>setShowCompleted(v=>!v)}><small>{showCompleted?'Masquer les terminés':'Afficher les terminés'}</small><strong>{completedCount}</strong></button></div>
+    {!works.length && !integratedAdaptations.length && <div className="empty-components"><strong>Journal vide.</strong><p>Depuis le Catalogue, passe une aventure à « Intégré · à venir », « En cours » ou « Terminé ».</p></div>}
+    {(works.length > 0 || integratedAdaptations.length > 0) && !visibleWorks.length && !visibleAdaptations.length && <div className="empty-components"><strong>Aucune aventure pour ces filtres.</strong><p>Affiche les aventures à venir ou terminées pour élargir la liste.</p></div>}
+    {visibleAdaptations.length>0&&<section className="detail-section"><h3>Adaptations intégrées</h3><div className="excluded-scenarios">{visibleAdaptations.map(({resource,status,override})=><article key={resource.id}><div><small>{resource.origin||'Adaptation'} · {lifecycleLabels[status]}</small><strong>{resource.title}</strong><Link to={viewPaths.resources+'/'+encodeURIComponent(resource.id)}>Ouvrir la source</Link></div><LifecycleSelect id={adaptationId(resource)} override={override} excluded={false} onUpdate={onUpdate}/><Link to={viewPaths.sessionPrep+'?scenarioId='+encodeURIComponent(adaptationId(resource))}>Préparer →</Link></article>)}</div></section>}
     {displayWorks.map((work, workIndex) => {
       const progress = workProgress(work)
       const expanded = expandedWorkIds.has(work.id)
@@ -1529,23 +1541,23 @@ function JournalView({ curation, onUpdate, onImported }: { curation: Curation; o
       const detailHref = work.kind === 'campaign' ? `/pf2-mj/campaigns/${encodeURIComponent(work.id)}` : work.kind === 'arc' ? viewPaths.library : playableHref(work.units[0])
       const showCampaignHeading = workIndex === 0 && work.campaign
       const showStandaloneHeading = !work.campaign && (workIndex === 0 || displayWorks[workIndex - 1]?.campaign)
-      return <Fragment key={work.id}>{showCampaignHeading && <div className="journal-group-heading"><small>JOURNAL</small><h3>Campagnes</h3><p>Campagnes longues et, bientôt, campagnes virtuelles.</p></div>}{showStandaloneHeading && <div className="journal-group-heading journal-standalone-heading"><small>JOURNAL</small><h3>Scénarios individuels</h3><p>Scénarios actifs qui n’appartiennent pas encore à une campagne du Journal.</p></div>}<section className={`component-work${!expanded ? ' is-collapsed' : ''}`}>
+      return <Fragment key={work.id}>{showCampaignHeading && <div className="journal-group-heading"><small>JOURNAL</small><h3>Campagnes</h3><p>Campagnes longues, mini-campagnes et campagnes transverses.</p></div>}{showStandaloneHeading && <div className="journal-group-heading journal-standalone-heading"><small>JOURNAL</small><h3>Scénarios individuels</h3><p>Scénarios actifs qui n’appartiennent pas encore à une campagne du Journal.</p></div>}<section className={`component-work${!expanded ? ' is-collapsed' : ''}`}>
         <header>
           <div><small>{work.kind === 'arc' ? 'CAMPAGNE TRANSVERSE' : work.campaign ? 'CAMPAGNE' : 'SCÉNARIO'} · {lifecycleLabels[work.status]}</small><h3><Link className="journal-detail-link" to={detailHref}>{work.title}</Link></h3><Link className="journal-detail-link" to={`${viewPaths.sessionPrep}?${work.kind === 'scenario' && !work.units.some(unit => unit.legacyEntryKind === 'campaign') ? 'scenarioId' : 'campaignId'}=${encodeURIComponent(work.id)}`}>✎ Préparer une séance</Link>{expanded && work.description && <p>{work.description}</p>}{work.kind === 'arc' && expanded && <p><em>Arc narratif PFS : les scénarios peuvent appartenir à plusieurs saisons.</em></p>}{workSessions.length > 0 && <span className="journal-session-badge">{sessionLabel(workSessions)}</span>}</div>
           <div className="component-work-actions">
-            <button className="component-toggle" onClick={() => toggleWork(work.id)} aria-expanded={expanded}>{expanded ? 'Réduire' : work.campaign ? `Développer · ${work.units.length} scénario${work.units.length > 1 ? 's' : ''}` : 'Développer'}</button>
-            {expanded && work.kind !== 'arc' && <button className="component-prompt" onClick={() => void copyPrompt(work)}>{work.campaign ? 'Prompt campagne' : 'Prompt'}</button>}
+            <button className="component-toggle" onClick={() => toggleWork(work.id)} aria-expanded={expanded}>{expanded ? 'Réduire' : work.kind !== 'scenario' ? `Développer · ${work.units.length} scénario${work.units.length > 1 ? 's' : ''}` : 'Développer'}</button>
+            {expanded && work.kind !== 'arc' && <button className="component-prompt" onClick={() => void copyPrompt(work)}>{work.kind === 'campaign' ? 'Prompt campagne' : 'Prompt'}</button>}
             {expanded && work.kind === 'campaign' && <label className={`component-import${importing === work.id ? ' disabled' : ''}`}>Importer la campagne<input type="file" accept="application/json,.json" disabled={importing !== null} onChange={(event) => { const file = event.target.files?.[0]; event.target.value = ''; void importCampaign(work, file) }} /></label>}
-            <span>{work.campaign && `${progress.completedScenarios}/${work.units.length} scénario${work.units.length > 1 ? 's' : ''} terminé${progress.completedScenarios > 1 ? 's' : ''} · `}{progress.played}/{progress.total} composant{progress.total > 1 ? 's' : ''} joué{progress.played > 1 ? 's' : ''}</span>
+            <span>{work.kind !== 'scenario' && `${progress.completedScenarios}/${work.units.length} scénario${work.units.length > 1 ? 's' : ''} terminé${progress.completedScenarios > 1 ? 's' : ''} · `}{progress.played}/{progress.total} composant{progress.total > 1 ? 's' : ''} joué{progress.played > 1 ? 's' : ''}</span>
           </div>
         </header>
         {expanded && <div className="component-work-units">{work.units.map((unit) => {
           const status = resolvePlayableOverride(curation, unit).playableComponentStatus ?? {}
           const unitState = unitProgress(unit)
           const unitSessions = scenarioSessions[unit.id] ?? []
-          const unitExpanded = !work.campaign || expandedScenarioIds.has(unit.id)
+          const unitExpanded = work.kind === 'scenario' || expandedScenarioIds.has(unit.id)
           return <article className={unitExpanded ? '' : 'is-collapsed'} key={unit.id}>
-            <div className="component-unit-head"><div><small>{unit.number ? `${unit.number} · ` : ''}{playableTypeLabel(unit.playableType)} · {lifecycleLabels[journalStatusForUnit(unit)]}</small><strong><Link className="journal-detail-link" to={playableHref(unit)}>{titleOf(unit)}</Link></strong>{unitSessions.length > 0 && <span className="journal-session-badge">{sessionLabel(unitSessions)}</span>}{unitExpanded && <p>{unit.synopsis || 'Description propre de ce scénario non renseignée.'}</p>}<em className="component-progress">{unitState.played}/{unitState.total} composant{unitState.total > 1 ? 's' : ''} joué{unitState.played > 1 ? 's' : ''}{unitState.completed ? ' · Scénario terminé' : ''}</em></div><div>{work.campaign && <button className="component-toggle scenario-toggle" type="button" onClick={() => toggleScenario(unit.id)} aria-expanded={unitExpanded}>{unitExpanded ? 'Réduire' : 'Développer'}</button>}{!work.campaign && <label className={`component-import${importing === unit.id ? ' disabled' : ''}`}>Importer<input type="file" accept="application/json,.json" disabled={importing !== null} onChange={(event) => { const file = event.target.files?.[0]; event.target.value = ''; void importComponents(unit, file) }} /></label>}</div></div>
+            <div className="component-unit-head"><div><small>{unit.number ? `${unit.number} · ` : ''}{playableTypeLabel(unit.playableType)} · {lifecycleLabels[journalStatusForUnit(unit)]}</small><strong><Link className="journal-detail-link" to={playableHref(unit)}>{titleOf(unit)}</Link></strong>{unitSessions.length > 0 && <span className="journal-session-badge">{sessionLabel(unitSessions)}</span>}{unitExpanded && <p>{unit.synopsis || 'Description propre de ce scénario non renseignée.'}</p>}<em className="component-progress">{unitState.played}/{unitState.total} composant{unitState.total > 1 ? 's' : ''} joué{unitState.played > 1 ? 's' : ''}{unitState.completed ? ' · Scénario terminé' : ''}</em></div><div>{work.kind !== 'scenario' && <button className="component-toggle scenario-toggle" type="button" onClick={() => toggleScenario(unit.id)} aria-expanded={unitExpanded}>{unitExpanded ? 'Réduire' : 'Développer'}</button>}{work.kind === 'scenario' && <label className={`component-import${importing === unit.id ? ' disabled' : ''}`}>Importer<input type="file" accept="application/json,.json" disabled={importing !== null} onChange={(event) => { const file = event.target.files?.[0]; event.target.value = ''; void importComponents(unit, file) }} /></label>}</div></div>
             {unitExpanded && (unit.playableComponents.length ? <ul>{unit.playableComponents.map((component) => {
               const componentKey = `${unit.id}:${component.id}`
               const detailsExpanded = expandedComponentKey === componentKey
@@ -1572,7 +1584,7 @@ function JournalView({ curation, onUpdate, onImported }: { curation: Curation; o
                   </dl>
                 </div>}
               </li>
-            })}</ul> : <p className="missing">Aucun composant renseigné. {work.campaign ? 'Utilise « Prompt campagne » puis importe un seul JSON pour la campagne.' : 'Utilise « Prompt » puis importe le JSON produit.'}</p>)}
+            })}</ul> : <p className="missing">Aucun composant renseigné. {work.kind === 'campaign' ? 'Utilise « Prompt campagne » puis importe un seul JSON pour la campagne.' : 'Utilise « Prompt » puis importe le JSON produit.'}</p>)}
           </article>
         })}</div>}
       </section></Fragment>
@@ -1836,7 +1848,7 @@ export function Pf2MjApp() {
     library: ['Catalogue', 'Campagnes, saisons, séries et ressources structurent le catalogue sans polluer la recherche jouable.'],
     resources: ['Ressources', 'Aventures courtes, lieux, cartes et idées réutilisables, indépendants du catalogue jouable.'],
     sessionPrep: ['Préparation séance', 'Conducteur MJ : étapes, lore, rencontres, loot et partages.'],
-    journal: ['Campagnes et scénarios', 'Le périmètre sélectionné : à jouer, en cours ou joué.'],
+    journal: ['Campagnes et scénarios', 'Les aventures intégrées, en cours et à venir. Les terminées sont masquées par défaut.'],
     journaux: ['Journaux d’Absalom', 'Deux unes médiévales : la gazette officielle et le journal à sensation.'],
     lore: ['Histoire', 'Bible PF2 : UNIVERS.md sert d’index narratif et les chapitres PJ, campagnes et univers sont consultables ici.'],
     prepare: ['Préparation technique', 'Contrôles documentaires et Foundry pour les scénarios suivis.'],
@@ -1880,7 +1892,7 @@ export function Pf2MjApp() {
 
   return <main className="pf2-mj pf2-mj-v3">
     <header><Link className="brand brand-button" to={viewPaths.journal}><b>✦</b><span><strong>PATHFINDER 2</strong><small>GESTION MJ</small></span></Link><div className="header-right"><span><i />{active.length} scénarios actifs · {documentCount} PDF · {missingTranslations} traduction{missingTranslations > 1 ? 's' : ''} à voir</span><em>MJ</em></div></header>
-    <div className="layout"><aside><nav>{nav.map(([id, icon, label, count]) => <NavLink key={id} to={viewPaths[id]} className={() => routedView === id || (id === 'pnj' && isReferenceView) ? 'active' : ''}><span>{icon}</span>{label}<b>{count}</b></NavLink>)}</nav><section><p>REPÈRES MJ</p><span className="aside-rule">☑ Campagnes et scénarios = sélectionnés, en cours, joués</span><span className="aside-rule">▦ Catalogue = recherche + chronologie + mis de côté</span><span className="aside-rule">◇ Ressources / Trilemma dans le Catalogue</span><span className="aside-rule">✧ Histoire = bible Markdown de la campagne</span><span className="aside-rule">♙ Monde = PNJ, factions, lieux, régions, événements, prix, voyages</span><span className="aside-rule">⚙ Administration = maintenance technique</span></section><div className="scan-note"><b>V3</b><strong>SQLite comme source</strong><p>Le catalogue est chargé depuis SQLite puis normalisé sans perte pour l’interface V3.</p></div></aside>
+    <div className="layout"><aside><nav>{nav.map(([id, icon, label, count]) => <NavLink key={id} to={viewPaths[id]} className={() => routedView === id || (id === 'pnj' && isReferenceView) ? 'active' : ''}><span>{icon}</span>{label}<b>{count}</b></NavLink>)}</nav><section><p>REPÈRES MJ</p><span className="aside-rule">☑ Campagnes et scénarios = intégrés, terminés sur demande</span><span className="aside-rule">▦ Catalogue = recherche + chronologie + mis de côté</span><span className="aside-rule">◇ Ressources / Trilemma dans le Catalogue</span><span className="aside-rule">✧ Histoire = bible Markdown de la campagne</span><span className="aside-rule">♙ Monde = PNJ, factions, lieux, régions, événements, prix, voyages</span><span className="aside-rule">⚙ Administration = maintenance technique</span></section><div className="scan-note"><b>V3</b><strong>SQLite comme source</strong><p>Le catalogue est chargé depuis SQLite puis normalisé sans perte pour l’interface V3.</p></div></aside>
       <section className="content">
         {route.kind === 'not-found' ? routeMissing('Page') : null}
         {route.kind === 'playable' ? (selectedPlayable ? <PlayableDetail unit={selectedPlayable} curation={curation} onUpdate={update} placeOptions={placeOptions} onOpenReference={openReference} /> : routeMissing('Scénario', route.id)) : null}
