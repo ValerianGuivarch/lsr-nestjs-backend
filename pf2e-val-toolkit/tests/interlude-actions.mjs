@@ -7,7 +7,8 @@ const messages=[];
 const dialogResults=[];
 const stats={
  diplomacy:{label:'Diplomatie',roll:async options=>rolls.push(['diplomacy',options])},
- nature:{label:'Nature',roll:async options=>rolls.push(['nature',options])}
+ nature:{label:'Nature',roll:async options=>rolls.push(['nature',options])},
+ occultism:{label:'Occultisme',roll:async options=>rolls.push(['occultism',options])}
 };
 const actor={type:'character',name:'Pépin',uuid:'Actor.pepin',isOwner:true,
  items:[{slug:'hobnobber'}],getStatistic:id=>stats[id]};
@@ -40,4 +41,10 @@ await module.openInterludeActivity(withoutFeat,'create');
 await module.openInterludeActivity(withoutFeat,'maintain');
 assert.equal(warnings.length,2);
 assert.equal(rolls.length,3);
+const eryn={...withoutFeat,name:'Eryn',uuid:'Actor.eryn'};
+await module.openInterludeActivity(eryn,'horoscope');
+assert.deepEqual(rolls[3],['occultism',{skipDialog:true}]);
+assert.equal(messages.length,3,'Horoscope does not send extra chat messages');
+await module.openInterludeActivity({...eryn,isOwner:false},'horoscope');
+assert.equal(rolls.length,4,'No roll without ownership');
 console.log('OK — three interlude flows, feat permissions, blind roll and manual MJ validation');

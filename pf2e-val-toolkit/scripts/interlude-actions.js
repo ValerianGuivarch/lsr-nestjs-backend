@@ -148,6 +148,18 @@ export function decorateInterludeExtras(actorOverride = null, root = document) {
 // Public API for optional macros dropped into PF2e HUD's supported Extras
 // macros section (instead of inserting HTML into the HUD-managed sidebar).
 export function openInterludeActivity(actor, kind) {
+  if (kind === 'horoscope') {
+    if (actor?.type !== 'character' || (!actor.isOwner && !game.user.isGM)) {
+      ui.notifications.warn('Vous ne pouvez pas lancer cette activité avec ce personnage.');
+      return Promise.resolve();
+    }
+    const statistic = actor.getStatistic?.('occultism');
+    if (!statistic?.roll) {
+      ui.notifications.warn('Compétence introuvable : Occultisme.');
+      return Promise.resolve();
+    }
+    return statistic.roll({skipDialog:true});
+  }
   if (kind !== 'community' && !isHobnobber(actor)) {
     ui.notifications.warn('Le don Animal social est nécessaire pour cette activité.');
     return Promise.resolve();

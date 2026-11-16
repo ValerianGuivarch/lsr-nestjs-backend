@@ -26,6 +26,8 @@ Une semaine d’étude d’un thème astral nécessite le jour et le mois de nai
 
 Lors d’une prémonition concernant ce personnage, utiliser ce total comme un jet d’Aide déjà préparé, sans nouveau jet ni action supplémentaire. Le MJ fixe le DD (15 usuel en PF2 remaster, ajustable) ; appliquer le bonus de circonstance selon le résultat de l’Aide. Un total de 24 face au DD 15 vaut ainsi +1. Cette adaptation maison ne modifie pas les sorts ni les jets Foundry. Le wiki conserve le total, pas le niveau ni le degré de réussite.
 
+Raccourci prévu dans Foundry : macro native Extras « Étudier un thème astral », jet d’Occultisme direct via le Toolkit, sans cible et sans synchronisation wiki. L’installation de la macro dans le monde reste à faire si le relais ne dispose pas de l’autorisation macro:write.
+
 ## Relations et contacts
 
 ### Famille et contacts
