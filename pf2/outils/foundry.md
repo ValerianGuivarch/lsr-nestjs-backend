@@ -500,16 +500,16 @@ Les deux PDF anglais sont dans `/home/valou/services/`. La source de vérité du
 
 Les trois PDF français sont sous `/home/valou/services/pf2-data/Références/Règles/` : `Règles - Bestiaire 1.pdf` (362 pages), `Règles - Bestiaire 2.pdf` (322), `Règles - Bestiaire 3.pdf` (322). Les compendiums legacy présents dans cette version de PF2e comptent 491 Actors (les fiches remplacées par le remaster sont dans les packs Monster Core).
 
-Traitement privé : `pf2-data/_AI/bestiary-legacy/`. Catalogue des IDs et des noms anglais/français issu des packs et du dictionnaire de traduction PF2-FR ; indexation des titres et statblocks des PDF, normalisation des accents et des alias, extraction du raster et de son masque de transparence, planches de revue des cas ambigus, génération de tokens WebP 512 × 512 sans cadre. Les scripts et rapports privés sont `index-pdf.py`, `match.py`, `review.py`, `approve-visual.py`, `install.py`, `catalog.json`, `installed.json`, `coverage-summary.json`, `unmatched.json`. Les PDF et illustrations ne doivent jamais être publiés.
+Traitement privé : `pf2-data/_AI/bestiary-legacy/`. Catalogue des IDs et des noms anglais/français issu des packs et du dictionnaire de traduction PF2-FR ; indexation des titres et statblocks des PDF, normalisation des accents et des alias, extraction du raster et de son masque de transparence, planches de revue des cas ambigus, génération de tokens WebP 512 × 512 sans cadre. Les scripts et rapports privés sont `index-pdf.py`, `match.py`, `review.py`, `approve-visual.py`, `fix-dragon-species.py`, `install.py`, `catalog.json`, `installed.json`, `coverage-summary.json`, `unmatched.json`. Les PDF et illustrations ne doivent jamais être publiés.
 
 | Collection | Fiches associées | Total |
 | --- | ---: | ---: |
-| Bestiary 1 | 127 | 166 |
+| Bestiary 1 | 139 | 166 |
 | Bestiary 2 | 136 | 160 |
 | Bestiary 3 | 135 | 165 |
-| Total legacy | 398 | 491 |
+| Total legacy | 410 | 491 |
 
-330 nouvelles illustrations PNG et leurs tokens WebP ont été installés dans le module privé existant, sous `images/bestiary1..3/` et `tokens/bestiary1..3/`. Une correspondance supplémentaire (Quatoid) réutilise l'art remaster de la même créature. Les 909 associations Monster Core restent strictement identiques à la sauvegarde `map-before-legacy.json`. Les 1 307 associations des cinq collections et tous les fichiers correspondants ont été contrôlés sur disque. Les 93 fiches legacy restantes n'ont pas d'art identifié de manière suffisamment sûre ; ne pas leur attribuer arbitrairement une image. Certaines variantes de créature partagent une illustration.
+332 nouvelles illustrations PNG et leurs tokens WebP ont été installés dans le module privé existant, sous `images/bestiary1..3/` et `tokens/bestiary1..3/`. Une correspondance supplémentaire (Quatoid) réutilise l'art remaster de la même créature. Les 909 associations Monster Core restent strictement identiques à la sauvegarde `map-before-legacy.json`. Les 1 319 associations des cinq collections et tous les fichiers correspondants ont été contrôlés sur disque. Les 81 fiches legacy restantes n'ont pas d'art identifié de manière suffisamment sûre ; ne pas leur attribuer arbitrairement une image. Certaines variantes de créature partagent une illustration. La revue visuelle complémentaire des dragons a corrigé le décalage des pages (noir PDF p. 113, rouge p. 115, cuivre p. 127), récupérant 12 fiches supplémentaires.
 
 Le client Foundry déjà ouvert peut conserver en mémoire le mappage antérieur : recharger la page (F5) pour charger les nouvelles associations natives. Le contrôle REST du 16 novembre avant rechargement montre effectivement l'ancienne image pour le compendium de Brume vampirique, tandis que les documents du monde et les tokens mis à jour utilisent les nouveaux chemins ; les trois chemins de tokens de recette répondent HTTP 200. Ne pas interrompre le relais en cours de synchronisation pour forcer un redémarrage.
 
