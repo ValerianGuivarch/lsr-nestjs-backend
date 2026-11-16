@@ -20,7 +20,9 @@ Sa découverte théorique : **une puissance magique brute ne suffit pas à faire
 
 Le frère de Yaz connaissait des exemples de puissants mages ayant acquis une capacité de patronage, notamment **Nex** dans son raisonnement ; il choisit donc une prouesse gigantesque, la création d'un demi-plan et d'une vie nouvelle, afin d'obtenir l'élévation requise. Il voulait pouvoir être le patron de son frère, pas simplement devenir plus puissant.
 
-**Non fixé :** comment il a appris cette règle, l'origine exacte de sa propre magie, l'éventualité qu'il dispose lui-même d'un patron, les procédures précises du rituel, ce qu'il devient ensuite, et s'il obtient réellement le statut de patron ou arrive à accorder de la magie à Yaz.
+**Non fixé :** comment il a appris cette règle, **l'origine de sa puissance magique brute et surtout de sa maîtrise exceptionnellement fine (déjà attestée à la Magaambya)**, l'éventualité qu'il dispose lui-même d'un patron, les procédures précises du rituel, ce qu'il devient ensuite, et s'il obtient réellement le statut de patron ou arrive à accorder de la magie à Yaz. Il faut conserver cette énigme pour une enquête ultérieure au Mwangi.
+
+**Parcours scolaire confirmé par décision MJ du 12 novembre 2026 :** Narek et Yaz étudient d'abord **un an à la Magaambya de Nantambu**, puis **un an à Quantium**. Narek se montre prodigieusement assidu et précis à Nantambu, mais irrégulier à Quantium parce qu'il aide Yaz à **paraître mage** tout en essayant réellement de lui donner ce pouvoir. L'ancien mentor de Yaz, **Uxir**, a retrouvé ces témoignages lors d'un voyage au Mwangi après la disparition de Narek ; **il les révélera pendant l'entretien prévu dans PFS 1-00**. C'est une préparation non jouée. Uxir ne sait pas que Narek voulait devenir patron de Yaz.
 
 ### Exemple de la divinité et des accomplissements
 
@@ -45,7 +47,7 @@ Le roman d'origine n'était ni un traité historique fiable ni une description f
 ## Relations entre dossiers et cloisonnement
 
 - [Jilkra — continuité MJ](../pj/PJ-Jilkra-Adoric-Larantis.md) : connaissance réelle du personnage, fausses pistes thassiloniennes et indices de saveur ; aucune révélation publique automatique.
-- [Yaz — continuité MJ](../pj/PJ-Yaz-Lorok.md) : motivations du frère, enquête sur les patrons, rituel et énigmes encore ouvertes. Son ancienne fiche cite **Narek Lorok**, nom à reconfirmer dans la version documentaire prioritaire.
+- [Yaz — continuité MJ](../pj/PJ-Yaz-Lorok.md) : motivations du frère, enquête sur les patrons, rituel et énigmes encore ouvertes. **Le nom Narek Lorok a été explicitement confirmé par le MJ le 12 novembre 2026**, indépendamment des lacunes de la source documentaire initiale.
 - Backgrounds et Notes wiki/SQLite : **inchangés** ; ils reflètent ce que les joueurs sont autorisés à savoir.
 
 ## Questions encore ouvertes

@@ -108,6 +108,27 @@ Cette divergence doit être traitée comme une dette technique. Le comportement 
 
 ---
 
+### 9.4 Accès contrôlé aux scènes et documents MJ (12 novembre 2026)
+
+Les opérations de scènes auparavant lancées directement contre le relais passent désormais par **le service Nest existant** `FoundryRelayService` : la clé `FOUNDRY_REST_API_KEY` reste dans le processus serveur, sans lecture/transmission via une commande ChatGPT.
+
+**Routes internes du backend JDR** (préfixe `/foundry`) :
+
+| Opération | Route |
+|---|---|
+| Lire une scène | `GET /foundry/gm/scenes/:uuid` |
+| Lire les éléments d'un calque | `GET /foundry/gm/scenes/:uuid/canvas/:type` |
+| Créer un jeton ou une note | `POST /foundry/gm/scenes/:uuid/canvas/:type` |
+| Mettre à jour un élément de calque | `PUT /foundry/gm/scenes/:uuid/canvas/:type/:documentId` |
+| Créer un Actor ou JournalEntry | `POST /foundry/gm/documents/:type` |
+| Mettre à jour un Actor ou JournalEntry | `PUT /foundry/gm/documents/:uuid` |
+
+**Toutes ces routes sont protégées** par l'en-tête interne `x-pf2-journals-key` (correspondant à `PF2_JOURNALS_INTERNAL_KEY` déjà configuré côté serveur). Sans cet en-tête valide, le backend refuse l'opération avant de contacter Foundry ; ce n'est **pas une API publique ou une interface à partager aux joueurs**. Les opérations ciblent uniquement un client connecté au monde `test-pf2`, valident les UUID et limitent les types documentaires. Elles ne proposent ni exécution libre de JavaScript Foundry, ni suppression de documents.
+
+**Ordre pour reprendre PFS S01-00 :** vérifier le déploiement de cette version, accéder au service avec un client interne autorisé, lire `Scene.eYxhjbWrCqWtLtO7` (orrerie) et `Scene.Dtg1CvduJ1cIxccD` (égouts) puis leurs calques `tokens`, `notes`, `walls`, `lights`. Ne modifier qu'après audit de l'existant, et relire le résultat de chaque écriture. Les tests automatisés protègent la règle d'autorisation mais ne prouvent pas qu'un déploiement ou un placement effectif a eu lieu.
+
+---
+
 ## 10. Séances, résumés et XPC
 
 ### 10.1 Séances
@@ -692,3 +713,96 @@ Sur la scène 03 — **Fosse N1, Repaire des Crocs-Sifflets**, la capture fourni
 - Snapshot JSON privé avant opération, script de reprise et snapshot après intervention : /home/valou/services/pf2-data/_AI/fosse-n1-translation-backup-20261107/.
 
 **À reprendre :** vérifier visuellement l'alignement porte/pont et régler les quatre exceptions avec la méthode Foundry appropriée, après validation du MJ. Ne pas considérer la translation de tous les tokens comme terminée.
+
+---
+
+## Bibliothèque des cartes et pilote Pathfinder Society — 11 novembre 2026
+
+Audit en lecture seule puis corrections ciblées dans le monde Foundry **test-pf2** via REST Relay avec un client MJ connecté, sous **Foundry V14.365 / PF2e 8.4.1**.
+
+- L'ancien inventaire du 3 novembre recensait **520 scènes** et proposait **75 suppressions** parmi 72 groupes de doublons. La nouvelle lecture **live** du 11 novembre compte **407 scènes avant** le pilote ; les 75 scènes anciennes à supprimer ont toutes disparu, tandis que les versions désignées à conserver sont présentes. Aucun autre doublon de nom dans un même dossier n'est relevé. **Aucune suppression supplémentaire effectuée.**
+- Le contrôle des ressources après reprise porte sur **409 scènes et 2 276 références**, dont 1 892 fichiers locaux présents, 320 références externes ou icônes natives non évaluées dans Data, et **64 références locales absentes** : 59 miniatures d'un monde Phandelver externe, 4 sons et 1 tuile. **Aucune image de fond de scène manquante** parmi les chemins locaux contrôlés.
+- Sur 65 chemins d'images auparavant proposés à la correction, **51 concernaient des scènes désormais supprimées**. Les **14 images de fond encore concernées** ont été réparées dans leur scène d'origine via le REST Relay, en changeant uniquement le chemin de fond du niveau de assets/maps vers le fichier existant maps ; relecture de chaque scène après modification, et conservation des murs, tokens et autres paramètres.
+- **Ne pas désinstaller** les modules tant que les scènes utilisent leurs chemins : ec-maps-remake-by-lios (73 fonds, 73 miniatures, 1 tuile), mad-phandelver (58 fonds, 330 tuiles, 324 sons) et monster-core-private-art (145 références de tokens dans les scènes). Les collections libres présentes sans références dans cet inventaire ne sont pas automatiquement à supprimer : vérifier les compendiums et les éventuels futurs imports.
+- **Kingmaker** : 43 scènes déjà importées. Comparer les nouvelles collections plutôt que créer un second ensemble par défaut.
+
+### Pilote PFS S01-00 — Origin of the Open Road
+
+Le PDF anglais officiel conservé dans la bibliothèque privée contient deux cartes distinctes ; elles ont été extraites puis adaptées au quadrillage dans des fichiers WebP **privés**, sous Data/worlds/test-pf2/images/scenes/pfs-s01-00/.
+
+Le dossier de scènes **« PFS S01-00 — Origin of the Open Road (cartes préparées) »** est créé dans Foundry (navigation des joueurs désactivée) :
+
+- Scene.eYxhjbWrCqWtLtO7 — **A, Archives de l'orrerie**, à Quantium ; page 6 du PDF, grille carrée **85 px / 5 pieds**, image **2573 × 2061**.
+- Scene.Dtg1CvduJ1cIxccD — **B, Égouts de Quantium**, page 12, grille carrée **66 px / 5 pieds**, image **2590 × 1796**.
+
+Les paramètres et les chemins d'images ont été vérifiés par API. **Le calage du quadrillage reste à confirmer visuellement dans le client**, et les deux scènes n'ont encore **ni murs, ni éclairages, ni tokens**. Il s'agit de cartes préparées manuellement, **pas encore d'un import complet par PDF to Foundry**. L'importateur PDF to Foundry n'a pas été installé sous V14 par cette opération.
+
+### Données privées et suite
+
+Les rapports détaillés, sauvegardes de scènes avant correction, inventaire des images, fichiers convertis et scripts ponctuels sont conservés uniquement sur le mini-PC dans /home/valou/services/pf2-data/_AI/cartes-audit-20261111/. Les PDF et illustrations propriétaires ne sont pas publiés sur GitHub.
+
+Priorités : validation visuelle des deux cartes PFS ; éventuellement murs et éclairages pour celles qui seront jouées ; contrôle des miniatures Phandelver uniquement si utile ; test de Deidril sous V14 sur un scénario effectivement pris en charge (21 PDF anglais complets identifiés parmi 27 références étudiées), et test de l'importateur historique PDF to Foundry dans un environnement V13 séparé si besoin. Ne pas importer toutes les cartes en bloc ni désinstaller les modules sources sans vérification des dépendances.
+
+### Après le retrait des scènes Phandelver (11 novembre 2026)
+
+- Le MJ a retiré son dossier de **59 scènes Phandelver**. Relecture du monde : **350 scènes restantes** ; aucune scène ne référence désormais les fichiers du module **mad-phandelver**. Celui-ci est néanmoins toujours installé (**environ 446 Mo**) et actif. Il n'a pas été désinstallé.
+- Inventaire des scènes restantes : dépendances de module limitées à **ec-maps-remake-by-lios** (147 références de scène) et **monster-core-private-art** (145 références de tokens). Il reste seulement **5 fichiers locaux introuvables** (4 sons et 1 tuile), sans lien avec Phandelver.
+- **Deidril 7.90 est incompatible avec la version de PF2e en cours** : il demande au minimum PF2e 8.5.0 ; ce monde est en **PF2e 8.4.1** sous Foundry **V14.365**.
+- **Deidril 7.87**, distribution officielle, est compatible Foundry V14 et exige au minimum PF2e 8.0.0. Cette version a été **installée sur disque sans activation**, dans le dossier des modules du mini-PC. Le client actuellement connecté ne l'a pas encore chargée ; aucun redémarrage ni import n'a été lancé.
+- **Pilote d'import proposé** : PDF anglais original *Pathfinder Society S03-16 — Escape from Oppara*, déjà présent dans la bibliothèque privée, 34 pages, non chiffré. Deidril référence ce scénario parmi ceux pris en charge. Le module s'utilise via le panneau de configuration Foundry **Helyx - Import PDF** ; fournir le PDF dans ce sélecteur depuis le client MJ après activation. Attention : les identifiants d'objets importés ne sont pas stables d'un import à l'autre.
+- Les rapports détaillés et le package Deidril 7.87 (SHA-256 **a7bf73b332c726c5abea64d3224222f9bdc3a8f8c6717c22491010b9f714387e**) restent sur le mini-PC, dans l'audit privé. Aucune illustration de PDF n'est mise dans GitHub.
+
+**Avant d'importer :** actualiser le catalogue de modules Foundry si nécessaire, puis activer **Deidril 7.87** pour le monde et fournir le PDF du pilote ; ne pas accepter une mise à jour automatique vers 7.90 sans vérifier la version du système PF2e. Contrôler les scènes, journaux et Actors générés avant de tenter un second import.
+
+### PFS S01-00 — Cartes réorientées et repères MJ (11 novembre 2026)
+
+- Les deux scènes PFS S01-00 ont conservé leurs UUID, mais leurs images privées ont été tournées pour retrouver l'orientation du PDF. Images actuelles : orrery-archive-portrait-aligned.webp et awash-in-slurry-portrait-aligned.webp, dans worlds/test-pf2/images/scenes/pfs-s01-00/. Copies d'origine et snapshots avant modification conservés.
+- Grilles vérifiées à 85 et 66 px pour 5 pieds ; calage visuel local de certains secteurs de la scène B encore à confirmer.
+- Création de **14 repères MJ cliquables** renvoyant à deux journaux privés (16 pages) ; troisième journal privé de trois documents joueurs issus des pages 16–17 du PDF, à partager au bon moment. Aucun accès joueur par défaut.
+- **Non terminé :** aucun mur, lumière dynamique ou token préparé sur ces deux scènes. Il reste à les préparer et à valider visuellement en client MJ.
+- Détails : [fiche du scénario](../campagnes/Scenario-Origines-Route-Ouverte.md). Pas d'images/PDF propriétaires dans GitHub.
+
+## Convention MJ — ascendance des PNJ temporaires (12 novembre 2026)
+
+Tout **personnage temporaire de préparation sans portrait** doit avoir une **ascendance affichée**, pour que le MJ puisse choisir une image cohérente. Préciser les ascendants dont la source est sûre et indiquer clairement **« Inconnue »** ou une hypothèse de travail **« Humain (choix MJ) »** lorsqu'elle ne l'est pas. **Ne jamais déduire une ascendance certaine du seul nom.** Le bouton séparé **« Enregistrer comme PNJ permanent »** crée une fiche privée dans la base MJ, réutilisable même sans rencontre par les PJ ; il n'envoie rien automatiquement sur Discord, Foundry ou wiki. Voir [préparations de séances](../../docs/pf2/session-preparations.md).
+
+## Convention MJ — combats adaptés et « comment le jouer » (12 novembre 2026)
+
+**À appliquer à tous les futurs Actors PNJ/monstres préparés, en plus de la règle de nommage des tokens.** Le MJ découvre encore certaines règles : une fiche techniquement correcte **sans mode d'emploi tactique** n'est pas suffisante.
+
+1. **Partir des vrais PJ et de leur niveau**, et vérifier le **budget d'XP PF2e pour le nombre de personnages** avant la mise en place. Ne jamais importer tels quels les niveaux de difficulté d'un scénario conçu pour un autre groupe. Distinguer clairement le **statblock original** de son **adaptation réelle en monde** ; réajuster attaques, dégâts, PV, CA, DD, capacités et danger complexe, puis revérifier le total XP. Éviter les créatures très au-dessus du groupe ; la difficulté est sensible aux écarts de niveau.
+2. **Réutiliser les compendiums** en priorité. Si le bon thème de créature existe, préférer un clone identifié et **rééquilibré de manière cohérente** à un acteur générique mal adapté. Un simple texte « niveau 2 » sur un monstre niveau 7 ne réduit aucune de ses statistiques : contrôler les données mécaniques et capacités.
+3. **Toutes les actions utiles doivent exister réellement dans Foundry** : attaques, dégâts, munitions, bombes, élixirs, objets équipés, aptitudes à actions/réactions, états et sauvegardes. **Pour tout lanceur de sorts**, intégrer **les sorts dans ses entrées de lancement**, avec rang, DD, attaques de sort et préparations/slots ou usages adaptés, pas seulement une liste dans la description. **Ne pas attribuer de sorts à tort aux alchimistes** : leurs bombes/élixirs relèvent des règles alchimiques et doivent être prêts à utiliser comme Items.
+4. **Sur chaque Actor**, créer une courte section privée **« Comment le jouer (MJ) »** (3 à 6 lignes) : objectif/attitude, ouverture de combat ou première action caractéristique, combinaison de 1–2 capacités, déplacements/terrain, réaction lorsqu'il perd l'avantage. Écrire pour un MJ qui **ne connaît pas encore tous les dons/sorts** : faire ressortir les actions concrètes, pas un catalogue de références.
+5. **Dans le journal de la salle**, rappeler en 2–4 lignes les gestes clés du combat : « Au premier tour, X fait Y ; au second tour, s'il peut, Z ; attention à l'effet de A ; ils cherchent à fuir/négocier lorsque… ». Éviter le « attaque, attaque, attaque » comme routine unique ; encourager **déplacements, couverts, contrôle, coordination et utilisation du décor**.
+6. **Vérifier dans Foundry par une action réelle** qu'un Actor est jouable : ouvrir la fiche, utiliser un sort/une bombe/une aptitude, vérifier calculs, charges, consommations et macros/routines. Recontrôler l'image et la visibilité du token, les droits des notes MJ et le placement final. Sans test, garder un statut « préparé sur papier / non validé en Foundry ».
+
+**Cas pilote actuel** : `PFS 1-00` à Quantium, désormais préparé pour **4 PJ niveau 3**. La fiche détaillée de [la Route ouverte](../campagnes/Scenario-Origines-Route-Ouverte.md) propose le rebalancement des égouts. Les statblocks originaux niveau 5–7 n'y sont **pas** acceptables tels quels. Le 12 novembre, l'accès au relais a été bloqué par les contrôles d'exécution ; ces consignes sont documentées, **pas déployées** dans le monde.
+
+## Convention MJ — explorer une carte par journaux, Actors et coffres (12 novembre 2026)
+
+À **généraliser** depuis la méthode déjà employée dans les scènes des **Sept Fléaux de Pointesable** : une carte de donjon sert à la véritable exploration, et **le conducteur de séance reste compact**. Ne pas générer une carte tactique complète lorsqu'une loge, un bureau ou une salle d'archives fonctionne mieux en RP.
+
+### Composition d'une scène explorée
+
+1. **Une note de journal par salle ou zone pertinente**, positionnée sur la carte, visible **MJ uniquement**. La page décrit ce que les PJ perçoivent, les éléments interactifs, les dangers/aptitudes/DD, les créatures et le butin ; elle distingue la description à lire des secrets de l'arbitre. Réutiliser les journaux existants, corriger et déplacer leurs repères plutôt que fabriquer des doublons.
+2. **Les Actors/jetons mécaniques sont placés là où ils seront rencontrés** ; réutiliser d'abord un Actor déjà présent ou une entrée de bestiaire/compendium (Monster Core, NPC Core, Bestiary, etc.), afin de récupérer sa statistique et si possible son portrait. N'inventer un Actor spécifique que si les références ne conviennent pas ; les dangers (mécaniques, moisissures, gouffres) peuvent rester des **journaux ou dangers Foundry**, sans faux monstre.
+3. **Coffres / Actors `loot` invisibles pour les joueurs**, uniquement aux emplacements où un butin exploitable existe réellement. Propriétés par défaut **privées au MJ**, token caché et visibilité contrôlée. Renseigner l'inventaire exact d'après la source, pas un butin improvisé pour remplir la carte. Les objets de quête restent identifiés séparément du trésor commercial.
+4. **Murs, passages, portes, lumière et navigation** : vérifier les dimensions et l'alignement des cases avant de poser les tokens ; ne pas dévoiler les salles inexplorées via des icônes, étiquettes ou lumières. Les notes MJ et Actors dissimulés ne doivent pas devenir lisibles aux joueurs à cause de droits trop ouverts.
+
+### Convention obligatoire de nommage des tokens
+
+**Nom du token toujours affiché à tous** (Foundry `displayName` : mode **Always / Toujours visible**, y compris sur les clones créés depuis un compendium), sans divulguer les secrets de scénario.
+
+- **Créature clairement identifiable** : dénomination **spécifique de son espèce/type visuel** lorsque plausible — `Pudding noir`, `Gobelin A`, `Gobelin B`, `Vase A`, `Vase B`. Numéroter/lettre A, B, C pour distinguer les exemplaires.
+- **Monstre dont l'identité réelle est secrète ou trompeuse** : utiliser une apparence/description visible **informative** mais non spoilante, par ex. `Démon` (si démon manifeste), `Poupée de glaise` (pour un automate dont le nom n'a pas été révélé), `Garde masqué` ; ne pas afficher le nom individuel caché ou un type surnaturel invisible aux PJ.
+- **PNJ réellement nommé et identifié dans la scène** : nom propre (`Bijan Ohrlavi`, `Zaynap Ohrlavi`). Si les PJ ne connaissent pas encore son nom, employer un libellé descriptif jusqu'à la présentation, puis mettre à jour le token.
+- **Éviter deux extrêmes** : les noms trop flous (par ex. `Animal bestial`, `Créature de feu` lorsque l'espèce est reconnaissable), et les noms encyclopédiques ou secrets d'une entité qui n'a pas été identifiée.
+
+**Distinguer le nom affiché des autres visibilités :** un nom en mode Always ne rend pas un token caché visible, ne le dévoile pas sur une scène inexplorée et ne donne aucune permission de consulter la fiche. Vérifier nom, `displayName`, `hidden`, `ownership`, image `Actor.img` et texture du token **dans Foundry après création** ; la simple présence d'un fichier portrait sur disque ne prouve pas qu'il est utilisé.
+
+### Méthode technique et blocages
+
+Travailler sur le **monde effectivement ouvert**, via **Foundry REST Relay connecté à un client GM** ou l'interface Foundry ; lire d'abord Scene/Actors/Notes/carte et faire une sauvegarde ciblée autorisée avant un remplacement massif. Modifier les documents par les endpoints normaux `/canvas/{documentType}`, `/create`, `/update`, `/scene` (selon l'opération), puis **relire le résultat**. Ne jamais modifier directement LevelDB, ni injecter des scénarios dans le module ou un hook de démarrage pour contourner une panne du Relay.
+
+**Cas concret 12 novembre 2026** : scènes du scénario PFS 1-00 déjà référencées dans [la fiche de scénario](../campagnes/Scenario-Origines-Route-Ouverte.md). Le service Relay répondait, mais l'unique client `test-pf2` était indiqué hors ligne ; **aucun token, Actor, coffre ni repère n'a été modifié dans ce contrôle**. Reprendre les placements par le processus nominal une fois le client GM connecté.

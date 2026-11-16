@@ -70,7 +70,7 @@ Ce groupe est plus célèbre à l'échelle mondiale que celui de Corvan parce qu
 
 - **Sheila Heidmarch** — grande figure canonique et figure centrale du groupe ;
 - **Aelyra** — elfe, magus et archéologue, sœur aînée de **Lethariel** ;
-- **Nérys** — ancien cube gélatineux devenu une personne humanoïde, puis champion de **Nocticula** ;
+- **Galahen** — ancien cube gélatineux devenu une personne humanoïde, puis champion de **Nocticula** ;
 - **Rovan Dheris** — forgeron nain de Janderhoff, érudit des runes et des métaux extraordinaires ;
 - **Veska Ornel** — sorcière varisienne spécialisée dans les présages, les incohérences du destin et les phénomènes temporels.
 

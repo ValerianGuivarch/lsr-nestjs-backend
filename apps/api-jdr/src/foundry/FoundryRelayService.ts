@@ -40,6 +40,92 @@ export class FoundryRelayService {
   listClients(): Promise<unknown> { return this.request('/clients') }
 
   /**
+   * GM scene bridge. The controller validates an independent internal
+   * authorization header before entering any of these methods.
+   * The Foundry Relay API key never leaves this server process.
+   */
+  async readGmScene(uuid: string): Promise<unknown> {
+    const sceneId = this.gmSceneId(uuid)
+    const clientId = await this.gmWorldClientId()
+    return this.request('/get?' + new URLSearchParams({ clientId, uuid: 'Scene.' + sceneId }), {}, 30_000)
+  }
+
+  async listGmCanvas(uuid: string, documentType: string): Promise<unknown> {
+    const sceneId = this.gmSceneId(uuid)
+    const type = this.gmCanvasType(documentType)
+    const clientId = await this.gmWorldClientId()
+    return this.request('/canvas/' + type + '?' + new URLSearchParams({ clientId, sceneId }), {}, 30_000)
+  }
+
+  async createGmCanvas(uuid: string, documentType: string, input: unknown): Promise<unknown> {
+    const sceneId = this.gmSceneId(uuid)
+    const type = this.gmCanvasType(documentType)
+    const data = this.gmInputData(input)
+    const clientId = await this.gmWorldClientId()
+    const result = await this.request('/canvas/' + type + '?' + new URLSearchParams({ clientId, sceneId }), {
+      method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ sceneId, data })
+    }, 30_000)
+    return result
+  }
+
+  async updateGmCanvas(uuid: string, documentType: string, documentId: string, input: unknown): Promise<unknown> {
+    const sceneId = this.gmSceneId(uuid)
+    const type = this.gmCanvasType(documentType)
+    if (!/^[A-Za-z0-9]{16}$/.test(documentId)) throw new BadRequestException('ID de document Foundry invalide.')
+    const data = this.gmInputData(input)
+    const clientId = await this.gmWorldClientId()
+    return this.request('/canvas/' + type + '?' + new URLSearchParams({ clientId, sceneId, documentId }), {
+      method: 'PUT', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ sceneId, documentId, data })
+    }, 30_000)
+  }
+
+  async createGmWorldDocument(type: string, input: unknown): Promise<unknown> {
+    if (!['Actor', 'JournalEntry'].includes(type)) throw new BadRequestException('Type de document non autorisé.')
+    const data = this.gmInputData(input)
+    const clientId = await this.gmWorldClientId()
+    return this.request('/create?' + new URLSearchParams({ clientId }), {
+      method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ entityType: type, data })
+    }, 30_000)
+  }
+
+  async updateGmWorldDocument(uuid: string, input: unknown): Promise<unknown> {
+    if (!/^(Actor|JournalEntry)\.[A-Za-z0-9]{16}$/.test(uuid)) throw new BadRequestException('UUID de document Foundry invalide.')
+    const data = this.gmInputData(input)
+    const clientId = await this.gmWorldClientId()
+    return this.request('/update?' + new URLSearchParams({ clientId, uuid }), {
+      method: 'PUT', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ data })
+    }, 30_000)
+  }
+
+  private gmSceneId(uuid: string): string {
+    if (!/^Scene\.[A-Za-z0-9]{16}$/.test(uuid)) throw new BadRequestException('UUID de scène Foundry invalide.')
+    return uuid.slice('Scene.'.length)
+  }
+
+  private gmCanvasType(value: string): string {
+    const allowed = ['tokens', 'notes', 'tiles', 'walls', 'lights', 'drawings', 'regions']
+    if (!allowed.includes(value)) throw new BadRequestException('Type de calque Foundry non autorisé.')
+    return value
+  }
+
+  private gmInputData(input: unknown): Record<string, unknown> {
+    if (!input || typeof input !== 'object' || Array.isArray(input)) throw new BadRequestException('Objet de données requis.')
+    const data = input as Record<string, unknown>
+    const raw = JSON.stringify(data)
+    if (raw.length > 60_000) throw new BadRequestException('Document Foundry trop volumineux.')
+    if (Object.keys(data).some((key) => ['__proto__', 'constructor', 'prototype'].includes(key))) throw new BadRequestException('Clé non autorisée.')
+    return data
+  }
+
+  private async gmWorldClientId(): Promise<string> {
+    const clients = await this.listClients() as { clients?: Array<RelayClient & { worldId?: string }> }
+    const client = clients.clients?.find((item) => item.isOnline === true && item.worldId === 'test-pf2' && typeof item.clientId === 'string')
+    if (!client || typeof client.clientId !== 'string') throw new ServiceUnavailableException('Le client MJ test-pf2 est hors ligne.')
+    return client.clientId
+  }
+
+
+  /**
    * Deliver the public Discord presentation even when no MJ browser is open.
    * Check both native toolkit flags and durable HTML markers before posting.
    * No numeric chatType: Foundry V14 rejects type 0 with a null result.

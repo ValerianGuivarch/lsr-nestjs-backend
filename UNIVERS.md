@@ -10,6 +10,7 @@ La continuité éditoriale est distincte des entités métier SQLite. Les secret
 - [Pointesable](pf2/univers/Pointesable.md)
 - [Chronologie thassilonienne](pf2/univers/Chronologie-thassilon.md)
 - [Labyrinthe de la Route Ouverte et portails](pf2/univers/Labyrinthe-et-portails.md)
+- [Trois pôles majeurs de formation magique — Absalom, Nantambu, Quantium](pf2/univers/Ecoles-de-magie.md)
 - [Elfes des cavernes et refuge azlanti](pf2/univers/Elfes-des-cavernes-et-refuge-azlanti.md)
 - [Cadre et continuité](pf2/univers/Cadre-et-continuite.md)
 

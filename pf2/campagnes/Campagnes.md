@@ -13,6 +13,8 @@ Ce document est un aiguillage : une **campagne réellement jouée** n'est pas la
 
 ## Fiches de campagne
 
+- [La Route ouverte — campagne transverse PFS](Campagne-Route-Ouverte.md) — treize scénarios sur plusieurs saisons, deux fils narratifs (pacte historique et labyrinthe), ouverture 1-00 préparée à Quantium avec l'intrigue personnelle de Yaz, non jouée.
+
 - [Agents d'Absalom](Campagne-Agents-d-Absalom.md) — campagne non terminée ; état des événements réellement joués à confirmer.
 
 - [Campagne du Cartel du Sel](Campagne-Cartel-du-Sel.md) — campagne maison construite progressivement ; sa première partie, issue de *La Vengeance de la rue Rose*, est terminée et l'enquête porte désormais sur le Cartel lui-même.
