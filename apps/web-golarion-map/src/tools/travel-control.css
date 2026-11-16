@@ -7,3 +7,5 @@
 .travel-map-panel .travel-map-actions button{width:auto;height:auto;padding:7px 10px;border-radius:4px;font:600 12px/1.4 system-ui;background:#eee7d6;color:#5a451c;cursor:pointer}
 .travel-map-panel .travel-map-actions .travel-map-calc{background:#765719;color:white}
 .travel-map-panel p{margin:10px 0 0;font-size:12px;line-height:1.4}
+
+.travel-map-stop{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px;align-items:center}.travel-map-panel .travel-map-stop button,.travel-map-panel .travel-map-add-stop{width:auto;height:auto;border:1px solid #d8c8a6;border-radius:4px;padding:5px 8px;background:#fff9ed;color:#765719;font:600 12px system-ui;cursor:pointer}.travel-map-panel .travel-map-add-stop:disabled{opacity:.5;cursor:not-allowed}

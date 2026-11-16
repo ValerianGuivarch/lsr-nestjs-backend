@@ -11,19 +11,25 @@ describe('Monde – Voyages', () => {
     ;(globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true
     const node = document.createElement('div'); document.body.append(node)
     const root = createRoot(node)
-    const destination = travelCities.find(c => c.original === 'Sandpoint')!
+    const destination = travelCities.find(c => c.original === 'Breachill')!
+    const via = travelCities.find(c => c.original === 'Almas')!
     try {
       await act(async () => root.render(<TravelsPage />))
       expect(resolvePf2Route(viewPaths.voyages)).toEqual({kind:'view',view:'voyages'})
       const select = node.querySelector<HTMLSelectElement>('select[aria-label="Arrivée"]')!
       await act(async () => { select.value = destination.id; select.dispatchEvent(new Event('change', { bubbles: true })) })
+      const add = [...node.querySelectorAll('button')].find(b => b.textContent === '+ Ajouter une étape')!
+      await act(async () => add.click())
+      const step = node.querySelector<HTMLSelectElement>('select[aria-label="Étape 1"]')!
+      await act(async () => { step.value=via.id; step.dispatchEvent(new Event('change',{bubbles:true})) })
       const button = [...node.querySelectorAll('button')].find(b => b.textContent === 'Calculer l’itinéraire')!
       await act(async () => { button.click(); await new Promise(resolve => setTimeout(resolve, 10)) })
       expect(node.textContent).toContain('Distance estimée')
       expect(node.textContent).toContain('Total · 4 voyageurs')
       expect(node.querySelector('a[href*="map.l7r.fr/mj"]')?.getAttribute('href')).toContain('travelTo='+destination.id)
+      expect(node.querySelector('a[href*="map.l7r.fr/mj"]')?.getAttribute('href')).toContain('travelVia='+via.id)
       expect(node.textContent).not.toContain('Aucun itinéraire')
-      console.log('Exemple Absalom → Pointesable:', node.querySelector('.travel-metrics')?.textContent)
+      console.log('Exemple Absalom → Almas → Brèchemont:', node.querySelector('.travel-metrics')?.textContent)
     } finally { await act(async () => root.unmount()); node.remove() }
   })
 })

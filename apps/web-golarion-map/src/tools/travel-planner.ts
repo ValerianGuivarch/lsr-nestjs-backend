@@ -1,17 +1,18 @@
 import gridData from '../../resources/travel-grid.json'
+import riverData from '../../resources/travel-rivers.json'
 import sourcePoints from '../../resources/map-source-points.json'
 import namesFr from '../../resources/place-names.fr.json'
 import { defaultMilesPerDay, travelTariffs } from './travel-rates'
 export { defaultMilesPerDay, travelTariffs } from './travel-rates'
 
 export type Coord = [number, number]
-export type TravelMode = 'walk' | 'horse' | 'caravan' | 'carriage' | 'ship' | 'mixed'
-type LandMode = Exclude<TravelMode, 'ship' | 'mixed'>
-export type TravelLeg = { mode: LandMode | 'ship'; km: number; days: number; points: Coord[] }
+export type TravelMode = 'walk' | 'horse' | 'caravan' | 'carriage' | 'ship' | 'riverboat' | 'mixed'
+type LandMode = Exclude<TravelMode, 'ship' | 'riverboat' | 'mixed'>
+export type TravelLeg = { mode: LandMode | 'ship' | 'riverboat'; km: number; days: number; points: Coord[] }
 export type TravelResult = { legs: TravelLeg[]; km: number; days: number; fareCopper: number; transfers: number }
 export type TravelCity = { id: string; name: string; original: string; coord: Coord; land: number; port: number | null }
 export const travelModes: Record<TravelMode, string> = {
-  walk: 'À pied', horse: 'À cheval', caravan: 'Caravane', carriage: 'Calèche', ship: 'Navire', mixed: 'Mixte (marche + navire)'
+  walk: 'À pied', horse: 'À cheval', caravan: 'Caravane', carriage: 'Calèche', ship: 'Navire (mer + fleuve)', riverboat: 'Bateau fluvial', mixed: 'Mixte (marche + mer + rivière)'
 }
 export const KM_PER_MILE = 1.609344
 
@@ -98,10 +99,10 @@ for (const p of ports) for (const s of neighbors(p, false).filter(isSea)) {
   list.push(p); seaPorts.set(s, list)
 }
 export const getTravelCity = (id: string) => travelCities.find(city => city.id === id)
-export const citySearch = (query: string, coastal = false) => {
+export const citySearch = (query: string, waterMode: boolean | 'riverboat' = false) => {
   const normalize = (s: string) => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim()
   const q = normalize(query)
-  return travelCities.filter(c => (!coastal || c.port !== null) && (!q || normalize(c.name + ' ' + c.original).replace(/ /g, '').includes(q.replace(/ /g, ''))))
+  return travelCities.filter(c => (!waterMode || (waterMode === 'riverboat' ? riverAccess.has(c.land) : c.port !== null || riverAccess.has(c.land))) && (!q || normalize(c.name + ' ' + c.original).replace(/ /g, '').includes(q.replace(/ /g, ''))))
 }
 type HeapItem = [number, number]
 class MinHeap {
@@ -130,7 +131,118 @@ class MinHeap {
     return root
   }
 }
-type Options = { landMiles?: number; shipMiles?: number }
+// River states are separate from land and marine cells: a river never becomes
+// a walkable shortcut or a fictitious sea corridor. Join actual endpoints only.
+const riverCoords: Coord[] = []
+const riverNeighbors: number[][] = []
+const riverBuckets = new Map<string, number[]>()
+const pointIds = new Map<string, number>()
+const terminals = new Set<number>()
+const bucket = (p: Coord) => [Math.floor(p[0] * 10), Math.floor(p[1] * 10)]
+const key = (x: number, y: number) => x + ':' + y
+function riverNode(p: Coord) {
+  const k = p.join(',')
+  const existing = pointIds.get(k)
+  if (existing !== undefined) return existing
+  const i = riverCoords.length
+  riverCoords.push(p); riverNeighbors.push([]); pointIds.set(k, i)
+  const [x,y] = bucket(p), b = key(x,y)
+  const list = riverBuckets.get(b) ?? []; list.push(i); riverBuckets.set(b,list)
+  return i
+}
+function joinRiver(a: number, b: number) {
+  if (a === b || riverNeighbors[a].includes(b)) return
+  riverNeighbors[a].push(b); riverNeighbors[b].push(a)
+}
+function closestRiver(p: Coord, maxKm: number, skip: (i: number) => boolean = () => false) {
+  const [x,y] = bucket(p)
+  const dx = Math.ceil(maxKm / (11 * Math.cos(p[1] * Math.PI / 180))) + 1
+  const dy = Math.ceil(maxKm / 11) + 1
+  let best = -1, bestKm = maxKm
+  for (let u = x-dx; u <= x+dx; u++) for (let v = y-dy; v <= y+dy; v++)
+    for (const i of riverBuckets.get(key(u,v)) ?? []) {
+      if (skip(i)) continue
+      const d = distanceKm(p, riverCoords[i])
+      if (d < bestKm) { best = i; bestKm = d }
+    }
+  return best
+}
+for (const path of riverData.paths as Coord[][]) {
+  const ids = path.map(riverNode)
+  terminals.add(ids[0]); terminals.add(ids[ids.length-1])
+  for (let j=1; j<ids.length; j++) joinRiver(ids[j-1],ids[j])
+}
+// A tiny tolerance accommodates junctions digitized on a separate line.
+for (const i of terminals) {
+  const j = closestRiver(riverCoords[i], 2.5, n => n === i || riverNeighbors[i].includes(n))
+  if (j >= 0) joinRiver(i,j)
+}
+// A town can reach more than one river basin (e.g. Petitioner's Port).
+const components = new Int32Array(riverCoords.length); components.fill(-1)
+for (let r=0; r<riverCoords.length; r++) {
+  if (components[r] >= 0) continue
+  const queue=[r]; components[r]=r
+  for (let i=0; i<queue.length; i++) for (const n of riverNeighbors[queue[i]]) {
+    if (components[n] < 0) { components[n]=r; queue.push(n) }
+  }
+}
+const riverAccess = new Map<number, number[]>()
+const riverLand = new Map<number, number[]>()
+const riverMouth = new Map<number, number>()
+const seaRiver = new Map<number, number[]>()
+function link(map: Map<number, number[]>, a: number, b: number) {
+  const list = map.get(a) ?? []
+  if (!list.includes(b)) list.push(b)
+  map.set(a,list)
+}
+// Local settlement/river links are estimated boarding access, not proof of a port.
+for (const city of travelCities) {
+  const seen = new Set<number>()
+  for (let k=0; k<4; k++) {
+    const r = closestRiver(city.coord,22,n => seen.has(components[n]))
+    if (r < 0) break
+    seen.add(components[r])
+    for (const i of new Set([city.land, ...(city.port === null ? [] : [city.port])])) {
+      link(riverAccess,i,r); link(riverLand,r,i)
+    }
+  }
+}
+function nearestWater(p: Coord, maxKm: number, seaOnly = false) {
+  const i = cellAt(p)
+  if (i < 0) return -1
+  const candidates = new Set([i,...neighbors(i)])
+  for (const j of [...candidates]) for (const k of neighbors(j)) candidates.add(k)
+  let best = -1, bestKm = maxKm
+  for (const j of candidates) if (isSea(j) || (!seaOnly && cells[j] === 5)) {
+    const d = distanceKm(p,cellCoord(j))
+    if (d < bestKm) { best = j; bestKm = d }
+  }
+  return best
+}
+// Infer flow towards mapped water outlets. An inland lake supplies direction
+// but never grants sea travel. Isolated networks use the conservative upstream pace.
+const outletDistances = new Float64Array(riverCoords.length); outletDistances.fill(Infinity)
+const flowHeap = new MinHeap()
+for (const r of terminals) {
+  if (riverNeighbors[r].length !== 1) continue
+  // Almas is a canonical sea port; its estuary's water polygon is isolated
+  // by the coarse mesh. Link the actual Andoshen mouth to the nearest sea cell.
+  const almasEstuary = distanceKm(riverCoords[r],[-2.84373,33.49074]) < 1
+  const water = nearestWater(riverCoords[r],16,almasEstuary)
+  if (water < 0) continue
+  outletDistances[r] = 0; flowHeap.push([r,0])
+  if (isSea(water)) { riverMouth.set(r,water); link(seaRiver,water,r) }
+}
+for (let item = flowHeap.pop(); item; item = flowHeap.pop()) {
+  const [r,d] = item
+  if (d !== outletDistances[r]) continue
+  for (const n of riverNeighbors[r]) {
+    const next = d + distanceKm(riverCoords[r],riverCoords[n])
+    if (next < outletDistances[n]) { outletDistances[n] = next; flowHeap.push([n,next]) }
+  }
+}
+
+export type TravelOptions = { landMiles?: number; shipMiles?: number; riverUpMiles?: number; riverDownMiles?: number }
 function terrainRate(terrain: number, mode: LandMode) {
   if (terrain === 3) return mode === 'carriage' ? 0 : 1 / 3
   if (terrain === 2) return mode === 'carriage' ? 0 : 1 / 2
@@ -139,36 +251,44 @@ function terrainRate(terrain: number, mode: LandMode) {
 }
 export function travelFareCopper(legs: TravelLeg[]): number {
   let total = 0
-  for (const mode of ['caravan', 'carriage', 'ship'] as const) {
+  for (const mode of ['caravan', 'carriage', 'ship', 'riverboat'] as const) {
     const km = legs.filter(l => l.mode === mode).reduce((sum, l) => sum + l.km, 0)
     total += Math.ceil(km / KM_PER_MILE / 5 * travelTariffs[mode])
   }
   total += Math.ceil(legs.filter(l => l.mode === 'horse').reduce((s, l) => s + l.days, 0)) * travelTariffs.horsePerDay
   return total
 }
-export function calculateTravel(from: TravelCity, to: TravelCity, mode: TravelMode, options: Options = {}): TravelResult | null {
+export function calculateTravel(from: TravelCity, to: TravelCity, mode: TravelMode, options: TravelOptions = {}): TravelResult | null {
   if (from.id === to.id) return { legs: [], km: 0, days: 0, fareCopper: 0, transfers: 0 }
-  if (mode === 'ship' && (from.port === null || to.port === null)) return null
-  const terrestrial: LandMode = mode === 'mixed' || mode === 'ship' ? 'walk' : mode
+  const aquaticOnly = mode === 'ship' || mode === 'riverboat'
+  const canSea = mode === 'ship' || mode === 'mixed'
+  const canRiver = canSea || mode === 'riverboat'
+  const terrestrial: LandMode = aquaticOnly || mode === 'mixed' ? 'walk' : mode
   const positive = (n: number | undefined, fallback: number) => n && Number.isFinite(n) && n > 0 ? Math.min(n, 200) : fallback
   const landSpeed = positive(options.landMiles, defaultMilesPerDay[terrestrial]) * KM_PER_MILE
   const seaSpeed = positive(options.shipMiles, defaultMilesPerDay.ship) * KM_PER_MILE
-  const marineOnly = mode === 'ship'
-  const multimodal = mode === 'mixed' || marineOnly
-  const limit = multimodal ? size * 2 : size
-  const start = marineOnly ? from.port! : from.land
-  const goal = marineOnly ? to.port! : to.land
-  // Sea-only routes may enter/leave only at their two endpoints.
-  const canTransfer = (i: number) => marineOnly ? i === start || i === goal : ports.has(i)
+  const riverUp = positive(options.riverUpMiles, defaultMilesPerDay.riverUp) * KM_PER_MILE
+  const riverDown = positive(options.riverDownMiles, defaultMilesPerDay.riverDown) * KM_PER_MILE
+  if (mode === 'ship' && [from,to].some(c => c.port === null && !riverAccess.has(c.land))) return null
+  if (mode === 'riverboat' && [from,to].some(c => !riverAccess.has(c.land))) return null
+  const start = mode === 'ship' ? from.port ?? from.land : from.land
+  const goal = mode === 'ship' ? to.port ?? to.land : to.land
+  // Sea and rivers are independent state spaces, not terrain types.
+  const riverBase = 2 * size
+  const limit = canRiver ? riverBase + riverCoords.length : size
+  const isRiverState = (s: number) => s >= riverBase
+  const isSeaState = (s: number) => s >= size && s < riverBase
+  const stateCoord = (s: number): Coord => isRiverState(s) ? riverCoords[s-riverBase] : cellCoord(s % size)
+  const canTransfer = (i: number) => aquaticOnly ? i === start || i === goal : true
   const allowedLand = (i: number) => isLand(i) && terrainRate(cells[i], terrestrial) > 0
-  if (!marineOnly && (!allowedLand(start) || !allowedLand(goal))) return null
+  if (!aquaticOnly && (!allowedLand(start) || !allowedLand(goal))) return null
   const g = new Float64Array(limit); g.fill(Infinity)
   const previous = new Int32Array(limit); previous.fill(-1)
   const done = new Uint8Array(limit)
   const heap = new MinHeap()
   const targetCoord = cellCoord(goal)
-  const fastest = multimodal ? Math.max(landSpeed, seaSpeed) : landSpeed
-  const heuristic = (i: number) => distanceKm(cellCoord(i % size), targetCoord) / fastest
+  const fastest = Math.max(landSpeed, canSea ? seaSpeed : 0, canRiver ? riverUp : 0, canRiver ? riverDown : 0)
+  const heuristic = (i: number) => distanceKm(stateCoord(i), targetCoord) / fastest
   g[start] = 0; heap.push([start, heuristic(start)])
   const update = (a: number, b: number, days: number) => {
     const next = g[a] + days
@@ -179,11 +299,23 @@ export function calculateTravel(from: TravelCity, to: TravelCity, mode: TravelMo
     if (done[state]) continue
     done[state] = 1
     if (state === goal) break
-    const sea = state >= size, i = state % size, point = cellCoord(i)
+    const point = stateCoord(state)
+    if (isRiverState(state)) {
+      const r = state-riverBase
+      for (const n of riverNeighbors[r]) {
+        const speed = outletDistances[n] < outletDistances[r] ? riverDown : riverUp
+        update(state,riverBase+n,distanceKm(point,riverCoords[n])/speed)
+      }
+      for (const l of riverLand.get(r) ?? []) if (canTransfer(l))
+        update(state,l,distanceKm(point,cellCoord(l))/landSpeed+0.25)
+      const mouth = riverMouth.get(r)
+      if (canSea && mouth !== undefined) update(state,size+mouth,distanceKm(point,cellCoord(mouth))/Math.min(seaSpeed,riverDown)+0.25)
+      continue
+    }
+    const sea = isSeaState(state), i = state % size
     const permitted = sea ? isSea : allowedLand
-    if (sea || !marineOnly) for (const j of neighbors(i)) {
+    if (sea || !aquaticOnly) for (const j of neighbors(i)) {
       if (!permitted(j)) continue
-      // Diagonal moves must not cut across land/water corners.
       if (i % width !== j % width && Math.floor(i / width) !== Math.floor(j / width)) {
         if (!permitted(Math.floor(i / width) * width + j % width) || !permitted(Math.floor(j / width) * width + i % width)) continue
       }
@@ -191,13 +323,16 @@ export function calculateTravel(from: TravelCity, to: TravelCity, mode: TravelMo
       const rate = sea ? 1 : Math.min(terrainRate(cells[i], terrestrial), terrainRate(cells[j], terrestrial))
       update(state, j + (sea ? size : 0), km / ((sea ? seaSpeed : landSpeed) * rate))
     }
-    if (multimodal) {
-      if (!sea && canTransfer(i)) {
+    if (canSea) {
+      if (!sea && ports.has(i) && canTransfer(i)) {
         for (const j of neighbors(i, false).filter(isSea)) update(state, j + size, distanceKm(point, cellCoord(j)) / seaSpeed + 0.25)
       } else if (sea) {
         for (const j of seaPorts.get(i) ?? []) if (canTransfer(j)) update(state, j, distanceKm(point, cellCoord(j)) / seaSpeed + 0.25)
+        for (const r of seaRiver.get(i) ?? []) update(state,riverBase+r,distanceKm(point,riverCoords[r])/Math.min(seaSpeed,riverUp)+0.25)
       }
     }
+    if (canRiver && !sea && canTransfer(i)) for (const r of riverAccess.get(i) ?? [])
+      update(state,riverBase+r,distanceKm(point,riverCoords[r])/landSpeed+0.25)
   }
   if (!Number.isFinite(g[goal])) return null
   const path: number[] = []
@@ -213,21 +348,35 @@ export function calculateTravel(from: TravelCity, to: TravelCity, mode: TravelMo
     leg.points.push(b); leg.km += km; leg.days += days
   }
   const first = cellCoord(start), end = cellCoord(goal)
-  // The first/last connector accounts for the city position and mesh approximation.
-  // For maritime-only routes, access to the harbor is a short local walking leg.
-  append(marineOnly ? 'walk' : terrestrial, from.coord, first, distanceKm(from.coord, first) / landSpeed)
+  append(terrestrial, from.coord, first, distanceKm(from.coord, first) / landSpeed)
   for (let i = 1; i < path.length; i++) {
-    const a = path[i - 1], b = path[i], sea = a >= size || b >= size
-    if ((a >= size) !== (b >= size)) transfers++
-    append(sea ? 'ship' : terrestrial, cellCoord(a % size), cellCoord(b % size), g[b] - g[a])
+    const a = path[i-1], b = path[i]
+    const aKind = isRiverState(a) ? 'riverboat' : isSeaState(a) ? 'ship' : terrestrial
+    const bKind = isRiverState(b) ? 'riverboat' : isSeaState(b) ? 'ship' : terrestrial
+    if (aKind !== bKind) transfers++
+    // Land-to-river access is on foot; maritime transitions retain blue.
+    const kind = aKind === bKind ? aKind : aKind === 'ship' || bKind === 'ship' ? 'ship' : terrestrial
+    append(kind,stateCoord(a),stateCoord(b),g[b]-g[a])
   }
-  append(marineOnly ? 'walk' : terrestrial, end, to.coord, distanceKm(end, to.coord) / landSpeed)
+  append(terrestrial, end, to.coord, distanceKm(end, to.coord) / landSpeed)
   return { legs, km: legs.reduce((s, l) => s + l.km, 0), days: legs.reduce((s, l) => s + l.days, 0), fareCopper: travelFareCopper(legs), transfers }
 }
-export function travelMapUrl(from: TravelCity, to: TravelCity, mode: TravelMode, options: Options = {}) {
+export function calculateItinerary(stops: TravelCity[], mode: TravelMode, options: TravelOptions = {}): TravelResult | null {
+  if (stops.length < 2 || stops.length > 8) return null
+  const legs: TravelLeg[] = []
+  let transfers = 0
+  for (let i=1;i<stops.length;i++) {
+    const segment = calculateTravel(stops[i-1],stops[i],mode,options)
+    if (!segment) return null
+    legs.push(...segment.legs); transfers += segment.transfers
+  }
+  return { legs, transfers, km:legs.reduce((s,l)=>s+l.km,0), days:legs.reduce((s,l)=>s+l.days,0), fareCopper:travelFareCopper(legs) }
+}
+export function travelMapUrl(from: TravelCity, to: TravelCity, mode: TravelMode, options: TravelOptions = {}, via: TravelCity[] = []) {
   const url = new URL('https://map.l7r.fr/mj')
   url.searchParams.set('travelFrom', from.id); url.searchParams.set('travelTo', to.id); url.searchParams.set('travelMode', mode)
-  if (options.landMiles) url.searchParams.set('landMiles', String(options.landMiles))
-  if (options.shipMiles) url.searchParams.set('shipMiles', String(options.shipMiles))
+  for (const stop of via.slice(0,6)) url.searchParams.append('travelVia',stop.id)
+  for (const field of ['landMiles','shipMiles','riverUpMiles','riverDownMiles'] as const)
+    if (options[field]) url.searchParams.set(field,String(options[field]))
   return url.toString()
 }

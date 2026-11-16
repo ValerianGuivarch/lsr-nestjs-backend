@@ -6,8 +6,8 @@ import { travelCities } from './travel-planner'
 
 describe('TravelControl', () => {
   it('loads the same route from an admin link, draws the line and clears it', () => {
-    const a = travelCities.find(c => c.original === 'Absalom')!, b = travelCities.find(c => c.original === 'Sandpoint')!
-    window.history.replaceState(null, '', '/mj?travelFrom='+a.id+'&travelTo='+b.id+'&travelMode=ship')
+    const a = travelCities.find(c => c.original === 'Absalom')!, b = travelCities.find(c => c.original === "Falcon's Hollow")!, via = travelCities.find(c => c.original === 'Almas')!
+    window.history.replaceState(null, '', '/mj?travelFrom='+a.id+'&travelTo='+b.id+'&travelMode=ship&travelVia='+via.id+'&riverUpMiles=30')
     const source = { setData: vi.fn() }
     let hasSource = false, hasLayer = false
     const map = { isStyleLoaded: () => true, getSource: () => hasSource ? source : undefined,
@@ -21,6 +21,9 @@ describe('TravelControl', () => {
     expect(map.fitBounds).toHaveBeenCalled()
     const collection = source.setData.mock.calls.at(-1)?.[0]
     expect(collection.features.some((f: {properties:{mode:string}}) => f.properties.mode === 'ship')).toBe(true)
+    expect(collection.features.some((f: {properties:{mode:string}}) => f.properties.mode === 'riverboat')).toBe(true)
+    expect(el.querySelector<HTMLSelectElement>('select[aria-label="Étape 1"]')?.value).toBe(via.id)
+    expect(el.querySelector<HTMLInputElement>('input[aria-label="Miles/jour en rivière (amont)"]')?.value).toBe('30')
     expect(el.textContent).toContain('km')
     ;[...el.querySelectorAll('button')].find(b => b.textContent === 'Effacer')!.click()
     expect(source.setData).toHaveBeenLastCalledWith({type:'FeatureCollection', features:[]})
