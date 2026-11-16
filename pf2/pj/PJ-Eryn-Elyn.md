@@ -20,6 +20,12 @@ Sa grand-mère lui a prédit une existence paisible, qu’elle trouvait décevan
 
 **Objectifs connus :** comprendre le Chant et son horoscope oublié ; retrouver Cilia ; découvrir l’héritage de Lirgen ; observer des phénomènes célestes ; suivre la piste du Papillon Noir. Ne pas confondre ces intentions avec des événements effectivement joués.
 
+## Activité d’intermède — Horoscope (validée)
+
+Une semaine d’étude d’un thème astral nécessite le jour et le mois de naissance d’un personnage connu et un jet d’Occultisme. Eryn conserve le total numérique du jet dans son onglet Horoscope (un thème par personnage, révisable après une nouvelle semaine d’étude). Le signe de la [Caravane cosmique](https://pathfinderwiki.com/wiki/Cosmic_Caravan) est calculé d’après la date ; le carnet permet aussi de rédiger une interprétation personnelle facultative et de modifier ou supprimer une entrée.
+
+Lors d’une prémonition concernant ce personnage, utiliser ce total comme un jet d’Aide déjà préparé, sans nouveau jet ni action supplémentaire. Le MJ fixe le DD (15 usuel en PF2 remaster, ajustable) ; appliquer le bonus de circonstance selon le résultat de l’Aide. Un total de 24 face au DD 15 vaut ainsi +1. Cette adaptation maison ne modifie pas les sorts ni les jets Foundry. Le wiki conserve le total, pas le niveau ni le degré de réussite.
+
 ## Relations et contacts
 
 ### Famille et contacts

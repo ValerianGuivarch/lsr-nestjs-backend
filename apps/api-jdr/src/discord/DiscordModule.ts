@@ -5,6 +5,8 @@ import { Pf2ReputationController, Pf2ReputationCandidatesController } from '../p
 import { Pf2ReputationService } from '../pf2-reputation/Pf2ReputationService'
 import { Pf2RelationController } from '../pf2-reputation/Pf2RelationController'
 import { Pf2RelationService } from '../pf2-reputation/Pf2RelationService'
+import { Pf2HoroscopeController } from '../pf2-reputation/Pf2HoroscopeController'
+import { Pf2HoroscopeService } from '../pf2-reputation/Pf2HoroscopeService'
 import { DiscordCommandsService } from './DiscordCommandsService'
 import { DiscordSessionFinishController } from './DiscordSessionFinishController'
 import { DiscordService } from './DiscordService'
@@ -16,5 +18,5 @@ import { Pf2PersistenceModule } from '../pf2-storage/Pf2PersistenceModule'
 import { Pf2MjModule } from '../pf2-mj/Pf2MjModule'
 import { Pf2JournalsModule } from '../pf2-journals/Pf2JournalsModule'
 
-@Module({ imports: [FoundryRelayModule, Pf2PersistenceModule, Pf2MjModule, Pf2JournalsModule], controllers: [Pf2RequestController, Pf2ReputationController, Pf2RelationController, Pf2ReputationCandidatesController, SessionPreparationController, DiscordSessionFinishController], providers: [SessionPreparationService, DiscordCommandsService, DiscordService, DiscordQuestPilotService, Pf2RequestService, Pf2ReputationService, Pf2RelationService], exports: [DiscordService, Pf2RequestService] })
+@Module({ imports: [FoundryRelayModule, Pf2PersistenceModule, Pf2MjModule, Pf2JournalsModule], controllers: [Pf2RequestController, Pf2ReputationController, Pf2RelationController, Pf2HoroscopeController, Pf2ReputationCandidatesController, SessionPreparationController, DiscordSessionFinishController], providers: [SessionPreparationService, DiscordCommandsService, DiscordService, DiscordQuestPilotService, Pf2RequestService, Pf2ReputationService, Pf2RelationService, Pf2HoroscopeService], exports: [DiscordService, Pf2RequestService] })
 export class DiscordModule {}
