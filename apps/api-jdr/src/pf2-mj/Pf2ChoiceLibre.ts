@@ -1,6 +1,7 @@
-import { Body, Controller, Get, Header, Injectable, Param, Put, BadRequestException } from '@nestjs/common'
+import { Body, Controller, Get, Header, Injectable, Param, Put, Query, BadRequestException } from '@nestjs/common'
 import { InjectDataSource } from '@nestjs/typeorm'
 import { DataSource } from 'typeorm'
+import { normalizePreparationBody } from '../discord/PreparationBody'
 import { Pf2PersistenceService } from '../pf2-storage/Pf2PersistenceService'
 
 const kinds = ['unassigned', 'mission', 'blocked', 'personal', 'rp'] as const
@@ -51,7 +52,11 @@ export function choiceCatalogue(entries: Record<string, any>[], arcs: Record<str
     }
     const parts = arr(entry.parts).filter(part => arr(part.playableComponents).length || ['volume_aventure', 'aventure_autonome', 'scenario', 'quest'].includes(str(part.kind)))
     if (arr(entry.playableComponents).length) add(entry, '', 0, false)
-    for (const [index, part] of parts.entries()) add(part, label(part), (Number(part.sequence) || index + 1) * 1000, true)
+    for (const [index, part] of parts.entries()) {
+      // A standalone adventure can have a document-only placeholder part. Do not duplicate its explicit modules.
+      if (parts.length === 1 && entry.kind !== 'campaign' && arr(entry.playableComponents).length && !arr(part.playableComponents).length) continue
+      add(part, label(part), (Number(part.sequence) || index + 1) * 1000, true)
+    }
     if (!parts.length && !arr(entry.playableComponents).length) add(entry, '', 0, true)
   }
   return { campaigns: [...campaigns.values()].sort((a,b) => a.title.localeCompare(b.title, 'fr')), modules }
@@ -74,18 +79,18 @@ export class Pf2ChoiceLibreService {
   }
 
   async snapshot() {
-    const [catalogue, quests, votes, identities, owners, links, preparation, launcher] = await Promise.all([
+    const [catalogue, quests, votes, identities, owners, links, preparation, launcher, templateRows] = await Promise.all([
       this.catalogue(), this.persistence.listDiscordQuests(), this.persistence.listDiscordQuestVotes(),
       this.persistence.listPlayerIdentities(),
       this.db.query('SELECT o.discord_user_id AS userId,p.display_name AS name FROM pf2_player_character_owner o JOIN pf2_player_character_profile p ON p.npc_id=o.npc_id WHERE p.is_player=1 ORDER BY p.display_name'),
       this.db.query('SELECT thread_id AS threadId,kind,campaign_id AS campaignId,module_key AS moduleKey,note FROM pf2_choice_quest'),
-      this.db.query('SELECT module_key AS moduleKey,checklist,progress FROM pf2_choice_module'), this.persistence.questLauncherId(),
+      this.db.query('SELECT module_key AS moduleKey,checklist,progress FROM pf2_choice_module'), this.persistence.questLauncherId(), this.db.query('SELECT module_key AS moduleKey FROM pf2_choice_template'),
     ])
     const names = new Map(identities.map(i => [i.discordUserId, i.playerName]))
     const modules = catalogue.modules.map(m => {
       const state = preparation.find((r: any) => r.moduleKey === m.key)
       const checklist: Checklist = { ...emptyChecklist(), ...JSON.parse(state?.checklist || '{}') }
-      return { ...m, checklist, progress: state?.progress || 'todo', ready: checks.every(c => checklist[c] === 'done' || checklist[c] === 'na') }
+      return { ...m, hasTemplate: templateRows.some((r: any) => r.moduleKey === m.key), checklist, progress: state?.progress || 'todo', ready: checks.every(c => checklist[c] === 'done' || checklist[c] === 'na') }
     })
     return { campaigns: catalogue.campaigns, modules, quests: quests.filter(q => !q.completed && q.id !== launcher).map(q => {
       const link = links.find((r: any) => r.threadId === q.id)
@@ -119,13 +124,25 @@ export class Pf2ChoiceLibreService {
     })
   }
 
+  async template(moduleKey: string) {
+    const catalogue = await this.catalogue()
+    const module = catalogue.modules.find(m => m.key === moduleKey)
+    if (!module) throw new BadRequestException('Module inconnu.')
+    const rows = await this.db.query('SELECT body_json AS bodyJson FROM pf2_choice_template WHERE module_key=?',[moduleKey])
+    return { ...module, hasTemplate: Boolean(rows.length), body: rows.length ? JSON.parse(rows[0].bodyJson) : null }
+  }
+
   async saveTemplate(data: unknown) {
     const value = obj(data), moduleKey = str(value.moduleKey), preparationId = str(value.preparationId)
     const catalogue = await this.catalogue()
     if (!catalogue.modules.some(m => m.key === moduleKey)) throw new BadRequestException('Module inconnu.')
-    const rows = await this.db.query('SELECT body_json AS bodyJson FROM pf2_session_preparation WHERE id=?',[preparationId])
-    if (!rows.length) throw new BadRequestException('Préparation enregistrée introuvable.')
-    const body = JSON.parse(rows[0].bodyJson)
+    let rawBody: unknown = value.body
+    if (rawBody === undefined) {
+      const rows = await this.db.query('SELECT body_json AS bodyJson FROM pf2_session_preparation WHERE id=?',[preparationId])
+      if (!rows.length) throw new BadRequestException('Préparation enregistrée introuvable.')
+      rawBody = JSON.parse(rows[0].bodyJson)
+    }
+    const body = normalizePreparationBody(rawBody)
     if (!Array.isArray(body.stages) || !body.stages.length) throw new BadRequestException('La préparation doit contenir des étapes.')
     await this.db.query('INSERT INTO pf2_choice_template (module_key,body_json) VALUES (?,?) ON CONFLICT(module_key) DO UPDATE SET body_json=excluded.body_json,updated_at=CURRENT_TIMESTAMP',[moduleKey,JSON.stringify(body)])
     return {ok:true}
@@ -155,6 +172,8 @@ export class Pf2ChoiceLibreController {
   @Put('quests/:id') saveQuest(@Param('id') id: string, @Body() data: unknown) { return this.choice.saveQuest(id,data) }
   @Header('Cache-Control', 'private, no-store')
   @Get('templates') templates() { return this.choice.templates() }
+  @Header('Cache-Control', 'private, no-store')
+  @Get('template') template(@Query('moduleKey') moduleKey = '') { return this.choice.template(moduleKey) }
   @Header('Cache-Control', 'private, no-store')
   @Put('templates') saveTemplate(@Body() data: unknown) { return this.choice.saveTemplate(data) }
   @Header('Cache-Control', 'private, no-store')

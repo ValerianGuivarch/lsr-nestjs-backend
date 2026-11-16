@@ -162,7 +162,7 @@ Constats vérifiés sur le mini-PC le 16/11 :
 - `pf2_session_preparation` contient titre, campagne/scénario/séance, JSON étapes/blocs et révision optimiste. C'est le socle de l'éditeur modèle et du conducteur. Ajouter des modèles dédiés ou une distinction explicite modèle/instance, plutôt que dupliquer l'éditeur.
 - `pf2_scenario_package` et `pf2_scenario_deployment` suivent import/déploiement sur Foundry ; ils ne suffisent pas à attester que le prochain module est prêt. L'état matériel doit pouvoir être validé par le MJ, en cohabitation avec la préparation manuelle de Foundry.
 - `pf2_library_asset`, `pf2_resource`, `pf2_resource_file`, `pf2_resource_link` conservent sources et fichiers. Les ressources sont déjà rattachables à campagne, scénario ou composant. Une adaptation devient opérationnelle sans perdre ce lien.
-- L'API de préparation manque actuellement d'authentification MJ centralisée (cf. guide). Les nouveaux types, prérequis, liens confidentiels, états et contenus MJ doivent rester techniquement protégés, et ne jamais être projetés dans les API/vues publiques ou messages Discord.
+- Le portail MJ repose sur la confiance des joueurs : aucun contrôle d'accès supplémentaire. Les types, prérequis, liens, états et contenus MJ ne sont pas publiés automatiquement dans les vues joueur ou les messages Discord.
 
 Références : [architecture](architecture.md), [données](donnees.md), [éditeur de séance](../../docs/pf2/session-preparations.md), [Discord](wiki-discord.md).
 
@@ -207,3 +207,9 @@ Essai sur copie réelle du 16/11 : intégrité SQLite OK, 17 quêtes ouvertes (l
 - Dans Préparation des séances > Choix libre, la vue Préparer les modules permet de travailler à l'avance par campagne, même sans quête Discord rattachée.
 - La clé MJ initialement ajoutée est retirée sur décision explicite du MJ. L'API conserve Cache-Control: private, no-store. Aucun secret dans Git.
 - Petits changements directement sur main ; grosses fonctionnalités par branche → PR → CI → merge. Dans les deux cas, laisser la CI déployer. Sauvegarde SQLite en ligne avant migration et vérification après démarrage.
+## 13. Préparation directe des modèles
+
+- Une campagne sélectionnée affiche le nombre de modèles enregistrés et permet de filtrer avec/sans contenu.
+- Ouvrir un module pour créer ou modifier son modèle directement, avec le même éditeur que les séances. Aucun enregistrement de séance artificiel ni publication depuis un modèle.
+- Le contenu du modèle, les PNJ/objets/rencontres et l'état Foundry sont distincts ; ne jamais marquer Foundry prêt avant contrôle réel du monde.
+- Pilote : Malveillance (`malevolence`), module autonome à exploration ouverte. Découpage par secteurs, avec recherches transversales et retours possibles ; pas de quête Discord associée arbitrairement.

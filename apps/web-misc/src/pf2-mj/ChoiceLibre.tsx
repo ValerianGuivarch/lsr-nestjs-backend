@@ -10,7 +10,7 @@ type Progress = 'todo' | 'started' | 'done'
 const kinds: Record<Kind,string> = { unassigned: 'À rattacher', mission: 'Mission jouable', blocked: 'Bloquée', personal: 'Quête de PJ', rp: 'Piste RP' }
 const checkLabels = { source:'Scénario étudié', template:'Préparation de séance', entities:'PNJ, rencontres et objets', foundry:'Foundry', review:'Ajustements MJ' }
 type Check = keyof typeof checkLabels
-type Module = { key:string; scenarioId:string; title:string; group:string; campaignIds:string[]; order:number; campaignOrder:Record<string,number>; checklist:Record<Check,CheckState>; progress:Progress; ready:boolean }
+type Module = { key:string; scenarioId:string; title:string; group:string; campaignIds:string[]; order:number; campaignOrder:Record<string,number>; checklist:Record<Check,CheckState>; progress:Progress; ready:boolean; hasTemplate:boolean }
 type Quest = { id:string; title:string; url:string; syncedAt:string; kind:Kind; campaignId:string; moduleKey:string; note:string; votes:{ emoji:string; name:string; characters:string[] }[] }
 type Snapshot = { quests:Quest[]; campaigns:Option[]; modules:Module[] }
 
@@ -60,7 +60,7 @@ function QuestCard({quest,data,showVotes,save,saveModule}:{quest:Quest;data:Snap
     {moduleOpen && next && <ModuleEditor key={next.key+JSON.stringify(next.checklist)+next.progress} module={next} save={saveModule}/>}
   </article>
 }
-function ChoiceLibre() {
+function ChoiceLibre(props:{campaigns:Option[];scenarios:Option[]}) {
   const [data,setData]=useState<Snapshot|null>(null)
   const [error,setError]=useState('')
   const [showVotes,setShowVotes]=useState(false)
@@ -69,6 +69,8 @@ function ChoiceLibre() {
   const [mode,setMode]=useState<'quests'|'modules'>('quests')
   const [campaignFilter,setCampaignFilter]=useState('')
   const [openedModule,setOpenedModule]=useState('')
+  const [templateModule,setTemplateModule]=useState<Module|null>(null)
+  const [templateFilter,setTemplateFilter]=useState('all')
   async function load() {setLoading(true);setError('');try{setData(await request<Snapshot>())}catch(e){setData(null);setError(String(e))}finally{setLoading(false)}}
   useEffect(()=>{void load()},[])
   const saveQuest=async(q:Quest)=>{await request('/quests/'+encodeURIComponent(q.id),{kind:q.kind,campaignId:q.campaignId,moduleKey:q.moduleKey,note:q.note});setData(d=>d?({...d,quests:d.quests.map(old=>old.id===q.id?q:old)}):d)}
@@ -80,15 +82,19 @@ function ChoiceLibre() {
   const linkedCampaigns=new Set(data.quests.filter(q=>q.campaignId&&q.kind==='mission').map(q=>q.campaignId))
   const selectedCampaign=campaignFilter||data.campaigns.find(c=>linkedCampaigns.has(c.id))?.id||''
   const campaignModules=data.modules.filter(m=>m.campaignIds.includes(selectedCampaign)).sort((a,b)=>(a.campaignOrder[selectedCampaign]??a.order)-(b.campaignOrder[selectedCampaign]??b.order))
+  const listedModules=campaignModules.filter(m=>templateFilter==='all'||(templateFilter==='yes'?m.hasTemplate:!m.hasTemplate))
+  if(templateModule)return <SessionPreparations key={templateModule.key} {...props} templateModule={templateModule} onBack={()=>{setTemplateModule(null);void load()}}/>
   if(mode==='modules')return <section className="choice-panel"><h2>Préparation permanente des modules</h2><div className="choice-toolbar"><button onClick={()=>setMode('quests')}>← Journal de quêtes</button><label>Campagne / scénario<select value={selectedCampaign} onChange={e=>{setCampaignFilter(e.target.value);setOpenedModule('')}}><option value="">Choisir</option>{data.campaigns.map(c=><option key={c.id} value={c.id}>{linkedCampaigns.has(c.id)?'◆ ':''}{c.title}</option>)}</select></label><button disabled={loading} onClick={()=>void load()}>Actualiser</button></div>
+    <label>Modèles <select value={templateFilter} onChange={e=>setTemplateFilter(e.target.value)}><option value="all">Tous</option><option value="yes">Avec contenu</option><option value="no">Sans contenu</option></select></label>
+    <p>{campaignModules.filter(m=>m.hasTemplate).length}/{campaignModules.length} modèles enregistrés</p>
     <p>◆ Campagnes rattachées aux missions ouvertes. Prépare un module même si aucune quête ne le propose encore.</p>
     <p>{campaignModules.filter(m=>m.progress!=='done'&&m.ready).length} module(s) prêt(s) non terminé(s) · {campaignModules.filter(m=>m.progress==='done').length} joué(s)</p>
-    <div className="choice-list">{campaignModules.map(m=><article key={m.key} className="choice-quest"><div className="choice-head"><div><strong>{m.title}</strong>{m.group&&<div className="choice-meta">{m.group}</div>}</div><span className={'choice-status '+(m.ready?'choice-ok':'')}>{m.progress==='done'?'Joué':m.ready?'Prêt à jouer':'À préparer'}</span></div><div className="choice-actions"><button onClick={()=>setOpenedModule(openedModule===m.key?'':m.key)}>{openedModule===m.key?'Fermer checklist':'Checklist du module'}</button></div>{openedModule===m.key&&<ModuleEditor key={m.key+JSON.stringify(m.checklist)+m.progress} module={m} save={saveModule}/>}</article>)}</div></section>
+    <div className="choice-list">{listedModules.map(m=><article key={m.key} className="choice-quest"><div className="choice-head"><div><strong>{m.title}</strong>{m.group&&<div className="choice-meta">{m.group}</div>}</div><span className={'choice-status '+(m.ready?'choice-ok':'')}>{m.progress==='done'?'Joué':m.ready?'Prêt à jouer':'À préparer'}</span></div><div className="choice-actions"><button onClick={()=>setTemplateModule(m)}>{m.hasTemplate?'Modifier le modèle':'Créer le modèle'}</button><button onClick={()=>setOpenedModule(openedModule===m.key?'':m.key)}>{openedModule===m.key?'Fermer checklist':'Checklist du module'}</button></div>{openedModule===m.key&&<ModuleEditor key={m.key+JSON.stringify(m.checklist)+m.progress} module={m} save={saveModule}/>}</article>)}</div></section>
   return <section className="choice-panel"><h2>Journal de quêtes · Choix libre</h2><p>{data.quests.length} quêtes ouvertes · {ready} prêtes à jouer · dernière synchronisation : {synced||'inconnue'}</p><p>Les votes sont ceux des comptes Discord ; les PJ affichés sont leurs personnages connus, pas une attribution certaine du vote à un PJ.</p><div className="choice-toolbar"><button onClick={()=>setMode('modules')}>Préparer les modules</button><label>Filtrer <select value={filter} onChange={e=>setFilter(e.target.value)}><option value="all">Toutes</option><option value="ready">Prêtes à jouer</option>{Object.entries(kinds).map(([id,label])=><option key={id} value={id}>{label}</option>)}</select></label><label><input type="checkbox" checked={showVotes} onChange={e=>setShowVotes(e.target.checked)}/> Intéressés / verrouillés</label><button disabled={loading} onClick={()=>void load()}>Actualiser</button></div>{error&&<p role="alert">{error}</p>}<div className="choice-list">{visible.map(q=><QuestCard key={q.id} quest={q} data={data} showVotes={showVotes} save={saveQuest} saveModule={saveModule}/>)}</div>{!visible.length&&<p>Aucune quête pour ce filtre.</p>}</section>
 }
 export default function ChoiceLibreWorkspace(props:{campaigns:Option[];scenarios:Option[]}) {
   const location=useLocation()
   const [tab,setTab]=useState(location.search?'session':'choice')
   useEffect(()=>{if(location.search)setTab('session')},[location.search])
-  return <><nav className="choice-tabs"><button className={tab==='choice'?'active':''} onClick={()=>setTab('choice')}>Journal de quêtes · Choix libre</button><button className={tab==='session'?'active':''} onClick={()=>setTab('session')}>Préparation des séances</button></nav><div hidden={tab!=='choice'}><ChoiceLibre/></div><div hidden={tab!=='session'}><SessionPreparations {...props}/></div></>
+  return <><nav className="choice-tabs"><button className={tab==='choice'?'active':''} onClick={()=>setTab('choice')}>Journal de quêtes · Choix libre</button><button className={tab==='session'?'active':''} onClick={()=>setTab('session')}>Préparation des séances</button></nav><div hidden={tab!=='choice'}><ChoiceLibre {...props}/></div><div hidden={tab!=='session'}><SessionPreparations {...props}/></div></>
 }

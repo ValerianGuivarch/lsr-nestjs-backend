@@ -81,7 +81,7 @@ function ModuleTemplatePicker({draft,dirty,onImport}:{draft:Preparation;dirty:bo
   return <div className="session-prep-channel"><button type="button" onClick={()=>{setOpen(!open);if(!open)void load()}}>{open?'Fermer les modèles':'Importer / enregistrer un module jouable'}</button>{open&&<div className="session-prep-fields"><label><input type="checkbox" checked={onlyTemplates} onChange={e=>{setOnlyTemplates(e.target.checked);setSelected('')}}/> Uniquement les modèles existants</label><label>Module<select value={selected} onChange={e=>setSelected(e.target.value)}><option value="">Choisir un module</option>{options.map(m=><option key={m.key} value={m.key}>{m.group?m.group+' — ':''}{m.title}{m.hasTemplate?' ✓':''}</option>)}</select></label><button type="button" disabled={!item?.hasTemplate||busy} onClick={importTemplate}>Importer les étapes</button><button type="button" disabled={!item||dirty||busy} onClick={()=>void saveTemplate()}>Copier la préparation enregistrée comme modèle</button>{dirty&&<small>Enregistre ta séance avant de créer un modèle.</small>}{notice&&<small role="status">{notice}</small>}</div>}</div>
 }
 
-export default function SessionPreparations({ campaigns, scenarios }: { campaigns: Option[]; scenarios: Option[] }) {
+export default function SessionPreparations({ campaigns, scenarios, templateModule, onBack }: { campaigns: Option[]; scenarios: Option[]; templateModule?: {key:string;title:string}; onBack?: () => void }) {
   const location = useLocation()
   const [items, setItems] = useState<Preparation[]>([])
   const [draft, setDraft] = useState<Preparation | null>(null)
@@ -114,7 +114,15 @@ export default function SessionPreparations({ campaigns, scenarios }: { campaign
     return list
   }
   useEffect(() => {
-    void refresh().then(list => { if (list.length) {
+    if (templateModule) {
+      setBusy(true)
+      fetch('/apil7r/pf2-mj/choice-libre/template?moduleKey='+encodeURIComponent(templateModule.key),{cache:'no-store'}).then(async r => {
+        if (!r.ok) throw new Error('Modèle inaccessible (HTTP '+r.status+')')
+        const item=await r.json() as ModuleTemplate
+        setDraft({id:templateModule.key,title:templateModule.title,campaignId:null,scenarioId:null,sessionId:null,revision:0,updatedAt:'',body:item.body ?? {summary:'',stages:[blankStage()]}})
+        setDirty(!item.hasTemplate)
+      }).catch(e=>setNotice(String(e))).finally(()=>setBusy(false))
+    } else void refresh().then(list => { if (list.length) {
       const selected = list.find(item => item.id === new URLSearchParams(location.search).get('preparationId')) ?? list[0]
       setDraft(current => current ?? selected)
     } }).catch(error => {
@@ -123,7 +131,7 @@ export default function SessionPreparations({ campaigns, scenarios }: { campaign
     fetch('/apil7r/pf2-mj/pnj-directory').then(r => r.ok ? r.json() : null)
       .then(data => setNpcs(Array.isArray(data?.items) ? data.items : []))
       .catch(() => undefined)
-  }, [location.search])
+  }, [location.search, templateModule])
 
   function set(patch: Partial<Preparation>) {
     setDraft(current => current ? { ...current, ...patch } : current)
@@ -156,7 +164,7 @@ export default function SessionPreparations({ campaigns, scenarios }: { campaign
       const form = new FormData()
       // Multipart fields are parsed in order. Send the unique block ID before
       // the file so even older API versions never fall back to "pnj.webp".
-      form.set('pnjId', `prep-${draft?.id ?? 'nouvelle'}-${blockId}`)
+      form.set('pnjId', `prep-${templateModule ? 'module' : draft?.id ?? 'nouvelle'}-${blockId}`)
       form.set('file', file)
       const response = await fetch('/apil7r/pf2-mj/pnj/portrait', { method: 'POST', body: form })
       const result = await response.json().catch(() => null)
@@ -191,6 +199,11 @@ export default function SessionPreparations({ campaigns, scenarios }: { campaign
     if (!value) throw new Error('Aucune préparation sélectionnée.')
     setBusy(true); setNotice('')
     try {
+      if (templateModule) {
+        const response=await fetch('/apil7r/pf2-mj/choice-libre/templates',{...bodyInit({moduleKey:templateModule.key,body:value.body}),method:'PUT'})
+        if (!response.ok) { const failure=await response.json().catch(()=>null); throw new Error(failure?.message || 'Erreur HTTP '+response.status) }
+        setDraft(value);setDirty(false);setNotice('Modèle enregistré.');return value
+      }
       const updated = await request<Preparation>(`/${encodeURIComponent(value.id)}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(value) })
       setDraft(updated); setDirty(false); await refresh(); setNotice('Préparation enregistrée.'); return updated
     } catch (error) { setNotice((error as Error).message); throw error }
@@ -257,9 +270,9 @@ export default function SessionPreparations({ campaigns, scenarios }: { campaign
   const canShare = Boolean(currentSession?.channelId && !currentSession.ended) || (!draft?.sessionId && unambiguousActive.length === 1)
 
   return <div className="session-prep">
-    <header className="session-prep-header"><div><small>JOURNAL MJ · AIDE EN PARTIE</small><h2>Préparation séance</h2><p>Crée ton conducteur à la main. Les fiches liées restent dans le référentiel MJ ; les figurants peuvent rester temporaires.</p></div></header>
-    <div className="session-prep-layout">
-      <aside className="session-prep-list">
+    <header className="session-prep-header"><div><small>JOURNAL MJ · AIDE EN PARTIE</small><h2>{templateModule ? 'Modèle · '+templateModule.title : 'Préparation séance'}</h2><p>{templateModule?'Ce modèle est indépendant des séances et peut être importé plusieurs fois.':'Crée ton conducteur à la main. Les fiches liées restent dans le référentiel MJ ; les figurants peuvent rester temporaires.'}</p>{templateModule&&<button disabled={busy||uploadingPortrait!==null} onClick={()=>{if(!dirty||window.confirm('Abandonner les modifications non enregistrées ?'))onBack?.()}}>← Retour aux modules</button>}</div></header>
+    <div className="session-prep-layout" style={templateModule?{gridTemplateColumns:"minmax(0, 1fr)"}:undefined}>
+      <aside className="session-prep-list" hidden={Boolean(templateModule)}>
         <h3>Mes préparations</h3>
         <label htmlFor="new-prep-title">Nouvelle préparation</label>
         <input id="new-prep-title" value={newTitle} placeholder="Titre de la séance" onChange={event => setNewTitle(event.target.value)} />
@@ -268,28 +281,28 @@ export default function SessionPreparations({ campaigns, scenarios }: { campaign
       </aside>
       <section className="session-prep-editor">
         {notice && <p role="status" className="session-prep-notice">{notice}</p>}
-        {!draft ? <div className="session-prep-empty"><h3>Commence par créer une préparation.</h3><p>Tu pourras la rattacher à une campagne, un scénario et une séance Discord, puis organiser librement les étapes.</p></div> : <>
+        {!draft ? <div className="session-prep-empty"><h3>{templateModule?'Chargement du modèle…':'Commence par créer une préparation.'}</h3><p>Tu pourras la rattacher à une campagne, un scénario et une séance Discord, puis organiser librement les étapes.</p></div> : <>
           <div className="session-prep-toolbar">
             <div><strong>{draft.title}</strong><small>{dirty ? 'Modifications non enregistrées' : 'Enregistrée'}</small></div>
             <div className="session-prep-actions"><button type="button" className={mode === 'edit' ? 'selected' : ''} onClick={() => setMode('edit')}>Édition</button><button type="button" className={mode === 'view' ? 'selected' : ''} onClick={() => setMode('view')}>Vue</button>{mode === 'edit' && <button type="button" className="primary" disabled={busy || uploadingPortrait !== null || !dirty} onClick={() => void save().catch(() => undefined)}>Enregistrer</button>}</div>
           </div>
           {mode === 'edit' ? <div className="session-prep-fields">
-            <label>Titre<input value={draft.title} onChange={e => set({ title: e.target.value })} /></label>
+            {!templateModule&&<><label>Titre<input value={draft.title} onChange={e => set({ title: e.target.value })} /></label>
             <label>Campagne<select value={draft.campaignId ?? ''} onChange={e => set({ campaignId: e.target.value || null })}><option value="">— Sans campagne —</option>{campaigns.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}</select></label>
             <label>Scénario<select value={draft.scenarioId ?? ''} onChange={e => set({ scenarioId: e.target.value || null })}><option value="">— Sans scénario —</option>{scenarios.map(s => <option key={s.id} value={s.id}>{s.title}</option>)}</select></label>
-            <label>Séance Discord<select value={draft.sessionId ?? ''} onChange={e => set({ sessionId: e.target.value || null })}><option value="">Automatique si une seule séance active</option>{sessions.map(s => <option key={s.id} value={s.id}>Séance n°{s.number}{s.channelName ? ` · #${s.channelName}` : ''}{s.ended ? ' (terminée)' : !s.channelId ? ' (sans canal)' : ''}</option>)}</select></label>
+            <label>Séance Discord<select value={draft.sessionId ?? ''} onChange={e => set({ sessionId: e.target.value || null })}><option value="">Automatique si une seule séance active</option>{sessions.map(s => <option key={s.id} value={s.id}>Séance n°{s.number}{s.channelName ? ` · #${s.channelName}` : ''}{s.ended ? ' (terminée)' : !s.channelId ? ' (sans canal)' : ''}</option>)}</select></label></>}
             <label className="session-prep-full">Introduction / objectif général<textarea rows={3} value={draft.body.summary} onChange={e => set({ body: { ...draft.body, summary: e.target.value } })}/></label>
           </div> : <div className="session-prep-summary">{draft.body.summary || 'Aucun objectif général renseigné.'}</div>}
-          <div className="session-prep-channel">Salon de partage : {currentSession?.channelId ? `#${currentSession.channelName || currentSession.channelId}${currentSession.ended ? ' · séance terminée' : ''}` : !draft.sessionId && unambiguousActive.length === 1 ? `#${unambiguousActive[0].channelName || unambiguousActive[0].channelId} (séance active)` : 'à associer via /debut-seance'} · Les partages sont envoyés sur Discord puis relayés dans Foundry.</div>
-          {mode === 'edit' && <ModuleTemplatePicker draft={draft} dirty={dirty} onImport={(stages,summary)=>{setDraft(current=>current?({...current,body:{summary:[current.body.summary,summary].filter(Boolean).join('\n\n'),stages:[...current.body.stages,...stages]}}):current);setDirty(true)}}/>}
+          {!templateModule&&<div className="session-prep-channel">Salon de partage : {currentSession?.channelId ? `#${currentSession.channelName || currentSession.channelId}${currentSession.ended ? ' · séance terminée' : ''}` : !draft.sessionId && unambiguousActive.length === 1 ? `#${unambiguousActive[0].channelName || unambiguousActive[0].channelId} (séance active)` : 'à associer via /debut-seance'} · Les partages sont envoyés sur Discord puis relayés dans Foundry.</div>}
+          {!templateModule && mode === 'edit' && <ModuleTemplatePicker draft={draft} dirty={dirty} onImport={(stages,summary)=>{setDraft(current=>current?({...current,body:{summary:[current.body.summary,summary].filter(Boolean).join('\n\n'),stages:[...current.body.stages,...stages]}}):current);setDirty(true)}}/>}
           <div className="session-prep-stages">{draft.body.stages.map((stage, index) => <article className={`session-prep-stage${stage.done ? ' is-done' : ''}`} key={stage.id}>
-            <div className="session-prep-stage-head"><span className="session-prep-step-number">{index + 1}</span>{mode === 'edit' ? <><input aria-label="Nom de l’étape" value={stage.title} onChange={e => updateStage(stage.id, { title: e.target.value })}/><input className="session-prep-time" aria-label="Horaire indicatif" placeholder="Horaire" value={stage.time} onChange={e => updateStage(stage.id, { time: e.target.value })}/><button type="button" title="Monter l’étape" onClick={() => updateStages(stages => move(stages, index, -1))}>↑</button><button type="button" title="Descendre l’étape" onClick={() => updateStages(stages => move(stages, index, 1))}>↓</button><button type="button" className="danger" onClick={() => updateStages(stages => stages.filter(s => s.id !== stage.id))}>×</button></> : <><h3>{stage.title}</h3><small>{stage.time}</small><button type="button" onClick={() => void toggleDone(stage.id)}>{stage.done ? '✓ Jouée' : 'Marquer jouée'}</button></>}</div>
+            <div className="session-prep-stage-head"><span className="session-prep-step-number">{index + 1}</span>{mode === 'edit' ? <><input aria-label="Nom de l’étape" value={stage.title} onChange={e => updateStage(stage.id, { title: e.target.value })}/><input className="session-prep-time" aria-label="Horaire indicatif" placeholder="Horaire" value={stage.time} onChange={e => updateStage(stage.id, { time: e.target.value })}/><button type="button" title="Monter l’étape" onClick={() => updateStages(stages => move(stages, index, -1))}>↑</button><button type="button" title="Descendre l’étape" onClick={() => updateStages(stages => move(stages, index, 1))}>↓</button><button type="button" className="danger" onClick={() => updateStages(stages => stages.filter(s => s.id !== stage.id))}>×</button></> : <><h3>{stage.title}</h3><small>{stage.time}</small>{!templateModule&&<button type="button" onClick={() => void toggleDone(stage.id)}>{stage.done ? '✓ Jouée' : 'Marquer jouée'}</button>}</>}</div>
             {mode === 'edit' ? <textarea className="session-prep-stage-notes" rows={2} placeholder="Déroulé, objectifs, points d’attention..." value={stage.notes} onChange={e => updateStage(stage.id, { notes: e.target.value })}/> : stage.notes && <p className="session-prep-stage-notes">{stage.notes}</p>}
             <div className="session-prep-blocks">{stage.blocks.map((block, blockIndex) => {
               const npc = npcs.find(n => n.id === block.npcId)
               const portrait = portraitUrl(block.npcId ? (npc?.portrait || block.portraitUrl) : block.portraitUrl)
               return <div key={block.id} className={`session-prep-block ${block.done ? 'is-done' : ''}`}>
-                <div className="session-prep-block-head"><span className="session-prep-kind">{blockLabels[block.kind]}</span>{mode === 'edit' ? <div className="session-prep-block-tools"><button type="button" onClick={() => updateStage(stage.id, { blocks: move(stage.blocks, blockIndex, -1) })}>↑</button><button type="button" onClick={() => updateStage(stage.id, { blocks: move(stage.blocks, blockIndex, 1) })}>↓</button><button type="button" className="danger" onClick={() => updateStage(stage.id, { blocks: stage.blocks.filter(b => b.id !== block.id) })}>Supprimer</button></div> : <button type="button" onClick={() => void toggleDone(stage.id, block.id)}>{block.done ? '✓ Terminé' : 'Marquer fait'}</button>}</div>
+                <div className="session-prep-block-head"><span className="session-prep-kind">{blockLabels[block.kind]}</span>{mode === 'edit' ? <div className="session-prep-block-tools"><button type="button" onClick={() => updateStage(stage.id, { blocks: move(stage.blocks, blockIndex, -1) })}>↑</button><button type="button" onClick={() => updateStage(stage.id, { blocks: move(stage.blocks, blockIndex, 1) })}>↓</button><button type="button" className="danger" onClick={() => updateStage(stage.id, { blocks: stage.blocks.filter(b => b.id !== block.id) })}>Supprimer</button></div> : !templateModule && <button type="button" onClick={() => void toggleDone(stage.id, block.id)}>{block.done ? '✓ Terminé' : 'Marquer fait'}</button>}</div>
                 {block.kind === 'personnage' && <div className="session-prep-character">
                   <div className={`session-prep-portrait${mode === 'edit' && !block.npcId ? ' can-upload' : ''}`}
                     role={mode === 'edit' && !block.npcId ? 'button' : undefined}
@@ -322,7 +335,7 @@ export default function SessionPreparations({ campaigns, scenarios }: { campaign
                       onClick={() => { void save().then(() => setPortraitFeedback(previous => ({ ...previous, [block.id]: 'Portrait enregistré dans la préparation.' }))).catch(error => setPortraitFeedback(previous => ({ ...previous, [block.id]: `Enregistrement impossible : ${error instanceof Error ? error.message : String(error)}` }))) }}>
                       {busy ? 'Enregistrement…' : 'Enregistrer le portrait'}
                     </button></>}<label className="session-prep-checkbox"><input type="checkbox" checked={block.showName !== false} onChange={e => updateBlock(stage.id, block.id, { showName: e.target.checked })}/> Afficher le nom aux joueurs</label></> : <><strong>{npc?.nom ?? block.name ?? 'Personnage temporaire'}</strong><small>{block.npcId ? 'Fiche MJ' : 'Temporaire · sans fiche MJ'} · Ascendance : {npc?.ascendance || block.ascendance || 'non précisée'}</small></>}
-                    <div className="session-prep-actions">{block.npcId && <Link to={`/pf2-mj/npcs/${encodeURIComponent(block.npcId)}`}>Ouvrir la fiche MJ</Link>}{!block.npcId && <button type="button" disabled={busy || uploadingPortrait !== null || !block.name?.trim()} onClick={() => void promote(block)}>Enregistrer comme PNJ permanent</button>}<button disabled={busy || uploadingPortrait !== null || !canShare} type="button" className="primary" onClick={() => void share(block)}>Partager · Discord + Foundry</button></div>
+                    <div className="session-prep-actions">{block.npcId && <Link to={`/pf2-mj/npcs/${encodeURIComponent(block.npcId)}`}>Ouvrir la fiche MJ</Link>}{!templateModule && !block.npcId && <button type="button" disabled={busy || uploadingPortrait !== null || !block.name?.trim()} onClick={() => void promote(block)}>Enregistrer comme PNJ permanent</button>}{!templateModule&&<button disabled={busy || uploadingPortrait !== null || !canShare} type="button" className="primary" onClick={() => void share(block)}>Partager · Discord + Foundry</button>}</div>
                   </div>
                 </div>}
                 {mode === 'edit' ? <div className="session-prep-block-fields">{block.kind !== 'personnage' && <label>Titre<input value={block.title} onChange={e => updateBlock(stage.id, block.id, { title: e.target.value })}/></label>}{block.kind === 'loot' && <label>Quantité<input value={block.quantity ?? ''} onChange={e => updateBlock(stage.id, block.id, { quantity: e.target.value })}/></label>}{block.kind === 'rencontre' && <label>Référence Foundry / scène<input value={block.reference ?? ''} onChange={e => updateBlock(stage.id, block.id, { reference: e.target.value })}/></label>}<label className="session-prep-full">{block.kind === 'personnage' ? 'Notes / rôle dans cette scène' : 'Contenu'}<textarea rows={3} value={block.text} onChange={e => updateBlock(stage.id, block.id, { text: e.target.value })}/></label>{block.kind === 'lore' && <label className="session-prep-checkbox"><input type="checkbox" checked={block.secret === true} onChange={e => updateBlock(stage.id, block.id, { secret: e.target.checked })}/> Secret MJ</label>}</div> : <><h4>{block.kind !== 'personnage' ? block.title : ''}{block.kind === 'loot' && block.quantity ? ` · ${block.quantity}` : ''}</h4>{block.kind === 'lore' && block.secret && <small className="session-prep-secret">🔒 Secret MJ</small>}{block.text && <p className="session-prep-block-text">{block.text}</p>}{block.reference && <small>{block.reference}</small>}</>}
@@ -330,7 +343,7 @@ export default function SessionPreparations({ campaigns, scenarios }: { campaign
             })}</div>
             {mode === 'edit' && <div className="session-prep-add"><select aria-label="Type de bloc" value={addKind[stage.id] ?? 'texte'} onChange={e => setAddKind(current => ({ ...current, [stage.id]: e.target.value as BlockKind }))}>{blockKinds.map(kind => <option key={kind} value={kind}>{blockLabels[kind]}</option>)}</select><button type="button" onClick={() => updateStage(stage.id, { blocks: [...stage.blocks, blankBlock(addKind[stage.id] ?? 'texte')] })}>+ Ajouter un bloc</button></div>}
           </article>)}</div>
-          {mode === 'edit' && <div className="session-prep-footer"><button type="button" onClick={() => updateStages(stages => [...stages, blankStage()])}>+ Ajouter une étape</button><button type="button" className="danger" disabled={busy} onClick={() => void remove()}>Supprimer la préparation</button></div>}
+          {mode === 'edit' && <div className="session-prep-footer"><button type="button" onClick={() => updateStages(stages => [...stages, blankStage()])}>+ Ajouter une étape</button>{!templateModule&&<button type="button" className="danger" disabled={busy} onClick={() => void remove()}>Supprimer la préparation</button>}</div>}
         </>}
       </section>
     </div>

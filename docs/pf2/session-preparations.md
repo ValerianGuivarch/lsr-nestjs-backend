@@ -62,11 +62,11 @@ Migration `049-session-preparations-and-discord-channel` :
 
 Le schéma JSON des étapes et blocs est validé côté API (longueurs, types, unicité des identifiants, nombres maximum de blocs/étapes). L'API est sous `/api/pf2-mj/session-preparations` avec `GET` liste/détail/sessions, `POST` création/partage/**promotion `:id/promote/:blockId`**, `PATCH` modification, `DELETE` suppression.
 
-**Accès :** cette V1 fonctionne sans clé supplémentaire à saisir : elle suit le même modèle d'accès que l'application MJ actuelle. **Limite de sécurité :** l'application et ses API n'ont actuellement pas d'authentification MJ centralisée. Les routes de préparation contiennent des secrets narratifs et le partage déclenche une publication Discord : prévoir une authentification centralisée pour l'ensemble du portail plutôt qu'une seconde clé propre à cette page. Ne pas confondre absence d'usage par les joueurs et restriction technique d'accès.
+**Accès :** le portail MJ repose volontairement sur la confiance entre amis. Aucun code d'accès ni authentification supplémentaire. Les données MJ ne sont pas publiées automatiquement aux joueurs ; le partage Discord reste une action volontaire.
 
 ## Exploitation et vérifications
 
-- L’interface de préparation ne demande plus de clé distincte. Une authentification MJ commune au portail et à ses API reste nécessaire pour protéger durablement les contenus confidentiels.
+- Aucune clé supplémentaire n'est demandée, conformément au modèle de confiance du portail MJ.
 - Ouvrir la page puis créer et enregistrer une préparation ; choisir une séance dont le canal est affiché ; partager un personnage lié ou temporaire.
 - Vérifier que le message apparaît dans le **salon exact** où `/debut-seance` a créé le brouillon, puis côté Foundry ; contrôler le cas nom masqué et l'absence de doublon après effacement du chat.
 - Vérifier également qu'une séance terminée ne permet plus de partager et qu'une création de fiche depuis Discord/Foundry reste fonctionnelle.
@@ -115,3 +115,6 @@ Pour les lieux réellement explorés, créer des **repères de journal MJ par pi
 Une carte n'est pas obligatoire pour une simple visite de loge ou une consultation d'archives : le théâtre de l'esprit ou une illustration fixe vaut parfois mieux qu'une carte à explorer artificiellement. Le choix de la cartographie doit servir le jeu, pas devenir un travail systématique.
 
 **Exemple actuel** : préparation PFS `1-00`, identifiant `fa2d18bd-32b1-48cf-904e-9873691a55eb` (5 étapes, 12 blocs ; 19 h–23 h ; quête de Yaz avant la mission principale). Cette entrée vit **dans SQLite**, pas dans le Markdown ; sa présence ici sert uniquement d'exemple de méthode.
+## Modèles de modules (Choix libre)
+
+Dans Préparation des séances > Choix libre > Préparer les modules, choisir une campagne puis filtrer les modules avec/sans contenu. `Créer le modèle` ou `Modifier le modèle` ouvre le même éditeur de conducteur directement sur `pf2_choice_template`, sans créer de séance. Le modèle ne possède pas de session Discord, n'autorise pas le partage, et ses étapes sont réutilisables. La checklist Foundry est indépendante du modèle. Importer dans une préparation de séance via le sélecteur existant ; l'import régénère les identifiants et remet les cases à zéro.
