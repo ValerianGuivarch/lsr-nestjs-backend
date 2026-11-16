@@ -67,6 +67,24 @@ describe('Portrait temporaire de préparation', () => {
     return [...container.querySelectorAll('button')].find(button => button.textContent?.includes('Enregistrer le portrait'))!
   }
 
+  it('creates a module template directly without a session or sharing', async () => {
+    const fetchMock=vi.fn(async (resource: RequestInfo | URL, init?: RequestInit) => {
+      const url=String(resource)
+      if(url.includes('/choice-libre/template?'))return new Response(JSON.stringify({hasTemplate:false,body:null}),{status:200})
+      if(url==='/apil7r/pf2-mj/choice-libre/templates'&&init?.method==='PUT')return new Response('{"ok":true}',{status:200})
+      if(url.endsWith('/pnj-directory'))return new Response('{"items":[]}',{status:200})
+      throw new Error('Unexpected fetch: '+url)
+    })
+    vi.stubGlobal('fetch',fetchMock)
+    await act(async()=>root.render(<MemoryRouter><SessionPreparations campaigns={[]} scenarios={[]} templateModule={{key:'m',title:'Manoir'}}/></MemoryRouter>))
+    expect(container.textContent).toContain('Modèle · Manoir')
+    expect(container.textContent).not.toContain('Salon de partage')
+    await act(async()=>[...container.querySelectorAll('button')].find(b=>b.textContent==='Enregistrer')!.click())
+    const put=fetchMock.mock.calls.find(c=>c[1]?.method==='PUT')!
+    expect(JSON.parse(put[1]!.body as string)).toMatchObject({moduleKey:'m',body:{stages:[{title:'Nouvelle étape'}]}})
+    expect(fetchMock.mock.calls.some(c=>String(c[0]).startsWith(API))).toBe(false)
+  })
+
   it('focuses on click, pastes an image, saves its path and loads it after remounting', async () => {
     await mount()
     const portrait = container.querySelector<HTMLElement>('.session-prep-portrait.can-upload')!
