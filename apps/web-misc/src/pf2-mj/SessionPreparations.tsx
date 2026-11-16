@@ -50,13 +50,14 @@ function portraitUrl(value?: string): string {
 }
 
 type ModuleTemplate = { key:string; title:string; group:string; campaignIds:string[]; hasTemplate:boolean; body:Preparation['body'] | null }
-function ModuleTemplatePicker({draft,dirty,onImport}:{draft:Preparation;dirty:boolean;onImport:(stages:Stage[],summary:string)=>void}) {
+function ModuleTemplatePicker({draft,dirty,onImport,campaigns}:{draft:Preparation;dirty:boolean;onImport:(stages:Stage[],summary:string)=>void;campaigns:Option[]}) {
   const [open,setOpen]=useState(false)
   const [templates,setTemplates]=useState<ModuleTemplate[]>([])
   const [selected,setSelected]=useState('')
   const [notice,setNotice]=useState('')
   const [busy,setBusy]=useState(false)
   const [onlyTemplates,setOnlyTemplates]=useState(true)
+  const [campaignFilter,setCampaignFilter]=useState('')
   async function call(data?:unknown):Promise<ModuleTemplate[]> {
     const response=await fetch('/apil7r/pf2-mj/choice-libre/templates',{cache:'no-store',headers:{...(data?{'Content-Type':'application/json'}:{})},...(data?{method:'PUT',body:JSON.stringify(data)}:{})})
     if(!response.ok)throw new Error('Accès au modèle impossible (HTTP '+response.status+').')
@@ -64,7 +65,9 @@ function ModuleTemplatePicker({draft,dirty,onImport}:{draft:Preparation;dirty:bo
   }
   async function load() {setBusy(true);setNotice('');try{setTemplates(await call())}catch(e){setNotice(String(e))}finally{setBusy(false)}}
   const item=templates.find(m=>m.key===selected)
-  const options=templates.filter(m=>!onlyTemplates||m.hasTemplate)
+  const campaignIds=new Set(templates.flatMap(m=>m.campaignIds))
+  const campaignOptions=[...new Map(campaigns.filter(c=>campaignIds.has(c.id)).map(c=>[c.id,c])).values()]
+  const options=templates.filter(m=>(!onlyTemplates||m.hasTemplate)&&(!campaignFilter||m.campaignIds.includes(campaignFilter)))
   function importTemplate() {
     if(!item?.body)return
     if(draft.body.stages.length+item.body.stages.length>100){setNotice('100 étapes maximum par séance.');return}
@@ -78,7 +81,7 @@ function ModuleTemplatePicker({draft,dirty,onImport}:{draft:Preparation;dirty:bo
     setBusy(true);setNotice('')
     try{await call({moduleKey:item.key,preparationId:draft.id});setTemplates(await call());setNotice('Modèle enregistré.')}catch(e){setNotice(String(e))}finally{setBusy(false)}
   }
-  return <div className="session-prep-channel"><button type="button" onClick={()=>{setOpen(!open);if(!open)void load()}}>{open?'Fermer les modèles':'Importer / enregistrer un module jouable'}</button>{open&&<div className="session-prep-fields"><label><input type="checkbox" checked={onlyTemplates} onChange={e=>{setOnlyTemplates(e.target.checked);setSelected('')}}/> Uniquement les modèles existants</label><label>Module<select value={selected} onChange={e=>setSelected(e.target.value)}><option value="">Choisir un module</option>{options.map(m=><option key={m.key} value={m.key}>{m.group?m.group+' — ':''}{m.title}{m.hasTemplate?' ✓':''}</option>)}</select></label><button type="button" disabled={!item?.hasTemplate||busy} onClick={importTemplate}>Importer les étapes</button><button type="button" disabled={!item||dirty||busy} onClick={()=>void saveTemplate()}>Copier la préparation enregistrée comme modèle</button>{dirty&&<small>Enregistre ta séance avant de créer un modèle.</small>}{notice&&<small role="status">{notice}</small>}</div>}</div>
+  return <div className="session-prep-channel"><button type="button" onClick={()=>{setOpen(!open);if(!open)void load()}}>{open?'Fermer les modèles':'Importer / enregistrer un module jouable'}</button>{open&&<div className="session-prep-fields"><label><input type="checkbox" checked={onlyTemplates} onChange={e=>{setOnlyTemplates(e.target.checked);setSelected('')}}/> Uniquement les modèles existants</label><label>Campagne / scénario<select value={campaignFilter} onChange={e=>{setCampaignFilter(e.target.value);setSelected('')}}><option value="">Tous</option>{campaignOptions.map(c=><option key={c.id} value={c.id}>{c.title}</option>)}</select></label><label>Module<select value={selected} onChange={e=>setSelected(e.target.value)}><option value="">Choisir un module</option>{options.map(m=><option key={m.key} value={m.key}>{m.group?m.group+' — ':''}{m.title}{m.hasTemplate?' ✓':''}</option>)}</select></label><button type="button" disabled={!item?.hasTemplate||busy} onClick={importTemplate}>Importer les étapes</button><button type="button" disabled={!item||dirty||busy} onClick={()=>void saveTemplate()}>Copier la préparation enregistrée comme modèle</button>{dirty&&<small>Enregistre ta séance avant de créer un modèle.</small>}{notice&&<small role="status">{notice}</small>}</div>}</div>
 }
 
 export default function SessionPreparations({ campaigns, scenarios, templateModule, onBack }: { campaigns: Option[]; scenarios: Option[]; templateModule?: {key:string;title:string}; onBack?: () => void }) {
@@ -272,13 +275,13 @@ export default function SessionPreparations({ campaigns, scenarios, templateModu
   return <div className="session-prep">
     <header className="session-prep-header"><div><small>JOURNAL MJ · AIDE EN PARTIE</small><h2>{templateModule ? 'Modèle · '+templateModule.title : 'Préparation séance'}</h2><p>{templateModule?'Ce modèle est indépendant des séances et peut être importé plusieurs fois.':'Crée ton conducteur à la main. Les fiches liées restent dans le référentiel MJ ; les figurants peuvent rester temporaires.'}</p>{templateModule&&<button disabled={busy||uploadingPortrait!==null} onClick={()=>{if(!dirty||window.confirm('Abandonner les modifications non enregistrées ?'))onBack?.()}}>← Retour aux modules</button>}</div></header>
     <div className="session-prep-layout" style={templateModule?{gridTemplateColumns:"minmax(0, 1fr)"}:undefined}>
-      <aside className="session-prep-list" hidden={Boolean(templateModule)}>
+      {!templateModule&&<aside className="session-prep-list">
         <h3>Mes préparations</h3>
         <label htmlFor="new-prep-title">Nouvelle préparation</label>
         <input id="new-prep-title" value={newTitle} placeholder="Titre de la séance" onChange={event => setNewTitle(event.target.value)} />
         <button disabled={busy || uploadingPortrait !== null} type="button" onClick={() => void create()}>+ Créer</button>
         {items.map(item => <button key={item.id} type="button" className={draft?.id === item.id ? 'selected' : ''} disabled={uploadingPortrait !== null} onClick={() => select(item)}><strong>{item.title}</strong><small>{item.body.stages.length} étape(s) · {item.campaignId ? (campaigns.find(c => c.id === item.campaignId)?.title ?? item.campaignId) : item.scenarioId ? (scenarios.find(s => s.id === item.scenarioId)?.title ?? item.scenarioId) : 'Sans campagne'} · v{item.revision}</small></button>)}
-      </aside>
+      </aside>}
       <section className="session-prep-editor">
         {notice && <p role="status" className="session-prep-notice">{notice}</p>}
         {!draft ? <div className="session-prep-empty"><h3>{templateModule?'Chargement du modèle…':'Commence par créer une préparation.'}</h3><p>Tu pourras la rattacher à une campagne, un scénario et une séance Discord, puis organiser librement les étapes.</p></div> : <>
@@ -294,7 +297,7 @@ export default function SessionPreparations({ campaigns, scenarios, templateModu
             <label className="session-prep-full">Introduction / objectif général<textarea rows={3} value={draft.body.summary} onChange={e => set({ body: { ...draft.body, summary: e.target.value } })}/></label>
           </div> : <div className="session-prep-summary">{draft.body.summary || 'Aucun objectif général renseigné.'}</div>}
           {!templateModule&&<div className="session-prep-channel">Salon de partage : {currentSession?.channelId ? `#${currentSession.channelName || currentSession.channelId}${currentSession.ended ? ' · séance terminée' : ''}` : !draft.sessionId && unambiguousActive.length === 1 ? `#${unambiguousActive[0].channelName || unambiguousActive[0].channelId} (séance active)` : 'à associer via /debut-seance'} · Les partages sont envoyés sur Discord puis relayés dans Foundry.</div>}
-          {!templateModule && mode === 'edit' && <ModuleTemplatePicker draft={draft} dirty={dirty} onImport={(stages,summary)=>{setDraft(current=>current?({...current,body:{summary:[current.body.summary,summary].filter(Boolean).join('\n\n'),stages:[...current.body.stages,...stages]}}):current);setDirty(true)}}/>}
+          {!templateModule && mode === 'edit' && <ModuleTemplatePicker draft={draft} dirty={dirty} campaigns={[...campaigns,...scenarios]} onImport={(stages,summary)=>{setDraft(current=>current?({...current,body:{summary:[current.body.summary,summary].filter(Boolean).join('\n\n'),stages:[...current.body.stages,...stages]}}):current);setDirty(true)}}/>}
           <div className="session-prep-stages">{draft.body.stages.map((stage, index) => <article className={`session-prep-stage${stage.done ? ' is-done' : ''}`} key={stage.id}>
             <div className="session-prep-stage-head"><span className="session-prep-step-number">{index + 1}</span>{mode === 'edit' ? <><input aria-label="Nom de l’étape" value={stage.title} onChange={e => updateStage(stage.id, { title: e.target.value })}/><input className="session-prep-time" aria-label="Horaire indicatif" placeholder="Horaire" value={stage.time} onChange={e => updateStage(stage.id, { time: e.target.value })}/><button type="button" title="Monter l’étape" onClick={() => updateStages(stages => move(stages, index, -1))}>↑</button><button type="button" title="Descendre l’étape" onClick={() => updateStages(stages => move(stages, index, 1))}>↓</button><button type="button" className="danger" onClick={() => updateStages(stages => stages.filter(s => s.id !== stage.id))}>×</button></> : <><h3>{stage.title}</h3><small>{stage.time}</small>{!templateModule&&<button type="button" onClick={() => void toggleDone(stage.id)}>{stage.done ? '✓ Jouée' : 'Marquer jouée'}</button>}</>}</div>
             {mode === 'edit' ? <textarea className="session-prep-stage-notes" rows={2} placeholder="Déroulé, objectifs, points d’attention..." value={stage.notes} onChange={e => updateStage(stage.id, { notes: e.target.value })}/> : stage.notes && <p className="session-prep-stage-notes">{stage.notes}</p>}

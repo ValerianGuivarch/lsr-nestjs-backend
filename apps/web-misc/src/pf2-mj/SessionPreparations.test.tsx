@@ -79,6 +79,7 @@ describe('Portrait temporaire de préparation', () => {
     await act(async()=>root.render(<MemoryRouter><SessionPreparations campaigns={[]} scenarios={[]} templateModule={{key:'m',title:'Manoir'}}/></MemoryRouter>))
     expect(container.textContent).toContain('Modèle · Manoir')
     expect(container.textContent).not.toContain('Salon de partage')
+    expect(container.querySelector('.session-prep-list')).toBeNull()
     await act(async()=>[...container.querySelectorAll('button')].find(b=>b.textContent==='Enregistrer')!.click())
     const put=fetchMock.mock.calls.find(c=>c[1]?.method==='PUT')!
     expect(JSON.parse(put[1]!.body as string)).toMatchObject({moduleKey:'m',body:{stages:[{title:'Nouvelle étape'}]}})
