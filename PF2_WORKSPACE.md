@@ -18,6 +18,10 @@ Quand plusieurs endpoints normaux et autorisés existent (par exemple lecture et
 - En cas de blocage, le signaler clairement et demander une décision avant toute solution alternative.
 - Portail MJ/admin : modèle de confiance entre amis, aucun ajout de clé, de code d'accès ou de contrôle supplémentaire. Les joueurs savent ne pas consulter l'administration. Les secrets et accès techniques des services restent inchangés.
 
+## Préparations de séance et modèles jouables
+
+**Lecture obligatoire :** toute demande de planification, de modèle/template, de module jouable ou de préparation de séance PF2 impose de lire puis respecter [docs/pf2/session-preparations.md](docs/pf2/session-preparations.md) avant de modifier le contenu ou le code. Ce guide définit notamment le Récapitulatif obligatoire, le découpage temporel, la réutilisation des ressources et la publication des illustrations.
+
 ## Sommaire
 
 | Dossier ChatGPT | Index principal | Sujets |

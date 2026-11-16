@@ -11,6 +11,8 @@ import { DiscordCommandsService } from './DiscordCommandsService'
 import { normalizePreparationBody, type PrepBody } from './PreparationBody'
 export type { PrepBlock, PrepStage, PrepBody } from './PreparationBody'
 type PrepRow = { id: string; title: string; campaign_id: string | null; scenario_id: string | null; session_id: string | null; body_json: string; revision: number; created_at: string; updated_at: string }
+type Asset = { id: string; kind: 'personnage' | 'illustration'; campaignId: string; campaignTitle: string; title: string; portraitUrl: string; ascendance: string; revision: number }
+const ASSET_SELECT = 'SELECT id,kind,campaign_id AS campaignId,campaign_title AS campaignTitle,title,portrait_url AS portraitUrl,ascendance,revision FROM pf2_preparation_asset'
 type ContextRow = { session_id: string; channel_id: string; guild_id: string; ended_at: string | null }
 
 @Injectable()
@@ -44,6 +46,40 @@ export class SessionPreparationService {
     if (!rows.length) throw new NotFoundException('Préparation introuvable.')
     return this.dto(rows[0])
   }
+  async listAssets(): Promise<Asset[]> {
+    return this.db.query(ASSET_SELECT + ' ORDER BY campaign_title COLLATE NOCASE,title COLLATE NOCASE')
+  }
+  private async getAsset(id: string, kind?: string): Promise<Asset> {
+    const rows = await this.db.query(ASSET_SELECT + ' WHERE id=?', [id]) as Asset[]
+    if (!rows[0] || (kind && rows[0].kind !== kind)) throw new BadRequestException('Ressource partagée introuvable ou incompatible.')
+    return rows[0]
+  }
+  async saveAsset(id: string | null, input: Record<string, unknown>): Promise<Asset> {
+    const kind = input.kind
+    if (kind !== 'personnage' && kind !== 'illustration') throw new BadRequestException('Type de ressource invalide.')
+    const campaignId = this.trim(input.campaignId, 'Campagne', 160, true)
+    const campaignTitle = this.trim(input.campaignTitle, 'Nom de campagne', 220, true)
+    const title = this.trim(input.title, 'Titre', kind === 'personnage' ? 160 : 220, true)
+    const portraitUrl = this.trim(input.portraitUrl, 'Image', 1200, kind === 'illustration')
+    const ascendance = kind === 'personnage' ? this.trim(input.ascendance, 'Ascendance', 120) : ''
+    if (portraitUrl && !/^(https:\/\/|assets\/l7r\/)/i.test(portraitUrl)) throw new BadRequestException('Image invalide.')
+    if (!id) {
+      id = randomUUID()
+      await this.db.query('INSERT INTO pf2_preparation_asset(id,kind,campaign_id,campaign_title,title,portrait_url,ascendance) VALUES (?,?,?,?,?,?,?)', [id,kind,campaignId,campaignTitle,title,portraitUrl,ascendance])
+    } else {
+      const assetId = id
+      await this.db.transaction(async manager => {
+        const [current] = await manager.query('SELECT kind,revision FROM pf2_preparation_asset WHERE id=?', [assetId])
+        if (!current || current.kind !== kind) throw new BadRequestException('Ressource introuvable ou incompatible.')
+        if (current.revision !== Number(input.revision)) throw new ConflictException('Ressource modifiée ailleurs. Recharge la page.')
+        await manager.query('UPDATE pf2_preparation_asset SET campaign_id=?,campaign_title=?,title=?,portrait_url=?,ascendance=?,revision=revision+1,updated_at=CURRENT_TIMESTAMP WHERE id=? AND revision=?', [campaignId,campaignTitle,title,portraitUrl,ascendance,assetId,current.revision])
+      })
+    }
+    return this.getAsset(id)
+  }
+  private async validateAssets(body: PrepBody): Promise<void> {
+    for (const block of body.stages.flatMap(stage => stage.blocks)) if (block.assetId) await this.getAsset(block.assetId, block.kind)
+  }
   async sessions(): Promise<unknown[]> {
     const rows = await this.db.query(`SELECT s.id, s.session_number, s.title, c.channel_id, c.guild_id, c.ended_at
       FROM pf2_session s LEFT JOIN pf2_session_discord_context c ON c.session_id=s.id
@@ -63,6 +99,7 @@ export class SessionPreparationService {
     const sessionId = this.optionalId(input?.sessionId, 'Séance')
     await this.validateSession(sessionId)
     const body = this.body(input?.body ?? { stages: [], summary: '' })
+    await this.validateAssets(body)
     await this.db.query('INSERT INTO pf2_session_preparation(id,title,campaign_id,scenario_id,session_id,body_json) VALUES (?,?,?,?,?,?)', [id, title, campaignId, scenarioId, sessionId, JSON.stringify(body)])
     return this.get(id)
   }
@@ -76,6 +113,7 @@ export class SessionPreparationService {
     const sessionId = this.optionalId(input.sessionId, 'Séance')
     await this.validateSession(sessionId)
     const body = this.body(input.body)
+    await this.validateAssets(body)
     await this.db.transaction(async manager => {
       const rows = await manager.query('SELECT revision FROM pf2_session_preparation WHERE id=?', [id]) as Array<{ revision: number }>
       if (rows[0]?.revision !== revision) throw new ConflictException('Conflit de sauvegarde. Recharge la page.')
@@ -104,8 +142,10 @@ export class SessionPreparationService {
       // create a duplicate, even when the caller still has the old revision.
       if (block.npcId) return { npcId: block.npcId, created: false }
       if (row.revision !== expectedRevision) throw new ConflictException('La préparation a changé. Recharge avant de convertir ce personnage.')
-      const name = this.trim(block.name, 'Nom du personnage', 160, true)
-      const portrait = block.portraitUrl?.trim() ?? ''
+      const [asset] = block.assetId ? await manager.query(ASSET_SELECT + " WHERE id=? AND kind='personnage'", [block.assetId]) as Asset[] : []
+      if (block.assetId && !asset) throw new BadRequestException('Personnage partagé introuvable.')
+      const name = this.trim(asset?.title ?? block.name, 'Nom du personnage', 160, true)
+      const portrait = asset?.portraitUrl ?? block.portraitUrl?.trim() ?? ''
       // The permanent PNJ directory only accepts local Foundry image paths.
       if (portrait && !/^assets\/l7r\/portraits\/pnj\/[^/]+\.(?:webp|gif|png|jpe?g)$/i.test(portrait)) {
         throw new BadRequestException('Pour conserver le portrait, importe d’abord l’image avec « Choisir un portrait » (une URL externe ne suffit pas).')
@@ -116,7 +156,7 @@ export class SessionPreparationService {
       const record = {
         id: npcId, nom: name, description: '', factions: [], tags: [], aliases: [],
         lieux: [], regions: [], evenements: [], ...(portrait ? { portrait } : {}),
-        ascendance: block.ascendance?.trim() || 'Inconnue', classe: 'Inconnue',
+        ascendance: asset?.ascendance || block.ascendance?.trim() || 'Inconnue', classe: 'Inconnue',
         role: '', roleplay: '', caractere: '', scope: 'global',
         importance: 'Secondaire', statut: 'Actif',
         // Keep scene/role notes as PRIVATE MJ notes, never as a public description.
@@ -124,6 +164,7 @@ export class SessionPreparationService {
       }
       await manager.query('INSERT INTO pf2_record(kind,id,name,payload) VALUES (?,?,?,?)', ['pnj', npcId, name, JSON.stringify(record)])
       block.npcId = npcId
+      delete block.assetId
       await manager.query(
         'UPDATE pf2_session_preparation SET body_json=?,revision=revision+1,updated_at=CURRENT_TIMESTAMP WHERE id=? AND revision=?',
         [JSON.stringify(body), preparationId, expectedRevision]
@@ -154,31 +195,34 @@ export class SessionPreparationService {
   async share(preparationId: string, blockId: string): Promise<Record<string, unknown>> {
     const prep = await this.get(preparationId)
     const body = prep.body as PrepBody
-    const block = body.stages.flatMap(stage => stage.blocks).find(b => b.id === blockId && b.kind === 'personnage')
+    const block = body.stages.flatMap(stage => stage.blocks).find(b => b.id === blockId && (b.kind === 'personnage' || b.kind === 'illustration'))
     if (!block) throw new NotFoundException('Personnage absent de la préparation enregistrée.')
     const context = await this.channelFor(prep.sessionId as string | null)
     const client = this.discord.requestClient()
     if (!client?.isReady()) throw new ServiceUnavailableException('Bot Discord indisponible : rien n’a été publié.')
     const channel = await client.channels.fetch(context.channel_id)
     if (!channel || !('send' in channel) || typeof channel.send !== 'function') throw new BadRequestException('Salon Discord non accessible au bot.')
+    const asset = block.assetId ? await this.getAsset(block.assetId, block.kind) : null
+    const illustration = block.kind === 'illustration'
     const candidate = block.npcId ? await this.codex.characterCandidate(block.npcId) : null
     if (block.npcId && !candidate) throw new BadRequestException('PNJ lié introuvable.')
-    const name = candidate?.name ?? block.name ?? ''
-    const portrait = candidate?.portrait ?? block.portraitUrl ?? ''
+    const name = asset?.title ?? (illustration ? block.title : candidate?.name ?? block.name ?? '')
+    const portrait = asset?.portraitUrl ?? candidate?.portrait ?? block.portraitUrl ?? ''
+    if (illustration && !portrait) throw new BadRequestException('Une illustration nécessite une image.')
     if (!name) throw new BadRequestException('Nom du personnage manquant.')
     let profile: { published?: boolean; wikiPageTitle?: string } | null = null
     if (block.npcId) { try { profile = await this.codex.character(block.npcId) as typeof profile } catch { profile = null } }
-    const presentation = await this.codex.createPresentation({ name, sourceNpcId: block.npcId, portraitUrl: portrait || null, showName: block.showName, channelId: context.channel_id, guildId: context.guild_id })
+    const presentation = await this.codex.createPresentation({ name, sourceNpcId: block.npcId, portraitUrl: portrait || null, showName: illustration ? true : block.showName, kind: illustration ? 'illustration' : 'character', channelId: context.channel_id, guildId: context.guild_id })
     const button = profile?.published && profile.wikiPageTitle
       ? new ButtonBuilder().setStyle(ButtonStyle.Link).setLabel('Voir la fiche').setURL(this.codex.wikiPageUrl(profile.wikiPageTitle))
       : new ButtonBuilder().setStyle(ButtonStyle.Primary).setCustomId(`pf2-character:create:${presentation.id}`).setLabel(profile ? 'Publier la fiche' : 'Créer la fiche')
     const components: Array<ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder>> = []
-    const factions = await this.codex.playerFactionCandidates(true)
+    const factions = illustration ? [] : await this.codex.playerFactionCandidates(true)
     if (!profile?.published && factions.length) {
       const options = [{ label: '(Aucune faction)', value: 'none', default: true }, ...factions.slice(0, 24).map(faction => ({ label: faction.path.slice(0, 100), value: faction.id }))]
       components.push(new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(new StringSelectMenuBuilder().setCustomId(`pf2-character:faction:${presentation.id}`).setPlaceholder('Faction principale (facultative)').addOptions(options)))
     }
-    components.push(new ActionRowBuilder<ButtonBuilder>().addComponents(button))
+    if (!illustration) components.push(new ActionRowBuilder<ButtonBuilder>().addComponents(button))
     let file: string | null = null
     if (/^https:\/\//i.test(portrait)) file = portrait
     else if (portrait.startsWith('assets/l7r/')) {
@@ -191,7 +235,7 @@ export class SessionPreparationService {
     else if (portrait) throw new BadRequestException('Portrait : utiliser une URL HTTPS ou un asset Foundry.')
     let message
     try {
-      message = await channel.send({ content: block.showName === false ? '\u200b' : name, files: file ? [file] : [], components, allowedMentions: { parse: [] } })
+      message = await channel.send({ content: !illustration && block.showName === false ? '\u200b' : name, files: file ? [file] : [], components, allowedMentions: { parse: [] } })
     } catch (error) {
       throw new ServiceUnavailableException(`Partage Discord impossible : ${error instanceof Error ? error.message : String(error)}`)
     }

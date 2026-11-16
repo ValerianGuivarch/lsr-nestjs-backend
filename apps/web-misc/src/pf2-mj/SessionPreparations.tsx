@@ -5,9 +5,9 @@ import { Link, useLocation } from 'react-router-dom'
 import './SessionPreparations.css'
 import { moduleDisplayTitle, moduleInWork, sortedWorks } from './moduleLabels'
 
-type BlockKind = 'personnage' | 'lore' | 'loot' | 'rencontre' | 'texte' | 'checklist'
+type BlockKind = 'personnage' | 'lore' | 'loot' | 'rencontre' | 'texte' | 'checklist' | 'illustration'
 type Block = {
-  id: string; kind: BlockKind; title: string; text: string; done: boolean; npcId?: string;
+  id: string; kind: BlockKind; title: string; text: string; done: boolean; npcId?: string; assetId?: string;
   name?: string; ascendance?: string; portraitUrl?: string; showName?: boolean; quantity?: string;
   reference?: string; secret?: boolean;
 }
@@ -19,14 +19,20 @@ type Preparation = {
 }
 type Session = { id: string; number: number; title: string; channelId: string | null; channelName: string | null; ended: boolean }
 type Npc = { id: string; nom: string; ascendance?: string; portrait?: string }
+type Asset = { id: string; kind: 'personnage' | 'illustration'; campaignId: string; campaignTitle: string; title: string; portraitUrl: string; ascendance: string; revision: number }
 type Option = { id: string; title: string }
 const URL = '/apil7r/pf2-mj/session-preparations'
-const blockLabels: Record<BlockKind, string> = { personnage: 'Personnage', lore: 'Lore', loot: 'Loot', rencontre: 'Rencontre', texte: 'Texte libre', checklist: 'Checklist' }
+const blockLabels: Record<BlockKind, string> = { personnage: 'Personnage', lore: 'Lore', loot: 'Loot', rencontre: 'Rencontre', texte: 'Texte libre', checklist: 'Checklist', illustration: 'Illustration' }
 const blockKinds = Object.keys(blockLabels) as BlockKind[]
 
 function blankStage(): Stage { return { id: crypto.randomUUID(), title: 'Nouvelle étape', time: '', notes: '', done: false, blocks: [] } }
 function blankBlock(kind: BlockKind): Block {
   return { id: crypto.randomUUID(), kind, title: kind === 'personnage' ? '' : blockLabels[kind], text: '', done: false, name: '', ascendance: '', portraitUrl: '', showName: true, quantity: '', reference: '', secret: kind === 'lore' }
+}
+function ensureRecap(body: Preparation['body']): Preparation['body'] {
+  if (body.stages[0]?.blocks[0]?.kind === 'texte' && body.stages[0].blocks[0].title === 'Récapitulatif') return body
+  const recap = { ...blankBlock('texte'), title: 'Récapitulatif' }
+  return { ...body, stages: [{ ...blankStage(), title: 'Avant de jouer', blocks: [recap] }, ...body.stages] }
 }
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(`${URL}${path}`, { cache: 'no-store', ...init, headers: init?.headers })
@@ -90,6 +96,8 @@ export default function SessionPreparations({ campaigns, scenarios, activeWorks,
   const [draft, setDraft] = useState<Preparation | null>(null)
   const [sessions, setSessions] = useState<Session[]>([])
   const [npcs, setNpcs] = useState<Npc[]>([])
+  const [assets, setAssets] = useState<Asset[]>([])
+  const [assetEdits, setAssetEdits] = useState<Record<string, Asset>>({})
   const [mode, setMode] = useState<'edit' | 'view'>('edit')
   const [dirty, setDirty] = useState(false)
   const [busy, setBusy] = useState(false)
@@ -122,8 +130,10 @@ export default function SessionPreparations({ campaigns, scenarios, activeWorks,
       fetch('/apil7r/pf2-mj/choice-libre/template?moduleKey='+encodeURIComponent(templateModule.key),{cache:'no-store'}).then(async r => {
         if (!r.ok) throw new Error('Modèle inaccessible (HTTP '+r.status+')')
         const item=await r.json() as ModuleTemplate
-        setDraft({id:templateModule.key,title:templateModule.title,campaignId:null,scenarioId:null,sessionId:null,revision:0,updatedAt:'',body:item.body ?? {summary:'',stages:[blankStage()]}})
-        setDirty(!item.hasTemplate)
+        const original = item.body ?? {summary:'',stages:[]}
+        const body = ensureRecap(original)
+        setDraft({id:templateModule.key,title:templateModule.title,campaignId:item.campaignIds?.[0] ?? item.scenarioId ?? null,scenarioId:item.scenarioId ?? null,sessionId:null,revision:0,updatedAt:'',body})
+        setDirty(!item.hasTemplate || body !== original)
       }).catch(e=>setNotice(String(e))).finally(()=>setBusy(false))
     } else void refresh().then(list => { if (list.length) {
       const selected = list.find(item => item.id === new URLSearchParams(location.search).get('preparationId')) ?? list[0]
@@ -131,6 +141,8 @@ export default function SessionPreparations({ campaigns, scenarios, activeWorks,
     } }).catch(error => {
       setNotice(error.message)
     })
+    void request<Asset[]>('/assets').then(data => { if (Array.isArray(data)) setAssets(data) }).catch(() => undefined)
+    setAssetEdits({})
     fetch('/apil7r/pf2-mj/pnj-directory').then(r => r.ok ? r.json() : null)
       .then(data => setNpcs(Array.isArray(data?.items) ? data.items : []))
       .catch(() => undefined)
@@ -149,7 +161,36 @@ export default function SessionPreparations({ campaigns, scenarios, activeWorks,
   }
   function updateStage(id: string, patch: Partial<Stage>) { updateStages(stages => stages.map(stage => stage.id === id ? { ...stage, ...patch } : stage)) }
   function updateBlock(stageId: string, blockId: string, patch: Partial<Block>) {
+    const block = draft?.body.stages.flatMap(stage => stage.blocks).find(b => b.id === blockId)
+    const asset = assets.find(a => a.id === block?.assetId)
+    if (asset && !('assetId' in patch) && !('npcId' in patch)) {
+      const shared: Partial<Asset> = {}
+      if (asset.kind === 'personnage' && 'name' in patch) { shared.title = patch.name; delete patch.name }
+      if (asset.kind === 'illustration' && 'title' in patch) { shared.title = patch.title; delete patch.title }
+      if ('portraitUrl' in patch) { shared.portraitUrl = patch.portraitUrl; delete patch.portraitUrl }
+      if ('ascendance' in patch) { shared.ascendance = patch.ascendance; delete patch.ascendance }
+      if (Object.keys(shared).length) {
+        setAssetEdits(prev => ({ ...prev, [asset.id]: { ...(prev[asset.id] ?? asset), ...shared } }))
+        setDirty(true)
+      }
+    }
     updateStages(stages => stages.map(stage => stage.id === stageId ? { ...stage, blocks: stage.blocks.map(block => block.id === blockId ? { ...block, ...patch } : block) } : stage))
+  }
+  function linkAsset(stageId: string, block: Block, id: string) {
+    const asset = assets.find(a => a.id === id)
+    updateBlock(stageId, block.id, { assetId: asset?.id, npcId: undefined, ...(asset ? { name: asset.kind === 'personnage' ? asset.title : block.name, title: asset.kind === 'illustration' ? asset.title : block.title, portraitUrl: asset.portraitUrl, ascendance: asset.ascendance } : {name:block.name,title:block.title,portraitUrl:block.portraitUrl,ascendance:block.ascendance}) })
+  }
+  async function saveAsset(stageId: string, block: Block) {
+    if (block.assetId) { setNotice('Enregistre la préparation pour appliquer les modifications à la ressource partagée.'); return }
+    const campaignId = draft?.campaignId || draft?.scenarioId
+    const campaignTitle = [...campaigns, ...scenarios, ...(activeWorks ?? [])].find(c => c.id === campaignId)?.title
+    if (!campaignId || !campaignTitle) { setNotice('Associe la préparation à une campagne ou un scénario pour enregistrer une ressource partagée.'); return }
+    setBusy(true)
+    try {
+      const asset = await request<Asset>('/assets', bodyInit({ kind: block.kind, campaignId, campaignTitle, title: block.kind === 'personnage' ? block.name : block.title, portraitUrl: block.portraitUrl, ascendance: block.ascendance }))
+      setAssets(prev => [...prev, asset]); updateBlock(stageId, block.id, { assetId: asset.id, npcId: undefined })
+      setNotice('Ressource enregistrée. Enregistre le modèle ou la préparation pour conserver le lien.')
+    } catch (error) { setNotice((error as Error).message) } finally { setBusy(false) }
   }
   async function uploadPortrait(stageId: string, blockId: string, file?: File) {
     if (!file || uploadingPortrait) return
@@ -167,7 +208,8 @@ export default function SessionPreparations({ campaigns, scenarios, activeWorks,
       const form = new FormData()
       // Multipart fields are parsed in order. Send the unique block ID before
       // the file so even older API versions never fall back to "pnj.webp".
-      form.set('pnjId', `prep-${templateModule ? 'module' : draft?.id ?? 'nouvelle'}-${blockId}`)
+      const block = draft?.body.stages.flatMap(stage => stage.blocks).find(b => b.id === blockId)
+      form.set('pnjId', block?.assetId || block?.kind === 'illustration' ? `prep-image-${crypto.randomUUID()}` : `prep-${templateModule ? 'module' : draft?.id ?? 'nouvelle'}-${blockId}`)
       form.set('file', file)
       const response = await fetch('/apil7r/pf2-mj/pnj/portrait', { method: 'POST', body: form })
       const result = await response.json().catch(() => null)
@@ -187,14 +229,14 @@ export default function SessionPreparations({ campaigns, scenarios, activeWorks,
   function select(item: Preparation) {
     if (uploadingPortrait) return
     if (dirty && !window.confirm('Modifications non enregistrées : les abandonner ?')) return
-    setDraft(item); setDirty(false); setMode('edit'); setNotice('')
+    setAssetEdits({}); setDraft(item); setDirty(false); setMode('edit'); setNotice('')
   }
   async function create() {
     const title = newTitle.trim() || 'Préparation sans titre'
     setBusy(true); setNotice('')
     try {
       const created = await request<Preparation>('', bodyInit({ title, campaignId: params.get('campaignId'), scenarioId: params.get('scenarioId'), body: { summary: '', stages: [blankStage()] } }))
-      await refresh(); setDraft(created); setMode('edit'); setDirty(false); setNewTitle(''); setNotice('Préparation créée.')
+      await refresh(); setAssetEdits({}); setDraft(created); setMode('edit'); setDirty(false); setNewTitle(''); setNotice('Préparation créée.')
     } catch (error) { setNotice((error as Error).message) }
     finally { setBusy(false) }
   }
@@ -202,6 +244,13 @@ export default function SessionPreparations({ campaigns, scenarios, activeWorks,
     if (!value) throw new Error('Aucune préparation sélectionnée.')
     setBusy(true); setNotice('')
     try {
+      if (Object.keys(assetEdits).length) {
+        if (!window.confirm('Enregistrer les modifications des ressources partagées dans tous les modules et séances liés ?')) throw new Error('Enregistrement annulé.')
+        for (const asset of Object.values(assetEdits)) {
+          const saved = await request<Asset>('/assets/'+encodeURIComponent(asset.id), { ...bodyInit(asset), method: 'PATCH' })
+          setAssets(prev => prev.map(a => a.id === saved.id ? saved : a)); setAssetEdits(prev => { const next = {...prev}; delete next[saved.id]; return next })
+        }
+      }
       if (templateModule) {
         const response=await fetch('/apil7r/pf2-mj/choice-libre/templates',{...bodyInit({moduleKey:templateModule.key,body:value.body}),method:'PUT'})
         if (!response.ok) { const failure=await response.json().catch(()=>null); throw new Error(failure?.message || 'Erreur HTTP '+response.status) }
@@ -223,7 +272,7 @@ export default function SessionPreparations({ campaigns, scenarios, activeWorks,
   }
   async function share(block: Block) {
     if (!draft) return
-    if (!window.confirm(`Partager « ${block.name || block.title || 'ce personnage'} » dans le salon Discord de la séance et dans Foundry ?`)) return
+    if (!window.confirm(`Partager « ${block.name || block.title || 'cette ressource'} » dans le salon Discord de la séance et dans Foundry ?`)) return
     setBusy(true); setNotice('')
     try {
       let prep = draft
@@ -301,11 +350,27 @@ export default function SessionPreparations({ campaigns, scenarios, activeWorks,
           <div className="session-prep-stages">{draft.body.stages.map((stage, index) => <article className={`session-prep-stage${stage.done ? ' is-done' : ''}`} key={stage.id}>
             <div className="session-prep-stage-head"><span className="session-prep-step-number">{index + 1}</span>{mode === 'edit' ? <><input aria-label="Nom de l’étape" value={stage.title} onChange={e => updateStage(stage.id, { title: e.target.value })}/><input className="session-prep-time" aria-label="Horaire indicatif" placeholder="Horaire" value={stage.time} onChange={e => updateStage(stage.id, { time: e.target.value })}/><button type="button" title="Monter l’étape" onClick={() => updateStages(stages => move(stages, index, -1))}>↑</button><button type="button" title="Descendre l’étape" onClick={() => updateStages(stages => move(stages, index, 1))}>↓</button><button type="button" className="danger" onClick={() => updateStages(stages => stages.filter(s => s.id !== stage.id))}>×</button></> : <><h3>{stage.title}</h3><small>{stage.time}</small>{!templateModule&&<button type="button" onClick={() => void toggleDone(stage.id)}>{stage.done ? '✓ Jouée' : 'Marquer jouée'}</button>}</>}</div>
             {mode === 'edit' ? <textarea className="session-prep-stage-notes" rows={2} placeholder="Déroulé, objectifs, points d’attention..." value={stage.notes} onChange={e => updateStage(stage.id, { notes: e.target.value })}/> : stage.notes && <p className="session-prep-stage-notes">{stage.notes}</p>}
-            <div className="session-prep-blocks">{stage.blocks.map((block, blockIndex) => {
+            <div className="session-prep-blocks">{stage.blocks.map((storedBlock, blockIndex) => {
+              const asset = storedBlock.assetId ? assetEdits[storedBlock.assetId] ?? assets.find(a => a.id === storedBlock.assetId) : undefined
+              const block: Block = asset ? { ...storedBlock, ...(asset.kind === 'personnage' ? { name: asset.title } : { title: asset.title }), portraitUrl: asset.portraitUrl, ascendance: asset.ascendance } : storedBlock
               const npc = npcs.find(n => n.id === block.npcId)
               const portrait = portraitUrl(block.npcId ? (npc?.portrait || block.portraitUrl) : block.portraitUrl)
               return <div key={block.id} className={`session-prep-block ${block.done ? 'is-done' : ''}`}>
                 <div className="session-prep-block-head"><span className="session-prep-kind">{blockLabels[block.kind]}</span>{mode === 'edit' ? <div className="session-prep-block-tools"><button type="button" onClick={() => updateStage(stage.id, { blocks: move(stage.blocks, blockIndex, -1) })}>↑</button><button type="button" onClick={() => updateStage(stage.id, { blocks: move(stage.blocks, blockIndex, 1) })}>↓</button><button type="button" className="danger" onClick={() => updateStage(stage.id, { blocks: stage.blocks.filter(b => b.id !== block.id) })}>Supprimer</button></div> : !templateModule && <button type="button" onClick={() => void toggleDone(stage.id, block.id)}>{block.done ? '✓ Terminé' : 'Marquer fait'}</button>}</div>
+                {mode === 'edit' && (block.kind === 'illustration' || (block.kind === 'personnage' && !block.npcId)) && <div className="session-prep-block-fields">
+                  <label>{block.kind === 'illustration' ? 'Illustration enregistrée' : 'Personnage temporaire enregistré'}<select disabled={busy || uploadingPortrait !== null} value={block.assetId ?? ''} onChange={e => linkAsset(stage.id, block, e.target.value)}><option value="">Unique à ce bloc</option>{assets.filter(a => a.kind === block.kind).sort((a,b) => (a.campaignTitle+' — '+a.title).localeCompare(b.campaignTitle+' — '+b.title)).map(a => <option key={a.id} value={a.id}>{a.campaignTitle} — {a.title}</option>)}</select></label>
+                  {block.assetId ? <small>Ressource liée : les modifications enregistrées s’appliquent à toutes ses utilisations.</small> : <button type="button" disabled={busy || uploadingPortrait !== null || !(block.kind === 'personnage' ? block.name?.trim() : block.title.trim() && block.portraitUrl)} onClick={() => void saveAsset(stage.id, block)}>Enregistrer dans les ressources partagées</button>}
+                </div>}
+                {block.kind === 'illustration' && <div>
+                  {portrait && <img src={portrait} alt={block.title} style={{maxWidth:'100%',maxHeight:480,objectFit:'contain',display:'block'}}/>}
+                  {mode === 'edit' && <div className="session-prep-block-fields">
+                    <label>{uploadingPortrait === block.id ? 'Envoi…' : 'Charger une illustration'}<input type="file" accept="image/png,image/jpeg,image/webp,image/gif" disabled={busy || uploadingPortrait !== null} onChange={event => {const file = event.target.files?.[0]; event.target.value = ''; void uploadPortrait(stage.id, block.id, file)}}/></label>
+                    <label>URL de l’illustration (HTTPS ou asset Foundry)<input value={block.portraitUrl ?? ''} onChange={e => updateBlock(stage.id, block.id, {portraitUrl:e.target.value})} /></label>
+                    {portraitFeedback[block.id] && <small role="status">{portraitFeedback[block.id]}</small>}
+                    <button type="button" disabled={busy || uploadingPortrait !== null || !dirty} onClick={() => void save().catch(() => undefined)}>Enregistrer l’illustration</button>
+                  </div>}
+                  {!templateModule && <button type="button" className="primary" disabled={busy || uploadingPortrait !== null || !canShare || !portrait || !block.title.trim()} onClick={() => void share(block)}>Publier l’illustration · Discord + Foundry</button>}
+                </div>}
                 {block.kind === 'personnage' && <div className="session-prep-character">
                   <div className={`session-prep-portrait${mode === 'edit' && !block.npcId ? ' can-upload' : ''}`}
                     role={mode === 'edit' && !block.npcId ? 'button' : undefined}
@@ -321,7 +386,7 @@ export default function SessionPreparations({ campaigns, scenarios, activeWorks,
                     {mode === 'edit' && !block.npcId && <span className="session-prep-portrait-hint">Cliquer puis Ctrl+V</span>}
                   </div>
                   <div className="session-prep-character-fields">
-                    {mode === 'edit' ? <><label>Source du personnage<select value={block.npcId ?? ''} onChange={e => updateBlock(stage.id, block.id, { npcId: e.target.value || undefined })}><option value="">Personnage temporaire</option>{npcs.map(n => <option key={n.id} value={n.id}>{n.nom}</option>)}</select></label>{block.npcId && <small>Ascendance : {npc?.ascendance || block.ascendance || 'non précisée'}</small>}{!block.npcId && <><label>Nom<input value={block.name ?? ''} onChange={e => updateBlock(stage.id, block.id, { name: e.target.value })}/></label><label>Ascendance (pour le portrait)<input placeholder="Humain, elfe, gnome… ou inconnue" value={block.ascendance ?? ''} onChange={e => updateBlock(stage.id, block.id, { ascendance: e.target.value })}/></label><label className="session-prep-portrait-upload">
+                    {mode === 'edit' ? <><label>Source du personnage<select value={block.npcId ?? ''} onChange={e => updateBlock(stage.id, block.id, { npcId: e.target.value || undefined, assetId: undefined })}><option value="">Personnage temporaire</option>{npcs.map(n => <option key={n.id} value={n.id}>{n.nom}</option>)}</select></label>{block.npcId && <small>Ascendance : {npc?.ascendance || block.ascendance || 'non précisée'}</small>}{!block.npcId && <><label>Nom<input value={block.name ?? ''} onChange={e => updateBlock(stage.id, block.id, { name: e.target.value })}/></label><label>Ascendance (pour le portrait)<input placeholder="Humain, elfe, gnome… ou inconnue" value={block.ascendance ?? ''} onChange={e => updateBlock(stage.id, block.id, { ascendance: e.target.value })}/></label><label className="session-prep-portrait-upload">
                       <span>{uploadingPortrait === block.id ? 'Envoi en cours…' : portrait ? 'Remplacer le portrait' : 'Choisir un portrait'}</span>
                       <input type="file" accept="image/png,image/jpeg,image/webp,image/gif" disabled={busy || uploadingPortrait !== null}
                         onChange={event => { const file = event.target.files?.[0]; event.target.value = ''; void uploadPortrait(stage.id, block.id, file) }}/>
@@ -341,7 +406,7 @@ export default function SessionPreparations({ campaigns, scenarios, activeWorks,
                     <div className="session-prep-actions">{block.npcId && <Link to={`/pf2-mj/npcs/${encodeURIComponent(block.npcId)}`}>Ouvrir la fiche MJ</Link>}{!templateModule && !block.npcId && <button type="button" disabled={busy || uploadingPortrait !== null || !block.name?.trim()} onClick={() => void promote(block)}>Enregistrer comme PNJ permanent</button>}{!templateModule&&<button disabled={busy || uploadingPortrait !== null || !canShare} type="button" className="primary" onClick={() => void share(block)}>Partager · Discord + Foundry</button>}</div>
                   </div>
                 </div>}
-                {mode === 'edit' ? <div className="session-prep-block-fields">{block.kind !== 'personnage' && <label>Titre<input value={block.title} onChange={e => updateBlock(stage.id, block.id, { title: e.target.value })}/></label>}{block.kind === 'loot' && <label>Quantité<input value={block.quantity ?? ''} onChange={e => updateBlock(stage.id, block.id, { quantity: e.target.value })}/></label>}{block.kind === 'rencontre' && <label>Référence Foundry / scène<input value={block.reference ?? ''} onChange={e => updateBlock(stage.id, block.id, { reference: e.target.value })}/></label>}<label className="session-prep-full">{block.kind === 'personnage' ? 'Notes / rôle dans cette scène' : 'Contenu'}<textarea rows={3} value={block.text} onChange={e => updateBlock(stage.id, block.id, { text: e.target.value })}/></label>{block.kind === 'lore' && <label className="session-prep-checkbox"><input type="checkbox" checked={block.secret === true} onChange={e => updateBlock(stage.id, block.id, { secret: e.target.checked })}/> Secret MJ</label>}</div> : <><h4>{block.kind !== 'personnage' ? block.title : ''}{block.kind === 'loot' && block.quantity ? ` · ${block.quantity}` : ''}</h4>{block.kind === 'lore' && block.secret && <small className="session-prep-secret">🔒 Secret MJ</small>}{block.text && <p className="session-prep-block-text">{block.text}</p>}{block.reference && <small>{block.reference}</small>}</>}
+                {mode === 'edit' ? <div className="session-prep-block-fields">{block.kind !== 'personnage' && <label>Titre<input value={block.title} onChange={e => updateBlock(stage.id, block.id, { title: e.target.value })}/></label>}{block.kind === 'loot' && <label>Quantité<input value={block.quantity ?? ''} onChange={e => updateBlock(stage.id, block.id, { quantity: e.target.value })}/></label>}{block.kind === 'rencontre' && <label>Référence Foundry / scène<input value={block.reference ?? ''} onChange={e => updateBlock(stage.id, block.id, { reference: e.target.value })}/></label>}<label className="session-prep-full">{block.kind === 'personnage' ? 'Notes / rôle dans cette scène' : block.kind === 'illustration' ? 'Notes MJ (non publiées, facultatives)' : 'Contenu'}<textarea rows={3} value={block.text} onChange={e => updateBlock(stage.id, block.id, { text: e.target.value })}/></label>{block.kind === 'lore' && <label className="session-prep-checkbox"><input type="checkbox" checked={block.secret === true} onChange={e => updateBlock(stage.id, block.id, { secret: e.target.checked })}/> Secret MJ</label>}</div> : <><h4>{block.kind !== 'personnage' ? block.title : ''}{block.kind === 'loot' && block.quantity ? ` · ${block.quantity}` : ''}</h4>{block.kind === 'lore' && block.secret && <small className="session-prep-secret">🔒 Secret MJ</small>}{block.text && <p className="session-prep-block-text">{block.text}</p>}{block.reference && <small>{block.reference}</small>}</>}
               </div>
             })}</div>
             {mode === 'edit' && <div className="session-prep-add"><select aria-label="Type de bloc" value={addKind[stage.id] ?? 'texte'} onChange={e => setAddKind(current => ({ ...current, [stage.id]: e.target.value as BlockKind }))}>{blockKinds.map(kind => <option key={kind} value={kind}>{blockLabels[kind]}</option>)}</select><button type="button" onClick={() => updateStage(stage.id, { blocks: [...stage.blocks, blankBlock(addKind[stage.id] ?? 'texte')] })}>+ Ajouter un bloc</button></div>}

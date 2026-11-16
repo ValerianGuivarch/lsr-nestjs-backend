@@ -4,10 +4,10 @@ import { PlayerCodexService } from './PlayerCodexService'
 @Controller(['api/pf2-mj/player-codex', 'api/v1/pf2-mj/player-codex'])
 export class PlayerCodexController {
   constructor(private readonly service: PlayerCodexService) {}
-  @Get('foundry-presentations') foundryPresentations(@Headers('x-pf2-foundry-sync-key') key = ''): Promise<unknown> {
+  @Get('foundry-presentations') foundryPresentations(@Headers('x-pf2-foundry-sync-key') key = '', @Query('includeIllustrations') includeIllustrations = ''): Promise<unknown> {
     const expected = process.env['PF2_FOUNDRY_CHAT_SYNC_KEY'] ?? ''
     if (!expected || key !== expected) throw new UnauthorizedException('Synchronisation Foundry non autorisée.')
-    return this.service.foundryPresentations()
+    return this.service.foundryPresentations(includeIllustrations === '1')
   }
   @Get('foundry-sync-state') foundrySyncState(@Headers('x-pf2-foundry-sync-key') key = ''): Promise<unknown> {
     const expected = process.env['PF2_FOUNDRY_CHAT_SYNC_KEY'] ?? ''

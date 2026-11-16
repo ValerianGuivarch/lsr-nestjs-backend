@@ -1,7 +1,7 @@
 import { Body, Controller, Get, Header, Injectable, Param, Put, Query, BadRequestException } from '@nestjs/common'
 import { InjectDataSource } from '@nestjs/typeorm'
 import { DataSource } from 'typeorm'
-import { normalizePreparationBody } from '../discord/PreparationBody'
+import { normalizePreparationBody, requireModuleRecap } from '../discord/PreparationBody'
 import { Pf2PersistenceService } from '../pf2-storage/Pf2PersistenceService'
 
 const kinds = ['unassigned', 'mission', 'blocked', 'personal', 'rp'] as const
@@ -143,6 +143,10 @@ export class Pf2ChoiceLibreService {
       rawBody = JSON.parse(rows[0].bodyJson)
     }
     const body = normalizePreparationBody(rawBody)
+    requireModuleRecap(body)
+    for (const block of body.stages.flatMap(stage => stage.blocks)) {
+      if (block.assetId && !(await this.db.query('SELECT 1 FROM pf2_preparation_asset WHERE id=? AND kind=?', [block.assetId, block.kind])).length) throw new BadRequestException('Ressource partagée introuvable ou incompatible.')
+    }
     if (!Array.isArray(body.stages) || !body.stages.length) throw new BadRequestException('La préparation doit contenir des étapes.')
     await this.db.query('INSERT INTO pf2_choice_template (module_key,body_json) VALUES (?,?) ON CONFLICT(module_key) DO UPDATE SET body_json=excluded.body_json,updated_at=CURRENT_TIMESTAMP',[moduleKey,JSON.stringify(body)])
     return {ok:true}

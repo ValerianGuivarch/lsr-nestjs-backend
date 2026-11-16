@@ -19,6 +19,7 @@ function escape(value) { return foundry.utils.escapeHTML(String(value ?? "")); }
 function renderPresentation(item) {
   const image = String(item.portraitUrl ?? "");
   const safeImage = /^(https:\/\/|assets\/l7r\/)/i.test(image) ? image : "";
+  if (item.kind === 'illustration') return `<div class="pf2e-val-character-presentation" data-pf2-character-presentation-id="${escape(item.id)}"><p><strong>${escape(item.name)}</strong></p>${safeImage ? `<img src="${escape(safeImage)}" alt="Illustration" style="max-width:100%;height:auto;display:block" />` : ""}</div>`;
   const wiki = item.wikiUrl && /^https:\/\//.test(item.wikiUrl) ? item.wikiUrl : null;
   return `<div class="pf2e-val-character-presentation" data-pf2-character-presentation-id="${escape(item.id)}">
     ${item.showName ? `<p><strong>${escape(item.name)}</strong></p>` : ""}
@@ -85,7 +86,7 @@ async function synchronizePresentations() {
   if (!firstActiveGM()) return;
   const key = game.settings.get(MODULE_ID, "discordCharacterChatKey");
   if (!key) return;
-  const data = await readJson(`${pf2MjApiUrl()}/player-codex/foundry-presentations`, {
+  const data = await readJson(`${pf2MjApiUrl()}/player-codex/foundry-presentations?includeIllustrations=1`, {
     headers: { Accept: "application/json", "x-pf2-foundry-sync-key": key }
   });
   const updatedInterval = data.active ? SESSION_INTERVAL : NORMAL_INTERVAL;
