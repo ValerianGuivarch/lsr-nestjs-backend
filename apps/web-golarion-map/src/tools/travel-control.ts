@@ -8,22 +8,58 @@ const empty = (): GeoJSON.FeatureCollection<GeoJSON.LineString> => ({ type: 'Fea
 function element<K extends keyof HTMLElementTagNameMap>(name: K, text = ''): HTMLElementTagNameMap[K] {
   const el = document.createElement(name); el.textContent = text; return el
 }
+// The button sits below other map controls, so a viewport-relative max-height
+// alone can extend below the visible map. Choose the available side of the anchor.
+export function travelPanelPlacement(anchor: Pick<DOMRect,'top'|'bottom'>, mapBounds: Pick<DOMRect,'top'|'bottom'>, viewportHeight: number) {
+  const above = Math.max(0, anchor.top - Math.max(0,mapBounds.top) - 12)
+  const below = Math.max(0, Math.min(viewportHeight,mapBounds.bottom) - anchor.bottom - 32)
+  const opensUp = below < 320 && above > below
+  return { opensUp, maxHeight: Math.floor(opensUp ? above : below) }
+}
 export class TravelControl implements IControl {
   private map?: GLMap
   private container?: HTMLDivElement
   private cleanupLoad?: () => void
+  private cleanupLayout?: () => void
   onAdd(map: GLMap): HTMLElement {
     this.map = map
     const container = element('div'); container.className = 'maplibregl-ctrl maplibregl-ctrl-group travel-map-control'
     this.container = container
     const toggle = element('button', '↝'); toggle.title = 'Calculer un itinéraire'; toggle.setAttribute('aria-label', toggle.title); toggle.setAttribute('aria-expanded', 'false')
     const panel = element('div'); panel.className = 'travel-map-panel'; panel.hidden = true
-    toggle.onclick = () => { panel.hidden = !panel.hidden; toggle.setAttribute('aria-expanded', String(!panel.hidden)) }
+    const mapContainer = map.getContainer()
+    let layoutFrame = 0
+    const refreshLayout = () => {
+      if (panel.hidden || !container.isConnected) return
+      const bounds = mapContainer.getBoundingClientRect(), anchor = container.getBoundingClientRect()
+      const placement = travelPanelPlacement(anchor,bounds,window.innerHeight)
+      panel.classList.toggle('opens-up',placement.opensUp)
+      panel.style.setProperty('--travel-panel-height',placement.maxHeight + 'px')
+    }
+    const setOpen = (open: boolean) => {
+      panel.hidden = !open; toggle.setAttribute('aria-expanded', String(open))
+      window.cancelAnimationFrame(layoutFrame)
+      if (open) { refreshLayout(); layoutFrame = window.requestAnimationFrame(refreshLayout) }
+    }
+    toggle.onclick = () => setOpen(panel.hidden)
+    window.addEventListener('resize',refreshLayout)
+    const observer = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(refreshLayout) : undefined
+    observer?.observe(mapContainer)
+    observer?.observe(container)
+    this.cleanupLayout = () => {
+      window.cancelAnimationFrame(layoutFrame)
+      window.removeEventListener('resize',refreshLayout)
+      observer?.disconnect()
+    }
+    // Keep wheel and touch gestures inside the form rather than zooming the map.
+    for (const event of ['wheel','touchmove']) panel.addEventListener(event,e=>e.stopPropagation(),{passive:true})
     const heading = element('h3', 'Itinéraire MJ')
+    const body = element('div'); body.className = 'travel-map-body'
+    panel.append(heading,body)
     const mode = element('select')
     for (const [key, label] of Object.entries(travelModes)) { const op = element('option', label); op.value = key; mode.append(op) }
     mode.value = 'mixed'; mode.setAttribute('aria-label', 'Mode de transport')
-    const searchPicker = (title: string, parent: HTMLElement = panel) => {
+    const searchPicker = (title: string, parent: HTMLElement = body) => {
       const label = element('label', title), query = element('input'), select = element('select')
       query.type = 'search'; query.placeholder = 'Chercher une ville…'; query.setAttribute('aria-label', 'Rechercher ' + title.toLowerCase())
       select.setAttribute('aria-label', title)
@@ -41,11 +77,10 @@ export class TravelControl implements IControl {
       parent.append(label)
       return { select, fill, label, query }
     }
-    panel.append(heading)
     const from = searchPicker('Départ')
-    const stopContainer = element('div'); stopContainer.className = 'travel-map-stops'; panel.append(stopContainer)
+    const stopContainer = element('div'); stopContainer.className = 'travel-map-stops'; body.append(stopContainer)
     const addStopButton = element('button', '+ Ajouter une étape'); addStopButton.type='button'; addStopButton.className='travel-map-add-stop'
-    panel.append(addStopButton)
+    body.append(addStopButton)
     const to = searchPicker('Arrivée')
     const stops: Array<ReturnType<typeof searchPicker> & { row: HTMLDivElement }> = []
     const renumberStops = () => {
@@ -67,17 +102,17 @@ export class TravelControl implements IControl {
       renumberStops()
     }
     addStopButton.onclick = () => { addStop(); reset() }
-    const modeLabel = element('label', 'Transport'); modeLabel.append(mode); panel.append(modeLabel)
+    const modeLabel = element('label', 'Transport'); modeLabel.append(mode); body.append(modeLabel)
     const land = element('input'), sea = element('input'), up = element('input'), down = element('input')
     for (const [input, name] of [[land, 'Miles/jour à terre'], [sea, 'Miles/jour en mer'], [up, 'Miles/jour en rivière (amont)'], [down, 'Miles/jour en rivière (aval)']] as const) {
-      const label = element('label', name); input.type = 'number'; input.min = '1'; input.max = '200'; input.setAttribute('aria-label', name); label.append(input); panel.append(label)
+      const label = element('label', name); input.type = 'number'; input.min = '1'; input.max = '200'; input.setAttribute('aria-label', name); label.append(input); body.append(label)
     }
     land.value = '20'; sea.value = '60'; up.value = String(defaultMilesPerDay.riverUp); down.value = String(defaultMilesPerDay.riverDown)
     const result = element('p', 'Estimation géographique, ports et voies navigables non garantis.'); result.setAttribute('aria-live', 'polite')
     const calc = element('button', 'Calculer'), clear = element('button', 'Effacer')
     calc.className = 'travel-map-calc'
     const actions = element('div'); actions.className = 'travel-map-actions'; actions.append(calc, clear)
-    panel.append(actions, result)
+    const footer = element('div'); footer.className = 'travel-map-footer'; footer.append(actions,result); panel.append(footer)
     container.append(toggle, panel)
     const setup = () => {
       if (!map.getSource(SOURCE)) map.addSource(SOURCE, { type: 'geojson', data: empty() })
@@ -122,7 +157,7 @@ export class TravelControl implements IControl {
         const n=Number(params.get(field)); if (n>0 && n<=200) input.value=String(n)
       }
       for (const stop of params.getAll('travelVia').slice(0,6)) if (getTravelCity(stop)) addStop(stop)
-      from.fill(f); to.fill(t); panel.hidden = false; toggle.setAttribute('aria-expanded','true')
+      from.fill(f); to.fill(t); setOpen(true)
       if (map.isStyleLoaded()) run()
       else { map.once('idle', run); this.cleanupLoad = () => { map.off('idle', run) } }
     }
@@ -130,6 +165,7 @@ export class TravelControl implements IControl {
   }
   onRemove() {
     this.cleanupLoad?.()
+    this.cleanupLayout?.()
     if (this.map?.getLayer(LAYER)) this.map.removeLayer(LAYER)
     if (this.map?.getSource(SOURCE)) this.map.removeSource(SOURCE)
     this.container?.remove(); this.map = undefined
