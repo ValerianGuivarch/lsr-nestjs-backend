@@ -38,6 +38,17 @@ workflow `Build and deploy` :
 
 Le mini-PC ne surveille donc plus GitHub et ne construit plus les images.
 
+### Modules Foundry
+
+Le conteneur Foundry monte les répertoires `pf2e-val-toolkit` et
+`pf2e-val-automations` en lecture seule depuis le clone de déploiement
+`/home/valou/services/lsr-nestjs-deploy`, et non depuis le clone de travail
+`lsr-nestjs-backend`. Les montages résident dans
+`/home/valou/services/foundry/docker-compose.override.yml`.
+Le 16 novembre 2026, les montages ont été corrigés et le conteneur recréé ;
+le Toolkit 0.44.18 a été vérifié dans le conteneur. Pour une nouvelle version,
+Foundry peut nécessiter un redémarrage afin de relire le manifeste.
+
 ## Configuration Tailscale à faire une seule fois
 
 Tailscale doit être installé sur le mini-PC et connecté au même tailnet que le
