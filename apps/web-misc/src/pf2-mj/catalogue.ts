@@ -877,7 +877,11 @@ export function isJournalStatusVisible(status: string, currentOnly: boolean, sho
 }
 /** A single-book mini-campaign has one stable playable ID and a campaign compilation. */
 export function isStandaloneCampaign(unit: PlayableUnit): boolean {
-  return unit.id === unit.legacyEntryId && Boolean(rawEntryMap.get(unit.id)?.parts.some(part => part.kind === 'compilation_campagne'))
+  if (unit.id !== unit.legacyEntryId) return false
+  const entry = rawEntryMap.get(unit.id)
+  // Classify by the table's expected play length, not the publisher's document format.
+  const minimumSessions = (unit.playableComponents ?? []).reduce((total, component) => total + (component.estimatedSessions?.min ?? 1), 0)
+  return Boolean(entry?.parts.some(part => part.kind === 'compilation_campagne')) || minimumSessions > 2
 }
 export function playableTypeLabel(type: PlayableType): string { return playableLabels[type] }
 export function containerTypeLabel(type: ContainerType): string { return containerLabels[type] }

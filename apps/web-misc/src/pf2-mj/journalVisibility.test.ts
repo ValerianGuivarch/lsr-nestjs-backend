@@ -10,6 +10,11 @@ describe('Journal MJ',()=>{
     expect(isJournalStatusVisible('played',false,true)).toBe(true)
     expect(isJournalStatusVisible('rejected',false,true)).toBe(false)
   })
+  it('classe comme campagne une aventure de plus de deux séances',()=>{
+    const unit={id:'test-long-adventure',legacyEntryId:'test-long-adventure',playableComponents:[{estimatedSessions:{min:3,max:4}}]} as PlayableUnit
+    expect(isStandaloneCampaign(unit)).toBe(true)
+    expect(isStandaloneCampaign({...unit,playableComponents:[{estimatedSessions:{min:1,max:2}}] as PlayableUnit['playableComponents']})).toBe(false)
+  })
   it('regroupe un livre de mini-campagne en conservant le scénario existant',()=>{
     const id='test-single-book'
     legacy.rawEntryMap.set(id,{id,parts:[{kind:'compilation_campagne'}]} as never)

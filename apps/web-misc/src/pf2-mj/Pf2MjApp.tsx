@@ -60,7 +60,7 @@ import PricesPage from './Prices'
 const TravelsPage = lazy(() => import('./Travels'))
 import EvenementsPage from './Evenements'
 import LorePage from './Lore'
-import ResourcesPage, { ResourceTargetPanel, type Pf2Resource } from './Resources'
+import ResourcesPage, { type Pf2Resource } from './Resources'
 import PlayerIdentityTable from './PlayerIdentityTable'
 import PlayerCharactersPage from './PlayerCharactersPage'
 import { expandedPlaceLabels, geographyTreeOptions, loadGeographyFromApi, matchesPlaceFilter, placeDisplay } from './geography'
@@ -1212,13 +1212,12 @@ function PlayableDetail({ unit, curation, onUpdate, placeOptions, onOpenReferenc
   const ancestors = ancestorContainers(unit)
 
   return <EntityPage backTo={viewPaths.library}>
-    <div className="detail-head"><small>{playableTypeLabel(unit.playableType)}{ancestors[0] ? ` · ${ancestors.map(titleOf).join(' · ')}` : ''}</small><h2>{unit.number && `${unit.number} · `}{titleOf(unit)}</h2>{originalTitleOf(unit) && <em>{originalTitleOf(unit)}</em>}<AvailabilityBadges unit={unit} /></div>
+    <div className="detail-head"><small>{isStandaloneCampaign(unit) ? 'Campagne' : playableTypeLabel(unit.playableType)}{ancestors[0] ? ` · ${ancestors.map(titleOf).join(' · ')}` : ''}</small><h2>{unit.number && `${unit.number} · `}{titleOf(unit)}</h2>{originalTitleOf(unit) && <em>{originalTitleOf(unit)}</em>}<AvailabilityBadges unit={unit} /></div>
     <div className="availability-grid"><div><small>Document</small><strong>{documentStatusLabel(unit)}</strong></div><div><small>Mode</small><strong>{documentaryModeLabel(availability.mode) || (availability.coreMaterial === 'informationOnly' ? 'INFO' : '—')}</strong></div><div><small>Prêt</small><strong>{availability.ready ? 'OK' : 'Non'}</strong></div><div><small>Documents requis</small><strong>{availability.requiredDocuments.present}/{availability.requiredDocuments.required}</strong>{availability.requiredDocuments.informationOnly > 0 && <em> + {availability.requiredDocuments.informationOnly} info</em>}</div><div><small>ZIP Foundry</small><strong>{resourceBundleLabel(bundle)}</strong>{bundle.inheritedFromId && <em>hérité de {titleOf(containerMap.get(bundle.inheritedFromId)!)}</em>}</div></div>
     <dl className="detail-grid"><div><dt>Niveaux</dt><dd><input value={levelsDraft} onChange={(event) => setLevelsDraft(event.target.value)} /><button onClick={() => onUpdate(unit.id, 'levelsOverride', levelsDraft)}>Enregistrer</button><SourceBadge source={levels.source} /></dd></div><div><dt>Lieux</dt><dd><input list="all-places" value={placesDraft} onChange={(event) => setPlacesDraft(event.target.value)} /><datalist id="all-places">{placeOptions.map((place) => <option key={place}>{place}</option>)}</datalist><button onClick={() => onUpdate(unit.id, 'placesOverride', placesDraft.split(',').map((value) => value.trim()).filter(Boolean))}>Remplacer</button>{locations.map((location) => <span className="location-provenance" key={`${location.id}-${location.source.kind}`}>{location.id}<SourceBadge source={location.source} /></span>)}</dd></div><div><dt>Statut MJ</dt><dd><LifecycleSelect id={unit.id} override={override} excluded={isExcluded(unit, override, curation)} onUpdate={onUpdate} /></dd></div><div><dt>Chronologie</dt><dd>{yearOf(unit) ? `${unit.chronology.estimated ? '≈ ' : ''}${yearOf(unit)} AR` : unit.chronology.period || 'À documenter'}</dd></div><div><dt>Fil narratif</dt><dd>{unit.narrativeThread || '—'}</dd></div></dl>
     {unit.arcIds.length > 0 && <section className="detail-section"><h3>Arcs PFS / transversaux</h3><div className="badges">{unit.arcIds.map((id) => <Badge key={id}>{arcMap.get(id)?.titleFr || id}</Badge>)}</div></section>}
     <section className="detail-section synopsis-long"><h3>Synopsis de l’unité</h3><p>{unit.synopsis || 'Description propre de ce scénario non renseignée.'}</p></section>
     <PlayableComponentsSection components={unit.playableComponents} ownerId={unit.id} />
-    <ResourceTargetPanel targetKind="scenario" targetId={unit.id} />
     {unit.gmDetails && <section className="detail-section gm-details"><h3>Détails MJ</h3><p>{unit.gmDetails}</p></section>}
     {unit.migration.issues.length > 0 && <section className="detail-section migration-warning"><h3>À revoir après migration</h3><ul>{unit.migration.issues.map((issue) => <li key={issue}>{issue}</li>)}</ul></section>}
     {components.length > 0 && <section className="detail-section"><h3>Composants de l’œuvre</h3><div className="part-list">{components.map((component) => <article key={component.id}><strong>{componentTypeLabel(component.componentType)} · {titleOf(component)}</strong><span>{component.notes}</span><Badge>{component.requiredForCore ? 'Requis' : 'Facultatif'}</Badge></article>)}</div></section>}
@@ -1258,7 +1257,6 @@ function ContainerDetail({ container, curation, onOpenPlayable, onUpdate, onOpen
     {container.containerType === 'campaign' && <section className="detail-section playable-components-summary"><h3>Composants jouables</h3><p>{documentedChildren.length}/{children.length} scénario{children.length > 1 ? 's' : ''} documenté{documentedChildren.length > 1 ? 's' : ''} · {componentTotal} composant{componentTotal > 1 ? 's' : ''} narratif{componentTotal > 1 ? 's' : ''}.</p>{container.playableComponents.length > 0 && <PlayableComponentsSection components={container.playableComponents} ownerId={container.id} />}{documentedChildren.length > 0 && <div className="campaign-component-list">{documentedChildren.map((unit) => <article key={unit.id}><strong>{titleOf(unit)}</strong><ol>{unit.playableComponents.map((component) => <li key={component.id}>#{component.order} · {component.title}</li>)}</ol></article>)}</div>}{!componentTotal && <p className="missing">Découpage narratif non renseigné : aucune partie n’est inventée automatiquement.</p>}</section>}
     {components.length > 0 && <section className="detail-section"><h3>Composants / ressources</h3><div className="part-list">{components.map((component) => <ComponentCard component={component} key={component.id} />)}</div></section>}
     {container.containerType === 'campaign' && <CampaignChatGptLink campaignId={container.id} value={override.chatgptUrl} onUpdate={onUpdate} />}
-    {container.containerType === 'campaign' && <ResourceTargetPanel targetKind="campaign" targetId={container.id} />}
     {container.containerType === 'campaign' && <CampaignOperationsPanel campaignId={container.id} onOpenPlayable={onOpenPlayable} />}
     {container.containerType !== 'campaign' && <ScenarioPackagePanel scenarioId={container.id} onOpenReference={onOpenReference} preparationStatus={override.preparationStatus ?? 'untreated'} foundrySelected={effectiveLifecycleStatus(override, isContainerExcluded(container, curation)) === 'to_play'} foundrySearchNames={[titleOf(container), originalTitleOf(container) ?? '', ...container.titles.aliases]} />}
   </EntityPage>
@@ -1273,54 +1271,7 @@ type PlayableComponentsWork = { id: string; title: string; description: string |
 type JournalSessionLink = { scenarioId?: string; componentId?: string | null }
 type JournalSession = { sessionNumber?: number | string; content?: JournalSessionLink[] }
 
-function JournalView({ curation, onUpdate, onImported }: { curation: Curation; onUpdate: (id: string, field: string, value: unknown) => void; onImported: () => Promise<void> }) {
-  const [message, setMessage] = useState('')
-  const [importing, setImporting] = useState<string | null>(null)
-  const [expandedWorkIds, setExpandedWorkIds] = useState<Set<string>>(() => new Set())
-  const [expandedScenarioIds, setExpandedScenarioIds] = useState<Set<string>>(() => new Set())
-  const [expandedComponentKey, setExpandedComponentKey] = useState<string | null>(null)
-  const [scenarioSessions, setScenarioSessions] = useState<Record<string, number[]>>({})
-  const [componentSessions, setComponentSessions] = useState<Record<string, number[]>>({})
-  const [currentOnly, setCurrentOnly] = useState(false)
-  const [showCompleted, setShowCompleted] = useState(false)
-  const isVisibleStatus = (status: LifecycleStatus) => isJournalStatusVisible(status,currentOnly,showCompleted)
-  const {resources:adaptations}=useCatalogueAdaptations()
-  const integratedAdaptations=adaptations.flatMap(r=>{const override=adaptationOverride(curation,r);const status=effectiveLifecycleStatus(override,Boolean(override.excluded));return journalLifecycleStatuses.has(status)?[{resource:r,status,override}]:[]})
-
-  useEffect(() => {
-    let cancelled = false
-    void fetch('/apil7r/pf2-mj/wiki/sessions', { cache: 'no-store' })
-      .then(async (response) => {
-        if (!response.ok) throw new Error('Séances indisponibles.')
-        return response.json() as Promise<{ sessions?: JournalSession[] }>
-      })
-      .then((payload) => {
-        if (cancelled) return
-        const byScenario = new Map<string, Set<number>>()
-        const byComponent = new Map<string, Set<number>>()
-        for (const session of Array.isArray(payload.sessions) ? payload.sessions : []) {
-          const sessionNumber = Number(session.sessionNumber)
-          if (!Number.isFinite(sessionNumber)) continue
-          for (const link of Array.isArray(session.content) ? session.content : []) {
-            const scenarioId = typeof link.scenarioId === 'string' ? link.scenarioId : ''
-            if (!scenarioId) continue
-            if (!byScenario.has(scenarioId)) byScenario.set(scenarioId, new Set())
-            byScenario.get(scenarioId)!.add(sessionNumber)
-            if (typeof link.componentId === 'string' && link.componentId) {
-              const key = `${scenarioId}:${link.componentId}`
-              if (!byComponent.has(key)) byComponent.set(key, new Set())
-              byComponent.get(key)!.add(sessionNumber)
-            }
-          }
-        }
-        setScenarioSessions(Object.fromEntries([...byScenario.entries()].map(([id, values]) => [id, [...values].sort((a, b) => a - b)])))
-        setComponentSessions(Object.fromEntries([...byComponent.entries()].map(([id, values]) => [id, [...values].sort((a, b) => a - b)])))
-      })
-      .catch(() => {
-        if (!cancelled) { setScenarioSessions({}); setComponentSessions({}) }
-      })
-    return () => { cancelled = true }
-  }, [])
+function journalWorks(curation: Curation, componentSessions: Record<string, number[]> = {}) {
   const statusRank: Record<LifecycleStatus, number> = { in_progress: 0, to_play: 1, played: 2, retained: 2, untracked: 4, later: 5, rejected: 6 }
   const componentProgressForUnit = (unit: PlayableUnit) => {
     const componentStatus = resolvePlayableOverride(curation, unit).playableComponentStatus ?? {}
@@ -1373,6 +1324,63 @@ function JournalView({ curation, onUpdate, onImported }: { curation: Curation; o
       return unit.playableType!=='bounty' && !coveredUnitIds.has(unit.id) && journalLifecycleStatuses.has(journalStatusForUnit(unit)) && !isExcluded(unit, override, curation)
     })
   const works: PlayableComponentsWork[] = [...selectedCampaigns, ...selectedArcs, ...selectedStandalone.map((unit) => ({ id: unit.id, title: titleOf(unit), description: unit.synopsis, units: [unit], campaign: isStandaloneCampaign(unit), kind: 'scenario' as const, status: journalStatusForUnit(unit) }))].sort((a, b) => statusRank[a.status] - statusRank[b.status] || a.title.localeCompare(b.title, 'fr'))
+  return { works, statusRank, componentProgressForUnit, journalStatusForUnit }
+}
+
+function useJournalSessions() {
+  const [scenarioSessions, setScenarioSessions] = useState<Record<string, number[]>>({})
+  const [componentSessions, setComponentSessions] = useState<Record<string, number[]>>({})
+  useEffect(() => {
+    let cancelled = false
+    void fetch('/apil7r/pf2-mj/wiki/sessions', { cache: 'no-store' })
+      .then(async (response) => {
+        if (!response.ok) throw new Error('Séances indisponibles.')
+        return response.json() as Promise<{ sessions?: JournalSession[] }>
+      })
+      .then((payload) => {
+        if (cancelled) return
+        const byScenario = new Map<string, Set<number>>()
+        const byComponent = new Map<string, Set<number>>()
+        for (const session of Array.isArray(payload.sessions) ? payload.sessions : []) {
+          const sessionNumber = Number(session.sessionNumber)
+          if (!Number.isFinite(sessionNumber)) continue
+          for (const link of Array.isArray(session.content) ? session.content : []) {
+            const scenarioId = typeof link.scenarioId === 'string' ? link.scenarioId : ''
+            if (!scenarioId) continue
+            if (!byScenario.has(scenarioId)) byScenario.set(scenarioId, new Set())
+            byScenario.get(scenarioId)!.add(sessionNumber)
+            if (typeof link.componentId === 'string' && link.componentId) {
+              const key = `${scenarioId}:${link.componentId}`
+              if (!byComponent.has(key)) byComponent.set(key, new Set())
+              byComponent.get(key)!.add(sessionNumber)
+            }
+          }
+        }
+        setScenarioSessions(Object.fromEntries([...byScenario.entries()].map(([id, values]) => [id, [...values].sort((a, b) => a - b)])))
+        setComponentSessions(Object.fromEntries([...byComponent.entries()].map(([id, values]) => [id, [...values].sort((a, b) => a - b)])))
+      })
+      .catch(() => {
+        if (!cancelled) { setScenarioSessions({}); setComponentSessions({}) }
+      })
+    return () => { cancelled = true }
+  }, [])
+  return { scenarioSessions, componentSessions }
+}
+
+function JournalView({ curation, onUpdate, onImported, sessionHistory }: { curation: Curation; onUpdate: (id: string, field: string, value: unknown) => void; onImported: () => Promise<void>; sessionHistory: ReturnType<typeof useJournalSessions> }) {
+  const [message, setMessage] = useState('')
+  const [importing, setImporting] = useState<string | null>(null)
+  const [expandedWorkIds, setExpandedWorkIds] = useState<Set<string>>(() => new Set())
+  const [expandedScenarioIds, setExpandedScenarioIds] = useState<Set<string>>(() => new Set())
+  const [expandedComponentKey, setExpandedComponentKey] = useState<string | null>(null)
+  const { scenarioSessions, componentSessions } = sessionHistory
+  const [currentOnly, setCurrentOnly] = useState(false)
+  const [showCompleted, setShowCompleted] = useState(false)
+  const isVisibleStatus = (status: LifecycleStatus) => isJournalStatusVisible(status,currentOnly,showCompleted)
+  const {resources:adaptations}=useCatalogueAdaptations()
+  const integratedAdaptations=adaptations.flatMap(r=>{const override=adaptationOverride(curation,r);const status=effectiveLifecycleStatus(override,Boolean(override.excluded));return journalLifecycleStatuses.has(status)?[{resource:r,status,override}]:[]})
+
+  const { works, statusRank, componentProgressForUnit, journalStatusForUnit } = journalWorks(curation, componentSessions)
   const visibleWorks = works.filter(work => isVisibleStatus(work.status))
   const visibleAdaptations = integratedAdaptations.filter(a => isVisibleStatus(a.status))
   const completedCount = works.filter(w => w.status === 'played').length + integratedAdaptations.filter(a => a.status === 'played').length
@@ -1547,7 +1555,7 @@ function JournalView({ curation, onUpdate, onImported }: { curation: Curation; o
           <div className="component-work-actions">
             <button className="component-toggle" onClick={() => toggleWork(work.id)} aria-expanded={expanded}>{expanded ? 'Réduire' : work.kind !== 'scenario' ? `Développer · ${work.units.length} scénario${work.units.length > 1 ? 's' : ''}` : 'Développer'}</button>
             {expanded && work.kind !== 'arc' && <button className="component-prompt" onClick={() => void copyPrompt(work)}>{work.kind === 'campaign' ? 'Prompt campagne' : 'Prompt'}</button>}
-            {expanded && work.kind === 'campaign' && <label className={`component-import${importing === work.id ? ' disabled' : ''}`}>Importer la campagne<input type="file" accept="application/json,.json" disabled={importing !== null} onChange={(event) => { const file = event.target.files?.[0]; event.target.value = ''; void importCampaign(work, file) }} /></label>}
+            {expanded && work.kind === 'campaign' && <label className={`component-import${importing === work.id ? ' disabled' : ''}`}>Importer le découpage JSON<input type="file" accept="application/json,.json" disabled={importing !== null} onChange={(event) => { const file = event.target.files?.[0]; event.target.value = ''; void importCampaign(work, file) }} /></label>}
             <span>{work.kind !== 'scenario' && `${progress.completedScenarios}/${work.units.length} scénario${work.units.length > 1 ? 's' : ''} terminé${progress.completedScenarios > 1 ? 's' : ''} · `}{progress.played}/{progress.total} composant{progress.total > 1 ? 's' : ''} joué{progress.played > 1 ? 's' : ''}</span>
           </div>
         </header>
@@ -1557,7 +1565,7 @@ function JournalView({ curation, onUpdate, onImported }: { curation: Curation; o
           const unitSessions = scenarioSessions[unit.id] ?? []
           const unitExpanded = work.kind === 'scenario' || expandedScenarioIds.has(unit.id)
           return <article className={unitExpanded ? '' : 'is-collapsed'} key={unit.id}>
-            <div className="component-unit-head"><div><small>{unit.number ? `${unit.number} · ` : ''}{playableTypeLabel(unit.playableType)} · {lifecycleLabels[journalStatusForUnit(unit)]}</small><strong><Link className="journal-detail-link" to={playableHref(unit)}>{titleOf(unit)}</Link></strong>{unitSessions.length > 0 && <span className="journal-session-badge">{sessionLabel(unitSessions)}</span>}{unitExpanded && <p>{unit.synopsis || 'Description propre de ce scénario non renseignée.'}</p>}<em className="component-progress">{unitState.played}/{unitState.total} composant{unitState.total > 1 ? 's' : ''} joué{unitState.played > 1 ? 's' : ''}{unitState.completed ? ' · Scénario terminé' : ''}</em></div><div>{work.kind !== 'scenario' && <button className="component-toggle scenario-toggle" type="button" onClick={() => toggleScenario(unit.id)} aria-expanded={unitExpanded}>{unitExpanded ? 'Réduire' : 'Développer'}</button>}{work.kind === 'scenario' && <label className={`component-import${importing === unit.id ? ' disabled' : ''}`}>Importer<input type="file" accept="application/json,.json" disabled={importing !== null} onChange={(event) => { const file = event.target.files?.[0]; event.target.value = ''; void importComponents(unit, file) }} /></label>}</div></div>
+            <div className="component-unit-head"><div><small>{unit.number ? `${unit.number} · ` : ''}{isStandaloneCampaign(unit) ? 'Campagne' : playableTypeLabel(unit.playableType)} · {lifecycleLabels[journalStatusForUnit(unit)]}</small><strong><Link className="journal-detail-link" to={playableHref(unit)}>{titleOf(unit)}</Link></strong>{unitSessions.length > 0 && <span className="journal-session-badge">{sessionLabel(unitSessions)}</span>}{unitExpanded && <p>{unit.synopsis || 'Description propre de ce scénario non renseignée.'}</p>}<em className="component-progress">{unitState.played}/{unitState.total} composant{unitState.total > 1 ? 's' : ''} joué{unitState.played > 1 ? 's' : ''}{unitState.completed ? ' · Scénario terminé' : ''}</em></div><div>{work.kind !== 'scenario' && <button className="component-toggle scenario-toggle" type="button" onClick={() => toggleScenario(unit.id)} aria-expanded={unitExpanded}>{unitExpanded ? 'Réduire' : 'Développer'}</button>}{work.kind === 'scenario' && <label className={`component-import${importing === unit.id ? ' disabled' : ''}`}>Importer le découpage JSON<input type="file" accept="application/json,.json" disabled={importing !== null} onChange={(event) => { const file = event.target.files?.[0]; event.target.value = ''; void importComponents(unit, file) }} /></label>}</div></div>
             {unitExpanded && (unit.playableComponents.length ? <ul>{unit.playableComponents.map((component) => {
               const componentKey = `${unit.id}:${component.id}`
               const detailsExpanded = expandedComponentKey === componentKey
@@ -1571,6 +1579,7 @@ function JournalView({ curation, onUpdate, onImported }: { curation: Curation; o
                     <small>{component.estimatedSessions ? `${component.estimatedSessions.min}${component.estimatedSessions.min !== component.estimatedSessions.max ? `–${component.estimatedSessions.max}` : ''} séance${component.estimatedSessions.max > 1 ? 's' : ''} · ` : ''}{continuityLabel} · {status[component.id] === 'played' ? 'Joué' : 'À jouer'}{playedSessions.length > 0 ? ` · ${sessionLabel(playedSessions)}` : ''}</small>
                   </button>
                 </div>
+                <Link className="journal-detail-link" to={moduleTemplateHref(unit.id, component.id)}>Ouvrir / modifier le modèle</Link>
                 {detailsExpanded && <div className="component-detail-panel">
                   <p>{component.description || 'Description non renseignée.'}</p>
                   <dl>
@@ -1593,10 +1602,14 @@ function JournalView({ curation, onUpdate, onImported }: { curation: Curation; o
   </section>
 }
 
+function moduleTemplateHref(scenarioId: string, componentId: string) {
+  return `${viewPaths.sessionPrep}?tab=templates&moduleKey=${encodeURIComponent(JSON.stringify([scenarioId, componentId]))}`
+}
+
 function PlayableComponentsSection({ components, ownerId }: { components: PlayableComponent[]; ownerId?: string }) {
   const continuityLabel = (mode: PlayableComponent['continuity']['mode']) => mode === 'free' ? 'Libre' : mode === 'soft_lock' ? 'Transition nécessaire' : 'Effet tunnel'
   if (!components.length) return <section className="detail-section playable-components"><h3>Composants jouables</h3><p className="missing">Découpage narratif non renseigné.</p></section>
-  return <section className="detail-section playable-components"><h3>Composants jouables</h3><div className="playable-component-list">{components.map((component) => <article key={component.id}><header><span>#{component.order}</span><strong>{component.title}</strong><em>{continuityLabel(component.continuity.mode)}</em></header><p>{component.description}</p><footer>{component.estimatedSessions && <span>{component.estimatedSessions.min === component.estimatedSessions.max ? `${component.estimatedSessions.min} séance${component.estimatedSessions.min > 1 ? 's' : ''}` : `${component.estimatedSessions.min}–${component.estimatedSessions.max} séances`}</span>}<span>{component.continuity.returnToHubPossible ? 'Retour à Absalom possible' : 'Retour à Absalom non prévu'}</span>{component.continuity.recommendedSameParty && <span>Même groupe recommandé</span>}{component.continuity.notes && <small>{component.continuity.notes}</small>}</footer>{ownerId && <ResourceTargetPanel targetKind="component" targetId={ownerId} componentId={component.id} />}</article>)}</div></section>
+  return <section className="detail-section playable-components"><h3>Composants jouables</h3><div className="playable-component-list">{components.map((component) => <article key={component.id}><header><span>#{component.order}</span><strong>{component.title}</strong><em>{continuityLabel(component.continuity.mode)}</em></header><p>{component.description}</p><footer>{component.estimatedSessions && <span>{component.estimatedSessions.min === component.estimatedSessions.max ? `${component.estimatedSessions.min} séance${component.estimatedSessions.min > 1 ? 's' : ''}` : `${component.estimatedSessions.min}–${component.estimatedSessions.max} séances`}</span>}<span>{component.continuity.returnToHubPossible ? 'Retour à Absalom possible' : 'Retour à Absalom non prévu'}</span>{component.continuity.recommendedSameParty && <span>Même groupe recommandé</span>}{component.continuity.notes && <small>{component.continuity.notes}</small>}</footer>{ownerId && <Link className="journal-detail-link" to={moduleTemplateHref(ownerId, component.id)}>Ouvrir / modifier le modèle</Link>}</article>)}</div></section>
 }
 
 function ScanPanel({ report, onClose, onApply }: { report: ScanReport; onClose: () => void; onApply: () => void }) {
@@ -1763,6 +1776,15 @@ export function Pf2MjApp() {
   const excludedContainerCount = useMemo(() => containers.filter((container) => explicitContainerExclusion(container, curation)).length, [curation, catalogueRevision])
   const explicitExcludedPlayableCount = useMemo(() => playableUnits.filter((unit) => explicitPlayableExclusion(unit, curation)).length, [curation, catalogueRevision])
   const placeOptions = useMemo(() => unique([...allPlaces, ...(curation.customPlaces ?? [])]), [curation, catalogueRevision])
+  const sessionHistory = useJournalSessions()
+  const { resources: activeResourceCandidates } = useCatalogueAdaptations()
+  const activeWorks = [
+    ...journalWorks(curation, sessionHistory.componentSessions).works.filter(work => isJournalStatusVisible(work.status, false, false)).map(work => ({ id: work.kind === 'arc' ? work.id.slice(4) : work.id, title: work.title })),
+    ...activeResourceCandidates.filter(resource => {
+      const override = adaptationOverride(curation, resource)
+      return isJournalStatusVisible(effectiveLifecycleStatus(override, Boolean(override.excluded)), false, false)
+    }).map(resource => ({ id: adaptationId(resource), title: resource.title })),
+  ]
   const preparationScope = active.filter((unit) => isPreparationScope(unit, curation))
   const missingTranslations = preparationScope.filter((unit) => availabilityOf(unit).coverage === 'complete' && availabilityOf(unit).mode === 'en').length
   const documentCount = currentDocuments().length
@@ -1900,7 +1922,7 @@ export function Pf2MjApp() {
         {route.kind === 'resource' ? <ResourcesPage initialSelectedId={route.id} /> : null}
         {route.kind === 'player' ? <PlayerCharactersPage selectedNpcId={route.id} /> : null}
         {(route.kind === 'view' || route.kind === 'reference') && <>
-          {!isReferenceView && <><div className="page-title"><div><small>TABLE OUVERTE · GOLARION PERSISTANT</small><h1>{headings[routedView][0]}</h1><p>{headings[routedView][1]}</p></div>{!['journaux', 'resources', 'lore', 'players', 'sessionPrep'].includes(routedView) && <button className="refresh" onClick={refresh}>{scanStatus === 'scanning' ? '↻ Détection…' : scanStatus === 'done' ? '✓ Rapport prêt' : scanStatus === 'error' ? '! Réessayer' : '↻ Scanner PDF & ZIP'}</button>}</div>{error && <div className="notice"><strong>Attention</strong><p>{error}</p></div>}{scan && <ScanPanel report={scan} onClose={() => setScan(null)} onApply={applyScan} />}{!['excluded', 'settings', 'documents', 'resources', 'players', 'journal', 'sessionPrep', 'journaux', 'lore', 'prepare', 'maintenance'].includes(routedView) && <Stats active={active} />}{routedView === 'find' && <FinderView active={active} curation={curation} onOpen={openPlayable} onUpdate={update} resourceVersion={resourceRevision} />}{routedView === 'library' && <LibraryView curation={curation} onOpen={openContainer} onOpenPlayable={openPlayable} onUpdate={update} />}{routedView === 'resources' && <ResourcesPage />}{routedView === 'players' && <PlayerCharactersPage />}{routedView === 'sessionPrep' && <SessionPreparations scenarios={active.filter(unit => unit.legacyEntryKind !== 'campaign').map(unit => ({ id: unit.id, title: titleOf(unit) }))} campaigns={[...containers.filter(container => container.containerType === 'campaign').map(container => ({ id: container.id, title: titleOf(container) })), ...active.filter(unit => unit.legacyEntryKind === 'campaign').map(unit => ({ id: unit.id, title: titleOf(unit) }))]} />}{routedView === 'journal' && <JournalView curation={curation} onUpdate={update} onImported={reloadCatalogue} />}{routedView === 'lore' && <LorePage />}{routedView === 'prepare' && <PreparationView active={active} curation={curation} onOpen={openPlayable} onUpdate={update} resourceVersion={resourceRevision} />}{routedView === 'maintenance' && <MaintenanceView active={active} curation={curation} onOpen={openPlayable} onUpdate={update} resourceVersion={resourceRevision} />}{routedView === 'documents' && <DocumentsView resourceVersion={resourceRevision} />}{routedView === 'chronology' && <ChronologyView units={active} onOpen={openPlayable} />}{routedView === 'excluded' && <ExcludedView curation={curation} onOpenContainer={openContainer} onOpenPlayable={openPlayable} onUpdate={update} />}{routedView === 'settings' && <Settings places={placeOptions} onOperation={placeOperation} />}</>}
+          {!isReferenceView && <><div className="page-title"><div><small>TABLE OUVERTE · GOLARION PERSISTANT</small><h1>{headings[routedView][0]}</h1><p>{headings[routedView][1]}</p></div>{!['journaux', 'resources', 'lore', 'players', 'sessionPrep'].includes(routedView) && <button className="refresh" onClick={refresh}>{scanStatus === 'scanning' ? '↻ Détection…' : scanStatus === 'done' ? '✓ Rapport prêt' : scanStatus === 'error' ? '! Réessayer' : '↻ Scanner PDF & ZIP'}</button>}</div>{error && <div className="notice"><strong>Attention</strong><p>{error}</p></div>}{scan && <ScanPanel report={scan} onClose={() => setScan(null)} onApply={applyScan} />}{!['excluded', 'settings', 'documents', 'resources', 'players', 'journal', 'sessionPrep', 'journaux', 'lore', 'prepare', 'maintenance'].includes(routedView) && <Stats active={active} />}{routedView === 'find' && <FinderView active={active} curation={curation} onOpen={openPlayable} onUpdate={update} resourceVersion={resourceRevision} />}{routedView === 'library' && <LibraryView curation={curation} onOpen={openContainer} onOpenPlayable={openPlayable} onUpdate={update} />}{routedView === 'resources' && <ResourcesPage />}{routedView === 'players' && <PlayerCharactersPage />}{routedView === 'sessionPrep' && <SessionPreparations activeWorks={activeWorks} scenarios={active.filter(unit => unit.legacyEntryKind !== 'campaign').map(unit => ({ id: unit.id, title: titleOf(unit) }))} campaigns={[...containers.filter(container => container.containerType === 'campaign').map(container => ({ id: container.id, title: titleOf(container) })), ...active.filter(unit => unit.legacyEntryKind === 'campaign').map(unit => ({ id: unit.id, title: titleOf(unit) }))]} />}{routedView === 'journal' && <JournalView curation={curation} onUpdate={update} onImported={reloadCatalogue} sessionHistory={sessionHistory} />}{routedView === 'lore' && <LorePage />}{routedView === 'prepare' && <PreparationView active={active} curation={curation} onOpen={openPlayable} onUpdate={update} resourceVersion={resourceRevision} />}{routedView === 'maintenance' && <MaintenanceView active={active} curation={curation} onOpen={openPlayable} onUpdate={update} resourceVersion={resourceRevision} />}{routedView === 'documents' && <DocumentsView resourceVersion={resourceRevision} />}{routedView === 'chronology' && <ChronologyView units={active} onOpen={openPlayable} />}{routedView === 'excluded' && <ExcludedView curation={curation} onOpenContainer={openContainer} onOpenPlayable={openPlayable} onUpdate={update} />}{routedView === 'settings' && <Settings places={placeOptions} onOperation={placeOperation} />}</>}
           {isReferenceView && <nav className="catalogue-subnav reference-subnav"><Link to={viewPaths.pnj}>PNJ</Link><Link to={viewPaths.factions}>Factions</Link><Link to={viewPaths.lieux}>Lieux</Link><Link to={viewPaths.regions}>Régions</Link><Link to={viewPaths.evenements}>Événements</Link><NavLink to={viewPaths.prix}>Prix</NavLink><NavLink to={viewPaths.voyages}>Voyages</NavLink></nav>}
           {routedView === 'prix' && <PricesPage />}
           {routedView === 'voyages' && <Suspense fallback={<div>Chargement de la carte des voyages…</div>}><TravelsPage /></Suspense>}

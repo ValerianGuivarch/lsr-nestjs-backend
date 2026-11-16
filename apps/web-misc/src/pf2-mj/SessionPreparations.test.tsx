@@ -67,6 +67,24 @@ describe('Portrait temporaire de préparation', () => {
     return [...container.querySelectorAll('button')].find(button => button.textContent?.includes('Enregistrer le portrait'))!
   }
 
+  it('offers only active works and prefixes module names in the session importer', async () => {
+    const templates = [
+      {key:'manoir',scenarioId:'malevolence',title:'Le domaine',group:'',campaignIds:['malevolence'],hasTemplate:true,body:sample().body},
+      {key:'hell',scenarioId:'hell',title:'Scène interdite',group:'',campaignIds:['hell'],hasTemplate:true,body:sample().body},
+    ]
+    const previous=globalThis.fetch
+    vi.stubGlobal('fetch',vi.fn(async(resource:RequestInfo|URL,init?:RequestInit)=>{
+      if(String(resource).endsWith('/choice-libre/templates'))return new Response(JSON.stringify(templates),{status:200})
+      return previous(resource,init)
+    }))
+    await act(async()=>root.render(<MemoryRouter><SessionPreparations campaigns={[{id:'hell',title:'Brise-Enfers'}]} scenarios={[]} activeWorks={[{id:'malevolence',title:'Malveillance'}]}/></MemoryRouter>))
+    await act(async()=>[...container.querySelectorAll('button')].find(b=>b.textContent==='Importer / enregistrer un module jouable')!.click())
+    const picker=[...container.querySelectorAll('.session-prep-channel')].find(el=>el.textContent?.includes('Fermer les modèles'))!
+    expect(picker.textContent).toContain('Malveillance — Le domaine')
+    expect(picker.textContent).not.toContain('Brise-Enfers')
+    expect(picker.textContent).not.toContain('Scène interdite')
+  })
+
   it('creates a module template directly without a session or sharing', async () => {
     const fetchMock=vi.fn(async (resource: RequestInfo | URL, init?: RequestInit) => {
       const url=String(resource)
