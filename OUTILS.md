@@ -16,6 +16,7 @@
 - [Journaux d'Absalom — guide de génération visuelle](pf2/outils/journaux.md)
 - [Déploiement et exploitation](pf2/outils/deploiement.md)
 - [Points ouverts et vérifications](pf2/outils/travaux-ouverts.md)
+- [Projet Choix libre — refonte de la préparation MJ](pf2/outils/Projet-Choix-libre.md)
 
 **Conventions :** le code/configuration présents prévalent sur les audits historiques. Décrire le *fonctionnement actuel vérifié* séparément des constats datés, dettes confirmées et pistes non validées. Après une implémentation, actualiser la documentation du domaine et fermer/requalifier la dette associée.
 

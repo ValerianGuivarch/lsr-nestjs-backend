@@ -16,5 +16,7 @@ import { Pf2WikiLoginController } from './Pf2WikiLoginController'
 import { Pf2ResourceService } from './Pf2ResourceService'
 import { Pf2ResourceController } from './Pf2ResourceController'
 
-@Module({ imports: [Pf2PersistenceModule, FoundryRelayModule], controllers: [Pf2MjController, PlayerCodexController, Pf2WikiLoginController, Pf2ResourceController], providers: [Pf2MjService, ScenarioPackageService, ScenarioPreparationService, ScenarioCampaignService, FoundryReferenceLibraryService, GeneratedDownloadService, PlayerCodexService, PlayerIdentityDirectoryService, MediaWikiClientService, Pf2ResourceService], exports: [PlayerCodexService, MediaWikiClientService] })
+import { Pf2ChoiceLibreController, Pf2ChoiceLibreService } from './Pf2ChoiceLibre'
+
+@Module({ imports: [Pf2PersistenceModule, FoundryRelayModule], controllers: [Pf2MjController, PlayerCodexController, Pf2WikiLoginController, Pf2ResourceController, Pf2ChoiceLibreController], providers: [Pf2MjService, ScenarioPackageService, ScenarioPreparationService, ScenarioCampaignService, FoundryReferenceLibraryService, GeneratedDownloadService, PlayerCodexService, PlayerIdentityDirectoryService, MediaWikiClientService, Pf2ResourceService, Pf2ChoiceLibreService], exports: [PlayerCodexService, MediaWikiClientService] })
 export class Pf2MjModule {}
