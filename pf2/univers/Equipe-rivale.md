@@ -35,17 +35,17 @@ Les portraits seront ajoutés plus tard manuellement.
 
 ### 11.1. Caelan Voss
 
-**Classe actuelle : Mage, niveau 2 — spécialisation à préciser.**
+**Classe retenue : Prêtre d’Abadar, niveau 2 — doctrine à préciser.** (Ancienne classe mage/magus abandonnée ; application Foundry à vérifier.)
 
 #### Concept
 
-Caelan a l'apparence d'un jeune mage académique impeccable : bien habillé, posture droite, matériel arcanique soigneusement entretenu, très civilisé. Son identité magique précise reste à définir.
+Caelan est un jeune prêtre d’Abadar impeccable, issu de la petite noblesse Voss. Aîné destiné à gérer les finances familiales, il incarne la rigueur, l'ordre et la compétence. Voir [la continuité de Zab](../pj/PJ-Zab.md).
 
 #### Apparence physique
 
 Humain d'une vingtaine d'années, **grand et mince**, silhouette droite presque raide. **Cheveux noirs coupés court et toujours impeccablement coiffés**, yeux gris clair, visage fin et sévère aux traits réguliers.
 
-Sa tenue est élégante et sobre, avec des accessoires arcaniques discrets et parfaitement entretenus. Aucun besoin d'arme visible.
+Sa tenue est élégante et sobre, avec des accessoires religieux discrets, dont le symbole d’Abadar et parfaitement entretenus. Aucun besoin d'arme visible.
 
 #### Personnalité
 
