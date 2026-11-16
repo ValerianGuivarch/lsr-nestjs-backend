@@ -1448,16 +1448,16 @@ describe('DiscordCommandsService', () => {
     expect(result).toContain('15 Pharast 4720 AR')
   })
 
-  it('/debut-seance can create its draft with Foundry offline and never adds levels to the announcement', async () => {
+  it('/debut-seance previews without writes, then publishes once with Foundry offline', async () => {
     const listActors = jest.fn().mockRejectedValue(new Error('relay offline'))
     const listPlayers = jest.fn().mockRejectedValue(new Error('relay offline'))
     const createSession = jest.fn().mockResolvedValue({ id: 'session-12', sessionNumber: 12 })
-    const service = new DiscordCommandsService({
-      listSessions: jest.fn().mockResolvedValue([]),
-      createSession,
-      rememberSessionDiscordChannel: jest.fn().mockResolvedValue(undefined),
-    } as never, { listActors, listPlayers } as never)
+    const rememberSessionDiscordChannel = jest.fn().mockResolvedValue(undefined)
+    const setFoundrySessionActive = jest.fn().mockResolvedValue(undefined)
+    const listSessions = jest.fn().mockResolvedValue([{ sessionNumber: 11, published: true, participants: ['Actor.other'], inGameStartDate: '4720-04-01', inGameEndDate: '4720-04-07' }])
+    const service = new DiscordCommandsService({ listSessions, createSession, rememberSessionDiscordChannel } as never, { listActors, listPlayers } as never, { setFoundrySessionActive } as never)
     const editReply = jest.fn().mockResolvedValue(undefined)
+    const interaction = { id: 'preview-12', user: { id: 'mj' }, editReply, channelId: 'test-channel', guildId: 'test-guild' }
 
     await expect((service as unknown as {
       finishGameModal: (
@@ -1467,20 +1467,37 @@ describe('DiscordCommandsService', () => {
         plan: { progressionRolls: string[]; rollCounts: Map<string, number> },
       ) => Promise<void>
     }).finishGameModal(
-      { editReply, channelId: 'test-channel', guildId: 'test-guild' } as never,
+      interaction,
       { selected: [{ uuid: 'Actor.pepin', name: 'Pépin (Eric)', userId: '399621722158137346' }] },
       '4720-04-08',
-      { progressionRolls: ['**Jets de progression** — 1 jet correspond à 7 jours d’activité.'], rollCounts: new Map([['Actor.pepin', 1]]) },
+      { progressionRolls: [], rollCounts: new Map([['Actor.pepin', 1]]) },
     )).resolves.toBeUndefined()
 
-    expect(createSession).toHaveBeenCalledWith(expect.objectContaining({ participants: ['Actor.pepin'], published: false }))
-    expect(editReply).toHaveBeenCalledWith(expect.objectContaining({ content: expect.stringContaining('Brouillon créé : résumé n°12') }))
+    expect(createSession).not.toHaveBeenCalled()
+    expect(rememberSessionDiscordChannel).not.toHaveBeenCalled()
+    expect(setFoundrySessionActive).not.toHaveBeenCalled()
+    const preview = editReply.mock.calls[0][0]
+    expect(preview.content).toContain('Aperçu privé — aucune séance créée')
+    expect(preview.content).toContain('Résumé n°12')
+    expect(preview.content).toContain('**Pépin** : **1 lancer à faire**')
+    expect(preview.content).not.toContain('niveau')
+    const customId = preview.components[0].toJSON().components[0].custom_id
+    const reply = jest.fn().mockResolvedValue(undefined)
+    const followUp = jest.fn().mockResolvedValue(undefined)
+    const button = { ...interaction, customId, reply, followUp, deferUpdate: jest.fn().mockResolvedValue(undefined) }
+    await service.handleButton({ ...button, user: { id: 'other' } } as never)
+    expect(createSession).not.toHaveBeenCalled()
+    await service.handleButton(button as never)
+    expect(createSession).toHaveBeenCalledTimes(1)
+    expect(createSession).toHaveBeenCalledWith(expect.objectContaining({ sessionNumber: 12, participants: ['Actor.pepin'], published: false }))
+    expect(rememberSessionDiscordChannel).toHaveBeenCalledWith('session-12', 'test-channel', 'test-guild')
+    expect(setFoundrySessionActive).toHaveBeenCalledWith(true)
+    expect(followUp).toHaveBeenCalledWith(expect.objectContaining({ ephemeral: false, content: expect.stringContaining('**Pépin** : **1 lancer à faire**') }))
+    await service.handleButton(button as never)
+    expect(createSession).toHaveBeenCalledTimes(1)
+    expect(followUp).toHaveBeenCalledTimes(1)
     expect(listActors).not.toHaveBeenCalled()
     expect(listPlayers).not.toHaveBeenCalled()
-    const pending = (service as unknown as { pendingAnnouncements: Map<string, { content: string }> }).pendingAnnouncements
-    const announcement = [...pending.values()][0]?.content ?? ''
-    expect(announcement).toContain('**Pépin** : **1 lancer à faire**')
-    expect(announcement).not.toContain('niveau')
   })
 
   it('/fin-seance offers a private web form link without applying XP or consulting Foundry', async () => {

@@ -57,7 +57,16 @@ export class DiscordCommandsService {
     plan?: { current: string; earliest: string; progressionRolls: string[]; rollCounts: Map<string, number> }
     baseDate?: string
   }>()
-  private readonly pendingAnnouncements = new Map<string, { content: string; userIds: string[] }>()
+  private readonly pendingAnnouncements = new Map<string, {
+    content: string
+    requesterId: string
+    channelId: string
+    guildId: string
+    sessionNumber: number
+    date: string
+    selected: Array<{ uuid: string; name: string; userId: string }>
+    createdAt: number
+  }>()
   private readonly pendingShortSummaries = new Map<string, {
     sessionId: string
     sessionNumber: number
@@ -3455,7 +3464,7 @@ export class DiscordCommandsService {
       await this.finishGameModal(interaction, pending, date, plan)
       this.pendingGames.delete(interaction.customId)
     } catch (error) {
-      await interaction.editReply({ content: `Création du brouillon impossible : ${error instanceof Error ? error.message : String(error)}`, components: [] })
+      await interaction.editReply({ content: `Prévisualisation impossible : ${error instanceof Error ? error.message : String(error)}`, components: [] })
     }
     return true
   }
@@ -3913,10 +3922,41 @@ export class DiscordCommandsService {
       } catch (error) { await interaction.reply({ content: error instanceof Error ? error.message : 'Présentation introuvable.', ephemeral: true }) }
       return true
     }
+    if (!interaction.customId.startsWith('pf2-new-game:announce:')) return false
     const announcement = this.pendingAnnouncements.get(interaction.customId)
-    if (!announcement || !interaction.customId.startsWith('pf2-new-game:announce:')) return false
-    await interaction.reply({ content: announcement.content, allowedMentions: { users: announcement.userIds }, ephemeral: false })
+    if (!announcement || Date.now() - announcement.createdAt > 15 * 60_000) {
+      this.pendingAnnouncements.delete(interaction.customId)
+      await interaction.reply({ content: 'Cette prévisualisation a expiré. Relance `/debut-seance`.', ephemeral: true })
+      return true
+    }
+    if (interaction.user.id !== announcement.requesterId || interaction.channelId !== announcement.channelId || interaction.guildId !== announcement.guildId) {
+      await interaction.reply({ content: 'Cette validation appartient à un autre MJ ou fil.', ephemeral: true })
+      return true
+    }
+    // Consume the preview before any asynchronous operation to prevent double clicks.
     this.pendingAnnouncements.delete(interaction.customId)
+    await interaction.deferUpdate()
+    let createdNumber: number | undefined
+    try {
+      const sessions = await this.persistence.listSessions()
+      const nextNumber = Math.max(0, ...sessions.map(session => session.sessionNumber)) + 1
+      const plan = await this.plan(announcement.selected)
+      const currentContent = await this.plannedSessionAnnouncement(nextNumber, announcement.date, announcement.selected, plan.rollCounts, true)
+      if (nextNumber !== announcement.sessionNumber || announcement.date < plan.earliest || currentContent !== announcement.content) {
+        await interaction.editReply({ content: 'Les dates, le numéro ou les jets ont changé. Relance `/debut-seance` pour obtenir un nouvel aperçu.', components: [] })
+        return true
+      }
+      const draft = await this.persistence.createSession({ sessionNumber: nextNumber, date: '', inGameStartDate: announcement.date, inGameEndDate: '', title: '', participants: announcement.selected.map(actor => actor.uuid), published: false })
+      createdNumber = draft.sessionNumber
+      await this.persistence.rememberSessionDiscordChannel(draft.id, announcement.channelId, announcement.guildId)
+      await this.playerCodex?.setFoundrySessionActive(true)
+      await interaction.followUp({ content: announcement.content, allowedMentions: { users: announcement.selected.map(actor => actor.userId) }, ephemeral: false })
+      await interaction.editReply({ content: `Séance n°${draft.sessionNumber} créée et annonce publiée. Complète puis publie le résumé dans l’application MJ.`, components: [] })
+    } catch (error) {
+      await interaction.editReply({ content: createdNumber === undefined
+        ? `Création impossible : ${error instanceof Error ? error.message : String(error)}. Relance \`/debut-seance\`.`
+        : `Séance n°${createdNumber} déjà créée : ${error instanceof Error ? error.message : String(error)}. Vérifie le fil et utilise \`/recap-seance\` si nécessaire ; ne crée pas une nouvelle séance.`, components: [] })
+    }
     return true
   }
 
@@ -4628,33 +4668,20 @@ export class DiscordCommandsService {
     }
   }
 
-  private async finishGame(interaction: StringSelectMenuInteraction, pending: { selected?: Array<{ uuid: string; name: string; userId: string }> }, date: string, plan: { progressionRolls: string[]; rollCounts: Map<string, number> }): Promise<void> {
-    const sessions = await this.persistence.listSessions()
-    const sessionNumber = Math.max(0, ...sessions.map((session) => session.sessionNumber)) + 1
-    const selected = pending.selected ?? []
-    const announcement = await this.plannedSessionAnnouncement(sessionNumber, date, selected, plan.rollCounts, true)
-    const draft = await this.persistence.createSession({ sessionNumber, date: '', inGameStartDate: date, inGameEndDate: '', title: '', participants: selected.map((actor) => actor.uuid), published: false })
-    const content = `Brouillon créé : résumé n°${draft.sessionNumber}.\nDébut : ${this.displayDate(date)}. Fin : à renseigner.\n\n${plan.progressionRolls.join('\n')}\n\nComplète puis publie le résumé dans l’application MJ.`
-    await this.persistence.rememberSessionDiscordChannel(draft.id, interaction.channelId, interaction.guildId ?? '')
-    await this.playerCodex?.setFoundrySessionActive(true)
-    const announcementId = `pf2-new-game:announce:${draft.id}`
-    this.pendingAnnouncements.set(announcementId, { content: announcement, userIds: selected.map((actor) => actor.userId) })
-    const publish = new ButtonBuilder().setCustomId(announcementId).setLabel('Publier l’annonce').setStyle(ButtonStyle.Primary)
-    await interaction.update({ content, components: [new ActionRowBuilder<ButtonBuilder>().addComponents(publish)] })
-  }
-
   private async finishGameModal(interaction: ModalSubmitInteraction, pending: { selected?: Array<{ uuid: string; name: string; userId: string }> }, date: string, plan: { progressionRolls: string[]; rollCounts: Map<string, number> }): Promise<void> {
+    if (!interaction.guildId || !interaction.channelId) throw new Error('Salon Discord de séance absent.')
     const sessions = await this.persistence.listSessions()
     const sessionNumber = Math.max(0, ...sessions.map((session) => session.sessionNumber)) + 1
     const selected = pending.selected ?? []
     const announcement = await this.plannedSessionAnnouncement(sessionNumber, date, selected, plan.rollCounts, true)
-    const draft = await this.persistence.createSession({ sessionNumber, date: '', inGameStartDate: date, inGameEndDate: '', title: '', participants: selected.map((actor) => actor.uuid), published: false })
-    await this.persistence.rememberSessionDiscordChannel(draft.id, interaction.channelId, interaction.guildId ?? '')
-    await this.playerCodex?.setFoundrySessionActive(true)
-    const announcementId = `pf2-new-game:announce:${draft.id}`
-    this.pendingAnnouncements.set(announcementId, { content: announcement, userIds: selected.map((actor) => actor.userId) })
+    const announcementId = `pf2-new-game:announce:${interaction.id}`
+    const now = Date.now()
+    for (const [id, preview] of this.pendingAnnouncements) {
+      if (now - preview.createdAt > 15 * 60_000 || (preview.requesterId === interaction.user.id && preview.channelId === interaction.channelId)) this.pendingAnnouncements.delete(id)
+    }
+    this.pendingAnnouncements.set(announcementId, { content: announcement, requesterId: interaction.user.id, channelId: interaction.channelId, guildId: interaction.guildId, sessionNumber, date, selected, createdAt: now })
     const publish = new ButtonBuilder().setCustomId(announcementId).setLabel('Publier l’annonce').setStyle(ButtonStyle.Primary)
-    await interaction.editReply({ content: `Brouillon créé : résumé n°${draft.sessionNumber}.\nDébut : ${this.displayDate(date)}. Fin : à renseigner.\n\n${plan.progressionRolls.join('\n')}\n\nComplète puis publie le résumé dans l’application MJ.`, components: [new ActionRowBuilder<ButtonBuilder>().addComponents(publish)] })
+    await interaction.editReply({ content: `**Aperçu privé — aucune séance créée**\n\n${announcement}\n\nClique sur Publier l’annonce pour créer la séance et activer le mode séance Foundry.`, components: [new ActionRowBuilder<ButtonBuilder>().addComponents(publish)], allowedMentions: { parse: [] } })
   }
 
   private planningSelectedDays(values: readonly string[]): number[] { return [...new Set(values.map(Number))].filter(value => Number.isInteger(value) && value >= 0 && value < PLANNING_DAYS.length).sort((a, b) => a - b) }

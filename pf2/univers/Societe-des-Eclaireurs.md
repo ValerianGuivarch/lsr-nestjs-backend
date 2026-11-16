@@ -4,6 +4,21 @@
 
 ---
 
+## Les six factions de la Société (4720 AR)
+
+Les factions sont des sous-structures de la Société des Éclaireurs, distinctes de la direction générale. Dirigeants retenus dans la continuité de campagne :
+
+- **Alliance des Émissaires** — Fola Barun : recrutement, entraide et soutien aux agents.
+- **Chasseurs d'Horizons** — Calisro Benarry : exploration et ouverture de nouvelles routes.
+- **Grandes Archives** — Gorm Greathammer : recherche, préservation et transmission du savoir.
+- **Sceau Vigilant** — Eando Kline : protection, confinement et neutralisation des dangers.
+- **Roue Verdoyante** — Urwal : étude et préservation des milieux naturels.
+- **Serment Radieux** — Galahen : compassion, secours et lutte contre l'injustice. **Adaptation de campagne** : Galahen remplace le dirigeant canonique ; seul son nom est public, sans révéler ses origines.
+
+Les six fiches publiques sont associées aux factions MJ et publiées dans le carnet joueur et le salon Discord #factions. Les textes publics sont maintenus dans le wiki et les données métier, pas dupliqués intégralement ici. Source canonique des autres dirigeants : [Paizo — Pathfinder Society](https://paizo.com/pathfindersociety/).
+
+---
+
 ## Corvan comme mentor de la cellule actuelle
 
 Corvan sert de **mentor majeur** aux PJ actuels. Il représente l'ancien aventurier qui connaît la Société, ses vertus, ses erreurs et ses trahisons, mais qui reste suffisamment attaché à l'institution pour vouloir la faire fonctionner.
