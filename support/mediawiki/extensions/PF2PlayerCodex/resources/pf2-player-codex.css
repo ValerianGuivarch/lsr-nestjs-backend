@@ -86,3 +86,19 @@
 .pf2-relations-field{display:flex;flex-direction:column;margin-bottom:.6rem;font-weight:600;gap:.25rem}
 .pf2-relations-field input,.pf2-relations-field textarea,.pf2-relations-field select{box-sizing:border-box;width:100%;padding:.4rem;font:inherit;font-weight:normal}
 @media(max-width:600px){.pf2-relation-row{flex-direction:column}.pf2-relation-score{align-items:flex-start}.pf2-relation-actions{flex-wrap:wrap}}
+
+/* Horoscope : carnet vertical, indépendant de la grille des fiches PNJ. */
+.pf2-horoscope{min-width:0;max-width:100%}
+.pf2-horoscope-list{display:flex;flex-direction:column;gap:.75rem;min-width:0}
+.pf2-horoscope-toolbar,.pf2-horoscope-actions{display:flex;flex-wrap:wrap;gap:.5rem;align-items:center}
+.pf2-horoscope-form-host:empty{display:none}
+.pf2-horoscope-editor{display:block;max-width:38rem;box-sizing:border-box;border:1px solid #a2a9b1;border-radius:6px;padding:1rem;background:#f8f9fa}
+.pf2-horoscope-editor input,.pf2-horoscope-editor textarea,.pf2-horoscope-editor select{max-width:100%;min-width:0;margin:0}
+.pf2-horoscope-row{display:flex;flex-wrap:wrap;gap:1rem;align-items:flex-start;min-width:0;border:1px solid #c8ccd1;border-radius:6px;padding:.8rem 1rem;background:#fff;box-sizing:border-box}
+.pf2-horoscope-portrait{display:block;flex:0 0 72px;width:72px;height:96px;max-width:100%;object-fit:contain;object-position:center top;border-radius:4px}
+.pf2-horoscope-details{flex:1 1 12rem;min-width:0;overflow-wrap:anywhere}
+.pf2-horoscope-details p{margin:.3rem 0;color:#54595d}
+.pf2-horoscope-note{white-space:pre-wrap}
+.pf2-horoscope-score{display:flex;flex:0 1 auto;flex-direction:column;gap:.35rem;align-items:flex-end;max-width:100%}
+.pf2-horoscope-score strong{font-variant-numeric:tabular-nums}
+@media(max-width:600px){.pf2-horoscope-row{gap:.65rem}.pf2-horoscope-score{flex:1 1 100%;align-items:flex-start}}
