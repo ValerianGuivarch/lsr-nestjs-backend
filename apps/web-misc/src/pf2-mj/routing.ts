@@ -44,6 +44,8 @@ export function containerHref(container: Pick<Container, 'id' | 'containerType'>
   return `/pf2-mj/${family}/${encodeURIComponent(container.id)}`
 }
 
+export function arcHref(id: string): string { return '/pf2-mj/arcs/'+encodeURIComponent(id) }
+
 export function referenceHref(view: ReferenceView, id?: string): string {
   return id ? `${referencePaths[view]}/${encodeURIComponent(id)}` : referencePaths[view]
 }
@@ -54,6 +56,7 @@ export type Pf2Route =
   | { kind: 'reference'; view: ReferenceView; id: string }
   | { kind: 'playable'; id: string }
   | { kind: 'container'; id: string }
+  | { kind: 'arc'; id: string }
   | { kind: 'resource'; id: string }
   | { kind: 'player'; id: string }
   | { kind: 'not-found' }
@@ -70,6 +73,7 @@ export function resolvePf2Route(pathname: string): Pf2Route {
   const [segment, rawId] = relative.split('/')
   const id = decodedRouteId(rawId)
 
+  if (segment === 'arcs' && id) return { kind: 'arc', id }
   if (segment === 'scenarios' && id) return { kind: 'playable', id }
   if ((segment === 'campaigns' || segment === 'containers') && id) return { kind: 'container', id }
   if (segment === 'resources' && id) return { kind: 'resource', id }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import './SessionPreparations.css'
 import { moduleDisplayTitle, moduleInWork, sortedWorks } from './moduleLabels'
@@ -90,7 +90,7 @@ function ModuleTemplatePicker({draft,dirty,onImport,campaigns}:{draft:Preparatio
   return <div className="session-prep-channel"><button type="button" onClick={()=>{setOpen(!open);if(!open)void load()}}>{open?'Fermer les modèles':'Importer / enregistrer un module jouable'}</button>{open&&<div className="session-prep-fields"><label><input type="checkbox" checked={onlyTemplates} onChange={e=>{setOnlyTemplates(e.target.checked);setSelected('')}}/> Uniquement les modèles existants</label><label>Campagne / scénario<select value={campaignFilter} onChange={e=>{setCampaignFilter(e.target.value);setSelected('')}}><option value="">Tous</option>{campaignOptions.map(c=><option key={c.id} value={c.id}>{c.title}</option>)}</select></label><label>Module<select value={selected} onChange={e=>setSelected(e.target.value)}><option value="">Choisir un module</option>{options.map(m=><option key={m.key} value={m.key}>{moduleDisplayTitle(m,campaignOptions,campaignFilter)}{m.hasTemplate?' ✓':''}</option>)}</select></label><button type="button" disabled={!item?.hasTemplate||busy} onClick={importTemplate}>Importer les étapes</button><button type="button" disabled={!item||dirty||busy} onClick={()=>void saveTemplate()}>Copier la préparation enregistrée comme modèle</button>{dirty&&<small>Enregistre ta séance avant de créer un modèle.</small>}{notice&&<small role="status">{notice}</small>}</div>}</div>
 }
 
-export default function SessionPreparations({ campaigns, scenarios, activeWorks, templateModule, onBack }: { campaigns: Option[]; scenarios: Option[]; activeWorks?: Option[]; templateModule?: {key:string;title:string}; onBack?: () => void }) {
+export default function SessionPreparations({ campaigns, scenarios, activeWorks, templateModule, templateChecklist, onBack }: { campaigns: Option[]; scenarios: Option[]; activeWorks?: Option[]; templateModule?: {key:string;title:string}; templateChecklist?: ReactNode; onBack?: () => void }) {
   const location = useLocation()
   const [items, setItems] = useState<Preparation[]>([])
   const [draft, setDraft] = useState<Preparation | null>(null)
@@ -146,7 +146,7 @@ export default function SessionPreparations({ campaigns, scenarios, activeWorks,
     fetch('/apil7r/pf2-mj/pnj-directory').then(r => r.ok ? r.json() : null)
       .then(data => setNpcs(Array.isArray(data?.items) ? data.items : []))
       .catch(() => undefined)
-  }, [location.search, templateModule])
+  }, [location.search, templateModule?.key])
 
   function set(patch: Partial<Preparation>) {
     setDraft(current => current ? { ...current, ...patch } : current)
@@ -338,6 +338,7 @@ export default function SessionPreparations({ campaigns, scenarios, activeWorks,
             <div><strong>{draft.title}</strong><small>{dirty ? 'Modifications non enregistrées' : 'Enregistrée'}</small></div>
             <div className="session-prep-actions"><button type="button" className={mode === 'edit' ? 'selected' : ''} onClick={() => setMode('edit')}>Édition</button><button type="button" className={mode === 'view' ? 'selected' : ''} onClick={() => setMode('view')}>Vue</button>{mode === 'edit' && <button type="button" className="primary" disabled={busy || uploadingPortrait !== null || !dirty} onClick={() => void save().catch(() => undefined)}>Enregistrer</button>}</div>
           </div>
+          {templateModule && mode === 'edit' && templateChecklist}
           {mode === 'edit' ? <div className="session-prep-fields">
             {!templateModule&&<><label>Titre<input value={draft.title} onChange={e => set({ title: e.target.value })} /></label>
             <label>Campagne<select value={draft.campaignId ?? ''} onChange={e => set({ campaignId: e.target.value || null })}><option value="">— Sans campagne —</option>{campaigns.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}</select></label>
