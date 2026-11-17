@@ -252,6 +252,8 @@ Le passage à Docker/GHCR concerne l’application principale. Les services suiv
 - Foundry VTT ;
 - Foundry REST Relay ;
 - Wiki/MediaWiki ;
+- LiveKit ;
+- Caddy (reverse proxy HTTPS) ;
 - leurs volumes et données associés.
 
 L’API principale parle notamment aux services hôte via :
@@ -261,7 +263,49 @@ Foundry REST Relay : host.docker.internal:3010
 MediaWiki API       : host.docker.internal:4205/api.php
 ```
 
-### 22.9 Règles pour une future discussion
+### 22.9 Reverse proxy HTTPS — Caddy sur le mini-PC
+
+Depuis le 17 novembre 2026, les sept domaines HTTPS sont servis par Caddy (Docker), directement sur le mini-PC. Le NAS Synology DataStation n'est plus sur le chemin HTTPS. Les règles historiques du NAS sont conservées temporairement pour un éventuel retour arrière.
+
+```mermaid
+flowchart TD
+    I[Internet] --> F[Freebox]
+    F -->|TCP 443 et 80 cible| C[Caddy mini-PC]
+    C --> A[Applications web et carte]
+    C --> B[Foundry et relais]
+    C --> W[Wiki et LiveKit HTTPS]
+    F -->|TCP 7881 / UDP 7882| M[LiveKit média]
+```
+
+| Domaine HTTPS | Backend HTTP sur le mini-PC |
+| --- | --- |
+| l7r.fr | 127.0.0.1:3000 |
+| admin.l7r.fr | 127.0.0.1:4203 |
+| map.l7r.fr | 127.0.0.1:4204 |
+| relay.l7r.fr | 127.0.0.1:3010 |
+| wiki.l7r.fr | 127.0.0.1:4205 |
+| pf2.l7r.fr | 127.0.0.1:30000 |
+| livekit.l7r.fr | 127.0.0.1:7880 |
+
+**Source de vérité :** [Caddyfile](../../deploy/linux/reverse-proxy/Caddyfile) et [compose.yaml](../../deploy/linux/reverse-proxy/compose.yaml), installés dans `/home/valou/services/reverse-proxy`. Cette stack est indépendante de `lsr-app` (réseau hôte, redémarrage automatique, image Caddy épinglée). Les volumes Docker `caddy_data` et `caddy_config` doivent être conservés : ils contiennent notamment les certificats et clés ACME, qui ne doivent jamais être versionnés.
+
+- Freebox : TCP WAN 443 → MINIPC LAN 443 ; cible TCP WAN 80 → MINIPC LAN 80 pour la redirection HTTP et la validation ACME HTTP. **Contrôle restant au 17/11 :** le test LAN par nom DNS sur HTTP public renvoie encore le 403 nginx du NAS, alors que Caddy renvoie bien 308 sur le port local 80. Vérifier la règle Freebox 80 et le comportement depuis un réseau externe. Les sept certificats ont déjà été émis, et HTTPS répond normalement.
+- DNS IONOS inchangé ; Caddy obtient et renouvelle des certificats publics individuels automatiquement, sans certificat wildcard importé ni achat chez IONOS.
+- Caddy gère les WebSockets ; garder les redirections TCP 7881 et UDP 7882 de LiveKit directement sur le mini-PC, elles ne passent pas par Caddy.
+- SSH/Tailscale et leurs accès techniques sont indépendants du proxy web. Ne pas modifier les autres redirections Freebox dans cette migration.
+
+Exploitation (depuis `/home/valou/services/reverse-proxy`) :
+
+```bash
+docker compose ps
+docker compose logs --tail 100 caddy
+docker compose exec caddy caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile
+docker compose exec caddy caddy reload --config /etc/caddy/Caddyfile --adapter caddyfile
+```
+
+Tests après modification : vérifier chacun des sept domaines en HTTPS sans désactiver la validation TLS, suivre les redirections applicatives, tester Foundry/WebSockets et une connexion audio/vidéo LiveKit. Ne jamais supprimer les volumes de certificats en redémarrant la stack. Si nécessaire, remettre temporairement les redirections 80/443 vers DataStation (les anciens certificats NAS peuvent toutefois être expirés).
+
+### 22.10 Règles pour une future discussion
 
 Quand une nouvelle discussion doit modifier ou déployer l’application :
 
@@ -273,7 +317,7 @@ Quand une nouvelle discussion doit modifier ou déployer l’application :
 6. ne jamais exposer les secrets GitHub/Tailscale/SSH ni le contenu du `.env` ;
 7. préserver les SQLite, `storage/`, `pf2-data` et les fichiers locaux non suivis ;
 8. ne pas relancer l’ancienne application npm/tmux ;
-9. ne pas toucher aux stacks Foundry/Relay/Wiki sauf si la tâche les concerne explicitement ;
+9. ne pas toucher aux stacks Foundry/Relay/Wiki/LiveKit/Caddy sauf si la tâche les concerne explicitement ;
 10. si un déploiement retourne `git@github.com: Permission denied (publickey)`, vérifier que le fetch reste en HTTPS plutôt que d’ajouter une nouvelle clé GitHub sur le serveur.
 
 Fichiers techniques de référence :
@@ -285,4 +329,6 @@ deploy/linux/Dockerfile
 deploy/linux/docker-compose.yml
 deploy/linux/scripts/deploy-main.sh
 deploy/linux/README.md
+deploy/linux/reverse-proxy/Caddyfile
+deploy/linux/reverse-proxy/compose.yaml
 ```

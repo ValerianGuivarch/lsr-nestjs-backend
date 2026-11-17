@@ -1,0 +1,27 @@
+l7r.fr {
+	reverse_proxy 127.0.0.1:3000
+}
+
+admin.l7r.fr {
+	reverse_proxy 127.0.0.1:4203
+}
+
+map.l7r.fr {
+	reverse_proxy 127.0.0.1:4204
+}
+
+relay.l7r.fr {
+	reverse_proxy 127.0.0.1:3010
+}
+
+wiki.l7r.fr {
+	reverse_proxy 127.0.0.1:4205
+}
+
+pf2.l7r.fr {
+	reverse_proxy 127.0.0.1:30000
+}
+
+livekit.l7r.fr {
+	reverse_proxy 127.0.0.1:7880
+}

@@ -42,6 +42,7 @@ Ne font **pas** partie du cœur PF2-MJ documenté ici :
 ```mermaid
 flowchart LR
     U[Utilisateur / MJ]
+    CADDY["Caddy HTTPS\nmini-PC"]
 
     subgraph WEB["web-misc"]
         MJ["/pf2-mj\nBibliothèque MJ"]
@@ -64,8 +65,9 @@ flowchart LR
     MAP["Carte Golarion\nservice séparé"]
     WIKI["Wiki joueur / MediaWiki\ncontenus narratifs publiés"]
 
-    U --> MJ
-    U --> RES
+    U --> CADDY
+    CADDY --> MJ
+    CADDY --> RES
 
     MJ <--> APIMJ
     RES <--> SESS
@@ -89,9 +91,11 @@ flowchart LR
     TOOLKIT -->|Actors / Scenes / Journals / assets| FOUNDRY
     TOOLKIT -->|résultat du déploiement| APIMJ
 
-    MAP -. application séparée .- U
+    CADDY --> MAP
+    CADDY --> WIKI
+    CADDY --> FOUNDRY
+    CADDY --> RELAY
     SESS --> WIKI
-    U --> WIKI
 ```
 
 ---
@@ -99,6 +103,8 @@ flowchart LR
 ---
 
 ## 3. Sources de vérité
+
+Le point d'entrée HTTPS public est Caddy sur le mini-PC, indépendant des déploiements applicatifs. Les domaines et la configuration de référence sont documentés dans [Déploiement — reverse proxy](deploiement.md#229-reverse-proxy-https--caddy-sur-le-mini-pc).
 
 ### Préparation narrative des séances (V1, octobre 2026)
 
