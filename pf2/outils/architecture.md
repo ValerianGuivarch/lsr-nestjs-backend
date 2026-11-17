@@ -216,7 +216,9 @@ Le comportement courant distingue uniquement l'importance d'affichage, sans cré
 
 Un scénario PFS membre d'une campagne transverse reste rattaché à sa saison dans les données, mais il est masqué de cette saison dans le Catalogue afin d'éviter un affichage en double. Les actions de curation portées par une campagne transverse se propagent à ses membres ; sélectionner directement un membre sélectionne également les autres membres encore non commencés, sans écraser un scénario déjà `En cours` ou `Joué`.
 
-Le Journal MJ privilégie les campagnes et regroupe ensuite les aventures réellement autonomes sous **Scénarios individuels**. Il ne contient que le périmètre actif : `Sélectionné`, `En cours` et `Joué`.
+Le Journal MJ privilégie les campagnes (y compris les mini-campagnes à livre unique) et regroupe ensuite les aventures réellement autonomes sous **Scénarios individuels**. Les arcs PFS ont leur propre route `/pf2-mj/arcs/:id` et une fiche de synthèse avec leurs scénarios, sans changer les identifiants ni leur saison d'origine. Il ne contient que le périmètre actif : `Sélectionné`, `En cours` et `Joué`.
+
+Les fiches et le Journal affichent les PDF issus de la projection `/scenarios/:id/resources` : original (FR ou EN), traduction, récit de campagne et documents complémentaires. Les PDF partagés restent une seule ressource physique visible sur chaque fiche associée ; aucune nouvelle association n'est déduite d'un titre seul. Les outils Foundry restent accessibles à la demande dans les détails techniques.
 
 ### 6.3 Scanner
 

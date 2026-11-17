@@ -209,6 +209,8 @@ Essai sur copie réelle du 16/11 : intégrité SQLite OK, 17 quêtes ouvertes (l
 - Petits changements directement sur main ; grosses fonctionnalités par branche → PR → CI → merge. Dans les deux cas, laisser la CI déployer. Sauvegarde SQLite en ligne avant migration et vérification après démarrage.
 ## 13. Préparation directe des modèles
 
+Le Journal affiche les modules futurs prêts (`0/3`, `1/3`, `2/3`, `3/3`, `3+/3`), exclut les modules terminés et signale aussi si le prochain module dans l'ordre n'est pas prêt même lorsque des modules suivants le sont. Le modèle doit exister sauf si son critère est explicitement non applicable ; les cinq critères doivent être vérifiés ou non applicables. Le statut individuel indique prêt, en préparation, à préparer ou joué. La checklist permanente est modifiable au début de l'éditeur du modèle ; aucun conducteur ou état de séance n'est dupliqué.
+
 - Une campagne sélectionnée affiche le nombre de modèles enregistrés et permet de filtrer avec/sans contenu.
 - Ouvrir un module pour créer ou modifier son modèle directement, avec le même éditeur que les séances. Aucun enregistrement de séance artificiel ni publication depuis un modèle.
 - Le contenu du modèle, les PNJ/objets/rencontres et l'état Foundry sont distincts ; ne jamais marquer Foundry prêt avant contrôle réel du monde.

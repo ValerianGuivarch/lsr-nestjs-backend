@@ -1043,3 +1043,13 @@
 .campaign-chatgpt-actions{display:flex;gap:.6rem;align-items:center;flex-wrap:wrap}
 .campaign-chatgpt-actions input{min-width:min(34rem,100%);flex:1}
 .campaign-chatgpt-actions a{display:inline-flex;align-items:center;text-decoration:none}
+
+/* Campaign journal: PDF sources and explicit preparation state. */
+.campaign-documents .campaign-pdf-groups { display: grid; gap: .6rem; }
+.campaign-documents .campaign-pdf-groups > div { border-bottom: 1px solid rgba(128,128,128,.25); padding: .4rem 0; }
+.campaign-documents ul { margin: .35rem 0; padding-left: 1.2rem; overflow-wrap: anywhere; }
+.campaign-documents li { margin: .25rem 0; }
+.campaign-documents.compact { padding: .75rem; margin: .5rem 0; }
+.journal-ready { display: inline-block; padding: .35rem .6rem; border: 1px solid currentColor; border-radius: 6px; color: #247c45; }
+.journal-ready-alert { color: #a42626; background: #fff0ec; }
+.journal-module-readiness { margin: .35rem 0; font-size: .85rem; }
