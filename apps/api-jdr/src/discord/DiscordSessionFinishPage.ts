@@ -66,7 +66,7 @@ button{background:#292e33;color:#eee;border-color:#74797f}
 </div>
 <label class="spaced">Objets obtenus (une ligne par objet)
 <textarea id="loot" maxlength="12000" placeholder="Potion de soins&#10;Anneau magique"></textarea></label>
-<p class="muted">Les pièces et objets sont uniquement notés dans le récapitulatif. Aucun versement automatique dans Foundry.</p></section>
+<p class="muted">Les pièces sont mises en attente de versement automatique à la confirmation (sur Foundry avec un MJ connecté). Ne les ajoute pas manuellement pendant cette attente. Les objets restent du texte.</p></section>
 <section><h2>Réputations</h2><p class="muted">Toutes les catégories, y compris Abberton et les cirques. Chaque variation est initialisée à zéro. Entre -50 et +50 par modification, selon le score actuel.</p>
 <p id="reputation-count" class="muted"></p><div id="factions"></div>
 </section>

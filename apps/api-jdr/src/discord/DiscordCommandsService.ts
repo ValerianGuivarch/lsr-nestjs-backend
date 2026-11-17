@@ -4054,7 +4054,7 @@ export class DiscordCommandsService {
       this.pendingSessionFinishes.delete(token)
       return {message:draft.mock
         ? 'Simulation publiée dans #mj. Aucun XP, aucune réputation et aucune pièce modifiés.'
-        : 'Fin de séance publiée dans Discord. XP et réputations enregistrés. Pièces à distribuer manuellement.'}
+        : 'Fin de séance publiée dans Discord. XP et réputations enregistrés. Les pièces déclarées sont en attente de versement Foundry.'}
     } catch(error) {
       // Existing source idempotency protects reputation deltas and session XP
       // if something failed after a partial real-world update.
@@ -4186,7 +4186,7 @@ export class DiscordCommandsService {
         await this.applySessionFinish({channel:interaction.channel}, draft)
         draft.step = 'completed'
         this.pendingSessionFinishes.delete(draft.token)
-        await interaction.editReply({ content: draft.mock ? '🧪 Simulation publiée dans #mj. Aucune donnée enregistrée.' : `✅ Séance n°${draft.number} terminée. XP et réputations enregistrés ; pièces à distribuer manuellement ; récapitulatif publié.` })
+        await interaction.editReply({ content: draft.mock ? '🧪 Simulation publiée dans #mj. Aucune donnée enregistrée.' : `✅ Séance n°${draft.number} terminée. XP et réputations enregistrés ; pièces déclarées mises en attente Foundry ; récapitulatif publié.` })
       } catch (error) {
         // Idempotency: session XP overwrites and reputation reasons
         // prevent double application when a partial operation needs retrying.
@@ -4225,7 +4225,7 @@ export class DiscordCommandsService {
     if (!session.inGameStartDate) throw new Error('La séance n’a pas de date de début en jeu.')
     if (!session.participants.length) throw new Error('Aucun PJ participant à cette séance.')
     if (!this.reputations) throw new Error('Service de réputation indisponible.')
-    // Coinage is informational until the Foundry relay integration is restored.
+    // The durable coin outbox is saved with the report. Foundry availability never blocks closing.
     // A retry after a publication error must not reapply an already persisted
     // reputation delta (a faction might now be exactly at the +50 cap).
     const previousReport = await this.persistence.sessionFinishReport(session.id)
@@ -4249,7 +4249,7 @@ export class DiscordCommandsService {
       ...(session.date ? {} : { date: this.realDate() }),
     })
     if (!updated) throw new Error('Séance introuvable lors de la clôture.')
-    await this.persistence.saveSessionFinishReport(session.id, draft.xpTotal, report)
+    await this.persistence.saveSessionFinishReport(session.id, draft.xpTotal, report, { actors: session.participants, coins: draft.coins })
     // Keep the context active until the report has reached Discord, allowing
     // an idempotent retry of a failed send. Do not let Foundry status sync
     // mask a successfully posted and committed session.

@@ -96,6 +96,10 @@ Il sert notamment à :
 - lire/modifier XPC ;
 - parler au service Relay.
 
+### 9.2 bis Versements de séance (toolkit 0.44.20)
+
+`/fin-seance` mémorise les montants par PJ en SQLite. Le toolkit du monde `test-pf2` les récupère via `player-codex/foundry-session-coins`, avec la clé `PF2_FOUNDRY_CHAT_SYNC_KEY` existante, et les applique via `actor.inventory.addCoins`. Aucun droit `execute-js` requis. Seul le MJ actif exécute les opérations ; réservation SQLite unique par séance/PJ, flag `sessionCoinAwards` sur l'Actor, et aucune relance du crédit si un résultat est incertain. Un message Foundry signale les versements effectués ou à vérifier. Les anciennes séances ne sont pas remises en file. Voir [fin de séance](../../docs/pf2/discord-session-end.md).
+
 ### 9.3 Point XPC à surveiller
 
 Le wrapper Nest contient encore un mécanisme de compatibilité qui peut reconstruire une XPC absente depuis le niveau et l’XP PF2e existants.
