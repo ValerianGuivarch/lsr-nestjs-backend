@@ -205,7 +205,7 @@ La navigation quotidienne est volontairement réduite à quatre domaines :
 
 `Trouver une partie` reste disponible comme recherche avancée du Catalogue ; l’ancien inventaire physique `Ressources PDF` est désormais nommé `Inventaire PDF` et reste en Administration sur `/pf2-mj/documents`. La bibliothèque métier `Ressources` possède sa propre entrée principale sur `/pf2-mj/resources` ; `Maintenance` et `Préparation technique` restent disponibles mais ne sont plus des entrées principales.
 
-Les `arcIds` peuvent représenter une **campagne transverse** composée de scénarios PFS appartenant à plusieurs saisons. Une saison PFS reste un conteneur du catalogue, jamais automatiquement une campagne du Journal.
+Les `arcIds` peuvent représenter une **campagne transverse** composée de scénarios PFS appartenant à plusieurs saisons. Une saison PFS reste un conteneur du catalogue, jamais automatiquement une campagne du Journal. Depuis le 17 novembre 2026, le chargement runtime normalise les entrées sans `parts` en tableau vide avant reconstruction : une aventure sans sous-parties ne bloque plus les index de documents, de composants et de campagnes.
 
 #### Campagnes transverses dans le Catalogue et le Journal
 

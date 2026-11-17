@@ -782,7 +782,7 @@ export function applyCatalogueSnapshot(value: unknown): void {
   const candidate = value && typeof value === 'object' && !Array.isArray(value) ? value as RawCatalogue : emptyRaw
   raw = {
     schemaVersion: Number(candidate.schemaVersion ?? 2),
-    meta: candidate.meta ?? {}, files: Array.isArray(candidate.files) ? candidate.files : [], entries: Array.isArray(candidate.entries) ? candidate.entries : [],
+    meta: candidate.meta ?? {}, files: Array.isArray(candidate.files) ? candidate.files : [], entries: Array.isArray(candidate.entries) ? candidate.entries.map(entry => ({...entry, parts: Array.isArray(entry.parts) ? entry.parts : []})) : [],
     collections: Array.isArray(candidate.collections) ? candidate.collections : [], arcs: Array.isArray(candidate.arcs) ? candidate.arcs : [], sections: Array.isArray(candidate.sections) ? candidate.sections : [],
     narrativeThreads: Array.isArray(candidate.narrativeThreads) ? candidate.narrativeThreads : []
   }

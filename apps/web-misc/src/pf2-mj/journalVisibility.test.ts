@@ -1,7 +1,18 @@
 import { describe, expect, it } from 'vitest'
-import { isJournalStatusVisible, isStandaloneCampaign, legacy, type PlayableUnit } from './catalogue'
+import { applyCatalogueSnapshot, isJournalStatusVisible, isStandaloneCampaign, legacy, playableMap, documents, type PlayableUnit } from './catalogue'
+import snapshot from './data/catalogue-player.json'
 
 describe('Journal MJ',()=>{
+  it('charge tout le catalogue malgré une entrée sans parts et conserve les documents et mini-campagnes',()=>{
+    const first=snapshot.entries.find(entry=>entry.kind==='adventure' && entry.id!=='crown-of-the-kobold-king')!
+    const {parts: _parts, ...withoutParts}=first
+    try {
+      expect(()=>applyCatalogueSnapshot({...snapshot, files:[{id:'test-pdf',filename:'test.pdf',path:'test.pdf',association:{itemId:first.id}}], entries:snapshot.entries.map(entry=>entry.id===first.id?withoutParts:entry)})).not.toThrow()
+      expect(playableMap.has(first.id)).toBe(true)
+      expect(documents.length).toBeGreaterThan(0)
+      expect(isStandaloneCampaign(playableMap.get('crown-of-the-kobold-king')!)).toBe(true)
+    } finally {applyCatalogueSnapshot({})}
+  })
   it('affiche les intégrés à venir et en cours, sans les terminés par défaut',()=>{
     expect(['to_play','in_progress','played','untracked','retained','later','rejected'].filter(s=>isJournalStatusVisible(s,false,false))).toEqual(['to_play','in_progress'])
   })

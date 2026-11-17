@@ -45,6 +45,8 @@ Réputation
 • Citadins : -2
 ```
 
+Depuis le 17 novembre 2026, le formulaire affiche le niveau moyen, le nombre de PJ et les recommandations XP (groupe et par PJ), calculés avec `sessionXpAid` sur l’historique SQLite. Le total des actions portant un montant `XP` est calculé en direct ; un bouton permet de le reporter dans les champs éditables, sans écraser automatiquement la saisie du MJ.
+
 Les pièces ayant une valeur zéro sont omises de la ligne de butin, et la ligne est absente si les trois valeurs sont nulles. La liste d'actions et la liste d'objets sont des textes libres transformés en puces ; aucun parsing des objets, aucun ajout automatique de loot dans les inventaires.
 
 ## Séance réelle : écritures
@@ -55,11 +57,11 @@ Lors de la confirmation :
 
 - **XP :** `pf2_session.session_xp` reçoit **l'XP par PJ** ; le **total saisi manuellement** et le texte complet sont conservés séparément dans `pf2_session_finish_report` (migration SQLite `053-discord-session-finish-report`). Le résumé Discord standard réutilise le total enregistré, et ne le recalcule plus nécessairement comme `sessionXp × participants`.
 - **Temps :** `in_game_end_date = in_game_start_date + nombre_de_jours_écoulés`. Plus de date libre à interpréter.
-- **Pièces :** le backend interroge le relais Foundry REST via **`POST /execute-js`** (opération autorisée seulement si `allowExecuteJs` et la permission `execute-js` sont activées côté Foundry/REST). Il vérifie d'abord chaque Actor de monde de type `character`, puis appelle l'API PF2e **`actor.inventory.addCoins({gp,sp,cp})`** pour chaque PJ de la séance. Le champ `system.currency` est calculé par PF2e : il ne faut pas l'écrire directement. L'Actor conserve un **flag `pf2e-val-toolkit.sessionCoinAwards[sessionId]`** pour empêcher un double versement en cas de nouvelle tentative. Si Foundry est déconnecté, l'opération est arrêtée *avant* de modifier les XP et réputations.
+- **Pièces :** versement automatique suspendu le 17 novembre 2026 (le relais refusait la permission `execute-js`). Les montants restent informatifs dans le bilan : distribution manuelle. La clôture ne fait plus appel à `checkSessionCoins` ni à `awardSessionCoins`. Ces méthodes et leur protection contre les doublons restent disponibles pour une reprise ultérieure.
 - **Réputation :** les scores globaux `pf2_reputation.score` sont incrémentés par delta en transaction SQLite, avec entrée dans `pf2_reputation_history`. Le motif `fin-seance:<uuid>` empêche l'application répétée du même delta. Les valeurs sont bornées à `[-50,50]` après application, comme dans le wiki.
 - **Clôture :** la séance active liée à ce canal est fermée et son état Foundry « séance active » est actualisé, puis le texte est publié dans le canal d'origine.
 
-L'ordre des mises à jour Foundry / SQLite / Discord ne constitue **pas une transaction distribuée**. En cas d'échec partiel, la réponse privée affiche l'erreur et propose de réessayer ; le flag Foundry et l'historique de réputation limitent le risque de créditer deux fois. Avant un nouvel essai après un échec de publication, le MJ doit vérifier les messages du fil. Si l'accès `execute-js` n'est pas activé, les versements automatiques ne fonctionnent pas : l'outil **n'affirme pas avoir crédité** les personnages.
+L'ordre des mises à jour SQLite / Discord ne constitue **pas une transaction distribuée**. En cas d'échec partiel, l'historique de réputation protège contre les doubles deltas ; vérifier les messages du fil avant un nouvel essai. L’état Foundry est synchronisé après publication et clôture, sans bloquer le succès. Aucun inventaire n’est modifié.
 
 ## Simulation sans séance : canal #mj
 

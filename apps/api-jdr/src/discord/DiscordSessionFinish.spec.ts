@@ -30,10 +30,11 @@ function wizard(mock:boolean) {
   const send=jest.fn().mockResolvedValue({id:'posted'})
   const channel={name:mock?'mj':'discussion',isTextBased:()=>true,send}
   const session={id:'5efb95f7-5ef8-438c-a984-9a4bdff0c273',sessionNumber:7,inGameStartDate:'4720-01-01',date:'',
-    participants:['Actor.hero','Actor.other'],sessionXp:0}
+    participants:['Actor.hero','Actor.other'],sessionXp:0,createdAt:'2026-01-01',title:'Test',summaries:[]}
   const persistence={
     activeSessionForDiscordChannel:jest.fn().mockResolvedValue(session),
     listSessions:jest.fn().mockResolvedValue([session]),
+    readFoundryActorCache:jest.fn().mockResolvedValue([]),
     updateSession:jest.fn().mockResolvedValue(session),
     saveSessionFinishReport:jest.fn().mockResolvedValue(undefined),
     sessionFinishReport:jest.fn().mockResolvedValue(null),
@@ -73,6 +74,7 @@ async function prepare(w:ReturnType<typeof wizard>) {
   expect(token).toMatch(/^[A-Za-z0-9_-]{43}$/)
   const state=w.service.sessionFinishWebState(token)
   expect(state.number).toBe(7)
+  expect(state.xpAid).toEqual(w.start.channel.name==='mj'?null:expect.objectContaining({participantCount:2,averageLevel:1,targetGroupXp:240,targetXpPerPlayer:120}))
   expect(state.groups).toHaveLength(6)
   const groups=state.groups as typeof FACTIONS
   expect(groups.map(group=>group.name)).toContain('Abberton')
@@ -118,13 +120,14 @@ describe('/fin-seance external single-page form',()=>{
     expect(w.send).toHaveBeenCalledTimes(1)
   })
 
-  it('in a live session credits each PJ, changes global reputation and publishes once',async()=>{
+  it('in a live session records XP and reputation and publishes once without crediting coins',async()=>{
     const w=wizard(false)
     const {token}=await prepare(w)
     expect(w.persistence.updateSession).not.toHaveBeenCalled()
     await w.service.sessionFinishWebConfirm(token)
-    expect(w.foundry.checkSessionCoins).toHaveBeenCalledWith(w.session.participants,{gp:7,sp:3,cp:2},w.session.id)
-    expect(w.foundry.awardSessionCoins).toHaveBeenCalledWith(w.session.participants,{gp:7,sp:3,cp:2},w.session.id)
+    expect(w.foundry.checkSessionCoins).not.toHaveBeenCalled()
+    expect(w.foundry.awardSessionCoins).not.toHaveBeenCalled()
+    expect(w.send.mock.calls[0][0].content).toContain('distribution manuelle')
     expect(w.reputations.applySessionDeltas).toHaveBeenCalledWith([
       {id:11,delta:3},{id:20,delta:2},{id:21,delta:1},{id:12,delta:-2},
     ],w.session.id)
@@ -152,17 +155,20 @@ describe('/fin-seance external single-page form',()=>{
     expect(w.send).not.toHaveBeenCalled()
   })
 
-  it('refuses a real confirmation when there is no longer an active session or Foundry is offline',async()=>{
+  it('refuses a missing active session but closes when Foundry coin operations are unavailable',async()=>{
     const w=wizard(false)
     const {token}=await prepare(w)
     w.persistence.activeSessionForDiscordChannel.mockResolvedValueOnce(null)
     await expect(w.service.sessionFinishWebConfirm(token)).rejects.toThrow(/Aucune séance active/)
     expect(w.foundry.awardSessionCoins).not.toHaveBeenCalled()
     w.foundry.checkSessionCoins.mockRejectedValueOnce(new Error('execute-js disabled'))
-    await expect(w.service.sessionFinishWebConfirm(token)).rejects.toThrow(/execute-js disabled/)
-    expect(w.persistence.updateSession).not.toHaveBeenCalled()
-    expect(w.reputations.applySessionDeltas).not.toHaveBeenCalled()
-    expect(w.send).not.toHaveBeenCalled()
+    w.foundry.awardSessionCoins.mockRejectedValueOnce(new Error('execute-js disabled'))
+    await expect(w.service.sessionFinishWebConfirm(token)).resolves.toMatchObject({message:expect.stringContaining('XP et réputations')})
+    expect(w.foundry.checkSessionCoins).not.toHaveBeenCalled()
+    expect(w.foundry.awardSessionCoins).not.toHaveBeenCalled()
+    expect(w.persistence.updateSession).toHaveBeenCalledTimes(1)
+    expect(w.reputations.applySessionDeltas).toHaveBeenCalledTimes(1)
+    expect(w.send).toHaveBeenCalledTimes(1)
   })
 
   it('expires private links and blocks attempts to confirm without a preview',async()=>{

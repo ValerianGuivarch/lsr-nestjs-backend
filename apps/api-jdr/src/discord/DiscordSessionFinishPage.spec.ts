@@ -32,7 +32,8 @@ describe('private one-page form layout',()=>{
     expect(html).toContain('id="loot"')
     const state={
       number:7,days:0,xpTotal:0,xpPerPlayer:0,gp:0,sp:0,cp:0,
-      actions:'',loot:'',groups,changes:[],mock:true,step:'form',
+      actions:'',loot:'',groups,changes:[],mock:false,step:'form',
+      xpAid:{participantCount:4,averageLevel:2.75,targetGroupXp:2400,targetXpPerPlayer:600,sessionsPerLevelTarget:2.5},
     }
     const dom=new JSDOM(html,{
       runScripts:'dangerously',
@@ -61,6 +62,14 @@ describe('private one-page form layout',()=>{
       expect(reputationNames).toContain('Ermitage de la Foudre Bénie')
       expect(reputationNames).toContain("Villageois d'Abberton")
       const input=(id:string) => document.getElementById(id) as HTMLInputElement
+      expect(document.getElementById('xp-aid')?.textContent).toContain('Niveau moyen : 2,75')
+      expect(document.getElementById('xp-aid')?.textContent).toContain('600 par PJ')
+      input('actions').value='125 oiseaux : 50XP\nChef : 1 200 xp'
+      input('actions').dispatchEvent(new dom.window.Event('input'))
+      expect(document.getElementById('xp-action-sum')?.textContent).toContain('313 XP par PJ')
+      document.getElementById('use-action-xp')!.click()
+      expect(input('xpTotal').value).toBe('1250')
+      expect(input('xpPerPlayer').value).toBe('313')
       input('xpTotal').value='1240'; input('xpPerPlayer').value='310';input('gp').value='7'
       input('sp').value='3';input('cp').value='2'
       input('actions').value='Gnome sauvé : 30XP\nChef vaincu : 1200 XP'

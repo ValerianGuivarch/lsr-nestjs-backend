@@ -14,6 +14,7 @@ import { shortSummaryRewardForSession } from '../pf2-sessions/Pf2CareerXp'
 import { Pf2JournalsService } from '../pf2-journals/Pf2JournalsService'
 import { Pf2ReputationService } from '../pf2-reputation/Pf2ReputationService'
 import { parseSessionFinishWebInput } from './DiscordSessionFinishWeb'
+import { sessionXpAid } from '../pf2-sessions/Pf2SessionXpAid'
 import { FINISH_TTL_MS, finishInt, finishXpForm, finishTreasureForm, finishReputationForm, parseFinishXpForm, parseFinishTreasureForm, parseFinishReputationForm, finishReport, finishReportParts, type SessionFinishDraft, type SessionFinishGroup } from './SessionFinishFlow'
 
 const PLANNING_DAYS = [
@@ -4025,7 +4026,7 @@ export class DiscordCommandsService {
     return {
       number:draft.number, days:draft.days, xpTotal:draft.xpTotal, xpPerPlayer:draft.xpPerPlayer,
       gp:draft.coins.gp, sp:draft.coins.sp, cp:draft.coins.cp,
-      actions:draft.activities,loot:draft.loot,
+      actions:draft.activities,loot:draft.loot,xpAid:draft.xpAid??null,
       groups:draft.groups, changes:draft.changes, mock:draft.mock,step:draft.step,
       ...(draft.step === 'review' ? { parts: finishReportParts(finishReport(draft)) } : {}),
     }
@@ -4053,10 +4054,10 @@ export class DiscordCommandsService {
       this.pendingSessionFinishes.delete(token)
       return {message:draft.mock
         ? 'Simulation publiée dans #mj. Aucun XP, aucune réputation et aucune pièce modifiés.'
-        : 'Fin de séance publiée dans Discord. Récompenses et réputations appliquées.'}
+        : 'Fin de séance publiée dans Discord. XP et réputations enregistrés. Pièces à distribuer manuellement.'}
     } catch(error) {
-      // Existing source idempotency protects Foundry coinage and reputation
-      // deltas if something failed after a partial real-world update.
+      // Existing source idempotency protects reputation deltas and session XP
+      // if something failed after a partial real-world update.
       draft.step = 'review'
       throw error
     }
@@ -4080,13 +4081,19 @@ export class DiscordCommandsService {
       // All groups, including Abberton. Never slice or truncate the list.
       for (const [key,value] of this.pendingSessionFinishes) if (Date.now()-value.createdAt > FINISH_TTL_MS) this.pendingSessionFinishes.delete(key)
       const token = randomBytes(32).toString('base64url')
+      let xpAid: SessionFinishDraft['xpAid']
+      if (active) {
+        const actors = await this.persistence.readFoundryActorCache().catch(() => [])
+        const { averageLevel, participantCount, targetGroupXp, targetXpPerPlayer, sessionsPerLevelTarget } = sessionXpAid(active, sessions, actors)
+        xpAid = { averageLevel, participantCount, targetGroupXp, targetXpPerPlayer, sessionsPerLevelTarget }
+      }
       const draft: SessionFinishDraft = {
         token,requesterId:interaction.user.id,channelId:interaction.channelId,guildId:interaction.guildId??'',
         mock,sessionId:active?.id??null,number,createdAt:Date.now(),
         days:0,xpTotal:0,xpPerPlayer:0,activities:'',coins:{gp:0,sp:0,cp:0},loot:'',
         groups:groups.map(group=>({id:Number(group.id),name:group.name,
           entries:group.entries.map(entry=>({id:Number(entry.id),name:entry.name,score:Number(entry.score)}))})),
-        changes:[],step:'form',
+        changes:[],step:'form',xpAid,
       }
       const base=(process.env['PF2_FIN_SEANCE_PUBLIC_URL']?.trim() || 'https://l7r.fr/apil7r/pf2-mj/discord/fin-seance').replace(/\/$/,'')
       const url=base+'/'+token
@@ -4179,12 +4186,12 @@ export class DiscordCommandsService {
         await this.applySessionFinish({channel:interaction.channel}, draft)
         draft.step = 'completed'
         this.pendingSessionFinishes.delete(draft.token)
-        await interaction.editReply({ content: draft.mock ? '🧪 Simulation publiée dans #mj. Aucune donnée enregistrée.' : `✅ Séance n°${draft.number} terminée. XP, pièces et réputations appliqués ; récapitulatif publié.` })
+        await interaction.editReply({ content: draft.mock ? '🧪 Simulation publiée dans #mj. Aucune donnée enregistrée.' : `✅ Séance n°${draft.number} terminée. XP et réputations enregistrés ; pièces à distribuer manuellement ; récapitulatif publié.` })
       } catch (error) {
-        // Idempotency: session XP overwrites, reputation reasons and coin flags
+        // Idempotency: session XP overwrites and reputation reasons
         // prevent double application when a partial operation needs retrying.
         draft.step = 'review'
-        await interaction.editReply({ content: `⚠️ Fin de séance incomplète : ${error instanceof Error ? error.message : String(error)}. Vérifie le fil et les inventaires avant de relancer.`,
+        await interaction.editReply({ content: `⚠️ Fin de séance incomplète : ${error instanceof Error ? error.message : String(error)}. Vérifie le fil Discord avant de relancer.`,
           components: [new ActionRowBuilder<ButtonBuilder>().addComponents(this.sessionFinishButton(draft, 'confirm', 'Réessayer (sans doubler)', ButtonStyle.Primary))] })
       }
       return true
@@ -4218,8 +4225,7 @@ export class DiscordCommandsService {
     if (!session.inGameStartDate) throw new Error('La séance n’a pas de date de début en jeu.')
     if (!session.participants.length) throw new Error('Aucun PJ participant à cette séance.')
     if (!this.reputations) throw new Error('Service de réputation indisponible.')
-    const pieces = draft.coins
-    await this.foundry.checkSessionCoins(session.participants, pieces, session.id)
+    // Coinage is informational until the Foundry relay integration is restored.
     // A retry after a publication error must not reapply an already persisted
     // reputation delta (a faction might now be exactly at the +50 cap).
     const previousReport = await this.persistence.sessionFinishReport(session.id)
@@ -4235,7 +4241,6 @@ export class DiscordCommandsService {
         throw new Error(`Réputation « ${change.name} » hors limites ou supprimée.`)
       }
     }
-    await this.foundry.awardSessionCoins(session.participants, pieces, session.id)
     await this.reputations.applySessionDeltas(draft.changes.map(change => ({ id: change.id, delta: change.delta })), session.id)
     const endDate = this.addDays(session.inGameStartDate, draft.days)
     const updated = await this.persistence.updateSession(session.id, {

@@ -8,6 +8,7 @@ export type SessionFinishDraft = {
   days: number; xpPerPlayer: number; xpTotal: number; activities: string
   coins: SessionFinishCoins; loot: string
   groups: SessionFinishGroup[]; changes: SessionFinishChange[]; reputationPage?: number
+  xpAid?: Pick<import('../pf2-sessions/Pf2SessionXpAid').SessionXpAid, 'averageLevel' | 'participantCount' | 'targetGroupXp' | 'targetXpPerPlayer' | 'sessionsPerLevelTarget'>
   step: 'form' | 'review' | 'committing' | 'completed'
   formValues?: { number: string; days: string; xp: string; treasure: string; reputation: string }
 }
@@ -161,7 +162,7 @@ export function finishReport(draft: SessionFinishDraft): string {
     ...(activities.length ? activities : ['• Aucune activité détaillée']),
     `**Total : ${draft.xpTotal} XP, soit ${draft.xpPerPlayer} XP par PJ.**`,
     '', '**Gain de points et butin**',
-    ...(money ? [`• ${money} (par PJ)`] : []),
+    ...(money ? [`• ${money} (par PJ) — distribution manuelle, aucun versement automatique.`] : []),
     ...lootLines,
     ...(!money && !lootLines.length ? ['• Aucun butin déclaré'] : []),
     '', '**Réputation**',

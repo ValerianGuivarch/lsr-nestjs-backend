@@ -51,12 +51,13 @@ button{background:#292e33;color:#eee;border-color:#74797f}
 <label>Numéro de séance<input name="number" id="number" type="number" min="1" step="1" required></label>
 <label>Nombre de jours écoulés<input name="days" id="days" type="number" min="0" step="1" required></label>
 </div></section>
-<section><h2>Expérience</h2><div class="grid">
+<section><h2>Expérience</h2><p id="xp-aid" class="muted"></p><div class="grid">
 <label>XP total du groupe<input name="xpTotal" id="xpTotal" type="number" min="0" step="1" required></label>
 <label>XP par PJ<input name="xpPerPlayer" id="xpPerPlayer" type="number" min="0" step="1" required></label>
 </div><label class="spaced">Actions réalisées (une ligne par action)
 <textarea id="actions" maxlength="12000" placeholder="Gnome libéré : 30XP&#10;Chef vaincu : 2000 XP"></textarea></label>
-<p class="muted">Chaque ligne sera publiée comme une puce. Pas besoin d'écrire « Actions : ».</p></section>
+<p class="muted">Chaque ligne sera publiée comme une puce. Pas besoin d'écrire « Actions : ».</p>
+<p id="xp-action-sum" class="muted" aria-live="polite"></p><button type="button" id="use-action-xp" class="hidden">Reporter le total des actions dans les champs XP</button></section>
 <section><h2>Pièces et butin</h2>
 <div class="grid three">
 <label>Or · po par PJ<input name="gp" id="gp" type="number" min="0" step="1" required></label>
@@ -65,7 +66,7 @@ button{background:#292e33;color:#eee;border-color:#74797f}
 </div>
 <label class="spaced">Objets obtenus (une ligne par objet)
 <textarea id="loot" maxlength="12000" placeholder="Potion de soins&#10;Anneau magique"></textarea></label>
-<p class="muted">Seuls les montants numériques des pièces seront crédités automatiquement aux PJ ; les objets restent du texte.</p></section>
+<p class="muted">Les pièces et objets sont uniquement notés dans le récapitulatif. Aucun versement automatique dans Foundry.</p></section>
 <section><h2>Réputations</h2><p class="muted">Toutes les catégories, y compris Abberton et les cirques. Chaque variation est initialisée à zéro. Entre -50 et +50 par modification, selon le score actuel.</p>
 <p id="reputation-count" class="muted"></p><div id="factions"></div>
 </section>
@@ -126,6 +127,29 @@ function renderGroups(groups,values) {
  }
  field('reputation-count').textContent=groups.length+' catégories · '+count+' réputations';
 }
+function renderXpAid(){
+ const aid=session&&session.xpAid, count=aid?.participantCount||0;
+ const fmt=value=>Number(value).toLocaleString('fr-FR',{maximumFractionDigits:2});
+ field('xp-aid').textContent=count&&aid.averageLevel!=null
+  ? count+' PJ · Niveau moyen : '+fmt(aid.averageLevel)+' · XP conseillés : '+fmt(aid.targetGroupXp)+' au total, '+fmt(aid.targetXpPerPlayer)+' par PJ (objectif '+fmt(aid.sessionsPerLevelTarget)+' séances/niveau).'
+  : 'Aide XP indisponible : aucun groupe réel identifié.';
+ let total=0, matches=0;
+ for(const line of field('actions').value.split(/\r?\n/)){
+  for(const match of line.matchAll(/(?<![\d.,])(\d{1,3}(?:[ \u00a0\u202f]\d{3})+|\d+)\s*XP\b/gi)){
+   total+=Number(match[1].replace(/\s/g,''));matches++;
+  }
+ }
+ const per=count?Math.round(total/count):null;
+ field('xp-action-sum').textContent=matches?'Actions : '+fmt(total)+' XP'+(per===null?'':' · '+fmt(per)+' XP par PJ (arrondi)')+'.':'Ajoute des montants suivis de XP pour calculer le total.';
+ field('use-action-xp').classList.toggle('hidden',!matches);
+ return {total,per};
+}
+field('actions').addEventListener('input',renderXpAid);
+field('use-action-xp').addEventListener('click',()=>{
+ const {total,per}=renderXpAid();
+ field('xpTotal').value=String(total);
+ if(per!==null)field('xpPerPlayer').value=String(per);
+});
 function readValues() {
  const payload={};
  for(const name of fields) payload[name]=['actions','loot'].includes(name)?field(name).value: Number(field(name).value);
@@ -140,6 +164,7 @@ async function load(){
   field('xpTotal').value=session.xpTotal;field('xpPerPlayer').value=session.xpPerPlayer;
   field('gp').value=session.gp;field('sp').value=session.sp;field('cp').value=session.cp;
   field('actions').value=session.actions;field('loot').value=session.loot;
+  renderXpAid();
   const previous=Object.fromEntries((session.changes||[]).map(change=>[change.id,change.delta]));
   renderGroups(session.groups,previous);
   field('loading').classList.add('hidden');form.classList.remove('hidden');
@@ -166,7 +191,7 @@ field('confirm').addEventListener('click',async()=>{
   finished=true;
   review.classList.add('hidden');form.classList.add('hidden');
   const success=field('success');success.textContent=result.message;success.classList.remove('hidden');
- }catch(err){showError('Confirmation non terminée : '+err.message+' Vérifie Discord et les inventaires avant de réessayer.');}
+ }catch(err){showError('Confirmation non terminée : '+err.message+' Vérifie Discord avant de réessayer.');}
  finally{setBusy(false);}
 });
 load();
