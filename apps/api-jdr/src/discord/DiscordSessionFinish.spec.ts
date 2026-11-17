@@ -120,21 +120,21 @@ describe('/fin-seance external single-page form',()=>{
     expect(w.send).toHaveBeenCalledTimes(1)
   })
 
-  it('in a live session records XP and reputation and publishes once without crediting coins',async()=>{
+  it('in a live session records XP and reputation and queues coins without invoking the relay',async()=>{
     const w=wizard(false)
     const {token}=await prepare(w)
     expect(w.persistence.updateSession).not.toHaveBeenCalled()
     await w.service.sessionFinishWebConfirm(token)
     expect(w.foundry.checkSessionCoins).not.toHaveBeenCalled()
     expect(w.foundry.awardSessionCoins).not.toHaveBeenCalled()
-    expect(w.send.mock.calls[0][0].content).toContain('distribution manuelle')
+    expect(w.send.mock.calls[0][0].content).toContain('versement en attente de synchronisation Foundry')
     expect(w.reputations.applySessionDeltas).toHaveBeenCalledWith([
       {id:11,delta:3},{id:20,delta:2},{id:21,delta:1},{id:12,delta:-2},
     ],w.session.id)
     expect(w.persistence.updateSession).toHaveBeenCalledWith(w.session.id,
       expect.objectContaining({inGameEndDate:'4720-01-03',sessionXp:310}))
     expect(w.persistence.saveSessionFinishReport).toHaveBeenCalledWith(w.session.id,1240,
-      expect.stringContaining('Total : 1240 XP'))
+      expect.stringContaining('Total : 1240 XP'),{actors:w.session.participants,coins:{gp:7,sp:3,cp:2}})
     expect(w.persistence.closeSessionDiscordChannel).toHaveBeenCalledWith(w.session.id)
     expect(w.send).toHaveBeenCalledTimes(1)
     expect(w.send.mock.calls[0][0].allowedMentions).toEqual({parse:[]})

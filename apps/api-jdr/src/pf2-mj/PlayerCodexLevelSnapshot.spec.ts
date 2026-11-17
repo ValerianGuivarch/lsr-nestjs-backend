@@ -42,6 +42,15 @@ describe('Foundry player level snapshot push', () => {
     ])
   })
 
+  it('protects all three session coin routes with the Foundry sync key', async () => {
+    process.env['PF2_FOUNDRY_CHAT_SYNC_KEY'] = 'secret-test'
+    const { controller } = setup()
+    expect(() => controller.foundrySessionCoins('bad','test-pf2')).toThrow(UnauthorizedException)
+    expect(() => controller.claimFoundrySessionCoin('bad',{world:'test-pf2'})).toThrow(UnauthorizedException)
+    expect(() => controller.finishFoundrySessionCoin('bad',{world:'test-pf2'})).toThrow(UnauthorizedException)
+    await expect(controller.foundrySessionCoins('secret-test','other-world')).rejects.toBeInstanceOf(BadRequestException)
+  })
+
   it('rejects unauthenticated requests before touching the cache', async () => {
     process.env['PF2_FOUNDRY_CHAT_SYNC_KEY'] = 'secret-test'
     const { controller, persistence } = setup()

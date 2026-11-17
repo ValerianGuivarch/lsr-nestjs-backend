@@ -141,6 +141,19 @@ describe('Pf2PersistenceService', () => {
     ])
   })
 
+  it('atomically freezes session coin recipients on first report, without backfilling earlier reports', async () => {
+    const service=await open()
+    const first=await service.createSession({sessionNumber:1,participants:['Actor.hero']})
+    const second=await service.createSession({sessionNumber:2,participants:['Actor.hero']})
+    const coins={gp:10,sp:2,cp:0}
+    await service.saveSessionFinishReport(first.id,100,'Ancien bilan')
+    await service.saveSessionFinishReport(first.id,100,'Ancien bilan',{actors:['Actor.hero'],coins})
+    await service.saveSessionFinishReport(second.id,100,'Nouveau bilan',{actors:['Actor.hero'],coins})
+    await service.saveSessionFinishReport(second.id,100,'Nouveau bilan',{actors:['Actor.other'],coins})
+    const rows=await currentDataSource().query('SELECT session_id, actor_uuid, gp, sp, cp, status FROM pf2_session_coin_award')
+    expect(rows).toEqual([{session_id:second.id,actor_uuid:'Actor.hero',gp:10,sp:2,cp:0,status:'pending'}])
+  })
+
   it('creates, updates, migrates and preserves complete sessions', async () => {
     const first = await open()
     const created = await first.createSession({

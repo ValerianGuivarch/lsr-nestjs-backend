@@ -5,6 +5,7 @@ import { readFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
 import { DataSource } from 'typeorm'
 import { Pf2PersistenceService } from '../pf2-storage/Pf2PersistenceService'
+import { claimSessionCoinAward, finishSessionCoinAward, listSessionCoinAwards, requireCoinWorld } from '../pf2-storage/SessionCoinAwards'
 import { FoundryRelayService } from '../foundry/FoundryRelayService'
 import { CharacterPresentationCard } from '../foundry/FoundryCharacterChat'
 import { levelForCareerXp } from '../pf2-sessions/Pf2CareerXp'
@@ -140,6 +141,21 @@ export class PlayerCodexService implements OnModuleInit, OnModuleDestroy {
       discordUrl: `https://discord.com/channels/${encodeURIComponent(row.discord_guild_id ?? "@me")}/${encodeURIComponent(row.discord_channel_id)}/${encodeURIComponent(row.discord_message_id)}`,
       wikiUrl: row.wiki_page_title && this.mediaWiki ? this.mediaWiki.pageUrl(row.wiki_page_title) : null,
     })) }
+  }
+
+  async foundrySessionCoins(world: unknown) {
+    requireCoinWorld(world)
+    return listSessionCoinAwards(this.db)
+  }
+
+  async claimFoundrySessionCoin(world: unknown, session: unknown, actor: unknown) {
+    requireCoinWorld(world)
+    return claimSessionCoinAward(this.db,session,actor)
+  }
+
+  async finishFoundrySessionCoin(world: unknown, token: unknown, status: unknown) {
+    requireCoinWorld(world)
+    return finishSessionCoinAward(this.db,token,status)
   }
 
   async foundrySyncState(): Promise<{ active: boolean }> {

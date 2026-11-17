@@ -24,6 +24,26 @@ export class PlayerCodexController {
     return this.service.storeFoundryPlayerLevelSnapshot(body?.players)
   }
 
+  @Get('foundry-session-coins')
+  foundrySessionCoins(@Headers('x-pf2-foundry-sync-key') key = '', @Query('world') world = '') {
+    this.requireFoundrySyncKey(key)
+    return this.service.foundrySessionCoins(world)
+  }
+  @Post('foundry-session-coins/claim')
+  claimFoundrySessionCoin(@Headers('x-pf2-foundry-sync-key') key = '', @Body() body: {world?:unknown;sessionId?:unknown;actorUuid?:unknown}) {
+    this.requireFoundrySyncKey(key)
+    return this.service.claimFoundrySessionCoin(body?.world,body?.sessionId,body?.actorUuid)
+  }
+  @Post('foundry-session-coins/finish')
+  finishFoundrySessionCoin(@Headers('x-pf2-foundry-sync-key') key = '', @Body() body: {world?:unknown;token?:unknown;status?:unknown}) {
+    this.requireFoundrySyncKey(key)
+    return this.service.finishFoundrySessionCoin(body?.world,body?.token,body?.status)
+  }
+  private requireFoundrySyncKey(key: string): void {
+    const expected = process.env['PF2_FOUNDRY_CHAT_SYNC_KEY'] ?? ''
+    if (!expected || key !== expected) throw new UnauthorizedException('Synchronisation Foundry non autorisée.')
+  }
+
   @Get('foundry-factions') foundryFactions(): Promise<unknown> { return this.service.playerFactionCandidates(true) }
   @Post('foundry-presentations/:id/publish') publishFoundry(@Param('id') id: string, @Body() body: { token?: string; name?: string; description?: string; factionId?: string | null }): Promise<unknown> { return this.service.publishFoundryPresentation(id, body?.token ?? '', body?.name ?? '', body?.description ?? '', body?.factionId ?? null) }
   @Get('character-candidates') candidates(@Query('q') q = ''): Promise<unknown> { return this.service.characterCandidates(q) }

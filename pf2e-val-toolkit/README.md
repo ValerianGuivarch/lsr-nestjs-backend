@@ -1444,3 +1444,7 @@ Toolkit reste générique. Ne pas injecter de bouton dans le DOM du HUD.
 Le raccourci `maintain` affiche désormais « Entretenir un contact ».
 Les macros natives déjà créées conservent leur fonctionnement ; leur nom
 affiché dans Extras doit également être renommé dans Foundry.
+
+### Versements de fin de séance (0.44.20)
+
+Le MJ actif de `test-pf2` interroge la file SQLite des pièces toutes les 30 secondes via la clé de synchronisation Discord/Foundry existante. L'opération utilise `actor.inventory.addCoins` sans autoriser `execute-js`. La réservation et le flag `sessionCoinAwards` par séance/PJ protègent des doubles versements ; les opérations ambiguës ne sont jamais rejouées automatiquement. La console MJ peut relancer uniquement la synchronisation (`game.modules.get('pf2e-val-toolkit').api.syncSessionCoins()`), sans rejouer les pièces déjà versées. Voir `docs/pf2/discord-session-end.md`. Test : `node pf2e-val-toolkit/tests/session-coin-awards.mjs`.

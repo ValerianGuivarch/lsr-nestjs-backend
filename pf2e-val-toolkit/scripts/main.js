@@ -37,6 +37,7 @@ import { initPortraitChatShare } from "./portrait-chat-share.js";
 import { registerLodgeStashSettings, initLodgeStashes } from "./lodge-stashes.js";
 import { initEarnIncomeCoins } from "./earn-income/index.js";
 import { initPlayerLevelSync } from "./player-level-sync.js";
+import { initSessionCoinAwards, syncSessionCoins } from "./session-coin-awards.js";
 import { initOutcomeEffects } from "./outcome-effects/index.js";
 
 import { initFamiliarSelector } from "./familiar-selector.js";
@@ -103,6 +104,8 @@ Hooks.once("ready", () => {
   // Mémoriser les deux niveaux dans l'API après recalcul de l'XPC,
   // sans nécessiter une session Foundry active au moment de /recap-pjs.
   initPlayerLevelSync(startupXpReconciliation);
+  initSessionCoinAwards();
+  if (toolkit) toolkit.api = { ...toolkit.api, syncSessionCoins };
 
   void migrateSashkaFamiliarFeat();
   initDiscordCharacterChat();

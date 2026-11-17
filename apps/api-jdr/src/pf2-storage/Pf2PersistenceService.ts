@@ -5,6 +5,7 @@ import { basename, dirname, resolve } from 'node:path'
 import { createHash, randomBytes, randomUUID } from 'node:crypto'
 import { DataSource, EntityManager } from 'typeorm'
 import { PF2_PLAYER_IDENTITIES } from '../discord/Pf2PlayerIdentity'
+import { enqueueSessionCoins, migrateSessionCoinAwards, type SessionCoins } from './SessionCoinAwards'
 
 export type Pf2RecordKind = 'pnj' | 'faction' | 'lieu' | 'region' | 'evenement' | 'scenario' | 'session' | 'catalogue' | 'curation' | 'foundry-actor-cache' | 'foundry-player-level-cache' | 'geography-config'
 export type Pf2RecordScope = 'global' | 'scenario'
@@ -1223,12 +1224,18 @@ export class Pf2PersistenceService implements OnModuleInit {
     return rows.length ? { xpTotal: Number(rows[0].xp_total), content: rows[0].content } : null
   }
 
-  async saveSessionFinishReport(sessionId: string, xpTotal: number, content: string): Promise<void> {
+  async saveSessionFinishReport(sessionId: string, xpTotal: number, content: string, reward?: { actors: string[]; coins: SessionCoins }): Promise<void> {
     if (!/^[a-f0-9-]{36}$/i.test(sessionId)) throw new Error('ID de séance invalide.')
     if (!Number.isSafeInteger(xpTotal) || xpTotal < 0 || xpTotal > 10_000_000) throw new Error('XP total invalide.')
-    await this.dataSource.query(`INSERT INTO pf2_session_finish_report (session_id,xp_total,content)
-      VALUES (?,?,?) ON CONFLICT(session_id) DO UPDATE SET xp_total=excluded.xp_total,
-      content=excluded.content,updated_at=CURRENT_TIMESTAMP`, [sessionId,xpTotal,content])
+    await this.dataSource.transaction(async manager => {
+      // Freeze the recipient list on the very first confirmed report; a retry
+      // must not credit a new participant or resurrect a historically manual award.
+      const previous = await manager.query('SELECT session_id FROM pf2_session_finish_report WHERE session_id=?',[sessionId]) as Array<{session_id:string}>
+      await manager.query(`INSERT INTO pf2_session_finish_report (session_id,xp_total,content)
+        VALUES (?,?,?) ON CONFLICT(session_id) DO UPDATE SET xp_total=excluded.xp_total,
+        content=excluded.content,updated_at=CURRENT_TIMESTAMP`, [sessionId,xpTotal,content])
+      if (reward && !previous.length) await enqueueSessionCoins(manager,sessionId,reward.actors,reward.coins)
+    })
   }
 
   async rememberSessionDiscordChannel(sessionId: string, channelId: string, guildId: string): Promise<void> {
@@ -1987,6 +1994,7 @@ export class Pf2PersistenceService implements OnModuleInit {
         await manager.query("ALTER TABLE pf2_character_presentation ADD COLUMN presentation_kind TEXT NOT NULL DEFAULT 'character'")
       }
     })
+    await this.applyMigration('057-session-coin-awards', migrateSessionCoinAwards)
     await this.assertDatabaseIntegrity(this.dataSource, 'base SQLite après migrations')
   }
 

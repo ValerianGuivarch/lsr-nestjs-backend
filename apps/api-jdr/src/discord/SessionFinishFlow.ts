@@ -162,7 +162,7 @@ export function finishReport(draft: SessionFinishDraft): string {
     ...(activities.length ? activities : ['• Aucune activité détaillée']),
     `**Total : ${draft.xpTotal} XP, soit ${draft.xpPerPlayer} XP par PJ.**`,
     '', '**Gain de points et butin**',
-    ...(money ? [`• ${money} (par PJ) — distribution manuelle, aucun versement automatique.`] : []),
+    ...(money ? [`• ${money} (par PJ) — ${draft.mock ? 'simulation, aucun versement' : 'versement en attente de synchronisation Foundry'}.`] : []),
     ...lootLines,
     ...(!money && !lootLines.length ? ['• Aucun butin déclaré'] : []),
     '', '**Réputation**',
