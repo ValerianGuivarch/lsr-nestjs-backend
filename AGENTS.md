@@ -25,5 +25,6 @@
 ## Règles de développement PF2
 
 - Lire `PF2_WORKSPACE.md` et les règles de déploiement avant toute intervention. Petites corrections : commit sur main après tests ; PR réservées aux grosses fonctionnalités.
+- Pour toute préparation ou modification de contenu Foundry PF2, suivre obligatoirement la convention « fiches immédiatement jouables » de `pf2/outils/foundry.md` (modèle Malveillance) et `docs/pf2/session-preparations.md`, même dans une autre discussion ou campagne.
 - Si la méthode nominale est bloquée, diagnostiquer et signaler le blocage. Ne pas chercher ni appliquer un contournement sans accord explicite.
 - Le portail MJ/admin repose sur la confiance entre amis : ne pas introduire de clé MJ, d'authentification ni de restriction d'accès supplémentaire. Conserver les secrets et contrôles techniques existants des services (Foundry, Wiki, Discord, SSH, etc.).

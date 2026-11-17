@@ -103,7 +103,7 @@ Checklist (chaque ligne : à faire / partiellement prêt / fait / non applicable
 - [ ] Source identifiée, lue, objectifs et déroulé adaptés à la continuité.
 - [ ] Conducteur modèle prêt (scènes, lore, décisions, issues, butin, références).
 - [ ] PNJ, portraits, créatures, rencontres et objets nécessaires prêts/référencés.
-- [ ] Foundry prêt : scènes/cartes, murs, éclairage, tokens/Actors, notes, objets et butin pertinents importés et vérifiés ; pas seulement « ZIP généré ».
+- [ ] Foundry prêt : scènes/cartes, murs, éclairage, tokens/Actors, notes, objets et butin pertinents importés et vérifiés ; pas seulement « ZIP généré ». Journaux et Actors exploitables selon la [convention MJ — fiches immédiatement jouables](foundry.md#convention-mj--fiches-immédiatement-jouables-17-novembre-2026) (modèle Malveillance) ; recherches transversales accessibles si nécessaires.
 - [ ] Contrôle final MJ : niveau/équilibrage, accès géographique, prérequis, conséquences, état réel du monde et contraintes de groupe revus.
 
 Le statut visuel dérivé doit être simple : **Pas prêt** (au moins un manque), **Prêt** (tout est validé ou non applicable), **À actualiser** (suite à une séance/changement matériel significatif). Pas de faux vert pour une entrée partiellement préparée. Montrer l'avancement et la prochaine action plutôt que multiplier les labels (« retenu », « sélectionné », « en attente », etc.). Ne pas confondre « scénario disponible » et « module prêt à jouer ». Un module prêt mais inaccessible doit être signalé séparément. Une mission RP sans carte peut valider Foundry comme non nécessaire.

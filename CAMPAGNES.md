@@ -14,7 +14,7 @@ Une **campagne ou un scénario suivi** doit avoir une fiche spécifique ; y dist
 | Sentence d'Extinction | Adaptation en préparation | [Sentence d'Extinction](pf2/campagnes/Campagne-Sentence-d-Extinction.md) |
 | L'Âge des Cendres (anciennement HD100) | Préparation d'une adaptation pour table ouverte | [Âge des Cendres](pf2/campagnes/Campagne-Age-des-Cendres.md) |
 | La Force des milliers | Prévue plus tard | [Force des milliers](pf2/campagnes/Campagne-La-Force-des-milliers.md) |
-| Malveillance | Préparation, pilote Choix libre ; non joué | [Malveillance](pf2/campagnes/Scenario-Malveillance.md) |
+| Malveillance | Commencée le 16/11 ; pilote Choix libre et modèle de préparation Foundry | [Malveillance](pf2/campagnes/Scenario-Malveillance.md) |
 
 ## Suivis transverses
 

@@ -22,6 +22,10 @@ Quand plusieurs endpoints normaux et autorisés existent (par exemple lecture et
 
 **Lecture obligatoire :** toute demande de planification, de modèle/template, de module jouable ou de préparation de séance PF2 impose de lire puis respecter [docs/pf2/session-preparations.md](docs/pf2/session-preparations.md) avant de modifier le contenu ou le code. Ce guide définit notamment le Récapitulatif obligatoire, le découpage temporel, la réutilisation des ressources et la publication des illustrations.
 
+## Préparation Foundry — convention obligatoire
+
+**Toute demande de création, import, correction ou enrichissement de scènes, journaux, Actors ou rencontres PF2 dans Foundry**, quelle que soit la discussion ChatGPT, impose de lire et appliquer la [convention MJ — fiches immédiatement jouables](pf2/outils/foundry.md#convention-mj--fiches-immédiatement-jouables-17-novembre-2026), ainsi que le [guide de préparation de séance](docs/pf2/session-preparations.md). **Malveillance (Blanchebois) est le modèle de référence** : journal de salle avec l'actionnable en tête, détails historiques en bas, notes privées des créatures contextualisées et recherches/visions accessibles par liens. Ne pas réintroduire de pavés de texte ni de descriptions génériques comme seules notes MJ. Appliquer aux contenus nouveaux et existants lorsque le MJ demande de les préparer ou réviser ; ne pas modifier le monde hors du périmètre demandé.
+
 ## Sommaire
 
 | Dossier ChatGPT | Index principal | Sujets |

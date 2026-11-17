@@ -809,6 +809,41 @@ Tout **personnage temporaire de préparation sans portrait** doit avoir une **as
 
 **Cas pilote actuel** : `PFS 1-00` à Quantium, désormais préparé pour **4 PJ niveau 3**. La fiche détaillée de [la Route ouverte](../campagnes/Scenario-Origines-Route-Ouverte.md) propose le rebalancement des égouts. Les statblocks originaux niveau 5–7 n'y sont **pas** acceptables tels quels. Le 12 novembre, l'accès au relais a été bloqué par les contrôles d'exécution ; ces consignes sont documentées, **pas déployées** dans le monde.
 
+## Convention MJ — fiches immédiatement jouables (17 novembre 2026)
+
+**Convention permanente, toutes campagnes et scénarios.** Référence validée par le MJ : [Malveillance — manoir de Blanchebois](../campagnes/Scenario-Malveillance.md), après la séance du 16 novembre. Le MJ consulte Foundry pendant l'exploration et doit pouvoir comprendre une pièce en quelques secondes. Le PDF reste disponible comme référence ; ne pas obliger le MJ à le relire ni à chercher dans le conducteur pour jouer une pièce.
+
+### Journal de salle : deux niveaux de lecture
+
+Conserver une page privée MJ par salle/zone pertinente, accessible par son repère de carte, avec les identifiants et liens existants. **Commencer par « En jeu — [repère] · [nom] »**, puis des rubriques courtes, en gras et en listes ; garder les seules rubriques applicables :
+
+- **À l’arrivée :** ce que les PJ voient, entendent, sentent, sans explication cachée ; quelques éléments factuels, éventuellement une courte phrase à lire.
+- **Interactions / déclenchement :** qui réagit, quand, à quelle condition, attitude, propos utiles, comportement, limites des interlocuteurs. Distinguer observation immédiate, fouille et information conditionnelle. Pour une menace : tactique, renforts, poursuite et fuite.
+- **Jets / dangers :** compétence ou sauvegarde, DD précis, déclencheur, conséquences selon réussite/échec, désamorçage, réarmement, fin définitive. Distinguer niveau original et adaptation effective ; ne pas inventer de DD source.
+- **Indices / informations accessibles :** ce que les PJ peuvent réellement apprendre, comment (document, dialogue, jet, vision), sujet débloqué, conséquence ou piste suivante. Ne jamais donner gratuitement tout le passé de la pièce.
+- **Recherche :** sujet, compétence, DD, durée et plafond de points par source si prévu ; lien direct vers la fiche du sujet.
+- **Passages et butin :** accès, portes, escaliers, secrets et DD ; objets, quantités, emplacement, lien vers coffre et Actors/dangers concernés.
+
+Sous une séparation horizontale, placer **« Contexte MJ et détails (référence) »** : historique, descriptions longues, texte de document, détails supplémentaires, pages du PDF. Préserver le contenu utile existant lors d'une refonte sans le laisser précéder la fiche rapide. Un journal peut être long si bien structuré ; aucun remplissage ni pavé à parcourir avant les informations jouables.
+
+### Actors : notes de jeu contextualisées
+
+Sur chaque Actor PNJ/monstre, mettre en tête de `system.details.privateNotes` une fiche **« En jeu — [scénario] · [zone] / Comment le jouer (MJ) »** : rôle concret, déclenchement, attitude et objectif, tactique 1–2 capacités, terrain/renforts/poursuite/fuite et informations accessibles aux PJ. Ajouter **« Se souvenir »** : compétence(s), DD sourcé ou DD indicatif explicitement signalé et réponses factuelles utiles ; distinguer l'identification d'une espèce de l'identité secrète ou du passé d'un individu. Renvoyer aux actions réelles de la fiche, sans dupliquer les statblocks ni inventer des mécaniques. Pour les dangers, adapter aux champs propres.
+
+La description publique reste courte et non spoilante ; jamais de secrets dans les notes publiques. Pour un Actor propre à la campagne, l'ancienne description générique peut être conservée en bas des notes privées, sous une section de référence ; ne pas écraser celle d'un Actor partagé. Les noms de tokens suivent la convention ci-dessous : aucun code de zone, niveau, mention technique ou secret dans leur nom affiché.
+
+### Investigations, visions et progression
+
+Si l'aventure comporte des recherches, rumeurs, visions, rêves, règles locales récurrentes ou indices transversaux, créer un **journal central privé MJ** : règles rapides, suivi manuel de progression, une page par sujet (sources, DD, durée, plafond, paliers, révélations et sujets débloqués). Lier chaque salle/source concernée directement à la page. Distinguer manifestations spécifiques et déclencheurs, visions facultatives, rêves et révélations de recherche ; ne pas transformer tout historique en vision automatique. Noter les indices réellement connus des joueurs sans inventer les résultats des séances précédentes. Ne pas fabriquer un sous-système artificiel si le scénario n'en comporte pas.
+
+### Conducteur et validation
+
+Le conducteur sert aux objectifs, rythme, introductions, PNJ, RP et transitions ; **Foundry est le support principal de l'exploration libre**, avec des journaux autosuffisants quel que soit le trajet. Ne pas imposer de chemin linéaire ni verrouiller artificiellement un accès autorisé par le scénario. Ne pas dupliquer les salles dans le conducteur. Voir [guide des préparations](../../docs/pf2/session-preparations.md).
+
+Réviser toutes les zones du périmètre demandé, y compris les étages non encore joués. Relire les documents modifiés dans le monde actif, contrôler repères, liens, visibilité MJ, DD/source et accessibilité des fiches ; distinguer vérification documentaire/API et essai en client. En cours de campagne, préserver tokens, PV, combats, portes, progression, butin et positions ; ne pas modifier géométrie/statistiques hors demande explicite.
+
+**Exemple : cuisine de Blanchebois (B14).** À l'arrivée : ustensiles en motifs absurdes, couteaux, squelette à la rapière. Ezramalkun, invisible, interpelle les PJ : elle se dit ancienne cuisinière, se révèle si elle a confiance. Elle sait que des oiseaux dangereux vivent au-dessus, des chiens en dessous, peut signaler une présence colérique et un accès secret ; elle ignore presque tout de la famille. Recherche par Diplomatie DD 20 ou 24 selon sujet, 10 min, maximum 3 points par sujet pour cette source. Accès et butin explicités ; histoire complète et origine de la créature en bas. C'est cette hiérarchie, pas la longueur exacte, qui doit être reprise.
+
 ## Convention MJ — explorer une carte par journaux, Actors et coffres (12 novembre 2026)
 
 À **généraliser** depuis la méthode déjà employée dans les scènes des **Sept Fléaux de Pointesable** : une carte de donjon sert à la véritable exploration, et **le conducteur de séance reste compact**. Ne pas générer une carte tactique complète lorsqu'une loge, un bureau ou une salle d'archives fonctionne mieux en RP.
