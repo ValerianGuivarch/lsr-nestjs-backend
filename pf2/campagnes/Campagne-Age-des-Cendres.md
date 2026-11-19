@@ -8,44 +8,82 @@
 
 ## Statut
 
-Campagne **à venir**. Cette fiche devient la source documentaire pour les décisions éditoriales prises au fil de la préparation et des questions du MJ.
+Campagne **en cours**.
 
-Aucun événement n'est considéré comme joué tant que cela n'est pas confirmé explicitement.
+La première mission a été jouée le **29 octobre 2026** : Appel aux héros à Brèchemont, incendie de l'hôtel de ville, poursuite de Calmont et première exploration d'Altaérein jusqu'au sauvetage des gobelins et à l'arrestation de Calmont.
+
+La progression jouée et les préparations opérationnelles sont enregistrées dans l'application. Cette fiche conserve seulement les décisions de campagne et les conséquences durables.
 
 ## Décisions validées
 
-- La campagne sera adaptée à une **table ouverte**, avec possibilité de rotation des joueurs entre les missions.
-- Le début de *L'Âge des Cendres* doit être resserré pour former une première mission complète et jouable d'une traite autant que possible.
-- La séquence envisagée pour cette ouverture est : **Appel aux héros / réunion → incendie → poursuite vers la Citadelle Altaerein → sauvetage des gobelins / résolution de l'objectif immédiat**.
-- L'exploration complète de la Citadelle Altaerein ne doit pas être obligatoire pendant cette première mission : il doit être clair qu'il reste davantage à découvrir et qu'une exploration ultérieure est possible.
-- Les déplacements entre campagnes et régions reposeront sur le **Labyrinthe de la Route Ouverte**. L'**Anneau d'Alséta** conserve donc son rôle et son fonctionnement actuels ; il n'est pas à modifier pour servir de réseau général de déplacement.
+- La campagne est adaptée à une **table ouverte**, avec possibilité de rotation des joueurs entre les missions.
+- Le début de *L'Âge des Cendres* a été resserré en une première mission : **Appel aux héros / réunion → incendie → poursuite vers la Citadelle Altaérein → sauvetage des gobelins / résolution de l'objectif immédiat**.
+- L'exploration complète d'Altaérein n'est pas obligatoire pendant une seule séance. Les grandes zones peuvent être interrompues à des points de retrait naturels, sans réinitialiser artificiellement les conséquences déjà produites.
+- Les déplacements entre campagnes et régions reposent sur le **Labyrinthe de la Route Ouverte**. L'**Anneau d'Alséta** conserve son rôle et son fonctionnement canoniques ; il ne sert pas de réseau général de déplacement de la table ouverte.
 - *Strength of Thousands / La Force des milliers* n'est **pas liée** à cette campagne ni à ce dispositif de déplacement.
+- **Voz Lirayne** reste une nécromancienne autonome qui recherche l'Anneau d'Alséta et dont la correspondance avec la **Triade écarlate** demeure canonique. En revanche, son habillage de fidèle de Norgorber est supprimé. Ses recherches et contacts nécromantiques peuvent la relier **périphériquement à la Voie des Murmures**, sans en faire un agent direct de Tar-Baphon ni modifier le rôle futur de la Triade écarlate.
+
+## État réellement joué — 29 octobre 2026
+
+- Corvan a réprimandé Vaga et Sashka, sans rupture avec la Société des Éclaireurs.
+- Le groupe est arrivé à **Brèchemont** à l'occasion de l'Appel aux héros.
+- L'hôtel de ville a été incendié et un **méphite du feu** a été vaincu ; les habitants ont été sauvés.
+- Les PJ ont identifié la fuite de **Calmont** vers la Citadelle Altaérein et l'ont poursuivi.
+- Ils ont découvert qu'Altaérein était un ancien bastion de l'**ordre de la Pointe** et ont appris les bases de l'organisation des Chevaliers infernaux, notamment la notion de licteur.
+- Ils ont rencontré **Alak Stagram**, armiger de l'ordre de la Pointe.
+- Ils ont affronté puis tué le grauladon qui rôdait dans la citadelle.
+- La prise d'otage de Calmont a été résolue sans effusion de sang et les gobelins ont été sauvés.
+- Calmont a révélé qu'il recherchait l'**Anneau d'Alséta**, un ancien ensemble de portails elfiques sous la citadelle.
+- Les gobelins ont expliqué avoir été chassés des niveaux inférieurs par les **Griffes de braise / Griffes de Cendre**, comprenant notamment bourbiérins et charau-kas. Les PJ savent donc déjà qu'une menace organisée se trouve sous Altaérein.
+- Le passage direct depuis la cour vers les niveaux inférieurs est effondré ; une entrée secondaire permet de poursuivre l'exploration.
+- **Sashka a récupéré la chevalière familiale de Stagram et l'a gardée sans le dire à Alak.** Cette chevalière est donc déjà sortie de son emplacement d'origine : elle ne doit jamais être recréée comme butin dans les cryptes.
 
 ## Principes de préparation
 
 - Privilégier des missions ayant un **objectif principal achevable sur une séance ou un bloc de jeu**, afin qu'un changement de groupe ne crée pas d'incohérence.
-- Les zones plus vastes peuvent conserver des contenus optionnels, secrets ou des pistes de retour, sans obliger le groupe ayant lancé une mission à tout explorer.
-- Distinguer dans cette fiche les **décisions validées**, les **propositions en cours**, les éléments **à vérifier dans les PDF**, et les **événements réellement joués**.
+- Les zones plus vastes conservent leurs contenus optionnels, secrets et pistes de retour sans obliger un seul groupe à tout explorer.
+- Un arrêt de séance n'annule jamais les alliances, ennemis éliminés, objets pris, portes ouvertes ou informations déjà obtenues.
+- Les modèles permanents de préparation, leurs checklists et leur état de disponibilité vivent dans l'application **Choix libre** ; ne pas dupliquer ici leur suivi opérationnel.
+- Les préparations Foundry doivent réutiliser les cartes, murs, portes, Actors et ressources déjà présents avant toute création supplémentaire.
 
-## Points à préciser ultérieurement
+## Prochaine séquence du tome 1
 
-- Découpage exact de l'ouverture et rencontres conservées dans la Citadelle Altaerein.
-- Modalités précises de retour à la base entre les missions.
-- Éléments de la campagne originale conservés, déplacés, condensés ou supprimés.
-- Chronologie et conséquences des événements une fois la campagne effectivement commencée.
+Les prochains composants jouables ont été structurés en quatre modules cohérents dans l'application.
 
+### 1. Les Griffes de braise sous Altaérein
 
-## Préparation de séance saisie dans l'application (29 octobre 2026)
+Suite directe de la séance 1. Exploration des cryptes **B1 à B17** : occupants indépendants, cellules des Griffes de braise, sépultures des Chevaliers infernaux, protection contre la nécromancie déclenchée par Voz et découverte du tunnel secret vers Brèchemont.
 
-La fiche MJ PDF de la séance 1 (Brèchemur et Citadelle Altaerein) a servi à créer une **préparation manuelle éditable** dans SQLite, initialement avec neuf étapes et 65 blocs, puis réorganisée après les modifications du MJ en **six moments et douze blocs**. Elle est accessible depuis le [Journal MJ → Préparation séance](/pf2-mj/session-preparations?preparationId=15eb2bb6-7e62-482b-9f96-57b080fddd79) et n’est pas marquée jouée. La préparation reste distincte de la vérité historique de la campagne, du document PDF source et des résumés de parties effectivement tenues. Consulter [le guide de l'outil](../../docs/pf2/session-preparations.md) pour le fonctionnement.
+Points de continuité :
+- ne pas recréer la chevalière de Stagram en B16 ;
+- Alak peut constater sa disparition sans connaître automatiquement le rôle de Sashka ;
+- les indices doivent d'abord établir qu'un nécromancien récent a visité les cryptes, sans obliger les PJ à connaître immédiatement son identité ;
+- la sortie B17 vers l'Oreille confite constitue le passage naturel au module suivant.
 
-### Conduite de la séance 1 : version resserrée (29 octobre 2026)
+### 2. Les secrets de Brèchemont
 
-Le MJ a repris l'exemple initial pour éviter les micro-blocs répétés. Le conducteur opérationnel dans SQLite est désormais organisé en six moments : **appel aux héros à Brèchemont** (Greta, Rinna et sa mission du manoir de Blanc-Manteau reportée à une autre séance, Warbal), **incendie et poursuite**, **référence des salles de la citadelle**, **Alak/A10**, **grauladon/A12**, **Helba et Calmont/A22**.
+Enquête par le tunnel de l'**Oreille confite**, discussion avec Roxie Denn et fouille de la **Maison du bel ouvrage**.
 
-- Chaque personnage important apparaît **une seule fois** dans le déroulé ; les requêtes ou combats qu'il amène figurent dans sa propre description plutôt que dans plusieurs blocs.
-- Une seule fiche de référence regroupe, **par salle A1 à A22 pertinente**, l'ambiance, les créatures, les enjeux et le butin. L'exploration reste facultative et n'oblige pas à visiter tout le donjon. Pas de liste de dizaines de loots ou de checklists de conclusion.
-- Le lore est réparti en quatre aides substantielles : **histoire de Brèchemont**, **Chevaliers de l'Enfer, leurs ordres et leur hiérarchie**, **histoire d'Altaerein**, **Isger/Cheliax/Ravounel**. Les révélations sensibles (Vidoc, Griffes de Cendre, Anneau d'Alséta) demeurent des notes MJ.
-- Utiliser les traductions validées **Brèchemont** et **Impétueux-Bafouilleurs** dans cette préparation, sans retransformer ces noms lors d'un import futur. La fiche Warbal du référentiel PNJ, qui possède encore son patronyme d'origine, n'a pas été modifiée.
+Objectif principal : identifier Voz Lirayne comme utilisatrice du tunnel et découvrir la piste de la **Voie du gardien**. Les informations sur l'histoire cachée de Brèchemont et sur les contacts nécromantiques périphériques de Voz sont des révélations supplémentaires, pas des verrous obligatoires.
 
-La préparation est **toujours à venir** : les scènes n'ont pas été marquées jouées. La base reste la source de vérité sur son contenu ; la version antérieure a été sauvegardée dans le stockage opérationnel avant cette réorganisation.
+### 3. La traque de Voz Lirayne
+
+Traque jusqu'à la **Voie du gardien**, confrontation ou négociation avec les Lames sanglantes, exploration des grottes C6–C8 et confrontation avec Voz.
+
+Le journal et la correspondance de Voz doivent survivre à l'issue de la rencontre afin que la campagne ne dépende pas de sa capture. Les éléments canoniques **Triade écarlate / Laslunn / financement contre accès à l'Anneau** sont conservés. Les références à Norgorber sont remplacées par les indices plus discrets liés à la **Voie des Murmures**.
+
+### 4. Malarunk et l'Anneau d'Alséta
+
+Finale du tome 1 dans les Cavernes du Sang gobelin **D1 à D8** : rencontre avec Rénali, Ralldar, Malarunk et ses derniers cultistes, découverte complète de l'Anneau d'Alséta puis récupération du titre de propriété d'Altaérein.
+
+À la fin :
+- le **portail du Chasseur reste endommagé** ;
+- sa réparation et son franchissement vers le Mwangi appartiennent au tome 2 ;
+- les autres aiudaras restent fermées jusqu'à leurs arcs canoniques ;
+- le titre de propriété peut faire d'Altaérein une base locale sans transformer l'Anneau en réseau général de déplacement.
+
+## Préparation de la séance 1
+
+La préparation du 29 octobre 2026 est conservée dans SQLite sous l'identifiant `15eb2bb6-7e62-482b-9f96-57b080fddd79`. Elle a servi de conducteur à la séance effectivement jouée et ne doit plus être interprétée comme une préparation « à venir ».
+
+Le conducteur avait été resserré en six moments : **Appel aux héros à Brèchemont**, **incendie et poursuite**, **référence des salles de la citadelle**, **Alak/A10**, **grauladon/A12**, **Helba et Calmont/A22**. Cette structure reste un exemple utile pour les futurs modules de la campagne : peu de grandes étapes, fiches de personnages non dupliquées et détails de salles reportés dans Foundry.
