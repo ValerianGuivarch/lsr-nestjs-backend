@@ -203,6 +203,19 @@ export class Pf2MjService {
         title: typeof entry.titleFr === 'string' && entry.titleFr.trim() ? entry.titleFr : typeof entry.titleOriginal === 'string' ? entry.titleOriginal : String(entry.id),
         playableComponents: this.validatePlayableComponents(entry.playableComponents ?? [])
       }))
+    const scenarioIds = new Set(scenarios.map((scenario) => scenario.scenarioId))
+    const playablePartKinds = new Set(['volume_aventure', 'aventure_autonome', 'one_shot', 'aventure_communautaire'])
+    for (const rawPart of Array.isArray(campaign.parts) ? campaign.parts : []) {
+      const part = this.asObject(rawPart)
+      const scenarioId = typeof part.id === 'string' ? part.id.trim() : ''
+      if (!scenarioId || scenarioIds.has(scenarioId) || !playablePartKinds.has(String(part.kind ?? ''))) continue
+      scenarios.push({
+        scenarioId,
+        title: typeof part.titleFr === 'string' && part.titleFr.trim() ? part.titleFr : typeof part.titleOriginal === 'string' ? part.titleOriginal : scenarioId,
+        playableComponents: this.validatePlayableComponents(part.playableComponents ?? [])
+      })
+      scenarioIds.add(scenarioId)
+    }
     const ownComponents = this.validatePlayableComponents(campaign.playableComponents ?? [])
     return {
       campaignId,
