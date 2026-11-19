@@ -116,6 +116,18 @@ Les **resonant reflections** sont des empreintes magiques immatérielles confér
 
 **Question non tranchée :** autoriser les PJ à **obtenir la dernière résonance sans emporter définitivement la sixième orbe**, pour la restituer au Vault plutôt que répéter le geste d'Aroden. C'est une **adaptation cohérente avec le principe des résonances**, pas une branche alternative confirmée comme écrite dans le tome 5. Si les PJ refusent même d'approcher l'orbe, le scénario publié ne développe pas de branche complète : il faudra prévoir une autre piste (éventuellement l'orbe disparue de Willowside), sans présumer où elle se trouve.
 
+## Parcours Choix libre — articulation des modules (19 novembre 2026)
+
+Le catalogue existant distingue les périodes jouables des six tomes ; conserver ses identifiants. Les deux premières périodes (représentation et traque de Nemmia) correspondent à l'histoire déjà jouée, sans déduire les détails manquants de la seule segmentation du catalogue. Les modèles de conducteur, leur checklist et la disponibilité matérielle sont maintenus dans Choix libre, indépendamment des séances passées.
+
+- **Deux quêtes ouvertes :** « Les Druides Ecoterroristes » vise l'ermitage après la disparition de Jae ; « Le Cirque des Merveilles » vise les représailles de la Ménagerie et peut commencer par le retour à Abberton. Le chapitre 2 est le carrefour commun disponible avant le déclencheur de l'ermitage. Ne pas faire disparaître le maire avant la résolution de ce chapitre.
+- **Tome 1 :** troubles d'Abberton → ermitage → tour d'Erran. Le sauvetage de Harlock ouvre la tour ; ce dernier distingue le déclin écologique ancien de la corruption récente. La résonance de l'orbe n'exige pas son déplacement.
+- **Tome 2 :** installation du cirque, sabotage, Moonstone Hall et ses souterrains, confrontation à la Ménagerie. Les liens concrets Absalom/Escadar restent à décider avant les scènes de Dusklight.
+- **Tome 3 :** les trois tours des Swardlands et la hantise sont des pistes concurrentes. Wellspring est la moins dangereuse dans le scénario original ; ne pas imposer l'ordre des autres tours. La confrontation avec Thessekka dépend de son emplacement et de son sort réel ; ne pas créer une deuxième Thessekka pour le module final.
+- **Tomes 4–6 :** les bibles narratives sont utiles pour le cadrage, mais pas une source suffisante pour les DD, rencontres, objets et salles. Obtenir les volumes complets avant préparation mécanique. La décision de la sixième orbe précède nécessairement la validation du final.
+
+**Correction de lecture du tome 1 (pp. 30–31) :** la shérif Ralhain a été tuée par la plante carnivore de l'extérieur de la grange Lindell ; il reste ses bottes ensanglantées et son chapeau reconnaissables. La fouille de la végétation révèle aussi une chaîne en argent (15 po) et un *savior spike*. À l'étage E3, Nemmia a laissé une huile de réparation (*oil of mending*) près de sa paillasse ; son cercle rituel associe Gozreh et des runes démoniaques (Religion DD 16, ou Arcanes/Occultisme/savoir pertinent DD 18). Ces éléments sont à vérifier dans les coffres et notes Foundry, pas à considérer comme déjà distribués.
+
 ## Continuité et décisions encore nécessaires
 
 - Fixer le relais d'**Escadar** et le calendrier des déplacements de Dusklight depuis **Absalom**.
