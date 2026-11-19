@@ -111,14 +111,54 @@ Ces volumes ne sont pas encore les modules immédiatement accessibles : ils sero
 
 ## Foundry — état vérifié
 
-Le 19 novembre 2026, le Relay répond et connaît le monde `test-pf2` / « Les Eclaireurs » (Foundry 14.365, PF2e 8.4.1), mais le client GM apparaît **hors ligne**.
+Le 19 novembre 2026, le client GM du monde `test-pf2` / « Les Eclaireurs » est **reconnecté** (Foundry 14.365, PF2e 8.4.1).
 
-Conséquences :
+### Scènes existantes réutilisées
 
-- aucune écriture de scène, JournalEntry, Actor, token, rencontre, coffre ou objet n'a été faite pour cette campagne lors de cette passe ;
-- aucun contournement par LevelDB, script injecté ou accès direct au stockage Foundry n'a été utilisé ;
-- dès que le client GM est reconnecté, reprendre par les routes `foundry/gm/*`, relire chaque document après écriture et n'actualiser `foundry: done` qu'après vérification visuelle/mécanique ;
-- le module **Alliés à Nantambu** n'a pas besoin de Foundry pour être jouable ; les quatre modules suivants en auront besoin dès qu'ils comporteront leur matériel tactique exact.
+Le dossier de scènes `La Force des milliers / 01 — La magie éveillée` existait déjà avec **11 scènes**, toutes sans token ni note lors de l'audit mais avec leurs cartes, murs et, selon les scènes, éclairages/tuiles/dessins :
+
+- `Scene.O3rc0xM6kglcA6n5` — Cérémonie d'accueil ;
+- `Scene.dCGvdhVGUOj9Z0nz` — Promenade de bienvenue ;
+- `Scene.CFCcMr0O2BO13B2k` — Dortoir de la flèche ;
+- `Scene.a2D4BvW6F1QD9cb7` — Cuisine ;
+- `Scene.Z7dymsaAAGYFvucZ` — Grange de stockage ;
+- `Scene.yQ3o4nVBmkAD4egh` — Bibliothèque de la souche ;
+- `Scene.vbivc7jTUKcsTMO3` — Caverne infestée ;
+- `Scene.79VDNx8gLXJ0sFyy` — Chapeaux écarlates ;
+- `Scene.WxZJDR1HDOTVfvCh` — Auditorium ;
+- `Scene.BemrdX45skua7AoA` — Auditorium — Détruit ;
+- `Scene.vCSwFmHLvMrfwpYW` — Tournoi du jour des étoiles.
+
+Ces scènes sont **réutilisées telles quelles**. Aucun doublon n'a été créé.
+
+### Actors préparés
+
+Un dossier d'Actors `La Force des milliers / 01 — La magie éveillée` a été créé, puis six fiches sûres ont été clonées depuis les compendiums officiels avec leur mécanique intacte :
+
+- `Actor.mwJFTAfXrdtE8B7e` — Fantôme de pierre (Stone Ghost), niveau 5, 40 PV ;
+- `Actor.dhyMLjySKHXF4rt7` — Pugwampi (FdM), niveau 0 ;
+- `Actor.8P2dxDd4QWxGDb8F` — Takulu Ot, niveau 4 ;
+- `Actor.t20usW8bSwcnIJ6b` — Chercheur anadi, niveau 1 ;
+- `Actor.C2tRvfAUs8OeTUFC` — Tisseur de destin anadi, niveau 5 ;
+- `Actor.d52rV544urzo3xYH` — Griffon, niveau 4.
+
+Chaque Actor conserve son `sourceUuid` de compendium dans `flags.l7r`. Les gremlins nommés supplémentaires visibles dans le bestiaire n'ont pas été clonés tant que le PDF 1 complet n'est pas disponible, afin d'éviter des Actors inutiles ou mal affectés.
+
+### Journal MJ
+
+Le dossier `MJ / Campagnes officielles / La Force des milliers / 01 — La magie éveillée` a été créé avec le journal :
+
+- `JournalEntry.Vh5Nd67dce6U9ilc` — **La Force des milliers — 01 — La magie éveillée — Préparation MJ**.
+
+Il contient huit pages : vue d'ensemble, les cinq modules, inventaire Foundry, blocages/reprise. Les pages utilisent des liens UUID directs vers les scènes et Actors existants.
+
+### Limite actuelle
+
+Foundry est donc **partiellement préparé** pour les quatre modules tactiques : scènes, Actors sûrs et Journal MJ sont en place. Les checklists Choix libre ont été mises à jour de `foundry: todo` vers `foundry: partial`.
+
+Aucun token, nombre de créatures, DD, coffre, trésor, déclencheur ou tactique n'a été inventé. Le fichier `Kindled Magic` présent à la racine de `/home/valou/services` reste à **0 octet** ; il faut une copie PDF valide avant de finaliser les rencontres et de passer Foundry à `done`.
+
+Aucun accès direct au stockage Foundry/LevelDB n'a été utilisé : toutes les écritures sont passées par le Relay.
 
 ## Point technique identifié et corrigé
 
