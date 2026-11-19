@@ -21,7 +21,7 @@ Ce document est un aiguillage : une **campagne réellement jouée** n'est pas la
 - [Sentence d'Extinction / Extinction Curse](Campagne-Sentence-d-Extinction.md) — adaptation en préparation : Vaga, Ménagerie Céleste à Absalom pour le Festival Radieux, relais possible à Escadar et dilemme des orbes.
 - [L'Âge des Cendres — table ouverte](Campagne-Age-des-Cendres.md) — adaptation en préparation, anciennement « HD100 ».
 - [Les Sept Fléaux de Pointesable](Campagne-Sept-Fleaux-de-Pointesable.md) — campagne commencée ; ouverture adaptée aux niveaux 1–2, Catacombes du Feu Infernal en suspens après la mort de Zoduk et rôle du groupe rival à arbitrer.
-- [La Force des milliers](Campagne-La-Force-des-milliers.md) — préparation active : PJ alliés de la Société plutôt qu’élèves ; `Kindled Magic` est découpé en quatre modules, dont le premier est prêt techniquement mais reste dépendant de l’ouverture en jeu du passage vers Nantambu.
+- [La Force des milliers](Campagne-La-Force-des-milliers.md) — préparation active : PJ alliés de la Société plutôt qu’élèves ; `Kindled Magic` est entièrement sourcé et préparé en cinq modules prêts, mais le premier reste narrativement dépendant de l’ouverture en jeu du passage vers Nantambu.
 
 Créer **une fiche `pf2/campagnes/Campagne-<Nom>.md` par campagne suivie en détail** au fur et à mesure de l'audit des discussions, et la référencer ici. Chaque fiche distinguera : concept, statut confirmé, séances/événements réellement joués, décisions validées, PNJ et lieux liés, pistes ouvertes, propositions non retenues et liens vers les sources.
 

@@ -2,120 +2,113 @@
 
 [← Index des campagnes](Campagnes.md) · [Labyrinthe de Narven](../univers/Labyrinthe-et-portails.md) · [La Route ouverte](Campagne-Route-Ouverte.md) · [Yaz Lorok](../pj/PJ-Yaz-Lorok.md)
 
-> **Statut runtime vérifié le 19 novembre 2026 : campagne intégrée et sélectionnée « à jouer », aucune séance de La Force des milliers attestée comme jouée.**
+> **Statut runtime vérifié le 19 novembre 2026 : campagne intégrée, sélectionnée « à jouer », aucune séance de La Force des milliers encore jouée.**
 >
-> La campagne publiée est fortement adaptée : les PJ de la table ne deviennent pas une promotion d'élèves de la Magaambya. Le premier module est préparé, mais reste **narrativement bloqué tant qu'un passage du Labyrinthe de Narven vers Nantambu n'a pas été ouvert en jeu**.
+> **Kindled Magic est entièrement préparé** : source complète, cinq modules Choix libre, scènes, Actors, rencontres, dangers, butins, notes de carte et Journal MJ sont prêts. Le seul verrou restant avant de commencer est narratif : **le passage du Labyrinthe de Narven vers Nantambu doit avoir été ouvert en jeu**.
 
 ## Décisions validées
 
-- Les PJ ne sont **pas des élèves de la Magaambya**. Les introductions, jalons scolaires et plusieurs motivations de quêtes doivent être adaptés.
-- Leur point d'entrée est leur relation avec la **Société des Éclaireurs** : ils interviennent comme alliés extérieurs venant aider la Magaambya et ses communautés.
-- La continuité académique est portée par des étudiants, enseignants et responsables récurrents. Les équipes de PJ peuvent varier entre les missions de terrain.
-- Les examens et promotions de l'AP ne sont pas imposés aux PJ. Les rites intéressants peuvent être conservés sous forme d'invitations, de partenariats, de protections ou de témoignages.
-- L'ouverture de cette campagne passe par le **Labyrinthe de Narven / futur Labyrinthe de la Route ouverte**. La préparation de La Force des milliers ne doit pas court-circuiter la progression de la campagne transverse : tant que la route vers Nantambu n'existe pas dans le jeu, l'accès reste un prérequis non satisfait.
-- Pour **Yaz Lorok**, sa première année à la Magaambya avec **Narek Lorok** fait déjà partie de son histoire validée. Le retour à Nantambu peut donc servir de piste personnelle, mais la campagne doit rester jouable sans Yaz et ne doit jamais révéler hors jeu les découvertes d'Uxir ou le secret de Narek.
+- Les PJ ne sont **pas des élèves de la Magaambya**. Ils interviennent comme alliés extérieurs de la **Société des Éclaireurs**.
+- La continuité académique est portée par les étudiants, enseignants et responsables récurrents de la Magaambya ; les équipes de PJ peuvent varier entre les missions de terrain.
+- Les examens, rangs et promotions de l'Adventure Path ne sont pas imposés aux PJ. Les rites intéressants sont conservés comme invitations, partenariats, protections ou témoignages.
+- L'entrée dans la campagne passe par le **Labyrinthe de Narven / futur Labyrinthe de la Route ouverte**. La préparation de La Force des milliers ne doit jamais créer ce passage à la place de la progression réellement jouée.
+- Pour **Yaz Lorok**, sa première année à la Magaambya avec **Narek Lorok** est déjà établie. Ce passé peut enrichir le retour à Nantambu, mais la campagne reste jouable sans Yaz et ne doit pas révéler hors jeu les découvertes d'Uxir ou le secret de Narek.
+- Les allocations et récompenses purement scolaires du scénario original ne deviennent pas automatiquement des paiements aux Éclaireurs ; les récompenses liées aux missions, découvertes et combats sont conservées.
 
 ## Progression réelle
 
 Au 19 novembre 2026 :
 
-- `pf2_session_content` ne contient aucune séance rattachée à un scénario `strength-of-thousands-*` ;
-- aucune quête Discord / Choix libre n'est encore rattachée à cette campagne ;
-- la curation SQLite indique `excluded: false`, `preparationStatus: selected` et `playStatus: to_play` ;
-- l'ancienne formulation « campagne prévue plus tard » est donc obsolète comme état runtime, même si le **pré-requis narratif du passage vers Nantambu** reste non joué.
+- aucune séance `strength-of-thousands-*` n'est enregistrée comme jouée ;
+- aucune quête Discord / Choix libre n'est encore rattachée à la campagne ;
+- la curation SQLite indique une campagne incluse, sélectionnée et `to_play` ;
+- les cinq modules de `Kindled Magic` restent en `progress: todo`, mais chacun a une checklist de préparation complète et `ready: true`.
 
-Ne pas transformer l'état « à jouer » en événement de fiction : il signifie que la campagne est retenue dans le Journal MJ, pas que les PJ ont déjà atteint Nantambu.
+L'état « prêt » signifie **préparé**, pas « joué ». Tant que le passage vers Nantambu n'a pas été ouvert dans la fiction, le premier module reste inaccessible narrativement.
 
-## Prochains modules jouables — Kindled Magic
+## Sources
 
-Le volume 1 est désormais découpé en cinq périodes jouables persistantes dans le catalogue et dans **Choix libre**.
+La bibliothèque contient désormais les **six volumes principaux complets** :
 
-| Ordre | Clé de composant | Module | Continuité | État de préparation |
+- **Tome 1 — Kindled Magic** : PDF anglais complet, 100 pages, associé à `strength-of-thousands-volume-1` ;
+- **Tome 2 — Spoken on the Song Wind** : PDF anglais complet, 100 pages ;
+- **Tome 3 — Hurricane's Howl** : PDF anglais complet, 100 pages + cartes ;
+- **Tome 4 — Secrets of the Temple-City** : PDF anglais complet + traduction partielle + cartes ;
+- **Tome 5 — Doorway to the Red Star** : PDF anglais complet + traduction partielle + cartes ;
+- **Tome 6 — Shadows of the Ancients** : PDF anglais complet + traduction partielle + cartes.
+
+La couverture du catalogue est donc **6/6**. Les détails mécaniques doivent être lus dans ces PDF ou dans Foundry ; ce Markdown conserve seulement les décisions et l'état de préparation durable.
+
+## Kindled Magic — découpage jouable
+
+| Ordre | Clé | Module | Continuité | Préparation |
 | --- | --- | --- | --- | --- |
-| 1 | `allies-a-nantambu` | **Alliés à Nantambu** | libre, groupe variable, retour au hub possible | **Prêt techniquement** ; Foundry `N/A` car module RP sans carte tactique obligatoire ; bloqué narrativement jusqu'à l'ouverture réelle du passage |
-| 2 | `services-de-la-magaambya` | **Services de la Magaambya** | libre, groupe variable | modèle créé, **partiel** : détails mécaniques du PDF complet et Foundry manquants |
-| 3 | `masques-et-incidents` | **Masques et incidents** | verrou souple, même groupe recommandé | modèle créé, **partiel** : cérémonie et matrice d'indices préparées, détails source/Foundry à compléter |
-| 4 | `stone-ghost` | **Le Fantôme de pierre** | verrou dur pendant la confrontation | modèle créé, **partiel** : convergence et conséquences préparées ; rencontre exacte non inventée |
-| 5 | `anadi-et-griffons` | **Les anadi et les griffons** | verrou souple, même groupe recommandé | modèle créé, **partiel** : raccord canonique confirmé par le tome 2 ; détails mécaniques du tome 1 manquants |
+| 1 | `allies-a-nantambu` | **Alliés à Nantambu** | libre, groupe variable | **Prêt** ; Foundry N/A ; verrou narratif = passage vers Nantambu |
+| 2 | `services-de-la-magaambya` | **Services de la Magaambya** | libre, groupe variable | **Prêt** |
+| 3 | `masques-et-incidents` | **Masques et incidents** | verrou souple | **Prêt** |
+| 4 | `stone-ghost` | **Le Fantôme de pierre** | verrou dur pendant l'exploration profonde | **Prêt** |
+| 5 | `anadi-et-griffons` | **Les anadi et les griffons** | verrou souple | **Prêt** |
 
 ### 1 — Alliés à Nantambu
 
-Une fois la route vers Nantambu réellement ouverte, les Éclaireurs arrivent comme **partenaires extérieurs**. Le module sert à fixer le point de débouché effectivement établi par la Route ouverte, présenter la philosophie de service de la Magaambya, installer quelques visages récurrents et conclure l'accord de coopération.
+Une fois la route réellement ouverte, les Éclaireurs arrivent comme **partenaires extérieurs**. Le module fixe le point de débouché établi par La Route ouverte, présente la philosophie de service de la Magaambya et conclut l'accord de coopération.
 
-Le modèle Choix libre contient notamment :
-
-- une garde explicite empêchant ce module d'ouvrir lui-même le portail ;
-- l'adaptation de Yaz s'il est présent, sans révéler l'enquête d'Uxir si elle n'a pas encore été jouée ;
-- **Esi Djana** comme relais récurrent de l'éthique de service ;
-- **Xhokan**, gestionnaire kobold des fournitures, comme contact institutionnel secondaire ;
-- le cadre de table ouverte : les résidents portent la mémoire, les PJ variables prennent les missions de terrain ;
-- la transition vers un premier service non létal impliquant des gremlins.
-
-Aucune carte tactique ni Actor de combat n'est requis pour ce module : le critère Foundry est donc légitimement `N/A`, pas artificiellement contourné.
+Le conducteur tient compte de Yaz s'il est présent, sans ajouter de révélation Uxir/Narek. Aucune scène tactique n'est obligatoire : le critère Foundry est légitimement `N/A`.
 
 ### 2 — Services de la Magaambya
 
-Le principe confirmé par la bible MJ est conservé : **Esi demande notamment d'évacuer des gremlins d'un local sans les tuer**. C'est le premier test concret de la manière de travailler des alliés.
+Le chapitre 1 est transformé en missions de terrain proposées aux alliés :
 
-Le conducteur prévoit plusieurs familles de solutions non létales et le suivi des conséquences communautaires, mais **ne fixe volontairement aucun DD ni statblock** : ces informations ne figurent pas dans la source locale disponible. Les premiers indices de coordination entre incidents sont préparés sans révéler prématurément Stone Ghost.
+1. **Rain-Scribes** : Kafesi Market et poussins ojofiri ;
+2. **Tempest-Sun Mages** : quatre pugwampis dans la grange, avec résolution non létale privilégiée ;
+3. **Cascade Bearers** : ingrédients du `fey abeyance`, dont Umbo aux chapeaux écarlates ;
+4. **Emerald Boughs** : livraisons et service communautaire à Nantambu ;
+5. **Uzunjati** : partage de récits et réflexion sur la responsabilité magique.
+
+Le module se termine sur l'**Introduction Ceremony** attaquée par **Kurshkin** et **Havvix**, qui peut fournir les premiers renseignements directs sur Stone Ghost et les tunnels.
 
 ### 3 — Masques et incidents
 
-La **Masking Ceremony** est conservée comme rite auquel les Éclaireurs sont invités, et non comme promotion scolaire des PJ. Elle sert de jalon relationnel avant une phase d'enquête légère.
+Le chapitre 2 garde son caractère de bac à sable :
 
-La matrice d'indices préparée suit la bible MJ :
+- **Bug Problems** de Koride : dortoir, Leshy Gardens, Speaker's Stage et cuisine ;
+- **Takulu's Reading List** : exploration complète de la bibliothèque B1–B8 ;
+- expérience de **Zuma** ;
+- **Starday Tournament**, trois combats successifs ;
+- cinq faveurs facultatives aux camarades ;
+- **First Masking**, conservée comme cérémonie à laquelle les Éclaireurs sont invités, pas comme promotion académique.
 
-1. comprendre que les incidents sont coordonnés ;
-2. comprendre que l'organisateur connaît le campus ;
-3. n'identifier Stone Ghost que lorsque témoignages, comportements des gremlins ou confrontation le justifient.
-
-Les preuves réellement obtenues doivent être transmises entre équipes ; les secrets MJ ne le sont pas.
+La First Masking se termine par une attaque coordonnée : un scarabée goliath géant, deux scarabées-flash et deux mille-pattes géants. L'événement révèle les tunnels et conduit directement au module suivant.
 
 ### 4 — Le Fantôme de pierre
 
-Cette escalade majeure est préparée autour de **Stone Ghost**, ancien élève expulsé supposé mort et coordinateur des gremlins. Une fois la confrontation tactique engagée, la même équipe est recommandée jusqu'à la résolution. Le tome 2 complet confirme toutefois que Stone Ghost n'est pas le dernier événement de *Kindled Magic* : l'arrivée d'anadi puis une attaque de griffons suivent encore.
+L'exploration des **15 zones C1–C15** sous Archhorn Library est préparée intégralement : abeilles minières, pièges de carcasses, moisissure brune, vase grise, nids de gremlins, étudiants en danger, Binji, Urbel et Stone Ghost.
 
-Le modèle interdit explicitement de créer une fausse fiche de Stone Ghost, de faux DD ou un faux coffre sous étiquette Paizo. Il prévoit le suivi durable : Stone Ghost mort/capturé/en fuite, gremlins, dégâts du campus, confiance de la Magaambya, contacts récurrents et informations transmises au module suivant.
+Particularité durable : les **nids C7a–d restent aléatoires**, conformément au scénario. Pour chaque nid, l'occupation et la composition sont tirées au moment du jeu ; l'absence de tokens fixes ici est donc volontaire et ne constitue pas un manque de préparation.
+
+La confrontation finale C15 utilise Stone Ghost et deux Jinkins. Les conséquences à conserver sont notamment : état de Stone Ghost, Kurshkin, Urbel, Binji, étudiants sauvés, notes récupérées, masques des victimes rendus et comportement des gremlins survivants.
 
 ### 5 — Les anadi et les griffons
 
-Le tome 2 complet établit sans ambiguïté qu'à la fin de *Kindled Magic*, de **nouveaux étudiants anadi arrivent à la Magaambya** et qu'une **paire de griffons les attaque**. Deux semaines plus tard, Janatimo revient et demande aux héros d'enquêter précisément sur ces deux mystères : ce qui a attiré les anadi à l'école et pourquoi les griffons les ont pris pour cibles.
+Le texte complet corrige l'estimation antérieure : il s'agit de **trois anadi et trois griffons**, pas d'une paire de griffons.
 
-Ce cinquième module est donc désormais enregistré dans Choix libre. Son conducteur est prêt sur le plan narratif et sert de raccord propre vers *Spoken on the Song Wind*. En revanche, le PDF complet du tome 1 restant absent, le lieu exact, les DD, les statblocks, tactiques, trésors et éventuels PNJ anadi nommés ne sont pas inventés.
+Les futurs étudiants sont :
 
-## Sources réellement disponibles
+- **Rainbows-Reflected-Upon-Gossamer-Strands**, dit **Goss** ;
+- **Droplets-Hanging-Gently Savanakin** ;
+- **Barest-Threads-Billowing Maztachia**.
 
-État vérifié dans `pf2-data` le 19 novembre 2026 :
+Ils sont aidés par Takulu Ot et attaqués par **trois griffons**. La rencontre est Extreme 3. Au moins un anadi devrait survivre afin que les deux mystères — pourquoi ils sont venus à la Magaambya et pourquoi les griffons les ont ciblés — puissent être repris par Janatimo au début de `Spoken on the Song Wind`.
 
-- **Tome 1 — Kindled Magic** : seulement une bible MJ de 4 pages dans `pf2-data`. Une tentative de copie du PDF anglais est présente à la racine de `/home/valou/services`, mais le fichier est **vide (0 octet)** et n'a donc pas été intégré ;
-- **Tome 2 — Spoken on the Song Wind** : **PDF anglais complet de 100 pages** désormais rangé dans `Documents/` et associé directement à `strength-of-thousands-volume-2` dans la bibliothèque ;
-- **Tome 3 — Hurricane's Howl** : **PDF anglais complet de 100 pages** désormais rangé dans `Documents/`, associé directement à `strength-of-thousands-volume-3`, avec les cartes déjà présentes ;
-- **Tome 4 — Secrets of the Temple-City** : PDF anglais complet + traduction partielle + cartes ;
-- **Tome 5 — Doorway to the Red Star** : PDF anglais complet + traduction partielle + cartes ;
-- **Tome 6 — Shadows of the Ancients** : PDF anglais complet + traduction partielle + cartes ;
-- dossier `Foundry/` de la campagne présent mais **vide** ; aucun ZIP/FVTT de La Force des milliers n'a été trouvé dans la bibliothèque actuelle.
+Le scénario situe cette scène près du **Speaker's Stage**. Aucun champ de bataille dédié n'existant dans les scènes importées, Foundry utilise **Promenade de bienvenue** comme **arène tactique d'adaptation**. Cette substitution est volontairement documentée comme non canonique.
 
-La bible MJ du tome 1 reste insuffisante pour les cartes détaillées, DD, statblocks, dangers, trésors et textes de scène de *Kindled Magic*. En revanche, les tomes 2 et 3 peuvent désormais être préparés directement depuis leurs volumes complets.
+## Foundry — Tome 1 prêt
 
-## Éléments des volumes suivants à conserver
+Le monde `test-pf2` / **Les Eclaireurs** utilise Foundry 14.365 et PF2e 8.4.1. Toutes les écritures ont été réalisées via le Relay autorisé ; aucun accès direct LevelDB n'a été utilisé.
 
-La campagne garde son arc général, adapté à des alliés extérieurs :
+### Scènes réutilisées
 
-- *Spoken on the Song Wind* est maintenant vérifié depuis le PDF complet : **chapitre 1 — The Learned One Returns**, puis **chapitre 2 — Service to the City**, structurés en bac à sable de missions choisies librement, puis **chapitre 3 — The Flooded Mansion**. Niveaux publiés : départ 4, passages 5 puis 6, niveau 7 avant le manoir, fin au niveau 8. Notre adaptation conserve ce bac à sable mais remplace la promotion académique par des mandats confiés aux alliés de la Société ;
-- *Hurricane's Howl* est maintenant vérifié depuis le PDF complet : **The Missing Student**, **Vanished Villagers**, **Prison of the Vacant Eye**, puis **Jula's Plight**. Niveaux publiés : départ 8, puis 9/10/11 et fin au niveau 12. L'ancien rôle de professeurs devient une **mission d'accompagnement / partenariat** vers Bloodsalt, Kiutu, la prison cyclopéenne et Jula ;
-- *Secrets of the Temple-City* conserve la délégation diplomatique à **Mzali**, le Sanctuaire de l'Éclipse et la piste d'Osibu ;
-- *Doorway to the Red Star* conserve la préparation de l'expédition, les Iobane, le passage vers **Akiton**, l'aide aux Contemplatifs et la poursuite du Roi des Fourmis Mordantes ;
-- *Shadows of the Ancients* conserve la crise du Vesicant Egg et la défense finale de la Magaambya.
-
-Ces volumes ne sont pas encore les modules immédiatement accessibles : ils seront découpés en périodes jouables lorsque la progression de *Kindled Magic* les rendra prochains, afin de ne pas préparer comme « choix libre » des étapes narrativement verrouillées.
-
-## Foundry — état vérifié
-
-Le 19 novembre 2026, le client GM du monde `test-pf2` / « Les Eclaireurs » est **reconnecté** (Foundry 14.365, PF2e 8.4.1).
-
-### Scènes existantes réutilisées
-
-Le dossier de scènes `La Force des milliers / 01 — La magie éveillée` existait déjà avec **11 scènes**, toutes sans token ni note lors de l'audit mais avec leurs cartes, murs et, selon les scènes, éclairages/tuiles/dessins :
+Le dossier `La Force des milliers / 01 — La magie éveillée` contient 11 scènes existantes, réutilisées sans doublon :
 
 - `Scene.O3rc0xM6kglcA6n5` — Cérémonie d'accueil ;
 - `Scene.dCGvdhVGUOj9Z0nz` — Promenade de bienvenue ;
@@ -129,50 +122,72 @@ Le dossier de scènes `La Force des milliers / 01 — La magie éveillée` exist
 - `Scene.BemrdX45skua7AoA` — Auditorium — Détruit ;
 - `Scene.vCSwFmHLvMrfwpYW` — Tournoi du jour des étoiles.
 
-Ces scènes sont **réutilisées telles quelles**. Aucun doublon n'a été créé.
+Les cartes, murs et éclairages préexistants sont conservés.
 
-### Actors préparés
+### Actors et rencontres
 
-Un dossier d'Actors `La Force des milliers / 01 — La magie éveillée` a été créé, puis six fiches sûres ont été clonées depuis les compendiums officiels avec leur mécanique intacte :
+Le dossier d'Actors `La Force des milliers / 01 — La magie éveillée` contient les fiches nécessaires clonées depuis les compendiums officiels, avec leur `sourceUuid` conservé dans `flags.l7r`.
 
-- `Actor.mwJFTAfXrdtE8B7e` — Fantôme de pierre (Stone Ghost), niveau 5, 40 PV ;
-- `Actor.dhyMLjySKHXF4rt7` — Pugwampi (FdM), niveau 0 ;
-- `Actor.8P2dxDd4QWxGDb8F` — Takulu Ot, niveau 4 ;
-- `Actor.t20usW8bSwcnIJ6b` — Chercheur anadi, niveau 1 ;
-- `Actor.C2tRvfAUs8OeTUFC` — Tisseur de destin anadi, niveau 5 ;
-- `Actor.d52rV544urzo3xYH` — Griffon, niveau 4.
+Parmi les Actors préparés : Stone Ghost, Kurshkin, Havvix/Vexgit, Umbo, Pugwampi, Scrit, Gnagrif, Mitflit, Jinkin, Binji, Urbel, Tissorts, silverfish, abeilles minières, mouche tsé-tsé, scarabées, mille-pattes, dangers, constructs du tournoi, anadi, Takulu et griffon.
 
-Chaque Actor conserve son `sourceUuid` de compendium dans `flags.l7r`. Les gremlins nommés supplémentaires visibles dans le bestiaire n'ont pas été clonés tant que le PDF 1 complet n'est pas disponible, afin d'éviter des Actors inutiles ou mal affectés.
+**63 tokens de rencontres fixes** ont été placés. Ils sont masqués par défaut lorsque nécessaire ; les trois anadi et Takulu sont visibles dans la scène finale. Les trois vagues du tournoi sont superposées et masquées pour être révélées successivement.
 
-### Journal MJ
+### Butins
 
-Le dossier `MJ / Campagnes officielles / La Force des milliers / 01 — La magie éveillée` a été créé avec le journal :
+Un sous-dossier `Butins` contient **16 Actors de butin**. Les objets mécaniques utilisent de vrais Items PF2e ; les parchemins contiennent leurs sorts embarqués. Les récompenses couvrent notamment :
 
-- `JournalEntry.Vh5Nd67dce6U9ilc` — **La Force des milliers — 01 — La magie éveillée — Préparation MJ**.
+- Chapeaux écarlates ;
+- Cuisine ;
+- Bibliothèque B1/B2/B3/B4/B6 ;
+- tournoi et faveurs ;
+- cavernes C1/C2/C10/C11/C14/C15 ;
+- récompense des anadi.
 
-Il contient huit pages : vue d'ensemble, les cinq modules, inventaire Foundry, blocages/reprise. Les pages utilisent des liens UUID directs vers les scènes et Actors existants.
+Les objets legacy sont remplacés explicitement par leur équivalent remaster lorsque nécessaire : le `bag of holding type I` du texte est ainsi représenté par le **Sac spacieux type I**.
 
-### Limite actuelle
+**15 tokens de butin** sont prépositionnés et masqués sur les cartes concernées. La récompense des faveurs, qui n'a pas de scène tactique dédiée, reste disponible dans le dossier sans token.
 
-Foundry est donc **partiellement préparé** pour les quatre modules tactiques : scènes, Actors sûrs et Journal MJ sont en place. Les checklists Choix libre ont été mises à jour de `foundry: todo` vers `foundry: partial`.
+### Journal et notes de carte
 
-Aucun token, nombre de créatures, DD, coffre, trésor, déclencheur ou tactique n'a été inventé. Le fichier `Kindled Magic` présent à la racine de `/home/valou/services` reste à **0 octet** ; il faut une copie PDF valide avant de finaliser les rencontres et de passer Foundry à `done`.
+Le Journal MJ canonique est :
 
-Aucun accès direct au stockage Foundry/LevelDB n'a été utilisé : toutes les écritures sont passées par le Relay.
+- `JournalEntry.ocvt0G55FnohLcT0` — **La Force des milliers — 01 — La magie éveillée — Préparation MJ**.
 
-## Point technique identifié et corrigé
+Il contient 13 pages structurées : vue d'ensemble, cinq modules, services, bibliothèque B1–B8, tournoi/faveurs, First Masking, cavernes C1–C7 et C8–C15, arrivée anadi, butins et état Foundry.
 
-L'import des composants de campagne stocke les modules dans les `parts` du catalogue. L'endpoint de synthèse `campaigns/:id/playable-components` ne lisait auparavant que d'anciens sous-scénarios stockés comme entrées séparées.
+L'ancien journal provisoire a été supprimé.
 
-Le correctif a été fusionné et déployé le 19 novembre 2026 (commit `4ca087d`). L'endpoint relit désormais correctement les six volumes et les composants de `Kindled Magic` sans dupliquer les données.
+**34 notes de scène** pointent directement vers les bonnes pages du Journal, notamment B1–B8 et C1–C15.
 
-## Règle de continuité
+### Vérification mécanique
 
-Cette fiche capitalise les **décisions de préparation** et les dépendances durables. Les états de checklist, modèles de séance, séances jouées et ressources runtime restent dans SQLite/Choix libre ; les scènes et mécaniques vivent dans Foundry ; les détails de source restent dans les PDF.
+La préparation a été relue depuis Foundry après écriture :
 
-À chaque reprise :
+- le Journal canonique expose bien 13 pages ;
+- les scènes contiennent les quantités de tokens et notes attendues ;
+- un coffre C11 a été relu avec ses vrais objets — Sac spacieux type I et Trompe de cherchesang ;
+- une action mécanique a été vérifiée par un vrai jet Foundry utilisant le bonus de Morgenstern de Stone Ghost (`+15`), sans publier de message parasite dans le chat.
+
+Les critères `source`, `template`, `entities`, `foundry` et `review` sont donc tous `done` pour les modules 2–5. Le module 1 conserve `foundry: N/A`.
+
+## Volumes suivants
+
+Ils sont sourcés mais ne sont pas encore exposés comme choix immédiatement jouables, car la progression de `Kindled Magic` n'a pas commencé.
+
+- **Spoken on the Song Wind** : chapitre 1 `The Learned One Returns`, chapitre 2 `Service to the City`, chapitre 3 `The Flooded Mansion` ; progression publiée du niveau 4 au niveau 8. Les deux premiers chapitres se prêtent particulièrement bien au choix libre.
+- **Hurricane's Howl** : `The Missing Student`, `Vanished Villagers`, `Prison of the Vacant Eye`, `Jula's Plight` ; niveaux 8 à 12. Le rôle de professeurs sera converti en mission d'accompagnement / partenariat.
+- **Secrets of the Temple-City** : délégation à Mzali, Sanctuaire de l'Éclipse et piste d'Osibu.
+- **Doorway to the Red Star** : préparation de l'expédition, Iobane, Akiton, Contemplatifs et Roi des Fourmis Mordantes.
+- **Shadows of the Ancients** : Vesicant Egg et défense finale de la Magaambya.
+
+Ces volumes seront découpés en modules Choix libre lorsqu'ils deviendront narrativement prochains, afin de ne pas présenter aux joueurs des choix inaccessibles.
+
+## Règle de reprise
+
+À chaque reprise de campagne :
 
 1. vérifier si le passage du Labyrinthe vers Nantambu a réellement été ouvert ;
 2. vérifier le dernier module effectivement joué ;
 3. importer le modèle Choix libre correspondant dans une séance seulement lorsque les joueurs l'ont choisi ;
-4. ne passer un module à `ready` que lorsque ses cinq critères sont `done` ou `N/A`.
+4. après la séance, enregistrer les conséquences persistantes dans SQLite et, lorsqu'elles sont durables, dans ce Markdown ;
+5. ne jamais déduire qu'un événement est joué simplement parce que son module est `ready`.
