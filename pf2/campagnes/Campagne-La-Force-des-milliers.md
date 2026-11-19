@@ -28,14 +28,15 @@ Ne pas transformer l'état « à jouer » en événement de fiction : il signifi
 
 ## Prochains modules jouables — Kindled Magic
 
-Le volume 1 est désormais découpé en quatre périodes jouables persistantes dans le catalogue et dans **Choix libre**.
+Le volume 1 est désormais découpé en cinq périodes jouables persistantes dans le catalogue et dans **Choix libre**.
 
 | Ordre | Clé de composant | Module | Continuité | État de préparation |
 | --- | --- | --- | --- | --- |
 | 1 | `allies-a-nantambu` | **Alliés à Nantambu** | libre, groupe variable, retour au hub possible | **Prêt techniquement** ; Foundry `N/A` car module RP sans carte tactique obligatoire ; bloqué narrativement jusqu'à l'ouverture réelle du passage |
 | 2 | `services-de-la-magaambya` | **Services de la Magaambya** | libre, groupe variable | modèle créé, **partiel** : détails mécaniques du PDF complet et Foundry manquants |
 | 3 | `masques-et-incidents` | **Masques et incidents** | verrou souple, même groupe recommandé | modèle créé, **partiel** : cérémonie et matrice d'indices préparées, détails source/Foundry à compléter |
-| 4 | `stone-ghost` | **Le Fantôme de pierre** | verrou dur pendant le final | modèle créé, **partiel** : convergence et conséquences préparées ; rencontre exacte non inventée |
+| 4 | `stone-ghost` | **Le Fantôme de pierre** | verrou dur pendant la confrontation | modèle créé, **partiel** : convergence et conséquences préparées ; rencontre exacte non inventée |
+| 5 | `anadi-et-griffons` | **Les anadi et les griffons** | verrou souple, même groupe recommandé | modèle créé, **partiel** : raccord canonique confirmé par le tome 2 ; détails mécaniques du tome 1 manquants |
 
 ### 1 — Alliés à Nantambu
 
@@ -72,30 +73,36 @@ Les preuves réellement obtenues doivent être transmises entre équipes ; les s
 
 ### 4 — Le Fantôme de pierre
 
-Le final est préparé comme résolution de l'arc initial : les incidents convergent vers **Stone Ghost**, coordinateur des gremlins. Une fois le final tactique engagé, la même équipe est recommandée jusqu'à la résolution.
+Cette escalade majeure est préparée autour de **Stone Ghost**, ancien élève expulsé supposé mort et coordinateur des gremlins. Une fois la confrontation tactique engagée, la même équipe est recommandée jusqu'à la résolution. Le tome 2 complet confirme toutefois que Stone Ghost n'est pas le dernier événement de *Kindled Magic* : l'arrivée d'anadi puis une attaque de griffons suivent encore.
 
-Le modèle interdit explicitement de créer une fausse fiche de Stone Ghost, de faux DD ou un faux coffre sous étiquette Paizo. Il prévoit le suivi durable : Stone Ghost mort/capturé/en fuite, gremlins, dégâts du campus, confiance de la Magaambya, contacts récurrents et informations transmises.
+Le modèle interdit explicitement de créer une fausse fiche de Stone Ghost, de faux DD ou un faux coffre sous étiquette Paizo. Il prévoit le suivi durable : Stone Ghost mort/capturé/en fuite, gremlins, dégâts du campus, confiance de la Magaambya, contacts récurrents et informations transmises au module suivant.
+
+### 5 — Les anadi et les griffons
+
+Le tome 2 complet établit sans ambiguïté qu'à la fin de *Kindled Magic*, de **nouveaux étudiants anadi arrivent à la Magaambya** et qu'une **paire de griffons les attaque**. Deux semaines plus tard, Janatimo revient et demande aux héros d'enquêter précisément sur ces deux mystères : ce qui a attiré les anadi à l'école et pourquoi les griffons les ont pris pour cibles.
+
+Ce cinquième module est donc désormais enregistré dans Choix libre. Son conducteur est prêt sur le plan narratif et sert de raccord propre vers *Spoken on the Song Wind*. En revanche, le PDF complet du tome 1 restant absent, le lieu exact, les DD, les statblocks, tactiques, trésors et éventuels PNJ anadi nommés ne sont pas inventés.
 
 ## Sources réellement disponibles
 
 État vérifié dans `pf2-data` le 19 novembre 2026 :
 
-- **Tome 1 — Kindled Magic** : seulement une bible MJ de 4 pages ; pas de PDF d'aventure complet ;
-- **Tome 2 — Spoken on the Song Wind** : seulement une bible MJ de 4 pages ; pas de PDF d'aventure complet ;
-- **Tome 3 — Hurricane's Howl** : bible MJ de 4 pages + cartes ; pas de PDF d'aventure complet ;
+- **Tome 1 — Kindled Magic** : seulement une bible MJ de 4 pages dans `pf2-data`. Une tentative de copie du PDF anglais est présente à la racine de `/home/valou/services`, mais le fichier est **vide (0 octet)** et n'a donc pas été intégré ;
+- **Tome 2 — Spoken on the Song Wind** : **PDF anglais complet de 100 pages** désormais rangé dans `Documents/` et associé directement à `strength-of-thousands-volume-2` dans la bibliothèque ;
+- **Tome 3 — Hurricane's Howl** : **PDF anglais complet de 100 pages** désormais rangé dans `Documents/`, associé directement à `strength-of-thousands-volume-3`, avec les cartes déjà présentes ;
 - **Tome 4 — Secrets of the Temple-City** : PDF anglais complet + traduction partielle + cartes ;
 - **Tome 5 — Doorway to the Red Star** : PDF anglais complet + traduction partielle + cartes ;
 - **Tome 6 — Shadows of the Ancients** : PDF anglais complet + traduction partielle + cartes ;
 - dossier `Foundry/` de la campagne présent mais **vide** ; aucun ZIP/FVTT de La Force des milliers n'a été trouvé dans la bibliothèque actuelle.
 
-Les bibles MJ des tomes 1–3 indiquent elles-mêmes qu'il faut revenir au volume Paizo pour les cartes détaillées, DD, statblocks, dangers, trésors et textes de scène. Ces éléments ne doivent pas être inventés puis présentés comme canoniques.
+La bible MJ du tome 1 reste insuffisante pour les cartes détaillées, DD, statblocks, dangers, trésors et textes de scène de *Kindled Magic*. En revanche, les tomes 2 et 3 peuvent désormais être préparés directement depuis leurs volumes complets.
 
 ## Éléments des volumes suivants à conserver
 
 La campagne garde son arc général, adapté à des alliés extérieurs :
 
-- *Spoken on the Song Wind* élargit les services à **Nantambu**, avec alchimiste vengeur, infiltrateurs et l'artefact mystérieux associé aux rassemblements d'arthropodes ;
-- *Hurricane's Howl* transforme l'ancien rôle de professeurs en **mission d'accompagnement / partenariat** vers les Terres détrempées, Kiutu et les communautés menacées ;
+- *Spoken on the Song Wind* est maintenant vérifié depuis le PDF complet : **chapitre 1 — The Learned One Returns**, puis **chapitre 2 — Service to the City**, structurés en bac à sable de missions choisies librement, puis **chapitre 3 — The Flooded Mansion**. Niveaux publiés : départ 4, passages 5 puis 6, niveau 7 avant le manoir, fin au niveau 8. Notre adaptation conserve ce bac à sable mais remplace la promotion académique par des mandats confiés aux alliés de la Société ;
+- *Hurricane's Howl* est maintenant vérifié depuis le PDF complet : **The Missing Student**, **Vanished Villagers**, **Prison of the Vacant Eye**, puis **Jula's Plight**. Niveaux publiés : départ 8, puis 9/10/11 et fin au niveau 12. L'ancien rôle de professeurs devient une **mission d'accompagnement / partenariat** vers Bloodsalt, Kiutu, la prison cyclopéenne et Jula ;
 - *Secrets of the Temple-City* conserve la délégation diplomatique à **Mzali**, le Sanctuaire de l'Éclipse et la piste d'Osibu ;
 - *Doorway to the Red Star* conserve la préparation de l'expédition, les Iobane, le passage vers **Akiton**, l'aide aux Contemplatifs et la poursuite du Roi des Fourmis Mordantes ;
 - *Shadows of the Ancients* conserve la crise du Vesicant Egg et la défense finale de la Magaambya.
@@ -111,13 +118,13 @@ Conséquences :
 - aucune écriture de scène, JournalEntry, Actor, token, rencontre, coffre ou objet n'a été faite pour cette campagne lors de cette passe ;
 - aucun contournement par LevelDB, script injecté ou accès direct au stockage Foundry n'a été utilisé ;
 - dès que le client GM est reconnecté, reprendre par les routes `foundry/gm/*`, relire chaque document après écriture et n'actualiser `foundry: done` qu'après vérification visuelle/mécanique ;
-- le module **Alliés à Nantambu** n'a pas besoin de Foundry pour être jouable ; les trois modules suivants en auront besoin dès qu'ils comporteront leur matériel tactique exact.
+- le module **Alliés à Nantambu** n'a pas besoin de Foundry pour être jouable ; les quatre modules suivants en auront besoin dès qu'ils comporteront leur matériel tactique exact.
 
-## Point technique identifié
+## Point technique identifié et corrigé
 
-L'import des composants de campagne stocke correctement les modules dans les `parts` du catalogue, ce que Choix libre lit déjà. L'endpoint de synthèse `campaigns/:id/playable-components` ne lisait jusque-là que d'anciens sous-scénarios stockés comme entrées séparées et renvoyait donc `0 scénario / 0 module`.
+L'import des composants de campagne stocke les modules dans les `parts` du catalogue. L'endpoint de synthèse `campaigns/:id/playable-components` ne lisait auparavant que d'anciens sous-scénarios stockés comme entrées séparées.
 
-Un correctif avec test de non-régression est préparé sur la branche de travail de cette passe afin que les deux représentations soient reconnues sans dupliquer les données.
+Le correctif a été fusionné et déployé le 19 novembre 2026 (commit `4ca087d`). L'endpoint relit désormais correctement les six volumes et les composants de `Kindled Magic` sans dupliquer les données.
 
 ## Règle de continuité
 
