@@ -4,6 +4,21 @@
 
 > **Statut : adaptation fortement condensée en cours.** La campagne publiée n'est plus destinée à être jouée telle quelle. La continuité maison sépare désormais un **mini-arc du Festival Radieux** d'une éventuelle reprise future du **Quatuor du Crépuscule**.
 
+## État runtime — restructuration du 21 novembre 2026
+
+La base de données a été réorganisée pour repartir sur une version courte propre :
+
+- **Agents d’Absalom — version originale** (`agents-of-edgewatch-original`) conserve l’intégralité de la structure publiée, les six aventures et les anciens identifiants de scénarios. Elle est **écartée / non sélectionnée** dans la curation.
+- Les anciens identifiants de scénarios (`agents-of-edgewatch-adventure-1` à `-6`) restent attachés à cette version originale afin de préserver les références techniques et les contenus Foundry existants.
+- La campagne active `agents-of-edgewatch` est renommée **Agents d’Absalom — Festival Radieux**.
+- Elle ne comporte plus que deux groupes narratifs :
+  1. **Avant le Festival** (`agents-of-edgewatch-before-festival`) ;
+  2. **Festival Radieux** (`agents-of-edgewatch-radiant-festival`).
+- Les cinq premiers modules déjà joués ont été recopiés dans **Avant le Festival** et restent marqués joués dans la curation.
+- L’ancien module **L’hôtel des meurtres** n’existe plus dans la version active. Il est remplacé par **Enquête sur l’hôtel** (`enquete-sur-hotel`), volontairement vide pour le moment.
+- Le groupe **Festival Radieux** est volontairement vide de sous-modules à ce stade ; il sera construit autour du mini-arc de Pratchett.
+- Un export de sauvegarde du catalogue avant transformation est conservé sur le mini-PC dans `/home/valou/services/pf2-data/_AI/catalogue-backups/agents-of-edgewatch-before-radiant-short-20261121.json`.
+
 ## Cadre
 
 *Agents d'Absalom* fournit le matériau de base autour d'Absalom pendant le **Festival Radieux de 4720**, de la garde de la Falaise, de Hendrid Pratchett, du Ratisseur de tombes et du Quatuor du Crépuscule.
