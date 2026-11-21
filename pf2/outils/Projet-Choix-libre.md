@@ -29,15 +29,16 @@ Dissocier le **contenu narratif** du **support documentaire**. Conserver un enre
 - Une compilation couvrant trois parties reste **un seul fichier** référencé par trois groupes, sans duplication physique ni fiche PDF supplémentaire par partie.
 - Un tome séparé est lié à son groupe ; un livre unique couvrant toute la campagne est lié une seule fois à la campagne.
 - Original EN, traduction FR complète ou partielle, traduction seule (original absent), édition FR officielle : variantes documentaires facultatives, reliées si la correspondance est attestée. Un module peut être préparé avec la traduction seule ; absence d'original ne crée pas un faux blocage. Ne pas confondre disponibilité documentaire avec readiness. Cartes, guides, bibles MJ et ressources externes : supports associés, pas des modules.
+- Quand le MJ retire volontairement une carte, un guide ou un document d'information de la bibliothèque active, l'archiver hors de `PF2_LIBRARY_ROOT` avec un manifeste plutôt que le supprimer définitivement. L'interface masque ces ressources secondaires absentes ; un PDF principal, une traduction ou un récit manquant reste au contraire signalé comme absent pour conserver le diagnostic documentaire.
 - Page de début/fin ou repère dans le PDF à saisir lorsque connu ; ne pas inventer. Le document principal peut être choisi explicitement par le MJ.
 
 ### 2.3 Exemples vérifiés dans SQLite
 
 | Entrée | Affichage des modules | Documents |
 | --- | --- | --- |
-| L'Âge des Cendres | 33 modules existants, 6 groupes repliables (tomes). « Les Griffes de braise sous Altaérein » est un module du tome 1. | 6 PDF principaux distincts ; cartes et guide secondaires. |
-| Agents d'Absalom | 33 modules existants, 6 groupes narratifs. Le module `palais-des-reves` correspond à L'hôtel des meurtres (tome narratif 1). | **Deux** PDF français de compilation : le premier est déjà lié aux parties 1, 2, 3 ; le second aux parties 4, 5, 6. Chaque fichier reste unique. |
-| Les Sept Fléaux de Pointesable | 14 modules existants, groupes possibles « Ville », « Fosse » ; affiner la segmentation des niveaux si utile (ex. module actuel `crocs-sifflets-et-volpepite`, ne pas créer un doublon aveuglément). | Un PDF de campagne et guide secondaire ; aucun faux niveau « Livre de campagne ». |
+| L'Âge des Cendres | 33 modules existants, 6 groupes repliables (tomes). « Les Griffes de braise sous Altaérein » est un module du tome 1. | 6 PDF principaux distincts ; cartes et guide retirés de la bibliothèque active le 21/11/2026 et conservés en sauvegarde. |
+| Agents d'Absalom | 33 modules existants, 6 groupes narratifs. Le module `palais-des-reves` correspond à L'hôtel des meurtres (tome narratif 1). | **Deux** PDF français de compilation : le premier est déjà lié aux parties 1, 2, 3 ; le second aux parties 4, 5, 6. Cartes et guide retirés de la bibliothèque active le 21/11/2026 ; chaque fichier principal reste unique. |
+| Les Sept Fléaux de Pointesable | 14 modules existants, groupes possibles « Ville », « Fosse » ; affiner la segmentation des niveaux si utile (ex. module actuel `crocs-sifflets-et-volpepite`, ne pas créer un doublon aveuglément). | Un PDF de campagne ; guide secondaire retiré de la bibliothèque active le 21/11/2026 ; aucun faux niveau « Livre de campagne ». |
 | La Route ouverte | Liste des scénarios PFS comme modules (1-00, 1-08, 1-11…), éventuellement subdivisés. Ordre recommandé et prérequis. | PDF par scénario ; le 1-08 possède un original anglais et une traduction partielle FR. |
 | Nuit au manoir de Blanchebois | La quête est désormais liée au premier de huit modules de Malveillance. | TRI-040 / Hainsley Hall reste au catalogue, non intégré ; Malveillance le remplace. |
 | Cartel du Sel | Campagne maison ; module suivant à écrire. | Aucun PDF obligatoire. |
@@ -73,6 +74,8 @@ Exemple : je crée le conducteur, ajoute Corvan ou un PNJ d'ouverture, puis impo
 **Ressources** n'est plus une entrée principale ; le contenu Trilemma est accessible dans le Catalogue. La gestion des documents/inspirations est rattachée à la même bibliothèque.
 
 **Campagnes et scénarios et Catalogue sont deux vues d'un même référentiel**, pas deux structures qui dupliquent les œuvres. Le catalogue est destiné à sélectionner ce qu'on souhaite intégrer ; la vue opérationnelle sert à jouer et à mesurer la progression.
+
+Chaque campagne, arc transverse ou aventure autonome peut aussi porter un `chatgptUrl` dans la curation SQLite. La vue **Campagnes et scénarios** expose un bouton « ChatGPT » quand ce lien est renseigné ; la fiche de l'œuvre permet de le modifier sans toucher aux scénarios enfants. Le lien est propre à l'identifiant runtime de l'œuvre et n'est jamais hérité. Tant qu'un conteneur dédié `Cartel du Sel` n'existe pas dans le catalogue, sa discussion de travail reste rattachée à `rose-street-revenge`, première affaire de cette campagne.
 
 ## 4. Quêtes Discord : liaison et disponibilité narrative
 

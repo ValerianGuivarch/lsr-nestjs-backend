@@ -32,12 +32,12 @@ La bibliothèque contient désormais les **six volumes principaux complets** :
 
 - **Tome 1 — Kindled Magic** : PDF anglais complet, 100 pages, associé à `strength-of-thousands-volume-1` ;
 - **Tome 2 — Spoken on the Song Wind** : PDF anglais complet, 100 pages ;
-- **Tome 3 — Hurricane's Howl** : PDF anglais complet, 100 pages + cartes ;
-- **Tome 4 — Secrets of the Temple-City** : PDF anglais complet + traduction partielle + cartes ;
-- **Tome 5 — Doorway to the Red Star** : PDF anglais complet + traduction partielle + cartes ;
-- **Tome 6 — Shadows of the Ancients** : PDF anglais complet + traduction partielle + cartes.
+- **Tome 3 — Hurricane's Howl** : PDF anglais complet, 100 pages ;
+- **Tome 4 — Secrets of the Temple-City** : PDF anglais complet + traduction partielle ;
+- **Tome 5 — Doorway to the Red Star** : PDF anglais complet + traduction partielle ;
+- **Tome 6 — Shadows of the Ancients** : PDF anglais complet + traduction partielle ; l'original a été replacé dans le dossier `Documents` du tome le 21/11/2026.
 
-La couverture du catalogue est donc **6/6**. Les détails mécaniques doivent être lus dans ces PDF ou dans Foundry ; ce Markdown conserve seulement les décisions et l'état de préparation durable.
+La couverture du catalogue est donc **6/6**. Les cartes secondaires des tomes 3 à 6 et les trois anciens PDF d'information des tomes 1 à 3 ont été retirés de la bibliothèque active le 21/11/2026 et archivés hors de `PF2_LIBRARY_ROOT`. Les détails mécaniques doivent être lus dans les PDF principaux ou dans Foundry ; ce Markdown conserve seulement les décisions et l'état de préparation durable.
 
 ## Kindled Magic — découpage jouable
 

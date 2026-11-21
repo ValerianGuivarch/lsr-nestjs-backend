@@ -34,4 +34,4 @@ L'exploration reste libre : les escaliers et passages secrets peuvent mener au s
 - Localisation et accroche adaptées au monde de la table ; le lien MJ à la quête Discord est confirmé.
 - Adaptation au groupe, rythme de l'horreur et limites de table.
 - Finaliser les objets, murs, portes, éclairage et jetons des scènes ; contrôler les fiches spécifiques et valider les checklists.
-- Le PDF original fourni dans la discussion a servi à la préparation ; le catalogue local contient déjà un dossier et une Bible MJ, mais pas le PDF original dans Documents. À ajouter si souhaité.
+- Le PDF original fourni dans la discussion a servi à la préparation, mais il n'est pas présent dans l'arborescence accessible de `~/services` au 21/11/2026, y compris dans les sauvegardes ZIP Foundry de Malveillance. La Bible MJ locale a été reclassée comme **Récit de campagne** dans `Documents` ; l'original reste donc à réintégrer si une copie locale redevient disponible.
