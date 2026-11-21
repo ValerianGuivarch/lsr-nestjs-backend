@@ -160,7 +160,7 @@ Dossier des journaux : « PFS S01-00 — Origines de la Route Ouverte (notes MJ)
 - B : **5 repères MJ cliquables** reliés à 6 pages de journal (B1–B5 et une synthèse).
 - **Documents joueurs :** trois pages image privées (lettre de Kreighton Shaine, note sur la vente, message de Bijan à Zaynap). À partager manuellement, sans accès joueur par défaut.
 
-## Préparation opérationnelle du 12 novembre 2026 — **non jouée**
+## Préparation opérationnelle du 12 novembre 2026 — scénario joué depuis (confirmation MJ du 21 novembre)
 
 **Préparation enregistrée dans l'application** : `fa2d18bd-32b1-48cf-904e-9873691a55eb` (campagne `open-road`, scénario `pfs-season-1-1-00`). Créneau 19 h–23 h, **5 étapes, 12 blocs** : briefing d'Ambrus Valsin à Absalom ; voyage en ellipse ; rencontre du maître Uxir pour l'enquête personnelle de Yaz **avant** la mission ; accueil par Sebnet ; recherches et enquête ; égouts. Les NPC Ambrus, Uxir et Sebnet sont liés aux fiches métier existantes. Igrigi et les deux jumeaux sont provisoirement des **personnages temporaires**, sans fiche métier créée.
 

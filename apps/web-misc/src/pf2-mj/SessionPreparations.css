@@ -1,4 +1,9 @@
-.session-prep {color:var(--text-primary,#e8e3d8); padding:0 0 4rem}
+.session-prep {color:var(--text,#252a25); padding:0 0 4rem}
+/* The parent MJ workspace is light. Dark editor cards retain their own foreground. */
+.session-prep :is(.session-prep-list,.session-prep-fields,.session-prep-summary,.session-prep-stage,.session-prep-notice) {color:#f0ece4}
+.session-prep .session-prep-channel {color:#62532f;background:#f5edda}
+.session-prep .session-prep-header small {color:#795c29}
+.session-prep .choice-module {color:var(--text,#252a25);background:var(--panel,#fffdf8)}
 .session-prep-header {margin-bottom:1.5rem}.session-prep-header small {letter-spacing:.17em;color:#b7a17a}.session-prep-header h2 {font-size:1.9rem;margin:.3rem 0}.session-prep-header p {opacity:.82;max-width:75ch}
 .session-prep-layout {display:grid;grid-template-columns:minmax(215px,260px) minmax(0,1fr);gap:1.25rem;align-items:start}
 .session-prep-list,.session-prep-editor {min-width:0}.session-prep-list {display:flex;flex-direction:column;gap:.55rem;padding:1.1rem;border:1px solid #72654a66;border-radius:13px;background:#171b21}
