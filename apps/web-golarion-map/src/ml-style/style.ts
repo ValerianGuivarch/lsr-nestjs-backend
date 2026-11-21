@@ -5,6 +5,7 @@ import { OptionalFields } from "../utils/type-utils";
 import { state, StateProp } from "./state";
 import { Expression } from "./expression";
 import { projection } from "./projection";
+import { geographyCorrections } from "./geography-corrections";
 
 export default function(HOST:string, BUILD_DATA_HASH: number, placeNamesFr: Record<string, string> = {}) {
 
@@ -122,6 +123,14 @@ export default function(HOST:string, BUILD_DATA_HASH: number, placeNamesFr: Reco
         'fill-antialias': false
       }
     }),
+    // Permanent terrain, below borders, labels and all gameplay markers.
+    {
+      id: 'geography-corrections-base',
+      type: 'fill',
+      source: 'geography-corrections',
+      layout: { 'fill-sort-key': ['match', ['get', 'color'], '#8ab4f8', 0, '#f8f1e1', 1, 2] },
+      paint: { 'fill-color': ['get', 'color'], 'fill-antialias': false }
+    },
     createLayer('borders', {
       id: 'borders-nations',
       type: 'line',
@@ -263,6 +272,20 @@ export default function(HOST:string, BUILD_DATA_HASH: number, placeNamesFr: Reco
       paint: {
       }
     }),
+    {
+      id: 'geography-corrections-labels',
+      type: 'symbol',
+      source: 'geography-corrections',
+      minzoom: 5,
+      filter: ['==', ['get', 'color'], '#f8f1e1'],
+      layout: {
+        visibility: state.showLabels.get(),
+        'text-field': 'Bhopan',
+        'text-font': ['NotoSans-Medium'],
+        'text-size': 14,
+      },
+      paint: { 'text-color': colors.regionLabels, 'text-halo-color': colors.white, 'text-halo-width': 1 }
+    },
     createLayer('labels', {
       type: 'symbol',
       layout: {
@@ -396,6 +419,7 @@ export default function(HOST:string, BUILD_DATA_HASH: number, placeNamesFr: Reco
     center: [-7,35],
     zoom: 4.5,
     sources: {
+      'geography-corrections': { type: 'geojson', data: geographyCorrections },
       golarion: {
         type: 'vector',
         attribution: '<a href="https://paizo.com/licenses/communityuse">Paizo CUP</a>, <a href="https://github.com/pf-wikis/mapping#acknowledgments">Acknowledgments</a>',

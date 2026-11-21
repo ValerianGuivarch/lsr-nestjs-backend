@@ -117,6 +117,10 @@ Le plan par défaut est inclus dans `assets/absalom-overlay.jpg` (carte de Maste
 
 Le calage initial est approximatif et doit être vérifié sur la ville (fort Azlant, portes, quai, île des Pilotes). L’image contient des étiquettes publiques de quartiers visibles également en mode PJ : elle ne doit pas être employée pour y insérer des secrets MJ.
 
+## Compléments cartographiques locaux
+
+Les polygones de terrain de `src/ml-style/geography-corrections.ts` complètent les tuiles vectorielles externes, sous les frontières, libellés et marqueurs, dans les trois modes. Bhopan est représentée avec côte, récifs et jungle au sud-est de Jalmeray, d’après Pathfinder Society 1-16 (p. 3) et *Lost Omens: Impossible Lands*. Le contour et les coordonnées sont approximatifs ; ils ne constituent pas une géolocalisation officielle. Le nom est également indexé dans la recherche. Aucune fiche de quête ni donnée SQLite n’est créée. Les tuiles amont et le calcul des trajets restent inchangés.
+
 ## Ressources externes
 
 Par défaut, l’application attend `~/GolarionMapData`, soit `../../GolarionMapData` depuis la racine habituelle du dépôt `~/IdeaProjects/lsr-nestjs-backend`.

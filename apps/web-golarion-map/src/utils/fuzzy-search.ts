@@ -1,5 +1,6 @@
 import Fuse from 'fuse.js';
 import { debug } from './debug';
+import { bhopanBounds } from '../ml-style/geography-corrections';
 import { getPlaceNamesFr, translatePlaceName } from '../i18n/place-names';
 
 /**
@@ -106,6 +107,14 @@ export class FuzzySearch {
           category: cat.category
         })))
       );
+
+      // Public geographical terrain correction, not a custom quest/place.
+      if (!flattenedEntries.some(entry => entry.label === 'Bhopan')) {
+        flattenedEntries.push({
+          label: 'Bhopan', labelFr: 'Bhopan', category: 'land',
+          bbox: bhopanBounds, timeYear: {}, timeIndex: {}
+        });
+      }
 
       flattenedEntries.push(...customPlaces.map(place => ({
         label: place.name,
