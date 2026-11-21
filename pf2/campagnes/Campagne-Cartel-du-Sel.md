@@ -6,6 +6,12 @@
 >
 > Contrairement aux campagnes publiées dont l'intrigue complète est connue à l'avance, celle-ci n'a pas de scénario intégral préécrit. Les parties futures ne doivent être documentées comme établies qu'à mesure de leur préparation ou de leur validation en jeu.
 
+## Intégration dans le portail MJ (21 novembre 2026)
+
+La campagne maison est intégrée sous l'identifiant stable `cartel-du-sel` via un arc maison ordonné : `rose-street-revenge` (chapitre joué, quatre modules historiques, données et documents inchangés) puis `cartel-du-sel-enquete` (chapitre à préparer, sans PDF ni scénario rédigé). Le lien ChatGPT de la campagne est rattaché au nouvel arc ; le lien historique de Rue Rose reste conservé. Le portail Choix libre utilise les mêmes identifiants ; ajouter les chapitres suivants au fur et à mesure.
+
+Le futur rangement dans Foundry est `Le Cartel du Sel / 01 — La Vengeance de la rue Rose` dans les trois onglets, en réutilisant les documents existants et leurs UUID ; aucun déplacement Foundry effectué dans cette passe.
+
 ## Concept
 
 La campagne du **Cartel du Sel** commence avec l'enquête adaptée de *The Rose Street Revenge*. Cette première affaire, désormais terminée, a servi de porte d'entrée vers une intrigue plus large sur les disparitions de personnes vulnérables, le trafic clandestin d'esclaves et les réseaux qui le protègent à Absalom.

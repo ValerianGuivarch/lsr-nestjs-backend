@@ -75,7 +75,7 @@ Exemple : je crée le conducteur, ajoute Corvan ou un PNJ d'ouverture, puis impo
 
 **Campagnes et scénarios et Catalogue sont deux vues d'un même référentiel**, pas deux structures qui dupliquent les œuvres. Le catalogue est destiné à sélectionner ce qu'on souhaite intégrer ; la vue opérationnelle sert à jouer et à mesurer la progression.
 
-Chaque campagne, arc transverse ou aventure autonome peut aussi porter un `chatgptUrl` dans la curation SQLite. La vue **Campagnes et scénarios** expose un bouton « ChatGPT » quand ce lien est renseigné ; la fiche de l'œuvre permet de le modifier sans toucher aux scénarios enfants. Le lien est propre à l'identifiant runtime de l'œuvre et n'est jamais hérité. Tant qu'un conteneur dédié `Cartel du Sel` n'existe pas dans le catalogue, sa discussion de travail reste rattachée à `rose-street-revenge`, première affaire de cette campagne.
+Chaque campagne, arc transverse ou aventure autonome peut aussi porter un `chatgptUrl` dans la curation SQLite. La vue **Campagnes et scénarios** expose un bouton « ChatGPT » quand ce lien est renseigné ; la fiche de l'œuvre permet de le modifier sans toucher aux scénarios enfants. Le lien est propre à l'identifiant runtime de l'œuvre et n'est jamais hérité. Le Cartel du Sel est désormais un arc maison `cartel-du-sel` (Rue Rose jouée puis `cartel-du-sel-enquete`, à écrire). Le lien de discussion a été rattaché à l'arc sans supprimer le lien ni les données historiques de Rue Rose. Les imports catalogue ciblés acceptent des `arcUpserts` explicites validés, sans réécrire les autres arcs.
 
 ## 4. Quêtes Discord : liaison et disponibilité narrative
 
