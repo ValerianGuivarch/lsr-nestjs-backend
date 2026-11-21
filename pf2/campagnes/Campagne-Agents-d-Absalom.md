@@ -94,7 +94,7 @@ Le rite doit faire correspondre plusieurs incidents du Festival aux quatre aspec
 - **Père Écorcheur** : les disparitions et meurtres du Palais des rêves constituent son acte principal.
 - **Noirs Doigts** : poison ou produit utilisé pour provoquer le chaos parmi les animaux de la ménagerie / du zoo.
 - **Maître Gris** : le vol du Ratisseur de tombes lui-même, conçu comme un exploit impossible et ostentatoire accompli sans que personne puisse prouver comment il a été réalisé.
-- **Faucheur de Réputation** : volet encore à préciser. Il doit dépasser la simple dissimulation des meurtres et reposer sur une véritable manipulation de l'identité, de la vérité publique, de la réputation ou de l'information.
+- **Faucheur de Réputation** : Pratchett cherche à **détruire la réputation de Lavarsus** avant le Festival par une opération de désinformation et de faux suffisamment crédible pour l'affaiblir, le faire suspendre ou au minimum mettre sa parole en doute. Le crime doit être découvert comme une fabrication, idéalement trop tard pour empêcher complètement ses effets.
 
 Le rite n'a pas besoin d'être parfaitement symétrique. Pratchett peut avoir conçu une théologie personnelle et imparfaite, ce qui laisse de la liberté pour les événements du scénario.
 
@@ -213,3 +213,18 @@ Ainsi, les actions des PJ pendant le Festival influencent mécaniquement le boss
 - sauver la victime finale ou interrompre le sacrifice empêche l'accomplissement du Père Écorcheur.
 
 Le boss final doit donc être nettement plus dangereux si les PJ ont laissé le rite progresser.
+
+
+### Cible du Faucheur de Réputation : Lavarsus
+
+Décision MJ : la victime du volet **Faucheur de Réputation** est **Lavarsus**.
+
+Pratchett organise avant le Festival une campagne de faux, de témoignages arrangés et de preuves fabriquées destinée à ruiner sa crédibilité. L'objectif n'est pas nécessairement de le faire condamner définitivement, mais de :
+- l'affaiblir politiquement et administrativement ;
+- détourner la garde sur une enquête interne ;
+- réduire sa capacité à coordonner les agents pendant le Festival ;
+- accomplir un crime qui corresponde clairement au Faucheur de Réputation.
+
+Les PJ doivent pouvoir finir le module **Enquête sur l'hôtel** en découvrant que l'affaire visant Lavarsus est artificielle et en reliant ce crime aux trois autres motifs déjà connus : vol du Ratisseur, poison/alchimie et disparitions/meurtres. Un jet réussi sur Norgorber, ou un PNJ de secours, peut alors révéler le motif des quatre aspects.
+
+Cette révélation ne doit pas identifier Pratchett ni un hôtel précis. Elle doit seulement permettre aux PJ d'anticiper que le Festival risque d'être le théâtre d'une nouvelle étape et de préparer notamment la surveillance des cirques et des hébergements.
