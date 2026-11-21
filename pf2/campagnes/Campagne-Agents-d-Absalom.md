@@ -228,3 +228,16 @@ Pratchett organise avant le Festival une campagne de faux, de témoignages arran
 Les PJ doivent pouvoir finir le module **Enquête sur l'hôtel** en découvrant que l'affaire visant Lavarsus est artificielle et en reliant ce crime aux trois autres motifs déjà connus : vol du Ratisseur, poison/alchimie et disparitions/meurtres. Un jet réussi sur Norgorber, ou un PNJ de secours, peut alors révéler le motif des quatre aspects.
 
 Cette révélation ne doit pas identifier Pratchett ni un hôtel précis. Elle doit seulement permettre aux PJ d'anticiper que le Festival risque d'être le théâtre d'une nouvelle étape et de préparer notamment la surveillance des cirques et des hébergements.
+
+
+## Continuité maison — Lavarsus
+
+Dans cette campagne, **le lieutenant Lavarsus est une femme**. Le PNJ canonique et le personnage secondaire plus conciliant ont été fusionnés pour réduire le nombre d'interlocuteurs.
+
+Lavarsus est :
+- la cheffe opérationnelle de la **garde de la Falaise** ;
+- le contact direct des PJ / aspirants Éclaireurs affectés comme agents spéciaux ;
+- la responsable de leur intégration aux interventions locales du Précipice ;
+- une figure plus accessible et coopérative que le Lavarsus canonique, tout en conservant son autorité et son expérience.
+
+Toute future préparation doit utiliser **elle / la lieutenant Lavarsus** et ne pas recréer le second officier fusionné.
