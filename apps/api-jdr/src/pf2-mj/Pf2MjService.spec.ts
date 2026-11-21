@@ -38,6 +38,20 @@ describe('Pf2MjService', () => {
     return { service: new Pf2MjService(persistence as never, foundry as never), persistence, foundry }
   }
 
+  it('upserts a scoped homebrew arc without replacing other catalogue arcs or entries', async () => {
+    const rose = { id: 'rose-street-revenge' }
+    const otherArc = { id: 'open-road', entryIds: ['pfs'] }
+    const before = { entries: [rose, { id: 'pfs' }], files: [], sections: [], arcs: [otherArc], collections: [] }
+    const { service, persistence } = serviceFor({}, pnj, { readCatalogueSnapshot: jest.fn().mockResolvedValue(before) })
+    const arc = { id: 'cartel-du-sel', titleFr: 'Le Cartel du Sel', kind: 'homebrew', entryIds: [rose.id, 'cartel-du-sel-enquete'] }
+    const selection = { scope: 'catalogue-selection', entries: [{ id: 'cartel-du-sel-enquete' }], arcUpserts: [arc] }
+    await expect(service.importData('catalogue', selection, true)).resolves.toMatchObject({ dryRun: true, summary: { arcs: { added: 1, removed: 0 } } })
+    expect(persistence.replaceCatalogueSnapshot).not.toHaveBeenCalled()
+    await service.importData('catalogue', selection)
+    expect(persistence.replaceCatalogueSnapshot).toHaveBeenCalledWith(expect.objectContaining({ entries: [rose, { id: 'pfs' }, { id: 'cartel-du-sel-enquete' }], arcs: [otherArc, arc] }))
+    await expect(service.importData('catalogue', { ...selection, arcUpserts: [{ ...arc, entryIds: ['missing'] }] })).rejects.toThrow('Arc invalide')
+  })
+
   describe('Calage Absalom et favoris partagés', () => {
     it('enregistre les 4 coins indépendants et les restitue à tous les modes', async () => {
       let stored: Record<string, unknown> | null = null

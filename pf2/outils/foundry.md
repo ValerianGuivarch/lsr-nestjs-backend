@@ -133,6 +133,16 @@ Les opérations de scènes auparavant lancées directement contre le relais pass
 
 ---
 
+### Organisation des campagnes et détection (21 novembre 2026)
+
+La convention cible est une racine par campagne dans Scene, Actor et JournalEntry, sans conteneur MJ pour les nouvelles préparations manuelles. The Party reste à la racine ; le dossier MJ est réservé aux éléments communs (PJ sous MJ / PJ, improvisation, etc.). Les imports historiques Toolkit sous MJ ne nécessitent pas une migration de format immédiate. Ne pas renommer arbitrairement les dossiers scénario du Toolkit : le reset reconnaît notamment leur préfixe d'identifiant.
+
+Une scène détectée par identifiant/titre/alias de dossier est une **indication de présence**, pas une preuve que le module est prêt. La détection prend en compte les dossiers sous MJ et à la racine, ignore les dossiers vides, Copies, archives/OLD et Vérification. Le statut de déploiement Toolkit reste indépendant. Pour une association fiable à long terme, préférer les UUID des documents ou une association explicite de dossier par ID catalogue à un nom seul.
+
+Le service de listes d'Actors conserve une portée volontairement limitée : racine et dossier PJ (à la racine ou sous MJ). Il alimente la sélection des participants/auteurs de résumés, le cache de noms Discord et les niveaux/XPC de /recap-pjs, ainsi que les candidats PNJ de cette portée. Les lectures individuelles par UUID sont indépendantes du dossier. Ne pas interroger en détail tous les monstres de campagne pour calculer la liste des PJ.
+
+Rangement : inventaire par UUID, sauvegarde, comparaison des tokens (actorId), des notes (entryId/pageId), des références de préparations et du contexte. Déplacer sans recréer ; les homonymes ne sont pas des doublons avérés. Archiver les éléments incertains sous Vérification plutôt que les effacer. Les dossiers vides ne sont supprimés qu'après vérification de tous leurs descendants et de leur rôle. Les opérations restent soumises à l'accès Foundry normal et aux règles de PF2_WORKSPACE.
+
 ## 10. Séances, résumés et XPC
 
 ### 10.1 Séances

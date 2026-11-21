@@ -26,6 +26,13 @@ Quand plusieurs endpoints normaux et autorisés existent (par exemple lecture et
 
 **Toute demande de création, import, correction ou enrichissement de scènes, journaux, Actors ou rencontres PF2 dans Foundry**, quelle que soit la discussion ChatGPT, impose de lire et appliquer la [convention MJ — fiches immédiatement jouables](pf2/outils/foundry.md#convention-mj--fiches-immédiatement-jouables-17-novembre-2026), ainsi que le [guide de préparation de séance](docs/pf2/session-preparations.md). **Malveillance (Blanchebois) est le modèle de référence** : journal de salle avec l'actionnable en tête, détails historiques en bas, notes privées des créatures contextualisées et recherches/visions accessibles par liens. Ne pas réintroduire de pavés de texte ni de descriptions génériques comme seules notes MJ. Appliquer aux contenus nouveaux et existants lorsque le MJ demande de les préparer ou réviser ; ne pas modifier le monde hors du périmètre demandé.
 
+## Organisation des documents Foundry (21 novembre 2026)
+
+- Une campagne préparée possède un dossier homonyme à la racine de chacun des onglets Scènes, Actors et Journaux, avec sous-dossiers par scénario/tome si nécessaire. Les dossiers non utilisés ne sont pas créés préventivement.
+- `The Party` reste directement à la racine des Actors ; les PJ communs peuvent être rangés sous `MJ / PJ` ; MJ reste un dossier de ressources transverses et d'improvisation. Les anciens imports Toolkit sous MJ restent compatibles pour le moment.
+- Exceptions conservées : copies originales de Pointesable, Le Faiseur de rois, L’Éveil des seigneurs des runes, archives identifiées. Un dossier `Vérification` accueille les ressources dont l'appartenance reste douteuse, sans suppression.
+- Déplacer les documents existants, préserver leurs UUID, propriétés, liens et contenus incorporés. L'appartenance réelle par token/repère et préparation prime sur un nom ou flag ancien. Référence : [Foundry](pf2/outils/foundry.md).
+
 ## Sommaire
 
 | Dossier ChatGPT | Index principal | Sujets |

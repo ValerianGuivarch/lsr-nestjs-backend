@@ -2183,7 +2183,14 @@ export class Pf2MjService {
       for (const item of this.records(selection[key])) map.set(String(item.id ?? ''), item)
       return [...map.values()]
     }
-    return { ...current, entries: merge('entries'), collections: merge('collections'), files: merge('files'), sections: current.sections ?? [], arcs: current.arcs ?? [], narrativeThreads: current.narrativeThreads ?? [] }
+    const entries = merge('entries')
+    const entryIds = new Set(entries.map(entry => String(entry.id)))
+    const arcs = new Map(this.records(current.arcs).map(item => [String(item.id), item]))
+    for (const arc of this.records(selection.arcUpserts)) {
+      if (typeof arc.id !== 'string' || !arc.id || typeof arc.titleFr !== 'string' || !arc.titleFr.trim() || !Array.isArray(arc.entryIds) || !arc.entryIds.length || arc.entryIds.some(id => typeof id !== 'string' || !entryIds.has(id)) || new Set(arc.entryIds).size !== arc.entryIds.length) throw new Error('Arc invalide dans arcUpserts.')
+      arcs.set(arc.id, arc)
+    }
+    return { ...current, entries, collections: merge('collections'), files: merge('files'), sections: current.sections ?? [], arcs: [...arcs.values()], narrativeThreads: current.narrativeThreads ?? [] }
   }
 
   private normalizeCuration(value: Record<string, unknown>): Record<string, unknown> {

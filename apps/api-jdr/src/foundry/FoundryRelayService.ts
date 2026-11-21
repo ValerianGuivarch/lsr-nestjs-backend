@@ -372,7 +372,7 @@ export class FoundryRelayService {
   }
 
   private async listRootWorldActors(clientId: string): Promise<WorldActor[]> {
-    const params = new URLSearchParams({ clientId, types: 'Actor', recursive: 'true', includeEntityData: 'false' })
+    const params = new URLSearchParams({ clientId, types: 'Actor,Folder', recursive: 'true', includeEntityData: 'false' })
     const structure = await this.request(`/structure?${params}`, {}, 30_000)
     const actors = this.collectRootWorldActors(structure)
     if (!actors.length) {
@@ -454,13 +454,32 @@ export class FoundryRelayService {
     const root = this.object(value)
     const data = this.object(root.data)
     const entities = this.object(data.entities ?? root.entities)
-    const actors = Array.isArray(entities.actors) ? entities.actors : []
-    return actors.flatMap((candidate) => {
+    const actors: unknown[] = Array.isArray(entities.actors) ? [...entities.actors] : []
+    // Preserve the small shared roster, without loading hundreds of campaign NPC statblocks.
+    // PJ/familiars may reside in MJ / PJ (or PJ at world root); The Party stays at root.
+    const visitPlayerFolders = (node: Record<string, unknown>, path: string[]): void => {
+      for (const [label, raw] of Object.entries(node)) {
+        const folder = this.object(raw)
+        if (folder.type !== 'Actor' || !/^Folder\.[A-Za-z0-9]+$/.test(String(folder.uuid))) continue
+        const name = typeof folder.name === 'string' ? folder.name : label
+        const next = [...path, name.trim().toLowerCase()]
+        const playerFolder = next[0] === 'pj' || next[0] === 'mj' && next[1] === 'pj'
+        if (playerFolder) {
+          const items = Array.isArray(folder.entities) ? folder.entities : this.object(folder.entities).actors
+          if (Array.isArray(items)) actors.push(...items)
+        }
+        if (playerFolder || next.length === 1 && next[0] === 'mj') visitPlayerFolders(folder, next)
+      }
+    }
+    visitPlayerFolders(this.object(data.folders ?? root.folders), [])
+    const result = new Map<string, WorldActor>()
+    for (const candidate of actors) {
       const item = this.object(candidate)
       const uuid = typeof item.uuid === 'string' ? item.uuid : ''
-      if (!/^Actor\.[A-Za-z0-9]+$/.test(uuid)) return []
-      return [{ uuid, name: typeof item.name === 'string' ? item.name : uuid, type: typeof item.type === 'string' ? item.type : undefined }]
-    }).sort((left, right) => left.name.localeCompare(right.name, 'fr'))
+      if (!/^Actor\.[A-Za-z0-9]+$/.test(uuid)) continue
+      result.set(uuid, { uuid, name: typeof item.name === 'string' ? item.name : uuid, type: typeof item.type === 'string' ? item.type : undefined })
+    }
+    return [...result.values()].sort((left, right) => left.name.localeCompare(right.name, 'fr'))
   }
 
   private collectSceneFolders(value: unknown): FoundrySceneFolderSummary[] {

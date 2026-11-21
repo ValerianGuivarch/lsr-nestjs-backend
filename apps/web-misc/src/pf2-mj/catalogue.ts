@@ -234,7 +234,7 @@ export type ResourceBundleAvailability = {
   bundles: ResourceBundle[]
 }
 
-export type Arc = { id: string; titleFr: string; season?: number; entryIds: string[]; order?: string; description?: string }
+export type Arc = { id: string; titleFr: string; season?: number; entryIds: string[]; order?: string; description?: string; kind?: 'homebrew' }
 export type NarrativeThread = { id?: string; title?: string; name?: string; entryIds?: string[]; [key: string]: unknown }
 
 // ---- Schéma V2 lu uniquement comme source de migration ----

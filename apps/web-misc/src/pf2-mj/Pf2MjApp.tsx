@@ -66,6 +66,7 @@ import PlayerIdentityTable from './PlayerIdentityTable'
 import PlayerCharactersPage from './PlayerCharactersPage'
 import { expandedPlaceLabels, geographyTreeOptions, loadGeographyFromApi, matchesPlaceFilter, placeDisplay } from './geography'
 import { CampaignDocuments } from './CampaignDocuments'
+import { matchingSceneFolders } from './foundryCoverage'
 import { type ModuleState, moduleKey, moduleStateLabel, checklistCount, upcomingReadiness } from './moduleReadiness'
 import { arcHref, containerHref, playableHref, referenceHref, resolvePf2Route, viewPaths, type ReferenceView, type View } from './routing'
 
@@ -811,6 +812,7 @@ type PackageActor = { key?: string; name?: string; type?: 'reference' | 'custom'
 type PackageRegistry = { factions: Array<{ id: string; name: string }>; places: Array<{ id: string; name: string; kind?: string }> }
 type FoundryReferenceLibraryStatus = { available: boolean; actorCount: number; itemCount: number; actorSourceCount: number; itemSourceCount: number; size: number; updatedAt: string | null; metadata?: { foundryVersion?: string | null; systemVersion?: string | null } }
 type FoundrySceneFolder = { uuid: string; name: string; path: string; sceneCount: number }
+
 type AiRequiredRequest = { requestId: string; kind: string; subject: { uuid: string; name: string | null }; reason: string; required: boolean; available: boolean; indexName: string | null; sourceType: 'Actor' | 'Item' }
 type AiRequiredDataStatus = { targetId: string; targetKind: 'scenario' | 'campaign'; status: 'ready' | 'needs_more_data' | 'blocked'; requests: AiRequiredRequest[]; unresolved: unknown[]; requiredMissing: number; availableCount: number; importedAt: string | null } | null
 
@@ -1087,21 +1089,8 @@ function ScenarioPackagePanel({ scenarioId, onOpenReference, preparationStatus, 
   }
   const referenceBadges = (items: Array<{ targetId?: string; npcId?: string; nom?: string; name?: string; role?: string | null; targetKind?: string }>, view: ReferenceView) => items.length ? <div className="badges relation-badges">{items.map((item) => { const id = item.targetId ?? item.npcId; const targetView: ReferenceView = item.targetKind === 'region' ? 'regions' : view; return id ? <Link key={id} to={referenceHref(targetView, id)}>{item.nom || item.name || id}{item.role ? ` · ${item.role}` : ''}</Link> : null })}</div> : <p className="missing">Aucun lien renseigné.</p>
   const currentStatus = !status ? (available ? 'available' : '—') : available?.packageVersion !== null && available?.packageVersion !== undefined && available.packageVersion > status.packageVersion ? 'obsolete' : status.status
-  const normalizeFoundryName = (value: string) => value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim()
-  const foundryNeedles = unique(foundrySearchNames.map(normalizeFoundryName).filter((value) => value.length >= 6))
-  const preexistingSceneFolders = foundrySceneFolders.filter((folder) => {
-    const normalizedPath = normalizeFoundryName(folder.path)
-    const managedByToolkit = normalizedPath === 'mj' || normalizedPath.startsWith('mj ')
-    return !managedByToolkit && foundryNeedles.some((needle) => normalizedPath.includes(needle))
-  })
+  const detectedSceneFolders = matchingSceneFolders(foundrySceneFolders, scenarioId, foundrySearchNames)
   const managedFoundryPresent = Boolean(status?.deployedVersion || (deployment?.operation !== 'reset' && deployment?.status === 'success'))
-  const foundryCoverageLabel = preexistingSceneFolders.length && managedFoundryPresent
-    ? 'Hybride · préexistant + Toolkit'
-    : preexistingSceneFolders.length
-      ? 'Présent dans Foundry · préexistant'
-      : managedFoundryPresent
-        ? 'Déployé par le Toolkit'
-        : 'Non détecté'
   const deploymentActive = deployment?.status === 'pending' || deployment?.status === 'claimed'
   const deploymentOperation = deployment?.operation ?? 'deploy'
   const deploymentLabel = deploymentOperation === 'reset'
@@ -1124,15 +1113,13 @@ function ScenarioPackagePanel({ scenarioId, onOpenReference, preparationStatus, 
     ? 'Mise à jour Foundry en cours'
     : deployment?.status === 'failed'
       ? 'Échec de synchronisation Foundry'
-      : preexistingSceneFolders.length && managedFoundryPresent
-        ? 'Prêt · contenu existant + contenu MJ'
-        : managedUpToDate
-          ? 'Prêt dans Foundry'
-          : managedFoundryPresent || status
-            ? 'À mettre à jour dans Foundry'
-            : preexistingSceneFolders.length
-              ? 'Contenu préexistant détecté'
-              : 'À préparer dans Foundry'
+      : managedUpToDate
+        ? 'Prêt dans Foundry'
+        : managedFoundryPresent || status
+          ? 'À mettre à jour dans Foundry'
+          : detectedSceneFolders.length
+            ? 'Scènes détectées dans Foundry'
+            : 'À préparer dans Foundry'
   const foundryActionLabel = deployment?.status === 'failed' ? 'Relancer la synchronisation' : status ? 'Mettre Foundry à jour' : null
   const bestiary = [...actors.filter((actor) => actor.type === 'reference' || actor.type === 'custom').reduce((groups, actor) => {
     const source = actor.type === 'reference' ? (actor.uuid || (typeof actor.lookup === 'string' ? actor.lookup : 'Référence PF2')) : 'Acteur mécanique du package'
@@ -1142,7 +1129,7 @@ function ScenarioPackagePanel({ scenarioId, onOpenReference, preparationStatus, 
     return groups
   }, new Map<string, { name: string; type: 'reference' | 'custom'; source: string; quantity: number }>()).values()]
   return <>
-    <section className="detail-section foundry-coverage compact-foundry-status"><h3>Foundry</h3><div className="package-status"><small>ÉTAT</small><strong>{foundryStateLabel}</strong><em>{preexistingSceneFolders.length ? `${preexistingSceneFolders.reduce((sum, folder) => sum + folder.sceneCount, 0)} scène(s) préexistante(s) détectée(s)` : managedFoundryPresent ? 'Contenu MJ géré détecté.' : 'Aucun contenu géré détecté.'}</em></div>{foundryActionLabel && !managedUpToDate && !deploymentActive && <button className="package-integrate package-deploy" disabled={busy} onClick={() => void requestDeployment()}>{busy ? 'Traitement…' : foundryActionLabel}</button>}{managedUpToDate && <p className="source-badge">Aucune action nécessaire.</p>}{!status && !preexistingSceneFolders.length && <p className="source-badge">Action : préparation Foundry à faire lors du prochain passage de génération.</p>}{deploymentLabel && deployment?.status === 'failed' && <p className="missing">{deployment.error || deploymentLabel}</p>}</section>
+    <section className="detail-section foundry-coverage compact-foundry-status"><h3>Foundry</h3><div className="package-status"><small>ÉTAT</small><strong>{foundryStateLabel}</strong><em>{detectedSceneFolders.length ? `${detectedSceneFolders.reduce((sum, folder) => sum + folder.sceneCount, 0)} scène(s) détectée(s)` : managedFoundryPresent ? 'Contenu MJ géré détecté.' : 'Aucun contenu géré détecté.'}</em></div>{foundryActionLabel && !managedUpToDate && !deploymentActive && <button className="package-integrate package-deploy" disabled={busy} onClick={() => void requestDeployment()}>{busy ? 'Traitement…' : foundryActionLabel}</button>}{managedUpToDate && <p className="source-badge">Aucune action nécessaire.</p>}{!status && !detectedSceneFolders.length && <p className="source-badge">Action : préparation Foundry à faire lors du prochain passage de génération.</p>}{deploymentLabel && deployment?.status === 'failed' && <p className="missing">{deployment.error || deploymentLabel}</p>}</section>
     {showLegacyTechnicalTools && allowAiExport && <section className="detail-section scenario-ai-preparation"><h3>Préparation IA · 2 phases</h3>
       <div className="package-status"><small>BIBLIOTHÈQUE DE RÉFÉRENCES FOUNDRY</small><strong>{referenceLibrary?.available ? `${referenceLibrary.actorCount} Actors · ${referenceLibrary.itemCount} Items` : 'Absente'}</strong><em>{referenceLibrary?.available ? `sources détaillées : ${referenceLibrary.actorSourceCount} Actors · ${referenceLibrary.itemSourceCount} Items${referenceLibrary.metadata?.systemVersion ? ` · PF2e ${referenceLibrary.metadata.systemVersion}` : ''}` : 'Exporte « PF2e Reference Library » depuis Foundry puis importe le JSON ici.'}</em></div>
       <label className="package-upload"><span>{busy ? 'Import en cours…' : referenceLibrary?.available ? 'Remplacer la bibliothèque Foundry' : 'Importer la bibliothèque Foundry'}</span><input type="file" accept=".json,application/json" disabled={busy} onChange={(event) => { void importReferenceLibrary(event.target.files?.[0]); event.currentTarget.value = '' }} /></label>
@@ -1275,7 +1262,7 @@ function ArcDetail({arc,curation,onUpdate}: {arc:Arc;curation:Curation;onUpdate:
   const places = unique(children.flatMap(u=>u.locations.map(location=>placeDisplay(location.id))))
   const levels = unique(children.map(u=>levelLabel(u.levels)))
   return <EntityPage backTo={viewPaths.library}>
-    <div className="detail-head"><small>Campagne transverse · Pathfinder Society</small><h2>{arc.titleFr}</h2><div className="badges"><Badge>{children.length} scénarios</Badge>{arc.season && <Badge>Saison {arc.season}</Badge>}</div></div>
+    <div className="detail-head"><small>{arc.kind === 'homebrew' ? 'Campagne maison' : 'Campagne transverse · Pathfinder Society'}</small><h2>{arc.titleFr}</h2><div className="badges"><Badge>{children.length} scénarios</Badge>{arc.season && <Badge>Saison {arc.season}</Badge>}</div></div>
     <section className="detail-section synopsis-long"><h3>Synthèse</h3><p>{arc.description || 'Synopsis de campagne non renseigné.'}</p></section>
     <dl className="detail-grid"><div><dt>Niveaux affichés</dt><dd>{levels.join(', ') || 'À documenter'}</dd></div><div><dt>Lieux</dt><dd>{places.join(', ') || 'À documenter'}</dd></div></dl>
     <CampaignDocuments id={arc.id}/>
@@ -1585,7 +1572,7 @@ function JournalView({ curation, onUpdate, onImported, sessionHistory }: { curat
       const showStandaloneHeading = !work.campaign && (workIndex === 0 || displayWorks[workIndex - 1]?.campaign)
       return <Fragment key={work.id}>{showCampaignHeading && <div className="journal-group-heading"><small>JOURNAL</small><h3>Campagnes</h3><p>Campagnes longues, mini-campagnes et campagnes transverses.</p></div>}{showStandaloneHeading && <div className="journal-group-heading journal-standalone-heading"><small>JOURNAL</small><h3>Scénarios individuels</h3><p>Scénarios actifs qui n’appartiennent pas encore à une campagne du Journal.</p></div>}<section className={`component-work${!expanded ? ' is-collapsed' : ''}`}>
         <header>
-          <div><small>{work.kind === 'arc' ? 'CAMPAGNE TRANSVERSE' : work.campaign ? 'CAMPAGNE' : 'SCÉNARIO'} · {lifecycleLabels[work.status]}</small><h3><Link className="journal-detail-link" to={detailHref}>{work.title}</Link></h3><Link className="journal-detail-link" to={`${viewPaths.sessionPrep}?${work.kind === 'scenario' && !work.campaign ? 'scenarioId' : 'campaignId'}=${encodeURIComponent(work.kind==='arc'?work.id.slice(4):work.id)}`}>✎ Préparer une séance</Link>{expanded && work.description && <p>{work.description}</p>}{work.kind === 'arc' && expanded && <p><em>Arc narratif PFS : les scénarios peuvent appartenir à plusieurs saisons.</em></p>}{workSessions.length > 0 && <span className="journal-session-badge">{sessionLabel(workSessions)}</span>}</div>
+          <div><small>{work.kind === 'arc' ? (arcs.find(arc => arc.id === work.id.slice(4))?.kind === 'homebrew' ? 'CAMPAGNE MAISON' : 'CAMPAGNE TRANSVERSE') : work.campaign ? 'CAMPAGNE' : 'SCÉNARIO'} · {lifecycleLabels[work.status]}</small><h3><Link className="journal-detail-link" to={detailHref}>{work.title}</Link></h3><Link className="journal-detail-link" to={`${viewPaths.sessionPrep}?${work.kind === 'scenario' && !work.campaign ? 'scenarioId' : 'campaignId'}=${encodeURIComponent(work.kind==='arc'?work.id.slice(4):work.id)}`}>✎ Préparer une séance</Link>{expanded && work.description && <p>{work.description}</p>}{work.kind === 'arc' && expanded && arcs.find(arc => arc.id === work.id.slice(4))?.kind !== 'homebrew' && <p><em>Arc narratif PFS : les scénarios peuvent appartenir à plusieurs saisons.</em></p>}{workSessions.length > 0 && <span className="journal-session-badge">{sessionLabel(workSessions)}</span>}</div>
           <div className="component-work-actions">
             <button className="component-toggle" onClick={() => toggleWork(work.id)} aria-expanded={expanded}>{expanded ? 'Réduire' : work.kind !== 'scenario' ? `Développer · ${work.units.length} scénario${work.units.length > 1 ? 's' : ''}` : 'Développer'}</button>
             {chatgptUrl && <a className="component-prompt component-chatgpt" href={chatgptUrl} target="_blank" rel="noreferrer">ChatGPT ↗</a>}

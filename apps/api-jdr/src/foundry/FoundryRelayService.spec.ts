@@ -163,6 +163,24 @@ describe('FoundryRelayService', () => {
     expect(maximumConcurrentGets).toBeLessThanOrEqual(4)
   })
 
+  it('includes the shared PJ folder without scanning campaign monsters', async () => {
+    jest.spyOn(global, 'fetch').mockImplementation(async input => {
+      const url = String(input)
+      if (url.endsWith('/clients')) return new Response(JSON.stringify({ clients: [{ clientId: 'world-1', isOnline: true }] }))
+      return new Response(JSON.stringify({ data: {
+        entities: { actors: [{ uuid: 'Actor.party', name: 'The Party' }] },
+        folders: {
+          MJ: { uuid: 'Folder.mj', type: 'Actor', PJ: { uuid: 'Folder.pj', type: 'Actor', entities: [{ uuid: 'Actor.hero', name: 'Héros (Joueur)' }] } },
+          Malveillance: { uuid: 'Folder.mal', type: 'Actor', entities: [{ uuid: 'Actor.npc', name: 'Monstre' }] }
+        }
+      } }))
+    })
+    expect(await new FoundryRelayService().listActors()).toEqual([
+      { uuid: 'Actor.hero', name: 'Héros (Joueur)', type: undefined },
+      { uuid: 'Actor.party', name: 'The Party', type: undefined }
+    ])
+  })
+
   it('lists nested Scene folders with their paths and direct scene counts', async () => {
     jest.spyOn(global, 'fetch').mockImplementation(async (input) => {
       const url = String(input)
