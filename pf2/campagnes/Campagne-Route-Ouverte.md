@@ -69,6 +69,21 @@ Le 12 novembre, le relais REST était joignable mais **son client Foundry du mon
 
 Voir la [fiche du scénario 1-00](Scenario-Origines-Route-Ouverte.md) pour les salles, menaces, butins et placements prévus. Pour les conventions transverses (journal de salle, coffres invisibles MJ, noms de tokens non-spoilants), voir [Foundry](../outils/foundry.md) et le [guide de préparation de séance](../../docs/pf2/session-preparations.md).
 
+### 1-08 — Révolution sur les rives (21 novembre 2026)
+
+Foundry `test-pf2` connecté. Dans MJ / Campagnes transverses / La Route ouverte / 1-08 — Révolution sur les rives :
+
+| Zone | Scène | Journal MJ |
+| --- | --- | --- |
+| A — Ancienne loge | `Scene.CFJ43V5mzoCUkXTQ` | `JournalEntry.SAxCR2o8s9B1nPHN` |
+| B — Camp des rebelles | `Scene.Q9RG1YjlisqmiJQQ` | `JournalEntry.Gla5icGuQgBcCG1L` |
+| C — Installations hydrauliques | `Scene.ZkJI76ZusTeykCiS` | `JournalEntry.AkjsjXff4TrCnW7o` |
+| D — Salle du trône | `Scene.qTDCo3Q0psGhw88E` | `JournalEntry.RdY25eiLaJzIjKNP` |
+
+Quatre cartes du PDF original, grilles, murs et porte secrète, notes MJ privées ; 10 fiches officielles des adversaires (palier 3–4) et 5 PNJ sociaux, 1 danger de marais, 6 conteneurs de butin masqués, liés et verrouillés. 10 journaux (dont les deux aides de jeu traduites, privées jusqu'à remise) et 24 tokens au total. Les documents de Napsunar et Pavo ouvrent la piste andoranaise indépendamment du choix politique. Les scènes et fiches ont été relues via le relais ; le modèle SQLite renvoie aux UUID correspondants. Ne pas déclencher d'emblée le combat du camp, des canaux ni du trône : négociation prioritaire possible.
+
+Reste à vérifier sur le canvas : ouvertures, lignes de vue, positions et déplacements ; adapter le nombre de créatures aux PJ présents (annexes originales) et compléter les portraits génériques des PNJ si souhaité. Les montants des lots de trésor PFS restent à adapter à la table. Checklist Foundry : **partiel** ; progression : **Non joué**. Aucun autre scénario n'a été modifié lors de cette passe.
+
 ## Sources et niveaux de certitude
 
 - **Faits publiés** : PDFs français de travail et original anglais de *PFS 1-00*, bibliothèque privée `pf2-data` (pas sur GitHub) ; `PFS 1-21` pour le Labyrinthe.
