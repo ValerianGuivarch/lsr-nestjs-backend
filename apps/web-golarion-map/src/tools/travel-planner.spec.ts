@@ -66,6 +66,13 @@ describe('Golarion travel mesh', () => {
     expect(r.legs.some(l=>l.mode==='riverboat')).toBe(true)
     expect(r.legs.filter(l=>l.mode==='walk').reduce((s,l)=>s+l.km,0)).toBeLessThan(300)
   })
+  it('follows the continuous Sellen from Absalom to Artume via Kallas Lake', () => {
+    const route = calculateTravel(city('Absalom'), city('Artume'), 'mixed')!
+    expect(route).not.toBeNull()
+    expect(route.legs.filter(l => l.mode === 'riverboat').reduce((s,l) => s + l.km, 0)).toBeGreaterThan(900)
+    expect(route.legs.filter(l => l.mode === 'walk').reduce((s,l) => s + l.km, 0)).toBeLessThan(100)
+    expect(calculateTravel(city('Absalom'), city('Artume'), 'ship')).not.toBeNull()
+  })
   it('connects Druma ports along the Profit’s Flow', () => {
     const r=calculateTravel(city("Petitioner's Port"),city('Macridi'),'riverboat')!
     expect(r).not.toBeNull()

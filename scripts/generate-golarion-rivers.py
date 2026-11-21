@@ -14,6 +14,31 @@ grid = runpy.run_path(str(Path(__file__).with_name("generate-golarion-travel-gri
 KNOWN = {"Andoshen River", "River Foam", "Profit's Flow"}
 # Narrow but explicitly continuous segments in known systems.
 CONNECTORS = {1527, 1530}
+# The Sellen's mapped centerline stops at water polygons. These pairs
+# are connected by navigable open water, not invented overland shortcuts.
+# (river fid, endpoint index, river fid, endpoint index, water polygon fid)
+WATER_CROSSINGS = [(745, 0, 1559, 0, 238), (1560, -1, 1156, -1, 82)]
+
+def inside_ring(p, ring):
+    x, y = p
+    return sum((a[1] > y) != (b[1] > y) and
+               x < (b[0] - a[0]) * (y - a[1]) / (b[1] - a[1]) + a[0]
+               for a, b in zip(ring, ring[1:])) % 2 == 1
+
+def water_crossing(c, first, first_end, last, last_end, water):
+    def endpoint(fid, end):
+        blob = c.execute("select geom from rivers where fid=?", (fid,)).fetchone()[0]
+        return next(line for kind, line in grid["shapes"](grid["geometry"](blob)) if kind == 2)[end]
+    a, b = endpoint(first, first_end), endpoint(last, last_end)
+    blob = c.execute("select geom from waters where fid=?", (water,)).fetchone()[0]
+    polygons = [p for kind, p in grid["shapes"](grid["geometry"](blob)) if kind == 3]
+    # Verify the whole crossing against the actual water polygon at <= 250 m intervals.
+    count = max(2, math.ceil(km(a,b)/.25))
+    for i in range(1, count):
+        p = tuple(a[j] + (b[j]-a[j])*i/count for j in range(2))
+        if not any(inside_ring(p, poly[0]) and not any(inside_ring(p, h) for h in poly[1:]) for poly in polygons):
+            raise ValueError(f"Water crossing {water} crosses land")
+    return sample([a,b])
 def km(a, b):
     return math.hypot((b[0]-a[0])*111.2*math.cos(math.radians((a[1]+b[1])/2)), (b[1]-a[1])*111.2)
 
@@ -47,6 +72,7 @@ def generate(source, output):
                     if len(chunk)>1: paths.append(chunk)
                     chunk=[]
             if len(chunk)>1: paths.append(chunk)
+    paths.extend(water_crossing(c, *crossing) for crossing in WATER_CROSSINGS)
     output.write_text(json.dumps({"version":1,"source":"pf-wikis/mapping-data","license":"CC BY-NC-SA 4.0","paths":paths},separators=(",",":"))+"\n")
     print(len(paths),sum(len(p) for p in paths),"vertices",output.stat().st_size,"bytes")
 
