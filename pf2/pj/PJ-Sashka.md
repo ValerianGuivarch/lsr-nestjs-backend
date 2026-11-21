@@ -87,8 +87,8 @@ Prisme est désormais identifié par le MJ comme le familier mécanique de Sashk
 | Forme | Imposée | Suggérée |
 | --- | --- | --- |
 | Faucon | Vol | Déplacement rapide (vol) |
-| Chat sauvage | Aucune | Télépathie tactile + Ambassadeur |
-| Chien de chasse | Aucune | Vision des âmes + Partage des sens |
+| Chat | Aucune | Télépathie tactile + Ambassadeur |
+| Chien | Aucune | Vision des âmes + Partage des sens |
 | Loup | Aucune | Démonstration menaçante + Écholocalisation |
 | Loutre | Amphibie | Dextérité manuelle |
 | Renard | Aucune | Fouisseur + Perception des vibrations |

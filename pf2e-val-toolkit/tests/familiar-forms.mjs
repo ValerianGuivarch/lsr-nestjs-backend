@@ -1,8 +1,11 @@
 import assert from 'node:assert/strict';
-import { HUNT_FORMS, presetSelection, presetSource, hasHuntForms, huntFavorites, reasons } from '../scripts/familiar-selector.js';
+import { HUNT_FORMS, presetSelection, presetSource, hasHuntForms, huntFavorites, reasons, formLabel } from '../scripts/familiar-selector.js';
 
 const all = new Set(Object.values(HUNT_FORMS).flatMap(form => [...form.fixed, ...form.suggested]));
 assert.equal(Object.keys(HUNT_FORMS).length, 9);
+assert.equal(formLabel(HUNT_FORMS.hound), 'Chien — Recherche et perception surnaturelle');
+assert.equal(formLabel(HUNT_FORMS.ermine), 'Hermine — Soutien magique');
+assert.equal(HUNT_FORMS.wildcat.name, 'Chat');
 assert.deepEqual(HUNT_FORMS.genet.fixed, []);
 assert.deepEqual(HUNT_FORMS.genet.suggested, ['climber','darkvision']);
 assert.deepEqual(Object.keys(HUNT_FORMS).filter(id=>HUNT_FORMS[id].fixed.length), ['falcon','otter','raven']);

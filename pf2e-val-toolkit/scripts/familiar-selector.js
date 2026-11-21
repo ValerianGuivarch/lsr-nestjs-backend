@@ -10,8 +10,8 @@ const spellRanks = { 'spell-battery': 4, 'spellcasting': 6, 'medic': 3 };
 
 export const HUNT_FORMS = {
   falcon: { name: 'Faucon', fixed: ['flier'], suggested: ['fast-movement'], choices: { 'fast-movement': { speed: 'fly' } }, role: 'Reconnaissance aérienne' },
-  wildcat: { name: 'Chat sauvage', fixed: [], suggested: ['touch-telepathy', 'ambassador'], role: 'Lien mental et interactions sociales' },
-  hound: { name: 'Chien de chasse', fixed: [], suggested: ['soul-sight', 'share-senses'], role: 'Détection surnaturelle et partage sensoriel' },
+  wildcat: { name: 'Chat', fixed: [], suggested: ['touch-telepathy', 'ambassador'], role: 'Lien mental et interactions sociales' },
+  hound: { name: 'Chien', fixed: [], suggested: ['soul-sight', 'share-senses'], role: 'Recherche et perception surnaturelle' },
   wolf: { name: 'Loup', fixed: [], suggested: ['threat-display', 'echolocation'], role: 'Intimidation et vigilance' },
   otter: { name: 'Loutre', fixed: ['amphibious'], suggested: ['manual-dexterity'], role: 'Exploration aquatique et récupération' },
   fox: { name: 'Renard', fixed: [], suggested: ['burrower', 'tremorsense'], role: 'Exploration souterraine' },
@@ -24,6 +24,7 @@ const FAVORITES_SEED_VERSION = 2;
 const FORM_ASSET = 'modules/pf2e-val-toolkit/assets/familiar-forms';
 const formFor = id => Object.hasOwn(HUNT_FORMS, id) ? HUNT_FORMS[id] : null;
 const formImage = id => `${FORM_ASSET}/${id}.webp`;
+export const formLabel = form => `${form.name} — ${form.role}`;
 
 export function hasHuntForms(familiar) {
   return familiar?.type === 'familiar' && ['Prism', 'Prisme'].includes(familiar.name);
@@ -129,8 +130,8 @@ export async function openFamiliarSelector(familiar) {
   const available = new Set(docs.map(abilityId));
   const formPanel = visibleForms ? `
     <div class="val-familiar-forms" style="margin:8px 0;padding:8px;border:1px solid var(--color-border-light-tertiary)">
-      <div style="display:flex;gap:12px;align-items:center"><img class="val-familiar-form-portrait" src="${escapeHTML(activeForm ? formImage(activeForm) : familiar.img)}" style="width:96px;height:96px;object-fit:contain;flex:0 0 96px" alt="Portrait du familier"/>
-      <div style="flex:1"><label>Forme du jour <select class="val-familiar-form"><option value="">Choisir une forme</option>${Object.entries(HUNT_FORMS).map(([id,form])=>`<option value="${id}" ${activeForm===id?'selected':''}>${escapeHTML(form.name)}</option>`).join('')}</select></label>
+      <div style="display:flex;gap:12px;align-items:center"><div style="flex:0 0 120px;display:flex;justify-content:center;align-items:center"><img class="val-familiar-form-portrait" src="${escapeHTML(activeForm ? formImage(activeForm) : familiar.img)}" style="width:auto !important;height:auto !important;max-width:120px;max-height:112px;aspect-ratio:auto !important;object-fit:contain !important;display:block" alt="Portrait du familier"/></div>
+      <div style="flex:1;min-width:0"><label>Forme du jour <select class="val-familiar-form" style="width:100%"><option value="">Choisir une forme</option>${Object.entries(HUNT_FORMS).map(([id,form])=>`<option value="${id}" ${activeForm===id?'selected':''}>${escapeHTML(formLabel(form))}</option>`).join('')}</select></label>
       <p class="val-familiar-form-role"></p><button type="button" class="val-familiar-reset-form">Rétablir les capacités suggérées</button></div></div>
       <p class="hint">La forme réserve ses capacités naturelles. Les autres restent libres. Le portrait et les capacités ne changent qu'à l'enregistrement.</p>
     </div>` : '';
@@ -159,7 +160,7 @@ export async function openFamiliarSelector(familiar) {
     <label><input type="checkbox" class="val-familiar-show-info" /> Afficher les informations</label>
   </div>
   <div class="val-familiar-counter" aria-live="polite"></div>
-  <div class="val-familiar-list" style="max-height:48vh;overflow-x:hidden;overflow-y:auto;display:block;min-width:0;max-width:100%">${docs.filter(doc => !fixedSet.has(abilityId(doc))).map(doc=>{
+  <div class="val-familiar-list" style="flex:1 1 0;min-height:88px;overflow-x:hidden;overflow-y:auto;display:block;min-width:0;max-width:100%">${docs.filter(doc => !fixedSet.has(abilityId(doc))).map(doc=>{
     const id=abilityId(doc); const checked=selected.has(id);
     const fav=favorites.has(id);
     return `<div class="val-familiar-row" data-row="${escapeHTML(id)}" style="min-width:0;max-width:100%;padding:5px 3px;border-bottom:1px solid var(--color-border-light-tertiary)">
@@ -210,11 +211,22 @@ export async function openFamiliarSelector(familiar) {
     Hooks.off('renderDialogV2',hook);
     const root=app.element;
     // Keep the dialog at a stable width even for lengthy compendium descriptions.
-    app.setPosition?.({ width: Math.min(780, window.innerWidth - 50) });
+    const height = Math.min(860, window.innerHeight - 32);
+    app.setPosition?.({ width: Math.min(780, window.innerWidth - 50), height, top: Math.max(16, (window.innerHeight - height) / 2) });
     root.style.maxWidth='calc(100vw - 32px)';
+    root.style.maxHeight='calc(100dvh - 32px)';
     root.style.minWidth='0';
     const content=root.querySelector('.window-content');
-    if(content){content.style.minWidth='0';content.style.overflowX='hidden';}
+    if(content) Object.assign(content.style,{minWidth:'0',minHeight:'0',overflow:'hidden',display:'flex',flexDirection:'column'});
+    const form=root.querySelector('.dialog-form');
+    if(form) Object.assign(form.style,{flex:'1 1 auto',minHeight:'0',display:'flex',flexDirection:'column',overflow:'hidden'});
+    const body=root.querySelector('.dialog-content');
+    if(body) {
+      Object.assign(body.style,{flex:'1 1 0',minHeight:'0',display:'flex',flexDirection:'column',overflowY:'auto',overflowX:'hidden'});
+      for(const child of body.children) if(!child.matches('.val-familiar-list')) child.style.flexShrink='0';
+    }
+    const footer=root.querySelector('.form-footer');
+    if(footer) footer.style.flex='0 0 auto';
     const update=()=>{
       const checked=new Set([...root.querySelectorAll('[data-ability]:checked')].map(el=>el.dataset.ability));
       const all=new Set([...checked,...unknown.map(abilityId)]);
@@ -228,7 +240,7 @@ export async function openFamiliarSelector(familiar) {
           const labels={fly:'vol',survival:'Survie',intimidation:'Intimidation',deception:'Tromperie'};
           return `${doc?.name || slug}${choice ? ` (${labels[choice] || choice})` : ''}`;
         });
-        formRole.textContent=form ? `${form.role} — suggéré : ${suggestion.join(', ')}` : '';
+        formRole.textContent=form ? `Capacités suggérées : ${suggestion.join(', ')}` : '';
       }
       const counter=root.querySelector('.val-familiar-counter');
       counter.textContent=`${all.size+fixed.length}/${maximum} capacités, dont ${new Set([...fixed,...natural]).size} imposée(s)${all.size>free?' — Retirez '+(all.size-free)+' capacité(s) pour enregistrer.':''}`;
