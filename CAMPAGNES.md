@@ -10,6 +10,7 @@ Une **campagne ou un scénario suivi** doit avoir une fiche spécifique ; y dist
 | Cartel du Sel | Active, première enquête terminée | [Cartel du Sel](pf2/campagnes/Campagne-Cartel-du-Sel.md) |
 | Les Sept Fléaux de Pointesable | Commencée | [Sept Fléaux](pf2/campagnes/Campagne-Sept-Fleaux-de-Pointesable.md) |
 | La Route ouverte — campagne transverse PFS | 13 scénarios liés, séance 1-00 en préparation | [Route ouverte](pf2/campagnes/Campagne-Route-Ouverte.md) |
+| Le Pacte des Échanges — campagne transverse PFS (Equal Exchanges) | Cadrage initial, quatre scénarios ; intégration SQLite/Foundry à vérifier | [Pacte des Échanges](pf2/campagnes/Campagne-Equal-Exchanges.md) |
 | PFS S01-00 — Origines de la Route Ouverte | Préparation prioritaire, non jouée | [Scénario PFS S01-00](pf2/campagnes/Scenario-Origines-Route-Ouverte.md) |
 | Sentence d'Extinction | Adaptation en préparation | [Sentence d'Extinction](pf2/campagnes/Campagne-Sentence-d-Extinction.md) |
 | L'Âge des Cendres (anciennement HD100) | Préparation d'une adaptation pour table ouverte | [Âge des Cendres](pf2/campagnes/Campagne-Age-des-Cendres.md) |
