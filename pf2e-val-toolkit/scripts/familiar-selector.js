@@ -8,6 +8,43 @@ const requires = {
 };
 const spellRanks = { 'spell-battery': 4, 'spellcasting': 6 };
 
+export const HUNT_FORMS = {
+  falcon: { name: 'Faucon', fixed: ['flier'], suggested: ['fast-movement'], choices: { 'fast-movement': { speed: 'fly' } }, role: 'Reconnaissance aérienne' },
+  wildcat: { name: 'Chat sauvage', fixed: ['climber'], suggested: ['darkvision'], role: 'Espionnage et infiltration' },
+  hound: { name: 'Chien de chasse', fixed: ['scent'], suggested: ['skilled'], choices: { skilled: { skill: 'survival' } }, role: 'Pistage et recherche' },
+  wolf: { name: 'Loup', fixed: ['scent'], suggested: ['skilled'], choices: { skilled: { skill: 'intimidation' } }, role: 'Menace et dissuasion' },
+  otter: { name: 'Loutre', fixed: ['amphibious'], suggested: ['manual-dexterity'], role: 'Exploration aquatique et récupération' },
+  fox: { name: 'Renard', fixed: ['burrower'], suggested: ['skilled'], choices: { skilled: { skill: 'deception' } }, role: 'Ruse et exploration souterraine' },
+  raven: { name: 'Corbeau', fixed: ['flier'], suggested: ['speech'], role: 'Communication et messagerie' },
+  ermine: { name: 'Hermine', fixed: [], suggested: ['familiar-focus', 'cantrip-connection'], role: 'Soutien magique' },
+};
+const FORM_FLAG = 'familiarHuntForms';
+const FORM_ASSET = 'modules/pf2e-val-toolkit/assets/familiar-forms';
+const formFor = id => Object.hasOwn(HUNT_FORMS, id) ? HUNT_FORMS[id] : null;
+const formImage = id => `${FORM_ASSET}/${id}.webp`;
+
+export function presetSelection(id, patron, maximum, reserved, available) {
+  const form = formFor(id);
+  if (!form) return null;
+  const fixed = new Set([...patron, ...form.fixed]);
+  const result = new Set(reserved);
+  if ([...fixed].some(slug => !available.has(slug)) || new Set([...fixed, ...result]).size > maximum) return null;
+  for (const slug of [...form.fixed, ...form.suggested]) {
+    if (available.has(slug) && new Set([...patron, ...result, slug]).size <= maximum) result.add(slug);
+  }
+  return { selected: result, fixed, choices: form.choices || {} };
+}
+
+export function presetSource(doc, choices = {}) {
+  const source = doc.toObject();
+  for (const rule of source.system?.rules || []) {
+    if (rule.key === 'ChoiceSet' && Object.hasOwn(choices, rule.flag) && rule.choices?.some?.(c => c.value === choices[rule.flag])) {
+      rule.selection = choices[rule.flag];
+    }
+  }
+  return source;
+}
+
 function familiarMaster(familiar) {
   const id = familiar.system?.master?.id;
   return id ? game.actors.get(id) : null;
@@ -74,12 +111,27 @@ export async function openFamiliarSelector(familiar) {
   const rank = highestRank(master);
   const unknown = freeCurrent.filter(i=>!docs.some(d=>abilityId(d)===abilityId(i)));
   for (const item of unknown) selected.add(abilityId(item));
+  const formConfig = familiar.getFlag(NAMESPACE, FORM_FLAG) || {};
+  let formsEnabled = formConfig.enabled === true;
+  let activeForm = formsEnabled && formFor(formConfig.form) ? formConfig.form : '';
+  let pendingChoices = {};
+  const visibleForms = formsEnabled || game.user.isGM;
+  const available = new Set(docs.map(abilityId));
+  const formPanel = visibleForms ? `
+    ${game.user.isGM ? `<label><input type="checkbox" class="val-familiar-forms-enabled" ${formsEnabled?'checked':''}/> Activer les formes de la Chasse Sauvage pour ce familier</label>` : ''}
+    <div class="val-familiar-forms" ${formsEnabled?'':'hidden'} style="margin:8px 0;padding:8px;border:1px solid var(--color-border-light-tertiary)">
+      <div style="display:flex;gap:12px;align-items:center"><img class="val-familiar-form-portrait" src="${escapeHTML(activeForm ? formImage(activeForm) : familiar.img)}" style="width:72px;height:72px;object-fit:cover" alt="Portrait du familier"/>
+      <div style="flex:1"><label>Forme du jour <select class="val-familiar-form"><option value="">Choisir une forme</option>${Object.entries(HUNT_FORMS).map(([id,form])=>`<option value="${id}" ${activeForm===id?'selected':''}>${escapeHTML(form.name)}</option>`).join('')}</select></label>
+      <p class="val-familiar-form-role"></p><button type="button" class="val-familiar-reset-form">Rétablir les capacités suggérées</button></div></div>
+      <p class="hint">La forme réserve ses capacités naturelles. Les autres restent libres. Le portrait et les capacités ne changent qu'à l'enregistrement.</p>
+    </div>` : '';
   const favorites = new Set(familiar.getFlag(NAMESPACE, 'familiarFavorites') || []);
   const descriptions = await Promise.all(docs.map(renderDescription));
   const descriptionById = new Map(docs.map((doc, index) => [abilityId(doc), descriptions[index]]));
   const details = `<p><b>${escapeHTML(familiar.name)}</b> — ${escapeHTML(master.name)} · ${maximum} capacités, dont ${fixed.length} imposée(s). <b>${free} choix libres</b>.</p>
   ${fixedDocuments.map(doc=>`<p>🔒 ${escapeHTML(doc.name)} (capacité obligatoire du patron, présente sur la fiche du familier)</p>`).join('')}
-  <p class="hint">L'apparence du familier n'impose aucune capacité dans ce sélecteur. Les restrictions textuelles non codées restent soumises au MJ.</p>
+  ${formPanel}
+  <p class="hint">Les restrictions textuelles non codées restent soumises au MJ.</p>
   <div style="display:flex;gap:1em;align-items:center;flex-wrap:wrap;margin:8px 0">
     <label><input type="checkbox" class="val-familiar-filter" checked /> Masquer les capacités indisponibles</label>
     <label><input type="checkbox" class="val-familiar-favorites-only" /> Favoris uniquement</label>
@@ -108,16 +160,25 @@ export async function openFamiliarSelector(familiar) {
         const root=dialog.element;
         const chosen=new Set([...root.querySelectorAll('[data-ability]:checked')].map(e=>e.dataset.ability));
         const all=new Set([...chosen,...unknown.map(abilityId)]);
+        const form = formsEnabled ? formFor(activeForm) : null;
+        if(formsEnabled && !form){ui.notifications.error('Choisissez une forme animale.');return false;}
+        if(form?.fixed.some(slug=>!available.has(slug)||(!all.has(slug)&&!fixedSet.has(slug)))){ui.notifications.error('Les capacités naturelles de la forme sont obligatoires.');return false;}
         if(all.size>free){ui.notifications.error(`Maximum ${free} capacités libres (dont ${unknown.length} personnalisées).`);return false;}
         for(const d of docs.filter(d=>chosen.has(abilityId(d)))){
-          const failed=reasons(d,master,all,rank);
+          const failed=reasons(d,master,new Set([...all,...fixed]),rank);
           if(failed.length){ui.notifications.error(`${d.name} : ${failed.join(', ')}`);return false;}
         }
         if(!familiar.isOwner){ui.notifications.error('Modification du familier non autorisée.');return false;}
-        const removable=freeCurrent.filter(i=>!all.has(abilityId(i)));
-        const add=docs.filter(d=>!fixedSet.has(abilityId(d))&&chosen.has(abilityId(d))&&!current.some(i=>abilityId(i)===abilityId(d)));
-        if(add.length) await familiar.createEmbeddedDocuments('Item',add.map(i=>i.toObject()));
+        const matchesChoice = item => Object.entries(pendingChoices[abilityId(item)] || {}).every(([flag,value])=>item.flags?.pf2e?.rulesSelections?.[flag]===value || item.system?.rules?.some(r=>r.key==='ChoiceSet'&&r.flag===flag&&r.selection===value));
+        const removable=freeCurrent.filter(i=>!all.has(abilityId(i))||!matchesChoice(i));
+        const add=docs.filter(d=>!fixedSet.has(abilityId(d))&&chosen.has(abilityId(d))&&!current.some(i=>abilityId(i)===abilityId(d)&&matchesChoice(i)));
+        if(add.length) await familiar.createEmbeddedDocuments('Item',add.map(i=>presetSource(i,pendingChoices[abilityId(i)])));
         if(removable.length) await familiar.deleteEmbeddedDocuments('Item',removable.map(i=>i.id));
+        if(visibleForms && (formsEnabled || formConfig.enabled)) {
+          const update = { [`flags.${NAMESPACE}.${FORM_FLAG}`]: { enabled: formsEnabled, form: formsEnabled ? activeForm : '' } };
+          if(form) { update.img=formImage(activeForm); update['prototypeToken.texture.src']=update.img; }
+          await familiar.update(update);
+        }
         ui.notifications.info(`Capacités de ${familiar.name} enregistrées.`);
         return true;
       }}
@@ -136,22 +197,59 @@ export async function openFamiliarSelector(familiar) {
     const update=()=>{
       const checked=new Set([...root.querySelectorAll('[data-ability]:checked')].map(el=>el.dataset.ability));
       const all=new Set([...checked,...unknown.map(abilityId)]);
+      const form = formsEnabled ? formFor(activeForm) : null;
+      const natural = new Set(form?.fixed || []);
+      const formRole=root.querySelector('.val-familiar-form-role');
+      if(formRole) {
+        const suggestion=(form?.suggested || []).map(slug=>{
+          const doc=docs.find(d=>abilityId(d)===slug);
+          const choice=Object.values(form.choices?.[slug] || {})[0];
+          const labels={fly:'vol',survival:'Survie',intimidation:'Intimidation',deception:'Tromperie'};
+          return `${doc?.name || slug}${choice ? ` (${labels[choice] || choice})` : ''}`;
+        });
+        formRole.textContent=form ? `${form.role} — suggéré : ${suggestion.join(', ')}` : '';
+      }
       const counter=root.querySelector('.val-familiar-counter');
-      counter.textContent=`${all.size}/${free} choix libres${all.size>free?' — Retirez '+(all.size-free)+' capacité(s) pour enregistrer.':''}`;
+      counter.textContent=`${all.size+fixed.length}/${maximum} capacités, dont ${new Set([...fixed,...natural]).size} imposée(s)${all.size>free?' — Retirez '+(all.size-free)+' capacité(s) pour enregistrer.':''}`;
       counter.style.color=all.size>free?'var(--color-text-danger)':'';
       for(const el of root.querySelectorAll('[data-ability]')){
         const doc=docs.find(d=>abilityId(d)===el.dataset.ability);
-        const errors=reasons(doc,master,all,rank);
+        const errors=reasons(doc,master,new Set([...all,...fixed]),rank);
         const row=el.closest('.val-familiar-row');
         const desc=row.querySelector('.val-familiar-reason');
-        desc.textContent=errors.length?` — Indisponible : ${errors.join(', ')}`:'';
-        el.disabled=!el.checked&&(!!errors.length||all.size>=free);
+        const locked=natural.has(el.dataset.ability);
+        desc.textContent=locked?' — 🔒 Capacité naturelle obligatoire':errors.length?` — Indisponible : ${errors.join(', ')}`:'';
+        el.disabled=locked||(!el.checked&&(!!errors.length||all.size>=free));
         const hideUnavailable=root.querySelector('.val-familiar-filter').checked;
         const onlyFavorites=root.querySelector('.val-familiar-favorites-only').checked;
         row.hidden=(hideUnavailable && errors.length>0 && !el.checked) || (onlyFavorites && !favorites.has(el.dataset.ability) && !el.checked);
       }
     };
+    const applyForm = id => {
+      const preset=presetSelection(id,fixed,maximum,unknown.map(abilityId),available);
+      if(!preset){ui.notifications.warn('Cette forme ne peut pas être appliquée avec les capacités disponibles.');return false;}
+      activeForm=id;
+      pendingChoices=preset.choices;
+      for(const el of root.querySelectorAll('[data-ability]')) {
+        const doc=docs.find(d=>abilityId(d)===el.dataset.ability);
+        el.checked=preset.selected.has(el.dataset.ability) && (!reasons(doc,master,new Set([...preset.selected,...fixed]),rank).length || preset.fixed.has(el.dataset.ability));
+      }
+      root.querySelector('.val-familiar-form-portrait').src=formImage(id);
+      root.querySelector('.val-familiar-form').value=id;
+      update();return true;
+    };
     root.addEventListener('change',event=>{
+      if(event.target.matches('.val-familiar-forms-enabled')){
+        formsEnabled=event.target.checked;
+        root.querySelector('.val-familiar-forms').hidden=!formsEnabled;
+        if(!formsEnabled){activeForm='';pendingChoices={};root.querySelector('.val-familiar-form').value='';}
+      }
+      if(event.target.matches('.val-familiar-form')){
+        if(!applyForm(event.target.value))event.target.value=activeForm;
+      }
+      if(event.target.matches('[data-ability]')&&!event.target.checked){
+        pendingChoices={...pendingChoices};delete pendingChoices[event.target.dataset.ability];
+      }
       if(event.target.matches('.val-familiar-show-info')){
         const show=event.target.checked;
         for(const detail of root.querySelectorAll('.val-familiar-description'))detail.hidden=!show;
@@ -159,6 +257,7 @@ export async function openFamiliarSelector(familiar) {
       update();
     });
     root.addEventListener('click',async event=>{
+      if(event.target.closest('.val-familiar-reset-form')){if(activeForm)applyForm(activeForm);return;}
       const favoriteButton=event.target.closest('[data-favorite]');
       if(favoriteButton){
         const id=favoriteButton.dataset.favorite;
@@ -178,6 +277,10 @@ export async function openFamiliarSelector(familiar) {
         root.querySelector('.val-familiar-show-info').checked=every.every(el=>!el.hidden);
       }
     });
+    if(activeForm) {
+      const form=formFor(activeForm);
+      for(const el of root.querySelectorAll('[data-ability]')) if(form.fixed.includes(el.dataset.ability))el.checked=true;
+    }
     update();
   });
   dlg.render(true);
@@ -208,3 +311,4 @@ export function initFamiliarSelector(){
   game.pf2eValToolkit ??= {};
   game.pf2eValToolkit.openFamiliarSelector=openFamiliarSelector;
 }
+

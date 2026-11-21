@@ -1448,3 +1448,10 @@ affiché dans Extras doit également être renommé dans Foundry.
 ### Versements de fin de séance (0.44.20)
 
 Le MJ actif de `test-pf2` interroge la file SQLite des pièces toutes les 30 secondes via la clé de synchronisation Discord/Foundry existante. L'opération utilise `actor.inventory.addCoins` sans autoriser `execute-js`. La réservation et le flag `sessionCoinAwards` par séance/PJ protègent des doubles versements ; les opérations ambiguës ne sont jamais rejouées automatiquement. La console MJ peut relancer uniquement la synchronisation (`game.modules.get('pf2e-val-toolkit').api.syncSessionCoins()`), sans rejouer les pièces déjà versées. Voir `docs/pf2/discord-session-end.md`. Test : `node pf2e-val-toolkit/tests/session-coin-awards.mjs`.
+
+
+## v0.44.21 — Formes quotidiennes des familiers
+
+Le MJ peut activer les huit formes de la Chasse Sauvage dans **Préparer** sur la fiche d'un familier. Le choix est enregistré par Actor (flag `familiarHuntForms`), jamais activé automatiquement sur un personnage nommé. Les autres familiers gardent le sélecteur classique. Choisir une forme présélectionne ses capacités naturelles (verrouillées, décomptées du maximum PF2e) et ses suggestions libres. L'hermine ne réserve aucune capacité naturelle. Les éventuels emplacements supplémentaires sont libres. Les capacités de patron et personnalisées restent préservées. Annuler ne change ni la forme ni les capacités. Enregistrer utilise les Items du compendium PF2e et change le portrait de l'Actor et du prototype de token ; les tokens de scène déjà placés ne sont pas réécrits. Les illustrations sont incluses dans le module. 
+
+Les choix PF2e de Compétent (Survie, Intimidation, Tromperie) et de Déplacement rapide (vol) sont présélectionnés via les ChoiceSet natifs. Lien de sort mineur ne crée pas automatiquement un sort dans le répertoire de l'ensorceleuse ; suivre sa règle textuelle. Aucun point de focalisation n'est accordé automatiquement par le choix de la forme. Test : `node pf2e-val-toolkit/tests/familiar-forms.mjs`. Validation interactive requise avec un compte joueur, notamment les choix natifs et les portraits.
