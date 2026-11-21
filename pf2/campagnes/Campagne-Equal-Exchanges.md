@@ -72,7 +72,13 @@ Inventaire physique mini-PC vérifié le 21 novembre 2026, dans les dossiers Doc
 | 5-11 | Présent, 43 p. | `- trad.pdf`, 4 p., partiel | Guide MJ français détaillé |
 | 5-18 | Présent, 41 p. | Document d'informations MJ | Guide MJ français détaillé |
 
+Chronique rétrospective de lecture : `Références/Univers/Chroniques MJ/Chronique - Le Pacte des Échanges - 4723 AR (info).pdf`, quatre chapitres, format PDF, catégorie `story`, asset `pdf-story-3e130e53dc28d736ce7da130`, rattaché à `equal-exchanges`. Présence physique et restitution par l'API catalogue vérifiées. Le chapitre 5-09 demeure provisoire. 
+
 Les PDF originaux disponibles ont été exploités pour les passages narratifs et les étapes ; le 5-09 reste à contrôler sur l'original. Ne pas enregistrer la chronique comme un événement joué. 
+
+## Foundry : inventaire et suite
+
+Le 21/11/2026, client en ligne dans le monde `test-pf2` (Les Eclaireurs), Foundry 14.365 / PF2e 8.4.1. L'API renvoie 86 dossiers de scènes, aucun dossier explicitement nommé pour cet arc. La Route ouverte est déjà sous `MJ / Campagnes transverses` : conserver cette organisation pour le futur dossier du Pacte. Aucune scène ni aucun Actor ou journal ajouté lors de ce contrôle ; l'API GM actuelle ne permet pas la création de dossiers/scènes, et un inventaire de journaux complet reste nécessaire pour éviter les doublons. Cartes, repères, acteurs, rencontres, permissions et essais réels restent à préparer. Ne pas marquer les modules prêts.
 
 ## Sources
 - Paizo : [5-04](https://store.paizo.com/pfs-scenario-5-04-equal-exchanges-necessary-introductions/), [5-09](https://store.paizo.com/pfs-scenario-5-09-equal-exchanges-skymetal-hoard/), [5-11](https://store.paizo.com/pfs-scenario-5-11-equal-exchanges-the-hidden-current/), [5-18](https://store.paizo.com/pfs-scenario-5-18-equal-exchanges-tapestry-of-the-mind/).
