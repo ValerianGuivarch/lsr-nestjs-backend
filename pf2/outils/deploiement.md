@@ -169,13 +169,18 @@ https://github.com/ValerianGuivarch/lsr-nestjs-backend.git
 
 Ne pas ajouter une clé GitHub permanente au mini-PC pour ce besoin : le dépôt est public et le fetch HTTPS évite une credential supplémentaire.
 
-### 22.5 Clone de production sur le mini-PC
+### 22.5 Deux clones permanents sur le mini-PC
 
-Chemin :
+| Chemin | Usage |
+| --- | --- |
+| `/home/valou/services/lsr-nestjs-deploy` | Checkout de production, alimenté exclusivement par GitHub Actions ; HEAD détachée sur le SHA déployé. Les extensions MediaWiki, les dossiers Markdown PJ et les modules Foundry sont montés depuis ce clone. Ne jamais y développer ni y commiter. |
+| `/home/valou/services/lsr-nestjs-backend` | Clone de développement et emplacement historique de données persistantes. Garder son `main` synchronisé avec GitHub ; vérifier le statut et actualiser les sources avant chaque intervention. |
 
-```text
-/home/valou/services/lsr-nestjs-backend
-```
+**Attention :** les conteneurs montent encore `pf2.sqlite`, `jdr-database.sqlite`, `database.sqlite` et `storage/` depuis le clone de développement. Ce répertoire ne doit ni être supprimé, déplacé ni nettoyé globalement. Préserver les fichiers ignorés, la configuration locale et les sauvegardes ; ne jamais les publier.
+
+GitHub `main` est l'unique référence des sources. Un espace de travail temporaire (idéalement un `git worktree` nommé sous `lsr-worktrees/`) sert à isoler une intervention. Avant de le retirer, vérifier que le commit est ancêtre de `origin/main` ou que son contenu a été repris (squash, rebase, corrections ultérieures), que les modifications locales sont intégrées et qu'aucun fichier de données ni processus actif ne dépend du dossier. Utiliser `git worktree remove` pour les worktrees ; ne pas supprimer directement leur répertoire. En cas de doute, garder un repère Git local et archiver séparément les données éventuelles. Auditer les stashes avant de les abandonner ; un stash obsolète peut être conservé de façon récupérable sous une référence Git locale `refs/archive/`, sans l'envoyer sur GitHub.
+
+Pour réactualiser le développement : inspecter `git status`, protéger les modifications ou fichiers non suivis utiles, puis `git fetch origin` et `git merge --ff-only --no-overwrite-ignore origin/main`. Éviter tout reset destructif ou nettoyage de fichiers ignorés ; la production continue de suivre son propre workflow.
 
 Script de déploiement :
 
@@ -194,7 +199,7 @@ Le script :
 7. tente ensuite de démarrer `api-recalbox` et `web-recalbox` séparément : une indisponibilité Recalbox produit un avertissement mais ne doit pas faire échouer le cœur de l'application ;
 8. rafraîchit ensuite la stack MediaWiki depuis le checkout de déploiement.
 
-**Ne jamais utiliser `git clean`, `git reset --hard` ou une suppression globale sur ce clone sans audit préalable.** Le mini-PC contient des fichiers locaux, sauvegardes et données non suivis qui doivent être préservés.
+**Ne jamais utiliser `git clean`, `git reset --hard` ou une suppression globale sur l'un de ces deux clones.** Le mini-PC contient des fichiers locaux, sauvegardes et données non suivis qui doivent être préservés.
 
 ### 22.6 Stack Docker principale
 

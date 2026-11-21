@@ -1,5 +1,3 @@
-[Reading 227 lines from start (total: 227 lines, 0 remaining)]
-
 # Les Sept Fléaux de Pointesable
 
 [← Index des campagnes](Campagnes.md) · [Pointesable](../univers/Pointesable.md) · [Équipe rivale d'Elysye](../univers/Equipe-rivale.md)
@@ -16,7 +14,7 @@ La campagne est **commencée** dans une adaptation destinée à une table dont l
 - Glorkus et Zoduk ont été adaptés mécaniquement pour cette ouverture.
 - Les PJ sont actuellement **entre les niveaux 2 et 3**. La référence antérieure de **3 PJ niveau 3** concernait uniquement la préparation des Catacombes du Feu Infernal.
 - Le **rituel de Nualia reste reporté à une séance ultérieure**.
-- La prochaine orientation probable est **enquête sur la Fosse puis première incursion**. La Fosse **ne doit pas être abaissée automatiquement au niveau du groupe** : son premier vrai niveau est prévu pour des PJ de niveau 5, et le contraste de danger fait partie de l'expérience recherchée.
+- La première incursion dans la Fosse et la séquence de captivité ont depuis été jouées. La Fosse **ne doit pas être abaissée automatiquement au niveau du groupe** : son premier vrai niveau est prévu pour des PJ de niveau 5, et le contraste de danger fait partie de l'expérience recherchée.
 - Les PJ peuvent donc atteindre la Fosse très tôt, reconnaître les lieux, commencer à descendre, comprendre qu'ils sont largement sous-niveau puis **revenir à Pointesable sans que cela soit un échec**. La campagne publiée autorise les allers-retours et laisse les PJ choisir leur rythme d'exploration.
 
 ## Événements réellement joués
@@ -25,7 +23,8 @@ La campagne est **commencée** dans une adaptation destinée à une table dont l
 - Ils ont longuement hésité à le libérer : une partie du groupe voulait le sauver, tandis que d'autres craignaient qu'ouvrir le passage ne libère la créature de feu située dans les ruines.
 - Les PJ n'ont pas clairement aperçu ni identifié la créature. Le bruit a fini par provoquer une nouvelle attaque de feu, qui a tué Zoduk.
 - Leur perception actuelle est donc que les ruines thassiloniennes sont probablement trop dangereuses pour eux. Ils envisagent plutôt de faire intervenir des Éclaireurs plus expérimentés que de poursuivre immédiatement l'exploration.
-- À ce stade, ils connaissent surtout **Volpépite** par son lien avec **Pic-Chardon**. Ils ne savent pas encore qu'il est parti vers la **Fosse** et celle-ci n'a pas encore été introduite clairement auprès d'eux.
+- Lors de cette ouverture, ils connaissaient surtout **Volpépite** par son lien avec **Pic-Chardon**, avant leur découverte de la Fosse.
+- La première incursion au Hall des Menaces (D1) a tourné à la retraite après un combat défavorable contre les Crocs-Sifflets. Pépin et Neyla ont été capturés ; la séquence de captivité a depuis été jouée (confirmation MJ du 21 novembre). Consulter l'historique de séance pour les conséquences exactes avant toute reprise.
 
 ## Catacombes du Feu Infernal — direction de préparation validée
 
@@ -72,7 +71,7 @@ Adaptation validée pour le climax :
 - Lorsque les Veilleurs de runes apprennent que les PJ veulent explorer la Fosse, ils leur demandent de **cartographier ses différents niveaux**. Une carte est acceptée si toutes les zones visibles du niveau ont été explorées ; les zones secrètes sont appréciées mais non obligatoires. Produire une carte propre demande normalement 4 h d'intermède et un test d'Artisanat DD 20. La récompense canonique est une réputation auprès des Veilleurs égale au niveau du donjon, avec +1 supplémentaire si au moins trois zones secrètes du niveau ont été découvertes.
 - Pour la séance à venir, cette demande sert surtout de **mission claire et non suicidaire** : observer, documenter et revenir vivant vaut déjà quelque chose.
 
-## Foundry — chantier de conversion de la campagne (état au 5 novembre 2026)
+## Foundry — chantier de conversion de la campagne (historique, dernière reprise le 18 novembre 2026)
 
 ### Objectif
 
@@ -117,7 +116,7 @@ Les cartes anglaises Seven Dooms for Sandpoint servent de copie/référence. Les
 | --- | --- | --- |
 | 01 | Catacombes du Feu infernal | contenu complet ; **corrigée le 5/11 : toute la géométrie montée de 50 px** ; repères B3a/B8a/B9 déplacés hors des portes |
 | 02 | La Fosse — Corniches C1–C7 | 7 repères MJ ; accès/profondeurs documentés |
-| 03 | Fosse N1 — Repaire des Crocs-Sifflets — niv. 5 | D1–D15/D14a, rencontres et loot ; **décalage global d'une case déjà signalé, reste à corriger** |
+| 03 | Fosse N1 — Repaire des Crocs-Sifflets — niv. 5 | D1–D15/D14a, rencontres et loot ; **translation de −50 px en Y appliquée le 7 novembre ; scène remaniée le 18 novembre, ne pas réappliquer l'ancien delta** |
 | 04 | Fosse N2 — Sanctuaire du diable de Pointesable — niv. 6 | E1–E16, rencontres, dangers et loot |
 | 05 | Fosse N3 — Ateliers de clonage — niv. 7 | F1–F20, rencontres, dangers et loot |
 | 06 | Fosse N4 — Sanctuaire du diable — niv. 8 | G1–G12, rencontres, dangers et loot |
@@ -143,9 +142,9 @@ Les cartes anglaises Seven Dooms for Sandpoint servent de copie/référence. Les
 
 Le monde travaillé est test-pf2 / **Les Éclaireurs** sur le mini-PC. Pendant cette discussion, plusieurs corrections ont été appliquées hors ligne après arrêt de Foundry et sauvegarde du monde. **Ce n'est pas le processus nominal décrit dans PF2_WORKSPACE.md** : lors d'une reprise, privilégier l'API documentaire / le relais Foundry ou l'interface prévue. Ne répéter une écriture directe de LevelDB que si le MJ l'autorise explicitement après constat que l'accès nominal est indisponible. Les sauvegardes ponctuelles créées pendant ce chantier se trouvent sous /home/valou/services/foundry/backups/.
 
-## Préparation de séance — première reconnaissance de la Fosse
+## Préparation historique de séance — première reconnaissance de la Fosse
 
-**État : proposition de préparation, non jouée.**
+**État : ancien conducteur, désormais joué ; ne pas réimporter tel quel.**
 **Groupe :** PJ entre niveaux 2 et 3. **Ne pas réduire la difficulté canonique de la Fosse pour cette séance.**
 **Rituel de Nualia :** toujours reporté.
 
@@ -220,12 +219,15 @@ Ne pas forcer de loot majeur. La vraie récompense de la première sortie peut �
 
 Le rituel de Nualia reste un **autre axe de progression** disponible plus tard.
 
+## Reprise des modules jouables (17–18 novembre 2026)
+
+Les 14 composantes de la campagne disposent de modèles persistants dans Choix libre, avec récapitulatif et références aux scènes Foundry. Leur état joué/prêt est conservé côté métier ; vérifier la progression effective avant de sélectionner le prochain module, sans créer de doublon. Le modèle Crocs-Sifflets et Volpépite réutilisait la préparation d'évasion. Lors du contrôle Foundry du 18 novembre, les trois coffres gobelins de N1 ont été reliés à des Actors contenant leur inventaire réel ; les anciens Actors vides ont été retirés. La relecture et l'état actuel de cette scène doivent être évalués d'après le jeu depuis cette préparation.
+
+La couverture des portraits avait été complétée par 24 illustrations de campagne et 19 portraits Monster Core. Ne pas réappliquer automatiquement d'anciennes coordonnées ou affectations d'images.
+
 ## Prochaines décisions à capitaliser
 
 - solution définitive et mécanique exacte des Trois Marches ;
 - statblocks / dangers finaux adaptés aux 3 PJ niveau 3 ;
 - résultat du rituel de Nualia et informations réellement obtenues par les PJ ;
-- manière exacte dont la Fosse est introduite ;
 - décision des PJ de revenir ou non explorer les Catacombes du Feu Infernal.
-
-[executed on device: minipc (0f1786de-8721-4294-b517-165961157741)]
