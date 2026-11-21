@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { HUNT_FORMS, presetSelection, presetSource, hasHuntForms, huntFavorites } from '../scripts/familiar-selector.js';
+import { HUNT_FORMS, presetSelection, presetSource, hasHuntForms, huntFavorites, reasons } from '../scripts/familiar-selector.js';
 
 const all = new Set(Object.values(HUNT_FORMS).flatMap(form => [...form.fixed, ...form.suggested]));
 assert.equal(Object.keys(HUNT_FORMS).length, 9);
@@ -12,8 +12,10 @@ assert.equal(hasHuntForms({type:'familiar',name:'Prisme'}),true);
 assert.equal(hasHuntForms({type:'familiar',name:'prism'}),false);
 assert.equal(hasHuntForms({type:'character',name:'Prism'}),false);
 assert.equal(hasHuntForms({type:'familiar',name:'Autre'}),false);
-assert.deepEqual(new Set(huntFavorites(['custom-favorite','skilled'])), new Set(['custom-favorite',...all]));
+assert.deepEqual(new Set(huntFavorites(['custom-favorite','skilled'])), new Set(['custom-favorite','skilled','scent',...all]));
 assert.equal(huntFavorites(['skilled']).filter(slug=>slug==='skilled').length,1);
+assert.equal(huntFavorites().includes('skilled'),false);
+assert.equal(huntFavorites().includes('scent'),true);
 for (const [id, form] of Object.entries(HUNT_FORMS)) {
   const preset = presetSelection(id, [], 2, [], all);
   assert.deepEqual([...preset.selected], [...form.fixed, ...form.suggested]);
@@ -26,9 +28,12 @@ assert.deepEqual([...presetSelection('falcon', ['patron'], 2, [], new Set([...al
 assert.equal(presetSelection('falcon', [], 1, ['custom'], all), null);
 assert.equal(presetSelection('falcon', [], 2, [], new Set(['fast-movement'])), null);
 assert.equal(presetSelection('invalid', [], 2, [], all), null);
-assert.deepEqual(presetSelection('hound', [], 2, [], all).choices.skilled, { skill: 'survival' });
-assert.deepEqual(presetSelection('wolf', [], 2, [], all).choices.skilled, { skill: 'intimidation' });
-assert.deepEqual(presetSelection('fox', [], 2, [], all).choices.skilled, { skill: 'deception' });
+assert.deepEqual(HUNT_FORMS.hound.suggested, ['soul-sight','share-senses']);
+assert.deepEqual(HUNT_FORMS.wolf.suggested, ['threat-display','echolocation']);
+assert.deepEqual(HUNT_FORMS.fox.suggested, ['burrower','tremorsense']);
+const medic = {system:{slug:'medic'}};
+assert.deepEqual(reasons(medic, {}, new Set(), 2), ['Nécessite des sorts de rang 3']);
+assert.deepEqual(reasons(medic, {}, new Set(), 3), []);
 const source = { system: { rules: [{ key: 'ChoiceSet', flag: 'skill', choices: [{ value: 'survival' }, { value: 'deception' }] }] } };
 const doc = { toObject: () => structuredClone(source) };
 assert.equal(presetSource(doc, { skill: 'survival' }).system.rules[0].selection, 'survival');

@@ -88,14 +88,14 @@ Prisme est désormais identifié par le MJ comme le familier mécanique de Sashk
 | --- | --- | --- |
 | Faucon | Vol | Déplacement rapide (vol) |
 | Chat sauvage | Aucune | Télépathie tactile + Ambassadeur |
-| Chien de chasse | Aucune | Odorat + Compétent (Survie) |
-| Loup | Aucune | Odorat + Compétent (Intimidation) |
+| Chien de chasse | Aucune | Vision des âmes + Partage des sens |
+| Loup | Aucune | Démonstration menaçante + Écholocalisation |
 | Loutre | Amphibie | Dextérité manuelle |
-| Renard | Aucune | Fouisseur + Compétent (Tromperie) |
+| Renard | Aucune | Fouisseur + Perception des vibrations |
 | Corbeau | Vol | Parole |
 | Hermine | Aucune | Concentration du familier + Lien de sort mineur |
 | Genette | Aucune | Escalade + Vision dans le noir |
 
-Les favoris sont initialisés une fois avec les capacités des neuf formes, sans effacer les favoris existants ni empêcher leur personnalisation. Les neuf portraits sont ceux fournis par le MJ.
+Les favoris sont initialisés puis actualisés lors de l'évolution des présélections, sans effacer les favoris existants ni empêcher leur personnalisation. Odorat reste une alternative conseillée au chien. Les neuf portraits sont ceux fournis par le MJ.
 
 Le lien avec Foundry reste à vérifier après déploiement du sélecteur de formes du Toolkit ; aucun changement de classe, de don ou de fiche n'est déclenché au chargement.

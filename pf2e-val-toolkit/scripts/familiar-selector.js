@@ -6,21 +6,21 @@ const requires = {
   'item-delivery': ['manual-dexterity'],
   'elemental': ['resistance'],
 };
-const spellRanks = { 'spell-battery': 4, 'spellcasting': 6 };
+const spellRanks = { 'spell-battery': 4, 'spellcasting': 6, 'medic': 3 };
 
 export const HUNT_FORMS = {
   falcon: { name: 'Faucon', fixed: ['flier'], suggested: ['fast-movement'], choices: { 'fast-movement': { speed: 'fly' } }, role: 'Reconnaissance aérienne' },
   wildcat: { name: 'Chat sauvage', fixed: [], suggested: ['touch-telepathy', 'ambassador'], role: 'Lien mental et interactions sociales' },
-  hound: { name: 'Chien de chasse', fixed: [], suggested: ['scent', 'skilled'], choices: { skilled: { skill: 'survival' } }, role: 'Pistage et recherche' },
-  wolf: { name: 'Loup', fixed: [], suggested: ['scent', 'skilled'], choices: { skilled: { skill: 'intimidation' } }, role: 'Menace et dissuasion' },
+  hound: { name: 'Chien de chasse', fixed: [], suggested: ['soul-sight', 'share-senses'], role: 'Détection surnaturelle et partage sensoriel' },
+  wolf: { name: 'Loup', fixed: [], suggested: ['threat-display', 'echolocation'], role: 'Intimidation et vigilance' },
   otter: { name: 'Loutre', fixed: ['amphibious'], suggested: ['manual-dexterity'], role: 'Exploration aquatique et récupération' },
-  fox: { name: 'Renard', fixed: [], suggested: ['burrower', 'skilled'], choices: { skilled: { skill: 'deception' } }, role: 'Ruse et exploration souterraine' },
+  fox: { name: 'Renard', fixed: [], suggested: ['burrower', 'tremorsense'], role: 'Exploration souterraine' },
   raven: { name: 'Corbeau', fixed: ['flier'], suggested: ['speech'], role: 'Communication et messagerie' },
   ermine: { name: 'Hermine', fixed: [], suggested: ['familiar-focus', 'cantrip-connection'], role: 'Soutien magique' },
   genet: { name: 'Genette', fixed: [], suggested: ['climber', 'darkvision'], role: 'Espionnage et infiltration nocturne' },
 };
 const FORM_FLAG = 'familiarHuntForms';
-const FAVORITES_SEED_VERSION = 1;
+const FAVORITES_SEED_VERSION = 2;
 const FORM_ASSET = 'modules/pf2e-val-toolkit/assets/familiar-forms';
 const formFor = id => Object.hasOwn(HUNT_FORMS, id) ? HUNT_FORMS[id] : null;
 const formImage = id => `${FORM_ASSET}/${id}.webp`;
@@ -30,7 +30,7 @@ export function hasHuntForms(familiar) {
 }
 
 export function huntFavorites(existing = []) {
-  return [...new Set([...existing, ...Object.values(HUNT_FORMS).flatMap(form => [...form.fixed, ...form.suggested])])];
+  return [...new Set([...existing, 'scent', ...Object.values(HUNT_FORMS).flatMap(form => [...form.fixed, ...form.suggested])])];
 }
 
 export function presetSelection(id, patron, maximum, reserved, available) {
@@ -65,7 +65,7 @@ function witchLocked(master) {
 }
 function isFamiliarAbility(item) { return item.type === 'action' && item.system?.category === 'familiar'; }
 function abilityId(item) { return item.system?.slug || item.name; }
-function reasons(item, master, selected, rank) {
+export function reasons(item, master, selected, rank) {
   const slug = item.system?.slug;
   const errors = [];
   for (const dep of requires[slug] || []) if (!selected.has(dep)) errors.push(`Nécessite ${dep}`);
@@ -129,7 +129,7 @@ export async function openFamiliarSelector(familiar) {
   const available = new Set(docs.map(abilityId));
   const formPanel = visibleForms ? `
     <div class="val-familiar-forms" style="margin:8px 0;padding:8px;border:1px solid var(--color-border-light-tertiary)">
-      <div style="display:flex;gap:12px;align-items:center"><img class="val-familiar-form-portrait" src="${escapeHTML(activeForm ? formImage(activeForm) : familiar.img)}" style="width:72px;height:72px;object-fit:cover" alt="Portrait du familier"/>
+      <div style="display:flex;gap:12px;align-items:center"><img class="val-familiar-form-portrait" src="${escapeHTML(activeForm ? formImage(activeForm) : familiar.img)}" style="width:96px;height:96px;object-fit:contain;flex:0 0 96px" alt="Portrait du familier"/>
       <div style="flex:1"><label>Forme du jour <select class="val-familiar-form"><option value="">Choisir une forme</option>${Object.entries(HUNT_FORMS).map(([id,form])=>`<option value="${id}" ${activeForm===id?'selected':''}>${escapeHTML(form.name)}</option>`).join('')}</select></label>
       <p class="val-familiar-form-role"></p><button type="button" class="val-familiar-reset-form">Rétablir les capacités suggérées</button></div></div>
       <p class="hint">La forme réserve ses capacités naturelles. Les autres restent libres. Le portrait et les capacités ne changent qu'à l'enregistrement.</p>
