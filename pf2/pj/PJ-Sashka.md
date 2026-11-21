@@ -82,16 +82,16 @@ Aucune décision supplémentaire documentée ici. Les informations du joueur et 
 
 ### Formes de Prisme — décision du 21 novembre 2026
 
-Prisme est désormais identifié par le MJ comme le familier mécanique de Sashka. Huit formes Très Petites sont validées ; leurs capacités naturelles consomment un emplacement, les suggestions sont librement remplaçables lors des préparations quotidiennes, dans la limite du maximum PF2e. L'hermine n'a aucune capacité imposée. Les formes surnaturelles sont réservées à une éventuelle évolution du familier.
+Prisme est désormais identifié par le MJ comme le familier mécanique de Sashka. Huit formes Très Petites sont validées ; seuls le Vol du faucon et du corbeau et Amphibie pour la loutre sont imposés et consomment un emplacement. Toutes les autres capacités sont des suggestions librement remplaçables lors des préparations quotidiennes, dans la limite du maximum PF2e. Le sélecteur est réservé aux familiers nommés exactement Prism ou Prisme, sans activation manuelle. Les formes surnaturelles sont réservées à une éventuelle évolution du familier.
 
 | Forme | Imposée | Suggérée |
 | --- | --- | --- |
 | Faucon | Vol | Déplacement rapide (vol) |
-| Chat sauvage | Escalade | Vision dans le noir |
-| Chien de chasse | Odorat | Compétent (Survie) |
-| Loup | Odorat | Compétent (Intimidation) |
+| Chat sauvage | Aucune | Télépathie tactile + Ambassadeur |
+| Chien de chasse | Aucune | Odorat + Compétent (Survie) |
+| Loup | Aucune | Odorat + Compétent (Intimidation) |
 | Loutre | Amphibie | Dextérité manuelle |
-| Renard | Fouisseur | Compétent (Tromperie) |
+| Renard | Aucune | Fouisseur + Compétent (Tromperie) |
 | Corbeau | Vol | Parole |
 | Hermine | Aucune | Concentration du familier + Lien de sort mineur |
 

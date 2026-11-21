@@ -1,8 +1,15 @@
 import assert from 'node:assert/strict';
-import { HUNT_FORMS, presetSelection, presetSource } from '../scripts/familiar-selector.js';
+import { HUNT_FORMS, presetSelection, presetSource, hasHuntForms } from '../scripts/familiar-selector.js';
 
 const all = new Set(Object.values(HUNT_FORMS).flatMap(form => [...form.fixed, ...form.suggested]));
 assert.equal(Object.keys(HUNT_FORMS).length, 8);
+assert.deepEqual(Object.keys(HUNT_FORMS).filter(id=>HUNT_FORMS[id].fixed.length), ['falcon','otter','raven']);
+assert.deepEqual(HUNT_FORMS.wildcat.suggested, ['touch-telepathy','ambassador']);
+assert.equal(hasHuntForms({type:'familiar',name:'Prism'}),true);
+assert.equal(hasHuntForms({type:'familiar',name:'Prisme'}),true);
+assert.equal(hasHuntForms({type:'familiar',name:'prism'}),false);
+assert.equal(hasHuntForms({type:'character',name:'Prism'}),false);
+assert.equal(hasHuntForms({type:'familiar',name:'Autre'}),false);
 for (const [id, form] of Object.entries(HUNT_FORMS)) {
   const preset = presetSelection(id, [], 2, [], all);
   assert.deepEqual([...preset.selected], [...form.fixed, ...form.suggested]);

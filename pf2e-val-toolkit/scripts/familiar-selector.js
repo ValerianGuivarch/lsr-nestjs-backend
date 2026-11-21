@@ -10,11 +10,11 @@ const spellRanks = { 'spell-battery': 4, 'spellcasting': 6 };
 
 export const HUNT_FORMS = {
   falcon: { name: 'Faucon', fixed: ['flier'], suggested: ['fast-movement'], choices: { 'fast-movement': { speed: 'fly' } }, role: 'Reconnaissance aérienne' },
-  wildcat: { name: 'Chat sauvage', fixed: ['climber'], suggested: ['darkvision'], role: 'Espionnage et infiltration' },
-  hound: { name: 'Chien de chasse', fixed: ['scent'], suggested: ['skilled'], choices: { skilled: { skill: 'survival' } }, role: 'Pistage et recherche' },
-  wolf: { name: 'Loup', fixed: ['scent'], suggested: ['skilled'], choices: { skilled: { skill: 'intimidation' } }, role: 'Menace et dissuasion' },
+  wildcat: { name: 'Chat sauvage', fixed: [], suggested: ['touch-telepathy', 'ambassador'], role: 'Lien mental et interactions sociales' },
+  hound: { name: 'Chien de chasse', fixed: [], suggested: ['scent', 'skilled'], choices: { skilled: { skill: 'survival' } }, role: 'Pistage et recherche' },
+  wolf: { name: 'Loup', fixed: [], suggested: ['scent', 'skilled'], choices: { skilled: { skill: 'intimidation' } }, role: 'Menace et dissuasion' },
   otter: { name: 'Loutre', fixed: ['amphibious'], suggested: ['manual-dexterity'], role: 'Exploration aquatique et récupération' },
-  fox: { name: 'Renard', fixed: ['burrower'], suggested: ['skilled'], choices: { skilled: { skill: 'deception' } }, role: 'Ruse et exploration souterraine' },
+  fox: { name: 'Renard', fixed: [], suggested: ['burrower', 'skilled'], choices: { skilled: { skill: 'deception' } }, role: 'Ruse et exploration souterraine' },
   raven: { name: 'Corbeau', fixed: ['flier'], suggested: ['speech'], role: 'Communication et messagerie' },
   ermine: { name: 'Hermine', fixed: [], suggested: ['familiar-focus', 'cantrip-connection'], role: 'Soutien magique' },
 };
@@ -22,6 +22,10 @@ const FORM_FLAG = 'familiarHuntForms';
 const FORM_ASSET = 'modules/pf2e-val-toolkit/assets/familiar-forms';
 const formFor = id => Object.hasOwn(HUNT_FORMS, id) ? HUNT_FORMS[id] : null;
 const formImage = id => `${FORM_ASSET}/${id}.webp`;
+
+export function hasHuntForms(familiar) {
+  return familiar?.type === 'familiar' && ['Prism', 'Prisme'].includes(familiar.name);
+}
 
 export function presetSelection(id, patron, maximum, reserved, available) {
   const form = formFor(id);
@@ -112,14 +116,13 @@ export async function openFamiliarSelector(familiar) {
   const unknown = freeCurrent.filter(i=>!docs.some(d=>abilityId(d)===abilityId(i)));
   for (const item of unknown) selected.add(abilityId(item));
   const formConfig = familiar.getFlag(NAMESPACE, FORM_FLAG) || {};
-  let formsEnabled = formConfig.enabled === true;
+  const formsEnabled = hasHuntForms(familiar);
   let activeForm = formsEnabled && formFor(formConfig.form) ? formConfig.form : '';
   let pendingChoices = {};
-  const visibleForms = formsEnabled || game.user.isGM;
+  const visibleForms = formsEnabled;
   const available = new Set(docs.map(abilityId));
   const formPanel = visibleForms ? `
-    ${game.user.isGM ? `<label><input type="checkbox" class="val-familiar-forms-enabled" ${formsEnabled?'checked':''}/> Activer les formes de la Chasse Sauvage pour ce familier</label>` : ''}
-    <div class="val-familiar-forms" ${formsEnabled?'':'hidden'} style="margin:8px 0;padding:8px;border:1px solid var(--color-border-light-tertiary)">
+    <div class="val-familiar-forms" style="margin:8px 0;padding:8px;border:1px solid var(--color-border-light-tertiary)">
       <div style="display:flex;gap:12px;align-items:center"><img class="val-familiar-form-portrait" src="${escapeHTML(activeForm ? formImage(activeForm) : familiar.img)}" style="width:72px;height:72px;object-fit:cover" alt="Portrait du familier"/>
       <div style="flex:1"><label>Forme du jour <select class="val-familiar-form"><option value="">Choisir une forme</option>${Object.entries(HUNT_FORMS).map(([id,form])=>`<option value="${id}" ${activeForm===id?'selected':''}>${escapeHTML(form.name)}</option>`).join('')}</select></label>
       <p class="val-familiar-form-role"></p><button type="button" class="val-familiar-reset-form">Rétablir les capacités suggérées</button></div></div>
@@ -174,8 +177,8 @@ export async function openFamiliarSelector(familiar) {
         const add=docs.filter(d=>!fixedSet.has(abilityId(d))&&chosen.has(abilityId(d))&&!current.some(i=>abilityId(i)===abilityId(d)&&matchesChoice(i)));
         if(add.length) await familiar.createEmbeddedDocuments('Item',add.map(i=>presetSource(i,pendingChoices[abilityId(i)])));
         if(removable.length) await familiar.deleteEmbeddedDocuments('Item',removable.map(i=>i.id));
-        if(visibleForms && (formsEnabled || formConfig.enabled)) {
-          const update = { [`flags.${NAMESPACE}.${FORM_FLAG}`]: { enabled: formsEnabled, form: formsEnabled ? activeForm : '' } };
+        if(formsEnabled) {
+          const update = { [`flags.${NAMESPACE}.${FORM_FLAG}.form`]: activeForm };
           if(form) { update.img=formImage(activeForm); update['prototypeToken.texture.src']=update.img; }
           await familiar.update(update);
         }
@@ -239,11 +242,6 @@ export async function openFamiliarSelector(familiar) {
       update();return true;
     };
     root.addEventListener('change',event=>{
-      if(event.target.matches('.val-familiar-forms-enabled')){
-        formsEnabled=event.target.checked;
-        root.querySelector('.val-familiar-forms').hidden=!formsEnabled;
-        if(!formsEnabled){activeForm='';pendingChoices={};root.querySelector('.val-familiar-form').value='';}
-      }
       if(event.target.matches('.val-familiar-form')){
         if(!applyForm(event.target.value))event.target.value=activeForm;
       }
