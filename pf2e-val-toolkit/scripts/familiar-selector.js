@@ -17,14 +17,20 @@ export const HUNT_FORMS = {
   fox: { name: 'Renard', fixed: [], suggested: ['burrower', 'skilled'], choices: { skilled: { skill: 'deception' } }, role: 'Ruse et exploration souterraine' },
   raven: { name: 'Corbeau', fixed: ['flier'], suggested: ['speech'], role: 'Communication et messagerie' },
   ermine: { name: 'Hermine', fixed: [], suggested: ['familiar-focus', 'cantrip-connection'], role: 'Soutien magique' },
+  genet: { name: 'Genette', fixed: [], suggested: ['climber', 'darkvision'], role: 'Espionnage et infiltration nocturne' },
 };
 const FORM_FLAG = 'familiarHuntForms';
+const FAVORITES_SEED_VERSION = 1;
 const FORM_ASSET = 'modules/pf2e-val-toolkit/assets/familiar-forms';
 const formFor = id => Object.hasOwn(HUNT_FORMS, id) ? HUNT_FORMS[id] : null;
 const formImage = id => `${FORM_ASSET}/${id}.webp`;
 
 export function hasHuntForms(familiar) {
   return familiar?.type === 'familiar' && ['Prism', 'Prisme'].includes(familiar.name);
+}
+
+export function huntFavorites(existing = []) {
+  return [...new Set([...existing, ...Object.values(HUNT_FORMS).flatMap(form => [...form.fixed, ...form.suggested])])];
 }
 
 export function presetSelection(id, patron, maximum, reserved, available) {
@@ -129,6 +135,18 @@ export async function openFamiliarSelector(familiar) {
       <p class="hint">La forme réserve ses capacités naturelles. Les autres restent libres. Le portrait et les capacités ne changent qu'à l'enregistrement.</p>
     </div>` : '';
   const favorites = new Set(familiar.getFlag(NAMESPACE, 'familiarFavorites') || []);
+  if (formsEnabled && familiar.isOwner && Number(familiar.getFlag(NAMESPACE, 'familiarHuntFavoritesVersion') || 0) < FAVORITES_SEED_VERSION) {
+    for (const slug of huntFavorites(favorites)) favorites.add(slug);
+    try {
+      await familiar.update({
+        [`flags.${NAMESPACE}.familiarFavorites`]: [...favorites],
+        [`flags.${NAMESPACE}.familiarHuntFavoritesVersion`]: FAVORITES_SEED_VERSION,
+      });
+    } catch (error) {
+      console.warn('PF2e Val Toolkit | Impossible de préremplir les favoris de Prisme', error);
+      ui.notifications.warn('Les favoris proposés seront réessayés à la prochaine ouverture.');
+    }
+  }
   const descriptions = await Promise.all(docs.map(renderDescription));
   const descriptionById = new Map(docs.map((doc, index) => [abilityId(doc), descriptions[index]]));
   const details = `<p><b>${escapeHTML(familiar.name)}</b> — ${escapeHTML(master.name)} · ${maximum} capacités, dont ${fixed.length} imposée(s). <b>${free} choix libres</b>.</p>

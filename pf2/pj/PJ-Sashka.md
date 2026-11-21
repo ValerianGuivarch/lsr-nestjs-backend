@@ -82,7 +82,7 @@ Aucune décision supplémentaire documentée ici. Les informations du joueur et 
 
 ### Formes de Prisme — décision du 21 novembre 2026
 
-Prisme est désormais identifié par le MJ comme le familier mécanique de Sashka. Huit formes Très Petites sont validées ; seuls le Vol du faucon et du corbeau et Amphibie pour la loutre sont imposés et consomment un emplacement. Toutes les autres capacités sont des suggestions librement remplaçables lors des préparations quotidiennes, dans la limite du maximum PF2e. Le sélecteur est réservé aux familiers nommés exactement Prism ou Prisme, sans activation manuelle. Les formes surnaturelles sont réservées à une éventuelle évolution du familier.
+Prisme est désormais identifié par le MJ comme le familier mécanique de Sashka. Neuf formes Très Petites sont validées ; seuls le Vol du faucon et du corbeau et Amphibie pour la loutre sont imposés et consomment un emplacement. Toutes les autres capacités sont des suggestions librement remplaçables lors des préparations quotidiennes, dans la limite du maximum PF2e. Le sélecteur est réservé aux familiers nommés exactement Prism ou Prisme, sans activation manuelle. Les formes surnaturelles sont réservées à une éventuelle évolution du familier.
 
 | Forme | Imposée | Suggérée |
 | --- | --- | --- |
@@ -94,5 +94,8 @@ Prisme est désormais identifié par le MJ comme le familier mécanique de Sashk
 | Renard | Aucune | Fouisseur + Compétent (Tromperie) |
 | Corbeau | Vol | Parole |
 | Hermine | Aucune | Concentration du familier + Lien de sort mineur |
+| Genette | Aucune | Escalade + Vision dans le noir |
+
+Les favoris sont initialisés une fois avec les capacités des neuf formes, sans effacer les favoris existants ni empêcher leur personnalisation. Les neuf portraits sont ceux fournis par le MJ.
 
 Le lien avec Foundry reste à vérifier après déploiement du sélecteur de formes du Toolkit ; aucun changement de classe, de don ou de fiche n'est déclenché au chargement.
