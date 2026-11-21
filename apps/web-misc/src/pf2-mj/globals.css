@@ -1042,7 +1042,7 @@
 
 .campaign-chatgpt-actions{display:flex;gap:.6rem;align-items:center;flex-wrap:wrap}
 .campaign-chatgpt-actions input{min-width:min(34rem,100%);flex:1}
-.campaign-chatgpt-actions a{display:inline-flex;align-items:center;text-decoration:none}
+.campaign-chatgpt-actions a{display:inline-flex;align-items:center;text-decoration:none}.component-chatgpt{text-decoration:none}
 
 /* Campaign journal: PDF sources and explicit preparation state. */
 .campaign-documents .campaign-pdf-groups { display: grid; gap: .6rem; }

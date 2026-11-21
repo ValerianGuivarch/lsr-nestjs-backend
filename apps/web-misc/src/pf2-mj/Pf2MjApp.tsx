@@ -1222,6 +1222,7 @@ function PlayableDetail({ unit, curation, onUpdate, placeOptions, onOpenReferenc
     {unit.arcIds.length > 0 && <section className="detail-section"><h3>Arcs PFS / transversaux</h3><div className="badges">{unit.arcIds.map((id) => <Badge key={id}>{arcMap.get(id)?.titleFr || id}</Badge>)}</div></section>}
     <section className="detail-section synopsis-long"><h3>Synopsis de l’unité</h3><p>{unit.synopsis || 'Description propre de ce scénario non renseignée.'}</p></section>
     <CampaignDocuments id={unit.id} />
+    {(isStandaloneCampaign(unit) || genericOverride(curation, unit.id).chatgptUrl) && <CampaignChatGptLink campaignId={unit.id} value={genericOverride(curation, unit.id).chatgptUrl} onUpdate={onUpdate} />}
     <PlayableComponentsSection components={unit.playableComponents} ownerId={unit.id} playedStatus={override.playableComponentStatus} />
     {unit.gmDetails && <section className="detail-section gm-details"><h3>Détails MJ</h3><p>{unit.gmDetails}</p></section>}
     {technical && components.length > 0 && <section className="detail-section"><h3>Composants de l’œuvre</h3><div className="part-list">{components.map((component) => <article key={component.id}><strong>{componentTypeLabel(component.componentType)} · {titleOf(component)}</strong><span>{component.notes}</span><Badge>{component.requiredForCore ? 'Requis' : 'Facultatif'}</Badge></article>)}</div></section>}
@@ -1238,7 +1239,7 @@ function CampaignChatGptLink({ campaignId, value, onUpdate }: { campaignId: stri
 
   return <section className="detail-section campaign-chatgpt-link">
     <h3>Discussion ChatGPT</h3>
-    <p>Discussion de travail associée à cette campagne. Le lien est propre à la campagne et n’est pas hérité par ses scénarios.</p>
+    <p>Discussion de travail associée à cette campagne ou aventure. Le lien reste propre à cette entrée et n’est pas hérité par ses scénarios.</p>
     <div className="campaign-chatgpt-actions">
       <input aria-label="Lien ChatGPT de la campagne" type="url" placeholder="https://chatgpt.com/c/…" value={draft} onChange={(event) => setDraft(event.target.value)} />
       <button type="button" onClick={save}>Enregistrer le lien</button>
@@ -1258,7 +1259,7 @@ function ContainerDetail({ container, curation, onOpenPlayable, onUpdate, onOpen
     <div className="detail-head"><small>{containerTypeLabel(container.containerType)} · CONTENEUR NON JOUABLE</small><h2>{titleOf(container)}</h2>{originalTitleOf(container) && <em>{originalTitleOf(container)}</em>}<div className="badges"><Badge>{levelLabel(container.levels)}</Badge><Badge>{children.length} unités jouables</Badge></div></div>
     <section className="detail-section synopsis-long"><h3>Synthèse</h3><p>{container.synopsis || 'Synopsis de collection non renseigné.'}</p></section>
     <dl className="detail-grid"><div><dt>Niveaux affichés</dt><dd>{levelLabel(container.levels)}<SourceBadge source={container.levels.source} /></dd></div><div><dt>Lieux</dt><dd>{container.locations.length ? unique(container.locations.map((location) => placeDisplay(location.id))).join(', ') : 'Agrégés depuis les enfants / à documenter'}{container.locations[0] && <SourceBadge source={container.locations[0].source} />}</dd></div><div><dt>Statut MJ</dt><dd><LifecycleSelect id={container.id} override={override} excluded={isContainerExcluded(container, curation)} onUpdate={onUpdate} /></dd></div></dl>
-    <CampaignDocuments id={container.id} excludeTargets={children.flatMap(unit=>[unit.id,...componentsOf(unit.id).map(c=>c.id)])} />
+    <CampaignDocuments id={container.id} />
     <section className="detail-section"><h3>Unités jouables</h3>{children.length ? <div className="compact-playables">{children.map((unit) => { const status = availabilityOf(unit); return <Link key={unit.id} to={playableHref(unit)}><span>▶</span><strong>{titleOf(unit)}</strong><small>{levelLabel(unit.levels)} · {documentStatusLabel(unit)}</small></Link> })}</div> : <p className="missing">Aucune unité jouable explicite : cette campagne doit être découpée avant d’être fiable dans « Trouver une partie ».</p>}</section>
     {container.containerType === 'campaign' && <section className="detail-section playable-components-summary"><h3>Composants jouables</h3><p>{documentedChildren.length}/{children.length} scénarios découpés · {componentTotal} modules jouables. Ouvre un scénario pour consulter ses modules et leur préparation.</p>{container.playableComponents.length > 0 && <PlayableComponentsSection components={container.playableComponents} ownerId={container.id} />}</section>}
     {technical && components.length > 0 && <section className="detail-section"><h3>Composants / ressources</h3><div className="part-list">{components.map((component) => <ComponentCard component={component} key={component.id} />)}</div></section>}
@@ -1278,6 +1279,7 @@ function ArcDetail({arc,curation,onUpdate}: {arc:Arc;curation:Curation;onUpdate:
     <section className="detail-section synopsis-long"><h3>Synthèse</h3><p>{arc.description || 'Synopsis de campagne non renseigné.'}</p></section>
     <dl className="detail-grid"><div><dt>Niveaux affichés</dt><dd>{levels.join(', ') || 'À documenter'}</dd></div><div><dt>Lieux</dt><dd>{places.join(', ') || 'À documenter'}</dd></div></dl>
     <CampaignDocuments id={arc.id}/>
+    <CampaignChatGptLink campaignId={arc.id} value={genericOverride(curation, arc.id).chatgptUrl} onUpdate={onUpdate} />
     <section className="detail-section"><h3>Unités jouables</h3>{children.map(unit=><article key={unit.id} className="component-work"><div><strong><Link to={playableHref(unit)}>{unit.number && unit.number+' · '}{titleOf(unit)}</Link></strong><p>{levelLabel(unit.levels)} · {unit.playableComponents.length} modules</p><LifecycleSelect id={unit.id} override={resolvePlayableOverride(curation,unit)} excluded={isExcluded(unit,resolvePlayableOverride(curation,unit),curation)} onUpdate={onUpdate}/></div><CampaignDocuments id={unit.id} compact/></article>)}</section>
   </EntityPage>
 }
@@ -1577,6 +1579,8 @@ function JournalView({ curation, onUpdate, onImported, sessionHistory }: { curat
       const workSessions = [...new Set(work.units.flatMap((unit) => scenarioSessions[unit.id] ?? []))].sort((a, b) => a - b)
       const detailHref = work.kind === 'campaign' ? `/pf2-mj/campaigns/${encodeURIComponent(work.id)}` : work.kind === 'arc' ? arcHref(work.id.slice(4)) : playableHref(work.units[0])
       const readiness = moduleStates ? upcomingReadiness(moduleStates,work.kind==='arc'?work.id.slice(4):work.id,modulePlayed,new Set(work.units.map(u=>u.id))) : null
+      const chatgptId = work.kind === 'arc' ? work.id.slice(4) : work.id
+      const chatgptUrl = genericOverride(curation, chatgptId).chatgptUrl
       const showCampaignHeading = workIndex === 0 && work.campaign
       const showStandaloneHeading = !work.campaign && (workIndex === 0 || displayWorks[workIndex - 1]?.campaign)
       return <Fragment key={work.id}>{showCampaignHeading && <div className="journal-group-heading"><small>JOURNAL</small><h3>Campagnes</h3><p>Campagnes longues, mini-campagnes et campagnes transverses.</p></div>}{showStandaloneHeading && <div className="journal-group-heading journal-standalone-heading"><small>JOURNAL</small><h3>Scénarios individuels</h3><p>Scénarios actifs qui n’appartiennent pas encore à une campagne du Journal.</p></div>}<section className={`component-work${!expanded ? ' is-collapsed' : ''}`}>
@@ -1584,13 +1588,14 @@ function JournalView({ curation, onUpdate, onImported, sessionHistory }: { curat
           <div><small>{work.kind === 'arc' ? 'CAMPAGNE TRANSVERSE' : work.campaign ? 'CAMPAGNE' : 'SCÉNARIO'} · {lifecycleLabels[work.status]}</small><h3><Link className="journal-detail-link" to={detailHref}>{work.title}</Link></h3><Link className="journal-detail-link" to={`${viewPaths.sessionPrep}?${work.kind === 'scenario' && !work.campaign ? 'scenarioId' : 'campaignId'}=${encodeURIComponent(work.kind==='arc'?work.id.slice(4):work.id)}`}>✎ Préparer une séance</Link>{expanded && work.description && <p>{work.description}</p>}{work.kind === 'arc' && expanded && <p><em>Arc narratif PFS : les scénarios peuvent appartenir à plusieurs saisons.</em></p>}{workSessions.length > 0 && <span className="journal-session-badge">{sessionLabel(workSessions)}</span>}</div>
           <div className="component-work-actions">
             <button className="component-toggle" onClick={() => toggleWork(work.id)} aria-expanded={expanded}>{expanded ? 'Réduire' : work.kind !== 'scenario' ? `Développer · ${work.units.length} scénario${work.units.length > 1 ? 's' : ''}` : 'Développer'}</button>
+            {chatgptUrl && <a className="component-prompt component-chatgpt" href={chatgptUrl} target="_blank" rel="noreferrer">ChatGPT ↗</a>}
             {expanded && work.kind !== 'arc' && <button className="component-prompt" onClick={() => void copyPrompt(work)}>{work.kind === 'campaign' ? 'Prompt campagne' : 'Prompt'}</button>}
             {expanded && work.kind === 'campaign' && <label className={`component-import${importing === work.id ? ' disabled' : ''}`}>Importer le découpage JSON<input type="file" accept="application/json,.json" disabled={importing !== null} onChange={(event) => { const file = event.target.files?.[0]; event.target.value = ''; void importCampaign(work, file) }} /></label>}
             {work.status!=='played' && <strong className={'journal-ready '+(readiness?.count===0?'journal-ready-alert':'')}>{readiness ? 'Modules prêts : '+readiness.label+(readiness.count===0?' · À préparer':!readiness.nextReady?' · Prochain à préparer':'') : 'Modules prêts : —'}</strong>}
             <span>{work.kind !== 'scenario' && `${progress.completedScenarios}/${work.units.length} scénario${work.units.length > 1 ? 's' : ''} terminé${progress.completedScenarios > 1 ? 's' : ''} · `}{progress.played}/{progress.total} composant{progress.total > 1 ? 's' : ''} joué{progress.played > 1 ? 's' : ''}</span>
           </div>
         </header>
-        {expanded && work.kind !== 'scenario' && <CampaignDocuments id={work.kind==='arc'?work.id.slice(4):work.id} excludeTargets={work.kind==='campaign'?work.units.flatMap(unit=>[unit.id,...componentsOf(unit.id).map(c=>c.id)]):[]} compact/>}
+        {expanded && work.kind !== 'scenario' && <CampaignDocuments id={work.kind==='arc'?work.id.slice(4):work.id} compact/>}
         {expanded && <div className="component-work-units">{work.units.map((unit) => {
           const status = resolvePlayableOverride(curation, unit).playableComponentStatus ?? {}
           const unitState = unitProgress(unit)

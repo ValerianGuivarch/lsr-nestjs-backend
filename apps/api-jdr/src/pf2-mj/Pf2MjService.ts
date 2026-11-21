@@ -1117,7 +1117,7 @@ export class Pf2MjService {
     const targets = this.scenarioResourceTargets(catalogue, scenarioId)
     const linkedFiles = this.scenarioDocumentLinks(catalogue, targets)
 
-    return (await this.persistence.listLibraryAssets())
+    const projected = (await this.persistence.listLibraryAssets())
       .flatMap((asset) => {
         const attachedTarget =
           asset.targetId !== null
@@ -1134,8 +1134,8 @@ export class Pf2MjService {
           resourceTargetId: target.id,
           resourceScope:
             target.id === scenarioId
-              ? 'direct'
-              : 'component',
+              ? 'direct' as const
+              : 'component' as const,
           resourceTargetLabel: target.label,
           libraryCategory: this.firstText(
             asset.metadata.libraryCategory,
@@ -1143,6 +1143,15 @@ export class Pf2MjService {
           )
         }]
       })
+
+    return Promise.all(projected.map(async (asset) => ({ ...asset, present: await this.libraryAssetExists(asset) })))
+  }
+
+  private async libraryAssetExists(asset: Pick<LibraryAsset, 'path' | 'present'>): Promise<boolean> {
+    if (!asset.path) return asset.present
+    const target = resolve(this.libraryRoot, asset.path.replace(/^\/+/, ''))
+    if (target !== this.libraryRoot && !target.startsWith(`${this.libraryRoot}${sep}`)) return false
+    try { return (await stat(target)).isFile() } catch { return false }
   }
 
   /**
