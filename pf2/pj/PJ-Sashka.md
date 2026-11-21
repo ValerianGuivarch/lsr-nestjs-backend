@@ -26,7 +26,7 @@ Sashka a grandi dans une petite communauté **sharedar** de l'arrière-pays du *
 
 **Secret MJ / mystères :** le chef des hommes en armures sombres, le vieux **cor**, la Chasse Sauvage et l'origine de **Prisme**, compagnon polymorphe, constituent des pistes distinctes à démêler. Ne pas révéler arbitrairement une identité ou une intention à ce chef.
 
-**Continuité mécanique préservée :** la décision du 18 octobre 2026 sur un futur familier **sans dévouement d'archétype** reste une orientation à appliquer/valider dans Foundry ; **Prisme n'est pas automatiquement ce familier**. Les considérations d'ombre, de Chasse Sauvage et de familier ne prouvent pas qu'un événement de campagne a déjà eu lieu.
+**Continuité mécanique :** le MJ a confirmé le 21 novembre 2026 que Prisme est le familier de Sashka, sans dévouement d'archétype ; l'état exact reste à vérifier dans Foundry. Les considérations d'ombre, de Chasse Sauvage et de familier ne prouvent pas qu'un événement de campagne a déjà eu lieu.
 
 ## Relations et contacts
 
@@ -75,6 +75,24 @@ Aucune décision supplémentaire documentée ici. Les informations du joueur et 
 
 ### Choix de familier — décision du 18 octobre 2026
 - **Confirmé avec la joueuse (orientation, sous réserve de finalisation) :** Sashka aura un familier **sans passer par un dévouement d'archétype**. Le choix envisagé est le don de classe d'ensorceleuse **Familier**, plutôt que le dévouement **Maître familier**.
-- **Concept souhaité :** petit compagnon lié à la chasse et à ses thèmes d'ombre / Chasse Sauvage ; espèce, nom, pouvoirs quotidiens et rôle exact restent à préciser. La continuité narrative mentionne déjà **Prisme**, compagnon surnaturel polymorphe : vérifier avec la joueuse si le futur familier mécanique est Prisme ou une autre créature, sans les assimiler par défaut.
+- **Concept souhaité :** petit compagnon lié à la chasse et à ses thèmes d'ombre / Chasse Sauvage ; espèce, nom, pouvoirs quotidiens et rôle exact restaient à préciser en octobre. Voir la décision du 21 novembre ci-dessous.
 - **État de référence historique (export Foundry analysé en octobre 2026) :** Sashka est ensorceleuse fetcheline de niveau 2 ; le dévouement Maître familier figurait sur sa fiche, sans acteur familier fourni. **Cet export ne représente pas la décision à appliquer** ; Foundry reste la source de vérité de la configuration actuelle.
-- **À reprendre ultérieurement dans Foundry :** remplacer le dévouement par le don retenu si confirmé définitivement, créer et relier le familier et choisir ses pouvoirs. Vérifier également le signalement d'une éventuelle duplication du don d'ascendance *Magie voilée* avant toute correction.
+- **À reprendre ultérieurement dans Foundry :** vérifier que le dévouement a bien été remplacé par le don retenu et que Prisme est lié à Sashka. Vérifier également le signalement d'une éventuelle duplication du don d'ascendance *Magie voilée* avant toute correction.
+
+
+### Formes de Prisme — décision du 21 novembre 2026
+
+Prisme est désormais identifié par le MJ comme le familier mécanique de Sashka. Huit formes Très Petites sont validées ; leurs capacités naturelles consomment un emplacement, les suggestions sont librement remplaçables lors des préparations quotidiennes, dans la limite du maximum PF2e. L'hermine n'a aucune capacité imposée. Les formes surnaturelles sont réservées à une éventuelle évolution du familier.
+
+| Forme | Imposée | Suggérée |
+| --- | --- | --- |
+| Faucon | Vol | Déplacement rapide (vol) |
+| Chat sauvage | Escalade | Vision dans le noir |
+| Chien de chasse | Odorat | Compétent (Survie) |
+| Loup | Odorat | Compétent (Intimidation) |
+| Loutre | Amphibie | Dextérité manuelle |
+| Renard | Fouisseur | Compétent (Tromperie) |
+| Corbeau | Vol | Parole |
+| Hermine | Aucune | Concentration du familier + Lien de sort mineur |
+
+Le lien avec Foundry reste à vérifier après déploiement du sélecteur de formes du Toolkit ; aucun changement de classe, de don ou de fiche n'est déclenché au chargement.
