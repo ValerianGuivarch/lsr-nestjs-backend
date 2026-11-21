@@ -143,6 +143,16 @@ Le service de listes d'Actors conserve une portée volontairement limitée : rac
 
 Rangement : inventaire par UUID, sauvegarde, comparaison des tokens (actorId), des notes (entryId/pageId), des références de préparations et du contexte. Déplacer sans recréer ; les homonymes ne sont pas des doublons avérés. Archiver les éléments incertains sous Vérification plutôt que les effacer. Les dossiers vides ne sont supprimés qu'après vérification de tous leurs descendants et de leur rôle. Les opérations restent soumises à l'accès Foundry normal et aux règles de PF2_WORKSPACE.
 
+**Rangement réalisé le 21 novembre 2026** — monde actif, exclusivement via REST Relay (mise à jour du champ `folder`, et harmonisation de huit noms de dossiers racine). Inventaire avant/après et journal des modifications avec données avant écriture : `/home/valou/services/foundry/backups/organisation-20261121/`. Contrôle final : mêmes 362 scènes, 761 Actors, 133 journaux (1 256 UUID identiques), 195 déplacements directs (38 dossiers, 5 scènes, 66 Actors, 86 journaux), 10 dossiers créés ; aucun document supprimé et aucun ID recréé. Chaque déplacement a été relu et comparé hors champ folder, sort et _stats ; pour les noms de dossier, seul le nom a changé.
+
+- Racines identiques dans les trois onglets pour La Route ouverte, Malveillance, Le Cartel du Sel, Agents d’Absalom, Sentences d’Extinction, Les Sept Fléaux de Pointesable, La Force des milliers et L’Âge des cendres. Les dossiers de scénario Toolkit existants conservent leur nom et UUID.
+- La Route ouverte : 12 scènes, 39 Actors, 14 journaux (1-00, 1-08 et 1-21, selon contenu disponible). Les 1-08 sont rattachés à leur sous-dossier ; le Labyrinthe demeure intact. Les flags hérités incorrects de certains Actors n'ont pas été modifiés lors de ce rangement.
+- Malveillance : 5 cartes actives et 6 anciennes cartes dans le sous-dossier d’archives, 61 Actors et 68 journaux. Les 37 journaux auparavant à la racine et les 15 coffres Blanchebois ont été identifiés via les repères/jetons des cartes.
+- L’Âge des cendres : les 39 journaux AoA1 sont sous le tome 1 et les chapitres selon campaignId/moduleKey ; les arbres de cartes anglais et français et les copies sont conservés, sans fusion.
+- Le Cartel du Sel : sous-dossier de La Vengeance de la rue Rose (3 scènes, 4 Actors, 1 journal). Les chapitres futurs ainsi que les campagnes sans contenu Foundry identifié (Pacte des Échanges, Absalom de l’Ombre) ne donnent pas lieu à des dossiers vides.
+- Ressources communes : MJ / PJ (16 fiches, dont familiers et archive de Neyla), MJ / Marchands, MJ / TestToken - Monster Core ; la Loge des Éclaireurs est sous MJ / Divers. The Party demeure le seul Actor isolé à la racine. Les listes API `/foundry/actors` (17) et `/api/pf2-mj/actors` (14) retournent exactement les mêmes noms et UUID avant/après. `/foundry/scene-folders` confirme les chemins et compteurs de 1-08, 1-21, Malveillance et La Vengeance de la rue Rose.
+- Exceptions intactes : Copies (13 scènes de Pointesable), Kingmaker (43), Runelords (37), OLD ; imports autonomes historiques encore sous MJ. Les dossiers de journaux vides Campagnes et Campagnes officielles ont été déplacés sous Vérification, sans suppression. Aucun journal ni scène à la racine.
+
 ## 10. Séances, résumés et XPC
 
 ### 10.1 Séances
