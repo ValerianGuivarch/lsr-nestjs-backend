@@ -11,7 +11,7 @@ Une **campagne ou un scénario suivi** doit avoir une fiche spécifique ; y dist
 | Les Sept Fléaux de Pointesable | Commencée | [Sept Fléaux](pf2/campagnes/Campagne-Sept-Fleaux-de-Pointesable.md) |
 | La Route ouverte — campagne transverse PFS | 13 scénarios liés, séance 1-00 en préparation | [Route ouverte](pf2/campagnes/Campagne-Route-Ouverte.md) |
 | Absalom de l’Ombre — arc PFS saison 3 | Intégrée, quatre modèles non joués ; sources et Foundry à compléter | [Absalom de l’Ombre](pf2/campagnes/Campagne-Absalom-de-l-Ombre.md) |
-| Le Pacte des Échanges — campagne transverse PFS (Equal Exchanges) | Cadrage initial, quatre scénarios ; intégration SQLite/Foundry à vérifier | [Pacte des Échanges](pf2/campagnes/Campagne-Equal-Exchanges.md) |
+| Le Pacte des Échanges — campagne transverse PFS (Equal Exchanges) | Intégrée, quatre scénarios à jouer et modèles initiaux ; original 5-09 et Foundry à compléter | [Pacte des Échanges](pf2/campagnes/Campagne-Equal-Exchanges.md) |
 | PFS S01-00 — Origines de la Route Ouverte | Préparation prioritaire, non jouée | [Scénario PFS S01-00](pf2/campagnes/Scenario-Origines-Route-Ouverte.md) |
 | Sentence d'Extinction | Adaptation en préparation | [Sentence d'Extinction](pf2/campagnes/Campagne-Sentence-d-Extinction.md) |
 | L'Âge des Cendres (anciennement HD100) | Préparation d'une adaptation pour table ouverte | [Âge des Cendres](pf2/campagnes/Campagne-Age-des-Cendres.md) |
