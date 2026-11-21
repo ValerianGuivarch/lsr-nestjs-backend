@@ -10,35 +10,21 @@
 
 Le matériau publié sert désormais surtout de **réservoir de scènes, factions et révélations**, sans obligation de suivre la progression niveaux 1–20.
 
-## Décision structurante — campagne séparée en deux temps
+## Décision structurante — mini-arc autonome du Festival Radieux
 
-### Partie 1 — Festival Radieux / Pratchett
+La continuité abandonne désormais **entièrement le Quatuor du Crépuscule pour ce mini-arc**. Aucun membre du Quatuor n'est à l'origine des événements, ne manipule Pratchett et n'a besoin d'être révélé ou suggéré.
 
-Cette partie doit constituer un **mini-arc autonome**, idéalement jouable en **1 à 3 séances**, centré sur les trois semaines du Festival Radieux.
-
-Objectif : reprendre les éléments les plus marquants du début de la campagne sans ouvrir immédiatement tout le complot politique du Quatuor.
+La campagne publiée sert uniquement de réservoir de scènes, lieux, PNJ et idées. Le mini-arc du Festival doit fonctionner et se conclure **entièrement avec Hendrid Pratchett comme mastermind**.
 
 Éléments à intégrer :
 - incidents de sécurité pendant le Festival ;
-- intoxication / sabotage touchant les animaux de la ménagerie ou du zoo ;
+- sabotage / poison touchant un spectacle de cirque ou une ménagerie ;
 - disparition puis réapparition du **Ratisseur de tombes** ;
+- action liée au contrôle ou à la manipulation de l'information ;
 - reprise des disparitions de visiteurs ;
 - **Palais des rêves** et confrontation finale avec **Hendrid Pratchett**.
 
-Le Ratisseur devient dans cette première partie un **événement annexe du Festival**. Son auteur, son mécanisme de vol et sa réapparition restent à fixer, mais il ne doit plus dépendre obligatoirement du déroulé publié du Quatuor du Crépuscule.
-
-### Partie 2 — éventuel retour du Quatuor du Crépuscule
-
-Le **Quatuor du Crépuscule** n'est pas supprimé de la continuité, mais sa campagne politique est mise en réserve.
-
-Une reprise ultérieure pourra réutiliser :
-- Wrent Dicaspiron / la Dépiauteuse ;
-- Jonis Flakfatter / l'Infector ;
-- Reginald Vancaskerkin / le Colporteur de rumeurs ;
-- Olansa Terimor / la Reine grise ;
-- la tentative de déstabilisation d'Absalom et la prise de pouvoir.
-
-Cette reprise peut avoir lieu **des années plus tard en jeu**. Le Festival Radieux peut alors être interprété rétrospectivement comme une première expérience, un test ou un prototype indirect de leurs méthodes, sans que les PJ aient à découvrir ce lien pendant le mini-arc.
+Le mini-arc doit pouvoir tenir en **1 à 3 séances**, avec une version courte jouable en une grosse soirée.
 
 ## Adaptation MJ — Pratchett comme auteur central du mini-arc
 
@@ -62,11 +48,20 @@ L'échelle doit rester volontairement inférieure à celle du Quatuor publié :
 
 Le rite doit ressembler à une **version réduite et imparfaite** des méthodes que le Quatuor pourra employer plus tard.
 
-### Lien éventuel avec le Quatuor — réservé MJ
+### Positionnement de Pratchett
 
-Hypothèse à conserver sans la rendre nécessaire : le Quatuor a pu identifier Pratchett comme un fanatique manipulable et lui fournir indirectement quelques moyens ou idées afin d'observer comment Absalom réagit à une série de crises pendant le Festival.
+Pratchett doit être traité comme un antagoniste **intelligent, ambitieux, vaniteux et capable de planifier longtemps à l'avance**.
 
-Pratchett peut croire agir seul et pour Norgorber. Même si cette hypothèse est retenue, aucune preuve exploitable ne doit nécessairement conduire les PJ au Quatuor à la fin du mini-arc.
+Son profil public reste celui déjà établi : propriétaire du **Palais des rêves**, hôtel haut de gamme du Précipice, dandy mondain, charmeur et notable local. Les PJ l'ont déjà rencontré brièvement sous cette identité.
+
+Le Palais des rêves peut avoir hébergé ponctuellement des architectes, ingénieurs, délégations et responsables liés aux travaux du Festival. Cette position permet à Pratchett :
+- d'écouter et observer ses clients ;
+- d'obtenir des plans, habitudes et informations techniques ;
+- d'identifier Wakeiwa Atikak, Blune Bandrevaleur et d'autres acteurs du Ratisseur ;
+- de voler ou recopier discrètement des documents ;
+- de bâtir ses plans sans jamais appartenir officiellement au comité du Festival.
+
+Il n'est donc **pas membre de l'organisation du Festival**, ce qui évite de le rendre immédiatement suspect.
 
 ## Les quatre aspects de Norgorber — repères pour le rite
 
@@ -83,8 +78,8 @@ Le rite doit faire correspondre plusieurs incidents du Festival aux quatre aspec
 
 - **Père Écorcheur** : les disparitions et meurtres du Palais des rêves constituent son acte principal.
 - **Noirs Doigts** : poison ou produit utilisé pour provoquer le chaos parmi les animaux de la ménagerie / du zoo.
-- **Maître Gris** : disparition / vol du Ratisseur de tombes ou participation indirecte à son détournement ; cette attribution reste à préciser selon la solution choisie pour la machine.
-- **Faucheur de Réputation** : manipulation de l'information, fausses pistes, rumeurs, dissimulation des victimes ou tentative de discréditer la garde / le Festival.
+- **Maître Gris** : le vol du Ratisseur de tombes lui-même, conçu comme un exploit impossible et ostentatoire accompli sans que personne puisse prouver comment il a été réalisé.
+- **Faucheur de Réputation** : volet encore à préciser. Il doit dépasser la simple dissimulation des meurtres et reposer sur une véritable manipulation de l'identité, de la vérité publique, de la réputation ou de l'information.
 
 Le rite n'a pas besoin d'être parfaitement symétrique. Pratchett peut avoir conçu une théologie personnelle et imparfaite, ce qui laisse de la liberté pour les événements du scénario.
 
@@ -162,3 +157,44 @@ Ils restent disponibles pour une éventuelle **Partie 2** ultérieure.
 - sélectionner 2 à 4 incidents majeurs ;
 - condenser le Palais des rêves en quelques zones essentielles ;
 - déterminer ce que les PJ peuvent apprendre de Norgorber sans ouvrir immédiatement le Quatuor.
+
+
+## Hypothèse de travail — Palais des rêves comme source d'information
+
+Le **Palais des rêves** est un hôtel récent mais haut de gamme du Précipice. Pendant les années et mois de préparation du Festival, des architectes, techniciens, délégations et responsables de chantier peuvent y avoir séjourné.
+
+Pratchett profite de cette clientèle :
+- observation via les passages secrets de son hôtel ;
+- écoute des conversations ;
+- copie de notes et plans laissés dans les chambres ;
+- récupération de documents ou objets jetés ;
+- manipulation de Ralso et de contacts criminels pour obtenir du matériel supplémentaire.
+
+C'est ainsi qu'il découvre l'existence des propriétés extraordinaires du Ratisseur et finit par décider d'en faire l'acte du **Maître Gris** de son rite.
+
+Le vol du Ratisseur est donc **son idée, son exploit et sa responsabilité**, même si la méthode exacte de déphasage reste à concevoir à partir du fonctionnement canonique de la machine.
+
+## Cirques et acte des Noirs Doigts
+
+Deux spectacles peuvent être en concurrence pendant le Festival :
+- la **Ménagerie Céleste** de Dusklight ;
+- le cirque allié / rival des PJ issu de *Sentence d'Extinction*.
+
+Pratchett ne choisit pas nécessairement sa cible à l'avance. Il observe lequel des deux devient **le spectacle le plus populaire ou le plus prestigieux**, puis frappe celui-ci.
+
+L'acte des **Noirs Doigts** consiste à contaminer ou empoisonner le spectacle choisi afin de transformer le succès public en catastrophe. Cette logique renforce son ego : il ne veut pas simplement empoisonner des animaux, il veut corrompre **ce que la foule célèbre le plus**.
+
+## Combat final — puissance variable du rite
+
+Le combat contre Pratchett doit dépendre directement de la réussite de ses quatre actes.
+
+Chaque acte pleinement accompli peut lui conférer une bénédiction temporaire de Norgorber, une ressource de combat, une réaction, une résistance, un poison renforcé, un avantage de terrain ou un effet rituel.
+
+Ainsi, les actions des PJ pendant le Festival influencent mécaniquement le boss final :
+- le vol du Ratisseur est déjà accompli et constitue au minimum un succès ;
+- empêcher la catastrophe liée à sa réapparition peut limiter la validation de cet acte ;
+- empêcher ou réduire le sabotage des cirques affaiblit l'acte de Noirs Doigts ;
+- déjouer l'acte du Faucheur de Réputation affaiblit un autre volet ;
+- sauver la victime finale ou interrompre le sacrifice empêche l'accomplissement du Père Écorcheur.
+
+Le boss final doit donc être nettement plus dangereux si les PJ ont laissé le rite progresser.
