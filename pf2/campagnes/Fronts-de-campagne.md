@@ -24,6 +24,16 @@ La suite n'est plus un front de combat mais un **front de transition** : négoci
 
 → Voir [Elfes des cavernes et refuge azlanti](../univers/Elfes-des-cavernes-et-refuge-azlanti.md).
 
+### Agents d'Absalom — mini-arc du Festival Radieux
+
+La campagne publiée est désormais **fortement condensée**. Sa première partie est traitée comme un mini-arc autonome autour des trois semaines du **Festival Radieux**, avec **Hendrid Pratchett** comme antagoniste central.
+
+Le mini-arc doit réutiliser plusieurs incidents déjà amorcés ou emblématiques : sabotage / poison touchant les animaux, disparition puis réapparition du **Ratisseur de tombes**, disparitions de visiteurs et conclusion au **Palais des rêves**. Pratchett est adapté en fanatique de Norgorber cherchant à accomplir un rite personnel faisant écho aux quatre aspects du dieu.
+
+Le **Quatuor du Crépuscule** n'est pas supprimé, mais toute sa campagne de prise de pouvoir est mise en réserve pour une éventuelle seconde partie bien plus tard dans la chronologie.
+
+→ Voir [Agents d'Absalom](Campagne-Agents-d-Absalom.md) pour la structure validée et les choix d'adaptation.
+
 ### Campagne du Cartel du Sel — active
 
 La première partie, **Le tueur de la rue Rose / La Vengeance de la rue Rose**, est terminée : les PJ ont résolu l'affaire de Wennel Ardonay et récupéré son dossier d'enquête.
