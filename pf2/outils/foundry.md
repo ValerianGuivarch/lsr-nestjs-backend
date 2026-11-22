@@ -65,6 +65,8 @@ Le fichier n’est pas dupliqué par le Relay : le PNJ et l’Actor doivent poin
 | Jeton rond (image de carte) | `assets/l7r/tokens/generiques/<profil>.webp` |
 | Catalogue complet : descriptions, chemins, source des paires | `assets/l7r/tokens/generiques/index.json` |
 
+Pour enrichir/reconstituer cette banque, le script privé `pf2-data/_AI/pnj-generiques/build-generic-library.py` vérifie les paires d’origine et conserve les fichiers existants à l’identique ; étendre la liste de profils et adapter le contrôle de cardinalité avant une nouvelle exécution. Les illustrations ne sont pas versionnées sur GitHub.
+
 Exemples de profils : `homme-civil`, `femme-civile`, `homme-notable`, `femme-noble`, `garde`, `capitaine-garde`, `garde-ulfe`, `religieux`, `religieux-tenue-sombre`, `combattant`, `rebelle`, `rebelle-veteran`, `rebelle-4`, `eclaireur`, `mage`, `mage-excentrique`, voyageurs et cuisiniers. Autres ascendances représentées : fetchlings, duergar, orc, kobolds (six variantes), gnolls/kholos, gobelin, hobgobelin, leshy et gobelours. Deux moines ont une ascendance à vérifier. Pas de profil adapté à tous les peuples ou à tous les genres : ne pas forcer une attribution incompatible.
 
 **Application Foundry à la création ou à la correction d'un PNJ :**
