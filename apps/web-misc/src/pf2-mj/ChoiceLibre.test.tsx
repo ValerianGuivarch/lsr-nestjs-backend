@@ -14,9 +14,9 @@ describe('Choix libre MJ',()=>{
     vi.stubGlobal('fetch',vi.fn(async (_url:RequestInfo|URL,init?:RequestInit)=>{
       calls.push(init||{})
       if(init?.method==='PUT')return new Response('{"ok":true}',{status:200})
-      return new Response(JSON.stringify({campaigns:[{id:'c',title:'Campagne'},{id:'excluded',title:'Brise-Enfers'}],modules:[{key:'m',scenarioId:'s',componentId:'',hasTemplate:true,title:'Module',group:'',campaignIds:['c'],order:0,campaignOrder:{c:0},checklist:check,remainingTasks:'Portrait de Nalla',progress:'todo',ready:false}],quests:[
-        {id:'q',title:'Explorer la fosse',url:'https://discord.com/test',kind:'mission',campaignId:'c',moduleKey:'m',note:'Préparation',syncedAt:'now',votes:[{emoji:'👍',name:'Test joueur',characters:['Test PJ']}]},
-        {id:'b',title:'Piste bloquée',url:'https://discord.com/test',kind:'blocked',campaignId:'c',moduleKey:'',note:'Attendre',syncedAt:'now',votes:[]}
+      return new Response(JSON.stringify({campaigns:[{id:'c',title:'Campagne'},{id:'excluded',title:'Brise-Enfers'}],modules:[{key:'m',scenarioId:'s',componentId:'',hasTemplate:true,title:'Module',group:'',campaignIds:['c'],order:0,campaignOrder:{c:0},checklist:check,remainingTasks:'Portrait de Nalla',progress:'todo',ready:false}],characters:[{id:'eos',title:'Eos'},{id:'eryn',title:'Eryn'}],quests:[
+        {id:'q',title:'Explorer la fosse',url:'https://discord.com/test',nature:'mission',blocked:false,personal:false,characterIds:[],dependsOnQuestId:'',campaignId:'c',moduleKey:'m',note:'Préparation',syncedAt:'now',votes:[{emoji:'👍',name:'Test joueur',characters:['Test PJ']}]},
+        {id:'b',title:'Piste bloquée',url:'https://discord.com/test',nature:'rp',blocked:true,personal:false,characterIds:[],dependsOnQuestId:'',campaignId:'c',moduleKey:'',note:'Attendre',syncedAt:'now',votes:[]}
       ]}),{status:200})
     }))
     try{

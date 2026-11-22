@@ -83,13 +83,13 @@ Le fil Discord (ID stable) reste la source de vérité de la quête publique. Ni
 
 Proposer une relation MJ explicite entre quête et module(s), réutilisant les identifiants existants ; une quête peut couvrir plusieurs modules successifs ou alternatives, plusieurs quêtes peuvent pointer vers le même module. Afficher le prochain module disponible et les autres sur demande. Ne pas associer automatiquement sur une simple proximité de nom : suggérer, puis faire confirmer le lien. Une nouvelle quête sans association doit apparaître dans « À qualifier », avec actions « Associer un module existant », « Créer un module » ou « Classer autrement ».
 
-Types MJ (choix proposé, modifiable) :
+**Classification MJ (décision du 22/11/2026)** : les dimensions ne sont pas exclusives.
 
-- **Mission jouable** : module identifié, disponible si les prérequis sont réunis.
-- **Piste sans contenu** : vraie intention du groupe mais aucun module défini ; créer ou choisir le scénario, ou décider d'une improvisation préparée.
-- **Piste narrative bloquée / longue** : vérité MJ connue, ne deviendra jouable qu'à un jalon d'une autre campagne ; documenter le déclencheur et une réponse crédible si les PJ insistent.
-- **Quête personnelle de PJ** : objectif transverse (Yaz, Eos, Eryn si démarche personnelle, etc.) ; peut progresser par rencontres/indices greffés à des missions, ou pointer vers des modules dédiés. Pas de promesse d'une séance entière.
-- **Sujet RP / curiosité** : aucune mission distincte actuellement ; conserver la piste et des notes de réponse éventuelles.
+- **Nature** : mission (un module jouable doit toujours exister, sinon à préparer), piste RP (module facultatif, peut devenir jouable), quête dépendante (renvoie à une quête principale, sans module autonome), ou à qualifier (défaut à la création Discord).
+- **Personnelle** : attribut indépendant de la nature, avec un ou plusieurs identifiants stables de PJ du référentiel. Une piste personnelle peut ne pas avoir de module ; ce n'est pas un manque systématique. Si un module réellement préparé est associé, la piste devient jouable comme une mission.
+- **Disponibilité narrative** : blocage MJ explicite (indépendant de la préparation), dont la raison peut être notée. Une dépendance hérite du blocage de la quête principale et n'est jamais proposée comme mission autonome. Le Festival Radieux est une vraie mission bloquée par les événements/calendrier ; la machine et l'hôtel des disparus en dépendent. Myojimo est une piste RP bloquée ; Corvan et le Cartel du Sel sont des pistes RP, sans obligation de créer un module.
+- **Préparation** : calculée de la checklist, du modèle et de la progression du module. Aucune quête autonome n'est jouable sans module prêt non terminé. Les vues rapides « À préparer » (missions accessibles sans module prêt, ainsi que les pistes accessibles avec module à préparer), « Jouables » (toute mission/piste accessible avec module prêt), « Bloquées », « Dépendantes », « Pistes sans module » et « À qualifier » se combinent avec les filtres Nature et Personnelles. Les quêtes bloquées ne constituent pas une urgence de préparation.
+- Les anciennes valeurs `kind` restent lisibles pour compatibilité ; migration additive `059-choice-quest-dimensions` vers `nature`, `blocked`, `personal`, `character_ids`, `depends_on_thread_id`. Les titres, états Discord, votes, associations et notes existantes sont conservés ; les corrections éditoriales passent par le PUT métier des quêtes, jamais par une migration de contenu. Une ancienne quête personnelle sans PJ identifié signale « PJ à préciser » jusqu'à qualification.
 
 Une réservation 🔒 est distincte de la disponibilité technique/narrative et reste une contrainte de composition de groupe. Les autres joueurs ne doivent pas apprendre que Myojimo, la machine ou Corvan ne sont pas de vraies missions autonomes.
 

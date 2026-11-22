@@ -4,7 +4,8 @@ import { DataSource } from 'typeorm'
 import { normalizePreparationBody, requireModuleRecap } from '../discord/PreparationBody'
 import { Pf2PersistenceService } from '../pf2-storage/Pf2PersistenceService'
 
-const kinds = ['unassigned', 'mission', 'blocked', 'personal', 'rp'] as const
+const natures = ['unassigned', 'mission', 'rp', 'dependent'] as const
+type Nature = typeof natures[number]
 const checks = ['source', 'template', 'entities', 'foundry', 'review'] as const
 type Check = typeof checks[number]
 type CheckState = 'todo' | 'partial' | 'done' | 'na'
@@ -79,12 +80,13 @@ export class Pf2ChoiceLibreService {
   }
 
   async snapshot() {
-    const [catalogue, quests, votes, identities, owners, links, preparation, launcher, templateRows] = await Promise.all([
+    const [catalogue, quests, votes, identities, owners, links, preparation, launcher, templateRows, characters] = await Promise.all([
       this.catalogue(), this.persistence.listDiscordQuests(), this.persistence.listDiscordQuestVotes(),
       this.persistence.listPlayerIdentities(),
       this.db.query('SELECT o.discord_user_id AS userId,p.display_name AS name FROM pf2_player_character_owner o JOIN pf2_player_character_profile p ON p.npc_id=o.npc_id WHERE p.is_player=1 ORDER BY p.display_name'),
-      this.db.query('SELECT thread_id AS threadId,kind,campaign_id AS campaignId,module_key AS moduleKey,note FROM pf2_choice_quest'),
+      this.db.query('SELECT thread_id AS threadId,kind,nature,blocked,personal,character_ids AS characterIds,depends_on_thread_id AS dependsOnQuestId,campaign_id AS campaignId,module_key AS moduleKey,note FROM pf2_choice_quest'),
       this.db.query('SELECT module_key AS moduleKey,checklist,progress,remaining_tasks AS remainingTasks FROM pf2_choice_module'), this.persistence.questLauncherId(), this.db.query('SELECT module_key AS moduleKey FROM pf2_choice_template'),
+      this.db.query('SELECT npc_id AS id,display_name AS title FROM pf2_player_character_profile WHERE is_player=1 ORDER BY display_name'),
     ])
     const names = new Map(identities.map(i => [i.discordUserId, i.playerName]))
     const modules = catalogue.modules.map(m => {
@@ -92,26 +94,50 @@ export class Pf2ChoiceLibreService {
       const checklist: Checklist = { ...emptyChecklist(), ...JSON.parse(state?.checklist || '{}') }
       return { ...m, hasTemplate: templateRows.some((r: any) => r.moduleKey === m.key), checklist, progress: state?.progress || 'todo', remainingTasks: str(state?.remainingTasks), ready: checks.every(c => checklist[c] === 'done' || checklist[c] === 'na') }
     })
-    return { campaigns: catalogue.campaigns, modules, quests: quests.filter(q => !q.completed && q.id !== launcher).map(q => {
+    return { campaigns: catalogue.campaigns, modules, characters, quests: quests.filter(q => !q.completed && q.id !== launcher).map(q => {
       const link = links.find((r: any) => r.threadId === q.id)
       const voteList = votes.filter(v => v.threadId === q.id).map(v => ({
         emoji: v.emoji, name: names.get(v.userId) || 'Joueur non identifié',
         characters: owners.filter((o: any) => o.userId === v.userId).map((o: any) => o.name),
       }))
-      return { ...q, kind: link?.kind || 'unassigned', campaignId: link?.campaignId || '', moduleKey: link?.moduleKey || '', note: link?.note || '', votes: voteList }
+      const dependency = quests.find(t => t.id === link?.dependsOnQuestId)
+      const dependencyLink = links.find((r: any) => r.threadId === link?.dependsOnQuestId)
+      return { ...q, kind: link?.kind || 'unassigned', nature: link?.nature || 'unassigned',
+        blocked: Boolean(link?.blocked), personal: Boolean(link?.personal), characterIds: JSON.parse(link?.characterIds || '[]'),
+        dependsOnQuestId: link?.dependsOnQuestId || '', dependencyTitle: dependency?.title || '',
+        dependencyBlocked: Boolean(dependencyLink?.blocked), dependencyCompleted: Boolean(dependency?.completed),
+        campaignId: link?.campaignId || '', moduleKey: link?.moduleKey || '', note: link?.note || '', votes: voteList }
     }) }
   }
 
   async saveQuest(id: string, data: unknown) {
     const value = obj(data)
-    if (!kinds.includes(value.kind)) throw new BadRequestException('Type de quête invalide.')
+    if (!natures.includes(value.nature)) throw new BadRequestException('Nature de quête invalide. Actualiser la page.')
+    if (typeof value.blocked !== 'boolean' || typeof value.personal !== 'boolean') throw new BadRequestException('Disponibilité et caractère personnel requis.')
+    const nature: Nature = value.nature
+    if (!Array.isArray(value.characterIds) || value.characterIds.some((v: unknown) => typeof v !== 'string' || !v)) throw new BadRequestException('Personnages invalides.')
+    const characterIds: string[] = [...new Set<string>(value.characterIds)]
+    if (value.personal !== Boolean(characterIds.length)) throw new BadRequestException('Choisir au moins un PJ pour une quête personnelle (ou décocher personnelle).')
+    if (characterIds.length > 30) throw new BadRequestException('Trop de personnages.')
+    const players = await this.db.query('SELECT npc_id AS id FROM pf2_player_character_profile WHERE is_player=1')
+    if (characterIds.some(id => !players.some((p:{id:string})=>p.id===id))) throw new BadRequestException('Personnage joueur inconnu.')
+    const dependsOnQuestId = str(value.dependsOnQuestId)
     const [quests,launcher] = await Promise.all([this.persistence.listDiscordQuests(),this.persistence.questLauncherId()])
     if (id === launcher || !quests.some(q => q.id === id && !q.completed)) throw new BadRequestException('Quête ouverte introuvable.')
     const campaignId = str(value.campaignId), moduleKey = str(value.moduleKey)
+    if (nature === 'dependent') {
+      if (!dependsOnQuestId || dependsOnQuestId === id || dependsOnQuestId === launcher || !quests.some(q=>q.id===dependsOnQuestId)) throw new BadRequestException('Choisir une autre quête de référence.')
+      if (moduleKey || value.blocked) throw new BadRequestException('Une quête dépendante hérite de la disponibilité et ne possède pas de module autonome.')
+      const dependencies = await this.db.query('SELECT thread_id AS threadId,nature,depends_on_thread_id AS dependsOnQuestId FROM pf2_choice_quest')
+      if (dependencies.some((q:any)=>q.threadId===dependsOnQuestId && q.nature==='dependent')) throw new BadRequestException('Choisir une quête principale, pas une quête déjà dépendante.')
+      if (dependencies.some((q:any)=>q.dependsOnQuestId===id)) throw new BadRequestException('Cette quête est déjà la référence d’une autre quête.')
+    } else if (dependsOnQuestId) throw new BadRequestException('Une dépendance exige la nature liée à une autre quête.')
     const catalogue = await this.catalogue()
     if (campaignId && !catalogue.campaigns.some(c => c.id === campaignId)) throw new BadRequestException('Campagne inconnue.')
     if (moduleKey && !catalogue.modules.some(m => m.key === moduleKey && (!campaignId || m.campaignIds.includes(campaignId)))) throw new BadRequestException('Module inconnu ou hors campagne.')
-    await this.db.query('INSERT INTO pf2_choice_quest (thread_id,kind,campaign_id,module_key,note) VALUES (?,?,?,?,?) ON CONFLICT(thread_id) DO UPDATE SET kind=excluded.kind,campaign_id=excluded.campaign_id,module_key=excluded.module_key,note=excluded.note,updated_at=CURRENT_TIMESTAMP', [id,value.kind,campaignId,moduleKey,str(value.note).slice(0,4000)])
+    // Keep the old column readable for historical exports; all new decisions use the independent fields.
+    const kind = value.blocked || nature==='dependent' ? 'blocked' : value.personal ? 'personal' : nature
+    await this.db.query('INSERT INTO pf2_choice_quest (thread_id,kind,nature,blocked,personal,character_ids,depends_on_thread_id,campaign_id,module_key,note) VALUES (?,?,?,?,?,?,?,?,?,?) ON CONFLICT(thread_id) DO UPDATE SET kind=excluded.kind,nature=excluded.nature,blocked=excluded.blocked,personal=excluded.personal,character_ids=excluded.character_ids,depends_on_thread_id=excluded.depends_on_thread_id,campaign_id=excluded.campaign_id,module_key=excluded.module_key,note=excluded.note,updated_at=CURRENT_TIMESTAMP', [id,kind,nature,Number(value.blocked),Number(value.personal),JSON.stringify(characterIds),dependsOnQuestId,campaignId,moduleKey,str(value.note).slice(0,4000)])
     return { ok: true }
   }
 

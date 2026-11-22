@@ -44,6 +44,29 @@ describe('Choix libre catalogue', () => {
     expect((await service.snapshot()).modules[0]).toMatchObject({ready:false,checklist,remainingTasks:'Portrait de Nalla'})
     await expect(service.saveModule({moduleKey:key,checklist,progress:'todo',remainingTasks:123})).rejects.toThrow('reste à faire')
   })
+  it('saves independent nature, blocking and several player characters', async () => {
+    const persistence={listDiscordQuests:async()=>[{id:'a',completed:false},{id:'b',completed:false}],questLauncherId:async()=>null}
+    const query=jest.fn(async (sql:string)=>sql.includes('pf2_player_character_profile')?[{id:'eos'},{id:'eryn'}]:[])
+    const service=new Pf2ChoiceLibreService({query} as never,persistence as never)
+    jest.spyOn(service,'catalogue').mockResolvedValue(choiceCatalogue([{id:'c'}],[]))
+    const data={nature:'rp',blocked:true,personal:true,characterIds:['eos','eryn'],dependsOnQuestId:'',campaignId:'c',moduleKey:'',note:'Attendre'}
+    await expect(service.saveQuest('a',data)).resolves.toEqual({ok:true})
+    expect(query.mock.calls.find(([sql])=>sql.includes('INSERT INTO pf2_choice_quest'))?.[0]).toContain('character_ids')
+    await expect(service.saveQuest('a',{...data,characterIds:[]})).rejects.toThrow('Choisir au moins un PJ')
+    await expect(service.saveQuest('a',{...data,characterIds:['unknown']})).rejects.toThrow('Personnage joueur inconnu')
+  })
+  it('allows a dependent quest but rejects a self-link or independent module', async () => {
+    const persistence={listDiscordQuests:async()=>[{id:'a',completed:false},{id:'b',completed:false}],questLauncherId:async()=>null}
+    const query=jest.fn().mockResolvedValue([])
+    const service=new Pf2ChoiceLibreService({query} as never,persistence as never)
+    jest.spyOn(service,'catalogue').mockResolvedValue(choiceCatalogue([{id:'c'}],[]))
+    const data={nature:'dependent',blocked:false,personal:false,characterIds:[],dependsOnQuestId:'b',campaignId:'c',moduleKey:'',note:''}
+    await expect(service.saveQuest('a',data)).resolves.toEqual({ok:true})
+    await expect(service.saveQuest('a',{...data,dependsOnQuestId:'a'})).rejects.toThrow('autre quête')
+    await expect(service.saveQuest('a',{...data,moduleKey:choiceModuleKey('c')})).rejects.toThrow('module autonome')
+    query.mockImplementation(async (sql:string)=>sql.includes('depends_on_thread_id AS dependsOnQuestId')?[{threadId:'b',nature:'dependent',dependsOnQuestId:'a'}]:[])
+    await expect(service.saveQuest('a',data)).rejects.toThrow('quête principale')
+  })
   it('uses the MJ trust model without a separate access key', () => {
     const controller=new Pf2ChoiceLibreController({snapshot:()=>({ok:true})} as unknown as Pf2ChoiceLibreService)
     expect(controller.list()).toEqual({ok:true})

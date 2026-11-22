@@ -2001,6 +2001,14 @@ export class Pf2PersistenceService implements OnModuleInit {
         await manager.query("ALTER TABLE pf2_choice_module ADD COLUMN remaining_tasks TEXT NOT NULL DEFAULT ''")
       }
     })
+    await this.applyMigration('059-choice-quest-dimensions', async manager => {
+      await manager.query("ALTER TABLE pf2_choice_quest ADD COLUMN nature TEXT NOT NULL DEFAULT 'unassigned' CHECK(nature IN ('unassigned','mission','rp','dependent'))")
+      await manager.query("ALTER TABLE pf2_choice_quest ADD COLUMN blocked INTEGER NOT NULL DEFAULT 0 CHECK(blocked IN (0,1))")
+      await manager.query("ALTER TABLE pf2_choice_quest ADD COLUMN personal INTEGER NOT NULL DEFAULT 0 CHECK(personal IN (0,1))")
+      await manager.query("ALTER TABLE pf2_choice_quest ADD COLUMN character_ids TEXT NOT NULL DEFAULT '[]'")
+      await manager.query("ALTER TABLE pf2_choice_quest ADD COLUMN depends_on_thread_id TEXT NOT NULL DEFAULT ''")
+      await manager.query("UPDATE pf2_choice_quest SET nature=CASE kind WHEN 'blocked' THEN 'mission' WHEN 'personal' THEN 'rp' ELSE kind END, blocked=CASE WHEN kind='blocked' THEN 1 ELSE 0 END, personal=CASE WHEN kind='personal' THEN 1 ELSE 0 END")
+    })
     await this.assertDatabaseIntegrity(this.dataSource, 'base SQLite après migrations')
   }
 

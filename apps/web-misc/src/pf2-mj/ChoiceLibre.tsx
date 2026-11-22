@@ -6,15 +6,16 @@ import { moduleDisplayTitle, moduleInWork, sortedWorks } from './moduleLabels'
 import { moduleReady, moduleStateLabel, checklistCount } from './moduleReadiness'
 
 type Option = { id: string; title: string }
-type Kind = 'unassigned' | 'mission' | 'blocked' | 'personal' | 'rp'
+import { natureLabels, questBlocked, questNeedsPreparation, questPlayable, questPreparationLabel, type QuestNature, type QuestState } from './questReadiness'
 type CheckState = 'todo' | 'partial' | 'done' | 'na'
 type Progress = 'todo' | 'started' | 'done'
-const kinds: Record<Kind,string> = { unassigned: 'À rattacher', mission: 'Mission jouable', blocked: 'Bloquée', personal: 'Quête de PJ', rp: 'Piste RP' }
+const filters = { all: 'Toutes', prepare: 'À préparer', ready: 'Jouables', blocked: 'Bloquées', dependent: 'Dépendantes', optional: 'Pistes sans module', unassigned: 'À qualifier' } as const
+type Filter = keyof typeof filters
 const checkLabels = { source:'Scénario étudié', template:'Préparation de séance', entities:'PNJ, rencontres et objets', foundry:'Foundry', review:'Ajustements MJ' }
 type Check = keyof typeof checkLabels
 type Module = { key:string; scenarioId:string; componentId:string; title:string; group:string; campaignIds:string[]; order:number; campaignOrder:Record<string,number>; checklist:Record<Check,CheckState>; remainingTasks:string; progress:Progress; ready:boolean; hasTemplate:boolean }
-type Quest = { id:string; title:string; url:string; syncedAt:string; kind:Kind; campaignId:string; moduleKey:string; note:string; votes:{ emoji:string; name:string; characters:string[] }[] }
-type Snapshot = { quests:Quest[]; campaigns:Option[]; modules:Module[] }
+type Quest = QuestState & { id:string; title:string; url:string; syncedAt:string; campaignId:string; note:string; dependencyTitle:string; votes:{ emoji:string; name:string; characters:string[] }[] }
+type Snapshot = { quests:Quest[]; campaigns:Option[]; modules:Module[]; characters:Option[] }
 
 const endpoint = '/apil7r/pf2-mj/choice-libre'
 async function request<T>(path='', data?:unknown):Promise<T> {
@@ -22,14 +23,16 @@ async function request<T>(path='', data?:unknown):Promise<T> {
   if (!response.ok) throw new Error('Erreur HTTP '+response.status)
   return response.json()
 }
-function readiness(q:Quest,m?:Module) {
-  if (q.kind==='blocked') return 'Bloquée'
-  if (q.kind==='personal') return 'Quête personnelle'
-  if (q.kind==='rp') return 'Piste RP'
-  if (q.kind==='unassigned') return 'À rattacher'
-  if (!m) return q.campaignId ? 'Module à choisir' : 'Sans module'
-  if (m.progress==='done') return 'Joué — choisir la suite'
-  return moduleReady(m) ? 'Prêt à jouer' : 'À préparer'
+function matchesFilter(q:Quest,m:Module|undefined,filter:Filter) {
+  switch(filter) {
+    case 'prepare': return questNeedsPreparation(q,m)
+    case 'ready': return questPlayable(q,m)
+    case 'blocked': return questBlocked(q)
+    case 'dependent': return q.nature==='dependent'
+    case 'optional': return q.nature==='rp' && !q.moduleKey
+    case 'unassigned': return q.nature==='unassigned'
+    default: return true
+  }
 }
 function ModuleEditor({module, save}:{module:Module;save:(m:Module)=>Promise<void>}) {
   const [draft,setDraft]=useState(module)
@@ -53,14 +56,20 @@ function QuestCard({quest,data,activeWorks,showVotes,save,openTemplate}:{quest:Q
   const [error,setError]=useState('')
     const next=data.modules.find(m=>m.key===quest.moduleKey)
   const options=data.modules.filter(m=>draft.campaignId&&moduleInWork(m,draft.campaignId)).sort((a,b)=>(a.campaignOrder[draft.campaignId]??a.order)-(b.campaignOrder[draft.campaignId]??b.order)||a.title.localeCompare(b.title,'fr'))
-  const status=readiness(quest,next)
+  const status=questPreparationLabel(quest,next)
+  const characterNames=quest.characterIds.map(id=>data.characters.find(c=>c.id===id)?.title || 'PJ à vérifier')
+  const dependency=data.quests.find(q=>q.id===quest.dependsOnQuestId)
   const questWorks=sortedWorks([...activeWorks,...data.campaigns.filter(c=>c.id===draft.campaignId)])
   return <article className="choice-quest">
-    <div className="choice-head"><div><a href={quest.url} target="_blank" rel="noreferrer">{quest.title}</a><div className="choice-meta">{data.campaigns.find(c=>c.id===quest.campaignId)?.title || 'Aucune campagne'}{next?' · '+moduleDisplayTitle(next,questWorks,quest.campaignId):quest.moduleKey?' · Module à vérifier':''}</div></div><span className={'choice-status '+(status==='Prêt à jouer'?'choice-ok':'')}>{status}</span></div>
+    <div className="choice-head"><div><a href={quest.url} target="_blank" rel="noreferrer">{quest.title}</a><div className="choice-meta">{data.campaigns.find(c=>c.id===quest.campaignId)?.title || 'Aucune campagne'}{next?' · '+moduleDisplayTitle(next,questWorks,quest.campaignId):quest.moduleKey?' · Module à vérifier':''}</div></div><div className="choice-badges"><span className="choice-status">{natureLabels[quest.nature]}</span>{quest.personal&&<span className="choice-status choice-personal">Personnelle · {characterNames.join(', ')||'PJ à préciser'}</span>}{questBlocked(quest)&&<span className="choice-status choice-blocked">Bloquée{quest.nature==='dependent'?' par la quête principale':''}</span>}<span className={'choice-status '+(questPlayable(quest,next)?'choice-ok':'')}>{status}</span></div></div>
+    {quest.nature==='dependent'&&<p className="choice-meta">Dépend de : {dependency ? <a href={dependency.url} target="_blank" rel="noreferrer">{dependency.title}</a> : quest.dependencyTitle || 'Quête à vérifier'}{quest.dependencyCompleted?' (terminée)':''}. Pas de séance indépendante.</p>}
     {quest.note && <p>{quest.note}</p>}{next && <p className="choice-meta">{Object.values(next.checklist).filter(v=>v==='done'||v==='na').length}/5 vérifiés · {Object.values(next.checklist).filter(v=>v==='partial').length} en préparation · {next.hasTemplate?'Modèle enregistré':'Aucun modèle'}</p>}{next && <p><a href={next.scenarioId.startsWith("resource:")?"/pf2-mj/resources/"+encodeURIComponent(next.scenarioId.slice(9)):"/pf2-mj/scenarios/"+encodeURIComponent(next.scenarioId)}>Ouvrir la source du module</a></p>}
     <div className="choice-actions"><span>👍 {quest.votes.filter(v=>v.emoji==='👍').length} · 🔒 {quest.votes.filter(v=>v.emoji==='🔒').length}</span><button onClick={()=>{setDraft(quest);setEditing(v=>!v)}}>{editing?'Fermer':'Associer / modifier'}</button>{next && <button onClick={()=>openTemplate(next)}>{next.hasTemplate?'Voir le modèle':'Créer le modèle'}</button>}</div>
     {showVotes && <div className="choice-votes">{['👍','🔒'].map(emoji=><div key={emoji}><strong>{emoji} {emoji==='👍'?'Intéressés':'Verrouillés'}</strong>{quest.votes.filter(v=>v.emoji===emoji).map((v,i)=><div key={i}>{v.name}{v.characters.length?' — '+v.characters.join(', '):''}</div>)}</div>)}</div>}
-    {editing && <div className="choice-edit"><label>Type<select value={draft.kind} onChange={e=>setDraft(v=>({...v,kind:e.target.value as Kind}))}>{Object.entries(kinds).map(([k,label])=><option key={k} value={k}>{label}</option>)}</select></label><label>Campagne / scénario<select value={draft.campaignId} onChange={e=>setDraft(v=>({...v,campaignId:e.target.value,moduleKey:''}))}><option value="">Aucun</option>{questWorks.map(c=><option key={c.id} value={c.id}>{c.title}</option>)}</select></label><label>Prochain module<select value={draft.moduleKey} onChange={e=>setDraft(v=>({...v,moduleKey:e.target.value}))}><option value="">Aucun / à choisir</option>{draft.moduleKey&&!options.some(m=>m.key===draft.moduleKey)&&<option value={draft.moduleKey}>Lien historique à vérifier</option>}{options.map(m=><option key={m.key} value={m.key}>{moduleDisplayTitle(m,questWorks,draft.campaignId)}</option>)}</select></label><label>Note MJ<textarea value={draft.note} onChange={e=>setDraft(v=>({...v,note:e.target.value}))}/></label>{error&&<p role="alert">{error}</p>}<button disabled={busy} onClick={async()=>{setBusy(true);setError('');try{await save(draft);setEditing(false)}catch(e){setError(String(e))}finally{setBusy(false)}}}>Enregistrer</button></div>}
+    {editing && <div className="choice-edit"><label>Nature<select value={draft.nature} onChange={e=>{const nature=e.target.value as QuestNature;setDraft(v=>({...v,nature,...(nature==='dependent'?{moduleKey:'',blocked:false}:{dependsOnQuestId:''})}))}}>{Object.entries(natureLabels).map(([k,label])=><option key={k} value={k}>{label}</option>)}</select></label>
+      <label><span>Quête personnelle</span><input type="checkbox" checked={draft.personal} onChange={e=>setDraft(v=>({...v,personal:e.target.checked,characterIds:e.target.checked?v.characterIds:[]}))}/></label>
+      {draft.personal&&<fieldset className="choice-character-list"><legend>PJ concernés (un ou plusieurs)</legend>{data.characters.map(c=><label key={c.id}><input type="checkbox" checked={draft.characterIds.includes(c.id)} onChange={e=>setDraft(v=>({...v,characterIds:e.target.checked?[...v.characterIds,c.id]:v.characterIds.filter(id=>id!==c.id)}))}/>{c.title}</label>)}</fieldset>}
+      {draft.nature==='dependent'?<label>Quête principale<select value={draft.dependsOnQuestId} onChange={e=>setDraft(v=>({...v,dependsOnQuestId:e.target.value}))}><option value="">Choisir la quête</option>{draft.dependsOnQuestId&&!data.quests.some(q=>q.id===draft.dependsOnQuestId)&&<option value={draft.dependsOnQuestId}>{draft.dependencyTitle||'Quête historique'}</option>}{data.quests.filter(q=>q.id!==quest.id&&q.nature!=='dependent').map(q=><option key={q.id} value={q.id}>{q.title}</option>)}</select></label>:<label><span>Bloquée narrativement</span><input type="checkbox" checked={draft.blocked} onChange={e=>setDraft(v=>({...v,blocked:e.target.checked}))}/></label>}<label>Campagne / scénario<select value={draft.campaignId} onChange={e=>setDraft(v=>({...v,campaignId:e.target.value,moduleKey:''}))}><option value="">Aucun</option>{questWorks.map(c=><option key={c.id} value={c.id}>{c.title}</option>)}</select></label>{draft.nature!=='dependent'&&<label>Prochain module<select value={draft.moduleKey} onChange={e=>setDraft(v=>({...v,moduleKey:e.target.value}))}><option value="">Aucun / à choisir</option>{draft.moduleKey&&!options.some(m=>m.key===draft.moduleKey)&&<option value={draft.moduleKey}>Lien historique à vérifier</option>}{options.map(m=><option key={m.key} value={m.key}>{moduleDisplayTitle(m,questWorks,draft.campaignId)}</option>)}</select></label>}<label>Note MJ<textarea value={draft.note} onChange={e=>setDraft(v=>({...v,note:e.target.value}))}/></label>{error&&<p role="alert">{error}</p>}<button disabled={busy||(draft.personal&&!draft.characterIds.length)||(draft.nature==='dependent'&&!draft.dependsOnQuestId)} onClick={async()=>{setBusy(true);setError('');try{await save(draft);setEditing(false)}catch(e){setError(String(e))}finally{setBusy(false)}}}>Enregistrer</button></div>}
   </article>
 }
 type WorkspaceProps = {campaigns:Option[];scenarios:Option[];activeWorks?:Option[]}
@@ -68,19 +77,24 @@ function ChoiceLibre(props:WorkspaceProps & {mode:'quests'|'modules';requestedMo
   const [data,setData]=useState<Snapshot|null>(null)
   const [error,setError]=useState('')
   const [showVotes,setShowVotes]=useState(false)
-  const [filter,setFilter]=useState('all')
+  const [filter,setFilter]=useState<Filter>('all')
+  const [natureFilter,setNatureFilter]=useState('all')
+  const [personalFilter,setPersonalFilter]=useState('all')
   const [loading,setLoading]=useState(false)
   const [campaignFilter,setCampaignFilter]=useState('')
   const [templateFilter,setTemplateFilter]=useState('all')
   async function load() {setLoading(true);setError('');try{setData(await request<Snapshot>())}catch(e){setData(null);setError(String(e))}finally{setLoading(false)}}
   useEffect(()=>{void load()},[])
-  const saveQuest=async(q:Quest)=>{await request('/quests/'+encodeURIComponent(q.id),{kind:q.kind,campaignId:q.campaignId,moduleKey:q.moduleKey,note:q.note});setData(d=>d?({...d,quests:d.quests.map(old=>old.id===q.id?q:old)}):d)}
+  const saveQuest=async(q:Quest)=>{await request('/quests/'+encodeURIComponent(q.id),{nature:q.nature,blocked:q.blocked,personal:q.personal,characterIds:q.characterIds,dependsOnQuestId:q.dependsOnQuestId,campaignId:q.campaignId,moduleKey:q.moduleKey,note:q.note});setData(await request<Snapshot>())}
   const saveModule=async(m:Module)=>{await request('/modules',{moduleKey:m.key,checklist:m.checklist,progress:m.progress,remainingTasks:m.remainingTasks ?? ''});setData(d=>d?({...d,modules:d.modules.map(old=>old.key===m.key?{...old,checklist:m.checklist,progress:m.progress,remainingTasks:m.remainingTasks ?? '',ready:Object.values(m.checklist).every(v=>v==='done'||v==='na')}:old)}):d)}
   if (!data) return <section className="choice-panel"><h2>Journal de quêtes · Choix libre</h2>{error&&<p role="alert">{error}</p>}<button disabled={loading} onClick={()=>void load()}>{loading?'Chargement…':'Réessayer'}</button></section>
-  const ready=data.quests.filter(q=>readiness(q,data.modules.find(m=>m.key===q.moduleKey))==='Prêt à jouer').length
-  const visible=data.quests.filter(q=>filter==='all'||(filter==='ready'?readiness(q,data.modules.find(m=>m.key===q.moduleKey))==='Prêt à jouer':q.kind===filter))
+  const moduleByKey=new Map(data.modules.map(m=>[m.key,m]))
+  const qualifying=data.quests.filter(q=>(natureFilter==='all'||q.nature===natureFilter)&&(personalFilter==='all'||(personalFilter==='personal'?q.personal:!q.personal)))
+  const counts=Object.fromEntries(Object.keys(filters).map(f=>[f,qualifying.filter(q=>matchesFilter(q,moduleByKey.get(q.moduleKey),f as Filter)).length]))
+  const ready=data.quests.filter(q=>questPlayable(q,moduleByKey.get(q.moduleKey))).length
+  const visible=qualifying.filter(q=>matchesFilter(q,moduleByKey.get(q.moduleKey),filter))
   const synced=data.quests.map(q=>q.syncedAt).sort().at(-1)
-  const linkedCampaigns=new Set(data.quests.filter(q=>q.campaignId&&q.kind==='mission').map(q=>q.campaignId))
+  const linkedCampaigns=new Set(data.quests.filter(q=>q.campaignId&&q.nature==='mission').map(q=>q.campaignId))
   const activeWorks=sortedWorks(props.activeWorks ?? data.campaigns)
   const selectedCampaign=activeWorks.some(c=>c.id===campaignFilter)?campaignFilter:activeWorks.find(c=>linkedCampaigns.has(c.id))?.id||activeWorks[0]?.id||''
   const campaignModules=data.modules.filter(m=>moduleInWork(m,selectedCampaign)).sort((a,b)=>(a.campaignOrder[selectedCampaign]??a.order)-(b.campaignOrder[selectedCampaign]??b.order))
@@ -94,7 +108,7 @@ function ChoiceLibre(props:WorkspaceProps & {mode:'quests'|'modules';requestedMo
     <p>{campaignModules.filter(m=>m.hasTemplate).length}/{campaignModules.length} modèles enregistrés</p>
     <p>{campaignModules.filter(m=>m.progress!=='done'&&moduleReady(m)).length} module(s) prêt(s) non terminé(s) · {campaignModules.filter(m=>m.progress==='done').length} joué(s)</p>
     <div className="choice-list">{listedModules.map(m=><article key={m.key} className="choice-quest"><div className="choice-head"><div><strong>{moduleDisplayTitle(m,activeWorks,selectedCampaign)}</strong>{m.group&&<div className="choice-meta">{m.group}</div>}</div><span className={'choice-status '+(moduleReady(m)?'choice-ok':'')}>{moduleStateLabel(m)}</span></div><p className="choice-meta">{checklistCount(m)}/5 vérifiés · {m.hasTemplate?'Modèle enregistré':'Sans modèle'}</p><div className="choice-actions"><button onClick={()=>props.openTemplate(m)}>{m.hasTemplate?'Modifier le modèle':'Créer le modèle'}</button></div></article>)}</div></section>
-  return <section className="choice-panel"><h2>Journal de quêtes · Choix libre</h2><p>{data.quests.length} quêtes ouvertes · {ready} prêtes à jouer · dernière synchronisation : {synced||'inconnue'}</p><p>Les votes sont ceux des comptes Discord ; les PJ affichés sont leurs personnages connus, pas une attribution certaine du vote à un PJ.</p><div className="choice-toolbar"><label>Filtrer <select value={filter} onChange={e=>setFilter(e.target.value)}><option value="all">Toutes</option><option value="ready">Prêtes à jouer</option>{Object.entries(kinds).map(([id,label])=><option key={id} value={id}>{label}</option>)}</select></label><label><input type="checkbox" checked={showVotes} onChange={e=>setShowVotes(e.target.checked)}/> Intéressés / verrouillés</label><button disabled={loading} onClick={()=>void load()}>Actualiser</button></div>{error&&<p role="alert">{error}</p>}<div className="choice-list">{visible.map(q=><QuestCard key={q.id} quest={q} data={data} activeWorks={activeWorks} showVotes={showVotes} save={saveQuest} openTemplate={props.openTemplate}/>)}</div>{!visible.length&&<p>Aucune quête pour ce filtre.</p>}</section>
+  return <section className="choice-panel"><h2>Journal de quêtes · Choix libre</h2><p>{data.quests.length} quêtes ouvertes · {ready} prêtes à jouer · dernière synchronisation : {synced||'inconnue'}</p><p>Les votes sont ceux des comptes Discord ; les PJ affichés sont leurs personnages connus, pas une attribution certaine du vote à un PJ.</p><div className="choice-toolbar"><label>Nature <select value={natureFilter} onChange={e=>setNatureFilter(e.target.value)}><option value="all">Toutes</option>{Object.entries(natureLabels).map(([id,label])=><option key={id} value={id}>{label}</option>)}</select></label><label>Personnelles <select value={personalFilter} onChange={e=>setPersonalFilter(e.target.value)}><option value="all">Toutes</option><option value="personal">Personnelles</option><option value="other">Non personnelles</option></select></label><label><input type="checkbox" checked={showVotes} onChange={e=>setShowVotes(e.target.checked)}/> Intéressés / verrouillés</label><button disabled={loading} onClick={()=>void load()}>Actualiser</button></div><div className="choice-filter-buttons" aria-label="Filtres de disponibilité">{Object.entries(filters).map(([id,label])=><button key={id} aria-pressed={filter===id} onClick={()=>setFilter(id as Filter)}>{label} · {counts[id]}</button>)}</div>{error&&<p role="alert">{error}</p>}<div className="choice-list">{visible.map(q=><QuestCard key={q.id} quest={q} data={data} activeWorks={activeWorks} showVotes={showVotes} save={saveQuest} openTemplate={props.openTemplate}/>)}</div>{!visible.length&&<p>Aucune quête pour ce filtre.</p>}</section>
 }
 export default function ChoiceLibreWorkspace(props:WorkspaceProps) {
   const location=useLocation()

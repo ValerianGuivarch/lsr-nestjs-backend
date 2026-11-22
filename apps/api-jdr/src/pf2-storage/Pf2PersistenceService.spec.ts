@@ -90,6 +90,24 @@ describe('Pf2PersistenceService', () => {
     expect((await store.listDiscordQuests())[0].title).toBe('La fosse')
   })
 
+  it('migrates legacy quest types into independent fields, preserving associations and notes', async () => {
+    const service=await open()
+    const db=currentDataSource()
+    // Reconstruct pre-059 schema in this isolated test database.
+    for (const column of ['depends_on_thread_id','character_ids','personal','blocked','nature']) await db.query('ALTER TABLE pf2_choice_quest DROP COLUMN '+column)
+    await db.query("DELETE FROM pf2_schema_migration WHERE id='059-choice-quest-dimensions'")
+    for (const kind of ['mission','blocked','personal','rp','unassigned']) await db.query('INSERT INTO pf2_choice_quest(thread_id,kind,campaign_id,module_key,note) VALUES (?,?,?,?,?)',[kind,kind,'campaign','module','note'])
+    await service.onModuleInit()
+    const rows=await db.query('SELECT thread_id,nature,blocked,personal,character_ids,depends_on_thread_id,campaign_id,module_key,note FROM pf2_choice_quest ORDER BY thread_id')
+    expect(rows.map(({thread_id,nature,blocked,personal}:any)=>[thread_id,nature,blocked,personal])).toEqual([
+      ['blocked','mission',1,0],['mission','mission',0,0],['personal','rp',0,1],['rp','rp',0,0],['unassigned','unassigned',0,0],
+    ])
+    expect(rows.every((r:any)=>r.character_ids==='[]'&&r.depends_on_thread_id===''&&r.campaign_id==='campaign'&&r.module_key==='module'&&r.note==='note')).toBe(true)
+    await db.query("UPDATE pf2_choice_quest SET nature='rp',blocked=1 WHERE thread_id='mission'")
+    await service.onModuleInit()
+    expect((await db.query("SELECT nature,blocked FROM pf2_choice_quest WHERE thread_id='mission'"))[0]).toEqual({nature:'rp',blocked:1})
+  })
+
   it('persists quest 👍/🔒 in SQLite, reconciles missing gateway events and survives database reopen', async () => {
     let store = await open()
     expect(await currentDataSource().query(
