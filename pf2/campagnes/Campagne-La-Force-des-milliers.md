@@ -2,9 +2,9 @@
 
 [← Index des campagnes](Campagnes.md) · [Labyrinthe de Narven](../univers/Labyrinthe-et-portails.md) · [La Route ouverte](Campagne-Route-Ouverte.md) · [Yaz Lorok](../pj/PJ-Yaz-Lorok.md)
 
-> **Statut runtime vérifié le 19 novembre 2026 : campagne intégrée, sélectionnée « à jouer », aucune séance de La Force des milliers encore jouée.**
+> **Statut runtime vérifié le 22 novembre 2026 : campagne intégrée, sélectionnée « à jouer », aucune séance de La Force des milliers encore jouée.**
 >
-> **Kindled Magic est entièrement préparé** : source complète, cinq modules Choix libre, scènes, Actors, rencontres, dangers, butins, notes de carte et Journal MJ sont prêts. Le seul verrou restant avant de commencer est narratif : **le passage du Labyrinthe de Narven vers Nantambu doit avoir été ouvert en jeu**.
+> **Audit des préparations de Kindled Magic terminé** : les sources et conducteurs des cinq composants ont été relus et corrigés ; Foundry est vérifié pour les quatre composants tactiques et reste légitimement N/A pour l’ouverture RP. Les composants ne sont toutefois **pas encore `ready`** : les portraits/illustrations encore génériques sont suivis dans `entities: partial` et l’équilibrage doit être refait pour le groupe réellement inscrit (`review: partial`). Le verrou narratif reste inchangé : **le passage du Labyrinthe de Narven vers Nantambu doit avoir été ouvert en jeu**.
 
 ## Décisions validées
 
@@ -17,14 +17,17 @@
 
 ## Progression réelle
 
-Au 19 novembre 2026 :
+Au 22 novembre 2026 :
 
 - aucune séance `strength-of-thousands-*` n'est enregistrée comme jouée ;
-- aucune quête Discord / Choix libre n'est encore rattachée à la campagne ;
-- la curation SQLite indique une campagne incluse, sélectionnée et `to_play` ;
-- les cinq modules de `Kindled Magic` restent en `progress: todo`, mais chacun a une checklist de préparation complète et `ready: true`.
+- aucun `pf2_session_content` ni `pf2_session_preparation` n'est rattaché au tome 1 ;
+- la curation SQLite indique toujours une campagne incluse, sélectionnée et `to_play` ;
+- les cinq composants restent en `progress: todo` ;
+- `source` et `template` sont `done` pour les cinq ;
+- `foundry` est `done` pour les quatre composants tactiques et `N/A` pour **Alliés à Nantambu** ;
+- `entities` et `review` restent `partial` tant que les portraits manquants et l'équilibrage au groupe réel ne sont pas vérifiés.
 
-L'état « prêt » signifie **préparé**, pas « joué ». Tant que le passage vers Nantambu n'a pas été ouvert dans la fiction, le premier module reste inaccessible narrativement.
+L'état de préparation est indépendant de l'état joué. Tant que le passage vers Nantambu n'a pas été ouvert dans la fiction, le premier composant reste en outre inaccessible narrativement.
 
 ## Sources
 
@@ -43,11 +46,11 @@ La couverture du catalogue est donc **6/6**. Les cartes secondaires des tomes 3 
 
 | Ordre | Clé | Module | Continuité | Préparation |
 | --- | --- | --- | --- | --- |
-| 1 | `allies-a-nantambu` | **Alliés à Nantambu** | libre, groupe variable | **Prêt** ; Foundry N/A ; verrou narratif = passage vers Nantambu |
-| 2 | `services-de-la-magaambya` | **Services de la Magaambya** | libre, groupe variable | **Prêt** |
-| 3 | `masques-et-incidents` | **Masques et incidents** | verrou souple | **Prêt** |
-| 4 | `stone-ghost` | **Le Fantôme de pierre** | verrou dur pendant l'exploration profonde | **Prêt** |
-| 5 | `anadi-et-griffons` | **Les anadi et les griffons** | verrou souple | **Prêt** |
+| 1 | `allies-a-nantambu` | **Alliés à Nantambu** | libre, groupe variable | source/template `done`, entities/review `partial`, Foundry `N/A` ; verrou narratif = passage vers Nantambu |
+| 2 | `services-de-la-magaambya` | **Services de la Magaambya** | libre, groupe variable | source/template/foundry `done`, entities/review `partial` |
+| 3 | `masques-et-incidents` | **Masques et incidents** | verrou souple | source/template/foundry `done`, entities/review `partial` |
+| 4 | `stone-ghost` | **Le Fantôme de pierre** | verrou dur pendant l'exploration profonde | source/template/foundry `done`, entities/review `partial` |
+| 5 | `anadi-et-griffons` | **Les anadi et les griffons** | reprise courte seulement si nécessaire | source/template/foundry `done`, entities/review `partial` |
 
 ### 1 — Alliés à Nantambu
 
@@ -88,6 +91,8 @@ Particularité durable : les **nids C7a–d restent aléatoires**, conformément
 
 La confrontation finale C15 utilise Stone Ghost et deux Jinkins. Les conséquences à conserver sont notamment : état de Stone Ghost, Kurshkin, Urbel, Binji, étudiants sauvés, notes récupérées, masques des victimes rendus et comportement des gremlins survivants.
 
+Pour éviter un découpage artificiel, **l'arrivée des anadi peut être jouée directement comme épilogue** si environ 45–60 minutes restent après la sortie des cavernes. Le composant `anadi-et-griffons` n'est importé comme séance séparée que si la séance précédente s'est réellement arrêtée avant cet épilogue.
+
 ### 5 — Les anadi et les griffons
 
 Le texte complet corrige l'estimation antérieure : il s'agit de **trois anadi et trois griffons**, pas d'une paire de griffons.
@@ -102,7 +107,9 @@ Ils sont aidés par Takulu Ot et attaqués par **trois griffons**. La rencontre 
 
 Le scénario situe cette scène près du **Speaker's Stage**. Aucun champ de bataille dédié n'existant dans les scènes importées, Foundry utilise **Promenade de bienvenue** comme **arène tactique d'adaptation**. Cette substitution est volontairement documentée comme non canonique.
 
-## Foundry — Tome 1 prêt
+Ce composant est désormais défini comme **reprise courte conditionnelle** : ne jamais le rejouer si l'Anadi Arrival a déjà été résolu à la fin du module Stone Ghost.
+
+## Foundry — Tome 1 audité
 
 Le monde `test-pf2` / **Les Eclaireurs** utilise Foundry 14.365 et PF2e 8.4.1. Toutes les écritures ont été réalisées via le Relay autorisé ; aucun accès direct LevelDB n'a été utilisé.
 
@@ -130,7 +137,7 @@ Le dossier d'Actors `La Force des milliers / 01 — La magie éveillée` contien
 
 Parmi les Actors préparés : Stone Ghost, Kurshkin, Havvix/Vexgit, Umbo, Pugwampi, Scrit, Gnagrif, Mitflit, Jinkin, Binji, Urbel, Tissorts, silverfish, abeilles minières, mouche tsé-tsé, scarabées, mille-pattes, dangers, constructs du tournoi, anadi, Takulu et griffon.
 
-**63 tokens de rencontres fixes** ont été placés. Ils sont masqués par défaut lorsque nécessaire ; les trois anadi et Takulu sont visibles dans la scène finale. Les trois vagues du tournoi sont superposées et masquées pour être révélées successivement.
+**63 tokens de rencontres fixes** sont en place. L'audit du 22/11 a supprimé les codes techniques (`C10 —`, `Bout 3 —`, etc.) de leurs noms visibles et impose `displayName: Always` aux créatures. Les tokens statiques visibles à l'entrée de leur salle ont été révélés ; restent masqués uniquement les embuscades, dangers, créatures cachées par le scénario, vagues futures du tournoi et arrivées différées. La mise à jour a aussi laissé PF2e recalculer la taille de certains tokens depuis la taille réelle de leur Actor (pugwampis/Scrits 1/2 case, griffons/constructs larges 2 cases, etc.) sans modifier leurs coordonnées.
 
 ### Butins
 
@@ -147,28 +154,37 @@ Les objets legacy sont remplacés explicitement par leur équivalent remaster lo
 
 **15 tokens de butin** sont prépositionnés et masqués sur les cartes concernées. La récompense des faveurs, qui n'a pas de scène tactique dédiée, reste disponible dans le dossier sans token.
 
-### Journal et notes de carte
+### Journaux et notes de carte
 
-Le Journal MJ canonique est :
+Deux Journaux privés ont désormais des rôles distincts :
 
-- `JournalEntry.ocvt0G55FnohLcT0` — **La Force des milliers — 01 — La magie éveillée — Préparation MJ**.
+- `JournalEntry.ocvt0G55FnohLcT0` — **La Force des milliers — 01 — La magie éveillée — Préparation MJ** : 13 pages de contexte général, transitions et liens ; les longues listes mécaniques B/C en ont été retirées ;
+- `JournalEntry.WuhHKhCm3x1oifE3` — **La Force des milliers — 01 — La magie éveillée — Fiches de scène** : **35 pages opérationnelles**, chacune commençant par `En jeu — …` puis, selon le besoin, `À l'arrivée`, `Interactions / déclenchement`, `Jets / dangers`, `Indices / informations accessibles`, `Recherche`, `Passages et butin`, puis `Contexte MJ et détails (référence)`.
 
-Il contient 13 pages structurées : vue d'ensemble, cinq modules, services, bibliothèque B1–B8, tournoi/faveurs, First Masking, cavernes C1–C7 et C8–C15, arrivée anadi, butins et état Foundry.
+Les **35 notes de scène** pointent maintenant vers la page exacte qui correspond à leur repère : B1–B8, C1–C15/C7a–d et les scènes hors donjon. L'auditorium détruit, qui n'avait aucune note, possède maintenant sa propre fiche d'après-combat.
 
-L'ancien journal provisoire a été supprimé.
+### Vérification après audit
 
-**34 notes de scène** pointent directement vers les bonnes pages du Journal, notamment B1–B8 et C1–C15.
+L'audit du 22 novembre a relu les données depuis le Relay après chaque correction :
 
-### Vérification mécanique
+- les backgrounds, grilles, murs et coordonnées `(x, y)` des tokens existants n'ont pas été modifiés ;
+- aucune statistique mécanique des Actors n'a changé lors de l'ajout des notes privées MJ ;
+- les 35 pages de scène commencent bien par `En jeu — …` et toutes les notes de campagne pointent vers le nouveau Journal et une page précise ;
+- les 27 Actors NPC effectivement utilisés possèdent désormais une section privée `Comment le jouer (MJ)` avec rôle, déclenchement, attitude, tactique courte, fuite/renfort et informations accessibles ; les hazards restent documentés par leur Actor mécanique et la fiche de salle ;
+- les coffres et objets mécaniques existants sont conservés.
 
-La préparation a été relue depuis Foundry après écriture :
+Cette vérification suffit à valider `foundry: done` pour les modules tactiques, **pas** `review: done` : aucun groupe de séance n'est encore inscrit, donc les budgets de rencontre du PDF ne peuvent pas être déclarés équilibrés pour la table ouverte.
 
-- le Journal canonique expose bien 13 pages ;
-- les scènes contiennent les quantités de tokens et notes attendues ;
-- un coffre C11 a été relu avec ses vrais objets — Sac spacieux type I et Trompe de cherchesang ;
-- une action mécanique a été vérifiée par un vrai jet Foundry utilisant le bonus de Morgenstern de Stone Ghost (`+15`), sans publier de message parasite dans le chat.
+## Reste à faire suivi dans Choix libre
 
-Les critères `source`, `template`, `entities`, `foundry` et `review` sont donc tous `done` pour les modules 2–5. Le module 1 conserve `foundry: N/A`.
+Les détails exacts sont enregistrés dans le champ `remaining_tasks` de chaque composant. Les catégories durables sont :
+
+- **portraits / illustrations** : les blocs de préparation des PNJ centraux n'ont pas encore de portrait associé et plusieurs Actors clonés utilisent encore l'icône PF2e générique ; cela maintient `entities: partial` ;
+- **équilibrage** : lors de l'inscription à une séance, recalculer les budgets et ajustements pour le nombre/niveau réel des PJ ; cela maintient `review: partial` sur les quatre composants tactiques ;
+- **continuité conditionnelle** : confirmer l'ouverture réelle du Labyrinthe avant `allies-a-nantambu`, l'état de Kurshkin avant C10, et vérifier que l'Anadi Arrival n'a pas déjà été joué comme épilogue avant d'importer `anadi-et-griffons` ;
+- **contrôle visuel juste avant jeu** : ouvrir les scènes concernées en client MJ pour vérifier visuellement tailles, reveals et lisibilité ; l'audit API/Relay ne remplace pas ce dernier contrôle de table.
+
+Ces éléments ne doivent pas être masqués par un statut `ready` prématuré.
 
 ## Volumes suivants
 
