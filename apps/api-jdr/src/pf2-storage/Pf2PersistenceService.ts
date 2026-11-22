@@ -1995,6 +1995,12 @@ export class Pf2PersistenceService implements OnModuleInit {
       }
     })
     await this.applyMigration('057-session-coin-awards', migrateSessionCoinAwards)
+    await this.applyMigration('058-choice-module-remaining-tasks', async manager => {
+      const columns = await manager.query('PRAGMA table_info(pf2_choice_module)') as Array<{name:string}>
+      if (!columns.some(column => column.name === 'remaining_tasks')) {
+        await manager.query("ALTER TABLE pf2_choice_module ADD COLUMN remaining_tasks TEXT NOT NULL DEFAULT ''")
+      }
+    })
     await this.assertDatabaseIntegrity(this.dataSource, 'base SQLite après migrations')
   }
 

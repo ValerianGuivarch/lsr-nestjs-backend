@@ -35,12 +35,14 @@ describe('Choix libre catalogue', () => {
   it('accepts partial preparation without marking a module ready', async () => {
     const key=choiceModuleKey('a')
     const checklist={source:'done',template:'done',entities:'partial',foundry:'partial',review:'todo'}
-    const query=jest.fn(async (sql:string)=>sql.includes('FROM pf2_choice_module')?[{moduleKey:key,checklist:JSON.stringify(checklist),progress:'todo'}]:[])
+    const query=jest.fn(async (sql:string)=>sql.includes('FROM pf2_choice_module')?[{moduleKey:key,checklist:JSON.stringify(checklist),progress:'todo',remainingTasks:'Portrait de Nalla'}]:[])
     const persistence={listDiscordQuests:async()=>[],listDiscordQuestVotes:async()=>[],listPlayerIdentities:async()=>[],questLauncherId:async()=>null}
     const service=new Pf2ChoiceLibreService({query} as never,persistence as never)
     jest.spyOn(service,'catalogue').mockResolvedValue(choiceCatalogue([{id:'a'}],[]))
-    await expect(service.saveModule({moduleKey:key,checklist,progress:'todo'})).resolves.toEqual({ok:true})
-    expect((await service.snapshot()).modules[0]).toMatchObject({ready:false,checklist})
+    await expect(service.saveModule({moduleKey:key,checklist,progress:'todo',remainingTasks:'Portrait de Nalla'})).resolves.toEqual({ok:true})
+    expect(query.mock.calls.some(([sql, ...args])=>sql.includes('INSERT INTO pf2_choice_module') && JSON.stringify(args).includes('Portrait de Nalla'))).toBe(true)
+    expect((await service.snapshot()).modules[0]).toMatchObject({ready:false,checklist,remainingTasks:'Portrait de Nalla'})
+    await expect(service.saveModule({moduleKey:key,checklist,progress:'todo',remainingTasks:123})).rejects.toThrow('reste à faire')
   })
   it('uses the MJ trust model without a separate access key', () => {
     const controller=new Pf2ChoiceLibreController({snapshot:()=>({ok:true})} as unknown as Pf2ChoiceLibreService)

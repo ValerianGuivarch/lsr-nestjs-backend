@@ -12,7 +12,7 @@ type Progress = 'todo' | 'started' | 'done'
 const kinds: Record<Kind,string> = { unassigned: 'À rattacher', mission: 'Mission jouable', blocked: 'Bloquée', personal: 'Quête de PJ', rp: 'Piste RP' }
 const checkLabels = { source:'Scénario étudié', template:'Préparation de séance', entities:'PNJ, rencontres et objets', foundry:'Foundry', review:'Ajustements MJ' }
 type Check = keyof typeof checkLabels
-type Module = { key:string; scenarioId:string; componentId:string; title:string; group:string; campaignIds:string[]; order:number; campaignOrder:Record<string,number>; checklist:Record<Check,CheckState>; progress:Progress; ready:boolean; hasTemplate:boolean }
+type Module = { key:string; scenarioId:string; componentId:string; title:string; group:string; campaignIds:string[]; order:number; campaignOrder:Record<string,number>; checklist:Record<Check,CheckState>; remainingTasks:string; progress:Progress; ready:boolean; hasTemplate:boolean }
 type Quest = { id:string; title:string; url:string; syncedAt:string; kind:Kind; campaignId:string; moduleKey:string; note:string; votes:{ emoji:string; name:string; characters:string[] }[] }
 type Snapshot = { quests:Quest[]; campaigns:Option[]; modules:Module[] }
 
@@ -41,6 +41,7 @@ function ModuleEditor({module, save}:{module:Module;save:(m:Module)=>Promise<voi
     <h4>{module.title} · {count}/5 vérifiés{partial>0?` · ${partial} en préparation`:''}</h4>
     {Object.entries(checkLabels).map(([id,label])=><label key={id}>{label}<select value={draft.checklist[id as Check]} onChange={e=>setDraft(d=>({...d,checklist:{...d.checklist,[id]:e.target.value as CheckState}}))}><option value="todo">À faire</option><option value="partial">Partiellement prêt</option><option value="done">Prêt</option><option value="na">Non applicable</option></select></label>)}
     <label>Progression <select value={draft.progress} onChange={e=>setDraft(d=>({...d,progress:e.target.value as Progress}))}><option value="todo">Non joué</option><option value="started">Commencé</option><option value="done">Joué</option></select></label>
+    <label>Reste à faire<textarea rows={5} maxLength={12000} value={draft.remainingTasks ?? ''} placeholder="Portraits, vérifications Foundry, ajustements MJ…" onChange={e=>setDraft(d=>({...d,remainingTasks:e.target.value}))}/></label>
     {error && <p role="alert">{error}</p>}
     <button disabled={busy} onClick={async()=>{setBusy(true);setError('');try{await save(draft)}catch(e){setError(String(e))}finally{setBusy(false)}}}>Enregistrer le module</button>
   </div>
@@ -74,7 +75,7 @@ function ChoiceLibre(props:WorkspaceProps & {mode:'quests'|'modules';requestedMo
   async function load() {setLoading(true);setError('');try{setData(await request<Snapshot>())}catch(e){setData(null);setError(String(e))}finally{setLoading(false)}}
   useEffect(()=>{void load()},[])
   const saveQuest=async(q:Quest)=>{await request('/quests/'+encodeURIComponent(q.id),{kind:q.kind,campaignId:q.campaignId,moduleKey:q.moduleKey,note:q.note});setData(d=>d?({...d,quests:d.quests.map(old=>old.id===q.id?q:old)}):d)}
-  const saveModule=async(m:Module)=>{await request('/modules',{moduleKey:m.key,checklist:m.checklist,progress:m.progress});setData(d=>d?({...d,modules:d.modules.map(old=>old.key===m.key?{...old,checklist:m.checklist,progress:m.progress,ready:Object.values(m.checklist).every(v=>v==='done'||v==='na')}:old)}):d)}
+  const saveModule=async(m:Module)=>{await request('/modules',{moduleKey:m.key,checklist:m.checklist,progress:m.progress,remainingTasks:m.remainingTasks ?? ''});setData(d=>d?({...d,modules:d.modules.map(old=>old.key===m.key?{...old,checklist:m.checklist,progress:m.progress,remainingTasks:m.remainingTasks ?? '',ready:Object.values(m.checklist).every(v=>v==='done'||v==='na')}:old)}):d)}
   if (!data) return <section className="choice-panel"><h2>Journal de quêtes · Choix libre</h2>{error&&<p role="alert">{error}</p>}<button disabled={loading} onClick={()=>void load()}>{loading?'Chargement…':'Réessayer'}</button></section>
   const ready=data.quests.filter(q=>readiness(q,data.modules.find(m=>m.key===q.moduleKey))==='Prêt à jouer').length
   const visible=data.quests.filter(q=>filter==='all'||(filter==='ready'?readiness(q,data.modules.find(m=>m.key===q.moduleKey))==='Prêt à jouer':q.kind===filter))
@@ -86,7 +87,7 @@ function ChoiceLibre(props:WorkspaceProps & {mode:'quests'|'modules';requestedMo
   const listedModules=campaignModules.filter(m=>templateFilter==='all'||(templateFilter==='yes'?m.hasTemplate:!m.hasTemplate))
   const templateModule=props.mode==='modules'?data.modules.find(m=>m.key===props.requestedModuleKey):undefined
   const names=sortedWorks([...data.campaigns,...activeWorks])
-  if(templateModule)return <SessionPreparations key={templateModule.key} {...props} templateModule={{key:templateModule.key,title:moduleDisplayTitle(templateModule,activeWorks.some(w=>moduleInWork(templateModule,w.id))?activeWorks:names,selectedCampaign)}} templateChecklist={<ModuleEditor key={templateModule.key+JSON.stringify(templateModule.checklist)+templateModule.progress} module={templateModule} save={saveModule}/>} onBack={()=>{const owner=activeWorks.find(w=>moduleInWork(templateModule,w.id));if(owner)setCampaignFilter(owner.id);props.closeTemplate();void load()}}/>
+  if(templateModule)return <SessionPreparations key={templateModule.key} {...props} templateModule={{key:templateModule.key,title:moduleDisplayTitle(templateModule,activeWorks.some(w=>moduleInWork(templateModule,w.id))?activeWorks:names,selectedCampaign)}} templateChecklist={<ModuleEditor key={templateModule.key+JSON.stringify(templateModule.checklist)+templateModule.progress+templateModule.remainingTasks} module={templateModule} save={saveModule}/>} onBack={()=>{const owner=activeWorks.find(w=>moduleInWork(templateModule,w.id));if(owner)setCampaignFilter(owner.id);props.closeTemplate();void load()}}/>
   if(props.mode==='modules'&&props.requestedModuleKey)return <section className="choice-panel"><p>Module introuvable.</p><button onClick={props.closeTemplate}>Retour aux modèles</button></section>
   if(props.mode==='modules')return <section className="choice-panel"><h2>Préparation permanente des modules</h2><div className="choice-toolbar"><label>Campagne / scénario<select value={selectedCampaign} onChange={e=>{setCampaignFilter(e.target.value)}}><option value="">Choisir</option>{activeWorks.map(c=><option key={c.id} value={c.id}>{c.title}</option>)}</select></label><button disabled={loading} onClick={()=>void load()}>Actualiser</button></div>
     <label>Modèles <select value={templateFilter} onChange={e=>setTemplateFilter(e.target.value)}><option value="all">Tous</option><option value="yes">Avec contenu</option><option value="no">Sans contenu</option></select></label>

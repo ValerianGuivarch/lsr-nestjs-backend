@@ -84,13 +84,13 @@ export class Pf2ChoiceLibreService {
       this.persistence.listPlayerIdentities(),
       this.db.query('SELECT o.discord_user_id AS userId,p.display_name AS name FROM pf2_player_character_owner o JOIN pf2_player_character_profile p ON p.npc_id=o.npc_id WHERE p.is_player=1 ORDER BY p.display_name'),
       this.db.query('SELECT thread_id AS threadId,kind,campaign_id AS campaignId,module_key AS moduleKey,note FROM pf2_choice_quest'),
-      this.db.query('SELECT module_key AS moduleKey,checklist,progress FROM pf2_choice_module'), this.persistence.questLauncherId(), this.db.query('SELECT module_key AS moduleKey FROM pf2_choice_template'),
+      this.db.query('SELECT module_key AS moduleKey,checklist,progress,remaining_tasks AS remainingTasks FROM pf2_choice_module'), this.persistence.questLauncherId(), this.db.query('SELECT module_key AS moduleKey FROM pf2_choice_template'),
     ])
     const names = new Map(identities.map(i => [i.discordUserId, i.playerName]))
     const modules = catalogue.modules.map(m => {
       const state = preparation.find((r: any) => r.moduleKey === m.key)
       const checklist: Checklist = { ...emptyChecklist(), ...JSON.parse(state?.checklist || '{}') }
-      return { ...m, hasTemplate: templateRows.some((r: any) => r.moduleKey === m.key), checklist, progress: state?.progress || 'todo', ready: checks.every(c => checklist[c] === 'done' || checklist[c] === 'na') }
+      return { ...m, hasTemplate: templateRows.some((r: any) => r.moduleKey === m.key), checklist, progress: state?.progress || 'todo', remainingTasks: str(state?.remainingTasks), ready: checks.every(c => checklist[c] === 'done' || checklist[c] === 'na') }
     })
     return { campaigns: catalogue.campaigns, modules, quests: quests.filter(q => !q.completed && q.id !== launcher).map(q => {
       const link = links.find((r: any) => r.threadId === q.id)
@@ -161,7 +161,9 @@ export class Pf2ChoiceLibreService {
     const checklist = obj(value.checklist)
     if (!checks.every(k => ['todo','partial','done','na'].includes(checklist[k]))) throw new BadRequestException('Checklist invalide.')
     const sanitized = Object.fromEntries(checks.map(k => [k,checklist[k]]))
-    await this.db.query('INSERT INTO pf2_choice_module (module_key,checklist,progress) VALUES (?,?,?) ON CONFLICT(module_key) DO UPDATE SET checklist=excluded.checklist,progress=excluded.progress,updated_at=CURRENT_TIMESTAMP',[moduleKey,JSON.stringify(sanitized),progress])
+    if (value.remainingTasks !== undefined && (typeof value.remainingTasks !== 'string' || value.remainingTasks.length > 12000)) throw new BadRequestException('Le reste à faire doit être un texte de 12 000 caractères maximum.')
+    const remainingTasks = value.remainingTasks ?? null
+    await this.db.query("INSERT INTO pf2_choice_module (module_key,checklist,progress,remaining_tasks) VALUES (?,?,?,COALESCE(?,'')) ON CONFLICT(module_key) DO UPDATE SET checklist=excluded.checklist,progress=excluded.progress,remaining_tasks=COALESCE(?,pf2_choice_module.remaining_tasks),updated_at=CURRENT_TIMESTAMP",[moduleKey,JSON.stringify(sanitized),progress,remainingTasks,remainingTasks])
     return { ok: true }
   }
 }

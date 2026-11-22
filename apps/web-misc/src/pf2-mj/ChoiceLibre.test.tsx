@@ -14,7 +14,7 @@ describe('Choix libre MJ',()=>{
     vi.stubGlobal('fetch',vi.fn(async (_url:RequestInfo|URL,init?:RequestInit)=>{
       calls.push(init||{})
       if(init?.method==='PUT')return new Response('{"ok":true}',{status:200})
-      return new Response(JSON.stringify({campaigns:[{id:'c',title:'Campagne'},{id:'excluded',title:'Brise-Enfers'}],modules:[{key:'m',scenarioId:'s',componentId:'',hasTemplate:true,title:'Module',group:'',campaignIds:['c'],order:0,campaignOrder:{c:0},checklist:check,progress:'todo',ready:false}],quests:[
+      return new Response(JSON.stringify({campaigns:[{id:'c',title:'Campagne'},{id:'excluded',title:'Brise-Enfers'}],modules:[{key:'m',scenarioId:'s',componentId:'',hasTemplate:true,title:'Module',group:'',campaignIds:['c'],order:0,campaignOrder:{c:0},checklist:check,remainingTasks:'Portrait de Nalla',progress:'todo',ready:false}],quests:[
         {id:'q',title:'Explorer la fosse',url:'https://discord.com/test',kind:'mission',campaignId:'c',moduleKey:'m',note:'Préparation',syncedAt:'now',votes:[{emoji:'👍',name:'Test joueur',characters:['Test PJ']}]},
         {id:'b',title:'Piste bloquée',url:'https://discord.com/test',kind:'blocked',campaignId:'c',moduleKey:'',note:'Attendre',syncedAt:'now',votes:[]}
       ]}),{status:200})
@@ -36,7 +36,12 @@ describe('Choix libre MJ',()=>{
       expect(element.textContent).toContain('Éditeur modèle Campagne — Module')
       const foundry=[...element.querySelectorAll('.choice-module label')].find(l=>l.textContent?.startsWith('Foundry'))!.querySelector('select')!
       await act(async()=>{foundry.value='done';foundry.dispatchEvent(new Event('change',{bubbles:true}))})
+      const remaining=element.querySelector<HTMLTextAreaElement>('.choice-module textarea')!
+      expect(remaining.value).toBe('Portrait de Nalla')
+      await act(async()=>{Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype,'value')!.set!.call(remaining,'Contrôler le journal');remaining.dispatchEvent(new Event('input',{bubbles:true}))})
       await act(async()=>[...element.querySelectorAll('button')].find(b=>b.textContent==='Enregistrer le module')!.click())
+      expect(JSON.parse(calls.find(c=>c.method==='PUT')!.body as string).remainingTasks).toBe('Contrôler le journal')
+      expect(element.querySelector<HTMLTextAreaElement>('.choice-module textarea')!.value).toBe('Contrôler le journal')
       expect(JSON.parse(calls.find(c=>c.method==='PUT')!.body as string).checklist.foundry).toBe('done')
       expect(element.textContent).toContain('5/5 vérifiés')
     }finally{await act(async()=>root.unmount());element.remove();sessionStorage.clear();vi.unstubAllGlobals()}
