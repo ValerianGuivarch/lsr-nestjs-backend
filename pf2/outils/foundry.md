@@ -51,6 +51,29 @@ l’API peut demander au Relay de mettre à jour l’Actor afin qu’il utilise 
 
 Le fichier n’est pas dupliqué par le Relay : le PNJ et l’Actor doivent pointer vers le même asset Foundry.
 
+### 8.5 Banque d'illustrations génériques (22 novembre 2026)
+
+**Décision MJ :** éviter le jeton de monstre par défaut pour les humanoïdes non illustrés. Cette banque d'appoint est commune à toutes les campagnes et ne remplace pas la recherche d'une illustration du personnage.
+
+- Rechercher d'abord un portrait **propre au personnage** : fiche PNJ existante, média privé déjà fourni, PDF du scénario, Actor/compendium et autres illustrations sourcées. Conserver toute illustration existante pertinente. Pour une créature, privilégier d'abord l'art de son espèce/statblock dans les bestiaires.
+- Pour un **figurant** (garde 1/2, capitaine secondaire, passant, soldat, bandit, etc.) sans portrait, sélectionner directement une illustration générique adaptée au rôle, à l'ascendance connue et à l'apparence visible ; varier les variantes si nécessaire. Pour un **PNJ important, récurrent ou nommé dont l'identité visuelle compte**, présenter au MJ l'absence de portrait source et le choix entre poursuivre la recherche, fournir/choisir un portrait spécifique ou accepter un générique. Ne pas faire passer un générique pour une illustration officielle du personnage ni révéler une identité secrète par son image.
+- Le 22 novembre 2026, **47 profils** (47 portraits et 47 jetons appariés) ont été copiés sans modification depuis les images déjà installées dans `modules/pf2-pdf-en-import/datas/images/` vers les assets privés L7R, indépendants des mises à jour de ce module. Les 14 noms historiques restent inchangés. Les images sont des illustrations d'appoint, pas une garantie de provenance officielle Paizo.
+
+| Ressource | Chemin Foundry (sélecteur de fichiers, User Data) |
+| --- | --- |
+| Portrait (image de fiche) | `assets/l7r/portraits/generiques/<profil>.webp` |
+| Jeton rond (image de carte) | `assets/l7r/tokens/generiques/<profil>.webp` |
+| Catalogue complet : descriptions, chemins, source des paires | `assets/l7r/tokens/generiques/index.json` |
+
+Exemples de profils : `homme-civil`, `femme-civile`, `homme-notable`, `femme-noble`, `garde`, `capitaine-garde`, `garde-ulfe`, `religieux`, `religieux-tenue-sombre`, `combattant`, `rebelle`, `rebelle-veteran`, `rebelle-4`, `eclaireur`, `mage`, `mage-excentrique`, voyageurs et cuisiniers. Autres ascendances représentées : fetchlings, duergar, orc, kobolds (six variantes), gnolls/kholos, gobelin, hobgobelin, leshy et gobelours. Deux moines ont une ascendance à vérifier. Pas de profil adapté à tous les peuples ou à tous les genres : ne pas forcer une attribution incompatible.
+
+**Application Foundry à la création ou à la correction d'un PNJ :**
+
+1. Sur un Actor de type NPC sans illustration pertinente, utiliser le portrait apparié pour `img` et le jeton rond pour `prototypeToken.texture.src` (ou seulement le jeton si le MJ ne veut pas d'image de fiche). Préserver les images spécifiques, les créatures et les coffres corrects. Ne pas modifier les fiches de PJ.
+2. Pour des jetons déjà placés, contrôler séparément leur `texture.src` et remplacer uniquement les textures par défaut concernées ; vérifier que le prototype et les jetons placés affichent le bon asset. Préserver mécanique, position, nom, état, permissions et UUID. Si plusieurs exemplaires d'un même Actor, une variante visuelle sur le token est possible.
+3. Un portrait **générique Foundry** ne crée pas une identité PNJ dans SQLite/wiki. Les images sous `portraits/generiques/` sont distinctes de la convention `portraits/pnj/` ; si le MJ veut une image de fiche métier ou de préparation partageable, suivre le workflow de portrait existant et ses validations, sans contourner les chemins autorisés.
+4. Dans la checklist de préparation, un portrait d'appoint approprié pour un figurant, ou l'absence d'illustration spécifique explicitement acceptée par le MJ, n'est plus un manque bloquant. Conserver dans « Reste à faire » les décisions de portrait des PNJ importants encore ouvertes et les vérifications réelles.
+
 ---
 
 ---
