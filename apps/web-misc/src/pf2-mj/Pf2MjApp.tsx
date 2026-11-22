@@ -1240,7 +1240,7 @@ function ContainerDetail({ container, curation, onOpenPlayable, onUpdate, onOpen
   const components = componentsOf(container.id)
   const [technical, setTechnical] = useState(false)
   const documentedChildren = children.filter((unit) => unit.playableComponents.length > 0)
-  const componentTotal = container.playableComponents.length + documentedChildren.reduce((total, unit) => total + unit.playableComponents.length, 0)
+  const componentTotal = container.playableComponents.length + children.reduce((total, unit) => total + Math.max(1, unit.playableComponents.length), 0)
   const override = resolveContainerOverride(curation, container)
   return <EntityPage backTo={viewPaths.library}>
     <div className="detail-head"><small>{containerTypeLabel(container.containerType)} · CONTENEUR NON JOUABLE</small><h2>{titleOf(container)}</h2>{originalTitleOf(container) && <em>{originalTitleOf(container)}</em>}<div className="badges"><Badge>{levelLabel(container.levels)}</Badge><Badge>{children.length} unités jouables</Badge></div></div>
@@ -1267,7 +1267,7 @@ function ArcDetail({arc,curation,onUpdate}: {arc:Arc;curation:Curation;onUpdate:
     <dl className="detail-grid"><div><dt>Niveaux affichés</dt><dd>{levels.join(', ') || 'À documenter'}</dd></div><div><dt>Lieux</dt><dd>{places.join(', ') || 'À documenter'}</dd></div></dl>
     <CampaignDocuments id={arc.id}/>
     <CampaignChatGptLink campaignId={arc.id} value={genericOverride(curation, arc.id).chatgptUrl} onUpdate={onUpdate} />
-    <section className="detail-section"><h3>Unités jouables</h3>{children.map(unit=><article key={unit.id} className="component-work"><div><strong><Link to={playableHref(unit)}>{unit.number && unit.number+' · '}{titleOf(unit)}</Link></strong><p>{levelLabel(unit.levels)} · {unit.playableComponents.length} modules</p><LifecycleSelect id={unit.id} override={resolvePlayableOverride(curation,unit)} excluded={isExcluded(unit,resolvePlayableOverride(curation,unit),curation)} onUpdate={onUpdate}/></div><CampaignDocuments id={unit.id} compact/></article>)}</section>
+    <section className="detail-section"><h3>Unités jouables</h3>{children.map(unit=><article key={unit.id} className="component-work"><div><strong><Link to={playableHref(unit)}>{unit.number && unit.number+' · '}{titleOf(unit)}</Link></strong><p>{levelLabel(unit.levels)} · {Math.max(1, unit.playableComponents.length)} module{unit.playableComponents.length > 1 ? 's' : ''}</p><LifecycleSelect id={unit.id} override={resolvePlayableOverride(curation,unit)} excluded={isExcluded(unit,resolvePlayableOverride(curation,unit),curation)} onUpdate={onUpdate}/></div><CampaignDocuments id={unit.id} compact/></article>)}</section>
   </EntityPage>
 }
 
@@ -1283,7 +1283,12 @@ type JournalSession = { sessionNumber?: number | string; content?: JournalSessio
 function journalWorks(curation: Curation, componentSessions: Record<string, number[]> = {}) {
   const statusRank: Record<LifecycleStatus, number> = { in_progress: 0, to_play: 1, played: 2, retained: 2, untracked: 4, later: 5, rejected: 6 }
   const componentProgressForUnit = (unit: PlayableUnit) => {
-    const componentStatus = resolvePlayableOverride(curation, unit).playableComponentStatus ?? {}
+    const override = resolvePlayableOverride(curation, unit)
+    const componentStatus = override.playableComponentStatus ?? {}
+    if (!unit.playableComponents.length) {
+      const played = componentStatus[''] === 'played' || effectiveLifecycleStatus(override, isExcluded(unit, override, curation)) === 'played'
+      return { played: played ? 1 : 0, total: 1 }
+    }
     const played = unit.playableComponents.filter((component) => componentStatus[component.id] === 'played' || (componentSessions[`${unit.id}:${component.id}`]?.length ?? 0) > 0).length
     return { played, total: unit.playableComponents.length }
   }
@@ -1620,7 +1625,7 @@ function JournalView({ curation, onUpdate, onImported, sessionHistory }: { curat
                   </dl>
                 </div>}
               </li>
-            })}</ul> : <div><p className="missing">Aucun découpage narratif : le scénario est un module unique.</p>{moduleByKey.get(moduleKey(unit.id)) && <p>{moduleStateLabel(moduleByKey.get(moduleKey(unit.id))!)} · {checklistCount(moduleByKey.get(moduleKey(unit.id))!)}/5 vérifiés</p>}<Link to={moduleTemplateHref(unit.id,'')}>Ouvrir / modifier le modèle</Link></div>)}
+            })}</ul> : <div><div className="component-checklist-row"><input aria-label={`Marquer ${titleOf(unit)} comme joué`} type="checkbox" checked={unitState.played === 1} disabled={unitState.played === 1 && status[''] !== 'played'} onChange={() => togglePlayed(unit, '')} /><strong>Module unique · {titleOf(unit)}</strong></div>{moduleByKey.get(moduleKey(unit.id)) && <p>{moduleStateLabel(moduleByKey.get(moduleKey(unit.id))!,unitState.played === 1)} · {checklistCount(moduleByKey.get(moduleKey(unit.id))!)}/5 vérifiés</p>}<Link to={moduleTemplateHref(unit.id,'')}>Ouvrir / modifier le modèle</Link></div>)}
           </article>
         })}</div>}
       </section></Fragment>
