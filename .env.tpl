@@ -117,3 +117,6 @@ TWILIO_MESSAGING_SERVICE=changeme
 # Prismic
 PRISMIC_URI=changeme
 PRISMIC_TOKEN=changeme
+
+# Remove BG : clé serveur uniquement. Vide = détourage indisponible.
+REMOVE_BG_API_KEY=

@@ -1,0 +1,34 @@
+import assert from "node:assert/strict";
+import { JSDOM } from "jsdom";
+import { injectPortraitRemoveBackground, removeActorPortraitBackground } from "../scripts/portrait-remove-background.js";
+
+const dom = new JSDOM('<div class="image-container"><img src="x.webp"><button data-action="show-image"></button></div>');
+globalThis.game = { user: { isGM: true } };
+globalThis.location = { origin: "https://pf2.l7r.fr" };
+globalThis.ui = { notifications: { info() {} } };
+const changes = [];
+const actor = { uuid: "Actor.TEST", isOwner: true, img: "worlds/pf2/test.webp", update: async change => changes.push(change) };
+const root = dom.window.document.body;
+injectPortraitRemoveBackground({ actor }, root);
+injectPortraitRemoveBackground({ actor }, root);
+assert.equal(root.querySelectorAll(".pf2e-val-remove-background").length, 1);
+assert.equal(root.querySelector("[data-action='show-image']").tagName, "BUTTON");
+const calls = [];
+globalThis.fetch = async (url, options) => {
+  calls.push({ url: String(url), options });
+  if (calls.length === 1) return new Response(new Blob(["test"], {type:"image/webp"}));
+  if (calls.length === 2) return new Response(new Blob(["cutout"], {type:"image/png"}));
+  return Response.json({ portrait: "assets/l7r/portraits/pnj/cutout-test.webp" });
+};
+await removeActorPortraitBackground(actor);
+assert.equal(calls.length, 3);
+assert.equal(calls[1].options.body.get("file").type, "image/webp");
+assert.equal(calls[2].options.body.get("file").type, "image/png");
+assert.deepEqual(changes, [{ img: "assets/l7r/portraits/pnj/cutout-test.webp" }]);
+globalThis.fetch = async () => Response.json({ message: "Clé absente" }, {status:503});
+await assert.rejects(removeActorPortraitBackground(actor), /Clé absente/);
+assert.equal(changes.length, 1);
+game.user.isGM = false;
+await removeActorPortraitBackground(actor);
+assert.equal(changes.length, 1);
+console.log("Remove BG : bouton unique, portraits sauvegardés et erreurs sans remplacement");

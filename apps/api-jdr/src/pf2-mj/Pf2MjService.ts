@@ -1265,8 +1265,8 @@ export class Pf2MjService {
     return this.savePnjPortrait(bytes, mimeType, pnjId)
   }
 
-  async saveAndSyncPnjPortrait(bytes: Uint8Array, mimeType: string, pnjId: string): Promise<{ portrait: string; local: 'success'; foundry: 'not-linked' | 'synchronized' | 'unavailable'; foundryMessage?: string }> {
-    const portrait = await this.savePnjPortrait(bytes, mimeType, pnjId)
+  async saveAndSyncPnjPortrait(bytes: Uint8Array, mimeType: string, pnjId: string, preserveOriginal = false): Promise<{ portrait: string; local: 'success'; foundry: 'not-linked' | 'synchronized' | 'unavailable'; foundryMessage?: string }> {
+    const portrait = await this.savePnjPortrait(bytes, mimeType, preserveOriginal ? `cutout-${randomUUID()}` : pnjId)
     // Pour un PNJ existant, l'upload est une vraie modification : on persiste
     // immédiatement le chemin Foundry afin qu'un abandon du dialogue n'introduise
     // pas de divergence entre l'Actor et le référentiel PF2-MJ.

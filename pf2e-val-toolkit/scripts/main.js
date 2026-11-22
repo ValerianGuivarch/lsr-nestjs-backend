@@ -34,6 +34,7 @@ import { initQuickEffects } from "./quick-effects/index.js";
 import { initTargetContext } from "./target-context/index.js";
 import { initPrivateRollCharacterNames } from "./private-roll-names.js";
 import { initPortraitChatShare } from "./portrait-chat-share.js";
+import { initPortraitRemoveBackground } from "./portrait-remove-background.js";
 import { registerLodgeStashSettings, initLodgeStashes } from "./lodge-stashes.js";
 import { initEarnIncomeCoins } from "./earn-income/index.js";
 import { initPlayerLevelSync } from "./player-level-sync.js";
@@ -87,6 +88,7 @@ Hooks.once("ready", () => {
   initEarnIncomeCoins();
   initPrivateRollCharacterNames();
   initPortraitChatShare();
+  initPortraitRemoveBackground();
   initLodgeStashes();
   initTargetContext();
   initGeneralActionsBrowser();

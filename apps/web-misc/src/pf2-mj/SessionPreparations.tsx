@@ -3,6 +3,7 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import './SessionPreparations.css'
+import { removeBackgroundFromUrl } from './removeBackground'
 import { moduleDisplayTitle, moduleInWork, sortedWorks } from './moduleLabels'
 
 type BlockKind = 'personnage' | 'lore' | 'loot' | 'rencontre' | 'texte' | 'checklist' | 'illustration'
@@ -192,24 +193,26 @@ export default function SessionPreparations({ campaigns, scenarios, activeWorks,
       setNotice('Ressource enregistrée. Enregistre le modèle ou la préparation pour conserver le lien.')
     } catch (error) { setNotice((error as Error).message) } finally { setBusy(false) }
   }
-  async function uploadPortrait(stageId: string, blockId: string, file?: File) {
-    if (!file || uploadingPortrait) return
-    if (!['image/png', 'image/jpeg', 'image/webp', 'image/gif'].includes(file.type)) {
+  async function uploadPortrait(stageId: string, blockId: string, file?: File, cutoutUrl?: string) {
+    if ((!file && !cutoutUrl) || uploadingPortrait) return
+    if (file && !['image/png', 'image/jpeg', 'image/webp', 'image/gif'].includes(file.type)) {
       setPortraitFeedback(previous => ({ ...previous, [blockId]: 'Format non supporté : PNG, JPEG, WebP ou GIF.' }))
       return
     }
-    if (file.size > 10 * 1024 * 1024) {
+    if (file && file.size > 10 * 1024 * 1024) {
       setPortraitFeedback(previous => ({ ...previous, [blockId]: 'Image trop volumineuse (10 Mo maximum).' }))
       return
     }
     setUploadingPortrait(blockId)
-    setPortraitFeedback(previous => ({ ...previous, [blockId]: 'Envoi du portrait…' }))
+    setPortraitFeedback(previous => ({ ...previous, [blockId]: cutoutUrl ? 'Suppression du fond…' : 'Envoi du portrait…' }))
     try {
+      if (cutoutUrl) file = await removeBackgroundFromUrl(cutoutUrl)
+      if (!file) return
       const form = new FormData()
       // Multipart fields are parsed in order. Send the unique block ID before
       // the file so even older API versions never fall back to "pnj.webp".
       const block = draft?.body.stages.flatMap(stage => stage.blocks).find(b => b.id === blockId)
-      form.set('pnjId', block?.assetId || block?.kind === 'illustration' ? `prep-image-${crypto.randomUUID()}` : `prep-${templateModule ? 'module' : draft?.id ?? 'nouvelle'}-${blockId}`)
+      form.set('pnjId', cutoutUrl || block?.assetId || block?.kind === 'illustration' ? `prep-image-${crypto.randomUUID()}` : `prep-${templateModule ? 'module' : draft?.id ?? 'nouvelle'}-${blockId}`)
       form.set('file', file)
       const response = await fetch('/apil7r/pf2-mj/pnj/portrait', { method: 'POST', body: form })
       const result = await response.json().catch(() => null)
@@ -392,6 +395,7 @@ export default function SessionPreparations({ campaigns, scenarios, activeWorks,
                       <input type="file" accept="image/png,image/jpeg,image/webp,image/gif" disabled={busy || uploadingPortrait !== null}
                         onChange={event => { const file = event.target.files?.[0]; event.target.value = ''; void uploadPortrait(stage.id, block.id, file) }}/>
                     </label>
+                    {portrait && <button type="button" disabled={busy || uploadingPortrait !== null} onClick={() => void uploadPortrait(stage.id, block.id, undefined, portrait)}>Remove BG</button>}
                     <small>PNG, JPEG, WebP ou GIF (10 Mo). Clique sur le portrait puis Ctrl+V pour coller, ou glisse une image dessus.</small>
                     {block.portraitUrl === 'assets/l7r/portraits/pnj/pnj.webp' && <small role="alert" className="session-prep-portrait-feedback">Ancien portrait partagé : il a pu être écrasé par un autre personnage. Réimporte une image propre à ce personnage.</small>}
                     {portraitFeedback[block.id] && <small role="status" className="session-prep-portrait-feedback">{portraitFeedback[block.id]}</small>}

@@ -1,6 +1,7 @@
 "use client";
 
 import {useEffect,useMemo,useState,type ClipboardEvent,type DragEvent} from "react";
+import { removeBackgroundFromUrl } from "./removeBackground";
 
 type Pnj={
   id:string;
@@ -307,12 +308,15 @@ export default function PnjPage({initialSelectedId}:{initialSelectedId?:string})
     setImageUrl("");
   };
 
-  const uploadImage=async(file:File,source:"envoyée"|"collée")=>{
-    if(!["image/png","image/jpeg","image/webp","image/gif"].includes(file.type)){setMessage("Format non supporté. Utilise PNG, JPEG, WebP ou GIF.");return}
-    if(file.size>10*1024*1024){setMessage("Image trop volumineuse (maximum 10 Mo).");return}
-    setImageBusy(true);setMessage("");
+  const uploadImage=async(file:File|undefined,source:"envoyée"|"collée"|"détourée",cutoutUrl?:string)=>{
+    if(imageBusy||(!file&&!cutoutUrl))return;
+    if(file&&!["image/png","image/jpeg","image/webp","image/gif"].includes(file.type)){setMessage("Format non supporté. Utilise PNG, JPEG, WebP ou GIF.");return}
+    if(file&&file.size>10*1024*1024){setMessage("Image trop volumineuse (maximum 10 Mo).");return}
+    setImageBusy(true);setMessage(cutoutUrl?"Suppression du fond…":"");
     try{
-      const form=new FormData();form.set("pnjId",editingId??(slug(draft.nom)||"pnj"));form.set("file",file);
+      if(cutoutUrl)file=await removeBackgroundFromUrl(cutoutUrl);
+      if(!file)return;
+      const form=new FormData();form.set("pnjId",cutoutUrl?`cutout-${crypto.randomUUID()}`:editingId??(slug(draft.nom)||"pnj"));if(cutoutUrl)form.set("cutout","true");form.set("file",file);
       const endpoint=editingId?`/apil7r/pf2-mj/pnj/${encodeURIComponent(editingId)}/portrait`:"/apil7r/pf2-mj/pnj/portrait";
       const response=await fetch(endpoint,{method:"POST",body:form});const payload=await response.json().catch(()=>null);
       if(!response.ok||typeof payload?.portrait!=="string")throw new Error(payload?.message||payload?.error||"Impossible d’envoyer l’image.");
@@ -584,6 +588,7 @@ export default function PnjPage({initialSelectedId}:{initialSelectedId?:string})
           </div>
           <div className="pnj-image-tools">
             <label className="pnj-button pnj-file-choice">{resolvePnjImage(draft)?"Remplacer le portrait":"Choisir une image"}<input type="file" accept="image/png,image/jpeg,image/webp,image/gif" disabled={imageBusy} onChange={event=>{const file=event.target.files?.[0];event.target.value="";if(file)void uploadImage(file,"envoyée")}}/></label>
+            {resolvePnjImage(draft)&&<button type="button" className="pnj-button" disabled={imageBusy} onClick={()=>void uploadImage(undefined,"détourée",resolvePnjImage(draft))}>Remove BG</button>}
             {draft.portrait&&<button type="button" className="pnj-button" disabled={imageBusy} onClick={()=>setDraft(current=>({...current,portrait:""}))}>Retirer le portrait</button>}
           </div>
           <div className="pnj-image-tools"><input value={imageUrl} onChange={event=>setImageUrl(event.target.value)} placeholder="https://… — télécharger puis stocker dans Foundry"/><button type="button" className="pnj-button" disabled={imageBusy||!imageUrl.trim()} onClick={importImageUrl}>Importer l’image</button></div>

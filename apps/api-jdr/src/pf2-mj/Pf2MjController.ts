@@ -10,6 +10,7 @@ import { ScenarioPreparationService } from './ScenarioPreparationService'
 import { FoundryReferenceLibraryService } from './FoundryReferenceLibraryService'
 import { GeneratedDownloadService } from './GeneratedDownloadService'
 import { ScenarioCampaignService } from './ScenarioCampaignService'
+import { removePortraitBackground } from './RemoveBackground'
 
 // Le sélecteur des résumés ne propose que les PJ. La convention de nommage
 // Foundry de la table est « Nom du PJ (Nom du joueur) ».
@@ -496,6 +497,14 @@ export class Pf2MjController {
     }
   }
 
+  @Post('portraits/remove-background')
+  async removeBackground(@Req() request: FastifyRequest, @Res() reply: FastifyReply) {
+    const file = await (request as FastifyRequest & { file: () => Promise<MultipartFile | undefined> }).file()
+    if (!file) throw new HttpException('Fichier image manquant.', HttpStatus.BAD_REQUEST)
+    const result = await removePortraitBackground(await file.toBuffer(), file.mimetype)
+    return reply.type('image/png').header('Cache-Control', 'no-store').send(result)
+  }
+
   @Post('pnj/portrait')
   async uploadPnjPortrait(@Req() request: FastifyRequest): Promise<{ portrait: string }> {
     try {
@@ -519,7 +528,9 @@ export class Pf2MjController {
     try {
       const file = await (request as FastifyRequest & { file: () => Promise<MultipartFile | undefined> }).file()
       if (!file) throw new Error('Fichier image manquant.')
-      return await this.service.saveAndSyncPnjPortrait(await file.toBuffer(), file.mimetype, id)
+      const bytes = await file.toBuffer()
+      const cutout = file.fields.cutout
+      return await this.service.saveAndSyncPnjPortrait(bytes, file.mimetype, id, !Array.isArray(cutout) && cutout?.type === 'field' && cutout.value === 'true')
     } catch (error) {
       throw new HttpException(error instanceof Error ? error.message : 'Impossible d’envoyer l’image.', HttpStatus.BAD_REQUEST)
     }
