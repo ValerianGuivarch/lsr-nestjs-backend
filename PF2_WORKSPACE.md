@@ -12,6 +12,10 @@ En particulier, ne jamais placer un script de création ou de réparation ponctu
 
 Quand plusieurs endpoints normaux et autorisés existent (par exemple lecture et modification d'un document dans le REST Relay), les privilégier sans rechercher de nouvelles permissions. Avant tout changement de code, examiner et protéger les modifications locales non commitées ; distinguer sources Git et déploiement. Rendre compte de ce qui est réellement fait et de ce qui reste bloqué.
 
+## Rangement du mini-PC — règle obligatoire
+
+Avant toute intervention sur `/home/valou/services`, appliquer les [conventions de maintenance et de rangement](pf2/outils/maintenance-mini-pc.md) : isoler les fichiers temporaires dans `_travail`, documenter les sauvegardes et scripts réutilisables, ne jamais laisser de fichiers ponctuels à la racine. Nettoyer après validation, en respectant les montages et les travaux concurrents.
+
 ## Développement : règles permanentes
 
 - Petits changements : commit directement sur `main` après tests ; réserver les PR aux fonctionnalités importantes.

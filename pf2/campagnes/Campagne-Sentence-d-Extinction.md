@@ -101,7 +101,7 @@ Les cinq nouveaux Actors sont rangés dans **Sentinelles d’Extinction — PNJ 
 
 **À ne pas confondre :** les **anciens documents de scènes vides** générés par le Toolkit pour le volume 1 existent encore dans le dossier précédent, avec leurs anciens chemins de fond erronés. Ils ont été **laissés intacts**, pour éviter les pertes de références. Les autres cartes du chapitre 2 sont désormais disponibles mais leurs rencontres et coffres ne sont pas encore installés. La future séance de l'ermitage reste distincte.
 
-**Sauvegarde avant modifications :** `/home/valou/services/foundry/backups/extinction-module-import-20261103/` (copies des données Scenes/Folders). Script de réimport idempotent : `/home/valou/services/foundry/import-ec-remake-20261103.py`. Toutes les écritures dans Foundry ont été réalisées via le REST Relay, **sans écriture directe dans les bases LevelDB du monde actif**.
+**Sauvegarde historique avant modifications :** `foundry/backups/extinction-module-import-20261103/` (copies des données Scenes/Folders, supprimées le 22 novembre 2026 après validation). Script de réimport idempotent : `/home/valou/services/foundry/import-ec-remake-20261103.py`. Toutes les écritures dans Foundry ont été réalisées via le REST Relay, **sans écriture directe dans les bases LevelDB du monde actif**.
 
 ## Repères du scénario publié — informations MJ
 

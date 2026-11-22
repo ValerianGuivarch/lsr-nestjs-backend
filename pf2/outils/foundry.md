@@ -511,7 +511,7 @@ L'index conserve notamment niveau, traits, rareté, taille, source et notes publ
 
 #### Monster Core 1 et 2 — traitement du 4–5 novembre 2026
 
-Les deux PDF anglais sont dans `/home/valou/services/`. La source de vérité du traitement complet est le rapport privé `pf2-data/_AI/monster-core-complet/README.md`, avec `coverage-summary.json`, `coverage-report.csv`, `unmapped-actors.csv` et `all-art-mapping.json`.
+Les deux PDF anglais sont dans `/home/valou/services/pf2-data/Références/Règles/` (déplacés le 22 novembre 2026 ; scripts privés adaptés). La source de vérité du traitement complet est le rapport privé `pf2-data/_AI/monster-core-complet/README.md`, avec `coverage-summary.json`, `coverage-report.csv`, `unmapped-actors.csv` et `all-art-mapping.json`.
 
 - Pilote validé par le MJ : 40 tokens de démonstration placés dans la scène `TestToken` selon le rapport final (20 initialement vérifiés par API). Ne pas recréer inutilement ces tests.
 - Extraction de 672 illustrations PNG (338 + 334) et de 672 tokens WebP transparents de 512 × 512, sans cadre ni recadrage destructeur ; une illustration peut servir à plusieurs variantes.
