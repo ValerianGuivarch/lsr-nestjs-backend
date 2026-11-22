@@ -128,6 +128,16 @@ Le catalogue existant distingue les périodes jouables des six tomes ; conserver
 
 **Correction de lecture du tome 1 (pp. 30–31) :** la shérif Ralhain a été tuée par la plante carnivore de l'extérieur de la grange Lindell ; il reste ses bottes ensanglantées et son chapeau reconnaissables. La fouille de la végétation révèle aussi une chaîne en argent (15 po) et un *savior spike*. À l'étage E3, Nemmia a laissé une huile de réparation (*oil of mending*) près de sa paillasse ; son cercle rituel associe Gozreh et des runes démoniaques (Religion DD 16, ou Arcanes/Occultisme/savoir pertinent DD 18). Ces éléments sont à vérifier dans les coffres et notes Foundry, pas à considérer comme déjà distribués.
 
+## Continuité validée le 22 novembre 2026 — deux branches indépendantes
+
+**Séances 8 et 17 réellement jouées :** Myron a été assassiné, le cirque sauvé et Nemmia tuée lors de la première intervention. Le 3 novembre (séance 17, 16–18 Sarenith 4720), les Éclaireurs ont interrogé Temin, sont revenus à Abberton, ont rencontré Amarei, aidé le cirque à surpasser les artistes de Dusklight, appris la mort de la shérif par divination, chassé les démons de l'église et sauvé Nellyn. Celui-ci leur a dit que Harlock avait volé un livre sacré ; **c'est son interprétation, non la vérité MJ**. Les deux livres se trouvent dans la cellule du bibliothécaire de l'ermitage. Le moulin et la grange Lindell étaient facultatifs et ne sont plus nécessaires ; le MJ considère les troubles d'Abberton terminés. Ne pas réinitialiser ces scènes ni réécrire les résumés historiques.
+
+**Temin reste captive à Absalom.** Elle a promis un entretien avec le centaure en échange d'une libération éventuelle. Les PJ ont entendu le nom des Attiseurs de tempête dans les séances 5 et 17 ; conserver leur perception sans annuler la distinction MJ validée (Thorn dirige son propre cercle). Sa libération reste un choix futur, pas un fait acquis.
+
+**Deux quêtes jouables en parallèle**, chacune pouvant être confiée à un groupe différent : la branche des druides mène à l'ermitage, puis à la tour d'Erran ; la branche du cirque poursuit la tournée et l'opposition à Dusklight, indépendamment de l'exploration de la tour. Ne pas bloquer Escadar sur Erran simplement parce que le PDF est ordonné ainsi. Adapter les indices et leur transmission à l'ordre réellement joué ; conserver le secret sur les xulgaths tant que les PJ ne l'ont pas découvert.
+
+**Découpage validé :** regrouper installation/sabotage à Escadar, les deux parties de Moonstone Hall, préparatifs/défense de Willowside, dernière représentation/expédition vers le sanctuaire, Verdant Beacon/final. Conserver les tours des Swardlands indépendantes, et la confrontation avec Thessekka conditionnelle à son sort réel. Les anciennes préparations et leurs identifiants sont sauvegardés ; les modules joués restent intacts.
+
 ## Continuité et décisions encore nécessaires
 
 - Fixer le relais d'**Escadar** et le calendrier des déplacements de Dusklight depuis **Absalom**.
