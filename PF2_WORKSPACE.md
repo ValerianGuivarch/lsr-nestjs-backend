@@ -35,7 +35,8 @@ Avant toute intervention sur `/home/valou/services`, appliquer les [conventions 
 ## Organisation des documents Foundry (21 novembre 2026)
 
 - Une campagne préparée possède un dossier homonyme à la racine de chacun des onglets Scènes, Actors et Journaux, avec sous-dossiers par scénario/tome si nécessaire. Les dossiers non utilisés ne sont pas créés préventivement.
-- `The Party` reste directement à la racine des Actors ; les PJ communs peuvent être rangés sous `MJ / PJ` ; MJ reste un dossier de ressources transverses et d'improvisation. Les anciens imports Toolkit sous MJ restent compatibles pour le moment.
+- `The Party` et les fiches des PJ restent directement à la racine des Actors (incident du 21 novembre 2026 ; ne pas les déplacer sans décision explicite du MJ). MJ reste un dossier de ressources transverses et d'improvisation. Les anciens imports Toolkit sous MJ restent compatibles pour le moment.
+- Ne jamais supprimer `The Party`, ses membres, les Actors PJ, leurs familiers ou leurs archives sans décision explicite du MJ. Avant toute suppression de dossier, vérifier récursivement ses descendants et le nombre/UUID des documents ; ne supprimer qu'un dossier effectivement vide, sans option de suppression en cascade. En cas de doute, déplacer vers Vérification et conserver les UUID.
 - Exceptions conservées : copies originales de Pointesable, Le Faiseur de rois, L’Éveil des seigneurs des runes, archives identifiées. Un dossier `Vérification` accueille les ressources dont l'appartenance reste douteuse, sans suppression.
 - Déplacer les documents existants, préserver leurs UUID, propriétés, liens et contenus incorporés. L'appartenance réelle par token/repère et préparation prime sur un nom ou flag ancien. Référence : [Foundry](pf2/outils/foundry.md).
 
