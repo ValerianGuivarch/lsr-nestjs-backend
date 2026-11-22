@@ -15,7 +15,7 @@ Une **campagne ou un scénario suivi** doit avoir une fiche spécifique ; y dist
 | PFS S01-00 — Origines de la Route Ouverte | Préparation prioritaire, non jouée | [Scénario PFS S01-00](pf2/campagnes/Scenario-Origines-Route-Ouverte.md) |
 | Sentence d'Extinction | Adaptation en préparation | [Sentence d'Extinction](pf2/campagnes/Campagne-Sentence-d-Extinction.md) |
 | L'Âge des Cendres (anciennement HD100) | Préparation d'une adaptation pour table ouverte | [Âge des Cendres](pf2/campagnes/Campagne-Age-des-Cendres.md) |
-| La Force des milliers | Kindled Magic prêt — à jouer ; accès à Nantambu encore dépendant du Labyrinthe | [Force des milliers](pf2/campagnes/Campagne-La-Force-des-milliers.md) |
+| La Force des milliers | Kindled Magic audité ; source/template/Foundry validés, portraits et équilibrage encore partiels ; accès dépendant du Labyrinthe | [Force des milliers](pf2/campagnes/Campagne-La-Force-des-milliers.md) |
 | Malveillance | Commencée le 16/11 ; pilote Choix libre et modèle de préparation Foundry | [Malveillance](pf2/campagnes/Scenario-Malveillance.md) |
 
 ## Suivis transverses
