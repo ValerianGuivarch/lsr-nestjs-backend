@@ -29,6 +29,13 @@ Modifications réellement appliquées et relues dans Foundry le 17/11 : 66 journ
 
 L'exploration reste libre : les escaliers et passages secrets peuvent mener au sous-sol avant l'étage. Distinguer fantasmes facultatifs, hantises spécifiques et rêves/recherches. Renseigner les points déjà acquis d'après la partie réelle.
 
+## Continuité confirmée — séance du 16 novembre (précisions MJ du 22/11)
+
+- Les PJ ont vu les portraits des quatre membres de la famille et des domestiques. Cela ne signifie pas qu'ils connaissent les circonstances de leurs morts.
+- Dans le cabinet secret B21, ils ont lu le poème et recherché les thèmes des ouvrages étudiés par son occupant. Ils ont appris que l'Homme de Cendres est lié à la Sombre Tapisserie et aux apocalypses. Le Dominion du Noir n'a pas encore été découvert. Le poème ouvre les sujets de recherche Tchekuth et Homme de Cendres ; ne pas confondre déblocage et connaissance des révélations ultérieures. La bibliothèque B10 reste peu exploitée ; les points exacts acquis ne sont pas confirmés.
+- Des accès aux souterrains ont été découverts ; le groupe s'est replié devant une menace trop forte. Ne pas rejouer les rencontres résolues ni présumer le contenu exploré. Les accès par B14 et B21 restent possibles sans la crypte.
+- Les huit clés de module sont conservées comme blocs de préparation réutilisables ; importer ensemble ceux nécessaires à une séance sans imposer un ordre géographique. La préparation historique de la première séance reste intacte. Le conducteur gère les enjeux et la continuité ; les journaux Foundry gèrent l'exploration détaillée.
+
 ## À confirmer par le MJ
 
 - Localisation et accroche adaptées au monde de la table ; le lien MJ à la quête Discord est confirmé.
