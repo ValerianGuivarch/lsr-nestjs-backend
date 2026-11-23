@@ -35,3 +35,11 @@ Répondre d'abord aux questions concrètes du MJ : actions, degrés de réussite
 - **Suite :** compléter selon les situations répétées, vérifier les éventuels changements d'errata, éviter de recopier les fiches SQLite dans ce Markdown.
 
 Pour chaque future question significative, conserver date, situation, réponse synthétique sourcée, décision d'intégration ou non (avec justification), et modification effectivement réalisée.
+
+### 2026-11-23 — Potions et consommables
+
+- **Demande MJ :** ajout des potions au socle de règles de l'application.
+- **Décision : intégrer**, car les actions pour boire et administrer des potions sont fréquentes en combat.
+- **Modification effectivement réalisée :** cinq fiches enregistrées par l'API métier dans SQLite : boire une potion et la sortir, l'administrer à un allié, potions de soins (dés, niveaux et prix), différence entre potions magiques et élixirs alchimiques, huiles et autres consommables. Le catalogue passe de 22 à 27 fiches. Le lien ChatGPT est conservé.
+- **Sources :** [PF2 Remaster — trésors et potions](https://pf2orc.d20pfsrd.com/rules/home/gamemastering/treasure/), [trait potion](https://pf2.d20pfsrd.com/trait/potion/), [trait élixir](https://pf2.d20pfsrd.com/trait/elixir/).
+- **Justification :** aider à arbitrer les coûts en actions sans dupliquer le catalogue complet des objets.
