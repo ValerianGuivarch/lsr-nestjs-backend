@@ -13,6 +13,8 @@ describe('Pf2MjService', () => {
       readPortrait: jest.fn().mockResolvedValue({ bytes: Buffer.from('portrait'), filename: 'janira-gavix.webp', mimeType: 'image/webp' }),
       replaceReference: jest.fn(),
       readCuration: jest.fn().mockResolvedValue({}),
+      getRecord: jest.fn().mockResolvedValue(null),
+      saveRecord: jest.fn(),
       saveCuration: jest.fn(),
       readCatalogueSnapshot: jest.fn().mockResolvedValue({ schemaVersion: 2, files: [], entries: [], collections: [] }),
       getCatalogueEntity: jest.fn().mockResolvedValue(null),
@@ -37,6 +39,37 @@ describe('Pf2MjService', () => {
     }
     return { service: new Pf2MjService(persistence as never, foundry as never), persistence, foundry }
   }
+
+  describe('Aide-mémoire de règles', () => {
+    it('returns an empty dataset before any manual entry', async () => {
+      const { service, persistence } = serviceFor({}, pnj, { getRecord: jest.fn().mockResolvedValue(null) })
+      await expect(service.rulesAide()).resolves.toMatchObject({ id: 'pf2-rules', entries: [], chatgptUrl: '' })
+      expect(persistence.getRecord).toHaveBeenCalledWith('rules-aide', 'pf2-rules')
+    })
+
+    it('persists the configured ChatGPT link and an operational rule', async () => {
+      const saved = jest.fn()
+      const { service } = serviceFor({}, pnj, { saveRecord: saved })
+      const content = { chatgptUrl: '  https://chatgpt.com/c/test  ', entries: [{
+        id: 'detecter-un-piege', title: 'Détecter un piège', category: 'Pièges et dangers',
+        summary: 'Résumé vérifié', details: 'Détails vérifiés', sourceUrl: 'https://2e.aonprd.com/',
+        origin: 'official'
+      }] }
+      const result = await service.saveRulesAide(content)
+      expect(result.chatgptUrl).toBe('https://chatgpt.com/c/test')
+      expect(saved).toHaveBeenCalledWith('rules-aide', expect.objectContaining({ id: 'pf2-rules', entries: content.entries }))
+    })
+
+    it('rejects untrusted links, duplicated identifiers and unsupported origins', async () => {
+      const saved = jest.fn()
+      const { service } = serviceFor({}, pnj, { saveRecord: saved })
+      const entry = { id: 'combat', title: 'Combat', category: 'Combat', summary: 'À vérifier', details: '', sourceUrl: '', origin: 'open' }
+      await expect(service.saveRulesAide({ chatgptUrl: 'https://example.com', entries: [] })).rejects.toThrow('ChatGPT')
+      await expect(service.saveRulesAide({ chatgptUrl: '', entries: [entry, entry] })).rejects.toThrow('invalide')
+      await expect(service.saveRulesAide({ chatgptUrl: '', entries: [{ ...entry, origin: 'unknown' }] })).rejects.toThrow('invalide')
+      expect(saved).not.toHaveBeenCalled()
+    })
+  })
 
   it('upserts a scoped homebrew arc without replacing other catalogue arcs or entries', async () => {
     const rose = { id: 'rose-street-revenge' }

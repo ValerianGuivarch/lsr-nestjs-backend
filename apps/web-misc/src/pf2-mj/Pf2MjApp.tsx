@@ -58,6 +58,7 @@ import FactionsPage from './Factions'
 import LieuxPage from './Lieux'
 import RegionsPage from './Regions'
 import PricesPage from './Prices'
+import RulesAidePage from './RulesAide'
 const TravelsPage = lazy(() => import('./Travels'))
 import EvenementsPage from './Evenements'
 import LorePage from './Lore'
@@ -1915,7 +1916,7 @@ export function Pf2MjApp() {
     excluded: ['Mis de côté', '« Plus tard » et « Écarté » ont le même effet : ils sortent entièrement du catalogue actif, mais restent faciles à récupérer ici.'],
     settings: ['Administration', 'Référentiel, maintenance, documents et outils de migration.'],
     players: ['Personnages joueurs', 'Fiches, propriétaires et accès Foundry, Wiki et Discord.'],
-    pnj: ['PNJ', ''], factions: ['Factions', ''], lieux: ['Lieux', ''], regions: ['Régions', ''], evenements: ['Événements', ''], prix: ['Prix', ''], voyages: ['Voyages', ''],
+    pnj: ['PNJ', ''], factions: ['Factions', ''], lieux: ['Lieux', ''], regions: ['Régions', ''], evenements: ['Événements', ''], prix: ['Prix', ''], voyages: ['Voyages', ''], regles: ['Règles', ''],
   }
 
   const nav: Array<[View, string, string, number | string]> = [
@@ -1938,7 +1939,7 @@ export function Pf2MjApp() {
         : route.kind === 'player' ? 'players'
         : route.kind === 'resource' ? 'resources'
           : 'find'
-  const isReferenceView = ['pnj', 'factions', 'lieux', 'regions', 'evenements', 'prix', 'voyages'].includes(routedView)
+  const isReferenceView = ['pnj', 'factions', 'lieux', 'regions', 'evenements', 'prix', 'voyages', 'regles'].includes(routedView)
   const selectedPlayable = route.kind === 'playable' ? playableMap.get(route.id) ?? null : null
   const selectedArc = route.kind === 'arc' ? arcMap.get(route.id) ?? null : null
   const selectedContainer = route.kind === 'container' ? containerMap.get(route.id) ?? null : null
@@ -1950,7 +1951,7 @@ export function Pf2MjApp() {
 
   return <main className="pf2-mj pf2-mj-v3">
     <header><Link className="brand brand-button" to={viewPaths.journal}><b>✦</b><span><strong>PATHFINDER 2</strong><small>GESTION MJ</small></span></Link><div className="header-right"><span><i />{active.length} scénarios actifs · {documentCount} PDF · {missingTranslations} traduction{missingTranslations > 1 ? 's' : ''} à voir</span><em>MJ</em></div></header>
-    <div className="layout"><aside><nav>{nav.map(([id, icon, label, count]) => <NavLink key={id} to={viewPaths[id]} className={() => routedView === id || (id === 'pnj' && isReferenceView) ? 'active' : ''}><span>{icon}</span>{label}<b>{count}</b></NavLink>)}</nav><section><p>REPÈRES MJ</p><span className="aside-rule">☑ Campagnes et scénarios = intégrés, terminés sur demande</span><span className="aside-rule">▦ Catalogue = recherche + chronologie + mis de côté</span><span className="aside-rule">◇ Ressources / Trilemma dans le Catalogue</span><span className="aside-rule">✧ Histoire = bible Markdown de la campagne</span><span className="aside-rule">♙ Monde = PNJ, factions, lieux, régions, événements, prix, voyages</span><span className="aside-rule">⚙ Administration = maintenance technique</span></section><div className="scan-note"><b>V3</b><strong>SQLite comme source</strong><p>Le catalogue est chargé depuis SQLite puis normalisé sans perte pour l’interface V3.</p></div></aside>
+    <div className="layout"><aside><nav>{nav.map(([id, icon, label, count]) => <NavLink key={id} to={viewPaths[id]} className={() => routedView === id || (id === 'pnj' && isReferenceView) ? 'active' : ''}><span>{icon}</span>{label}<b>{count}</b></NavLink>)}</nav><section><p>REPÈRES MJ</p><span className="aside-rule">☑ Campagnes et scénarios = intégrés, terminés sur demande</span><span className="aside-rule">▦ Catalogue = recherche + chronologie + mis de côté</span><span className="aside-rule">◇ Ressources / Trilemma dans le Catalogue</span><span className="aside-rule">✧ Histoire = bible Markdown de la campagne</span><span className="aside-rule">♙ Monde = PNJ, factions, lieux, régions, événements, prix, voyages, règles</span><span className="aside-rule">⚙ Administration = maintenance technique</span></section><div className="scan-note"><b>V3</b><strong>SQLite comme source</strong><p>Le catalogue est chargé depuis SQLite puis normalisé sans perte pour l’interface V3.</p></div></aside>
       <section className="content">
         {route.kind === 'not-found' ? routeMissing('Page') : null}
         {route.kind === 'playable' ? (selectedPlayable ? <PlayableDetail unit={selectedPlayable} curation={curation} onUpdate={update} placeOptions={placeOptions} onOpenReference={openReference} /> : routeMissing('Scénario', route.id)) : null}
@@ -1960,8 +1961,9 @@ export function Pf2MjApp() {
         {route.kind === 'player' ? <PlayerCharactersPage selectedNpcId={route.id} /> : null}
         {(route.kind === 'view' || route.kind === 'reference') && <>
           {!isReferenceView && <><div className="page-title"><div><small>TABLE OUVERTE · GOLARION PERSISTANT</small><h1>{headings[routedView][0]}</h1><p>{headings[routedView][1]}</p></div>{!['journaux', 'resources', 'lore', 'players', 'sessionPrep'].includes(routedView) && <button className="refresh" onClick={refresh}>{scanStatus === 'scanning' ? '↻ Détection…' : scanStatus === 'done' ? '✓ Rapport prêt' : scanStatus === 'error' ? '! Réessayer' : '↻ Scanner PDF & ZIP'}</button>}</div>{error && <div className="notice"><strong>Attention</strong><p>{error}</p></div>}{scan && <ScanPanel report={scan} onClose={() => setScan(null)} onApply={applyScan} />}{!['excluded', 'settings', 'documents', 'resources', 'players', 'journal', 'sessionPrep', 'journaux', 'lore', 'prepare', 'maintenance'].includes(routedView) && <Stats active={active} />}{routedView === 'find' && <FinderView active={active} curation={curation} onOpen={openPlayable} onUpdate={update} resourceVersion={resourceRevision} />}{routedView === 'library' && <LibraryView curation={curation} onOpen={openContainer} onOpenPlayable={openPlayable} onUpdate={update} />}{routedView === 'resources' && <ResourcesPage />}{routedView === 'players' && <PlayerCharactersPage />}{routedView === 'sessionPrep' && <SessionPreparations activeWorks={activeWorks} scenarios={active.filter(unit => unit.legacyEntryKind !== 'campaign').map(unit => ({ id: unit.id, title: titleOf(unit) }))} campaigns={[...containers.filter(container => container.containerType === 'campaign').map(container => ({ id: container.id, title: titleOf(container) })), ...active.filter(unit => isStandaloneCampaign(unit)).map(unit => ({ id: unit.id, title: titleOf(unit) })), ...arcs.map(arc=>({id:arc.id,title:arc.titleFr}))]} />}{routedView === 'journal' && <JournalView curation={curation} onUpdate={update} onImported={reloadCatalogue} sessionHistory={sessionHistory} />}{routedView === 'lore' && <LorePage />}{routedView === 'prepare' && <PreparationView active={active} curation={curation} onOpen={openPlayable} onUpdate={update} resourceVersion={resourceRevision} />}{routedView === 'maintenance' && <MaintenanceView active={active} curation={curation} onOpen={openPlayable} onUpdate={update} resourceVersion={resourceRevision} />}{routedView === 'documents' && <DocumentsView resourceVersion={resourceRevision} />}{routedView === 'chronology' && <ChronologyView units={active} onOpen={openPlayable} />}{routedView === 'excluded' && <ExcludedView curation={curation} onOpenContainer={openContainer} onOpenPlayable={openPlayable} onUpdate={update} />}{routedView === 'settings' && <Settings places={placeOptions} onOperation={placeOperation} />}</>}
-          {isReferenceView && <nav className="catalogue-subnav reference-subnav"><Link to={viewPaths.pnj}>PNJ</Link><Link to={viewPaths.factions}>Factions</Link><Link to={viewPaths.lieux}>Lieux</Link><Link to={viewPaths.regions}>Régions</Link><Link to={viewPaths.evenements}>Événements</Link><NavLink to={viewPaths.prix}>Prix</NavLink><NavLink to={viewPaths.voyages}>Voyages</NavLink></nav>}
+          {isReferenceView && <nav className="catalogue-subnav reference-subnav"><Link to={viewPaths.pnj}>PNJ</Link><Link to={viewPaths.factions}>Factions</Link><Link to={viewPaths.lieux}>Lieux</Link><Link to={viewPaths.regions}>Régions</Link><Link to={viewPaths.evenements}>Événements</Link><NavLink to={viewPaths.prix}>Prix</NavLink><NavLink to={viewPaths.voyages}>Voyages</NavLink><NavLink to={viewPaths.regles}>Règles</NavLink></nav>}
           {routedView === 'prix' && <PricesPage />}
+          {routedView === 'regles' && <RulesAidePage />}
           {routedView === 'voyages' && <Suspense fallback={<div>Chargement de la carte des voyages…</div>}><TravelsPage /></Suspense>}
           {routedView === 'pnj' && <PnjPage initialSelectedId={route.kind === 'reference' && route.view === 'pnj' ? route.id : undefined} />}
           {routedView === 'factions' && <FactionsPage initialSelectedId={route.kind === 'reference' && route.view === 'factions' ? route.id : undefined} />}

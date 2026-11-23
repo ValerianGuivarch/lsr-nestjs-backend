@@ -7,7 +7,7 @@ import { DataSource, EntityManager } from 'typeorm'
 import { PF2_PLAYER_IDENTITIES } from '../discord/Pf2PlayerIdentity'
 import { enqueueSessionCoins, migrateSessionCoinAwards, type SessionCoins } from './SessionCoinAwards'
 
-export type Pf2RecordKind = 'pnj' | 'faction' | 'lieu' | 'region' | 'evenement' | 'scenario' | 'session' | 'catalogue' | 'curation' | 'foundry-actor-cache' | 'foundry-player-level-cache' | 'geography-config'
+export type Pf2RecordKind = 'pnj' | 'faction' | 'lieu' | 'region' | 'evenement' | 'scenario' | 'session' | 'catalogue' | 'curation' | 'foundry-actor-cache' | 'foundry-player-level-cache' | 'geography-config' | 'rules-aide'
 export type Pf2RecordScope = 'global' | 'scenario'
 export type ListRecordOptions = { includeExcluded?: boolean }
 export type FoundryActorCacheEntry = { uuid: string; name: string }

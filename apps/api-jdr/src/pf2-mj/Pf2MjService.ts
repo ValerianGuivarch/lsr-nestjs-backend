@@ -155,6 +155,40 @@ export class Pf2MjService {
   private mapSearchIndexCache: Array<{ category: string; entries: Array<Record<string, unknown>> }> | null = null
   constructor(private readonly persistence: Pf2PersistenceService, private readonly foundry: FoundryRelayService) {}
 
+  /** Fiches opérationnelles du MJ, indépendantes de la curation des campagnes. */
+  async rulesAide(): Promise<Record<string, unknown>> {
+    return (await this.persistence.getRecord('rules-aide', 'pf2-rules')) ?? {
+      id: 'pf2-rules', nom: 'Aide-mémoire des règles', chatgptUrl: '', entries: []
+    }
+  }
+
+  async saveRulesAide(input: unknown): Promise<Record<string, unknown>> {
+    if (!input || typeof input !== 'object' || Array.isArray(input)) throw new Error('Données des règles invalides.')
+    const body = input as Record<string, unknown>
+    const url = typeof body.chatgptUrl === 'string' ? body.chatgptUrl.trim() : ''
+    if (url && !/^https:\/\/(?:chatgpt\.com|chat\.openai\.com)\//i.test(url)) throw new Error('Le lien doit pointer vers ChatGPT.')
+    if (!Array.isArray(body.entries) || body.entries.length > 300) throw new Error('Liste de fiches invalide (300 maximum).')
+    const ids = new Set<string>()
+    const entries = body.entries.map((raw: unknown) => {
+      if (!raw || typeof raw !== 'object' || Array.isArray(raw)) throw new Error('Fiche invalide.')
+      const v = raw as Record<string, unknown>
+      const id = typeof v.id === 'string' ? v.id.trim() : ''
+      const title = typeof v.title === 'string' ? v.title.trim() : ''
+      const category = typeof v.category === 'string' ? v.category.trim() : ''
+      const summary = typeof v.summary === 'string' ? v.summary.trim() : ''
+      const details = typeof v.details === 'string' ? v.details.trim() : ''
+      const sourceUrl = typeof v.sourceUrl === 'string' ? v.sourceUrl.trim() : ''
+      const origin = v.origin
+      if (!/^[a-z0-9][a-z0-9-]{0,79}$/.test(id) || ids.has(id) || !title || title.length > 140 || !category || category.length > 80 || summary.length > 2000 || details.length > 12000 || (origin !== 'official' && origin !== 'house' && origin !== 'open') || (sourceUrl && !/^https:\/\//i.test(sourceUrl))) throw new Error('Contenu de fiche invalide.')
+      ids.add(id)
+      return { id, title, category, summary, details, sourceUrl, origin }
+    })
+    const record = { id: 'pf2-rules', nom: 'Aide-mémoire des règles', chatgptUrl: url, entries }
+    await this.persistence.saveRecord('rules-aide', record)
+    return record
+  }
+
+
   isReferenceKind(value: string): value is ReferenceKind {
     return value in referenceFiles
   }

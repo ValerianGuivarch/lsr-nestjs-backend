@@ -465,6 +465,15 @@ export class Pf2MjController {
     catch (error) { throw new HttpException(error instanceof Error ? error.message : 'Import impossible.', HttpStatus.BAD_REQUEST) }
   }
 
+  @Get('rules-aide')
+  rulesAide(): Promise<Record<string, unknown>> { return this.service.rulesAide() }
+
+  @Put('rules-aide')
+  async saveRulesAide(@Body() body: unknown): Promise<Record<string, unknown>> {
+    try { return await this.service.saveRulesAide(body) }
+    catch (error) { throw new HttpException(error instanceof Error ? error.message : 'Fiche invalide.', HttpStatus.BAD_REQUEST) }
+  }
+
   @Get('curation')
   curation(): Promise<Record<string, unknown>> {
     return this.service.readCuration()
