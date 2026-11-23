@@ -151,6 +151,9 @@ Les opérations de scènes auparavant lancées directement contre le relais pass
 | Mettre à jour un élément de calque | `PUT /foundry/gm/scenes/:uuid/canvas/:type/:documentId` |
 | Créer un Actor ou JournalEntry | `POST /foundry/gm/documents/:type` |
 | Mettre à jour un Actor ou JournalEntry | `PUT /foundry/gm/documents/:uuid` |
+| Corriger nom ou description d’un Item incorporé à un Actor | `PUT /foundry/gm/documents/:uuid` avec `Actor.<id>.Item.<id>` |
+
+Pour les Items incorporés, la mise à jour se limite à `name` et `system.description.value`. Le service vérifie que l’UUID complet est résolu avant d’écrire ; aucune suppression/recréation ni modification de la mécanique ou de l’inventaire n’est autorisée par cette route. Les Items indépendants et de compendium restent exclus.
 
 **Toutes ces routes sont protégées** par l'en-tête interne `x-pf2-journals-key` (correspondant à `PF2_JOURNALS_INTERNAL_KEY` déjà configuré côté serveur). Sans cet en-tête valide, le backend refuse l'opération avant de contacter Foundry ; ce n'est **pas une API publique ou une interface à partager aux joueurs**. Les opérations ciblent uniquement un client connecté au monde `test-pf2`, valident les UUID et limitent les types documentaires. Elles ne proposent ni exécution libre de JavaScript Foundry, ni suppression de documents.
 

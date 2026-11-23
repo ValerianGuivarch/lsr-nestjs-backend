@@ -89,9 +89,28 @@ export class FoundryRelayService {
   }
 
   async updateGmWorldDocument(uuid: string, input: unknown): Promise<unknown> {
-    if (!/^(Actor|JournalEntry)\.[A-Za-z0-9]{16}$/.test(uuid)) throw new BadRequestException('UUID de document Foundry invalide.')
+    const isEmbeddedItem = /^Actor\.[A-Za-z0-9]{16}\.Item\.[A-Za-z0-9]{16}$/.test(uuid)
+    if (!isEmbeddedItem && !/^(Actor|JournalEntry)\.[A-Za-z0-9]{16}$/.test(uuid)) {
+      throw new BadRequestException('UUID de document Foundry invalide.')
+    }
     const data = this.gmInputData(input)
+    if (isEmbeddedItem) {
+      const allowed = ['name', 'system.description.value']
+      if (!Object.keys(data).length || Object.keys(data).some((key) => !allowed.includes(key)) ||
+        Object.values(data).some((value) => typeof value !== 'string')) {
+        throw new BadRequestException('Un objet incorporé accepte uniquement un nom ou une description textuelle.')
+      }
+    }
     const clientId = await this.gmWorldClientId()
+    if (isEmbeddedItem) {
+      // Verify the full UUID resolves to the exact Item before writing to its owning Actor.
+      const result = await this.request('/get?' + new URLSearchParams({ clientId, uuid }), {}, 30_000) as {
+        entity?: Array<{ uuid?: string; documentName?: string; type?: string }>
+      }
+      if (!result.entity?.some((item) => item.uuid === uuid)) {
+        throw new BadRequestException('Objet incorporé introuvable dans cet Actor.')
+      }
+    }
     return this.request('/update?' + new URLSearchParams({ clientId, uuid }), {
       method: 'PUT', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ data })
     }, 30_000)

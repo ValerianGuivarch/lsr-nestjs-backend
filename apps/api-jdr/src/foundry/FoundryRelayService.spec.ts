@@ -253,4 +253,40 @@ describe('FoundryRelayService', () => {
     })
     await expect(new FoundryRelayService().createNpcPlaceholder('Janira Gavix', 'assets/l7r/portraits/janira.webp')).resolves.toEqual({ uuid: 'Actor.janira', name: 'Janira Gavix' })
   })
+  it('updates an existing embedded treasure Item by full UUID without recreating it', async () => {
+    const uuid = 'Actor.1234567890abcdef.Item.abcdef1234567890'
+    const requests: Array<{ url: string; method?: string; body?: unknown }> = []
+    jest.spyOn(global, 'fetch').mockImplementation(async (input, init) => {
+      const url = String(input)
+      requests.push({ url, method: init?.method, body: init?.body ? JSON.parse(String(init.body)) : undefined })
+      if (url.endsWith('/clients')) return new Response(JSON.stringify({ clients: [{ clientId: 'world-1', worldId: 'test-pf2', isOnline: true }] }))
+      if (url.includes('/get?')) return new Response(JSON.stringify({ entity: [{ uuid, name: 'Ancien trésor' }] }))
+      if (url.includes('/update?')) return new Response(JSON.stringify({ entity: [{ uuid, name: 'Statuette ancienne' }] }))
+      throw new Error(`Unexpected URL: ${url}`)
+    })
+    await new FoundryRelayService().updateGmWorldDocument(uuid, { name: 'Statuette ancienne' })
+    expect(requests.find((r) => r.url.includes('/get?'))?.url).toContain(encodeURIComponent(uuid))
+    expect(requests.find((r) => r.url.includes('/update?'))).toMatchObject({
+      method: 'PUT', body: { data: { name: 'Statuette ancienne' } }
+    })
+    expect(requests.some((r) => r.url.includes('/create?') || r.url.includes('/delete?'))).toBe(false)
+  })
+
+  it('rejects destructive embedded item fields and missing items before updating', async () => {
+    const uuid = 'Actor.1234567890abcdef.Item.abcdef1234567890'
+    const calls: string[] = []
+    jest.spyOn(global, 'fetch').mockImplementation(async (input) => {
+      const url = String(input)
+      calls.push(url)
+      if (url.endsWith('/clients')) return new Response(JSON.stringify({ clients: [{ clientId: 'world-1', worldId: 'test-pf2', isOnline: true }] }))
+      if (url.includes('/get?')) return new Response(JSON.stringify({ entity: [] }))
+      throw new Error(`Unexpected URL: ${url}`)
+    })
+    const service = new FoundryRelayService()
+    await expect(service.updateGmWorldDocument(uuid, { 'system.quantity': 0 })).rejects.toThrow('uniquement un nom')
+    expect(calls).toHaveLength(0)
+    await expect(service.updateGmWorldDocument(uuid, { 'system.description.value': 'Texte corrigé' })).rejects.toThrow('introuvable')
+    expect(calls.some((url) => url.includes('/update?'))).toBe(false)
+  })
+
 })
