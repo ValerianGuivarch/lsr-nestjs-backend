@@ -474,6 +474,12 @@ export class Pf2MjController {
     catch (error) { throw new HttpException(error instanceof Error ? error.message : 'Fiche invalide.', HttpStatus.BAD_REQUEST) }
   }
 
+  @Post('rules-aide/:id/vote')
+  async voteRulesAide(@Param('id') id: string, @Body() body: { direction?: unknown }): Promise<Record<string, unknown>> {
+    try { return await this.service.voteRulesAide(id, body?.direction) }
+    catch (error) { throw new HttpException(error instanceof Error ? error.message : 'Vote invalide.', HttpStatus.BAD_REQUEST) }
+  }
+
   @Get('curation')
   curation(): Promise<Record<string, unknown>> {
     return this.service.readCuration()
