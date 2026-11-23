@@ -20,9 +20,18 @@ Répondre d'abord aux questions concrètes du MJ : actions, degrés de réussite
 - **Décision :** sous-rubrique de « Monde », avec fiches repliables, recherche textuelle, filtres par catégorie et statut, édition intégrée ; données et lien ChatGPT conservés dans SQLite.
 - **Architecture :** `RulesAide.tsx`, `RulesAide.css`, `routing.ts`, `Pf2MjApp.tsx`, `Pf2MjController.ts`, `Pf2MjService.ts`, `Pf2PersistenceService.ts`.
 - **À conserver :** mécaniques générales réellement utiles, expliquées avec références ; **à écarter :** questions purement circonstancielles.
-- **Point ouvert :** contenu initial à ajouter progressivement après vérification officielle. Éviter de publier des synthèses mécaniques non sourcées.
+- **Point ouvert (levé le 23/11) :** premier socle de fiches vérifiées publié en SQLite. Les fiches spécialisées restent à enrichir selon les questions du MJ.
 - **Évaluation future :** ergonomie en séance, fréquence des questions, rubriques difficiles à retrouver, redondances, catégories inadaptées.
 
 ## Questions mécaniques et décisions
 
-Aucune question de règles n'a encore été traitée ici. Pour chaque question significative, conserver date, situation, réponse synthétique sourcée, décision d'intégration ou non (avec justification), et modification effectivement réalisée.
+### 2026-11-23 — Demande de socle initial
+
+- **Demande MJ :** « remplir avec un peu les infos de base : les combats, les pièges, les sorts, les armes ».
+- **Décision : intégrer.** Thèmes généraux très réutilisables, directement utiles à l'arbitrage en séance ; garder une fiche synthétique par mécanisme plutôt qu'une encyclopédie par équipement ou sort.
+- **Modifications réellement appliquées via l'API métier :** 22 fiches dans SQLite, réparties en Combat (8), Pièges et dangers (4), Sorts (6) et Armes (4) ; chaque fiche dispose d'un lien de référence Archives of Nethys ; aucune règle maison ajoutée. Le lien ChatGPT existant est conservé.
+- **Précisions après vérification du GM Core, p. 98 :** les dangers exigeant un rang minimal ne donnent un jet de détection qu'aux personnages suffisamment compétents qui recherchent activement ; un désamorçage est habituellement une activité de 2 actions et un échec critique déclenche le danger.
+- **Sources utiles :** [Écran MJ PF2e](https://2e.aonprd.com/GMScreen.aspx), [dangers, GM Core](https://2e.aonprd.com/Rules.aspx?ID=2846), [incantation, Player Core](https://2e.aonprd.com/Rules.aspx?ID=2233), [armes, Player Core](https://2e.aonprd.com/Rules.aspx?ID=2186).
+- **Suite :** compléter selon les situations répétées, vérifier les éventuels changements d'errata, éviter de recopier les fiches SQLite dans ce Markdown.
+
+Pour chaque future question significative, conserver date, situation, réponse synthétique sourcée, décision d'intégration ou non (avec justification), et modification effectivement réalisée.
