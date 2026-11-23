@@ -8,6 +8,8 @@ Les règles mécaniques utilisées en jeu doivent être confirmées avec les sou
 
 **Aide MJ aux récompenses XP et aux trésors :** le wiki comporte un [outil XP par séance](docs/pf2/wiki-session-xp-aid.md), réservé aux administrateurs. Il prend la courbe XPC historique et les niveaux des PJ au début de la séance, puis indique un budget de groupe correspondant à une montée de niveau en environ 2,5 séances. La même page compare les récompenses monétaires et la valeur des objets au budget de trésors du *GM Core*. La saisie des événements dans le champ libre n’attribue aucun XP ni trésor automatiquement. Les guides techniques d'intégration relèvent des [Outils](OUTILS.md).
 
+**Aide-mémoire PF2e Remaster :** [rubrique « Règles » et suivi éditorial](pf2/aides/Aide-memoire-regles.md). Le contenu opérationnel vit dans SQLite ; le Markdown conserve décisions et historique.
+
 ## Ressources MJ externes
 
 La bibliothèque métier **Ressources** de PF2-MJ sert à conserver des contenus externes ou génériques réutilisables sans les transformer en scénarios du catalogue. Les données complètes vivent dans SQLite ; ce document ne doit conserver que les sources, méthodes et conventions utiles.
