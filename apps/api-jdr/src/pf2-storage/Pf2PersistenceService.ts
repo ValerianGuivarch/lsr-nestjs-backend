@@ -1,3 +1,4 @@
+import { migrateFoundryItemEdits } from '../foundry/FoundryItemEdits'
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common'
 import { InjectDataSource } from '@nestjs/typeorm'
 import { readFile, mkdir, writeFile } from 'node:fs/promises'
@@ -2009,6 +2010,7 @@ export class Pf2PersistenceService implements OnModuleInit {
       await manager.query("ALTER TABLE pf2_choice_quest ADD COLUMN depends_on_thread_id TEXT NOT NULL DEFAULT ''")
       await manager.query("UPDATE pf2_choice_quest SET nature=CASE kind WHEN 'blocked' THEN 'mission' WHEN 'personal' THEN 'rp' ELSE kind END, blocked=CASE WHEN kind='blocked' THEN 1 ELSE 0 END, personal=CASE WHEN kind='personal' THEN 1 ELSE 0 END")
     })
+    await this.applyMigration('059-foundry-embedded-item-edits', migrateFoundryItemEdits)
     await this.assertDatabaseIntegrity(this.dataSource, 'base SQLite après migrations')
   }
 

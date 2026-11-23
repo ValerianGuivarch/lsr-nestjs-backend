@@ -1,9 +1,10 @@
 import { BadRequestException, Body, Controller, Delete, Get, Headers, Param, Patch, Post, Query, UnauthorizedException } from '@nestjs/common'
 import { PlayerCodexService } from './PlayerCodexService'
+import { FoundryItemEdits } from '../foundry/FoundryItemEdits'
 
 @Controller(['api/pf2-mj/player-codex', 'api/v1/pf2-mj/player-codex'])
 export class PlayerCodexController {
-  constructor(private readonly service: PlayerCodexService) {}
+  constructor(private readonly service: PlayerCodexService, private readonly itemEdits?: FoundryItemEdits) {}
   @Get('foundry-presentations') foundryPresentations(@Headers('x-pf2-foundry-sync-key') key = '', @Query('includeIllustrations') includeIllustrations = ''): Promise<unknown> {
     const expected = process.env['PF2_FOUNDRY_CHAT_SYNC_KEY'] ?? ''
     if (!expected || key !== expected) throw new UnauthorizedException('Synchronisation Foundry non autorisée.')
@@ -42,6 +43,22 @@ export class PlayerCodexController {
   private requireFoundrySyncKey(key: string): void {
     const expected = process.env['PF2_FOUNDRY_CHAT_SYNC_KEY'] ?? ''
     if (!expected || key !== expected) throw new UnauthorizedException('Synchronisation Foundry non autorisée.')
+  }
+
+  @Get('foundry-item-edits')
+  foundryItemEdits(@Headers('x-pf2-foundry-sync-key') key = '', @Query('world') world = '') {
+    this.requireFoundrySyncKey(key)
+    return this.itemEdits!.list(world)
+  }
+  @Post('foundry-item-edits/claim')
+  claimFoundryItemEdit(@Headers('x-pf2-foundry-sync-key') key = '', @Body() data: {world?:unknown;id?:unknown}) {
+    this.requireFoundrySyncKey(key)
+    return this.itemEdits!.claim(data?.world,data?.id)
+  }
+  @Post('foundry-item-edits/finish')
+  finishFoundryItemEdit(@Headers('x-pf2-foundry-sync-key') key = '', @Body() data: {world?:unknown;token?:unknown;status?:unknown;error?:unknown}) {
+    this.requireFoundrySyncKey(key)
+    return this.itemEdits!.finish(data?.world,data?.token,data?.status,data?.error)
   }
 
   @Get('foundry-factions') foundryFactions(): Promise<unknown> { return this.service.playerFactionCandidates(true) }

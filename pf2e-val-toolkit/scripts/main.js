@@ -39,6 +39,7 @@ import { registerLodgeStashSettings, initLodgeStashes } from "./lodge-stashes.js
 import { initEarnIncomeCoins } from "./earn-income/index.js";
 import { initPlayerLevelSync } from "./player-level-sync.js";
 import { initSessionCoinAwards, syncSessionCoins } from "./session-coin-awards.js";
+import { initFoundryItemEdits, syncFoundryItemEdits } from "./foundry-item-edits.js";
 import { initOutcomeEffects } from "./outcome-effects/index.js";
 
 import { initFamiliarSelector } from "./familiar-selector.js";
@@ -107,7 +108,8 @@ Hooks.once("ready", () => {
   // sans nécessiter une session Foundry active au moment de /recap-pjs.
   initPlayerLevelSync(startupXpReconciliation);
   initSessionCoinAwards();
-  if (toolkit) toolkit.api = { ...toolkit.api, syncSessionCoins };
+  initFoundryItemEdits();
+  if (toolkit) toolkit.api = { ...toolkit.api, syncSessionCoins, syncFoundryItemEdits };
 
   void migrateSashkaFamiliarFeat();
   initDiscordCharacterChat();

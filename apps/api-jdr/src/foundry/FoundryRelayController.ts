@@ -1,9 +1,10 @@
 import { Body, Controller, ForbiddenException, Get, Headers, Param, Post, Put } from '@nestjs/common'
 import { FoundryRelayService } from './FoundryRelayService'
+import { FoundryItemEdits } from './FoundryItemEdits'
 
 @Controller('foundry')
 export class FoundryRelayController {
-  constructor(private readonly foundry: FoundryRelayService) {}
+  constructor(private readonly foundry: FoundryRelayService, private readonly itemEdits?: FoundryItemEdits) {}
 
   /**
    * Privileged GM-only document operations, guarded independently of public
@@ -48,6 +49,20 @@ export class FoundryRelayController {
   gmUpdateDocument(@Param('uuid') uuid: string, @Body() data: unknown, @Headers('x-pf2-journals-key') key = ''): Promise<unknown> {
     this.requireGmKey(key)
     return this.foundry.updateGmWorldDocument(uuid, data)
+  }
+
+  @Post('gm/item-edits')
+  queueGmItemEdit(@Body() data: unknown, @Headers('x-pf2-journals-key') key = '') {
+    this.requireGmKey(key)
+    if (!this.itemEdits) throw new Error('Service des corrections indisponible.')
+    return this.itemEdits.enqueue(data)
+  }
+
+  @Get('gm/item-edits/:id')
+  gmItemEditStatus(@Param('id') id: string, @Headers('x-pf2-journals-key') key = '') {
+    this.requireGmKey(key)
+    if (!this.itemEdits) throw new Error('Service des corrections indisponible.')
+    return this.itemEdits.status(id)
   }
 
   @Get('clients')
