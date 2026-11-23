@@ -1221,17 +1221,24 @@ function PlayableDetail({ unit, curation, onUpdate, placeOptions, onOpenReferenc
 
 function CampaignChatGptLink({ campaignId, value, onUpdate }: { campaignId: string; value?: string; onUpdate: (id: string, field: string, value: unknown) => void }) {
   const [draft, setDraft] = useState(value ?? '')
+  const [editing, setEditing] = useState(false)
   useEffect(() => setDraft(value ?? ''), [value])
 
-  const save = () => onUpdate(campaignId, 'chatgptUrl', draft.trim() || null)
+  const save = () => {
+    onUpdate(campaignId, 'chatgptUrl', draft.trim() || null)
+    setEditing(false)
+  }
 
   return <section className="detail-section campaign-chatgpt-link">
     <h3>Discussion ChatGPT</h3>
-    <p>Discussion de travail associée à cette campagne ou aventure. Le lien reste propre à cette entrée et n’est pas hérité par ses scénarios.</p>
     <div className="campaign-chatgpt-actions">
-      <input aria-label="Lien ChatGPT de la campagne" type="url" placeholder="https://chatgpt.com/c/…" value={draft} onChange={(event) => setDraft(event.target.value)} />
-      <button type="button" onClick={save}>Enregistrer le lien</button>
-      {value && <a href={value} target="_blank" rel="noreferrer">Ouvrir la discussion ChatGPT ↗</a>}
+      {value && <a href={value} target="_blank" rel="noreferrer">ChatGPT ↗</a>}
+      <button type="button" onClick={() => setEditing(current => !current)} aria-expanded={editing}>✎ Éditer le lien</button>
+      {editing && <>
+        <input aria-label="Lien ChatGPT de la campagne" type="url" placeholder="https://chatgpt.com/c/…" value={draft} onChange={(event) => setDraft(event.target.value)} />
+        <button type="button" onClick={save}>Enregistrer</button>
+        <button type="button" onClick={() => { setDraft(value ?? ''); setEditing(false) }}>Annuler</button>
+      </>}
     </div>
   </section>
 }
@@ -1582,6 +1589,10 @@ function JournalView({ curation, onUpdate, onImported, sessionHistory }: { curat
           <div className="component-work-actions">
             <button className="component-toggle" onClick={() => toggleWork(work.id)} aria-expanded={expanded}>{expanded ? 'Réduire' : work.kind !== 'scenario' ? `Développer · ${work.units.length} scénario${work.units.length > 1 ? 's' : ''}` : 'Développer'}</button>
             {chatgptUrl && <a className="component-prompt component-chatgpt" href={chatgptUrl} target="_blank" rel="noreferrer">ChatGPT ↗</a>}
+            <button className="component-prompt" type="button" aria-label={'Éditer le lien ChatGPT de ' + work.title} onClick={() => {
+              const next = window.prompt('Lien ChatGPT pour « ' + work.title + ' » (laisser vide pour supprimer) :', chatgptUrl || '')
+              if (next !== null) void onUpdate(chatgptId, 'chatgptUrl', next.trim() || null)
+            }}>✎ Éditer</button>
             {expanded && work.kind !== 'arc' && <button className="component-prompt" onClick={() => void copyPrompt(work)}>{work.kind === 'campaign' ? 'Prompt campagne' : 'Prompt'}</button>}
             {expanded && work.kind === 'campaign' && <label className={`component-import${importing === work.id ? ' disabled' : ''}`}>Importer le découpage JSON<input type="file" accept="application/json,.json" disabled={importing !== null} onChange={(event) => { const file = event.target.files?.[0]; event.target.value = ''; void importCampaign(work, file) }} /></label>}
             {work.status!=='played' && <strong className={'journal-ready '+(readiness?.count===0?'journal-ready-alert':'')}>{readiness ? 'Modules prêts : '+readiness.label+(readiness.count===0?' · À préparer':!readiness.nextReady?' · Prochain à préparer':'') : 'Modules prêts : —'}</strong>}

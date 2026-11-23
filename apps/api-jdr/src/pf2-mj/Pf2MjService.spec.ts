@@ -57,7 +57,34 @@ describe('Pf2MjService', () => {
       }] }
       const result = await service.saveRulesAide(content)
       expect(result.chatgptUrl).toBe('https://chatgpt.com/c/test')
-      expect(saved).toHaveBeenCalledWith('rules-aide', expect.objectContaining({ id: 'pf2-rules', entries: content.entries }))
+      expect(saved).toHaveBeenCalledWith('rules-aide', expect.objectContaining({ id: 'pf2-rules', entries: [expect.objectContaining(content.entries[0])] }))
+    })
+
+    it('increments feedback without changing the content and preserves it on a trivial correction', async () => {
+      const entry = { id: 'test', title: 'Test', category: 'Combat', summary: 'Une règle très utile pour gérer des situations.', details: 'Les conséquences sont expliquées dans plusieurs paragraphes.', examples: 'Exemple de jeu.', foundry: '', sourceUrl: '', origin: 'official', votesUp: 2, votesDown: 1 }
+      let stored: Record<string, unknown> = { id: 'pf2-rules', chatgptUrl: '', entries: [entry] }
+      const saveRecord = jest.fn(async (_kind: string, value: Record<string, unknown>) => { stored = value })
+      const { service } = serviceFor({}, pnj, { getRecord: jest.fn(async () => stored), saveRecord })
+      await service.voteRulesAide('test', 'down')
+      expect((stored.entries as Array<Record<string, unknown>>)[0].votesDown).toBe(2)
+      const modified = { ...entry, details: entry.details + ' ', votesUp: 0, votesDown: 0 }
+      await service.saveRulesAide({ chatgptUrl: '', entries: [modified] })
+      expect((stored.entries as Array<Record<string, unknown>>)[0]).toMatchObject({ votesUp: 2, votesDown: 2 })
+      await expect(service.voteRulesAide('missing', 'up')).rejects.toThrow('introuvable')
+      await expect(service.voteRulesAide('test', 'invalid')).rejects.toThrow('invalide')
+    })
+
+    it('resets feedback on substantive explanation edits but not metadata changes', async () => {
+      const entry = { id: 'test', title: 'Test', category: 'Combat', summary: 'Jet contre la difficulté.', details: 'Comparer le jet avec le DD indiqué.', examples: '', foundry: '', sourceUrl: '', origin: 'official', votesUp: 3, votesDown: 4 }
+      let stored: Record<string, unknown> = { id: 'pf2-rules', chatgptUrl: '', entries: [entry] }
+      const { service } = serviceFor({}, pnj, {
+        getRecord: jest.fn(async () => stored),
+        saveRecord: jest.fn(async (_kind: string, value: Record<string, unknown>) => { stored = value })
+      })
+      await service.saveRulesAide({ chatgptUrl: '', entries: [{ ...entry, category: 'Règles de combat' }] })
+      expect((stored.entries as Array<Record<string, unknown>>)[0]).toMatchObject({ votesUp: 3, votesDown: 4 })
+      await service.saveRulesAide({ chatgptUrl: '', entries: [{ ...entry, category: 'Règles de combat', details: 'Une étape entièrement nouvelle. Le MJ compare d’abord le jet de compétence au DD fixé, puis annonce la conséquence et les modifications suivant les degrés de réussite.' }] })
+      expect((stored.entries as Array<Record<string, unknown>>)[0]).toMatchObject({ votesUp: 0, votesDown: 0 })
     })
 
     it('rejects untrusted links, duplicated identifiers and unsupported origins', async () => {

@@ -155,7 +155,19 @@ export class Pf2MjService {
   private mapSearchIndexCache: Array<{ category: string; entries: Array<Record<string, unknown>> }> | null = null
   constructor(private readonly persistence: Pf2PersistenceService, private readonly foundry: FoundryRelayService) {}
 
-  /** Fiches opérationnelles du MJ, indépendantes de la curation des campagnes. */
+  /** Serialize modifications to prevent simultaneous votes and edits from overwriting each other. */
+  private rulesWriteQueue: Promise<void> = Promise.resolve()
+
+  private async exclusiveRulesWrite<T>(fn: () => Promise<T>): Promise<T> {
+    const previous = this.rulesWriteQueue
+    let release!: () => void
+    this.rulesWriteQueue = new Promise<void>((resolve) => { release = resolve })
+    await previous
+    try { return await fn() }
+    finally { release() }
+  }
+
+  /** Aide-mémoire indépendant du catalogue et des campagnes. */
   async rulesAide(): Promise<Record<string, unknown>> {
     return (await this.persistence.getRecord('rules-aide', 'pf2-rules')) ?? {
       id: 'pf2-rules', nom: 'Aide-mémoire des règles', chatgptUrl: '', entries: []
@@ -163,29 +175,75 @@ export class Pf2MjService {
   }
 
   async saveRulesAide(input: unknown): Promise<Record<string, unknown>> {
-    if (!input || typeof input !== 'object' || Array.isArray(input)) throw new Error('Données des règles invalides.')
-    const body = input as Record<string, unknown>
-    const url = typeof body.chatgptUrl === 'string' ? body.chatgptUrl.trim() : ''
-    if (url && !/^https:\/\/(?:chatgpt\.com|chat\.openai\.com)\//i.test(url)) throw new Error('Le lien doit pointer vers ChatGPT.')
-    if (!Array.isArray(body.entries) || body.entries.length > 300) throw new Error('Liste de fiches invalide (300 maximum).')
-    const ids = new Set<string>()
-    const entries = body.entries.map((raw: unknown) => {
-      if (!raw || typeof raw !== 'object' || Array.isArray(raw)) throw new Error('Fiche invalide.')
-      const v = raw as Record<string, unknown>
-      const id = typeof v.id === 'string' ? v.id.trim() : ''
-      const title = typeof v.title === 'string' ? v.title.trim() : ''
-      const category = typeof v.category === 'string' ? v.category.trim() : ''
-      const summary = typeof v.summary === 'string' ? v.summary.trim() : ''
-      const details = typeof v.details === 'string' ? v.details.trim() : ''
-      const sourceUrl = typeof v.sourceUrl === 'string' ? v.sourceUrl.trim() : ''
-      const origin = v.origin
-      if (!/^[a-z0-9][a-z0-9-]{0,79}$/.test(id) || ids.has(id) || !title || title.length > 140 || !category || category.length > 80 || summary.length > 2000 || details.length > 12000 || (origin !== 'official' && origin !== 'house' && origin !== 'open') || (sourceUrl && !/^https:\/\//i.test(sourceUrl))) throw new Error('Contenu de fiche invalide.')
-      ids.add(id)
-      return { id, title, category, summary, details, sourceUrl, origin }
+    return this.exclusiveRulesWrite(async () => {
+      if (!input || typeof input !== 'object' || Array.isArray(input)) throw new Error('Données des règles invalides.')
+      const body = input as Record<string, unknown>
+      const url = typeof body.chatgptUrl === 'string' ? body.chatgptUrl.trim() : ''
+      if (url && !/^https:\/\/(?:chatgpt\.com|chat\.openai\.com)\//i.test(url)) throw new Error('Le lien doit pointer vers ChatGPT.')
+      if (!Array.isArray(body.entries) || body.entries.length > 300) throw new Error('Liste de fiches invalide (300 maximum).')
+      const previous = await this.rulesAide()
+      const previousById = new Map((Array.isArray(previous.entries) ? previous.entries : []).map((raw: unknown) => {
+        const value = raw as Record<string, unknown>
+        return [String(value.id), value] as const
+      }))
+      const ids = new Set<string>()
+      const entries = body.entries.map((raw: unknown) => {
+        if (!raw || typeof raw !== 'object' || Array.isArray(raw)) throw new Error('Fiche invalide.')
+        const v = raw as Record<string, unknown>
+        const id = typeof v.id === 'string' ? v.id.trim() : ''
+        const title = typeof v.title === 'string' ? v.title.trim() : ''
+        const category = typeof v.category === 'string' ? v.category.trim() : ''
+        const summary = typeof v.summary === 'string' ? v.summary.trim() : ''
+        const details = typeof v.details === 'string' ? v.details.trim() : ''
+        const examples = typeof v.examples === 'string' ? v.examples.trim() : ''
+        const foundry = typeof v.foundry === 'string' ? v.foundry.trim() : ''
+        const sourceUrl = typeof v.sourceUrl === 'string' ? v.sourceUrl.trim() : ''
+        const origin = v.origin
+        if (!/^[a-z0-9][a-z0-9-]{0,79}$/.test(id) || ids.has(id) || !title || title.length > 140 || !category || category.length > 80 || summary.length > 2000 || details.length > 16000 || examples.length > 12000 || foundry.length > 12000 || (origin !== 'official' && origin !== 'house' && origin !== 'open') || (sourceUrl && !/^https:\/\//i.test(sourceUrl))) throw new Error('Contenu de fiche invalide.')
+        ids.add(id)
+        const old = previousById.get(id)
+        // Reset only for a substantive explanatory rewrite; typo/whitespace/metadata updates preserve feedback.
+        const substantiveChange = old && (['summary', 'details', 'examples', 'foundry'] as const).some((key) => {
+          const before = typeof old[key] === 'string' ? String(old[key]) : ''
+          const after = ({ summary, details, examples, foundry } as Record<string, string>)[key]
+          const normalized = (text: string) => text.replace(/\s+/g, ' ').trim()
+          const a = normalized(before), b = normalized(after)
+          if (a === b) return false
+          const words = (text: string) => text.split(/\s+/).filter(Boolean)
+          const wa = words(a), wb = words(b)
+          // Changes to a single short word or punctuation are not a real rewrite.
+          if (Math.abs(wa.length - wb.length) >= 3) return true
+          let differences = Math.abs(wa.length - wb.length)
+          for (let index = 0; index < Math.min(wa.length, wb.length); index++) if (wa[index] !== wb[index]) differences++
+          return differences >= 3 || (Math.max(a.length, b.length) >= 30 && Math.abs(a.length - b.length) >= 30)
+        })
+        const count = (v: unknown) => Number.isSafeInteger(v) && (v as number) >= 0 ? v as number : 0
+        return {
+          id, title, category, summary, details, examples, foundry, sourceUrl, origin,
+          votesUp: !old || substantiveChange ? 0 : count(old.votesUp),
+          votesDown: !old || substantiveChange ? 0 : count(old.votesDown)
+        }
+      })
+      const record = { id: 'pf2-rules', nom: 'Aide-mémoire des règles', chatgptUrl: url, entries }
+      await this.persistence.saveRecord('rules-aide', record)
+      return record
     })
-    const record = { id: 'pf2-rules', nom: 'Aide-mémoire des règles', chatgptUrl: url, entries }
-    await this.persistence.saveRecord('rules-aide', record)
-    return record
+  }
+
+  async voteRulesAide(id: string, vote: unknown): Promise<Record<string, unknown>> {
+    return this.exclusiveRulesWrite(async () => {
+      if (!['up', 'down'].includes(String(vote))) throw new Error('Vote invalide.')
+      const record = await this.rulesAide()
+      const entries = Array.isArray(record.entries) ? record.entries.map((raw) => ({ ...(raw as Record<string, unknown>) })) : []
+      const entry = entries.find((item) => item.id === id)
+      if (!entry) throw new Error('Fiche introuvable.')
+      const key = vote === 'up' ? 'votesUp' : 'votesDown'
+      const prior = Number.isSafeInteger(entry[key]) && Number(entry[key]) >= 0 ? Number(entry[key]) : 0
+      entry[key] = prior + 1
+      const next = { ...record, entries }
+      await this.persistence.saveRecord('rules-aide', next)
+      return next
+    })
   }
 
 
