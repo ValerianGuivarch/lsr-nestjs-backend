@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { processItemEdit } from '../scripts/foundry-item-edits.js';
+import { processItemEdit, activeGM } from '../scripts/foundry-item-edits.js';
 const id='Actor.1234567890abcdef.Item.abcdef1234567890';
 const job={id:'93e12d5f-3e15-49cb-acb8-5bc0e14e930e',itemUuid:id,expectedName:'Ancienne statuette',expectedDescription:'Ancienne description',name:'Statuette ancienne',description:'Description corrigée',status:'pending'};
 function setup(itemName='Ancienne statuette') {
@@ -28,3 +28,12 @@ function setup(itemName='Ancienne statuette') {
  assert.equal(x.changes(),0);assert.equal(x.state(),'applied');
 }
 console.log('Foundry embedded Item edits: update, conflict and ACK recovery OK');
+
+{
+ globalThis.game={world:{id:'test-pf2'},user:{id:'GM-B',isGM:true},users:{contents:[{id:'GM-B',active:true,isGM:true}]}};
+ assert.equal(activeGM(),true,'only online GM may edit, even without game.users.activeGM');
+ game.users.contents.unshift({id:'GM-A',active:true,isGM:true});
+ assert.equal(activeGM(),false,'only deterministic first active GM may poll');
+ game.user.id='GM-A';assert.equal(activeGM(),true);
+ game.user.isGM=false;assert.equal(activeGM(),false);
+}

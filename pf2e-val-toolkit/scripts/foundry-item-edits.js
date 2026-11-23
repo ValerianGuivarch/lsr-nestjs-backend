@@ -6,7 +6,13 @@ const UUID = /^Actor\.([A-Za-z0-9]{16})\.Item\.([A-Za-z0-9]{16})$/;
 let initialized = false;
 let running = false;
 const warned = new Set();
-const activeGM = () => game.world?.id === WORLD && game.user?.isGM && game.users?.activeGM?.id === game.user.id;
+export function activeGM() {
+  if (game.world?.id !== WORLD || !game.user?.isGM) return false;
+  const activeGMs = (game.users?.contents ?? [])
+    .filter(user => user.isGM && user.active)
+    .sort((left, right) => String(left.id).localeCompare(String(right.id)));
+  return activeGMs[0]?.id === game.user.id;
+}
 
 async function request(key,action,body) {
   const path = pf2MjApiUrl()+'/player-codex/foundry-item-edits';
