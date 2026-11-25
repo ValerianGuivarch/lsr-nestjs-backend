@@ -75,6 +75,30 @@ export class PlayerCodexController {
     if (typeof body?.portraitKnown !== 'boolean') throw new BadRequestException('portraitKnown doit être booléen.')
     return this.service.setContactPortraitKnown(playerNpcId, contactNpcId, body.portraitKnown)
   }
+  @Get('me/help')
+  wikiHelp(
+    @Query('wikiUsername') wikiUsername = '', @Query('npcId') npcId = '',
+    @Query('wikiIsAdmin') wikiIsAdmin = '', @Headers('x-pf2-wiki-key') key = '',
+  ): Promise<unknown> {
+    this.requireWikiInternalKey(key)
+    return this.service.wikiCharacterHelp(wikiUsername, npcId, wikiIsAdmin === '1')
+  }
+
+  @Post('me/help')
+  updateWikiHelp(
+    @Body() body: { wikiUsername?: unknown; npcId?: unknown; field?: unknown;
+      value?: unknown; wikiIsAdmin?: boolean },
+    @Headers('x-pf2-wiki-key') key = '',
+  ): Promise<unknown> {
+    this.requireWikiInternalKey(key)
+    return this.service.updateWikiCharacterHelp(
+      typeof body.wikiUsername === 'string' ? body.wikiUsername : '',
+      typeof body.npcId === 'string' ? body.npcId : '',
+      typeof body.field === 'string' ? body.field as any : '' as any,
+      body.value, body.wikiIsAdmin === true,
+    )
+  }
+
   @Get('me') me(@Query('wikiUsername') wikiUsername = '', @Query('wikiIsAdmin') wikiIsAdmin = '', @Headers('x-pf2-wiki-key') key = ''): Promise<unknown> { this.requireWikiInternalKey(key); return this.service.myCharacters(wikiUsername, wikiIsAdmin === '1') }
   @Post('me/background') updateMyBackground(@Body() body: { wikiUsername?: unknown; npcId?: unknown; content?: unknown; wikiIsAdmin?: boolean }, @Headers('x-pf2-wiki-key') key = ''): Promise<unknown> { this.requireWikiInternalKey(key); return this.service.updateMyBackground(typeof body.wikiUsername === 'string' ? body.wikiUsername : '', typeof body.npcId === 'string' ? body.npcId : '', body.content, body.wikiIsAdmin === true) }
   @Post('me/short-description') updateMyShortDescription(@Body() body: { wikiUsername?: unknown; npcId?: unknown; content?: unknown; wikiIsAdmin?: boolean }, @Headers('x-pf2-wiki-key') key = ''): Promise<unknown> { this.requireWikiInternalKey(key); return this.service.updateMyShortDescription(typeof body.wikiUsername === 'string' ? body.wikiUsername : '', typeof body.npcId === 'string' ? body.npcId : '', body.content, body.wikiIsAdmin === true) }

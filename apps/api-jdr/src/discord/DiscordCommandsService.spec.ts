@@ -45,6 +45,48 @@ describe('DiscordCommandsService', () => {
     expect(editReply).toHaveBeenCalledWith('État mis à jour.')
   })
 
+  it('opens /aide privately and displays the next level when it is pending', async () => {
+    const discordId = '399621722158137346'
+    const codex = {
+      discordCharacterHelps: jest.fn(async (id: string) => id === discordId
+        ? [{ npcId: 'npc_pj_pepin', displayName: 'Pépin' }] : []),
+      discordCharacterHelp: jest.fn(async () => ({
+        npcId: 'npc_pj_pepin', displayName: 'Pépin', currentLevel: 3,
+        theoreticalLevel: 4, pendingLevelUp: true, foundryUuid: 'Actor.ABC',
+        howToPlay: 'Comment jouer', nextLevel: 'Choisir des dons', nextLevelFor: 4,
+      })),
+    }
+    const service = new DiscordCommandsService({} as never, {} as never, codex as never)
+    expect(service.definitions().map(i => i.name)).toContain('aide')
+    const reply = jest.fn().mockResolvedValue(undefined)
+    await service.handle({ commandName: 'aide', user: { id: discordId }, reply } as never)
+    expect(reply).toHaveBeenCalledWith(expect.objectContaining({ ephemeral: true,
+      components: [expect.anything()] }))
+    const row = reply.mock.calls[0][0].components[0]
+    expect(row.components[0].toJSON().options[0].value).toBe('npc_pj_pepin')
+    const update = jest.fn().mockResolvedValue(undefined)
+    await service.handleComponent({ customId: 'pf2-character-help:' + discordId,
+      user: { id: discordId }, values: ['npc_pj_pepin'], update, reply: jest.fn() } as never)
+    expect(update).toHaveBeenCalledWith(expect.objectContaining({
+      content: expect.stringContaining('Faire son prochain niveau (4)'), components: [],
+    }))
+    expect(update.mock.calls[0][0].content).toContain('Choisir des dons')
+    expect(update.mock.calls[0][0].content).not.toContain('Comment jouer')
+    await service.handleComponent({ customId: 'pf2-character-help:' + discordId,
+      user: { id: 'another-user' }, values: ['npc_pj_pepin'], update,
+      reply: jest.fn().mockResolvedValue(undefined) } as never)
+    expect(update).toHaveBeenCalledTimes(1)
+    codex.discordCharacterHelp.mockResolvedValueOnce({
+      npcId: 'npc_pj_pepin', displayName: 'Pépin', currentLevel: 4,
+      theoreticalLevel: 4, pendingLevelUp: false, foundryUuid: 'Actor.ABC',
+      howToPlay: 'Jouer et explorer', nextLevel: 'Choisir des dons', nextLevelFor: 4,
+    })
+    await service.handleComponent({ customId: 'pf2-character-help:' + discordId,
+      user: { id: discordId }, values: ['npc_pj_pepin'], update, reply: jest.fn() } as never)
+    expect(update.mock.calls.at(-1)![0].content).toContain('Jouer et explorer')
+    expect(update.mock.calls.at(-1)![0].content).not.toContain('Choisir des dons')
+  })
+
   it('registers an emoji argument and routes the icon-changing slash command to the quest service', async () => {
     const pilot = { changeQuestIconCommand: jest.fn().mockResolvedValue(undefined) }
     const service = new DiscordCommandsService({} as never, {} as never, undefined, undefined, undefined, undefined, undefined, pilot as never)
@@ -1506,6 +1548,7 @@ describe('DiscordCommandsService', () => {
       activeSessionForDiscordChannel: jest.fn().mockResolvedValue({ id: 'session-12', sessionNumber: 12 }),
       listSessions: jest.fn().mockResolvedValue([{ id: 'session-12', sessionNumber: 12 }]),
       updateSession: jest.fn(), closeSessionDiscordChannel: jest.fn(),
+      readFoundryActorCache: jest.fn().mockResolvedValue([]),
     }
     const reply = jest.fn().mockResolvedValue(undefined)
     const reputations = { list: jest.fn().mockResolvedValue([{ id: 1, name: 'Absalom', entries: [{ id: 11, name: 'Habitants', score: 0 }] }]) }

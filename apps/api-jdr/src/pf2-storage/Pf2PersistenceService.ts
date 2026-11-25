@@ -2011,6 +2011,21 @@ export class Pf2PersistenceService implements OnModuleInit {
       await manager.query("UPDATE pf2_choice_quest SET nature=CASE kind WHEN 'blocked' THEN 'mission' WHEN 'personal' THEN 'rp' ELSE kind END, blocked=CASE WHEN kind='blocked' THEN 1 ELSE 0 END, personal=CASE WHEN kind='personal' THEN 1 ELSE 0 END")
     })
     await this.applyMigration('059-foundry-embedded-item-edits', migrateFoundryItemEdits)
+    await this.applyMigration('060-player-character-help', async manager => {
+      await manager.query(`CREATE TABLE IF NOT EXISTS pf2_player_character_help (
+        npc_id TEXT PRIMARY KEY,
+        how_to_play TEXT NOT NULL DEFAULT '',
+        next_level TEXT NOT NULL DEFAULT '',
+        progression TEXT NOT NULL DEFAULT '',
+        next_level_for INTEGER,
+        updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        CHECK(next_level_for IS NULL OR (next_level_for BETWEEN 2 AND 20))
+      )`)
+      for (const npcId of ['npc_pj_sashka', 'npc_pj_pepin', 'npc_pj_zab', 'npc_pj_vaga', 'npc_pj_neyla_ketta']) {
+        await manager.query('INSERT OR IGNORE INTO pf2_player_character_help(npc_id) VALUES (?)', [npcId])
+      }
+    })
+
     await this.assertDatabaseIntegrity(this.dataSource, 'base SQLite après migrations')
   }
 

@@ -20,6 +20,59 @@ describe('PlayerCodexService', () => {
     await persistence.saveRecord('pnj', { id: 'janira', nom: 'Janira Gavix', factions: ['Secret MJ'] })
     return { persistence, codex: new PlayerCodexService(source!, persistence) }
   }
+  it('stores guided character sections and enforces wiki/Discord permissions and level switching', async () => {
+    const { persistence, codex } = await open()
+    const ids = ['npc_pj_pepin', 'npc_pj_sashka', 'npc_pj_zab', 'npc_pj_vaga', 'npc_pj_neyla_ketta']
+    for (const id of ids) {
+      await persistence.saveRecord('pnj', { id, nom: id })
+      await codex.createCharacter({ npcId: id, displayName: ({
+        npc_pj_pepin: 'Pépin', npc_pj_sashka: 'Sashka', npc_pj_zab: 'Zab',
+        npc_pj_vaga: 'Vaga', npc_pj_neyla_ketta: 'Neyla Ketta',
+      } as Record<string, string>)[id], wikiPageTitle: 'Personnage:' + id, isPlayer: true })
+    }
+    await source!.query("INSERT INTO pf2_player_character_owner(discord_user_id,npc_id) VALUES (?,?)",
+      ['399621722158137346', 'npc_pj_pepin'])
+    await source!.query("INSERT INTO pf2_wiki_account_link(discord_user_id,wiki_username) VALUES (?,?)",
+      ['399621722158137346', 'EricWiki'])
+
+    expect((await codex.discordCharacterHelps('492387405760823297')).map(i => i.npcId)).toHaveLength(5)
+    expect((await codex.discordCharacterHelps('399621722158137346')).map(i => i.npcId))
+      .toEqual(['npc_pj_pepin'])
+    expect(await codex.discordCharacterHelps('688860103629340690')).toEqual([])
+    await expect(codex.discordCharacterHelp('399621722158137346', 'npc_pj_zab'))
+      .rejects.toThrow('ne peux pas')
+    await expect(codex.wikiCharacterHelp('OtherWiki', 'npc_pj_pepin')).rejects.toThrow('inaccessible')
+    await expect(codex.wikiCharacterHelp('EricWiki', 'npc_pj_zab')).rejects.toThrow('inaccessible')
+    await expect(codex.updateWikiCharacterHelp('EricWiki', 'npc_pj_pepin', 'howToPlay', 'pirouette'))
+      .rejects.toThrow('MJ')
+    await expect(codex.updateWikiCharacterHelp('MJ', 'npc_pj_pepin', 'howToPlay', 'x'.repeat(1701), true))
+      .rejects.toThrow('1700')
+    await expect(codex.updateWikiCharacterHelp('MJ', 'npc_pj_pepin', 'nextLevelFor', 25, true))
+      .rejects.toThrow('2 et 20')
+    await codex.updateWikiCharacterHelp('MJ', 'npc_pj_pepin', 'howToPlay', 'Social et exploration', true)
+    await codex.updateWikiCharacterHelp('MJ', 'npc_pj_pepin', 'nextLevel', 'Choisir un don', true)
+    await codex.updateWikiCharacterHelp('MJ', 'npc_pj_pepin', 'nextLevelFor', 4, true)
+    await codex.updateWikiCharacterHelp('MJ', 'npc_pj_pepin', 'progression', 'Piste sociale, sans choix forcé', true)
+    expect(await codex.wikiCharacterHelp('EricWiki', 'npc_pj_pepin')).toMatchObject({
+      howToPlay: 'Social et exploration', nextLevel: 'Choisir un don',
+      nextLevelFor: 4, progression: 'Piste sociale, sans choix forcé', canEdit: false,
+    })
+    await persistence.saveFoundryActorCache([{ name: 'Pépin (Eric)', uuid: 'Actor.ABC123' },
+      { name: 'Neyla (Sameh)', uuid: 'Actor.DEF456' }])
+    await persistence.saveFoundryPlayerLevels([
+      { uuid: 'Actor.ABC123', foundryLevel: 3, theoreticalLevel: 4 },
+      { uuid: 'Actor.DEF456', foundryLevel: 3, theoreticalLevel: 3 },
+    ])
+    expect(await codex.discordCharacterHelp('399621722158137346', 'npc_pj_pepin'))
+      .toMatchObject({ currentLevel: 3, theoreticalLevel: 4, pendingLevelUp: true })
+    expect(await codex.playerHelpLevels('npc_pj_neyla_ketta'))
+      .toMatchObject({ currentLevel: 3, theoreticalLevel: 3, pendingLevelUp: false })
+    await persistence.saveFoundryPlayerLevels([{ uuid: 'Actor.ABC123', foundryLevel: 4, theoreticalLevel: 4 }])
+    expect(await codex.discordCharacterHelp('399621722158137346', 'npc_pj_pepin'))
+      .toMatchObject({ currentLevel: 4, theoreticalLevel: 4, pendingLevelUp: false })
+    expect((await source!.query('SELECT COUNT(*) AS total FROM pf2_player_character_help'))[0].total).toBe(5)
+  })
+
   it('keeps player factions independent from MJ truth while allowing an explicit association', async () => {
     const { persistence, codex } = await open()
     await persistence.saveRecord('faction', { id: 'faction_aspis', nom: 'Consortium de l’Aspis', description: 'Secret MJ.', published: false })

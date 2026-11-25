@@ -8,6 +8,7 @@
 - [Réputations personnelles, Relations et intermèdes PF2](pf2/outils/reputations-relations.md)
 - [Foundry et portraits](pf2/outils/foundry.md)
 - [Wiki, résumés et Discord](pf2/outils/wiki-discord.md)
+- [Aide personnalisée des PJ — Discord et Wiki](pf2/outils/aide-personnages.md)
 - [Fin de séance Discord : XP, pièces, butin et réputations](docs/pf2/discord-session-end.md)
 - [Aide XP admin par séance sur le wiki](docs/pf2/wiki-session-xp-aid.md)
 - [Prix du quotidien et calcul des voyages](pf2/outils/prix-voyages.md)

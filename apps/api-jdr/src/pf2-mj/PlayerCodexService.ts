@@ -9,6 +9,7 @@ import { claimSessionCoinAward, finishSessionCoinAward, listSessionCoinAwards, r
 import { FoundryRelayService } from '../foundry/FoundryRelayService'
 import { CharacterPresentationCard } from '../foundry/FoundryCharacterChat'
 import { levelForCareerXp } from '../pf2-sessions/Pf2CareerXp'
+import { GUIDED_CHARACTER_IDS, normalizeCharacterHelpName, PlayerHelpField, PlayerHelpLevel } from './PlayerCharacterHelp'
 import { MediaWikiClientService } from './MediaWikiClientService'
 
 type ProfileRow = { npc_id: string; wiki_page_title: string; display_name: string; wiki_portrait_filename: string | null; short_description: string; ancestry: string; character_class: string; objective: string; personality: string; is_player: number; is_published: number; created_at: string; updated_at: string }
@@ -416,6 +417,129 @@ export class PlayerCodexService implements OnModuleInit, OnModuleDestroy {
       if (!row.length) throw new NotFoundException('Associe d’abord ce PNJ comme contact du PJ.')
     }
     return { portraitKnown: known }
+  }
+
+  private async authorizedHelpNpc(npcId: string): Promise<{ npcId: string; displayName: string }> {
+    if (!(GUIDED_CHARACTER_IDS as readonly string[]).includes(npcId)) {
+      throw new NotFoundException('Aide indisponible pour ce personnage.')
+    }
+    const rows = await this.db.query(
+      'SELECT npc_id AS npcId, display_name AS displayName FROM pf2_player_character_profile WHERE npc_id=? AND is_player=1 LIMIT 1',
+      [npcId],
+    ) as Array<{ npcId: string; displayName: string }>
+    if (!rows[0]) throw new NotFoundException('Personnage joueur introuvable.')
+    return rows[0]
+  }
+
+  /** Discord access relies on persisted owners (and the known MJ ID). */
+  async discordCharacterHelps(discordUserId: string): Promise<Array<{ npcId: string; displayName: string }>> {
+    if (!/^\d{15,22}$/.test(discordUserId)) return []
+    const admin = discordUserId === '492387405760823297'
+    const placeholders = GUIDED_CHARACTER_IDS.map(() => '?').join(',')
+    const rows = await this.db.query(
+      'SELECT p.npc_id AS npcId, p.display_name AS displayName FROM pf2_player_character_profile p '
+      + 'WHERE p.is_player=1 AND p.npc_id IN (' + placeholders + ') '
+      + 'AND (?=1 OR EXISTS(SELECT 1 FROM pf2_player_character_owner o '
+      + 'WHERE o.npc_id=p.npc_id AND o.discord_user_id=?)) ORDER BY p.display_name COLLATE NOCASE',
+      [...GUIDED_CHARACTER_IDS, admin ? 1 : 0, discordUserId],
+    ) as Array<{ npcId: string; displayName: string }>
+    return rows
+  }
+
+  /** Wiki access is checked on the backend, never through JavaScript alone. */
+  private async requireWikiHelpAccess(wikiUsername: string, npcId: string, isWikiAdmin: boolean): Promise<void> {
+    if (!wikiUsername.trim()) throw new ForbiddenException('Connexion Wiki requise.')
+    await this.authorizedHelpNpc(npcId)
+    if (isWikiAdmin) return
+    const rows = await this.db.query(
+      'SELECT 1 FROM pf2_player_character_owner o JOIN pf2_wiki_account_link a '
+      + 'ON a.discord_user_id=o.discord_user_id '
+      + 'WHERE o.npc_id=? AND a.wiki_username=? COLLATE NOCASE LIMIT 1',
+      [npcId, wikiUsername],
+    ) as Array<Record<string, unknown>>
+    if (!rows.length) throw new ForbiddenException('Aide inaccessible pour ce personnage.')
+  }
+
+  async playerHelpLevels(npcId: string): Promise<PlayerHelpLevel> {
+    const { displayName } = await this.authorizedHelpNpc(npcId)
+    const allActors = await this.persistence.readFoundryActorCache()
+    // The playable Foundry actor is named 'Neyla (Sameh)', while the wiki
+    // profile is 'Neyla Ketta'. The suffix in parentheses excludes archives.
+    const name = normalizeCharacterHelpName(npcId === 'npc_pj_neyla_ketta' ? 'Neyla' : displayName)
+    const matching = allActors.filter(actor => {
+      const actualName = normalizeCharacterHelpName(actor.name)
+      return actualName.startsWith(name + ' (')
+    })
+    const actor = matching.length === 1 ? matching[0] : null
+    if (!actor) return { currentLevel: null, theoreticalLevel: null, pendingLevelUp: false, foundryUuid: null }
+    const levels = await this.persistence.readFoundryPlayerLevels()
+    const level = levels.get(actor.uuid)
+    if (!level) return { currentLevel: null, theoreticalLevel: null, pendingLevelUp: false, foundryUuid: actor.uuid }
+    return { currentLevel: level.foundryLevel, theoreticalLevel: level.theoreticalLevel,
+      pendingLevelUp: level.theoreticalLevel > level.foundryLevel, foundryUuid: actor.uuid }
+  }
+
+  async characterHelp(npcId: string): Promise<{
+    npcId: string; displayName: string; howToPlay: string; nextLevel: string;
+    nextLevelFor: number | null; progression: string;
+    currentLevel: number | null; theoreticalLevel: number | null;
+    pendingLevelUp: boolean; foundryUuid: string | null;
+  }> {
+    const profile = await this.authorizedHelpNpc(npcId)
+    const rows = await this.db.query(
+      'SELECT how_to_play AS howToPlay, next_level AS nextLevel, progression, next_level_for AS nextLevelFor '
+      + 'FROM pf2_player_character_help WHERE npc_id=?', [npcId],
+    ) as Array<{ howToPlay: string; nextLevel: string; progression: string; nextLevelFor: number | null }>
+    const levels = await this.playerHelpLevels(npcId)
+    return { ...profile, howToPlay: rows[0]?.howToPlay ?? '', nextLevel: rows[0]?.nextLevel ?? '',
+      progression: rows[0]?.progression ?? '', nextLevelFor: rows[0]?.nextLevelFor ?? null, ...levels }
+  }
+
+  async discordCharacterHelp(discordUserId: string, npcId: string) {
+    if (!(await this.discordCharacterHelps(discordUserId)).some(item => item.npcId === npcId)) {
+      throw new ForbiddenException('Tu ne peux pas consulter ce personnage.')
+    }
+    return this.characterHelp(npcId)
+  }
+
+  async wikiCharacterHelp(wikiUsername: string, npcId: string, isWikiAdmin = false) {
+    await this.requireWikiHelpAccess(wikiUsername, npcId, isWikiAdmin)
+    return { ...(await this.characterHelp(npcId)), canEdit: isWikiAdmin }
+  }
+
+  async updateWikiCharacterHelp(
+    wikiUsername: string, npcId: string, field: PlayerHelpField,
+    value: unknown, isWikiAdmin = false,
+  ) {
+    await this.requireWikiHelpAccess(wikiUsername, npcId, isWikiAdmin)
+    if (!isWikiAdmin) throw new ForbiddenException('La rédaction des aides appartient au MJ.')
+    const columns: Record<PlayerHelpField, string> = {
+      howToPlay: 'how_to_play', nextLevel: 'next_level',
+      progression: 'progression', nextLevelFor: 'next_level_for',
+    }
+    if (!Object.prototype.hasOwnProperty.call(columns, field)) {
+      throw new BadRequestException('Section d’aide inconnue.')
+    }
+    const column = columns[field]
+    let stored: string | number | null
+    if (field === 'nextLevelFor') {
+      if (value === null || value === '') stored = null
+      else if (Number.isInteger(value) && (value as number) >= 2 && (value as number) <= 20) stored = value as number
+      else throw new BadRequestException('Le niveau cible doit être compris entre 2 et 20.')
+    } else {
+      const max = field === 'progression' ? 16000 : 1700
+      if (typeof value !== 'string' || value.length > max) {
+        throw new BadRequestException('La section est limitée à ' + max + ' caractères.')
+      }
+      stored = value
+    }
+    await this.db.query(
+      'INSERT INTO pf2_player_character_help (npc_id, ' + column + ') VALUES (?,?) '
+      + 'ON CONFLICT(npc_id) DO UPDATE SET ' + column + '=excluded.' + column
+      + ', updated_at=CURRENT_TIMESTAMP',
+      [npcId, stored],
+    )
+    return this.wikiCharacterHelp(wikiUsername, npcId, true)
   }
 
   async myCharacters(wikiUsername: string, isWikiAdmin = false): Promise<{ wikiUsername: string; characters: unknown[] }> {

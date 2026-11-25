@@ -5,6 +5,7 @@ import { ActionRowBuilder, AutocompleteInteraction, ButtonBuilder, ButtonInterac
 import { FoundryRelayService } from '../foundry/FoundryRelayService'
 import { DiscordQuestRecapPart, Pf2PersistenceService } from '../pf2-storage/Pf2PersistenceService'
 import { PlayerCodexService } from '../pf2-mj/PlayerCodexService'
+import { selectHelpDiscordSection } from '../pf2-mj/PlayerCharacterHelp'
 import { MediaWikiClientService } from '../pf2-mj/MediaWikiClientService'
 import { DiscordResumeSync, DiscordService } from './DiscordService'
 import { DiscordQuestPilotService } from './DiscordQuestPilotService'
@@ -143,6 +144,7 @@ export class DiscordCommandsService {
       new SlashCommandBuilder().setName('random-perso').setDescription('Tire au hasard une ascendance, une classe et un genre.').setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild).toJSON(),
       new SlashCommandBuilder().setName('tirage-sort-joueur').setDescription('Tire au sort des personnes parmi une sélection Discord.').setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild).toJSON(),
       new SlashCommandBuilder().setName('help').setDescription('Affiche les commandes PF2 disponibles.').toJSON(),
+      new SlashCommandBuilder().setName('aide').setDescription('Guide de jeu et de progression de ton personnage.').toJSON(),
       new SlashCommandBuilder().setName('nouvelle-quete').setDescription('Créer une quête dans le journal avec une fiche interactive.').toJSON(),
       new SlashCommandBuilder().setName('changer-icone-quete')
         .setDescription('Change l’emoji du titre de cette quête.')
@@ -233,6 +235,10 @@ export class DiscordCommandsService {
       await this.helpCommand(interaction as ChatInputCommandInteraction)
       return true
     }
+    if (interaction.commandName === 'aide') {
+      await this.characterHelpCommand(interaction as ChatInputCommandInteraction)
+      return true
+    }
     if (interaction.commandName === 'choix-quete') {
       await this.choiceCommand(interaction as ChatInputCommandInteraction)
       return true
@@ -294,6 +300,67 @@ export class DiscordCommandsService {
     return false
   }
 
+  private async characterHelpCommand(interaction: ChatInputCommandInteraction): Promise<void> {
+    if (!this.playerCodex) {
+      await interaction.reply({ content: 'Le service des aides de personnages est indisponible.', ephemeral: true })
+      return
+    }
+    const options = await this.playerCodex.discordCharacterHelps(interaction.user.id)
+    if (!options.length) {
+      await interaction.reply({
+        content: 'Aucune aide de personnage ne t’est attribuée. Demande au MJ si ton personnage devrait apparaître ici.',
+        ephemeral: true,
+      })
+      return
+    }
+    const selector = new StringSelectMenuBuilder()
+      .setCustomId('pf2-character-help:' + interaction.user.id)
+      .setPlaceholder('Choisir un ou plusieurs personnages')
+      .setMinValues(1)
+      .setMaxValues(options.length)
+      .addOptions(options.map(item => ({ label: item.displayName, value: item.npcId })))
+    await interaction.reply({
+      content: '**Aide aux personnages**\nSélectionne le ou les personnages à consulter :',
+      components: [new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(selector)],
+      ephemeral: true,
+      allowedMentions: { parse: [] },
+    })
+  }
+
+  private async characterHelpSelection(interaction: StringSelectMenuInteraction): Promise<void> {
+    if (!this.playerCodex || interaction.customId !== 'pf2-character-help:' + interaction.user.id) {
+      await interaction.reply({ content: 'Sélection réservée à son auteur.', ephemeral: true })
+      return
+    }
+    const options = await this.playerCodex.discordCharacterHelps(interaction.user.id)
+    const allowed = new Set(options.map(item => item.npcId))
+    const selected = [...new Set(interaction.values)]
+    if (!selected.length || selected.some(id => !allowed.has(id))) {
+      await interaction.reply({ content: 'Personnage non autorisé. Relance /aide.', ephemeral: true })
+      return
+    }
+    const texts: string[] = []
+    for (const npcId of selected) {
+      const help = await this.playerCodex.discordCharacterHelp(interaction.user.id, npcId)
+      const section = selectHelpDiscordSection(help, help)
+      const levelNote = help.currentLevel !== null && help.theoreticalLevel !== null
+        ? 'Niveau Foundry ' + help.currentLevel + ' / acquis ' + help.theoreticalLevel
+        : 'Niveau Foundry indisponible : vérifier la synchronisation'
+      const text = '**' + help.displayName + ' — ' + section.title + '**\n'
+        + '_' + levelNote + '_\n\n' + section.content
+      texts.push(text.length <= 2000 ? text : text.slice(0, 1990) + '…')
+    }
+    if (texts.length === 1) {
+      await interaction.update({ content: texts[0], components: [], allowedMentions: { parse: [] } })
+    } else {
+      await interaction.update({ content: 'Aides privées pour ' + texts.length + ' personnages :',
+        components: [], allowedMentions: { parse: [] } })
+      for (const text of texts) {
+        await interaction.followUp({ content: text, ephemeral: true, allowedMentions: { parse: [] } })
+      }
+    }
+  }
+
   private async helpCommand(interaction: ChatInputCommandInteraction): Promise<void> {
     await interaction.reply({
       content: [
@@ -309,6 +376,7 @@ export class DiscordCommandsService {
         '`/nouvelle-faction` — crée une faction ou sous-faction dans le carnet des joueurs.',
         '`/rechercher` — recherche au même endroit un personnage ou une faction publiée, puis permet de le/la partager.',
         '`/wiki` — ouvre le Wiki avec ton compte déjà connecté.',
+        '`/aide` — consulte comment jouer ton PJ ou préparer son prochain niveau.',
         '`/help` — affiche cette aide.',
       ].join('\n'),
       ephemeral: true,
@@ -2863,6 +2931,11 @@ export class DiscordCommandsService {
   }
 
   async handleComponent(interaction: StringSelectMenuInteraction): Promise<boolean> {
+    if (interaction.customId.startsWith('pf2-character-help:')) {
+      await this.characterHelpSelection(interaction)
+      return true
+    }
+
     if (interaction.customId.startsWith('pf2-quest-ui:')) return this.questPilot!.handleSelect(interaction)
 
     if (interaction.customId.startsWith('pf2-manual-session:date:')) {

@@ -322,6 +322,9 @@
                 } ).catch( function () {
                     privateView.textContent = 'Accès MJ refusé ou document indisponible.';
                 } );
+            } else if ( name === 'aide' ) {
+                if ( window.pf2RenderCharacterHelp ) window.pf2RenderCharacterHelp( panel, character, isMjAdmin );
+                else panel.textContent = 'Aide indisponible.';
             } else if ( name === 'horoscope' && character.npcId === 'npc_pj_eryn' ) {
                 window.pf2RenderHoroscopes( panel, character );
             } else if ( name === 'relations' && character.npcId === 'npc_pj_pepin' ) {
@@ -335,6 +338,9 @@
 		}
 
 		var items = [ [ 'fiche', 'Fiche' ], [ 'background', 'Background' ], [ 'notes', 'Notes' ] ];
+        if ( [ 'npc_pj_sashka', 'npc_pj_pepin', 'npc_pj_zab', 'npc_pj_vaga', 'npc_pj_neyla_ketta' ].indexOf( character.npcId ) !== -1 ) {
+            items.push( [ 'aide', 'Aide' ] );
+        }
 		if ( character.npcId === 'npc_pj_pepin' ) items.push( [ 'relations', 'Contacts' ] );
 		if ( character.npcId === 'npc_pj_eryn' ) items.push( [ 'horoscope', 'Horoscope' ] );
 		items.push( [ 'contacts', 'Relations' ] );

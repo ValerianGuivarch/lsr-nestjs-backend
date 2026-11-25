@@ -312,3 +312,7 @@ proxy : il faut servir la chaîne complète Sectigo, comme sur
 wiki.l7r.fr. La publication des personnages ne dépend désormais plus
 de cette connexion HTTPS navigateur, mais d'autres appels API du toolkit
 peuvent toujours en souffrir.
+
+## Aide privée des PJ (25 novembre 2026)
+
+Les cinq PJ Sashka, Pépin, Zab, Vaga et Neyla disposent d'un onglet **Aide** privé sur le Wiki. Les trois sections sont **Comment le jouer**, **Faire son prochain niveau**, **Comment progresser**. L'admin Wiki peut lire et modifier ; le propriétaire peut lire. La commande Discord /aide sélectionne les personnages autorisés et affiche automatiquement le guide immédiat ou le prochain niveau selon Foundry. Voir [Aide aux personnages](aide-personnages.md).

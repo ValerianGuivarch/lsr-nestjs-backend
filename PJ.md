@@ -34,3 +34,7 @@ La documentation technique de référence est [Visibilité des personnages PF2](
 ## Champ Caractère des douze PJ
 
 L'onglet **Fiche** du wiki contient un champ **Caractère** éditable (2 à 3 phrases, sans secret MJ) dans `pf2_player_character_profile.personality`. Les propositions initiales sont établies à partir du Background SQLite et des notes de continuité MJ, sans révéler d'éléments réservés au MJ. La validation et les retouches finales appartiennent au MJ.
+
+## Aide guidée des personnages
+
+Les guides personnalisés de **Sashka, Pépin, Zab, Vaga et Neyla** sont décrits dans [Aide aux personnages](pf2/outils/aide-personnages.md). Leurs trois textes éditables vivent en SQLite et sont consultés via l'onglet personnel **Aide** du Wiki ou la commande privée Discord **/aide**. Les autres PJ restent autonomes.

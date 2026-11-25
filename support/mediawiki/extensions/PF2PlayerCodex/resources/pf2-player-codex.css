@@ -102,3 +102,11 @@
 .pf2-horoscope-score{display:flex;flex:0 1 auto;flex-direction:column;gap:.35rem;align-items:flex-end;max-width:100%}
 .pf2-horoscope-score strong{font-variant-numeric:tabular-nums}
 @media(max-width:600px){.pf2-horoscope-row{gap:.65rem}.pf2-horoscope-score{flex:1 1 100%;align-items:flex-start}}
+
+/* Aide des PJ : texte uniquement sur les pages privées Mes personnages. */
+.pf2-player-help-section { margin: 1.1em 0; }
+.pf2-player-help-content { white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.55; }
+.pf2-player-help-editor { box-sizing: border-box; width: 100%; min-height: 11em; }
+.pf2-player-help-status { font-weight: 600; margin-bottom: 1.2em; }
+.pf2-player-help-target { margin: .7em 0 1.4em; }
+.pf2-player-help-target button, .pf2-player-help-section button { margin-left: .5em; }
