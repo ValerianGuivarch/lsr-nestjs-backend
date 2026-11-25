@@ -2026,6 +2026,13 @@ export class Pf2PersistenceService implements OnModuleInit {
       }
     })
 
+    await this.applyMigration('061-player-help-unfinished-level', async manager => {
+      // Character level and completed level-up choices are distinct concepts.
+      await manager.query('ALTER TABLE pf2_player_character_help ADD COLUMN unfinished_level INTEGER CHECK(unfinished_level IS NULL OR (unfinished_level BETWEEN 2 AND 20))')
+      // MJ explicitly confirmed on 25 Nov: Pépin is 4 but has not finalized his level 4.
+      // Seed only once; later changes in the Wiki must remain authoritative.
+      await manager.query("UPDATE pf2_player_character_help SET unfinished_level=4, next_level_for=COALESCE(next_level_for, 4), updated_at=CURRENT_TIMESTAMP WHERE npc_id='npc_pj_pepin' AND unfinished_level IS NULL")
+    })
     await this.assertDatabaseIntegrity(this.dataSource, 'base SQLite après migrations')
   }
 

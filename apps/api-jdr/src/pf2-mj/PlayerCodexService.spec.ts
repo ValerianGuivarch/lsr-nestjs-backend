@@ -55,8 +55,13 @@ describe('PlayerCodexService', () => {
     await codex.updateWikiCharacterHelp('MJ', 'npc_pj_pepin', 'progression', 'Piste sociale, sans choix forcé', true)
     expect(await codex.wikiCharacterHelp('EricWiki', 'npc_pj_pepin')).toMatchObject({
       howToPlay: 'Social et exploration', nextLevel: 'Choisir un don',
-      nextLevelFor: 4, progression: 'Piste sociale, sans choix forcé', canEdit: false,
+      nextLevelFor: 4, unfinishedLevel: 4,
+      progression: 'Piste sociale, sans choix forcé', canEdit: false,
     })
+    // Seeded from the MJ's explicit correction, not inferred from Foundry's level.
+    expect((await source!.query("SELECT unfinished_level FROM pf2_player_character_help WHERE npc_id='npc_pj_pepin'"))[0].unfinished_level).toBe(4)
+    await expect(codex.updateWikiCharacterHelp('EricWiki', 'npc_pj_pepin', 'unfinishedLevel', null))
+      .rejects.toThrow('MJ')
     await persistence.saveFoundryActorCache([{ name: 'Pépin (Eric)', uuid: 'Actor.ABC123' },
       { name: 'Neyla (Sameh)', uuid: 'Actor.DEF456' }])
     await persistence.saveFoundryPlayerLevels([
@@ -69,7 +74,16 @@ describe('PlayerCodexService', () => {
       .toMatchObject({ currentLevel: 3, theoreticalLevel: 3, pendingLevelUp: false })
     await persistence.saveFoundryPlayerLevels([{ uuid: 'Actor.ABC123', foundryLevel: 4, theoreticalLevel: 4 }])
     expect(await codex.discordCharacterHelp('399621722158137346', 'npc_pj_pepin'))
-      .toMatchObject({ currentLevel: 4, theoreticalLevel: 4, pendingLevelUp: false })
+      .toMatchObject({ currentLevel: 4, theoreticalLevel: 4, pendingLevelUp: true, levelToComplete: 4 })
+    await codex.updateWikiCharacterHelp('MJ', 'npc_pj_pepin', 'unfinishedLevel', null, true)
+    expect(await codex.discordCharacterHelp('399621722158137346', 'npc_pj_pepin'))
+      .toMatchObject({ currentLevel: 4, theoreticalLevel: 4, pendingLevelUp: false, levelToComplete: null })
+    // If an old manual marker remains after a real level change, it must not
+    // send the previous level's guide.
+    await codex.updateWikiCharacterHelp('MJ', 'npc_pj_pepin', 'unfinishedLevel', 4, true)
+    await persistence.saveFoundryPlayerLevels([{ uuid: 'Actor.ABC123', foundryLevel: 5, theoreticalLevel: 5 }])
+    expect(await codex.discordCharacterHelp('399621722158137346', 'npc_pj_pepin'))
+      .toMatchObject({ currentLevel: 5, theoreticalLevel: 5, pendingLevelUp: false })
     expect((await source!.query('SELECT COUNT(*) AS total FROM pf2_player_character_help'))[0].total).toBe(5)
   })
 

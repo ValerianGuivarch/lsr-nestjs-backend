@@ -460,7 +460,7 @@ export class PlayerCodexService implements OnModuleInit, OnModuleDestroy {
     if (!rows.length) throw new ForbiddenException('Aide inaccessible pour ce personnage.')
   }
 
-  async playerHelpLevels(npcId: string): Promise<PlayerHelpLevel> {
+  async playerHelpLevels(npcId: string, unfinishedLevel: number | null = null): Promise<PlayerHelpLevel> {
     const { displayName } = await this.authorizedHelpNpc(npcId)
     const allActors = await this.persistence.readFoundryActorCache()
     // The playable Foundry actor is named 'Neyla (Sameh)', while the wiki
@@ -471,28 +471,37 @@ export class PlayerCodexService implements OnModuleInit, OnModuleDestroy {
       return actualName.startsWith(name + ' (')
     })
     const actor = matching.length === 1 ? matching[0] : null
-    if (!actor) return { currentLevel: null, theoreticalLevel: null, pendingLevelUp: false, foundryUuid: null }
+    if (!actor) return { currentLevel: null, theoreticalLevel: null,
+      pendingLevelUp: unfinishedLevel !== null, levelToComplete: unfinishedLevel, foundryUuid: null }
     const levels = await this.persistence.readFoundryPlayerLevels()
     const level = levels.get(actor.uuid)
-    if (!level) return { currentLevel: null, theoreticalLevel: null, pendingLevelUp: false, foundryUuid: actor.uuid }
+    if (!level) return { currentLevel: null, theoreticalLevel: null,
+      pendingLevelUp: unfinishedLevel !== null, levelToComplete: unfinishedLevel, foundryUuid: actor.uuid }
+    // An Actor at level 4 may still have all level-4 feat selections to make.
+    // Ignore a stale unfinished marker when its level no longer matches Foundry.
+    const explicit = unfinishedLevel === level.foundryLevel ? unfinishedLevel : null
+    const target = explicit ?? (level.theoreticalLevel > level.foundryLevel ? level.foundryLevel + 1 : null)
     return { currentLevel: level.foundryLevel, theoreticalLevel: level.theoreticalLevel,
-      pendingLevelUp: level.theoreticalLevel > level.foundryLevel, foundryUuid: actor.uuid }
+      pendingLevelUp: target !== null, levelToComplete: target, foundryUuid: actor.uuid }
   }
 
   async characterHelp(npcId: string): Promise<{
     npcId: string; displayName: string; howToPlay: string; nextLevel: string;
-    nextLevelFor: number | null; progression: string;
+    nextLevelFor: number | null; unfinishedLevel: number | null; progression: string;
     currentLevel: number | null; theoreticalLevel: number | null;
-    pendingLevelUp: boolean; foundryUuid: string | null;
+    pendingLevelUp: boolean; levelToComplete: number | null; foundryUuid: string | null;
   }> {
     const profile = await this.authorizedHelpNpc(npcId)
     const rows = await this.db.query(
-      'SELECT how_to_play AS howToPlay, next_level AS nextLevel, progression, next_level_for AS nextLevelFor '
+      'SELECT how_to_play AS howToPlay, next_level AS nextLevel, progression, '
+      + 'next_level_for AS nextLevelFor, unfinished_level AS unfinishedLevel '
       + 'FROM pf2_player_character_help WHERE npc_id=?', [npcId],
-    ) as Array<{ howToPlay: string; nextLevel: string; progression: string; nextLevelFor: number | null }>
-    const levels = await this.playerHelpLevels(npcId)
+    ) as Array<{ howToPlay: string; nextLevel: string; progression: string; nextLevelFor: number | null; unfinishedLevel: number | null }>
+    const unfinishedLevel = rows[0]?.unfinishedLevel ?? null
+    const levels = await this.playerHelpLevels(npcId, unfinishedLevel)
     return { ...profile, howToPlay: rows[0]?.howToPlay ?? '', nextLevel: rows[0]?.nextLevel ?? '',
-      progression: rows[0]?.progression ?? '', nextLevelFor: rows[0]?.nextLevelFor ?? null, ...levels }
+      progression: rows[0]?.progression ?? '', nextLevelFor: rows[0]?.nextLevelFor ?? null,
+      unfinishedLevel, ...levels }
   }
 
   async discordCharacterHelp(discordUserId: string, npcId: string) {
@@ -515,14 +524,14 @@ export class PlayerCodexService implements OnModuleInit, OnModuleDestroy {
     if (!isWikiAdmin) throw new ForbiddenException('La rédaction des aides appartient au MJ.')
     const columns: Record<PlayerHelpField, string> = {
       howToPlay: 'how_to_play', nextLevel: 'next_level',
-      progression: 'progression', nextLevelFor: 'next_level_for',
+      progression: 'progression', nextLevelFor: 'next_level_for', unfinishedLevel: 'unfinished_level',
     }
     if (!Object.prototype.hasOwnProperty.call(columns, field)) {
       throw new BadRequestException('Section d’aide inconnue.')
     }
     const column = columns[field]
     let stored: string | number | null
-    if (field === 'nextLevelFor') {
+    if (field === 'nextLevelFor' || field === 'unfinishedLevel') {
       if (value === null || value === '') stored = null
       else if (Number.isInteger(value) && (value as number) >= 2 && (value as number) <= 20) stored = value as number
       else throw new BadRequestException('Le niveau cible doit être compris entre 2 et 20.')

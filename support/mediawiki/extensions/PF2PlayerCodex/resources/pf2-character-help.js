@@ -15,13 +15,19 @@
             var help = response.pf2characterhelp;
             panel.textContent = '';
             var status = document.createElement('p');
-            if (help.currentLevel === null || help.theoreticalLevel === null) {
-                status.textContent = 'Niveau actuel indisponible : vérifier la dernière synchronisation Foundry.';
-            } else {
-                status.textContent = 'Niveau sur Foundry : ' + help.currentLevel
-                    + ' · Niveau acquis : ' + help.theoreticalLevel
-                    + (help.pendingLevelUp ? ' · Niveau à faire !' : ' · À jour');
+            function renderStatus() {
+                if (help.currentLevel === null || help.theoreticalLevel === null) {
+                    status.textContent = 'Niveau Foundry indisponible : vérifier la synchronisation.'
+                        + (help.unfinishedLevel !== null ? ' · Niveau ' + help.unfinishedLevel + ' à finaliser (signalé par le MJ)' : '');
+                } else {
+                    status.textContent = 'Niveau sur Foundry : ' + help.currentLevel
+                        + ' · Niveau acquis : ' + help.theoreticalLevel
+                        + (help.unfinishedLevel === help.currentLevel
+                            ? ' · Choix du niveau ' + help.unfinishedLevel + ' non terminés'
+                            : (help.pendingLevelUp ? ' · Niveau ' + help.levelToComplete + ' à faire' : ' · À jour'));
+                }
             }
+            renderStatus();
             status.className = 'pf2-player-help-status';
             panel.appendChild(status);
 
@@ -123,8 +129,59 @@
                     };
                 };
             }
-            // Keep the target directly after the next-level section.
+            // Distinct from the Actor level: an Actor level 4 can still lack its
+            // level-4 feat and skill choices. The MJ explicitly controls this state.
+            var unfinished = document.createElement('div');
+            unfinished.className = 'pf2-player-help-target';
+            var unfinishedLabel = document.createElement('strong');
+            unfinishedLabel.textContent = 'Niveau à terminer (choix non faits) : ';
+            unfinished.appendChild(unfinishedLabel);
+            var unfinishedValue = document.createElement('span');
+            unfinishedValue.textContent = help.unfinishedLevel || 'Aucun';
+            unfinished.appendChild(unfinishedValue);
+            if (isMjAdmin && help.canEdit) {
+                var editUnfinished = document.createElement('button');
+                editUnfinished.textContent = 'Modifier';
+                unfinished.appendChild(editUnfinished);
+                editUnfinished.onclick = function () {
+                    var input = document.createElement('input');
+                    input.type = 'number'; input.min = 2; input.max = 20;
+                    input.value = help.unfinishedLevel || '';
+                    input.placeholder = 'Vider quand terminé';
+                    var save = document.createElement('button');
+                    save.textContent = 'Enregistrer';
+                    var cancel = document.createElement('button');
+                    cancel.textContent = 'Annuler';
+                    unfinishedValue.hidden = true; editUnfinished.hidden = true;
+                    unfinished.appendChild(input);
+                    unfinished.appendChild(save);
+                    unfinished.appendChild(cancel);
+                    cancel.onclick = function () {
+                        input.remove(); save.remove(); cancel.remove();
+                        unfinishedValue.hidden = false; editUnfinished.hidden = false;
+                    };
+                    save.onclick = function () {
+                        var num = input.value === '' ? '' : Number(input.value);
+                        if (num !== '' && (!Number.isInteger(num) || num < 2 || num > 20)) {
+                            mw.notify('Indique un niveau entre 2 et 20.', { type: 'error' }); return;
+                        }
+                        save.disabled = true;
+                        api().postWithToken('csrf', { action: 'pf2characterhelpupdate',
+                            npcId: character.npcId, field: 'unfinishedLevel',
+                            content: String(num), format: 'json'
+                        }).then(function (result) {
+                            help = result.pf2characterhelpupdate;
+                            unfinishedValue.textContent = help.unfinishedLevel || 'Aucun';
+                            renderStatus();
+                            cancel.onclick();
+                            mw.notify('État de la montée de niveau enregistré.', { type: 'success' });
+                        }).catch(function (error) { save.disabled = false; notifyError(error); });
+                    };
+                };
+            }
+            // Keep the two level controls directly under the next-level section.
             panel.insertBefore(target, panel.children[2].nextSibling);
+            panel.insertBefore(unfinished, target.nextSibling);
         }).catch(function () {
             panel.textContent = 'Aide indisponible ou accès refusé.';
         });

@@ -7,7 +7,7 @@ class ApiPF2CharacterHelpUpdate extends ApiPF2CharacterHelp {
         }
         $params = $this->extractRequestParams();
         $field = $params['field'];
-        $value = $field === 'nextLevelFor'
+        $value = ($field === 'nextLevelFor' || $field === 'unfinishedLevel')
             ? ($params['content'] === '' ? null : (int)$params['content'])
             : $params['content'];
         $data = $this->proxy(trim($params['npcId']), 'POST', [ 'field' => $field, 'value' => $value ]);
@@ -16,7 +16,7 @@ class ApiPF2CharacterHelpUpdate extends ApiPF2CharacterHelp {
     public function getAllowedParams() {
         return [
             'npcId' => [ self::PARAM_TYPE => 'string', self::PARAM_REQUIRED => true ],
-            'field' => [ self::PARAM_TYPE => ['howToPlay', 'nextLevel', 'progression', 'nextLevelFor'], self::PARAM_REQUIRED => true ],
+            'field' => [ self::PARAM_TYPE => ['howToPlay', 'nextLevel', 'progression', 'nextLevelFor', 'unfinishedLevel'], self::PARAM_REQUIRED => true ],
             'content' => [ self::PARAM_TYPE => 'string', self::PARAM_DFLT => '' ],
         ];
     }

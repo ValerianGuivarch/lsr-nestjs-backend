@@ -6,9 +6,9 @@ export const GUIDED_CHARACTER_IDS = [
   'npc_pj_vaga', 'npc_pj_neyla_ketta',
 ] as const
 
-export type PlayerHelpField = 'howToPlay' | 'nextLevel' | 'progression' | 'nextLevelFor'
+export type PlayerHelpField = 'howToPlay' | 'nextLevel' | 'progression' | 'nextLevelFor' | 'unfinishedLevel'
 export type PlayerHelpLevel = { currentLevel: number | null; theoreticalLevel: number | null;
-  pendingLevelUp: boolean; foundryUuid: string | null }
+  pendingLevelUp: boolean; levelToComplete: number | null; foundryUuid: string | null }
 
 export function normalizeCharacterHelpName(name: string): string {
   return name.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim()
@@ -18,10 +18,12 @@ export function selectHelpDiscordSection(
   level: PlayerHelpLevel,
 ): { title: string; content: string; needsLevelUp: boolean } {
   if (level.pendingLevelUp) {
-    const target = (level.currentLevel ?? 0) + 1
+    const target = level.levelToComplete
+    if (target === null) throw new Error('Un niveau à faire nécessite son niveau cible.')
     const isForLevel = help.nextLevelFor === target
     return {
-      title: 'Faire son prochain niveau (' + target + ')',
+      title: level.currentLevel === target ? 'Terminer son niveau ' + target
+        : 'Faire son prochain niveau (' + target + ')',
       content: isForLevel && help.nextLevel.trim() ? help.nextLevel
         : 'Le guide pour le niveau ' + target + ' reste à préparer. Demande conseil au MJ avant de choisir tes dons.',
       needsLevelUp: true,
