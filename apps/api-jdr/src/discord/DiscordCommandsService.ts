@@ -1,5 +1,5 @@
 import { forwardRef, Inject, Injectable, Logger } from '@nestjs/common'
-import { randomBytes } from 'node:crypto'
+import { randomBytes, randomInt } from 'node:crypto'
 import { resolve } from 'node:path'
 import { ActionRowBuilder, AutocompleteInteraction, ButtonBuilder, ButtonInteraction, ButtonStyle, ChannelType, ChatInputCommandInteraction, ModalBuilder, ModalSubmitInteraction, Message, MessageReaction, PartialMessageReaction, PermissionFlagsBits, RESTPostAPIApplicationGuildCommandsJSONBody, SlashCommandBuilder, StringSelectMenuBuilder, StringSelectMenuInteraction, TextInputBuilder, TextInputStyle, UserSelectMenuBuilder, UserSelectMenuInteraction } from 'discord.js'
 import { FoundryRelayService } from '../foundry/FoundryRelayService'
@@ -10,10 +10,11 @@ import { MediaWikiClientService } from '../pf2-mj/MediaWikiClientService'
 import { DiscordResumeSync, DiscordService } from './DiscordService'
 import { DiscordQuestPilotService } from './DiscordQuestPilotService'
 import { Pf2RequestService, RequestStatus } from './Pf2RequestService'
-import { pf2DiscordIdForPlayer, pf2MatchesPlayerOrDiscordAlias, pf2PlayerByDiscordId } from './Pf2PlayerIdentity'
+import { PF2_PLAYER_IDENTITIES, pf2DiscordIdForPlayer, pf2MatchesPlayerOrDiscordAlias, pf2PlayerByDiscordId } from './Pf2PlayerIdentity'
 import { shortSummaryRewardForSession } from '../pf2-sessions/Pf2CareerXp'
 import { Pf2JournalsService } from '../pf2-journals/Pf2JournalsService'
 import { Pf2ReputationService } from '../pf2-reputation/Pf2ReputationService'
+import { ScheduleSearch, parseScheduleFilters } from './DiscordScheduleWeb'
 import { parseSessionFinishWebInput } from './DiscordSessionFinishWeb'
 import { sessionXpAid } from '../pf2-sessions/Pf2SessionXpAid'
 import { FINISH_TTL_MS, finishInt, finishXpForm, finishTreasureForm, finishReputationForm, parseFinishXpForm, parseFinishTreasureForm, parseFinishReputationForm, finishReport, finishReportParts, type SessionFinishDraft, type SessionFinishGroup } from './SessionFinishFlow'
@@ -96,6 +97,7 @@ export class DiscordCommandsService {
     chosenGroups?: ScheduleGroup[]
     selectionLabel?: string
   }>()
+  private readonly scheduleWebLinks = new Map<string, { commandId: string; createdAt: number; voters: SchedulePlayer[]; unavailable: string[]; uncertain: string[]; max: number; busy: boolean; search?: ScheduleSearch; filterKey?: string; selection?: { index: number; score: number; groups: ScheduleGroup[] } }>()
   private readonly pendingSessionValidations = new Map<string, { requesterId: string; channelId: string; content: string; userIds: string[]; planningMessageId?: string; planningContent?: string; reactions?: string; planningDates?: string[] }>()
   private readonly pendingManualSessionValidations = new Map<string, {
     requesterId: string
@@ -1946,8 +1948,8 @@ export class DiscordCommandsService {
     const pending = this.pendingSchedulePublications.get(commandId)!
     const solutions = pending.solutions ?? []
     const page = pending.solutionPage ?? 0
-    const begin = page * 3
-    const visible = solutions.slice(begin, begin + 3)
+    const begin = page * 4
+    const visible = solutions.slice(begin, begin + 4)
     const lines = [
       '**Propositions de groupes — décision MJ privée**',
       `${solutions.length} solution(s) complète(s) optimale(s) conservée(s). Les joueurs moins souvent présents sont prioritaires.`,
@@ -1960,10 +1962,10 @@ export class DiscordCommandsService {
       }
     }
     const choices = visible.map((_, offset) => ({
-      label: `Choisir la proposition ${begin + offset + 1}`, value: `solution:${begin + offset}`,
+      label: `Valider le choix ${begin + offset + 1}`, value: `solution:${begin + offset}`,
     }))
     choices.push({ label: '🎲 Tirer au sort entre les solutions optimales', value: 'random' })
-    if (solutions.length > 3) choices.push({ label: 'Voir les autres propositions', value: 'next' })
+    if (solutions.length > 4) choices.push({ label: 'Voir les autres propositions', value: 'next' })
     choices.push({ label: 'Modifier les dates', value: 'dates' })
     return {
       content: lines.join('\n').slice(0, 2000),
@@ -2073,8 +2075,8 @@ export class DiscordCommandsService {
       return
     }
     const channel = interaction.channel
-    if (!channel?.isTextBased() || !('messages' in channel)) {
-      await interaction.reply({ content: 'Cette commande doit être utilisée dans un salon de discussion.', ephemeral: true })
+    if (!channel?.isThread()) {
+      await interaction.reply({ content: 'Utilise cette commande dans le fil de planification.', ephemeral: true })
       return
     }
 
@@ -2139,18 +2141,6 @@ export class DiscordCommandsService {
         availability.set(key, available)
       }
 
-      const proposals = this.bestSessionGroupProposals(days, availability)
-      if (!proposals.length) {
-        const names = days.flatMap(([key, label]) => [
-          `**${label}** : ${availability.get(key)?.length ?? 0} disponible(s)`,
-          ...(availability.get(key) ?? []).map(player => `- <@${player.id}> : ${player.played} séance(s) jouée(s)`),
-        ])
-        await interaction.editReply({
-          content: ['**Analyse des disponibilités**', 'Aucun groupe de 4 compatible avec les réponses actuelles.', ...names].join('\n').slice(0, 2000),
-          components: [], allowedMentions: { parse: [] },
-        })
-        return
-      }
       const unavailableReaction = [...scheduleMessage.reactions.cache.values()].find(item => item.emoji.name === PLANNING_UNAVAILABLE_EMOJI)
       const unavailableUsers = unavailableReaction ? await unavailableReaction.users.fetch() : null
       const unavailableIds = new Set(unavailableUsers ? [...unavailableUsers.values()].filter(user => !user.bot).map(user => user.id) : [])
@@ -2164,82 +2154,312 @@ export class DiscordCommandsService {
       }
       const reactions = [...availability.entries()].map(([key, players]) => `${key}:${players.map(player => player.id).sort().join(',')}`)
         .concat(`x:${[...unavailableIds].sort().join(',')}`).sort().join('|')
-      this.pendingSchedulePublications.set(interaction.id, {
-        requesterId: interaction.user.id, channelId: interaction.channelId,
-        planningMessageId: scheduleMessage.id, planningContent: scheduleMessage.content,
-        dates: days.map(([key, label]) => ({ key, label })), availability, reactions,
+      const dates = days.map(([key, label]) => ({ key, label }))
+      const maxPossible = Math.min(dates.length, Math.floor(new Set([...availability.values()].flat().map(p=>p.id)).size / 4))
+      let max = maxPossible
+      while (max > 0 && !new ScheduleSearch(dates, availability, { count:max, required:[], excluded:[], all:false }).total) max--
+      const uncertainReaction = [...scheduleMessage.reactions.cache.values()].find(item => item.emoji.name === PLANNING_UNCERTAIN_EMOJI)
+      const uncertainUsers = uncertainReaction ? await uncertainReaction.users.fetch() : null
+      const uncertain = uncertainUsers ? [...uncertainUsers.values()].filter(u=>!u.bot && u.id!==valerianId).map(u=>u.id) : []
+      const voters = new Map<string,SchedulePlayer>()
+      for(const p of PF2_PLAYER_IDENTITIES) if(p.id!==valerianId) voters.set(p.id,{id:p.id,name:p.name,played:playCounts.get(p.id)??0})
+      for(const p of [...availability.values()].flat()) voters.set(p.id,p)
+      for(const u of [...(unavailableUsers?.values()??[]),...(uncertainUsers?.values()??[])]) {
+        if(!u.bot && u.id!==valerianId && !voters.has(u.id)) voters.set(u.id,{id:u.id,name:u.globalName||u.username,played:playCounts.get(u.id)??0})
+      }
+      for(const [key,link] of this.scheduleWebLinks) {
+        const old=this.pendingSchedulePublications.get(link.commandId)
+        if(!link.busy && (Date.now()-link.createdAt>FINISH_TTL_MS || old?.channelId===interaction.channelId)) {
+          this.scheduleWebLinks.delete(key)
+          this.pendingSchedulePublications.delete(link.commandId)
+          this.pendingSessionValidations.delete(link.commandId)
+        }
+      }
+      const token=randomBytes(32).toString('base64url')
+      this.pendingSchedulePublications.set(interaction.id,{
+        requesterId:interaction.user.id,channelId:interaction.channelId,planningMessageId:scheduleMessage.id,
+        planningContent:scheduleMessage.content,dates,availability,reactions,
       })
-      const options = days.filter(([key]) => (availability.get(key)?.length ?? 0) >= 4)
-      const menu = new StringSelectMenuBuilder().setCustomId(`pf2-schedule:dates:${interaction.id}`)
-        .setPlaceholder('Sélectionner une ou plusieurs séances').setMinValues(1).setMaxValues(options.length)
-        .addOptions(options.map(([key, label]) => ({ label: `${label} — ${availability.get(key)?.length ?? 0} disponibles`, value: key })))
-
-      // Conserver l'analyse nominative de l'ancien workflow, avec les scores
-      // de priorité et les éventuels groupes ex æquo. Aucun ping dans cet aperçu.
-      const detail: string[] = ['**Analyse des disponibilités — groupes et priorités**']
-      for (const [key, label] of days) {
-        const players = availability.get(key) ?? []
-        detail.push('', `**${label} — ${players.length} disponible(s)**`)
-        detail.push(...players.map(player => `- <@${player.id}> : ${player.played} séance(s) jouée(s)`))
-        if (players.length < 4) detail.push('_Pas assez de joueurs pour constituer un groupe de 4._')
-      }
-      const compact = this.compactSessionGroupProposals(proposals)
-      const result: string[] = ['**Meilleure répartition globale**']
-      if (compact) {
-        for (const group of compact) {
-          result.push('', `**${group.label}**`)
-          result.push(...group.fixed.map(player => `- <@${player.id}> (${player.played} séance(s))`))
-          if (group.choose) result.push(`- **${group.choose} place(s) parmi ${group.pool.length} candidats ex æquo** : ${group.pool.map(player => `<@${player.id}> (${player.played})`).join(', ')}`)
-        }
-      } else {
-        for (const [index, solution] of proposals.slice(0, 3).entries()) {
-          if (proposals.length > 1) result.push('', `**Proposition ${index + 1} — ex æquo**`)
-          for (const group of solution) {
-            result.push('', `**${group.label}**`, ...group.players.map(player => `- <@${player.id}> (${player.played} séance(s))`))
-          }
-        }
-      }
-      const playable = days.filter(([key]) => (availability.get(key)?.length ?? 0) >= 4)
-      const conflicts: string[] = []
-      for (let a = 0; a < playable.length; a++) for (let b = a + 1; b < playable.length; b++) {
-        const [keyA, labelA] = playable[a]
-        const [keyB, labelB] = playable[b]
-        const distinct = new Set([...(availability.get(keyA) ?? []), ...(availability.get(keyB) ?? [])].map(player => player.id))
-        if (distinct.size < 8) {
-          const first = new Set((availability.get(keyA) ?? []).map(player => player.id))
-          const common = (availability.get(keyB) ?? []).filter(player => first.has(player.id))
-          conflicts.push(`${labelA} / ${labelB} : ${common.map(player => `<@${player.id}>`).join(', ')} disponible(s) les deux jours`)
-        }
-      }
-      if (conflicts.length) result.push('', '**Chevauchements de disponibilités :**', ...conflicts.map(value => `- ${value}`))
-      result.push('', `${proposals[0].length} séance(s) maximum ; ${proposals.length > 1 ? `${proposals.length} solutions optimales conservées (égalité après priorité)` : 'une répartition optimale'}.`)
-      result.push('Sélectionne les dates à organiser ; tu pourras choisir une proposition ou demander un tirage si plusieurs solutions sont équivalentes.')
-      const maxText = 2000
-      const showDetail = [...detail, '', ...result].join('\n').length <= maxText
-      const content = showDetail ? [...detail, '', ...result].join('\n')
-        : ['**Analyse globale — groupes optimaux**', ...result].join('\n')
+      this.scheduleWebLinks.set(token,{commandId:interaction.id,createdAt:Date.now(),voters:[...voters.values()].sort((a,b)=>a.played-b.played||a.name.localeCompare(b.name,'fr')),unavailable:[...unavailableIds],uncertain,max,busy:false})
+      const base=(process.env['PF2_FIN_SEANCE_PUBLIC_URL']?.trim() || 'https://l7r.fr/apil7r/pf2-mj/discord/fin-seance').replace(/\/$/,'').replace(/fin-seance$/,'analyse-date-seance')
       await interaction.editReply({
-        content: content.length <= maxText ? content : content.slice(0, 1900) + '\n… (voir les détails complémentaires ci-dessous)',
-        components: [new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(menu)],
-        allowedMentions: { parse: [] },
+        content:`**Analyse des disponibilités — outil MJ privé**\n${max} séance(s) maximum. Choisis le nombre, les dates, puis une répartition ou un tirage au sort sur la page. Rien n'est publié avant confirmation.`,
+        components:[new ActionRowBuilder<ButtonBuilder>().addComponents(new ButtonBuilder().setStyle(ButtonStyle.Link).setURL(base+'/'+token).setLabel('Ouvrir la planification'))],
+        allowedMentions:{parse:[]},
       })
-      if (!showDetail) {
-        const detailLines = [...detail, '', ...result]
-        let chunk = ''
-        for (const line of detailLines) {
-          if (chunk.length + line.length + 1 > 1900) {
-            if (chunk) await interaction.followUp({ content: chunk, ephemeral: true, allowedMentions: { parse: [] } })
-            chunk = ''
-          }
-          if (line.length > 1900) continue
-          chunk += (chunk ? '\n' : '') + line
-        }
-        if (chunk) await interaction.followUp({ content: chunk, ephemeral: true, allowedMentions: { parse: [] } })
-      }
     } catch (error) {
       this.logger.error('analyse-date-seance: calcul impossible', error instanceof Error ? error.stack : undefined)
       await interaction.editReply({ content: `Calcul impossible : ${error instanceof Error ? error.message : String(error)}` })
     }
+  }
+
+  private async publishSchedule(interaction: Pick<ButtonInteraction,'channel'|'guild'|'client'> & {
+    reply:(payload:any)=>Promise<unknown>; editReply:(payload:any)=>Promise<unknown>; deferUpdate:()=>Promise<unknown>
+  }, id:string, pending: NonNullable<ReturnType<typeof this.pendingSessionValidations.get>>):Promise<boolean> {
+    const lockId=pending.planningMessageId??id
+      if (this.publishingSessionIds.has(lockId)) {
+        await interaction.reply({ content: 'Publication déjà en cours. Ne clique pas une seconde fois.', ephemeral: true })
+        return true
+      }
+      this.publishingSessionIds.add(lockId)
+      // Discord requires the component to be acknowledged within 3 seconds.
+      // Reading live reactions and creating threads must happen AFTER this.
+      try {
+        await interaction.deferUpdate()
+      } catch (error) {
+        this.publishingSessionIds.delete(lockId)
+        throw error
+      }
+      const retry = new ActionRowBuilder<ButtonBuilder>().addComponents(
+        new ButtonBuilder().setCustomId(`pf2-date-confirm:publish:${id}`).setLabel('Réessayer la publication').setStyle(ButtonStyle.Success),
+        new ButtonBuilder().setCustomId(`pf2-date-confirm:cancel:${id}`).setLabel('Annuler').setStyle(ButtonStyle.Secondary),
+      )
+      try {
+      if (pending.planningMessageId && pending.planningContent && pending.reactions && pending.planningDates) {
+        const channel = interaction.channel
+        if (!channel || !('messages' in channel)) {
+          await interaction.editReply({ content: 'Impossible de vérifier la planification ; relance /analyse-date-seance.', components: [] })
+          return true
+        }
+        const starter = channel.isThread()
+          ? await channel.fetchStarterMessage({ force: true }).catch(() => null)
+          : await channel.messages.fetch(pending.planningMessageId).catch(() => null)
+        if (!starter || starter.id !== pending.planningMessageId || starter.content !== pending.planningContent) {
+          await interaction.editReply({ content: 'Les dates ont changé. Relance /analyse-date-seance.', components: [] })
+          return true
+        }
+        const refreshed: string[] = []
+        for (const day of PLANNING_DAYS) {
+          if (!pending.planningDates.includes(String(day.offset))) continue
+          const reaction = starter.reactions.cache.find(item => item.emoji.name === day.emoji)
+          const users = reaction ? await reaction.users.fetch() : null
+          refreshed.push(`${day.offset}:${users ? [...users.values()].filter(user => !user.bot && user.id !== this.discordId('valerian')).map(user => user.id).sort().join(',') : ''}`)
+        }
+        const unavailable = starter.reactions.cache.find(item => item.emoji.name === PLANNING_UNAVAILABLE_EMOJI)
+        const unavailableUsers = unavailable ? await unavailable.users.fetch() : null
+        refreshed.push(`x:${unavailableUsers ? [...unavailableUsers.values()].filter(user => !user.bot).map(user => user.id).sort().join(',') : ''}`)
+        if (refreshed.sort().join('|') !== pending.reactions) {
+          await interaction.editReply({ content: 'Les disponibilités ont changé depuis l’analyse. Relance /analyse-date-seance.', components: [] })
+          return true
+        }
+      }
+      await interaction.editReply({ content: 'Disponibilités vérifiées. Création des annonces de mission…', components: [], allowedMentions: { parse: [] } })
+      try {
+        const groups = this.parseConfirmedMissionGroups(pending.content)
+        if (!groups) throw new Error('Les groupes de la validation sont invalides.')
+        const channelList = await interaction.guild?.channels.fetch()
+        const target = channelList && [...channelList.values()].find(item =>
+          item?.type === ChannelType.GuildText && item.name === 'objectif-prochaine-mission'
+        )
+        if (!target || target.type !== ChannelType.GuildText) throw new Error('Salon #objectif-prochaine-mission introuvable.')
+        const published: string[] = []
+        const failures: string[] = []
+        for (const group of groups) {
+          let date = this.isoDateFromFullPlanningLabel(group.label)
+          if (!date && interaction.channel?.isThread()) {
+            const starter = await interaction.channel.fetchStarterMessage({ force: true }).catch(() => null)
+            const planning = starter && this.parsePlanningMessage(starter.content)
+            if (planning) {
+              const matching = PLANNING_DAYS.find(day =>
+                planning.selectedDays.includes(day.offset)
+                && group.label === `${day.label} ${this.planningDate(this.addDays(planning.monday, day.offset))}`
+              )
+              if (matching) date = this.addDays(planning.monday, matching.offset)
+            }
+          }
+          if (!date) {
+            failures.push(`${group.label} : date non reconnue`)
+            continue
+          }
+          const title = `Séance ${date.slice(8, 10)}/${date.slice(5, 7)}`
+          const key = `[PF2-SESSION:${date}]`
+          const content = [
+            `**Séance du ${group.label}**`,
+            `**Groupe proposé :** ${group.userIds.map(userId => `<@${userId}>`).join(', ')}`,
+            '',
+            '**Merci de confirmer votre présence :** ✅ présent · ❌ indisponible.',
+            '**Choisissez également votre prochaine mission** dans le fil ci-dessous.',
+            'La commande `/choix-quete` permet de consulter les quêtes disponibles.',
+            '',
+            key,
+          ].join('\n')
+          try {
+            const recent = await target.messages.fetch({ limit: 100 })
+            let announcement = [...recent.values()].find(message => message.author?.id === interaction.client.user?.id && message.content.includes(key))
+            if (announcement) {
+              const groupLine = announcement.content.split('\n').find(line => line.startsWith('**Groupe proposé :** '))
+              if (groupLine) {
+                const existingIds = [...groupLine.matchAll(/<@!?(\d+)>/g)].map(match => match[1]).sort()
+                if (existingIds.join(',') !== [...group.userIds].sort().join(',')) {
+                  throw new Error('Une annonce existe déjà pour cette date avec un autre groupe. Utilise /modifier-groupe-seance.')
+                }
+              }
+            }
+            if (!announcement) {
+              announcement = await target.send({ content, allowedMentions: { parse: [], users: group.userIds } })
+              await announcement.react('✅').catch(() => undefined)
+              await announcement.react('❌').catch(() => undefined)
+            }
+            const existingThread = announcement.thread
+            const thread = existingThread ?? await announcement.startThread({ name: title })
+            const messages = await thread.messages.fetch({ limit: 20 })
+            if (![...messages.values()].some(message => message.author?.id === interaction.client.user?.id && message.content.startsWith('**Que voulez-vous faire ?**'))) {
+              await thread.send({
+                content: '**Que voulez-vous faire ?**\nDiscutez de la prochaine mission ici. Utilisez `/choix-quete` pour voir les quêtes disponibles et leurs réservations.',
+                allowedMentions: { parse: [] },
+              })
+            }
+            await this.updateSessionConfirmationMessage(announcement).catch(error =>
+              this.logger.warn('Initial session confirmation status failed: ' + (error instanceof Error ? error.message : String(error))))
+            published.push(`${group.label} : ${thread.url}`)
+          } catch (error) {
+            failures.push(`${group.label} : ${error instanceof Error ? error.message : String(error)}`)
+          }
+        }
+        const report = [
+          published.length ? `**Séances créées :**\n${published.join('\n')}` : 'Aucune séance créée.',
+          failures.length ? `**À vérifier :**\n${failures.join('\n')}` : '',
+        ].filter(Boolean).join('\n\n')
+        if (failures.length) {
+          await interaction.editReply({
+            content: `**Publication partielle : une reprise est possible sans renotifier les séances déjà créées.**\n\n${report}`,
+            components: [retry], allowedMentions: { parse: [] },
+          })
+        } else {
+          const channel = interaction.channel
+          if (channel?.isThread()) {
+            const starter = await channel.fetchStarterMessage({ force: true })
+            const planning = starter && this.parsePlanningMessage(starter.content)
+            if (!planning) throw new Error('Planification introuvable pour le bilan public.')
+            const available = new Set<string>()
+            const unavailable = new Set<string>()
+            for (const reaction of starter.reactions.cache.values()) {
+              const day = PLANNING_DAYS.find(item => item.emoji === reaction.emoji.name && planning.selectedDays.includes(item.offset))
+              if (!day && reaction.emoji.name !== PLANNING_UNAVAILABLE_EMOJI) continue
+              const users = await reaction.users.fetch()
+              for (const user of users.values()) {
+                if (user.bot || user.id === this.discordId('valerian')) continue
+                ;(day ? available : unavailable).add(user.id)
+              }
+            }
+            const selected = new Set(groups.flatMap(group => group.userIds))
+            const omitted = [...available].filter(userId => !selected.has(userId) && !unavailable.has(userId)).sort()
+            const names = new Map<string, string>()
+            for (const userId of selected) {
+              const member = await interaction.guild?.members?.fetch(userId).catch(() => null)
+              const identity = pf2PlayerByDiscordId(userId)
+              const name = member?.displayName || identity?.actor || userId
+              names.set(userId, name.replace(/[@\r\n]/g, '').trim())
+            }
+            const summary = [
+              '✅ **Validation des groupes :**',
+              ...groups.flatMap(group => ['', `**${group.label}**`, group.userIds.map(userId => names.get(userId)).join(', ')]),
+              '', '**Non sélectionnés :**', omitted.length ? omitted.map(userId => `<@${userId}>`).join(', ') : 'Aucun.',
+            ].join('\n')
+            // Identical recap is not posted twice on retry.
+            const recent = await channel.messages.fetch({ limit: 100 })
+            if (![...recent.values()].some(message => message.author?.id === interaction.client.user?.id && message.content === summary)) {
+              await channel.send({ content: summary, allowedMentions: { parse: [], users: omitted } })
+            }
+          }
+          this.pendingSessionValidations.delete(id)
+          this.pendingSchedulePublications.delete(id)
+          await interaction.editReply({ content: report, components: [], allowedMentions: { parse: [] } })
+        }
+      } catch (error) {
+        await interaction.editReply({
+          content: `Publication impossible : ${error instanceof Error ? error.message : String(error)}. Tu peux réessayer sans recréer les annonces déjà publiées.`,
+          components: [retry], allowedMentions: { parse: [] },
+        }).catch(() => undefined)
+      }
+      } catch (error) {
+        this.logger.error('Validation de séance : vérification impossible', error instanceof Error ? error.stack : undefined)
+        await interaction.editReply({
+          content: `Vérification impossible : ${error instanceof Error ? error.message : String(error)}. Réessaie ou relance l’analyse.`,
+          components: [retry], allowedMentions: { parse: [] },
+        }).catch(() => undefined)
+      } finally {
+        this.publishingSessionIds.delete(lockId)
+      }
+      return true
+  }
+
+  private scheduleWebDraft(token:string) {
+    if(!/^[A-Za-z0-9_-]{43}$/.test(token)) throw new Error('Lien invalide.')
+    const link=this.scheduleWebLinks.get(token)
+    if(!link || Date.now()-link.createdAt>FINISH_TTL_MS) throw new Error('Lien expiré. Relance /analyse-date-seance.')
+    const pending=this.pendingSchedulePublications.get(link.commandId)
+    if(!pending) throw new Error('Analyse expirée ou déjà publiée.')
+    return {link,pending}
+  }
+
+  scheduleWebState(token:string) {
+    const {link,pending}=this.scheduleWebDraft(token)
+    return {dates:pending.dates,players:link.voters,availability:Object.fromEntries([...pending.availability].map(([key,p])=>[key,p.map(x=>x.id)])),unavailable:link.unavailable,uncertain:link.uncertain,max:link.max}
+  }
+
+  private scheduleWebSearch(token:string,body:unknown) {
+    const {link,pending}=this.scheduleWebDraft(token)
+    if(link.busy) throw new Error('Publication en cours.')
+    const filters=parseScheduleFilters(body,pending.dates)
+    if(filters.count>link.max) throw new Error('Nombre de séances impossible.')
+    const filterKey=JSON.stringify(filters)
+    if(link.filterKey!==filterKey || !link.search){
+      link.search=new ScheduleSearch(pending.dates,pending.availability,filters)
+      link.filterKey=filterKey
+      link.selection=undefined
+      this.pendingSessionValidations.delete(link.commandId)
+    }
+    return {link,pending,search:link.search}
+  }
+
+  scheduleWebOptions(token:string,body:unknown) {
+    const {search}=this.scheduleWebSearch(token,body)
+    const offset=Number((body as {offset?:number}).offset??0)
+    if(!Number.isSafeInteger(offset)||offset<0) throw new Error('Page invalide.')
+    const entries=[]
+    for(let i=offset;i<Math.min(offset+20,search.visibleCount);i++) entries.push(search.at(i))
+    return {entries,total:search.total,optimal:search.optimal,visible:search.visibleCount,bestScore:search.bestScore,offset}
+  }
+
+  scheduleWebChoose(token:string,body:unknown) {
+    const {link,pending,search}=this.scheduleWebSearch(token,body)
+    if(!search.visibleCount) throw new Error('Aucune proposition compatible.')
+    const b=body as {random?:boolean;index?:number}
+    // Tirage uniforme parmi les solutions optimales, même lorsque les autres sont visibles.
+    const index=b.random===true?randomInt(search.optimal):b.index
+    const choice=search.at(index!)
+    link.selection=choice
+    const userIds=choice.groups.flatMap(g=>g.players.map(p=>p.id))
+    const content=['✅ **Séances validées — proposition 1**',...choice.groups.flatMap(g=>['',`**${g.label}**`,...g.players.map(p=>`- <@${p.id}>`)])].join('\n')
+    this.pendingSessionValidations.set(link.commandId,{requesterId:pending.requesterId,channelId:pending.channelId,content,userIds,planningMessageId:pending.planningMessageId,planningContent:pending.planningContent,reactions:pending.reactions,planningDates:pending.dates.map(d=>d.key)})
+    const available=new Set([...pending.availability.values()].flat().map(p=>p.id))
+    return {...choice,omitted:link.voters.filter(p=>available.has(p.id)&&!userIds.includes(p.id)&&!link.unavailable.includes(p.id))}
+  }
+
+  async scheduleWebConfirm(token:string,body:unknown) {
+    const {link,pending}=this.scheduleWebDraft(token)
+    if(link.busy || !link.selection) throw new Error('Sélectionne une proposition avant de publier.')
+    const filters=parseScheduleFilters(body,pending.dates)
+    if(JSON.stringify(filters)!==link.filterKey || (body as {index?:number}).index!==link.selection.index) throw new Error('La sélection a changé. Choisis à nouveau une proposition.')
+    const validation=this.pendingSessionValidations.get(link.commandId)
+    if(!validation) throw new Error('Validation introuvable.')
+    link.busy=true
+    try {
+      const client=this.discord?.requestClient()
+      const channel=await client?.channels.fetch(pending.channelId)
+      if(!client?.isReady() || !channel || !channel.isThread()) throw new Error('Fil Discord indisponible.')
+      let message=''
+      await this.publishSchedule({
+        channel,guild:channel.guild,client,
+        deferUpdate:async()=>undefined,
+        reply:async payload=>{message=String(payload.content??'')},
+        editReply:async payload=>{message=String(payload.content??'')},
+      },link.commandId,validation)
+      if(this.pendingSessionValidations.has(link.commandId)) throw new Error(message||'Publication non confirmée.')
+      this.scheduleWebLinks.delete(token)
+      return {message}
+    } finally {link.busy=false}
   }
 
   private async discordSessionCounts(): Promise<Map<string, number>> {
@@ -3025,7 +3245,7 @@ export class DiscordCommandsService {
         return true
       }
       if (choice === 'next') {
-        pending.solutionPage = ((pending.solutionPage ?? 0) + 1) % Math.ceil(pending.solutions.length / 3)
+        pending.solutionPage = ((pending.solutionPage ?? 0) + 1) % Math.ceil(pending.solutions.length / 4)
         await interaction.editReply(this.scheduleSolutionChoiceView(key))
         return true
       }
@@ -3037,6 +3257,7 @@ export class DiscordCommandsService {
         await interaction.editReply({ content: 'Proposition invalide. Recommence la sélection.', ...this.scheduleSolutionChoiceView(key) })
         return true
       }
+      pending.selectedKeys = pending.solutions[selectedIndex].map(group => group.key)
       await this.showScheduleFinalPreview(interaction, key, pending.solutions[selectedIndex],
         random ? `Tirage demandé par le MJ : proposition ${selectedIndex + 1} parmi ${pending.solutions.length} solutions optimales.`
           : `Proposition ${selectedIndex + 1} choisie manuellement par le MJ, sans tirage.`)
@@ -3708,146 +3929,7 @@ export class DiscordCommandsService {
           : { content: '**Modifier les dates**', components: [this.scheduleDateChoiceRow(id)], allowedMentions: { parse: [] } })
         return true
       }
-      if (this.publishingSessionIds.has(id)) {
-        await interaction.reply({ content: 'Publication déjà en cours. Ne clique pas une seconde fois.', ephemeral: true })
-        return true
-      }
-      this.publishingSessionIds.add(id)
-      // Discord requires the component to be acknowledged within 3 seconds.
-      // Reading live reactions and creating threads must happen AFTER this.
-      try {
-        await interaction.deferUpdate()
-      } catch (error) {
-        this.publishingSessionIds.delete(id)
-        throw error
-      }
-      const retry = new ActionRowBuilder<ButtonBuilder>().addComponents(
-        new ButtonBuilder().setCustomId(`pf2-date-confirm:publish:${id}`).setLabel('Réessayer la publication').setStyle(ButtonStyle.Success),
-        new ButtonBuilder().setCustomId(`pf2-date-confirm:cancel:${id}`).setLabel('Annuler').setStyle(ButtonStyle.Secondary),
-      )
-      try {
-      if (pending.planningMessageId && pending.planningContent && pending.reactions && pending.planningDates) {
-        const channel = interaction.channel
-        if (!channel || !('messages' in channel)) {
-          await interaction.editReply({ content: 'Impossible de vérifier la planification ; relance /analyse-date-seance.', components: [] })
-          return true
-        }
-        const starter = channel.isThread()
-          ? await channel.fetchStarterMessage({ force: true }).catch(() => null)
-          : await channel.messages.fetch(pending.planningMessageId).catch(() => null)
-        if (!starter || starter.id !== pending.planningMessageId || starter.content !== pending.planningContent) {
-          await interaction.editReply({ content: 'Les dates ont changé. Relance /analyse-date-seance.', components: [] })
-          return true
-        }
-        const refreshed: string[] = []
-        for (const day of PLANNING_DAYS) {
-          if (!pending.planningDates.includes(String(day.offset))) continue
-          const reaction = starter.reactions.cache.find(item => item.emoji.name === day.emoji)
-          const users = reaction ? await reaction.users.fetch() : null
-          refreshed.push(`${day.offset}:${users ? [...users.values()].filter(user => !user.bot && user.id !== this.discordId('valerian')).map(user => user.id).sort().join(',') : ''}`)
-        }
-        const unavailable = starter.reactions.cache.find(item => item.emoji.name === PLANNING_UNAVAILABLE_EMOJI)
-        const unavailableUsers = unavailable ? await unavailable.users.fetch() : null
-        refreshed.push(`x:${unavailableUsers ? [...unavailableUsers.values()].filter(user => !user.bot).map(user => user.id).sort().join(',') : ''}`)
-        if (refreshed.sort().join('|') !== pending.reactions) {
-          await interaction.editReply({ content: 'Les disponibilités ont changé depuis l’analyse. Relance /analyse-date-seance.', components: [] })
-          return true
-        }
-      }
-      await interaction.editReply({ content: 'Disponibilités vérifiées. Création des annonces de mission…', components: [], allowedMentions: { parse: [] } })
-      try {
-        const groups = this.parseConfirmedMissionGroups(pending.content)
-        if (!groups) throw new Error('Les groupes de la validation sont invalides.')
-        const channelList = await interaction.guild?.channels.fetch()
-        const target = channelList && [...channelList.values()].find(item =>
-          item?.type === ChannelType.GuildText && item.name === 'objectif-prochaine-mission'
-        )
-        if (!target || target.type !== ChannelType.GuildText) throw new Error('Salon #objectif-prochaine-mission introuvable.')
-        const published: string[] = []
-        const failures: string[] = []
-        for (const group of groups) {
-          let date = this.isoDateFromFullPlanningLabel(group.label)
-          if (!date && interaction.channel?.isThread()) {
-            const starter = await interaction.channel.fetchStarterMessage({ force: true }).catch(() => null)
-            const planning = starter && this.parsePlanningMessage(starter.content)
-            if (planning) {
-              const matching = PLANNING_DAYS.find(day =>
-                planning.selectedDays.includes(day.offset)
-                && group.label === `${day.label} ${this.planningDate(this.addDays(planning.monday, day.offset))}`
-              )
-              if (matching) date = this.addDays(planning.monday, matching.offset)
-            }
-          }
-          if (!date) {
-            failures.push(`${group.label} : date non reconnue`)
-            continue
-          }
-          const title = `Séance ${date.slice(8, 10)}/${date.slice(5, 7)}`
-          const key = `[PF2-SESSION:${date}]`
-          const content = [
-            `**Séance du ${group.label}**`,
-            `**Groupe proposé :** ${group.userIds.map(userId => `<@${userId}>`).join(', ')}`,
-            '',
-            '**Merci de confirmer votre présence :** ✅ présent · ❌ indisponible.',
-            '**Choisissez également votre prochaine mission** dans le fil ci-dessous.',
-            'La commande `/choix-quete` permet de consulter les quêtes disponibles.',
-            '',
-            key,
-          ].join('\n')
-          try {
-            const recent = await target.messages.fetch({ limit: 100 })
-            let announcement = [...recent.values()].find(message => message.author?.id === interaction.client.user?.id && message.content.includes(key))
-            if (!announcement) {
-              announcement = await target.send({ content, allowedMentions: { parse: [], users: group.userIds } })
-              await announcement.react('✅').catch(() => undefined)
-              await announcement.react('❌').catch(() => undefined)
-            }
-            const existingThread = announcement.thread
-            const thread = existingThread ?? await announcement.startThread({ name: title })
-            const messages = await thread.messages.fetch({ limit: 20 })
-            if (![...messages.values()].some(message => message.author?.id === interaction.client.user?.id && message.content.startsWith('**Que voulez-vous faire ?**'))) {
-              await thread.send({
-                content: '**Que voulez-vous faire ?**\nDiscutez de la prochaine mission ici. Utilisez `/choix-quete` pour voir les quêtes disponibles et leurs réservations.',
-                allowedMentions: { parse: [] },
-              })
-            }
-            await this.updateSessionConfirmationMessage(announcement).catch(error =>
-              this.logger.warn('Initial session confirmation status failed: ' + (error instanceof Error ? error.message : String(error))))
-            published.push(`${group.label} : ${thread.url}`)
-          } catch (error) {
-            failures.push(`${group.label} : ${error instanceof Error ? error.message : String(error)}`)
-          }
-        }
-        const report = [
-          published.length ? `**Séances créées :**\n${published.join('\n')}` : 'Aucune séance créée.',
-          failures.length ? `**À vérifier :**\n${failures.join('\n')}` : '',
-        ].filter(Boolean).join('\n\n')
-        if (failures.length) {
-          await interaction.editReply({
-            content: `**Publication partielle : une reprise est possible sans renotifier les séances déjà créées.**\n\n${report}`,
-            components: [retry], allowedMentions: { parse: [] },
-          })
-        } else {
-          this.pendingSessionValidations.delete(id)
-          this.pendingSchedulePublications.delete(id)
-          await interaction.editReply({ content: report, components: [], allowedMentions: { parse: [] } })
-        }
-      } catch (error) {
-        await interaction.editReply({
-          content: `Publication impossible : ${error instanceof Error ? error.message : String(error)}. Tu peux réessayer sans recréer les annonces déjà publiées.`,
-          components: [retry], allowedMentions: { parse: [] },
-        }).catch(() => undefined)
-      }
-      } catch (error) {
-        this.logger.error('Validation de séance : vérification impossible', error instanceof Error ? error.stack : undefined)
-        await interaction.editReply({
-          content: `Vérification impossible : ${error instanceof Error ? error.message : String(error)}. Réessaie ou relance l’analyse.`,
-          components: [retry], allowedMentions: { parse: [] },
-        }).catch(() => undefined)
-      } finally {
-        this.publishingSessionIds.delete(id)
-      }
-      return true
+      return this.publishSchedule(interaction,id,pending)
     }
     if (interaction.customId.startsWith('pf2-preview:publish:')) {
       const pending = this.pendingPreviewPublications.get(interaction.customId)

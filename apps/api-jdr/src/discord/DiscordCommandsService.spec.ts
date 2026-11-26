@@ -2100,7 +2100,7 @@ describe('DiscordCommandsService', () => {
     }))
   })
 
-  it('uses non-pinging Discord mentions rather than account names in schedule group analysis', async () => {
+  it('opens a private scheduling page with the exact vote snapshot', async () => {
     const service = new DiscordCommandsService({} as never, {} as never)
     jest.spyOn(service as never, 'discordSessionCounts' as never).mockResolvedValue(new Map() as never)
     const planning = (service as unknown as { planningMessage: (monday: string, days: number[]) => string })
@@ -2121,7 +2121,7 @@ describe('DiscordCommandsService', () => {
     }
     const editReply = jest.fn().mockResolvedValue(undefined)
     await service.handle({
-      commandName: 'analyse-date-seance',
+      commandName: 'analyse-date-seance', id:'web-analysis', channelId:'planning-thread',
       user: { id: 'admin' },
       memberPermissions: { has: jest.fn().mockReturnValue(true) },
       channel: {
@@ -2137,14 +2137,80 @@ describe('DiscordCommandsService', () => {
       deferReply: jest.fn().mockResolvedValue(undefined),
       editReply,
     } as never)
-    const output = editReply.mock.calls[0][0].content as string
-    expect(output).toContain('Analyse des disponibilités — groupes et priorités')
-    expect(output).toContain('<@100000000000000000> : 0 séance(s)')
-    expect(output).toContain('Meilleure répartition globale')
-    expect(editReply.mock.calls[0][0].components[0].toJSON().components[0].custom_id).toContain('pf2-schedule:dates:')
-    expect(editReply.mock.calls[0][0].allowedMentions).toEqual({ parse: [] })
-    expect(output).not.toContain('Account 0')
-    expect(output).not.toContain('account-0')
+    const payload=editReply.mock.calls[0][0]
+    expect(payload.content).toContain('outil MJ privé')
+    expect(payload.allowedMentions).toEqual({parse:[]})
+    const url=payload.components[0].toJSON().components[0].url
+    expect(url).toContain('/analyse-date-seance/')
+    const token=url.split('/').pop()
+    const state=service.scheduleWebState(token)
+    expect(state.max).toBe(1)
+    expect(state.availability['0']).toEqual(accounts.map(p=>p.id))
+    const filters={count:1,required:[],excluded:[],all:true}
+    expect(service.scheduleWebOptions(token,filters).total).toBe(1)
+    const chosen=service.scheduleWebChoose(token,{...filters,index:0})
+    expect(chosen.groups[0].players).toHaveLength(4)
+    expect(chosen.omitted).toEqual([])
+    expect(()=>service.scheduleWebState('bad')).toThrow()
+
+  })
+
+  it('offers the fourth global choice directly, including equal-priority players', async () => {
+    const service = new DiscordCommandsService({} as never, {} as never)
+    const ids = Array.from({ length: 5 }, (_, index) => '1000000000000000' + (index + 1))
+    const players = ids.map(id => ({ id, name: id, played: 8 }))
+    const availability = new Map([['0', players]])
+    const solutions = (service as any).bestSessionGroupProposals([['0', 'Lundi 30 novembre']], availability)
+    expect(solutions).toHaveLength(5)
+    ;(service as any).pendingSchedulePublications.set('global', {
+      requesterId: 'admin', channelId: 'thread', planningMessageId: 'starter',
+      planningContent: 'Planning', dates: [{ key: '0', label: 'Lundi 30 novembre' }],
+      availability, reactions: '0:', solutions, solutionPage: 0,
+    })
+    const view = (service as any).scheduleSolutionChoiceView('global')
+    expect(view.content).toContain('Proposition 4')
+    expect(view.components[0].toJSON().components[0].options.map((option: any) => option.label)).toContain('Valider le choix 4')
+    const editReply = jest.fn().mockResolvedValue(undefined)
+    await service.handleComponent({
+      customId: 'pf2-schedule:solution:global', user: { id: 'admin' }, channelId: 'thread',
+      values: ['solution:3'], deferUpdate: jest.fn(), editReply,
+    } as never)
+    expect((service as any).pendingSessionValidations.get('global').userIds).toEqual(solutions[3][0].players.map((p: any) => p.id))
+  })
+
+  it('publishes a planning recap with names and only pings available omitted voters', async () => {
+    const service = new DiscordCommandsService({} as never, {} as never)
+    const ids = Array.from({ length: 8 }, (_, index) => '1000000000000000' + (index + 1))
+    const selected = ids.slice(0, 4)
+    const planning = (service as any).planningMessage('2026-11-30', [0, 1])
+    const reaction = (emoji: string, userIds: string[]) => ({
+      emoji: { name: emoji }, users: { fetch: jest.fn().mockResolvedValue(new Map(userIds.map(id => [id, { id, bot: false }]))) },
+    })
+    const starter = { content: planning, reactions: { cache: new Map([
+      ['0', reaction('🇱', [...selected, ids[4]])],
+      ['1', reaction('🇲', [ids[4], ids[5]])],
+      ['no', reaction('❌', [ids[5], ids[6]])],
+      ['maybe', reaction('❓', [ids[7]])],
+    ]) } }
+    ;(service as any).pendingSessionValidations.set('recap', {
+      requesterId: 'admin', channelId: 'planning-thread', userIds: selected,
+      content: ['✅ **Séances validées — validation manuelle**', '', '**Lundi 30 novembre 2026**', ...selected.map(id => '<@' + id + '>') .map(x => '- ' + x)].join('\n'),
+    })
+    const thread = { url: 'https://discord.com/thread', messages: { fetch: jest.fn().mockResolvedValue(new Map()) }, send: jest.fn() }
+    const announcement = { content: '', thread: null, react: jest.fn().mockResolvedValue(undefined), startThread: jest.fn().mockResolvedValue(thread) }
+    const target = { type: 0, name: 'objectif-prochaine-mission', messages: { fetch: jest.fn().mockResolvedValue(new Map()) }, send: jest.fn().mockResolvedValue(announcement) }
+    const send = jest.fn().mockResolvedValue(undefined)
+    await service.handleButton({
+      customId: 'pf2-date-confirm:publish:recap', user: { id: 'admin' }, channelId: 'planning-thread',
+      channel: { isThread: () => true, fetchStarterMessage: jest.fn().mockResolvedValue(starter), messages: { fetch: jest.fn().mockResolvedValue(new Map()) }, send },
+      guild: { channels: { fetch: jest.fn().mockResolvedValue(new Map([['target', target]])) }, members: { fetch: jest.fn(async (id: string) => ({ displayName: 'PJ ' + id.slice(-1) })) } },
+      client: { user: { id: 'bot' } }, deferUpdate: jest.fn(), editReply: jest.fn(),
+    } as never)
+    expect(send).toHaveBeenCalledTimes(1)
+    expect(send.mock.calls[0][0].allowedMentions).toEqual({ parse: [], users: [ids[4]] })
+    expect(send.mock.calls[0][0].content).toContain('PJ 1, PJ 2, PJ 3, PJ 4')
+    expect(send.mock.calls[0][0].content).toContain('<@' + ids[4] + '>')
+    for (const id of [...selected, ...ids.slice(5)]) expect(send.mock.calls[0][0].content).not.toContain('<@' + id + '>')
   })
 
   it('keeps global optimal tie choices visible until the MJ explicitly chooses one', async () => {
