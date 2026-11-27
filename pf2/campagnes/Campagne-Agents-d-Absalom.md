@@ -126,7 +126,7 @@ Les modèles en SQLite font foi pour les scènes et les horaires détaillés.
 
 **Partie 1 — 1er au 11 Kuthona, 19 h–23 h** : rencontre des Chasseurs de l'Étoile et des organisateurs ; arrestation de Lavarsus au début de la séance. Asilia de Gyr mandate Valsombre (agent canonique de niveau 14) pour reprendre le dispositif de sécurité. Corvan Keris demande aux aspirants d'obéir et étudie le dossier falsifié. Dix incidents quotidiens (réserve de 20 amorces, sans remise) entre 20 h et 22 h, avec une demi-heure de compétition des deux cirques de 20 h 45 à 21 h 15. Le 11, catastrophe planaire du Ratisseur, 22 h–23 h. La séance se conclut par une victoire et la première preuve norgorbérite permettant de reconnaître les quatre aspects ; Pratchett n'est pas identifié.
 
-**Partie 2 — 12 au 21 Kuthona** : empoisonnement du cirque gagnant, surveillance des hébergements, piste fraîche vers le Palais des rêves, confrontation avec Pratchett dont la puissance dépend de la réussite de ses actes, clôture lors de la fête de Shelyn. Le détail de la partie 2 reste à finaliser selon les résultats de la première.
+**Partie 2 — 12 au 21 Kuthona** : empoisonnement du cirque gagnant, surveillance des hébergements, piste fraîche vers le Palais des rêves, confrontation avec Pratchett dont la puissance dépend de la réussite de ses actes, clôture lors de la fête de Shelyn. Le conducteur de Partie 2 est créé ; les résultats de la première restent à reporter.
 
 ## Ratisseur de tombes — canon utile
 
@@ -266,3 +266,16 @@ Le conducteur SQLite comprend désormais une description jouable de la réappari
 ### Épreuve coopérative du couplage A — 27 novembre 2026
 
 Décision MJ : remplacer le casse-tête aveugle par une salle de maintenance inspirée de la communication asymétrique. Prototype fixe de 10 min : conduits, trois séries de runes, pulsations Simon en repères de scène, circuit 5×5, molette, régulateur récurrent. Pression initiale 7 %, hausse régulière +5/30 s, erreur +5 et première réussite −10 ; seuil 100 % ou échéance → arrêt d'urgence, convertir en complication de catastrophe au conducteur. Les manuels sont séparés de la console ; un opérateur et les experts, pas de DD obligatoire. Panneau dédié dans Outils MJ du Val Toolkit. Création explicite de la scène de test, pas de modification d'une scène existante. Validation multiclient et déploiement à vérifier avant de remplacer le défi A7 dans le conducteur.
+
+
+## Partie 2 — conducteur opérationnel (27 novembre 2026)
+
+Le modèle SQLite et la [préparation indépendante de Partie 2](https://l7r.fr/pf2-mj/session-preparations?preparationId=256ff036-d1bd-4b6a-830a-0efb2f558f5d) sont créés, sans séance Discord associée. Huit étapes, 61 blocs, 19 h–23 h. Aucun événement de la partie 1 n'a été présumé effectivement joué dans les données : les vingt textes d'incidents sont conservés à l'identique, retirer les dix titres réellement tirés avant la partie 2. Reporter sécurité, confiance, vainqueur des cirques, catastrophe, dossier Lavarsus et preuves. Ne pas réinitialiser la continuité.
+
+- 19 h : bilan et trois preuves indépendantes pour le réexamen de Lavarsus ; choix des dispositifs de surveillance.
+- 19 h 15 : cinq incidents restants ; 19 h 45 : attaque des Noirs Doigts contre le cirque gagnant. Prévention possible avant exposition, sinon défi en trois rounds avec trois objectifs (source, victimes, foule). La troupe rivale n'est pas coupable par défaut. Les indices du matériel ne désignent pas directement Pratchett.
+- 20 h 30 : cinq derniers incidents ; 20 h 55 : disparition fraîche, trois voies d'indice vers le Palais des rêves. Nalia Serevan, interprète adulte d'une délégation, est une victime proposée (figurante maison, modifiable). Si les PJ empêchent l'enlèvement, ne pas réimposer une victime.
+- 21 h 15 : Palais des rêves minimal, fondé sur le tome 1, pp.46–66 : E1/E2/E3 (réception, bagages, grand hall), E24 (Ralso et journal), E30 (bureau et escalier secret), E31 (cave), E36/E37 (sanctuaire et laboratoire). Les autres pièces et monstres ne constituent plus des obstacles obligatoires. Ralso reste une complice, les poupées des âmes sont écartées du combat obligatoire. Les faux documents de Lavarsus et les correspondances avec le Ratisseur et le cirque sont des preuves maison ajoutées.
+- 21 h 50 : un seul combat principal à objectifs, libération de la captive et neutralisation du sceau ; Pratchett alchimiste adapté au niveau réel. Quatre avantages rituels conditionnels, deux avantages directs simultanés au maximum. La réussite des PJ réduit les pouvoirs du boss ; interruption de la progression si Pratchett est empêché d'agir. Poursuite éventuelle courte, sans suite obligatoire. 22 h 40 : preuves, réhabilitation selon le dossier et clôture de Shelyn.
+
+Le niveau du groupe, le choix définitif de la victime, la présence de Hesper et Meitas, les profils mécaniques provisoires et les scènes Foundry restent à valider. Checklist modèle prête, autres critères partiels/à faire ; aucune carte ni Actor Foundry modifié dans cette opération. Les règles maison et conséquences détaillées sont dans le conducteur, pas dans une seconde source de données.
