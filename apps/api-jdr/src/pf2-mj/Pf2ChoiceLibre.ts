@@ -1,7 +1,7 @@
 import { Body, Controller, Get, Header, Injectable, Param, Put, Query, BadRequestException } from '@nestjs/common'
 import { InjectDataSource } from '@nestjs/typeorm'
 import { DataSource } from 'typeorm'
-import { normalizePreparationBody, requireModuleRecap } from '../discord/PreparationBody'
+import { hydratePreparationCounters, normalizePreparationBody, requireModuleRecap, resetPreparationCounters } from '../discord/PreparationBody'
 import { Pf2PersistenceService } from '../pf2-storage/Pf2PersistenceService'
 
 const natures = ['unassigned', 'mission', 'rp', 'dependent'] as const
@@ -146,7 +146,7 @@ export class Pf2ChoiceLibreService {
     const rows = await this.db.query('SELECT module_key AS moduleKey,body_json AS bodyJson,updated_at AS updatedAt FROM pf2_choice_template') as Array<{moduleKey:string;bodyJson:string;updatedAt:string}>
     return catalogue.modules.map(m => {
       const row = rows.find(r => r.moduleKey === m.key)
-      return { ...m, hasTemplate: Boolean(row), updatedAt: row?.updatedAt, body: row ? JSON.parse(row.bodyJson) : null }
+      return { ...m, hasTemplate: Boolean(row), updatedAt: row?.updatedAt, body: row ? hydratePreparationCounters(JSON.parse(row.bodyJson)) : null }
     })
   }
 
@@ -155,7 +155,7 @@ export class Pf2ChoiceLibreService {
     const module = catalogue.modules.find(m => m.key === moduleKey)
     if (!module) throw new BadRequestException('Module inconnu.')
     const rows = await this.db.query('SELECT body_json AS bodyJson FROM pf2_choice_template WHERE module_key=?',[moduleKey])
-    return { ...module, hasTemplate: Boolean(rows.length), body: rows.length ? JSON.parse(rows[0].bodyJson) : null }
+    return { ...module, hasTemplate: Boolean(rows.length), body: rows.length ? hydratePreparationCounters(JSON.parse(rows[0].bodyJson)) : null }
   }
 
   async saveTemplate(data: unknown) {
@@ -168,7 +168,7 @@ export class Pf2ChoiceLibreService {
       if (!rows.length) throw new BadRequestException('Préparation enregistrée introuvable.')
       rawBody = JSON.parse(rows[0].bodyJson)
     }
-    const body = normalizePreparationBody(rawBody)
+    const body = resetPreparationCounters(normalizePreparationBody(rawBody))
     requireModuleRecap(body)
     for (const block of body.stages.flatMap(stage => stage.blocks)) {
       if (block.assetId && !(await this.db.query('SELECT 1 FROM pf2_preparation_asset WHERE id=? AND kind=?', [block.assetId, block.kind])).length) throw new BadRequestException('Ressource partagée introuvable ou incompatible.')

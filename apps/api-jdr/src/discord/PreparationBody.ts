@@ -1,10 +1,11 @@
 import { BadRequestException } from '@nestjs/common'
 
-type Kind = 'personnage' | 'lore' | 'loot' | 'rencontre' | 'texte' | 'checklist' | 'illustration'
+type Kind = 'personnage' | 'lore' | 'loot' | 'rencontre' | 'texte' | 'checklist' | 'illustration' | 'compteur'
+export type PrepCounter = { min: number; max: number; initial: number; value: number; broadcast: boolean }
 export type PrepBlock = {
   id: string; kind: Kind; title: string; text: string; done: boolean;
   npcId?: string; assetId?: string; name?: string; ascendance?: string; portraitUrl?: string; showName?: boolean;
-  quantity?: string; reference?: string; secret?: boolean;
+  quantity?: string; reference?: string; secret?: boolean; counter?: PrepCounter;
 }
 export type PrepStage = { id: string; title: string; time: string; notes: string; done: boolean; blocks: PrepBlock[] }
 export type PrepBody = { stages: PrepStage[]; summary: string }
@@ -15,6 +16,23 @@ function trim(value: unknown, label: string, max: number, required = false): str
     return text
   }
 function optionalId(value: unknown, label: string): string | null { return trim(value, label, 160) || null }
+function normalizeCounter(raw: unknown): PrepCounter {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) throw new BadRequestException('Compteur invalide.')
+  const x = raw as Record<string, unknown>
+  const {min,max,initial,value} = x
+  if (typeof min !== 'number' || typeof max !== 'number' || typeof initial !== 'number' || typeof value !== 'number' ||
+      ![min,max,initial,value].every(Number.isSafeInteger) || min >= max || initial < min || initial > max || value < min || value > max)
+    throw new BadRequestException('Compteur : bornes entières et valeurs dans les limites requises.')
+  return {min,max,initial,value,broadcast:x.broadcast === true}
+}
+/** Tagged text allows staging counters through older API versions. */
+export function hydratePreparationCounters(body: PrepBody): PrepBody {
+  if (!body.stages.some(stage => stage.blocks.some(b => b.kind === 'texte' && b.text?.startsWith('@compteur/v1 ')))) return body
+  return normalizePreparationBody(body)
+}
+export function resetPreparationCounters(body: PrepBody): PrepBody {
+  return {...body,stages:body.stages.map(stage=>({...stage,blocks:stage.blocks.map(block=>block.counter ? {...block,counter:{...block.counter,value:block.counter.initial,broadcast:false}} : block)}))}
+}
 export function normalizePreparationBody(value: unknown): PrepBody {
     if (!value || typeof value !== 'object' || Array.isArray(value)) throw new BadRequestException('Préparation invalide.')
     const input = value as Record<string, unknown>
@@ -33,8 +51,14 @@ export function normalizePreparationBody(value: unknown): PrepBody {
         const blockId = trim(b.id, 'Identifiant bloc', 100, true)
         if (unique.has(blockId)) throw new BadRequestException('Identifiant de bloc dupliqué.')
         unique.add(blockId)
-        const kind = b.kind as Kind
-        if (!['personnage', 'lore', 'loot', 'rencontre', 'texte', 'checklist', 'illustration'].includes(kind)) throw new BadRequestException('Type de bloc inconnu.')
+        let kind = b.kind as Kind
+        let counterRaw = b.counter
+        let rawText = b.text
+        if (kind === 'texte' && typeof rawText === 'string' && rawText.startsWith('@compteur/v1 ')) {
+          try { counterRaw = JSON.parse(rawText.slice('@compteur/v1 '.length)) } catch { throw new BadRequestException('Compteur illisible.') }
+          kind = 'compteur'; rawText = ''
+        }
+        if (!['personnage', 'lore', 'loot', 'rencontre', 'texte', 'checklist', 'illustration', 'compteur'].includes(kind)) throw new BadRequestException('Type de bloc inconnu.')
         const npcId = optionalId(b.npcId, 'Référence personnage')
         const assetId = optionalId(b.assetId, 'Ressource partagée')
         if (assetId && (npcId || !['personnage', 'illustration'].includes(kind))) throw new BadRequestException('Ressource partagée incompatible.')
@@ -43,8 +67,9 @@ export function normalizePreparationBody(value: unknown): PrepBody {
         const ascendance = trim(b.ascendance, 'Ascendance du personnage', 120)
         if (kind === 'personnage' && !npcId && !assetId && !name) throw new BadRequestException('Un personnage temporaire doit avoir un nom.')
         return {
-          id: blockId, kind, title: trim(b.title, 'Titre du bloc', 220),
-          text: trim(b.text, 'Contenu', 12000), done: b.done === true,
+          id: blockId, kind, title: trim(b.title, 'Titre du bloc', 220, kind === 'compteur'),
+          text: trim(rawText, 'Contenu', 12000), done: b.done === true,
+          ...(kind === 'compteur' ? {counter:normalizeCounter(counterRaw)} : {}),
           ...(npcId ? { npcId } : {}), ...(assetId ? { assetId } : {}), ...(name ? { name } : {}), ...(ascendance ? { ascendance } : {}),
           portraitUrl: trim(b.portraitUrl, 'Portrait', 1200), showName: b.showName !== false,
           quantity: trim(b.quantity, 'Quantité', 100), reference: trim(b.reference, 'Référence', 500), secret: b.secret === true,
