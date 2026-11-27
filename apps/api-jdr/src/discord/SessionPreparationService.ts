@@ -8,7 +8,8 @@ import { PlayerCodexService } from '../pf2-mj/PlayerCodexService'
 import { DiscordService } from './DiscordService'
 import { DiscordCommandsService } from './DiscordCommandsService'
 
-import { normalizePreparationBody, type PrepBody } from './PreparationBody'
+import { FoundryRelayService } from '../foundry/FoundryRelayService'
+import { hydratePreparationCounters, normalizePreparationBody, type PrepBody } from './PreparationBody'
 export type { PrepBlock, PrepStage, PrepBody } from './PreparationBody'
 type PrepRow = { id: string; title: string; campaign_id: string | null; scenario_id: string | null; session_id: string | null; body_json: string; revision: number; created_at: string; updated_at: string }
 type Asset = { id: string; kind: 'personnage' | 'illustration'; campaignId: string; campaignTitle: string; title: string; portraitUrl: string; ascendance: string; revision: number }
@@ -22,6 +23,7 @@ export class SessionPreparationService {
     private readonly codex: PlayerCodexService,
     private readonly discord: DiscordService,
     private readonly commands: DiscordCommandsService,
+    private readonly foundry: FoundryRelayService,
   ) {}
 
   private trim(value: unknown, label: string, max: number, required = false): string {
@@ -34,7 +36,7 @@ export class SessionPreparationService {
   private body(value: unknown): PrepBody { return normalizePreparationBody(value) }
   private dto(row: PrepRow): Record<string, unknown> { return {
     id: row.id, title: row.title, campaignId: row.campaign_id, scenarioId: row.scenario_id,
-    sessionId: row.session_id, body: JSON.parse(row.body_json) as PrepBody,
+    sessionId: row.session_id, body: hydratePreparationCounters(JSON.parse(row.body_json) as PrepBody),
     revision: row.revision, createdAt: row.created_at, updatedAt: row.updated_at,
   } }
   async list(): Promise<unknown[]> {
@@ -191,6 +193,14 @@ export class SessionPreparationService {
     const active = await this.db.query('SELECT * FROM pf2_session_discord_context WHERE ended_at IS NULL ORDER BY started_at DESC LIMIT 2') as ContextRow[]
     if (active.length !== 1) throw new BadRequestException('Associe cette préparation à une séance Discord active (aucune ou plusieurs séances possibles).')
     return active[0]
+  }
+  async publishCounters(preparationId: string, revision: unknown): Promise<{foundryId:string}> {
+    const prep = await this.get(preparationId)
+    if (revision !== prep.revision) throw new ConflictException('Préparation modifiée ailleurs : recharge avant de diffuser.')
+    const counters = (prep.body as PrepBody).stages.flatMap(s=>s.blocks).filter(b=>b.kind==='compteur' && b.counter?.broadcast)
+      .map(b=>({title:b.title,min:b.counter!.min,max:b.counter!.max,value:b.counter!.value}))
+    if (!counters.length) throw new BadRequestException('Aucun compteur à diffuser.')
+    return {foundryId:await this.foundry.publishPreparationCounters(counters)}
   }
   async share(preparationId: string, blockId: string): Promise<Record<string, unknown>> {
     const prep = await this.get(preparationId)

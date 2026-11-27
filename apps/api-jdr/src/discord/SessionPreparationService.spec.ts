@@ -4,6 +4,7 @@ import { join } from 'node:path'
 import { DataSource } from 'typeorm'
 import { Pf2PersistenceService } from '../pf2-storage/Pf2PersistenceService'
 import { PlayerCodexService } from '../pf2-mj/PlayerCodexService'
+import { FoundryRelayService } from '../foundry/FoundryRelayService'
 import { SessionPreparationService } from './SessionPreparationService'
 import { DiscordService } from './DiscordService'
 import { DiscordCommandsService } from './DiscordCommandsService'
@@ -22,9 +23,23 @@ describe('SessionPreparationService', () => {
     source = new DataSource({ type: 'sqlite', database: join(root, 'pf2.sqlite') }); await source.initialize()
     persistence = new Pf2PersistenceService(source); await persistence.onModuleInit()
     const codex = new PlayerCodexService(source, persistence)
-    service = new SessionPreparationService(source, codex, { requestClient: () => null } as unknown as DiscordService, {} as DiscordCommandsService)
+    service = new SessionPreparationService(source, codex, { requestClient: () => null } as unknown as DiscordService, {} as DiscordCommandsService, {publishPreparationCounters:jest.fn(async()=> 'message-foundry')} as unknown as FoundryRelayService)
   })
   afterEach(async () => { if (source.isInitialized) await source.destroy(); await rm(root, { recursive: true, force: true }) })
+
+  it('persists bounded counters and publishes only selected public snapshots, never GM notes', async () => {
+    const created = await service.create({title:'Test',body:{summary:'',stages:[{id:'s',title:'Suivi',blocks:[
+      {id:'a',kind:'texte',title:'Test 1',text:'@compteur/v1 {"min":0,"max":10,"initial":5,"value":5,"broadcast":false}'},
+      {id:'b',kind:'compteur',title:'Test 2',text:'Secret MJ',counter:{min:0,max:10,initial:5,value:6,broadcast:true}},
+    ]}]}}) as {id:string;revision:number;body:import('./PreparationBody').PrepBody}
+    expect(created.body.stages[0].blocks[0].kind).toBe('compteur')
+    const relay=(service as unknown as {foundry:FoundryRelayService}).foundry
+    await expect(service.publishCounters(created.id,created.revision)).resolves.toEqual({foundryId:'message-foundry'})
+    expect(relay.publishPreparationCounters).toHaveBeenCalledWith([{title:'Test 2',min:0,max:10,value:6}])
+    await expect(service.publishCounters(created.id,0)).rejects.toThrow()
+    created.body.stages[0].blocks[0].counter!.value=11
+    await expect(service.update(created.id,created)).rejects.toThrow()
+  })
 
   it('creates, edits, lists and removes a preparation without creating permanent PNJs', async () => {
     const created = await service.create({ title: 'La citadelle', body: { summary: 'Des gobelins disparus', stages: [

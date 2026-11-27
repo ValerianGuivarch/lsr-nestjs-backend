@@ -14,5 +14,6 @@ export class SessionPreparationController {
   @Patch(':id') update(@Param('id') id: string, @Body() body: Record<string, unknown>): Promise<unknown> { return this.service.update(id, body) }
   @Post(':id/promote/:blockId') promote(@Param('id') id: string, @Param('blockId') blockId: string, @Body() body: Record<string, unknown>): Promise<unknown> { return this.service.promoteCharacter(id, blockId, body) }
   @Delete(':id') remove(@Param('id') id: string): Promise<unknown> { return this.service.remove(id) }
+  @Post(':id/publish-counters') publishCounters(@Param('id') id: string, @Body() body: Record<string, unknown>): Promise<unknown> { return this.service.publishCounters(id, body.revision) }
   @Post(':id/share/:blockId') share(@Param('id') id: string, @Param('blockId') blockId: string): Promise<unknown> { return this.service.share(id, blockId) }
 }

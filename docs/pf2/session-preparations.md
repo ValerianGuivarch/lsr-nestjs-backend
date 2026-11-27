@@ -152,3 +152,8 @@ Sous chaque rubrique, écrire une liste courte d'actions concrètes, en langage 
 Si aucune tâche ne reste, laisser le champ vide. Après sauvegarde via l'API métier, relire les statuts et le champ pour vérifier leur cohérence. Conserver séparément la progression jouée. Ce format s'applique à toutes les campagnes, sur le modèle des huit modules de Malveillance.
 
 Les portraits de personnages temporaires disposent également de « Remove BG » (image déjà importée) ; le résultat utilise le flux habituel d’envoi puis d’enregistrement du portrait. Configuration et quota : [Foundry — détourage](../../pf2/outils/foundry.md#détourage-de-portraits-remove-bg).
+
+
+## Valeurs évolutives (27 novembre 2026 — branche de développement)
+
+Type de bloc « Valeur évolutive » : titre public, minimum et maximum entiers, valeur initiale et valeur courante, case Diffuser dans Foundry. Une préparation importée redémarre à la valeur initiale, diffusion éteinte. Les modèles ne publient jamais. En séance, +1 / −1 sauvegardent la préparation avec contrôle de révision ; lorsque le compteur diffusé évolue ou que la diffusion est activée, un nouveau message Foundry récapitule uniquement les compteurs cochés, sans notes MJ ni message Discord. Décocher arrête la diffusion ; Republier renvoie un instantané. Un échec du relais n'annule pas la sauvegarde de la valeur et est signalé. Le format de transit texte @compteur/v1 permet de préparer des configurations avec l'ancien backend ; le nouveau les normalise en blocs typés. Aucun changement de schéma SQLite requis. Le test réel sur le monde Foundry connecté doit être effectué après déploiement.

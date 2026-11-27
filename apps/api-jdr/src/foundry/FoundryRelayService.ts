@@ -172,6 +172,25 @@ export class FoundryRelayService {
     return id
   }
 
+  /** Public snapshot of selected preparation counters; no GM notes or Discord broadcast. */
+  async publishPreparationCounters(counters: Array<{title:string;min:number;max:number;value:number}>): Promise<string> {
+    const escape = (value:string) => value.replace(/[&<>"']/g, ch => (({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'} as Record<string,string>)[ch] ?? ch))
+    const clients = await this.listClients() as {clients?: Array<RelayClient & {worldId?:string}>}
+    const online = (clients.clients ?? []).filter(c=>c.isOnline === true && typeof c.clientId === 'string' && c.clientId)
+    if (!online.length) throw new ServiceUnavailableException('Aucun monde Foundry connecté.')
+    if (online.length > 1 && (online.some(c=>!c.worldId) || new Set(online.map(c=>c.worldId)).size > 1)) throw new ServiceUnavailableException('Plusieurs mondes Foundry possibles : ferme les mondes non concernés avant de diffuser.')
+    const clientId = online[0].clientId as string
+    const content = '<div class="pf2-preparation-counters"><h3>Suivi de séance</h3>'+counters.map(c=>{
+      const percent=Math.max(0,Math.min(100,Math.round((c.value-c.min)/(c.max-c.min)*100)))
+      return '<p><strong>'+escape(c.title)+'</strong> : '+c.value+' / '+c.max+' (min. '+c.min+')</p><div style="height:8px;background:#ccc;border-radius:4px"><div style="height:8px;background:#496b8c;border-radius:4px;width:'+percent+'%"></div></div>'
+    }).join('')+'</div>'
+    if (content.length > 60000) throw new BadRequestException('Trop de compteurs diffusés.')
+    const response=this.object(await this.request('/chat?'+new URLSearchParams({clientId}),{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({content,alias:'Gamemaster'})},20000))
+    const id=this.object(response.data).id
+    if(response.success !== true || typeof id !== 'string' || !id) throw new BadGatewayException('Foundry n’a pas confirmé le message.')
+    return id
+  }
+
   async listActors(): Promise<WorldActor[]> {
     return this.listRootWorldActors(await this.onlineClientId())
   }

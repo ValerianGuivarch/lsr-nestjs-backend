@@ -6,11 +6,12 @@ import './SessionPreparations.css'
 import { removeBackgroundFromUrl } from './removeBackground'
 import { moduleDisplayTitle, moduleInWork, sortedWorks } from './moduleLabels'
 
-type BlockKind = 'personnage' | 'lore' | 'loot' | 'rencontre' | 'texte' | 'checklist' | 'illustration'
+type BlockKind = 'personnage' | 'lore' | 'loot' | 'rencontre' | 'texte' | 'checklist' | 'illustration' | 'compteur'
+type Counter = {min:number;max:number;initial:number;value:number;broadcast:boolean}
 type Block = {
   id: string; kind: BlockKind; title: string; text: string; done: boolean; npcId?: string; assetId?: string;
   name?: string; ascendance?: string; portraitUrl?: string; showName?: boolean; quantity?: string;
-  reference?: string; secret?: boolean;
+  reference?: string; secret?: boolean; counter?: Counter;
 }
 type Stage = { id: string; title: string; time: string; notes: string; done: boolean; blocks: Block[] }
 type Preparation = {
@@ -23,12 +24,12 @@ type Npc = { id: string; nom: string; ascendance?: string; portrait?: string }
 type Asset = { id: string; kind: 'personnage' | 'illustration'; campaignId: string; campaignTitle: string; title: string; portraitUrl: string; ascendance: string; revision: number }
 type Option = { id: string; title: string }
 const URL = '/apil7r/pf2-mj/session-preparations'
-const blockLabels: Record<BlockKind, string> = { personnage: 'Personnage', lore: 'Lore', loot: 'Loot', rencontre: 'Rencontre', texte: 'Texte libre', checklist: 'Checklist', illustration: 'Illustration' }
+const blockLabels: Record<BlockKind, string> = { personnage: 'Personnage', lore: 'Lore', loot: 'Loot', rencontre: 'Rencontre', texte: 'Texte libre', checklist: 'Checklist', illustration: 'Illustration', compteur: 'Valeur évolutive' }
 const blockKinds = Object.keys(blockLabels) as BlockKind[]
 
 function blankStage(): Stage { return { id: crypto.randomUUID(), title: 'Nouvelle étape', time: '', notes: '', done: false, blocks: [] } }
 function blankBlock(kind: BlockKind): Block {
-  return { id: crypto.randomUUID(), kind, title: kind === 'personnage' ? '' : blockLabels[kind], text: '', done: false, name: '', ascendance: '', portraitUrl: '', showName: true, quantity: '', reference: '', secret: kind === 'lore' }
+  return { id: crypto.randomUUID(), kind, title: kind === 'personnage' ? '' : blockLabels[kind], text: '', done: false, name: '', ascendance: '', portraitUrl: '', showName: true, quantity: '', reference: '', secret: kind === 'lore', ...(kind==='compteur'?{counter:{min:0,max:10,initial:5,value:5,broadcast:false}}:{}) }
 }
 function ensureRecap(body: Preparation['body']): Preparation['body'] {
   if (body.stages[0]?.blocks[0]?.kind === 'texte' && body.stages[0].blocks[0].title === 'Récapitulatif') return body
@@ -78,7 +79,7 @@ function ModuleTemplatePicker({draft,dirty,onImport,campaigns}:{draft:Preparatio
   function importTemplate() {
     if(!item?.body)return
     if(draft.body.stages.length+item.body.stages.length>100){setNotice('100 étapes maximum par séance.');return}
-    const stages=item.body.stages.map(stage=>({...stage,id:crypto.randomUUID(),done:false,blocks:stage.blocks.map(block=>({...block,id:crypto.randomUUID(),done:false}))}))
+    const stages=item.body.stages.map(stage=>({...stage,id:crypto.randomUUID(),done:false,blocks:stage.blocks.map(block=>({...block,id:crypto.randomUUID(),done:false,...(block.counter?{counter:{...block.counter,value:block.counter.initial,broadcast:false}}:{})}))}))
     onImport(stages,item.body.summary)
     setNotice(stages.length+' étape(s) copiée(s), sans modifier le modèle.')
   }
@@ -273,6 +274,23 @@ export default function SessionPreparations({ campaigns, scenarios, activeWorks,
     } catch (error) { setNotice((error as Error).message) }
     finally { setBusy(false) }
   }
+  async function changeCounter(stageId:string,block:Block,patch:Partial<Counter>,publish:boolean) {
+    if (!draft || !block.counter || templateModule || busy) return
+    const counter={...block.counter,...patch}
+    if (counter.value<counter.min || counter.value>counter.max) return
+    const next={...draft,body:{...draft.body,stages:draft.body.stages.map(s=>s.id===stageId?{...s,blocks:s.blocks.map(b=>b.id===block.id?{...b,counter}:b)}:s)}}
+    try {
+      const saved=await save(next)
+      if(publish) {
+        setBusy(true)
+        try {
+          await request('/'+encodeURIComponent(saved.id)+'/publish-counters',bodyInit({revision:saved.revision}))
+          setNotice('Valeurs enregistrées et message confirmé dans Foundry.')
+        } catch(e) { setNotice('Valeurs enregistrées ; diffusion non confirmée : '+(e as Error).message) }
+        finally {setBusy(false)}
+      }
+    } catch { /* save reports the error */ }
+  }
   async function share(block: Block) {
     if (!draft) return
     if (!window.confirm(`Partager « ${block.name || block.title || 'cette ressource'} » dans le salon Discord de la séance et dans Foundry ?`)) return
@@ -410,6 +428,17 @@ export default function SessionPreparations({ campaigns, scenarios, activeWorks,
                     </button></>}<label className="session-prep-checkbox"><input type="checkbox" checked={block.showName !== false} onChange={e => updateBlock(stage.id, block.id, { showName: e.target.checked })}/> Afficher le nom aux joueurs</label></> : <><strong>{npc?.nom ?? block.name ?? 'Personnage temporaire'}</strong><small>{block.npcId ? 'Fiche MJ' : 'Temporaire · sans fiche MJ'} · Ascendance : {npc?.ascendance || block.ascendance || 'non précisée'}</small></>}
                     <div className="session-prep-actions">{block.npcId && <Link to={`/pf2-mj/npcs/${encodeURIComponent(block.npcId)}`}>Ouvrir la fiche MJ</Link>}{!templateModule && !block.npcId && <button type="button" disabled={busy || uploadingPortrait !== null || !block.name?.trim()} onClick={() => void promote(block)}>Enregistrer comme PNJ permanent</button>}{!templateModule&&<button disabled={busy || uploadingPortrait !== null || !canShare} type="button" className="primary" onClick={() => void share(block)}>Partager · Discord + Foundry</button>}</div>
                   </div>
+                </div>}
+                {block.kind==='compteur' && block.counter && <div className="session-prep-block-fields">
+                  {mode==='edit' && <>{(['min','max','initial'] as const).map(field=><label key={field}>{({min:'Minimum',max:'Maximum',initial:'Valeur initiale'})[field]}<input type="number" step="1" value={block.counter![field]} onChange={e=>{const v=e.target.valueAsNumber;if(Number.isSafeInteger(v)){const c={...block.counter!,[field]:v};if(field==='initial'&&templateModule)c.value=v;updateBlock(stage.id,block.id,{counter:c})}}}/></label>)}</>}
+                  <div className="session-prep-full"><strong>{block.title} : {block.counter.value} / {block.counter.max}</strong><progress style={{width:'100%'}} max={Math.max(1,block.counter.max-block.counter.min)} value={Math.max(0,block.counter.value-block.counter.min)}/>
+                  {!templateModule&&<div className="session-prep-actions">
+                    <button type="button" disabled={busy||block.counter.value<=block.counter.min} onClick={()=>void changeCounter(stage.id,block,{value:block.counter!.value-1},block.counter!.broadcast)}>−1</button>
+                    <button type="button" disabled={busy||block.counter.value>=block.counter.max} onClick={()=>void changeCounter(stage.id,block,{value:block.counter!.value+1},block.counter!.broadcast)}>+1</button>
+                    <label><input type="checkbox" disabled={busy} checked={block.counter.broadcast} onChange={e=>void changeCounter(stage.id,block,{broadcast:e.target.checked},e.target.checked)}/> Diffuser dans Foundry</label>
+                    {block.counter.broadcast&&<button type="button" disabled={busy} onClick={()=>void changeCounter(stage.id,block,{},true)}>Republier</button>}
+                  </div>}
+                  {templateModule&&<small>La valeur repart de l’initiale à l’import ; diffusion uniquement depuis une préparation de séance.</small>}</div>
                 </div>}
                 {mode === 'edit' ? <div className="session-prep-block-fields">{block.kind !== 'personnage' && <label>Titre<input value={block.title} onChange={e => updateBlock(stage.id, block.id, { title: e.target.value })}/></label>}{block.kind === 'loot' && <label>Quantité<input value={block.quantity ?? ''} onChange={e => updateBlock(stage.id, block.id, { quantity: e.target.value })}/></label>}{block.kind === 'rencontre' && <label>Référence Foundry / scène<input value={block.reference ?? ''} onChange={e => updateBlock(stage.id, block.id, { reference: e.target.value })}/></label>}<label className="session-prep-full">{block.kind === 'personnage' ? 'Notes / rôle dans cette scène' : block.kind === 'illustration' ? 'Notes MJ (non publiées, facultatives)' : 'Contenu'}<textarea rows={3} value={block.text} onChange={e => updateBlock(stage.id, block.id, { text: e.target.value })}/></label>{block.kind === 'lore' && <label className="session-prep-checkbox"><input type="checkbox" checked={block.secret === true} onChange={e => updateBlock(stage.id, block.id, { secret: e.target.checked })}/> Secret MJ</label>}</div> : <><h4>{block.kind !== 'personnage' ? block.title : ''}{block.kind === 'loot' && block.quantity ? ` · ${block.quantity}` : ''}</h4>{block.kind === 'lore' && block.secret && <small className="session-prep-secret">🔒 Secret MJ</small>}{block.text && <p className="session-prep-block-text">{block.text}</p>}{block.reference && <small>{block.reference}</small>}</>}
               </div>
