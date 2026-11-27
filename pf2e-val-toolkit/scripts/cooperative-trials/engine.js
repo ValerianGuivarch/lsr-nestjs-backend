@@ -44,7 +44,7 @@ const clamp = (v)=>Math.max(0,Math.min(100,v));
 export function initialState(now, {duration=600, interval=30, increment=5, operatorId="",sceneId="",sessionId="",simonSequence=SIGNALS}={}) {
   return {status:"running",sceneId,sessionId,operatorId,started:now,deadline:now+duration*1000,nextTick:now+interval*1000,interval,increment,pressure:7,errors:0,
     solved:Object.fromEntries(MODULES.map(m=>[m,false])),rewarded:{},isolated:[false,false,false,false,false],runeRound:0,runeStep:0,simonSequence:[...simonSequence],simonLength:4,simonStep:0,simonPhase:"loop",simonAt:now+700,simonLast:null,
-    mazePos:0,dialIndex:0,dialAngle:0,dialDue:now+90000,purgeReady:now,purgeStart:null,events:[]};
+    mazePos:0,mazeFeedback:"initial",dialIndex:0,dialAngle:0,dialDue:now+90000,purgeReady:now,purgeStart:null,events:[]};
 }
 function change(s,delta,label,now,error=false) {
   s.pressure=clamp(s.pressure+delta);
@@ -96,10 +96,12 @@ export function apply(state,action,now) {
         }
       }else {s.simonStep=0;s.simonPhase="error";s.simonAt=now;s.simonLast=null;error("Erreur critique de quintessence — pulsation");}
     }
+  }else if(module==="maze"&&!s.solved.maze&&value==="reset"){
+    s.mazePos=0;s.mazeFeedback="reset";
   }else if(module==="maze"&&!s.solved.maze&&["U","D","L","R"].includes(value)){
     const a=s.mazePos,b=a+({U:-5,D:5,L:-1,R:1}[value]);
-    if(MAZE_EDGES.some(([x,y])=>(x===a&&y===b)||(x===b&&y===a))) {s.mazePos=b;if(b===24)reward(s,"maze",now);}
-    else error("Erreur critique de quintessence — paroi du circuit");
+    if(MAZE_EDGES.some(([x,y])=>(x===a&&y===b)||(x===b&&y===a))) {s.mazePos=b;s.mazeFeedback=b===24?"success":"move";if(b===24)reward(s,"maze",now);}
+    else {s.mazeFeedback="wall";error("Erreur critique de quintessence — paroi du circuit");}
   }else if(module==="dial"){
     if(value==="turn"){s.dialAngle=(s.dialAngle+1)%4;s.solved.dial=false;}
     if(value==="check"){
@@ -132,7 +134,7 @@ export function publicState(s) {
 export function playerState(s,operator) {
   const v=publicState(s);
   if(!v)return null;
-  if(operator)Object.assign(v,{isolated:s.isolated,runeRound:s.runeRound,runeStep:s.runeStep,simonSequence:s.simonSequence,simonLength:s.simonLength,simonStep:s.simonStep,simonPhase:s.simonPhase,simonAt:s.simonAt,simonLast:s.simonLast,mazePos:s.mazePos,dialIndex:s.dialIndex,dialAngle:s.dialAngle,dialDue:s.dialDue});
+  if(operator)Object.assign(v,{isolated:s.isolated,runeRound:s.runeRound,runeStep:s.runeStep,simonSequence:s.simonSequence,simonLength:s.simonLength,simonStep:s.simonStep,simonPhase:s.simonPhase,simonAt:s.simonAt,simonLast:s.simonLast,mazeFeedback:s.mazeFeedback,dialIndex:s.dialIndex,dialAngle:s.dialAngle,dialDue:s.dialDue});
   else Object.assign(v,{purgeReady:s.purgeReady,purgeStart:s.purgeStart});
   return v;
 }
