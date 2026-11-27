@@ -6,7 +6,8 @@ export const MJ_TOOLS = [
   'pf2eValAV',
   'pf2eValActiveParty',
   'pf2eValQuickNpc',
-  'pf2eValImprovise'
+  'pf2eValImprovise',
+  'pf2eValCooperative'
 ];
 
 export function moveToolsToMJ(controls) {

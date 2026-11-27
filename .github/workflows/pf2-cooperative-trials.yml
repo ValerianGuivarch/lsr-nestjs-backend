@@ -1,0 +1,18 @@
+name: PF2 cooperative trials
+on:
+  pull_request:
+    paths:
+      - 'pf2e-val-toolkit/**'
+      - '.github/workflows/pf2-cooperative-trials.yml'
+permissions:
+  contents: read
+jobs:
+  trials:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node pf2e-val-toolkit/tests/cooperative-trials.mjs
+      - run: node --check pf2e-val-toolkit/scripts/cooperative-trials/index.js
