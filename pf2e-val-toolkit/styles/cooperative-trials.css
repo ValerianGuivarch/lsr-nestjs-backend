@@ -1,0 +1,15 @@
+.pf2e-val-cooperative .val-trial-content{padding:.5rem;display:grid;gap:.5rem}
+.pf2e-val-cooperative .val-trial-content form{display:grid;gap:.45rem}
+.pf2e-val-cooperative .val-trial-content label{display:flex;align-items:center;justify-content:space-between;gap:.5rem}
+.pf2e-val-cooperative .val-trial-content label input,.pf2e-val-cooperative .val-trial-content select{max-width:55%}
+.pf2e-val-cooperative .val-trial-row{display:flex;align-items:center;gap:.6rem;justify-content:space-between;padding:.3rem;border-bottom:1px solid var(--color-border-light-2)}
+.pf2e-val-cooperative .val-trial-row button{width:auto;margin-left:auto}
+.pf2e-val-cooperative .val-trial-buttons{display:flex;flex-wrap:wrap;gap:.4rem}
+.pf2e-val-cooperative .val-trial-buttons button{flex:1;min-width:90px}
+.pf2e-val-cooperative .val-trial-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:.5rem}
+.pf2e-val-cooperative .val-trial-grid button{height:80px;font-size:2.5rem}
+.pf2e-val-cooperative .val-trial-maze{display:grid;grid-template-columns:repeat(5,1fr);gap:3px}
+.pf2e-val-cooperative .val-trial-maze span{border:1px solid #7b8794;text-align:center;padding:.7rem}
+.pf2e-val-cooperative .val-trial-lights{display:grid;grid-template-columns:repeat(6,1fr);gap:.4rem}
+.pf2e-val-cooperative .val-trial-lights span{border-radius:50%;border:1px solid #64748b;background:#4b535a;padding:.5rem;text-align:center;color:#eee}
+.pf2e-val-cooperative .val-trial-lights span.on{background:#42a56b;color:#fff;box-shadow:0 0 7px #42a56b}

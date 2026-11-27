@@ -1,3 +1,4 @@
+import {registerCooperativeTrials,initCooperativeTrials} from "./cooperative-trials/index.js";
 import { initDiscordCharacterChat, registerDiscordCharacterChatSettings } from "./discord-character-chat.js";
 import { initScenarioImporter } from "./scenario-importer/index.js";
 import { initReferenceIndexExporter } from "./reference-index/index.js";
@@ -69,6 +70,7 @@ Hooks.once("init", () => {
   initEncounterBuilder();
   initQuickNpc();
   // Register last: collect the four toolkit buttons into a separate MJ category.
+  registerCooperativeTrials();
   initMJSceneControls();
 });
 
@@ -79,6 +81,7 @@ Hooks.once("ready", () => {
   // here so native character-sheet pages (including Maîtrises) also use Larcin.
   applyTranslationOverrides();
 
+  initCooperativeTrials();
   initFamiliarSelector();
   initAVControl();
   initCombatMovement();
