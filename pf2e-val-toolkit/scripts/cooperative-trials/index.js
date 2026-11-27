@@ -5,6 +5,7 @@ const BASE="modules/"+NS+"/icons/cooperative/";
 const COLORS_HEX={R:0xff4141,B:0x4ca7ff,J:0xffd343,V:0x45dd78};
 const COLOR_CSS=["#ec5656","#55a0ff","#e8cf55","#55a0ff","#eeeeee"];
 const esc=x=>foundry.utils.escapeHTML(String(x??""));
+const clock=()=>game.time?.serverTime??Date.now();
 let authority=null, view=null, panel=null, consolePanel=null, queue=Promise.resolve(), busy=false;
 const hasAuthority=()=>game.user?.isGM && game.users.activeGM?.id===game.user.id;
 const trialScene=()=>canvas.scene?.getFlag(NS,"cooperativeLayout")===true;
@@ -16,7 +17,7 @@ function runSerial(fn){queue=queue.then(fn).catch(e=>{console.error("Épreuves c
 function role(id,s){return game.users.get(id)?.isGM||id===s.operatorId?"operator":"expert";}
 function near(note,userId,tokenId) {
  const user=game.users.get(userId),scene=note?.parent;
- if(!scene||!user)return false;
+ if(!scene||!user||!user.active)return false;
  if(user.isGM)return true;
  const token=scene.tokens.get(tokenId);
  if(!token||token.hidden||!token.actor?.testUserPermission(user,"OWNER"))return false;
@@ -106,7 +107,7 @@ async function start(data){
  const duration=Math.max(60,Math.min(1800,Number(data.duration)||600));
  const interval=Math.max(10,Math.min(120,Number(data.interval)||30));
  const increment=Math.max(1,Math.min(20,Number(data.increment)||5));
- const s=initialState(Date.now(),{duration,interval,increment,operatorId:op.id,sceneId:canvas.scene.id,sessionId:foundry.utils.randomID()});
+ const s=initialState(clock(),{duration,interval,increment,operatorId:op.id,sceneId:canvas.scene.id,sessionId:foundry.utils.randomID()});
  await grantManuals(s);
  await persist(s,false);await chat("Début de l’épreuve",7);
 }
@@ -114,7 +115,7 @@ async function gmAction(action,value){
  if(!hasAuthority())throw Error("Seul le MJ actif peut piloter cette épreuve.");
  authority=getSaved();
  if(!authority?.sessionId)return;
- let s=structuredClone(authority),now=Date.now();
+ let s=structuredClone(authority),now=clock();
  if(action==="adjust")return persist(adjust(s,value,now));
  if(action==="pause"&&s.status==="running"){s=tick(s,now);if(s.status==="running"){s.status="paused";s.pausedAt=now;}return persist(s);}
  if(action==="resume"&&s.status==="paused"){
@@ -139,7 +140,7 @@ async function accept(msg){
  const id=noteStation(note),module=stationModule(id);
  // A station may only submit its own command, especially individual Simon buttons.
  const value=id.startsWith("simon-")?(id==="simon-show"?"show":id.slice(-1)):msg.value;
- const next=apply(s,{module,value},Date.now());
+ const next=apply(s,{module,value},clock());
  await persist(next);
 }
 function command(note,value){
@@ -177,11 +178,12 @@ function panelClass(){
 }
 let PanelClass;
 const btn=(label,action,value="",disabled=false)=>'<button type="button" data-action="'+esc(action)+'" data-value="'+esc(value)+'" '+(disabled?'disabled':'')+'>'+esc(label)+'</button>';
-function timeLabel(s){return s?Math.max(0,Math.ceil((s.deadline-(s.status==="paused"?s.pausedAt??Date.now():Date.now()))/1000)):0;}
+function timeLabel(s){return s?Math.max(0,Math.ceil((s.deadline-(s.status==="paused"?s.pausedAt??clock():clock()))/1000)):0;}
 function gmHtml(){
  const s=view,active=["running","paused"].includes(s?.status);
+ const details=s?{conduits:(s.isolated??[]).map((v,i)=>v?i+1:null).filter(Boolean).join(", ")||"aucun isolé",runes:"série "+Math.min(3,(s.runeRound??0)+1)+"/3 · "+(s.runeStep??0)+"/4",simon:"série "+Math.min(4,(s.simonRound??0)+1)+"/4 · "+(s.simonStep??0),maze:"case "+String.fromCharCode(65+(s.mazePos??0)%5)+(1+Math.floor((s.mazePos??0)/5)),dial:["Nord","Est","Sud","Ouest"][s.dialAngle??0]+" · configuration "+((s.dialIndex??0)+1),pressure:(s.purgeStart!==null&&s.purgeStart!==undefined?"maintien en cours":clock()<(s.purgeReady??0)?"recharge":"prêt")}:{};
  let html='<p><b>Scène :</b> '+esc(canvas.scene?.name||"Aucune")+'</p>';
- if(s)html+='<p><b>'+esc(statusLabels[s.status])+'</b> · Pression '+s.pressure+' % · Erreurs '+s.errors+' · <span data-time>'+timeLabel(s)+'</span> s</p><ul>'+MODULES.map(m=>'<li>'+esc(LABELS[m])+' : '+(s.solved[m]?"stabilisé":"à résoudre")+'</li>').join("")+'</ul>';
+ if(s)html+='<p><b>'+esc(statusLabels[s.status])+'</b> · Pression '+s.pressure+' % · Erreurs '+s.errors+' · <span data-time>'+timeLabel(s)+'</span> s</p><ul>'+MODULES.map(m=>'<li>'+esc(LABELS[m])+' : '+(s.solved[m]?"stabilisé":"à résoudre")+" — "+esc(details[m])+'</li>').join("")+'</ul>';
  if(active)return html+'<div class="val-trial-buttons">'+btn("−10","adjust","-10",s.status!=="running")+btn("+5","adjust","5",s.status!=="running")+btn(s.status==="paused"?"Reprendre":"Pause",s.status==="paused"?"resume":"pause")+btn("Résoudre (MJ)","resolve")+btn("Arrêter","stop")+'</div>';
  const users=game.users.filter(u=>u.active).sort((a,b)=>Number(a.isGM)-Number(b.isGM));
  return html+'<form data-start-form><label>Opérateur <select name="operator">'+users.map(u=>'<option value="'+esc(u.id)+'" '+(!u.isGM?"":"")+'>'+esc(u.name)+(u.isGM?" (MJ test)":"")+'</option>').join("")+'</select></label><label>Durée (s) <input name="duration" type="number" value="600" min="60" max="1800"></label><label>Intervalle (s) <input name="interval" type="number" value="30" min="10" max="120"></label><label>Hausse par intervalle <input name="increment" type="number" value="5" min="1" max="20"></label></form><div class="val-trial-buttons">'+btn("Démarrer","start","",!trialScene())+btn("Créer une salle","create")+'</div><p class="hint">Créer la salle, placer les PJ, puis démarrer. Un seul opérateur ; les autres joueurs connectés reçoivent les manuels.</p>';
@@ -208,7 +210,7 @@ function consoleHtml(note){
   return html+'<div class="val-trial-lights">'+Array.from({length:12},(_,i)=>'<span class="'+(DIALS[s.dialIndex].lights.includes(i)?"on":"")+'">'+(i+1)+'</span>').join("")+'</div><p>Orientation : <b>'+["Nord ↑","Est →","Sud ↓","Ouest ←"][s.dialAngle]+'</b></p><div class="val-trial-buttons">'+btn("Tourner","value","turn")+btn("Valider","value","check")+'</div>';
  }
  if(id==="pressure"){
-  const t=Date.now(),ready=t>=s.purgeReady;
+  const t=clock(),ready=t>=s.purgeReady;
   return html+'<p data-purge-status>'+(!ready?"Recharge en cours":s.purgeStart!==null?"Maintien en cours — relâcher après 3 s":"Prêt à purger")+'</p><div class="val-trial-buttons">'+btn("Commencer le maintien","value","begin",!ready||s.purgeStart!==null)+btn("Relâcher","value","release",s.purgeStart===null)+'</div><p>Maintenez 3 à 10 secondes ; recharge 60 s.</p>';
  }
  return html;
@@ -224,13 +226,13 @@ function openGM(){
 }
 function openConsole(note){
  if(!PanelClass)PanelClass=panelClass();
- if(consolePanel?.rendered)consolePanel.close();
+ if(consolePanel?.rendered)void consolePanel.close();
  consolePanel=new PanelClass("console",note);consolePanel.render({force:true});
 }
 function renderSimon(){
  if(!trialScene()||!view||view.sceneId!==canvas.scene?.id)return;
  const op=game.user.isGM||game.user.id===view.operatorId;
- const elapsed=Date.now()-(view.simonShow??0),index=Math.floor(elapsed/850),flash=op&&view.status==="running"&&!view.solved.simon&&elapsed>=0&&index<=view.simonRound&&elapsed%850<550?SIGNALS[index]:null;
+ const elapsed=clock()-(view.simonShow??0),index=Math.floor(elapsed/850),flash=op&&view.status==="running"&&!view.solved.simon&&elapsed>=0&&index<=view.simonRound&&elapsed%850<550?SIGNALS[index]:null;
  for(const n of canvas.notes?.placeables??[]){
   const id=noteStation(n.document);
   if(!/^simon-[RBJV]$/.test(id??""))continue;
@@ -273,14 +275,14 @@ export function initCooperativeTrials(){
   renderSimon();
   if(panel?.rendered){const node=panel.root?.querySelector("[data-time]");if(node)node.textContent=timeLabel(view);}
   if(consolePanel?.rendered&&noteStation(consolePanel.note)==="pressure"&&view?.status==="running"){
-   const now=Date.now(),ready=now>=view.purgeReady,started=view.purgeStart!==null;
+   const now=clock(),ready=now>=view.purgeReady,started=view.purgeStart!==null;
    const b=consolePanel.root?.querySelector('[data-value="begin"]');if(b)b.disabled=!ready||started;
    const c=consolePanel.root?.querySelector('[data-value="release"]');if(c)c.disabled=!started;
    const p=consolePanel.root?.querySelector("[data-purge-status]");if(p)p.textContent=started?"Maintien : "+Math.floor((now-view.purgeStart)/1000)+" s":ready?"Prêt à purger":"Recharge : "+Math.ceil((view.purgeReady-now)/1000)+" s";
   }
   if(!hasAuthority()||busy)return;
-  const s=getSaved(),now=Date.now();
+  const s=getSaved(),now=clock();
   if(s?.status!=="running"||now<Math.min(s.nextTick,s.deadline,s.dialDue,s.purgeStart===null?Infinity:s.purgeStart+10001))return;
-  busy=true;runSerial(async()=>{const old=getSaved();if(old?.status==="running"){const n=tick(old,Date.now());if(n.purgeStart!==null&&Date.now()-n.purgeStart>10000)n.purgeStart=null;await persist(n);}}).finally(()=>busy=false);
+  busy=true;runSerial(async()=>{const old=getSaved();if(old?.status==="running"){const n=tick(old,clock());if(n.purgeStart!==null&&clock()-n.purgeStart>10000)n.purgeStart=null;await persist(n);}}).finally(()=>busy=false);
  },125);
 }

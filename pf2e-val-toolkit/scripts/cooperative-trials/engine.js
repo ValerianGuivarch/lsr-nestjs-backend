@@ -13,7 +13,7 @@ export const MAZE_EDGES = [...MAZE_PATH.slice(1).map((p,i)=>[MAZE_PATH[i],p]),[1
 const clamp = (v)=>Math.max(0,Math.min(100,v));
 export function initialState(now, {duration=600, interval=30, increment=5, operatorId="",sceneId="",sessionId=""}={}) {
   return {status:"running",sceneId,sessionId,operatorId,started:now,deadline:now+duration*1000,nextTick:now+interval*1000,interval,increment,pressure:7,errors:0,
-    solved:Object.fromEntries(MODULES.map(m=>[m,false])),rewarded:{},isolated:[false,false,false,false,false],runeRound:0,runeStep:0,simonRound:0,simonStep:0,simonShow:now,
+    solved:Object.fromEntries(MODULES.map(m=>[m,false])),rewarded:{},isolated:[false,false,false,false,false],runeRound:0,runeStep:0,simonRound:0,simonStep:0,simonShow:now+700,
     mazePos:0,dialIndex:0,dialAngle:0,dialDue:now+90000,purgeReady:now,purgeStart:null,events:[]};
 }
 function change(s,delta,label,now,error=false) {
@@ -36,7 +36,7 @@ export function tick(state,now) {
     change(s,s.increment,"Montée de pression",s.nextTick);s.nextTick+=s.interval*1000;
   }
   if(s.purgeStart!==null&&now-s.purgeStart>10000)s.purgeStart=null;
-  if(s.pressure<100&&now<s.deadline&&now>=s.dialDue){s.dialIndex=(s.dialIndex+1)%DIALS.length;s.dialDue=now+90000;s.solved.dial=false;change(s,5,"Molette : réajustement requis",now,true);}
+  if(s.pressure<100&&now<s.deadline&&now>=s.dialDue){const missed=!s.solved.dial;s.dialIndex=(s.dialIndex+1)%DIALS.length;s.dialDue=now+90000;s.solved.dial=false;change(s,missed?5:0,missed?"Erreur critique de quintessence — molette non réglée":"Molette : nouvelle configuration",now,missed);}
   finish(s,now);return s;
 }
 export function apply(state,action,now) {
@@ -53,11 +53,11 @@ export function apply(state,action,now) {
       s.runeStep++;if(s.runeStep===4){s.runeRound++;s.runeStep=0;if(s.runeRound===RUNE_ROWS.length)reward(s,"runes",now);}
     }else {s.runeStep=0;error("Erreur critique de quintessence — rune");}
   }else if(module==="simon"&&!s.solved.simon){
-    if(value==="show"){s.simonShow=now;s.simonStep=0;}
+    if(value==="show"){s.simonShow=now+700;s.simonStep=0;}
     else if(Object.hasOwn(RESPONSES,value)&&now>=s.simonShow+(s.simonRound+1)*850+300){
       if(value===RESPONSES[SIGNALS[s.simonStep]]){
-        s.simonStep++;if(s.simonStep===s.simonRound+1){s.simonRound++;s.simonStep=0;if(s.simonRound===SIGNALS.length)reward(s,"simon",now);else s.simonShow=now;}
-      }else{s.simonStep=0;s.simonShow=now;error("Erreur critique de quintessence — pulsation");}
+        s.simonStep++;if(s.simonStep===s.simonRound+1){s.simonRound++;s.simonStep=0;if(s.simonRound===SIGNALS.length)reward(s,"simon",now);else s.simonShow=now+700;}
+      }else{s.simonStep=0;s.simonShow=now+700;error("Erreur critique de quintessence — pulsation");}
     }
   }else if(module==="maze"&&!s.solved.maze&&["U","D","L","R"].includes(value)){
     const a=s.mazePos,b=a+({U:-5,D:5,L:-1,R:1}[value]);
@@ -66,7 +66,7 @@ export function apply(state,action,now) {
   }else if(module==="dial"){
     if(value==="turn"){s.dialAngle=(s.dialAngle+1)%4;s.solved.dial=false;}
     if(value==="check"){
-      if(s.dialAngle===DIALS[s.dialIndex].answer){reward(s,"dial",now);s.dialDue=now+90000;}
+      if(s.dialAngle===DIALS[s.dialIndex].answer){reward(s,"dial",now);}
       else error("Erreur critique de quintessence — orientation");
     }
   }else if(module==="pressure"){

@@ -22,7 +22,7 @@ act("pressure","begin");n+=3100;act("pressure","release");assert.equal(s.status,
 let other=initialState(0,{duration:600,interval:30,increment:5});assert.equal(tick(other,30000).pressure,12);
 other=apply(other,{module:"pressure",value:"begin"},1000);other=apply(other,{module:"pressure",value:"release"},2000);assert.equal(other.solved.pressure,false);
 assert.equal(tick(initialState(0),600000).status,"failed");
-let d=initialState(0);d=apply(d,{module:"dial",value:"turn"},1);d=apply(d,{module:"dial",value:"check"},2);assert.equal(d.solved.dial,true);d=tick(d,90002);assert.equal(d.solved.dial,false);assert.equal(d.dialIndex,1);
+let d=initialState(0);d=apply(d,{module:"dial",value:"turn"},1);d=apply(d,{module:"dial",value:"check"},2);assert.equal(d.solved.dial,true);const errorCount=d.errors;d=tick(d,90002);assert.equal(d.solved.dial,false);assert.equal(d.dialIndex,1);assert.equal(d.errors,errorCount);d=tick(d,180003);assert.equal(d.errors,errorCount+1);
 let p=initialState(0);p=apply(p,{module:"pressure",value:"begin"},1);p=tick(p,10002);assert.equal(p.purgeStart,null);
 assert.equal(adjust(initialState(0),-10,1).pressure,0);
 assert.equal(playerState(initialState(0),false).isolated,undefined);
