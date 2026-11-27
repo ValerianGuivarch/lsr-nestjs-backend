@@ -1,4 +1,4 @@
-import {MODULES,LABELS,COLORS,RUNE_KEYS,SIGNALS,DIALS,initialState,tick,apply,adjust,playerState} from "./engine.js";
+import {MODULES,LABELS,COLORS,RUNE_KEYS,SIMON_COLORS,simonVisual,simonDue,DIALS,initialState,tick,apply,adjust,playerState} from "./engine.js";
 import {MANUALS,STATIONS,MANUAL_POSITIONS} from "./manuals.js";
 const NS="pf2e-val-toolkit", CHANNEL="module."+NS, KEY="cooperativeTrial";
 const BASE="modules/"+NS+"/icons/cooperative/";
@@ -18,15 +18,16 @@ function role(id,s){return game.users.get(id)?.isGM||id===s.operatorId?"operator
 function near(note,userId,tokenId) {
  const user=game.users.get(userId),scene=note?.parent;
  if(!scene||!user||!user.active)return false;
- if(user.isGM)return true;
+ const simon=String(noteStation(note)??"").startsWith("simon-");
+ if(user.isGM&&!simon)return true;
  const token=scene.tokens.get(tokenId);
  if(!token||token.hidden||!token.actor?.testUserPermission(user,"OWNER"))return false;
  const g=scene.grid.size||100;
  const dx=token.x+(token.width||1)*g/2-note.x,dy=token.y+(token.height||1)*g/2-note.y;
- return Math.hypot(dx,dy)<=g*2.5;
+ return Math.hypot(dx,dy)<=g*(simon?1.5:2.5);
 }
 function selectedNear(note) {
- if(game.user.isGM)return {id:null};
+ if(game.user.isGM&&!String(noteStation(note)??"").startsWith("simon-"))return {id:null};
  // Only selected, owned tokens are accepted. No action from a remote location.
  return (canvas.tokens.controlled??[]).map(t=>t.document).find(t=>near(note,game.user.id,t.id));
 }
@@ -76,6 +77,8 @@ async function grantManuals(s) {
   const ownership={default:0};for(const u of experts)ownership[u.id]=2;
   const changes={ownership};for(const id of Object.keys(j.ownership))if(id!=="default"&&!(id in ownership))changes["ownership.-="+id]=null;
   await j.update(changes);
+  const manual=MANUALS[j.getFlag(NS,"cooperativeManual")],page=j.pages.find(p=>p.type==="text");
+  if(manual&&page&&page.text.content!==manual.text)await page.update({"text.content":manual.text});
  }
 }
 async function chat(label,pressure,delta=0,error=false){
@@ -107,7 +110,9 @@ async function start(data){
  const duration=Math.max(60,Math.min(1800,Number(data.duration)||600));
  const interval=Math.max(10,Math.min(120,Number(data.interval)||30));
  const increment=Math.max(1,Math.min(20,Number(data.increment)||5));
- const s=initialState(clock(),{duration,interval,increment,operatorId:op.id,sceneId:canvas.scene.id,sessionId:foundry.utils.randomID()});
+ const seq=[...SIMON_COLORS];for(let k=seq.length-1;k>0;k--){const j=Math.floor(Math.random()*(k+1));[seq[k],seq[j]]=[seq[j],seq[k]];}
+ while(seq.length<12)seq.push(SIMON_COLORS[Math.floor(Math.random()*SIMON_COLORS.length)]);
+ const s=initialState(clock(),{duration,interval,increment,operatorId:op.id,sceneId:canvas.scene.id,sessionId:foundry.utils.randomID(),simonSequence:seq});
  await grantManuals(s);
  await persist(s,false);await chat("Début de l’épreuve",7);
 }
@@ -119,7 +124,7 @@ async function gmAction(action,value){
  if(action==="adjust")return persist(adjust(s,value,now));
  if(action==="pause"&&s.status==="running"){s=tick(s,now);if(s.status==="running"){s.status="paused";s.pausedAt=now;}return persist(s);}
  if(action==="resume"&&s.status==="paused"){
-  const shift=now-s.pausedAt;for(const k of ["deadline","nextTick","simonShow","dialDue","purgeReady","purgeStart"])if(s[k]!==null&&typeof s[k]==="number")s[k]+=shift;
+  const shift=now-s.pausedAt;for(const k of ["deadline","nextTick","simonShow","simonAt","dialDue","purgeReady","purgeStart"])if(s[k]!==null&&typeof s[k]==="number")s[k]+=shift;
   s.status="running";delete s.pausedAt;return persist(s);
  }
  if(action==="stop"&&["running","paused"].includes(s.status)){s.status="stopped";await persist(s,false);return chat("Épreuve arrêtée par le MJ",s.pressure);}
@@ -146,7 +151,7 @@ async function accept(msg){
 function command(note,value){
  if(!view||view.status!=="running"||view.sceneId!==canvas.scene?.id)return ui.notifications.warn("L’épreuve n’est pas en cours.");
  const tok=selectedNear(note);
- if(!tok)return ui.notifications.warn("Sélectionnez un de vos personnages à moins de 2,5 cases du mécanisme.");
+ if(!tok)return ui.notifications.warn("Sélectionnez un jeton à proximité (1,5 case pour les pulsations, 2,5 pour les autres mécanismes).");
  const message={kind:"action",userId:game.user.id,tokenId:tok.id,noteId:note.id,sessionId:view.sessionId,value};
  if(hasAuthority())runSerial(()=>accept(message));else send(message);
 }
@@ -181,9 +186,9 @@ const btn=(label,action,value="",disabled=false)=>'<button type="button" data-ac
 function timeLabel(s){return s?Math.max(0,Math.ceil((s.deadline-(s.status==="paused"?s.pausedAt??clock():clock()))/1000)):0;}
 function gmHtml(){
  const s=view,active=["running","paused"].includes(s?.status);
- const details=s?{conduits:(s.isolated??[]).map((v,i)=>v?i+1:null).filter(Boolean).join(", ")||"aucun isolé",runes:"série "+Math.min(3,(s.runeRound??0)+1)+"/3 · "+(s.runeStep??0)+"/4",simon:"série "+Math.min(4,(s.simonRound??0)+1)+"/4 · "+(s.simonStep??0),maze:"case "+String.fromCharCode(65+(s.mazePos??0)%5)+(1+Math.floor((s.mazePos??0)/5)),dial:["Nord","Est","Sud","Ouest"][s.dialAngle??0]+" · configuration "+((s.dialIndex??0)+1),pressure:(s.purgeStart!==null&&s.purgeStart!==undefined?"maintien en cours":clock()<(s.purgeReady??0)?"recharge":"prêt")}:{};
+ const details=s?{conduits:(s.isolated??[]).map((v,i)=>v?i+1:null).filter(Boolean).join(", ")||"aucun isolé",runes:"série "+Math.min(3,(s.runeRound??0)+1)+"/3 · "+(s.runeStep??0)+"/4",simon:s.solved.simon?"12/12":(s.simonLength??4)+" couleurs · "+(s.simonStep??0)+" saisies",maze:"case "+String.fromCharCode(65+(s.mazePos??0)%5)+(1+Math.floor((s.mazePos??0)/5)),dial:["Nord","Est","Sud","Ouest"][s.dialAngle??0]+" · configuration "+((s.dialIndex??0)+1),pressure:(s.purgeStart!==null&&s.purgeStart!==undefined?"maintien en cours":clock()<(s.purgeReady??0)?"recharge":"prêt")}:{};
  let html='<p><b>Scène :</b> '+esc(canvas.scene?.name||"Aucune")+'</p>';
- if(s)html+='<p><b>'+esc(statusLabels[s.status])+'</b> · Pression '+s.pressure+' % · Erreurs '+s.errors+' · <span data-time>'+timeLabel(s)+'</span> s</p><ul>'+MODULES.map(m=>'<li>'+esc(LABELS[m])+' : '+(s.solved[m]?"stabilisé":"à résoudre")+" — "+esc(details[m])+'</li>').join("")+'</ul>';
+ if(s)html+='<div class="val-trial-dashboard"><div class="val-trial-meter"><b>PRESSION '+s.pressure+' %</b><div class="val-trial-track"><i style="width:'+s.pressure+'%"></i></div></div><div class="val-trial-clock"><span data-time>'+timeLabel(s)+'</span> s</div></div><p><b>'+esc(statusLabels[s.status])+'</b> · Erreurs '+s.errors+'</p><ul class="val-trial-status-list">'+MODULES.map(m=>'<li>'+esc(LABELS[m])+' : '+(s.solved[m]?"stabilisé":"à résoudre")+" — "+esc(details[m])+'</li>').join("")+'</ul>';
  if(active)return html+'<div class="val-trial-buttons">'+btn("−10","adjust","-10",s.status!=="running")+btn("+5","adjust","5",s.status!=="running")+btn(s.status==="paused"?"Reprendre":"Pause",s.status==="paused"?"resume":"pause")+btn("Résoudre (MJ)","resolve")+btn("Arrêter","stop")+'</div>';
  const users=game.users.filter(u=>u.active).sort((a,b)=>Number(a.isGM)-Number(b.isGM));
  return html+'<form data-start-form><label>Opérateur <select name="operator">'+users.map(u=>'<option value="'+esc(u.id)+'" '+(!u.isGM?"":"")+'>'+esc(u.name)+(u.isGM?" (MJ test)":"")+'</option>').join("")+'</select></label><label>Durée (s) <input name="duration" type="number" value="600" min="60" max="1800"></label><label>Intervalle (s) <input name="interval" type="number" value="30" min="10" max="120"></label><label>Hausse par intervalle <input name="increment" type="number" value="5" min="1" max="20"></label></form><div class="val-trial-buttons">'+btn("Démarrer","start","",!trialScene())+btn("Créer une salle","create")+'</div><p class="hint">Créer la salle, placer les PJ, puis démarrer. Un seul opérateur ; les autres joueurs connectés reçoivent les manuels.</p>';
@@ -194,26 +199,26 @@ function consoleHtml(note){
  if(s.status!=="running")return "<p>"+esc(statusLabels[s.status])+"</p>";
  const op=game.user.isGM||game.user.id===s.operatorId;
  if((id==="pressure"?op&&!game.user.isGM:!op))return "<p>Ce mécanisme appartient à l’autre équipe.</p>";
- let html='<p>Pression '+s.pressure+' % · '+esc(s.solved[stationModule(id)]?"Stabilisé":"Actif")+'</p>';
+ let html='<div class="val-trial-instrument"><div class="val-trial-heading"><span>'+esc(LABELS[stationModule(id)])+'</span><b class="'+(s.solved[stationModule(id)]?"is-solved":"")+'">'+(s.solved[stationModule(id)]?"STABILISÉ":"EN SERVICE")+'</b></div><div class="val-trial-meter"><b>PRESSION '+s.pressure+' %</b><div class="val-trial-track"><i style="width:'+s.pressure+'%"></i></div></div>';
+ const close='</div>';
  if(id==="conduits"){
-  return html+COLORS.map((c,i)=>'<div class="val-trial-row"><span style="color:'+COLOR_CSS[i]+'">●</span> '+(i+1)+'. '+esc(c)+' '+btn(s.isolated[i]?"Rétablir":"Isoler","number",i)+'</div>').join("");
+  return html+'<div class="val-trial-wires">'+COLORS.map((c,k)=>'<button class="val-trial-wire '+(s.isolated[k]?"is-open":"")+'" style="--wire:'+COLOR_CSS[k]+'" type="button" data-action="number" data-value="'+k+'" aria-label="'+esc(c)+' '+(k+1)+' : '+(s.isolated[k]?"rétablir":"isoler")+'"><span class="wire-number">'+(k+1)+'</span><svg viewBox="0 0 240 52" aria-hidden="true"><circle cx="13" cy="26" r="11" class="wire-terminal"/><circle cx="227" cy="26" r="11" class="wire-terminal"/><path class="wire-intact" d="M13 26 C65 26 66 8 120 26 S184 26 227 26"/><path class="wire-cut" d="M13 26 C66 26 82 8 106 15 M134 37 C160 44 184 26 227 26"/></svg><span class="wire-caption">'+esc(c)+' · '+(s.isolated[k]?"Rétablir":"Isoler")+'</span></button>').join("")+'</div>'+close;
  }
  if(id==="runes"){
-  if(s.solved.runes)return html;
-  return html+'<p>Série '+(s.runeRound+1)+'/3 · '+s.runeStep+'/4</p><div class="val-trial-grid">'+RUNE_KEYS[s.runeRound].map(r=>btn(r,"value",r)).join("")+'</div>';
+  const progress=Array.from({length:4},(_,k)=>'<i class="'+(k<s.runeStep||s.solved.runes?"on":"")+'"></i>').join("");
+  return html+'<div class="val-trial-readout">SÉRIE '+Math.min(3,s.runeRound+1)+' / 3</div><div class="val-trial-pips">'+progress+'</div>'+(s.solved.runes?'':'<div class="val-trial-grid">'+RUNE_KEYS[s.runeRound].map(r=>btn(r,"value",r)).join("")+'</div>')+close;
  }
  if(id==="maze"){
-  if(s.solved.maze)return html;
-  return html+'<div class="val-trial-maze">'+Array.from({length:25},(_,i)=>'<span>'+String.fromCharCode(65+i%5)+(1+Math.floor(i/5))+(i===s.mazePos?" ●":"")+(i===24?" ◎":"")+'</span>').join("")+'</div><div class="val-trial-buttons">'+[["↑","U"],["←","L"],["↓","D"],["→","R"]].map(([a,v])=>btn(a,"value",v)).join("")+'</div>';
+  return html+'<div class="val-trial-maze">'+Array.from({length:25},(_,k)=>'<span class="'+(k===s.mazePos?"current ":"")+(k===24?"exit":"")+'"><small>'+String.fromCharCode(65+k%5)+(1+Math.floor(k/5))+'</small><i>'+(k===s.mazePos?"◆":k===24?"◎":"")+'</i></span>').join("")+'</div>'+(s.solved.maze?'':'<div class="val-trial-arrows">'+[["↑","U"],["←","L"],["↓","D"],["→","R"]].map(([a,v])=>btn(a,"value",v)).join("")+'</div>')+close;
  }
  if(id==="dial"){
-  return html+'<div class="val-trial-lights">'+Array.from({length:12},(_,i)=>'<span class="'+(DIALS[s.dialIndex].lights.includes(i)?"on":"")+'">'+(i+1)+'</span>').join("")+'</div><p>Orientation : <b>'+["Nord ↑","Est →","Sud ↓","Ouest ←"][s.dialAngle]+'</b></p><div class="val-trial-buttons">'+btn("Tourner","value","turn")+btn("Valider","value","check")+'</div>';
+  return html+'<div class="val-trial-lights">'+Array.from({length:12},(_,k)=>'<span class="'+(DIALS[s.dialIndex].lights.includes(k)?"on":"")+'">'+(k+1)+'</span>').join("")+'</div><svg class="val-trial-dial" viewBox="0 0 220 190" aria-hidden="true"><defs><radialGradient id="val-knob"><stop stop-color="#9c9074"/><stop offset="1" stop-color="#332d27"/></radialGradient></defs><circle cx="110" cy="95" r="65" fill="#11191d" stroke="#a98c56" stroke-width="3"/><circle cx="110" cy="95" r="50" fill="url(#val-knob)" stroke="#c8ad74" stroke-width="2"/><path d="M102 102V59L110 49 118 59V102Z" fill="#f4d27d" transform="rotate('+(90*s.dialAngle)+' 110 95)"/><circle cx="110" cy="95" r="8" fill="#302a25" stroke="#d1b16c"/><g fill="#e9d8ae" text-anchor="middle" font-size="14" font-weight="bold"><text x="110" y="20">N</text><text x="193" y="100">E</text><text x="110" y="181">S</text><text x="27" y="100">O</text></g></svg><div class="val-trial-readout">'+["NORD","EST","SUD","OUEST"][s.dialAngle]+'</div><div class="val-trial-buttons">'+btn("↻ Tourner","value","turn")+btn("✓ Valider","value","check")+'</div>'+close;
  }
  if(id==="pressure"){
   const t=clock(),ready=t>=s.purgeReady;
-  return html+'<p data-purge-status>'+(!ready?"Recharge en cours":s.purgeStart!==null?"Maintien en cours — relâcher après 3 s":"Prêt à purger")+'</p><div class="val-trial-buttons">'+btn("Commencer le maintien","value","begin",!ready||s.purgeStart!==null)+btn("Relâcher","value","release",s.purgeStart===null)+'</div><p>Maintenez 3 à 10 secondes ; recharge 60 s.</p>';
+  return html+'<svg class="val-trial-gauge" viewBox="0 0 220 115"><path d="M25 95 A85 85 0 0 1 195 95" fill="none" stroke="#3a4446" stroke-width="17"/><path d="M25 95 A85 85 0 0 1 195 95" fill="none" stroke="'+(s.pressure>=75?"#db6551":"#9bc879")+'" stroke-width="11" pathLength="100" stroke-dasharray="'+s.pressure+' 100"/><path d="M110 95L110 27" transform="rotate('+(-90+1.8*s.pressure)+' 110 95)" stroke="#ead0a0" stroke-width="4"/><circle cx="110" cy="95" r="8" fill="#d6af70"/><text x="110" y="80" text-anchor="middle" fill="#f8ebcf" font-size="20">'+s.pressure+'%</text></svg><p class="val-trial-readout" data-purge-status>'+(!ready?"Recharge en cours":s.purgeStart!==null?"Maintien en cours — relâcher après 3 s":"Prêt à purger")+'</p><div class="val-trial-purge">'+btn("PURGE","value","begin",!ready||s.purgeStart!==null)+btn("Relâcher","value","release",s.purgeStart===null)+'</div><p>Maintenez 3 à 10 secondes ; recharge 60 s.</p>'+close;
  }
- return html;
+ return html+close;
 }
 function refresh(){
  panel?.updateContent();consolePanel?.updateContent();
@@ -232,13 +237,16 @@ function openConsole(note){
 function renderSimon(){
  if(!trialScene()||!view||view.sceneId!==canvas.scene?.id)return;
  const op=game.user.isGM||game.user.id===view.operatorId;
- const elapsed=clock()-(view.simonShow??0),index=Math.floor(elapsed/850),flash=op&&view.status==="running"&&!view.solved.simon&&elapsed>=0&&index<=view.simonRound&&elapsed%850<550?SIGNALS[index]:null;
+ const visual=op?simonVisual(view,clock()):{lit:[]};
  for(const n of canvas.notes?.placeables??[]){
   const id=noteStation(n.document);
   if(!/^simon-[RBJV]$/.test(id??""))continue;
-  const col=id.slice(-1),sprite=n.controlIcon?.icon;
-  if(sprite){sprite.tint=flash===col?COLORS_HEX[col]:0x777777;sprite.alpha=flash===col?1:0.72;}
+  const col=id.slice(-1),icon=n.controlIcon,sprite=icon?.icon,lit=visual.lit.includes(col);
+  if(sprite){sprite.tint=lit?0xffffff:0x454545;sprite.alpha=1;}
+  if(icon?.border){icon.border.tint=lit?COLORS_HEX[col]:0x545454;icon.border.visible=true;}
+  if(icon?.bg){icon.bg.tint=lit?COLORS_HEX[col]:0x000000;icon.bg.alpha=lit?0.8:0.4;}
  }
+
 }
 function noteClick(note){
  const doc=note.document,st=noteStation(doc),manual=noteManual(doc);
@@ -282,7 +290,7 @@ export function initCooperativeTrials(){
   }
   if(!hasAuthority()||busy)return;
   const s=getSaved(),now=clock();
-  if(s?.status!=="running"||now<Math.min(s.nextTick,s.deadline,s.dialDue,s.purgeStart===null?Infinity:s.purgeStart+10001))return;
+  if(s?.status!=="running"||now<Math.min(s.nextTick,s.deadline,s.dialDue,simonDue(s),s.purgeStart===null?Infinity:s.purgeStart+10001))return;
   busy=true;runSerial(async()=>{const old=getSaved();if(old?.status==="running"){const n=tick(old,clock());if(n.purgeStart!==null&&clock()-n.purgeStart>10000)n.purgeStart=null;await persist(n);}}).finally(()=>busy=false);
  },125);
 }

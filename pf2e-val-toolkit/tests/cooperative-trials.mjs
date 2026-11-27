@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import {initialState,apply,tick,adjust,MAZE_PATH,RUNE_ROWS,SIGNALS,RESPONSES,DIALS,playerState} from "../scripts/cooperative-trials/engine.js";
+import {initialState,apply,tick,adjust,MAZE_PATH,RUNE_ROWS,SIGNALS,SIMON_SLOT,simonVisual,simonDue,DIALS,playerState} from "../scripts/cooperative-trials/engine.js";
 let n=1000, s=initialState(n);
 const act=(module,value,t=n)=>{s=apply(s,{module,value},t);return s;};
 assert.equal(s.pressure,7);
@@ -11,7 +11,7 @@ act("conduits",3);assert.equal(s.pressure,7,"no repeat reward");
 act("runes","◇");assert.equal(s.errors,3);
 for(const row of RUNE_ROWS)for(const v of row)act("runes",v);
 assert.equal(s.solved.runes,true);
-for(let i=0;i<SIGNALS.length;i++){n+=5000;for(const v of SIGNALS.slice(0,i+1))act("simon",RESPONSES[v]);}
+for(let k=4;k<=12;k++){n+=800;for(const v of SIGNALS.slice(0,k)){n+=100;act("simon",v);}}
 assert.equal(s.solved.simon,true);
 act("maze","U");assert.equal(s.mazePos,0);
 for(let i=1;i<MAZE_PATH.length;i++)act("maze",({1:"R","-1":"L",5:"D","-5":"U"})[MAZE_PATH[i]-MAZE_PATH[i-1]]);
@@ -27,3 +27,26 @@ let p=initialState(0);p=apply(p,{module:"pressure",value:"begin"},1);p=tick(p,10
 assert.equal(adjust(initialState(0),-10,1).pressure,0);
 assert.equal(playerState(initialState(0),false).isolated,undefined);
 console.log("Cooperative trials: fixed modules, pressure, failures, restore and role views OK");
+
+let sim=initialState(0,{interval:120,duration:1800});
+const click=(v,t)=>sim=apply(sim,{module:"simon",value:v},t);
+assert.equal(sim.simonLength,4);
+assert.deepEqual(simonVisual(sim,700).lit,[SIGNALS[0]]);
+assert.deepEqual(simonVisual(sim,700+SIMON_SLOT).lit,[SIGNALS[1]]);
+assert.deepEqual(simonVisual(sim,700+4*SIMON_SLOT+10000).lit,[SIGNALS[0]]);
+click(SIGNALS[0],900);assert.equal(sim.simonPhase,"input");assert.equal(sim.simonStep,1);
+click("V",1000);assert.equal(sim.simonPhase,"error");assert.equal(sim.pressure,12);
+assert.deepEqual(simonVisual(sim,1100).lit,["B","R","J","V"]);
+assert.deepEqual(simonVisual(sim,1600).lit,[]);
+assert.deepEqual(simonVisual(sim,4500).lit,[]);
+click("B",4500);assert.equal(sim.simonPhase,"error");assert.equal(sim.errors,1);
+assert.deepEqual(simonVisual(sim,5000).lit,[SIGNALS[0]]);
+sim=tick(sim,5000);assert.equal(sim.simonPhase,"loop");
+click(SIGNALS[0],5100);assert.equal(simonDue(sim),15100);
+sim=tick(sim,15100);assert.equal(sim.simonPhase,"loop");assert.equal(sim.simonStep,0);assert.equal(sim.errors,1);
+let t=16000;
+for(let k=4;k<=12;k++){assert.equal(sim.simonLength,k);t+=1000;for(const v of SIGNALS.slice(0,k))click(v,t+=300);}
+assert.equal(sim.solved.simon,true);assert.equal(sim.pressure,2);assert.equal(sim.errors,1);
+assert.deepEqual(simonVisual(sim,t).lit,["B","R","J","V"]);
+assert.equal(playerState(sim,false).simonSequence,undefined);
+console.log("Simon: loop, interruption, error flash, timeout, progression 4–12 and victory OK");
