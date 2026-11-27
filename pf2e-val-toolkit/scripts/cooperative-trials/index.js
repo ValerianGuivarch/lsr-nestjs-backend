@@ -1,5 +1,6 @@
 import {MODULES,LABELS,COLORS,RUNE_KEYS,SIMON_COLORS,simonVisual,simonDue,DIALS,initialState,tick,apply,adjust,playerState} from "./engine.js";
 import {MANUALS,STATIONS,MANUAL_POSITIONS} from "./manuals.js";
+import {ILLUSTRATED_LAYOUT} from "./layouts.js";
 const NS="pf2e-val-toolkit", CHANNEL="module."+NS, KEY="cooperativeTrial";
 const BASE="modules/"+NS+"/icons/cooperative/";
 const COLORS_HEX={R:0xff4141,B:0x4ca7ff,J:0xffd343,V:0x45dd78};
@@ -36,19 +37,24 @@ function noteManual(note){return note?.getFlag(NS,"cooperativeManual");}
 function makeNote(entry,x,y,text,icon,flag) {
  return {entryId:entry.id,x,y,text,iconSize:70,global:false,fontSize:20,texture:{src:BASE+icon+".svg"},flags:{[NS]:flag}};
 }
-async function createLayout(){
+async function createLayout(preset="blank"){
+ const illustrated=preset==="illustrated",layout=illustrated?ILLUSTRATED_LAYOUT:null;
  if(!game.user.isGM)return;
  const folders=game.folders.filter(f=>f.type==="Scene");
  const chosen=folders.find(f=>f.name.replace(/[’']/g,"'")==="Agents d'Absalom");
  const opts=await foundry.applications.api.DialogV2.wait({
   window:{title:"Créer une salle d’épreuves coopératives"},
-  content:'<label>Nom <input name="name" value="Le Ratisseur de tombes"></label><label>Dossier <select name="folder"><option value="">Racine</option>'+folders.map(f=>'<option value="'+esc(f.id)+'" '+(f.id===chosen?.id?'selected':'')+'>'+esc(f.name)+'</option>').join("")+'</select></label><p>Scène vide 26 × 19 cases, deux zones séparées, six manuels et dix mécanismes. Ne crée aucun Actor, ne remplace aucune scène.</p>',
+  content:'<label>Nom <input name="name" value="'+esc(layout?.name??"Le Ratisseur de tombes")+'"></label><label>Dossier <select name="folder"><option value="">Racine</option>'+folders.map(f=>'<option value="'+esc(f.id)+'" '+(f.id===chosen?.id?'selected':'')+'>'+esc(f.name)+'</option>').join("")+'</select></label><p>'+(illustrated?"Carte rati.png, 30 × 34 cases environ, salle des machines au nord et bureau au sud, séparés par une cloison de jeu.":"Scène vide 26 × 19 cases, deux zones séparées.")+' Six manuels et dix mécanismes. Ne crée aucun Actor, ne remplace aucune scène.</p>',
   buttons:[{action:"create",label:"Créer",callback:(_e,b)=>Object.fromEntries(new FormData(b.form))},{action:"cancel",label:"Annuler",callback:()=>null}],close:()=>null
  });
  if(!opts)return;
  const name=String(opts.name||"Épreuves coopératives").trim();
  if(game.scenes.some(s=>s.name===name)){ui.notifications.warn("Une scène porte déjà ce nom. Choisissez un autre nom.");return;}
- const scene=await Scene.create({name,folder:opts.folder||null,width:2600,height:1900,padding:0,background:{src:null},backgroundColor:"#242b31",tokenVision:true,fog:{mode:CONST.FOG_EXPLORATION_MODES.DISABLED},environment:{darknessLevel:0,darknessLevelLock:true},grid:{type:CONST.GRID_TYPES.SQUARE,size:100,distance:5,units:"ft"},navigation:false,flags:{[NS]:{cooperativeLayout:true}}});
+ if(illustrated){
+  const img=new Image();await new Promise((resolve,reject)=>{img.onload=resolve;img.onerror=()=>reject(Error("Carte rati.png introuvable : aucune scène créée."));img.src=layout.src;});
+  if(img.naturalWidth!==1000||img.naturalHeight!==1136)throw Error("Dimensions inattendues pour rati.png : aucune scène créée.");
+ }
+ const scene=await Scene.create({name,folder:opts.folder||null,width:layout?.width??2600,height:layout?.height??1900,padding:0,background:{src:layout?.src??null},backgroundColor:"#242b31",tokenVision:true,fog:{mode:CONST.FOG_EXPLORATION_MODES.DISABLED},environment:{darknessLevel:0,darknessLock:true,globalLight:{enabled:true}},grid:{type:CONST.GRID_TYPES.SQUARE,size:layout?.grid??100,distance:5,units:"ft",alpha:illustrated?0:0.2},navigation:false,flags:{[NS]:{cooperativeLayout:true,cooperativePreset:illustrated?"illustrated":"blank"}}});
  const journalFolder=game.folders.find(f=>f.type==="JournalEntry"&&f.name===chosen?.name);
  // A dedicated folder avoids scattering journals; no existing documents are changed.
  const jf=await Folder.create({name:name+" — épreuves",type:"JournalEntry",folder:journalFolder?.id??null});
@@ -56,13 +62,13 @@ async function createLayout(){
  const notes=[];
  for(const [i,[key,manual]] of Object.entries(Object.entries(MANUALS))){
   const j=await JournalEntry.create({name:manual.name,folder:jf.id,ownership:{default:0},pages:[{name:"Instructions",type:"text",text:{content:manual.text,format:1}}],flags:{[NS]:{cooperativeScene:scene.id,cooperativeManual:key}}});
-  const [x,y]=MANUAL_POSITIONS[Number(i)];
+  const [x,y]=(layout?.manuals??MANUAL_POSITIONS)[Number(i)];
   notes.push(makeNote(j,x,y,manual.name,"book",{cooperativeManual:key}));
  }
- for(const st of STATIONS)notes.push(makeNote(anchor,st.x,st.y,st.label,st.icon,{cooperativeStation:st.id}));
+ for(const st of STATIONS){const [x,y]=layout?.stations[st.id]??[st.x,st.y];notes.push(makeNote(anchor,x,y,st.label,st.icon,{cooperativeStation:st.id}));}
  // Partition at x=1900; bottom entry to a one-cell-wide passage by the return wall.
  const wall=(c,door=0)=>({c,move:20,sight:20,light:20,sound:0,door,ds:0});
- await scene.createEmbeddedDocuments("Wall",[
+ await scene.createEmbeddedDocuments("Wall",illustrated?layout.walls.map(w=>wall(w.c,w.door)):[
   wall([50,50,2550,50]),wall([2550,50,2550,1850]),wall([2550,1850,50,1850]),wall([50,1850,50,50]),
   wall([1900,50,1900,1650]),wall([1900,1650,1900,1750],1),wall([1900,1750,1900,1850]),
   wall([2100,50,2100,1300]),wall([1900,1300,2100,1300])
@@ -173,7 +179,8 @@ function panelClass(){
    this.root.querySelectorAll("[data-action]").forEach(button=>button.addEventListener("click",()=>{
     const act=button.dataset.action,val=button.dataset.value;
     if(this.type==="gm"){
-     if(act==="create")runSerial(createLayout);
+     if(act==="create")runSerial(()=>createLayout());
+     else if(act==="create-map")runSerial(()=>createLayout("illustrated"));
      else if(act==="start"){const form=this.root.querySelector("[data-start-form]");runSerial(()=>start(Object.fromEntries(new FormData(form))));}
      else runSerial(()=>gmAction(act,Number(val)));
     }else command(this.note,act==="number"?Number(val):val);
@@ -191,7 +198,7 @@ function gmHtml(){
  if(s)html+='<div class="val-trial-dashboard"><div class="val-trial-meter"><b>PRESSION '+s.pressure+' %</b><div class="val-trial-track"><i style="width:'+s.pressure+'%"></i></div></div><div class="val-trial-clock"><span data-time>'+timeLabel(s)+'</span> s</div></div><p><b>'+esc(statusLabels[s.status])+'</b> · Erreurs '+s.errors+'</p><ul class="val-trial-status-list">'+MODULES.map(m=>'<li>'+esc(LABELS[m])+' : '+(s.solved[m]?"stabilisé":"à résoudre")+" — "+esc(details[m])+'</li>').join("")+'</ul>';
  if(active)return html+'<div class="val-trial-buttons">'+btn("−10","adjust","-10",s.status!=="running")+btn("+5","adjust","5",s.status!=="running")+btn(s.status==="paused"?"Reprendre":"Pause",s.status==="paused"?"resume":"pause")+btn("Résoudre (MJ)","resolve")+btn("Arrêter","stop")+'</div>';
  const users=game.users.filter(u=>u.active).sort((a,b)=>Number(a.isGM)-Number(b.isGM));
- return html+'<form data-start-form><label>Opérateur <select name="operator">'+users.map(u=>'<option value="'+esc(u.id)+'" '+(!u.isGM?"":"")+'>'+esc(u.name)+(u.isGM?" (MJ test)":"")+'</option>').join("")+'</select></label><label>Durée (s) <input name="duration" type="number" value="600" min="60" max="1800"></label><label>Intervalle (s) <input name="interval" type="number" value="30" min="10" max="120"></label><label>Hausse par intervalle <input name="increment" type="number" value="5" min="1" max="20"></label></form><div class="val-trial-buttons">'+btn("Démarrer","start","",!trialScene())+btn("Créer une salle","create")+'</div><p class="hint">Créer la salle, placer les PJ, puis démarrer. Un seul opérateur ; les autres joueurs connectés reçoivent les manuels.</p>';
+ return html+'<form data-start-form><label>Opérateur <select name="operator">'+users.map(u=>'<option value="'+esc(u.id)+'" '+(!u.isGM?"":"")+'>'+esc(u.name)+(u.isGM?" (MJ test)":"")+'</option>').join("")+'</select></label><label>Durée (s) <input name="duration" type="number" value="600" min="60" max="1800"></label><label>Intervalle (s) <input name="interval" type="number" value="30" min="10" max="120"></label><label>Hausse par intervalle <input name="increment" type="number" value="5" min="1" max="20"></label></form><div class="val-trial-buttons">'+btn("Démarrer","start","",!trialScene())+btn("Créer une salle","create")+btn("Créer salle illustrée","create-map")+'</div><p class="hint">Créer la salle, placer les PJ, puis démarrer. Un seul opérateur ; les autres joueurs connectés reçoivent les manuels.</p>';
 }
 function consoleHtml(note){
  const s=view,id=noteStation(note);
