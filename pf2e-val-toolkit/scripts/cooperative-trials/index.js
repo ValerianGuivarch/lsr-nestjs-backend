@@ -19,16 +19,16 @@ function role(id,s){return game.users.get(id)?.isGM||id===s.operatorId?"operator
 function near(note,userId,tokenId) {
  const user=game.users.get(userId),scene=note?.parent;
  if(!scene||!user||!user.active)return false;
- const simon=String(noteStation(note)??"").startsWith("simon-");
- if(user.isGM&&!simon)return true;
+ const close=String(noteStation(note)??"").startsWith("simon-")||!!noteManual(note);
+ if(user.isGM&&!close)return true;
  const token=scene.tokens.get(tokenId);
  if(!token||token.hidden||!token.actor?.testUserPermission(user,"OWNER"))return false;
  const g=scene.grid.size||100;
  const dx=token.x+(token.width||1)*g/2-note.x,dy=token.y+(token.height||1)*g/2-note.y;
- return Math.hypot(dx,dy)<=g*(simon?1.5:2.5);
+ return Math.hypot(dx,dy)<=g*(close?1.5:2.5);
 }
 function selectedNear(note) {
- if(game.user.isGM&&!String(noteStation(note)??"").startsWith("simon-"))return {id:null};
+ if(game.user.isGM&&!noteManual(note)&&!String(noteStation(note)??"").startsWith("simon-"))return {id:null};
  // Only selected, owned tokens are accepted. No action from a remote location.
  return (canvas.tokens.controlled??[]).map(t=>t.document).find(t=>near(note,game.user.id,t.id));
 }
@@ -63,7 +63,7 @@ async function createLayout(preset="blank"){
  for(const [i,[key,manual]] of Object.entries(Object.entries(MANUALS))){
   const j=await JournalEntry.create({name:manual.name,folder:jf.id,ownership:{default:0},pages:[{name:"Instructions",type:"text",text:{content:manual.text,format:1}}],flags:{[NS]:{cooperativeScene:scene.id,cooperativeManual:key}}});
   const [x,y]=(layout?.manuals??MANUAL_POSITIONS)[Number(i)];
-  notes.push(makeNote(j,x,y,manual.name,"book",{cooperativeManual:key}));
+  notes.push(makeNote(anchor,x,y,manual.name,"manual-"+key,{cooperativeManual:key}));
  }
  for(const st of STATIONS){const [x,y]=layout?.stations[st.id]??[st.x,st.y];notes.push(makeNote(anchor,x,y,st.label,st.icon,{cooperativeStation:st.id}));}
  // Partition at x=1900; bottom entry to a one-cell-wide passage by the return wall.
@@ -78,14 +78,29 @@ async function createLayout(preset="blank"){
  ui.notifications.info(name+" : "+notes.length+" repères créés. Déplacez les PJ puis ouvrez Épreuves coopératives.");
 }
 async function grantManuals(s) {
- const experts=game.users.filter(u=>!u.isGM&&u.id!==s.operatorId&&u.active);
+ // Only the harmless interaction anchor is readable by players. Manual text is
+ // displayed by the proximity-gated client panel, never by a sidebar Journal.
+ const scene=sceneById(s.sceneId);
+ const anchor=game.journal.find(j=>j.getFlag(NS,"cooperativeScene")===s.sceneId&&!j.getFlag(NS,"cooperativeManual"));
+ if(!scene||!anchor)throw Error("Ancrage des mécanismes introuvable.");
  for(const j of game.journal.filter(j=>j.getFlag(NS,"cooperativeScene")===s.sceneId&&j.getFlag(NS,"cooperativeManual"))){
-  const ownership={default:0};for(const u of experts)ownership[u.id]=2;
-  const changes={ownership};for(const id of Object.keys(j.ownership))if(id!=="default"&&!(id in ownership))changes["ownership.-="+id]=null;
-  await j.update(changes);
+  const changes={ownership:{default:0}};
+  for(const id of Object.keys(j.ownership))if(id!=="default")changes["ownership.-="+id]=null;
+  if(j.ownership.default!==0||Object.keys(j.ownership).some(id=>id!=="default"))await j.update(changes);
   const manual=MANUALS[j.getFlag(NS,"cooperativeManual")],page=j.pages.find(p=>p.type==="text");
   if(manual&&page&&page.text.content!==manual.text)await page.update({"text.content":manual.text});
  }
+ const updates=scene.notes.filter(n=>Object.hasOwn(MANUALS,noteManual(n)??"")).flatMap(n=>{
+  const src=BASE+"manual-"+noteManual(n)+".svg";
+  if(n.entryId===anchor.id&&!n.pageId&&n.texture.src===src)return [];
+  return [{_id:n.id,entryId:anchor.id,pageId:null,"texture.src":src}];
+ });
+ if(updates.length)await scene.updateEmbeddedDocuments("Note",updates);
+}
+function canReadManual(note){
+ return !!note&&canvas.scene?.id===note.parent?.id&&view?.sceneId===note.parent.id&&
+ ["running","paused"].includes(view.status)&&Object.hasOwn(MANUALS,noteManual(note)??"")&&
+ (game.user.isGM||game.user.id!==view.operatorId)&&!!selectedNear(note);
 }
 async function chat(label,pressure,delta=0,error=false){
  const color=error?"#b83e3e":"inherit";
@@ -103,7 +118,7 @@ async function persist(next,announce=true) {
 function publish(target=null) {
  if(!authority)return;
  for(const u of game.users.filter(u=>u.active&&(!target||u.id===target))){
-  const v=u.isGM?{...playerState(authority,true),...playerState(authority,false)}:playerState(authority,role(u.id,authority)==="operator");
+  const v=u.isGM?{...playerState(authority,true),...playerState(authority,false),mazePos:authority.mazePos}:playerState(authority,role(u.id,authority)==="operator");
   if(u.id===game.user.id){view=v;refresh();}
   else send({kind:"view",to:u.id,from:game.user.id,view:v});
  }
@@ -165,7 +180,7 @@ function panelClass(){
  const App=foundry.applications.api.ApplicationV2;
  return class TrialPanel extends App{
   static DEFAULT_OPTIONS={classes:["pf2e-val-cooperative"],window:{title:"Épreuves coopératives",resizable:true},position:{width:470,height:"auto"}};
-  constructor(type,note=null){super({id:type==="gm"?"pf2e-val-cooperative-gm":"pf2e-val-cooperative-console",window:{title:type==="gm"?"Épreuves coopératives — MJ":"Mécanisme — "+note.text}});this.type=type;this.note=note;}
+  constructor(type,note=null){super({id:type==="gm"?"pf2e-val-cooperative-gm":"pf2e-val-cooperative-console",window:{title:type==="gm"?"Épreuves coopératives — MJ":type==="manual"?note.text:"Mécanisme — "+note.text}});this.type=type;this.note=note;}
   async _renderHTML(){const root=document.createElement("div");root.className="val-trial-content";this.root=root;this.updateContent();return root;}
   _replaceHTML(result,content){content.replaceChildren(result);}
   updateContent(){
@@ -175,7 +190,7 @@ function panelClass(){
    if(this.type==="gm"&&!active&&this.root.querySelector("[data-start-form]")&&this.lastStatus===view?.status&&this.lastScene===canvas.scene?.id)return;
    this.lastScene=canvas.scene?.id;
    this.lastStatus=view?.status;
-   this.root.innerHTML=this.type==="gm"?gmHtml():consoleHtml(this.note);
+   this.root.innerHTML=this.type==="gm"?gmHtml():this.type==="manual"?manualHtml(this.note):consoleHtml(this.note);
    this.root.querySelectorAll("[data-action]").forEach(button=>button.addEventListener("click",()=>{
     const act=button.dataset.action,val=button.dataset.value;
     if(this.type==="gm"){
@@ -209,14 +224,15 @@ function consoleHtml(note){
  let html='<div class="val-trial-instrument"><div class="val-trial-heading"><span>'+esc(LABELS[stationModule(id)])+'</span><b class="'+(s.solved[stationModule(id)]?"is-solved":"")+'">'+(s.solved[stationModule(id)]?"STABILISÉ":"EN SERVICE")+'</b></div><div class="val-trial-meter"><b>PRESSION '+s.pressure+' %</b><div class="val-trial-track"><i style="width:'+s.pressure+'%"></i></div></div>';
  const close='</div>';
  if(id==="conduits"){
-  return html+'<div class="val-trial-wires">'+COLORS.map((c,k)=>'<button class="val-trial-wire '+(s.isolated[k]?"is-open":"")+'" style="--wire:'+COLOR_CSS[k]+'" type="button" data-action="number" data-value="'+k+'" aria-label="'+esc(c)+' '+(k+1)+' : '+(s.isolated[k]?"rétablir":"isoler")+'"><span class="wire-number">'+(k+1)+'</span><svg viewBox="0 0 240 52" aria-hidden="true"><circle cx="13" cy="26" r="11" class="wire-terminal"/><circle cx="227" cy="26" r="11" class="wire-terminal"/><path class="wire-intact" d="M13 26 C65 26 66 8 120 26 S184 26 227 26"/><path class="wire-cut" d="M13 26 C66 26 82 8 106 15 M134 37 C160 44 184 26 227 26"/></svg><span class="wire-caption">'+esc(c)+' · '+(s.isolated[k]?"Rétablir":"Isoler")+'</span></button>').join("")+'</div>'+close;
+  return html+'<div class="val-trial-conduits">'+COLORS.map((c,k)=>'<div class="val-trial-conduit"><span class="conduit-color" style="--conduit:'+COLOR_CSS[k]+'"></span><b>'+(k+1)+'. '+esc(c.charAt(0).toUpperCase()+c.slice(1))+'</b><span class="conduit-state">'+(s.isolated[k]?"Isolé":"Actif")+'</span>'+btn(s.isolated[k]?"Rétablir":"Isoler","number",k)+'</div>').join("")+'</div>'+close;
  }
  if(id==="runes"){
   const progress=Array.from({length:4},(_,k)=>'<i class="'+(k<s.runeStep||s.solved.runes?"on":"")+'"></i>').join("");
   return html+'<div class="val-trial-readout">SÉRIE '+Math.min(3,s.runeRound+1)+' / 3</div><div class="val-trial-pips">'+progress+'</div>'+(s.solved.runes?'':'<div class="val-trial-grid">'+RUNE_KEYS[s.runeRound].map(r=>btn(r,"value",r)).join("")+'</div>')+close;
  }
  if(id==="maze"){
-  return html+'<div class="val-trial-maze">'+Array.from({length:25},(_,k)=>'<span class="'+(k===s.mazePos?"current ":"")+(k===24?"exit":"")+'"><small>'+String.fromCharCode(65+k%5)+(1+Math.floor(k/5))+'</small><i>'+(k===s.mazePos?"◆":k===24?"◎":"")+'</i></span>').join("")+'</div>'+(s.solved.maze?'':'<div class="val-trial-arrows">'+[["↑","U"],["←","L"],["↓","D"],["→","R"]].map(([a,v])=>btn(a,"value",v)).join("")+'</div>')+close;
+  const feedback={initial:"En attente d’une direction",move:"Déplacement accepté",wall:"Obstacle — déplacement refusé",reset:"Retour au point de départ",success:"Circuit stabilisé"}[s.solved.maze?"success":s.mazeFeedback??"initial"];
+  return html+'<div class="val-trial-direction-status '+(s.mazeFeedback==="wall"?"is-error":s.solved.maze?"is-success":"")+'" role="status"><i></i>'+esc(feedback)+'</div>'+(s.solved.maze?'':'<div class="val-trial-dpad">'+[["↑","U","Nord"],["←","L","Ouest"],["↓","D","Sud"],["→","R","Est"]].map(([arrow,v,label])=>'<button type="button" data-action="value" data-value="'+v+'" aria-label="'+label+'"><span>'+arrow+'</span><small>'+label+'</small></button>').join("")+'<div class="val-trial-dpad-center" aria-hidden="true"><i></i></div></div><div class="val-trial-reset">'+btn("↺ Réinitialiser en position initiale","value","reset")+'</div><p class="val-trial-direction-hint">Suivez les directions données par les experts.</p>')+close;
  }
  if(id==="dial"){
   return html+'<div class="val-trial-lights">'+Array.from({length:12},(_,k)=>'<span class="'+(DIALS[s.dialIndex].lights.includes(k)?"on":"")+'">'+(k+1)+'</span>').join("")+'</div><svg class="val-trial-dial" viewBox="0 0 220 190" aria-hidden="true"><defs><radialGradient id="val-knob"><stop stop-color="#9c9074"/><stop offset="1" stop-color="#332d27"/></radialGradient></defs><circle cx="110" cy="95" r="65" fill="#11191d" stroke="#a98c56" stroke-width="3"/><circle cx="110" cy="95" r="50" fill="url(#val-knob)" stroke="#c8ad74" stroke-width="2"/><path d="M102 102V59L110 49 118 59V102Z" fill="#f4d27d" transform="rotate('+(90*s.dialAngle)+' 110 95)"/><circle cx="110" cy="95" r="8" fill="#302a25" stroke="#d1b16c"/><g fill="#e9d8ae" text-anchor="middle" font-size="14" font-weight="bold"><text x="110" y="20">N</text><text x="193" y="100">E</text><text x="110" y="181">S</text><text x="27" y="100">O</text></g></svg><div class="val-trial-readout">'+["NORD","EST","SUD","OUEST"][s.dialAngle]+'</div><div class="val-trial-buttons">'+btn("↻ Tourner","value","turn")+btn("✓ Valider","value","check")+'</div>'+close;
@@ -227,8 +243,18 @@ function consoleHtml(note){
  }
  return html+close;
 }
+function manualHtml(note){
+ if(!canReadManual(note))return "<p>Approchez le personnage du repère.</p>";
+ const key=noteManual(note),manual=MANUALS[key];
+ return '<div class="val-trial-manual"><div class="val-trial-manual-heading"><img src="'+BASE+'manual-'+key+'.svg" alt=""><strong>'+esc(manual.name)+'</strong></div>'+manual.text+'</div>';
+}
+function checkManual(){
+ if(consolePanel?.type==="manual"&&consolePanel.rendered&&!canReadManual(consolePanel.note)){
+  const app=consolePanel;consolePanel=null;void app.close();
+ }
+}
 function refresh(){
- panel?.updateContent();consolePanel?.updateContent();
+ panel?.updateContent();checkManual();consolePanel?.updateContent();
 }
 function openGM(){
  if(!game.user.isGM)return;
@@ -236,10 +262,10 @@ function openGM(){
  panel??=new PanelClass("gm");if(!panel.rendered)panel.render({force:true});else panel.updateContent();
  if(hasAuthority()){authority=getSaved();if(authority?.sessionId)publish(game.user.id);}
 }
-function openConsole(note){
+function openConsole(note,type="console"){
  if(!PanelClass)PanelClass=panelClass();
  if(consolePanel?.rendered)void consolePanel.close();
- consolePanel=new PanelClass("console",note);consolePanel.render({force:true});
+ consolePanel=new PanelClass(type,note);consolePanel.render({force:true});
 }
 function renderSimon(){
  if(!trialScene()||!view||view.sceneId!==canvas.scene?.id)return;
@@ -260,8 +286,8 @@ function noteClick(note){
  if(!st&&!manual)return;
  if(!selectedNear(doc)){ui.notifications.warn("Approchez et sélectionnez votre personnage.");return false;}
  if(manual){
-  if(!game.user.isGM&&(!view||view.status!=="running"||view.operatorId===game.user.id)){ui.notifications.warn("Manuel réservé aux experts pendant l’épreuve.");return false;}
-  return; // Foundry opens the native journal, with native ownership.
+  if(!canReadManual(doc)){ui.notifications.warn("Manuel réservé aux experts : approchez et sélectionnez votre personnage (1,5 case).");return false;}
+  openConsole(doc,"manual");return false;
  }
  if(!view||view.sceneId!==doc.parent.id){ui.notifications.warn("Attendez le lancement de l’épreuve.");return false;}
  if(!game.user.isGM&&!canAct(doc,game.user.id,selectedNear(doc)?.id,view)){ui.notifications.warn("Ce mécanisme n’est pas accessible à votre rôle.");return false;}
@@ -284,10 +310,12 @@ export function initCooperativeTrials(){
  });
  Hooks.on("canvasReady",()=>{if(hasAuthority()){authority=getSaved();if(authority?.sessionId)publish();}else send({kind:"request",userId:game.user.id});if(panel?.rendered)panel.updateContent();});
  Hooks.on("updateUser",()=>{if(hasAuthority()&&authority?.sessionId)publish();});
+ Hooks.on("controlToken",checkManual);
+ Hooks.on("updateToken",checkManual);
  game.pf2eValToolkit??={};game.pf2eValToolkit.cooperativeTrials={open:openGM,createLayout};
  if(hasAuthority()){authority=getSaved();if(authority?.sessionId)publish();}else send({kind:"request",userId:game.user.id});
  setInterval(()=>{
-  renderSimon();
+  renderSimon();checkManual();
   if(panel?.rendered){const node=panel.root?.querySelector("[data-time]");if(node)node.textContent=timeLabel(view);}
   if(consolePanel?.rendered&&noteStation(consolePanel.note)==="pressure"&&view?.status==="running"){
    const now=clock(),ready=now>=view.purgeReady,started=view.purgeStart!==null;
