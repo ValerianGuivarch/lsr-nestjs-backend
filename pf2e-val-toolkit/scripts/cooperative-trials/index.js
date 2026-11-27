@@ -37,6 +37,21 @@ function noteManual(note){return note?.getFlag(NS,"cooperativeManual");}
 function makeNote(entry,x,y,text,icon,flag) {
  return {entryId:entry.id,x,y,text,iconSize:70,global:false,fontSize:20,texture:{src:BASE+icon+".svg"},flags:{[NS]:flag}};
 }
+async function verifyIllustratedAsset(layout){
+ const img=new Image();await new Promise((resolve,reject)=>{img.onload=resolve;img.onerror=()=>reject(Error("Carte rati.png introuvable."));img.src=layout.src;});
+ if(img.naturalWidth!==1000||img.naturalHeight!==1136)throw Error("Dimensions inattendues pour rati.png.");
+}
+async function repairIllustratedBackground(scene=canvas.scene){
+ if(!game.user.isGM||scene?.getFlag(NS,"cooperativePreset")!=="illustrated")throw Error("Sélectionnez la salle illustrée.");
+ const level=scene.initialLevel??scene.levels.contents[0];
+ if(!level)throw Error("Niveau de scène introuvable.");
+ if(level.background?.src===ILLUSTRATED_LAYOUT.src){ui.notifications.info("Le fond rati.png est déjà enregistré. Vérifiez le niveau affiché et la visibilité.");return;}
+ if(level.background?.src)throw Error("Un autre fond existe déjà : aucune modification automatique.");
+ await verifyIllustratedAsset(ILLUSTRATED_LAYOUT);
+ await level.update({"background.src":ILLUSTRATED_LAYOUT.src});
+ if(level.background?.src!==ILLUSTRATED_LAYOUT.src)throw Error("Le fond n’a pas été enregistré.");
+ ui.notifications.info("Fond du Ratisseur réparé, sans modifier les repères ni les murs.");
+}
 async function createLayout(preset="blank"){
  const illustrated=preset==="illustrated",layout=illustrated?ILLUSTRATED_LAYOUT:null;
  if(!game.user.isGM)return;
@@ -50,11 +65,10 @@ async function createLayout(preset="blank"){
  if(!opts)return;
  const name=String(opts.name||"Épreuves coopératives").trim();
  if(game.scenes.some(s=>s.name===name)){ui.notifications.warn("Une scène porte déjà ce nom. Choisissez un autre nom.");return;}
- if(illustrated){
-  const img=new Image();await new Promise((resolve,reject)=>{img.onload=resolve;img.onerror=()=>reject(Error("Carte rati.png introuvable : aucune scène créée."));img.src=layout.src;});
-  if(img.naturalWidth!==1000||img.naturalHeight!==1136)throw Error("Dimensions inattendues pour rati.png : aucune scène créée.");
- }
- const scene=await Scene.create({name,folder:opts.folder||null,width:layout?.width??2600,height:layout?.height??1900,padding:0,background:{src:layout?.src??null},backgroundColor:"#242b31",tokenVision:true,fog:{mode:CONST.FOG_EXPLORATION_MODES.DISABLED},environment:{darknessLevel:0,darknessLock:true,globalLight:{enabled:true}},grid:{type:CONST.GRID_TYPES.SQUARE,size:layout?.grid??100,distance:5,units:"ft",alpha:illustrated?0:0.2},navigation:false,flags:{[NS]:{cooperativeLayout:true,cooperativePreset:illustrated?"illustrated":"blank"}}});
+ if(illustrated)await verifyIllustratedAsset(layout);
+ const levelId=foundry.utils.randomID();
+ const scene=await Scene.create({name,folder:opts.folder||null,width:layout?.width??2600,height:layout?.height??1900,padding:0,levels:[{_id:levelId,name:"Rez-de-chaussée",background:{src:layout?.src??null,color:"#242b31"}}],initialLevel:levelId,tokenVision:true,fog:{mode:CONST.FOG_EXPLORATION_MODES.DISABLED},environment:{darknessLevel:0,darknessLock:true,globalLight:{enabled:true}},grid:{type:CONST.GRID_TYPES.SQUARE,size:layout?.grid??100,distance:5,units:"ft",alpha:illustrated?0:0.2},navigation:false,flags:{[NS]:{cooperativeLayout:true,cooperativePreset:illustrated?"illustrated":"blank"}}});
+ if(illustrated&&scene.initialLevel?.background?.src!==layout.src)await repairIllustratedBackground(scene);
  const journalFolder=game.folders.find(f=>f.type==="JournalEntry"&&f.name===chosen?.name);
  // A dedicated folder avoids scattering journals; no existing documents are changed.
  const jf=await Folder.create({name:name+" — épreuves",type:"JournalEntry",folder:journalFolder?.id??null});
@@ -196,6 +210,7 @@ function panelClass(){
     if(this.type==="gm"){
      if(act==="create")runSerial(()=>createLayout());
      else if(act==="create-map")runSerial(()=>createLayout("illustrated"));
+     else if(act==="repair-map")runSerial(()=>repairIllustratedBackground());
      else if(act==="start"){const form=this.root.querySelector("[data-start-form]");runSerial(()=>start(Object.fromEntries(new FormData(form))));}
      else runSerial(()=>gmAction(act,Number(val)));
     }else command(this.note,act==="number"?Number(val):val);
@@ -213,7 +228,7 @@ function gmHtml(){
  if(s)html+='<div class="val-trial-dashboard"><div class="val-trial-meter"><b>PRESSION '+s.pressure+' %</b><div class="val-trial-track"><i style="width:'+s.pressure+'%"></i></div></div><div class="val-trial-clock"><span data-time>'+timeLabel(s)+'</span> s</div></div><p><b>'+esc(statusLabels[s.status])+'</b> · Erreurs '+s.errors+'</p><ul class="val-trial-status-list">'+MODULES.map(m=>'<li>'+esc(LABELS[m])+' : '+(s.solved[m]?"stabilisé":"à résoudre")+" — "+esc(details[m])+'</li>').join("")+'</ul>';
  if(active)return html+'<div class="val-trial-buttons">'+btn("−10","adjust","-10",s.status!=="running")+btn("+5","adjust","5",s.status!=="running")+btn(s.status==="paused"?"Reprendre":"Pause",s.status==="paused"?"resume":"pause")+btn("Résoudre (MJ)","resolve")+btn("Arrêter","stop")+'</div>';
  const users=game.users.filter(u=>u.active).sort((a,b)=>Number(a.isGM)-Number(b.isGM));
- return html+'<form data-start-form><label>Opérateur <select name="operator">'+users.map(u=>'<option value="'+esc(u.id)+'" '+(!u.isGM?"":"")+'>'+esc(u.name)+(u.isGM?" (MJ test)":"")+'</option>').join("")+'</select></label><label>Durée (s) <input name="duration" type="number" value="600" min="60" max="1800"></label><label>Intervalle (s) <input name="interval" type="number" value="30" min="10" max="120"></label><label>Hausse par intervalle <input name="increment" type="number" value="5" min="1" max="20"></label></form><div class="val-trial-buttons">'+btn("Démarrer","start","",!trialScene())+btn("Créer une salle","create")+btn("Créer salle illustrée","create-map")+'</div><p class="hint">Créer la salle, placer les PJ, puis démarrer. Un seul opérateur ; les autres joueurs connectés reçoivent les manuels.</p>';
+ return html+'<form data-start-form><label>Opérateur <select name="operator">'+users.map(u=>'<option value="'+esc(u.id)+'" '+(!u.isGM?"":"")+'>'+esc(u.name)+(u.isGM?" (MJ test)":"")+'</option>').join("")+'</select></label><label>Durée (s) <input name="duration" type="number" value="600" min="60" max="1800"></label><label>Intervalle (s) <input name="interval" type="number" value="30" min="10" max="120"></label><label>Hausse par intervalle <input name="increment" type="number" value="5" min="1" max="20"></label></form><div class="val-trial-buttons">'+btn("Démarrer","start","",!trialScene())+btn("Créer une salle","create")+btn("Créer salle illustrée","create-map")+(canvas.scene?.getFlag(NS,"cooperativePreset")==="illustrated"?btn("Réparer le fond","repair-map"):"")+'</div><p class="hint">Créer la salle, placer les PJ, puis démarrer. Un seul opérateur ; les autres joueurs connectés reçoivent les manuels.</p>';
 }
 function consoleHtml(note){
  const s=view,id=noteStation(note);
