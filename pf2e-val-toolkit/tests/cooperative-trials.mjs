@@ -50,3 +50,15 @@ assert.equal(sim.solved.simon,true);assert.equal(sim.pressure,2);assert.equal(si
 assert.deepEqual(simonVisual(sim,t).lit,["B","R","J","V"]);
 assert.equal(playerState(sim,false).simonSequence,undefined);
 console.log("Simon: loop, interruption, error flash, timeout, progression 4–12 and victory OK");
+
+import {ILLUSTRATED_LAYOUT as L} from "../scripts/cooperative-trials/layouts.js";
+import {STATIONS,MANUALS} from "../scripts/cooperative-trials/manuals.js";
+assert.equal(L.width/L.height,1000/1136);
+assert.deepEqual(Object.keys(L.stations).sort(),STATIONS.map(s=>s.id).sort());
+assert.equal(L.manuals.length,Object.keys(MANUALS).length);
+for(const [x,y] of [...L.manuals,...Object.values(L.stations)])assert.ok(x>0&&x<L.width&&y>0&&y<L.height);
+assert.ok(L.manuals.every(p=>p[1]>699*3));
+assert.ok(Object.entries(L.stations).every(([k,p])=>k==="pressure"?p[1]>699*3:p[1]<699*3));
+assert.equal(L.walls.filter(w=>w.door===1).length,1);
+for(const w of L.walls)assert.ok(w.c.every((v,i)=>v>=0&&v<=(i%2?L.height:L.width)));
+console.log("Illustrated scene preset: dimensions, stations, manuals and bounds OK");
