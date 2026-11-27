@@ -35,6 +35,7 @@ export function tick(state,now) {
   while(now>=s.nextTick && s.nextTick<=s.deadline && s.pressure<100) {
     change(s,s.increment,"Montée de pression",s.nextTick);s.nextTick+=s.interval*1000;
   }
+  if(s.purgeStart!==null&&now-s.purgeStart>10000)s.purgeStart=null;
   if(s.pressure<100&&now<s.deadline&&now>=s.dialDue){s.dialIndex=(s.dialIndex+1)%DIALS.length;s.dialDue=now+90000;s.solved.dial=false;change(s,5,"Molette : réajustement requis",now,true);}
   finish(s,now);return s;
 }
@@ -88,8 +89,8 @@ export function adjust(state,delta,now){
 }
 export function publicState(s) {
   if(!s)return null;
-  const {status,sceneId,sessionId,operatorId,deadline,pressure,errors,solved}=s;
-  return {status,sceneId,sessionId,operatorId,deadline,pressure,errors,solved};
+  const {status,sceneId,sessionId,operatorId,deadline,pressure,errors,solved,pausedAt}=s;
+  return {status,sceneId,sessionId,operatorId,deadline,pressure,errors,solved,pausedAt};
 }
 export function playerState(s,operator) {
   const v=publicState(s);

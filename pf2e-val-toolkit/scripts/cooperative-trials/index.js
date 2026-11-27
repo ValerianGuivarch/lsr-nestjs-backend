@@ -73,7 +73,8 @@ async function grantManuals(s) {
  const experts=game.users.filter(u=>!u.isGM&&u.id!==s.operatorId&&u.active);
  for(const j of game.journal.filter(j=>j.getFlag(NS,"cooperativeScene")===s.sceneId&&j.getFlag(NS,"cooperativeManual"))){
   const ownership={default:0};for(const u of experts)ownership[u.id]=2;
-  await j.update({ownership}, {diff:false,recursive:false});
+  const changes={ownership};for(const id of Object.keys(j.ownership))if(id!=="default"&&!(id in ownership))changes["ownership.-="+id]=null;
+  await j.update(changes);
  }
 }
 async function chat(label,pressure,delta=0,error=false){
@@ -92,7 +93,7 @@ async function persist(next,announce=true) {
 function publish(target=null) {
  if(!authority)return;
  for(const u of game.users.filter(u=>u.active&&(!target||u.id===target))){
-  const v=playerState(authority,role(u.id,authority)==="operator");
+  const v=u.isGM?{...playerState(authority,true),...playerState(authority,false)}:playerState(authority,role(u.id,authority)==="operator");
   if(u.id===game.user.id){view=v;refresh();}
   else send({kind:"view",to:u.id,from:game.user.id,view:v});
  }
@@ -146,7 +147,7 @@ function command(note,value){
  const tok=selectedNear(note);
  if(!tok)return ui.notifications.warn("Sélectionnez un de vos personnages à moins de 2,5 cases du mécanisme.");
  const message={kind:"action",userId:game.user.id,tokenId:tok.id,noteId:note.id,sessionId:view.sessionId,value};
- if(game.user.isGM)runSerial(()=>accept(message));else send(message);
+ if(hasAuthority())runSerial(()=>accept(message));else send(message);
 }
 function panelClass(){
  const App=foundry.applications.api.ApplicationV2;
@@ -159,7 +160,8 @@ function panelClass(){
    if(!this.root)return;
    // Keep the setup form intact while the GM selects duration and operator.
    const active=this.type==="gm"&&["running","paused"].includes(view?.status);
-   if(this.type==="gm"&&!active&&this.root.querySelector("[data-start-form]")&&this.lastStatus===view?.status)return;
+   if(this.type==="gm"&&!active&&this.root.querySelector("[data-start-form]")&&this.lastStatus===view?.status&&this.lastScene===canvas.scene?.id)return;
+   this.lastScene=canvas.scene?.id;
    this.lastStatus=view?.status;
    this.root.innerHTML=this.type==="gm"?gmHtml():consoleHtml(this.note);
    this.root.querySelectorAll("[data-action]").forEach(button=>button.addEventListener("click",()=>{
@@ -181,7 +183,7 @@ function gmHtml(){
  let html='<p><b>Scène :</b> '+esc(canvas.scene?.name||"Aucune")+'</p>';
  if(s)html+='<p><b>'+esc(statusLabels[s.status])+'</b> · Pression '+s.pressure+' % · Erreurs '+s.errors+' · <span data-time>'+timeLabel(s)+'</span> s</p><ul>'+MODULES.map(m=>'<li>'+esc(LABELS[m])+' : '+(s.solved[m]?"stabilisé":"à résoudre")+'</li>').join("")+'</ul>';
  if(active)return html+'<div class="val-trial-buttons">'+btn("−10","adjust","-10",s.status!=="running")+btn("+5","adjust","5",s.status!=="running")+btn(s.status==="paused"?"Reprendre":"Pause",s.status==="paused"?"resume":"pause")+btn("Résoudre (MJ)","resolve")+btn("Arrêter","stop")+'</div>';
- const users=game.users.filter(u=>u.active);
+ const users=game.users.filter(u=>u.active).sort((a,b)=>Number(a.isGM)-Number(b.isGM));
  return html+'<form data-start-form><label>Opérateur <select name="operator">'+users.map(u=>'<option value="'+esc(u.id)+'" '+(!u.isGM?"":"")+'>'+esc(u.name)+(u.isGM?" (MJ test)":"")+'</option>').join("")+'</select></label><label>Durée (s) <input name="duration" type="number" value="600" min="60" max="1800"></label><label>Intervalle (s) <input name="interval" type="number" value="30" min="10" max="120"></label><label>Hausse par intervalle <input name="increment" type="number" value="5" min="1" max="20"></label></form><div class="val-trial-buttons">'+btn("Démarrer","start","",!trialScene())+btn("Créer une salle","create")+'</div><p class="hint">Créer la salle, placer les PJ, puis démarrer. Un seul opérateur ; les autres joueurs connectés reçoivent les manuels.</p>';
 }
 function consoleHtml(note){
@@ -260,7 +262,7 @@ export function initCooperativeTrials(){
  Hooks.on("activateNote",noteClick);
  game.socket.on(CHANNEL,msg=>{
   if(msg?.kind==="view"&&msg.to===game.user.id&&msg.from===game.users.activeGM?.id){view=msg.view;refresh();}
-  if(msg?.kind==="request"&&hasAuthority()){authority=getSaved();if(authority?.sessionId)publish(msg.userId);}
+  if(msg?.kind==="request"&&hasAuthority()&&game.users.get(msg.userId)?.active){authority=getSaved();if(authority?.sessionId)publish(msg.userId);}
   if(msg?.kind==="action"&&hasAuthority())runSerial(()=>accept(msg));
  });
  Hooks.on("canvasReady",()=>{if(hasAuthority()){authority=getSaved();if(authority?.sessionId)publish();}else send({kind:"request",userId:game.user.id});if(panel?.rendered)panel.updateContent();});
