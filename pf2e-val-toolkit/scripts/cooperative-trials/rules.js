@@ -19,13 +19,13 @@ export function shuffle(items,random=Math.random){const a=[...items];for(let i=a
 export function makePuzzleConfig(random=Math.random){
  const conduits=Array.from({length:3+Math.floor(random()*4)},()=>COLORS[Math.floor(random()*COLORS.length)]);
  const candidates=shuffle(RUNE_CANDIDATES,random),runeAnswers=[],runeKeys=[];
- let prior="";
+ const usedOrders=new Set();
  for(const answer of candidates){
   if(runeAnswers.some(a=>a.join("")===answer.join("")))continue;
   let keys=shuffle(answer,random),order=answer.map(x=>keys.indexOf(x)).join("");
-  if(order===prior||order==="0123"){for(let i=0;i<4&&(order===prior||order==="0123");i++){keys=[...keys.slice(1),keys[0]];order=answer.map(x=>keys.indexOf(x)).join("");}}
-  if(order===prior||order==="0123")continue;
-  runeAnswers.push(answer);runeKeys.push(keys);prior=order;if(runeAnswers.length===3)break;
+  if(usedOrders.has(order)||order==="0123"){for(let i=0;i<4&&(usedOrders.has(order)||order==="0123");i++){keys=[...keys.slice(1),keys[0]];order=answer.map(x=>keys.indexOf(x)).join("");}}
+  if(usedOrders.has(order)||order==="0123")continue;
+  runeAnswers.push(answer);runeKeys.push(keys);usedOrders.add(order);if(runeAnswers.length===3)break;
  }
  if(runeAnswers.length!==3)throw Error("Clavier runique incomplet");
  return {conduits,runeAnswers,runeKeys,dialIndex:Math.floor(random()*DIALS.length)};

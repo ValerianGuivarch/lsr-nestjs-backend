@@ -38,7 +38,7 @@ function noteStation(note){return note?.getFlag(NS,"cooperativeStation");}
 function noteManual(note){return note?.getFlag(NS,"cooperativeManual");}
 const noteSize=id=>/^simon-[RBJV]$/.test(id??"")?94:120;
 function makeNote(entry,x,y,text,icon,flag) {
- return {entryId:entry.id,x,y,text,iconSize:noteSize(flag.cooperativeStation),global:false,fontSize:20,texture:{src:BASE+icon+".svg"},flags:{[NS]:flag}};
+ return {entryId:entry.id,x,y,text,iconSize:noteSize(flag.cooperativeStation),global:false,fontSize:20,texture:{src:BASE+icon+"-large.svg"},flags:{[NS]:flag}};
 }
 async function verifyIllustratedAsset(layout){
  const img=new Image();await new Promise((resolve,reject)=>{img.onload=resolve;img.onerror=()=>reject(Error("Carte rati.png introuvable."));img.src=layout.src;});
@@ -70,7 +70,7 @@ async function createLayout(preset="blank"){
  if(game.scenes.some(s=>s.name===name)){ui.notifications.warn("Une scène porte déjà ce nom. Choisissez un autre nom.");return;}
  if(illustrated)await verifyIllustratedAsset(layout);
  const levelId=foundry.utils.randomID();
- const scene=await Scene.create({name,folder:opts.folder||null,width:layout?.width??2600,height:layout?.height??1900,padding:0,levels:[{_id:levelId,name:"Rez-de-chaussée",background:{src:layout?.src??null,color:"#242b31"}}],initialLevel:levelId,tokenVision:true,fog:{mode:CONST.FOG_EXPLORATION_MODES.DISABLED},environment:{darknessLevel:0,darknessLock:true,globalLight:{enabled:true}},grid:{type:CONST.GRID_TYPES.SQUARE,size:layout?.grid??100,distance:5,units:"ft",alpha:illustrated?0:0.2},navigation:false,flags:{[NS]:{cooperativeLayout:true,cooperativePreset:illustrated?"illustrated":"blank"}}});
+ const scene=await Scene.create({name,folder:opts.folder||null,width:layout?.width??2600,height:layout?.height??1900,padding:0,levels:[{_id:levelId,name:"Rez-de-chaussée",background:{src:layout?.src??null,color:"#242b31"}}],initialLevel:levelId,tokenVision:true,fog:{mode:CONST.FOG_EXPLORATION_MODES.DISABLED},environment:{darknessLevel:0,darknessLock:true,globalLight:{enabled:true}},grid:{type:CONST.GRID_TYPES.SQUARE,size:layout?.grid??100,distance:5,units:"ft",alpha:illustrated?0:0.2},navigation:false,flags:{[NS]:{cooperativeLayout:true,cooperativePreset:illustrated?"illustrated":"blank",cooperativeObstaclesV1:illustrated}}});
  if(illustrated&&scene.initialLevel?.background?.src!==layout.src)await repairIllustratedBackground(scene);
  const journalFolder=game.folders.find(f=>f.type==="JournalEntry"&&f.name===chosen?.name);
  // A dedicated folder avoids scattering journals; no existing documents are changed.
@@ -94,18 +94,22 @@ async function createLayout(preset="blank"){
  await scene.view();
  ui.notifications.info(name+" : "+notes.length+" repères créés. Déplacez les PJ puis ouvrez Épreuves coopératives.");
 }
-async function upgradeRoom(scene){
+async function upgradeRoom(scene,{forceObstacles=false}={}){
  if(!game.user.isGM||!scene?.getFlag(NS,"cooperativeLayout"))throw Error("Sélectionnez une salle d’épreuves.");
  const updates=scene.notes.filter(n=>noteStation(n)||noteManual(n)).flatMap(n=>{
-  const size=noteSize(noteStation(n));return n.iconSize===size?[]:[{_id:n.id,iconSize:size}];
+  const station=STATIONS.find(st=>st.id===noteStation(n)),manual=noteManual(n);
+  const icon=manual?"manual-"+manual:station?.icon;
+  const size=noteSize(noteStation(n)),src=icon?BASE+icon+"-large.svg":n.texture.src;
+  return n.iconSize===size&&n.texture.src===src?[]:[{_id:n.id,iconSize:size,"texture.src":src}];
  });
  if(updates.length)await scene.updateEmbeddedDocuments("Note",updates);
- if(scene.getFlag(NS,"cooperativePreset")==="illustrated"){
+ if(scene.getFlag(NS,"cooperativePreset")==="illustrated"&&(forceObstacles||!scene.getFlag(NS,"cooperativeObstaclesV1"))){
   if(scene.width!==ILLUSTRATED_LAYOUT.width||scene.height!==ILLUSTRATED_LAYOUT.height)throw Error("Dimensions de la carte modifiées : obstacles à vérifier manuellement.");
   const key=c=>[c.slice(0,2).join(","),c.slice(2,4).join(",")].sort().join("|");
   const existing=new Set(scene.walls.map(w=>key(w.c)));
   const additions=MACHINE_OBSTACLES.filter(w=>!existing.has(key(w.c))).map(w=>({...w,ds:0,flags:{[NS]:{cooperativeObstacle:true}}}));
   if(additions.length)await scene.createEmbeddedDocuments("Wall",additions);
+  await scene.setFlag(NS,"cooperativeObstaclesV1",true);
  }
 }
 async function grantManuals(s) {
@@ -131,7 +135,7 @@ async function grantManuals(s) {
   if(manual&&page&&page.text.content!==manual.text)await page.update({"text.content":manual.text});
  }
  const updates=scene.notes.filter(n=>Object.hasOwn(MANUALS,noteManual(n)??"")).flatMap(n=>{
-  const src=BASE+"manual-"+noteManual(n)+".svg";
+  const src=BASE+"manual-"+noteManual(n)+"-large.svg";
   if(n.entryId===anchor.id&&!n.pageId&&n.texture.src===src)return [];
   return [{_id:n.id,entryId:anchor.id,pageId:null,"texture.src":src}];
  });
@@ -173,9 +177,10 @@ async function start(data){
  const increment=Math.max(1,Math.min(20,Number(data.increment)||5));
  const seq=[...SIMON_COLORS];for(let k=seq.length-1;k>0;k--){const j=Math.floor(Math.random()*(k+1));[seq[k],seq[j]]=[seq[j],seq[k]];}
  while(seq.length<12)seq.push(SIMON_COLORS[Math.floor(Math.random()*SIMON_COLORS.length)]);
- const s=initialState(clock(),{duration,interval,increment,operatorId:op.id,sceneId:canvas.scene.id,sessionId:foundry.utils.randomID(),simonSequence:seq,...makePuzzleConfig()});
+ const config={duration,interval,increment,operatorId:op.id,sceneId:canvas.scene.id,sessionId:foundry.utils.randomID(),simonSequence:seq,...makePuzzleConfig()};
  await upgradeRoom(canvas.scene);
- await grantManuals(s);
+ await grantManuals({sceneId:config.sceneId});
+ const s=initialState(clock(),config);
  await persist(s,false);await chat("Début de l’épreuve",7);
 }
 async function gmAction(action,value){
@@ -239,7 +244,7 @@ function panelClass(){
      if(act==="create")runSerial(()=>createLayout());
      else if(act==="create-map")runSerial(()=>createLayout("illustrated"));
      else if(act==="repair-map")runSerial(()=>repairIllustratedBackground());
-     else if(act==="upgrade-room")runSerial(async()=>{await upgradeRoom(canvas.scene);ui.notifications.info("Repères et obstacles actualisés.");});
+     else if(act==="upgrade-room")runSerial(async()=>{await upgradeRoom(canvas.scene,{forceObstacles:true});ui.notifications.info("Repères et obstacles actualisés.");});
      else if(act==="start"){const form=this.root.querySelector("[data-start-form]");runSerial(()=>start(Object.fromEntries(new FormData(form))));}
      else runSerial(()=>gmAction(act,Number(val)));
     }else command(this.note,act==="number"?Number(val):val);
