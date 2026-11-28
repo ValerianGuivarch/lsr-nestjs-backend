@@ -28,6 +28,6 @@ export function makePuzzleConfig(random=Math.random){
   runeAnswers.push(answer);runeKeys.push(keys);usedOrders.add(order);if(runeAnswers.length===3)break;
  }
  if(runeAnswers.length!==3)throw Error("Clavier runique incomplet");
- return {conduits,runeAnswers,runeKeys,dialIndex:Math.floor(random()*DIALS.length)};
+ return {conduits,runeAnswers,runeKeys,dialRounds:shuffle(DIALS.map((_,i)=>i),random).slice(0,5)};
 }
-export const DIALS=[{lights:[0,2,4,6,7,9,11],answer:1},{lights:[1,3,5,6,8,10],answer:3},{lights:[0,1,5,7,8,11],answer:0},{lights:[0,3,4,7,9,10],answer:2}];
+export const DIALS=[{lights:[0,2,4,6,7,9,11],answer:1},{lights:[1,3,5,6,8,10],answer:3},{lights:[0,1,5,7,8,11],answer:0},{lights:[0,3,4,7,9,10],answer:2},{lights:[1,2,4,6,9,11],answer:0},{lights:[0,2,5,6,8,10],answer:3},{lights:[1,3,4,7,8,11],answer:1},{lights:[2,3,5,6,9,10],answer:2}];

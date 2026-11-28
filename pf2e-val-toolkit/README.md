@@ -1458,6 +1458,8 @@ Déplacement rapide (vol) est présélectionné via le ChoiceSet natif. Le chien
 
 ## Épreuves coopératives — 0.44.35
 
+Mise à jour 0.44.36 : cinq accords sur huit constellations, tirage sans répétition ; compteur 0/5, nouvelle constellation uniquement après succès, erreur +5, réduction unique de 10 à la cinquième réussite. Relancer une épreuve après rechargement.
+
 ### Utilisation
 
 Foundry V14, monde ouvert avec le MJ actif : outils de jetons → **Épreuves coopératives** (puzzle). Choisir l'opérateur connecté, la durée indicative (600 s), l'intervalle (30 s) et la hausse (5 points). Cliquer sur Démarrer. Les joueurs contrôlent un jeton propriétaire. Pause, reprise, arrêt, ajustement ± et résolution manuelle depuis le panneau MJ ; état monde persistant. Aucun panneau web d'administration.
@@ -1472,7 +1474,7 @@ La pression commence à 7 %, chaque faute ajoute 5 points et chaque première st
 | Runes | Dix lignes de six symboles recouvrants ; trois séries de quatre symboles à appartenance unique, ordre lu dans la ligne. Trois permutations distinctes, grandes touches et témoins. Erreur : reprise de la série. |
 | Pulsations | Quatre lampes sur la scène. Séquence initiale de 4, 700 ms avant le premier signal, 850 ms par pulsation (550 ms allumée), attente 10 s et boucle. Premier double-clic interrompt et compte. Même ordre. Faute : +5, clignotement 3 s, noir 1 s, rediffusion. Inactivité 10 s : reprise sans faute. Séries jusqu'à 12 ; toutes les lampes restent allumées après réussite. |
 | Circuit | Labyrinthe 5×5, plan réservé à l'expert, pavé directionnel sans position côté opérateur. Déplacement accepté/refusé ; mur +5 et position inchangée. Réinitialiser à A1 sans pénalité avant réussite. Position visible au MJ. |
-| Rose des plans | Douze gemmes, quatre constellations possibles, configuration tirée une seule fois. Choix direct du cardinal puis validation. Pas de changement périodique ni de pénalité d'inactivité. Après réussite, demeure stabilisée. |
+| Rose des plans | Douze gemmes, huit constellations possibles ; cinq distinctes tirées au départ. Choix du cardinal puis validation, progression 0/5 à 5/5. Pas de changement périodique ni de pénalité d'inactivité. Après le cinquième accord, demeure stabilisée. |
 | Soupape | Une activation −10 points, recharge 60 s, pas de maintien. Première purge compte comme stabilisation ; les suivantes sont possibles jusqu'à la réussite globale. |
 
 Les notices sont des textes d'atelier maison attribués à Wakeiwa Atikak, sans logo décoratif, sans instructions d'interface. Source partagée des règles : `scripts/cooperative-trials/rules.js` ; moteur pur : `engine.js` ; notices : `manuals.js`. Aucun ordre correct des runes ni position du circuit n'est envoyé à l'opérateur dans sa projection d'état.
