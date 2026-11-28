@@ -1470,3 +1470,6 @@ Conduits : liste numérotée, pastilles, état, bouton Isoler/Rétablir. Circuit
 
 ### Fond illustré Foundry 14 — 0.44.33
 Le générateur crée explicitement un Level avec `background.src`, et vérifie que le chemin a été enregistré. Sur une salle illustrée existante, arrêter l’épreuve puis utiliser **Réparer le fond** : le bouton vérifie le fichier et ne remplace qu’un fond absent, via le document Level, sans toucher aux coordonnées, dimensions, murs et repères. Aucun autre fond n’est écrasé. Si le chemin est déjà enregistré mais invisible, vérifier le niveau affiché et le rendu client.
+
+### Permissions des manuels — 0.44.34
+Foundry 14 valide le diff de propriété : utiliser uniquement des niveaux numériques NONE (0) pour les anciennes entrées et les pages qui ont des droits explicites. Ne jamais utiliser les clés de suppression `ownership.-=` ni `null`. Relire les droits avant de lancer le chronomètre ; conserver les repères et la carte. Arrêter et redémarrer l’épreuve après mise à jour.

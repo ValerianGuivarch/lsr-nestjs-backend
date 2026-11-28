@@ -1,6 +1,7 @@
 import {MODULES,LABELS,COLORS,RUNE_KEYS,SIMON_COLORS,simonVisual,simonDue,DIALS,initialState,tick,apply,adjust,playerState} from "./engine.js";
 import {MANUALS,STATIONS,MANUAL_POSITIONS} from "./manuals.js";
 import {ILLUSTRATED_LAYOUT} from "./layouts.js";
+import {privateOwnership,hasPrivateOwnership} from "./permissions.js";
 const NS="pf2e-val-toolkit", CHANNEL="module."+NS, KEY="cooperativeTrial";
 const BASE="modules/"+NS+"/icons/cooperative/";
 const COLORS_HEX={R:0xff4141,B:0x4ca7ff,J:0xffd343,V:0x45dd78};
@@ -98,9 +99,18 @@ async function grantManuals(s) {
  const anchor=game.journal.find(j=>j.getFlag(NS,"cooperativeScene")===s.sceneId&&!j.getFlag(NS,"cooperativeManual"));
  if(!scene||!anchor)throw Error("Ancrage des mécanismes introuvable.");
  for(const j of game.journal.filter(j=>j.getFlag(NS,"cooperativeScene")===s.sceneId&&j.getFlag(NS,"cooperativeManual"))){
-  const changes={ownership:{default:0}};
-  for(const id of Object.keys(j.ownership))if(id!=="default")changes["ownership.-="+id]=null;
-  if(j.ownership.default!==0||Object.keys(j.ownership).some(id=>id!=="default"))await j.update(changes);
+  // V14 validates the ownership diff itself: deletion markers and null
+  // values are not valid ownership entries. Use explicit NONE levels.
+  if(!hasPrivateOwnership(j.ownership))await j.update({ownership:privateOwnership(j.ownership)});
+  if(!hasPrivateOwnership(j.ownership))throw Error("Permissions du manuel non révoquées : "+j.name);
+  for(const page of j.pages){
+   const own=page.ownership??{};
+   // Inherit (-1) is safe when the parent is private; revoke explicit access.
+   if(Object.values(own).some(level=>level>0)){
+    await page.update({ownership:privateOwnership(own)});
+    if(!hasPrivateOwnership(page.ownership))throw Error("Permissions de la page non révoquées : "+page.name);
+   }
+  }
   const manual=MANUALS[j.getFlag(NS,"cooperativeManual")],page=j.pages.find(p=>p.type==="text");
   if(manual&&page&&page.text.content!==manual.text)await page.update({"text.content":manual.text});
  }

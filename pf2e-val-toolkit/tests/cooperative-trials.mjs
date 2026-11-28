@@ -64,3 +64,10 @@ for(const w of L.walls)assert.ok(w.c.every((v,i)=>v>=0&&v<=(i%2?L.height:L.width
 console.log("Illustrated scene preset: dimensions, stations, manuals and bounds OK");
 
 let mz=initialState(0);mz=apply(mz,{module:"maze",value:"R"},1);assert.equal(mz.mazePos,1);assert.equal(mz.mazeFeedback,"move");mz=apply(mz,{module:"maze",value:"U"},2);assert.equal(mz.mazePos,1);assert.equal(mz.mazeFeedback,"wall");assert.equal(mz.errors,1);const mzPressure=mz.pressure;mz=apply(mz,{module:"maze",value:"reset"},3);assert.equal(mz.mazePos,0);assert.equal(mz.mazeFeedback,"reset");assert.equal(mz.pressure,mzPressure);assert.equal(mz.errors,1);assert.equal(playerState(mz,true).mazePos,undefined);assert.equal(playerState(mz,true).mazeFeedback,"reset");assert.equal(playerState(mz,false).mazeFeedback,undefined);for(let k=1;k<MAZE_PATH.length;k++)mz=apply(mz,{module:"maze",value:({1:"R","-1":"L",5:"D","-5":"U"})[MAZE_PATH[k]-MAZE_PATH[k-1]]},4+k);assert.equal(mz.solved.maze,true);const won=mz.pressure;mz=apply(mz,{module:"maze",value:"reset"},20);assert.equal(mz.solved.maze,true);assert.equal(mz.mazePos,24);assert.equal(mz.pressure,won);console.log("Maze: hidden position, accepted/rejected directions, penalty-free reset and locked success OK");
+
+import {privateOwnership,hasPrivateOwnership} from "../scripts/cooperative-trials/permissions.js";
+const uid="A123456789012345",uid2="B123456789012345";
+const own=privateOwnership({default:2,[uid]:2,[uid2]:3});
+assert.deepEqual(own,{default:0,[uid]:0,[uid2]:0});
+assert.ok(hasPrivateOwnership(own));assert.equal(hasPrivateOwnership({default:0,[uid]:2}),false);assert.deepEqual(privateOwnership({default:-1,[uid]:-1}),{default:0,[uid]:0});assert.deepEqual(privateOwnership({}),{default:0});assert.ok(Object.entries(own).every(([k,v])=>(k==="default"||/^[A-Za-z0-9]{16}$/.test(k))&&v===0));
+console.log("Manual ownership: valid numeric NONE diff, no deletion markers, idempotent OK");
