@@ -244,7 +244,11 @@ Les **Merveilles Vagabondes** et la **Ménagerie Céleste** de Dusklight concour
 - Prévention réelle avant activation par inspection de la piste, du registre en coulisses, des malaises à l'atelier/enclos ou d'un témoin dans les gradins. Un indice crédible permet d'isoler le cristal ; ne pas imposer la crise.
 - Si activation : trois rounds PF2, quatre secteurs P/C/A/G, trois objectifs (source, victimes, foule). À la fin de chaque round, un secteur intact adjacent est menacé si la source reste active. Ne jamais recontaminer un secteur évacué. Actions concrètes et DD16 (hypothèse N2), trois actions par PJ ; la garde prend le relais à la fin du troisième round. Degré N : 0 prévention, 1 activation localisée maîtrisée, 2 source encore active ou deux secteurs ou plus menacés. Garder les preuves même si la catastrophe est évitée.
 
-## Affaire Lavarsus — faux ordre de déplacement
+## Affaire Lavarsus — deux variantes exclusives
+
+Choix MJ à faire avant la séance : conserver une seule version et ses preuves correspondantes en partie 2. Les deux versions sont présentes côte à côte dans les conducteurs.
+
+### Version 1 — faux ordre de déplacement
 
 Le fantôme qui tuait les anciens esclaves a été retrouvé ; cette affaire est terminée et n’a aucun rapport avec la disparition du Ratisseur. L’ancien dossier R-17 et la piste du détournement d’argent sont abandonnés.
 
@@ -254,6 +258,12 @@ Pratchett a dérobé le Ratisseur puis fabriqué un ordre de déplacement au nom
 - Wakeiwa confirme que ni départ, ni destination, ni autorisation technique ne figurent dans son carnet. Les PJ peuvent interroger Lavarsus, le greffier et Wakeiwa ; Asilia conserve les pièces et poursuit la procédure hors champ.
 - Partie 2, bureau de Pratchett (E30) : brouillon de l’ordre, essais d’imitation du cachet et corrections manuscrites prouvent la falsification. Les pièces saisies permettent la réhabilitation. Respecter une découverte anticipée effective.
 - Corvan n’intervient que si les PJ vont spontanément le consulter ; il n’est pas enquêteur ni responsable de la garde.
+
+### Version 2 — accusation de complicité dans le vol
+
+Lavarsus aurait averti le voleur, détourné la surveillance et étouffé l’alerte. Elle ne serait pas l’auteur matériel du vol. Les trois pièces à charge : billet attribué à Lavarsus (« Le chemin sera dégagé comme convenu. Mes agents n’interviendront pas. Une fois le Ratisseur disparu, je m’occuperai des rapports. »), véritable réaffectation ordinaire d’une patrouille rapprochée d’une fausse mention au registre, bourse de 30 po déposée parmi ses affaires avec billet de paiement. Tous les éléments incriminants sont fabriqués par Pratchett ; la réaffectation était justifiée et ne doit pas réécrire une scène déjà jouée.
+
+En partie 1, Lavarsus montre l’ordre de service légitime, le greffier possède encore le signalement initial et nie avoir reçu de consigne de le supprimer, la bourse n’a pas de témoin de remise ; Wakeiwa confirme l’absence de déplacement normal. Asilia suspend et vérifie hors champ ; Corvan ne participe pas. En partie 2 (E30), le brouillon du billet avec essais de signature, la copie annotée du registre et la note « 30 po — bourse à déposer au poste ; aucune remise à L. » établissent la mise en scène. Les plans et la plaque de rappel prouvent séparément le vol. Aucun lien avec le fantôme des anciens esclaves.
 
 Degré Faucheur : 0 si réhabilitation publique anticipée, 1 accusation contestée mais suspension, 2 discrédit durable. La difficulté du boss en dépend, pas la culpabilité réelle de Lavarsus.
 
@@ -383,3 +393,5 @@ Les choix provisoires (identité de Nesret, profils N2, responsabilités de Wake
 ### Révision du 28 novembre — table et lisibilité
 
 Les deux préparations SQLite et leurs modèles sont synchronisés (P1 révision 10, P2 révision 8), index des 19 incidents, règles de doublon, six factions, accusation indépendante du fantôme, références finales. Sauvegarde avant modification dans `/home/valou/services/pf2-data/_AI/catalogue-backups/festival-20261128-2d10-102757.json`. Les statuts de préparation et la progression en jeu ne sont pas changés. La Rose 0.44.36 passe les tests de cinq accords, absence de répétition, erreurs, récompense unique et non-divulgation des futures configurations ; le rendu réel à deux comptes reste à vérifier après rechargement.
+
+Révision supplémentaire du 28 novembre : deux variantes de Lavarsus enregistrées en SQLite et modèles (P1 révision 11, P2 révision 9), sauvegarde `festival-lavarsus-variantes-20261128-105512.json`. Choix non tranché ; ne pas cumuler les deux dossiers.
