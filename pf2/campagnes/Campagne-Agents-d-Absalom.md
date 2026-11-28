@@ -15,7 +15,7 @@ La base de données a été réorganisée pour repartir sur une version courte p
   1. **Avant le Festival** (`agents-of-edgewatch-before-festival`) ;
   2. **Festival Radieux** (`agents-of-edgewatch-radiant-festival`).
 - Les cinq premiers modules déjà joués ont été recopiés dans **Avant le Festival** et restent marqués joués dans la curation.
-- L'ancien module **L’hôtel des meurtres** est conservé seulement dans l'archive. Le module provisoire **Enquête sur l’hôtel** a été supprimé le 27 novembre ; son enjeu est absorbé par la première séance.
+- L'ancien module **L’hôtel des meurtres** est conservé seulement dans l'archive. Le module provisoire **Enquête sur l’hôtel** a été supprimé le 27 novembre ; son enjeu est absorbé par le mini-arc, avec résolution au Palais des rêves en partie 2.
 - Le groupe **Festival Radieux** comporte désormais deux modules jouables, **Festival Radieux — Partie 1** et **Festival Radieux — Partie 2**, avec modèles enregistrés en SQLite. Les cinq modules joués ne sont pas modifiés.
 - Un export de sauvegarde du catalogue avant transformation est conservé sur le mini-PC dans `/home/valou/services/pf2-data/_AI/catalogue-backups/agents-of-edgewatch-before-radiant-short-20261121.json`.
 
@@ -87,16 +87,14 @@ Les quatre aspects utiles sont :
 - **Faucheur de Réputation** — secrets, mensonges, information, réputation détruite et manipulation.
 - **Maître Gris** — vol, furtivité, larcin et crime clandestin.
 
-### Répartition provisoire des actes de Pratchett
+### Répartition des quatre actes — adaptation retenue le 28 novembre
 
-Le rite doit faire correspondre plusieurs incidents du Festival aux quatre aspects :
+- **Père Écorcheur** : les disparitions et meurtres du Palais préparent le dernier hommage, le meurtre du dignitaire osirien Nesret Ankhari, rencontré par les PJ en partie 1. Il est mort quand les agents arrivent dans le sanctuaire, sauf prévention effectivement réussie par leurs actions antérieures.
+- **Noirs Doigts** : les troubles déjà joués de la ménagerie sont, dans l'adaptation, une première expérience de Pratchett. Il contamine ensuite l'accessoire magique du grand spectacle officiel du 16 Kuthona. Le succès de l'hommage dépend de la propagation réelle.
+- **Maître Gris** : le vol impossible du Ratisseur, préparé grâce aux plans obtenus par l'hôtelier ; la catastrophe lors de son retour amplifie la récompense, sans être nécessaire pour que le vol ait été accompli.
+- **Faucheur de Réputation** : fausse annexe R-17 au dossier de l'enquête de la rue de la Rose, pour faire croire que Lavarsus a autorisé le transfert du Ratisseur et suspendu les recherches. La calomnie et le discrédit sont l'acte rituel, indépendamment d'une condamnation définitive.
 
-- **Père Écorcheur** : les disparitions et meurtres du Palais des rêves constituent son acte principal.
-- **Noirs Doigts** : poison ou produit utilisé pour provoquer le chaos parmi les animaux de la ménagerie / du zoo.
-- **Maître Gris** : le vol du Ratisseur de tombes lui-même, conçu comme un exploit impossible et ostentatoire accompli sans que personne puisse prouver comment il a été réalisé.
-- **Faucheur de Réputation** : Pratchett cherche à **détruire la réputation de Lavarsus** avant le Festival par une opération de désinformation et de faux suffisamment crédible pour l'affaiblir, le faire suspendre ou au minimum mettre sa parole en doute. Le crime doit être découvert comme une fabrication, idéalement trop tard pour empêcher complètement ses effets.
-
-Le rite n'a pas besoin d'être parfaitement symétrique. Pratchett peut avoir conçu une théologie personnelle et imparfaite, ce qui laisse de la liberté pour les événements du scénario.
+Le rite est personnel. Pratchett obtient progressivement des faveurs limitées pendant le combat final ; il ne devient pas un avatar complet. Les actes peuvent être contrariés et leurs faveurs interrompues.
 
 ## Éléments déjà établis ou à conserver
 
@@ -120,13 +118,41 @@ Dates maison retenues :
 
 Pendant cette période, les aspirants Éclaireurs affectés comme agents spéciaux auprès de la garde de la Falaise doivent rester disponibles à Absalom.
 
-## Structure validée du mini-arc — deux séances
+## Structure du mini-arc — deux séances (révision du 28 novembre)
 
-Les modèles en SQLite font foi pour les scènes et les horaires détaillés.
+Les conducteurs SQLite font foi pour les textes de jeu et horaires détaillés ; les décisions ci-dessous remplacent les anciennes répartitions. Les deux séances sont encore non jouées.
 
-**Partie 1 — 1er au 11 Kuthona, 19 h–23 h** : rencontre des Chasseurs de l'Étoile et des organisateurs ; arrestation de Lavarsus au début de la séance. Asilia de Gyr mandate Valsombre (agent canonique de niveau 14) pour reprendre le dispositif de sécurité. Corvan Keris demande aux aspirants d'obéir et étudie le dossier falsifié. Dix incidents quotidiens (réserve de 20 amorces, sans remise) entre 20 h et 22 h, avec une demi-heure de compétition des deux cirques de 20 h 45 à 21 h 15. Le 11, catastrophe planaire du Ratisseur, 22 h–23 h. La séance se conclut par une victoire et la première preuve norgorbérite permettant de reconnaître les quatre aspects ; Pratchett n'est pas identifié.
+**Partie 1 — 1er au 11 Kuthona, 19 h–23 h**
 
-**Partie 2 — 12 au 21 Kuthona** : empoisonnement du cirque gagnant, surveillance des hébergements, piste fraîche vers le Palais des rêves, confrontation avec Pratchett dont la puissance dépend de la réussite de ses actes, clôture lors de la fête de Shelyn. Le conducteur de Partie 2 est créé ; les résultats de la première restent à reporter.
+| Heure | Séquence |
+|---|---|
+| 19 h–19 h 30 | Grande Loge : Chasseurs de l'Étoile, équipe concurrente des « chouchous », Corvan et Ambrus. |
+| 19 h 30–20 h | Arrestation de Lavarsus ; courte enquête R-17 ; comité, délégations, Wakeiwa et Nesret. |
+| 20 h–20 h 45 | Jours 1–5 : incidents de sûreté et d'organisation. |
+| 20 h 45–21 h 10 | Aide aux Merveilles Vagabondes : maintenir leur candidature. |
+| 21 h 10–21 h 35 | Jours 6–10 : autres patrouilles et préparatifs. |
+| 21 h 35–22 h 45 | 11 Kuthona : retour, embarquement, combat, secours, miroirs et deux couplages du Ratisseur. |
+| 22 h 45–23 h | Le Retour à l'Ancrage : rituel de stabilisation, bilan, signe du Maître Gris. |
+
+**Partie 2 — 12 au 21 Kuthona, 19 h–23 h**
+
+| Heure | Séquence |
+|---|---|
+| 19 h–19 h 15 | Reporter les vrais résultats et affecter les gardes. |
+| 19 h 15–19 h 45 | Incidents restants et sélection du spectacle, si elle n'a pas déjà été décidée. |
+| 19 h 45–20 h 40 | 16 Kuthona : grand spectacle et attaque alchimique des Noirs Doigts. |
+| 20 h 40–21 h 05 | Derniers incidents, clôture de Shelyn, absence du dignitaire osirien. |
+| 21 h 05–21 h 40 | Palais des rêves : donjon express et preuves du meurtre accompli. |
+| 21 h 40–22 h 40 | Pratchett, ses deux ombres et quatre sceaux d'ascension. |
+| 22 h 40–23 h | Enquête conclue selon les preuves, réhabilitation éventuelle, deuil et clôture. |
+
+### Rencontre des deux équipes
+
+Chasseurs : Sheila Heidmarch, Aelyra, Galahen, Rovan Dheris, Veska Ornel. Rivalité : Caelan Voss, Sivri Nymm, Tareth Olan, Lyssara Vel, aspirants choisis par Elysye ([fiche de l'équipe rivale](../univers/Equipe-rivale.md)). Ne pas supposer la présence physique d'Elysye. Les rivaux ne sont pas des antagonistes du rite ni une équipe condamnée à échouer. Corvan Keris et Ambrus Valsin introduisent les aspirants et leurs affectations. Asilia de Gyr confie le dispositif de sûreté à Valsombre (niveau canonique 14), sans effacer l'autorité habituelle de Lavarsus dans la continuité.
+
+### Réserve d'incidents et organisation
+
+Vingt fiches développées et identiques dans les deux conducteurs, sans remise : les titres réellement joués en partie 1 sont exclus de la partie 2. Chaque fiche contient enjeux, personnes, provenance des délégations, actions et conséquences ; alterner intervention policière et service au bon déroulement du Festival. Les délégations proposées (Osirion, Taldor, Jalmeray, Nex, Alkenastre, entre autres selon les fiches) et leurs personnes non publiées sont des ajouts MJ, pas une liste canonique de participants. Sécurité 0–10, confiance de Valsombre 0–10, réputation auprès de l'organisation 0–10, popularité de chaque cirque 0–10 : départs indicatifs 5/3/3/3/5. Ne jamais remplacer les résultats réels par ces départs. Choisir des missions concrètes et permettre la délégation à la garde. Les horaires peuvent être raccourcis sans sacrifier les deux finales.
 
 ## Ratisseur de tombes — canon utile
 
@@ -141,7 +167,7 @@ Dans le scénario publié :
 Pour l'adaptation basse puissance, conserver surtout l'idée suivante :
 **des forces beaucoup plus puissantes peuvent tenter de contenir le Ratisseur à l'extérieur tandis que les PJ, présents au bon endroit au bon moment, doivent intervenir à l'intérieur sur des sous-systèmes adaptés à leur niveau.**
 
-Pratchett est le responsable du vol et du sabotage ; il exploite les informations obtenues grâce à son hôtel. La méthode magique exacte reste à préciser.
+Pratchett est le responsable du vol et du sabotage ; il exploite les informations obtenues grâce à son hôtel. Le conducteur utilise une plaque de rappel occulte fictive et un retour préprogrammé ; le détail métaphysique reste libre.
 
 ## Repères du scénario publié mis en réserve
 
@@ -158,15 +184,14 @@ Les éléments suivants ne sont plus des obligations pour le mini-arc :
 
 Ils restent uniquement dans la version publiée archivée, pas dans notre Partie 2.
 
-## À préparer ensuite
+## À vérifier et à préparer avant jeu
 
-- préciser le mécanisme magique du vol et du retour du Ratisseur ;
-- construire le rite de Pratchett en quatre actes avec indices progressifs ;
-- définir le générateur d'incidents du Festival et sa jauge de sécurité ;
-- sélectionner 2 à 4 incidents majeurs ;
-- condenser le Palais des rêves en quelques zones essentielles ;
-- déterminer ce que les PJ peuvent apprendre de Norgorber sans ouvrir immédiatement le Quatuor.
-
+- Valider groupe réel, DD, niveau des rencontres et durée de la salle A7 ; les profils maison sont écrits pour quatre PJ N2.
+- Tester le Toolkit sur la scène existante avec deux comptes ; vérifier la disposition et les obstacles.
+- Préparer dans Foundry les scènes nécessaires au parcours A1–A9 et E1–E37, les Actors des fragments, dangers, ombres et Pratchett ; la mécanique décrite sur papier ne garantit pas leur création.
+- Vérifier les portraits importants (Wakeiwa, Nesret, Ralso, Pratchett) et présence/affiliation des artistes dans la continuité. Trois portraits du Ratisseur sont déjà importés, voir ci-dessous.
+- Valider l'équilibrage du rituel final du Ratisseur et des quatre sceaux de Pratchett. Reporter les résultats réellement joués, pas les valeurs proposées.
+- Les modèles et conducteurs sont actualisés ; les statuts de préparation et de partie jouée ne sont pas modifiés par cette réécriture.
 
 ## Hypothèse de travail — Palais des rêves comme source d'information
 
@@ -181,48 +206,31 @@ Pratchett profite de cette clientèle :
 
 C'est ainsi qu'il découvre l'existence des propriétés extraordinaires du Ratisseur et finit par décider d'en faire l'acte du **Maître Gris** de son rite.
 
-Le vol du Ratisseur est donc **son idée, son exploit et sa responsabilité**, même si la méthode exacte de déphasage reste à concevoir à partir du fonctionnement canonique de la machine.
+Le vol du Ratisseur est donc **son idée, son exploit et sa responsabilité**, le conducteur retient le déphasage et la plaque de rappel occulte comme explication maison, sans décrire de procédé technique réel.
 
 ## Cirques et acte des Noirs Doigts
 
-Deux spectacles peuvent être en concurrence pendant le Festival :
-- la **Ménagerie Céleste** de Dusklight ;
-- le cirque allié / rival des PJ issu de *Sentence d'Extinction*.
+Les **Merveilles Vagabondes** et la **Ménagerie Céleste** de Dusklight concourent au Festival. Ne pas réintroduire Myron après sa mort. Professeur Zarlian Kyosophus, Dusklight, Daring Danika, Viktor Volkano, Jellico Bounce-Bounce, Hesper et Meitas Jaxis sont répertoriés dans les conducteurs ; vérifier leur présence et leur affiliation selon la continuité jouée, et ne pas forcer Vaga à participer.
 
-Pratchett ne choisit pas nécessairement sa cible à l'avance. Il observe lequel des deux devient **le spectacle le plus populaire ou le plus prestigieux**, puis frappe celui-ci.
+- Partie 1, aide facultative : dossier MV-4 (treuil, axe et sangles) envoyé par erreur au pavillon d'Alkenastre ; MA-4 concerne la troupe rivale. Récupérer le matériel, sécuriser l'agrès, convaincre l'homologateur (deux objectifs sur trois), puis répétition. Une solution au sol permet de maintenir la candidature même après un échec. Ce problème est ordinaire, sans poison ni implication de Pratchett.
+- La sélection officielle peut être acquise en partie 1 si les décisions le justifient ; sinon courte compétition en partie 2, fondée sur la popularité et une répétition. Ne pas refaire une décision déjà prise.
+- Partie 2, Pratchett vise le spectacle choisi, pas une troupe par rancune. Q-16 est le cristal d'or de finale autorisé ; Q-17 est le remplacement à rune noire et visa absent, chargé d'une quintessence alchimique fantastique qui ne s'active qu'au spectacle. Le dépôt dessert plusieurs clients dont le Palais ; la facture précise E30 confirme l'auteur. Les troubles de la ménagerie antérieure constituent un essai dans l'adaptation, pas une révélation canonique.
+- Prévention réelle avant activation par inspection de la piste, du registre en coulisses, des malaises à l'atelier/enclos ou d'un témoin dans les gradins. Un indice crédible permet d'isoler le cristal ; ne pas imposer la crise.
+- Si activation : trois rounds PF2, quatre secteurs P/C/A/G, trois objectifs (source, victimes, foule). À la fin de chaque round, un secteur intact adjacent est menacé si la source reste active. Ne jamais recontaminer un secteur évacué. Actions concrètes et DD16 (hypothèse N2), trois actions par PJ ; la garde prend le relais à la fin du troisième round. Degré N : 0 prévention, 1 activation localisée maîtrisée, 2 source encore active ou deux secteurs ou plus menacés. Garder les preuves même si la catastrophe est évitée.
 
-L'acte des **Noirs Doigts** consiste à contaminer ou empoisonner le spectacle choisi afin de transformer le succès public en catastrophe. Cette logique renforce son ego : il ne veut pas simplement empoisonner des animaux, il veut corrompre **ce que la foule célèbre le plus**.
+## Affaire Lavarsus — le faux dossier R-17
 
-## Combat final — puissance variable du rite
+L'ancienne proposition de détournement d'argent (12/120 po) est **abandonnée**. La calomnie est liée à une enquête déjà jouée, celle du tueur d'anciens esclaves de la rue de la Rose, et à la disparition du Ratisseur.
 
-Le combat contre Pratchett doit dépendre directement de la réussite de ses quatre actes.
+Pratchett a utilisé une copie du dossier pour fabriquer une annexe, faire croire à un transfert autorisé de matériel sous couvert de pièces à conviction et détourner une patrouille du Précipice. Le greffier a obéi au document apparent, sans complicité nécessaire. Le faux ordre attribué à Lavarsus lui impute le vol, la protection d'un receleur et l'arrêt des recherches.
 
-Chaque acte pleinement accompli peut lui conférer une bénédiction temporaire de Norgorber, une ressource de combat, une réaction, une résistance, un poison renforcé, un avantage de terrain ou un effet rituel.
+- **Pièce falsifiée :** R-17, transport de trois coffres de scellés et clause ajoutée autorisant le transfert du Ratisseur et suspendant les recherches.
+- **Original indépendant :** duplicata de Corvan, protection des témoins et transport de trois scellés, sans aucune autorisation de déplacement du Ratisseur.
+- **Registre du greffe :** note initiale sur l'absence de traces de départ, puis classement du transfert comme autorisé sur la foi de R-17. Le carnet technique de Wakeiwa ne confirme aucune autorisation.
+- **En partie 1 :** un bloc facultatif d'enquête courte permet de comparer les pièces, interroger greffier et Corvan, écouter Wakeiwa. Les contradictions rendent l'accusation douteuse sans identifier le faussaire ni produire une réhabilitation automatique. Ne pas bloquer une véritable découverte anticipée. Corvan poursuit la commission hors champ.
+- **En partie 2, E30 :** brouillon avec clause ajoutée et corrections manuscrites de Pratchett, rapproché du duplicata, des pièces du greffe et du journal de Ralso. Preuve positive du faux et de son auteur, permettant la réhabilitation selon les actions des PJ. L'innocence réelle de Lavarsus est un secret MJ ; l'annonce du Maître Gris ne révèle pas directement Pratchett.
 
-Ainsi, les actions des PJ pendant le Festival influencent mécaniquement le boss final :
-- le vol du Ratisseur est déjà accompli et constitue au minimum un succès ;
-- empêcher la catastrophe liée à sa réapparition peut limiter la validation de cet acte ;
-- empêcher ou réduire le sabotage des cirques affaiblit l'acte de Noirs Doigts ;
-- déjouer l'acte du Faucheur de Réputation affaiblit un autre volet ;
-- sauver la victime finale ou interrompre le sacrifice empêche l'accomplissement du Père Écorcheur.
-
-Le boss final doit donc être nettement plus dangereux si les PJ ont laissé le rite progresser.
-
-
-### Cible du Faucheur de Réputation : Lavarsus
-
-Décision MJ : la victime du volet **Faucheur de Réputation** est **Lavarsus**.
-
-Pratchett organise avant le Festival une campagne de faux, de témoignages arrangés et de preuves fabriquées destinée à ruiner sa crédibilité. L'objectif n'est pas nécessairement de le faire condamner définitivement, mais de :
-- l'affaiblir politiquement et administrativement ;
-- détourner la garde sur une enquête interne ;
-- réduire sa capacité à coordonner les agents pendant le Festival ;
-- accomplir un crime qui corresponde clairement au Faucheur de Réputation.
-
-Lavarsus est arrêtée au début de la partie 1 ; Corvan enquête en parallèle. La marque du Maître Gris trouvée dans le Ratisseur arrêté permet, à la fin de cette première séance, de rapprocher les accusations contre Lavarsus des trois autres crimes. Religion ou un PNJ de secours révèle le motif possible des quatre aspects. L'innocence de Lavarsus reste à établir en jeu.
-
-Cette révélation ne doit pas identifier Pratchett ni un hôtel précis. Elle doit seulement permettre aux PJ d'anticiper que le Festival risque d'être le théâtre d'une nouvelle étape et de préparer notamment la surveillance des cirques et des hébergements.
-
+Degré Faucheur : 0 si réhabilitation publique anticipée, 1 accusation contestée mais suspension, 2 discrédit durable. La difficulté du boss en dépend, pas la culpabilité réelle de Lavarsus.
 
 ## Continuité maison — Lavarsus
 
@@ -241,27 +249,26 @@ Toute future préparation doit utiliser **elle / la lieutenant Lavarsus** et ne 
 
 Le but initial de Wakeiwa Atikak est de démontrer au Festival que l'engin, protégé contre la magie instable par ses systèmes planaires, permettra de réhabiliter l'**Étreinte du Tyran**, zone ravagée par l'attaque de 4719. Il s'agit d'une adaptation de la mission canonique d'excavation de cette fosse commune. Pratchett le trafique ; son retour le 11 Kuthona déchaîne une tempête planaire et des manifestations de plusieurs plans. Les PJ sont à proximité, entrent avant le verrouillage, et sont les seuls à pouvoir agir rapidement sur les couplages. Les vétérans à l'extérieur contiennent la tempête, protègent les civils, et pourront intervenir dans le cœur après stabilisation des accès. Fola Barun assure la liaison mentale empathique (pouvoir maison, pas canon attesté) et transmet les indications de Wakeiwa. Eando Kline dirige le confinement ; Ambrus coordonne ; Corvan, Gardétoile, Gorm Granmarteau et Calisro Benarry assurent secours et soutien. Sheila Heidmarch, Aelyra, Galahen, Rovan Dheris et Veska Ornel forment les Chasseurs de l'Étoile. Galahen est le nom définitif du champion et dirigeant du Serment Radieux dans notre continuité ; la fiche PNJ existante a été renommée sans changer son identifiant. Hestriviniaas (ké'ktar niveau 22 dans le canon) ne doit pas être un adversaire direct des aspirants. Les PJ neutralisent la transmission et les distorsions, stabilisent les ancrages et ouvrent l'accès aux vétérans ; arrêt et libération peuvent être contrôlés. Préférer confinement et retour au Maelström à un combat obligatoire contre les captifs.
 
-## État de préparation du 27 novembre 2026
+## État des conducteurs — 28 novembre 2026
 
-La préparation de Partie 1 a été créée en base, sans séance Discord liée : [ouvrir le conducteur](https://l7r.fr/pf2-mj/session-preparations?preparationId=f0e9ce7b-41d5-4195-bb2c-3a9bd779792b). Les 20 incidents ont des blocs distincts et sont tirés dix fois sans remise. Professeur Zarlian Kyosophus et Dusklight sont les interlocuteurs des deux troupes ; Daring Danika, Viktor Volkano et Jellico Bounce-Bounce appartiennent aux rivaux de la Ménagerie Céleste. Myron ne doit pas être réintroduit après sa mort. La [PR technique #60](https://github.com/ValerianGuivarch/lsr-nestjs-backend/pull/60) a été fusionnée ; le 27 novembre, l'API en production renvoie bien les sept blocs de compteurs typés. La publication réelle dans le chat Foundry reste à tester. Les scènes et Actors Foundry existants n'ont pas été modifiés ; DD, dangers et portraits restent à finaliser. Les modèles restent non joués et les checklists partiellement préparées.
+Enregistrement et relecture API confirmés, avec remplacement des modèles des deux modules existants, sans création de doublon ni modification des cinq missions jouées. Aucun événement des deux séances n'est marqué accompli.
 
+- [Partie 1](https://l7r.fr/pf2-mj/session-preparations?preparationId=f0e9ce7b-41d5-4195-bb2c-3a9bd779792b) : révision 9, sept étapes, 81 blocs, 43 537 caractères de contenu.
+- [Partie 2](https://l7r.fr/pf2-mj/session-preparations?preparationId=256ff036-d1bd-4b6a-830a-0efb2f558f5d) : révision 7, sept étapes, 68 blocs, 50 366 caractères de contenu.
+- Modèles `festival-partie-1` et `festival-partie-2` du scénario `agents-of-edgewatch-radiant-festival` synchronisés ; réserve commune de vingt fiches contrôlée. Aucune séance Discord liée. Sauvegarde avant réécriture : `/home/valou/services/_sauvegardes/PF2/agents-absalom/festival-reorganisation-20261128-093642.json`.
+- La [PR technique #60](https://github.com/ValerianGuivarch/lsr-nestjs-backend/pull/60) a fourni les blocs compteurs typés. Publication réelle dans le chat Foundry à tester ; ne pas confondre les compteurs SQLite avec la pression du Toolkit.
 
-## Ratisseur — conducteur détaillé du 27 novembre 2026
+## Ratisseur — conducteur révisé de Partie 1
 
-Le modèle de la Partie 1 et la préparation indépendante ont été enrichis en base (révision 6 de la préparation). Les données jouables détaillées restent dans le conducteur SQLite ; aucun événement de cette séance n'est encore considéré joué.
+Tome 6, *L'excavateur fou*, pagination imprimée pp. 136–149, notamment p. 137 pour le rôle de Wakeiwa et le tri des souvenirs, p. 139 pour A2, p. 140 pour le plan, pp. 141–142 pour A5/Kaeron, pp. 143–145 pour les couplages et le noyau. Les descriptions de la préparation sont réécrites pour la table, pas des citations intégrales.
 
-- 22 h : retour du Ratisseur au Parterre d'argent, sauvetage motivant l'entrée avant verrouillage, tempête planaire. Pratchett a programmé le retour par un dispositif occulte fictif ; aucun pilote à bord. Les vétérans ne peuvent percer la coque sans risque pour les captifs et le noyau.
-- Parcours fondé sur la carte publiée (tome 6, chapitre L'excavateur fou, pp. 136–149) : A2/A4/A5 (secours et rencontre de Kaeron possédée par Murmure-Dans-l'Éther), A6 (neutraliser le pilotage automatique et vision non interactive du siège Radieux de 1619), A7 (couplage coopératif, voir la salle d'épreuves ci-dessous ; ancien défi de cristaux encore dans le conducteur SQLite), A8 (second couplage, choix de libération graduelle ou d'isolement forcé), A9 (trois ancrages et levier d'arrêt). Les DD et rencontres de bas niveau sont des propositions maison et doivent être ajustés au groupe réel. Le rapport temporel canonique est simplifié pour coordonner les deux fronts.
-- La progression des vétérans est conditionnée par celle des PJ : après A7 la machine ralentit ; après A8 le passage se stabilise ; les Chasseurs ne pénètrent qu'après le signal des aspirants. Fola relie les équipes et transmet les conseils de Wakeiwa. Galahen, Sheila, Aelyra, Rovan et Veska interviennent, tandis qu'Eando maintient le confinement. Hestriviniaas et les deux imenteshs du noyau restent hors du combat direct des aspirants.
-- Le combat du noyau est une rencontre à objectifs, avec deux manifestations de quintessence et un danger de niveau adapté (exemple provisoire pour quatre PJ de niveau 2 dans le conducteur). Arrêt d'urgence possible si les ancrages ne sont pas tous sécurisés. La libération contrôlée et le retour au Maelström sont préférés à la destruction des captifs. Le choix appartient aux joueurs.
-- Jauge publique de catastrophe de 0 à 6 : dommages cumulés et conséquences graduées, pas de points de vie ni de réparation rétroactive. Les mauvais résultats accélèrent la crise sans bloquer le parcours ; les succès des joueurs et la sécurité préalable limitent les dégâts. Bilan secret MJ provisoire : le vol est acquis ; catastrophe 0–2 aucun bonus additionnel, 3–4 bénédiction grise mineure, 5–6 renforcée (effets de la partie 2 à définir).
-- À 22 h 50 : le sceau du Maître Gris sous la plaque étrangère de la console A6 est normalement révélé après l'arrêt, ou plus tôt si les PJ réussissent une investigation ingénieuse. Indice garanti ; Religion ou aide d'un spécialiste pour reconnaître les quatre visages. La victoire et la découverte de la piste norgorbérite ne révèlent ni Pratchett ni l'hôtel et ne constituent pas une preuve de l'innocence de Lavarsus.
-
-À faire : adapter une copie de la carte et des journaux Foundry, créer les manifestations et le danger au niveau réel de la table, tester les compteurs, régler les effets de la bénédiction de Pratchett. Aucune modification des scènes originales. Les statuts de préparation restent partiels.
-
-### Approfondissement opérationnel du Ratisseur (révision 6)
-
-Le conducteur SQLite comprend désormais une description jouable de la réapparition, un parcours respectant le puits A4b et ses trois niveaux, un accès de secours par A1, des conséquences extérieures concrètes, une énigme coopérative des quatre symboles pour A7 et les positions/conditions d'intervention du combat d'A9. Le tri magique des souvenirs des morts de l'Étreinte du Tyran est canonique (tome 6, p.137) ; il sert à montrer la vocation de l'engin au briefing et dans A2. La plaque de rappel occulte, les coordonnées faussées et le choix de cap entre le Parterre d'argent et la voie de service sont des adaptations : le premier expose les attractions, le second réduit le danger pour la foule mais menace les remparts en cas de catastrophe élevée. Les vétérans entrent au signal des PJ après coupure des deux couplages. L'arrêt maîtrisé fait disparaître les manifestations sans exiger de vider leurs PV. La responsabilité de Wakeiwa quant à l'asservissement des protéens reste un choix MJ à confirmer : elle croyait à un accord de service dans la proposition du conducteur. Le bilan et la preuve du Maître Gris sont adaptés aux décisions et résultats réels ; aucun indice n'est artificiellement retardé si les PJ le découvrent avant l'arrêt. Les compteurs existants, les autres scènes du conducteur et la campagne archivée n'ont pas été modifiés. La carte et les Actors Foundry n'ont pas été adaptés à ce stade ; les tâches restantes sont enregistrées dans le module.
+- Le premier jour, Wakeiwa peut expliquer l'origine de l'excavateur, sa mission pour l'Étreinte du Tyran, les tapis de tri, l'utilisation des protéens par Blune, l'espace déformé, les conditions de sécurité et les deux couplages. Elle croyait à un accord de service dans cette proposition : sa responsabilité morale reste à confirmer par le MJ. Blune et Ama Uomi font partie des interlocuteurs rencontrés.
+- Retour le 11 au Parterre d'argent ; le dispositif occulte de Pratchett lance la machine sans pilote. Accès par la porte avant verrouillage, ou A1, glissière canonique longue de 18 m et débouchant à 9 m du sol ; accès adapté à la table. Les PJ peuvent utiliser cordes, échelles, entraide et magie réellement disponible.
+- A2 : premier combat adapté, deux éclats d'imentesh N1 et un danger de convoyeur N0 (80 XP pour quatre PJ N2), sauvetage d'un technicien. Les vrais imenteshs ne sont pas abaissés arbitrairement : ce sont des manifestations maison. A3 : tri et indices, pas de pillage des souvenirs des morts. A4/A5 : palier, refuge et Kaeron possédée par le pélagastr Murmure-Dans-l'Éther ; négociation et secours.
+- A6 : plaque étrangère du rappel, choix du cap, liaison empathique de Fola Barun (pouvoir maison) et grands miroirs vers la tempête extérieure ; scènes d'entités planaires, rues menacées, vétérans à l'œuvre et vision non interactive du siège de 1619. Les PJ restent indispensables à l'intérieur. Hestriviniaas N22 et les vrais imenteshs ne sont jamais des adversaires directs imposés.
+- A7 : mini-jeu interactif du Toolkit, six mécanismes. Viser environ 10–20 minutes réelles ; secours par décision MJ/solution adaptée si le temps manque. A8 : trois valves, séparation de transmission, libération graduelle du chœur préférée à l'arrêt brutal ; conséquence de gravité et risque adaptés. A9 : noyau, ancrages, levier et préparation du rituel, **pas de deuxième combat obligatoire** ; les vétérans contiennent les grands protéens et n'exécutent pas le rituel à la place des PJ.
+- Catastrophe 0–6 : jauge narrative distincte de la pression, dégâts cumulés, pas de points de vie. Degré Maître Gris 0 si 0–2, 1 si 3–4, 2 si 5–6. Le vol est acquis. Le signe sous la plaque A6 est un indice garanti après l'arrêt ou plus tôt si découvert ; Religion ou spécialiste pour l'interpréter. Pas d'identification directe de Pratchett.
+- Trois illustrations extraites des PDF privés et réellement importées via l'API de portraits : Éclat d'imentesh `prep-agents-absalom-imentesh.webp`, Kaeron/Murmure `prep-agents-absalom-murmure.webp`, Hestriviniaas `prep-agents-absalom-keketar.webp` (vol. 2, pages PDF 141, 143, 148). Elles sont liées aux blocs de personnages temporaires de la préparation, pas à de nouveaux Actors Foundry.
 
 ### Épreuve coopérative du couplage A7 — état de référence au 28 novembre 2026
 
@@ -283,25 +290,66 @@ Les six notices courtes sont des textes d'atelier **maison**, signés Wakeiwa At
 
 **État des tests :** le MJ a essayé les mécanismes et signalé le manque de lisibilité, les arrêts à 100 %, la molette changeante et le maintien de purge ; la 0.44.35 répond à ces retours. Les tests automatisés du moteur passent (règles des conduits exhaustives, unicité et permutations des runes, Simon, circuit, pression au-delà de 100 %, temps dépassé, molette fixe, recharge, bornes des obstacles, permissions). La version est installée ; le rendu du nouveau pavé et des touches, la taille des pictogrammes, le placement des obstacles et une partie à deux comptes restent à valider sur le client après rechargement. La migration de la salle elle-même n'est pas confirmée.
 
-**À reporter au conducteur et au modèle SQLite de Partie 1 :** remplacer l'ancien défi A7 de cristaux par cette salle après validation en jeu ; conserver une solution de secours si la séance manque de temps. La pression du mini-jeu est distincte de la jauge narrative de catastrophe 0–6. Ne pas appliquer d'arrêt ni de catastrophe automatique à 100 % : le barème de conversion éventuel reste une décision MJ à définir selon la durée et le résultat. Ne pas compter les essais techniques comme des événements joués. Les autres rencontres, profils et DD restent à régler au niveau réel du groupe.
+**Report effectué le 28 novembre :** conducteur et modèle de Partie 1 révision 9 utilisent désormais cette salle à la place du défi de cristaux. Solution de secours et limite indicative de temps prévues. La pression n'est pas la catastrophe ; ni arrêt ni catastrophe automatique à 100 %. Le DD du rituel final peut dépendre de la pression (proposition ci-dessous). Les essais techniques ne constituent pas des événements joués. Validation en situation et DD réels à confirmer.
 
 
-## Partie 2 — conducteur opérationnel (27 novembre 2026)
+## Le Retour à l'Ancrage — rituel de stabilisation
 
-Le modèle SQLite et la [préparation indépendante de Partie 2](https://l7r.fr/pf2-mj/session-preparations?preparationId=256ff036-d1bd-4b6a-830a-0efb2f558f5d) sont créés, sans séance Discord associée. Huit étapes, 74 blocs, 19 h–23 h (préparation révision 3, enrichissement vérifié le 27 novembre). Aucun événement de la partie 1 n'a été présumé effectivement joué dans les données : les vingt textes d'incidents sont conservés à l'identique, retirer les dix titres réellement tirés avant la partie 2. Reporter sécurité, confiance, vainqueur des cirques, catastrophe, dossier Lavarsus et preuves. Ne pas réinitialiser la continuité.
+Décision MJ : la fin de Partie 1 doit être un **véritable rituel inspiré de PF2**, joué ensemble après les couplages, plutôt qu'un simple bouton ou un combat obligatoire. Le conducteur inclut une explication des règles de base et une version adaptée, avec texte d'invocation, gestes et conséquences.
 
-- 19 h : bilan et trois preuves indépendantes pour le réexamen de Lavarsus ; choix des dispositifs de surveillance.
-- 19 h 15 : cinq incidents restants ; 19 h 45 : attaque des Noirs Doigts contre le cirque gagnant. Prévention possible avant exposition, sinon défi en trois rounds avec trois objectifs (source, victimes, foule). La troupe rivale n'est pas coupable par défaut. Les indices du matériel ne désignent pas directement Pratchett.
-- 20 h 30 : cinq derniers incidents ; 20 h 55 : disparition fraîche, trois voies d'indice vers le Palais des rêves. Nalia Serevan, interprète adulte d'une délégation, est une victime proposée (figurante maison, modifiable). Si les PJ empêchent l'enlèvement, ne pas réimposer une victime.
-- 21 h 15 : Palais des rêves minimal, fondé sur le tome 1, pp.46–66 : E1/E2/E3 (réception, bagages, grand hall), E24 (Ralso et journal), E30 (bureau et escalier secret), E31 (cave), E36/E37 (sanctuaire et laboratoire). Les autres pièces et monstres ne constituent plus des obstacles obligatoires. Ralso reste une complice, les poupées des âmes sont écartées du combat obligatoire. Les faux documents de Lavarsus et les correspondances avec le Ratisseur et le cirque sont des preuves maison ajoutées.
-- 21 h 50 : un seul combat principal à objectifs, libération de la captive et neutralisation du sceau ; Pratchett alchimiste adapté au niveau réel. Quatre avantages rituels conditionnels, deux avantages directs simultanés au maximum. La réussite des PJ réduit les pouvoirs du boss ; interruption de la progression si Pratchett est empêché d'agir. Poursuite éventuelle courte, sans suite obligatoire. 22 h 40 : preuves, réhabilitation selon le dossier et clôture de Shelyn.
+### Règles PF2 de référence
 
-Le niveau du groupe, le choix définitif de la victime, la présence de Hesper et Meitas, les profils mécaniques provisoires et les scènes Foundry restent à valider. Checklist modèle prête, autres critères partiels/à faire ; aucune carte ni Actor Foundry modifié dans cette opération. Les règles maison et conséquences détaillées sont dans le conducteur, pas dans une seconde source de données.
+Voir [Rituals](https://pathdb.net/rules/rituals) (règles de jeu). Durée normalement au moins une heure. Un rituel ne dépense pas d'emplacement de sort et son incantateur n'a pas besoin d'être un lanceur de sorts ; il doit connaître le rituel, remplir les exigences de compétence et pouvoir effectuer un rituel de ce rang (moitié du niveau arrondie au supérieur). Les participants secondaires ne sont pas soumis à la même restriction générale de niveau. Le MJ peut adapter les exigences selon les circonstances. Le DD principal est très difficile pour un niveau égal au double du rang, les DD secondaires standards du même niveau. Rang 1 : principal DD21, secondaires DD16.
 
-### Enrichissement du spectacle et du Palais — révision 3
+Les participants secondaires font leurs tests avant le principal : réussite critique +2 de circonstance ; réussite aucun modificateur ; échec −4 de circonstance ; échec critique −4 de circonstance et degré du test principal abaissé d'un cran. Les bonus ou malus de circonstance identiques ne s'additionnent pas ; respecter les degrés du résultat. Les effets de fortune/infortune ne s'appliquent pas aux tests de rituel. Puis test principal, résolution selon le degré du rituel.
 
-La préparation indépendante existante a été enrichie en base, ainsi que son modèle, sans créer de doublon ni modifier la partie 1. Les 20 amorces sont vérifiées identiques à la première partie ; aucun tirage réel n'est encore enregistré. Exclure les dix incidents réellement joués. Compteurs de report : sécurité, confiance de Valsombre, popularité des deux cirques, catastrophe (distincte de la pression du mini-jeu), degré des Noirs Doigts. Valeurs initiales provisoires, aucune publication automatique.
+### Adaptation proposée et enregistrée dans le conducteur
 
-- Cirque : quatre postes de surveillance (piste, coulisses, enclos, gradins), indices distincts par poste et possibilité de prévenir totalement la crise. Lot Q-17 et trois documents fictifs donnent une piste d'enquête vérifiable, sans révéler directement l'hôtelier. Les PJ peuvent interrompre ou modifier le numéro, sauver la foule et les artistes, ou jouer un numéro improvisé si le temps le permet. La troupe gagnante reste celle de la partie 1.
-- Disparition : surveillance proactive ou enquête après absence ; interception possible sans enlèvement forcé. Le Palais conserve l'illusion des fenêtres en boucle et la disposition canonique E1/E2/E3, E24, E30, E31–E37. Le passage E37 vers E32 est à sens unique (commande depuis E37). Trois pièces maison du bureau relient les actes de Lavarsus, du Ratisseur et du cirque ; le journal de Ralso et le registre d'E36 restent des preuves autonomes.
-- Final : combat unique à objectifs, choix entre arrestation, sauvetage, interruption du rite et conservation des preuves ; aucune seconde phase obligatoire. Les biens saisis ne sont pas du butin automatique. Les DD, profils et figurante Nalia restent provisoires ; scènes, Actors et portraits Foundry non vérifiés. Les huit étapes et leurs détails opérationnels restent dans SQLite.
+Rituel maison rang 1, durée réduite à dix minutes fictionnelles grâce aux ancrages déjà en place, instructions de Wakeiwa transmises par Fola, pas de coût supplémentaire ni d'apprentissage préalable imposé dans cette situation. Principal Arcanes ou Occultisme ; trois postes secondaires : Artisanat, Religion, Athlétisme. Adapter postes au groupe réel et compétences disponibles. DD secondaires 16.
+
+Proposition de DD principal selon pression de fin d'A7 : 0–24 % DD16 ; 25–49 % DD18 ; 50–99 % DD21 ; 100 % et plus DD26. Ce dernier seuil est sévère, à valider. Variante plus simple : DD18 fixe, ou plafonner à 21. Ne pas additionner les modificateurs par maison à ceux des règles PF2. L'ancienne idée de modificateurs secondaires +2/+1/−1/−2 est mise de côté en faveur de la règle officielle. Le rituel n'est pas un test d'Arcanes unique détaché des autres PJ.
+
+- **Critique :** stabilisation exceptionnelle, noyau préservé, captifs libérés en sécurité.
+- **Réussite :** arrêt contrôlé, libération et réparation ordinaire.
+- **Échec :** arrêt possible mais réparation importante et catastrophe +1.
+- **Échec critique :** arrêt d'urgence, catastrophe +2, dégâts au noyau ; pas de mort obligatoire des captifs ou des PJ. Jauge toujours bornée à 6.
+
+Le succès des agents à l'intérieur débloque l'accès des vétérans ; Fola transmet, les Chasseurs contiennent, les PJ font réellement le rituel. Ne pas compter une victoire de PNJ comme leur réussite.
+
+## Partie 2 — Nesret, Palais des rêves et ascension
+
+**Nesret Ankhari**, personnage maison : humain d'Osirion, envoyé d'un comité de prêteurs d'antiquités, d'une cinquantaine d'années, robe ivoire, broche de lapis en scarabée. Rencontre normale avec le comité et Wakeiwa le premier jour : conservation des souvenirs et prêt d'objets, séjour au Palais des rêves, allocution annoncée le 21. Le nom et le portrait physique sont des choix de préparation, pas une figure canonique. Son portrait spécifique reste à trouver ou créer. L'ancienne captive Nalia Serevan est abandonnée.
+
+Le dernier jour, son assistant constate son absence à la cérémonie de Shelyn, dément le faux départ annoncé par l'hôtel et fournit directement l'adresse. Les PJ ne passent pas la séance à chercher l'hôtel. Par défaut, Nesret est **déjà mort**, dernier hommage du Père Écorcheur, lorsqu'ils découvrent E36. Si une action préventive effective a sauvé Nesret plus tôt, ne pas substituer une autre victime de force. L'absorption des faveurs, et non la vie du dignitaire, est l'enjeu immédiat du combat.
+
+### Palais express
+
+Tome 1, *Le Diable du Palais des rêves*, pp. 46–66 imprimées. Parcours : E1 réception (Ralso, départ mensonger) → E2 vestiaire (effets Takeko Lon et Nesret) et E3 hall (portrait) → E24 facultatif (journal, clé, histoire de Cora, poupées inertes) → E30 bureau et placard-escalier → E31 cave → E36 sanctuaire (fosse visible, masque, registre, corps identifié dignement) → E37 laboratoire. E21 possible sauvetage de Kemeneles et Lyrma si compatible avec les faits déjà joués ; E16 piège facultatif adapté ; E32–35 non obligatoires. Issue E37 vers E32, à bloquer si l'on a prévu la garde. Ralso est une complice, pas le boss ; négociation, arrestation ou fuite. Pas de donjon complet à nettoyer. Préserver les objets et registres ; ne pas déclarer tous les disparus morts sans preuve.
+
+Quatre pièces E30 : brouillon R-17 et corrections, plan de Wakeiwa et croquis de la plaque, paiement Q-17 par le Palais, ordre concernant l'invité d'Osirion du 20. Le journal de Ralso et le registre E36 sont des preuves autonomes. Le rapprochement révèle la responsabilité de Pratchett dans les quatre actes et permet le réexamen de Lavarsus. Le théâtre de la preuve ne doit pas empêcher une enquête anticipée crédible.
+
+### Boss final : ascension à quatre sceaux (règle maison)
+
+Pratchett est un alchimiste fanatique qui vient d'achever le rite mais doit encore absorber les faveurs ; pas d'avatar complet. Une rencontre unique avec deux ombres. Hypothèse 4 PJ N2 : Pratchett N3 CA19 PV48 Perception+9 Vig+10 Réf+12 Vol+8 attaque+11 1d6+4 ; deux fioles fictives (1 éclaboussure). Ombres N0 CA15 PV12 +6 1d4+2, budget total 100 XP entre modéré et sévère. Ajuster avant initiative au groupe réel.
+
+Ordre **Père Écorcheur → Faucheur de Réputation → Noirs Doigts → Maître Gris**. Début à 0. Annoncer le prochain signe et son effet au début du round ; absorber un signe à la fin du round si Pratchett est conscient et relié, sauter les signes neutralisés. Quatre étapes maximum, pas de soin complet ni action supplémentaire. Chaque sceau demeure accessible et alimente son avantage tant qu'il est intact. Deux actions Religion/Occultisme/Arcanes/Artisanat/Vol DD16 ou Athlétisme DD18 ; réussite désactive, critique empêche également l'absorption suivante une fois ; échec critique 1d6 force, Vigueur basique DD16. Destruction physique possible : CA16 solidité3 PV12 seuil brisé6. Neutraliser un signe déjà absorbé retire son avantage et décrémente le compteur. Un moyen pertinent de rompre effectivement le lien est accepté. Inconscient ou mort : signes et ombres disparaissent. Les ombres disparaissent aussi quand tous les signes sont neutralisés. Pas de régénération ni nouvelle phase obligatoire.
+
+| Sceau | Dégré et effet |
+|---|---|
+| Père Écorcheur | 2 par défaut : 8 PV temporaires une fois, +2 dégâts première mêlée réussie du tour ; 0 et signe inactif si meurtre empêché (variante degré 1 : 4 PV temporaires et +1). |
+| Faucheur | 0 : pas 1,5 m sans réaction à absorption ; 1 : +1 CA première attaque par round ; 2 : premières deux attaques. |
+| Noirs Doigts | 0 : +1 dégâts fantastiques au premier projectile réussi du tour ; 1 : idem et cône unique 1d6 Vig basique16 ; 2 : +2 et cône unique 2d6 Vig basique19, deux actions. |
+| Maître Gris | 0 : pas 1,5 m sans réaction à absorption ; 1 : +1 circonstance premier jet d'attaque par round ; 2 : idem et déplacement d'ombre unique de 3 m, une action. |
+
+Les degrés proviennent des faits, voir les sections précédentes. Les effets ne se cumulent pas sur la même attaque pour P/N. Les PJ peuvent concentrer dégâts, couper les supports ou protéger les preuves ; la fuite éventuelle est courte et évitable. Le combat reste le final de cet arc, sans nouvelle intrigue imposée. Le bilan et la fête de Shelyn tiennent compte du deuil, de la sécurité, de la réputation, de la preuve du faux et des conséquences réellement jouées.
+
+## Pistes envisagées, non imposées à la table
+
+- Les anciennes idées de calomnie plus fantastique (corps ou identité altérés, plusieurs Lavarsus, faux témoignage, souvenirs falsifiés, prédiction) sont en réserve ; l'accusation R-17 ordinaire et documentable est la version active. Ne pas ajouter un complot indépendant pour les utiliser.
+- La compétition complète des deux cirques initialement prévue en partie 1 est déplacée en partie 2, sauf sélection déjà obtenue par les PJ ; l'aide matérielle à la candidature constitue la première rencontre.
+- Des activités annexes (concours de cerfs-volants pour Pen-Pen, ateliers d'alchimie et d'invention, parade et logistique, archives de l'Ascension, foires culinaires, régate, concours liés à Cayden ou enchères) peuvent enrichir les fiches selon les PJ présents. Rien n'oblige à les jouer toutes.
+- Piste personnelle Tsuyi : archives liées à l'Ascension, enquête des Tisseurs de Mémoire, noms et morts signalées autour de la Confirmation, Seo Haneul à Absalom, questions concernant Grand-Mère Araignée. Ne pas transformer ces pistes en preuves ou réponses déjà acquises ; se reporter au dossier personnel et à ce que le joueur sait réellement.
+- Les propositions de ritualisation simplifiée (DD18 fixe ; modificateurs secondaires maison) et de catastrophe liée directement à la pression sont conservées comme variantes discutées, non règles actives. Le conducteur propose la version PF2 avec DD selon pression.
+- La version précédente de P2 avec captive Nalia à sauver est remplacée par Nesret mort ; ne pas mélanger les deux. La prévention antérieure effective reste possible, sans railroading.
+
+Les choix provisoires (identité de Nesret, profils N2, responsabilités de Wakeiwa, DD du rituel et effets des sceaux) sont ajustables par le MJ. Les conducteurs enregistrés constituent la version jouable, et le présent fichier la mémoire des décisions et des variantes. Ne pas marquer les événements comme joués avant la séance.
