@@ -92,7 +92,7 @@ Les quatre aspects utiles sont :
 - **Père Écorcheur** : les disparitions et meurtres du Palais préparent le dernier hommage, le meurtre du dignitaire osirien Nesret Ankhari, rencontré par les PJ en partie 1. Il est mort quand les agents arrivent dans le sanctuaire, sauf prévention effectivement réussie par leurs actions antérieures.
 - **Noirs Doigts** : les troubles déjà joués de la ménagerie sont, dans l'adaptation, une première expérience de Pratchett. Il contamine ensuite l'accessoire magique du grand spectacle officiel du 16 Kuthona. Le succès de l'hommage dépend de la propagation réelle.
 - **Maître Gris** : le vol impossible du Ratisseur, préparé grâce aux plans obtenus par l'hôtelier ; la catastrophe lors de son retour amplifie la récompense, sans être nécessaire pour que le vol ait été accompli.
-- **Faucheur de Réputation** : fausse annexe R-17 au dossier de l'enquête de la rue de la Rose, pour faire croire que Lavarsus a autorisé le transfert du Ratisseur et suspendu les recherches. La calomnie et le discrédit sont l'acte rituel, indépendamment d'une condamnation définitive.
+- **Faucheur de Réputation** : faux ordre de déplacement du Ratisseur imitant le cachet de Lavarsus, pour faire croire que Lavarsus a autorisé le transfert du Ratisseur et suspendu les recherches. La calomnie et le discrédit sont l'acte rituel, indépendamment d'une condamnation définitive.
 
 Le rite est personnel. Pratchett obtient progressivement des faveurs limitées pendant le combat final ; il ne devient pas un avatar complet. Les actes peuvent être contrariés et leurs faveurs interrompues.
 
@@ -127,7 +127,7 @@ Les conducteurs SQLite font foi pour les textes de jeu et horaires détaillés ;
 | Heure | Séquence |
 |---|---|
 | 19 h–19 h 30 | Grande Loge : Chasseurs de l'Étoile, équipe concurrente des « chouchous », Corvan et Ambrus. |
-| 19 h 30–20 h | Arrestation de Lavarsus ; courte enquête R-17 ; comité, délégations, Wakeiwa et Nesret. |
+| 19 h 30–20 h | Arrestation de Lavarsus ; courte enquête sur l’ordre de déplacement ; comité, délégations, Wakeiwa et Nesret. |
 | 20 h–20 h 45 | Jours 1–5 : incidents de sûreté et d'organisation. |
 | 20 h 45–21 h 10 | Aide aux Merveilles Vagabondes : maintenir leur candidature. |
 | 21 h 10–21 h 35 | Jours 6–10 : autres patrouilles et préparatifs. |
@@ -148,11 +148,37 @@ Les conducteurs SQLite font foi pour les textes de jeu et horaires détaillés ;
 
 ### Rencontre des deux équipes
 
-Chasseurs : Sheila Heidmarch, Aelyra, Galahen, Rovan Dheris, Veska Ornel. Rivalité : Caelan Voss, Sivri Nymm, Tareth Olan, Lyssara Vel, aspirants choisis par Elysye ([fiche de l'équipe rivale](../univers/Equipe-rivale.md)). Ne pas supposer la présence physique d'Elysye. Les rivaux ne sont pas des antagonistes du rite ni une équipe condamnée à échouer. Corvan Keris et Ambrus Valsin introduisent les aspirants et leurs affectations. Asilia de Gyr confie le dispositif de sûreté à Valsombre (niveau canonique 14), sans effacer l'autorité habituelle de Lavarsus dans la continuité.
+Chasseurs : Sheila Heidmarch, Aelyra, Galahen, Rovan Dheris, Veska Ornel. Rivalité : Caelan Voss, Sivri Nymm, Tareth Olan, Lyssara Vel, aspirants choisis par Elysye ([fiche de l'équipe rivale](../univers/Equipe-rivale.md)). Ne pas supposer la présence physique d'Elysye. Les rivaux ne sont pas des antagonistes du rite ni une équipe condamnée à échouer. Corvan Keris et Ambrus Valsin introduisent les aspirants et leurs affectations. Corvan les envoie en mission et reste disponible à leur demande ; il ne revient pas spontanément dans les événements, les secours ou l’enquête. Asilia de Gyr confie le dispositif de sûreté à Valsombre (niveau canonique 14), sans effacer l'autorité habituelle de Lavarsus dans la continuité.
 
 ### Réserve d'incidents et organisation
 
-Vingt fiches développées et identiques dans les deux conducteurs, sans remise : les titres réellement joués en partie 1 sont exclus de la partie 2. Chaque fiche contient enjeux, personnes, provenance des délégations, actions et conséquences ; alterner intervention policière et service au bon déroulement du Festival. Les délégations proposées (Osirion, Taldor, Jalmeray, Nex, Alkenastre, entre autres selon les fiches) et leurs personnes non publiées sont des ajouts MJ, pas une liste canonique de participants. Sécurité 0–10, confiance de Valsombre 0–10, réputation auprès de l'organisation 0–10, popularité de chaque cirque 0–10 : départs indicatifs 5/3/3/3/5. Ne jamais remplacer les résultats réels par ces départs. Choisir des missions concrètes et permettre la délégation à la garde. Les horaires peuvent être raccourcis sans sacrifier les deux finales.
+Dix-neuf fiches identiques dans les deux conducteurs (2d10 additionnés, sommes 2 à 20). Si le numéro a déjà été traité, y compris par la garde, action libre sans relance. Les deux fausses disparitions sont réunies en deux variantes d’une seule fiche. Les scènes principales ne dépendent pas du tirage. Les résultats centraux sont courants ; les bas extrêmes sont insolites, les hauts extrêmes dangereux. Numéros à reporter entre séances.
+
+| 2d10 | Événement |
+| --- | --- |
+| 2 | Bras de Neigivre — procession des souvenirs |
+| 3 | Labyrinthe de l’effroi — passage impossible |
+| 4 | Scandale diplomatique |
+| 5 | Camp d’Esker |
+| 6 | Querelle des délégations |
+| 7 | Erreur de la Gardétoile |
+| 8 | Paris clandestins |
+| 9 | Voleurs du Parterre d’argent |
+| 10 | Enfant perdu |
+| 11 | Le Canard pourpre |
+| 12 | Disparition signalée (deux variantes) |
+| 13 | Affaire Lavarsus |
+| 14 | Colère des commerçants |
+| 15 | Coupole martiale |
+| 16 | Feux de Beckabee |
+| 17 | Bête en liberté |
+| 18 | Magie incontrôlée |
+| 19 | Char en flammes — parade menacée |
+| 20 | Château de corail — effondrement imminent |
+
+Les six responsables de faction sont disponibles selon la situation : Fola Barun (Alliance des Émissaires), Calisro Benarry (Chasseurs d’Horizons), Gorm Greathammer (Grandes Archives), Eando Kline (Sceau Vigilant), Urwal (Roue Verdoyante, animaux et milieux naturels), Galahen (Serment Radieux, déjà présent avec les Chasseurs de l’Étoile). Leur aide ne remplace pas les PJ. Voir [Société des Éclaireurs](../univers/Societe-des-Eclaireurs.md).
+
+Sécurité, confiance de Valsombre, réputation organisation et popularité des deux cirques, jauges 0–10 : départs indicatifs 5/3/3/3/5. Ne pas remplacer les résultats réels. Délégations et détails des litiges : ajouts MJ. Conducteurs : index rapide, paragraphes distincts, références réunies en fin de séance.
 
 ## Ratisseur de tombes — canon utile
 
@@ -218,17 +244,16 @@ Les **Merveilles Vagabondes** et la **Ménagerie Céleste** de Dusklight concour
 - Prévention réelle avant activation par inspection de la piste, du registre en coulisses, des malaises à l'atelier/enclos ou d'un témoin dans les gradins. Un indice crédible permet d'isoler le cristal ; ne pas imposer la crise.
 - Si activation : trois rounds PF2, quatre secteurs P/C/A/G, trois objectifs (source, victimes, foule). À la fin de chaque round, un secteur intact adjacent est menacé si la source reste active. Ne jamais recontaminer un secteur évacué. Actions concrètes et DD16 (hypothèse N2), trois actions par PJ ; la garde prend le relais à la fin du troisième round. Degré N : 0 prévention, 1 activation localisée maîtrisée, 2 source encore active ou deux secteurs ou plus menacés. Garder les preuves même si la catastrophe est évitée.
 
-## Affaire Lavarsus — le faux dossier R-17
+## Affaire Lavarsus — faux ordre de déplacement
 
-L'ancienne proposition de détournement d'argent (12/120 po) est **abandonnée**. La calomnie est liée à une enquête déjà jouée, celle du tueur d'anciens esclaves de la rue de la Rose, et à la disparition du Ratisseur.
+Le fantôme qui tuait les anciens esclaves a été retrouvé ; cette affaire est terminée et n’a aucun rapport avec la disparition du Ratisseur. L’ancien dossier R-17 et la piste du détournement d’argent sont abandonnés.
 
-Pratchett a utilisé une copie du dossier pour fabriquer une annexe, faire croire à un transfert autorisé de matériel sous couvert de pièces à conviction et détourner une patrouille du Précipice. Le greffier a obéi au document apparent, sans complicité nécessaire. Le faux ordre attribué à Lavarsus lui impute le vol, la protection d'un receleur et l'arrêt des recherches.
+Pratchett a dérobé le Ratisseur puis fabriqué un ordre de déplacement au nom de Lavarsus avec imitation du cachet. Le greffe reçoit cet ordre le lendemain de la disparition : transfert pour maintenance hors du Précipice, suspension des recherches. Lavarsus est suspendue à l’ouverture du Festival, pas condamnée.
 
-- **Pièce falsifiée :** R-17, transport de trois coffres de scellés et clause ajoutée autorisant le transfert du Ratisseur et suspendant les recherches.
-- **Original indépendant :** duplicata de Corvan, protection des témoins et transport de trois scellés, sans aucune autorisation de déplacement du Ratisseur.
-- **Registre du greffe :** note initiale sur l'absence de traces de départ, puis classement du transfert comme autorisé sur la foi de R-17. Le carnet technique de Wakeiwa ne confirme aucune autorisation.
-- **En partie 1 :** un bloc facultatif d'enquête courte permet de comparer les pièces, interroger greffier et Corvan, écouter Wakeiwa. Les contradictions rendent l'accusation douteuse sans identifier le faussaire ni produire une réhabilitation automatique. Ne pas bloquer une véritable découverte anticipée. Corvan poursuit la commission hors champ.
-- **En partie 2, E30 :** brouillon avec clause ajoutée et corrections manuscrites de Pratchett, rapproché du duplicata, des pièces du greffe et du journal de Ralso. Preuve positive du faux et de son auteur, permettant la réhabilitation selon les actions des PJ. L'innocence réelle de Lavarsus est un secret MJ ; l'annonce du Maître Gris ne révèle pas directement Pratchett.
+- L’ordre contesté et le registre du greffe sont accessibles. Le greffier n’a pas reçu le document de la main de Lavarsus.
+- Wakeiwa confirme que ni départ, ni destination, ni autorisation technique ne figurent dans son carnet. Les PJ peuvent interroger Lavarsus, le greffier et Wakeiwa ; Asilia conserve les pièces et poursuit la procédure hors champ.
+- Partie 2, bureau de Pratchett (E30) : brouillon de l’ordre, essais d’imitation du cachet et corrections manuscrites prouvent la falsification. Les pièces saisies permettent la réhabilitation. Respecter une découverte anticipée effective.
+- Corvan n’intervient que si les PJ vont spontanément le consulter ; il n’est pas enquêteur ni responsable de la garde.
 
 Degré Faucheur : 0 si réhabilitation publique anticipée, 1 accusation contestée mais suspension, 2 discrédit durable. La difficulté du boss en dépend, pas la culpabilité réelle de Lavarsus.
 
@@ -247,7 +272,7 @@ Toute future préparation doit utiliser **elle / la lieutenant Lavarsus** et ne 
 
 ## Adaptation du Ratisseur et intervention de la Société — 27 novembre 2026
 
-Le but initial de Wakeiwa Atikak est de démontrer au Festival que l'engin, protégé contre la magie instable par ses systèmes planaires, permettra de réhabiliter l'**Étreinte du Tyran**, zone ravagée par l'attaque de 4719. Il s'agit d'une adaptation de la mission canonique d'excavation de cette fosse commune. Pratchett le trafique ; son retour le 11 Kuthona déchaîne une tempête planaire et des manifestations de plusieurs plans. Les PJ sont à proximité, entrent avant le verrouillage, et sont les seuls à pouvoir agir rapidement sur les couplages. Les vétérans à l'extérieur contiennent la tempête, protègent les civils, et pourront intervenir dans le cœur après stabilisation des accès. Fola Barun assure la liaison mentale empathique (pouvoir maison, pas canon attesté) et transmet les indications de Wakeiwa. Eando Kline dirige le confinement ; Ambrus coordonne ; Corvan, Gardétoile, Gorm Granmarteau et Calisro Benarry assurent secours et soutien. Sheila Heidmarch, Aelyra, Galahen, Rovan Dheris et Veska Ornel forment les Chasseurs de l'Étoile. Galahen est le nom définitif du champion et dirigeant du Serment Radieux dans notre continuité ; la fiche PNJ existante a été renommée sans changer son identifiant. Hestriviniaas (ké'ktar niveau 22 dans le canon) ne doit pas être un adversaire direct des aspirants. Les PJ neutralisent la transmission et les distorsions, stabilisent les ancrages et ouvrent l'accès aux vétérans ; arrêt et libération peuvent être contrôlés. Préférer confinement et retour au Maelström à un combat obligatoire contre les captifs.
+Le but initial de Wakeiwa Atikak est de démontrer au Festival que l'engin, protégé contre la magie instable par ses systèmes planaires, permettra de réhabiliter l'**Étreinte du Tyran**, zone ravagée par l'attaque de 4719. Il s'agit d'une adaptation de la mission canonique d'excavation de cette fosse commune. Pratchett le trafique ; son retour le 11 Kuthona déchaîne une tempête planaire et des manifestations de plusieurs plans. Les PJ sont à proximité, entrent avant le verrouillage, et sont les seuls à pouvoir agir rapidement sur les couplages. Les vétérans à l'extérieur contiennent la tempête, protègent les civils, et pourront intervenir dans le cœur après stabilisation des accès. Fola Barun assure la liaison mentale empathique (pouvoir maison, pas canon attesté) et transmet les indications de Wakeiwa. Eando Kline dirige le confinement ; Ambrus coordonne ; la Gardétoile, Gorm Greathammer, Calisro Benarry et Urwal assurent secours et soutien. Sheila Heidmarch, Aelyra, Galahen, Rovan Dheris et Veska Ornel forment les Chasseurs de l'Étoile. Galahen est le nom définitif du champion et dirigeant du Serment Radieux dans notre continuité ; la fiche PNJ existante a été renommée sans changer son identifiant. Hestriviniaas (ké'ktar niveau 22 dans le canon) ne doit pas être un adversaire direct des aspirants. Les PJ neutralisent la transmission et les distorsions, stabilisent les ancrages et ouvrent l'accès aux vétérans ; arrêt et libération peuvent être contrôlés. Préférer confinement et retour au Maelström à un combat obligatoire contre les captifs.
 
 ## État des conducteurs — 28 novembre 2026
 
@@ -255,7 +280,7 @@ Enregistrement et relecture API confirmés, avec remplacement des modèles des d
 
 - [Partie 1](https://l7r.fr/pf2-mj/session-preparations?preparationId=f0e9ce7b-41d5-4195-bb2c-3a9bd779792b) : révision 9, sept étapes, 81 blocs, 43 537 caractères de contenu.
 - [Partie 2](https://l7r.fr/pf2-mj/session-preparations?preparationId=256ff036-d1bd-4b6a-830a-0efb2f558f5d) : révision 7, sept étapes, 68 blocs, 50 366 caractères de contenu.
-- Modèles `festival-partie-1` et `festival-partie-2` du scénario `agents-of-edgewatch-radiant-festival` synchronisés ; réserve commune de vingt fiches contrôlée. Aucune séance Discord liée. Sauvegarde avant réécriture : `/home/valou/services/_sauvegardes/PF2/agents-absalom/festival-reorganisation-20261128-093642.json`.
+- Modèles `festival-partie-1` et `festival-partie-2` du scénario `agents-of-edgewatch-radiant-festival` synchronisés ; réserve commune de dix-neuf fiches contrôlée (2d10). Aucune séance Discord liée. Sauvegarde avant réécriture : `/home/valou/services/_sauvegardes/PF2/agents-absalom/festival-reorganisation-20261128-093642.json`.
 - La [PR technique #60](https://github.com/ValerianGuivarch/lsr-nestjs-backend/pull/60) a fourni les blocs compteurs typés. Publication réelle dans le chat Foundry à tester ; ne pas confondre les compteurs SQLite avec la pression du Toolkit.
 
 ## Ratisseur — conducteur révisé de Partie 1
@@ -274,21 +299,21 @@ Tome 6, *L'excavateur fou*, pagination imprimée pp. 136–149, notamment p. 137
 
 **Décision MJ, adaptation maison :** remplacer le casse-tête de cristaux à guidage aveugle prévu dans le conducteur du 27 novembre par une salle de maintenance interactive inspirée de la communication asymétrique de Keep Talking. Un PJ opérateur manipule les mécanismes, les autres cherchent les notices et lui dictent leurs conclusions ; ils peuvent aussi actionner la soupape. Aucun DD obligatoire pour résoudre les six mécanismes. Les PJ se déplacent physiquement dans la salle. L'épreuve reste le couplage A7 du parcours A2/A5 → A6 → A7 → A8 → A9 ; elle ne remplace ni les secours ni le cœur de la machine.
 
-**Règles en vigueur (Val Toolkit 0.44.35, déployé et vérifié sur le mini-PC le 28 novembre) :**
+**Règles en vigueur (Val Toolkit 0.44.36, déployé et vérifié sur le mini-PC le 28 novembre) :**
 
 - Pression initiale 7 %, hausse par défaut de 5 points toutes les 30 s (intervalle et hausse réglables), erreur +5 points, première réussite de chaque mécanisme −10 points. Pression minimale 0 %, **aucun plafond**, aucun arrêt automatique à 100 % ou à la fin du temps indicatif. Durée proposée 600 s ; le panneau montre le dépassement. Le MJ peut mettre en pause, reprendre, ajuster, arrêter ou résoudre. La réussite automatique intervient quand les six mécanismes sont stabilisés.
 - **Conduits :** liste numérotée de couleurs et état actif/isolé ; 3 à 6 conduits tirés au sort à chaque partie. La notice comporte les règles pour 1 à 6 conduits ; appliquer la première règle valable pour le nombre affiché. Un seul bon conduit isolé valide l'épreuve. Isoler un mauvais conduit ou un second conduit coûte +5 ; rétablir un conduit ne coûte rien. La récompense n'est donnée qu'une fois.
 - **Sceaux runiques :** dix lignes de six symboles, avec recouvrements. Trois séries de quatre symboles tirées parmi les combinaisons appartenant à une seule ligne ; l'opérateur ne voit que ses quatre touches. L'expert dicte l'ordre de la ligne, sans activer les autres symboles. Les trois permutations de saisie sont distinctes. Erreur : recommencer la série en cours, +5. Grandes touches et témoins de progression.
 - **Pulsations du Maelström :** quatre lampes colorées directement sur la carte ; séquence initiale de quatre couleurs, diffusion répétée après 10 s. Premier double-clic = première saisie et interruption de la diffusion ; reproduire l'ordre identique. À chaque série correcte, ajouter une pulsation, jusqu'à douze. Une faute fait clignoter les quatre lampes 3 s puis les éteint 1 s avant rediffusion ; dix secondes sans saisie relancent sans pénalité. À la réussite, les quatre lampes restent allumées.
 - **Circuit planaire :** l'expert dispose du plan 5×5 de A1 à E5 ; l'opérateur ne voit ni grille ni position, uniquement quatre directions et un retour accepté/refusé. Mur = +5, sans déplacement ; rappel à A1 sans pénalité. Le MJ voit la position.
-- **Rose des plans :** douze gemmes en deux rangées ; l'une de quatre constellations fixes est choisie à l'ouverture. La notice associe chaque motif à un cardinal. Choisir Nord/Est/Sud/Ouest puis sceller l'accord. Mauvaise validation +5 ; aucune rotation de configuration ni pénalité d'inactivité. Une fois validée, la rose demeure stabilisée.
+- **Rose des plans :** douze gemmes en deux rangées ; cinq constellations distinctes tirées parmi huit au départ. La notice associe chaque motif à un cardinal. Choisir Nord/Est/Sud/Ouest puis sceller l’accord. Compteur 0/5 à 5/5 ; nouvelle constellation seulement après réussite. Mauvaise validation +5, constellation inchangée ; aucune pénalité d’inactivité. Réduction unique de 10 points et stabilisation au cinquième accord.
 - **Soupape :** une activation immédiate réduit la pression de 10 points, première purge comprise ; recharge de 60 s, pas de maintien ou de relâchement. Les purges suivantes restent utiles jusqu'à la réussite globale.
 
 Les six notices courtes sont des textes d'atelier **maison**, signés Wakeiwa Atikak (inventrice canonique). Pas de références aux jetons ni aux clics dans leur texte, pas de grand logo décoratif. L'accès passe par les repères thématiques : sélection d'un jeton propriétaire à 1,5 case maximum, fermeture en s'éloignant. Les mécanismes exigent normalement une proximité de 2,5 cases pour les joueurs ; les lampes 1,5 case, même en test MJ. Les manuels sont réservés aux experts, avec exception de test MJ. Voir le [fonctionnement technique Foundry](../outils/foundry.md#épreuves-coopératives-du-ratisseur) et le [README du Toolkit](../../pf2e-val-toolkit/README.md#épreuves-coopératives--04435).
 
 **Carte Foundry :** deux scènes de test existent dans le dossier Agents d'Absalom du monde `test-pf2` ; utiliser **Le Ratisseur de tombes — carte** plutôt que recréer une salle. Image privée BirdieMaps `rati.png`, source 1000 × 1136 px, scène 3000 × 3408, grille 100 px, marge nulle et grille Foundry invisible. Le MJ a confirmé l'affichage du fond et supprimé lui-même la cloison horizontale : ne pas la remettre. Les obstacles de déplacement suivent les conduits verts et les trois grandes machines centrales (pas d'occlusion de vision) ; ils sont préparés dans le préréglage et ajoutés une seule fois sur la scène existante lors de la prochaine épreuve. Ne pas déplacer les repères déjà ajustés par le MJ. Icônes agrandies à 120 px, lampes à 94 px. Aucun Actor créé automatiquement.
 
-**État des tests :** le MJ a essayé les mécanismes et signalé le manque de lisibilité, les arrêts à 100 %, la molette changeante et le maintien de purge ; la 0.44.35 répond à ces retours. Les tests automatisés du moteur passent (règles des conduits exhaustives, unicité et permutations des runes, Simon, circuit, pression au-delà de 100 %, temps dépassé, molette fixe, recharge, bornes des obstacles, permissions). La version est installée ; le rendu du nouveau pavé et des touches, la taille des pictogrammes, le placement des obstacles et une partie à deux comptes restent à valider sur le client après rechargement. La migration de la salle elle-même n'est pas confirmée.
+**État des tests :** le MJ a essayé les mécanismes et signalé le manque de lisibilité, les arrêts à 100 %, la molette changeante et le maintien de purge ; la 0.44.35 répondait à ces retours ; la 0.44.36 ajoute les cinq accords. Les tests automatisés du moteur passent (règles des conduits exhaustives, unicité et permutations des runes, Simon, circuit, pression au-delà de 100 %, temps dépassé, molette fixe, recharge, bornes des obstacles, permissions). La version est installée ; le rendu du nouveau pavé et des touches, la taille des pictogrammes, le placement des obstacles et une partie à deux comptes restent à valider sur le client après rechargement. La migration de la salle elle-même n'est pas confirmée.
 
 **Report effectué le 28 novembre :** conducteur et modèle de Partie 1 révision 9 utilisent désormais cette salle à la place du défi de cristaux. Solution de secours et limite indicative de temps prévues. La pression n'est pas la catastrophe ; ni arrêt ni catastrophe automatique à 100 %. Le DD du rituel final peut dépendre de la pression (proposition ci-dessous). Les essais techniques ne constituent pas des événements joués. Validation en situation et DD réels à confirmer.
 
@@ -326,7 +351,7 @@ Le dernier jour, son assistant constate son absence à la cérémonie de Shelyn,
 
 Tome 1, *Le Diable du Palais des rêves*, pp. 46–66 imprimées. Parcours : E1 réception (Ralso, départ mensonger) → E2 vestiaire (effets Takeko Lon et Nesret) et E3 hall (portrait) → E24 facultatif (journal, clé, histoire de Cora, poupées inertes) → E30 bureau et placard-escalier → E31 cave → E36 sanctuaire (fosse visible, masque, registre, corps identifié dignement) → E37 laboratoire. E21 possible sauvetage de Kemeneles et Lyrma si compatible avec les faits déjà joués ; E16 piège facultatif adapté ; E32–35 non obligatoires. Issue E37 vers E32, à bloquer si l'on a prévu la garde. Ralso est une complice, pas le boss ; négociation, arrestation ou fuite. Pas de donjon complet à nettoyer. Préserver les objets et registres ; ne pas déclarer tous les disparus morts sans preuve.
 
-Quatre pièces E30 : brouillon R-17 et corrections, plan de Wakeiwa et croquis de la plaque, paiement Q-17 par le Palais, ordre concernant l'invité d'Osirion du 20. Le journal de Ralso et le registre E36 sont des preuves autonomes. Le rapprochement révèle la responsabilité de Pratchett dans les quatre actes et permet le réexamen de Lavarsus. Le théâtre de la preuve ne doit pas empêcher une enquête anticipée crédible.
+Quatre pièces E30 : brouillon du faux ordre et essais de cachet, plan de Wakeiwa et croquis de la plaque, paiement Q-17 par le Palais, ordre concernant l'invité d'Osirion du 20. Le journal de Ralso et le registre E36 sont des preuves autonomes. Le rapprochement révèle la responsabilité de Pratchett dans les quatre actes et permet le réexamen de Lavarsus. Le théâtre de la preuve ne doit pas empêcher une enquête anticipée crédible.
 
 ### Boss final : ascension à quatre sceaux (règle maison)
 
@@ -345,7 +370,7 @@ Les degrés proviennent des faits, voir les sections précédentes. Les effets n
 
 ## Pistes envisagées, non imposées à la table
 
-- Les anciennes idées de calomnie plus fantastique (corps ou identité altérés, plusieurs Lavarsus, faux témoignage, souvenirs falsifiés, prédiction) sont en réserve ; l'accusation R-17 ordinaire et documentable est la version active. Ne pas ajouter un complot indépendant pour les utiliser.
+- Les anciennes idées de calomnie plus fantastique (corps ou identité altérés, plusieurs Lavarsus, faux témoignage, souvenirs falsifiés, prédiction) sont en réserve ; le faux ordre de déplacement ordinaire et documentable est la version active. Ne pas ajouter un complot indépendant pour les utiliser.
 - La compétition complète des deux cirques initialement prévue en partie 1 est déplacée en partie 2, sauf sélection déjà obtenue par les PJ ; l'aide matérielle à la candidature constitue la première rencontre.
 - Des activités annexes (concours de cerfs-volants pour Pen-Pen, ateliers d'alchimie et d'invention, parade et logistique, archives de l'Ascension, foires culinaires, régate, concours liés à Cayden ou enchères) peuvent enrichir les fiches selon les PJ présents. Rien n'oblige à les jouer toutes.
 - Piste personnelle Tsuyi : archives liées à l'Ascension, enquête des Tisseurs de Mémoire, noms et morts signalées autour de la Confirmation, Seo Haneul à Absalom, questions concernant Grand-Mère Araignée. Ne pas transformer ces pistes en preuves ou réponses déjà acquises ; se reporter au dossier personnel et à ce que le joueur sait réellement.
@@ -353,3 +378,8 @@ Les degrés proviennent des faits, voir les sections précédentes. Les effets n
 - La version précédente de P2 avec captive Nalia à sauver est remplacée par Nesret mort ; ne pas mélanger les deux. La prévention antérieure effective reste possible, sans railroading.
 
 Les choix provisoires (identité de Nesret, profils N2, responsabilités de Wakeiwa, DD du rituel et effets des sceaux) sont ajustables par le MJ. Les conducteurs enregistrés constituent la version jouable, et le présent fichier la mémoire des décisions et des variantes. Ne pas marquer les événements comme joués avant la séance.
+
+
+### Révision du 28 novembre — table et lisibilité
+
+Les deux préparations SQLite et leurs modèles sont synchronisés (P1 révision 10, P2 révision 8), index des 19 incidents, règles de doublon, six factions, accusation indépendante du fantôme, références finales. Sauvegarde avant modification dans `/home/valou/services/pf2-data/_AI/catalogue-backups/festival-20261128-2d10-102757.json`. Les statuts de préparation et la progression en jeu ne sont pas changés. La Rose 0.44.36 passe les tests de cinq accords, absence de répétition, erreurs, récompense unique et non-divulgation des futures configurations ; le rendu réel à deux comptes reste à vérifier après rechargement.

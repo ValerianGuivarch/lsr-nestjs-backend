@@ -38,10 +38,10 @@ export function simonDue(s){
 export const MAZE_PATH = [0,1,6,7,8,13,12,17,18,19,24];
 export const MAZE_EDGES = [...MAZE_PATH.slice(1).map((p,i)=>[MAZE_PATH[i],p]),[1,2],[2,3],[3,4],[4,9],[6,5],[5,10],[10,15],[15,20],[20,21],[13,14],[14,9],[17,16],[19,23],[23,22],[22,21]].filter(([a,b])=> Math.abs(a-b)===5 || (Math.abs(a-b)===1&&Math.floor(a/5)===Math.floor(b/5)));
 const clamp = (v)=>Math.max(0,v);
-export function initialState(now, {duration=600, interval=30, increment=5, operatorId="",sceneId="",sessionId="",simonSequence=SIGNALS,conduits=DEFAULT_CONDUITS,runeAnswers=DEFAULT_RUNE_ANSWERS,runeKeys=DEFAULT_RUNE_KEYS,dialIndex=0}={}) {
+export function initialState(now, {duration=600, interval=30, increment=5, operatorId="",sceneId="",sessionId="",simonSequence=SIGNALS,conduits=DEFAULT_CONDUITS,runeAnswers=DEFAULT_RUNE_ANSWERS,runeKeys=DEFAULT_RUNE_KEYS,dialIndex=0,dialRounds=[dialIndex,...DIALS.map((_,i)=>i).filter(i=>i!==dialIndex)].slice(0,5)}={}) {
   return {status:"running",sceneId,sessionId,operatorId,started:now,deadline:now+duration*1000,nextTick:now+interval*1000,interval,increment,pressure:7,errors:0,
     solved:Object.fromEntries(MODULES.map(m=>[m,false])),rewarded:{},conduits:[...conduits],isolated:conduits.map(()=>false),runeAnswers:structuredClone(runeAnswers),runeKeys:structuredClone(runeKeys),runeRound:0,runeStep:0,simonSequence:[...simonSequence],simonLength:4,simonStep:0,simonPhase:"loop",simonAt:now+700,simonLast:null,
-    mazePos:0,mazeFeedback:"initial",dialIndex,dialAngle:0,purgeReady:now,events:[]};
+    mazePos:0,mazeFeedback:"initial",dialRounds:[...dialRounds],dialRound:0,dialIndex:dialRounds[0],dialAngle:0,purgeReady:now,events:[]};
 }
 function change(s,delta,label,now,error=false) {
   s.pressure=clamp(s.pressure+delta);
@@ -101,7 +101,11 @@ export function apply(state,action,now) {
     if(value==="turn")s.dialAngle=(s.dialAngle+1)%4;
     if(Number.isInteger(value)&&value>=0&&value<4)s.dialAngle=value;
     if(value==="check"){
-      if(s.dialAngle===DIALS[s.dialIndex].answer){reward(s,"dial",now);}
+      if(s.dialAngle===DIALS[s.dialIndex].answer){
+        s.dialRound=(s.dialRound??0)+1;
+        if(s.dialRound===5)reward(s,"dial",now);
+        else {s.dialIndex=(s.dialRounds??[s.dialIndex,...DIALS.map((_,i)=>i).filter(i=>i!==s.dialIndex)].slice(0,5))[s.dialRound];s.dialAngle=0;}
+      }
       else error("Erreur critique de quintessence — orientation");
     }
   }else if(module==="pressure"&&value==="purge"&&now>=s.purgeReady){
@@ -123,7 +127,7 @@ export function publicState(s) {
 export function playerState(s,operator) {
   const v=publicState(s);
   if(!v)return null;
-  if(operator)Object.assign(v,{conduits:s.conduits??DEFAULT_CONDUITS,isolated:s.isolated,runeKeys:(s.runeKeys??DEFAULT_RUNE_KEYS)[s.runeRound]??[],runeRound:s.runeRound,runeStep:s.runeStep,simonSequence:s.simonSequence,simonLength:s.simonLength,simonStep:s.simonStep,simonPhase:s.simonPhase,simonAt:s.simonAt,simonLast:s.simonLast,mazeFeedback:s.mazeFeedback,dialIndex:s.dialIndex,dialAngle:s.dialAngle});
+  if(operator)Object.assign(v,{conduits:s.conduits??DEFAULT_CONDUITS,isolated:s.isolated,runeKeys:(s.runeKeys??DEFAULT_RUNE_KEYS)[s.runeRound]??[],runeRound:s.runeRound,runeStep:s.runeStep,simonSequence:s.simonSequence,simonLength:s.simonLength,simonStep:s.simonStep,simonPhase:s.simonPhase,simonAt:s.simonAt,simonLast:s.simonLast,mazeFeedback:s.mazeFeedback,dialIndex:s.dialIndex,dialAngle:s.dialAngle,dialRound:s.dialRound??0});
   else Object.assign(v,{purgeReady:s.purgeReady});
   return v;
 }
