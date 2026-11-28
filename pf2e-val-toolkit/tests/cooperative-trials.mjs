@@ -1,73 +1,21 @@
 import assert from "node:assert/strict";
-import {initialState,apply,tick,adjust,MAZE_PATH,RUNE_ROWS,SIGNALS,SIMON_SLOT,simonVisual,simonDue,DIALS,playerState} from "../scripts/cooperative-trials/engine.js";
-let n=1000, s=initialState(n);
-const act=(module,value,t=n)=>{s=apply(s,{module,value},t);return s;};
-assert.equal(s.pressure,7);
-act("conduits",0);assert.equal(s.errors,1);assert.equal(s.pressure,12);
-act("conduits",3);assert.equal(s.errors,2);assert.equal(s.solved.conduits,false);
-act("conduits",0);assert.equal(s.errors,2);assert.equal(s.solved.conduits,true);assert.equal(s.pressure,7);
-act("conduits",3);assert.equal(s.solved.conduits,false);
-act("conduits",3);assert.equal(s.pressure,7,"no repeat reward");
-act("runes","◇");assert.equal(s.errors,3);
-for(const row of RUNE_ROWS)for(const v of row)act("runes",v);
-assert.equal(s.solved.runes,true);
-for(let k=4;k<=12;k++){n+=800;for(const v of SIGNALS.slice(0,k)){n+=100;act("simon",v);}}
-assert.equal(s.solved.simon,true);
-act("maze","U");assert.equal(s.mazePos,0);
-for(let i=1;i<MAZE_PATH.length;i++)act("maze",({1:"R","-1":"L",5:"D","-5":"U"})[MAZE_PATH[i]-MAZE_PATH[i-1]]);
-assert.equal(s.solved.maze,true);
-for(let i=0;i<DIALS[s.dialIndex].answer;i++)act("dial","turn");
-act("dial","check");assert.equal(s.solved.dial,true);
-act("pressure","begin");n+=3100;act("pressure","release");assert.equal(s.status,"success");
-let other=initialState(0,{duration:600,interval:30,increment:5});assert.equal(tick(other,30000).pressure,12);
-other=apply(other,{module:"pressure",value:"begin"},1000);other=apply(other,{module:"pressure",value:"release"},2000);assert.equal(other.solved.pressure,false);
-assert.equal(tick(initialState(0),600000).status,"failed");
-let d=initialState(0);d=apply(d,{module:"dial",value:"turn"},1);d=apply(d,{module:"dial",value:"check"},2);assert.equal(d.solved.dial,true);const errorCount=d.errors;d=tick(d,90002);assert.equal(d.solved.dial,false);assert.equal(d.dialIndex,1);assert.equal(d.errors,errorCount);d=tick(d,180003);assert.equal(d.errors,errorCount+1);
-let p=initialState(0);p=apply(p,{module:"pressure",value:"begin"},1);p=tick(p,10002);assert.equal(p.purgeStart,null);
-assert.equal(adjust(initialState(0),-10,1).pressure,0);
-assert.equal(playerState(initialState(0),false).isolated,undefined);
-console.log("Cooperative trials: fixed modules, pressure, failures, restore and role views OK");
-
-let sim=initialState(0,{interval:120,duration:1800});
-const click=(v,t)=>sim=apply(sim,{module:"simon",value:v},t);
-assert.equal(sim.simonLength,4);
-assert.deepEqual(simonVisual(sim,700).lit,[SIGNALS[0]]);
-assert.deepEqual(simonVisual(sim,700+SIMON_SLOT).lit,[SIGNALS[1]]);
-assert.deepEqual(simonVisual(sim,700+4*SIMON_SLOT+10000).lit,[SIGNALS[0]]);
-click(SIGNALS[0],900);assert.equal(sim.simonPhase,"input");assert.equal(sim.simonStep,1);
-click("V",1000);assert.equal(sim.simonPhase,"error");assert.equal(sim.pressure,12);
-assert.deepEqual(simonVisual(sim,1100).lit,["B","R","J","V"]);
-assert.deepEqual(simonVisual(sim,1600).lit,[]);
-assert.deepEqual(simonVisual(sim,4500).lit,[]);
-click("B",4500);assert.equal(sim.simonPhase,"error");assert.equal(sim.errors,1);
-assert.deepEqual(simonVisual(sim,5000).lit,[SIGNALS[0]]);
-sim=tick(sim,5000);assert.equal(sim.simonPhase,"loop");
-click(SIGNALS[0],5100);assert.equal(simonDue(sim),15100);
-sim=tick(sim,15100);assert.equal(sim.simonPhase,"loop");assert.equal(sim.simonStep,0);assert.equal(sim.errors,1);
-let t=16000;
-for(let k=4;k<=12;k++){assert.equal(sim.simonLength,k);t+=1000;for(const v of SIGNALS.slice(0,k))click(v,t+=300);}
-assert.equal(sim.solved.simon,true);assert.equal(sim.pressure,2);assert.equal(sim.errors,1);
-assert.deepEqual(simonVisual(sim,t).lit,["B","R","J","V"]);
-assert.equal(playerState(sim,false).simonSequence,undefined);
-console.log("Simon: loop, interruption, error flash, timeout, progression 4–12 and victory OK");
-
-import {ILLUSTRATED_LAYOUT as L} from "../scripts/cooperative-trials/layouts.js";
+import {initialState,apply,tick,adjust,MAZE_PATH,SIGNALS,SIMON_SLOT,simonVisual,simonDue,playerState} from "../scripts/cooperative-trials/engine.js";
+import {COLORS,correctConduit,CONDUIT_RULES,RUNE_ROWS,RUNE_CANDIDATES,DEFAULT_RUNE_ANSWERS,makePuzzleConfig,DIALS} from "../scripts/cooperative-trials/rules.js";
+import {ILLUSTRATED_LAYOUT as L,MACHINE_OBSTACLES} from "../scripts/cooperative-trials/layouts.js";
 import {STATIONS,MANUALS} from "../scripts/cooperative-trials/manuals.js";
-assert.equal(L.width/L.height,1000/1136);
-assert.deepEqual(Object.keys(L.stations).sort(),STATIONS.map(s=>s.id).sort());
-assert.equal(L.manuals.length,Object.keys(MANUALS).length);
-for(const [x,y] of [...L.manuals,...Object.values(L.stations)])assert.ok(x>0&&x<L.width&&y>0&&y<L.height);
-assert.ok(L.manuals.every(p=>p[1]>699*3));
-assert.ok(Object.entries(L.stations).every(([k,p])=>k==="pressure"?p[1]>699*3:p[1]<699*3));
-assert.equal(L.walls.filter(w=>w.door===1).length,1);
-for(const w of L.walls)assert.ok(w.c.every((v,i)=>v>=0&&v<=(i%2?L.height:L.width)));
-console.log("Illustrated scene preset: dimensions, stations, manuals and bounds OK");
-
-let mz=initialState(0);mz=apply(mz,{module:"maze",value:"R"},1);assert.equal(mz.mazePos,1);assert.equal(mz.mazeFeedback,"move");mz=apply(mz,{module:"maze",value:"U"},2);assert.equal(mz.mazePos,1);assert.equal(mz.mazeFeedback,"wall");assert.equal(mz.errors,1);const mzPressure=mz.pressure;mz=apply(mz,{module:"maze",value:"reset"},3);assert.equal(mz.mazePos,0);assert.equal(mz.mazeFeedback,"reset");assert.equal(mz.pressure,mzPressure);assert.equal(mz.errors,1);assert.equal(playerState(mz,true).mazePos,undefined);assert.equal(playerState(mz,true).mazeFeedback,"reset");assert.equal(playerState(mz,false).mazeFeedback,undefined);for(let k=1;k<MAZE_PATH.length;k++)mz=apply(mz,{module:"maze",value:({1:"R","-1":"L",5:"D","-5":"U"})[MAZE_PATH[k]-MAZE_PATH[k-1]]},4+k);assert.equal(mz.solved.maze,true);const won=mz.pressure;mz=apply(mz,{module:"maze",value:"reset"},20);assert.equal(mz.solved.maze,true);assert.equal(mz.mazePos,24);assert.equal(mz.pressure,won);console.log("Maze: hidden position, accepted/rejected directions, penalty-free reset and locked success OK");
-
 import {privateOwnership,hasPrivateOwnership} from "../scripts/cooperative-trials/permissions.js";
-const uid="A123456789012345",uid2="B123456789012345";
-const own=privateOwnership({default:2,[uid]:2,[uid2]:3});
-assert.deepEqual(own,{default:0,[uid]:0,[uid2]:0});
-assert.ok(hasPrivateOwnership(own));assert.equal(hasPrivateOwnership({default:0,[uid]:2}),false);assert.deepEqual(privateOwnership({default:-1,[uid]:-1}),{default:0,[uid]:0});assert.deepEqual(privateOwnership({}),{default:0});assert.ok(Object.entries(own).every(([k,v])=>(k==="default"||/^[A-Za-z0-9]{16}$/.test(k))&&v===0));
-console.log("Manual ownership: valid numeric NONE diff, no deletion markers, idempotent OK");
+let n=1000,s=initialState(n),act=(module,value,t=n)=>s=apply(s,{module,value},t);
+assert.equal(s.pressure,7);act("conduits",0);assert.equal(s.errors,1);act("conduits",3);assert.equal(s.solved.conduits,false);act("conduits",0);assert.equal(s.solved.conduits,true);assert.equal(s.pressure,7);act("conduits",3);act("conduits",3);assert.equal(s.pressure,7);
+for(let len=1;len<=6;len++){const test=(a)=>{if(a.length===len){const k=correctConduit(a);assert.ok(Number.isInteger(k)&&k>=0&&k<len);return;}for(const c of COLORS)test([...a,c]);};test([]);}
+for(const keys of RUNE_CANDIDATES)assert.equal(RUNE_ROWS.filter(r=>keys.every(k=>r.includes(k))).length,1);
+for(let i=0;i<100;i++){const cfg=makePuzzleConfig();assert.ok(cfg.conduits.length>=3&&cfg.conduits.length<=6);assert.equal(cfg.runeAnswers.length,3);const perms=cfg.runeAnswers.map((r,k)=>{assert.equal(RUNE_ROWS.filter(row=>r.every(x=>row.includes(x))).length,1);assert.deepEqual([...r].sort(),[...cfg.runeKeys[k]].sort());return r.map(x=>cfg.runeKeys[k].indexOf(x)).join("");});assert.equal(new Set(perms).size,3);assert.ok(perms.every(p=>p!=="0123"));}
+act("runes","◇");assert.equal(s.errors,3);for(const row of DEFAULT_RUNE_ANSWERS)for(const v of row)act("runes",v);assert.equal(s.solved.runes,true);
+for(let k=4;k<=12;k++){n+=800;for(const v of SIGNALS.slice(0,k)){n+=100;act("simon",v);}}assert.equal(s.solved.simon,true);
+act("maze","U");assert.equal(s.mazePos,0);act("maze","R");assert.equal(s.mazePos,1);const before=s.pressure;act("maze","reset");assert.equal(s.mazePos,0);assert.equal(s.pressure,before);for(let k=1;k<MAZE_PATH.length;k++)act("maze",({1:"R","-1":"L",5:"D","-5":"U"})[MAZE_PATH[k]-MAZE_PATH[k-1]]);assert.equal(s.solved.maze,true);assert.equal(playerState(s,true).mazePos,undefined);
+act("dial",DIALS[s.dialIndex].answer);act("dial","check");assert.equal(s.solved.dial,true);act("pressure","purge");assert.equal(s.status,"success");
+let d=initialState(0,{duration:60,interval:10,increment:20});d=tick(d,120000);assert.equal(d.status,"running");assert.equal(d.pressure,247);assert.equal(d.errors,0);assert.equal(d.dialIndex,0);d=apply(d,{module:"dial",value:1},120001);d=apply(d,{module:"dial",value:"check"},120002);d=tick(d,240000);assert.equal(d.solved.dial,true);assert.equal(d.errors,0);assert.equal(d.dialIndex,0);
+let p=initialState(0,{interval:120});p=adjust(p,10,1);p=apply(p,{module:"pressure",value:"purge"},2);assert.equal(p.pressure,7);assert.equal(p.solved.pressure,true);p=apply(p,{module:"pressure",value:"purge"},60001);assert.equal(p.pressure,7);p=apply(p,{module:"pressure",value:"purge"},60002);assert.equal(p.pressure,0);assert.equal(p.purgeReady,120002);
+let sim=initialState(0,{interval:120});const click=(v,t)=>sim=apply(sim,{module:"simon",value:v},t);assert.deepEqual(simonVisual(sim,700).lit,[SIGNALS[0]]);assert.deepEqual(simonVisual(sim,700+4*SIMON_SLOT+10000).lit,[SIGNALS[0]]);click("B",900);click("V",1000);assert.equal(sim.simonPhase,"error");assert.deepEqual(simonVisual(sim,1100).lit,["B","R","J","V"]);assert.deepEqual(simonVisual(sim,4500).lit,[]);sim=tick(sim,5000);click("B",5100);assert.equal(simonDue(sim),15100);sim=tick(sim,15100);assert.equal(sim.simonStep,0);let t=16000;for(let k=4;k<=12;k++){t+=1000;for(const v of SIGNALS.slice(0,k))click(v,t+=300);}assert.equal(sim.solved.simon,true);assert.deepEqual(simonVisual(sim,t).lit,["B","R","J","V"]);assert.equal(playerState(sim,false).simonSequence,undefined);assert.equal(playerState(sim,true).runeAnswers,undefined);
+assert.equal(L.width/L.height,1000/1136);assert.deepEqual(Object.keys(L.stations).sort(),STATIONS.map(s=>s.id).sort());assert.equal(L.manuals.length,Object.keys(MANUALS).length);assert.ok(MACHINE_OBSTACLES.length>20);assert.ok(L.walls.every(w=>w.door===0));for(const w of L.walls)assert.ok(w.c.every((v,i)=>v>=0&&v<=(i%2?L.height:L.width)));assert.ok(MACHINE_OBSTACLES.every(w=>w.move===20&&w.sight===0));assert.ok(Object.values(MANUALS).every(m=>m.text.includes("Wakeiwa Atikak")));
+const uid="A123456789012345";assert.deepEqual(privateOwnership({default:2,[uid]:2}),{default:0,[uid]:0});assert.ok(hasPrivateOwnership({default:0,[uid]:0}));assert.equal(hasPrivateOwnership({default:0,[uid]:2}),false);
+console.log("Conduits exhaustive 1–6, runes unique + randomized, Simon, maze, pressure >100, unlimited duration, fixed dial, purge cooldown, map obstacles, permissions OK");

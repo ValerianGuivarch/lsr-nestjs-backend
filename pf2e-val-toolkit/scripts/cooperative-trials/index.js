@@ -1,11 +1,12 @@
-import {MODULES,LABELS,COLORS,RUNE_KEYS,SIMON_COLORS,simonVisual,simonDue,DIALS,initialState,tick,apply,adjust,playerState} from "./engine.js";
+import {MODULES,LABELS,SIMON_COLORS,simonVisual,simonDue,DIALS,initialState,tick,apply,adjust,playerState} from "./engine.js";
 import {MANUALS,STATIONS,MANUAL_POSITIONS} from "./manuals.js";
-import {ILLUSTRATED_LAYOUT} from "./layouts.js";
+import {ILLUSTRATED_LAYOUT,MACHINE_OBSTACLES} from "./layouts.js";
+import {makePuzzleConfig} from "./rules.js";
 import {privateOwnership,hasPrivateOwnership} from "./permissions.js";
 const NS="pf2e-val-toolkit", CHANNEL="module."+NS, KEY="cooperativeTrial";
 const BASE="modules/"+NS+"/icons/cooperative/";
 const COLORS_HEX={R:0xff4141,B:0x4ca7ff,J:0xffd343,V:0x45dd78};
-const COLOR_CSS=["#ec5656","#55a0ff","#e8cf55","#55a0ff","#eeeeee"];
+const COLOR_CSS={rouge:"#ec5656",bleu:"#55a0ff",jaune:"#e8cf55",blanc:"#eeeeee",noir:"#121212"};
 const esc=x=>foundry.utils.escapeHTML(String(x??""));
 const clock=()=>game.time?.serverTime??Date.now();
 let authority=null, view=null, panel=null, consolePanel=null, queue=Promise.resolve(), busy=false;
@@ -35,8 +36,9 @@ function selectedNear(note) {
 }
 function noteStation(note){return note?.getFlag(NS,"cooperativeStation");}
 function noteManual(note){return note?.getFlag(NS,"cooperativeManual");}
+const noteSize=id=>/^simon-[RBJV]$/.test(id??"")?94:120;
 function makeNote(entry,x,y,text,icon,flag) {
- return {entryId:entry.id,x,y,text,iconSize:70,global:false,fontSize:20,texture:{src:BASE+icon+".svg"},flags:{[NS]:flag}};
+ return {entryId:entry.id,x,y,text,iconSize:noteSize(flag.cooperativeStation),global:false,fontSize:20,texture:{src:BASE+icon+"-large.svg"},flags:{[NS]:flag}};
 }
 async function verifyIllustratedAsset(layout){
  const img=new Image();await new Promise((resolve,reject)=>{img.onload=resolve;img.onerror=()=>reject(Error("Carte rati.png introuvable."));img.src=layout.src;});
@@ -60,7 +62,7 @@ async function createLayout(preset="blank"){
  const chosen=folders.find(f=>f.name.replace(/[’']/g,"'")==="Agents d'Absalom");
  const opts=await foundry.applications.api.DialogV2.wait({
   window:{title:"Créer une salle d’épreuves coopératives"},
-  content:'<label>Nom <input name="name" value="'+esc(layout?.name??"Le Ratisseur de tombes")+'"></label><label>Dossier <select name="folder"><option value="">Racine</option>'+folders.map(f=>'<option value="'+esc(f.id)+'" '+(f.id===chosen?.id?'selected':'')+'>'+esc(f.name)+'</option>').join("")+'</select></label><p>'+(illustrated?"Carte rati.png, 30 × 34 cases environ, salle des machines au nord et bureau au sud, séparés par une cloison de jeu.":"Scène vide 26 × 19 cases, deux zones séparées.")+' Six manuels et dix mécanismes. Ne crée aucun Actor, ne remplace aucune scène.</p>',
+  content:'<label>Nom <input name="name" value="'+esc(layout?.name??"Le Ratisseur de tombes")+'"></label><label>Dossier <select name="folder"><option value="">Racine</option>'+folders.map(f=>'<option value="'+esc(f.id)+'" '+(f.id===chosen?.id?'selected':'')+'>'+esc(f.name)+'</option>').join("")+'</select></label><p>'+(illustrated?"Carte rati.png, 30 × 34 cases environ, salle des machines au nord et bureau au sud, obstacles mécaniques sans cloison centrale.":"Scène vide 26 × 19 cases, deux zones séparées.")+' Six manuels et dix mécanismes. Ne crée aucun Actor, ne remplace aucune scène.</p>',
   buttons:[{action:"create",label:"Créer",callback:(_e,b)=>Object.fromEntries(new FormData(b.form))},{action:"cancel",label:"Annuler",callback:()=>null}],close:()=>null
  });
  if(!opts)return;
@@ -68,7 +70,7 @@ async function createLayout(preset="blank"){
  if(game.scenes.some(s=>s.name===name)){ui.notifications.warn("Une scène porte déjà ce nom. Choisissez un autre nom.");return;}
  if(illustrated)await verifyIllustratedAsset(layout);
  const levelId=foundry.utils.randomID();
- const scene=await Scene.create({name,folder:opts.folder||null,width:layout?.width??2600,height:layout?.height??1900,padding:0,levels:[{_id:levelId,name:"Rez-de-chaussée",background:{src:layout?.src??null,color:"#242b31"}}],initialLevel:levelId,tokenVision:true,fog:{mode:CONST.FOG_EXPLORATION_MODES.DISABLED},environment:{darknessLevel:0,darknessLock:true,globalLight:{enabled:true}},grid:{type:CONST.GRID_TYPES.SQUARE,size:layout?.grid??100,distance:5,units:"ft",alpha:illustrated?0:0.2},navigation:false,flags:{[NS]:{cooperativeLayout:true,cooperativePreset:illustrated?"illustrated":"blank"}}});
+ const scene=await Scene.create({name,folder:opts.folder||null,width:layout?.width??2600,height:layout?.height??1900,padding:0,levels:[{_id:levelId,name:"Rez-de-chaussée",background:{src:layout?.src??null,color:"#242b31"}}],initialLevel:levelId,tokenVision:true,fog:{mode:CONST.FOG_EXPLORATION_MODES.DISABLED},environment:{darknessLevel:0,darknessLock:true,globalLight:{enabled:true}},grid:{type:CONST.GRID_TYPES.SQUARE,size:layout?.grid??100,distance:5,units:"ft",alpha:illustrated?0:0.2},navigation:false,flags:{[NS]:{cooperativeLayout:true,cooperativePreset:illustrated?"illustrated":"blank",cooperativeObstaclesV1:illustrated}}});
  if(illustrated&&scene.initialLevel?.background?.src!==layout.src)await repairIllustratedBackground(scene);
  const journalFolder=game.folders.find(f=>f.type==="JournalEntry"&&f.name===chosen?.name);
  // A dedicated folder avoids scattering journals; no existing documents are changed.
@@ -83,7 +85,7 @@ async function createLayout(preset="blank"){
  for(const st of STATIONS){const [x,y]=layout?.stations[st.id]??[st.x,st.y];notes.push(makeNote(anchor,x,y,st.label,st.icon,{cooperativeStation:st.id}));}
  // Partition at x=1900; bottom entry to a one-cell-wide passage by the return wall.
  const wall=(c,door=0)=>({c,move:20,sight:20,light:20,sound:0,door,ds:0});
- await scene.createEmbeddedDocuments("Wall",illustrated?layout.walls.map(w=>wall(w.c,w.door)):[
+ await scene.createEmbeddedDocuments("Wall",illustrated?layout.walls.map(w=>({...wall(w.c,w.door),...w})):[
   wall([50,50,2550,50]),wall([2550,50,2550,1850]),wall([2550,1850,50,1850]),wall([50,1850,50,50]),
   wall([1900,50,1900,1650]),wall([1900,1650,1900,1750],1),wall([1900,1750,1900,1850]),
   wall([2100,50,2100,1300]),wall([1900,1300,2100,1300])
@@ -91,6 +93,24 @@ async function createLayout(preset="blank"){
  await scene.createEmbeddedDocuments("Note",notes);
  await scene.view();
  ui.notifications.info(name+" : "+notes.length+" repères créés. Déplacez les PJ puis ouvrez Épreuves coopératives.");
+}
+async function upgradeRoom(scene,{forceObstacles=false}={}){
+ if(!game.user.isGM||!scene?.getFlag(NS,"cooperativeLayout"))throw Error("Sélectionnez une salle d’épreuves.");
+ const updates=scene.notes.filter(n=>noteStation(n)||noteManual(n)).flatMap(n=>{
+  const station=STATIONS.find(st=>st.id===noteStation(n)),manual=noteManual(n);
+  const icon=manual?"manual-"+manual:station?.icon;
+  const size=noteSize(noteStation(n)),src=icon?BASE+icon+"-large.svg":n.texture.src;
+  return n.iconSize===size&&n.texture.src===src?[]:[{_id:n.id,iconSize:size,"texture.src":src}];
+ });
+ if(updates.length)await scene.updateEmbeddedDocuments("Note",updates);
+ if(scene.getFlag(NS,"cooperativePreset")==="illustrated"&&(forceObstacles||!scene.getFlag(NS,"cooperativeObstaclesV1"))){
+  if(scene.width!==ILLUSTRATED_LAYOUT.width||scene.height!==ILLUSTRATED_LAYOUT.height)throw Error("Dimensions de la carte modifiées : obstacles à vérifier manuellement.");
+  const key=c=>[c.slice(0,2).join(","),c.slice(2,4).join(",")].sort().join("|");
+  const existing=new Set(scene.walls.map(w=>key(w.c)));
+  const additions=MACHINE_OBSTACLES.filter(w=>!existing.has(key(w.c))).map(w=>({...w,ds:0,flags:{[NS]:{cooperativeObstacle:true}}}));
+  if(additions.length)await scene.createEmbeddedDocuments("Wall",additions);
+  await scene.setFlag(NS,"cooperativeObstaclesV1",true);
+ }
 }
 async function grantManuals(s) {
  // Only the harmless interaction anchor is readable by players. Manual text is
@@ -115,7 +135,7 @@ async function grantManuals(s) {
   if(manual&&page&&page.text.content!==manual.text)await page.update({"text.content":manual.text});
  }
  const updates=scene.notes.filter(n=>Object.hasOwn(MANUALS,noteManual(n)??"")).flatMap(n=>{
-  const src=BASE+"manual-"+noteManual(n)+".svg";
+  const src=BASE+"manual-"+noteManual(n)+"-large.svg";
   if(n.entryId===anchor.id&&!n.pageId&&n.texture.src===src)return [];
   return [{_id:n.id,entryId:anchor.id,pageId:null,"texture.src":src}];
  });
@@ -157,8 +177,10 @@ async function start(data){
  const increment=Math.max(1,Math.min(20,Number(data.increment)||5));
  const seq=[...SIMON_COLORS];for(let k=seq.length-1;k>0;k--){const j=Math.floor(Math.random()*(k+1));[seq[k],seq[j]]=[seq[j],seq[k]];}
  while(seq.length<12)seq.push(SIMON_COLORS[Math.floor(Math.random()*SIMON_COLORS.length)]);
- const s=initialState(clock(),{duration,interval,increment,operatorId:op.id,sceneId:canvas.scene.id,sessionId:foundry.utils.randomID(),simonSequence:seq});
- await grantManuals(s);
+ const config={duration,interval,increment,operatorId:op.id,sceneId:canvas.scene.id,sessionId:foundry.utils.randomID(),simonSequence:seq,...makePuzzleConfig()};
+ await upgradeRoom(canvas.scene);
+ await grantManuals({sceneId:config.sceneId});
+ const s=initialState(clock(),config);
  await persist(s,false);await chat("Début de l’épreuve",7);
 }
 async function gmAction(action,value){
@@ -169,7 +191,7 @@ async function gmAction(action,value){
  if(action==="adjust")return persist(adjust(s,value,now));
  if(action==="pause"&&s.status==="running"){s=tick(s,now);if(s.status==="running"){s.status="paused";s.pausedAt=now;}return persist(s);}
  if(action==="resume"&&s.status==="paused"){
-  const shift=now-s.pausedAt;for(const k of ["deadline","nextTick","simonShow","simonAt","dialDue","purgeReady","purgeStart"])if(s[k]!==null&&typeof s[k]==="number")s[k]+=shift;
+  const shift=now-s.pausedAt;for(const k of ["deadline","nextTick","simonShow","simonAt","purgeReady"])if(s[k]!==null&&typeof s[k]==="number")s[k]+=shift;
   s.status="running";delete s.pausedAt;return persist(s);
  }
  if(action==="stop"&&["running","paused"].includes(s.status)){s.status="stopped";await persist(s,false);return chat("Épreuve arrêtée par le MJ",s.pressure);}
@@ -205,7 +227,7 @@ function panelClass(){
  return class TrialPanel extends App{
   static DEFAULT_OPTIONS={classes:["pf2e-val-cooperative"],window:{title:"Épreuves coopératives",resizable:true},position:{width:470,height:"auto"}};
   constructor(type,note=null){super({id:type==="gm"?"pf2e-val-cooperative-gm":"pf2e-val-cooperative-console",window:{title:type==="gm"?"Épreuves coopératives — MJ":type==="manual"?note.text:"Mécanisme — "+note.text}});this.type=type;this.note=note;}
-  async _renderHTML(){const root=document.createElement("div");root.className="val-trial-content";this.root=root;this.updateContent();return root;}
+  async _renderHTML(){const root=document.createElement("div");root.className="val-trial-content pf2e-val-cooperative";root.style.cssText="display:grid;gap:8px;padding:8px;max-width:100%;box-sizing:border-box";this.root=root;this.updateContent();return root;}
   _replaceHTML(result,content){content.replaceChildren(result);}
   updateContent(){
    if(!this.root)return;
@@ -215,12 +237,14 @@ function panelClass(){
    this.lastScene=canvas.scene?.id;
    this.lastStatus=view?.status;
    this.root.innerHTML=this.type==="gm"?gmHtml():this.type==="manual"?manualHtml(this.note):consoleHtml(this.note);
+   this.root.querySelectorAll(".val-trial-grid button").forEach(b=>{b.style.cssText="min-height:92px;height:92px;font-size:42px;line-height:1;color:#f5e7c8;background:#353b37;border:2px solid #b79c63;border-radius:9px";});
    this.root.querySelectorAll("[data-action]").forEach(button=>button.addEventListener("click",()=>{
     const act=button.dataset.action,val=button.dataset.value;
     if(this.type==="gm"){
      if(act==="create")runSerial(()=>createLayout());
      else if(act==="create-map")runSerial(()=>createLayout("illustrated"));
      else if(act==="repair-map")runSerial(()=>repairIllustratedBackground());
+     else if(act==="upgrade-room")runSerial(async()=>{await upgradeRoom(canvas.scene,{forceObstacles:true});ui.notifications.info("Repères et obstacles actualisés.");});
      else if(act==="start"){const form=this.root.querySelector("[data-start-form]");runSerial(()=>start(Object.fromEntries(new FormData(form))));}
      else runSerial(()=>gmAction(act,Number(val)));
     }else command(this.note,act==="number"?Number(val):val);
@@ -230,15 +254,15 @@ function panelClass(){
 }
 let PanelClass;
 const btn=(label,action,value="",disabled=false)=>'<button type="button" data-action="'+esc(action)+'" data-value="'+esc(value)+'" '+(disabled?'disabled':'')+'>'+esc(label)+'</button>';
-function timeLabel(s){return s?Math.max(0,Math.ceil((s.deadline-(s.status==="paused"?s.pausedAt??clock():clock()))/1000)):0;}
+function timeLabel(s){if(!s)return "—";const sec=Math.ceil((s.deadline-(s.status==="paused"?s.pausedAt??clock():clock()))/1000);return (sec<0?"+":"")+Math.abs(sec)+" s"+(sec<0?" (dépassé)":"");}
 function gmHtml(){
  const s=view,active=["running","paused"].includes(s?.status);
- const details=s?{conduits:(s.isolated??[]).map((v,i)=>v?i+1:null).filter(Boolean).join(", ")||"aucun isolé",runes:"série "+Math.min(3,(s.runeRound??0)+1)+"/3 · "+(s.runeStep??0)+"/4",simon:s.solved.simon?"12/12":(s.simonLength??4)+" couleurs · "+(s.simonStep??0)+" saisies",maze:"case "+String.fromCharCode(65+(s.mazePos??0)%5)+(1+Math.floor((s.mazePos??0)/5)),dial:["Nord","Est","Sud","Ouest"][s.dialAngle??0]+" · configuration "+((s.dialIndex??0)+1),pressure:(s.purgeStart!==null&&s.purgeStart!==undefined?"maintien en cours":clock()<(s.purgeReady??0)?"recharge":"prêt")}:{};
+ const details=s?{conduits:(s.isolated??[]).map((v,i)=>v?i+1:null).filter(Boolean).join(", ")||"aucun isolé",runes:"série "+Math.min(3,(s.runeRound??0)+1)+"/3 · "+(s.runeStep??0)+"/4",simon:s.solved.simon?"12/12":(s.simonLength??4)+" couleurs · "+(s.simonStep??0)+" saisies",maze:"case "+String.fromCharCode(65+(s.mazePos??0)%5)+(1+Math.floor((s.mazePos??0)/5)),dial:["Nord","Est","Sud","Ouest"][s.dialAngle??0]+" · configuration "+((s.dialIndex??0)+1),pressure:(clock()<(s.purgeReady??0)?"recharge":"prêt")}:{};
  let html='<p><b>Scène :</b> '+esc(canvas.scene?.name||"Aucune")+'</p>';
- if(s)html+='<div class="val-trial-dashboard"><div class="val-trial-meter"><b>PRESSION '+s.pressure+' %</b><div class="val-trial-track"><i style="width:'+s.pressure+'%"></i></div></div><div class="val-trial-clock"><span data-time>'+timeLabel(s)+'</span> s</div></div><p><b>'+esc(statusLabels[s.status])+'</b> · Erreurs '+s.errors+'</p><ul class="val-trial-status-list">'+MODULES.map(m=>'<li>'+esc(LABELS[m])+' : '+(s.solved[m]?"stabilisé":"à résoudre")+" — "+esc(details[m])+'</li>').join("")+'</ul>';
+ if(s)html+='<div class="val-trial-dashboard"><div class="val-trial-meter"><b>PRESSION '+s.pressure+' %</b><div class="val-trial-track"><i style="width:'+Math.min(100,s.pressure)+'%"></i></div></div><div class="val-trial-clock"><span data-time>'+timeLabel(s)+'</span></div></div><p><b>'+esc(statusLabels[s.status])+'</b> · Erreurs '+s.errors+'</p><ul class="val-trial-status-list">'+MODULES.map(m=>'<li>'+esc(LABELS[m])+' : '+(s.solved[m]?"stabilisé":"à résoudre")+" — "+esc(details[m])+'</li>').join("")+'</ul>';
  if(active)return html+'<div class="val-trial-buttons">'+btn("−10","adjust","-10",s.status!=="running")+btn("+5","adjust","5",s.status!=="running")+btn(s.status==="paused"?"Reprendre":"Pause",s.status==="paused"?"resume":"pause")+btn("Résoudre (MJ)","resolve")+btn("Arrêter","stop")+'</div>';
  const users=game.users.filter(u=>u.active).sort((a,b)=>Number(a.isGM)-Number(b.isGM));
- return html+'<form data-start-form><label>Opérateur <select name="operator">'+users.map(u=>'<option value="'+esc(u.id)+'" '+(!u.isGM?"":"")+'>'+esc(u.name)+(u.isGM?" (MJ test)":"")+'</option>').join("")+'</select></label><label>Durée (s) <input name="duration" type="number" value="600" min="60" max="1800"></label><label>Intervalle (s) <input name="interval" type="number" value="30" min="10" max="120"></label><label>Hausse par intervalle <input name="increment" type="number" value="5" min="1" max="20"></label></form><div class="val-trial-buttons">'+btn("Démarrer","start","",!trialScene())+btn("Créer une salle","create")+btn("Créer salle illustrée","create-map")+(canvas.scene?.getFlag(NS,"cooperativePreset")==="illustrated"?btn("Réparer le fond","repair-map"):"")+'</div><p class="hint">Créer la salle, placer les PJ, puis démarrer. Un seul opérateur ; les autres joueurs connectés reçoivent les manuels.</p>';
+ return html+'<form data-start-form><label>Opérateur <select name="operator">'+users.map(u=>'<option value="'+esc(u.id)+'" '+(!u.isGM?"":"")+'>'+esc(u.name)+(u.isGM?" (MJ test)":"")+'</option>').join("")+'</select></label><label>Durée indicative (s) <input name="duration" type="number" value="600" min="60" max="1800"></label><label>Intervalle (s) <input name="interval" type="number" value="30" min="10" max="120"></label><label>Hausse par intervalle <input name="increment" type="number" value="5" min="1" max="20"></label></form><div class="val-trial-buttons">'+btn("Démarrer","start","",!trialScene())+btn("Créer une salle","create")+btn("Créer salle illustrée","create-map")+(canvas.scene?.getFlag(NS,"cooperativePreset")==="illustrated"?btn("Réparer le fond","repair-map"):"")+(trialScene()?btn("Actualiser les repères et obstacles","upgrade-room"):"")+'</div><p class="hint">Créer la salle, placer les PJ, puis démarrer. Un seul opérateur ; les autres joueurs connectés reçoivent les manuels.</p>';
 }
 function consoleHtml(note){
  const s=view,id=noteStation(note);
@@ -246,32 +270,33 @@ function consoleHtml(note){
  if(s.status!=="running")return "<p>"+esc(statusLabels[s.status])+"</p>";
  const op=game.user.isGM||game.user.id===s.operatorId;
  if((id==="pressure"?op&&!game.user.isGM:!op))return "<p>Ce mécanisme appartient à l’autre équipe.</p>";
- let html='<div class="val-trial-instrument"><div class="val-trial-heading"><span>'+esc(LABELS[stationModule(id)])+'</span><b class="'+(s.solved[stationModule(id)]?"is-solved":"")+'">'+(s.solved[stationModule(id)]?"STABILISÉ":"EN SERVICE")+'</b></div><div class="val-trial-meter"><b>PRESSION '+s.pressure+' %</b><div class="val-trial-track"><i style="width:'+s.pressure+'%"></i></div></div>';
+ let html='<div class="val-trial-instrument"><div class="val-trial-heading"><span>'+esc(LABELS[stationModule(id)])+'</span><b class="'+(s.solved[stationModule(id)]?"is-solved":"")+'">'+(s.solved[stationModule(id)]?"STABILISÉ":"EN SERVICE")+'</b></div><div class="val-trial-meter"><b>PRESSION '+s.pressure+' %</b><div class="val-trial-track"><i style="width:'+Math.min(100,s.pressure)+'%"></i></div></div>';
  const close='</div>';
  if(id==="conduits"){
-  return html+'<div class="val-trial-conduits">'+COLORS.map((c,k)=>'<div class="val-trial-conduit"><span class="conduit-color" style="--conduit:'+COLOR_CSS[k]+'"></span><b>'+(k+1)+'. '+esc(c.charAt(0).toUpperCase()+c.slice(1))+'</b><span class="conduit-state">'+(s.isolated[k]?"Isolé":"Actif")+'</span>'+btn(s.isolated[k]?"Rétablir":"Isoler","number",k)+'</div>').join("")+'</div>'+close;
+  return html+'<div class="val-trial-conduits">'+(s.conduits??[]).map((c,k)=>'<div class="val-trial-conduit"><span class="conduit-color" style="--conduit:'+COLOR_CSS[c]+'"></span><b>'+(k+1)+'. '+esc(c.charAt(0).toUpperCase()+c.slice(1))+'</b><span class="conduit-state">'+(s.isolated[k]?"Isolé":"Actif")+'</span>'+btn(s.isolated[k]?"Rétablir":"Isoler","number",k)+'</div>').join("")+'</div>'+close;
  }
  if(id==="runes"){
   const progress=Array.from({length:4},(_,k)=>'<i class="'+(k<s.runeStep||s.solved.runes?"on":"")+'"></i>').join("");
-  return html+'<div class="val-trial-readout">SÉRIE '+Math.min(3,s.runeRound+1)+' / 3</div><div class="val-trial-pips">'+progress+'</div>'+(s.solved.runes?'':'<div class="val-trial-grid">'+RUNE_KEYS[s.runeRound].map(r=>btn(r,"value",r)).join("")+'</div>')+close;
+  return html+'<div class="val-trial-readout">SÉRIE '+Math.min(3,s.runeRound+1)+' / 3</div><div class="val-trial-pips">'+progress+'</div>'+(s.solved.runes?'':'<div class="val-trial-grid" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px">'+(s.runeKeys??[]).map(r=>btn(r,"value",r)).join("")+'</div>')+close;
  }
  if(id==="maze"){
   const feedback={initial:"En attente d’une direction",move:"Déplacement accepté",wall:"Obstacle — déplacement refusé",reset:"Retour au point de départ",success:"Circuit stabilisé"}[s.solved.maze?"success":s.mazeFeedback??"initial"];
-  return html+'<div class="val-trial-direction-status '+(s.mazeFeedback==="wall"?"is-error":s.solved.maze?"is-success":"")+'" role="status"><i></i>'+esc(feedback)+'</div>'+(s.solved.maze?'':'<div class="val-trial-dpad">'+[["↑","U","Nord"],["←","L","Ouest"],["↓","D","Sud"],["→","R","Est"]].map(([arrow,v,label])=>'<button type="button" data-action="value" data-value="'+v+'" aria-label="'+label+'"><span>'+arrow+'</span><small>'+label+'</small></button>').join("")+'<div class="val-trial-dpad-center" aria-hidden="true"><i></i></div></div><div class="val-trial-reset">'+btn("↺ Réinitialiser en position initiale","value","reset")+'</div><p class="val-trial-direction-hint">Suivez les directions données par les experts.</p>')+close;
+  return html+'<div class="val-trial-direction-status '+(s.mazeFeedback==="wall"?"is-error":s.solved.maze?"is-success":"")+'" role="status"><i></i>'+esc(feedback)+'</div>'+(s.solved.maze?'':'<div class="val-trial-dpad" style="display:grid;grid-template-columns:repeat(3, minmax(0,1fr));grid-template-rows:repeat(3,72px);gap:6px;width:240px;max-width:100%;margin:8px auto">'+[["↑","U","Nord"],["←","L","Ouest"],["↓","D","Sud"],["→","R","Est"]].map(([arrow,v,label],k)=>'<button style="grid-area:'+["1/2","2/1","3/2","2/3"][k]+';display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:0;height:100%" type="button" data-action="value" data-value="'+v+'" aria-label="'+label+'"><span style="font-size:30px;line-height:1">'+arrow+'</span><small style="font-size:10px">'+label+'</small></button>').join("")+'<div class="val-trial-dpad-center" style="grid-area:2/2;display:grid;place-items:center;border:1px solid #9c895d;border-radius:50%" aria-hidden="true"><span style="font-size:24px;color:#d7bd75">◆</span></div></div><div class="val-trial-reset">'+btn("↺ Réinitialiser en position initiale","value","reset")+'</div><p class="val-trial-direction-hint">Suivez les directions données par les experts.</p>')+close;
  }
  if(id==="dial"){
-  return html+'<div class="val-trial-lights">'+Array.from({length:12},(_,k)=>'<span class="'+(DIALS[s.dialIndex].lights.includes(k)?"on":"")+'">'+(k+1)+'</span>').join("")+'</div><svg class="val-trial-dial" viewBox="0 0 220 190" aria-hidden="true"><defs><radialGradient id="val-knob"><stop stop-color="#9c9074"/><stop offset="1" stop-color="#332d27"/></radialGradient></defs><circle cx="110" cy="95" r="65" fill="#11191d" stroke="#a98c56" stroke-width="3"/><circle cx="110" cy="95" r="50" fill="url(#val-knob)" stroke="#c8ad74" stroke-width="2"/><path d="M102 102V59L110 49 118 59V102Z" fill="#f4d27d" transform="rotate('+(90*s.dialAngle)+' 110 95)"/><circle cx="110" cy="95" r="8" fill="#302a25" stroke="#d1b16c"/><g fill="#e9d8ae" text-anchor="middle" font-size="14" font-weight="bold"><text x="110" y="20">N</text><text x="193" y="100">E</text><text x="110" y="181">S</text><text x="27" y="100">O</text></g></svg><div class="val-trial-readout">'+["NORD","EST","SUD","OUEST"][s.dialAngle]+'</div><div class="val-trial-buttons">'+btn("↻ Tourner","value","turn")+btn("✓ Valider","value","check")+'</div>'+close;
+  const d=DIALS[s.dialIndex];
+  return html+'<p>Gemmes allumées</p><div class="val-trial-lights" style="display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px">'+Array.from({length:12},(_,k)=>'<span style="display:grid;place-items:center;min-height:32px;border-radius:50%;background:'+(d.lights.includes(k)?"#82d26d;color:#10210c":"#30383a;color:#d4d6cb")+';border:2px solid #a18b5f" class="'+(d.lights.includes(k)?"on":"")+'">'+(k+1)+'</span>').join("")+'</div><svg class="val-trial-dial" width="120" height="104" style="width:120px;height:104px;display:block;margin:auto" viewBox="0 0 220 190" aria-hidden="true"><circle cx="110" cy="95" r="65" fill="#11191d" stroke="#a98c56" stroke-width="5"/><circle cx="110" cy="95" r="49" fill="#5c5a46" stroke="#c8ad74" stroke-width="3"/><path d="M102 102V59L110 49 118 59V102Z" fill="#f4d27d" transform="rotate('+(90*s.dialAngle)+' 110 95)"/><g fill="#e9d8ae" text-anchor="middle" font-size="19" font-weight="bold"><text x="110" y="20">N</text><text x="193" y="101">E</text><text x="110" y="181">S</text><text x="27" y="101">O</text></g></svg><div class="val-trial-readout">'+["NORD","EST","SUD","OUEST"][s.dialAngle]+'</div>'+(s.solved.dial?'':'<div class="val-trial-cardinals" style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px">'+["Nord","Est","Sud","Ouest"].map((label,k)=>btn(label,"number",k)).join("")+'</div>'+btn("Sceller l’accord","value","check"))+close;
  }
  if(id==="pressure"){
-  const t=clock(),ready=t>=s.purgeReady;
-  return html+'<svg class="val-trial-gauge" viewBox="0 0 220 115"><path d="M25 95 A85 85 0 0 1 195 95" fill="none" stroke="#3a4446" stroke-width="17"/><path d="M25 95 A85 85 0 0 1 195 95" fill="none" stroke="'+(s.pressure>=75?"#db6551":"#9bc879")+'" stroke-width="11" pathLength="100" stroke-dasharray="'+s.pressure+' 100"/><path d="M110 95L110 27" transform="rotate('+(-90+1.8*s.pressure)+' 110 95)" stroke="#ead0a0" stroke-width="4"/><circle cx="110" cy="95" r="8" fill="#d6af70"/><text x="110" y="80" text-anchor="middle" fill="#f8ebcf" font-size="20">'+s.pressure+'%</text></svg><p class="val-trial-readout" data-purge-status>'+(!ready?"Recharge en cours":s.purgeStart!==null?"Maintien en cours — relâcher après 3 s":"Prêt à purger")+'</p><div class="val-trial-purge">'+btn("PURGE","value","begin",!ready||s.purgeStart!==null)+btn("Relâcher","value","release",s.purgeStart===null)+'</div><p>Maintenez 3 à 10 secondes ; recharge 60 s.</p>'+close;
+  const ready=clock()>=s.purgeReady;
+  return html+'<p class="val-trial-readout" data-purge-status>'+(ready?"Prêt à purger":"Recharge en cours")+'</p><div class="val-trial-purge" style="display:grid;grid-template-columns:1fr">'+btn("PURGE · −10 points","value","purge",!ready)+'</div><p>Réamorçage : 60 secondes.</p>'+close;
  }
  return html+close;
 }
 function manualHtml(note){
  if(!canReadManual(note))return "<p>Approchez le personnage du repère.</p>";
  const key=noteManual(note),manual=MANUALS[key];
- return '<div class="val-trial-manual"><div class="val-trial-manual-heading"><img src="'+BASE+'manual-'+key+'.svg" alt=""><strong>'+esc(manual.name)+'</strong></div>'+manual.text+'</div>';
+ return '<div class="val-trial-manual" style="max-height:65vh;overflow:auto;padding:12px"><h3 style="margin:0 0 6px">'+esc(manual.name)+'</h3>'+manual.text+'</div>';
 }
 function checkManual(){
  if(consolePanel?.type==="manual"&&consolePanel.rendered&&!canReadManual(consolePanel.note)){
@@ -279,7 +304,7 @@ function checkManual(){
  }
 }
 function refresh(){
- panel?.updateContent();checkManual();consolePanel?.updateContent();
+ panel?.updateContent();checkManual();if(consolePanel?.type!=="manual")consolePanel?.updateContent();
 }
 function openGM(){
  if(!game.user.isGM)return;
@@ -300,8 +325,8 @@ function renderSimon(){
   const id=noteStation(n.document);
   if(!/^simon-[RBJV]$/.test(id??""))continue;
   const col=id.slice(-1),icon=n.controlIcon,sprite=icon?.icon,lit=visual.lit.includes(col);
-  if(sprite){sprite.tint=lit?0xffffff:0x454545;sprite.alpha=1;}
-  if(icon?.border){icon.border.tint=lit?COLORS_HEX[col]:0x545454;icon.border.visible=true;}
+  if(sprite){sprite.tint=lit?0xffffff:0x999999;sprite.alpha=1;}
+  if(icon?.border){icon.border.tint=lit?0xffffff:COLORS_HEX[col];icon.border.visible=true;}
   if(icon?.bg){icon.bg.tint=lit?COLORS_HEX[col]:0x000000;icon.bg.alpha=lit?0.8:0.4;}
  }
 
@@ -327,6 +352,8 @@ export function registerCooperativeTrials(){
  });
 }
 export function initCooperativeTrials(){
+ // Explicit versioned load also covers clients whose manifest stylesheet cache is stale.
+ if(!document.querySelector("link[data-val-cooperative]")){const link=document.createElement("link");link.rel="stylesheet";link.href="modules/"+NS+"/styles/cooperative-trials.css?v="+game.modules.get(NS)?.version;link.dataset.valCooperative="1";document.head.append(link);}
  Hooks.on("activateNote",noteClick);
  game.socket.on(CHANNEL,msg=>{
   if(msg?.kind==="view"&&msg.to===game.user.id&&msg.from===game.users.activeGM?.id){view=msg.view;refresh();}
@@ -343,14 +370,13 @@ export function initCooperativeTrials(){
   renderSimon();checkManual();
   if(panel?.rendered){const node=panel.root?.querySelector("[data-time]");if(node)node.textContent=timeLabel(view);}
   if(consolePanel?.rendered&&noteStation(consolePanel.note)==="pressure"&&view?.status==="running"){
-   const now=clock(),ready=now>=view.purgeReady,started=view.purgeStart!==null;
-   const b=consolePanel.root?.querySelector('[data-value="begin"]');if(b)b.disabled=!ready||started;
-   const c=consolePanel.root?.querySelector('[data-value="release"]');if(c)c.disabled=!started;
-   const p=consolePanel.root?.querySelector("[data-purge-status]");if(p)p.textContent=started?"Maintien : "+Math.floor((now-view.purgeStart)/1000)+" s":ready?"Prêt à purger":"Recharge : "+Math.ceil((view.purgeReady-now)/1000)+" s";
+   const now=clock(),ready=now>=view.purgeReady;
+   const b=consolePanel.root?.querySelector('[data-value="purge"]');if(b)b.disabled=!ready;
+   const p=consolePanel.root?.querySelector("[data-purge-status]");if(p)p.textContent=ready?"Prêt à purger":"Réamorçage : "+Math.ceil((view.purgeReady-now)/1000)+" s";
   }
   if(!hasAuthority()||busy)return;
   const s=getSaved(),now=clock();
-  if(s?.status!=="running"||now<Math.min(s.nextTick,s.deadline,s.dialDue,simonDue(s),s.purgeStart===null?Infinity:s.purgeStart+10001))return;
-  busy=true;runSerial(async()=>{const old=getSaved();if(old?.status==="running"){const n=tick(old,clock());if(n.purgeStart!==null&&clock()-n.purgeStart>10000)n.purgeStart=null;await persist(n);}}).finally(()=>busy=false);
+  if(s?.status!=="running"||now<Math.min(s.nextTick,simonDue(s)))return;
+  busy=true;runSerial(async()=>{const old=getSaved();if(old?.status==="running"){const n=tick(old,clock());await persist(n);}}).finally(()=>busy=false);
  },125);
 }
